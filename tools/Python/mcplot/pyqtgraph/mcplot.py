@@ -116,6 +116,13 @@ def plot_node(node, layout, logflipper):
     replot_cb = lambda: plot_node(node, layout, logflipper=logflipper)
     set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip, flip_legend=logflipper.flip_legend, inc_cmap=logflipper.inc_colormap)
 
+def print_help():
+    if sys.platform == 'darwin':
+        modifier = 'Meta'
+    else:
+        modifier = 'ctrl'    
+    print("q            - quit\np            - save png\ns            - save svg\nd            - save pdf\nl            - log toggle\nt            - textinfo toggle\nc            - cycle colormap\nF1/h         - help\nF5           - replot\nclick        - display subplot\nrclick       - back\n" + modifier + " + click - sweep monitors")
+
 def set_keyhandler(scene, replot_cb, key, modifier, flip_log, flip_legend, inc_cmap):
     ''' sets a clickhadler according to input '''
     
@@ -142,11 +149,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, flip_log, flip_legend, inc_c
         elif ev.key() == 16777268: # F5
             cb(log=False)
         elif ev.key() == 16777264 or ev.key() == 72: # F1 or h
-            if sys.platform == 'darwin':
-                modifier = 'Meta'
-            else:
-                modifier = 'ctrl'
-            print("q            - quit\np            - save png\ns            - save svg\nd            - save pdf\nl            - log toggle\nt            - textinfo toggle\nc            - cycle colormap\nF1/h         - help\nF5           - replot\nclick        - display subplot\nrclick       - back\n" + modifier + " + click - sweep monitors")
+            print_help()
         # print debug info
         if debug:
             print("key code: %s" % str(ev.key()))
@@ -288,6 +291,7 @@ def main(args):
         # set up
         plotter = McPyqtgraphPlotter(graph, loader.simfile)
         plotter.runplot()
+        print_help()
         
         # start
         sys.exit(app.exec_())

@@ -5,11 +5,13 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
+GlobalColormap='none'
+
 class ModLegend(pg.LegendItem):
     """
     Modified LegendItem to remove the ugly / in the label. Also reduces text size and padding.
     """
-    def __init__(self, offset, text_size='7pt'):
+    def __init__(self, offset, text_size='9pt'):
         self.text_size = text_size
         LegendItem.__init__(self, None, offset)
     
@@ -24,7 +26,13 @@ class ModLegend(pg.LegendItem):
         self.items.append((sample, label))
         self.layout.addItem(label, row, 1)
         self.updateSize()
+        
+    def paint(self, p, *args):
+        p.setPen(pg.functions.mkPen(255,255,255,100))
+        p.setBrush(pg.functions.mkBrush(0,0,0,100))
+        p.drawRect(self.boundingRect())
 
+        
 def plot_Data1D(data, log=False, legend=True, icolormap=0):
     ''' create a plotItem and populate it with data, Data1D '''
     plt = pg.PlotItem()
@@ -117,7 +125,12 @@ def get_color_map(idx, pos_min, pos_max):
     idx = idx % len(keys)
     colormap = colormaps[keys[idx]]
     pos = pos_min + (pos_max - pos_min) * np.arange(len(colormap))/(len(colormap)-1)
-    print('Active colormap: ' + keys[idx])
+
+    global GlobalColormap
+    if not GlobalColormap == keys[idx]:
+        print('Active colormap: ' + keys[idx])
+        GlobalColormap=keys[idx]
+
     return pg.ColorMap(pos, colormap)
 
 def plot_Data2D(data, log=False, legend=True, icolormap=0):
