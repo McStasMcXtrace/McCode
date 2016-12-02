@@ -120,6 +120,7 @@ def get_color_map(idx, pos_min, pos_max):
     idx = idx % len(keys)
     colormap = colormaps[keys[idx]]
     pos = pos_min + (pos_max - pos_min) * np.arange(len(colormap))/(len(colormap)-1)
+    print('Active colormap: ' + keys[idx])
     return pg.ColorMap(pos, colormap)
 
 def plot_Data2D(data, log=False, legend=True, icolormap=0):
