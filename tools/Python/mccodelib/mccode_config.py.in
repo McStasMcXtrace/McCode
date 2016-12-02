@@ -61,14 +61,17 @@ def save_user_config():
     ''' attempts to save the current values to a local .json file '''
     userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")
     text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
+   
+    userdir = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'])
+    if not os.path.isdir(userdir):
+        try:
+            os.mkdir(userdir)
+        except Exception as e:
+            print("Directory %s could not be created: %s " % (userdir, e.__str__())) 
     f = None
     try:
-        userdir = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'])
-        if not os.path.isfile(userdir):
-            os.mkdir(userdir)
         f = open(str(userconfig), 'w')
         f.write(text)
-        
         print("userconfig saved to %s" % userconfig)
     except Exception as e:
         print("userconfig could not be saved to %s: %s" % (userconfig, e.__str__()))
