@@ -63,6 +63,9 @@ def save_user_config():
     text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
     f = None
     try:
+        userdir = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'])
+        if not os.path.isfile(userdir):
+            os.mkdir(userdir)
         f = open(str(userconfig), 'w')
         f.write(text)
         
