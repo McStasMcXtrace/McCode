@@ -27,7 +27,21 @@
 #endif
 
 
-
+/*******************************************************************************
+ * void *Table_File_List_Handler(action, item, item_modifier)
+ *   ACTION: handle file entries in the read_table-lib file list. If a file is read - it is supposed to be
+ *   stored in a list such that we can avoid reading the same file many times.
+ *   input  action: FIND, STORE, GC. check if file exists in the list, store an item in the list, or check if it can be garbage collected.
+ *   input item: depends on the action.
+ *    FIND)  item is a filename, and item_modifier is the block number
+ *    STORE) item is the Table to store - item_modifier is ignored
+ *    GC)    item is the Table to check. If it has a ref_count >1 then this is simply decremented.
+ *   return  depends on the action
+ *    FIND)  return a reference to a table+ref_count item if found - NULL otherwise. I.e. NULL means the file has not been read before and must be read again.
+ *    STORE) return NULL always
+ *    GC)    return NULL if no garbage collection is needed, return an adress to the t_Table which should be garbage collected. 0x1 is returned if
+ *           the item is not found in the list
+*******************************************************************************/
 void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier){
 
     /* logic here is Read_Table should include a call to FIND. If found the return value shoud just be used as
@@ -91,7 +105,14 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
 
 }
 
-/*add access functions to make it simpler*/
+/* Access functions to the handler*/
+
+/********************************************
+ * t_Table *Table_File_List_find(char *name, int block)
+ * input name: filename to search for in the file list
+ * input block: data block in the file as each file may contain more than 1 data block.
+ * return a ref. to a table if it is found (you may use this pointer and skip reading the file), NULL otherwise (i.e. go ahead and read the file)
+*********************************************/
 t_Table *Table_File_List_find(char *name, int block){
     t_Read_table_file_item *item = Table_File_List_Handler(FIND,name, &block);
     if (item == NULL){
@@ -100,18 +121,29 @@ t_Table *Table_File_List_find(char *name, int block){
         return item->table_ref;
     }
 }
-
+/********************************************
+ * int Table_File_List_gc(t_Table *tab)
+ * input tab: the table to check for references.
+ * return 0: no garbage collection needed
+ *        1: we should call Table_Free
+*********************************************/
 int Table_File_List_gc(t_Table *tab){
     void *rval=Table_File_List_Handler(GC,tab,0);
     if (rval==NULL) return 0;
+    else if (rval==0x1) return 0;
     else return 1;
 }
 
+
+/*****************************************************************************
+ * void *Table_File_List_store(t_Table *tab)
+ * input tab: pointer to table to store.
+ * return None. 
+*******************************************************************************/
 void *Table_File_List_store(t_Table *tab){
     Table_File_List_Handler(STORE,tab,0);
 }
 
-/**/
 
 /*******************************************************************************
 * FILE *Open_File(char *name, char *Mode, char *path)
