@@ -130,7 +130,7 @@ t_Table *Table_File_List_find(char *name, int block){
 int Table_File_List_gc(t_Table *tab){
     void *rval=Table_File_List_Handler(GC,tab,0);
     if (rval==NULL) return 0;
-    else if (rval==0x1) return 0;
+    else if (rval==(void *)0x1) return 0;
     else return 1;
 }
 
