@@ -114,7 +114,7 @@ INITIALIZE
     prms.pint=0;
     t_Table *T=&(prms.T);
     for (i=0;i<prms.T.rows-1;i++){
-      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*fabs(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
     }
     printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
