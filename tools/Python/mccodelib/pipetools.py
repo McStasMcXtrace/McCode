@@ -113,6 +113,12 @@ class McdisplayState(LineHandlerState):
     def add_line(self, line):
         if re.match('MCDISPLAY: ', line):
             self.databox.add_instrdef(line)
+        if re.match('MANTID_PIXEL: ', line):
+            self.databox.add_instrdef(line)
+        if re.match('MANTID_RECTANGULAR_DET: ', line):
+            self.databox.add_instrdef(line)
+        if re.match('MANTID_BANANA_DET: ', line):
+            self.databox.add_instrdef(line)
         elif re.match('INSTRUMENT END:\n', line):
             self.databox.add_instrdef(line)
         elif re.match('ENTER:\n', line):
