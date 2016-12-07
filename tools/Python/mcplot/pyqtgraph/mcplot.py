@@ -24,17 +24,17 @@ class McPyqtgraphPlotter():
     '''
     PyQtGraph-based plotter class.
     '''
-    def __init__(self, plotgraph, simfile):
+    def __init__(self, plotgraph, sourcedir):
         self.graph = plotgraph
-        self.simfile = simfile
+        self.sourcedir = sourcedir
         
     def runplot(self):
         node = self.graph
         
-        plt_layout = create_plotwindow(title=self.simfile)
+        plt_layout = create_plotwindow(title=self.sourcedir)
         
         # create the logflipper
-        flipper = LogFlipper(simfile=self.simfile)
+        flipper = LogFlipper(sourcedir=self.sourcedir)
         
         # initiate event driven plot recursion
         plot_node(node, plt_layout, flipper)
@@ -57,11 +57,11 @@ class LogFlipper():
     It is a kind of viewmodel, originally a log logstate housekeeping object, 
     extended by various other logstate variables as well.
     '''
-    def __init__(self, log=False, legend=True, simfile=None):
+    def __init__(self, log=False, legend=True, sourcedir=None):
         self.log = log
         self.icolormap = 0
         self.legend = legend
-        self.simfile = simfile
+        self.sourcedir = sourcedir
     def flip_log(self):
         self.log = not self.log
         return self.log
@@ -76,8 +76,8 @@ class LogFlipper():
         return self.legend
     def cmapindex(self):
         return self.icolormap
-    def get_simfile(self):
-        return self.simfile
+    def get_sourcedir(self):
+        return self.sourcedir
 
 def plot_node(node, layout, viewmodel):
     '''
@@ -179,7 +179,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
             print("key code: %s" % str(ev.key()))
     
     savefile_cb = lambda format: dumpfile(scene=scene, format=format)
-    expand_sp = lambda : expand_subplots(simfile=viewmodel.get_simfile())
+    expand_sp = lambda : expand_subplots(sourcedir=viewmodel.get_sourcedir())
     
     scene.keyPressEvent = lambda ev: key_handler(ev=ev,
                                                  replot_cb=replot_cb,
@@ -189,7 +189,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
                                                  inc_cmap=viewmodel.inc_colormap,
                                                  expand_sp=expand_sp)
 
-def expand_subplots(simfile):
+def expand_subplots(sourcedir):
     ''' opens a new process of mcplot-pyqtgraph on each subdir '''
     # stolen from stack overflow:
     def get_immediate_subdirectories(a_dir):
@@ -201,8 +201,11 @@ def expand_subplots(simfile):
                                        if item[0].isdigit() else float('inf'), item)
                )
     
-    dir = os.path.dirname(simfile)
-    subdirs = sortalpha(get_immediate_subdirectories(dir))
+    subdirs = sortalpha(get_immediate_subdirectories(sourcedir))
+    
+    if len(subdirs) == 0:
+        print("no subdirs to plot")
+        return
         
     for s in subdirs:
         subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(dir, s), shell=True, cwd=os.getcwd())
@@ -338,7 +341,7 @@ def main(args):
         app = QtGui.QApplication(sys.argv)
         
         # set up
-        plotter = McPyqtgraphPlotter(graph, loader.simfile)
+        plotter = McPyqtgraphPlotter(graph, sourcedir=loader.directory)
         plotter.runplot()
         print_help()
         
