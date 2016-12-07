@@ -56,7 +56,7 @@ import sys
 import os
 import string
 import matplotlib
-#matplotlib.use('TkAgg');
+matplotlib.use('Qt4Agg');
 
 FSlist      = list()
 options     = 0
@@ -225,7 +225,7 @@ def read_monitor(this_File):
     # Read header
     isHeader = lambda line: line.startswith('#')
     Header = filter(isHeader, open(this_File).readlines())
-    
+    Header = list(Header)
     # Traverse header and define corresponding 'struct'
     str ="{"
     for j in range(0, len(Header)):
@@ -233,8 +233,7 @@ def read_monitor(this_File):
         Line = Header[j]; Line = Line[2:len(Line)].strip()
         Line = Line.split(':')
         Field = Line[0]
-        Value = ""
-        Value = string.join(string.join(Line[1:len(Line)], ':').split("'"), '')
+        Value = ''.join(':'.join(Line[1:len(Line)]).split("'"))
         str = str + "'" + Field + "':'" + Value + "'"
         if j<len(Header)-1:
             str = str + ","
@@ -450,6 +449,7 @@ def display(this_File, comment):
 
     # Get filenames from the sim file
     MonFiles = filter(isCompFilename, open(this_File).readlines())
+    MonFiles = list(MonFiles)
     L = len(MonFiles)
     
     # create main window
@@ -540,7 +540,7 @@ if __name__ == "__main__":
     
     (options, args) = parser.parse_args()
     
-    File=string.join(args)
+    File=''.join(args)
 
     if options.Format!=None:
         matplotlib.use(options.Format)
