@@ -207,8 +207,8 @@ def expand_subplots(sourcedir):
         print("no subdirs to plot")
         return
         
-    for s in subdirs:
-        subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(dir, s), shell=True, cwd=os.getcwd())
+    for s in subdiry
+        subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
 def dumpfile(scene, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
