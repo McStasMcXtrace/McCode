@@ -72,6 +72,7 @@ first a MCNP simulation is run
 DEFINE COMPONENT Virtual_mcnp_ss_input
 DEFINITION PARAMETERS (string file="rssa")
 SETTING PARAMETERS (verbose=1)
+DEPENDENCY "@MCCODE_LIB@/libs/neutronics/neutronics-subs.o -lgfortran"
 
 SHARE
 %{
