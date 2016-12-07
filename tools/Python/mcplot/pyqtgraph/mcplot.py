@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import math
+import subprocess
 
 import PyQt4
 import pyqtgraph as pg
@@ -33,7 +34,7 @@ class McPyqtgraphPlotter():
         plt_layout = create_plotwindow(title=self.simfile)
         
         # create the logflipper
-        flipper = LogFlipper()
+        flipper = LogFlipper(simfile=self.simfile)
         
         # initiate event driven plot recursion
         plot_node(node, plt_layout, flipper)
@@ -52,12 +53,16 @@ def create_plotwindow(title):
     return layout
 
 class LogFlipper():
-    ''' boolean log state keeper object '''
-    def __init__(self, log=False, legend=True):
+    ''' 
+    It is a kind of viewmodel, originally a log logstate housekeeping object, 
+    extended by various other logstate variables as well.
+    '''
+    def __init__(self, log=False, legend=True, simfile=None):
         self.log = log
         self.icolormap = 0
         self.legend = legend
-    def flip(self):
+        self.simfile = simfile
+    def flip_log(self):
         self.log = not self.log
         return self.log
     def inc_colormap(self):
@@ -65,14 +70,16 @@ class LogFlipper():
     def flip_legend(self):
         self.legend = not self.legend
         return self.legend
-    def state(self):
+    def logstate(self):
         return self.log
     def legendstate(self):
         return self.legend
     def cmapindex(self):
         return self.icolormap
+    def get_simfile(self):
+        return self.simfile
 
-def plot_node(node, layout, logflipper):
+def plot_node(node, layout, viewmodel):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
@@ -89,7 +96,7 @@ def plot_node(node, layout, logflipper):
     n = len(data_lst)
     viewbox_lst = []
     for i in range(n):
-        viewbox_lst.append(add_plot(layout, data_lst[i], i, n, logflipper.state(), logflipper.legendstate(), logflipper.cmapindex()))
+        viewbox_lst.append(add_plot(layout, data_lst[i], i, n, viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex()))
     
     # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
     vn_dict_click = {}
@@ -107,56 +114,98 @@ def plot_node(node, layout, logflipper):
         vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
     
     # set mouse click handlers on the window
-    plot_node_cb = lambda node: plot_node(node, layout=layout, logflipper=logflipper)
+    plot_node_cb = lambda node: plot_node(node, layout=layout, viewmodel=viewmodel)
     set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
     set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
     set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
     
     # set keypress handlers 
-    replot_cb = lambda: plot_node(node, layout, logflipper=logflipper)
-    set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip, flip_legend=logflipper.flip_legend, inc_cmap=logflipper.inc_colormap)
+    replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
+    set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
 
 def print_help():
     if sys.platform == 'darwin':
         modifier = 'Meta'
     else:
-        modifier = 'ctrl'    
-    print("q            - quit\np            - save png\ns            - save svg\nd            - save pdf\nl            - log toggle\nt            - textinfo toggle\nc            - cycle colormap\nF1/h         - help\nF5           - replot\nclick        - display subplot\nrclick       - back\n" + modifier + " + click - sweep monitors")
+        modifier = 'ctrl'
+    
+    helplines = []
+    helplines.append('q            - quit')
+    helplines.append('p            - save png')
+    helplines.append('s            - save svg')
+    helplines.append('d            - save pdf')
+    helplines.append('l            - log toggle')
+    helplines.append('t            - textinfo toggle')
+    helplines.append('c            - cycle colormap')
+    helplines.append('F1/h         - help')
+    helplines.append('F5           - replot')
+    helplines.append('click        - display subplot')
+    helplines.append('right-click  - back')
+    helplines.append('%s + click - sweep monitors' % modifier)
+    helplines.append('x            - expand subplots')
+    print('\n'.join(helplines))
 
-def set_keyhandler(scene, replot_cb, key, modifier, flip_log, flip_legend, inc_cmap):
+def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
     
-    def key_handler(ev, cb, savefile_cb, flip_log, flip_legend, inc_cmap, debug=False):
-        ''' global keypress handler, cb is a function of log '''
-        if ev.key() == 81: # q
+    def key_handler(ev, replot_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
+        ''' global keypress handler, replot_cb is a function of log '''
+        if ev.key() == 81:                              # q
             quit()
-        elif ev.key() == 76: # l
+        elif ev.key() == 76:                            # l
             log = flip_log()
-            cb()
-        elif ev.key() == 80: # p
+            replot_cb()
+        elif ev.key() == 80:                            # p
             savefile_cb(format='png')
-        elif ev.key() == 83: # s
+        elif ev.key() == 83:                            # s
             savefile_cb(format='svg')
-        elif ev.key() == 68: # d
+        elif ev.key() == 68:                            # d
             savefile_cb(format='pdf')
-        elif ev.key() == 84: # t
+        elif ev.key() == 84:                            # t
             print("Toggle legend visibility")
             legend=flip_legend()
-            cb()
-        elif ev.key() == 67: # c
+            replot_cb()
+        elif ev.key() == 67:                            # c
             inc_cmap()
-            cb()
-        elif ev.key() == 16777268: # F5
-            cb(log=False)
-        elif ev.key() == 16777264 or ev.key() == 72: # F1 or h
+            replot_cb()
+        elif ev.key() == 16777268:                      # F5
+            replot_cb(log=False)
+        elif ev.key() == 88:                            # x
+            expand_sp()
+        elif ev.key() == 16777264 or ev.key() == 72:    # F1 or h
             print_help()
         # print debug info
         if debug:
             print("key code: %s" % str(ev.key()))
     
     savefile_cb = lambda format: dumpfile(scene=scene, format=format)
+    expand_sp = lambda : expand_subplots(simfile=viewmodel.get_simfile())
     
-    scene.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log, flip_legend=flip_legend, inc_cmap=inc_cmap)
+    scene.keyPressEvent = lambda ev: key_handler(ev=ev,
+                                                 replot_cb=replot_cb,
+                                                 savefile_cb=savefile_cb,
+                                                 flip_log=viewmodel.flip_log,
+                                                 flip_legend=viewmodel.flip_legend,
+                                                 inc_cmap=viewmodel.inc_colormap,
+                                                 expand_sp=expand_sp)
+
+def expand_subplots(simfile):
+    ''' opens a new process of mcplot-pyqtgraph on each subdir '''
+    # stolen from stack overflow:
+    def get_immediate_subdirectories(a_dir):
+        return [name for name in os.listdir(a_dir)
+                if os.path.isdir(os.path.join(a_dir, name))]
+    def sortalpha(data):
+        return sorted(data, key=lambda item: (
+                                       int(item.partition(' ')[0])
+                                       if item[0].isdigit() else float('inf'), item)
+               )
+    
+    dir = os.path.dirname(simfile)
+    subdirs = sortalpha(get_immediate_subdirectories(dir))
+        
+    for s in subdirs:
+        subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(dir, s), shell=True, cwd=os.getcwd())
 
 def dumpfile(scene, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''

@@ -704,4 +704,4 @@ class McPlotDataLoader():
 
         self.plot_graph = exit_node.result
         
-        self.simfile = args['simfile']
+        self.simfile = join(args['directory'],args['simfile'])
