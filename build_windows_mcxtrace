@@ -18,12 +18,13 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcxtrace $1 "" "" mingw32 "" -- nsis
 ./mkdist mcxtrace-comps $1 "" "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mingw32 "" -- nsis
-./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw32 "" -- nsis
-./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" mingw32 "o" -- nsis
 
 if [ "x$2" != "x" ]; then

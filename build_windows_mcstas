@@ -16,18 +16,16 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 
 # 32-bit
 ./mkdist mcstas $1 "" "" mingw32 "" -- nsis
-./mkdist mcstas-comps $1 mcstas-comps-win "" mingw32 "" -- nsis
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl-win "" mingw32 "" -- nsis
-./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mingw32 "" -- nsis
-./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw32 "" -- nsis
+./mkdist mcstas-comps $1 "" "" mingw32 "" -- nsis
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mingw32 "" -- nsis
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 "" -- nsis
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw32 "" -- nsis
-./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 "" -- nsis
-./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw32 "" -- nsis
-./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mingw32 "" -- nsis
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw32 "" -- nsis
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw32 "" -- nsis
 
 if [ "x$2" != "x" ]; then

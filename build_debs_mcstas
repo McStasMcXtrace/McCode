@@ -14,16 +14,12 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-comps $1 "" "" linux64 "" -- deb
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux64 "" -- deb
-./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- deb
-./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux64 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" linux64 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- deb
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- deb
 
