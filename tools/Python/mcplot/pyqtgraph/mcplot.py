@@ -207,7 +207,7 @@ def expand_subplots(sourcedir):
         print("no subdirs to plot")
         return
         
-    for s in subdiry
+    for s in subdirs:
         subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
 def dumpfile(scene, filenamebase='mcplot', format='png'):
