@@ -1025,7 +1025,7 @@ static void mcdetector_out_array_ascii(long m, long n, double *p, FILE *f, char 
     {
       for(i = 0; i < m; i++)
       {
-        fprintf(f, "%g ", p[!istransposed ? i*n + j : j*m+i]);
+          fprintf(f, "%.10g ", p[!istransposed ? i*n + j : j*m+i]);
       }
       fprintf(f,"\n");
     }
