@@ -17,14 +17,15 @@
 *
 * This is a unit test for the MCPL_output component.
 *
-* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
+* %Example: -n1e3 merge=0 Detector: m1_I=2.42284e+11
 *
 *
 * %Parameters
-*
+* merge:    [1] Flag to indicate if we should merge the output in case of MPI
+* 
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_output(dummy=0)
+DEFINE INSTRUMENT Test_MCPL_output(merge=1)
 
 DECLARE
 %{
@@ -54,7 +55,7 @@ EXTEND %{
 
 /* the output ============================================================== */
 COMPONENT vout = MCPL_output(
-     filename="voutput", verbose=1, userflag=flag, userflagcomment="Neutron Id")
+			     filename="voutput", verbose=1, userflag=flag, userflagcomment="Neutron Id", merge_mpi=merge)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
