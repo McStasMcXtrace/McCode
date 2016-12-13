@@ -228,7 +228,9 @@ TRACE
 
     /* Correct for repetition, by repeat_count and/or MPI */
     p /= repeat_cnt;
-    
+#if defined (USE_MPI)   
+    p /= mpi_node_count;
+#endif    
     SCATTER;
 %}
 
