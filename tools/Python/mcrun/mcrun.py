@@ -5,7 +5,7 @@ from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
-from mccode import McStas
+from mccode import McStas, Process
 from optimisation import Scanner, LinearInterval, MultiInterval
 
 #import config
@@ -61,6 +61,10 @@ def add_mcrun_options(parser):
         action='store_true',
         help='run a multi-dimensional scan')
 
+    add('--autoplot',
+        action='store_true',
+        help='open plotter on generated dataset')
+    
     # Multiprocessing
     add('--mpi',
         metavar='NB_CPU',
@@ -361,6 +365,10 @@ def main():
         if not options.ncount == 0.0:
             mcstas.run()
 
+    if options.autoplot is not None:
+        if isdir(options.dir):
+            LOG.info('Running plotter %s on dataset %s',mccode_config.configuration['MCPLOT'],options.dir)
+            Process(mccode_config.configuration['MCPLOT']).run([options.dir])
 
 if __name__ == '__main__':
     try:
