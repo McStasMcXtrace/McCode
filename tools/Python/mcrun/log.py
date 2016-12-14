@@ -13,7 +13,7 @@ class McRunException(Exception):
 
 def setupLogger():
     """ Setup logging facilities """
-    formatter = logging.Formatter('%(created).2f, %(levelname)8s: %(message)s')
+    formatter = logging.Formatter('%(levelname)8s: %(message)s')
 
     global HANDLER
     HANDLER = logging.StreamHandler()
