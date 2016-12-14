@@ -197,6 +197,9 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
     cbimg.setImage(np.array([arr_1]))
     # calculate scaling and translation for the y-axis
     dy = (pos_max - pos_min) / numsteps
+    # Prevent division by 0
+    if (dy==0):
+        dy=1;
     ty = (pos_min) / dy
     cbimg.scale(1, dy)
     cbimg.translate(0,ty)
