@@ -158,7 +158,7 @@
 * barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2
 *             (barns=1 for laz, barns=0 for lau type files).[1]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
-* DW:       Global Debey-Waller factor when the 'DW' column
+* DW:       Global Debye-Waller factor when the 'DW' column
 *             is not available. Use 1 if included in F2 [1]
 * weight:   Atomic/molecular weight of material [g/mol]
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]

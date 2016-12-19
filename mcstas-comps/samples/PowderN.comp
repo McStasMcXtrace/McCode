@@ -167,7 +167,7 @@
 * sigma_abs:Absorption cross section per unit cell at 2200 m/s. Use a negative value to unactivate it  [barns]
 * sigma_inc:Incoherent cross section per unit cell. Use a negative value to unactivate it [barns]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
-* DW:       Global Debey-Waller factor when the 'DW' column
+* DW:       Global Debye-Waller factor when the 'DW' column
 *             is not available. Use 1 if included in F2 [1]
 * weight:   Atomic/molecular weight of material [g/mol]
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
