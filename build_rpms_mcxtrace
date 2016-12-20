@@ -18,18 +18,6 @@ fi
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" rpm64 "o" -- rpm
-# 32-bit
-./mkdist mcxtrace $1 "" "" rpm32 "" -- rpm
-./mkdist mcxtrace-comps $1 "" "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm32 "" -- rpm
-./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" rpm32 "o" -- rpm
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
