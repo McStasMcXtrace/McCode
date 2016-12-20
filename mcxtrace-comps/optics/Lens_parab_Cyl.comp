@@ -18,7 +18,7 @@
 * Origin: NBI
 *
 * %D.
-* An X-ray compound refractive lens (CRL) with a parabolic cylinder profile focussing in 1D, i.e. onto a line
+* An X-ray compound refractive lens (CRL) with a parabolic cylinder profile focusing in 1D, i.e. onto a line
 * 
 * The lens is invariant along the x-axis and has a parabolic profile along the y-axis defined as z/c = y^2/b^2.
 * Thus, i.e. it focuses onto a line along the x-axis.
@@ -29,17 +29,18 @@
 * %P
 * Input parameters:
 * r [m] Radius of curvature (circular approximation at the tip of the profile) [m];
-* yheight [m] The CRL's dimensions along Y, and if r_ap==0 also the diameter of the aperture.
+* yheight [m] The CRL's aperture along Y.
 * xwidth [m] The width of the CRL in the invariant direction x.
 * d [m] Distance between two surfaces of the lens along the propagation axis;
 * N [ ] Number of single lenses in a stack.
 * T [ ] Obsolete. Ignored but will be removed in next release.
-*
+* rough_xy [rms] - waviness along x and y
+* rough_z [rms] -waviness along z
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab_Cyl
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3,T=.99,N=1)
+SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, T=.99, N=1, rough_z=0, rough_xy=0)
 OUTPUT PARAMETERS (prms,parab)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -56,7 +57,7 @@ SHARE
  
   // intersect_parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
    
-  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, param_lens_parab_Cyl b){
+  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, param_lens_parab_Cyl b, double rough_xy, double rough_z){
     data_lens_parab_Cyl result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
@@ -68,6 +69,7 @@ SHARE
     double k_new[3];
     double cos_theta,cos_theta1;
     double yh,xw;
+    double rough_xy,rough_z;
     
     for(i=0;i<=2;i++){
       k[i]=a.k[i];
@@ -85,7 +87,10 @@ SHARE
     dd=b.constants[3];
     M=b.constants[4];
     Sign=b.constants[5];
-   
+    
+    rough_xy=b.constants[6];
+    rough_z=b.constants[7];
+    
     A=knorm[1]*knorm[1];
     B=2*(p[1]*knorm[1]-Sign*rr*knorm[2]);
     C=p[1]*p[1]-Sign*2*rr*p[2]+Sign*dd*2*rr;
@@ -128,11 +133,23 @@ SHARE
 	}
       }	else return result; 
       }
-     
+   
+    
     Nx=0;
-    if (result.coord[1]==0){		Ny=1;	Nz=0; 
-    } else if (result.coord[1]!=0) {	Ny=Sign*rr/result.coord[1]; Nz=1;
+    if (result.coord[1]==0){		
+	Ny=1;	
+	Nz=0; 
+    } else if (result.coord[1]!=0) {	
+	Ny=Sign*rr/result.coord[1]; Nz=1;
     }
+    if (rough_xy) {
+     	double d_xy=rough_xy*randnorm(); 	
+	Ny+=d_xy; 
+    } 
+    if (rough_z) {
+    	double d_z=rough_z*randnorm(); 
+	Nz+=d_z;
+    }  
    
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
     N[0]=Nx/Nnorm; 
@@ -214,6 +231,9 @@ TRACE
   parab_Cyl.constants[1]=yheight;
   parab_Cyl.constants[2]=xwidth;
   
+  parab_Cyl.constants[6]=rough_xy;
+  parab_Cyl.constants[7]=rough_z;
+  
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
@@ -254,7 +274,7 @@ TRACE
     parab_Cyl.constants[4]=1.0/Refractive_Index_Re; // M constant
     parab_Cyl.constants[5]=-1.0; //Sign constant
     
-    refr=intersect_parab_Cyl(incid,parab_Cyl);
+    refr=intersect_parab_Cyl(incid,parab_Cyl,rough_xy,rough_z);
     
     if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
     
@@ -271,7 +291,7 @@ TRACE
     parab_Cyl.constants[4]=Refractive_Index_Re;
     parab_Cyl.constants[5]=1.0; 
  
-    outg=intersect_parab_Cyl(refr,parab_Cyl);
+    outg=intersect_parab_Cyl(refr,parab_Cyl,rough_xy,rough_z);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
