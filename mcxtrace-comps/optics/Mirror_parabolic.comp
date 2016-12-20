@@ -60,7 +60,7 @@ TRACE
 %{
   double A,B,C,D2,kxu, kyu, kzu;
   double l0,l1;
-    do {
+  do {
       kxu=kx; kyu=ky; kzu=kz; NORM(kxu, kyu, kzu);
       A=kzu*kzu*a2inv + kxu*kxu*b2inv;
       B=2*(z*kzu*a2inv + x*kxu*b2inv) - kyu ;
@@ -108,7 +108,7 @@ TRACE
 
       /*adjust weight of ray*/
       p*=R;
-    }  while (D2 > 0); /* keep trying as long as a bounce is available */
+  }  while (D2 > 0); /* keep trying as long as a bounce is available */
 
 %}
 
