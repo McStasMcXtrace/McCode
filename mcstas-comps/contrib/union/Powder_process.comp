@@ -407,7 +407,7 @@ int Powder_physics_initialize(union data_transfer_union data_transfer) {
 };
 
 // Function for calculating my in a test case.
-int Powder_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer) {
+int Powder_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
     //*my = data_transfer.pointer_to_a_Powder_physics_storage_struct->my_scattering;
     
     

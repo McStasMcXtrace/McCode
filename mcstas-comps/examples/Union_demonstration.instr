@@ -12,7 +12,6 @@
 * Date: September 2015
 * Origin: University of Copenhagen
 * Version: $Revision: 0.1 $
-* %INSTRUMENT_SITE: Union_demos
 *
 * Simple test instrument for sample component.
 *
@@ -28,8 +27,8 @@ DEFINE INSTRUMENT test(stick_displacement=0)
 
 DECLARE
 %{
-int sample_1_index=27,sample_2_index=30,sample_3_index=36; // Indexes of three samples
-int scattered_1,scattered_2,scattered_3;
+int sample_1_index=27,sample_2_index=30,sample_3_index=33,sample_4_index=36; // Indexes of three samples
+int scattered_1,scattered_2,scattered_3,scattered_4;
 %}
 
 TRACE
@@ -133,10 +132,10 @@ COMPONENT a1 = Progress_bar()
 //  AT (0,-0.02,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT source = Source_div(
-        xwidth=0.01, yheight=0.01,focus_aw=0.05, focus_ah=0.05,
+        xwidth=0.04, yheight=0.08,focus_aw=0.05, focus_ah=0.05,
         E0 = 50,
         dE = 0, flux = 1E9)
-  AT (0.013,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+  AT (0.013,-0.02,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 
 // Sample position
@@ -147,8 +146,6 @@ ROTATED (0,0,0) RELATIVE a1
 COMPONENT drum_center = Arm()
 AT (0,0.38,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
-
-
 
 
 // V1
@@ -331,7 +328,6 @@ COMPONENT sample_3_container_rim = Union_cylinder(radius=0.007,yheight=0.002,pri
 AT (0,0.023*0.5,0) RELATIVE sample_3
 ROTATED (0,0,0) RELATIVE sample_3
 
-
 // V36
 COMPONENT sample_4 = Union_cylinder(radius=0.0045,yheight=0.02,priority=93,material_string="Cs",p_interact=0.6)
 AT (0,-0.002-0.01-0.003,-0.015) RELATIVE sample_holder_middle_shelf
@@ -356,6 +352,7 @@ EXTEND
 if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
 if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
 if (scattered_flag[sample_3_index] > 0) scattered_3 = 1; else scattered_3 = 0;
+if (scattered_flag[sample_4_index] > 0) scattered_4 = 1; else scattered_4 = 0;
 %}
 
 
@@ -364,22 +361,7 @@ COMPONENT detector_position = Arm()
 AT (0,0,0.03) RELATIVE beam_center
 ROTATED(0,0,0) RELATIVE beam_center
 
-
-
-
 COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
-AT (0, 0, 0) RELATIVE beam_center
-ROTATED (0,0,0) RELATIVE beam_center
-
-COMPONENT arm_1 = Arm()
-  AT (0, 0, 0) RELATIVE beam_center
-EXTEND
-%{
-	if (scattered_1 + scattered_2 + scattered_3 != 3) ABSORB;
-%}
-
-COMPONENT m4pi_three_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
-WHEN (scattered_1 + scattered_2 + scattered_3 == 3)
 AT (0, 0, 0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
@@ -391,8 +373,22 @@ COMPONENT detector = PSD_monitor(xwidth=0.1, yheight=0.08, nx=200, ny=200, filen
 AT (0,-0.02,0.4) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
+// Removes events not scattering in the three selected samples
+// mcdisplay --inspect=m4pi_two_samples shows only rays that scatters on all three
+//  since all others were removed before that component with this arm.
+COMPONENT arm_1 = Arm()
+  AT (0, 0, 0) RELATIVE beam_center
+EXTEND
+%{
+  if (scattered_1 + scattered_2 + scattered_3 + scattered_4 < 2) ABSORB;
+%}
+
+COMPONENT m4pi_two_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
+WHEN (scattered_1 + scattered_2 + scattered_3 + scattered_4 > 1)
+AT (0, 0, 0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
 
 
 
 END
-

@@ -242,7 +242,7 @@ if (xwidth2 <= 0 && xwidth2 != -1) {
   printf("\nERROR in Union_box named %s, the xwidth2 is <= 0. \n",NAME_CURRENT_COMP);
   exit(1);
 }
-if (yheight2 <= 0 && xwidth2 != -1) {
+if (yheight2 <= 0 && yheight2 != -1) {
   printf("\nERROR in Union_box named %s, yheight2 is <= 0. \n",NAME_CURRENT_COMP);
   exit(1);
 }

@@ -739,7 +739,7 @@ struct Single_crystal_physics_storage_struct{
 
 // Function for calculating my, the inverse penetration depth (for only this scattering process).
 // The input for this function and its order may not be changed, but the names may be updated.
-int Single_crystal_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer) {
+int Single_crystal_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
     // *k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] which describes the wavevector
     double kix = k_initial[0],kiy = k_initial[1],kiz = k_initial[2];
     double ki = sqrt(k_initial[0]*k_initial[0]+k_initial[1]*k_initial[1]+k_initial[2]*k_initial[2]);
