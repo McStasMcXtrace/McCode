@@ -276,15 +276,6 @@ macro(installMCCODE)
   ## McFormat needs to be linked against m
   target_link_libraries(${FLAVOR_FMT} m)
 
-  ## Build mcpltool
-  add_executable(
-         mcpltool
-         work/lib/MCPL/tool.c
-	 work/lib/MCPL/mcpl.c
-  )
-  target_compile_options(mcpltool PUBLIC "-std=c99")
-  target_link_libraries(mcpltool m)
-
   ## Add install targets
   include(MCUtil)
   set(WORK "${PROJECT_BINARY_DIR}/work")
@@ -315,10 +306,6 @@ macro(installMCCODE)
     )
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    )
-    install (
-      PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
 
@@ -358,10 +345,6 @@ macro(installMCCODE)
     )
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${bin}
-    )
-    install (
-      PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
     )
 
