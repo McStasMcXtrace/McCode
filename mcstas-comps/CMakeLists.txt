@@ -30,10 +30,25 @@ set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 
 include(CPack)
 
+## Build mcpltool
+add_executable(
+  mcpltool
+  libs/mcpl/tool.c
+  libs/mcpl/mcpl.c
+)
+target_compile_options(mcpltool PUBLIC "-std=c99")
+target_link_libraries(mcpltool m)
+
+
+
 if (NOT WINDOWS)
   add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
   target_compile_options(mcpl PUBLIC "-std=c99")
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
 endif()
 
 # Include mcstas-comp files
@@ -48,6 +63,10 @@ if(WINDOWS)
   install(
     FILES "${WORK}/revision"
     DESTINATION "${lib}"
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
   )
 else()
   install(
