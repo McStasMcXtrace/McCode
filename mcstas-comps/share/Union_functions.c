@@ -3080,7 +3080,7 @@ void generate_grandparents_lists(struct pointer_to_1d_int_list **grandparents_li
         // returns a pointer_to_1d_list, with all the elements that are in common.
         for (child = 0;child < common.num_elements;child++) {
             // Need to make sure the element is not already on the list
-            if (1 == on_int_list(temp_list_local,common.elements[child])) {
+            if (0 == on_int_list(temp_list_local,common.elements[child])) {
               temp_list_local.elements[used_elements++] = common.elements[child];
             }
         }
@@ -3973,3 +3973,5 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
     geometry->focus_data.focusing_function = &randvec_target_circle_union;
   }
 };
+
+
