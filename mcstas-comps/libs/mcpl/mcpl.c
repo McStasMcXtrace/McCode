@@ -1,4 +1,15 @@
-// This is the "fat" version of MCPL including a small ZLIB implementation
+
+ ///////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// NOTICE: This is an automatically modified version of mcpl.c which has   //
+// been augmented by including the sources of zlib inside, eliminating the //
+// need for linking with zlib, at the expense of being more bloated.       //
+//                                                                         //
+// For licensing and documentation, please refer to pure unmodified        //
+// versions of MCPL and zlib (http://zlib.net).                            //
+//                                                                         //
+ ///////////////////////////////////////////////////////////////////////////
+    
 #ifndef MCPL_HASZLIB
 #  define MCPL_HASZLIB
 #endif
@@ -6,10 +17,7 @@
 #  undef MCPL_ZLIB_INCPATH
 #endif
 
-// Protect against using the NAME bareword as it has meaning internally to MCPL
-#ifdef NAME
-#  undef NAME
-#endif
+
 /////////////////////////////////////////////////////////////////////////////////////
 //                                                                                 //
 //  Monte Carlo Particle Lists : MCPL                                              //
@@ -41,15 +49,16 @@
 //  MCPL_NO_CUSTOM_GZIP : Define to make sure that mcpl_gzip_file will never       //
 //                        compress via custom zlib-based code.                     //
 //                                                                                 //
+//  This file can be freely used as per the terms in the LICENSE file.             //
+//                                                                                 //
+//  Find more information and updates at https://mctools.github.io/mcpl/           //
+//                                                                                 //
 //  Written by Thomas Kittelmann, 2015-2016.                                       //
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
 
 
 //////
-//
-// TODO:
-//  * Implement --ignore flag for --merge.
 //
 //Possible future developments:
 //
@@ -94,9 +103,9 @@
 //    give higher precision (or allow to use fewer bits).
 //
 // 8) Consider writing .mcpl.gz files directly (through a large buffer
-//    presumably).
+//    presumably). Or to have compressed blocks internally.
 //
-// 9) Should use unsigned char* rather than char* for buffers.
+// 9) Should use unsigned char* rather than char* for buffers?
 //
 //////
 
@@ -2582,6 +2591,7 @@ typedef struct {
   unsigned particle_size;
   int particle_offset;
   mcpl_particlesingleprec_t * psp;
+  mcpl_particle_t* puser;
 } mcpl_outfileinternal_t;
 
 #define MCPLIMP_OUTFILEDECODE mcpl_outfileinternal_t * f = (mcpl_outfileinternal_t *)of.internal; assert(f)
@@ -3030,6 +3040,19 @@ void mcpl_update_nparticles(FILE* f, uint64_t n)
     mcpl_error(errmsg);
 }
 
+mcpl_particle_t* mcpl_get_empty_particle(mcpl_outfile_t of)
+{
+  MCPLIMP_OUTFILEDECODE;
+  if (f->puser) {
+    //Calling more than once. This could be innocent, or it could indicate
+    //problems in multi-threaded user-code. Better disallow and give an error:
+    mcpl_error("mcpl_get_empty_particle must not be called more than once per output file");
+  } else {
+    f->puser = (mcpl_particle_t*)calloc(sizeof(mcpl_particle_t),1);
+  }
+  return f->puser;
+}
+
 void mcpl_close_outfile(mcpl_outfile_t of)
 {
   MCPLIMP_OUTFILEDECODE;
@@ -3040,17 +3063,47 @@ void mcpl_close_outfile(mcpl_outfile_t of)
   fclose(f->file);
   free(f->filename);
   free(f->psp);
+  free(f->puser);
   free(f);
 }
 
-void mcpl_closeandgzip_outfile(mcpl_outfile_t of)
+void mcpl_transfer_metadata(mcpl_file_t source, mcpl_outfile_t target)
+{
+  mcpl_hdr_set_srcname(target,mcpl_hdr_srcname(source));
+  for (unsigned i = 0; i < mcpl_hdr_ncomments(source); ++i)
+    mcpl_hdr_add_comment(target,mcpl_hdr_comment(source,i));
+  const char** blobkeys = mcpl_hdr_blobkeys(source);
+  if (blobkeys) {
+    int nblobs = mcpl_hdr_nblobs(source);
+    uint32_t ldata;
+    const char * data;
+    for (int i = 0; i < nblobs; ++i) {
+      int res = mcpl_hdr_blob(source,blobkeys[i],&ldata,&data);
+      assert(res);//key must exist
+      (void)res;
+      mcpl_hdr_add_data(target, blobkeys[i], ldata, data);
+    }
+  }
+  if (mcpl_hdr_has_userflags(source))
+    mcpl_enable_userflags(target);
+  if (mcpl_hdr_has_polarisation(source))
+    mcpl_enable_polarisation(target);
+  if (mcpl_hdr_has_doubleprec(source))
+    mcpl_enable_doubleprec(target);
+  int32_t updg = mcpl_hdr_universel_pdgcode(source);
+  if (updg)
+    mcpl_enable_universal_pdgcode(target,updg);
+}
+
+int mcpl_closeandgzip_outfile_rc(mcpl_outfile_t of)
 {
   MCPLIMP_OUTFILEDECODE;
   char * filename = f->filename;
   f->filename = 0;//prevent free in mcpl_close_outfile
   mcpl_close_outfile(of);
-  mcpl_gzip_file(filename);
+  int rc = mcpl_gzip_file_rc(filename);
   free(filename);
+  return rc;
 }
 
 typedef struct {
@@ -3823,11 +3876,12 @@ int mcpl_tool_usage( char** argv, const char * errmsg ) {
   printf("Usage:\n");
   printf("  %s [dump-options] FILE\n",progname);
   printf("  %s --merge [merge-options] FILE1 FILE2\n",progname);
+  printf("  %s --extract [extract-options] FILE1 FILE2\n",progname);
   printf("  %s --repair FILE\n",progname);
   printf("  %s --version\n",progname);
   printf("  %s --help\n",progname);
   printf("\n");
-  printf("Dump Options:\n");
+  printf("Dump options:\n");
   printf("  By default include the info in the FILE header plus the first ten contained\n");
   printf("  particles. Modify with the following options:\n");
   assert(MCPLIMP_TOOL_DEFAULT_NLIMIT==10);
@@ -3838,13 +3892,17 @@ int mcpl_tool_usage( char** argv, const char * errmsg ) {
   printf("  -sN             : Skip past the first N particles in the file (default %i).\n",MCPLIMP_TOOL_DEFAULT_NSKIP);
   printf("  -bKEY           : Dump binary blob stored under KEY to standard output.\n");
   printf("\n");
-  printf("Merge Options:\n");
+  printf("Merge options:\n");
   printf("  -m, --merge FILE1 FILE2\n");
   printf("                    Appends the particle contents in FILE2 to the end of FILE1.\n");
-  printf("                    Note that this will fail unless FILE1 and FILE2 have iden-\n");
-  printf("                    tical headers (but see option --ignore below).\n");
-  printf("  -i, --ignore      Ignore comments and binary blobs in FILE2. This allows some\n");
-  printf("                    otherwise forbidden merges, but some info might get lost.\n");
+  printf("                    Note that this will fail unless FILE1 and FILE2 have compa-\n");
+  printf("                    tible headers.\n");
+  printf("\n");
+  printf("Extract options:\n");
+  printf("  -e, --extract FILE1 FILE2\n");
+  printf("                    Extracts particles from FILE1 into a new FILE2.\n");
+  printf("  -lN, -sN          Select range of particles in FILE1 (as above).\n");
+  printf("  -pPDGCODE         select particles of type given by PDGCODE.\n");
   printf("\n");
   printf("Other options:\n");
   printf("  -r, --repair FILE\n");
@@ -3856,16 +3914,47 @@ int mcpl_tool_usage( char** argv, const char * errmsg ) {
   return 0;
 }
 
+int mcpl_str2int(const char* str, size_t len, int64_t* res)
+{
+  //portable 64bit str2int with error checking (only INT64_MIN might not be
+  //possible to specify).
+  *res = 0;
+  if (!len)
+    len=strlen(str);
+  if (!len)
+    return 0;
+  int sign = 1;
+  if (str[0]=='-') {
+    sign = -1;
+    len -= 1;
+    str += 1;
+  }
+  int64_t tmp = 0;
+  for (size_t i=0; i<len; ++i) {
+    if (str[i]<'0'||str[i]>'9') {
+      return 0;
+    }
+    int64_t prev = tmp;
+    tmp *= 10;
+    tmp += str[i] - '0';
+    if (prev>=tmp)
+      return 1;//overflow (hopefully it did not trigger a signal or FPE)
+  }
+  *res = sign * tmp;
+  return 1;
+}
+
 int mcpl_tool(int argc,char** argv) {
   const char * filename1 = 0;
   const char * filename2 = 0;
   const char * blobkey = 0;
+  const char * pdgcode_str = 0;
   int opt_justhead = 0;
   int opt_nohead = 0;
   int64_t opt_num_limit = -1;
   int64_t opt_num_skip = -1;
   int opt_merge = 0;
-  int opt_ignore = 0;
+  int opt_extract = 0;
   int opt_repair = 0;
   int opt_version = 0;
 
@@ -3893,18 +3982,26 @@ int mcpl_tool(int argc,char** argv) {
           blobkey = a+j+1;
           break;
         }
+        if (a[j]=='p') {
+          if (pdgcode_str)
+            return mcpl_tool_usage(argv,"-p specified more than once");
+          if (j+1==n)
+            return mcpl_tool_usage(argv,"Missing argument for -p");
+          pdgcode_str = a+j+1;
+          break;
+        }
+
         switch(a[j]) {
           case 'h': return mcpl_tool_usage(argv,0);
           case 'j': opt_justhead = 1; break;
           case 'n': opt_nohead = 1; break;
           case 'm': opt_merge = 1; break;
-          case 'i': opt_ignore = 1; break;
+          case 'e': opt_extract = 1; break;
           case 'r': opt_repair = 1; break;
           case 'v': opt_version = 1; break;
           case 'l': consume_digit = &opt_num_limit; break;
           case 's': consume_digit = &opt_num_skip; break;
           default:
-            printf("%c\n",a[j]);
             return mcpl_tool_usage(argv,"Unrecognised option");
         }
         if (consume_digit) {
@@ -3920,7 +4017,7 @@ int mcpl_tool(int argc,char** argv) {
       const char * lo_justhead = "justhead";
       const char * lo_nohead = "nohead";
       const char * lo_merge = "merge";
-      const char * lo_ignore = "ignore";
+      const char * lo_extract = "extract";
       const char * lo_repair = "repair";
       const char * lo_version = "version";
       //Use strstr instead of "strcmp(a,"--help")==0" to support shortened
@@ -3929,7 +4026,7 @@ int mcpl_tool(int argc,char** argv) {
       else if (strstr(lo_justhead,a)==lo_justhead) opt_justhead = 1;
       else if (strstr(lo_nohead,a)==lo_nohead) opt_nohead = 1;
       else if (strstr(lo_merge,a)==lo_merge) opt_merge = 1;
-      else if (strstr(lo_ignore,a)==lo_ignore) opt_ignore = 1;
+      else if (strstr(lo_extract,a)==lo_extract) opt_extract = 1;
       else if (strstr(lo_repair,a)==lo_repair) opt_repair = 1;
       else if (strstr(lo_version,a)==lo_version) opt_version = 1;
       else return mcpl_tool_usage(argv,"Unrecognised option");
@@ -3943,10 +4040,17 @@ int mcpl_tool(int argc,char** argv) {
       return mcpl_tool_usage(argv,"Bad arguments");
     }
   }
-  int number_dumpopts = (opt_justhead + opt_nohead + (opt_num_limit!=-1) + (opt_num_skip!=-1) + (blobkey!=0));
+
+  if ( opt_extract==0 && pdgcode_str )
+    return mcpl_tool_usage(argv,"-p can only be used with --extract.");
+
+  int number_dumpopts = (opt_justhead + opt_nohead + (blobkey!=0));
+  if (opt_extract==0)
+    number_dumpopts += (opt_num_limit!=-1) + (opt_num_skip!=-1);
   int any_dumpopts = number_dumpopts != 0;
-  int any_mergeopts = (opt_merge + opt_ignore)!=0;
-  if (any_dumpopts+any_mergeopts+opt_repair+opt_version>1)
+  int any_extractopts = (opt_extract!=0||pdgcode_str!=0);
+  int any_mergeopts = (opt_merge!=0);
+  if (any_dumpopts+any_mergeopts+any_extractopts+opt_repair+opt_version>1)
     return mcpl_tool_usage(argv,"Conflicting options specified.");
 
   if (blobkey&&(number_dumpopts>1))
@@ -3955,23 +4059,66 @@ int mcpl_tool(int argc,char** argv) {
   if (opt_version) {
     if (filename1)
       return mcpl_tool_usage(argv,"Unrecognised arguments for --version.");
-    printf("MCPL version %i.%i\n",MCPL_VERSION/100,MCPL_VERSION%100);
+    printf("MCPL version %i.%i.%i\n",MCPL_VERSION_MAJOR,MCPL_VERSION_MINOR,MCPL_VERSION_PATCH);
     return 0;
   }
-
-  if (opt_ignore&&!opt_merge)
-    return mcpl_tool_usage(argv,"Use --ignore only with --merge.");
 
   if (opt_merge) {
     if (!filename2)
       return mcpl_tool_usage(argv,"Must specify two input files with --merge.");
-    if (opt_ignore)
-      return mcpl_tool_usage(argv,"--ignore is not implemented yet.");
 
     if (!mcpl_can_merge(filename1,filename2))
       return mcpl_tool_usage(argv,"Requested files are incompatible for merge as they have different header info.");
 
     mcpl_merge(filename1,filename2);
+    return 0;
+  }
+
+  if (opt_extract) {
+    if (!filename2)
+      return mcpl_tool_usage(argv,"Must specify both input and output files with --extract.");
+
+    mcpl_file_t fi = mcpl_open_file(filename1);
+    mcpl_outfile_t fo = mcpl_create_outfile(filename2);
+    mcpl_transfer_metadata(fi, fo);
+    uint64_t fi_nparticles = mcpl_hdr_nparticles(fi);
+
+    char comment[1024];
+    sprintf(comment, "mcpltool: extracted particles from file with %" PRIu64 " particles",fi_nparticles);
+    mcpl_hdr_add_comment(fo,comment);
+
+    int32_t pdgcode_select = 0;
+    if (pdgcode_str) {
+      int64_t pdgcode64;
+      if (!mcpl_str2int(pdgcode_str, 0, &pdgcode64) || pdgcode64<-2147483648 || pdgcode64>2147483647 || !pdgcode64)
+        return mcpl_tool_usage(argv,"Must specify non-zero 32bit integer as argument to -p.");
+      pdgcode_select = (int32_t)pdgcode64;
+    }
+
+    if (opt_num_skip>0)
+      mcpl_seek(fi,(uint64_t)opt_num_skip);
+
+    //uint64_t(-1) instead of UINT64_MAX to fix clang c++98 compilation
+    uint64_t left = opt_num_limit>0 ? (uint64_t)opt_num_limit : (uint64_t)-1;
+    uint64_t added = 0;
+    const mcpl_particle_t* particle;
+    while ( left-- && ( particle = mcpl_read(fi) ) ) {
+      if (pdgcode_select && pdgcode_select!= particle->pdgcode)
+        continue;
+      mcpl_add_particle(fo,particle);
+      ++added;
+    }
+
+    char *fo_filename = (char*)malloc(strlen(mcpl_outfile_filename(fo))+4);
+    fo_filename[0] = '\0';
+    strcat(fo_filename,mcpl_outfile_filename(fo));
+    if (mcpl_closeandgzip_outfile_rc(fo))
+      strcat(fo_filename,".gz");
+    mcpl_close_file(fi);
+
+    printf("MCPL: Succesfully extracted %" PRIu64 " / %" PRIu64 " particles from %s into %s\n",
+           added,fi_nparticles,filename1,fo_filename);
+    free(fo_filename);
     return 0;
   }
 
@@ -4018,6 +4165,17 @@ int mcpl_tool(int argc,char** argv) {
   return 0;
 }
 
+void mcpl_gzip_file(const char * filename)
+{
+  /* for backwards compatibility, this version simply ignores the return code */
+  mcpl_gzip_file_rc(filename);
+}
+void mcpl_closeandgzip_outfile(mcpl_outfile_t of)
+{
+  /* for backwards compatibility, this version simply ignores the return code */
+  mcpl_closeandgzip_outfile_rc(of);
+}
+
 #if defined(MCPL_HASZLIB) && !defined(Z_SOLO) && !defined(MCPL_NO_CUSTOM_GZIP)
 #  define MCPLIMP_HAS_CUSTOM_GZIP
 int _mcpl_custom_gzip(const char *file, const char *mode);//return 1 if successful, 0 if not
@@ -4030,7 +4188,7 @@ int _mcpl_custom_gzip(const char *file, const char *mode);//return 1 if successf
 #  include <sys/wait.h>
 #  include <errno.h>
 
-void mcpl_gzip_file(const char * filename)
+int mcpl_gzip_file_rc(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
   bn = bn ? bn + 1 : filename;
@@ -4058,10 +4216,11 @@ void mcpl_gzip_file(const char * filename)
       printf("MCPL: Succesfully compressed file into %s.gz\n",bn);
   } else {
     //spawned proc in which to invoke gzip
-    execlp("gzip", "gzip", "-f",filename, 0, 0);
+    execlp("gzip", "gzip", "-f",filename, (char*)0);
     printf("MCPL: execlp/gzip error: %s\n",strerror(errno));
     exit(1);
   }
+  return 1;
 }
 #else
 //Non unix-y platform (like windows). We could use e.g. windows-specific calls
@@ -4069,14 +4228,15 @@ void mcpl_gzip_file(const char * filename)
 //the system anyway, so we either resort to using zlib directly to gzip, or we
 //disable the feature and print a warning.
 #  ifndef MCPLIMP_HAS_CUSTOM_GZIP
-void mcpl_gzip_file(const char * filename)
+int mcpl_gzip_file_rc(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
   bn = bn ? bn + 1 : filename;
   printf("MCPL WARNING: Requested compression of %s to %s.gz is not supported in this build.\n",bn,bn);
+  return 0;
 }
 #  else
-void mcpl_gzip_file(const char * filename)
+int mcpl_gzip_file_rc(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
   bn = bn ? bn + 1 : filename;
@@ -4085,6 +4245,7 @@ void mcpl_gzip_file(const char * filename)
     printf("MCPL ERROR: Problems encountered while compressing file %s.\n",bn);
   else
     printf("MCPL: Succesfully compressed file into %s.gz\n",bn);
+  return 1;
 }
 #  endif
 #endif
@@ -4137,6 +4298,9 @@ int _mcpl_custom_gzip(const char *filename, const char *mode)
   return 1;
 }
 
+#endif
+#ifdef NAME
+#  undef NAME
 #endif
 /* START OF DUMP OF mz_compress.c*/
 #ifdef GZIP

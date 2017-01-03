@@ -11,13 +11,18 @@
 /*  particle state information, for interchanging and reshooting events between    */
 /*  various Monte Carlo simulation applications.                                   */
 /*                                                                                 */
-/*  Refer to the top of mcpl.c for details regarding how to build.                 */
+/*  Find more information and updates at https://mctools.github.io/mcpl/           */
+/*                                                                                 */
+/*  This file can be freely used as per the terms in the LICENSE file.             */
 /*                                                                                 */
 /*  Written by Thomas Kittelmann, 2015-2016.                                       */
 /*                                                                                 */
 /***********************************************************************************/
 
-#define MCPL_VERSION 6       /* Code version (100*MAJOR+MINOR) */
+#define MCPL_VERSION_MAJOR 1
+#define MCPL_VERSION_MINOR 0
+#define MCPL_VERSION_PATCH 0
+#define MCPL_VERSION   10000 /* (10000*MAJOR+100*MINOR+PATCH)   */
 #define MCPL_FORMATVERSION 2 /* Format version of written files */
 
 #ifdef __cplusplus
@@ -78,6 +83,12 @@ extern "C" {
 
   /* Alternatively close with (will call mcpl_gzip_file after close): */
   void mcpl_closeandgzip_outfile(mcpl_outfile_t);
+  int mcpl_closeandgzip_outfile_rc(mcpl_outfile_t);/*version returning non-zero on success*/
+
+  /* Convenience function which returns a pointer to a nulled-out particle
+     struct which can be used to edit and pass to mcpl_add_particle. It can be
+     reused and will be automatically free'd when the file is closed: */
+  mcpl_particle_t* mcpl_get_empty_particle(mcpl_outfile_t);
 
   /***********************/
   /* Reading .mcpl files */
@@ -146,6 +157,11 @@ extern "C" {
 
   /* Attempt to run gzip on a file (does not require MCPL_HASZLIB on unix): */
   void mcpl_gzip_file(const char * filename);
+  int mcpl_gzip_file_rc(const char * filename);/*version returning non-zero on success*/
+
+  /* Convenience function which transfers all settings, blobs and comments to */
+  /* outfile. Intended to make it easy to filter files via custom C code.   */
+  void mcpl_transfer_metadata(mcpl_file_t source, mcpl_outfile_t target);
 
   /******************/
   /* Error handling */
