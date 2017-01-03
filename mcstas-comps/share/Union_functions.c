@@ -359,8 +359,8 @@ Rotation rotation_matrix;      // rotation matrix of process, reported by compon
 union data_transfer_union data_transfer; // The way to reach the storage space allocated for this process (see examples in process.comp files)
 
 // probability_for_scattering_functions calculates this probability given k_i and parameters
-int (*probability_for_scattering_function)(double*,double*,union data_transfer_union);
-//                                         prop,   k_i,   ,parameters
+int (*probability_for_scattering_function)(double*,double*,union data_transfer_union,struct focus_data_struct*);
+//                                         prop,   k_i,   ,parameters               , focus data / function
 
 // A scattering_function takes k_i and parameters, returns k_f
 int (*scattering_function)(double*,double*,double*,union data_transfer_union,struct focus_data_struct*);
@@ -2869,7 +2869,7 @@ void generate_true_parents_lists(struct pointer_to_1d_int_list **parents_lists, 
   for (iterate = 0;iterate < number_of_volumes;iterate++) {
     // clear temp list
     used_elements = 0;
-    parents_lists[iterate] = malloc(sizeof(struct pointer_to_1d_int_list));
+    parents_lists[iterate] = malloc(sizeof(struct pointer_to_1d_int_list)); // allocate_list_from_temp allocates
     for (parent = 0;parent < number_of_volumes;parent++) {
         //if (on_int_list(Volumes[parent]->geometry.children,iterate))
         if (on_int_list(*true_children_lists[parent],iterate))
@@ -3079,7 +3079,10 @@ void generate_grandparents_lists(struct pointer_to_1d_int_list **grandparents_li
         on_both_int_lists(parents_lists[parents_lists[iterate]->elements[parent]],parents_lists[iterate],&common);
         // returns a pointer_to_1d_list, with all the elements that are in common.
         for (child = 0;child < common.num_elements;child++) {
-            temp_list_local.elements[used_elements++] = common.elements[child];
+            // Need to make sure the element is not already on the list
+            if (0 == on_int_list(temp_list_local,common.elements[child])) {
+              temp_list_local.elements[used_elements++] = common.elements[child];
+            }
         }
     }
       allocate_list_from_temp(used_elements,temp_list_local,grandparents_lists[iterate]);
@@ -3745,6 +3748,7 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
     struct pointer_to_1d_int_list **grandparents_lists;
     grandparents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
     generate_grandparents_lists(grandparents_lists,parents_lists,number_of_volumes,verbal);
+    printf("grandparents_lists[0]->num_elements = %d \n",grandparents_lists[0]->num_elements);
     
     // Generate version of grandparents list as it would have been if no masks were defined
     struct pointer_to_1d_int_list **grandparents_lists_no_masks;
@@ -3783,21 +3787,44 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
     // Garbage collection for temporary dynamically allocated lists. (Permanent lists freed from FINALLY)
     int iterate;
     for (iterate=0;iterate<number_of_volumes;iterate++) {
+        //printf("freeing for volume nr %d\n",iterate);
+        //printf("true_overlap_lists[iterate]->num_elements = %d \n",true_overlap_lists[iterate]->num_elements);
         if (true_overlap_lists[iterate]->num_elements > 0) free(true_overlap_lists[iterate]->elements);
+        
+        //printf("raw_overlap_lists[iterate]->num_elements = %d \n",raw_overlap_lists[iterate]->num_elements);
         if (raw_overlap_lists[iterate]->num_elements > 0) free(raw_overlap_lists[iterate]->elements);
+        
+        //printf("parents_lists[iterate]->num_elements = %d \n",parents_lists[iterate]->num_elements);
         if (parents_lists[iterate]->num_elements > 0) free(parents_lists[iterate]->elements);
+        
+        //printf("parents_lists_no_masks[iterate]->num_elements = %d \n",parents_lists_no_masks[iterate]->num_elements);
         if (parents_lists_no_masks[iterate]->num_elements > 0) free(parents_lists_no_masks[iterate]->elements);
+        
+        //printf("true_parents_lists[iterate]->num_elements = %d \n",true_parents_lists[iterate]->num_elements);
         if (true_parents_lists[iterate]->num_elements > 0) free(true_parents_lists[iterate]->elements);
+        
+        //printf("true_parents_lists_no_masks[iterate]->num_elements = %d \n",true_parents_lists_no_masks[iterate]->num_elements);
         if (true_parents_lists_no_masks[iterate]->num_elements > 0) free(true_parents_lists_no_masks[iterate]->elements);
+        
+        //printf("grandparents_lists[iterate]->num_elements = %d \n",grandparents_lists[iterate]->num_elements);
         if (grandparents_lists[iterate]->num_elements > 0) free(grandparents_lists[iterate]->elements);
+        
+        //printf("true_grandparents_lists[iterate]->num_elements = %d \n",true_grandparents_lists[iterate]->num_elements);
         if (true_grandparents_lists[iterate]->num_elements > 0) free(true_grandparents_lists[iterate]->elements);
+        
+        //printf("grandparents_lists_no_masks[iterate]->num_elements = %d \n",grandparents_lists_no_masks[iterate]->num_elements);
         if (grandparents_lists_no_masks[iterate]->num_elements > 0) free(grandparents_lists_no_masks[iterate]->elements);
+        
+        //printf("true_grandparents_lists_no_masks[iterate]->num_elements = %d \n",true_grandparents_lists_no_masks[iterate]->num_elements);
         if (true_grandparents_lists_no_masks[iterate]->num_elements > 0) free(true_grandparents_lists_no_masks[iterate]->elements);
+        
+        //printf("true_children_lists[iterate]->num_elements = %d \n",true_children_lists[iterate]->num_elements);
         if (true_children_lists[iterate]->num_elements > 0) free(true_children_lists[iterate]->elements);
     }
+    //printf("generate lists volume specific free completed\n");
     free(true_overlap_lists);free(raw_overlap_lists);free(parents_lists);free(true_parents_lists);free(true_parents_lists_no_masks);
     free(parents_lists_no_masks);free(true_grandparents_lists);free(grandparents_lists);free(grandparents_lists_no_masks);free(true_grandparents_lists_no_masks);
-    
+    //printf("generate lists free completed\n");
 };
 
 // -------------    Focusing functions   --------------------------------------------------------
@@ -3946,32 +3973,5 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
     geometry->focus_data.focusing_function = &randvec_target_circle_union;
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

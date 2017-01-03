@@ -12,7 +12,6 @@
 * Date: September 2015
 * Origin: University of Copenhagen
 * Version: $Revision: 0.1 $
-* %INSTRUMENT_SITE: Union_demos
 *
 * Simple test instrument for sample component.
 *
@@ -76,7 +75,7 @@ AT (0,0,0.1) RELATIVE source
 // Sample position
 COMPONENT beam_center = Arm()
 AT (0,-0.3,0.3) RELATIVE a1
-ROTATED (15,50,0) RELATIVE a1
+ROTATED (0,20,0) RELATIVE a1
 
 
 COMPONENT sample = Union_cylinder(radius=0.005,yheight=0.0265, priority=20,material_string="Cu")

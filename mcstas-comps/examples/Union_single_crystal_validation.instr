@@ -10,7 +10,7 @@
 * Release: McStas CVS-080208
 * Version: $Revision$
 * Modified by: EF, 
-* %INSTRUMENT_SITE: Tests_samples
+* %INSTRUMENT_SITE: Templates
 *
 * A simple Laue diffractometer
 *
@@ -26,7 +26,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Union_single_crystal_validation(comp_select=1,string material_data_file="YBaCuO.lau",sigma_inc=2.105, my_absorption_union=8.55, delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , xwidth=0.01, yheight=0.01, zdepth=0.01,unit_cell_volume=173.28,sigma_abs_sc=0,sigma_inc=2.105,x_rotation_geometry=0,y_rotation_geometry=0,x_rotation_geometry_ref=0,y_rotation_geometry_ref=0,x_rotation_process=0,y_rotation_process=0,geometry_interact=0,PG=0,powder=0)
+DEFINE INSTRUMENT templateLaue(comp_select=1,string material_data_file="YBaCuO.lau",sigma_inc=2.105, my_absorption_union=8.55, delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , xwidth=0.01, yheight=0.01, zdepth=0.01,unit_cell_volume=173.28,sigma_abs_sc=0,sigma_inc=2.105,x_rotation_geometry=0,y_rotation_geometry=0,x_rotation_geometry_ref=0,y_rotation_geometry_ref=0,x_rotation_process=0,y_rotation_process=0,geometry_interact=0,PG=0,powder=0)
 
 DECLARE
 %{
@@ -45,25 +45,12 @@ COMPONENT Single_crystal_test_process = Single_crystal_process(
           ax = 3.8186, ay = 0,      az = 0,
           bx = 0,      by = 3.8843, bz = 0,
           cx = 0,      cy = 0,      cz = 11.6777,
-          reflections="YBaCuO.lau",barns=0,packing_factor=1,powder=powder,PG=PG)
+          reflections=material_data_file,barns=0,packing_factor=1,powder=powder,PG=PG)
 AT (0,0,0) ABSOLUTE
 ROTATED (x_rotation_process,y_rotation_process,0) ABSOLUTE
 
-/*
-COMPONENT Single_crystal_test_process_twin = Single_crystal_process(
-          delta_d_d=delta_d_d, mosaic = mosaic,
-          ax = 3.8186, ay = 0,      az = 0,
-          bx = 0,      by = 3.8843, bz = 0,
-          cx = 0,      cy = 0,      cz = 11.6777,
-          reflections="YBaCuO.lau",barns=0,packing_factor=0.5)
-AT (0,0,0) ABSOLUTE
-ROTATED (-x_rotation_process,-y_rotation_process,0) ABSOLUTE
-*/
-
 COMPONENT test_material = Union_make_material(my_absorption=my_absorption_union,
-  process_string="Single_crystal_test_process,Single_crystal_test_process_twin,Incoherent_process")
-  //process_string="Single_crystal_test_process")
-  //process_string="Incoherent_process")
+  process_string="Single_crystal_test_process,Incoherent_process")
 AT (0,0,0) ABSOLUTE
 
 
@@ -78,13 +65,6 @@ AT (0,0,0) ABSOLUTE
 COMPONENT slit = Slit(
   xwidth=0.01, yheight=0.01)
 AT (0,0,5) RELATIVE source
-
-
-/*
-COMPONENT box_sample_union = Union_box(xwidth=xwidth, yheight=yheight, zdepth=zdepth, priority=1, material_string="test_material",p_interact=geometry_interact)
-AT (0,0,0.1) RELATIVE slit
-ROTATED (x_rotation_geometry,0,0) RELATIVE slit
-*/
 
 COMPONENT cylinder_sample_union = Union_cylinder(radius=xwidth,yheight=yheight, priority=1, material_string="test_material",p_interact=geometry_interact)
 AT (0,0,0.1) RELATIVE slit

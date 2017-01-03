@@ -12,7 +12,6 @@
 * Date: September 2015
 * Origin: University of Copenhagen
 * Version: $Revision: 0.1 $
-* %INSTRUMENT_SITE: Union_demos
 *
 * Simple test instrument for sample component.
 *
@@ -261,7 +260,7 @@ AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
 
-COMPONENT test_sample_after = Union_master()
+COMPONENT test_sample_after = Union_master(allow_inside_start=1)
 AT(0,0,0) RELATIVE beam_center
 ROTATED(0,0,0) RELATIVE beam_center
 EXTEND
@@ -288,7 +287,4 @@ AT (0,-0.02,0.4) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
 
-
-
 END
-

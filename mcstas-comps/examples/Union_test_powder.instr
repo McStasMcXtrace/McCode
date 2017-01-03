@@ -12,7 +12,6 @@
 * Date: September 2015
 * Origin: University of Copenhagen
 * Version: $Revision: 0.1 $
-* %INSTRUMENT_SITE: Union_demos
 *
 * Simple test instrument for sample component.
 *
@@ -28,10 +27,6 @@ DEFINE INSTRUMENT test()
 
 DECLARE
 %{
-int scattered_1;
-int scattered_2;
-int sample_1_index = 22;
-int sample_2_index = 6;
 %}
 
 TRACE
@@ -75,40 +70,11 @@ ROTATED (0,0,0) RELATIVE beam_center
 COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE beam_center
 ROTATED(0,0,0) RELATIVE beam_center
-EXTEND
-%{
-	//if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
-	//if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
-	
-    // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
-%}
-
-
-// COMPONENT small_detector = PSD_monitor(xwidth=0.04, yheight=0.06, nx=100, ny=100, filename="absoprtion_picture.dat", restore_neutron=0)
-  // AT (0,0,0) RELATIVE detector_position
-  // ROTATED (0,0,0) RELATIVE detector_position
-
 
 COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",restore_neutron=1)
   AT (0, 0, 0) RELATIVE beam_center
 
-/*
-COMPONENT m4pi_1 = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_1",restore_neutron=1) WHEN (scattered_1)
-  AT (0, 0, 0) RELATIVE beam_center
 
-COMPONENT m4pi_2 = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_2",restore_neutron=1) WHEN (scattered_2)
-  AT (0, 0, 0) RELATIVE beam_center
-
-COMPONENT arm_1 = Arm()
-  AT (0, 0, 0) RELATIVE beam_center
-EXTEND
-%{
-	if (scattered_1 + scattered_2 != 2) ABSORB;
-%}
-
-COMPONENT m4pi_both = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_12") WHEN (scattered_1 && scattered_2)
-  AT (0, 0, 0) RELATIVE beam_center
-*/
 
 
 

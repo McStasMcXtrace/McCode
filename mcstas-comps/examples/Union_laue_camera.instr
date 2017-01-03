@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: Union_laue_camera
+* Instrument: templateLaue
 *
 * %Identification
 * Written by: K. Nielsen
@@ -26,7 +26,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Union_laue_camera(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , radius = 0.01, height=0.01,
+DEFINE INSTRUMENT templateLaue(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , radius = 0.01, height=0.01,
    x_rotation_geometry=0, y_rotation_geometry=0,
    x_rotation_geometry_ref=0, y_rotation_geometry_ref=0,
    x_rotation_process=0, y_rotation_process=0, z_rotation_process=0,
@@ -41,7 +41,7 @@ int scattered_flag_instr;
 TRACE
 
 
-COMPONENT NaCaNi2F7_incoherent = Incoherent_process(sigma=109.96035, packing_factor=1, unit_cell_volume=1086.3739, interact_fraction=-1)
+COMPONENT YBaCuO_incoherent = Incoherent_process(sigma=2.105, packing_factor=1, unit_cell_volume=173.28)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT single_crystal_orientation_110_vertical = Arm()
@@ -52,17 +52,17 @@ COMPONENT single_crystal_orientation_001_along_x = Arm()
 AT (0,0,0) ABSOLUTE
 ROTATED (0,90,0) RELATIVE single_crystal_orientation_110_vertical
 
-COMPONENT NaCaNi2F7_single_crystal = Single_crystal_process(
-          delta_d_d=1E-4, mosaic = 15,
-          ax = 10.28,  ay = 0,     az = 0,
-          bx = 0,      by = 10.28, bz = 0,
-          cx = 0,      cy = 0,     cz = 10.28,
-          reflections="NaCaNi2F7.lau",barns=0,packing_factor=1,powder=0,PG=0)
+COMPONENT YBaCuO_single_crystal = Single_crystal_process(
+          delta_d_d=1e-4, mosaic = 15,
+          ax = 3.8186, ay = 0,      az = 0,
+          bx = 0,      by = 3.8843, bz = 0,
+          cx = 0,      cy = 0,      cz = 11.6777,
+          reflections="YBaCuO.lau",barns=0,packing_factor=1)
 AT (0,0,0) ABSOLUTE
 ROTATED (x_rotation_process,y_rotation_process,z_rotation_process) ABSOLUTE
 
-COMPONENT NaCaNi2F7 = Union_make_material(my_absorption=100*87.73759/1086.3739,
-  process_string="NaCaNi2F7_incoherent,NaCaNi2F7_single_crystal")
+COMPONENT YBaCuO = Union_make_material(my_absorption=100*87.73759/1086.3739,
+  process_string="YBaCuO_incoherent,YBaCuO_single_crystal")
 AT (0,0,0) ABSOLUTE
 
 
@@ -79,7 +79,7 @@ COMPONENT slit = Slit(
 AT (0,0,5) RELATIVE source
 
 
-COMPONENT cylinder_sample_union = Union_cylinder(radius=radius,yheight=height, priority=1, material_string="NaCaNi2F7",p_interact=geometry_interact)
+COMPONENT cylinder_sample_union = Union_cylinder(radius=radius,yheight=height, priority=1, material_string="YBaCuO",p_interact=geometry_interact)
 AT (0,0,0.1) RELATIVE slit
 ROTATED (x_rotation_geometry,y_rotation_geometry,0) RELATIVE slit
 
