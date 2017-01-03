@@ -1,0 +1,128 @@
+(thki@tklenovo2014 tomcstas)> ll
+total 68
+-rw-rw-r--. 1 thki thki 45130 Sep  4 16:16 mcpl.c
+-rw-rw-r--. 1 thki thki  7092 Sep  5 10:22 mcpl.h
+-rw-rw-r--. 1 thki thki   990 Sep  5 10:22 readexample.c
+-rw-rw-r--. 1 thki thki    86 Sep  5 10:24 tool.c
+-rw-rw-r--. 1 thki thki  3122 Sep  5 10:22 writeexample.c
+
+(thki@tklenovo2014 tomcstas)> gcc -std=c99 mcpl.c writeexample.c -o writeexample
+
+(thki@tklenovo2014 tomcstas)> gcc -std=c99 mcpl.c readexample.c -o readexample
+
+(thki@tklenovo2014 tomcstas)> gcc -std=c99 mcpl.c tool.c -o mcpltool
+
+(thki@tklenovo2014 tomcstas)> ./writeexample
+Please supply output filename
+
+(thki@tklenovo2014 tomcstas)> ./writeexample lala.mcpl
+
+(thki@tklenovo2014 tomcstas)> ll lala.mcpl
+-rw-rw-r--. 1 thki thki 32105 Sep  5 10:24 lala.mcpl
+
+(thki@tklenovo2014 tomcstas)> hexdump -C  lala.mcpl
+00000000  4d 43 50 4c 30 30 31 4c  e8 03 00 00 00 00 00 00  |MCPL001L........|
+00000010  02 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000020  01 00 00 00 40 08 00 00  20 00 00 00 00 00 00 00  |....@... .......|
+00000030  10 00 00 00 46 61 6b 65  4d 63 53 74 61 73 2d 76  |....FakeMcStas-v|
+00000040  32 2e 32 61 0d 00 00 00  53 6f 6d 65 20 63 6f 6d  |2.2a....Some com|
+00000050  6d 65 6e 74 2e 10 00 00  00 41 6e 6f 74 68 65 72  |ment.....Another|
+00000060  20 63 6f 6d 6d 65 6e 74  2e 8b 16 d7 4e 8f ec 49  | comment....N..I|
+00000070  4e 31 79 c8 4e 91 66 cc  4e b9 61 e9 4e e8 4a ca  |N1y.N.f.N.a.N.J.|
+00000080  4d 51 a2 2b 4e b2 aa c4  4e 7d 38 0e 4e fa d0 8d  |MQ.+N...N}8.N...|
+00000090  4e 63 6d 74 4e af fd a0  4e 08 c5 3a 4e 3e 6e 83  |NcmtN...N..:N>n.|
+<<snip>>
+
+(thki@tklenovo2014 tomcstas)> ./mcpltool lala.mcpl 
+Opened MCPL file lala.mcpl:
+
+  Basic info
+    Format             : MCPL-1
+    No. of particles   : 1000
+    Header storage     : 105 bytes
+    Data storage       : 32000 bytes
+
+  Custom meta data
+    Source             : "FakeMcStas-v2.2a"
+    Number of comments : 2
+          -> comment 0 : "Some comment."
+          -> comment 1 : "Another comment."
+    Number of blobs    : 0
+
+  Particle data format
+    User flags         : no
+    Polarisation info  : no
+    Fixed part. type   : yes (pdgcode 2112)
+    FP precision       : single
+    Endianness         : little
+    Storage            : 32 bytes/particle
+
+index pdgcode     x[cm]     y[cm]     z[cm]   vx[m/s]   vy[m/s]   vz[m/s]  time[ms]    weight
+    0    2112 1.80429e+09 8.46931e+08 1.68169e+09 1.71464e+09 1.95775e+09 4.24238e+08 7.19885e+08 1.64976e+09
+    1    2112 5.96517e+08 1.18964e+09 1.0252e+09 1.35049e+09 7.83369e+08 1.10252e+09 2.0449e+09 1.96751e+09
+    2    2112 1.36518e+09 1.54038e+09 3.04089e+08 1.30346e+09 3.50052e+07 5.21595e+08 2.94703e+08 1.72696e+09
+    3    2112 3.36466e+08 8.61022e+08 2.78723e+08 2.33665e+08 2.14517e+09 4.68703e+08 1.10151e+09 1.80198e+09
+    4    2112 1.31563e+09 6.35723e+08 1.36913e+09 1.1259e+09 1.05996e+09 2.08902e+09 6.28175e+08 1.65648e+09
+    5    2112 1.13118e+09 1.65338e+09 8.59484e+08 1.91454e+09 6.08414e+08 7.56899e+08 1.73458e+09 1.97359e+09
+    6    2112 1.49798e+08 2.03866e+09 1.12957e+09 1.84804e+08 4.12776e+08 1.42427e+09 1.91176e+09 7.49242e+08
+    7    2112 1.37807e+08 4.29992e+07 9.82907e+08 1.35497e+08 5.11702e+08 2.08442e+09 1.93748e+09 1.82734e+09
+    8    2112 5.7266e+08 1.15913e+09 8.05751e+08 1.63262e+09 1.10066e+09 1.43393e+09 1.14162e+09 8.43539e+07
+    9    2112 9.3982e+08 2.0011e+09 1.9989e+09 1.54823e+09 6.10515e+08 1.58599e+09 1.37434e+09 7.60314e+08
+
+(thki@tklenovo2014 tomcstas)> ./readexample
+Please supply input filename
+
+(thki@tklenovo2014 tomcstas)> ./readexample lala.mcpl
+Opened MCPL file produced with FakeMcStas-v2.2a
+file had comment: 'Some comment.'
+file had comment: 'Another comment.'
+File containts 1000 particles
+  found particle with pdgcode 2112 and time-stamp 7.19885e+08 ms with weight 1.64976e+09
+  found particle with pdgcode 2112 and time-stamp 2.0449e+09 ms with weight 1.96751e+09
+  found particle with pdgcode 2112 and time-stamp 2.94703e+08 ms with weight 1.72696e+09
+  found particle with pdgcode 2112 and time-stamp 1.10151e+09 ms with weight 1.80198e+09
+  found particle with pdgcode 2112 and time-stamp 6.28175e+08 ms with weight 1.65648e+09
+  found particle with pdgcode 2112 and time-stamp 1.73458e+09 ms with weight 1.97359e+09
+  found particle with pdgcode 2112 and time-stamp 1.91176e+09 ms with weight 7.49242e+08
+  found particle with pdgcode 2112 and time-stamp 1.93748e+09 ms with weight 1.82734e+09
+  found particle with pdgcode 2112 and time-stamp 1.14162e+09 ms with weight 8.43539e+07
+  found particle with pdgcode 2112 and time-stamp 1.37434e+09 ms with weight 7.60314e+08
+<<snip>>
+
+(thki@tklenovo2014 tomcstas)> ./mcpltool -h
+Tool for inspecting or modifying Monte Carlo Particle List (.mcpl) files.
+
+The default behaviour is to display the contents of the FILE in human readable
+format (see Dump Options below for how to modify what is displayed).
+
+Usage:
+  mcpltool [dump-options] FILE
+  mcpltool --merge [merge-options] FILE1 FILE2
+  mcpltool --repair FILE
+  mcpltool --version
+  mcpltool --help
+
+Dump Options:
+  By default include the info in the FILE header plus the first ten contained
+  particles. Modify with the following options:
+  -j, --justhead  : Dump just header info and no particle info.
+  -n, --nohead    : Dump just particle info and no header info.
+  -lN             : Dump up to N particles from the file (default 10). You
+                    can specify -l0 to disable this limit.
+  -sN             : Skip past the first N particles in the file (default 0).
+
+Merge Options:
+  -m, --merge FILE1 FILE2
+                    Appends the particle contents in FILE2 to the end of FILE1.
+                    Note that this will fail unless FILE1 and FILE2 have iden-
+                    tical headers (but see option --ignore below).
+  -i, --ignore      Ignore comments and binary blobs in FILE2. This allows some
+                    otherwise forbidden merges, but some info might get lost.
+
+Other options:
+  -r, --repair FILE
+                    Attempt to repair FILE which was not properly closed, by up-
+                    dating the file header with the correct number of particles.
+  -v, --version   : Display version of MCPL installation.
+  -h, --help      : Display this usage information (ignores all other options).
+
