@@ -70,31 +70,10 @@ def add_mcrun_options(parser):
         metavar='NB_CPU',
         help='spread simulation over NB_CPU machines using MPI')
 
-    add('--machines',
-        metavar='FILE',
-        help='read machine names from FILE (MPI/grid)')
-
-    add('--slave',
-        metavar='HOST',
-        help='execute simulation on distant HOST (SSH grid)')
-
     # Optimisation
-    add('--optimise',
-        metavar='COMP',
-        help='Add COMP to the list of monitors to maximise '
-             '(optimisation criteria, requires Math::Amoeba)')
-
-    add('--optimise-all',
-        action='store_true', default=False,
-        help='Maximise all monitors')
-
-    add('--optimise-prec',
-        metavar='PREC', type=float, default=1e-3,
-        help='relative requested accuracy of criteria (default: 1e-3)')
-
     add('--optimise-file',
         metavar='FILE',
-        help='store optimisation results in FILE '
+        help='store scan results in FILE '
              '(defaults to: "mccode.dat")')
 
     # Misc options
