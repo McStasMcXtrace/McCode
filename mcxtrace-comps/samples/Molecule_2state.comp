@@ -41,7 +41,6 @@
 * delta_t:       (s) Delay between the exciting event t=0. delay is negative, i.e. delta_t>0 means the exciting event happens before t=0.
 * excitation_yield: ( ) Mean fraction of molecules that get excited.
 * t_relax:       (s) Mean relaxation time (into state 0) of excited molecules.
-* initial_state: ( ) The state of the molecule for t<0.
 * psimin:         (rad) Minimum scattering angle off the optical axis.
 * psimax:         (rad) Maximum scattering angle off the optical axis.
 * etamin:         (rad) Minimum scattering angle around the optical axis.
