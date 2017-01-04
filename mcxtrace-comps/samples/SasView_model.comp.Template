@@ -143,7 +143,7 @@ SETTING PARAMETERS (
 OUTPUT PARAMETERS ( 
     my_a_v, 
     shape)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DEPENDENCY "-std=c99"
 
 DECLARE
@@ -166,7 +166,7 @@ INITIALIZE
   else if (radius > 0 && !yheight)  
     shape=2; 
   if (shape < 0) 
-    exit(fprintf(stderr, "Sans_spheres: %s: sample has invalid dimensions.\n"
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
                          "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
   
   /* now compute target coords if a component index is supplied */
@@ -184,7 +184,7 @@ INITIALIZE
       NAME_CURRENT_COMP);
     target_z=1;
   }
-
+/*TODO fix absorption*/
   my_a_v = model_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
 %}
 
@@ -196,49 +196,50 @@ TRACE
   double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz;
   char intersect=0;
 
-  /* Intersection neutron trajectory / sample (sample surface) */
+  /*TODO convert to photons/lengths*/
+  /* Intersection photon trajectory / sample (sample surface) */
   if (shape == 0)
-    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight);
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, kx, ky, kz, radius, yheight);
   else if (shape == 1)
-    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+    intersect = box_intersect(&t0, &t1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
   else if (shape == 2)
-    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius);
+    intersect = sphere_intersect(&t0, &t1, x, y, z, kx, ky, kz, radius);
   if(intersect)
   {
     if(t0 < 0)
       ABSORB;
     
-    /* Neutron enters at t=t0. */
-    v = sqrt(vx*vx + vy*vy + vz*vz);
-    l_full = v * (t1 - t0);          /* Length of full path through sample */
+    /* Photon enters at t=t0. */
+    v = sqrt(kx*kx + ky*ky + kz*kz);
+    l_full = (t1 - t0);          /* Length of full path through sample */
     dt = rand01()*(t1 - t0) + t0;    /* Time of scattering */
-    PROP_DT(dt);                     /* Point of scattering */
-    l = v*(dt-t0);                   /* Penetration in sample */
+    PROP_DL(dt);                     /* Point of scattering */
+    l = (dt-t0);                   /* Penetration in sample */
 
-    vx_i=vx;
-    vy_i=vy;
-    vz_i=vz;
+    vx_i=kx;
+    vy_i=ky;
+    vz_i=kz;
     if ((target_x || target_y || target_z)) {
       aim_x = target_x-x;            /* Vector pointing at target (anal./det.) */
       aim_y = target_y-y;
       aim_z = target_z-z;
     }
     if(focus_aw && focus_ah) {
-      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+      randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
         aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
     } else if(focus_xw && focus_yh) {
-      randvec_target_rect(&vx, &vy, &vz, &solid_angle,
+      randvec_target_rect(&kx, &ky, &kz, &solid_angle,
         aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
     } else {
-      randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+      randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
     }
-    NORM(vx, vy, vz);
-    vx *= v;
-    vy *= v;
-    vz *= v;
-    qx = V2K*(vx_i-vx);
-    qy = V2K*(vy_i-vy);
-    qz = V2K*(vz_i-vz);
+    NORM(kx, ky, kz);
+    kx *= v;
+    ky *= v;
+    kz *= v;
+    qx = (vx_i-kx);
+    qy = (vy_i-ky);
+    qz = (vz_i-kz);
     q = sqrt(qx*qx+qy*qy+qz*qz);
     
     float Iq_out;
@@ -246,7 +247,7 @@ TRACE
 
     float vol;
     vol=getFormVol(model_pars_ptr);
-    // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
     
     l_1 = v*t1;
