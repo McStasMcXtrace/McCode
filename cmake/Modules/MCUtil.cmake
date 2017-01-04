@@ -28,6 +28,9 @@ endmacro()
 # Setup McCode constants using either mkdist or Git-defaults
 macro(setupMCCODE FLAVOR)
 
+  # Use .pl suffix on any platform
+  set(PERL_SUFFIX "pl")
+  
   # Check for WINDOWS
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(WINDOWS true)
