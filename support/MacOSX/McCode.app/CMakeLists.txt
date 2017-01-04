@@ -40,10 +40,15 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file(Contents/Resources/launcher.sh.in ${WORK}/launcher.sh @ONLY)
+# These two provide a method to change between running the .pl and .py launchers
+configure_file(Contents/Resources/launcher-pl.sh.in ${WORK}/launcher-pl.sh @ONLY)
+configure_file(Contents/Resources/launcher-py.sh.in ${WORK}/launcher-py.sh @ONLY)
+# This one is the one actually run by the app "droplet"
+configure_file(Contents/Resources/launcher-py.sh.in ${WORK}/launcher.sh @ONLY)
 
 exec_program(chmod ARGS 755 work/launcher.sh)
-exec_program(chmod ARGS 755 work/Contents/MacOS/droplet)
+exec_program(chmod ARGS 755 work/launcher-pl.sh)
+exec_program(chmod ARGS 755 work/launcher-py.sh)
 
 # Include the Contents subfolder...
 install (
@@ -56,7 +61,7 @@ install (
   )
 
 install(
-    FILES "${WORK}/launcher.sh"
+    FILES "${WORK}/launcher.sh" "${WORK}/launcher-py.sh" "${WORK}/launcher-pl.sh"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
     DESTINATION "Contents/Resources/"
   )
