@@ -71,12 +71,12 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-webgl-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-webgl" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-webgl-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-webgl")
 endif()
 
 # Program files
@@ -119,8 +119,8 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}display-webgl-py"
+    PROGRAMS "${WORK}/${P}display-webgl"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-webgl-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}display-webgl${DOT_PYTHON_SUFFIX}"
     )
 endif()
