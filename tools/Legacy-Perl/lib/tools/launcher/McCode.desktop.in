@@ -2,10 +2,10 @@
 
 [Desktop Entry]
 Comment=Monte-Carlo @MCCODE_PARTICLE@ instrument simulation (@FLAVOR@.org)
-Exec=@MCCODE_PREFIX@gui %F
+Exec=@MCCODE_PREFIX@gui.pl %F
 Icon=/usr/share/pixmaps/@FLAVOR@-pl.png
 MimeType=text/plain;text/x-csrc;
-Name=@NAME@ (@FLAVOR@.org)
+Name=@NAME@.pl (@FLAVOR@.org)
 StartupNotify=true
 Terminal=false
 TerminalOptions=
@@ -18,5 +18,5 @@ Actions=Help
 
 [Desktop Action Help]
 Name=Open @FLAVOR@ Help
-Exec=@MCCODE_PREFIX@doc
+Exec=@MCCODE_PREFIX@doc.pl
 OnlyShowIn=Unity;Gnome;
