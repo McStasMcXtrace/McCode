@@ -73,12 +73,12 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-pyqtgraph-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-pyqtgraph" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-pyqtgraph-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-pyqtgraph")
 endif()
 
 
@@ -121,8 +121,8 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}plot-pyqtgraph-py"
+    PROGRAMS "${WORK}/${P}plot-pyqtgraph"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}plot-pyqtgraph-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}plot-pyqtgraph${DOT_PYTHON_SUFFIX}"
     )
 endif()

@@ -75,13 +75,13 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-matplotlib-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-matplotlib" @ONLY)
 
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-matplotlib-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-matplotlib")
 endif()
 
 
@@ -107,8 +107,8 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}plot-matplotlib-py"
+    PROGRAMS "${WORK}/${P}plot-matplotlib"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}plot-matplotlib-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}plot-matplotlib${DOT_PYTHON_SUFFIX}"
     )
 endif()
