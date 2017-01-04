@@ -63,12 +63,12 @@ if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py")
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/${P}run-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/${P}run")
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
 
 if(WINDOWS)
   install(
@@ -106,12 +106,12 @@ if(NOT WINDOWS)
   )
 
   add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run-py"
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run"
     )
 
   install(
-    PROGRAMS "${WORK}/${P}run-py"
+    PROGRAMS "${WORK}/${P}run"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}run-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}run${DOT_PYTHON_SUFFIX}"
     )
 endif()
