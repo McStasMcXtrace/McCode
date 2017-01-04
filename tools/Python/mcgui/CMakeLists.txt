@@ -75,7 +75,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 
 # Configure launcher
 configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
@@ -83,7 +83,7 @@ configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui")
 endif()
 
 
@@ -124,13 +124,13 @@ if(NOT WINDOWS)
   )
 
   add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui-py"
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui"
     )
 
   install(
-    PROGRAMS "${WORK}/${P}gui-py"
+    PROGRAMS "${WORK}/${P}gui"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}gui-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}gui${DOT_PYTHON_SUFFIX}"
     )
 
   install(

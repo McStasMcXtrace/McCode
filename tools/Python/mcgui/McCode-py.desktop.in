@@ -2,10 +2,10 @@
 
 [Desktop Entry]
 Comment=Monte-Carlo @MCCODE_PARTICLE@ instrument simulation (@FLAVOR@.org)
-Exec=@MCCODE_PREFIX@gui-py %F
+Exec=@MCCODE_PREFIX@gui %F
 Icon=/usr/share/pixmaps/@FLAVOR@-py.png
 MimeType=text/plain;text/x-csrc;
-Name=@NAME@-py (@FLAVOR@.org)
+Name=@NAME@ (@FLAVOR@.org)
 StartupNotify=true
 Terminal=false
 TerminalOptions=
@@ -18,7 +18,7 @@ Actions=Help
 
 [Desktop Action Help]
 Name=Open @FLAVOR@ Help
-Exec=@MCCODE_PREFIX@doc
+Exec=@MCCODE_PREFIX@doc.pl
 OnlyShowIn=Unity;Gnome;
 
 
