@@ -158,7 +158,7 @@ class McView(object):
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(self.mw, prefix+'gui-py: About', text)
+        QtGui.QMessageBox.about(self.mw, prefix+'gui: About', text)
 
 
 ''' Main Window widgets wrapper class
@@ -202,6 +202,13 @@ class McMainWindow(QtGui.QMainWindow):
             for j in range(len(instrs)):
                 action = menu.addAction(instrs[j])
                 action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
+
+    def add_conf_menu(self):
+        confmenu = QtGui.QAction(self)
+        self.ui.menuFile.addAction(confmenu)
+        confmenu.setText(QtGui.QApplication.translate("MainWindow", "Configuration", None, QtGui.QApplication.UnicodeUTF8))
+        confmenu.setToolTip(QtGui.QApplication.translate("MainWindow", "mccode configuration", None, QtGui.QApplication.UnicodeUTF8))
+        return confmenu
 
     def closeEvent(self, event):
         ''' allow close down only if editor window did not reject '''

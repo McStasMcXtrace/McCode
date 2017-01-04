@@ -745,7 +745,10 @@ class McGuiAppController():
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
-        
+        # On macOS add a copy of the configuration menu to File
+        if sys.platform == 'darwin':
+            self.view.mw.add_conf_menu().triggered.connect(self.handleConfiguration)
+            
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
         mwui.btnEdit.clicked.connect(self.handleEditInstrument)
