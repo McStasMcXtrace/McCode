@@ -220,7 +220,7 @@ class InstrObjectConstructor:
     def __init__(self, parsetreeroot):
         self.root = parsetreeroot
         if (type(self.root) is not Node) or (self.root.type != 'instrdeftree'):
-            raise Exception('TraceObjectConstructor: parsetreeroot must be a Node of type "instrdeftree"')
+            raise Exception('InstrObjectConstructor: parsetreeroot must be a Node of type "instrdeftree"')
     
     def build_instr(self):
         ''' builds and returns the instrument representation object '''

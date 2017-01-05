@@ -65,6 +65,8 @@ class McDisplayReader(object):
         instrbuilder = InstrObjectConstructor(instrparser.parsetree)
         instrument = instrbuilder.build_instr()
         
+        instrument.set_cmd(self.cmd)
+        
         return instrument
     
     def read_particles(self):

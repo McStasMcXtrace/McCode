@@ -16,7 +16,7 @@ class InstrumentSpecific(object):
         self.rays = []
         self.cmd = None
     
-    def setCmd(self, cmd):
+    def set_cmd(self, cmd):
         self.cmd = cmd
     
     def get_boundingbox(self, first=None, last=None):
@@ -478,6 +478,7 @@ class DrawLine(DrawCommand):
     ''' '''
     point_1 = None
     point_2 = None
+    points = None
     # x_1, y_1, z_1, x_2, y_2, z_2
     def __init__(self, args):
         super(DrawLine, self).__init__(args)
@@ -491,11 +492,14 @@ class DrawLine(DrawCommand):
             self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
             self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
             self.args = args
+        
+        self.points = [point_1, point_2]
 
 class DrawDashedLine(DrawCommand):
     ''' '''
     point_1 = None
     point_2 = None
+    points = None
     # x_1, y_1, z_1, x_2, y_2, z_2
     def __init__(self, args):
         super(DrawDashedLine, self).__init__(args)
@@ -503,10 +507,12 @@ class DrawDashedLine(DrawCommand):
         
         self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
+        
+        self.points = [point_1, point_2]
 
 class DrawMultiline(DrawCommand):
     ''' '''
-    points = []
+    points = None
     def __init__(self, args):
         super(DrawMultiline, self).__init__(args)
         self.key = 'multiline'
@@ -630,6 +636,13 @@ class Vector3d(object):
     
     def to_args_str(self):
         return '%s, %s, %s' % (str(self.x), str(self.y), str(self.z))
+    
+    def __getitem__(self, idx):
+        ''' support get by index '''
+        if idx == 0: return self.x
+        elif idx == 1: return self.y
+        elif idx == 2: return self.z
+        else: raise Exception('Vector3d: idexing index must be in (0, 1, 2)')
 
 class Matrix3(object):
     ''' a 3x3 matrix representation '''

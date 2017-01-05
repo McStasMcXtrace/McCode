@@ -147,7 +147,6 @@ def main(args):
     # set up a pipe, read and parse the particle trace
     reader = McDisplayReader(args, n=100, dir=dirname, debug=debug)
     instrument = reader.read_instrument()
-    instrument.setCmd(reader.cmd)
     raybundle = reader.read_particles()
     
     # write output files
