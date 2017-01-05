@@ -255,17 +255,17 @@ def get_modifiers(modname):
     if modname == "ctrl-shft":
         return 100663296
 
-def clear_window_and_handlers(window):
-    ''' clears all click handlers '''
-    window.clear()
+def clear_window_and_handlers(rootui):
+    ''' clears all click handlers on "rootui" '''
+    rootui.clear()
     try:
-        window.scene.sigMouseClicked.disconnect()
+        rootui.scene.sigMouseClicked.disconnect()
     except:
         # TODO: log.DEBUG("no events to disconnect")
         pass
 
 def set_handler(scene, vn_dict, node_cb, click, modifier):
-    ''' sets a clickhadler according to input '''
+    ''' sets a clickhandler according to input '''
     
     def click_handler(event, vn_dict, node_cb, click, mod, debug=False):
         ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
