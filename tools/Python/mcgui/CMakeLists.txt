@@ -61,11 +61,11 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mclib-${MCCODE_VERSION}, python3, python3-pyqt4.qsci")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mclib-${MCCODE_VERSION}, python3, python3-pyqt4.qsci")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mclib-${MCCODE_VERSION}, python, qscintilla, PyQt4, qscintilla-python"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mclib-${MCCODE_VERSION}, python, qscintilla, PyQt4, qscintilla-python"
   )
 
 

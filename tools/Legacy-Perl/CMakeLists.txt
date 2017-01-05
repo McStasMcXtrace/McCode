@@ -65,14 +65,14 @@ endif()
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot-x11, sed, bc, libtk-codetext-perl"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot-x11, sed, bc, libtk-codetext-perl"
   )
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "freewrl")
 
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-Tk, perl-PDL, pgplot, perl-PGPLOT, gnuplot, sed, bc, libtk-codetext-perl"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, perl, perl-Tk, perl-PDL, pgplot, perl-PGPLOT, gnuplot, sed, bc, libtk-codetext-perl"
   )
 set(CPACK_RPM_SPEC_MORE_DEFINE "AutoReq: no")
 
@@ -84,12 +84,12 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Select prefix
 if(${enable_mcstas})
   set(P "mc")
-  set(SOURCENAMES daemon display doc formatgui
-      gui plot resplot run stas2vitess )
+  set(SOURCENAMES daemon display formatgui
+      gui plot resplot stas2vitess )
 else()
   set(P "mx")
-  set(SOURCENAMES daemon display doc formatgui
-      gui plot run )
+  set(SOURCENAMES daemon display formatgui
+      gui plot )
 endif()
 
 # Include mcstas-comp files
@@ -161,7 +161,7 @@ if(NOT WINDOWS)
   ) 
 
   # Generate man pages
-  set(LIST display doc gui plot run)
+  set(LIST display gui plot)
   foreach(NAME ${LIST})
 
     set(filepath "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1")

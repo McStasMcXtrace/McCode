@@ -93,11 +93,7 @@ endif()
 # Include mcstas-comp files
 foreach(NAME ${SOURCENAMES}
     )
-  if(NAME STREQUAL "display")
-    set(filename ${P}${NAME})
-  else()
-    set(filename mc${NAME})
-  endif()
+  set(filename mc${NAME})
   
   add_custom_command(
     OUTPUT "${WORK}/${P}${NAME}"
@@ -150,7 +146,7 @@ if(NOT WINDOWS)
   )
   
   # Generate man pages
-  set(LIST display doc gui plot run)
+  set(LIST doc run)
   foreach(NAME ${LIST})
 
     set(filepath "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1")

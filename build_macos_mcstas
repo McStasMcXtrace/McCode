@@ -16,6 +16,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas $1 "" "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-comps $1 "" "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_el_capitan "" -- OSXapp
