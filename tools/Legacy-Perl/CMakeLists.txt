@@ -128,10 +128,6 @@ foreach(NAME ${SOURCENAMES}
 endforeach()
 
 
-# Generate mccode_config.perl and mccode_reconfigure
-configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONLY)
-configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
-
 # Generate perl header
 configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY immediate)
 configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
@@ -149,12 +145,6 @@ if(NOT WINDOWS)
     PATTERN "*.in" EXCLUDE
   )
 
-  install(
-    FILES "${WORK}/mccode_config.perl"
-          "${WORK}/mccode_reconfigure"
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/"
-  )
-  
   install(
     FILES "${WORK}/@NAME@.desktop" "lib/tools/launcher/@FLAVOR@-pl.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
@@ -179,12 +169,6 @@ if(WINDOWS)
     DIRECTORY lib/tools/
     DESTINATION "${lib}/${TOOLS_NAME}"
     PATTERN "*.in" EXCLUDE
-  )
-
-  install(
-    FILES "${WORK}/mccode_config.perl"
-          "${WORK}/mccode_reconfigure"
-    DESTINATION "${lib}/${TOOLS_NAME}/perl/"
   )
 
   # Safe wrap; used when calling scripts
