@@ -30,10 +30,5 @@ canrun() {
 if ( canrun ); then
     python ${LIB}/${TOOL}.py $*
 else
-    echo ":: Failed to run Python ${TOOL}, trying old Perl version."
-    echo ":: If this fails too, consider reinstalling ${TOOL}."
-    echo ""
-
-    # Try old Perl-version of mcplot if Python version cannot run
-    ${TOOL} $*
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
