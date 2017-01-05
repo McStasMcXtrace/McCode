@@ -8,6 +8,9 @@ if [ "$1" == "set_mccode_default" ]; then
     # for post-configuration using mcgui and the PREFIX value should be
     # defined from the location of this script
     PREFIX=`dirname $0`
+    cd $PREFIX
+    PREFIX=`pwd -P`
+    cd -
     PREFIX=`dirname $PREFIX`
     PREFIX=`dirname $PREFIX`
     PREFIX=`dirname $PREFIX`
@@ -112,18 +115,18 @@ function checklinks {
     checklinkrm /usr/bin/@MCCODE_PREFIX@resplot.pl
     checklinkrm /usr/bin/@FLAVOR@tovitess
     checklinkrm /usr/bin/@FLAVOR@tovitess.pl
-    checklinkrm /usr/bin/@MCCODE_PREFIX@daemon
-    checklinkrm /usr/bin/@MCCODE_PREFIX@daemon.pl
-    checklinkrm /usr/bin/@MCCODE_PREFIX@doc
-    checklinkrm /usr/bin/@MCCODE_PREFIX@doc.pl
-    checklinkrm /usr/bin/@MCCODE_PREFIX@format
-    checklinkrm /usr/bin/@MCCODE_PREFIX@format.pl
-    checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui
-    checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui.pl
-    checklinkrm /usr/bin/@MCCODE_PREFIX@resplot
-    checklinkrm /usr/bin/@MCCODE_PREFIX@resplot.pl
-    checklinkrm /usr/bin/@FLAVOR@tovitess
-    checklinkrm /usr/bin/@FLAVOR@tovitess.pl
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@daemon
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@daemon.pl
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@doc
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@doc.pl
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@format
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@format.pl
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@formatgui
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@formatgui.pl
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@resplot
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@resplot.pl
+    checklinkrm /usr/local/bin/@FLAVOR@tovitess
+    checklinkrm /usr/local/bin/@FLAVOR@tovitess.pl
 }
 
 

@@ -729,7 +729,10 @@ class McGuiAppController():
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     def handleMcdoc(self):
-        subprocess.Popen('mcdoc', shell=True)
+        subprocess.Popen('mcdoc.pl', shell=True)
+
+    def handleDefault(self):
+        subprocess.Popen('postinst set_mccode_default', shell=True)
     
     ''' Connect UI and state callbacks 
     '''
@@ -747,8 +750,10 @@ class McGuiAppController():
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
         # On macOS add a copy of the configuration menu to File
         if sys.platform == 'darwin':
-            self.view.mw.add_conf_menu().triggered.connect(self.handleConfiguration)
-            
+            self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)
+        # If not on Windows add menu point to make current mccode the system default
+        if not sys.platform == 'windows':
+            self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
         mwui.btnEdit.clicked.connect(self.handleEditInstrument)

@@ -203,11 +203,11 @@ class McMainWindow(QtGui.QMainWindow):
                 action = menu.addAction(instrs[j])
                 action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
 
-    def add_conf_menu(self):
+    def add_conf_menu(self,label):
         confmenu = QtGui.QAction(self)
         self.ui.menuFile.addAction(confmenu)
-        confmenu.setText(QtGui.QApplication.translate("MainWindow", "Configuration", None, QtGui.QApplication.UnicodeUTF8))
-        confmenu.setToolTip(QtGui.QApplication.translate("MainWindow", "mccode configuration", None, QtGui.QApplication.UnicodeUTF8))
+        confmenu.setText(QtGui.QApplication.translate("MainWindow", label, None, QtGui.QApplication.UnicodeUTF8))
+        confmenu.setToolTip(QtGui.QApplication.translate("MainWindow", "mccode " + label, None, QtGui.QApplication.UnicodeUTF8))
         return confmenu
 
     def closeEvent(self, event):
