@@ -23,6 +23,32 @@ from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
+from mccodelib.fcparticleparser import FlowChartParticleTraceParser
+
+
+def get_2d_ray(ray_story, instr, plane='zy'):
+    ''' returns transformed projection into plane, instr is used to transform points '''
+    coords = []
+    
+    (k1, k2) = (0,1)
+    if plane == 'zy': (k1, k2) = (2,1)
+    if plane == 'xy': (k1, k2) = (0,1)
+    if plane == 'zx': (k1, k2) = (2,0)
+    
+    for group in ray_story.groups:
+        transform = [c.transform for c in instr.components if c.name == group.compname][0]
+        for e in group.events:
+            p = transform.apply(Vector3d(e.args[0], e.args[1], e.args[2]))
+            coords.append((p[k1], p[k2]))
+    
+    return coords
+
+def plot_2d_ray(coords, plt):
+    ''' see get_2d_ray to understand the data structure '''
+    
+    x = np.array([p[0] for p in coords])
+    y = np.array([p[1] for p in coords])
+    return plt.plot(x, y, pen=pg.mkPen(color=(255, 255, 255)))
 
 def get_2d_instrument(instr, plane='zy'):
     ''' returns a list of (compname, coords-lst) tuples, coords-lst being a list of 2-tuple points in the plane '''
@@ -45,12 +71,18 @@ def get_2d_instrument(instr, plane='zy'):
 
 def plot_2d_instr(coords_sets, plt):
     ''' see get_2d_instrument impl to understand the data structure '''
+    idx = 0
+    def get_next_colour(idx):
+        colours = [(100, 0, 255), (30, 255, 100), (250, 150, 255), (150, 150, 115), (255, 255, 0), (0, 150, 0)]
+        colour = colours[idx % len(colours)]
+        idx += 1
+        return colour
     
     for i in range(len(coords_sets)):
-        
         comp_coords_sets = coords_sets[i]
         
-        color = None # TODO: set color
+        colour = get_next_colour(idx)
+        idx += 1
         comp = comp_coords_sets[0]
         comp_data = comp_coords_sets[1]
         
@@ -69,7 +101,7 @@ def plot_2d_instr(coords_sets, plt):
                         
             connect_comp = np.concatenate([connect_comp, connect])
             
-        plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=(100, 100, 255)))
+        plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=colour))
 
 class McDisplay2DGui(object):
     class ZoomState(Enum):
@@ -77,8 +109,6 @@ class McDisplay2DGui(object):
         UNZOOM = 1
     
     def __init__(self):
-        self.nxt_ray = lambda : None
-        
         #
         # app, scene, plots 
         #
@@ -100,24 +130,23 @@ class McDisplay2DGui(object):
         self.plt_xy = pg.PlotItem(enableMenu=False)
         self.plt_zx = pg.PlotItem(enableMenu=False)
         
+        self.ray_idx = 0
+        self.rayplots = []
+        
         #
         # zoom stuff
         #
         self.unzoom()
         
         def unzoom_handler(event):
-            print("unzoom")
             if event.button() != 2:
                 return
             if self.zoomstate == self.ZoomState.ZOOM:
                 self.unzoom()
         
         def zoom_handler(event, item=None, idx=None):
-            print("zoom")
-            print(event.currentItem)
             if event.button() != 1:
                 return
-            
             if self.zoomstate == self.ZoomState.UNZOOM and event.currentItem == item:
                 self.zoom(idx)
         
@@ -160,7 +189,9 @@ class McDisplay2DGui(object):
     
     def run_ui(self):
         '''  '''
+        
         self.unzoom()
+        self._display_nextray()
         return self.app.exec_()
     
     def set_instr_and_plot(self, instr):
@@ -174,14 +205,28 @@ class McDisplay2DGui(object):
         plot_2d_instr(self.instr_xy, self.plt_xy)
         plot_2d_instr(self.instr_zx, self.plt_zx)
         
-    def set_nxt_ray(self, nxt_ray):
-        ''' set the function nxt_ray '''
-        self.nxt_ray = nxt_ray
-        print("Ui.set_nxt_ray()")
+    def set_rays(self, rays):
+        ''' just set a reference to rays '''
+        self.rays = rays
     
     def _display_nextray(self):
-        ray = self.nxt_ray()
-        print("_display_nextray")
+        '''  '''
+        ray = self.rays[self.ray_idx % len(self.rays)]
+        
+        self.ray_zy = get_2d_ray(ray, self.instr, 'zy')
+        self.ray_xy = get_2d_ray(ray, self.instr, 'xy')
+        self.ray_zx = get_2d_ray(ray, self.instr, 'zx')
+        
+        for plt in self.rayplots:
+            plt.clear()
+        
+        plt0 = plot_2d_ray(self.ray_zy, self.plt_zy)
+        plt1 = plot_2d_ray(self.ray_xy, self.plt_xy)
+        plt2 = plot_2d_ray(self.ray_zx, self.plt_zx)
+        
+        self.rayplots = (plt0, plt1, plt2)
+        
+        self.ray_idx += 1
     
     def _clear(self):
         self.layout.clear()
@@ -204,7 +249,6 @@ class McDisplay2DGui(object):
     
     def zoom(self, idx_subwin):
         ''' zoom action, plot a single view full-window '''
-        
         self._clear()
         
         if idx_subwin == 0: self.layout.addItem(self.plt_zy, 0, 0)
@@ -226,10 +270,17 @@ class McDisplay2DGui(object):
 
 def load_instr(filename):
     instrdef = open(filename).read()
+    
     instrparser = InstrTraceParser(instrdef)
     instrbuilder = InstrObjectConstructor(instrparser.parsetree)
     return instrbuilder.build_instr()
 
+def load_rays(filename):
+    particles = open(filename).read()
+    
+    parser = FlowChartParticleTraceParser()
+    rays = parser.execute(particles)
+    return rays
 
 def get_datadirname(instrname):
     ''' returns an mcrun-like name-date-time string '''
@@ -242,14 +293,8 @@ def file_save(data, filename):
     f.close()
 
 def main(args):
+    ''' script execution '''
     logging.basicConfig(level=logging.INFO)
-    debug = False
-    
-    # 
-    gui = McDisplay2DGui()
-    gui.set_instr_and_plot(load_instr('instrdata'))
-    #gui.set_ray(raybundle[0])
-    sys.exit(gui.run_ui())
     
     # output directory
     dirname = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
@@ -257,25 +302,26 @@ def main(args):
         dirname = args.dirname
     
     # set up a pipe, read and parse the particle trace
-    reader = McDisplayReader(args, n=100, dir=dirname, debug=debug)
+    reader = McDisplayReader(args, n=100, dir=dirname)
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
     
-    if debug:
-        # this should enable template.html to load directly
-        jsonized = json.dumps(instrument.jsonize(), indent=0)
-        file_save(jsonized, 'jsonized.json')
+    gui = McDisplay2DGui()
+    gui.set_instr_and_plot(load_instr('instrdata'))
+    gui.set_rays(load_rays('particledata').rays)
+
+    sys.exit(gui.run_ui())
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    #parser.add_argument('instr', help='display this instrument file (.instr or .out)')
-    #parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
-    #parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
-    #parser.add_argument('--dirname', help='name of the output directory requested to mcrun')
-    #parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
-    #parser.add_argument('--first', help='zoom range first component')
-    #parser.add_argument('--last', help='zoom range last component')
-    #parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
+    parser.add_argument('instr', help='display this instrument file (.instr or .out)')
+    parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    parser.add_argument('--dirname', help='output directory name override')
+    parser.add_argument('--inspect', help='display only particle rays reaching this component')
+    parser.add_argument('--first', help='zoom range first component name')
+    parser.add_argument('--last', help='zoom range last component name')
+    parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
     
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
