@@ -16,6 +16,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace $1 "" "" mac_el_capitan "" -- OSXapp
 ./mkdist mcxtrace-comps $1 "" "" mac_el_capitan "" -- OSXapp
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_el_capitan "" -- OSXapp

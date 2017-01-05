@@ -13,6 +13,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace $1 "" "" linux64 "" -- deb
 ./mkdist mcxtrace-comps $1 "" "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- deb
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" linux64 "" -- deb
