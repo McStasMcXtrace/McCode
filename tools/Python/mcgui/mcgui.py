@@ -760,8 +760,8 @@ class McGuiAppController():
         # 2) add menu points for changing what the bundle opens
         if sys.platform == 'darwin':
             self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)
-            self.view.mw.add_conf_menu('Python default mcgui').triggered.connect(self.handleDefaultMcguiPy)
-            self.view.mw.add_conf_menu('Perl default mcgui').triggered.connect(self.handleDefaultMcguiPl)            
+            self.view.mw.add_conf_menu('Use Python App').triggered.connect(self.handleDefaultMcguiPy)
+            self.view.mw.add_conf_menu('Use Perl App').triggered.connect(self.handleDefaultMcguiPl)            
         # If not on Windows add menu point to make current mccode the system default
         if not sys.platform == 'windows':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
