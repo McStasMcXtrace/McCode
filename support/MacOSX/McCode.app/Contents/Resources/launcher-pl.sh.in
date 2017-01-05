@@ -7,7 +7,7 @@
 PREFIX=`dirname $0`
 
 # program name
-PROGRAM=@GUIPREFIX@gui@DOT_PL_SUFFIX@
+PROGRAM=@GUIPREFIX@gui.pl
 
 # program arguments
 ARGUMENTS=""

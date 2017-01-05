@@ -733,7 +733,14 @@ class McGuiAppController():
 
     def handleDefault(self):
         subprocess.Popen('postinst set_mccode_default', shell=True)
-    
+
+    def handleDefaultMcguiPy(self):
+        subprocess.Popen('postinst osx_app_default py', shell=True)
+
+    def handleDefaultMcguiPl(self):
+        subprocess.Popen('postinst osx_app_default pl', shell=True)
+
+        
     ''' Connect UI and state callbacks 
     '''
     def connectCallbacks(self):        
@@ -748,9 +755,13 @@ class McGuiAppController():
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
-        # On macOS add a copy of the configuration menu to File
+        # On macOS
+        # 1) add a copy of the configuration menu to File
+        # 2) add menu points for changing what the bundle opens
         if sys.platform == 'darwin':
             self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)
+            self.view.mw.add_conf_menu('Python default mcgui').triggered.connect(self.handleDefaultMcguiPy)
+            self.view.mw.add_conf_menu('Perl default mcgui').triggered.connect(self.handleDefaultMcguiPl)            
         # If not on Windows add menu point to make current mccode the system default
         if not sys.platform == 'windows':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)

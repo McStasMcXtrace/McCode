@@ -2,6 +2,7 @@
 
 # Extract CMake macros during configure
 PREFIX="@CMAKE_INSTALL_PREFIX@"
+UNAME=`uname -s`
 
 if [ "$1" == "set_mccode_default" ]; then
     # If we are being called with the input parameter default, this is a call
@@ -15,13 +16,24 @@ if [ "$1" == "set_mccode_default" ]; then
     PREFIX=`dirname $PREFIX`
     PREFIX=`dirname $PREFIX`
 fi
+if [ "$1" == "osx_app_default" ]; then
+    # Hook to change which mcgui will run using the App bundle 
+    if [[ ${UNAME} = Darwin* ]]; then
+	PREFIX=`dirname $0`
+	cd $PREFIX/../../..
+	if [[ -x "./launcher-$2.sh" ]]; then
+	    cp launcher-$2.sh launcher.sh
+	    echo Set up your bundle to run the $2 version of mcgui
+	fi
+	cd -
+	exit 0
+    fi
+fi
 
 FLAVOR="@FLAVOR@"
 VERSION="@MCCODE_VERSION@"
 MC="@MCCODE_PREFIX@"
 NO_ALTERNATIVES="@NO_ALTERNATIVES@" 
-
-UNAME=`uname -s`
 
 echo "Post-install configuring $FLAVOR v. $VERSION on $UNAME."
 echo "PREFIX was set to $PREFIX"
