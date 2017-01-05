@@ -391,6 +391,39 @@ sub tools_set_default_mcstas {
   system("postinst set_mccode_default");
 }
 
+sub tools_set_osx_bundle_pl {
+  # Runs the packaged "postinst" script which sets up the bundle to use the pl mcgui
+  my ($w) = @_;
+  my $msg="Press Yes to use run the Perl-based McStas App\n";
+  my $do_dsa=$w->messageBox(-message =>$msg,
+		   -title => "McGUI: Use Perl McStas App?",
+		   -type => 'YesNoCancel',
+		   -icon => 'question',
+		   -default => 'yes');
+  if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
+    putmsg($cmdwin, "Set Perl App cancelled!\n", 'msg');
+    return 0;
+  }
+  system("postinst osx_app_default pl");
+}
+
+sub tools_set_osx_bundle_py {
+  # Runs the packaged "postinst" script which sets up the bundle to use the py mcgui
+  my ($w) = @_;
+  my $msg="Press Yes to use run the Python-based McStas App\n";
+  my $do_dsa=$w->messageBox(-message =>$msg,
+		   -title => "McGUI: Use Python McStas App?",
+		   -type => 'YesNoCancel',
+		   -icon => 'question',
+		   -default => 'yes');
+  if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
+    putmsg($cmdwin, "Set Python App cancelled!\n", 'msg');
+    return 0;
+  }
+  system("postinst osx_app_default py");
+}
+
+
 sub tools_dsa {
     my ($w) = @_;
     my $msg="Press Yes to create DSA key.\n";
@@ -1662,6 +1695,13 @@ sub setup_menu {
 			   -command => sub {tools_set_default_mcstas($w)});
 	$toolmenu->command(-label => 'Activate MPI/grid (DSA key)',
 			   -command => sub {tools_dsa($w)});
+    }
+    # The following item only apply to Mac OS systems...
+    if ($Config{'osname'} eq 'darwin') {
+      $toolmenu->command(-label => 'Use Python App',
+			 -command => sub {tools_set_osx_bundle_py($w)});
+      $toolmenu->command(-label => 'Use Perl App',
+			 -command => sub {tools_set_osx_bundle_pl($w)});
     }
 
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
