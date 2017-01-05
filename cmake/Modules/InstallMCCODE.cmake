@@ -317,6 +317,7 @@ macro(installMCCODE)
       install(PROGRAMS ${WORK}/support/${name} DESTINATION ${FLAVOR}/${MCCODE_VERSION}/)
     endforeach()
     install(PROGRAMS ${WORK}/support/postinst DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin/)
+    install(PROGRAMS ${WORK}/support/${FLAVOR}_errmsg DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin/)
   endif()
 
   if(WINDOWS)
