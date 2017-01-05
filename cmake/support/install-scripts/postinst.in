@@ -45,47 +45,85 @@ function checklinks {
     checklinkrm /usr/local/bin/mcpltool  
         # mcrun variants
     checklinkrm /usr/bin/@MCCODE_PREFIX@run
+    checklinkrm /usr/bin/@MCCODE_PREFIX@run.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@run-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@run
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@run.pl
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@run-py
 	# mcgui variants
     checklinkrm /usr/bin/@MCCODE_PREFIX@gui
+    checklinkrm /usr/bin/@MCCODE_PREFIX@gui.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@gui-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui.pl
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui-py
 	# mcplot 
     checklinkrm /usr/bin/@MCCODE_PREFIX@plot
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@plot-chaco-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-chaco
     checklinkrm /usr/bin/@MCCODE_PREFIX@plot-matplotlib-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-matplotlib
     checklinkrm /usr/bin/@MCCODE_PREFIX@plot-matlab
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-pyqtgraph-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-pyqtgraph
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot.pl
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-chaco
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-pyqtgraph-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-pyqtgraph
 	# mcdisplay
     checklinkrm /usr/bin/@MCCODE_PREFIX@display
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@display-py
     checklinkrm /usr/bin/@MCCODE_PREFIX@display-x3d-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-x3d
     checklinkrm /usr/bin/@MCCODE_PREFIX@display-matplotlib-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-matplotlib
     checklinkrm /usr/bin/@MCCODE_PREFIX@display-vtk-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-vtk
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-webgl-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-webgl
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display.pl
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-x3d
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-vtk
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-webgl-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-webgl
         # other stuff
     checklinkrm /usr/bin/@MCCODE_PREFIX@daemon
+    checklinkrm /usr/bin/@MCCODE_PREFIX@daemon.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@doc
+    checklinkrm /usr/bin/@MCCODE_PREFIX@doc.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@format
+    checklinkrm /usr/bin/@MCCODE_PREFIX@format.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui
+    checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui.pl
     checklinkrm /usr/bin/@MCCODE_PREFIX@resplot
+    checklinkrm /usr/bin/@MCCODE_PREFIX@resplot.pl
     checklinkrm /usr/bin/@FLAVOR@tovitess
-    checklinkrm /usr/local/bin/@MCCODE_PREFIX@daemon
-    checklinkrm /usr/local/bin/@MCCODE_PREFIX@doc
-    checklinkrm /usr/local/bin/@MCCODE_PREFIX@format
-    checklinkrm /usr/local/bin/@MCCODE_PREFIX@formatgui
-    checklinkrm /usr/local/bin/@MCCODE_PREFIX@resplot
-    checklinkrm /usr/local/bin/@FLAVOR@tovitess
+    checklinkrm /usr/bin/@FLAVOR@tovitess.pl
+    checklinkrm /usr/bin/@MCCODE_PREFIX@daemon
+    checklinkrm /usr/bin/@MCCODE_PREFIX@daemon.pl
+    checklinkrm /usr/bin/@MCCODE_PREFIX@doc
+    checklinkrm /usr/bin/@MCCODE_PREFIX@doc.pl
+    checklinkrm /usr/bin/@MCCODE_PREFIX@format
+    checklinkrm /usr/bin/@MCCODE_PREFIX@format.pl
+    checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui
+    checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui.pl
+    checklinkrm /usr/bin/@MCCODE_PREFIX@resplot
+    checklinkrm /usr/bin/@MCCODE_PREFIX@resplot.pl
+    checklinkrm /usr/bin/@FLAVOR@tovitess
+    checklinkrm /usr/bin/@FLAVOR@tovitess.pl
 }
 
 
@@ -164,7 +202,7 @@ else
 fi
 
 # Check if mcdoc is installed and if it needs to run
-if [ -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc ] && \
+if [ -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc.pl ] && \
     [ -d ${PREFIX}/${FLAVOR}/${VERSION}/examples ]; then
-    ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc --text &>/dev/null
+    ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc.pl --text &>/dev/null
 fi
