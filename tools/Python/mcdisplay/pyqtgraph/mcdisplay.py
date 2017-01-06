@@ -69,7 +69,7 @@ def get_2d_instrument(instr, plane='zy'):
     
     return coords_sets
 
-def plot_2d_instr(coords_sets, plt):
+def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     ''' see get_2d_instrument impl to understand the data structure '''
     idx = 0
     def get_next_colour(idx):
@@ -114,6 +114,7 @@ def plot_2d_instr(coords_sets, plt):
     else:
         dy=dx
     plt.getViewBox().setRange(xRange=[x0-dx/2,x0+dx/2],yRange=[y0-dy/2,y0+dy/2])
+    plt.setLabels(left=ylabel,bottom=xlabel)
     
 class McDisplay2DGui(object):
     class ZoomState(Enum):
@@ -213,9 +214,9 @@ class McDisplay2DGui(object):
         self.instr_xy = get_2d_instrument(instr, 'xy')
         self.instr_zx = get_2d_instrument(instr, 'zx')
         
-        plot_2d_instr(self.instr_zy, self.plt_zy)
-        plot_2d_instr(self.instr_xy, self.plt_xy)
-        plot_2d_instr(self.instr_zx, self.plt_zx)
+        plot_2d_instr(self.instr_zy, self.plt_zy, 'z/[m]', 'y/[m]')
+        plot_2d_instr(self.instr_xy, self.plt_xy, 'x/[m]', 'y/[m]')
+        plot_2d_instr(self.instr_zx, self.plt_zx, 'z/[m]', 'x/[m]')
         
     def set_rays(self, rays):
         ''' just set a reference to rays '''
