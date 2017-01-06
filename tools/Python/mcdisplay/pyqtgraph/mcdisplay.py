@@ -103,6 +103,18 @@ def plot_2d_instr(coords_sets, plt):
             
         plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=colour))
 
+    # Fix the axes to have a common x and y zooom factor
+    AxisBounds=plt.getViewBox().childrenBounds()
+    x0=(AxisBounds[0][1]+AxisBounds[0][0])
+    y0=(AxisBounds[1][1]+AxisBounds[1][0])
+    dx=AxisBounds[0][1]-AxisBounds[0][0]
+    dy=AxisBounds[0][1]-AxisBounds[0][0]
+    if dy>=dx:
+        dx=dy
+    else:
+        dy=dx
+    plt.getViewBox().setRange(xRange=[x0-dx/2,x0+dx/2],yRange=[y0-dy/2,y0+dy/2])
+    
 class McDisplay2DGui(object):
     class ZoomState(Enum):
         ZOOM = 0
