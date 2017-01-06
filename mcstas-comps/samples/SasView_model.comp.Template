@@ -105,10 +105,6 @@
 * target_y:      3- relative focus target position [m]
 * target_z:     -/
 * 
-* Variables calculated in the component:
-* 
-* my_s:         Attenuation factor due to scattering (m^-1)
-* my_a:         Attenuation factor due to absorbtion (m^-1)
 * 
 * %Link
 * http://www.sasview.org/sasview/user/models/model_functions.html
@@ -166,7 +162,7 @@ INITIALIZE
   else if (radius > 0 && !yheight)  
     shape=2; 
   if (shape < 0) 
-    exit(fprintf(stderr, "Sans_spheres: %s: sample has invalid dimensions.\n"
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
                          "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
   
   /* now compute target coords if a component index is supplied */
@@ -180,7 +176,7 @@ INITIALIZE
   }
 
   if (!(target_x || target_y || target_z)) {
-    printf("Sans_spheres: %s: The target is not defined. Using direct beam (Z-axis).\n",
+    printf("SasView_model: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
     target_z=1;
   }
@@ -190,9 +186,9 @@ INITIALIZE
 
 TRACE
 %{
-  double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
+  double t0, t1, v, l_full, l, l_1, dt, d_phi, theta;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz;
   double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz;
   char intersect=0;
 
