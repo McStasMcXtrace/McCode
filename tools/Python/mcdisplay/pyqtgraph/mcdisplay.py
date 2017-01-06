@@ -69,14 +69,23 @@ def get_2d_instrument(instr, plane='zy'):
     
     return coords_sets
 
+
+
+
 def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
-    ''' see get_2d_instrument impl to understand the data structure '''
+    '''
+    See get_2d_instrument impl to understand the data structure 
+    
+    Returns a list of compname, plotitem
+    '''
     idx = 0
     def get_next_colour(idx):
         colours = [(100, 0, 255), (30, 255, 100), (250, 150, 255), (150, 150, 115), (255, 255, 0), (0, 150, 0)]
         colour = colours[idx % len(colours)]
         idx += 1
         return colour
+    
+    compnames_plts = []
     
     for i in range(len(coords_sets)):
         comp_coords_sets = coords_sets[i]
@@ -100,8 +109,9 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
             y_comp = np.concatenate([y_comp, y])
                         
             connect_comp = np.concatenate([connect_comp, connect])
-            
-        plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=colour))
+        
+        itm = plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=colour))
+        compnames_plts.append((comp, itm))
 
     # Fix the axes to have a common x and y zooom factor
     AxisBounds=plt.getViewBox().childrenBounds()
@@ -115,6 +125,8 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
         dy=dx
     plt.getViewBox().setRange(xRange=[x0-dx/2,x0+dx/2],yRange=[y0-dy/2,y0+dy/2])
     plt.setLabels(left=ylabel,bottom=xlabel)
+    
+    return compnames_plts
     
 class McDisplay2DGui(object):
     class ZoomState(Enum):
@@ -210,20 +222,38 @@ class McDisplay2DGui(object):
     def set_instr_and_plot(self, instr):
         ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
         self.instr = instr
+        
+        # get instrument 2d projections
         self.instr_zy = get_2d_instrument(instr, 'zy')
         self.instr_xy = get_2d_instrument(instr, 'xy')
         self.instr_zx = get_2d_instrument(instr, 'zx')
         
-        plot_2d_instr(self.instr_zy, self.plt_zy, 'z/[m]', 'y/[m]')
-        plot_2d_instr(self.instr_xy, self.plt_xy, 'x/[m]', 'y/[m]')
-        plot_2d_instr(self.instr_zx, self.plt_zx, 'z/[m]', 'x/[m]')
+        # plot instrument three times
+        comp_plotdataitm_pairs_zy = plot_2d_instr(self.instr_zy, self.plt_zy, 'z/[m]', 'y/[m]')
+        comp_plotdataitm_pairs_xy = plot_2d_instr(self.instr_xy, self.plt_xy, 'x/[m]', 'y/[m]')
+        comp_plotdataitm_pairs_zx = plot_2d_instr(self.instr_zx, self.plt_zx, 'z/[m]', 'x/[m]')
         
+        # set PlotDataItem click events
+        for pairs in [comp_plotdataitm_pairs_zy, comp_plotdataitm_pairs_xy, comp_plotdataitm_pairs_zx]:
+            for p in pairs:
+                comp = p[0]
+                itm = p[1]
+                itm.curve.setClickable(True)
+                itm.curve.mouseClickEvent = lambda event, comp=comp: self._handle_comp_clicked(event, comp)
+
+    def _handle_comp_clicked(self, event, comp):
+        ''' display clicked component info '''
+        print(comp)
+        
+        # prevent event propagation (e.g. zoom)
+        event.accept()
+    
     def set_rays(self, rays):
         ''' just set a reference to rays '''
         self.rays = rays
     
     def _display_nextray(self):
-        '''  '''
+        ''' plots the next ray to the three plot windows '''
         ray = self.rays[self.ray_idx % len(self.rays)]
         
         self.ray_zy = get_2d_ray(ray, self.instr, 'zy')
