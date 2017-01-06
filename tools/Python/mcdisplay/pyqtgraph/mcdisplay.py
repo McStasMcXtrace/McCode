@@ -115,10 +115,10 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
 
     # Fix the axes to have a common x and y zooom factor
     AxisBounds=plt.getViewBox().childrenBounds()
-    x0=(AxisBounds[0][1]+AxisBounds[0][0])
-    y0=(AxisBounds[1][1]+AxisBounds[1][0])
+    x0=(AxisBounds[0][1]+AxisBounds[0][0])/2
+    y0=(AxisBounds[1][1]+AxisBounds[1][0])/2
     dx=AxisBounds[0][1]-AxisBounds[0][0]
-    dy=AxisBounds[0][1]-AxisBounds[0][0]
+    dy=AxisBounds[1][1]-AxisBounds[1][0]
     if dy>=dx:
         dx=dy
     else:
