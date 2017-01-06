@@ -8,10 +8,10 @@ configuration = {
     "MCCODE_VERSION": '@MCCODE_VERSION@',
     "MCCODE_LIB_DIR": os.path.join(os.path.dirname(__file__),"..","..",".."),
     "MCCODE": '@FLAVOR@',
-    "MCRUN": '@MCCODE_PREFIX@run-py',
+    "MCRUN": '@MCCODE_PREFIX@run',
     "MCPLOT": '@MCCODE_PREFIX@@MCPLOT_DEFAULT@',
-    "MCDISPLAY": '@MCCODE_PREFIX@display-matplotlib-py',
-    "TOOL_NAME": '@MCCODE_PREFIX@gui-py',
+    "MCDISPLAY": '@MCCODE_PREFIX@display-webgl',
+    "TOOL_NAME": '@MCCODE_PREFIX@gui',
     "PARTICLE": '@MCCODE_PARTICLE@',
     "BROWSER": '@BROWSER@',
 }
