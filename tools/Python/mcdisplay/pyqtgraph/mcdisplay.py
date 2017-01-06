@@ -240,6 +240,7 @@ class McDisplay2DGui(object):
                 itm = p[1]
                 itm.curve.setClickable(True)
                 itm.curve.mouseClickEvent = lambda event, comp=comp: self._handle_comp_clicked(event, comp)
+        
 
     def _handle_comp_clicked(self, event, comp):
         ''' display clicked component info '''
@@ -272,23 +273,8 @@ class McDisplay2DGui(object):
         self.ray_idx += 1
     
     def _clear(self):
+        ''' prepare for a new zoom state '''
         self.layout.clear()
-        try:
-            self.layout.scene.sigMouseClicked.disconnect()
-        except:
-            pass
-        try:
-            self.plt_zy.scene().sigMouseClicked.disconnect()
-        except:
-            pass
-        try:
-            self.plt_xy.scene().sigMouseClicked.disconnect()
-        except:
-            pass
-        try:
-            self.plt_zx.scene().sigMouseClicked.disconnect()
-        except:
-            pass
     
     def zoom(self, idx_subwin):
         ''' zoom action, plot a single view full-window '''
@@ -309,7 +295,6 @@ class McDisplay2DGui(object):
         self.layout.addItem(self.plt_zx, 1, 0)
         
         self.zoomstate = self.ZoomState.UNZOOM
-
 
 def debug_load_instr(filename):
     instrdef = open(filename).read()
