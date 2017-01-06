@@ -268,14 +268,14 @@ class McDisplay2DGui(object):
         self.zoomstate = self.ZoomState.UNZOOM
 
 
-def load_instr(filename):
+def debug_load_instr(filename):
     instrdef = open(filename).read()
     
     instrparser = InstrTraceParser(instrdef)
     instrbuilder = InstrObjectConstructor(instrparser.parsetree)
     return instrbuilder.build_instr()
 
-def load_rays(filename):
+def debug_load_rays(filename):
     particles = open(filename).read()
     
     parser = FlowChartParticleTraceParser()
@@ -286,7 +286,7 @@ def get_datadirname(instrname):
     ''' returns an mcrun-like name-date-time string '''
     return "%s_%s" % (instrname, datetime.strftime(datetime.now(), "%Y%m%d_%H%M%S"))
 
-def file_save(data, filename):
+def debug_file_save(data, filename):
     ''' saves data for debug purposes '''
     f = open(filename, 'w')
     f.write(data)
@@ -307,8 +307,8 @@ def main(args):
     raybundle = reader.read_particles()
     
     gui = McDisplay2DGui()
-    gui.set_instr_and_plot(load_instr('instrdata'))
-    gui.set_rays(load_rays('particledata').rays)
+    gui.set_instr_and_plot(instrument)
+    gui.set_rays(raybundle.rays)
 
     sys.exit(gui.run_ui())
 
