@@ -732,13 +732,35 @@ class McGuiAppController():
         subprocess.Popen('mcdoc.pl', shell=True)
 
     def handleDefault(self):
-        subprocess.Popen('postinst set_mccode_default', shell=True)
+        reply = QtGui.QMessageBox.question(self.view.mw,
+                                           'Define system default?',
+                                           'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?',
+                                           'Yes',       # default button, reply == 0
+                                           'No',        # reply == 1
+                                           'Cancel')    # reply == 2
+        if reply == 0:
+             subprocess.Popen('postinst set_mccode_default', shell=True)
+             
 
     def handleDefaultMcguiPy(self):
-        subprocess.Popen('postinst osx_app_default py', shell=True)
+        reply = QtGui.QMessageBox.question(self.view.mw,
+                                           'Make Python gui App default?',
+                                           'Do you want to use Python ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?',
+                                           'Yes',       # default button, reply == 0
+                                           'No',        # reply == 1
+                                           'Cancel')    # reply == 2
+        if reply == 0:
+            subprocess.Popen('postinst osx_app_default py', shell=True)
 
     def handleDefaultMcguiPl(self):
-        subprocess.Popen('postinst osx_app_default pl', shell=True)
+        reply = QtGui.QMessageBox.question(self.view.mw,
+                                           'Make Python gui App default?',
+                                           'Do you want to use Perl ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?',
+                                           'Yes',       # default button, reply == 0
+                                           'No',        # reply == 1
+                                           'Cancel')    # reply == 2
+        if reply == 0:
+            subprocess.Popen('postinst osx_app_default pl', shell=True)
 
         
     ''' Connect UI and state callbacks 
