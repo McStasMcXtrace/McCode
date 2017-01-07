@@ -85,7 +85,7 @@ double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, do
     ps1=scalar_prod(*sx,*sy,*sz,s1x,s1y,s1z);
     ps2=scalar_prod(*sx,*sy,*sz,s2x,s2y,s2z);
   }
-  /*the fraction of "up" neutrons*/
+  /*the fractions of "up" and "down" neutrons*/
   double phiu=((pm)+1)/2.0;
   double phid=(1-(pm))/2.0;
 
