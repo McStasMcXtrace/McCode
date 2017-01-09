@@ -24,3 +24,14 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- deb
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- deb
 
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/deb
+
+  for controlfile in `ls control.mcstas*`
+  do
+    sed -i.bak s/@VERSION@/${1}/g $controlfile
+    equivs-build $controlfile
+    mv $controlfile.bak $controlfile
+  done
+fi

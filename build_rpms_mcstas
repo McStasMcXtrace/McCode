@@ -21,3 +21,14 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64 "" -- rpm
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64 "" -- rpm
 
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/rpm
+
+  for controlfile in `ls mcstas-*.spec`
+  do
+    sed -i.bak s/@VERSION@/${1}/g $controlfile
+    rpmbuild -bb --target x86_64 $controlfile
+    mv $controlfile.bak $controlfile
+  done
+fi

@@ -6,7 +6,7 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-# From 1.2 onwards, let McXtrace reside in /usr/share on Debian-like systems
+# From 1.4 onwards, let McXtrace reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr/share/
 
 # 64-bit
@@ -14,14 +14,15 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-comps $1 "" "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" linux64 "" -- deb
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" linux64 "" -- deb
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- deb
+./mkdist mcxtrace-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- deb
-./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux64 "o" -- deb
+./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" linux64 "o" -- deb
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
