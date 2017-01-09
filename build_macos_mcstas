@@ -32,9 +32,15 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac_el_capitan "" -- OSXapp
 
-# Move the App bundle back to the dist folder
 mkdir -p dist
-mv /Applications/McStas-$1.app dist
+# Move the App bundle back to the dist - or keep it in /Applications?
+if [ "x$2" = "x" ]; then
+    mv /Applications/McStas-$1.app dist
+    echo Your app is now located in the dist folder
+else
+    ln -s /Applications/McStas-$1.app dist/
+    echo Your app is now located in /Applications \(link available in the dist folder\)
+fi
 
 
 

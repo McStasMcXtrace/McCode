@@ -31,9 +31,16 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac_el_capitan "" -- OSXapp
 
-# Move the App bundle back to the dist folder
 mkdir -p dist
-mv /Applications/McXtrace-$1.app dist
+# Move the App bundle back to the dist - or keep it in /Applications?
+if [ "x$2" = "x" ]; then
+    mv /Applications/McXtrace-$1.app dist
+    echo Your app is now located in the dist folder
+else
+    ln -s /Applications/McXtrace-$1.app dist/
+    echo Your app is now located in /Applications \(link available in the dist folder\)
+fi
+
 
 
 
