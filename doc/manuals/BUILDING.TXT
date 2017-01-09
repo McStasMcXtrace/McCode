@@ -1,0 +1,13 @@
+To build a McStas or McXtrace set of manuals, follow the below recipe
+
+* Build on Linux
+* Dependencies e.g. texlive texlive-latex-extra texlive-bibtex-extra
+* cd mcstas
+* cp -rp ../../../cmake cmake
+* mkdir tmp
+* cd tmp
+* cmake ..
+* make
+
+The resulting pdf's are then to be added to the similar hieracy in the 
+../../docpkg folder
