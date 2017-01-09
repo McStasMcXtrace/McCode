@@ -13,7 +13,7 @@ set(GNUPLOT "gnuplot")
 set(PERL "/usr/bin/perl5.8.9")
 
 # Plotting options
-set(MCPLOT_DEFAULT "plot")
+set(MCPLOT_DEFAULT "plot-pyqtgraph")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
 set(GNUDEV "wxt")
