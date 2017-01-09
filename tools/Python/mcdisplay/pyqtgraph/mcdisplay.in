@@ -11,11 +11,7 @@ else
     LIB=`dirname $0`
 fi
 LIB="$LIB/../tools/Python/@P@display/pyqtgraph"
-TOOL="@P@gui"
-VERS="@MCCODE_VERSION@"
-
-LIB="@TOOLS_LIB@"
-TOOL="mcdisplay"
+TOOL="@P@display"
 VERS="@MCCODE_VERSION@"
 
 
