@@ -148,7 +148,7 @@ DECLARE
 
   float model_pars_ptr[] = model_pars;
 
-  double my_a_v, q_v, q, shape;
+  double my_a_v, q, shape;
 %}
 
 INITIALIZE
