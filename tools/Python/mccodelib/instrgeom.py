@@ -493,7 +493,7 @@ class DrawLine(DrawCommand):
             self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
             self.args = args
         
-        self.points = [point_1, point_2]
+        self.points = [self.point_1, self.point_2]
 
 class DrawDashedLine(DrawCommand):
     ''' '''
@@ -508,7 +508,7 @@ class DrawDashedLine(DrawCommand):
         self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
         
-        self.points = [point_1, point_2]
+        self.points = [self.point_1, self.point_2]
 
 class DrawMultiline(DrawCommand):
     ''' '''
