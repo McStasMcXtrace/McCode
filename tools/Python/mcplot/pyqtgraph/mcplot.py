@@ -151,7 +151,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     def key_handler(ev, replot_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
         ''' global keypress handler, replot_cb is a function of log '''
         if ev.key() == 81:                              # q
-            quit()
+            QtGui.QApplication.quit()
         elif ev.key() == 76:                            # l
             log = flip_log()
             replot_cb()
