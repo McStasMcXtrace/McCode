@@ -82,15 +82,15 @@ def plot_Data1D(data, log=False, legend=True, icolormap=0):
             lname2 = '%s' % (data.title)
             lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
             # these lines DO NOT plot anything meaningful, but add legend items
-            plt.plot(x[0], y[0], name=lname1)
-            plt.plot(x[0], y[0], name=lname2)
-            plt.plot(x[0], y[0], name=lname3)
+            plt.plot([x[0]], [y[0]], name=lname1)
+            plt.plot([x[0]], [y[0]], name=lname2)
+            plt.plot([x[0]], [y[0]], name=lname3)
         except:
             lname1 = '%s [%s]' % (data.component, data.filename)
             lname2 = '%s' % (data.title)
             # these lines DO NOT plot anything meaningful, but add legend items
-            plt.plot([0], [0], name=lname1)
-            plt.plot([0], [0], name=lname2)
+            plt.plot([x[0]], [y[0]], name=lname1)
+            plt.plot([x[0]], [y[0]], name=lname2)
     
     # plots data
     plt.plot(x, y)
