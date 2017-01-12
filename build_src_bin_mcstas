@@ -19,6 +19,7 @@ fi
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- src bin
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux64 "" -- src bin
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- src bin
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux64 "" -- src bin
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- src bin
 
 # 32-bit
@@ -34,4 +35,5 @@ fi
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux32 "" -- src bin
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux32 "" -- src bin
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux32 "" -- src bin
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux32 "" -- src bin
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux32 "" -- src bin
