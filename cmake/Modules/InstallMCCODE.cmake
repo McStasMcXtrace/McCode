@@ -54,7 +54,8 @@ macro(installMCCODE)
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
 
   include(CPack)
-
+  
+  string(TIMESTAMP MCCODE_YEAR "%Y")
 
   ## Add global definitions
   # set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS

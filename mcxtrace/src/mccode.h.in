@@ -63,6 +63,10 @@
 #define MCCODE_LIBENV "@MCCODE_LIBENV@"
 #endif
 
+#ifndef MCCODE_YEAR
+#define MCCODE_YEAR "@MCCODE_YEAR@"
+#endif
+
 /* Functions defined in memory.c */
 
 typedef struct Pool_header *Pool;

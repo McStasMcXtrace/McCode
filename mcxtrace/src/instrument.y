@@ -1540,8 +1540,8 @@ static void
 print_version(void)
 {
   printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
-    "Copyright (C) DTU Physics, 1997-2016\n"
-    "Additions (C) Institut Laue Langevin, 2003-2016\n"
+    "Copyright (C) DTU Physics, 1997-" MCCODE_YEAR "\n"
+    "Additions (C) Institut Laue Langevin, 2003-" MCCODE_YEAR "\n"
     "All rights reserved\n");
   exit(0);
 }
