@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
-from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline
+from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline, DrawCircle
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
 from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
@@ -63,6 +63,9 @@ def get_2d_instrument(instr, plane='zy'):
         for d in c.drawcalls:
             if type(d) in [DrawLine, DrawMultiline]:
                 comp_coord_sets.append([(tp[k1], tp[k2]) for tp in [c.transform.apply(p) for p in d.points]])
+            if type(d) in [DrawCircle]:
+                set = [(tp[k1], tp[k2]) for tp in [c.transform.apply(p) for p in d.get_points_on_circle()]]
+                comp_coord_sets.append(set)
         coords_sets.append((c.name, comp_coord_sets))
     
     return coords_sets
@@ -139,7 +142,7 @@ class McDisplay2DGui(object):
         layout = pg.GraphicsLayout()
         
         window.resize(1000, 600)
-        window.setWindowTitle('2D-mcdisplay: %s' % title)
+        window.setWindowTitle('mcdisplay-2D: %s' % title)
         window.setCentralItem(layout)
         
         layout.window = window # keep window to avoid garbage collection

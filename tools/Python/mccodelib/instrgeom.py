@@ -2,7 +2,7 @@
 Classes for representing a mcstas instruments and particle trace rays,
 and classes used for organizing component drawing calls.
 '''
-import math
+import numpy as np
 
 class InstrumentSpecific(object):
     ''' represents a mcstas instrument with params choice '''
@@ -307,7 +307,7 @@ class ParticleStory(object):
         ''' on-demand speed of this particle ray, which is incorrectly assumed to be constant '''
         if not self.speed:
             args = self.groups[len(self.groups)-1].events[0].args
-            self.speed = math.sqrt(args[3]*args[3] + args[4]*args[4] + args[5]*args[5])
+            self.speed = np.sqrt(args[3]*args[3] + args[4]*args[4] + args[5]*args[5])
         return self.speed
     
     def jsonize(self):
@@ -584,7 +584,7 @@ class DrawCircle(DrawCommand):
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
     
     def _get_points(self):
-        ''' returns the corners of a flat sqare around the circle, transformed into the proper plane '''
+        ''' returns the corners of a flat square around the circle, transformed into the proper plane '''
         rad = self.radius
         cen = self.center
         
@@ -603,9 +603,30 @@ class DrawCircle(DrawCommand):
             return map(lambda p: cen.add(Vector3d(0, p.x, p.y)), square)
         else:
             raise Exception('DrawCircle: invalid plane argument')
+    
+    def get_points_on_circle(self, steps=60):
+        ''' returns points on the circle, transformed into the proper plane '''
+        if self.plane in ['zy', 'yz']: (k1, k2) = (2,1)
+        elif self.plane in ['xy', 'yx']: (k1, k2) = (0,1)
+        elif self.plane in ['zx', 'xz']: (k1, k2) = (2,0)
+        else:
+            raise Exception('DrawCircle: invalid plane argument: %s' % self.plane)
+        
+        rad = self.radius
+        center = self.center
+        
+        circ2 = [ (rad*np.cos(theta), rad*np.sin(theta)) for theta in np.linspace(0, 2*np.pi, steps) ]
+        circ3 = []
+        for p2 in circ2:
+            p = Vector3d()
+            p[k1] = p2[0]
+            p[k2] = p2[1]
+            circ3.append(p)
+        
+        return [center.add(c) for c in circ3]
 
 class Vector3d(object):
-    def __init__(self, x, y, z):
+    def __init__(self, x=0, y=0, z=0):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
@@ -624,7 +645,7 @@ class Vector3d(object):
     
     def norm(self):
         ''' returns the norm of this object '''
-        return math.sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
+        return np.sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
     
     def normalize(self):
         ''' returns the norm of this object '''
@@ -642,7 +663,14 @@ class Vector3d(object):
         if idx == 0: return self.x
         elif idx == 1: return self.y
         elif idx == 2: return self.z
-        else: raise Exception('Vector3d: idexing index must be in (0, 1, 2)')
+        else: raise Exception('Vector3d: get index must be in (0, 1, 2)')
+    
+    def __setitem__(self, idx, value):
+        ''' support get by index '''
+        if idx == 0: self.x = value
+        elif idx == 1: self.y = value
+        elif idx == 2: self.z = value
+        else: raise Exception('Vector3d: assignment index must be in (0, 1, 2)')
 
 class Matrix3(object):
     ''' a 3x3 matrix representation '''
