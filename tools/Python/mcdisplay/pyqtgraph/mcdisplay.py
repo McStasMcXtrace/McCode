@@ -7,8 +7,6 @@ import sys
 import os
 import logging
 import argparse
-import json
-import subprocess
 from datetime import datetime
 import numpy as np
 from enum import Enum
@@ -68,9 +66,6 @@ def get_2d_instrument(instr, plane='zy'):
         coords_sets.append((c.name, comp_coord_sets))
     
     return coords_sets
-
-
-
 
 def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     '''
@@ -133,7 +128,7 @@ class McDisplay2DGui(object):
         ZOOM = 0
         UNZOOM = 1
     
-    def __init__(self):
+    def __init__(self, title):
         #
         # app, scene, plots 
         #
@@ -144,7 +139,7 @@ class McDisplay2DGui(object):
         layout = pg.GraphicsLayout()
         
         window.resize(1000, 600)
-        window.setWindowTitle('2d-mcdisplay')
+        window.setWindowTitle('2D-mcdisplay: %s' % title)
         window.setCentralItem(layout)
         
         layout.window = window # keep window to avoid garbage collection
@@ -154,6 +149,13 @@ class McDisplay2DGui(object):
         self.plt_zy = pg.PlotItem(enableMenu=False)
         self.plt_xy = pg.PlotItem(enableMenu=False)
         self.plt_zx = pg.PlotItem(enableMenu=False)
+        
+        #self.plt_zy.axes['right']['item'].show()
+        #self.plt_zy.axes['top']['item'].show()
+        #self.plt_xy.axes['right']['item'].show()
+        #self.plt_xy.axes['top']['item'].show()
+        #self.plt_zx.axes['right']['item'].show()
+        #self.plt_zx.axes['top']['item'].show()
         
         self.ray_idx = 0
         self.rayplots = []
@@ -192,7 +194,7 @@ class McDisplay2DGui(object):
                 print(event.key())
             
             if event.key() == 81:                # q
-                quit()
+                QtGui.QApplication.quit()
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
@@ -201,6 +203,7 @@ class McDisplay2DGui(object):
         def print_help():
             ''' print help lines to the console '''
             helplines = []
+            helplines.append('')
             helplines.append('q            - quit')
             helplines.append('space        - next ray')
             helplines.append('click        - zoom')
@@ -334,7 +337,7 @@ def main(args):
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
     
-    gui = McDisplay2DGui()
+    gui = McDisplay2DGui(title=dirname)
     gui.set_instr_and_plot(instrument)
     gui.set_rays(raybundle.rays)
 
