@@ -88,7 +88,7 @@ def get_options():
     mcrun_lst =     [prefix+"run.pl", prefix+"run"]
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot.pl", prefix+"plot.pl --format=Gnuplot", prefix+"plot.pl --format=Matlab",
                      prefix+"plot-matlab", prefix+"plot-matplotlib", prefix+"plot-gnuplot", prefix+"plot-chaco"]
-    mcdisplay_lst = [prefix+"display-webgl",prefix+"display.pl", prefix+"display.pl --format=Matlab", prefix+"display.pl --format=VRML", 
+    mcdisplay_lst = [prefix+"display-webgl",prefix+"display-pyqtgraph",prefix+"display.pl", prefix+"display.pl --format=Matlab", prefix+"display.pl --format=VRML", 
                      prefix+"display.pl --format=Mantid", prefix+"display-matplotlib"]
     return mcrun_lst, mcplot_lst, mcdisplay_lst
 
