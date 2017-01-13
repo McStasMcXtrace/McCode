@@ -133,7 +133,8 @@ def print_help():
     helplines.append('q            - quit')
     helplines.append('p            - save png')
     helplines.append('s            - save svg')
-    helplines.append('d            - save pdf')
+# PDF currently unsupported
+#    helplines.append('d            - save pdf')
     helplines.append('l            - log toggle')
     helplines.append('t            - textinfo toggle')
     helplines.append('c            - cycle colormap')
@@ -159,8 +160,9 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
             savefile_cb(format='png')
         elif ev.key() == 83:                            # s
             savefile_cb(format='svg')
-        elif ev.key() == 68:                            # d
-            savefile_cb(format='pdf')
+# This is where export of PDF would be handled, e.g. via conversion from SVG
+#        elif ev.key() == 68:                            # d
+#            savefile_cb(format='pdf')
         elif ev.key() == 84:                            # t
             print("Toggle legend visibility")
             legend=flip_legend()
@@ -229,18 +231,19 @@ def dumpfile(scene, filenamebase='mcplot', format='png'):
     elif format=='svg':
         exporter = pg.exporters.SVGExporter(scene)
         exporter.export(outputfile)
-    elif format=='pdf':
-        exporter = pg.exporters.SVGExporter(scene)
-        exporter.export(outputfile)
-        import subprocess
-        # TODO: error handling
-        process = subprocess.Popen('svg2pdf %s %s.pdf' % (outputfile, '%s_%i.%s' % (filenamebase, index, 'pdf')), 
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE,
-                                   shell=True,
-                                   universal_newlines=True)
+# This is where PDF export would be handled via conversion from SVG
+#    elif format=='pdf':
+#        exporter = pg.exporters.SVGExporter(scene)
+#        exporter.export(outputfile)
+#        import subprocess
+#        # TODO: error handling
+#        process = subprocess.Popen('svg2pdf %s %s.pdf' % (outputfile, '%s_%i.%s' % (filenamebase, index, 'pdf')), 
+#                                   stdout=subprocess.PIPE, 
+#                                   stderr=subprocess.PIPE,
+#                                   shell=True,
+#                                   universal_newlines=True)
     else:
-        raise Exception('png, svg and pdf (via svg2pdf) are the only supported file formats (format=%s)' % format)
+        raise Exception('png, and svg are the only supported file formats (format=%s)' % format)
     if os.path.isfile(outputfile):
         print('Graphics output ' + outputfile + ' saved')
 
