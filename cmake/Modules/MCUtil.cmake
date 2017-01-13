@@ -125,10 +125,6 @@ macro(setupMCCODE FLAVOR)
     endif()
   endforeach()
 
-
-  # Setup mccode name and paths
-  set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
-
   if(WINDOWS)
     # Fix installation root
     set(CMAKE_INSTALL_PREFIX "C://")
