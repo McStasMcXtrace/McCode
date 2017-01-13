@@ -47,6 +47,7 @@ Source: "dist\mcstas-tools-python-mccodelib-NSIS-@VERSION@-mingw32.exe"; DestDir
 Source: "dist\mcstas-tools-python-mcplot-matplotlib-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcplot-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 
 [Run]
 ;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
@@ -66,5 +67,7 @@ Filename: "{tmp}\mcstas-tools-python-mccodelib-NSIS-@VERSION@-mingw32.exe"; Para
 Filename: "{tmp}\mcstas-tools-python-mcplot-matplotlib-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcplot-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
