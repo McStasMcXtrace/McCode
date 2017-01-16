@@ -196,8 +196,10 @@ TRACE
         sx=particle->polarisation[0];
         sy=particle->polarisation[1];
         sz=particle->polarisation[2];
+    }else{
+        sx=sy=sz=0;
     }
-    
+
     nrm = particle->ekin *1e9/VS2E;
     nrm = sqrt(nrm);
     if (ismpislave || repeating) {
