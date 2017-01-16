@@ -127,6 +127,6 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${WORK}/${P}display-pyqtgraph-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-pyqtgraph-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}display"
     )
 endif()
