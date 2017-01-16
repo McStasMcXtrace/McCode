@@ -34,7 +34,7 @@ then
        echo "We need write acces for installation, using sudo below..."
    fi
    $SUDO conda config --add channels conda-forge
-   $SUDO conda install qscintilla2
+   $SUDO conda install qscintilla2 pyqtgraph yaml
 else
    osascript -e "tell app \"System Events\" to display dialog \"Your current Python3 is not Anaconda - Please download and install Anaconda Python3 and rerun this tool after installation completes\""
    open https://www.continuum.io/downloads#osx
