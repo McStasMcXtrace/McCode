@@ -125,4 +125,10 @@ if(NOT WINDOWS)
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}plot-pyqtgraph${DOT_PYTHON_SUFFIX}"
     )
+  # Make pyqtgraph plotter available as mcplot/mxplot
+  install(
+    PROGRAMS "${WORK}/${P}plot-pyqtgraph"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    RENAME "${P}plot"
+    )
 endif()
