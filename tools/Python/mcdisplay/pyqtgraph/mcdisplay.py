@@ -142,7 +142,7 @@ class McDisplay2DGui(object):
         layout = pg.GraphicsLayout()
         
         window.resize(1000, 600)
-        window.setWindowTitle('mcdisplay-2D: %s' % title)
+        window.setWindowTitle(title)
         window.setCentralItem(layout)
         
         layout.window = window # keep window to avoid garbage collection
@@ -206,9 +206,18 @@ class McDisplay2DGui(object):
         def print_help(nogui=False):
             ''' print help lines to the console '''
             
+            helplines = []
+            helplines.append('')
+            helplines.append('q            - quit')
+            helplines.append('space        - next ray')
+            helplines.append('click        - zoom')
+            helplines.append('right-click  - zoom out')
+            helplines.append('h/F1         - help')
+            
+            print('\n'.join(helplines))
+            
             if not nogui:
                 helplines_gui = []
-                helplines_gui.append('')
                 helplines_gui.append('q - quit')
                 helplines_gui.append('space - next ray')
                 helplines_gui.append('click - zoom')
@@ -220,15 +229,6 @@ class McDisplay2DGui(object):
                 else:
                     prefix = "mx"
                 QtGui.QMessageBox.about(window, prefix+'display-2D', '\n'.join(helplines_gui))
-            
-            helplines = []
-            helplines.append('q            - quit')
-            helplines.append('space        - next ray')
-            helplines.append('click        - zoom')
-            helplines.append('right-click  - zoom out')
-            helplines.append('h/F1         - help')
-            
-            print('\n'.join(helplines))
         
         # add generic handlers
         self.layout.scene().keyPressEvent = key_handler

@@ -17,6 +17,8 @@ from plotfuncs import plot_Data1D, plot_Data2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from mccodelib import mccode_config
+
 from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D
 from mccodelib.mcplotgraph import PlotGraphPrint
 
@@ -44,6 +46,9 @@ def create_plotwindow(title):
     window = pg.GraphicsWindow()
     window.resize(1000,600)
     window.setWindowTitle(title)
+    
+    global g_window
+    g_window = window
     
     layout = pg.GraphicsLayout()
     window.setCentralItem(layout)
@@ -123,13 +128,14 @@ def plot_node(node, layout, viewmodel):
     replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
     set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
 
-def print_help():
+def print_help(nogui=False):
     if sys.platform == 'darwin':
         modifier = 'Meta'
     else:
         modifier = 'ctrl'
     
     helplines = []
+    helplines.append('')
     helplines.append('q            - quit')
     helplines.append('p            - save png')
     helplines.append('s            - save svg')
@@ -145,6 +151,28 @@ def print_help():
     helplines.append('%s + click - sweep monitors' % modifier)
     helplines.append('x            - expand subplots')
     print('\n'.join(helplines))
+    
+    if not nogui:
+        helplines_gui = []
+        helplines_gui.append('q            - quit')
+        helplines_gui.append('p            - save png')
+        helplines_gui.append('s            - save svg')
+        helplines_gui.append('d            - save pdf')
+        helplines_gui.append('l            - log toggle')
+        helplines_gui.append('t            - textinfo toggle')
+        helplines_gui.append('c            - cycle colormap')
+        helplines_gui.append('F1/h         - help')
+        helplines_gui.append('F5           - replot')
+        helplines_gui.append('click        - display subplot')
+        helplines_gui.append('right-click  - back')
+        helplines_gui.append('%s + click - sweep monitors' % modifier)
+        helplines_gui.append('x            - expand subplots')
+        
+        if mccode_config.configuration["MCCODE"] == "mcstas":
+            prefix = "mc"
+        else:
+            prefix = "mx"
+        QtGui.QMessageBox.about(g_window, prefix+'display-2D', '\n'.join(helplines_gui))
 
 def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
@@ -171,7 +199,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
             inc_cmap()
             replot_cb()
         elif ev.key() == 16777268:                      # F5
-            replot_cb(log=False)
+            replot_cb()
         elif ev.key() == 88:                            # x
             expand_sp()
         elif ev.key() == 16777264 or ev.key() == 72:    # F1 or h
@@ -346,7 +374,7 @@ def main(args):
         # set up
         plotter = McPyqtgraphPlotter(graph, sourcedir=loader.directory)
         plotter.runplot()
-        print_help()
+        print_help(nogui=True)
         
         # start
         sys.exit(app.exec_())
