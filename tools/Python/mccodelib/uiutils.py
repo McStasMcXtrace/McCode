@@ -9,8 +9,8 @@ Static utility functions related to handling mccode files.
 '''
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
-    f = open(instr_file, 'r')
-    text = f.read()
+    f = open(instr_file, 'rb')
+    text = f.read().decode()
     f.close()
     
     site = '("%INSTRUMENT_SITE:" tag not found)'
