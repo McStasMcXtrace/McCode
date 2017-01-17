@@ -139,12 +139,20 @@ class McDisplay2DGui(object):
         self.app = QtGui.QApplication(sys.argv)
         
         window = pg.GraphicsWindow()
-        layout = pg.GraphicsLayout()
-        
         window.resize(1000, 600)
-        window.setWindowTitle(title)
+        
+        mw = QtGui.QMainWindow()
+        window.setParent(mw)
+        mw.setCentralWidget(window)
+        mw.setWindowTitle(title)
+        
+        mw.show()
+        mw.raise_()
+        
+        layout = pg.GraphicsLayout()
         window.setCentralItem(layout)
         
+        layout.mw = mw
         layout.window = window # keep window to avoid garbage collection
         layout.setContentsMargins(2, 2, 2, 2) # outermost margin
         
