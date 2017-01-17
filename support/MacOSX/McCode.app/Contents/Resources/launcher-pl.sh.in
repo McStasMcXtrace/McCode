@@ -129,11 +129,3 @@ else
   "$PROGRAM" $ARGUMENTS "$@" > /dev/null 2>&1 &
 fi
 
-if [ "$osVersion" -lt 5 ]
-then
-  # bring X11 application to front
-  if [ $USEX11 -eq 1 ]
-  then
-    /usr/bin/open -a "$X11"
-  fi
-fi
