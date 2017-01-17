@@ -203,20 +203,36 @@ class McDisplay2DGui(object):
             elif event.key() in [72, 16777264]:  # h, F1
                 print_help()
         
-        def print_help():
+        def print_help(nogui=False):
             ''' print help lines to the console '''
+            
+            if not nogui:
+                helplines_gui = []
+                helplines_gui.append('')
+                helplines_gui.append('q - quit')
+                helplines_gui.append('space - next ray')
+                helplines_gui.append('click - zoom')
+                helplines_gui.append('right - click: zoom out')
+                helplines_gui.append('h/F1 - help')
+                
+                if mccode_config.configuration["MCCODE"] == "mcstas":
+                    prefix = "mc"
+                else:
+                    prefix = "mx"
+                QtGui.QMessageBox.about(window, prefix+'display-2D', '\n'.join(helplines_gui))
+            
             helplines = []
-            helplines.append('')
             helplines.append('q            - quit')
             helplines.append('space        - next ray')
             helplines.append('click        - zoom')
             helplines.append('right-click  - zoom out')
             helplines.append('h/F1         - help')
+            
             print('\n'.join(helplines))
         
         # add generic handlers
         self.layout.scene().keyPressEvent = key_handler
-        print_help()
+        print_help(True)
     
     def run_ui(self):
         '''  '''
