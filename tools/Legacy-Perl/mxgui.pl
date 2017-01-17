@@ -246,7 +246,7 @@ sub menu_spawn_mcplot {
     my ($w) = @_;
     my $file = $w->getOpenFile(-title => "Select simulation file", -initialdir => getcwd());
     if ($file == 0) {
-	my $cmd = "$MCSTAS::mcstas_config{'PLOTCMD'}$suffix $file";
+	my $cmd = "$MCSTAS::mcstas_config{'PLOTCMD'} $file";
 	spawn_external($w,$cmd);
     }
 }
@@ -284,38 +284,38 @@ sub spawn_external {
 }
 
 sub mcdoc_current {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix $current_sim_def $background";
+    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'} $current_sim_def $background";
     if (-e $current_sim_def) {
         putmsg($cmdwin, "Opening instrument docs: $cmd\n", 'msg');
         system("$cmd");
     }
 }
 sub mcdoc_web {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix --web $background";
+    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'} --web $background";
     putmsg($cmdwin, "Opening Web Page: $cmd\n", 'msg');
     system("$cmd");
 }
 
 sub mcdoc_manual {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix --manual $background";
+    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'} --manual $background";
     putmsg($cmdwin, "Opening User Manual: $cmd\n", 'msg');
     system("$cmd");
 }
 
 sub mcdoc_compman {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix --comp $background";
+    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'} --comp $background";
     putmsg($cmdwin, "Opening Component Manual: $cmd\n", 'msg');
     system("$cmd");
 }
 
 sub mcdoc_components {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix $background";
+    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'} $background";
     putmsg($cmdwin, "Opening Library help: $cmd\n", 'msg');
     system("$cmd");
 }
 
 sub mcdoc_generate {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix --force $background";
+    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'} --force $background";
     putmsg($cmdwin, "Generating Library help (local): $cmd\n", 'msg');
     system("$cmd");
 }
@@ -1018,7 +1018,7 @@ sub menu_run_simulation {
         # Check 'Mode' setting if a scan/trace/optim is
         # requested
         if ($newsi->{'Mode'} == 1) {
-	    push @command, "$MCSTAS::mcstas_config{'TRACECMD'}$suffix";
+	    push @command, "$MCSTAS::mcstas_config{'TRACECMD'}";
             if ($plotter =~ /PGPLOT|McXtrace|Gnuplot/i) {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.
@@ -1068,7 +1068,7 @@ sub menu_run_simulation {
             # push @command, "--save";
         } # end Mode=Trace mcdisplay
         elsif ($newsi->{'Mode'} == 2) { # optimize
-          push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}$suffix";
+          push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}";
           if (not ($newsi->{'Last'} || $newsi->{'Inspect'} || $newsi->{'First'})) {
             putmsg($cmdwin, "Warning: No criteria/monitor selected\n
          Global optimization using all monitors\n");
@@ -1081,7 +1081,7 @@ sub menu_run_simulation {
 	  push @command, "--optim-prec=$MCSTAS::mcstas_config{'PREC'}" if $MCSTAS::mcstas_config{'PREC'};
         } # end Mode=Optimize
         elsif ($newsi->{'Mode'} == 0) { # simulate
-	    push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}$suffix";
+	    push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}";
         } # end Mode=simulate
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);

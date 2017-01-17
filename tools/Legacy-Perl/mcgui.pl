@@ -246,7 +246,7 @@ sub menu_spawn_mcplot {
     my ($w) = @_;
     my $file = $w->getOpenFile(-title => "Select simulation file", -initialdir => getcwd());
     if ($file == 0) {
-	my $cmd = "$MCSTAS::mcstas_config{'PLOTCMD'}$suffix $file";
+	my $cmd = "$MCSTAS::mcstas_config{'PLOTCMD'} $file";
 	spawn_external($w,$cmd);
     }
 }
@@ -1051,7 +1051,7 @@ sub menu_run_simulation {
         # Check 'Mode' setting if a scan/trace/optim is
         # requested
         if ($newsi->{'Mode'} == 1) { # Trace 3D
-            push @command, "$MCSTAS::mcstas_config{'TRACECMD'}$suffix";
+            push @command, "$MCSTAS::mcstas_config{'TRACECMD'}";
             if ($plotter =~ /PGPLOT|McStas|McXtrace|Gnuplot/i) {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.
@@ -1105,7 +1105,7 @@ sub menu_run_simulation {
             # push @command, "--save";
         } # end Mode=Trace mcdisplay
         elsif ($newsi->{'Mode'} == 2) { # optimize
-          push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}$suffix";
+          push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}";
           if (not ($newsi->{'Last'} || $newsi->{'Inspect'} || $newsi->{'First'})) {
             putmsg($cmdwin, "Warning: No criteria/monitor selected\n
          Global optimization using all monitors\n");
@@ -1118,7 +1118,7 @@ sub menu_run_simulation {
 	  push @command, "--optim-prec=$MCSTAS::mcstas_config{'PREC'}" if $MCSTAS::mcstas_config{'PREC'};
         } # end Mode=Optimize
         elsif ($newsi->{'Mode'} == 0) { # simulate
-	    push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}$suffix";
+	    push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}";
         } # end Mode=simulate
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);

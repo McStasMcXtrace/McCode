@@ -316,7 +316,7 @@ sub pgplotit {
               if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'suffix'} --format=McCode $passed_arg_str -$dev $file");
+	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'SUFFIX'} --format=McCode $passed_arg_str -$dev $file");
               next;
           }
           elsif($cc =~ /[l]/i) {        # toggle log mode
@@ -340,7 +340,7 @@ sub pgplotit {
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
               my $filename = "$datalist->[$idx]{'Filename'}";
 	      print "Spawning plot of $filename \n";
-	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'suffix'} --format=McCode $passed_arg_str $filename -$dev");
+	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'SUFFIX'} --format=McCode $passed_arg_str $filename -$dev");
           }
           if($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }
