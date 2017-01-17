@@ -29,7 +29,7 @@ class McPyqtgraphPlotter():
     def __init__(self, plotgraph, sourcedir):
         self.graph = plotgraph
         self.sourcedir = sourcedir
-        
+    
     def runplot(self):
         node = self.graph
         
@@ -40,20 +40,29 @@ class McPyqtgraphPlotter():
         
         # initiate event driven plot recursion
         plot_node(node, plt_layout, flipper)
-
+    
 def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
+    
     window = pg.GraphicsWindow()
     window.resize(1000,600)
-    window.setWindowTitle(title)
+    
+    mw = QtGui.QMainWindow()
+    window.setParent(mw)
+    mw.setCentralWidget(window)
+    mw.setWindowTitle(title)
     
     global g_window
-    g_window = window
+    g_window = mw
     
     layout = pg.GraphicsLayout()
     window.setCentralItem(layout)
     layout.window = window # keep window to avoid garbage collection
     layout.setContentsMargins(2, 2, 2, 2) # outermost margin
+    layout.mw = mw
+    
+    mw.show()
+    mw.raise_()
     
     return layout
 
@@ -378,7 +387,7 @@ def main(args):
         
         # start
         sys.exit(app.exec_())
-    
+        
     except KeyboardInterrupt:
         print('keyboard interrupt')
     except Exception as e:
