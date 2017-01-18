@@ -174,8 +174,7 @@ class McGuiState(QtCore.QObject):
     
     def checkInstrFileCandidate(self, instr):
         if ' ' in instr:
-            msg = "WARNING: Please not use directory names containing whitespaces."
-            self.__emitter.status(msg)
+            msg = "Error: Please do not save instrument files in directories, whose names contain white-spaces."
             raise Exception(msg)
 
     def setWorkDir(self, newdir):
@@ -676,11 +675,22 @@ class McGuiAppController():
             self.view.ew.assumeDataSaved()
             self.emitter.status("Instrument saved: " + os.path.basename(self.state.getInstrumentFile()))
     
+    def msgboxDisplayError(self, can_throw_func, raise_err=False):
+        try:
+            return can_throw_func()
+        except Exception as e:
+            self.emitter.status("Instrument not saved")
+            self.view.showMessage("Instrument not saved.", str(e))
+            if raise_err:
+                raise e
+            return None
+    
     def handleSaveAs(self):
         oldinstr = self.state.getInstrumentFile()
         if oldinstr != '':
             newinstr = self.view.showSaveAsDialog(oldinstr)
-            self.state.checkInstrFileCandidate(newinstr)
+            if not self.msgboxDisplayError(lambda: self.state.checkInstrFileCandidate(newinstr)):
+                return
         
         if newinstr != '':
             self.state.unloadInstrument()
@@ -692,7 +702,8 @@ class McGuiAppController():
     
     def handleNewInstrument(self):
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
-        self.state.checkInstrFileCandidate(new_instr_req)
+        if not self.msgboxDisplayError(lambda: self.state.checkInstrFileCandidate(new_instr_req)):
+            return
         
         if new_instr_req != '':
             template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_simple.instr")).read()
@@ -706,7 +717,8 @@ class McGuiAppController():
     
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
-        self.state.checkInstrFileCandidate(new_instr_req)
+        if not self.msgboxDisplayError(lambda: self.state.checkInstrFileCandidate(new_instr_req)):
+            return
         
         if new_instr_req != '':
             if self.view.closeCodeEditorWindow():
@@ -719,7 +731,8 @@ class McGuiAppController():
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if not instr:
             return
-        self.state.checkInstrFileCandidate(instr)
+        if not self.msgboxDisplayError(lambda: self.state.checkInstrFileCandidate(instr)):
+            return
         
         if instr:
             if self.view.closeCodeEditorWindow():

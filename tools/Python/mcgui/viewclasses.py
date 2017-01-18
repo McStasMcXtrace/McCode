@@ -33,6 +33,9 @@ class McView(object):
     def showMainWindow(self):
         self.mw.show()
         self.mw.raise_()
+    
+    def showMessage(self, title, message):
+        QtGui.QMessageBox.about(self.mw, title, message)
 
     def showCodeEditorWindow(self, instr):
         self.ew.initCodeEditor(instr)
