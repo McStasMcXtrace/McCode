@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
 
-
 ## This file will build McXtrace
 project(mcxtrace C)
 
