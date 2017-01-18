@@ -12,8 +12,9 @@ import numpy as np
 from enum import Enum
 
 import PyQt4
-import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
+from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -125,7 +126,64 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     plt.setLabels(left=ylabel,bottom=xlabel)
     
     return compnames_plts
+
+class ModLegend(pg.LegendItem):
+    """
+    Modified LegendItem to remove the ugly / in the label. Also reduces text size and padding.
+    """
+    def __init__(self, offset, text_size='9pt'):
+        self.text_size = text_size
+        LegendItem.__init__(self, None, offset)
     
+    def addItem(self, item, name):
+        label = pg.LabelItem(name, size=self.text_size)
+        if isinstance(item, ItemSample):
+            sample = item
+        else:
+            sample = ItemSample(item)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        row = self.layout.rowCount()
+        self.items.append((sample, label))
+        self.layout.addItem(label, row, 1)
+        self.updateSize()
+        
+    def paint(self, p, *args):
+        p.setPen(pg.functions.mkPen(255,255,255,100))
+        p.setBrush(pg.functions.mkBrush(0,0,0,100))
+        p.drawRect(self.boundingRect())
+
+def get_help_lines():
+    ''' print help lines to the console '''
+    
+    helplines = []
+    helplines.append('q            - quit')
+    helplines.append('space        - next ray')
+    helplines.append('click        - zoom')
+    helplines.append('right-click  - zoom out')
+    helplines.append('h/F1         - info')
+    
+    return helplines
+    
+    #if mccode_config.configuration["MCCODE"] == "mcstas":
+    #    prefix = "mc"
+    #else:
+    #    prefix = "mx"
+    #QtGui.QMessageBox.about(window, prefix+'display-2D', '\n'.join(helplines_gui))
+
+def create_help_pltitm():
+    
+    plt = pg.PlotItem(enableMenu=False)
+    plt.axes['left']['item'].hide()
+    plt.axes['bottom']['item'].hide()
+    
+    plt.legend = ModLegend(offset=(-140, 60))
+    plt.legend.setParentItem(plt.vb)
+
+    for l in get_help_lines():
+        plt.plot([0], [0], name=l)
+    
+    return plt
+
 class McDisplay2DGui(object):
     class ZoomState(Enum):
         ZOOM = 0
@@ -148,11 +206,12 @@ class McDisplay2DGui(object):
         
         mw.show()
         mw.raise_()
+        mw.activateWindow()
+        self.mw = mw
         
         layout = pg.GraphicsLayout()
         window.setCentralItem(layout)
         
-        layout.mw = mw
         layout.window = window # keep window to avoid garbage collection
         layout.setContentsMargins(2, 2, 2, 2) # outermost margin
         
@@ -160,16 +219,18 @@ class McDisplay2DGui(object):
         self.plt_zy = pg.PlotItem(enableMenu=False)
         self.plt_xy = pg.PlotItem(enableMenu=False)
         self.plt_zx = pg.PlotItem(enableMenu=False)
-        
-        #self.plt_zy.axes['right']['item'].show()
-        #self.plt_zy.axes['top']['item'].show()
-        #self.plt_xy.axes['right']['item'].show()
-        #self.plt_xy.axes['top']['item'].show()
-        #self.plt_zx.axes['right']['item'].show()
-        #self.plt_zx.axes['top']['item'].show()
-        
+        self.plt_help = create_help_pltitm()
+
         self.ray_idx = 0
         self.rayplots = []
+        
+        #
+        # info window
+        #
+        
+        iw = QtGui.QMainWindow()
+        iw.setCentralWidget = QtGui.QWidget()
+        self.infowindow = iw
         
         #
         # zoom stuff
@@ -209,39 +270,17 @@ class McDisplay2DGui(object):
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
-                print_help()
-        
-        def print_help(nogui=False):
-            ''' print help lines to the console '''
-            
-            helplines = []
-            helplines.append('')
-            helplines.append('q            - quit')
-            helplines.append('space        - next ray')
-            helplines.append('click        - zoom')
-            helplines.append('right-click  - zoom out')
-            helplines.append('h/F1         - help')
-            
-            print('\n'.join(helplines))
-            
-            if not nogui:
-                helplines_gui = []
-                helplines_gui.append('q - quit')
-                helplines_gui.append('space - next ray')
-                helplines_gui.append('click - zoom')
-                helplines_gui.append('right - click: zoom out')
-                helplines_gui.append('h/F1 - help')
-                
-                if mccode_config.configuration["MCCODE"] == "mcstas":
-                    prefix = "mc"
-                else:
-                    prefix = "mx"
-                QtGui.QMessageBox.about(window, prefix+'display-2D', '\n'.join(helplines_gui))
+                self.infowindow.show()
+                self.mw.raise_()
+                self.mw.activateWindow()
         
         # add generic handlers
         self.layout.scene().keyPressEvent = key_handler
-        print_help(True)
-    
+        
+        # print help lines
+        print('')
+        print('\n'.join(get_help_lines()))
+        
     def run_ui(self):
         '''  '''
         
@@ -323,6 +362,7 @@ class McDisplay2DGui(object):
         self.layout.addItem(self.plt_zy, 0, 0)
         self.layout.addItem(self.plt_xy, 0, 1)
         self.layout.addItem(self.plt_zx, 1, 0)
+        self.layout.addItem(self.plt_help, 1, 1)
         
         self.zoomstate = self.ZoomState.UNZOOM
 
