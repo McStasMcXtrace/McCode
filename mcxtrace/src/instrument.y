@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
-* McStas/McXtrace, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
+* McXtrace, x-ray tracing package
+*         Copyright (C) 1997-2017, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -1968,7 +1968,7 @@ read_component(char *name)
     {
       print_error(
         "Cannot find file containing definition of component '%s'.\n"
-        "Check the McStas library installation or your MCSTAS environment variable\n"
+        "Check the McXtrace library installation or your MCXTRACE environment variable\n"
         "or copy the component definition file locally.\n", name);
       return NULL;
     }

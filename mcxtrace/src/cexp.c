@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* McXtrace, x-ray tracing package
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -11,7 +11,7 @@
 * Written by: K.N.
 * Date: Aug  7, 1997
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McXtrace 1.0
 * Version: $Revision$
 *
 * Handle expressions used as arguments to components etc.
