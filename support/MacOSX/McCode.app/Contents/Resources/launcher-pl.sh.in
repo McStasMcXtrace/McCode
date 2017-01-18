@@ -16,7 +16,7 @@ ARGUMENTS=""
 DIRECTORY="~"
 
 # paths
-PATH=$HOME/anaconda3/bin:$HOME/anaconda/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:/usr/local/bin:/sw/bin:/sw/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/bin/X11:/usr/local/bin/X11:$PATH
+PATH=$HOME/anaconda3/bin:$HOME/anaconda/bin:$HOME/miniconda3/bin:$HOME/miniconda/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:/usr/local/bin:/sw/bin:/sw/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/bin/X11:/usr/local/bin/X11:$PATH
 
 # MCCODE
 @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
