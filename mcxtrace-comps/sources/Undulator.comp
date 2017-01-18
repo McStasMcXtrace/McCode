@@ -21,32 +21,32 @@
  *
  * %P
  * Input Parameters:
- * Ee: (GeV) Storage ring electron energy (typically a few GeV)
- * Ie: (A)   Ring current
+ * Ee: (GeV) Storage ring electron energy (typically a few GeV).
+ * Ie: (A)   Ring current.
  * tbunch: (s) Bunch length. 0 means continous source.
  * t0:     (s) Delay of the first bunch from t=0.
- * B:      (T) Peak magnet field strength
- * Nper:   ( ) Number of magnetic periods in the undulator
- * length: (m) Length of the undulator.
- * K:      ( ) Dimensionless undulator parameter. overrides B.
+ * B:      (T) Peak magnet field strength.
+ * Nper:   ( ) Number of magnetic periods in the undulator.
+ * lu:     (m) Magnetic period length of the undulator.
+ * K:      ( ) Dimensionless undulator parameter. Overrides B.
  * gap:    (m) Undulator gap.
- * sigex:  ( ) Electron ring beam size in horizontal plane (rms) 
- * sigey:  ( ) Electron ring beam size in vertical plane (rms)
+ * sigex:  ( ) Electron ring beam size in horizontal plane (rms).
+ * sigey:  ( ) Electron ring beam size in vertical plane (rms).
  * phase:  ( ) Initial phase of radiation.
- * randomphase: ( ) If !=0 phase will be random (I.e. the emitted radiation is completely incoherent)
- * focus_xw: (m) Width of target window
- * focus yh: (m) Height of target window
- * dist: (m) Distance from source plane to target window along the optical axis
- * E0: (keV) Center of emitted energy spectrum (overrides lambda0)
- * dE: (keV) Half-width of emitted energy spectrum
- * verbose: ( ) if nonzero, output extra information
+ * randomphase: ( ) If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
+ * focus_xw: (m) Width of target window.
+ * focus yh: (m) Height of target window.
+ * dist: (m) Distance from source plane to target window along the optical axis.
+ * E0: (keV) Center of emitted energy spectrum (overrides lambda0).
+ * dE: (keV) Half-width of emitted energy spectrum.
+ * verbose: ( ) if nonzero, output extra information.
  * quick_integ: ( ) if nonzero, use faster (but less accurate) integration scheme.
 */
 
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
 SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, K=3,
-        gap=1e-3, int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
+        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 DEPENDENCY "-lgsl -lgslcblas"
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -96,7 +96,7 @@ DECLARE
   struct {
     double gamma,gamma2,igamma;
     double s1x,s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
-    double lu; /*undulator magnetic period*/
+    double length; /*undulator magnetic length*/
     double kc; /*undulator kritical wavenumber*/
     double pmul; /*initial photon weight*/
     gsl_function Bsig,Bpi;
@@ -115,7 +115,7 @@ INITIALIZE
 %{
   fprintf(stderr,"Warning (%s): Undulator is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
   
-  prms.lu=length/Nper;
+  prms.length=lu*Nper;
 
   if( (!K && B<=0) || Ee<=0 || Ie<=0 ){
     fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a consistent set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
@@ -123,10 +123,10 @@ INITIALIZE
   }
   
   if(K){
-    B=2*M_PI*MELE*M_C*K/CELE/prms.lu;
+    B=2*M_PI*MELE*M_C*K/CELE/lu;
     if (verbose) printf("Undulator (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
   }else if (B>0){
-    K=CELE*B*prms.lu/(2*M_PI*MELE*M_C);
+    K=CELE*B*lu/(2*M_PI*MELE*M_C);
     if (verbose) printf("Undulator (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
   }
 
@@ -182,7 +182,7 @@ TRACE
 /*    }*/
 
     /* the undulator's fundamental wavelength*/
-    w_u=2*M_PI*M_C/prms.lu;
+    w_u=2*M_PI*M_C/lu;
 
     /* now pick angles (\xi and \psi => \theta) within the focus_window 
      * (point on window + point in electron beam)
@@ -225,7 +225,7 @@ TRACE
     double w10=2*prms.gamma2/(1+K*K/2.0) * w_u; 
     double w_w1=w/w1theta;
     double w_w10=w/w10;
-    //double e2=0.95*Ee*Ee/((1+K*K/2.0)*prms.lu);
+    //double e2=0.95*Ee*Ee/((1+K*K/2.0)*lu);
 
     //printf("SPECTR: %g %g %g %g %g %g %g\n",e,e2,k,w,w1theta,w10,w_w1);
 
@@ -256,7 +256,7 @@ TRACE
     
     double prefactor=alpha*Ie/CELE*pow(K*prms.gamma/(1+K*K/2.0),2.0)*Nper*Nper*w_w10*w_w10;
 
-    p*=prefactor* pow(bsigma_integral,2.0)*s_n2;
+    p*=prefactor* (pow(bsigma_integral,2.0)+pow(bpi_integral,2.0) ) *s_n2;
     p=p;
 
     /*randomly pick phase*/
@@ -283,12 +283,12 @@ MCDISPLAY
   const double D=dist;
   double x0,z0,x1,z1;
 
-  zz=-(length+prms.lu)/2.0;
-  dz=prms.lu/2.0;
+  zz=-(prms.length+lu)/2.0;
+  dz=lu/2.0;
 
-  while (zz<=(length-prms.lu)/2.0){
-    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,prms.lu/2.0);
-    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,prms.lu/2.0);
+  while (zz<=(prms.length-lu)/2.0){
+    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,lu/2.0);
+    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,lu/2.0);
     zz+=dz;
   }
 
