@@ -92,6 +92,17 @@ else
    fi
 fi
 
+osascript -e "tell app \"System Events\" to display dialog \"We recommend that your user $USER takes ownership of /usr/local - do you want to do this? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo sudo chown -R $USER:staff /usr/local
+    sudo chown -R $USER:staff /usr/local
+    mkdir -p /usr/local/bin
+else
+    echo "Not taking ownership of /usr/local..."
+fi
+
 # TODO:
 # Offer to get gcc from hpc.sourceforge.net
 # Offer to spawn (c-only) build of openmpi-2.0
