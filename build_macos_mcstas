@@ -8,24 +8,24 @@ fi
 
 # This is an app bundle being built, relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
-./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 # 64-bit Mac OS
-./mkdist mcstas $1 "" "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-comps $1 "" "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcstas $1 "" "" mac "" -- OSXapp
+./mkdist mcstas-comps $1 "" "" mac "" -- OSXapp
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac "" -- OSXapp
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?

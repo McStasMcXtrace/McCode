@@ -16,7 +16,7 @@ set(PERL "/usr/bin/perl")
 set(MCPLOT_DEFAULT "plot-pyqtgraph")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
-set(GNUDEV "wxt")
+set(GNUDEV "x11")
 
 # Suffix for executables
 set(EXE "out")

@@ -8,28 +8,28 @@ fi
 
 # This is an app bundle being built, relocatable.
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
-./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 # 64-bit Mac OS
-./mkdist mcxtrace $1 "" "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-comps $1 "" "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac_el_capitan "" -- OSXapp
-./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcxtrace $1 "" "" mac "" -- OSXapp
+./mkdist mcxtrace-comps $1 "" "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-r $1 tools/Python/mcdisplay/R/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
+./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac "" -- OSXapp
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
