@@ -31,7 +31,13 @@ mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then
     mv /Applications/McStas-$1.app dist
-    echo Your app is now located in the dist folder
+    ln -s /Applications dist/
+    cp support/MacOSX/Check-dependencies/* dist
+    mv dist mcstas-$1
+    mkdir dist
+    tar cfz dist/mcstas-$1.tgz mcstas-$1
+    echo A tgz of your app is now located in the dist folder
+    rm -rf mcstas-$1
 else
     ln -s /Applications/McStas-$1.app dist/
     echo Your app is now located in /Applications \(link available in the dist folder\)

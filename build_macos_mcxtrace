@@ -35,12 +35,15 @@ mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then
     mv /Applications/McXtrace-$1.app dist
-    echo Your app is now located in the dist folder
+    ln -s /Applications dist/
+    cp support/MacOSX/Check-dependencies/* dist
+    mv dist mcxtrace-$1
+    mkdir dist
+    tar cfz dist/mcxtrace-$1.tgz mcxtrace-$1
+    echo A tgz of your app is now located in the dist folder
+    rm -rf mcxtrace-$1
 else
     ln -s /Applications/McXtrace-$1.app dist/
     echo Your app is now located in /Applications \(link available in the dist folder\)
 fi
-
-
-
 
