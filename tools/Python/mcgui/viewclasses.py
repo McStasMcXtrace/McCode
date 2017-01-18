@@ -34,17 +34,21 @@ class McView(object):
         self.mw.show()
         self.mw.raise_()
     
-    def showMessage(self, title, message):
-        QtGui.QMessageBox.about(self.mw, title, message)
-
+    def showErrorDialogue(self, title, message):
+        msg = QtGui.QMessageBox()
+        msg.setIcon(QtGui.QMessageBox.Critical)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.exec_()
+    
     def showCodeEditorWindow(self, instr):
         self.ew.initCodeEditor(instr)
         self.ew.show()
         self.mw.raise_()
-        
+    
     def closeCodeEditorWindow(self):
         return self.ew.close()
-
+    
     ''' Update UI data
     '''
     def updateInstrument(self, labels, instr):
