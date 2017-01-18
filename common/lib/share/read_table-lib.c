@@ -71,7 +71,9 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
         case STORE:
             /*find an available slot and store references to table there*/
             tr=&(read_table_file_list[read_table_file_count++]);
-            tr->table_ref= (t_Table *) item;
+            tr->table_ref=(t_Table *)calloc(1,sizeof(t_Table));
+            /*copy the contents of the table handle*/
+            *(tr->table_ref)= *((t_Table *) item);
             tr->ref_count++;
             return NULL;
         case GC:
@@ -88,7 +90,7 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                         tr->ref_count--;
                         return NULL;
                     }else{
-                        /* The item is found - move remaing list items up one slot 
+                        /* The item is found - move remaining list items up one slot,
                          * and return the table for garbage collection by caller*/
                         while (tr->table_ref!=NULL){
                             *tr=*(tr+1);
@@ -274,8 +276,9 @@ void *Table_File_List_store(t_Table *tab){
     /*Need to be able to store the pointer*/
     if (!Table) return(-1);
     
-    if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
-    else                   strncpy(name, File, 1024);
+    //if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
+    //else                   
+    strncpy(name, File, 1024);
     
     /* Check if the table has already been read from file.
      * If so just reuse the table, if not (this is flagged by returning NULL
@@ -1105,11 +1108,13 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
     {
       t_Table Table;
 
-      /* access file at offset and get following block */
-      nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
       /* if ok, set t_Table block number else exit loop */
       block_number++;
       Table.block_number = block_number;
+      
+      /* access file at offset and get following block. Block number is from the set offset
+       * hance the hardcoded 1 - i.e. the next block counted from offset.*/
+      nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
       /* if t_Table array is not long enough, expand and realocate */
       if (block_number >= allocated-1) {
         allocated += 256;
@@ -1123,7 +1128,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
         }
       }
       /* store it into t_Table array */
-      snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
+      //snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
       Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }
