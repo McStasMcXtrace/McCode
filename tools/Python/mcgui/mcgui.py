@@ -550,7 +550,7 @@ class McGuiAppController():
             parsers = []
             
             for f in files_comp:
-                if re.search(dirnames[i], f):
+                if re.search(dirnames[i], os.path.basename(os.path.dirname(f))):
                     compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
                     parsers.append(McComponentParser(f)) # append a parser, for ease of parsing on-the-fly
             
