@@ -54,7 +54,7 @@ usage() {
     echo ""
     echo "Available generators are: ${ALL_GENS}";
     echo ""
-    echo "McStas, Johan Brinch <jsbn@fysik.dtu.dk>";
+    echo "McCode, Peter K Willendruo <pkwi@fysik.dtu.dk> || Erik B Knudsen <erkn@fysik.dtu.dk>";
 }
 
 if [ "x$1" = "x" ]; then
