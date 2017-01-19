@@ -18,7 +18,7 @@ from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib import mccode_config
+from mccodelib import uiutils
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline, DrawCircle
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
@@ -158,18 +158,14 @@ def get_help_lines():
     
     helplines = []
     helplines.append('q            - quit')
+    helplines.append('p            - save png')
+    helplines.append('s            - save svg')
     helplines.append('space        - next ray')
     helplines.append('click        - zoom')
     helplines.append('right-click  - zoom out')
     helplines.append('h/F1         - info')
     
     return helplines
-    
-    #if mccode_config.configuration["MCCODE"] == "mcstas":
-    #    prefix = "mc"
-    #else:
-    #    prefix = "mx"
-    #QtGui.QMessageBox.about(window, prefix+'display-2D', '\n'.join(helplines_gui))
 
 def create_help_pltitm():
     
@@ -321,6 +317,10 @@ class McDisplay2DGui(object):
             
             if event.key() == 81:                # q
                 QtGui.QApplication.quit()
+            elif event.key() == 80:                 # p
+                self.dumpfile(format='png')
+            elif event.key() == 83:                 # s
+                self.dumpfile(format='svg')
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
@@ -340,6 +340,9 @@ class McDisplay2DGui(object):
         # print help lines
         print('')
         print('\n'.join(get_help_lines()))
+    
+    def dumpfile(self, format):
+        uiutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
     def get_comp_color_pairs(self):
         ''' extracts component names and matches then with colours in the natural order '''

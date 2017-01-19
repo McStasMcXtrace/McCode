@@ -17,8 +17,8 @@ from plotfuncs import plot_Data1D, plot_Data2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from mccodelib import uiutils
 from mccodelib import mccode_config
-
 from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D
 from mccodelib.mcplotgraph import PlotGraphPrint
 
@@ -197,9 +197,9 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
             savefile_cb(format='png')
         elif ev.key() == 83:                            # s
             savefile_cb(format='svg')
-# This is where export of PDF would be handled, e.g. via conversion from SVG
-#        elif ev.key() == 68:                            # d
-#            savefile_cb(format='pdf')
+        # This is where export of PDF would be handled, e.g. via conversion from SVG
+        #elif ev.key() == 68:                            # d
+        #    savefile_cb(format='pdf')
         elif ev.key() == 84:                            # t
             print("Toggle legend visibility")
             legend=flip_legend()
@@ -217,7 +217,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
         if debug:
             print("key code: %s" % str(ev.key()))
     
-    savefile_cb = lambda format: dumpfile(scene=scene, format=format)
+    savefile_cb = lambda format: uiutils.dumpfile_pqtg(scene=scene, format=format)
     expand_sp = lambda : expand_subplots(sourcedir=viewmodel.get_sourcedir())
     
     scene.keyPressEvent = lambda ev: key_handler(ev=ev,
@@ -248,41 +248,6 @@ def expand_subplots(sourcedir):
         
     for s in subdirs:
         subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
-
-def dumpfile(scene, filenamebase='mcplot', format='png'):
-    ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
-    import pyqtgraph.exporters
-
-    outputfile = '%s.%s' % (filenamebase, format)
-    # Check for existance of earlier exports
-    if os.path.isfile(outputfile):
-        index=1
-        outputfile = '%s_%i.%s' % (filenamebase, index, format )
-        while os.path.isfile(outputfile):
-            index += 1
-            outputfile = '%s_%i.%s' % (filenamebase, index, format)
-            
-    if format=='png':
-        exporter = pg.exporters.ImageExporter(scene)
-        exporter.export(outputfile)
-    elif format=='svg':
-        exporter = pg.exporters.SVGExporter(scene)
-        exporter.export(outputfile)
-# This is where PDF export would be handled via conversion from SVG
-#    elif format=='pdf':
-#        exporter = pg.exporters.SVGExporter(scene)
-#        exporter.export(outputfile)
-#        import subprocess
-#        # TODO: error handling
-#        process = subprocess.Popen('svg2pdf %s %s.pdf' % (outputfile, '%s_%i.%s' % (filenamebase, index, 'pdf')), 
-#                                   stdout=subprocess.PIPE, 
-#                                   stderr=subprocess.PIPE,
-#                                   shell=True,
-#                                   universal_newlines=True)
-    else:
-        raise Exception('png, and svg are the only supported file formats (format=%s)' % format)
-    if os.path.isfile(outputfile):
-        print('Graphics output ' + outputfile + ' saved')
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''

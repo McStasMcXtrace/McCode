@@ -98,3 +98,40 @@ def get_file_contents(filepath):
         return get_file_text_direct(filepath)
     else:
         return ''
+
+def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
+    ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
+    import pyqtgraph.exporters
+    import pyqtgraph as pg
+
+    outputfile = '%s.%s' % (filenamebase, format)
+    # Check for existance of earlier exports
+    if os.path.isfile(outputfile):
+        index=1
+        outputfile = '%s_%i.%s' % (filenamebase, index, format )
+        while os.path.isfile(outputfile):
+            index += 1
+            outputfile = '%s_%i.%s' % (filenamebase, index, format)
+            
+    if format=='png':
+        exporter = pg.exporters.ImageExporter(scene)
+        exporter.export(outputfile)
+    elif format=='svg':
+        exporter = pg.exporters.SVGExporter(scene)
+        exporter.export(outputfile)
+        # This is where PDF export would be handled via conversion from SVG
+        #    elif format=='pdf':
+        #        exporter = pg.exporters.SVGExporter(scene)
+        #        exporter.export(outputfile)
+        #        import subprocess
+        #        # TODO: error handling
+        #        process = subprocess.Popen('svg2pdf %s %s.pdf' % (outputfile, '%s_%i.%s' % (filenamebase, index, 'pdf')), 
+        #                                   stdout=subprocess.PIPE, 
+        #                                   stderr=subprocess.PIPE,
+        #                                   shell=True,
+        #                                   universal_newlines=True)
+    else:
+        raise Exception('png, and svg are the only supported file formats (format=%s)' % format)
+    if os.path.isfile(outputfile):
+        print('Graphics output ' + outputfile + ' saved')
+
