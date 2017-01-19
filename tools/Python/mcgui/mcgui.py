@@ -682,13 +682,13 @@ class McGuiAppController():
             self.view.showErrorDialogue("Error: Instrument not saved", "Instrument files should not be saved in directories, whose paths containing white-spaces.")
             if raise_err:
                 raise e
-            return None
+            return False
     
     def handleSaveAs(self):
         oldinstr = self.state.getInstrumentFile()
         if oldinstr != '':
             newinstr = self.view.showSaveAsDialog(oldinstr)
-            if not self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(newinstr)):
+            if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(newinstr))==False:
                 return
         
         if newinstr != '':
@@ -701,7 +701,7 @@ class McGuiAppController():
     
     def handleNewInstrument(self):
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
-        if not self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req)):
+        if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
         
         if new_instr_req != '':
@@ -716,7 +716,7 @@ class McGuiAppController():
     
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
-        if not self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req)):
+        if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
         
         if new_instr_req != '':
