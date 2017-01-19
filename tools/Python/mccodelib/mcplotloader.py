@@ -126,7 +126,7 @@ class DataMultiHeader(DataMcCode):
 ''' 
 Utility funcitons for loading and parsing mccode output files
 '''
-freetext_pat = '[\w \[\]\{\}\(\)\.\+\-\\\/\^]+'
+freetext_pat = '[\w \[\]\{\}\(\)\.\+\-\\\/\^\~]+'
 
 def _parse_1D_monitor(text):
     ''' populates data fields of new Data1D object using the text from a mccode data file '''
