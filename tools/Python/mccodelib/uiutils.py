@@ -85,12 +85,16 @@ def save_instrfile(instr, text):
     
     return instr
 
+def get_file_text_direct(file):
+    ''' Opens a file for reading binary, reads it, decodes the results and returns the text. Fixes an occational issue on MacOSX. '''
+    f = open(file, 'rb')
+    text = f.read().decode()
+    f.close()
+    return text
+
 def get_file_contents(filepath):
     ''' returns file contents if file exists '''
     if os.path.exists(str(filepath)):
-        f = open(filepath, 'r')
-        text = f.read()
-        f.close()
-        return text
+        return get_file_text_direct(filepath)
     else:
         return ''

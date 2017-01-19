@@ -16,6 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d
+from mccodelib.uiutils import get_file_text_direct
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
@@ -27,7 +28,7 @@ class SimpleWriter(object):
     
     def write(self):
         # load and modify
-        template = open(self.template).read()
+        template = get_file_text_direct(self.template)
         lines = template.splitlines()
         for i in range(len(lines)):
             if 'INSERT_CAMPOS_HERE' in lines[i]:
@@ -64,7 +65,7 @@ class DjangoWriter(object):
         settings.configure()
     
     def build(self):
-        templ = open(self.templatefile).read()
+        templ = get_file_text_direct(self.templatefile)
         t = self.Template(templ)
         c = self.Context({'instrument': self.instrument, 
             'campos_x': self.campos.x, 'campos_y': self.campos.y, 'campos_z': self.campos.z,})
@@ -101,7 +102,7 @@ def write_browse(instrument, raybundle, dir, nobrowse=False):
     ''' writes instrument definitions to html/ js '''
     # write mcdisplay.js
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
-    file_save(open(mcd_filepath).read(), os.path.join(dir, '_mcdisplay.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, '_mcdisplay.js'))
     
     # write html
     html_filepath = os.path.join(dir, 'index.html')
