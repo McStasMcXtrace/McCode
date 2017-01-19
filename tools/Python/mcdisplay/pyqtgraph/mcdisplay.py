@@ -71,6 +71,8 @@ def get_2d_instrument(instr, plane='zy'):
     
     return coords_sets
 
+colours = [(100, 0, 255), (30, 255, 100), (250, 150, 255), (150, 150, 115), (255, 255, 0), (0, 150, 0)]
+
 def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     '''
     See get_2d_instrument impl to understand the data structure 
@@ -79,7 +81,6 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     '''
     idx = 0
     def get_next_colour(idx):
-        colours = [(100, 0, 255), (30, 255, 100), (250, 150, 255), (150, 150, 115), (255, 255, 0), (0, 150, 0)]
         colour = colours[idx % len(colours)]
         idx += 1
         return colour
@@ -184,6 +185,61 @@ def create_help_pltitm():
     
     return plt
 
+def create_infowindow(comp_colour_pairs):
+    class InfoWindow(QtGui.QMainWindow):
+        ''' infowindow that is designed to be static '''
+        class Ui_InfoWindow(object):
+            ''' info window widgets (auto-generated code) '''
+            def setupUi(self, MainWindow):
+                MainWindow.setObjectName("MainWindow")
+                MainWindow.resize(259, 395)
+                MainWindow.setStyleSheet("background-color: rgb(0, 0, 0);")
+                self.centralwidget = QtGui.QWidget(MainWindow)
+                self.centralwidget.setObjectName("centralwidget")
+                self.verticalLayoutTechnicalReason = QtGui.QVBoxLayout(self.centralwidget)
+                self.verticalLayoutTechnicalReason.setObjectName("verticalLayoutTechnicalReason")
+                self.scrollArea = QtGui.QScrollArea(self.centralwidget)
+                self.scrollArea.setWidgetResizable(True)
+                self.scrollArea.setObjectName("scrollArea")
+                self.scrollAreaWidgetContents = QtGui.QWidget()
+                self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 239, 375))
+                self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+                self.vlayout = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
+                self.vlayout.setObjectName("vlayout")
+                MainWindow.setCentralWidget(self.centralwidget)
+                
+                self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+                self.verticalLayoutTechnicalReason.addWidget(self.scrollArea)
+                
+                self.labels = []
+                self.spacerItem = QtGui.QSpacerItem(20, 448, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+                
+        def set_components(self, str_colour_pairs):
+            ''' colours are tri-tupples of rgb '''
+            for pair in str_colour_pairs:
+                s = pair[0]
+                c = pair[1]
+                
+                lbl = QtGui.QLabel(self.ui.scrollAreaWidgetContents)
+                lbl.setText(s)
+                lbl.setStyleSheet("color: rgb(%d, %d, %d);" % c)
+                self.ui.labels.append(lbl)
+                self.ui.vlayout.addWidget(lbl)
+            
+            self.ui.vlayout.addItem(self.ui.spacerItem)
+        
+        def __init__(self, parent=None):
+            super(InfoWindow, self).__init__(parent)
+            
+            # create ui and set info
+            self.ui = self.Ui_InfoWindow()
+            self.ui.setupUi(self)
+    
+    iw = InfoWindow()
+    iw.set_components(comp_colour_pairs)
+    
+    return iw
+
 class McDisplay2DGui(object):
     class ZoomState(Enum):
         ZOOM = 0
@@ -227,10 +283,8 @@ class McDisplay2DGui(object):
         #
         # info window
         #
-        
-        iw = QtGui.QMainWindow()
-        iw.setCentralWidget = QtGui.QWidget()
-        self.infowindow = iw
+        self.iw = None
+        self.iw_visible = False
         
         #
         # zoom stuff
@@ -270,9 +324,15 @@ class McDisplay2DGui(object):
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
-                self.infowindow.show()
-                self.mw.raise_()
-                self.mw.activateWindow()
+                if not self.iw_visible:
+                    self.iw = create_infowindow(self.get_comp_color_pairs())
+                    self.iw.show()
+                    self.iw_visible = True
+                    self.mw.raise_()
+                    self.mw.activateWindow()
+                else:
+                    self.iw.hide()
+                    self.iw_visible = False
         
         # add generic handlers
         self.layout.scene().keyPressEvent = key_handler
@@ -280,10 +340,18 @@ class McDisplay2DGui(object):
         # print help lines
         print('')
         print('\n'.join(get_help_lines()))
-        
+    
+    def get_comp_color_pairs(self):
+        ''' extracts component names and matches then with colours in the natural order '''
+        lst = []
+        numcolours = len(colours)
+        for idx in range(len(self.instr.components)):
+            tpl = (self.instr.components[idx].name, colours[idx%numcolours])
+            lst.append(tpl)
+        return lst
+    
     def run_ui(self):
         '''  '''
-        
         self.unzoom()
         self._display_nextray()
         return self.app.exec_()
