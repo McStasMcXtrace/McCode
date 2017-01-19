@@ -219,14 +219,14 @@ def _parse_2D_monitor(text):
         data.ylabel = m.group(1)
 
         '''# xvar: X'''
-        m = re.search('\# xvar: ([\w ]+)\n', text)
+        m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
         data.xvar = m.group(1)
         '''# yvar: Y '''
-        m = re.search('\# yvar: ([\w ]+)\n', text)
+        m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
         data.yvar = m.group(1)
         
         '''# zvar: I '''
-        m = re.search('\# zvar: ([\w ]+)\n', text)
+        m = re.search('\# zvar: (%s)\n' % freetext_pat, text)
         data.zvar = m.group(1)
         '''# xylimits: -30 30 -30 30'''
         m = re.search('\# xylimits: ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
