@@ -28,7 +28,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    ${LIB}/mcgui.py $*
+    python3 ${LIB}/mcgui.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
