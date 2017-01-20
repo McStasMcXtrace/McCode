@@ -54,8 +54,7 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
     double beta  = 0;
     mc_pol_q     = fabs(mc_pol_q);
     double arg;
-    double m_value;
-    
+        
     /* Simpler parametrization from Henrik Jacobsen uses these values that depend on m only.
        double m_value=m*0.9853+0.1978;
        double W=-0.0002*m_value+0.0022;
@@ -70,7 +69,7 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
       W=-0.0002*m+0.0022;
       alpha=0.2304*m+5.0944;
       beta=-7.6251*m+68.1137;
-      if (m_value<=3) {
+      if (m<=3) {
 	alpha=m;
 	beta=0;
       }
