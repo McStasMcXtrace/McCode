@@ -95,7 +95,7 @@ Main.prototype.init = function(campos)
 {
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 130);
     this.camera.position.x = campos.x; // -50;
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
@@ -419,7 +419,10 @@ TraceLoader.prototype.loadParticles = function()
             }
 
             // transform these vertices by component matrix and add to vertex container for this ray
-            aVertices = aVertices.concat(transformPoints(aCompVertices, main.compnodes[compname].matrix));
+            if (main.compnodes[compname])
+            {
+                aVertices = aVertices.concat(transformPoints(aCompVertices, main.compnodes[compname].matrix));
+            }
         }
         // add ray as a multiline
         main.addRayNode(rayobj, aVertices, speed);
