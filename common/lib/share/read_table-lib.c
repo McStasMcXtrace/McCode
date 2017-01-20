@@ -52,7 +52,6 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
     static t_Read_table_file_item read_table_file_list[1024];  
     static int read_table_file_count=0;
 
-    int i=0;
     t_Read_table_file_item *tr;
     switch(action){
         case FIND:
@@ -60,8 +59,10 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
              * if not found return the item itself*/
             tr=read_table_file_list;
             while ( tr->table_ref!=NULL ){
-                i=*((int*) item_modifier);
-                if ( !strcmp(tr->table_ref->filename,(char *) item) && tr->table_ref->block_number==i ){
+                int i=*((int*) item_modifier);
+                int j=*( ((int*) item_modifier)+1);
+                if ( !strcmp(tr->table_ref->filename,(char *) item) &&
+                        tr->table_ref->block_number==i && tr->table_ref->begin==j ){
                     tr->ref_count++;
                     return (void *) tr;
                 }
@@ -71,7 +72,9 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
         case STORE:
             /*find an available slot and store references to table there*/
             tr=&(read_table_file_list[read_table_file_count++]);
-            tr->table_ref= (t_Table *) item;
+            tr->table_ref=(t_Table *)calloc(1,sizeof(t_Table));
+            /*copy the contents of the table handle*/
+            *(tr->table_ref)= *((t_Table *) item);
             tr->ref_count++;
             return NULL;
         case GC:
@@ -88,7 +91,7 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                         tr->ref_count--;
                         return NULL;
                     }else{
-                        /* The item is found - move remaing list items up one slot 
+                        /* The item is found - move remaining list items up one slot,
                          * and return the table for garbage collection by caller*/
                         while (tr->table_ref!=NULL){
                             *tr=*(tr+1);
@@ -108,13 +111,14 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
 /* Access functions to the handler*/
 
 /********************************************
- * t_Table *Table_File_List_find(char *name, int block)
+ * t_Table *Table_File_List_find(char *name, int block, int offset)
  * input name: filename to search for in the file list
  * input block: data block in the file as each file may contain more than 1 data block.
  * return a ref. to a table if it is found (you may use this pointer and skip reading the file), NULL otherwise (i.e. go ahead and read the file)
 *********************************************/
-t_Table *Table_File_List_find(char *name, int block){
-    t_Read_table_file_item *item = Table_File_List_Handler(FIND,name, &block);
+t_Table *Table_File_List_find(char *name, int block, int offset){
+    int vars[2]={block,offset};
+    t_Read_table_file_item *item = Table_File_List_Handler(FIND,name, vars);
     if (item == NULL){
         return NULL;
     }else{
@@ -125,12 +129,11 @@ t_Table *Table_File_List_find(char *name, int block){
  * int Table_File_List_gc(t_Table *tab)
  * input tab: the table to check for references.
  * return 0: no garbage collection needed
- *        1: we should call Table_Free
+ *        1: Table's data and header (at least) should be freed.
 *********************************************/
 int Table_File_List_gc(t_Table *tab){
     void *rval=Table_File_List_Handler(GC,tab,0);
     if (rval==NULL) return 0;
-    else if (rval==(void *)0x1) return 0;
     else return 1;
 }
 
@@ -264,8 +267,8 @@ void *Table_File_List_store(t_Table *tab){
                          long max_rows)
   { /* reads all/a data block in 'file' and returns a Table structure  */
     FILE *hfile;
-    long  nelements;
-    long  begin;
+    long  nelements=0;
+    long  begin=0;
     long  filesize=0;
     char  name[1024];
     char  path[1024];
@@ -274,16 +277,19 @@ void *Table_File_List_store(t_Table *tab){
     /*Need to be able to store the pointer*/
     if (!Table) return(-1);
     
-    if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
-    else                   strncpy(name, File, 1024);
-    
+    //if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
+    //else                   
+    strncpy(name, File, 1024);
+    if(offset && *offset){
+        begin=*offset;
+    }
     /* Check if the table has already been read from file.
      * If so just reuse the table, if not (this is flagged by returning NULL
      * set up a new table and read the data into it */
-    t_Table *tab_p= Table_File_List_find(name,block_number);/*a helper pointer*/
+    t_Table *tab_p= Table_File_List_find(name,block_number,begin);
     if ( tab_p!=NULL ){
         /*table was found in the Table_File_List*/
-        printf("Reusing input file '%s' (Table_Read)\n", name);
+        printf("Reusing input file '%s' (Table_Read_Offset)\n", name);
         *Table=*tab_p;
         return Table->rows*Table->columns;
     }
@@ -293,8 +299,7 @@ void *Table_File_List_store(t_Table *tab){
     if (!hfile) return(-1);
     else {
       MPI_MASTER(
-      if (!offset || (offset && !*offset))
-        printf("Opening input file '%s' (Table_Read)\n", path);
+      printf("Opening input file '%s' (Table_Read_Offset)\n", path);
       );
     }
     
@@ -1105,11 +1110,13 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
     {
       t_Table Table;
 
-      /* access file at offset and get following block */
-      nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
       /* if ok, set t_Table block number else exit loop */
       block_number++;
       Table.block_number = block_number;
+      
+      /* access file at offset and get following block. Block number is from the set offset
+       * hence the hardcoded 1 - i.e. the next block counted from offset.*/
+      nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
       /* if t_Table array is not long enough, expand and realocate */
       if (block_number >= allocated-1) {
         allocated += 256;
@@ -1123,7 +1130,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
         }
       }
       /* store it into t_Table array */
-      snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
+      //snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
       Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }
@@ -1144,11 +1151,10 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
   {
     long index=0;
     if (!Table) return;
-    do {
-        if (Table[index].data || Table[index].header)
-          Table_Free(&Table[index]);
-        else index=-1;
-    } while (index>= 0);
+    while (Table[index].data || Table[index].header){
+            Table_Free(&Table[index]);
+            index++;
+    }
     free(Table);
   } /* end Table_Free_Array */
 

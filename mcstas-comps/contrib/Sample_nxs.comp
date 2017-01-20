@@ -163,7 +163,6 @@ int readStrainFile( char *fileName, StrainData *sd )
 {
   /* read the file */
   t_Table dataTable;
-  Table_Read(&dataTable, fileName, 1); /* read 1st block data from file into table */
   int i;
   char **parsing;
 
@@ -175,7 +174,15 @@ int readStrainFile( char *fileName, StrainData *sd )
   int column_axial = 0;
   
   sd->d0_hoop = sd->d0_radial = sd->d0_axial = 0.0;
-  
+
+  /*try to read the strain data from a file - return immidiately if not succesful*/ 
+  status=Table_Read(&dataTable, fileName, 1); /* read 1st block data from file into table */
+  if(status==-1){
+      fprintf(stderr,"%s: Warning: Could not read table from '%s' - using default values.\n", NAME_CURRENT_COMP, fileName);
+      sd->n_entries = 0;
+      return -1;
+  }
+ 
   /* parsing of header for sample parameters */
   parsing = Table_ParseHeader( dataTable.header,"d0_hoop","d0_radial","d0_axial",NULL );  
   if (parsing)
