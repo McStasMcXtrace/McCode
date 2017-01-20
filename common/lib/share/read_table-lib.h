@@ -110,7 +110,7 @@ double   Table_Value2d(t_Table Table, double X, double Y);    /* same as Table_I
 MCDETECTOR Table_Write(t_Table Table, char*file, char*xl, char*yl, 
            double x1, double x2, double y1, double y2); /* write Table to disk */
 void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier);
-t_Table *Table_File_List_find(char *name, int block);
+t_Table *Table_File_List_find(char *name, int block, int offset);
 int Table_File_List_gc(t_Table *tab);
 void *Table_File_List_store(t_Table *tab);
 
