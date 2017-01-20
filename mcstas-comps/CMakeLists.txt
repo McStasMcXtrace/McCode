@@ -49,6 +49,7 @@ if (NOT WINDOWS)
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
+add_custom_target(neutronics-subs.o ALL COMMAND gfortran -c "${PROJECT_SOURCE_DIR}/contrib/Neutronics/neutronics-subs.f" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/contrib/Neutronics")
 endif()
 
 # Include mcstas-comp files
@@ -78,5 +79,6 @@ endif()
 if (NOT WINDOWS)
   install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
   install(TARGETS mcpl DESTINATION "${MCCODE_LIB}/libs/mcpl/")
+  install(FILES "${PROJECT_SOURCE_DIR}/contrib/Neutronics/neutronics-subs.o" DESTINATION "${MCCODE_LIB}/contrib/Neutronics/")
 endif()
 
