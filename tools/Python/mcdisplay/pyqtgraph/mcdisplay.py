@@ -35,7 +35,12 @@ def get_2d_ray(ray_story, instr, plane='zy'):
     if plane == 'zx': (k1, k2) = (2,0)
     
     for group in ray_story.groups:
-        transform = [c.transform for c in instr.components if c.name == group.compname][0]
+        try:
+            transform = [c.transform for c in instr.components if c.name == group.compname][0]
+        except:
+            logging.debug('missing comp in ray gropus: %s' % c.name)
+            continue
+        
         for e in group.events:
             p = transform.apply(Vector3d(e.args[0], e.args[1], e.args[2]))
             coords.append((p[k1], p[k2]))
