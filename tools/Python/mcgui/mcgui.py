@@ -730,7 +730,7 @@ class McGuiAppController():
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if not instr:
             return
-        if not self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(instr)):
+        if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(instr))==False:
             return
         
         if instr:
