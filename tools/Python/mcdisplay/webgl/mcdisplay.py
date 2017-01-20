@@ -138,7 +138,7 @@ def file_save(data, filename):
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
-    debug = False
+    debug = args.debug
     
     # output directory
     dirname = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
@@ -167,6 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
+    parser.add_argument('--debug', action='store_true', help='dump debug trace data')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
     
     args, unknown = parser.parse_known_args()
