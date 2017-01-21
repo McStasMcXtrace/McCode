@@ -166,8 +166,8 @@ def get_help_lines():
     helplines.append('p            - save png')
     helplines.append('s            - save svg')
     helplines.append('space        - next ray')
-    helplines.append('click        - zoom')
-    helplines.append('right-click  - zoom out')
+    helplines.append('click        - enter subplot')
+    helplines.append('right-click  - exit subplot')
     helplines.append('h/F1         - info')
     
     return helplines
