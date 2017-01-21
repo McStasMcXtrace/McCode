@@ -150,9 +150,9 @@ class McStas:
         cflags += [self.options.mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
         cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
         # Look for CFLAGS in the generated C code
-        ccode = open(self.cpath)
+        ccode = open(self.cpath,'rb')
         for line in ccode:
-            line = line.rstrip()
+            line = line.decode().rstrip()
             if re.search('CFLAGS=', line) :
                 label,flags = line.split('=',1)
                 flags = re.sub(r'\@MCCODE_LIB\@', self.options.mccode_lib, flags)
