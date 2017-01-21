@@ -527,7 +527,7 @@ sub plot_dialog {
     if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
       $sim_file_name =~ s! !\ !g;
     }
-    push @plot_cmd, "$plotcmd$suffix";
+    push @plot_cmd, "$plotcmd";
     push @plot_cmd, $sim_file_name;
     push @plot_cmd, "--format=$MCSTAS::mcstas_config{'PLOTTER'}";
     my $cmd=join(' ',@plot_cmd);

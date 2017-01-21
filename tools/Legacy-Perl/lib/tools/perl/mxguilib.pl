@@ -528,7 +528,7 @@ sub plot_dialog {
     if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
       $sim_file_name =~ s! !\ !g;
     }
-    push @plot_cmd, "$plotcmd$suffix";
+    push @plot_cmd, "$plotcmd";
     push @plot_cmd, $sim_file_name;
     push @plot_cmd, "--format=$MCSTAS::mcstas_config{'PLOTTER'}";
     my $cmd=join(' ',@plot_cmd);
@@ -582,7 +582,7 @@ sub preferences_dialog {
 
     $pgmultiflag = $lf->Checkbutton(-text => "3-pane view with PGPLOT trace",
 				     -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_PGMULTI'})->pack(-fill => 'x');
-    $b->attach($pgmultiflag, -balloonmsg => "Check to view 3 panes in PGPLOT mcdisplay");
+    $b->attach($pgmultiflag, -balloonmsg => "Check to view 3 panes in PGPLOT mxdisplay");
     # handle clustering methods
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
