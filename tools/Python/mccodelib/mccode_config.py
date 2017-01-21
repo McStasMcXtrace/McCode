@@ -40,6 +40,24 @@ platform = {
     "EXESUFFIX": 'out',
 }
 
+def check_env_vars():
+    ''' checks the OS environment variables '''
+    global configuration
+    global compilation
+
+    # MCCODE_LIB_DIR
+    if not os.getenv('MCSTAS_OVERRIDE') is None:
+        configuration['MCCODE_LIB_DIR'] = os.getenv('MCSTAS_OVERRIDE')
+    # CFLAGS
+    if not os.getenv('MCSTAS_CFLAGS_OVERRIDE') is None:
+        compilation['CFLAGS'] = os.getenv('MCSTAS_CFLAGS_OVERRIDE')
+    # CC
+    if not os.getenv('MCSTAS_CC_OVERRIDE') is None:
+        compilation['CC'] = os.getenv('MCSTAS_CC_OVERRIDE')
+    # MPICC
+    if not os.getenv('MCSTAS_MPICC_OVERRIDE') is None:
+        compilation['MPICC'] = os.getenv('MCSTAS_MPICC_OVERRIDE')
+
 def load_user_config():
     ''' loads a json user config to the dictionaries in this module '''
     userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")

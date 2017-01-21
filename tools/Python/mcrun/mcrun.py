@@ -352,6 +352,7 @@ def main():
 if __name__ == '__main__':
     try:
         mccode_config.load_user_config()
+        mccode_config.check_env_vars()
         
         main()
     except KeyboardInterrupt:

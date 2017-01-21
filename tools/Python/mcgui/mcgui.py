@@ -842,6 +842,7 @@ def main():
     
     try:
         mccode_config.load_user_config()
+        mccode_config.check_env_vars()
                 
         mcguiApp = QtGui.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
