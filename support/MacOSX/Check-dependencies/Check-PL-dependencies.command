@@ -204,6 +204,35 @@ else
     echo "Not taking ownership of /usr/local..."
 fi
 
+# Check if the user has a matlab installation - and offer to create a link to the binary in /usr/local
+MATLAB=`ls -art /Applications/ |grep MATLAB|wc -l`
+if [[ $MATLAB != 0 ]]; 
+then
+    MATLAB=`ls -art /Applications/ |grep MATLAB|tail -1`
+    if [[ -x "/Applications/$MATLAB/bin/matlab" ]];
+    then
+	osascript -e "tell app \"System Events\" to display dialog \"I found that you have MATLAB installed in /Applications/$MATLAB. \n Do you want that version to be accessible to the tools? \n(I will create a link in /usr/local/bin/matlab, replacing any existing link)\""
+	rc1=$?; 
+	if [[ $rc1 == 0 ]]; 
+	then
+	    echo sudo ln -sf /Applications/$MATLAB/bin/matlab /usr/local/bin/matlab
+	    sudo ln -sf /Applications/$MATLAB/bin/matlab /usr/local/bin/matlab
+	else
+	    echo Not installing link to $MATLAB in /usr/local/bin
+	fi
+	
+    fi
+fi
+
+# Offer to download instantplayer for viewing VRML files
+osascript -e "tell app \"System Events\" to display dialog \"Do you want to download InstantPlayer for viewing VRML/x3d files? \n (Will spawn browser for you...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    open http://www.instantreality.org/downloads
+else
+    echo Not spawning download of InstantPlayer
+fi
 
 
 # TODO:
