@@ -172,8 +172,8 @@ def print_help(nogui=False):
         helplines_gui.append('c            - cycle colormap')
         helplines_gui.append('F1/h         - help')
         helplines_gui.append('F5           - replot')
-        helplines_gui.append('click        - display subplot')
-        helplines_gui.append('right-click  - back')
+        helplines_gui.append('click        - enter subplot')
+        helplines_gui.append('right-click  - exit subplot')
         helplines_gui.append('%s + click - sweep monitors' % modifier)
         helplines_gui.append('x            - expand subplots')
         
