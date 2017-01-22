@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(mcstas-comps C)
+project(mcstas-comps C Fortran)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -44,12 +44,12 @@ target_link_libraries(mcpltool m)
 if (NOT WINDOWS)
   add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+  add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
   target_compile_options(mcpl PUBLIC "-std=c99")
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
-add_custom_target(neutronics-subs.o ALL COMMAND gfortran -c "${PROJECT_SOURCE_DIR}/contrib/Neutronics/neutronics-subs.f" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/contrib/Neutronics")
 endif()
 
 # Include mcstas-comp files
@@ -79,6 +79,6 @@ endif()
 if (NOT WINDOWS)
   install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
   install(TARGETS mcpl DESTINATION "${MCCODE_LIB}/libs/mcpl/")
-  install(FILES "${PROJECT_SOURCE_DIR}/contrib/Neutronics/neutronics-subs.o" DESTINATION "${MCCODE_LIB}/contrib/Neutronics/")
+  install(TARGETS neutronics DESTINATION "${MCCODE_LIB}/libs/neutronics/")
 endif()
 
