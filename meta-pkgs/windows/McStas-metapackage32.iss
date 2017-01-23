@@ -53,7 +53,6 @@ Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe
 ;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
-FileName: "{tmp}\gnuplot-py-installer.exe"; Parameters: "/VERYSILENT"
 Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "c:\mcstas-@VERSION@\lib\libs\libnxs\compile.bat"
