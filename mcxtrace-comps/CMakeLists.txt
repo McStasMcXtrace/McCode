@@ -33,6 +33,21 @@ include(CPack)
 
 
 # Install mcxtrace components
-foreach(name data examples misc monitors optics samples share sources)
+foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
+
+# Include mcxtrace-comp revision tag file
+configure_file("${CMAKE_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
+
+if(WINDOWS)
+  install(
+    FILES "${WORK}/revision"
+    DESTINATION "${lib}"
+  )
+else()
+  install(
+    FILES "${WORK}/revision"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
+  )
+endif()
