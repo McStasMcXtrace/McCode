@@ -18,4 +18,4 @@
 @SET PGPLOT_FONT=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp\\grfont.dat
 @SET PGPLOT_DEV=/gw
 @IF EXIST "c:\Program Files\MPICH2\bin\smpd.exe" start smpd -d
-@cd %USERPROFILE%
+

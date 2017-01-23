@@ -1,3 +1,4 @@
 @CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mccodeenv.bat
 @ECHO Starting mcgui
+@cd %USERPROFILE%
 @@MCCODE_PREFIX@gui.pl
