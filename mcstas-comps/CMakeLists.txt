@@ -77,8 +77,8 @@ else()
 endif()
 
 if (NOT WINDOWS)
-  install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
-  install(TARGETS mcpl DESTINATION "${MCCODE_LIB}/libs/mcpl/")
-  install(TARGETS neutronics DESTINATION "${MCCODE_LIB}/libs/neutronics/")
+  install(TARGETS nxs DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/libnxs/")
+  install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
+  install(TARGETS neutronics DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/neutronics/")
 endif()
 
