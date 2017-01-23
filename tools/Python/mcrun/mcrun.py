@@ -262,6 +262,10 @@ def main():
     # Clean out quotes (perl mcgui requires this step)
     options.params = map(clean_quotes, args[1:])
 
+    # On windows, ensure that backslashes in the filename are escaped
+    if sys.platform == "win32":
+        options.instr = options.instr.replace("\\","\\\\")
+        
     # Fill out extra information
     expand_options(options)
 

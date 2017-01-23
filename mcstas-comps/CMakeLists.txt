@@ -68,7 +68,11 @@ if(WINDOWS)
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
     DESTINATION ${bin}
-  )
+    )
+  add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
+  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+  add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
+  
 else()
   install(
     FILES "${WORK}/revision"
@@ -80,5 +84,9 @@ if (NOT WINDOWS)
   install(TARGETS nxs DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/libnxs/")
   install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
   install(TARGETS neutronics DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/neutronics/")
+else()
+  install(TARGETS nxs DESTINATION "${lib}/libs/libnxs/")
+  install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
+  install(TARGETS neutronics DESTINATION "${lib}/libs/neutronics/")
 endif()
 
