@@ -253,7 +253,7 @@ sub get_out_file_next {
 	 my $mpistr;
 	 if ($mpi) {$mpistr="--mpi=1";}
 	 else {$mpistr="";}
-         my $cmd = ["$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'} -c $mpistr -n0 ", $sim_def];
+         my $cmd = ["$MCSTAS::mcstas_config{'RUNCMD'} -c $mpistr -n0 ", $sim_def];
       &$printer(join(" ", @$cmd));
 	$v->{'stage'} = POST_MCSTAS;
       return (RUN_CMD, $cmd);
