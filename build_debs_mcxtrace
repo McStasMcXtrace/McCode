@@ -22,6 +22,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- deb
+./mkdist mcxtrace-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux64 "" -- deb
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" linux64 "o" -- deb
 
 #build metapackages?
