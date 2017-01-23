@@ -222,6 +222,11 @@ sub parse_args {
         }
     }
     
+    # Escape backslashes in Windows paths
+    if ($Config{'osname'} eq 'MSWin32') {
+      sim_def =~ s{\\}{\\\\}g;
+    }
+    
     # If no data dir is explicitly given, generate dirname from time stamp
     if ((!($no_output_files)) && (!($data_dir))) {
       $data_dir = ${sim_def};
