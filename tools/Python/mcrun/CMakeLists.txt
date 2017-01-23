@@ -60,10 +60,8 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Program files
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py")
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/${P}run")
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
@@ -72,8 +70,9 @@ configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
 
 if(WINDOWS)
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcrun.py"
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}run.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -96,22 +95,31 @@ if(NOT WINDOWS)
       )
   endforeach()
   
-  Install(
-    FILES ${BINS}
+  add_custom_target(
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run"
+    )
+
+  install(
+    FILES "${WORK}/${P}run"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/mcrun.py"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    RENAME "${P}run.py"
+    PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+  )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run"
-    )
-
+  
   install(
     PROGRAMS "${WORK}/${P}run"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}run${DOT_PYTHON_SUFFIX}"
     )
 endif()
