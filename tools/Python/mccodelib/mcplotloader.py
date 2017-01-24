@@ -483,7 +483,7 @@ def is_mccodesim_or_mccodedat(args):
 def is_monitorfile(args):
     f = args['simfile']
     ext = splitext(f)[1]
-    if ext == '.dat' and isfile(f):
+    if isfile(f):
         args['monitorfile'] = f
         return True
     else:
