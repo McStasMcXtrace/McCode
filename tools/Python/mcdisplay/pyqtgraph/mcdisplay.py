@@ -38,7 +38,7 @@ def get_2d_ray(ray_story, instr, plane='zy'):
         try:
             transform = [c.transform for c in instr.components if c.name == group.compname][0]
         except:
-            logging.debug('missing comp in ray gropus: %s' % c.name)
+            logging.debug('missing comp in ray gropus: %s' % group.compname)
             continue
         
         for e in group.events:
@@ -493,8 +493,6 @@ if __name__ == '__main__':
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
-    parser.add_argument('--first', help='zoom range first component name')
-    parser.add_argument('--last', help='zoom range last component name')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
     
     args, unknown = parser.parse_known_args()
