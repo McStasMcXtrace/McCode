@@ -363,7 +363,9 @@ class McGuiState(QtCore.QObject):
             self.__dataDir = output_dir
         else:
             runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
-            self.__dataDir = "None"
+            if sys.platform == "win32":
+                runstr='start ' + runstr
+
         
         # neutron count
         ncount = fixed_params[1]
@@ -610,7 +612,8 @@ class McGuiAppController():
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          shell=True,
-                         universal_newlines=True)
+                         universal_newlines=True,
+                         cwd=os.path.dirname(self.state.getInstrumentFile()))
         self.emitter.message(cmd)
         self.emitter.message('')
     
