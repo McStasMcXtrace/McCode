@@ -78,7 +78,7 @@ then
    echo 
    sleep 3
    $SUDO conda config --add channels conda-forge
-   $SUDO conda install qscintilla2 pyqtgraph pyaml ply
+   $SUDO conda install qscintilla2 pyqtgraph pyaml ply -y
    osascript -e "tell app \"System Events\" to display dialog \"As far as this script can tell, all needed dependencies for the Python tools are now installed!\""
 else
    osascript -e "tell app \"System Events\" to display dialog \"Your current Python3 is not Anaconda...\n\n !! Do you want me to embed a miniconda into your app?\""
