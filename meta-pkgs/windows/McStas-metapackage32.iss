@@ -50,13 +50,13 @@ Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; D
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 
 [Run]
-;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
 Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "c:\mcstas-@VERSION@\lib\libs\libnxs\compile.bat"
 Filename: "c:\mcstas-@VERSION@\lib\libs\mcpl\compile.bat"
+Filename: "c:\mcstas-@VERSION@\lib\libs\neutronics\compile.bat"
 Filename: "{tmp}\mcstas-manuals-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-perl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-perl-cmdline-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
