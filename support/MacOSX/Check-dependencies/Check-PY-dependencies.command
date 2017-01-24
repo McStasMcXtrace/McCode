@@ -35,6 +35,19 @@ else
     echo Xcode commandline tools is already installed!
 fi
 
+# Look for latest McCode app in current dir...
+cd `dirname $0`
+echo
+echo Locating newest McCode package in $PWD/...
+echo
+NEWESTAPP=`ls -rt | grep Mc | grep \.app`
+echo Seems $NEWESTAPP is where I should go...
+echo
+export PATH=$PWD/$NEWESTAPP/Contents/Resources/miniconda3/bin:$PATH
+sleep 1
+echo $PATH
+which python3
+sleep 5
 # Check if Python3 is installed and is anaconda
 PYTHON=`which python3`
 PYVER=`$PYTHON --version 2>&1`
@@ -67,19 +80,21 @@ then
    $SUDO conda install qscintilla2 pyqtgraph pyaml
    osascript -e "tell app \"System Events\" to display dialog \"As far as this script can tell, all needed dependencies for the Python tools are now installed!\""
 else
-   osascript -e "tell app \"System Events\" to display dialog \"Your current Python3 is not Anaconda - Please download and install Anaconda Python3.\n\n !! Afterwards please rerun this tool for installing python packages !!\""
+   osascript -e "tell app \"System Events\" to display dialog \"Your current Python3 is not Anaconda...\n\n !! Do you want me to embed a miniconda into your app?\""
    rc1=$?; 
    if [[ $rc1 == 0 ]]; 
    then
        echo
        echo "******************************************************"
-       echo "* Spawning browser for downloading Anaconda Python 3 *"
+       echo "* Downloading and embeeding miniconda3 in your app   *"
        echo "*                                                    *"
        echo "* Please rerun dependency script after that install *"
        echo "******************************************************"
        echo   
        sleep 3
-       open https://www.continuum.io/downloads#osx
+       curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+       chmod a+x Miniconda3-latest-MacOSX-x86_64.sh
+       ./Miniconda3-latest-MacOSX-x86_64.sh -b -p $NEWESTAPP/Content/Resources/miniconda3/
        exit 0
    else
        echo
