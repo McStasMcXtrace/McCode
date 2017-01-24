@@ -101,6 +101,7 @@ def save_user_config():
         except Exception as e:
             print("Directory %s could not be created: %s " % (userdir, e.__str__())) 
     f = None
+    userconfig = os.path.join(userdir,"mccode_config.json")
     try:
         f = open(str(userconfig), 'w')
         f.write(text)
