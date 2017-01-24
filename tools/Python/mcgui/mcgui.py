@@ -369,7 +369,7 @@ class McGuiState(QtCore.QObject):
         
         # neutron count
         ncount = fixed_params[1]
-        if int(ncount) > 0:
+        if int(float(ncount)) > 0:
             runstr = runstr + ' -n ' + str(ncount)
         
         # steps count
