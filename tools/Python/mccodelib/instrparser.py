@@ -22,7 +22,7 @@ class InstrTraceParser:
     # these tokens match ID, but are of these types (handled in t_ID)
     reserved = {
         'INSTRUMENT'  : 'INSTRUMENT',
-        'END'  : 'END',
+        'END'         : 'END',
         'Instrument'  : 'INSTRKW',
         'COMPONENT'   : 'COMPONENT',
         'Component'   : 'COMPKW',
