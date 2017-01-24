@@ -60,7 +60,12 @@ def check_env_vars():
 
 def load_user_config():
     ''' loads a json user config to the dictionaries in this module '''
-    userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")
+    if os.name == 'nt':
+        userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
+    else:
+        userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
+    userconfig = os.path.join(userdir,"mccode_config.json")
+    
     if not os.path.isfile(userconfig):
         print("user config does not exist: %s" % userconfig)
         return
@@ -77,10 +82,20 @@ def load_user_config():
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''
-    userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")
     text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
-   
-    userdir = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'])
+
+    if os.name == 'nt':
+        homedirconf =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'])
+    else:
+        homedirconf =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'])
+
+    if not os.path.isdir(homedirconf):
+        try:
+            os.mkdir(homedirconf)
+        except Exception as e:
+            print("Directory %s could not be created: %s " % (homedirconf, e.__str__()))
+            
+    userdir = os.path.join(homedirconf,configuration['MCCODE_VERSION'])
     if not os.path.isdir(userdir):
         try:
             os.mkdir(userdir)
@@ -96,6 +111,7 @@ def save_user_config():
     finally:
         if f:
             f.close()
+            
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
