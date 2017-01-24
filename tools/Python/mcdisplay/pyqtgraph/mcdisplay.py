@@ -242,6 +242,7 @@ def create_infowindow(comp_colour_pairs):
     return iw
 
 class McDisplay2DGui(object):
+    ''' view, viewmodel and controller all in one object '''
     class ZoomState(Enum):
         ZOOM = 0
         UNZOOM = 1
@@ -364,7 +365,7 @@ class McDisplay2DGui(object):
         self._display_nextray()
         return self.app.exec_()
     
-    def set_instr_and_plot(self, instr):
+    def set_instr_and_plot(self, instr, enable_clickable=False):
         ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
         self.instr = instr
         
@@ -379,12 +380,13 @@ class McDisplay2DGui(object):
         comp_plotdataitm_pairs_zx = plot_2d_instr(self.instr_zx, self.plt_zx, 'z/[m]', 'x/[m]')
         
         # set PlotDataItem click events
-        for pairs in [comp_plotdataitm_pairs_zy, comp_plotdataitm_pairs_xy, comp_plotdataitm_pairs_zx]:
-            for p in pairs:
-                comp = p[0]
-                itm = p[1]
-                itm.curve.setClickable(True)
-                itm.curve.mouseClickEvent = lambda event, comp=comp: self._handle_comp_clicked(event, comp)
+        if enable_clickable:
+            for pairs in [comp_plotdataitm_pairs_zy, comp_plotdataitm_pairs_xy, comp_plotdataitm_pairs_zx]:
+                for p in pairs:
+                    comp = p[0]
+                    itm = p[1]
+                    itm.curve.setClickable(True)
+                    itm.curve.mouseClickEvent = lambda event, comp=comp: self._handle_comp_clicked(event, comp)
         
 
     def _handle_comp_clicked(self, event, comp):
