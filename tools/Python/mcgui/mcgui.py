@@ -741,7 +741,10 @@ class McGuiAppController():
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     def handleMcdoc(self):
-        subprocess.Popen('mcdoc.pl', shell=True)
+        mcdoc='mcdoc.pl'
+        if sys.platform == "win32":
+            mcdoc='start ' + mcdoc
+        subprocess.Popen(mcdoc, shell=True)
 
     def handleDefault(self):
         reply = QtGui.QMessageBox.question(self.view.mw,
