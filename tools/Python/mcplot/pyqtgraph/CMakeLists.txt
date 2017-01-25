@@ -75,17 +75,10 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-pyqtgraph" @ONLY)
 
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-pyqtgraph")
-endif()
-
-
 # Program files
 if(WINDOWS)
   # Python files
-  foreach(name mcdataclient.py  mcdataserver.py  mcdataservice.py  mcplot.py  plotfuncs.py)
+  foreach(name mcdataclient.py  mcdataserver.py  mcdataservice.py plotfuncs.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -93,8 +86,9 @@ if(WINDOWS)
   endforeach()
 
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -112,8 +106,9 @@ if(NOT WINDOWS)
   endforeach()
 
   install(
-    FILES ${BINS}
+    FILES ${PROJECT_SOURCE_DIR}/mcplot.py
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
