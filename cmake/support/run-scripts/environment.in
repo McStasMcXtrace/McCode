@@ -1,8 +1,16 @@
 #!/bin/sh
-PREFIX=`dirname $0`
+
+PREFIX=`readlink "$0"`
+# Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
+while [ -L "$PREFIX" ]
+do
+   PREFIX=`readlink "$PREFIX"`
+done
+
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
+echo $PREFIX
 export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
 export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
 export PATH=$PREFIX/miniconda3/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:$PATH
