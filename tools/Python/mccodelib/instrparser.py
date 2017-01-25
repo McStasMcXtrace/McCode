@@ -13,7 +13,8 @@ class InstrTraceParser:
     Parser for the instrument definition section of mcdisplay --trace output.
     '''
     parsetree = None
-    def __init__(self, data=None):
+    def __init__(self, data=None, debug=False):
+        self.debug = debug
         self.build_lexer()
         self.build_parser()
         if data:
@@ -206,7 +207,7 @@ class InstrTraceParser:
     
     def build_parser(self, **kwargs):
         ''' builds the lexer '''
-        self.parser = yacc.yacc(module=self, debug=True)
+        self.parser = yacc.yacc(module=self, debug=self.debug, write_tables=False)
 
     def parse(self, data):
         ''' attempts to parse data '''
