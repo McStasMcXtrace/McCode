@@ -228,8 +228,7 @@ class Scanner:
                 par_values.append(point[key])
             
             is_decimal = lambda x: type(x) == Decimal
-            to_string = (lambda x: is_decimal(x)
-                         and '%.4f' % x or x)
+            to_string = (lambda x: x if not is_decimal(x) else ( '%f' % x if abs(x)>1e-4 else '%e' % x))
 
             LOG.info(', '.join('%s: %s' % (a, to_string(b))
                                for (a, b) in point.items()))
