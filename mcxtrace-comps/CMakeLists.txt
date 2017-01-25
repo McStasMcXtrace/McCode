@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McXtrace components
-project(mcxtrace-comps NONE)
+project(mcxtrace-comps C Fortran)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -9,12 +9,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 setupMCCODE("mcxtrace")
-
+set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
-set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
+set(CPACK_PACKAGE_CONTACT       "erkn@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
@@ -28,9 +28,27 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
 set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 
-
 include(CPack)
 
+## Build mcpltool
+#add_executable(
+#  mcpltool
+#  libs/mcpl/tool.c
+#  libs/mcpl/mcpl.c
+#)
+#target_compile_options(mcpltool PUBLIC "-std=c99")
+#target_link_libraries(mcpltool m)
+
+
+
+#if (NOT WINDOWS)
+#  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+#  target_compile_options(mcpl PUBLIC "-std=c99")
+#  install (
+#    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+#    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+#  )
+#endif()
 
 # Install mcxtrace components
 foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
@@ -45,9 +63,21 @@ if(WINDOWS)
     FILES "${WORK}/revision"
     DESTINATION "${lib}"
   )
+#  install (
+#    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+#    DESTINATION ${bin}
+#    )
+#  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+
 else()
   install(
     FILES "${WORK}/revision"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
+endif()
+
+if (NOT WINDOWS)
+    #  install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
+else()
+    #  install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
 endif()
