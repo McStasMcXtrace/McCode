@@ -10,7 +10,7 @@ Contents of this folder:
 3) Check-PY-dependencies.command: Script to check for / install Python tool dependencies
    !! MANDATORY to run before attempting to run the .app !!
    - Will check if Xcode is installed, otherwise help you install it
-   - Will check if Anaconda Python 3 is installed, otherwise help you install it
+   - Will check if Anaconda Python 3 is installed, otherwise help you embed a miniconda into the app!
    - Will make sure needed Python modules are installed
    - Will ask you to take ownership of /usr/local
 
@@ -24,7 +24,10 @@ Contents of this folder:
 5) A link to /Applications - after running the relevant dependency script(s) above you
    may use it to install McCode in the default location (drag the .app)
 
-6) Optional script Install-extras.command:
+6) A link to an "environment script" (suffix .command) for placement in /Applications. Runs
+   the version at hand in a terminal (for easy access to terminal commands)
+
+7) Optional script Install-extras.command:
    - Helps in downloading/installing gcc from hpc.sourceforge.net (installed in /usr/local)
    - Helps in downloading/building openmpi (c-bindings only, installed in /usr/local)
 
