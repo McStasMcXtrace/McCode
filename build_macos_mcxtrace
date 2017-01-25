@@ -36,6 +36,9 @@ mkdir -p dist
 if [ "x$2" = "x" ]; then
     mv /Applications/McXtrace-$1.app dist
     ln -s /Applications dist/
+    cd dist
+    ln -s McXtrace-$1.app/Contents/Resources/mcxtrace/$1/environment McXtrace-$1-environment.command
+    cd ..
     cp support/MacOSX/Check-dependencies/* dist
     mv dist mcxtrace-$1
     mkdir dist

@@ -32,6 +32,9 @@ mkdir -p dist
 if [ "x$2" = "x" ]; then
     mv /Applications/McStas-$1.app dist
     ln -s /Applications dist/
+    cd dist
+    ln -s McStas-$1.app/Contents/Resources/mcstas/$1/environment McStas-$1-environment.command
+    cd ..
     cp support/MacOSX/Check-dependencies/* dist
     mv dist mcstas-$1
     mkdir dist
