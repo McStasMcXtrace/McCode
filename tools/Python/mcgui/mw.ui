@@ -198,6 +198,7 @@
     <addaction name="separator"/>
     <addaction name="actionPlot"/>
     <addaction name="actionDisplay"/>
+    <addaction name="actionDisplay_2d"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -336,7 +337,12 @@
   </action>
   <action name="actionDisplay">
    <property name="text">
-    <string>Display</string>
+    <string>Display-3D</string>
+   </property>
+  </action>
+  <action name="actionDisplay_2d">
+   <property name="text">
+    <string>Display-2D</string>
    </property>
   </action>
  </widget>

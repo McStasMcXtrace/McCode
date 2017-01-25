@@ -3,6 +3,45 @@ Utility functions used by mcgui. Should be static.
 '''
 import os
 import re
+import subprocess
+import time
+
+def run_subtool(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
+    '''
+    Synchronous run subprocess.popen with pipe buffer reads, 
+    one-string command 'cmd' and running in directory 'cwd'.
+    '''
+    def call_if_not_none(fct, *args):
+        ''' shorthand utility for calling a function if it is defined, and otherwise ignoring it '''
+        if fct:
+            fct(*args)
+    if not cwd:
+        cwd = os.getcwd()
+    
+    # open the process with all bells & whistles
+    process = subprocess.Popen(cmd, 
+                               stdout=subprocess.PIPE, 
+                               stderr=subprocess.PIPE,
+                               stdin=subprocess.PIPE,
+                               shell=True,
+                               universal_newlines=True,
+                               cwd=cwd)
+    
+    # read program output while the process is active
+    while process.poll() == None:
+        stdoutdata = process.stdout.readline().rstrip('\n')
+        call_if_not_none(stdout_cb, stdoutdata)
+        stderrdata = process.stderr.readline().rstrip('\n')
+        call_if_not_none(stderr_cb, stderrdata)
+        time.sleep(0.05)
+    
+    # flush until EOF
+    for stdoutdata in process.stdout:
+        call_if_not_none(stdout_cb, stdoutdata.rstrip('\n'))
+    for stderrdata in process.stderr:
+        call_if_not_none(stderr_cb, stderrdata.rstrip('\n'))
+    
+    return process.returncode
 
 '''
 Static utility functions related to handling mccode files.
