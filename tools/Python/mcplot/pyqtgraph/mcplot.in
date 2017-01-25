@@ -10,6 +10,7 @@ if [ "x$LINK" != "x" ]; then
 else
     LIB=`dirname $0`
 fi
+PATH=$LIB/../../../miniconda3/bin:$PATH
 LIB="$LIB/../tools/Python/@P@plot/pyqtgraph"
 TOOL="@P@plot"
 VERS="@MCCODE_VERSION@"

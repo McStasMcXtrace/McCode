@@ -16,7 +16,7 @@ from viewclasses import McView
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mccodelib import mccode_config
+from mccodelib import mccode_config, uiutils
 from mccodelib.uiutils import save_instrfile, get_instr_site, get_file_contents, get_instr_comp_files
 from mccodelib.fileutils import McComponentParser
 
@@ -70,8 +70,9 @@ class McRunQThread(QtCore.QThread):
             # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
             # not readable live
             process = subprocess.Popen(self.cmd, 
-                                       stdout=subprocess.PIPE, 
+                                       stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
+                                       stdin=subprocess.PIPE,
                                        shell=True,
                                        universal_newlines=True,
                                        cwd=self.cwd)
@@ -608,28 +609,35 @@ class McGuiAppController():
         self.emitter.status('')
         resultdir = self.state.getDataDir()
         cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
-        subprocess.Popen(cmd,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         shell=True,
-                         universal_newlines=True,
-                         cwd=os.path.dirname(self.state.getInstrumentFile()))
-        self.emitter.message(cmd)
-        self.emitter.message('')
+        cwd = os.path.dirname(self.state.getInstrumentFile())
+        
+        def messg(s): self.emitter.message(s)
+        def messg_err(s): self.emitter.message(s, err_msg=True)
+        uiutils.run_subtool(cmd=cmd, cwd=cwd, stdout_cb=messg, stderr_cb=messg_err)
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
         try:
-            cmd = 'mcdisplay-webgl-py --default ' + os.path.basename(self.state.getInstrumentFile())
+            cmd = 'mcdisplay-webgl --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
             self.emitter.message(cmd)
             self.emitter.message('')
-            process = subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             shell=True,
-                             universal_newlines=True)
-            process.wait()
             
+            def messg(s): self.emitter.message(s)
+            def messg_err(s): self.emitter.message(s, err_msg=True)
+            uiutils.run_subtool(cmd, stdout_cb=messg, stderr_cb=messg_err)
+        finally:
+            self.emitter.status('')
+    
+    def handleMcDisplay2D(self):
+        self.emitter.status('Running mcdisplay-webgl...')
+        try:
+            cmd = 'mcdisplay-pyqtgraph --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
+            self.emitter.message(cmd)
+            self.emitter.message('')
+            
+            def messg(s): self.emitter.message(s)
+            def messg_err(s): self.emitter.message(s, err_msg=True)
+            uiutils.run_subtool(cmd, stdout_cb=messg, stderr_cb=messg_err)
         finally:
             self.emitter.status('')
     
@@ -815,6 +823,7 @@ class McGuiAppController():
         mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
         mwui.actionPlot.triggered.connect(self.handlePlotResults)
         mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
+        mwui.actionDisplay_2d.triggered.connect(self.handleMcDisplay2D)
         
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)

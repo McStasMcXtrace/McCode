@@ -1,5 +1,12 @@
 #!/bin/sh
-PREFIX=`dirname $0`
+
+PREFIX="$0"
+# Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
+while [ -L "$PREFIX" ];
+do
+   PREFIX=`readlink "$PREFIX"`
+done
+
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
