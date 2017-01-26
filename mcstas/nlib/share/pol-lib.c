@@ -55,6 +55,11 @@ static Rotation mcMagnetRot;
 static double*  mcMagnetData                = NULL;
 static int (*mcMagneticField) (double, double, double, double,
     double*, double*, double*, void *);
+/*Threshold below which two magnetic fields are considered to be
+ * in the same direction.*/
+static double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
+/*The maximal timestep taken by neutrons in a const field*/
+static double mc_pol_initial_timestep = 1e-5;
 #define POL_LIB_C 1
 #endif
 #endif
@@ -62,6 +67,14 @@ static int (*mcMagneticField) (double, double, double, double,
 int mcmagnet_init(){
   mcMagnetPrecession=SimpleNumMagnetPrecession;
   return 1;
+}
+
+void mc_pol_set_angular_accuracy(double domega){
+    mc_pol_angular_accuracy = domega;
+}
+
+void mc_pol_set_timestep(double dt){
+    mc_pol_initial_timestep=dt;
 }
 
 #ifdef PROP_MAGNET

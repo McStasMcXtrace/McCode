@@ -30,11 +30,6 @@
 
 // Constant used 
 #define mc_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */
-/*Threshold below which two magnetic fields are considered to be
- * in the same direction.*/
-#define mc_pol_angular_accuracy 1.0*DEG2RAD /*rad.*/
-/*The maximal timestep taken by neutrons in a const field*/
-#define mc_pol_initial_timestep 1e-5 /*s*/
 
 /*example field functions should have a variable set of arguments*/
 #include <stdarg.h>
@@ -59,6 +54,9 @@ typedef struct mcmagnet_field_info {
   void *data;
   int stop;
 } mcmagnet_field_info;
+
+void mc_pol_set_timestep(double);
+void mc_pol_set_angular_accuracy(double);
 
 #define mcmagnet_sizeof (sizeof(mcmagnet_field_func *)+ sizeof(Rotation *)+ sizeof(Coords *)+ sizeof(double *))
 #define mcmagnet_malloc(n) malloc( (n)*sizeof(mcmagnet_field_info) );
