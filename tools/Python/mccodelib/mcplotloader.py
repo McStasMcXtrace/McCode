@@ -8,7 +8,122 @@ from os.path import isfile, isdir, join, dirname, basename, splitext
 from os import walk
 
 from .flowchart import *
-from .mcplotgraph import *
+
+'''
+Plot graph node types have parent, primaries and secondaries, corresponding to whether 
+"back", "click" or "ctr-click" is used to navigate.
+Descendents also have a data pointer, which is an instance or a list.
+'''
+class PlotNode(object):
+    ''' 
+    Base class for plot graph nodes. 
+    Parent is set implicitly on "primary" and "secondary" child node lists.
+    '''
+    def __init__(self):
+        self.parent = None
+        self.data = []
+        self.primaries = []
+        self.secondaries = []
+    
+    def set_primaries(self, node_lst):
+        self.primaries = node_lst
+        for node in node_lst:
+            node.parent = self
+    def get_primaries(self):
+        return self.primaries
+    
+    def set_secondaries(self, node_lst):
+        self.secondaries = node_lst
+        for node in node_lst: 
+            node.parent = self
+    def get_secondaries(self):
+        return self.secondaries
+    
+    def get_parent(self):
+        return self.parent
+
+class PNMultiple(PlotNode):
+    def __init__(self, header):
+        self.header = header
+        super().__init__()
+    
+    def setdata(self, data_lst):
+        self._data = data_lst
+    
+    def getdata(self):
+        return self._data
+    
+    def __str__(self):
+        return 'PNMultiple'
+
+class PNSingle(PlotNode):
+    def getdata(self):
+        return self._data
+    
+    def setdata(self, data_obj):
+        self._data = data_obj
+    
+    def __str__(self):
+        return 'PNSingle'
+
+class PlotGraphPrint(object):
+    ''' NOTE: iteration logics not yet implemented '''
+    def __init__(self, rootnode, indent_str='    '):
+        if indent_str == '' or type(indent_str) != str:
+            raise Exception('PlotGraphPrint: indent_str must be a non-empty string.')
+        self.indent_str = indent_str
+        self.root = rootnode
+        self.printed_ids = []
+        # execute
+        self.print_recurse(self.root, level=0)
+        
+    def print_recurse(self, node, level):
+        ''' node print recursion '''
+        self.printnode(node, level)
+        children = node.primaries + node.secondaries
+        for c in children:
+            self.print_recurse( c, level+1)                
+
+    def printnode(self, node, level=0):
+        ''' 
+        Prints the node id, its children id's and data reference, respecting indent and
+        using self.indent_str.
+        '''
+        
+        # only print nodes once
+        if id(node) in self.printed_ids:
+            return
+        
+        indent = self.indent_str
+        
+        # print the node
+        print()
+        print(indent*(level+0) + '%s (%d):' % (node, id(node)))
+        
+        if node.parent:
+            print(indent*(level+1) + 'parent:')
+            print(indent*(level+2) + '%s (%d)' % (node.parent, id(node.parent)))
+        
+        print(indent*(level+1) + 'data objects:')
+        for d in node.data:
+            print(indent*(level+2) + '%s (%d)' % (d, id(d)))
+        
+        if type(node) is PNMultiple:
+            print(indent*(level+1) + 'header:')
+            print(indent*(level+2) + '%s (%d)' % (node.header, id(node.header)))
+        
+        if not len(node.primaries) == 0:
+            print(indent*(level+1) + 'primary children:')
+            for p in node.primaries:
+                print(indent*(level+2) + '%s (%d)' % (p, id(p)))
+        
+        if not len(node.secondaries) == 0:
+            print(indent*(level+1) + 'secondary children:')
+            for s in node.secondaries:
+                print(indent*(level+2) + '%s (%d)' % (s, id(s)))
+        
+        self.printed_ids.append(id(node))
+
 
 '''
 McCode simulation output data types.
@@ -606,12 +721,14 @@ def load_sweep(args):
     # load primary data, 1D sweep values
     datalst_sweep1D = _load_multiplot_1D_lst(f_dat)
     header = _load_sweep_header(f_sim)
-    root = PNMultiple(header, datalst_sweep1D)
+    root = PNMultiple(header)
+    root.setdata(datalst_sweep1D)
 
     # primary nodes (zoom on 1D sweep values)
     primnodes_lst = []
     for data in datalst_sweep1D:
-        primnode = PNSingle(data)
+        primnode = PNSingle()
+        primnode.setdata(data)
         primnodes_lst.append(primnode)
     root.set_primaries(primnodes_lst)
 
@@ -623,10 +740,12 @@ def load_sweep(args):
     for i in range(len(headers)):
         m_lst = monitors[i]
         header = headers[i]
-        secnode = PNMultiple(header, m_lst)
+        secnode = PNMultiple(header)
+        secnode.setdata(m_lst)
         children = []
         for m in m_lst:
-            child = PNSingle(m)
+            child = PNSingle()
+            child.setdata(m)
             children.append(child)
         secnode.set_primaries(children)
         secnode.set_secondaries(children)
