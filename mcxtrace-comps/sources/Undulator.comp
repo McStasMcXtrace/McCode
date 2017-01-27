@@ -25,11 +25,12 @@
  * Ie: (A)   Ring current.
  * tbunch: (s) Bunch length. 0 means continous source.
  * t0:     (s) Delay of the first bunch from t=0.
- * B:      (T) Peak magnet field strength.
+ * B:      (T) Peak magnet field strength. Overrides K.
  * Nper:   ( ) Number of magnetic periods in the undulator.
  * lu:     (m) Magnetic period length of the undulator.
- * K:      ( ) Dimensionless undulator parameter. Overrides B.
- * gap:    (m) Undulator gap.
+ * K:      ( ) Dimensionless undulator parameter.
+ * gap_min (m) Minimum Undulator gap. The gap for which B (or K) is specified.
+ * gap:    (m) Undulator gap. If > gap_min the actual magnetic field strength is < B. Currently ignored.
  * sigex:  ( ) Electron ring beam size in horizontal plane (rms).
  * sigey:  ( ) Electron ring beam size in vertical plane (rms).
  * phase:  ( ) Initial phase of radiation.
@@ -118,23 +119,23 @@ INITIALIZE
   prms.length=lu*Nper;
 
   if( (!K && B<=0) || Ee<=0 || Ie<=0 ){
-    fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a consistent set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
+    fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a sane set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
     exit(1);
   }
-  
-  if(K){
-    B=2*M_PI*MELE*M_C*K/CELE/lu;
-    if (verbose) printf("Undulator (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
-  }else if (B>0){
+
+  if(B>0){
     K=CELE*B*lu/(2*M_PI*MELE*M_C);
     if (verbose) printf("Undulator (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
+  }else if (K){
+    B=2*M_PI*MELE*M_C*K/CELE/lu;
+    if (verbose) printf("Undulator (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
   }
 
   if (sigex <0 || sigey<0){
    fprintf(stderr, "Error (%s): sigex and sigey must be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
     exit(1);
   }
-  if (dist<=0){
+  if (dist<=0 || focus_xw < 0 || focus_yh < 0){
     fprintf(stderr,"Error (%s): Target undefined.\n",NAME_CURRENT_COMP);
     exit(1);
   }
