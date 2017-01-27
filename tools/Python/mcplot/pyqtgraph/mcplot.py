@@ -100,7 +100,7 @@ def plot_node(node, layout, viewmodel):
     clear_window_and_handlers(layout)
     
     # get references from node
-    data_lst = node.getdata()
+    data_lst = node.getdata_lst()
     parent = node.parent
     prim_lst = node.primaries
     sec_lst = node.secondaries
