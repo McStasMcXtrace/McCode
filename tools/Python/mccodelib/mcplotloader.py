@@ -21,14 +21,17 @@ class PlotNode(object):
     '''
     def __init__(self):
         self.parent = None
-        self.data = []
         self.primaries = []
         self.secondaries = []
+        
+        self._data = []
+        self.load_fct = None
     
     def set_primaries(self, node_lst):
         self.primaries = node_lst
         for node in node_lst:
             node.parent = self
+    
     def get_primaries(self):
         return self.primaries
     
@@ -36,11 +39,15 @@ class PlotNode(object):
         self.secondaries = node_lst
         for node in node_lst: 
             node.parent = self
+    
     def get_secondaries(self):
         return self.secondaries
     
     def get_parent(self):
         return self.parent
+    
+    def set_loaddata(self, fct):
+        self.load_fct = fct
 
 class PNMultiple(PlotNode):
     def __init__(self, header):
@@ -61,7 +68,7 @@ class PNSingle(PlotNode):
         return self._data
     
     def setdata(self, data_obj):
-        self._data = data_obj
+        self._data = [data_obj]
     
     def __str__(self):
         return 'PNSingle'
@@ -105,7 +112,7 @@ class PlotGraphPrint(object):
             print(indent*(level+2) + '%s (%d)' % (node.parent, id(node.parent)))
         
         print(indent*(level+1) + 'data objects:')
-        for d in node.data:
+        for d in node.getdata():
             print(indent*(level+2) + '%s (%d)' % (d, id(d)))
         
         if type(node) is PNMultiple:
@@ -688,7 +695,8 @@ def load_monitor(args):
     data = _load_monitor(args['monitorfile'])
 
     # plot graph only has one node in this case
-    root = PNSingle(data)
+    root = PNSingle()
+    root.setdata(data)
 
     return root
 
@@ -703,10 +711,12 @@ def load_simulation(args):
     data_lst = _load_data_from_mcfiles(_get_filenames_from_mccodesim(join(d, 'mccode.sim')))
 
     # construct two-level plot graph
-    root = PNMultiple(header, data_lst)
+    root = PNMultiple(header)
+    root.setdata(data_lst)
     primnodes = []
     for data in data_lst:
-        node = PNSingle(data)
+        node = PNSingle()
+        node.setdata(data)
         primnodes.append(node)
     root.set_primaries(primnodes)
     root.set_secondaries(primnodes) # there is only one way to click here...could also be None
@@ -769,10 +779,12 @@ def load_monitor_folder(args):
     data_lst = _load_data_from_mcfiles(datfiles)
 
     # construct two-level plot graph
-    root = PNMultiple(DataMultiHeader(), data_lst)
+    root = PNMultiple(DataMultiHeader())
+    root.setdata(data_lst)
     primnodes = []
     for data in data_lst:
-        node = PNSingle(data)
+        node = PNSingle()
+        node.setdata(data)
         primnodes.append(node)
     root.set_primaries(primnodes)
     root.set_secondaries(primnodes)
