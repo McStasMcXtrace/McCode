@@ -19,8 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib import uiutils
 from mccodelib import mccode_config
-from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D
-from mccodelib.mcplotgraph import PlotGraphPrint
+from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D, PlotGraphPrint
 
 class McPyqtgraphPlotter():
     '''
@@ -101,7 +100,7 @@ def plot_node(node, layout, viewmodel):
     clear_window_and_handlers(layout)
     
     # get references from node
-    data_lst = node.data
+    data_lst = node.getdata_lst()
     parent = node.parent
     prim_lst = node.primaries
     sec_lst = node.secondaries
@@ -148,8 +147,8 @@ def print_help(nogui=False):
     helplines.append('q            - quit')
     helplines.append('p            - save png')
     helplines.append('s            - save svg')
-# PDF currently unsupported
-#    helplines.append('d            - save pdf')
+    # PDF currently unsupported
+    #    helplines.append('d            - save pdf')
     helplines.append('l            - log toggle')
     helplines.append('t            - textinfo toggle')
     helplines.append('c            - cycle colormap')

@@ -153,9 +153,16 @@ class McStas:
         ccode = open(self.cpath,'rb')
         for line in ccode:
             line = line.decode().rstrip()
+            line = re.sub(r'\\','/', line)
             if re.search('CFLAGS=', line) :
                 label,flags = line.split('=',1)
-                flags = re.sub(r'\@MCCODE_LIB\@', self.options.mccode_lib, flags)
+                
+                MCCODE_LIB = self.options.mccode_lib
+                # On windows, replace \ by / for safety
+                if os.name == 'nt':
+                    MCCODE_LIB = re.sub(r'\\','/', MCCODE_LIB)
+
+                flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
                 flags = flags.split(' ')
                 cflags += flags
                 
