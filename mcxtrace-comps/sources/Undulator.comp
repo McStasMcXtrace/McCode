@@ -19,6 +19,8 @@
  * %D
  * A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
  *
+ *
+ *
  * %P
  * Input Parameters:
  * Ee: (GeV) Storage ring electron energy (typically a few GeV).
@@ -210,8 +212,14 @@ TRACE
     theta2=xi*xi+psi*psi;
 
     //printf("XYO: %g %g\n",xo,yo);
-    /*for now disregard e-beam size*/
     x=y=z=0;
+    if(sigex){
+        x=randnorm()*sigex;
+    }
+    if(sigey){
+        y=randnorm()*sigey;
+    }
+
     k=E2K*e;
     /*anguar frequency w:*/
     w=M_C*k*1e10;
