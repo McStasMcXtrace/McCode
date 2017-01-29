@@ -131,7 +131,7 @@ void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
 
 
 /* This is the cold moderator with 2015 updates, fits from Troels Schoenfeldt */
-/* Parametrization incl*t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());uding moderator height for the "pancake" moderator */
+/* Parametrization including moderator height for the "pancake" moderator */
 void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
    if ((extras.height_c == 0.03) || (extras.height_c == 0.06)) {
