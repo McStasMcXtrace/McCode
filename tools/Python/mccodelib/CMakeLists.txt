@@ -80,7 +80,7 @@ set(BINS "${WORK}/mccode_config.py")
 
 if(WINDOWS)
   # Python files
-  foreach(name __init__.py fcparticleparser.py fileutils.py flowchart.py uiutils.py instrgeom.py instrparser.py mcdisplayutils.py mcplotgraph.py mcplotloader.py nodetree.py particleparser.py pipetools.py test.py)
+  foreach(name __init__.py fcparticleparser.py fileutils.py flowchart.py uiutils.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py test.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -98,7 +98,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name __init__.py fcparticleparser.py fileutils.py flowchart.py uiutils.py instrgeom.py instrparser.py mcdisplayutils.py mcplotgraph.py mcplotloader.py nodetree.py particleparser.py pipetools.py test.py)
+  foreach(name __init__.py fcparticleparser.py fileutils.py flowchart.py uiutils.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py test.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
