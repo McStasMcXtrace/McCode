@@ -417,11 +417,7 @@ INITIALIZE
 	    NAME_CURRENT_COMP, tfocus_width, tfocus_time, tfocus_dist);
     exit(-1);
   }
-  if (tfocus_time<modextras.tmultiplier*ESS_SOURCE_DURATION) {
-    fprintf(stderr,"%s: Time focusing scheme only works with tfocus_time (%g s) > tmax_multiplier * %g = %g * %g = %g.  ERROR - Exiting\n",
-	    NAME_CURRENT_COMP, tfocus_time,ESS_SOURCE_DURATION, tmax_multiplier, ESS_SOURCE_DURATION, tmax_multiplier*ESS_SOURCE_DURATION);
-    exit(-1);
-  }
+
   /* Specify brilliance fct.'s */
   cold_bril=ESS_2015_Schoenfeldt_cold;
   thermal_bril=ESS_2015_Schoenfeldt_thermal;
@@ -502,8 +498,14 @@ TRACE
     double tfinal = tfocus_time + trand ;
     //printf("final arrival time is %g = %g + %g\n",tfinal,tfocus_time,trand);
     /* Caculate which wavelength range this corresponds to when emitted within the maximal source time */
-    double vz_min = tfocus_dist/tfinal;
-    double vz_max = tfocus_dist/(tfinal-modextras.tmultiplier*ESS_SOURCE_DURATION);
+    double vz_min,vz_max;
+    vz_min = tfocus_dist/tfinal;
+    if (tfinal>modextras.tmultiplier*ESS_SOURCE_DURATION) {
+      vz_max = tfocus_dist/(tfinal-modextras.tmultiplier*ESS_SOURCE_DURATION);
+    } else {
+      vz_max = 1e6;
+    }
+    
     Lmax_sampled = (2*PI/V2K)/vz_min;
     Lmin_sampled = (2*PI/V2K)/vz_max;
     /* Calculate which of these are possible with current Lmin-Lmax setting */
