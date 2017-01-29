@@ -115,10 +115,6 @@ void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
     exit(-1);
   }
 
- 
-  /* Next is time structure... */
-  *t=0;
-  *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
   *p *= extras.tmultiplier*ESS_2015_Schoenfeldt_thermal_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);  
   if (extras.height_c == 0.03) {
@@ -135,7 +131,7 @@ void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
 
 
 /* This is the cold moderator with 2015 updates, fits from Troels Schoenfeldt */
-/* Parametrization including moderator height for the "pancake" moderator */
+/* Parametrization incl*t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());uding moderator height for the "pancake" moderator */
 void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
    if ((extras.height_c == 0.03) || (extras.height_c == 0.06)) {
@@ -145,18 +141,9 @@ void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocu
     exit(-1);
   }
 
-  /* Next is time structure... */
-  *t=0;
-  double pt=0;
-  
-  // Potentially apply russian roulette technique 
-  //while (rand01()>pt) {
-  *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
-  pt = extras.tmultiplier*ESS_2015_Schoenfeldt_cold_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);
-  //}
+  *p *= extras.tmultiplier*ESS_2015_Schoenfeldt_cold_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);
   
-  *p *= pt;
   if (extras.Uniform==0) {
     if (extras.height_c == 0.03) {
       // 3cm case

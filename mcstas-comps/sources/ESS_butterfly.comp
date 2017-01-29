@@ -96,6 +96,9 @@
 * tmax_multiplier: [1]   Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION.
 * acc_power:       [MW]  Accelerator power in MW
 * n_pulses:        [1]   Number of pulses simulated. 0 and 1 creates one pulse. 
+* tfocus_dist:     [m]   Position of time focusing window along z axis
+* tfocus_time:     [s]   Time position of time focusing window
+* tfocus_width:    [s]   Time width of time focusing window
 *
 * 
 *
@@ -105,8 +108,8 @@
 DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, int target_index=0, dist=0, focus_xw=0, focus_yh=0, 
-		    c_performance=1, t_performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5)
-OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C1_x,C1_z,C2_x,C2_z,C3_x,C3_z,T1_x,T1_z,T2_x,T2_z,T3_x,T3_z,rC1_x,rC1_z,rC2_x,rC2_z,rC3_x,rC3_z,rT1_x,rT1_z,rT2_x,rT2_z,rT3_x,rT3_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_geom_c,w_geom_t,tx,ty,tz,tfocutmps_width, tfocus_time, dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,x0,z0, cos_beamport_angle, sin_beamport_angle, cos_thermal, cos_cold)
+		    c_performance=1, t_performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5,tfocus_dist,tfocus_time,tfocus_width)
+  OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C1_x,C1_z,C2_x,C2_z,C3_x,C3_z,T1_x,T1_z,T2_x,T2_z,T3_x,T3_z,rC1_x,rC1_z,rC2_x,rC2_z,rC3_x,rC3_z,rT1_x,rT1_z,rT2_x,rT2_z,rT3_x,rT3_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_tfocus,w_geom_c,w_geom_t,tx,ty,tz,dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,x0,z0, cos_beamport_angle, sin_beamport_angle, cos_thermal, cos_cold, Lmin_sampled, Lmax_sampled)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
@@ -164,11 +167,11 @@ DECLARE
   double delta_y;
   double xf, yf, zf;
   double w_mult,w_stat;
-  double w_geom, w_focus;
+  double w_geom, w_focus, w_tfocus;
   double w_geom_c, w_geom_t;
   double tx,ty,tz;
   int isleft;
-  double  tfocus_width,  tfocus_time,  dt, lambda, l_range;
+  double  Lmin_sampled,  Lmax_sampled,  dt, lambda, l_range;
   %include "ESS_butterfly-lib"
   ess_moderator_struct modextras;
   /* Cold and thermal function pointers */
@@ -405,9 +408,20 @@ INITIALIZE
   /* "Measured" moderator widths in cm scale */
   modextras.Mwidth_c=100.0*ColdWidths[beamline-1]/cos_cold; //Should it be one or the other here?
   modextras.Mwidth_t=(100.0*ThermalWidths[beamline-1]+0.7)/cos_thermal;
-  tfocus_width=0;
-  tfocus_time=0;
-  dt=0; 
+  if (tfocus_width && tfocus_time && tfocus_dist) {
+    printf("%s: Using time focusing: Directing neutrons to this time-window:\n   tfocus_width (%g s) wide at tfocus_time (%g s), tfocus_dist (%g m) downstream\n",NAME_CURRENT_COMP, tfocus_width, tfocus_time, tfocus_dist);
+  } else if (!tfocus_width && !tfocus_time && !tfocus_dist) {
+    printf("%s: NOT using time focusing\n",NAME_CURRENT_COMP);
+  } else {
+    fprintf(stderr,"%s: Unmeaningful combination tfocus_width (%g s), tfocus_time (%g s) and tfocus_dist (%g m): \n    All must be either==0 (no time focusing) or !=0 (time focusing)\n ERROR - Exiting\n",
+	    NAME_CURRENT_COMP, tfocus_width, tfocus_time, tfocus_dist);
+    exit(-1);
+  }
+  if (tfocus_time<modextras.tmultiplier*ESS_SOURCE_DURATION) {
+    fprintf(stderr,"%s: Time focusing scheme only works with tfocus_time (%g s) > tmax_multiplier * %g = %g * %g = %g.  ERROR - Exiting\n",
+	    NAME_CURRENT_COMP, tfocus_time,ESS_SOURCE_DURATION, tmax_multiplier, ESS_SOURCE_DURATION, tmax_multiplier*ESS_SOURCE_DURATION);
+    exit(-1);
+  }
   /* Specify brilliance fct.'s */
   cold_bril=ESS_2015_Schoenfeldt_cold;
   thermal_bril=ESS_2015_Schoenfeldt_thermal;
@@ -481,14 +495,48 @@ TRACE
   dz = zf-z;
   r = sqrt(dx*dx+dy*dy+dz*dz);
   
-  lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
+  /* Are we using time focusing? */
+  if (tfocus_width>0) {
+    /* Pick a random time to reach the remote window */
+    double trand = randpm1()* tfocus_width/2.0;
+    double tfinal = tfocus_time + trand ;
+    //printf("final arrival time is %g = %g + %g\n",tfinal,tfocus_time,trand);
+    /* Caculate which wavelength range this corresponds to when emitted within the maximal source time */
+    double vz_min = tfocus_dist/tfinal;
+    double vz_max = tfocus_dist/(tfinal-modextras.tmultiplier*ESS_SOURCE_DURATION);
+    Lmax_sampled = (2*PI/V2K)/vz_min;
+    Lmin_sampled = (2*PI/V2K)/vz_max;
+    /* Calculate which of these are possible with current Lmin-Lmax setting */
+    t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
+	
+    Lmin_sampled = fmax(Lmin,Lmin_sampled);
+    Lmax_sampled = fmin(Lmax,Lmax_sampled);
+    
+    /* Ensure that all still looks reasonable */
+    if (Lmin_sampled<Lmax_sampled && tfinal > t) {
+      double vtmp = tfocus_dist/(tfinal-t);
+      lambda = (2*PI/V2K)/vtmp;
+      w_tfocus=(Lmax_sampled-Lmin_sampled)/(Lmax-Lmin);
+    } else {
+      /* Seems we couldn't focus this one... */
+      t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
+      lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
+      w_tfocus=1;
+    }
+  } else {
+    /* Simple, random wavelength @ random time */
+    t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
+    lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
+    w_tfocus=1;
+  }
+  
   k = 2*PI/lambda;
   v = K2V*k;
 
   vz = v*dz/r;
   vy = v*dy/r;
   vx = v*dx/r;
-   
+  
   if (iscold) {          //case: cold moderator
     /* Apply simple engineering reality correction */
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
@@ -500,7 +548,7 @@ TRACE
     p *= ThermalScalars[beamline-1];
   }
   
-  p*=w_stat*w_focus*w_geom*w_mult;
+  p*=w_stat*w_focus*w_geom*w_mult*w_tfocus;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
   p*=cos_factor;
 
