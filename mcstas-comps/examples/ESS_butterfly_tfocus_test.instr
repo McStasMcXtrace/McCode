@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESS_butterfly_tfocus_test
+* Instrument: ESS_butterfly_test
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -12,7 +12,7 @@
 * Test instrument for the updated BF1 butterfly moderator design
 *
 * %D
-* Test instrument for the updated BF1 butterfly moderator design. Demonstrates use of time focusing option.
+* Test instrument for the updated BF1 butterfly moderator design.
 * 
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
 * Example: mcrun -n1e6 ESS_butterfly_test.instr sector=N beamline=10 cold=0.5
@@ -27,7 +27,8 @@
 * Lmax:          [AA]   Maximum wavelength simulated
 * c_performance: [1]    Cold brilliance scalar performance multiplicator c_performance > 0
 * t_performance: [1]    Thermal brilliance scalar performance multiplicator t_performance > 0
-* dist:          [m]    Distance from origin to focusing rectangle; at (0,0,dist)
+* index:         [1]    Target index for source focusing. Defaults to illuminate the "cold collimated" brilliance monitor, thereby suppressing "dist"
+* dist:          [m]    Distance from origin to focusing rectangle; at (0,0,dist) - alternatively use target_index
 * cold:          [1]    Defines the statistical fraction of events emitted from the cold part of the moderator
 * Yheight:       [m]    Defines the moderator height. Valid values are 0.03 m and 0.06 m
 * delta:         [m]    Parameter that allows to scan "collimator" position
@@ -37,7 +38,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_tfocus_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,dist=100,cold=0.5,Yheight=0.03,delta=0,tfocus_dist=100,tfocus_time=0.125,tfocus_width=0.001)
+DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=0,dist=100,cold=0.5,Yheight=0.03,delta=0,tfocus_dist=0,tfocus_time=0,tfocus_width=0)
 
 DECLARE
 %{
@@ -98,7 +99,7 @@ COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
 /* Focusing for this use of the source is a little unphysical: 1x1cm @ 1m ~ 1e-4 steradian. To be useful in a "proper" instrument, you should of course illuminate your beamport fully!*/
-COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,c_performance=c_performance,t_performance=t_performance,dist=dist,target_index=0,cold_frac=cold, yheight=Yheight,
+COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,c_performance=c_performance,t_performance=t_performance,dist=dist,target_index=index,cold_frac=cold, yheight=Yheight,
 				 focus_xw=0.1, focus_yh=0.1,tfocus_dist=tfocus_dist,tfocus_time=tfocus_time,tfocus_width=tfocus_width)
 AT (0,0,0) ABSOLUTE
 EXTEND %{
