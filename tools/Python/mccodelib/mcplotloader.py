@@ -667,8 +667,7 @@ def load_monitor(args):
     data = _load_monitor(args['monitorfile'])
 
     # plot graph only has one node in this case
-    root = PNSingle()
-    root.setdata(data)
+    root = PNSingle(data)
 
     return root
 
