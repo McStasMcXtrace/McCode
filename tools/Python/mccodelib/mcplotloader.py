@@ -449,19 +449,19 @@ def _load_multiplot_1D_lst(f_dat):
         
         # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
-        m = re.search('\# title: ([\w ]+)\n', text)
+        m = re.search('\# title: ([\w, ]+)\n', text)
         header.title = m.group(1)
         
         '''# xlabel: 'lambda\''''
-        m = re.search('\# xlabel: ([\w \[\]\/\^\']+)\n', text)
+        m = re.search('\# xlabel: ([\w \[\]\/\^\',]+)\n', text)
         header.xlabel = m.group(1).strip("\'")
         '''# ylabel: 'Intensity\''''
-        m = re.search('\# ylabel: ([\w \[\]\/\^\']+)\n', text)
+        m = re.search('\# ylabel: ([\w \[\]\/\^\',]+)\n', text)
         header.ylabel = m.group(1).strip("\'")
 
         # NOTE: this only supports a single xvar
         '''# xvars: lambda'''
-        m = re.search('\# xvars: ([\w]+)\n', text)
+        m = re.search('\# xvars: ([\w, ]+)\n', text)
         header.xvar = m.group(1)
         '''# xlimits: 6 7'''
         m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
