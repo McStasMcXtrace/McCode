@@ -11,7 +11,7 @@ proc ModulesHelp { } {
         puts stderr "\n\tVersion $version\n"
 }
 
-module-whatis   "loads the mcstas environment"
+module-whatis   "loads the @FLAVOR@ environment"
 
 
 # Define prefix so PATH and MANPATH can be updated.
