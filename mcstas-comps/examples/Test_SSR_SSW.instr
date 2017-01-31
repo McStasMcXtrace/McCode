@@ -8,7 +8,7 @@
 * and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a> 
 * Date: January, 2012
 * Version:  $Revision$
-* %INSTRUMENT_SITE: Tests_optics
+* %INSTRUMENT_SITE: Tests_MCPL_etc
 *
 * Test instrument for SSW/SSR interface between McStas and MCNP
 *

@@ -9,7 +9,7 @@
 * Origin: DTU
 * Release: McStas
 * Version: 2.3
-* %INSTRUMENT_SITE: Test_samples
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Idealized powder diffractometer, to illustrate the difference between 'banana,theta' and 'banana,divergence' in Monitor_nD.
 *
