@@ -237,11 +237,9 @@ class Scanner:
             current_dir = '%s/%i' % (mcstas_dir, i)
             out = self.mcstas.run(pipe=True, extra_opts={'dir': current_dir})
 
-            dets = sorted(McStasResult(out).get_detectors(),
-                          key=lambda x: x.name)
+            dets = McStasResult(out).get_detectors()
 
             if not wrote_header:
-                
                 fid.write(build_header(self.mcstas.options,
                    self.intervals.keys(), self.intervals,
                    [det.name for det in dets]))
@@ -250,10 +248,8 @@ class Scanner:
                    [det.name for det in dets], version=self.mcstas.version))
                 wrote_header = True
 
-            dets_vals = ['%s %s' % (d.intensity, d.error) for d in
-                         sorted(dets, key=lambda x: x.name)]
-            line = '%s %s\n' % (' '.join(map(str, par_values)),
-                                ' '.join(dets_vals))
+            dets_vals = ['%s %s' % (d.intensity, d.error) for d in dets]
+            line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(dets_vals))
             fid.write(line)
             fid.flush()
         
