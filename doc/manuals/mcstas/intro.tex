@@ -29,9 +29,12 @@ is supplied with several examples and with an extensive documentation.
 Besides this manual, a separate component manual exists.
 
 The release at hand \MCS \version is a major upgrade from the last
-1.12c release, meaning partial loss of backward compatibility -
-especially in terms of uniform naming of component input
-parameters. Porting your existing personal instrument files and
+release, mainly because of our switch to the use of a Python user
+interface layer. (The perl-based layer is still available, but we
+recommend and encourage use of the new Python layer, since this is
+where our efforts will go from this point.)
+
+Porting your existing personal instrument files and
 components should be trivial, but if you experience problems feel free
 to contact  \verb+mcstas-users@mcstas.org+ or the authors.
 
@@ -82,13 +85,15 @@ Similarly, the PSI has applied \MCS extensively for instrument design
 and upgrades, provided important component additions and contributed
 several systematic comparative studies of the European instrument
 Monte Carlo codes. Hence, PSI has also become a part of the core \MCS
-team.
+team. 
 Since year 2001 Ris\o\ was no longer a neutron source, and the authors
 from that site have moved on to positions at University of Copenhagen
 (NBI) and Technical University of Denmark (DTU Physics), hence these
 two partners have joined the core \MCS team.
-It is further envisioned that the future ESS Data Management and
-Software Centre (ESS DMSC) will contribute to the project in the future.
+Finally, trough general emphasis on use of \MCS as a tool for
+simulating the ESS instruments and virtual data, plus the partial
+secondment of one DTU-based \MCS author, the ESS Data Management and
+Software Centre (ESS DMSC) is now contributing to the projecte.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Scientific background}
@@ -197,7 +202,8 @@ this language by the user, and the \MCS compiler automatically
 translates them into efficient simulation programs written in ISO-C.
 
 In realizing the design of \MCS, the task was
-separated into four conceptual layers:
+separated into four conceptual layers, listed below and also detailed
+in Figure \ref{fig:structure}
 \begin{enumerate}
 \item Graphical user interface and scripting layer, presentation of
   the calculations, graphical or otherwise. (aka. the tool layer).
@@ -284,8 +290,13 @@ power of the C language is available if needed.
 The \MCS system documentation consists of the following major
 parts:
 \begin{itemize}
-\item A short list of new features introduced in this \MCS release
-  appears in chapter~\ref{c:changes}
+\item The complete listing of changes related to the version \MCS \version
+is available in CHANGES document of the relevant download folder at
+\url{http://download.mcstas.org/}. Bugs are reported and traced using
+the \MCS GitHub issue system\cite{mczilla_webpage}. We will not
+present here an extensive list of corrections, and we let the reader
+refer to this bug reporting service for details. Only important
+changes are indicated in the CHANGES document.
 \item Chapter~\ref{s:MCtechniques} concerns Monte Carlo techniques
   and simulation strategies in general
 \item Chapter~\ref{c:running} includes a brief introduction to the
