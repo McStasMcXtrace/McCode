@@ -54,7 +54,7 @@
 
 DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
-SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=0)
+SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
