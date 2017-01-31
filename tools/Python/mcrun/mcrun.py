@@ -209,6 +209,7 @@ def get_parameters(options):
             if len(interval) == 1:
                 fixed_params[key] = value
             else:
+                print("Yes")
                 LOG.debug('interval: %s', interval)
                 intervals[key] = interval
         else:
@@ -308,7 +309,8 @@ def main():
         if len(intervals) == 0:
             raise OptionValueError(
                 '--list was chosen but no lists was presented.')
-        points = len(intervals.values()[0])
+        pointlist=list(intervals.values())
+        points = len(pointlist[0])
         if not(all(map(lambda i: len(i) == points, intervals.values()))):
             raise OptionValueError(
                 'All variables much have an equal amount of points.')
