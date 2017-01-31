@@ -1052,7 +1052,7 @@ TRACE
   double l;                     /* Path length to scattering event */
   double abs_xsect, abs_xlen;   /* Absorption cross section and length */
   double inc_xsect, inc_xlen;   /* Incoherent scattering cross section and length */
-  double coh_xlen;   /* Coherent cross section and length */
+  double coh_xlen;              /* Coherent cross section and length */
   double tot_xsect, tot_xlen;   /* Total cross section and length */
   double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
   double adjust, r, sum;        /* Temporaries */
@@ -1182,15 +1182,14 @@ TRACE
       }
 
       /* (3). Probabilities of the different possible interactions. */
-      tot_xsect = abs_xsect + inc_xsect + hkl_info.coh_xsect;
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
          scattering lengths to m**-1 */
       coh_xlen = hkl_info.coh_xsect/V0;
-      tot_xlen = tot_xsect/V0;
       if (barns) {
-        coh_xlen *= 100; tot_xlen *= 100;
+        coh_xlen *= 100; 
       } /* else assume fm^2 */
+      tot_xlen = abs_xlen + inc_xlen + coh_xlen;
 
       /* (5). Transmission */
       p_trans = exp(-tot_xlen*l_full);
