@@ -1086,11 +1086,11 @@ TRACE
     V0= hkl_info.V0;
     abs_xlen  = abs_xsect/V0;
     inc_xlen  = inc_xsect/V0;
-    if (barns) { 
-      /*If cross sections are given in barns, we need a scaling factor of 100 
-        to get scattering lengths in m, since V0 is assumed to be in AA*/
-      abs_xlen *= 100; inc_xlen *= 100; 
-    } /* else assume fm^2 */
+
+    /* Scalar cross sections for inc/abs are given in barns, so we need a scaling factor of 100
+       to get scattering lengths in m, since V0 is assumed to be in AA*/
+    abs_xlen *= 100; inc_xlen *= 100;
+
     L = hkl_info.list;
     T = hkl_info.tau_list;
     hkl_info.type = '\0';
