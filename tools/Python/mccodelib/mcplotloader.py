@@ -524,7 +524,7 @@ def _load_sweep_monitors(rootdir):
             if f not in mnames and f != 'mccode.sim':
                 mnames.append(f)
         arg.append(dirsignature)
-
+    
     d = rootdir
     subdirtuple = []
     for root, dirs, files in walk(top=d):
@@ -534,8 +534,17 @@ def _load_sweep_monitors(rootdir):
 
     subdirs = map(lambda t: t[0], subdirtuple)
     subdirs = sortalpha(subdirs)
-    monitors = list(map(lambda t: t[1], subdirtuple))[0]
-
+    
+    # get the monitor ordering right by snooping the '  filename:' labelsout of the scan point file 0/mccode.sim
+    monitors = []
+    f = open(join(d, '0', 'mccode.sim'), 'rb')
+    line = f.readline().decode()
+    while line:
+        line = f.readline().decode()
+        m = re.match('  filename:\s+([\w\.]+)\s*\n', line)
+        if m:
+            monitors.append(m.group(1))
+    
     # assemble monitor data
     sweep_monitors = []
     for m in monitors:
