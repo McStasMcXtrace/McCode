@@ -108,7 +108,7 @@
 DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, int target_index=0, dist=0, focus_xw=0, focus_yh=0, 
-		    c_performance=1, t_performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5,tfocus_dist,tfocus_time,tfocus_width)
+		    c_performance=1, t_performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5,tfocus_dist=0,tfocus_time=0,tfocus_width=0)
   OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C1_x,C1_z,C2_x,C2_z,C3_x,C3_z,T1_x,T1_z,T2_x,T2_z,T3_x,T3_z,rC1_x,rC1_z,rC2_x,rC2_z,rC3_x,rC3_z,rT1_x,rT1_z,rT2_x,rT2_z,rT3_x,rT3_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_tfocus,w_geom_c,w_geom_t,tx,ty,tz,dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,x0,z0, cos_beamport_angle, sin_beamport_angle, cos_thermal, cos_cold, Lmin_sampled, Lmax_sampled)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
