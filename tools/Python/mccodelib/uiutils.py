@@ -6,7 +6,7 @@ import re
 import subprocess
 import time
 
-def run_subtool(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
+def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
     Synchronous run subprocess.popen with pipe buffer reads, 
     one-string command 'cmd' and running in directory 'cwd'.
@@ -42,6 +42,31 @@ def run_subtool(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
         call_if_not_none(stderr_cb, stderrdata.rstrip('\n'))
     
     return process.returncode
+
+
+def start_subtool_then_return(cmd, cwd=None):
+    '''
+    Asynchronous run subprocess.popen, using
+    one-string command 'cmd' in directory 'cwd'.
+    '''
+    def call_if_not_none(fct, *args):
+        ''' shorthand utility for calling a function if it is defined, and otherwise ignoring it '''
+        if fct:
+            fct(*args)
+    if not cwd:
+        cwd = os.getcwd()
+    
+    # open the process with all bells & whistles
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               stdin=subprocess.PIPE,
+                               shell=True,
+                               universal_newlines=True,
+                               cwd=cwd)
+    
+    return process.returncode
+
 
 '''
 Static utility functions related to handling mccode files.

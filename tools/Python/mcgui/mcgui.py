@@ -611,9 +611,7 @@ class McGuiAppController():
         cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
         cwd = os.path.dirname(self.state.getInstrumentFile())
         
-        def messg(s): self.emitter.message(s)
-        def messg_err(s): self.emitter.message(s, err_msg=True)
-        uiutils.run_subtool(cmd=cmd, cwd=cwd, stdout_cb=messg, stderr_cb=messg_err)
+        uiutils.start_subtool_then_return(cmd=cmd, cwd=cwd)
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
@@ -624,7 +622,7 @@ class McGuiAppController():
             
             def messg(s): self.emitter.message(s)
             def messg_err(s): self.emitter.message(s, err_msg=True)
-            uiutils.run_subtool(cmd, stdout_cb=messg, stderr_cb=messg_err)
+            uiutils.run_subtool_to_completion(cmd, stdout_cb=messg, stderr_cb=messg_err)
         finally:
             self.emitter.status('')
     
@@ -637,7 +635,7 @@ class McGuiAppController():
             
             def messg(s): self.emitter.message(s)
             def messg_err(s): self.emitter.message(s, err_msg=True)
-            uiutils.run_subtool(cmd, stdout_cb=messg, stderr_cb=messg_err)
+            uiutils.run_subtool_to_completion(cmd, stdout_cb=messg, stderr_cb=messg_err)
         finally:
             self.emitter.status('')
     
