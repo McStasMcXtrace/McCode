@@ -180,7 +180,7 @@ def print_help(nogui=False):
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(g_window, prefix+'display-2D', '\n'.join(helplines_gui))
+        QtGui.QMessageBox.about(g_window, prefix+'plot-2D', '\n'.join(helplines_gui))
 
 def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
