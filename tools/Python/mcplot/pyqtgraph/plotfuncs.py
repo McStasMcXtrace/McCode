@@ -95,7 +95,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
     
-    return plt, vb
+    return vb
 
 def get_color_map(idx, pos_min, pos_max):
     # The contents of this function was generated from Matlab using the generate_colormaps.m script
@@ -225,5 +225,5 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     colorbar.getViewBox().autoRange(padding=0)
     
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
-    return layout, plt.getViewBox()
+    return plt.getViewBox()
 
