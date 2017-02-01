@@ -603,8 +603,20 @@ class McGuiAppController():
         resultdir = self.state.getDataDir()
         cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
         cwd = os.path.dirname(self.state.getInstrumentFile())
+
+        self._runthread = McRunQThread()
+        self._runthread.cmd = cmd
+        self._runthread.cwd = cwd
+        self._runthread.finished.connect(lambda: None)
+        self._runthread.terminated.connect(lambda: None)
+        self._runthread.thread_exception.connect(handleExceptionMsg)
+        self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
+        self._runthread.message.connect(lambda msg: self.emitter.message(msg))
+        self._runthread.start()
         
-        uiutils.start_subtool_then_return(cmd=cmd, cwd=cwd)
+        self.emitter.message(cmd)
+        self.emitter.status('Running plotter ...')
+        
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')

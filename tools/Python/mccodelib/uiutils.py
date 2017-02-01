@@ -26,15 +26,6 @@ def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
                                shell=True,
                                universal_newlines=True,
                                cwd=cwd)
-    
-    # read program output while the process is active
-    while process.poll() == None:
-        stdoutdata = process.stdout.readline().rstrip('\n')
-        call_if_not_none(stdout_cb, stdoutdata)
-        stderrdata = process.stderr.readline().rstrip('\n')
-        call_if_not_none(stderr_cb, stderrdata)
-        time.sleep(0.05)
-    
     # flush until EOF
     for stdoutdata in process.stdout:
         call_if_not_none(stdout_cb, stdoutdata.rstrip('\n'))
