@@ -318,6 +318,7 @@ class McStasResult:
         ''' Extract detector information '''
         if self.detectors is not None:
             return self.detectors
+        print(self.data)
         res = re.findall(self.DETECTOR_RE, self.data)
 
         return [Detector(name, intensity, error, count, path)
