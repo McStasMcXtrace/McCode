@@ -246,7 +246,7 @@ def expand_subplots(sourcedir):
         return
         
     for s in subdirs:
-        subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
+        subprocess.Popen('mcplot-pyqtgraph %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
