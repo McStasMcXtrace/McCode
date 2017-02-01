@@ -224,6 +224,8 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     
     colorbar.getViewBox().autoRange(padding=0)
     
+    plt.layout_2d = layout
+    
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
     return plt.getViewBox()
 
