@@ -33,10 +33,8 @@ class ModLegend(pg.LegendItem):
         p.drawRect(self.boundingRect())
 
         
-def plot_Data1D(data, log=False, legend=True, icolormap=0):
+def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     ''' create a plotItem and populate it with data, Data1D '''
-    plt = pg.PlotItem()
-    
     # data
     x = np.array(data.xvals).astype(np.float)
     y = np.array(data.yvals).astype(np.float)
@@ -72,7 +70,6 @@ def plot_Data1D(data, log=False, legend=True, icolormap=0):
         plt.addItem(err)
     
     # commit
-    lname = ''
     if legend:
         plt.legend = ModLegend(offset=(-1, 1))
         plt.legend.setParentItem(plt.vb)
@@ -133,7 +130,7 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
-def plot_Data2D(data, log=False, legend=True, icolormap=0):
+def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
    
     # data
@@ -175,7 +172,7 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
     layout.addLabel(data.title, 0, 0, colspan=2)
     
     # plot area
-    plt = layout.addPlot(1, 0)
+    layout.addItem(plt, 1, 0)
     plt.setLabels(bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
     

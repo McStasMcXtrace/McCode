@@ -306,14 +306,16 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     ''' constructs a plot from data and adds this to layout '''
     rowlen = get_golden_rowlen(n)
     
+    
+    plt = pg.PlotItem()
     if type(data) is Data1D:
-        item, view_box = plot_Data1D(data, log=log, legend=legend, icolormap=icolormap)
+        view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap)
     elif type(data) is Data2D:
-        item, view_box = plot_Data2D(data, log=log, legend=legend, icolormap=icolormap)
+        view_box = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap)
     else:
         raise Exception("unknown plot data type")
     
-    layout.addItem(item, i / rowlen, i % rowlen)
+    layout.addItem(plt, i / rowlen, i % rowlen)
     
     return view_box
 
@@ -366,3 +368,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args)
+
