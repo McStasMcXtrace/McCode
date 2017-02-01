@@ -38,7 +38,7 @@ class McMessageEmitter(QtCore.QObject):
         
         self.statusUpdate.emit(status)
         self.__statusLog.append(status)
-        QtGui.QApplication.processEvents()
+        
     
     def message(self, msg, err_msg=False):
         ''' message log messages (simulation progress etc.)
@@ -77,19 +77,12 @@ class McRunQThread(QtCore.QThread):
                                        universal_newlines=True,
                                        cwd=self.cwd)
             
-            # read program output while the process is active
-            while process.poll() == None:
-                stdoutdata = process.stdout.readline().rstrip('\n')
-                self.message.emit(stdoutdata)
-                stderrdata = process.stderr.readline().rstrip('\n')
-                self.error.emit(stderrdata)
-                time.sleep(0.05)
-            # flush until EOF
             for stdoutdata in process.stdout:
                 self.message.emit(stdoutdata.rstrip('\n'))
+
             for stderrdata in process.stderr:
                 self.error.emit(stderrdata.rstrip('\n'))
-            
+                
             self.process_returncode = process.returncode
                         
         except:
