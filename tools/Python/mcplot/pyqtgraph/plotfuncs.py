@@ -33,10 +33,8 @@ class ModLegend(pg.LegendItem):
         p.drawRect(self.boundingRect())
 
         
-def plot_Data1D(data, log=False, legend=True, icolormap=0):
+def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     ''' create a plotItem and populate it with data, Data1D '''
-    plt = pg.PlotItem()
-    
     # data
     x = np.array(data.xvals).astype(np.float)
     y = np.array(data.yvals).astype(np.float)
@@ -72,7 +70,6 @@ def plot_Data1D(data, log=False, legend=True, icolormap=0):
         plt.addItem(err)
     
     # commit
-    lname = ''
     if legend:
         plt.legend = ModLegend(offset=(-1, 1))
         plt.legend.setParentItem(plt.vb)
@@ -98,7 +95,7 @@ def plot_Data1D(data, log=False, legend=True, icolormap=0):
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
     
-    return plt, vb
+    return vb
 
 def get_color_map(idx, pos_min, pos_max):
     # The contents of this function was generated from Matlab using the generate_colormaps.m script
@@ -133,7 +130,7 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
-def plot_Data2D(data, log=False, legend=True, icolormap=0):
+def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
    
     # data
@@ -153,8 +150,11 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
     img.setImage(dataset)
     
     # scale(x,y) is in %, translate(x,y) is in the original units
-    img.scale((data.xlimits[1] - data.xlimits[0])/datashape[0], (data.xlimits[3] - data.xlimits[2])/datashape[1])
-    img.translate(-datashape[0]/2, -datashape[1]/2)
+    dx = (data.xlimits[1] - data.xlimits[0])/datashape[0]
+    dy = (data.xlimits[3] - data.xlimits[2])/datashape[1]
+    img.scale(dx,dy)
+    # Calculate translation in original pixel units
+    img.translate(data.xlimits[0]/dx,data.xlimits[2]/dy)
     
     # color map (by lookup table)
     pos_min = np.min(dataset)
@@ -172,7 +172,7 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
     layout.addLabel(data.title, 0, 0, colspan=2)
     
     # plot area
-    plt = layout.addPlot(1, 0)
+    layout.addItem(plt, 1, 0)
     plt.setLabels(bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
     
@@ -188,7 +188,9 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
         plt.plot([0], [0], name=lname3)
 
     plt.addItem(img)
-    plt.getViewBox().autoRange(padding=0)
+    # Set the x and y ranges correctly
+    plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)
+    plt.getViewBox().setYRange(data.xlimits[2], data.xlimits[3], padding=0)
     
     # color bar
     cbimg = pg.ImageItem()
@@ -222,6 +224,8 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
     
     colorbar.getViewBox().autoRange(padding=0)
     
+    plt.layout_2d = layout
+    
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
-    return layout, plt.getViewBox()
+    return plt.getViewBox()
 

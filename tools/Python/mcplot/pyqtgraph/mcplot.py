@@ -180,7 +180,7 @@ def print_help(nogui=False):
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(g_window, prefix+'display-2D', '\n'.join(helplines_gui))
+        QtGui.QMessageBox.about(g_window, prefix+'plot-2D', '\n'.join(helplines_gui))
 
 def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
@@ -246,7 +246,7 @@ def expand_subplots(sourcedir):
         return
         
     for s in subdirs:
-        subprocess.Popen('mcplot-pyqtgraph-py %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
+        subprocess.Popen('mcplot-pyqtgraph %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
@@ -306,14 +306,16 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     ''' constructs a plot from data and adds this to layout '''
     rowlen = get_golden_rowlen(n)
     
+    
+    plt = pg.PlotItem()
     if type(data) is Data1D:
-        item, view_box = plot_Data1D(data, log=log, legend=legend, icolormap=icolormap)
+        view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap)
     elif type(data) is Data2D:
-        item, view_box = plot_Data2D(data, log=log, legend=legend, icolormap=icolormap)
+        view_box = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap)
     else:
         raise Exception("unknown plot data type")
     
-    layout.addItem(item, i / rowlen, i % rowlen)
+    layout.addItem(plt, i / rowlen, i % rowlen)
     
     return view_box
 
@@ -366,3 +368,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args)
+
