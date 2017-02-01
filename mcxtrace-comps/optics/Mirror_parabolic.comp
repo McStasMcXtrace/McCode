@@ -26,8 +26,8 @@
 * %P
 * INPUT PARAMETERS
 * R: [1] reflectivity of mirror.
-* a: [m] (z) primary axis curvature scale
-* b: [m] (x) curvature scale, if zero, flat in x.
+* a: [sqrt(m)] (z) primary axis curvature scale
+* b: [sqrt(m)] (x) curvature scale, if zero, flat in x.
 * xmin: [m] lower bound of mirror in x (-width/2.0)
 * xmax: [m] upper bound of mirror in x ( width/2.0)
 * ymin: [m] lower bound of mirror in y (-height/2.0)
