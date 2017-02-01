@@ -1,6 +1,6 @@
 #%Module 1.0
 #
-#  mcstas module for use with 'environment-modules' package:
+#  @FLAVOR@ module for use with 'environment-modules' package:
 # 
 proc ModulesHelp { } {
         global version modroot
