@@ -2138,5 +2138,10 @@ if(@ARGV>0 && @ARGV<3) {
 #    menu_open($win);
 }
 
+# On Unix systems - when PGPLOT/McCode format is chosen, ensure to start pgxwin_server
+if ($Config{'osname'} ne 'MSWin32' && $MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas|McXtrace|Gnuplot/i) {
+  require "mcplotlib.pl";
+  ensure_pgplot_xserv_started()
+}
 
 MainLoop;
