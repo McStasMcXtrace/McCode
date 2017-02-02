@@ -306,18 +306,18 @@ def get_golden_rowlen(n):
 
 def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     ''' constructs a plot from data and adds this to layout '''
+    view_box = None
+    plt = pg.PlotItem()
     rowlen = get_golden_rowlen(n)
     
-    
-    plt = pg.PlotItem()
     if type(data) is Data1D:
         view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap)
+        layout.addItem(plt, i / rowlen, i % rowlen)
     elif type(data) is Data2D:
-        view_box = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap)
+        view_box, lyt = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap)
+        layout.addItem(lyt, i / rowlen, i % rowlen)
     else:
         raise Exception("unknown plot data type")
-    
-    layout.addItem(plt, i / rowlen, i % rowlen)
     
     return view_box
 
