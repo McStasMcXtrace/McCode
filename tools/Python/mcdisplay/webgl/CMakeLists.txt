@@ -82,7 +82,7 @@ endif()
 # Program files
 if(WINDOWS)
   # Python files
-  foreach(name mcdisplay.js template.html __init__.py)
+  foreach(name mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -102,7 +102,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name mcdisplay.js template.html __init__.py)
+  foreach(name mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"

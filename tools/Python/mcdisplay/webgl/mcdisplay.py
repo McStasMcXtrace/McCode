@@ -103,6 +103,18 @@ def write_browse(instrument, raybundle, dir, nobrowse=False):
     # write mcdisplay.js
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
     file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, '_mcdisplay.js'))
+
+    # write other necessary .js files
+    mcd_filepath = os.path.join(os.path.dirname(__file__), 'three.min.js')
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'three.min.js'))
+    mcd_filepath = os.path.join(os.path.dirname(__file__), 'dat.gui.min.js')
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'dat.gui.min.js'))
+    mcd_filepath = os.path.join(os.path.dirname(__file__), 'OrbitControls.js')
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'OrbitControls.js'))
+    mcd_filepath = os.path.join(os.path.dirname(__file__), 'Lut.js')
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'Lut.js'))
+    mcd_filepath = os.path.join(os.path.dirname(__file__), 'jquery.min.js')
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'jquery.min.js'))
     
     # write html
     html_filepath = os.path.join(dir, 'index.html')
