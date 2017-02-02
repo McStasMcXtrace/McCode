@@ -357,9 +357,6 @@ class McGuiState(QtCore.QObject):
             self.__dataDir = output_dir
         else:
             runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
-            if sys.platform == "win32":
-                runstr='start ' + runstr
-
         
         # neutron count
         ncount = fixed_params[1]
