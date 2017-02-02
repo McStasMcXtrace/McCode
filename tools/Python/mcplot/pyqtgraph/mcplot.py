@@ -146,9 +146,8 @@ def print_help(nogui=False):
     helplines.append('')
     helplines.append('q            - quit')
     helplines.append('p            - save png')
-    helplines.append('s            - save svg')
-    # PDF currently unsupported
-    #    helplines.append('d            - save pdf')
+    if not os.name == 'nt':
+        helplines.append('s            - save svg')
     helplines.append('l            - log toggle')
     helplines.append('t            - textinfo toggle')
     helplines.append('c            - cycle colormap')
@@ -164,8 +163,8 @@ def print_help(nogui=False):
         helplines_gui = []
         helplines_gui.append('q            - quit')
         helplines_gui.append('p            - save png')
-        helplines_gui.append('s            - save svg')
-        helplines_gui.append('d            - save pdf')
+        if not os.name == 'nt':
+            helplines_gui.append('s            - save svg')
         helplines_gui.append('l            - log toggle')
         helplines_gui.append('t            - textinfo toggle')
         helplines_gui.append('c            - cycle colormap')
@@ -180,7 +179,7 @@ def print_help(nogui=False):
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(g_window, prefix+'plot-2D', '\n'.join(helplines_gui))
+        QtGui.QMessageBox.about(g_window, prefix+'plot-pyqtgraph', '\n'.join(helplines_gui))
 
 def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
@@ -195,10 +194,8 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
         elif ev.key() == 80:                            # p
             savefile_cb(format='png')
         elif ev.key() == 83:                            # s
-            savefile_cb(format='svg')
-        # This is where export of PDF would be handled, e.g. via conversion from SVG
-        #elif ev.key() == 68:                            # d
-        #    savefile_cb(format='pdf')
+            if not os.name == 'nt':
+                savefile_cb(format='svg')
         elif ev.key() == 84:                            # t
             print("Toggle legend visibility")
             legend=flip_legend()

@@ -164,11 +164,12 @@ def get_help_lines():
     helplines = []
     helplines.append('q            - quit')
     helplines.append('p            - save png')
-    helplines.append('s            - save svg')
+    if not os.name == 'nt':
+        helplines.append('s            - save svg')
     helplines.append('space        - next ray')
     helplines.append('click        - enter subplot')
     helplines.append('right-click  - exit subplot')
-    helplines.append('h/F1         - info')
+    helplines.append('h/F1         - show component list')
     
     return helplines
 
@@ -326,7 +327,8 @@ class McDisplay2DGui(object):
             elif event.key() == 80:                 # p
                 self.dumpfile(format='png')
             elif event.key() == 83:                 # s
-                self.dumpfile(format='svg')
+                if not os.name == 'nt':
+                    self.dumpfile(format='svg')
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
