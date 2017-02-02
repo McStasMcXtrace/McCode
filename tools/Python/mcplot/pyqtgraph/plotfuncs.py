@@ -59,7 +59,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     plt.setXRange(np.min(x), np.max(x), padding=0)
         
     # labels
-    title = '%s' % (data.title)
+    title = '%s [%s]' % (data.component, data.filename)
     plt.setLabels(title=title, bottom=data.xlabel, left=data.ylabel)
 
     # error bars
@@ -175,7 +175,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     layout.setContentsMargins(0, 0, 20, 5)
     
     # title label
-    layout.addLabel(data.title, 0, 0, colspan=2)
+    layout.addLabel('%s [%s]' % (data.component, data.filename), 0, 0, colspan=2)
     
     # plot area
     layout.addItem(plt, 1, 0)
