@@ -48,8 +48,11 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
                 nonzeros.append(i)
             else:
                 zeros.append(i)
-        y[zeros] = np.min(y[nonzeros])/10
-        plt.setLogMode(y=True)
+        if len(nonzeros)>0:
+            y[zeros] = np.min(y[nonzeros])/10
+            plt.setLogMode(y=True)
+        else:
+            plt.setLogMode(y=False)
     else:
         plt.setLogMode(y=False)
 
@@ -143,10 +146,12 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     if log:
         dataset = np.reshape(dataset, (1, datashape[0]*datashape[1]))
         ymin = np.min(dataset[dataset>0])/10
-        dataset[dataset<=0] = ymin
-        dataset = np.reshape(dataset, datashape)
-        dataset = np.log10(dataset)
-
+        if not ymin is None:
+            dataset[dataset<=0] = ymin
+            dataset = np.reshape(dataset, datashape)
+            dataset = np.log10(dataset)
+        else:
+            dataset = np.reshape(dataset, datashape)
     img.setImage(dataset)
     
     # scale(x,y) is in %, translate(x,y) is in the original units
