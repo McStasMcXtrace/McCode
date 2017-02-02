@@ -145,8 +145,9 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     ymin = 1e-19
     if log:
         dataset = np.reshape(dataset, (1, datashape[0]*datashape[1]))
-        ymin = np.min(dataset[dataset>0])/10
-        if not ymin is None:
+        idx = dataset[dataset>0]
+        if len(idx) > 0:
+            ymin = np.min(idx)/10
             dataset[dataset<=0] = ymin
             dataset = np.reshape(dataset, datashape)
             dataset = np.log10(dataset)
