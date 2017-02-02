@@ -3,7 +3,7 @@ Version: @VERSION@
 Section: main
 Priority: optional
 Architecture: all
-Depends: mcxtrace-@VERSION@, mcxtrace-comps-@VERSION@, mcxtrace-tools-perl-@VERSION@
+Depends: mcxtrace-@VERSION@, mcxtrace-comps-@VERSION@, mcxtrace-tools-perl-@VERSION@, mcxtrace-tools-perl-cmdline-@VERSION@, mcxtrace-manuals-@VERSION@
 Installed-Size:
 Maintainer: Erik B Knudsen <erkn@fysik.dtu.dk>
 Description: A metapackage for McXtrace + perl tools
