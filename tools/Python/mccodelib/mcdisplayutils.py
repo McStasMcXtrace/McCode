@@ -38,6 +38,9 @@ class McDisplayReader(object):
                 cmd = cmd + ' --ncount=' + str(100)
             else:
                 cmd = cmd + ' --ncount=' + str(n)
+        else:
+            n = None
+        
         if dir:
             cmd = cmd + ' --dir=' + dir
         if args.instr_options:

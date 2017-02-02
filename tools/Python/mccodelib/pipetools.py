@@ -135,6 +135,9 @@ class ParticlesTraceState(LineHandlerState):
         
         self.inspect = args.get('inspect', None)
         super(ParticlesTraceState, self).__init__(setcurrent, next, databox, args)
+        
+        self.max_particles = args.get('max_particles', 1000)
+        self.block_count = 0
     
     def add_line(self, line):
         if re.match('LEAVE:', line):
@@ -154,8 +157,12 @@ class ParticlesTraceState(LineHandlerState):
                         accept_block = True
             else:
                 accept_block = True
-            if accept_block: 
+            if accept_block:
                 self.databox.add_particleblock(''.join(self.block))
+                self.block_count += 1
+                if self.block_count >= self.max_particles:
+                    print('max particle count exceeded, blocking all further trace particle trace lines...')
+                    self.setcurrent(self.next, None)
             
             self.block = []
             self.leaveflag = False
@@ -165,6 +172,11 @@ class ParticlesTraceState(LineHandlerState):
         else:
             self.databox.add_comment(line)
 
+class PostParticletraceState(LineHandlerState):
+    ''' this state does nothing, so nothing happens from now on '''
+    def add_line(self, line):
+        pass
+
 class ThreadException(Exception):
     pass
 
@@ -173,14 +185,15 @@ class TraceReader(Thread):
         self.current = current
         current.add_line(line)
     
-    def __init__(self, cmd, inspect=None, use_defaultpars=False):
+    def __init__(self, cmd, inspect=None, use_defaultpars=False, max_particles=1000):
         self.exc_obj = None
         
         # set up state machine
         allstates = {}
         databox = DataBox()
         
-        allstates['particles'] = ParticlesTraceState(self._setcurrent, next=None, databox=databox, args={'inspect': inspect})
+        allstates['post_particles'] = PostParticletraceState(self._setcurrent, None, databox=databox, args={'use_defaultpars': use_defaultpars})
+        allstates['particles'] = ParticlesTraceState(self._setcurrent, next=allstates['post_particles'], databox=databox, args={'inspect': inspect, 'max_particles': max_particles})
         allstates['mcdisplay'] = McdisplayState(self._setcurrent, next=allstates['particles'], databox=databox)
         allstates['instr'] = InstrState(self._setcurrent, next=allstates['mcdisplay'], databox=databox)
         allstates['prompt'] = PromptState(self._setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': use_defaultpars})
