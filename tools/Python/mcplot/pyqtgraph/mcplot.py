@@ -44,12 +44,17 @@ def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
     
     window = pg.GraphicsWindow()
-    window.resize(1000,600)
     
     mw = QtGui.QMainWindow()
     window.setParent(mw)
     mw.setCentralWidget(window)
     mw.setWindowTitle(title)
+    
+    # window size
+    rect = QtGui.QApplication.desktop().screenGeometry()
+    w = 0.9 * rect.width()
+    h = 0.9 * rect.height()
+    mw.resize(w, h)
     
     global g_window
     g_window = mw
