@@ -121,8 +121,9 @@ class InstrTraceParser:
         p[0] = self.comps
     
     def p_comp_def(self, p):
-        'comp_def : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON m4 NL COMPKW comp_name AT LB v3 RB NL'
-        p[0] = Node(type='comp', children=[p[4], p[9], p[15]])
+        'comp_def : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON m4 NL'
+        v3 = Node(type='v3', leaf=[p[9].leaf[0], p[9].leaf[1], p[9].leaf[2]])
+        p[0] = Node(type='comp', children=[p[4], p[9], v3])
     
     def p_comp_name(self, p):
         'comp_name : ID'

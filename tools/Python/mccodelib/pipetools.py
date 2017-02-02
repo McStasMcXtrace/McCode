@@ -94,17 +94,19 @@ class InstrState(LineHandlerState):
         super(InstrState, self).__init__(setcurrent, next, databox, args)
         
     def add_line(self, line):
-        if self.first:
+        if self.first and re.match('INSTRUMENT:', line):
             self.databox.add_instrdef(line)
             self.first = False
             self.second = True
-        elif self.second:
+        elif self.second and re.match('Instrument \'\w+\' \([/\w\\\:]+.instr\)', line):
             self.databox.add_instrdef(line)
             self.second = False
-        elif (self.idx % 3) is not 0 or re.match(r'COMPONENT: ', line):
+        elif re.match('COMPONENT:', line):
             self.databox.add_instrdef(line)
-            self.idx += 1
-        elif re.match('MCDISPLAY: start\n', line):
+        elif re.match('POS:', line):
+            self.databox.add_instrdef(line)
+        elif re.match('MCDISPLAY: start', line):
+            self.databox.set_instrdone()
             self.setcurrent(self.next, line)
         else:
             self.databox.add_comment(line)
@@ -119,9 +121,9 @@ class McdisplayState(LineHandlerState):
             self.databox.add_instrdef(line)
         elif re.match('MANTID_BANANA_DET: ', line):
             self.databox.add_instrdef(line)
-        elif re.match('INSTRUMENT END:\n', line):
+        elif re.match('INSTRUMENT END:', line):
             self.databox.add_instrdef(line)
-        elif re.match('ENTER:\n', line):
+        elif re.match('ENTER:', line):
             self.databox.set_instrdone()
             self.setcurrent(self.next, line)
         else:
@@ -133,20 +135,29 @@ class ParticlesTraceState(LineHandlerState):
         self.active = False
         self.leaveflag = False
         
-        self.inspect = args.get('inspect', None)
+        self.inspect = None
+        if args:
+            self.inspect = args.get('inspect', None)
         super(ParticlesTraceState, self).__init__(setcurrent, next, databox, args)
         
-        self.max_particles = args.get('max_particles', 1000)
+        self.max_particles = 1000
+        if args:
+            self.max_particles = args.get('max_particles', 1000)
+        
         self.block_count = 0
     
     def add_line(self, line):
+        def check(line):
+            if len(line) > 5:
+                return line[:5] in ['SCATT', 'STATE', 'COMP:', 'ABSOR']
+        
         if re.match('LEAVE:', line):
             self.block.append(line)
             self.leaveflag = True
             self.active = False
-        elif self.active: 
+        elif self.active and check(line):
             self.block.append(line)
-        elif self.leaveflag:
+        elif self.leaveflag and check(line):
             self.block.append(line)
             
             # inspect
@@ -159,10 +170,10 @@ class ParticlesTraceState(LineHandlerState):
                 accept_block = True
             if accept_block:
                 self.databox.add_particleblock(''.join(self.block))
-                self.block_count += 1
-                if self.block_count >= self.max_particles:
+                if self.block_count > self.max_particles:
                     print('max particle count exceeded, blocking all further trace particle trace lines...')
                     self.setcurrent(self.next, None)
+                self.block_count += 1
             
             self.block = []
             self.leaveflag = False
@@ -192,11 +203,13 @@ class TraceReader(Thread):
         allstates = {}
         databox = DataBox()
         
-        allstates['post_particles'] = PostParticletraceState(self._setcurrent, None, databox=databox, args={'use_defaultpars': use_defaultpars})
-        allstates['particles'] = ParticlesTraceState(self._setcurrent, next=allstates['post_particles'], databox=databox, args={'inspect': inspect, 'max_particles': max_particles})
+        allstates['post_particles'] = PostParticletraceState(self._setcurrent, None, databox=databox)
+        allstates['particles'] = ParticlesTraceState(self._setcurrent, next=allstates['post_particles'], databox=databox, 
+                                                     args={'inspect': inspect, 'max_particles': max_particles})
         allstates['mcdisplay'] = McdisplayState(self._setcurrent, next=allstates['particles'], databox=databox)
         allstates['instr'] = InstrState(self._setcurrent, next=allstates['mcdisplay'], databox=databox)
-        allstates['prompt'] = PromptState(self._setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': use_defaultpars})
+        allstates['prompt'] = PromptState(self._setcurrent, next=allstates['instr'], databox=databox, 
+                                          args={'use_defaultpars': use_defaultpars})
         
         # remember
         self.current = allstates['prompt']
@@ -216,8 +229,10 @@ class TraceReader(Thread):
                             stdin=PIPE
                             )
             
-            # special case: give the prompt state access to process to allow automation flag
+            # special case: give the prompt state access to process to allow automation flag, 
+            # and particles to end the process in max particle count is exceeded
             self.allstates['prompt'].setprocess(process)
+            #self.allstates['particles'].setprocess(process)
             
             while process.poll() == None:
                 stdoutdata = process.stdout.readline()
@@ -237,6 +252,38 @@ class TraceReader(Thread):
         except Exception as e:
             self.exc_obj = e
 
+class TestTraceReader:
+    ''' can be used with data from a file '''
+    def _setcurrent(self, current, line):
+        self.current = current
+        current.add_line(line)
+    
+    def __init__(self, text):
+        self.exc_obj = None
+        
+        allstates = {}
+        databox = DataBox()
+        
+        allstates['particles'] = ParticlesTraceState(self._setcurrent, next=None, databox=databox)
+        allstates['mcdisplay'] = McdisplayState(self._setcurrent, next=allstates['particles'], databox=databox)
+        allstates['instr'] = InstrState(self._setcurrent, next=allstates['mcdisplay'], databox=databox)
+        
+        # remember
+        self.current = allstates['instr']
+        self.allstates = allstates
+        self.databox = databox
+
+        for line in text.splitlines():
+            self.current.add_line(line + '\n')
+        self.databox.set_particlesdone()
+    
+    def start(self):
+        pass
+
+    def join(self, timeout=-1):
+        pass
+    
+    
 class McrunPipeMan(object):
     '''
     Proxy class for setting up the McrunPipeThread thread and LineBuffer.
