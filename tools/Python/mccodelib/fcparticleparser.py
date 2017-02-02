@@ -207,7 +207,8 @@ class FlowChartParticleTraceParser(object):
         
         p7.set_nodenext(node_next=d6)
         d6.set_nodes(node_T=p8, node_F=d3)
-        p8.set_nodenext(node_next=d8) # <-- can this event happen?
+        p8.set_nodenext(node_next=d8) # <-- this event rarely happens for most instruments!
+        d8.set_nodes(node_T=p7, node_F=d3)
         
         p9.set_nodenext(node_next=d7)
         d7.set_nodes(node_T=p10, node_F=t3)
