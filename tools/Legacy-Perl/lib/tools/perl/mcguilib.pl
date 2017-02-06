@@ -114,7 +114,6 @@ sub simulation_dialog {
     $si{'GravityWarn'} = 0 unless $si{'GravityWarn'};
     $si{'Mode'}  = 0 unless $si{'Mode'};
     $si{'NScan'} = 0 unless $si{'NScan'};
-    $si{'Force'} = 0 unless $si{'Force'};
     $si{'Detach'} = 0 unless $si{'Detach'};
     $si{'cluster'}= $MCSTAS::mcstas_config{'CLUSTER'};
     # 'Inspect' field for use of mcdisplay's built-in
@@ -218,8 +217,7 @@ sub simulation_dialog {
                                -justify => 'left',
                                -textvariable => \$si{'Dir'});
     $dir_entry->pack(-side => 'left');
-    my $choiceforce = $line->Checkbutton(-text => "overwrite",-variable => \$si{'Force'})->pack(-side => 'left');
-    $b->attach($choiceforce, -balloonmsg => "Force to overwrite existing directories");
+
     $line->Button(-text => "Browse...", -width => 9,
                 -command => sub { my $d = select_dir($si{'Dir'});
                                   $si{'Dir'} = $d if $d; } )->pack(-side => 'right');
