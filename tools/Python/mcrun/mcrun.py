@@ -76,11 +76,6 @@ def add_mcrun_options(parser):
         help='store scan results in FILE '
              '(defaults to: "mccode.dat")')
 
-    # Misc options
-    add('--test',
-        action='store_true', default=False,
-        help='execute McStas self-test and generate report')
-
     add('--no-cflags',
         action='store_true', default=False,
         help='disable optimising compiler flags for faster compilation')
