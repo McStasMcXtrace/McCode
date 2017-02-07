@@ -518,12 +518,6 @@ def _load_sweep_monitors(rootdir):
     '''
     loads the files of a scan sweep into plotable datastructures
     '''
-    def sortalpha(data):
-        return sorted(data, key=lambda item: (
-                                       int(item.partition(' ')[0])
-                                       if item[0].isdigit() else float('inf'), item)
-               )
-
     def walkfunc(arg, dirname, fnames):
         mnames = []
         dirsignature = (dirname, mnames)
@@ -532,14 +526,15 @@ def _load_sweep_monitors(rootdir):
             if f not in mnames and f != 'mccode.sim':
                 mnames.append(f)
         arg.append(dirsignature)
-    # get the subdirs - would have been fine to just say '0', '1', ... to 'N'
-    d = rootdir
+    
+    # get the subdirs somehow
     subdirtuple = []
-    for root, dirs, files in walk(top=d):
+    for root, dirs, files in walk(top=rootdir):
         walkfunc(subdirtuple, root, files)
     del subdirtuple[0] # remove root dir
-    subdirs = map(lambda t: t[0], subdirtuple)
-    subdirs = sortalpha(subdirs)
+    subdirs = [t[0] for t in subdirtuple]
+    # get the right order of subdirs by recreating them a little bit
+    subdirs = [join(dirname(subdirs[i]), str(i)) for i in range(len(subdirs))] # sortalpha(subdirs)
     
     # get the monitor ordering right by snooping the '  filename:' labels out of the scan point file 0/mccode.sim
     def get_subdir_monitors(subdir):
