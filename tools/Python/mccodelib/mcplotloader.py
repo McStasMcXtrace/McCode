@@ -562,7 +562,6 @@ def _load_sweep_monitors(rootdir):
     for i in range(len(monitors_by_subdir[0])):          # N
         mon_lst = [None]*len(monitors_by_subdir)
         for j in range(len(monitors_by_subdir)):
-            print(monitors_by_subdir[j][i])
             mon_lst[j] = _load_monitor(monitors_by_subdir[j][i])
         sweep_monitors[i] = mon_lst
     
