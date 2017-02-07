@@ -530,14 +530,12 @@ def _load_sweep_monitors(rootdir):
             if f not in mnames and f != 'mccode.sim':
                 mnames.append(f)
         arg.append(dirsignature)
-    
+    # get the subdirs - would have been fine to just say '0', '1', ... to 'N'
     d = rootdir
     subdirtuple = []
     for root, dirs, files in walk(top=d):
         walkfunc(subdirtuple, root, files)
-
     del subdirtuple[0] # remove root dir
-
     subdirs = map(lambda t: t[0], subdirtuple)
     subdirs = sortalpha(subdirs)
     
@@ -550,23 +548,23 @@ def _load_sweep_monitors(rootdir):
             line = f.readline().decode()
             m = re.match('  filename:\s+([\w\.]+)\s*\n', line)
             if m:
-                mons.append(m.group(1))
+                mons.append(join(subdir, m.group(1)))
         return mons
-    monitors = get_subdir_monitors(join(d, '0'))
+   
+    monitors_by_subdir = []
+    for s in subdirs:
+        monitors_by_subdir.append(get_subdir_monitors(s))
     
-    # assemble monitor data
-    sweep_monitors = []
-    for m in monitors:
-        mon_lst = []
-        for s in subdirs:
-            mon_lst.append(_load_monitor(join(s, m)))
-        sweep_monitors.append(mon_lst)
-
+    # notice that columns and rows are swapped, so we get to use a list-of-lists data structure, with rows the same monitor
+    sweep_monitors = [None]*len(monitors_by_subdir[0])
+    for i in range(len(monitors_by_subdir[0])):          # N
+        mon_lst = [None]*len(monitors_by_subdir)
+        for j in range(len(monitors_by_subdir)):
+            print(monitors_by_subdir[j][i])
+            mon_lst[j] = _load_monitor(monitors_by_subdir[j][i])
+        sweep_monitors[i] = mon_lst
+    
     return sweep_monitors
-    
-    
-
-
 
 
 '''
