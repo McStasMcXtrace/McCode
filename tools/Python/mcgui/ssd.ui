@@ -97,7 +97,7 @@
           </item>
          </widget>
         </item>
-        <item row="3" column="2">
+        <item row="4" column="2">
          <widget class="QLineEdit" name="edtSteps">
           <property name="text">
            <string/>
@@ -107,7 +107,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="2" column="2">
          <widget class="QLineEdit" name="edtNeutronCnt">
           <property name="text">
            <string>1000000</string>
@@ -117,7 +117,7 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="2">
+        <item row="9" column="2">
          <widget class="QLineEdit" name="edtNodes">
           <property name="text">
            <string>2</string>
@@ -140,28 +140,42 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="lblSweepSteps">
-          <property name="text">
-           <string>Sweep steps (optional):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="lblNeutronCount">
-          <property name="text">
-           <string>Particle count:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
+        <item row="6" column="1">
          <widget class="QLabel" name="lblMpi">
           <property name="text">
            <string>MPI:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="2">
+        <item row="2" column="1">
+         <widget class="QLabel" name="lblNeutronCount">
+          <property name="text">
+           <string>Particle count:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLabel" name="lblSweepSteps">
+          <property name="text">
+           <string>Sweep steps (optional):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="1">
+         <widget class="QLabel" name="lblMpiNodes">
+          <property name="text">
+           <string>MPI node count:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="lblOutputDir">
+          <property name="text">
+           <string>Output subdir (optional):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="2">
          <widget class="QComboBox" name="cbxClustering">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -186,22 +200,18 @@
           </item>
          </widget>
         </item>
-        <item row="8" column="1">
-         <widget class="QLabel" name="lblMpiNodes">
-          <property name="text">
-           <string>MPI node count:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="lblOutputDir">
-          <property name="text">
-           <string>Output subdir (optional):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
+        <item row="3" column="2">
          <widget class="QLineEdit" name="edtOutputDir"/>
+        </item>
+        <item row="1" column="2">
+         <widget class="QComboBox" name="cbxInspect"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="lblInspect">
+          <property name="text">
+           <string>Inspect:</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

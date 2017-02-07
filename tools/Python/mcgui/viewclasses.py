@@ -132,10 +132,11 @@ class McView(object):
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 
-    def showStartSimDialog(self, params):
+    def showStartSimDialog(self, params, comps):
         if self.__ssd == None:
             self.__ssd = McStartSimDialog()
         self.__ssd.createParamsWidgets(params)
+        self.__ssd.set_components(comps)
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
@@ -579,10 +580,30 @@ state to proceed.
 class McStartSimDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(McStartSimDialog, self).__init__(parent)
+        self._last_inspect_compnames = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         self.ui.btnStart.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
+        self._set_inspect_visible(False)
+        self.ui.cbxSimTrace.currentIndexChanged.connect(lambda i: self._set_inspect_visible(i))
+    
+    def set_components(self, compnames):
+        
+        if compnames == self._last_inspect_compnames:
+            return
+        self._last_inspect_compnames = compnames
+        self.ui.cbxInspect.clear()
+        self.ui.cbxInspect.addItem("-- None --")
+        for c in compnames:
+            self.ui.cbxInspect.addItem(c)
+        
+    def _set_inspect_visible(self, sim_run_idx):
+        visible = False
+        if sim_run_idx == 1:
+            visible = True
+        self.ui.lblInspect.setVisible(visible)
+        self.ui.cbxInspect.setVisible(visible)
 
     def getValues(self):
         ''' Return values:
@@ -611,10 +632,10 @@ class McStartSimDialog(QtGui.QDialog):
 
         # steps
         p2 = self.ui.edtSteps.text()
-
+        
         # gravity
         p3 = self.ui.cbxGravity.currentIndex() == 1
-
+        
         # clustering option
         p4 = None
         if self.ui.cbxClustering.currentIndex() == 0:
@@ -623,18 +644,18 @@ class McStartSimDialog(QtGui.QDialog):
             p4 = ClusteringEnum.MPI
         if self.ui.cbxClustering.currentIndex() == 2:
             p4 = ClusteringEnum.MPI_RC
-
+        
         # clustring option
         p5 = self.ui.edtNodes.text()
-
+        
         # seed
         p6 = self.ui.edtRandomSeed.text()
-
+        
         # output dir
         p7 = str(self.ui.edtOutputDir.text())
-
+        
         fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7]
-
+        
         # get dynamic params
         params = []
         for w in self.__wParams:
@@ -642,9 +663,14 @@ class McStartSimDialog(QtGui.QDialog):
             p.append(str(w[0].text()).rstrip(':'))
             p.append(str(w[1].text()))
             params.append(p)
-
-        return fixed_params, params
-
+        
+        inspect = None
+        idx = self.ui.cbxInspect.currentIndex()
+        if idx > 0:
+            inspect = self._last_inspect_compnames[idx]
+        
+        return fixed_params, params, inspect
+    
     __wParams = []
     __oldParams = []
     def createParamsWidgets(self, params):
@@ -706,7 +732,7 @@ class McStartSimDialog(QtGui.QDialog):
             self.__wParams.append([lbl, edt])
 
             p_index += 1
-
+                
         self.ui.btnStart.setFocus()
 
 class SimTraceEnum:

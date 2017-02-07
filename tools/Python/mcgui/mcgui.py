@@ -318,7 +318,7 @@ class McGuiState(QtCore.QObject):
         else:
             raise Exception('State.interrupt: no __runthread')
     
-    def run(self, fixed_params, params):
+    def run(self, fixed_params, params, inspect=None):
         ''' fixed_params[]:
                 0 - simulation = 0, trace = 1
                 1 - neutron count (int)
@@ -356,7 +356,10 @@ class McGuiState(QtCore.QObject):
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + os.path.basename(self.__instrFile) + ' -d ' + output_dir
             self.__dataDir = output_dir
         else:
-            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
+            if inspect:
+                runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files' + ' --inspect=' + inspect
+            else:
+                runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
         
         # neutron count
         ncount = fixed_params[1]
@@ -575,13 +578,24 @@ class McGuiAppController():
             except:
                 self.emitter.status("Instrument compile error")
                 raise
-                
-            fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
+            
+            def get_compnames(text):
+                ''' return a list of compnames from an instrument definition code text '''
+                comps = []
+                pat = 'COMPONENT[ ]+([\w0-9]+)[ ]+='
+                for l in text.splitlines():
+                    m = re.match(pat, l)
+                    if m:
+                        comps.append(m.group(1))
+                return comps
+            
+            comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
+            fixed_params, new_instr_params, inspect = self.view.showStartSimDialog(instr_params, comps)
             
             self.emitter.status("")
             
             if fixed_params != None:
-                self.state.run(fixed_params, new_instr_params)
+                self.state.run(fixed_params, new_instr_params, inspect)
         
     def handleConfiguration(self):
         self.view.showConfigDialog()
