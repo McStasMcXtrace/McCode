@@ -470,21 +470,27 @@ def _load_multiplot_1D_lst(f_dat):
         '''# variables: lambda Ldetector_I Ldetector_ERR PSDrad_I PSDrad_ERR PSDrad_I PSDrad_ERR detector_I detector_ERR'''
         m = re.search('\# variables: ([\w ]+)\n', text)
         variables = m.group(1).split()
-
+        
+        '''# yvars: (AutoTOFL0_I,AutoTOFL0_ERR) (AutoTOF0_I,AutoTOF0_ERR) (AutoL0_I,AutoL0_ERR) ...'''
+        m = re.search('\# yvars: ([\w \(\)\,]+)\n', text)
+        unsplit = m.group(1)
+        unsplit = unsplit.replace('(', ' ')
+        unsplit = unsplit.replace(')', ' ')
+        unsplit = unsplit.replace(',', ' ')
+        yvars = unsplit.split()
+        
         # get x and y values (the latter is a list of a list, the infamous yvals_lst which contains yvals values, which are lists)
         lines = text.splitlines()
         xvals = []
         yvals_lst = []
         yvals_err_lst = []
-
-        yvariables = variables # remember, every second "variable" is an error bar
-        yvariables.pop(0) # remove xval, which for some reason is the first value
+        
         for l in lines:
             if '#' in l:
                 continue
             xvals.append(l.split()[0])
 
-            for i in range(len(yvariables)//2):
+            for i in range(len(yvars)//2):
                 yvals_lst.append([])
                 yvals_err_lst.append([])
                 yvals_lst[i].append(l.split()[2*i+1])
@@ -492,10 +498,10 @@ def _load_multiplot_1D_lst(f_dat):
         header.xvals = xvals
 
         # create a new instance for each y variable
-        for i in range(len(yvariables)//2):
+        for i in range(len(yvars)//2):
             data = header.clone()
             data.yvals = yvals_lst[i]
-            data.yvar = yvariables[2*i]
+            data.yvar = yvars[2*i]
             data.title = '%s' % (data.yvar)
             data.y_err_vals = yvals_err_lst[i]
             data_handle_lst.append(DataHandle(load_fct=None, data=data))
