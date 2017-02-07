@@ -462,7 +462,9 @@ def _load_multiplot_1D_lst(f_dat):
         # NOTE: this only supports a single xvar
         '''# xvars: lambda'''
         m = re.search('\# xvars: ([\w, ]+)\n', text)
-        header.xvar = m.group(1)
+        header.xvar = m.group(1).replace(',', '')
+        num_xvars = len(header.xvar.split())
+        
         '''# xlimits: 6 7'''
         m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
         header.xlimits = (float(m.group(1)), float(m.group(2)))
@@ -493,10 +495,10 @@ def _load_multiplot_1D_lst(f_dat):
             for i in range(len(yvars)//2):
                 yvals_lst.append([])
                 yvals_err_lst.append([])
-                yvals_lst[i].append(l.split()[2*i+1])
-                yvals_err_lst[i].append(l.split()[2*i+2])
+                yvals_lst[i].append(l.split()[2*i+num_xvars])
+                yvals_err_lst[i].append(l.split()[2*i+num_xvars+1])
         header.xvals = xvals
-
+        
         # create a new instance for each y variable
         for i in range(len(yvars)//2):
             data = header.clone()
