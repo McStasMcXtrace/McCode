@@ -541,15 +541,18 @@ def _load_sweep_monitors(rootdir):
     subdirs = map(lambda t: t[0], subdirtuple)
     subdirs = sortalpha(subdirs)
     
-    # get the monitor ordering right by snooping the '  filename:' labelsout of the scan point file 0/mccode.sim
-    monitors = []
-    f = open(join(d, '0', 'mccode.sim'), 'rb')
-    line = f.readline().decode()
-    while line:
+    # get the monitor ordering right by snooping the '  filename:' labels out of the scan point file 0/mccode.sim
+    def get_subdir_monitors(subdir):
+        mons = []
+        f = open(join(subdir, 'mccode.sim'), 'rb')
         line = f.readline().decode()
-        m = re.match('  filename:\s+([\w\.]+)\s*\n', line)
-        if m:
-            monitors.append(m.group(1))
+        while line:
+            line = f.readline().decode()
+            m = re.match('  filename:\s+([\w\.]+)\s*\n', line)
+            if m:
+                mons.append(m.group(1))
+        return mons
+    monitors = get_subdir_monitors(join(d, '0'))
     
     # assemble monitor data
     sweep_monitors = []
@@ -560,6 +563,10 @@ def _load_sweep_monitors(rootdir):
         sweep_monitors.append(mon_lst)
 
     return sweep_monitors
+    
+    
+
+
 
 
 '''
