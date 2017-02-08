@@ -577,7 +577,10 @@ def has_filename(args):
     f = args['simfile']
     if not isfile(f):
         if not isdir(f):
-            raise Exception('Invalid input file.')
+            if not f == '':
+                raise Exception('Invalid input file.')
+            else:
+                f = '.'
         args['directory'] = f
         args['simfile'] = ''
         return False
