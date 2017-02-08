@@ -24,7 +24,7 @@ set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available
 set(GNUPLOT "gnuplot.exe")
 
 # Plotting options
-set(MCPLOT_DEFAULT "plot-pyqtgraph")
+
 set(PLOTTER "PGPLOT")
 set(PGDEV "/gw")
 set(GNUDEV "windows")

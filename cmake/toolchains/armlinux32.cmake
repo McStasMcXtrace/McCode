@@ -12,7 +12,7 @@ set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
 
 # Plotting options
-set(MCPLOT_DEFAULT "plot-pyqtgraph")
+
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
 set(GNUDEV "wxt")
