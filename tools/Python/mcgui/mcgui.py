@@ -777,7 +777,7 @@ class McGuiAppController():
             if sys.platform == 'darwin':
                 scriptfile = 'open ' + scriptfile
             else:
-                scriptfile = 'xdg-open ' + scriptfile
+                scriptfile = 'x-terminal-emulator ' + scriptfile
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
         subprocess.Popen(scriptfile, shell=True)
