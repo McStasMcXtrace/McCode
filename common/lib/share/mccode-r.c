@@ -1681,6 +1681,9 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 {
   int     node_i=0;
+  MPI_MASTER(
+	     printf("\n** MPI master gathering slave node list data ** \n");
+  );
   
   if (mpi_node_rank != mpi_node_root) {
     /* MPI slave: slaves send their data to master: 2 MPI_Send calls */
@@ -1697,27 +1700,34 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
   } /* end slaves */
 
   /* MPI master: receive data from slaves sequentially: 2 MPI_Recv calls */
-  for(node_i=0; node_i<mpi_node_count; node_i++) {
-    double *this_p1=NULL;                               /* buffer to hold the list from slaves */
-    int     mnp[3]={0,0,0};  /* size of this buffer */
-    if (node_i != mpi_node_root) { /* get data from slaves */
-      if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
-        fprintf(stderr, "Warning: master from proc %i: "
-          "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
-      if (mnp[0]*mnp[1]*mnp[2]) {
-        this_p1 = (double *)calloc(mnp[0]*mnp[1]*mnp[2], sizeof(double));
-        if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
-          fprintf(stderr, "Warning: master from proc %i: "
-            "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, mnp[0]*mnp[1]*mnp[2]);
-        else {
-          detector.p1 = this_p1;
-          detector.m  = mnp[0]; detector.n  = mnp[1]; detector.p  = mnp[2];
-          mcdetector_out_data_nexus(nxhandle, detector);
-        }
-      }
-    } /* if not master */
-  } /* for */
 
+  if (mpi_node_rank == mpi_node_root) {
+    for(node_i=0; node_i<mpi_node_count; node_i++) {
+      double *this_p1=NULL;                               /* buffer to hold the list from slaves */
+      int     mnp[3]={0,0,0};  /* size of this buffer */
+      if (node_i != mpi_node_root) { /* get data from slaves */
+	if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
+	  fprintf(stderr, "Warning: master from proc %i: "
+		  "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
+	if (mnp[0]*mnp[1]*mnp[2]) {
+	  this_p1 = (double *)calloc(mnp[0]*mnp[1]*mnp[2], sizeof(double));
+	  if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
+	    fprintf(stderr, "Warning: master from proc %i: "
+		    "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, mnp[0]*mnp[1]*mnp[2]);
+	  else {
+	    printf(". MPI master writing data for slave node %i\n",node_i);
+	    detector.p1 = this_p1;
+	    detector.m  = mnp[0]; detector.n  = mnp[1]; detector.p  = mnp[2];
+	    
+	    mcdetector_out_data_nexus(nxhandle, detector);
+	  }
+	}
+      } /* if not master */
+    } /* for */
+  MPI_MASTER(
+	     printf("\n** Done ** \n");
+  );   
+  }
 }
 #endif
 
@@ -1912,7 +1922,6 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         double *p0, double *p1, double *p2, char *f,
         char *c, Coords posa)
 {
-  
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
   MCDETECTOR detector = mcdetector_import(mcformat,
     c, (t ? t : MCCODE_STRING " 1D data"),
