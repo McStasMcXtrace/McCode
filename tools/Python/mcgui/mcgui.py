@@ -771,6 +771,17 @@ class McGuiAppController():
             mcdoc='start ' + mcdoc
         subprocess.Popen(mcdoc, shell=True)
 
+    def handleEnvironment(self):
+        if not sys.platform == 'win32':
+            scriptfile = mccode_config.configuration["MCCODE_LIB_DIR"] + '/environment'
+            if sys.platform == 'darwin':
+                scriptfile = 'open ' + scriptfile
+            else:
+                scriptfile = 'xdg-open ' + scriptfile
+        else:
+            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
+        subprocess.Popen(scriptfile, shell=True)
+        
     def handleDefault(self):
         reply = QtGui.QMessageBox.question(self.view.mw,
                                            'Define system default?',
@@ -817,6 +828,7 @@ class McGuiAppController():
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
+        self.view.mw.add_conf_menu('Open terminal env.').triggered.connect(self.handleEnvironment)
         # On macOS
         # 1) add a copy of the configuration menu to File
         # 2) add menu points for changing what the bundle opens
@@ -824,8 +836,9 @@ class McGuiAppController():
             self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)
             self.view.mw.add_conf_menu('Use Python App').triggered.connect(self.handleDefaultMcguiPy)
             self.view.mw.add_conf_menu('Use Perl App').triggered.connect(self.handleDefaultMcguiPl)            
+            
         # If not on Windows add menu point to make current mccode the system default
-        if not sys.platform == 'windows':
+        if not sys.platform == 'win32':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
