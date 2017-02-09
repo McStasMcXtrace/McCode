@@ -374,6 +374,21 @@ sub tools_shortcuts {
     $w->fontDelete('small');
 }
 
+sub tools_terminal {
+  # Starts the relevant "evnvironment script" - platform independent
+  my $scriptfile;
+  if ($Config{'osname'} eq 'MSWin32') {
+    $scriptfile = "start $MCSTAS::sys_dir\\..\\bin\\mccodego.bat"
+  } else {
+    $scriptfile = "$MCSTAS::sys_dir/environment";
+    if ($Config{'osname'} eq 'darwin') {
+      $scriptfile = "open $scriptfile"
+    } else {
+      $scriptfile = "x-terminal-emulator -e $scriptfile"
+    }
+  }
+  system($scriptfile);
+}
 sub tools_set_default_mcstas {
   # Runs the packaged "postinst" script which sets up system-wide Unix links to
   # the McCode version at hand
@@ -1685,6 +1700,8 @@ sub setup_menu {
     $toolmenu->pack(-side=>'left');
     $toolmenu->command(-label => 'mcgui Shorcut keys',
                        -command => sub {tools_shortcuts($w)});
+    $toolmenu->command(-label => 'Open terminal env.',
+                       -command => sub {tools_terminal($w)});
     # The following items for now only applies to non-Win32 systems...
     if (!($Config{'osname'} eq 'MSWin32')) {
         $toolmenu->command(-label => 'Set this McStas as sys default',
