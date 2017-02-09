@@ -139,7 +139,8 @@ def plot_node(node, layout, viewmodel):
     
     # set keypress handlers 
     replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
-    set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
+    back_cb = lambda: plot_node(node.parent, layout, viewmodel=viewmodel)
+    set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
 
 def print_help(nogui=False):
     if sys.platform == 'darwin':
@@ -149,52 +150,37 @@ def print_help(nogui=False):
     
     helplines = []
     helplines.append('')
-    helplines.append('q            - quit')
-    helplines.append('p            - save png')
+    helplines.append('q              - quit')
+    helplines.append('p              - save png')
     if not os.name == 'nt':
-        helplines.append('s            - save svg')
-    helplines.append('l            - log toggle')
-    helplines.append('t            - textinfo toggle')
-    helplines.append('c            - cycle colormap')
-    helplines.append('F1/h         - help')
-    helplines.append('F5           - replot')
-    helplines.append('click        - display subplot')
-    helplines.append('right-click  - back')
+        helplines.append('s              - save svg')
+    helplines.append('l              - log toggle')
+    helplines.append('t              - textinfo toggle')
+    helplines.append('c              - cycle colormap')
+    helplines.append('F1/h           - help')
+    helplines.append('F5             - replot')
+    helplines.append('click          - display subplot')
+    helplines.append('right-click/b  - back')
     helplines.append('%s + click - sweep monitors' % modifier)
-    helplines.append('x            - expand subplots')
+    helplines.append('x              - expand subplots')
     print('\n'.join(helplines))
     
     if not nogui:
-        helplines_gui = []
-        helplines_gui.append('q            - quit')
-        helplines_gui.append('p            - save png')
-        if not os.name == 'nt':
-            helplines_gui.append('s            - save svg')
-        helplines_gui.append('l            - log toggle')
-        helplines_gui.append('t            - textinfo toggle')
-        helplines_gui.append('c            - cycle colormap')
-        helplines_gui.append('F1/h         - help')
-        helplines_gui.append('F5           - replot')
-        helplines_gui.append('click        - enter subplot')
-        helplines_gui.append('right-click  - exit subplot')
-        helplines_gui.append('%s + click - sweep monitors' % modifier)
-        helplines_gui.append('x            - expand subplots')
-        
         if mccode_config.configuration["MCCODE"] == "mcstas":
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(g_window, prefix+'plot-pyqtgraph', '\n'.join(helplines_gui))
+        QtGui.QMessageBox.about(g_window, prefix+'plot-pyqtgraph', '\n'.join(helplines))
 
-def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
+def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
     
-    def key_handler(ev, replot_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
+    def key_handler(ev, replot_cb, back_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
         ''' global keypress handler, replot_cb is a function of log '''
         if ev.key() == 81:                              # q
             QtGui.QApplication.quit()
         elif ev.key() == 76:                            # l
-            log = flip_log()
+            flip_log()
             replot_cb()
         elif ev.key() == 80:                            # p
             savefile_cb(format='png')
@@ -203,7 +189,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
                 savefile_cb(format='svg')
         elif ev.key() == 84:                            # t
             print("Toggle legend visibility")
-            legend=flip_legend()
+            flip_legend()
             replot_cb()
         elif ev.key() == 67:                            # c
             inc_cmap()
@@ -214,6 +200,9 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
             expand_sp()
         elif ev.key() == 16777264 or ev.key() == 72:    # F1 or h
             print_help()
+            expand_sp()
+        elif ev.key() == 66:                            # b
+            back_cb()
         # print debug info
         if debug:
             print("key code: %s" % str(ev.key()))
@@ -224,6 +213,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, viewmodel):
     scene.keyPressEvent = lambda ev: key_handler(ev=ev,
                                                  replot_cb=replot_cb,
                                                  savefile_cb=savefile_cb,
+                                                 back_cb=back_cb,
                                                  flip_log=viewmodel.flip_log,
                                                  flip_legend=viewmodel.flip_legend,
                                                  inc_cmap=viewmodel.inc_colormap,
