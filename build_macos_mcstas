@@ -48,6 +48,9 @@ $MCINSTALL_PREFIX/miniconda3/bin/conda config --add channels conda-forge
 $MCINSTALL_PREFIX/miniconda3/bin/conda install qscintilla2 pyqtgraph pyaml gcc openmpi ply -y
 $MCINSTALL_PREFIX/miniconda3/bin/conda install -c nexpy nexusformat -y
 
+# Copy in the mpicc snippets
+cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
+
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then
