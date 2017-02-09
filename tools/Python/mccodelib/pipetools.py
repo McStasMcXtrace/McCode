@@ -5,6 +5,7 @@ Buffering and low-level filtering. Thread management.
 import re
 from subprocess import Popen, PIPE
 from threading import Thread, Event
+import os
 
 class DataBox():
     ''' container for pre-processed trace data '''
@@ -131,6 +132,7 @@ class McdisplayState(LineHandlerState):
 
 class ParticlesTraceState(LineHandlerState):
     def __init__(self, setcurrent, next, databox, args=None):
+        self.process = None
         self.block = []
         self.active = False
         self.leaveflag = False
@@ -172,7 +174,10 @@ class ParticlesTraceState(LineHandlerState):
                 self.databox.add_particleblock(''.join(self.block))
                 if self.block_count > self.max_particles:
                     print('max particle count exceeded, blocking all further trace particle trace lines...')
-                    self.setcurrent(self.next, None)
+                    # TODO: find a way to safely kill the process group (a group, since shell=True is used for platform independence)
+                    #self.setcurrent(self.next, None)
+                    #if self.pid:
+                    #    os.killpg(self.pid, 9)
                 self.block_count += 1
             
             self.block = []
@@ -182,6 +187,10 @@ class ParticlesTraceState(LineHandlerState):
             self.active = True
         else:
             self.databox.add_comment(line)
+    
+    def setprocess(self, process):
+        self.process = process.pid
+
 
 class PostParticletraceState(LineHandlerState):
     ''' this state does nothing, so nothing happens from now on '''
@@ -232,7 +241,7 @@ class TraceReader(Thread):
             # special case: give the prompt state access to process to allow automation flag, 
             # and particles to end the process in max particle count is exceeded
             self.allstates['prompt'].setprocess(process)
-            #self.allstates['particles'].setprocess(process)
+            self.allstates['particles'].setprocess(process)
             
             while process.poll() == None:
                 stdoutdata = process.stdout.readline()
