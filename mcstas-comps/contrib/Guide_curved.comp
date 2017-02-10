@@ -142,8 +142,8 @@ MCDISPLAY
   magnify("xy");
 
   for(j=0;j<n;j++) {
-    z1 = ((double)j - 1.0)*(R1*l/curvature)/(double)(n - 1);
-    z2 = ((double)j - 1.0)*(R2*l/curvature)/(double)(n - 1);
+    z1 = ((double)j)*(R1*l/curvature)/(double)(n - 1);
+    z2 = ((double)j)*(R2*l/curvature)/(double)(n - 1);
     x1 = curvature - sqrt(R1*R1 - z1*z1);
     x2 = curvature - sqrt(R2*R2 - z2*z2);
     xplot1[j] = x1;
