@@ -91,6 +91,7 @@ class McView(object):
         ui.actionClose_Instrument.setEnabled(enableRun)
         ui.actionPlot.setEnabled(enablePlot)
         ui.actionDisplay.setEnabled(enableRun)
+        ui.actionDisplay_2d.setEnabled(enableRun)
         ui.actionRun_Simulation.setEnabled(enableRun)
         ui.actionSave_As.setEnabled(enableRun)
         ui.actionOpen_instrument.setEnabled(True)
