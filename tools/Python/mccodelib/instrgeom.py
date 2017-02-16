@@ -15,6 +15,8 @@ class InstrumentSpecific(object):
         self.components = []
         self.rays = []
         self.cmd = None
+        
+        self.mantids = None
     
     def set_cmd(self, cmd):
         self.cmd = cmd

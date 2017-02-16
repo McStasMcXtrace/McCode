@@ -14,6 +14,9 @@ class InstrTraceParser:
     '''
     parsetree = None
     def __init__(self, data=None, debug=False):
+        self.mantid = None
+
+        
         self.debug = debug
         self.build_lexer()
         self.build_parser()
@@ -26,9 +29,7 @@ class InstrTraceParser:
         'END'         : 'END',
         'Instrument'  : 'INSTRKW',
         'COMPONENT'   : 'COMPONENT',
-        'Component'   : 'COMPKW',
         'POS'         : 'POS',
-        'AT'          : 'AT',
         'MCDISPLAY'   : 'MCDISPLAY',
         'start'       : 'STARTKWLC',
         'end'         : 'ENDKWLC',
@@ -41,6 +42,11 @@ class InstrTraceParser:
         'rectangle'   : 'DRAWCALL',
         'box'         : 'DRAWCALL',
         'circle'      : 'DRAWCALL',
+        
+        'MANTID_PIXEL': 'MANTID_PIXEL',
+        'MANTID_BANANA_DET': 'MB_DET',
+        'MANTID_RECTANGULAR_DET': 'MR_DET',
+        
     }
     
     # tokens 
@@ -99,7 +105,10 @@ class InstrTraceParser:
         # quirky: reverse ordering of components
         self.comps.children = self.comps.children[::-1]
         # assemble parse tree
-        self.parsetree = Node(type='instrdeftree', children=[self.instr, self.comps])
+        if not self.mantid: 
+            self.parsetree = Node(type='instrdeftree', children=[self.instr, self.comps])
+        else:
+            self.parsetree = Node(type='instrdeftree', children=[self.instr, self.comps, self.mantid])
     
     instr = None
     def p_instr_open(self, p):
@@ -133,10 +142,6 @@ class InstrTraceParser:
         'm4 : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
         p[0] = Node(type='m4', leaf=[p[1], p[3], p[5], p[7], p[9], p[11], p[13], p[15], p[17], p[19], p[21], p[23]])
     
-    def p_v3(self, p):
-        'v3 :  DEC COMMA DEC COMMA DEC'
-        p[0] = Node(type='v3', leaf=[p[1], p[3], p[5]])
-    
     def p_draw_lines(self, p):
         '''draw_lines : draw_line draw_lines
                       | draw_line '''
@@ -162,7 +167,23 @@ class InstrTraceParser:
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
-                        | MCDISPLAY COLON DRAWCALL LB RB NL'''
+                        | MCDISPLAY COLON DRAWCALL LB RB NL
+                        | MANTID_PIXEL COLON nineteen_dec NL
+                        | MB_DET COLON  NL
+                        | MR_DET COLON  NL
+        '''
+        if p[1] in ['MANTID_PIXEL', 'MANTID_BANANA_DET', 'MANTID_RECTANGULAR_DET']:
+            if not self.mantid:
+                self.mantid = Node(type='mantid', leaf={})
+                self.mantid.leaf['MANTID_PIXEL'] = []
+                self.mantid.leaf['MANTID_BANANA_DET'] = []
+                self.mantid.leaf['MANTID_RECTANGULAR_DET'] = []
+            if p[1] == 'MANTID_PIXEL':
+                self.mantid.leaf['MANTID_PIXEL'].append(p[3])
+            else:
+                print("MANTID_BANANA or RECT not yet implemented")
+            return
+        
         # special case: remove first argument of args
         if p[3] == 'multiline':
             self.args.leaf = self.args.leaf[1:]
@@ -170,6 +191,11 @@ class InstrTraceParser:
         self.commands.children.append(Node(type='draw', children=[self.args], leaf=p[3]))
         # reset args after having parsed them all, which is now
         self.args = Node(type='args', leaf=[])
+    
+    def p_nineteen_dec(self, p):
+        ''' nineteen_dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC
+        '''
+        p[0] = [p[2*i+1] for i in range(19)]
     
     args = Node(type='args', leaf=[])
     def p_args(self, p):
@@ -234,8 +260,8 @@ class InstrObjectConstructor:
         self.compindices = {}
         comp_idx = 0
         
-        # iterate through parse tree
-        for dc in self.root.children:
+        # iterate through parse tree, parsing instr information and components
+        for dc in self.root.children[0:2]:
             # handle instrument branch
             if dc.type == 'instrument':
                 for ic in dc.children:    
@@ -299,5 +325,25 @@ class InstrObjectConstructor:
                         comp_idx += 1
                         self.compindices[name] = comp_idx
         
+        # parse mantid stuff, if it exists in the parse tree
+        if len(self.root.children) == 3:
+            mantids = []
+            dict = self.root.children[2].leaf
+            pixels = MantidPixelList(dict['MANTID_PIXEL'])
+            mantids.append(pixels)
+            instrument_tree.mantids = mantids
+        
         return instrument_tree
+
+class MantidPixelList:
+    def __init__(self, pixels):
+        self.pixels = pixels
+        for p in pixels: 
+            # this should be a 19-list of strings
+            pass
+            # what do the numbers mean? 
+
+
+
+
 
