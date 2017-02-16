@@ -174,8 +174,8 @@ class ParticlesTraceState(LineHandlerState):
                 self.databox.add_particleblock(''.join(self.block))
                 if self.block_count > self.max_particles:
                     print('max particle count exceeded, blocking all further trace particle trace lines...')
+                    self.setcurrent(self.next, None)
                     # TODO: find a way to safely kill the process group (a group, since shell=True is used for platform independence)
-                    #self.setcurrent(self.next, None)
                     #if self.pid:
                     #    os.killpg(self.pid, 9)
                 self.block_count += 1
