@@ -518,7 +518,7 @@ Transform {
 		    write_process("\t\t<y-min val=\"".min($y0,$y1,$y2,$y3)."\"/>\n");
 		    write_process("\t\t<y-max val=\"".max($y0,$y1,$y2,$y3)."\"/>\n");
 		    write_process("\t\t<z-min val=\"".min($z0,$z1,$z2,$z3)."\"/>\n");
-		    write_process("\t\t<z-max val=\"".(max($y0,$y1,$y2,$y3)+0.01)."\"/>\n");
+		    write_process("\t\t<z-max val=\"".(max($z0,$z1,$z2,$z3)+0.01)."\"/>\n");
 		    write_process("\t</bounding-box>\n");
 		    write_process("\t<algebra val=\"hexapix-".$pixID."\" />\n");
 		    write_process("</type>\n\n");
