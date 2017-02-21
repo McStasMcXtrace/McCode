@@ -8,10 +8,10 @@ import os
 import logging
 import argparse
 import re
-from mccodelib.instrgeom import DrawMultiline
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from mccodelib.instrgeom import DrawMultiline, Vector3d
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
 from mccodelib.fcparticleparser import FlowChartParticleTraceParser
@@ -62,7 +62,7 @@ class MantidPixelWriter:
     
     sample_type = '''
 <component type="sampleMantid-type" name="sampleMantid">
-    <location x=" 0" y=" 0" z=" 6.2"  />
+    <location x="X_COORD" y="Y_COORD" z="Z_COORD"  />
 </component>'''
     
     sample_line_type = '''
@@ -76,19 +76,21 @@ class MantidPixelWriter:
 </type>'''
     
     sample_line = '''
-    <component type="line-sourceMantid-0" >
+    <component type="line-sampleMantid-0" >
         <location x="0" y="0" z="0" />
     </component >'''
     
     sample_header = '''
-<type name="sourceMantid-type" is="Source" >'''
+<type name="sampleMantid-type" is="SamplePos" >'''
     
     sample_footer = '''
 </type>'''
     
     def _get_mantid_sample(self):
-        # TODO: implement
-        return ''
+        h = self.sample_header.replace('X_COORD', '0')
+        h = h.replace('Y_COORD', '0')
+        h = h.replace('Z_COORD', '0')
+        return '\n\n'.join([self.sample_type, h, self.sample_footer])
     
     monitor_type = '''
 <component type="MonNDtype-IDX_MONITOR" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
@@ -108,25 +110,24 @@ class MantidPixelWriter:
     
     s1 = '''
 <type name="MonNDtype-IDX_MONITOR-pix-IDX_PIXEL" is="detector">
-    <hexahedron id="hexapix-IDX_PIXEL">
-        <left-back-bottom-point  x="-COORD_X" y="y_1" z="0"  />
-        <left-front-bottom-point x="-COORD_X" y="y_2" z="0"  />
-        <right-front-bottom-point x="COORD_X" y="y_3" z="0"  />
-        <right-back-bottom-point  x="COORD_X" y="y_4" z="0"  />
-        <left-back-top-point  x="-COORD_X" y="y_1" z="0.001"  />
-        <left-front-top-point  x="-COORD_X" y="y_2" z="0.001"  />
-        <right-front-top-point  x="COORD_X" y="y_3" z="0.001"  />
-        <right-back-top-point   x="COORD_X" y="y_4" z="0.001"  />
+    <hexahedron id="hexapix-1009">
+        <left-back-bottom-point  x="x_1" y="y_1" z="z_1"/>
+        <left-front-bottom-point  x="x_2" y="y_2" z="z_2"/>
+        <right-front-bottom-point  x="x_3" y="y_3" z="z_3"/>
+        <right-back-bottom-point  x="x_4" y="y_4" z="z_4"/>
+        <left-back-top-point  x="x_1" y="y_1" z="z_PLUS_1"/>
+        <left-front-top-point  x="x_2" y="y_2" z="z_PLUS_2"/>
+        <right-front-top-point  x="x_3" y="y_3" z="z_PLUS_3"/>
+        <right-back-top-point  x="x_4" y="y_4" z="z_PLUS_4"/>
     </hexahedron>
     <bounding-box>
-        <x-min val="-COORD_X"/>
-        <x-max val="-COORD_X"/>
-        <y-min val="y_4"/>
-        <y-max val="y_2"/>
-        <z-min val="0"/>
-        <z-max val="0.001"/>
+        <x-min val="x_bb_min"/>
+        <x-max val="x_bb_max"/>
+        <y-min val="y_bb_min"/>
+        <y-max val="y_bb_max"/>
+        <z-min val="y_bb_min"/>
+        <z-max val="z_bb_max"/>
     </bounding-box>
-    <algebra val="hexapix-IDX_PIXEL" />
 </type>'''
     
     s2 = '''
@@ -165,34 +166,55 @@ class MantidPixelWriter:
             mt = mt.replace('IDX_PIX_END', pixels[0][2])
             mt = mt.replace('MONITOR_NAME', m.name)
             
-            
-            #count = 0
             s1_s = []
             s2_s = []
-            #for line in self.pixel_statements:
             for line in pixels:
-                s1 = self.s1.replace('COORD_X', line[13])
-                s1 = s1.replace('IDX_PIXEL', line[0])
+                idx_pix = line[0]
+                s1 = self.s1.replace('IDX_PIXEL', idx_pix)
                 s1 = s1.replace('IDX_MONITOR', idx_monitor)
-                s1 = s1.replace('y_1', line[9])
-                s1 = s1.replace('y_2', line[12])
-                s1 = s1.replace('y_3', line[15])
-                s1 = s1.replace('y_4', line[18])
+                
+                pix = MantidPixel(line, m.transform)
+                
+                x      = [pix.p1.x, pix.p2.x, pix.p3.x, pix.p4.x]
+                y      = [pix.p1.y, pix.p2.y, pix.p3.y, pix.p4.y]
+                z      = [pix.p1.z, pix.p2.z, pix.p3.z, pix.p4.z]
+                z_PLUS = [pix.p1.z+0.001, pix.p2.z+0.001, pix.p3.z+0.001, pix.p4.z+0.001]
+                
+                s1 = s1.replace('x_1', str(x[0]))
+                s1 = s1.replace('x_2', str(x[1]))
+                s1 = s1.replace('x_3', str(x[2]))
+                s1 = s1.replace('x_4', str(x[3]))
+                
+                s1 = s1.replace('y_1', str(y[0]))
+                s1 = s1.replace('y_2', str(y[1]))
+                s1 = s1.replace('y_3', str(y[2]))
+                s1 = s1.replace('y_4', str(y[3]))
+                
+                s1 = s1.replace('z_1', str(z[0]))
+                s1 = s1.replace('z_2', str(z[1]))
+                s1 = s1.replace('z_3', str(z[2]))
+                s1 = s1.replace('z_4', str(z[3]))
+                
+                s1 = s1.replace('z_PLUS_1', str(z_PLUS[0]))
+                s1 = s1.replace('z_PLUS_2', str(z_PLUS[1]))
+                s1 = s1.replace('z_PLUS_3', str(z_PLUS[2]))
+                s1 = s1.replace('z_PLUS_4', str(z_PLUS[3]))
+                
+                s1 = s1.replace('x_bb_min', str(min(x)))
+                s1 = s1.replace('x_bb_max', str(max(x)))
+                s1 = s1.replace('y_bb_min', str(min(y)))
+                s1 = s1.replace('y_bb_max', str(max(y)))
+                s1 = s1.replace('z_bb_min', str(min(z)))
+                s1 = s1.replace('z_bb_max', str(max(z_PLUS)))
                 s1_s.append(s1)
                 
-                s2 = self.s2.replace('IDX_PIXEL', line[13])
+                s2 = self.s2.replace('IDX_PIXEL', idx_pix)
                 s2 = s2.replace('IDX_MONITOR', idx_monitor)
-                s2 = s2.replace('x_cp', line[4])
-                s2 = s2.replace('y_cp', line[5])
+                s2 = s2.replace('x_cp', str(pix.p_cp.x))
+                s2 = s2.replace('y_cp', str(pix.p_cp.y))
                 s2_s.append(s2)
-                
-                # DEBUG STUFF
-                #count +=1
-                #if count > 2:
-                #    break
             
-            
-            mon_txt_blocks.append('\n\n'.join([mt, join_s1_block(s1_s), wrap_join_s2_block(s2_s,monitor_name=m.name, idx_monitor=idx_monitor)]))
+            mon_txt_blocks.append('\n\n'.join([mt, join_s1_block(s1_s), wrap_join_s2_block(s2_s, monitor_name=m.name, idx_monitor=idx_monitor)]))
         
         return '\n\n'.join(mon_txt_blocks)
     
@@ -220,13 +242,22 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
 <type name="Othercomp"></type>'''
     
     footer = '''</instrument>'''
-        
+    
     def do_work(self):
         source = self._get_mantid_source()
         sample = self._get_mantid_sample()
         monitors = self._get_mantid_monitors()
         
         print('\n\n'.join([self.header, source, sample, monitors, self.footer]))
+
+class MantidPixel:
+    def __init__(self, pixel_line_lst, transform):
+        l = pixel_line_lst
+        self.p_cp = transform.apply(Vector3d( float(l[4]),  float(l[5]),  float(l[6])))
+        self.p1   = transform.apply(Vector3d( float(l[7]),  float(l[8]),  float(l[9])))
+        self.p2   = transform.apply(Vector3d(float(l[10]), float(l[11]), float(l[12])))
+        self.p3   = transform.apply(Vector3d(float(l[13]), float(l[14]), float(l[15])))
+        self.p4   = transform.apply(Vector3d(float(l[16]), float(l[17]), float(l[18])))
         
 
 def debug_load_instr(filename):
