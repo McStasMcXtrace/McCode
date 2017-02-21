@@ -180,6 +180,7 @@ class InstrTraceParser:
                 self.mantid.leaf['MANTID_RECTANGULAR_DET'] = []
             if p[1] == 'MANTID_PIXEL':
                 self.mantid.leaf['MANTID_PIXEL'].append(p[3])
+                self.commands.children.append(Node(type='mantid_pixel', children=[], leaf=p[3]))
             else:
                 print("MANTID_BANANA or RECT not yet implemented")
             return
@@ -304,15 +305,13 @@ class InstrObjectConstructor:
                         for cc in csc.children:
                             if cc.type == 'draw_commands':
                                 for dc in cc.children:
+                                    if dc.type == 'mantid_pixel':
+                                        comp.drawcalls.append(dc.leaf)
+                                        continue
+                                    
                                     # get args
-                                    try:
-                                        if len(dc.children) != 1:
-                                            raise Exception()
-                                        
-                                        argsnode = dc.children[0]
-                                        args = argsnode.leaf
-                                    except:
-                                        raise Exception('TraceObjectConstructor: node "comp" -> "draw" -> "args" must be only child')
+                                    argsnode = dc.children[0]
+                                    args = argsnode.leaf
                                     
                                     commandname = dc.leaf
                                     draw = drawclass_factory(commandname, args, reduced=True)
@@ -325,25 +324,5 @@ class InstrObjectConstructor:
                         comp_idx += 1
                         self.compindices[name] = comp_idx
         
-        # parse mantid stuff, if it exists in the parse tree
-        if len(self.root.children) == 3:
-            mantids = []
-            dict = self.root.children[2].leaf
-            pixels = MantidPixelList(dict['MANTID_PIXEL'])
-            mantids.append(pixels)
-            instrument_tree.mantids = mantids
-        
         return instrument_tree
-
-class MantidPixelList:
-    def __init__(self, pixels):
-        self.pixels = pixels
-        for p in pixels: 
-            # this should be a 19-list of strings
-            pass
-            # what do the numbers mean? 
-
-
-
-
 
