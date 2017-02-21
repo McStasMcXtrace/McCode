@@ -29,7 +29,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}display/pyqtgraph")
+set(TOOLS_NAME "tools/Python/${P}display/mantid_xml")
 
 # Windows needs special handling of this path...
 if(WINDOWS)
@@ -44,7 +44,7 @@ set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-pyqtgraph-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-mantidxml-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
@@ -54,16 +54,16 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python/pyqtgraph -based mcdisplay (mcdisplay-pyqtgraph-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python/pyqtgraph -based mcdisplay (mcdisplay-mantidxml), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python-pyqtgraph, python3-ply")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python3, python-pyqtgraph, python3-ply"
+  "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply"
   )
 
 
@@ -71,12 +71,12 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-pyqtgraph-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-mantidxml" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-pyqtgraph-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-mantidxml")
 endif()
 
 # Program files
@@ -123,9 +123,9 @@ if(NOT WINDOWS)
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display-pyqtgraph${DOT_PYTHON_SUFFIX}"
     )
-  # Make pyqtgraph mcdisplay available as mcdisplay/mxdisplay
+  # Make mantidxml mcdisplay available as mcdisplay/mxdisplay
   install(
-    PROGRAMS "${WORK}/${P}display-pyqtgraph-py"
+    PROGRAMS "${WORK}/${P}display-mantidxml"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display"
     )
