@@ -54,7 +54,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python/pyqtgraph -based mcdisplay (mcdisplay-pyqtgraph-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python/pyqtgraph -based ${P}display (${P}display-pyqtgraph-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
@@ -66,32 +66,19 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, python3, python-pyqtgraph, python3-ply"
   )
 
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-pyqtgraph-py" @ONLY)
 
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-pyqtgraph-py")
-endif()
-
 # Program files
 if(WINDOWS)
-  # Python files
-  foreach(name __init__.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${lib}/${TOOLS_NAME}"
-      )
-  endforeach()
 
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcdisplay.py"
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}display.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -101,17 +88,11 @@ endif()
 
 
 if(NOT WINDOWS)
-  # Python files
-  foreach(name __init__.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-      )
-  endforeach()
 
   install(
-    FILES ${BINS}
+    FILES ${PROJECT_SOURCE_DIR}/mcdisplay.py
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    RENAME "${P}display.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
