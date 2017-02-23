@@ -726,9 +726,11 @@ class Transform(object):
         z = self.a31*v3.x + self.a32*v3.y + self.a33*v3.z + self.a34
         return Vector3d(x, y, z)
     
-    def get_rotvector_alpha(self):
+    def get_rotvector_alpha(self, deg=False):
         ''' calculate one angle of rotation around an axis by general 3x3 rotation '''
         self.alpha = math.acos((self.a11 + self.a22 + self.a33 - 1)/2)
+        if deg:
+            self.alpha = 180/math.pi * self.alpha
         x = self.a32 - self.a23
         y = self.a13 - self.a31
         z = self.a21 - self.a12
