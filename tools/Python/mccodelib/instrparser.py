@@ -6,7 +6,7 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
 from .nodetree import Node
-from .instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory
+from .instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory, DrawCommand
 
 class InstrTraceParser:
     '''
@@ -180,7 +180,13 @@ class InstrTraceParser:
                 self.mantid.leaf['MANTID_RECTANGULAR_DET'] = []
             if p[1] == 'MANTID_PIXEL':
                 self.mantid.leaf['MANTID_PIXEL'].append(p[3])
-                self.commands.children.append(Node(type='mantid_pixel', children=[], leaf=p[3]))
+                self.commands.children.append(Node(type='mantid', children=[], leaf=MantidPixelLine(p[3])))
+            elif p[1] == 'MANTID_PIXEL':
+                self.mantid.leaf['MANTID_RECTANGULAR_DETECTOR'].append(p[3])
+                self.commands.children.append(Node(type='mantid', children=[], leaf=MantidRectangularDetectorLine(p[3])))
+            elif p[1] == 'MANTID_PIXEL':
+                self.mantid.leaf['MANTID_BANANA_DETECTOR'].append(p[3])
+                self.commands.children.append(Node(type='mantid', children=[], leaf=MantidBananaDetectorLine(p[3])))
             else:
                 print("MANTID_BANANA or RECT not yet implemented")
             return
@@ -305,7 +311,7 @@ class InstrObjectConstructor:
                         for cc in csc.children:
                             if cc.type == 'draw_commands':
                                 for dc in cc.children:
-                                    if dc.type == 'mantid_pixel':
+                                    if dc.type == 'mantid':
                                         comp.drawcalls.append(dc.leaf)
                                         continue
                                     
@@ -326,3 +332,14 @@ class InstrObjectConstructor:
         
         return instrument_tree
 
+class MantidPixelLine(DrawCommand):
+    def __init__(self, line_lst):
+        self.line = line_lst
+
+class MantidRectangularDetectorLine(DrawCommand):
+    def __init__(self, line_lst):
+        self.line = line_lst
+
+class MantidBananaDetectorLine(DrawCommand):
+    def __init__(self, line_lst):
+        self.line = line_lst

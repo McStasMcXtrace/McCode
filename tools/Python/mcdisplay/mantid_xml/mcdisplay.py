@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.instrgeom import DrawMultiline, Vector3d
 from mccodelib.mcdisplayutils import McDisplayReader
-from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
+from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor, MantidPixelLine, MantidRectangularDetectorLine, MantidRectangularDetectorLine
 from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
 class MantidPixelWriter:
@@ -92,7 +92,7 @@ class MantidPixelWriter:
         h = h.replace('Z_COORD', '0')
         return '\n\n'.join([self.sample_type, h, self.sample_footer])
     
-    monitor_type = '''
+    pixels_monitor_type = '''
 <component type="MonNDtype-IDX_MONITOR" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
     <location x="X_LOC" y="Y_LOC" z="Z_LOC"  />
 </component>
@@ -101,14 +101,14 @@ class MantidPixelWriter:
     <id start="IDX_PIX_START" end="IDX_PIX_END"/>
 </idlist>'''
     
-    monitor_header = '''
+    pixels_monitor_header = '''
 <type name="MonNDtype-IDX_MONITOR">
     <properties />'''
     
-    monitor_footer = '''
+    pixels_monitor_footer = '''
 </type>'''
     
-    s1 = '''
+    pixels_s1 = '''
 <type name="MonNDtype-IDX_MONITOR-pix-IDX_PIXEL" is="detector">
     <hexahedron id="hexapix-1009">
         <left-back-bottom-point  x="x_1" y="y_1" z="z_1"/>
@@ -130,7 +130,7 @@ class MantidPixelWriter:
     </bounding-box>
 </type>'''
     
-    s2 = '''
+    pixels_s2 = '''
 <component type="MonNDtype-IDX_MONITOR-pix-IDX_PIXEL">
     <location x="x_cp" y="y_cp" z="0" />
 </component>'''
@@ -138,14 +138,14 @@ class MantidPixelWriter:
     #['IDX_PIXEL', '0', 'NUM_PIXELS', '4', 'x_cp'    , 'y_cp'    , '0', '-COORD_X'   , 'y_1'       , '0', '-COORD_X'   , 'y_2'      , '0', 'COORD_X'   , 'y_3'      , '0', 'COORD_X'   , 'y_4'       , '0']
     #['1009'     , '0', '1009'      , '4', '0.301485', '0.111419', '0', '-0.00148515', '-0.0139429', '0', '-0.00148515', '0.0128452', '0', '0.00148515', '0.0140756', '0', '0.00148515', '-0.0129778', '0']
     
-    def _get_mantid_monitors(self):
+    def _get_mantid_pixels_monitors(self):
         ''' creates the mantid xml by means of a couple of template strings '''
         def join_s1_block(s1_s):
             return '\n\n'.join(s1_s)
         def wrap_join_s2_block(s2_s, monitor_name, idx_monitor):
             s2 = ''.join(s2_s)
-            h = self.monitor_header.replace('IDX_MONITOR', idx_monitor)
-            return ''.join([h, s2, self.monitor_footer])
+            h = self.pixels_monitor_header.replace('IDX_MONITOR', idx_monitor)
+            return ''.join([h, s2, self.pixels_monitor_footer])
         
         monitors = []
         for c in self.components:
@@ -156,12 +156,12 @@ class MantidPixelWriter:
         for m in monitors:
             pixels = []
             for d in m.drawcalls:
-                if type(d) == list:
-                    pixels.append(d)
+                if type(d) == MantidPixelLine:
+                    pixels.append(d.line)
             
             
             idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
-            mt = self.monitor_type.replace('IDX_MONITOR', idx_monitor)
+            mt = self.pixels_monitor_type.replace('IDX_MONITOR', idx_monitor)
             mt = mt.replace('IDX_PIX_START', pixels[0][1])
             mt = mt.replace('IDX_PIX_END', pixels[0][2])
             mt = mt.replace('MONITOR_NAME', m.name)
@@ -170,7 +170,7 @@ class MantidPixelWriter:
             s2_s = []
             for line in pixels:
                 idx_pix = line[0]
-                s1 = self.s1.replace('IDX_PIXEL', idx_pix)
+                s1 = self.pixels_s1.replace('IDX_PIXEL', idx_pix)
                 s1 = s1.replace('IDX_MONITOR', idx_monitor)
                 
                 pix = MantidPixel(line, m.transform)
@@ -208,7 +208,7 @@ class MantidPixelWriter:
                 s1 = s1.replace('z_bb_max', str(max(z_PLUS)))
                 s1_s.append(s1)
                 
-                s2 = self.s2.replace('IDX_PIXEL', idx_pix)
+                s2 = self.pixels_s2.replace('IDX_PIXEL', idx_pix)
                 s2 = s2.replace('IDX_MONITOR', idx_monitor)
                 s2 = s2.replace('x_cp', str(pix.p_cp.x))
                 s2 = s2.replace('y_cp', str(pix.p_cp.y))
@@ -218,6 +218,33 @@ class MantidPixelWriter:
         
         return '\n\n'.join(mon_txt_blocks)
     
+    
+    
+    rect_monitor = '''
+<component type="MonNDtype" name="MONITOR_NAME" idstart="0" idfillbyfirst="x" idstepbyrow="128">
+    <location x=" 0" y=" 0" z=" 9.4"  />
+</component>
+
+<type name="MonNDtype" is="RectangularDetector" type="pixel-0"
+    xpixels=" 128" xstart="  -0.2" xstep="0.0031496062992126"
+    ypixels=" 128" ystart=" -0.2" ystep="0.0031496062992126">
+</type>
+
+<type is="detector" name="pixel-0">
+    <cuboid id="pixel-shape-0">
+        <left-front-bottom-point x="0.0015748031496063" y="-0.0015748031496063" z="0.0" />
+        <left-front-top-point x="0.0015748031496063" y="-0.0015748031496063" z="0.00005" />
+        <left-back-bottom-point x="-0.0015748031496063" y="-0.0015748031496063" z="0.0" />
+        <right-front-bottom-point x="0.0015748031496063" y="0.0015748031496063" z="0.0" />
+    </cuboid>
+    <algebra val="pixel-shape-0" />
+</type>'''
+    
+    def _get_mantid_rectangular_monitors(self):
+        s = self.rect_monitor
+        
+        
+        
     
     header = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -246,7 +273,7 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
     def do_work(self):
         source = self._get_mantid_source()
         sample = self._get_mantid_sample()
-        monitors = self._get_mantid_monitors()
+        monitors = self._get_mantid_pixels_monitors()
         
         print('\n\n'.join([self.header, source, sample, monitors, self.footer]))
 
@@ -284,6 +311,8 @@ def main(args):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
     
+    # inspect is required b McDisplayReader
+    args.inspect = None 
     reader = McDisplayReader(args, n=1, debug=True)
     instrument = reader.read_instrument()
     
