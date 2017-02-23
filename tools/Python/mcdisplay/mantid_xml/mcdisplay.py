@@ -63,7 +63,6 @@ class MantidPixelWriter:
                 s = s.replace('Y_LOC', str(c.pos.y))
                 s = s.replace('Z_LOC', str(c.pos.z))
                 break
-        
         return '\n'.join([s, self.source_header, self.source_footer])
     
     sample = '''
@@ -93,11 +92,19 @@ class MantidPixelWriter:
 </type>'''
     
     def _get_mantid_sample(self):
-        h = self.sample.replace('X_COORD', '0')
-        h = h.replace('Y_COORD', '0')
-        h = h.replace('Z_COORD', '0')
+        for c in self.components:
+            if c.name == 'sampleMantid':
+                for d in c.drawcalls:
+                    # only supported output is multiline
+                    if type(d) == DrawMultiline:
+                        # TODO: implement sample drawing
+                        pass
+                
+                h = self.sample.replace('X_COORD', str(c.pos.x))
+                h = h.replace('Y_COORD', str(c.pos.y))
+                h = h.replace('Z_COORD', str(c.pos.z))
+                break
         return '\n\n'.join([h, self.sample_type, self.sample_footer])
-        #return '\n\n'.join([self.sample_header, h, self.sample_footer])
     
     pixels_monitor_type = '''
 <component type="MonNDtype-IDX_MONITOR" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
