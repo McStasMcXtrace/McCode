@@ -19,6 +19,11 @@ from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 class MantidPixelWriter:
     def __init__(self, components):
         self.components = components
+        self.monitors = []
+        for c in self.components:
+            if re.search('nD_Mantid', c.name):
+                self.monitors.append(c)
+        
     
     source_type = '''
 <component type="sourceMantid-type" name="sourceMantid">
@@ -147,18 +152,15 @@ class MantidPixelWriter:
             h = self.pixels_monitor_header.replace('IDX_MONITOR', idx_monitor)
             return ''.join([h, s2, self.pixels_monitor_footer])
         
-        monitors = []
-        for c in self.components:
-            if re.search('nD_Mantid', c.name):
-                monitors.append(c)
-        
         mon_txt_blocks = []
-        for m in monitors:
+        for m in self.monitors:
             pixels = []
             for d in m.drawcalls:
                 if type(d) == MantidPixelLine:
                     pixels.append(d.line)
             
+            if len(pixels) == 0:
+                return ''
             
             idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
             mt = self.pixels_monitor_type.replace('IDX_MONITOR', idx_monitor)
@@ -225,12 +227,12 @@ class MantidPixelWriter:
     <location x=" 0" y=" 0" z=" 9.4"  />
 </component>
 
-<type name="MonNDtype" is="RectangularDetector" type="pixel-0"
+<type name="MonNDtype" is="RectangularDetector" type="rectangular_det_type"
     xpixels=" 128" xstart="  -0.2" xstep="0.0031496062992126"
     ypixels=" 128" ystart=" -0.2" ystep="0.0031496062992126">
 </type>
 
-<type is="detector" name="pixel-0">
+<type is="detector" name="rectangular_det_type">
     <cuboid id="pixel-shape-0">
         <left-front-bottom-point x="0.0015748031496063" y="-0.0015748031496063" z="0.0" />
         <left-front-top-point x="0.0015748031496063" y="-0.0015748031496063" z="0.00005" />
@@ -241,10 +243,28 @@ class MantidPixelWriter:
 </type>'''
     
     def _get_mantid_rectangular_monitors(self):
-        s = self.rect_monitor
+        text = []
+        for m in self.monitors: 
+            
+            rec_dets = []
+            for d in m.drawcalls:
+                rec = MantidRectangularDetector(d)
+                rec_dets.append(rec)
+            
+            for r in rec_dets:
+                s = self.rect_monitor
+                
+                s.replace('', r.xmin)
+                s.replace('', r.xmax)
+                s.replace('', r.ymin)
+                s.replace('', r.ymax)
+                s.replace('', r.nx)
+                s.replace('', r.ny)
+                s.replace('', r.pixelmin)
+                
+                text.append(s)
         
-        
-        
+        return '\n\n'.join(text)
     
     header = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -285,6 +305,32 @@ class MantidPixel:
         self.p2   = transform.apply(Vector3d(float(l[10]), float(l[11]), float(l[12])))
         self.p3   = transform.apply(Vector3d(float(l[13]), float(l[14]), float(l[15])))
         self.p4   = transform.apply(Vector3d(float(l[16]), float(l[17]), float(l[18])))
+
+class MantidRectangularDetector:
+    def __init__(self, det_line_lst):
+        # $xmin, $xmax, $ymin, $ymax, $nx, $ny, $pixelmin
+        l = det_line_lst
+        self.xmin = l[0]
+        self.xmax = l[1]
+        self.ymin = l[2]
+        self.ymax = l[3]
+        self.nx = l[4]
+        self.ny = l[5]
+        self.pixelmin = l[6]
+
+class MantidBananaDetector:
+    def __init__(self, det_line_lst):
+        # $radius, $tmin, $tmax, $ymin, $ymax, $nt, $ny, $pixelmin
+        l = det_line_lst
+        self.radius = l[0]
+        self.tmin = l[1]
+        self.tmax = l[2]
+        self.ymin = l[3]
+        self.ymax = l[4]
+        self.nt = l[5]
+        self.ny = l[6]
+        self.pixelmin = l[7]
+        
         
 
 def debug_load_instr(filename):
