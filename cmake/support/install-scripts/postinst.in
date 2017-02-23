@@ -114,6 +114,8 @@ function checklinks {
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-vtk
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-webgl-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-webgl
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-pyqtgraph-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-pyqtgraph
         # other stuff
     checklinkrm /usr/bin/@MCCODE_PREFIX@daemon
     checklinkrm /usr/bin/@MCCODE_PREFIX@daemon.pl
