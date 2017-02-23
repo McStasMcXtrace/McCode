@@ -295,9 +295,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
-    parser.add_argument('--dirname', help='output directory name override')
-    parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
+    
     
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
