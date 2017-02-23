@@ -181,10 +181,10 @@ class InstrTraceParser:
             if p[1] == 'MANTID_PIXEL':
                 self.mantid.leaf['MANTID_PIXEL'].append(p[3])
                 self.commands.children.append(Node(type='mantid', children=[], leaf=MantidPixelLine(p[3])))
-            elif p[1] == 'MB_DET':
+            elif p[1] == 'MANTID_RECTANGULAR_DET':
                 self.mantid.leaf['MANTID_RECTANGULAR_DET'].append(p[3])
                 self.commands.children.append(Node(type='mantid', children=[], leaf=MantidRectangularDetectorLine(p[3])))
-            elif p[1] == 'MR_DET':
+            elif p[1] == 'MANTID_BANANA_DET':
                 self.mantid.leaf['MANTID_BANANA_DET'].append(p[3])
                 self.commands.children.append(Node(type='mantid', children=[], leaf=MantidBananaDetectorLine(p[3])))
             return

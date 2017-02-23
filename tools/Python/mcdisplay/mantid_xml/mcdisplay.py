@@ -220,50 +220,97 @@ class MantidPixelWriter:
         
         return '\n\n'.join(mon_txt_blocks)
     
-    
-    
     rect_monitor = '''
-<component type="MonNDtype" name="MONITOR_NAME" idstart="0" idfillbyfirst="x" idstepbyrow="128">
-    <location x=" 0" y=" 0" z=" 9.4"  />
+<component type="MonNDtype" name="MONITOR_NAME" idstart="PIXEL_MIN" idfillbyfirst="x" idstepbyrow="Y_NUM">
+    <location x="X_LOC" y="Y_LOC" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/>
 </component>
 
 <type name="MonNDtype" is="RectangularDetector" type="rectangular_det_type"
-    xpixels=" 128" xstart="  -0.2" xstep="0.0031496062992126"
-    ypixels=" 128" ystart=" -0.2" ystep="0.0031496062992126">
+    xpixels="X_NUM" xstart="X_MIN" xstep="X_STEP"
+    ypixels="Y_NUM" ystart="Y_MIN" ystep="Y_STEP">
 </type>
 
 <type is="detector" name="rectangular_det_type">
     <cuboid id="pixel-shape-0">
-        <left-front-bottom-point x="0.0015748031496063" y="-0.0015748031496063" z="0.0" />
-        <left-front-top-point x="0.0015748031496063" y="-0.0015748031496063" z="0.00005" />
-        <left-back-bottom-point x="-0.0015748031496063" y="-0.0015748031496063" z="0.0" />
-        <right-front-bottom-point x="0.0015748031496063" y="0.0015748031496063" z="0.0" />
+        <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+        <left-front-top-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.00005" />
+        <left-back-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+        <right-front-bottom-point x="X_STP_HALF" y="Y_STP_HALF" z="0.0" />
     </cuboid>
     <algebra val="pixel-shape-0" />
 </type>'''
     
-    def _get_mantid_rectangular_monitors(self):
+    def _get_mantid_rectangular_monitor(self):
         text = []
         for m in self.monitors: 
             
-            rec_dets = []
+            rec = None
             for d in m.drawcalls:
-                rec = MantidRectangularDetector(d)
-                rec_dets.append(rec)
+                if type(d) == MantidRectangularDetectorLine:
+                    rec = MantidRectangularDetector(d.line)
             
-            for r in rec_dets:
-                s = self.rect_monitor
-                
-                s.replace('', r.xmin)
-                s.replace('', r.xmax)
-                s.replace('', r.ymin)
-                s.replace('', r.ymax)
-                s.replace('', r.nx)
-                s.replace('', r.ny)
-                s.replace('', r.pixelmin)
-                
-                text.append(s)
+            rot_vector, alpha = m.transform.get_rotvector_alpha()
+            
+            x_step = (float(rec.xmax) - float(rec.xmin)) / float(rec.nx)
+            y_step = (float(rec.ymax) - float(rec.ymin)) / float(rec.ny)
+            x_step_half = x_step / 2
+            y_step_half = y_step / 2
+            
+            s = self.rect_monitor
+            s = s.replace('MONITOR_NAME', m.name)
+            s = s.replace('X_LOC', str(m.pos.x))
+            s = s.replace('Y_LOC', str(m.pos.y))
+            s = s.replace('Z_LOC', str(m.pos.z))
+            s = s.replace('ROT_ANGLE', str(alpha))
+            s = s.replace('ROT_X', str(rot_vector.x))
+            s = s.replace('ROT_Y', str(rot_vector.y))
+            s = s.replace('ROT_Z', str(rot_vector.z))
+            s = s.replace('X_MIN', rec.xmin)
+            s = s.replace('X_STEP', str(x_step))
+            s = s.replace('Y_MIN', rec.ymin)
+            s = s.replace('Y_STEP', str(y_step))
+            s = s.replace('X_NUM', rec.nx)
+            s = s.replace('Y_NUM', rec.ny)
+            s = s.replace('PIXEL_MIN', rec.pixelmin)
+            s = s.replace('X_STP_HALF', str(x_step_half))
+            s = s.replace('Y_STP_HALF', str(y_step_half))
+            
+            text.append(s)
         
+        return '\n\n'.join(text)
+    
+    banana_monitor = '''
+<component type="MonNDtype" name="nD_Mantid_0" idlist="MonNDtype-list">
+    <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOV" rot="61.0824840370707" axis-x="0" axis-y="1" axis-z="0" /> 
+</component>
+
+<type name="MonNDtype">
+<component type="pixel-0">
+    <locations r="RADIUS" t="T_START" t-end="T_END" n-elements="T_NUM_ELEMENTS" rot="T_START" rot-end="T_END" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
+</component>
+</type>
+
+<type is="detector" name="pixel-0">
+    <cuboid id="pixel-shape-0">
+        <left-front-bottom-point x="X_STEP_HALF" y="-Y_STEP_HALF" z="0.0" />
+        <left-front-top-point x="X_STEP_HALF" y="-Y_STEP_HALF" z="0.00005" />
+        <left-back-bottom-point x="-X_STEP_HALF" y="-Y_STEP_HALF" z="0.0" />
+        <right-front-bottom-point x="X_STEP_HALF" y="Y_STEP_HALF" z="0.0" />
+    </cuboid>
+    <algebra val="pixel-shape-0"/>
+</type>
+
+<idlist idname="MonNDtype-list">
+    <id start="PIXEL_START" end="PIXEL_END"/></idlist>
+
+<type name="in5_t-type">
+</type>'''
+    
+    def _get_mantid_banana_monitor(self):
+        text = []
+        for m in self.monitors: 
+            pass
+            # pixel-end numteta*numy + pixel-start
         return '\n\n'.join(text)
     
     header = '''
@@ -293,9 +340,11 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
     def do_work(self):
         source = self._get_mantid_source()
         sample = self._get_mantid_sample()
-        monitors = self._get_mantid_pixels_monitors()
+        pixmonitors = self._get_mantid_pixels_monitors()
+        rectmonitor = self._get_mantid_rectangular_monitor()
+        bananamonitor = self._get_mantid_banana_monitor()
         
-        print('\n\n'.join([self.header, source, sample, monitors, self.footer]))
+        print('\n\n'.join([self.header, source, sample, pixmonitors, rectmonitor, self.footer]))
 
 class MantidPixel:
     def __init__(self, pixel_line_lst, transform):
