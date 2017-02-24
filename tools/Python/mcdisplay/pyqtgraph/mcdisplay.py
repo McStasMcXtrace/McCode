@@ -49,7 +49,7 @@ def get_2d_ray(ray_story, instr, plane='zy'):
 
 def plot_1d_tof_rays(instr, rays, plt):
     ''' REIMPLEMENT '''
-    
+    return
     
     for ray_story in rays:
         k = 2
@@ -99,59 +99,28 @@ def get_2d_instrument(instr, plane='zy'):
 
 colours = [(248, 0, 0), (0, 248, 0), (0, 0, 248), (0, 248, 248), (248, 0, 248), (0, 248, 128), (248, 248, 0), (248, 128, 0), (128, 248, 0), (0, 128, 248), (128, 0, 248), (248, 0, 128), (168, 168, 168)]
 
-def plot_tof_instr(instr, plt, xlabel, ylabel):
+def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
     ''' REIMPLEMENT '''
     
-    
-    
-    k = 2
-    coords_sets = []
-    for c in instr.components:
-        comp_coord_sets = []
-        for d in c.drawcalls:
-            if type(d) in [DrawLine, DrawMultiline]:
-                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.points]])
-            if type(d) in [DrawCircle]:
-                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.get_points_on_circle(steps=8)]])
-        coords_sets.append((c.name, comp_coord_sets))
-    
-    
-    
-    
-    idx = 0
-    def get_next_colour(idx):
-        colour = colours[idx % len(colours)]
-        idx += 1
+    # colour stuff
+    colour_idx = 0
+    def get_next_colour(colour_idx):
+        colour = colours[colour_idx % len(colours)]
         return colour
     
-    compnames_plts = []
+    # create a horizontal line for the lower- and upper bounds of each component
     
-    for i in range(len(coords_sets)):
-        comp_coords_sets = coords_sets[i]
-        
-        colour = get_next_colour(idx)
-        idx += 1
-        comp = comp_coords_sets[0]
-        comp_data = comp_coords_sets[1]
-        
-        x_comp = np.array([])
-        y_comp = np.array([])
-        connect_comp = np.array([])
-        for coords in comp_data:
-            x = np.array([p[0] for p in coords])
-            y = np.array([p[1] for p in coords])
-            # all true except for the last entry, which gives a hole towards the next set
-            connect = np.array([True for x in x])
-            connect[len(x)-1] = False
-            
-            x_comp = np.concatenate([x_comp, x])
-            y_comp = np.concatenate([y_comp, y])
-                        
-            connect_comp = np.concatenate([connect_comp, connect])
-        
-        itm = plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=colour))
-        compnames_plts.append((comp, itm))
-
+    for c in instr.components:
+        bb = c.get_tranformed_bb()
+        colour = get_next_colour(colour_idx)
+        colour_idx += 1
+        z1 = bb.z1
+        z2 = bb.z2
+        if not (abs(z1) == float("inf") or abs(z2) == float("inf")):
+            plt.plot(np.array([0.0, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour))
+            plt.plot(np.array([0.0, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour))
+    
+    plt.setLabels(left=ylabel,bottom=xlabel)
 
 def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     '''
@@ -162,7 +131,6 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     idx = 0
     def get_next_colour(idx):
         colour = colours[idx % len(colours)]
-        idx += 1
         return colour
     
     compnames_plts = []
@@ -351,17 +319,10 @@ class McDisplay2DGui(object):
         self.ray_idx = 0
         self.rayplots = []
         
-        #
-        # info window
-        #
         self.iw = None
         self.iw_visible = False
     
     def _init_2dmode(self):
-        #
-        # 2d mode
-        #
-        
         self.plt_zy = pg.PlotItem(enableMenu=False)
         self.plt_xy = pg.PlotItem(enableMenu=False)
         self.plt_zx = pg.PlotItem(enableMenu=False)
@@ -444,10 +405,12 @@ class McDisplay2DGui(object):
         '''  '''
         # plot instrument
         plt = pg.PlotItem(enableMenu=False)
-        plot_tof_instr(instr, plt, "xlabel", "ylabel")
-        self.plot_tof = plt
+        plot_tof_instr(instr, 10.0, plt, "xlabel", "ylabel")
+        #self.plot_tof = plt
+        self.layout.addItem(plt)
+        
         # plot rays
-        plot_1d_tof_rays(instr, rays, self.plot_tof)
+        plot_1d_tof_rays(instr, rays, plt)
         
         return self.app.exec_()
     
@@ -567,14 +530,17 @@ def main(args):
     raybundle = reader.read_particles()
     
     gui = McDisplay2DGui(title=dirname)
-    
-    sys.exit(gui.run_ui(instrument, raybundle.rays))
+    if not args.tof:
+        sys.exit(gui.run_ui(instrument, raybundle.rays))
+    else:
+        sys.exit(gui.run_ui_tof(instrument, raybundle.rays))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
