@@ -25,24 +25,6 @@ from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
 from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
 
-def get_1d_tof_ray(ray_story, instr, plane='zy'):
-    ''' returns transformed projection into plane, instr is used to transform points '''
-    k = 2
-    coords = []
-    for group in ray_story.groups:
-        try:
-            transform = [c.transform for c in instr.components if c.name == group.compname][0]
-        except:
-            logging.debug('missing comp in ray gropus: %s' % group.compname)
-            continue
-        
-        for e in group.events:
-            p = transform.apply(Vector3d(e.position[0], e.position[1], e.position[2]))
-            t = e.time
-            coords.append((t, p[k]))
-    
-    return coords
-
 def get_2d_ray(ray_story, instr, plane='zy'):
     ''' returns transformed projection into plane, instr is used to transform points '''
     coords = []
@@ -65,32 +47,34 @@ def get_2d_ray(ray_story, instr, plane='zy'):
     
     return coords
 
-def plot_1d_tof_ray(coords, plt):
-    '''  '''
-    #t = 
-    #z = np.array(coords)
-    #return plt.plot(t, z, pen=pg.mkPen(color=(255, 255, 255)))
+def plot_1d_tof_rays(instr, rays, plt):
+    ''' REIMPLEMENT '''
+    
+    
+    for ray_story in rays:
+        k = 2
+        coords = []
+        for group in ray_story.groups:
+            try:
+                transform = [c.transform for c in instr.components if c.name == group.compname][0]
+            except:
+                logging.debug('missing comp in ray gropus: %s' % group.compname)
+                continue
+            
+            for e in group.events:
+                p = transform.apply(Vector3d(e.position[0], e.position[1], e.position[2]))
+                t = e.time
+                coords.append((t, p[k]))
+        
+        #t = 
+        #z = np.array(coords)
+        #return plt.plot(t, z, pen=pg.mkPen(color=(255, 255, 255)))
 
 def plot_2d_ray(coords, plt):
     ''' see get_2d_ray to understand the data structure '''
     x = np.array([p[0] for p in coords])
     y = np.array([p[1] for p in coords])
     return plt.plot(x, y, pen=pg.mkPen(color=(255, 255, 255)))
-
-def get_1d_z_instrument(instr):
-    ''' returns a list of (compname, z-coords) tuples, coords taken from points in component draw calls '''
-    k = 2
-    coords_sets = []
-    for c in instr.components:
-        comp_coord_sets = []
-        for d in c.drawcalls:
-            if type(d) in [DrawLine, DrawMultiline]:
-                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.points]])
-            if type(d) in [DrawCircle]:
-                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.get_points_on_circle(steps=8)]])
-        coords_sets.append((c.name, comp_coord_sets))
-    
-    return coords_sets    
 
 def get_2d_instrument(instr, plane='zy'):
     ''' returns a list of (compname, coords-lst) tuples, coords-lst being a list of 2-tuple points in the plane '''
@@ -114,6 +98,60 @@ def get_2d_instrument(instr, plane='zy'):
     return coords_sets
 
 colours = [(248, 0, 0), (0, 248, 0), (0, 0, 248), (0, 248, 248), (248, 0, 248), (0, 248, 128), (248, 248, 0), (248, 128, 0), (128, 248, 0), (0, 128, 248), (128, 0, 248), (248, 0, 128), (168, 168, 168)]
+
+def plot_tof_instr(instr, plt, xlabel, ylabel):
+    ''' REIMPLEMENT '''
+    
+    
+    
+    k = 2
+    coords_sets = []
+    for c in instr.components:
+        comp_coord_sets = []
+        for d in c.drawcalls:
+            if type(d) in [DrawLine, DrawMultiline]:
+                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.points]])
+            if type(d) in [DrawCircle]:
+                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.get_points_on_circle(steps=8)]])
+        coords_sets.append((c.name, comp_coord_sets))
+    
+    
+    
+    
+    idx = 0
+    def get_next_colour(idx):
+        colour = colours[idx % len(colours)]
+        idx += 1
+        return colour
+    
+    compnames_plts = []
+    
+    for i in range(len(coords_sets)):
+        comp_coords_sets = coords_sets[i]
+        
+        colour = get_next_colour(idx)
+        idx += 1
+        comp = comp_coords_sets[0]
+        comp_data = comp_coords_sets[1]
+        
+        x_comp = np.array([])
+        y_comp = np.array([])
+        connect_comp = np.array([])
+        for coords in comp_data:
+            x = np.array([p[0] for p in coords])
+            y = np.array([p[1] for p in coords])
+            # all true except for the last entry, which gives a hole towards the next set
+            connect = np.array([True for x in x])
+            connect[len(x)-1] = False
+            
+            x_comp = np.concatenate([x_comp, x])
+            y_comp = np.concatenate([y_comp, y])
+                        
+            connect_comp = np.concatenate([connect_comp, connect])
+        
+        itm = plt.plot(x_comp, y_comp, connect=connect_comp, pen=pg.mkPen(color=colour))
+        compnames_plts.append((comp, itm))
+
 
 def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     '''
@@ -319,9 +357,6 @@ class McDisplay2DGui(object):
         self.iw = None
         self.iw_visible = False
     
-    def _init_tofmode(self):
-        self.plot_tof = pg.PlotItem(enableMenu=False)
-    
     def _init_2dmode(self):
         #
         # 2d mode
@@ -362,15 +397,15 @@ class McDisplay2DGui(object):
             if event.key() == 81:                # q
                 QtGui.QApplication.quit()
             elif event.key() == 80:                 # p
-                self.dumpfile(format='png')
+                self._dumpfile(format='png')
             elif event.key() == 83:                 # s
                 if not os.name == 'nt':
-                    self.dumpfile(format='svg')
+                    self._dumpfile(format='svg')
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
                 if not self.iw_visible:
-                    self.iw = create_infowindow(self.get_comp_color_pairs())
+                    self.iw = create_infowindow(self._get_comp_color_pairs())
                     self.iw.show()
                     self.iw_visible = True
                     self.mw.raise_()
@@ -384,10 +419,10 @@ class McDisplay2DGui(object):
         print('')
         print('\n'.join(get_help_lines()))
     
-    def dumpfile(self, format):
+    def _dumpfile(self, format):
         uiutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
-    def get_comp_color_pairs(self):
+    def _get_comp_color_pairs(self):
         ''' extracts component names and matches then with colours in the natural order '''
         lst = []
         numcolours = len(colours)
@@ -406,12 +441,15 @@ class McDisplay2DGui(object):
         return self.app.exec_()
     
     def run_ui_tof(self, instr, rays):
-        pass
-    
-    def _set_and_plot_instr_tof(self, instr, enable_clickable=False):
-        ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
-        self.instr_z = get_2d_instrument(instr, 'zy')
+        '''  '''
+        # plot instrument
+        plt = pg.PlotItem(enableMenu=False)
+        plot_tof_instr(instr, plt, "xlabel", "ylabel")
+        self.plot_tof = plt
+        # plot rays
+        plot_1d_tof_rays(instr, rays, self.plot_tof)
         
+        return self.app.exec_()
     
     def _set_and_plot_instr(self, instr, enable_clickable=False):
         ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
@@ -439,12 +477,11 @@ class McDisplay2DGui(object):
     def _handle_comp_clicked(self, event, comp):
         ''' display clicked component info '''
         print(comp)
-        
         # prevent event propagation (e.g. _zoom)
         event.accept()
     
     def _set_rays(self, rays):
-        ''' just set a reference to rays '''
+        ''' set a reference to rays '''
         self.rays = rays
     
     def _display_nextray(self):
