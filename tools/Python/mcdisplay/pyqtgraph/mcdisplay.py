@@ -25,6 +25,24 @@ from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
 from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
 
+def get_1d_tof_ray(ray_story, instr, plane='zy'):
+    ''' returns transformed projection into plane, instr is used to transform points '''
+    k = 2
+    coords = []
+    for group in ray_story.groups:
+        try:
+            transform = [c.transform for c in instr.components if c.name == group.compname][0]
+        except:
+            logging.debug('missing comp in ray gropus: %s' % group.compname)
+            continue
+        
+        for e in group.events:
+            p = transform.apply(Vector3d(e.position[0], e.position[1], e.position[2]))
+            t = e.time
+            coords.append((t, p[k]))
+    
+    return coords
+
 def get_2d_ray(ray_story, instr, plane='zy'):
     ''' returns transformed projection into plane, instr is used to transform points '''
     coords = []
@@ -47,16 +65,35 @@ def get_2d_ray(ray_story, instr, plane='zy'):
     
     return coords
 
+def plot_1d_tof_ray(coords, plt):
+    '''  '''
+    #t = 
+    #z = np.array(coords)
+    #return plt.plot(t, z, pen=pg.mkPen(color=(255, 255, 255)))
+
 def plot_2d_ray(coords, plt):
     ''' see get_2d_ray to understand the data structure '''
-    
     x = np.array([p[0] for p in coords])
     y = np.array([p[1] for p in coords])
     return plt.plot(x, y, pen=pg.mkPen(color=(255, 255, 255)))
 
+def get_1d_z_instrument(instr):
+    ''' returns a list of (compname, z-coords) tuples, coords taken from points in component draw calls '''
+    k = 2
+    coords_sets = []
+    for c in instr.components:
+        comp_coord_sets = []
+        for d in c.drawcalls:
+            if type(d) in [DrawLine, DrawMultiline]:
+                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.points]])
+            if type(d) in [DrawCircle]:
+                comp_coord_sets.append([tp[k] for tp in [c.transform.apply(p) for p in d.get_points_on_circle(steps=8)]])
+        coords_sets.append((c.name, comp_coord_sets))
+    
+    return coords_sets    
+
 def get_2d_instrument(instr, plane='zy'):
     ''' returns a list of (compname, coords-lst) tuples, coords-lst being a list of 2-tuple points in the plane '''
-    
     (k1, k2) = (0,1)
     if plane == 'zy': (k1, k2) = (2,1)
     if plane == 'xy': (k1, k2) = (0,1)
@@ -252,7 +289,6 @@ class McDisplay2DGui(object):
         #
         # app, scene, plots 
         #
-        
         self.app = QtGui.QApplication(sys.argv)
         
         window = pg.GraphicsWindow()
@@ -270,16 +306,10 @@ class McDisplay2DGui(object):
         
         layout = pg.GraphicsLayout()
         window.setCentralItem(layout)
-        
         layout.window = window # keep window to avoid garbage collection
         layout.setContentsMargins(2, 2, 2, 2) # outermost margin
-        
         self.layout = layout
-        self.plt_zy = pg.PlotItem(enableMenu=False)
-        self.plt_xy = pg.PlotItem(enableMenu=False)
-        self.plt_zx = pg.PlotItem(enableMenu=False)
-        self.plt_help = create_help_pltitm()
-
+        
         self.ray_idx = 0
         self.rayplots = []
         
@@ -288,23 +318,33 @@ class McDisplay2DGui(object):
         #
         self.iw = None
         self.iw_visible = False
+    
+    def _init_tofmode(self):
+        self.plot_tof = pg.PlotItem(enableMenu=False)
+    
+    def _init_2dmode(self):
+        #
+        # 2d mode
+        #
         
-        #
-        # zoom stuff
-        #
-        self.unzoom()
+        self.plt_zy = pg.PlotItem(enableMenu=False)
+        self.plt_xy = pg.PlotItem(enableMenu=False)
+        self.plt_zx = pg.PlotItem(enableMenu=False)
+        self.plt_help = create_help_pltitm()
+        
+        self._unzoom()
         
         def unzoom_handler(event):
             if event.button() != 2:
                 return
             if self.zoomstate == self.ZoomState.ZOOM:
-                self.unzoom()
+                self._unzoom()
         
         def zoom_handler(event, item=None, idx=None):
             if event.button() != 1:
                 return
             if self.zoomstate == self.ZoomState.UNZOOM and event.currentItem == item:
-                self.zoom(idx)
+                self._zoom(idx)
         
         self.zoomstate = self.ZoomState.UNZOOM
         
@@ -314,9 +354,6 @@ class McDisplay2DGui(object):
         
         self.layout.scene().sigMouseClicked.connect(unzoom_handler)
         
-        #
-        # keypress events stuff
-        #
         def key_handler(event):
             ''' global keypress handler '''
             if False:
@@ -342,10 +379,8 @@ class McDisplay2DGui(object):
                     self.iw.hide()
                     self.iw_visible = False
         
-        # add generic handlers
         self.layout.scene().keyPressEvent = key_handler
         
-        # print help lines
         print('')
         print('\n'.join(get_help_lines()))
     
@@ -361,13 +396,24 @@ class McDisplay2DGui(object):
             lst.append(tpl)
         return lst
     
-    def run_ui(self):
+    def run_ui(self, instr, rays):
         '''  '''
-        self.unzoom()
+        self._init_2dmode()
+        self._set_and_plot_instr(instr)
+        self._set_rays(rays)
+        self._unzoom()
         self._display_nextray()
         return self.app.exec_()
     
-    def set_instr_and_plot(self, instr, enable_clickable=False):
+    def run_ui_tof(self, instr, rays):
+        pass
+    
+    def _set_and_plot_instr_tof(self, instr, enable_clickable=False):
+        ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
+        self.instr_z = get_2d_instrument(instr, 'zy')
+        
+    
+    def _set_and_plot_instr(self, instr, enable_clickable=False):
         ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
         self.instr = instr
         
@@ -389,16 +435,15 @@ class McDisplay2DGui(object):
                     itm = p[1]
                     itm.curve.setClickable(True)
                     itm.curve.mouseClickEvent = lambda event, comp=comp: self._handle_comp_clicked(event, comp)
-        
 
     def _handle_comp_clicked(self, event, comp):
         ''' display clicked component info '''
         print(comp)
         
-        # prevent event propagation (e.g. zoom)
+        # prevent event propagation (e.g. _zoom)
         event.accept()
     
-    def set_rays(self, rays):
+    def _set_rays(self, rays):
         ''' just set a reference to rays '''
         self.rays = rays
     
@@ -422,11 +467,11 @@ class McDisplay2DGui(object):
         self.ray_idx += 1
     
     def _clear(self):
-        ''' prepare for a new zoom state '''
+        ''' prepare for a new _zoom state '''
         self.layout.clear()
     
-    def zoom(self, idx_subwin):
-        ''' zoom action, plot a single view full-window '''
+    def _zoom(self, idx_subwin):
+        ''' _zoom action, plot a single view full-window '''
         self._clear()
         
         if idx_subwin == 0: self.layout.addItem(self.plt_zy, 0, 0)
@@ -435,8 +480,8 @@ class McDisplay2DGui(object):
         
         self.zoomstate = self.ZoomState.ZOOM
     
-    def unzoom(self):
-        ''' unzoom action, plot the overview window with the three side views along each axis '''
+    def _unzoom(self):
+        ''' _unzoom action, plot the overview window with the three side views along each axis '''
         self._clear()
         
         self.layout.addItem(self.plt_zy, 0, 0)
@@ -485,10 +530,8 @@ def main(args):
     raybundle = reader.read_particles()
     
     gui = McDisplay2DGui(title=dirname)
-    gui.set_instr_and_plot(instrument)
-    gui.set_rays(raybundle.rays)
-
-    sys.exit(gui.run_ui())
+    
+    sys.exit(gui.run_ui(instrument, raybundle.rays))
 
 
 if __name__ == '__main__':
