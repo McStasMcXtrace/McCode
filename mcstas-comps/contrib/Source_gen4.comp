@@ -208,7 +208,6 @@ DECLARE
 
 INITIALIZE
 %{
-  Lambda0=0;
   double source_area, k;
 
   /* spectrum characteristics */
