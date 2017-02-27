@@ -33,8 +33,10 @@
  * K:      ( ) Dimensionless undulator parameter.
  * gap_min (m) Minimum Undulator gap. The gap for which B (or K) is specified.
  * gap:    (m) Undulator gap. If > gap_min the actual magnetic field strength is < B. Currently ignored.
- * sigex:  ( ) Electron ring beam size in horizontal plane (rms).
- * sigey:  ( ) Electron ring beam size in vertical plane (rms).
+ * sigex:  (m) Electron ring beam size in horizontal plane (rms).
+ * sigey:  (m) Electron ring beam size in vertical plane (rms).
+ * sigepx: (rad) Electron ring beam horizontal divergence (rms).
+ * sigepy: (rad) Electron ring beam vertical divergence (rms).
  * phase:  ( ) Initial phase of radiation.
  * randomphase: ( ) If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
  * focus_xw: (m) Width of target window.
