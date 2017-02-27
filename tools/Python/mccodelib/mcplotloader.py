@@ -6,6 +6,7 @@ import glob
 import re
 from os.path import isfile, isdir, join, dirname, basename, splitext
 from os import walk
+from decimal import Decimal
 
 from .flowchart import *
 
@@ -278,7 +279,7 @@ def _parse_1D_monitor(text):
         data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\-e]+); dX=([\d\.\-e]+);\n', text)
-        data.statistics = 'X0=%f; dX=%f;' % (float(m.group(1)), float(m.group(2)))
+        data.statistics = 'X0=%.2E; dX=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)))
 
         # load the actual data
         lines = text.splitlines()
@@ -289,18 +290,18 @@ def _parse_1D_monitor(text):
         for l in lines:
             if '#' in l:
                 continue
-
+            
             vals = l.split()
             xvals.append(float(vals[0]))
             yvals.append(float(vals[1]))
             y_err_vals.append(float(vals[2]))
             Nvals.append(float(vals[3]))
-
+        
         data.xvals = xvals
         data.yvals = yvals
         data.y_err_vals = y_err_vals
         data.Nvals = Nvals
-
+    
     except Exception as e:
         print('Data1D load error.')
         raise e
@@ -322,14 +323,14 @@ def _parse_2D_monitor(text):
         '''# title: PSD monitor'''
         m = re.search('\# title: (%s)\n' % freetext_pat, text)
         data.title = m.group(1)
-
+        
         '''# xlabel: X position [cm]'''
         m = re.search('\# xlabel: (%s)\n' % freetext_pat, text)
         data.xlabel = m.group(1)
         '''# ylabel: Y position [cm]'''
         m = re.search('\# ylabel: (%s)\n' % freetext_pat, text)
         data.ylabel = m.group(1)
-
+        
         '''# xvar: X'''
         m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
         data.xvar = m.group(1)
@@ -343,17 +344,18 @@ def _parse_2D_monitor(text):
         '''# xylimits: -30 30 -30 30'''
         m = re.search('\# xylimits: ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
-
+        
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\+\-\.e]+) ([\d\+\-\.e]+) ([\d\+\-\.e]+)\n', text)
         data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\+\-e]+); dX=([\d\.\+\-e]+); Y0=([\d\.\+\-e]+); dY=([\d\.\+\-e]+);\n', text)
-        data.statistics = 'X0=%f; dX=%f; Y0=%f; dY=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
+        
+        data.statistics = 'X0=%.2E; dX=%.2E; Y0=%.2E; dY=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)), Decimal(m.group(3)), Decimal(m.group(4)))
         '''# signal: Min=0; Max=1.20439e-18; Mean=4.10394e-21;'''
         m = re.search('\# signal: Min=([\d\.\+\-e]+); Max=([\d\.\+\-e]+); Mean=([\d\.\+\-e]+);\n', text)
         data.signal = 'Min=%f; Max=%f; Mean=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)))
-
+        
         '''# Data [detector/PSD.dat] I:'''
         '''# Events [detector/PSD.dat] N:'''
         lines = text.splitlines()
@@ -657,9 +659,9 @@ def has_multiple_datfiles(args):
     
     # look for any "unkonwn" files, could be data files
     datfiles = glob.glob(join(d, '*'))
-    if 'mccode.sim' in datfiles: 
+    if 'mccode.sim' in datfiles:
         datfiles.remove('mccode.sim')
-    if 'mccode.dat' in datfiles: 
+    if 'mccode.dat' in datfiles:
         datfiles.remove('mccode.dat')
     return len(datfiles) > 1
 

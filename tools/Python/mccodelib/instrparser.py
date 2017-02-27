@@ -6,7 +6,7 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
 from .nodetree import Node
-from .instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory
+from .instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory, DrawCommand
 
 class InstrTraceParser:
     '''
@@ -44,8 +44,8 @@ class InstrTraceParser:
         'circle'      : 'DRAWCALL',
         
         'MANTID_PIXEL': 'MANTID_PIXEL',
-        'MANTID_BANANA_DET': 'MB_DET',
-        'MANTID_RECTANGULAR_DET': 'MR_DET',
+        'MANTID_BANANA_DET': 'MANTID_BANANA_DET',
+        'MANTID_RECTANGULAR_DET': 'MANTID_RECTANGULAR_DET',
         
     }
     
@@ -169,8 +169,8 @@ class InstrTraceParser:
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB RB NL
                         | MANTID_PIXEL COLON nineteen_dec NL
-                        | MB_DET COLON  NL
-                        | MR_DET COLON  NL
+                        | MANTID_BANANA_DET COLON eight_dec NL
+                        | MANTID_RECTANGULAR_DET COLON seven_dec NL
         '''
         if p[1] in ['MANTID_PIXEL', 'MANTID_BANANA_DET', 'MANTID_RECTANGULAR_DET']:
             if not self.mantid:
@@ -180,9 +180,13 @@ class InstrTraceParser:
                 self.mantid.leaf['MANTID_RECTANGULAR_DET'] = []
             if p[1] == 'MANTID_PIXEL':
                 self.mantid.leaf['MANTID_PIXEL'].append(p[3])
-                self.commands.children.append(Node(type='mantid_pixel', children=[], leaf=p[3]))
-            else:
-                print("MANTID_BANANA or RECT not yet implemented")
+                self.commands.children.append(Node(type='mantid', children=[], leaf=MantidPixelLine(p[3])))
+            elif p[1] == 'MANTID_RECTANGULAR_DET':
+                self.mantid.leaf['MANTID_RECTANGULAR_DET'].append(p[3])
+                self.commands.children.append(Node(type='mantid', children=[], leaf=MantidRectangularDetectorLine(p[3])))
+            elif p[1] == 'MANTID_BANANA_DET':
+                self.mantid.leaf['MANTID_BANANA_DET'].append(p[3])
+                self.commands.children.append(Node(type='mantid', children=[], leaf=MantidBananaDetectorLine(p[3])))
             return
         
         # special case: remove first argument of args
@@ -197,6 +201,16 @@ class InstrTraceParser:
         ''' nineteen_dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC
         '''
         p[0] = [p[2*i+1] for i in range(19)]
+    
+    def p_eight_dec(self, p):
+        ''' eight_dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC
+        '''
+        p[0] = [p[2*i+1] for i in range(8)]
+    
+    def p_seven_dec(self, p):
+        ''' seven_dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC
+        '''
+        p[0] = [p[2*i+1] for i in range(7)]
     
     args = Node(type='args', leaf=[])
     def p_args(self, p):
@@ -305,7 +319,7 @@ class InstrObjectConstructor:
                         for cc in csc.children:
                             if cc.type == 'draw_commands':
                                 for dc in cc.children:
-                                    if dc.type == 'mantid_pixel':
+                                    if dc.type == 'mantid':
                                         comp.drawcalls.append(dc.leaf)
                                         continue
                                     
@@ -326,3 +340,14 @@ class InstrObjectConstructor:
         
         return instrument_tree
 
+class MantidPixelLine(DrawCommand):
+    def __init__(self, line_lst):
+        self.line = line_lst
+
+class MantidRectangularDetectorLine(DrawCommand):
+    def __init__(self, line_lst):
+        self.line = line_lst
+
+class MantidBananaDetectorLine(DrawCommand):
+    def __init__(self, line_lst):
+        self.line = line_lst

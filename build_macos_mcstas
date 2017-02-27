@@ -44,8 +44,7 @@ echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo 
 $MCINSTALL_PREFIX/miniconda3/bin/conda config --add channels conda-forge
-$MCINSTALL_PREFIX/miniconda3/bin/conda config --add channels conda-forge
-$MCINSTALL_PREFIX/miniconda3/bin/conda install qscintilla2 pyqtgraph pyaml gcc openmpi ply -y
+$MCINSTALL_PREFIX/miniconda3/bin/conda install python=3.4 pyqt=4.11.4 qscintilla2 pyqtgraph pyaml gcc openmpi ply -y -c conda-forge
 $MCINSTALL_PREFIX/miniconda3/bin/conda install -c nexpy nexusformat -y
 
 # Copy in the mpicc snippets

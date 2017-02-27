@@ -3,6 +3,7 @@ Classes for representing a mcstas instruments and particle trace rays,
 and classes used for organizing component drawing calls.
 '''
 import numpy as np
+import math
 
 class InstrumentSpecific(object):
     ''' represents a mcstas instrument with params choice '''
@@ -715,12 +716,31 @@ class Transform(object):
         self.a42 = 0
         self.a43 = 0
         self.a44 = 1
+        
+        self.v = None
+        self.alpha = None
     
     def apply(self, v3):
         x = self.a11*v3.x + self.a12*v3.y + self.a13*v3.z + self.a14
         y = self.a21*v3.x + self.a22*v3.y + self.a23*v3.z + self.a24
         z = self.a31*v3.x + self.a32*v3.y + self.a33*v3.z + self.a34
         return Vector3d(x, y, z)
+    
+    def get_rotvector_alpha(self, deg=False):
+        ''' calculate one angle of rotation around an axis by general 3x3 rotation '''
+        self.alpha = math.acos((self.a11 + self.a22 + self.a33 - 1)/2)
+        if deg:
+            self.alpha = 180/math.pi * self.alpha
+        x = self.a32 - self.a23
+        y = self.a13 - self.a31
+        z = self.a21 - self.a12
+        v_abs = math.sqrt(x*x + y*y + z*z)
+        if not self.v:
+            self.v = Vector3d
+        self.v.x = x / v_abs
+        self.v.y = y / v_abs
+        self.v.z = z / v_abs
+        return self.v, self.alpha
     
     def __str__(self):
         return "%s %s %s %s\n%s %s %s %s\n%s %s %s %s\n%s %s %s %s" % (self.a11, self.a12, self.a13, self.a14, self.a21, self.a22, self.a23, self.a24, self.a31, self.a32, self.a33, self.a34, self.a41, self.a42, self.a43, self.a44)

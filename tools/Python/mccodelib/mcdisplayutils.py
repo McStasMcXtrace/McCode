@@ -27,7 +27,7 @@ class McDisplayReader(object):
             exit()
         
         # assemble command
-        cmd = 'mcrun ' + args.instr + '--no-output-files --trace'
+        cmd = 'mcrun ' + args.instr + ' --no-output-files --trace'
         b1 = False
         b2 = False
         for o in args.instr_options:
