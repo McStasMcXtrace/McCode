@@ -35,11 +35,12 @@
 * radius: Obsolete: Used if r==0, but will be removed in next release. (m)
 * Optional parameters:
 * T: Transmission efficiency of the lens. ( )
+* verbose: Extra information for debugging. ( ) 
 *
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
-DEFINITION PARAMETERS (string material_datafile="Be.txt")
+DEFINITION PARAMETERS (string material_datafile="Be.txt",verbose=0)
 SETTING PARAMETERS (xwidth,yheight,T=1,r=0.3e-3,radius=0,N=1)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -132,7 +133,8 @@ TRACE
     {
       i++;
       if (prms->E[i]==-1) {
-        fprintf(stderr,"Photon energy (%g keV) outside Lens data range",e);ABSORB;
+          if(verbose) fprintf(stderr,"Photon energy (%g keV) outside Lens data range.\n",e);
+          ABSORB;
       } 
     }
     /*protect against out of range errors*/
