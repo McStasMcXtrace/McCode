@@ -49,7 +49,7 @@
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
 SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, K=3,
-        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
+        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 DEPENDENCY "-lgsl -lgslcblas"
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -205,13 +205,8 @@ TRACE
         Omega=1;
     }
     p=prms.pmul*Omega/(4*M_PI);
-    xi=fabs(tan(xo/dist));
-    //xi=0.05/prms.gamma;
-    psi=fabs(tan(yo/dist));
-    //psi=0;
-    theta2=xi*xi+psi*psi;
 
-    //printf("XYO: %g %g\n",xo,yo);
+    /*add emittance effects - note that doing it this way will shoot some rays outside the focus-window*/
     x=y=z=0;
     if(sigex){
         x=randnorm()*sigex;
@@ -219,6 +214,18 @@ TRACE
     if(sigey){
         y=randnorm()*sigey;
     }
+
+    xi=fabs(tan(xo/dist));
+    psi=fabs(tan(yo/dist));
+    /* This has to be after (xi,psi), else it will be convoluted into the weight calculation.*/
+    if(sigepx){
+        xo+=randnorm()*sigepx*dist;
+    }
+    if(sigepy){
+        yo+=randnorm()*sigepy*dist;
+    }
+
+    theta2=xi*xi+psi*psi;
 
     k=E2K*e;
     /*anguar frequency w:*/
@@ -234,12 +241,7 @@ TRACE
     double w10=2*prms.gamma2/(1+K*K/2.0) * w_u; 
     double w_w1=w/w1theta;
     double w_w10=w/w10;
-    //double e2=0.95*Ee*Ee/((1+K*K/2.0)*lu);
 
-    //printf("SPECTR: %g %g %g %g %g %g %g\n",e,e2,k,w,w1theta,w10,w_w1);
-
-    //double w, res,err,res2;
-    //w=w_w10*2*gam*gam/(1+K*K/2.0)*wu;
     double Bsig_integ_prms[4],Bpi_integ_prms[4];
     Bsig_integ_prms[0] = Bpi_integ_prms[0]=w_w1; /*relative frequency*/
     Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w1*xi*prms.gamma*K/(1+K*K/2.0); /*p*/
