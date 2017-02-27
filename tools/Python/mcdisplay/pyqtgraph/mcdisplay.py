@@ -47,28 +47,45 @@ def get_2d_ray(ray_story, instr, plane='zy'):
     
     return coords
 
-def plot_1d_tof_rays(instr, rays, plt):
-    ''' REIMPLEMENT '''
-    return
+# colour stuff
+colour_idx = 0
+def get_next_colour(colour_idx):
+    colour = colours[colour_idx % len(colours)]
+    return colour
+
+def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
+    ''' creates a horizontal line for the lower- and upper bounds of each component '''
+    global colour_idx
+    for c in instr.components:
+        bb = c.get_tranformed_bb()
+        colour = get_next_colour(colour_idx)
+        colour_idx += 1
+        z1 = bb.z1
+        z2 = bb.z2
+        if not (abs(z1) == float("inf") or abs(z2) == float("inf")):
+            plt.plot(np.array([0.0, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour))
+            plt.plot(np.array([0.0, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour))
     
-    for ray_story in rays:
-        k = 2
-        coords = []
-        for group in ray_story.groups:
-            try:
-                transform = [c.transform for c in instr.components if c.name == group.compname][0]
-            except:
-                logging.debug('missing comp in ray gropus: %s' % group.compname)
-                continue
-            
-            for e in group.events:
-                p = transform.apply(Vector3d(e.position[0], e.position[1], e.position[2]))
-                t = e.time
-                coords.append((t, p[k]))
-        
-        #t = 
-        #z = np.array(coords)
-        #return plt.plot(t, z, pen=pg.mkPen(color=(255, 255, 255)))
+    plt.setLabels(left=ylabel,bottom=xlabel)
+
+def plot_1d_tof_rays(instr, rays, plt):
+    global colour_idx
+    t_plt = pg.plot()
+    for story in rays:
+        colour = get_next_colour(colour_idx)
+        colour_idx += 1
+        t = []
+        z = []
+        for g in story.groups:
+            if not g.transform:
+                g.transform = [c.transform for c in instr.components if c.name == g.compname][0]
+            pvt_lst = g.get_transformed_pos_vel_t_lst()
+            t = t + [pvt[2] for pvt in pvt_lst]
+            z = z + [pvt[0].z for pvt in pvt_lst]
+                
+        plt.plot(t, z, pen=pg.mkPen(color=colour))
+        t_plt.plot(t)
+    
 
 def plot_2d_ray(coords, plt):
     ''' see get_2d_ray to understand the data structure '''
@@ -98,29 +115,6 @@ def get_2d_instrument(instr, plane='zy'):
     return coords_sets
 
 colours = [(248, 0, 0), (0, 248, 0), (0, 0, 248), (0, 248, 248), (248, 0, 248), (0, 248, 128), (248, 248, 0), (248, 128, 0), (128, 248, 0), (0, 128, 248), (128, 0, 248), (248, 0, 128), (168, 168, 168)]
-
-def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
-    ''' REIMPLEMENT '''
-    
-    # colour stuff
-    colour_idx = 0
-    def get_next_colour(colour_idx):
-        colour = colours[colour_idx % len(colours)]
-        return colour
-    
-    # create a horizontal line for the lower- and upper bounds of each component
-    
-    for c in instr.components:
-        bb = c.get_tranformed_bb()
-        colour = get_next_colour(colour_idx)
-        colour_idx += 1
-        z1 = bb.z1
-        z2 = bb.z2
-        if not (abs(z1) == float("inf") or abs(z2) == float("inf")):
-            plt.plot(np.array([0.0, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour))
-            plt.plot(np.array([0.0, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour))
-    
-    plt.setLabels(left=ylabel,bottom=xlabel)
 
 def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     '''
@@ -405,8 +399,14 @@ class McDisplay2DGui(object):
         '''  '''
         # plot instrument
         plt = pg.PlotItem(enableMenu=False)
-        plot_tof_instr(instr, 10.0, plt, "xlabel", "ylabel")
-        #self.plot_tof = plt
+        # get max time from ray events 
+        time = 0
+        for story in rays:
+            for g in story.groups:
+                for state in g.events:
+                    time = max(time, state.get_time())
+        
+        plot_tof_instr(instr, time, plt, "xlabel", "ylabel")
         self.layout.addItem(plt)
         
         # plot rays
