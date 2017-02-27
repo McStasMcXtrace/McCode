@@ -39,6 +39,7 @@
 * dist:   [m]   Distance from source plane to sampling window.
 * flux:   [ph/s] Total flux radiated from the source. 
 * 
+* %E
 */
 
 DEFINE COMPONENT Source_pt
