@@ -343,36 +343,36 @@ class McDisplay2DGui(object):
         
         self.layout.scene().sigMouseClicked.connect(unzoom_handler)
         
-        def key_handler(event):
-            ''' global keypress handler '''
-            if False:
-                print(event.key())
-            
-            if event.key() == 81:                # q
-                QtGui.QApplication.quit()
-            elif event.key() == 80:                 # p
-                self._dumpfile(format='png')
-            elif event.key() == 83:                 # s
-                if not os.name == 'nt':
-                    self._dumpfile(format='svg')
-            elif event.key() in [32, 16777268]:  # space, F5
-                self._display_nextray()
-            elif event.key() in [72, 16777264]:  # h, F1
-                if not self.iw_visible:
-                    self.iw = create_infowindow(self._get_comp_color_pairs())
-                    self.iw.show()
-                    self.iw_visible = True
-                    self.mw.raise_()
-                    self.mw.activateWindow()
-                else:
-                    self.iw.hide()
-                    self.iw_visible = False
-        
-        self.layout.scene().keyPressEvent = key_handler
+        self.layout.scene().keyPressEvent = self._key_handler
         
         print('')
         print('\n'.join(get_help_lines()))
-    
+
+    def _key_handler(self, event):
+        ''' global keypress handler '''
+        if False:
+            print(event.key())
+        
+        if event.key() == 81:                # q
+            QtGui.QApplication.quit()
+        elif event.key() == 80:                 # p
+            self._dumpfile(format='png')
+        elif event.key() == 83:                 # s
+            if not os.name == 'nt':
+                self._dumpfile(format='svg')
+        elif event.key() in [32, 16777268]:  # space, F5
+            self._display_nextray()
+        elif event.key() in [72, 16777264]:  # h, F1
+            if not self.iw_visible:
+                self.iw = create_infowindow(self._get_comp_color_pairs())
+                self.iw.show()
+                self.iw_visible = True
+                self.mw.raise_()
+                self.mw.activateWindow()
+            else:
+                self.iw.hide()
+                self.iw_visible = False
+        
     def _dumpfile(self, format):
         uiutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
@@ -412,6 +412,8 @@ class McDisplay2DGui(object):
         
         # plot rays
         plot_1d_tof_rays(instr, rays, plt)
+        
+        self.layout.scene().keyPressEvent = self._key_handler
         
         return self.app.exec_()
     
