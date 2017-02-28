@@ -53,7 +53,7 @@ def get_next_colour(colour_idx):
     colour = colours[colour_idx % len(colours)]
     return colour
 
-def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
+def plot_tof_instr(instr, t_min, t_max, plt):
     ''' creates a horizontal line for the lower- and upper bounds of each component '''
     global colour_idx
     for c in instr.components:
@@ -62,18 +62,18 @@ def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
         colour_idx += 1
         z1 = bb.z1
         z2 = bb.z2
+        zpos = c.pos.z
         if not (abs(z1) == float("inf") or abs(z2) == float("inf")):
-            plt.plot(np.array([0.0, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour))
-            plt.plot(np.array([0.0, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour))
+            if z1 != zpos:
+                plt.plot(np.array([t_min, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour, style=QtCore.Qt.DashLine))
+            if z2 != zpos:
+                plt.plot(np.array([t_min, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour, style=QtCore.Qt.DashLine))
+            plt.plot(np.array([t_min, t_max]), np.array([zpos, zpos]), pen=pg.mkPen(color=colour))
     
-    plt.setLabels(left=ylabel,bottom=xlabel)
+    plt.setLabels(left="z [m]",bottom="time [secs]")
 
 def plot_1d_tof_rays(instr, rays, plt):
-    global colour_idx
-    t_plt = pg.plot()
     for story in rays:
-        colour = get_next_colour(colour_idx)
-        colour_idx += 1
         t = []
         z = []
         for g in story.groups:
@@ -83,8 +83,7 @@ def plot_1d_tof_rays(instr, rays, plt):
             t = t + [pvt[2] for pvt in pvt_lst]
             z = z + [pvt[0].z for pvt in pvt_lst]
                 
-        plt.plot(t, z, pen=pg.mkPen(color=colour))
-        t_plt.plot(t)
+        plt.plot(t, z, symbol='o', symbolSize=7, pen=pg.mkPen(color=(255, 255, 255)))
     
 
 def plot_2d_ray(coords, plt):
@@ -399,14 +398,16 @@ class McDisplay2DGui(object):
         '''  '''
         # plot instrument
         plt = pg.PlotItem(enableMenu=False)
-        # get max time from ray events 
-        time = 0
+        # get max t_min from ray events 
+        t_min = 0 
+        t_max = 0
         for story in rays:
             for g in story.groups:
                 for state in g.events:
-                    time = max(time, state.get_time())
+                    t_min = min(t_min, state.get_time())
+                    t_max = max(t_max, state.get_time())
         
-        plot_tof_instr(instr, time, plt, "xlabel", "ylabel")
+        plot_tof_instr(instr, t_min, t_max, plt)
         self.layout.addItem(plt)
         
         # plot rays
