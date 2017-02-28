@@ -200,7 +200,6 @@ def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
             expand_sp()
         elif ev.key() == 16777264 or ev.key() == 72:    # F1 or h
             print_help()
-            expand_sp()
         elif ev.key() == 66:                            # b
             back_cb()
         # print debug info
