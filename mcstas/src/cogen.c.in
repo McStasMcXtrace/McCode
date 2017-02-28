@@ -814,8 +814,11 @@ cogen_init(struct instr_def *instr)
      system changes between components. */
   cout("  /* Computation of coordinate transformations. */");
   cout("  {");
-  coutf("    Coords %stc1, %stc2;", ID_PRE, ID_PRE);
+  coutf("    Coords %stc1, %stc2, %sLastComp;", ID_PRE, ID_PRE, ID_PRE);
   coutf("    Rotation %str1;", ID_PRE);
+  coutf("    double %sAccumulatedILength = 0;", ID_PRE);
+  coutf("    /* Initialize \"last\" component origin as (0,0,0) */");
+  coutf("    %sLastComp = coords_set(0,0,0);", ID_PRE);
   cout("");
   /* Conversion factor degrees->radians for rotation angles. */
   d2r = "DEG2RAD";
