@@ -47,16 +47,54 @@ def get_2d_ray(ray_story, instr, plane='zy'):
     
     return coords
 
+# colour stuff
+colour_idx = 0
+def get_next_colour(colour_idx):
+    colour = colours[colour_idx % len(colours)]
+    return colour
+
+def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
+    ''' creates a horizontal line for the lower- and upper bounds of each component '''
+    global colour_idx
+    for c in instr.components:
+        bb = c.get_tranformed_bb()
+        colour = get_next_colour(colour_idx)
+        colour_idx += 1
+        z1 = bb.z1
+        z2 = bb.z2
+        if not (abs(z1) == float("inf") or abs(z2) == float("inf")):
+            plt.plot(np.array([0.0, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour))
+            plt.plot(np.array([0.0, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour))
+    
+    plt.setLabels(left=ylabel,bottom=xlabel)
+
+def plot_1d_tof_rays(instr, rays, plt):
+    global colour_idx
+    t_plt = pg.plot()
+    for story in rays:
+        colour = get_next_colour(colour_idx)
+        colour_idx += 1
+        t = []
+        z = []
+        for g in story.groups:
+            if not g.transform:
+                g.transform = [c.transform for c in instr.components if c.name == g.compname][0]
+            pvt_lst = g.get_transformed_pos_vel_t_lst()
+            t = t + [pvt[2] for pvt in pvt_lst]
+            z = z + [pvt[0].z for pvt in pvt_lst]
+                
+        plt.plot(t, z, pen=pg.mkPen(color=colour))
+        t_plt.plot(t)
+    
+
 def plot_2d_ray(coords, plt):
     ''' see get_2d_ray to understand the data structure '''
-    
     x = np.array([p[0] for p in coords])
     y = np.array([p[1] for p in coords])
     return plt.plot(x, y, pen=pg.mkPen(color=(255, 255, 255)))
 
 def get_2d_instrument(instr, plane='zy'):
     ''' returns a list of (compname, coords-lst) tuples, coords-lst being a list of 2-tuple points in the plane '''
-    
     (k1, k2) = (0,1)
     if plane == 'zy': (k1, k2) = (2,1)
     if plane == 'xy': (k1, k2) = (0,1)
@@ -87,7 +125,6 @@ def plot_2d_instr(coords_sets, plt, xlabel, ylabel):
     idx = 0
     def get_next_colour(idx):
         colour = colours[idx % len(colours)]
-        idx += 1
         return colour
     
     compnames_plts = []
@@ -252,7 +289,6 @@ class McDisplay2DGui(object):
         #
         # app, scene, plots 
         #
-        
         self.app = QtGui.QApplication(sys.argv)
         
         window = pg.GraphicsWindow()
@@ -270,41 +306,35 @@ class McDisplay2DGui(object):
         
         layout = pg.GraphicsLayout()
         window.setCentralItem(layout)
-        
         layout.window = window # keep window to avoid garbage collection
         layout.setContentsMargins(2, 2, 2, 2) # outermost margin
-        
         self.layout = layout
+        
+        self.ray_idx = 0
+        self.rayplots = []
+        
+        self.iw = None
+        self.iw_visible = False
+    
+    def _init_2dmode(self):
         self.plt_zy = pg.PlotItem(enableMenu=False)
         self.plt_xy = pg.PlotItem(enableMenu=False)
         self.plt_zx = pg.PlotItem(enableMenu=False)
         self.plt_help = create_help_pltitm()
-
-        self.ray_idx = 0
-        self.rayplots = []
         
-        #
-        # info window
-        #
-        self.iw = None
-        self.iw_visible = False
-        
-        #
-        # zoom stuff
-        #
-        self.unzoom()
+        self._unzoom()
         
         def unzoom_handler(event):
             if event.button() != 2:
                 return
             if self.zoomstate == self.ZoomState.ZOOM:
-                self.unzoom()
+                self._unzoom()
         
         def zoom_handler(event, item=None, idx=None):
             if event.button() != 1:
                 return
             if self.zoomstate == self.ZoomState.UNZOOM and event.currentItem == item:
-                self.zoom(idx)
+                self._zoom(idx)
         
         self.zoomstate = self.ZoomState.UNZOOM
         
@@ -314,9 +344,6 @@ class McDisplay2DGui(object):
         
         self.layout.scene().sigMouseClicked.connect(unzoom_handler)
         
-        #
-        # keypress events stuff
-        #
         def key_handler(event):
             ''' global keypress handler '''
             if False:
@@ -325,15 +352,15 @@ class McDisplay2DGui(object):
             if event.key() == 81:                # q
                 QtGui.QApplication.quit()
             elif event.key() == 80:                 # p
-                self.dumpfile(format='png')
+                self._dumpfile(format='png')
             elif event.key() == 83:                 # s
                 if not os.name == 'nt':
-                    self.dumpfile(format='svg')
+                    self._dumpfile(format='svg')
             elif event.key() in [32, 16777268]:  # space, F5
                 self._display_nextray()
             elif event.key() in [72, 16777264]:  # h, F1
                 if not self.iw_visible:
-                    self.iw = create_infowindow(self.get_comp_color_pairs())
+                    self.iw = create_infowindow(self._get_comp_color_pairs())
                     self.iw.show()
                     self.iw_visible = True
                     self.mw.raise_()
@@ -342,17 +369,15 @@ class McDisplay2DGui(object):
                     self.iw.hide()
                     self.iw_visible = False
         
-        # add generic handlers
         self.layout.scene().keyPressEvent = key_handler
         
-        # print help lines
         print('')
         print('\n'.join(get_help_lines()))
     
-    def dumpfile(self, format):
+    def _dumpfile(self, format):
         uiutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
-    def get_comp_color_pairs(self):
+    def _get_comp_color_pairs(self):
         ''' extracts component names and matches then with colours in the natural order '''
         lst = []
         numcolours = len(colours)
@@ -361,13 +386,35 @@ class McDisplay2DGui(object):
             lst.append(tpl)
         return lst
     
-    def run_ui(self):
+    def run_ui(self, instr, rays):
         '''  '''
-        self.unzoom()
+        self._init_2dmode()
+        self._set_and_plot_instr(instr)
+        self._set_rays(rays)
+        self._unzoom()
         self._display_nextray()
         return self.app.exec_()
     
-    def set_instr_and_plot(self, instr, enable_clickable=False):
+    def run_ui_tof(self, instr, rays):
+        '''  '''
+        # plot instrument
+        plt = pg.PlotItem(enableMenu=False)
+        # get max time from ray events 
+        time = 0
+        for story in rays:
+            for g in story.groups:
+                for state in g.events:
+                    time = max(time, state.get_time())
+        
+        plot_tof_instr(instr, time, plt, "xlabel", "ylabel")
+        self.layout.addItem(plt)
+        
+        # plot rays
+        plot_1d_tof_rays(instr, rays, plt)
+        
+        return self.app.exec_()
+    
+    def _set_and_plot_instr(self, instr, enable_clickable=False):
         ''' set internal references to the full instrument and three 2d instrument set of coordinate pairs '''
         self.instr = instr
         
@@ -389,17 +436,15 @@ class McDisplay2DGui(object):
                     itm = p[1]
                     itm.curve.setClickable(True)
                     itm.curve.mouseClickEvent = lambda event, comp=comp: self._handle_comp_clicked(event, comp)
-        
 
     def _handle_comp_clicked(self, event, comp):
         ''' display clicked component info '''
         print(comp)
-        
-        # prevent event propagation (e.g. zoom)
+        # prevent event propagation (e.g. _zoom)
         event.accept()
     
-    def set_rays(self, rays):
-        ''' just set a reference to rays '''
+    def _set_rays(self, rays):
+        ''' set a reference to rays '''
         self.rays = rays
     
     def _display_nextray(self):
@@ -422,11 +467,11 @@ class McDisplay2DGui(object):
         self.ray_idx += 1
     
     def _clear(self):
-        ''' prepare for a new zoom state '''
+        ''' prepare for a new _zoom state '''
         self.layout.clear()
     
-    def zoom(self, idx_subwin):
-        ''' zoom action, plot a single view full-window '''
+    def _zoom(self, idx_subwin):
+        ''' _zoom action, plot a single view full-window '''
         self._clear()
         
         if idx_subwin == 0: self.layout.addItem(self.plt_zy, 0, 0)
@@ -435,8 +480,8 @@ class McDisplay2DGui(object):
         
         self.zoomstate = self.ZoomState.ZOOM
     
-    def unzoom(self):
-        ''' unzoom action, plot the overview window with the three side views along each axis '''
+    def _unzoom(self):
+        ''' _unzoom action, plot the overview window with the three side views along each axis '''
         self._clear()
         
         self.layout.addItem(self.plt_zy, 0, 0)
@@ -485,16 +530,17 @@ def main(args):
     raybundle = reader.read_particles()
     
     gui = McDisplay2DGui(title=dirname)
-    gui.set_instr_and_plot(instrument)
-    gui.set_rays(raybundle.rays)
-
-    sys.exit(gui.run_ui())
+    if not args.tof:
+        sys.exit(gui.run_ui(instrument, raybundle.rays))
+    else:
+        sys.exit(gui.run_ui_tof(instrument, raybundle.rays))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')

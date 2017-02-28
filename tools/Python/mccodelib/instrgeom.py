@@ -330,13 +330,20 @@ class ParticleStory(object):
 
 class ParticleCompGroup(object):
     ''' represents particle events / states within the context of a specific component '''
-    def __init__(self, compname):
+    def __init__(self, compname, transform=None):
         self.compname = compname
         self.events = []
+        self.transform = transform
     
     def add_event(self, event):
         self.events.append(event)
-        
+    
+    def get_transformed_pos_vel_t_lst(self):
+        if self.transform:
+            return [(self.transform.apply(e.get_position()), self.transform.rotate(e.get_velocity()), e.get_time()) for e in self.events]
+        else:
+            raise Exception("ParticleCompGroup: Member 'transform' not set.")
+    
     def jsonize(self):
         ''' returns a jsonized version of this object '''
         group = {}
@@ -369,12 +376,28 @@ class ParticleState(object):
             self.time = float(args[6])
             self.spin = Vector3d(float(args[7]), float(args[8]), float(args[9]))
             self.intensity = float(args[10])
+        else:
+            self.time = None
+            self.position = None
+            self.velocity = None
     
-    @classmethod
-    def fromcoords(cls, coords):
-        "Initialize from a list of floats"
-        #data = open(filename).readlines()
-        #return cls(data)
+    def get_time(self):
+        ''' returns time even if not initialized as verbose '''
+        if not self.time:
+            self.time = float(self.args[6])
+        return self.time
+    
+    def get_position(self):
+        ''' returns position even if not initialized as verbose '''
+        if not self.position:
+            self.position = Vector3d(float(self.args[0]), float(self.args[1]), float(self.args[2]))
+        return self.position
+    
+    def get_velocity(self):
+        ''' returns position even if not initialized as verbose '''
+        if not self.velocity:
+            self.velocity = Vector3d(float(self.args[3]), float(self.args[4]), float(self.args[5]))
+        return self.velocity
     
     def jsonize(self):
         ''' returns a jsonized version of this object '''
@@ -726,6 +749,12 @@ class Transform(object):
         z = self.a31*v3.x + self.a32*v3.y + self.a33*v3.z + self.a34
         return Vector3d(x, y, z)
     
+    def rotate(self, v3):
+        x = self.a11*v3.x + self.a12*v3.y + self.a13*v3.z
+        y = self.a21*v3.x + self.a22*v3.y + self.a23*v3.z
+        z = self.a31*v3.x + self.a32*v3.y + self.a33*v3.z
+        return Vector3d(x, y, z)
+        
     def get_rotvector_alpha(self, deg=False):
         ''' calculate one angle of rotation around an axis by general 3x3 rotation '''
         self.alpha = math.acos((self.a11 + self.a22 + self.a33 - 1)/2)
