@@ -510,6 +510,16 @@ Controller.prototype.run = function()
         // set bounding box visible property
         _this.main.bbnode.visible = viewmodel.getShowBoundingBox();
 
+        // set scatter cubes on/off
+        if (viewmodel.getShowScatterCubes())
+        {
+            _this.main.showCubes();
+        }
+        else
+        {
+            _this.main.hideCubes();
+        }
+
         setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
 
         busy = false;
@@ -594,6 +604,7 @@ var ViewModel = function(numRays)
     this.displayMode = DisplayMode.SINGLE;
 
     this.showBoundingbox = true;
+    this.showScattCubes = false;
 
     this.numRays = numRays;
     this.rayIdx = [-1];
@@ -617,9 +628,25 @@ ViewModel.prototype.setShowBoundingBox = function(bbOnOff)
     }
     this.updateVersion += 1;
 }
-ViewModel.prototype.getShowBoundingBox = function(bbOnOff)
+ViewModel.prototype.getShowBoundingBox = function()
 {
     return this.showBoundingbox;
+}
+ViewModel.prototype.setShowScatterCubes = function(scOnOff)
+{
+    if (scOnOff)
+    {
+        this.showScattCubes = true;
+    }
+    else
+    {
+        this.showScattCubes = false;
+    }
+    this.updateVersion += 1;
+}
+ViewModel.prototype.getShowScatterCubes = function()
+{
+    return this.showScattCubes;
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {

@@ -62,8 +62,13 @@
 		}
 		var handleShowBBChanged = function(checked)
 		{
-			console.log("bounding box " + checked);
+			console.log("bounding box: " + checked);
 			viewmodel.setShowBoundingBox(checked);
+		}
+		var handleShowScatterCubesChanged = function(checked)
+		{
+			console.log("scatter cubes: " + checked);
+			viewmodel.setShowScatterCubes(checked);
 		}
 		var handleViewTop = function()
 		{
@@ -91,6 +96,9 @@
 		<label id="lblMaxRayIdx" style="color: white; background-color: black; display: inline-block;">(max_idx)</label>
 		<label id="lblKeep" style="color: white; background-color: black; display: inline-block; text-align:right; width: 140px;">
 			Keep rays<input id="cbxKeep" type="checkbox">
+		</label>
+		<label id="lblScatterCubes" style="color: white; background-color: black; display: inline-block; text-align:right; width: 140px;">
+			Scatter Cubes<input id="cbxScattCub" type="checkbox">
 		</label>
 		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 120px;">Reset view:</label>
 		<button id="btnHome", onclick="handleViewHome();" style="width: 60px;">Home</button>
@@ -144,6 +152,10 @@
 				cbxKeep.checked = true;
 			}
 
+			// update show/hide scatter cubes
+			cbxScattCub = document.getElementById("cbxScattCub");
+			cbxScattCub.checked = this.viewmodel.getShowScatterCubes();
+
 			// update bounding box checkbox
 			cbxBoundingbox = document.getElementById("cbxBoundingbox");
 			cbxBoundingbox.checked = this.viewmodel.getShowBoundingBox();
@@ -163,6 +175,10 @@
 		// set show bounding box event handler
 		cbxBoundingbox = document.getElementById("cbxBoundingbox");
 		cbxBoundingbox.addEventListener("change", function () { handleShowBBChanged(cbxBoundingbox.checked) });
+
+		// set show bounding box event handler
+		cbxScattCub = document.getElementById("cbxScattCub");
+		cbxScattCub.addEventListener("change", function () { handleShowScatterCubesChanged(cbxScattCub.checked) });
 
 		// call the mcdisplay app!
 		controller.setUpdateGuiFunc(upd.update);
