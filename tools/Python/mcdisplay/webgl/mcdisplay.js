@@ -176,7 +176,8 @@ Main.prototype.putScatterPoints = function(raynode)
         geometry.translate(v.x, v.y, v.z);
         var material = new THREE.MeshBasicMaterial({ color: raynode.lut_color });
         var cube = new THREE.Mesh( geometry, material );
-        raynode.add( cube );
+
+        raynode.annotcubes.add( cube );
     }
 }
 
@@ -205,6 +206,9 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
     rayObj.add(multiline);
 
     rayObj.vtx = vertices; // WARNING: this is a hidden field hacky stuff, but only used in the function putScatterPoints
+    annotcubes = new THREE.Object3D();
+    rayObj.add(annotcubes);
+    rayObj.annotcubes = annotcubes;
 
     this.raynodes.push(rayObj);
     rayObj.visible = false;
@@ -248,6 +252,26 @@ Main.prototype.hideAllRays = function()
     for (var i = 0; i < this.raynodes.length; i++)
     {
         this.raynodes[i].visible = false;
+    }
+}
+// hide all annotation cubes on all rays
+//
+Main.prototype.hideCubes = function()
+{
+    for (var i = 0; i < this.raynodes.length; i++)
+    {
+        ray = this.raynodes[i];
+        ray.annotcubes.visible = false;
+    }
+}
+// show all annotation cubes on all rays
+//
+Main.prototype.showCubues = function()
+{
+    for (var i = 0; i < this.raynodes.length; i++)
+    {
+        ray = this.raynodes[i];
+        ray.annotcubes.visible = true;
     }
 }
 // iterates to attach the next ray in the global ray sequence
