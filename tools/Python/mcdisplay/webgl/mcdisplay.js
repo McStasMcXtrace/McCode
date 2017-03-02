@@ -95,7 +95,7 @@ Main.prototype.init = function(campos)
 {
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 130);
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.001, 130);
     this.camera.position.x = campos.x; // -50;
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
