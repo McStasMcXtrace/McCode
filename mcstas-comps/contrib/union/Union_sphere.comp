@@ -281,7 +281,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
             this_sphere_volume.p_physics = global_material_list.elements[loop_index].physics;
             break;
           }
-          if (loop_index == global_material_list.num_elements) {
+          if (loop_index == global_material_list.num_elements-1) {
             printf("\n");
             printf("ERROR: The material string \"%s\" in Union geometry \"%s\" did not match a specified material. \n",material_string,NAME_CURRENT_COMP);
             printf("       The materials available at this point (need to be defined before the geometry): \n");
