@@ -83,20 +83,20 @@
 		<label id="lblInstrInfo" style="color: white;">(instr)</label>
 	</div>
 	<div id="gui" style="width: auto; background-color: black;">
-		<label id="lblKeep" style="color: white; background-color: black; display: inline-block; text-align:right;">
-			Keep rays<input id="cbxKeep" type="checkbox">
-		</label>
 		<button id="btnPrev", onclick="handlePrev();" style="width: 90px;">Previous</button>
 		<button id="btnPlayPause", onclick="handlePlayPause();" style="width: 90px;">Play/Pause</button>
 		<button id="btnNext", onclick="handleNext();" style="width: 90px;">Next</button>
 		<label id="lblRayIdxText" style="color: white;">Ray index</label>
 		<label id="lblRayIdx" style="color: white; background-color: black; width: 27px; text-align: right; display: inline-block;">(idx)</label>
 		<label id="lblMaxRayIdx" style="color: white; background-color: black; display: inline-block;">(max_idx)</label>
-		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 150px;">Reset view</label>
+		<label id="lblKeep" style="color: white; background-color: black; display: inline-block; text-align:right; width: 140px;">
+			Keep rays<input id="cbxKeep" type="checkbox">
+		</label>
+		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 120px;">Reset view:</label>
 		<button id="btnHome", onclick="handleViewHome();" style="width: 60px;">Home</button>
 		<button id="btnSide", onclick="handleViewSide();" style="width: 60px;">Side</button>
 		<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
-		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 150px;">Bounding box</label>
+		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 120px;">Show BB</label>
 		<input id="cbxBoundingbox" type="checkbox">
 	</div>
 	<div id="3dcanvas"></div>

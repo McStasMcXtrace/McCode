@@ -266,7 +266,7 @@ Main.prototype.hideCubes = function()
 }
 // show all annotation cubes on all rays
 //
-Main.prototype.showCubues = function()
+Main.prototype.showCubes = function()
 {
     for (var i = 0; i < this.raynodes.length; i++)
     {
