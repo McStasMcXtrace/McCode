@@ -234,7 +234,3 @@ else
     echo Not spawning download of InstantPlayer
 fi
 
-
-# TODO:
-# Offer to get gcc from hpc.sourceforge.net
-# Offer to spawn (c-only) build of openmpi-2.0
