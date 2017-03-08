@@ -53,7 +53,7 @@ def get_next_colour(colour_idx):
     colour = colours[colour_idx % len(colours)]
     return colour
 
-def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
+def plot_tof_instr(instr, t_min, t_max, plt):
     ''' creates a horizontal line for the lower- and upper bounds of each component '''
     global colour_idx
     for c in instr.components:
@@ -62,18 +62,18 @@ def plot_tof_instr(instr, t_max, plt, xlabel, ylabel):
         colour_idx += 1
         z1 = bb.z1
         z2 = bb.z2
+        zpos = c.pos.z
         if not (abs(z1) == float("inf") or abs(z2) == float("inf")):
-            plt.plot(np.array([0.0, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour))
-            plt.plot(np.array([0.0, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour))
+            if z1 != zpos:
+                plt.plot(np.array([t_min, t_max]), np.array([z1, z1]), pen=pg.mkPen(color=colour, style=QtCore.Qt.DashLine))
+            if z2 != zpos:
+                plt.plot(np.array([t_min, t_max]), np.array([z2, z2]), pen=pg.mkPen(color=colour, style=QtCore.Qt.DashLine))
+            plt.plot(np.array([t_min, t_max]), np.array([zpos, zpos]), pen=pg.mkPen(color=colour))
     
-    plt.setLabels(left=ylabel,bottom=xlabel)
+    plt.setLabels(left="z [m]",bottom="time [secs]")
 
 def plot_1d_tof_rays(instr, rays, plt):
-    global colour_idx
-    t_plt = pg.plot()
     for story in rays:
-        colour = get_next_colour(colour_idx)
-        colour_idx += 1
         t = []
         z = []
         for g in story.groups:
@@ -83,8 +83,7 @@ def plot_1d_tof_rays(instr, rays, plt):
             t = t + [pvt[2] for pvt in pvt_lst]
             z = z + [pvt[0].z for pvt in pvt_lst]
                 
-        plt.plot(t, z, pen=pg.mkPen(color=colour))
-        t_plt.plot(t)
+        plt.plot(t, z, symbol='o', symbolSize=7, pen=pg.mkPen(color=(255, 255, 255)))
     
 
 def plot_2d_ray(coords, plt):
@@ -344,36 +343,36 @@ class McDisplay2DGui(object):
         
         self.layout.scene().sigMouseClicked.connect(unzoom_handler)
         
-        def key_handler(event):
-            ''' global keypress handler '''
-            if False:
-                print(event.key())
-            
-            if event.key() == 81:                # q
-                QtGui.QApplication.quit()
-            elif event.key() == 80:                 # p
-                self._dumpfile(format='png')
-            elif event.key() == 83:                 # s
-                if not os.name == 'nt':
-                    self._dumpfile(format='svg')
-            elif event.key() in [32, 16777268]:  # space, F5
-                self._display_nextray()
-            elif event.key() in [72, 16777264]:  # h, F1
-                if not self.iw_visible:
-                    self.iw = create_infowindow(self._get_comp_color_pairs())
-                    self.iw.show()
-                    self.iw_visible = True
-                    self.mw.raise_()
-                    self.mw.activateWindow()
-                else:
-                    self.iw.hide()
-                    self.iw_visible = False
-        
-        self.layout.scene().keyPressEvent = key_handler
+        self.layout.scene().keyPressEvent = self._key_handler
         
         print('')
         print('\n'.join(get_help_lines()))
-    
+
+    def _key_handler(self, event):
+        ''' global keypress handler '''
+        if False:
+            print(event.key())
+        
+        if event.key() == 81:                # q
+            QtGui.QApplication.quit()
+        elif event.key() == 80:                 # p
+            self._dumpfile(format='png')
+        elif event.key() == 83:                 # s
+            if not os.name == 'nt':
+                self._dumpfile(format='svg')
+        elif event.key() in [32, 16777268]:  # space, F5
+            self._display_nextray()
+        elif event.key() in [72, 16777264]:  # h, F1
+            if not self.iw_visible:
+                self.iw = create_infowindow(self._get_comp_color_pairs())
+                self.iw.show()
+                self.iw_visible = True
+                self.mw.raise_()
+                self.mw.activateWindow()
+            else:
+                self.iw.hide()
+                self.iw_visible = False
+        
     def _dumpfile(self, format):
         uiutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
@@ -399,18 +398,22 @@ class McDisplay2DGui(object):
         '''  '''
         # plot instrument
         plt = pg.PlotItem(enableMenu=False)
-        # get max time from ray events 
-        time = 0
+        # get max t_min from ray events 
+        t_min = 0 
+        t_max = 0
         for story in rays:
             for g in story.groups:
                 for state in g.events:
-                    time = max(time, state.get_time())
+                    t_min = min(t_min, state.get_time())
+                    t_max = max(t_max, state.get_time())
         
-        plot_tof_instr(instr, time, plt, "xlabel", "ylabel")
+        plot_tof_instr(instr, t_min, t_max, plt)
         self.layout.addItem(plt)
         
         # plot rays
         plot_1d_tof_rays(instr, rays, plt)
+        
+        self.layout.scene().keyPressEvent = self._key_handler
         
         return self.app.exec_()
     
@@ -530,7 +533,7 @@ def main(args):
     raybundle = reader.read_particles()
     
     gui = McDisplay2DGui(title=dirname)
-    if not args.tof:
+    if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
     else:
         sys.exit(gui.run_ui_tof(instrument, raybundle.rays))
@@ -541,6 +544,8 @@ if __name__ == '__main__':
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
     parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
+    parser.add_argument('--TOF', action='store_true', help='alternative to --tof')
+    parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')

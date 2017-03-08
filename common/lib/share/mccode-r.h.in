@@ -333,7 +333,9 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
          "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
          t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]); \
-  printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z); \
+  mcAccumulatedILength += coords_len(coords_sub(mcLastComp,c)); \
+  printf("Component %30s AT (%g,%g,%g)    %g m from origin\n", name, c.x, c.y, c.z, mcAccumulatedILength); \
+  mcLastComp=c;\
   }
 #define mcDEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
 #define mcDEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
@@ -496,6 +498,7 @@ Coords coords_neg(Coords a);
 Coords coords_scale(Coords b, double scale);
 double coords_sp(Coords a, Coords b);
 Coords coords_xp(Coords b, Coords c);
+double coords_len(Coords a);
 void   coords_print(Coords a);
 mcstatic inline void coords_norm(Coords* c);
 

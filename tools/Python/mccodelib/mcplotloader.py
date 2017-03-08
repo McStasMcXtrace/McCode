@@ -276,7 +276,7 @@ def _parse_1D_monitor(text):
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d\-\+\.e]+)\n', text)
-        data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
+        data.values = (Decimal,(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\-e]+); dX=([\d\.\-e]+);\n', text)
         data.statistics = 'X0=%.2E; dX=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)))
@@ -347,7 +347,7 @@ def _parse_2D_monitor(text):
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\+\-\.e]+) ([\d\+\-\.e]+) ([\d\+\-\.e]+)\n', text)
-        data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
+        data.values = (Decimal(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\+\-e]+); dX=([\d\.\+\-e]+); Y0=([\d\.\+\-e]+); dY=([\d\.\+\-e]+);\n', text)
         
@@ -764,7 +764,7 @@ def load_monitor_folder(args):
     root = PNMultiple(data_lst)
     primnodes = []
     for data in data_lst:
-        node = PNSingle()
+        node = PNSingle(data)
         node.setdata(data)
         primnodes.append(node)
     root.set_primaries(primnodes)

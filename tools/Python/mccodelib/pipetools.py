@@ -6,6 +6,7 @@ import re
 from subprocess import Popen, PIPE
 from threading import Thread, Event
 import os
+import signal
 
 class DataBox():
     ''' container for pre-processed trace data '''
@@ -175,9 +176,7 @@ class ParticlesTraceState(LineHandlerState):
                 if self.block_count > self.max_particles:
                     print('max particle count exceeded, blocking all further trace particle trace lines...')
                     self.setcurrent(self.next, None)
-                    # TODO: find a way to safely kill the process group (a group, since shell=True is used for platform independence)
-                    #if self.pid:
-                    #    os.killpg(self.pid, 9)
+
                 self.block_count += 1
             
             self.block = []
@@ -188,15 +187,19 @@ class ParticlesTraceState(LineHandlerState):
         else:
             self.databox.add_comment(line)
     
-    def setprocess(self, process):
-        self.process = process.pid
-
-
 class PostParticletraceState(LineHandlerState):
     ''' this state does nothing, so nothing happens from now on '''
     def add_line(self, line):
-        pass
+        # Only kill if PID still can be killed, buffered stream data
+        # means that we could enter here multiple times still.
+        try:
+            os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+        except:
+            pass
 
+    def setprocess(self, process):
+        self.process = process
+        
 class ThreadException(Exception):
     pass
 
@@ -232,7 +235,9 @@ class TraceReader(Thread):
     def run(self):
         try:
             ''' create a process given command and read, print and write to it depending on state '''
-            process = Popen(self.cmd, shell=True, universal_newlines=True,
+            # os.setsid defineds a fresh process group so that the calling Python survives when the
+            # simulation is potentially terminated.
+            process = Popen(self.cmd, shell=True, preexec_fn=os.setsid, universal_newlines=True,
                             stdout=PIPE,
                             stderr=PIPE,
                             stdin=PIPE
@@ -241,7 +246,8 @@ class TraceReader(Thread):
             # special case: give the prompt state access to process to allow automation flag, 
             # and particles to end the process in max particle count is exceeded
             self.allstates['prompt'].setprocess(process)
-            self.allstates['particles'].setprocess(process)
+            self.allstates['post_particles'].setprocess(process)
+            
             
             while process.poll() == None:
                 stdoutdata = process.stdout.readline()
@@ -252,11 +258,9 @@ class TraceReader(Thread):
                 self.current.add_line(stdoutdata)
             for stderrdata in process.stderr:
                 self.current.add_line(stderrdata)
-            
-            if process.poll() == 0:
-                self.databox.set_particlesdone()
-            else:
-                raise ThreadException()
+
+            # If we made it all the way here, sim has ended or been killed
+            self.databox.set_particlesdone()
             
         except Exception as e:
             self.exc_obj = e

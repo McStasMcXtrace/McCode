@@ -95,7 +95,7 @@ Main.prototype.init = function(campos)
 {
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 130);
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.001, 130);
     this.camera.position.x = campos.x; // -50;
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
@@ -176,7 +176,8 @@ Main.prototype.putScatterPoints = function(raynode)
         geometry.translate(v.x, v.y, v.z);
         var material = new THREE.MeshBasicMaterial({ color: raynode.lut_color });
         var cube = new THREE.Mesh( geometry, material );
-        raynode.add( cube );
+
+        raynode.annotcubes.add( cube );
     }
 }
 
@@ -205,6 +206,9 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
     rayObj.add(multiline);
 
     rayObj.vtx = vertices; // WARNING: this is a hidden field hacky stuff, but only used in the function putScatterPoints
+    annotcubes = new THREE.Object3D();
+    rayObj.add(annotcubes);
+    rayObj.annotcubes = annotcubes;
 
     this.raynodes.push(rayObj);
     rayObj.visible = false;
@@ -248,6 +252,26 @@ Main.prototype.hideAllRays = function()
     for (var i = 0; i < this.raynodes.length; i++)
     {
         this.raynodes[i].visible = false;
+    }
+}
+// hide all annotation cubes on all rays
+//
+Main.prototype.hideCubes = function()
+{
+    for (var i = 0; i < this.raynodes.length; i++)
+    {
+        ray = this.raynodes[i];
+        ray.annotcubes.visible = false;
+    }
+}
+// show all annotation cubes on all rays
+//
+Main.prototype.showCubes = function()
+{
+    for (var i = 0; i < this.raynodes.length; i++)
+    {
+        ray = this.raynodes[i];
+        ray.annotcubes.visible = true;
     }
 }
 // iterates to attach the next ray in the global ray sequence
@@ -486,6 +510,16 @@ Controller.prototype.run = function()
         // set bounding box visible property
         _this.main.bbnode.visible = viewmodel.getShowBoundingBox();
 
+        // set scatter cubes on/off
+        if (viewmodel.getShowScatterCubes())
+        {
+            _this.main.showCubes();
+        }
+        else
+        {
+            _this.main.hideCubes();
+        }
+
         setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
 
         busy = false;
@@ -570,6 +604,7 @@ var ViewModel = function(numRays)
     this.displayMode = DisplayMode.SINGLE;
 
     this.showBoundingbox = true;
+    this.showScattCubes = false;
 
     this.numRays = numRays;
     this.rayIdx = [-1];
@@ -593,9 +628,25 @@ ViewModel.prototype.setShowBoundingBox = function(bbOnOff)
     }
     this.updateVersion += 1;
 }
-ViewModel.prototype.getShowBoundingBox = function(bbOnOff)
+ViewModel.prototype.getShowBoundingBox = function()
 {
     return this.showBoundingbox;
+}
+ViewModel.prototype.setShowScatterCubes = function(scOnOff)
+{
+    if (scOnOff)
+    {
+        this.showScattCubes = true;
+    }
+    else
+    {
+        this.showScattCubes = false;
+    }
+    this.updateVersion += 1;
+}
+ViewModel.prototype.getShowScatterCubes = function()
+{
+    return this.showScattCubes;
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {

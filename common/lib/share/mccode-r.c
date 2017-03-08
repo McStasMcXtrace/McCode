@@ -2343,6 +2343,11 @@ Coords coords_xp(Coords b, Coords c) {
   return a;
 }
 
+/* coords_len: Gives length of coords set. */
+double coords_len(Coords a) {
+  return sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
+}
+
 /* coords_mirror: Mirror a in plane (through the origin) defined by normal n*/
 Coords coords_mirror(Coords a, Coords n) {
   double t = scalar_prod(n.x, n.y, n.z, n.x, n.y, n.z);
