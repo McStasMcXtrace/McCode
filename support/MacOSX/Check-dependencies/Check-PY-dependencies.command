@@ -6,9 +6,6 @@ rc1=$?;
 if [[ $rc1 == 0 ]]; 
 then
     echo "OK, proceeding!"
-    echo sudo chown -R $USER:staff /usr/local
-    sudo chown -R $USER:staff /usr/local
-    mkdir -p /usr/local/bin
 else
     echo "OK, exiting for you to drag the app"
     exit 1

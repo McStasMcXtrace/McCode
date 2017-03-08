@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Ask user if the app was dragged to /Applications
+osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n\n (Otherwise parts of this script could fail...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo "OK, proceeding!"
+else
+    echo "OK, exiting for you to drag the app"
+    exit 1
+fi
+
 # Check if Xcode commandline tools is installed
 
 # xcode-select -p to check, otherwise
