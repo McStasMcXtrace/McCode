@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Ask user if the app was dragged to /Applications
+osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n\n (Otherwise parts of this script could fail...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo "OK, proceeding!"
+    echo sudo chown -R $USER:staff /usr/local
+    sudo chown -R $USER:staff /usr/local
+    mkdir -p /usr/local/bin
+else
+    echo "OK, exiting for you to drag the app"
+    exit 1
+fi
+
 # Check if Xcode commandline tools is installed
 
 # xcode-select -p to check, otherwise
@@ -33,6 +47,25 @@ then
     fi
 else
     echo Xcode commandline tools is already installed!
+fi
+
+echo
+echo Locating newest McCode package in /Applications/...
+echo
+NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
+echo Seems /Applications/$NEWESTAPP is where I should go...
+echo
+
+osascript -e "tell app \"System Events\" to display dialog \"Allow embedded openmpi binaries in $NEWESTAPP to send/receive through your macOS firewall? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+else
+    echo "Not allowing access for openmpi binaries..."
 fi
 
 osascript -e "tell app \"System Events\" to display dialog \"We recommend that your user $USER takes ownership of /usr/local - do you want to do this? \n\n (Please give your passwd to the sudo command in the terminal...) \""

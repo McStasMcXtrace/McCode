@@ -139,13 +139,25 @@ else
     echo "McCode support packages $TKPKG and $SCIPDL will NOT be downloaded!"
 fi
 
-cd `dirname $0`
 echo
-echo Locating newest McCode package in $PWD/...
+echo Locating newest McCode package in /Applications/...
 echo
-NEWESTAPP=`ls -rt | grep Mc | grep \.app`
-echo Seems $NEWESTAPP is where I should go...
+NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
+echo Seems /Applications/$NEWESTAPP is where I should go...
 echo
+
+osascript -e "tell app \"System Events\" to display dialog \"Allow embedded openmpi binaries in $NEWESTAPP to send/receive through your macOS firewall? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+else
+    echo "Not allowing access for openmpi binaries..."
+fi
+
 # If we are not using the SYSTEM perl, patch the perl scripts to use the relevant version...
 if [ "$PERLVER" != "SYSTEM" ];
 then
@@ -153,14 +165,14 @@ then
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then
-	if [ -d "$NEWESTAPP/Contents/Resources/mcstas" ];
+	if [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcstas" ];
 	then
-    	    cd $NEWESTAPP/Contents/Resources/mcstas/*/bin
+    	    cd /Applications/$NEWESTAPP/Contents/Resources/mcstas/*/bin
     	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
 	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mcdoc
-	elif [ -d "$NEWESTAPP/Contents/Resources/mcxtrace" ];
+	elif [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcxtrace" ];
 	then
-    	    cd $NEWESTAPP/Contents/Resources/mcxtrace/*/bin
+    	    cd /Applications/$NEWESTAPP/Contents/Resources/mcxtrace/*/bin
     	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
 	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mxdoc
 	else
@@ -175,7 +187,7 @@ else
     echo Excellent, your default Perl is the right version, proceeding!
 fi
 
-cd `dirname $0`
+cd /Applications
 osascript -e "tell app \"System Events\" to display dialog \"Should I patch $NEWESTAPP to run the Perl GUI? (default is otherwise Python)\""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
