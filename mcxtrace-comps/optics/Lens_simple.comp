@@ -41,7 +41,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS (string material_datafile="Be.txt",verbose=0)
-SETTING PARAMETERS (xwidth,yheight,T=1,r=0.3e-3,radius=0,N=1)
+SETTING PARAMETERS (xwidth,yheight,T=1,r=0,radius=0,N=1)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
