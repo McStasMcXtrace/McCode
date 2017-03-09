@@ -1,0 +1,9 @@
+- mcgui:
+
+verbose 
+
+config
+
+terminal env.
+
+system default
