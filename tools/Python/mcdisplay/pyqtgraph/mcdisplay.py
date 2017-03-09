@@ -396,6 +396,8 @@ class McDisplay2DGui(object):
     
     def run_ui_tof(self, instr, rays):
         '''  '''
+        self.instr = instr
+        
         # plot instrument
         plt = pg.PlotItem(enableMenu=False)
         # get max t_min from ray events 
