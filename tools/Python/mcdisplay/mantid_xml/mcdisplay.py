@@ -346,7 +346,7 @@ class MantidPixelWriter:
             s = s.replace('ROT_X', str(rot_vector.x))
             s = s.replace('ROT_Y', str(rot_vector.y))
             s = s.replace('ROT_Z', str(rot_vector.z))
-            s = s.replace('RADIUS', str(alpha))
+            s = s.replace('RADIUS', ban.radius)
             s = s.replace('T_MIN', ban.tmin)
             s = s.replace('T_MAX', ban.tmax)
             s = s.replace('T_STEP', str(t_step))

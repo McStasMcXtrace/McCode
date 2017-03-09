@@ -41,7 +41,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS (string material_datafile="Be.txt",verbose=0)
-SETTING PARAMETERS (xwidth,yheight,T=1,r=0.3e-3,radius=0,N=1)
+SETTING PARAMETERS (xwidth,yheight,T=1,r=0,radius=0,N=1)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -99,8 +99,9 @@ INITIALIZE
   prms->delta[T.rows]=-FLT_MAX;
   
   Table_Free(&T);
-
-  if (r==0 && radius!=0){
+  if (r!=0 && radius!=0){
+      fprintf(stderr,"Warning (%s): parameter r = %g overrides old parameter name radius = %g.\n",NAME_CURRENT_COMP);
+  }else if (r==0 && radius!=0){
     fprintf(stderr,"Warning (%s): You are using the obsolescent parameter name radius. Please consider changing to r\n"NAME_CURRENT_COMP); 
     r=radius;
   }
@@ -140,7 +141,7 @@ TRACE
     /*protect against out of range errors*/
     alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
     delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
-    F=radius/2/delta/N;
+    F=r/2/delta/N;
     /*Only focusing in the y-direction for now.*/
     /*auxiliary vector s*/ 
     sx=0;sy=-y;sz=F;

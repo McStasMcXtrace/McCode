@@ -760,12 +760,19 @@ class Transform(object):
         self.alpha = math.acos((self.a11 + self.a22 + self.a33 - 1)/2)
         if deg:
             self.alpha = 180/math.pi * self.alpha
+
         x = self.a32 - self.a23
         y = self.a13 - self.a31
         z = self.a21 - self.a12
+        
         v_abs = math.sqrt(x*x + y*y + z*z)
         if not self.v:
             self.v = Vector3d
+
+        # Protection for division by 0
+        if v_abs == 0:
+            v_abs=1;
+            
         self.v.x = x / v_abs
         self.v.y = y / v_abs
         self.v.z = z / v_abs
