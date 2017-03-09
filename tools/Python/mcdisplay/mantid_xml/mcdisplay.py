@@ -395,7 +395,7 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
         rectmonitor = self._get_mantid_rectangular_monitor()
         bananamonitor = self._get_mantid_banana_monitor()
         
-        print('\n\n'.join([self.header, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]))
+        return '\n\n'.join([self.header, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
 
 class MantidPixel:
     def __init__(self, pixel_line_lst, transform):
@@ -447,7 +447,7 @@ def debug_load_rays(filename):
     rays = parser.execute(particles)
     return rays
 
-def debug_file_save(data, filename):
+def file_save(data, filename):
     ''' saves data for debug purposes '''
     f = open(filename, 'w')
     f.write(data)
@@ -463,8 +463,11 @@ def main(args):
     instrument = reader.read_instrument()
     
     writer = MantidPixelWriter(instrument.components)
-    writer.do_work()
-    
+    print("assembling mantid xml...")
+    text = writer.do_work()
+    filename = args.instr + '.xml'
+    file_save(text, filename)
+    print("saved file %s" % filename)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
