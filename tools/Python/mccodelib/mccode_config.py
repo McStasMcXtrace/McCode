@@ -112,7 +112,7 @@ def save_user_config():
     finally:
         if f:
             f.close()
-            
+
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
@@ -139,7 +139,7 @@ def get_options():
 
     mcrun_lst =     [prefix+"run.pl", prefix+"run"]
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot.pl", prefix+"plot.pl --format=Gnuplot", prefix+"plot.pl --format=Matlab",
-                     prefix+"plot-matlab", prefix+"plot-matplotlib", prefix+"plot-gnuplot", prefix+"plot-chaco"]
+                     prefix+"plot-matlab"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst
 
