@@ -1,7 +1,16 @@
 #!/bin/bash
 
+
+echo
+echo Locating newest McCode package in /Applications/...
+echo
+NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
+echo Seems /Applications/$NEWESTAPP is where I should go...
+echo
+
+
 # Ask user if the app was dragged to /Applications
-osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n\n (Otherwise parts of this script could fail...) \""
+osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n Newest available is /Applications/$NEWESTAPP \n\n (Parts of this script could easily fail if this does not look right!) \""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
@@ -150,13 +159,6 @@ else
     echo "McCode support packages $TKPKG and $SCIPDL will NOT be downloaded!"
 fi
 
-echo
-echo Locating newest McCode package in /Applications/...
-echo
-NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
-echo Seems /Applications/$NEWESTAPP is where I should go...
-echo
-
 osascript -e "tell app \"System Events\" to display dialog \"Allow embedded openmpi binaries in $NEWESTAPP to send/receive through your macOS firewall? \n\n (Please give your passwd to the sudo command in the terminal...) \""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
@@ -168,6 +170,22 @@ then
 else
     echo "Not allowing access for openmpi binaries..."
 fi
+
+PACKAGEDIR=`dirname $0`
+cd $PACKAGEDIR
+ENVSCRIPT=`ls -art | grep environment | grep \.command | tail -1`
+if [ "x$ENVSCRIPT" != "x" ]; then
+    osascript -e "tell app \"System Events\" to display dialog \"It looks like you did not move your environment script $ENVSCRIPT to /Applications? \n\n We recommend that to run McStas/McXtrace from commmandline - do you want to do this? \""
+    rc1=$?; 
+    if [[ $rc1 == 0 ]]; 
+    then
+	echo mv $ENVSCRIPT /Applications/
+	mv $ENVSCRIPT /Applications/
+    else
+	echo "Not moving the $ENVSCRIPT to /Applications..."
+    fi
+fi
+cd -
 
 # If we are not using the SYSTEM perl, patch the perl scripts to use the relevant version...
 if [ "$PERLVER" != "SYSTEM" ];
