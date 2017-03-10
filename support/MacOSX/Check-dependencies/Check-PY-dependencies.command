@@ -7,7 +7,6 @@ NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
 echo Seems /Applications/$NEWESTAPP is where I should go...
 echo
 
-
 # Ask user if the app was dragged to /Applications
 osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n Newest available is /Applications/$NEWESTAPP \n\n (Parts of this script could easily fail if this does not look right!) \""
 rc1=$?; 
@@ -52,6 +51,25 @@ then
     fi
 else
     echo Xcode commandline tools is already installed!
+fi
+
+ENVSCRIPT=`ls /Applications/$NEWESTAPP/Contents/Resources/mc*/*/environment`
+if [ -f $ENVSCRIPT ]; then
+    echo $ENVSCRIPT
+    VERSION=`dirname $ENVSCRIPT`
+    echo $VERSION
+    FLAVOR=`dirname $VERSION`
+    VERSION=`basename $VERSION`
+    FLAVOR=`basename $FLAVOR`
+    osascript -e "tell app \"System Events\" to display dialog \"Do you want to define the Unix command \n\n$FLAVOR-$VERSION-environment \n\nfor easy terminal acess to $NEWESTAPP? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+    rc1=$?; 
+    if [[ $rc1 == 0 ]]; 
+    then
+	echo sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment 
+	sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment
+    else
+	echo "Not adding /usr/local/bin/$FLAVOR-$VERSION-environment "
+    fi
 fi
 
 osascript -e "tell app \"System Events\" to display dialog \"Allow embedded openmpi binaries in $NEWESTAPP to send/receive through your macOS firewall? \n\n (Please give your passwd to the sudo command in the terminal...) \""

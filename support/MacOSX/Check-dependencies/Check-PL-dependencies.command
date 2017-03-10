@@ -159,6 +159,26 @@ else
     echo "McCode support packages $TKPKG and $SCIPDL will NOT be downloaded!"
 fi
 
+ENVSCRIPT=`ls /Applications/$NEWESTAPP/Contents/Resources/mc*/*/environment`
+if [ -f $ENVSCRIPT ]; then
+    echo $ENVSCRIPT
+    VERSION=`dirname $ENVSCRIPT`
+    echo $VERSION
+    FLAVOR=`dirname $VERSION`
+    VERSION=`basename $VERSION`
+    FLAVOR=`basename $FLAVOR`
+    osascript -e "tell app \"System Events\" to display dialog \"Do you want to define the Unix command \n\n$FLAVOR-$VERSION-environment \n\nfor easy terminal acess to $NEWESTAPP? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+    rc1=$?; 
+    if [[ $rc1 == 0 ]]; 
+    then
+	echo sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment 
+	sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment
+    else
+	echo "Not adding /usr/local/bin/$FLAVOR-$VERSION-environment "
+    fi
+fi
+
+
 osascript -e "tell app \"System Events\" to display dialog \"Allow embedded openmpi binaries in $NEWESTAPP to send/receive through your macOS firewall? \n\n (Please give your passwd to the sudo command in the terminal...) \""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
