@@ -137,7 +137,7 @@ def get_options():
                          prefix+"display.pl --format=VRML", 
                          prefix+"display-matplotlib"]
 
-    mcrun_lst =     [prefix+"run.pl", prefix+"run"]
+    mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run.pl", prefix+"run.pl --format=NeXus"]
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot.pl", prefix+"plot.pl --format=Gnuplot", prefix+"plot.pl --format=Matlab",
                      prefix+"plot-matlab"]
 
