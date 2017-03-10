@@ -171,8 +171,8 @@ if [ -f $ENVSCRIPT ]; then
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then
-	echo sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment 
-	sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment
+	echo sudo mkdir -p /usr/local/bin && sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment 
+	sudo mkdir -p /usr/local/bin && sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment
     else
 	echo "Not adding /usr/local/bin/$FLAVOR-$VERSION-environment "
     fi
