@@ -69,6 +69,10 @@ def add_mcrun_options(parser):
     add('--mpi',
         metavar='NB_CPU',
         help='spread simulation over NB_CPU machines using MPI')
+    
+    add('--machines',
+        metavar='machines',
+        help='machines filename that becomes forwarded to mpirun"')
 
     # Optimisation
     add('--optimise-file',
