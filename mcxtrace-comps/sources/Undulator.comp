@@ -252,8 +252,8 @@ TRACE
 
     double Bsig_integ_prms[4],Bpi_integ_prms[4];
     Bsig_integ_prms[0] = Bpi_integ_prms[0]=w_w1; /*relative frequency*/
-    Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w1*xi*prms.gamma*K/(1+K*K/2.0); /*p*/
-    Bsig_integ_prms[2] = Bpi_integ_prms[1] = 0.25 * w_w1*K*K/(1+K*K/2.0); /*q*/
+    Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w10*xi*prms.gamma*K/(1+K*K/2.0); /*p*/
+    Bsig_integ_prms[2] = Bpi_integ_prms[2] = 0.25 * w_w10*K*K/(1+K*K/2.0); /*q*/
     Bsig_integ_prms[3] = xi *prms.gamma/K; /*angle terms*/
     Bpi_integ_prms[3]  = psi*prms.gamma/K; 
 
