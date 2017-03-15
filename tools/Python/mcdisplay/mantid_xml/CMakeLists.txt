@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(python-tools-mcdisplay-pyqtgraph C)
+project(python-tools-mcdisplay-mantid C)
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)
@@ -44,7 +44,7 @@ set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-mantidxml-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-mantid-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
@@ -54,7 +54,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python/pyqtgraph -based mcdisplay (mcdisplay-mantidxml), ${MCCODE_STRING}")
+set(NSIS_NAME "Python/mantid -based mcdisplay (mcdisplay-mantid), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
@@ -71,12 +71,12 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-mantidxml" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-mantid" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-mantidxml")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-mantid")
 endif()
 
 # Program files
@@ -119,14 +119,8 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}display-pyqtgraph-py"
+    PROGRAMS "${WORK}/${P}display-mantid"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-pyqtgraph${DOT_PYTHON_SUFFIX}"
-    )
-  # Make mantidxml mcdisplay available as mcdisplay/mxdisplay
-  install(
-    PROGRAMS "${WORK}/${P}display-mantidxml"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display"
+    RENAME "${P}display-mantid"
     )
 endif()

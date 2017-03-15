@@ -1,5 +1,25 @@
 #!/bin/bash
 
+
+echo
+echo Locating newest McCode package in /Applications/...
+echo
+NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
+echo Seems /Applications/$NEWESTAPP is where I should go...
+echo
+
+
+# Ask user if the app was dragged to /Applications
+osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n Newest available is /Applications/$NEWESTAPP \n\n (Parts of this script could easily fail if this does not look right!) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo "OK, proceeding!"
+else
+    echo "OK, exiting for you to drag the app"
+    exit 1
+fi
+
 # Check if Xcode commandline tools is installed
 
 # xcode-select -p to check, otherwise
@@ -139,13 +159,54 @@ else
     echo "McCode support packages $TKPKG and $SCIPDL will NOT be downloaded!"
 fi
 
-cd `dirname $0`
-echo
-echo Locating newest McCode package in $PWD/...
-echo
-NEWESTAPP=`ls -rt | grep Mc | grep \.app`
-echo Seems $NEWESTAPP is where I should go...
-echo
+ENVSCRIPT=`ls /Applications/$NEWESTAPP/Contents/Resources/mc*/*/environment`
+if [ -f $ENVSCRIPT ]; then
+    echo $ENVSCRIPT
+    VERSION=`dirname $ENVSCRIPT`
+    echo $VERSION
+    FLAVOR=`dirname $VERSION`
+    VERSION=`basename $VERSION`
+    FLAVOR=`basename $FLAVOR`
+    osascript -e "tell app \"System Events\" to display dialog \"Do you want to define the Unix command \n\n$FLAVOR-$VERSION-environment \n\nfor easy terminal acess to $NEWESTAPP? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+    rc1=$?; 
+    if [[ $rc1 == 0 ]]; 
+    then
+	echo sudo mkdir -p /usr/local/bin && sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment 
+	sudo mkdir -p /usr/local/bin && sudo ln -sf $ENVSCRIPT /usr/local/bin/$FLAVOR-$VERSION-environment
+    else
+	echo "Not adding /usr/local/bin/$FLAVOR-$VERSION-environment "
+    fi
+fi
+
+
+osascript -e "tell app \"System Events\" to display dialog \"Allow embedded openmpi binaries in $NEWESTAPP to send/receive through your macOS firewall? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+else
+    echo "Not allowing access for openmpi binaries..."
+fi
+
+PACKAGEDIR=`dirname $0`
+cd $PACKAGEDIR
+ENVSCRIPT=`ls -art | grep environment | grep \.command | tail -1`
+if [ "x$ENVSCRIPT" != "x" ]; then
+    osascript -e "tell app \"System Events\" to display dialog \"It looks like you did not move your environment script $ENVSCRIPT to /Applications? \n\n We recommend that to run McStas/McXtrace from commmandline - do you want to do this? \""
+    rc1=$?; 
+    if [[ $rc1 == 0 ]]; 
+    then
+	echo mv $ENVSCRIPT /Applications/
+	mv $ENVSCRIPT /Applications/
+    else
+	echo "Not moving the $ENVSCRIPT to /Applications..."
+    fi
+fi
+cd -
+
 # If we are not using the SYSTEM perl, patch the perl scripts to use the relevant version...
 if [ "$PERLVER" != "SYSTEM" ];
 then
@@ -153,14 +214,14 @@ then
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then
-	if [ -d "$NEWESTAPP/Contents/Resources/mcstas" ];
+	if [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcstas" ];
 	then
-    	    cd $NEWESTAPP/Contents/Resources/mcstas/*/bin
+    	    cd /Applications/$NEWESTAPP/Contents/Resources/mcstas/*/bin
     	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
 	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mcdoc
-	elif [ -d "$NEWESTAPP/Contents/Resources/mcxtrace" ];
+	elif [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcxtrace" ];
 	then
-    	    cd $NEWESTAPP/Contents/Resources/mcxtrace/*/bin
+    	    cd /Applications/$NEWESTAPP/Contents/Resources/mcxtrace/*/bin
     	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
 	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mxdoc
 	else
@@ -175,7 +236,7 @@ else
     echo Excellent, your default Perl is the right version, proceeding!
 fi
 
-cd `dirname $0`
+cd /Applications
 osascript -e "tell app \"System Events\" to display dialog \"Should I patch $NEWESTAPP to run the Perl GUI? (default is otherwise Python)\""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 

@@ -112,18 +112,34 @@ def save_user_config():
     finally:
         if f:
             f.close()
-            
+
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
+        mcdisplay_lst = [prefix+"display-webgl",
+                         prefix+"display-pyqtgraph",
+                         prefix+"display-pyqtgraph --tof",
+                         prefix+"display-mantid",
+                         prefix+"display.pl",
+                         prefix+"display.pl --format=Matlab",
+                         prefix+"display.pl --format=VRML", 
+                         prefix+"display.pl --format=Mantid",
+                         prefix+"display-matplotlib"]
     else:
         prefix = "mx"
-    mcrun_lst =     [prefix+"run.pl", prefix+"run"]
+        mcdisplay_lst = [prefix+"display-webgl",
+                         prefix+"display-pyqtgraph",
+                         prefix+"display-pyqtgraph --tof",
+                         prefix+"display.pl",
+                         prefix+"display.pl --format=Matlab",
+                         prefix+"display.pl --format=VRML", 
+                         prefix+"display-matplotlib"]
+
+    mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run.pl", prefix+"run.pl --format=NeXus"]
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot.pl", prefix+"plot.pl --format=Gnuplot", prefix+"plot.pl --format=Matlab",
-                     prefix+"plot-matlab", prefix+"plot-matplotlib", prefix+"plot-gnuplot", prefix+"plot-chaco"]
-    mcdisplay_lst = [prefix+"display-webgl",prefix+"display-pyqtgraph",prefix+"display.pl", prefix+"display.pl --format=Matlab", prefix+"display.pl --format=VRML", 
-                     prefix+"display.pl --format=Mantid", prefix+"display-matplotlib"]
+                     prefix+"plot-matlab"]
+
     return mcrun_lst, mcplot_lst, mcdisplay_lst
 
