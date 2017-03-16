@@ -47,7 +47,7 @@ elif ( canrun_i ); then
 elif ( canrun_o ); then
     octave --eval "addpath('${LIB}');${TOOL} $*"
 else
-    echo ":: Failed to run Matlab/iFit/Octave ${TOOL}, trying old Perl version."
+    echo ":: Failed to run Matlab/iFit/Octave ${TOOL}, trying default ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
     echo ""
 
