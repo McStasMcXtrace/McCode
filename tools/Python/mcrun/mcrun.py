@@ -72,7 +72,7 @@ def add_mcrun_options(parser):
     
     add('--machines',
         metavar='machines',
-        help='machines filename that becomes forwarded to mpirun"')
+        help='defines path of MPI machinefile to use in parallel mode')
 
     # Optimisation
     add('--optimise-file',
