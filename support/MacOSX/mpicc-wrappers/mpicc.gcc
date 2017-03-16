@@ -16,4 +16,4 @@ fi
 
 export PATH=$BIN:$BIN/../../../miniconda3/bin:$PATH
 export DYLD_LIBRARY_PATH=$BIN/../../../miniconda3/lib
-gcc $* -DUSE_MPI -lmpi -I$BIN/../../../miniconda3/include
+gcc $* -DUSE_MPI -lmpi -L$BIN/../../../miniconda3/lib -I$BIN/../../../miniconda3/include
