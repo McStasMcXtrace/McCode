@@ -27,6 +27,12 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mac "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac "" -- OSXapp
 
+# Generate mcdoc pages
+WORK=`pwd`
+cd $MCINSTALL_PREFIX/mcstas/$1/
+./bin/mcdoc . -t
+cd $PWD
+
 # Download and embed a miniconda
 echo
 echo "*********************************************************"
