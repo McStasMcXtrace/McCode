@@ -31,7 +31,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 WORK=`pwd`
 cd $MCINSTALL_PREFIX/mcstas/$1/
 ./bin/mcdoc . -t
-cd $PWD
+cd $WORK
 
 # Download and embed a miniconda
 echo
