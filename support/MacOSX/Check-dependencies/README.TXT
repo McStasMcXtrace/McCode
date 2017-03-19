@@ -1,6 +1,9 @@
 ******************************************
 README and install instructions for 
-McStas and McXtrace on Mac OS X
+McStas and McXtrace on Mac OS X.
+
+OS X versions 10.9-10.12 fully supported,
+earlier ones only limited support...
 ******************************************
 
 Contents of this folder:
@@ -14,7 +17,9 @@ Contents of this folder:
 
 4) Run the Check-PY-dependencies.command script to check for / install Python tool dependencies
    !! MANDATORY to run before attempting to run the .app that you moved to /Applications !!
-   - Will check if Xcode is installed, otherwise help you install it
+   - Will check if Xcode is installed, otherwise help you install it (THIS MAY FAIL on old versions
+     e.g. Mountain Lion and older  - please manually install Xcode and Xcode commandline tools on
+     such systems!!)
    - Will ask you to take ownership of /usr/local
    - Will ask you to configure the firewall to allow simple usage of openmpi
 
