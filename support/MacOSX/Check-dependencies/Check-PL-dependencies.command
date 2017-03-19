@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 echo
 echo Locating newest McCode package in /Applications/...
 echo
@@ -22,8 +21,8 @@ fi
 
 # Check if Xcode commandline tools is installed
 
-# xcode-select -p to check, otherwise
-xcode-select -p
+# xcode-select --print-path to check, otherwise
+xcode-select --print-path
 rc=$?; 
 if [[ $rc != 0 ]]; 
 then 
