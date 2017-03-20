@@ -221,6 +221,8 @@ class McStas:
                 mpi_flags = ['-np', str(self.options.mpi)]
             else:
                 mpi_flags = []
+            if self.options.machines:
+                mpi_flags = mpi_flags + ['-machinefile', self.options.machines]
             args = mpi_flags + [self.binpath] + args
         return Process(binpath).run(args, pipe=pipe)
 

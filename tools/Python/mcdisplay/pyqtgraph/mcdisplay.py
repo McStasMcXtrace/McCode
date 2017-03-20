@@ -82,8 +82,7 @@ def plot_1d_tof_rays(instr, rays, plt):
             pvt_lst = g.get_transformed_pos_vel_t_lst()
             t = t + [pvt[2] for pvt in pvt_lst]
             z = z + [pvt[0].z for pvt in pvt_lst]
-                
-        plt.plot(t, z, symbol='o', symbolSize=7, pen=pg.mkPen(color=(255, 255, 255)))
+        plt.plot(t, z, symbol='o', symbolSize=7, pen=pg.mkPen(color=(110, 110, 110)))
     
 
 def plot_2d_ray(coords, plt):

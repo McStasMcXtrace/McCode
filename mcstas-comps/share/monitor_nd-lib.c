@@ -786,7 +786,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
   /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
   if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List >= 2))
   {
-    if (Vars->Buffer_Size >= 20000 || Vars->Flag_List == 3)
+    if (Vars->Buffer_Size >= 1000000 || Vars->Flag_List == 3)
     { /* save current (possibly append) and re-use Buffer */
       Monitor_nD_Save(DEFS, Vars);
       Vars->Flag_List = 3;

@@ -45,8 +45,10 @@ Source: "dist\mcstas-tools-python-mcrun-NSIS-@VERSION@-mingw32.exe"; DestDir: "{
 Source: "dist\mcstas-tools-python-mcgui-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mccodelib-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcplot-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-matlab-mcplot-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 
 [Run]
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
@@ -63,8 +65,9 @@ Filename: "{tmp}\mcstas-tools-python-mcrun-NSIS-@VERSION@-mingw32.exe"; Paramete
 Filename: "{tmp}\mcstas-tools-python-mcgui-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mccodelib-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcplot-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-matlab-mcplot-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcdisplay-mantid-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-
