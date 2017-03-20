@@ -15,15 +15,16 @@
 /*                                                                                 */
 /*  This file can be freely used as per the terms in the LICENSE file.             */
 /*                                                                                 */
-/*  Written by Thomas Kittelmann, 2015-2016.                                       */
+/*  Written by Thomas Kittelmann, 2015-2017.                                       */
 /*                                                                                 */
 /***********************************************************************************/
 
 #define MCPL_VERSION_MAJOR 1
 #define MCPL_VERSION_MINOR 0
-#define MCPL_VERSION_PATCH 0
-#define MCPL_VERSION   10000 /* (10000*MAJOR+100*MINOR+PATCH)   */
-#define MCPL_FORMATVERSION 2 /* Format version of written files */
+#define MCPL_VERSION_PATCH 97
+#define MCPL_VERSION   10097 /* (10000*MAJOR+100*MINOR+PATCH)   */
+#define MCPL_VERSION_STR "1.0.97"
+#define MCPL_FORMATVERSION 3 /* Format version of written files */
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,8 +47,8 @@ extern "C" {
     double direction[3];    /* momentum direction (unit vector) */
     double time;            /* time-stamp [millisecond]         */
     double weight;          /* weight or intensity              */
-    int32_t pdgcode;   /* MC particle number from the Particle Data Group (2112=neutron, 22=gamma, ...)        */
-    int32_t userflags; /* User flags (if used, the file header should probably contain information about how). */
+    int32_t pdgcode;    /* MC particle number from the Particle Data Group (2112=neutron, 22=gamma, ...)        */
+    uint32_t userflags; /* User flags (if used, the file header should probably contain information about how). */
   } mcpl_particle_t;
 
 #pragma pack (pop)
@@ -73,6 +74,7 @@ extern "C" {
   void mcpl_enable_polarisation(mcpl_outfile_t);/* to write the "polarisation" info                     */
   void mcpl_enable_doubleprec(mcpl_outfile_t);/* use double precision FP numbers in storage             */
   void mcpl_enable_universal_pdgcode(mcpl_outfile_t, int32_t pdgcode);/* All particles are of the same type */
+  void mcpl_enable_universal_weight(mcpl_outfile_t, double w);/* All particles have the same weight */
 
   /* Optionally (but rarely skipped) add particles, by updating the info in */
   /* and then passing in a pointer to an mcpl_particle_t instance:          */
@@ -81,9 +83,9 @@ extern "C" {
   /* Finally, always remember to close the file: */
   void mcpl_close_outfile(mcpl_outfile_t);
 
-  /* Alternatively close with (will call mcpl_gzip_file after close): */
-  void mcpl_closeandgzip_outfile(mcpl_outfile_t);
-  int mcpl_closeandgzip_outfile_rc(mcpl_outfile_t);/*version returning non-zero on success*/
+  /* Alternatively close with (will call mcpl_gzip_file after close). */
+  /* Returns non-zero if gzipping was succesful:                      */
+  int mcpl_closeandgzip_outfile(mcpl_outfile_t);
 
   /* Convenience function which returns a pointer to a nulled-out particle
      struct which can be used to edit and pass to mcpl_add_particle. It can be
@@ -100,7 +102,7 @@ extern "C" {
 
   /* Access header data: */
   unsigned mcpl_hdr_version(mcpl_file_t);/* file format version (not the same as MCPL_VERSION) */
-  uint64_t mcpl_hdr_nparticles(mcpl_file_t);/* number of particles stored in file         */
+  uint64_t mcpl_hdr_nparticles(mcpl_file_t);/* number of particles stored in file              */
   const char* mcpl_hdr_srcname(mcpl_file_t);/* Name of the generating application              */
   unsigned mcpl_hdr_ncomments(mcpl_file_t);/* number of comments stored in file                */
   const char * mcpl_hdr_comment(mcpl_file_t, unsigned icomment);/* access i'th comment         */
@@ -113,7 +115,8 @@ extern "C" {
   int mcpl_hdr_has_doubleprec(mcpl_file_t);
   uint64_t mcpl_hdr_header_size(mcpl_file_t);/* bytes consumed by header (uncompressed) */
   int mcpl_hdr_particle_size(mcpl_file_t);/* bytes per particle (uncompressed)     */
-  int32_t mcpl_hdr_universel_pdgcode(mcpl_file_t);
+  int32_t mcpl_hdr_universal_pdgcode(mcpl_file_t);/* returns 0 in case of per-particle pdgcode */
+  double mcpl_hdr_universal_weight(mcpl_file_t);/* returns 0.0 in case of per-particle weights */
   int mcpl_hdr_little_endian(mcpl_file_t);
 
   /* Request pointer to particle at current location and skip forward to the next */
@@ -140,13 +143,22 @@ extern "C" {
   /*   nskip : index of first particle in the file to list.                          */
   void mcpl_dump(const char * file, int parts, uint64_t nskip, uint64_t nlimit);
 
-  /* Merge contents of two files by appending all particles in file2 to the list */
-  /* in file1 (thus file1 grows while file2 stays untouched). This results in an */
-  /* error unless all of their meta-data and settings are identical:             */
-  void mcpl_merge(const char * file1, const char* file2);
+  /* Merge contents of a list of files by concatenating all particle contents into a   */
+  /* new file, file_output. This results in an error unless all meta-data and settings */
+  /* in the files are identical. Also fails if file_output already exists. Note that   */
+  /* the return value is a handle to the output file which has not yet been closed:    */
+  mcpl_outfile_t mcpl_merge_files( const char* file_output,
+                                   unsigned nfiles, const char ** files);
 
-  /* Test if files could be merged: */
+  /* Test if files could be merged by mcpl_merge_files: */
   int mcpl_can_merge(const char * file1, const char* file2);
+
+  /* Similar to mcpl_merge_files, but merges two files by appending all particles in */
+  /* file2 to the list in file1 (thus file1 grows while file2 stays untouched).      */
+  /* Note that this requires similar version of the MCPL format of the two files, in */
+  /* addition to the other checks in mcpl_can_merge().                               */
+  /* Careful usage of this function can be more efficient than mcpl_merge_files.     */
+  void mcpl_merge_inplace(const char * file1, const char* file2);
 
   /* Attempt to fix number of particles in the header of a file which was never */
   /* properly closed:                                                           */
@@ -155,12 +167,12 @@ extern "C" {
   /* For easily creating a standard mcpl-tool cmdline application: */
   int mcpl_tool(int argc,char** argv);
 
-  /* Attempt to run gzip on a file (does not require MCPL_HASZLIB on unix): */
-  void mcpl_gzip_file(const char * filename);
-  int mcpl_gzip_file_rc(const char * filename);/*version returning non-zero on success*/
+  /* Attempt to run gzip on a file (does not require MCPL_HASZLIB on unix) */
+  /* Returns non-zero if gzipping was succesful.                           */
+  int mcpl_gzip_file(const char * filename);
 
   /* Convenience function which transfers all settings, blobs and comments to */
-  /* outfile. Intended to make it easy to filter files via custom C code.   */
+  /* target. Intended to make it easy to filter files via custom C code.      */
   void mcpl_transfer_metadata(mcpl_file_t source, mcpl_outfile_t target);
 
   /******************/
@@ -171,6 +183,19 @@ extern "C" {
   /* description. If no handler is set, errors will get printed to stdout and the */
   /* process terminated. An error handler should not return to the calling code.  */
   void mcpl_set_error_handler(void (*handler)(const char *));
+
+  /**********************/
+  /* Obsolete functions */
+  /**********************/
+
+  /* Functions kept for backwards compatibility. They keep working for now, but  */
+  /* usage will result in a warning printed to stdout, notifying users to update */
+  /* their code.                                                                 */
+
+  void mcpl_merge(const char *, const char*);/* Obsolete name for mcpl_merge_inplace */
+  int mcpl_gzip_file_rc(const char * filename);/* Obsolete name for mcpl_gzip_file */
+  int mcpl_closeandgzip_outfile_rc(mcpl_outfile_t);/* Obsolete name for mcpl_closeandgzip_outfile_rc */
+  int32_t mcpl_hdr_universel_pdgcode(mcpl_file_t);/* Obsolete name for mcpl_hdr_universal_pdgcode */
 
 #ifdef __cplusplus
 }

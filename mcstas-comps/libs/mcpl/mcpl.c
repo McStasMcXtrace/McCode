@@ -1,15 +1,70 @@
 
- ///////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// NOTICE: This is an automatically modified version of mcpl.c which has   //
-// been augmented by including the sources of zlib inside, eliminating the //
-// need for linking with zlib, at the expense of being more bloated.       //
-//                                                                         //
-// For licensing and documentation, please refer to pure unmodified        //
-// versions of MCPL and zlib (http://zlib.net).                            //
-//                                                                         //
- ///////////////////////////////////////////////////////////////////////////
-    
+ /////////////////////////////////////////////////////////////////////
+//                                                                   //
+// NOTICE: This is an automatically modified version of mcpl.c which //
+// has been augmented by including the sources of zlib inside, eli-  //
+// minating the need for linking with zlib, at the expense of being  //
+// more bloated.                                                     //
+//                                                                   //
+// For licensing and documentation, please refer to either the MCPL  //
+// website (https://mctools.github.io/mcpl/) or files in the full    //
+// MCPL distribution, obtainable from the same place. In particular, //
+// since some code in this file originates in the zlib library       //
+// (http://zlib.net), the zlib license applies to those parts and is //
+// repeated below.                                                   //
+//                                                                   //
+ /////////////////////////////////////////////////////////////////////
+
+
+
+//---------- the zlib license ----------//
+
+/* zlib.h -- interface of the 'zlib' general purpose compression library
+  version 1.2.8, April 28th, 2013
+
+  Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
+  Jean-loup Gailly        Mark Adler
+  jloup@gzip.org          madler@alumni.caltech.edu
+*/
+
+
+
+//---------- Automatically concatenated code follows below ----------//
+
+
+#ifdef MCPL_HEADER_INCPATH
+#  undef MCPL_HEADER_INCPATH
+#endif
+#ifndef __STDC_FORMAT_MACROS
+#  define __STDC_FORMAT_MACROS
+#endif
+#ifndef _POSIX_C_SOURCE
+#  define _POSIX_C_SOURCE 1
+#endif
+#ifndef _ISOC99_SOURCE
+#  define _ISOC99_SOURCE 1
+#endif
+#ifndef _C99_SOURCE
+#  define _C99_SOURCE 1
+#endif
+
 #ifndef MCPL_HASZLIB
 #  define MCPL_HASZLIB
 #endif
@@ -53,10 +108,19 @@
 //                                                                                 //
 //  Find more information and updates at https://mctools.github.io/mcpl/           //
 //                                                                                 //
-//  Written by Thomas Kittelmann, 2015-2016.                                       //
+//  Written by Thomas Kittelmann, 2015-2017.                                       //
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
 
+
+/////////////////////////////////////////////////////////////////////////////////////
+//  MCPL_FORMATVERSION history:                                                    //
+//                                                                                 //
+//  3: Current version. Changed packing of unit vectors from octahedral to         //
+//     the better performing "Adaptive Projection Packing".                        //
+//  2: First public release.                                                       //
+//  1: Format used during early development. No longer supported.                  //
+/////////////////////////////////////////////////////////////////////////////////////
 
 //////
 //
@@ -96,25 +160,35 @@
 //    kernels are >= 2.6.33, which unfortunately excludes slc6), and equivalent
 //    on osx. Even better would be a "move operator version".
 //
-// 6) merge(file1,file2) should support file2 being gzipped.
-//
-// 7) shave off a few bytes since the numbers in the packed unit vectors are
-//    bounded, and thus not really using the exponent(?). Signed integers would
-//    give higher precision (or allow to use fewer bits).
-//
-// 8) Consider writing .mcpl.gz files directly (through a large buffer
+// 6) Consider writing .mcpl.gz files directly (through a large buffer
 //    presumably). Or to have compressed blocks internally.
 //
-// 9) Should use unsigned char* rather than char* for buffers?
+// 7) Should use unsigned char* rather than char* for buffers?
 //
 //////
 
+//Rough platform detection (could be much more fine-grained):
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+#  define MCPL_THIS_IS_UNIX
+#endif
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+#  ifdef MCPL_THIS_IS_UNIX
+#    undef MCPL_THIS_IS_UNIX
+#  endif
+#  define MCPL_THIS_IS_MS
+#endif
+
 //Before including mcpl.h, we attempt to get PRIu64 defined in a relatively
-//robust manner:
+//robust manner by enabling feature test macros for gcc and including relevant
+//headers:
 #ifndef __STDC_FORMAT_MACROS
 #  define __STDC_FORMAT_MACROS
 #endif
+#ifndef _POSIX_C_SOURCE
+#  define _POSIX_C_SOURCE 1
+#endif
 #include <inttypes.h>
+#include <stdio.h>
 #ifndef PRIu64//bad compiler - fallback to guessing
 #  if defined(_MSC_VER) && (_MSC_VER<1900)
 #    define PRIu64 "I64u"
@@ -2489,19 +2563,19 @@ ZEXTERN int            ZEXPORTVA gzvprintf Z_ARG((gzFile file,
 #  endif
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
-
 #include <unistd.h>
-#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+#include <limits.h>
+#ifdef MCPL_THIS_IS_MS
 #  include <fcntl.h>
 #  include <io.h>
 #endif
 
 #define MCPLIMP_NPARTICLES_POS 8
+#define MCPLIMP_MAX_PARTICLE_SIZE 96
 
 int mcpl_platform_is_little_endian() {
   // return 0 for big endian, 1 for little endian.
@@ -2557,21 +2631,6 @@ void mcpl_write_string(FILE* f, const char * str, const char * errmsg)
   mcpl_write_buffer(f,n,str,errmsg);//nb: we don't write the terminating null-char
 }
 
-#pragma pack (push, 1)
-// single-precision version of particle struct
-// (without energy which is anyway stored in direction[2]):
-typedef struct {
-  float polarisation[3];
-  float position[3];
-  float direction[3];
-  float time;
-  float weight;
-  int32_t pdgcode;
-  int32_t userflags;
-} mcpl_particlesingleprec_t;
-
-#pragma pack (pop)
-
 typedef struct {
   char * filename;
   FILE * file;
@@ -2586,32 +2645,37 @@ typedef struct {
   int opt_polarisation;
   int opt_singleprec;
   int32_t opt_universalpdgcode;
+  double opt_universalweight;
   int header_notwritten;
   uint64_t nparticles;
   unsigned particle_size;
-  int particle_offset;
-  mcpl_particlesingleprec_t * psp;
   mcpl_particle_t* puser;
+  unsigned opt_signature;
+  char particle_buffer[MCPLIMP_MAX_PARTICLE_SIZE];
 } mcpl_outfileinternal_t;
 
 #define MCPLIMP_OUTFILEDECODE mcpl_outfileinternal_t * f = (mcpl_outfileinternal_t *)of.internal; assert(f)
 
-void mcpl_recalc_sizeoffset(mcpl_outfile_t of)
+void mcpl_recalc_psize(mcpl_outfile_t of)
 {
   MCPLIMP_OUTFILEDECODE;
   unsigned fp = f->opt_singleprec ? sizeof(float) : sizeof(double);
-  f->particle_offset = 3*fp;
-  f->particle_size = 8*fp+1*sizeof(int32_t);
+  f->particle_size = 7*fp;
+  if (f->opt_polarisation)
+    f->particle_size += 3*fp;
+  if (!f->opt_universalpdgcode)
+    f->particle_size += sizeof(int32_t);
+  if (!f->opt_universalweight)
+    f->particle_size += fp;
   if (f->opt_userflags)
     f->particle_size += sizeof(uint32_t);
-  if (f->opt_polarisation) {
-    f->particle_size += 3*fp;
-    f->particle_offset = 0;
-  }
-  if (f->opt_universalpdgcode)
-    f->particle_size -= sizeof(int32_t);
-  if (!f->opt_singleprec)
-    f->particle_offset += fp;//skip past initial energy field
+  assert(f->particle_size<=MCPLIMP_MAX_PARTICLE_SIZE);
+  f->opt_signature = 0
+    + 1 * f->opt_singleprec
+    + 2 * f->opt_polarisation
+    + 4 * f->opt_universalpdgcode
+    + 8 * (f->opt_universalweight?1:0)
+    + 16 * f->opt_userflags;
 }
 
 void mcpl_platform_compatibility_check() {
@@ -2620,19 +2684,30 @@ void mcpl_platform_compatibility_check() {
     return;
   first = 0;
 
+  if (CHAR_BIT!=8)
+    mcpl_error("Platform compatibility check failed (bytes are not 8 bit)");
+
   if (sizeof(float)!=4)
     mcpl_error("Platform compatibility check failed (float is not 4 bytes)");
 
   if (sizeof(double)!=8)
     mcpl_error("Platform compatibility check failed (double is not 8 bytes)");
 
+  int32_t m1_32 = -1;
+  int32_t not0_32 = ~0;
+  int64_t m1_64 = -1;
+  int64_t not0_64 = ~0;
+  if ( m1_32 != not0_32 || m1_64 != not0_64 )
+    mcpl_error("Platform compatibility check failed (integers are not two's complement)");
+
+
+  if (copysign(1.0, -0.0) != -1.0)
+    mcpl_error("Platform compatibility check failed (floating point numbers do not have signed zero)");
+
   mcpl_particle_t pd;
   if ( (char*)&(pd.userflags)-(char*)&(pd) != 12*sizeof(double)+sizeof(uint32_t) )
     mcpl_error("Platform compatibility check failed (unexpected padding in mcpl_particle_t)");
 
-  mcpl_particlesingleprec_t ps;
-  if ( (char*)&(ps.userflags)-(char*)&(ps) != 11*sizeof(float)+sizeof(uint32_t) )
-    mcpl_error("Platform compatibility check failed (unexpected padding in mcpl_particlesingleprec_t)");
 }
 
 mcpl_outfile_t mcpl_create_outfile(const char * filename)
@@ -2671,7 +2746,6 @@ mcpl_outfile_t mcpl_create_outfile(const char * filename)
   }
 
   f->hdr_srcprogname = 0;
-  f->psp = (mcpl_particlesingleprec_t*)calloc(sizeof(mcpl_particlesingleprec_t),1);
   f->ncomments = 0;
   f->comments = 0;
   f->nblobs = 0;
@@ -2682,6 +2756,7 @@ mcpl_outfile_t mcpl_create_outfile(const char * filename)
   f->opt_polarisation = 0;
   f->opt_singleprec = 1;
   f->opt_universalpdgcode = 0;
+  f->opt_universalweight = 0.0;
   f->header_notwritten = 1;
   f->nparticles = 0;
   f->file = fopen(f->filename,"wb");
@@ -2689,7 +2764,7 @@ mcpl_outfile_t mcpl_create_outfile(const char * filename)
     mcpl_error("Unable to open output file!");
 
   out.internal = f;
-  mcpl_recalc_sizeoffset(out);
+  mcpl_recalc_psize(out);
   return out;
 }
 
@@ -2730,7 +2805,8 @@ void mcpl_hdr_add_data(mcpl_outfile_t of, const char * key,
   size_t oldn = f->nblobs;
   f->nblobs += 1;
   //Check that key is unique
-  for (unsigned i =0; i<oldn; ++i) {
+  unsigned i;
+  for (i =0; i<oldn; ++i) {
     if (strcmp(f->blobkeys[i],key)==0)
       mcpl_error("mcpl_hdr_add_data got duplicate key");
   }
@@ -2765,7 +2841,7 @@ void mcpl_enable_userflags(mcpl_outfile_t of)
   if (!f->header_notwritten)
     mcpl_error("mcpl_enable_userflags called too late.");
   f->opt_userflags = 1;
-  mcpl_recalc_sizeoffset(of);
+  mcpl_recalc_psize(of);
 }
 
 void mcpl_enable_polarisation(mcpl_outfile_t of)
@@ -2776,7 +2852,7 @@ void mcpl_enable_polarisation(mcpl_outfile_t of)
   if (!f->header_notwritten)
     mcpl_error("mcpl_enable_polarisation called too late.");
   f->opt_polarisation = 1;
-  mcpl_recalc_sizeoffset(of);
+  mcpl_recalc_psize(of);
 }
 
 void mcpl_enable_doubleprec(mcpl_outfile_t of)
@@ -2787,11 +2863,7 @@ void mcpl_enable_doubleprec(mcpl_outfile_t of)
   if (!f->header_notwritten)
     mcpl_error("mcpl_enable_doubleprec called too late.");
   f->opt_singleprec = 0;
-  if (f->psp) {
-    free(f->psp);
-    f->psp = 0;
-  }
-  mcpl_recalc_sizeoffset(of);
+  mcpl_recalc_psize(of);
 }
 
 void mcpl_enable_universal_pdgcode(mcpl_outfile_t of, int32_t pdgcode)
@@ -2807,8 +2879,23 @@ void mcpl_enable_universal_pdgcode(mcpl_outfile_t of, int32_t pdgcode)
   if (!f->header_notwritten)
     mcpl_error("mcpl_enable_universal_pdgcode called too late.");
   f->opt_universalpdgcode = pdgcode;
-  mcpl_recalc_sizeoffset(of);
+  mcpl_recalc_psize(of);
+}
 
+void mcpl_enable_universal_weight(mcpl_outfile_t of, double w)
+{
+  MCPLIMP_OUTFILEDECODE;
+  if (w<=0.0||isinf(w)||isnan(w))
+    mcpl_error("mcpl_enable_universal_weight must be called with positive but finite weight.");
+  if (f->opt_universalweight) {
+    if (f->opt_universalweight!=w)
+      mcpl_error("mcpl_enable_universal_weight called multiple times");
+    return;
+  }
+  if (!f->header_notwritten)
+    mcpl_error("mcpl_enable_universal_weight called too late.");
+  f->opt_universalweight = w;
+  mcpl_recalc_psize(of);
 }
 
 void mcpl_write_header(mcpl_outfile_t of)
@@ -2849,41 +2936,49 @@ void mcpl_write_header(mcpl_outfile_t of)
   arr[4] = f->opt_singleprec;
   arr[5] = f->opt_universalpdgcode;
   arr[6] = f->particle_size;
-  arr[7] = 0;//reserved to implement particle groups
+  arr[7] = (f->opt_universalweight?1:0);
   assert(sizeof(arr)==32);
   nb = fwrite(arr, 1, sizeof(arr), f->file);
   if (nb!=sizeof(arr))
     mcpl_error(errmsg);
 
+  if (f->opt_universalweight) {
+    assert(sizeof(f->opt_universalweight)==8);
+    nb = fwrite((void*)(&(f->opt_universalweight)), 1, sizeof(f->opt_universalweight), f->file);
+    if (nb!=sizeof(f->opt_universalweight))
+      mcpl_error(errmsg);
+  }
+
   //strings:
   mcpl_write_string(f->file,f->hdr_srcprogname?f->hdr_srcprogname:"unknown",errmsg);
-  for (uint32_t i = 0; i < f->ncomments; ++i)
+  uint32_t i;
+  for (i = 0; i < f->ncomments; ++i)
     mcpl_write_string(f->file,f->comments[i],errmsg);
 
   //blob keys:
-  for (uint32_t i = 0; i < f->nblobs; ++i)
+  for (i = 0; i < f->nblobs; ++i)
     mcpl_write_string(f->file,f->blobkeys[i],errmsg);
 
   //blobs:
-  for (uint32_t i = 0; i < f->nblobs; ++i)
+  for (i = 0; i < f->nblobs; ++i)
     mcpl_write_buffer(f->file, f->bloblengths[i], f->blobs[i],errmsg);
 
   //Free up acquired memory only needed for header writing:
   free(f->hdr_srcprogname);
   f->hdr_srcprogname = 0;
   if (f->ncomments) {
-    for (uint32_t i = 0; i < f->ncomments; ++i)
+    for (i = 0; i < f->ncomments; ++i)
       free(f->comments[i]);
     free(f->comments);
     f->comments=0;
     f->ncomments=0;
   }
   if (f->nblobs) {
-    for (uint32_t i = 0; i < f->nblobs; ++i)
+    for (i = 0; i < f->nblobs; ++i)
       free(f->blobkeys[i]);
     free(f->blobkeys);
     f->blobkeys = 0;
-    for (uint32_t i = 0; i < f->nblobs; ++i)
+    for (i = 0; i < f->nblobs; ++i)
       free(f->blobs[i]);
     free(f->blobs);
     f->blobs = 0;
@@ -2894,43 +2989,84 @@ void mcpl_write_header(mcpl_outfile_t of)
   f->header_notwritten = 0;
 }
 
-void mcpl_transfer_fields_d2s(const mcpl_particle_t* pd,mcpl_particlesingleprec_t* ps)
-{
-  //transfers all fields except energy
-  ps->polarisation[0] = pd->polarisation[0];
-  ps->polarisation[1] = pd->polarisation[1];
-  ps->polarisation[2] = pd->polarisation[2];
-  ps->position[0] = pd->position[0];
-  ps->position[1] = pd->position[1];
-  ps->position[2] = pd->position[2];
-  ps->direction[0] = pd->direction[0];
-  ps->direction[1] = pd->direction[1];
-  ps->direction[2] = pd->direction[2];
-  ps->time = pd->time;
-  ps->weight = pd->weight;
-  ps->pdgcode = pd->pdgcode;
-  ps->userflags = pd->userflags;
+#ifndef INFINITY
+//Missing in ICC 12 C99 compilation:
+#  define  INFINITY (__builtin_inf())
+#endif
+
+void mcpl_unitvect_pack_adaptproj(const double* in, double* out) {
+
+  //Precise packing of unit vector into 2 floats + 1 bit using the "Adaptive
+  //Projection Packing" method (T. Kittelmann, 2017).
+  //
+  //The Adaptive Projection Packing method is a variant on the traditional projection
+  //method where one would store (x,y,sign(z)) and upon unpacking recover the
+  //magnitude of z with |z|=sqrt(1-x^2-y^2), a formula which suffers from
+  //numerical precision issues when |z| is small. In this improved version, one
+  //gets rid of the precision issues by always storing the components that are
+  //smallest in magnitude (the last one must then have a magnitude in the
+  //interval [1/sqrt(3),1] = [0.577,1.0] which is never small). This just leaves
+  //the issue of being able to recognise the coordinate choices again upon
+  //unpacking. Since all components are at most of unit magnitude, this is
+  //achieved by storing 1/z rather than z and replacing either x or y as
+  //needed (infinity when z=0). Thus, the packed data will contain:
+  //
+  //              ( 1/z,  y, sign(x) ) when |x|>|y|,|z|
+  //              ( x,  1/z, sign(y) ) when |y|>|x|,|z|
+  //              ( x,    y, sign(z) ) when |z|>|x|,|y|
+  //
+  //The unpacking code can determine which of the three scenarios is used to
+  //encode a given piece of data by checking if the first or second field is
+  //greater than unity.
+  //
+  //Note that the arrays "in" and "out" are both of dimension 3, however out[2]
+  //will contain only binary information, in the form of the sign of the
+  //component which was projected away (-1.0 or 1.0).
+  const double absx = fabs(in[0]);
+  const double absy = fabs(in[1]);
+  if ( fabs(in[2]) < fmax(absx,absy) ) {
+    const double invz = ( in[2] ? (1.0/in[2]) : INFINITY );
+    if (absx>=absy) {
+      //output (1/z,y,sign(x))
+      out[0] = invz; out[1] = in[1]; out[2] = in[0];
+    } else {
+      //output (x,1/z,sign(y))
+      out[0] = in[0]; out[1] = invz; out[2] = in[1];
+    }
+  } else {
+    //output (x,y,sign(z))
+    out[0] = in[0]; out[1] = in[1]; out[2] = in[2];
+  }
+  out[2] = copysign(1.0,out[2]);
 }
 
-void mcpl_transfer_fields_s2d(const mcpl_particlesingleprec_t* ps, mcpl_particle_t* pd)
-{
-  //transfers all fields except energy
-  pd->polarisation[0] = ps->polarisation[0];
-  pd->polarisation[1] = ps->polarisation[1];
-  pd->polarisation[2] = ps->polarisation[2];
-  pd->position[0] = ps->position[0];
-  pd->position[1] = ps->position[1];
-  pd->position[2] = ps->position[2];
-  pd->direction[0] = ps->direction[0];
-  pd->direction[1] = ps->direction[1];
-  pd->direction[2] = ps->direction[2];
-  pd->time = ps->time;
-  pd->weight = ps->weight;
-  pd->pdgcode = ps->pdgcode;
-  pd->userflags = ps->userflags;
+void mcpl_unitvect_unpack_adaptproj( const double* in, double* out ) {
+
+  //Unpacking for the "Adaptive Projection Packing" method (T. Kittelmann, 2017).
+  //See mcpl_unitvect_pack_adaptproj for more information.
+  //
+  //Note that the arrays "in" and "out" are both of dimension 3, however in[2]
+  //will contain only binary information, in the form of the sign of the
+  //component which was projected away.
+
+  assert(in[2]==1.0||in[2]==-1.0);
+  if (fabs(in[0]) > 1.0) {
+    //input is (1/z,y,sign(x))
+    out[1] = in[1]; out[2] = 1.0 / in[0];
+    out[0] = in[2] * sqrt( fmax( 0.0, 1.0 - ( in[1]*in[1] + out[2]*out[2] ) ) );
+  } else if (fabs(in[1])>1.0) {
+    //input is (x,1/z,sign(y))
+    out[0] = in[0]; out[2] = 1.0 / in[1];
+    out[1] = in[2] * sqrt( fmax ( 0.0, 1.0 - ( in[0]*in[0] + out[2]*out[2] ) ) );
+  } else {
+    //input is (x,y,sign(z))
+    out[0] = in[0]; out[1] = in[1];
+    out[2] = in[2] * sqrt( fmax( 0.0, 1.0 - ( in[0]*in[0] + in[1]*in[1] ) ) );
+  }
 }
 
-void mcpl_unitvect_pack(const double* in, double* out) {
+void mcpl_unitvect_unpack_oct(const double* in, double* out) {
+
   //Octahedral packing inspired by http://jcgt.org/published/0003/02/01/
   //
   //and:
@@ -2939,22 +3075,10 @@ void mcpl_unitvect_pack(const double* in, double* out) {
   //Proceedings of the Vision, Modeling, and Visualization Conference 2008, VMV
   //2008, Konstanz, Germany, October 8-10, 2008
   //
-  //Note that we might consider using the hemi-oct storage suggested in the
-  //first of the two above references, since we can store the sign of the z
-  //component elsewhere (like in the signbit of the kinetic energy).
+  //Note: Octahedral packing was used for the MCPL-2 format, which we are no
+  //longer writing, only reading. Thus, we only keep the unpacking function in
+  //the code.
 
-  //project unit sphere to octahedron and store x and y coords:
-  double n = 1.0 / (fabs(in[0]) + fabs(in[1]) + fabs(in[2]));
-  out[0] = in[0] * n;  out[1] = in[1] * n;
-  if (in[2] > 0.0)
-    return;
-  //For the lower hemisphere, we reflect the folds over the diagonals:
-  double tmp = out[0];
-  out[0] = ( 1.0-fabs(out[1]) ) * ( out[0]>=0.0? 1.0 : -1.0 );
-  out[1] = ( 1.0-fabs( tmp  ) ) * ( out[1]>=0.0? 1.0 : -1.0 );
-}
-
-void mcpl_unitvect_unpack(const double* in, double* out) {
   //restore z-coord of octahedron:
   out[2] = 1.0 - fabs(in[0]) - fabs(in[1]);
   if (out[2]<0) {
@@ -2987,39 +3111,74 @@ void mcpl_add_particle(mcpl_outfile_t of,const mcpl_particle_t* particle)
   if (particle->ekin<0.0)
     mcpl_error("attempting to add particle with negative kinetic energy");
 
-  //shuffle both ekin and unit vector into the three directional doubles
-  //(essentially loss-less packing!):
-  mcpl_particle_t * parnc = ((mcpl_particle_t*)particle);
-  double dir[3];
-  dir[0] = particle->direction[0];
-  dir[1] = particle->direction[1];
-  dir[2] = particle->direction[2];
-  mcpl_unitvect_pack(dir,parnc->direction);
-  //sometimes the unit vector packing->unpacking transforms z=0 into
-  //z=somethingverysmall. We (ab)use the sign bit on the kinetic energy storage
-  //to remember when z is strictly 0.
-  parnc->direction[2] = particle->ekin;
-  if (!dir[2]) {
-    parnc->direction[2] = copysign(particle->ekin,-1.0);//copysign to be sure the signbit is set also when ekin=0
-    assert(signbit(parnc->direction[2]));
-  }
+  //direction and ekin are packed into 3 doubles:
+  double pack_ekindir[3];
+  mcpl_unitvect_pack_adaptproj(particle->direction,pack_ekindir);
+  //pack_ekindir[2] is now just a sign(1.0 or -1.0), so we can store the
+  //ekin in that field as well (since it must be non-negative). We use copysign
+  //to be sure the signbit is set also if ekin=0:
+  pack_ekindir[2] = copysign(particle->ekin,pack_ekindir[2]);
 
-  if (f->opt_userflags&&f->opt_universalpdgcode)
-    ((mcpl_particle_t*)particle)->pdgcode = particle->userflags;//shuffle userflags into pdgcode field
-  size_t nb;
-  if (!f->opt_singleprec) {
-    nb = fwrite((char*)particle + f->particle_offset, 1, f->particle_size, f->file);
+  //serialise particle object to buffer:
+  unsigned ibuf = 0;
+  char * pbuf = &(f->particle_buffer[0]);
+  int i;
+  if (f->opt_singleprec) {
+    if (f->opt_polarisation) {
+      for (i=0;i<3;++i) {
+        *(float*)&pbuf[ibuf] = (float)particle->polarisation[i];
+        ibuf += sizeof(float);
+      }
+    }
+    for (i=0;i<3;++i) {
+      *(float*)&pbuf[ibuf] = (float)particle->position[i];
+      ibuf += sizeof(float);
+    }
+    for (i=0;i<3;++i) {
+      *(float*)&pbuf[ibuf] = (float)pack_ekindir[i];
+      ibuf += sizeof(float);
+    }
+    *(float*)&pbuf[ibuf] = (float)particle->time;
+    ibuf += sizeof(float);
+    if (!f->opt_universalweight) {
+      *(float*)&pbuf[ibuf] = (float)particle->weight;
+      ibuf += sizeof(float);
+    }
   } else {
-    assert(f->psp);
-    mcpl_transfer_fields_d2s(particle,f->psp);
-    nb=fwrite((char*)(f->psp) + f->particle_offset, 1, f->particle_size, f->file);
+    if (f->opt_polarisation) {
+      for (i=0;i<3;++i) {
+        *(double*)&pbuf[ibuf] = particle->polarisation[i];
+        ibuf += sizeof(double);
+      }
+    }
+    for (i=0;i<3;++i) {
+      *(double*)&pbuf[ibuf] = particle->position[i];
+      ibuf += sizeof(double);
+    }
+    for (i=0;i<3;++i) {
+      *(double*)&pbuf[ibuf] = pack_ekindir[i];
+      ibuf += sizeof(double);
+    }
+    *(double*)&pbuf[ibuf] = particle->time;
+    ibuf += sizeof(double);
+    if (!f->opt_universalweight) {
+      *(double*)&pbuf[ibuf] = particle->weight;
+      ibuf += sizeof(double);
+    }
   }
-  //shuffle back:
-  if (f->opt_userflags&&f->opt_universalpdgcode)
-    parnc->userflags = particle->pdgcode;
-  parnc->direction[0] = dir[0];
-  parnc->direction[1] = dir[1];
-  parnc->direction[2] = dir[2];
+  if (!f->opt_universalpdgcode) {
+    *(int32_t*)&pbuf[ibuf] = particle->pdgcode;
+    ibuf += sizeof(int32_t);
+  }
+  if (f->opt_userflags) {
+    *(uint32_t*)&pbuf[ibuf] = particle->userflags;
+    ibuf += sizeof(uint32_t);
+  }
+  assert(ibuf==f->particle_size);
+
+  //Write buffer to file:
+  size_t nb;
+  nb = fwrite(pbuf, 1, f->particle_size, f->file);
   if (nb!=f->particle_size)
     mcpl_error("Errors encountered while attempting to write particle data.");
 }
@@ -3062,26 +3221,33 @@ void mcpl_close_outfile(mcpl_outfile_t of)
     mcpl_update_nparticles(f->file,f->nparticles);
   fclose(f->file);
   free(f->filename);
-  free(f->psp);
   free(f->puser);
   free(f);
 }
 
 void mcpl_transfer_metadata(mcpl_file_t source, mcpl_outfile_t target)
 {
+  //Note that MCPL format version 2 and 3 have the same meta-data in the header,
+  //except of course the version number itself.
+
+  if (mcpl_hdr_little_endian(source) != mcpl_platform_is_little_endian())
+    mcpl_error("mcpl_transfer_metadata can only work on files with same endianness as current platform.");
+
   mcpl_hdr_set_srcname(target,mcpl_hdr_srcname(source));
-  for (unsigned i = 0; i < mcpl_hdr_ncomments(source); ++i)
+  unsigned i;
+  for (i = 0; i < mcpl_hdr_ncomments(source); ++i)
     mcpl_hdr_add_comment(target,mcpl_hdr_comment(source,i));
   const char** blobkeys = mcpl_hdr_blobkeys(source);
   if (blobkeys) {
     int nblobs = mcpl_hdr_nblobs(source);
     uint32_t ldata;
     const char * data;
-    for (int i = 0; i < nblobs; ++i) {
-      int res = mcpl_hdr_blob(source,blobkeys[i],&ldata,&data);
+    int ii;
+    for (ii = 0; ii < nblobs; ++ii) {
+      int res = mcpl_hdr_blob(source,blobkeys[ii],&ldata,&data);
       assert(res);//key must exist
       (void)res;
-      mcpl_hdr_add_data(target, blobkeys[i], ldata, data);
+      mcpl_hdr_add_data(target, blobkeys[ii], ldata, data);
     }
   }
   if (mcpl_hdr_has_userflags(source))
@@ -3090,18 +3256,29 @@ void mcpl_transfer_metadata(mcpl_file_t source, mcpl_outfile_t target)
     mcpl_enable_polarisation(target);
   if (mcpl_hdr_has_doubleprec(source))
     mcpl_enable_doubleprec(target);
-  int32_t updg = mcpl_hdr_universel_pdgcode(source);
+  int32_t updg = mcpl_hdr_universal_pdgcode(source);
   if (updg)
     mcpl_enable_universal_pdgcode(target,updg);
+  double uw = mcpl_hdr_universal_weight(source);
+  if (uw)
+    mcpl_enable_universal_weight(target,uw);
 }
 
 int mcpl_closeandgzip_outfile_rc(mcpl_outfile_t of)
+{
+    printf("MCPL WARNING: Usage of function mcpl_closeandgzip_outfile_rc is obsolete as"
+         " mcpl_closeandgzip_outfile now also returns the status. Please update your code"
+           " to use mcpl_closeandgzip_outfile instead.\n");
+    return mcpl_closeandgzip_outfile(of);
+}
+
+int mcpl_closeandgzip_outfile(mcpl_outfile_t of)
 {
   MCPLIMP_OUTFILEDECODE;
   char * filename = f->filename;
   f->filename = 0;//prevent free in mcpl_close_outfile
   mcpl_close_outfile(of);
-  int rc = mcpl_gzip_file_rc(filename);
+  int rc = mcpl_gzip_file(filename);
   free(filename);
   return rc;
 }
@@ -3119,6 +3296,7 @@ typedef struct {
   int opt_polarisation;
   int opt_singleprec;
   int32_t opt_universalpdgcode;
+  double opt_universalweight;
   int is_little_endian;
   uint64_t nparticles;
   uint32_t ncomments;
@@ -3128,11 +3306,11 @@ typedef struct {
   uint32_t * bloblengths;
   char ** blobs;
   unsigned particle_size;
-  int particle_offset;
   uint64_t first_particle_pos;
   uint64_t current_particle_idx;
   mcpl_particle_t* particle;
-  mcpl_particlesingleprec_t * psp;
+  unsigned opt_signature;
+  char particle_buffer[MCPLIMP_MAX_PARTICLE_SIZE];
 } mcpl_fileinternal_t;
 
 #define MCPLIMP_FILEDECODE mcpl_fileinternal_t * f = (mcpl_fileinternal_t *)ff.internal; assert(f)
@@ -3218,7 +3396,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
       mcpl_error("Unable to open file!");
   }
 
-  //First read and check magic word, format version and endianess.
+  //First read and check magic word, format version and endianness.
   unsigned char start[8];// = {'M','C','P','L','0','0','0','L'};
   size_t nb;
 #ifdef MCPL_HASZLIB
@@ -3232,7 +3410,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
   if (nb!=sizeof(start))
     mcpl_error("Error while reading first bytes of file!");
   f->format_version = (start[4]-'0')*100 + (start[5]-'0')*10 + (start[6]-'0');
-  if (f->format_version!=2)
+  if (f->format_version!=2&&f->format_version!=3)
     mcpl_error("File is in an unsupported MCPL version!");
   f->is_little_endian = mcpl_platform_is_little_endian();
   if (start[7]!=(f->is_little_endian?'L':'B'))
@@ -3260,7 +3438,6 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
   else
 #endif
     nb=fread(arr, 1, sizeof(arr), f->file);
-  assert(nb==sizeof(arr));
   if (nb!=sizeof(arr))
     mcpl_error(errmsg);
 
@@ -3270,18 +3447,34 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
   f->opt_polarisation = arr[3];
   f->opt_singleprec = arr[4];
   f->opt_universalpdgcode = arr[5];
-  f->particle_size = arr[6];
-  if (arr[7]!=0)
-    mcpl_error("Reading error: reserved word is mysteriously non-zero.");
+  f->particle_size = arr[6];//We could check consistency here with the calculated value.
+  assert(f->particle_size<=MCPLIMP_MAX_PARTICLE_SIZE);
 
-  f->particle_offset = f->opt_polarisation ? 0 : 3*(f->opt_singleprec?sizeof(float):sizeof(double));
-  if (!f->opt_singleprec)
-    f->particle_offset += sizeof(double);//skip past initial energy field
+  if (arr[7]) {
+    //file has universal weight
+#ifdef MCPL_HASZLIB
+    if (f->filegz)
+      nb = gzread(f->filegz, (void*)&(f->opt_universalweight), sizeof(f->opt_universalweight));
+    else
+#endif
+      nb=fread((void*)&(f->opt_universalweight), 1, sizeof(f->opt_universalweight), f->file);
+    assert(nb==sizeof(f->opt_universalweight));
+    if (nb!=sizeof(f->opt_universalweight))
+      mcpl_error(errmsg);
+  }
+
+  f->opt_signature = 0
+    + 1 * f->opt_singleprec
+    + 2 * f->opt_polarisation
+    + 4 * f->opt_universalpdgcode
+    + 8 * (f->opt_universalweight?1:0)
+    + 16 * f->opt_userflags;
 
   //Then some strings:
   mcpl_read_string(f,&f->hdr_srcprogname,errmsg);
   f->comments = f->ncomments ? (char **)calloc(f->ncomments,sizeof(char*)) : 0;
-  for (uint32_t i = 0; i < f->ncomments; ++i)
+  uint32_t i;
+  for (i = 0; i < f->ncomments; ++i)
     mcpl_read_string(f,&(f->comments[i]),errmsg);
 
   f->blobkeys = 0;
@@ -3291,13 +3484,12 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
     f->blobs = (char **)calloc(f->nblobs,sizeof(char*));
     f->blobkeys = (char **)calloc(f->nblobs,sizeof(char*));
     f->bloblengths = (uint32_t *)calloc(f->nblobs,sizeof(uint32_t));
-    for (uint32_t i =0; i < f->nblobs; ++i)
+    for (i =0; i < f->nblobs; ++i)
       mcpl_read_string(f,&(f->blobkeys[i]),errmsg);
-    for (uint32_t i =0; i < f->nblobs; ++i)
+    for (i =0; i < f->nblobs; ++i)
       mcpl_read_buffer(f, &(f->bloblengths[i]), &(f->blobs[i]), errmsg);
   }
   f->particle = (mcpl_particle_t*)calloc(sizeof(mcpl_particle_t),1);
-  f->psp = f->opt_singleprec ? (mcpl_particlesingleprec_t*)calloc(sizeof(mcpl_particlesingleprec_t),1) : 0;
 
   //At first event now:
   f->current_particle_idx = 0;
@@ -3395,18 +3587,18 @@ void mcpl_close_file(mcpl_file_t ff)
   MCPLIMP_FILEDECODE;
 
   free(f->hdr_srcprogname);
-  for (uint32_t i = 0; i < f->ncomments; ++i)
+  uint32_t i;
+  for (i = 0; i < f->ncomments; ++i)
     free(f->comments[i]);
   free(f->comments);
-  for (uint32_t i = 0; i < f->nblobs; ++i)
+  for (i = 0; i < f->nblobs; ++i)
     free(f->blobkeys[i]);
-  for (uint32_t i = 0; i < f->nblobs; ++i)
+  for (i = 0; i < f->nblobs; ++i)
     free(f->blobs[i]);
   free(f->blobkeys);
   free(f->blobs);
   free(f->bloblengths);
   free(f->particle);
-  free(f->psp);
 #ifdef MCPL_HASZLIB
   if (f->filegz)
     gzclose(f->filegz);
@@ -3459,7 +3651,8 @@ int mcpl_hdr_blob(mcpl_file_t ff, const char* key,
                   uint32_t* ldata, const char ** data)
 {
   MCPLIMP_FILEDECODE;
-  for (uint32_t i = 0; i < f->nblobs; ++i) {
+  uint32_t i;
+  for (i = 0; i < f->nblobs; ++i) {
     if (strcmp(f->blobkeys[i],key)==0) {
       *data = f->blobs[i];
       *ldata = f->bloblengths[i];
@@ -3499,55 +3692,123 @@ const mcpl_particle_t* mcpl_read(mcpl_file_t ff)
 {
   MCPLIMP_FILEDECODE;
   f->current_particle_idx += 1;
-  if (f->current_particle_idx >= f->nparticles+1)
+  if ( f->current_particle_idx > f->nparticles ) {
+    f->current_particle_idx = f->nparticles;//overflow guard
     return 0;
-  //read particle data (note due to size and offset, some ends of the struct
-  //might be ignored, but they were nulled out at initialisation):
+  }
 
+  //read particle data:
   size_t nb;
   unsigned lbuf = f->particle_size;
-  if (!f->opt_singleprec) {
-    char * buf = (char*)(f->particle) + f->particle_offset;
+  char * pbuf = &(f->particle_buffer[0]);
 #ifdef MCPL_HASZLIB
     if (f->filegz)
-      nb = gzread(f->filegz, buf, lbuf);
+      nb = gzread(f->filegz, pbuf, lbuf);
     else
 #endif
-      nb = fread(buf, 1, lbuf, f->file);
-  } else {
-    char * buf = (char*)(f->psp) + f->particle_offset;
-#ifdef MCPL_HASZLIB
-    if (f->filegz)
-      nb = gzread(f->filegz, buf, lbuf);
-    else
-#endif
-      nb = fread(buf, 1, lbuf, f->file);
-    mcpl_transfer_fields_s2d(f->psp,f->particle);
-  }
-  if (nb!=f->particle_size)
+      nb = fread(pbuf, 1, lbuf, f->file);
+  if (nb!=lbuf)
     mcpl_error("Errors encountered while attempting to read particle data.");
-  if (f->opt_universalpdgcode) {
-    if (f->opt_userflags)
-      f->particle->userflags=f->particle->pdgcode;//shuffle fields
-    f->particle->pdgcode=f->opt_universalpdgcode;
+
+  //Transfer to particle struct:
+  unsigned ibuf = 0;
+  mcpl_particle_t * p = f->particle;
+  double pack_ekindir[3];
+  p->weight = f->opt_universalweight;
+  int i;
+  if (f->opt_singleprec) {
+    if (f->opt_polarisation) {
+      for (i=0;i<3;++i) {
+        p->polarisation[i] = *(float*)&pbuf[ibuf];
+        ibuf += sizeof(float);
+      }
+    } else {
+      for (i=0;i<3;++i)
+        p->polarisation[i] = 0.0;
+    }
+    for (i=0;i<3;++i) {
+      p->position[i] = *(float*)&pbuf[ibuf];
+      ibuf += sizeof(float);
+    }
+    for (i=0;i<3;++i) {
+      pack_ekindir[i] = *(float*)&pbuf[ibuf];
+      ibuf += sizeof(float);
+    }
+    p->time = *(float*)&pbuf[ibuf];
+    ibuf += sizeof(float);
+    if (!p->weight) {
+      p->weight = *(float*)&pbuf[ibuf];
+      ibuf += sizeof(float);
+    }
+  } else {
+    if (f->opt_polarisation) {
+      for (i=0;i<3;++i) {
+        p->polarisation[i] = *(double*)&pbuf[ibuf];
+        ibuf += sizeof(double);
+      }
+    } else {
+      for (i=0;i<3;++i)
+        p->polarisation[i] = 0.0;
+    }
+    for (i=0;i<3;++i) {
+      p->position[i] = *(double*)&pbuf[ibuf];
+      ibuf += sizeof(double);
+    }
+    for (i=0;i<3;++i) {
+      pack_ekindir[i] = *(double*)&pbuf[ibuf];
+      ibuf += sizeof(double);
+    }
+    p->time = *(double*)&pbuf[ibuf];
+    ibuf += sizeof(double);
+    if (!p->weight) {
+      p->weight = *(double*)&pbuf[ibuf];
+      ibuf += sizeof(double);
+    }
   }
 
-  f->particle->ekin = f->particle->direction[2];
-  double packdir[2];
-  packdir[0] = f->particle->direction[0];
-  packdir[1] = f->particle->direction[1];
-  mcpl_unitvect_unpack(packdir,f->particle->direction);
-  if (signbit(f->particle->ekin)) {
-    f->particle->ekin = - f->particle->ekin;
-    f->particle->direction[2] = 0.0;
+  if (f->opt_universalpdgcode) {
+    p->pdgcode = f->opt_universalpdgcode;
+  } else {
+    p->pdgcode = *(int32_t*)&pbuf[ibuf];
+    ibuf += sizeof(int32_t);
   }
-  return f->particle;
+  if (f->opt_userflags) {
+    p->userflags = *(uint32_t*)&pbuf[ibuf];
+    ibuf += sizeof(uint32_t);
+  } else {
+    f->opt_userflags = 0;
+  }
+  assert(ibuf==lbuf);
+
+  //Unpack direction and ekin:
+
+  if (f->format_version>=3) {
+    p->ekin = fabs(pack_ekindir[2]);
+    pack_ekindir[2] = copysign(1.0,pack_ekindir[2]);
+    mcpl_unitvect_unpack_adaptproj(pack_ekindir,p->direction);
+  } else {
+    assert(f->format_version==2);
+    mcpl_unitvect_unpack_oct(pack_ekindir,p->direction);
+    p->ekin = pack_ekindir[2];
+    if (signbit(pack_ekindir[2])) {
+      p->ekin = -p->ekin;
+      p->direction[2] = 0.0;
+    }
+  }
+  return p;
 }
 
 int mcpl_skipforward(mcpl_file_t ff,uint64_t n)
 {
   MCPLIMP_FILEDECODE;
-  f->current_particle_idx += n;
+  //increment, but guard against overflows:
+  if ( n >= f->nparticles || f->current_particle_idx >= f->nparticles )
+    f->current_particle_idx = f->nparticles;
+  else
+    f->current_particle_idx += n;
+  if ( f->current_particle_idx > f->nparticles )
+    f->current_particle_idx = f->nparticles;
+
   int notEOF = f->current_particle_idx<f->nparticles;
   if (n==0)
     return notEOF;
@@ -3590,7 +3851,7 @@ int mcpl_seek(mcpl_file_t ff,uint64_t ipos)
 {
   MCPLIMP_FILEDECODE;
   int already_there = (f->current_particle_idx==ipos);
-  f->current_particle_idx = ipos;
+  f->current_particle_idx = (ipos<f->nparticles?ipos:f->nparticles);
   int notEOF = f->current_particle_idx<f->nparticles;
   if (notEOF&&!already_there) {
     int error;
@@ -3632,16 +3893,66 @@ uint64_t mcpl_hdr_header_size(mcpl_file_t ff)
   return f->first_particle_pos;
 }
 
-int mcpl_hdr_universel_pdgcode(mcpl_file_t ff)
+int mcpl_hdr_universal_pdgcode(mcpl_file_t ff)
 {
   MCPLIMP_FILEDECODE;
   return f->opt_universalpdgcode;
+}
+
+int mcpl_hdr_universel_pdgcode(mcpl_file_t ff)
+{
+  printf("MCPL WARNING: Usage of function mcpl_hdr_universel_pdgcode is obsolete as it has"
+         " been renamed to mcpl_hdr_universal_pdgcode. Please update your code.\n");
+  return mcpl_hdr_universal_pdgcode(ff);
+}
+
+double mcpl_hdr_universal_weight(mcpl_file_t ff)
+{
+  MCPLIMP_FILEDECODE;
+  return f->opt_universalweight;
 }
 
 int mcpl_hdr_little_endian(mcpl_file_t ff)
 {
   MCPLIMP_FILEDECODE;
   return f->is_little_endian;
+}
+
+void mcpl_transfer_last_read_particle(mcpl_file_t source, mcpl_outfile_t target)
+{
+  //TODO: We keep this as an internal function for now, but it would be great to
+  //have it publically available. But first, we should extend it a bit to better
+  //work when source and target have somewhat different settings. When
+  //signatures are different, we should not error but instead revert to slower code
+  //which would only error if the transfer would throw away information
+  //(e.g. polarisation or pdgcode not possible to set in output, but ok to not
+  //enable opt_userflags or double prec).
+
+  mcpl_outfileinternal_t * ft = (mcpl_outfileinternal_t *)target.internal; assert(ft);
+  mcpl_fileinternal_t * fs = (mcpl_fileinternal_t *)source.internal; assert(fs);
+
+  if (ft->opt_signature!=fs->opt_signature) {
+    mcpl_error("mcpl_transfer_last_read_particle used on files with incompatible options.");
+  }
+
+  if (fs->format_version==2) {
+    //source file is in old format with different unit vector packing. Thus, we
+    //can not avoid a repacking, but this is unavoidable when we want to keep
+    //older files as fully functioning as possible:
+    mcpl_add_particle(target,fs->particle);
+    return;
+  }
+
+  if (ft->header_notwritten)
+    mcpl_write_header(target);
+
+  assert(fs->particle_size==ft->particle_size);
+  ft->nparticles += 1;
+
+  size_t nb;
+  nb = fwrite(fs->particle_buffer, 1, fs->particle_size, ft->file);
+  if (nb!=fs->particle_size)
+    mcpl_error("Errors encountered while attempting to write particle data.");
 }
 
 void mcpl_dump_header(mcpl_file_t f)
@@ -3655,12 +3966,14 @@ void mcpl_dump_header(mcpl_file_t f)
   printf("    Source             : \"%s\"\n",mcpl_hdr_srcname(f));
   unsigned nc=mcpl_hdr_ncomments(f);
   printf("    Number of comments : %i\n",nc);
-  for (unsigned ic = 0; ic < nc; ++ic)
+  unsigned ic;
+  for (ic = 0; ic < nc; ++ic)
     printf("          -> comment %i : \"%s\"\n",ic,mcpl_hdr_comment(f,ic));
   unsigned nb = mcpl_hdr_nblobs(f);
   printf("    Number of blobs    : %i\n",nb);
   const char** blobkeys = mcpl_hdr_blobkeys(f);
-  for (uint32_t ib = 0; ib < nb; ++ib) {
+  uint32_t ib;
+  for (ib = 0; ib < nb; ++ib) {
     const char * data;
     uint32_t ldata;
     int ok = mcpl_hdr_blob(f, blobkeys[ib], &ldata, &data);
@@ -3673,9 +3986,15 @@ void mcpl_dump_header(mcpl_file_t f)
   printf("    User flags         : %s\n",(mcpl_hdr_has_userflags(f)?"yes":"no"));
   printf("    Polarisation info  : %s\n",(mcpl_hdr_has_polarisation(f)?"yes":"no"));
   printf("    Fixed part. type   : ");
-  int32_t updg = mcpl_hdr_universel_pdgcode(f);
+  int32_t updg = mcpl_hdr_universal_pdgcode(f);
   if (updg)
     printf("yes (pdgcode %li)\n",(long)updg);
+  else
+    printf("no\n");
+  printf("    Fixed part. weight : ");
+  double uw = mcpl_hdr_universal_weight(f);
+  if (uw)
+    printf("yes (weight %g)\n",uw);
   else
     printf("no\n");
   printf("    FP precision       : %s\n",(mcpl_hdr_has_doubleprec(f)?"double":"single"));
@@ -3751,23 +4070,26 @@ int mcpl_actual_can_merge(mcpl_file_t ff1, mcpl_file_t ff2)
   if (f1->first_particle_pos!=f2->first_particle_pos)
     return 0;//different header
 
+  //Note, we do not check the format_version field here, since mcpl_merge_files
+  //can actually work on files with different versions.
+
   //Very strict checking of everything except nparticles. Even order of blobs
   //and comments must be preserved (could possibly be relaxed a bit):
   if (strcmp(f1->hdr_srcprogname,f2->hdr_srcprogname)!=0) return 0;
-  if (f1->format_version!=f2->format_version) return 0;
   if (f1->opt_userflags!=f2->opt_userflags) return 0;
   if (f1->opt_polarisation!=f2->opt_polarisation) return 0;
   if (f1->opt_singleprec!=f2->opt_singleprec) return 0;
   if (f1->opt_universalpdgcode!=f2->opt_universalpdgcode) return 0;
+  if (f1->opt_universalweight!=f2->opt_universalweight) return 0;
   if (f1->is_little_endian!=f2->is_little_endian) return 0;
   if (f1->particle_size!=f2->particle_size) return 0;
-  if (f1->particle_offset!=f2->particle_offset) return 0;
   if (f1->ncomments!=f2->ncomments) return 0;
   if (f1->nblobs!=f2->nblobs) return 0;
-  for (uint32_t i = 0; i<f1->ncomments; ++i) {
+  uint32_t i;
+  for (i = 0; i<f1->ncomments; ++i) {
     if (strcmp(f1->comments[i],f2->comments[i])!=0) return 0;
   }
-  for (uint32_t i = 0; i<f1->nblobs; ++i) {
+  for (i = 0; i<f1->nblobs; ++i) {
     if (f1->bloblengths[i]!=f2->bloblengths[i]) return 0;
     if (strcmp(f1->blobkeys[i],f2->blobkeys[i])!=0) return 0;
     if (memcmp(f1->blobs[i],f2->blobs[i],f1->bloblengths[i])!=0) return 0;
@@ -3786,7 +4108,228 @@ int mcpl_can_merge(const char * file1, const char* file2)
   return can_merge;
 }
 
+#ifdef MCPL_THIS_IS_UNIX
+#  include <sys/stat.h>
+#endif
+
+int mcpl_file_certainly_exists(const char * filename)
+{
+#if defined MCPL_THIS_IS_UNIX || defined MCPL_THIS_IS_MS
+  if( access( filename, F_OK ) != -1 )
+    return 1;
+  return 0;
+#else
+  //esoteric platform without access(..). Try opening for reads:
+  FILE *fd;
+  if ((fd = fopen(filename, "r"))) {
+    fclose(fd);
+    return 1;
+  }
+  //non-existing or read access not allowed:
+  return 0;
+#endif
+}
+
+#ifdef MCPL_THIS_IS_UNIX
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#endif
+
+void mcpl_warn_duplicates(unsigned n, const char ** filenames)
+{
+  //Checks that no filenames in provided list represent the same file (the
+  //detection is not 100% certain on non-POSIX platforms). If duplicates are
+  //found, emit warning - it is assumed the function is called from
+  //mcpl_merge_xxx on a user-provided list of files.
+
+  //Since this is C, we resort to slow O(N^2) comparison for simplicity.
+
+  if (n<2)
+    return;
+
+#ifdef MCPL_THIS_IS_UNIX
+  //Bullet proof(ish) way, (st_ino,st_dev) uniquely identifies a file on a system.
+  dev_t * id_dev = (dev_t*)calloc(n*sizeof(dev_t),1);
+  ino_t * id_ino = (ino_t*)calloc(n*sizeof(ino_t),1);
+  unsigned i;
+  for (i = 0; i<n; ++i) {
+    FILE * fd = fopen(filenames[i],"rb");
+    struct stat sinfo;
+    if( !fd || fstat(fileno(fd), &sinfo) < 0) {
+      id_dev[i] = 0;
+      id_ino[i] = 0;
+    } else {
+      id_dev[i] = sinfo.st_dev;
+      id_ino[i] = sinfo.st_ino;
+    }
+    if (fd)
+      fclose(fd);
+    if (id_dev[i]==0&&id_ino[i]==0) {
+      printf("MCPL WARNING: Problems %s file (%s).\n",
+             (fd?"accessing meta data of":"opening"),filenames[i]);
+      continue;
+    }
+    unsigned j;
+    for (j = 0; j<i; ++j) {
+      if (id_dev[j]==0&&id_ino[j]==0)
+        continue;
+      if (id_ino[i]==id_ino[j] && id_dev[i]==id_dev[j]) {
+        if (strcmp(filenames[i], filenames[j]) == 0) {
+          printf("MCPL WARNING: Merging file with itself (%s).\n",
+                 filenames[i]);
+        } else {
+          printf("MCPL WARNING: Merging file with itself (%s and %s are the same file).\n",
+                 filenames[j],filenames[i]);
+        }
+      }
+    }
+  }
+  free(id_dev);
+  free(id_ino);
+#else
+  //Simple check that strings are unique. Very easy to fool obviously and could
+  //be improved with platform-dependent code to at least normalise paths before
+  //comparison.
+  unsigned i, j;
+  for (i = 0; i<n; ++i) {
+    for (j = i+1; j<n; ++j) {
+      if (strcmp(filenames[i], filenames[j]) == 0) {
+        printf("MCPL WARNING: Merging file with itself (%s).\n",
+               filenames[i]);
+      }
+    }
+  }
+#endif
+}
+
+
+//Internal function for merges which will transfer the particle data in the
+//input file into an output file handle which must already be open and ready to
+//be written to, and otherwise be associated with an MCPL file with a compatible
+//format. Note that the error messages assume the overall operation is a merge:
+void mcpl_transfer_particle_contents(FILE * fo, mcpl_file_t ffi, uint64_t nparticles)
+{
+  mcpl_fileinternal_t * fi = (mcpl_fileinternal_t *)ffi.internal; assert(fi);
+
+  if (!nparticles)
+    return;//no particles to transfer
+
+  unsigned particle_size = fi->particle_size;
+
+  //buffer for transferring up to 1000 particles at a time:
+  const unsigned npbufsize = 1000;
+  char * buf = (char*)malloc(npbufsize*particle_size);
+  uint64_t np_remaining = nparticles;
+
+  while(np_remaining) {
+    //NB: On linux > 2.6.33 we could use sendfile for more efficient in-kernel
+    //transfer of data between two files!
+    uint64_t toread = np_remaining >= npbufsize ? npbufsize : np_remaining;
+    np_remaining -= toread;
+
+    //read:
+    size_t nb;
+#ifdef MCPL_HASZLIB
+    if (fi->filegz)
+      nb = gzread(fi->filegz, buf, toread*particle_size);
+    else
+#endif
+      nb = fread(buf,1,toread*particle_size,fi->file);
+    if (nb!=toread*particle_size)
+      mcpl_error("Unexpected read-error while merging");
+
+    //write:
+    nb = fwrite(buf,1,toread*particle_size,fo);
+    if (nb!=toread*particle_size)
+      mcpl_error("Unexpected write-error while merging");
+  }
+
+  free(buf);
+}
+
+
+mcpl_outfile_t mcpl_merge_files( const char* file_output,
+                                 unsigned nfiles, const char ** files)
+{
+  mcpl_outfile_t out;
+  out.internal = 0;
+
+  if (!nfiles)
+    mcpl_error("mcpl_merge_files must be called with at least one input file");
+
+  //Check all files for compatibility before we start (for robustness, we check
+  //again when actually merging each file).
+  unsigned ifile;
+  for (ifile = 1; ifile < nfiles; ++ifile) {
+    if (!mcpl_can_merge(files[0],files[ifile]))
+      mcpl_error("Attempting to merge incompatible files.");
+  }
+
+  //Warn user if they are merging a file with itself:
+  mcpl_warn_duplicates(nfiles,files);
+
+  //Create new file:
+
+  if (mcpl_file_certainly_exists(file_output))
+    mcpl_error("requested output file of mcpl_merge_files already exists");
+
+  out = mcpl_create_outfile(file_output);
+  mcpl_outfileinternal_t * out_internal = (mcpl_outfileinternal_t *)out.internal;
+
+  mcpl_file_t f1;
+  f1.internal = 0;
+
+  int warned_oldversion = 0;
+
+  for (ifile = 0; ifile < nfiles; ++ifile) {
+    mcpl_file_t fi = mcpl_open_file(files[ifile]);
+    if (ifile==0) {
+      //Add metadata from the first file:
+      mcpl_transfer_metadata(fi, out);
+      if (out_internal->header_notwritten)
+        mcpl_write_header(out);
+      f1 = fi;
+    } else {
+      //Check file is still compatible with first file
+      if (!mcpl_actual_can_merge(f1,fi))
+        mcpl_error("Aborting merge of suddenly incompatible files.");
+    }
+
+    //Transfer particle contents:
+    if (mcpl_hdr_version(fi)==MCPL_FORMATVERSION) {
+      //Can transfer raw bytes:
+      uint64_t npi = mcpl_hdr_nparticles(fi);
+      mcpl_transfer_particle_contents(out_internal->file, fi, npi);
+      out_internal->nparticles += npi;
+    } else {
+      //Merging from older version. Transfer via public interface to re-encode
+      //particle data for latest format:
+      if (!warned_oldversion) {
+        warned_oldversion = 1;
+        printf("MCPL WARNING: Merging files from older MCPL format. Output will be in latest format.\n");
+      }
+      const mcpl_particle_t* particle;
+      while ( ( particle = mcpl_read(fi) ) )
+        mcpl_add_particle(out,particle);
+    }
+
+    if (ifile!=0)
+      mcpl_close_file(fi);
+  }
+
+  mcpl_close_file(f1);
+
+  return out;
+}
+
 void mcpl_merge(const char * file1, const char* file2)
+{
+  printf("MCPL WARNING: Usage of function mcpl_merge is obsolete as it has"
+         " been renamed to mcpl_merge_inplace. Please update your code.\n");
+  mcpl_merge_inplace(file1, file2);
+}
+
+void mcpl_merge_inplace(const char * file1, const char* file2)
 {
   mcpl_file_t ff1 = mcpl_open_file(file1);
   mcpl_file_t ff2 = mcpl_open_file(file2);
@@ -3796,20 +4339,33 @@ void mcpl_merge(const char * file1, const char* file2)
     mcpl_close_file(ff2);
     mcpl_error("Attempting to merge incompatible files");
   }
+  //Warn user if they are merging a file with itself:
+  const char * filelist[2];
+  filelist[0] = file1;
+  filelist[1] = file2;
+  mcpl_warn_duplicates(2,filelist);
 
+  //Access internals:
   mcpl_fileinternal_t * f1 = (mcpl_fileinternal_t *)ff1.internal;
   mcpl_fileinternal_t * f2 = (mcpl_fileinternal_t *)ff2.internal;
   assert(f1&&f2);
+
+  if (f1->format_version!=f2->format_version) {
+    mcpl_close_file(ff1);
+    mcpl_close_file(ff2);
+    mcpl_error("Attempting to merge incompatible files (can not mix MCPL format versions when merging inplace)");
+  }
+
+  if (f1->filegz) {
+    mcpl_close_file(ff1);
+    mcpl_close_file(ff2);
+    mcpl_error("direct modification of gzipped files is not supported.");
+  }
+
   uint64_t np1 = f1->nparticles;
   uint64_t np2 = f2->nparticles;
   if (!np2)
     return;//nothing to take from file 2.
-
-  if (f1->filegz)
-    mcpl_error("direct modification of gzipped files is not supported.");
-
-  if (f2->filegz)
-    mcpl_error("merging of gzipped files is not supported.");//TODO: file2 can be gzipped!
 
   unsigned particle_size = f1->particle_size;
   uint64_t first_particle_pos = f1->first_particle_pos;
@@ -3818,38 +4374,28 @@ void mcpl_merge(const char * file1, const char* file2)
   assert(particle_size==f2->particle_size);
   assert(first_particle_pos==f2->first_particle_pos);
 
-  //Now, close file1 and reopen in append mode:
+  //Now, close file1 and reopen a file handle in append mode:
   mcpl_close_file(ff1);
-
   FILE * f1a = fopen(file1,"rb+");
+
+  //Update file positions. Note that f2->file is already at the position for the
+  //first particle and that the seek operation on f1a correctly discards any
+  //partial entries at the end, which could be there if the file was in need of
+  //mcpl_repair:
   if (!f1a)
     mcpl_error("Unable to open file1 in update mode!");
   if (fseek( f1a, first_particle_pos + particle_size*np1, SEEK_SET ))
     mcpl_error("Unable to seek to end of file1 in update mode");
 
-  //f2->file is already at the position for the first particle.
-
-  //buffer for transferring up to 1000 particles at a time:
-  char * buf = (char*)malloc(1000*particle_size);
-  uint64_t np_remaining = np2;
-
-  while(np_remaining) {
-    //NB: On linux > 2.6.33 we could use sendfile for more efficient in-kernel
-    //transfer of data between two files!
-    uint64_t toread = np_remaining >= 1000 ? 1000 : np_remaining;
-    np_remaining -= toread;
-    size_t nb = fread(buf,1,toread*particle_size,f2->file);
-    if (nb!=toread*particle_size)
-      mcpl_error("Unexpected read-error while merging");
-    nb = fwrite(buf,1,toread*particle_size,f1a);
-    if (nb!=toread*particle_size)
-      mcpl_error("Unexpected write-error while merging");
-  }
-
-  //update number of particles in file1 + cleanup:
-  free(buf);
-  mcpl_close_file(ff2);
+  //Transfer particle contents, setting nparticles to 0 during the operation (so
+  //the file appears broken and in need of mcpl_repair in case of errors during
+  //the transfer):
+  mcpl_update_nparticles(f1a,0);
+  mcpl_transfer_particle_contents(f1a, ff2, np2);
   mcpl_update_nparticles(f1a,np1+np2);
+
+  //Finish up.
+  mcpl_close_file(ff2);
   fclose(f1a);
 }
 
@@ -3893,10 +4439,12 @@ int mcpl_tool_usage( char** argv, const char * errmsg ) {
   printf("  -bKEY           : Dump binary blob stored under KEY to standard output.\n");
   printf("\n");
   printf("Merge options:\n");
-  printf("  -m, --merge FILE1 FILE2\n");
-  printf("                    Appends the particle contents in FILE2 to the end of FILE1.\n");
-  printf("                    Note that this will fail unless FILE1 and FILE2 have compa-\n");
-  printf("                    tible headers.\n");
+  printf("  -m, --merge FILEOUT FILE1 FILE2 ... FILEN\n");
+  printf("                    Creates new FILEOUT with combined particle contents from\n");
+  printf("                    specified list of N existing and compatible files.\n");
+  printf("  -m, --merge --inplace FILE1 FILE2 ... FILEN\n");
+  printf("                    Appends the particle contents in FILE2 ... FILEN into\n");
+  printf("                    FILE1. Note that this action modifies FILE1!\n");
   printf("\n");
   printf("Extract options:\n");
   printf("  -e, --extract FILE1 FILE2\n");
@@ -3930,7 +4478,8 @@ int mcpl_str2int(const char* str, size_t len, int64_t* res)
     str += 1;
   }
   int64_t tmp = 0;
-  for (size_t i=0; i<len; ++i) {
+  size_t i;
+  for (i=0; i<len; ++i) {
     if (str[i]<'0'||str[i]>'9') {
       return 0;
     }
@@ -3945,8 +4494,9 @@ int mcpl_str2int(const char* str, size_t len, int64_t* res)
 }
 
 int mcpl_tool(int argc,char** argv) {
-  const char * filename1 = 0;
-  const char * filename2 = 0;
+
+  int nfilenames = 0;
+  char ** filenames = 0;
   const char * blobkey = 0;
   const char * pdgcode_str = 0;
   int opt_justhead = 0;
@@ -3954,11 +4504,14 @@ int mcpl_tool(int argc,char** argv) {
   int64_t opt_num_limit = -1;
   int64_t opt_num_skip = -1;
   int opt_merge = 0;
+  int opt_inplace = 0;
   int opt_extract = 0;
+  int opt_preventcomment = 0;//undocumented unoffical flag for mcpl unit tests
   int opt_repair = 0;
   int opt_version = 0;
 
-  for (int i = 1; i<argc; ++i) {
+  int i;
+  for (i = 1; i<argc; ++i) {
     char * a = argv[i];
     size_t n=strlen(a);
     if (!n)
@@ -3966,7 +4519,8 @@ int mcpl_tool(int argc,char** argv) {
     if (n>=2&&a[0]=='-'&&a[1]!='-') {
       //short options:
       int64_t * consume_digit = 0;
-      for (size_t j=1; j<n; ++j) {
+      size_t j;
+      for (j=1; j<n; ++j) {
         if (consume_digit) {
           if (a[j]<'0'||a[j]>'9')
             return mcpl_tool_usage(argv,"Bad option: expected number");
@@ -4017,7 +4571,9 @@ int mcpl_tool(int argc,char** argv) {
       const char * lo_justhead = "justhead";
       const char * lo_nohead = "nohead";
       const char * lo_merge = "merge";
+      const char * lo_inplace = "inplace";
       const char * lo_extract = "extract";
+      const char * lo_preventcomment = "preventcomment";
       const char * lo_repair = "repair";
       const char * lo_version = "version";
       //Use strstr instead of "strcmp(a,"--help")==0" to support shortened
@@ -4026,16 +4582,20 @@ int mcpl_tool(int argc,char** argv) {
       else if (strstr(lo_justhead,a)==lo_justhead) opt_justhead = 1;
       else if (strstr(lo_nohead,a)==lo_nohead) opt_nohead = 1;
       else if (strstr(lo_merge,a)==lo_merge) opt_merge = 1;
+      else if (strstr(lo_inplace,a)==lo_inplace) opt_inplace = 1;
       else if (strstr(lo_extract,a)==lo_extract) opt_extract = 1;
       else if (strstr(lo_repair,a)==lo_repair) opt_repair = 1;
       else if (strstr(lo_version,a)==lo_version) opt_version = 1;
+      else if (strstr(lo_preventcomment,a)==lo_preventcomment) opt_preventcomment = 1;
       else return mcpl_tool_usage(argv,"Unrecognised option");
     } else if (n>=1&&a[0]!='-') {
       //input file
-      if (filename2)
-        return mcpl_tool_usage(argv,"Too many arguments.");
-      if (filename1) filename2 = a;
-      else filename1 = a;
+      if (!filenames) {
+        //For code simplicity, we overallocate and never free:
+        filenames = (char **)calloc(argc,sizeof(char*));
+      }
+      filenames[nfilenames] = a;
+      ++nfilenames;
     } else {
       return mcpl_tool_usage(argv,"Bad arguments");
     }
@@ -4043,6 +4603,9 @@ int mcpl_tool(int argc,char** argv) {
 
   if ( opt_extract==0 && pdgcode_str )
     return mcpl_tool_usage(argv,"-p can only be used with --extract.");
+
+  if ( opt_merge==0 && opt_inplace!=0 )
+    return mcpl_tool_usage(argv,"--inplace can only be used with --merge.");
 
   int number_dumpopts = (opt_justhead + opt_nohead + (blobkey!=0));
   if (opt_extract==0)
@@ -4057,35 +4620,80 @@ int mcpl_tool(int argc,char** argv) {
     return mcpl_tool_usage(argv,"Do not specify other dump options with -b.");
 
   if (opt_version) {
-    if (filename1)
+    if (nfilenames)
       return mcpl_tool_usage(argv,"Unrecognised arguments for --version.");
-    printf("MCPL version %i.%i.%i\n",MCPL_VERSION_MAJOR,MCPL_VERSION_MINOR,MCPL_VERSION_PATCH);
+    printf("MCPL version " MCPL_VERSION_STR "\n");
     return 0;
   }
 
   if (opt_merge) {
-    if (!filename2)
-      return mcpl_tool_usage(argv,"Must specify two input files with --merge.");
 
-    if (!mcpl_can_merge(filename1,filename2))
-      return mcpl_tool_usage(argv,"Requested files are incompatible for merge as they have different header info.");
+    if (nfilenames<2)
+      return mcpl_tool_usage(argv,"Too few arguments for --merge.");
 
-    mcpl_merge(filename1,filename2);
+    int ifirstinfile = (opt_inplace ? 0 : 1);
+    for (i = ifirstinfile+1; i < nfilenames; ++i)
+      if (!mcpl_can_merge(filenames[ifirstinfile],filenames[i]))
+        return mcpl_tool_usage(argv,"Requested files are incompatible for merge as they have different header info.");
+
+    if (opt_inplace) {
+      for (i = ifirstinfile+1; i < nfilenames; ++i)
+        mcpl_merge_inplace(filenames[ifirstinfile],filenames[i]);
+    } else {
+      if (mcpl_file_certainly_exists(filenames[0]))
+        return mcpl_tool_usage(argv,"Requested output file already exists.");
+
+      //Disallow .gz endings unless it is .mcpl.gz, in which case we attempt to gzip automatically.
+      char * outfn = filenames[0];
+      size_t lfn = strlen(outfn);
+      int attempt_gzip = 0;
+      if( lfn > 8 && !strcmp(outfn + (lfn - 8), ".mcpl.gz")) {
+        attempt_gzip = 1;
+        outfn = (char*)malloc(lfn+1);
+        outfn[0] = '\0';
+        strcat(outfn,filenames[0]);
+        outfn[lfn-3] = '\0';
+        if (mcpl_file_certainly_exists(outfn))
+          return mcpl_tool_usage(argv,"Requested output file already exists (without .gz extension).");
+
+      } else if( lfn > 3 && !strcmp(outfn + (lfn - 3), ".gz")) {
+        return mcpl_tool_usage(argv,"Requested output file should not have .gz extension (unless it is .mcpl.gz).");
+      }
+
+      mcpl_outfile_t mf = mcpl_merge_files( outfn, nfilenames-1, (const char**)filenames + 1);
+      if (attempt_gzip) {
+        if (!mcpl_closeandgzip_outfile(mf))
+          printf("MCPL WARNING: Failed to gzip output. Non-gzipped output is found in %s\n",outfn);
+      } else {
+        mcpl_close_outfile(mf);
+      }
+      if (outfn != filenames[0])
+        free(outfn);
+    }
+
     return 0;
   }
 
   if (opt_extract) {
-    if (!filename2)
+    if (nfilenames>2)
+      return mcpl_tool_usage(argv,"Too many arguments.");
+
+    if (nfilenames!=2)
       return mcpl_tool_usage(argv,"Must specify both input and output files with --extract.");
 
-    mcpl_file_t fi = mcpl_open_file(filename1);
-    mcpl_outfile_t fo = mcpl_create_outfile(filename2);
+    if (mcpl_file_certainly_exists(filenames[1]))
+      return mcpl_tool_usage(argv,"Requested output file already exists.");
+
+    mcpl_file_t fi = mcpl_open_file(filenames[0]);
+    mcpl_outfile_t fo = mcpl_create_outfile(filenames[1]);
     mcpl_transfer_metadata(fi, fo);
     uint64_t fi_nparticles = mcpl_hdr_nparticles(fi);
 
-    char comment[1024];
-    sprintf(comment, "mcpltool: extracted particles from file with %" PRIu64 " particles",fi_nparticles);
-    mcpl_hdr_add_comment(fo,comment);
+    if (!opt_preventcomment) {
+      char comment[1024];
+      sprintf(comment, "mcpltool: extracted particles from file with %" PRIu64 " particles",fi_nparticles);
+      mcpl_hdr_add_comment(fo,comment);
+    }
 
     int32_t pdgcode_select = 0;
     if (pdgcode_str) {
@@ -4105,42 +4713,42 @@ int mcpl_tool(int argc,char** argv) {
     while ( left-- && ( particle = mcpl_read(fi) ) ) {
       if (pdgcode_select && pdgcode_select!= particle->pdgcode)
         continue;
-      mcpl_add_particle(fo,particle);
+      mcpl_transfer_last_read_particle(fi, fo);//Doing mcpl_add_particle(fo,particle) is potentially (very rarely) lossy
       ++added;
     }
 
     char *fo_filename = (char*)malloc(strlen(mcpl_outfile_filename(fo))+4);
     fo_filename[0] = '\0';
     strcat(fo_filename,mcpl_outfile_filename(fo));
-    if (mcpl_closeandgzip_outfile_rc(fo))
+    if (mcpl_closeandgzip_outfile(fo))
       strcat(fo_filename,".gz");
     mcpl_close_file(fi);
 
     printf("MCPL: Succesfully extracted %" PRIu64 " / %" PRIu64 " particles from %s into %s\n",
-           added,fi_nparticles,filename1,fo_filename);
+           added,fi_nparticles,filenames[0],fo_filename);
     free(fo_filename);
     return 0;
   }
 
-  if (filename2)
+  if (nfilenames>1)
     return mcpl_tool_usage(argv,"Too many arguments.");
 
-  if (!filename1)
+  if (!nfilenames)
     return mcpl_tool_usage(argv,"No input file specified");
 
   if (opt_repair) {
-    mcpl_repair(filename1);
+    mcpl_repair(filenames[0]);
     return 0;
   }
 
   //Dump mode:
   if (blobkey) {
-    mcpl_file_t mcplfile = mcpl_open_file(filename1);
+    mcpl_file_t mcplfile = mcpl_open_file(filenames[0]);
     uint32_t ldata;
     const char * data;
     if (!mcpl_hdr_blob(mcplfile, blobkey, &ldata, &data))
       return 1;//mcpl_tool_usage(argv,"Too many arguments.");
-#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+#ifdef MCPL_THIS_IS_MS
     setmode(STDOUT_FILENO, O_BINARY);
 #endif
     uint32_t nb = write(STDOUT_FILENO,data,ldata);
@@ -4161,19 +4769,16 @@ int mcpl_tool(int argc,char** argv) {
   int parts = 0;
   if (opt_nohead) parts=2;
   else if (opt_justhead) parts=1;
-  mcpl_dump(filename1,parts,opt_num_skip,opt_num_limit);
+  mcpl_dump(filenames[0],parts,opt_num_skip,opt_num_limit);
   return 0;
 }
 
-void mcpl_gzip_file(const char * filename)
+int mcpl_gzip_file_rc(const char * filename)
 {
-  /* for backwards compatibility, this version simply ignores the return code */
-  mcpl_gzip_file_rc(filename);
-}
-void mcpl_closeandgzip_outfile(mcpl_outfile_t of)
-{
-  /* for backwards compatibility, this version simply ignores the return code */
-  mcpl_closeandgzip_outfile_rc(of);
+  printf("MCPL WARNING: Usage of function mcpl_gzip_file_rc is obsolete as"
+         " mcpl_gzip_file now also returns the status. Please update your code"
+         " to use mcpl_gzip_file instead.\n");
+  return mcpl_gzip_file(filename);
 }
 
 #if defined(MCPL_HASZLIB) && !defined(Z_SOLO) && !defined(MCPL_NO_CUSTOM_GZIP)
@@ -4181,14 +4786,14 @@ void mcpl_closeandgzip_outfile(mcpl_outfile_t of)
 int _mcpl_custom_gzip(const char *file, const char *mode);//return 1 if successful, 0 if not
 #endif
 
-#if (defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))) && !defined(MCPL_NO_EXT_GZIP)
+#if defined MCPL_THIS_IS_UNIX && !defined(MCPL_NO_EXT_GZIP)
 //Platform is unix-like enough that we assume gzip is installed and we can
 //include posix headers.
 #  include <sys/types.h>
 #  include <sys/wait.h>
 #  include <errno.h>
 
-int mcpl_gzip_file_rc(const char * filename)
+int mcpl_gzip_file(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
   bn = bn ? bn + 1 : filename;
@@ -4228,7 +4833,7 @@ int mcpl_gzip_file_rc(const char * filename)
 //the system anyway, so we either resort to using zlib directly to gzip, or we
 //disable the feature and print a warning.
 #  ifndef MCPLIMP_HAS_CUSTOM_GZIP
-int mcpl_gzip_file_rc(const char * filename)
+int mcpl_gzip_file(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
   bn = bn ? bn + 1 : filename;
@@ -4236,7 +4841,7 @@ int mcpl_gzip_file_rc(const char * filename)
   return 0;
 }
 #  else
-int mcpl_gzip_file_rc(const char * filename)
+int mcpl_gzip_file(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
   bn = bn ? bn + 1 : filename;
@@ -4302,7 +4907,7 @@ int _mcpl_custom_gzip(const char *filename, const char *mode)
 #ifdef NAME
 #  undef NAME
 #endif
-/* START OF DUMP OF mz_compress.c*/
+/* START OF DUMP OF mz_uncompr.c*/
 #ifdef GZIP
 #  undef GZIP
 #endif
@@ -4315,8 +4920,8 @@ int _mcpl_custom_gzip(const char *filename, const char *mode)
 #ifdef DO8
 #  undef DO8
 #endif
-/* compress.c -- compress a memory buffer
- * Copyright (C) 1995-2005 Jean-loup Gailly.
+/* uncompr.c -- decompress a memory buffer
+ * Copyright (C) 1995-2003, 2010 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -4325,1525 +4930,55 @@ int _mcpl_custom_gzip(const char *filename, const char *mode)
 #define ZLIB_INTERNAL
 
 /* ===========================================================================
-     Compresses the source buffer into the destination buffer. The level
-   parameter has the same meaning as in deflateInit.  sourceLen is the byte
-   length of the source buffer. Upon entry, destLen is the total size of the
-   destination buffer, which must be at least 0.1% larger than sourceLen plus
-   12 bytes. Upon exit, destLen is the actual size of the compressed buffer.
+     Decompresses the source buffer into the destination buffer.  sourceLen is
+   the byte length of the source buffer. Upon entry, destLen is the total
+   size of the destination buffer, which must be large enough to hold the
+   entire uncompressed data. (The size of the uncompressed data must have
+   been saved previously by the compressor and transmitted to the decompressor
+   by some mechanism outside the scope of this compression library.)
+   Upon exit, destLen is the actual size of the compressed buffer.
 
-     compress2 returns Z_OK if success, Z_MEM_ERROR if there was not enough
-   memory, Z_BUF_ERROR if there was not enough room in the output buffer,
-   Z_STREAM_ERROR if the level parameter is invalid.
+     uncompress returns Z_OK if success, Z_MEM_ERROR if there was not
+   enough memory, Z_BUF_ERROR if there was not enough room in the output
+   buffer, or Z_DATA_ERROR if the input data was corrupted.
 */
-int ZEXPORT compress2 (dest, destLen, source, sourceLen, level)
+int ZEXPORT uncompress (dest, destLen, source, sourceLen)
     Bytef *dest;
     uLongf *destLen;
     const Bytef *source;
     uLong sourceLen;
-    int level;
 {
     z_stream stream;
     int err;
 
     stream.next_in = (z_const Bytef *)source;
     stream.avail_in = (uInt)sourceLen;
-#ifdef MAXSEG_64K
     /* Check for source > 64K on 16-bit machine: */
     if ((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
-#endif
+
     stream.next_out = dest;
     stream.avail_out = (uInt)*destLen;
     if ((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
 
     stream.zalloc = (alloc_func)0;
     stream.zfree = (free_func)0;
-    stream.opaque = (voidpf)0;
 
-    err = deflateInit(&stream, level);
+    err = inflateInit(&stream);
     if (err != Z_OK) return err;
 
-    err = deflate(&stream, Z_FINISH);
+    err = inflate(&stream, Z_FINISH);
     if (err != Z_STREAM_END) {
-        deflateEnd(&stream);
-        return err == Z_OK ? Z_BUF_ERROR : err;
+        inflateEnd(&stream);
+        if (err == Z_NEED_DICT || (err == Z_BUF_ERROR && stream.avail_in == 0))
+            return Z_DATA_ERROR;
+        return err;
     }
     *destLen = stream.total_out;
 
-    err = deflateEnd(&stream);
+    err = inflateEnd(&stream);
     return err;
 }
-
-/* ===========================================================================
- */
-int ZEXPORT compress (dest, destLen, source, sourceLen)
-    Bytef *dest;
-    uLongf *destLen;
-    const Bytef *source;
-    uLong sourceLen;
-{
-    return compress2(dest, destLen, source, sourceLen, Z_DEFAULT_COMPRESSION);
-}
-
-/* ===========================================================================
-     If the default memLevel or windowBits for deflateInit() is changed, then
-   this function needs to be updated.
- */
-uLong ZEXPORT compressBound (sourceLen)
-    uLong sourceLen;
-{
-    return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) +
-           (sourceLen >> 25) + 13;
-}
-/* END OF DUMP OF mz_compress.c*/
-/* START OF DUMP OF mz_gzread.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* gzread.c -- zlib functions for reading gzip files
- * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-/* START OF DUMP OF mz_gzguts.h*/
-/* gzguts.h -- zlib internal header definitions for gz* operations
- * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-#include <sys/types.h>//ADDED BY TK
-#include <unistd.h>//ADDED BY TK
-#include <fcntl.h>//ADDED BY TK
-
-#ifdef _LARGEFILE64_SOURCE
-#  ifndef _LARGEFILE_SOURCE
-#    define _LARGEFILE_SOURCE 1
-#  endif
-#  ifdef _FILE_OFFSET_BITS
-#    undef _FILE_OFFSET_BITS
-#  endif
-#endif
-
-#ifdef HAVE_HIDDEN
-#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
-#else
-#  define ZLIB_INTERNAL
-#endif
-
-#include <stdio.h>
-#ifdef STDC
-#  include <string.h>
-#  include <stdlib.h>
-#  include <limits.h>
-#endif
-#include <fcntl.h>
-
-#ifdef _WIN32
-#  include <stddef.h>
-#endif
-
-#if defined(__TURBOC__) || defined(_MSC_VER) || defined(_WIN32)
-#  include <io.h>
-#endif
-
-#ifdef WINAPI_FAMILY
-#  define open _open
-#  define read _read
-#  define write _write
-#  define close _close
-#endif
-
-#ifdef NO_DEFLATE       /* for compatibility with old definition */
-#  define NO_GZCOMPRESS
-#endif
-
-#if defined(STDC99) || (defined(__TURBOC__) && __TURBOC__ >= 0x550)
-#  ifndef HAVE_VSNPRINTF
-#    define HAVE_VSNPRINTF
-#  endif
-#endif
-
-#if defined(__CYGWIN__)
-#  ifndef HAVE_VSNPRINTF
-#    define HAVE_VSNPRINTF
-#  endif
-#endif
-
-#if defined(MSDOS) && defined(__BORLANDC__) && (BORLANDC > 0x410)
-#  ifndef HAVE_VSNPRINTF
-#    define HAVE_VSNPRINTF
-#  endif
-#endif
-
-#ifndef HAVE_VSNPRINTF
-#  ifdef MSDOS
-/* vsnprintf may exist on some MS-DOS compilers (DJGPP?),
-   but for now we just assume it doesn't. */
-#    define NO_vsnprintf
-#  endif
-#  ifdef __TURBOC__
-#    define NO_vsnprintf
-#  endif
-#  ifdef WIN32
-/* In Win32, vsnprintf is available as the "non-ANSI" _vsnprintf. */
-#    if !defined(vsnprintf) && !defined(NO_vsnprintf)
-#      if !defined(_MSC_VER) || ( defined(_MSC_VER) && _MSC_VER < 1500 )
-#         define vsnprintf _vsnprintf
-#      endif
-#    endif
-#  endif
-#  ifdef __SASC
-#    define NO_vsnprintf
-#  endif
-#  ifdef VMS
-#    define NO_vsnprintf
-#  endif
-#  ifdef __OS400__
-#    define NO_vsnprintf
-#  endif
-#  ifdef __MVS__
-#    define NO_vsnprintf
-#  endif
-#endif
-
-/* unlike snprintf (which is required in C99, yet still not supported by
-   Microsoft more than a decade later!), _snprintf does not guarantee null
-   termination of the result -- however this is only used in gzlib.c where
-   the result is assured to fit in the space provided */
-#ifdef _MSC_VER
-#  define snprintf _snprintf
-#endif
-
-#ifndef local
-#  define local static
-#endif
-/* compile with -Dlocal if your debugger can't find static symbols */
-
-/* gz* functions always use library allocation functions */
-#ifndef STDC
-  extern voidp  malloc OF((uInt size));
-  extern void   free   OF((voidpf ptr));
-#endif
-
-/* get errno and strerror definition */
-#if defined UNDER_CE
-#  include <windows.h>
-#  define zstrerror() gz_strwinerror((DWORD)GetLastError())
-#else
-#  ifndef NO_STRERROR
-#    include <errno.h>
-#    define zstrerror() strerror(errno)
-#  else
-#    define zstrerror() "stdio error (consult errno)"
-#  endif
-#endif
-
-/* provide prototypes for these when building zlib without LFS */
-#if !defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0
-    ZEXTERN gzFile ZEXPORT gzopen64 OF((const char *, const char *));
-    ZEXTERN z_off64_t ZEXPORT gzseek64 OF((gzFile, z_off64_t, int));
-    ZEXTERN z_off64_t ZEXPORT gztell64 OF((gzFile));
-    ZEXTERN z_off64_t ZEXPORT gzoffset64 OF((gzFile));
-#endif
-
-/* default memLevel */
-#if MAX_MEM_LEVEL >= 8
-#  define DEF_MEM_LEVEL 8
-#else
-#  define DEF_MEM_LEVEL  MAX_MEM_LEVEL
-#endif
-
-/* default i/o buffer size -- double this for output when reading (this and
-   twice this must be able to fit in an unsigned type) */
-#define GZBUFSIZE 8192
-
-/* gzip modes, also provide a little integrity check on the passed structure */
-#define GZ_NONE 0
-#define GZ_READ 7247
-#define GZ_WRITE 31153
-#define GZ_APPEND 1     /* mode set to GZ_WRITE after the file is opened */
-
-/* values for gz_state how */
-#define LOOK 0      /* look for a gzip header */
-#define COPY 1      /* copy input directly */
-#define GZIP 2      /* decompress a gzip stream */
-
-/* internal gzip file state data structure */
-typedef struct {
-        /* exposed contents for gzgetc() macro */
-    struct gzFile_s x;      /* "x" for exposed */
-                            /* x.have: number of bytes available at x.next */
-                            /* x.next: next output data to deliver or write */
-                            /* x.pos: current position in uncompressed data */
-        /* used for both reading and writing */
-    int mode;               /* see gzip modes above */
-    int fd;                 /* file descriptor */
-    char *path;             /* path or fd for error messages */
-    unsigned size;          /* buffer size, zero if not allocated yet */
-    unsigned want;          /* requested buffer size, default is GZBUFSIZE */
-    unsigned char *in;      /* input buffer */
-    unsigned char *out;     /* output buffer (double-sized when reading) */
-    int direct;             /* 0 if processing gzip, 1 if transparent */
-        /* just for reading */
-    int how;                /* 0: get header, 1: copy, 2: decompress */
-    z_off64_t start;        /* where the gzip data started, for rewinding */
-    int eof;                /* true if end of input file reached */
-    int past;               /* true if read requested past end */
-        /* just for writing */
-    int level;              /* compression level */
-    int strategy;           /* compression strategy */
-        /* seek request */
-    z_off64_t skip;         /* amount to skip (already rewound if backwards) */
-    int seek;               /* true if seek request pending */
-        /* error information */
-    int err;                /* error code */
-    char *msg;              /* error message */
-        /* zlib inflate or deflate stream */
-    z_stream strm;          /* stream structure in-place (not a pointer) */
-} gz_state;
-typedef gz_state FAR *gz_statep;
-
-/* shared functions */
-void ZLIB_INTERNAL gz_error OF((gz_statep, int, const char *));
-#if defined UNDER_CE
-char ZLIB_INTERNAL *gz_strwinerror OF((DWORD error));
-#endif
-
-/* GT_OFF(x), where x is an unsigned value, is true if x > maximum z_off64_t
-   value -- needed when comparing unsigned to z_off64_t, which is signed
-   (possible z_off64_t types off_t, off64_t, and long are all signed) */
-#ifdef INT_MAX
-#  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > INT_MAX)
-#else
-unsigned ZLIB_INTERNAL gz_intmax OF((void));
-#  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > gz_intmax())
-#endif
-/* END OF DUMP OF mz_gzguts.h*/
-
-/* Local functions */
-local int gz_load OF((gz_statep, unsigned char *, unsigned, unsigned *));
-local int gz_avail OF((gz_statep));
-local int gz_look OF((gz_statep));
-local int gz_decomp OF((gz_statep));
-local int gz_fetch OF((gz_statep));
-local int gz_skip OF((gz_statep, z_off64_t));
-
-/* Use read() to load a buffer -- return -1 on error, otherwise 0.  Read from
-   state->fd, and update state->eof, state->err, and state->msg as appropriate.
-   This function needs to loop on read(), since read() is not guaranteed to
-   read the number of bytes requested, depending on the type of descriptor. */
-local int gz_load(state, buf, len, have)
-    gz_statep state;
-    unsigned char *buf;
-    unsigned len;
-    unsigned *have;
-{
-    int ret;
-
-    *have = 0;
-    do {
-        ret = read(state->fd, buf + *have, len - *have);
-        if (ret <= 0)
-            break;
-        *have += ret;
-    } while (*have < len);
-    if (ret < 0) {
-        gz_error(state, Z_ERRNO, zstrerror());
-        return -1;
-    }
-    if (ret == 0)
-        state->eof = 1;
-    return 0;
-}
-
-/* Load up input buffer and set eof flag if last data loaded -- return -1 on
-   error, 0 otherwise.  Note that the eof flag is set when the end of the input
-   file is reached, even though there may be unused data in the buffer.  Once
-   that data has been used, no more attempts will be made to read the file.
-   If strm->avail_in != 0, then the current data is moved to the beginning of
-   the input buffer, and then the remainder of the buffer is loaded with the
-   available data from the input file. */
-local int gz_avail(state)
-    gz_statep state;
-{
-    unsigned got;
-    z_streamp strm = &(state->strm);
-
-    if (state->err != Z_OK && state->err != Z_BUF_ERROR)
-        return -1;
-    if (state->eof == 0) {
-        if (strm->avail_in) {       /* copy what's there to the start */
-            unsigned char *p = state->in;
-            unsigned const char *q = strm->next_in;
-            unsigned n = strm->avail_in;
-            do {
-                *p++ = *q++;
-            } while (--n);
-        }
-        if (gz_load(state, state->in + strm->avail_in,
-                    state->size - strm->avail_in, &got) == -1)
-            return -1;
-        strm->avail_in += got;
-        strm->next_in = state->in;
-    }
-    return 0;
-}
-
-/* Look for gzip header, set up for inflate or copy.  state->x.have must be 0.
-   If this is the first time in, allocate required memory.  state->how will be
-   left unchanged if there is no more input data available, will be set to COPY
-   if there is no gzip header and direct copying will be performed, or it will
-   be set to GZIP for decompression.  If direct copying, then leftover input
-   data from the input buffer will be copied to the output buffer.  In that
-   case, all further file reads will be directly to either the output buffer or
-   a user buffer.  If decompressing, the inflate state will be initialized.
-   gz_look() will return 0 on success or -1 on failure. */
-local int gz_look(state)
-    gz_statep state;
-{
-    z_streamp strm = &(state->strm);
-
-    /* allocate read buffers and inflate memory */
-    if (state->size == 0) {
-        /* allocate buffers */
-        state->in = (unsigned char *)malloc(state->want);
-        state->out = (unsigned char *)malloc(state->want << 1);
-        if (state->in == NULL || state->out == NULL) {
-            if (state->out != NULL)
-                free(state->out);
-            if (state->in != NULL)
-                free(state->in);
-            gz_error(state, Z_MEM_ERROR, "out of memory");
-            return -1;
-        }
-        state->size = state->want;
-
-        /* allocate inflate memory */
-        state->strm.zalloc = Z_NULL;
-        state->strm.zfree = Z_NULL;
-        state->strm.opaque = Z_NULL;
-        state->strm.avail_in = 0;
-        state->strm.next_in = Z_NULL;
-        if (inflateInit2(&(state->strm), 15 + 16) != Z_OK) {    /* gunzip */
-            free(state->out);
-            free(state->in);
-            state->size = 0;
-            gz_error(state, Z_MEM_ERROR, "out of memory");
-            return -1;
-        }
-    }
-
-    /* get at least the magic bytes in the input buffer */
-    if (strm->avail_in < 2) {
-        if (gz_avail(state) == -1)
-            return -1;
-        if (strm->avail_in == 0)
-            return 0;
-    }
-
-    /* look for gzip magic bytes -- if there, do gzip decoding (note: there is
-       a logical dilemma here when considering the case of a partially written
-       gzip file, to wit, if a single 31 byte is written, then we cannot tell
-       whether this is a single-byte file, or just a partially written gzip
-       file -- for here we assume that if a gzip file is being written, then
-       the header will be written in a single operation, so that reading a
-       single byte is sufficient indication that it is not a gzip file) */
-    if (strm->avail_in > 1 &&
-            strm->next_in[0] == 31 && strm->next_in[1] == 139) {
-        inflateReset(strm);
-        state->how = GZIP;
-        state->direct = 0;
-        return 0;
-    }
-
-    /* no gzip header -- if we were decoding gzip before, then this is trailing
-       garbage.  Ignore the trailing garbage and finish. */
-    if (state->direct == 0) {
-        strm->avail_in = 0;
-        state->eof = 1;
-        state->x.have = 0;
-        return 0;
-    }
-
-    /* doing raw i/o, copy any leftover input to output -- this assumes that
-       the output buffer is larger than the input buffer, which also assures
-       space for gzungetc() */
-    state->x.next = state->out;
-    if (strm->avail_in) {
-        memcpy(state->x.next, strm->next_in, strm->avail_in);
-        state->x.have = strm->avail_in;
-        strm->avail_in = 0;
-    }
-    state->how = COPY;
-    state->direct = 1;
-    return 0;
-}
-
-/* Decompress from input to the provided next_out and avail_out in the state.
-   On return, state->x.have and state->x.next point to the just decompressed
-   data.  If the gzip stream completes, state->how is reset to LOOK to look for
-   the next gzip stream or raw data, once state->x.have is depleted.  Returns 0
-   on success, -1 on failure. */
-local int gz_decomp(state)
-    gz_statep state;
-{
-    int ret = Z_OK;
-    unsigned had;
-    z_streamp strm = &(state->strm);
-
-    /* fill output buffer up to end of deflate stream */
-    had = strm->avail_out;
-    do {
-        /* get more input for inflate() */
-        if (strm->avail_in == 0 && gz_avail(state) == -1)
-            return -1;
-        if (strm->avail_in == 0) {
-            gz_error(state, Z_BUF_ERROR, "unexpected end of file");
-            break;
-        }
-
-        /* decompress and handle errors */
-        ret = inflate(strm, Z_NO_FLUSH);
-        if (ret == Z_STREAM_ERROR || ret == Z_NEED_DICT) {
-            gz_error(state, Z_STREAM_ERROR,
-                     "internal error: inflate stream corrupt");
-            return -1;
-        }
-        if (ret == Z_MEM_ERROR) {
-            gz_error(state, Z_MEM_ERROR, "out of memory");
-            return -1;
-        }
-        if (ret == Z_DATA_ERROR) {              /* deflate stream invalid */
-            gz_error(state, Z_DATA_ERROR,
-                     strm->msg == NULL ? "compressed data error" : strm->msg);
-            return -1;
-        }
-    } while (strm->avail_out && ret != Z_STREAM_END);
-
-    /* update available output */
-    state->x.have = had - strm->avail_out;
-    state->x.next = strm->next_out - state->x.have;
-
-    /* if the gzip stream completed successfully, look for another */
-    if (ret == Z_STREAM_END)
-        state->how = LOOK;
-
-    /* good decompression */
-    return 0;
-}
-
-/* Fetch data and put it in the output buffer.  Assumes state->x.have is 0.
-   Data is either copied from the input file or decompressed from the input
-   file depending on state->how.  If state->how is LOOK, then a gzip header is
-   looked for to determine whether to copy or decompress.  Returns -1 on error,
-   otherwise 0.  gz_fetch() will leave state->how as COPY or GZIP unless the
-   end of the input file has been reached and all data has been processed.  */
-local int gz_fetch(state)
-    gz_statep state;
-{
-    z_streamp strm = &(state->strm);
-
-    do {
-        switch(state->how) {
-        case LOOK:      /* -> LOOK, COPY (only if never GZIP), or GZIP */
-            if (gz_look(state) == -1)
-                return -1;
-            if (state->how == LOOK)
-                return 0;
-            break;
-        case COPY:      /* -> COPY */
-            if (gz_load(state, state->out, state->size << 1, &(state->x.have))
-                    == -1)
-                return -1;
-            state->x.next = state->out;
-            return 0;
-        case GZIP:      /* -> GZIP or LOOK (if end of gzip stream) */
-            strm->avail_out = state->size << 1;
-            strm->next_out = state->out;
-            if (gz_decomp(state) == -1)
-                return -1;
-        }
-    } while (state->x.have == 0 && (!state->eof || strm->avail_in));
-    return 0;
-}
-
-/* Skip len uncompressed bytes of output.  Return -1 on error, 0 on success. */
-local int gz_skip(state, len)
-    gz_statep state;
-    z_off64_t len;
-{
-    unsigned n;
-
-    /* skip over len bytes or reach end-of-file, whichever comes first */
-    while (len)
-        /* skip over whatever is in output buffer */
-        if (state->x.have) {
-            n = GT_OFF(state->x.have) || (z_off64_t)state->x.have > len ?
-                (unsigned)len : state->x.have;
-            state->x.have -= n;
-            state->x.next += n;
-            state->x.pos += n;
-            len -= n;
-        }
-
-        /* output buffer empty -- return if we're at the end of the input */
-        else if (state->eof && state->strm.avail_in == 0)
-            break;
-
-        /* need more data to skip -- load up output buffer */
-        else {
-            /* get more output, looking for header if required */
-            if (gz_fetch(state) == -1)
-                return -1;
-        }
-    return 0;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzread(file, buf, len)
-    gzFile file;
-    voidp buf;
-    unsigned len;
-{
-    unsigned got, n;
-    gz_statep state;
-    z_streamp strm;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    strm = &(state->strm);
-
-    /* check that we're reading and that there's no (serious) error */
-    if (state->mode != GZ_READ ||
-            (state->err != Z_OK && state->err != Z_BUF_ERROR))
-        return -1;
-
-    /* since an int is returned, make sure len fits in one, otherwise return
-       with an error (this avoids the flaw in the interface) */
-    if ((int)len < 0) {
-        gz_error(state, Z_DATA_ERROR, "requested length does not fit in int");
-        return -1;
-    }
-
-    /* if len is zero, avoid unnecessary operations */
-    if (len == 0)
-        return 0;
-
-    /* process a skip request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_skip(state, state->skip) == -1)
-            return -1;
-    }
-
-    /* get len bytes to buf, or less than len if at the end */
-    got = 0;
-    do {
-        /* first just try copying data from the output buffer */
-        if (state->x.have) {
-            n = state->x.have > len ? len : state->x.have;
-            memcpy(buf, state->x.next, n);
-            state->x.next += n;
-            state->x.have -= n;
-        }
-
-        /* output buffer empty -- return if we're at the end of the input */
-        else if (state->eof && strm->avail_in == 0) {
-            state->past = 1;        /* tried to read past end */
-            break;
-        }
-
-        /* need output data -- for small len or new stream load up our output
-           buffer */
-        else if (state->how == LOOK || len < (state->size << 1)) {
-            /* get more output, looking for header if required */
-            if (gz_fetch(state) == -1)
-                return -1;
-            continue;       /* no progress yet -- go back to copy above */
-            /* the copy above assures that we will leave with space in the
-               output buffer, allowing at least one gzungetc() to succeed */
-        }
-
-        /* large len -- read directly into user buffer */
-        else if (state->how == COPY) {      /* read directly */
-            if (gz_load(state, (unsigned char *)buf, len, &n) == -1)
-                return -1;
-        }
-
-        /* large len -- decompress directly into user buffer */
-        else {  /* state->how == GZIP */
-            strm->avail_out = len;
-            strm->next_out = (unsigned char *)buf;
-            if (gz_decomp(state) == -1)
-                return -1;
-            n = state->x.have;
-            state->x.have = 0;
-        }
-
-        /* update progress */
-        len -= n;
-        buf = (char *)buf + n;
-        got += n;
-        state->x.pos += n;
-    } while (len);
-
-    /* return number of bytes read into user buffer (will fit in int) */
-    return (int)got;
-}
-
-/* -- see zlib.h -- */
-#ifdef Z_PREFIX_SET
-#  undef z_gzgetc
-#else
-#  undef gzgetc
-#endif
-int ZEXPORT gzgetc(file)
-    gzFile file;
-{
-    int ret;
-    unsigned char buf[1];
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-
-    /* check that we're reading and that there's no (serious) error */
-    if (state->mode != GZ_READ ||
-        (state->err != Z_OK && state->err != Z_BUF_ERROR))
-        return -1;
-
-    /* try output buffer (no need to check for skip request) */
-    if (state->x.have) {
-        state->x.have--;
-        state->x.pos++;
-        return *(state->x.next)++;
-    }
-
-    /* nothing there -- try gzread() */
-    ret = gzread(file, buf, 1);
-    return ret < 1 ? -1 : buf[0];
-}
-
-int ZEXPORT gzgetc_(file)
-gzFile file;
-{
-    return gzgetc(file);
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzungetc(c, file)
-    int c;
-    gzFile file;
-{
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-
-    /* check that we're reading and that there's no (serious) error */
-    if (state->mode != GZ_READ ||
-        (state->err != Z_OK && state->err != Z_BUF_ERROR))
-        return -1;
-
-    /* process a skip request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_skip(state, state->skip) == -1)
-            return -1;
-    }
-
-    /* can't push EOF */
-    if (c < 0)
-        return -1;
-
-    /* if output buffer empty, put byte at end (allows more pushing) */
-    if (state->x.have == 0) {
-        state->x.have = 1;
-        state->x.next = state->out + (state->size << 1) - 1;
-        state->x.next[0] = c;
-        state->x.pos--;
-        state->past = 0;
-        return c;
-    }
-
-    /* if no room, give up (must have already done a gzungetc()) */
-    if (state->x.have == (state->size << 1)) {
-        gz_error(state, Z_DATA_ERROR, "out of room to push characters");
-        return -1;
-    }
-
-    /* slide output data if needed and insert byte before existing data */
-    if (state->x.next == state->out) {
-        unsigned char *src = state->out + state->x.have;
-        unsigned char *dest = state->out + (state->size << 1);
-        while (src > state->out)
-            *--dest = *--src;
-        state->x.next = dest;
-    }
-    state->x.have++;
-    state->x.next--;
-    state->x.next[0] = c;
-    state->x.pos--;
-    state->past = 0;
-    return c;
-}
-
-/* -- see zlib.h -- */
-char * ZEXPORT gzgets(file, buf, len)
-    gzFile file;
-    char *buf;
-    int len;
-{
-    unsigned left, n;
-    char *str;
-    unsigned char *eol;
-    gz_statep state;
-
-    /* check parameters and get internal structure */
-    if (file == NULL || buf == NULL || len < 1)
-        return NULL;
-    state = (gz_statep)file;
-
-    /* check that we're reading and that there's no (serious) error */
-    if (state->mode != GZ_READ ||
-        (state->err != Z_OK && state->err != Z_BUF_ERROR))
-        return NULL;
-
-    /* process a skip request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_skip(state, state->skip) == -1)
-            return NULL;
-    }
-
-    /* copy output bytes up to new line or len - 1, whichever comes first --
-       append a terminating zero to the string (we don't check for a zero in
-       the contents, let the user worry about that) */
-    str = buf;
-    left = (unsigned)len - 1;
-    if (left) do {
-        /* assure that something is in the output buffer */
-        if (state->x.have == 0 && gz_fetch(state) == -1)
-            return NULL;                /* error */
-        if (state->x.have == 0) {       /* end of file */
-            state->past = 1;            /* read past end */
-            break;                      /* return what we have */
-        }
-
-        /* look for end-of-line in current output buffer */
-        n = state->x.have > left ? left : state->x.have;
-        eol = (unsigned char *)memchr(state->x.next, '\n', n);
-        if (eol != NULL)
-            n = (unsigned)(eol - state->x.next) + 1;
-
-        /* copy through end-of-line, or remainder if not found */
-        memcpy(buf, state->x.next, n);
-        state->x.have -= n;
-        state->x.next += n;
-        state->x.pos += n;
-        left -= n;
-        buf += n;
-    } while (left && eol == NULL);
-
-    /* return terminated string, or if nothing, end of file */
-    if (buf == str)
-        return NULL;
-    buf[0] = 0;
-    return str;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzdirect(file)
-    gzFile file;
-{
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return 0;
-    state = (gz_statep)file;
-
-    /* if the state is not known, but we can find out, then do so (this is
-       mainly for right after a gzopen() or gzdopen()) */
-    if (state->mode == GZ_READ && state->how == LOOK && state->x.have == 0)
-        (void)gz_look(state);
-
-    /* return 1 if transparent, 0 if processing a gzip stream */
-    return state->direct;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzclose_r(file)
-    gzFile file;
-{
-    int ret, err;
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return Z_STREAM_ERROR;
-    state = (gz_statep)file;
-
-    /* check that we're reading */
-    if (state->mode != GZ_READ)
-        return Z_STREAM_ERROR;
-
-    /* free memory and close file */
-    if (state->size) {
-        inflateEnd(&(state->strm));
-        free(state->out);
-        free(state->in);
-    }
-    err = state->err == Z_BUF_ERROR ? Z_BUF_ERROR : Z_OK;
-    gz_error(state, Z_OK, NULL);
-    free(state->path);
-    ret = close(state->fd);
-    free(state);
-    return ret ? Z_ERRNO : err;
-}
-/* END OF DUMP OF mz_gzread.c*/
-/* START OF DUMP OF mz_gzclose.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* gzclose.c -- zlib gzclose() function
- * Copyright (C) 2004, 2010 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-
-/* gzclose() is in a separate file so that it is linked in only if it is used.
-   That way the other gzclose functions can be used instead to avoid linking in
-   unneeded compression or decompression routines. */
-int ZEXPORT gzclose(file)
-    gzFile file;
-{
-#ifndef NO_GZCOMPRESS
-    gz_statep state;
-
-    if (file == NULL)
-        return Z_STREAM_ERROR;
-    state = (gz_statep)file;
-
-    return state->mode == GZ_READ ? gzclose_r(file) : gzclose_w(file);
-#else
-    return gzclose_r(file);
-#endif
-}
-/* END OF DUMP OF mz_gzclose.c*/
-/* START OF DUMP OF mz_gzwrite.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* gzwrite.c -- zlib functions for writing gzip files
- * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-
-/* Local functions */
-local int gz_init OF((gz_statep));
-local int gz_comp OF((gz_statep, int));
-local int gz_zero OF((gz_statep, z_off64_t));
-
-/* Initialize state for writing a gzip file.  Mark initialization by setting
-   state->size to non-zero.  Return -1 on failure or 0 on success. */
-local int gz_init(state)
-    gz_statep state;
-{
-    int ret;
-    z_streamp strm = &(state->strm);
-
-    /* allocate input buffer */
-    state->in = (unsigned char *)malloc(state->want);
-    if (state->in == NULL) {
-        gz_error(state, Z_MEM_ERROR, "out of memory");
-        return -1;
-    }
-
-    /* only need output buffer and deflate state if compressing */
-    if (!state->direct) {
-        /* allocate output buffer */
-        state->out = (unsigned char *)malloc(state->want);
-        if (state->out == NULL) {
-            free(state->in);
-            gz_error(state, Z_MEM_ERROR, "out of memory");
-            return -1;
-        }
-
-        /* allocate deflate memory, set up for gzip compression */
-        strm->zalloc = Z_NULL;
-        strm->zfree = Z_NULL;
-        strm->opaque = Z_NULL;
-        ret = deflateInit2(strm, state->level, Z_DEFLATED,
-                           MAX_WBITS + 16, DEF_MEM_LEVEL, state->strategy);
-        if (ret != Z_OK) {
-            free(state->out);
-            free(state->in);
-            gz_error(state, Z_MEM_ERROR, "out of memory");
-            return -1;
-        }
-    }
-
-    /* mark state as initialized */
-    state->size = state->want;
-
-    /* initialize write buffer if compressing */
-    if (!state->direct) {
-        strm->avail_out = state->size;
-        strm->next_out = state->out;
-        state->x.next = strm->next_out;
-    }
-    return 0;
-}
-
-/* Compress whatever is at avail_in and next_in and write to the output file.
-   Return -1 if there is an error writing to the output file, otherwise 0.
-   flush is assumed to be a valid deflate() flush value.  If flush is Z_FINISH,
-   then the deflate() state is reset to start a new gzip stream.  If gz->direct
-   is true, then simply write to the output file without compressing, and
-   ignore flush. */
-local int gz_comp(state, flush)
-    gz_statep state;
-    int flush;
-{
-    int ret, got;
-    unsigned have;
-    z_streamp strm = &(state->strm);
-
-    /* allocate memory if this is the first time through */
-    if (state->size == 0 && gz_init(state) == -1)
-        return -1;
-
-    /* write directly if requested */
-    if (state->direct) {
-        got = write(state->fd, strm->next_in, strm->avail_in);
-        if (got < 0 || (unsigned)got != strm->avail_in) {
-            gz_error(state, Z_ERRNO, zstrerror());
-            return -1;
-        }
-        strm->avail_in = 0;
-        return 0;
-    }
-
-    /* run deflate() on provided input until it produces no more output */
-    ret = Z_OK;
-    do {
-        /* write out current buffer contents if full, or if flushing, but if
-           doing Z_FINISH then don't write until we get to Z_STREAM_END */
-        if (strm->avail_out == 0 || (flush != Z_NO_FLUSH &&
-            (flush != Z_FINISH || ret == Z_STREAM_END))) {
-            have = (unsigned)(strm->next_out - state->x.next);
-            if (have && ((got = write(state->fd, state->x.next, have)) < 0 ||
-                         (unsigned)got != have)) {
-                gz_error(state, Z_ERRNO, zstrerror());
-                return -1;
-            }
-            if (strm->avail_out == 0) {
-                strm->avail_out = state->size;
-                strm->next_out = state->out;
-            }
-            state->x.next = strm->next_out;
-        }
-
-        /* compress */
-        have = strm->avail_out;
-        ret = deflate(strm, flush);
-        if (ret == Z_STREAM_ERROR) {
-            gz_error(state, Z_STREAM_ERROR,
-                      "internal error: deflate stream corrupt");
-            return -1;
-        }
-        have -= strm->avail_out;
-    } while (have);
-
-    /* if that completed a deflate stream, allow another to start */
-    if (flush == Z_FINISH)
-        deflateReset(strm);
-
-    /* all done, no errors */
-    return 0;
-}
-
-/* Compress len zeros to output.  Return -1 on error, 0 on success. */
-local int gz_zero(state, len)
-    gz_statep state;
-    z_off64_t len;
-{
-    int first;
-    unsigned n;
-    z_streamp strm = &(state->strm);
-
-    /* consume whatever's left in the input buffer */
-    if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
-        return -1;
-
-    /* compress len zeros (len guaranteed > 0) */
-    first = 1;
-    while (len) {
-        n = GT_OFF(state->size) || (z_off64_t)state->size > len ?
-            (unsigned)len : state->size;
-        if (first) {
-            memset(state->in, 0, n);
-            first = 0;
-        }
-        strm->avail_in = n;
-        strm->next_in = state->in;
-        state->x.pos += n;
-        if (gz_comp(state, Z_NO_FLUSH) == -1)
-            return -1;
-        len -= n;
-    }
-    return 0;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzwrite(file, buf, len)
-    gzFile file;
-    voidpc buf;
-    unsigned len;
-{
-    unsigned put = len;
-    gz_statep state;
-    z_streamp strm;
-
-    /* get internal structure */
-    if (file == NULL)
-        return 0;
-    state = (gz_statep)file;
-    strm = &(state->strm);
-
-    /* check that we're writing and that there's no error */
-    if (state->mode != GZ_WRITE || state->err != Z_OK)
-        return 0;
-
-    /* since an int is returned, make sure len fits in one, otherwise return
-       with an error (this avoids the flaw in the interface) */
-    if ((int)len < 0) {
-        gz_error(state, Z_DATA_ERROR, "requested length does not fit in int");
-        return 0;
-    }
-
-    /* if len is zero, avoid unnecessary operations */
-    if (len == 0)
-        return 0;
-
-    /* allocate memory if this is the first time through */
-    if (state->size == 0 && gz_init(state) == -1)
-        return 0;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            return 0;
-    }
-
-    /* for small len, copy to input buffer, otherwise compress directly */
-    if (len < state->size) {
-        /* copy to input buffer, compress when full */
-        do {
-            unsigned have, copy;
-
-            if (strm->avail_in == 0)
-                strm->next_in = state->in;
-            have = (unsigned)((strm->next_in + strm->avail_in) - state->in);
-            copy = state->size - have;
-            if (copy > len)
-                copy = len;
-            memcpy(state->in + have, buf, copy);
-            strm->avail_in += copy;
-            state->x.pos += copy;
-            buf = (const char *)buf + copy;
-            len -= copy;
-            if (len && gz_comp(state, Z_NO_FLUSH) == -1)
-                return 0;
-        } while (len);
-    }
-    else {
-        /* consume whatever's left in the input buffer */
-        if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
-            return 0;
-
-        /* directly compress user buffer to file */
-        strm->avail_in = len;
-        strm->next_in = (z_const Bytef *)buf;
-        state->x.pos += len;
-        if (gz_comp(state, Z_NO_FLUSH) == -1)
-            return 0;
-    }
-
-    /* input was all buffered or compressed (put will fit in int) */
-    return (int)put;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzputc(file, c)
-    gzFile file;
-    int c;
-{
-    unsigned have;
-    unsigned char buf[1];
-    gz_statep state;
-    z_streamp strm;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    strm = &(state->strm);
-
-    /* check that we're writing and that there's no error */
-    if (state->mode != GZ_WRITE || state->err != Z_OK)
-        return -1;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            return -1;
-    }
-
-    /* try writing to input buffer for speed (state->size == 0 if buffer not
-       initialized) */
-    if (state->size) {
-        if (strm->avail_in == 0)
-            strm->next_in = state->in;
-        have = (unsigned)((strm->next_in + strm->avail_in) - state->in);
-        if (have < state->size) {
-            state->in[have] = c;
-            strm->avail_in++;
-            state->x.pos++;
-            return c & 0xff;
-        }
-    }
-
-    /* no room in buffer or not initialized, use gz_write() */
-    buf[0] = c;
-    if (gzwrite(file, buf, 1) != 1)
-        return -1;
-    return c & 0xff;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzputs(file, str)
-    gzFile file;
-    const char *str;
-{
-    int ret;
-    unsigned len;
-
-    /* write string */
-    len = (unsigned)strlen(str);
-    ret = gzwrite(file, str, len);
-    return ret == 0 && len != 0 ? -1 : ret;
-}
-
-#if defined(STDC) || defined(Z_HAVE_STDARG_H)
-#include <stdarg.h>
-
-/* -- see zlib.h -- */
-int ZEXPORTVA gzvprintf(gzFile file, const char *format, va_list va)
-{
-    int size, len;
-    gz_statep state;
-    z_streamp strm;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    strm = &(state->strm);
-
-    /* check that we're writing and that there's no error */
-    if (state->mode != GZ_WRITE || state->err != Z_OK)
-        return 0;
-
-    /* make sure we have some buffer space */
-    if (state->size == 0 && gz_init(state) == -1)
-        return 0;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            return 0;
-    }
-
-    /* consume whatever's left in the input buffer */
-    if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
-        return 0;
-
-    /* do the printf() into the input buffer, put length in len */
-    size = (int)(state->size);
-    state->in[size - 1] = 0;
-#ifdef NO_vsnprintf
-#  ifdef HAS_vsprintf_void
-    (void)vsprintf((char *)(state->in), format, va);
-    for (len = 0; len < size; len++)
-        if (state->in[len] == 0) break;
-#  else
-    len = vsprintf((char *)(state->in), format, va);
-#  endif
-#else
-#  ifdef HAS_vsnprintf_void
-    (void)vsnprintf((char *)(state->in), size, format, va);
-    len = strlen((char *)(state->in));
-#  else
-    len = vsnprintf((char *)(state->in), size, format, va);
-#  endif
-#endif
-
-    /* check that printf() results fit in buffer */
-    if (len <= 0 || len >= (int)size || state->in[size - 1] != 0)
-        return 0;
-
-    /* update buffer and position, defer compression until needed */
-    strm->avail_in = (unsigned)len;
-    strm->next_in = state->in;
-    state->x.pos += len;
-    return len;
-}
-
-int ZEXPORTVA gzprintf(gzFile file, const char *format, ...)
-{
-    va_list va;
-    int ret;
-
-    va_start(va, format);
-    ret = gzvprintf(file, format, va);
-    va_end(va);
-    return ret;
-}
-
-#else /* !STDC && !Z_HAVE_STDARG_H */
-
-/* -- see zlib.h -- */
-int ZEXPORTVA gzprintf (file, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
-                       a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
-    gzFile file;
-    const char *format;
-    int a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
-        a11, a12, a13, a14, a15, a16, a17, a18, a19, a20;
-{
-    int size, len;
-    gz_statep state;
-    z_streamp strm;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    strm = &(state->strm);
-
-    /* check that can really pass pointer in ints */
-    if (sizeof(int) != sizeof(void *))
-        return 0;
-
-    /* check that we're writing and that there's no error */
-    if (state->mode != GZ_WRITE || state->err != Z_OK)
-        return 0;
-
-    /* make sure we have some buffer space */
-    if (state->size == 0 && gz_init(state) == -1)
-        return 0;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            return 0;
-    }
-
-    /* consume whatever's left in the input buffer */
-    if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
-        return 0;
-
-    /* do the printf() into the input buffer, put length in len */
-    size = (int)(state->size);
-    state->in[size - 1] = 0;
-#ifdef NO_snprintf
-#  ifdef HAS_sprintf_void
-    sprintf((char *)(state->in), format, a1, a2, a3, a4, a5, a6, a7, a8,
-            a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
-    for (len = 0; len < size; len++)
-        if (state->in[len] == 0) break;
-#  else
-    len = sprintf((char *)(state->in), format, a1, a2, a3, a4, a5, a6, a7, a8,
-                  a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
-#  endif
-#else
-#  ifdef HAS_snprintf_void
-    snprintf((char *)(state->in), size, format, a1, a2, a3, a4, a5, a6, a7, a8,
-             a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
-    len = strlen((char *)(state->in));
-#  else
-    len = snprintf((char *)(state->in), size, format, a1, a2, a3, a4, a5, a6,
-                   a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18,
-                   a19, a20);
-#  endif
-#endif
-
-    /* check that printf() results fit in buffer */
-    if (len <= 0 || len >= (int)size || state->in[size - 1] != 0)
-        return 0;
-
-    /* update buffer and position, defer compression until needed */
-    strm->avail_in = (unsigned)len;
-    strm->next_in = state->in;
-    state->x.pos += len;
-    return len;
-}
-
-#endif
-
-/* -- see zlib.h -- */
-int ZEXPORT gzflush(file, flush)
-    gzFile file;
-    int flush;
-{
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-
-    /* check that we're writing and that there's no error */
-    if (state->mode != GZ_WRITE || state->err != Z_OK)
-        return Z_STREAM_ERROR;
-
-    /* check flush parameter */
-    if (flush < 0 || flush > Z_FINISH)
-        return Z_STREAM_ERROR;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            return -1;
-    }
-
-    /* compress remaining data with requested flush */
-    gz_comp(state, flush);
-    return state->err;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzsetparams(file, level, strategy)
-    gzFile file;
-    int level;
-    int strategy;
-{
-    gz_statep state;
-    z_streamp strm;
-
-    /* get internal structure */
-    if (file == NULL)
-        return Z_STREAM_ERROR;
-    state = (gz_statep)file;
-    strm = &(state->strm);
-
-    /* check that we're writing and that there's no error */
-    if (state->mode != GZ_WRITE || state->err != Z_OK)
-        return Z_STREAM_ERROR;
-
-    /* if no change is requested, then do nothing */
-    if (level == state->level && strategy == state->strategy)
-        return Z_OK;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            return -1;
-    }
-
-    /* change compression parameters for subsequent input */
-    if (state->size) {
-        /* flush previous input with previous parameters before changing */
-        if (strm->avail_in && gz_comp(state, Z_PARTIAL_FLUSH) == -1)
-            return state->err;
-        deflateParams(strm, level, strategy);
-    }
-    state->level = level;
-    state->strategy = strategy;
-    return Z_OK;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzclose_w(file)
-    gzFile file;
-{
-    int ret = Z_OK;
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return Z_STREAM_ERROR;
-    state = (gz_statep)file;
-
-    /* check that we're writing */
-    if (state->mode != GZ_WRITE)
-        return Z_STREAM_ERROR;
-
-    /* check for seek request */
-    if (state->seek) {
-        state->seek = 0;
-        if (gz_zero(state, state->skip) == -1)
-            ret = state->err;
-    }
-
-    /* flush, free memory, and close file */
-    if (gz_comp(state, Z_FINISH) == -1)
-        ret = state->err;
-    if (state->size) {
-        if (!state->direct) {
-            (void)deflateEnd(&(state->strm));
-            free(state->out);
-        }
-        free(state->in);
-    }
-    gz_error(state, Z_OK, NULL);
-    free(state->path);
-    if (close(state->fd) == -1)
-        ret = Z_ERRNO;
-    free(state);
-    return ret;
-}
-/* END OF DUMP OF mz_gzwrite.c*/
+/* END OF DUMP OF mz_uncompr.c*/
 /* START OF DUMP OF mz_trees.c*/
 #ifdef GZIP
 #  undef GZIP
@@ -7813,7 +6948,7 @@ local void copy_block(s, buf, len, header)
     }
 }
 /* END OF DUMP OF mz_trees.c*/
-/* START OF DUMP OF mz_uncompr.c*/
+/* START OF DUMP OF mz_inftrees.c*/
 #ifdef GZIP
 #  undef GZIP
 #endif
@@ -7826,80 +6961,8 @@ local void copy_block(s, buf, len, header)
 #ifdef DO8
 #  undef DO8
 #endif
-/* uncompr.c -- decompress a memory buffer
- * Copyright (C) 1995-2003, 2010 Jean-loup Gailly.
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-/* @(#) $Id$ */
-
-#define ZLIB_INTERNAL
-
-/* ===========================================================================
-     Decompresses the source buffer into the destination buffer.  sourceLen is
-   the byte length of the source buffer. Upon entry, destLen is the total
-   size of the destination buffer, which must be large enough to hold the
-   entire uncompressed data. (The size of the uncompressed data must have
-   been saved previously by the compressor and transmitted to the decompressor
-   by some mechanism outside the scope of this compression library.)
-   Upon exit, destLen is the actual size of the compressed buffer.
-
-     uncompress returns Z_OK if success, Z_MEM_ERROR if there was not
-   enough memory, Z_BUF_ERROR if there was not enough room in the output
-   buffer, or Z_DATA_ERROR if the input data was corrupted.
-*/
-int ZEXPORT uncompress (dest, destLen, source, sourceLen)
-    Bytef *dest;
-    uLongf *destLen;
-    const Bytef *source;
-    uLong sourceLen;
-{
-    z_stream stream;
-    int err;
-
-    stream.next_in = (z_const Bytef *)source;
-    stream.avail_in = (uInt)sourceLen;
-    /* Check for source > 64K on 16-bit machine: */
-    if ((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
-
-    stream.next_out = dest;
-    stream.avail_out = (uInt)*destLen;
-    if ((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
-
-    stream.zalloc = (alloc_func)0;
-    stream.zfree = (free_func)0;
-
-    err = inflateInit(&stream);
-    if (err != Z_OK) return err;
-
-    err = inflate(&stream, Z_FINISH);
-    if (err != Z_STREAM_END) {
-        inflateEnd(&stream);
-        if (err == Z_NEED_DICT || (err == Z_BUF_ERROR && stream.avail_in == 0))
-            return Z_DATA_ERROR;
-        return err;
-    }
-    *destLen = stream.total_out;
-
-    err = inflateEnd(&stream);
-    return err;
-}
-/* END OF DUMP OF mz_uncompr.c*/
-/* START OF DUMP OF mz_inffast.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* inffast.c -- fast decoding
- * Copyright (C) 1995-2008, 2010, 2013 Mark Adler
+/* inftrees.c -- generate Huffman trees for efficient decoding
+ * Copyright (C) 1995-2013 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -7967,6 +7030,401 @@ int ZLIB_INTERNAL inflate_table OF((codetype type, unsigned short FAR *lens,
                              unsigned codes, code FAR * FAR *table,
                              unsigned FAR *bits, unsigned short FAR *work));
 /* END OF DUMP OF mz_inftrees.h*/
+
+#define MAXBITS 15
+
+const char inflate_copyright[] =
+   " inflate 1.2.8 Copyright 1995-2013 Mark Adler ";
+/*
+  If you use the zlib library in a product, an acknowledgment is welcome
+  in the documentation of your product. If for some reason you cannot
+  include such an acknowledgment, I would appreciate that you keep this
+  copyright string in the executable of your product.
+ */
+
+/*
+   Build a set of tables to decode the provided canonical Huffman code.
+   The code lengths are lens[0..codes-1].  The result starts at *table,
+   whose indices are 0..2^bits-1.  work is a writable array of at least
+   lens shorts, which is used as a work area.  type is the type of code
+   to be generated, CODES, LENS, or DISTS.  On return, zero is success,
+   -1 is an invalid code, and +1 means that ENOUGH isn't enough.  table
+   on return points to the next available entry's address.  bits is the
+   requested root table index bits, and on return it is the actual root
+   table index bits.  It will differ if the request is greater than the
+   longest code or if it is less than the shortest code.
+ */
+int ZLIB_INTERNAL inflate_table(type, lens, codes, table, bits, work)
+codetype type;
+unsigned short FAR *lens;
+unsigned codes;
+code FAR * FAR *table;
+unsigned FAR *bits;
+unsigned short FAR *work;
+{
+    unsigned len;               /* a code's length in bits */
+    unsigned sym;               /* index of code symbols */
+    unsigned min, max;          /* minimum and maximum code lengths */
+    unsigned root;              /* number of index bits for root table */
+    unsigned curr;              /* number of index bits for current table */
+    unsigned drop;              /* code bits to drop for sub-table */
+    int left;                   /* number of prefix codes available */
+    unsigned used;              /* code entries in table used */
+    unsigned huff;              /* Huffman code */
+    unsigned incr;              /* for incrementing code, index */
+    unsigned fill;              /* index for replicating entries */
+    unsigned low;               /* low bits for current root entry */
+    unsigned mask;              /* mask for low root bits */
+    code here;                  /* table entry for duplication */
+    code FAR *next;             /* next available space in table */
+    const unsigned short FAR *base;     /* base value table to use */
+    const unsigned short FAR *extra;    /* extra bits table to use */
+    int end;                    /* use base and extra for symbol > end */
+    unsigned short count[MAXBITS+1];    /* number of codes of each length */
+    unsigned short offs[MAXBITS+1];     /* offsets in table for each length */
+    static const unsigned short lbase[31] = { /* Length codes 257..285 base */
+        3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
+        35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0};
+    static const unsigned short lext[31] = { /* Length codes 257..285 extra */
+        16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18,
+        19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78};
+    static const unsigned short dbase[32] = { /* Distance codes 0..29 base */
+        1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
+        257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
+        8193, 12289, 16385, 24577, 0, 0};
+    static const unsigned short dext[32] = { /* Distance codes 0..29 extra */
+        16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22,
+        23, 23, 24, 24, 25, 25, 26, 26, 27, 27,
+        28, 28, 29, 29, 64, 64};
+
+    /*
+       Process a set of code lengths to create a canonical Huffman code.  The
+       code lengths are lens[0..codes-1].  Each length corresponds to the
+       symbols 0..codes-1.  The Huffman code is generated by first sorting the
+       symbols by length from short to long, and retaining the symbol order
+       for codes with equal lengths.  Then the code starts with all zero bits
+       for the first code of the shortest length, and the codes are integer
+       increments for the same length, and zeros are appended as the length
+       increases.  For the deflate format, these bits are stored backwards
+       from their more natural integer increment ordering, and so when the
+       decoding tables are built in the large loop below, the integer codes
+       are incremented backwards.
+
+       This routine assumes, but does not check, that all of the entries in
+       lens[] are in the range 0..MAXBITS.  The caller must assure this.
+       1..MAXBITS is interpreted as that code length.  zero means that that
+       symbol does not occur in this code.
+
+       The codes are sorted by computing a count of codes for each length,
+       creating from that a table of starting indices for each length in the
+       sorted table, and then entering the symbols in order in the sorted
+       table.  The sorted table is work[], with that space being provided by
+       the caller.
+
+       The length counts are used for other purposes as well, i.e. finding
+       the minimum and maximum length codes, determining if there are any
+       codes at all, checking for a valid set of lengths, and looking ahead
+       at length counts to determine sub-table sizes when building the
+       decoding tables.
+     */
+
+    /* accumulate lengths for codes (assumes lens[] all in 0..MAXBITS) */
+    for (len = 0; len <= MAXBITS; len++)
+        count[len] = 0;
+    for (sym = 0; sym < codes; sym++)
+        count[lens[sym]]++;
+
+    /* bound code lengths, force root to be within code lengths */
+    root = *bits;
+    for (max = MAXBITS; max >= 1; max--)
+        if (count[max] != 0) break;
+    if (root > max) root = max;
+    if (max == 0) {                     /* no symbols to code at all */
+        here.op = (unsigned char)64;    /* invalid code marker */
+        here.bits = (unsigned char)1;
+        here.val = (unsigned short)0;
+        *(*table)++ = here;             /* make a table to force an error */
+        *(*table)++ = here;
+        *bits = 1;
+        return 0;     /* no symbols, but wait for decoding to report error */
+    }
+    for (min = 1; min < max; min++)
+        if (count[min] != 0) break;
+    if (root < min) root = min;
+
+    /* check for an over-subscribed or incomplete set of lengths */
+    left = 1;
+    for (len = 1; len <= MAXBITS; len++) {
+        left <<= 1;
+        left -= count[len];
+        if (left < 0) return -1;        /* over-subscribed */
+    }
+    if (left > 0 && (type == CODES || max != 1))
+        return -1;                      /* incomplete set */
+
+    /* generate offsets into symbol table for each length for sorting */
+    offs[1] = 0;
+    for (len = 1; len < MAXBITS; len++)
+        offs[len + 1] = offs[len] + count[len];
+
+    /* sort symbols by length, by symbol order within each length */
+    for (sym = 0; sym < codes; sym++)
+        if (lens[sym] != 0) work[offs[lens[sym]]++] = (unsigned short)sym;
+
+    /*
+       Create and fill in decoding tables.  In this loop, the table being
+       filled is at next and has curr index bits.  The code being used is huff
+       with length len.  That code is converted to an index by dropping drop
+       bits off of the bottom.  For codes where len is less than drop + curr,
+       those top drop + curr - len bits are incremented through all values to
+       fill the table with replicated entries.
+
+       root is the number of index bits for the root table.  When len exceeds
+       root, sub-tables are created pointed to by the root entry with an index
+       of the low root bits of huff.  This is saved in low to check for when a
+       new sub-table should be started.  drop is zero when the root table is
+       being filled, and drop is root when sub-tables are being filled.
+
+       When a new sub-table is needed, it is necessary to look ahead in the
+       code lengths to determine what size sub-table is needed.  The length
+       counts are used for this, and so count[] is decremented as codes are
+       entered in the tables.
+
+       used keeps track of how many table entries have been allocated from the
+       provided *table space.  It is checked for LENS and DIST tables against
+       the constants ENOUGH_LENS and ENOUGH_DISTS to guard against changes in
+       the initial root table size constants.  See the comments in inftrees.h
+       for more information.
+
+       sym increments through all symbols, and the loop terminates when
+       all codes of length max, i.e. all codes, have been processed.  This
+       routine permits incomplete codes, so another loop after this one fills
+       in the rest of the decoding tables with invalid code markers.
+     */
+
+    /* set up for code type */
+    switch (type) {
+    case CODES:
+        base = extra = work;    /* dummy value--not used */
+        end = 19;
+        break;
+    case LENS:
+        base = lbase;
+        base -= 257;
+        extra = lext;
+        extra -= 257;
+        end = 256;
+        break;
+    default:            /* DISTS */
+        base = dbase;
+        extra = dext;
+        end = -1;
+    }
+
+    /* initialize state for loop */
+    huff = 0;                   /* starting code */
+    sym = 0;                    /* starting code symbol */
+    len = min;                  /* starting code length */
+    next = *table;              /* current table to fill in */
+    curr = root;                /* current table index bits */
+    drop = 0;                   /* current bits to drop from code for index */
+    low = (unsigned)(-1);       /* trigger new sub-table when len > root */
+    used = 1U << root;          /* use root table entries */
+    mask = used - 1;            /* mask for comparing low */
+
+    /* check available table space */
+    if ((type == LENS && used > ENOUGH_LENS) ||
+        (type == DISTS && used > ENOUGH_DISTS))
+        return 1;
+
+    /* process all codes and make table entries */
+    for (;;) {
+        /* create table entry */
+        here.bits = (unsigned char)(len - drop);
+        if ((int)(work[sym]) < end) {
+            here.op = (unsigned char)0;
+            here.val = work[sym];
+        }
+        else if ((int)(work[sym]) > end) {
+            here.op = (unsigned char)(extra[work[sym]]);
+            here.val = base[work[sym]];
+        }
+        else {
+            here.op = (unsigned char)(32 + 64);         /* end of block */
+            here.val = 0;
+        }
+
+        /* replicate for those indices with low len bits equal to huff */
+        incr = 1U << (len - drop);
+        fill = 1U << curr;
+        min = fill;                 /* save offset to next table */
+        do {
+            fill -= incr;
+            next[(huff >> drop) + fill] = here;
+        } while (fill != 0);
+
+        /* backwards increment the len-bit code huff */
+        incr = 1U << (len - 1);
+        while (huff & incr)
+            incr >>= 1;
+        if (incr != 0) {
+            huff &= incr - 1;
+            huff += incr;
+        }
+        else
+            huff = 0;
+
+        /* go to next symbol, update count, len */
+        sym++;
+        if (--(count[len]) == 0) {
+            if (len == max) break;
+            len = lens[work[sym]];
+        }
+
+        /* create new sub-table if needed */
+        if (len > root && (huff & mask) != low) {
+            /* if first time, transition to sub-tables */
+            if (drop == 0)
+                drop = root;
+
+            /* increment past last table */
+            next += min;            /* here min is 1 << curr */
+
+            /* determine length of next table */
+            curr = len - drop;
+            left = (int)(1 << curr);
+            while (curr + drop < max) {
+                left -= count[curr + drop];
+                if (left <= 0) break;
+                curr++;
+                left <<= 1;
+            }
+
+            /* check for enough space */
+            used += 1U << curr;
+            if ((type == LENS && used > ENOUGH_LENS) ||
+                (type == DISTS && used > ENOUGH_DISTS))
+                return 1;
+
+            /* point entry in root table to sub-table */
+            low = huff & mask;
+            (*table)[low].op = (unsigned char)curr;
+            (*table)[low].bits = (unsigned char)root;
+            (*table)[low].val = (unsigned short)(next - *table);
+        }
+    }
+
+    /* fill in remaining table entry if code is incomplete (guaranteed to have
+       at most one remaining entry, since if the code is incomplete, the
+       maximum code length that was allowed to get this far is one bit) */
+    if (huff != 0) {
+        here.op = (unsigned char)64;            /* invalid code marker */
+        here.bits = (unsigned char)(len - drop);
+        here.val = (unsigned short)0;
+        next[huff] = here;
+    }
+
+    /* set return parameters */
+    *table += used;
+    *bits = root;
+    return 0;
+}
+/* END OF DUMP OF mz_inftrees.c*/
+/* START OF DUMP OF mz_inflate.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* inflate.c -- zlib decompression
+ * Copyright (C) 1995-2012 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+/*
+ * Change history:
+ *
+ * 1.2.beta0    24 Nov 2002
+ * - First version -- complete rewrite of inflate to simplify code, avoid
+ *   creation of window when not needed, minimize use of window when it is
+ *   needed, make inffast.c even faster, implement gzip decoding, and to
+ *   improve code readability and style over the previous zlib inflate code
+ *
+ * 1.2.beta1    25 Nov 2002
+ * - Use pointers for available input and output checking in inffast.c
+ * - Remove input and output counters in inffast.c
+ * - Change inffast.c entry and loop from avail_in >= 7 to >= 6
+ * - Remove unnecessary second byte pull from length extra in inffast.c
+ * - Unroll direct copy to three copies per loop in inffast.c
+ *
+ * 1.2.beta2    4 Dec 2002
+ * - Change external routine names to reduce potential conflicts
+ * - Correct filename to inffixed.h for fixed tables in inflate.c
+ * - Make hbuf[] unsigned char to match parameter type in inflate.c
+ * - Change strm->next_out[-state->offset] to *(strm->next_out - state->offset)
+ *   to avoid negation problem on Alphas (64 bit) in inflate.c
+ *
+ * 1.2.beta3    22 Dec 2002
+ * - Add comments on state->bits assertion in inffast.c
+ * - Add comments on op field in inftrees.h
+ * - Fix bug in reuse of allocated window after inflateReset()
+ * - Remove bit fields--back to byte structure for speed
+ * - Remove distance extra == 0 check in inflate_fast()--only helps for lengths
+ * - Change post-increments to pre-increments in inflate_fast(), PPC biased?
+ * - Add compile time option, POSTINC, to use post-increments instead (Intel?)
+ * - Make MATCH copy in inflate() much faster for when inflate_fast() not used
+ * - Use local copies of stream next and avail values, as well as local bit
+ *   buffer and bit count in inflate()--for speed when inflate_fast() not used
+ *
+ * 1.2.beta4    1 Jan 2003
+ * - Split ptr - 257 statements in inflate_table() to avoid compiler warnings
+ * - Move a comment on output buffer sizes from inffast.c to inflate.c
+ * - Add comments in inffast.c to introduce the inflate_fast() routine
+ * - Rearrange window copies in inflate_fast() for speed and simplification
+ * - Unroll last copy for window match in inflate_fast()
+ * - Use local copies of window variables in inflate_fast() for speed
+ * - Pull out common wnext == 0 case for speed in inflate_fast()
+ * - Make op and len in inflate_fast() unsigned for consistency
+ * - Add FAR to lcode and dcode declarations in inflate_fast()
+ * - Simplified bad distance check in inflate_fast()
+ * - Added inflateBackInit(), inflateBack(), and inflateBackEnd() in new
+ *   source file infback.c to provide a call-back interface to inflate for
+ *   programs like gzip and unzip -- uses window as output buffer to avoid
+ *   window copying
+ *
+ * 1.2.beta5    1 Jan 2003
+ * - Improved inflateBack() interface to allow the caller to provide initial
+ *   input in strm.
+ * - Fixed stored blocks bug in inflateBack()
+ *
+ * 1.2.beta6    4 Jan 2003
+ * - Added comments in inffast.c on effectiveness of POSTINC
+ * - Typecasting all around to reduce compiler warnings
+ * - Changed loops from while (1) or do {} while (1) to for (;;), again to
+ *   make compilers happy
+ * - Changed type of window in inflateBackInit() to unsigned char *
+ *
+ * 1.2.beta7    27 Jan 2003
+ * - Changed many types to unsigned or unsigned short to avoid warnings
+ * - Added inflateCopy() function
+ *
+ * 1.2.0        9 Mar 2003
+ * - Changed inflateBack() interface to provide separate opaque descriptors
+ *   for the in() and out() functions
+ * - Changed inflateBack() argument and in_func typedef to swap the length
+ *   and buffer address return values for the input function
+ * - Check next_in and next_out for Z_NULL on entry to inflate()
+ *
+ * The history for versions after 1.2.0 are in ChangeLog in zlib distribution.
+ */
+
 /* START OF DUMP OF mz_inflate.h*/
 /* inflate.h -- internal inflate state definition
  * Copyright (C) 1995-2009 Mark Adler
@@ -8104,6 +7562,1550 @@ struct inflate_state {
 
 void ZLIB_INTERNAL inflate_fast OF((z_streamp strm, unsigned start));
 /* END OF DUMP OF mz_inffast.h*/
+
+#ifdef MAKEFIXED
+#  ifndef BUILDFIXED
+#    define BUILDFIXED
+#  endif
+#endif
+
+/* function prototypes */
+local void fixedtables OF((struct inflate_state FAR *state));
+local int updatewindow OF((z_streamp strm, const unsigned char FAR *end,
+                           unsigned copy));
+#ifdef BUILDFIXED
+   void makefixed OF((void));
+#endif
+local unsigned syncsearch OF((unsigned FAR *have, const unsigned char FAR *buf,
+                              unsigned len));
+
+int ZEXPORT inflateResetKeep(strm)
+z_streamp strm;
+{
+    struct inflate_state FAR *state;
+
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    strm->total_in = strm->total_out = state->total = 0;
+    strm->msg = Z_NULL;
+    if (state->wrap)        /* to support ill-conceived Java test suite */
+        strm->adler = state->wrap & 1;
+    state->mode = HEAD;
+    state->last = 0;
+    state->havedict = 0;
+    state->dmax = 32768U;
+    state->head = Z_NULL;
+    state->hold = 0;
+    state->bits = 0;
+    state->lencode = state->distcode = state->next = state->codes;
+    state->sane = 1;
+    state->back = -1;
+    Tracev((stderr, "inflate: reset\n"));
+    return Z_OK;
+}
+
+int ZEXPORT inflateReset(strm)
+z_streamp strm;
+{
+    struct inflate_state FAR *state;
+
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    state->wsize = 0;
+    state->whave = 0;
+    state->wnext = 0;
+    return inflateResetKeep(strm);
+}
+
+int ZEXPORT inflateReset2(strm, windowBits)
+z_streamp strm;
+int windowBits;
+{
+    int wrap;
+    struct inflate_state FAR *state;
+
+    /* get the state */
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+
+    /* extract wrap request from windowBits parameter */
+    if (windowBits < 0) {
+        wrap = 0;
+        windowBits = -windowBits;
+    }
+    else {
+        wrap = (windowBits >> 4) + 1;
+#ifdef GUNZIP
+        if (windowBits < 48)
+            windowBits &= 15;
+#endif
+    }
+
+    /* set number of window bits, free window if different */
+    if (windowBits && (windowBits < 8 || windowBits > 15))
+        return Z_STREAM_ERROR;
+    if (state->window != Z_NULL && state->wbits != (unsigned)windowBits) {
+        ZFREE(strm, state->window);
+        state->window = Z_NULL;
+    }
+
+    /* update state and reset the rest of it */
+    state->wrap = wrap;
+    state->wbits = (unsigned)windowBits;
+    return inflateReset(strm);
+}
+
+int ZEXPORT inflateInit2_(strm, windowBits, version, stream_size)
+z_streamp strm;
+int windowBits;
+const char *version;
+int stream_size;
+{
+    int ret;
+    struct inflate_state FAR *state;
+
+    if (version == Z_NULL || version[0] != ZLIB_VERSION[0] ||
+        stream_size != (int)(sizeof(z_stream)))
+        return Z_VERSION_ERROR;
+    if (strm == Z_NULL) return Z_STREAM_ERROR;
+    strm->msg = Z_NULL;                 /* in case we return an error */
+    if (strm->zalloc == (alloc_func)0) {
+#ifdef Z_SOLO
+        return Z_STREAM_ERROR;
+#else
+        strm->zalloc = zcalloc;
+        strm->opaque = (voidpf)0;
+#endif
+    }
+    if (strm->zfree == (free_func)0)
+#ifdef Z_SOLO
+        return Z_STREAM_ERROR;
+#else
+        strm->zfree = zcfree;
+#endif
+    state = (struct inflate_state FAR *)
+            ZALLOC(strm, 1, sizeof(struct inflate_state));
+    if (state == Z_NULL) return Z_MEM_ERROR;
+    Tracev((stderr, "inflate: allocated\n"));
+    strm->state = (struct internal_state FAR *)state;
+    state->window = Z_NULL;
+    ret = inflateReset2(strm, windowBits);
+    if (ret != Z_OK) {
+        ZFREE(strm, state);
+        strm->state = Z_NULL;
+    }
+    return ret;
+}
+
+int ZEXPORT inflateInit_(strm, version, stream_size)
+z_streamp strm;
+const char *version;
+int stream_size;
+{
+    return inflateInit2_(strm, DEF_WBITS, version, stream_size);
+}
+
+int ZEXPORT inflatePrime(strm, bits, value)
+z_streamp strm;
+int bits;
+int value;
+{
+    struct inflate_state FAR *state;
+
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    if (bits < 0) {
+        state->hold = 0;
+        state->bits = 0;
+        return Z_OK;
+    }
+    if (bits > 16 || state->bits + bits > 32) return Z_STREAM_ERROR;
+    value &= (1L << bits) - 1;
+    state->hold += value << state->bits;
+    state->bits += bits;
+    return Z_OK;
+}
+
+/*
+   Return state with length and distance decoding tables and index sizes set to
+   fixed code decoding.  Normally this returns fixed tables from inffixed.h.
+   If BUILDFIXED is defined, then instead this routine builds the tables the
+   first time it's called, and returns those tables the first time and
+   thereafter.  This reduces the size of the code by about 2K bytes, in
+   exchange for a little execution time.  However, BUILDFIXED should not be
+   used for threaded applications, since the rewriting of the tables and virgin
+   may not be thread-safe.
+ */
+local void fixedtables(state)
+struct inflate_state FAR *state;
+{
+#ifdef BUILDFIXED
+    static int virgin = 1;
+    static code *lenfix, *distfix;
+    static code fixed[544];
+
+    /* build fixed huffman tables if first call (may not be thread safe) */
+    if (virgin) {
+        unsigned sym, bits;
+        static code *next;
+
+        /* literal/length table */
+        sym = 0;
+        while (sym < 144) state->lens[sym++] = 8;
+        while (sym < 256) state->lens[sym++] = 9;
+        while (sym < 280) state->lens[sym++] = 7;
+        while (sym < 288) state->lens[sym++] = 8;
+        next = fixed;
+        lenfix = next;
+        bits = 9;
+        inflate_table(LENS, state->lens, 288, &(next), &(bits), state->work);
+
+        /* distance table */
+        sym = 0;
+        while (sym < 32) state->lens[sym++] = 5;
+        distfix = next;
+        bits = 5;
+        inflate_table(DISTS, state->lens, 32, &(next), &(bits), state->work);
+
+        /* do this just once */
+        virgin = 0;
+    }
+#else /* !BUILDFIXED */
+/* START OF DUMP OF mz_inffixed.h*/
+    /* inffixed.h -- table for decoding fixed codes
+     * Generated automatically by makefixed().
+     */
+
+    /* WARNING: this file should *not* be used by applications.
+       It is part of the implementation of this library and is
+       subject to change. Applications should only use zlib.h.
+     */
+
+    static const code lenfix[512] = {
+        {96,7,0},{0,8,80},{0,8,16},{20,8,115},{18,7,31},{0,8,112},{0,8,48},
+        {0,9,192},{16,7,10},{0,8,96},{0,8,32},{0,9,160},{0,8,0},{0,8,128},
+        {0,8,64},{0,9,224},{16,7,6},{0,8,88},{0,8,24},{0,9,144},{19,7,59},
+        {0,8,120},{0,8,56},{0,9,208},{17,7,17},{0,8,104},{0,8,40},{0,9,176},
+        {0,8,8},{0,8,136},{0,8,72},{0,9,240},{16,7,4},{0,8,84},{0,8,20},
+        {21,8,227},{19,7,43},{0,8,116},{0,8,52},{0,9,200},{17,7,13},{0,8,100},
+        {0,8,36},{0,9,168},{0,8,4},{0,8,132},{0,8,68},{0,9,232},{16,7,8},
+        {0,8,92},{0,8,28},{0,9,152},{20,7,83},{0,8,124},{0,8,60},{0,9,216},
+        {18,7,23},{0,8,108},{0,8,44},{0,9,184},{0,8,12},{0,8,140},{0,8,76},
+        {0,9,248},{16,7,3},{0,8,82},{0,8,18},{21,8,163},{19,7,35},{0,8,114},
+        {0,8,50},{0,9,196},{17,7,11},{0,8,98},{0,8,34},{0,9,164},{0,8,2},
+        {0,8,130},{0,8,66},{0,9,228},{16,7,7},{0,8,90},{0,8,26},{0,9,148},
+        {20,7,67},{0,8,122},{0,8,58},{0,9,212},{18,7,19},{0,8,106},{0,8,42},
+        {0,9,180},{0,8,10},{0,8,138},{0,8,74},{0,9,244},{16,7,5},{0,8,86},
+        {0,8,22},{64,8,0},{19,7,51},{0,8,118},{0,8,54},{0,9,204},{17,7,15},
+        {0,8,102},{0,8,38},{0,9,172},{0,8,6},{0,8,134},{0,8,70},{0,9,236},
+        {16,7,9},{0,8,94},{0,8,30},{0,9,156},{20,7,99},{0,8,126},{0,8,62},
+        {0,9,220},{18,7,27},{0,8,110},{0,8,46},{0,9,188},{0,8,14},{0,8,142},
+        {0,8,78},{0,9,252},{96,7,0},{0,8,81},{0,8,17},{21,8,131},{18,7,31},
+        {0,8,113},{0,8,49},{0,9,194},{16,7,10},{0,8,97},{0,8,33},{0,9,162},
+        {0,8,1},{0,8,129},{0,8,65},{0,9,226},{16,7,6},{0,8,89},{0,8,25},
+        {0,9,146},{19,7,59},{0,8,121},{0,8,57},{0,9,210},{17,7,17},{0,8,105},
+        {0,8,41},{0,9,178},{0,8,9},{0,8,137},{0,8,73},{0,9,242},{16,7,4},
+        {0,8,85},{0,8,21},{16,8,258},{19,7,43},{0,8,117},{0,8,53},{0,9,202},
+        {17,7,13},{0,8,101},{0,8,37},{0,9,170},{0,8,5},{0,8,133},{0,8,69},
+        {0,9,234},{16,7,8},{0,8,93},{0,8,29},{0,9,154},{20,7,83},{0,8,125},
+        {0,8,61},{0,9,218},{18,7,23},{0,8,109},{0,8,45},{0,9,186},{0,8,13},
+        {0,8,141},{0,8,77},{0,9,250},{16,7,3},{0,8,83},{0,8,19},{21,8,195},
+        {19,7,35},{0,8,115},{0,8,51},{0,9,198},{17,7,11},{0,8,99},{0,8,35},
+        {0,9,166},{0,8,3},{0,8,131},{0,8,67},{0,9,230},{16,7,7},{0,8,91},
+        {0,8,27},{0,9,150},{20,7,67},{0,8,123},{0,8,59},{0,9,214},{18,7,19},
+        {0,8,107},{0,8,43},{0,9,182},{0,8,11},{0,8,139},{0,8,75},{0,9,246},
+        {16,7,5},{0,8,87},{0,8,23},{64,8,0},{19,7,51},{0,8,119},{0,8,55},
+        {0,9,206},{17,7,15},{0,8,103},{0,8,39},{0,9,174},{0,8,7},{0,8,135},
+        {0,8,71},{0,9,238},{16,7,9},{0,8,95},{0,8,31},{0,9,158},{20,7,99},
+        {0,8,127},{0,8,63},{0,9,222},{18,7,27},{0,8,111},{0,8,47},{0,9,190},
+        {0,8,15},{0,8,143},{0,8,79},{0,9,254},{96,7,0},{0,8,80},{0,8,16},
+        {20,8,115},{18,7,31},{0,8,112},{0,8,48},{0,9,193},{16,7,10},{0,8,96},
+        {0,8,32},{0,9,161},{0,8,0},{0,8,128},{0,8,64},{0,9,225},{16,7,6},
+        {0,8,88},{0,8,24},{0,9,145},{19,7,59},{0,8,120},{0,8,56},{0,9,209},
+        {17,7,17},{0,8,104},{0,8,40},{0,9,177},{0,8,8},{0,8,136},{0,8,72},
+        {0,9,241},{16,7,4},{0,8,84},{0,8,20},{21,8,227},{19,7,43},{0,8,116},
+        {0,8,52},{0,9,201},{17,7,13},{0,8,100},{0,8,36},{0,9,169},{0,8,4},
+        {0,8,132},{0,8,68},{0,9,233},{16,7,8},{0,8,92},{0,8,28},{0,9,153},
+        {20,7,83},{0,8,124},{0,8,60},{0,9,217},{18,7,23},{0,8,108},{0,8,44},
+        {0,9,185},{0,8,12},{0,8,140},{0,8,76},{0,9,249},{16,7,3},{0,8,82},
+        {0,8,18},{21,8,163},{19,7,35},{0,8,114},{0,8,50},{0,9,197},{17,7,11},
+        {0,8,98},{0,8,34},{0,9,165},{0,8,2},{0,8,130},{0,8,66},{0,9,229},
+        {16,7,7},{0,8,90},{0,8,26},{0,9,149},{20,7,67},{0,8,122},{0,8,58},
+        {0,9,213},{18,7,19},{0,8,106},{0,8,42},{0,9,181},{0,8,10},{0,8,138},
+        {0,8,74},{0,9,245},{16,7,5},{0,8,86},{0,8,22},{64,8,0},{19,7,51},
+        {0,8,118},{0,8,54},{0,9,205},{17,7,15},{0,8,102},{0,8,38},{0,9,173},
+        {0,8,6},{0,8,134},{0,8,70},{0,9,237},{16,7,9},{0,8,94},{0,8,30},
+        {0,9,157},{20,7,99},{0,8,126},{0,8,62},{0,9,221},{18,7,27},{0,8,110},
+        {0,8,46},{0,9,189},{0,8,14},{0,8,142},{0,8,78},{0,9,253},{96,7,0},
+        {0,8,81},{0,8,17},{21,8,131},{18,7,31},{0,8,113},{0,8,49},{0,9,195},
+        {16,7,10},{0,8,97},{0,8,33},{0,9,163},{0,8,1},{0,8,129},{0,8,65},
+        {0,9,227},{16,7,6},{0,8,89},{0,8,25},{0,9,147},{19,7,59},{0,8,121},
+        {0,8,57},{0,9,211},{17,7,17},{0,8,105},{0,8,41},{0,9,179},{0,8,9},
+        {0,8,137},{0,8,73},{0,9,243},{16,7,4},{0,8,85},{0,8,21},{16,8,258},
+        {19,7,43},{0,8,117},{0,8,53},{0,9,203},{17,7,13},{0,8,101},{0,8,37},
+        {0,9,171},{0,8,5},{0,8,133},{0,8,69},{0,9,235},{16,7,8},{0,8,93},
+        {0,8,29},{0,9,155},{20,7,83},{0,8,125},{0,8,61},{0,9,219},{18,7,23},
+        {0,8,109},{0,8,45},{0,9,187},{0,8,13},{0,8,141},{0,8,77},{0,9,251},
+        {16,7,3},{0,8,83},{0,8,19},{21,8,195},{19,7,35},{0,8,115},{0,8,51},
+        {0,9,199},{17,7,11},{0,8,99},{0,8,35},{0,9,167},{0,8,3},{0,8,131},
+        {0,8,67},{0,9,231},{16,7,7},{0,8,91},{0,8,27},{0,9,151},{20,7,67},
+        {0,8,123},{0,8,59},{0,9,215},{18,7,19},{0,8,107},{0,8,43},{0,9,183},
+        {0,8,11},{0,8,139},{0,8,75},{0,9,247},{16,7,5},{0,8,87},{0,8,23},
+        {64,8,0},{19,7,51},{0,8,119},{0,8,55},{0,9,207},{17,7,15},{0,8,103},
+        {0,8,39},{0,9,175},{0,8,7},{0,8,135},{0,8,71},{0,9,239},{16,7,9},
+        {0,8,95},{0,8,31},{0,9,159},{20,7,99},{0,8,127},{0,8,63},{0,9,223},
+        {18,7,27},{0,8,111},{0,8,47},{0,9,191},{0,8,15},{0,8,143},{0,8,79},
+        {0,9,255}
+    };
+
+    static const code distfix[32] = {
+        {16,5,1},{23,5,257},{19,5,17},{27,5,4097},{17,5,5},{25,5,1025},
+        {21,5,65},{29,5,16385},{16,5,3},{24,5,513},{20,5,33},{28,5,8193},
+        {18,5,9},{26,5,2049},{22,5,129},{64,5,0},{16,5,2},{23,5,385},
+        {19,5,25},{27,5,6145},{17,5,7},{25,5,1537},{21,5,97},{29,5,24577},
+        {16,5,4},{24,5,769},{20,5,49},{28,5,12289},{18,5,13},{26,5,3073},
+        {22,5,193},{64,5,0}
+    };
+/* END OF DUMP OF mz_inffixed.h*/
+#endif /* BUILDFIXED */
+    state->lencode = lenfix;
+    state->lenbits = 9;
+    state->distcode = distfix;
+    state->distbits = 5;
+}
+
+#ifdef MAKEFIXED
+#include <stdio.h>
+
+/*
+   Write out the inffixed.h that is #include'd above.  Defining MAKEFIXED also
+   defines BUILDFIXED, so the tables are built on the fly.  makefixed() writes
+   those tables to stdout, which would be piped to inffixed.h.  A small program
+   can simply call makefixed to do this:
+
+    void makefixed(void);
+
+    int main(void)
+    {
+        makefixed();
+        return 0;
+    }
+
+   Then that can be linked with zlib built with MAKEFIXED defined and run:
+
+    a.out > inffixed.h
+ */
+void makefixed()
+{
+    unsigned low, size;
+    struct inflate_state state;
+
+    fixedtables(&state);
+    puts("    /* inffixed.h -- table for decoding fixed codes");
+    puts("     * Generated automatically by makefixed().");
+    puts("     */");
+    puts("");
+    puts("    /* WARNING: this file should *not* be used by applications.");
+    puts("       It is part of the implementation of this library and is");
+    puts("       subject to change. Applications should only use zlib.h.");
+    puts("     */");
+    puts("");
+    size = 1U << 9;
+    printf("    static const code lenfix[%u] = {", size);
+    low = 0;
+    for (;;) {
+        if ((low % 7) == 0) printf("\n        ");
+        printf("{%u,%u,%d}", (low & 127) == 99 ? 64 : state.lencode[low].op,
+               state.lencode[low].bits, state.lencode[low].val);
+        if (++low == size) break;
+        putchar(',');
+    }
+    puts("\n    };");
+    size = 1U << 5;
+    printf("\n    static const code distfix[%u] = {", size);
+    low = 0;
+    for (;;) {
+        if ((low % 6) == 0) printf("\n        ");
+        printf("{%u,%u,%d}", state.distcode[low].op, state.distcode[low].bits,
+               state.distcode[low].val);
+        if (++low == size) break;
+        putchar(',');
+    }
+    puts("\n    };");
+}
+#endif /* MAKEFIXED */
+
+/*
+   Update the window with the last wsize (normally 32K) bytes written before
+   returning.  If window does not exist yet, create it.  This is only called
+   when a window is already in use, or when output has been written during this
+   inflate call, but the end of the deflate stream has not been reached yet.
+   It is also called to create a window for dictionary data when a dictionary
+   is loaded.
+
+   Providing output buffers larger than 32K to inflate() should provide a speed
+   advantage, since only the last 32K of output is copied to the sliding window
+   upon return from inflate(), and since all distances after the first 32K of
+   output will fall in the output data, making match copies simpler and faster.
+   The advantage may be dependent on the size of the processor's data caches.
+ */
+local int updatewindow(strm, end, copy)
+z_streamp strm;
+const Bytef *end;
+unsigned copy;
+{
+    struct inflate_state FAR *state;
+    unsigned dist;
+
+    state = (struct inflate_state FAR *)strm->state;
+
+    /* if it hasn't been done already, allocate space for the window */
+    if (state->window == Z_NULL) {
+        state->window = (unsigned char FAR *)
+                        ZALLOC(strm, 1U << state->wbits,
+                               sizeof(unsigned char));
+        if (state->window == Z_NULL) return 1;
+    }
+
+    /* if window not in use yet, initialize */
+    if (state->wsize == 0) {
+        state->wsize = 1U << state->wbits;
+        state->wnext = 0;
+        state->whave = 0;
+    }
+
+    /* copy state->wsize or less output bytes into the circular window */
+    if (copy >= state->wsize) {
+        zmemcpy(state->window, end - state->wsize, state->wsize);
+        state->wnext = 0;
+        state->whave = state->wsize;
+    }
+    else {
+        dist = state->wsize - state->wnext;
+        if (dist > copy) dist = copy;
+        zmemcpy(state->window + state->wnext, end - copy, dist);
+        copy -= dist;
+        if (copy) {
+            zmemcpy(state->window, end - copy, copy);
+            state->wnext = copy;
+            state->whave = state->wsize;
+        }
+        else {
+            state->wnext += dist;
+            if (state->wnext == state->wsize) state->wnext = 0;
+            if (state->whave < state->wsize) state->whave += dist;
+        }
+    }
+    return 0;
+}
+
+/* Macros for inflate(): */
+
+/* check function to use adler32() for zlib or crc32() for gzip */
+#ifdef GUNZIP
+#  define UPDATE(check, buf, len) \
+    (state->flags ? crc32(check, buf, len) : adler32(check, buf, len))
+#else
+#  define UPDATE(check, buf, len) adler32(check, buf, len)
+#endif
+
+/* check macros for header crc */
+#ifdef GUNZIP
+#  define CRC2(check, word) \
+    do { \
+        hbuf[0] = (unsigned char)(word); \
+        hbuf[1] = (unsigned char)((word) >> 8); \
+        check = crc32(check, hbuf, 2); \
+    } while (0)
+
+#  define CRC4(check, word) \
+    do { \
+        hbuf[0] = (unsigned char)(word); \
+        hbuf[1] = (unsigned char)((word) >> 8); \
+        hbuf[2] = (unsigned char)((word) >> 16); \
+        hbuf[3] = (unsigned char)((word) >> 24); \
+        check = crc32(check, hbuf, 4); \
+    } while (0)
+#endif
+
+/* Load registers with state in inflate() for speed */
+#define LOAD() \
+    do { \
+        put = strm->next_out; \
+        left = strm->avail_out; \
+        next = strm->next_in; \
+        have = strm->avail_in; \
+        hold = state->hold; \
+        bits = state->bits; \
+    } while (0)
+
+/* Restore state from registers in inflate() */
+#define RESTORE() \
+    do { \
+        strm->next_out = put; \
+        strm->avail_out = left; \
+        strm->next_in = next; \
+        strm->avail_in = have; \
+        state->hold = hold; \
+        state->bits = bits; \
+    } while (0)
+
+/* Clear the input bit accumulator */
+#define INITBITS() \
+    do { \
+        hold = 0; \
+        bits = 0; \
+    } while (0)
+
+/* Get a byte of input into the bit accumulator, or return from inflate()
+   if there is no input available. */
+#define PULLBYTE() \
+    do { \
+        if (have == 0) goto inf_leave; \
+        have--; \
+        hold += (unsigned long)(*next++) << bits; \
+        bits += 8; \
+    } while (0)
+
+/* Assure that there are at least n bits in the bit accumulator.  If there is
+   not enough available input to do that, then return from inflate(). */
+#define NEEDBITS(n) \
+    do { \
+        while (bits < (unsigned)(n)) \
+            PULLBYTE(); \
+    } while (0)
+
+/* Return the low n bits of the bit accumulator (n < 16) */
+#define BITS(n) \
+    ((unsigned)hold & ((1U << (n)) - 1))
+
+/* Remove n bits from the bit accumulator */
+#define DROPBITS(n) \
+    do { \
+        hold >>= (n); \
+        bits -= (unsigned)(n); \
+    } while (0)
+
+/* Remove zero to seven bits as needed to go to a byte boundary */
+#define BYTEBITS() \
+    do { \
+        hold >>= bits & 7; \
+        bits -= bits & 7; \
+    } while (0)
+
+/*
+   inflate() uses a state machine to process as much input data and generate as
+   much output data as possible before returning.  The state machine is
+   structured roughly as follows:
+
+    for (;;) switch (state) {
+    ...
+    case STATEn:
+        if (not enough input data or output space to make progress)
+            return;
+        ... make progress ...
+        state = STATEm;
+        break;
+    ...
+    }
+
+   so when inflate() is called again, the same case is attempted again, and
+   if the appropriate resources are provided, the machine proceeds to the
+   next state.  The NEEDBITS() macro is usually the way the state evaluates
+   whether it can proceed or should return.  NEEDBITS() does the return if
+   the requested bits are not available.  The typical use of the BITS macros
+   is:
+
+        NEEDBITS(n);
+        ... do something with BITS(n) ...
+        DROPBITS(n);
+
+   where NEEDBITS(n) either returns from inflate() if there isn't enough
+   input left to load n bits into the accumulator, or it continues.  BITS(n)
+   gives the low n bits in the accumulator.  When done, DROPBITS(n) drops
+   the low n bits off the accumulator.  INITBITS() clears the accumulator
+   and sets the number of available bits to zero.  BYTEBITS() discards just
+   enough bits to put the accumulator on a byte boundary.  After BYTEBITS()
+   and a NEEDBITS(8), then BITS(8) would return the next byte in the stream.
+
+   NEEDBITS(n) uses PULLBYTE() to get an available byte of input, or to return
+   if there is no input available.  The decoding of variable length codes uses
+   PULLBYTE() directly in order to pull just enough bytes to decode the next
+   code, and no more.
+
+   Some states loop until they get enough input, making sure that enough
+   state information is maintained to continue the loop where it left off
+   if NEEDBITS() returns in the loop.  For example, want, need, and keep
+   would all have to actually be part of the saved state in case NEEDBITS()
+   returns:
+
+    case STATEw:
+        while (want < need) {
+            NEEDBITS(n);
+            keep[want++] = BITS(n);
+            DROPBITS(n);
+        }
+        state = STATEx;
+    case STATEx:
+
+   As shown above, if the next state is also the next case, then the break
+   is omitted.
+
+   A state may also return if there is not enough output space available to
+   complete that state.  Those states are copying stored data, writing a
+   literal byte, and copying a matching string.
+
+   When returning, a "goto inf_leave" is used to update the total counters,
+   update the check value, and determine whether any progress has been made
+   during that inflate() call in order to return the proper return code.
+   Progress is defined as a change in either strm->avail_in or strm->avail_out.
+   When there is a window, goto inf_leave will update the window with the last
+   output written.  If a goto inf_leave occurs in the middle of decompression
+   and there is no window currently, goto inf_leave will create one and copy
+   output to the window for the next call of inflate().
+
+   In this implementation, the flush parameter of inflate() only affects the
+   return code (per zlib.h).  inflate() always writes as much as possible to
+   strm->next_out, given the space available and the provided input--the effect
+   documented in zlib.h of Z_SYNC_FLUSH.  Furthermore, inflate() always defers
+   the allocation of and copying into a sliding window until necessary, which
+   provides the effect documented in zlib.h for Z_FINISH when the entire input
+   stream available.  So the only thing the flush parameter actually does is:
+   when flush is set to Z_FINISH, inflate() cannot return Z_OK.  Instead it
+   will return Z_BUF_ERROR if it has not reached the end of the stream.
+ */
+
+int ZEXPORT inflate(strm, flush)
+z_streamp strm;
+int flush;
+{
+    struct inflate_state FAR *state;
+    z_const unsigned char FAR *next;    /* next input */
+    unsigned char FAR *put;     /* next output */
+    unsigned have, left;        /* available input and output */
+    unsigned long hold;         /* bit buffer */
+    unsigned bits;              /* bits in bit buffer */
+    unsigned in, out;           /* save starting available input and output */
+    unsigned copy;              /* number of stored or match bytes to copy */
+    unsigned char FAR *from;    /* where to copy match bytes from */
+    code here;                  /* current decoding table entry */
+    code last;                  /* parent table entry */
+    unsigned len;               /* length to copy for repeats, bits to drop */
+    int ret;                    /* return code */
+#ifdef GUNZIP
+    unsigned char hbuf[4];      /* buffer for gzip header crc calculation */
+#endif
+    static const unsigned short order[19] = /* permutation of code lengths */
+        {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+
+    if (strm == Z_NULL || strm->state == Z_NULL || strm->next_out == Z_NULL ||
+        (strm->next_in == Z_NULL && strm->avail_in != 0))
+        return Z_STREAM_ERROR;
+
+    state = (struct inflate_state FAR *)strm->state;
+    if (state->mode == TYPE) state->mode = TYPEDO;      /* skip check */
+    LOAD();
+    in = have;
+    out = left;
+    ret = Z_OK;
+    for (;;)
+        switch (state->mode) {
+        case HEAD:
+            if (state->wrap == 0) {
+                state->mode = TYPEDO;
+                break;
+            }
+            NEEDBITS(16);
+#ifdef GUNZIP
+            if ((state->wrap & 2) && hold == 0x8b1f) {  /* gzip header */
+                state->check = crc32(0L, Z_NULL, 0);
+                CRC2(state->check, hold);
+                INITBITS();
+                state->mode = FLAGS;
+                break;
+            }
+            state->flags = 0;           /* expect zlib header */
+            if (state->head != Z_NULL)
+                state->head->done = -1;
+            if (!(state->wrap & 1) ||   /* check if zlib header allowed */
+#else
+            if (
+#endif
+                ((BITS(8) << 8) + (hold >> 8)) % 31) {
+                strm->msg = (char *)"incorrect header check";
+                state->mode = BAD;
+                break;
+            }
+            if (BITS(4) != Z_DEFLATED) {
+                strm->msg = (char *)"unknown compression method";
+                state->mode = BAD;
+                break;
+            }
+            DROPBITS(4);
+            len = BITS(4) + 8;
+            if (state->wbits == 0)
+                state->wbits = len;
+            else if (len > state->wbits) {
+                strm->msg = (char *)"invalid window size";
+                state->mode = BAD;
+                break;
+            }
+            state->dmax = 1U << len;
+            Tracev((stderr, "inflate:   zlib header ok\n"));
+            strm->adler = state->check = adler32(0L, Z_NULL, 0);
+            state->mode = hold & 0x200 ? DICTID : TYPE;
+            INITBITS();
+            break;
+#ifdef GUNZIP
+        case FLAGS:
+            NEEDBITS(16);
+            state->flags = (int)(hold);
+            if ((state->flags & 0xff) != Z_DEFLATED) {
+                strm->msg = (char *)"unknown compression method";
+                state->mode = BAD;
+                break;
+            }
+            if (state->flags & 0xe000) {
+                strm->msg = (char *)"unknown header flags set";
+                state->mode = BAD;
+                break;
+            }
+            if (state->head != Z_NULL)
+                state->head->text = (int)((hold >> 8) & 1);
+            if (state->flags & 0x0200) CRC2(state->check, hold);
+            INITBITS();
+            state->mode = TIME;
+        case TIME:
+            NEEDBITS(32);
+            if (state->head != Z_NULL)
+                state->head->time = hold;
+            if (state->flags & 0x0200) CRC4(state->check, hold);
+            INITBITS();
+            state->mode = OS;
+        case OS:
+            NEEDBITS(16);
+            if (state->head != Z_NULL) {
+                state->head->xflags = (int)(hold & 0xff);
+                state->head->os = (int)(hold >> 8);
+            }
+            if (state->flags & 0x0200) CRC2(state->check, hold);
+            INITBITS();
+            state->mode = EXLEN;
+        case EXLEN:
+            if (state->flags & 0x0400) {
+                NEEDBITS(16);
+                state->length = (unsigned)(hold);
+                if (state->head != Z_NULL)
+                    state->head->extra_len = (unsigned)hold;
+                if (state->flags & 0x0200) CRC2(state->check, hold);
+                INITBITS();
+            }
+            else if (state->head != Z_NULL)
+                state->head->extra = Z_NULL;
+            state->mode = EXTRA;
+        case EXTRA:
+            if (state->flags & 0x0400) {
+                copy = state->length;
+                if (copy > have) copy = have;
+                if (copy) {
+                    if (state->head != Z_NULL &&
+                        state->head->extra != Z_NULL) {
+                        len = state->head->extra_len - state->length;
+                        zmemcpy(state->head->extra + len, next,
+                                len + copy > state->head->extra_max ?
+                                state->head->extra_max - len : copy);
+                    }
+                    if (state->flags & 0x0200)
+                        state->check = crc32(state->check, next, copy);
+                    have -= copy;
+                    next += copy;
+                    state->length -= copy;
+                }
+                if (state->length) goto inf_leave;
+            }
+            state->length = 0;
+            state->mode = NAME;
+        case NAME:
+            if (state->flags & 0x0800) {
+                if (have == 0) goto inf_leave;
+                copy = 0;
+                do {
+                    len = (unsigned)(next[copy++]);
+                    if (state->head != Z_NULL &&
+                            state->head->name != Z_NULL &&
+                            state->length < state->head->name_max)
+                        state->head->name[state->length++] = len;
+                } while (len && copy < have);
+                if (state->flags & 0x0200)
+                    state->check = crc32(state->check, next, copy);
+                have -= copy;
+                next += copy;
+                if (len) goto inf_leave;
+            }
+            else if (state->head != Z_NULL)
+                state->head->name = Z_NULL;
+            state->length = 0;
+            state->mode = COMMENT;
+        case COMMENT:
+            if (state->flags & 0x1000) {
+                if (have == 0) goto inf_leave;
+                copy = 0;
+                do {
+                    len = (unsigned)(next[copy++]);
+                    if (state->head != Z_NULL &&
+                            state->head->comment != Z_NULL &&
+                            state->length < state->head->comm_max)
+                        state->head->comment[state->length++] = len;
+                } while (len && copy < have);
+                if (state->flags & 0x0200)
+                    state->check = crc32(state->check, next, copy);
+                have -= copy;
+                next += copy;
+                if (len) goto inf_leave;
+            }
+            else if (state->head != Z_NULL)
+                state->head->comment = Z_NULL;
+            state->mode = HCRC;
+        case HCRC:
+            if (state->flags & 0x0200) {
+                NEEDBITS(16);
+                if (hold != (state->check & 0xffff)) {
+                    strm->msg = (char *)"header crc mismatch";
+                    state->mode = BAD;
+                    break;
+                }
+                INITBITS();
+            }
+            if (state->head != Z_NULL) {
+                state->head->hcrc = (int)((state->flags >> 9) & 1);
+                state->head->done = 1;
+            }
+            strm->adler = state->check = crc32(0L, Z_NULL, 0);
+            state->mode = TYPE;
+            break;
+#endif
+        case DICTID:
+            NEEDBITS(32);
+            strm->adler = state->check = ZSWAP32(hold);
+            INITBITS();
+            state->mode = DICT;
+        case DICT:
+            if (state->havedict == 0) {
+                RESTORE();
+                return Z_NEED_DICT;
+            }
+            strm->adler = state->check = adler32(0L, Z_NULL, 0);
+            state->mode = TYPE;
+        case TYPE:
+            if (flush == Z_BLOCK || flush == Z_TREES) goto inf_leave;
+        case TYPEDO:
+            if (state->last) {
+                BYTEBITS();
+                state->mode = CHECK;
+                break;
+            }
+            NEEDBITS(3);
+            state->last = BITS(1);
+            DROPBITS(1);
+            switch (BITS(2)) {
+            case 0:                             /* stored block */
+                Tracev((stderr, "inflate:     stored block%s\n",
+                        state->last ? " (last)" : ""));
+                state->mode = STORED;
+                break;
+            case 1:                             /* fixed block */
+                fixedtables(state);
+                Tracev((stderr, "inflate:     fixed codes block%s\n",
+                        state->last ? " (last)" : ""));
+                state->mode = LEN_;             /* decode codes */
+                if (flush == Z_TREES) {
+                    DROPBITS(2);
+                    goto inf_leave;
+                }
+                break;
+            case 2:                             /* dynamic block */
+                Tracev((stderr, "inflate:     dynamic codes block%s\n",
+                        state->last ? " (last)" : ""));
+                state->mode = TABLE;
+                break;
+            case 3:
+                strm->msg = (char *)"invalid block type";
+                state->mode = BAD;
+            }
+            DROPBITS(2);
+            break;
+        case STORED:
+            BYTEBITS();                         /* go to byte boundary */
+            NEEDBITS(32);
+            if ((hold & 0xffff) != ((hold >> 16) ^ 0xffff)) {
+                strm->msg = (char *)"invalid stored block lengths";
+                state->mode = BAD;
+                break;
+            }
+            state->length = (unsigned)hold & 0xffff;
+            Tracev((stderr, "inflate:       stored length %u\n",
+                    state->length));
+            INITBITS();
+            state->mode = COPY_;
+            if (flush == Z_TREES) goto inf_leave;
+        case COPY_:
+            state->mode = COPY;
+        case COPY:
+            copy = state->length;
+            if (copy) {
+                if (copy > have) copy = have;
+                if (copy > left) copy = left;
+                if (copy == 0) goto inf_leave;
+                zmemcpy(put, next, copy);
+                have -= copy;
+                next += copy;
+                left -= copy;
+                put += copy;
+                state->length -= copy;
+                break;
+            }
+            Tracev((stderr, "inflate:       stored end\n"));
+            state->mode = TYPE;
+            break;
+        case TABLE:
+            NEEDBITS(14);
+            state->nlen = BITS(5) + 257;
+            DROPBITS(5);
+            state->ndist = BITS(5) + 1;
+            DROPBITS(5);
+            state->ncode = BITS(4) + 4;
+            DROPBITS(4);
+#ifndef PKZIP_BUG_WORKAROUND
+            if (state->nlen > 286 || state->ndist > 30) {
+                strm->msg = (char *)"too many length or distance symbols";
+                state->mode = BAD;
+                break;
+            }
+#endif
+            Tracev((stderr, "inflate:       table sizes ok\n"));
+            state->have = 0;
+            state->mode = LENLENS;
+        case LENLENS:
+            while (state->have < state->ncode) {
+                NEEDBITS(3);
+                state->lens[order[state->have++]] = (unsigned short)BITS(3);
+                DROPBITS(3);
+            }
+            while (state->have < 19)
+                state->lens[order[state->have++]] = 0;
+            state->next = state->codes;
+            state->lencode = (const code FAR *)(state->next);
+            state->lenbits = 7;
+            ret = inflate_table(CODES, state->lens, 19, &(state->next),
+                                &(state->lenbits), state->work);
+            if (ret) {
+                strm->msg = (char *)"invalid code lengths set";
+                state->mode = BAD;
+                break;
+            }
+            Tracev((stderr, "inflate:       code lengths ok\n"));
+            state->have = 0;
+            state->mode = CODELENS;
+        case CODELENS:
+            while (state->have < state->nlen + state->ndist) {
+                for (;;) {
+                    here = state->lencode[BITS(state->lenbits)];
+                    if ((unsigned)(here.bits) <= bits) break;
+                    PULLBYTE();
+                }
+                if (here.val < 16) {
+                    DROPBITS(here.bits);
+                    state->lens[state->have++] = here.val;
+                }
+                else {
+                    if (here.val == 16) {
+                        NEEDBITS(here.bits + 2);
+                        DROPBITS(here.bits);
+                        if (state->have == 0) {
+                            strm->msg = (char *)"invalid bit length repeat";
+                            state->mode = BAD;
+                            break;
+                        }
+                        len = state->lens[state->have - 1];
+                        copy = 3 + BITS(2);
+                        DROPBITS(2);
+                    }
+                    else if (here.val == 17) {
+                        NEEDBITS(here.bits + 3);
+                        DROPBITS(here.bits);
+                        len = 0;
+                        copy = 3 + BITS(3);
+                        DROPBITS(3);
+                    }
+                    else {
+                        NEEDBITS(here.bits + 7);
+                        DROPBITS(here.bits);
+                        len = 0;
+                        copy = 11 + BITS(7);
+                        DROPBITS(7);
+                    }
+                    if (state->have + copy > state->nlen + state->ndist) {
+                        strm->msg = (char *)"invalid bit length repeat";
+                        state->mode = BAD;
+                        break;
+                    }
+                    while (copy--)
+                        state->lens[state->have++] = (unsigned short)len;
+                }
+            }
+
+            /* handle error breaks in while */
+            if (state->mode == BAD) break;
+
+            /* check for end-of-block code (better have one) */
+            if (state->lens[256] == 0) {
+                strm->msg = (char *)"invalid code -- missing end-of-block";
+                state->mode = BAD;
+                break;
+            }
+
+            /* build code tables -- note: do not change the lenbits or distbits
+               values here (9 and 6) without reading the comments in inftrees.h
+               concerning the ENOUGH constants, which depend on those values */
+            state->next = state->codes;
+            state->lencode = (const code FAR *)(state->next);
+            state->lenbits = 9;
+            ret = inflate_table(LENS, state->lens, state->nlen, &(state->next),
+                                &(state->lenbits), state->work);
+            if (ret) {
+                strm->msg = (char *)"invalid literal/lengths set";
+                state->mode = BAD;
+                break;
+            }
+            state->distcode = (const code FAR *)(state->next);
+            state->distbits = 6;
+            ret = inflate_table(DISTS, state->lens + state->nlen, state->ndist,
+                            &(state->next), &(state->distbits), state->work);
+            if (ret) {
+                strm->msg = (char *)"invalid distances set";
+                state->mode = BAD;
+                break;
+            }
+            Tracev((stderr, "inflate:       codes ok\n"));
+            state->mode = LEN_;
+            if (flush == Z_TREES) goto inf_leave;
+        case LEN_:
+            state->mode = LEN;
+        case LEN:
+            if (have >= 6 && left >= 258) {
+                RESTORE();
+                inflate_fast(strm, out);
+                LOAD();
+                if (state->mode == TYPE)
+                    state->back = -1;
+                break;
+            }
+            state->back = 0;
+            for (;;) {
+                here = state->lencode[BITS(state->lenbits)];
+                if ((unsigned)(here.bits) <= bits) break;
+                PULLBYTE();
+            }
+            if (here.op && (here.op & 0xf0) == 0) {
+                last = here;
+                for (;;) {
+                    here = state->lencode[last.val +
+                            (BITS(last.bits + last.op) >> last.bits)];
+                    if ((unsigned)(last.bits + here.bits) <= bits) break;
+                    PULLBYTE();
+                }
+                DROPBITS(last.bits);
+                state->back += last.bits;
+            }
+            DROPBITS(here.bits);
+            state->back += here.bits;
+            state->length = (unsigned)here.val;
+            if ((int)(here.op) == 0) {
+                Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
+                        "inflate:         literal '%c'\n" :
+                        "inflate:         literal 0x%02x\n", here.val));
+                state->mode = LIT;
+                break;
+            }
+            if (here.op & 32) {
+                Tracevv((stderr, "inflate:         end of block\n"));
+                state->back = -1;
+                state->mode = TYPE;
+                break;
+            }
+            if (here.op & 64) {
+                strm->msg = (char *)"invalid literal/length code";
+                state->mode = BAD;
+                break;
+            }
+            state->extra = (unsigned)(here.op) & 15;
+            state->mode = LENEXT;
+        case LENEXT:
+            if (state->extra) {
+                NEEDBITS(state->extra);
+                state->length += BITS(state->extra);
+                DROPBITS(state->extra);
+                state->back += state->extra;
+            }
+            Tracevv((stderr, "inflate:         length %u\n", state->length));
+            state->was = state->length;
+            state->mode = DIST;
+        case DIST:
+            for (;;) {
+                here = state->distcode[BITS(state->distbits)];
+                if ((unsigned)(here.bits) <= bits) break;
+                PULLBYTE();
+            }
+            if ((here.op & 0xf0) == 0) {
+                last = here;
+                for (;;) {
+                    here = state->distcode[last.val +
+                            (BITS(last.bits + last.op) >> last.bits)];
+                    if ((unsigned)(last.bits + here.bits) <= bits) break;
+                    PULLBYTE();
+                }
+                DROPBITS(last.bits);
+                state->back += last.bits;
+            }
+            DROPBITS(here.bits);
+            state->back += here.bits;
+            if (here.op & 64) {
+                strm->msg = (char *)"invalid distance code";
+                state->mode = BAD;
+                break;
+            }
+            state->offset = (unsigned)here.val;
+            state->extra = (unsigned)(here.op) & 15;
+            state->mode = DISTEXT;
+        case DISTEXT:
+            if (state->extra) {
+                NEEDBITS(state->extra);
+                state->offset += BITS(state->extra);
+                DROPBITS(state->extra);
+                state->back += state->extra;
+            }
+#ifdef INFLATE_STRICT
+            if (state->offset > state->dmax) {
+                strm->msg = (char *)"invalid distance too far back";
+                state->mode = BAD;
+                break;
+            }
+#endif
+            Tracevv((stderr, "inflate:         distance %u\n", state->offset));
+            state->mode = MATCH;
+        case MATCH:
+            if (left == 0) goto inf_leave;
+            copy = out - left;
+            if (state->offset > copy) {         /* copy from window */
+                copy = state->offset - copy;
+                if (copy > state->whave) {
+                    if (state->sane) {
+                        strm->msg = (char *)"invalid distance too far back";
+                        state->mode = BAD;
+                        break;
+                    }
+#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
+                    Trace((stderr, "inflate.c too far\n"));
+                    copy -= state->whave;
+                    if (copy > state->length) copy = state->length;
+                    if (copy > left) copy = left;
+                    left -= copy;
+                    state->length -= copy;
+                    do {
+                        *put++ = 0;
+                    } while (--copy);
+                    if (state->length == 0) state->mode = LEN;
+                    break;
+#endif
+                }
+                if (copy > state->wnext) {
+                    copy -= state->wnext;
+                    from = state->window + (state->wsize - copy);
+                }
+                else
+                    from = state->window + (state->wnext - copy);
+                if (copy > state->length) copy = state->length;
+            }
+            else {                              /* copy from output */
+                from = put - state->offset;
+                copy = state->length;
+            }
+            if (copy > left) copy = left;
+            left -= copy;
+            state->length -= copy;
+            do {
+                *put++ = *from++;
+            } while (--copy);
+            if (state->length == 0) state->mode = LEN;
+            break;
+        case LIT:
+            if (left == 0) goto inf_leave;
+            *put++ = (unsigned char)(state->length);
+            left--;
+            state->mode = LEN;
+            break;
+        case CHECK:
+            if (state->wrap) {
+                NEEDBITS(32);
+                out -= left;
+                strm->total_out += out;
+                state->total += out;
+                if (out)
+                    strm->adler = state->check =
+                        UPDATE(state->check, put - out, out);
+                out = left;
+                if ((
+#ifdef GUNZIP
+                     state->flags ? hold :
+#endif
+                     ZSWAP32(hold)) != state->check) {
+                    strm->msg = (char *)"incorrect data check";
+                    state->mode = BAD;
+                    break;
+                }
+                INITBITS();
+                Tracev((stderr, "inflate:   check matches trailer\n"));
+            }
+#ifdef GUNZIP
+            state->mode = LENGTH;
+        case LENGTH:
+            if (state->wrap && state->flags) {
+                NEEDBITS(32);
+                if (hold != (state->total & 0xffffffffUL)) {
+                    strm->msg = (char *)"incorrect length check";
+                    state->mode = BAD;
+                    break;
+                }
+                INITBITS();
+                Tracev((stderr, "inflate:   length matches trailer\n"));
+            }
+#endif
+            state->mode = DONE;
+        case DONE:
+            ret = Z_STREAM_END;
+            goto inf_leave;
+        case BAD:
+            ret = Z_DATA_ERROR;
+            goto inf_leave;
+        case MEM:
+            return Z_MEM_ERROR;
+        case SYNC:
+        default:
+            return Z_STREAM_ERROR;
+        }
+
+    /*
+       Return from inflate(), updating the total counts and the check value.
+       If there was no progress during the inflate() call, return a buffer
+       error.  Call updatewindow() to create and/or update the window state.
+       Note: a memory error from inflate() is non-recoverable.
+     */
+  inf_leave:
+    RESTORE();
+    if (state->wsize || (out != strm->avail_out && state->mode < BAD &&
+            (state->mode < CHECK || flush != Z_FINISH)))
+        if (updatewindow(strm, strm->next_out, out - strm->avail_out)) {
+            state->mode = MEM;
+            return Z_MEM_ERROR;
+        }
+    in -= strm->avail_in;
+    out -= strm->avail_out;
+    strm->total_in += in;
+    strm->total_out += out;
+    state->total += out;
+    if (state->wrap && out)
+        strm->adler = state->check =
+            UPDATE(state->check, strm->next_out - out, out);
+    strm->data_type = state->bits + (state->last ? 64 : 0) +
+                      (state->mode == TYPE ? 128 : 0) +
+                      (state->mode == LEN_ || state->mode == COPY_ ? 256 : 0);
+    if (((in == 0 && out == 0) || flush == Z_FINISH) && ret == Z_OK)
+        ret = Z_BUF_ERROR;
+    return ret;
+}
+
+int ZEXPORT inflateEnd(strm)
+z_streamp strm;
+{
+    struct inflate_state FAR *state;
+    if (strm == Z_NULL || strm->state == Z_NULL || strm->zfree == (free_func)0)
+        return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    if (state->window != Z_NULL) ZFREE(strm, state->window);
+    ZFREE(strm, strm->state);
+    strm->state = Z_NULL;
+    Tracev((stderr, "inflate: end\n"));
+    return Z_OK;
+}
+
+int ZEXPORT inflateGetDictionary(strm, dictionary, dictLength)
+z_streamp strm;
+Bytef *dictionary;
+uInt *dictLength;
+{
+    struct inflate_state FAR *state;
+
+    /* check state */
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+
+    /* copy dictionary */
+    if (state->whave && dictionary != Z_NULL) {
+        zmemcpy(dictionary, state->window + state->wnext,
+                state->whave - state->wnext);
+        zmemcpy(dictionary + state->whave - state->wnext,
+                state->window, state->wnext);
+    }
+    if (dictLength != Z_NULL)
+        *dictLength = state->whave;
+    return Z_OK;
+}
+
+int ZEXPORT inflateSetDictionary(strm, dictionary, dictLength)
+z_streamp strm;
+const Bytef *dictionary;
+uInt dictLength;
+{
+    struct inflate_state FAR *state;
+    unsigned long dictid;
+    int ret;
+
+    /* check state */
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    if (state->wrap != 0 && state->mode != DICT)
+        return Z_STREAM_ERROR;
+
+    /* check for correct dictionary identifier */
+    if (state->mode == DICT) {
+        dictid = adler32(0L, Z_NULL, 0);
+        dictid = adler32(dictid, dictionary, dictLength);
+        if (dictid != state->check)
+            return Z_DATA_ERROR;
+    }
+
+    /* copy dictionary to window using updatewindow(), which will amend the
+       existing dictionary if appropriate */
+    ret = updatewindow(strm, dictionary + dictLength, dictLength);
+    if (ret) {
+        state->mode = MEM;
+        return Z_MEM_ERROR;
+    }
+    state->havedict = 1;
+    Tracev((stderr, "inflate:   dictionary set\n"));
+    return Z_OK;
+}
+
+int ZEXPORT inflateGetHeader(strm, head)
+z_streamp strm;
+gz_headerp head;
+{
+    struct inflate_state FAR *state;
+
+    /* check state */
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    if ((state->wrap & 2) == 0) return Z_STREAM_ERROR;
+
+    /* save header structure */
+    state->head = head;
+    head->done = 0;
+    return Z_OK;
+}
+
+/*
+   Search buf[0..len-1] for the pattern: 0, 0, 0xff, 0xff.  Return when found
+   or when out of input.  When called, *have is the number of pattern bytes
+   found in order so far, in 0..3.  On return *have is updated to the new
+   state.  If on return *have equals four, then the pattern was found and the
+   return value is how many bytes were read including the last byte of the
+   pattern.  If *have is less than four, then the pattern has not been found
+   yet and the return value is len.  In the latter case, syncsearch() can be
+   called again with more data and the *have state.  *have is initialized to
+   zero for the first call.
+ */
+local unsigned syncsearch(have, buf, len)
+unsigned FAR *have;
+const unsigned char FAR *buf;
+unsigned len;
+{
+    unsigned got;
+    unsigned next;
+
+    got = *have;
+    next = 0;
+    while (next < len && got < 4) {
+        if ((int)(buf[next]) == (got < 2 ? 0 : 0xff))
+            got++;
+        else if (buf[next])
+            got = 0;
+        else
+            got = 4 - got;
+        next++;
+    }
+    *have = got;
+    return next;
+}
+
+int ZEXPORT inflateSync(strm)
+z_streamp strm;
+{
+    unsigned len;               /* number of bytes to look at or looked at */
+    unsigned long in, out;      /* temporary to save total_in and total_out */
+    unsigned char buf[4];       /* to restore bit buffer to byte string */
+    struct inflate_state FAR *state;
+
+    /* check parameters */
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    if (strm->avail_in == 0 && state->bits < 8) return Z_BUF_ERROR;
+
+    /* if first time, start search in bit buffer */
+    if (state->mode != SYNC) {
+        state->mode = SYNC;
+        state->hold <<= state->bits & 7;
+        state->bits -= state->bits & 7;
+        len = 0;
+        while (state->bits >= 8) {
+            buf[len++] = (unsigned char)(state->hold);
+            state->hold >>= 8;
+            state->bits -= 8;
+        }
+        state->have = 0;
+        syncsearch(&(state->have), buf, len);
+    }
+
+    /* search available input */
+    len = syncsearch(&(state->have), strm->next_in, strm->avail_in);
+    strm->avail_in -= len;
+    strm->next_in += len;
+    strm->total_in += len;
+
+    /* return no joy or set up to restart inflate() on a new block */
+    if (state->have != 4) return Z_DATA_ERROR;
+    in = strm->total_in;  out = strm->total_out;
+    inflateReset(strm);
+    strm->total_in = in;  strm->total_out = out;
+    state->mode = TYPE;
+    return Z_OK;
+}
+
+/*
+   Returns true if inflate is currently at the end of a block generated by
+   Z_SYNC_FLUSH or Z_FULL_FLUSH. This function is used by one PPP
+   implementation to provide an additional safety check. PPP uses
+   Z_SYNC_FLUSH but removes the length bytes of the resulting empty stored
+   block. When decompressing, PPP checks that at the end of input packet,
+   inflate is waiting for these length bytes.
+ */
+int ZEXPORT inflateSyncPoint(strm)
+z_streamp strm;
+{
+    struct inflate_state FAR *state;
+
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    return state->mode == STORED && state->bits == 0;
+}
+
+int ZEXPORT inflateCopy(dest, source)
+z_streamp dest;
+z_streamp source;
+{
+    struct inflate_state FAR *state;
+    struct inflate_state FAR *copy;
+    unsigned char FAR *window;
+    unsigned wsize;
+
+    /* check input */
+    if (dest == Z_NULL || source == Z_NULL || source->state == Z_NULL ||
+        source->zalloc == (alloc_func)0 || source->zfree == (free_func)0)
+        return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)source->state;
+
+    /* allocate space */
+    copy = (struct inflate_state FAR *)
+           ZALLOC(source, 1, sizeof(struct inflate_state));
+    if (copy == Z_NULL) return Z_MEM_ERROR;
+    window = Z_NULL;
+    if (state->window != Z_NULL) {
+        window = (unsigned char FAR *)
+                 ZALLOC(source, 1U << state->wbits, sizeof(unsigned char));
+        if (window == Z_NULL) {
+            ZFREE(source, copy);
+            return Z_MEM_ERROR;
+        }
+    }
+
+    /* copy state */
+    zmemcpy((voidpf)dest, (voidpf)source, sizeof(z_stream));
+    zmemcpy((voidpf)copy, (voidpf)state, sizeof(struct inflate_state));
+    if (state->lencode >= state->codes &&
+        state->lencode <= state->codes + ENOUGH - 1) {
+        copy->lencode = copy->codes + (state->lencode - state->codes);
+        copy->distcode = copy->codes + (state->distcode - state->codes);
+    }
+    copy->next = copy->codes + (state->next - state->codes);
+    if (window != Z_NULL) {
+        wsize = 1U << state->wbits;
+        zmemcpy(window, state->window, wsize);
+    }
+    copy->window = window;
+    dest->state = (struct internal_state FAR *)copy;
+    return Z_OK;
+}
+
+int ZEXPORT inflateUndermine(strm, subvert)
+z_streamp strm;
+int subvert;
+{
+    struct inflate_state FAR *state;
+
+    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    state->sane = !subvert;
+#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
+    return Z_OK;
+#else
+    state->sane = 1;
+    return Z_DATA_ERROR;
+#endif
+}
+
+long ZEXPORT inflateMark(strm)
+z_streamp strm;
+{
+    struct inflate_state FAR *state;
+
+    //TK: Applied the following fix (also in actual zlib devel branch):
+    if (strm == Z_NULL || strm->state == Z_NULL)
+      return (long)(((unsigned long)0 - 1) << 16);
+    //TK: Code was (but clang 7.3 warns about bitshifting negative numbers):
+    //if (strm == Z_NULL || strm->state == Z_NULL) return -1L << 16;
+    state = (struct inflate_state FAR *)strm->state;
+    return ((long)(state->back) << 16) +
+        (state->mode == COPY ? state->length :
+            (state->mode == MATCH ? state->was - state->length : 0));
+}
+/* END OF DUMP OF mz_inflate.c*/
+/* START OF DUMP OF mz_inffast.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* inffast.c -- fast decoding
+ * Copyright (C) 1995-2008, 2010, 2013 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
 
 #ifndef ASMINF
 
@@ -8436,6 +9438,2099 @@ unsigned start;         /* inflate()'s starting value for strm->avail_out */
 
 #endif /* !ASMINF */
 /* END OF DUMP OF mz_inffast.c*/
+/* START OF DUMP OF mz_gzwrite.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* gzwrite.c -- zlib functions for writing gzip files
+ * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+/* START OF DUMP OF mz_gzguts.h*/
+/* gzguts.h -- zlib internal header definitions for gz* operations
+ * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+#include <sys/types.h>//ADDED BY TK
+#include <unistd.h>//ADDED BY TK
+#include <fcntl.h>//ADDED BY TK
+
+#ifdef _LARGEFILE64_SOURCE
+#  ifndef _LARGEFILE_SOURCE
+#    define _LARGEFILE_SOURCE 1
+#  endif
+#  ifdef _FILE_OFFSET_BITS
+#    undef _FILE_OFFSET_BITS
+#  endif
+#endif
+
+#ifdef HAVE_HIDDEN
+#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+#else
+#  define ZLIB_INTERNAL
+#endif
+
+#include <stdio.h>
+#ifdef STDC
+#  include <string.h>
+#  include <stdlib.h>
+#  include <limits.h>
+#endif
+#include <fcntl.h>
+
+#ifdef _WIN32
+#  include <stddef.h>
+#endif
+
+#if defined(__TURBOC__) || defined(_MSC_VER) || defined(_WIN32)
+#  include <io.h>
+#endif
+
+#ifdef WINAPI_FAMILY
+#  define open _open
+#  define read _read
+#  define write _write
+#  define close _close
+#endif
+
+#ifdef NO_DEFLATE       /* for compatibility with old definition */
+#  define NO_GZCOMPRESS
+#endif
+
+#if defined(STDC99) || (defined(__TURBOC__) && __TURBOC__ >= 0x550)
+#  ifndef HAVE_VSNPRINTF
+#    define HAVE_VSNPRINTF
+#  endif
+#endif
+
+#if defined(__CYGWIN__)
+#  ifndef HAVE_VSNPRINTF
+#    define HAVE_VSNPRINTF
+#  endif
+#endif
+
+#if defined(MSDOS) && defined(__BORLANDC__) && (BORLANDC > 0x410)
+#  ifndef HAVE_VSNPRINTF
+#    define HAVE_VSNPRINTF
+#  endif
+#endif
+
+#ifndef HAVE_VSNPRINTF
+#  ifdef MSDOS
+/* vsnprintf may exist on some MS-DOS compilers (DJGPP?),
+   but for now we just assume it doesn't. */
+#    define NO_vsnprintf
+#  endif
+#  ifdef __TURBOC__
+#    define NO_vsnprintf
+#  endif
+#  ifdef WIN32
+/* In Win32, vsnprintf is available as the "non-ANSI" _vsnprintf. */
+#    if !defined(vsnprintf) && !defined(NO_vsnprintf)
+#      if !defined(_MSC_VER) || ( defined(_MSC_VER) && _MSC_VER < 1500 )
+#         define vsnprintf _vsnprintf
+#      endif
+#    endif
+#  endif
+#  ifdef __SASC
+#    define NO_vsnprintf
+#  endif
+#  ifdef VMS
+#    define NO_vsnprintf
+#  endif
+#  ifdef __OS400__
+#    define NO_vsnprintf
+#  endif
+#  ifdef __MVS__
+#    define NO_vsnprintf
+#  endif
+#endif
+
+/* unlike snprintf (which is required in C99, yet still not supported by
+   Microsoft more than a decade later!), _snprintf does not guarantee null
+   termination of the result -- however this is only used in gzlib.c where
+   the result is assured to fit in the space provided */
+#ifdef _MSC_VER
+#  define snprintf _snprintf
+#endif
+
+#ifndef local
+#  define local static
+#endif
+/* compile with -Dlocal if your debugger can't find static symbols */
+
+/* gz* functions always use library allocation functions */
+#ifndef STDC
+  extern voidp  malloc OF((uInt size));
+  extern void   free   OF((voidpf ptr));
+#endif
+
+/* get errno and strerror definition */
+#if defined UNDER_CE
+#  include <windows.h>
+#  define zstrerror() gz_strwinerror((DWORD)GetLastError())
+#else
+#  ifndef NO_STRERROR
+#    include <errno.h>
+#    define zstrerror() strerror(errno)
+#  else
+#    define zstrerror() "stdio error (consult errno)"
+#  endif
+#endif
+
+/* provide prototypes for these when building zlib without LFS */
+#if !defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0
+    ZEXTERN gzFile ZEXPORT gzopen64 OF((const char *, const char *));
+    ZEXTERN z_off64_t ZEXPORT gzseek64 OF((gzFile, z_off64_t, int));
+    ZEXTERN z_off64_t ZEXPORT gztell64 OF((gzFile));
+    ZEXTERN z_off64_t ZEXPORT gzoffset64 OF((gzFile));
+#endif
+
+/* default memLevel */
+#if MAX_MEM_LEVEL >= 8
+#  define DEF_MEM_LEVEL 8
+#else
+#  define DEF_MEM_LEVEL  MAX_MEM_LEVEL
+#endif
+
+/* default i/o buffer size -- double this for output when reading (this and
+   twice this must be able to fit in an unsigned type) */
+#define GZBUFSIZE 8192
+
+/* gzip modes, also provide a little integrity check on the passed structure */
+#define GZ_NONE 0
+#define GZ_READ 7247
+#define GZ_WRITE 31153
+#define GZ_APPEND 1     /* mode set to GZ_WRITE after the file is opened */
+
+/* values for gz_state how */
+#define LOOK 0      /* look for a gzip header */
+#define COPY 1      /* copy input directly */
+#define GZIP 2      /* decompress a gzip stream */
+
+/* internal gzip file state data structure */
+typedef struct {
+        /* exposed contents for gzgetc() macro */
+    struct gzFile_s x;      /* "x" for exposed */
+                            /* x.have: number of bytes available at x.next */
+                            /* x.next: next output data to deliver or write */
+                            /* x.pos: current position in uncompressed data */
+        /* used for both reading and writing */
+    int mode;               /* see gzip modes above */
+    int fd;                 /* file descriptor */
+    char *path;             /* path or fd for error messages */
+    unsigned size;          /* buffer size, zero if not allocated yet */
+    unsigned want;          /* requested buffer size, default is GZBUFSIZE */
+    unsigned char *in;      /* input buffer */
+    unsigned char *out;     /* output buffer (double-sized when reading) */
+    int direct;             /* 0 if processing gzip, 1 if transparent */
+        /* just for reading */
+    int how;                /* 0: get header, 1: copy, 2: decompress */
+    z_off64_t start;        /* where the gzip data started, for rewinding */
+    int eof;                /* true if end of input file reached */
+    int past;               /* true if read requested past end */
+        /* just for writing */
+    int level;              /* compression level */
+    int strategy;           /* compression strategy */
+        /* seek request */
+    z_off64_t skip;         /* amount to skip (already rewound if backwards) */
+    int seek;               /* true if seek request pending */
+        /* error information */
+    int err;                /* error code */
+    char *msg;              /* error message */
+        /* zlib inflate or deflate stream */
+    z_stream strm;          /* stream structure in-place (not a pointer) */
+} gz_state;
+typedef gz_state FAR *gz_statep;
+
+/* shared functions */
+void ZLIB_INTERNAL gz_error OF((gz_statep, int, const char *));
+#if defined UNDER_CE
+char ZLIB_INTERNAL *gz_strwinerror OF((DWORD error));
+#endif
+
+/* GT_OFF(x), where x is an unsigned value, is true if x > maximum z_off64_t
+   value -- needed when comparing unsigned to z_off64_t, which is signed
+   (possible z_off64_t types off_t, off64_t, and long are all signed) */
+#ifdef INT_MAX
+#  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > INT_MAX)
+#else
+unsigned ZLIB_INTERNAL gz_intmax OF((void));
+#  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > gz_intmax())
+#endif
+/* END OF DUMP OF mz_gzguts.h*/
+
+/* Local functions */
+local int gz_init OF((gz_statep));
+local int gz_comp OF((gz_statep, int));
+local int gz_zero OF((gz_statep, z_off64_t));
+
+/* Initialize state for writing a gzip file.  Mark initialization by setting
+   state->size to non-zero.  Return -1 on failure or 0 on success. */
+local int gz_init(state)
+    gz_statep state;
+{
+    int ret;
+    z_streamp strm = &(state->strm);
+
+    /* allocate input buffer */
+    state->in = (unsigned char *)malloc(state->want);
+    if (state->in == NULL) {
+        gz_error(state, Z_MEM_ERROR, "out of memory");
+        return -1;
+    }
+
+    /* only need output buffer and deflate state if compressing */
+    if (!state->direct) {
+        /* allocate output buffer */
+        state->out = (unsigned char *)malloc(state->want);
+        if (state->out == NULL) {
+            free(state->in);
+            gz_error(state, Z_MEM_ERROR, "out of memory");
+            return -1;
+        }
+
+        /* allocate deflate memory, set up for gzip compression */
+        strm->zalloc = Z_NULL;
+        strm->zfree = Z_NULL;
+        strm->opaque = Z_NULL;
+        ret = deflateInit2(strm, state->level, Z_DEFLATED,
+                           MAX_WBITS + 16, DEF_MEM_LEVEL, state->strategy);
+        if (ret != Z_OK) {
+            free(state->out);
+            free(state->in);
+            gz_error(state, Z_MEM_ERROR, "out of memory");
+            return -1;
+        }
+    }
+
+    /* mark state as initialized */
+    state->size = state->want;
+
+    /* initialize write buffer if compressing */
+    if (!state->direct) {
+        strm->avail_out = state->size;
+        strm->next_out = state->out;
+        state->x.next = strm->next_out;
+    }
+    return 0;
+}
+
+/* Compress whatever is at avail_in and next_in and write to the output file.
+   Return -1 if there is an error writing to the output file, otherwise 0.
+   flush is assumed to be a valid deflate() flush value.  If flush is Z_FINISH,
+   then the deflate() state is reset to start a new gzip stream.  If gz->direct
+   is true, then simply write to the output file without compressing, and
+   ignore flush. */
+local int gz_comp(state, flush)
+    gz_statep state;
+    int flush;
+{
+    int ret, got;
+    unsigned have;
+    z_streamp strm = &(state->strm);
+
+    /* allocate memory if this is the first time through */
+    if (state->size == 0 && gz_init(state) == -1)
+        return -1;
+
+    /* write directly if requested */
+    if (state->direct) {
+        got = write(state->fd, strm->next_in, strm->avail_in);
+        if (got < 0 || (unsigned)got != strm->avail_in) {
+            gz_error(state, Z_ERRNO, zstrerror());
+            return -1;
+        }
+        strm->avail_in = 0;
+        return 0;
+    }
+
+    /* run deflate() on provided input until it produces no more output */
+    ret = Z_OK;
+    do {
+        /* write out current buffer contents if full, or if flushing, but if
+           doing Z_FINISH then don't write until we get to Z_STREAM_END */
+        if (strm->avail_out == 0 || (flush != Z_NO_FLUSH &&
+            (flush != Z_FINISH || ret == Z_STREAM_END))) {
+            have = (unsigned)(strm->next_out - state->x.next);
+            if (have && ((got = write(state->fd, state->x.next, have)) < 0 ||
+                         (unsigned)got != have)) {
+                gz_error(state, Z_ERRNO, zstrerror());
+                return -1;
+            }
+            if (strm->avail_out == 0) {
+                strm->avail_out = state->size;
+                strm->next_out = state->out;
+            }
+            state->x.next = strm->next_out;
+        }
+
+        /* compress */
+        have = strm->avail_out;
+        ret = deflate(strm, flush);
+        if (ret == Z_STREAM_ERROR) {
+            gz_error(state, Z_STREAM_ERROR,
+                      "internal error: deflate stream corrupt");
+            return -1;
+        }
+        have -= strm->avail_out;
+    } while (have);
+
+    /* if that completed a deflate stream, allow another to start */
+    if (flush == Z_FINISH)
+        deflateReset(strm);
+
+    /* all done, no errors */
+    return 0;
+}
+
+/* Compress len zeros to output.  Return -1 on error, 0 on success. */
+local int gz_zero(state, len)
+    gz_statep state;
+    z_off64_t len;
+{
+    int first;
+    unsigned n;
+    z_streamp strm = &(state->strm);
+
+    /* consume whatever's left in the input buffer */
+    if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
+        return -1;
+
+    /* compress len zeros (len guaranteed > 0) */
+    first = 1;
+    while (len) {
+        n = GT_OFF(state->size) || (z_off64_t)state->size > len ?
+            (unsigned)len : state->size;
+        if (first) {
+            memset(state->in, 0, n);
+            first = 0;
+        }
+        strm->avail_in = n;
+        strm->next_in = state->in;
+        state->x.pos += n;
+        if (gz_comp(state, Z_NO_FLUSH) == -1)
+            return -1;
+        len -= n;
+    }
+    return 0;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzwrite(file, buf, len)
+    gzFile file;
+    voidpc buf;
+    unsigned len;
+{
+    unsigned put = len;
+    gz_statep state;
+    z_streamp strm;
+
+    /* get internal structure */
+    if (file == NULL)
+        return 0;
+    state = (gz_statep)file;
+    strm = &(state->strm);
+
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK)
+        return 0;
+
+    /* since an int is returned, make sure len fits in one, otherwise return
+       with an error (this avoids the flaw in the interface) */
+    if ((int)len < 0) {
+        gz_error(state, Z_DATA_ERROR, "requested length does not fit in int");
+        return 0;
+    }
+
+    /* if len is zero, avoid unnecessary operations */
+    if (len == 0)
+        return 0;
+
+    /* allocate memory if this is the first time through */
+    if (state->size == 0 && gz_init(state) == -1)
+        return 0;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            return 0;
+    }
+
+    /* for small len, copy to input buffer, otherwise compress directly */
+    if (len < state->size) {
+        /* copy to input buffer, compress when full */
+        do {
+            unsigned have, copy;
+
+            if (strm->avail_in == 0)
+                strm->next_in = state->in;
+            have = (unsigned)((strm->next_in + strm->avail_in) - state->in);
+            copy = state->size - have;
+            if (copy > len)
+                copy = len;
+            memcpy(state->in + have, buf, copy);
+            strm->avail_in += copy;
+            state->x.pos += copy;
+            buf = (const char *)buf + copy;
+            len -= copy;
+            if (len && gz_comp(state, Z_NO_FLUSH) == -1)
+                return 0;
+        } while (len);
+    }
+    else {
+        /* consume whatever's left in the input buffer */
+        if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
+            return 0;
+
+        /* directly compress user buffer to file */
+        strm->avail_in = len;
+        strm->next_in = (z_const Bytef *)buf;
+        state->x.pos += len;
+        if (gz_comp(state, Z_NO_FLUSH) == -1)
+            return 0;
+    }
+
+    /* input was all buffered or compressed (put will fit in int) */
+    return (int)put;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzputc(file, c)
+    gzFile file;
+    int c;
+{
+    unsigned have;
+    unsigned char buf[1];
+    gz_statep state;
+    z_streamp strm;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    strm = &(state->strm);
+
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK)
+        return -1;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            return -1;
+    }
+
+    /* try writing to input buffer for speed (state->size == 0 if buffer not
+       initialized) */
+    if (state->size) {
+        if (strm->avail_in == 0)
+            strm->next_in = state->in;
+        have = (unsigned)((strm->next_in + strm->avail_in) - state->in);
+        if (have < state->size) {
+            state->in[have] = c;
+            strm->avail_in++;
+            state->x.pos++;
+            return c & 0xff;
+        }
+    }
+
+    /* no room in buffer or not initialized, use gz_write() */
+    buf[0] = c;
+    if (gzwrite(file, buf, 1) != 1)
+        return -1;
+    return c & 0xff;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzputs(file, str)
+    gzFile file;
+    const char *str;
+{
+    int ret;
+    unsigned len;
+
+    /* write string */
+    len = (unsigned)strlen(str);
+    ret = gzwrite(file, str, len);
+    return ret == 0 && len != 0 ? -1 : ret;
+}
+
+#if defined(STDC) || defined(Z_HAVE_STDARG_H)
+#include <stdarg.h>
+
+/* -- see zlib.h -- */
+int ZEXPORTVA gzvprintf(gzFile file, const char *format, va_list va)
+{
+    int size, len;
+    gz_statep state;
+    z_streamp strm;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    strm = &(state->strm);
+
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK)
+        return 0;
+
+    /* make sure we have some buffer space */
+    if (state->size == 0 && gz_init(state) == -1)
+        return 0;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            return 0;
+    }
+
+    /* consume whatever's left in the input buffer */
+    if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
+        return 0;
+
+    /* do the printf() into the input buffer, put length in len */
+    size = (int)(state->size);
+    state->in[size - 1] = 0;
+#ifdef NO_vsnprintf
+#  ifdef HAS_vsprintf_void
+    (void)vsprintf((char *)(state->in), format, va);
+    for (len = 0; len < size; len++)
+        if (state->in[len] == 0) break;
+#  else
+    len = vsprintf((char *)(state->in), format, va);
+#  endif
+#else
+#  ifdef HAS_vsnprintf_void
+    (void)vsnprintf((char *)(state->in), size, format, va);
+    len = strlen((char *)(state->in));
+#  else
+    len = vsnprintf((char *)(state->in), size, format, va);
+#  endif
+#endif
+
+    /* check that printf() results fit in buffer */
+    if (len <= 0 || len >= (int)size || state->in[size - 1] != 0)
+        return 0;
+
+    /* update buffer and position, defer compression until needed */
+    strm->avail_in = (unsigned)len;
+    strm->next_in = state->in;
+    state->x.pos += len;
+    return len;
+}
+
+int ZEXPORTVA gzprintf(gzFile file, const char *format, ...)
+{
+    va_list va;
+    int ret;
+
+    va_start(va, format);
+    ret = gzvprintf(file, format, va);
+    va_end(va);
+    return ret;
+}
+
+#else /* !STDC && !Z_HAVE_STDARG_H */
+
+/* -- see zlib.h -- */
+int ZEXPORTVA gzprintf (file, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
+                       a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
+    gzFile file;
+    const char *format;
+    int a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
+        a11, a12, a13, a14, a15, a16, a17, a18, a19, a20;
+{
+    int size, len;
+    gz_statep state;
+    z_streamp strm;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    strm = &(state->strm);
+
+    /* check that can really pass pointer in ints */
+    if (sizeof(int) != sizeof(void *))
+        return 0;
+
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK)
+        return 0;
+
+    /* make sure we have some buffer space */
+    if (state->size == 0 && gz_init(state) == -1)
+        return 0;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            return 0;
+    }
+
+    /* consume whatever's left in the input buffer */
+    if (strm->avail_in && gz_comp(state, Z_NO_FLUSH) == -1)
+        return 0;
+
+    /* do the printf() into the input buffer, put length in len */
+    size = (int)(state->size);
+    state->in[size - 1] = 0;
+#ifdef NO_snprintf
+#  ifdef HAS_sprintf_void
+    sprintf((char *)(state->in), format, a1, a2, a3, a4, a5, a6, a7, a8,
+            a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+    for (len = 0; len < size; len++)
+        if (state->in[len] == 0) break;
+#  else
+    len = sprintf((char *)(state->in), format, a1, a2, a3, a4, a5, a6, a7, a8,
+                  a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+#  endif
+#else
+#  ifdef HAS_snprintf_void
+    snprintf((char *)(state->in), size, format, a1, a2, a3, a4, a5, a6, a7, a8,
+             a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
+    len = strlen((char *)(state->in));
+#  else
+    len = snprintf((char *)(state->in), size, format, a1, a2, a3, a4, a5, a6,
+                   a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18,
+                   a19, a20);
+#  endif
+#endif
+
+    /* check that printf() results fit in buffer */
+    if (len <= 0 || len >= (int)size || state->in[size - 1] != 0)
+        return 0;
+
+    /* update buffer and position, defer compression until needed */
+    strm->avail_in = (unsigned)len;
+    strm->next_in = state->in;
+    state->x.pos += len;
+    return len;
+}
+
+#endif
+
+/* -- see zlib.h -- */
+int ZEXPORT gzflush(file, flush)
+    gzFile file;
+    int flush;
+{
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK)
+        return Z_STREAM_ERROR;
+
+    /* check flush parameter */
+    if (flush < 0 || flush > Z_FINISH)
+        return Z_STREAM_ERROR;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            return -1;
+    }
+
+    /* compress remaining data with requested flush */
+    gz_comp(state, flush);
+    return state->err;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzsetparams(file, level, strategy)
+    gzFile file;
+    int level;
+    int strategy;
+{
+    gz_statep state;
+    z_streamp strm;
+
+    /* get internal structure */
+    if (file == NULL)
+        return Z_STREAM_ERROR;
+    state = (gz_statep)file;
+    strm = &(state->strm);
+
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK)
+        return Z_STREAM_ERROR;
+
+    /* if no change is requested, then do nothing */
+    if (level == state->level && strategy == state->strategy)
+        return Z_OK;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            return -1;
+    }
+
+    /* change compression parameters for subsequent input */
+    if (state->size) {
+        /* flush previous input with previous parameters before changing */
+        if (strm->avail_in && gz_comp(state, Z_PARTIAL_FLUSH) == -1)
+            return state->err;
+        deflateParams(strm, level, strategy);
+    }
+    state->level = level;
+    state->strategy = strategy;
+    return Z_OK;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzclose_w(file)
+    gzFile file;
+{
+    int ret = Z_OK;
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return Z_STREAM_ERROR;
+    state = (gz_statep)file;
+
+    /* check that we're writing */
+    if (state->mode != GZ_WRITE)
+        return Z_STREAM_ERROR;
+
+    /* check for seek request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_zero(state, state->skip) == -1)
+            ret = state->err;
+    }
+
+    /* flush, free memory, and close file */
+    if (gz_comp(state, Z_FINISH) == -1)
+        ret = state->err;
+    if (state->size) {
+        if (!state->direct) {
+            (void)deflateEnd(&(state->strm));
+            free(state->out);
+        }
+        free(state->in);
+    }
+    gz_error(state, Z_OK, NULL);
+    free(state->path);
+    if (close(state->fd) == -1)
+        ret = Z_ERRNO;
+    free(state);
+    return ret;
+}
+/* END OF DUMP OF mz_gzwrite.c*/
+/* START OF DUMP OF mz_gzread.c*/
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* gzread.c -- zlib functions for reading gzip files
+ * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+
+/* Local functions */
+local int gz_load OF((gz_statep, unsigned char *, unsigned, unsigned *));
+local int gz_avail OF((gz_statep));
+local int gz_look OF((gz_statep));
+local int gz_decomp OF((gz_statep));
+local int gz_fetch OF((gz_statep));
+local int gz_skip OF((gz_statep, z_off64_t));
+
+/* Use read() to load a buffer -- return -1 on error, otherwise 0.  Read from
+   state->fd, and update state->eof, state->err, and state->msg as appropriate.
+   This function needs to loop on read(), since read() is not guaranteed to
+   read the number of bytes requested, depending on the type of descriptor. */
+local int gz_load(state, buf, len, have)
+    gz_statep state;
+    unsigned char *buf;
+    unsigned len;
+    unsigned *have;
+{
+    int ret;
+
+    *have = 0;
+    do {
+        ret = read(state->fd, buf + *have, len - *have);
+        if (ret <= 0)
+            break;
+        *have += ret;
+    } while (*have < len);
+    if (ret < 0) {
+        gz_error(state, Z_ERRNO, zstrerror());
+        return -1;
+    }
+    if (ret == 0)
+        state->eof = 1;
+    return 0;
+}
+
+/* Load up input buffer and set eof flag if last data loaded -- return -1 on
+   error, 0 otherwise.  Note that the eof flag is set when the end of the input
+   file is reached, even though there may be unused data in the buffer.  Once
+   that data has been used, no more attempts will be made to read the file.
+   If strm->avail_in != 0, then the current data is moved to the beginning of
+   the input buffer, and then the remainder of the buffer is loaded with the
+   available data from the input file. */
+local int gz_avail(state)
+    gz_statep state;
+{
+    unsigned got;
+    z_streamp strm = &(state->strm);
+
+    if (state->err != Z_OK && state->err != Z_BUF_ERROR)
+        return -1;
+    if (state->eof == 0) {
+        if (strm->avail_in) {       /* copy what's there to the start */
+            unsigned char *p = state->in;
+            unsigned const char *q = strm->next_in;
+            unsigned n = strm->avail_in;
+            do {
+                *p++ = *q++;
+            } while (--n);
+        }
+        if (gz_load(state, state->in + strm->avail_in,
+                    state->size - strm->avail_in, &got) == -1)
+            return -1;
+        strm->avail_in += got;
+        strm->next_in = state->in;
+    }
+    return 0;
+}
+
+/* Look for gzip header, set up for inflate or copy.  state->x.have must be 0.
+   If this is the first time in, allocate required memory.  state->how will be
+   left unchanged if there is no more input data available, will be set to COPY
+   if there is no gzip header and direct copying will be performed, or it will
+   be set to GZIP for decompression.  If direct copying, then leftover input
+   data from the input buffer will be copied to the output buffer.  In that
+   case, all further file reads will be directly to either the output buffer or
+   a user buffer.  If decompressing, the inflate state will be initialized.
+   gz_look() will return 0 on success or -1 on failure. */
+local int gz_look(state)
+    gz_statep state;
+{
+    z_streamp strm = &(state->strm);
+
+    /* allocate read buffers and inflate memory */
+    if (state->size == 0) {
+        /* allocate buffers */
+        state->in = (unsigned char *)malloc(state->want);
+        state->out = (unsigned char *)malloc(state->want << 1);
+        if (state->in == NULL || state->out == NULL) {
+            if (state->out != NULL)
+                free(state->out);
+            if (state->in != NULL)
+                free(state->in);
+            gz_error(state, Z_MEM_ERROR, "out of memory");
+            return -1;
+        }
+        state->size = state->want;
+
+        /* allocate inflate memory */
+        state->strm.zalloc = Z_NULL;
+        state->strm.zfree = Z_NULL;
+        state->strm.opaque = Z_NULL;
+        state->strm.avail_in = 0;
+        state->strm.next_in = Z_NULL;
+        if (inflateInit2(&(state->strm), 15 + 16) != Z_OK) {    /* gunzip */
+            free(state->out);
+            free(state->in);
+            state->size = 0;
+            gz_error(state, Z_MEM_ERROR, "out of memory");
+            return -1;
+        }
+    }
+
+    /* get at least the magic bytes in the input buffer */
+    if (strm->avail_in < 2) {
+        if (gz_avail(state) == -1)
+            return -1;
+        if (strm->avail_in == 0)
+            return 0;
+    }
+
+    /* look for gzip magic bytes -- if there, do gzip decoding (note: there is
+       a logical dilemma here when considering the case of a partially written
+       gzip file, to wit, if a single 31 byte is written, then we cannot tell
+       whether this is a single-byte file, or just a partially written gzip
+       file -- for here we assume that if a gzip file is being written, then
+       the header will be written in a single operation, so that reading a
+       single byte is sufficient indication that it is not a gzip file) */
+    if (strm->avail_in > 1 &&
+            strm->next_in[0] == 31 && strm->next_in[1] == 139) {
+        inflateReset(strm);
+        state->how = GZIP;
+        state->direct = 0;
+        return 0;
+    }
+
+    /* no gzip header -- if we were decoding gzip before, then this is trailing
+       garbage.  Ignore the trailing garbage and finish. */
+    if (state->direct == 0) {
+        strm->avail_in = 0;
+        state->eof = 1;
+        state->x.have = 0;
+        return 0;
+    }
+
+    /* doing raw i/o, copy any leftover input to output -- this assumes that
+       the output buffer is larger than the input buffer, which also assures
+       space for gzungetc() */
+    state->x.next = state->out;
+    if (strm->avail_in) {
+        memcpy(state->x.next, strm->next_in, strm->avail_in);
+        state->x.have = strm->avail_in;
+        strm->avail_in = 0;
+    }
+    state->how = COPY;
+    state->direct = 1;
+    return 0;
+}
+
+/* Decompress from input to the provided next_out and avail_out in the state.
+   On return, state->x.have and state->x.next point to the just decompressed
+   data.  If the gzip stream completes, state->how is reset to LOOK to look for
+   the next gzip stream or raw data, once state->x.have is depleted.  Returns 0
+   on success, -1 on failure. */
+local int gz_decomp(state)
+    gz_statep state;
+{
+    int ret = Z_OK;
+    unsigned had;
+    z_streamp strm = &(state->strm);
+
+    /* fill output buffer up to end of deflate stream */
+    had = strm->avail_out;
+    do {
+        /* get more input for inflate() */
+        if (strm->avail_in == 0 && gz_avail(state) == -1)
+            return -1;
+        if (strm->avail_in == 0) {
+            gz_error(state, Z_BUF_ERROR, "unexpected end of file");
+            break;
+        }
+
+        /* decompress and handle errors */
+        ret = inflate(strm, Z_NO_FLUSH);
+        if (ret == Z_STREAM_ERROR || ret == Z_NEED_DICT) {
+            gz_error(state, Z_STREAM_ERROR,
+                     "internal error: inflate stream corrupt");
+            return -1;
+        }
+        if (ret == Z_MEM_ERROR) {
+            gz_error(state, Z_MEM_ERROR, "out of memory");
+            return -1;
+        }
+        if (ret == Z_DATA_ERROR) {              /* deflate stream invalid */
+            gz_error(state, Z_DATA_ERROR,
+                     strm->msg == NULL ? "compressed data error" : strm->msg);
+            return -1;
+        }
+    } while (strm->avail_out && ret != Z_STREAM_END);
+
+    /* update available output */
+    state->x.have = had - strm->avail_out;
+    state->x.next = strm->next_out - state->x.have;
+
+    /* if the gzip stream completed successfully, look for another */
+    if (ret == Z_STREAM_END)
+        state->how = LOOK;
+
+    /* good decompression */
+    return 0;
+}
+
+/* Fetch data and put it in the output buffer.  Assumes state->x.have is 0.
+   Data is either copied from the input file or decompressed from the input
+   file depending on state->how.  If state->how is LOOK, then a gzip header is
+   looked for to determine whether to copy or decompress.  Returns -1 on error,
+   otherwise 0.  gz_fetch() will leave state->how as COPY or GZIP unless the
+   end of the input file has been reached and all data has been processed.  */
+local int gz_fetch(state)
+    gz_statep state;
+{
+    z_streamp strm = &(state->strm);
+
+    do {
+        switch(state->how) {
+        case LOOK:      /* -> LOOK, COPY (only if never GZIP), or GZIP */
+            if (gz_look(state) == -1)
+                return -1;
+            if (state->how == LOOK)
+                return 0;
+            break;
+        case COPY:      /* -> COPY */
+            if (gz_load(state, state->out, state->size << 1, &(state->x.have))
+                    == -1)
+                return -1;
+            state->x.next = state->out;
+            return 0;
+        case GZIP:      /* -> GZIP or LOOK (if end of gzip stream) */
+            strm->avail_out = state->size << 1;
+            strm->next_out = state->out;
+            if (gz_decomp(state) == -1)
+                return -1;
+        }
+    } while (state->x.have == 0 && (!state->eof || strm->avail_in));
+    return 0;
+}
+
+/* Skip len uncompressed bytes of output.  Return -1 on error, 0 on success. */
+local int gz_skip(state, len)
+    gz_statep state;
+    z_off64_t len;
+{
+    unsigned n;
+
+    /* skip over len bytes or reach end-of-file, whichever comes first */
+    while (len)
+        /* skip over whatever is in output buffer */
+        if (state->x.have) {
+            n = GT_OFF(state->x.have) || (z_off64_t)state->x.have > len ?
+                (unsigned)len : state->x.have;
+            state->x.have -= n;
+            state->x.next += n;
+            state->x.pos += n;
+            len -= n;
+        }
+
+        /* output buffer empty -- return if we're at the end of the input */
+        else if (state->eof && state->strm.avail_in == 0)
+            break;
+
+        /* need more data to skip -- load up output buffer */
+        else {
+            /* get more output, looking for header if required */
+            if (gz_fetch(state) == -1)
+                return -1;
+        }
+    return 0;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzread(file, buf, len)
+    gzFile file;
+    voidp buf;
+    unsigned len;
+{
+    unsigned got, n;
+    gz_statep state;
+    z_streamp strm;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    strm = &(state->strm);
+
+    /* check that we're reading and that there's no (serious) error */
+    if (state->mode != GZ_READ ||
+            (state->err != Z_OK && state->err != Z_BUF_ERROR))
+        return -1;
+
+    /* since an int is returned, make sure len fits in one, otherwise return
+       with an error (this avoids the flaw in the interface) */
+    if ((int)len < 0) {
+        gz_error(state, Z_DATA_ERROR, "requested length does not fit in int");
+        return -1;
+    }
+
+    /* if len is zero, avoid unnecessary operations */
+    if (len == 0)
+        return 0;
+
+    /* process a skip request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_skip(state, state->skip) == -1)
+            return -1;
+    }
+
+    /* get len bytes to buf, or less than len if at the end */
+    got = 0;
+    do {
+        /* first just try copying data from the output buffer */
+        if (state->x.have) {
+            n = state->x.have > len ? len : state->x.have;
+            memcpy(buf, state->x.next, n);
+            state->x.next += n;
+            state->x.have -= n;
+        }
+
+        /* output buffer empty -- return if we're at the end of the input */
+        else if (state->eof && strm->avail_in == 0) {
+            state->past = 1;        /* tried to read past end */
+            break;
+        }
+
+        /* need output data -- for small len or new stream load up our output
+           buffer */
+        else if (state->how == LOOK || len < (state->size << 1)) {
+            /* get more output, looking for header if required */
+            if (gz_fetch(state) == -1)
+                return -1;
+            continue;       /* no progress yet -- go back to copy above */
+            /* the copy above assures that we will leave with space in the
+               output buffer, allowing at least one gzungetc() to succeed */
+        }
+
+        /* large len -- read directly into user buffer */
+        else if (state->how == COPY) {      /* read directly */
+            if (gz_load(state, (unsigned char *)buf, len, &n) == -1)
+                return -1;
+        }
+
+        /* large len -- decompress directly into user buffer */
+        else {  /* state->how == GZIP */
+            strm->avail_out = len;
+            strm->next_out = (unsigned char *)buf;
+            if (gz_decomp(state) == -1)
+                return -1;
+            n = state->x.have;
+            state->x.have = 0;
+        }
+
+        /* update progress */
+        len -= n;
+        buf = (char *)buf + n;
+        got += n;
+        state->x.pos += n;
+    } while (len);
+
+    /* return number of bytes read into user buffer (will fit in int) */
+    return (int)got;
+}
+
+/* -- see zlib.h -- */
+#ifdef Z_PREFIX_SET
+#  undef z_gzgetc
+#else
+#  undef gzgetc
+#endif
+int ZEXPORT gzgetc(file)
+    gzFile file;
+{
+    int ret;
+    unsigned char buf[1];
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+
+    /* check that we're reading and that there's no (serious) error */
+    if (state->mode != GZ_READ ||
+        (state->err != Z_OK && state->err != Z_BUF_ERROR))
+        return -1;
+
+    /* try output buffer (no need to check for skip request) */
+    if (state->x.have) {
+        state->x.have--;
+        state->x.pos++;
+        return *(state->x.next)++;
+    }
+
+    /* nothing there -- try gzread() */
+    ret = gzread(file, buf, 1);
+    return ret < 1 ? -1 : buf[0];
+}
+
+int ZEXPORT gzgetc_(file)
+gzFile file;
+{
+    return gzgetc(file);
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzungetc(c, file)
+    int c;
+    gzFile file;
+{
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+
+    /* check that we're reading and that there's no (serious) error */
+    if (state->mode != GZ_READ ||
+        (state->err != Z_OK && state->err != Z_BUF_ERROR))
+        return -1;
+
+    /* process a skip request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_skip(state, state->skip) == -1)
+            return -1;
+    }
+
+    /* can't push EOF */
+    if (c < 0)
+        return -1;
+
+    /* if output buffer empty, put byte at end (allows more pushing) */
+    if (state->x.have == 0) {
+        state->x.have = 1;
+        state->x.next = state->out + (state->size << 1) - 1;
+        state->x.next[0] = c;
+        state->x.pos--;
+        state->past = 0;
+        return c;
+    }
+
+    /* if no room, give up (must have already done a gzungetc()) */
+    if (state->x.have == (state->size << 1)) {
+        gz_error(state, Z_DATA_ERROR, "out of room to push characters");
+        return -1;
+    }
+
+    /* slide output data if needed and insert byte before existing data */
+    if (state->x.next == state->out) {
+        unsigned char *src = state->out + state->x.have;
+        unsigned char *dest = state->out + (state->size << 1);
+        while (src > state->out)
+            *--dest = *--src;
+        state->x.next = dest;
+    }
+    state->x.have++;
+    state->x.next--;
+    state->x.next[0] = c;
+    state->x.pos--;
+    state->past = 0;
+    return c;
+}
+
+/* -- see zlib.h -- */
+char * ZEXPORT gzgets(file, buf, len)
+    gzFile file;
+    char *buf;
+    int len;
+{
+    unsigned left, n;
+    char *str;
+    unsigned char *eol;
+    gz_statep state;
+
+    /* check parameters and get internal structure */
+    if (file == NULL || buf == NULL || len < 1)
+        return NULL;
+    state = (gz_statep)file;
+
+    /* check that we're reading and that there's no (serious) error */
+    if (state->mode != GZ_READ ||
+        (state->err != Z_OK && state->err != Z_BUF_ERROR))
+        return NULL;
+
+    /* process a skip request */
+    if (state->seek) {
+        state->seek = 0;
+        if (gz_skip(state, state->skip) == -1)
+            return NULL;
+    }
+
+    /* copy output bytes up to new line or len - 1, whichever comes first --
+       append a terminating zero to the string (we don't check for a zero in
+       the contents, let the user worry about that) */
+    str = buf;
+    left = (unsigned)len - 1;
+    if (left) do {
+        /* assure that something is in the output buffer */
+        if (state->x.have == 0 && gz_fetch(state) == -1)
+            return NULL;                /* error */
+        if (state->x.have == 0) {       /* end of file */
+            state->past = 1;            /* read past end */
+            break;                      /* return what we have */
+        }
+
+        /* look for end-of-line in current output buffer */
+        n = state->x.have > left ? left : state->x.have;
+        eol = (unsigned char *)memchr(state->x.next, '\n', n);
+        if (eol != NULL)
+            n = (unsigned)(eol - state->x.next) + 1;
+
+        /* copy through end-of-line, or remainder if not found */
+        memcpy(buf, state->x.next, n);
+        state->x.have -= n;
+        state->x.next += n;
+        state->x.pos += n;
+        left -= n;
+        buf += n;
+    } while (left && eol == NULL);
+
+    /* return terminated string, or if nothing, end of file */
+    if (buf == str)
+        return NULL;
+    buf[0] = 0;
+    return str;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzdirect(file)
+    gzFile file;
+{
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return 0;
+    state = (gz_statep)file;
+
+    /* if the state is not known, but we can find out, then do so (this is
+       mainly for right after a gzopen() or gzdopen()) */
+    if (state->mode == GZ_READ && state->how == LOOK && state->x.have == 0)
+        (void)gz_look(state);
+
+    /* return 1 if transparent, 0 if processing a gzip stream */
+    return state->direct;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzclose_r(file)
+    gzFile file;
+{
+    int ret, err;
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return Z_STREAM_ERROR;
+    state = (gz_statep)file;
+
+    /* check that we're reading */
+    if (state->mode != GZ_READ)
+        return Z_STREAM_ERROR;
+
+    /* free memory and close file */
+    if (state->size) {
+        inflateEnd(&(state->strm));
+        free(state->out);
+        free(state->in);
+    }
+    err = state->err == Z_BUF_ERROR ? Z_BUF_ERROR : Z_OK;
+    gz_error(state, Z_OK, NULL);
+    free(state->path);
+    ret = close(state->fd);
+    free(state);
+    return ret ? Z_ERRNO : err;
+}
+/* END OF DUMP OF mz_gzread.c*/
+/* START OF DUMP OF mz_gzlib.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* gzlib.c -- zlib functions common to reading and writing gzip files
+ * Copyright (C) 2004, 2010, 2011, 2012, 2013 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+
+#if defined(_WIN32) && !defined(__BORLANDC__)
+#  define LSEEK _lseeki64
+#else
+#if defined(_LARGEFILE64_SOURCE) && _LFS64_LARGEFILE-0
+#  define LSEEK lseek64
+#else
+#  define LSEEK lseek
+#endif
+#endif
+
+/* Local functions */
+local void gz_reset OF((gz_statep));
+local gzFile gz_open OF((const void *, int, const char *));
+
+#if defined UNDER_CE
+
+/* Map the Windows error number in ERROR to a locale-dependent error message
+   string and return a pointer to it.  Typically, the values for ERROR come
+   from GetLastError.
+
+   The string pointed to shall not be modified by the application, but may be
+   overwritten by a subsequent call to gz_strwinerror
+
+   The gz_strwinerror function does not change the current setting of
+   GetLastError. */
+char ZLIB_INTERNAL *gz_strwinerror (error)
+     DWORD error;
+{
+    static char buf[1024];
+
+    wchar_t *msgbuf;
+    DWORD lasterr = GetLastError();
+    DWORD chars = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
+        | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+        NULL,
+        error,
+        0, /* Default language */
+        (LPVOID)&msgbuf,
+        0,
+        NULL);
+    if (chars != 0) {
+        /* If there is an \r\n appended, zap it.  */
+        if (chars >= 2
+            && msgbuf[chars - 2] == '\r' && msgbuf[chars - 1] == '\n') {
+            chars -= 2;
+            msgbuf[chars] = 0;
+        }
+
+        if (chars > sizeof (buf) - 1) {
+            chars = sizeof (buf) - 1;
+            msgbuf[chars] = 0;
+        }
+
+        wcstombs(buf, msgbuf, chars + 1);
+        LocalFree(msgbuf);
+    }
+    else {
+        sprintf(buf, "unknown win32 error (%ld)", error);
+    }
+
+    SetLastError(lasterr);
+    return buf;
+}
+
+#endif /* UNDER_CE */
+
+/* Reset gzip file state */
+local void gz_reset(state)
+    gz_statep state;
+{
+    state->x.have = 0;              /* no output data available */
+    if (state->mode == GZ_READ) {   /* for reading ... */
+        state->eof = 0;             /* not at end of file */
+        state->past = 0;            /* have not read past end yet */
+        state->how = LOOK;          /* look for gzip header */
+    }
+    state->seek = 0;                /* no seek request pending */
+    gz_error(state, Z_OK, NULL);    /* clear error */
+    state->x.pos = 0;               /* no uncompressed data yet */
+    state->strm.avail_in = 0;       /* no input data yet */
+}
+
+/* Open a gzip file either by name or file descriptor. */
+local gzFile gz_open(path, fd, mode)
+    const void *path;
+    int fd;
+    const char *mode;
+{
+    gz_statep state;
+    size_t len;
+    int oflag;
+#ifdef O_CLOEXEC
+    int cloexec = 0;
+#endif
+#ifdef O_EXCL
+    int exclusive = 0;
+#endif
+
+    /* check input */
+    if (path == NULL)
+        return NULL;
+
+    /* allocate gzFile structure to return */
+    state = (gz_statep)malloc(sizeof(gz_state));
+    if (state == NULL)
+        return NULL;
+    state->size = 0;            /* no buffers allocated yet */
+    state->want = GZBUFSIZE;    /* requested buffer size */
+    state->msg = NULL;          /* no error message yet */
+
+    /* interpret mode */
+    state->mode = GZ_NONE;
+    state->level = Z_DEFAULT_COMPRESSION;
+    state->strategy = Z_DEFAULT_STRATEGY;
+    state->direct = 0;
+    while (*mode) {
+        if (*mode >= '0' && *mode <= '9')
+            state->level = *mode - '0';
+        else
+            switch (*mode) {
+            case 'r':
+                state->mode = GZ_READ;
+                break;
+#ifndef NO_GZCOMPRESS
+            case 'w':
+                state->mode = GZ_WRITE;
+                break;
+            case 'a':
+                state->mode = GZ_APPEND;
+                break;
+#endif
+            case '+':       /* can't read and write at the same time */
+                free(state);
+                return NULL;
+            case 'b':       /* ignore -- will request binary anyway */
+                break;
+#ifdef O_CLOEXEC
+            case 'e':
+                cloexec = 1;
+                break;
+#endif
+#ifdef O_EXCL
+            case 'x':
+                exclusive = 1;
+                break;
+#endif
+            case 'f':
+                state->strategy = Z_FILTERED;
+                break;
+            case 'h':
+                state->strategy = Z_HUFFMAN_ONLY;
+                break;
+            case 'R':
+                state->strategy = Z_RLE;
+                break;
+            case 'F':
+                state->strategy = Z_FIXED;
+                break;
+            case 'T':
+                state->direct = 1;
+                break;
+            default:        /* could consider as an error, but just ignore */
+                ;
+            }
+        mode++;
+    }
+
+    /* must provide an "r", "w", or "a" */
+    if (state->mode == GZ_NONE) {
+        free(state);
+        return NULL;
+    }
+
+    /* can't force transparent read */
+    if (state->mode == GZ_READ) {
+        if (state->direct) {
+            free(state);
+            return NULL;
+        }
+        state->direct = 1;      /* for empty file */
+    }
+
+    /* save the path name for error messages */
+#ifdef _WIN32
+    if (fd == -2) {
+        len = wcstombs(NULL, path, 0);
+        if (len == (size_t)-1)
+            len = 0;
+    }
+    else
+#endif
+        len = strlen((const char *)path);
+    state->path = (char *)malloc(len + 1);
+    if (state->path == NULL) {
+        free(state);
+        return NULL;
+    }
+#ifdef _WIN32
+    if (fd == -2)
+        if (len)
+            wcstombs(state->path, path, len + 1);
+        else
+            *(state->path) = 0;
+    else
+#endif
+#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
+        snprintf(state->path, len + 1, "%s", (const char *)path);
+#else
+        strcpy(state->path, path);
+#endif
+
+    /* compute the flags for open() */
+    oflag =
+#ifdef O_LARGEFILE
+        O_LARGEFILE |
+#endif
+#ifdef O_BINARY
+        O_BINARY |
+#endif
+#ifdef O_CLOEXEC
+        (cloexec ? O_CLOEXEC : 0) |
+#endif
+        (state->mode == GZ_READ ?
+         O_RDONLY :
+         (O_WRONLY | O_CREAT |
+#ifdef O_EXCL
+          (exclusive ? O_EXCL : 0) |
+#endif
+          (state->mode == GZ_WRITE ?
+           O_TRUNC :
+           O_APPEND)));
+
+    /* open the file with the appropriate flags (or just use fd) */
+    state->fd = fd > -1 ? fd : (
+#ifdef _WIN32
+        fd == -2 ? _wopen(path, oflag, 0666) :
+#endif
+        open((const char *)path, oflag, 0666));
+    if (state->fd == -1) {
+        free(state->path);
+        free(state);
+        return NULL;
+    }
+    if (state->mode == GZ_APPEND)
+        state->mode = GZ_WRITE;         /* simplify later checks */
+
+    /* save the current position for rewinding (only if reading) */
+    if (state->mode == GZ_READ) {
+        state->start = LSEEK(state->fd, 0, SEEK_CUR);
+        if (state->start == -1) state->start = 0;
+    }
+
+    /* initialize stream */
+    gz_reset(state);
+
+    /* return stream */
+    return (gzFile)state;
+}
+
+/* -- see zlib.h -- */
+gzFile ZEXPORT gzopen(path, mode)
+    const char *path;
+    const char *mode;
+{
+    return gz_open(path, -1, mode);
+}
+
+/* -- see zlib.h -- */
+gzFile ZEXPORT gzopen64(path, mode)
+    const char *path;
+    const char *mode;
+{
+    return gz_open(path, -1, mode);
+}
+
+/* -- see zlib.h -- */
+gzFile ZEXPORT gzdopen(fd, mode)
+    int fd;
+    const char *mode;
+{
+    char *path;         /* identifier for error messages */
+    gzFile gz;
+
+    if (fd == -1 || (path = (char *)malloc(7 + 3 * sizeof(int))) == NULL)
+        return NULL;
+#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
+    snprintf(path, 7 + 3 * sizeof(int), "<fd:%d>", fd); /* for debugging */
+#else
+    sprintf(path, "<fd:%d>", fd);   /* for debugging */
+#endif
+    gz = gz_open(path, fd, mode);
+    free(path);
+    return gz;
+}
+
+/* -- see zlib.h -- */
+#ifdef _WIN32
+gzFile ZEXPORT gzopen_w(path, mode)
+    const wchar_t *path;
+    const char *mode;
+{
+    return gz_open(path, -2, mode);
+}
+#endif
+
+/* -- see zlib.h -- */
+int ZEXPORT gzbuffer(file, size)
+    gzFile file;
+    unsigned size;
+{
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return -1;
+
+    /* make sure we haven't already allocated memory */
+    if (state->size != 0)
+        return -1;
+
+    /* check and set requested size */
+    if (size < 2)
+        size = 2;               /* need two bytes to check magic header */
+    state->want = size;
+    return 0;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzrewind(file)
+    gzFile file;
+{
+    gz_statep state;
+
+    /* get internal structure */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+
+    /* check that we're reading and that there's no error */
+    if (state->mode != GZ_READ ||
+            (state->err != Z_OK && state->err != Z_BUF_ERROR))
+        return -1;
+
+    /* back up and start over */
+    if (LSEEK(state->fd, state->start, SEEK_SET) == -1)
+        return -1;
+    gz_reset(state);
+    return 0;
+}
+
+/* -- see zlib.h -- */
+z_off64_t ZEXPORT gzseek64(file, offset, whence)
+    gzFile file;
+    z_off64_t offset;
+    int whence;
+{
+    unsigned n;
+    z_off64_t ret;
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return -1;
+
+    /* check that there's no error */
+    if (state->err != Z_OK && state->err != Z_BUF_ERROR)
+        return -1;
+
+    /* can only seek from start or relative to current position */
+    if (whence != SEEK_SET && whence != SEEK_CUR)
+        return -1;
+
+    /* normalize offset to a SEEK_CUR specification */
+    if (whence == SEEK_SET)
+        offset -= state->x.pos;
+    else if (state->seek)
+        offset += state->skip;
+    state->seek = 0;
+
+    /* if within raw area while reading, just go there */
+    if (state->mode == GZ_READ && state->how == COPY &&
+            state->x.pos + offset >= 0) {
+        ret = LSEEK(state->fd, offset - state->x.have, SEEK_CUR);
+        if (ret == -1)
+            return -1;
+        state->x.have = 0;
+        state->eof = 0;
+        state->past = 0;
+        state->seek = 0;
+        gz_error(state, Z_OK, NULL);
+        state->strm.avail_in = 0;
+        state->x.pos += offset;
+        return state->x.pos;
+    }
+
+    /* calculate skip amount, rewinding if needed for back seek when reading */
+    if (offset < 0) {
+        if (state->mode != GZ_READ)         /* writing -- can't go backwards */
+            return -1;
+        offset += state->x.pos;
+        if (offset < 0)                     /* before start of file! */
+            return -1;
+        if (gzrewind(file) == -1)           /* rewind, then skip to offset */
+            return -1;
+    }
+
+    /* if reading, skip what's in output buffer (one less gzgetc() check) */
+    if (state->mode == GZ_READ) {
+        n = GT_OFF(state->x.have) || (z_off64_t)state->x.have > offset ?
+            (unsigned)offset : state->x.have;
+        state->x.have -= n;
+        state->x.next += n;
+        state->x.pos += n;
+        offset -= n;
+    }
+
+    /* request skip (if not zero) */
+    if (offset) {
+        state->seek = 1;
+        state->skip = offset;
+    }
+    return state->x.pos + offset;
+}
+
+/* -- see zlib.h -- */
+z_off_t ZEXPORT gzseek(file, offset, whence)
+    gzFile file;
+    z_off_t offset;
+    int whence;
+{
+    z_off64_t ret;
+
+    ret = gzseek64(file, (z_off64_t)offset, whence);
+    return ret == (z_off_t)ret ? (z_off_t)ret : -1;
+}
+
+/* -- see zlib.h -- */
+z_off64_t ZEXPORT gztell64(file)
+    gzFile file;
+{
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return -1;
+
+    /* return position */
+    return state->x.pos + (state->seek ? state->skip : 0);
+}
+
+/* -- see zlib.h -- */
+z_off_t ZEXPORT gztell(file)
+    gzFile file;
+{
+    z_off64_t ret;
+
+    ret = gztell64(file);
+    return ret == (z_off_t)ret ? (z_off_t)ret : -1;
+}
+
+/* -- see zlib.h -- */
+z_off64_t ZEXPORT gzoffset64(file)
+    gzFile file;
+{
+    z_off64_t offset;
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return -1;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return -1;
+
+    /* compute and return effective offset in file */
+    offset = LSEEK(state->fd, 0, SEEK_CUR);
+    if (offset == -1)
+        return -1;
+    if (state->mode == GZ_READ)             /* reading */
+        offset -= state->strm.avail_in;     /* don't count buffered input */
+    return offset;
+}
+
+/* -- see zlib.h -- */
+z_off_t ZEXPORT gzoffset(file)
+    gzFile file;
+{
+    z_off64_t ret;
+
+    ret = gzoffset64(file);
+    return ret == (z_off_t)ret ? (z_off_t)ret : -1;
+}
+
+/* -- see zlib.h -- */
+int ZEXPORT gzeof(file)
+    gzFile file;
+{
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return 0;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return 0;
+
+    /* return end-of-file state */
+    return state->mode == GZ_READ ? state->past : 0;
+}
+
+/* -- see zlib.h -- */
+const char * ZEXPORT gzerror(file, errnum)
+    gzFile file;
+    int *errnum;
+{
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return NULL;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return NULL;
+
+    /* return error information */
+    if (errnum != NULL)
+        *errnum = state->err;
+    return state->err == Z_MEM_ERROR ? "out of memory" :
+                                       (state->msg == NULL ? "" : state->msg);
+}
+
+/* -- see zlib.h -- */
+void ZEXPORT gzclearerr(file)
+    gzFile file;
+{
+    gz_statep state;
+
+    /* get internal structure and check integrity */
+    if (file == NULL)
+        return;
+    state = (gz_statep)file;
+    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
+        return;
+
+    /* clear error and end-of-file */
+    if (state->mode == GZ_READ) {
+        state->eof = 0;
+        state->past = 0;
+    }
+    gz_error(state, Z_OK, NULL);
+}
+
+/* Create an error message in allocated memory and set state->err and
+   state->msg accordingly.  Free any previous error message already there.  Do
+   not try to free or allocate space if the error is Z_MEM_ERROR (out of
+   memory).  Simply save the error message as a static string.  If there is an
+   allocation failure constructing the error message, then convert the error to
+   out of memory. */
+void ZLIB_INTERNAL gz_error(state, err, msg)
+    gz_statep state;
+    int err;
+    const char *msg;
+{
+    /* free previously allocated message and clear */
+    if (state->msg != NULL) {
+        if (state->err != Z_MEM_ERROR)
+            free(state->msg);
+        state->msg = NULL;
+    }
+
+    /* if fatal, set state->x.have to 0 so that the gzgetc() macro fails */
+    if (err != Z_OK && err != Z_BUF_ERROR)
+        state->x.have = 0;
+
+    /* set error code, and if no message, then done */
+    state->err = err;
+    if (msg == NULL)
+        return;
+
+    /* for an out of memory error, return literal string when requested */
+    if (err == Z_MEM_ERROR)
+        return;
+
+    /* construct error message with path */
+    if ((state->msg = (char *)malloc(strlen(state->path) + strlen(msg) + 3)) ==
+            NULL) {
+        state->err = Z_MEM_ERROR;
+        return;
+    }
+#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
+    snprintf(state->msg, strlen(state->path) + strlen(msg) + 3,
+             "%s%s%s", state->path, ": ", msg);
+#else
+    strcpy(state->msg, state->path);
+    strcat(state->msg, ": ");
+    strcat(state->msg, msg);
+#endif
+    return;
+}
+
+#ifndef INT_MAX
+/* portably return maximum value for an int (when limits.h presumed not
+   available) -- we need to do this to cover cases where 2's complement not
+   used, since C standard permits 1's complement and sign-bit representations,
+   otherwise we could just use ((unsigned)-1) >> 1 */
+unsigned ZLIB_INTERNAL gz_intmax()
+{
+    unsigned p, q;
+
+    p = 1;
+    do {
+        q = p;
+        p <<= 1;
+        p++;
+    } while (p > q);
+    return q >> 1;
+}
+#endif
+/* END OF DUMP OF mz_gzlib.c*/
+/* START OF DUMP OF mz_gzclose.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* gzclose.c -- zlib gzclose() function
+ * Copyright (C) 2004, 2010 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+
+/* gzclose() is in a separate file so that it is linked in only if it is used.
+   That way the other gzclose functions can be used instead to avoid linking in
+   unneeded compression or decompression routines. */
+int ZEXPORT gzclose(file)
+    gzFile file;
+{
+#ifndef NO_GZCOMPRESS
+    gz_statep state;
+
+    if (file == NULL)
+        return Z_STREAM_ERROR;
+    state = (gz_statep)file;
+
+    return state->mode == GZ_READ ? gzclose_r(file) : gzclose_w(file);
+#else
+    return gzclose_r(file);
+#endif
+}
+/* END OF DUMP OF mz_gzclose.c*/
 /* START OF DUMP OF mz_deflate.c*/
 #ifdef GZIP
 #  undef GZIP
@@ -10416,2784 +13511,6 @@ local block_state deflate_huff(s, flush)
     return block_done;
 }
 /* END OF DUMP OF mz_deflate.c*/
-/* START OF DUMP OF mz_gzlib.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* gzlib.c -- zlib functions common to reading and writing gzip files
- * Copyright (C) 2004, 2010, 2011, 2012, 2013 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-
-#if defined(_WIN32) && !defined(__BORLANDC__)
-#  define LSEEK _lseeki64
-#else
-#if defined(_LARGEFILE64_SOURCE) && _LFS64_LARGEFILE-0
-#  define LSEEK lseek64
-#else
-#  define LSEEK lseek
-#endif
-#endif
-
-/* Local functions */
-local void gz_reset OF((gz_statep));
-local gzFile gz_open OF((const void *, int, const char *));
-
-#if defined UNDER_CE
-
-/* Map the Windows error number in ERROR to a locale-dependent error message
-   string and return a pointer to it.  Typically, the values for ERROR come
-   from GetLastError.
-
-   The string pointed to shall not be modified by the application, but may be
-   overwritten by a subsequent call to gz_strwinerror
-
-   The gz_strwinerror function does not change the current setting of
-   GetLastError. */
-char ZLIB_INTERNAL *gz_strwinerror (error)
-     DWORD error;
-{
-    static char buf[1024];
-
-    wchar_t *msgbuf;
-    DWORD lasterr = GetLastError();
-    DWORD chars = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
-        | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-        NULL,
-        error,
-        0, /* Default language */
-        (LPVOID)&msgbuf,
-        0,
-        NULL);
-    if (chars != 0) {
-        /* If there is an \r\n appended, zap it.  */
-        if (chars >= 2
-            && msgbuf[chars - 2] == '\r' && msgbuf[chars - 1] == '\n') {
-            chars -= 2;
-            msgbuf[chars] = 0;
-        }
-
-        if (chars > sizeof (buf) - 1) {
-            chars = sizeof (buf) - 1;
-            msgbuf[chars] = 0;
-        }
-
-        wcstombs(buf, msgbuf, chars + 1);
-        LocalFree(msgbuf);
-    }
-    else {
-        sprintf(buf, "unknown win32 error (%ld)", error);
-    }
-
-    SetLastError(lasterr);
-    return buf;
-}
-
-#endif /* UNDER_CE */
-
-/* Reset gzip file state */
-local void gz_reset(state)
-    gz_statep state;
-{
-    state->x.have = 0;              /* no output data available */
-    if (state->mode == GZ_READ) {   /* for reading ... */
-        state->eof = 0;             /* not at end of file */
-        state->past = 0;            /* have not read past end yet */
-        state->how = LOOK;          /* look for gzip header */
-    }
-    state->seek = 0;                /* no seek request pending */
-    gz_error(state, Z_OK, NULL);    /* clear error */
-    state->x.pos = 0;               /* no uncompressed data yet */
-    state->strm.avail_in = 0;       /* no input data yet */
-}
-
-/* Open a gzip file either by name or file descriptor. */
-local gzFile gz_open(path, fd, mode)
-    const void *path;
-    int fd;
-    const char *mode;
-{
-    gz_statep state;
-    size_t len;
-    int oflag;
-#ifdef O_CLOEXEC
-    int cloexec = 0;
-#endif
-#ifdef O_EXCL
-    int exclusive = 0;
-#endif
-
-    /* check input */
-    if (path == NULL)
-        return NULL;
-
-    /* allocate gzFile structure to return */
-    state = (gz_statep)malloc(sizeof(gz_state));
-    if (state == NULL)
-        return NULL;
-    state->size = 0;            /* no buffers allocated yet */
-    state->want = GZBUFSIZE;    /* requested buffer size */
-    state->msg = NULL;          /* no error message yet */
-
-    /* interpret mode */
-    state->mode = GZ_NONE;
-    state->level = Z_DEFAULT_COMPRESSION;
-    state->strategy = Z_DEFAULT_STRATEGY;
-    state->direct = 0;
-    while (*mode) {
-        if (*mode >= '0' && *mode <= '9')
-            state->level = *mode - '0';
-        else
-            switch (*mode) {
-            case 'r':
-                state->mode = GZ_READ;
-                break;
-#ifndef NO_GZCOMPRESS
-            case 'w':
-                state->mode = GZ_WRITE;
-                break;
-            case 'a':
-                state->mode = GZ_APPEND;
-                break;
-#endif
-            case '+':       /* can't read and write at the same time */
-                free(state);
-                return NULL;
-            case 'b':       /* ignore -- will request binary anyway */
-                break;
-#ifdef O_CLOEXEC
-            case 'e':
-                cloexec = 1;
-                break;
-#endif
-#ifdef O_EXCL
-            case 'x':
-                exclusive = 1;
-                break;
-#endif
-            case 'f':
-                state->strategy = Z_FILTERED;
-                break;
-            case 'h':
-                state->strategy = Z_HUFFMAN_ONLY;
-                break;
-            case 'R':
-                state->strategy = Z_RLE;
-                break;
-            case 'F':
-                state->strategy = Z_FIXED;
-                break;
-            case 'T':
-                state->direct = 1;
-                break;
-            default:        /* could consider as an error, but just ignore */
-                ;
-            }
-        mode++;
-    }
-
-    /* must provide an "r", "w", or "a" */
-    if (state->mode == GZ_NONE) {
-        free(state);
-        return NULL;
-    }
-
-    /* can't force transparent read */
-    if (state->mode == GZ_READ) {
-        if (state->direct) {
-            free(state);
-            return NULL;
-        }
-        state->direct = 1;      /* for empty file */
-    }
-
-    /* save the path name for error messages */
-#ifdef _WIN32
-    if (fd == -2) {
-        len = wcstombs(NULL, path, 0);
-        if (len == (size_t)-1)
-            len = 0;
-    }
-    else
-#endif
-        len = strlen((const char *)path);
-    state->path = (char *)malloc(len + 1);
-    if (state->path == NULL) {
-        free(state);
-        return NULL;
-    }
-#ifdef _WIN32
-    if (fd == -2)
-        if (len)
-            wcstombs(state->path, path, len + 1);
-        else
-            *(state->path) = 0;
-    else
-#endif
-#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
-        snprintf(state->path, len + 1, "%s", (const char *)path);
-#else
-        strcpy(state->path, path);
-#endif
-
-    /* compute the flags for open() */
-    oflag =
-#ifdef O_LARGEFILE
-        O_LARGEFILE |
-#endif
-#ifdef O_BINARY
-        O_BINARY |
-#endif
-#ifdef O_CLOEXEC
-        (cloexec ? O_CLOEXEC : 0) |
-#endif
-        (state->mode == GZ_READ ?
-         O_RDONLY :
-         (O_WRONLY | O_CREAT |
-#ifdef O_EXCL
-          (exclusive ? O_EXCL : 0) |
-#endif
-          (state->mode == GZ_WRITE ?
-           O_TRUNC :
-           O_APPEND)));
-
-    /* open the file with the appropriate flags (or just use fd) */
-    state->fd = fd > -1 ? fd : (
-#ifdef _WIN32
-        fd == -2 ? _wopen(path, oflag, 0666) :
-#endif
-        open((const char *)path, oflag, 0666));
-    if (state->fd == -1) {
-        free(state->path);
-        free(state);
-        return NULL;
-    }
-    if (state->mode == GZ_APPEND)
-        state->mode = GZ_WRITE;         /* simplify later checks */
-
-    /* save the current position for rewinding (only if reading) */
-    if (state->mode == GZ_READ) {
-        state->start = LSEEK(state->fd, 0, SEEK_CUR);
-        if (state->start == -1) state->start = 0;
-    }
-
-    /* initialize stream */
-    gz_reset(state);
-
-    /* return stream */
-    return (gzFile)state;
-}
-
-/* -- see zlib.h -- */
-gzFile ZEXPORT gzopen(path, mode)
-    const char *path;
-    const char *mode;
-{
-    return gz_open(path, -1, mode);
-}
-
-/* -- see zlib.h -- */
-gzFile ZEXPORT gzopen64(path, mode)
-    const char *path;
-    const char *mode;
-{
-    return gz_open(path, -1, mode);
-}
-
-/* -- see zlib.h -- */
-gzFile ZEXPORT gzdopen(fd, mode)
-    int fd;
-    const char *mode;
-{
-    char *path;         /* identifier for error messages */
-    gzFile gz;
-
-    if (fd == -1 || (path = (char *)malloc(7 + 3 * sizeof(int))) == NULL)
-        return NULL;
-#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
-    snprintf(path, 7 + 3 * sizeof(int), "<fd:%d>", fd); /* for debugging */
-#else
-    sprintf(path, "<fd:%d>", fd);   /* for debugging */
-#endif
-    gz = gz_open(path, fd, mode);
-    free(path);
-    return gz;
-}
-
-/* -- see zlib.h -- */
-#ifdef _WIN32
-gzFile ZEXPORT gzopen_w(path, mode)
-    const wchar_t *path;
-    const char *mode;
-{
-    return gz_open(path, -2, mode);
-}
-#endif
-
-/* -- see zlib.h -- */
-int ZEXPORT gzbuffer(file, size)
-    gzFile file;
-    unsigned size;
-{
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return -1;
-
-    /* make sure we haven't already allocated memory */
-    if (state->size != 0)
-        return -1;
-
-    /* check and set requested size */
-    if (size < 2)
-        size = 2;               /* need two bytes to check magic header */
-    state->want = size;
-    return 0;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzrewind(file)
-    gzFile file;
-{
-    gz_statep state;
-
-    /* get internal structure */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-
-    /* check that we're reading and that there's no error */
-    if (state->mode != GZ_READ ||
-            (state->err != Z_OK && state->err != Z_BUF_ERROR))
-        return -1;
-
-    /* back up and start over */
-    if (LSEEK(state->fd, state->start, SEEK_SET) == -1)
-        return -1;
-    gz_reset(state);
-    return 0;
-}
-
-/* -- see zlib.h -- */
-z_off64_t ZEXPORT gzseek64(file, offset, whence)
-    gzFile file;
-    z_off64_t offset;
-    int whence;
-{
-    unsigned n;
-    z_off64_t ret;
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return -1;
-
-    /* check that there's no error */
-    if (state->err != Z_OK && state->err != Z_BUF_ERROR)
-        return -1;
-
-    /* can only seek from start or relative to current position */
-    if (whence != SEEK_SET && whence != SEEK_CUR)
-        return -1;
-
-    /* normalize offset to a SEEK_CUR specification */
-    if (whence == SEEK_SET)
-        offset -= state->x.pos;
-    else if (state->seek)
-        offset += state->skip;
-    state->seek = 0;
-
-    /* if within raw area while reading, just go there */
-    if (state->mode == GZ_READ && state->how == COPY &&
-            state->x.pos + offset >= 0) {
-        ret = LSEEK(state->fd, offset - state->x.have, SEEK_CUR);
-        if (ret == -1)
-            return -1;
-        state->x.have = 0;
-        state->eof = 0;
-        state->past = 0;
-        state->seek = 0;
-        gz_error(state, Z_OK, NULL);
-        state->strm.avail_in = 0;
-        state->x.pos += offset;
-        return state->x.pos;
-    }
-
-    /* calculate skip amount, rewinding if needed for back seek when reading */
-    if (offset < 0) {
-        if (state->mode != GZ_READ)         /* writing -- can't go backwards */
-            return -1;
-        offset += state->x.pos;
-        if (offset < 0)                     /* before start of file! */
-            return -1;
-        if (gzrewind(file) == -1)           /* rewind, then skip to offset */
-            return -1;
-    }
-
-    /* if reading, skip what's in output buffer (one less gzgetc() check) */
-    if (state->mode == GZ_READ) {
-        n = GT_OFF(state->x.have) || (z_off64_t)state->x.have > offset ?
-            (unsigned)offset : state->x.have;
-        state->x.have -= n;
-        state->x.next += n;
-        state->x.pos += n;
-        offset -= n;
-    }
-
-    /* request skip (if not zero) */
-    if (offset) {
-        state->seek = 1;
-        state->skip = offset;
-    }
-    return state->x.pos + offset;
-}
-
-/* -- see zlib.h -- */
-z_off_t ZEXPORT gzseek(file, offset, whence)
-    gzFile file;
-    z_off_t offset;
-    int whence;
-{
-    z_off64_t ret;
-
-    ret = gzseek64(file, (z_off64_t)offset, whence);
-    return ret == (z_off_t)ret ? (z_off_t)ret : -1;
-}
-
-/* -- see zlib.h -- */
-z_off64_t ZEXPORT gztell64(file)
-    gzFile file;
-{
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return -1;
-
-    /* return position */
-    return state->x.pos + (state->seek ? state->skip : 0);
-}
-
-/* -- see zlib.h -- */
-z_off_t ZEXPORT gztell(file)
-    gzFile file;
-{
-    z_off64_t ret;
-
-    ret = gztell64(file);
-    return ret == (z_off_t)ret ? (z_off_t)ret : -1;
-}
-
-/* -- see zlib.h -- */
-z_off64_t ZEXPORT gzoffset64(file)
-    gzFile file;
-{
-    z_off64_t offset;
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return -1;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return -1;
-
-    /* compute and return effective offset in file */
-    offset = LSEEK(state->fd, 0, SEEK_CUR);
-    if (offset == -1)
-        return -1;
-    if (state->mode == GZ_READ)             /* reading */
-        offset -= state->strm.avail_in;     /* don't count buffered input */
-    return offset;
-}
-
-/* -- see zlib.h -- */
-z_off_t ZEXPORT gzoffset(file)
-    gzFile file;
-{
-    z_off64_t ret;
-
-    ret = gzoffset64(file);
-    return ret == (z_off_t)ret ? (z_off_t)ret : -1;
-}
-
-/* -- see zlib.h -- */
-int ZEXPORT gzeof(file)
-    gzFile file;
-{
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return 0;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return 0;
-
-    /* return end-of-file state */
-    return state->mode == GZ_READ ? state->past : 0;
-}
-
-/* -- see zlib.h -- */
-const char * ZEXPORT gzerror(file, errnum)
-    gzFile file;
-    int *errnum;
-{
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return NULL;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return NULL;
-
-    /* return error information */
-    if (errnum != NULL)
-        *errnum = state->err;
-    return state->err == Z_MEM_ERROR ? "out of memory" :
-                                       (state->msg == NULL ? "" : state->msg);
-}
-
-/* -- see zlib.h -- */
-void ZEXPORT gzclearerr(file)
-    gzFile file;
-{
-    gz_statep state;
-
-    /* get internal structure and check integrity */
-    if (file == NULL)
-        return;
-    state = (gz_statep)file;
-    if (state->mode != GZ_READ && state->mode != GZ_WRITE)
-        return;
-
-    /* clear error and end-of-file */
-    if (state->mode == GZ_READ) {
-        state->eof = 0;
-        state->past = 0;
-    }
-    gz_error(state, Z_OK, NULL);
-}
-
-/* Create an error message in allocated memory and set state->err and
-   state->msg accordingly.  Free any previous error message already there.  Do
-   not try to free or allocate space if the error is Z_MEM_ERROR (out of
-   memory).  Simply save the error message as a static string.  If there is an
-   allocation failure constructing the error message, then convert the error to
-   out of memory. */
-void ZLIB_INTERNAL gz_error(state, err, msg)
-    gz_statep state;
-    int err;
-    const char *msg;
-{
-    /* free previously allocated message and clear */
-    if (state->msg != NULL) {
-        if (state->err != Z_MEM_ERROR)
-            free(state->msg);
-        state->msg = NULL;
-    }
-
-    /* if fatal, set state->x.have to 0 so that the gzgetc() macro fails */
-    if (err != Z_OK && err != Z_BUF_ERROR)
-        state->x.have = 0;
-
-    /* set error code, and if no message, then done */
-    state->err = err;
-    if (msg == NULL)
-        return;
-
-    /* for an out of memory error, return literal string when requested */
-    if (err == Z_MEM_ERROR)
-        return;
-
-    /* construct error message with path */
-    if ((state->msg = (char *)malloc(strlen(state->path) + strlen(msg) + 3)) ==
-            NULL) {
-        state->err = Z_MEM_ERROR;
-        return;
-    }
-#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
-    snprintf(state->msg, strlen(state->path) + strlen(msg) + 3,
-             "%s%s%s", state->path, ": ", msg);
-#else
-    strcpy(state->msg, state->path);
-    strcat(state->msg, ": ");
-    strcat(state->msg, msg);
-#endif
-    return;
-}
-
-#ifndef INT_MAX
-/* portably return maximum value for an int (when limits.h presumed not
-   available) -- we need to do this to cover cases where 2's complement not
-   used, since C standard permits 1's complement and sign-bit representations,
-   otherwise we could just use ((unsigned)-1) >> 1 */
-unsigned ZLIB_INTERNAL gz_intmax()
-{
-    unsigned p, q;
-
-    p = 1;
-    do {
-        q = p;
-        p <<= 1;
-        p++;
-    } while (p > q);
-    return q >> 1;
-}
-#endif
-/* END OF DUMP OF mz_gzlib.c*/
-/* START OF DUMP OF mz_adler32.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* adler32.c -- compute the Adler-32 checksum of a data stream
- * Copyright (C) 1995-2011 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-/* @(#) $Id$ */
-
-
-#define local static
-
-local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
-
-#define BASE 65521      /* largest prime smaller than 65536 */
-#define NMAX 5552
-/* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
-
-#define DO1(buf,i)  {adler += (buf)[i]; sum2 += adler;}
-#define DO2(buf,i)  DO1(buf,i); DO1(buf,i+1);
-#define DO4(buf,i)  DO2(buf,i); DO2(buf,i+2);
-#define DO8(buf,i)  DO4(buf,i); DO4(buf,i+4);
-#define DO16(buf)   DO8(buf,0); DO8(buf,8);
-
-/* use NO_DIVIDE if your processor does not do division in hardware --
-   try it both ways to see which is faster */
-#ifdef NO_DIVIDE
-/* note that this assumes BASE is 65521, where 65536 % 65521 == 15
-   (thank you to John Reiser for pointing this out) */
-#  define CHOP(a) \
-    do { \
-        unsigned long tmp = a >> 16; \
-        a &= 0xffffUL; \
-        a += (tmp << 4) - tmp; \
-    } while (0)
-#  define MOD28(a) \
-    do { \
-        CHOP(a); \
-        if (a >= BASE) a -= BASE; \
-    } while (0)
-#  define MOD(a) \
-    do { \
-        CHOP(a); \
-        MOD28(a); \
-    } while (0)
-#  define MOD63(a) \
-    do { /* this assumes a is not negative */ \
-        z_off64_t tmp = a >> 32; \
-        a &= 0xffffffffL; \
-        a += (tmp << 8) - (tmp << 5) + tmp; \
-        tmp = a >> 16; \
-        a &= 0xffffL; \
-        a += (tmp << 4) - tmp; \
-        tmp = a >> 16; \
-        a &= 0xffffL; \
-        a += (tmp << 4) - tmp; \
-        if (a >= BASE) a -= BASE; \
-    } while (0)
-#else
-#  define MOD(a) a %= BASE
-#  define MOD28(a) a %= BASE
-#  define MOD63(a) a %= BASE
-#endif
-
-/* ========================================================================= */
-uLong ZEXPORT adler32(adler, buf, len)
-    uLong adler;
-    const Bytef *buf;
-    uInt len;
-{
-    unsigned long sum2;
-    unsigned n;
-
-    /* split Adler-32 into component sums */
-    sum2 = (adler >> 16) & 0xffff;
-    adler &= 0xffff;
-
-    /* in case user likes doing a byte at a time, keep it fast */
-    if (len == 1) {
-        adler += buf[0];
-        if (adler >= BASE)
-            adler -= BASE;
-        sum2 += adler;
-        if (sum2 >= BASE)
-            sum2 -= BASE;
-        return adler | (sum2 << 16);
-    }
-
-    /* initial Adler-32 value (deferred check for len == 1 speed) */
-    if (buf == Z_NULL)
-        return 1L;
-
-    /* in case short lengths are provided, keep it somewhat fast */
-    if (len < 16) {
-        while (len--) {
-            adler += *buf++;
-            sum2 += adler;
-        }
-        if (adler >= BASE)
-            adler -= BASE;
-        MOD28(sum2);            /* only added so many BASE's */
-        return adler | (sum2 << 16);
-    }
-
-    /* do length NMAX blocks -- requires just one modulo operation */
-    while (len >= NMAX) {
-        len -= NMAX;
-        n = NMAX / 16;          /* NMAX is divisible by 16 */
-        do {
-            DO16(buf);          /* 16 sums unrolled */
-            buf += 16;
-        } while (--n);
-        MOD(adler);
-        MOD(sum2);
-    }
-
-    /* do remaining bytes (less than NMAX, still just one modulo) */
-    if (len) {                  /* avoid modulos if none remaining */
-        while (len >= 16) {
-            len -= 16;
-            DO16(buf);
-            buf += 16;
-        }
-        while (len--) {
-            adler += *buf++;
-            sum2 += adler;
-        }
-        MOD(adler);
-        MOD(sum2);
-    }
-
-    /* return recombined sums */
-    return adler | (sum2 << 16);
-}
-
-/* ========================================================================= */
-local uLong adler32_combine_(adler1, adler2, len2)
-    uLong adler1;
-    uLong adler2;
-    z_off64_t len2;
-{
-    unsigned long sum1;
-    unsigned long sum2;
-    unsigned rem;
-
-    /* for negative len, return invalid adler32 as a clue for debugging */
-    if (len2 < 0)
-        return 0xffffffffUL;
-
-    /* the derivation of this formula is left as an exercise for the reader */
-    MOD63(len2);                /* assumes len2 >= 0 */
-    rem = (unsigned)len2;
-    sum1 = adler1 & 0xffff;
-    sum2 = rem * sum1;
-    MOD(sum2);
-    sum1 += (adler2 & 0xffff) + BASE - 1;
-    sum2 += ((adler1 >> 16) & 0xffff) + ((adler2 >> 16) & 0xffff) + BASE - rem;
-    if (sum1 >= BASE) sum1 -= BASE;
-    if (sum1 >= BASE) sum1 -= BASE;
-    if (sum2 >= (BASE << 1)) sum2 -= (BASE << 1);
-    if (sum2 >= BASE) sum2 -= BASE;
-    return sum1 | (sum2 << 16);
-}
-
-/* ========================================================================= */
-uLong ZEXPORT adler32_combine(adler1, adler2, len2)
-    uLong adler1;
-    uLong adler2;
-    z_off_t len2;
-{
-    return adler32_combine_(adler1, adler2, len2);
-}
-
-uLong ZEXPORT adler32_combine64(adler1, adler2, len2)
-    uLong adler1;
-    uLong adler2;
-    z_off64_t len2;
-{
-    return adler32_combine_(adler1, adler2, len2);
-}
-/* END OF DUMP OF mz_adler32.c*/
-/* START OF DUMP OF mz_inftrees.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* inftrees.c -- generate Huffman trees for efficient decoding
- * Copyright (C) 1995-2013 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-
-#define MAXBITS 15
-
-const char inflate_copyright[] =
-   " inflate 1.2.8 Copyright 1995-2013 Mark Adler ";
-/*
-  If you use the zlib library in a product, an acknowledgment is welcome
-  in the documentation of your product. If for some reason you cannot
-  include such an acknowledgment, I would appreciate that you keep this
-  copyright string in the executable of your product.
- */
-
-/*
-   Build a set of tables to decode the provided canonical Huffman code.
-   The code lengths are lens[0..codes-1].  The result starts at *table,
-   whose indices are 0..2^bits-1.  work is a writable array of at least
-   lens shorts, which is used as a work area.  type is the type of code
-   to be generated, CODES, LENS, or DISTS.  On return, zero is success,
-   -1 is an invalid code, and +1 means that ENOUGH isn't enough.  table
-   on return points to the next available entry's address.  bits is the
-   requested root table index bits, and on return it is the actual root
-   table index bits.  It will differ if the request is greater than the
-   longest code or if it is less than the shortest code.
- */
-int ZLIB_INTERNAL inflate_table(type, lens, codes, table, bits, work)
-codetype type;
-unsigned short FAR *lens;
-unsigned codes;
-code FAR * FAR *table;
-unsigned FAR *bits;
-unsigned short FAR *work;
-{
-    unsigned len;               /* a code's length in bits */
-    unsigned sym;               /* index of code symbols */
-    unsigned min, max;          /* minimum and maximum code lengths */
-    unsigned root;              /* number of index bits for root table */
-    unsigned curr;              /* number of index bits for current table */
-    unsigned drop;              /* code bits to drop for sub-table */
-    int left;                   /* number of prefix codes available */
-    unsigned used;              /* code entries in table used */
-    unsigned huff;              /* Huffman code */
-    unsigned incr;              /* for incrementing code, index */
-    unsigned fill;              /* index for replicating entries */
-    unsigned low;               /* low bits for current root entry */
-    unsigned mask;              /* mask for low root bits */
-    code here;                  /* table entry for duplication */
-    code FAR *next;             /* next available space in table */
-    const unsigned short FAR *base;     /* base value table to use */
-    const unsigned short FAR *extra;    /* extra bits table to use */
-    int end;                    /* use base and extra for symbol > end */
-    unsigned short count[MAXBITS+1];    /* number of codes of each length */
-    unsigned short offs[MAXBITS+1];     /* offsets in table for each length */
-    static const unsigned short lbase[31] = { /* Length codes 257..285 base */
-        3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
-        35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0};
-    static const unsigned short lext[31] = { /* Length codes 257..285 extra */
-        16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18,
-        19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78};
-    static const unsigned short dbase[32] = { /* Distance codes 0..29 base */
-        1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
-        257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
-        8193, 12289, 16385, 24577, 0, 0};
-    static const unsigned short dext[32] = { /* Distance codes 0..29 extra */
-        16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22,
-        23, 23, 24, 24, 25, 25, 26, 26, 27, 27,
-        28, 28, 29, 29, 64, 64};
-
-    /*
-       Process a set of code lengths to create a canonical Huffman code.  The
-       code lengths are lens[0..codes-1].  Each length corresponds to the
-       symbols 0..codes-1.  The Huffman code is generated by first sorting the
-       symbols by length from short to long, and retaining the symbol order
-       for codes with equal lengths.  Then the code starts with all zero bits
-       for the first code of the shortest length, and the codes are integer
-       increments for the same length, and zeros are appended as the length
-       increases.  For the deflate format, these bits are stored backwards
-       from their more natural integer increment ordering, and so when the
-       decoding tables are built in the large loop below, the integer codes
-       are incremented backwards.
-
-       This routine assumes, but does not check, that all of the entries in
-       lens[] are in the range 0..MAXBITS.  The caller must assure this.
-       1..MAXBITS is interpreted as that code length.  zero means that that
-       symbol does not occur in this code.
-
-       The codes are sorted by computing a count of codes for each length,
-       creating from that a table of starting indices for each length in the
-       sorted table, and then entering the symbols in order in the sorted
-       table.  The sorted table is work[], with that space being provided by
-       the caller.
-
-       The length counts are used for other purposes as well, i.e. finding
-       the minimum and maximum length codes, determining if there are any
-       codes at all, checking for a valid set of lengths, and looking ahead
-       at length counts to determine sub-table sizes when building the
-       decoding tables.
-     */
-
-    /* accumulate lengths for codes (assumes lens[] all in 0..MAXBITS) */
-    for (len = 0; len <= MAXBITS; len++)
-        count[len] = 0;
-    for (sym = 0; sym < codes; sym++)
-        count[lens[sym]]++;
-
-    /* bound code lengths, force root to be within code lengths */
-    root = *bits;
-    for (max = MAXBITS; max >= 1; max--)
-        if (count[max] != 0) break;
-    if (root > max) root = max;
-    if (max == 0) {                     /* no symbols to code at all */
-        here.op = (unsigned char)64;    /* invalid code marker */
-        here.bits = (unsigned char)1;
-        here.val = (unsigned short)0;
-        *(*table)++ = here;             /* make a table to force an error */
-        *(*table)++ = here;
-        *bits = 1;
-        return 0;     /* no symbols, but wait for decoding to report error */
-    }
-    for (min = 1; min < max; min++)
-        if (count[min] != 0) break;
-    if (root < min) root = min;
-
-    /* check for an over-subscribed or incomplete set of lengths */
-    left = 1;
-    for (len = 1; len <= MAXBITS; len++) {
-        left <<= 1;
-        left -= count[len];
-        if (left < 0) return -1;        /* over-subscribed */
-    }
-    if (left > 0 && (type == CODES || max != 1))
-        return -1;                      /* incomplete set */
-
-    /* generate offsets into symbol table for each length for sorting */
-    offs[1] = 0;
-    for (len = 1; len < MAXBITS; len++)
-        offs[len + 1] = offs[len] + count[len];
-
-    /* sort symbols by length, by symbol order within each length */
-    for (sym = 0; sym < codes; sym++)
-        if (lens[sym] != 0) work[offs[lens[sym]]++] = (unsigned short)sym;
-
-    /*
-       Create and fill in decoding tables.  In this loop, the table being
-       filled is at next and has curr index bits.  The code being used is huff
-       with length len.  That code is converted to an index by dropping drop
-       bits off of the bottom.  For codes where len is less than drop + curr,
-       those top drop + curr - len bits are incremented through all values to
-       fill the table with replicated entries.
-
-       root is the number of index bits for the root table.  When len exceeds
-       root, sub-tables are created pointed to by the root entry with an index
-       of the low root bits of huff.  This is saved in low to check for when a
-       new sub-table should be started.  drop is zero when the root table is
-       being filled, and drop is root when sub-tables are being filled.
-
-       When a new sub-table is needed, it is necessary to look ahead in the
-       code lengths to determine what size sub-table is needed.  The length
-       counts are used for this, and so count[] is decremented as codes are
-       entered in the tables.
-
-       used keeps track of how many table entries have been allocated from the
-       provided *table space.  It is checked for LENS and DIST tables against
-       the constants ENOUGH_LENS and ENOUGH_DISTS to guard against changes in
-       the initial root table size constants.  See the comments in inftrees.h
-       for more information.
-
-       sym increments through all symbols, and the loop terminates when
-       all codes of length max, i.e. all codes, have been processed.  This
-       routine permits incomplete codes, so another loop after this one fills
-       in the rest of the decoding tables with invalid code markers.
-     */
-
-    /* set up for code type */
-    switch (type) {
-    case CODES:
-        base = extra = work;    /* dummy value--not used */
-        end = 19;
-        break;
-    case LENS:
-        base = lbase;
-        base -= 257;
-        extra = lext;
-        extra -= 257;
-        end = 256;
-        break;
-    default:            /* DISTS */
-        base = dbase;
-        extra = dext;
-        end = -1;
-    }
-
-    /* initialize state for loop */
-    huff = 0;                   /* starting code */
-    sym = 0;                    /* starting code symbol */
-    len = min;                  /* starting code length */
-    next = *table;              /* current table to fill in */
-    curr = root;                /* current table index bits */
-    drop = 0;                   /* current bits to drop from code for index */
-    low = (unsigned)(-1);       /* trigger new sub-table when len > root */
-    used = 1U << root;          /* use root table entries */
-    mask = used - 1;            /* mask for comparing low */
-
-    /* check available table space */
-    if ((type == LENS && used > ENOUGH_LENS) ||
-        (type == DISTS && used > ENOUGH_DISTS))
-        return 1;
-
-    /* process all codes and make table entries */
-    for (;;) {
-        /* create table entry */
-        here.bits = (unsigned char)(len - drop);
-        if ((int)(work[sym]) < end) {
-            here.op = (unsigned char)0;
-            here.val = work[sym];
-        }
-        else if ((int)(work[sym]) > end) {
-            here.op = (unsigned char)(extra[work[sym]]);
-            here.val = base[work[sym]];
-        }
-        else {
-            here.op = (unsigned char)(32 + 64);         /* end of block */
-            here.val = 0;
-        }
-
-        /* replicate for those indices with low len bits equal to huff */
-        incr = 1U << (len - drop);
-        fill = 1U << curr;
-        min = fill;                 /* save offset to next table */
-        do {
-            fill -= incr;
-            next[(huff >> drop) + fill] = here;
-        } while (fill != 0);
-
-        /* backwards increment the len-bit code huff */
-        incr = 1U << (len - 1);
-        while (huff & incr)
-            incr >>= 1;
-        if (incr != 0) {
-            huff &= incr - 1;
-            huff += incr;
-        }
-        else
-            huff = 0;
-
-        /* go to next symbol, update count, len */
-        sym++;
-        if (--(count[len]) == 0) {
-            if (len == max) break;
-            len = lens[work[sym]];
-        }
-
-        /* create new sub-table if needed */
-        if (len > root && (huff & mask) != low) {
-            /* if first time, transition to sub-tables */
-            if (drop == 0)
-                drop = root;
-
-            /* increment past last table */
-            next += min;            /* here min is 1 << curr */
-
-            /* determine length of next table */
-            curr = len - drop;
-            left = (int)(1 << curr);
-            while (curr + drop < max) {
-                left -= count[curr + drop];
-                if (left <= 0) break;
-                curr++;
-                left <<= 1;
-            }
-
-            /* check for enough space */
-            used += 1U << curr;
-            if ((type == LENS && used > ENOUGH_LENS) ||
-                (type == DISTS && used > ENOUGH_DISTS))
-                return 1;
-
-            /* point entry in root table to sub-table */
-            low = huff & mask;
-            (*table)[low].op = (unsigned char)curr;
-            (*table)[low].bits = (unsigned char)root;
-            (*table)[low].val = (unsigned short)(next - *table);
-        }
-    }
-
-    /* fill in remaining table entry if code is incomplete (guaranteed to have
-       at most one remaining entry, since if the code is incomplete, the
-       maximum code length that was allowed to get this far is one bit) */
-    if (huff != 0) {
-        here.op = (unsigned char)64;            /* invalid code marker */
-        here.bits = (unsigned char)(len - drop);
-        here.val = (unsigned short)0;
-        next[huff] = here;
-    }
-
-    /* set return parameters */
-    *table += used;
-    *bits = root;
-    return 0;
-}
-/* END OF DUMP OF mz_inftrees.c*/
-/* START OF DUMP OF mz_inflate.c*/
-#ifdef GZIP
-#  undef GZIP
-#endif
-#ifdef COPY
-#  undef COPY
-#endif
-#ifdef DO1
-#  undef DO1
-#endif
-#ifdef DO8
-#  undef DO8
-#endif
-/* inflate.c -- zlib decompression
- * Copyright (C) 1995-2012 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-
-/*
- * Change history:
- *
- * 1.2.beta0    24 Nov 2002
- * - First version -- complete rewrite of inflate to simplify code, avoid
- *   creation of window when not needed, minimize use of window when it is
- *   needed, make inffast.c even faster, implement gzip decoding, and to
- *   improve code readability and style over the previous zlib inflate code
- *
- * 1.2.beta1    25 Nov 2002
- * - Use pointers for available input and output checking in inffast.c
- * - Remove input and output counters in inffast.c
- * - Change inffast.c entry and loop from avail_in >= 7 to >= 6
- * - Remove unnecessary second byte pull from length extra in inffast.c
- * - Unroll direct copy to three copies per loop in inffast.c
- *
- * 1.2.beta2    4 Dec 2002
- * - Change external routine names to reduce potential conflicts
- * - Correct filename to inffixed.h for fixed tables in inflate.c
- * - Make hbuf[] unsigned char to match parameter type in inflate.c
- * - Change strm->next_out[-state->offset] to *(strm->next_out - state->offset)
- *   to avoid negation problem on Alphas (64 bit) in inflate.c
- *
- * 1.2.beta3    22 Dec 2002
- * - Add comments on state->bits assertion in inffast.c
- * - Add comments on op field in inftrees.h
- * - Fix bug in reuse of allocated window after inflateReset()
- * - Remove bit fields--back to byte structure for speed
- * - Remove distance extra == 0 check in inflate_fast()--only helps for lengths
- * - Change post-increments to pre-increments in inflate_fast(), PPC biased?
- * - Add compile time option, POSTINC, to use post-increments instead (Intel?)
- * - Make MATCH copy in inflate() much faster for when inflate_fast() not used
- * - Use local copies of stream next and avail values, as well as local bit
- *   buffer and bit count in inflate()--for speed when inflate_fast() not used
- *
- * 1.2.beta4    1 Jan 2003
- * - Split ptr - 257 statements in inflate_table() to avoid compiler warnings
- * - Move a comment on output buffer sizes from inffast.c to inflate.c
- * - Add comments in inffast.c to introduce the inflate_fast() routine
- * - Rearrange window copies in inflate_fast() for speed and simplification
- * - Unroll last copy for window match in inflate_fast()
- * - Use local copies of window variables in inflate_fast() for speed
- * - Pull out common wnext == 0 case for speed in inflate_fast()
- * - Make op and len in inflate_fast() unsigned for consistency
- * - Add FAR to lcode and dcode declarations in inflate_fast()
- * - Simplified bad distance check in inflate_fast()
- * - Added inflateBackInit(), inflateBack(), and inflateBackEnd() in new
- *   source file infback.c to provide a call-back interface to inflate for
- *   programs like gzip and unzip -- uses window as output buffer to avoid
- *   window copying
- *
- * 1.2.beta5    1 Jan 2003
- * - Improved inflateBack() interface to allow the caller to provide initial
- *   input in strm.
- * - Fixed stored blocks bug in inflateBack()
- *
- * 1.2.beta6    4 Jan 2003
- * - Added comments in inffast.c on effectiveness of POSTINC
- * - Typecasting all around to reduce compiler warnings
- * - Changed loops from while (1) or do {} while (1) to for (;;), again to
- *   make compilers happy
- * - Changed type of window in inflateBackInit() to unsigned char *
- *
- * 1.2.beta7    27 Jan 2003
- * - Changed many types to unsigned or unsigned short to avoid warnings
- * - Added inflateCopy() function
- *
- * 1.2.0        9 Mar 2003
- * - Changed inflateBack() interface to provide separate opaque descriptors
- *   for the in() and out() functions
- * - Changed inflateBack() argument and in_func typedef to swap the length
- *   and buffer address return values for the input function
- * - Check next_in and next_out for Z_NULL on entry to inflate()
- *
- * The history for versions after 1.2.0 are in ChangeLog in zlib distribution.
- */
-
-
-#ifdef MAKEFIXED
-#  ifndef BUILDFIXED
-#    define BUILDFIXED
-#  endif
-#endif
-
-/* function prototypes */
-local void fixedtables OF((struct inflate_state FAR *state));
-local int updatewindow OF((z_streamp strm, const unsigned char FAR *end,
-                           unsigned copy));
-#ifdef BUILDFIXED
-   void makefixed OF((void));
-#endif
-local unsigned syncsearch OF((unsigned FAR *have, const unsigned char FAR *buf,
-                              unsigned len));
-
-int ZEXPORT inflateResetKeep(strm)
-z_streamp strm;
-{
-    struct inflate_state FAR *state;
-
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    strm->total_in = strm->total_out = state->total = 0;
-    strm->msg = Z_NULL;
-    if (state->wrap)        /* to support ill-conceived Java test suite */
-        strm->adler = state->wrap & 1;
-    state->mode = HEAD;
-    state->last = 0;
-    state->havedict = 0;
-    state->dmax = 32768U;
-    state->head = Z_NULL;
-    state->hold = 0;
-    state->bits = 0;
-    state->lencode = state->distcode = state->next = state->codes;
-    state->sane = 1;
-    state->back = -1;
-    Tracev((stderr, "inflate: reset\n"));
-    return Z_OK;
-}
-
-int ZEXPORT inflateReset(strm)
-z_streamp strm;
-{
-    struct inflate_state FAR *state;
-
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    state->wsize = 0;
-    state->whave = 0;
-    state->wnext = 0;
-    return inflateResetKeep(strm);
-}
-
-int ZEXPORT inflateReset2(strm, windowBits)
-z_streamp strm;
-int windowBits;
-{
-    int wrap;
-    struct inflate_state FAR *state;
-
-    /* get the state */
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-
-    /* extract wrap request from windowBits parameter */
-    if (windowBits < 0) {
-        wrap = 0;
-        windowBits = -windowBits;
-    }
-    else {
-        wrap = (windowBits >> 4) + 1;
-#ifdef GUNZIP
-        if (windowBits < 48)
-            windowBits &= 15;
-#endif
-    }
-
-    /* set number of window bits, free window if different */
-    if (windowBits && (windowBits < 8 || windowBits > 15))
-        return Z_STREAM_ERROR;
-    if (state->window != Z_NULL && state->wbits != (unsigned)windowBits) {
-        ZFREE(strm, state->window);
-        state->window = Z_NULL;
-    }
-
-    /* update state and reset the rest of it */
-    state->wrap = wrap;
-    state->wbits = (unsigned)windowBits;
-    return inflateReset(strm);
-}
-
-int ZEXPORT inflateInit2_(strm, windowBits, version, stream_size)
-z_streamp strm;
-int windowBits;
-const char *version;
-int stream_size;
-{
-    int ret;
-    struct inflate_state FAR *state;
-
-    if (version == Z_NULL || version[0] != ZLIB_VERSION[0] ||
-        stream_size != (int)(sizeof(z_stream)))
-        return Z_VERSION_ERROR;
-    if (strm == Z_NULL) return Z_STREAM_ERROR;
-    strm->msg = Z_NULL;                 /* in case we return an error */
-    if (strm->zalloc == (alloc_func)0) {
-#ifdef Z_SOLO
-        return Z_STREAM_ERROR;
-#else
-        strm->zalloc = zcalloc;
-        strm->opaque = (voidpf)0;
-#endif
-    }
-    if (strm->zfree == (free_func)0)
-#ifdef Z_SOLO
-        return Z_STREAM_ERROR;
-#else
-        strm->zfree = zcfree;
-#endif
-    state = (struct inflate_state FAR *)
-            ZALLOC(strm, 1, sizeof(struct inflate_state));
-    if (state == Z_NULL) return Z_MEM_ERROR;
-    Tracev((stderr, "inflate: allocated\n"));
-    strm->state = (struct internal_state FAR *)state;
-    state->window = Z_NULL;
-    ret = inflateReset2(strm, windowBits);
-    if (ret != Z_OK) {
-        ZFREE(strm, state);
-        strm->state = Z_NULL;
-    }
-    return ret;
-}
-
-int ZEXPORT inflateInit_(strm, version, stream_size)
-z_streamp strm;
-const char *version;
-int stream_size;
-{
-    return inflateInit2_(strm, DEF_WBITS, version, stream_size);
-}
-
-int ZEXPORT inflatePrime(strm, bits, value)
-z_streamp strm;
-int bits;
-int value;
-{
-    struct inflate_state FAR *state;
-
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    if (bits < 0) {
-        state->hold = 0;
-        state->bits = 0;
-        return Z_OK;
-    }
-    if (bits > 16 || state->bits + bits > 32) return Z_STREAM_ERROR;
-    value &= (1L << bits) - 1;
-    state->hold += value << state->bits;
-    state->bits += bits;
-    return Z_OK;
-}
-
-/*
-   Return state with length and distance decoding tables and index sizes set to
-   fixed code decoding.  Normally this returns fixed tables from inffixed.h.
-   If BUILDFIXED is defined, then instead this routine builds the tables the
-   first time it's called, and returns those tables the first time and
-   thereafter.  This reduces the size of the code by about 2K bytes, in
-   exchange for a little execution time.  However, BUILDFIXED should not be
-   used for threaded applications, since the rewriting of the tables and virgin
-   may not be thread-safe.
- */
-local void fixedtables(state)
-struct inflate_state FAR *state;
-{
-#ifdef BUILDFIXED
-    static int virgin = 1;
-    static code *lenfix, *distfix;
-    static code fixed[544];
-
-    /* build fixed huffman tables if first call (may not be thread safe) */
-    if (virgin) {
-        unsigned sym, bits;
-        static code *next;
-
-        /* literal/length table */
-        sym = 0;
-        while (sym < 144) state->lens[sym++] = 8;
-        while (sym < 256) state->lens[sym++] = 9;
-        while (sym < 280) state->lens[sym++] = 7;
-        while (sym < 288) state->lens[sym++] = 8;
-        next = fixed;
-        lenfix = next;
-        bits = 9;
-        inflate_table(LENS, state->lens, 288, &(next), &(bits), state->work);
-
-        /* distance table */
-        sym = 0;
-        while (sym < 32) state->lens[sym++] = 5;
-        distfix = next;
-        bits = 5;
-        inflate_table(DISTS, state->lens, 32, &(next), &(bits), state->work);
-
-        /* do this just once */
-        virgin = 0;
-    }
-#else /* !BUILDFIXED */
-/* START OF DUMP OF mz_inffixed.h*/
-    /* inffixed.h -- table for decoding fixed codes
-     * Generated automatically by makefixed().
-     */
-
-    /* WARNING: this file should *not* be used by applications.
-       It is part of the implementation of this library and is
-       subject to change. Applications should only use zlib.h.
-     */
-
-    static const code lenfix[512] = {
-        {96,7,0},{0,8,80},{0,8,16},{20,8,115},{18,7,31},{0,8,112},{0,8,48},
-        {0,9,192},{16,7,10},{0,8,96},{0,8,32},{0,9,160},{0,8,0},{0,8,128},
-        {0,8,64},{0,9,224},{16,7,6},{0,8,88},{0,8,24},{0,9,144},{19,7,59},
-        {0,8,120},{0,8,56},{0,9,208},{17,7,17},{0,8,104},{0,8,40},{0,9,176},
-        {0,8,8},{0,8,136},{0,8,72},{0,9,240},{16,7,4},{0,8,84},{0,8,20},
-        {21,8,227},{19,7,43},{0,8,116},{0,8,52},{0,9,200},{17,7,13},{0,8,100},
-        {0,8,36},{0,9,168},{0,8,4},{0,8,132},{0,8,68},{0,9,232},{16,7,8},
-        {0,8,92},{0,8,28},{0,9,152},{20,7,83},{0,8,124},{0,8,60},{0,9,216},
-        {18,7,23},{0,8,108},{0,8,44},{0,9,184},{0,8,12},{0,8,140},{0,8,76},
-        {0,9,248},{16,7,3},{0,8,82},{0,8,18},{21,8,163},{19,7,35},{0,8,114},
-        {0,8,50},{0,9,196},{17,7,11},{0,8,98},{0,8,34},{0,9,164},{0,8,2},
-        {0,8,130},{0,8,66},{0,9,228},{16,7,7},{0,8,90},{0,8,26},{0,9,148},
-        {20,7,67},{0,8,122},{0,8,58},{0,9,212},{18,7,19},{0,8,106},{0,8,42},
-        {0,9,180},{0,8,10},{0,8,138},{0,8,74},{0,9,244},{16,7,5},{0,8,86},
-        {0,8,22},{64,8,0},{19,7,51},{0,8,118},{0,8,54},{0,9,204},{17,7,15},
-        {0,8,102},{0,8,38},{0,9,172},{0,8,6},{0,8,134},{0,8,70},{0,9,236},
-        {16,7,9},{0,8,94},{0,8,30},{0,9,156},{20,7,99},{0,8,126},{0,8,62},
-        {0,9,220},{18,7,27},{0,8,110},{0,8,46},{0,9,188},{0,8,14},{0,8,142},
-        {0,8,78},{0,9,252},{96,7,0},{0,8,81},{0,8,17},{21,8,131},{18,7,31},
-        {0,8,113},{0,8,49},{0,9,194},{16,7,10},{0,8,97},{0,8,33},{0,9,162},
-        {0,8,1},{0,8,129},{0,8,65},{0,9,226},{16,7,6},{0,8,89},{0,8,25},
-        {0,9,146},{19,7,59},{0,8,121},{0,8,57},{0,9,210},{17,7,17},{0,8,105},
-        {0,8,41},{0,9,178},{0,8,9},{0,8,137},{0,8,73},{0,9,242},{16,7,4},
-        {0,8,85},{0,8,21},{16,8,258},{19,7,43},{0,8,117},{0,8,53},{0,9,202},
-        {17,7,13},{0,8,101},{0,8,37},{0,9,170},{0,8,5},{0,8,133},{0,8,69},
-        {0,9,234},{16,7,8},{0,8,93},{0,8,29},{0,9,154},{20,7,83},{0,8,125},
-        {0,8,61},{0,9,218},{18,7,23},{0,8,109},{0,8,45},{0,9,186},{0,8,13},
-        {0,8,141},{0,8,77},{0,9,250},{16,7,3},{0,8,83},{0,8,19},{21,8,195},
-        {19,7,35},{0,8,115},{0,8,51},{0,9,198},{17,7,11},{0,8,99},{0,8,35},
-        {0,9,166},{0,8,3},{0,8,131},{0,8,67},{0,9,230},{16,7,7},{0,8,91},
-        {0,8,27},{0,9,150},{20,7,67},{0,8,123},{0,8,59},{0,9,214},{18,7,19},
-        {0,8,107},{0,8,43},{0,9,182},{0,8,11},{0,8,139},{0,8,75},{0,9,246},
-        {16,7,5},{0,8,87},{0,8,23},{64,8,0},{19,7,51},{0,8,119},{0,8,55},
-        {0,9,206},{17,7,15},{0,8,103},{0,8,39},{0,9,174},{0,8,7},{0,8,135},
-        {0,8,71},{0,9,238},{16,7,9},{0,8,95},{0,8,31},{0,9,158},{20,7,99},
-        {0,8,127},{0,8,63},{0,9,222},{18,7,27},{0,8,111},{0,8,47},{0,9,190},
-        {0,8,15},{0,8,143},{0,8,79},{0,9,254},{96,7,0},{0,8,80},{0,8,16},
-        {20,8,115},{18,7,31},{0,8,112},{0,8,48},{0,9,193},{16,7,10},{0,8,96},
-        {0,8,32},{0,9,161},{0,8,0},{0,8,128},{0,8,64},{0,9,225},{16,7,6},
-        {0,8,88},{0,8,24},{0,9,145},{19,7,59},{0,8,120},{0,8,56},{0,9,209},
-        {17,7,17},{0,8,104},{0,8,40},{0,9,177},{0,8,8},{0,8,136},{0,8,72},
-        {0,9,241},{16,7,4},{0,8,84},{0,8,20},{21,8,227},{19,7,43},{0,8,116},
-        {0,8,52},{0,9,201},{17,7,13},{0,8,100},{0,8,36},{0,9,169},{0,8,4},
-        {0,8,132},{0,8,68},{0,9,233},{16,7,8},{0,8,92},{0,8,28},{0,9,153},
-        {20,7,83},{0,8,124},{0,8,60},{0,9,217},{18,7,23},{0,8,108},{0,8,44},
-        {0,9,185},{0,8,12},{0,8,140},{0,8,76},{0,9,249},{16,7,3},{0,8,82},
-        {0,8,18},{21,8,163},{19,7,35},{0,8,114},{0,8,50},{0,9,197},{17,7,11},
-        {0,8,98},{0,8,34},{0,9,165},{0,8,2},{0,8,130},{0,8,66},{0,9,229},
-        {16,7,7},{0,8,90},{0,8,26},{0,9,149},{20,7,67},{0,8,122},{0,8,58},
-        {0,9,213},{18,7,19},{0,8,106},{0,8,42},{0,9,181},{0,8,10},{0,8,138},
-        {0,8,74},{0,9,245},{16,7,5},{0,8,86},{0,8,22},{64,8,0},{19,7,51},
-        {0,8,118},{0,8,54},{0,9,205},{17,7,15},{0,8,102},{0,8,38},{0,9,173},
-        {0,8,6},{0,8,134},{0,8,70},{0,9,237},{16,7,9},{0,8,94},{0,8,30},
-        {0,9,157},{20,7,99},{0,8,126},{0,8,62},{0,9,221},{18,7,27},{0,8,110},
-        {0,8,46},{0,9,189},{0,8,14},{0,8,142},{0,8,78},{0,9,253},{96,7,0},
-        {0,8,81},{0,8,17},{21,8,131},{18,7,31},{0,8,113},{0,8,49},{0,9,195},
-        {16,7,10},{0,8,97},{0,8,33},{0,9,163},{0,8,1},{0,8,129},{0,8,65},
-        {0,9,227},{16,7,6},{0,8,89},{0,8,25},{0,9,147},{19,7,59},{0,8,121},
-        {0,8,57},{0,9,211},{17,7,17},{0,8,105},{0,8,41},{0,9,179},{0,8,9},
-        {0,8,137},{0,8,73},{0,9,243},{16,7,4},{0,8,85},{0,8,21},{16,8,258},
-        {19,7,43},{0,8,117},{0,8,53},{0,9,203},{17,7,13},{0,8,101},{0,8,37},
-        {0,9,171},{0,8,5},{0,8,133},{0,8,69},{0,9,235},{16,7,8},{0,8,93},
-        {0,8,29},{0,9,155},{20,7,83},{0,8,125},{0,8,61},{0,9,219},{18,7,23},
-        {0,8,109},{0,8,45},{0,9,187},{0,8,13},{0,8,141},{0,8,77},{0,9,251},
-        {16,7,3},{0,8,83},{0,8,19},{21,8,195},{19,7,35},{0,8,115},{0,8,51},
-        {0,9,199},{17,7,11},{0,8,99},{0,8,35},{0,9,167},{0,8,3},{0,8,131},
-        {0,8,67},{0,9,231},{16,7,7},{0,8,91},{0,8,27},{0,9,151},{20,7,67},
-        {0,8,123},{0,8,59},{0,9,215},{18,7,19},{0,8,107},{0,8,43},{0,9,183},
-        {0,8,11},{0,8,139},{0,8,75},{0,9,247},{16,7,5},{0,8,87},{0,8,23},
-        {64,8,0},{19,7,51},{0,8,119},{0,8,55},{0,9,207},{17,7,15},{0,8,103},
-        {0,8,39},{0,9,175},{0,8,7},{0,8,135},{0,8,71},{0,9,239},{16,7,9},
-        {0,8,95},{0,8,31},{0,9,159},{20,7,99},{0,8,127},{0,8,63},{0,9,223},
-        {18,7,27},{0,8,111},{0,8,47},{0,9,191},{0,8,15},{0,8,143},{0,8,79},
-        {0,9,255}
-    };
-
-    static const code distfix[32] = {
-        {16,5,1},{23,5,257},{19,5,17},{27,5,4097},{17,5,5},{25,5,1025},
-        {21,5,65},{29,5,16385},{16,5,3},{24,5,513},{20,5,33},{28,5,8193},
-        {18,5,9},{26,5,2049},{22,5,129},{64,5,0},{16,5,2},{23,5,385},
-        {19,5,25},{27,5,6145},{17,5,7},{25,5,1537},{21,5,97},{29,5,24577},
-        {16,5,4},{24,5,769},{20,5,49},{28,5,12289},{18,5,13},{26,5,3073},
-        {22,5,193},{64,5,0}
-    };
-/* END OF DUMP OF mz_inffixed.h*/
-#endif /* BUILDFIXED */
-    state->lencode = lenfix;
-    state->lenbits = 9;
-    state->distcode = distfix;
-    state->distbits = 5;
-}
-
-#ifdef MAKEFIXED
-#include <stdio.h>
-
-/*
-   Write out the inffixed.h that is #include'd above.  Defining MAKEFIXED also
-   defines BUILDFIXED, so the tables are built on the fly.  makefixed() writes
-   those tables to stdout, which would be piped to inffixed.h.  A small program
-   can simply call makefixed to do this:
-
-    void makefixed(void);
-
-    int main(void)
-    {
-        makefixed();
-        return 0;
-    }
-
-   Then that can be linked with zlib built with MAKEFIXED defined and run:
-
-    a.out > inffixed.h
- */
-void makefixed()
-{
-    unsigned low, size;
-    struct inflate_state state;
-
-    fixedtables(&state);
-    puts("    /* inffixed.h -- table for decoding fixed codes");
-    puts("     * Generated automatically by makefixed().");
-    puts("     */");
-    puts("");
-    puts("    /* WARNING: this file should *not* be used by applications.");
-    puts("       It is part of the implementation of this library and is");
-    puts("       subject to change. Applications should only use zlib.h.");
-    puts("     */");
-    puts("");
-    size = 1U << 9;
-    printf("    static const code lenfix[%u] = {", size);
-    low = 0;
-    for (;;) {
-        if ((low % 7) == 0) printf("\n        ");
-        printf("{%u,%u,%d}", (low & 127) == 99 ? 64 : state.lencode[low].op,
-               state.lencode[low].bits, state.lencode[low].val);
-        if (++low == size) break;
-        putchar(',');
-    }
-    puts("\n    };");
-    size = 1U << 5;
-    printf("\n    static const code distfix[%u] = {", size);
-    low = 0;
-    for (;;) {
-        if ((low % 6) == 0) printf("\n        ");
-        printf("{%u,%u,%d}", state.distcode[low].op, state.distcode[low].bits,
-               state.distcode[low].val);
-        if (++low == size) break;
-        putchar(',');
-    }
-    puts("\n    };");
-}
-#endif /* MAKEFIXED */
-
-/*
-   Update the window with the last wsize (normally 32K) bytes written before
-   returning.  If window does not exist yet, create it.  This is only called
-   when a window is already in use, or when output has been written during this
-   inflate call, but the end of the deflate stream has not been reached yet.
-   It is also called to create a window for dictionary data when a dictionary
-   is loaded.
-
-   Providing output buffers larger than 32K to inflate() should provide a speed
-   advantage, since only the last 32K of output is copied to the sliding window
-   upon return from inflate(), and since all distances after the first 32K of
-   output will fall in the output data, making match copies simpler and faster.
-   The advantage may be dependent on the size of the processor's data caches.
- */
-local int updatewindow(strm, end, copy)
-z_streamp strm;
-const Bytef *end;
-unsigned copy;
-{
-    struct inflate_state FAR *state;
-    unsigned dist;
-
-    state = (struct inflate_state FAR *)strm->state;
-
-    /* if it hasn't been done already, allocate space for the window */
-    if (state->window == Z_NULL) {
-        state->window = (unsigned char FAR *)
-                        ZALLOC(strm, 1U << state->wbits,
-                               sizeof(unsigned char));
-        if (state->window == Z_NULL) return 1;
-    }
-
-    /* if window not in use yet, initialize */
-    if (state->wsize == 0) {
-        state->wsize = 1U << state->wbits;
-        state->wnext = 0;
-        state->whave = 0;
-    }
-
-    /* copy state->wsize or less output bytes into the circular window */
-    if (copy >= state->wsize) {
-        zmemcpy(state->window, end - state->wsize, state->wsize);
-        state->wnext = 0;
-        state->whave = state->wsize;
-    }
-    else {
-        dist = state->wsize - state->wnext;
-        if (dist > copy) dist = copy;
-        zmemcpy(state->window + state->wnext, end - copy, dist);
-        copy -= dist;
-        if (copy) {
-            zmemcpy(state->window, end - copy, copy);
-            state->wnext = copy;
-            state->whave = state->wsize;
-        }
-        else {
-            state->wnext += dist;
-            if (state->wnext == state->wsize) state->wnext = 0;
-            if (state->whave < state->wsize) state->whave += dist;
-        }
-    }
-    return 0;
-}
-
-/* Macros for inflate(): */
-
-/* check function to use adler32() for zlib or crc32() for gzip */
-#ifdef GUNZIP
-#  define UPDATE(check, buf, len) \
-    (state->flags ? crc32(check, buf, len) : adler32(check, buf, len))
-#else
-#  define UPDATE(check, buf, len) adler32(check, buf, len)
-#endif
-
-/* check macros for header crc */
-#ifdef GUNZIP
-#  define CRC2(check, word) \
-    do { \
-        hbuf[0] = (unsigned char)(word); \
-        hbuf[1] = (unsigned char)((word) >> 8); \
-        check = crc32(check, hbuf, 2); \
-    } while (0)
-
-#  define CRC4(check, word) \
-    do { \
-        hbuf[0] = (unsigned char)(word); \
-        hbuf[1] = (unsigned char)((word) >> 8); \
-        hbuf[2] = (unsigned char)((word) >> 16); \
-        hbuf[3] = (unsigned char)((word) >> 24); \
-        check = crc32(check, hbuf, 4); \
-    } while (0)
-#endif
-
-/* Load registers with state in inflate() for speed */
-#define LOAD() \
-    do { \
-        put = strm->next_out; \
-        left = strm->avail_out; \
-        next = strm->next_in; \
-        have = strm->avail_in; \
-        hold = state->hold; \
-        bits = state->bits; \
-    } while (0)
-
-/* Restore state from registers in inflate() */
-#define RESTORE() \
-    do { \
-        strm->next_out = put; \
-        strm->avail_out = left; \
-        strm->next_in = next; \
-        strm->avail_in = have; \
-        state->hold = hold; \
-        state->bits = bits; \
-    } while (0)
-
-/* Clear the input bit accumulator */
-#define INITBITS() \
-    do { \
-        hold = 0; \
-        bits = 0; \
-    } while (0)
-
-/* Get a byte of input into the bit accumulator, or return from inflate()
-   if there is no input available. */
-#define PULLBYTE() \
-    do { \
-        if (have == 0) goto inf_leave; \
-        have--; \
-        hold += (unsigned long)(*next++) << bits; \
-        bits += 8; \
-    } while (0)
-
-/* Assure that there are at least n bits in the bit accumulator.  If there is
-   not enough available input to do that, then return from inflate(). */
-#define NEEDBITS(n) \
-    do { \
-        while (bits < (unsigned)(n)) \
-            PULLBYTE(); \
-    } while (0)
-
-/* Return the low n bits of the bit accumulator (n < 16) */
-#define BITS(n) \
-    ((unsigned)hold & ((1U << (n)) - 1))
-
-/* Remove n bits from the bit accumulator */
-#define DROPBITS(n) \
-    do { \
-        hold >>= (n); \
-        bits -= (unsigned)(n); \
-    } while (0)
-
-/* Remove zero to seven bits as needed to go to a byte boundary */
-#define BYTEBITS() \
-    do { \
-        hold >>= bits & 7; \
-        bits -= bits & 7; \
-    } while (0)
-
-/*
-   inflate() uses a state machine to process as much input data and generate as
-   much output data as possible before returning.  The state machine is
-   structured roughly as follows:
-
-    for (;;) switch (state) {
-    ...
-    case STATEn:
-        if (not enough input data or output space to make progress)
-            return;
-        ... make progress ...
-        state = STATEm;
-        break;
-    ...
-    }
-
-   so when inflate() is called again, the same case is attempted again, and
-   if the appropriate resources are provided, the machine proceeds to the
-   next state.  The NEEDBITS() macro is usually the way the state evaluates
-   whether it can proceed or should return.  NEEDBITS() does the return if
-   the requested bits are not available.  The typical use of the BITS macros
-   is:
-
-        NEEDBITS(n);
-        ... do something with BITS(n) ...
-        DROPBITS(n);
-
-   where NEEDBITS(n) either returns from inflate() if there isn't enough
-   input left to load n bits into the accumulator, or it continues.  BITS(n)
-   gives the low n bits in the accumulator.  When done, DROPBITS(n) drops
-   the low n bits off the accumulator.  INITBITS() clears the accumulator
-   and sets the number of available bits to zero.  BYTEBITS() discards just
-   enough bits to put the accumulator on a byte boundary.  After BYTEBITS()
-   and a NEEDBITS(8), then BITS(8) would return the next byte in the stream.
-
-   NEEDBITS(n) uses PULLBYTE() to get an available byte of input, or to return
-   if there is no input available.  The decoding of variable length codes uses
-   PULLBYTE() directly in order to pull just enough bytes to decode the next
-   code, and no more.
-
-   Some states loop until they get enough input, making sure that enough
-   state information is maintained to continue the loop where it left off
-   if NEEDBITS() returns in the loop.  For example, want, need, and keep
-   would all have to actually be part of the saved state in case NEEDBITS()
-   returns:
-
-    case STATEw:
-        while (want < need) {
-            NEEDBITS(n);
-            keep[want++] = BITS(n);
-            DROPBITS(n);
-        }
-        state = STATEx;
-    case STATEx:
-
-   As shown above, if the next state is also the next case, then the break
-   is omitted.
-
-   A state may also return if there is not enough output space available to
-   complete that state.  Those states are copying stored data, writing a
-   literal byte, and copying a matching string.
-
-   When returning, a "goto inf_leave" is used to update the total counters,
-   update the check value, and determine whether any progress has been made
-   during that inflate() call in order to return the proper return code.
-   Progress is defined as a change in either strm->avail_in or strm->avail_out.
-   When there is a window, goto inf_leave will update the window with the last
-   output written.  If a goto inf_leave occurs in the middle of decompression
-   and there is no window currently, goto inf_leave will create one and copy
-   output to the window for the next call of inflate().
-
-   In this implementation, the flush parameter of inflate() only affects the
-   return code (per zlib.h).  inflate() always writes as much as possible to
-   strm->next_out, given the space available and the provided input--the effect
-   documented in zlib.h of Z_SYNC_FLUSH.  Furthermore, inflate() always defers
-   the allocation of and copying into a sliding window until necessary, which
-   provides the effect documented in zlib.h for Z_FINISH when the entire input
-   stream available.  So the only thing the flush parameter actually does is:
-   when flush is set to Z_FINISH, inflate() cannot return Z_OK.  Instead it
-   will return Z_BUF_ERROR if it has not reached the end of the stream.
- */
-
-int ZEXPORT inflate(strm, flush)
-z_streamp strm;
-int flush;
-{
-    struct inflate_state FAR *state;
-    z_const unsigned char FAR *next;    /* next input */
-    unsigned char FAR *put;     /* next output */
-    unsigned have, left;        /* available input and output */
-    unsigned long hold;         /* bit buffer */
-    unsigned bits;              /* bits in bit buffer */
-    unsigned in, out;           /* save starting available input and output */
-    unsigned copy;              /* number of stored or match bytes to copy */
-    unsigned char FAR *from;    /* where to copy match bytes from */
-    code here;                  /* current decoding table entry */
-    code last;                  /* parent table entry */
-    unsigned len;               /* length to copy for repeats, bits to drop */
-    int ret;                    /* return code */
-#ifdef GUNZIP
-    unsigned char hbuf[4];      /* buffer for gzip header crc calculation */
-#endif
-    static const unsigned short order[19] = /* permutation of code lengths */
-        {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
-
-    if (strm == Z_NULL || strm->state == Z_NULL || strm->next_out == Z_NULL ||
-        (strm->next_in == Z_NULL && strm->avail_in != 0))
-        return Z_STREAM_ERROR;
-
-    state = (struct inflate_state FAR *)strm->state;
-    if (state->mode == TYPE) state->mode = TYPEDO;      /* skip check */
-    LOAD();
-    in = have;
-    out = left;
-    ret = Z_OK;
-    for (;;)
-        switch (state->mode) {
-        case HEAD:
-            if (state->wrap == 0) {
-                state->mode = TYPEDO;
-                break;
-            }
-            NEEDBITS(16);
-#ifdef GUNZIP
-            if ((state->wrap & 2) && hold == 0x8b1f) {  /* gzip header */
-                state->check = crc32(0L, Z_NULL, 0);
-                CRC2(state->check, hold);
-                INITBITS();
-                state->mode = FLAGS;
-                break;
-            }
-            state->flags = 0;           /* expect zlib header */
-            if (state->head != Z_NULL)
-                state->head->done = -1;
-            if (!(state->wrap & 1) ||   /* check if zlib header allowed */
-#else
-            if (
-#endif
-                ((BITS(8) << 8) + (hold >> 8)) % 31) {
-                strm->msg = (char *)"incorrect header check";
-                state->mode = BAD;
-                break;
-            }
-            if (BITS(4) != Z_DEFLATED) {
-                strm->msg = (char *)"unknown compression method";
-                state->mode = BAD;
-                break;
-            }
-            DROPBITS(4);
-            len = BITS(4) + 8;
-            if (state->wbits == 0)
-                state->wbits = len;
-            else if (len > state->wbits) {
-                strm->msg = (char *)"invalid window size";
-                state->mode = BAD;
-                break;
-            }
-            state->dmax = 1U << len;
-            Tracev((stderr, "inflate:   zlib header ok\n"));
-            strm->adler = state->check = adler32(0L, Z_NULL, 0);
-            state->mode = hold & 0x200 ? DICTID : TYPE;
-            INITBITS();
-            break;
-#ifdef GUNZIP
-        case FLAGS:
-            NEEDBITS(16);
-            state->flags = (int)(hold);
-            if ((state->flags & 0xff) != Z_DEFLATED) {
-                strm->msg = (char *)"unknown compression method";
-                state->mode = BAD;
-                break;
-            }
-            if (state->flags & 0xe000) {
-                strm->msg = (char *)"unknown header flags set";
-                state->mode = BAD;
-                break;
-            }
-            if (state->head != Z_NULL)
-                state->head->text = (int)((hold >> 8) & 1);
-            if (state->flags & 0x0200) CRC2(state->check, hold);
-            INITBITS();
-            state->mode = TIME;
-        case TIME:
-            NEEDBITS(32);
-            if (state->head != Z_NULL)
-                state->head->time = hold;
-            if (state->flags & 0x0200) CRC4(state->check, hold);
-            INITBITS();
-            state->mode = OS;
-        case OS:
-            NEEDBITS(16);
-            if (state->head != Z_NULL) {
-                state->head->xflags = (int)(hold & 0xff);
-                state->head->os = (int)(hold >> 8);
-            }
-            if (state->flags & 0x0200) CRC2(state->check, hold);
-            INITBITS();
-            state->mode = EXLEN;
-        case EXLEN:
-            if (state->flags & 0x0400) {
-                NEEDBITS(16);
-                state->length = (unsigned)(hold);
-                if (state->head != Z_NULL)
-                    state->head->extra_len = (unsigned)hold;
-                if (state->flags & 0x0200) CRC2(state->check, hold);
-                INITBITS();
-            }
-            else if (state->head != Z_NULL)
-                state->head->extra = Z_NULL;
-            state->mode = EXTRA;
-        case EXTRA:
-            if (state->flags & 0x0400) {
-                copy = state->length;
-                if (copy > have) copy = have;
-                if (copy) {
-                    if (state->head != Z_NULL &&
-                        state->head->extra != Z_NULL) {
-                        len = state->head->extra_len - state->length;
-                        zmemcpy(state->head->extra + len, next,
-                                len + copy > state->head->extra_max ?
-                                state->head->extra_max - len : copy);
-                    }
-                    if (state->flags & 0x0200)
-                        state->check = crc32(state->check, next, copy);
-                    have -= copy;
-                    next += copy;
-                    state->length -= copy;
-                }
-                if (state->length) goto inf_leave;
-            }
-            state->length = 0;
-            state->mode = NAME;
-        case NAME:
-            if (state->flags & 0x0800) {
-                if (have == 0) goto inf_leave;
-                copy = 0;
-                do {
-                    len = (unsigned)(next[copy++]);
-                    if (state->head != Z_NULL &&
-                            state->head->name != Z_NULL &&
-                            state->length < state->head->name_max)
-                        state->head->name[state->length++] = len;
-                } while (len && copy < have);
-                if (state->flags & 0x0200)
-                    state->check = crc32(state->check, next, copy);
-                have -= copy;
-                next += copy;
-                if (len) goto inf_leave;
-            }
-            else if (state->head != Z_NULL)
-                state->head->name = Z_NULL;
-            state->length = 0;
-            state->mode = COMMENT;
-        case COMMENT:
-            if (state->flags & 0x1000) {
-                if (have == 0) goto inf_leave;
-                copy = 0;
-                do {
-                    len = (unsigned)(next[copy++]);
-                    if (state->head != Z_NULL &&
-                            state->head->comment != Z_NULL &&
-                            state->length < state->head->comm_max)
-                        state->head->comment[state->length++] = len;
-                } while (len && copy < have);
-                if (state->flags & 0x0200)
-                    state->check = crc32(state->check, next, copy);
-                have -= copy;
-                next += copy;
-                if (len) goto inf_leave;
-            }
-            else if (state->head != Z_NULL)
-                state->head->comment = Z_NULL;
-            state->mode = HCRC;
-        case HCRC:
-            if (state->flags & 0x0200) {
-                NEEDBITS(16);
-                if (hold != (state->check & 0xffff)) {
-                    strm->msg = (char *)"header crc mismatch";
-                    state->mode = BAD;
-                    break;
-                }
-                INITBITS();
-            }
-            if (state->head != Z_NULL) {
-                state->head->hcrc = (int)((state->flags >> 9) & 1);
-                state->head->done = 1;
-            }
-            strm->adler = state->check = crc32(0L, Z_NULL, 0);
-            state->mode = TYPE;
-            break;
-#endif
-        case DICTID:
-            NEEDBITS(32);
-            strm->adler = state->check = ZSWAP32(hold);
-            INITBITS();
-            state->mode = DICT;
-        case DICT:
-            if (state->havedict == 0) {
-                RESTORE();
-                return Z_NEED_DICT;
-            }
-            strm->adler = state->check = adler32(0L, Z_NULL, 0);
-            state->mode = TYPE;
-        case TYPE:
-            if (flush == Z_BLOCK || flush == Z_TREES) goto inf_leave;
-        case TYPEDO:
-            if (state->last) {
-                BYTEBITS();
-                state->mode = CHECK;
-                break;
-            }
-            NEEDBITS(3);
-            state->last = BITS(1);
-            DROPBITS(1);
-            switch (BITS(2)) {
-            case 0:                             /* stored block */
-                Tracev((stderr, "inflate:     stored block%s\n",
-                        state->last ? " (last)" : ""));
-                state->mode = STORED;
-                break;
-            case 1:                             /* fixed block */
-                fixedtables(state);
-                Tracev((stderr, "inflate:     fixed codes block%s\n",
-                        state->last ? " (last)" : ""));
-                state->mode = LEN_;             /* decode codes */
-                if (flush == Z_TREES) {
-                    DROPBITS(2);
-                    goto inf_leave;
-                }
-                break;
-            case 2:                             /* dynamic block */
-                Tracev((stderr, "inflate:     dynamic codes block%s\n",
-                        state->last ? " (last)" : ""));
-                state->mode = TABLE;
-                break;
-            case 3:
-                strm->msg = (char *)"invalid block type";
-                state->mode = BAD;
-            }
-            DROPBITS(2);
-            break;
-        case STORED:
-            BYTEBITS();                         /* go to byte boundary */
-            NEEDBITS(32);
-            if ((hold & 0xffff) != ((hold >> 16) ^ 0xffff)) {
-                strm->msg = (char *)"invalid stored block lengths";
-                state->mode = BAD;
-                break;
-            }
-            state->length = (unsigned)hold & 0xffff;
-            Tracev((stderr, "inflate:       stored length %u\n",
-                    state->length));
-            INITBITS();
-            state->mode = COPY_;
-            if (flush == Z_TREES) goto inf_leave;
-        case COPY_:
-            state->mode = COPY;
-        case COPY:
-            copy = state->length;
-            if (copy) {
-                if (copy > have) copy = have;
-                if (copy > left) copy = left;
-                if (copy == 0) goto inf_leave;
-                zmemcpy(put, next, copy);
-                have -= copy;
-                next += copy;
-                left -= copy;
-                put += copy;
-                state->length -= copy;
-                break;
-            }
-            Tracev((stderr, "inflate:       stored end\n"));
-            state->mode = TYPE;
-            break;
-        case TABLE:
-            NEEDBITS(14);
-            state->nlen = BITS(5) + 257;
-            DROPBITS(5);
-            state->ndist = BITS(5) + 1;
-            DROPBITS(5);
-            state->ncode = BITS(4) + 4;
-            DROPBITS(4);
-#ifndef PKZIP_BUG_WORKAROUND
-            if (state->nlen > 286 || state->ndist > 30) {
-                strm->msg = (char *)"too many length or distance symbols";
-                state->mode = BAD;
-                break;
-            }
-#endif
-            Tracev((stderr, "inflate:       table sizes ok\n"));
-            state->have = 0;
-            state->mode = LENLENS;
-        case LENLENS:
-            while (state->have < state->ncode) {
-                NEEDBITS(3);
-                state->lens[order[state->have++]] = (unsigned short)BITS(3);
-                DROPBITS(3);
-            }
-            while (state->have < 19)
-                state->lens[order[state->have++]] = 0;
-            state->next = state->codes;
-            state->lencode = (const code FAR *)(state->next);
-            state->lenbits = 7;
-            ret = inflate_table(CODES, state->lens, 19, &(state->next),
-                                &(state->lenbits), state->work);
-            if (ret) {
-                strm->msg = (char *)"invalid code lengths set";
-                state->mode = BAD;
-                break;
-            }
-            Tracev((stderr, "inflate:       code lengths ok\n"));
-            state->have = 0;
-            state->mode = CODELENS;
-        case CODELENS:
-            while (state->have < state->nlen + state->ndist) {
-                for (;;) {
-                    here = state->lencode[BITS(state->lenbits)];
-                    if ((unsigned)(here.bits) <= bits) break;
-                    PULLBYTE();
-                }
-                if (here.val < 16) {
-                    DROPBITS(here.bits);
-                    state->lens[state->have++] = here.val;
-                }
-                else {
-                    if (here.val == 16) {
-                        NEEDBITS(here.bits + 2);
-                        DROPBITS(here.bits);
-                        if (state->have == 0) {
-                            strm->msg = (char *)"invalid bit length repeat";
-                            state->mode = BAD;
-                            break;
-                        }
-                        len = state->lens[state->have - 1];
-                        copy = 3 + BITS(2);
-                        DROPBITS(2);
-                    }
-                    else if (here.val == 17) {
-                        NEEDBITS(here.bits + 3);
-                        DROPBITS(here.bits);
-                        len = 0;
-                        copy = 3 + BITS(3);
-                        DROPBITS(3);
-                    }
-                    else {
-                        NEEDBITS(here.bits + 7);
-                        DROPBITS(here.bits);
-                        len = 0;
-                        copy = 11 + BITS(7);
-                        DROPBITS(7);
-                    }
-                    if (state->have + copy > state->nlen + state->ndist) {
-                        strm->msg = (char *)"invalid bit length repeat";
-                        state->mode = BAD;
-                        break;
-                    }
-                    while (copy--)
-                        state->lens[state->have++] = (unsigned short)len;
-                }
-            }
-
-            /* handle error breaks in while */
-            if (state->mode == BAD) break;
-
-            /* check for end-of-block code (better have one) */
-            if (state->lens[256] == 0) {
-                strm->msg = (char *)"invalid code -- missing end-of-block";
-                state->mode = BAD;
-                break;
-            }
-
-            /* build code tables -- note: do not change the lenbits or distbits
-               values here (9 and 6) without reading the comments in inftrees.h
-               concerning the ENOUGH constants, which depend on those values */
-            state->next = state->codes;
-            state->lencode = (const code FAR *)(state->next);
-            state->lenbits = 9;
-            ret = inflate_table(LENS, state->lens, state->nlen, &(state->next),
-                                &(state->lenbits), state->work);
-            if (ret) {
-                strm->msg = (char *)"invalid literal/lengths set";
-                state->mode = BAD;
-                break;
-            }
-            state->distcode = (const code FAR *)(state->next);
-            state->distbits = 6;
-            ret = inflate_table(DISTS, state->lens + state->nlen, state->ndist,
-                            &(state->next), &(state->distbits), state->work);
-            if (ret) {
-                strm->msg = (char *)"invalid distances set";
-                state->mode = BAD;
-                break;
-            }
-            Tracev((stderr, "inflate:       codes ok\n"));
-            state->mode = LEN_;
-            if (flush == Z_TREES) goto inf_leave;
-        case LEN_:
-            state->mode = LEN;
-        case LEN:
-            if (have >= 6 && left >= 258) {
-                RESTORE();
-                inflate_fast(strm, out);
-                LOAD();
-                if (state->mode == TYPE)
-                    state->back = -1;
-                break;
-            }
-            state->back = 0;
-            for (;;) {
-                here = state->lencode[BITS(state->lenbits)];
-                if ((unsigned)(here.bits) <= bits) break;
-                PULLBYTE();
-            }
-            if (here.op && (here.op & 0xf0) == 0) {
-                last = here;
-                for (;;) {
-                    here = state->lencode[last.val +
-                            (BITS(last.bits + last.op) >> last.bits)];
-                    if ((unsigned)(last.bits + here.bits) <= bits) break;
-                    PULLBYTE();
-                }
-                DROPBITS(last.bits);
-                state->back += last.bits;
-            }
-            DROPBITS(here.bits);
-            state->back += here.bits;
-            state->length = (unsigned)here.val;
-            if ((int)(here.op) == 0) {
-                Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
-                        "inflate:         literal '%c'\n" :
-                        "inflate:         literal 0x%02x\n", here.val));
-                state->mode = LIT;
-                break;
-            }
-            if (here.op & 32) {
-                Tracevv((stderr, "inflate:         end of block\n"));
-                state->back = -1;
-                state->mode = TYPE;
-                break;
-            }
-            if (here.op & 64) {
-                strm->msg = (char *)"invalid literal/length code";
-                state->mode = BAD;
-                break;
-            }
-            state->extra = (unsigned)(here.op) & 15;
-            state->mode = LENEXT;
-        case LENEXT:
-            if (state->extra) {
-                NEEDBITS(state->extra);
-                state->length += BITS(state->extra);
-                DROPBITS(state->extra);
-                state->back += state->extra;
-            }
-            Tracevv((stderr, "inflate:         length %u\n", state->length));
-            state->was = state->length;
-            state->mode = DIST;
-        case DIST:
-            for (;;) {
-                here = state->distcode[BITS(state->distbits)];
-                if ((unsigned)(here.bits) <= bits) break;
-                PULLBYTE();
-            }
-            if ((here.op & 0xf0) == 0) {
-                last = here;
-                for (;;) {
-                    here = state->distcode[last.val +
-                            (BITS(last.bits + last.op) >> last.bits)];
-                    if ((unsigned)(last.bits + here.bits) <= bits) break;
-                    PULLBYTE();
-                }
-                DROPBITS(last.bits);
-                state->back += last.bits;
-            }
-            DROPBITS(here.bits);
-            state->back += here.bits;
-            if (here.op & 64) {
-                strm->msg = (char *)"invalid distance code";
-                state->mode = BAD;
-                break;
-            }
-            state->offset = (unsigned)here.val;
-            state->extra = (unsigned)(here.op) & 15;
-            state->mode = DISTEXT;
-        case DISTEXT:
-            if (state->extra) {
-                NEEDBITS(state->extra);
-                state->offset += BITS(state->extra);
-                DROPBITS(state->extra);
-                state->back += state->extra;
-            }
-#ifdef INFLATE_STRICT
-            if (state->offset > state->dmax) {
-                strm->msg = (char *)"invalid distance too far back";
-                state->mode = BAD;
-                break;
-            }
-#endif
-            Tracevv((stderr, "inflate:         distance %u\n", state->offset));
-            state->mode = MATCH;
-        case MATCH:
-            if (left == 0) goto inf_leave;
-            copy = out - left;
-            if (state->offset > copy) {         /* copy from window */
-                copy = state->offset - copy;
-                if (copy > state->whave) {
-                    if (state->sane) {
-                        strm->msg = (char *)"invalid distance too far back";
-                        state->mode = BAD;
-                        break;
-                    }
-#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
-                    Trace((stderr, "inflate.c too far\n"));
-                    copy -= state->whave;
-                    if (copy > state->length) copy = state->length;
-                    if (copy > left) copy = left;
-                    left -= copy;
-                    state->length -= copy;
-                    do {
-                        *put++ = 0;
-                    } while (--copy);
-                    if (state->length == 0) state->mode = LEN;
-                    break;
-#endif
-                }
-                if (copy > state->wnext) {
-                    copy -= state->wnext;
-                    from = state->window + (state->wsize - copy);
-                }
-                else
-                    from = state->window + (state->wnext - copy);
-                if (copy > state->length) copy = state->length;
-            }
-            else {                              /* copy from output */
-                from = put - state->offset;
-                copy = state->length;
-            }
-            if (copy > left) copy = left;
-            left -= copy;
-            state->length -= copy;
-            do {
-                *put++ = *from++;
-            } while (--copy);
-            if (state->length == 0) state->mode = LEN;
-            break;
-        case LIT:
-            if (left == 0) goto inf_leave;
-            *put++ = (unsigned char)(state->length);
-            left--;
-            state->mode = LEN;
-            break;
-        case CHECK:
-            if (state->wrap) {
-                NEEDBITS(32);
-                out -= left;
-                strm->total_out += out;
-                state->total += out;
-                if (out)
-                    strm->adler = state->check =
-                        UPDATE(state->check, put - out, out);
-                out = left;
-                if ((
-#ifdef GUNZIP
-                     state->flags ? hold :
-#endif
-                     ZSWAP32(hold)) != state->check) {
-                    strm->msg = (char *)"incorrect data check";
-                    state->mode = BAD;
-                    break;
-                }
-                INITBITS();
-                Tracev((stderr, "inflate:   check matches trailer\n"));
-            }
-#ifdef GUNZIP
-            state->mode = LENGTH;
-        case LENGTH:
-            if (state->wrap && state->flags) {
-                NEEDBITS(32);
-                if (hold != (state->total & 0xffffffffUL)) {
-                    strm->msg = (char *)"incorrect length check";
-                    state->mode = BAD;
-                    break;
-                }
-                INITBITS();
-                Tracev((stderr, "inflate:   length matches trailer\n"));
-            }
-#endif
-            state->mode = DONE;
-        case DONE:
-            ret = Z_STREAM_END;
-            goto inf_leave;
-        case BAD:
-            ret = Z_DATA_ERROR;
-            goto inf_leave;
-        case MEM:
-            return Z_MEM_ERROR;
-        case SYNC:
-        default:
-            return Z_STREAM_ERROR;
-        }
-
-    /*
-       Return from inflate(), updating the total counts and the check value.
-       If there was no progress during the inflate() call, return a buffer
-       error.  Call updatewindow() to create and/or update the window state.
-       Note: a memory error from inflate() is non-recoverable.
-     */
-  inf_leave:
-    RESTORE();
-    if (state->wsize || (out != strm->avail_out && state->mode < BAD &&
-            (state->mode < CHECK || flush != Z_FINISH)))
-        if (updatewindow(strm, strm->next_out, out - strm->avail_out)) {
-            state->mode = MEM;
-            return Z_MEM_ERROR;
-        }
-    in -= strm->avail_in;
-    out -= strm->avail_out;
-    strm->total_in += in;
-    strm->total_out += out;
-    state->total += out;
-    if (state->wrap && out)
-        strm->adler = state->check =
-            UPDATE(state->check, strm->next_out - out, out);
-    strm->data_type = state->bits + (state->last ? 64 : 0) +
-                      (state->mode == TYPE ? 128 : 0) +
-                      (state->mode == LEN_ || state->mode == COPY_ ? 256 : 0);
-    if (((in == 0 && out == 0) || flush == Z_FINISH) && ret == Z_OK)
-        ret = Z_BUF_ERROR;
-    return ret;
-}
-
-int ZEXPORT inflateEnd(strm)
-z_streamp strm;
-{
-    struct inflate_state FAR *state;
-    if (strm == Z_NULL || strm->state == Z_NULL || strm->zfree == (free_func)0)
-        return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    if (state->window != Z_NULL) ZFREE(strm, state->window);
-    ZFREE(strm, strm->state);
-    strm->state = Z_NULL;
-    Tracev((stderr, "inflate: end\n"));
-    return Z_OK;
-}
-
-int ZEXPORT inflateGetDictionary(strm, dictionary, dictLength)
-z_streamp strm;
-Bytef *dictionary;
-uInt *dictLength;
-{
-    struct inflate_state FAR *state;
-
-    /* check state */
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-
-    /* copy dictionary */
-    if (state->whave && dictionary != Z_NULL) {
-        zmemcpy(dictionary, state->window + state->wnext,
-                state->whave - state->wnext);
-        zmemcpy(dictionary + state->whave - state->wnext,
-                state->window, state->wnext);
-    }
-    if (dictLength != Z_NULL)
-        *dictLength = state->whave;
-    return Z_OK;
-}
-
-int ZEXPORT inflateSetDictionary(strm, dictionary, dictLength)
-z_streamp strm;
-const Bytef *dictionary;
-uInt dictLength;
-{
-    struct inflate_state FAR *state;
-    unsigned long dictid;
-    int ret;
-
-    /* check state */
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    if (state->wrap != 0 && state->mode != DICT)
-        return Z_STREAM_ERROR;
-
-    /* check for correct dictionary identifier */
-    if (state->mode == DICT) {
-        dictid = adler32(0L, Z_NULL, 0);
-        dictid = adler32(dictid, dictionary, dictLength);
-        if (dictid != state->check)
-            return Z_DATA_ERROR;
-    }
-
-    /* copy dictionary to window using updatewindow(), which will amend the
-       existing dictionary if appropriate */
-    ret = updatewindow(strm, dictionary + dictLength, dictLength);
-    if (ret) {
-        state->mode = MEM;
-        return Z_MEM_ERROR;
-    }
-    state->havedict = 1;
-    Tracev((stderr, "inflate:   dictionary set\n"));
-    return Z_OK;
-}
-
-int ZEXPORT inflateGetHeader(strm, head)
-z_streamp strm;
-gz_headerp head;
-{
-    struct inflate_state FAR *state;
-
-    /* check state */
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    if ((state->wrap & 2) == 0) return Z_STREAM_ERROR;
-
-    /* save header structure */
-    state->head = head;
-    head->done = 0;
-    return Z_OK;
-}
-
-/*
-   Search buf[0..len-1] for the pattern: 0, 0, 0xff, 0xff.  Return when found
-   or when out of input.  When called, *have is the number of pattern bytes
-   found in order so far, in 0..3.  On return *have is updated to the new
-   state.  If on return *have equals four, then the pattern was found and the
-   return value is how many bytes were read including the last byte of the
-   pattern.  If *have is less than four, then the pattern has not been found
-   yet and the return value is len.  In the latter case, syncsearch() can be
-   called again with more data and the *have state.  *have is initialized to
-   zero for the first call.
- */
-local unsigned syncsearch(have, buf, len)
-unsigned FAR *have;
-const unsigned char FAR *buf;
-unsigned len;
-{
-    unsigned got;
-    unsigned next;
-
-    got = *have;
-    next = 0;
-    while (next < len && got < 4) {
-        if ((int)(buf[next]) == (got < 2 ? 0 : 0xff))
-            got++;
-        else if (buf[next])
-            got = 0;
-        else
-            got = 4 - got;
-        next++;
-    }
-    *have = got;
-    return next;
-}
-
-int ZEXPORT inflateSync(strm)
-z_streamp strm;
-{
-    unsigned len;               /* number of bytes to look at or looked at */
-    unsigned long in, out;      /* temporary to save total_in and total_out */
-    unsigned char buf[4];       /* to restore bit buffer to byte string */
-    struct inflate_state FAR *state;
-
-    /* check parameters */
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    if (strm->avail_in == 0 && state->bits < 8) return Z_BUF_ERROR;
-
-    /* if first time, start search in bit buffer */
-    if (state->mode != SYNC) {
-        state->mode = SYNC;
-        state->hold <<= state->bits & 7;
-        state->bits -= state->bits & 7;
-        len = 0;
-        while (state->bits >= 8) {
-            buf[len++] = (unsigned char)(state->hold);
-            state->hold >>= 8;
-            state->bits -= 8;
-        }
-        state->have = 0;
-        syncsearch(&(state->have), buf, len);
-    }
-
-    /* search available input */
-    len = syncsearch(&(state->have), strm->next_in, strm->avail_in);
-    strm->avail_in -= len;
-    strm->next_in += len;
-    strm->total_in += len;
-
-    /* return no joy or set up to restart inflate() on a new block */
-    if (state->have != 4) return Z_DATA_ERROR;
-    in = strm->total_in;  out = strm->total_out;
-    inflateReset(strm);
-    strm->total_in = in;  strm->total_out = out;
-    state->mode = TYPE;
-    return Z_OK;
-}
-
-/*
-   Returns true if inflate is currently at the end of a block generated by
-   Z_SYNC_FLUSH or Z_FULL_FLUSH. This function is used by one PPP
-   implementation to provide an additional safety check. PPP uses
-   Z_SYNC_FLUSH but removes the length bytes of the resulting empty stored
-   block. When decompressing, PPP checks that at the end of input packet,
-   inflate is waiting for these length bytes.
- */
-int ZEXPORT inflateSyncPoint(strm)
-z_streamp strm;
-{
-    struct inflate_state FAR *state;
-
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    return state->mode == STORED && state->bits == 0;
-}
-
-int ZEXPORT inflateCopy(dest, source)
-z_streamp dest;
-z_streamp source;
-{
-    struct inflate_state FAR *state;
-    struct inflate_state FAR *copy;
-    unsigned char FAR *window;
-    unsigned wsize;
-
-    /* check input */
-    if (dest == Z_NULL || source == Z_NULL || source->state == Z_NULL ||
-        source->zalloc == (alloc_func)0 || source->zfree == (free_func)0)
-        return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)source->state;
-
-    /* allocate space */
-    copy = (struct inflate_state FAR *)
-           ZALLOC(source, 1, sizeof(struct inflate_state));
-    if (copy == Z_NULL) return Z_MEM_ERROR;
-    window = Z_NULL;
-    if (state->window != Z_NULL) {
-        window = (unsigned char FAR *)
-                 ZALLOC(source, 1U << state->wbits, sizeof(unsigned char));
-        if (window == Z_NULL) {
-            ZFREE(source, copy);
-            return Z_MEM_ERROR;
-        }
-    }
-
-    /* copy state */
-    zmemcpy((voidpf)dest, (voidpf)source, sizeof(z_stream));
-    zmemcpy((voidpf)copy, (voidpf)state, sizeof(struct inflate_state));
-    if (state->lencode >= state->codes &&
-        state->lencode <= state->codes + ENOUGH - 1) {
-        copy->lencode = copy->codes + (state->lencode - state->codes);
-        copy->distcode = copy->codes + (state->distcode - state->codes);
-    }
-    copy->next = copy->codes + (state->next - state->codes);
-    if (window != Z_NULL) {
-        wsize = 1U << state->wbits;
-        zmemcpy(window, state->window, wsize);
-    }
-    copy->window = window;
-    dest->state = (struct internal_state FAR *)copy;
-    return Z_OK;
-}
-
-int ZEXPORT inflateUndermine(strm, subvert)
-z_streamp strm;
-int subvert;
-{
-    struct inflate_state FAR *state;
-
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    state->sane = !subvert;
-#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
-    return Z_OK;
-#else
-    state->sane = 1;
-    return Z_DATA_ERROR;
-#endif
-}
-
-long ZEXPORT inflateMark(strm)
-z_streamp strm;
-{
-    struct inflate_state FAR *state;
-
-    //TK: Applied the following fix (also in actual zlib devel branch):
-    if (strm == Z_NULL || strm->state == Z_NULL)
-      return (long)(((unsigned long)0 - 1) << 16);
-    //TK: Code was (but clang 7.3 warns about bitshifting negative numbers):
-    //if (strm == Z_NULL || strm->state == Z_NULL) return -1L << 16;
-    state = (struct inflate_state FAR *)strm->state;
-    return ((long)(state->back) << 16) +
-        (state->mode == COPY ? state->length :
-            (state->mode == MATCH ? state->was - state->length : 0));
-}
-/* END OF DUMP OF mz_inflate.c*/
 /* START OF DUMP OF mz_crc32.c*/
 #ifdef GZIP
 #  undef GZIP
@@ -14074,6 +14391,291 @@ uLong ZEXPORT crc32_combine64(crc1, crc2, len2)
     return crc32_combine_(crc1, crc2, len2);
 }
 /* END OF DUMP OF mz_crc32.c*/
+/* START OF DUMP OF mz_compress.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* compress.c -- compress a memory buffer
+ * Copyright (C) 1995-2005 Jean-loup Gailly.
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+/* @(#) $Id$ */
+
+#define ZLIB_INTERNAL
+
+/* ===========================================================================
+     Compresses the source buffer into the destination buffer. The level
+   parameter has the same meaning as in deflateInit.  sourceLen is the byte
+   length of the source buffer. Upon entry, destLen is the total size of the
+   destination buffer, which must be at least 0.1% larger than sourceLen plus
+   12 bytes. Upon exit, destLen is the actual size of the compressed buffer.
+
+     compress2 returns Z_OK if success, Z_MEM_ERROR if there was not enough
+   memory, Z_BUF_ERROR if there was not enough room in the output buffer,
+   Z_STREAM_ERROR if the level parameter is invalid.
+*/
+int ZEXPORT compress2 (dest, destLen, source, sourceLen, level)
+    Bytef *dest;
+    uLongf *destLen;
+    const Bytef *source;
+    uLong sourceLen;
+    int level;
+{
+    z_stream stream;
+    int err;
+
+    stream.next_in = (z_const Bytef *)source;
+    stream.avail_in = (uInt)sourceLen;
+#ifdef MAXSEG_64K
+    /* Check for source > 64K on 16-bit machine: */
+    if ((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
+#endif
+    stream.next_out = dest;
+    stream.avail_out = (uInt)*destLen;
+    if ((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
+
+    stream.zalloc = (alloc_func)0;
+    stream.zfree = (free_func)0;
+    stream.opaque = (voidpf)0;
+
+    err = deflateInit(&stream, level);
+    if (err != Z_OK) return err;
+
+    err = deflate(&stream, Z_FINISH);
+    if (err != Z_STREAM_END) {
+        deflateEnd(&stream);
+        return err == Z_OK ? Z_BUF_ERROR : err;
+    }
+    *destLen = stream.total_out;
+
+    err = deflateEnd(&stream);
+    return err;
+}
+
+/* ===========================================================================
+ */
+int ZEXPORT compress (dest, destLen, source, sourceLen)
+    Bytef *dest;
+    uLongf *destLen;
+    const Bytef *source;
+    uLong sourceLen;
+{
+    return compress2(dest, destLen, source, sourceLen, Z_DEFAULT_COMPRESSION);
+}
+
+/* ===========================================================================
+     If the default memLevel or windowBits for deflateInit() is changed, then
+   this function needs to be updated.
+ */
+uLong ZEXPORT compressBound (sourceLen)
+    uLong sourceLen;
+{
+    return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) +
+           (sourceLen >> 25) + 13;
+}
+/* END OF DUMP OF mz_compress.c*/
+/* START OF DUMP OF mz_adler32.c*/
+#ifdef GZIP
+#  undef GZIP
+#endif
+#ifdef COPY
+#  undef COPY
+#endif
+#ifdef DO1
+#  undef DO1
+#endif
+#ifdef DO8
+#  undef DO8
+#endif
+/* adler32.c -- compute the Adler-32 checksum of a data stream
+ * Copyright (C) 1995-2011 Mark Adler
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
+
+/* @(#) $Id$ */
+
+
+#define local static
+
+local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
+
+#define BASE 65521      /* largest prime smaller than 65536 */
+#define NMAX 5552
+/* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
+
+#define DO1(buf,i)  {adler += (buf)[i]; sum2 += adler;}
+#define DO2(buf,i)  DO1(buf,i); DO1(buf,i+1);
+#define DO4(buf,i)  DO2(buf,i); DO2(buf,i+2);
+#define DO8(buf,i)  DO4(buf,i); DO4(buf,i+4);
+#define DO16(buf)   DO8(buf,0); DO8(buf,8);
+
+/* use NO_DIVIDE if your processor does not do division in hardware --
+   try it both ways to see which is faster */
+#ifdef NO_DIVIDE
+/* note that this assumes BASE is 65521, where 65536 % 65521 == 15
+   (thank you to John Reiser for pointing this out) */
+#  define CHOP(a) \
+    do { \
+        unsigned long tmp = a >> 16; \
+        a &= 0xffffUL; \
+        a += (tmp << 4) - tmp; \
+    } while (0)
+#  define MOD28(a) \
+    do { \
+        CHOP(a); \
+        if (a >= BASE) a -= BASE; \
+    } while (0)
+#  define MOD(a) \
+    do { \
+        CHOP(a); \
+        MOD28(a); \
+    } while (0)
+#  define MOD63(a) \
+    do { /* this assumes a is not negative */ \
+        z_off64_t tmp = a >> 32; \
+        a &= 0xffffffffL; \
+        a += (tmp << 8) - (tmp << 5) + tmp; \
+        tmp = a >> 16; \
+        a &= 0xffffL; \
+        a += (tmp << 4) - tmp; \
+        tmp = a >> 16; \
+        a &= 0xffffL; \
+        a += (tmp << 4) - tmp; \
+        if (a >= BASE) a -= BASE; \
+    } while (0)
+#else
+#  define MOD(a) a %= BASE
+#  define MOD28(a) a %= BASE
+#  define MOD63(a) a %= BASE
+#endif
+
+/* ========================================================================= */
+uLong ZEXPORT adler32(adler, buf, len)
+    uLong adler;
+    const Bytef *buf;
+    uInt len;
+{
+    unsigned long sum2;
+    unsigned n;
+
+    /* split Adler-32 into component sums */
+    sum2 = (adler >> 16) & 0xffff;
+    adler &= 0xffff;
+
+    /* in case user likes doing a byte at a time, keep it fast */
+    if (len == 1) {
+        adler += buf[0];
+        if (adler >= BASE)
+            adler -= BASE;
+        sum2 += adler;
+        if (sum2 >= BASE)
+            sum2 -= BASE;
+        return adler | (sum2 << 16);
+    }
+
+    /* initial Adler-32 value (deferred check for len == 1 speed) */
+    if (buf == Z_NULL)
+        return 1L;
+
+    /* in case short lengths are provided, keep it somewhat fast */
+    if (len < 16) {
+        while (len--) {
+            adler += *buf++;
+            sum2 += adler;
+        }
+        if (adler >= BASE)
+            adler -= BASE;
+        MOD28(sum2);            /* only added so many BASE's */
+        return adler | (sum2 << 16);
+    }
+
+    /* do length NMAX blocks -- requires just one modulo operation */
+    while (len >= NMAX) {
+        len -= NMAX;
+        n = NMAX / 16;          /* NMAX is divisible by 16 */
+        do {
+            DO16(buf);          /* 16 sums unrolled */
+            buf += 16;
+        } while (--n);
+        MOD(adler);
+        MOD(sum2);
+    }
+
+    /* do remaining bytes (less than NMAX, still just one modulo) */
+    if (len) {                  /* avoid modulos if none remaining */
+        while (len >= 16) {
+            len -= 16;
+            DO16(buf);
+            buf += 16;
+        }
+        while (len--) {
+            adler += *buf++;
+            sum2 += adler;
+        }
+        MOD(adler);
+        MOD(sum2);
+    }
+
+    /* return recombined sums */
+    return adler | (sum2 << 16);
+}
+
+/* ========================================================================= */
+local uLong adler32_combine_(adler1, adler2, len2)
+    uLong adler1;
+    uLong adler2;
+    z_off64_t len2;
+{
+    unsigned long sum1;
+    unsigned long sum2;
+    unsigned rem;
+
+    /* for negative len, return invalid adler32 as a clue for debugging */
+    if (len2 < 0)
+        return 0xffffffffUL;
+
+    /* the derivation of this formula is left as an exercise for the reader */
+    MOD63(len2);                /* assumes len2 >= 0 */
+    rem = (unsigned)len2;
+    sum1 = adler1 & 0xffff;
+    sum2 = rem * sum1;
+    MOD(sum2);
+    sum1 += (adler2 & 0xffff) + BASE - 1;
+    sum2 += ((adler1 >> 16) & 0xffff) + ((adler2 >> 16) & 0xffff) + BASE - rem;
+    if (sum1 >= BASE) sum1 -= BASE;
+    if (sum1 >= BASE) sum1 -= BASE;
+    if (sum2 >= (BASE << 1)) sum2 -= (BASE << 1);
+    if (sum2 >= BASE) sum2 -= BASE;
+    return sum1 | (sum2 << 16);
+}
+
+/* ========================================================================= */
+uLong ZEXPORT adler32_combine(adler1, adler2, len2)
+    uLong adler1;
+    uLong adler2;
+    z_off_t len2;
+{
+    return adler32_combine_(adler1, adler2, len2);
+}
+
+uLong ZEXPORT adler32_combine64(adler1, adler2, len2)
+    uLong adler1;
+    uLong adler2;
+    z_off64_t len2;
+{
+    return adler32_combine_(adler1, adler2, len2);
+}
+/* END OF DUMP OF mz_adler32.c*/
 /* START OF DUMP OF mz_zutil.c*/
 #ifdef GZIP
 #  undef GZIP
