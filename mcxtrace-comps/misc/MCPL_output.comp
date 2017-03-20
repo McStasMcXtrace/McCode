@@ -11,7 +11,7 @@
 * Date: Aug 2016
 * Version: $Revision$
 * Origin: DTU Physics
-* Release: McXtrace 1.3
+* Release: McXtrace 1.4
 *
 * Detector-like component that writes photon state parameters into an mcpl-format 
 * binary, virtual-source photon file.
@@ -40,27 +40,31 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: [str] Name of photon file to write. Default is standard
-*                 output [string]. If not given, a unique name will be used.
-* verbose:  [ ]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McXtrace.
-* polarisationuse: [ ]  Enable storing the polarisation state of the photon.
-* doubleprec: [ ] Use double precision storage
-* userflag [ ] Extra variable to attach to each photon. The value of this variable will be packed into a 32 bit integer.
-* userflagcomment [ ] String variable to describe the userflag.
+* filename:        [str] Name of photon file to write. Default is standard output [string]. If not given, a unique name will be used.
+* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
+* polarisationuse: [1]   Enable storing the polarisation state of the neutron.
+* doubleprec:      [1]   Use double precision storage
+* userflag:        [1]   Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
+* userflagcomment: [str] String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
+* merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI 
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
-SETTING PARAMETERS (string filename=0, string userflagcomment="")
+SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
 %{
 #include <mcpl.h>
-
+  int mcpl_file_exist (char *filename)
+  {
+    struct stat   buffer;   
+    return (stat (filename, &buffer) == 0);
+  }
 %}
 
 DECLARE
@@ -68,24 +72,31 @@ DECLARE
     mcpl_outfile_t outputfile;
     mcpl_particle_t *particle,Particle;
     int userflagenabled;
+    char *myfilename;
 %}
 
 INITIALIZE
 %{
+    char extension[128]="";
+
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
     MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
-    sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
+    sprintf(extension,"node_%i.mcpl",mpi_node_rank);
+#else
+    sprintf(extension,"mcpl",filename);
 #endif
+    /*add output dir (if applicable) to the output filename and add extension if */
+    myfilename=mcfull_file(filename,extension);
 
     char line[256];
-    outputfile = mcpl_create_outfile(filename);
+    outputfile = mcpl_create_outfile(myfilename);
     /*reset filename to be whatever mcpl actually calls it. It may have added .mcpl*/
-    snprintf(filename,2048,"%s",mcpl_outfile_filename(outputfile));
+    snprintf(myfilename,strlen(myfilename)+5,"%s",mcpl_outfile_filename(outputfile));
 
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
     mcpl_hdr_set_srcname(outputfile,line);
-    mcpl_enable_universal_pdgcode(outputfile,22);/*all particles are photons*/
+    mcpl_enable_universal_pdgcode(outputfile,2112);/*all particles are neutrons*/
     snprintf(line,255,"Output by COMPONENT: %s",NAME_CURRENT_COMP);
     mcpl_hdr_add_comment(outputfile,line);
 
@@ -100,13 +111,23 @@ INITIALIZE
         fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
         if ( size && (buffer=malloc(size))!=NULL){
             if (size!=(fread(buffer,1,size,fp))){ 
-                fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n");
+	      fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
             }
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
     }
     fclose(fp);
+
+    int ii;
+    char clr[2048],*clrp;
+    clrp=clr;
+    clrp+=snprintf(clrp,2048,"%s",mcinstrument_exe);
+    for (ii=0;ii<mcnumipar;ii++){
+        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].par);
+    }
+    *(clrp-1)='\0';
+    mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);
 
     if (polarisationuse) {
         mcpl_enable_polarisation(outputfile);
@@ -199,27 +220,66 @@ TRACE
 
 SAVE
 %{
+#ifdef USE_MPI
+  if (merge_mpi && mpi_node_count > 1) {
+    mcpl_close_outfile(outputfile); 
+  } else {
     mcpl_closeandgzip_outfile(outputfile);  
+  }
+#else
+  mcpl_closeandgzip_outfile(outputfile);  
+#endif
 %}
 
 FINALLY
 %{
-    /*TODO check (use fopen?) for existance of .mcpl-file (mcpl_outfile_filename) then .gz*/
-    if (verbose) {
-        char tmpfn[2048],*ptr;
-        FILE *tmp;
-        snprintf(tmpfn,2048,"%s.gz",filename);
-        if( (tmp=fopen(filename,"r"))!=NULL ){
-            ptr=filename;
-        } else if ( (tmp=fopen(tmpfn,"r"))!=NULL ){
-            ptr=tmpfn;
-        } else {
-            ptr=NULL;
-        }
-        fclose(tmp);
-        if(ptr) printf("trying to mcpl_dump %s\n",ptr);
-        mcpl_dump(ptr,(verbose>2?2:verbose),0,10);
+#ifdef USE_MPI
+ MPI_Barrier(MPI_COMM_WORLD);
+ MPI_MASTER(
+     /* Only attempt merge if requested and meaningful */ 
+     if (merge_mpi && mpi_node_count > 1) {
+        char basefilename[2048];
+        char *ptr;
+   	FILE *tmp;
+   	sprintf(basefilename,"%s",myfilename);
+	/* Check if we can read the MPI_MASTER writen file */
+	if( (tmp=fopen(basefilename,"r"))!=NULL ) {
+    	  fclose(tmp);
+    	  int j;
+	  /* Loop over slave node files ... */
+    	  for (j=1; j<mpi_node_count; j++) {
+	    sprintf(myfilename,"%s.node_%i.mcpl",filename,j);
+	    /* ... check if we can read them ...*/ 
+	    if( (tmp=fopen(myfilename,"r"))!=NULL ){
+	      fclose(tmp);
+	      /* ... check of they look mergeable... */
+    	      if (mcpl_can_merge(basefilename,myfilename)) {
+		/* ... merge and remove */
+		mcpl_merge(basefilename,myfilename);
+		fprintf(stdout,"MCPL: merged %s into %s and removed!\n",myfilename,basefilename);
+		remove(myfilename);
+    	      } else {
+    		fprintf(stderr,"Error: mcpl merge impossible for files %s and %s!\n",basefilename,myfilename);
+		exit(-1);
+    	      }
+	    } else {
+	      fprintf(stderr,"Error reading MPI node generated output file %s!\n",myfilename);
+	      exit(-1);
+	    }
+	  }
+	} else {
+	  fprintf(stderr,"Error reading MPI_MASTER generated output file %s!\n",basefilename);
+	  exit(-1);
+	}
+	/* If we arrived here without crashing, we should be able to gzip basefilename */
+	mcpl_gzip_file(basefilename);
     }
+   );
+#endif
+
+   if (myfilename){
+       free(myfilename);
+   }
 %}
 
 MCDISPLAY
