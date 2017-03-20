@@ -73,23 +73,27 @@ DECLARE
     mcpl_outfile_t outputfile;
     mcpl_particle_t *particle,Particle;
     int userflagenabled;
-    char myfilename[2048];
+    char *myfilename;
 %}
 
 INITIALIZE
 %{
+    char extension[128]="";
+
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
     MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
-    sprintf(myfilename,"%s.node_%i",filename,mpi_node_rank);
+    sprintf(extension,"node_%i.mcpl",mpi_node_rank);
 #else
-    sprintf(myfilename,"%s",filename);
+    sprintf(extension,"mcpl",filename);
 #endif
+    /*add output dir (if applicable) to the output filename and add extension if */
+    myfilename=mcfull_file(filename,extension);
 
     char line[256];
     outputfile = mcpl_create_outfile(myfilename);
     /*reset filename to be whatever mcpl actually calls it. It may have added .mcpl*/
-    snprintf(myfilename,2048,"%s",mcpl_outfile_filename(outputfile));
+    snprintf(myfilename,strlen(myfilename)+5,"%s",mcpl_outfile_filename(outputfile));
 
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
     mcpl_hdr_set_srcname(outputfile,line);
@@ -110,7 +114,7 @@ INITIALIZE
             if (size!=(fread(buffer,1,size,fp))){ 
 	      fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
             }
-            mcpl_hdr_add_data(outputfile, "mccode_instr_file" , size, buffer);
+            mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
     }
@@ -274,6 +278,9 @@ FINALLY
    );
 #endif
 
+   if (myfilename){
+       free(myfilename);
+   }
 %}
 
 MCDISPLAY
