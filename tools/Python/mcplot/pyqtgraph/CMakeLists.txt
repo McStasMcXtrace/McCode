@@ -62,7 +62,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-pyqtgraph, python3-numpy")
 
 # RPM
-set(CPACK_RPM_PACKAGE_REQUIRES "${FLAVOR}-${MCCODE_VERSION}, python-pyqtgraph")
+set(CPACK_RPM_PACKAGE_REQUIRES "${FLAVOR}-${MCCODE_VERSION} python34-numpy")
 
 
 include(CPack)

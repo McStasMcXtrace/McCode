@@ -63,7 +63,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python3, python-pyqtgraph, python3-ply"
+  "${FLAVOR}-${MCCODE_VERSION}, python34, python34-ply, python34-numpy"
   )
 
 include(CPack)
