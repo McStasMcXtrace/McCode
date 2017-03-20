@@ -32,7 +32,7 @@
 * 2. If doubleprec is unset (default) data will be stored as 32 bit floating points, effectively cutting the output file size in half.
 * 3. Extra information may be attached to each ray in the form of a userflag, a user-defined variable wich is packed into 32 bits. If
 * the user variable does not fit in 32 bits the value will be truncated and likely garbage. If more than one variable is to be attached to
-* each neutron this must be packed into the 32 bits. 
+* each neutron this must be packed into the 32 bits.
 * 
 * These features are set this way to keep file sizes as manageable as possible.
 *
@@ -73,12 +73,12 @@ DECLARE
     mcpl_outfile_t outputfile;
     mcpl_particle_t *particle,Particle;
     int userflagenabled;
-    char *myfilename;
 %}
 
 INITIALIZE
 %{
     char extension[128]="";
+    char *myfilename;
 
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
@@ -166,6 +166,9 @@ INITIALIZE
           mcpl_hdr_add_comment(outputfile,line);
       }
   }
+   if (myfilename){
+       free(myfilename);
+   }
 
 %}
 
@@ -239,48 +242,31 @@ FINALLY
  MPI_MASTER(
      /* Only attempt merge if requested and meaningful */ 
      if (merge_mpi && mpi_node_count > 1) {
-        char basefilename[2048];
-        char *ptr;
-   	FILE *tmp;
-   	sprintf(basefilename,"%s",myfilename);
-	/* Check if we can read the MPI_MASTER writen file */
-	if( (tmp=fopen(basefilename,"r"))!=NULL ) {
-    	  fclose(tmp);
-    	  int j;
-	  /* Loop over slave node files ... */
-    	  for (j=1; j<mpi_node_count; j++) {
-	    sprintf(myfilename,"%s.node_%i.mcpl",filename,j);
-	    /* ... check if we can read them ...*/ 
-	    if( (tmp=fopen(myfilename,"r"))!=NULL ){
-	      fclose(tmp);
-	      /* ... check of they look mergeable... */
-    	      if (mcpl_can_merge(basefilename,myfilename)) {
-		/* ... merge and remove */
-		mcpl_merge(basefilename,myfilename);
-		fprintf(stdout,"MCPL: merged %s into %s and removed!\n",myfilename,basefilename);
-		remove(myfilename);
-    	      } else {
-    		fprintf(stderr,"Error: mcpl merge impossible for files %s and %s!\n",basefilename,myfilename);
-		exit(-1);
-    	      }
-	    } else {
-	      fprintf(stderr,"Error reading MPI node generated output file %s!\n",myfilename);
-	      exit(-1);
-	    }
-	  }
-	} else {
-	  fprintf(stderr,"Error reading MPI_MASTER generated output file %s!\n",basefilename);
-	  exit(-1);
-	}
-	/* If we arrived here without crashing, we should be able to gzip basefilename */
-	mcpl_gzip_file(basefilename);
-    }
-   );
-#endif
+        char **mpi_node_files;
+        char *merge_outfilename;
+        char extension[128]="mcpl";
+        int j;
+        mcpl_outfile_t merge_outfile;
 
-   if (myfilename){
-       free(myfilename);
-   }
+        merge_outfilename=mcfull_file(filename,extension);
+
+        mpi_node_files=(char **) calloc(mpi_node_count,sizeof(char *));
+        for (j=0;j<mpi_node_count;j++){
+            sprintf(extension,"node_%i.mcpl",j);
+            mpi_node_files[j]=mcfull_file(filename,extension);
+        }
+        /*now do the merge through the call to mcpl_merge_files*/
+        merge_outfile = mcpl_merge_files(merge_outfilename,mpi_node_count,(const char **) mpi_node_files);
+        mcpl_closeandgzip_outfile(merge_outfile);
+        /*free the string storage*/
+        free(merge_outfilename);
+        for (j=0;j<mpi_node_count;j++){
+            free(mpi_node_files[j]);
+        }
+        free(mpi_node_files);
+    }
+  );
+#endif
 %}
 
 MCDISPLAY
