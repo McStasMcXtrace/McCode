@@ -39,7 +39,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     x = np.array(data.xvals).astype(np.float)
     y = np.array(data.yvals).astype(np.float)
     e = np.array(data.y_err_vals).astype(np.float)
-
+    
     if log:
         nonzeros=[]
         zeros=[]
@@ -55,13 +55,18 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
             plt.setLogMode(y=False)
     else:
         plt.setLogMode(y=False)
-
+    
     plt.setXRange(np.min(x), np.max(x), padding=0)
-        
+    
     # labels
-    title = '%s [%s]' % (data.component, data.filename)
-    plt.setLabels(title=title, bottom=data.xlabel, left=data.ylabel)
-
+    plt.setLabels(bottom=data.xlabel, left=data.ylabel)
+    
+    # how to add labels with html styling:
+    #plt.titleLabel.item.setHtml('<span style="font-size:5pt; text-align:center;color:#FFFFFF">data.component <br>hest</span>')
+    #axis_style = {'color': '#FFF', 'font-size': '5pt'}
+    #plt.setLabel(axis='left', text=data.ylabel, **axis_style)
+    #plt.setLabel(axis='bottom', text=data.xlabel, **axis_style)
+    
     # error bars
     beam = 0
     if len(x) > 1:
@@ -94,7 +99,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     
     # plots data
     plt.plot(x, y)
-        
+    
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
     
@@ -173,9 +178,6 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     # graphics layout with a plotitem and a gradienteditoritem
     layout = pg.GraphicsLayout()
     layout.setContentsMargins(0, 0, 20, 5)
-    
-    # title label
-    layout.addLabel('%s [%s]' % (data.component, data.filename), 0, 0, colspan=2)
     
     # plot area
     layout.addItem(plt, 1, 0)
