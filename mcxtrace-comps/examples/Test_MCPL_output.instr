@@ -24,7 +24,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_output(dummy=0)
+DEFINE INSTRUMENT Test_MCPL_output(merge=1)
 
 DECLARE
 %{
@@ -51,7 +51,7 @@ EXTEND %{
 
 /* the output ============================================================== */
 COMPONENT vout = MCPL_output(
-     filename="voutput", verbose=1, userflag=flag, userflagcomment="Photon Id")
+        filename="voutput", verbose=1, userflag=flag, userflagcomment="Photon Id", merge_mpi=merge)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
