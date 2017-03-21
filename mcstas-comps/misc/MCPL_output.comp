@@ -48,13 +48,13 @@
 * userflag:        [1]   Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
 * userflagcomment: [str] String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
 * merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI 
-*
+* keep_mpi_unmerged: [1] Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
-SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1)
+SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
@@ -204,16 +204,14 @@ TRACE
 #if defined (USE_MPI)   
   MPI_MASTER(
 #endif
-
     if (verbose==3 && mcrun_num<10) {
       printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     mcrun_num, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
     }
-
 #if defined (USE_MPI)   
-	    );
+  );
 #endif
 
 
@@ -258,6 +256,18 @@ FINALLY
         /*now do the merge through the call to mcpl_merge_files*/
         merge_outfile = mcpl_merge_files(merge_outfilename,mpi_node_count,(const char **) mpi_node_files);
         mcpl_closeandgzip_outfile(merge_outfile);
+
+        /*remove the original unmerged files if wanted*/
+        if(!keep_mpi_unmerged){
+            int status=0;
+            for (j=0;j<mpi_node_count;j++){
+                status+=remove(mpi_node_files[j]);
+            }
+            if (status){
+                fprintf(stderr,"Warning (%s): Could not remove one or more unmerged files.\n",NAME_CURRENT_COMP);
+            }
+        }
+
         /*free the string storage*/
         free(merge_outfilename);
         for (j=0;j<mpi_node_count;j++){
