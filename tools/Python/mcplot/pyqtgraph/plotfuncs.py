@@ -32,8 +32,7 @@ class ModLegend(pg.LegendItem):
         p.setBrush(pg.functions.mkBrush(0,0,0,100))
         p.drawRect(self.boundingRect())
 
-        
-def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
+def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, legend_fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data
     x = np.array(data.xvals).astype(np.float)
@@ -79,23 +78,27 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0):
     
     # commit
     if legend:
-        plt.legend = ModLegend(offset=(-1, 1))
+        plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(legend_fontsize))
         plt.legend.setParentItem(plt.vb)
         # this construct reduces the requiremet for header data in Data1D, in case of an error during parsing of the string
         try:
-            lname1 = '%s [%s]' % (data.component, data.filename)
-            lname2 = '%s' % (data.title)
-            lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
-            # these lines DO NOT plot anything meaningful, but add legend items
-            plt.plot([x[0]], [y[0]], name=lname1)
-            plt.plot([x[0]], [y[0]], name=lname2)
-            plt.plot([x[0]], [y[0]], name=lname3)
+            lname1 = '%s' % data.component
+            lname2 = 'I = %s' % data.values[0]
+            lname3 = None
+            if verbose:
+                lname1 = '%s [%s]' % (data.component, data.filename)
+                lname2 = '%s' % (data.title)
+                lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
         except:
             lname1 = '%s [%s]' % (data.component, data.filename)
             lname2 = '%s' % (data.title)
-            # these lines DO NOT plot anything meaningful, but add legend items
+            lname3 = None
+        if lname1:
             plt.plot([x[0]], [y[0]], name=lname1)
+        if lname2:
             plt.plot([x[0]], [y[0]], name=lname2)
+        if lname3:
+            plt.plot([x[0]], [y[0]], name=lname3)
     
     # plots data
     plt.plot(x, y)
@@ -138,9 +141,8 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
-def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
+def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, legend_fontsize=10):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
-   
     # data
     img = pg.ImageItem()
     dataset = np.array(data.zvals)
@@ -185,16 +187,22 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0):
     plt.setMenuEnabled(False)
     
     if legend:
-        plt.legend = ModLegend(offset=(-1, 1))
+        plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(legend_fontsize))
         plt.legend.setParentItem(plt.vb)
-        lname1 = '%s [%s]' % (data.component, data.filename)
-        lname2 = '%s' % (data.statistics)
-        lname3 = 'I = %s Err = %s N = %s' % (data.values[0], data.values[1], data.values[2])
+        
+        lname1 = '%s' % data.component
+        lname2 = 'I = %s' % data.values[0]
+        lname3 = None
+        if verbose:
+            lname1 = '%s [%s]' % (data.component, data.filename)
+            lname2 = '%s' % (data.statistics)
+            lname3 = 'I = %s Err = %s N = %s' % (data.values[0], data.values[1], data.values[2])
         # these line DO NOT plot anything meaningful, but adds a legend item (!)
         plt.plot([0], [0], name=lname1)
         plt.plot([0], [0], name=lname2)
-        plt.plot([0], [0], name=lname3)
-
+        if lname3:
+            plt.plot([0], [0], name=lname3)
+    
     plt.addItem(img)
     # Set the x and y ranges correctly
     plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)

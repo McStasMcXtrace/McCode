@@ -52,14 +52,14 @@ def create_plotwindow(title):
     
     # window size
     rect = QtGui.QApplication.desktop().screenGeometry()
-    w = 0.9 * rect.width()
-    h = 0.9 * rect.height()
+    w = 0.7 * rect.width()
+    h = 0.7 * rect.height()
     mw.resize(w, h)
     
     global g_window
     g_window = mw
     
-    layout = pg.GraphicsLayout()
+    layout = pg.GraphicsLayout(border=True)
     window.setCentralItem(layout)
     layout.window = window # keep window to avoid garbage collection
     layout.setContentsMargins(2, 2, 2, 2) # outermost margin
@@ -267,7 +267,7 @@ def set_handler(scene, vn_dict, node_cb, click, modifier):
         # print debug info
         if debug:
             print("click modifier: %s" % str(int(event.modifiers())))
-            
+        
         # prevent action for modifiers mismatch
         if int(event.modifiers()) != mod:
             return
@@ -299,11 +299,14 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     plt = pg.PlotItem()
     rowlen = get_golden_rowlen(n)
     
+    verbose = n<=4
+    legend_fontsize = (10, 14)[n<=1]
+    
     if type(data) is Data1D:
-        view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap)
+        view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap, verbose=verbose, legend_fontsize=legend_fontsize)
         layout.addItem(plt, i / rowlen, i % rowlen)
     elif type(data) is Data2D:
-        view_box, lyt = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap)
+        view_box, lyt = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap, verbose=verbose, legend_fontsize=legend_fontsize)
         layout.addItem(lyt, i / rowlen, i % rowlen)
     else:
         raise Exception("unknown plot data type")
