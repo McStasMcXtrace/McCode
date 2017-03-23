@@ -18,7 +18,7 @@ from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib import uiutils
+from mccodelib import fileutils
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline, DrawCircle
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor
@@ -373,7 +373,7 @@ class McDisplay2DGui(object):
                 self.iw_visible = False
         
     def _dumpfile(self, format):
-        uiutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
+        fileutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
     def _get_comp_color_pairs(self):
         ''' extracts component names and matches then with colours in the natural order '''
