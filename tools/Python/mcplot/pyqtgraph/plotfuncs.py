@@ -58,7 +58,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, le
     plt.setXRange(np.min(x), np.max(x), padding=0)
     
     # labels
-    plt.setLabels(bottom=data.xlabel, left=data.ylabel)
+    plt.setLabels(title=" ",bottom=data.xlabel, left=data.ylabel)
     
     # how to add labels with html styling:
     #plt.titleLabel.item.setHtml('<span style="font-size:5pt; text-align:center;color:#FFFFFF">data.component <br>hest</span>')
@@ -82,23 +82,13 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, le
         plt.legend.setParentItem(plt.vb)
         # this construct reduces the requiremet for header data in Data1D, in case of an error during parsing of the string
         try:
-            lname1 = '%s' % data.component
-            lname2 = 'I = %s' % data.values[0]
-            lname3 = None
+            lname1 = '<center>%s<br>I = %s</center>' % (data.component, data.values[0])
             if verbose:
-                lname1 = '%s [%s]' % (data.component, data.filename)
-                lname2 = '%s' % (data.title)
-                lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
+                lname1 = '%s [%s]<br><br>%s<br><br>I = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
         except:
-            lname1 = '%s [%s]' % (data.component, data.filename)
-            lname2 = '%s' % (data.title)
-            lname3 = None
+            lname1 = '%s<br>[%s]' % (data.component, data.filename)
         if lname1:
             plt.plot([x[0]], [y[0]], name=lname1)
-        if lname2:
-            plt.plot([x[0]], [y[0]], name=lname2)
-        if lname3:
-            plt.plot([x[0]], [y[0]], name=lname3)
     
     # plots data
     plt.plot(x, y)
@@ -183,25 +173,21 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, l
     
     # plot area
     layout.addItem(plt, 1, 0)
-    plt.setLabels(bottom=data.xlabel, left=data.ylabel)
+    plt.setLabels(title=" ",bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
     
     if legend:
         plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(legend_fontsize))
         plt.legend.setParentItem(plt.vb)
         
-        lname1 = '%s' % data.component
-        lname2 = 'I = %s' % data.values[0]
-        lname3 = None
-        if verbose:
-            lname1 = '%s [%s]' % (data.component, data.filename)
-            lname2 = '%s' % (data.statistics)
-            lname3 = 'I = %s Err = %s N = %s' % (data.values[0], data.values[1], data.values[2])
-        # these line DO NOT plot anything meaningful, but adds a legend item (!)
-        plt.plot([0], [0], name=lname1)
-        plt.plot([0], [0], name=lname2)
-        if lname3:
-            plt.plot([0], [0], name=lname3)
+        try:
+            lname1 = '<center>%s<br>I = %s</center>' % (data.component, data.values[0])
+            if verbose:
+                lname1 = '%s [%s]<br><br>%s<br><br>I = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+        except:
+            lname1 = '%s<br>[%s]' % (data.component, data.filename)
+        if lname1:
+            plt.plot([0], [0], name=lname1)
     
     plt.addItem(img)
     # Set the x and y ranges correctly

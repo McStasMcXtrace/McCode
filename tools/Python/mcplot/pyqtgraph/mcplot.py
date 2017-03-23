@@ -300,7 +300,7 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     rowlen = get_golden_rowlen(n)
     
     verbose = n<=4
-    legend_fontsize = (10, 14)[n<=1]
+    legend_fontsize = (8, 14)[n<=2]
     
     if type(data) is Data1D:
         view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap, verbose=verbose, legend_fontsize=legend_fontsize)
