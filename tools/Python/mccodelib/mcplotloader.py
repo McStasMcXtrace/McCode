@@ -765,7 +765,6 @@ def load_monitor_folder(args):
     primnodes = []
     for data in data_lst:
         node = PNSingle(data)
-        node.setdata(data)
         primnodes.append(node)
     root.set_primaries(primnodes)
     root.set_secondaries(primnodes)
