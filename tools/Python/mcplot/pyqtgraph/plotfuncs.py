@@ -172,8 +172,9 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, l
     layout.setContentsMargins(0, 0, 20, 5)
     
     # plot area
+    layout.addLabel(' ', 0, 0, colspan=2)
     layout.addItem(plt, 1, 0)
-    plt.setLabels(title=" ",bottom=data.xlabel, left=data.ylabel)
+    plt.setLabels(bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
     
     if legend:
