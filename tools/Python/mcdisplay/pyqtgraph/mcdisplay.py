@@ -18,7 +18,7 @@ from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib import fileutils
+from mccodelib import utils
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline, DrawCircle
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor

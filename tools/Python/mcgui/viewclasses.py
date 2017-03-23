@@ -9,7 +9,7 @@ from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib.fileutils import McComponentParser
+from mccodelib.utils import McComponentParser
 
 '''
 View class containing windows and dialogs as delegates.

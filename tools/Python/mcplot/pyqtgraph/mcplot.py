@@ -17,7 +17,7 @@ from plotfuncs import plot_Data1D, plot_Data2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib import uiutils
+from mccodelib import utils
 from mccodelib import mccode_config
 from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D, PlotGraphPrint
 
@@ -206,7 +206,7 @@ def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
         if debug:
             print("key code: %s" % str(ev.key()))
     
-    savefile_cb = lambda format: uiutils.dumpfile_pqtg(scene=scene, format=format)
+    savefile_cb = lambda format: utils.dumpfile_pqtg(scene=scene, format=format)
     expand_sp = lambda : expand_subplots(sourcedir=viewmodel.get_sourcedir())
     
     scene.keyPressEvent = lambda ev: key_handler(ev=ev,
