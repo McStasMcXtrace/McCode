@@ -9,7 +9,7 @@ from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib.utils import McComponentParser
+from mccodelib.utils import ComponentParser, ComponentParInfo
 
 '''
 View class containing windows and dialogs as delegates.
@@ -550,7 +550,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+"component files (*.comp)");
         if dlg.exec_():
             comp_file = dlg.selectedFiles()[0]
-            parser = McComponentParser(comp_file)
+            parser = ComponentParser(comp_file)
             self.__handleComponentClicked(parser)
 
     def __handleTextChanged(self):
@@ -814,7 +814,7 @@ class McInsertComponentDialog(QtGui.QDialog):
         self.__wParams = None
         self.__wParams = []
         for i in range(len(comp_parser.pars)):
-            par = McComponentParser.McComponentParInfo(comp_parser.pars[i])
+            par = ComponentParInfo(comp_parser.pars[i])
             if par.par_name == "string filename":
                 par.par_name = "filename"
 

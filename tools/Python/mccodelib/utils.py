@@ -6,35 +6,33 @@ import os
 import subprocess
 
 
-''' Component parser
-'''
-class McComponentParser(object):
-    file = '' # component file path
-    name = '' # component name
-    info = '' # info section all in one string  (multiple lines)
-    description = '' # component doc description (multiple lines)
-    pars = [] # list of McComponentParInfo
-    
-    display = None # optional MCDISPLAY section
-    
-    class McComponentParInfo(object):
-        ''' component parameter info object - appended to the list member McComponentParser.pars '''
-        def __init__(self, par_info=None):
-            if par_info:
-                self.par_name = par_info.par_name
-                self.type = par_info.type
-                self.default_value = par_info.default_value
-                self.doc_and_unit = par_info.doc_and_unit
-        par_name = '' # parameter par_name
-        type = '' # mostly empty, can also be "string" or "int" 
-        default_value = ''
-        doc_and_unit = '' # doc string and unit (single line)
-    
+class ComponentParInfo(object):
+    ''' Component parameter info, used as McComponentParser.pars '''
+    def __init__(self, par_info=None):
+        if par_info:
+            self.par_name = par_info.par_name
+            self.type = par_info.type
+            self.default_value = par_info.default_value
+            self.doc_and_unit = par_info.doc_and_unit
+    par_name = ''       # parameter par_name
+    type = ''           # can be "string" or "int", but is mostly empty
+    default_value = ''
+    doc_and_unit = ''   # doc string and unit (no linebreaks)
+
+
+class ComponentParser(object):
+    ''' Component file parser. '''
     def __init__(self, comp_file):
         if comp_file == '':
-            raise Exception('McComponentParser: "comp_file" cannot be an empty string.')
+            raise Exception('McComponentParser: "comp_file" may not be an empty.')
         
         self.file = comp_file
+        self.name = None
+        self.info = None
+        self.description = None     # info section all in one string  (multiple lines)
+        self.pars = []              # list of McComponentParInfo
+        self.mcdisplay = None       # optional MCDISPLAY section
+        
         self.__hasParsed = False
     
     def parse(self):
@@ -94,9 +92,9 @@ class McComponentParser(object):
             raise Exception('parseComponentHeader: Missing %E tag.')
         
         # extract strings for I, D and P sections
-        text_I = McComponentParser.__removeStarsFromLines(text[pos_I+2: pos_D])
-        text_D = McComponentParser.__removeStarsFromLines(text[pos_D+2: pos_P])
-        text_P = McComponentParser.__removeStarsFromLines(text[pos_P+2: pos_E])
+        text_I = ComponentParser.__removeStarsFromLines(text[pos_I+2: pos_D])
+        text_D = ComponentParser.__removeStarsFromLines(text[pos_D+2: pos_P])
+        text_P = ComponentParser.__removeStarsFromLines(text[pos_P+2: pos_E])
         
         return text_I, text_D, text_P
         
@@ -114,8 +112,8 @@ class McComponentParser(object):
         result_1 = []
         re_out = re.search(r'DEFINITION\s+PARAMETERS\s*\([-+.\w\s=,/*{}\"]+\)', text)
         if re_out:
-            result_sub, substituted_text = McComponentParser.__substituteCurlyPars(re_out.group(0))
-            result_1 = McComponentParser.__parseParLine(substituted_text)
+            result_sub, substituted_text = ComponentParser.__substituteCurlyPars(re_out.group(0))
+            result_1 = ComponentParser.__parseParLine(substituted_text)
             # restitute curly pars default values
             for r in result_1:
                 for s in result_sub:
@@ -126,7 +124,7 @@ class McComponentParser(object):
         result_2 = []
         re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.\w\s=,/*\"]+\)', text)
         if re_out:
-            result_2 = McComponentParser.__parseParLine(re_out.group(0))
+            result_2 = ComponentParser.__parseParLine(re_out.group(0))
         
         return result_1 + result_2
     
@@ -141,7 +139,7 @@ class McComponentParser(object):
         
         # get par_info into the par info par_info structure: 
         for p in curly:
-            par_info = McComponentParser.McComponentParInfo()
+            par_info = ComponentParInfo()
             par_info.par_name = p[0]
             par_info.default_value = p[1]
             result.append(par_info)
@@ -169,7 +167,7 @@ class McComponentParser(object):
         
         # get par_info into the par info par_info structure: 
         for p in comma_sep:
-            par_info = McComponentParser.McComponentParInfo()
+            par_info = ComponentParInfo()
             
             out = re.search(r'(\w+)\s+([\w\-]+)\s*=\s*([-+.\w/*\"]+)', p)
             if out:
@@ -248,6 +246,10 @@ class McComponentParser(object):
         re_out = re.search('DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]*)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]*)\)', text)
         if re_out:
             return re_out.group(1)
+
+
+class InstrParser:
+    pass
 
 
 '''
