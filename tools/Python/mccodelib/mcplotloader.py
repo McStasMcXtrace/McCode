@@ -575,6 +575,17 @@ Therefore, any load errors are encountered at the terminal nodes' load data step
 NOTE: Functions can be context-dependent, according to the corresponding node position.
 The function has_filename must be called first (see test_decfuncs).
 '''
+
+def is_dat_file(f):
+    if not isfile(f):
+        return False
+    f = open(f, 'rb')
+    line = f.readline().decode()
+    m = re.match('\# Format\: McCode with text headers', line)
+    if m:
+        return True
+    return False
+
 def has_filename(args):
     f = args['simfile']
     if not isfile(f):
@@ -649,6 +660,9 @@ def has_datfile(args):
     if 'mccode.dat' in datfiles: 
         datfiles.remove('mccode.dat')
     if len(datfiles) > 0:
+        for f in datfiles:
+            if not is_dat_file(f):
+                return False
         args['monitorfile'] = datfiles[0]
         return True
     else:
@@ -663,6 +677,9 @@ def has_multiple_datfiles(args):
         datfiles.remove('mccode.sim')
     if 'mccode.dat' in datfiles:
         datfiles.remove('mccode.dat')
+    for f in datfiles:
+        if not is_dat_file(f):
+            return False
     return len(datfiles) > 1
 
 def test_decfuncs(simfile):
@@ -772,7 +789,7 @@ def load_monitor_folder(args):
     return root
 
 def throw_error(args):
-    raise Exception('Could not load file "%s".' % args['simfile'])
+    raise Exception('Could not load "%s".' % args['simfile'])
 
 class McPlotDataLoader():
     ''' assembly and execution of mccode data loader flowchart '''

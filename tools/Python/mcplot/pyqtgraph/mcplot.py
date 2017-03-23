@@ -161,7 +161,7 @@ def print_help(nogui=False):
     helplines.append('F5             - replot')
     helplines.append('click          - display subplot')
     helplines.append('right-click/b  - back')
-    helplines.append('%s + click - sweep monitors' % modifier)
+    helplines.append('%s + click   - sweep monitors' % modifier)
     helplines.append('x              - expand subplots')
     print('\n'.join(helplines))
     
@@ -331,7 +331,14 @@ def main(args):
             test_decfuncs(simfile)
         
         loader = McPlotDataLoader(simfile=simfile)
-        loader.load()
+        try:
+            loader.load()
+        except Exception as e:
+            # invallid input case:
+            print('mcplot loader: ' + e.__str__())
+            print_help(nogui=True)
+            quit()
+        
         graph = loader.plot_graph
         
         if args.test:
