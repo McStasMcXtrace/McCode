@@ -2,7 +2,7 @@
 @REM
 @conda config --add channels conda-forge
 @conda install python=3.4
-@conda install pyqt=4.11.4 qscintilla2 pyqtgraph pyaml gcc openmpi ply -y
+@conda install pyqt=4.10.4 qscintilla2 pyqtgraph pyaml gcc openmpi ply -y
 @set PATH=c:\\strawberry\\perl\\bin;%PATH%
 @call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Astro-FITS-Header.ppd
 @call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Convert-UU.ppd
