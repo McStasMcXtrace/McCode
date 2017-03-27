@@ -237,11 +237,18 @@ class TraceReader(Thread):
             ''' create a process given command and read, print and write to it depending on state '''
             # os.setsid defineds a fresh process group so that the calling Python survives when the
             # simulation is potentially terminated.
-            process = Popen(self.cmd, shell=True, preexec_fn=os.setsid, universal_newlines=True,
-                            stdout=PIPE,
-                            stderr=PIPE,
-                            stdin=PIPE
-                            )
+            if not os.name == 'nt':
+                process = Popen(self.cmd, shell=True, preexec_fn=os.setsid, universal_newlines=True,
+                                stdout=PIPE,
+                                stderr=PIPE,
+                                stdin=PIPE
+                                )
+            else:
+                process = Popen(self.cmd, shell=True, universal_newlines=True,
+                                stdout=PIPE,
+                                stderr=PIPE,
+                                stdin=PIPE
+                                )
             
             # special case: give the prompt state access to process to allow automation flag, 
             # and particles to end the process in max particle count is exceeded
