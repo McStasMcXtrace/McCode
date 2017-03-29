@@ -85,7 +85,7 @@ INITIALIZE
     MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
     sprintf(extension,"node_%i.mcpl",mpi_node_rank);
 #else
-    sprintf(extension,"mcpl",filename);
+    sprintf(extension,"mcpl");
 #endif
     /*add output dir (if applicable) to the output filename and add extension if */
     myfilename=mcfull_file(filename,extension);
