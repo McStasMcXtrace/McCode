@@ -16,9 +16,8 @@ from viewclasses import McView
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mccodelib import mccode_config, uiutils
-from mccodelib.uiutils import save_instrfile, get_instr_site, get_file_contents, get_instr_comp_files
-from mccodelib.fileutils import McComponentParser
+from mccodelib import mccode_config, utils
+from mccodelib.utils import ComponentParser, get_instr_site, get_instr_comp_files, save_instrfile, get_file_contents
 
 ''' Message emitter
 Status and message log and signalling.
@@ -546,7 +545,7 @@ class McGuiAppController():
             for f in files_comp:
                 if re.search(dirnames[i], os.path.basename(os.path.dirname(f))):
                     compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
-                    parsers.append(McComponentParser(f)) # append a parser, for ease of parsing on-the-fly
+                    parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
             
             arg.append(categories[i])
             arg.append(compnames)
@@ -638,7 +637,7 @@ class McGuiAppController():
             
             def messg(s): self.emitter.message(s)
             def messg_err(s): self.emitter.message(s, err_msg=True)
-            uiutils.run_subtool_to_completion(cmd, stdout_cb=messg, stderr_cb=messg_err)
+            utils.run_subtool_to_completion(cmd, stdout_cb=messg, stderr_cb=messg_err)
         finally:
             self.emitter.status('')
     
@@ -651,7 +650,7 @@ class McGuiAppController():
             
             def messg(s): self.emitter.message(s)
             def messg_err(s): self.emitter.message(s, err_msg=True)
-            uiutils.run_subtool_to_completion(cmd, stdout_cb=messg, stderr_cb=messg_err)
+            utils.run_subtool_to_completion(cmd, stdout_cb=messg, stderr_cb=messg_err)
         finally:
             self.emitter.status('')
     

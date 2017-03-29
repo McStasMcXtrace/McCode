@@ -16,7 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d
-from mccodelib.uiutils import get_file_text_direct
+from mccodelib.utils import get_file_text_direct
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''

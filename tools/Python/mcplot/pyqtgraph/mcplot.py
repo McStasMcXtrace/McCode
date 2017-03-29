@@ -17,7 +17,7 @@ from plotfuncs import plot_Data1D, plot_Data2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib import uiutils
+from mccodelib import utils
 from mccodelib import mccode_config
 from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D, PlotGraphPrint
 
@@ -161,7 +161,7 @@ def print_help(nogui=False):
     helplines.append('F5             - replot')
     helplines.append('click          - display subplot')
     helplines.append('right-click/b  - back')
-    helplines.append('%s + click - sweep monitors' % modifier)
+    helplines.append('%s + click   - sweep monitors' % modifier)
     helplines.append('x              - expand subplots')
     print('\n'.join(helplines))
     
@@ -206,7 +206,7 @@ def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
         if debug:
             print("key code: %s" % str(ev.key()))
     
-    savefile_cb = lambda format: uiutils.dumpfile_pqtg(scene=scene, format=format)
+    savefile_cb = lambda format: utils.dumpfile_pqtg(scene=scene, format=format)
     expand_sp = lambda : expand_subplots(sourcedir=viewmodel.get_sourcedir())
     
     scene.keyPressEvent = lambda ev: key_handler(ev=ev,
@@ -300,7 +300,7 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     rowlen = get_golden_rowlen(n)
     
     verbose = n<=4
-    legend_fontsize = (10, 14)[n<=1]
+    legend_fontsize = (8, 14)[n<=2]
     
     if type(data) is Data1D:
         view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap, verbose=verbose, legend_fontsize=legend_fontsize)
@@ -331,7 +331,14 @@ def main(args):
             test_decfuncs(simfile)
         
         loader = McPlotDataLoader(simfile=simfile)
-        loader.load()
+        try:
+            loader.load()
+        except Exception as e:
+            # invallid input case:
+            print('mcplot loader: ' + e.__str__())
+            print_help(nogui=True)
+            quit()
+        
         graph = loader.plot_graph
         
         if args.test:
