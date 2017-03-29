@@ -24,6 +24,7 @@
  * %P
  * Input Parameters:
  * Ee: (GeV) Storage ring electron energy (typically a few GeV).
+ * dEe: (GeV) Electron enery spread (sigma).
  * Ie: (A)   Ring current.
  * tbunch: (s) Bunch length. 0 means continous source.
  * t0:     (s) Delay of the first bunch from t=0.
@@ -50,7 +51,7 @@
 
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
-SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
+SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
         gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 DEPENDENCY "-lgsl -lgslcblas"
@@ -185,12 +186,14 @@ TRACE
 
     /* pick an energy in the given interval */
     e=E0+randpm1()*dE;
-/*    double rtt=rand01();*/
-/*    if(rtt<0.5){*/
-/*        e=E0;*/
-/*    }else{*/
-/*        e=2*E0;*/
-/*    }*/
+
+    /* add electron beam energy spread to gamma parameters (if necessary).*/
+    if( dEe){
+        double deltaEe=randnorm()*dEe+ Ee;
+        prms.gamma=(deltaEe*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+        prms.gamma2=prms.gamma*prms.gamma;
+        prms.igamma=1.0/prms.gamma;
+    }
 
     /* the undulator's fundamental wavelength*/
     w_u=2*M_PI*M_C/lu;
@@ -244,6 +247,7 @@ TRACE
     kx*=k;
     ky*=k;
     kz*=k;
+
 
     double w1theta=2*prms.gamma2/(1+K*K/2.0 + prms.gamma2 *theta2) * w_u; 
     double w10=2*prms.gamma2/(1+K*K/2.0) * w_u; 
