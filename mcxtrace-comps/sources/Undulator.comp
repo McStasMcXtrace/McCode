@@ -24,6 +24,7 @@
  * %P
  * Input Parameters:
  * Ee: (GeV) Storage ring electron energy (typically a few GeV).
+ * dEe: ( ) Relative electron energy beam spread (sigma/Ee).
  * Ie: (A)   Ring current.
  * tbunch: (s) Bunch length. 0 means continous source.
  * t0:     (s) Delay of the first bunch from t=0.
@@ -50,7 +51,7 @@
 
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
-SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
+SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
         gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 DEPENDENCY "-lgsl -lgslcblas"
@@ -164,7 +165,13 @@ INITIALIZE
   prms.Bpi.function = &mxundulator_Bpi_integrand;
   gsl_set_error_handler_off();
 
+  /*correct for number of rays*/
   prms.pmul=1.0/( (double) mcget_ncount());
+
+  /*correct for finite energy interval*/
+  if(dE){
+      prms.pmul*=dE*2.0;
+  }
 
 %}
 
@@ -179,12 +186,14 @@ TRACE
 
     /* pick an energy in the given interval */
     e=E0+randpm1()*dE;
-/*    double rtt=rand01();*/
-/*    if(rtt<0.5){*/
-/*        e=E0;*/
-/*    }else{*/
-/*        e=2*E0;*/
-/*    }*/
+
+    /* add electron beam energy spread to gamma parameters (if necessary).*/
+    if( dEe){
+        double deltaEe=(randnorm()*dEe*Ee)+ Ee;
+        prms.gamma=(deltaEe*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+        prms.gamma2=prms.gamma*prms.gamma;
+        prms.igamma=1.0/prms.gamma;
+    }
 
     /* the undulator's fundamental wavelength*/
     w_u=2*M_PI*M_C/lu;
@@ -239,6 +248,7 @@ TRACE
     ky*=k;
     kz*=k;
 
+
     double w1theta=2*prms.gamma2/(1+K*K/2.0 + prms.gamma2 *theta2) * w_u; 
     double w10=2*prms.gamma2/(1+K*K/2.0) * w_u; 
     double w_w1=w/w1theta;
@@ -246,8 +256,8 @@ TRACE
 
     double Bsig_integ_prms[4],Bpi_integ_prms[4];
     Bsig_integ_prms[0] = Bpi_integ_prms[0]=w_w1; /*relative frequency*/
-    Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w1*xi*prms.gamma*K/(1+K*K/2.0); /*p*/
-    Bsig_integ_prms[2] = Bpi_integ_prms[1] = 0.25 * w_w1*K*K/(1+K*K/2.0); /*q*/
+    Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w10*xi*prms.gamma*K/(1+K*K/2.0); /*p*/
+    Bsig_integ_prms[2] = Bpi_integ_prms[2] = 0.25 * w_w10*K*K/(1+K*K/2.0); /*q*/
     Bsig_integ_prms[3] = xi *prms.gamma/K; /*angle terms*/
     Bpi_integ_prms[3]  = psi*prms.gamma/K; 
 
@@ -269,8 +279,7 @@ TRACE
     
     double prefactor=alpha*Ie/CELE*pow(K*prms.gamma/(1+K*K/2.0),2.0)*Nper*Nper*w_w10*w_w10;
 
-    p*=prefactor* (pow(bsigma_integral,2.0)+pow(bpi_integral,2.0) ) *s_n2;
-    p=p;
+    p*=prefactor* ( pow(bsigma_integral,2.0)+pow(bpi_integral,2.0) ) *s_n2;
 
     /*randomly pick phase*/
     if (randomphase){
@@ -279,7 +288,7 @@ TRACE
         phi=phase;
     }
 
-    /*set polarization vector*/
+    /*Set polarization vector. TODO: Do this right.*/
     Ex=0;Ey=0;Ez=0;
 %}
 FINALLY
