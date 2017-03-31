@@ -24,7 +24,7 @@
  * %P
  * Input Parameters:
  * Ee: (GeV) Storage ring electron energy (typically a few GeV).
- * dEe: (GeV) Electron enery spread (sigma).
+ * dEe: ( ) Relative electron energy beam spread (sigma/Ee).
  * Ie: (A)   Ring current.
  * tbunch: (s) Bunch length. 0 means continous source.
  * t0:     (s) Delay of the first bunch from t=0.
@@ -189,7 +189,7 @@ TRACE
 
     /* add electron beam energy spread to gamma parameters (if necessary).*/
     if( dEe){
-        double deltaEe=randnorm()*dEe+ Ee;
+        double deltaEe=(randnorm()*dEe*Ee)+ Ee;
         prms.gamma=(deltaEe*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
         prms.gamma2=prms.gamma*prms.gamma;
         prms.igamma=1.0/prms.gamma;
