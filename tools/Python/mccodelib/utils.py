@@ -248,13 +248,183 @@ class ComponentParser(object):
             return re_out.group(1)
 
 
-class InstrParser:
-    pass
+'''
 
+Utility functions related to mccode file handling.
 
 '''
-Static utility functions related to handling mccode files.
+
 '''
+Utility functions for parsing an instrument file
+'''
+def read_header(file):
+    '''
+    Reads lines of a slash-star commented section, from file-object. 
+    Returns acc. read lines as text.
+    '''
+    lines = []
+    while True:
+        try:
+            l = file.readline()
+            lines.append(l)
+        except:
+            break
+        if not re.match('\*', l):
+            if not re.match('\/\*', l):
+                break
+        elif re.search('\*\*', l):
+            break
+    return ''.join(lines)
+
+class InstrHeaderInfo:
+    def __init__(self):
+        # legit info
+        self.name = ''
+        self.params = []
+        # doc info
+        self.author = ''
+        self.date = ''
+        self.origin = ''
+        self.version = ''
+        self.site = ''
+        self.short_descr = ''
+        self.description = ''
+        self.test = ''
+        self.params_docs = []
+    def __str__(self):
+        lst = [self.name, self.author, self.date, self.origin, self.version, self.site, self.short_descr, self.description, self.test]
+        return '\n'.join(lst) + '\n\n(... plus params and params_docs)'
+    
+def parse_instr_header(text):
+    ''' Parses the header of an instrument file: LEGACY version. '''
+    # get rid of stars and empty padding lines
+    lines = text.splitlines()
+    new_lines = []
+    for i in range(len(lines)):
+        l = lines[i]
+        new_lines.append(l.lstrip('*').strip())
+    text = '\n'.join(new_lines)
+    
+    # get tag indices, and deal with cases of missing tags
+    lst = [text.find('%I'), text.find('%D'), text.find('%E'), text.find('%P'), text.find('%L')]
+    for i in range(len(lst)-1):
+        if lst[i] > lst[i+1]:
+            lst[i+1] = lst[i]
+    if lst[4] == lst[3]:
+        lst[4] = len(text)
+    
+    # cut header into some sections
+    bites = [text[lst[i]+3:lst[i+1]].strip() for i in range(len(lst)-1)]
+    info = InstrHeaderInfo()
+    
+    # get author, date, origin, revision
+    m1 = re.search('Written by:([^\n]*)\n', bites[0])
+    if m1: info.author = m1.group(1).strip()
+    
+    m2 = re.search('Date:([^\n]*)\n', bites[0])
+    if m2: info.date = m2.group(1).strip()
+    
+    m3 = re.search('Origin:([^\n]*)\n', bites[0])
+    if m3: info.origin = m3.group(1).strip()
+    
+    m4 = re.search('Version:([^\n]*)\n', bites[0])
+    if m4: info.version = m4.group(1).strip()
+    
+    m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    if m5: info.short_descr = m5.group(1).strip()
+    
+    # description
+    info.description = bites[1]
+    
+    # test / example
+    info.test = bites[2]
+    
+    # params
+    for l in bites[3].splitlines():
+        m = m = re.match('(\w+):[ \t]*\[(\w+)\](.*)', l)
+        if m:
+            info.params_docs.append((m.group(1), m.group(2), m.group(3).strip()))
+    
+    return info
+
+def read_define_instr(file):
+    '''
+    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until \).
+    Parses this statement and returns the result in organized form.
+    '''
+    lines = []
+    l = ''
+    while True:
+        try:
+            l = file.readline().strip()
+        except:
+            break
+        
+        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l):
+            continue
+        else:
+            lines.append(l)
+            break
+    
+    while True:
+        if re.search('\)', l):
+            break
+        try:
+            l = file.readline().strip()
+        except:
+            break
+        lines.append(l)
+    
+    return ''.join(lines)
+
+def parse_define_instr(text):
+    '''
+    Parses a DEFINE INSTRUMENT statement from an instrument file. Not robust to "junk" in the input string.
+    '''
+    m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.=]+)\)', text)
+    name = m.group(1)
+    params = m.group(2).replace('\n', '').strip()
+    
+    def parse_params(params_line):
+        ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
+        params = []
+        # p = (type, name, defvalue)
+        parts = [s.strip() for s in params_line.split(',')]
+        for part in parts:
+            tpe = None
+            dval = None
+            name = None
+            if re.match('string', part):
+                tpe = 'string'
+                part = part.replace('string', '').strip()
+            if re.search('=', part):
+                dval = part.split('=')[1].strip()
+                name = part.replace('=', '')
+                name = name.replace(dval, '').strip()
+            params.append((tpe, name, dval))
+        return params
+    
+    return name, parse_params(params)
+
+def read_declare(file):
+    raise Exception('Read_declare: not yet implemented.')
+
+def read_initialize(file):
+    raise Exception('Read_initialize: not yet implemented.')
+
+def read_trace(file):
+    raise Exception('Read_trace: not yet implemented.')
+
+def read_finally(file):
+    raise Exception('Read_finally: not yet implemented.')
+
+def get_instr_site_fromtxt(text):
+    m = re.search('\%INSTRUMENT_SITE:[ \t]*(\w+)[ \t]*\n?', text)
+    if m:
+        return m.group(1)
+    else:
+        return None
+
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
     f = open(instr_file, 'rb')
