@@ -293,7 +293,9 @@ class InstrHeaderInfo:
         self.params_docs = []
     def __str__(self):
         lst = [self.name, self.author, self.date, self.origin, self.version, self.site, self.short_descr, self.description, self.test]
-        return '\n'.join(lst) + '\n\n(... plus params and params_docs)'
+        lst2 = [' '.join(d) for d in self.params_docs]
+        lst3 = [' '.join([str(c) for c in p]) for p in self.params]
+        return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3)
     
 def parse_instr_header(text):
     ''' Parses the header of an instrument file: LEGACY version. '''
@@ -340,11 +342,16 @@ def parse_instr_header(text):
     info.test = bites[2]
     
     # params
+    last = None
     for l in bites[3].splitlines():
         m = m = re.match('(\w+):[ \t]*\[(\w+)\](.*)', l)
         if m:
-            info.params_docs.append((m.group(1), m.group(2), m.group(3).strip()))
-    
+            last = (m.group(1), m.group(2), m.group(3).strip())
+            info.params_docs.append(last)
+        # enable multi-line docstring parsing
+        elif last:
+            last = (last[0], last[1], last[2] + ' ' + l.strip())
+            info.params_docs[len(info.params_docs)-1] = last
     return info
 
 def read_define_instr(file):
