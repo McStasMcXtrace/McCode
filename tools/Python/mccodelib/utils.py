@@ -269,10 +269,10 @@ def read_header(file):
             lines.append(l)
         except:
             break
-        if not re.match('\*', l):
-            if not re.match('\/\*', l):
+        if not re.match('[ ]*\*', l):
+            if not re.match('[ ]*\/\*', l):
                 break
-        elif re.search('\*\*', l):
+        elif re.search('[ ]*\*\*', l):
             break
     return ''.join(lines)
 
@@ -360,37 +360,30 @@ def read_define_instr(file):
     Parses this statement and returns the result in organized form.
     '''
     lines = []
-    l = ''
-    while True:
-        try:
-            l = file.readline().strip()
-        except:
-            break
-        
+    for l in file:
         if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l):
             continue
         else:
-            lines.append(l)
+            lines.append(l.strip())
             break
     
-    while True:
+    for l in file:
+        lines.append(l.strip())
         if re.search('\)', l):
             break
-        try:
-            l = file.readline().strip()
-        except:
-            break
-        lines.append(l)
     
-    return ''.join(lines)
+    return ' '.join(lines)
 
 def parse_define_instr(text):
     '''
     Parses a DEFINE INSTRUMENT statement from an instrument file. Not robust to "junk" in the input string.
     '''
-    m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.=]+)\)', text)
-    name = m.group(1)
-    params = m.group(2).replace('\n', '').strip()
+    try:
+        m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+        name = m.group(1)
+        params = m.group(2).replace('\n', '').strip()
+    except:
+        return '', []
     
     def parse_params(params_line):
         ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
@@ -430,7 +423,8 @@ def get_instr_site_fromtxt(text):
     if m:
         return m.group(1)
     else:
-        return None
+        #raise Exception('Tag "%INSTRUMENT_SITE" not found.')
+        return ''
 
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
@@ -460,7 +454,6 @@ def get_instr_comp_files(mydir):
                 files_comp.append(dirpath + '/' + f)
     
     return files_instr, files_comp
-
 
 def save_instrfile(instr, text):
     ''' 
@@ -496,7 +489,6 @@ def get_file_contents(filepath):
         return get_file_text_direct(filepath)
     else:
         return ''
-
 
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
@@ -549,39 +541,6 @@ def start_subtool_then_return(cmd, cwd=None):
                                cwd=cwd)
     
     return process.returncode
-
-
-''' Unused code?
-
-def _get_resultdirs_chron(mydir, prefix):
-    def _chrono_sort(word1, word2):
-        result1 = re.search('.*_([0-9]+)_([0-9]+)', word1)
-        result2 = re.search('.*_([0-9]+)_([0-9]+)', word2)
-        date1 = int(result1.group(1))
-        date2 = int(result2.group(1))
-        time1 = int(result1.group(2))
-        time2 = int(result2.group(2))
-        if date1 < date2:
-            return 1
-        elif date1 > date2:
-            return -1
-        if date1 == date2:
-            if time1 < time2:
-                return 1
-            elif time1 > time2:
-                return -1
-            else:
-                return 0
-    
-    subdirs = []
-    for fileordir in os.listdir(mydir):
-        if os.path.isdir(fileordir):
-            if prefix in fileordir:
-                subdirs.append(fileordir)
-    subdirs.sort(cmp=lambda x,y: _chrono_sort(x,y))
-    return subdirs
-
-'''
 
 def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
