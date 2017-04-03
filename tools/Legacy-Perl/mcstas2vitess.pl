@@ -114,11 +114,6 @@ TotalID vitess_ID;
 /* Our main() function. */
 int main(int argc, char *argv[])
 {
-  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
-  /* default is to output as McStas format */
-  mcformat_data.Name=NULL;
-  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
-    mcformat_data = mcuse_format("VRML");
 
   srandom(time(NULL));  /* Random seed */
   vitess_parseopt(argc, argv, dptr, dchr, sptr, schr); /* VITESS-style option parser */
@@ -144,7 +139,7 @@ INITIALIZE
 TRACE
 
 COMPONENT vitess_in = Vitess_input(
-    file = vitess_infile, repeat_count = vitess_repcnt,
+    filename = vitess_infile, repeat_count = vitess_repcnt,
     bufsize = vitess_bufsize)
   AT (0, 0, 0) ABSOLUTE
 
@@ -154,7 +149,7 @@ COMPONENT comp = $comp_name(
   ROTATED (0, 0, 0) ABSOLUTE
 
 COMPONENT vitess_out = Vitess_output(
-    file = vitess_outfile, bufsize = vitess_bufsize,
+    filename = vitess_outfile, bufsize = vitess_bufsize,
     progress = vitess_tracepoints)
   AT (0, 0, 0) ABSOLUTE
 
@@ -252,10 +247,10 @@ my $VIF = new FileHandle;
 my $vifname = "$compname.vif";
 if(open($VIF, $vifname)) {
     while(<$VIF>) {
-        if(/^\s*([a-zA-Z���0-9_]+)\s+-([a-zA-Z0-9])\s+(string|double)\s*$/) {
+        if(/^\s*([a-zA-Z0-9_]+)\s+-([a-zA-Z0-9])\s+(string|double)\s*$/) {
             $vif{$1} = [$2, $3];
             $vifletters{$2} = $1;
-        } elsif(/^\s*([a-zA-Z���0-9_]+)\s+-([a-zA-Z0-9])\s*$/) {
+        } elsif(/^\s*([a-zA-Z0-9_]+)\s+-([a-zA-Z0-9])\s*$/) {
             $vif{$1} = [$2, 'double'];
             $vifletters{$2} = $1;
         } else {
@@ -287,7 +282,7 @@ for $p (@{$data->{'inputpar'}}) {
         } while($let && $vifletters{$let});
         die "Too many component parameters!" unless $let;
     }
-    if($p =~ /(char\s*\*|string)\s+([a-zA-Z���0-9_]+)/i)
+    if($p =~ /(char\s*\*|string)\s+([a-zA-Z0-9_]+)/i)
       { $typ = 'string'; $p=$2; }
     $typ = 'double' unless $typ;
     push @param, [$p, $let, $typ];
