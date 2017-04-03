@@ -28,7 +28,8 @@ BEGIN {
     ENV_HEADER
 }
 use lib $MCSTAS::perl_dir;
-
+use POSIX qw(uname);
+use Config;
 use FileHandle;
 
 require "mccode_config.perl";
@@ -55,6 +56,7 @@ sub make_instr_file {
     my $checkinit="";
     my $terminate="";
     my $finally="";
+    my $typ;
     for (@$par) {
         my ($p, $let, $typ) = @$_;
         $comp_actuals = $comp_actuals ? "$comp_actuals, $p=$p" : "$p=$p";
@@ -191,6 +193,9 @@ INSTR_END
 sub make_tcl_file {
     my ($F, $par, $d) = @_;
 
+    print $F "global AvailableSET\n";
+    print $F "lappend AvailableSET {mcstas_", lc($d->{'name'}), "}\n";
+
     print $F "### $d->{'name'}\n###\n";
     print $F "gSet mcstas_", lc($d->{'name'}), "ESET {\n";
     my $dsc = $d->{'identification'}{'short'};
@@ -200,14 +205,7 @@ sub make_tcl_file {
     if ($d->{'isasource'} == 1) {
       print $F "  {number of tracjectories \"float\ 1e6 {\"Ncount [1]\" \"Defines number of trajectories to generate\" \"\" n}}\n";
     }
-    if($typ eq 'double') {
-	print $F "float";
-            if($d->{'parhelp'}{$p}{'default'}) {
-                print $F " $d->{'parhelp'}{$p}{'default'}";
-            } else {
-                print $F " \"\"";
-            }
-    }
+    
     for (@$par) {
         my ($p, $let, $typ) = @$_;
         print $F "  {$p ";
@@ -356,6 +354,13 @@ if(system(@mcstas_cmd)) {
 print "Wrote C file '$c_name'.\n";
 
 my $out_name = "McStas_${compname}";
+$out_name = lc($out_name);
+my @uname = uname(); 
+if (!($Config{'osname'} eq 'MSWin32')) {
+  $out_name = "${out_name}_".$uname[0]."_".$uname[4];
+} else {
+  $out_name = "${out_name}.exe";
+}
 my $cc = $ENV{'MCSTAS_CC'} || $MCSTAS::mcstas_config{CC};
 my $cflags = $ENV{'MCSTAS_CFLAGS'} || $MCSTAS::mcstas_config{CFLAGS};
 my $vitess_lib_name = "vitess-lib.c";
@@ -371,16 +376,16 @@ if(system(@cc_cmd)) {
     print STDERR "C compilation failed.\n";
     exit 1;
 }
-print "Wrote executable Vitess Module file '$out_name'.\n";
+print "\nWrote executable Vitess Module file '$out_name' for placement in your vitess/MODULES folder.\n\n";
 
 # Output the .tcl file for the VITESS gui.
 my $TCL = new FileHandle;
-my $tcl_name = "McStas_${compname}.tcl";
+my $tcl_name = lc("McStas_${compname}.tcl");
 open($TCL, ">$tcl_name") ||
     die "Could not open output Vitess Module Tcl file '$tcl_name'.";
 make_tcl_file($TCL, \@param, $data);
 close($TCL);
-print "Wrote Vitess Module Tcl GUI file '$tcl_name'.\n";
+print "\nWrote Vitess Module Tcl GUI file '$tcl_name' for inclusion in your vitess/GUI/usermodule.tcl script.\n\n";
 print "mcstas2vitess: Convertion has been performed\n";
 
 exit 0;
