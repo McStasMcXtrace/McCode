@@ -203,7 +203,7 @@ sub make_tcl_file {
     $dsc =~ s/\n/\\n/g;
     print $F "  {\"$dsc\" header}\n";
     if ($d->{'isasource'} == 1) {
-      print $F "  {number of tracjectories float 1e6 {\"Ncount [1]\" \"Defines number of trajectories to generate\" \"\" n}}\n";
+      print $F "  {\"number of tracjectories\" float 1e6 {\"Ncount [1]\" \"Defines number of trajectories to generate\" \"\" n}}\n";
     }
     
     for (@$par) {
