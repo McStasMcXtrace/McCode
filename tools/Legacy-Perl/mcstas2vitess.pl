@@ -197,6 +197,17 @@ sub make_tcl_file {
     chomp $dsc;
     $dsc =~ s/\n/\\n/g;
     print $F "  {\"$dsc\" header}\n";
+    if ($d->{'isasource'} == 1) {
+      print $F "  {number of tracjectories \"float\ 1e6 {\"Ncount [1]\" \"Defines number of trajectories to generate\" \"\" n}}\n";
+    }
+    if($typ eq 'double') {
+	print $F "float";
+            if($d->{'parhelp'}{$p}{'default'}) {
+                print $F " $d->{'parhelp'}{$p}{'default'}";
+            } else {
+                print $F " \"\"";
+            }
+    }
     for (@$par) {
         my ($p, $let, $typ) = @$_;
         print $F "  {$p ";
