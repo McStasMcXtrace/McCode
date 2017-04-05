@@ -277,6 +277,8 @@ def read_header(file):
     return ''.join(lines)
 
 class InstrHeaderInfo:
+    field_cols = ['name', 'author', 'date', 'origin', 'site', 'short_description', 'description', 'test']
+    lst_cols = ['params', 'params_docs']
     def __init__(self):
         # legit info
         self.name = ''
@@ -285,14 +287,50 @@ class InstrHeaderInfo:
         self.author = ''
         self.date = ''
         self.origin = ''
-        self.version = ''
         self.site = ''
         self.short_descr = ''
         self.description = ''
         self.test = ''
         self.params_docs = []
+    @staticmethod
+    def __len__():
+        return len(InstrHeaderInfo.field_cols) + len(InstrHeaderInfo.lst_cols)
+    @staticmethod
+    def colname(idx):
+        if idx >= 0 and idx <= 7:
+            return InstrHeaderInfo.field_cols[idx]
+        elif idx >= 8 and idx <= 9:
+            return InstrHeaderInfo.lst_cols[idx-8]
+        else:
+            raise Exception("InstrHeaderInfo.colname: invalid index")
+    def __getitem__(self, idx):
+        if idx == 0: return self.name
+        elif idx == 1: return self.author
+        elif idx == 2: return self.date
+        elif idx == 3: return self.origin
+        elif idx == 4: return self.site
+        elif idx == 5: return self.short_descr
+        elif idx == 6: return self.description
+        elif idx == 7: return self.test
+        elif idx == 8: return self.params
+        elif idx == 9: return self.params_docs
+        else:
+            raise Exception("InstrHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
+    def __setitem__(self, idx, value):
+        if idx == 0: self.name = value
+        elif idx == 1: self.author = value
+        elif idx == 2: self.date = value
+        elif idx == 3: self.origin = value
+        elif idx == 4: self.site = value
+        elif idx == 5: self.short_descr = value
+        elif idx == 6: self.description = value
+        elif idx == 7: self.test = value
+        elif idx == 8: self.params = value
+        elif idx == 9: self.params_docs = value
+        else:
+            raise Exception("InstrHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
     def __str__(self):
-        lst = [self.name, self.author, self.date, self.origin, self.version, self.site, self.short_descr, self.description, self.test]
+        lst = [self.name, self.author, self.date, self.origin, self.site, self.short_descr, self.description, self.test]
         lst2 = [' '.join(d) for d in self.params_docs]
         lst3 = [' '.join([str(c) for c in p]) for p in self.params]
         return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3)
