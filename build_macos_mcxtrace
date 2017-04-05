@@ -33,9 +33,9 @@ echo "* Downloading and embeeding miniconda3 in your app      *"
 echo "*********************************************************"
 echo   
 sleep 3
-curl -O https://repo.continuum.io/miniconda/Miniconda3-4.2.13-MacOSX-x86_64.sh
-chmod a+x Miniconda3-4.2.13-MacOSX-x86_64.sh
-./Miniconda3-4.2.13-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/miniconda3/
+curl -O https://repo.continuum.io/miniconda/Miniconda3-4.2.12-MacOSX-x86_64.sh
+chmod a+x Miniconda3-4.2.12-MacOSX-x86_64.sh
+./Miniconda3-4.2.12-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/miniconda3/
 
 # Run conda to install the dependencies
 echo
