@@ -49,6 +49,7 @@ Source: "dist\mcstas-tools-matlab-mcplot-NSIS-@VERSION@-mingw32.exe"; DestDir: "
 Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
+Source: "Support\miniconda3.zip"; DestDir: "{tmp}"
 
 [Run]
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
@@ -69,5 +70,6 @@ Filename: "{tmp}\mcstas-tools-matlab-mcplot-NSIS-@VERSION@-mingw32.exe"; Paramet
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-mantid-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\miniconda3.zip"; WorkingDir: "c:\mcstas-@VERSION@\"
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
