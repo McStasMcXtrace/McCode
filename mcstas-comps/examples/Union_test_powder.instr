@@ -11,7 +11,7 @@
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* Version: $Revision: 0.1 $
+* INSTRUMENT_SITE:
 *
 * Simple test instrument for sample component.
 *
@@ -80,4 +80,3 @@ COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",res
 
 
 END
-

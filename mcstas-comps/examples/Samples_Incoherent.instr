@@ -13,16 +13,16 @@
 *
 * This instrument allows to compare incoherent scattering from different McStas
 * sample components.
-
-* %Description
-*  This instrument allows to compare incoherent scattering from different McStas
-*  sample components:
 *
-*   V_sample
-*   PowderN
-*   Single_crystal
-*   Isotropic_sqw
-*   Incoherent
+* %Description
+* This instrument allows to compare incoherent scattering from different McStas
+* sample components:
+*
+* V_sample
+* PowderN
+* Single_crystal
+* Isotropic_sqw
+* Incoherent
 *
 * Examples:
 *
@@ -30,28 +30,28 @@
 * (V_multiples=0: V_sample algo identical to PowderN algo - NO multiples
 *  V_multiples: V_sample performs crude estimate for multiple scattering)
 *
-*   mcrun Samples_Incoherent -d Some_directory -N5 SAMPLE=1,5 STOP=1 V_multiples=0
+* mcrun Samples_Incoherent -d Some_directory -N5 SAMPLE=1,5 STOP=1 V_multiples=0
 *
 * Compare incoherent scattering and direct beam attenuation for PowderN, Single_crystal
 * and Isotroic_sqw:
 *
-*   mcrun Samples_Incoherent -d Some_other_directory -N4 SAMPLE=2,5 STOP=0
+* mcrun Samples_Incoherent -d Some_other_directory -N4 SAMPLE=2,5 STOP=0
 *
 * Have a closer look of direct beam attentuation for PowderN, Single_crystal
 * and Isotroic_sqw (has the side-effect that back-scattered neutrons are absorbed):
 *
-*   mcrun Samples_Incoherent -d Some_third_directory -N4 SAMPLE=2,5 STOP=0 DB=1
+* mcrun Samples_Incoherent -d Some_third_directory -N4 SAMPLE=2,5 STOP=0 DB=1
 *
 * The sample type selection is:
-*   box:      1=Vanadium 
-*             2=PowderN 
-*             3=Single_Crystal 
-*             4=Isotropic_Sqw 
+*   box:      1=Vanadium
+*             2=PowderN
+*             3=Single_Crystal
+*             4=Isotropic_Sqw
 *             5=Incoherent
 *            10=Isotropic_Sqw with V.laz
-*   cube.off: 6=PowderN, 
-*             7=Single_Crystal 
-*             8=Isotropic_Sqw 
+*   cube.off: 6=PowderN,
+*             7=Single_Crystal
+*             8=Isotropic_Sqw
 *             9=Incoherent
 *
 * %Example: SAMPLE=1 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.2321e+06

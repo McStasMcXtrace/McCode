@@ -4,10 +4,9 @@
 * Instrument: test_SSR_SSW
 *
 * %Identification
-* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a>
-* and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a> 
+* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a>
 * Date: January, 2012
-* Version:  $Revision$
+* Origin: DTU
 * %INSTRUMENT_SITE: Tests_MCPL_etc
 *
 * Test instrument for SSW/SSR interface between McStas and MCNP
@@ -21,19 +20,19 @@
 * After passing a slit at z=2m, events are written to the same format
 *
 * Note that axes orientation may be different between MCNP and McStas!
-* Note also that the conversion of between McStas and MCNP units and parameters 
+* Note also that the conversion of between McStas and MCNP units and parameters
 * is done automatically by this component - but the user must ensure that
 * geometry description matches between the two Monte Carlo codes.
 *
 * The verbose mode is highly recommended as it displays lots of useful informations.
 *
-* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR). 
-* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules 
+* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR).
+* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules
 * and subroutines collected in "subs.f"
-* For succesful compilation, it is required that these subroutines are compiled 
+* For succesful compilation, it is required that these subroutines are compiled
 * and linked to the instrument file:
-* 
-* Example: 
+*
+* Example:
 *
 *  "mcstas SSRSSW_test.instr" gives: SSRSSW_test.c
 *  "gfortran -c subs.f" gives:  subs.f
@@ -79,7 +78,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT  (0, 0, 0) ABSOLUTE
 
- 
+
   //read rssa file
 COMPONENT testread = Virtual_mcnp_ss_input(
     )
@@ -104,7 +103,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-

@@ -1,14 +1,11 @@
 /*******************************************************************************
-*         McStas instrument definition URL=http://mcstas.risoe.dk
 *
 * Instrument: Test_Sources
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Mar 2016
-* Origin: 
-* Release: McStas 2.3
-* Version: $Revision$
+* Origin: DTU
 * %INSTRUMENT_SITE: Tests_MCPL_etc
 *
 * A test instrument for MCPL_input
@@ -87,5 +84,3 @@ COMPONENT m4 = Monitor_nD(
 
 
 END
-
-

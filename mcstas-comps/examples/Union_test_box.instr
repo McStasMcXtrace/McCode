@@ -11,7 +11,7 @@
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* Version: $Revision: 0.1 $
+* %INSTRUMENT_SITE:
 *
 * Simple test instrument for sample component.
 *
@@ -117,7 +117,7 @@ EXTEND
 %{
 	if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
 	if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
-	
+
     // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
 %}
 
@@ -145,4 +145,3 @@ COMPONENT m4pi_both = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events
 
 
 END
-

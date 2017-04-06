@@ -1,32 +1,29 @@
-/* Instrument: PSI_Focus
- *
- * %Identification
- * Written by: <a href="mailto:Uwe.Filges@psi.ch">Uwe Filges</a>
- * Date: Jan 2004
- * Version:    $Revision$
- * Release:    McStas 2.0
- * Origin: <a href="http://www.psi.ch">PSI</a>
- *
- * %INSTRUMENT_SITE: PSI
- *
- * The FOCUS Spectrometer at PSI (Paul Scherrer Institute,Switzerland)
- *
- * %Description
- * This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH.
- *
- * %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
- * Example: lambda=3.4 Detector: PSD_SAMPLE_I=1.58754E+05
- *
- * %Parameters
- * INPUT PARAMETERS:
- *    lambda:      source energy                               [Angs]
- *    chopp_ratio: chopper radio Fermi Chopper to Disk Chopper [1]
- *    DET:         Detector angle                              [deg]
- *
- * %Link
- * Written by U.Filges <uwe.filges@psi.ch> PSI, Jan 2004
- * %End
-*/
+/*******************************************************************************
+* Instrument: PSI_Focus
+*
+* %Identification
+* Written by: <a href="mailto:Uwe.Filges@psi.ch">Uwe Filges</a>
+* Date: Jan 2004
+* Origin: <a href="http://www.psi.ch">PSI</a>
+* %INSTRUMENT_SITE: PSI
+*
+* The FOCUS Spectrometer at PSI (Paul Scherrer Institute,Switzerland)
+*
+* %Description
+* This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH.
+*
+* %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
+* Example: lambda=3.4 Detector: PSD_SAMPLE_I=1.58754E+05
+*
+* %Parameters
+* lambda:      [Angs] source energy
+* chopp_ratio: [1] Chopper radio Fermi Chopper to Disk Chopper
+* DET:         [deg ]Detector angle
+*
+* %Link
+* Written by U.Filges <uwe.filges@psi.ch> PSI, Jan 2004
+* %End
+*******************************************************************************/
 
 
 DEFINE INSTRUMENT PSI_Focus(lambda=3.4, chopp_ratio=1, DET=-69.9)
@@ -97,7 +94,7 @@ COMPONENT a1 = Progress_bar()
 /* values for guide side window RNR11 */
 COMPONENT csource = Source_gen(
    yheight = 0.135, xwidth = 0.08, dist=1.77, focus_xw = 0.05, focus_yh = 0.12,
-   lambda0 = 3.4, dlambda = dL, T1= 296.16, I1=8.5E11, 
+   lambda0 = 3.4, dlambda = dL, T1= 296.16, I1=8.5E11,
    T2=40.68, I2=5.2E11)
 AT (0,0,0) RELATIVE a1  ROTATED (0,0,0) RELATIVE a1
 
@@ -159,7 +156,7 @@ COMPONENT FOCUSguide = Guide_channeled(
 COMPONENT FirstChopper = DiskChopper(theta_0=0, abs_out=0, verbose=1,
 				     radius = 0.70, yheight=0.70, xwidth = 0.07, nu = DISC_SPEED/2/PI, nslit = 2, delay = FO_PHA, isfirst = 1)
   AT (0, 0, 69.674) RELATIVE a1
-  
+
 COMPONENT  DISCTOF = Monitor_nD(
     bins = 30, filename = "DISC_TOF.dat", xmin = -0.05,
     xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
@@ -302,7 +299,7 @@ COMPONENT  FERMITOF2 = Monitor_nD(
   AT (0, 0, 1.2) RELATIVE a2
 
 COMPONENT PSD_SAMPLE = PSD_monitor(
-    xwidth=0.02, yheight=0.1, 
+    xwidth=0.02, yheight=0.1,
     nx=30, ny=30, filename="psdsample.dat")
   AT (0, 0, 1.45) RELATIVE a2  ROTATED (0, 0, 0) RELATIVE a2
 
@@ -313,7 +310,7 @@ COMPONENT DivMon_Sample = Divergence_monitor(
   AT (0, 0, 1.451) RELATIVE a2  ROTATED (0, 0, 0) RELATIVE a2
 
 COMPONENT EMON_SAMPLE = E_monitor(
-	xwidth=0.01, yheight=0.06, 
+	xwidth=0.01, yheight=0.06,
 	Emin = EMIN, Emax = EMAX, nE = 60,
 	filename = "emon_sample.dat")
   AT(0, 0, 1.452) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
@@ -340,9 +337,8 @@ COMPONENT FoDet = Monitor_nD(
 AT (0, 0, 2.5) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a3
 
 COMPONENT EMON_DET = E_monitor(
-	xwidth=0.4, yheight=0.4, 
+	xwidth=0.4, yheight=0.4,
 	Emin = EMIN, Emax = EMAX, nE = 80, filename = "emon_det.dat")
   AT(0, 0, 2.501) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a3
 
 END
-

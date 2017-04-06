@@ -3,6 +3,7 @@
 *
 * Instrument: Mezei_SNS_decoupled_poisoned.instr
 *
+* %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
 * Date: May 2913
 * Origin: DTU Physics
@@ -18,8 +19,8 @@
 * Simple instrumentfile for estimating SNS brilliance, moderator is a rescaled ESS short-pulsed Mezei description.
 *
 * %Parameters
-* Lambda_min:        [AA]
-* Lambda_max:        [AA]
+* Lambda_min: [AA]
+* Lambda_max: [AA]
 *
 * %Link
 *
@@ -34,18 +35,18 @@ DEFINE INSTRUMENT Mezei_SNS_decoupled_poisoned(Lambda_min=0.5,Lambda_max=20)
 
 DECLARE
 %{
-  double E_min; 
+  double E_min;
   double E_max;
 %}
 
 INITIALIZE
-%{ 
+%{
   E_min=81.82/(Lambda_max*Lambda_max);
   E_max=81.82/(Lambda_min*Lambda_min);
 %}
 
 /* Here comes the TRACE section, where the actual      */
-/* instrument is defined as a sequence of components.  */  
+/* instrument is defined as a sequence of components.  */
 TRACE
 
 COMPONENT Origin = Progress_bar()
@@ -73,15 +74,3 @@ COMPONENT Brillmon = Brilliance_monitor(
 /* optional sections are : SAVE                                         */
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-
-
-
-
