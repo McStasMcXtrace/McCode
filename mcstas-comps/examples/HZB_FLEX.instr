@@ -12,6 +12,8 @@
 * Instrument short description:
 * Primary and secondary spectrometer for the FLEX upgrade
 *
+* %Description
+*
 * %Parameters
 * kI: [inv AA] incident wavevector
 * kF: [inv AA] outgoing wavevector

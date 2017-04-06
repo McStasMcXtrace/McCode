@@ -31,7 +31,7 @@
 * Qmax:         [AA^-1] The maximum value of the interesting Qrange
 * straight:     If 1, the guide walls are straight
 * width:        [m] The width of the guide in the case of straight guide walls
-***************************************************/
+*******************************************************************************/
 DEFINE INSTRUMENT Reflectometer(
 directbeam=1,
 Lam_min=2.0,

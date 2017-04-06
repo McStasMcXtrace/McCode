@@ -15,13 +15,13 @@
 *
 * %Description
 * This instrument produces brilliance curves from the ISIS TS1 facility.
-* 
+*
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths.
 *
 * Example: ISIS_brilliance Detector: Brillmon_I=3.80e+15 (First detector output)
 *
 * %Parameters
-* modfile: [string] Name of moderator face - TS1=water,ch4,h2,merlin or instrument name eg maps, crisp etc.
+* modfile: [string] Name of moderator face - TS1=water, ch4, h2, merlin or instrument name eg maps, crisp etc.
 *
 * %Link
 *
@@ -77,11 +77,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-

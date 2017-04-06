@@ -30,7 +30,6 @@
 * 4.1; 4.6; 5.1; and 5.9 Angs. The second order reflection from the graphite
 * monochromator is removed by a beryllium-filter cooled at liquid nitrogen
 * temperature.
-
 * To achieve the time-focussing condition, the beam is pulsed by a Fermi chopper.
 * It has a small slot length to ensure a good transmission. The normal distance
 * between the Fermi chopper and the sample is 38 cm. To prevent frame-overlap when
@@ -132,7 +131,7 @@ DECLARE
   double dq=0, dw=0, vf;
   char opt1[256]; /* options for Monitor_nD */
   char opt2[256];
-  
+
   double monok_index;
 %}
 
@@ -359,7 +358,7 @@ EXTEND
     /* Fermi opening time is atan(w/length)/PI/frequency */
     double Tfermi=atan2(0.052,0.14)/Frequency/PI; /* opening time for Fermi [s] */
     t  = -(0.071/Vi)+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
-    
+
     /* geometric integrated transmission of Fermi=0.55 % */
     /* 2 sides*angular opening = 2*atan2(0.031/136,0.013)*RAD2DEG/360 */
     p *= 4*atan2(0.052,0.14)*RAD2DEG/360;
@@ -437,9 +436,8 @@ COMPONENT M_theta_t_all = Monitor_nD(
 AT (0,0,0) RELATIVE sample_pos
 
 COMPONENT Detector_nM = Monitor_Sqw(
-  radius=1.3, yheight=1, bins=100, index=-2, 
+  radius=1.3, yheight=1, bins=100, index=-2,
   options="user1 limits=[0 6] user2 limits=[-20 20]")
-  AT (0, 0, 0) RELATIVE PREVIOUS 
+  AT (0, 0, 0) RELATIVE PREVIOUS
 
 END
-

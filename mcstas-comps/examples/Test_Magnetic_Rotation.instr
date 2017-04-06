@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_constBfield
@@ -18,7 +16,7 @@
 * This instrument demonstrates how to use the component
 * Pol_constBfield to make a Mezei Spin flipper.
 *
-* See: 
+* See:
 * Seeger et al. NIM A: Volume 457, Issues 1-2 , 11 January 2001, Pages 338-346
 *
 * %Example: Test_Magnetic_Rotation.instr -n1e5 RESTORENEUT=1 Detector: MPLMonNum2Y_I=3.54525
@@ -40,7 +38,7 @@ DECLARE
   const double magnetLength =  0.2;
   double Bmagnitude;
 
-  
+
   %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -53,9 +51,9 @@ INITIALIZE
   // paper by Seeger and Daemen on the NISP algorithm.
   double vel = 2*PI/10*K2V;
   double deltaT =  magnetLength/vel;
-  
+
   printf("deltaT = %f\n", deltaT);
-  
+
   Bmagnitude = PI/2*20/deltaT/183.247e6; // Tesla
   printf("Bmagnitude = %f T\n", Bmagnitude);
   %}
@@ -74,7 +72,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 
-COMPONENT source = 
+COMPONENT source =
 Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01, lambda0 = 5,
 	      dlambda = 4.99, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
@@ -126,7 +124,7 @@ MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  mx=0, my=0, mz=1, filename="MPLMonNum2Z_1.data")
      AT (0, 0, magnetLength/2) RELATIVE magnetNum
 */
-COMPONENT magnetNumCp = 
+COMPONENT magnetNumCp =
 Pol_simpleBfield_stop(magnet_comp_stop=magnetNum)
   AT(0,0,magnetLength) RELATIVE magnetNum
 
@@ -156,4 +154,3 @@ FINALLY
   %}
 /* The END token marks the instrument definition end */
 END
-

@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 17th Jan 2005.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * The IN6 Time-of-Flight simulation, positioned as the first instrument in the
@@ -31,7 +29,7 @@
 * 4.1; 4.6; 5.1; and 5.9 Angs. The second order reflection from the graphite
 * monochromator is removed by a beryllium-filter cooled at liquid nitrogen
 * temperature.
-
+*
 * To achieve the time-focussing condition, the beam is pulsed by a Fermi chopper.
 * It has a small slot length to ensure a good transmission. The normal distance
 * between the Fermi chopper and the sample is 38 cm. To prevent frame-overlap when
@@ -52,25 +50,25 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-*   lambda:        [Angs] wavelength within 4.14|4.6|5.12|5.92
-*   dlambda:       [Angs] wavelength HALF spread. default is 0.075
-*   SPEED:         [rpm]  Fermi chopper speed.  -1=auto, 0=stopped in open pos.
-*   RATIO:         [1]  Suppressor speed ratio. -1=no suppressor.
-*   PHASE:         [deg] Fermi phase w/r/ to Suppressor. -360=auto
-*   M1:                 monochromator motor 1 position. -1=auto [coder values]
-*   M2:                 monochromator motor 2 positinn. -1=auto [coder values]
-*   M3:                 monochromator motor 3 position. -1=auto [coder values]
-*   MONITOR:            monitor preset [something like time in s]
-*   CHA_WIDTH:     [us] channel width. -1=auto
-*   TOF_CHA_RESOL: [1]  number of channels.
-*   TOF_DELAY:     [us] TOF delay. -1=auto
-*   ELPEAK:        [1]  elastic peak channel. -1=auto
-*   m:             [1]  super mirror guide m-value. 1 for Ni, 1.2 for Ni58, 2-4 for SM
-*   mFC:           [1]  super mirror FermiChopper coating m-value
-*   Sqw_coh:       [str] coherent S(q,w) file name
-*   Sqw_inc:       [str] incoherent S(q,w) file name
-*   radius:        [m]  outer radius of sample hollow cylinder
-*   thickness:     [m]  thickness of sample hollow cylinder
+* lambda:        [Angs] wavelength within 4.14|4.6|5.12|5.92
+* dlambda:       [Angs] wavelength HALF spread. default is 0.075
+* SPEED:         [rpm] Fermi chopper speed, -1=auto, 0=stopped in open pos
+* RATIO:         [1] Suppressor speed ratio, -1=no suppressor
+* PHASE:         [deg] Fermi phase w/r/ to Suppressor. -360=auto
+* M1:            [coder values] monochromator motor 1 position. -1=auto
+* M2:            [coder values] monochromator motor 2 positinn. -1=auto
+* M3:            [coder values] monochromator motor 3 position. -1=auto
+* MONITOR:       [something like time in s] monitor preset
+* CHA_WIDTH:     [us] channel width. -1=auto
+* TOF_CHA_RESOL: [1] number of channels
+* TOF_DELAY:     [us] TOF delay. -1=auto
+* ELPEAK:        [1] elastic peak channel. -1=auto
+* m:             [1] super mirror guide m-value. 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mFC:           [1] super mirror FermiChopper coating m-value
+* Sqw_coh:       [str] coherent S(q,w) file name
+* Sqw_inc:       [str] incoherent S(q,w) file name
+* radius:        [m] outer radius of sample hollow cylinder
+* thickness:     [m] thickness of sample hollow cylinder
 *
 * %Link
 * <a href="http://www.ill.fr/in6">The IN6@ILL Yellow Pages</a>
@@ -96,4 +94,3 @@ TRACE
 %include "ILL_IN6.instr"
 
 END
-

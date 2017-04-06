@@ -11,37 +11,34 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * Thermal neutron three-axis spectrometer IN8@ILL
 *
 * %Description
 * IN8 is installed on beamtube H10 (diameter F = 200 mm).
-
 * The incident wavelength selection is obtained through a double focusing
 * monochromator , which has three faces equipped with PG002, Cu200 and bent
 * perfect Si111 crystals, respectively. Horizontal focusing allows increasing the
-* monochromatic flux at the expense of momentum but not energy resolution when 
+* monochromatic flux at the expense of momentum but not energy resolution when
 * the horizontal virtual source (an adjustable entrance slit) is introduced at a
 * distance before the monochromator which matches the monochromator-sample
 * distance.
-* 
+*
 * The aperture of the horizontal virtual source can be varied but is typically
 * kept below 50 mm. This reduces the background level of the instrument.
 * Converging collimators as well as diaphragms can be placed in the beam path
 * before and after the monochromator to optimize the beam dimension and
 * definition. For special high-resolution experiments using a flat monochromator,
 * Soller collimators are available.
-* 
+*
 * The shielding drum allows varying the monochromator take-off angle in the range
 * 10 < 2theta_m < 90. The secondary spectrometer has heavy borated polyethylene
 * shielding installed around the analyzer and detector elements. The scattering
 * angle at the sample position is in the range 0 < 2theta_s < 130 independent of
 * the monochromator take-off angle.
-* 
-* In this TAS configuration, Cu200 is used as monochromator and Cu111 as 
+*
+* In this TAS configuration, Cu200 is used as monochromator and Cu111 as
 * analyser, with a single type detector.
 *
 * %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=9.36585e+08
@@ -111,8 +108,8 @@
 * NVA:  Number of vertical slabs composing the analyzer [1]
 * NHA:  Number of horizontal slabs composing the analyzer [1]
 *
-* Sqw_coh:   sample coherent S(q,w) file name. Use LAZ/LAU or SQW file [str] 
-* Sqw_inc:   sample incoherent S(q,w) file name. Use NULL to scatter incoherently [str] 
+* Sqw_coh:   sample coherent S(q,w) file name. Use LAZ/LAU or SQW file [str]
+* Sqw_inc:   sample incoherent S(q,w) file name. Use NULL to scatter incoherently [str]
 * radius:    outer radius of sample hollow cylinder/sphere [m]
 * height:    sample height. Use 0 for a spherical shape [m]
 * thickness: thickness of sample hollow cylinder. 0 for bulk. [m]

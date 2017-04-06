@@ -1,49 +1,49 @@
-/* Instrument: templateTOF.instr
- *
- * %Identification
- * Written by: E. Farhi
- * Date: Jan 2004
- * Origin: ILL
- *
- * %INSTRUMENT_SITE: Templates
- *
- * A test instrument for the S(q,w) sample, with furnace/container
- *
- * %Description
- * This instrument is a test instrument for the S(q,w) sample.
- * It produces a tof-angle and q-energy detectors and also exports the
- * S(q,w) and S(q) data.
- * The sample environment is a single cylinder.
- * The sample container has the same shape as the sample itself, but is not
- * active when using a spherical sample shape (height=0).
- * detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
- *
- * %Example: E0=4.94 Detector:  M_single_coh_I=3.5e-11
- * %Example: E0=33 dE=1.07 dt=9.6e-6 Detector: M_single_coh_I=5.93372e-10
- *
- * %Parameters
- * INPUT PARAMETERS:
- *  E0:        incident neutron beam energy                [meV]
- *  dE:        incident neutron beam energy spread         [meV]
- *  dt:        time spread from chopper distribution       [s]
- *  coh:       sample coherent Sqw data file or NULL       [str]
- *  inc:       sample incoherent Sqw data file or NULL     [str]
- *  radius:    radius of sample (outer).                   [m]
- *  thickness: thickness of sample. 0=filled               [m]
- *  yheight:   height of sample. 0=sphere                  [m]
- *  container: container material or NULL                  [str]
- *  container_thickness: container thickness               [m]
- *  environment: sample environment material or NULL       [str]
- *  environment_radius: sample environment outer radius    [m]
- *  environment_thickness: sample environment thickness    [m]
- *
- * %Link
- * The Isotropic_Sqw sample
- * %Link
- * The Samples_Isotropic_Sqw example instrument
- * %End
-*/
-
+/*******************************************************************************
+* Instrument: templateTOF.instr
+*
+* %Identification
+* Written by: E. Farhi
+* Date: Jan 2004
+* Origin: ILL
+*
+* %INSTRUMENT_SITE: Templates
+*
+* A test instrument for the S(q,w) sample, with furnace/container
+*
+* %Description
+* This instrument is a test instrument for the S(q,w) sample.
+* It produces a tof-angle and q-energy detectors and also exports the
+* S(q,w) and S(q) data.
+* The sample environment is a single cylinder.
+* The sample container has the same shape as the sample itself, but is not
+* active when using a spherical sample shape (height=0).
+* detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
+*
+* %Example: E0=4.94 Detector:  M_single_coh_I=3.5e-11
+* %Example: E0=33 dE=1.07 dt=9.6e-6 Detector: M_single_coh_I=5.93372e-10
+*
+* %Parameters
+* INPUT PARAMETERS:
+* E0: [meV] incident neutron beam energy
+* dE: [meV] incident neutron beam energy spread
+* dt: [s] time spread from chopper distribution
+* coh: [str] sample coherent Sqw data file or NULL
+* inc: [str] sample incoherent Sqw data file or NULL
+* radius: [m] radius of sample (outer)
+* thickness: [m] thickness of sample. 0=filled
+* yheight: [m] height of sample. 0=sphere
+* container: [str] container material or NULL
+* container_thickness: [m] container thickness
+* environment: [str] sample environment material or NULL
+* environment_radius: [m] sample environment outer radius
+* environment_thickness: [m] sample environment thickness
+*
+* %Link
+* The Isotropic_Sqw sample
+* %Link
+* The Samples_Isotropic_Sqw example instrument
+* %End
+*******************************************************************************/
 DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6,
   string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw",
   thickness=1e-4,yheight=0.0168,radius=0.005,
@@ -174,20 +174,20 @@ COMPONENT M_total = Monitor_nD(
 AT (0,0,0) RELATIVE SampleOut
 
 /* single coherent */
-COMPONENT M_single_coh = COPY(M_total) 
+COMPONENT M_single_coh = COPY(M_total)
   WHEN (flag_single == 1)
 AT (0,0,0) RELATIVE SampleOut
 
 /* single incoherent */
-COMPONENT M_single_inc = COPY(M_total) 
+COMPONENT M_single_inc = COPY(M_total)
   WHEN (flag_single == 2)
 AT (0,0,0) RELATIVE SampleOut
 
-COMPONENT M_multi = COPY(M_total) 
+COMPONENT M_multi = COPY(M_total)
   WHEN (flag_multi)
 AT (0,0,0) RELATIVE SampleOut
 
-COMPONENT M_env_container = COPY(M_total) 
+COMPONENT M_env_container = COPY(M_total)
   WHEN (flag_env || flag_container)
 AT (0,0,0) RELATIVE SampleOut
 

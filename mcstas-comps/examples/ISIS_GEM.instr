@@ -11,8 +11,6 @@
 * Written by: E. Farhi, G. Cuello, M. Tucker
 * Date: September 20, 2006
 * Origin: ISIS
-* Release: McStas 2.0a
-* Version: $Revision$
 * %INSTRUMENT_SITE: ISIS
 *
 * McStas instrument for simulating the GEM diffractometer at ISIS TS1.
@@ -21,8 +19,8 @@
 * McStas instrument for simulating GEM at ISIS TS1.
 * The sample is a powder. The detector is simplified as a banana shaped one.
 *
-* The General Materials Diffractometer is a new generation neutron diffractometer 
-* recently constructed at the ISIS pulsed neutron source. GEM can be used to 
+* The General Materials Diffractometer is a new generation neutron diffractometer
+* recently constructed at the ISIS pulsed neutron source. GEM can be used to
 * perform high intensity, high resolution experiments to study the structure of
 * disordered materials and crystalline powders.
 *
@@ -76,5 +74,3 @@ COMPONENT monzns = Monitor_nD(
   AT (0, 0, 0) RELATIVE sample_out
 
 END
-
-

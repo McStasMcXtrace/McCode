@@ -10,14 +10,16 @@
 * Test instrument for the H Frielinghaus SANS_benchmark2 component
 *
 * %INSTRUMENT_SITE: FZ_Juelich
-* 
+*
+* %Parameters
+* cnum: Set to 0.0 for no polarizer as for benchmarking the normal SANS samples, to 2.0 for two cavities, keep default values as much as possible
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT FZJ_BenchmarkSfin2 (lbdmin=2.00, lbdmax=8.5, NGbend=0.053,
                               NGblen=0.03, Clen = 8.0, SampD=0.01,
                               bendL = 5.0, bendR = 385.0, bendM = 7.0, bendiM = 7.0, dfltM = 1.5,
-                              vorPl = 0.5, PolLen = 0.492, PolTot = 2.30,                          /* for two cavities */
-                              MDOWN = 3.6, Min=1.5, cnum=0.00, ROT=0.0,                            /* set cnum = 2.0 for two cavities */
+                              vorPl = 0.5, PolLen = 0.492, PolTot = 2.30, /* for two cavities */
+                              MDOWN = 3.6, Min=1.5, cnum=0.00, ROT=0.0,   /* set cnum = 2.0 for two cavities */
                               modnum= 11.0,sglscatt=1.0, incs=0.0005         )
 
 /* set cnum to 0.0 for no polarizer as for benchmarking the normal SANS samples */

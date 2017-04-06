@@ -10,8 +10,7 @@
 * %Identification
 * Written by: G. Granroth
 * Date: Nov 2014
-* Origin: SNS 
-* Version: Nov 21, 2014
+* Origin: SNS
 * %INSTRUMENT_SITE:SNS
 *
 * Model of the ARCS spectrometer from SNS.
@@ -21,10 +20,9 @@
 * <ul>
 * <li>Granroth, G. E. and Abernathy, D. L., "Performance Comparisons of Four Direct Geometry
 * Spectrometers Planned for Spallation Neutron Source",  Proceedings of ICANS-XVI, 289 (2003).
-* <li>D. L. Abernathy,  M. B. Stone,  M. J. Loguillo, M. S. Lucas, O. Delaire, X.Tang, J. Y. Y. Lin, and 
+* <li>D. L. Abernathy,  M. B. Stone,  M. J. Loguillo, M. S. Lucas, O. Delaire, X.Tang, J. Y. Y. Lin, and
 * B. Fultz,"Design and operation of the wide angular-range chopper spectrometer ARCS at the
-* Spallation Neutron Source", Review of Scientific Instruments, 83 , 015114 (2012)
-</ul>
+* Spallation Neutron Source", Review of Scientific Instruments, 83 , 015114 (2012)</ul>
 *
 * %Parameters
 * Fermi_nu:   [Hz]    Frequency of the Fermi chopper
@@ -35,7 +33,7 @@
 * Et:         [meV]   Energy transfer of the Spot_sample
 * ttheta:     [deg]   Scattering angle of the Spot_sample
 * T0_off:     [deg]   Offset for T0 chopper (unused at present)
-* sxmin:      [m]     Sample slit horz min value 
+* sxmin:      [m]     Sample slit horz min value
 * sxmax:      [m]     Sample slit horz max value
 * symin:      [m]     Sample slit vert min value
 * symax:      [m]     Sample slit vert max value
@@ -47,15 +45,15 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT SNS_ARCS(Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1) 
+DEFINE INSTRUMENT SNS_ARCS(Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
 DECLARE
-%{ 
+%{
    double Emin,Emax;
    /* guide reflectivity profile parameters */
    double Gu_m, Gu_R, Gu_alpha, Gu_Qc, Gu_W;
    double phaseoff,phasefc1,phase_T0,phase_sam, phase_det,toffset,phase_m1,phase_m2;
    double tplotmin,tplotmax;
-      /* critical distances 
+      /* critical distances
   LF moderator to Fermi chopper
   LT0 moderator to T0 chopper
   LM1 moderator to monitor 1
@@ -64,13 +62,13 @@ DECLARE
   L3  approximate distance to in plane detectors */
    double LF,LT0,LM1,LM2,LS,L3;
    double ch_x,ch_y;
-   char *v_fname; 
+   char *v_fname;
    char *detoptstr;
    char *tfilename;
    char *detsampoptstr;
-   char *detdetoptstr; 
+   char *detdetoptstr;
    char *mon1optstr;
-   char *mon2optstr; 
+   char *mon2optstr;
 %}
 INITIALIZE
 %{
@@ -79,7 +77,7 @@ INITIALIZE
    detsampoptstr=malloc(200*sizeof(char));
    detdetoptstr=malloc(200*sizeof(char));
    mon1optstr=malloc(200*sizeof(char));
-   mon2optstr=malloc(200*sizeof(char)); 
+   mon2optstr=malloc(200*sizeof(char));
    v_fname=malloc(200*sizeof(char));
    /*set lengths defined above */
    LT0=8.77;LF=11.61;LM1=11.82;LM2=18.50;LS=13.61;L3=3.5;
@@ -107,8 +105,8 @@ INITIALIZE
    sprintf(mon1optstr,"ARCS_mon1_Edes_%1.3e_Ferminu_%1.2e_nrad_%1.5g_nchans_%g_T0_off_%1.3e_T0_nu_%1.1e%s",Edes,Fermi_nu,nrad,nchans,T0_off,T0_nu,".tdat");
    sprintf(mon2optstr,"ARCS_mon2_Edes_%1.3e_Ferminu_%1.2e_nrad_%1.5g_nchans_%g_T0_off_%1.3e_T0_nu_%1.1e%s",Edes,Fermi_nu,nrad,nchans,T0_off,T0_nu,".tdat");
    sprintf(tfilename,"%s%1.0f%s","tdet_E_",Edes,".dat");
-   sprintf(v_fname,"virt_src_ARCS_E%1.2f_F_nu_%g_T0_nu_%g_%g.dat",Edes,Fermi_nu,T0_nu,run_num); 
-  %}   
+   sprintf(v_fname,"virt_src_ARCS_E%1.2f_F_nu_%g_T0_nu_%g_%g.dat",Edes,Fermi_nu,T0_nu,run_num);
+  %}
 TRACE
 COMPONENT mod=SNS_source(filename="source_sct521_bu_17_1.dat",
                          xwidth=0.1,
@@ -218,7 +216,7 @@ COMPONENT Guide_2_1_5=Guide_channeled(w1=0.05745,h1=0.06417,w2=0.05637,h2=0.0622
             R0=Gu_R,mx=Gu_m,my=Gu_m,Qcx=Gu_Qc,Qcy=Gu_Qc,
             W=Gu_W,nslit=1,d=0.0,alphax=Gu_alpha,alphay=Gu_alpha)
 AT(0,0,11.08340) RELATIVE mod
-             
+
 COMPONENT fermi_chopp=Fermi_chop2a(len=0.10,w=0.06,ymin=-.0325,ymax=.0325,
                                         nu=Fermi_nu,delta=0.0,tc=phasefc1
                                        ,nchan=nchans,bw=0.0005,blader=nrad)
@@ -236,7 +234,7 @@ COMPONENT Guide_3_1_1=Guide_channeled(w1=0.05536,h1=0.06046,w2=0.05473,h2=0.0593
             R0=Gu_R,mx=Gu_m,my=Gu_m,Qcx=Gu_Qc,Qcy=Gu_Qc,
             W=Gu_W,nslit=1,d=0.0,alphax=Gu_alpha,alphay=Gu_alpha)
 AT(0,0,11.84975) RELATIVE mod
-/* Section 4: fixed guide section between Fermi choppers and sample vessel */ 
+/* Section 4: fixed guide section between Fermi choppers and sample vessel */
 COMPONENT Guide_4_1_1=Guide_channeled(w1=0.05468,h1=0.05924,w2=0.05331,h2=0.05674,
             l=0.46275,
             R0=Gu_R,mx=Gu_m,my=Gu_m,Qcx=Gu_Qc,Qcy=Gu_Qc,
@@ -260,9 +258,9 @@ AT(0,0,13.01830) RELATIVE mod*/
 COMPONENT Slits2=Slit(xmin=sxmin,xmax=sxmax,ymin=symin,ymax=symax)
 AT(0,0,13.328) RELATIVE mod
 
-                                         
 
-/* If you split into a front end and a back end,  split it here 
+
+/* If you split into a front end and a back end,  split it here
 COMPONENT vout = Virtual_output(file = v_fname,bufsize=0,type="binary")
   AT (0, 0, LS) RELATIVE mod */
 
@@ -273,12 +271,12 @@ AT (0.0,0.0,0.0) RELATIVE Sample_Arm
 
   COMPONENT  t_mon_detB= Monitor_nD(xwidth=5.9817,yheight=3.2,restore_neutron=1, filename="this",
                           options="mantid banana, theta limits=[-28.0 135.38] bins=389 ,y limits=[-0.550 0.450] bins=128, neutron pixel t, list all neutrons", restore_neutron=1)
-AT (0,0,0.00005) RELATIVE Sample_Arm 
+AT (0,0,0.00005) RELATIVE Sample_Arm
 
 COMPONENT  t_mon_detA= Monitor_nD(xwidth=6.26,yheight=3.2,restore_neutron=1,filename="this",
                           options="mantid banana, theta limits=[-28.0 135.38] bins=389 ,y limits=[-1.600 -0.600] bins=128, neutron pixel min=50000 t, list all neutrons", restore_neutron=1)
 AT (0,0,0.00005) RELATIVE Sample_Arm
- 
+
 COMPONENT  t_mon_detC= Monitor_nD(xwidth=6.626,yheight=3.2,restore_neutron=1,filename="this",
                           options="mantid banana, theta limits=[-28.0 135.38] bins=389, y limits=[0.495 1.495] bins=128, neutron pixel min=100000 t, list all neutrons",  restore_neutron=1)
 AT (0,0,0.00005) RELATIVE Sample_Arm
@@ -287,11 +285,7 @@ AT (0,0,0.00005) RELATIVE Sample_Arm
 
 
 FINALLY
-%{                               
-   free(detoptstr);free(tfilename);free(detsampoptstr);free(detdetoptstr);free(mon1optstr);free(mon2optstr);  
-%}                  
+%{
+   free(detoptstr);free(tfilename);free(detsampoptstr);free(detdetoptstr);free(mon1optstr);free(mon2optstr);
+%}
 END
-
-
-
-
