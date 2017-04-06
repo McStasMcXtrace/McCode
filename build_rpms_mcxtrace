@@ -23,6 +23,7 @@ fi
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
+  ./mkdist mcxtrace-miniconda3 $1 support/rpm/miniconda3/ "" rpm64 "" -- rpm
   cd meta-pkgs/rpm
 
   for controlfile in `ls mcxtrace-*.spec`
