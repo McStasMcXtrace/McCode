@@ -63,7 +63,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
   )
 
 

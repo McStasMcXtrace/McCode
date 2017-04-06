@@ -65,7 +65,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-p
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}, python, qscintilla, PyQt4, qscintilla-python"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
   )
 
 
