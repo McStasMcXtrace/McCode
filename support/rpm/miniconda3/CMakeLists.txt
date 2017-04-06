@@ -46,6 +46,8 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/miniconda3")
   endif()
   execute_process(COMMAND tar xzf miniconda3.tgz
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+  execute_process(COMMAND rm miniconda3.tgz
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif()
 
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/miniconda3"
