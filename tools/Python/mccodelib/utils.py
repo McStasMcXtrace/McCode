@@ -347,6 +347,9 @@ def parse_instr_header(text):
     
     # get tag indices, and deal with cases of missing tags
     lst = [text.find('%I'), text.find('%D'), text.find('%E'), text.find('%P'), text.find('%L')]
+    # existing %I tag with missing %D tag handled like this
+    if lst[0] > lst[1] and lst[2] > lst[1]: 
+        lst[1] = lst[2]
     for i in range(len(lst)-1):
         if lst[i] > lst[i+1]:
             lst[i+1] = lst[i]
