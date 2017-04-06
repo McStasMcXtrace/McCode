@@ -12,7 +12,7 @@ PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
 export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
 export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
-export PATH=$PREFIX/miniconda3/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:$PATH
+export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
 echo
 echo The new shell started here is now set up for running this version of @FLAVOR@:
 echo

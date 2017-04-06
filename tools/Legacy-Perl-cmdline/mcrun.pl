@@ -1211,7 +1211,7 @@ our $scan_info = check_input_params(); # Get variables to scan, if any
 ($out_file, undef) = get_out_file($sim_def, $force_compile && !$multi && $slave eq 0, $mpi, $cflags, @ccopts);
 exit(1) unless $out_file;
 if ($Config{'osname'} eq 'darwin') {
-  my_system("install_name_tool -add_rpath $MCSTAS::sys_dir/../../miniconda3/lib $out_file");
+  my_system("install_name_tool -add_rpath $MCSTAS::sys_dir/miniconda3/lib $out_file");
 }
 
 $instr_info = get_sim_info("$out_file","--format=$MCSTAS::mcstas_config{'PLOTTER'}");

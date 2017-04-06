@@ -6,9 +6,12 @@ echo
 NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
 echo Seems /Applications/$NEWESTAPP is where I should go...
 echo
+MCCODE=`echo $NEWESTAPP | cut -f2 -d/ | cut -f1 -d- | tr '[:upper:]' '[:lower:]'`
+RELEASE=`echo $NEWESTAPP | cut -f2 -d/ | cut -f2 -d- | tr '[:upper:]' '[:lower:]'`
+RELEASE=${RELEASE%%.app}
 
 # Ask user if the app was dragged to /Applications
-osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n Newest available is /Applications/$NEWESTAPP \n\n (Parts of this script could easily fail if this does not look right!) \""
+osascript -e "tell app \"System Events\" to display dialog \"Did you drag the McCode.app bundle to /Applications? \n Newest available is /Applications/$NEWESTAPP \n-i.e. $MCCODE v. $RELEASE\n (Parts of this script could easily fail if this does not look right!) \""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
@@ -76,10 +79,10 @@ osascript -e "tell app \"System Events\" to display dialog \"Allow embedded open
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
-    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
-    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orted
-    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
-    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/miniconda3/bin/orterun
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
 else
     echo "Not allowing access for openmpi binaries..."
 fi
