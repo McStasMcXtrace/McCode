@@ -41,7 +41,7 @@ struct Symbol_table
     struct Symtab_entry *entries; /* Array of pairs of names and values. */
   };
 
-#define MAXSIZE 1000		/* Max. table size. */
+#define MAXSIZE 2000		/* Max. table size. */
 
 /* Position in a symbol table for doing traversals. */
 struct Symtab_position
