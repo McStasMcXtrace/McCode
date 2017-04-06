@@ -11,14 +11,23 @@
 * Written by: K. Lefmann <kim.lefmann@risoe.dk> RISOE, Feb 2004
 *
 * Simple test instrument for the Phonon_simple component
-* 
+*
 * %INSTRUMENT_SITE: Tests_samples
 *
 * %Description
 * Simple test instrument for the Phonon_simple component.
 * Refer to the component documentation for further instructions.
-* 
+*
 * %Example: E=10 -n 1e5 Detector: mon1_I=1.80177e-22
+*
+* %Parameters
+* E:
+* DE:
+* HDIV:
+* VDIV:
+* TT:
+* OM:
+* C:
 *
 * %End
 ******************************************************************************/
@@ -31,15 +40,15 @@ COMPONENT a1 = Progress_bar()
 
 COMPONENT source = Source_div(
 	xwidth=0.0005, yheight=0.0005,
-  focus_aw=HDIV, focus_ah=VDIV, 
+  focus_aw=HDIV, focus_ah=VDIV,
 	E0 = E,
-	dE = DE)		
+	dE = DE)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT sample = Phonon_simple(
-     radius=0.01, yheight=0.02, focus_r=0.001, 
+     radius=0.01, yheight=0.02, focus_r=0.001,
      target_index=+2,
-     sigma_abs=0.17, sigma_inc=0.003, b=0.90, M=208, 
+     sigma_abs=0.17, sigma_inc=0.003, b=0.90, M=208,
      c=C, a=4.95, DW=1.00, T=300)
   AT (0, 0, 1.00) RELATIVE a1 ROTATED (0,OM,0) RELATIVE a1
 
@@ -53,5 +62,3 @@ COMPONENT mon1 = E_monitor(
 
 
 END
-
-

@@ -11,7 +11,6 @@
 * Written by: Mads Bertelsen
 * Date: May 2016
 * Origin: Johns Hopkins University, Baltimore
-* Version: $Revision: 0.1 $
 * %INSTRUMENT_SITE: Union_demos
 *
 * Validation of union network against incoherent scattering component
@@ -20,6 +19,19 @@
 * simple test instrument for sample component.
 *
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+*
+* %Parameters
+* material_data_file:
+* E0:
+* dE:
+* sample_radius:
+* sample_height:
+* pack:
+* sigma_inc:
+* sigma_abs:
+* Vc:
+* geometry_interact:
+* incoherent_fraction
 *
 * %End
 *******************************************************************************/
@@ -104,4 +116,3 @@ COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="4Pi_events.
   AT (0, 0, 0) RELATIVE sample_position
 
 END
-

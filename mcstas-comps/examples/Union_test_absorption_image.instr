@@ -21,6 +21,9 @@
 *
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
+* %Parameters
+* stick_displacement:
+*
 * %End
 *******************************************************************************/
 
@@ -196,7 +199,7 @@ EXTEND
 %{
 	if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
 	if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
-	
+
     // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
 %}
 
@@ -252,7 +255,7 @@ EXTEND
 %{
 	//if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
 	//if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
-	
+
     // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
 %}
 
@@ -267,4 +270,3 @@ COMPONENT screen = PSD_monitor(xwidth=0.4,ymin=-0.15,ymax=0.85,nx=500,ny=1200,fi
 
 
 END
-

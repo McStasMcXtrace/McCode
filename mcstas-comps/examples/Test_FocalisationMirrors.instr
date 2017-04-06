@@ -11,14 +11,12 @@
 * Written by: <a href="mailto:desert@drecam.cea.fr">Sylvain Desert</a>
 * Date: 2007.
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
-* Test instrument for neutron focalisation with a set of supermirrors. 
+* Test instrument for neutron focalisation with a set of supermirrors.
 * No guide / velocity selector
-* One parabolic SM converges the incoming beam to its focal point, then one 
-* elliptic SM (with primary focal point at same location as parabolic SM focal point) 
+* One parabolic SM converges the incoming beam to its focal point, then one
+* elliptic SM (with primary focal point at same location as parabolic SM focal point)
 * images the focal point onto the detector.
 *
 * %Description
@@ -27,23 +25,21 @@
 * %Example: G=1 Detector: monPSD_I=2.50457e-16
 *
 * %Parameters
-* INPUT PARAMETERS:
-* Qmin:       Minimum momentum transfer on the detector [AA^-1]
-* G:          Ratio of the mirror focal length = increase in accepted divergence angle [1]
-* H:          Height of mirrors [m]
-* F:          Parabolic focal [m]
-* DET:        Distance between the two elliptic focal points [m]
-* lambda:     Mean wavelength of neutrons [AA]
-* divergence: source divergence (deg)
-* BeamWidth:  Length of the source to focalize [m]
-* TetaMin:    Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron) [deg]
+* Qmin: [AA^-1]     Minimum momentum transfer on the detector
+* G: [1]            Ratio of the mirror focal length = increase in accepted divergence angle
+* H: [m]            Height of mirrors
+* F: [m]            Parabolic focal
+* DET: [m]          Distance between the two elliptic focal points
+* lambda: [AA]      Mean wavelength of neutrons
+* divergence: [deg] Source divergence
+* BeamWidth: [m]    Length of the source to focalize
+* TetaMin: [deg]    Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron)
 *
 * %Link
-* 
+*
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_FocalisationMirrors(
-  Qmin=.0001,G=1,H=.0001,F=.00066,DET=8.2,lambda=14,divergence=.1,BeamWidth=.05,TetaMin=3)
+DEFINE INSTRUMENT Test_FocalisationMirrors(Qmin=.0001,G=1,H=.0001,F=.00066,DET=8.2,lambda=14,divergence=.1,BeamWidth=.05,TetaMin=3)
 
 DECLARE %{
   float T;       /* (Tan(2*Theta))^2 */
@@ -82,33 +78,33 @@ INITIALIZE %{
   y2b=Ellib*sqrt((1-(x2b+Ellia)*(x2b+Ellia)/Ellia/Ellia));
   y2h=Ellib*sqrt((1-(x2h+Ellia)*(x2h+Ellia)/Ellia/Ellia));
   BS=Qmin*lambda/2/PI*(DET+x2h);
-  rayon1=BS*4*G*F/DET/T; 
+  rayon1=BS*4*G*F/DET/T;
 %}
 
 TRACE
 
-COMPONENT base=Progress_bar() 
+COMPONENT base=Progress_bar()
 AT (0,0,0) ABSOLUTE
 
-COMPONENT source1 = Source_gen(focus_aw = divergence , focus_ah = .0001, lambda0=lambda, 
-			       dlambda=0.01, yheight = H/1000, xwidth = BeamWidth) 
-AT (0,0,0.1) RELATIVE PREVIOUS 
+COMPONENT source1 = Source_gen(focus_aw = divergence , focus_ah = .0001, lambda0=lambda,
+			       dlambda=0.01, yheight = H/1000, xwidth = BeamWidth)
+AT (0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT mirpara = Mirror_Parabolic(reflect="supermirror_m3.rfl", xwidth = BeamWidth, xshift=y1b,
-				  yheight = H*2, focus = F) 
+				  yheight = H*2, focus = F)
 AT (-(y1b+BeamWidth/2), 0,0.1001) RELATIVE base
 
 COMPONENT filter = Slit(xmin = 0, xmax = .1, yheight = 2*H)
 AT ((rayon1+y1h)/(x1h-F)*(x1b-x1h)+y1h,0, x1h-x1b) RELATIVE PREVIOUS
 
-COMPONENT spatialfilter = Slit(radius=rayon1) 
+COMPONENT spatialfilter = Slit(radius=rayon1)
 AT (0, 0, xf) RELATIVE mirpara
 
 COMPONENT mirelli = Mirror_Elliptic(reflect="supermirror_m3.rfl",focus= F*G, interfocus = DET, yheight = H*2,
 				  zmin=-x2b-DET/2, zmax=-x2h-DET/2)
 AT (0, 0, DET/2-G*F+x1h) RELATIVE mirpara
 
-COMPONENT monPSD = PSD_monitor(nx = 100, ny = 1, filename = "det.txt", xwidth = 3*BS, 
+COMPONENT monPSD = PSD_monitor(nx = 100, ny = 1, filename = "det.txt", xwidth = 3*BS,
 			       yheight = .01)
 AT (0, 0, DET/2) RELATIVE mirelli
 
@@ -122,4 +118,3 @@ FINALLY
 %}
 
 END
-

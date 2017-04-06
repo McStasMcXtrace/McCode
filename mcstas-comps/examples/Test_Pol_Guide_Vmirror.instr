@@ -4,13 +4,12 @@
 * Instrument: Test_Pol_Guide_Vmirror
 *
 * %Identification
-* Written by: Peter Christiansen 
+* Written by: Peter Christiansen
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
-* Test Pol_guide_Vmirror. 
+* Test Pol_guide_Vmirror.
 *
 * %Description
 * A simple description of the V4 instrument in Berlin as explained in:
@@ -19,25 +18,20 @@
 * %Example: polariserIn=1 Detector: psdPolGuide_I=3.95407e+12
 *
 * %Parameters
+* polariserIn:
 *
 * %Link
 *
 * %End
 ******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_Pol_Guide_Vmirror(int polariserIn=1)
 
-/* The DECLARE section allows us to declare variables or  small      */
-/* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
 #define GUIDEREF 0.99
 #define MIRRORREF 0.99
   %}
 
-/* The INITIALIZE section is executed when the simulation starts     */
-/* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
   %}
@@ -56,18 +50,18 @@ TRACE
 COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 
-COMPONENT source = 
+COMPONENT source =
 Source_simple(radius = 0.05, dist = 5.0, focus_xw = 0.03, focus_yh = 0.05, lambda0 = 11,
 	      dlambda = 10, flux = 1e14)
      AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT lamStart = 
-L_monitor(nL = 30, filename = "lambdaStart.dat", 
-	  xwidth = 0.10, yheight = 0.10, 
+COMPONENT lamStart =
+L_monitor(nL = 30, filename = "lambdaStart.dat",
+	  xwidth = 0.10, yheight = 0.10,
 	  Lmin = 1, Lmax = 21)
      AT (0, 0, 4.8) RELATIVE Origin
 
-COMPONENT psdStart = 
+COMPONENT psdStart =
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdStart.dat")
      AT (0, 0, 4.8) RELATIVE Origin
@@ -82,9 +76,9 @@ PSD_monitor(xwidth=0.10, yheight=0.10,
 // m_up = 3.5/1.73 ~ 2
 // m_down = 0.7/1.73 ~ 0.4
 //                         R0      Qc       alpha  m     W
-COMPONENT POLguidevmirror = 
-Pol_guide_vmirror(xwidth = 0.03, yheight = 0.05, 
-		  length = 1.8, debug=0, 		  
+COMPONENT POLguidevmirror =
+Pol_guide_vmirror(xwidth = 0.03, yheight = 0.05,
+		  length = 1.8, debug=0,
 		  rPar    ={GUIDEREF,  1.0*0.0219, 6.07, 1, 0.003},
 		  rUpPar  ={MIRRORREF, 2.0*0.0219, 6.07, 1, 0.003},
 		  rDownPar={MIRRORREF, 0.4*0.0219, 6.07, 1, 0.003})
@@ -96,7 +90,7 @@ Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
      WHEN (polariserIn<=0) AT (0, 0, 5.0) RELATIVE Origin
 
 COMPONENT armGuide = Arm()
-     AT (0, 0, 6.8) 
+     AT (0, 0, 6.8)
      RELATIVE Origin
 
 COMPONENT Guide =
@@ -105,16 +99,16 @@ Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
      AT (0, 0, 0) RELATIVE armGuide
 
 COMPONENT armlambdaStop = Arm()
-     AT (0, 0, 11.0) 
+     AT (0, 0, 11.0)
      RELATIVE armGuide
 
-COMPONENT lamStopPolGuide = 
+COMPONENT lamStopPolGuide =
 L_monitor(nL = 20, filename = "lambdaStopPolGuide.dat",
-	  xwidth = 0.10, yheight = 0.10, 
+	  xwidth = 0.10, yheight = 0.10,
 	  Lmin = 3, Lmax = 19)
      AT (0, 0, 0.05) RELATIVE armlambdaStop
 
-COMPONENT psdPolGuide = 
+COMPONENT psdPolGuide =
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdPolGuide.dat")
      AT (0, 0, 0.05) RELATIVE armlambdaStop

@@ -7,8 +7,6 @@
 * Written by: Thorwald van Vuure
 * Date: Thorwald van Vuure
 * Origin: ILL
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test for PSD_Detector component
@@ -20,7 +18,7 @@
 * %Example: rot=0 Detector: mydet_I=3.57344e-18
 *
 * %Parameters
-* rot: rotation angle of detector (deg)
+* rot: [deg] rotation angle of detector
 *
 * %Link
 * The PSD_Detector component
@@ -44,7 +42,7 @@ COMPONENT det_pos=Arm()
 AT (0, 0, 0.1) RELATIVE Origin
 
 COMPONENT mydet = PSD_Detector(
-    filename = "test_out.dat", xwidth = 0.01, yheight = .01, zdepth = 3.2e-2, 
+    filename = "test_out.dat", xwidth = 0.01, yheight = .01, zdepth = 3.2e-2,
     dc=2.6e-2,
     PressureConv = 5, PressureStop = 1,
     verbose = 1, LensOn=1, nx=64, ny=32,
@@ -55,4 +53,3 @@ COMPONENT mydet = PSD_Detector(
   ROTATED (0,rot,0) RELATIVE Origin
 
 END
-

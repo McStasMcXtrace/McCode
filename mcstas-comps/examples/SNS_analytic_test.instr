@@ -22,6 +22,9 @@
 *
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
+* %Parameters
+* filename:
+*
 * %Link
 * Written by G. Granroth
 * SNS_source component
@@ -50,4 +53,3 @@ COMPONENT det=Monitor_nD(
   options=" square x bins 100 limits=[-0.05 0.05]; y bins 100 limits=[-0.12 0.12]")
 AT (0,0,1.0000000000001) RELATIVE mod
 END
-

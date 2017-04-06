@@ -19,10 +19,10 @@
 * %Example: m=1 Detector: GuideOut_Phic_I=1.16e10
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip:        (1)  m-value of in-pile guide coating
-* lambda:     (AA) central wavelength
-* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
+* m:          [1] m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip:        [1]  m-value of in-pile guide coating
+* lambda:     [AA] central wavelength
+* dlambda:    [AA] wavelength half width. Use e.g. 0.8*lambda for white beam.
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN6">IN6 TOF</a> at the ILL
@@ -394,5 +394,3 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 /* The END token marks the instrument definition end */
 END
-
-

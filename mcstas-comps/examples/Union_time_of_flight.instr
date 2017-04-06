@@ -21,6 +21,9 @@
 *
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
+* %Parameters
+* stick_displacement:
+*
 * %End
 *******************************************************************************/
 
@@ -333,4 +336,3 @@ ROTATED (0,0,0) RELATIVE beam_center
 
 
 END
-

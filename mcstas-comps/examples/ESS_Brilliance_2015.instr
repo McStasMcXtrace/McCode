@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
 * Date: 20130425
 * Origin: DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
 * This instrument produces the ESS 2014 updated brilliance, including the "pancake" moderator option.
@@ -18,13 +16,20 @@
 *
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths.
 *
-* Note that to reproduce the curves listed in Troels Schoenfeldt's paper on the topic, you need to look at the "collimated" monitors that 
+* Note that to reproduce the curves listed in Troels Schoenfeldt's paper on the topic, you need to look at the "collimated" monitors that
 * take neutrons from only part of the moderator surface.
 *
-* Note also that the 2014 version of the moderator spectra emits neutrons from a FLAT surface through the component origo, positioned tangentially to 
+* Note also that the 2014 version of the moderator spectra emits neutrons from a FLAT surface through the component origo, positioned tangentially to
 * the cold moderator "bucket". This means that you may need to shift the position of the moderator along z, when introducing it to your existing instruments.
 *
 * %Parameters
+* frac:
+* power:
+* Yheight:
+* np:
+* lambdamin:
+* lambdamax:
+* ANGLE:
 *
 * %Link
 * A reference/HTML link for more information
@@ -148,12 +153,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-

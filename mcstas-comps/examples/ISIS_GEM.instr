@@ -26,6 +26,12 @@
 *
 * %Example: sample="Y2O3.laz" Detector: monzns_I=52.689
 *
+* %Parameters:
+* l_min:
+* l_max:
+* dist:
+* sample:
+*
 * %Link
 * The <a href="http://essworkshop.org">ESS Instrument workshops</a> website.
 * %Link

@@ -9,7 +9,7 @@
 * Origin: ILL
 * Release: McStas CVS-080208
 * Version: $Revision$
-* Modified by: EF, 
+* Modified by: EF,
 * %INSTRUMENT_SITE: Templates
 *
 * A simple Laue diffractometer
@@ -21,12 +21,24 @@
 * %Example: templateLaue Detector: det_I=8.39706e+06
 *
 * %Parameters
+* delta_d_d:
+* mosaic:
+* lam0:
+* dlam:
+* radius:
+* height:
+* x_rotation_geometry:
+* y_rotation_geometry:
+* x_rotation_geometry_ref:
+* y_rotation_geometry_ref:
+* x_rotation_process:
+* y_rotation_process:
+* z_rotation_process:
+* geometry_interact:
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT templateLaue(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , radius = 0.01, height=0.01,
+DEFINE INSTRUMENT templateLaue(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, radius = 0.01, height=0.01,
    x_rotation_geometry=0, y_rotation_geometry=0,
    x_rotation_geometry_ref=0, y_rotation_geometry_ref=0,
    x_rotation_process=0, y_rotation_process=0, z_rotation_process=0,
@@ -70,7 +82,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_simple(
-  radius=0.02, focus_xw=0.01, focus_yh=0.01, 
+  radius=0.02, focus_xw=0.01, focus_yh=0.01,
   lambda0=lam0, dlambda=dlam, flux=1e12)
 AT (0,0,0) ABSOLUTE
 
@@ -109,4 +121,3 @@ WHEN (scattered_flag_instr==0)
 AT (0,0,0.5) RELATIVE slit
 
 END
-
