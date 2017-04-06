@@ -401,10 +401,6 @@ def parse_instr_header(text):
         if m:
             last = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(last)
-        # enable multi-line docstring parsing
-        elif last:
-            last = (last[0], last[1], last[2] + ' ' + l.strip())
-            info.params_docs[len(info.params_docs)-1] = last
     return info
 
 def read_define_instr(file):
