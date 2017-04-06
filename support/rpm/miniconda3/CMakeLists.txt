@@ -39,6 +39,16 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 include(CPack)
 
-# Include miniconda3 
-installLib("${PROJECT_SOURCE_DIR}/miniconda3")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/miniconda3")
+  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/miniconda3.tgz")
+    execute_process(COMMAND wget http://support.mccode.org/rpm/miniconda3.tgz
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+  endif()
+  execute_process(COMMAND tar xzf miniconda3.tgz
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+endif()
+
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/miniconda3"
+  DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
+  USE_SOURCE_PERMISSIONS)
 
