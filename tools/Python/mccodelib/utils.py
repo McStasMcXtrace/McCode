@@ -383,15 +383,21 @@ def parse_instr_header(text):
     if m5: info.short_descr = m5.group(1).strip()
     
     # description
-    info.description = bites[1]
+    descr = bites[1]
+    if re.match('\%Description', descr):
+        descr = descr.replace('%Description', '').strip()
+    elif re.match('\%D', descr):
+        descr = descr.replace('%D', '').strip()
+    info.description = descr
     
     # test / example
-    info.test = bites[2]
+    tst = bites[2]
+    info.test = tst
     
     # params
     last = None
     for l in bites[3].splitlines():
-        m = m = re.match('(\w+):[ \t]*\[(\w+)\](.*)', l)
+        m = m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%]+)\](.*)', l)
         if m:
             last = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(last)

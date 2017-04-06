@@ -136,17 +136,9 @@ def write_file(filename, text):
     f.close()
 
 def test():
-    text = open('/home/jaga/test/simulations/ISIS_SANS2d.instr').read()
-    #print(text)
-    
-    #ip = InstrParser('/home/jaga/test/simulations/ILL_IN5.instr')
-    #ip = InstrParser('/home/jaga/test/simulations/ILL_IN5_mod01.instr')
-    ip = InstrParser('/usr/share/mcstas/2.3/examples/template_header_simple.instr')
-    #ip = InstrParser('/usr/share/mcstas/2.3/examples/Test_Sample_nxs_diffraction.instr')
-    
-    ip.parse()
-    
-    quit()
+    ip = InstrParser('/home/jaga/source/McCode/mcstas-comps/examples/Test_Magnetic_Rotation.instr')
+    print(ip.parse())
+    #quit()
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -162,7 +154,7 @@ def main(args):
     # write debug files with a header property each 
     rows = []
     files = []
-    for f in lib_instr_files:
+    for f in local_instr_files:
         try:
             print("parsing... %s" % f)
             info = InstrParser(f).parse()
@@ -174,11 +166,14 @@ def main(args):
     print("parsed instr files: %s" % str(len(lib_instr_files)))
         
     if True:
-        text = '\n'.join(['%4d: %s' % (i, files[i]) for i in range(len(files))])
+        text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
         write_file('files', text)
         
         for i in range(utils.InstrHeaderInfo.__len__()-2):
             text = '\n'.join(['%4d: %s' % (j, rows[j][i]) for j in range(len(rows))])
+            write_file(utils.InstrHeaderInfo.colname(i), text)
+        for i in range(8, 10):
+            text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(['%-20s, %-10s, %s' % (str(k[0]), str(k[1]), str(k[2])) for k in rows[j][i]])) for j in range(len(rows))])
             write_file(utils.InstrHeaderInfo.colname(i), text)
 
 
