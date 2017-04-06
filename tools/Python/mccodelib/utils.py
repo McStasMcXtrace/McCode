@@ -347,9 +347,15 @@ def parse_instr_header(text):
     
     # get tag indices, and deal with cases of missing tags
     lst = [text.find('%I'), text.find('%D'), text.find('%E'), text.find('%P'), text.find('%L')]
+    # missing %E tag
+    if lst[2] == -1: 
+        lst[2] = lst[3]
     # existing %I tag with missing %D tag handled like this
     if lst[0] > lst[1] and lst[2] > lst[1]: 
         lst[1] = lst[2]
+    # if %E is actually %End:
+    if lst[2] > lst[3] and lst[3] != -1:
+        lst[2] = lst[3]
     for i in range(len(lst)-1):
         if lst[i] > lst[i+1]:
             lst[i+1] = lst[i]
@@ -357,7 +363,7 @@ def parse_instr_header(text):
         lst[4] = len(text)
     
     # cut header into some sections
-    bites = [text[lst[i]+3:lst[i+1]].strip() for i in range(len(lst)-1)]
+    bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
     info = InstrHeaderInfo()
     
     # get author, date, origin, revision
