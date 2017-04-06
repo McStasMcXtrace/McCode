@@ -29,14 +29,13 @@
 * %Example:  C1=30 TT=0 Detector: sng_I=2e-5
 *
 * %Parameters
-* INPUT PARAMETERS:
-* PHM: (deg) Monochromator arm angle, aka A1
-* TTM: (deg) Monochromator take-off angle, aka A2
-* TT:  (deg) Take-off angle at the sample position, aka A4
-* C1:  (min) Collimator 1 aperture (mono-sample arm)
-* OMC1:(deg) Tilt angle of the Collimator 1
-* C2:  (min) Collimator 2 aperture (sample-ana arm)
-* C3:  (min) Collimator 3 aperture (ana-detector arm)
+* PHM: [deg] Monochromator arm angle, aka A1
+* TTM: [deg] Monochromator take-off angle, aka A2
+* TT:  [deg] Take-off angle at the sample position, aka A4
+* C1:  [min] Collimator 1 aperture (mono-sample arm)
+* OMC1:[deg] Tilt angle of the Collimator 1
+* C2:  [min] Collimator 2 aperture (sample-ana arm)
+* C3:  [min] Collimator 3 aperture (ana-detector arm)
 *
 * %Link
 * The McStas User manual
@@ -44,7 +43,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT TAS1_Diff_Slit(PHM=-37.077,TTM=-74,TT=33.52,C1=30,OMC1=5.5,C2=28,C3=67)
+DEFINE INSTRUMENT TAS1_Diff_Slit(PHM=-37.077, TTM=-74, TT=33.52, C1=30, OMC1=5.5, C2=28, C3=67)
 
 DECLARE
 %{

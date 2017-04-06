@@ -18,13 +18,13 @@
 * a set of in-solution SANS samples.
 *
 * %Parameters
-* DistSrcPin1 : [m]	Distance to first pinhole from source.
-* DistSrcPin2 : [m] 	Distance to second pinhole - used for focussing rays.
-* DistPinSamp : [m]	Collimation length.
-* DistSampDet : [m]	Sample-detector-distance.
-* DetRadius   : [m]	Radius of the circular detector.
-* Lambda      : [AA] 	Wavelength of the rays emitted from source.
-* DLambda     : [AA]	Relative deviation of wavelength of the rays emitted from source.
+* DistSrcPin1: [m] Distance to first pinhole from source.
+* DistSrcPin2: [m] Distance to second pinhole - used for focussing rays.
+* DistPinSamp: [m] Collimation length.
+* DistSampDet: [m] Sample-detector-distance.
+* DetRadius: [m] Radius of the circular detector.
+* Lambda: [AA] Wavelength of the rays emitted from source.
+* DLambda: [AA]	Relative deviation of wavelength of the rays emitted from source.
 *
 * %End
 *******************************************************************************/
@@ -57,10 +57,10 @@ AT (0, 0, 0) ABSOLUTE
 
 COMPONENT Source = Source_simple(
 	radius = 0.02,
-	dist = DistSrcPin2, 
-	yheight = 0.01, 
+	dist = DistSrcPin2,
+	yheight = 0.01,
 	xwidth = 0.01,
-	lambda0 = Lambda, 
+	lambda0 = Lambda,
 	dlambda = DLambda * Lambda)
   AT (0, 0, 0) RELATIVE Origin
 
@@ -76,7 +76,7 @@ COMPONENT SecondPinhole = Slit(
 
 /*COMPONENT Sample = SANSSpheres(
 	xwidth = 0.1,
-	yheight = 0.1, 
+	yheight = 0.1,
 	zdepth = 0.1,
 	R = 100.0,
 	SampleToDetectorDistance = DistSampDet,
@@ -86,11 +86,11 @@ AT (0, 0, DistSampDet) RELATIVE SecondPinhole*/
 
 /*COMPONENT Sample = SANSShells(
 	xwidth = 0.1,
-	yheight = 0.1, 
+	yheight = 0.1,
 	zdepth = 0.1,
 	SampleToDetectorDistance = DistSampDet,
 	DetectorRadius = DetRadius,
-	R = 50.0, 
+	R = 50.0,
 	Thickness = 20.0)
 AT (0, 0, DistSampDet) RELATIVE SecondPinhole*/
 
@@ -198,8 +198,8 @@ AT (0, 0, DistSampDet - 0.000001) RELATIVE Sample
 
 COMPONENT Monitor = PSD_monitor(
 	filename = "PSDMonitor",
-	//xwidth = 2.0 * DetRadius / sqrt(2.0), 
-	xwidth = 2.0 * DetRadius, 
+	//xwidth = 2.0 * DetRadius / sqrt(2.0),
+	xwidth = 2.0 * DetRadius,
 	//yheight = 2.0 * DetRadius / sqrt(2.0),
 	yheight = 2.0 * DetRadius,
 	nx = 200,
@@ -222,6 +222,3 @@ FINALLY
 %}
 
 END
-
-
-

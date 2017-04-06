@@ -21,6 +21,8 @@
 * %Example: guideLength=10 Detector: psdGuide_I=0.0022
 *
 * %Parameters
+* guideLength:
+* guideRadius:
 *
 * %Link
 * A reference/HTML link for more information
@@ -29,8 +31,7 @@
 ******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Pol_Bender_Vs_Guide_Curved(guideLength=10.0,
-						  guideRadius=100.0)
+DEFINE INSTRUMENT Test_Pol_Bender_Vs_Guide_Curved(guideLength=10.0, guideRadius=100.0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

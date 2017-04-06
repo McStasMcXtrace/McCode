@@ -14,10 +14,18 @@
 * This instrument produces the ESS TDR brilliance.
 *
 * %Description
-* This instrument produces the ESS TDR brilliances. 
+* This instrument produces the ESS TDR brilliances.
 *
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths
 *
+* %Parameters
+* frac:
+* power:
+* Yheight:
+* np:
+* ISleft:
+* lambdamin:
+* lambdamax:
 *
 * %Link
 * A reference/HTML link for more information
@@ -113,12 +121,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-

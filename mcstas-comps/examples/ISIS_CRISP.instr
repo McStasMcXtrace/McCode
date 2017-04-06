@@ -20,7 +20,7 @@
 * %Description
 * This model of the ISIS CRISP reflectometer demonstrates the use of the Multilayer_Sample component.
 *
-* The algorithm of the component requires complex numbers, facilitated by the 
+* The algorithm of the component requires complex numbers, facilitated by the
 * <a href="http://www.gnu.org/software/gsl/">GNU Scientific Library (GSL)</a>. To link
 * your the instrument with an installed GSL, you should use MCSTAS_CFLAGS like
 *
@@ -29,7 +29,6 @@
 * Example: -lgsl -lgslcblas FRAC=0.1 Detector: PSDdet1_I=43.7829
 *
 * %Parameters
-* INPUT PARAMETERS:
 * glen: Length of the elliptical guides [m]
 * flen: Focal-length of elliptical guides [m]
 * w1: Entry-width of elliptical guides [m]
@@ -45,7 +44,7 @@ DEFINE INSTRUMENT ISIS_CRISP(glen=1.4,flen=0.4,w1=0.05,vm=3.0, FRAC=0)
 
 DECLARE
 %{
-  double glen,flen,spos,tend,t15,fp1; 
+  double glen,flen,spos,tend,t15,fp1;
   double linw,loutw,l,u1,u2,div1,b_ell_q,w1,w12,a_ell_q,lbw,w2;
 %}
 
@@ -63,7 +62,7 @@ INITIALIZE
   u2 = sqrt((w12*w12) + ((l+loutw)*(l+loutw)));
   a_ell_q = ((u1 + u2)/2)*((u1 + u2)/2);
   b_ell_q = a_ell_q - ((lbw/2)*(lbw/2));
-  
+
 /* calculate width of guide exit (w2) */
   div1 = ((lbw/2-loutw)*(lbw/2-loutw))/a_ell_q;
   w2 = sqrt(b_ell_q*(1-div1));
@@ -88,17 +87,17 @@ COMPONENT isis_source = ISIS_moderator(
 COMPONENT defslit1 = Slit(
     xmin = -0.0345, xmax = 0.0345, ymin = -0.01731,
     ymax = 0.01731)
-  AT (0.0, -0.09829, 3.7537) ABSOLUTE 
+  AT (0.0, -0.09829, 3.7537) ABSOLUTE
 
 COMPONENT defslit2 = Slit(
     xmin = -0.0289, xmax = 0.0289, ymin = -0.0123,
     ymax = 0.0123)
-  AT (0.0, -0.15976, 6.101) ABSOLUTE 
+  AT (0.0, -0.15976, 6.101) ABSOLUTE
 
 COMPONENT coarseslit1 = Slit(
     xmin = -0.03, xmax = 0.03, ymin = -0.1,
     ymax = 0.1)
-  AT (0.0, -0.1757, 6.7096) ABSOLUTE 
+  AT (0.0, -0.1757, 6.7096) ABSOLUTE
 
 COMPONENT coarseslit2 = Slit(
     xmin = -0.1, xmax = 0.1, ymin = -0.01,
@@ -114,7 +113,7 @@ COMPONENT lmon1 = L_monitor(
 COMPONENT PSDmon1 = PSD_monitor(
     nx = 100, ny = 100, filename = "PSD1.dat",
     xmin = -0.05, xmax = 0.05, ymin = -0.01, ymax = 0.01)
-  AT (0.0, -0.1833, 7.01) ABSOLUTE 
+  AT (0.0, -0.1833, 7.01) ABSOLUTE
 
 COMPONENT slit1 = Slit(
     xwidth=0.04, yheight=0.004)
@@ -123,7 +122,7 @@ COMPONENT slit1 = Slit(
 COMPONENT PSDmons1 = PSD_monitor(
     nx = 100, ny = 100, filename = "PSDs1.dat",
     xmin = -0.05, xmax = 0.05, ymin = -0.01, ymax = 0.01)
-  AT (0.0, 7.27*t15, 7.27) ABSOLUTE 
+  AT (0.0, 7.27*t15, 7.27) ABSOLUTE
 
 COMPONENT eguide1 = Guide_tapering(
     segno = 10, w1 = w1, h1 = 0.1, l = glen, option="elliptical",
@@ -167,7 +166,6 @@ COMPONENT lmon3 = L_monitor(
 COMPONENT PSDdet1 = PSD_monitor(
     nx = 100, ny = 100, filename = "PSD3.dat",
     xmin = -0.05, xmax = 0.05, ymin = -0.05, ymax = 0.05)
-  AT (0.0, 12.111*t15-2.0*(12.111-spos)*t15, 12.111) ABSOLUTE 
+  AT (0.0, 12.111*t15-2.0*(12.111-spos)*t15, 12.111) ABSOLUTE
 
 END
-

@@ -37,7 +37,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Sources(int source=0,Lmin=1,Lmax=11)
+DEFINE INSTRUMENT Test_Sources(int source=0, Lmin=1, Lmax=11)
 
 DECLARE
 %{

@@ -27,19 +27,13 @@
 * %Example: Emin=443 Detector: cyl_I=235837
 *
 * %Parameters
-* INPUT PARAMETERS:
 * Emin  : lowest energy sampled      [meV]
 * Emax  : highest energy sampled     [meV]
 * nu_chop : frequency of chopper rotation [Hz]
-* type : chopper package selected [sloppy chopper = 1, B chopper = 2]
+* type : chopper package - sloppy chopper = 1, B chopper = 2
 *
 * %End
-*******************************************************************************/
-
-
-
-
-
+********************************************************************************
 DEFINE INSTRUMENT ISIS_HET(Emin=443.0,Emax=470.0,nu_chop=600.0,int type=2)
 DECLARE
 %{
@@ -121,9 +115,3 @@ COMPONENT cyl = Monitor_nD(
   AT (0, 0, 0) RELATIVE a2
 
 END
-
-
-
-
-
-

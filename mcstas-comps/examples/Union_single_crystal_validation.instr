@@ -9,7 +9,7 @@
 * Origin: ILL
 * Release: McStas CVS-080208
 * Version: $Revision$
-* Modified by: EF, 
+* Modified by: EF,
 * %INSTRUMENT_SITE: Templates
 *
 * A simple Laue diffractometer
@@ -21,6 +21,29 @@
 * %Example: templateLaue Detector: det_I=8.39706e+06
 *
 * %Parameters
+* comp_select:
+* string material_data_file:
+* sigma_inc:
+* my_absorption_union:
+* delta_d_d:
+* mosaic:
+* lam0:
+* dlam:
+* xwidth:
+* yheight:
+* zdepth:
+* unit_cell_volume:
+* sigma_abs_sc:
+* sigma_inc:
+* x_rotation_geometry:
+* y_rotation_geometry:
+* x_rotation_geometry_ref:
+* y_rotation_geometry_ref:
+* x_rotation_process:
+* y_rotation_process:
+* geometry_interact:
+* PG:
+* powder:
 *
 * %End
 *******************************************************************************/
@@ -58,7 +81,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_simple(
-  radius=0.02, focus_xw=0.01, focus_yh=0.01, 
+  radius=0.02, focus_xw=0.01, focus_yh=0.01,
   lambda0=lam0, dlambda=dlam, flux=1e12)
 AT (0,0,0) ABSOLUTE
 
@@ -116,4 +139,3 @@ WHEN (scattered_flag_instr==0)
 AT (0,0,0.5) RELATIVE slit
 
 END
-

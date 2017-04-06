@@ -23,18 +23,17 @@
 * It works at 0.9 and 2.4AA without polarization and at 1.4AA with incident polarization
 * (optional FeCo supermirror) and polarization analysis (P//z).
 *
-* Monochromators: 
+* Monochromators:
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
 * Cu       220 DM=1.278 AA
 *
 * %Parameters
-* INPUT PARAMETERS:
-*   lambda   :        [Angs] wavelength
-*   phi      :        [Deg]  sample rotation along the vertical axis
-*   gamma    :        [Deg]  in plane detector position
-*   nu       :        [Deg]  out of plane detector position
-*   monok    :        [1]    monochromator to use (0: PG, 1: Cu, 5: test mode)
-*   samp_f   :        [str]  LAU file describing sample
+* lambda: [Angs] wavelength
+* phi: [Deg] sample rotation along the vertical axis
+* gamma: [Deg] in plane detector position
+* nu: [Deg] out of plane detector position
+* monok: [1] monochromator to use (0: PG, 1: Cu, 5: test mode)
+* samp_f: [str] LAU file describing sample
 *
 * Example of a C60 200 rocking curve scan:
 *    mcrun LLB_6T2.instr --mpi=NUM_CORES -N31 lambda=2.4 phi=8.37,11.37 gamma=19.74 nu=0 monok=0 samp_f="C60.lau" -n 1e8 -d C60_200
@@ -68,7 +67,7 @@ INITIALIZE
     sT3=20. ; 	sI3=0.*0.15*0.697674e+13;
     s_w=0.1;
     s_h=0.15;
-    
+
     /****************************************************************
 	*
 	*  SET Distances and dimensions
@@ -76,26 +75,26 @@ INITIALIZE
 	****************************************************************/
     // Thermal moderator surface to barillet
     f_dist = 2.91;
-        
+
     // Barillet in full opening configuration
     b_length = 0.695;
 	b_in_r   = 0.10/2.0;
 	b_out_r  = 0.12/2.0;
-	
+
     // Barillet to Monochromator
     b2mon    = 0.75;
-    
+
     // Monochromator to preliminary collimation
     mon2col = 0.80;
-    
+
     // Preliminary collimation parameters
     c_length = 0.30;
     c_w      = 0.02;
     c_h      = 0.05;
-    
+
     // Preliminary collimation to sample position
     col2samp = 1.2;
-    
+
     /****************************************************************
 	*
 	*  SET Monochromators parameters
@@ -120,8 +119,8 @@ INITIALIZE
     	monoc_ang=asin(lambda/(2*monoc_d))*180./PI;
     	dlambda0=lambda/5.;
     }
-	
-    
+
+
     /****************************************************************
 	*
 	*  DISPLAY Errors
@@ -129,18 +128,18 @@ INITIALIZE
 	****************************************************************/
     fprintf(stderr,"Monoc_ang=%3.2f\n",monoc_ang);
     if((lambda>=2*monoc_d) || (lambda<0)) exit(printf("Lambda (%g [AA]) out of range (0 -> 6.7 [AA]).\n", lambda));
-    
+
     // Motors boundaries check
     if((nu>26) || (nu<-5)) exit(printf("nu (%g [Deg]) out of range (-5 -> 26 deg.).\n", nu));
     if((gamma>140) || (gamma<-28)) exit(printf("gamma (%g [Deg]) out of range (-28 -> 140 deg.).\n", gamma));
-    
+
     /****************************************************************
 	*
 	*  SET Misceanellous parameters
 	*
 	****************************************************************/
     // radius of single counter collimator
-    coll_det=0.01;  
+    coll_det=0.01;
 %}
 
 TRACE
@@ -273,7 +272,7 @@ SPLIT 100 COMPONENT Sample=Single_crystal(
         reflections=samp_f,
         recip_cell=0,order=1,
         xwidth=0.01, yheight=0.01, zdepth=0.01,
-        // Remove/comment the following for automatic 
+        // Remove/comment the following for automatic
         // configuration through LAU file
         delta_d_d=1e-6, mosaic = 15,
         ax =  0.0, ay =  0.0, az = 14.0,

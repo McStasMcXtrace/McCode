@@ -1,6 +1,6 @@
 /*******************************************************************************
 * Instrument: FZJ_KWS2_Lens
-* 
+*
 * %Identification
 * Written by: Henrich Frielinghaus
 * Date: June 2010
@@ -18,13 +18,12 @@
 * %Example: lambda=20.15 Detector: detector_I=3.4633E+01
 *
 * %Parameters
-* INPUT PARAMETERS:
 * lambda: Mean wavelength of neutrons                 [AA]
 * dlambda:Wavelength spread of neutrons (fwhm)        [AA]
 * FLUX:   Source flux normalization constant          [1]
 * NGblen: Defining source radius (is \sqrt(2)*NGblen) [1]
 * Cblen:  Dimension of rectangular guide              [m]
-* Clen:   Distance source-guide                       [m] 
+* Clen:   Distance source-guide                       [m]
 * Dlen:   Placement of final detector                 [m]
 * Rlense: Radius of lens                              [m]
 *
@@ -42,7 +41,7 @@ TRACE
 COMPONENT origin = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  mcgravitation = 0;  
+  mcgravitation = 0;
 %}
 
 COMPONENT source = Source_simple(

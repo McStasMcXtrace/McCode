@@ -24,8 +24,7 @@
 * %Example: ROT=0 Detector: PSD_4pi_I=7.97023e-05
 *
 * %Parameters
-* INPUT PARAMETERS:
-* ROT: (deg) Rotation angle of the PSD monitor
+* ROT: [deg] Rotation angle of the PSD monitor
 *
 * %Link
 * The McStas User manual
@@ -33,27 +32,15 @@
 *
 * %End
 *******************************************************************************/
-/* The line below defines the 'name' of our instrument */
-/* Here, we have a single input parameter, ROT         */
 DEFINE INSTRUMENT Samples_vanadium(ROT=0)
 
-/* The DECLARE section allows us to declare variables  */
-/* in c syntax. Here, coll_div (collimator divergence) */
-/* is set to 60 degrees...                             */
 DECLARE
 %{
   double coll_div = 60;
 %}
 
-/* Here comes the TRACE section, where the actual      */
-/* instrument is defined....                           */
 TRACE
 
-/* The Arm() class component defines reference points  */
-/* in 3D space. Every component instance must have a   */
-/* unique name. Here, arm is used. This Arm() component*/
-/* is set to define the origin of our global coordinate*/
-/* system (AT (0,0,0) ABSOLUTE)                        */
 COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 
 /* Next, we need some neutrons. Let's place a neutron  */

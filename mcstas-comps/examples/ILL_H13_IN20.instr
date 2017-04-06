@@ -45,7 +45,6 @@
 * %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=4.83869e+08
 *
 * %Parameters
-* INPUT PARAMETERS:
 * KI:   Incoming neutron wavevector [Angs-1]
 * KF:   Outgoing neutron wavevector [Angs-1]
 * EI:   Incoming neutron energy [meV]
@@ -109,8 +108,8 @@
 * NVA:  Number of vertical slabs composing the analyzer [1]
 * NHA:  Number of horizontal slabs composing the analyzer [1]
 *
-* Sqw_coh:   sample coherent S(q,w) file name. Use LAZ/LAU or SQW file [str] 
-* Sqw_inc:   sample incoherent S(q,w) file name. Use NULL to scatter incoherently [str] 
+* Sqw_coh:   sample coherent S(q,w) file name. Use LAZ/LAU or SQW file [str]
+* Sqw_inc:   sample incoherent S(q,w) file name. Use NULL to scatter incoherently [str]
 * radius:    outer radius of sample hollow cylinder/sphere [m]
 * height:    sample height. Use 0 for a spherical shape [m]
 * thickness: thickness of sample hollow cylinder. 0 for bulk. [m]
