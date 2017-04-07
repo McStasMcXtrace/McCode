@@ -395,12 +395,12 @@ def parse_instr_header(text):
     info.test = tst
     
     # params
-    last = None
+    par_doc = None
     for l in bites[3].splitlines():
-        m = m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%]+)\](.*)', l)
+        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^]+)\](.*)', l)
         if m:
-            last = (m.group(1), m.group(2), m.group(3).strip())
-            info.params_docs.append(last)
+            par_doc = (m.group(1), m.group(2), m.group(3).strip())
+            info.params_docs.append(par_doc)
     return info
 
 def read_define_instr(file):

@@ -140,6 +140,88 @@ def test():
     print(ip.parse())
     #quit()
 
+import re
+def repair(args):
+    local_instr_files, local_comp_files = utils.get_instr_comp_files(args.localdir)
+    
+    files = []
+    rows = []
+    for filename in local_instr_files:
+        try:
+            print("parsing... %s" % filename)
+            info = InstrParser(filename).parse()
+            files.append(filename)
+            rows.append(info)
+        except:
+            print("failed parsing instr file: %s" % filename)
+            quit()
+    
+    for filename in local_instr_files:
+        f = open(filename)
+        header = utils.read_header(f)
+        define = utils.read_define_instr(f)
+        
+        print('*****')
+        print(filename)
+        print()
+        
+        seen_P = False
+        par_docs = []
+        idxs = []
+        lines = header.splitlines()
+        for i in range(len(lines)):
+            l = lines[i]
+            
+            # fast-forward to %P / %Parameters tag
+            if not seen_P and re.match('\* \%Parameters', l):
+                seen_P = True
+            elif not seen_P:
+                continue
+            # exit if we reach %L / %Link tag 
+            if re.match('\* \%L', l):
+                break
+            
+            l = l.lstrip('*').strip()
+            m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^]+)\](.*)', l)
+            if m:
+                healthy_par_doc = (m.group(1), m.group(2), m.group(3).strip())
+            elif re.match('(\w+):', l):
+                # empty docstrings
+                if re.match('(\w+):[ \t]*$', l):
+                    continue
+                # no-unit docstrings
+                if re.match('(\w+):[ \t]*[\w\s,.\-\(\)\=]+$', l):
+                    continue
+                # "inversed" docstrings
+                m2 = re.match('(\w+):[ \t]*(.*)[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%]+)\]', l)
+                if m2:
+                    par_doc = (m2.group(1), m2.group(3).strip(), m2.group(2))
+                    par_docs.append(par_doc)
+                    idxs.append(i)
+        
+        # continue working on transforming the lines
+        if len(par_docs) == 0:
+            continue
+        l01 = max([len(p[0]) for p in par_docs]) + max([len(p[1]) for p in par_docs])
+        
+        for i in range(len(par_docs)):
+            p = par_docs[i]
+            idx = idxs[i]
+            
+            # reorganize the docstring line
+            format_str = '* %s: %-' +str(l01-len(p[0])+2)+ 's %s'
+            l = format_str % (p[0], '['+p[1]+']', p[2])
+            print(l)
+            
+            # replace l in lines:
+            lines[idx] = l
+            
+        for l in lines:
+            print(l)
+        quit()
+    
+    quit()
+
 def main(args):
     logging.basicConfig(level=logging.INFO)
     localdir = args.localdir or '.'
@@ -183,5 +265,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     #test()
+    #repair(args)
+
     main(args)
 
