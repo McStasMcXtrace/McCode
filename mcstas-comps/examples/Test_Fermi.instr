@@ -15,7 +15,7 @@
 *
 * %Description
 * Cross comparison of Fermi Chopper components, using McStas and
-* contributed components, as well as rotating collimator approximations. It 
+* contributed components, as well as rotating collimator approximations. It
 * shows that all implementations are equivalent. However, approximating rotating
 * guide are 30% faster than McStas Fermi chopper, and on the other hand
 * Vitess implementation is 100 times slower.
@@ -27,12 +27,7 @@
 * %Example: Fermi=5 Detector: Monitor2_xt_I=0.00058003
 *
 * %Parameters
-* Fermi: [1] Choice of Fermi chopper component to test, with
-*            1=FermiChopper, 
-*            2=Vitess_ChopperFermi,
-*            3=FermiChopper_ILL, 
-*            4=rotating Guide_gravity,
-*            5=rotating Guide_channeled
+* Fermi: [1] Choice of Fermi chopper component to test, with 1=FermiChopper, 2=Vitess_ChopperFermi, 3=FermiChopper_ILL, 4=rotating Guide_gravity, 5=rotating Guide_channeled
 * width_FC:  total slit pack width [m]
 * height_FC: height of FC slit pack [m]
 * length_FC: length of FC slit pack [m]
@@ -44,10 +39,10 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Fermi(int Fermi=1, lambda=3.39, 
+DEFINE INSTRUMENT Test_Fermi(int Fermi=1, lambda=3.39,
   width_FC=0.044, height_FC=0.064,length_FC=0.012, FC_Hz=100,
   Nslit_FC=120,d_SF=3, d_FD=3, phase=271.92)
-  
+
 DECLARE %{
   double time_to_arrival;
   double time_window_width;
@@ -68,13 +63,13 @@ INITIALIZE
   case 5:
     printf("Using rotating Guide_channeled\n"); break;
   }
-  
+
   double w = width_FC/Nslit_FC;
   double v = 3956/lambda;
-  
-  printf("\nTheor: Lambda=%g [Angs]\n", 
+
+  printf("\nTheor: Lambda=%g [Angs]\n",
     3956*w/2/PI/FC_Hz/length_FC/length_FC/2);
-    
+
   printf("Theor: Time from source  t=%g [s]\n", d_SF/v);
   printf("Theor: Time to detection t=%g [s]\n", d_FD/v);
   printf("       Time period      dt=%g [s]\n", 1/FC_Hz);
@@ -82,7 +77,7 @@ INITIALIZE
   printf("       Time window width  =%g [s] (pulse width)\n",
     atan2(w,length_FC)/PI/FC_Hz);
   printf("       Phase           phi=%g [deg]\n", (d_SF/v)/(1/FC_Hz)*360);
-  
+
   time_to_arrival  = (d_SF/v);
   time_window_width= atan2(w,length_FC)/PI/FC_Hz;
   if (phase == -0) phase=(d_SF/v)/(1/FC_Hz)*360; /* assumes time at source is centered on 0 */
@@ -136,7 +131,7 @@ COMPONENT FC_McStas = FermiChopper(
   AT (0, 0, 0) RELATIVE FC_Position
 
 COMPONENT FC_ILL = FermiChopper_ILL(
-    radius = 0.1, nu = FC_Hz, yheight = height_FC, 
+    radius = 0.1, nu = FC_Hz, yheight = height_FC,
     nslit = Nslit_FC, length = length_FC, xwidth = width_FC,phase=phase)
   WHEN (Fermi ==3)
   AT (0, 0, 0) RELATIVE FC_Position
@@ -152,10 +147,9 @@ COMPONENT FC_Vitess = Vitess_ChopperFermi(
   AT (0, 0, d_SF) RELATIVE PREVIOUS
 
 COMPONENT Monitor2_xt = Monitor_nD(
-    options = "multiple x y time, all auto", 
+    options = "multiple x y time, all auto",
     restore_neutron=1,
     xwidth = width_FC, yheight = height_FC)
   AT (0, 0, d_FD) RELATIVE FC_Position
 
 END
-

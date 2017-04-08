@@ -15,7 +15,7 @@
 *
 * %Description
 * Cross comparison of radial collimator components, using McStas and
-* contributed components. It shows that all implementations are equivalent. 
+* contributed components. It shows that all implementations are equivalent.
 * The Exact_radial_coll contributed component also takes into account the absorbing
 * blade thickness between slits, which decreases slightly intensity.
 *
@@ -24,10 +24,7 @@
 * %Example: Collimator=3 Detector: BananaTheta_I=1.581e-08
 *
 * %Parameters
-* Collimator: [1] Choice of radial collimator component to test, with
-*            1=Collimator_Radial, 
-*            2=Collimator_ROC,
-*            3=Exact_radial_coll, 
+* Collimator: [1] Choice of radial collimator component to test, with 1=Collimator_Radial, 2=Collimator_ROC, 3=Exact_radial_coll.
 *
 * %End
 *******************************************************************************/
@@ -67,11 +64,11 @@ COMPONENT Sample = PowderN(
 AT (0, 0, 0.1) RELATIVE PREVIOUS
 EXTEND %{
   if (!SCATTERED) ABSORB;
-%} 
-  
+%}
+
 COMPONENT collimador_rad = Collimator_radial(
-  nslit=ceil((130-2)/0.42), 
-  radius=0.324, length=0.419-0.324, yheight=0.09, 
+  nslit=ceil((130-2)/0.42),
+  radius=0.324, length=0.419-0.324, yheight=0.09,
   theta_min=-160, theta_max=160, roc=0)
   WHEN (Collimator==1)
 AT (0, 0, 0) RELATIVE Sample
@@ -88,13 +85,10 @@ COMPONENT collimador_contrib = Exact_radial_coll(
   WHEN (Collimator==3)
 AT (0, 0, 0) RELATIVE Sample
 
-/* perfect detector: 1D(theta). Se ha modificado los limites. Originalm ~ [-4 -130]*/     
-COMPONENT BananaTheta = Monitor_nD(   
+/* perfect detector: 1D(theta). Se ha modificado los limites. Originalm ~ [-4 -130]*/
+COMPONENT BananaTheta = Monitor_nD(
   options = "banana, angle limits=[2 160], bins=1280",
-  radius = 1.5, yheight = 0.09)   
+  radius = 1.5, yheight = 0.09)
 AT (0, 0, 0) RELATIVE Sample
 
 END
-
-
-

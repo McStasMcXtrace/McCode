@@ -27,11 +27,9 @@
 *   - Reads a Virtual_output generated event file and applies a spherical PSD
 *
 * %Parameters
-* MODE:    [int]    Input file mode/format - 0 for help on usage
-*                   1=McStas,2=Vitess,3=MCNP,4=Tripoli4
+* MODE:    [int]    Input file mode/format - 0 for help on usage 1=McStas,2=Vitess,3=MCNP,4=Tripoli4
 * filename:[string] Specifies input event file
-* options: [string] Specifies the histogramming rules used by Monitor_nD.
-*                   It <b>MUST</b> contain the 'previous' word - see mcdoc page
+* options: [string] Specifies the histogramming rules used by Monitor_nD. It <b>MUST</b> contain the 'previous' word - see mcdoc page
 * type:    [string] Virtual_input event files, 'type' parameter(text/float/double) - see mcdoc page
 * bufsize: [int]    Vitess_input 'buffersize' parameter - see mcdoc page
 * xwidth:  [m]      Horizontal width of detector, or diameter for banana,cylinder and shpere geometry
@@ -119,7 +117,7 @@ TRACE
 
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
-  
+
 /* event file readers *********************************************************/
 
 COMPONENT Virtualinput = Virtual_input(
@@ -151,7 +149,3 @@ COMPONENT Monitor = Monitor_nD(options=options,xwidth=xwidth,yheight=yheight)
   AT (0, 0, 0) RELATIVE Origin
 
 END
-
-
-
-

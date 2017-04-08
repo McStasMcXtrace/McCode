@@ -16,9 +16,9 @@
 * %Description
 * A template powder diffractometer used as a tutorial at LLB.
 * Default geometry is from D20@ILL.
-* 
+*
 * If included after a guide, use ALPHA1=0 and L1=0 (the first collimator is then
-* the guide with effective ALPHA1=m*0.1*lambda). If you prefer to include 
+* the guide with effective ALPHA1=m*0.1*lambda). If you prefer to include
 * explicitely a collimator before the monochromator, use L1=1.2.
 *
 * Monochromator lattice parameter
@@ -51,8 +51,8 @@
 * ALPHA3: [min]  Horizontal collimator divergence for L3 arm (sample-detector)
 * ETA:    [min]  Monochromator horizontal mosaic (gaussian)
 * Powder: [str]  File name for powder description
-* verbose:[1]    Print DIF configuration. 0 to be quiet
-* SM:     [1]    Scattering sense of beam from Monochromator. 1:left, -1:right
+* verbose:[int]  Print DIF configuration. 0 to be quiet
+* SM:     [int]  Scattering sense of beam from Monochromator. 1:left, -1:right
 *
 * %End
 *******************************************************************************/
@@ -61,7 +61,7 @@
 DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355,
   string Powder="Na2Ca3Al2F14.laz", RV=-1,
   L1=17, L2=3.2, L3=1.471,
-  ALPHA1=5,ALPHA2=60,ALPHA3=5, ETA=12, 
+  ALPHA1=5,ALPHA2=60,ALPHA3=5, ETA=12,
   verbose=1, THETA_M=0, SM=1)
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -77,8 +77,8 @@ else if (THETA_M && !lambda && DM)
 	lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
 else if (THETA_M && lambda)
 	DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
-	
-THETA_M *= SM; /* take-off direction left or right */	
+
+THETA_M *= SM; /* take-off direction left or right */
 
 /* test input parameters */
 if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
@@ -122,11 +122,11 @@ REMOVABLE COMPONENT Source = Source_gen(
     lambda0 = lambda, dlambda = lambda*0.01,
     T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
   AT (0, 0, 0) RELATIVE Origin
-  
+
 /* TIP: monochromator cradle */
 COMPONENT mono_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
-  
+
 /* ALPHA1 collimator */
 COMPONENT Alpha_One = Collimator_linear(
   xwidth = 0.07, yheight = 0.15, length = 0.70, divergence = ALPHA1, transmission = 1.0)
@@ -156,18 +156,18 @@ SPLIT COMPONENT Monok = Monochromator_curved(
 COMPONENT mono_out = Arm()
   AT (0, 0, 0) RELATIVE mono_cradle
   ROTATED (0, 2*THETA_M, 0) RELATIVE mono_cradle
-  
+
 /* ALPHA2 collimator */
 COMPONENT Alpha_Two = Collimator_linear(
     xwidth = 0.05, yheight = 0.2, length = 0.2, divergence = ALPHA2, transmission = 1.0)
   WHEN (ALPHA2>0)
   AT (0, 0, L2-0.25) RELATIVE mono_out
-  
+
 COMPONENT Diff_Sample_Lambda = Monitor_nD(
      options="lambda, all auto",
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
-   AT (0, 0, 0.2) RELATIVE PREVIOUS  
-   
+   AT (0, 0, 0.2) RELATIVE PREVIOUS
+
 COMPONENT Slit_Sample = Slit(xwidth = 0.01, yheight = 0.05)
   AT (0, 0, L2-0.02) RELATIVE mono_out
 
@@ -186,7 +186,7 @@ COMPONENT collimador_radial = Collimator_radial(
     divergence=ALPHA3,transmission=1,
     theta_min=-10, theta_max=160, radius=L3-0.3-0.01)
   WHEN (ALPHA3>0)
-	AT (0, 0, 0) RELATIVE Sample  
+	AT (0, 0, 0) RELATIVE Sample
 
 /* perfect detector: 1D(theta) */
 COMPONENT Diff_BananaTheta = Monitor_nD(
@@ -202,4 +202,3 @@ COMPONENT Diff_BananaPSD = Monitor_nD(
 
 /* The END token marks the instrument definition end */
 END
-

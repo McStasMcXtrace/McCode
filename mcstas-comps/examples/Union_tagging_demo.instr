@@ -31,7 +31,7 @@
 * sigma_abs:
 * Vc:
 * geometry_interact:
-* incoherent_fraction
+* incoherent_fraction:
 *
 * %End
 *******************************************************************************/
