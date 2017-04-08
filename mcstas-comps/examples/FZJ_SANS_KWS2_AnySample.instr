@@ -11,8 +11,6 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision$
-* Release:    McStas CVS_080624
 * %INSTRUMENT_SITE: FZ_Juelich
 *
 * KWS2 SANS instrument at FZ-Juelich. 2 detectors. 4 available sample models.
@@ -28,7 +26,6 @@
 * %Example: lambda=7 sample=3 Detector: detector_I=1249
 *
 * %P
-* INPUT PARAMETERS:
 * lambda: [AA] Mean wavelength of neutrons
 * dlambda: [AA]  Wavelength spread of neutrons
 * sample: [int] type of sample, as 0=None, 1='AnySample', 2='Debye' or 3='Guinier'

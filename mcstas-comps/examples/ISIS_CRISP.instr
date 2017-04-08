@@ -11,8 +11,6 @@
 * Written by: <a href="robert.dalgliesh@stfc.ac.uk">Robert Dalgliesh</a>
 * Date: 2010
 * Origin: <a href="http://www.isis.stfc.ac.uk/">ISIS (UK)</a>
-* Release: McStas 1.12b
-* Version: $Revision$
 * %INSTRUMENT_SITE: ISIS
 *
 * Model of the ISIS CRISP reflectometer, including the Multilayer_Sample reflectivity sample.

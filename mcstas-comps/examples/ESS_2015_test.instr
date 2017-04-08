@@ -7,8 +7,6 @@
 * Written by: Jan Saroun (saroun@ujf.cas.cz)
 * Date: 04/01/2016
 * Origin: NPI Rez
-* Release: McStas 2.2a
-* Version: 0.1
 * %INSTRUMENT_SITE: ESS
 *
 * Test of the ESS-2015 moderator model with updated component ESS_moderator_corr.comp  .

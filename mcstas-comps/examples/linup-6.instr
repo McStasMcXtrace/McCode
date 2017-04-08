@@ -11,8 +11,6 @@
 * Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
 * Date: 1998
 * Origin: Risoe
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -27,7 +25,6 @@
 * %Example: PHM=-37.077 Detector: sng_I=1.11099e-09
 *
 * %Parameters
-* INPUT PARAMETERS:
 * PHM: [deg]  Monochromator rotation angle, aka A1
 * TTM: [deg]  Monochromator take-off angle, aka A2
 * TT: [deg]   Take-off angle at the sample position, aka A4

@@ -6,9 +6,7 @@
 * %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk) and S&oslash;en Kynde (kynde@nbi.dk)
 * Date: October 29th, 2012
-* Version: $Revision$
 * Origin: KU-Science
-* Release: McStas 1.12c
 * %INSTRUMENT_SITE: Templates
 *
 * Template instrument for a suite of SANS sample models.

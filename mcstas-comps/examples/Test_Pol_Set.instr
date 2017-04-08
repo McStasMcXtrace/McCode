@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen
 * Date: July 2006
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Tests Set_pol, V_sample, and pol monitors.

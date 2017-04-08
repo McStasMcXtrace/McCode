@@ -23,7 +23,6 @@
 * %Example: E0=33 dE=1.07 dt=9.6e-6 Detector: M_single_coh_I=5.93372e-10
 *
 * %Parameters
-* INPUT PARAMETERS:
 * E0: [meV]                    incident neutron beam energy
 * dE: [meV]                    incident neutron beam energy spread
 * dt: [s]                      time spread from chopper distribution

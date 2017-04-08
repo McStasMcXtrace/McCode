@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
 * Date: May 29,2013
 * Origin: DTU Physics
-* Release: McStas 2.x
-* Version: 0.1
 * %INSTRUMENT_SITE: SNS
 *
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Granroth SNS_source applying linear interpolation in MCNPX tables.

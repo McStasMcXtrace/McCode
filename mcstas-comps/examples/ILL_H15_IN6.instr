@@ -49,7 +49,6 @@
 * Example: lambda=4.14 Detector: M_theta_t_all_I=70
 *
 * %Parameters
-* INPUT PARAMETERS:
 * lambda: [Angs]                            wavelength within 4.14|4.6|5.12|5.92
 * dlambda: [Angs]                           wavelength HALF spread. default is 0.075
 * SPEED: [rpm]                              Fermi chopper speed, -1=auto, 0=stopped in open pos

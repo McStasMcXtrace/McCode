@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
 * Date: 201407
 * Origin: DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
 * This instrument produces the ESS TDR brilliance.

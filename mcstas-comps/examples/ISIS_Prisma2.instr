@@ -11,8 +11,6 @@
 * Written by: Kristian Nielsen and Mark Hagen
 * Date: August 1998.
 * Origin: ISIS/Risoe
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
@@ -30,7 +28,6 @@
 * %Example: TT=-30 Detector: mon9_I=2.75547e-08
 *
 * %Parameters
-* INPUT PARAMETERS:
 * TT: [deg]   Take-off angle at the sample position, aka A4
 * PHA: [deg]  Analyzer group rotation angle, aka A5
 * PHA1: [deg] Analyzer 1 tilt angle

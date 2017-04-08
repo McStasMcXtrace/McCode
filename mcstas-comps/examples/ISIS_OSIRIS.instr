@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen with input from Mark Telling, updates by P Willendrup
 * Date: November 2015
 * Origin: DTU Fysik, RISOE and ISIS
-* Release: McStas 2.3
-* Version: $Revision: $
 * %INSTRUMENT_SITE: ISIS
 *
 * A simulation of the indirect TOF geometry part of the OSIRIS instrument.

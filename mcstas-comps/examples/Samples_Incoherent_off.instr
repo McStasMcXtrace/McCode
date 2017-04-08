@@ -7,8 +7,6 @@
 * Written by: Reynald ARNERIN
 * Date: June 12th, 2008
 * Origin: ILL
-* Release: McStas CVS-080208
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_samples
 *
 * Instrument to demonstrate the usage of OFF shape samples with totally absorbing material.

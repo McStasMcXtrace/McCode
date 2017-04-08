@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup, Erik Knudsen, Aziz Aziz Daoud-aladine
 * Date: August 14th, 2007
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: 0.1
 * %INSTRUMENT_SITE: Tests_samples
 *
 * This instrument allows to compare incoherent scattering from different McStas

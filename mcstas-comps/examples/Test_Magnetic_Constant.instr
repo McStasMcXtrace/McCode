@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield

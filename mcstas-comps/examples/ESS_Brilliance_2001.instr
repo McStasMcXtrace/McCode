@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
 * Date: 20130425
 * Origin: DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
 * This instrument produces the legacy ESS 2001 cold brilliance, at 14 Hz 2.86 ms.

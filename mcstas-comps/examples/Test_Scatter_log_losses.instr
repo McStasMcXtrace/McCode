@@ -7,8 +7,6 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: 2013
 * Origin: DTU Fysik
-* Release: McStas 2.0
-* Version: 1.0
 * %INSTRUMENT_SITE: Templates
 *
 * Example instrument of Scatter_logger feature usage for detection of lost instensity

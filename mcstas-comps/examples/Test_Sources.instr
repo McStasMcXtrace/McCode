@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: Aug 3, 2008
 * Origin:ILL
-* Release: McStas CVS_080901
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * A test instrument to compare sources

@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup, based on work by Reynald ARNERIN
 * Date: June 20th, 2008
 * Origin: Risoe
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Templates
 *
 * Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.

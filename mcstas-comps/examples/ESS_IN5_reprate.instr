@@ -11,8 +11,6 @@
 * Written by: Kim Lefmann (kim.lefmann@risoe.dk), Helmuth Schober, Feri Mezei
 * Date: September 20, 2006
 * Origin:ESS
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ESS
 *
 * An IN5 type (cold chopper) multi-frame spectrometer at ESS LPTS

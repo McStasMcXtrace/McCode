@@ -6,9 +6,7 @@
 * %Identification
 * Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a> 
 * Date: Marts, 2012
-* Version:  $Revision$
 * Origin: Risoe-DTU
-* Release: McStas 2.0
 * %INSTRUMENT_SITE: Tests_MCPL_etc
 *
 * Test instrument for SSW/SSR interface between McStas and MCNP

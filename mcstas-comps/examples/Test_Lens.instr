@@ -7,8 +7,6 @@
 * Written by: E. Farhi/C. Monzat
 * Date: Dec 2009.
 * Origin: ILL
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Demonstrate focusing effect of refractive lenses

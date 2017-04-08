@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a> and R. Lechner
 * Date: 2011
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>/<a href="http://www.helmholtz-berlin.de/user/neutrons/index_en.html">BENSC (Germany)</a>
-* Release: McStas 2.0
-* Version: $Revision$
 * %INSTRUMENT_SITE: HZB
 *
 * V3 Time-of-Flight-Spectrometer (NEAT) at BENSC, 1995 version.

@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup
 * Date: 20130425
 * Origin: DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ISIS
 *
 * This instrument produces brilliance curves from the ISIS TS2 facility.

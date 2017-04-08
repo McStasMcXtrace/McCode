@@ -11,8 +11,6 @@
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: 1998
 * Origin: Risoe
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_samples
 *
 * A test instrument using a vanadium cylinder

@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
 * Date: September 2014
 * Origin: DTU Physics
-* Release: McStas
-* Version: 0.2
 * %INSTRUMENT_SITE: DTU
 *
 * Simple test instrument for the Virtual_input component

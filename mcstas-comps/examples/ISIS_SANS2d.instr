@@ -7,8 +7,6 @@
 * Written by: Richard Heenan with edits by Peter Willendrup
 * Date: 2014
 * Origin: ISIS, DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ISIS
 *
 * This instrument models the ISIS TS2 SANS2d instrument.

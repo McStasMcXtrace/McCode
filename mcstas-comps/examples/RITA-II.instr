@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:udby@fys.ku.dk">Linda Udby</a>  and <a href="mailto:pkwi@fysik.dtu.dk">Peter Willendrup</a>
 * Date: 2012
 * Origin: <a href="http://www.risoe.dk">Ris&oslash; (Denmark)</a>
-* Release: McStas 1.12c
-* Version: $June 03 2011 $
 * %INSTRUMENT_SITE: PSI
 *
 * RITA type triple-axis spectrometer (TAS)
@@ -52,7 +50,6 @@
 * mcrun RITA-II.instr -n1e6 L0=3.418 BPL=0.97 BPH=1.03 EI=7 EF=5 SAMPLE=4 REP=10 QH=2 QK=0.16 QM=0 AS=4.95 BS=4.95 CS=4.95 AAX=-4.95 BBZ=4.95 CCY=4.95 AH=0 AK=1 AL=0  BH=1 BK=0 BL=0 SAMPLEFILE="Pb.laz" -d RITA-II_SXPb200_2meV <br>
 * </ul>
 * %Parameters
-* INPUT PARAMETERS:
 * ITAR: [mA]              Relative neutron yield from the spallation target. Value relative to 2009 
 * KI: [Angs-1]            Incoming neutron wavevector. If set EI is automatically calculated 
 * KF: [Angs-1]            Outgoing neutron wavevector. If set EI is automatically calculated 

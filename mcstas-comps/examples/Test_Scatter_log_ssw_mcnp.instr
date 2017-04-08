@@ -7,8 +7,6 @@
 * Written by: Esben Klinkby (esbe@dtu.dk), Peter Willendrup (pkwi@fysik.dtu.dk)
 * Origin: DTU Nutech
 * Date: 2013
-* Release: McStas 2.1
-* Version: 1.0
 * %INSTRUMENT_SITE: Tests_MCPL_etc
 *
 * Example instrument of Scatter_logger feature usage for lost neutron transfer to MCNP via the ssr/ssw mechanism.

@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
-* Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Templates
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -31,7 +29,6 @@
 * %Example: lambda=6 Detector: detector_I=6.55e-17
 *
 * %Parameters
-* INPUT PARAMETERS:
 * lambda: [AA]         Mean wavelength of neutrons
 * dlambda: [AA]        Wavelength spread of neutrons
 * r: [AA]              Radius of scattering hard spheres
