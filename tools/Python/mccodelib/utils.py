@@ -416,10 +416,11 @@ def read_define_instr(file):
             lines.append(l.strip())
             break
     
-    for l in file:
-        lines.append(l.strip())
-        if re.search('\)', l):
-            break
+    if not re.search('\)', lines[-1]):
+        for l in file:
+            lines.append(l.strip())
+            if re.search('\)', l):
+                break
     
     return ' '.join(lines)
 
