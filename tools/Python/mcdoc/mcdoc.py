@@ -160,8 +160,8 @@ def repair(args):
     for filename in local_instr_files:
         f = open(filename, 'r')
         header = utils.read_header(f)
-        #define = utils.read_define_instr(f)
-        
+                
+        # doc lines
         print('*****')
         print(filename)
         print()
@@ -169,9 +169,24 @@ def repair(args):
         seen_P = False
         par_docs = []
         idxs = []
+        idxs_remove = []
         lines = header.splitlines()
         for i in range(len(lines)):
             l = lines[i]
+            
+            # remove unwanted lines
+            m = re.match('\* Release:', l)
+            if m:
+                idxs_remove.append(i)
+                continue
+            m = re.match('\* Version:', l)
+            if m:
+                idxs_remove.append(i)
+                continue
+            m = re.match('\* INPUT PARAMETERS:', l)
+            if m:
+                idxs_remove.append(i)
+                continue
             
             # fast-forward to %P / %Parameters tag
             if not seen_P and re.match('\* \%Parameters', l):
@@ -212,37 +227,46 @@ def repair(args):
                     idxs.append(i)
                     continue
         
-        # continue working on transforming the lines
-        if len(par_docs) == 0:
-            continue
-        l01 = max([len(p[0]) for p in par_docs]) + max([len(p[1]) for p in par_docs])
-        
-        for i in range(len(par_docs)):
-            p = par_docs[i]
-            idx = idxs[i]
+        # edit par doc lines
+        if False:
+            # continue working on transforming the lines
+            if len(par_docs) == 0:
+                continue
+            l01 = max([len(p[0]) for p in par_docs]) + max([len(p[1]) for p in par_docs])
             
-            # reorganize the docstring line
-            format_str = '* %s: %-' +str(l01-len(p[0])+2)+ 's %s'
-            l = format_str % (p[0], '['+p[1]+']', p[2])
-            print(l)
-            
-            # replace l in lines:
-            lines[idx] = l
+            for i in range(len(par_docs)):
+                p = par_docs[i]
+                idx = idxs[i]
+                
+                # reorganize the docstring line
+                format_str = '* %s: %-' +str(l01-len(p[0])+2)+ 's %s'
+                l = format_str % (p[0], '['+p[1]+']', p[2])
+                print(l)
+                
+                # replace l in lines:
+                lines[idx] = l
         
-        for l in f: 
+        # read remaining lines
+        for l in f:
             lines.append(l.rstrip('\n'))
+        
+        # remove unwanted lines:
+        for idx in reversed(idxs_remove):
+            del lines[idx]
         
         for l in lines:
             print(l)
         
+    
         f.close()
         f = open(filename, 'w')
         f.write('\n'.join(lines) + '\n')
         f.close()
         
         cnt += 1
-        print(cnt) 
+        print(cnt)
     quit()
+
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
