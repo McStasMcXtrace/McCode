@@ -25,7 +25,7 @@
 * %Example: Guide=7 Detector: Monitor2_xy_I=0.00683072
 *
 * %Parameters
-* Guide: [1] Choice of Guide component to test, with 1=Guide, 2=Guide_channeled, 3=Guide_gravity, 4=Guide_wavy, 5=Guide_curved 6=Elliptic_guide_gravity 7=Guide_honeycomb
+* Guide: [1]  Choice of Guide component to test, with 1=Guide, 2=Guide_channeled, 3=Guide_gravity, 4=Guide_wavy, 5=Guide_curved 6=Elliptic_guide_gravity 7=Guide_honeycomb
 *
 * %End
 *******************************************************************************/

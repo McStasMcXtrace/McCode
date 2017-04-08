@@ -70,17 +70,17 @@
 * %Example: lambda=1.2 DM=1.677 Detector: sample_flux_I=2.2e6
 *
 * %Parameters
-* lambda: [Angs]             wavelength
-* dlambda: [Angs]            wavelength HALF spread at source
-* DM: [Angs]                 monochromator d-spacing
-* ETAM: [arcmin]             monochromator mosaic FWHM
-* RMH: [m]                   Monochromator horizontal curvature. Use -1 for auto.
-* ratio: [1]                 Disk Chopper ratio (nu=nu_FC/ratio)
-* dE: [meV]                  Inelastic energy for time focusing
-* Sapphire_present: [1]      Flag, when 1 the Al2O3 filter is active
-* sample_coh: [str]          Sample coherent dynamic structure factor (.sqw) or NULL
-* sample_inc: [str]          Sample incoherent dynamic structure factor (.sqw) or NULL
-* order: [1]                 The number of multiple orders at the monochromator
+* lambda: [Angs]         wavelength
+* dlambda: [Angs]        wavelength HALF spread at source
+* DM: [Angs]             monochromator d-spacing
+* ETAM: [arcmin]         monochromator mosaic FWHM
+* RMH: [m]               Monochromator horizontal curvature. Use -1 for auto.
+* ratio: [1]             Disk Chopper ratio (nu=nu_FC/ratio)
+* dE: [meV]              Inelastic energy for time focusing
+* Sapphire_present: [1]  Flag, when 1 the Al2O3 filter is active
+* sample_coh: [str]      Sample coherent dynamic structure factor (.sqw) or NULL
+* sample_inc: [str]      Sample incoherent dynamic structure factor (.sqw) or NULL
+* order: [1]             The number of multiple orders at the monochromator
 *
 * %Link
 * H. Mutka, Nucl. Instr. and Meth. A 338 (1994) 144

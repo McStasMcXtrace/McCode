@@ -29,7 +29,7 @@
 * %Example: source=8 Detector: m1_I=5.0787e+13
 *
 * %Parameters
-* source: [1] selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
+* source: [1]  selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
 * Lmin: []    
 * Lxax: []    
 *

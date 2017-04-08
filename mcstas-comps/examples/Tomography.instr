@@ -25,17 +25,17 @@
 * %Example: omega=0 Detector: monitor_I=2.23492e-09
 *
 * %Parameters
-* geometry: [string]   Name of the OFF file describing the sample shape
-* omega: [deg]         Sample rotation around y
-* sigma_abs: [barn]    Sample absorption xs
-* frac_scatt: [1]      Fraction of neutrons to scatter in the sample
-* div_v: [deg]         Source vertical divergence (angular height)
-* div_h: [deg]         Source horisontal divergence (angular width)
-* source_w: [m]        Source width
-* source_h: [m]        Source height
-* det_w: [m]           Detector width
-* det_h: [m]           Detector height
-* opts: [string]       Detector Monitor_nD options
+* geometry: [string]  Name of the OFF file describing the sample shape
+* omega: [deg]        Sample rotation around y
+* sigma_abs: [barn]   Sample absorption xs
+* frac_scatt: [1]     Fraction of neutrons to scatter in the sample
+* div_v: [deg]        Source vertical divergence (angular height)
+* div_h: [deg]        Source horisontal divergence (angular width)
+* source_w: [m]       Source width
+* source_h: [m]       Source height
+* det_w: [m]          Detector width
+* det_h: [m]          Detector height
+* opts: [string]      Detector Monitor_nD options
 *
 * %Link
 * http://shape.cs.princeton.edu/benchmark/documentation/off_format.html

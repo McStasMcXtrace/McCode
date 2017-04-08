@@ -19,7 +19,7 @@
 * %Example: geometry="socket.off" Detector: monitor_I=0.0150169
 *
 * %Parameters
-* geometry: [string] Name of the OFF file describing the sample shape
+* geometry: [string]  Name of the OFF file describing the sample shape
 *
 * %Link
 * http://shape.cs.princeton.edu/benchmark/documentation/off_format.html

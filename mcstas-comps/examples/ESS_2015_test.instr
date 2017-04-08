@@ -20,10 +20,10 @@
 *
 * %Parameters
 * frac: []         fraction of trials from the cold moderator
-* lmin: [A]        wavelength range min
-* lmax: [A]        wavelength range max
-* ANGLE: [deg]     port angle
-* mon_shift: [m]   shift of the monitor along x-axis
+* lmin: [A]       wavelength range min
+* lmax: [A]       wavelength range max
+* ANGLE: [deg]    port angle
+* mon_shift: [m]  shift of the monitor along x-axis
 *
 * %Link
 * A reference/HTML link for more information

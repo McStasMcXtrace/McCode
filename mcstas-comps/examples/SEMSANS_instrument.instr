@@ -15,45 +15,45 @@
 * SEMSANS instrument with 2 isosceles triangular field coils
 *
 * %Parameters
-* triacoil_depth: [m]     Half of the triangular coil depth in z-direction (one right triangle)
-* triacoil_width: [m]     xwidth of triangular coil
-* triacoil_height: [m]    yheight of triangular coil
-* pol_zdepth: [m]         Depth of the polariser along z
-* vcoil_zdepth: [m]       Depth along z of the v-coil flipper
-* Guide1_depth: [m]       Depth of first guide/precession field section
-* Guide2_depth: [m]       Depth of second guide/precession field section
-* Guide3_depth: [m]       Depth of third guide/precession field section
-* Guide4_depth: [m]       Depth of fourth guide/precession field section
-* Bguide: [T]             Field strength of guide/precession field
-* Bextra: [T]             Field strength of extra field in guide field 1 to acheive echo
-* Bt2: [T]                Field in first triangular coil
-* Bt1: [T]                Field in second triangular coil
-* DLambda: [AA]           Wavelength spread from source (half of it)
-* Lambda: [AA]            Mean wavelength
-* flippos: [m]            Position (away from position set by vcoil_34_pos) of pi-flipper
-* FLIP: [1]               Choose polarisation direction using v-coil pi/2-flipper (1 is down, -1 is up)
-* chop1_pos: [m]          Position of first chopper
-* chop2_pos: [m]          Position of second chopper
-* pol_pos: [m]            Position of polariser
-* analyser_pos: [m]       Position of analyser
-* grating_w: [m]          Width of transmitting part of grating
-* grating_a: [m]          Width of absorbing part of grating
-* slit_1_pos: [m]         Position of first slit
-* slit_2_pos: [m]         Position of second slit
-* Guide1_pos: [m]         Position of first guide/precession field
-* Guide2_pos: [m]         Position of second guide/precession field
-* Guide3_pos: [m]         Position of third guide/precession field
-* Guide4_pos: [m]         Position of fourth guide/precession field
-* vcoil_12_pos: [m]       Position of first v-coil pair
-* vcoil_34_pos: [m]       Position of second v-coil pair
-* vcoil_56_pos: [m]       Position of third v-coil pair
-* triacoil_1_pos: [m]     Position of first triangular coil (centre)
-* triacoil_2_pos: [m]     Position of second triangular coil (centre)
-* grating_pos: [m]        Position of grating
-* grating_pos: [m]        Position of grating
-* detector_pos: [m]       Position of detector
-* tlow: [mu-s]            tmin of detector
-* thigh: [mu-s]           tmax of detector
+* triacoil_depth: [m]   Half of the triangular coil depth in z-direction (one right triangle)
+* triacoil_width: [m]   xwidth of triangular coil
+* triacoil_height: [m]  yheight of triangular coil
+* pol_zdepth: [m]       Depth of the polariser along z
+* vcoil_zdepth: [m]     Depth along z of the v-coil flipper
+* Guide1_depth: [m]     Depth of first guide/precession field section
+* Guide2_depth: [m]     Depth of second guide/precession field section
+* Guide3_depth: [m]     Depth of third guide/precession field section
+* Guide4_depth: [m]     Depth of fourth guide/precession field section
+* Bguide: [T]           Field strength of guide/precession field
+* Bextra: [T]           Field strength of extra field in guide field 1 to acheive echo
+* Bt2: [T]              Field in first triangular coil
+* Bt1: [T]              Field in second triangular coil
+* DLambda: [AA]         Wavelength spread from source (half of it)
+* Lambda: [AA]          Mean wavelength
+* flippos: [m]          Position (away from position set by vcoil_34_pos) of pi-flipper
+* FLIP: [1]             Choose polarisation direction using v-coil pi/2-flipper (1 is down, -1 is up)
+* chop1_pos: [m]        Position of first chopper
+* chop2_pos: [m]        Position of second chopper
+* pol_pos: [m]          Position of polariser
+* analyser_pos: [m]     Position of analyser
+* grating_w: [m]        Width of transmitting part of grating
+* grating_a: [m]        Width of absorbing part of grating
+* slit_1_pos: [m]       Position of first slit
+* slit_2_pos: [m]       Position of second slit
+* Guide1_pos: [m]       Position of first guide/precession field
+* Guide2_pos: [m]       Position of second guide/precession field
+* Guide3_pos: [m]       Position of third guide/precession field
+* Guide4_pos: [m]       Position of fourth guide/precession field
+* vcoil_12_pos: [m]     Position of first v-coil pair
+* vcoil_34_pos: [m]     Position of second v-coil pair
+* vcoil_56_pos: [m]     Position of third v-coil pair
+* triacoil_1_pos: [m]   Position of first triangular coil (centre)
+* triacoil_2_pos: [m]   Position of second triangular coil (centre)
+* grating_pos: [m]      Position of grating
+* grating_pos: [m]      Position of grating
+* detector_pos: [m]     Position of detector
+* tlow: [mu-s]          tmin of detector
+* thigh: [mu-s]         tmax of detector
 *
 * %End
 *******************************************************************************/

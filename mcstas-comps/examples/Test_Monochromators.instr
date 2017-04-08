@@ -25,8 +25,8 @@
 *
 * %Parameters
 * Mono: []              Choice of Monochromator component to use, with 1=Monochromator_flat 2=Monochromator_pol 3=Monochromator_pol (forcing 1% events to be reflected) 4=Monochromator_curved (in flat mode) 5=Monochromator_2foc (contrib, flat mode) 6=Single_crystal
-* lambda: [Angs]        Source wavelength
-* Moz: [Arc minutes]    Mosaicity
+* lambda: [Angs]      Source wavelength
+* Moz: [Arc minutes]  Mosaicity
 * PG: []                
 * powder: []            
 * order: []             

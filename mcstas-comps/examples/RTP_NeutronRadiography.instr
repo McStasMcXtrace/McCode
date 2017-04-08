@@ -19,8 +19,8 @@
 * Example: mcrun RTP_NeutronRadiography.instr theta=20 phi=10
 *
 * %Parameters
-* theta: [deg] horizontal rotation of the object
-* phi: [deg]   vertical rotation of the object
+* theta: [deg]  horizontal rotation of the object
+* phi: [deg]    vertical rotation of the object
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>

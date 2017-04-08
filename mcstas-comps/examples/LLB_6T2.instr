@@ -26,12 +26,12 @@
 * Cu       220 DM=1.278 AA
 *
 * %Parameters
-* lambda: [Angs] wavelength
-* phi: [Deg]     sample rotation along the vertical axis
-* gamma: [Deg]   in plane detector position
-* nu: [Deg]      out of plane detector position
-* monok: [1]     monochromator to use (0: PG, 1: Cu, 5: test mode)
-* samp_f: [str]  LAU file describing sample
+* lambda: [Angs]  wavelength
+* phi: [Deg]      sample rotation along the vertical axis
+* gamma: [Deg]    in plane detector position
+* nu: [Deg]       out of plane detector position
+* monok: [1]      monochromator to use (0: PG, 1: Cu, 5: test mode)
+* samp_f: [str]   LAU file describing sample
 *
 * Example of a C60 200 rocking curve scan:
 *    mcrun LLB_6T2.instr --mpi=NUM_CORES -N31 lambda=2.4 phi=8.37,11.37 gamma=19.74 nu=0 monok=0 samp_f="C60.lau" -n 1e8 -d C60_200

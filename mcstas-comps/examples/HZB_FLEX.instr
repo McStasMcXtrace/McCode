@@ -15,16 +15,16 @@
 * %Description
 *
 * %Parameters
-* kI: [inv AA]              incident wavevector
-* kF: [inv AA]              outgoing wavevector
-* wVS: [m]                  Width of virtual source slit
-* tilt: [deg]               Tilt angle for velocity selector
-* SA: [1]                   Analyzer scattering sense
-* A3: [deg]                 Sample omega angle
-* A4: [deg]                 Sample 2-theta angle
-* L3: [m]                   
-* L4: [m]                   
-* Mono_flatswitch: [1]      Flag for flat or curved monochromator
+* kI: [inv AA]          incident wavevector
+* kF: [inv AA]          outgoing wavevector
+* wVS: [m]              Width of virtual source slit
+* tilt: [deg]           Tilt angle for velocity selector
+* SA: [1]               Analyzer scattering sense
+* A3: [deg]             Sample omega angle
+* A4: [deg]             Sample 2-theta angle
+* L3: [m]               
+* L4: [m]               
+* Mono_flatswitch: [1]  Flag for flat or curved monochromator
 *
 * %End
 *******************************************************************************/

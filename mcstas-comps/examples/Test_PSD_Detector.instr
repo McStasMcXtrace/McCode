@@ -18,7 +18,7 @@
 * %Example: rot=0 Detector: mydet_I=3.57344e-18
 *
 * %Parameters
-* rot: [deg] rotation angle of detector
+* rot: [deg]  rotation angle of detector
 *
 * %Link
 * The PSD_Detector component

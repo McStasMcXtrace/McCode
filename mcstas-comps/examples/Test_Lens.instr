@@ -18,8 +18,8 @@
 * around the focusing point to show the beam spot.
 *
 * %Parameters
-* lambda: [Angs]       Source wavelength
-* position_PSD: [m]    Distance from last lens to first monitor
+* lambda: [Angs]     Source wavelength
+* position_PSD: [m]  Distance from last lens to first monitor
 *
 * %Link
 *

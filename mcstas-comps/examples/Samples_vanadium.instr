@@ -22,7 +22,7 @@
 * %Example: ROT=0 Detector: PSD_4pi_I=7.97023e-05
 *
 * %Parameters
-* ROT: [deg] Rotation angle of the PSD monitor
+* ROT: [deg]  Rotation angle of the PSD monitor
 *
 * %Link
 * The McStas User manual

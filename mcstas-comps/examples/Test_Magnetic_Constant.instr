@@ -22,7 +22,7 @@
 * %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.0768972
 *
 * %Parameters
-* ROT_ANGLE: [deg] Angle that the spin of a 5AA neutron rotates in the 0.2 m magnet
+* ROT_ANGLE: [deg]  Angle that the spin of a 5AA neutron rotates in the 0.2 m magnet
 *
 * %Link
 *

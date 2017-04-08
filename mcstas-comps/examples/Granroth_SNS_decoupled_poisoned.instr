@@ -16,8 +16,8 @@
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Granroth SNS_source applying linear interpolation in MCNPX tables.
 *
 * %Parameters
-* Lambda_min: [AA] 
-* Lambda_max: [AA] 
+* Lambda_min: [AA]  
+* Lambda_max: [AA]  
 *
 * %Link
 *

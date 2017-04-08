@@ -16,9 +16,9 @@
 * Example: lambda=3.4 Detector: PSD_SAMPLE_I=1.58754E+05
 *
 * %Parameters
-* lambda: [Angs]      source energy
-* chopp_ratio: [1]    Chopper radio Fermi Chopper to Disk Chopper
-* DET: [deg ]         Detector angle
+* lambda: [Angs]    source energy
+* chopp_ratio: [1]  Chopper radio Fermi Chopper to Disk Chopper
+* DET: [deg ]       Detector angle
 *
 * %Link
 * Written by U.Filges <uwe.filges@psi.ch> PSI, Jan 2004

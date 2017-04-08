@@ -22,15 +22,15 @@
 *
 * %Parameters
 * directbeam: []        If 1, the sample is a mirror with reflectivity 1. If 0, the mirror reflects like a D2O surface with zero roughness
-* Lam_min: [AA]         Minimum wavelength emitted by the cold moderator
-* Lam_max: [AA]         Maximum wavelength emitted by the cold moderator
-* deltatheta: [%]       The angular resolution
-* theta_sample: [deg]   The grazing angle
+* Lam_min: [AA]        Minimum wavelength emitted by the cold moderator
+* Lam_max: [AA]        Maximum wavelength emitted by the cold moderator
+* deltatheta: [%]      The angular resolution
+* theta_sample: [deg]  The grazing angle
 * defineAngle: []       If 0, the angle defining slits are wide open. If 1 the angular resolution is deltatheta
-* Qmin: [AA^-1]         The minimum value of the interesting Qrange
-* Qmax: [AA^-1]         The maximum value of the interesting Qrange
+* Qmin: [AA^-1]        The minimum value of the interesting Qrange
+* Qmax: [AA^-1]        The maximum value of the interesting Qrange
 * straight: []          If 1, the guide walls are straight
-* width: [m]            The width of the guide in the case of straight guide walls
+* width: [m]           The width of the guide in the case of straight guide walls
 *******************************************************************************/
 DEFINE INSTRUMENT Reflectometer(
 directbeam=1,

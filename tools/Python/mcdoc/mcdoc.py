@@ -228,18 +228,18 @@ def repair(args):
                     continue
         
         # edit par doc lines
-        if False:
+        if True:
             # continue working on transforming the lines
             if len(par_docs) == 0:
                 continue
-            l01 = max([len(p[0]) for p in par_docs]) + max([len(p[1]) for p in par_docs])
+            l01 = max([len(p[0]) + len(p[1]) for p in par_docs])
             
             for i in range(len(par_docs)):
                 p = par_docs[i]
                 idx = idxs[i]
                 
                 # reorganize the docstring line
-                format_str = '* %s: %-' +str(l01-len(p[0])+2)+ 's %s'
+                format_str = '* %s: %-' +str(l01-len(p[0])+3)+ 's %s'
                 l = format_str % (p[0], '['+p[1]+']', p[2])
                 print(l)
                 
@@ -257,7 +257,8 @@ def repair(args):
         for l in lines:
             print(l)
         
-    
+        #continue
+        
         f.close()
         f = open(filename, 'w')
         f.write('\n'.join(lines) + '\n')

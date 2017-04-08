@@ -19,11 +19,11 @@
 * %Example: L=60 Detector: Mon_LambdaDX_Out_I=0.790318
 *
 * %Parameters
-* L: [m]     total length of curved section
-* numel: [1] number of guide elements, each of length L/numel
-* R: [m]     curvature radius
-* width: [m] width of guide element
-* m: [1]     super-mirror coating wrt Ni, e.g. m=2
+* L: [m]      total length of curved section
+* numel: [1]  number of guide elements, each of length L/numel
+* R: [m]      curvature radius
+* width: [m]  width of guide element
+* m: [1]      super-mirror coating wrt Ni, e.g. m=2
 *
 * %End
 *******************************************************************************/

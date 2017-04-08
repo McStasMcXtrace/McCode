@@ -16,7 +16,7 @@
 * Simple test instrument for the Virtual_output component
 *
 * %Parameters
-* Vinfile: [string] Filename for storing events for processing by Virtual_input
+* Vinfile: [string]  Filename for storing events for processing by Virtual_input
 *
 * %Link
 * A reference/HTML link for more information

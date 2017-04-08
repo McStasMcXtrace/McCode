@@ -28,16 +28,16 @@
 * %Example: TT=-30 Detector: mon9_I=2.75547e-08
 *
 * %Parameters
-* TT: [deg]   Take-off angle at the sample position, aka A4
-* PHA: [deg]  Analyzer group rotation angle, aka A5
-* PHA1: [deg] Analyzer 1 tilt angle
-* PHA2: [deg] Analyzer 2 tilt angle
-* PHA3: [deg] Analyzer 3 tilt angle
-* PHA4: [deg] Analyzer 4 tilt angle
-* PHA5: [deg] Analyzer 5 tilt angle
-* PHA6: [deg] Analyzer 6 tilt angle
-* PHA7: [deg] Analyzer 7 tilt angle
-* TTA: [deg]  Take-off angle at the analyzer position, aka A6
+* TT: [deg]    Take-off angle at the sample position, aka A4
+* PHA: [deg]   Analyzer group rotation angle, aka A5
+* PHA1: [deg]  Analyzer 1 tilt angle
+* PHA2: [deg]  Analyzer 2 tilt angle
+* PHA3: [deg]  Analyzer 3 tilt angle
+* PHA4: [deg]  Analyzer 4 tilt angle
+* PHA5: [deg]  Analyzer 5 tilt angle
+* PHA6: [deg]  Analyzer 6 tilt angle
+* PHA7: [deg]  Analyzer 7 tilt angle
+* TTA: [deg]   Take-off angle at the analyzer position, aka A6
 *
 * %Link
 * The McStas User manual

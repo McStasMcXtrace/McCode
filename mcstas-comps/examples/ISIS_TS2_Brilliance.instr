@@ -19,7 +19,7 @@
 * Example: ISIS_brilliance Detector: Brillmon_I=3.80e+15 (First detector output)
 *
 * %Parameters
-* modfile: [string] Name of moderator face - TS2=groove,hydrogen,narrow,broad - - TS1=Water,ch4,h2,merlin or instrument name eg maps, crisp etc.
+* modfile: [string]  Name of moderator face - TS2=groove,hydrogen,narrow,broad - - TS1=Water,ch4,h2,merlin or instrument name eg maps, crisp etc.
 *
 * %Link
 *

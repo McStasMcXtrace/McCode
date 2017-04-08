@@ -18,9 +18,9 @@
 * Example: mcrun RTP_SANS.instr lambda=5
 *
 * %Parameters
-* theta: [deg]        horizontal rotation of the object
-* phi: [deg]          vertical rotation of the object
-* det_rotation: [deg] detector rotation around the sample
+* theta: [deg]         horizontal rotation of the object
+* phi: [deg]           vertical rotation of the object
+* det_rotation: [deg]  detector rotation around the sample
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>

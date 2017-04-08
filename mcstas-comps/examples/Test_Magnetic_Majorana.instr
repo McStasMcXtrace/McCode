@@ -25,9 +25,9 @@
 *
 * %Parameters
 *
-* Blarge: [T]       Large linear decreasing field along x axis (+Blarge to -Blarge).
-* Bsmall: [T]       Constant small component of field along y axis.
-* magnetLength: [m] Magnet length.
+* Blarge: [T]        Large linear decreasing field along x axis (+Blarge to -Blarge).
+* Bsmall: [T]        Constant small component of field along y axis.
+* magnetLength: [m]  Magnet length.
 *
 * %Link
 *

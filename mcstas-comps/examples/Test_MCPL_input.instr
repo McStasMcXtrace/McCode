@@ -18,10 +18,10 @@
 *
 * %Parameters
 *
-* repeat: [1]      Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
-* E_smear: [1]     When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
-* pos_smear: [m]   When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
-* dir_smear: [deg] When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
+* repeat: [1]       Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
+* E_smear: [1]      When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
+* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
 *
 * %End
 *******************************************************************************/

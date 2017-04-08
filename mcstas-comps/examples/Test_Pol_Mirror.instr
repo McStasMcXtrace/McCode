@@ -22,7 +22,7 @@
 * %Example: mirrorOption=1 Detector: lamReflec_I=3.27108e-05
 *
 * %Parameters
-* mirrorOption: [1] Option for mirror (1:T+R, 2:R, 3:T)
+* mirrorOption: [1]  Option for mirror (1:T+R, 2:R, 3:T)
 *
 * %Link
 *
