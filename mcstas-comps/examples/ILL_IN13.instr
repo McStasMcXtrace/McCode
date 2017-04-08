@@ -71,11 +71,11 @@
 * %Example: TM=301 Detector: SamposPSD_I=5905.14
 *
 * %Parameters
-* RMV:     [m]    monochromator vertical curvature. Use 0=flat, -1=auto.
-* RDV:     [m]    deflector vertical curvature. Use 0=flat, -1=auto.
-* RDH:     [m]    deflector horizontal curvature. Use 0=flat, -1=auto.
-* TM:      [K]    monochromator temperature, from 77 to 500 K
-* LMD:     [m]    monochromator-deflector distance
+* RMV: [m]          monochromator vertical curvature. Use 0=flat, -1=auto.
+* RDV: [m]          deflector vertical curvature. Use 0=flat, -1=auto.
+* RDH: [m]          deflector horizontal curvature. Use 0=flat, -1=auto.
+* TM: [K]           monochromator temperature, from 77 to 500 K
+* LMD: [m]          monochromator-deflector distance
 * CaF2mos: [arcmin] monochromator mosaic
 * mos_ana: [arcmin] analyser mosaic
 *

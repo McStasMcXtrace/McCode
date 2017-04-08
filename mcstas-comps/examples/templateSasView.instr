@@ -24,8 +24,8 @@
 * Very simple test instrument for the SasView_model component
 *
 * %Parameters
-* lambda:    Mean wavelength of neutrons      [AA]
-* dlambda:   Wavelength spread of neutrons    [AA]
+* lambda: [AA]  Mean wavelength of neutrons      
+* dlambda: [AA] Wavelength spread of neutrons    
 *
 * %Link
 * %End

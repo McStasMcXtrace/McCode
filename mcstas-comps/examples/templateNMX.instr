@@ -23,8 +23,8 @@
 * Example: templateNMX REPS=700 reflections=PPase_D_P1.lau Detector: det_I=29.6512
 *
 * %Parameters
-* REPS:
-* reflections:
+* REPS: []        
+* reflections: [] 
 *
 * %End
 *******************************************************************************/

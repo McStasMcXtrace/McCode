@@ -25,19 +25,19 @@
 * Spallation Neutron Source", Review of Scientific Instruments, 83 , 015114 (2012)</ul>
 *
 * %Parameters
-* Fermi_nu:   [Hz]    Frequency of the Fermi chopper
-* T0_nu:      [Hz]    Frequency of the T0 chopper
-* nrad:       [m]     Radius of the Fermi chopper blades
-* nchans:     [1]     Number of channels in the Fermi chopper
-* Edes:       [meV]   Desired/target energy
-* Et:         [meV]   Energy transfer of the Spot_sample
-* ttheta:     [deg]   Scattering angle of the Spot_sample
-* T0_off:     [deg]   Offset for T0 chopper (unused at present)
-* sxmin:      [m]     Sample slit horz min value
-* sxmax:      [m]     Sample slit horz max value
-* symin:      [m]     Sample slit vert min value
-* symax:      [m]     Sample slit vert max value
-* run_num:    [1]     Virtual source run number (unused at present)
+* Fermi_nu: [Hz]  Frequency of the Fermi chopper
+* T0_nu: [Hz]     Frequency of the T0 chopper
+* nrad: [m]       Radius of the Fermi chopper blades
+* nchans: [1]     Number of channels in the Fermi chopper
+* Edes: [meV]     Desired/target energy
+* Et: [meV]       Energy transfer of the Spot_sample
+* ttheta: [deg]   Scattering angle of the Spot_sample
+* T0_off: [deg]   Offset for T0 chopper (unused at present)
+* sxmin: [m]      Sample slit horz min value
+* sxmax: [m]      Sample slit horz max value
+* symin: [m]      Sample slit vert min value
+* symax: [m]      Sample slit vert max value
+* run_num: [1]    Virtual source run number (unused at present)
 *
 * %Link
 * <br>Granroth, G. E. and Abernathy, D. L., "Performance Comparisons of Four Direct Geometry Spectrometers Planned for Spallation Neutron Source",  Proceedings of ICANS-XVI, 289 (2003).

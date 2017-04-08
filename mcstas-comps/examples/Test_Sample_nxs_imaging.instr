@@ -18,15 +18,15 @@
 * %Example: Test_Sample_nxs_imaging.instr
 *
 * %Parameters
-* lambda1: [AA] Lower bound of wavelength band
-* lambda2: [AA] Upper bound of wavelength band
-* sample_detector_distance: [m] Distance between sample and detector
-* moderator_pinhole_distance: [m] Distance between moderator and pinhole
-* pinhole_sample_distance: [m] Distance between pinhole and sample
-* sample_x: [m] Sample translation along x
-* thickness: [m] Sample thickness along z
-* sample_file: [str] Crystallographic structure from 'nsx' file
-* moderator_face: [str] Chosen ISIS moderator
+* lambda1: [AA]                     Lower bound of wavelength band
+* lambda2: [AA]                     Upper bound of wavelength band
+* sample_detector_distance: [m]     Distance between sample and detector
+* moderator_pinhole_distance: [m]   Distance between moderator and pinhole
+* pinhole_sample_distance: [m]      Distance between pinhole and sample
+* sample_x: [m]                     Sample translation along x
+* thickness: [m]                    Sample thickness along z
+* sample_file: [str]                Crystallographic structure from 'nsx' file
+* moderator_face: [str]             Chosen ISIS moderator
 *
 * %Link
 * M. Boin (2012), <i>J. Appl. Cryst.</i> <b>45</b>, 603-607, <a href="http://dx.doi.org/10.1107/S0021889812016056">doi:10.1107/S0021889812016056</a>

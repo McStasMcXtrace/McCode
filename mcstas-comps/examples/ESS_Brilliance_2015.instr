@@ -23,13 +23,13 @@
 * the cold moderator "bucket". This means that you may need to shift the position of the moderator along z, when introducing it to your existing instruments.
 *
 * %Parameters
-* frac:
-* power:
-* Yheight:
-* np:
-* lambdamin:
-* lambdamax:
-* ANGLE:
+* frac: []      
+* power: []     
+* Yheight: []   
+* np: []        
+* lambdamin: [] 
+* lambdamax: [] 
+* ANGLE: []     
 *
 * %Link
 * A reference/HTML link for more information

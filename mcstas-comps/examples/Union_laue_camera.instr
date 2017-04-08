@@ -21,20 +21,20 @@
 * %Example: templateLaue Detector: det_I=8.39706e+06
 *
 * %Parameters
-* delta_d_d:
-* mosaic:
-* lam0:
-* dlam:
-* radius:
-* height:
-* x_rotation_geometry:
-* y_rotation_geometry:
-* x_rotation_geometry_ref:
-* y_rotation_geometry_ref:
-* x_rotation_process:
-* y_rotation_process:
-* z_rotation_process:
-* geometry_interact:
+* delta_d_d: []               
+* mosaic: []                  
+* lam0: []                    
+* dlam: []                    
+* radius: []                  
+* height: []                  
+* x_rotation_geometry: []     
+* y_rotation_geometry: []     
+* x_rotation_geometry_ref: [] 
+* y_rotation_geometry_ref: [] 
+* x_rotation_process: []      
+* y_rotation_process: []      
+* z_rotation_process: []      
+* geometry_interact: []       
 *
 * %End
 *******************************************************************************/

@@ -25,14 +25,14 @@
 * Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
 *
 * %Parameters
-* REPS:
-* reflections:
-* theta:
-* phi:
-* xw:
-* yh:
-* tmin:
-* tmax:
+* REPS: []        
+* reflections: [] 
+* theta: []       
+* phi: []         
+* xw: []          
+* yh: []          
+* tmin: []        
+* tmax: []        
 *
 * %End
 *******************************************************************************/

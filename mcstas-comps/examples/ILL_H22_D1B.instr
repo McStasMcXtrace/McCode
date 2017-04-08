@@ -38,29 +38,29 @@
 * %Example: lambda=2.52 Detector: D1B_BananaTheta_I=5097.25
 *
 * %Parameters:
-* m: [1]   m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* lambda:    [AA]  mean incident wavelength.
-* dlambda:   [AA]  wavelength full width.
-* RV:[m]   Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:[m]   Source-Monochromator distance
-* L2:[m]   Monochromator-Sample distance
-* L3:[m]   Sample-Detector distance
-* Powder:    [str] File name for powder description, LAZ/LAU/Fullprof
-* verbose:   [1]   Print DIF configuration. 0 to be quiet
-* R_pitch:   [deg] Angular pitch between the absorbing blades 
-* R_ri:      [m]   Inner radius of the collimator
-* R_ro:      [m]   Outer radius of the collimator 
-* R_h:       [m]   Height of the collimator
-* R_ttmin:   [deg] Lower scattering angle limit
-* R_ttmax:   [deg] Higher scattering angle limit
-* R_present: [1]   Presence flag for the radial collimator. 0: unactivate component.
-* Inc_Cryo:  [1]   Cryostat incoherent fraction
-* Trans_Cryo:[1]   Cryostat event transmission
-* Trans_Spl: [1]   Sample event transmission
-* Inc_Spl:   [1]   Sample incoherent fraction
-* TILT:      [deg] Monochromator additional tilt, for rocking curves
-* TRAS_X:    [m]   Additional monochromator translation along X, left/righ w.r.t beam
-* TRAS_Z:    [m]   Additional monochromator translation along Z, along guide
+* m: [1]            m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]      mean incident wavelength.
+* dlambda: [AA]     wavelength full width.
+* RV: [m]           Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]           Source-Monochromator distance
+* L2: [m]           Monochromator-Sample distance
+* L3: [m]           Sample-Detector distance
+* Powder: [str]     File name for powder description, LAZ/LAU/Fullprof
+* verbose: [1]      Print DIF configuration. 0 to be quiet
+* R_pitch: [deg]    Angular pitch between the absorbing blades
+* R_ri: [m]         Inner radius of the collimator
+* R_ro: [m]         Outer radius of the collimator
+* R_h: [m]          Height of the collimator
+* R_ttmin: [deg]    Lower scattering angle limit
+* R_ttmax: [deg]    Higher scattering angle limit
+* R_present: [1]    Presence flag for the radial collimator. 0: unactivate component.
+* Inc_Cryo: [1]     Cryostat incoherent fraction
+* Trans_Cryo: [1]   Cryostat event transmission
+* Trans_Spl: [1]    Sample event transmission
+* Inc_Spl: [1]      Sample incoherent fraction
+* TILT: [deg]       Monochromator additional tilt, for rocking curves
+* TRAS_X: [m]       Additional monochromator translation along X, left/righ w.r.t beam
+* TRAS_Z: [m]       Additional monochromator translation along Z, along guide
 *   
 * %End      
 *******************************************************************************/  

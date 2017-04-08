@@ -32,19 +32,19 @@
 * Example: mcrun test.instr <parameters=values>
 *
 * %Parameters
-* Lambda_source: [AA] central wavelength of the used wavelength spectra
-* dLambda_source: [AA] bandgab of the used wavelength spectra ( +/- from  Lambda_source )
+* Lambda_source: [AA]        central wavelength of the used wavelength spectra
+* dLambda_source: [AA]       bandgab of the used wavelength spectra ( +/- from  Lambda_source )
 * Sapphire_Filter_Flag: [--] flag to use (1) or not use (0) the high energie sapphire filter to clean the source spectrum
-* lens_width: [m] width of the central part of the focusing devise
-* lens_height: [m] height of the central part of the focusing devise
-* channel_width: [m] width of the channels of the focusing devise (NOT  for the central channel, central channel is given by lens_width)
-* channel_height: [m] height of the channels of the focusing devise (NOT  for the central channel, central channel is given by lens_height)
-* m_lens: m-value used for all layers of the focusing devise
-* lens_focal_in_hor: [m] distance of the focal point in front of the focusing devise to the entrance of the focusing devise for the horizontal direction
-* lens_focal_in_ver: [m] distance of the focal point in front of the focusing devise to the entrance of the focusing devise for the vertical direction
-* lens_focal_out_hor: [m] distance of the  exit of the focusing devise to the focal point behind the devise for the horizontal direction
-* lens_focal_out_ver: [m] distance of the  exit of the focusing devise to the focal point behind the devise  for the vertical direction
-* lens_glass_thickness: [m] thickness the the glass walls used  for the focusing devise
+* lens_width: [m]            width of the central part of the focusing devise
+* lens_height: [m]           height of the central part of the focusing devise
+* channel_width: [m]         width of the channels of the focusing devise (NOT  for the central channel, central channel is given by lens_width)
+* channel_height: [m]        height of the channels of the focusing devise (NOT  for the central channel, central channel is given by lens_height)
+* m_lens: []                 m-value used for all layers of the focusing devise
+* lens_focal_in_hor: [m]     distance of the focal point in front of the focusing devise to the entrance of the focusing devise for the horizontal direction
+* lens_focal_in_ver: [m]     distance of the focal point in front of the focusing devise to the entrance of the focusing devise for the vertical direction
+* lens_focal_out_hor: [m]    distance of the  exit of the focusing devise to the focal point behind the devise for the horizontal direction
+* lens_focal_out_ver: [m]    distance of the  exit of the focusing devise to the focal point behind the devise  for the vertical direction
+* lens_glass_thickness: [m]  thickness the the glass walls used  for the focusing devise
 *
 * %Link
 * A reference/HTML link for more information

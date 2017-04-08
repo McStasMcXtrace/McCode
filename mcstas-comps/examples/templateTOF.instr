@@ -24,19 +24,19 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* E0: [meV] incident neutron beam energy
-* dE: [meV] incident neutron beam energy spread
-* dt: [s] time spread from chopper distribution
-* coh: [str] sample coherent Sqw data file or NULL
-* inc: [str] sample incoherent Sqw data file or NULL
-* radius: [m] radius of sample (outer)
-* thickness: [m] thickness of sample. 0=filled
-* yheight: [m] height of sample. 0=sphere
-* container: [str] container material or NULL
-* container_thickness: [m] container thickness
-* environment: [str] sample environment material or NULL
-* environment_radius: [m] sample environment outer radius
-* environment_thickness: [m] sample environment thickness
+* E0: [meV]                    incident neutron beam energy
+* dE: [meV]                    incident neutron beam energy spread
+* dt: [s]                      time spread from chopper distribution
+* coh: [str]                   sample coherent Sqw data file or NULL
+* inc: [str]                   sample incoherent Sqw data file or NULL
+* radius: [m]                  radius of sample (outer)
+* thickness: [m]               thickness of sample. 0=filled
+* yheight: [m]                 height of sample. 0=sphere
+* container: [str]             container material or NULL
+* container_thickness: [m]     container thickness
+* environment: [str]           sample environment material or NULL
+* environment_radius: [m]      sample environment outer radius
+* environment_thickness: [m]   sample environment thickness
 *
 * %Link
 * The Isotropic_Sqw sample

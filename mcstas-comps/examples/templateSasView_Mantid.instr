@@ -33,7 +33,7 @@
 * c) Run Mantid algorithm: 'Qxy' using the options 'MaxQxy=0.6', 'DeltaQ=0.003', 'SolidAngleWeighting=False'
 *
 * %Parameters
-* lambda: [AA] Mean wavelength of neutrons
+* lambda: [AA]  Mean wavelength of neutrons
 * dlambda: [AA] Wavelength spread of neutrons
 *
 * %Link

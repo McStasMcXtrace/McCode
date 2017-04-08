@@ -22,18 +22,18 @@
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
 * %Parameters
-* comp_select:
-* material_data_file:
-* E0:
-* dE:
-* sample_radius:
-* sample_height:
-* pack:
-* sigma_inc:
-* sigma_abs:
-* Vc:
-* geometry_interact:
-* incoherent_fraction:
+* comp_select: []         
+* material_data_file: []  
+* E0: []                  
+* dE: []                  
+* sample_radius: []       
+* sample_height: []       
+* pack: []                
+* sigma_inc: []           
+* sigma_abs: []           
+* Vc: []                  
+* geometry_interact: []   
+* incoherent_fraction: [] 
 *
 * %End
 *******************************************************************************/

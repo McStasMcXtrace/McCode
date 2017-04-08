@@ -25,15 +25,15 @@
 * %Example: G=1 Detector: monPSD_I=2.50457e-16
 *
 * %Parameters
-* Qmin: [AA^-1]     Minimum momentum transfer on the detector
-* G: [1]            Ratio of the mirror focal length = increase in accepted divergence angle
-* H: [m]            Height of mirrors
-* F: [m]            Parabolic focal
-* DET: [m]          Distance between the two elliptic focal points
-* lambda: [AA]      Mean wavelength of neutrons
-* divergence: [deg] Source divergence
-* BeamWidth: [m]    Length of the source to focalize
-* TetaMin: [deg]    Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron)
+* Qmin: [AA^-1]       Minimum momentum transfer on the detector
+* G: [1]              Ratio of the mirror focal length = increase in accepted divergence angle
+* H: [m]              Height of mirrors
+* F: [m]              Parabolic focal
+* DET: [m]            Distance between the two elliptic focal points
+* lambda: [AA]        Mean wavelength of neutrons
+* divergence: [deg]   Source divergence
+* BeamWidth: [m]      Length of the source to focalize
+* TetaMin: [deg]      Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron)
 *
 * %Link
 *

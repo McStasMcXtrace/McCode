@@ -27,7 +27,7 @@
 * Example: mcrun Test_Scatter_log_losses LENGTH=10
 *
 * %Parameters
-* LENGTH: [m] The length of the guide to be modelled 
+* LENGTH: [m] The length of the guide to be modelled
 *
 * %Link
 * <a href="http://orbit.dtu.dk/files/57025387/prod11375088187360.NO_P_v8.pdf">Esben Klinkby talk at NOP&D 2013</a>

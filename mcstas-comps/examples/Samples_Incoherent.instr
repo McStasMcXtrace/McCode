@@ -66,16 +66,16 @@
 * %Example: SAMPLE=10 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.28905e+06
 *
 * %Parameters
-* L_min:    [AA] Minimum wavelength of neutrons
-* L_max:    [AA] Maximum wavelength of neutrons
-* SAMPLE:    [1]  box: 1=Vanadium 2=PowderN 3=Single_Crystal 4=Isotropic_Sqw 5=Incoherent cube.off: 6=PowderN, 7=Single_Crystal 8=Isotropic_Sqw 9=Incoherent
-* V_multiples: [1]  Use crude estimate for multiple scattering in V_sample?
-* STOP:      [1]  Beamstop inserted? (Needed in case of comparison between V and SX/sqw).
-* DB:        [1]  Direct Beam monitor inserted? (Side-effect: absorbs 'backscattered' neutrons).
-* Order:     [1]  Maximum order of multiple scattering in SX/sqw
-* INC:       [barns] Incoherent scattering cross section
-* ABS:       [barns] Absorption cross section
-* ISISFACE:  [string] ISIS moderator face to look at
+* L_min: [AA]           Minimum wavelength of neutrons
+* L_max: [AA]           Maximum wavelength of neutrons
+* SAMPLE: [1]           box: 1=Vanadium 2=PowderN 3=Single_Crystal 4=Isotropic_Sqw 5=Incoherent cube.off: 6=PowderN, 7=Single_Crystal 8=Isotropic_Sqw 9=Incoherent
+* V_multiples: [1]      Use crude estimate for multiple scattering in V_sample?
+* STOP: [1]             Beamstop inserted? (Needed in case of comparison between V and SX/sqw).
+* DB: [1]               Direct Beam monitor inserted? (Side-effect: absorbs 'backscattered' neutrons).
+* Order: [1]            Maximum order of multiple scattering in SX/sqw
+* INC: [barns]          Incoherent scattering cross section
+* ABS: [barns]          Absorption cross section
+* ISISFACE: [string]    ISIS moderator face to look at
 *
 * %Link
 * Validation of Single_crystal is now in progress!

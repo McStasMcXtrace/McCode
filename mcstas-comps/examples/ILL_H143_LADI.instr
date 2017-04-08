@@ -49,9 +49,9 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-*   lambda:        [Angs] wavelength
-*   dlambda:       [Angs] wavelength HALF spread. 
-*   reflections:   [str]  list of reflections describing the sample SX
+* lambda: [Angs]      wavelength
+* dlambda: [Angs]     wavelength HALF spread.
+* reflections: [str]  list of reflections describing the sample SX
 *   
 * %End
 *******************************************************************************/

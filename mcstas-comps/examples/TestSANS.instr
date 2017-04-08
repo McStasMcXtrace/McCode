@@ -18,13 +18,13 @@
 * a set of in-solution SANS samples.
 *
 * %Parameters
-* DistSrcPin1: [m] Distance to first pinhole from source.
-* DistSrcPin2: [m] Distance to second pinhole - used for focussing rays.
-* DistPinSamp: [m] Collimation length.
-* DistSampDet: [m] Sample-detector-distance.
-* DetRadius: [m] Radius of the circular detector.
-* Lambda: [AA] Wavelength of the rays emitted from source.
-* DLambda: [AA]	Relative deviation of wavelength of the rays emitted from source.
+* DistSrcPin1: [m]  Distance to first pinhole from source.
+* DistSrcPin2: [m]  Distance to second pinhole - used for focussing rays.
+* DistPinSamp: [m]  Collimation length.
+* DistSampDet: [m]  Sample-detector-distance.
+* DetRadius: [m]    Radius of the circular detector.
+* Lambda: [AA]      Wavelength of the rays emitted from source.
+* DLambda: [AA]     Relative deviation of wavelength of the rays emitted from source.
 *
 * %End
 *******************************************************************************/

@@ -22,14 +22,14 @@
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
 * %Parameters
-* comp_select:
-* sample_radius:
-* sample_height:
-* pack:
-* sigma_inc_vanadium:
-* sigma_abs_vanadium:
-* Vc_vanadium:
-* geometry_interact:
+* comp_select: []        
+* sample_radius: []      
+* sample_height: []      
+* pack: []               
+* sigma_inc_vanadium: [] 
+* sigma_abs_vanadium: [] 
+* Vc_vanadium: []        
+* geometry_interact: []  
 *
 *
 * %End

@@ -29,12 +29,12 @@
 * Example: mcrun RTP_SANS.instr lambda=5
 *
 * %Parameters
-* lambda:           [Angs] monochromator selected wavelength
-* dlambda:          [Angs] monochromator wavelength spread
-* DM:               [Angs] d-spacing for the monochromator reflection
-* Be_filter_depth:  [m]    thickness of the Be filter
-* Mono_tilt:        [deg]  angle tilt between the 3 monochromator layers
-* mono_rotation:    [deg]  additional monochromator offset rotation for e.g rocking curves
+* lambda: [Angs]          monochromator selected wavelength
+* dlambda: [Angs]         monochromator wavelength spread
+* DM: [Angs]              d-spacing for the monochromator reflection
+* Be_filter_depth: [m]    thickness of the Be filter
+* Mono_tilt: [deg]        angle tilt between the 3 monochromator layers
+* mono_rotation: [deg]    additional monochromator offset rotation for e.g rocking curves
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>

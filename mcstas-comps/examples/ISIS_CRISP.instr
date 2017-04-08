@@ -29,11 +29,11 @@
 * Example: -lgsl -lgslcblas FRAC=0.1 Detector: PSDdet1_I=43.7829
 *
 * %Parameters
-* glen: Length of the elliptical guides [m]
-* flen: Focal-length of elliptical guides [m]
-* w1: Entry-width of elliptical guides [m]
-* vm: m-value of material for left and right vertical guide mirrors [m]
-* FRAC: Fraction of statistics used to model incoherent scattering from sample [1]
+* glen: [m] Length of the elliptical guides 
+* flen: [m] Focal-length of elliptical guides 
+* w1: [m]   Entry-width of elliptical guides 
+* vm: [m]   m-value of material for left and right vertical guide mirrors 
+* FRAC: [1] Fraction of statistics used to model incoherent scattering from sample 
 *
 * %Link
 * <a href="http://www.isis.stfc.ac.uk/instruments/crisp/">Website of the CRISP instrument</a>

@@ -18,7 +18,7 @@
 * %Example: polariserIn=1 Detector: psdPolGuide_I=3.95407e+12
 *
 * %Parameters
-* polariserIn:
+* polariserIn: [] 
 *
 * %Link
 *

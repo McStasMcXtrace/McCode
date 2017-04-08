@@ -27,14 +27,14 @@
 * %Example: Fermi=5 Detector: Monitor2_xt_I=0.00058003
 *
 * %Parameters
-* Fermi: [1] Choice of Fermi chopper component to test, with 1=FermiChopper, 2=Vitess_ChopperFermi, 3=FermiChopper_ILL, 4=rotating Guide_gravity, 5=rotating Guide_channeled
-* width_FC:  total slit pack width [m]
-* height_FC: height of FC slit pack [m]
-* length_FC: length of FC slit pack [m]
-* FC_Hz:     rotation speed. Omega=2*PI*nu in rad/s, nu*60 in rpm [Hz]
-* d_SF:      distance from Source to FC center [m]
-* d_FD:      distance from FC center to Detector [m]
-* phase:     FC phase. Use -0 for automatic [deg]
+* Fermi: [1]       Choice of Fermi chopper component to test, with 1=FermiChopper, 2=Vitess_ChopperFermi, 3=FermiChopper_ILL, 4=rotating Guide_gravity, 5=rotating Guide_channeled
+* width_FC: [m]    total slit pack width 
+* height_FC: [m]   height of FC slit pack 
+* length_FC: [m]   length of FC slit pack 
+* FC_Hz: [Hz]      rotation speed. Omega=2*PI*nu in rad/s, nu*60 in rpm 
+* d_SF: [m]        distance from Source to FC center 
+* d_FD: [m]        distance from FC center to Detector 
+* phase: [deg]     FC phase. Use -0 for automatic 
 *
 * %End
 *******************************************************************************/

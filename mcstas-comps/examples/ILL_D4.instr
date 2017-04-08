@@ -30,14 +30,14 @@
 * %Example: lambda=0.7 Detector: BananaTheta_I=1.44351e+06
 *
 * %Parameters
-* lambda: [Angs] Wavelength at monochromator
-* DM:     [Angs] d-spacing of monochromator
-* RV:     [m]    Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:     [m]    Source-Monochromator distance
-* L2:     [m]    Monochromator-Sample distance
-* L3:     [m]    Sample-Detector distance
-* sample: [str]  File name for powder/liquid description LAU/LAZ/qSq/Sqw
-* verbose:[1]    Print DIF configuration. 0 to be quiet
+* lambda: [Angs]  Wavelength at monochromator
+* DM: [Angs]      d-spacing of monochromator
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* sample: [str]   File name for powder/liquid description LAU/LAZ/qSq/Sqw
+* verbose: [1]    Print DIF configuration. 0 to be quiet
 *
 * %Link
 * The <a href="http://www.ill.eu/d4">D4 diffractometer</a> at the ILL

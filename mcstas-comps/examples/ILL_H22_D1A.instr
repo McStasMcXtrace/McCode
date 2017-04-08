@@ -46,11 +46,11 @@
 * %Example: lambda=1.911 Detector: BananaPSD_I=3.8578E+05
 *
 * %Parameters
-* m:      [1]      m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* lambda: [Angs]   Wavelength at monochromator
-* DM:     [Angs]   d-spacing of monochromator. Use DM=0 to compute the values from the requested wavelength.
-* powder: [str]    File name for powder sample description
-* container: [str] File name for container decription in Al cryostat/furnace
+* m: [1]            m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [Angs]    Wavelength at monochromator
+* DM: [Angs]        d-spacing of monochromator. Use DM=0 to compute the values from the requested wavelength.
+* powder: [str]     File name for powder sample description
+* container: [str]  File name for container decription in Al cryostat/furnace
 *
 * %End
 *******************************************************************************/

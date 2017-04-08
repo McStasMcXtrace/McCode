@@ -24,54 +24,54 @@
 * %Example: Lmin=4.9 Detector: PSDfast2_I=3.0261e+10
 *
 * %Parameters
-* Lmin:              [AA]  Minimum wavelength emitted by the moderator
-* Lmax:              [AA]  Maximum wavelength emitted by the moderator
-* lambda0:           [AA]  Target wavelength for the monochromating crystal
-* Pulse_width:       [s]   Length of the long pulse. Default to 2 ms.
-* Num_pulses:        [1]   Number of pulses to simulate. Default 1.
+* Lmin: [AA]               Minimum wavelength emitted by the moderator
+* Lmax: [AA]               Maximum wavelength emitted by the moderator
+* lambda0: [AA]            Target wavelength for the monochromating crystal
+* Pulse_width: [s]         Length of the long pulse. Default to 2 ms.
+* Num_pulses: [1]          Number of pulses to simulate. Default 1.
 *
-* GUI_start:         [m]   Distance from moderator to guide start
-* FO1_DIST:          [m]   Distance from moderator to FO1 chopper
+* GUI_start: [m]           Distance from moderator to guide start
+* FO1_DIST: [m]            Distance from moderator to FO1 chopper
 * L_ballistic_begin: [m]   Length of expanding ballistic section in the beginning of the guide
-* L_ballistic_end:   [m]   Length of compressing ballistic section in the end of the guide
-* Length:            [m]   Total length of spectrometer (moderator to F2)
-* SAMPLE_DIST:       [m]   Distance from F2 to sample
-* DETECTOR_DIST:     [m]   Length sample-detector
+* L_ballistic_end: [m]     Length of compressing ballistic section in the end of the guide
+* Length: [m]              Total length of spectrometer (moderator to F2)
+* SAMPLE_DIST: [m]         Distance from F2 to sample
+* DETECTOR_DIST: [m]       Length sample-detector
 *
-* GUI_h:             [m]   Height of guide opening at entry
-* GUI_w:             [m]   Width of guide opening at entry
-* H1:                [m]   Height of guide elements
-* H2:                [m]   Height of guide elements
-* H3:                [m]   Height of guide elements
-* H4:                [m]   Height of guide elements
-* W1:                [m]   Width of guide elements
-* W2:                [m]   Width of guide elements
-* W3:                [m]   Width of guide elements
-* W4:                [m]   Width of guide elements
-* GUI_GAP:           [m]   Gap between guides due to chopper hardware
-* H_chop:            [m]   Height at F2 chopper position
-* W_chop:            [m]   Width at F2 chopper position
-* H_end:             [m]   Height of guide opening at exit
-* W_end:             [m]   Width of guide opening at exit
-* ALPHA:             [m]   Parameter for supermirrors in guides, Swiss Neutronics best at 3.4
-* M:                 [1]   Parameter for supermirrors in guides, Swiss Neutronics best at 4
+* GUI_h: [m]               Height of guide opening at entry
+* GUI_w: [m]               Width of guide opening at entry
+* H1: [m]                  Height of guide elements
+* H2: [m]                  Height of guide elements
+* H3: [m]                  Height of guide elements
+* H4: [m]                  Height of guide elements
+* W1: [m]                  Width of guide elements
+* W2: [m]                  Width of guide elements
+* W3: [m]                  Width of guide elements
+* W4: [m]                  Width of guide elements
+* GUI_GAP: [m]             Gap between guides due to chopper hardware
+* H_chop: [m]              Height at F2 chopper position
+* W_chop: [m]              Width at F2 chopper position
+* H_end: [m]               Height of guide opening at exit
+* W_end: [m]               Width of guide opening at exit
+* ALPHA: [m]               Parameter for supermirrors in guides, Swiss Neutronics best at 3.4
+* M: [1]                   Parameter for supermirrors in guides, Swiss Neutronics best at 4
 *
-* F_slow1:           [Hz]  Frequency of the FO1 chopper
-* F_slow2:           [Hz]  Frequency of the FO2 chopper
-* F_fast1:           [Hz]  Frequency of the F1 chopper
-* F_fast2:           [Hz]  Frequency of the F2 chopper
-* N_fast:            [1]   Number of symmetric openings in the fast F choppers
-* SLOW1_THETA:       [deg] Opening angle of the FO1 chopper
-* FO3:               [1]   Inverse frequency of FO3 chopper (if 1, same as F2; if 2, half of F2, etc.)
-* THETA_fast1:       [deg] Opening angle of the F1 chopper
-* FAST_THETA:        [deg] Opening angle of the F2 chopper
+* F_slow1: [Hz]            Frequency of the FO1 chopper
+* F_slow2: [Hz]            Frequency of the FO2 chopper
+* F_fast1: [Hz]            Frequency of the F1 chopper
+* F_fast2: [Hz]            Frequency of the F2 chopper
+* N_fast: [1]              Number of symmetric openings in the fast F choppers
+* SLOW1_THETA: [deg]       Opening angle of the FO1 chopper
+* FO3: [1]                 Inverse frequency of FO3 chopper (if 1, same as F2; if 2, half of F2, etc.)
+* THETA_fast1: [deg]       Opening angle of the F1 chopper
+* FAST_THETA: [deg]        Opening angle of the F2 chopper
 *
-* Gamma:             [meV] Width of sample quasielastic scattering (0=elastic)
-* Etun:              [meV] Tunneling energy
-* V_HOLE:            [m]   Radius of hole in V sample (must be smaller than the outer radius: 0.01)
-* FRAC_QUASIEL:      [1]   Fraction of the sample that scatters quasielastically
-* TT:                [deg] 2Theta (or a4) scattering angle
-* RES_DE:            [meV] Adjustable zoom for energy monitor at detector position
+* Gamma: [meV]             Width of sample quasielastic scattering (0=elastic)
+* Etun: [meV]              Tunneling energy
+* V_HOLE: [m]              Radius of hole in V sample (must be smaller than the outer radius: 0.01)
+* FRAC_QUASIEL: [1]        Fraction of the sample that scatters quasielastically
+* TT: [deg]                2Theta (or a4) scattering angle
+* RES_DE: [meV]            Adjustable zoom for energy monitor at detector position
 *
 * %Link
 * The <a href="http://wwwold.ill.fr/Computing/links/meetings/ESS-LP/">ESS-Rencurel</a> website.

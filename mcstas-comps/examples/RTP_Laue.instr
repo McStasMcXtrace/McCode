@@ -20,8 +20,8 @@
 * Example: mcrun RTP_SANS.instr lambda=5
 *
 * %Parameters
-* theta: [deg] horizontal rotation of the object
-* phi:   [deg] vertical rotation of the object
+* theta: [deg]        horizontal rotation of the object
+* phi: [deg]          vertical rotation of the object
 * det_rotation: [deg] detector rotation around the sample
 *
 * %Link

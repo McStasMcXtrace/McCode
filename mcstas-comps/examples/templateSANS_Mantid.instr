@@ -32,13 +32,13 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* lambda:    [AA] Mean wavelength of neutrons
-* dlambda:   [AA] Wavelength spread of neutrons
-* r:         [AA] Radius of scattering hard spheres
-* PHI:       [1] Particle volume fraction
+* lambda: [AA]         Mean wavelength of neutrons
+* dlambda: [AA]        Wavelength spread of neutrons
+* r: [AA]              Radius of scattering hard spheres
+* PHI: [1]             Particle volume fraction
 * Delta_Rho: [fm/AA^3] Excess scattering length density
-* sigma_abs: [barns] Absorption cross section at 2200 m/s
-* Qmax:      [AA^-1] Maximum momentum transfer
+* sigma_abs: [barns]   Absorption cross section at 2200 m/s
+* Qmax: [AA^-1]        Maximum momentum transfer
 *
 * %Link
 *

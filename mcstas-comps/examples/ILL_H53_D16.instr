@@ -24,25 +24,25 @@
 * Example: m=1.2 Detector: Det_psd_I=6.4729E+03
 *
 * %Parameters
-* m:      [1]    m-value of whole guide coating
-* GuideW: [m]    guide width along H53
-* lambda: [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
-* DM:     [Angs] d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
-* THETA_M:[deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
-* TILT:   [deg]  Monochromator additional tilt, for rocking curves
-* dlambda:[AA]   wavelength half width.
-* RV:     [m]    Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:     [m]    Guide-Monochromator distance
-* L2:     [m]    Monochromator-Sample distance
-* L3:     [m]    Sample-Detector distance
-* Powder: [str]  File name for powder description. 
+* m: [1]            m-value of whole guide coating
+* GuideW: [m]       guide width along H53
+* lambda: [Angs]    Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* DM: [Angs]        d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]    Monochromator take-off angle, computed from lambda and DM if left as 0.
+* TILT: [deg]       Monochromator additional tilt, for rocking curves
+* dlambda: [AA]     wavelength half width.
+* RV: [m]           Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]           Guide-Monochromator distance
+* L2: [m]           Monochromator-Sample distance
+* L3: [m]           Sample-Detector distance
+* Powder: [str]     File name for powder description.
 *                If set to NULL, use a 100 Angs particule colloid 
-* verbose:[1]    Print DIF configuration. 0 to be quiet
-* TwoTheta:[deg] Detector rotation (in plane)
-* RadiusDet:[m]  Detector entrance window radius
-* DetEthick:[m]  Detector entrance window thickness
-* DetEgap:  [m]  Detector entrance window gap to flat detector inner window
-* DetVthick:[m]  Detector active volume thickness 
+* verbose: [1]      Print DIF configuration. 0 to be quiet
+* TwoTheta: [deg]   Detector rotation (in plane)
+* RadiusDet: [m]    Detector entrance window radius
+* DetEthick: [m]    Detector entrance window thickness
+* DetEgap: [m]      Detector entrance window gap to flat detector inner window
+* DetVthick: [m]    Detector active volume thickness
 *
 * %Link
 * The <a href="http://www.ill.fr/d16">D16 diffractometer</a> at the ILL

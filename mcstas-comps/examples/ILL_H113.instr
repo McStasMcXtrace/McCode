@@ -19,10 +19,10 @@
 * %Example: lambda=10 Detector: GuideOut_Phic_I=2.3402e+10
 *
 * %Parameters
-* m:       [1]  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* lambda:  [AA] central wavelength
+* m: [1]        m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]  central wavelength
 * dlambda: [AA] wavelength half width. Use e.g. 0.8*lambda for white beam.
-* mip:     [1]  m-value of in-pile guide coating (3.5 first meters of guide)
+* mip: [1]      m-value of in-pile guide coating (3.5 first meters of guide)
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/PF1">PF1b beam line</a> at the ILL

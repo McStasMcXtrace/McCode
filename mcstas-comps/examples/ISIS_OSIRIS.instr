@@ -29,9 +29,9 @@
 *    McStas for completeness.
 *
 * %Parameters
-* LAMBDA: [AA] Central wavelength of source and chopper wavelength
-* DLAMBDA: [AA] Source interval (LAMBDA-DLAMBDA to LAMBDA+DLAMBDA)
-* GUIDEREFLECTIVITY: [1] Max reflectivity of guide
+* LAMBDA: [AA]            Central wavelength of source and chopper wavelength
+* DLAMBDA: [AA]           Source interval (LAMBDA-DLAMBDA to LAMBDA+DLAMBDA)
+* GUIDEREFLECTIVITY: [1]  Max reflectivity of guide
 *
 * %Link
 *

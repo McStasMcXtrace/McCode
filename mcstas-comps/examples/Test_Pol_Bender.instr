@@ -19,12 +19,12 @@
 * %Example: GUIDELENGTH=1 Detector: psdBender_I=0.703658
 *
 * %Parameters
-* GUIDELENGTH:
-* GUIDERADIUS:
-* ENDOPTION:
-* NSLITS:
-* WSPACER:
-* DRAWOPTION:
+* GUIDELENGTH: [] 
+* GUIDERADIUS: [] 
+* ENDOPTION: []   
+* NSLITS: []      
+* WSPACER: []     
+* DRAWOPTION: []  
 *
 * %Link
 *

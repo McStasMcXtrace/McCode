@@ -18,14 +18,14 @@
 * %Example: lambda=20.15 Detector: detector_I=3.4633E+01
 *
 * %Parameters
-* lambda: Mean wavelength of neutrons                 [AA]
-* dlambda:Wavelength spread of neutrons (fwhm)        [AA]
-* FLUX:   Source flux normalization constant          [1]
-* NGblen: Defining source radius (is \sqrt(2)*NGblen) [1]
-* Cblen:  Dimension of rectangular guide              [m]
-* Clen:   Distance source-guide                       [m]
-* Dlen:   Placement of final detector                 [m]
-* Rlense: Radius of lens                              [m]
+* lambda: [AA]  Mean wavelength of neutrons                 
+* dlambda: [AA] Wavelength spread of neutrons (fwhm)        
+* FLUX: [1]     Source flux normalization constant          
+* NGblen: [1]   Defining source radius (is \sqrt(2)*NGblen) 
+* Cblen: [m]    Dimension of rectangular guide              
+* Clen: [m]     Distance source-guide                       
+* Dlen: [m]     Placement of final detector                 
+* Rlense: [m]   Radius of lens                              
 *
 * %Link
 * The Lens_simple component

@@ -42,23 +42,23 @@
 * %Example: lambda=1 Detector: D2B_BananaPSD_I=1.4489E+04
 *
 * %Parameters
-* lambda: [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
-* coating:[1]    Super-mirror in-beam tube guide coating
-* DM:     [Angs] d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
-* THETA_M:[deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
-* TILT:   [deg]  Monochromator additional tilt, for rocking curves
-* RV:     [m]    Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:     [m]    Source-Monochromator distance
-* L2:     [m]    Monochromator-Sample distance
-* L3:     [m]    Sample-Detector distance
-* Powder: [str]  File name for powder description
-* verbose:[1]    Print DIF configuration. 0 to be quiet
-* ALPHA1: [min]  Horizontal collimator divergence for L1 arm (before monochromator)
-* ALPHA2: [min]  Horizontal collimator divergence for L2 arm (monochromator-sample)
-* ALPHA3: [min]  Horizontal collimator divergence for L3 arm (sample-detector)
-* ETA:    [min]  Monochromator horizontal mosaic (gaussian)
-* SM:     [1]    Scattering sense of beam from Monochromator. 1:left, -1:right
-* Dheight:[m]    Banana detector height
+* lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* coating: [1]    Super-mirror in-beam tube guide coating
+* DM: [Angs]      d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
+* TILT: [deg]     Monochromator additional tilt, for rocking curves
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* Powder: [str]   File name for powder description
+* verbose: [1]    Print DIF configuration. 0 to be quiet
+* ALPHA1: [min]   Horizontal collimator divergence for L1 arm (before monochromator)
+* ALPHA2: [min]   Horizontal collimator divergence for L2 arm (monochromator-sample)
+* ALPHA3: [min]   Horizontal collimator divergence for L3 arm (sample-detector)
+* ETA: [min]      Monochromator horizontal mosaic (gaussian)
+* SM: [1]         Scattering sense of beam from Monochromator. 1:left, -1:right
+* Dheight: [m]    Banana detector height
 *
 * %Link
 * G. Caglioti, A. Paoletti, F.P. Ricci, Nucl. Instr. and. Meth. 3 (1958) 223

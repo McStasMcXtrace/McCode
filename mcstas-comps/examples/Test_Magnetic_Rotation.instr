@@ -22,7 +22,7 @@
 * %Example: Test_Magnetic_Rotation.instr -n1e5 RESTORENEUT=1 Detector: MPLMonNum2Y_I=3.54525
 *
 * %Parameters
-* RESTORENEUT:
+* RESTORENEUT: [] 
 *
 * %Link
 *

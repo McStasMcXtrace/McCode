@@ -23,13 +23,13 @@
 * Example: mcrun SE_example.instr dBz=-0.0001,0.0001 -N41 -n1e5 
 *
 * %Parameters
-* POL_ANGLE: [deg] Reflection angle of polarizer/analyzer
-* SAMPLE: [1] Flag to include (0) or exclude incoherent scatterer
-* Bguide: [T] Field magnitude in guide fields
-* dBz:    [T] Magnitude field perturbation in first guide field
-* Bflip:  [T] Magnitude of flipper fields, 
-* Lam:    [Angstrom] Mean wavelength of neutrons emitted from source
-* dLam:   [Angstrom] Wavelength spread of neutrons emitted from source
+* POL_ANGLE: [deg]      Reflection angle of polarizer/analyzer
+* SAMPLE: [1]           Flag to include (0) or exclude incoherent scatterer
+* Bguide: [T]           Field magnitude in guide fields
+* dBz: [T]              Magnitude field perturbation in first guide field
+* Bflip: [T]            Magnitude of flipper fields,
+* Lam: [Angstrom]       Mean wavelength of neutrons emitted from source
+* dLam: [Angstrom]      Wavelength spread of neutrons emitted from source
 *
 * %Link
 * Requires mcstas 1.12b (or beta). PolLambda_monitor has been modified to work (nL->nlam)

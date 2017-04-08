@@ -12,27 +12,27 @@
 * %INSTRUMENT_SITE: FZ_Juelich
 *
 * %Parameters
-* cnum: Set to 0.0 for no polarizer as for benchmarking the normal SANS samples, to 2.0 for two cavities, keep default values as much as possible
-* lbdmin:
-* lbdmax:
-* NGbend:
-* NGblen:
-* Clen:
-* SampD:
-* bendL:
-* bendR:
-* bendM:
-* bendiM:
-* dfltM:
-* vorPl:    for two cavities
-* PolLen:   for two cavities
-* PolTot:   for two cavities
-* MDOWN:
-* Min:
-* ROT:
-* modnum:
-* sglscatt:
-* incs:
+* cnum: []     Set to 0.0 for no polarizer as for benchmarking the normal SANS samples, to 2.0 for two cavities, keep default values as much as possible
+* lbdmin: []   
+* lbdmax: []   
+* NGbend: []   
+* NGblen: []   
+* Clen: []     
+* SampD: []    
+* bendL: []    
+* bendR: []    
+* bendM: []    
+* bendiM: []   
+* dfltM: []    
+* vorPl: []    for two cavities
+* PolLen: []   for two cavities
+* PolTot: []   for two cavities
+* MDOWN: []    
+* Min: []      
+* ROT: []      
+* modnum: []   
+* sglscatt: [] 
+* incs: []     
 *
 * %End
 *******************************************************************************/
