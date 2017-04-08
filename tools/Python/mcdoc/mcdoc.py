@@ -156,10 +156,11 @@ def repair(args):
             print("failed parsing instr file: %s" % filename)
             quit()
     
+    cnt = 0
     for filename in local_instr_files:
-        f = open(filename)
+        f = open(filename, 'r')
         header = utils.read_header(f)
-        define = utils.read_define_instr(f)
+        #define = utils.read_define_instr(f)
         
         print('*****')
         print(filename)
@@ -233,8 +234,14 @@ def repair(args):
         
         for l in lines:
             print(l)
-        quit()
-    
+        
+        f.close()
+        f = open(filename, 'w')
+        f.write('\n'.join(lines) + '\n')
+        f.close()
+        
+        cnt += 1
+        print(cnt) 
     quit()
 
 def main(args):
@@ -280,7 +287,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     #test()
-    #repair(args)
+    repair(args)
 
     main(args)
 
