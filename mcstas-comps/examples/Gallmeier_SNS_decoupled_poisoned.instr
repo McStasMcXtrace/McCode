@@ -18,8 +18,8 @@
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Gallmeier SNS_source_analytic applying Ikeda-Carpenter vs. Pade function fits to MCNPX tables.
 *
 * %P
-* Lambda_min:        [AA]
-* Lambda_max:        [AA]
+* Lambda_min: [AA]
+* Lambda_max: [AA]
 *
 * %End
 *******************************************************************************/
