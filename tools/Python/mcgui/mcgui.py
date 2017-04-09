@@ -452,7 +452,9 @@ class McGuiState(QtCore.QObject):
         params = []
         for l in stdoutdata.splitlines():
             if 'Param:' in l:
-                s = l.split()[1]
+                s = l.split()
+                s[0]=""
+                s = ' '.join(s)
                 s = s.split('=')
                 params.append(s)
         
