@@ -447,11 +447,15 @@ def parse_define_instr(text):
             if re.match('string', part):
                 tpe = 'string'
                 part = part.replace('string', '').strip()
+            if re.match('int', part):
+                tpe = 'int'
+                part = part.replace('int', '').strip()
             if re.search('=', part):
                 dval = part.split('=')[1].strip()
                 name = part.replace('=', '')
                 name = name.replace(dval, '').strip()
-            params.append((tpe, name, dval))
+            if name is not None:
+                params.append((tpe, name, dval))
         return params
     
     return name, parse_params(params)
