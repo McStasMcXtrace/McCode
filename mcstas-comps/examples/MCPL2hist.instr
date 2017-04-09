@@ -30,7 +30,7 @@
 * MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT MCPL2hist(string MCPLfile="my.mcpl.gz", NDoptions=1)
+DEFINE INSTRUMENT MCPL2hist(string MCPLfile="my.mcpl.gz", int NDoptions=1)
 
 DECLARE
 %{
@@ -45,7 +45,10 @@ INITIALIZE
     sprintf(monopts,"previous, auto, x, y");
   } else if (NDoptions == 3) {
     sprintf(monopts,"previous, auto, tof, lambda");
+  } else {
+    printf("\n%s: Warning: NDoptions=%i is undefined. Your MonitorND will likely give no output.\n\n", NAME_CURRENT_COMP, NDoptions);
   }
+  printf("\n%s: Running with Monitor_nD options \"%s\"\n\n", NAME_CURRENT_COMP, monopts);
 %}
 
 TRACE
