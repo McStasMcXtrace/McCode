@@ -200,52 +200,19 @@ def get_parameters(options):
     ''' Get fixed and scan/optimise parameters '''
     fixed_params = {}
     intervals = {}
-    Partype = None
-    interval = None
     for param in options.params:
-        
-        # Check if previous parameter was string that needs termination
-        if Partype == "s":
-            if not fixed_params[key].endswith("\""):
-                fixed_params[key] = fixed_params[key] + "\""
-                
         if '=' in param:
             key, value = param.split('=', 1)
-
-            # Check if value not alpabetical, i.e a number
-            if not value[0].isalpha():
-                Partype = "n"
-                interval = value.split(',')
-            else:
-                # This is a string
-                Partype = "s"
-                
+            interval = value.split(',')
             # When just one point is present, fix as constant
-            if Partype == "s" or len(interval) == 1:
-                if Partype == "s":
-                    # Ensure to quote the string
-                    fixed_params[key] = "\"" + value
-                    LOG.debug('%s has string value starting with : %s',key, value)
-                else:
-                    fixed_params[key] = value
-                    LOG.debug('%s has numeric value: %s',key, value)
+            if len(interval) == 1:
+                fixed_params[key] = value
             else:
+                print("Yes")
                 LOG.debug('interval: %s', interval)
                 intervals[key] = interval
         else:
-            # No = above, continue last parameter value as string
-            if Partype == "s":
-                if fixed_params[key].endswith("\""):
-                    fixed_params[key] = fixed_params[key][:-1]
-                fixed_params[key] = fixed_params[key] + " " + param
-            else:
-                LOG.warning('Ignoring invalid parameter: "%s"', param)
-
-    # Check if last parameter is a string that needs a final quote
-    if Partype == "s":
-        if not fixed_params[key].endswith("\""):
-            fixed_params[key] = fixed_params[key] + "\""
-            
+            LOG.warning('Ignoring invalid parameter: "%s"', param)
     return (fixed_params, intervals)
 
 
@@ -293,7 +260,7 @@ def main():
     options.instr = find_instr_file(args[0])
 
     # Clean out quotes (perl mcgui requires this step)
-    options.params = args[1:]
+    options.params = map(clean_quotes, args[1:])
 
     # On windows, ensure that backslashes in the filename are escaped
     if sys.platform == "win32":
