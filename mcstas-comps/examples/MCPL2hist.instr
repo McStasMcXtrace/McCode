@@ -13,31 +13,39 @@
 * Flexible histogramming instrument file for processing MCPL input files using Monitor_nD.
 * 
 * Example1: Multiple 1D histograms of position, velocity, divergence, time and wavelength, use
-* NDoptions="previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda"
+* NDoptions=1 defines options="previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda"
 *
 * Example2: 2D x-y plot of beam cross section:
-* NDoptions="previous, auto, x, y"
+* NDoptions=2 defines options="previous, auto, x, y"
 * 
 * Example3: 2D TOF-lambda plot of beam:
-* NDoptions="previous, auto, tof, lambda"
+* NDoptions=3 defines options="previous, auto, tof, lambda"
 *
 * %P
 * MCPLfile:  [str] Defines the MCPL input file to process
-* NDoptions: [str] Defines what Monitor_nD measures
+* NDoptions: [int] Defines what Monitor_nD measures, see example list
 *
 * %L
 * <reference/HTML link>
 * MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT MCPL2hist(string MCPLfile="my.mcpl.gz", string NDoptions="previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda")
+DEFINE INSTRUMENT MCPL2hist(string MCPLfile="my.mcpl.gz", NDoptions=1)
 
 DECLARE
 %{
+  char monopts[128];
 %}
 
 INITIALIZE
 %{
+  if (NDoptions == 1) {
+    sprintf(monopts,"previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda");
+  } else if (NDoptions == 2) {
+    sprintf(monopts,"previous, auto, x, y");
+  } else if (NDoptions == 3) {
+    sprintf(monopts,"previous, auto, tof, lambda");
+  }
 %}
 
 TRACE
@@ -50,7 +58,7 @@ AT (0, 0, 0) ABSOLUTE
 COMPONENT MCPLinput = MCPL_input(filename=MCPLfile,verbose=1)
 AT(0,0,0) RELATIVE PREVIOUS
  
-COMPONENT MonND1 = Monitor_nD(options=NDoptions)
+COMPONENT MonND1 = Monitor_nD(options=monopts)
 AT (0,0,0) RELATIVE PREVIOUS
 
 FINALLY
