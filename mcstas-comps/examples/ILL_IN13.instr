@@ -76,6 +76,7 @@
 * LMD: [m]           monochromator-deflector distance
 * CaF2mos: [arcmin]  monochromator mosaic
 * mos_ana: [arcmin]  analyser mosaic
+* gW:
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN3">IN3 TAS</a> at the ILL

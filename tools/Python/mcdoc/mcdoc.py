@@ -238,6 +238,7 @@ def repair(args):
             name, real_pars = utils.parse_define_instr(define)
             real_parnames = [par[1] for par in real_pars]
             
+            # rewrite par doc lines, remove "bonus" doc lines without a parameter to document
             for i in range(len(par_docs)):
                 p = par_docs[i]
                 idx = idxs[i]
@@ -257,6 +258,23 @@ def repair(args):
                     # removed lines are above, but this may change
                     # (!!!!)
                     idxs_remove.append(idx)
+            
+            # add a stub par doc line for each par that isn't represented (WARNING: do not use while removing lines!
+            if True:
+                print()
+                extra_pardoc_lines = []
+                par_doc_names = [q[0] for q in par_docs]
+                for i in range(len(real_pars)):
+                    par_name = real_pars[i][1]
+                    if par_name not in par_doc_names:
+                        l = '* %s:' % par_name
+                        print(l)
+                        extra_pardoc_lines.append(l)
+                # insert those extra lines ...
+                good_idx = idxs[-1]
+                for i in range(len(extra_pardoc_lines)):
+                    l = extra_pardoc_lines[i]
+                    lines.insert(good_idx + i + 1, l)
         
         # append/read-append remaining lines
         for l in define.splitlines():
@@ -270,6 +288,8 @@ def repair(args):
         
         for l in lines:
             print(l)
+        
+        #continue
         
         f.close()
         f = open(filename, 'w')

@@ -43,6 +43,10 @@
 * det_takeoff: [deg]      Detector takeoff angle - positive anti-clockwise from incident beam
 * cor_to_det: [m]         Distance between sample centre of rotation and detector
 * dangle_interest: [deg]  Delta angle of interenterest.
+* hi_res:
+* mono_Si_type:
+* inc_slit_sep:
+* full_instrument:
 * full_instrument: []        When 1, simulates the complete instrument. When 0, only simulate from the outlet collimator
 *
 * %Link

@@ -27,6 +27,7 @@
 * ETA: [min]      Monochromator mosaic (gaussian)
 * verbose: [1]    Print DIF configuration. 0 to be quiet
 * SM: [1]         Scattering sense of beam from Monochromator. 1:left, -1:right
+* RH:
 *
 * %End
 *******************************************************************************/

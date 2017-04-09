@@ -22,10 +22,29 @@
 * %Example: KI=3.84 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=4.5e+07
 *
 * %Parameters
-* m: [1]          m-value of guide coating (H14/H142)
-* KI: [Angs-1]    central wavevector for incoming neutrons
-* QM: [Angs-1]    wavevector transfer modulus at the sample
-* EN: [meV]       energy transfer at the sample
+* m: [1]        m-value of guide coating (H14/H142)
+* KI: [Angs-1]  central wavevector for incoming neutrons
+* QM: [Angs-1]  wavevector transfer modulus at the sample
+* EN: [meV]     energy transfer at the sample
+* verbose:
+* WM:
+* HM:
+* NHM:
+* NVM:
+* RMV:
+* WA:
+* HA:
+* NHA:
+* NVA:
+* RAV:
+* RAH:
+* SM:
+* SS:
+* SA:
+* L1:
+* L2:
+* L3:
+* L4:
 *
 * %Link
 * The <a href="http://www.ill.fr/in22">IN22 TAS</a> at the ILL

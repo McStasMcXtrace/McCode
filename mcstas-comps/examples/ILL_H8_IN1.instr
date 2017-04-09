@@ -47,35 +47,35 @@
 * %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=1.06671e+09
 *
 * %Parameters
-* KI: [Angs-1]            Incoming neutron wavevector
-* KF: [Angs-1]            Outgoing neutron wavevector
-* EN: [meV]               Energy transfer in crystal
-* QM: [Angs-1]            Wavevector transfer in crystal
-* L1: [m]                 Source-Monochromator distance. Contains 1st Collimator of length 5.34
-* DM: [Angs]              Monochromator d-spacing
-* DA: [Angs]              Analyzer d-spacing
-* RMV: [m]                Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* RMH: [m]                Monochromator horizontal curvature, 0 for flat, -1 for automatic setting
-* RAV: [m]                Analyzer vertical curvature, 0 for flat, -1 for automatic setting
-* RAH: [m]                Analyzer horizontal curvature, 0 for flat, -1 for automatic setting
-* ALF1: [arc min]         Horizontal collimation from Source to Monochromator
-* ALF2: [arc min]         Horizontal collimation from Monochromator to Sample A
-* ALF3: [arc min]         Horizontal collimation from Sample to Analyzer
-* ALF4: [arc min]         Horizontal collimation from Analyzer to Detector
-* BET1: [arc min]         Vertical collimation from Source to Monochromator
-* BET2: [arc min]         Vertical collimation from Monochromator to Sample A
-* BET3: [arc min]         Vertical collimation from Sample to Analyzer
-* BET4: [arc min]         Vertical collimation from Analyzer to Detector
-* verbose: [1]            print TAS configuration. 0 to be quiet
+* KI: [Angs-1]     Incoming neutron wavevector
+* KF: [Angs-1]     Outgoing neutron wavevector
+* EN: [meV]        Energy transfer in crystal
+* QM: [Angs-1]     Wavevector transfer in crystal
+* L1: [m]          Source-Monochromator distance. Contains 1st Collimator of length 5.34
+* DM: [Angs]       Monochromator d-spacing
+* DA: [Angs]       Analyzer d-spacing
+* RMV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* RMH: [m]         Monochromator horizontal curvature, 0 for flat, -1 for automatic setting
+* RAV: [m]         Analyzer vertical curvature, 0 for flat, -1 for automatic setting
+* RAH: [m]         Analyzer horizontal curvature, 0 for flat, -1 for automatic setting
+* ALF1: [arc min]  Horizontal collimation from Source to Monochromator
+* ALF2: [arc min]  Horizontal collimation from Monochromator to Sample A
+* ALF3: [arc min]  Horizontal collimation from Sample to Analyzer
+* ALF4: [arc min]  Horizontal collimation from Analyzer to Detector
+* BET1: [arc min]  Vertical collimation from Source to Monochromator
+* BET2: [arc min]  Vertical collimation from Monochromator to Sample A
+* BET3: [arc min]  Vertical collimation from Sample to Analyzer
+* BET4: [arc min]  Vertical collimation from Analyzer to Detector
+* verbose: [1]     print TAS configuration. 0 to be quiet
 *
-* WM: [m]                 Width of monochromator
-* HM: [m]                 Height of monochromator
-* NVM: [1]                Number of vertical slabs composing the monochromator
-* NHM: [1]                Number of horizontal slabs composing the monochromator
-* WA: [m]                 Width of analyzer
-* HA: [m]                 Height of analyzer
-* NVA: [1]                Number of vertical slabs composing the analyzer
-* NHA: [1]                Number of horizontal slabs composing the analyzer
+* WM: [m]          Width of monochromator
+* HM: [m]          Height of monochromator
+* NVM: [1]         Number of vertical slabs composing the monochromator
+* NHM: [1]         Number of horizontal slabs composing the monochromator
+* WA: [m]          Width of analyzer
+* HA: [m]          Height of analyzer
+* NVA: [1]         Number of vertical slabs composing the analyzer
+* NHA: [1]         Number of horizontal slabs composing the analyzer
 *
 *
 * %Link

@@ -24,6 +24,7 @@
 * lmax: [A]       wavelength range max
 * ANGLE: [deg]    port angle
 * mon_shift: [m]  shift of the monitor along x-axis
+* frac:
 *
 * %Link
 * A reference/HTML link for more information

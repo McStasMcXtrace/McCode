@@ -37,6 +37,7 @@
 * symin: [m]      Sample slit vert min value
 * symax: [m]      Sample slit vert max value
 * run_num: [1]    Virtual source run number (unused at present)
+* T_off:
 *
 * %Link
 * <br>Granroth, G. E. and Abernathy, D. L., "Performance Comparisons of Four Direct Geometry Spectrometers Planned for Spallation Neutron Source",  Proceedings of ICANS-XVI, 289 (2003).

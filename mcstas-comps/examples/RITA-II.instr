@@ -135,6 +135,19 @@
 * CCZ: []                 
 * TILT: [deg]              Tilt angle out of plane of the sample scattering vector out of plane (rotation around z of the A3 arm)
 * BARNS: [1]               If set the flag indicates that reflection list structure factors are in units of barns, otherwise fm^2
+* BPL:
+* BPH:
+* MOS:
+* DD_D:
+* AAX:
+* AAY:
+* AAZ:
+* BBX:
+* BBY:
+* BBZ:
+* CCX:
+* CCY:
+* CCZ:
 *
 * %Link
 * Rescal for Matlab at http://www.ill.fr/tas/matlab

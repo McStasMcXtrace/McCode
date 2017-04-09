@@ -40,8 +40,8 @@
 * %Example: lambda=4.5 Detector: Det_PSD_I=1.1e6
 *
 * %Parameters
-* lambda: [AA]       mean incident wavelength
-* dlambda: [AA]      wavelength half width. Use e.g. 0.8*lambda for white beam.
+* lambda: [AA]   mean incident wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
 8
 DEFINE INSTRUMENT ILL_H16_IN5_Mantid(lambda=4.5, dlambda=0.09)
 
