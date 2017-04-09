@@ -44,7 +44,6 @@
 * %Example: lambda=1.911 Detector: BananaPSD_I=3.8578E+05
 *
 * %Parameters
-* m: [1]            m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
 * lambda: [Angs]    Wavelength at monochromator
 * DM: [Angs]        d-spacing of monochromator. Use DM=0 to compute the values from the requested wavelength.
 * powder: [str]     File name for powder sample description
@@ -52,10 +51,7 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ILL_H22_D1A(lambda=1.911, dlambda=0.03, DM=0, RV=-1,
-  string powder="Na2Ca3Al2F14.laz", string container="V.laz")
+DEFINE INSTRUMENT ILL_H22_D1A(lambda=1.911, dlambda=0.03, DM=0, RV=-1, string powder="Na2Ca3Al2F14.laz", string container="V.laz")
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

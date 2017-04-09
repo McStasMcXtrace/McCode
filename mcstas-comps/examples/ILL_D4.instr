@@ -42,12 +42,7 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 ,
-  string sample="SiO2_liq.qSq", RV=-1,
-  L1=6.4, L2=2.61, L3=1.148,
-  verbose=1)
+DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 , string sample="SiO2_liq.qSq", RV=-1, L1=6.4, L2=2.61, L3=1.148, verbose=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

@@ -52,7 +52,6 @@
 *   
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H143_LADI(lambda=3.2, dlambda=1, string reflections="leucine.lau")
 
 DECLARE

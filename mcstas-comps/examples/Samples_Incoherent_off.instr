@@ -26,7 +26,6 @@
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT Samples_Incoherent_off(string geometry="socket.off")
 
 TRACE

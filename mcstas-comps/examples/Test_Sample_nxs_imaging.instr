@@ -35,14 +35,7 @@
 *
 * %End
 ***************************************************/
-DEFINE INSTRUMENT Test_Sample_nxs_imaging( lambda1=3.7, lambda2=4.4,
-                               sample_detector_distance=0.05,
-                               moderator_pinhole_distance=30.0,
-                               pinhole_sample_distance=0.05,
-                               sample_x = 0.0,
-                               thickness = 0.02,
-                               string sample_file="Cu.nxs",
-                               string moderator_face="water" )
+DEFINE INSTRUMENT Test_Sample_nxs_imaging( lambda1=3.7, lambda2=4.4, sample_detector_distance=0.05, moderator_pinhole_distance=30.0, pinhole_sample_distance=0.05, sample_x = 0.0, thickness = 0.02, string sample_file="Cu.nxs", string moderator_face="water" )
 
 DECLARE
 %{

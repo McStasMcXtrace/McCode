@@ -35,8 +35,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_PowderN_Res(Lambda0=2.5667,dLambda=0.01,radius=0.01,TT=72,D_PHI=6, SPLITS=117,Distance=30,sig_abs=1e-9)
 
 /* The DECLARE section allows us to declare variables or  small      */

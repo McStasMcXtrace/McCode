@@ -28,7 +28,6 @@
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H142(m=1, lambda=10, dlambda=9.9, gH=0.12, mip=1)
 
 /* The DECLARE section allows us to declare variables or  small      */

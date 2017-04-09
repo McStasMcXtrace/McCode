@@ -29,7 +29,6 @@
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT Test_Guides(int Guide=1)
 
 INITIALIZE

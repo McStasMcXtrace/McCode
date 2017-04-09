@@ -33,8 +33,6 @@
 * Requires mcstas 1.12b (or beta). PolLambda_monitor has been modified to work (nL->nlam)
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT SE_example2(POL_ANGLE=2, SAMPLE=0, Bguide=0.1, Bflip=3e-4, dBz=0, Lam=8, dLam=0.8)
 
 /* The DECLARE section allows us to declare variables or  small      */

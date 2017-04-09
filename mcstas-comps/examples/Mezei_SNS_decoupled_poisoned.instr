@@ -24,8 +24,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Mezei_SNS_decoupled_poisoned(Lambda_min=0.5,Lambda_max=20)
 
 /* The DECLARE section allows us to declare variables or  small      */

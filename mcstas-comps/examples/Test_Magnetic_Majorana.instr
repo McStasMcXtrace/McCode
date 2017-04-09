@@ -33,10 +33,7 @@
 *
 * %End
 ****************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Magnetic_Majorana(Blarge=1.0, Bsmall=0.003, 
-					 magnetLength=1.0)
+DEFINE INSTRUMENT Test_Magnetic_Majorana(Blarge=1.0, Bsmall=0.003, magnetLength=1.0)
 					 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

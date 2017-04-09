@@ -82,11 +82,7 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ILL_BRISP(DM=3.355,
-  string coh="V.laz", string inc="NULL",
-  string container="NULL", LSD=4.5)
+DEFINE INSTRUMENT ILL_BRISP(DM=3.355, string coh="V.laz", string inc="NULL", string container="NULL", LSD=4.5)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

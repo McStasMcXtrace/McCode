@@ -88,10 +88,7 @@
 * http://www.ill.eu/fr/instruments-support/instruments-groups/instruments/in4c
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT ILL_IN4(lambda=2.2, dlambda=0.1, DM=3.355, 
-  ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1,
-  string sample_coh="Dirac2D.sqw", string sample_inc="NULL", order=1)
+DEFINE INSTRUMENT ILL_IN4(lambda=2.2, dlambda=0.1, DM=3.355, ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1, string sample_coh="Dirac2D.sqw", string sample_inc="NULL", order=1)
 
 DECLARE %{
   double A1, RMH, RMV=-1.9;

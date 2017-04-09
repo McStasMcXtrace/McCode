@@ -49,8 +49,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Histogrammer(string filename=0, int MODE=0 , string options="sphere theta phi outgoing previous", string type="text", int bufsize=10000, xwidth=0.1, yheight=0.1)
 
 /* The DECLARE section allows us to declare variables or  small      */

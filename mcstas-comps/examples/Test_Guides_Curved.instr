@@ -26,7 +26,6 @@
 * length: [m]     Length of the guide
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT Test_Guides_Curved(int Guide=1, curvature=1000, length=100)
 
 DECLARE

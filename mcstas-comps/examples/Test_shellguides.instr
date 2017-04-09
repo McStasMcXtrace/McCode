@@ -49,11 +49,6 @@
 *
 * %End
 *******************************************************************************/
-
-
-
-
-
 DEFINE INSTRUMENT Test_shellguides(Lambda_source=5, dLambda_source=2, Sapphire_Filter_Flag=1, lens_width = 0.004 , lens_height=0.004 , channel_width=0.002, channel_height=0.002, m_lens=5, lens_focal_in_hor = 0, lens_focal_in_ver = 0, lens_focal_out_hor= 0.5,  lens_focal_out_ver= 0.35, lens_glass_thickness=0.0002)
 
 DECLARE

@@ -30,11 +30,7 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_PreMonitor_nD(lambda=1, DM=3.355,
-  RV=-1, RH=-1, L1=17, L2=3.2, ETA=30,
-  verbose=1, THETA_M=0, SM=1)
+DEFINE INSTRUMENT Test_PreMonitor_nD(lambda=1, DM=3.355, RV=-1, RH=-1, L1=17, L2=3.2, ETA=30, verbose=1, THETA_M=0, SM=1)
 
 INITIALIZE
 %{

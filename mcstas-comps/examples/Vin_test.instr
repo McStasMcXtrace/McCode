@@ -23,8 +23,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Vin_test(string Vinfile="Vout_text.dat")
 
 /* The DECLARE section allows us to declare variables or  small      */

@@ -22,8 +22,6 @@
 * Example: m=1.2 Detector: Det_psd_I=6.4729E+03
 *
 * %Parameters
-* m: [1]           m-value of whole guide coating
-* GuideW: [m]      guide width along H53
 * lambda: [Angs]   Wavelength at monochromator, computed from DM and THETA_M if left as 0.
 * DM: [Angs]       d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
 * THETA_M: [deg]   Monochromator take-off angle, computed from lambda and DM if left as 0.
@@ -47,12 +45,7 @@
 *
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT ILL_H53_D16(lambda=4.7, DM=3.355, dlambda=0.05,
-  string Powder="Na2Ca3Al2F14.laz", RV=-1,
-  L1=0.1, L2=2.8, L3=1.0, THETA_M=44.46, 
-  TwoTheta=0, RadiusDet=0.36, DetEthick=.01, DetEgap=0.08, DetVthick=5e-3,
-  verbose=1, TILT=0)
+DEFINE INSTRUMENT ILL_H53_D16(lambda=4.7, DM=3.355, dlambda=0.05, string Powder="Na2Ca3Al2F14.laz", RV=-1, L1=0.1, L2=2.8, L3=1.0, THETA_M=44.46, TwoTheta=0, RadiusDet=0.36, DetEthick=.01, DetEgap=0.08, DetVthick=5e-3, verbose=1, TILT=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

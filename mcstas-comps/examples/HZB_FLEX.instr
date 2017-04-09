@@ -28,8 +28,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT HZB_FLEX(kI=1.55, kF=1.55, wVS=0.03, tilt=0, SA=-1, A3=0, A4=70, L3=1.00, L4=1.00, int Mono_flatswitch = 0)
 
 /* The DECLARE section allows us to declare variables or small      */

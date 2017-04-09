@@ -31,9 +31,7 @@
 * The Lens_simple component
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT FZJ_KWS2_Lens(lambda=20.15, dlambda=2.015, FLUX=1e8,
-     NGblen=0.03, Cblen=0.005,
-     Clen = 20.0, Dlen = 20.0, Rlense=0.025)
+DEFINE INSTRUMENT FZJ_KWS2_Lens(lambda=20.15, dlambda=2.015, FLUX=1e8, NGblen=0.03, Cblen=0.005, Clen = 20.0, Dlen = 20.0, Rlense=0.025)
 
 TRACE
 

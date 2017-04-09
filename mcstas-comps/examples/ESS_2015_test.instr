@@ -30,8 +30,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ESS_2015_test(frac=0.5, lmin=0.3, lmax=8.3, ANGLE=-55, mon_shift=0.0 )
 
 /* The DECLARE section allows us to declare variables or  small      */

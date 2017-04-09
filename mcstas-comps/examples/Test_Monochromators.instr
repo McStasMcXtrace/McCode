@@ -35,7 +35,6 @@
 *
 * %End
 ****************************************************************************/
-
 DEFINE INSTRUMENT Test_Monochromators(int Mono=1, lambda=2.0, Moz=40, PG=0, powder=0, order=1)
 
 DECLARE

@@ -25,9 +25,7 @@
 * The Isotropic_Sqw sample
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT Samples_Isotropic_Sqw(lambda=3.4,
-  string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw")
+DEFINE INSTRUMENT Samples_Isotropic_Sqw(lambda=3.4, string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw")
 
 TRACE
 

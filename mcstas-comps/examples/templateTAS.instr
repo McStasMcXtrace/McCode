@@ -134,29 +134,7 @@
 * Restrax at http://omega.ujf.cas.cz/restrax/
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT templateTAS(
-KI=2.662, KF=0, EI=0, EF=0,
-QH=0, QK=0, QL=0,
-EN=0, QM=0, KFIX=0, FX=0,
-L1=9, L2=2.1, L3=1.5, L4=0.7,
-SM=1, SS=-1, SA=1,
-DM=3.3539, DA=3.3539,
-RMV=-1, RMH=0, RAV=0, RAH=-1,
-ETAM=30, ETAA=30,
-ALF1=60, ALF2=60, ALF3=60, ALF4=60,
-BET1=120, BET2=120, BET3=120, BET4=120,
-AS=6.28, BS=6.28, CS=6.28,
-AA=90, BB=90, CC=90,
-AX=1, AY=0, AZ=0,
-BX=0, BY=1, BZ=0,
-verbose=1,
-A1=0,A2=0,A3=0,A4=0,A5=0,A6=0,
-NHM=1, NVM=9, WM=0.10, HM=0.12,
-NHA=9, NVA=1, WA=0.10, HA=0.12,
-string Sqw_coh="NULL", string Sqw_inc="NULL",
-radius=0.01, thickness=0.005, height=0.05
-)
+DEFINE INSTRUMENT templateTAS( KI=2.662, KF=0, EI=0, EF=0, QH=0, QK=0, QL=0, EN=0, QM=0, KFIX=0, FX=0, L1=9, L2=2.1, L3=1.5, L4=0.7, SM=1, SS=-1, SA=1, DM=3.3539, DA=3.3539, RMV=-1, RMH=0, RAV=0, RAH=-1, ETAM=30, ETAA=30, ALF1=60, ALF2=60, ALF3=60, ALF4=60, BET1=120, BET2=120, BET3=120, BET4=120, AS=6.28, BS=6.28, CS=6.28, AA=90, BB=90, CC=90, AX=1, AY=0, AZ=0, BX=0, BY=1, BZ=0, verbose=1, A1=0,A2=0,A3=0,A4=0,A5=0,A6=0, NHM=1, NVM=9, WM=0.10, HM=0.12, NHA=9, NVA=1, WA=0.10, HA=0.12, string Sqw_coh="NULL", string Sqw_inc="NULL", radius=0.01, thickness=0.005, height=0.05 )
 
 DECLARE
 %{

@@ -81,11 +81,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_IN6(lambda=4.14, dlambda=0.075, SPEED=-1,
-  M1=-1, M2=-1, M3=-1, MONITOR=1, CHA_WIDTH=-1,
-  TOF_DELAY=-1, TOF_CHA_RESOL=128, ELPEAK=-1, RATIO=1, mFC=0, PHASE=-360,
-  string Sqw_coh="Rb_liq_coh.sqw", string Sqw_inc="Rb_liq_inc.sqw",
-  radius=0.01, thickness=0.005)
+DEFINE INSTRUMENT ILL_IN6(lambda=4.14, dlambda=0.075, SPEED=-1, M1=-1, M2=-1, M3=-1, MONITOR=1, CHA_WIDTH=-1, TOF_DELAY=-1, TOF_CHA_RESOL=128, ELPEAK=-1, RATIO=1, mFC=0, PHASE=-360, string Sqw_coh="Rb_liq_coh.sqw", string Sqw_inc="Rb_liq_inc.sqw", radius=0.01, thickness=0.005)
 
 DECLARE
 %{

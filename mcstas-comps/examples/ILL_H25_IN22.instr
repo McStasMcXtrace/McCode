@@ -26,23 +26,12 @@
 * KI: [Angs-1]    central wavevector for incoming neutrons
 * QM: [Angs-1]    wavevector transfer modulus at the sample
 * EN: [meV]       energy transfer at the sample
-* Sqw_coh: [str]  sample coherent S(q,w) file name. Use LAZ/LAU or SQW file, NULL to scatter incoherently
-* Sqw_inc: [str]  sample incoherent S(q,w) file name. Use NULL to scatter incoherently
-* radius: [m]     outer radius of sample hollow cylinder/sphere
-* height: [m]     sample height. Use 0 for a spherical shape
-* thickness: [m]  thickness of sample hollow cylinder. 0 for bulk.
 *
 * %Link
 * The <a href="http://www.ill.fr/in22">IN22 TAS</a> at the ILL
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT ILL_H25_IN22(
-	m=2, KI=3.84, QM=1.0, EN=0.0, verbose=1,
-  WM=0.15, HM=0.12,    NHM=1, NVM=9, RMV=-1,
-  WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1, 
-  SM=-1, SS=1, SA=-1,
-  L1=10.0, L2=1.7, L3=1.0, L4=0.8)
+DEFINE INSTRUMENT ILL_H25_IN22( m=2, KI=3.84, QM=1.0, EN=0.0, verbose=1, WM=0.15, HM=0.12,    NHM=1, NVM=9, RMV=-1, WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1, SM=-1, SS=1, SA=-1, L1=10.0, L2=1.7, L3=1.0, L4=0.8)
 
 INITIALIZE
 %{

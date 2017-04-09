@@ -25,8 +25,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ISIS_TS1_Brilliance(string modfile="ch4")
 
 /* The DECLARE section allows us to declare variables or  small      */

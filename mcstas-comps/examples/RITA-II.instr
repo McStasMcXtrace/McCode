@@ -51,8 +51,6 @@
 * </ul>
 * %Parameters
 * ITAR: [mA]               Relative neutron yield from the spallation target. Value relative to 2009
-* KI: [Angs-1]             Incoming neutron wavevector. If set EI is automatically calculated
-* KF: [Angs-1]             Outgoing neutron wavevector. If set EI is automatically calculated
 * EI: [meV]                Incoming neutron energy. Also used to set range of energy monitors
 * EF: [meV]                Outgoing neutron energy. Also used to set range of energy monitors
 * QH: [rlu]                Measurement QH position in crystal
@@ -97,12 +95,8 @@
 * INFILTER: [1]            Flag to indicate if mono-block filter is in or out
 * INFILTERFILE: [string]   An input file of wavevector vs transmission to use with incoming filter
 * COARSE: [1]              Flag to indicate if Detector collimator is in or out
-* dmv: [m]                 Mono-virtual source dist
-* dvs: [m]                 virtual source - sample dist. dms=dmv+dvs
 * REP: [1]                 Repetition factor of virtual_input or Monochromator/Sample/Analyzer SPLITs
 * ANAFORCE: [1]            If set the analyzer is forced flat
-* ANA_MOS_H: [min]         Analyzer, horizontal mosaicity
-* ANA_MOS_V: [min]         Analyzer, vertical mosaicity
 * MONO_MOS_H: [min]        Monochromator, horizontal mosaicity
 * MONO_MOS_V: [min]        Monochromator, vertical mosaicity
 * LC: [deg]                Detector-collimator angle of the leftmost blade
@@ -116,9 +110,6 @@
 * SAMPLE: [1]              1 is incoherent scatterer, 2 is powder, 3 is single crystal.
 * SAMPLEFILE: [string]     Name of samplefile (with reflectionlist etc)
 * SAMPLESIZE: [m]          Length, height and width of single crystal sample, or radius and height of phonon sample
-* XW: [m]                  sample thickness across downstream direction
-* YH: [m]                  sample vertical height
-* ZT: [m]                  sample thickness along downstream direction
 * MOS: []                 Isotropic 'mosaicity' of single crystal
 * DD_D: []                spead of lattice parameter
 * AS: [Angs]               Sample lattice parameter A
@@ -151,31 +142,7 @@
 * Restrax at http://omega.ujf.cas.cz/restrax/
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT RITA_II( ITAR=1.0,L0=4.045,BPL=0.97,BPH=1.03,
-        MONO_N=1,MONOFORCE=0,MONO_MOS_H=37, MONO_MOS_V=37,
-        EI=0,EF=0,EN=0,
-        SM=1,SS=-1,SA=1,
-        QH=0, QK=0, QL=0, QM=1.8051,
-        AS=4.95, BS=4.95, CS=4.95,
-        AA=90, BB=90, CC=90,
-        AH=0, AK=1, AL=0,
-        BH=1, BK=0, BL=0,
-
-        INFILTER=0, string INFILTERFILE="Be.trm",
-        COLL_MS=80, MST=40, MSB=40, MSL=40, MSR=40,
-        PTHICK=1e-3,PERSPEX=0,
-        SAMPLE=1, string SAMPLEFILE="default",MOS=100,DD_D=1e-3, SAMPLESIZE=0.01,BARNS=1, 
-        AAX=-4.95, AAY=0, AAZ=0, 
-        BBX=0, BBY=0, BBZ=4.95, 
-        CCX=0, CCY=4.95, CCZ=0,
-        A1=0,A2=0,A3=0,A4=0,AA5=0,A6=0,TILT=0, 
-
-        SST=100, SSB=100, SSL=100, SSR=100,
-        OUTFILTER=1, string OUTFILTERFILE="Be.trm",
-        ANAFORCE=0, AA5=0,C1=0,C2=0,C3=0,C4=0,C5=0,C6=0,C7=0,C8=0,C9=0,
-        COARSE=1,LC=4, RC=3,
-        REP=1,VIRTUALOUT=0, VIRTUALIN=0, string SOURCEFILE="Vin_default.dat",verbose=1
-)
+DEFINE INSTRUMENT RITA_II( ITAR=1.0,L0=4.045,BPL=0.97,BPH=1.03, MONO_N=1,MONOFORCE=0,MONO_MOS_H=37, MONO_MOS_V=37, EI=0,EF=0,EN=0, SM=1,SS=-1,SA=1, QH=0, QK=0, QL=0, QM=1.8051, AS=4.95, BS=4.95, CS=4.95, AA=90, BB=90, CC=90, AH=0, AK=1, AL=0, BH=1, BK=0, BL=0,  INFILTER=0, string INFILTERFILE="Be.trm", COLL_MS=80, MST=40, MSB=40, MSL=40, MSR=40, PTHICK=1e-3,PERSPEX=0, SAMPLE=1, string SAMPLEFILE="default",MOS=100,DD_D=1e-3, SAMPLESIZE=0.01,BARNS=1, AAX=-4.95, AAY=0, AAZ=0, BBX=0, BBY=0, BBZ=4.95, CCX=0, CCY=4.95, CCZ=0, A1=0,A2=0,A3=0,A4=0,AA5=0,A6=0,TILT=0,  SST=100, SSB=100, SSL=100, SSR=100, OUTFILTER=1, string OUTFILTERFILE="Be.trm", ANAFORCE=0, AA5=0,C1=0,C2=0,C3=0,C4=0,C5=0,C6=0,C7=0,C8=0,C9=0, COARSE=1,LC=4, RC=3, REP=1,VIRTUALOUT=0, VIRTUALIN=0, string SOURCEFILE="Vin_default.dat",verbose=1 )
 
 DECLARE
 %{

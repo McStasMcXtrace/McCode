@@ -41,9 +41,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT TAS1_Vana(PHM=-37.077,TTM=-74,TT=33.52,
-  TTA=0,C1=30,OMC1=5.5,C2=28,C3=67,
-  OMA=-17.45)
+DEFINE INSTRUMENT TAS1_Vana(PHM=-37.077,TTM=-74,TT=33.52, TTA=0,C1=30,OMC1=5.5,C2=28,C3=67, OMA=-17.45)
 
 DECLARE
 %{

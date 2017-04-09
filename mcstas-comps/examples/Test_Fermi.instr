@@ -36,10 +36,7 @@
 *
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT Test_Fermi(int Fermi=1, lambda=3.39,
-  width_FC=0.044, height_FC=0.064,length_FC=0.012, FC_Hz=100,
-  Nslit_FC=120,d_SF=3, d_FD=3, phase=271.92)
+DEFINE INSTRUMENT Test_Fermi(int Fermi=1, lambda=3.39, width_FC=0.044, height_FC=0.064,length_FC=0.012, FC_Hz=100, Nslit_FC=120,d_SF=3, d_FD=3, phase=271.92)
 
 DECLARE %{
   double time_to_arrival;

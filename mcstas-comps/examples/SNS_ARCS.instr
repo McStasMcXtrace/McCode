@@ -32,7 +32,6 @@
 * Edes: [meV]     Desired/target energy
 * Et: [meV]       Energy transfer of the Spot_sample
 * ttheta: [deg]   Scattering angle of the Spot_sample
-* T0_off: [deg]   Offset for T0 chopper (unused at present)
 * sxmin: [m]      Sample slit horz min value
 * sxmax: [m]      Sample slit horz max value
 * symin: [m]      Sample slit vert min value

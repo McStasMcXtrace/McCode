@@ -54,13 +54,7 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355,
-  string Powder="Na2Ca3Al2F14.laz", RV=-1,
-  L1=17, L2=3.2, L3=1.471,
-  ALPHA1=5,ALPHA2=60,ALPHA3=5, ETA=12,
-  verbose=1, THETA_M=0, SM=1)
+DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355, string Powder="Na2Ca3Al2F14.laz", RV=-1, L1=17, L2=3.2, L3=1.471, ALPHA1=5,ALPHA2=60,ALPHA3=5, ETA=12, verbose=1, THETA_M=0, SM=1)
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */

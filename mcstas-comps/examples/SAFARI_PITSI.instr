@@ -50,16 +50,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT SAFARI_PITSI( source_lam_min=0.5, source_lam_max=2.0,
-      hi_res=0,
-      mono_Si_type=551, mono_mosh=30, mono_mosv=30,
-      mono_dx=0, mono_dy=0, mono_dz=0, mono_takeoff=90.0, mono_dtilt=0,mono_r_h=5.0,mono_r_v=3.572,
-      port_takeoff=90.0,
-      inc_slit_rot=0, inc_slit_dx=0, inc_slit_to_cor=0.01,
-      inc_slit_width=0.006, inc_slit_height=0.05, inc_slit_sep=0,
-      mono_to_cor=2.5, sample_dx=0, sample_dy=0, sample_dz=0, sample_dom=0,
-      det_takeoff=-114.375, cor_to_det=1.179, dangle_interest=125,
-      full_instrument=1)
+DEFINE INSTRUMENT SAFARI_PITSI( source_lam_min=0.5, source_lam_max=2.0, hi_res=0, mono_Si_type=551, mono_mosh=30, mono_mosv=30, mono_dx=0, mono_dy=0, mono_dz=0, mono_takeoff=90.0, mono_dtilt=0,mono_r_h=5.0,mono_r_v=3.572, port_takeoff=90.0, inc_slit_rot=0, inc_slit_dx=0, inc_slit_to_cor=0.01, inc_slit_width=0.006, inc_slit_height=0.05, inc_slit_sep=0, mono_to_cor=2.5, sample_dx=0, sample_dy=0, sample_dz=0, sample_dom=0, det_takeoff=-114.375, cor_to_det=1.179, dangle_interest=125, full_instrument=1)
 
 
 DECLARE

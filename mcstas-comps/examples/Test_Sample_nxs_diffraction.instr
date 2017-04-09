@@ -36,13 +36,7 @@
 *
 * %End
 ***************************************************/
-DEFINE INSTRUMENT Test_Sample_nxs_diffraction(lambda1=1.5, lambda2=1.51,
-                               sample_detector_distance=0.1,
-                               moderator_pinhole_distance=30.0,
-                               pinhole_sample_distance=0.05,
-                               sample_x = 0.0,
-                               string sample_file="Cu.nxs",
-                               string moderator_face="water")
+DEFINE INSTRUMENT Test_Sample_nxs_diffraction(lambda1=1.5, lambda2=1.51, sample_detector_distance=0.1, moderator_pinhole_distance=30.0, pinhole_sample_distance=0.05, sample_x = 0.0, string sample_file="Cu.nxs", string moderator_face="water")
 
 DECLARE
 %{
