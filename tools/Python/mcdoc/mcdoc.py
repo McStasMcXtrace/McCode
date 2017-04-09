@@ -159,8 +159,10 @@ def repair(args):
     cnt = 0
     for filename in local_instr_files:
         f = open(filename, 'r')
+        # read the first two instr file sections
         header = utils.read_header(f)
-                
+        define = utils.read_define_instr(f)
+        
         # doc lines
         print('*****')
         print(filename)
@@ -227,12 +229,14 @@ def repair(args):
                     idxs.append(i)
                     continue
         
-        # edit par doc lines
+        # edit par doc lines, remove superfluous
         if True:
-            # continue working on transforming the lines
             if len(par_docs) == 0:
                 continue
             l01 = max([len(p[0]) + len(p[1]) for p in par_docs])
+            
+            name, real_pars = utils.parse_define_instr(define)
+            real_parnames = [par[1] for par in real_pars]
             
             for i in range(len(par_docs)):
                 p = par_docs[i]
@@ -245,8 +249,18 @@ def repair(args):
                 
                 # replace l in lines:
                 lines[idx] = l
+                
+                # flag superfluous doc lines for removal
+                if p[0] not in real_parnames:
+                    # (!!!!)
+                    # TODO: take care of the ordering of idxs_remove. Today, we know that all previuosly 
+                    # removed lines are above, but this may change
+                    # (!!!!)
+                    idxs_remove.append(idx)
         
-        # read remaining lines
+        # append/read-append remaining lines
+        for l in define.splitlines():
+            lines.append(l)
         for l in f:
             lines.append(l.rstrip('\n'))
         
@@ -256,8 +270,6 @@ def repair(args):
         
         for l in lines:
             print(l)
-        
-        #continue
         
         f.close()
         f = open(filename, 'w')
