@@ -4,137 +4,15 @@ import logging
 import argparse
 import sys
 import os
+import re
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
 
-class InstrParInfo:
-    ''' Component parameter info, used as McComponentParser.pars '''
-    def __init__(self, info=None):
-        if info:
-            self.par_name = info.par_name
-            self.type = info.type
-            self.default_value = info.default_value
-            self.doc_and_unit = info.doc_and_unit
-        else:
-            self.par_name = ''       # parameter par_name
-            self.type = ''           # can be "string" or "int", but is mostly empty
-            self.default_value = ''
-            self.doc_and_unit = ''   # doc string and unit (no linebreaks)
-
-class InstrParser:
-    ''' parses an instr file, extracting all relevant information into python '''
-    def __init__(self, instr_file):
-        self.instr_file = instr_file
-        self.info = None
-    
-    def parse(self):
-        try:
-            self._parse()
-        except:
-            self._parse_legacy()
-        return self.info
-        
-    def _parse(self):
-        raise Exception()
-    
-    def _parse_legacy(self):
-        ''' parses the given instr file '''
-        
-        f = open(self.instr_file)
-        logging.debug('parsing file "%s"' % self.instr_file)
-        
-        header = utils.read_header(f)
-        info = utils.parse_instr_header(header)
-        info.site = utils.get_instr_site_fromtxt(header)
-        info.name, info.params = utils.parse_define_instr(utils.read_define_instr(f))
-        
-        self.info = info
-
-class InstrDocWriter:
-    tags = ['%TITLE%', '%INSTRNAME%', '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%THEAD_ROW%', '%T_ROWS%', '%GENDATE%']
-    par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
-    lnk_str = ""
-    
-    html = '''
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD>
-<TITLE>McStas: %TITLE%</TITLE>
-<LINK REV="made" HREF="mailto:pkwi@fysik.dtu.dk">
-</HEAD>
-
-<BODY>
-
-<P ALIGN=CENTER>
- [ <A href="#id">Identification</A>
- | <A href="#desc">Description</A>
- | <A href="#ipar">Input parameters</A>
- | <A href="#opar">Output parameters</A>
- | <A href="#links">Links</A> ]
-</P>
-
-<H1>The <CODE>%INSTRNAME%</CODE> Instrument</H1>
-
-Simple test instrument for sample component.
-
-<H2><A NAME=id></A>Identification</H2>
-
-<UL>
-  <LI> <B>Site: </B>%SITE%
-  <LI> <B>Author: </B>%AUTHOR%
-  <LI> <B>Origin: </B>%ORIGIN%
-  <LI> <B>Date: </B>%DATE%
-</UL>
-<H2><A NAME=desc></A>Description</H2>
-
-<PRE>
-%DESCRIPTION%
-</PRE>
-
-<H2><A NAME=ipar></A>Input parameters</H2>
-Parameters in <B>boldface</B> are required;
-the others are optional.
-
-<TABLE BORDER=1>
-%THEAD_ROW%
-%T_ROWS%
-</TABLE>
-
-<H2><A NAME=links></A>Links</H2>
-
-<UL>
-  <LI> <A HREF="Union_demonstration_absorption_image.instr">Source code</A> for <CODE>test.instr</CODE>.
-</UL>
-<HR>
-<P ALIGN=CENTER>
- [ <A href="#id">Identification</A>
- | <A href="#desc">Description</A>
- | <A href="#ipar">Input parameters</A>
- | <A href="#opar">Output parameters</A>
- | <A href="#links">Links</A> ]
-</P>
-
-<ADDRESS>
-Generated automatically by McDoc, Peter Willendrup
-&lt;<A HREF="mailto:peter.willendrup@risoe.dk">pkwi@fysik.dtu.dk</A>&gt; /
-%GENDATE%</ADDRESS>
-</BODY></HTML>
-'''
-    def __init__(self, instr_parser):
-        self.instr_parser = instr_parser
-    def _create_html(self):
-        pass
-    def write_file(self):
-        pass
-
-def write_file(filename, text):
-    f = open(filename, 'w')
-    f.write(text)
-    f.close()
-
-import re
 def repair(localdir):
+    '''
+    Dev function used to alter instr file headers.
+    '''
     local_instr_files, local_comp_files = utils.get_instr_comp_files(localdir)
     
     files = []
@@ -294,6 +172,133 @@ def repair(localdir):
     quit()
 
 
+class InstrParInfo:
+    ''' Component parameter info, used as McComponentParser.pars '''
+    def __init__(self, info=None):
+        if info:
+            self.par_name = info.par_name
+            self.type = info.type
+            self.default_value = info.default_value
+            self.doc_and_unit = info.doc_and_unit
+        else:
+            self.par_name = ''       # parameter par_name
+            self.type = ''           # can be "string" or "int", but is mostly empty
+            self.default_value = ''
+            self.doc_and_unit = ''   # doc string and unit (no linebreaks)
+
+class InstrParser:
+    ''' parses an instr file, extracting all relevant information into python '''
+    def __init__(self, instr_file):
+        self.instr_file = instr_file
+        self.info = None
+    
+    def parse(self):
+        try:
+            self._parse()
+        except:
+            self._parse_legacy()
+        return self.info
+        
+    def _parse(self):
+        raise Exception()
+    
+    def _parse_legacy(self):
+        ''' parses the given instr file '''
+        
+        f = open(self.instr_file)
+        logging.debug('parsing file "%s"' % self.instr_file)
+        
+        header = utils.read_header(f)
+        info = utils.parse_instr_header(header)
+        info.site = utils.get_instr_site_fromtxt(header)
+        info.name, info.params = utils.parse_define_instr(utils.read_define_instr(f))
+        
+        self.info = info
+
+class InstrDocWriter:
+    tags = ['%TITLE%', '%INSTRNAME%', '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%THEAD_ROW%', '%T_ROWS%', '%GENDATE%']
+    par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    lnk_str = ""
+    
+    html = '''
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>McStas: %TITLE%</TITLE>
+<LINK REV="made" HREF="mailto:pkwi@fysik.dtu.dk">
+</HEAD>
+
+<BODY>
+
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<H1>The <CODE>%INSTRNAME%</CODE> Instrument</H1>
+
+Simple test instrument for sample component.
+
+<H2><A NAME=id></A>Identification</H2>
+
+<UL>
+  <LI> <B>Site: </B>%SITE%
+  <LI> <B>Author: </B>%AUTHOR%
+  <LI> <B>Origin: </B>%ORIGIN%
+  <LI> <B>Date: </B>%DATE%
+</UL>
+<H2><A NAME=desc></A>Description</H2>
+
+<PRE>
+%DESCRIPTION%
+</PRE>
+
+<H2><A NAME=ipar></A>Input parameters</H2>
+Parameters in <B>boldface</B> are required;
+the others are optional.
+
+<TABLE BORDER=1>
+%THEAD_ROW%
+%T_ROWS%
+</TABLE>
+
+<H2><A NAME=links></A>Links</H2>
+
+<UL>
+  <LI> <A HREF="Union_demonstration_absorption_image.instr">Source code</A> for <CODE>test.instr</CODE>.
+</UL>
+<HR>
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<ADDRESS>
+Generated automatically by McDoc, Peter Willendrup
+&lt;<A HREF="mailto:peter.willendrup@risoe.dk">pkwi@fysik.dtu.dk</A>&gt; /
+%GENDATE%</ADDRESS>
+</BODY></HTML>
+'''
+    def __init__(self, instr_parser):
+        self.instr_parser = instr_parser
+    
+    def create(self):
+        self.text = 'hest'
+        return self.text
+
+
+def write_file(filename, text):
+    f = open(filename, 'w')
+    f.write(text)
+    f.close()
+
+
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
@@ -311,6 +316,7 @@ def main(args):
     lib_instr_files, lib_comp_files = utils.get_instr_comp_files(libdir)
     local_instr_files, local_comp_files = utils.get_instr_comp_files(localdir)
     
+    # parse all instr files
     rows = []
     files = []
     for f in local_instr_files:
@@ -324,7 +330,19 @@ def main(args):
             quit()
     print("parsed instr files: %s" % str(len(lib_instr_files)))
     
+    html_files = []
+    # generate and save all html pages docs
+    for f in files: 
+        doc = InstrDocWriter(f)
+        text = doc.create()
+        h = os.path.splitext(f)[0] + '.html'
+        print("writing doc file... %s" % h)
+        write_file(h, text)
+        html_files.append(h)
     
+    # TODO: write overview files, properly assembling links to instr- and html-files
+    for h in html_files:
+        pass
     
     # debug files with a header property each
     if args.debug:
