@@ -85,9 +85,8 @@ int conditional_function_PSD(union conditional_data_union *data_union, Coords *p
 
   
   // Transform to this coordinate system
-  Coords local_position = transform_position(*position,data_union->p_PSD->PSD_position,data_union->p_PSD->PSD_t_rotation);
-  Coords local_velocity = rot_apply(data_union->p_PSD->PSD_t_rotation,*velocity);
-  
+  Coords local_position = transform_position(*position,data_union->p_PSD->PSD_position,data_union->p_PSD->PSD_rotation);
+  Coords local_velocity = rot_apply(data_union->p_PSD->PSD_rotation,*velocity);
   
   // Prop_Z0
   if (local_velocity.z == 0) return 0;
@@ -95,6 +94,7 @@ int conditional_function_PSD(union conditional_data_union *data_union, Coords *p
   if (dt<0) return 0;
   local_position.x = local_position.x + dt*local_velocity.x;
   local_position.y = local_position.y + dt*local_velocity.y;
+  
   double detect_time = *time + dt;
   
   if (data_union->p_PSD->T_limit == 1) {

@@ -225,9 +225,9 @@ void record_to_temp_2DS_t(Coords *position, double *k_new, double *k_old, double
         storage->temp_2DS_t_data.elements[storage->temp_2DS_t_data.num_elements++].weight = p;
       }
   
-    // If this is the first time this ray is being recorded in this logger, add it to the list of loggers that write to temp and may get it moved to perm
-    if (storage->temp_2DS_t_data.num_elements == 1)
-      add_to_logger_with_data(logger_with_data_array,logger);
+      // If this is the first time this ray is being recorded in this logger, add it to the list of loggers that write to temp and may get it moved to perm
+      if (storage->temp_2DS_t_data.num_elements == 1)
+        add_to_logger_with_data(logger_with_data_array,logger);
       
     }
   }

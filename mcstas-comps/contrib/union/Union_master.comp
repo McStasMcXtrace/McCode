@@ -52,7 +52,7 @@ DEPENDENCY "-I@MCCODE_LIB@/share/"
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
+#define Union $Revision: 0.9 $
 
 #include "Union_functions.c"
 #include "Union_initialization.c"
@@ -362,6 +362,9 @@ INITIALIZE
     free_tagging_conditioanl_list = 1;
   }
   
+    // The absolute rotation of this component is saved for use in initialization
+  rot_transpose(ROT_A_CURRENT_COMP,master_transposed_rotation_matrix);
+  
   // Update positions and rotations in transform lists
   for (iterate=0;iterate<global_positions_to_transform_list.num_elements;iterate++) {
     //print_position(*global_positions_to_transform_list.positions[iterate],"Position to transform before");
@@ -376,16 +379,15 @@ INITIALIZE
   }
   for (iterate=0;iterate<global_rotations_to_transform_list.num_elements;iterate++) {
     //print_rotation(*(global_rotations_to_transform_list.rotations[iterate]),"rotation matrix to be updated");
-    rot_mul(ROT_A_CURRENT_COMP,*(global_rotations_to_transform_list.rotations[iterate]),temp_rotation_matrix);
+    
+    //rot_mul(ROT_A_CURRENT_COMP,*(global_rotations_to_transform_list.rotations[iterate]),temp_rotation_matrix);
+    rot_mul(master_transposed_rotation_matrix,*(global_rotations_to_transform_list.rotations[iterate]),temp_rotation_matrix);
     rot_copy(*(global_rotations_to_transform_list.rotations[iterate]),temp_rotation_matrix);
   }
   if (global_rotations_to_transform_list.num_elements > 0) {
     global_rotations_to_transform_list.num_elements = 0;
     free(global_rotations_to_transform_list.rotations);
   }
-  
-  // The absolute rotation of this component is saved for use in initialization
-  rot_transpose(ROT_A_CURRENT_COMP,master_transposed_rotation_matrix);
   
   // A pointer to the geometry structure
   Geometries[0] = &Volumes[0]->geometry;
@@ -566,16 +568,28 @@ INITIALIZE
       Volumes[volume_index]->geometry.center.y = rotated_position.y;
       Volumes[volume_index]->geometry.center.z = rotated_position.z;
       
+      // The focus_data information need to be updated as well
+      rot_mul(ROT_A_CURRENT_COMP,Volumes[volume_index]->geometry.focus_data.absolute_rotation,temp_rotation_matrix);
+      // Copy the result back to the volumes structure
+      rot_copy(Volumes[volume_index]->geometry.focus_data.absolute_rotation,temp_rotation_matrix);
+      // Now update the transpose as well
+      //rot_transpose(Volumes[volume_index]->geometry.focus_data.absolute_rotation,temp_rotation_matrix);
+      //rot_copy(Volumes[volume_index]->geometry.transpose_rotation_matrix,temp_rotation_matrix);
+      
       // Using the same algorithm, the Aim vector of the focus_data struct is transformed as well
+      // There may be an issue with focusing in a isotropic and non isotropic scattering process
       non_rotated_position.x = Volumes[volume_index]->geometry.focus_data.Aim.x;
       non_rotated_position.y = Volumes[volume_index]->geometry.focus_data.Aim.y;
       non_rotated_position.z = Volumes[volume_index]->geometry.focus_data.Aim.z;
 
       rotated_position = rot_apply(ROT_A_CURRENT_COMP,non_rotated_position);
+      //rotated_position = rot_apply(master_transposed_rotation_matrix,non_rotated_position);
 
+      /*
       Volumes[volume_index]->geometry.focus_data.Aim.x = rotated_position.x;
       Volumes[volume_index]->geometry.focus_data.Aim.y = rotated_position.y;
       Volumes[volume_index]->geometry.focus_data.Aim.z = rotated_position.z;
+      */
 
       //sprintf(string_output,"Rotated Aim vector for volume [%d]",volume_index);
       //print_position(Volumes[volume_index]->geometry.focus_data.Aim,string_output);
@@ -710,6 +724,7 @@ INITIALIZE
   if (max_conditional_extend_index > -1) {
     logger_conditional_extend_array = malloc((max_conditional_extend_index + 1)*sizeof(int));
   }
+  
   
   // In this function different lists of volume indecies are generated. They are the key to the speed of the component and central for the logic.
   // They use simple set algebra to generate these lists for each volume:
@@ -888,6 +903,7 @@ TRACE
   done = 0;
   error_msg = 0;
   clear_intersection_table(&intersection_time_table);
+  
   
   time_propagated_without_scattering = 0;
   v_length = sqrt(vx*vx+vy*vy+vz*vz);
@@ -1151,6 +1167,7 @@ TRACE
                 wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index],wavevector);
                 
                 coords_get(wavevector_rotated,&k_rotated[0],&k_rotated[1],&k_rotated[2]);
+
               } else {
                 k_rotated[0] = k[0]; k_rotated[1] = k[1]; k_rotated[2] = k[2];
               }
@@ -1179,10 +1196,12 @@ TRACE
             
             my_sum_plus_abs = my_sum + Volumes[current_volume]->p_physics->my_a*(2200/v_length);
             
+            // May need a safeguard for a situation with my_sum = 0
             // NEW SYSTEM
-            if (my_sum_plus_abs < 1E-18) {
+            if (my_sum < 1E-18) {
                 // The scattering cross section is basicly zero, no scattering should occur.
                 scattering_event = 0;
+                p *= exp(-length_to_boundery*my_sum_plus_abs); // Correct for absorption
             } else if (length_to_boundery < safty_distance2) {
                 // Experiment 28/11/2016
                 // Too close to boundery to safly make another scattering, attenuate
@@ -1229,6 +1248,7 @@ TRACE
                 if (scattering_event == 1) {
                   // Adjust weight for absorption
                   p *= my_sum/my_sum_plus_abs;
+                  if (my_sum/my_sum_plus_abs > 1) printf("weight factor above 1! Should not happen! \n");
                   // Select process
                   if (Volumes[current_volume]->p_physics->number_of_processes == 1) {
                     // trivial case
@@ -1332,7 +1352,7 @@ TRACE
             // Safe check that should be unecessary. Used to fine tune how close to the edge of a volume a scattering event is allowed to take place (1E-14 m away currently).
             if (Volumes[current_volume]->geometry.within_function(ray_position,&Volumes[current_volume]->geometry) == 0) {
               printf("\nERROR, propagated out of current volume instead of to a point within!\n");
-              printf("length_to_scattering_specified = %2.20f\n             length propagated = %2.20f\n            length_to_boundery = %2.20f \n",length_to_scattering,sqrt(time_to_scattering*time_to_scattering*vx*vx+time_to_scattering*time_to_scattering*vy*vy+time_to_scattering*time_to_scattering*vz*vz),length_to_boundery);
+              printf("length_to_scattering_specified = %2.20f\n             length propagated = %2.20f\n            length_to_boundery = %2.20f \n   current_position = (%lf,%lf,%lf) \n",length_to_scattering,sqrt(time_to_scattering*time_to_scattering*vx*vx+time_to_scattering*time_to_scattering*vy*vy+time_to_scattering*time_to_scattering*vz*vz),length_to_boundery,x,y,z);
               
               volume_index = within_which_volume(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
               
@@ -1358,13 +1378,17 @@ TRACE
             
             // I may replace a intial and final k with one instance that serves as both input and output
             if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data)) {
+              /*
+              // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
+              // It can arise from need to simplify sampling process and end up in cases where weight factor is 0, and the ray should be absorbed in these cases
               printf("ERROR: Union_master: %s.Absorbed ray because scattering function returned 0 (error/absorb)\n",NAME_CURRENT_COMP);
               component_error_msg++;
               if (component_error_msg > 100) {
                 printf("To many errors encountered, exiting. \n");
                 exit(1);
               }
-              ABSORB; // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
+              */
+              ABSORB;
             }
             
             // Update velocity using k
@@ -1701,12 +1725,15 @@ TRACE
               for (iterate=0;iterate<number_of_volumes;iterate++)
                  printf("%d:%d - ",iterate,scattered_flag[iterate]);
               printf("\n");
+              printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
               
               printf("Trace error number (%d/100) \n",component_error_msg);
               //print_intersection_table(intersection_time_table);
               //printf("Cluster is loosing the thread, debug for this behavior\n");
               //printf("global_all_volume_logger_list.num_elements = %d\n",global_all_volume_logger_list.num_elements);
               //printf("global_specific_volumes_logger_list.num_elements = %d\n",global_specific_volumes_logger_list.num_elements);
+              
+              //exit(1); // Temporary
             }
             error_msg++;
             
@@ -1720,7 +1747,7 @@ TRACE
     }
     /*
     */
-    if (limit == 0) {done = 1; printf("Reached limit on number of interactions, and discarded the neutron, was in volume %d\n",current_volume);ABSORB;}
+    if (limit == 0) {done = 1; ray_sucseeded = 0; printf("Reached limit on number of interactions, and discarded the neutron, was in volume %d\n",current_volume);ABSORB;}
     if (trace_verbal) printf("----------- END OF WHILE LOOP --------------------------------------\n");
     //printf("This ray did %d iterations in the while loop\n",1000-limit);
     
@@ -1791,6 +1818,7 @@ TRACE
       conditional_status = 1;
       for (iterate=0;iterate<tagging_conditional_list->num_elements;iterate++) {
         // Call this particular conditional. If it fails, report the status and break
+        // Since a conditional can work for a logger and master_tagging at the same time, it may be evaluated twice
         //printf("checking conditional! \n");
         if (trace_verbal) printf("Checking tagging conditional number %d\n",iterate);
         if (0 == tagging_conditional_list->conditional_functions[iterate](
@@ -1821,6 +1849,7 @@ TRACE
     // Could error log here
   }
   
+  
 %}
 
 
@@ -1834,6 +1863,7 @@ FINALLY
 // write out histories from tagging system if enabled
 if (enable_tagging) {
     if (finally_verbal) printf("Writing tagging tree to disk \n");
+    if (finally_verbal) printf("Number of leafs = %d \n",tagging_leaf_counter);
     // While writing the tagging tree to disk, all the leafs are deallocated
     write_tagging_tree(&master_tagging_node_list, Volumes, tagging_leaf_counter, number_of_volumes);
 }

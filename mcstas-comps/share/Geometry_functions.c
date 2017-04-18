@@ -1181,6 +1181,7 @@ int cylinder_within_cylinder(struct geometry_struct *geometry_child,struct geome
                         // If there is a solution before the cylinder ends, cylinder 2 can not be within cylinder 1
                         if (positive_solution < height2) {
                             if (verbal == 1) printf("Along axis: Not inside, as the positive solutions is less than the cylinder height: %f %f\n",temp_solution[0],temp_solution[1]);
+                            if (verbal == 1) printf("Radial position = (%f,%f,%f) \n",radial_position[0],radial_position[1],radial_position[2]);
                             return 0;
                         }
                     }
@@ -1199,6 +1200,11 @@ int cylinder_within_cylinder(struct geometry_struct *geometry_child,struct geome
                     //printf("Base point number %d was not inside cylinder 1 (%f %f %f)\n",iterate,base_point_vector[0],base_point_vector[1],base_point_vector[2]);
                     return 0;
                 }
+            
+                // Base point in vector notation needed for intersect function.
+                base_point_vector[0] = base_point.x;
+                base_point_vector[1] = base_point.y;
+                base_point_vector[2] = base_point.z;
             
                 // The vector circ_point is from the base to the circumference. This is used to check the bottom cap.
                 sample_cylinder_intersect(temp_solution,&number_of_solutions,base_point_vector,cyl_radial_direction,geometry_parent);
@@ -1226,7 +1232,7 @@ int cylinder_within_cylinder(struct geometry_struct *geometry_child,struct geome
                 } else {
                     if (verbal == 1) printf("Radially bottom: 0 or 1 solution!\n");
                     if (verbal == 1) print_position(circ_point,"current circ point");
-                    if (verbal == 1) print_position(coords_set(cyl_radial_direction[0],cyl_radial_direction[1],cyl_radial_direction[2]),"current cyl_radial_directio (should be same as above)");
+                    if (verbal == 1) print_position(coords_set(cyl_radial_direction[0],cyl_radial_direction[1],cyl_radial_direction[2]),"current cyl_radial_direction (should be same as above)");
                     return 0; // If there are 1 or 0 solutions, the radial position (on cylinder 2) would not be inside cylinder 1
                 }
             
