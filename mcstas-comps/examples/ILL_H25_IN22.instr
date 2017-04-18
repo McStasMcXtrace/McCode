@@ -26,25 +26,25 @@
 * KI: [Angs-1]  central wavevector for incoming neutrons
 * QM: [Angs-1]  wavevector transfer modulus at the sample
 * EN: [meV]     energy transfer at the sample
-* verbose:
-* WM:
-* HM:
-* NHM:
-* NVM:
-* RMV:
-* WA:
-* HA:
-* NHA:
-* NVA:
-* RAV:
-* RAH:
-* SM:
-* SS:
-* SA:
-* L1:
-* L2:
-* L3:
-* L4:
+* verbose: []   
+* WM: []        
+* HM: []        
+* NHM: []       
+* NVM: []       
+* RMV: []       
+* WA: []        
+* HA: []        
+* NHA: []       
+* NVA: []       
+* RAV: []       
+* RAH: []       
+* SM: []        
+* SS: []        
+* SA: []        
+* L1: []        
+* L2: []        
+* L3: []        
+* L4: []        
 *
 * %Link
 * The <a href="http://www.ill.fr/in22">IN22 TAS</a> at the ILL

@@ -70,9 +70,9 @@
 * FRAC_QUASIEL: [1]       Fraction of the sample that scatters quasielastically
 * TT: [deg]               2Theta (or a4) scattering angle
 * RES_DE: [meV]           Adjustable zoom for energy monitor at detector position
-* FRAC_TUNNEL:
-* port:
-* cold:
+* FRAC_TUNNEL: []         
+* port: []                
+* cold: []                
 *
 * %Link
 * The <a href="http://wwwold.ill.fr/Computing/links/meetings/ESS-LP/">ESS-Rencurel</a> website.

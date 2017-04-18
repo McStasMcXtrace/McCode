@@ -36,6 +36,7 @@
 * det_w: [m]          Detector width
 * det_h: [m]          Detector height
 * opts80 y bins40":
+* opts80 y bins40":
 *
 * %Link
 * http://shape.cs.princeton.edu/benchmark/documentation/off_format.html

@@ -53,9 +53,9 @@
 * h_mirror: [m]             The height of the part of the mirror that is outside the guide
 * substrate_thickness: [m]  The thickness of the substrate of the mirror
 * coating_thickness: [m]    The thickness of the coating of the mirror
-* m_mirror:
-* m1:
-* m2:
+* m_mirror: []              
+* m1: []                    
+* m2: []                    
 *
 * %End
 *
