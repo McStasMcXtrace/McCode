@@ -52,11 +52,16 @@ class InstrParser:
         self.info = info
 
 class InstrDocWriter:
+    tags = ['%TITLE%', '%INSTRNAME%', '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%THEAD_ROW%', '%T_ROWS%', '%GENDATE%']
+    par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    lnk_str = ""
+    
     html = '''
-    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML><HEAD>
-<TITLE>McStas: test Instrument at  Union_demos</TITLE>
-<LINK REV="made" HREF="mailto:peter.willendrup@risoe.dk">
+<TITLE>McStas: %TITLE%</TITLE>
+<LINK REV="made" HREF="mailto:pkwi@fysik.dtu.dk">
 </HEAD>
 
 <BODY>
@@ -69,39 +74,32 @@ class InstrDocWriter:
  | <A href="#links">Links</A> ]
 </P>
 
-<H1>The <CODE>test</CODE> Instrument</H1>
+<H1>The <CODE>%INSTRNAME%</CODE> Instrument</H1>
 
 Simple test instrument for sample component.
-
 
 <H2><A NAME=id></A>Identification</H2>
 
 <UL>
-  <LI> <B>Site:    Union_demos</B>
-  <LI> <B>Author:</B> Mads Bertelsen</B>
-  <LI> <B>Origin:</B> University of Copenhagen</B>
-  <LI> <B>Date:</B> September 2015</B>
-  <LI> <B>Version:</B> 0.1 </B>
+  <LI> <B>Site: </B>%SITE%
+  <LI> <B>Author: </B>%AUTHOR%
+  <LI> <B>Origin: </B>%ORIGIN%
+  <LI> <B>Date: </B>%DATE%
 </UL>
 <H2><A NAME=desc></A>Description</H2>
 
 <PRE>
-simple test instrument for sample component.
-
-Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
-
+%DESCRIPTION%
 </PRE>
 
 <H2><A NAME=ipar></A>Input parameters</H2>
 Parameters in <B>boldface</B> are required;
 the others are optional.
-<TABLE BORDER=1>
-<TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH> <TH>Default</TH></TR>
-<TR> <TD>stick_displacement</TD>
-     <TD></TD> <TD></TD>
-<TD ALIGN=RIGHT>0</TD> </TR>
-</TABLE>
 
+<TABLE BORDER=1>
+%THEAD_ROW%
+%T_ROWS%
+</TABLE>
 
 <H2><A NAME=links></A>Links</H2>
 
@@ -119,10 +117,10 @@ the others are optional.
 
 <ADDRESS>
 Generated automatically by McDoc, Peter Willendrup
-&lt;<A HREF="mailto:peter.willendrup@risoe.dk">peter.willendrup@risoe.dk</A>&gt; /
-Tue Feb  7 12:58:21 2017</ADDRESS>
+&lt;<A HREF="mailto:peter.willendrup@risoe.dk">pkwi@fysik.dtu.dk</A>&gt; /
+%GENDATE%</ADDRESS>
 </BODY></HTML>
-    '''
+'''
     def __init__(self, instr_parser):
         self.instr_parser = instr_parser
     def _create_html(self):
@@ -135,14 +133,9 @@ def write_file(filename, text):
     f.write(text)
     f.close()
 
-def test():
-    ip = InstrParser('/home/jaga/source/McCode/mcstas-comps/examples/Test_Magnetic_Rotation.instr')
-    print(ip.parse())
-    #quit()
-
 import re
-def repair(args):
-    local_instr_files, local_comp_files = utils.get_instr_comp_files(args.localdir)
+def repair(localdir):
+    local_instr_files, local_comp_files = utils.get_instr_comp_files(localdir)
     
     files = []
     rows = []
@@ -303,16 +296,21 @@ def repair(args):
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
+    
     localdir = args.localdir or '.'
+    print("local directory: " + localdir)
+    
+    # repair mode - do not run mcdoc, just the "repair" function
+    if args.repair:
+        repair()
+        quit()
     
     # get lib dir
     libdir = mccode_config.configuration["MCCODE_LIB_DIR"]
     print("lib directory: " + libdir)
     lib_instr_files, lib_comp_files = utils.get_instr_comp_files(libdir)
-    print("local directory: " + localdir)
     local_instr_files, local_comp_files = utils.get_instr_comp_files(localdir)
     
-    # write debug files with a header property each 
     rows = []
     files = []
     for f in local_instr_files:
@@ -325,8 +323,11 @@ def main(args):
             print("failed parsing instr file: %s" % f)
             quit()
     print("parsed instr files: %s" % str(len(lib_instr_files)))
-        
-    if True:
+    
+    
+    
+    # debug files with a header property each
+    if args.debug:
         text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
         write_file('files', text)
         
@@ -341,10 +342,10 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('localdir', nargs='?', help='local dir to parse (in addition to lib dir)')
+    parser.add_argument('--debug', action='store_true', help='enable debug mode')
+    parser.add_argument('--repair', action='store_true', help='enable repair mode')
+    
     args = parser.parse_args()
     
-    #test()
-    repair(args)
-
     main(args)
 
