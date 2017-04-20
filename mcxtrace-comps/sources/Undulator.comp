@@ -1,53 +1,56 @@
-/************************************************************************'
- * 
- * McXtrace X-ray tracing software
- * Copyright, All Rights Reserved
- * Risoe-DTU, Roskilde, Denmark
- *
- *
- * Component: Undulator
- *
- * %I
- * Written by: Erik B. Knudsen
- * Date: May, 2013.
- * Version: 1.0
- * Origin: DTU Physics
- * Release: McXtrace 1.2
- *
- * Model of an undulator source
- * 
- * %D
- * A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
- *
- *
- *
- * %P
- * Input Parameters:
- * Ee: (GeV) Storage ring electron energy (typically a few GeV).
- * dEe: ( ) Relative electron energy beam spread (sigma/Ee).
- * Ie: (A)   Ring current.
- * tbunch: (s) Bunch length. 0 means continous source.
- * t0:     (s) Delay of the first bunch from t=0.
- * B:      (T) Peak magnet field strength. Overrides K.
- * Nper:   ( ) Number of magnetic periods in the undulator.
- * lu:     (m) Magnetic period length of the undulator.
- * K:      ( ) Dimensionless undulator parameter.
- * gap_min (m) Minimum Undulator gap. The gap for which B (or K) is specified.
- * gap:    (m) Undulator gap. If > gap_min the actual magnetic field strength is < B. Currently ignored.
- * sigex:  (m) Electron ring beam size in horizontal plane (rms).
- * sigey:  (m) Electron ring beam size in vertical plane (rms).
- * sigepx: (rad) Electron ring beam horizontal divergence (rms).
- * sigepy: (rad) Electron ring beam vertical divergence (rms).
- * phase:  ( ) Initial phase of radiation.
- * randomphase: ( ) If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
- * focus_xw: (m) Width of target window.
- * focus yh: (m) Height of target window.
- * dist: (m) Distance from source plane to target window along the optical axis.
- * E0: (keV) Center of emitted energy spectrum (overrides lambda0).
- * dE: (keV) Half-width of emitted energy spectrum.
- * verbose: ( ) if nonzero, output extra information.
- * quick_integ: ( ) if nonzero, use faster (but less accurate) integration scheme.
-*/
+/************************************************************************
+*
+* McXtrace X-ray tracing software
+* Copyright, All Rights Reserved
+* Risoe-DTU, Roskilde, Denmark
+*
+*
+* Component: Undulator
+*
+* %I
+* Written by: Erik B. Knudsen
+* Date: May, 2013.
+* Version: 1.0
+* Origin: DTU Physics
+* Release: McXtrace 1.2
+*
+* Model of an undulator source
+*
+* %D
+* A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
+*
+*
+*
+* %P
+* Ee: [GeV] Storage ring electron energy [typically a few GeV).
+* dEe: [ ] Relative electron energy beam spread (sigma/Ee).
+* Ie: [A]   Ring current.
+* tbunch: [s] Bunch length. 0 means continous source.
+* t0:     [s] Delay of the first bunch from t=0.
+* B:      [T] Peak magnet field strength. Overrides K.
+* Nper:   [ ] Number of magnetic periods in the undulator.
+* lu:     [m] Magnetic period length of the undulator.
+* K:      [ ] Dimensionless undulator parameter.
+* gap_min [m] Minimum Undulator gap. The gap for which B (or K) is specified.
+* gap:    [m] Undulator gap. If > gap_min the actual magnetic field strength is < B. Currently ignored.
+* sigex:  [m] Electron ring beam size in horizontal plane (rms).
+* sigey:  [m] Electron ring beam size in vertical plane (rms).
+* sigepx: [rad] Electron ring beam horizontal divergence (rms).
+* sigepy: [rad] Electron ring beam vertical divergence (rms).
+* phase:  [ ] Initial phase of radiation.
+* randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
+* focus_xw: [m] Width of target window.
+* focus yh: [m] Height of target window.
+* dist: [m] Distance from source plane to target window along the optical axis.
+* E0: [keV] Center of emitted energy spectrum (overrides lambda0).
+* dE: [keV] Half-width of emitted energy spectrum.
+* verbose: [ ] if nonzero, output extra information.
+* quick_integ: [ ] if nonzero, use faster (but less accurate) integration scheme.
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*****************************************************************/
 
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
