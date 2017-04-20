@@ -1,60 +1,60 @@
 /*******************************************************************************
- *   McStas simulation of the Materials Probe for Internal Strain Investigations (SAFARI_MPISI)
- *
- * Instrument: SAFARI_MPISI
- *
- * %Identification
- * Written by: Deon Marais (deon.marais@necsa.co.za)
- * Date: September 2013
- * Origin: Necsa
- * Release: McStas 2.0
- * Version: $Revision 0.1 $
- * %INSTRUMENT_SITE: Necsa
- *
- * Materials Probe for Internal Strain Investigations
- *
- * %Description
- * Necsa Neutron Strain Scanner located at beam port 5 of the SAFARI-1 research reactor, South Africa
- *
- * %Parameters
- * source_lam_min:  [Angs]     Minimum wavelenth of source
- * source_lam_max:  [Angs]    Maximum wavelenth of source
- * hi_res:        Selects hi-resolution(1) or hi-intensity(0) reactor beam through primary shutter
- * mono_Si_type:      Monochromator Silicon type options: 422 400 311 511 111 331
- * mono_mosh:    [arc min]  Monochromator horizontal mosaicity
- * mono_mosv:    [arc min]  Monochromator vertical mosaicity
- * mono_dx:    [m]    Monochromator delta x - positive to left of reactor beam
- * mono_dy:    [m]    Monochromator delta y - positive upward of reactor beam
- * mono_dz:    [m]    Monochromator delta z - positive along reactor beam
- * mono_takeoff:  [deg]    Monochromator takeoff angle - positive anti-clockwise from reactor beam
- * mono_dtilt:    [deg]    Monochromator tilt angle - not implemented yet
- * mono_Rh:    [m]    Monochromator horizontal focus radius
- * port_takeoff:  [deg]    Port takeoff angle - positive anti clockwise from reactor beam
- * chamber_window_rad  [m]    Chamber window radius. If this is 0, there is no window
- * inc_slit_rot:  [deg]    Incident slit delta rotation - not implemented yet
- * inc_slit_dx:    [m]    Incident slit delta x position - positive to left of incident beam
- * inc_slit_to_cor:  [m]    Incident slit to sample stage center of rotation
- * inc_slit_width:  [m]    Incident slit width 0.00013m to 0.005m
- * inc_slit_height:  [m]    Incident slit height 0m to 0.02m
- * inc_slit_sep:      Incident slit separation between width and height. <0:use emperical calc, >=0:distance in m
- * mono_to_cor:    [m]    Distance between monochromator and center of rotation
- * sample_dx:    [m]    Sample delta x - positive to left of incident beam if sample_dom=0
- * sample_dy:    [m]    Sample delta y - positive upword of incident beam
- * sample_dz:    [m]    Sample delta x - positive along of incident beam if sample_dom=0
- * sample_dom:    [deg]    Sample delta omega - positive anti-clockwise from incident beam
- * det_takeoff:    [deg]    Detector takeoff angle - positive anti-clockwise from incident beam
- * cor_to_det:    [m]    Distance between sample centre of rotation and detector
- * diff_slit_dx:  [m]    Diffracted slit delta x position - positive to left of diffracted beam
- * diff_slit_to_cor:  [deg]    Distance between centre of rotation and diffracted slit
- * diff_slit_width:  [m]    Diffracted slit width
- * diff_slit_height:  [m]    Diffracted slit height
- * full_instrument:      When 1, simulates the complete instrument. When 0, only simulate from the outlet collimator
- *
- * %Link
- * The South African Nuclear Energy Corporation <a href="http://www.necsa.co.za"> website</a>
- *
- * %End
- *******************************************************************************/
+*   McStas simulation of the Materials Probe for Internal Strain Investigations (SAFARI_MPISI)
+*
+* Instrument: SAFARI_MPISI
+*
+* %Identification
+* Written by: Deon Marais (deon.marais@necsa.co.za)
+* Date: September 2013
+* Origin: Necsa
+* Release: McStas 2.0
+* Version: $Revision 0.1 $
+* %INSTRUMENT_SITE: Necsa
+*
+* Materials Probe for Internal Strain Investigations
+*
+* %Description
+* Necsa Neutron Strain Scanner located at beam port 5 of the SAFARI-1 research reactor, South Africa
+*
+* %Parameters
+* source_lam_min:  [Angs]     Minimum wavelenth of source
+* source_lam_max:  [Angs]    Maximum wavelenth of source
+* hi_res:        Selects hi-resolution(1) or hi-intensity(0) reactor beam through primary shutter
+* mono_Si_type:      Monochromator Silicon type options: 422 400 311 511 111 331
+* mono_mosh:    [arc min]  Monochromator horizontal mosaicity
+* mono_mosv:    [arc min]  Monochromator vertical mosaicity
+* mono_dx:    [m]    Monochromator delta x - positive to left of reactor beam
+* mono_dy:    [m]    Monochromator delta y - positive upward of reactor beam
+* mono_dz:    [m]    Monochromator delta z - positive along reactor beam
+* mono_takeoff:  [deg]    Monochromator takeoff angle - positive anti-clockwise from reactor beam
+* mono_dtilt:    [deg]    Monochromator tilt angle - not implemented yet
+* mono_Rh:    [m]    Monochromator horizontal focus radius
+* port_takeoff:  [deg]    Port takeoff angle - positive anti clockwise from reactor beam
+* chamber_window_rad  [m]    Chamber window radius. If this is 0, there is no window
+* inc_slit_rot:  [deg]    Incident slit delta rotation - not implemented yet
+* inc_slit_dx:    [m]    Incident slit delta x position - positive to left of incident beam
+* inc_slit_to_cor:  [m]    Incident slit to sample stage center of rotation
+* inc_slit_width:  [m]    Incident slit width 0.00013m to 0.005m
+* inc_slit_height:  [m]    Incident slit height 0m to 0.02m
+* inc_slit_sep:      Incident slit separation between width and height. <0:use emperical calc, >=0:distance in m
+* mono_to_cor:    [m]    Distance between monochromator and center of rotation
+* sample_dx:    [m]    Sample delta x - positive to left of incident beam if sample_dom=0
+* sample_dy:    [m]    Sample delta y - positive upword of incident beam
+* sample_dz:    [m]    Sample delta x - positive along of incident beam if sample_dom=0
+* sample_dom:    [deg]    Sample delta omega - positive anti-clockwise from incident beam
+* det_takeoff:    [deg]    Detector takeoff angle - positive anti-clockwise from incident beam
+* cor_to_det:    [m]    Distance between sample centre of rotation and detector
+* diff_slit_dx:  [m]    Diffracted slit delta x position - positive to left of diffracted beam
+* diff_slit_to_cor:  [deg]    Distance between centre of rotation and diffracted slit
+* diff_slit_width:  [m]    Diffracted slit width
+* diff_slit_height:  [m]    Diffracted slit height
+* full_instrument:      When 1, simulates the complete instrument. When 0, only simulate from the outlet collimator
+*
+* %Link
+* The South African Nuclear Energy Corporation <a href="http://www.necsa.co.za"> website</a>
+*
+* %End
+*******************************************************************************/
 
 DEFINE INSTRUMENT SAFARI_MPISI( source_lam_min=0.5, source_lam_max=2.0,
       hi_res=0,
