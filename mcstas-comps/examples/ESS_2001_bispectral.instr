@@ -7,8 +7,6 @@
 * Written by: Henrik Jacobsen, contact: hjacobse@fys.ku.dk
 * Date:  October 2012.
 * Origin: NBI, ESS
-* Release: McStas CVS-080208
-* Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
 * Instrument short description
@@ -23,70 +21,46 @@
 *
 *
 * %Parameters
-*	cold_Lam_min: 		[AA]	Minimum wavelength emitted by the cold moderator
-*	cold_Lam_max: 		[AA]	Maximum wavelength emitted by the cold moderator
-*	thermal_Lam_min: 	[AA]	Minimum wavelength emitted by the thermal moderator
-*	thermal_Lam_max: 	[AA]	Maximum wavelength emitted by the thermal moderator
-*	Pulse_width:	 	[s]	Length of the long pulse.
-*       frequency: 		[Hz] 	Frequency of source
-*	thermal_hotspot_fac:	[1]	Intensity increase in thermal hot spot
-*	cold_hotspot_fac:	[1]	Intensity increase in cold hot spot
+* cold_Lam_min: [AA]        Minimum wavelength emitted by the cold moderator
+* cold_Lam_max: [AA]        Maximum wavelength emitted by the cold moderator
+* thermal_Lam_min: [AA]     Minimum wavelength emitted by the thermal moderator
+* thermal_Lam_max: [AA]     Maximum wavelength emitted by the thermal moderator
+* Pulse_width: [s]          Length of the long pulse.
+* frequency: [Hz]           Frequency of source
+* thermal_hotspot_fac: [1]  Intensity increase in thermal hot spot
+* cold_hotspot_fac: [1]     Intensity increase in cold hot spot
 *
-*	use_full_guide_flag:	[1]	1: Use full guide. 2: Remove left part of guide to let cold neutrons through
-*	guide_start:		[m]	Distance from thermal moderator to guide start
-*	gravity:			[m/s^2] Gravitational acceleration
-*	focus_start_w:		[m]	First horizontal focus in real space
-*	focus_end_w:		[m]	Second horizontal focus in real space
-*	smallaxis_w:		[m]	Width of small axis
-*	focus_start_h:		[m]	First vertical focus in real space
-*	focus_end_h:		[m]	Second vertical focus in real space
-*	smallaxis_h:		[m]	Height of small axis
-* maxdiv:			[deg]	Maximum divergence detected
-* Length:			[m]	Distance from source to sample
-* coldperthermal:		[1]	Amount of simulated cold neutrons per thermal neutrons
-* man_lam:			[1]	0: use standard wavelength, overrides input parameters. 1: use input parameters
-*	thermal:			[1]	Choose which sources to use. 0: only cold source. 1: only thermal source. 2: both sources.	
-*	mirror_type:		[1]	The type of mirror. 0: no mirror. 1: flat mirror. 2: curved mirror.
-*	mirror_coating_type:	[1]	The coating distribution of the mirror. 1: same for all plates. 2: parabolic
-*	mirror_offset:		[m]	The offset of the center of the mirror in the x direction
-*	theta1:			[deg]	The angle of the first mirror plate
-*	theta2:			[deg]	The angle of the central mirror plate
-*	theta3:			[deg]	The angle at the end of the mirror
-*	m_mirror1:		[1]	The m-value of the first mirror plate
-*	m_mirror2:		[1]	The m-value of the central mirror plate
-*	m_mirror4:		[1]	The m-value at the end of the mirror
-*	h_mirror:		[m]	The height of the part of the mirror that is outside the guide
-*	substrate_thickness:	[m]	The thickness of the substrate of the mirror
-*	coating_thickness:	[m]	The thickness of the coating of the mirror	
+* use_full_guide_flag: [1]  1: Use full guide. 2: Remove left part of guide to let cold neutrons through
+* guide_start: [m]          Distance from thermal moderator to guide start
+* gravity: [m/s^2]          Gravitational acceleration
+* focus_start_w: [m]        First horizontal focus in real space
+* focus_end_w: [m]          Second horizontal focus in real space
+* smallaxis_w: [m]          Width of small axis
+* focus_start_h: [m]        First vertical focus in real space
+* focus_end_h: [m]          Second vertical focus in real space
+* smallaxis_h: [m]          Height of small axis
+* maxdiv: [deg]             Maximum divergence detected
+* Length: [m]               Distance from source to sample
+* coldperthermal: [1]       Amount of simulated cold neutrons per thermal neutrons
+* man_lam: [1]              0: use standard wavelength, overrides input parameters. 1: use input parameters
+* thermal: [1]              Choose which sources to use. 0: only cold source. 1: only thermal source. 2: both sources.
+* mirror_type: [1]          The type of mirror. 0: no mirror. 1: flat mirror. 2: curved mirror.
+* mirror_coating_type: [1]  The coating distribution of the mirror. 1: same for all plates. 2: parabolic
+* mirror_offset: [m]        The offset of the center of the mirror in the x direction
+* theta1: [deg]             The angle of the first mirror plate
+* theta2: [deg]             The angle of the central mirror plate
+* theta3: [deg]             The angle at the end of the mirror
+* h_mirror: [m]             The height of the part of the mirror that is outside the guide
+* substrate_thickness: [m]  The thickness of the substrate of the mirror
+* coating_thickness: [m]    The thickness of the coating of the mirror
+* m_mirror: []              
+* m1: []                    
+* m2: []                    
 *
 * %End
 *
 ***************************************************/
-
-DEFINE INSTRUMENT ESS_2001_bispectral(
-int man_lam=1, 
-int thermal=2, 
-cold_Lam_min=0.1, cold_Lam_max=10, 
-thermal_Lam_min=0.1, thermal_Lam_max=10, 
-thermal_hotspot_fac=1.0,
-cold_hotspot_fac=1.0,
-int use_full_guide_flag=0, 
-guide_start=2, Length=150, 
-focus_start_w=-1.2620, focus_end_w=150.3187, smallaxis_w=0.2550,
-focus_start_h=-2.1415, focus_end_h=150.0778, smallaxis_h=0.3847,
-maxdiv=2.0, 
-coldperthermal=30,  
-int mirror_type=2, 
-int mirror_coating_type=1,
-mirror_offset=0,
-theta1=1.25,
-theta2=1.25,
-theta3=1.25,
-m_mirror=5,
-h_mirror=0.15,
-Pulse_width=0.00286, frequency=14.0,   gravity=-9.81, substrate_thickness=0.0005, coating_thickness=10e-6,
-m1=5,
-m2=4)
+DEFINE INSTRUMENT ESS_2001_bispectral( int man_lam=1, int thermal=2, cold_Lam_min=0.1, cold_Lam_max=10, thermal_Lam_min=0.1, thermal_Lam_max=10, thermal_hotspot_fac=1.0, cold_hotspot_fac=1.0, int use_full_guide_flag=0, guide_start=2, Length=150, focus_start_w=-1.2620, focus_end_w=150.3187, smallaxis_w=0.2550, focus_start_h=-2.1415, focus_end_h=150.0778, smallaxis_h=0.3847, maxdiv=2.0, coldperthermal=30, int mirror_type=2, int mirror_coating_type=1, mirror_offset=0, theta1=1.25, theta2=1.25, theta3=1.25, m_mirror=5, h_mirror=0.15, Pulse_width=0.00286, frequency=14.0,   gravity=-9.81, substrate_thickness=0.0005, coating_thickness=10e-6, m1=5, m2=4)
 
 DECLARE
 %{

@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:udby@fys.ku.dk">Linda Udby</a>  and <a href="mailto:pkwi@fysik.dtu.dk">Peter Willendrup</a>
 * Date: 2012
 * Origin: <a href="http://www.risoe.dk">Ris&oslash; (Denmark)</a>
-* Release: McStas 1.12c
-* Version: $June 03 2011 $
 * %INSTRUMENT_SITE: PSI
 *
 * RITA type triple-axis spectrometer (TAS)
@@ -52,101 +50,104 @@
 * mcrun RITA-II.instr -n1e6 L0=3.418 BPL=0.97 BPH=1.03 EI=7 EF=5 SAMPLE=4 REP=10 QH=2 QK=0.16 QM=0 AS=4.95 BS=4.95 CS=4.95 AAX=-4.95 BBZ=4.95 CCY=4.95 AH=0 AK=1 AL=0  BH=1 BK=0 BL=0 SAMPLEFILE="Pb.laz" -d RITA-II_SXPb200_2meV <br>
 * </ul>
 * %Parameters
-* INPUT PARAMETERS:
-* ITAR: Relative neutron yield from the spallation target. Value relative to 2009 [mA]
-* KI:   Incoming neutron wavevector. If set EI is automatically calculated [Angs-1]
-* KF:   Outgoing neutron wavevector. If set EI is automatically calculated [Angs-1]
-* EI:   Incoming neutron energy. Also used to set range of energy monitors [meV]
-* EF:   Outgoing neutron energy. Also used to set range of energy monitors [meV]
-* QH:   Measurement QH position in crystal [rlu]
-* QK:   Measurement QK position in crystal [rlu]
-* QL:   Measurement QL position in crystal [rlu]
-* EN:   Energy transferred in crystal [meV]
-* QM:   Wavevector transferred in sample, use QM=0 if (QH,QK,QL) is specified [Angs-1]
-* A1:   Monohromator rotation angle [deg]
-* A2:   Monohromator take-off angle [deg]
-* A3:   Sample rotation angle [deg]
-* A4:   Sample take-off angle [deg]
-* AA5:  Analyzer rack rotation angle [deg]
-* A6:   Analyzer take-off angle [deg]
-* C1:  Analyzer blade 1 position [deg]
-* C2:  Analyzer blade 2 position [deg]
-* C3:  Analyzer blade 3 position [deg]
-* C4:  Analyzer blade 4 position [deg]
-* C5:  Analyzer blade 5 position [deg]
-* C6:  Analyzer blade 6 position [deg]
-* C7:  Analyzer blade 7 position [deg]
-* C8:  Analyzer blade 8 position [deg]
-* C9:  Analyzer blade 9 position [deg]
-* COLL_MS: Primary collimator max divergence [deg]
-* MONO_N:    Order of reflection used on mono [1]
-* MONOFORCE: If set, monochromator is flat [1]
-* L0: Centre of generated wavelength distribution from source [Angs]
+* ITAR: [mA]               Relative neutron yield from the spallation target. Value relative to 2009
+* EI: [meV]                Incoming neutron energy. Also used to set range of energy monitors
+* EF: [meV]                Outgoing neutron energy. Also used to set range of energy monitors
+* QH: [rlu]                Measurement QH position in crystal
+* QK: [rlu]                Measurement QK position in crystal
+* QL: [rlu]                Measurement QL position in crystal
+* EN: [meV]                Energy transferred in crystal
+* QM: [Angs-1]             Wavevector transferred in sample, use QM=0 if (QH,QK,QL) is specified
+* A1: [deg]                Monohromator rotation angle
+* A2: [deg]                Monohromator take-off angle
+* A3: [deg]                Sample rotation angle
+* A4: [deg]                Sample take-off angle
+* AA5: [deg]               Analyzer rack rotation angle
+* A6: [deg]                Analyzer take-off angle
+* C1: [deg]                Analyzer blade 1 position
+* C2: [deg]                Analyzer blade 2 position
+* C3: [deg]                Analyzer blade 3 position
+* C4: [deg]                Analyzer blade 4 position
+* C5: [deg]                Analyzer blade 5 position
+* C6: [deg]                Analyzer blade 6 position
+* C7: [deg]                Analyzer blade 7 position
+* C8: [deg]                Analyzer blade 8 position
+* C9: [deg]                Analyzer blade 9 position
+* COLL_MS: [deg]           Primary collimator max divergence
+* MONO_N: [1]              Order of reflection used on mono
+* MONOFORCE: [1]           If set, monochromator is flat
+* L0: [Angs]               Centre of generated wavelength distribution from source
 * BPL:  Band Pass Low factor, multiplied on source wavelength L0 to allow neutrons with wavelengths with lambda {BPL*L0,BPH*L0} to be traced from the source.
 * BPH:  Band Pass High factor, multiplied on source wavelength L0 to allow neutrons with wavelengths with lambda {BPL*L0,BPH*L0} to be traced from the source.
-* MST: Monochromator TOP slit [m]
-* MSB: Monochromator BOTTOM slit [m]
-* MSR: Monochromator RIGHT slit [m]
-* MSL: Monochromator LEFT slit [m]
-* SST: Sample TOP slit [m]
-* SSB: Sample BOTTOM slit [m]
-* SSR: Sample RIGHT slit [m]
-* SSL: Sample LEFT slit [m]
-* SM: [1]
-* SS:  Scattering configuration signs. 'W' is SM=1,SS=-1,SA=1 [1]
-* SA: [1]
-* OUTFILTER: Flag to indicate if the outbound filter is in or out [1]
-* OUTFILTERFILE: An input file of wavevector vs transmission to use with outgoing filter [string]
-* INFILTER: Flag to indicate if mono-block filter is in or out [1]
-* INFILTERFILE: An input file of wavevector vs transmission to use with incoming filter [string]
-* COARSE: Flag to indicate if Detector collimator is in or out [1]
-* dmv: Mono-virtual source dist [m]
-* dvs: virtual source - sample dist. dms=dmv+dvs [m]
-* REP: Repetition factor of virtual_input or Monochromator/Sample/Analyzer SPLITs [1]
-* ANAFORCE: If set the analyzer is forced flat [1]
-* ANA_MOS_H: Analyzer, horizontal mosaicity [min]
-* ANA_MOS_V: Analyzer, vertical mosaicity [min]
-* MONO_MOS_H: Monochromator, horizontal mosaicity [min]
-* MONO_MOS_V: Monochromator, vertical mosaicity [min]
-* LC: Detector-collimator angle of the leftmost blade [deg]
-* RC: Detector-collimator angle of the rightmost blade [deg]
-* PERSPEX: Flag to indicate if perspex attenuator is in or out [1]
-* PTHICK: Thickness of perspex attenuator [m]
-* VIRTUALOUT: If set, flag indicates that a Virtual source is created after the monochromator collimator [1]
-* VIRTUALIN: If set, flag to indicates that Virtual source is used after the monochromator collimator [1]
-* SOURCEFILE: Name of file to be used/genereated as virtual input/output [string]
-* verbose: print TAS configuration. 0 to be quiet [1]
-* SAMPLE: 1 is incoherent scatterer, 2 is powder, 3 is single crystal.[1]
-* SAMPLEFILE: Name of samplefile (with reflectionlist etc) [string]
-* SAMPLESIZE: Length, height and width of single crystal sample, or radius and height of phonon sample [m]
-* XW: sample thickness across downstream direction [m]
-* YH: sample vertical height [m]
-* ZT: sample thickness along downstream direction [m]
-* MOS: Isotropic 'mosaicity' of single crystal
-* DD_D: spead of lattice parameter
-* AS:   Sample lattice parameter A [Angs]
-* BS:   Sample lattice parameter B [Angs]
-* CS:   Sample lattice parameter C [Angs]
-* AA:   Angle between lattice vectors B,C [deg]
-* BB:   Angle between lattice vectors C,A [deg]
-* CC:   Angle between lattice vectors A,B [deg]
-* AH:   First reciprocal lattice vector in scattering plane, X [rlu]
-* AK:   First reciprocal lattice vector in scattering plane, Y [rlu]
-* AL:   First reciprocal lattice vector in scattering plane, Z [rlu]
-* BH:   Second reciprocal lattice vector in scattering plane, X [rlu]
-* BK:   Second reciprocal lattice vector in scattering plane, Y [rlu]
-* BL:   Second reciprocal lattice vector in scattering plane, Z [rlu]
-* AAX:
-* AAY:  Orientation vector of unit cell, single_crystal
-* AAZ:
-* BBX:
-* BBY:  Orientation vector of unit cell, single_crystal
-* BBZ:
-* CCX:
-* CCY:  Orientation vector of unit cell, single_crystal
-* CCZ: 
-* TILT: Tilt angle out of plane of the sample scattering vector out of plane (rotation around z of the A3 arm)  [deg]
-* BARNS: If set the flag indicates that reflection list structure factors are in units of barns, otherwise fm^2 [1]
+* MST: [m]                 Monochromator TOP slit
+* MSB: [m]                 Monochromator BOTTOM slit
+* MSR: [m]                 Monochromator RIGHT slit
+* MSL: [m]                 Monochromator LEFT slit
+* SST: [m]                 Sample TOP slit
+* SSB: [m]                 Sample BOTTOM slit
+* SSR: [m]                 Sample RIGHT slit
+* SSL: [m]                 Sample LEFT slit
+* SM: [1]                  
+* SS: [1]                  Scattering configuration signs. 'W' is SM=1,SS=-1,SA=1
+* SA: [1]                  
+* OUTFILTER: [1]           Flag to indicate if the outbound filter is in or out
+* OUTFILTERFILE: [string]  An input file of wavevector vs transmission to use with outgoing filter
+* INFILTER: [1]            Flag to indicate if mono-block filter is in or out
+* INFILTERFILE: [string]   An input file of wavevector vs transmission to use with incoming filter
+* COARSE: [1]              Flag to indicate if Detector collimator is in or out
+* REP: [1]                 Repetition factor of virtual_input or Monochromator/Sample/Analyzer SPLITs
+* ANAFORCE: [1]            If set the analyzer is forced flat
+* MONO_MOS_H: [min]        Monochromator, horizontal mosaicity
+* MONO_MOS_V: [min]        Monochromator, vertical mosaicity
+* LC: [deg]                Detector-collimator angle of the leftmost blade
+* RC: [deg]                Detector-collimator angle of the rightmost blade
+* PERSPEX: [1]             Flag to indicate if perspex attenuator is in or out
+* PTHICK: [m]              Thickness of perspex attenuator
+* VIRTUALOUT: [1]          If set, flag indicates that a Virtual source is created after the monochromator collimator
+* VIRTUALIN: [1]           If set, flag to indicates that Virtual source is used after the monochromator collimator
+* SOURCEFILE: [string]     Name of file to be used/genereated as virtual input/output
+* verbose: [1]             print TAS configuration. 0 to be quiet
+* SAMPLE: [1]              1 is incoherent scatterer, 2 is powder, 3 is single crystal.
+* SAMPLEFILE: [string]     Name of samplefile (with reflectionlist etc)
+* SAMPLESIZE: [m]          Length, height and width of single crystal sample, or radius and height of phonon sample
+* MOS: []                 Isotropic 'mosaicity' of single crystal
+* DD_D: []                spead of lattice parameter
+* AS: [Angs]               Sample lattice parameter A
+* BS: [Angs]               Sample lattice parameter B
+* CS: [Angs]               Sample lattice parameter C
+* AA: [deg]                Angle between lattice vectors B,C
+* BB: [deg]                Angle between lattice vectors C,A
+* CC: [deg]                Angle between lattice vectors A,B
+* AH: [rlu]                First reciprocal lattice vector in scattering plane, X
+* AK: [rlu]                First reciprocal lattice vector in scattering plane, Y
+* AL: [rlu]                First reciprocal lattice vector in scattering plane, Z
+* BH: [rlu]                Second reciprocal lattice vector in scattering plane, X
+* BK: [rlu]                Second reciprocal lattice vector in scattering plane, Y
+* BL: [rlu]                Second reciprocal lattice vector in scattering plane, Z
+* AAX: []                 
+* AAY: []                 Orientation vector of unit cell, single_crystal
+* AAZ: []                 
+* BBX: []                 
+* BBY: []                 Orientation vector of unit cell, single_crystal
+* BBZ: []                 
+* CCX: []                 
+* CCY: []                 Orientation vector of unit cell, single_crystal
+* CCZ: []                 
+* TILT: [deg]              Tilt angle out of plane of the sample scattering vector out of plane (rotation around z of the A3 arm)
+* BARNS: [1]               If set the flag indicates that reflection list structure factors are in units of barns, otherwise fm^2
+* BPL: []                  
+* BPH: []                  
+* MOS: []                  
+* DD_D: []                 
+* AAX: []                  
+* AAY: []                  
+* AAZ: []                  
+* BBX: []                  
+* BBY: []                  
+* BBZ: []                  
+* CCX: []                  
+* CCY: []                  
+* CCZ: []                  
 *
 * %Link
 * Rescal for Matlab at http://www.ill.fr/tas/matlab
@@ -154,31 +155,7 @@
 * Restrax at http://omega.ujf.cas.cz/restrax/
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT RITA_II( ITAR=1.0,L0=4.045,BPL=0.97,BPH=1.03,
-        MONO_N=1,MONOFORCE=0,MONO_MOS_H=37, MONO_MOS_V=37,
-        EI=0,EF=0,EN=0,
-        SM=1,SS=-1,SA=1,
-        QH=0, QK=0, QL=0, QM=1.8051,
-        AS=4.95, BS=4.95, CS=4.95,
-        AA=90, BB=90, CC=90,
-        AH=0, AK=1, AL=0,
-        BH=1, BK=0, BL=0,
-
-        INFILTER=0, string INFILTERFILE="Be.trm",
-        COLL_MS=80, MST=40, MSB=40, MSL=40, MSR=40,
-        PTHICK=1e-3,PERSPEX=0,
-        SAMPLE=1, string SAMPLEFILE="default",MOS=100,DD_D=1e-3, SAMPLESIZE=0.01,BARNS=1, 
-        AAX=-4.95, AAY=0, AAZ=0, 
-        BBX=0, BBY=0, BBZ=4.95, 
-        CCX=0, CCY=4.95, CCZ=0,
-        A1=0,A2=0,A3=0,A4=0,AA5=0,A6=0,TILT=0, 
-
-        SST=100, SSB=100, SSL=100, SSR=100,
-        OUTFILTER=1, string OUTFILTERFILE="Be.trm",
-        ANAFORCE=0, AA5=0,C1=0,C2=0,C3=0,C4=0,C5=0,C6=0,C7=0,C8=0,C9=0,
-        COARSE=1,LC=4, RC=3,
-        REP=1,VIRTUALOUT=0, VIRTUALIN=0, string SOURCEFILE="Vin_default.dat",verbose=1
-)
+DEFINE INSTRUMENT RITA_II( ITAR=1.0,L0=4.045,BPL=0.97,BPH=1.03, MONO_N=1,MONOFORCE=0,MONO_MOS_H=37, MONO_MOS_V=37, EI=0,EF=0,EN=0, SM=1,SS=-1,SA=1, QH=0, QK=0, QL=0, QM=1.8051, AS=4.95, BS=4.95, CS=4.95, AA=90, BB=90, CC=90, AH=0, AK=1, AL=0, BH=1, BK=0, BL=0,  INFILTER=0, string INFILTERFILE="Be.trm", COLL_MS=80, MST=40, MSB=40, MSL=40, MSR=40, PTHICK=1e-3,PERSPEX=0, SAMPLE=1, string SAMPLEFILE="default",MOS=100,DD_D=1e-3, SAMPLESIZE=0.01,BARNS=1, AAX=-4.95, AAY=0, AAZ=0, BBX=0, BBY=0, BBZ=4.95, CCX=0, CCY=4.95, CCZ=0, A1=0,A2=0,A3=0,A4=0,AA5=0,A6=0,TILT=0,  SST=100, SSB=100, SSL=100, SSR=100, OUTFILTER=1, string OUTFILTERFILE="Be.trm", ANAFORCE=0, AA5=0,C1=0,C2=0,C3=0,C4=0,C5=0,C6=0,C7=0,C8=0,C9=0, COARSE=1,LC=4, RC=3, REP=1,VIRTUALOUT=0, VIRTUALIN=0, string SOURCEFILE="Vin_default.dat",verbose=1 )
 
 DECLARE
 %{

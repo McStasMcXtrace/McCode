@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -28,15 +26,13 @@
 * %Example: lambda=2.36 Detector: He3H_I=9.84026e-10
 *
 * %Parameters
-* INPUT PARAMETERS:
-* lambda: source energy      [Angs]
+* lambda: [Angs]  source energy
 *
 * %Link
 * Neutron News 13 (No. 4), 24-29 (2002).
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT BNL_H8(lambda=2.36)
 
 DECLARE
@@ -244,4 +240,3 @@ COMPONENT He3H = PSD_monitor(
 AT (0, 0, 0.3049) RELATIVE SC4
 
 END
-

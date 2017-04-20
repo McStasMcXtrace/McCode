@@ -345,6 +345,7 @@ union data_transfer_union{
     struct Incoherent_physics_storage_struct  *pointer_to_a_Incoherent_physics_storage_struct;
     struct Powder_physics_storage_struct *pointer_to_a_Powder_physics_storage_struct;
     struct Single_crystal_physics_storage_struct *pointer_to_a_Single_crystal_physics_storage_struct;
+    struct AF_HB_1D_physics_storage_struct *pointer_to_a_AF_HB_1D_physics_storage_struct;
     struct Template_physics_storage_struct *pointer_to_a_Template_physics_storage_struct;
     // possible to add as many structs as wanted, without increasing memory footprint.
 };
@@ -3921,6 +3922,7 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
   geometry->focus_data.spatial_focus_width = 0;
   geometry->focus_data.spatial_focus_height = 0;
   geometry->focus_data.spatial_focus_radius = 0;
+  rot_copy(geometry->focus_data.absolute_rotation,ROT_A_CURRENT);
 
   // Built on code from Incoherent.comp by Kim Lefmann and Kristian Nielsen
   if (target_index != 0 && !target_x && !target_y && !target_z)
@@ -3973,5 +3975,4 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
     geometry->focus_data.focusing_function = &randvec_target_circle_union;
   }
 };
-
 

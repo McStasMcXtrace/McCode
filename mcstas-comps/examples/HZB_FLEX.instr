@@ -5,30 +5,29 @@
 *
 * %Identification
 * Written by: M. Skoulatos and K. Habicht, port to McStas 2.0 by Mathias Kure KU
-* (up)Date: 26 October 2010
+* Date: 26 October 2010
 * Origin: Helmholtz-Zentrum Berlin
-*
 * %INSTRUMENT_SITE: HZB
 *
-* Instrument short description
+* Instrument short description:
 * Primary and secondary spectrometer for the FLEX upgrade
 *
+* %Description
+*
 * %Parameters
-* kI: [inv AA] incident wavevector
-* kF: [inv AA] outgoing wavevector
-* wVS: [m] Width of virtual source slit
-* tilt: [deg] Tilt angle for velocity selector
-* SA: [1] Analyzer scattering sense
-* A3: [deg] Sample omega angle
-* A4: [deg] Sample 2-theta angle
-* L3: [m]
-* L4: [m]
-* Mono_flatswitch: [1] Flag for flat or curved monochromator
+* kI: [inv AA]          incident wavevector
+* kF: [inv AA]          outgoing wavevector
+* wVS: [m]              Width of virtual source slit
+* tilt: [deg]           Tilt angle for velocity selector
+* SA: [1]               Analyzer scattering sense
+* A3: [deg]             Sample omega angle
+* A4: [deg]             Sample 2-theta angle
+* L3: [m]               
+* L4: [m]               
+* Mono_flatswitch: [1]  Flag for flat or curved monochromator
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT HZB_FLEX(kI=1.55, kF=1.55, wVS=0.03, tilt=0, SA=-1, A3=0, A4=70, L3=1.00, L4=1.00, int Mono_flatswitch = 0)
 
 /* The DECLARE section allows us to declare variables or small      */
@@ -41,7 +40,7 @@ DECLARE
 double m_n=1.674928e-27;     // in kg
 double hbar=1.054572e-34;    // in J sec
 double meV_to_SI=1.6022e-22; // conversion
-double SI_to_meV=6.2414e21; 
+double SI_to_meV=6.2414e21;
 
 // guide coating properties
 double MGUIDE=3.2;
@@ -96,12 +95,12 @@ INITIALIZE
 int    SM=-1;      // monochromator scattering sense is always negative
 int    SS=+1;
 // int    SA=-1;
-double DM = 3.355; // PG 002 monochromator d-spacing in inv AA   
+double DM = 3.355; // PG 002 monochromator d-spacing in inv AA
 double DA = 3.355; // PG 002 analyser d-spacing in inv AA
 
-/* -------calculate spectrometer angles and monochromator/analyser curvatures-------*/    
+/* -------calculate spectrometer angles and monochromator/analyser curvatures-------*/
 // ----- monochromator
-  A1 = SM*RAD2DEG*asin(PI/(DM*kI));   
+  A1 = SM*RAD2DEG*asin(PI/(DM*kI));
   A2 = 2*A1;
 
 //  RMH = L2/sin(A1*DEG2RAD);
@@ -128,7 +127,7 @@ if (Mono_flatswitch == 1) RMH = 0.0;
 printf("sample angles are:\n A3=%7.3f, A4=%7.3f [deg]\n",A3,A4);
 
 // ----- analyser
-  A5 = SA*RAD2DEG*asin(PI/(DA*kF));   
+  A5 = SA*RAD2DEG*asin(PI/(DA*kF));
   A6 = 2*A5;
   RAH = (L3+L4)/(2*sin(A5*DEG2RAD)); //Additional factor multiplied by RTP
   RAV = SA*1/rho_AV;
@@ -136,10 +135,10 @@ printf("sample angles are:\n A3=%7.3f, A4=%7.3f [deg]\n",A3,A4);
   printf("analyser angles are:\n A5=%7.3f, A6=%7.3f [deg]\n",A5,A6);
   printf("radius of curvature RAH=%7.3f [m]\nradius of curvature RAV=%7.3f [m] \n",RAH,RAV);
 
-/* ------------------------------calculate EI, lambdaI and so on ------------------*/    
+/* ------------------------------calculate EI, lambdaI and so on ------------------*/
   lambdaI=2*PI/kI;  // in AA
   EI=SI_to_meV*hbar*hbar*kI*kI*1e20/2/m_n;
-  
+
   SelFreq = 3956.06/(lambdaI*(360/(19.7+(2.1*tilt)))*0.25);
 //  empirical formulas for source emmitance to save time on simulations!
 //  1st attempt: linear
@@ -154,13 +153,13 @@ printf("sample angles are:\n A3=%7.3f, A4=%7.3f [deg]\n",A3,A4);
   e_min=81.81/l_max/l_max;
   e_max=81.81/l_min/l_min;
 
-  printf("velocity selector frequency is %7.3f [Hz]\n",SelFreq);  
+  printf("velocity selector frequency is %7.3f [Hz]\n",SelFreq);
   printf("lambda=%7.3f [A]\nkI=%7.3f [A^-1] \nEI=%7.3f [meV]\n",lambdaI,kI,EI);
   printf("Maxwellian source forced to emit only between l_min=%7.3f and l_max=%7.3f [A] in order to save simulation time\n",l_min,l_max);
   printf("correspondingly, the energy monitors at sample position are detecting between %7.3f and %7.3f [meV]\n",e_min,e_max);
 
 
-// guide properties 
+// guide properties
   beta_guide_1=LGUIDE_1/2800*180/PI;
   beta_guide_2=LGUIDE_2/2800*180/PI;
   s_guide_1 = 2800-sqrt(2800*2800-LGUIDE_1*LGUIDE_1);
@@ -199,13 +198,13 @@ COMPONENT NL1A_NL1B_NL2_NL3_InPile_Entrance_Window = Arm()
 
 // this is the extraction part - with 4 mm symmetrically increased width and height
 COMPONENT NL1A_NL1B_NL2_NL3_InPile = Guide(
-    w1 = 0.170696, h1 = 0.129, w2 = 0.340522, h2 = 0.129, l = 1.870, 
+    w1 = 0.170696, h1 = 0.129, w2 = 0.340522, h2 = 0.129, l = 1.870,
     R0=R0_para, Qc=Qc_para, alpha=alpha_para, m=MGUIDE, W=W_para)
   AT (0, 0, 0) RELATIVE NL1A_NL1B_NL2_NL3_InPile_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1A_NL1B_NL2_NL3_InPile_Entrance_Window
 
 // the NL1B_Straight1_Entrance_Window is shifted ans rotated according to T.Krists proposal 25.08.2008 - no gaps for simplicity
 COMPONENT NL1B_Straight1_Entrance_Window = Arm()
-  AT (-0.1277, 0, 3.400) RELATIVE Origin ROTATED (0, -2.15, 0) RELATIVE Origin  
+  AT (-0.1277, 0, 3.400) RELATIVE Origin ROTATED (0, -2.15, 0) RELATIVE Origin
 
 // in the following straight guide sections the gaps are neglected and so only a single straight guide is considered!
 COMPONENT NL1B_Straight1 = Guide(
@@ -214,20 +213,20 @@ COMPONENT NL1B_Straight1 = Guide(
   AT (0, 0, 0) RELATIVE NL1B_Straight1_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Straight1_Entrance_Window
 
 COMPONENT NL1B_Curved_Entrance_Window = Arm()
-  AT (0, 0, 1.549) RELATIVE NL1B_Straight1_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Straight1_Entrance_Window  
+  AT (0, 0, 1.549) RELATIVE NL1B_Straight1_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Straight1_Entrance_Window
 
 // END complete neutron guide system in front of curved guide
 // START curved guide
 
-COMPONENT NL1B_Curved_Guide_1 = Guide_curved(               
-    w1 = 0.06, h1 = 0.125, l = LGUIDE_1, R0 = R0_para, Qc = Qc_para, 
+COMPONENT NL1B_Curved_Guide_1 = Guide_curved(
+    w1 = 0.06, h1 = 0.125, l = LGUIDE_1, R0 = R0_para, Qc = Qc_para,
     alpha = alpha_para, m = MGUIDE, W = W_para, curvature = 2800)
   AT (0, 0, 0) RELATIVE NL1B_Curved_Entrance_Window ROTATED (0, 0, 180) RELATIVE NL1B_Curved_Entrance_Window
 
 //following arm translates and rotates to allow for the 18.65m guide. It also rotates by an extra 90 deg around z, to allow for a 12 o'clock velocity selector window.
 
 COMPONENT NL1B_Velocity_Selector_Gap_Entrance_Window = Arm()
-  AT (-s_guide_1, 0, LGUIDE_1) RELATIVE NL1B_Curved_Entrance_Window ROTATED (0, -beta_guide_1, 0) RELATIVE NL1B_Curved_Entrance_Window  
+  AT (-s_guide_1, 0, LGUIDE_1) RELATIVE NL1B_Curved_Entrance_Window ROTATED (0, -beta_guide_1, 0) RELATIVE NL1B_Curved_Entrance_Window
 
 /************************************** 12h selector **************************************/
 
@@ -249,7 +248,7 @@ alpha=19.7,
 nu=SelFreq
 )
 
-  AT (0,0,0.2) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window 
+  AT (0,0,0.2) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window
   ROTATED (0,tilt,90)    RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window
 
 COMPONENT After_selec = PSD_monitor(
@@ -258,10 +257,10 @@ COMPONENT After_selec = PSD_monitor(
   AT (0, 0, 0.46) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window
 
 COMPONENT NL1B_Curved_2_Entrance_Window = Arm()
-  AT (0, 0, 0.47) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window  
+  AT (0, 0, 0.47) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Velocity_Selector_Gap_Entrance_Window
 
-COMPONENT NL1B_Curved_Guide_2 = Guide_curved(               
-    w1 = 0.06, h1 = 0.125, l = LGUIDE_2, R0 = R0_para, Qc = Qc_para, 
+COMPONENT NL1B_Curved_Guide_2 = Guide_curved(
+    w1 = 0.06, h1 = 0.125, l = LGUIDE_2, R0 = R0_para, Qc = Qc_para,
     alpha = alpha_para, m = MGUIDE, W = W_para, curvature = 2800)
   AT (0, 0, 0) RELATIVE NL1B_Curved_2_Entrance_Window ROTATED (0, 0, 180) RELATIVE NL1B_Curved_2_Entrance_Window
 
@@ -269,16 +268,16 @@ COMPONENT  NL1B_Straight2_Entrance_Window = Arm()
   AT (-s_guide_2, 0, LGUIDE_2) RELATIVE NL1B_Curved_2_Entrance_Window ROTATED (0,-beta_guide_2,0) RELATIVE NL1B_Curved_2_Entrance_Window
 
 COMPONENT NL1B_Straight2 = Guide(
-    w1 = 0.06, h1 = 0.125, w2 = 0.06, h2 = 0.125, l = 3.500, 
+    w1 = 0.06, h1 = 0.125, w2 = 0.06, h2 = 0.125, l = 3.500,
     R0=R0_para, Qc=Qc_para, alpha=alpha_para, m=MGUIDE, W=W_para)
   AT (0, 0, 0) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Straight2_Entrance_Window
 
-// START elliptical guide section 
+// START elliptical guide section
 
 COMPONENT NL1B_Elliptical_Entrance_Window = Arm()
-//AT (0.0006, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.0114, 0.0458) RELATIVE NL1B_Straight2_Entrance_Window  
-  AT (0.0000, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.000,  0.00) RELATIVE NL1B_Straight2_Entrance_Window  
-//AT (0.0006, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.015, -0.06) RELATIVE NL1B_Straight2_Entrance_Window  
+//AT (0.0006, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.0114, 0.0458) RELATIVE NL1B_Straight2_Entrance_Window
+  AT (0.0000, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.000,  0.00) RELATIVE NL1B_Straight2_Entrance_Window
+//AT (0.0006, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.015, -0.06) RELATIVE NL1B_Straight2_Entrance_Window
 
 COMPONENT elliptical_piece = Guide_tapering(
     option = "elliptical", segno = 800, w1 = 0.06, h1 = 0.125,
@@ -289,7 +288,7 @@ COMPONENT elliptical_piece = Guide_tapering(
   AT (0, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window
   ROTATED (0, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window
 
-// END elliptical guide section 
+// END elliptical guide section
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 COMPONENT Virtual_source = Slit(
@@ -297,7 +296,7 @@ COMPONENT Virtual_source = Slit(
   AT (0, 0, 2.900) RELATIVE NL1B_Elliptical_Entrance_Window
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 
-// START GUIDE before monochromator 
+// START GUIDE before monochromator
 
 COMPONENT NL1B_Vertical_Guide_Entrance_Window = Arm()
 //AT (0.0017, 0, 2.925) RELATIVE NL1B_Elliptical_Entrance_Window ROTATED (0, 0.00388, 0.0458) RELATIVE NL1B_Elliptical_Entrance_Window
@@ -314,13 +313,13 @@ COMPONENT NL1B_Vertical_Guide = Guide_channeled(
   ROTATED (0, 0, 0) RELATIVE NL1B_Vertical_Guide_Entrance_Window
 
 COMPONENT NL1B_Guide_Exit = Arm()
-  AT (0, 0, 1.475) RELATIVE NL1B_Vertical_Guide_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Vertical_Guide_Entrance_Window  
+  AT (0, 0, 1.475) RELATIVE NL1B_Vertical_Guide_Entrance_Window ROTATED (0, 0, 0) RELATIVE NL1B_Vertical_Guide_Entrance_Window
 
 // COMPONENT psd_endguide = PSD_monitor(
 //     nx = 200, ny = 200, filename = "psd-endguide.dat",
 //     restore_neutron = 1, xwidth = 0.17, yheight = 0.135)
 //   AT (0, 0, 0) RELATIVE NL1B_Guide_Exit
-// 
+//
 COMPONENT energy_endguide = E_monitor(
     nE = 200, filename = "energy-endguide.dat", restore_neutron = 1,
     xwidth = 0.17, yheight = 0.135, Emin = e_min, Emax = e_max)
@@ -331,7 +330,7 @@ COMPONENT energy_endguide = E_monitor(
 //     restore_neutron = 1, xwidth = 0.17, yheight = 0.135,
 //     h_maxdiv = 3)
 //   AT (0, 0, 0) RELATIVE NL1B_Guide_Exit
-// 
+//
 // COMPONENT div_endguide = Divergence_monitor(
 //     nh = 200, nv = 200, filename = "div-endguide.dat",
 //     restore_neutron = 1, xwidth = 0.17, yheight = 0.135,
@@ -346,15 +345,15 @@ COMPONENT Mono_center = Arm()
 // set monochromator transmission to zero
 COMPONENT Monochromator = Monochromator_curved(
     zwidth = 0.02,
-    yheight = 0.02, 
-    gap = 0.0005, 
+    yheight = 0.02,
+    gap = 0.0005,
     NH = 15,
-    NV = 7, 
-    mosaich = 40, 
-    mosaicv = 40, 
+    NV = 7,
+    mosaich = 40,
+    mosaicv = 40,
     r0 = 1.0,
     t0 = 0.00001,
-    RV = RMV, 
+    RV = RMV,
     RH = RMH
     )
   AT (0, 0, 0) RELATIVE Mono_center ROTATED (0,0,0) RELATIVE Mono_center
@@ -366,24 +365,24 @@ COMPONENT Mono_sample_arm = Arm()
 //     nx = 200, ny = 200, filename = "psd-mono.dat",
 //     restore_neutron = 1, xwidth = 0.2, yheight = 0.15)
 //   AT (0, 0, 0.15) RELATIVE Mono_sample_arm
-// 
+//
 COMPONENT energy_mono = E_monitor(
     nE = 200, filename = "energy-mono.dat", restore_neutron = 1,
     xwidth = 0.2, yheight = 0.125, Emin = e_min, Emax = e_max)
   AT (0, 0, 0.15) RELATIVE Mono_sample_arm
-// 
+//
 // COMPONENT hdiv_mono = Hdiv_monitor(
 //     nh = 200, filename = "hdiv-mono.dat",
 //     restore_neutron = 1, xwidth = 0.2, yheight = 0.125,
 //     h_maxdiv = 4)
 //   AT (0, 0, 0.15) RELATIVE Mono_sample_arm
-// 
+//
 // COMPONENT div_mono = Divergence_monitor(
 //     nh = 200, nv = 200, filename = "div-mono.dat",
 //     restore_neutron = 1, xwidth = 0.2, yheight = 0.125,
 //     h_maxdiv = 4, v_maxdiv = 4)
 //   AT (0, 0, 0.15) RELATIVE Mono_sample_arm
-// 
+//
 COMPONENT energy_pre_sample = E_monitor(
     nE = 50, filename = "energy-pre-sample.dat", restore_neutron = 1,
     xwidth = 0.08, yheight = 0.08, Emin = e_min, Emax = e_max)
@@ -401,7 +400,7 @@ COMPONENT Sample_center = Arm()
   AT (0, 0, L2) RELATIVE Mono_sample_arm ROTATED (0,A3,0) RELATIVE Mono_sample_arm
 
 
- 
+
 COMPONENT Sample_analyser_arm = Arm()
   AT (0,0,0) RELATIVE Sample_center ROTATED (0,A4,0) RELATIVE Mono_sample_arm
 
@@ -416,7 +415,7 @@ COMPONENT div_mono_H = Hdiv_monitor(
      restore_neutron = 1, xwidth = 0.005, yheight = 0.7,
      h_maxdiv = 4)
    AT (0, 0, L2-0.04) RELATIVE Mono_sample_arm
-   
+
  COMPONENT psd_sam = PSD_monitor(
      nx = 60, ny = 60, filename = "psd-sam.dat",
      restore_neutron = 1, xwidth = 0.20, yheight = 0.20)
@@ -434,26 +433,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

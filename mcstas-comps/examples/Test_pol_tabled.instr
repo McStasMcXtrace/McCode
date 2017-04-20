@@ -7,8 +7,6 @@
 * Written by: Your name (email)
 * Date: Current Date
 * Origin: Your institution
-* Release: McStas CVS-080208
-* Version: 0.2
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Test the tabled magnetic field option
@@ -23,15 +21,12 @@
 *    flipfield.dat in the working directory.
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
 *
 * %Link
 * A reference/HTML link for more information
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_pol_tabled(string MF="flipfield.dat")
 
 /* The DECLARE section allows us to declare variables or  small      */

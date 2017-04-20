@@ -7,8 +7,6 @@
 * Written by: Your name (email)
 * Date: Current Date
 * Origin: Your institution
-* Release: McStas CVS-080208
-* Version: 0.2
 * %INSTRUMENT_SITE: Templates
 *
 * Instrument short description
@@ -26,15 +24,12 @@
 *     sensible parameter set.
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
 *
 * %Link
 * A reference/HTML link for more information
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT test(Par1=1)
 
 /* The DECLARE section allows us to declare variables or  small      */

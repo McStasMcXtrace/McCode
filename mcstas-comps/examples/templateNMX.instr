@@ -7,12 +7,10 @@
 * Written by: K. Nielsen
 * Date: June 2nd, 2010
 * Origin: ILL
-* Release: McStas CVS-080208
-* Version: $Revision$
 * Modified by: EF, PW
 * %INSTRUMENT_SITE: Templates
 *
-* A simple Laue NMX diffractometer for macromolecules, adapted from the classic 
+* A simple Laue NMX diffractometer for macromolecules, adapted from the classic
 * templateLaue instrument.
 *
 * %Description
@@ -23,10 +21,11 @@
 * Example: templateNMX REPS=700 reflections=PPase_D_P1.lau Detector: det_I=29.6512
 *
 * %Parameters
+* REPS: []        
+* reflections: [] 
 *
 * %End
 *******************************************************************************/
-
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT templateNMX(REPS=43, string reflections="Rubredoxin.lau")
 
@@ -36,7 +35,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_simple(
-  radius=0.02, focus_xw=0.001, focus_yh=0.001, 
+  radius=0.02, focus_xw=0.001, focus_yh=0.001,
   lambda0=7, dlambda=5, flux=1e12)
 AT (0,0,0) ABSOLUTE
 

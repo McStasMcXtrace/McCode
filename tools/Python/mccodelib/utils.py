@@ -248,13 +248,251 @@ class ComponentParser(object):
             return re_out.group(1)
 
 
-class InstrParser:
-    pass
+'''
 
+Utility functions related to mccode file handling.
 
 '''
-Static utility functions related to handling mccode files.
+
 '''
+Utility functions for parsing an instrument file
+'''
+def read_header(file):
+    '''
+    Reads lines of a slash-star commented section, from file-object. 
+    Returns acc. read lines as text.
+    '''
+    lines = []
+    while True:
+        try:
+            l = file.readline()
+            lines.append(l)
+        except:
+            break
+        if not re.match('[ ]*\*', l):
+            if not re.match('[ ]*\/\*', l):
+                break
+        elif re.search('[ ]*\*\*', l):
+            break
+    return ''.join(lines)
+
+class InstrHeaderInfo:
+    field_cols = ['name', 'author', 'date', 'origin', 'site', 'short_description', 'description', 'test']
+    lst_cols = ['params', 'params_docs', 'links']
+    def __init__(self):
+        # legit info
+        self.name = ''
+        self.params = []
+        self.filepath = ''
+        # doc info
+        self.author = ''
+        self.date = ''
+        self.origin = ''
+        self.site = ''
+        self.short_descr = ''
+        self.description = ''
+        self.test = ''
+        self.params_docs = []
+        self.links = []
+    @staticmethod
+    def __len__():
+        return len(InstrHeaderInfo.field_cols) + len(InstrHeaderInfo.lst_cols)
+    @staticmethod
+    def colname(idx):
+        if idx >= 0 and idx <= 7:
+            return InstrHeaderInfo.field_cols[idx]
+        elif idx >= 8 and idx <= 10:
+            return InstrHeaderInfo.lst_cols[idx-8]
+        else:
+            raise Exception("InstrHeaderInfo.colname: invalid index")
+    def __getitem__(self, idx):
+        if idx == 0: return self.name
+        elif idx == 1: return self.author
+        elif idx == 2: return self.date
+        elif idx == 3: return self.origin
+        elif idx == 4: return self.site
+        elif idx == 5: return self.short_descr
+        elif idx == 6: return self.description
+        elif idx == 7: return self.test
+        elif idx == 8: return self.params
+        elif idx == 9: return self.params_docs
+        elif idx == 10: return self.links
+        else:
+            raise Exception("InstrHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
+    def __setitem__(self, idx, value):
+        if idx == 0: self.name = value
+        elif idx == 1: self.author = value
+        elif idx == 2: self.date = value
+        elif idx == 3: self.origin = value
+        elif idx == 4: self.site = value
+        elif idx == 5: self.short_descr = value
+        elif idx == 6: self.description = value
+        elif idx == 7: self.test = value
+        elif idx == 8: self.params = value
+        elif idx == 9: self.params_docs = value
+        elif idx == 10: self.links = value
+        else:
+            raise Exception("InstrHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
+    def __str__(self):
+        lst = [self.name, self.author, self.date, self.origin, self.site, self.short_descr, self.description, self.test]
+        lst2 = [' '.join(d) for d in self.params_docs]
+        lst3 = [' '.join([str(c) for c in p]) for p in self.params]
+        lst4 = [l for l in self.links]
+        return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3) + '\n\n- links:\n' + '\n'.join(lst4)
+    
+def parse_instr_header(text):
+    ''' Parses the header of an instrument file: LEGACY version. '''
+    # get rid of stars and empty padding lines
+    lines = text.splitlines()
+    new_lines = []
+    for i in range(len(lines)):
+        l = lines[i]
+        new_lines.append(l.lstrip('*').strip())
+    text = '\n'.join(new_lines)
+    
+    # get tag indices, and deal with cases of missing tags
+    lst = [text.find('%I'), text.find('%D'), text.find('%E'), text.find('%P'), text.find('%L')]
+    # missing %E tag
+    if lst[2] == -1: 
+        lst[2] = lst[3]
+    # existing %I tag with missing %D tag handled like this
+    if lst[0] > lst[1] and lst[2] > lst[1]: 
+        lst[1] = lst[2]
+    # if %E is actually %End:
+    if lst[2] > lst[3] and lst[3] != -1:
+        lst[2] = lst[3]
+    for i in range(len(lst)-1):
+        if lst[i] > lst[i+1]:
+            lst[i+1] = lst[i]
+    if lst[4] == lst[3]:
+        lst[4] = len(text)
+    
+    # cut header into some sections
+    bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
+    bites.append(text[lst[4]:])
+    info = InstrHeaderInfo()
+    
+    # get author, date, origin, revision
+    m1 = re.search('Written by:([^\n]*)\n', bites[0])
+    if m1: info.author = m1.group(1).strip()
+    
+    m2 = re.search('Date:([^\n]*)\n', bites[0])
+    if m2: info.date = m2.group(1).strip()
+    
+    m3 = re.search('Origin:([^\n]*)\n', bites[0])
+    if m3: info.origin = m3.group(1).strip()
+    
+    m4 = re.search('Version:([^\n]*)\n', bites[0])
+    if m4: info.version = m4.group(1).strip()
+    
+    m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    if m5: info.short_descr = m5.group(1).strip()
+    
+    # description
+    descr = bites[1]
+    if re.match('\%Description', descr):
+        descr = descr.replace('%Description', '').strip()
+    elif re.match('\%D', descr):
+        descr = descr.replace('%D', '').strip()
+    info.description = descr
+    
+    # test / example
+    tst = bites[2]
+    info.test = tst
+    
+    # params
+    par_doc = None
+    for l in bites[3].splitlines():
+        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^]+)\](.*)', l)
+        if m:
+            par_doc = (m.group(1), m.group(2), m.group(3).strip())
+            info.params_docs.append(par_doc)
+    
+    # links
+    for l in bites[4].splitlines():
+        if re.match('\s*%', l) or l.strip() == '' or re.match('\/', l):
+            continue
+        info.links.append(l)
+    
+    return info
+
+def read_define_instr(file):
+    '''
+    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until \).
+    Parses this statement and returns the result in organized form.
+    '''
+    lines = []
+    for l in file:
+        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l):
+            continue
+        else:
+            lines.append(l.strip())
+            break
+    
+    if not re.search('\)', lines[-1]):
+        for l in file:
+            lines.append(l.strip())
+            if re.search('\)', l):
+                break
+    
+    return ' '.join(lines)
+
+def parse_define_instr(text):
+    '''
+    Parses a DEFINE INSTRUMENT statement from an instrument file. Not robust to "junk" in the input string.
+    '''
+    try:
+        m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+        name = m.group(1)
+        params = m.group(2).replace('\n', '').strip()
+    except:
+        return '', []
+    
+    def parse_params(params_line):
+        ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
+        params = []
+        # p = (type, name, defvalue)
+        parts = [s.strip() for s in params_line.split(',')]
+        for part in parts:
+            tpe = None
+            dval = None
+            name = None
+            if re.match('string', part):
+                tpe = 'string'
+                part = part.replace('string', '').strip()
+            if re.match('int', part):
+                tpe = 'int'
+                part = part.replace('int', '').strip()
+            if re.search('=', part):
+                dval = part.split('=')[1].strip()
+                name = part.replace('=', '')
+                name = name.replace(dval, '').strip()
+            if name is not None:
+                params.append((tpe, name, dval))
+        return params
+    
+    return name, parse_params(params)
+
+def read_declare(file):
+    raise Exception('Read_declare: not yet implemented.')
+
+def read_initialize(file):
+    raise Exception('Read_initialize: not yet implemented.')
+
+def read_trace(file):
+    raise Exception('Read_trace: not yet implemented.')
+
+def read_finally(file):
+    raise Exception('Read_finally: not yet implemented.')
+
+def get_instr_site_fromtxt(text):
+    m = re.search('\%INSTRUMENT_SITE:[ \t]*(\w+)[ \t]*\n?', text)
+    if m:
+        return m.group(1)
+    else:
+        #raise Exception('Tag "%INSTRUMENT_SITE" not found.')
+        return ''
+
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
     f = open(instr_file, 'rb')
@@ -283,7 +521,6 @@ def get_instr_comp_files(mydir):
                 files_comp.append(dirpath + '/' + f)
     
     return files_instr, files_comp
-
 
 def save_instrfile(instr, text):
     ''' 
@@ -319,7 +556,6 @@ def get_file_contents(filepath):
         return get_file_text_direct(filepath)
     else:
         return ''
-
 
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
@@ -372,39 +608,6 @@ def start_subtool_then_return(cmd, cwd=None):
                                cwd=cwd)
     
     return process.returncode
-
-
-''' Unused code?
-
-def _get_resultdirs_chron(mydir, prefix):
-    def _chrono_sort(word1, word2):
-        result1 = re.search('.*_([0-9]+)_([0-9]+)', word1)
-        result2 = re.search('.*_([0-9]+)_([0-9]+)', word2)
-        date1 = int(result1.group(1))
-        date2 = int(result2.group(1))
-        time1 = int(result1.group(2))
-        time2 = int(result2.group(2))
-        if date1 < date2:
-            return 1
-        elif date1 > date2:
-            return -1
-        if date1 == date2:
-            if time1 < time2:
-                return 1
-            elif time1 > time2:
-                return -1
-            else:
-                return 0
-    
-    subdirs = []
-    for fileordir in os.listdir(mydir):
-        if os.path.isdir(fileordir):
-            if prefix in fileordir:
-                subdirs.append(fileordir)
-    subdirs.sort(cmp=lambda x,y: _chrono_sort(x,y))
-    return subdirs
-
-'''
 
 def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''

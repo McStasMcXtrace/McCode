@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr) and SANCHEZ Javier (sanchez-montero@ill.fr)   
 * Date: June, 2008
 * Origin:ILL
-* Release: McStas 1.12    
-* Version: $Revision$   
 * %INSTRUMENT_SITE: ILL   
 *   
 * The D1B diffractometer on the H22 curved thermal guide at the ILL    
@@ -38,40 +36,34 @@
 * %Example: lambda=2.52 Detector: D1B_BananaTheta_I=5097.25
 *
 * %Parameters:
-* m: [1]   m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* lambda:    [AA]  mean incident wavelength.
-* dlambda:   [AA]  wavelength full width.
-* RV:[m]   Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:[m]   Source-Monochromator distance
-* L2:[m]   Monochromator-Sample distance
-* L3:[m]   Sample-Detector distance
-* Powder:    [str] File name for powder description, LAZ/LAU/Fullprof
-* verbose:   [1]   Print DIF configuration. 0 to be quiet
-* R_pitch:   [deg] Angular pitch between the absorbing blades 
-* R_ri:      [m]   Inner radius of the collimator
-* R_ro:      [m]   Outer radius of the collimator 
-* R_h:       [m]   Height of the collimator
-* R_ttmin:   [deg] Lower scattering angle limit
-* R_ttmax:   [deg] Higher scattering angle limit
+* lambda: [AA]     mean incident wavelength.
+* dlambda: [AA]    wavelength full width.
+* RV: [m]          Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]          Source-Monochromator distance
+* L2: [m]          Monochromator-Sample distance
+* L3: [m]          Sample-Detector distance
+* Powder: [str]    File name for powder description, LAZ/LAU/Fullprof
+* verbose: [1]     Print DIF configuration. 0 to be quiet
+* R_pitch: [deg]   Angular pitch between the absorbing blades
+* R_ri: [m]        Inner radius of the collimator
+* R_ro: [m]        Outer radius of the collimator
+* R_h: [m]         Height of the collimator
+* R_ttmin: [deg]   Lower scattering angle limit
+* R_ttmax: [deg]   Higher scattering angle limit
 * R_present: [1]   Presence flag for the radial collimator. 0: unactivate component.
-* Inc_Cryo:  [1]   Cryostat incoherent fraction
-* Trans_Cryo:[1]   Cryostat event transmission
+* Inc_Cryo: [1]    Cryostat incoherent fraction
+* Trans_Cryo: [1]  Cryostat event transmission
 * Trans_Spl: [1]   Sample event transmission
-* Inc_Spl:   [1]   Sample incoherent fraction
-* TILT:      [deg] Monochromator additional tilt, for rocking curves
-* TRAS_X:    [m]   Additional monochromator translation along X, left/righ w.r.t beam
-* TRAS_Z:    [m]   Additional monochromator translation along Z, along guide
+* Inc_Spl: [1]     Sample incoherent fraction
+* TILT: [deg]      Monochromator additional tilt, for rocking curves
+* TRAS_X: [m]      Additional monochromator translation along X, left/righ w.r.t beam
+* TRAS_Z: [m]      Additional monochromator translation along Z, along guide
+* DM: []           
+* THETA_M: []      
 *   
 * %End      
 *******************************************************************************/  
-
-DEFINE INSTRUMENT ILL_H22_D1B(lambda=2.52, dlambda=0.03, DM=0,  
-  string Powder="Na2Ca3Al2F14.laz", RV=2.2, 
-  L1=0.25, L2=3.0, L3=1.500,  
-  TRAS_X=-0, TRAS_Z=0, TILT=0, THETA_M=22.11, 
-  R_pitch=.42, R_ri=0.324, R_ro=0.419, R_h=0.090,   
-  R_ttmin=-130, R_ttmax=-2, R_present=1,
-  verbose=1, Inc_Cryo=0.02, Trans_Cryo=0.85, Trans_Spl=0.2, Inc_Spl=0.05)
+DEFINE INSTRUMENT ILL_H22_D1B(lambda=2.52, dlambda=0.03, DM=0, string Powder="Na2Ca3Al2F14.laz", RV=2.2, L1=0.25, L2=3.0, L3=1.500, TRAS_X=-0, TRAS_Z=0, TILT=0, THETA_M=22.11, R_pitch=.42, R_ri=0.324, R_ro=0.419, R_h=0.090, R_ttmin=-130, R_ttmax=-2, R_present=1, verbose=1, Inc_Cryo=0.02, Trans_Cryo=0.85, Trans_Spl=0.2, Inc_Spl=0.05)
 
 /* The DECLARE section allows us to declare variables or  small      */       
 /* functions in C syntax. These may be used in the whole instrument. */       

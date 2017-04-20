@@ -11,22 +11,19 @@
 * Written by: Kim Lefmann
 * Date: 19th Dec 2003.
 * Origin: Risoe
-* Release: 
-* Version: $Revision$
 * Modified by: Torben  Nielsen 25 Jan. 2016
-* 
+*
 * %INSTRUMENT_SITE: Templates
 *
 * Test instrument for the SasView_model component. No guide / velocity selector
-* etc. 
+* etc.
 *
 * %Description
 * Very simple test instrument for the SasView_model component
 *
 * %Parameters
-* INPUT PARAMETERS:
-* lambda:    Mean wavelength of neutrons      [AA]
-* dlambda:   Wavelength spread of neutrons    [AA]
+* lambda: [AA]   Mean wavelength of neutrons
+* dlambda: [AA]  Wavelength spread of neutrons
 *
 * %Link
 * %End
@@ -61,7 +58,7 @@ model_abs=0.0,
                          xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
    AT (0,0,0.2) RELATIVE coll2
 EXTEND %{
-       if (!SCATTERED) ABSORB;  
+       if (!SCATTERED) ABSORB;
 %}
 
 COMPONENT detector = PSD_monitor(
@@ -80,7 +77,3 @@ COMPONENT PSDrad = PSD_monitor_rad(
   AT (0, 0, 3.02) RELATIVE sample
 
 END
-
-
-
-

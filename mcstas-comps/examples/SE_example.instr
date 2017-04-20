@@ -7,8 +7,6 @@
 * Written by: Erik Knudsen, Peter Willendrup
 * Date: June 2010
 * Origin: Risoe
-* Release: McStas 1.12b
-* Version: 0.2
 * %INSTRUMENT_SITE: Templates
 *
 * Mockup of transmission Spin-Echo, written for PNCMI 2010 school in Delft.
@@ -23,20 +21,18 @@
 * Example: mcrun SE_example.instr dBz=-0.0001,0.0001 -N41 -n1e5 
 *
 * %Parameters
-* POL_ANGLE: [deg] Reflection angle of polarizer/analyzer
-* SAMPLE: [1] Flag to include (0) or exclude incoherent scatterer
-* Bguide: [T] Field magnitude in guide fields
-* dBz:    [T] Magnitude field perturbation in first guide field
-* Bflip:  [T] Magnitude of flipper fields, 
-* Lam:    [Angstrom] Mean wavelength of neutrons emitted from source
-* dLam:   [Angstrom] Wavelength spread of neutrons emitted from source
+* POL_ANGLE: [deg]  Reflection angle of polarizer/analyzer
+* SAMPLE: [1]       Flag to include (0) or exclude incoherent scatterer
+* Bguide: [T]       Field magnitude in guide fields
+* dBz: [T]          Magnitude field perturbation in first guide field
+* Bflip: [T]        Magnitude of flipper fields,
+* Lam: [Angstrom]   Mean wavelength of neutrons emitted from source
+* dLam: [Angstrom]  Wavelength spread of neutrons emitted from source
 *
 * %Link
 * Requires mcstas 1.12b (or beta). PolLambda_monitor has been modified to work (nL->nlam)
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT SE_example(POL_ANGLE=2, SAMPLE=0, Bguide=0.1, Bflip=3e-4, dBz=0, Lam=8, dLam=0.8)
 
 /* The DECLARE section allows us to declare variables or  small      */

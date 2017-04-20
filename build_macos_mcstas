@@ -33,16 +33,21 @@ cd $MCINSTALL_PREFIX/mcstas/$1/
 ./bin/mcdoc . -t
 cd $WORK
 
-# Download and embed a miniconda
-echo
+if [ ! -f Miniconda3-4.2.12-MacOSX-x86_64.sh ]; then
+    # Download and embed a miniconda
+    echo
+    echo "*********************************************************"
+    echo "* Downloading a miniconda3 for your app                 *"
+    echo "*********************************************************"
+    echo   
+    sleep 3
+    curl -O https://repo.continuum.io/miniconda/Miniconda3-4.2.12-MacOSX-x86_64.sh
+fi
 echo "*********************************************************"
-echo "* Downloading and embeeding miniconda3 in your app      *"
+echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-echo   
-sleep 3
-curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
-chmod a+x Miniconda3-latest-MacOSX-x86_64.sh
-./Miniconda3-latest-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/miniconda3/
+chmod a+x Miniconda3-4.2.12-MacOSX-x86_64.sh
+./Miniconda3-4.2.12-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -50,8 +55,8 @@ echo "*********************************************************"
 echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo 
-$MCINSTALL_PREFIX/miniconda3/bin/conda config --add channels conda-forge
-$MCINSTALL_PREFIX/miniconda3/bin/conda install python=3.4 pyqt=4.11.4 qscintilla2 pyqtgraph pyaml gcc openmpi ply -y -c conda-forge
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda config --add channels conda-forge
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install python=3.4 pyqt=4.11.4 qscintilla2 pyqtgraph pyaml gcc openmpi ply -y -c conda-forge
 
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin

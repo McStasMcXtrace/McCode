@@ -7,8 +7,6 @@
 * Written by: K. Nielsen
 * Date: June 2nd, 2010
 * Origin: DTU
-* Release: McStas CVS-080208
-* Version: $Revision$
 * Modified by: EF, PW
 * %INSTRUMENT_SITE: Templates
 *
@@ -25,6 +23,14 @@
 * Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
 *
 * %Parameters
+* REPS: []        
+* reflections: [] 
+* theta: []       
+* phi: []         
+* xw: []          
+* yh: []          
+* tmin: []        
+* tmax: []        
 *
 * %End
 *******************************************************************************/
@@ -38,7 +44,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_simple(
-  radius=0.02, focus_xw=0.001, focus_yh=0.001, 
+  radius=0.02, focus_xw=0.001, focus_yh=0.001,
   lambda0=7, dlambda=5, flux=1e12)
 AT (0,0,0) ABSOLUTE
 EXTEND %{
@@ -50,13 +56,13 @@ COMPONENT slit = Slit(
 AT (0,0,5) RELATIVE source
 
 COMPONENT toflambda_monitor0 = TOFLambda_monitor(
-    nL=101, 
-    tmin=0, 
-    tmax=2e4, 
-    filename="toflambda0", 
-    xwidth=0.001, 
-    yheight=0.001, 
-    Lmin=2, 
+    nL=101,
+    tmin=0,
+    tmax=2e4,
+    filename="toflambda0",
+    xwidth=0.001,
+    yheight=0.001,
+    Lmin=2,
     Lmax=12,
     restore_neutron=1)
 AT (0, 0, 0.001) RELATIVE PREVIOUS
@@ -82,42 +88,41 @@ COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd", restore_n
 AT (0,0,0) RELATIVE sample
 
 COMPONENT psd_monitorBIG = PSD_monitor(
-    filename="PSDrawBIG", 
-    xwidth=1, 
+    filename="PSDrawBIG",
+    xwidth=1,
     yheight=1,
     restore_neutron=1)
 AT (0, 0, 1.001) RELATIVE DetArm2
 ROTATED (0,0,0) RELATIVE DetArm2
 
 COMPONENT psd_monitor = PSD_monitor(
-    filename="PSDraw", 
-    xwidth=xw, 
+    filename="PSDraw",
+    xwidth=xw,
     nx=5,ny=5,
     yheight=yh,
     restore_neutron=1)
 AT (0, 0, 0.001) RELATIVE PREVIOUS
 
 COMPONENT toflambda_monitor = TOFLambda_monitor(
-    nL=101, 
-    tmin=tmin, 
-    tmax=tmax, 
-    filename="toflambda", 
-    xwidth=xw, 
-    yheight=yh, 
-    Lmin=2, 
+    nL=101,
+    tmin=tmin,
+    tmax=tmax,
+    filename="toflambda",
+    xwidth=xw,
+    yheight=yh,
+    Lmin=2,
     Lmax=12)
 AT (0, 0, 0.001) RELATIVE PREVIOUS
 
-COMPONENT psd_tof_monitor = PSD_monitor_TOF( 
-    nx=5, 
-    ny=5, 
-    nt=100, 
-    filename="PSDtof", 
-    xwidth=xw, 
-    yheight=yh, 
-    tmin=tmin, 
+COMPONENT psd_tof_monitor = PSD_monitor_TOF(
+    nx=5,
+    ny=5,
+    nt=100,
+    filename="PSDtof",
+    xwidth=xw,
+    yheight=yh,
+    tmin=tmin,
     tmax=tmax)
 AT (0, 0, 1.01) RELATIVE DetArm2
 
 END
-

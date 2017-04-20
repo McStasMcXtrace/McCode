@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * The H113 supermirror ballistic curved cold guide at the ILL
@@ -19,17 +17,16 @@
 * %Example: lambda=10 Detector: GuideOut_Phic_I=2.3402e+10
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip:        (1)  m-value of in-pile guide coating (3.5 first meters of guide)
-* lambda:     (AA) central wavelength
-* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
+* mip: [1]       m-value of in-pile guide coating (3.5 first meters of guide)
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/PF1">PF1b beam line</a> at the ILL
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H113(m=2, lambda=10, dlambda=9.9, mip=1.2)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -540,4 +537,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-

@@ -7,9 +7,7 @@
 * Written by: Morten Sales
 * Date: 2014
 * Origin: Copenhagen, Berlin, Delft
-* Release: McStas 2.2a
-* Version: $Revision: 1
-* INSTRUMENT_SITE: TU Delft. 
+* INSTRUMENT_SITE: TU Delft.
 *
 * SEMSANS-instrument
 *
@@ -17,88 +15,49 @@
 * SEMSANS instrument with 2 isosceles triangular field coils
 *
 * %Parameters
-* triacoil_depth: Half of the triangular coil depth in z-direction (one right triangle) [m]
-* triacoil_width: xwidth of triangular coil [m]
-* triacoil_height: yheight of triangular coil  [m]
-* pol_zdepth: Depth of the polariser along z [m]
-* vcoil_zdepth: Depth along z of the v-coil flipper [m]
-* Guide1_depth: Depth of first guide/precession field section [m]
-* Guide2_depth: Depth of second guide/precession field section [m]
-* Guide3_depth: Depth of third guide/precession field section [m]
-* Guide4_depth: Depth of fourth guide/precession field section [m]
-* Bguide: Field strength of guide/precession field [T]
-* Bextra: Field strength of extra field in guide field 1 to acheive echo [T] 
-* Bt2: Field in first triangular coil [T]
-* Bt1: Field in second triangular coil [T]
-* DLambda: Wavelength spread from source (half of it) [AA]
-* Lambda: Mean wavelength [AA]
-* flippos: Position (away from position set by vcoil_34_pos) of pi-flipper [m]
-* FLIP: Choose polarisation direction using v-coil pi/2-flipper (1 is down, -1 is up) [1]
-* chop1_pos: Position of first chopper [m]
-* chop2_pos: Position of second chopper [m]
-* pol_pos: Position of polariser [m]
-* analyser_pos: Position of analyser [m]
-* grating_w: Width of transmitting part of grating [m]
-* grating_a: Width of absorbing part of grating [m]
-* slit_1_pos: Position of first slit [m]
-* slit_2_pos: Position of second slit [m]
-* Guide1_pos: Position of first guide/precession field [m]
-* Guide2_pos: Position of second guide/precession field [m]
-* Guide3_pos: Position of third guide/precession field [m]
-* Guide4_pos: Position of fourth guide/precession field [m]
-* vcoil_12_pos: Position of first v-coil pair [m]
-* vcoil_34_pos: Position of second v-coil pair [m]
-* vcoil_56_pos: Position of third v-coil pair [m]
-* triacoil_1_pos: Position of first triangular coil (centre) [m]
-* triacoil_2_pos: Position of second triangular coil (centre) [m]
-* grating_pos: Position of grating [m]
-* grating_pos: Position of grating [m]
-* detector_pos: Position of detector [m]
-* tlow: tmin of detector [mu-s]
-* thigh: tmax of detector [mu-s]
+* triacoil_depth: [m]   Half of the triangular coil depth in z-direction (one right triangle)
+* triacoil_width: [m]   xwidth of triangular coil
+* triacoil_height: [m]  yheight of triangular coil
+* pol_zdepth: [m]       Depth of the polariser along z
+* vcoil_zdepth: [m]     Depth along z of the v-coil flipper
+* Guide1_depth: [m]     Depth of first guide/precession field section
+* Guide2_depth: [m]     Depth of second guide/precession field section
+* Guide3_depth: [m]     Depth of third guide/precession field section
+* Guide4_depth: [m]     Depth of fourth guide/precession field section
+* Bguide: [T]           Field strength of guide/precession field
+* Bextra: [T]           Field strength of extra field in guide field 1 to acheive echo
+* Bt2: [T]              Field in first triangular coil
+* Bt1: [T]              Field in second triangular coil
+* DLambda: [AA]         Wavelength spread from source (half of it)
+* Lambda: [AA]          Mean wavelength
+* flippos: [m]          Position (away from position set by vcoil_34_pos) of pi-flipper
+* FLIP: [1]             Choose polarisation direction using v-coil pi/2-flipper (1 is down, -1 is up)
+* chop1_pos: [m]        Position of first chopper
+* chop2_pos: [m]        Position of second chopper
+* pol_pos: [m]          Position of polariser
+* analyser_pos: [m]     Position of analyser
+* grating_w: [m]        Width of transmitting part of grating
+* grating_a: [m]        Width of absorbing part of grating
+* slit_1_pos: [m]       Position of first slit
+* slit_2_pos: [m]       Position of second slit
+* Guide1_pos: [m]       Position of first guide/precession field
+* Guide2_pos: [m]       Position of second guide/precession field
+* Guide3_pos: [m]       Position of third guide/precession field
+* Guide4_pos: [m]       Position of fourth guide/precession field
+* vcoil_12_pos: [m]     Position of first v-coil pair
+* vcoil_34_pos: [m]     Position of second v-coil pair
+* vcoil_56_pos: [m]     Position of third v-coil pair
+* triacoil_1_pos: [m]   Position of first triangular coil (centre)
+* triacoil_2_pos: [m]   Position of second triangular coil (centre)
+* grating_pos: [m]      Position of grating
+* grating_pos: [m]      Position of grating
+* detector_pos: [m]     Position of detector
+* tlow: [mu-s]          tmin of detector
+* thigh: [mu-s]         tmax of detector
 *
-* %End 
+* %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT SEMSANS_instrument(
-								triacoil_depth  = 1.935000e-01,
-								triacoil_width  = 7.042824e-02, 
-								triacoil_height = 3.000000e-01, 
-								pol_zdepth      = 9.300000e-01, 
-								vcoil_zdepth    = 1.500000e-01,
-								Guide1_depth    = 1.650000e-02,
-								Guide2_depth    = 3.315000e-01, 
-								Guide3_depth    = 3.315000e-01,
-								Guide4_depth    = 5.650000e-02,
-								Bguide          = -5.000000e-04,
-								Bextra	       	= -2.120000e-02,
-								Bt2             = -4.440000e-03,
-								Bt1             = -2.560000e-03,
-								DLambda         = 4.166366e+00,
-								Lambda          = 4.559500e+00,
-								flippos         = 3.100000e-02,
-								FLIP            = 1.000000e+00, 
-								chop1_pos       = 5.000000e-01,
-								chop2_pos       = 9.740000e-01, 
-								pol_pos         = 1.907000e+00, 
-								analyser_pos    = 6.072000e+00,
-								grating_w       = 1.570000e-03, 
-								grating_a       = 2.930000e-03,
-								slit_1_pos      = 2.957000e+00,
-								slit_2_pos      = 5.437000e+00,
-								Guide1_pos      = 3.307000e+00,
-								Guide2_pos      = 3.710500e+00,
-								Guide3_pos      = 4.342000e+00,
-								Guide4_pos      = 5.060500e+00,
-								vcoil_12_pos    = 3.157000e+00,
-								vcoil_34_pos    = 4.192000e+00,
-								vcoil_56_pos    = 5.267000e+00,
-								triacoil_1_pos  = 3.517000e+00,
-								triacoil_2_pos  = 4.867000e+00,
-								grating_pos     = 6.757000e+00,
-								detector_pos    = 6.957000e+00,
-								tlow            = 2.190523040779461e+03,
-							    thigh			= 1.214744595341338e+04)
+DEFINE INSTRUMENT SEMSANS_instrument( triacoil_depth  = 1.935000e-01, triacoil_width  = 7.042824e-02, triacoil_height = 3.000000e-01, pol_zdepth      = 9.300000e-01, vcoil_zdepth    = 1.500000e-01, Guide1_depth    = 1.650000e-02, Guide2_depth    = 3.315000e-01, Guide3_depth    = 3.315000e-01, Guide4_depth    = 5.650000e-02, Bguide          = -5.000000e-04, Bextra	       	= -2.120000e-02, Bt2             = -4.440000e-03, Bt1             = -2.560000e-03, DLambda         = 4.166366e+00, Lambda          = 4.559500e+00, flippos         = 3.100000e-02, FLIP            = 1.000000e+00, chop1_pos       = 5.000000e-01, chop2_pos       = 9.740000e-01, pol_pos         = 1.907000e+00, analyser_pos    = 6.072000e+00, grating_w       = 1.570000e-03, grating_a       = 2.930000e-03, slit_1_pos      = 2.957000e+00, slit_2_pos      = 5.437000e+00, Guide1_pos      = 3.307000e+00, Guide2_pos      = 3.710500e+00, Guide3_pos      = 4.342000e+00, Guide4_pos      = 5.060500e+00, vcoil_12_pos    = 3.157000e+00, vcoil_34_pos    = 4.192000e+00, vcoil_56_pos    = 5.267000e+00, triacoil_1_pos  = 3.517000e+00, triacoil_2_pos  = 4.867000e+00, grating_pos     = 6.757000e+00, detector_pos    = 6.957000e+00, tlow            = 2.190523040779461e+03, thigh			= 1.214744595341338e+04)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -167,7 +126,7 @@ COMPONENT Guide_field1_cp = Pol_simpleBfield_stop(magnet_comp_stop=Guide_field1)
 
 // TRIA COIL 1
 COMPONENT triacoil_1=Pol_triafield(
-    xwidth=triacoil_width,yheight=triacoil_height,zdepth=2*triacoil_depth, 
+    xwidth=triacoil_width,yheight=triacoil_height,zdepth=2*triacoil_depth,
     B=Bt1, Bguide=Bguide)
   AT (0,0,triacoil_1_pos-triacoil_depth) RELATIVE Origin
 
@@ -205,7 +164,7 @@ COMPONENT Guide_field3_cp = Pol_simpleBfield_stop(magnet_comp_stop=Guide_field3)
 
 // START TRIA COIL 2
 COMPONENT triacoil_2=Pol_triafield(
-    xwidth=triacoil_width,yheight=triacoil_height,zdepth=2*triacoil_depth, 
+    xwidth=triacoil_width,yheight=triacoil_height,zdepth=2*triacoil_depth,
     B=Bt2, Bguide=Bguide)
   AT (0,0,triacoil_2_pos-triacoil_depth) RELATIVE Origin
 
@@ -243,7 +202,7 @@ COMPONENT analyser=Analyser_ideal(mx=0,my=1,mz=0)
 		COMPONENT GratingSlit1_1 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (-2.0*grating_w - 2.0*grating_a, 0, grating_pos) RELATIVE Origin
 			 GROUP Grating
-    
+
 		COMPONENT GratingSlit1_2 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (-1.0*grating_w - 1.0*grating_a, 0, grating_pos) RELATIVE Origin
  		    GROUP Grating
@@ -251,7 +210,7 @@ COMPONENT analyser=Analyser_ideal(mx=0,my=1,mz=0)
 		COMPONENT GratingSlit1_3 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (0, 0, grating_pos) RELATIVE Origin
 			 GROUP Grating
-    
+
 		COMPONENT GratingSlit1_4 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (1.0*grating_w + 1.0*grating_a, 0, grating_pos) RELATIVE Origin
  		    GROUP Grating
@@ -264,7 +223,7 @@ COMPONENT analyser=Analyser_ideal(mx=0,my=1,mz=0)
 		COMPONENT GratingSlit2_1 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (-0.5*grating_w - 0.5*grating_a, 0, grating_pos) RELATIVE Origin
 			 GROUP Grating
-    
+
 		COMPONENT GratingSlit2_2 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (0.5*grating_w + 0.5*grating_a, 0, grating_pos) RELATIVE Origin
 			 GROUP Grating
@@ -289,6 +248,3 @@ FINALLY
 
 /* The END token marks the instrument definition end */
 END
-
-
-

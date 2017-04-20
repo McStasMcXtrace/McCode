@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * The H22 curved thermal guide at the ILL
@@ -19,14 +17,13 @@
 * %Example: m=2 mip=0 Detector: GuideOut_Phic_I=2.75e+09
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip:        (1)  m-value of in-pile guide coating
-* lambda:     (AA) central wavelength
-* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
+* mip: [1]       m-value of in-pile guide coating
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H22(m=2, lambda=4, dlambda=3.9, mip=2)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -45,10 +42,10 @@ DECLARE
   /* guide curvatures */
   double gRh          = -27000; /* clockwise */
   /* guide section parameters (total length/number of elements) */
-  double L_H22_3 =7.5/7,    Rh_H22_3 =0; 
-  double L_H22_4 =15/15,    Rh_H22_4 =0; 
-  double L_H22_5 =4.75 /5,  Rh_H22_5 =0; 
-  double L_H22_6 =60/60,    Rh_H22_6 =0; 
+  double L_H22_3 =7.5/7,    Rh_H22_3 =0;
+  double L_H22_4 =15/15,    Rh_H22_4 =0;
+  double L_H22_5 =4.75 /5,  Rh_H22_5 =0;
+  double L_H22_6 =60/60,    Rh_H22_6 =0;
 
 /* capture flux positions from moderator: 21.4    28.4    61.2 */
 
@@ -76,7 +73,7 @@ TRACE
 /* Source description */
 COMPONENT Origin = Progress_bar(percent=5)
   AT (0,0,0) ABSOLUTE
-  
+
 /* H22 Guide description */
 COMPONENT Thermal = Source_gen(
   yheight  = 0.22,
@@ -398,4 +395,3 @@ COMPONENT GuideOut_L = Monitor_nD(
 AT (0,0,0) RELATIVE PREVIOUS
 
 END
-

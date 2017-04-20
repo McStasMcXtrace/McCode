@@ -11,8 +11,6 @@
 * Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
 * Date: 1998
 * Origin: Risoe
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -27,16 +25,15 @@
 * %Example: PHM=-37.077 Detector: sng_I=1.11099e-09
 *
 * %Parameters
-* INPUT PARAMETERS:
-* PHM: (deg) Monochromator rotation angle, aka A1
-* TTM: (deg) Monochromator take-off angle, aka A2
-* TT:  (deg) Take-off angle at the sample position, aka A4
-* OMA: (deg) Analyzer rotation angle, aka A5
-* TTA: (deg) Take-off angle at the analyzer position, aka A6
-* C1:  (min) Collimator 1 aperture (mono-sample arm)
-* OMC1:(deg) Tilt angle of the Collimator 1
-* C2:  (min) Collimator 2 aperture (sample-ana arm)
-* C3:  (min) Collimator 3 aperture (ana-detector arm)
+* PHM: [deg]   Monochromator rotation angle, aka A1
+* TTM: [deg]   Monochromator take-off angle, aka A2
+* TT: [deg]    Take-off angle at the sample position, aka A4
+* OMA: [deg]   Analyzer rotation angle, aka A5
+* TTA: [deg]   Take-off angle at the analyzer position, aka A6
+* C1: [min]    Collimator 1 aperture (mono-sample arm)
+* OMC1: [deg]  Tilt angle of the Collimator 1
+* C2: [min]    Collimator 2 aperture (sample-ana arm)
+* C3: [min]    Collimator 3 aperture (ana-detector arm)
 *
 * %Link
 * The McStas User manual
@@ -44,9 +41,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT TAS1_Vana(PHM=-37.077,TTM=-74,TT=33.52,
-  TTA=0,C1=30,OMC1=5.5,C2=28,C3=67,
-  OMA=-17.45)
+DEFINE INSTRUMENT TAS1_Vana(PHM=-37.077,TTM=-74,TT=33.52, TTA=0,C1=30,OMC1=5.5,C2=28,C3=67, OMA=-17.45)
 
 DECLARE
 %{

@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:d.champion@rl.ac.uk">Dickon Champion</a>
 * Date: 22nd Jan 2004.
 * Origin: <a href="http://www.isis.rl.ac.uk">ISIS (UK)</a>
-* Release: McStas CVS_070630/1.8
-* Version: $Revision$
 * %INSTRUMENT_SITE: ISIS
 *
 * HET: High Energy Transfer Chopper Spectrometer
@@ -27,19 +25,13 @@
 * %Example: Emin=443 Detector: cyl_I=235837
 *
 * %Parameters
-* INPUT PARAMETERS:
 * Emin  : lowest energy sampled      [meV]
 * Emax  : highest energy sampled     [meV]
 * nu_chop : frequency of chopper rotation [Hz]
-* type : chopper package selected [sloppy chopper = 1, B chopper = 2]
+* type : chopper package - sloppy chopper = 1, B chopper = 2
 *
 * %End
-*******************************************************************************/
-
-
-
-
-
+********************************************************************************
 DEFINE INSTRUMENT ISIS_HET(Emin=443.0,Emax=470.0,nu_chop=600.0,int type=2)
 DECLARE
 %{
@@ -121,9 +113,3 @@ COMPONENT cyl = Monitor_nD(
   AT (0, 0, 0) RELATIVE a2
 
 END
-
-
-
-
-
-

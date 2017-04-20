@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
 * Date: 20130425
 * Origin: DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
 * This instrument produces the ESS 2013 post-TDR brillance, before the "pancake" moderator was introduced.
@@ -19,6 +17,13 @@
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths
 *
 * %Parameters
+* frac: []      
+* power: []     
+* Yheight: []   
+* np: []        
+* ISleft: []    
+* lambdamin: [] 
+* lambdamax: [] 
 *
 * %Link
 * A reference/HTML link for more information
@@ -114,12 +119,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-

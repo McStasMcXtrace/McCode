@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Templates
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -20,12 +18,12 @@
 * %Description
 * This instrument is a simple model of triple-axis spectrometer.
 * It is directly illuminated by the moderator,
-* and has curved monochromator and analyzer. 
-* Sample can be specified as a powder, liquid/amorphous or a pure incoherent 
-* scatterer (e.g. vanadium, which is the default). 
+* and has curved monochromator and analyzer.
+* Sample can be specified as a powder, liquid/amorphous or a pure incoherent
+* scatterer (e.g. vanadium, which is the default).
 * Sample geometry can be spherical or cylindrical.
-* For PG002 monochromator/analyzer setting, a reflectivity curve vs. wavelength 
-* is used, else reflectivity is set to 70 %. To suppress collimators, set their 
+* For PG002 monochromator/analyzer setting, a reflectivity curve vs. wavelength
+* is used, else reflectivity is set to 70 %. To suppress collimators, set their
 * divergence to 0 (ALFn BETn).
 * Default instrument geometry is from IN20@ILL with PG monochromator/analyzer.
 *
@@ -44,10 +42,10 @@
 * Cu       220 DM=1.278 AA
 * Cu       111 DM=2.095 AA
 *
-* IN22 configuration (at H25 thermal m=2 guide end): 
+* IN22 configuration (at H25 thermal m=2 guide end):
 *     KI=3.84, QM=1.0, EN=0.0, verbose=1,
 *     WM=0.15, HM=0.12,    NHM=1, NVM=9, RMV=-1,
-*     WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1, 
+*     WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1,
 *     SM=-1, SS=1, SA=-1,
 *     L1=10.0, L2=1.7, L3=1.0, L4=0.8
 *
@@ -55,81 +53,80 @@
 *     KF=5, KI=0, QM=0.5, EN=5, verbose=1
 *     WM=0.23, HM=0.19, RMH=-1, RMV=-1, DM=1.807, NHM=15, NVM=15,
 *     WA=0.16, HA=0.08, RAH=-1, RAV=-1, DA=2.087, NHA=15, NVA=15,
-*     L1=2.33 
+*     L1=2.33
 *
 * %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=2.55907e+08
 * %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=256
 *
 * %Parameters
-* INPUT PARAMETERS:
-* KI:   Incoming neutron wavevector [Angs-1]
-* KF:   Outgoing neutron wavevector [Angs-1]
-* EI:   Incoming neutron energy [meV]
-* EF:   Outgoing neutron energy [meV]
-* QH:   Measurement QH position in crystal [rlu]
-* QK:   Measurement QK position in crystal [rlu]
-* QL:   Measurement QL position in crystal [rlu]
-* EN:   Energy transfer in crystal [meV]
-* QM:   Wavevector transfer in crystal [Angs-1]
-* KFIX: Fixed KI or KF value for Rescal compatibility [Angs-1]
-* FX:   Fixed KI or KF type for Rescal compatibility [1:KI,2:KF]
-* L1:   Source-Monochromator distance. Contains 1st Collimator of length 5.34 [m]
-* L2:   Monochromator-Sample distance. Contains 2nd Collimator of length 0.35 [m]
-* L3:   Sample-Analyzer distance. Contains 3rd Collimator of length 0.40 [m]
-* L4:   Analyzer-detector distance. Contains 4th Collimator of length 0.24 [m]
-* SM:   Scattering sense of beam from Monochromator [1:left, -1:right]
-* SS:   Scattering sense of beam from Sample [1:left, -1:right]
-* SA:   Scattering sense of beam from Analyzer [1:left, -1:right]
-* DM:   Monochromator d-spacing [Angs]
-* DA:   Analyzer d-spacing [Angs]
-* RMV:  Monochromator vertical curvature, 0 for flat, -1 for automatic setting [m]
-* RMH:  Monochromator horizontal curvature, 0 for flat, -1 for automatic setting [m]
-* RAV:  Analyzer vertical curvature, 0 for flat, -1 for automatic setting [m]
-* RAH:  Analyzer horizontal curvature, 0 for flat, -1 for automatic setting [m]
-* ETAM: Monochromator mosaic [arc min]
-* ETAA: Analyzer mosaic [arc min]
-* ALF1: Horizontal collimation from Source to Monochromator [arc min]
-* ALF2: Horizontal collimation from Monochromator to Sample A[arc min]
-* ALF3: Horizontal collimation from Sample to Analyzer [arc min]
-* ALF4: Horizontal collimation from Analyzer to Detector [arc min]
-* BET1: Vertical collimation from Source to Monochromator [arc min]
-* BET2: Vertical collimation from Monochromator to Sample A[arc min]
-* BET3: Vertical collimation from Sample to Analyzer [arc min]
-* BET4: Vertical collimation from Analyzer to Detector [arc min]
-* AS:   Sample lattice parameter A [Angs]
-* BS:   Sample lattice parameter B [Angs]
-* CS:   Sample lattice parameter C [Angs]
-* AA:   Angle between lattice vectors B,C [deg]
-* BB:   Angle between lattice vectors C,A [deg]
-* CC:   Angle between lattice vectors A,B [deg]
-* AX:   First reciprocal lattice vector in scattering plane, X [rlu]
-* AY:   First reciprocal lattice vector in scattering plane, Y [rlu]
-* AZ:   First reciprocal lattice vector in scattering plane, Z [rlu]
-* BX:   Second reciprocal lattice vector in scattering plane, X [rlu]
-* BY:   Second reciprocal lattice vector in scattering plane, Y [rlu]
-* BZ:   Second reciprocal lattice vector in scattering plane, Z [rlu]
-* A1:   Monohromator rotation angle [deg]
-* A2:   Monohromator take-off angle [deg]
-* A3:   Sample rotation angle [deg]
-* A4:   Sample take-off angle [deg]
-* A5:   Analyzer rotation angle [deg]
-* A6:   Analyzer take-off angle [deg]
-* verbose: print TAS configuration. 0 to be quiet [1]
+* KI: [Angs-1]            Incoming neutron wavevector
+* KF: [Angs-1]            Outgoing neutron wavevector
+* EI: [meV]               Incoming neutron energy
+* EF: [meV]               Outgoing neutron energy
+* QH: [rlu]               Measurement QH position in crystal
+* QK: [rlu]               Measurement QK position in crystal
+* QL: [rlu]               Measurement QL position in crystal
+* EN: [meV]               Energy transfer in crystal
+* QM: [Angs-1]            Wavevector transfer in crystal
+* KFIX: [Angs-1]          Fixed KI or KF value for Rescal compatibility
+* FX: [1:KI,2:KF]         Fixed KI or KF type for Rescal compatibility
+* L1: [m]                 Source-Monochromator distance. Contains 1st Collimator of length 5.34
+* L2: [m]                 Monochromator-Sample distance. Contains 2nd Collimator of length 0.35
+* L3: [m]                 Sample-Analyzer distance. Contains 3rd Collimator of length 0.40
+* L4: [m]                 Analyzer-detector distance. Contains 4th Collimator of length 0.24
+* SM: [1:left, -1:right]  Scattering sense of beam from Monochromator
+* SS: [1:left, -1:right]  Scattering sense of beam from Sample
+* SA: [1:left, -1:right]  Scattering sense of beam from Analyzer
+* DM: [Angs]              Monochromator d-spacing
+* DA: [Angs]              Analyzer d-spacing
+* RMV: [m]                Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* RMH: [m]                Monochromator horizontal curvature, 0 for flat, -1 for automatic setting
+* RAV: [m]                Analyzer vertical curvature, 0 for flat, -1 for automatic setting
+* RAH: [m]                Analyzer horizontal curvature, 0 for flat, -1 for automatic setting
+* ETAM: [arc min]         Monochromator mosaic
+* ETAA: [arc min]         Analyzer mosaic
+* ALF1: [arc min]         Horizontal collimation from Source to Monochromator
+* ALF2: [arc min]         Horizontal collimation from Monochromator to Sample A
+* ALF3: [arc min]         Horizontal collimation from Sample to Analyzer
+* ALF4: [arc min]         Horizontal collimation from Analyzer to Detector
+* BET1: [arc min]         Vertical collimation from Source to Monochromator
+* BET2: [arc min]         Vertical collimation from Monochromator to Sample A
+* BET3: [arc min]         Vertical collimation from Sample to Analyzer
+* BET4: [arc min]         Vertical collimation from Analyzer to Detector
+* AS: [Angs]              Sample lattice parameter A
+* BS: [Angs]              Sample lattice parameter B
+* CS: [Angs]              Sample lattice parameter C
+* AA: [deg]               Angle between lattice vectors B,C
+* BB: [deg]               Angle between lattice vectors C,A
+* CC: [deg]               Angle between lattice vectors A,B
+* AX: [rlu]               First reciprocal lattice vector in scattering plane, X
+* AY: [rlu]               First reciprocal lattice vector in scattering plane, Y
+* AZ: [rlu]               First reciprocal lattice vector in scattering plane, Z
+* BX: [rlu]               Second reciprocal lattice vector in scattering plane, X
+* BY: [rlu]               Second reciprocal lattice vector in scattering plane, Y
+* BZ: [rlu]               Second reciprocal lattice vector in scattering plane, Z
+* A1: [deg]               Monohromator rotation angle
+* A2: [deg]               Monohromator take-off angle
+* A3: [deg]               Sample rotation angle
+* A4: [deg]               Sample take-off angle
+* A5: [deg]               Analyzer rotation angle
+* A6: [deg]               Analyzer take-off angle
+* verbose: [1]            print TAS configuration. 0 to be quiet
 *
-* WM:   Width of monochromator [m]
-* HM:   Height of monochromator [m]
-* NVM:  Number of vertical slabs composing the monochromator [1]
-* NHM:  Number of horizontal slabs composing the monochromator [1]
-* WA:   Width of analyzer [m]
-* HA:   Height of analyzer [m]
-* NVA:  Number of vertical slabs composing the analyzer [1]
-* NHA:  Number of horizontal slabs composing the analyzer [1]
+* WM: [m]                 Width of monochromator
+* HM: [m]                 Height of monochromator
+* NVM: [1]                Number of vertical slabs composing the monochromator
+* NHM: [1]                Number of horizontal slabs composing the monochromator
+* WA: [m]                 Width of analyzer
+* HA: [m]                 Height of analyzer
+* NVA: [1]                Number of vertical slabs composing the analyzer
+* NHA: [1]                Number of horizontal slabs composing the analyzer
 *
-* Sqw_coh:   sample coherent S(q,w) file name. Use LAZ/LAU or SQW file [str] 
-* Sqw_inc:   sample incoherent S(q,w) file name. Use NULL to scatter incoherently [str] 
-* radius:    outer radius of sample hollow cylinder/sphere [m]
-* height:    sample height. Use 0 for a spherical shape [m]
-* thickness: thickness of sample hollow cylinder. 0 for bulk. [m]
+* Sqw_coh: [str]          sample coherent S(q,w) file name. Use LAZ/LAU or SQW file
+* Sqw_inc: [str]          sample incoherent S(q,w) file name. Use NULL to scatter incoherently
+* radius: [m]             outer radius of sample hollow cylinder/sphere
+* height: [m]             sample height. Use 0 for a spherical shape
+* thickness: [m]          thickness of sample hollow cylinder. 0 for bulk
 *
 * %Link
 * Rescal for Matlab at http://www.ill.eu/instruments-support/computing-for-science/cs-software/all-software/matlab-ill/
@@ -137,29 +134,7 @@
 * Restrax at http://omega.ujf.cas.cz/restrax/
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT templateTAS(
-KI=2.662, KF=0, EI=0, EF=0,
-QH=0, QK=0, QL=0,
-EN=0, QM=0, KFIX=0, FX=0,
-L1=9, L2=2.1, L3=1.5, L4=0.7,
-SM=1, SS=-1, SA=1,
-DM=3.3539, DA=3.3539,
-RMV=-1, RMH=0, RAV=0, RAH=-1,
-ETAM=30, ETAA=30,
-ALF1=60, ALF2=60, ALF3=60, ALF4=60,
-BET1=120, BET2=120, BET3=120, BET4=120,
-AS=6.28, BS=6.28, CS=6.28,
-AA=90, BB=90, CC=90,
-AX=1, AY=0, AZ=0,
-BX=0, BY=1, BZ=0,
-verbose=1,
-A1=0,A2=0,A3=0,A4=0,A5=0,A6=0,
-NHM=1, NVM=9, WM=0.10, HM=0.12,
-NHA=9, NVA=1, WA=0.10, HA=0.12,
-string Sqw_coh="NULL", string Sqw_inc="NULL",
-  radius=0.01, thickness=0.005, height=0.05
-)
+DEFINE INSTRUMENT templateTAS( KI=2.662, KF=0, EI=0, EF=0, QH=0, QK=0, QL=0, EN=0, QM=0, KFIX=0, FX=0, L1=9, L2=2.1, L3=1.5, L4=0.7, SM=1, SS=-1, SA=1, DM=3.3539, DA=3.3539, RMV=-1, RMH=0, RAV=0, RAH=-1, ETAM=30, ETAA=30, ALF1=60, ALF2=60, ALF3=60, ALF4=60, BET1=120, BET2=120, BET3=120, BET4=120, AS=6.28, BS=6.28, CS=6.28, AA=90, BB=90, CC=90, AX=1, AY=0, AZ=0, BX=0, BY=1, BZ=0, verbose=1, A1=0,A2=0,A3=0,A4=0,A5=0,A6=0, NHM=1, NVM=9, WM=0.10, HM=0.12, NHA=9, NVA=1, WA=0.10, HA=0.12, string Sqw_coh="NULL", string Sqw_inc="NULL", radius=0.01, thickness=0.005, height=0.05 )
 
 DECLARE
 %{
@@ -535,7 +510,7 @@ if (verbose) {
   printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
     machine_hkl.da, machine_real.rah, machine_real.rav,
     (!machine_real.rah && !machine_real.rav ? "flat" : "curved"));
-    
+
   printf("Sample:        ");
     if (strcmp(Sqw_coh, "NULL") && !strstr(Sqw_coh, ".laz") && !strstr(Sqw_coh, ".lau"))
       printf("Isotropic (liquid/polymer) %s\n", Sqw_coh);
@@ -583,14 +558,14 @@ AT (0, 0, machine_hkl.l1-0.2) ABSOLUTE
 
 COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 0.2) RELATIVE PREVIOUS
-  
+
 SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   width  = WM,
   height = HM,
   NH=NHM, NV=NVM,
   RV=machine_real.rmv, RH=machine_real.rmh,
   DM=machine_hkl.dm, mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
-  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7), 
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7),
   reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Mono_Cradle
 ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
@@ -599,7 +574,7 @@ ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
 COMPONENT Mono_Out = Arm()
   AT (0,0,0) RELATIVE Mono_Cradle
   ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Cradle
-  
+
   COMPONENT D4_SC2_1D = Monitor_nD(
   xmin = -0.0420/2, xmax = 0.0420/2,
   ymin = -0.1200/2, ymax = 0.1200/2,
@@ -628,7 +603,7 @@ AT (0,0,0) RELATIVE Sample_Cradle
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
   AT (0,0,0) RELATIVE Sample_Cradle
   ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
-  
+
 COMPONENT D7_SC3_1D = Monitor_nD(
   xwidth = 0.06, yheight = HA, bins=50, restore_neutron=1,
   options="theta energy, all auto, banana")
@@ -652,7 +627,7 @@ SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   NH=NHA, NV=NVA,
   RV=machine_real.rav, RH=machine_real.rah,
   DM=machine_hkl.da, mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
-  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7), 
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7),
   reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Ana_Cradle
 ROTATED (0, machine_real.a5, 0) RELATIVE Ana_Cradle
@@ -667,7 +642,7 @@ COMPONENT SC4 =Collimator_linear(
   length = 0.24,
   divergence=ALF4,
   divergenceV=BET4)
-WHEN (ALF4 && BET4)  
+WHEN (ALF4 && BET4)
 AT (0, 0, (machine_hkl.l4-0.24)/2) RELATIVE Ana_Out
 
 /* vertical 3He Detector */

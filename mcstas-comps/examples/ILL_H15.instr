@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * The H15@ILL curved cold guide at the ILL (feeding IN6, D7, IN10, D11)
@@ -19,17 +17,16 @@
 * %Example: m=1 Detector: GuideOut_Phic_I=1.16e10
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip:        (1)  m-value of in-pile guide coating
-* lambda:     (AA) central wavelength
-* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip: [1]       m-value of in-pile guide coating
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN6">IN6 TOF</a> at the ILL
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H15(m=1, lambda=10, dlambda=9.9, mip=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -394,5 +391,3 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 /* The END token marks the instrument definition end */
 END
-
-

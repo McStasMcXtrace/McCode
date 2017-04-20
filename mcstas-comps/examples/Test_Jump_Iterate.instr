@@ -7,8 +7,6 @@
 * Written by: E. Farhi
 * Date: March 30, 2015
 * Origin:ILL
-* Release: McStas 2.2
-* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_grammar
 *
 * A test of the JUMP ITERATE keyword to describe a long curved guide in a concise way.
@@ -21,15 +19,14 @@
 * %Example: L=60 Detector: Mon_LambdaDX_Out_I=0.790318
 *
 * %Parameters
-* L:     [m]    total length of curved section
-* numel: [1]    number of guide elements, each of length L/numel
-* R:     [m]    curvature radius
-* width: [m]    width of guide element
-* m:     [1]    super-mirror coating wrt Ni, e.g. m=2
+* L: [m]      total length of curved section
+* numel: [1]  number of guide elements, each of length L/numel
+* R: [m]      curvature radius
+* width: [m]  width of guide element
+* m: [1]      super-mirror coating wrt Ni, e.g. m=2
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT Test_Jump_Iterate(L=60, numel=30, R=1500, width=0.03, m=2)
 
 DECLARE %{

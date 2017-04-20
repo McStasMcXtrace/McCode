@@ -8,6 +8,7 @@ from .pipetools import McrunPipeMan
 from .instrparser import InstrTraceParser, InstrObjectConstructor
 from .particleparser import ParticleBundleRayFactory, ParticleTraceParser
 from .fcparticleparser import FlowChartParticleTraceParser
+from . import mccode_config
 
 class McDisplayReader(object):
     ''' High-level trace manager '''
@@ -27,7 +28,7 @@ class McDisplayReader(object):
             exit()
         
         # assemble command
-        cmd = 'mcrun ' + args.instr + ' --no-output-files --trace'
+        cmd = mccode_config.configuration["MCRUN"] + ' ' + args.instr + ' --no-output-files --trace'
         b1 = False
         b2 = False
         for o in args.instr_options:

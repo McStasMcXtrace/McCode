@@ -7,8 +7,6 @@
 * Written by: E. Farhi
 * Date: 13 Apr 2006
 * Origin: LLB/ILL
-* Release: McStas 2.0a
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * D4 Diffractometer for liquids at the ILL.
@@ -30,26 +28,21 @@
 * %Example: lambda=0.7 Detector: BananaTheta_I=1.44351e+06
 *
 * %Parameters
-* lambda: [Angs] Wavelength at monochromator
-* DM:     [Angs] d-spacing of monochromator
-* RV:     [m]    Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:     [m]    Source-Monochromator distance
-* L2:     [m]    Monochromator-Sample distance
-* L3:     [m]    Sample-Detector distance
-* sample: [str]  File name for powder/liquid description LAU/LAZ/qSq/Sqw
-* verbose:[1]    Print DIF configuration. 0 to be quiet
+* lambda: [Angs]  Wavelength at monochromator
+* DM: [Angs]      d-spacing of monochromator
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* sample: [str]   File name for powder/liquid description LAU/LAZ/qSq/Sqw
+* verbose: [1]    Print DIF configuration. 0 to be quiet
 *
 * %Link
 * The <a href="http://www.ill.eu/d4">D4 diffractometer</a> at the ILL
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 ,
-  string sample="SiO2_liq.qSq", RV=-1,
-  L1=6.4, L2=2.61, L3=1.148,
-  verbose=1)
+DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 , string sample="SiO2_liq.qSq", RV=-1, L1=6.4, L2=2.61, L3=1.148, verbose=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

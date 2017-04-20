@@ -7,28 +7,24 @@
 * Written by: Peter Willendrup
 * Date: 20130425
 * Origin: DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ISIS
 *
 * This instrument produces brilliance curves from the ISIS TS1 facility.
 *
 * %Description
 * This instrument produces brilliance curves from the ISIS TS1 facility.
-* 
+*
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths.
 *
 * Example: ISIS_brilliance Detector: Brillmon_I=3.80e+15 (First detector output)
 *
 * %Parameters
-* modfile: [string] Name of moderator face - TS1=water,ch4,h2,merlin or instrument name eg maps, crisp etc.
+* modfile: [string]  Name of moderator face - TS1=water, ch4, h2, merlin or instrument name eg maps, crisp etc.
 *
 * %Link
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ISIS_TS1_Brilliance(string modfile="ch4")
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -77,11 +73,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-

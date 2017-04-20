@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Sept 2014.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas Sept 5
-* Version: $Revision: 1.0 $
 * %INSTRUMENT_SITE: ILL
 *
 * The LADI protein crystallography cold Laue diffractometer
@@ -48,14 +46,12 @@
 * Sample:      at 2.710 mm from the end of the guide H143.
 *
 * %Parameters
-* INPUT PARAMETERS:
-*   lambda:        [Angs] wavelength
-*   dlambda:       [Angs] wavelength HALF spread. 
-*   reflections:   [str]  list of reflections describing the sample SX
+* lambda: [Angs]      wavelength
+* dlambda: [Angs]     wavelength HALF spread.
+* reflections: [str]  list of reflections describing the sample SX
 *   
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H143_LADI(lambda=3.2, dlambda=1, string reflections="leucine.lau")
 
 DECLARE

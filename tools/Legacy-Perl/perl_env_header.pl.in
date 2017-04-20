@@ -18,6 +18,6 @@
 
     $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
     $ENV{"@FLAVOR_UPPER@"}=$MCSTAS::sys_dir;
-    $ENV{"PATH"} = $MCSTAS::sys_dir."/bin".$Config::Config{'path_sep'}.$MCSTAS::sys_dir."/../../miniconda3/bin".$Config::Config{'path_sep'}.$ENV{"PATH"};
+    $ENV{"PATH"} = $MCSTAS::sys_dir."/bin".$Config::Config{'path_sep'}.$MCSTAS::sys_dir."/miniconda3/bin".$Config::Config{'path_sep'}.$ENV{"PATH"};
 
 }

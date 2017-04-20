@@ -7,8 +7,6 @@
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
 * Date: September 2014
 * Origin: DTU Physics
-* Release: McStas
-* Version: 0.2
 * %INSTRUMENT_SITE: DTU
 *
 * Simple test instrument for the Virtual_output component
@@ -18,15 +16,12 @@
 * Simple test instrument for the Virtual_output component
 *
 * %Parameters
-* Vinfile: [string] Filename for storing events for processing by Virtual_input
 *
 * %Link
 * A reference/HTML link for more information
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Vout_test(string Voutfile="Vout_text.dat")
 
 /* The DECLARE section allows us to declare variables or  small      */

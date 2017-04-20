@@ -1,4 +1,3 @@
-
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
@@ -8,32 +7,30 @@
 * Written by: Jan Saroun (saroun@ujf.cas.cz)
 * Date: 04/01/2016
 * Origin: NPI Rez
-* Release: McStas 2.2a
-* Version: 0.1
 * %INSTRUMENT_SITE: ESS
 *
-* Test of the ESS-2015 moderator model with updated component ESS_moderator_corr.comp  . 
+* Test of the ESS-2015 moderator model with updated component ESS_moderator_corr.comp  .
 *
 * %Description
-* Measures flux projected on a 1cm^2 target at 100 m, 
+* Measures flux projected on a 1cm^2 target at 100 m,
 * The beamline origin is centered at the nearest cross point between cold and thermal moderators.
 * Accepts negative port angle. Default is -55 deg corresponding to the assumed BEER position (port 2).
-* Records spatial and time distributions at 0.3 m from the beamline origin and wavelength distribution 
+* Records spatial and time distributions at 0.3 m from the beamline origin and wavelength distribution
 * behind the target slit.
 *
 * %Parameters
-* frac	fraction of trials from the cold moderator
-* lmin, lmax	[A]	wavelength range
-* ANGLE	[deg]	port angle
-* mon_shift	[m]	shift of the monitor along x-axis
+* frac: []         fraction of trials from the cold moderator
+* lmin: [A]       wavelength range min
+* lmax: [A]       wavelength range max
+* ANGLE: [deg]    port angle
+* mon_shift: [m]  shift of the monitor along x-axis
+* frac: []        
 *
 * %Link
 * A reference/HTML link for more information
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ESS_2015_test(frac=0.5, lmin=0.3, lmax=8.3, ANGLE=-55, mon_shift=0.0 )
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -68,7 +65,7 @@ INITIALIZE
   printf("Beamline centered at [cm]: x= %g,  z=%g \n",ctrX*100,ctrZ*100);
   printf("after rotation by beamport angle [cm]: x= %g,  z=%g \n",BX0*100,BZ0*100);
   // printf("maximum extent of cold area [cm]: x= %g\n",(0.1425*cosa + 0.05077*sina - BX0)*100);
-  
+
   sprintf(srcdef,"2015");
 %}
 
@@ -141,21 +138,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

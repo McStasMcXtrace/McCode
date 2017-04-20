@@ -7,8 +7,6 @@
 * Written by: E. Farhi and Megat Harun Al-Rashid
 * Date: June 2014
 * Origin: ILL/RTP
-* Release: McStas
-* Version: 0.2
 * %INSTRUMENT_SITE: TRIGA
 *
 * A powder diffractometer at Reactor TRIGA PUSPATI (Malaysia)
@@ -19,10 +17,10 @@
 * Example: mcrun RTP_DIFF.instr lambda=2.36
 *
 * %Parameters
-* lambda:       [Angs] Monochromator selected wavelength
-* DM:           [Angs] d-spacing for the monochromator reflection
-* Mono_tilt:    [deg]  Tilt angle magnitude for the inner/outer mono slabs
-* powder:       [str]  Filename of the powder sample
+* lambda: [Angs]       Monochromator selected wavelength
+* DM: [Angs]           d-spacing for the monochromator reflection
+* Mono_tilt: [deg]     Tilt angle magnitude for the inner/outer mono slabs
+* powder: [str]        Filename of the powder sample
 * det_rotation: [deg]  Rotation of the portable detector
 *
 * %Link
@@ -32,10 +30,7 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT RTP_DIF(lambda=2.36, DM=3.355, Mono_tilt=0, 
-  string powder="Na2Ca3Al2F14.laz", det_rotation=45)
+DEFINE INSTRUMENT RTP_DIF(lambda=2.36, DM=3.355, Mono_tilt=0, string powder="Na2Ca3Al2F14.laz", det_rotation=45)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

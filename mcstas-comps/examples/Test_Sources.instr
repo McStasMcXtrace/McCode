@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: Aug 3, 2008
 * Origin:ILL
-* Release: McStas CVS_080901
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * A test instrument to compare sources
@@ -18,7 +16,7 @@
 * sprectrum and intensity. It shows that the first 4 flat sources are equivalent,
 * the 2 Maxwellian sources as well.
 *
-* WARNING: Result of test no. 1 for Source_adapt.comp is not correct if MPI is used, as 
+* WARNING: Result of test no. 1 for Source_adapt.comp is not correct if MPI is used, as
 * that source component does not support MPI.
 *
 * %Example: source=1 Detector: m1_I=9.97273e+11
@@ -30,15 +28,16 @@
 * %Example: source=7 Detector: m1_I=2.2362e+11
 * %Example: source=8 Detector: m1_I=5.0787e+13
 *
-*
 * %Parameters
-* source:  (1) selection of the source to use in 1=Source_adapt, 2=Source_div, 
-*               3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 
-*               6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
+* source: [1]  selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
+* Lmin: []     
+* Lmax: []     
+* Lmin: []    
+* Lxax: []    
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Sources(int source=0,Lmin=1,Lmax=11)
+DEFINE INSTRUMENT Test_Sources(int source=0, Lmin=1, Lmax=11)
 
 DECLARE
 %{
@@ -79,7 +78,7 @@ AT (0, 0, 0) ABSOLUTE
 
 /* the sources ============================================================== */
 COMPONENT sa1 = Source_adapt( /* flux in n/s/cm2/st/AA */
-  xwidth=0.01, yheight=0.01, 
+  xwidth=0.01, yheight=0.01,
   dist=1, focus_xw=0.1, focus_yh=0.1,
   lambda0=Lambda0, dlambda=dLambda, flux=1e13
 ) WHEN (source == 1)
@@ -91,7 +90,7 @@ COMPONENT sa2 = Source_div(  /* flux in n/s/cm2/st/AA */
 AT (0,0,0) ABSOLUTE
 
 COMPONENT sa3 = Source_simple(   /* flux in n/s/cm2/st/AA */
-  xwidth=0.01, yheight=0.01, 
+  xwidth=0.01, yheight=0.01,
   dist=1, focus_xw=0.1, focus_yh=0.1,
   lambda0=Lambda0, dlambda=dLambda, flux=1e13
 ) WHEN (source == 3)
@@ -113,7 +112,7 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT sa6 = Source_Maxwell_3( /* flux in n/s/cm2/st/AA */
   Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1,
-  xwidth=0.01, yheight=0.01, 
+  xwidth=0.01, yheight=0.01,
   T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13, T3=16.7 ,I3=3.0423e+12
 ) WHEN (source == 6)
 AT (0,0,0) ABSOLUTE
@@ -154,6 +153,3 @@ COMPONENT m3 = Monitor_nD(
 ) AT (0,0,1) ABSOLUTE
 
 END
-
-
-

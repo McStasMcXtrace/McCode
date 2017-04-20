@@ -7,8 +7,6 @@
 * Written by: Reynald ARNERIN
 * Date: June 12th, 2008
 * Origin: ILL
-* Release: McStas CVS-080208
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_samples
 *
 * Instrument to demonstrate the usage of OFF shape samples with totally absorbing material.
@@ -21,14 +19,13 @@
 * %Example: geometry="socket.off" Detector: monitor_I=0.0150169
 *
 * %Parameters
-* geometry: [string] Name of the OFF file describing the sample shape
+* geometry: [string]  Name of the OFF file describing the sample shape
 *
 * %Link
 * http://shape.cs.princeton.edu/benchmark/documentation/off_format.html
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT Samples_Incoherent_off(string geometry="socket.off")
 
 TRACE

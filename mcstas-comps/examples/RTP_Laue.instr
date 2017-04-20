@@ -7,8 +7,6 @@
 * Written by: E. Farhi and Megat Harun Al-Rashid
 * Date: June 2014
 * Origin: ILL/RTP
-* Release: McStas
-* Version: 0.2
 * %INSTRUMENT_SITE: TRIGA
 *
 * The NR instrument installed at Reactor TRIGA PUSPATI (Malaysia)
@@ -20,9 +18,9 @@
 * Example: mcrun RTP_SANS.instr lambda=5
 *
 * %Parameters
-* theta: [deg] horizontal rotation of the object
-* phi:   [deg] vertical rotation of the object
-* det_rotation: [deg] detector rotation around the sample
+* theta: [deg]         horizontal rotation of the object
+* phi: [deg]           vertical rotation of the object
+* det_rotation: [deg]  detector rotation around the sample
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>
@@ -31,8 +29,6 @@
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT RTP_Laue(theta=0, phi=0, det_rotation=0)
 
 /* The DECLARE section allows us to declare variables or  small      */

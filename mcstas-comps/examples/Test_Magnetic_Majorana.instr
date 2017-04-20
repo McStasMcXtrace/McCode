@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -27,18 +25,15 @@
 *
 * %Parameters
 *
-* Blarge:        [T]   Large linear decreasing field along x axis (+Blarge to -Blarge).
-* Bsmall:        [T]   Constant small component of field along y axis.
-* magnetLength:  [m]   Magnet length.
+* Blarge: [T]        Large linear decreasing field along x axis (+Blarge to -Blarge).
+* Bsmall: [T]        Constant small component of field along y axis.
+* magnetLength: [m]  Magnet length.
 *
 * %Link
 *
 * %End
 ****************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Magnetic_Majorana(Blarge=1.0, Bsmall=0.003, 
-					 magnetLength=1.0)
+DEFINE INSTRUMENT Test_Magnetic_Majorana(Blarge=1.0, Bsmall=0.003, magnetLength=1.0)
 					 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

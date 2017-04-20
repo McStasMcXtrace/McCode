@@ -35,6 +35,10 @@ if [ "x$2" != "x" ]; then
     if [ ! -f PPDs.zip ]; then
 	wget http://ppds.mccode.org/PPDs.zip
     fi
+    if [ ! -f miniconda3.zip ]; then
+	echo Sorry! I need to download a miniconda3 for embedding - will take some time...
+	wget http://support.mccode.org/windows/miniconda3.zip
+    fi
     cd ..
 
     sed s/@VERSION@/${1}/g McStas-metapackage32.iss > McStas-${1}-metapackage32.iss

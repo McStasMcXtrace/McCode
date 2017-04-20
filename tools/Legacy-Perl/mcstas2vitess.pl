@@ -28,7 +28,8 @@ BEGIN {
     ENV_HEADER
 }
 use lib $MCSTAS::perl_dir;
-
+use POSIX qw(uname);
+use Config;
 use FileHandle;
 
 require "mccode_config.perl";
@@ -51,6 +52,11 @@ sub make_instr_file {
     my $str_letters = "";
     my $comp_name = $d->{'name'};
     my $comp_actuals = "";
+    my $firstcomp="";
+    my $checkinit="";
+    my $terminate="";
+    my $finally="";
+    my $typ;
     for (@$par) {
         my ($p, $let, $typ) = @$_;
         $comp_actuals = $comp_actuals ? "$comp_actuals, $p=$p" : "$p=$p";
@@ -66,6 +72,26 @@ sub make_instr_file {
             die "Internal: make_instr_file()";
         }
     }
+    if ($d->{'isasource'} == 1) {
+      $firstcomp="Arm()
+    ";
+      $checkinit="check_finished = 0;";
+      $terminate="our_ncount < Ncount";
+      $double_decl= "$double_decl, Ncount";
+      $double_adr= "$double_adr &Ncount,";
+      $double_letters= "$double_letters 'n',";
+      $finally = "";
+    } else {
+      $firstcomp="Vitess_input(
+    filename = vitess_infile, repeat_count = vitess_repcnt,
+    bufsize = vitess_bufsize)";
+      $checkinit="check_finished = &MC_GETPAR(vitess_in, finished);";
+      $terminate="!*check_finished";
+      $finally="  double p_sum=0.0, p2_sum=0.0;
+  p_sum  = MC_GETPAR(vitess_out, p_out);
+  p2_sum = MC_GETPAR(vitess_out, p2_out);
+  vitess_write(mcNCounter[1]-1, mcNCounter[3], p_sum, p2_sum, pos_x, pos_y, pos_z, 0.0, 0.0);"
+    }
 
     print $F <<INSTR_END;
 DEFINE INSTRUMENT McStas_$comp_name()
@@ -76,6 +102,8 @@ DEFINE INSTRUMENT McStas_$comp_name()
  */
 DECLARE
 %{
+#define printf(...) fprintf(stderr,__VA_ARGS__)
+#define fprintf(stdout,...) fprintf(stderr,__VA_ARGS__)
 /* Component parameters. */
 $double_decl;
 $str_decl;
@@ -118,11 +146,13 @@ int main(int argc, char *argv[])
   srandom(time(NULL));  /* Random seed */
   vitess_parseopt(argc, argv, dptr, dchr, sptr, schr); /* VITESS-style option parser */
   mcinit();
+  double our_ncount=-1;
   do
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
     mcraytrace();
-  } while(!*check_finished);
+    our_ncount++;
+  } while($terminate);
 
   mcfinally();
   exit(0);
@@ -133,14 +163,12 @@ INITIALIZE
   %include "vitess-lib.h"
   /* This double-indirection is necessary here since MC_GETPAR is not
      available in the DECLARE section. */
-  check_finished = &MC_GETPAR(vitess_in, finished);
+  $checkinit
   vitess_col =0;
 %}
 TRACE
 
-COMPONENT vitess_in = Vitess_input(
-    filename = vitess_infile, repeat_count = vitess_repcnt,
-    bufsize = vitess_bufsize)
+COMPONENT vitess_in = $firstcomp
   AT (0, 0, 0) ABSOLUTE
 
 COMPONENT comp = $comp_name(
@@ -149,17 +177,13 @@ COMPONENT comp = $comp_name(
   ROTATED (0, 0, 0) ABSOLUTE
 
 COMPONENT vitess_out = Vitess_output(
-    filename = vitess_outfile, bufsize = vitess_bufsize,
+    filename = "stdout", bufsize = vitess_bufsize,
     progress = vitess_tracepoints)
   AT (0, 0, 0) ABSOLUTE
 
 FINALLY
 %{
-  double p_sum=0.0, p2_sum=0.0;
-
-  p_sum  = MC_GETPAR(vitess_out, p_out);
-  p2_sum = MC_GETPAR(vitess_out, p2_out);
-  vitess_write(mcNCounter[1]-1, mcNCounter[3], p_sum, p2_sum, pos_x, pos_y, pos_z, 0.0, 0.0);
+  $finally  
 %}
 
 END
@@ -169,12 +193,19 @@ INSTR_END
 sub make_tcl_file {
     my ($F, $par, $d) = @_;
 
+    print $F "global AvailableSET\n";
+    print $F "lappend AvailableSET {mcstas_", lc($d->{'name'}), "}\n";
+
     print $F "### $d->{'name'}\n###\n";
     print $F "gSet mcstas_", lc($d->{'name'}), "ESET {\n";
     my $dsc = $d->{'identification'}{'short'};
     chomp $dsc;
     $dsc =~ s/\n/\\n/g;
     print $F "  {\"$dsc\" header}\n";
+    if ($d->{'isasource'} == 1) {
+      print $F "  {\"number of tracjectories\" float 1e6 {\"Ncount [1]\" \"Defines number of trajectories to generate\" \"\" n}}\n";
+    }
+    
     for (@$par) {
         my ($p, $let, $typ) = @$_;
         print $F "  {$p ";
@@ -188,7 +219,7 @@ sub make_tcl_file {
         } elsif($typ eq 'string') {
             print $F "string";
             if($d->{'parhelp'}{$p}{'default'}) {
-                print $F " \"$d->{'parhelp'}{$p}{'default'}\"";
+                print $F " $d->{'parhelp'}{$p}{'default'}";
             } else {
                 print $F " \"\"";
             }
@@ -203,6 +234,7 @@ sub make_tcl_file {
             my $txt =  $d->{'parhelp'}{$p}{'text'};
             $txt =~ s/\s+$//;
             $txt =~ s/\n/\\n/g;
+	    $txt =~ s/\"//g;
             print $F $txt;
         }
         print $F "\" ";
@@ -222,14 +254,25 @@ sub make_tcl_file {
     print $F "}\n";
 }
 
-if(@ARGV != 1) {
-    print STDERR "Usage: mcstas2vitess component\n";
+my $issourcemodule = 0;
+
+if(@ARGV == 0 || @ARGV > 2) {
+    print STDERR "Usage: mcstas2vitess component [assource]\n";
     print STDERR "       This tool enables to convert a single McStas component into\n";
-    print STDERR "       a Vitess module. Component string parameters should be declared\n";
+    print STDERR "       a Vitess module. \n ";
+    print STDERR "       If a second input parameter to this script is defined, the component\n";
+    print STDERR "       will be for insertion as first module in Vitess, i.e. a source module.\n";
+    print STDERR "\n";
+    print STDERR "       Component string parameters should be declared\n";
     print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
     print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
     print STDERR "DOC:      Please visit http://www.mcstas.org\n";
     exit 1;
+} elsif (@ARGV == 1) {
+    print "Processing component as non-source module for Vitess\n";
+} elsif (@ARGV == 2) {
+    print "Processing component as source module for Vitess\n";
+    $issourcemodule = 1;
 }
 
 my $compfile = $ARGV[0];
@@ -239,6 +282,8 @@ $compname = $1 if $compname =~ /^(.*)\.(comp|cmp|com)$/;
 my $data = component_information($compfile);
 die "Failed to get information for component '$compfile'"
     unless defined($data);
+
+$data->{'isasource'}=$issourcemodule;
 
 # Read the corresponding .vif file if available.
 my %vif = ();
@@ -265,7 +310,7 @@ if(open($VIF, $vifname)) {
 # Now decide on how the name and type of each component parameter.
 # The following option letters are not available: fFJLZABxyz
 my @optletter = ('a', 'b', 'c', 'd', 'e', 'g', 'h', 'i',
-                 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+                 'j', 'k', 'l', 'm', 'o', 'p', 'q',
                  'r', 's', 't', 'u', 'v', 'w', 'C', 'D',
                  'E', 'G', 'H', 'I', 'K', 'M', 'N', 'O',
                  'P', 'Q', 'R', 'S', 'T', 'Y', 'V', 'W',
@@ -309,6 +354,13 @@ if(system(@mcstas_cmd)) {
 print "Wrote C file '$c_name'.\n";
 
 my $out_name = "McStas_${compname}";
+$out_name = lc($out_name);
+my @uname = uname(); 
+if (!($Config{'osname'} eq 'MSWin32')) {
+  $out_name = "${out_name}_".$uname[0]."_".$uname[4];
+} else {
+  $out_name = "${out_name}.exe";
+}
 my $cc = $ENV{'MCSTAS_CC'} || $MCSTAS::mcstas_config{CC};
 my $cflags = $ENV{'MCSTAS_CFLAGS'} || $MCSTAS::mcstas_config{CFLAGS};
 my $vitess_lib_name = "vitess-lib.c";
@@ -324,16 +376,16 @@ if(system(@cc_cmd)) {
     print STDERR "C compilation failed.\n";
     exit 1;
 }
-print "Wrote executable Vitess Module file '$out_name'.\n";
+print "\nWrote executable Vitess Module file '$out_name' for placement in your vitess/MODULES folder.\n\n";
 
 # Output the .tcl file for the VITESS gui.
 my $TCL = new FileHandle;
-my $tcl_name = "McStas_${compname}.tcl";
+my $tcl_name = lc("McStas_${compname}.tcl");
 open($TCL, ">$tcl_name") ||
     die "Could not open output Vitess Module Tcl file '$tcl_name'.";
 make_tcl_file($TCL, \@param, $data);
 close($TCL);
-print "Wrote Vitess Module Tcl GUI file '$tcl_name'.\n";
+print "\nWrote Vitess Module Tcl GUI file '$tcl_name' for inclusion in your vitess/GUI/usermodule.tcl script.\n\n";
 print "mcstas2vitess: Convertion has been performed\n";
 
 exit 0;

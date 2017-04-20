@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * The H25 supermirror curved thermal guide at the ILL
@@ -23,20 +21,18 @@
 * %Example: m=2 Detector: GuideOut_Phic_I=1.17e+09
 *
 * %Parameters
-* INPUT PARAMETERS:
-* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip:        (1)  m-value of in-pile guide coating
-* lambda:     (AA) central wavelength
-* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
+* mip: [1]       m-value of in-pile guide coating
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H25(m=2, lambda=4, dlambda=3.9, mip=2)
 
 DECLARE
 %{
-  
+
   /* Thermal (H2x) source parameters */
 
   /* guide coating parameters */
@@ -53,11 +49,11 @@ DECLARE
   double gH =0.2;
   double L_H25_1 =3.5  /4,  Rh_H25_1 =0;
   double L_H25_2 =2.5  /3,  Rh_H25_2 =0; /* end of C2=VS 148 mm */
-  double L_H25_3 =9.5  /10, Rh_H25_3 =0; 
+  double L_H25_3 =9.5  /10, Rh_H25_3 =0;
   double L_H25_4 =7.0  /7,  Rh_H25_4 =0; /* end of C4=2 mm window */
   double L_H25_5 =4.75 /5,  Rh_H25_5 =0; /* end of C5=OT1 H25 109 mm */
-  double L_H25_6 =10.0 /10, Rh_H25_6 =0; 
-  double L_H25_7 =10.0 /10, Rh_H25_7 =0; 
+  double L_H25_6 =10.0 /10, Rh_H25_6 =0;
+  double L_H25_7 =10.0 /10, Rh_H25_7 =0;
   double L_H25_8 =5.0  /5,  Rh_H25_8 =0; /* end of C8=S18 Mono+OS S18 */
   double L_H25_9 =5.7  /6,  Rh_H25_9 =0; /* end of C9=D23 Mono +OS D23 */
   double L_H25_10=4.7  /5,  Rh_H25_10=0; /* end of C10=IN22 Mono +OS IN22, height 12 cm (top) */
@@ -88,7 +84,7 @@ TRACE
 /* Source description */
 COMPONENT Origin = Progress_bar(percent=5)
   AT (0,0,0) ABSOLUTE
-  
+
 /* H25 Guide description */
 COMPONENT Thermal = Source_gen(
   yheight  = 0.22,
@@ -445,4 +441,3 @@ COMPONENT GuideOut_L = Monitor_nD(
 AT (0,0,0) RELATIVE PREVIOUS
 
 END
-

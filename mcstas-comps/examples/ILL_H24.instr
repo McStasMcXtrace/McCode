@@ -7,8 +7,6 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas 2.0
-* Version: $Revision$
 * %INSTRUMENT_SITE: ILL
 *
 * The H24 curved thermal guide at the ILL
@@ -19,14 +17,13 @@
 * %Example: m=1 Detector: GuideOut_Phic_I=1.22e+09
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip:        (1)  m-value of in-pile guide coating
-* lambda:     (AA) central wavelength
-* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
+* mip: [1]       m-value of in-pile guide coating
 *
 * %End
 *******************************************************************************/
-
 DEFINE INSTRUMENT ILL_H24(m=2, lambda=4, dlambda=3.9, mip=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -84,7 +81,7 @@ TRACE
 /* Source description */
 COMPONENT Origin = Progress_bar(percent=5)
   AT (0,0,0) ABSOLUTE
-  
+
 /* H24 Guide description */
 COMPONENT Thermal = Source_gen(
   yheight  = 0.22,
@@ -416,5 +413,3 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 /* The END token marks the instrument definition end */
 END
-
-

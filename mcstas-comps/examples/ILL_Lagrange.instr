@@ -7,8 +7,6 @@
 * Written by: E. Farhi
 * Date: 13 Apr 2006
 * Origin: LLB/ILL
-* Release: McStas 2.0a
-* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN1-Lagrange hot neutrons spectrometer for liquids at the ILL.
@@ -33,25 +31,22 @@
 * %Example: lambda=0.897 Detector: Detector_I=21.7527
 *
 * %Parameters
-* lambda:    [Angs] Wavelength at monochromator
-* DM:         [Angs] d-spacing of monochromator
-* RV:         [m]    Monochromator vertical curvature, 0=flat, -1=automatic
-* L1:         [m]    Source-Monochromator distance
-* L2:         [m]    Monochromator-Sample distance
-* L3:         [m]    Sample-Detector distance
-* coh:        [str]  File name for sample coherent scattering contribution
-* inc:        [str]  File name for sample incoherent scattering contribution
-* verbose:    [1]    Print spectrometer configuration. 0 to be quiet
+* lambda: [Angs]  Wavelength at monochromator
+* DM: [Angs]      d-spacing of monochromator
+* RV: [m]         Monochromator vertical curvature, 0=flat, -1=automatic
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* coh: [str]      File name for sample coherent scattering contribution
+* inc: [str]      File name for sample incoherent scattering contribution
+* verbose: [1]    Print spectrometer configuration. 0 to be quiet
 *
 * %Link
 * The <a href="http://www.ill.eu/d4">D4 diffractometer</a> at the ILL
 *
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT ILL_Lagrange(lambda=0.897, DM = 1.807, RV = -1, 
-  string coh = "Rb_liq_coh.sqw", string inc = "Rb_liq_inc.sqw", 
-  L1 = 6.35, L2 = 2.55, L3=0.901, verbose=1)
+DEFINE INSTRUMENT ILL_Lagrange(lambda=0.897, DM = 1.807, RV = -1, string coh = "Rb_liq_coh.sqw", string inc = "Rb_liq_inc.sqw", L1 = 6.35, L2 = 2.55, L3=0.901, verbose=1)
 
 
 /* The DECLARE section allows us to declare variables or  small      */

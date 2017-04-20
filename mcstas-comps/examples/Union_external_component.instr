@@ -11,7 +11,7 @@
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* Version: $Revision: 0.1 $
+* %INSTRUMENT_SITE:
 *
 * Simple test instrument for sample component.
 *
@@ -19,6 +19,9 @@
 * simple test instrument for sample component.
 *
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+*
+* %Parameters
+* stick_displacement: [] 
 *
 * %End
 *******************************************************************************/

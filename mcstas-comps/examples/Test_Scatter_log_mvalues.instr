@@ -7,8 +7,6 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Jan. 13st 2013
 * Origin: DTU Fysik
-* Release: McStas 2.1
-* Version: 1.0
 * %INSTRUMENT_SITE: Templates
 *
 * Example instrument of Scatter_logger feature advanced usage
@@ -27,15 +25,12 @@
 * Example: Test_Scatter_log_mvalues LENGTH=10
 *
 * %Parameters
-* LENGTH: [m] The length of the guide to be modelled
 *
 * %Link
 * <a href="http://orbit.dtu.dk/files/57025387/prod11375088187360.NO_P_v8.pdf">Esben Klinkby talk at NOP&D 2013</a>
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_Scatter_log_mvalues()
 
 

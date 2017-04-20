@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -24,15 +22,12 @@
 * %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.0768972
 *
 * %Parameters
-*
-* ROT_ANGLE      Angle that the spin of a 5AA neutron rotates in the 0.2 m magnet [deg]
+* ROT_ANGLE: [deg]  Angle that the spin of a 5AA neutron rotates in the 0.2 m magnet
 *
 * %Link
 *
 * %End
 ****************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_Magnetic_Constant(ROT_ANGLE=180)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -69,8 +64,8 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-COMPONENT source = 
-Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.05, focus_yh = 0.05, 
+COMPONENT source =
+Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.05, focus_yh = 0.05,
 	      lambda0 = LAMBDA, dlambda = DLAMBDA, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
@@ -78,9 +73,9 @@ COMPONENT polSetter =
 Set_pol(px=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
-COMPONENT pollambdaMonitor1x = 
-PolLambda_monitor(xwidth=0.1, yheight=0.1, 
-		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21, 
+COMPONENT pollambdaMonitor1x =
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=1, my=0, mz=0, filename="pollambdaMon1x.data")
      AT (0, 0, 0.7) RELATIVE Origin
 
@@ -153,4 +148,3 @@ FINALLY
   %}
 /* The END token marks the instrument definition end */
 END
-

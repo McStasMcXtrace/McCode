@@ -11,8 +11,6 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision$
-* Release:    McStas CVS_080624
 * %INSTRUMENT_SITE: FZ_Juelich
 *
 * KWS2 SANS instrument at FZ-Juelich. 2 detectors. 4 available sample models.
@@ -22,28 +20,25 @@
 * KWS2 SANS instrument at FZ-Juelich. Custom sample (None, Guinier, Debye or Any).
 * Sample is at 40 m from source. 2 detectors.
 *
-* %Example: lambda=7 sample=0 Detector: detector_I=3450 
+* %Example: lambda=7 sample=0 Detector: detector_I=3450
 * %Example: lambda=7 sample=1 Detector: detector_I=1182
 * %Example: lambda=7 sample=2 Detector: detector_I=1751
 * %Example: lambda=7 sample=3 Detector: detector_I=1249
 *
 * %P
-* INPUT PARAMETERS:
-* lambda:    Mean wavelength of neutrons      [AA]
-* dlambda:   Wavelength spread of neutrons    [AA]
-* sample:    type of sample, as 
-*            0=None, 1='AnySample', 2='Debye' or 3='Guinier' [int]
-* Clen:      distance to collimation in 0-20. Sample is at 40 m from source [m]
-* Dlen:      distance from sample to detector [m]
-* NGblen:    collimation width/height [m]
-* FLUX:      incoming neutron flux [n/s/cm2/st]
+* lambda: [AA] Mean wavelength of neutrons
+* dlambda: [AA]  Wavelength spread of neutrons
+* sample: [int] type of sample, as 0=None, 1='AnySample', 2='Debye' or 3='Guinier'
+* Clen: [m] distance to collimation in 0-20. Sample is at 40 m from source
+* Dlen: [m] distance from sample to detector
+* NGblen: [m] collimation width/height
+* FLUX: [n/s/cm2/st] incoming neutron flux
 *
 * %E
 *******************************************************************************/
 
-DEFINE INSTRUMENT SANS_KWS2_AnySample(lambda=7.0, dlambda=0.7, FLUX=1e8,
-     NGblen=0.05, int sample=0, Clen = 10.0, Dlen = 10.0)
-     
+DEFINE INSTRUMENT SANS_KWS2_AnySample(lambda=7.0, dlambda=0.7, FLUX=1e8, NGblen=0.05, int sample=0, Clen = 10.0, Dlen = 10.0)
+
 INITIALIZE
 %{
   char sample_str[32];
@@ -89,17 +84,17 @@ COMPONENT SmpAp = Slit(xwidth=0.01, yheight=0.01)
 /* set of sample selected from instrument parameters */
 COMPONENT sample = Arm()
    AT (0,0, 20.00) RELATIVE Cguide
-   
+
 COMPONENT sampleAS = SANS_AnySamp(transm=0.5, Rg=300, qmax=0.031416,
                                xwidth=0.02, yheight=0.02, zdepth=0.001)
    WHEN (sample == 1)
    AT (0,0,0) RELATIVE sample
-   
+
 COMPONENT sampleDS = SANS_DebyeS(transm=0.5, qDS=0.022,
                                xwidth=0.02, yheight=0.02, zdepth=0.001)
    WHEN (sample == 2)
    AT (0,0,0) RELATIVE sample
-   
+
 COMPONENT sampleGu = SANS_Guinier(transm=0.5, Rg=300, qmax=0.031416,
                                xwidth=0.02, yheight=0.02, zdepth=0.001)
    WHEN (sample == 3)

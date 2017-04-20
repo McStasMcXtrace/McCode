@@ -7,8 +7,6 @@
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
 * Origin: RISOE
-* Release: McStas CVS_080624
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -17,7 +15,7 @@
 * %Description
 * This instrument demonstrates how to use the component
 * Pol_simpleBfield with a user-specified fieldFunction.
-* 
+*
 * The fieldFunction is specified in the DECLARE section and defined active
 * using the fieldFunction parameter of the component. The example fieldFunction
 * is timedependent (velocity-dependent), setting a B-field that will rotatate
@@ -42,7 +40,7 @@ DECLARE
   double omegaL = -2 * PI * 29.16e6;
   double MagnetLength = 0.2;
   double SrcMagnetDist = 1;
-  
+
   int magnetic_field_t(double x, double y, double z, double t,
       double *bx, double *by, double *bz, void *data_Ptr) {
     // Example of time-dependent field. Note parameters t0 and rho defined
@@ -58,7 +56,7 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  
+
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -75,7 +73,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-COMPONENT source = 
+COMPONENT source =
 Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.1, focus_yh = 0.1, lambda0 = 5,
 	      dlambda = 4.9, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
@@ -84,9 +82,9 @@ COMPONENT polSetter =
 Set_pol(px=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
-COMPONENT pollambdaMonitor1x = 
-PolLambda_monitor(xwidth=0.1, yheight=0.1, 
-		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21, 
+COMPONENT pollambdaMonitor1x =
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=1, my=0, mz=0, filename="pollambdaMon1x.data")
      AT (0, 0, 0.7) RELATIVE Origin
 
@@ -160,5 +158,3 @@ FINALLY
   %}
 /* The END token marks the instrument definition end */
 END
-
-

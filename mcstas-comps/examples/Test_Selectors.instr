@@ -7,8 +7,6 @@
 * Written by: E. Farhi [farhi@ill.fr]
 * Date: Sept 28th, 2010
 * Origin: ILL
-* Release: McStas 1.12
-* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Cross comparison of velocity selector components
@@ -21,12 +19,12 @@
 * %Example: selector=2 Detector: VS_Mon_I=0.0093
 *
 * %Parameters
-* selector:  [1]    Choice of the velocity selector to test, with
+* selector: [1]   Choice of the velocity selector to test, with
 *                   1=V_selector
 *                   2=Selector
-* lambda:    [Angs] neutron wavelength selected by the velocity selector
-* phi:       [deg]  velocity selector twist angle
-* d_vs:      [m]    velocity selector rotating drum length
+* lambda: [Angs]  neutron wavelength selected by the velocity selector
+* phi: [deg]      velocity selector twist angle
+* d_vs: [m]       velocity selector rotating drum length
 * %End
 ************************************************************************************************/
 DEFINE INSTRUMENT Test_Selectors(int selector=1, lambda=4, phi=48.3, d_vs=0.25)

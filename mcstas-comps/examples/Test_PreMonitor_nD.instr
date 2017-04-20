@@ -7,8 +7,6 @@
 * Written by: E. Farhi
 * Date: 13 Apr 2015
 * Origin: LLB
-* Release: McStas CVS_080624
-* Version: $Revision: 4621 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * A test of the PreMonitor_nD component
@@ -20,23 +18,20 @@
 * Example: ETA=1 lambda=1 Detector: Mon_Sample=1.36e+08
 *
 * %Parameters
-* lambda: [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
-* DM:     [Angs] d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
-* THETA_M:[deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
-* RV:     [m]    Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1:     [m]    Source-Monochromator distance
-* L2:     [m]    Monochromator-Sample distance
-* ETA:    [min]  Monochromator mosaic (gaussian)
-* verbose:[1]    Print DIF configuration. 0 to be quiet
-* SM:     [1]    Scattering sense of beam from Monochromator. 1:left, -1:right
+* lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* DM: [Angs]      d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* ETA: [min]      Monochromator mosaic (gaussian)
+* verbose: [1]    Print DIF configuration. 0 to be quiet
+* SM: [1]         Scattering sense of beam from Monochromator. 1:left, -1:right
+* RH: []          
 *
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_PreMonitor_nD(lambda=1, DM=3.355,
-  RV=-1, RH=-1, L1=17, L2=3.2, ETA=30,
-  verbose=1, THETA_M=0, SM=1)
+DEFINE INSTRUMENT Test_PreMonitor_nD(lambda=1, DM=3.355, RV=-1, RH=-1, L1=17, L2=3.2, ETA=30, verbose=1, THETA_M=0, SM=1)
 
 INITIALIZE
 %{

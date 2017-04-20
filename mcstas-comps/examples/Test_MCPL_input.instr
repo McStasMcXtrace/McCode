@@ -1,14 +1,11 @@
 /*******************************************************************************
-*         McStas instrument definition URL=http://mcstas.risoe.dk
 *
 * Instrument: Test_Sources
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Mar 2016
-* Origin: 
-* Release: McStas 2.3
-* Version: $Revision$
+* Origin: DTU
 * %INSTRUMENT_SITE: Tests_MCPL_etc
 *
 * A test instrument for MCPL_input
@@ -21,10 +18,10 @@
 *
 * %Parameters
 *
-* repeat:    [1]   Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
-* E_smear:   [1]   When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
-* pos_smear: [m]   When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
-* dir_smear: [deg] When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
+* repeat: [1]       Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
+* E_smear: [1]      When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
+* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
 *
 * %End
 *******************************************************************************/
@@ -87,5 +84,3 @@ COMPONENT m4 = Monitor_nD(
 
 
 END
-
-

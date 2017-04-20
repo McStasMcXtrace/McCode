@@ -7,8 +7,6 @@
 * Written by: E. Farhi and A. Dennison
 * Date: March 25, 2015
 * Origin:ILL
-* Release: McStas 2.1
-* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN13 Thermal neutron backscattering spectrometer (without guide)
@@ -71,23 +69,21 @@
 * %Example: TM=301 Detector: SamposPSD_I=5905.14
 *
 * %Parameters
-* RMV:     [m]    monochromator vertical curvature. Use 0=flat, -1=auto.
-* RDV:     [m]    deflector vertical curvature. Use 0=flat, -1=auto.
-* RDH:     [m]    deflector horizontal curvature. Use 0=flat, -1=auto.
-* TM:      [K]    monochromator temperature, from 77 to 500 K
-* LMD:     [m]    monochromator-deflector distance
-* CaF2mos: [arcmin] monochromator mosaic
-* mos_ana: [arcmin] analyser mosaic
+* RMV: [m]           monochromator vertical curvature. Use 0=flat, -1=auto.
+* RDV: [m]           deflector vertical curvature. Use 0=flat, -1=auto.
+* RDH: [m]           deflector horizontal curvature. Use 0=flat, -1=auto.
+* TM: [K]            monochromator temperature, from 77 to 500 K
+* LMD: [m]           monochromator-deflector distance
+* CaF2mos: [arcmin]  monochromator mosaic
+* mos_ana: [arcmin]  analyser mosaic
+* gW: []             
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN3">IN3 TAS</a> at the ILL
 *
 * %End
 *******************************************************************************/
-
-DEFINE INSTRUMENT ILL_IN13(
-  RMV=0, RDV=4.6, RDH=0, TM=301, LMD=1.8, mos_ana=2, CaF2mos=10,
-  gW=0.030)
+DEFINE INSTRUMENT ILL_IN13( RMV=0, RDV=4.6, RDH=0, TM=301, LMD=1.8, mos_ana=2, CaF2mos=10, gW=0.030)
 
 DECLARE
 %{

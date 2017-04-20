@@ -7,8 +7,6 @@
 * Written by: Richard Heenan with edits by Peter Willendrup
 * Date: 2014
 * Origin: ISIS, DTU Fysik
-* Release: McStas 2.x
-* Version: 0.2
 * %INSTRUMENT_SITE: ISIS
 *
 * This instrument models the ISIS TS2 SANS2d instrument.
@@ -33,13 +31,13 @@
 * <p>RKH 2014
 *
 * %Parameters
-* L1:  [m] Variable distance from 1st to 2nd variable slit
-* S6:  [m] Radius of slit S6 (last of the optis slits)
-* A1w: [m] Width of first collimation slit, rectangular slit
-* A1h: [m] Height of first collimation slit, rectangular slit
-* A2:  [m] Radius of second collimation slit, circular slit
-* Lmin: [AA] Minimum wavelength to produce at the source
-* Lmax: [AA] Maximum wavelength to produce at the source
+* L1: [m]     Variable distance from 1st to 2nd variable slit
+* S6: [m]     Radius of slit S6 (last of the optis slits)
+* A1w: [m]    Width of first collimation slit, rectangular slit
+* A1h: [m]    Height of first collimation slit, rectangular slit
+* A2: [m]     Radius of second collimation slit, circular slit
+* Lmin: [AA]  Minimum wavelength to produce at the source
+* Lmax: [AA]  Maximum wavelength to produce at the source
 *
 * %Link
 *
