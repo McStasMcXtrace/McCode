@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import re
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
@@ -171,30 +172,17 @@ def repair(localdir):
         print(cnt)
     quit()
 
-
-class InstrParInfo:
-    ''' Component parameter info, used as McComponentParser.pars '''
-    def __init__(self, info=None):
-        if info:
-            self.par_name = info.par_name
-            self.type = info.type
-            self.default_value = info.default_value
-            self.doc_and_unit = info.doc_and_unit
-        else:
-            self.par_name = ''       # parameter par_name
-            self.type = ''           # can be "string" or "int", but is mostly empty
-            self.default_value = ''
-            self.doc_and_unit = ''   # doc string and unit (no linebreaks)
-
 class InstrParser:
     ''' parses an instr file, extracting all relevant information into python '''
     def __init__(self, instr_file):
         self.instr_file = instr_file
         self.info = None
+        self.has_parsed = False
     
     def parse(self):
         try:
             self._parse()
+            self.has_parsed = True
         except:
             self._parse_legacy()
         return self.info
@@ -216,10 +204,52 @@ class InstrParser:
         self.info = info
 
 class InstrDocWriter:
-    tags = ['%TITLE%', '%INSTRNAME%', '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%THEAD_ROW%', '%T_ROWS%', '%GENDATE%']
+    ''' create html doc text by means of a instr parser '''
+    def __init__(self, info):
+        self.info = info
+    
+    def create(self):
+        i = self.info
+        t = self.tags
+        h = self.html
+        
+        h = h.replace(t[0], i.name)
+        h = h.replace(t[1], i.name)
+        h = h.replace(t[2], i.short_descr)
+        h = h.replace(t[3], i.site)
+        h = h.replace(t[4], i.author)
+        h = h.replace(t[5], i.origin)
+        h = h.replace(t[6], i.date)
+        h = h.replace(t[7], i.description)
+        
+        
+        h = h.replace(t[8], self.par_header)
+        doc_rows = ''
+        for p in i.params:
+            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = lst[0] if len(lst) > 0 else ''
+            doc_rows = doc_rows + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+        h = h.replace(t[9], doc_rows)
+        
+        h = h.replace(t[10], i.filepath)
+        h = h.replace(t[11], os.path.basename(i.filepath))
+        
+        # TODO: implement links writing
+        #h = h.replace(t[7], i.description)
+        
+        h = h.replace(t[13], datetime.now().strftime("%Y%m%d"))
+        
+        self.text = h
+        return self.text
+    
+    tags = ['%TITLE%', '%INSTRNAME%', '%SHORT_DESCRIPTION%',
+            '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%DESCRIPTION%',
+            '%T_HEAD%', '%T_ROWS%',
+            '%INSTRFILE%', '%INSTRFILE_BASE%', '%LINKS%','%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
-    lnk_str = ""
+    lnk_str = "<LI>%s"
+    
     
     html = '''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
@@ -240,7 +270,7 @@ class InstrDocWriter:
 
 <H1>The <CODE>%INSTRNAME%</CODE> Instrument</H1>
 
-Simple test instrument for sample component.
+%SHORT_DESCRIPTION%
 
 <H2><A NAME=id></A>Identification</H2>
 
@@ -261,14 +291,15 @@ Parameters in <B>boldface</B> are required;
 the others are optional.
 
 <TABLE BORDER=1>
-%THEAD_ROW%
+%T_HEAD%
 %T_ROWS%
 </TABLE>
 
 <H2><A NAME=links></A>Links</H2>
 
 <UL>
-  <LI> <A HREF="Union_demonstration_absorption_image.instr">Source code</A> for <CODE>test.instr</CODE>.
+  <LI> <A HREF="%INSTRFILE%">Source code</A> for <CODE>%INSTRFILE_BASE%</CODE>.
+  %LINKS%
 </UL>
 <HR>
 <P ALIGN=CENTER>
@@ -285,12 +316,6 @@ Generated automatically by McDoc, Peter Willendrup
 %GENDATE%</ADDRESS>
 </BODY></HTML>
 '''
-    def __init__(self, instr_parser):
-        self.instr_parser = instr_parser
-    
-    def create(self):
-        self.text = 'hest'
-        return self.text
 
 
 def write_file(filename, text):
@@ -323,6 +348,7 @@ def main(args):
         try:
             print("parsing... %s" % f)
             info = InstrParser(f).parse()
+            info.filepath = f
             files.append(f)
             rows.append(info)
         except:
@@ -330,21 +356,7 @@ def main(args):
             quit()
     print("parsed instr files: %s" % str(len(lib_instr_files)))
     
-    html_files = []
-    # generate and save all html pages docs
-    for f in files: 
-        doc = InstrDocWriter(f)
-        text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
-        print("writing doc file... %s" % h)
-        write_file(h, text)
-        html_files.append(h)
-    
-    # TODO: write overview files, properly assembling links to instr- and html-files
-    for h in html_files:
-        pass
-    
-    # debug files with a header property each
+    # debug mode - write files with a header property each, then quit
     if args.debug:
         text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
         write_file('files', text)
@@ -355,6 +367,22 @@ def main(args):
         for i in range(8, 10):
             text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(['%-20s, %-10s, %s' % (str(k[0]), str(k[1]), str(k[2])) for k in rows[j][i]])) for j in range(len(rows))])
             write_file(utils.InstrHeaderInfo.colname(i), text)
+        quit()
+    
+    # generate and save all html pages docs
+    html_files = []
+    
+    for p in rows:
+        doc = InstrDocWriter(p)
+        text = doc.create()
+        h = os.path.splitext(f)[0] + '.html'
+        print("writing doc file... %s" % h)
+        write_file(h, text)
+        html_files.append(h)
+    
+    # TODO: write overview files, properly assembling links to instr- and html-files
+    for h in html_files:
+        pass
 
 
 if __name__ == '__main__':

@@ -283,6 +283,7 @@ class InstrHeaderInfo:
         # legit info
         self.name = ''
         self.params = []
+        self.filepath = ''
         # doc info
         self.author = ''
         self.date = ''
