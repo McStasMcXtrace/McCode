@@ -1,4 +1,4 @@
-/************************************************************************'
+/************************************************************************
 * 
 * McXtrace X-ray tracing software
 * Copyright, All Rights Reserved
@@ -40,7 +40,7 @@
 * flux:   [ph/s] Total flux radiated from the source. 
 * 
 * %E
-*/
+******************************************************************/
 
 DEFINE COMPONENT Source_pt
 DEFINITION PARAMETERS (string spectrum_file=NULL)

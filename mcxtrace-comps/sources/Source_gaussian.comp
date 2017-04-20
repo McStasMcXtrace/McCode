@@ -1,51 +1,53 @@
-/************************************************************************'
- * 
- * McXtrace X-ray tracing software
- * Copyright, All Rights Reserved
- * Risoe-DTU, Roskilde, Denmark
- *
- *
- * Component: Source_gaussian
- *
- * %I
- * Written by: Jana Baltser & Erik Knudsen
- * Date: April, 2011.
- * Version: 1.0 
- * Origin: NBI
- * Release: McXtrace 0.1
- *
- * Gaussian cross-section source 
- * 
- * %D
- * A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
- * standard deviations and divergence. A square target centered on the beam (Z-axis)
- * may be used to restrict the beam to that aperture. If no target aperture is given the full gaussian cross-section is used.
- * Further, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda, whichever is given, if a spectrum_file
- * is not specified, in which case the contents of the file dictates the emitted spectrum. 
- * 
- * Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=12.5, dE=0.1)
- *  
- * %P
- * Input Parameters:
- * sig_x: (m) Horizontal standard deviation of source (rms source size).
- * sig_y: (m) Vertical standard deviation of source (rms source size).
- * sigPr_x: (rad) Angular horizontal divergence
- * sigPr_y: (rad) Angular vertical divergence
- * Optional Parameters:
- * spectrum_file: ( ) File from which to read the spectral intensity profile
- * E0: (keV) Centre of emitted energy spectrum (overrides spectrum_file)  
- * dE: (kev) Half-width (or std. dev.) of emitted energy spectrum.
- * lambda0: (AA) Centre of emitted wavelength spectrum. 
- * dlambda: (AA) Half-width (or std. dev.) of emitted wavelength spectrum.
- * phase: ( ) The initial phase of the photons.
- * flux: ( ) Scaling factor to set the total emitted unrestricted flux.
- * focus_xw: (m) Width of sampling window dist m downstream from source to allow focused sampling.
- * focus_yh: (m) Height of sampling window dist m downstream from source to allow focused sampling.
- * dist: (m) Distance from source plane to sampling window.
- * brilliance: ( ) Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
- * gauss: ( ) Gaussian (1) or uniform (0) spectrum profile. 
- * randomphase: ( ) If nonzero phase is random (incoherent radiation), otherwise it is set to the value of phase 
-*/
+/************************************************************************
+* 
+* McXtrace X-ray tracing software
+* Copyright, All Rights Reserved
+* Risoe-DTU, Roskilde, Denmark
+*
+*
+* Component: Source_gaussian
+*
+* %I
+* Written by: Jana Baltser & Erik Knudsen
+* Date: April, 2011.
+* Version: 1.0 
+* Origin: NBI
+* Release: McXtrace 0.1
+*
+* Gaussian cross-section source 
+* 
+* %D
+* A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
+* standard deviations and divergence. A square target centered on the beam (Z-axis)
+* may be used to restrict the beam to that aperture. If no target aperture is given the full gaussian cross-section is used.
+* Further, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda, whichever is given, if a spectrum_file
+* is not specified, in which case the contents of the file dictates the emitted spectrum. 
+* 
+* Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=12.5, dE=0.1)
+*  
+* %P
+* Input Parameters:
+* sig_x: [m] Horizontal standard deviation of source (rms source size).
+* sig_y: [m] Vertical standard deviation of source (rms source size).
+* sigPr_x: [rad] Angular horizontal divergence
+* sigPr_y: [rad] Angular vertical divergence
+* Optional Parameters:
+* spectrum_file: [ ] File from which to read the spectral intensity profile
+* E0: [keV] Centre of emitted energy spectrum (overrides spectrum_file)  
+* dE: [kev] Half-width (or std. dev.) of emitted energy spectrum.
+* lambda0: [AA] Centre of emitted wavelength spectrum. 
+* dlambda: [AA] Half-width (or std. dev.) of emitted wavelength spectrum.
+* phase: [ ] The initial phase of the photons.
+* flux: [ ] Scaling factor to set the total emitted unrestricted flux.
+* focus_xw: [m] Width of sampling window dist m downstream from source to allow focused sampling.
+* focus_yh: [m] Height of sampling window dist m downstream from source to allow focused sampling.
+* dist: [m] Distance from source plane to sampling window.
+* brilliance: [ ] Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
+* gauss: [ ] Gaussian (1) or uniform (0) spectrum profile. 
+* randomphase: [ ] If nonzero phase is random (incoherent radiation), otherwise it is set to the value of phase 
+*
+* %E
+*****************************************/
 
 DEFINE COMPONENT Source_gaussian
 DEFINITION PARAMETERS (string spectrum_file=NULL)

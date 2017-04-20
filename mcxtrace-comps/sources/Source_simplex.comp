@@ -1,4 +1,4 @@
-/************************************************************************'
+/************************************************************************
 * 
 * McXtrace X-ray tracing software
 * Copyright, All Rights Reserved
@@ -29,7 +29,9 @@
 * s0: [m] back end of pulse time sampling windows scaled by c^-1. 
 * s1: [m] front end of pulse time sampling window scaled by c^-1.
 * focus_a: [rad] mean divergence angle.
-*/
+* 
+* %E
+*****************************************************************************/
 
 DEFINE COMPONENT Source_simplex
 DEFINITION PARAMETERS (gridpoints=101)
