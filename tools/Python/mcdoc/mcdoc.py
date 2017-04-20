@@ -235,7 +235,10 @@ class InstrDocWriter:
         h = h.replace(t[11], os.path.basename(i.filepath))
         
         # TODO: implement links writing
-        #h = h.replace(t[7], i.description)
+        lstr = ''
+        for l in i.links:
+            lstr = lstr + self.lnk_str % l + '\n'
+        h = h.replace(t[12], lstr)
         
         h = h.replace(t[13], datetime.now().strftime("%Y%m%d"))
         
@@ -361,12 +364,16 @@ def main(args):
         text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
         write_file('files', text)
         
-        for i in range(utils.InstrHeaderInfo.__len__()-2):
+        for i in range(utils.InstrHeaderInfo.__len__()-3):
             text = '\n'.join(['%4d: %s' % (j, rows[j][i]) for j in range(len(rows))])
             write_file(utils.InstrHeaderInfo.colname(i), text)
-        for i in range(8, 10):
+        for i in range(8, 9):
             text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(['%-20s, %-10s, %s' % (str(k[0]), str(k[1]), str(k[2])) for k in rows[j][i]])) for j in range(len(rows))])
             write_file(utils.InstrHeaderInfo.colname(i), text)
+        
+        text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(rows[j][10])) for j in range(len(rows))])
+        #  '\n'.join(info.links)
+        write_file(utils.InstrHeaderInfo.colname(10), text)
         quit()
     
     # generate and save all html pages docs

@@ -278,7 +278,7 @@ def read_header(file):
 
 class InstrHeaderInfo:
     field_cols = ['name', 'author', 'date', 'origin', 'site', 'short_description', 'description', 'test']
-    lst_cols = ['params', 'params_docs']
+    lst_cols = ['params', 'params_docs', 'links']
     def __init__(self):
         # legit info
         self.name = ''
@@ -293,6 +293,7 @@ class InstrHeaderInfo:
         self.description = ''
         self.test = ''
         self.params_docs = []
+        self.links = []
     @staticmethod
     def __len__():
         return len(InstrHeaderInfo.field_cols) + len(InstrHeaderInfo.lst_cols)
@@ -300,7 +301,7 @@ class InstrHeaderInfo:
     def colname(idx):
         if idx >= 0 and idx <= 7:
             return InstrHeaderInfo.field_cols[idx]
-        elif idx >= 8 and idx <= 9:
+        elif idx >= 8 and idx <= 10:
             return InstrHeaderInfo.lst_cols[idx-8]
         else:
             raise Exception("InstrHeaderInfo.colname: invalid index")
@@ -315,6 +316,7 @@ class InstrHeaderInfo:
         elif idx == 7: return self.test
         elif idx == 8: return self.params
         elif idx == 9: return self.params_docs
+        elif idx == 10: return self.links
         else:
             raise Exception("InstrHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
     def __setitem__(self, idx, value):
@@ -328,13 +330,15 @@ class InstrHeaderInfo:
         elif idx == 7: self.test = value
         elif idx == 8: self.params = value
         elif idx == 9: self.params_docs = value
+        elif idx == 10: self.links = value
         else:
             raise Exception("InstrHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
     def __str__(self):
         lst = [self.name, self.author, self.date, self.origin, self.site, self.short_descr, self.description, self.test]
         lst2 = [' '.join(d) for d in self.params_docs]
         lst3 = [' '.join([str(c) for c in p]) for p in self.params]
-        return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3)
+        lst4 = [l for l in self.links]
+        return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3) + '\n\n- links:\n' + '\n'.join(lst4)
     
 def parse_instr_header(text):
     ''' Parses the header of an instrument file: LEGACY version. '''
@@ -365,6 +369,7 @@ def parse_instr_header(text):
     
     # cut header into some sections
     bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
+    bites.append(text[lst[4]:])
     info = InstrHeaderInfo()
     
     # get author, date, origin, revision
@@ -402,6 +407,13 @@ def parse_instr_header(text):
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
+    
+    # links
+    for l in bites[4].splitlines():
+        if re.match('\s*%', l) or l.strip() == '' or re.match('\/', l):
+            continue
+        info.links.append(l)
+    
     return info
 
 def read_define_instr(file):
