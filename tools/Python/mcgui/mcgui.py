@@ -432,12 +432,13 @@ class McGuiState(QtCore.QObject):
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
         # returns: params: a list of [name, value] pairs 
-        cmd = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + " --info"
+        cmd = mccode_config.configuration["MCRUN"] + ' ' + os.basename(self.__instrFile) + " --info"
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
                                    shell=True,
-                                   universal_newlines=True)
+                                   universal_newlines=True,
+                                   cwd=os.dirname(self.__instrFile))
         # synchronous call
         (stdoutdata, stderrdata) = process.communicate()
         # note: communicate() always sets a process exit code
