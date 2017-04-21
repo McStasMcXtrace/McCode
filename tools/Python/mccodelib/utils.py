@@ -7,7 +7,7 @@ import subprocess
 
 
 class ComponentParInfo(object):
-    ''' Component parameter info, used as McComponentParser.pars '''
+    ''' Component parameter info, used as ComponentParser.pars '''
     def __init__(self, par_info=None):
         if par_info:
             self.par_name = par_info.par_name
@@ -24,7 +24,7 @@ class ComponentParser(object):
     ''' Component file parser. '''
     def __init__(self, comp_file):
         if comp_file == '':
-            raise Exception('McComponentParser: "comp_file" may not be an empty.')
+            raise Exception('ComponentParser: "comp_file" may not be an empty.')
         
         self.file = comp_file
         self.name = None
@@ -214,7 +214,7 @@ class ComponentParser(object):
                 elif lastpar:
                     lastpar.doc_and_unit += out.group(2).strip()
             
-            elif lastpar and McComponentParser.__stringIsEmptyLine(line):
+            elif lastpar and ComponentParser.__stringIsEmptyLine(line):
                 # empty line, close lastpar appending
                 lastpar = None
             elif lastpar:
