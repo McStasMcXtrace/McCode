@@ -373,7 +373,7 @@ class McDisplay2DGui(object):
                 self.iw_visible = False
         
     def _dumpfile(self, format):
-        fileutils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
+        utils.dumpfile_pqtg(scene=self.layout.scene(), filenamebase='mcdisplay', format=format)
     
     def _get_comp_color_pairs(self):
         ''' extracts component names and matches then with colours in the natural order '''
