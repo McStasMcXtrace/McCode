@@ -21,7 +21,7 @@ def repair(localdir):
     for filename in local_instr_files:
         try:
             print("parsing... %s" % filename)
-            info = InstrParser(filename).parse()
+            info = InstrCompParser(filename).parse()
             files.append(filename)
             rows.append(info)
         except:
@@ -33,7 +33,7 @@ def repair(localdir):
         f = open(filename, 'r')
         # read the first two instr file sections
         header = utils.read_header(f)
-        define = utils.read_define_instr(f)
+        define = utils.read_define_instr_or_comp(f)
         
         # doc lines
         print('*****')
@@ -107,7 +107,7 @@ def repair(localdir):
                 continue
             l01 = max([len(p[0]) + len(p[1]) for p in par_docs])
             
-            name, real_pars = utils.parse_define_instr(define)
+            name, real_pars = utils.parse_define_instr_or_comp(define)
             real_parnames = [par[1] for par in real_pars]
             
             # rewrite par doc lines, remove "bonus" doc lines without a parameter to document
@@ -393,10 +393,10 @@ Contact us for any comments.
 </HTML>
 '''
 
-class InstrParser:
-    ''' parses an instr file, extracting all relevant information into python '''
-    def __init__(self, instr_file):
-        self.instr_file = instr_file
+class InstrCompParser:
+    ''' parses an instr or comp file, extracting all relevant information into python '''
+    def __init__(self, filename):
+        self.filename = filename
         self.info = None
         self.has_parsed = False
     
@@ -412,17 +412,17 @@ class InstrParser:
         raise Exception()
     
     def _parse_legacy(self):
-        ''' parses the given instr file '''
-        
-        f = open(self.instr_file)
-        logging.debug('parsing file "%s"' % self.instr_file)
+        ''' parses the given file '''
+        f = open(self.filename)
+        logging.debug('parsing file "%s"' % self.filename)
         
         header = utils.read_header(f)
-        info = utils.parse_instr_header(header)
+        info = utils.parse_header(header)
         info.site = utils.get_instr_site_fromtxt(header)
-        info.name, info.params = utils.parse_define_instr(utils.read_define_instr(f))
+        info.name, info.params = utils.parse_define_instr_or_comp(utils.read_define_instr_or_comp(f))
         
         self.info = info
+
 
 class InstrDocWriter:
     ''' create html doc text by means of a instr parser '''
@@ -556,7 +556,7 @@ def main(args):
     
     # repair mode - do not run mcdoc, just the "repair" function
     if args.repair:
-        repair()
+        repair(localdir)
         quit()
     
     # get lib dir
@@ -571,7 +571,7 @@ def main(args):
     for f in local_instr_files:
         try:
             print("parsing... %s" % f)
-            info = InstrParser(f).parse()
+            info = InstrCompParser(f).parse()
             info.filepath = f
             files.append(f)
             instr_info_lst.append(info)

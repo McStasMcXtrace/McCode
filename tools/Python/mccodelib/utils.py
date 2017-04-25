@@ -340,8 +340,8 @@ class InstrHeaderInfo:
         lst4 = [l for l in self.links]
         return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3) + '\n\n- links:\n' + '\n'.join(lst4)
     
-def parse_instr_header(text):
-    ''' Parses the header of an instrument file: LEGACY version. '''
+def parse_header(text):
+    ''' Parses the header of an instrument or component file: LEGACY version. '''
     # get rid of stars and empty padding lines
     lines = text.splitlines()
     new_lines = []
@@ -416,14 +416,14 @@ def parse_instr_header(text):
     
     return info
 
-def read_define_instr(file):
+def read_define_instr_or_comp(file):
     '''
-    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until \).
+    Reads lines from file obj until DEFINE INSTRUMENT or DEFINE COMPONENT, then reads lines until \).
     Parses this statement and returns the result in organized form.
     '''
     lines = []
     for l in file:
-        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l):
+        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l) and not re.match('DEFINE[ \t]+COMPONENT[ \t]+', l):
             continue
         else:
             lines.append(l.strip())
@@ -437,12 +437,15 @@ def read_define_instr(file):
     
     return ' '.join(lines)
 
-def parse_define_instr(text):
+def parse_define_instr_or_comp(text):
     '''
-    Parses a DEFINE INSTRUMENT statement from an instrument file. Not robust to "junk" in the input string.
+    Parses a DEFINE INSTRUMENT or DEFINE COMPONENT statement from an instrument file.
+    Not robust to "junk" in the input string.
     '''
     try:
         m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+        if not m:
+            m = re.match('DEFINE[ \t]+COMPONENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
         name = m.group(1)
         params = m.group(2).replace('\n', '').strip()
     except:
