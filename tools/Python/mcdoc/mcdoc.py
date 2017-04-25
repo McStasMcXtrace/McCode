@@ -21,7 +21,7 @@ def repair(localdir):
     for filename in local_instr_files:
         try:
             print("parsing... %s" % filename)
-            info = InstrCompParser(filename).parse()
+            info = InstrParser(filename).parse()
             files.append(filename)
             rows.append(info)
         except:
@@ -393,7 +393,7 @@ Contact us for any comments.
 </HTML>
 '''
 
-class InstrCompParser:
+class InstrParser:
     ''' parses an instr or comp file, extracting all relevant information into python '''
     def __init__(self, filename):
         self.filename = filename
@@ -424,6 +424,24 @@ class InstrCompParser:
         
         self.info = info
 
+class CompParser(InstrParser):
+    def _parse_legacy(self):
+        ''' override '''
+        f = open(self.filename)
+        logging.debug('parsing file "%s"' % self.filename)
+        
+        header = utils.read_header(f)
+        info = utils.parse_header(header)
+        info.site = utils.get_instr_site_fromtxt(header)
+        
+        dfine = utils.read_keyword_statement(f, 'DEFINE', 'COMPONENT')
+        defpar = utils.read_keyword_statement(f, 'DEFINITION', 'PARAMETERS')
+        setpar = utils.read_keyword_statement(f, 'SETTING', 'PARAMETERS')
+        outpar = utils.read_keyword_statement(f, 'OUTPUT', 'PARAMETERS')
+        
+        info.name, info.params = utils.parse_define_instr(dfine)
+        
+        self.info = info
 
 class InstrDocWriter:
     ''' create html doc text by means of a instr parser '''
@@ -570,9 +588,10 @@ def main(args):
     instr_info_lst = []
     files = []
     for f in local_instr_files:
+    #for f in local_comp_files:
         try:
             print("parsing... %s" % f)
-            info = InstrCompParser(f).parse()
+            info = InstrParser(f).parse()
             info.filepath = f
             files.append(f)
             instr_info_lst.append(info)

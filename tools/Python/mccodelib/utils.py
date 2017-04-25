@@ -423,7 +423,7 @@ def read_define_instr(file):
     '''
     lines = []
     for l in file:
-        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l) and not re.match('DEFINE[ \t]+COMPONENT[ \t]+', l):
+        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l):
             continue
         else:
             lines.append(l.strip())
@@ -437,6 +437,50 @@ def read_define_instr(file):
     
     return ' '.join(lines)
 
+
+def read_keyword_statement(file, keyword_A, keyword_B):
+    '''
+    Reads DEFINE COMPONENT, DEFINITION PARAMETERS and SETTING PARAMETERS lines from a comp file.
+    '''
+    lines = []
+    for l in file:
+        if not re.match('%s[ \t]+%s[ \t]+' % (keyword_A, keyword_B), l):
+            continue
+        else:
+            lines.append(l.strip())
+            break
+    
+    if not re.search('\)', lines[-1]):
+        for l in file:
+            lines.append(l.strip())
+            if re.search('\)', l):
+                break
+    
+    return ' '.join(lines)
+
+def parse_params(params_line):
+    ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
+    params = []
+    # p = (type, name, defvalue)
+    parts = [s.strip() for s in params_line.split(',')]
+    for part in parts:
+        tpe = None
+        dval = None
+        name = None
+        if re.match('string', part):
+            tpe = 'string'
+            part = part.replace('string', '').strip()
+        if re.match('int', part):
+            tpe = 'int'
+            part = part.replace('int', '').strip()
+        if re.search('=', part):
+            dval = part.split('=')[1].strip()
+            name = part.replace('=', '')
+            name = name.replace(dval, '').strip()
+        if name is not None:
+            params.append((tpe, name, dval))
+    return params
+
 def parse_define_instr(text):
     '''
     Parses a DEFINE INSTRUMENT statement from an instrument file.
@@ -448,30 +492,6 @@ def parse_define_instr(text):
         params = m.group(2).replace('\n', '').strip()
     except:
         return '', []
-    
-    def parse_params(params_line):
-        ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
-        params = []
-        # p = (type, name, defvalue)
-        parts = [s.strip() for s in params_line.split(',')]
-        for part in parts:
-            tpe = None
-            dval = None
-            name = None
-            if re.match('string', part):
-                tpe = 'string'
-                part = part.replace('string', '').strip()
-            if re.match('int', part):
-                tpe = 'int'
-                part = part.replace('int', '').strip()
-            if re.search('=', part):
-                dval = part.split('=')[1].strip()
-                name = part.replace('=', '')
-                name = name.replace(dval, '').strip()
-            if name is not None:
-                params.append((tpe, name, dval))
-        return params
-    
     return name, parse_params(params)
 
 def read_declare(file):
