@@ -47,7 +47,7 @@
 * %L
 *
 * %E
-*/
+****************************************************************************/
 DEFINE COMPONENT Pol_bender_tapering
 DEFINITION PARAMETERS (string channel_file="channel.dat")
 SETTING PARAMETERS (xwidth=0, yheight, length, d_substrate, entry_radius=10, radius=100, G=9.8, int nslit=1, int debug=1,
@@ -68,7 +68,7 @@ SHARE
  * Rup and Rdown referring to the direction of the vector (mx,my,mz)
  * m is assumed to have unit length, - if zero the default m=(0,1,0) is used.
  * returns the fraction of intensity thus reflected (if Rup+Rdown<1) 
- *****************************************************************/
+ **************************************************************************/
 double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, double *sz, double mx, double my, double mz){
   double pm,ps1,ps2,pin;
   double s1x,s1y,s1z,s2x,s2y,s2z;
