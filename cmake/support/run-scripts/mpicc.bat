@@ -1,3 +1,4 @@
 @REM mpicc.bat batch file for running gcc and MPICH2 under windows
 
-gcc %* -lmpi -I"c:\Program Files\MPICH2\include" -L"c:\Program Files\MPICH2\lib"
+gcc %* -lmsmpi -I"C:\Program Files (x86)\Microsoft SDKs\MPI\Include" -L"C:\Program Files (x86)\Microsoft SDKs\MPI\Lib\x86"
+
