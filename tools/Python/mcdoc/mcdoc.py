@@ -33,7 +33,7 @@ def repair(localdir):
         f = open(filename, 'r')
         # read the first two instr file sections
         header = utils.read_header(f)
-        define = utils.read_define_instr_or_comp(f)
+        define = utils.read_define_instr(f)
         
         # doc lines
         print('*****')
@@ -107,7 +107,7 @@ def repair(localdir):
                 continue
             l01 = max([len(p[0]) + len(p[1]) for p in par_docs])
             
-            name, real_pars = utils.parse_define_instr_or_comp(define)
+            name, real_pars = utils.parse_define_instr(define)
             real_parnames = [par[1] for par in real_pars]
             
             # rewrite par doc lines, remove "bonus" doc lines without a parameter to document
@@ -419,7 +419,8 @@ class InstrCompParser:
         header = utils.read_header(f)
         info = utils.parse_header(header)
         info.site = utils.get_instr_site_fromtxt(header)
-        info.name, info.params = utils.parse_define_instr_or_comp(utils.read_define_instr_or_comp(f))
+        dfine = utils.read_define_instr(f)
+        info.name, info.params = utils.parse_define_instr(dfine)
         
         self.info = info
 
@@ -576,25 +577,25 @@ def main(args):
             files.append(f)
             instr_info_lst.append(info)
         except:
-            print("failed parsing instr file: %s" % f)
+            print("failed parsing file: %s" % f)
             quit()
-    print("parsed instr files: %s" % str(len(lib_instr_files)))
+    print("parsed files: %s" % str(len(lib_instr_files)))
     
     # debug mode - write files with a header property each, then quit
     if args.debug:
         text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
         write_file('files', text)
         
-        for i in range(utils.InstrHeaderInfo.__len__()-3):
+        for i in range(utils.InstrCompHeaderInfo.__len__()-3):
             text = '\n'.join(['%4d: %s' % (j, instr_info_lst[j][i]) for j in range(len(instr_info_lst))])
-            write_file(utils.InstrHeaderInfo.colname(i), text)
+            write_file(utils.InstrCompHeaderInfo.colname(i), text)
         for i in range(8, 9):
             text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(['%-20s, %-10s, %s' % (str(k[0]), str(k[1]), str(k[2])) for k in instr_info_lst[j][i]])) for j in range(len(instr_info_lst))])
-            write_file(utils.InstrHeaderInfo.colname(i), text)
+            write_file(utils.InstrCompHeaderInfo.colname(i), text)
         
         text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(instr_info_lst[j][10])) for j in range(len(instr_info_lst))])
         #  '\n'.join(info.links)
-        write_file(utils.InstrHeaderInfo.colname(10), text)
+        write_file(utils.InstrCompHeaderInfo.colname(10), text)
         quit()
     
     # generate and save all html pages docs

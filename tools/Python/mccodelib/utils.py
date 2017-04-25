@@ -276,7 +276,7 @@ def read_header(file):
             break
     return ''.join(lines)
 
-class InstrHeaderInfo:
+class InstrCompHeaderInfo:
     field_cols = ['name', 'author', 'date', 'origin', 'site', 'short_description', 'description', 'test']
     lst_cols = ['params', 'params_docs', 'links']
     def __init__(self):
@@ -296,15 +296,15 @@ class InstrHeaderInfo:
         self.links = []
     @staticmethod
     def __len__():
-        return len(InstrHeaderInfo.field_cols) + len(InstrHeaderInfo.lst_cols)
+        return len(InstrCompHeaderInfo.field_cols) + len(InstrCompHeaderInfo.lst_cols)
     @staticmethod
     def colname(idx):
         if idx >= 0 and idx <= 7:
-            return InstrHeaderInfo.field_cols[idx]
+            return InstrCompHeaderInfo.field_cols[idx]
         elif idx >= 8 and idx <= 10:
-            return InstrHeaderInfo.lst_cols[idx-8]
+            return InstrCompHeaderInfo.lst_cols[idx-8]
         else:
-            raise Exception("InstrHeaderInfo.colname: invalid index")
+            raise Exception("InstrCompHeaderInfo.colname: invalid index")
     def __getitem__(self, idx):
         if idx == 0: return self.name
         elif idx == 1: return self.author
@@ -318,7 +318,7 @@ class InstrHeaderInfo:
         elif idx == 9: return self.params_docs
         elif idx == 10: return self.links
         else:
-            raise Exception("InstrHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
+            raise Exception("InstrCompHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
     def __setitem__(self, idx, value):
         if idx == 0: self.name = value
         elif idx == 1: self.author = value
@@ -332,7 +332,7 @@ class InstrHeaderInfo:
         elif idx == 9: self.params_docs = value
         elif idx == 10: self.links = value
         else:
-            raise Exception("InstrHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
+            raise Exception("InstrCompHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
     def __str__(self):
         lst = [self.name, self.author, self.date, self.origin, self.site, self.short_descr, self.description, self.test]
         lst2 = [' '.join(d) for d in self.params_docs]
@@ -370,7 +370,7 @@ def parse_header(text):
     # cut header into some sections
     bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
     bites.append(text[lst[4]:])
-    info = InstrHeaderInfo()
+    info = InstrCompHeaderInfo()
     
     # get author, date, origin, revision
     m1 = re.search('Written by:([^\n]*)\n', bites[0])
@@ -416,9 +416,9 @@ def parse_header(text):
     
     return info
 
-def read_define_instr_or_comp(file):
+def read_define_instr(file):
     '''
-    Reads lines from file obj until DEFINE INSTRUMENT or DEFINE COMPONENT, then reads lines until \).
+    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until \).
     Parses this statement and returns the result in organized form.
     '''
     lines = []
@@ -437,15 +437,13 @@ def read_define_instr_or_comp(file):
     
     return ' '.join(lines)
 
-def parse_define_instr_or_comp(text):
+def parse_define_instr(text):
     '''
-    Parses a DEFINE INSTRUMENT or DEFINE COMPONENT statement from an instrument file.
+    Parses a DEFINE INSTRUMENT statement from an instrument file.
     Not robust to "junk" in the input string.
     '''
     try:
         m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
-        if not m:
-            m = re.match('DEFINE[ \t]+COMPONENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
         name = m.group(1)
         params = m.group(2).replace('\n', '').strip()
     except:
