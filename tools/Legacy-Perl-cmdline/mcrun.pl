@@ -463,7 +463,7 @@ sub exec_sim {
       push @opt, map("$_=$vals{$_}", @params);
       push @opt, "--format=PGPLOT";
       push @opt, "--ncount=$hostncount";
-      my $cmd="$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'} --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
+      my $cmd="$MCSTAS::mcstas_config{'RUNCMD'} --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
       if ($ncount) {
         $pids[$j]->Proc::Simple::start($cmd);  # asynchronous exec
       }
@@ -1012,7 +1012,7 @@ sub do_scan {
             our $pid;
             if ($Config{'osname'} eq 'MSWin32') {
                 # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
-                my @cmdlist = ("$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'}",
+                my @cmdlist = ("$MCSTAS::mcstas_config{'RUNCMD'}",
                               $out_file, "--ncount=$ncount", @options, map("$_=$vals{$_}", @params),
                               $force_compile && ($multi >= 1 || $slave ne 0) ? "--force-compile" : "",
                 							$output_opt ? "--dir=$output_opt" : "--no-output-files",
