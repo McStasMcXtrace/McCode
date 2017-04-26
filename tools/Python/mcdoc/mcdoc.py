@@ -424,6 +424,125 @@ class InstrParser:
         
         self.info = info
 
+
+class InstrDocWriter:
+    ''' create html doc text by means of a instr parser '''
+    def __init__(self, info):
+        self.info = info
+        self.text = ''
+    
+    def create(self):
+        i = self.info
+        t = self.tags
+        h = self.html
+        
+        h = h.replace(t[0], i.name)
+        h = h.replace(t[1], i.name)
+        h = h.replace(t[2], i.short_descr)
+        h = h.replace(t[3], i.site)
+        h = h.replace(t[4], i.author)
+        h = h.replace(t[5], i.origin)
+        h = h.replace(t[6], i.date)
+        h = h.replace(t[7], i.description)
+        
+        h = h.replace(t[8], self.par_header)
+        doc_rows = ''
+        for p in i.params:
+            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = lst[0] if len(lst) > 0 else ''
+            doc_rows = doc_rows + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+        h = h.replace(t[9], doc_rows)
+        
+        h = h.replace(t[10], i.filepath)
+        h = h.replace(t[11], os.path.basename(i.filepath))
+        
+        # TODO: implement links writing
+        lstr = ''
+        for l in i.links:
+            lstr = lstr + self.lnk_str % l + '\n'
+        h = h.replace(t[12], lstr)
+        
+        h = h.replace(t[13], datetime.now().strftime("%Y%m%d"))
+        
+        self.text = h
+        return self.text
+    
+    tags = ['%TITLE%', '%INSTRNAME%', '%SHORT_DESCRIPTION%',
+            '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%DESCRIPTION%',
+            '%T_HEAD%', '%T_ROWS%',
+            '%INSTRFILE%', '%INSTRFILE_BASE%', '%LINKS%','%GENDATE%']
+    par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    lnk_str = "<LI>%s"
+    
+    
+    html = '''
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>McStas: %TITLE%</TITLE>
+<LINK REV="made" HREF="mailto:pkwi@fysik.dtu.dk">
+</HEAD>
+
+<BODY>
+
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<H1>The <CODE>%INSTRNAME%</CODE> Instrument</H1>
+
+%SHORT_DESCRIPTION%
+
+<H2><A NAME=id></A>Identification</H2>
+
+<UL>
+  <LI> <B>Site: </B>%SITE%
+  <LI> <B>Author: </B>%AUTHOR%
+  <LI> <B>Origin: </B>%ORIGIN%
+  <LI> <B>Date: </B>%DATE%
+</UL>
+<H2><A NAME=desc></A>Description</H2>
+
+<PRE>
+%DESCRIPTION%
+</PRE>
+
+<H2><A NAME=ipar></A>Input parameters</H2>
+Parameters in <B>boldface</B> are required;
+the others are optional.
+
+<TABLE BORDER=1>
+%T_HEAD%
+%T_ROWS%
+</TABLE>
+
+<H2><A NAME=links></A>Links</H2>
+
+<UL>
+  <LI> <A HREF="%INSTRFILE%">Source code</A> for <CODE>%INSTRFILE_BASE%</CODE>.
+  %LINKS%
+</UL>
+<HR>
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<ADDRESS>
+Generated automatically by McDoc, Peter Willendrup
+&lt;<A HREF="mailto:peter.willendrup@risoe.dk">pkwi@fysik.dtu.dk</A>&gt; /
+%GENDATE%</ADDRESS>
+</BODY></HTML>
+'''
+
+
 class CompParser(InstrParser):
     def _parse_legacy(self):
         ''' override '''
@@ -434,16 +553,18 @@ class CompParser(InstrParser):
         info = utils.parse_header(header)
         info.site = utils.get_instr_site_fromtxt(header)
         
-        dfine = utils.read_keyword_statement(f, 'DEFINE', 'COMPONENT')
-        defpar = utils.read_keyword_statement(f, 'DEFINITION', 'PARAMETERS')
-        setpar = utils.read_keyword_statement(f, 'SETTING', 'PARAMETERS')
-        outpar = utils.read_keyword_statement(f, 'OUTPUT', 'PARAMETERS')
+        dfine = utils.read_define_comp(f)
         
-        info.name, info.params = utils.parse_define_instr(dfine)
+        name, setpar, defpar, outpar = utils.parse_define_comp(dfine)
+        
+        info.name = name
+        # TODO: upgrade info object to distinguish between the different types of pars
+        info.params = setpar + defpar + outpar
         
         self.info = info
 
-class InstrDocWriter:
+
+class CompDocWriter:
     ''' create html doc text by means of a instr parser '''
     def __init__(self, info):
         self.info = info
@@ -587,11 +708,12 @@ def main(args):
     # parse all instr files
     instr_info_lst = []
     files = []
-    for f in local_instr_files:
-    #for f in local_comp_files:
+    #for f in local_instr_files:
+    for f in local_comp_files:
         try:
             print("parsing... %s" % f)
-            info = InstrParser(f).parse()
+            #info = InstrParser(f).parse()
+            info = CompParser(f).parse()
             info.filepath = f
             files.append(f)
             instr_info_lst.append(info)
@@ -608,7 +730,7 @@ def main(args):
         for i in range(utils.InstrCompHeaderInfo.__len__()-3):
             text = '\n'.join(['%4d: %s' % (j, instr_info_lst[j][i]) for j in range(len(instr_info_lst))])
             write_file(utils.InstrCompHeaderInfo.colname(i), text)
-        for i in range(8, 9):
+        for i in range(8, 10):
             text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(['%-20s, %-10s, %s' % (str(k[0]), str(k[1]), str(k[2])) for k in instr_info_lst[j][i]])) for j in range(len(instr_info_lst))])
             write_file(utils.InstrCompHeaderInfo.colname(i), text)
         

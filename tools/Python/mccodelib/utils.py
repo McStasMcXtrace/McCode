@@ -386,7 +386,18 @@ def parse_header(text):
     if m4: info.version = m4.group(1).strip()
     
     m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
-    if m5: info.short_descr = m5.group(1).strip()
+    if m5:
+        info.short_descr = m5.group(1).strip()
+    else:
+        # component files dont have %INSTRUMENT_SITE tag, this is an alternative
+        m6 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+        if m6:
+            # remove all "Modified by" lines
+            nomodby = [] 
+            for l in m6.group(1).strip().splitlines():
+                if not re.match('Modified by:', l, flags=re.DOTALL):
+                    nomodby.append(l)
+            info.short_descr = '\n'.join(nomodby).strip()
     
     # description
     descr = bites[1]
@@ -437,26 +448,52 @@ def read_define_instr(file):
     
     return ' '.join(lines)
 
-
-def read_keyword_statement(file, keyword_A, keyword_B):
-    '''
-    Reads DEFINE COMPONENT, DEFINITION PARAMETERS and SETTING PARAMETERS lines from a comp file.
-    '''
+def read_define_comp(file):
+    end_conds = ('SHARE', 'DECLARE', 'INITIALIZE', 'TRACE')
+    
     lines = []
+    
+    # get to DEFINE COMPONENT statement
     for l in file:
-        if not re.match('%s[ \t]+%s[ \t]+' % (keyword_A, keyword_B), l):
+        if not re.match('DEFINE[ \t]+COMPONENT[ \t]+', l):
             continue
         else:
             lines.append(l.strip())
             break
     
+    for l in file:
+        m = re.match('[ ]*(\w+)', l)
+        if m and m.group(1) in end_conds:
+            break
+        lines.append(l.strip())
+    
+    # look for closing 
     if not re.search('\)', lines[-1]):
         for l in file:
             lines.append(l.strip())
             if re.search('\)', l):
                 break
     
-    return ' '.join(lines)
+    return '\n'.join(lines)
+
+def parse_define_comp(text):
+    text = text.replace('\n', ' ')
+    
+    name = re.search('DEFINE[ \t]+COMPONENT[ \t](\w+)', text).group(1)
+    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]+\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    defpar = []
+    if m:
+        defpar = parse_params(m.group(1))
+    m = re.search('SETTING[ \t]+PARAMETERS[ \t]+\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    setpar = []
+    if m:
+        setpar = parse_params(m.group(1))
+    m = re.search('OUTPUT[ \t]+PARAMETERS[ \t]+\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    outpar = []
+    if m:
+        outpar = parse_params(m.group(1))
+    
+    return (name, defpar, setpar, outpar)
 
 def parse_params(params_line):
     ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
