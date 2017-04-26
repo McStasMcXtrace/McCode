@@ -28,8 +28,7 @@
 * Example: Adapt_check(source_comp=MySource)
 *
 * %P
-* source_comp: [no quotes] The name of the Source_adapt component in the
-*                instrument definition.
+* source_comp: [no quotes] The name of the Source_adapt component in the instrument definition.
 *
 * %E
 *******************************************************************************/
