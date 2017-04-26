@@ -28,7 +28,7 @@
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
 * %VALIDATION
-* Jun 2005: extensive external test, no problems found 
+* Jun 2005: extensive external test, no problems found
 * Validated by: K. Lieutenant
 *
 * %P
@@ -41,8 +41,7 @@
 * alpha:     (deg) Twist angle along the cylinder
 * length:    (m)   Length of cylinder/rotor (less than zdepth)
 * d:         (m)   Thickness of blades
-* nu:        (Hz)  Cylinder rotation speed, counter-clockwise, 
-*                  which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length
+* nu:        (Hz)  Cylinder rotation speed, counter-clockwise, which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length
 * nslit:     (1)   Number of Soller blades
 *
 * %E
@@ -55,7 +54,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=48.298, length=0.25, d=0.0004, nu=300, nslit=72)
 
 OUTPUT PARAMETERS(omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
@@ -78,7 +77,7 @@ TRACE
   if (x<(-xwidth/2.0) || x>(xwidth/2.0) || y<(-yheight/2.0) || y>(yheight/2.0))
     ABSORB;
 
-  dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the cylinder start */ 
+  dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the cylinder start */
   PROP_DT(dt0);
   r_i = sqrt(x*x+(y+radius)*(y+radius));
   theta_i = atan2(x,y+radius);
@@ -88,16 +87,16 @@ TRACE
   r_f = sqrt(x*x+(y+radius)*(y+radius));
   theta_f = atan2(x,y+radius);
 
-  dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the exit aperture */ 
+  dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the exit aperture */
   PROP_DT(dt0);
   if (x<(-xwidth/2.0) || x>(xwidth/2.0) || y<(-yheight/2.0) || y>(yheight/2.0))
     ABSORB;
 
   /* Calculate analytical transmission assuming continuous source */
-    
+
   r_mean = (r_i + r_f)/2.0;          /* Approximation using mean radius */
   d_s_alpha = theta_f-theta_i;
-  A = nslit/(2*PI)*( d/r_mean + fabs(alpha_rad+d_s_alpha-omega*length/vz) ); 
+  A = nslit/(2*PI)*( d/r_mean + fabs(alpha_rad+d_s_alpha-omega*length/vz) );
   if (A >= 1)
     ABSORB;
   p*= (1-A);
@@ -117,7 +116,7 @@ MCDISPLAY
   double z3 =  zdepth/2.0;
   double a;
   double xw, yh;
-  
+
   magnify("xy");
   xw = xwidth/2.0;
   yh = yheight/2.0;
@@ -157,4 +156,3 @@ MCDISPLAY
 %}
 
 END
-

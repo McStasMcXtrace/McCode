@@ -23,33 +23,33 @@
 * of the guide with multiple slits (but without spacers), and trajectories.
 * It relies on similar physics as the Monochromator_pol.
 * The reflec function and parameters are passed to this component to
-* give a bigger freedom. 
+* give a bigger freedom.
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
 *
 * The guide is asummed to have half a spacer on each side:
-*    slit1  slit2  slit3 
+*    slit1  slit2  slit3
 *  |+     ++     ++     +|
-*  |+     ++     ++     +|  
+*  |+     ++     ++     +|
 *  <---------------------> xwidth
 *  <------> xwidth/nslit (nslit=3)
 *         <> d
 *
 * The reflection functions and parameters defaults as follows:
 * Bot defaults to Top, Left defaults to Top, Right defaults to left.
-* Down defaults to down and up defaults to up for all functions and 
+* Down defaults to down and up defaults to up for all functions and
 * Top(Up and Down) defaults to StdReflecFunc and {0.99,0.0219,6.07,2.0,0.003}
 * which stands for {R0, Qc, alpha, m, W}.
 *
-* Example: 
-* Pol_bender(xwidth = 0.08, yheight = 0.08, length = 1.0, radius= 10.0, 
+* Example:
+* Pol_bender(xwidth = 0.08, yheight = 0.08, length = 1.0, radius= 10.0,
 * 	     nslit=5, d=0.0, endFlat=0, drawOption=2,
 * 	     rTopUpPar={0.99, 0.0219, 6.07, 3.0, 0.003},
 * 	     rTopDownPar={0.99, 0.0219, 6.07, 1.0, 0.003})
-* 
-* See also the example instruments Test_Pol_Bender and 
+*
+* See also the example instruments Test_Pol_Bender and
 * Test_Pol_Bender_Vs_Guide_Curved (under tests).
-* 
-* %BUGS 
+*
+* %BUGS
 * This component has been against tested Guide_curved and found to
 * give the same intensities. Gravity option has not been tested.
 *
@@ -58,25 +58,25 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:       Width at the guide entry (m)
-* yheight:      Height at the guide entry (m)
-* length:       length of guide along center (m)
-* curvature:    Radius of curvature of the guide (+:curve left/-:right) (m) 
-* nslit:        Number of slits (1)
-* d:            Width of spacers (subdividing absorbing walls) (m)
-* endFlat:      If endflat>0 then entrance and exit planes are parallel. (1)
-* rTopUpFunc:   Top reflection function for spin up (q, *par, *reflecProb) (1)
-* rTopUpPar:    Parameters for rTopUpFunc (1)
-* rTopDownFunc: Top reflection function for spin down (q, *par, *reflecProb) (1)
-* rTopDownPar:  Parameters for rTopDownFunc (1)
-* drawOption:   1: fine(all slits/90 points per arc), 2: normal (max 20/40), 3: rough (max 5/10) (1)
-* debug:        if debug > 0 print out some internal parameters (1)
+* xwidth:       Width at the guide entry [m]
+* yheight:      Height at the guide entry [m]
+* length:       length of guide along center [m]
+* curvature:    Radius of curvature of the guide (+:curve left/-:right) [m]
+* nslit:        Number of slits [1]
+* d:            Width of spacers (subdividing absorbing walls) [m]
+* endFlat:      If endflat>0 then entrance and exit planes are parallel. [1]
+* rTopUpFunc:   Top reflection function for spin up (q, *par, *reflecProb) [1]
+* rTopUpPar:    Parameters for rTopUpFunc [1]
+* rTopDownFunc: Top reflection function for spin down (q, *par, *reflecProb) [1]
+* rTopDownPar:  Parameters for rTopDownFunc [1]
+* drawOption:   1: fine(all slits/90 points per arc), 2: normal (max 20/40), 3: rough (max 5/10) [1]
+* debug:        if debug > 0 print out some internal parameters [1]
 *
 * OUTPUT PARAMETERS:
 *
-* localG:       Gravity vector in guide reference system (m/s/s)
-* normalXXX:    Several normal vector used for defining the geometry (1)
-* pointXXX:     Several points used for defining the geometry (1)
+* localG:       Gravity vector in guide reference system [m/s/s]
+* normalXXX:    Several normal vector used for defining the geometry [1]
+* pointXXX:     Several points used for defining the geometry [1]
 * rXXXParPtr:   Pointers to reflection parameters used with ref. functions.
 *
 * %L
@@ -86,24 +86,24 @@
 
 DEFINE COMPONENT Pol_bender
 DEFINITION PARAMETERS (
-		       rTopUpFunc=StdReflecFunc, rTopDownFunc=StdReflecFunc, 
-		       rBotUpFunc=rTopUpFunc, rBotDownFunc=rTopDownFunc, 
-		       rLeftUpFunc=rTopUpFunc, rLeftDownFunc=rTopDownFunc, 
-		       rRightUpFunc=rLeftUpFunc, rRightDownFunc=rLeftDownFunc, 
-		       rTopUpPar={0.99,0.0219,6.07,2.0,0.003}, 
+		       rTopUpFunc=StdReflecFunc, rTopDownFunc=StdReflecFunc,
+		       rBotUpFunc=rTopUpFunc, rBotDownFunc=rTopDownFunc,
+		       rLeftUpFunc=rTopUpFunc, rLeftDownFunc=rTopDownFunc,
+		       rRightUpFunc=rLeftUpFunc, rRightDownFunc=rLeftDownFunc,
+		       rTopUpPar={0.99,0.0219,6.07,2.0,0.003},
 		       rTopDownPar={0.99,0.0219,6.07,2.0,0.003},
 		       rBotUpPar=rTopUpPar, rBotDownPar=rTopDownPar,
 		       rLeftUpPar=rTopUpPar, rLeftDownPar=rTopDownPar,
 		       rRightUpPar=rLeftUpPar, rRightDownPar=rLeftDownPar)
-SETTING PARAMETERS (xwidth, yheight, length, radius, G=9.8, int nslit=1, d=0.0, int debug=0, int endFlat=0, 
+SETTING PARAMETERS (xwidth, yheight, length, radius, G=9.8, int nslit=1, d=0.0, int debug=0, int endFlat=0,
 		    int drawOption=1)
-OUTPUT PARAMETERS (localG, normTopBot, normIn, normOut,  
-		   pointTop, pointBot, pointIn, pointOut, 
-		   rTopUpParPtr, rTopDownParPtr, 
+OUTPUT PARAMETERS (localG, normTopBot, normIn, normOut,
+		   pointTop, pointBot, pointIn, pointOut,
+		   rTopUpParPtr, rTopDownParPtr,
 		   rBotUpParPtr, rBotDownParPtr,
-		   rLeftUpParPtr, rLeftDownParPtr, 
+		   rLeftUpParPtr, rLeftDownParPtr,
 		   rRightUpParPtr, rRightDownParPtr)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -113,9 +113,9 @@ SHARE
 
 DECLARE
 %{
-  Coords localG; 
-  Coords normTopBot, normIn, normOut; 
-  Coords pointTop, pointBot, pointIn, pointOut; 
+  Coords localG;
+  Coords normTopBot, normIn, normOut;
+  Coords pointTop, pointBot, pointIn, pointOut;
 
 #if (useTables)
   t_Table *rTopUpParPtr     = 0;
@@ -126,7 +126,7 @@ DECLARE
   t_Table *rLeftDownParPtr  = 0;
   t_Table *rRightUpParPtr   = 0;
   t_Table *rRightDownParPtr = 0;
-#else 
+#else
   double rTopUpParPtr[]     = (double [])rTopUpPar;
   double rTopDownParPtr[]   = (double [])rTopDownPar;
   double rBotUpParPtr[]     = (double [])rBotUpPar;
@@ -152,62 +152,62 @@ INITIALIZE
   rRightUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
   rRightDownParPtr = (t_Table*) malloc(sizeof(t_Table));
   if (Table_Read(rTopUpParPtr, rTopUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rTopUpPar);
     exit(1);
   }
-  if (Table_Read(rTopDownParPtr, rTopDownPar, 1) <= 0) { 
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+  if (Table_Read(rTopDownParPtr, rTopDownPar, 1) <= 0) {
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rTopDownPar);
     exit(1);
   }
   if (Table_Read(rBotUpParPtr, rBotUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rBotUpPar);
     exit(1);
   }
-  if (Table_Read(rBotDownParPtr, rBotDownPar, 1) <= 0) { 
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+  if (Table_Read(rBotDownParPtr, rBotDownPar, 1) <= 0) {
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rBotDownPar);
     exit(1);
   }
   if (Table_Read(rLeftUpParPtr, rLeftUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rLeftUpPar);
     exit(1);
   }
-  if (Table_Read(rLeftDownParPtr, rLeftDownPar, 1) <= 0) { 
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+  if (Table_Read(rLeftDownParPtr, rLeftDownPar, 1) <= 0) {
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rLeftDownPar);
     exit(1);
   }
   if (Table_Read(rRightUpParPtr, rRightUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rRightUpPar);
     exit(1);
   }
-  if (Table_Read(rRightDownParPtr, rRightDownPar, 1) <= 0) { 
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
+  if (Table_Read(rRightDownParPtr, rRightDownPar, 1) <= 0) {
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rRightDownPar);
     exit(1);
   }
 #endif
-  
+
   if ((xwidth<=0) || (yheight <= 0) || (length<=0) || (radius==0)) {
     fprintf(stderr, "Pol_bender: %s: NULL or negative length scale!\n"
 	    "ERROR      (xwidth,yheight,length, radius). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
-  
+
   if (drawOption<1 || drawOption>3) {
     fprintf(stderr, "Pol_bender: %s: drawOption %ld not supported. Exiting.\n",
 	    NAME_CURRENT_COMP, drawOption);
     exit(1);
-  }  
+  }
 
   if (mcgravitation) {
-    
+
     localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
     fprintf(stdout,"Pol_bender %s: Gravity is on!\n",
 	    NAME_CURRENT_COMP);
@@ -216,14 +216,14 @@ INITIALIZE
 	      "This component only gives correct resulta with gravitation,\n"
 	      "when gravity is strictly along the y-axis!\n",
 	      NAME_CURRENT_COMP);
-    
+
   } else
     localG = coords_set(0, 0, 0);
-  
+
   // To be able to handle the situation properly where a component of
   // the gravity is along the z-axis we also define entrance (in) and
-  // exit (out) planes 
-  
+  // exit (out) planes
+
   angle = length/radius;
   normIn    = coords_set(0, 0, 1);
   if (endFlat)
@@ -232,14 +232,14 @@ INITIALIZE
     normOut   = coords_set(sin(angle), 0, cos(angle));
   pointIn   = coords_set(0, 0, 0);
   pointOut  = coords_set(radius-radius*cos(angle), 0, radius*sin(angle));
-  
+
   // Top and bot plane (+y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
   // and the top point (0, yheight/2, 0) and bot point (0, -yheight/2, 0)
   // A normal vector is (0, 1, 0)
   normTopBot  = coords_set(0, 1, 0);
   pointTop = coords_set(0, yheight/2, 0);
   pointBot = coords_set(0, -yheight/2, 0);
-  
+
 %}
 
 TRACE
@@ -248,15 +248,15 @@ TRACE
   const double hhalf  = 0.5*yheight; /* half height of guide */
   const double z_off  = radius*sin(length/radius); /* z-comp of guide length */
   const double dThreshold = 1e-10; /* distance threshold */
-  const double tThreshold = dThreshold/sqrt(vx*vx + vy*vy + vz*vz); 
+  const double tThreshold = dThreshold/sqrt(vx*vx + vy*vy + vz*vz);
   double angle_z_vout;       /* angle between z-axis and v_out */
-  
+
   // Variables used in the case of multiple slits
   const double slitWidth = xwidth/nslit; // slitwidth
   const double spacerhalf  = 0.5*d; /* half width of spacers */
   int slitHit;                 // decide which slit is hit
   double posInSlit;            // position in slit
-  
+
   double t11, t12, t21, t22, theta, alpha, endtime, phi;
   int i_bounce;
 
@@ -274,60 +274,60 @@ TRACE
   PROP_Z0;
   if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
-  
+
   if(nslit>1) {
-    // check if neutron is absorbed on a spacer 
+    // check if neutron is absorbed on a spacer
     posInSlit = fmod(x+whalf, slitWidth);
     if(posInSlit <= spacerhalf ||
        posInSlit >= slitWidth-spacerhalf)
       ABSORB;
-    
-    // check which slat is hit 
+
+    // check which slat is hit
     slitHit = (int)((x+whalf)/slitWidth);
-    
+
     // Modify R1 and R2 according to which slat was hit
     Rleft  = absR + sign*whalf - sign*(slitHit+1)*slitWidth + sign*spacerhalf;
     Rright = absR + sign*whalf - sign*slitHit*slitWidth - sign*spacerhalf;
-    
+
     if(debug>0)
-      printf("\nslitHit: %d/%f, Rleft: %f, Rright: %f\n", 
+      printf("\nslitHit: %d/%f, Rleft: %f, Rright: %f\n",
 	     slitHit, (x+whalf)/slitWidth, Rleft, Rright);
   } else { // only 1 slit
-    
+
     Rleft  = absR - sign*whalf;
     Rright = absR + sign*whalf;
   }
-  
+
   for(;;) {
 
     double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror;
     double tUp, tSide, time, endtime;
-    double R, Q; 
+    double R, Q;
     Coords vVec, xVec;
     int isPolarising;
     double vel_xz;
 
     isPolarising = 0;
-    
+
     xVec = coords_set(x, y, z);
     vVec = coords_set(vx, vy, vz);
-    
-    solve_2nd_order(&tTop, NULL, 0.5*coords_sp(normTopBot,localG), 
+
+    solve_2nd_order(&tTop, NULL, 0.5*coords_sp(normTopBot,localG),
 		    coords_sp(normTopBot, vVec),
 		    coords_sp(normTopBot, coords_sub(xVec, pointTop)));
-    
-    solve_2nd_order(&tBot, NULL, 0.5*coords_sp(normTopBot,localG), 
+
+    solve_2nd_order(&tBot, NULL, 0.5*coords_sp(normTopBot,localG),
 		    coords_sp(normTopBot, vVec),
 		    coords_sp(normTopBot, coords_sub(xVec, pointBot)));
-    
-    solve_2nd_order(&tIn, NULL, 0.5*coords_sp(normIn,localG), 
+
+    solve_2nd_order(&tIn, NULL, 0.5*coords_sp(normIn,localG),
 		    coords_sp(normIn, vVec),
 		    coords_sp(normIn, coords_sub(xVec, pointIn)));
 
-    solve_2nd_order(&tOut, NULL, 0.5*coords_sp(normOut,localG), 
+    solve_2nd_order(&tOut, NULL, 0.5*coords_sp(normOut,localG),
 		    coords_sp(normOut, vVec),
 		    coords_sp(normOut, coords_sub(xVec, pointOut)));
-    
+
     /* Find itersection points with inside and outside guide walls */
     if (!cylinder_intersect(&t11, &t12 ,x - radius, y, z, vx, vy, vz, Rleft,  2*yheight)){
       /*neutron did not hit the cylinder*/
@@ -337,7 +337,7 @@ TRACE
       /*neutron did not hit the cylinder*/
       t21=t22=0;
     }
-    
+
     /* Choose appropriate reflection time */
     tLeft  = (t11 < tThreshold) ? t12 : t11;
     tRight = (t21 < tThreshold) ? t22 : t21;
@@ -371,10 +371,10 @@ TRACE
 
     if (time > endtime)
       break;
-    
+
     PROP_DT(time);
     SCATTER;
-    
+
     /* Find reflection surface */
     if(time==tSide) {      /* Left or right side */
 
@@ -382,12 +382,12 @@ TRACE
 	R = sign*Rleft;
       else
 	R = sign*Rright;
-      
+
       phi   = atan(vx/vz);        /* angle of neutron trajectory */
       alpha = asin(z/R);      /* angle of guide wall */
       theta = fabs(phi - alpha);    /* angle of reflection */
       angle_z_vout = 2.0*alpha - phi;
-      
+
       vel_xz = sqrt(vx*vx + vz*vz);      /* in plane velocity */
       vz    = vel_xz*cos(angle_z_vout);
       vx    = vel_xz*sin(angle_z_vout);
@@ -396,37 +396,37 @@ TRACE
       theta = fabs(atan(vy/vz));
       vy    = -vy;
     }
-    
+
     /* Now compute reflectivity. */
     Q = 2.0*sin(theta)*sqrt(vx*vx + vy*vy + vz*vz)*V2K;
-    
+
     // calculate reflection probability
     if(time==tTop) {
-      
+
       rTopUpFunc(Q, rTopUpParPtr, &Rup);
       rTopDownFunc(Q, rTopDownParPtr, &Rdown);
       if(debug>0)
 	fprintf(stdout, "\tTop hit:\n");
     } else if(time==tBot) {
-      
+
       rBotUpFunc(Q, rBotUpParPtr, &Rup);
       rBotDownFunc(Q, rBotDownParPtr, &Rdown);
       if(debug>0)
 	fprintf(stdout, "\tBot hit:\n");
     } else if(time==tRight) {
-      
+
       rRightUpFunc(Q, rRightUpParPtr, &Rup);
       rRightDownFunc(Q, rRightDownParPtr, &Rdown);
       if(debug>0)
 	fprintf(stdout, "\tRight hit:\n");
     } else if(time==tLeft) {
-      
+
       rLeftUpFunc(Q, rLeftUpParPtr, &Rup);
       rLeftDownFunc(Q, rLeftDownParPtr, &Rdown);
       if(debug>0)
 	fprintf(stdout, "\tLeft hit:\n");
     }
-    
+
     if(Rup != Rdown) {
 
       isPolarising = 1;
@@ -434,21 +434,21 @@ TRACE
       GetMonoPolRefProb(FN, FM, sy, &weight);
     } else
       weight = Rup;
-    
+
     if(debug>0)
       printf("\tlambda: %.2f AA, Q: %.4f, Rup: %.4f, Rdown: %.4f,"
 	     " weight: %.4f\n",
-	     2*PI/(sqrt(vx*vx + vy*vy + vz*vz)*V2K), Q, 
+	     2*PI/(sqrt(vx*vx + vy*vy + vz*vz)*V2K), Q,
 	     Rup, Rdown, weight);
-    
+
     // check that refWeight is meaningfull
-    if (weight <= 0) ABSORB; 
+    if (weight <= 0) ABSORB;
     if (weight >  1) weight =1 ;
 
     if(isPolarising) {
       SetMonoPolRefOut(FN, FM, weight, &sx, &sy, &sz);
-      if(sx*sx+sy*sy+sz*sz>1.000001) 
-        fprintf(stderr,"Pol_bender: %s: Warning: polarisation |s| = %g > 1\n", 
+      if(sx*sx+sy*sy+sz*sz>1.000001)
+        fprintf(stderr,"Pol_bender: %s: Warning: polarisation |s| = %g > 1\n",
               NAME_CURRENT_COMP, sx*sx+sy*sy+sz*sz); // check that polarisation is meaningfull
     }
 
@@ -469,18 +469,18 @@ MCDISPLAY
   double xplot[n], zplot[n];
   int ns = 0;
   int j = 1;
-  const double lengthOfGuide = sin(length/radius)*radius; 
-  const double slitWidth = xwidth/nslit; 
+  const double lengthOfGuide = sin(length/radius)*radius;
+  const double slitWidth = xwidth/nslit;
   double R = 0; /* radius of arc */
   int nSlitsMax = nslit;
   int nMax      = n;
-  
-  if (lengthOfGuide<=0) 
+
+  if (lengthOfGuide<=0)
     exit(fprintf(stdout,"Pol_bender: %s: Negative guide length ! lengthOfGuide=%g\n",
 	    NAME_CURRENT_COMP, lengthOfGuide));
-  
+
   if (drawOption==2) {
-    
+
     if(nSlitsMax>20)
       nSlitsMax = 20;
     nMax = 40;
@@ -492,51 +492,51 @@ MCDISPLAY
   }
 
   magnify("xy");
-  
-  // draw opening 
+
+  // draw opening
   rectangle("xy", 0, 0, 0, xwidth, yheight);
-  
+
   for(ns=0; ns < nSlitsMax+1; ns++) {
-    
+
     // to make sure the sides are drawn properly
-    if(ns==nSlitsMax && nSlitsMax<nslit) 
+    if(ns==nSlitsMax && nSlitsMax<nslit)
       ns=nslit;
-    
+
     // calculate x for this R
     R = radius - 0.5*xwidth + ns*slitWidth;
 
     for(j=0; j<nMax; j++) {
-      
+
       if(endFlat) {
-	
+
 	if(ns==0)  // only calculate once
 	  zplot[j] = j*lengthOfGuide/(double)(nMax-1);
       } else
 	zplot[j] = R*sin(length/radius * (double)j/(double)(nMax-1));
-      
+
       if(radius>0)
 	xplot[j] = radius - sqrt(R*R - zplot[j]*zplot[j]);
       else
-	xplot[j] = radius + sqrt(R*R - zplot[j]*zplot[j]);	
+	xplot[j] = radius + sqrt(R*R - zplot[j]*zplot[j]);
     }
-    
+
     // To be able to draw end we store some of the point values
     if(ns==0) { // first wall
-      
+
       x1 = xplot[nMax-1];
       z1 = zplot[nMax-1];
     } else if(ns==nslit) { //last wall
-      
+
       x2 = xplot[nMax-1];
       z2 = zplot[nMax-1];
     }
-    
+
     for(j=0; j<nMax-1; j++) {
       line(xplot[j],  0.5*yheight, zplot[j], xplot[j+1],  0.5*yheight, zplot[j+1]);
       line(xplot[j], -0.5*yheight, zplot[j], xplot[j+1], -0.5*yheight, zplot[j+1]);
     }
   }
-  
+
   // draw end gap
   line(x1, 0.5*yheight, z1, x2, 0.5*yheight, z2);
   line(x1, 0.5*yheight, z1, x1,-0.5*yheight, z1);

@@ -46,9 +46,7 @@
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
 * alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-*                     glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond 
-*                 m=  0.65       0.47 1   1.18  2-6         1.01  1.12
+* m:       (1)    m-value of material. Zero means completely absorbing. glass/SiO2 Si Ni Ni58 supermirror Be Diamond m=  0.65 0.47 1 1.18 2-6 1.01 1.12
 * W:       (AA-1) Width of supermirror cut-off
 * reflect: (str)  Reflectivity file name. Format [q(Angs-1) R(0-1)]
 *
@@ -62,7 +60,7 @@ DEFINE COMPONENT Guide
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, w1, h1, w2=0, h2=0, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
 OUTPUT PARAMETERS (pTable)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 %include "read_table-lib"
@@ -80,7 +78,7 @@ INITIALIZE
     "This component produces wrong results with gravitation !\n"
     "Use Guide_gravity.\n",
     NAME_CURRENT_COMP);
-    
+
   if (!w2) w2=w1;
   if (!h2) h2=h1;
 

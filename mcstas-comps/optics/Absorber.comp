@@ -22,16 +22,15 @@
 *
 * Example: Absorber(xmin=-0.01, xmax=0.01, ymin=-0.05, ymax=0.05, zmin=-0.2, zmax=0)
 *
-* %PAR
-*
+* %P
 * INPUT PARAMETERS
 *
-* xmin:   Lower x bound (m)
-* xmax:   Upper x bound (m)
-* ymin:   Lower y bound (m)
-* ymax:   Upper y bound (m)
-* zmin:   Lower z bound (m)
-* zmax:   Upper z bound (m)
+* xmin:   Lower x bound [m]
+* xmax:   Upper x bound [m]
+* ymin:   Lower y bound [m]
+* ymax:   Upper y bound [m]
+* zmin:   Lower z bound [m]
+* zmax:   Upper z bound [m]
 *
 * %END
 *******************************************************************************/
@@ -48,7 +47,7 @@ DECLARE
 INITIALIZE
 %{
   xw = xmax-xmin;
-  yh = ymax-ymin; 
+  yh = ymax-ymin;
   zt = zmax-zmin;
   xm = (xmax+xmin)/2;
   ym = (ymax+ymin)/2;

@@ -24,18 +24,18 @@
 * Example: Diaphragm(xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01)
 *          Diaphragm(radius=0.01)
 *
-* 
+*
 * For <B>INPUT PARAMETERS</B> - please consult <a href="Slit.html">Slit.comp</a> as Diaphragm is a copy of that component.
 *
 * radius: Radius of diaphragm in the z=0 plane, centered at Origo (m)
-* xmin: Lower x bound (m)
-* xmax: Upper x bound (m)
-* ymin: Lower y bound (m)
-* ymax: Upper y bound (m)
-* xwidth: Width of diaphragm. Overrides xmin,xmax. (m)
-* yheight:Height of diaphragm. Overrides ymin,ymax. (m)
+* xmin: Lower x bound [m]
+* xmax: Upper x bound [m]
+* ymin: Lower y bound [m]
+* ymax: Upper y bound [m]
+* xwidth: Width of diaphragm. Overrides xmin,xmax. [m]
+* yheight:Height of diaphragm. Overrides ymin,ymax. [m]
 *
-* 
+*
 * %E
 *******************************************************************************/
 
@@ -51,4 +51,3 @@ TRACE COPY Slit
 MCDISPLAY COPY Slit
 
 END
-

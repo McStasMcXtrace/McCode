@@ -45,39 +45,39 @@
 *
 * The magetic field may be given as any definable c-function with a specific footprint:
 *   int func(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data)
-* where the magnetic field at coordinates (x,y,z, t) is returned in the variables 
+* where the magnetic field at coordinates (x,y,z, t) is returned in the variables
 * pointed to by bx,by, and bz. Additional parameters to be handed to the function
 * should be handed to the function using the pointer data.
 *
 * Functions supplied by the system are:
 * 1. const_magnetic_field: Constant field (Bx,By,Bz) within the region
-* 2. rot_magnetic_field: Field is initially (0,By,0) but after a length of zdepth 
+* 2. rot_magnetic_field: Field is initially (0,By,0) but after a length of zdepth
 *      has rotated to (By,0,0)
-* 3. majorana_magnetic_field: Field is initially (Bx,By,0) liearly transforms to 
+* 3. majorana_magnetic_field: Field is initially (Bx,By,0) liearly transforms to
 *      (-Bx,By,0) after zdepth where By<<Bx
-* 4. table_magnetic_field: The magnetic field is read from a text file where it is 
+* 4. table_magnetic_field: The magnetic field is read from a text file where it is
 *      specified as a point cloud with N rows of 6 columns:
 *      x y z Bx By Bz
-*    the B field map is resampled with Stepx*Stepy*Stepz points. 
+*    the B field map is resampled with Stepx*Stepy*Stepz points.
 *    Use Stepx=Stepy=Stepz=0 to skip resampling and use the table as is.
 * 5. resampled_3to3_magnetic_field
 *
-* Users may specify any other function with the required footprint to have any 
-* other field. Note that coordinates refer the coordinate system defined by this 
+* Users may specify any other function with the required footprint to have any
+* other field. Note that coordinates refer the coordinate system defined by this
 * component.
 *
-* The magnetic field is turned on by an instance of this component, and turned 
-* off by an instance of Pol_simpleBfield_stop. Anything in between is considered 
+* The magnetic field is turned on by an instance of this component, and turned
+* off by an instance of Pol_simpleBfield_stop. Anything in between is considered
 * inside the field.
 *
 * When using table_magnetic_field or resampled_3to3_magnetic_field as
 * fieldFunction the input data is first resampled to speed up the interpolation.
 * With table_magnetic_field only Stepx is used, and this defines the total number
-* of points to use during resampling (should be at least the number of points 
+* of points to use during resampling (should be at least the number of points
 * present in the input table).
 * With resampled_3to3_magnetic_field both Stepx, Stepy and Stepz is used to
 * determine the number of points to use in each individual dimension. Here the
-* total number of resample points are the product Stepx*Stepy*Stepz (which again 
+* total number of resample points are the product Stepx*Stepy*Stepz (which again
 * should exceed the number of points in the input table).
 *
 * %P
@@ -94,8 +94,8 @@
 *
 * OUTPUT PARAMETERS:
 *
-* gz:             z-component of gravity (m/s/s)
-* parPtr:         Pointer to component magnet parameters (pointer)
+* gz:             z-component of gravity [m/s/s]
+* parPtr:         Pointer to component magnet parameters [pointer]
 *
 * %E
 ****************************************************************************/

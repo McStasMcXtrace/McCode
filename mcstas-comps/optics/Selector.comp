@@ -19,7 +19,7 @@
 * %Description
 * Velocity selector consisting of rotating Soller-like blades
 * defining a helically twisted passage.
-* Geometry is defined by two identical apertures at 12 o'clock position, 
+* Geometry is defined by two identical apertures at 12 o'clock position,
 * The origin is at the ENTRANCE of the selector.
 *
 * Example: Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, length=0.25,
@@ -27,7 +27,7 @@
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
 * %VALIDATION
-* Jun 2005: extensive external test, one minor problem 
+* Jun 2005: extensive external test, one minor problem
 * Jan 2006: problem solved (for McStas-1.9.1)
 * Validated by: K. Lieutenant
 *
@@ -37,18 +37,18 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xmin:        Lower x bound of entry aperture (m)
-* xmax:        Upper x bound of entry aperture (m)
-* ymin:        Lower y bound of entry aperture (m)
-* ymax:        Upper y bound of entry aperture (m)
-* xwidth:      Width of entry. Overrides xmin,xmax. (m)
-* yheight:     Height of entry. Overrides ymin,ymax. (m)
-* length:      rotor length  (m)
-* nslit:       number of absorbing subdivinding spokes/lamella (1)
-* d:           width of spokes at beam-center (m)
-* radius:      radius of beam-center (m)
-* alpha:       angle of torsion (deg)
-* nu:          frequency of rotation, which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length (Hz)
+* xmin:        Lower x bound of entry aperture [m]
+* xmax:        Upper x bound of entry aperture [m]
+* ymin:        Lower y bound of entry aperture [m]
+* ymax:        Upper y bound of entry aperture [m]
+* xwidth:      Width of entry. Overrides xmin,xmax. [m]
+* yheight:     Height of entry. Overrides ymin,ymax. [m]
+* length:      rotor length  [m]
+* nslit:       number of absorbing subdivinding spokes/lamella [1]
+* d:           width of spokes at beam-center [m]
+* radius:      radius of beam-center [m]
+* alpha:       angle of torsion [deg]
+* nu:          frequency of rotation, which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length [Hz]
 *
 * %Links
 * See also Additional notes <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000134.html">March 1999</a> and <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q2/000136.html">Jan 2000</a>.
@@ -64,7 +64,7 @@ SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, length=0.2
   xwidth=0, yheight=0, nslit=72, d=0.0004, radius=0.12, alpha=48.298, nu=500)
 
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 INITIALIZE
 %{
@@ -191,4 +191,3 @@ MCDISPLAY
 %}
 
 END
-

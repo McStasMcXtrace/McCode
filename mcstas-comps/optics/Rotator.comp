@@ -20,7 +20,7 @@
 * %Description
 * All components positioned after this one are rotating at frequency 'nu' with
 * phase 'phase'. Use the Derotator component to put back the model steady.
-* The rotation is performed w.r.t. the position of the component, along the 
+* The rotation is performed w.r.t. the position of the component, along the
 * vertical axis 'y'.
 *
 * Example:
@@ -35,7 +35,7 @@
 * phase:   (deg)  Phase shift
 *
 * OUTPUT PARAMETERS:
-* angle:   rotation angle (deg)
+* angle:   rotation angle [deg]
 *
 * %End
 *******************************************************************************/
@@ -44,7 +44,7 @@ DEFINE COMPONENT Rotator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nu=0, phase=0)
 OUTPUT PARAMETERS (angle)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
@@ -54,7 +54,7 @@ DECLARE
 TRACE
 %{
   double dt=0;
-  
+
   if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
     /* approximation of rotating frame */
     /* current coordinates of neutron in centered static frame */
@@ -67,14 +67,14 @@ TRACE
     /* rotate speed */
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   }
-  
+
 %}
 
 MCDISPLAY
 %{
   int ih;
 
- 
+
    if (nu || phase) {
       double radius = 0.1;
       /* cylinder to visualise the rotating frame */
@@ -83,6 +83,3 @@ MCDISPLAY
 %}
 
 END
-
-
-

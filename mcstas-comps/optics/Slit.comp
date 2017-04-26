@@ -14,7 +14,7 @@
 * Origin: Risoe
 * Release: McStas 1.6
 *
-* Rectangular/circular slit 
+* Rectangular/circular slit
 *
 * %D
 * A simple rectangular or circular slit. You may either
@@ -27,13 +27,13 @@
 * %P
 * INPUT PARAMETERS
 *
-* radius: Radius of slit in the z=0 plane, centered at Origo (m)
-* xmin: Lower x bound (m)
-* xmax: Upper x bound (m)
-* ymin: Lower y bound (m)
-* ymax: Upper y bound (m)
-* xwidth: Width of slit. Overrides xmin,xmax. (m)
-* yheight:Height of slit. Overrides ymin,ymax. (m)
+* radius: Radius of slit in the z=0 plane, centered at Origo [m]
+* xmin: Lower x bound [m]
+* xmax: Upper x bound [m]
+* ymin: Lower y bound [m]
+* ymax: Upper y bound [m]
+* xwidth: Width of slit. Overrides xmin,xmax. [m]
+* yheight:Height of slit. Overrides ymin,ymax. [m]
 *
 * *
 * %E
@@ -44,7 +44,7 @@ DEFINE COMPONENT Slit
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01, radius=0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 INITIALIZE
 %{
   if (xwidth > 0)  { xmax=xwidth/2;  xmin=-xmax; }

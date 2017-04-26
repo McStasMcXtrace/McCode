@@ -44,7 +44,7 @@
 * behaviour, in the case the neutron trajectory is nearly linear inside the
 * chopper slits, i.e. the neutrons are fast w/r/ to the chopper speed.
 * Slits are straight, but may be super-mirror coated. In this case, the
-* component is NOT centered, but located at its entry window. It should then 
+* component is NOT centered, but located at its entry window. It should then
 * be shifted by -l/2.
 *
 * Example: Guide_gravity(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12,
@@ -65,15 +65,10 @@
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
 * alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing. m=0.65 
-*                     glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond 
-*                 m=  0.65       0.47 1   1.18  2-6         1.01  1.12
-*                 for glass/SiO2, m=1 for Ni, 1.2 for Ni58, m=2-6 for supermirror.
-*                 m=0.47 for Si
+* m:       (1)    m-value of material. Zero means completely absorbing. m=0.65  glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond m=  0.65       0.47 1   1.18  2-6         1.01  1.12 for glass/SiO2, m=1 for Ni, 1.2 for Ni58, m=2-6 for supermirror. m=0.47 for Si
 * W:       (AA-1) Width of supermirror cut-off
 * d:       (m)    Thickness of subdividing walls
-* nslit:   (1)    Number of vertical channels in the guide (>= 1)
-*                 (nslit-1 vertical dividing walls).
+* nslit:   (1)    Number of vertical channels in the guide (>= 1) (nslit-1 vertical dividing walls).
 *
 * Optional input parameters: (different ways for m-specifications)
 *
@@ -85,9 +80,7 @@
 * aright:  (1)    alpha-value of right vert. mirror
 * atop:    (1)    alpha-value of top   horz. mirror
 * abottom: (1)    alpha-value of left  horz. mirror
-* nhslit:  (1)    Number of horizontal channels in the guide (>= 1).
-*                 (nhslit-1 horizontal dividing walls).
-*                 this enables to have nslit*nhslit rectangular channels
+* nhslit:  (1)    Number of horizontal channels in the guide (>= 1). (nhslit-1 horizontal dividing walls). this enables to have nslit*nhslit rectangular channels
 * G:       (m/s2) Gravitation norm. 0 value disables G effects.
 * wavy:    (deg)  Global guide waviness
 * wavy_z:  (deg)  Partial waviness along propagation axis
@@ -127,7 +120,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect="NULL")
 OUTPUT PARAMETERS (GVars, pTable)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 %include "ref-lib"
@@ -184,7 +177,7 @@ SHARE
     for (i=0; i<7; aVars->N_reflection[i++] = 0);
     for (i=0; i<5; aVars->M[i++] = 0);
     for (i=0; i<5; aVars->Alpha[i++] = 0);
-    
+
     aVars->gx = a_Gx; /* The gravitation vector in the current component axis system */
     aVars->gy = a_Gy;
     aVars->gz = a_Gz;
@@ -207,7 +200,7 @@ SHARE
     if (a_aright  >= 0) aVars->Alpha[2] =a_aright ;
     if (a_atop    >= 0) aVars->Alpha[3] =a_atop   ;
     if (a_abottom >= 0) aVars->Alpha[4] =a_abottom;
-    
+
     /* n: normal vectors to surfaces */
     aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] =  0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
     aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] = -aVars->nz[1];             /* 2:-X right      */
@@ -365,7 +358,7 @@ INITIALIZE
   if (!w1 || !h1)
   { fprintf(stderr,"Guide_gravity: %s: input window is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
     exit(-1); }
-    
+
   if (d*nslit > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*nslit > w1).\n", NAME_CURRENT_COMP));
 
   if (!w2) w2=w1;
@@ -423,7 +416,7 @@ TRACE
       RX = rot_apply(R, X);
       coords_get(RX, &vx, &vy, &vz);
     }
-    
+
     for (i=0; i<7; GVars.N_reflection[i++] = 0);
 
     /* propagate to box input (with gravitation) in comp local coords */
@@ -448,7 +441,7 @@ TRACE
       double w_edge, w_adj; /* Channel displacement on X */
       double h_edge, h_adj; /* Channel displacement on Y */
       double w_chnum,h_chnum; /* channel indexes */
-      
+
       SCATTER;
 
       /* X: Shift origin to center of channel hit (absorb if hit dividing walls) */
