@@ -72,7 +72,7 @@ def repair(localdir):
                 break
             
             l = l.lstrip('*').strip()
-            m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^]+)\][ \t]*(.*)', l)
+            m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]+)\][ \t]*(.*)', l)
             if m:
                 healthy_par_doc = (m.group(1), m.group(2), m.group(3).strip())
                 par_docs.append(healthy_par_doc)
@@ -87,14 +87,14 @@ def repair(localdir):
                     idxs.append(i)
                     continue
                 # no-unit docstrings
-                m4 = re.match('(\w+):[ \t]*([ \t\w,.\-\(\)\=\^\/:\"\'\%\<\>]+)$', l)
+                m4 = re.match('(\w+):[ \t]*([ \t\w,.\-\(\)\=\^\/:\"\'\%\<\>\|\{\};\*]+)$', l)
                 if m4:
                     limp_par_doc = (m4.group(1), '', m4.group(2).strip())
                     par_docs.append(limp_par_doc)
                     idxs.append(i)
                     continue
                 # "inversed" docstrings
-                m2 = re.match('(\w+):[ \t]*(.*)[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%]+)\]', l)
+                m2 = re.match('(\w+):[ \t]*(.*)[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\|\{\}]+)\]', l)
                 if m2:
                     par_doc = (m2.group(1), m2.group(3).strip(), m2.group(2))
                     par_docs.append(par_doc)

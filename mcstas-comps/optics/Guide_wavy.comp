@@ -21,6 +21,8 @@
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
 *
+* Example: m=2 Qc=0.0218 (nat. Ni) W=1/300 alpha=4.38 R0=0.995 (given by Daniel Clemens, PSI)
+*
 * %BUGS
 * This component does not work with gravitation on. Use component Guide_gravity then.
 *
@@ -54,16 +56,12 @@
 * wavy_z:  (deg)  Waviness in the z-(flight-)direction
 * wavy_xy: (deg)  Waviness in the transverse direction
 *
-* %D
-* Example values: m=2 Qc=0.0218 (nat. Ni) W=1/300 alpha=4.38 R0=0.995
-*                 (given by Daniel Clemens, PSI)
-
 * %E
 ******************************************************************************/
 
 DEFINE COMPONENT Guide_wavy
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2=0, h2=0, l, 
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
 R0=0.995, Qc=0.0218, alpha=0, m=0, W=0,
 alpha1=4.38, m1=2, W1=0.003,
 alpha2=4.38, m2=2, W2=0.003,
@@ -71,7 +69,7 @@ alpha3=4.38, m3=2, W3=0.003,
 alpha4=4.38, m4=2, W4=0.003,
 wavy_z=0, wavy_xy=0)
 OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE %{
 %include "ref-lib"
 %}
@@ -85,7 +83,7 @@ INITIALIZE
   if (m)     { m1=m2=m3=m4=m; }
   if (alpha) { alpha1=alpha2=alpha3=alpha4=alpha; }
   if (W)     { W1=W2=W3=W4=W; }
-  
+
   if (!w2) w2=w1;
   if (!h2) h2=h1;
   f_h = 0.5*(w2 - w1), f_v = 0.5*(h2 - h1);
@@ -120,7 +118,7 @@ TRACE
   /* Propagate neutron to guide entrance. */
   PROP_Z0;
   /* Scatter here to ensure that fully transmitted neutrons will not be
-     absorbed in a GROUP construction, e.g. all neutrons - even the 
+     absorbed in a GROUP construction, e.g. all neutrons - even the
      later absorbed ones are scattered at the guide entry. */
   SCATTER;
   if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
@@ -294,7 +292,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-

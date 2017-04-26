@@ -56,8 +56,7 @@
 * Optional input parameters
 * repeat_count: Number of times the source must be generated/repeated [1]
 * verbose:      Display additional information about source, recommended [0/1]
-* smooth:       Smooth sparsed event files for filename repetitions. Use this option with MPI.
-*                 This will apply gaussian distributions around initial events from the file [0/1]
+* smooth:       Smooth sparsed event files for filename repetitions. Use this option with MPI. This will apply gaussian distributions around initial events from the file [0/1]
 *
 * %E
 *******************************************************************************/
@@ -70,7 +69,7 @@ OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,filename_nco
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
                    max_vx, max_vy, max_vz, first_block, mean_x, mean_y, mean_z,
                    end_reading, n_count_extrapolated, repeat_cnt)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -193,7 +192,7 @@ INITIALIZE
         printf("* Beam will be smoothed\n");
   } else if (!filename)
     exit(fprintf(stderr,"Virtual_input: %s: please give me a filename name (filename).\n", NAME_CURRENT_COMP));
-  
+
   repeat_cnt = repeat_count;
 #if defined (USE_MPI)
   repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
@@ -236,7 +235,7 @@ TRACE
       /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
     if (!end_reading) {
       /* BEWARE! This is a non-standard way of using mcrestore_neutron, order of parameters
-	 MUST be  &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz 
+	 MUST be  &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz
          to match the data format from the Virtual_input files */
       mcrestore_neutron(rTable.data,pos, &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz);
 
@@ -357,14 +356,13 @@ FINALLY
   }
 %}
 
-MCDISPLAY 
+MCDISPLAY
 %{
   if (display) {
     mcdis_box(mean_x, mean_y, mean_z, max_x-min_x, max_y-min_y, max_z-min_z);
-    /* a line in the main beam direction */ 
+    /* a line in the main beam direction */
     line(mean_x, mean_y, mean_z,mean_dx,mean_dy,mean_dz);
   }
 %}
 
 END
-

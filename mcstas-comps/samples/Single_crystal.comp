@@ -43,15 +43,15 @@
 *   any shape:       geometry=OFF file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
-*   It computes the intersection points of the neutron ray with the object  
+*   It computes the intersection points of the neutron ray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces). 
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
-*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
-*   The default size of the object depends on the OFF file data, but its 
+*   The default size of the object depends on the OFF file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
 * <b>Crystal definition file format</b>
@@ -92,8 +92,8 @@
 *           mosaic = 5, reflections="YBaCuO.lau")
 *
 * A PG graphite crystal plate, cut for (002) reflections
-*   Single_crystal(xwidth = 0.002, yheight = 0.1, zdepth = 0.1, 
-*     mosaic = 30, reflections = "C_graphite.lau", 
+*   Single_crystal(xwidth = 0.002, yheight = 0.1, zdepth = 0.1,
+*     mosaic = 30, reflections = "C_graphite.lau",
 *     ax=0,      ay=2.14,   az=-1.24,
 *     bx = 0,    by = 0,    bz =  2.47,
 *     cx = 6.71, cy = 0,    cz =  0)
@@ -118,26 +118,14 @@
 * xwidth:    Width of crystal [m]
 * yheight:   Height of crystal [m]
 * zdepth:    Depth of crystal (no extinction simulated) [m]
-* geometry:  Name of an Object File Format (OFF) or PLY file for complex geometry. 
-*              The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
+* geometry:  Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
-* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the 
-*              isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
-* mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. 
-*              Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
-*              through rotation around the crystal lattice vectors. Has precedence over
-*              in-plane mosaic model. [arc minutes]
-* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), 
-*              gaussian RMS. [arc minutes]
-* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), 
-*              gaussian RMS [arc minutes]
-* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), 
-*              mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in 
-*              the in-plane mosaic state. Vectors A and B define plane in which 
-*              the crystal roation is defined, and mosaic_A, mosaic_B, denotes the 
-*              resp. mosaicities (gaussian RMS) with respect to the the two 
-*              reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
-* 
+* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
+* mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model. [arc minutes]
+* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS. [arc minutes]
+* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS [arc minutes]
+* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which  the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
+*
 * recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
 * ax:        Coordinates of first (direct/recip) unit cell vector [AA or AA^-1]
 * ay:        a on y axis
@@ -148,48 +136,36 @@
 * cx:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
 * cy:        c on y axis
 * cz:        c on z axis
-* reflections: File name containing structure factors of reflections. Use
-*              empty ("") or NULL for incoherent scattering only [string]
-* order:     Limit multiple scattering up to given order
-*              (0: all, 1: first, 2: second, ...) [1]
+* reflections: File name containing structure factors of reflections. Use empty ("") or NULL for incoherent scattering only [string]
+* order:     Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...) [1]
 *
 * Optional input parameters:
 *
-* p_transmit: Monte Carlo probability for neutrons to be transmitted
-*               without any scattering. Used to improve statistics from
-*               weak reflections [1]
+* p_transmit: Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics from weak reflections [1]
 * sigma_abs: Absorption cross-section per unit cell at 2200 m/s [barns]
-* sigma_inc: Incoherent scattering cross-section per unit cell
-*              Use -1 to unactivate [barns]
-* aa:        Unit cell angles alpha, beta and gamma. Then uses norms of
-*              vectors a,b and c as lattice parameters [deg]
-* bb:        Beta angle [deg] 
+* sigma_inc: Incoherent scattering cross-section per unit cell Use -1 to unactivate [barns]
+* aa:        Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters [deg]
+* bb:        Beta angle [deg]
 * cc:        Gamma angle [deg].
-* barns:     Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
-*              barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
-*              barns=0 for lau type files [1]
-* RX:        Radius of horizontal along X lattice curvature. flat for 0 (m)
-* RY:        Radius of vertical lattice curvature. flat for 0 (m)
-* RZ:        Radius of horizontal along Z lattice curvature. flat for 0 (m)
-* powder:    Flag to indicate powder mode, for simulation of Debye-Scherrer cones
-*              via random crystallite orientation. A powder texture can be 
-*              approximated with 0<powder<1 (1)
-* PG:        Flag to indicate "Pyrolytic Graphite" mode, only meaningful with 
-*              choice of Graphite.lau, models PG crystal. A powder texture can be 
-*              approximated with 0<PG<1 with main axis on 'c' (1)
+* barns:     Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files [1]
+* RX:        Radius of horizontal along X lattice curvature. flat for 0 [m]
+* RY:        Radius of vertical lattice curvature. flat for 0 [m]
+* RZ:        Radius of horizontal along Z lattice curvature. flat for 0 [m]
+* powder:    Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1 (1)
+* PG:        Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0<PG<1 with main axis on 'c' (1)
 *
 * OUTPUT PARAMETERS:
 *
 * hkl_info: Internal [structure]
 * hkl_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
-* hkl_info.h:   
+* hkl_info.h:
 * hkl_info.k: wavevector indices of last coherent scattering event [Angs-1]
 * hkl_info.l:
 *
 * %L
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
 * %L
-* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a> 
+* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a>
 * %L
 * <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
 * %L
@@ -237,7 +213,7 @@
        Carlo probability p_transmit, which defaults to the actual
        transmission probability. After the first event, transmission
        is selected with the correct Monte Carlo probability.
-       
+
   (6). Incoherent scattering is done simply by selecting a random
        direction for the outgoing wave vector kf.
 
@@ -271,7 +247,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
 		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
   /* used for reading data table from file */
@@ -298,7 +274,7 @@ SHARE
       double m1, m2, m3;          /* Diagonal matrix representation of Gauss */
       double cutoff;              /* Cutoff value for Gaussian tails */
     };
-    
+
   struct tau_data
     {
       int index;                  /* Index into reflection table */
@@ -350,11 +326,11 @@ SHARE
      struct hkl_data const *pa = a;
      struct hkl_data const *pb = b;
      double s = pa->tau - pb->tau;
-     
+
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
-  
+
   /* ------------------------------------------------------------------------ */
   int
   read_hkl_data(char *SC_file, struct hkl_info_struct *info,
@@ -426,7 +402,7 @@ SHARE
         free(parsing);
       }
     }
-    
+
     if (nb_atoms > 1) { info->sigma_a *= nb_atoms; info->sigma_i *= nb_atoms; }
 
     /* special cases for the structure definition */
@@ -442,12 +418,12 @@ SHARE
     }
     if (info->m_a && !info->m_b) info->m_b=info->m_a;
     if (info->m_b && !info->m_c) info->m_c=info->m_b;
-    
+
     /* compute the lattive angles if not set from data file. Not used when in vector mode. */
     if (info->m_a && !info->m_aa) info->m_aa=90;
     if (info->m_aa && !info->m_bb) info->m_bb=info->m_aa;
     if (info->m_bb && !info->m_cc) info->m_cc=info->m_bb;
-    
+
     /* parameters consistency checks */
     if (!info->m_ax && !info->m_ay && !info->m_az && !info->m_a) {
       fprintf(stderr,
@@ -512,7 +488,7 @@ SHARE
 	       info->m_cx, info->m_cy, info->m_cz);
       info->V0 = fabs(scalar_prod(info->m_ax, info->m_ay, info->m_az, tmp_x, tmp_y, tmp_z));
       printf("V0=%g\n", info->V0);
-      
+
       info->asx = 2*PI/info->V0*tmp_x;
       info->asy = 2*PI/info->V0*tmp_y;
       info->asz = 2*PI/info->V0*tmp_z;
@@ -534,14 +510,14 @@ SHARE
       info->csx = info->m_cx;
       info->csy = info->m_cy;
       info->csz = info->m_cz;
-      
+
       vec_prod(tmp_x, tmp_y, tmp_z,
 	       info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
 	       info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
       info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
       printf("V0=%g\n", info->V0);
-      
-      /*compute the direct cell parameters, ofr completeness*/ 
+
+      /*compute the direct cell parameters, ofr completeness*/
       info->m_ax = tmp_x*info->V0;
       info->m_ay = tmp_y*info->V0;
       info->m_az = tmp_z*info->V0;
@@ -590,7 +566,7 @@ SHARE
       list[i].k = k;
       list[i].l = l;
       list[i].F2 = F2;
-      
+
       /* Precompute some values */
       list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
       list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
@@ -609,7 +585,7 @@ SHARE
       vec_prod(b2[0], b2[1], b2[2],
                list[i].u1x, list[i].u1y, list[i].u1z,
                b1[0], b1[1], b1[2]);
-               
+
       /* Find the two mosaic axes perpendicular to tau. */
       if(SC_mosaic > 0) {
         /* Use isotropic mosaic. */
@@ -642,7 +618,7 @@ SHARE
         l->u3x = b2[0];
         l->u3y = b2[1];
         l->u3z = b2[2];
-                                                                          
+
         xia_x=l->tau_x-(M_2_PI*h/info->m_a)*info->asx;
         xia_y=l->tau_y-(M_2_PI*h/info->m_a)*info->asy;
         xia_z=l->tau_z-(M_2_PI*h/info->m_a)*info->asz;
@@ -682,7 +658,7 @@ SHARE
         }
         fprintf(stderr,"Single_crystal: Warning: you are using an experimental feature: \n"
               "  \"in-plane\" anistropic mosaicity. Please examine your data carefully.\n");
- 
+
         /*for given reflection in list - compute linear comb of tau_a and tau_b*/
         /*check for not in plane - f.i. check if (tau_a X tau_b).tau_i)==0*/
         struct hkl_data *l =&(list[i]);
@@ -699,7 +675,7 @@ SHARE
         tau_b[0]=M_2_PI*( (SC_mosaic_AB[5]/info->m_a)*info->asx + (SC_mosaic_AB[6]/info->m_b)*info->bsx + (SC_mosaic_AB[7]/info->m_c)*info->csx );
         tau_b[1]=M_2_PI*( (SC_mosaic_AB[5]/info->m_a)*info->asy + (SC_mosaic_AB[6]/info->m_b)*info->bsy + (SC_mosaic_AB[7]/info->m_c)*info->csy );
         tau_b[2]=M_2_PI*( (SC_mosaic_AB[5]/info->m_a)*info->asz + (SC_mosaic_AB[6]/info->m_b)*info->bsz + (SC_mosaic_AB[7]/info->m_c)*info->csz );
-        
+
         /*check determinants to see how we should compute the linear combination of a and b (to match c)*/
         if ((det=tau_a[0]*tau_b[1]-tau_a[1]*tau_b[0])!=0){
           c1= (l->tau_x*tau_b[1] - l->tau_y*tau_b[0])/det;
@@ -713,7 +689,7 @@ SHARE
         }
         if ((c1==0) && (c2==0)){
           fprintf(stderr,"Single_crystal: Warning: reflection tau[%i]=(%g %g %g) "
-          "has no component in defined mosaic plane\n", 
+          "has no component in defined mosaic plane\n",
           i, l->tau_x,l->tau_y,l->tau_z);
         }
         /*compute linear combination => sig_tau_i = | c1*sig_tau_a + c2*sig_tau_b |  - also add in the minute to radian scaling factor*/;
@@ -755,10 +731,10 @@ SHARE
           list[i].cutoff = 5*sig3;
     }
     Table_Free(&sTable);
-    
+
     /* sort the list with increasing tau */
     qsort(list, i, sizeof(struct hkl_data),  SX_list_compare);
-    
+
     info->list = list;
     info->count = i;
     info->tau_list = malloc(i*sizeof(*info->tau_list));
@@ -779,7 +755,7 @@ SHARE
     this function returns:
       tau_count (return), coh_refl, coh_xsect, T (updated elements in the array up to [j])
    */
-  int hkl_search(struct hkl_data *L, struct tau_data *T, int count, double V0, 
+  int hkl_search(struct hkl_data *L, struct tau_data *T, int count, double V0,
     double kix, double kiy, double kiz, double tau_max,
     double *coh_refl, double *coh_xsect)
   {
@@ -790,12 +766,12 @@ SHARE
     double b1x,b1y,b1z, b2x,b2y,b2z, kx, ky, kz, nx, ny, nz;
     double n11, n22, n12, det_N, inv_n11, inv_n22, inv_n12, l11, l22, l12,  det_L;
     double Bt_D_O_x, Bt_D_O_y, y0x, y0y, alpha;
-    
+
     double ki = sqrt(kix*kix+kiy*kiy+kiz*kiz);
 
     /* Common factor in coherent cross-section */
     double xsect_factor = pow(2*PI, 5.0/2.0)/(V0*ki*ki);
-    
+
     for(i = j = 0; i < count; i++)
       {
     /* Assuming reflections are sorted, stop search when max tau exceeded. */
@@ -876,11 +852,11 @@ SHARE
           *coh_xsect += T[j].xsect;
           j++;
         }
-        
+
       } /* end for */
         return (j); // this is 'tau_count', i.e. number of reachable reflections
     } /* end hkl_search */
-    
+
     int hkl_select(struct tau_data *T, int tau_count, double coh_refl, double *sum) {
       int j;
       double r = rand0max(coh_refl);
@@ -968,42 +944,42 @@ INITIALIZE
   hkl_info.nb_reuses = hkl_info.nb_refl = hkl_info.nb_refl_count = 0;
   hkl_info.tau_count = 0;
 
-  /*this is necessary to allow a numerical array to be passed through as a DEFINITION parameter*/ 
+  /*this is necessary to allow a numerical array to be passed through as a DEFINITION parameter*/
   double mosaic_ABin[]=mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
     printf("Single_crystal: %s: Error: Aborting.\n", NAME_CURRENT_COMP);
     exit(0);
   }
-    
+
   if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;
   if (hkl_info.sigma_i<0) hkl_info.sigma_i=0;
-  
+
   if (hkl_info.count)
     printf("Single_crystal: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info.count, reflections);
   else printf("Single_crystal: %s: Using incoherent elastic scattering only sigma=%g.\n",
       NAME_CURRENT_COMP, hkl_info.sigma_i);
-      
+
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
-      hkl_info.shape=3; 
+      hkl_info.shape=3;
     }
   }
   else if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
   else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
 
-  if (hkl_info.shape < 0) 
+  if (hkl_info.shape < 0)
     exit(fprintf(stderr,"Single_crystal: %s: sample has invalid dimensions.\n"
                         "ERROR           Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
-  
+
   printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
-      NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, 
+      NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i,
       reflections && strlen(reflections) ? reflections : "NULL");
 
-  if (powder && PG) 
+  if (powder && PG)
     exit(fprintf(stderr,"Single_crystal: %s: powder and PG modes can not be used together!\n"
 	     "ERROR           Please use EITHER powder or PG mode.\n", NAME_CURRENT_COMP));
 
@@ -1011,14 +987,14 @@ INITIALIZE
     fprintf(stderr,"Single_crystal: %s: powder mode means implicit choice of no multiple scattering!\n"
 	    "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
-  } 
-  
+  }
+
   if (PG && !(order==1)) {
     fprintf(stderr,"Single_crystal: %s: PG mode means implicit choice of no multiple scattering!\n"
 	    "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
-  } 
-  
+  }
+
 
 %}
 
@@ -1056,12 +1032,12 @@ TRACE
   double tot_xsect, tot_xlen;   /* Total cross section and length */
   double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
   double adjust, r, sum;        /* Temporaries */
-  
+
   double p_trans;               /* Transmission probability */
   double mc_trans, mc_interact; /* Transmission, interaction MC choices */
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
-  
+
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1071,9 +1047,9 @@ TRACE
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
   else if (hkl_info.shape == 3)
     intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-      
+
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
-    
+
   if(intersect)
   {                         /* Neutron intersects crystal */
     if(t1 > 0)
@@ -1094,11 +1070,11 @@ TRACE
     L = hkl_info.list;
     T = hkl_info.tau_list;
     hkl_info.type = '\0';
-    
+
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
       double Alpha, Beta;
-      
+
       if (hkl_info.shape == 0)
         intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
       else if (hkl_info.shape == 1)
@@ -1110,7 +1086,7 @@ TRACE
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
-        if (hkl_info.flag_warning < 100) 
+        if (hkl_info.flag_warning < 100)
           fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
@@ -1118,7 +1094,7 @@ TRACE
         hkl_info.flag_warning++;
         break;
       }
-        
+
       l_full = t2*v;
 
       /* (1). Compute incoming wave vector ki */
@@ -1134,12 +1110,12 @@ TRACE
 
 
       /* lattice curvature option: rotate neutron velocity */
-      if (RX || RY || RZ) { 
+      if (RX || RY || RZ) {
         if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RX),0,0,1); }
 		    else { b1x=vx; b1y=vy; b1z=vz; }
 		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, atan2(y,RY),1,0,0); }
 		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, atan2(z,RZ),0,1,0); } 
+		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, atan2(z,RZ),0,1,0); }
         else { b1x=b2x; b1y=b2y; b1z=b2z; }
 		    kix = V2K*b1x;
         kiy = V2K*b1y;
@@ -1149,9 +1125,9 @@ TRACE
         kiy = V2K*vy;
         kiz = V2K*vz;
       }
-      
+
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
-      
+
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
       if ( fabs(kix - hkl_info.kix) < 1e-6
@@ -1162,19 +1138,19 @@ TRACE
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
         double coh_xsect = 0, coh_refl = 0;
-        
+
         /* call hkl_search */
-        hkl_info.tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+        hkl_info.tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0,
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect); /* CPU consuming */
-              
+
         /* store ki so that we can check for further SPLIT iterations */
         if (event_counter == 0 ) { /* only for incoming neutron */
           hkl_info.kix = kix;
           hkl_info.kiy = kiy;
           hkl_info.kiz = kiz;
         }
-        
+
         hkl_info.coh_refl  = coh_refl;
         hkl_info.coh_xsect = coh_xsect;
         hkl_info.nb_refl += hkl_info.tau_count;
@@ -1187,7 +1163,7 @@ TRACE
          scattering lengths to m**-1 */
       coh_xlen = hkl_info.coh_xsect/V0;
       if (barns) {
-        coh_xlen *= 100; 
+        coh_xlen *= 100;
       } /* else assume fm^2 */
       tot_xlen = abs_xlen + inc_xlen + coh_xlen;
 
@@ -1203,7 +1179,7 @@ TRACE
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
         p *= p_trans/mc_trans;
-        intersect=0; 
+        intersect=0;
 	if (powder) { /* orientation of crystallite is longer random */
 	  randderotate(&vx, &vy, &vz, Alpha, Beta);
 	}
@@ -1216,14 +1192,14 @@ TRACE
         ABSORB;
       }
       if(mc_interact <= 0)        /* Protect against rounding errors */
-        { intersect=0; 
+        { intersect=0;
 	  if (powder) { /* orientation of crystallite is no longer random */
 	    randderotate(&vx, &vy, &vz, Alpha, Beta);
 	  }
 	  if (PG) { /* orientation of crystallite is longer random */
 	    PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
 	  }
-	  break; 
+	  break;
 	}
       if (!event_counter) p *= fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the neutron, taking
@@ -1263,7 +1239,7 @@ TRACE
 
         if(j >= hkl_info.tau_count)
         {
-          if (hkl_info.flag_warning < 100) 
+          if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
               "(r=%g, sum=%g, j=%i, tau_count=%i).\n", r, sum, j , hkl_info.tau_count);
           hkl_info.flag_warning++;
@@ -1301,14 +1277,14 @@ TRACE
 		    else { b1x=vx; b1y=vy; b1z=vz; }
 		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, -atan2(y,RY),1,0,0); }
 		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, -atan2(z,RZ),0,1,0); } 
+		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, -atan2(z,RZ),0,1,0); }
         else { b1x=b2x; b1y=b2y; b1z=b2z; }
         vx=b1x; vy=b1y; vz=b1z;
 	    }
-      
+
       SCATTER;
       if (powder) { /* orientation of crystallite is no longer random */
-	  randderotate(&vx, &vy, &vz, Alpha, Beta);	
+	  randderotate(&vx, &vy, &vz, Alpha, Beta);
       }
       if (PG) { /* orientation of crystallite is longer random */
 	PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
@@ -1324,10 +1300,10 @@ FINALLY
 %{
   MPI_MASTER(
   if (hkl_info.flag_warning)
-    fprintf(stderr, "Single_crystal: %s: Error message was repeated %i times with absorbed neutrons.\n", 
+    fprintf(stderr, "Single_crystal: %s: Error message was repeated %i times with absorbed neutrons.\n",
       NAME_CURRENT_COMP, hkl_info.flag_warning);
-      
-  /* in case this instance is used in a SPLIT, we can recommend the 
+
+  /* in case this instance is used in a SPLIT, we can recommend the
      optimal iteration value */
   if (hkl_info.nb_refl_count) {
     double split_iterations = (double)hkl_info.nb_reuses/hkl_info.nb_refl_count + 1;
@@ -1335,7 +1311,7 @@ FINALLY
     if (split_optimal > split_iterations + 5)
       printf("Single_crystal: %s: Info: you may highly improve the computation efficiency by using\n"
         "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
-        "  in the instrument description %s.\n", 
+        "  in the instrument description %s.\n",
         NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
   }
   );
@@ -1377,7 +1353,7 @@ MCDISPLAY
   else if (hkl_info.shape == 2) {	/* sphere */
     circle("xy", 0,  0.0, 0, radius);
     circle("xz", 0,  0.0, 0, radius);
-    circle("yz", 0,  0.0, 0, radius);        
+    circle("yz", 0,  0.0, 0, radius);
   }
   else if (hkl_info.shape == 3) {	/* OFF file */
     off_display(offdata);

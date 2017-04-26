@@ -91,7 +91,7 @@
 * chamfers_lr:(m) Chamfers on left/right mirror sides
 * chamfers_tb:(m) Chamfers on top/bottom mirror sides
 * nelements:(1)   Number of sections in the guide (length l/nelements).
-* reflect: (str)  Reflectivity file name. Format [q(Angs-1) R(0-1)]
+* reflect: (str)  Reflectivity file name. Format <q(Angs-1) R(0-1)>
 * nu:      (Hz)   Rotation frequency (round/s) for Fermi Chopper approximation
 * phase:   (deg)  Phase shift for the Fermi Chopper approximation
 *

@@ -18,7 +18,7 @@
 * The counterpart of the Rotator component.
 *
 * %Description
-* A component which stops the rotative frame set by the Rotator component. 
+* A component which stops the rotative frame set by the Rotator component.
 * Its position should better coincide with the Rotator instance.
 * Components preceding the Derotator are rotating, all following are steady.
 *
@@ -33,7 +33,7 @@
 * rotator: the name of the Rotator component used to initiate the rotation [no quotes]
 *
 * OUTPUT PARAMETERS:
-* angle:   rotation angle (deg)
+* angle: [deg]  rotation angle
 *
 * %End
 *******************************************************************************/
@@ -42,12 +42,12 @@ DEFINE COMPONENT Derotator
 DEFINITION PARAMETERS (rotator)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 TRACE
 %{
   double angle = MC_GETPAR(rotator, angle);
-  
+
   if (angle) { /* rotate back neutron w/r to monochromator */
     /* approximation of rotating monochromator */
     /* current coordinates of neutron in centered static frame */
@@ -66,6 +66,3 @@ MCDISPLAY
 %}
 
 END
-
-
-

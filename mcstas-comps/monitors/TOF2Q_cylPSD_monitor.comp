@@ -19,26 +19,26 @@
 * Calculates Q from TOF and known nominal grazing angle theta:
 * E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
 *    Q=2*sqrt(E/2.072)*sin(theta);
-* 
+*
 * %D
-* 
+*
 * %P
 * INPUT PARAMETERS:
 *
-* radius:   Cylinder radius (m)
-* yheight:   Cylinder height (m)
-* nQ:    Number of Q bins (1)
-* ny:    Number of y bins (1)
-* yheight: Height of cylinder (m)
-* ymin:  Minimum value of y monitored (m)
-* ymax:  Maximum value of y monitored (m)
+* radius:   Cylinder radius [m]
+* yheight:   Cylinder height [m]
+* nQ:    Number of Q bins [1]
+* ny:    Number of y bins [1]
+* yheight: Height of cylinder [m]
+* ymin:  Minimum value of y monitored [m]
+* ymax:  Maximum value of y monitored [m]
 * Qmin: Beginning of Q-range
 * Qmax: End of Q-range
-* T_zero: Beginning of time window (s)
+* T_zero: Beginning of time window [s]
 * L_flight: Nominal flightpath moderator--detector
-* theta: Nominal grazing angle 
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* theta: Nominal grazing angle
+* filename: Name of file in which to store the detector image [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -92,7 +92,7 @@ TRACE
     PROP_DT(dt);
     if(y>=yheight/2 || y<= -yheight/2)
       ABSORB;  /* Neutron hits cylinder ends; no detectors here */
- 
+
     E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
 
     /*i = floor((t-tt_0)*nt/(tt_1-tt_0));               Bin number */
@@ -131,55 +131,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

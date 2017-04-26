@@ -27,16 +27,16 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* psf:      Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf (m)
+* xmin:     Lower x bound of detector opening [m]
+* xmax:     Upper x bound of detector opening [m]
+* ymin:     Lower y bound of detector opening [m]
+* ymax:     Upper y bound of detector opening [m]
+* xwidth:   Width/diameter of detector (x). Overrides xmin, xmax [m]
+* yheight:  Height of detector (y). Overrides ymin, ymax [m]
+* nx:       Number of pixel columns [1]
+* ny:       Number of pixel rows [1]
+* filename: Name of file in which to store the detector image [string]
+* psf:      Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf [m]
 *
 * OUTPUT PARAMETERS:
 *
@@ -91,7 +91,7 @@ TRACE
     double xp,yp;
 
     PROP_Z0;
-    
+
     xp = x + psf*randnorm();
     yp = y + psf*randnorm();
 

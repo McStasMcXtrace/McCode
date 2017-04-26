@@ -24,8 +24,7 @@
 * The mosaic is anisotropic gaussian, with different FWHMs in the Y and Z
 * directions. The scattering vector is perpendicular to the surface.
 *
-* Example: Monochromator_flat(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
-*           mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
+* Example: Monochromator_flat(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
 *
 * Monochromator lattice parameter
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
@@ -45,19 +44,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* zmin:    Lower horizontal (z) bound of crystal (m)
-* zmax:    Upper horizontal (z) bound of crystal (m)
-* ymin:    Lower vertical (y) bound of crystal (m)
-* ymax:    Upper vertical (y) bound of crystal (m)
-* mosaich: Horizontal mosaic (in z direction) (FWHM) (arc minutes)
-* mosaicv: Vertical mosaic (in y direction) (FWHM) (arc minutes)
-* r0:      Maximum reflectivity (1)
-* Q:       Magnitude of scattering vector (1/angstrom)
+* zmin:    Lower horizontal (z) bound of crystal [m]
+* zmax:    Upper horizontal (z) bound of crystal [m]
+* ymin:    Lower vertical (y) bound of crystal [m]
+* ymax:    Upper vertical (y) bound of crystal [m]
+* mosaich: Horizontal mosaic (in z direction) (FWHM) [arc minutes]
+* mosaicv: Vertical mosaic (in y direction) (FWHM) [arc minutes]
+* r0:      Maximum reflectivity [1]
+* Q:       Magnitude of scattering vector [1/angstrom]
 *
 * optional parameters
-* zwidth:  Width of crystal, instead of zmin and zmax (m)
-* yheight: Height of crystal, instead of ymin and ymax (m)
-* DM:      monochromator d-spacing, instead of Q = 2*pi/DM (angstrom)
+* zwidth:  Width of crystal, instead of zmin and zmax [m]
+* yheight: Height of crystal, instead of ymin and ymax [m]
+* DM:      monochromator d-spacing, instead of Q = 2*pi/DM [AA]
 *
 * %E
 *******************************************************************************/
@@ -68,7 +67,7 @@ SETTING PARAMETERS (zmin=-0.05, zmax=0.05, ymin=-0.05, ymax=0.05,
   zwidth=0, yheight=0,
   mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, DM=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 #ifndef GAUSS

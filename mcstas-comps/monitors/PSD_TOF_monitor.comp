@@ -17,29 +17,28 @@
 * Position-sensitive monitor with TOF slices.
 *
 * %D
-* An (nx times ny) pixel PSD monitor with nt time bins pr pixel. 
+* An (nx times ny) pixel PSD monitor with nt time bins pr pixel.
 *
 * Will output nt PSD images plus 1 integrated image.
 *
-* Example: PSD_TOF_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-            nx=90, ny=90, tmin=4000, tmax=7000, nt=3, filename="Output")
+* Example: PSD_TOF_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, tmin=4000, tmax=7000, nt=3, filename="Output")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* tmin:     Lower time bound (mu-s)
-* tmax:     Upper time bound (mu-s)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* nt:       Number of TOF bins (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xmin:     Lower x bound of detector opening [m]
+* xmax:     Upper x bound of detector opening [m]
+* ymin:     Lower y bound of detector opening [m]
+* ymax:     Upper y bound of detector opening [m]
+* tmin:     Lower time bound [mu-s]
+* tmax:     Upper time bound [mu-s]
+* xwidth:   Width/diameter of detector (x). Overrides xmin, xmax [m]
+* yheight:  Height of detector (y). Overrides ymin, ymax [m]
+* nx:       Number of pixel columns [1]
+* ny:       Number of pixel rows [1]
+* nt:       Number of TOF bins [1]
+* filename: Name of file in which to store the detector image [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -117,7 +116,7 @@ TRACE
       PSD_Ns[i][j]++;
       PSD_ps[i][j] += p;
       PSD_p2s[i][j] += p*p;
-      
+
       SCATTER;
     }
     if (restore_neutron) {
@@ -139,7 +138,7 @@ SAVE
         nx, ny,
         &PSD_Ns[0][0],&PSD_ps[0][0],&PSD_p2s[0][0],
         ff);
-  
+
   for (kk=0; kk<nt; kk++) {
     sprintf(ff, "%s_%i",filename,kk);
     sprintf(tt, "PSD monitor TOF slice %i ~ %g mu-s",kk,kk*(tmax-tmin)/nt);

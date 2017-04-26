@@ -43,7 +43,7 @@
 * n_pulse: [1]      Number of pulses (Only if isfirst)
 * jitter:  [s]      Jitter in the time phase
 * abs_out: [0/1]    Absorb neutrons hitting outside of chopper radius?
-* delay:   [s]      Time 'delay'.
+* delay:   [s]      Time 'delay'
 * phase:   [deg]    Angular 'delay' (overrides delay)
 * xwidth:  [m]      Horizontal slit width opening at beam center
 * verbose: [1]      Set to 1 to display Disk chopper configuration

@@ -16,7 +16,7 @@
 *
 * (Unphysical) way of setting the polarization.
 *
-* %D 
+* %D
 *
 * This component has no physical size (like Arm - also drawn that
 * way), but is used to set the polarisation in one of two ways:
@@ -28,10 +28,10 @@
 * %P
 * INPUT PARAMETERS:
 *
-* px:        X-component of polarisation vector (can be negative) (1)
-* py:        Y-component of polarisation vector (can be negative) (1)
-* pz:        Z-component of polarisation vector (can be negative) (1)
-* randomOn:  Generate random values if randomOn!=0. (1) 
+* px:        X-component of polarisation vector (can be negative) [1]
+* py:        Y-component of polarisation vector (can be negative) [1]
+* pz:        Z-component of polarisation vector (can be negative) [1]
+* randomOn:  Generate random values if randomOn!=0. [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -41,8 +41,8 @@
 DEFINE COMPONENT Set_pol
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (px=0, py=0, pz=0, randomOn=0)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
-     
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
 
@@ -50,22 +50,22 @@ DECLARE
 
 INITIALIZE
 %{
-  if (px==1 && py==1 && pz==1) 
+  if (px==1 && py==1 && pz==1)
   {
     printf("Set_pol: %s: NULL vector defined!\n"
 	   "ERROR      (px, py, pz). Exiting",
            NAME_CURRENT_COMP);
     exit(1);
   }
-  
-  if ((px*px + py*py + pz*pz) > 1) 
+
+  if ((px*px + py*py + pz*pz) > 1)
   {
     printf("Set_pol: %s: Polarisation vector (px, py, pz) is unphysical!\n"
 	   "ERROR  px*px + py*py + pz*pz > 1. Exiting....",
            NAME_CURRENT_COMP);
     exit(1);
   }
-  
+
   if(randomOn!=0)
     printf("Set_pol: %s: Setting polarisation randomly.\n",
            NAME_CURRENT_COMP);
@@ -77,23 +77,23 @@ INITIALIZE
 TRACE
 %{
   double theta, phi;
-  
-  if(randomOn!=0) 
+
+  if(randomOn!=0)
   {
     theta = 2*PI*rand01(); // 0-2*PI
-    phi   = acos(2*rand01()-1); // 0-PI 
-    
+    phi   = acos(2*rand01()-1); // 0-PI
+
     sx = sin(phi)*cos(theta);
     sy = sin(phi)*sin(theta);
     sz = cos(phi);
-  } 
-  else 
+  }
+  else
   {
     sx = px;
     sy = py;
     sz = pz;
   }
-  
+
   SCATTER;
 %}
 

@@ -33,14 +33,13 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of monitor opening (m)
-* xmax:     Upper x bound of monitor opening (m)
-* ymin:     Lower y bound of monitor opening (m)
-* ymax:     Upper y bound of monitor opening (m)
-* optim_comp: name of the Source_Optimizer component in the
-*           instrument definition. Do not use quotes (no quotes)
-* xwidth:   Width of monitor. Overrides xmin,xmax. (m)
-* yheight:  Height of monitor. Overrides ymin,ymax. (m)
+* xmin:     Lower x bound of monitor opening [m]
+* xmax:     Upper x bound of monitor opening [m]
+* ymin:     Lower y bound of monitor opening [m]
+* ymax:     Upper y bound of monitor opening [m]
+* optim_comp: name of the Source_Optimizer component in the instrument definition. Do not use quotes (no quotes)
+* xwidth:   Width of monitor. Overrides xmin,xmax. [m]
+* yheight:  Height of monitor. Overrides ymin,ymax. [m]
 *
 * OUTPUT PARAMETERS:
 *
@@ -56,7 +55,7 @@ DEFINE COMPONENT Monitor_Optimizer
 DEFINITION PARAMETERS (optim_comp)
 SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (This_Monitor_id)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
@@ -70,7 +69,7 @@ DECLARE
 INITIALIZE
 %{
   struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
-  
+
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -265,11 +264,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-
-

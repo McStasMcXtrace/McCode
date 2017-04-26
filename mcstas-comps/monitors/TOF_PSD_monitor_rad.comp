@@ -14,7 +14,7 @@
 * Origin:     UCPH
 * Version:    $Revision$
 * Release:    McStas 2.0
-* Modified by:   
+* Modified by:
 *
 * Position-sensitive TOF monitor with radially averaging.
 *
@@ -29,13 +29,13 @@
 * %P
 * INPUT PARAMETERS:
 *
-* rmax:     Outer radius of detector (m)
-* nr:       Number of concentric circles (1)
-* filename: Name of file in which to store the detector image (text)
-* filename_av: Name of file in which to store the averaged detector image (text)
-* nt:       Number of time bins (1)
-* tmin:     Beginning of time window (mu-s)
-* tmax:     End of time window (mu-s)
+* rmax:     Outer radius of detector [m]
+* nr:       Number of concentric circles [1]
+* filename: Name of file in which to store the detector image [string]
+* filename_av: Name of file in which to store the averaged detector image [string]
+* nt:       Number of time bins [1]
+* tmin:     Beginning of time window [mu-s]
+* tmax:     End of time window [mu-s]
 * *
 * OUTPUT PARAMETERS:
 *

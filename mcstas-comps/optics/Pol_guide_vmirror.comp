@@ -55,7 +55,7 @@
 * localG:       Gravity vector in guide reference system [m/s/s]
 * normalTop:    One of several normal vectors used for defining the geometry [1]
 * pointTop:     One of several points used for defining the geometry [1]
-* rParPtr:      One of several pointers to reflection parameters used with the ref. functions. [*]
+* rParPtr:      One of several pointers to reflection parameters used with the ref. functions. []
 * SCATTERED:    is 1 for reflected, and 2 for transmitted neutrons
 *
 *

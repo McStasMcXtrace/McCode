@@ -50,8 +50,7 @@
 *
 * This component works with gravity (uses PROP_X0).
 *
-* Example: Monochromator_pol(zwidth=0.2, yheight=0.2, mosaic=30.0, dspread=0.0025,
-*                            Rup=1.0, Rdown=0.0, Q=1.8734)
+* Example: Monochromator_pol(zwidth=0.2, yheight=0.2, mosaic=30.0, dspread=0.0025, Rup=1.0, Rdown=0.0, Q=1.8734)
 *
 * Monochromator lattice parameter
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
@@ -82,7 +81,7 @@
 * optional parameters
 * DM:      monochromator d-spacing instead of Q = 2*pi/DM [AA]
 * pThreshold: if probability>pThreshold then accept and weight else random
-* debug  : if debug > 0 print out some info about the calculations
+* debug: if debug > 0, print out some info about the calculations
 *
 * %E
 *****************************************************************************/

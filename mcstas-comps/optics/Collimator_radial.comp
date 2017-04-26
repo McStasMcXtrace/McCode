@@ -35,14 +35,11 @@
 * machines) with the 'roc' parameter.
 * The neutron beam outside the collimator angular area is transmitted unaffected.
 *
-* Example: Channelled radial collimator with shadow parts
-*        Collimator_radial(xwidth=0.015, yheight=.3, length=.35,
-*                   divergence=40,transmission=1,
-*                   theta_min=5, theta_max=165, nchan=128, radius=0.9)
+* Example:
+*   Channelled radial collimator with shadow parts
+*     Collimator_radial(xwidth=0.015, yheight=.3, length=.35, divergence=40,transmission=1, theta_min=5, theta_max=165, nchan=128, radius=0.9)
 *   A continuous radial collimator
-*        Collimator_radial(yheight=.3, length=.35,
-*                   divergence=40,transmission=1,
-*                   theta_min=5, theta_max=165, radius=0.9)
+*     Collimator_radial(yheight=.3, length=.35, divergence=40,transmission=1, theta_min=5, theta_max=165, radius=0.9)
 *
 * %P
 * INPUT PARAMETERS:
@@ -60,8 +57,8 @@
 * transmission:[1]         Maximum transmission of Soller (0<=t<=1).
 * nslit:       [1]         Number of blades composing each Soller. Overrides the divergence parameter.
 * roc:         [deg]       Amplitude of oscillation of collimator. 0=fixed.
-* verbose:     []       Gives additional information.
-* approx:      []       Use Soller triangular transmission approximation.
+* verbose:     []          Gives additional information.
+* approx:      []          Use Soller triangular transmission approximation.
 *
 * %E
 *******************************************************************************/

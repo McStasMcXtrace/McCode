@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: KL, February 2001
-* Modified by: KL, 18 November 2001 
+* Modified by: KL, 18 November 2001
 * Version: $Revision$
 * Origin: Risoe
 * Release: McStas 1.6
@@ -21,7 +21,7 @@
 * Chooses evenly in lambda, exponentially decaying in time .
 * Adapted from Moderator by: KN, M.Hagen, August 1998
 *
-* Units of flux: n/cm^2/s/AA/ster  
+* Units of flux: n/cm^2/s/AA/ster
 * (McStas units are in general neutrons/second)
 *
 * Example general parameters (general):
@@ -29,79 +29,74 @@
 *          branchframe=0.5
 *
 * Example moderator specific parameters
-* (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00: 
+* (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00:
 *  Defining the normalised Maxwelian
 *     M(lam,T) = 2 a^2 lam^-5 exp(-a/lam^2); a=949/T; lam in AA; T in K,
 *   and the normalised pulse shape function
 *     F(t,tau,n) = ( exp(-t/tau) - exp(-nt/tau) ) n/(n-1)/tau,
 *   the flux distribution is given as
-*     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n) 
+*     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n)
 *                 + I2/(1+exp(chi2 lam-2.2))/lam*F(t,tau2*lam,n2)  )
 *
 *   a1: Ambient H20, short pulse, decoupled poisoned
-*          T=325 tau=22e-6 tau1=0 tau2=7e-6 n=5 n2=5 chi2=2.5 
-*          I0=9e10 I2=4.6e10    branch1=0 branch2=0.5 
+*          T=325 tau=22e-6 tau1=0 tau2=7e-6 n=5 n2=5 chi2=2.5
+*          I0=9e10 I2=4.6e10    branch1=0 branch2=0.5
 *
 *   a2: Ambient H20, short pulse, decoupled un-poisoned
-*          T=325 tau=35e-6 tau1=0 tau2=12e-6 n=5 n2=5 chi2=2.5 
-*          I0=1.8e11 I2=9.2e10    branch1=0 branch2=0.5 
+*          T=325 tau=35e-6 tau1=0 tau2=12e-6 n=5 n2=5 chi2=2.5
+*          I0=1.8e11 I2=9.2e10    branch1=0 branch2=0.5
 *
 *   a3: Ambient H20, short pulse, coupled
-*          T=325 tau=80e-6 tau1=400e-6 tau2=12e-6 n=20 n2=5 chi2=2.5 
-*          I0=4.5e11 I2=9.2e10    branch1=0.5 branch2=0.5 
+*          T=325 tau=80e-6 tau1=400e-6 tau2=12e-6 n=20 n2=5 chi2=2.5
+*          I0=4.5e11 I2=9.2e10    branch1=0.5 branch2=0.5
 *
 *   b1: Liquid H2, short pulse, decoupled poisoned
-*          T=50 tau=49e-6 tau1=0 tau2=7e-6 n=5 n2=5 chi2=0.9 
-*          I0=2.7e10 I2=4.6e10    branch1=0 branch2=0.5 
+*          T=50 tau=49e-6 tau1=0 tau2=7e-6 n=5 n2=5 chi2=0.9
+*          I0=2.7e10 I2=4.6e10    branch1=0 branch2=0.5
 *
 *   b2: Liquid H2, short pulse, decoupled un-poisoned
-*          T=50 tau=78e-6 tau1=0 tau2=12e-6 n=5 n2=5 chi2=0.9 
-*          I0=5.4e10 I2=9.2e10    branch1=0 branch2=0.5 
+*          T=50 tau=78e-6 tau1=0 tau2=12e-6 n=5 n2=5 chi2=0.9
+*          I0=5.4e10 I2=9.2e10    branch1=0 branch2=0.5
 *
-*   b3: Liquid H2, short pulse, coupled 
-*          T=50 tau=287e-6 tau1=0 tau2=12e-6 n=20 n2=5 chi2=0.9 
+*   b3: Liquid H2, short pulse, coupled
+*          T=50 tau=287e-6 tau1=0 tau2=12e-6 n=20 n2=5 chi2=0.9
 *          I0=2.3e11 I2=9.2e10    branch1=0 branch2=0.5
 *
 * %P
 * Input parameters:
 *
-* size:   (m)    Edge of cube shaped source 
+* size:   (m)    Edge of cube shaped source
 * Lmin:   (AA)   Lower edge of wavelength distribution
 * Lmax:   (AA)   Upper edge of wavelength distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
 * focus_xw:(m)   Width of focusing rectangle
 * focus_yh:(m)   Height of focusing rectangle
-* target_index:(1)  relative index of component to focus at, e.g. next is +1
-*                this is used to compute 'dist' automatically.
-* nu:     (Hz)   Frequency of pulses 
-* T:      (K)    Temperature of source 
-* tau:    (s)    long time decay constant for pulse, 1a 
-* tau1:   (s)    long time decay constant for pulse, 1b 
-*                  (only for coupled water, else 0)  
-* tau2:   (s/AA) long time decay constant for pulse, 2 
-* n:      (1)    pulse shape parameter 1 
-* n2:     (1)    pulse shape parameter 2 
+* target_index:(1)  relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* nu:     (Hz)   Frequency of pulses
+* T:      (K)    Temperature of source
+* tau:    (s)    long time decay constant for pulse, 1a
+* tau1:   (s)    long time decay constant for pulse, 1b (only for coupled water, else 0)
+* tau2:   (s/AA) long time decay constant for pulse, 2
+* n:      (1)    pulse shape parameter 1
+* n2:     (1)    pulse shape parameter 2
 * chi2:   (1/AA) lambda-distribution parameter in pulse 2
 * I0:     (flux) integrated flux 1 (in flux units, see above) (default 9e10)
 * I2:     (flux*AA) integrated flux 2 (default 4.6e10)
-* branch1: (1)   limit for switching between distribution 1 and 2. 
-*                (has effect only for coupled water, tau1>0)
-* branch2: (1)   limit for switching between distribution 1 and 2. 
-*                (default value 0.5)
-* branchframe: (1) limit for switching between 1st and 2nd pulse
-*                  (if only one pulse wanted: 1)
-* 
+* branch1: (1)   limit for switching between distribution 1 and 2. (has effect only for coupled water, tau1>0)
+* branch2: (1)   limit for switching between distribution 1 and 2. (default value 0.5)
+* branchframe: (1) limit for switching between 1st and 2nd pulse (if only one pulse wanted: 1)
+*
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT ESS_moderator_short
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size, Lmin, Lmax, dist, focus_xw, focus_yh, 
-                    nu=50, T=325, tau=22e-6, tau1=0, tau2=7e-6, n=5, n2=5, 
+SETTING PARAMETERS (size, Lmin, Lmax, dist, focus_xw, focus_yh,
+                    nu=50, T=325, tau=22e-6, tau1=0, tau2=7e-6, n=5, n2=5,
                     chi2=2.5, I0=9e10, I2=4.6e10, branch1=0, branch2=0.5 ,
                     branchframe=0, int target_index=+1)
 OUTPUT PARAMETERS (l_range, w_mult)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -133,14 +128,14 @@ INITIALIZE
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   }
-  
-  if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0 
+
+  if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0
     || branch1 == 1 || branch2 == 1 || tau == 0)
   {
     printf("ESS_moderator_short: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {Lmin Lmax dist tau} and 1 value for {n n2 branch1/2/frame}\n", NAME_CURRENT_COMP);
     exit(-1);
   }
-  
+
   Delta_t = 1.0/(double)nu;
   l_range = Lmax-Lmin;
   w_mult = size*size*1.0e4;     /* source area correction */
@@ -157,9 +152,9 @@ TRACE
   x = 0.5*size*randpm1();
   y = 0.5*size*randpm1();         /* Choose initial position */
 
-  randvec_target_rect_real(&xf, &yf, &r, &w_focus, 
-			   0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2); 
- 
+  randvec_target_rect_real(&xf, &yf, &r, &w_focus,
+			   0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
@@ -180,7 +175,7 @@ TRACE
   if (rand01() < branch2)
   {
     if (tau1>0)  /* coupled water */
-      if (rand01() < branch1)    
+      if (rand01() < branch1)
       {  /* FIRST CASE a */
         tau_l = tau;
         p = 1/(branch1*branch2);            /* Correct for switching prob. */
@@ -208,7 +203,7 @@ TRACE
     p = n2/(n2-1)*(1-exp(-(n2-1)*t/tau_l));/* Correct for true pulse shape */
     p /= (1-branch2);                     /* Correct for switching prob. */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;           
+    p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;
                                           /* Calculate true intensity */
   }
 
@@ -227,7 +222,7 @@ TRACE
 
  /* Go to per-second units */
  p*=nu;
- 
+
 %}
 
 MCDISPLAY
@@ -243,8 +238,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-

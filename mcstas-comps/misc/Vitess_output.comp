@@ -33,8 +33,7 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: Filename of neutron file to write. Default is standard
-*           output [string]
+* filename: Filename of neutron file to write. Default is standard output [string]
 * bufsize:  Size of neutron output buffer [records]
 * progress: If not zero, output dots as progress indicator [flag]
 *
@@ -46,7 +45,7 @@ DEFINE COMPONENT Vitess_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename = 0, int bufsize = 10000, int progress = 0)
 OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
   %include "general"
@@ -140,7 +139,7 @@ TRACE
   /* obuf[pos].Color   = vitess_col;
      obuf[pos].ID.IDNo = vitess_ID.IDNo;
      memcpy(obuf[pos].ID.IDGrp, vitess_ID.IDGrp, 2); */
-  
+
   p_out  += p;
   p2_out += p*p;
   ++pos;

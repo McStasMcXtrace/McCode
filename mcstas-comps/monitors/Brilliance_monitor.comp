@@ -12,7 +12,7 @@
 * Origin: DTU Physics
 * Release: McStas 1.12c
 *
-* Special "Brilliance" monitor. 
+* Special "Brilliance" monitor.
 *
 * %D
 * If used in the right setting, will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s. Conditions for proper units:
@@ -22,9 +22,9 @@
 * <li>Parametrise the Brilliance_monitor with the frequency of the source
 * <li>To not change the source TOF distribution, place the Brilliance monitor close to the source!
 * </ul>
-* 
+*
 * with a source of area 1x1cm illuminating/focusing to an area of 1x1cm a 1m distance, this monitor will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s
-* 
+*
 * Here is an example of the use of the component. Note how the mentioned Unit conditions are implemented in instrument code.
 *
 *COMPONENT Source = ESS_moderator_long(
@@ -42,22 +42,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* nlam:      Number of bins in wavelength (1)
-* nt:        Number of bins in TOF (1)
-* t_0:       Minimum time (us)
-* t_1:       Maximum time (us)
-* lambda_0:  Minimum wavelength detected (AA)
-* lambda_1:  Maximum wavelength detected (AA)
-* filename:  Defines filenames for the detector images. Stored as:<br>Peak_&lt;filename&gt; and Mean_&lt;filename&gt; (string)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
-* Freq:      Source frequency. Use freq=1 for reactor source (Hz)
-* srcarea:   Source area (cm^2)
-* tofcuts:   Flag to generate TOF-distributions as function of wavelength (1)
-* toflambda: Flag to generate TOF-lambda distribution output ´ (1)
-* source_dist: Distance from source. Beware when transporting through neutron optics! (m)
-* xwidth:      width of monitor (m)
-* yheight:     height of monitor (m)
-* 
+* nlam:       Number of bins in wavelength [1]
+* nt:         Number of bins in TOF [1]
+* t_0:        Minimum time [us]
+* t_1:        Maximum time [us]
+* lambda_0:   Minimum wavelength detected [AA]
+* lambda_1:   Maximum wavelength detected [AA]
+* filename:   Defines filenames for the detector images. Stored as:<br>Peak_&lt;filename&gt; and Mean_&lt;filename&gt; [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* Freq:       Source frequency. Use freq=1 for reactor source [Hz]
+* srcarea:    Source area [cm^2]
+* tofcuts:    Flag to generate TOF-distributions as function of wavelength [1]
+* toflambda:  Flag to generate TOF-lambda distribution output [1]
+* source_dist:Distance from source. Beware when transporting through neutron optics! [m]
+* xwidth:     width of monitor [m]
+* yheight:    height of monitor [m]
+*
 * OUTPUT PARAMETERS:
 *
 * Div_N:    Array of neutron counts
@@ -100,7 +100,7 @@ DECLARE
 INITIALIZE
   %{
     prsec=1e-6;
-    
+
     int i,j;
 
     tt_0 = t_0*prsec;
@@ -132,7 +132,7 @@ INITIALIZE
     ymax = yheight/2.0;
     xmin = -xmax;
     ymin = -ymax;
-    
+
     ster = xwidth * yheight/(source_dist*source_dist);
 
   %}
@@ -161,24 +161,24 @@ TRACE
 	BRIL_N[j][i]++;
         BRIL_p[j][i] += Pnorm;
         BRIL_p2[j][i] += Pnorm*Pnorm;
-	
+
       }
-    } 
+    }
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }  
+    }
   %}
 
 SAVE
 %{
   /* First, dump the 2D monitor */
-  
+
   /* For each Wavelength channel, find peak brilliance */
   int i,j,jmax;
   double Pnorm;
   char ff[256];
   char tt[256];
-  
+
   for (i=0; i<nlam; i++)
     {
       Pnorm = -1;
@@ -193,7 +193,7 @@ SAVE
 	  BRIL_shape[j] = BRIL_p[j][i];
 	  BRIL_shapeN[j] = BRIL_N[j][i];
 	  BRIL_shapeE[j] = BRIL_p2[j][i];
-	  
+
 	}
       if (tofcuts == 1) {
 	sprintf(ff, "Shape_%s_%g",filename,lambda_0+i*dlam);
@@ -228,7 +228,7 @@ SAVE
         ff);
 
   /* MPI related NOTE: Order is important here! The 2D-data used to generate wavelength-slices and calculate
-     the peak brilliance should be done LAST, otherwise we will get a factor of MPI_node_count too much as 
+     the peak brilliance should be done LAST, otherwise we will get a factor of MPI_node_count too much as
      scatter/gather has been performed on the arrays... */
   if (toflambda == 1) {
     sprintf(ff, "TOFL_%s",filename);
@@ -253,5 +253,3 @@ MCDISPLAY
 %}
 
 END
-
-

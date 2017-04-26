@@ -35,29 +35,28 @@
 * This target position will be set to its AT position. When targeting to centered
 * components, such as spheres or cylinders, define an Arm component where to focus at.
 *
-* Example: Res_sample(thickness=0.001,radius=0.02,yheight=0.4,focus_r=0.05,
-*     E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
+* Example: Res_sample(thickness=0.001,radius=0.02,yheight=0.4,focus_r=0.05, E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
 *
 * %P
 * INPUT PARAMETERS:
-* thickness:Thickness of hollow cylinder in (x,z) plane
-* radius:   Outer radius of hollow cylinder (m)
-* yheight:  vert. dimension of sample, as a height (m)
-* focus_r:  Radius of sphere containing target. (m)
+* thickness: Thickness of hollow cylinder in (x,z) plane [m]
+* radius:   Outer radius of hollow cylinder [m]
+* yheight:  vert. dimension of sample, as a height [m]
+* focus_r:  Radius of sphere containing target. [m]
 * target_x:
-* target_y: position of target to focus at (m)
+* target_y: position of target to focus at [m]
 * target_z:
 * E0:       Center of scattered energy range [meV]
 * dE:       half width of scattered energy range [meV]
 *
 * Optional parameters
-* xwidth:   horiz. dimension of sample, as a width (m)
-* zdepth:   depth of sample (m)
-* focus_xw: horiz. dimension of a rectangular area (m)
-* focus_yh: vert. dimension of a rectangular area (m)
-* focus_aw: horiz. angular dimension of a rectangular area (deg)
-* focus_ah: vert. angular dimension of a rectangular area (deg)
-* target_index: relative index of component to focus at, e.g. next is +1 (1)
+* xwidth:   horiz. dimension of sample, as a width [m]
+* zdepth:   depth of sample [m]
+* focus_xw: horiz. dimension of a rectangular area [m]
+* focus_yh: vert. dimension of a rectangular area [m]
+* focus_aw: horiz. angular dimension of a rectangular area [deg]
+* focus_ah: vert. angular dimension of a rectangular area [deg]
+* target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
 * %E
 *******************************************************************************/
@@ -68,7 +67,7 @@ SETTING PARAMETERS (thickness=0,radius=0.01,focus_r=0.05,E0=14,dE=2,
         target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
         focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, int target_index=0)
 OUTPUT PARAMETERS (res_struct)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
   struct Res_sample_struct
@@ -82,7 +81,7 @@ SHARE
     };
 %}
 
-DECLARE 
+DECLARE
 %{
   struct Res_sample_struct res_struct;
 %}
@@ -105,7 +104,7 @@ INITIALIZE
   }
   else
   { res_struct.tx = target_x; res_struct.ty = target_y; res_struct.tz = target_z; }
-  
+
   if (!(res_struct.tx || res_struct.ty || res_struct.tz)) {
     printf("Res_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);

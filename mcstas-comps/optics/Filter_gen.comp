@@ -55,17 +55,8 @@
 * in the component instance parameters.
 *
 *%P
-* filename: [str] name of the filename to look at (first two columns data)
-*           data D should rather be sorted (ascending order) and monotonic
-*           filename may contain options (see below) as comment
-* options: [str] string that can contain:
-*          "[ k p ]"      or "wavevector" for filename type,
-*          "[ omega p]"   or "energy",
-*          "[ lambda p ]" or "wavelength",
-*          "set"          to set the weight according to the table,
-*          "multiply"     to multiply (instead of set) the weight by factor,
-*          "add"          to add to current flux,
-*          "verbose"      to display additional informations.
+* filename: [str] name of the filename to look at (first two columns data). Data D should rather be sorted (ascending order) and monotonic filename may contain options (see below) as comment
+* options: [str] string that can contain: "[ k p ]"      or "wavevector" for filename type, "[ omega p]"   or "energy", "[ lambda p ]" or "wavelength", "set"          to set the weight according to the table,"multiply"     to multiply (instead of set) the weight by factor,"add"          to add to current flux,"verbose"      to display additional informations.
 * thickness: [1] relative thickness. D = D^(thickness).
 * scaling: [1] scaling factor. D = D*scaling.
 * xmin:    [m] dimension of filter
@@ -81,10 +72,10 @@
 ***********************************************************************/
 DEFINE COMPONENT Filter_gen
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, string options=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+SETTING PARAMETERS (string filename=0, string options=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
   xwidth=0, yheight=0, thickness=1, scaling=1, verbose=0)
 OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -134,12 +125,12 @@ INITIALIZE
 %{
   Mode_Table = FLUX_ADAPT_MULT;
   Type_Table = UNKNOWN_TABLE;
-  
+
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   FilterGen_Mode(options, &Mode_Table, &Type_Table, &verbose);
-  
+
   if (filename != NULL && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
   {
     if (Table_Read(&pTable, filename, 1) <= 0) /* read 1st block data from filename into pTable */

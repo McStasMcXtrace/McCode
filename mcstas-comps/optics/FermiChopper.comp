@@ -33,9 +33,7 @@
 * super-mirror coating.
 *
 * Example:
-* FermiChopper(phase=-50.0, radius=0.04, nu=100,
-*   yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0,
-*   Qc=0.02176, alpha=2.33, m=0.0, length=0.012, eff=0.95)
+* FermiChopper(phase=-50.0, radius=0.04, nu=100, yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0, Qc=0.02176, alpha=2.33, m=0.0, length=0.012, eff=0.95)
 *
 * %VALIDATION
 * Apr 2005: extensive external test, most problems solved (cf. 'Bugs')
@@ -67,12 +65,12 @@
 * R0:       [1]    low-angle reflectivity
 *
 * Constants to reset time of flight:
-* zero_time:[1]   set time to zero: 0=no,  1=once per half cycle, 2=auto adjust phase
+* zero_time:[1]   set time to zero: 0=no, 1=once per half cycle, 2=auto adjust phase
 * phase:    [deg] chopper phase at t=0
 * delay:    [s]   sets phase so that transmision is centered on 'delay'
 *
 * OUTPUT PARAMETERS:
-* FCVars :  [-]     structure
+* FCVars :  []     structure
 *
 * %L
 * <a href="Vitess_ChopperFermi.html">Vitess_ChopperFermi</a> component by

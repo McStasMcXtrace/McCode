@@ -21,21 +21,20 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
-* nL:       Number of bins in wavelength (1)
-* nt:       Number of bins in TOF (1)
-* tmin:     Minimum time (us)
-* tmax:     Maximum time (us)
-* Lmin:     Minimum wavelength detected (AA)
-* Lmax:     Maximum wavelength detected (AA)
-* filename: Name of file in which to store the detector image (string)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
-*
+* xmin:     Lower x bound of detector opening [m]
+* xmax:     Upper x bound of detector opening [m]
+* ymin:     Lower y bound of detector opening [m]
+* ymax:     Upper y bound of detector opening [m]
+* xwidth:   Width/diameter of detector (x). Overrides xmin, xmax [m]
+* yheight:  Height of detector (y). Overrides ymin, ymax [m]
+* nL:       Number of bins in wavelength [1]
+* nt:       Number of bins in TOF [1]
+* tmin:     Minimum time [us]
+* tmax:     Maximum time [us]
+* Lmin:     Minimum wavelength detected [AA]
+* Lmax:     Maximum wavelength detected [AA]
+* filename: Name of file in which to store the detector image [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,10 +47,10 @@
 
 DEFINE COMPONENT TOFLambda_monitor
 DEFINITION PARAMETERS (nL=20, nt=128, tmin, tmax)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
   xwidth=0, yheight=0, Lmin, Lmax, restore_neutron=0)
 OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
   %{
     double TOFL_N[nt][nL];
@@ -103,10 +102,10 @@ TRACE
         TOFL_p[j][i] += p;
         TOFL_p2[j][i] += p*p;
       }
-    } 
+    }
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }  
+    }
   %}
 SAVE
   %{
@@ -130,5 +129,3 @@ MCDISPLAY
 %}
 
 END
-
-

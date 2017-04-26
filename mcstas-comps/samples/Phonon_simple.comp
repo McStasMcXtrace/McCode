@@ -33,22 +33,22 @@
 * INPUT PARAMETERS:
 * radius:  [m] Outer radius of sample in (x,z) plane
 * yheight: [m] Height of sample in y direction
-* sigma_abs:[barns] Absorption cross section at 2200 m/s per atom
-* sigma_inc:[barns] Incoherent scattering cross section per atom
-* a:      [AA] fcc Lattice constant 
+* sigma_abs: [barns] Absorption cross section at 2200 m/s per atom
+* sigma_inc: [barns] Incoherent scattering cross section per atom
+* a:      [AA] fcc Lattice constant
 * b:      [fm] Scattering length
 * M:    [a.u.] Atomic mass
-* c:[meV/AA^(-1)] Velocity of sound
+* c: [meV/AA^(-1)] Velocity of sound
 * DW:      [1] Debye-Waller factor
 * T:       [K] Temperature
 * focus_r: [m] Radius of sphere containing target.
-* focus_xw:[m] horiz. dimension of a rectangular area
-* focus_yh:[m] vert.  dimension of a rectangular area 
-* focus_aw:[deg] horiz. angular dimension of a rectangular area 
-* focus_ah:[deg] vert.  angular dimension of a rectangular area 
-* target_x:[m] position of target to focus at . Transverse coordinate
-* target_y:[m] position of target to focus at. Vertical coordinate
-* target_z:[m] position of target to focus at. Straight ahead.
+* focus_xw: [m] horiz. dimension of a rectangular area
+* focus_yh: [m] vert.  dimension of a rectangular area
+* focus_aw: [deg] horiz. angular dimension of a rectangular area
+* focus_ah: [deg] vert.  angular dimension of a rectangular area
+* target_x: [m] position of target to focus at . Transverse coordinate
+* target_y: [m] position of target to focus at. Vertical coordinate
+* target_z: [m] position of target to focus at. Straight ahead.
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
 * OUTPUT PARAMETERS:
@@ -67,7 +67,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,b,M,c,DW,T,
   target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0)
 OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a_v, DV, parms)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 #ifndef PHONON_SIMPLE
@@ -168,7 +168,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
      for (i=0; i<steps; i++)
      {
       root = zridd(f, brack_low+range*i/(int)steps,
-                   brack_low+range*(i+1)/(int)steps, 
+                   brack_low+range*(i+1)/(int)steps,
                    (double *)parms, ROOTACC);
       if (root != UNUSED)
       {
@@ -238,7 +238,7 @@ INITIALIZE
   V_my_s = (V_rho * 100 * sigma_inc);
   V_my_a_v = (V_rho * 100 * sigma_abs * 2200);
   DV = 0.001;   /* Velocity change used for numerical derivative */
-  
+
   /* now compute target coords if a component index is supplied */
   if (!target_index && !target_x && !target_y && !target_z) target_index=1;
   if (target_index){
@@ -377,10 +377,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-

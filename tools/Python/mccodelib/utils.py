@@ -414,7 +414,7 @@ def parse_header(text):
     # params
     par_doc = None
     for l in bites[3].splitlines():
-        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^]+)\](.*)', l)
+        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|;\*]+)\](.*)', l)
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)

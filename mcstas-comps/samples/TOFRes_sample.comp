@@ -47,23 +47,23 @@
 * %P
 * INPUT PARAMETERS:
 *
-* thickness:Thickness of hollow cylinder in (x,z) plane
-* radius:   Outer radius of hollow cylinder (m)
-* yheight:  vert.  dimension of sample, as a height (m)
-* focus_r:  Radius of sphere containing target. (m)
-* target_index: relative index of component to focus at, e.g. next is +1 (1)
-* time_bin: position of time bin (us)
-* time_width: width of time bin (us)
+* thickness: Thickness of hollow cylinder in (x,z) plane [m]
+* radius:   Outer radius of hollow cylinder [m]
+* yheight:  vert.  dimension of sample, as a height [m]
+* focus_r:  Radius of sphere containing target [m]
+* target_index: relative index of component to focus at, e.g. next is +1 [1]
+* time_bin: position of time bin [us]
+* time_width: width of time bin [us]
 *
 * Optional parameters
-* xwidth:   horiz. dimension of sample, as a width (m)
-* zdepth:   depth of sample (m)
-* focus_xw: horiz. dimension of a rectangular area (m)
-* focus_yh: vert.  dimension of a rectangular area (m)
-* focus_aw: horiz. angular dimension of a rectangular area (deg)
-* focus_ah: vert.  angular dimension of a rectangular area (deg)
+* xwidth:   horiz. dimension of sample, as a width [m]
+* zdepth:   depth of sample [m]
+* focus_xw: horiz. dimension of a rectangular area [m]
+* focus_yh: vert.  dimension of a rectangular area [m]
+* focus_aw: horiz. angular dimension of a rectangular area [deg]
+* focus_ah: vert.  angular dimension of a rectangular area [deg]
 * target_x:
-* target_y: position of target to focus at (m)
+* target_y: position of target to focus at [m]
 * target_z:
 * %E
 *******************************************************************************/
@@ -78,9 +78,9 @@ SETTING PARAMETERS (thickness=0,radius=0.01,yheight=0.05,focus_r=0.05,
     focus_aw=0, focus_ah=0, xwidth=0, zdepth=0, int target_index=0)
 
 OUTPUT PARAMETERS (res_struct, f, E0, dE)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
-SHARE 
+SHARE
 %{
   struct Res_sample_struct
   {

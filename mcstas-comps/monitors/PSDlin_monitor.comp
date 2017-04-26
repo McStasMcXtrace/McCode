@@ -22,15 +22,15 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* nx:       Number of x bins (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xmin:     Lower x bound of detector opening [m]
+* xmax:     Upper x bound of detector opening [m]
+* ymin:     Lower y bound of detector opening [m]
+* ymax:     Upper y bound of detector opening [m]
+* xwidth:   Width of detector. Overrides xmin, xmax [m]
+* yheight:  Height of detector. Overrides ymin, ymax [m]
+* nx:       Number of x bins [1]
+* filename: Name of file in which to store the detector image [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -43,10 +43,10 @@
 
 DEFINE COMPONENT PSDlin_monitor
 DEFINITION PARAMETERS (nx=20)
-  SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+  SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
     xwidth=0, yheight=0, restore_neutron=0)
 OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
   %{
@@ -93,7 +93,7 @@ TRACE
       PSDlin_N[i]++;
       PSDlin_p[i] += p;
       PSDlin_p2[i] += p*p;
-    } 
+    }
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
@@ -121,6 +121,3 @@ MCDISPLAY
 %}
 
 END
-
-
-

@@ -9,7 +9,7 @@
 *
 * %I
 *
-* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby 
+* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby
 * Date: January 2013
 * Version: $Revision: 1.12 $
 * Release: McStas 2.1
@@ -25,8 +25,6 @@
 *
 * %P
 * Input parameters:
-*
-* (none)
 *
 * %E
 *******************************************************************************/
@@ -44,7 +42,7 @@ SHARE
     long long int _nid;
     int _comp, _idx;
   };
-  
+
 #define SCATTER_LOG do { \
     if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
       struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
@@ -87,7 +85,7 @@ SHARE
 %}
 
 DECLARE
-%{ 
+%{
   int bounce_store_index;
   int bounce_store_overrun;
 %}
@@ -110,7 +108,7 @@ TRACE
 
 #undef mcabsorb
 #define mcabsorb scatter_logger_stop
-  bounce_store_index=0;/*we are now starting logging so we should start afresh*/    
+  bounce_store_index=0;/*we are now starting logging so we should start afresh*/
   if (bounce_store_index<BOUNCE_LOG_SIZE){
     struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);
     Coords ctmp=POS_A_CURRENT_COMP;

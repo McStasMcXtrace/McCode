@@ -42,14 +42,10 @@
 *
 * Examples:
 * Reflection function parametrization
-* Pol_mirror(zwidth = 0.40, yheight = 0.40,
-*             rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
+* Pol_mirror(zwidth = 0.40, yheight = 0.40, rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
 *
 * Table function
-* Pol_mirror(zwidth = 0.40, yheight = 0.40,
-*             rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
-*             rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl",
-*             useTables=1)
+* Pol_mirror(zwidth = 0.40, yheight = 0.40, rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl", rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", useTables=1)
 *
 * See also the example instrument Test_Pol_Mirror (under tests).
 *
@@ -68,7 +64,7 @@
 * rDownFunc: Reflection function for spin down (q, *par, *r) [1]
 * rDownPar:  Parameters for rDownFunc [1]
 * useTables: Parameters are 0: Values, 1: Table names [1]
-* p_reflect: Proportion of reflected events. Use 0 to only get the transmitted beam, and 1 to get only the reflected beam. Use -1 to use the mirror reflectivity. This value is purely computational and is not related to the actual reflectivity (1)
+* p_reflect: Proportion of reflected events. Use 0 to only get the transmitted beam, and 1 to get only the reflected beam. Use -1 to use the mirror reflectivity. This value is purely computational and is not related to the actual reflectivity [1]
 *
 * OUTPUT PARAMETERS:
 * SCATTERED:    is 1 for reflected, and 2 for transmitted neutrons

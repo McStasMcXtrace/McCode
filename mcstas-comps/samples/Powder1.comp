@@ -32,8 +32,7 @@
 *
 * INPUT PARAMETERS
 *
-* d_phi:    Angle corresponding to the vertical angular range
-*             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
+* d_phi:    Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * radius:  Radius of sample in (x,z) plane [m]
 * yheight: Height of sample y direction [m]
 * pack:    Packing factor [1]
@@ -50,8 +49,7 @@
 * xwidth:  horiz. dimension of sample, as a width [m]
 * zdepth:  depth of box sample [m]
 *
-* Variables calculated in the component
-*
+* Variables calculated in the component:
 * my_s: Attenuation factor due to scattering [m^-1]
 * my_a: Attenuation factor due to absorbtion [m^-1]
 *
@@ -68,12 +66,12 @@ DEFINE COMPONENT Powder1
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (radius=0.01, yheight=0.05, xwidth=0, zdepth=0, 
+SETTING PARAMETERS (radius=0.01, yheight=0.05, xwidth=0, zdepth=0,
   q= 1.8049, d=0, d_phi= 0,
   pack= 1, j= 6, DW= 1, F2= 56.8, Vc= 85.0054, sigma_abs= 0.463)
 
 OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v, isrect)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{

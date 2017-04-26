@@ -77,11 +77,11 @@
 * Ws:      [AA-1]       Width of supermirror cut-off
 *
 * Optional parameters:
-* l:       (m)          length of bender l=r*Win
+* l:       [m]          length of bender l=r*Win
 *
 * OUTPUT PARAMETERS:
-* bk:      (m)          Width of 1 channel + 1 separating blade
-* mWin:    (rad)        Angle of the deflection of the whole bender
+* bk:      [m]          Width of 1 channel + 1 separating blade
+* mWin:    [rad]        Angle of the deflection of the whole bender
 *
 * %L
 * <a href="../contrib/Guide_curved.comp.html>Guide_curved</a> (contributed)

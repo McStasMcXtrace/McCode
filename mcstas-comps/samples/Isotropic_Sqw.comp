@@ -176,70 +176,43 @@
 *
 * %P
 * INPUT PARAMETERS:
-* Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w)
-*                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1.
-*                     Use 0, NULL or "" to disable.
-* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w).
-*                     Incoherent (self) part.
-*                     Use 0, NULL or "" to scatter isotropically (V-like).
+* Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w) Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1. Use 0, NULL or "" to disable.
+* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w). Incoherent (self) part. Use 0, NULL or "" to scatter isotropically (V-like).
 * sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
 * sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
 * rho:       [AA-3] Density of scattering elements (nb atoms/unit cell V_0).
-* T:            [K] Temperature of sample, detailed balance. Use T=0 to disable it.
-*                   and T=-1 to automatically set it from non-classical S(q,w).
+* T:            [K] Temperature of sample, detailed balance. Use T=0 to disable it. and T=-1 to automatically set it from non-classical S(q,w).
 *
 * Geometry parameters:
 * radius:       [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
 * xwidth:       [m] width for a box sample shape
-* yheight:      [m] Height of sample in vertical direction for box/cylinder
-*                     shapes
+* yheight:      [m] Height of sample in vertical direction for box/cylinder shapes
 * zdepth:       [m] depth for a box sample shape
-* thickness:    [m] Thickness of hollow sample
-*                     Negative value extends the hollow volume outside of the box/cylinder.
+* thickness:    [m] Thickness of hollow sample Negative value extends the hollow volume outside of the box/cylinder.
 *
 * OPTIONAL PARAMETERS:
-* concentric:   [1] Indicate that this component has a hollow geometry and
-*                   may contain other components. It should then be duplicated
-*                   after the inside part (only for box, cylinder, sphere) [1]
-*                   See description for an example.
-* geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry.
-*                   The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
-* order:        [1] Limit multiple scattering up to given order
-*                     0:all (default), 1:single, 2:double, ...
-* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
-*                   A verbosity>1 also computes dispersions and S(q,w) analysis.
-* d_phi:      [deg] scattering vertical angular spreading (usually the height
-*                     of the next component/detector). Use 0 for full space.
-*                     This is only relevant for single scattering (order=1).
+* concentric:   [1] Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere) [1]
+* geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* order:        [1] Limit multiple scattering up to given order 0:all (default), 1:single, 2:double, ...
+* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug). A verbosity>1 also computes dispersions and S(q,w) analysis.
+* d_phi:      [deg] scattering vertical angular spreading (usually the height of the next component/detector). Use 0 for full space. This is only relevant for single scattering (order=1).
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
-* threshold:    [1] Value under which S(Q,w) is not accounted for.
-*                     to set according to the S(Q,w) values, i.e. not too low.
-* p_interact:   [1] Force a given fraction of the beam to scatter, keeping
-*                   intensity right, to enhance small signals (-1 unactivate).
-* norm:         [1] Normalize S(q,w) when -1 (default). Use raw data when 0,
-*                     multiply S(q,w) when norm>0.
-* classical:    [1] Assumes the S(q,w) data from the files is a classical S(q,w),
-*                     and multiply that data by exp(hw/2kT) on up/down energy sides.
-*                     Use 0 when obtained from raw experiments, 1 from molecular dynamics.
-*                     Use -1 to guess from a data set including both energy sides.
+* threshold:    [1] Value under which S(Q,w) is not accounted for. to set according to the S(Q,w) values, i.e. not too low.
+* p_interact:   [1] Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
+* norm:         [1] Normalize S(q,w) when -1 (default). Use raw data when 0, multiply S(q,w) when norm>0.
+* classical:    [1] Assumes the S(q,w) data from the files is a classical S(q,w), and multiply that data by exp(hw/2kT) on up/down energy sides. Use 0 when obtained from raw experiments, 1 from molecular dynamics. Use -1 to guess from a data set including both energy sides.
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
 * powder_Vc:          [AA^3] volume of the unit cell
-* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in
-*                              barns (barns=1 for laz, barns=0 for lau type files).
+* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
 *
 * OUTPUT PARAMETERS:
-* VarSqw: internal structure including
-*         dq=wavevector transfer Kf-Ki in Angs-1;
-*         dw=energy transfer Ef-Ei in meV;
-*         type=interaction type of event as
-*         'c' (coherent),  't' (transmitted)
-*         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
+* VarSqw: internal structure including  dq=wavevector transfer Kf-Ki in Angs-1; dw=energy transfer Ef-Ei in meV; type=interaction type of event as 'c' (coherent),  't' (transmitted) 'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
 *
 * %Links
@@ -415,7 +388,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double single_coh;
   double single_inc;
   double multi;
-  
+
   double rw, rq;
 };
 
@@ -712,10 +685,10 @@ int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
 int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int index_w)
 {
   int index_q=0;
-  
+
   if (randnum <0) randnum=0;
   if (randnum >1) randnum=1;
-  
+
   /* benefit from fast lookup table if exists */
   if (Sqw.QW_lookup && Sqw.QW_lookup[index_w]) {
     index_q = Sqw.QW_lookup[index_w][(long)floor(randnum*Sqw.lookup_length)]-1;
@@ -907,8 +880,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
 #ifdef USE_MPI
     /* sum all bits of the integrals with MPI */
     if (mpi_node_count > 1) {
-      mc_MPI_Sum(&sq, 1); mc_MPI_Sum(&sq_cl, 1); 
-      mc_MPI_Sum(&w1, 1); mc_MPI_Sum(&w3, 1); 
+      mc_MPI_Sum(&sq, 1); mc_MPI_Sum(&sq_cl, 1);
+      mc_MPI_Sum(&w1, 1); mc_MPI_Sum(&w3, 1);
     }
 #endif
     sq    *= Sqw_Data->w_step;         /* S(q) = \int S(q,w) dw = structure factor */
@@ -943,8 +916,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       Table_SetElement(&Sqw_moments[5],    index_q, 0, sq_cl);
 
   } /* for index_q */
-  
-  
+
+
 
   /* display some usefull information, only once in MPI mode (MASTER) */
   if (Sqw->Temperature > 0) {
@@ -956,7 +929,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     double CELE       = 1.602176487e-19;  /* [C] Elementary charge CODATA 2006 'e' */
     double meV2Hz     = CELE/HBAR/1000/2/PI; /* 1 meV = 241.80e9 GHz */
     double gqw_sum    = 0;
-    
+
     /* classical Sqw */
     sprintf(c, "%s_%s_cl.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
     Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "'S(q,w)*exp(hw/2kT) classical limit' Energy [meV]",
@@ -988,7 +961,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         /* HBAR = [J*s] */
         double c_T = 2*PI*w_c*meV2Hz/q_min/1e10;                  /* meV*Angs -> m/s */
         double ChiT= S0/(KB*Sqw->Temperature*Sqw->mat_rho*1e30);
-        printf("# Isothermal compressibility Chi_T=%g [Pa-1] (Egelstaff  p201 Eq 10.21) at q=%g [Angs-1]\n", 
+        printf("# Isothermal compressibility Chi_T=%g [Pa-1] (Egelstaff  p201 Eq 10.21) at q=%g [Angs-1]\n",
           ChiT, q_min);
         printf("# Isothermal sound velocity    c_T=%g [m/s]  (Lovesey T1 p210 Eq 5.197) at q=%g [Angs-1]\n",
           c_T, q_min);
@@ -1038,7 +1011,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     Gqw.min_x        = 0;
     Gqw.max_x        = Sqw_Data->q_max;
     Gqw.step_x       = Sqw_Data->q_step;
-    
+
     for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
       double w        = -Sqw_Data->w_max + index_w*Sqw_Data->w_step; /* w value in Sqw_full */
       double gw       = 0;
@@ -1067,7 +1040,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         Table_SetElement(&Gqw, index_q, index_w, gqw / gqw_sum);
       }
     }
-    
+
     /* write Gqw and free memory */
     if (Sqw_Data->w_bins > 1) {
       sprintf(c, "%s_%s.gqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
@@ -1083,7 +1056,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     Table_Write(Sqw_moments[1], c, "Momentum [Angs-1]", "int w S(q,w) dw (recoil) q^2/2m [meV]",
       0,Sqw_Data->q_max,0,0);
     sprintf(c, "%s_%s.w_l", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_moments[4], c, "Momentum [Angs-1]", "w_l(q) harmonic frequency [meV]", 
+    Table_Write(Sqw_moments[4], c, "Momentum [Angs-1]", "w_l(q) harmonic frequency [meV]",
       0,Sqw_Data->q_max,0,0);
     sprintf(c, "%s_%s.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
     Table_Write(Sqw_Data->Sqw, c, "Momentum [Angs-1]", "'S(q,w) dynamical structure factor [meV-1]' Energy [meV]",
@@ -1093,12 +1066,12 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       sprintf(c, "%s_%s.w_c",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
       Table_Write(Sqw_moments[3], c, "Momentum [Angs-1]", "w_c(q) collective excitation [meV]", 0,Sqw_Data->q_max,0,0);
       sprintf(c, "%s_%s_cl.sq",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw", 
+      Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw",
         0,Sqw_Data->q_max,0,0);
       sprintf(c, "%s_%s.gw",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
       Table_Write(Sqw_moments[6], c, "Energy [meV]", "'Generalized effective density of states' Energy [meV]",
         -Sqw_Data->w_max,Sqw_Data->w_max,0,0);
-      
+
     }
   }
   sprintf(c, "%s_%s.sq",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
@@ -1343,7 +1316,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   );
 
   double w_file2full[w_bins]; /* lookup table for fast file -> Sqw_full allocation */
-  
+
   for (index_w=0; index_w < w_bins; w_file2full[index_w++]=0);
 
 #ifdef USE_MPI
@@ -1390,10 +1363,10 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (mpi_node_count > 1)
     mc_MPI_Sum(w_file2full, w_bins);
 #endif
-  
+
   double q_file2full[q_bins];
   for   (index_q=0; index_q < q_bins; q_file2full[index_q++]=0);
-  
+
 #ifdef USE_MPI
   for (index_q=mpi_node_rank; index_q < q_bins; index_q+=mpi_node_count) {
 #else
@@ -1460,10 +1433,10 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (mpi_node_count > 1)
     mc_MPI_Sum(Sqw_full.data, q_bins*w_bins);
 #endif
-  
+
   /* free memory and store limits for new full Sqw table */
   Table_Free_Array(Table_Array);
-  
+
   /* if only one S(q,w) side is given, it is symmetrised by mirroring, then M1=0 */
 
   /* (5) test if the Sqw_full is classical or not by computing the 1st moment (=0 for classical) */
@@ -1542,12 +1515,12 @@ struct Sqw_Data_struct *Sqw_readfile(
       printf(  "Isotropic_Sqw: %s: Temperature computed from S(q,w) data from %s is T=%g [K] (not set here).\n",
         Sqw->compname, file, T);
       if (Sqw->Temperature == 0)
-        printf("Warning:       %s: Use T=-1 to set it. Currently using T=%g, i.e. no detailed balance.\n", 
+        printf("Warning:       %s: Use T=-1 to set it. Currently using T=%g, i.e. no detailed balance.\n",
           Sqw->compname, Sqw->Temperature);
     }
     if (Sqw->sqw_classical == 0 && Sqw->Temperature>0 && fabs(Sqw->Temperature - T) > 0.1*Sqw->Temperature)
       printf("WARNING:       %s: The temperature %g [K] guessed from the non-classical\n"
-             "               S(q,w) %s does not match the requested T=%g [K].\n", 
+             "               S(q,w) %s does not match the requested T=%g [K].\n",
              Sqw->compname, T, file, Sqw->Temperature);
     );
   }
@@ -1699,9 +1672,9 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* compute the maximum incoming energy that can be handled */
   Sqw_Data->Ei_max = 2*w_max;
-  
+
   /* Checked in different ways in Powder and "proper inelastic" case */
-  if (w_step==1) { 
+  if (w_step==1) {
     /* Powder */
     double Ei_max_q = (q_max*K2V)*(q_max*K2V)*VS2E/2;
     if (Ei_max_q > Sqw_Data->Ei_max) Sqw_Data->Ei_max = Ei_max_q;
@@ -1721,7 +1694,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       }
     }
   }
-  
+
   MPI_MASTER(
   if (Sqw->verbose_output >= 2)
     printf("Isotropic_Sqw: %s: Creating Sigma(Ei=0:%g [meV]) with %li entries...(%s %s)\n",
@@ -1768,7 +1741,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* set up 'density of states' */
   /* uses: Sqw_full and w axes */
   Sqw_Data->SW =
-    (struct Sqw_W_struct*)calloc(w_bins, sizeof(struct Sqw_W_struct));  
+    (struct Sqw_W_struct*)calloc(w_bins, sizeof(struct Sqw_W_struct));
 
   if (!Sqw_Data->SW) {
     printf("Isotropic_Sqw: %s: Cannot allocate SW (%li bytes).\n"
@@ -1800,7 +1773,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     Table_Free(&iqSq);
     return(NULL);
   }
-  
+
   /* normalize Pw distribution to 0:1 range */
   for (index_w=0; index_w < w_bins ; index_w++) {
     Sqw_Data->SW[index_w].cumul_proba /= Sqw_Data->SW[w_bins-1].cumul_proba;
@@ -2110,13 +2083,13 @@ INITIALIZE
            NAME_CURRENT_COMP);
     order = 1;
   }
-  
+
   /* request statistics */
   if (VarSqw.verbose_output > 1) {
     Sqw_diagnosis(&VarSqw, &VarSqw.Data_coh);
     Sqw_diagnosis(&VarSqw, &VarSqw.Data_inc);
   }
-  
+
   for (i=0; i < 2; i++) {
     struct Sqw_Data_struct Data_sqw;
     Data_sqw =  (i == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
@@ -2435,7 +2408,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (index_w >= Data_sqw.w_bins) index_w = Data_sqw.w_bins-1;
         randmax  = Data_sqw.SW[index_w].cumul_proba;
         tmp_rand = rand0max(randmax < 1 ? randmax : 1);
-        
+
         /* energy index for rand > cumul SW */
         index_w  = Sqw_search_SW(Data_sqw, tmp_rand);
         VarSqw.rw = (double)index_w;
@@ -2480,7 +2453,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
         randmax  = Data_sqw.SQW[index_w][index_q].cumul_proba;
         tmp_rand = rand0max(randmax < 1 ? randmax : 1);
-        
+
         /* momentum index for rand > cumul SQ|W */
         index_q  = Sqw_search_Q_proba_per_w(Data_sqw, tmp_rand, index_w);
         VarSqw.rq = (double)index_q;
@@ -2523,7 +2496,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
             printf("Isotropic_Sqw: %s: Warning: No suitable q transfer\n"
                "               for w=%g\n",
             NAME_CURRENT_COMP, omega);
-          VarSqw.neutron_removed++; 
+          VarSqw.neutron_removed++;
           continue; /* no Q value for this w choice */
         }
 
@@ -2652,7 +2625,7 @@ VarSqw.theta= theta;
 
 if (SCATTERED) {
 
-  
+
 
   if (SCATTERED == 1) {
     if (VarSqw.type == 'c') VarSqw.single_coh += p;

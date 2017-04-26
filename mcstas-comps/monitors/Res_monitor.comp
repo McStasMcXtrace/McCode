@@ -22,35 +22,30 @@
 * scattering events in the sample along with their intensities in the
 * detector. The output file may be analyzed with the mcresplot front-end.
 *
-* Example: Res_monitor(filename="Output.res", res_sample_comp=RSample,
-*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+* Example: Res_monitor(filename="Output.res", res_sample_comp=RSample, xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
 * Setting the monitor geometry.
 *   The optional parameter 'options' may be set as a string with the
 *   following keywords. Default is rectangular ('square'):
 *     box                       Box of size xwidth, yheight, zdepth
-*     cylinder                  To get a cylindrical monitor
-*                                (diameter is xwidth, height is yheight).
-*     banana                    Same as cylinder, without top/bottom,
-*                                on restricted angular area
+*     cylinder                  To get a cylindrical monitor (diameter is xwidth, height is yheight).
+*     banana                    Same as cylinder, without top/bottom, on restricted angular area
 *     disk                      Disk flat xy monitor. diameter is xwidth.
-*     sphrere                   To get a spherical monitor (e.g. a 4PI)
-*                                (diameter is xwidth).
+*     sphrere                   To get a spherical monitor (e.g. a 4PI) (diameter is xwidth).
 *     square                    Square flat xy monitor (xwidth, yheight)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:            Lower x bound of detector opening (m)
-* xmax:            Upper x bound of detector opening (m)
-* ymin:            Lower y bound of detector opening (m)
-* ymax:            Upper y bound of detector opening (m)
-* zmin:            Lower z bound of detector opening (m)
-* zmax:            Upper z bound of detector opening (m)
-* filename:        Name of output file. If unset, use automatic name (string)
-* res_sample_comp: Name of Res_sample component in the instrument
-*                  definition [no quotes]
-* bufsize  :       Number of events to store. Use 0 to store all [1]
+* xmin:            Lower x bound of detector opening [m]
+* xmax:            Upper x bound of detector opening [m]
+* ymin:            Lower y bound of detector opening [m]
+* ymax:            Upper y bound of detector opening [m]
+* zmin:            Lower z bound of detector opening [m]
+* zmax:            Upper z bound of detector opening [m]
+* filename:        Name of output file. If unset, use automatic name [string]
+* res_sample_comp: Name of Res_sample component in the instrument definition [no quotes]
+* bufsize:         Number of events to store. Use 0 to store all [1]
 *
 * OPTIONAL PARAMETERS (derived from Monitor_nD)
 *
@@ -58,8 +53,8 @@
 * yheight: (m)  Height of detector
 * zdepth:  (m)  Thichness of detector
 * radius:  (m)  Radius of sphere/cylinder monitor
-* options: (str)String that specifies the geometry of the monitor
-* restore_neutron(1): If set, the monitor does not influence the neutron state
+* options: (str) String that specifies the geometry of the monitor
+* restore_neutron: (1) If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -77,7 +72,7 @@ SETTING PARAMETERS (string filename=0, string options=0, xwidth=.1, yheight=.1, 
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0,restore_neutron=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -94,7 +89,7 @@ DECLARE
 INITIALIZE
 %{
   long buffer_index=0;
-  
+
   int i;
   char tmp[1024];
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
@@ -110,7 +105,7 @@ INITIALIZE
     sprintf(Vars.option, "%s borders list all, x vx sx y vy sy z vz sz t ", tmp);
   else
     sprintf(Vars.option, "%s borders list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
-    
+
   if (radius) xwidth = 2*radius;
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,0);

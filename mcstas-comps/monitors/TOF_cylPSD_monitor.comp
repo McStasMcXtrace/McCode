@@ -16,20 +16,20 @@
 * Modified by: Kim Lefmann, October 9, 2001
 *
 * Cylindrical (2pi) PSD Time-of-flight monitor.
-* 
+*
 * %D
 *
 * %P
 * INPUT PARAMETERS:
 *
-* radius:   Cylinder radius (m)
-* yheight:  Cylinder height (m)
-* nt:       Number of time bins (1)
-* tmin:     Beginning of time window (mu-s)
-* tmax:     End of time window (mu-s)
-* nphi:     Number of angular bins (deg)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* radius:   Cylinder radius [m]
+* yheight:  Cylinder height [m]
+* nt:       Number of time bins [1]
+* tmin:     Beginning of time window [mu-s]
+* tmax:     End of time window [mu-s]
+* nphi:     Number of angular bins [deg]
+* filename: Name of file in which to store the detector image [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -44,7 +44,7 @@ DEFINE COMPONENT TOF_cylPSD_monitor
 DEFINITION PARAMETERS (nt=128, nphi=90)
 SETTING PARAMETERS (string filename=0, radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
   %{
     double TOF_N[nt][nphi];
@@ -95,7 +95,7 @@ TRACE
       TOF_N[i][j]++;
       TOF_p[i][j] += p;
       TOF_p2[i][j] += p*p;
-     } 
+     }
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
@@ -119,54 +119,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

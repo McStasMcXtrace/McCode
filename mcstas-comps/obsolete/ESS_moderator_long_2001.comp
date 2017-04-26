@@ -54,7 +54,7 @@
 * Debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
 * The output is now neutrons / second, not as previously neutrons / pulse.
 *
-* %VALIDATION 
+* %VALIDATION
 * Validated against VitESS and Mezei note (4/12 2000) @ Rencurel 2006
 *
 * %P
@@ -77,13 +77,10 @@
 * chi2:   (1/AA) lambda-distribution parameter in pulse 2
 * I0:     (flux) integrated flux, 1 (in flux units, see above)
 * I2:     (flux) Flux, 2 (in flux units, see above)
-* branch1: (1)   limit for switching between two time structures in
-                 distribution 1 (only for coupled water, else = 1)
-* branch2: (1)   limit for switching between distribution 1 and 2.
-*                (default value 0.5)
-* branch_tail: (1)   limit for switching between pulse and tail
-*                (suggested value: tau/d - default defined this way)
-* twopulses: (1) Flag for selecting one or two pulses. 0 is one pulse. 
+* branch1: (1)   limit for switching between two time structures in distribution 1 (only for coupled water, else = 1)
+* branch2: (1)   limit for switching between distribution 1 and 2. (default value 0.5)
+* branch_tail: (1)   limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
+* twopulses: (1) Flag for selecting one or two pulses. 0 is one pulse.
 *
 * %E
 ******************************************************************************/
@@ -147,12 +144,12 @@ INITIALIZE
       exit(-1);
     }
     dist = sqrt(tx*tx+ty*ty+tz*tz);
-  } else { 
+  } else {
     if (!dist) {
       printf("ESS_moderator_long_2001: %s: ERROR: Target undefined, neither dist or target_index were set!\n", NAME_CURRENT_COMP);
       exit(-1);
     }
-    tx = 0;  ty = 0; tz = dist; 
+    tx = 0;  ty = 0; tz = dist;
   }
 
   l_range = l_high-l_low;

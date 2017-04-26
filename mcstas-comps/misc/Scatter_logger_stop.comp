@@ -9,7 +9,7 @@
 *
 * %I
 *
-* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby 
+* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby
 * Date: January 2013
 * Version: $Revision: 1.12 $
 * Release: McStas 2.1
@@ -23,7 +23,7 @@
 * %P
 * Input parameters:
 *
-* logger: The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components. ( )
+* logger: The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components.
 *
 * %E
 *******************************************************************************/
@@ -41,7 +41,7 @@ SHARE
 %}
 
 DECLARE
-%{ 
+%{
   int bounce_store_index;
   int bounce_store_overrun;
 %}
@@ -64,7 +64,7 @@ TRACE
 #define mcabsorb mcabsorbAll
 
 scatter_logger_stop:
-    
+
   if (bounce_store_index<BOUNCE_LOG_SIZE){
     struct Generalized_State_t *bp;
     bp=&(Bounce_store[bounce_store_index]);
@@ -79,7 +79,7 @@ scatter_logger_stop:
     bp->_sz=0;
     bp->_t=0;
     bp->_p=-1;
-    bp->_nid=0; 
+    bp->_nid=0;
     bp->_comp=0;
     bounce_store_index++;
   }else if(bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun){
@@ -95,7 +95,7 @@ FINALLY
   struct Generalized_State_t *bp;
   for (i=0;i<BOUNCE_LOG_SIZE;i++){
     bp=&(Bounce_store[i]);
-    /* maybe this should be in the share block - must be able to discern between different loggers*/       
+    /* maybe this should be in the share block - must be able to discern between different loggers*/
     /*      printf("SCATTERLOG: %d %lld %g %g %g  %g %g %g  %g  %g %g %g  %g  %d\n", \*/
     /*	     i,bp->_nid,bp->_x,bp->_y,bp->_z, bp->_vx, bp->_vy, bp->_vz, bp->_t, \*/
     /*	     bp->_sx, bp->_sy, bp->_sz, bp->_p, bp->_comp);*/

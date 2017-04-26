@@ -20,17 +20,16 @@
 * An (n times m) pixel spherical PSD monitor using a cylindrical projection.
 * Mostly for test and debugging purposes.
 *
-* Example: PSD_monitor_4PI(radius=0.1,
-            nx=90, ny=90, filename="Output.psd")
+* Example: PSD_monitor_4PI(radius=0.1, nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* radius:   Radius of detector (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* radius:   Radius of detector [m]
+* nx:       Number of pixel columns [1]
+* ny:       Number of pixel rows [1]
+* filename: Name of file in which to store the detector image [string]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,7 +49,7 @@ DEFINE COMPONENT PSD_monitor_4PI
 DEFINITION PARAMETERS (nx=90, ny=90)
 SETTING PARAMETERS (string filename=0, radius=1, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{

@@ -21,19 +21,18 @@
 * polarisation along a given normalized m-vector (mx, my, mz).
 * The measured quantity is: sx*mx+sy*my+mz*sz
 *
-* Example: Pol_monitor(xwidth=0.1, yheight=0.1, nchan=11, 
-*                      mx=0, my=1, mz=0)
+* Example: Pol_monitor(xwidth=0.1, yheight=0.1, nchan=11, mx=0, my=1, mz=0)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   Width of detector (m). 
-* yheight:  Height of detector (m). 
-* mx:       X-component of monitor vector (can be negative) (1)
-* my:       Y-component of monitor vector (can be negative) (1)
-* mz:       Z-component of monitor vector (can be negative) (1)
-* npol:     Number of channels (1)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xwidth:   Width of detector [m]
+* yheight:  Height of detector [m]
+* mx:       X-component of monitor vector (can be negative) [1]
+* my:       Y-component of monitor vector (can be negative) [1]
+* mz:       Z-component of monitor vector (can be negative) [1]
+* npol:     Number of channels [1]
+* restore_neutron: If set, the monitor does not influence the neutron state [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,8 +47,8 @@ DEFINE COMPONENT Pol_monitor
 DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, restore_neutron=0)
 SETTING PARAMETERS (mx=0, my=0, mz=0)
 OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2, Psum, titlestring)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
-     
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
   double Pol_N;
@@ -62,14 +61,14 @@ DECLARE
 INITIALIZE
 %{
   // Check that input parameteters makes sense
-  
+
   if (mx==0 && my==0 && mz==0) {
     fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
 	    "ERROR      (mx, my, mz). Exiting",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
-  
+
   if ((xwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
 	    "ERROR      (xwidth,yheight). Exiting",
@@ -77,9 +76,9 @@ INITIALIZE
     exit(1);
   }
   sprintf(titlestring,"Polarisation monitor m=(%g %g %g) %s",mx,my,mz,NAME_CURRENT_COMP);
-  
-  // Initialize variables 
- 
+
+  // Initialize variables
+
   NORM(mx, my, mz);
   Psum=0;
   Pol_N = 0;
@@ -90,12 +89,12 @@ INITIALIZE
 TRACE
 %{
   double pol_proj;
-  
+
   PROP_Z0;
   if (inside_rectangle(x, y, xwidth, yheight)){
-    
+
     pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
-    
+
     if(fabs(pol_proj)>1) {
       fprintf(stderr, "Pol_monitor: %s: Pol vector longer than 1 (%g, %g %g %g)\n",
 	      NAME_CURRENT_COMP,pol_proj,sx,sy,sz);
@@ -106,7 +105,7 @@ TRACE
     Pol_p += pol_proj*p;
     Pol_p2 += pol_proj*pol_proj*p;
     SCATTER;
-  }    
+  }
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
