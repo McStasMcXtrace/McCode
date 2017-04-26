@@ -27,7 +27,7 @@ def build_header(options, params, intervals, detectors):
     """.strip()
 
     # Date format: Fri Aug 26 12:21:39 2011
-    date = datetime.strftime(datetime.now(), '%a %b %d %T %Y')
+    date = datetime.strftime(datetime.now(), '%a %b %d %H %M %Y')
 
     xvars = ', '.join(params)
     lst = intervals[list(params)[0]]
@@ -100,7 +100,7 @@ end data
     """.strip()
     
     # Date format: Fri Aug 26 12:21:39 2011
-    date = datetime.strftime(datetime.now(), '%a %b %d %T %Y')
+    date = datetime.strftime(datetime.now(), '%a %b %d %H %M %Y')
 
     xvars = ', '.join(params)
     lst = intervals[list(params)[0]]
