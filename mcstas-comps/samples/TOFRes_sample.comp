@@ -40,9 +40,7 @@
 * When targeting to centered components, such as spheres or cylinders,
 * define an Arm component where to focus at.
 *
-* Example: TOFRes_sample(thickness=0.001, radius=0.01, yheight=0.04,
-      focus_xw=0.025, focus_yh=0.025,
-*     E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
+* Example: TOFRes_sample(thickness=0.001, radius=0.01, yheight=0.04, focus_xw=0.025, focus_yh=0.025, E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
 *
 * %P
 * INPUT PARAMETERS:

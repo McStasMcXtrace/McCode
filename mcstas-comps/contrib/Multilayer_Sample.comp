@@ -10,27 +10,25 @@
 * Date: June 2010
 * Version: 1.0
 * Origin: McStas 1.12b
-* 
+*
 * Multilayer Reflecting sample using matrix Formula.
 *
 * %D
 *
-***************************************************************
-*** in order to get this to compile you need to link against
-*** the gsl and gslcblas libraries.
-***
-*** to do this automatically edit
-*** /usr/local/lib/mcstas/tools/perl/mcstas_config.perl
-***
-*** add -lgsl and -lgslcblas to the CFLAGS line
-***************************************************************
+* in order to get this to compile you need to link against
+* the gsl and gslcblas libraries.
+*
+* to do this automatically edit
+* /usr/local/lib/mcstas/tools/perl/mcstas_config.perl
+*
+* add -lgsl and -lgslcblas to the CFLAGS line
 *
 * Horizontal reflecting substrate defined by SLDs,Thicknesses, roughnesses
 * The superphase may also be determined
-* 
-* Example: Multilayer_Sample(xmin=-0.1, xmax=0.1,zmin=-0.1, 
-* zmax=0.1, nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0},
-* sigmaPar={5.0,5.0})
+*
+* Example: Multilayer_Sample(xmin=-0.1, xmax=0.1,zmin=-0.1, zmax=0.1, nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0}, sigmaPar={5.0,5.0})
+*
+* Example: d1 500: sld1 (air) 0.0: sld2 (Si) 2.07e-6: sldf1(film Ni) 9.1e-6
 *
 * %P
 * INPUT PARAMETERS:
@@ -44,12 +42,8 @@
 * pack: (1)  Substrate packing factor
 * nlayer: (1)	Number of film layers
 * sldPar: (1)  (Angstoms ^-2) Scattering length Density's of layers
-* dPar:   (1)  (Angstroms) Thicknesses of film layers 
+* dPar:   (1)  (Angstroms) Thicknesses of film layers
 * sigmaPar: (1)  (Angstroms) r.m.s roughnesses of the interfaces
-*
-* %D
-* Example values: d1 500: sld1 (air) 0.0: sld2 (Si) 2.07e-6:
-*                 sldf1(film Ni) 9.1e-6
 *
 * %E
 *******************************************************************************/
@@ -60,7 +54,7 @@ DEFINITION PARAMETERS (xwidth = 0.2, zlength = 0.2,
 	 sigmaPar={5.0,5.0}, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
 OUTPUT PARAMETERS (sldParPtr, dParPtr, sigmaParPtr, tx, ty, tz)
 DEPENDENCY "-lgsl -lgslcblas"
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -81,7 +75,7 @@ DECLARE
   double tx, ty, tz;
 %}
 
-INITIALIZE 
+INITIALIZE
 %{
   if (frac_inc>0) {
     if (!(ythick) || !(mu_inc)) {
@@ -101,14 +95,14 @@ INITIALIZE
   } else {
     tx = 0; ty = 0; tz = 0;
   }
-   
+
 %}
 
 TRACE
 %{
   double dt,q,n1,n2,pfn,R0,lambda,theta,s0,c0,kx,ky,kz,t0,t1,t2,l_i,l_o,v, solid_angle;
   double intersect = 0;
-  
+
   /* First check if neutron has the right direction. */
   /* calculate time to reach the mirror i.e. y=0*/
   if(vy != 0.0 && (dt = -y/vy) >= 0)
@@ -121,12 +115,12 @@ TRACE
     y=0;
     /* Now check if neutron intersects mirror. */
     if(x >= xmin && x <= xmax && z >= zmin && z <= zmax)
-    { 
+    {
       // Incoherent scattering from substrate or coherent scattering from thin film?
       if (rand01()<frac_inc) {
 	RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
 	// This part is basically from V_sample
-	
+
 	intersect = box_intersect(&t0, &t2, x, y+ythick/2.0, z, vx, vy, vz, xwidth, ythick, zlength);
 	if (intersect) {
 	  if (t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
@@ -135,7 +129,7 @@ TRACE
 	  SCATTER;
 	  v = sqrt(vx*vx + vy*vy + vz*vz);
 	  l_i = v*dt;                 /* Penetration in sample until scattering */
-	  
+
 	  // If target comp and focus area set, work with that. Otherwise scatter in 4PI
 	  if (target_index && (focus_xw>0) && (focus_yh>0)) {
 	    randvec_target_rect(&vx, &vy, &vz, &solid_angle, tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
@@ -163,13 +157,13 @@ TRACE
 	} else { // Otherwise simply leave alone
 	  RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
 	}
-	
+
       } else {
 //
 // If neutron intersect mirror calculate reflectivity from a thin
 // film using simple fresnel coefficients formula found in e.g. Born and Wolf
 // this could be generalised to many layers using the matrix formalism
-// but we'll get this bit to work first. 
+// but we'll get this bit to work first.
 //
       double dbl0,dbl1,tvar;
       int arrsize=nlayer+2;
@@ -236,7 +230,7 @@ TRACE
 		gsl_matrix_complex_set(betan,i+1,0,gsl_complex_mul_real(tcvar1,tpi*dParPtr[i]/lambda));
 	    }
       }
-      
+
       gsl_matrix_complex_set(a1,0,0,cr);
       tcvar1=gsl_matrix_complex_get(pfn,0,0);
       tcvar2=gsl_matrix_complex_get(pfn,1,0);
@@ -250,7 +244,7 @@ TRACE
       gsl_matrix_complex_set(a1,0,1,gsl_complex_mul(a12t,gsl_complex_exp(tcvar4)));
       gsl_matrix_complex_set(a1,1,0,gsl_matrix_complex_get(a1,0,1));
       gsl_matrix_complex_set(a1,1,1,cr);
-      
+
       if(nlayer > 0){
             for(i=1;i<nlayer+1;i++){
 		btm=gsl_complex_mul(gsl_matrix_complex_get(betan,i,0),ci);
@@ -271,7 +265,7 @@ TRACE
       		gsl_matrix_complex_set(a2,0,1,gsl_complex_mul(a22t,cbtm));
       		gsl_matrix_complex_set(a2,1,0,gsl_complex_mul(a22t,cbtm1));
                 gsl_matrix_complex_set(a2,1,1,cbtm1);
-      	
+
 		tcvar1=gsl_matrix_complex_get(a1,0,0);
 		tcvar2=gsl_complex_mul(tcvar1,gsl_matrix_complex_get(a2,0,0));
 		tcvar3=gsl_matrix_complex_get(a1,0,1);
@@ -295,13 +289,13 @@ TRACE
 		tcvar3=gsl_matrix_complex_get(a1,1,1);
 		tcvar4=gsl_complex_mul(tcvar3,gsl_matrix_complex_get(a2,1,1));
                 gsl_matrix_complex_set(a3,1,1,gsl_complex_add(tcvar2,tcvar4));
-		
+
 		gsl_matrix_complex_set(a1,0,0,gsl_matrix_complex_get(a3,0,0));
 		gsl_matrix_complex_set(a1,0,1,gsl_matrix_complex_get(a3,0,1));
 		gsl_matrix_complex_set(a1,1,0,gsl_matrix_complex_get(a3,1,0));
 		gsl_matrix_complex_set(a1,1,1,gsl_matrix_complex_get(a3,1,1));
             }
-      }        
+      }
       ac1=gsl_matrix_complex_get(a1,1,0);
       ac2=gsl_complex_conjugate(ac1);
       ac3=gsl_matrix_complex_get(a1,0,0);
@@ -310,7 +304,7 @@ TRACE
       R0 = gsl_complex_abs(cans);
 
       //printf("Q %g pfn %g lambda %g \n",q,pfn,lambda);
-      /*reflect off horizontal surface so reverse y component of velocity*/      
+      /*reflect off horizontal surface so reverse y component of velocity*/
       vy = -vy;
       /* Reflectivity (see component Guide). */
       p *= R0;

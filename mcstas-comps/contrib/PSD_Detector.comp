@@ -26,7 +26,7 @@
 * the parameter 'type' to "events" will save the signal as an event file which
 * contains all neutron parameters at detection points, including time. This is
 * especially suited for TOF detectors. Please use Histogrammer afterwards.
-* The gas creation event (neutron absorption in gas) is flagged as SCATTERED==1, 
+* The gas creation event (neutron absorption in gas) is flagged as SCATTERED==1,
 * and the charge detection (signal) is flagged as SCATTERED==2.
 *
 * GEOMETRY:
@@ -131,56 +131,33 @@
 *                       LensOn=1, filename="D19.psd")
 *
 * %P
-
 * INPUT PARAMETERS:
 *
 * xwidth:         Width of detector opening, in the case of a flat box (m)
 * radius:         Radius of detector for cylindrical/banana shape (m)
-* awidth:         Width of detector opening along the horizontal arc of
-*                 the detector, measured along the inside arc of the
-*                 sensitive volume in the case of a 'banana' detector (m)
-* angle:          Angular opening of detector in the case of a 'banana' 
-*                 detector, then overrides awidth parameter (deg)
+* awidth:         Width of detector opening along the horizontal arc of the detector, measured along the inside arc of the sensitive volume in the case of a 'banana' detector (m)
+* angle:          Angular opening of detector in the case of a 'banana' detector, then overrides awidth parameter (deg)
 * yheight:        Height of detector opening (m)
 * zdepth:         Depth of the sensitive volume of the detector (m)
 * nx:             Number of pixel columns (1)
 * ny:             Number of pixel rows (1)
 * borderx:        Width of (gas-filled) border on the side of the detector (m)
-* bordery:        Height of (gas-filled) border on the top/bottom of the
-*                 detector giving rise to various border effects.
-*                 Set to -2 to obtain the height of one pixel, -1 for the
-*                 depth of the detector (default), or specify a non-negative
-*                 distance (m)
-* FN_Conv:        Filename of the stopping power table of the converter
-*                 gas (text)
-* PressureConv:   Pressure of gaseous thermal-neutron converter
-*                 (e.g. He-3) (bar)
-* FN_Stop:        Filename of the stopping power table of the stopping
-*                 gas (text)
+* bordery:        Height of (gas-filled) border on the top/bottom of the detector giving rise to various border effects. Set to -2 to obtain the height of one pixel, -1 for the depth of the detector (default), or specify a non-negativedistance (m)
+* FN_Conv:        Filename of the stopping power table of the converter gas (text)
+* PressureConv:   Pressure of gaseous thermal-neutron converter (e.g. He-3) (bar)
+* FN_Stop:        Filename of the stopping power table of the stopping gas (text)
 * PressureStop:   Pressure of stopping gas (bar)
 * threshold:      Energy threshold for acceptance of an event (keV)
-* filename:       Name of file in which to store the detector image
-*                   The name of the component is used if file name is not specified (text)
+* filename:       Name of file in which to store the detector image. The name of the component is used if file name is not specified (text)
 * interpolate:    Performs energy interpolation if true (1)
 * verbose:        Gives more information and spectrum (1)
-* p_interact:     Fraction of statistical events to be treated by component.
-*                 Set it to 0 to use real absorption probability (1)
-* LensOn:         set to 1 to simulate an electrostatic lens according to
-*                 P. Van Esch, NIM A 540 (2005) pp. 361-367. (1)
-* dc:             Distance from the entrance window to the cathode plane,
-*                 where the correction zone of the lens ends 
-*                 for banana shape and LensOn=1 (m)
-* xChDivRelSigma: Sigma of the error in position determination along the x
-*                 axis (relative to xwidth), uniquely due to charge division
-*                 readout. Set to 0 in case of independent channel readout
-*                 along the x dimension (1)
-* yChDivRelSigma: Relative sigma due to charge division in y direction ,
-*                 (relative to yheight). (1)
-* type:           If set to 'events' detector signal saves signal into an event
-*                 file to be read e.g. by Histogrammer. This is to be used for 
-*                 TOF detectors. (string)
-* bufsize:        Size of neutron output buffer
-*                 default is 0, i.e. save all - recommended. (1)
+* p_interact:     Fraction of statistical events to be treated by component. Set it to 0 to use real absorption probability (1)
+* LensOn:         set to 1 to simulate an electrostatic lens according to P. Van Esch, NIM A 540 (2005) pp. 361-367. (1)
+* dc:             Distance from the entrance window to the cathode plane, where the correction zone of the lens ends for banana shape and LensOn=1 (m)
+* xChDivRelSigma: Sigma of the error in position determination along the x axis (relative to xwidth), uniquely due to charge division readout. Set to 0 in case of independent channel readout along the x dimension (1)
+* yChDivRelSigma: Relative sigma due to charge division in y direction, relative to yheight. (1)
+* type:           If set to 'events' detector signal saves signal into an event file to be read e.g. by Histogrammer. This is to be used for TOF detectors. (string)
+* bufsize:        Size of neutron output buffer default is 0, i.e. save all - recommended. (1)
 * restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
@@ -207,9 +184,9 @@ SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
   PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
-  DetectorType, 
+  DetectorType,
   DEFS, Vars)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -234,7 +211,7 @@ DECLARE
   %{
     MonitornD_Defines_type   DEFS;  /* for event files */
     MonitornD_Variables_type Vars;
-    
+
     double PSD_N[nx][ny];
     double PSD_p[nx][ny];
     double PSD_p2[nx][ny];
@@ -276,10 +253,10 @@ DECLARE
 INITIALIZE
 %{
   CountNeutrons=0;
-  GeomCumul=0; 
+  GeomCumul=0;
   AbsCumul=0;
   SensVolCumul=0;
-  DetCumul=0; 
+  DetCumul=0;
   VariousErrors=0;
   DetectorType=0;
 
@@ -314,7 +291,7 @@ INITIALIZE
   double *TempVar35;
   double *ETT1; // Energy transferred by triton
   double *PTT1; // Positions of transfer of energy by triton
-  
+
   /* GEOMETRY stuff ********************************************************* */
   if (borderx==-2) borderx = xwidth/nx;
   else if (borderx==-1) borderx = zdepth;
@@ -379,7 +356,7 @@ INITIALIZE
                      "              specifications, i.e. combinations of xwidth, radius\n"
                      "              or awidth, or none at all. Exit.\n",
                                     NAME_CURRENT_COMP);
-    exit(0); 
+    exit(0);
   }
   if (verbose) {
     printf("PSD_Detector: %s: Geometry is ", NAME_CURRENT_COMP);
@@ -387,7 +364,7 @@ INITIALIZE
     case 1: printf("box\n"); break;
     case 2: printf("tube\n"); break;
     case 4: printf("cylinder ('banana') opening angle=%g [deg] arc length=%g [m]\n", angle, awidth); break;
-    default: 
+    default:
       printf("not defined\n");
     }
   }
@@ -431,7 +408,7 @@ INITIALIZE
   	Table_Read(&Part_Stop_t,tmp,2);
     nS_t = Part_Stop_t.rows;
   }
-  
+
 
   if (nH_p != nS_p || nH_t != nS_t) {
       fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
@@ -616,7 +593,7 @@ INITIALIZE
   Table_Free(&Part_Stop_n);
 
   if (p_interact>1) p_interact=1;
-    
+
 /* handle event files as in Virtual_output, with bufsize=0 ****************** */
   long element_size;
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
@@ -1053,7 +1030,7 @@ TRACE
             }
           }
         }
-          
+
 /* STORAGE of detected neutrons ********************************************* */
         if (DetectorType==1 || DetectorType==4) {
           xCOG=xCOG + xwidth * xChDivRelSigma * randnorm();
@@ -1096,7 +1073,7 @@ TRACE
             // if the particles have deposited sufficient energy to be
             // recognised as a neutron event (and not a gamma event)
             double P = p*pa;
-            x = xCOG; y = yCOG; z = zCOG; 
+            x = xCOG; y = yCOG; z = zCOG;
             SCATTER; // show point of detection for 3D view
             PSD_N[i][j] ++;       // one neutron tallied in the appropriate pixel
             PSD_p[i][j] += P;     // incremented by neutron weight
@@ -1131,7 +1108,7 @@ TRACE
               Vars.psum  += P;
               Vars.p2sum += P*P;
             }
-            // initial version ABSORB detected neutrons. 
+            // initial version ABSORB detected neutrons.
             // This was removed if user wants to analyze the behaviour of the detector
           }
         } /* storage */
@@ -1154,7 +1131,7 @@ SAVE
     DETECTOR_OUT(Vars.Nsum, Vars.psum, Vars.p2sum);
   } else {
     double width;
-    
+
     if (xwidth>0) width=xwidth;
     if (radius>0) width=2*radius;
     if (awidth>0) width=awidth;
@@ -1188,8 +1165,8 @@ SAVE
   }
   if (verbose) {
     char xlabelstr[64];
-    snprintf(file, 128, "%s.en", 
-      filename && strlen(filename) && strcmp(filename,"0") && strcmp(filename,"NULL") ? 
+    snprintf(file, 128, "%s.en",
+      filename && strlen(filename) && strcmp(filename,"0") && strcmp(filename,"NULL") ?
             filename : NAME_CURRENT_COMP);
     fprintf(stdout,"PSD_Detector: %s: statistics\n", NAME_CURRENT_COMP);
     fprintf(stdout,"  %g neutrons in the simulation, %g encounter the detector.\n",
@@ -1284,7 +1261,7 @@ MCDISPLAY
 		    double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
 		    phi0 = (-angle/2+(angle/NH)*ih)    *DEG2RAD; /* in xz plane */
 		    phi1 = (-angle/2+(angle/NH)*(ih+1))*DEG2RAD;
-	      
+
 		    z0 = radius*cos(phi0);
 		    x0 = radius*sin(phi0);
 		    y0 = -yheight/2;

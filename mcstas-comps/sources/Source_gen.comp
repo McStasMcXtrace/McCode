@@ -108,11 +108,11 @@
 * focus_aw: (deg) maximal (uniform) horz. width divergence
 * focus_ah: (deg) maximal (uniform) vert. height divergence
 * T1:       [K]   Temperature of the Maxwellian source, 0=none
-* I1:       [1/(cm 2 sr)] Source flux per solid angle, area and Angstrom if I1=0, the source emits 1 in 4*PI whole space.
+* I1:       [1/(cm**2*sr)] Source flux per solid angle, area and Angstrom if I1=0, the source emits 1 in 4*PI whole space.
 * T2:       [K]   Second Maxwellian source Temperature, 0=none
-* I2:       [1/(cm 2 sr)] Second Maxwellian Source flux
+* I2:       [1/(cm**2*sr)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
-* I3:       [1/(cm 2 sr)] Third Maxwellian Source flux
+* I3:       [1/(cm**2*sr)] Third Maxwellian Source flux
 * flux_file: [str] Name of a two columns [lambda flux] text file that contains the wavelength distribution of the flux in <b>either</b> [1/(s*cm**2*st)] <b>or</b> [1/(s*cm**2*st*AA)] (see flux_file_perAA flag) Comments (#) and further columns are ignored. Format is compatible with McStas/PGPLOT wavelength monitor files. When specified, temperature and intensity values are ignored.
 * flux_file_perAA: [1] When true (1), indicates that flux file data is already per Aangstroem. If false, file data is per wavelength bin.
 * flux_file_log: [1]   When true, will transform the flux table in log scale to improve the sampling.

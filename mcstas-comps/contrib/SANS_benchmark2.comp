@@ -34,31 +34,29 @@
 *
 * INPUT PARAMETERS
 *
-* xwidth    : width of sample volume (m)
-* yheight   : height of sample volume (m)
-* zthick    : thickness of sample volume (m)
-* model     : model no., real variable will be rounded. negative numbers interpreted as model #0, too large as #18.
-*     case 0: no coherent scattering
-*     case 1: polymer with Mw = 2.000g/mol
-*     case 2: polymer with Mw = 1.000.000g/mol
-*     case 3: microemulsion
-*     case 4: wormlike micelle
-*     case 5: sphere, R = 25 AA
-*     case 6: sphere, R = 500 AA
-*     case 7: polymer blend
-*     case 8: diblock copolymer
-*     case 9: multilamellar vesicles
-*     case 10: logarithmically spaced series of sharp peaks
-*     case 11: logarithmically spaced series of sharp delta peaks !!!!!!
+* xwidth: width of sample volume (m)
+* yheight: height of sample volume (m)
+* zthick: thickness of sample volume (m)
+* model: model no., real variable will be rounded. negative numbers interpreted as model #0, too large as #18.
+*     case 0 - no coherent scattering
+*     case 1 - polymer with Mw = 2.000g/mol
+*     case 2 - polymer with Mw = 1.000.000g/mol
+*     case 3 - microemulsion
+*     case 4 - wormlike micelle
+*     case 5 - sphere, R = 25 AA
+*     case 6 - sphere, R = 500 AA
+*     case 7 - polymer blend
+*     case 8 - diblock copolymer
+*     case 9 - multilamellar vesicles
+*     case 10 - logarithmically spaced series of sharp peaks
+*     case 11 - logarithmically spaced series of sharp delta peaks !!!!!!
 *     ...
 *     case 18: free
 *
-* dsdw_inc  : the incoherent background from the overall sample (cm-1), should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
-* sc_aim    : the fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
-* sans_aim  : the fraction of neutron paths used to represent the scattered neutrons in the sans-range (up to 1.0AA-1). rest is incoherent with Q>1AA-1.
-* singlesp  : switches between multiple scattering (parameter zero 0.0) and single scattering (parameter 1.0).
-*             The sc_aim directs a fraction of paths to the first scattering process accordingly.
-*             The no. of paths for the second scattering process is derived from the real probability. Up to 10 scattering processes are considered.
+* dsdw_inc: the incoherent background from the overall sample (cm-1), should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
+* sc_aim: the fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
+* sans_aim: the fraction of neutron paths used to represent the scattered neutrons in the sans-range (up to 1.0AA-1). rest is incoherent with Q>1AA-1.
+* singlesp: switches between multiple scattering (parameter zero 0.0) and single scattering (parameter 1.0). The sc_aim directs a fraction of paths to the first scattering process accordingly. The no. of paths for the second scattering process is derived from the real probability. Up to 10 scattering processes are considered.
 *
 * %Link
 *
@@ -177,7 +175,7 @@ double J1(double arg0) {
 double Pic = 3.141592653589793238462643;
 double J1o,cs,sn;
 
-if (arg0<6.11) 
+if (arg0<6.11)
 {arg0=arg0*arg0;
  J1o = 1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0/528.0)
                  /440.0)/360.0)/288.0)/224.0)/168.0)/120.0)/80.0)/48.0)/24.0)/8.0;
@@ -468,7 +466,7 @@ out = 0.0;
 
 for (i = 0; i <= npeaks; i++){
 	Qpeak  = Qpeak1*pow(10.0,i*delta);
-	dQpeak = Qpeak*0.1; 				/* Peak width */		
+	dQpeak = Qpeak*0.1; 				/* Peak width */
 	out += I0/(PI*Qpeak*dQpeak)*exp(-pow((Q-Qpeak)/dQpeak,2));
 	};
 break;
@@ -517,7 +515,7 @@ INITIALIZE
   Qmaxd = 2.1544346900319;
 
 
-  if (!xwidth || !yheight || !zthick) 
+  if (!xwidth || !yheight || !zthick)
   {
     exit(fprintf(stderr,"SANS_DebyeS: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
   }

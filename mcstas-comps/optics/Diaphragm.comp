@@ -27,6 +27,8 @@
 *
 * For <B>INPUT PARAMETERS</B> - please consult <a href="Slit.html">Slit.comp</a> as Diaphragm is a copy of that component.
 *
+* %P
+*
 * radius: Radius of diaphragm in the z=0 plane, centered at Origo [m]
 * xmin: Lower x bound [m]
 * xmax: Upper x bound [m]

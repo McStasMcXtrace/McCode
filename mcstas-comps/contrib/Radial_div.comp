@@ -7,17 +7,17 @@
 *
 * Component: Radial_div
 *
-*%I
+* %I
 * Modified by: Kaspar Hewitt Klenø from Hdiv_monitor (1.12b), Jan 2011.
-
+*
 *
 * A radial divergence sensitive monitor with wavelength restrictions.
 *
-*%D
+* %D
 * A radial divergence sensitive monitor with wavelength restrictions. The counts are distributed in
 * n pixels.
 *
-* Example: 
+* Example:
 *
 *%P
 * INPUT PARAMETERS:
@@ -42,7 +42,7 @@
 * Div_p2:   Array of second moments
 *
 *%E
-*/
+*******************************************************************************/
 
 
 DEFINE COMPONENT Radial_div

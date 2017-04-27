@@ -18,32 +18,32 @@
 * Refractive lens with absorption, incoherent scattering and surface imperfection.
 *
 * %Description
-* Refractive Lens with absorption, incoherent scattering and surface imperfection. 
+* Refractive Lens with absorption, incoherent scattering and surface imperfection.
 * Geometry may be:
-*   spherical (use r1 and r2 to specify radius of curvature), 
-*   planar    (use phiy1 and phiy2 to specify rotation angle of plane w.r.t beam) 
-*   parabolic (use focus1 and focus2 as optical focal length). 
+*   spherical (use r1 and r2 to specify radius of curvature),
+*   planar    (use phiy1 and phiy2 to specify rotation angle of plane w.r.t beam)
+*   parabolic (use focus1 and focus2 as optical focal length).
 *
 * Optionally, you can specify the 'geometry' parameter as a OFF/PLY file name.
 *   The complex geometry option handles any closed non-convex polyhedra.
-*   It computes the intersection points of the neutron ray with the object  
+*   It computes the intersection points of the neutron ray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces). 
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
-*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
 *
 * The lens cross-section is seen as a 2*radius disk from the beam Z axis, except
 *   when a 'geometry' file is given.
-* Usually, you should stack more than one of these to get a significant effect 
+* Usually, you should stack more than one of these to get a significant effect
 * on the neutron beam, so-called 'compound refractive lens'.
 *
-* The focal length for N lenses with focal 'f' is f/N, where f=R/(1-n) 
-*   and R = r/2   for a spherical lens with curvature radius 'r' 
+* The focal length for N lenses with focal 'f' is f/N, where f=R/(1-n)
+*   and R = r/2   for a spherical lens with curvature radius 'r'
 *       R = focus for a parabolic lens with focal of the parabola
-*   and n = sqrt(1-(lambda*lambda*rho*bc/PI)) with 
+*   and n = sqrt(1-(lambda*lambda*rho*bc/PI)) with
 *     bc  = sqrt(fabs(sigma_coh)*100/4/PI)*1e-5
 *     rho = density*6.02214179*1e23*1e-24/weight
 *
@@ -62,8 +62,8 @@
 *   Quartz/silica: density=2.53,  weight=60.08,  sigma_coh=10.625,sigma_inc=0.0056,sigma_abs=0.1714
 *   Si:            density=2.329, weight=28.0855,sigma_coh=2.1633,sigma_inc=0.004, sigma_abs=0.171
 *   Al:            density=2.7,   weight=26.98,  sigma_coh=1.495, sigma_inc=0.0082,sigma_abs=0.231
-*   perfluoropolymer(PTFE/Teflon/CF2): 
-                   density=2.2,   weight=50.007, sigma_coh=13.584,sigma_inc=0.0026,sigma_abs=0.0227
+*   perfluoropolymer(PTFE/Teflon/CF2):
+*                  density=2.2,   weight=50.007, sigma_coh=13.584,sigma_inc=0.0026,sigma_abs=0.0227
 *   Organic molecules with C,O,H,F
 *
 * Example: Lens(r1=0.025,r2=0.025, thickness=0.001,radius=0.0150)
@@ -73,10 +73,8 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* r1:        (m)     radius of the first circle describing the lens.
-*                      r>0 means concave face, r<0 means convex, r=0 means plane
-* r2:        (m)     radius of the second circle describing the lens
-*                      r>0 means concave face, r<0 means convex, r=0 means plane
+* r1:        (m)     radius of the first circle describing the lens. r>0 means concave face, r<0 means convex, r=0 means plane
+* r2:        (m)     radius of the second circle describing the lens r>0 means concave face, r<0 means convex, r=0 means plane
 * focus1:    (m)     focal of the first parabola describing the lens
 * focus2:    (m)     focal of the second parabola describing the lens
 * phiy1:     (deg)   angle of plane1 (r1=0) around y vertical axis
@@ -92,8 +90,7 @@
 * sigma_abs: (barn)  thermal absorption cross section
 * p_interact:(1)     MC Probability for scattering the ray; otherwise transmit
 * RMS:       (Angs)  root mean square roughness of the surface
-* geometry:  (str)   Name of an Object File Format (OFF) or PLY file for complex geometry.
-*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* geometry:  (str)   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
 *
 * %L
 * M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947)
@@ -122,17 +119,17 @@ SETTING PARAMETERS (r1=0,r2=0,focus1=0,focus2=0,phiy1=0,phiy2=0,
   density=3.148,weight=62.3018,
   p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0, string geometry=0)
 OUTPUT PARAMETERS (rho, bc, my_s, my_a_v, mean_n, events)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
   /* support for OFF/PLY geometry */
   %include "read_table-lib"
   %include "interoff-lib"
-  
+
   off_struct offdata;
-  
-  /* Lens_roughness: function to rotate normal vector around axis for roughness 
+
+  /* Lens_roughness: function to rotate normal vector around axis for roughness
    *                 with specified tilt angle (deg)
    * RETURNS: rotated nx,ny,nz coordinates
    */
@@ -150,13 +147,13 @@ SHARE
 
     /* rotate n1 with angle phi around n -> nt */
     rotate(nt_x,nt_y,nt_z, n1_x,n1_y,n1_z, 2*PI*rand01(), *nx,*ny,*nz);
-    
+
     *nx=nt_x;
     *ny=nt_y;
     *nz=nt_z;
   }
-  
-/* parabola_intersect: Calculate intersection between a line and a parabola with 
+
+/* parabola_intersect: Calculate intersection between a line and a parabola with
 *  axis along z, focal length f, centered at (0,0,0)
  * RETURNS 0 when no intersection is found
  *      or 1 in case of intersection with resulting times t0 and t1 */
@@ -164,34 +161,34 @@ SHARE
                  double vx, double vy, double vz, double f)
   {
      /* equation of line: (x,y,z) = (vx,vy,vz)*t+(x,y,z)_0 */
-     /* equation of parabola:  z  = (x^2+y^2)/4/f 
+     /* equation of parabola:  z  = (x^2+y^2)/4/f
         that is: 4*f*(vz*t+z0) = (vx*t+x0)^2 + (vy*t+y0)^2 */
-     
+
      double A = vx*vx+vy*vy;
      double B = 2*vx*x+2*vy*y-4*vz*f;
      double C = x*x+y*y-4*f*z;
-     
+
      return(solve_2nd_order(t0, t1, A,B,C));
   }
-  
+
   /* Lens_intersect: function to compute intersection with lens surface
    * of section 2*radius (beam size)
-   * which can be 
-   *   type="spherical" (arg=curvature radius), 
-   *   type="parabolic" (arg=focus) or 
+   * which can be
+   *   type="spherical" (arg=curvature radius),
+   *   type="parabolic" (arg=focus) or
    *   type="planar"    (arg=phi around y).
    * The Surface intersection along the Z axis is 'shift' (e.g. +/-thickness/2)
    * RETURNS: intersection time to surface, or negative for no intersection
-   *          neutron must then be propagated on the surface with PROP_DT, 
+   *          neutron must then be propagated on the surface with PROP_DT,
    *          and checked for actual intersection.
    */
-  double Lens_intersect(double x,double y,double z, 
-    double vx,double vy,double vz, 
-    double shift, double radius, 
+  double Lens_intersect(double x,double y,double z,
+    double vx,double vy,double vz,
+    double shift, double radius,
     char *type, double arg)
   {
     double t0, t1;
-    
+
     if (!vz || !type || !radius) return -1;
     if (strstr(type, "spher") && arg) {   /* spherical */
       if (sphere_intersect(&t0,&t1, x,y,z+shift+arg, vx,vy,vz, fabs(arg))) {
@@ -228,24 +225,24 @@ INITIALIZE
 %{
   /* density: Number of atoms by AA^3, pow(10,-24) stands for conversion from cm^3 to AA^3 */
   if (density<=0 || weight<=0)
-    exit(printf("Lens: %s: FATAL: invalid material density or molar weight: density=%g weight=%g\n", 
+    exit(printf("Lens: %s: FATAL: invalid material density or molar weight: density=%g weight=%g\n",
       NAME_CURRENT_COMP, density, weight));
-  rho= density*6.02214179*1e23*1e-24/weight; 
+  rho= density*6.02214179*1e23*1e-24/weight;
   if (sigma_coh==0)
-    exit(printf("Lens: %s: FATAL: invalid material coherent cross section: sigma_coh=%g\n", 
+    exit(printf("Lens: %s: FATAL: invalid material coherent cross section: sigma_coh=%g\n",
       NAME_CURRENT_COMP, sigma_coh));
   bc=sqrt(fabs(sigma_coh)*100/4/PI)*1e-5;      /* bound coherent cross section */
   if (sigma_coh<0) bc *= -1;
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     /* init the OFF/PLY without centering and scaling */
 	  if (!off_init(geometry, 0, 0, 0, 1, &offdata))
-      exit(printf("Lens: %s: FATAL: could not initialize geometry file %s [OFF/PLY]\n", 
+      exit(printf("Lens: %s: FATAL: could not initialize geometry file %s [OFF/PLY]\n",
       NAME_CURRENT_COMP, geometry));
   }
 
   phiy1 *= DEG2RAD; /* planes orientation */
   phiy2 *= DEG2RAD;
-  
+
   focus_aw *= DEG2RAD;
   focus_ah *= DEG2RAD;
   my_s  = rho * 100 *(sigma_inc+sigma_coh);
@@ -276,7 +273,7 @@ do {
     else if (t0 < 0 && 0 < t1)      { dt = t1; n=n1; }
     else if (t1 < 0 && 0 < t0) { dt = t0; n=n0; }
     else {
-      if (t1 < t0) { dt=t1; n=n1; } 
+      if (t1 < t0) { dt=t1; n=n1; }
       else  { dt=t0; n=n0; }
     }
     coords_get(n, &nx, &ny, &nz);
@@ -305,7 +302,7 @@ do {
   /* M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947) */
   /* alpha1 = (sigma_inc+sigma_abs*2200/v)/2/lambda;
   n      = 1-lambda*lambda*rho/2/PI*sqrt(bc*bc-alpha1*alpha1); */
-  n   = sqrt(1-(lambda*lambda*rho*bc/PI)); 
+  n   = sqrt(1-(lambda*lambda*rho*bc/PI));
   mean_n += n*p;
   events += p;
 
@@ -338,7 +335,7 @@ do {
   theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
 
   /* Fresnel formula for refraction */
-  theta2 = asin(sin(theta1)/n); 
+  theta2 = asin(sin(theta1)/n);
 
   /* compute new velocity after refraction */
   alpha1 = (sin(theta2))/(sin(theta1));
@@ -358,7 +355,7 @@ do {
     else if (t0 < 0 && 0 < t1)      { dt = t1; n=n1; }
     else if (t1 < 0 && 0 < t0) { dt = t0; n=n0; }
     else {
-      if (t1 < t0) { dt=t1; n=n1; } 
+      if (t1 < t0) { dt=t1; n=n1; }
       else  { dt=t0; n=n0; }
     }
     coords_get(n, &nx, &ny, &nz);
@@ -368,7 +365,7 @@ do {
     dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", focus2);
   else
     dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "plane", phiy2);
-    
+
   if (dt <= 0) break; /* no intersection: exit from main loop */
 
   /* =============== Absorption and scattering between the two faces =========== */
@@ -430,14 +427,14 @@ do {
       a = rand0max((1 - exp(-my_t*d_path)));
       dt = -log(1 - a) / my_t; /* length */
     }
-    
+
     l_i = dt;/* Penetration in sample: scattering+abs */
     dt /= v; /* Time from present position to scattering point */
     PROP_DT(dt); /* Point of scattering */
 
     randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,0,0,1, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
     NORM(vx, vy, vz);
-    
+
     vx*=v;
     vy*=v;
     vz*=v;
@@ -456,7 +453,7 @@ do {
       else if (t0 < 0 && 0 < t1)      { dt = t1; n=n1; }
       else if (t1 < 0 && 0 < t0) { dt = t0; n=n0; }
       else {
-        if (t1 < t0) { dt=t1; n=n1; } 
+        if (t1 < t0) { dt=t1; n=n1; }
         else  { dt=t0; n=n0; }
       }
       coords_get(n, &nx, &ny, &nz);
@@ -466,9 +463,9 @@ do {
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", -focus2);
     else
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "plane", phiy2);
-      
+
     if (dt <= 0) break; /* no intersection: exit from main loop */
-    
+
   } /* end scattering handling in material*/
 
   /* propagate to surface */
@@ -523,22 +520,22 @@ FINALLY %{
   /* compute focal length */
   double f1=0, f2=0, f=0;
   double n = mean_n / events;
-  
+
   if (n != 1) {
     if (r1 && !focus1)      f1 = r1/2/(1-n);
     else if (!r1 && focus1) f1 = focus1/(1-n);
-    
+
     if (r2 && !focus2)      f2 = r2/2/(1-n);
     else if (!r2 && focus2) f2 = focus2/(1-n);
   }
-  
+
   if (f1) f+= 1/f1;
   if (f2) f+= 1/f2;
   if (f)  {
     f = 1/f;
     printf("Lens: %s: focal length f=%g [m]. Focal length for N lenses is f/N.\n", NAME_CURRENT_COMP, f);
   }
-  
+
 %}
 
 MCDISPLAY
@@ -549,7 +546,7 @@ MCDISPLAY
   height2=radius/2;
   dist_parab1=0.0;
   dist_parab2=0.0;
-  
+
   /* draw circles to describe the 2 surfaces */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
@@ -561,10 +558,10 @@ MCDISPLAY
         theta00=acos((fabs(r1)-thickness/2)/fabs(r1));
         height=fabs(r1)*sin(theta00);
       }
-      
+
       theta1=-theta00;
       eps=theta00/4;
-      eps2=2*PI/4; 
+      eps2=2*PI/4;
       while (theta1<0) {
         circle("xy",0,0,-thickness/2-r1+r1*cos(theta1),fabs(r1)*sin(theta1));
         theta1+=eps;
@@ -581,7 +578,7 @@ MCDISPLAY
       } else {
         dist_parab1=0.0;
       }
-      
+
       distance=-(radius*radius/4)/(4*focus1);
       eps=-distance/4;
       eps2=2*PI/4;
@@ -594,7 +591,7 @@ MCDISPLAY
           line(sqrt(4*fabs(focus1)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus1)*(fabs(distance-eps)))*sin(theta_line),distance-eps-thickness/2,sqrt(4*fabs(focus1)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus1)*fabs(distance))*sin(theta_line),distance-thickness/2);
           theta_line+=eps2;
           }
-        } else { 
+        } else {
           circle("xy",0,0,(radius*radius/4)/(4*focus1)+distance-thickness/2,sqrt((4*fabs(focus1)*fabs(distance))));
           distance+=eps;
           theta_line=0;
@@ -625,7 +622,7 @@ MCDISPLAY
       theta1=PI-theta01;
 
       eps=(PI-theta1)/4;
-      eps2=2*PI/4; 
+      eps2=2*PI/4;
       while (theta1<PI) {
         circle("xy",0,0,thickness/2+r2+r2*cos(theta1),fabs(r2)*sin(theta1));
         theta1+=eps;
@@ -664,7 +661,7 @@ MCDISPLAY
             theta_line+=eps2;
           }
         }
-      }   
+      }
     } else { /* plane 2 */
       /* phiy2 is rotation angle around 'y' at z=+thickness. width/height is radius. */
       double x1= height2*cos(phiy2);
@@ -695,7 +692,7 @@ MCDISPLAY
 		  {
 			  line(-fabs(r1)*sin(theta00),0,-thickness/2-r1+r1*cos(theta00),-radius/2,0,thickness/2+radius*radius/(16*focus2));
 			  line(fabs(r1)*sin(theta00),0,-thickness/2-r1+r1*cos(theta00),radius/2,0,thickness/2+radius*radius/(16*focus2));
-		  }	
+		  }
 	  }
 	  else if (r2 && !r1) {
 		  if (!focus1){

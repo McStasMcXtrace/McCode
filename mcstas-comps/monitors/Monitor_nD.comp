@@ -173,12 +173,9 @@
 * zmin:   [m]    Lower z bound of opening
 * zmax:   [m]    Upper z bound of opening
 * filename: [str] Output file name (overrides file=XX option).
-* bins:   [1]    Number of bins to force for all variables.
-*                Use 'bins' keyword in 'options' for heterogeneous bins
-* min:    [u]    Minimum range value to force for all variables
-*                Use 'min' or 'limits' keyword in 'options' for other limits
-* max:    [u]    Maximum range value to force for all variables
-*                Use 'max' or 'limits' keyword in 'options' for other limits
+* bins:   [1]    Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
+* min:    [u]    Minimum range value to force for all variables Use 'min' or 'limits' keyword in 'options' for other limits
+* max:    [u]    Maximum range value to force for all variables Use 'max' or 'limits' keyword in 'options' for other limits
 * user1: [variable] Variable assigned to User1
 * user2: [variable] Variable assigned to User2
 * user3: [variable] Variable assigned to User3
@@ -240,7 +237,8 @@ INITIALIZE
   if (strstr(Vars.option, "source"))
     strcat(Vars.option, " list, x y z vx vy vz t sx sy sz ");
 
-  if (bins) { sprintf(tmp, " all bins=%ld ", (long)bins); strcat(Vars.option, tmp); }
+  if (bins) { sprintf(tmp, " a
+ll bins=%ld ", (long)bins); strcat(Vars.option, tmp); }
   if (min > -FLT_MAX && max < FLT_MAX) { sprintf(tmp, " all limits=[%g %g]", min, max); strcat(Vars.option, tmp); }
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }

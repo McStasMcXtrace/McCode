@@ -16,14 +16,14 @@
 * This components may either set the flux or change it (filter-like), using
 * an external data filename.
 *
-*%D
+* %D
 * This component changes the neutron flux (weight) in order to match
 * a reference table in a filename.
 * Typically you may set the neutron flux (source-like), or multiply it
 * using a transmission table (filter-like).
 * The component may be placed after a source, in order to e.g.
 * simulate a real source from a reference table, or used as a filter (BeO)
-, or as a window (Al). The behaviour of the component is
+* or as a window (Al). The behaviour of the component is
 * specified using the 'options' parameter, or from the filename itself (see below)
 * If the thickness for the transmission data filename D was t0, and a different
 * thickness t1 would be required, then the resulting transmission is:

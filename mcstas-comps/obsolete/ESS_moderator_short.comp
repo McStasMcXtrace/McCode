@@ -68,23 +68,23 @@
 * size:   (m)    Edge of cube shaped source
 * Lmin:   (AA)   Lower edge of wavelength distribution
 * Lmax:   (AA)   Upper edge of wavelength distribution
-* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
+* dist:   [m]    Distance from source to focusing rectangle; at (0,0,dist)
 * focus_xw:(m)   Width of focusing rectangle
 * focus_yh:(m)   Height of focusing rectangle
 * target_index:(1)  relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
 * nu:     (Hz)   Frequency of pulses
 * T:      (K)    Temperature of source
 * tau:    (s)    long time decay constant for pulse, 1a
-* tau1:   (s)    long time decay constant for pulse, 1b (only for coupled water, else 0)
+* tau1:   [s]    long time decay constant for pulse, 1b (only for coupled water, else 0)
 * tau2:   (s/AA) long time decay constant for pulse, 2
 * n:      (1)    pulse shape parameter 1
 * n2:     (1)    pulse shape parameter 2
 * chi2:   (1/AA) lambda-distribution parameter in pulse 2
-* I0:     (flux) integrated flux 1 (in flux units, see above) (default 9e10)
-* I2:     (flux*AA) integrated flux 2 (default 4.6e10)
-* branch1: (1)   limit for switching between distribution 1 and 2. (has effect only for coupled water, tau1>0)
-* branch2: (1)   limit for switching between distribution 1 and 2. (default value 0.5)
-* branchframe: (1) limit for switching between 1st and 2nd pulse (if only one pulse wanted: 1)
+* I0:     [flux] integrated flux 1 (in flux units, see above) (default 9e10)
+* I2:     [flux*AA] integrated flux 2 (default 4.6e10)
+* branch1: [1]   limit for switching between distribution 1 and 2. (has effect only for coupled water, tau1>0)
+* branch2: [1]   limit for switching between distribution 1 and 2. (default value 0.5)
+* branchframe: [1] limit for switching between 1st and 2nd pulse (if only one pulse wanted: 1)
 *
 * %E
 *******************************************************************************/

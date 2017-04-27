@@ -6,15 +6,14 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Virtual_mcnp_ss_output.comp
-
 * %I
-* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a> 
+* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a>
 * Date: January, 2012
 * Version:  $Revision$
 * Origin: <a href="http://www.risoe.dtu.dk/">DTU</a>
 * Release: McStas 2.0
 *
-* This component uses a Source Surface type file of recorded neutrons from the 
+* This component uses a Source Surface type file of recorded neutrons from the
 * reactor monte carlo code MCNP as a source of particles.
 *
 * %D
@@ -22,18 +21,18 @@
 * MCNP Monte Carlo code and converts them to make them suitable for a McStas simulation
 *
 * Note that axes orientation may be different between MCNP and McStas!
-* Note also that the conversion of between McStas and MCNP units and parameters 
+* Note also that the conversion of between McStas and MCNP units and parameters
 * is done automatically by this component - but the user must ensure that
 * geometry description matches between the two Monte Carlo codes.
 *
 * The verbose mode is highly recommended as it displays lots of useful informations.
 *
-* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR). 
-* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules 
+* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR).
+* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules
 * and subroutines collected in "subs.f"
-* For succesful compilation, it is required that these subroutines are compiled 
+* For succesful compilation, it is required that these subroutines are compiled
 * and linked to the instrument file:
-* 
+*
 *  mcstas dummy.instr  -> generates dummy.c
 *  gfortran -c subs.f  -> generates subs.f
 *  gcc -o runme.out dummy.c subs.o -lm -lgfortran  -> generates runme.out
@@ -49,12 +48,13 @@
 *         Or hardcode values of nhis & ntrk in either subs.f or Virtual_mcnp_ss_output.comp.
 *
 * EXAMPLE of usage:
-first a MCNP simulation is run
+*     first a MCNP simulation is run
 *     and at a relevant surface, a Source Surface Write card is given (e.g. for MCNP surface #1, add the line:
-*     SSW 1 
+*     SSW 1
 *     to the end of the input file.
 *     By this a ".w" file is produced, which then serves as input to the McStas simulation.
 * Present version: rename *.w to rssa, and make sure to put it in the dir from which McStas is run (or use symbolic links)
+*
 * %P
 * INPUT PARAMETERS
 * file:  Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' (str)
@@ -119,7 +119,7 @@ INITIALIZE
 	fprintf(stderr, "MCNP_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
       } else if (verbose)
 	printf("MCNP_input: %s: opening MCNP SSW file '%s'\n", NAME_CURRENT_COMP, file);
-  
+
     // put hardcoded nhis and ntrk values here
     //    ntrk=10;
     //    nhis=10;
@@ -134,7 +134,7 @@ INITIALIZE
     if (verbose) printf("WARNING: Virtual_mcnp_ss_output.comp or subs.f \n");
     if (verbose) printf("WARNING: sorry for the inconvience. \n");
     if (verbose) printf("Analysing MCNP file: %s \n", file);
-    
+
   } /* non-empty filename */
 
 %}
@@ -154,7 +154,7 @@ TRACE
     from_mcstas[5]=vz;
     from_mcstas[6]=p;
     from_mcstas[7]=t;
-    
+
     writeneutron_(&from_mcstas);
 
     if ( counterout >= (nhis-1) ) {
@@ -162,7 +162,7 @@ TRACE
       exit_flag = 1;
     }
     counterout++;
-  
+
   if (exit_flag) {
     if (verbose) printf("  Finishing simulation\n");
     mcset_ncount(mcget_run_num()); ABSORB;
@@ -185,4 +185,3 @@ MCDISPLAY
 %}
 
 END
-

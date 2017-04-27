@@ -13,14 +13,13 @@
 * Release: McStas 1.6
 *
 * A 2D Position-sensitive monitor. The shape is cylindrical with
-the axis vertical. The monitor covers the whole cylinder (360 degrees).
+* the axis vertical. The monitor covers the whole cylinder (360 degrees).
 *
 * %D
 * An (n times m) pixel PSD monitor with cylinder shape,
 * vertical axis, centered at (0,0,0).
 *
-* Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl",
-*           yheight=0.2, radius=0.1)
+* Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl", yheight=0.2, radius=0.1)
 *
 * %P
 * INPUT PARAMETERS:

@@ -38,11 +38,11 @@
 *
 * INPUT PARAMETERS
 *
-* transm  (1): coherent transmission of sample for the optical path "zdepth"
-* qDS  (AA-1): Scattering vector of Debye-Sherrer ring
-* xwidth  (m): horiz. dimension of sample, as a width (m)
-* yheight (m): vert.. dimension of sample, as a height (m)
-* zdepth  (m): thickness of sample (m)
+* transm:  (1) coherent transmission of sample for the optical path "zdepth"
+* qDS:  (AA-1) Scattering vector of Debye-Sherrer ring
+* xwidth:  (m) horiz. dimension of sample, as a width (m)
+* yheight: (m) vert.. dimension of sample, as a height (m)
+* zdepth:  (m) thickness of sample (m)
 *
 * %Link
 * Sans_spheres component
@@ -54,7 +54,7 @@ DEFINE COMPONENT SANS_DebyeS
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zdepth=0.001)
 OUTPUT PARAMETERS (q_v)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
   double q_v;

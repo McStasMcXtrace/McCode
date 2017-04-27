@@ -53,7 +53,7 @@
 * m4:       (1)    m-value of material, bottom.
 * W4:       (AA-1) Width of supermirror cut-off bottom
 *
-* wavy_z:  (deg)  Waviness in the z-(flight-)direction
+* wavy_z:  [deg]  Waviness in the z-(flight-)direction
 * wavy_xy: (deg)  Waviness in the transverse direction
 *
 * %E

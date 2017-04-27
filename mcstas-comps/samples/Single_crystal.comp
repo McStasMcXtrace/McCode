@@ -88,8 +88,7 @@
 *
 * See the Component Manual for more defails.
 *
-* Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
-*           mosaic = 5, reflections="YBaCuO.lau")
+* Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01, mosaic = 5, reflections="YBaCuO.lau")
 *
 * A PG graphite crystal plate, cut for (002) reflections
 *   Single_crystal(xwidth = 0.002, yheight = 0.1, zdepth = 0.1,
@@ -113,7 +112,7 @@
 * This component has been validated.
 *
 * %P
-* INPUT PARAMETERS:
+* INPUT PARAMETERS
 * radius:    Outer radius of sample in (x,z) plane [m]
 * xwidth:    Width of crystal [m]
 * yheight:   Height of crystal [m]
@@ -139,7 +138,7 @@
 * reflections: File name containing structure factors of reflections. Use empty ("") or NULL for incoherent scattering only [string]
 * order:     Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...) [1]
 *
-* Optional input parameters:
+* Optional input parameters
 *
 * p_transmit: Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics from weak reflections [1]
 * sigma_abs: Absorption cross-section per unit cell at 2200 m/s [barns]

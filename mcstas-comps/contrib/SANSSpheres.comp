@@ -7,7 +7,7 @@
 * Component: SANSSpheres
 *
 * %I
-* 
+*
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Based on a SANS-component in McStas by Peter Willendrup
 * Date: October 17, 2012
@@ -22,19 +22,16 @@
 * of monodisperse, spherical particles.
 *
 * %P
-* R						    : [AA]		Radius of the spherical particles.
-* dR                                : [AA]  Variance of the radius of spherical particles. Default 0 (monodisperse spheres)
-* Concentration		  	    : [mM]		Concentration of sample.
-* DeltaRho  			    : [cm/AA^3]	Excess scattering length density of the 
-*								   	    particles.
-* AbsorptionCrosssection    : [1/m]		Absorption cross section of the sample.
-* xwidth    			    : [m]  		Dimension of component in the x-direction.
-* yheight   			    : [m]		Dimension of component in the y-direction.
-* zdepth    			    : [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered neutrons).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered neutrons).
+* R: [AA]		Radius of the spherical particles.
+* dR: [AA]  Variance of the radius of spherical particles. Default 0 (monodisperse spheres)
+* Concentration: [mM]		Concentration of sample.
+* DeltaRho: [cm/AA^3]	Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
+* xwidth: [m]  		Dimension of component in the x-direction.
+* yheight: [m]		Dimension of component in the y-direction.
+* zdepth: [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]		Distance from sample to detector (for focusing the scattered neutrons).
+* DetectorRadius: [m] 		Radius of the detector (for focusing the scattered neutrons).
 *
 * %E
 *******************************************************************************/
@@ -50,7 +47,7 @@ OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-	// Declarations	
+	// Declarations
 	double Prefactor;
 	double Absorption;
 	double q;
@@ -74,16 +71,16 @@ INITIALIZE
 
 TRACE
 %{
-	// Declarations	
-	double t0; 
+	// Declarations
+	double t0;
 	double t1;
 	double l_full;
 	double l;
 	double l1;
 	double Formfactor;
 	double SolidAngle;
-	double qx; 
-	double qy; 
+	double qx;
+	double qy;
 	double qz;
 	double v;
 	double dt;
@@ -91,10 +88,10 @@ TRACE
 	double vy_i;
 	double vz_i;
 	char Intersect = 0;
-	
+
 	// Set radius if polydisperse spheres
 	R = R + randnorm()*dR;
-	
+
 	// Computation
 	Intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
 
@@ -109,7 +106,7 @@ TRACE
 		v = sqrt(pow(vx, 2) + pow(vy, 2) + pow(vz, 2));
 		l_full = v * (t1 - t0);
 		dt = rand01() * (t1 - t0) + t0;
-		PROP_DT(dt);                     
+		PROP_DT(dt);
 	    l = v * (dt - t0);
 
 		// Store properties of incoming neutron

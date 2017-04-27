@@ -84,7 +84,7 @@
 * width_t: (m)    Edge of cube shaped thermal source
 * Lmin:   (AA)   Lower edge of wavelength distribution
 * Lmax:   (AA)   Upper edge of wavelength distribution
-* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
+* dist:   [m]    Distance from source to focusing rectangle; at (0,0,dist)
 * focus_xw:(m)   Width of focusing rectangle
 * focus_yh:(m)   Height of focusing rectangle
 * target_index:(1)  relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
@@ -102,17 +102,17 @@
 * n2:     (1)    pulse shape parameter, 2
 * chi2:   (1/AA) lambda-distribution parameter in cold pulse 2
 * chi2_t: (1/AA) lambda-distribution parameter in thermal pulse 2
-* I0:     (flux) integrated cold flux, 1 (in flux units, see above)
-* I0_t:   (flux) integrated thermal flux, 1 (in flux units, see above)
-* I2:     (flux) Cold flux, 2 (in flux units, see above)
-* I2_t:   (flux) Thermal flux, 2 (in flux units, see above)
-* branch1: (1)   limit for switching between two time structures in cold distribution 1 (only for coupled water, else = 1)
-* branch1_t: (1) limit for switching between two time structures in thermal distribution 1 (only for coupled water, else = 1)
-* branch2: (1)   limit for switching between cold distribution 1 and 2. (default value 0.5)
-* branch2_t: (1) limit for switching between thermal distribution 1 and 2. (default value 0.5)
-* branch_tail: (1)   limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
+* I0:     [flux] integrated cold flux, 1 (in flux units, see above)
+* I0_t:   [flux] integrated thermal flux, 1 (in flux units, see above)
+* I2:     [flux] Cold flux, 2 (in flux units, see above)
+* I2_t:   [flux] Thermal flux, 2 (in flux units, see above)
+* branch1: [1]   limit for switching between two time structures in cold distribution 1 (only for coupled water, else = 1)
+* branch1_t: [1] limit for switching between two time structures in thermal distribution 1 (only for coupled water, else = 1)
+* branch2: [1]   limit for switching between cold distribution 1 and 2. (default value 0.5)
+* branch2_t: [1] limit for switching between thermal distribution 1 and 2. (default value 0.5)
+* branch_tail: [1]   limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
 * n_pulses: (1)  Number of pulses simulated. 0 and 1 creates one pulse. The integrated intensity is constant
-* cold_frac: (1) Fraction of neutron statistics from cold source. It is implicitely assumed that supermirror allows each beamline to choose the desired fraction of cold and thermal neutrons (i.e. extreme idealization).
+* cold_frac: [1] Fraction of neutron statistics from cold source. It is implicitely assumed that supermirror allows each beamline to choose the desired fraction of cold and thermal neutrons (i.e. extreme idealization).
 * src_2012:  (bool) Flag to apply 2012 MCNPX-derived, wavelenght-dependent correction to intensity from the cold moderator.
 * tfocus_dist: (m) Position of time window
 * tfocus_time: (s) Time position of window

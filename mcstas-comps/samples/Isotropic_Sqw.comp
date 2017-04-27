@@ -69,7 +69,6 @@
 *   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
-
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -254,7 +253,6 @@
 * %L
 * <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
 * %E
-******************
 ***********************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
