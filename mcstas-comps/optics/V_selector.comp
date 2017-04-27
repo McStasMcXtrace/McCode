@@ -10,9 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Velocity selector.
 *
@@ -33,15 +31,15 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:    (m)   Width of entry aperture
-* yheight:   (m)   Height of entry aperture
-* zdepth:    (m)   Distance between apertures, for housing containing the rotor
-* radius:    (m)   Height from aperture centre to rotation axis
-* alpha:     (deg) Twist angle along the cylinder
-* length:    (m)   Length of cylinder/rotor (less than zdepth)
-* d:         (m)   Thickness of blades
-* nu:        (Hz)  Cylinder rotation speed, counter-clockwise, which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length
-* nslit:     (1)   Number of Soller blades
+* xwidth: [m]   Width of entry aperture
+* yheight: [m]  Height of entry aperture
+* zdepth: [m]   Distance between apertures, for housing containing the rotor
+* radius: [m]   Height from aperture centre to rotation axis
+* alpha: [deg]  Twist angle along the cylinder
+* length: [m]   Length of cylinder/rotor (less than zdepth)
+* d: [m]        Thickness of blades
+* nu: [Hz]      Cylinder rotation speed, counter-clockwise, which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length
+* nslit: [1]    Number of Soller blades
 *
 * %E
 *******************************************************************************/
@@ -57,14 +55,14 @@ OUTPUT PARAMETERS(omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f
 
 DECLARE
 %{
-  double omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha;
+double omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha;
 %}
 
 INITIALIZE
 %{
-  omega=nu*2*PI;
-  alpha_rad = alpha*DEG2RAD;
-  if (zdepth < length) zdepth=length;
+omega=nu*2*PI;
+alpha_rad = alpha*DEG2RAD;
+if (zdepth < length) zdepth=length;
 %}
 
 TRACE

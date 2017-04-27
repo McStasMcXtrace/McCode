@@ -11,8 +11,6 @@
 *
 * Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby
 * Date: January 2013
-* Version: $Revision: 1.12 $
-* Release: McStas 2.1
 * Origin: DTU Physics / DTU Nutech
 *
 * Stop logging iteractions of neutrons with components
@@ -23,7 +21,7 @@
 * %P
 * Input parameters:
 *
-* logger: The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components.
+* logger: []  The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components.
 *
 * %E
 *******************************************************************************/
@@ -34,10 +32,10 @@ SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
 
 SHARE
-  %{
+%{
 #define SCATTER0\
-    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
+do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
 %}
 
 DECLARE

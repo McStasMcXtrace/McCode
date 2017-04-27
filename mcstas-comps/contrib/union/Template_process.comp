@@ -6,7 +6,6 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 *
@@ -37,8 +36,8 @@
 *
 * %P
 * INPUT PARAMETERS:
-* sigma:            [barns]  Scattering cross section
-* unit_cell_volume: [AA^3]   Unit cell volume
+* sigma: [barns]            Scattering cross section
+* unit_cell_volume: [AA^3]  Unit cell volume
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter
@@ -66,13 +65,13 @@ SHARE
 
 // Very important to add a pointer to this struct in the Union_functions.c file
 struct Template_physics_storage_struct{
-    // Variables that needs to be transfered between any of the following places:
-    // The initialize in this component
-    // The function for calculating my
-    // The function for calculating scattering
-    
-    // Avoid duplicates of output parameters and setting parameters in naming
-    double my_scattering;
+// Variables that needs to be transfered between any of the following places:
+// The initialize in this component
+// The function for calculating my
+// The function for calculating scattering
+
+// Avoid duplicates of output parameters and setting parameters in naming
+double my_scattering;
 };
 
 // Function for calculating my, the inverse penetration depth (for only this scattering process).

@@ -10,9 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 2.0
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by
 * Kaspar Hewitt Klenoe (jan 2006), adjustments by Rob Bewey (march 2006)
 *
@@ -32,21 +30,21 @@
 * %P
 * INPUT PARAMETERS:
 *
-* theta_0: [deg]    Angular width of the slits.
-* yheight: [m]      Slit height (if = 0, equal to radius). Auto centering of beam at half height.
-* radius:  [m]      Radius of the disc
-* nu:      [Hz]     Frequency of the Chopper, omega=2*PI*nu (algebraic sign defines the direction of rotation)
-* nslit:   [1]      Number of slits, regularly arranged around the disk
+* theta_0: [deg]  Angular width of the slits.
+* yheight: [m]    Slit height (if = 0, equal to radius). Auto centering of beam at half height.
+* radius: [m]     Radius of the disc
+* nu: [Hz]        Frequency of the Chopper, omega=2*PI*nu (algebraic sign defines the direction of rotation)
+* nslit: [1]      Number of slits, regularly arranged around the disk
 *
 * Optional parameters:
-* isfirst: [0/1]    Set it to 1 for the first chopper position in a cw source (it then spreads the neutron time distribution)
-* n_pulse: [1]      Number of pulses (Only if isfirst)
-* jitter:  [s]      Jitter in the time phase
-* abs_out: [0/1]    Absorb neutrons hitting outside of chopper radius?
-* delay:   [s]      Time 'delay'
-* phase:   [deg]    Angular 'delay' (overrides delay)
-* xwidth:  [m]      Horizontal slit width opening at beam center
-* verbose: [1]      Set to 1 to display Disk chopper configuration
+* isfirst: [0/1]  Set it to 1 for the first chopper position in a cw source (it then spreads the neutron time distribution)
+* n_pulse: [1]    Number of pulses (Only if isfirst)
+* jitter: [s]     Jitter in the time phase
+* abs_out: [0/1]  Absorb neutrons hitting outside of chopper radius?
+* delay: [s]      Time 'delay'
+* phase: [deg]    Angular 'delay' (overrides delay)
+* xwidth: [m]     Horizontal slit width opening at beam center
+* verbose: [1]    Set to 1 to display Disk chopper configuration
 *
 * %E
 *******************************************************************************/
@@ -62,13 +60,13 @@ OUTPUT PARAMETERS (Tg, To, delta_y, height,omega)
 
 DECLARE
 %{
-  double Tg,To,delta_y,height,omega;
+double Tg,To,delta_y,height,omega;
 %}
 
 INITIALIZE
 %{
-      /* If slit height 'unset', assume full opening */
-      if (yheight == 0) {
+/* If slit height 'unset', assume full opening */
+if (yheight == 0) {
         height=radius;
       } else {
         height=yheight;

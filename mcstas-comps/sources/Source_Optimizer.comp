@@ -9,8 +9,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 17 Sept 1999
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.6
-* Version: $Revision$
 * Modified by: (v 0.06) EF, Feb 2000;
 * Modified by: (v.0.07) EF, Mar 10th 2000; (smoothed, parse options). struct
 * Modified by: (v.0.08) EF, Oct 12th 2000; optim divergence for v and s
@@ -90,10 +88,10 @@
 * The 'smooth' option minimises this effect (on by default).
 *
 * %Parameters
-* bins:    Number of cells for sampling neutron states. [1]
-* step:    Optimizer step in percent of simulation. [0-100]
-* keep:    Percentage of initial source distribution that is kept. [0-100]
-* options: string of options. See <b>Description<b> [str]
+* bins: [1]       Number of cells for sampling neutron states. 
+* step: [0-100]   Optimizer step in percent of simulation. 
+* keep: [0-100]   Percentage of initial source distribution that is kept. 
+* options: [str]  string of options. See <b>Description<b> 
 
 *
 * OUTPUT PARAMETERS:
@@ -120,14 +118,14 @@ Mar 10 2000 : v0.07.2 gathered all variables into 2 structures
 */
 
 /* other options : setxy, setv, sets, setdiv to precise what parameters
- *                 should be optimized */
+*                 should be optimized */
 /*                 default is 'setxy'+setdiv+sets' */
 
 /* TODO :
- * 1- can re-use previous optimisation pattern
- */
+* 1- can re-use previous optimisation pattern
+*/
 
- /* PB : the use of 's2' in a component makes a conflict with McStas kernel */
+/* PB : the use of 's2' in a component makes a conflict with McStas kernel */
 
 DEFINE COMPONENT Source_Optimizer
 
@@ -141,7 +139,7 @@ OUTPUT PARAMETERS (DEFS, Vars)
 SHARE
 %{
 
-  /* here we define a structure of constants (some kind of DEFINES) */
+/* here we define a structure of constants (some kind of DEFINES) */
   struct Optim_Defines
   {
     char PHASE_UNACTIVATE; /* to unactivate Optimizer */

@@ -303,12 +303,13 @@ def repair_comp(localdir):
                 lines[idx] = l
                 
                 # flag superfluous doc lines for removal
-                if p[0] not in real_parnames:
-                    # (!!!!)
-                    # TODO: take care of the ordering of idxs_remove. Today, we know that all previuosly 
-                    # removed lines are above, but this may change
-                    # (!!!!)
-                    idxs_remove.append(idx)
+                if False:
+                    if p[0] not in real_parnames:
+                        # (!!!!)
+                        # TODO: take care of the ordering of idxs_remove. Today, we know that all previuosly 
+                        # removed lines are above, but this may change
+                        # (!!!!)
+                        idxs_remove.append(idx)
             
             # add a stub par doc line for each par that isn't represented (WARNING: do not use while removing lines!
             if False:
@@ -337,10 +338,10 @@ def repair_comp(localdir):
         for idx in reversed(idxs_remove):
             del lines[idx]
         
-        #for l in lines:
-        #    print(l)
+        for l in lines:
+            print(l)
         
-        continue
+        #continue
         
         f.close()
         f = open(filename, 'w')

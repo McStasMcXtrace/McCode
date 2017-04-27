@@ -10,9 +10,7 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.12cb
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -60,27 +58,27 @@
 * %P
 * Input parameters:
 *
-* size:   (m)    Edge of cube shaped source
-* l_low:  (AA)   Lower edge of lambda distribution
-* l_high: (AA)   Upper edge of energy distribution
-* dist:   [m]    Distance from source to focusing rectangle; at (0,0,dist)
-* xw:     (m)    Width of focusing rectangle
-* yh:     (m)    Height of focusing rectangle
-* freq:   (Hz)   Frequency of pulses
-* T:      (K)    Temperature of source
-* tau:    (s)    long time decay constant for pulse tail 1a
-* tau1:   (s)    long time decay constant for pulse tail 1b
-* tau2:   (s)    long time decay constant for pulse, 2
-* d:      (s)    pulse length
-* n:      (1)    pulse shape parameter, 1
-* n2:     (1)    pulse shape parameter, 2
-* chi2:   (1/AA) lambda-distribution parameter in pulse 2
-* I0:     [flux] integrated flux, 1 (in flux units, see above)
-* I2:     [flux] Flux, 2 (in flux units, see above)
-* branch1: [1]   limit for switching between two time structures in distribution 1 (only for coupled water, else = 1)
-* branch2: [1]   limit for switching between distribution 1 and 2. (default value 0.5)
-* branch_tail: [1]   limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
-* twopulses: (1) Flag for selecting one or two pulses. 0 is one pulse.
+* size: [m]         Edge of cube shaped source
+* l_low: [AA]       Lower edge of lambda distribution
+* l_high: [AA]      Upper edge of energy distribution
+* dist: [m]         Distance from source to focusing rectangle; at (0,0,dist)
+* xw: [m]           Width of focusing rectangle
+* yh: [m]           Height of focusing rectangle
+* freq: [Hz]        Frequency of pulses
+* T: [K]            Temperature of source
+* tau: [s]          long time decay constant for pulse tail 1a
+* tau1: [s]         long time decay constant for pulse tail 1b
+* tau2: [s]         long time decay constant for pulse, 2
+* d: [s]            pulse length
+* n: [1]            pulse shape parameter, 1
+* n2: [1]           pulse shape parameter, 2
+* chi2: [1/AA]      lambda-distribution parameter in pulse 2
+* I0: [flux]        integrated flux, 1 (in flux units, see above)
+* I2: [flux]        Flux, 2 (in flux units, see above)
+* branch1: [1]      limit for switching between two time structures in distribution 1 (only for coupled water, else = 1)
+* branch2: [1]      limit for switching between distribution 1 and 2. (default value 0.5)
+* branch_tail: [1]  limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
+* twopulses: [1]    Flag for selecting one or two pulses. 0 is one pulse.
 *
 * %E
 ******************************************************************************/
@@ -88,14 +86,14 @@
 DEFINE COMPONENT ESS_moderator_long_2001
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size=0.12, l_low, l_high, dist=0, xw, yh, freq=50.0/3.0,
-                    T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
-		    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
-                    branch1=1, branch2=0.5, branch_tail=0.14350, twopulses=0, int target_index=0)
+T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
+n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
+branch1=1, branch2=0.5, branch_tail=0.14350, twopulses=0, int target_index=0)
 OUTPUT PARAMETERS (l_range, w_mult)
 
 SHARE
 %{
-  double Mezei_M_fct(double l, double temp)
+double Mezei_M_fct(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);

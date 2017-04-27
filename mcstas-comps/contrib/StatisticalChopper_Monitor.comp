@@ -10,9 +10,7 @@
 * %Identification
 * Written by: C. Monzat/E. Farhi
 * Date: 2009
-* Version: $Revision: 1.0$
 * Origin: ILL
-* Release: McStas 2.0
 *
 * Monitor designed to compute the autocorrelation signal for the Statistical Chopper
 *
@@ -28,13 +26,13 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* comp: name of the component monitored. Do not use quotes (StatisticalChopper)
-* tmin: minimal time of detection (s)
-* tmax: maximal time of detection (s)
+* comp: [StatisticalChopper]  name of the component monitored. Do not use quotes 
+* tmin: [s]                   minimal time of detection 
+* tmax: [s]                   maximal time of detection 
 *
 * OUTPUT PARAMETERS:
-* delta_t: interval of time of the detection (s)
-* T_p: period of the statistical chopper comp (s)
+* delta_t: [s]                interval of time of the detection 
+* T_p: [s]                    period of the statistical chopper comp 
 *
 * %L
 * R. Von Jan and R. Scherm. The statistical chopper for neutron time-of-flight spectroscopy. Nuclear Instruments and Methods, 80 (1970) 69-76.
@@ -45,15 +43,15 @@ DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
 DEFINITION PARAMETERS (comp)
 SETTING PARAMETERS (tmin=0.0,tmax=0.0)
 OUTPUT PARAMETERS()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE COPY Monitor_nD
 
 INITIALIZE COPY Monitor_nD EXTEND
 %{
-  char op[CHAR_BUF_LENGTH];
-  /* check if time is already in the variables to monitor */
-  if (!strstr(Vars.option, "time")) {
+char op[CHAR_BUF_LENGTH];
+/* check if time is already in the variables to monitor */
+if (!strstr(Vars.option, "time")) {
     sprintf(op, "time %s", Vars.option);
     strcpy(Vars.option,op);
   } else {

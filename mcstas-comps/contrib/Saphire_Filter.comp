@@ -8,7 +8,6 @@
 *
 * Written by: Jonas Okkels Birk (based upon Filteg_Graphite by Thomas C Hansen (2000))
 * Date: 6 December 2006
-* Version: $Revision: 1.1.1.1 $
 * Origin: PSI
 *
 * Saphire filter at 300K
@@ -33,15 +32,15 @@
 *
 * INPUT PARAMETERS:
 *
-* xmin:     [m]    Lower x bound
-* xmax:     [m]    Upper x bound
-* ymin:     [m]    Lower y bound
-* ymax:     [m]    Upper y bound
-* len:      [m]    Thickness of filter
-* A: [m^-1 AA^-1]
-* B: [AA^2]
-* C: [m^-1]
-* D: [AA^4]
+* xmin: [m]        Lower x bound
+* xmax: [m]        Upper x bound
+* ymin: [m]        Lower y bound
+* ymax: [m]        Upper y bound
+* len: [m]         Thickness of filter
+* A: [m^-1 AA^-1]  
+* B: [AA^2]        
+* C: [m^-1]        
+* D: [AA^4]        
 *
 * %LINKS
 * %END
@@ -60,10 +59,10 @@ INITIALIZE
 %}
 TRACE
 %{
-  double L,L2,Filt_T;
-  double dt;
-  PROP_Z0;
-  L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+double L,L2,Filt_T;
+double dt;
+PROP_Z0;
+L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
   if (x<xmin || x>xmax || y<ymin || y>ymax) ABSORB;
   dt = len/vz;
   PROP_DT(dt);

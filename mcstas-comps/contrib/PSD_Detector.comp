@@ -10,9 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision$
 * Origin: ILL
-* Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
 *
 * Position-sensitive gas-filled detector with gaseous thermal-neutron
@@ -133,39 +131,39 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:         Width of detector opening, in the case of a flat box (m)
-* radius:         Radius of detector for cylindrical/banana shape (m)
-* awidth:         Width of detector opening along the horizontal arc of the detector, measured along the inside arc of the sensitive volume in the case of a 'banana' detector (m)
-* angle:          Angular opening of detector in the case of a 'banana' detector, then overrides awidth parameter (deg)
-* yheight:        Height of detector opening (m)
-* zdepth:         Depth of the sensitive volume of the detector (m)
-* nx:             Number of pixel columns (1)
-* ny:             Number of pixel rows (1)
-* borderx:        Width of (gas-filled) border on the side of the detector (m)
-* bordery:        Height of (gas-filled) border on the top/bottom of the detector giving rise to various border effects. Set to -2 to obtain the height of one pixel, -1 for the depth of the detector (default), or specify a non-negativedistance (m)
-* FN_Conv:        Filename of the stopping power table of the converter gas (text)
-* PressureConv:   Pressure of gaseous thermal-neutron converter (e.g. He-3) (bar)
-* FN_Stop:        Filename of the stopping power table of the stopping gas (text)
-* PressureStop:   Pressure of stopping gas (bar)
-* threshold:      Energy threshold for acceptance of an event (keV)
-* filename:       Name of file in which to store the detector image. The name of the component is used if file name is not specified (text)
-* interpolate:    Performs energy interpolation if true (1)
-* verbose:        Gives more information and spectrum (1)
-* p_interact:     Fraction of statistical events to be treated by component. Set it to 0 to use real absorption probability (1)
-* LensOn:         set to 1 to simulate an electrostatic lens according to P. Van Esch, NIM A 540 (2005) pp. 361-367. (1)
-* dc:             Distance from the entrance window to the cathode plane, where the correction zone of the lens ends for banana shape and LensOn=1 (m)
-* xChDivRelSigma: Sigma of the error in position determination along the x axis (relative to xwidth), uniquely due to charge division readout. Set to 0 in case of independent channel readout along the x dimension (1)
-* yChDivRelSigma: Relative sigma due to charge division in y direction, relative to yheight. (1)
-* type:           If set to 'events' detector signal saves signal into an event file to be read e.g. by Histogrammer. This is to be used for TOF detectors. (string)
-* bufsize:        Size of neutron output buffer default is 0, i.e. save all - recommended. (1)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xwidth: [m]           Width of detector opening, in the case of a flat box 
+* radius: [m]           Radius of detector for cylindrical/banana shape 
+* awidth: [m]           Width of detector opening along the horizontal arc of the detector, measured along the inside arc of the sensitive volume in the case of a 'banana' detector 
+* angle: [deg]          Angular opening of detector in the case of a 'banana' detector, then overrides awidth parameter 
+* yheight: [m]          Height of detector opening 
+* zdepth: [m]           Depth of the sensitive volume of the detector 
+* nx: [1]               Number of pixel columns 
+* ny: [1]               Number of pixel rows 
+* borderx: [m]          Width of (gas-filled) border on the side of the detector 
+* bordery: [m]          Height of (gas-filled) border on the top/bottom of the detector giving rise to various border effects. Set to -2 to obtain the height of one pixel, -1 for the depth of the detector (default), or specify a non-negativedistance 
+* FN_Conv: [text]       Filename of the stopping power table of the converter gas 
+* PressureConv: [bar]   Pressure of gaseous thermal-neutron converter (e.g. He-3) 
+* FN_Stop: [text]       Filename of the stopping power table of the stopping gas 
+* PressureStop: [bar]   Pressure of stopping gas 
+* threshold: [keV]      Energy threshold for acceptance of an event 
+* filename: [text]      Name of file in which to store the detector image. The name of the component is used if file name is not specified 
+* interpolate: [1]      Performs energy interpolation if true 
+* verbose: [1]          Gives more information and spectrum 
+* p_interact: [1]       Fraction of statistical events to be treated by component. Set it to 0 to use real absorption probability 
+* LensOn: [1]           set to 1 to simulate an electrostatic lens according to P. Van Esch, NIM A 540 (2005) pp. 361-367. 
+* dc: [m]               Distance from the entrance window to the cathode plane, where the correction zone of the lens ends for banana shape and LensOn=1 
+* xChDivRelSigma: [1]   Sigma of the error in position determination along the x axis (relative to xwidth), uniquely due to charge division readout. Set to 0 in case of independent channel readout along the x dimension 
+* yChDivRelSigma: [1]   Relative sigma due to charge division in y direction, relative to yheight. 
+* type: [string]        If set to 'events' detector signal saves signal into an event file to be read e.g. by Histogrammer. This is to be used for TOF detectors. 
+* bufsize: [1]          Size of neutron output buffer default is 0, i.e. save all - recommended. 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
-* SCATERED: is 1 when neutron is absorbed by gas, and reaches 2 when charges are detected
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
+* SCATERED: []          is 1 when neutron is absorbed by gas, and reaches 2 when charges are detected
 *
 * %L
 * The test/example instrument <a href="../examples/Test_PSD_Detector.instr">Test_PSD_Detector.instr</a>.
@@ -176,26 +174,26 @@
 DEFINE COMPONENT PSD_Detector
 DEFINITION PARAMETERS (nx=128, ny=128)
 SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
-  threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
-  verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
-  yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
-  string type=0, string filename=0,
-  string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
+threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
+verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
+yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
+string type=0, string filename=0,
+string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
-  CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
-  PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
-  DetectorType,
-  DEFS, Vars)
+CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
+PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
+DetectorType,
+DEFS, Vars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "read_table-lib"
-  %include "monitor_nd-lib"
+%include "read_table-lib"
+%include "monitor_nd-lib"
 
-  #ifndef PSD_Detector_SHARE
-  #define PSD_Detector_SHARE
-  double PSD_He_interp1value(double *array_x,double *array_y,long n_elements,double interp_x) {
+#ifndef PSD_Detector_SHARE
+#define PSD_Detector_SHARE
+double PSD_He_interp1value(double *array_x,double *array_y,long n_elements,double interp_x) {
     long cnt1 = 0;
     double a;
     // while (interp_x > array_x[++cnt1]);

@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
 * Date: Feb. 12,1999
 * Origin: Uni. Gottingen (Germany)
-* Release: McStas 1.6
-* Version: $Revision$
 * Modified by: Peter Link Feb. 12,1999, Added double bent feature by:
 * Modified by: Peter Link Sep. 24. 1999, corrected bug in rotation of v-coords:
 * Modified by: EF, Feb 13th 2002: Read reflectivity table
@@ -49,25 +47,25 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* zwidth:  horizontal width of an individual slab (m)
-* yheight: vertical height of an individual slab (m)
-* gap:     typical gap  between adjacent slabs (m)
-* NH:      number of slabs horizontal (columns)
-* NV:      number of slabs vertical   (rows)
-* mosaich: Horisontal mosaic FWHM (arc minutes)
-* mosaicv: Vertical mosaic FWHM (arc minutes)
-* r0:      Maximum reflectivity (1)
-* Q:       Scattering vector (AA-1)
-* RV:      radius of vertical focussing, flat for 0 (m)
-* RH:      radius of horizontal focussing, flat for 0 (m)
+* zwidth: [m]      horizontal width of an individual slab 
+* yheight: [m]     vertical height of an individual slab 
+* gap: [m]         typical gap  between adjacent slabs 
+* NH: [columns]    number of slabs horizontal 
+* NV: [rows]       number of slabs vertical   
+* mosaich: []      Horisontal mosaic FWHM (arc minutes)
+* mosaicv: []      Vertical mosaic FWHM (arc minutes)
+* r0: [1]          Maximum reflectivity 
+* Q: [AA-1]        Scattering vector 
+* RV: [m]          radius of vertical focussing, flat for 0 
+* RH: [m]          radius of horizontal focussing, flat for 0 
 *
 * optional parameters
-* DM:      monochromator d-spacing instead of Q=2*pi/DM (Angstrom)
-* mosaic:  sets mosaich=mosaicv (arc minutes)
-* width:   total width of monochromator (m)
-* height:  total height of monochromator (m)
-* verbose: verbosity level (0/1)
-* reflect: reflectivity file name of text file as 2 columns [k, R] (str)
+* DM: [Angstrom]   monochromator d-spacing instead of Q=2*pi/DM 
+* mosaic: []       sets mosaich=mosaicv (arc minutes)
+* width: [m]       total width of monochromator 
+* height: [m]      total height of monochromator 
+* verbose: [0/1]   verbosity level 
+* reflect: [k, R]  reflectivity file name of text file as 2 columns 
 *
 * %Link
 * <a href="http://mailman.risoe.dk/pipermail/neutron-mc/1999q1/000133.html">Additional note</a> from <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
@@ -79,26 +77,26 @@ DEFINE COMPONENT Monochromator_2foc
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
 OUTPUT PARAMETERS (mos_y, mos_z,  mono_Q, SlabWidth, SlabHeight, rTable)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 %include "read_table-lib"
 %}
 DECLARE
-  %{
+%{
 #ifndef DIV_CUTOFF
 #define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
 #endif
-  double mos_y; /* mosaic, in radians */
-  double mos_z;
-  double mono_Q;
-  double SlabWidth, SlabHeight;
-  t_Table rTable;
-  %}
+double mos_y; /* mosaic, in radians */
+double mos_z;
+double mono_Q;
+double SlabWidth, SlabHeight;
+t_Table rTable;
+%}
 
 INITIALIZE
 %{
-  if (mosaic != 0) {
+if (mosaic != 0) {
     mos_y = mosaic;
     mos_z = mos_y; }
   else {

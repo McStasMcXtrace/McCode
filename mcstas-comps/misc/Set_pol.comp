@@ -10,9 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: August 2006
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.10
 *
 * (Unphysical) way of setting the polarization.
 *
@@ -28,10 +26,10 @@
 * %P
 * INPUT PARAMETERS:
 *
-* px:        X-component of polarisation vector (can be negative) [1]
-* py:        Y-component of polarisation vector (can be negative) [1]
-* pz:        Z-component of polarisation vector (can be negative) [1]
-* randomOn:  Generate random values if randomOn!=0. [1]
+* px: [1]        X-component of polarisation vector (can be negative) 
+* py: [1]        Y-component of polarisation vector (can be negative) 
+* pz: [1]        Z-component of polarisation vector (can be negative) 
+* randomOn: [1]  Generate random values if randomOn!=0. 
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,7 +48,7 @@ DECLARE
 
 INITIALIZE
 %{
-  if (px==1 && py==1 && pz==1)
+if (px==1 && py==1 && pz==1)
   {
     printf("Set_pol: %s: NULL vector defined!\n"
 	   "ERROR      (px, py, pz). Exiting",

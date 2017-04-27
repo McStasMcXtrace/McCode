@@ -11,9 +11,7 @@
 *
 * Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 1.6
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * Pyrolytic graphite filter (analytical model)
@@ -32,13 +30,13 @@
 *
 * INPUT PARAMETERS:
 *
-* xmin:   [m] Lower x bound       
-* xmax:   [m] Upper x bound       
-* ymin:   [m] Lower y bound       
-* ymax:   [m] Upper y bound       
-* length: [m] Thickness of graphite plate   
-* xwidth: Width of filter. Overrides xmin,xmax. (m)
-* yheight:Height of filter. Overrides ymin,ymax. (m)
+* xmin: [m]     Lower x bound
+* xmax: [m]     Upper x bound
+* ymin: [m]     Lower y bound
+* ymax: [m]     Upper y bound
+* length: [m]   Thickness of graphite plate
+* xwidth: [m]   Width of filter. Overrides xmin,xmax. 
+* yheight: [m]  Height of filter. Overrides ymin,ymax. 
 *
 * %END
 *
@@ -48,10 +46,10 @@ DEFINE COMPONENT Filter_graphite
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.16, xmax=0.16, ymin=-0.16, ymax=0.16, length=0.05, xwidth=0, yheight=0)
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 INITIALIZE
 %{
-  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
   
   if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0)

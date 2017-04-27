@@ -12,8 +12,6 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision$
-* Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
 * Modified by: EF, Oct 2008: fix chopper orientation
@@ -46,28 +44,28 @@
 * INPUT PARAMETERS:
 *
 * Geometrical chopper constants:
-* radius:   [m]   chopper cylinder radius
-* nslit:    [1]   number of chopper slits
-* length:   [m]   channel length of the Fermi chopper
-* w:        [m]   width of one chopper slit
-* xwidth:   [m]   optional total width of slit package
-* yheight:  [m]   height of slit package
-* nu:       [Hz]  chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm. Positive value corresponds to a clockwise rotation from X towards Z from above (y>0).
-* eff:      [1]   efficiency = transmission x fraction of transparent material
-* verbose:  [1]   set to 1,2 or 3 gives debugging information
-* curvature:[m-1] Curvature of slits (1/radius of curvature).
+* radius: [m]       chopper cylinder radius
+* nslit: [1]        number of chopper slits
+* length: [m]       channel length of the Fermi chopper
+* w: [m]            width of one chopper slit
+* xwidth: [m]       optional total width of slit package
+* yheight: [m]      height of slit package
+* nu: [Hz]          chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm. Positive value corresponds to a clockwise rotation from X towards Z from above (y>0).
+* eff: [1]          efficiency = transmission x fraction of transparent material
+* verbose: [1]      set to 1,2 or 3 gives debugging information
+* curvature: [m-1]  Curvature of slits (1/radius of curvature).
 *
 * Supermirror constants:
-* m:        [1]    m-value of material. Zero means completely absorbing.
-* alpha:    [AA]   slope of reflectivity
-* Qc:       [AA-1] critical scattering vector
-* W:        [AA-1] width of supermirror cut-off
-* R0:       [1]    low-angle reflectivity
+* m: [1]            m-value of material. Zero means completely absorbing.
+* alpha: [AA]       slope of reflectivity
+* Qc: [AA-1]        critical scattering vector
+* W: [AA-1]         width of supermirror cut-off
+* R0: [1]           low-angle reflectivity
 *
 * Constants to reset time of flight:
-* zero_time:[1]   set time to zero: 0=no, 1=once per half cycle, 2=auto adjust phase
-* phase:    [deg] chopper phase at t=0
-* delay:    [s]   sets phase so that transmision is centered on 'delay'
+* zero_time: [1]    set time to zero: 0=no, 1=once per half cycle, 2=auto adjust phase
+* phase: [deg]      chopper phase at t=0
+* delay: [s]        sets phase so that transmision is centered on 'delay'
 *
 * OUTPUT PARAMETERS:
 * FCVars :  []     structure
@@ -80,20 +78,20 @@
 *****************************************************************************/
 
 /* NOTE:
- *   The initial component version (McStas version <= 1.12) was written
- *   with an inverted coordinate frame orientation. This corresponds
- *   to inverting the frequency and phase sign.
- */
+*   The initial component version (McStas version <= 1.12) was written
+*   with an inverted coordinate frame orientation. This corresponds
+*   to inverting the frequency and phase sign.
+*/
 
 DEFINE COMPONENT FermiChopper
 
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
-  w=0.00022475, nslit=200, R0=0.0,
-  Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
-  zero_time=0, xwidth=0, verbose=0, yheight=0.08,
-  curvature=0,delay=0)
+w=0.00022475, nslit=200, R0=0.0,
+Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
+zero_time=0, xwidth=0, verbose=0, yheight=0.08,
+curvature=0,delay=0)
 
 OUTPUT PARAMETERS(FCVars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -102,47 +100,47 @@ SHARE
 %{
 %include "ref-lib"
 #ifndef FermiChopper_TimeAccuracy
-  #define FermiChopper_TimeAccuracy 1e-9
-  #define FermiChopper_MAXITER      100
+#define FermiChopper_TimeAccuracy 1e-9
+#define FermiChopper_MAXITER      100
 
-  /* Definition of internal variable structure: all counters */
-  struct FermiChopper_struct
-  {
-    double omega, ph0, t0;  /* chopper rotation */
-    double C_slit;          /* slit curvature radius in [m] */
-    double L_slit;          /* slit package length [m] */
-    double sum_t;
-    double sum_v;
-    double sum_N;
-    double sum_N_pass;
-    /* events */
-    long absorb_alreadyinside;
-    long absorb_topbottom;
-    long absorb_cylentrance;
-    long absorb_sideentrance;
-    long absorb_notreachentrance;
-    long absorb_packentrance;
-    long absorb_slitcoating;
-    long warn_notreachslitwall;
-    long absorb_exitslitpack;
-    long absorb_maxiterations;
-    long absorb_wrongdirection;
-    long absorb_nocontrol;
-    long absorb_cylexit;
-    long warn_notreachslitoutput;
-    char compcurname[256];
-    double X[5],Z[5]; /* position of interaction locations in the Fermi chopper rotating frame
-                       [0]=cylinder input
-                       [1]=slit input
-                       [2]=slit wall reflection
-                       [3]=slit exit
-                       [4]=cylinder exit
-                       */
-  };
+/* Definition of internal variable structure: all counters */
+struct FermiChopper_struct
+{
+double omega, ph0, t0;  /* chopper rotation */
+double C_slit;          /* slit curvature radius in [m] */
+double L_slit;          /* slit package length [m] */
+double sum_t;
+double sum_v;
+double sum_N;
+double sum_N_pass;
+/* events */
+long absorb_alreadyinside;
+long absorb_topbottom;
+long absorb_cylentrance;
+long absorb_sideentrance;
+long absorb_notreachentrance;
+long absorb_packentrance;
+long absorb_slitcoating;
+long warn_notreachslitwall;
+long absorb_exitslitpack;
+long absorb_maxiterations;
+long absorb_wrongdirection;
+long absorb_nocontrol;
+long absorb_cylexit;
+long warn_notreachslitoutput;
+char compcurname[256];
+double X[5],Z[5]; /* position of interaction locations in the Fermi chopper rotating frame
+[0]=cylinder input
+[1]=slit input
+[2]=slit wall reflection
+[3]=slit exit
+[4]=cylinder exit
+*/
+};
 
 /*****************************************************************************
- * FC_zrot: returns Z' in rotating frame, from X,Z and t,omega,ph0
- ****************************************************************************/
+* FC_zrot: returns Z' in rotating frame, from X,Z and t,omega,ph0
+****************************************************************************/
 double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs)
 {
   double omega =FCs.omega;

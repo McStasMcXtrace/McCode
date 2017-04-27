@@ -10,9 +10,7 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: E Klinkby, October 2012 - updated geometry, bispectral
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas CVS_080803
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -79,67 +77,67 @@
 * %P
 * Input parameters:
 *
-* size:   (m)    Height of the cylindershaped cold source
-* cyl_radius:(m) Radius of the cylindershaped cold source
-* width_t: (m)    Edge of cube shaped thermal source
-* Lmin:   (AA)   Lower edge of wavelength distribution
-* Lmax:   (AA)   Upper edge of wavelength distribution
-* dist:   [m]    Distance from source to focusing rectangle; at (0,0,dist)
-* focus_xw:(m)   Width of focusing rectangle
-* focus_yh:(m)   Height of focusing rectangle
-* target_index:(1)  relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
-* nu:     (Hz)   Frequency of pulses
-* T:      (K)    Temperature of cold source
-* T_t:    (K)    Temperature of thermal source
-* tau:    (s)    long time decay constant for cold pulse tail 1a
-* tau_t:  (s)    long time decay constant for thermal pulse tail 1a
-* tau1:   (s)    long time decay constant for cold pulse tail 1b
-* tau1_t: (s)    long time decay constant for thermal pulse tail 1b
-* tau2:   (s)    long time decay constant for cold pulse, 2
-* tau2_t:   (s)    long time decay constant for thermal pulse, 2
-* d:      (s)    pulse length
-* n:      (1)    pulse shape parameter, 1
-* n2:     (1)    pulse shape parameter, 2
-* chi2:   (1/AA) lambda-distribution parameter in cold pulse 2
-* chi2_t: (1/AA) lambda-distribution parameter in thermal pulse 2
-* I0:     [flux] integrated cold flux, 1 (in flux units, see above)
-* I0_t:   [flux] integrated thermal flux, 1 (in flux units, see above)
-* I2:     [flux] Cold flux, 2 (in flux units, see above)
-* I2_t:   [flux] Thermal flux, 2 (in flux units, see above)
-* branch1: [1]   limit for switching between two time structures in cold distribution 1 (only for coupled water, else = 1)
-* branch1_t: [1] limit for switching between two time structures in thermal distribution 1 (only for coupled water, else = 1)
-* branch2: [1]   limit for switching between cold distribution 1 and 2. (default value 0.5)
-* branch2_t: [1] limit for switching between thermal distribution 1 and 2. (default value 0.5)
-* branch_tail: [1]   limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
-* n_pulses: (1)  Number of pulses simulated. 0 and 1 creates one pulse. The integrated intensity is constant
-* cold_frac: [1] Fraction of neutron statistics from cold source. It is implicitely assumed that supermirror allows each beamline to choose the desired fraction of cold and thermal neutrons (i.e. extreme idealization).
-* src_2012:  (bool) Flag to apply 2012 MCNPX-derived, wavelenght-dependent correction to intensity from the cold moderator.
-* tfocus_dist: (m) Position of time window
-* tfocus_time: (s) Time position of window
-* tfocus_width: (s) Time width of window
-* beamport_angle: (deg) Direction within the beamport sector (0 < angle < 60) to direct neutrons
+* size: [m]              Height of the cylindershaped cold source
+* cyl_radius: [m]        Radius of the cylindershaped cold source
+* width_t: [m]           Edge of cube shaped thermal source
+* Lmin: [AA]             Lower edge of wavelength distribution
+* Lmax: [AA]             Upper edge of wavelength distribution
+* dist: [m]              Distance from source to focusing rectangle; at (0,0,dist)
+* focus_xw: [m]          Width of focusing rectangle
+* focus_yh: [m]          Height of focusing rectangle
+* target_index: [1]      relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* nu: [Hz]               Frequency of pulses
+* T: [K]                 Temperature of cold source
+* T_t: [K]               Temperature of thermal source
+* tau: [s]               long time decay constant for cold pulse tail 1a
+* tau_t: [s]             long time decay constant for thermal pulse tail 1a
+* tau1: [s]              long time decay constant for cold pulse tail 1b
+* tau1_t: [s]            long time decay constant for thermal pulse tail 1b
+* tau2: [s]              long time decay constant for cold pulse, 2
+* tau2_t: [s]            long time decay constant for thermal pulse, 2
+* d: [s]                 pulse length
+* n: [1]                 pulse shape parameter, 1
+* n2: [1]                pulse shape parameter, 2
+* chi2: [1/AA]           lambda-distribution parameter in cold pulse 2
+* chi2_t: [1/AA]         lambda-distribution parameter in thermal pulse 2
+* I0: [flux]             integrated cold flux, 1 (in flux units, see above)
+* I0_t: [flux]           integrated thermal flux, 1 (in flux units, see above)
+* I2: [flux]             Cold flux, 2 (in flux units, see above)
+* I2_t: [flux]           Thermal flux, 2 (in flux units, see above)
+* branch1: [1]           limit for switching between two time structures in cold distribution 1 (only for coupled water, else = 1)
+* branch1_t: [1]         limit for switching between two time structures in thermal distribution 1 (only for coupled water, else = 1)
+* branch2: [1]           limit for switching between cold distribution 1 and 2. (default value 0.5)
+* branch2_t: [1]         limit for switching between thermal distribution 1 and 2. (default value 0.5)
+* branch_tail: [1]       limit for switching between pulse and tail (suggested value: tau/d - default defined this way)
+* n_pulses: [1]          Number of pulses simulated. 0 and 1 creates one pulse. The integrated intensity is constant
+* cold_frac: [1]         Fraction of neutron statistics from cold source. It is implicitely assumed that supermirror allows each beamline to choose the desired fraction of cold and thermal neutrons (i.e. extreme idealization).
+* src_2012: [bool]       Flag to apply 2012 MCNPX-derived, wavelenght-dependent correction to intensity from the cold moderator.
+* tfocus_dist: [m]       Position of time window
+* tfocus_time: [s]       Time position of window
+* tfocus_width: [s]      Time width of window
+* beamport_angle: [deg]  Direction within the beamport sector (0 < angle < 60) to direct neutrons
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT ESS_moderator_long
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (width_c=0, yheight=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=14,
-                    T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
-                    n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=0,
-		    cyl_radius=0.085, branch1=1, branch2=0.5, branch_tail=0.14350,
-		    int n_pulses=1, width_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
-		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
-		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
+SETTING PARAMETERS (width_c=0, yheight=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=14,
+T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
+n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=0,
+cyl_radius=0.085, branch1=1, branch2=0.5, branch_tail=0.14350,
+int n_pulses=1, width_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
+tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
+branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
 OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t,
-  tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2z,
-  T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
-  r_empty,r_optics)
+tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2z,
+T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
+r_empty,r_optics)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  double Mezei_M_fct(double l, double temp)
+double Mezei_M_fct(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);

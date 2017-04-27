@@ -10,9 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision$
 * Origin: RISOE
-* Release: McStas 1.10
 *
 * Constant magnetic field.
 *
@@ -28,12 +26,12 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:     Width of opening [m]
-* yheight:    Height of opening [m]
-* length:     Length of field [m]
-* B:          Magnetic field along y-direction [Gauss]
-* fliplambda: lambda for calculating B field
-* flipangle:  Angle flipped for lambda = fliplambda fliplambda and flipangle overrides B so a neutron with s= (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =(cos(flipangle), sin(flipangle), 0) after the section.
+* xwidth: [m]     Width of opening 
+* yheight: [m]    Height of opening 
+* length: [m]     Length of field 
+* B: [Gauss]      Magnetic field along y-direction 
+* fliplambda: []  lambda for calculating B field
+* flipangle: []   Angle flipped for lambda = fliplambda fliplambda and flipangle overrides B so a neutron with s= (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =(cos(flipangle), sin(flipangle), 0) after the section.
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,7 +46,7 @@ OUTPUT PARAMETERS(omegaL)
 
 SHARE
 %{
-  double IntersectWall(double pos, double vel, double wallpos) {
+double IntersectWall(double pos, double vel, double wallpos) {
     /* Function to calculate where the neutron hit the wall */
 
     if(vel==0)

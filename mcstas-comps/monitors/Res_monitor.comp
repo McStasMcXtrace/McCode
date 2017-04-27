@@ -9,9 +9,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
 *
 * Monitor for resolution calculations
@@ -37,30 +35,30 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:            Lower x bound of detector opening [m]
-* xmax:            Upper x bound of detector opening [m]
-* ymin:            Lower y bound of detector opening [m]
-* ymax:            Upper y bound of detector opening [m]
-* zmin:            Lower z bound of detector opening [m]
-* zmax:            Upper z bound of detector opening [m]
-* filename:        Name of output file. If unset, use automatic name [string]
-* res_sample_comp: Name of Res_sample component in the instrument definition [no quotes]
-* bufsize:         Number of events to store. Use 0 to store all [1]
+* xmin: [m]                     Lower x bound of detector opening 
+* xmax: [m]                     Upper x bound of detector opening 
+* ymin: [m]                     Lower y bound of detector opening 
+* ymax: [m]                     Upper y bound of detector opening 
+* zmin: [m]                     Lower z bound of detector opening 
+* zmax: [m]                     Upper z bound of detector opening 
+* filename: [string]            Name of output file. If unset, use automatic name 
+* res_sample_comp: [no quotes]  Name of Res_sample component in the instrument definition 
+* bufsize: [1]                  Number of events to store. Use 0 to store all 
 *
 * OPTIONAL PARAMETERS (derived from Monitor_nD)
 *
-* xwidth:  (m)  Width/diameter of detector
-* yheight: (m)  Height of detector
-* zdepth:  (m)  Thichness of detector
-* radius:  (m)  Radius of sphere/cylinder monitor
-* options: (str) String that specifies the geometry of the monitor
-* restore_neutron: (1) If set, the monitor does not influence the neutron state
+* xwidth: [m]                   Width/diameter of detector
+* yheight: [m]                  Height of detector
+* zdepth: [m]                   Thichness of detector
+* radius: [m]                   Radius of sphere/cylinder monitor
+* options: [str]                String that specifies the geometry of the monitor
+* restore_neutron: [1]          If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
-* DEFS: structure containing Monitor_nD Defines (struct)
-* Vars: structure containing Monitor_nD variables (struct)
-* buffer_index: number of recorded events (long)
+* DEFS: [struct]                structure containing Monitor_nD Defines 
+* Vars: [struct]                structure containing Monitor_nD variables 
+* buffer_index: [long]          number of recorded events 
 *
 * %E
 *******************************************************************************/
@@ -69,30 +67,30 @@
 DEFINE COMPONENT Res_monitor
 DEFINITION PARAMETERS (res_sample_comp)
 SETTING PARAMETERS (string filename=0, string options=0, xwidth=.1, yheight=.1, zdepth=0, radius=0,
-  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0,restore_neutron=0)
+xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0,restore_neutron=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "monitor_nd-lib"
+%include "monitor_nd-lib"
 %}
 
 DECLARE
 %{
-  MonitornD_Defines_type DEFS;
-  MonitornD_Variables_type Vars;
-  long buffer_index;
+MonitornD_Defines_type DEFS;
+MonitornD_Variables_type Vars;
+long buffer_index;
 %}
 
 INITIALIZE
 %{
-  long buffer_index=0;
+long buffer_index=0;
 
-  int i;
-  char tmp[1024];
-  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+int i;
+char tmp[1024];
+strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
   if (options != NULL)
     strncpy(tmp, options, 1024);

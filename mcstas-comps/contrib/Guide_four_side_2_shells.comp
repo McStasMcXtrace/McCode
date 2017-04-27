@@ -7,8 +7,6 @@
 * %I
 * Written by: Tobias Panzner
 * Date: 07/08/2010
-* Version: $Revision: 1.1 $
-* Release: McStas 1.9
 * Origin: PSI
 *
 * Guide with four side walls surounded by up to 2 shells
@@ -67,34 +65,34 @@
 *
 * GENERAL PARAMETERS (VALID FOR ALL SIDES):
 *
-* l:       [m]    length of guide (DEFAULT = 0)
+* l: [m]            length of guide (DEFAULT = 0)
 *
-* R0:      [1]    Low-angle reflectivity (DEFAULT = 0.99)
+* R0: [1]           Low-angle reflectivity (DEFAULT = 0.99)
 *
 * THE INNER WALLS OF THE INLAY ARE DEFINED BY:
 *
-* w1r:     [m]    Width at the right guide entry   (negative x-axis)
+* w1r: [m]          Width at the right guide entry   (negative x-axis)
 *                 (DEFAULT = 0)
 *
-* w2r:     [m]    Width at the right guide exit    (negative x-axis)
+* w2r: [m]          Width at the right guide exit    (negative x-axis)
 *                 (DEFAULT = 0)
 *
-* w1l:     [m]    Width at the left guide entry    (positive x-axis)
+* w1l: [m]          Width at the left guide entry    (positive x-axis)
 *                 (DEFAULT = 0)
 *
-* w2l:     [m]    Width at the left guide exit     (positive x-axis)
+* w2l: [m]          Width at the left guide exit     (positive x-axis)
 *                 (DEFAULT = 0)
 *
-* h1d:     [m]    Height at the bottom guide entry (negative y-axis)
+* h1d: [m]          Height at the bottom guide entry (negative y-axis)
 *                 (DEFAULT = 0)
 *
-* h2d:     [m]    Height at the bottom guide entry (negative y-axis)
+* h2d: [m]          Height at the bottom guide entry (negative y-axis)
 *                 (DEFAULT = 0)
 *
-* h1u:     [m]    Height at the top guide entry    (positive y-axis)
+* h1u: [m]          Height at the top guide entry    (positive y-axis)
 *                 (DEFAULT = 0)
 *
-* h2u:     [m]    Height at the top guide entry    (positive y-axis)
+* h2u: [m]          Height at the top guide entry    (positive y-axis)
 *                 (DEFAULT = 0)
 *
 * linwr     [m]   right horizontal wall: distance of 1st focal point
@@ -121,72 +119,72 @@
 * louthu   [m]    upper vertical wall: distance of 2nd focal point
 *                 and guide exit (DEFAULT = 0)
 *
-* RIreflect: (str)  Name of relfectivity file for the right inner wall.
+* RIreflect: [str]  Name of relfectivity file for the right inner wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
 *
-* LIreflect: (str)  Name of relfectivity file for the left inner wall.
+* LIreflect: [str]  Name of relfectivity file for the left inner wall.
 *                   Format [q(Angs-1) R(0-1)]   (DEFAULT : no file)
 * 
-* DIreflect: (str)  Name of relfectivity file for the bottom inner wall.
+* DIreflect: [str]  Name of relfectivity file for the bottom inner wall.
 *                   Format [q(Angs-1) R(0-1)] (DEFAULT : no file)
 *
-* UIreflect: (str)  Name of relfectivity file for the top inner wall. 
+* UIreflect: [str]  Name of relfectivity file for the top inner wall.
 *                   Format [q(Angs-1) R(0-1)]    (DEFAULT : no file)
 *
-* Qcxr:    [AA-1] Critical scattering vector for right vertical
+* Qcxr: [AA-1]      Critical scattering vector for right vertical
 *                 inner wall (DEFAULT = 0.0217)
 *
-* Qcxl:    [AA-1] Critical scattering vector for left vertical
+* Qcxl: [AA-1]      Critical scattering vector for left vertical
 *                 inner wall (DEFAULT = 0.0217)
 *
-* Qcyd:    [AA-1] Critical scattering vector for bottom inner wall
+* Qcyd: [AA-1]      Critical scattering vector for bottom inner wall
 *                 (DEFAULT = 0.0217)
 *
-* Qcyu:    [AA-1] Critical scattering vector for top inner wall
+* Qcyu: [AA-1]      Critical scattering vector for top inner wall
 *                 (DEFAULT = 0.0217)
 *
-* alphaxr: [AA]   Slope of reflectivity for right vertical
+* alphaxr: [AA]     Slope of reflectivity for right vertical
 *                 inner wall (DEFAULT = 6.07)
 *
-* alphaxl: [AA]   Slope of reflectivity for left vertical
+* alphaxl: [AA]     Slope of reflectivity for left vertical
 *                 inner wall (DEFAULT = 6.07)
 *
-* alphayd: [AA]   Slope of reflectivity for bottom inner wall
+* alphayd: [AA]     Slope of reflectivity for bottom inner wall
 *                 (DEFAULT = 6.07)
 *
-* alphayu: [AA]   Slope of reflectivity for top inner wall
+* alphayu: [AA]     Slope of reflectivity for top inner wall
 *                 (DEFAULT = 6.07)
 *
-* mxr:     [1]    m-value of material for right vertical inner wall.
+* mxr: [1]          m-value of material for right vertical inner wall.
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* mxl:     [1]    m-value of material for left vertical inner wall.
+* mxl: [1]          m-value of material for left vertical inner wall.
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* myd:     [1]    m-value of material for bottom inner wall
+* myd: [1]          m-value of material for bottom inner wall
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* myu:     [1]    m-value of material for top inner wall
+* myu: [1]          m-value of material for top inner wall
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* Wxr:       [AA-1] Width of supermirror cut-off for right inner wall
+* Wxr: [AA-1]       Width of supermirror cut-off for right inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wxl:       [AA-1] Width of supermirror cut-off for left inner wall
+* Wxl: [AA-1]       Width of supermirror cut-off for left inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wyu:       [AA-1] Width of supermirror cut-off for top inner wall
+* Wyu: [AA-1]       Width of supermirror cut-off for top inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wyd:       [AA-1] Width of supermirror cut-off for bottom inner wall
+* Wyd: [AA-1]       Width of supermirror cut-off for bottom inner wall
 *                   (DEFAULT = 0.003)
 *
 * rwallthick: [m]   thickness of the right wall (DEFAULT = 0.001 m)
@@ -199,28 +197,28 @@
 *
 *   THE OUTER WALLS OF THE INLAY ARE DEFINED BY: 
 *
-* ROreflect: (str)  Name of relfectivity file for the right outer wall.
+* ROreflect: [str]  Name of relfectivity file for the right outer wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
 *
-* LOreflect: (str)  Name of relfectivity file for the left outer wall.
+* LOreflect: [str]  Name of relfectivity file for the left outer wall.
 *                   Format [q(Angs-1) R(0-1)]   (DEFAULT : no file)
 * 
-* DOreflect: (str)  Name of relfectivity file for the bottom outer wall.
+* DOreflect: [str]  Name of relfectivity file for the bottom outer wall.
 *                   Format [q(Angs-1) R(0-1)] (DEFAULT : no file)
 *
-* UOreflect: (str)  Name of relfectivity file for the top outer wall.
+* UOreflect: [str]  Name of relfectivity file for the top outer wall.
 *                   Format [q(Angs-1) R(0-1)]    (DEFAULT : no file)
 *
-* QcxrOW:    [AA-1] Critical scattering vector for right vertical
+* QcxrOW: [AA-1]    Critical scattering vector for right vertical
 *                   outer wall (DEFAULT = 0.0217)
 *
-* QcxlOW:    [AA-1] Critical scattering vector for left vertical
+* QcxlOW: [AA-1]    Critical scattering vector for left vertical
 *                   outer wall (DEFAULT = 0.0217)
 *
-* QcydOW:    [AA-1] Critical scattering vector for bottom outer wall
+* QcydOW: [AA-1]    Critical scattering vector for bottom outer wall
 *                   (DEFAULT = 0.0217)
 *
-* QcyuOW:    [AA-1] Critical scattering vector for top outer wall
+* QcyuOW: [AA-1]    Critical scattering vector for top outer wall
 *                   (DEFAULT = 0.0217)
 *
 * alphaxrOW: [AA]   Slope of reflectivity for right vertical
@@ -235,36 +233,36 @@
 * alphayuOW: [AA]   Slope of reflectivity for top outer wall
 *                   (DEFAULT = 6.07)
 *
-* mxrOW:     [1]   m-value of material for right vertical outer wall
+* mxrOW: [1]        m-value of material for right vertical outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* mxlOW:     [1]   m-value of material for left vertical outer wall
+* mxlOW: [1]        m-value of material for left vertical outer wall
 *                  0 means the wall is absorbing.(DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* mydOW:     [1]   m-value of material for bottom outer wall
+* mydOW: [1]        m-value of material for bottom outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* myuOW:     [1]   m-value of material for top outer wall
+* myuOW: [1]        m-value of material for top outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* WxrOW:       [AA-1] Width of supermirror cut-off for right outer wall
+* WxrOW: [AA-1]     Width of supermirror cut-off for right outer wall
 *                     (DEFAULT = 0.003)
 *
-* WxlOW:       [AA-1] Width of supermirror cut-off for left outer wall
+* WxlOW: [AA-1]     Width of supermirror cut-off for left outer wall
 *                     (DEFAULT = 0.003)
 *
-* WyuOW:       [AA-1] Width of supermirror cut-off for top outer wall
+* WyuOW: [AA-1]     Width of supermirror cut-off for top outer wall
 *                     (DEFAULT = 0.003)
 *
-* WydOW:       [AA-1] Width of supermirror cut-off for bottom outer wall
+* WydOW: [AA-1]     Width of supermirror cut-off for bottom outer wall
 *                     (DEFAULT = 0.003)
 *
 * THE INNER WALLS OF THE  @ OUTER CHANNEL ARE DEFINED BY:	
@@ -461,129 +459,129 @@
 DEFINE COMPONENT Guide_four_side_2_shells
 DEFINITION PARAMETERS(string RIreflect=0, LIreflect=0, UIreflect=0, DIreflect=0, ROreflect=0, LOreflect=0, UOreflect=0, DOreflect=0, RIreflect1=0, LIreflect1=0, UIreflect1=0, DIreflect1=0, ROreflect1=0, LOreflect1=0, UOreflect1=0, DOreflect1=0,RIreflect2=0, LIreflect2=0, UIreflect2=0, DIreflect2=0, ROreflect2=0, LOreflect2=0, UOreflect2=0, DOreflect2=0)
 SETTING PARAMETERS (w1l=0.002,w2l=0.002,linwl=0,loutwl=0,
-                    w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
-                    h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
-                    h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
-                    l=0, R0=0.99,
-                    Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
-                    alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
-                    Wxr=0.003,Wxl=0.003,Wyu=0.003,Wyd=0.003,
-                    mxr=3.6, mxl=3.6, myu=3.6, myd=3.6,
-                    QcxrOW=0.0217,QcxlOW=0.0217,QcyuOW=0.0217, QcydOW=0.0217,
-                    alphaxlOW=6.07, alphaxrOW=6.07, alphayuOW=6.07, alphaydOW=6.07,
-                    WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
-                    mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
-		    rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001,
+w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
+h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
+h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
+l=0, R0=0.99,
+Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
+alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
+Wxr=0.003,Wxl=0.003,Wyu=0.003,Wyd=0.003,
+mxr=3.6, mxl=3.6, myu=3.6, myd=3.6,
+QcxrOW=0.0217,QcxlOW=0.0217,QcyuOW=0.0217, QcydOW=0.0217,
+alphaxlOW=6.07, alphaxrOW=6.07, alphayuOW=6.07, alphaydOW=6.07,
+WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
+mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
+rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001,
 
-                    w1l1=2.002,w2l1=2.002,linwl1=0,loutwl1=0,
-                    w1r1=2.002,w2r1=2.002,linwr1=0,loutwr1=0,
-                    h1u1=2.002,h2u1=2.002,linhu1=0,louthu1=0,
-                    h1d1=2.002,h2d1=2.002,linhd1=0,louthd1=0,
-                    Qcxl1=0.0217,Qcxr1=0.0217,Qcyu1=0.0217, Qcyd1=0.0217,
-                    alphaxl1=6.07, alphaxr1=6.07, alphayu1=6.07, alphayd1=6.07,
-                    Wxr1=0.003,Wxl1=0.003,Wyu1=0.003,Wyd1=0.003,
-                    mxr1=-1, mxl1=-1, myu1=-1, myd1=-1,
-                    QcxrOW1=0.0217,QcxlOW1=0.0217,QcyuOW1=0.0217, QcydOW1=0.0217,
-                    alphaxlOW1=6.07, alphaxrOW1=6.07, alphayuOW1=6.07, alphaydOW1=6.07,
-                    WxrOW1=0.003,WxlOW1=0.003,WyuOW1=0.003,WydOW1=0.003,
-                    mxrOW1=-1, mxlOW1=-1, myuOW1=-1, mydOW1=-1,
-		    rwallthick1=0.001,lwallthick1=0.001,uwallthick1=0.001,dwallthick1=0.001,
+w1l1=2.002,w2l1=2.002,linwl1=0,loutwl1=0,
+w1r1=2.002,w2r1=2.002,linwr1=0,loutwr1=0,
+h1u1=2.002,h2u1=2.002,linhu1=0,louthu1=0,
+h1d1=2.002,h2d1=2.002,linhd1=0,louthd1=0,
+Qcxl1=0.0217,Qcxr1=0.0217,Qcyu1=0.0217, Qcyd1=0.0217,
+alphaxl1=6.07, alphaxr1=6.07, alphayu1=6.07, alphayd1=6.07,
+Wxr1=0.003,Wxl1=0.003,Wyu1=0.003,Wyd1=0.003,
+mxr1=-1, mxl1=-1, myu1=-1, myd1=-1,
+QcxrOW1=0.0217,QcxlOW1=0.0217,QcyuOW1=0.0217, QcydOW1=0.0217,
+alphaxlOW1=6.07, alphaxrOW1=6.07, alphayuOW1=6.07, alphaydOW1=6.07,
+WxrOW1=0.003,WxlOW1=0.003,WyuOW1=0.003,WydOW1=0.003,
+mxrOW1=-1, mxlOW1=-1, myuOW1=-1, mydOW1=-1,
+rwallthick1=0.001,lwallthick1=0.001,uwallthick1=0.001,dwallthick1=0.001,
 
-                    w1l2=2.004,w2l2=2.004,linwl2=0,loutwl2=0,
-                    w1r2=2.004,w2r2=2.004,linwr2=0,loutwr2=0,
-                    h1u2=2.004,h2u2=2.004,linhu2=0,louthu2=0,
-                    h1d2=2.004,h2d2=2.004,linhd2=0,louthd2=0,
-                    Qcxl2=0.0217,Qcxr2=0.0217,Qcyu2=0.0217, Qcyd2=0.0217,
-                    alphaxl2=6.07, alphaxr2=6.07, alphayu2=6.07, alphayd2=6.07,
-                    Wxr2=0.003,Wxl2=0.003,Wyu2=0.003,Wyd2=0.003,
-                    mxr2=-1, mxl2=-1, myu2=-1, myd2=-1,
-                    QcxrOW2=0.0217,QcxlOW2=0.0217,QcyuOW2=0.0217, QcydOW2=0.0217,
-                    alphaxlOW2=6.07, alphaxrOW2=6.07, alphayuOW2=6.07, alphaydOW2=6.07,
-                    WxrOW2=0.003,WxlOW2=0.003,WyuOW2=0.003,WydOW2=0.003,
-                    mxrOW2=-1, mxlOW2=-1, myuOW2=-1, mydOW2=-1,
-		    rwallthick2=0.001,lwallthick2=0.001,uwallthick2=0.001,dwallthick2=0.001
+w1l2=2.004,w2l2=2.004,linwl2=0,loutwl2=0,
+w1r2=2.004,w2r2=2.004,linwr2=0,loutwr2=0,
+h1u2=2.004,h2u2=2.004,linhu2=0,louthu2=0,
+h1d2=2.004,h2d2=2.004,linhd2=0,louthd2=0,
+Qcxl2=0.0217,Qcxr2=0.0217,Qcyu2=0.0217, Qcyd2=0.0217,
+alphaxl2=6.07, alphaxr2=6.07, alphayu2=6.07, alphayd2=6.07,
+Wxr2=0.003,Wxl2=0.003,Wyu2=0.003,Wyd2=0.003,
+mxr2=-1, mxl2=-1, myu2=-1, myd2=-1,
+QcxrOW2=0.0217,QcxlOW2=0.0217,QcyuOW2=0.0217, QcydOW2=0.0217,
+alphaxlOW2=6.07, alphaxrOW2=6.07, alphayuOW2=6.07, alphaydOW2=6.07,
+WxrOW2=0.003,WxlOW2=0.003,WyuOW2=0.003,WydOW2=0.003,
+mxrOW2=-1, mxlOW2=-1, myuOW2=-1, mydOW2=-1,
+rwallthick2=0.001,lwallthick2=0.001,uwallthick2=0.001,dwallthick2=0.001
 )
 
 OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
-                  pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
-                  awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
-                  awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
-                  pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
-                  t1,t2w1r,t2w1l,t2h1u,t2h1d,
-                  t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
+pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
+awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
+awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
+pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
+t1,t2w1r,t2w1l,t2h1u,t2h1d,
+t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
 
-		  a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
-                  a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
-                  mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
-                  z0wr,z0wl,z0hu,z0hd,
-		
-
-                  p2parawr,p2parawl,p2parahu,p2parahd,
-                  p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
-
-                  m,n,
-                  nz,nx,ny,n2,
-                  pf,
-                  vxin,vyin,vzin,
-                  q,
-                  xtest,ytest,
-
-                  riTable, liTable, uiTable, diTable,
-                  roTable, loTable, uoTable, doTable,
+a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
+a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
+mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
+z0wr,z0wl,z0hu,z0hd,
 
 
+p2parawr,p2parawl,p2parahu,p2parahd,
+p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
 
-		  w1rwt1,w1lwt1,h1uwt1,h1dwt1,w2rwt1,w2lwt1,h2uwt1,h2dwt1,
-                  pawr1,pawl1,pbwr1,pbwl1,pahu1,pahd1,pbhu1,pbhd1,
-                  awl1,bwl1,awr1,bwr1,ahu1,bhu1,ahd1,bhd1,
-                  awlwt1,bwlwt1,awrwt1,bwrwt1,ahuwt1,bhuwt1,ahdwt1,bhdwt1,
-                  pawrwt1,pawlwt1,pbwrwt1,pbwlwt1,pahuwt1,pahdwt1,pbhuwt1,pbhdwt1,
-                  t2w1r1,t2w1l1,t2h1u1,t2h1d1,
-                  t2w1rwt1,t2w1lwt1,t2h1uwt1,t2h1dwt1,
+m,n,
+nz,nx,ny,n2,
+pf,
+vxin,vyin,vzin,
+q,
+xtest,ytest,
 
-                  a2wlwt1,b2wlwt1,a2wrwt1,b2wrwt1,a2huwt1,b2huwt1,a2hdwt1,b2hdwt1,
-                  a2wl1,b2wl1,a2wr1,b2wr1,a2hu1,b2hu1,a2hd1,b2hd1,
-                  mru11,mru21,nru11,nru21,mrd11,mrd21,nrd11,nrd21,mlu11,mlu21,nlu11,nlu21,mld11,mld21,nld11,nld21,
-                  z0wr1,z0wl1,z0hu1,z0hd1,
-
-
-                  p2parawr1,p2parawl1,p2parahu1,p2parahd1,
-                  p2parawrwt1,p2parawlwt1,p2parahuwt1,p2parahdwt1,
+riTable, liTable, uiTable, diTable,
+roTable, loTable, uoTable, doTable,
 
 
-                  riTable1, liTable1, uiTable1, diTable1,
-                  roTable1, loTable1, uoTable1, doTable1,
 
-                  w1rwt2,w1lwt2,h1uwt2,h1dwt2,w2rwt2,w2lwt2,h2uwt2,h2dwt2,
-                  pawr2,pawl2,pbwr2,pbwl2,pahu2,pahd2,pbhu2,pbhd2,
-                  awl2,bwl2,awr2,bwr2,ahu2,bhu2,ahd2,bhd2,
-                  awlwt2,bwlwt2,awrwt2,bwrwt2,ahuwt2,bhuwt2,ahdwt2,bhdwt2,
-                  pawrwt2,pawlwt2,pbwrwt2,pbwlwt2,pahuwt2,pahdwt2,pbhuwt2,pbhdwt2,
-                  t2w1r2,t2w1l2,t2h1u2,t2h1d2,
-                  t2w1rwt2,t2w1lwt2,t2h1uwt2,t2h1dwt2,
+w1rwt1,w1lwt1,h1uwt1,h1dwt1,w2rwt1,w2lwt1,h2uwt1,h2dwt1,
+pawr1,pawl1,pbwr1,pbwl1,pahu1,pahd1,pbhu1,pbhd1,
+awl1,bwl1,awr1,bwr1,ahu1,bhu1,ahd1,bhd1,
+awlwt1,bwlwt1,awrwt1,bwrwt1,ahuwt1,bhuwt1,ahdwt1,bhdwt1,
+pawrwt1,pawlwt1,pbwrwt1,pbwlwt1,pahuwt1,pahdwt1,pbhuwt1,pbhdwt1,
+t2w1r1,t2w1l1,t2h1u1,t2h1d1,
+t2w1rwt1,t2w1lwt1,t2h1uwt1,t2h1dwt1,
 
-                  a2wlwt2,b2wlwt2,a2wrwt2,b2wrwt2,a2huwt2,b2huwt2,a2hdwt2,b2hdwt2,
-                  a2wl2,b2wl2,a2wr2,b2wr2,a2hu2,b2hu2,a2hd2,b2hd2,
-                  mru12,mru22,nru12,nru22,mrd12,mrd22,nrd12,nrd22,mlu12,mlu22,nlu12,nlu22,mld12,mld22,nld12,nld22,
-                  z0wr2,z0wl2,z0hu2,z0hd2,
+a2wlwt1,b2wlwt1,a2wrwt1,b2wrwt1,a2huwt1,b2huwt1,a2hdwt1,b2hdwt1,
+a2wl1,b2wl1,a2wr1,b2wr1,a2hu1,b2hu1,a2hd1,b2hd1,
+mru11,mru21,nru11,nru21,mrd11,mrd21,nrd11,nrd21,mlu11,mlu21,nlu11,nlu21,mld11,mld21,nld11,nld21,
+z0wr1,z0wl1,z0hu1,z0hd1,
 
 
-                  p2parawr2,p2parawl2,p2parahu2,p2parahd2,
-                  p2parawrwt2,p2parawlwt2,p2parahuwt2,p2parahdwt2,
+p2parawr1,p2parawl1,p2parahu1,p2parahd1,
+p2parawrwt1,p2parawlwt1,p2parahuwt1,p2parahdwt1,
 
 
-                  riTable2, liTable2, uiTable2, diTable2,
-                  roTable2, loTable2, uoTable2, doTable2,
+riTable1, liTable1, uiTable1, diTable1,
+roTable1, loTable1, uoTable1, doTable1,
 
-                  TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
-                  ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
-                  TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
-                  TEST_UP_DOWN,TEST_LEFT_RIGHT
+w1rwt2,w1lwt2,h1uwt2,h1dwt2,w2rwt2,w2lwt2,h2uwt2,h2dwt2,
+pawr2,pawl2,pbwr2,pbwl2,pahu2,pahd2,pbhu2,pbhd2,
+awl2,bwl2,awr2,bwr2,ahu2,bhu2,ahd2,bhd2,
+awlwt2,bwlwt2,awrwt2,bwrwt2,ahuwt2,bhuwt2,ahdwt2,bhdwt2,
+pawrwt2,pawlwt2,pbwrwt2,pbwlwt2,pahuwt2,pahdwt2,pbhuwt2,pbhdwt2,
+t2w1r2,t2w1l2,t2h1u2,t2h1d2,
+t2w1rwt2,t2w1lwt2,t2h1uwt2,t2h1dwt2,
+
+a2wlwt2,b2wlwt2,a2wrwt2,b2wrwt2,a2huwt2,b2huwt2,a2hdwt2,b2hdwt2,
+a2wl2,b2wl2,a2wr2,b2wr2,a2hu2,b2hu2,a2hd2,b2hd2,
+mru12,mru22,nru12,nru22,mrd12,mrd22,nrd12,nrd22,mlu12,mlu22,nlu12,nlu22,mld12,mld22,nld12,nld22,
+z0wr2,z0wl2,z0hu2,z0hd2,
+
+
+p2parawr2,p2parawl2,p2parahu2,p2parahd2,
+p2parawrwt2,p2parawlwt2,p2parahuwt2,p2parahdwt2,
+
+
+riTable2, liTable2, uiTable2, diTable2,
+roTable2, loTable2, uoTable2, doTable2,
+
+TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
+ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
+TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
+TEST_UP_DOWN,TEST_LEFT_RIGHT
 )
 
 SHARE
-%{	
-  %include "read_table-lib"
+%{
+%include "read_table-lib"
 
 
 

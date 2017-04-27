@@ -12,8 +12,6 @@
 * Modified from: PSD_monitor_rad by Henrich Frielinghaus, FZJuelich
 * Date:       March 2012
 * Origin:     UCPH
-* Version:    $Revision$
-* Release:    McStas 2.0
 * Modified by:
 *
 * Position-sensitive TOF monitor with radially averaging.
@@ -29,22 +27,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* rmax:     Outer radius of detector [m]
-* nr:       Number of concentric circles [1]
-* filename: Name of file in which to store the detector image [string]
-* filename_av: Name of file in which to store the averaged detector image [string]
-* nt:       Number of time bins [1]
-* tmin:     Beginning of time window [mu-s]
-* tmax:     End of time window [mu-s]
+* rmax: [m]              Outer radius of detector 
+* nr: [1]                Number of concentric circles 
+* filename: [string]     Name of file in which to store the detector image 
+* filename_av: [string]  Name of file in which to store the averaged detector image 
+* nt: [1]                Number of time bins 
+* tmin: [mu-s]           Beginning of time window 
+* tmax: [mu-s]           End of time window 
 * *
 * OUTPUT PARAMETERS:
 *
-* PSDr_N:      Array of neutron counts
-* PSDr_p:      Array of neutron weight counts
-* PSDr_p2:     Array of second moments
-* PSDr_av_N:   Array of neutron counts, averaged
-* PSDr_av_p:   Array of neutron weight counts, averaged
-* PSDr_av_p2:  Array of second moments, averaged
+* PSDr_N: []             Array of neutron counts
+* PSDr_p: []             Array of neutron weight counts
+* PSDr_p2: []            Array of second moments
+* PSDr_av_N: []          Array of neutron counts, averaged
+* PSDr_av_p: []          Array of neutron weight counts, averaged
+* PSDr_av_p2: []         Array of second moments, averaged
 *
 * %E
 *******************************************************************************/
@@ -55,22 +53,22 @@ SETTING PARAMETERS (string filename="", string filename_av="", rmax=0.2, tmin, t
 OUTPUT PARAMETERS (TOFPSDr_N, TOFPSDr_p, TOFPSDr_p2, TOFPSDr_av_p, TOFPSDr_av_p2)
 
 DECLARE
-  %{
-    double tt_0, tt_1;
-    double TOFPSDr_N[nt][nr];
-    double TOFPSDr_p[nt][nr];
-    double TOFPSDr_p2[nt][nr];
-    double TOFPSDr_av_p[nt][nr];
-    double TOFPSDr_av_p2[nt][nr];
-  %}
+%{
+double tt_0, tt_1;
+double TOFPSDr_N[nt][nr];
+double TOFPSDr_p[nt][nr];
+double TOFPSDr_p2[nt][nr];
+double TOFPSDr_av_p[nt][nr];
+double TOFPSDr_av_p2[nt][nr];
+%}
 
 INITIALIZE
-  %{
-    int i,j;
+%{
+int i,j;
 
-    tt_0=tmin*1e-6;
-    tt_1=tmax*1e-6;
-    for (i=0; i<nt; i++)
+tt_0=tmin*1e-6;
+tt_1=tmax*1e-6;
+for (i=0; i<nt; i++)
       for (j=0; j<nr; j++)
       {
         TOFPSDr_N[i][j] = 0;

@@ -10,9 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision$
 * Origin: ILL
-* Release: McStas 1.6
 *
 * A simulation progress bar
 *
@@ -28,10 +26,10 @@
 *
 * %P
 * INPUT PARAMETERS:
-* percent:  (0-100) percentage interval between updates. Default is 10%.
-* minutes:  (min)   time in minutes between updates (Overrides percent flag).
-* flag_save:(0|1)   flag to enable intermediate saving for all monitors
-* profile:  (str)   file name to save the simulation profile if set to "", it is set to the name of the instrument.
+* percent: [0-100]  percentage interval between updates. Default is 10%.
+* minutes: [min]    time in minutes between updates (Overrides percent flag).
+* flag_save: [0|1]  flag to enable intermediate saving for all monitors
+* profile: [str]    file name to save the simulation profile if set to "", it is set to the name of the instrument.
 *
 * %E
 *******************************************************************************/
@@ -49,20 +47,20 @@ DECLARE
 #error Only one Progress_bar component may be used in an instrument definition.
 #endif
 
-  double IntermediateCnts;
-  time_t StartTime;
-  time_t EndTime;
-  time_t CurrentTime;
+double IntermediateCnts;
+time_t StartTime;
+time_t EndTime;
+time_t CurrentTime;
 %}
 
 INITIALIZE
 %{
-  IntermediateCnts=0;
-  StartTime=0;
-  EndTime=0;
-  CurrentTime=0;
+IntermediateCnts=0;
+StartTime=0;
+EndTime=0;
+CurrentTime=0;
 
-  fprintf(stdout, "[%s] Initialize\n", mcinstrument_name);
+fprintf(stdout, "[%s] Initialize\n", mcinstrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
   }

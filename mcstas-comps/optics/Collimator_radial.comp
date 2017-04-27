@@ -10,9 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision$
 * Origin: ILL
-* Release: McStas 1.9
 *
 * A radial Soller collimator.
 *
@@ -44,19 +42,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:     [m]          Soller  window width, filled with nslit slits. Use 0 value for continuous collimator.
-* yheight:    [m]          Collimator height.
-* length:     [m]          Length/Distance between inner and outer slits.
-* divergence: [min of arc] Divergence angle. May also be specified with the nslit parameter. A zero value unactivates component.
-* theta_min:  [deg]        Minimum Theta angle for the radial setting.
-* theta_max:  [deg]        Maximum Theta angle for the radial setting.
-* nchan:      [1]          Number of Soller channels in the theta range. Use 0 value for continuous collimator.
-* radius:     [m]          Radius of the collimator (to entry window).
+* xwidth: [m]               Soller  window width, filled with nslit slits. Use 0 value for continuous collimator.
+* yheight: [m]              Collimator height.
+* length: [m]               Length/Distance between inner and outer slits.
+* divergence: [min of arc]  Divergence angle. May also be specified with the nslit parameter. A zero value unactivates component.
+* theta_min: [deg]          Minimum Theta angle for the radial setting.
+* theta_max: [deg]          Maximum Theta angle for the radial setting.
+* nchan: [1]                Number of Soller channels in the theta range. Use 0 value for continuous collimator.
+* radius: [m]               Radius of the collimator (to entry window).
 *
 * Optional parameters
-* transmission:[1]         Maximum transmission of Soller (0<=t<=1).
-* nslit:       [1]         Number of blades composing each Soller. Overrides the divergence parameter.
-* roc:         [deg]       Amplitude of oscillation of collimator. 0=fixed.
+* transmission: [1]         Maximum transmission of Soller (0<=t<=1).
+* nslit: [1]                Number of blades composing each Soller. Overrides the divergence parameter.
+* roc: [deg]                Amplitude of oscillation of collimator. 0=fixed.
 * verbose:     []          Gives additional information.
 * approx:      []          Use Soller triangular transmission approximation.
 *
@@ -65,26 +63,26 @@
 DEFINE COMPONENT Collimator_radial
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0, yheight=.3, length=.35,
-                    divergence=0,transmission=1,
-                    theta_min=5, theta_max=165, nchan=0, radius=1.3, nslit=0,
-                    roc=0, verbose=0, approx=0)
+divergence=0,transmission=1,
+theta_min=5, theta_max=165, nchan=0, radius=1.3, nslit=0,
+roc=0, verbose=0, approx=0)
 OUTPUT PARAMETERS (width_of_slit,width_of_Soller,slit_theta)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-  double width_of_slit;
-  double width_of_Soller;
-  double slit_theta;
+double width_of_slit;
+double width_of_Soller;
+double slit_theta;
 %}
 
 INITIALIZE
 %{
-  width_of_slit=0;
-  width_of_Soller=0;
-  slit_theta=0;
+width_of_slit=0;
+width_of_Soller=0;
+slit_theta=0;
 
-  if (radius <= 0)
+if (radius <= 0)
     exit(printf("Collimator_radial: %s: incorrect radius=%g\n", NAME_CURRENT_COMP, radius));
   if (length <= 0)
     exit(printf("Collimator_radial: %s: invalid collimator length=%g\n", NAME_CURRENT_COMP, length));

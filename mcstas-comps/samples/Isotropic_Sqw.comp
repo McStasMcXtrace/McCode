@@ -8,7 +8,6 @@
 * %I
 * Written by: E. Farhi, V. Hugouvieux
 * Date: August 2003
-* Version: $Revision$
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -175,44 +174,44 @@
 *
 * %P
 * INPUT PARAMETERS:
-* Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w) Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1. Use 0, NULL or "" to disable.
-* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w). Incoherent (self) part. Use 0, NULL or "" to scatter isotropically (V-like).
-* sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
-* sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
-* sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
-* rho:       [AA-3] Density of scattering elements (nb atoms/unit cell V_0).
-* T:            [K] Temperature of sample, detailed balance. Use T=0 to disable it. and T=-1 to automatically set it from non-classical S(q,w).
+* Sqw_coh: [str]              Name of the file containing the values of Q, w and S(Q,w) Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1. Use 0, NULL or "" to disable.
+* Sqw_inc: [str]              Name of the file containing the values of Q, w and S(Q,w). Incoherent (self) part. Use 0, NULL or "" to scatter isotropically (V-like).
+* sigma_coh: [barns]          Coherent Scattering cross-section. Use -1 to unactivate.
+* sigma_inc: [barns]          Incoherent Scattering cross-section. Use -1 to unactivate.
+* sigma_abs: [barns]          Absorption cross-section at 2200 m/s. Use -1 to unactivate.
+* rho: [AA-3]                 Density of scattering elements (nb atoms/unit cell V_0).
+* T: [K]                      Temperature of sample, detailed balance. Use T=0 to disable it. and T=-1 to automatically set it from non-classical S(q,w).
 *
 * Geometry parameters:
-* radius:       [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
-* xwidth:       [m] width for a box sample shape
-* yheight:      [m] Height of sample in vertical direction for box/cylinder shapes
-* zdepth:       [m] depth for a box sample shape
-* thickness:    [m] Thickness of hollow sample Negative value extends the hollow volume outside of the box/cylinder.
+* radius: [m]                 Outer radius of sample in (x,z) plane. cylinder/sphere.
+* xwidth: [m]                 width for a box sample shape
+* yheight: [m]                Height of sample in vertical direction for box/cylinder shapes
+* zdepth: [m]                 depth for a box sample shape
+* thickness: [m]              Thickness of hollow sample Negative value extends the hollow volume outside of the box/cylinder.
 *
 * OPTIONAL PARAMETERS:
-* concentric:   [1] Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere) [1]
-* geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
-* order:        [1] Limit multiple scattering up to given order 0:all (default), 1:single, 2:double, ...
-* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug). A verbosity>1 also computes dispersions and S(q,w) analysis.
-* d_phi:      [deg] scattering vertical angular spreading (usually the height of the next component/detector). Use 0 for full space. This is only relevant for single scattering (order=1).
-* weight:   [g/mol] atomic/molecular weight of material
-* density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
-* threshold:    [1] Value under which S(Q,w) is not accounted for. to set according to the S(Q,w) values, i.e. not too low.
-* p_interact:   [1] Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
-* norm:         [1] Normalize S(q,w) when -1 (default). Use raw data when 0, multiply S(q,w) when norm>0.
-* classical:    [1] Assumes the S(q,w) data from the files is a classical S(q,w), and multiply that data by exp(hw/2kT) on up/down energy sides. Use 0 when obtained from raw experiments, 1 from molecular dynamics. Use -1 to guess from a data set including both energy sides.
+* concentric: [1]             Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere) [1]
+* geometry: [str]             Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* order: [1]                  Limit multiple scattering up to given order 0:all (default), 1:single, 2:double, ...
+* verbose: [1]                Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug). A verbosity>1 also computes dispersions and S(q,w) analysis.
+* d_phi: [deg]                scattering vertical angular spreading (usually the height of the next component/detector). Use 0 for full space. This is only relevant for single scattering (order=1).
+* weight: [g/mol]             atomic/molecular weight of material
+* density: [g/cm^3]           density of material. V_rho=density/weight/1e24*N_A
+* threshold: [1]              Value under which S(Q,w) is not accounted for. to set according to the S(Q,w) values, i.e. not too low.
+* p_interact: [1]             Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
+* norm: [1]                   Normalize S(q,w) when -1 (default). Use raw data when 0, multiply S(q,w) when norm>0.
+* classical: [1]              Assumes the S(q,w) data from the files is a classical S(q,w), and multiply that data by exp(hw/2kT) on up/down energy sides. Use 0 when obtained from raw experiments, 1 from molecular dynamics. Use -1 to guess from a data set including both energy sides.
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
-* powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
-* powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
-* powder_format: [no quotes] name or definition of column indexes in file
-* powder_Vc:          [AA^3] volume of the unit cell
-* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
+* powder_Dd: [1]              global Delta_d/d spreading, or 0 if ideal.
+* powder_DW: [1]              global Debey-Waller factor, if not in |F2| or 1.
+* powder_format: [no quotes]  name or definition of column indexes in file
+* powder_Vc: [AA^3]           volume of the unit cell
+* powder_barns: [1]           0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
 *
 * OUTPUT PARAMETERS:
-* VarSqw: internal structure including  dq=wavevector transfer Kf-Ki in Angs-1; dw=energy transfer Ef-Ei in meV; type=interaction type of event as 'c' (coherent),  't' (transmitted) 'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
-* SCATTERED: order of multiple scattering
+* VarSqw: []                  internal structure including  dq=wavevector transfer Kf-Ki in Angs-1; dw=energy transfer Ef-Ei in meV; type=interaction type of event as 'c' (coherent),  't' (transmitted) 'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
+* SCATTERED: []               order of multiple scattering
 *
 * %Links
 * E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
@@ -258,28 +257,28 @@
 DEFINE COMPONENT Isotropic_Sqw
 DEFINITION PARAMETERS (powder_format=Undefined)
 SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, string geometry=0,
-    radius=0,thickness=0,
-    xwidth=0, yheight=0, zdepth=0,
-    threshold=1e-20, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
-    rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, classical=-1,
-    powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    p_interact=-1, norm=-1, powder_barns=1)
+radius=0,thickness=0,
+xwidth=0, yheight=0, zdepth=0,
+threshold=1e-20, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
+rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, classical=-1,
+powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
+p_interact=-1, norm=-1, powder_barns=1)
 OUTPUT PARAMETERS (VarSqw, columns, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 /*****************************************************************************/
 /*****************************************************************************/
 
 /* SHARE functions:
- * void     Sqw_Data_init   (struct Sqw_Data_struct *Sqw_Data)
- * t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
- * int      Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
- * int      Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int index)
- * double   Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
- * double   Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
- * void     Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Data)
- * struct   Sqw_Data_struct *Sqw_readfile(
-     struct Sqw_sample_struct *Sqw, char *file, struct Sqw_Data_struct *Sqw_Data)
- */
+* void     Sqw_Data_init   (struct Sqw_Data_struct *Sqw_Data)
+* t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
+* int      Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
+* int      Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int index)
+* double   Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
+* double   Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
+* void     Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Data)
+* struct   Sqw_Data_struct *Sqw_readfile(
+struct Sqw_sample_struct *Sqw, char *file, struct Sqw_Data_struct *Sqw_Data)
+*/
 SHARE
 %{
 

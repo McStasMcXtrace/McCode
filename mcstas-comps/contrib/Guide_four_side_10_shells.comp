@@ -7,8 +7,6 @@
 * %I
 * Written by: Tobias Panzner
 * Date: 07/08/2010
-* Version: $Revision: 1.1 $
-* Release: McStas 1.9
 * Origin: PSI
 *
 * Guide with four side walls surounded by up to 10 shells
@@ -67,34 +65,34 @@
 *
 * GENERAL PARAMETERS (VALID FOR ALL SIDES):
 *
-* l:       [m]    length of guide (DEFAULT = 0)
+* l: [m]            length of guide (DEFAULT = 0)
 *
-* R0:      [1]    Low-angle reflectivity (DEFAULT = 0.99)
+* R0: [1]           Low-angle reflectivity (DEFAULT = 0.99)
 *
 * THE INNER WALLS OF THE INLAY ARE DEFINED BY:
 *
-* w1r:     [m]    Width at the right guide entry   (negative x-axis)
+* w1r: [m]          Width at the right guide entry   (negative x-axis)
 *                 (DEFAULT = 0)
 *
-* w2r:     [m]    Width at the right guide exit    (negative x-axis)
+* w2r: [m]          Width at the right guide exit    (negative x-axis)
 *                 (DEFAULT = 0)
 *
-* w1l:     [m]    Width at the left guide entry    (positive x-axis)
+* w1l: [m]          Width at the left guide entry    (positive x-axis)
 *                 (DEFAULT = 0)
 *
-* w2l:     [m]    Width at the left guide exit     (positive x-axis)
+* w2l: [m]          Width at the left guide exit     (positive x-axis)
 *                 (DEFAULT = 0)
 *
-* h1d:     [m]    Height at the bottom guide entry (negative y-axis)
+* h1d: [m]          Height at the bottom guide entry (negative y-axis)
 *                 (DEFAULT = 0)
 *
-* h2d:     [m]    Height at the bottom guide entry (negative y-axis)
+* h2d: [m]          Height at the bottom guide entry (negative y-axis)
 *                 (DEFAULT = 0)
 *
-* h1u:     [m]    Height at the top guide entry    (positive y-axis)
+* h1u: [m]          Height at the top guide entry    (positive y-axis)
 *                 (DEFAULT = 0)
 *
-* h2u:     [m]    Height at the top guide entry    (positive y-axis)
+* h2u: [m]          Height at the top guide entry    (positive y-axis)
 *                 (DEFAULT = 0)
 *
 * linwr     [m]   right horizontal wall: distance of 1st focal point
@@ -121,72 +119,72 @@
 * louthu   [m]    upper vertical wall: distance of 2nd focal point
 *                 and guide exit (DEFAULT = 0)
 *
-* RIreflect: (str)  Name of relfectivity file for the right inner wall.
+* RIreflect: [str]  Name of relfectivity file for the right inner wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
 *
-* LIreflect: (str)  Name of relfectivity file for the left inner wall.
+* LIreflect: [str]  Name of relfectivity file for the left inner wall.
 *                   Format [q(Angs-1) R(0-1)]   (DEFAULT : no file)
 * 
-* DIreflect: (str)  Name of relfectivity file for the bottom inner wall.
+* DIreflect: [str]  Name of relfectivity file for the bottom inner wall.
 *                   Format [q(Angs-1) R(0-1)] (DEFAULT : no file)
 *
-* UIreflect: (str)  Name of relfectivity file for the top inner wall. 
+* UIreflect: [str]  Name of relfectivity file for the top inner wall.
 *                   Format [q(Angs-1) R(0-1)]    (DEFAULT : no file)
 *
-* Qcxr:    [AA-1] Critical scattering vector for right vertical
+* Qcxr: [AA-1]      Critical scattering vector for right vertical
 *                 inner wall (DEFAULT = 0.0217)
 *
-* Qcxl:    [AA-1] Critical scattering vector for left vertical
+* Qcxl: [AA-1]      Critical scattering vector for left vertical
 *                 inner wall (DEFAULT = 0.0217)
 *
-* Qcyd:    [AA-1] Critical scattering vector for bottom inner wall
+* Qcyd: [AA-1]      Critical scattering vector for bottom inner wall
 *                 (DEFAULT = 0.0217)
 *
-* Qcyu:    [AA-1] Critical scattering vector for top inner wall
+* Qcyu: [AA-1]      Critical scattering vector for top inner wall
 *                 (DEFAULT = 0.0217)
 *
-* alphaxr: [AA]   Slope of reflectivity for right vertical
+* alphaxr: [AA]     Slope of reflectivity for right vertical
 *                 inner wall (DEFAULT = 6.07)
 *
-* alphaxl: [AA]   Slope of reflectivity for left vertical
+* alphaxl: [AA]     Slope of reflectivity for left vertical
 *                 inner wall (DEFAULT = 6.07)
 *
-* alphayd: [AA]   Slope of reflectivity for bottom inner wall
+* alphayd: [AA]     Slope of reflectivity for bottom inner wall
 *                 (DEFAULT = 6.07)
 *
-* alphayu: [AA]   Slope of reflectivity for top inner wall
+* alphayu: [AA]     Slope of reflectivity for top inner wall
 *                 (DEFAULT = 6.07)
 *
-* mxr:     [1]    m-value of material for right vertical inner wall.
+* mxr: [1]          m-value of material for right vertical inner wall.
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* mxl:     [1]    m-value of material for left vertical inner wall.
+* mxl: [1]          m-value of material for left vertical inner wall.
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* myd:     [1]    m-value of material for bottom inner wall
+* myd: [1]          m-value of material for bottom inner wall
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* myu:     [1]    m-value of material for top inner wall
+* myu: [1]          m-value of material for top inner wall
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* Wxr:       [AA-1] Width of supermirror cut-off for right inner wall
+* Wxr: [AA-1]       Width of supermirror cut-off for right inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wxl:       [AA-1] Width of supermirror cut-off for left inner wall
+* Wxl: [AA-1]       Width of supermirror cut-off for left inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wyu:       [AA-1] Width of supermirror cut-off for top inner wall
+* Wyu: [AA-1]       Width of supermirror cut-off for top inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wyd:       [AA-1] Width of supermirror cut-off for bottom inner wall
+* Wyd: [AA-1]       Width of supermirror cut-off for bottom inner wall
 *                   (DEFAULT = 0.003)
 *
 * rwallthick: [m]   thickness of the right wall (DEFAULT = 0.001 m)
@@ -199,28 +197,28 @@
 *
 *   THE OUTER WALLS OF THE INLAY ARE DEFINED BY: 
 *
-* ROreflect: (str)  Name of relfectivity file for the right outer wall.
+* ROreflect: [str]  Name of relfectivity file for the right outer wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
 *
-* LOreflect: (str)  Name of relfectivity file for the left outer wall.
+* LOreflect: [str]  Name of relfectivity file for the left outer wall.
 *                   Format [q(Angs-1) R(0-1)]   (DEFAULT : no file)
 * 
-* DOreflect: (str)  Name of relfectivity file for the bottom outer wall.
+* DOreflect: [str]  Name of relfectivity file for the bottom outer wall.
 *                   Format [q(Angs-1) R(0-1)] (DEFAULT : no file)
 *
-* UOreflect: (str)  Name of relfectivity file for the top outer wall.
+* UOreflect: [str]  Name of relfectivity file for the top outer wall.
 *                   Format [q(Angs-1) R(0-1)]    (DEFAULT : no file)
 *
-* QcxrOW:    [AA-1] Critical scattering vector for right vertical
+* QcxrOW: [AA-1]    Critical scattering vector for right vertical
 *                   outer wall (DEFAULT = 0.0217)
 *
-* QcxlOW:    [AA-1] Critical scattering vector for left vertical
+* QcxlOW: [AA-1]    Critical scattering vector for left vertical
 *                   outer wall (DEFAULT = 0.0217)
 *
-* QcydOW:    [AA-1] Critical scattering vector for bottom outer wall
+* QcydOW: [AA-1]    Critical scattering vector for bottom outer wall
 *                   (DEFAULT = 0.0217)
 *
-* QcyuOW:    [AA-1] Critical scattering vector for top outer wall
+* QcyuOW: [AA-1]    Critical scattering vector for top outer wall
 *                   (DEFAULT = 0.0217)
 *
 * alphaxrOW: [AA]   Slope of reflectivity for right vertical
@@ -235,36 +233,36 @@
 * alphayuOW: [AA]   Slope of reflectivity for top outer wall
 *                   (DEFAULT = 6.07)
 *
-* mxrOW:     [1]   m-value of material for right vertical outer wall
+* mxrOW: [1]        m-value of material for right vertical outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* mxlOW:     [1]   m-value of material for left vertical outer wall
+* mxlOW: [1]        m-value of material for left vertical outer wall
 *                  0 means the wall is absorbing.(DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* mydOW:     [1]   m-value of material for bottom outer wall
+* mydOW: [1]        m-value of material for bottom outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* myuOW:     [1]   m-value of material for top outer wall
+* myuOW: [1]        m-value of material for top outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* WxrOW:       [AA-1] Width of supermirror cut-off for right outer wall
+* WxrOW: [AA-1]     Width of supermirror cut-off for right outer wall
 *                     (DEFAULT = 0.003)
 *
-* WxlOW:       [AA-1] Width of supermirror cut-off for left outer wall
+* WxlOW: [AA-1]     Width of supermirror cut-off for left outer wall
 *                     (DEFAULT = 0.003)
 *
-* WyuOW:       [AA-1] Width of supermirror cut-off for top outer wall
+* WyuOW: [AA-1]     Width of supermirror cut-off for top outer wall
 *                     (DEFAULT = 0.003)
 *
-* WydOW:       [AA-1] Width of supermirror cut-off for bottom outer wall
+* WydOW: [AA-1]     Width of supermirror cut-off for bottom outer wall
 *                     (DEFAULT = 0.003)
 *
 * THE INNER WALLS OF THE  @ OUTER CHANNEL ARE DEFINED BY:	
@@ -461,409 +459,409 @@
 DEFINE COMPONENT Guide_four_side_10_shells
 DEFINITION PARAMETERS(string RIreflect=0, LIreflect=0, UIreflect=0, DIreflect=0, ROreflect=0, LOreflect=0, UOreflect=0, DOreflect=0, RIreflect1=0, LIreflect1=0, UIreflect1=0, DIreflect1=0, ROreflect1=0, LOreflect1=0, UOreflect1=0, DOreflect1=0,RIreflect2=0, LIreflect2=0, UIreflect2=0, DIreflect2=0, ROreflect2=0, LOreflect2=0, UOreflect2=0, DOreflect2=0, RIreflect3=0, LIreflect3=0, UIreflect3=0, DIreflect3=0, ROreflect3=0, LOreflect3=0, UOreflect3=0, DOreflect3=0,RIreflect4=0, LIreflect4=0, UIreflect4=0, DIreflect4=0, ROreflect4=0, LOreflect4=0, UOreflect4=0, DOreflect4=0, RIreflect5=0, LIreflect5=0, UIreflect5=0, DIreflect5=0, ROreflect5=0, LOreflect5=0, UOreflect5=0, DOreflect5=0,RIreflect6=0, LIreflect6=0, UIreflect6=0, DIreflect6=0, ROreflect6=0, LOreflect6=0, UOreflect6=0, DOreflect6=0, RIreflect7=0, LIreflect7=0, UIreflect7=0, DIreflect7=0, ROreflect7=0, LOreflect7=0, UOreflect7=0,  DOreflect7=0,RIreflect8=0, LIreflect8=0, UIreflect8=0, DIreflect8=0, ROreflect8=0, LOreflect8=0, UOreflect8=0, DOreflect8=0, RIreflect9=0, LIreflect9=0, UIreflect9=0, DIreflect9=0, ROreflect9=0, LOreflect9=0, UOreflect9=0, DOreflect9=0,RIreflect10=0, LIreflect10=0, UIreflect10=0, DIreflect10=0, ROreflect10=0, LOreflect10=0, UOreflect10=0, DOreflect10=0)
 SETTING PARAMETERS (w1l=0.002,w2l=0.002,linwl=0,loutwl=0,
-                    w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
-                    h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
-                    h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
-                    l=0, R0=0.99,
-                    Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
-                    alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
-                    Wxr=0.003,Wxl=0.003,Wyu=0.003,Wyd=0.003,
-                    mxr=3.6, mxl=3.6, myu=3.6, myd=3.6,
-                    QcxrOW=0.0217,QcxlOW=0.0217,QcyuOW=0.0217, QcydOW=0.0217,
-                    alphaxlOW=6.07, alphaxrOW=6.07, alphayuOW=6.07, alphaydOW=6.07,
-                    WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
-                    mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
-		    rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001,
+w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
+h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
+h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
+l=0, R0=0.99,
+Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
+alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
+Wxr=0.003,Wxl=0.003,Wyu=0.003,Wyd=0.003,
+mxr=3.6, mxl=3.6, myu=3.6, myd=3.6,
+QcxrOW=0.0217,QcxlOW=0.0217,QcyuOW=0.0217, QcydOW=0.0217,
+alphaxlOW=6.07, alphaxrOW=6.07, alphayuOW=6.07, alphaydOW=6.07,
+WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
+mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
+rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001,
 
-                    w1l1=2.002,w2l1=2.002,linwl1=0,loutwl1=0,
-                    w1r1=2.002,w2r1=2.002,linwr1=0,loutwr1=0,
-                    h1u1=2.002,h2u1=2.002,linhu1=0,louthu1=0,
-                    h1d1=2.002,h2d1=2.002,linhd1=0,louthd1=0,
-                    Qcxl1=0.0217,Qcxr1=0.0217,Qcyu1=0.0217, Qcyd1=0.0217,
-                    alphaxl1=6.07, alphaxr1=6.07, alphayu1=6.07, alphayd1=6.07,
-                    Wxr1=0.003,Wxl1=0.003,Wyu1=0.003,Wyd1=0.003,
-                    mxr1=-1, mxl1=-1, myu1=-1, myd1=-1,
-                    QcxrOW1=0.0217,QcxlOW1=0.0217,QcyuOW1=0.0217, QcydOW1=0.0217,
-                    alphaxlOW1=6.07, alphaxrOW1=6.07, alphayuOW1=6.07, alphaydOW1=6.07,
-                    WxrOW1=0.003,WxlOW1=0.003,WyuOW1=0.003,WydOW1=0.003,
-                    mxrOW1=-1, mxlOW1=-1, myuOW1=-1, mydOW1=-1,
-		    rwallthick1=0.001,lwallthick1=0.001,uwallthick1=0.001,dwallthick1=0.001,
+w1l1=2.002,w2l1=2.002,linwl1=0,loutwl1=0,
+w1r1=2.002,w2r1=2.002,linwr1=0,loutwr1=0,
+h1u1=2.002,h2u1=2.002,linhu1=0,louthu1=0,
+h1d1=2.002,h2d1=2.002,linhd1=0,louthd1=0,
+Qcxl1=0.0217,Qcxr1=0.0217,Qcyu1=0.0217, Qcyd1=0.0217,
+alphaxl1=6.07, alphaxr1=6.07, alphayu1=6.07, alphayd1=6.07,
+Wxr1=0.003,Wxl1=0.003,Wyu1=0.003,Wyd1=0.003,
+mxr1=-1, mxl1=-1, myu1=-1, myd1=-1,
+QcxrOW1=0.0217,QcxlOW1=0.0217,QcyuOW1=0.0217, QcydOW1=0.0217,
+alphaxlOW1=6.07, alphaxrOW1=6.07, alphayuOW1=6.07, alphaydOW1=6.07,
+WxrOW1=0.003,WxlOW1=0.003,WyuOW1=0.003,WydOW1=0.003,
+mxrOW1=-1, mxlOW1=-1, myuOW1=-1, mydOW1=-1,
+rwallthick1=0.001,lwallthick1=0.001,uwallthick1=0.001,dwallthick1=0.001,
 
-                    w1l2=2.004,w2l2=2.004,linwl2=0,loutwl2=0,
-                    w1r2=2.004,w2r2=2.004,linwr2=0,loutwr2=0,
-                    h1u2=2.004,h2u2=2.004,linhu2=0,louthu2=0,
-                    h1d2=2.004,h2d2=2.004,linhd2=0,louthd2=0,
-                    Qcxl2=0.0217,Qcxr2=0.0217,Qcyu2=0.0217, Qcyd2=0.0217,
-                    alphaxl2=6.07, alphaxr2=6.07, alphayu2=6.07, alphayd2=6.07,
-                    Wxr2=0.003,Wxl2=0.003,Wyu2=0.003,Wyd2=0.003,
-                    mxr2=-1, mxl2=-1, myu2=-1, myd2=-1,
-                    QcxrOW2=0.0217,QcxlOW2=0.0217,QcyuOW2=0.0217, QcydOW2=0.0217,
-                    alphaxlOW2=6.07, alphaxrOW2=6.07, alphayuOW2=6.07, alphaydOW2=6.07,
-                    WxrOW2=0.003,WxlOW2=0.003,WyuOW2=0.003,WydOW2=0.003,
-                    mxrOW2=-1, mxlOW2=-1, myuOW2=-1, mydOW2=-1,
-		    rwallthick2=0.001,lwallthick2=0.001,uwallthick2=0.001,dwallthick2=0.001,
+w1l2=2.004,w2l2=2.004,linwl2=0,loutwl2=0,
+w1r2=2.004,w2r2=2.004,linwr2=0,loutwr2=0,
+h1u2=2.004,h2u2=2.004,linhu2=0,louthu2=0,
+h1d2=2.004,h2d2=2.004,linhd2=0,louthd2=0,
+Qcxl2=0.0217,Qcxr2=0.0217,Qcyu2=0.0217, Qcyd2=0.0217,
+alphaxl2=6.07, alphaxr2=6.07, alphayu2=6.07, alphayd2=6.07,
+Wxr2=0.003,Wxl2=0.003,Wyu2=0.003,Wyd2=0.003,
+mxr2=-1, mxl2=-1, myu2=-1, myd2=-1,
+QcxrOW2=0.0217,QcxlOW2=0.0217,QcyuOW2=0.0217, QcydOW2=0.0217,
+alphaxlOW2=6.07, alphaxrOW2=6.07, alphayuOW2=6.07, alphaydOW2=6.07,
+WxrOW2=0.003,WxlOW2=0.003,WyuOW2=0.003,WydOW2=0.003,
+mxrOW2=-1, mxlOW2=-1, myuOW2=-1, mydOW2=-1,
+rwallthick2=0.001,lwallthick2=0.001,uwallthick2=0.001,dwallthick2=0.001,
 
-                    w1l3=2.006,w2l3=2.006,linwl3=0,loutwl3=0,
-                    w1r3=2.006,w2r3=2.006,linwr3=0,loutwr3=0,
-                    h1u3=2.006,h2u3=2.006,linhu3=0,louthu3=0,
-                    h1d3=2.006,h2d3=2.006,linhd3=0,louthd3=0,
-                    Qcxl3=0.0217,Qcxr3=0.0217,Qcyu3=0.0217, Qcyd3=0.0217,
-                    alphaxl3=6.07, alphaxr3=6.07, alphayu3=6.07, alphayd3=6.07,
-                    Wxr3=0.003,Wxl3=0.003,Wyu3=0.003,Wyd3=0.003,
-                    mxr3=-1, mxl3=-1, myu3=-1, myd3=-1,
-                    QcxrOW3=0.0217,QcxlOW3=0.0217,QcyuOW3=0.0217, QcydOW3=0.0217,
-                    alphaxlOW3=6.07, alphaxrOW3=6.07, alphayuOW3=6.07, alphaydOW3=6.07,
-                    WxrOW3=0.003,WxlOW3=0.003,WyuOW3=0.003,WydOW3=0.003,
-                    mxrOW3=-1, mxlOW3=-1, myuOW3=-1, mydOW3=-1,
-		    rwallthick3=0.001,lwallthick3=0.001,uwallthick3=0.001,dwallthick3=0.001,
+w1l3=2.006,w2l3=2.006,linwl3=0,loutwl3=0,
+w1r3=2.006,w2r3=2.006,linwr3=0,loutwr3=0,
+h1u3=2.006,h2u3=2.006,linhu3=0,louthu3=0,
+h1d3=2.006,h2d3=2.006,linhd3=0,louthd3=0,
+Qcxl3=0.0217,Qcxr3=0.0217,Qcyu3=0.0217, Qcyd3=0.0217,
+alphaxl3=6.07, alphaxr3=6.07, alphayu3=6.07, alphayd3=6.07,
+Wxr3=0.003,Wxl3=0.003,Wyu3=0.003,Wyd3=0.003,
+mxr3=-1, mxl3=-1, myu3=-1, myd3=-1,
+QcxrOW3=0.0217,QcxlOW3=0.0217,QcyuOW3=0.0217, QcydOW3=0.0217,
+alphaxlOW3=6.07, alphaxrOW3=6.07, alphayuOW3=6.07, alphaydOW3=6.07,
+WxrOW3=0.003,WxlOW3=0.003,WyuOW3=0.003,WydOW3=0.003,
+mxrOW3=-1, mxlOW3=-1, myuOW3=-1, mydOW3=-1,
+rwallthick3=0.001,lwallthick3=0.001,uwallthick3=0.001,dwallthick3=0.001,
 
-                    w1l4=2.008,w2l4=2.008,linwl4=0,loutwl4=0,
-                    w1r4=2.008,w2r4=2.008,linwr4=0,loutwr4=0,
-                    h1u4=2.008,h2u4=2.008,linhu4=0,louthu4=0,
-                    h1d4=2.008,h2d4=2.008,linhd4=0,louthd4=0,
-                    Qcxl4=0.0217,Qcxr4=0.0217,Qcyu4=0.0217, Qcyd4=0.0217,
-                    alphaxl4=6.07, alphaxr4=6.07, alphayu4=6.07, alphayd4=6.07,
-                    Wxr4=0.003,Wxl4=0.003,Wyu4=0.003,Wyd4=0.003,
-                    mxr4=-1, mxl4=-1, myu4=-1, myd4=-1,
-                    QcxrOW4=0.0217,QcxlOW4=0.0217,QcyuOW4=0.0217, QcydOW4=0.0217,
-                    alphaxlOW4=6.07, alphaxrOW4=6.07, alphayuOW4=6.07, alphaydOW4=6.07,
-                    WxrOW4=0.003,WxlOW4=0.003,WyuOW4=0.003,WydOW4=0.003,
-                    mxrOW4=-1, mxlOW4=-1, myuOW4=-1, mydOW4=-1,
-		   rwallthick4=0.001,lwallthick4=0.001,uwallthick4=0.001,dwallthick4=0.001,
+w1l4=2.008,w2l4=2.008,linwl4=0,loutwl4=0,
+w1r4=2.008,w2r4=2.008,linwr4=0,loutwr4=0,
+h1u4=2.008,h2u4=2.008,linhu4=0,louthu4=0,
+h1d4=2.008,h2d4=2.008,linhd4=0,louthd4=0,
+Qcxl4=0.0217,Qcxr4=0.0217,Qcyu4=0.0217, Qcyd4=0.0217,
+alphaxl4=6.07, alphaxr4=6.07, alphayu4=6.07, alphayd4=6.07,
+Wxr4=0.003,Wxl4=0.003,Wyu4=0.003,Wyd4=0.003,
+mxr4=-1, mxl4=-1, myu4=-1, myd4=-1,
+QcxrOW4=0.0217,QcxlOW4=0.0217,QcyuOW4=0.0217, QcydOW4=0.0217,
+alphaxlOW4=6.07, alphaxrOW4=6.07, alphayuOW4=6.07, alphaydOW4=6.07,
+WxrOW4=0.003,WxlOW4=0.003,WyuOW4=0.003,WydOW4=0.003,
+mxrOW4=-1, mxlOW4=-1, myuOW4=-1, mydOW4=-1,
+rwallthick4=0.001,lwallthick4=0.001,uwallthick4=0.001,dwallthick4=0.001,
 
-                    w1l5=2.01,w2l5=2.01,linwl5=0,loutwl5=0,
-                    w1r5=2.01,w2r5=2.01,linwr5=0,loutwr5=0,
-                    h1u5=2.01,h2u5=2.01,linhu5=0,louthu5=0,
-                    h1d5=2.01,h2d5=2.01,linhd5=0,louthd5=0,
-                    Qcxl5=0.0217,Qcxr5=0.0217,Qcyu5=0.0217, Qcyd5=0.0217,
-                    alphaxl5=6.07, alphaxr5=6.07, alphayu5=6.07, alphayd5=6.07,
-                    Wxr5=0.003,Wxl5=0.003,Wyu5=0.003,Wyd5=0.003,
-                    mxr5=-1, mxl5=-1, myu5=-1, myd5=-1,
-                    QcxrOW5=0.0217,QcxlOW5=0.0217,QcyuOW5=0.0217, QcydOW5=0.0217,
-                    alphaxlOW5=6.07, alphaxrOW5=6.07, alphayuOW5=6.07, alphaydOW5=6.07,
-                    WxrOW5=0.003,WxlOW5=0.003,WyuOW5=0.003,WydOW5=0.003,
-                    mxrOW5=-1, mxlOW5=-1, myuOW5=-1, mydOW5=-1,
-		    rwallthick5=0.001,lwallthick5=0.001,uwallthick5=0.001,dwallthick5=0.001,
+w1l5=2.01,w2l5=2.01,linwl5=0,loutwl5=0,
+w1r5=2.01,w2r5=2.01,linwr5=0,loutwr5=0,
+h1u5=2.01,h2u5=2.01,linhu5=0,louthu5=0,
+h1d5=2.01,h2d5=2.01,linhd5=0,louthd5=0,
+Qcxl5=0.0217,Qcxr5=0.0217,Qcyu5=0.0217, Qcyd5=0.0217,
+alphaxl5=6.07, alphaxr5=6.07, alphayu5=6.07, alphayd5=6.07,
+Wxr5=0.003,Wxl5=0.003,Wyu5=0.003,Wyd5=0.003,
+mxr5=-1, mxl5=-1, myu5=-1, myd5=-1,
+QcxrOW5=0.0217,QcxlOW5=0.0217,QcyuOW5=0.0217, QcydOW5=0.0217,
+alphaxlOW5=6.07, alphaxrOW5=6.07, alphayuOW5=6.07, alphaydOW5=6.07,
+WxrOW5=0.003,WxlOW5=0.003,WyuOW5=0.003,WydOW5=0.003,
+mxrOW5=-1, mxlOW5=-1, myuOW5=-1, mydOW5=-1,
+rwallthick5=0.001,lwallthick5=0.001,uwallthick5=0.001,dwallthick5=0.001,
 
-                    w1l6=2.012,w2l6=2.012,linwl6=0,loutwl6=0,
-                    w1r6=2.012,w2r6=2.012,linwr6=0,loutwr6=0,
-                    h1u6=2.012,h2u6=2.012,linhu6=0,louthu6=0,
-                    h1d6=2.012,h2d6=2.012,linhd6=0,louthd6=0,
-                    Qcxl6=0.0217,Qcxr6=0.0217,Qcyu6=0.0217, Qcyd6=0.0217,
-                    alphaxl6=6.07, alphaxr6=6.07, alphayu6=6.07, alphayd6=6.07,
-                    Wxr6=0.003,Wxl6=0.003,Wyu6=0.003,Wyd6=0.003,
-                    mxr6=-1, mxl6=-1, myu6=-1, myd6=-1,
-                    QcxrOW6=0.0217,QcxlOW6=0.0217,QcyuOW6=0.0217, QcydOW6=0.0217,
-                    alphaxlOW6=6.07, alphaxrOW6=6.07, alphayuOW6=6.07, alphaydOW6=6.07,
-                    WxrOW6=0.003,WxlOW6=0.003,WyuOW6=0.003,WydOW6=0.003,
-                    mxrOW6=-1, mxlOW6=-1, myuOW6=-1, mydOW6=-1,
-		    rwallthick6=0.001,lwallthick6=0.001,uwallthick6=0.001,dwallthick6=0.001,
+w1l6=2.012,w2l6=2.012,linwl6=0,loutwl6=0,
+w1r6=2.012,w2r6=2.012,linwr6=0,loutwr6=0,
+h1u6=2.012,h2u6=2.012,linhu6=0,louthu6=0,
+h1d6=2.012,h2d6=2.012,linhd6=0,louthd6=0,
+Qcxl6=0.0217,Qcxr6=0.0217,Qcyu6=0.0217, Qcyd6=0.0217,
+alphaxl6=6.07, alphaxr6=6.07, alphayu6=6.07, alphayd6=6.07,
+Wxr6=0.003,Wxl6=0.003,Wyu6=0.003,Wyd6=0.003,
+mxr6=-1, mxl6=-1, myu6=-1, myd6=-1,
+QcxrOW6=0.0217,QcxlOW6=0.0217,QcyuOW6=0.0217, QcydOW6=0.0217,
+alphaxlOW6=6.07, alphaxrOW6=6.07, alphayuOW6=6.07, alphaydOW6=6.07,
+WxrOW6=0.003,WxlOW6=0.003,WyuOW6=0.003,WydOW6=0.003,
+mxrOW6=-1, mxlOW6=-1, myuOW6=-1, mydOW6=-1,
+rwallthick6=0.001,lwallthick6=0.001,uwallthick6=0.001,dwallthick6=0.001,
 
-                    w1l7=2.014,w2l7=2.014,linwl7=0,loutwl7=0,
-                    w1r7=2.014,w2r7=2.014,linwr7=0,loutwr7=0,
-                    h1u7=2.014,h2u7=2.014,linhu7=0,louthu7=0,
-                    h1d7=2.014,h2d7=2.014,linhd7=0,louthd7=0,
-                    Qcxl7=0.0217,Qcxr7=0.0217,Qcyu7=0.0217, Qcyd7=0.0217,
-                    alphaxl7=6.07, alphaxr7=6.07, alphayu7=6.07, alphayd7=6.07,
-                    Wxr7=0.003,Wxl7=0.003,Wyu7=0.003,Wyd7=0.003,
-                    mxr7=-1, mxl7=-1, myu7=-1, myd7=-1,
-                    QcxrOW7=0.0217,QcxlOW7=0.0217,QcyuOW7=0.0217, QcydOW7=0.0217,
-                    alphaxlOW7=6.07, alphaxrOW7=6.07, alphayuOW7=6.07, alphaydOW7=6.07,
-                    WxrOW7=0.003,WxlOW7=0.003,WyuOW7=0.003,WydOW7=0.003,
-                    mxrOW7=-1, mxlOW7=-1, myuOW7=-1, mydOW7=-1,
-		   rwallthick7=0.001,lwallthick7=0.001,uwallthick7=0.001,dwallthick7=0.001,
+w1l7=2.014,w2l7=2.014,linwl7=0,loutwl7=0,
+w1r7=2.014,w2r7=2.014,linwr7=0,loutwr7=0,
+h1u7=2.014,h2u7=2.014,linhu7=0,louthu7=0,
+h1d7=2.014,h2d7=2.014,linhd7=0,louthd7=0,
+Qcxl7=0.0217,Qcxr7=0.0217,Qcyu7=0.0217, Qcyd7=0.0217,
+alphaxl7=6.07, alphaxr7=6.07, alphayu7=6.07, alphayd7=6.07,
+Wxr7=0.003,Wxl7=0.003,Wyu7=0.003,Wyd7=0.003,
+mxr7=-1, mxl7=-1, myu7=-1, myd7=-1,
+QcxrOW7=0.0217,QcxlOW7=0.0217,QcyuOW7=0.0217, QcydOW7=0.0217,
+alphaxlOW7=6.07, alphaxrOW7=6.07, alphayuOW7=6.07, alphaydOW7=6.07,
+WxrOW7=0.003,WxlOW7=0.003,WyuOW7=0.003,WydOW7=0.003,
+mxrOW7=-1, mxlOW7=-1, myuOW7=-1, mydOW7=-1,
+rwallthick7=0.001,lwallthick7=0.001,uwallthick7=0.001,dwallthick7=0.001,
 
-                    w1l8=2.016,w2l8=2.016,linwl8=0,loutwl8=0,
-                    w1r8=2.016,w2r8=2.016,linwr8=0,loutwr8=0,
-                    h1u8=2.016,h2u8=2.016,linhu8=0,louthu8=0,
-                    h1d8=2.016,h2d8=2.016,linhd8=0,louthd8=0,
-                    Qcxl8=0.0217,Qcxr8=0.0217,Qcyu8=0.0217, Qcyd8=0.0217,
-                    alphaxl8=6.07, alphaxr8=6.07, alphayu8=6.07, alphayd8=6.07,
-                    Wxr8=0.003,Wxl8=0.003,Wyu8=0.003,Wyd8=0.003,
-                    mxr8=-1, mxl8=-1, myu8=-1, myd8=-1,
-                    QcxrOW8=0.0217,QcxlOW8=0.0217,QcyuOW8=0.0217, QcydOW8=0.0217,
-                    alphaxlOW8=6.07, alphaxrOW8=6.07, alphayuOW8=6.07, alphaydOW8=6.07,
-                    WxrOW8=0.003,WxlOW8=0.003,WyuOW8=0.003,WydOW8=0.003,
-                    mxrOW8=-1, mxlOW8=-1, myuOW8=-1, mydOW8=-1,
-		   rwallthick8=0.001,lwallthick8=0.001,uwallthick8=0.001,dwallthick8=0.001,
+w1l8=2.016,w2l8=2.016,linwl8=0,loutwl8=0,
+w1r8=2.016,w2r8=2.016,linwr8=0,loutwr8=0,
+h1u8=2.016,h2u8=2.016,linhu8=0,louthu8=0,
+h1d8=2.016,h2d8=2.016,linhd8=0,louthd8=0,
+Qcxl8=0.0217,Qcxr8=0.0217,Qcyu8=0.0217, Qcyd8=0.0217,
+alphaxl8=6.07, alphaxr8=6.07, alphayu8=6.07, alphayd8=6.07,
+Wxr8=0.003,Wxl8=0.003,Wyu8=0.003,Wyd8=0.003,
+mxr8=-1, mxl8=-1, myu8=-1, myd8=-1,
+QcxrOW8=0.0217,QcxlOW8=0.0217,QcyuOW8=0.0217, QcydOW8=0.0217,
+alphaxlOW8=6.07, alphaxrOW8=6.07, alphayuOW8=6.07, alphaydOW8=6.07,
+WxrOW8=0.003,WxlOW8=0.003,WyuOW8=0.003,WydOW8=0.003,
+mxrOW8=-1, mxlOW8=-1, myuOW8=-1, mydOW8=-1,
+rwallthick8=0.001,lwallthick8=0.001,uwallthick8=0.001,dwallthick8=0.001,
 
-                    w1l9=2.018,w2l9=2.018,linwl9=0,loutwl9=0,
-                    w1r9=2.018,w2r9=2.018,linwr9=0,loutwr9=0,
-                    h1u9=2.018,h2u9=2.018,linhu9=0,louthu9=0,
-                    h1d9=2.018,h2d9=2.018,linhd9=0,louthd9=0,
-                    Qcxl9=0.0217,Qcxr9=0.0217,Qcyu9=0.0217, Qcyd9=0.0217,
-                    alphaxl9=6.07, alphaxr9=6.07, alphayu9=6.07, alphayd9=6.07,
-                    Wxr9=0.003,Wxl9=0.003,Wyu9=0.003,Wyd9=0.003,
-                    mxr9=-1, mxl9=-1, myu9=-1, myd9=-1,
-                    QcxrOW9=0.0217,QcxlOW9=0.0217,QcyuOW9=0.0217, QcydOW9=0.0217,
-                    alphaxlOW9=6.07, alphaxrOW9=6.07, alphayuOW9=6.07, alphaydOW9=6.07,
-                    WxrOW9=0.003,WxlOW9=0.003,WyuOW9=0.003,WydOW9=0.003,
-                    mxrOW9=-1, mxlOW9=-1, myuOW9=-1, mydOW9=-1,
-		   rwallthick9=0.001,lwallthick9=0.001,uwallthick9=0.001,dwallthick9=0.001,
+w1l9=2.018,w2l9=2.018,linwl9=0,loutwl9=0,
+w1r9=2.018,w2r9=2.018,linwr9=0,loutwr9=0,
+h1u9=2.018,h2u9=2.018,linhu9=0,louthu9=0,
+h1d9=2.018,h2d9=2.018,linhd9=0,louthd9=0,
+Qcxl9=0.0217,Qcxr9=0.0217,Qcyu9=0.0217, Qcyd9=0.0217,
+alphaxl9=6.07, alphaxr9=6.07, alphayu9=6.07, alphayd9=6.07,
+Wxr9=0.003,Wxl9=0.003,Wyu9=0.003,Wyd9=0.003,
+mxr9=-1, mxl9=-1, myu9=-1, myd9=-1,
+QcxrOW9=0.0217,QcxlOW9=0.0217,QcyuOW9=0.0217, QcydOW9=0.0217,
+alphaxlOW9=6.07, alphaxrOW9=6.07, alphayuOW9=6.07, alphaydOW9=6.07,
+WxrOW9=0.003,WxlOW9=0.003,WyuOW9=0.003,WydOW9=0.003,
+mxrOW9=-1, mxlOW9=-1, myuOW9=-1, mydOW9=-1,
+rwallthick9=0.001,lwallthick9=0.001,uwallthick9=0.001,dwallthick9=0.001,
 
-                    w1l10=2.02,w2l10=2.02,linwl10=0,loutwl10=0,
-                    w1r10=2.02,w2r10=2.02,linwr10=0,loutwr10=0,
-                    h1u10=2.02,h2u10=2.02,linhu10=0,louthu10=0,
-                    h1d10=2.02,h2d10=2.02,linhd10=0,louthd10=0,
-                    Qcxl10=0.0217,Qcxr10=0.0217,Qcyu10=0.0217, Qcyd10=0.0217,
-                    alphaxl10=6.07, alphaxr10=6.07, alphayu10=6.07, alphayd10=6.07,
-                    Wxr10=0.003,Wxl10=0.003,Wyu10=0.003,Wyd10=0.003,
-                    mxr10=-1, mxl10=-1, myu10=-1, myd10=-1,
-                    QcxrOW10=0.0217,QcxlOW10=0.0217,QcyuOW10=0.0217, QcydOW10=0.0217,
-                    alphaxlOW10=6.07, alphaxrOW10=6.07, alphayuOW10=6.07, alphaydOW10=6.07,
-                    WxrOW10=0.003,WxlOW10=0.003,WyuOW10=0.003,WydOW10=0.003,
-                    mxrOW10=-1, mxlOW10=-1, myuOW10=-1, mydOW10=-1,
-		   rwallthick10=0.001,lwallthick10=0.001,uwallthick10=0.001,dwallthick10=0.001
+w1l10=2.02,w2l10=2.02,linwl10=0,loutwl10=0,
+w1r10=2.02,w2r10=2.02,linwr10=0,loutwr10=0,
+h1u10=2.02,h2u10=2.02,linhu10=0,louthu10=0,
+h1d10=2.02,h2d10=2.02,linhd10=0,louthd10=0,
+Qcxl10=0.0217,Qcxr10=0.0217,Qcyu10=0.0217, Qcyd10=0.0217,
+alphaxl10=6.07, alphaxr10=6.07, alphayu10=6.07, alphayd10=6.07,
+Wxr10=0.003,Wxl10=0.003,Wyu10=0.003,Wyd10=0.003,
+mxr10=-1, mxl10=-1, myu10=-1, myd10=-1,
+QcxrOW10=0.0217,QcxlOW10=0.0217,QcyuOW10=0.0217, QcydOW10=0.0217,
+alphaxlOW10=6.07, alphaxrOW10=6.07, alphayuOW10=6.07, alphaydOW10=6.07,
+WxrOW10=0.003,WxlOW10=0.003,WyuOW10=0.003,WydOW10=0.003,
+mxrOW10=-1, mxlOW10=-1, myuOW10=-1, mydOW10=-1,
+rwallthick10=0.001,lwallthick10=0.001,uwallthick10=0.001,dwallthick10=0.001
 )
 
 OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
-                  pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
-                  awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
-                  awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
-                  pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
-                  t1,t2w1r,t2w1l,t2h1u,t2h1d,
-                  t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
-
-		  a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
-                  a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
-                  mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
-                  z0wr,z0wl,z0hu,z0hd,
-		
-
-                  p2parawr,p2parawl,p2parahu,p2parahd,
-                  p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
-
-                  m,n,
-                  nz,nx,ny,n2,
-                  pf,
-                  vxin,vyin,vzin,
-                  q,
-                  xtest,ytest,
-
-                  riTable, liTable, uiTable, diTable,
-                  roTable, loTable, uoTable, doTable,
-
-
-
-		  w1rwt1,w1lwt1,h1uwt1,h1dwt1,w2rwt1,w2lwt1,h2uwt1,h2dwt1,
-                  pawr1,pawl1,pbwr1,pbwl1,pahu1,pahd1,pbhu1,pbhd1,
-                  awl1,bwl1,awr1,bwr1,ahu1,bhu1,ahd1,bhd1,
-                  awlwt1,bwlwt1,awrwt1,bwrwt1,ahuwt1,bhuwt1,ahdwt1,bhdwt1,
-                  pawrwt1,pawlwt1,pbwrwt1,pbwlwt1,pahuwt1,pahdwt1,pbhuwt1,pbhdwt1,
-                  t2w1r1,t2w1l1,t2h1u1,t2h1d1,
-                  t2w1rwt1,t2w1lwt1,t2h1uwt1,t2h1dwt1,
-
-                  a2wlwt1,b2wlwt1,a2wrwt1,b2wrwt1,a2huwt1,b2huwt1,a2hdwt1,b2hdwt1,
-                  a2wl1,b2wl1,a2wr1,b2wr1,a2hu1,b2hu1,a2hd1,b2hd1,
-                  mru11,mru21,nru11,nru21,mrd11,mrd21,nrd11,nrd21,mlu11,mlu21,nlu11,nlu21,mld11,mld21,nld11,nld21,
-                  z0wr1,z0wl1,z0hu1,z0hd1,
+pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
+awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
+awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
+pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
+t1,t2w1r,t2w1l,t2h1u,t2h1d,
+t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
+
+a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
+a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
+mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
+z0wr,z0wl,z0hu,z0hd,
+
+
+p2parawr,p2parawl,p2parahu,p2parahd,
+p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
+
+m,n,
+nz,nx,ny,n2,
+pf,
+vxin,vyin,vzin,
+q,
+xtest,ytest,
 
-
-                  p2parawr1,p2parawl1,p2parahu1,p2parahd1,
-                  p2parawrwt1,p2parawlwt1,p2parahuwt1,p2parahdwt1,
+riTable, liTable, uiTable, diTable,
+roTable, loTable, uoTable, doTable,
 
-
-                  riTable1, liTable1, uiTable1, diTable1,
-                  roTable1, loTable1, uoTable1, doTable1,
 
-                  w1rwt2,w1lwt2,h1uwt2,h1dwt2,w2rwt2,w2lwt2,h2uwt2,h2dwt2,
-                  pawr2,pawl2,pbwr2,pbwl2,pahu2,pahd2,pbhu2,pbhd2,
-                  awl2,bwl2,awr2,bwr2,ahu2,bhu2,ahd2,bhd2,
-                  awlwt2,bwlwt2,awrwt2,bwrwt2,ahuwt2,bhuwt2,ahdwt2,bhdwt2,
-                  pawrwt2,pawlwt2,pbwrwt2,pbwlwt2,pahuwt2,pahdwt2,pbhuwt2,pbhdwt2,
-                  t2w1r2,t2w1l2,t2h1u2,t2h1d2,
-                  t2w1rwt2,t2w1lwt2,t2h1uwt2,t2h1dwt2,
 
-                  a2wlwt2,b2wlwt2,a2wrwt2,b2wrwt2,a2huwt2,b2huwt2,a2hdwt2,b2hdwt2,
-                  a2wl2,b2wl2,a2wr2,b2wr2,a2hu2,b2hu2,a2hd2,b2hd2,
-                  mru12,mru22,nru12,nru22,mrd12,mrd22,nrd12,nrd22,mlu12,mlu22,nlu12,nlu22,mld12,mld22,nld12,nld22,
-                  z0wr2,z0wl2,z0hu2,z0hd2,
+w1rwt1,w1lwt1,h1uwt1,h1dwt1,w2rwt1,w2lwt1,h2uwt1,h2dwt1,
+pawr1,pawl1,pbwr1,pbwl1,pahu1,pahd1,pbhu1,pbhd1,
+awl1,bwl1,awr1,bwr1,ahu1,bhu1,ahd1,bhd1,
+awlwt1,bwlwt1,awrwt1,bwrwt1,ahuwt1,bhuwt1,ahdwt1,bhdwt1,
+pawrwt1,pawlwt1,pbwrwt1,pbwlwt1,pahuwt1,pahdwt1,pbhuwt1,pbhdwt1,
+t2w1r1,t2w1l1,t2h1u1,t2h1d1,
+t2w1rwt1,t2w1lwt1,t2h1uwt1,t2h1dwt1,
 
+a2wlwt1,b2wlwt1,a2wrwt1,b2wrwt1,a2huwt1,b2huwt1,a2hdwt1,b2hdwt1,
+a2wl1,b2wl1,a2wr1,b2wr1,a2hu1,b2hu1,a2hd1,b2hd1,
+mru11,mru21,nru11,nru21,mrd11,mrd21,nrd11,nrd21,mlu11,mlu21,nlu11,nlu21,mld11,mld21,nld11,nld21,
+z0wr1,z0wl1,z0hu1,z0hd1,
 
-                  p2parawr2,p2parawl2,p2parahu2,p2parahd2,
-                  p2parawrwt2,p2parawlwt2,p2parahuwt2,p2parahdwt2,
 
+p2parawr1,p2parawl1,p2parahu1,p2parahd1,
+p2parawrwt1,p2parawlwt1,p2parahuwt1,p2parahdwt1,
 
-                  riTable2, liTable2, uiTable2, diTable2,
-                  roTable2, loTable2, uoTable2, doTable2,
 
-                  t2w1r3,t2w1l3,t2h1u3,t2h1d3,
-                  t2w1rwt3,t2w1lwt3,t2h1uwt3,t2h1dwt3,
-		  t2w1r4,t2w1l4,t2h1u4,t2h1d4,
-                  t2w1rwt4,t2w1lwt4,t2h1uwt4,t2h1dwt4,
-		  t2w1r5,t2w1l5,t2h1u5,t2h1d5,
-                  t2w1rwt5,t2w1lwt5,t2h1uwt5,t2h1dwt5,
-		  t2w1r6,t2w1l6,t2h1u6,t2h1d6,
-                  t2w1rwt6,t2w1lwt6,t2h1uwt6,t2h1dwt6,
-		  t2w1r7,t2w1l7,t2h1u7,t2h1d7,
-                  t2w1rwt7,t2w1lwt7,t2h1uwt7,t2h1dwt7,
-		  t2w1r8,t2w1l8,t2h1u8,t2h1d8,
-                  t2w1rwt8,t2w1lwt8,t2h1uwt8,t2h1dwt8,
-		  t2w1r9,t2w1l9,t2h1u9,t2h1d9,
-                  t2w1rwt9,t2w1lwt9,t2h1uwt9,t2h1dwt9,
-		  t2w1r10,t2w1l10,t2h1u10,t2h1d10,
-                  t2w1rwt10,t2w1lwt10,t2h1uwt10,t2h1dwt10,
+riTable1, liTable1, uiTable1, diTable1,
+roTable1, loTable1, uoTable1, doTable1,
 
-                  w1rwt3,w1lwt3,h1uwt3,h1dwt3,w2rwt3,w2lwt3,h2uwt3,h2dwt3,
-                  pawr3,pawl3,pbwr3,pbwl3,pahu3,pahd3,pbhu3,pbhd3,
-                  awl3,bwl3,awr3,bwr3,ahu3,bhu3,ahd3,bhd3,
-                  awlwt3,bwlwt3,awrwt3,bwrwt3,ahuwt3,bhuwt3,ahdwt3,bhdwt3,
-                  pawrwt3,pawlwt3,pbwrwt3,pbwlwt3,pahuwt3,pahdwt3,pbhuwt3,pbhdwt3,
+w1rwt2,w1lwt2,h1uwt2,h1dwt2,w2rwt2,w2lwt2,h2uwt2,h2dwt2,
+pawr2,pawl2,pbwr2,pbwl2,pahu2,pahd2,pbhu2,pbhd2,
+awl2,bwl2,awr2,bwr2,ahu2,bhu2,ahd2,bhd2,
+awlwt2,bwlwt2,awrwt2,bwrwt2,ahuwt2,bhuwt2,ahdwt2,bhdwt2,
+pawrwt2,pawlwt2,pbwrwt2,pbwlwt2,pahuwt2,pahdwt2,pbhuwt2,pbhdwt2,
+t2w1r2,t2w1l2,t2h1u2,t2h1d2,
+t2w1rwt2,t2w1lwt2,t2h1uwt2,t2h1dwt2,
 
-                  a2wlwt3,b2wlwt3,a2wrwt3,b2wrwt3,a2huwt3,b2huwt3,a2hdwt3,b2hdwt3,
-                  a2wl3,b2wl3,a2wr3,b2wr3,a2hu3,b2hu3,a2hd3,b2hd3,
-                  mru13,mru23,nru13,nru23,mrd13,mrd23,nrd13,nrd23,mlu13,mlu23,nlu13,nlu23,mld13,mld23,nld13,nld23,
-                  z0wr3,z0wl3,z0hu3,z0hd3,
+a2wlwt2,b2wlwt2,a2wrwt2,b2wrwt2,a2huwt2,b2huwt2,a2hdwt2,b2hdwt2,
+a2wl2,b2wl2,a2wr2,b2wr2,a2hu2,b2hu2,a2hd2,b2hd2,
+mru12,mru22,nru12,nru22,mrd12,mrd22,nrd12,nrd22,mlu12,mlu22,nlu12,nlu22,mld12,mld22,nld12,nld22,
+z0wr2,z0wl2,z0hu2,z0hd2,
 
-                  p2parawr3,p2parawl3,p2parahu3,p2parahd3,
-                  p2parawrwt3,p2parawlwt3,p2parahuwt3,p2parahdwt3,
 
+p2parawr2,p2parawl2,p2parahu2,p2parahd2,
+p2parawrwt2,p2parawlwt2,p2parahuwt2,p2parahdwt2,
 
-                  riTable3, liTable3, uiTable3, diTable3,
-                  roTable3, loTable3, uoTable3, doTable3,
 
-                  w1rwt4,w1lwt4,h1uwt4,h1dwt4,w2rwt4,w2lwt4,h2uwt4,h2dwt4,
-                  pawr4,pawl4,pbwr4,pbwl4,pahu4,pahd4,pbhu4,pbhd4,
-                  awl4,bwl4,awr4,bwr4,ahu4,bhu4,ahd4,bhd4,
-                  awlwt4,bwlwt4,awrwt4,bwrwt4,ahuwt4,bhuwt4,ahdwt4,bhdwt4,
-                  pawrwt4,pawlwt4,pbwrwt4,pbwlwt4,pahuwt4,pahdwt4,pbhuwt4,pbhdwt4,
+riTable2, liTable2, uiTable2, diTable2,
+roTable2, loTable2, uoTable2, doTable2,
 
-                  a2wlwt4,b2wlwt4,a2wrwt4,b2wrwt4,a2huwt4,b2huwt4,a2hdwt4,b2hdwt4,
-                  a2wl4,b2wl4,a2wr4,b2wr4,a2hu4,b2hu4,a2hd4,b2hd4,
-                  mru14,mru24,nru14,nru24,mrd14,mrd24,nrd14,nrd24,mlu14,mlu24,nlu14,nlu24,mld14,mld24,nld14,nld24,
-                  z0wr4,z0wl4,z0hu4,z0hd4,
+t2w1r3,t2w1l3,t2h1u3,t2h1d3,
+t2w1rwt3,t2w1lwt3,t2h1uwt3,t2h1dwt3,
+t2w1r4,t2w1l4,t2h1u4,t2h1d4,
+t2w1rwt4,t2w1lwt4,t2h1uwt4,t2h1dwt4,
+t2w1r5,t2w1l5,t2h1u5,t2h1d5,
+t2w1rwt5,t2w1lwt5,t2h1uwt5,t2h1dwt5,
+t2w1r6,t2w1l6,t2h1u6,t2h1d6,
+t2w1rwt6,t2w1lwt6,t2h1uwt6,t2h1dwt6,
+t2w1r7,t2w1l7,t2h1u7,t2h1d7,
+t2w1rwt7,t2w1lwt7,t2h1uwt7,t2h1dwt7,
+t2w1r8,t2w1l8,t2h1u8,t2h1d8,
+t2w1rwt8,t2w1lwt8,t2h1uwt8,t2h1dwt8,
+t2w1r9,t2w1l9,t2h1u9,t2h1d9,
+t2w1rwt9,t2w1lwt9,t2h1uwt9,t2h1dwt9,
+t2w1r10,t2w1l10,t2h1u10,t2h1d10,
+t2w1rwt10,t2w1lwt10,t2h1uwt10,t2h1dwt10,
 
+w1rwt3,w1lwt3,h1uwt3,h1dwt3,w2rwt3,w2lwt3,h2uwt3,h2dwt3,
+pawr3,pawl3,pbwr3,pbwl3,pahu3,pahd3,pbhu3,pbhd3,
+awl3,bwl3,awr3,bwr3,ahu3,bhu3,ahd3,bhd3,
+awlwt3,bwlwt3,awrwt3,bwrwt3,ahuwt3,bhuwt3,ahdwt3,bhdwt3,
+pawrwt3,pawlwt3,pbwrwt3,pbwlwt3,pahuwt3,pahdwt3,pbhuwt3,pbhdwt3,
 
-                  p2parawr4,p2parawl4,p2parahu4,p2parahd4,
-                  p2parawrwt4,p2parawlwt4,p2parahuwt4,p2parahdwt4,
+a2wlwt3,b2wlwt3,a2wrwt3,b2wrwt3,a2huwt3,b2huwt3,a2hdwt3,b2hdwt3,
+a2wl3,b2wl3,a2wr3,b2wr3,a2hu3,b2hu3,a2hd3,b2hd3,
+mru13,mru23,nru13,nru23,mrd13,mrd23,nrd13,nrd23,mlu13,mlu23,nlu13,nlu23,mld13,mld23,nld13,nld23,
+z0wr3,z0wl3,z0hu3,z0hd3,
 
+p2parawr3,p2parawl3,p2parahu3,p2parahd3,
+p2parawrwt3,p2parawlwt3,p2parahuwt3,p2parahdwt3,
 
-                  riTable4, liTable4, uiTable4, diTable4,
-                  roTable4, loTable4, uoTable4, doTable4,
 
-                  w1rwt5,w1lwt5,h1uwt5,h1dwt5,w2rwt5,w2lwt5,h2uwt5,h2dwt5,
-                  pawr5,pawl5,pbwr5,pbwl5,pahu5,pahd5,pbhu5,pbhd5,
-                  awl5,bwl5,awr5,bwr5,ahu5,bhu5,ahd5,bhd5,
-                  awlwt5,bwlwt5,awrwt5,bwrwt5,ahuwt5,bhuwt5,ahdwt5,bhdwt5,
-                  pawrwt5,pawlwt5,pbwrwt5,pbwlwt5,pahuwt5,pahdwt5,pbhuwt5,pbhdwt5,
+riTable3, liTable3, uiTable3, diTable3,
+roTable3, loTable3, uoTable3, doTable3,
 
-                  a2wlwt5,b2wlwt5,a2wrwt5,b2wrwt5,a2huwt5,b2huwt5,a2hdwt5,b2hdwt5,
-                  a2wl5,b2wl5,a2wr5,b2wr5,a2hu5,b2hu5,a2hd5,b2hd5,
-                  mru15,mru25,nru15,nru25,mrd15,mrd25,nrd15,nrd25,mlu15,mlu25,nlu15,nlu25,mld15,mld25,nld15,nld25,
-                  z0wr5,z0wl5,z0hu5,z0hd5,
+w1rwt4,w1lwt4,h1uwt4,h1dwt4,w2rwt4,w2lwt4,h2uwt4,h2dwt4,
+pawr4,pawl4,pbwr4,pbwl4,pahu4,pahd4,pbhu4,pbhd4,
+awl4,bwl4,awr4,bwr4,ahu4,bhu4,ahd4,bhd4,
+awlwt4,bwlwt4,awrwt4,bwrwt4,ahuwt4,bhuwt4,ahdwt4,bhdwt4,
+pawrwt4,pawlwt4,pbwrwt4,pbwlwt4,pahuwt4,pahdwt4,pbhuwt4,pbhdwt4,
 
+a2wlwt4,b2wlwt4,a2wrwt4,b2wrwt4,a2huwt4,b2huwt4,a2hdwt4,b2hdwt4,
+a2wl4,b2wl4,a2wr4,b2wr4,a2hu4,b2hu4,a2hd4,b2hd4,
+mru14,mru24,nru14,nru24,mrd14,mrd24,nrd14,nrd24,mlu14,mlu24,nlu14,nlu24,mld14,mld24,nld14,nld24,
+z0wr4,z0wl4,z0hu4,z0hd4,
 
-                  p2parawr5,p2parawl5,p2parahu5,p2parahd5,
-                  p2parawrwt5,p2parawlwt5,p2parahuwt5,p2parahdwt5,
 
-                  riTable5, liTable5, uiTable5, diTable5,
-                  roTable5, loTable5, uoTable5, doTable5,
+p2parawr4,p2parawl4,p2parahu4,p2parahd4,
+p2parawrwt4,p2parawlwt4,p2parahuwt4,p2parahdwt4,
 
-                  w1rwt6,w1lwt6,h1uwt6,h1dwt6,w2rwt6,w2lwt6,h2uwt6,h2dwt6,
-                  pawr6,pawl6,pbwr6,pbwl6,pahu6,pahd6,pbhu6,pbhd6,
-                  awl6,bwl6,awr6,bwr6,ahu6,bhu6,ahd6,bhd6,
-                  awlwt6,bwlwt6,awrwt6,bwrwt6,ahuwt6,bhuwt6,ahdwt6,bhdwt6,
-                  pawrwt6,pawlwt6,pbwrwt6,pbwlwt6,pahuwt6,pahdwt6,pbhuwt6,pbhdwt6,
 
-                  a2wlwt6,b2wlwt6,a2wrwt6,b2wrwt6,a2huwt6,b2huwt6,a2hdwt6,b2hdwt6,
-                  a2wl6,b2wl6,a2wr6,b2wr6,a2hu6,b2hu6,a2hd6,b2hd6,
-                  mru16,mru26,nru16,nru26,mrd16,mrd26,nrd16,nrd26,mlu16,mlu26,nlu16,nlu26,mld16,mld26,nld16,nld26,
-                  z0wr6,z0wl6,z0hu6,z0hd6,
+riTable4, liTable4, uiTable4, diTable4,
+roTable4, loTable4, uoTable4, doTable4,
 
+w1rwt5,w1lwt5,h1uwt5,h1dwt5,w2rwt5,w2lwt5,h2uwt5,h2dwt5,
+pawr5,pawl5,pbwr5,pbwl5,pahu5,pahd5,pbhu5,pbhd5,
+awl5,bwl5,awr5,bwr5,ahu5,bhu5,ahd5,bhd5,
+awlwt5,bwlwt5,awrwt5,bwrwt5,ahuwt5,bhuwt5,ahdwt5,bhdwt5,
+pawrwt5,pawlwt5,pbwrwt5,pbwlwt5,pahuwt5,pahdwt5,pbhuwt5,pbhdwt5,
 
-                  p2parawr6,p2parawl6,p2parahu6,p2parahd6,
-                  p2parawrwt6,p2parawlwt6,p2parahuwt6,p2parahdwt6,
+a2wlwt5,b2wlwt5,a2wrwt5,b2wrwt5,a2huwt5,b2huwt5,a2hdwt5,b2hdwt5,
+a2wl5,b2wl5,a2wr5,b2wr5,a2hu5,b2hu5,a2hd5,b2hd5,
+mru15,mru25,nru15,nru25,mrd15,mrd25,nrd15,nrd25,mlu15,mlu25,nlu15,nlu25,mld15,mld25,nld15,nld25,
+z0wr5,z0wl5,z0hu5,z0hd5,
 
 
-                  riTable6, liTable6, uiTable6, diTable6,
-                  roTable6, loTable6, uoTable6, doTable6,
+p2parawr5,p2parawl5,p2parahu5,p2parahd5,
+p2parawrwt5,p2parawlwt5,p2parahuwt5,p2parahdwt5,
 
-                  w1rwt7,w1lwt7,h1uwt7,h1dwt7,w2rwt7,w2lwt7,h2uwt7,h2dwt7,
-                  pawr7,pawl7,pbwr7,pbwl7,pahu7,pahd7,pbhu7,pbhd7,
-                  awl7,bwl7,awr7,bwr7,ahu7,bhu7,ahd7,bhd7,
-                  awlwt7,bwlwt7,awrwt7,bwrwt7,ahuwt7,bhuwt7,ahdwt7,bhdwt7,
-                  pawrwt7,pawlwt7,pbwrwt7,pbwlwt7,pahuwt7,pahdwt7,pbhuwt7,pbhdwt7,
+riTable5, liTable5, uiTable5, diTable5,
+roTable5, loTable5, uoTable5, doTable5,
 
-                  a2wlwt7,b2wlwt7,a2wrwt7,b2wrwt7,a2huwt7,b2huwt7,a2hdwt7,b2hdwt7,
-                  a2wl7,b2wl7,a2wr7,b2wr7,a2hu7,b2hu7,a2hd7,b2hd7,
-                  mru17,mru27,nru17,nru27,mrd17,mrd27,nrd17,nrd27,mlu17,mlu27,nlu17,nlu27,mld17,mld27,nld17,nld27,
-                  z0wr7,z0wl7,z0hu7,z0hd7,
+w1rwt6,w1lwt6,h1uwt6,h1dwt6,w2rwt6,w2lwt6,h2uwt6,h2dwt6,
+pawr6,pawl6,pbwr6,pbwl6,pahu6,pahd6,pbhu6,pbhd6,
+awl6,bwl6,awr6,bwr6,ahu6,bhu6,ahd6,bhd6,
+awlwt6,bwlwt6,awrwt6,bwrwt6,ahuwt6,bhuwt6,ahdwt6,bhdwt6,
+pawrwt6,pawlwt6,pbwrwt6,pbwlwt6,pahuwt6,pahdwt6,pbhuwt6,pbhdwt6,
 
+a2wlwt6,b2wlwt6,a2wrwt6,b2wrwt6,a2huwt6,b2huwt6,a2hdwt6,b2hdwt6,
+a2wl6,b2wl6,a2wr6,b2wr6,a2hu6,b2hu6,a2hd6,b2hd6,
+mru16,mru26,nru16,nru26,mrd16,mrd26,nrd16,nrd26,mlu16,mlu26,nlu16,nlu26,mld16,mld26,nld16,nld26,
+z0wr6,z0wl6,z0hu6,z0hd6,
 
-                  p2parawr7,p2parawl7,p2parahu7,p2parahd7,
-                  p2parawrwt7,p2parawlwt7,p2parahuwt7,p2parahdwt7,
 
-                  riTable7, liTable7, uiTable7, diTable7,
-                  roTable7, loTable7, uoTable7, doTable7,
+p2parawr6,p2parawl6,p2parahu6,p2parahd6,
+p2parawrwt6,p2parawlwt6,p2parahuwt6,p2parahdwt6,
 
-                  w1rwt8,w1lwt8,h1uwt8,h1dwt8,w2rwt8,w2lwt8,h2uwt8,h2dwt8,
-                  pawr8,pawl8,pbwr8,pbwl8,pahu8,pahd8,pbhu8,pbhd8,
-                  awl8,bwl8,awr8,bwr8,ahu8,bhu8,ahd8,bhd8,
-                  awlwt8,bwlwt8,awrwt8,bwrwt8,ahuwt8,bhuwt8,ahdwt8,bhdwt8,
-                  pawrwt8,pawlwt8,pbwrwt8,pbwlwt8,pahuwt8,pahdwt8,pbhuwt8,pbhdwt8,
 
-                  a2wlwt8,b2wlwt8,a2wrwt8,b2wrwt8,a2huwt8,b2huwt8,a2hdwt8,b2hdwt8,
-                  a2wl8,b2wl8,a2wr8,b2wr8,a2hu8,b2hu8,a2hd8,b2hd8,
-                  mru18,mru28,nru18,nru28,mrd18,mrd28,nrd18,nrd28,mlu18,mlu28,nlu18,nlu28,mld18,mld28,nld18,nld28,
-                  z0wr8,z0wl8,z0hu8,z0hd8,
+riTable6, liTable6, uiTable6, diTable6,
+roTable6, loTable6, uoTable6, doTable6,
 
+w1rwt7,w1lwt7,h1uwt7,h1dwt7,w2rwt7,w2lwt7,h2uwt7,h2dwt7,
+pawr7,pawl7,pbwr7,pbwl7,pahu7,pahd7,pbhu7,pbhd7,
+awl7,bwl7,awr7,bwr7,ahu7,bhu7,ahd7,bhd7,
+awlwt7,bwlwt7,awrwt7,bwrwt7,ahuwt7,bhuwt7,ahdwt7,bhdwt7,
+pawrwt7,pawlwt7,pbwrwt7,pbwlwt7,pahuwt7,pahdwt7,pbhuwt7,pbhdwt7,
 
-                  p2parawr8,p2parawl8,p2parahu8,p2parahd8,
-                  p2parawrwt8,p2parawlwt8,p2parahuwt8,p2parahdwt8,
+a2wlwt7,b2wlwt7,a2wrwt7,b2wrwt7,a2huwt7,b2huwt7,a2hdwt7,b2hdwt7,
+a2wl7,b2wl7,a2wr7,b2wr7,a2hu7,b2hu7,a2hd7,b2hd7,
+mru17,mru27,nru17,nru27,mrd17,mrd27,nrd17,nrd27,mlu17,mlu27,nlu17,nlu27,mld17,mld27,nld17,nld27,
+z0wr7,z0wl7,z0hu7,z0hd7,
 
 
-                  riTable8, liTable8, uiTable8, diTable8,
-                  roTable8, loTable8, uoTable8, doTable8,
+p2parawr7,p2parawl7,p2parahu7,p2parahd7,
+p2parawrwt7,p2parawlwt7,p2parahuwt7,p2parahdwt7,
 
-                  w1rwt9,w1lwt9,h1uwt9,h1dwt9,w2rwt9,w2lwt9,h2uwt9,h2dwt9,
-                  pawr9,pawl9,pbwr9,pbwl9,pahu9,pahd9,pbhu9,pbhd9,
-                  awl9,bwl9,awr9,bwr9,ahu9,bhu9,ahd9,bhd9,
-                  awlwt9,bwlwt9,awrwt9,bwrwt9,ahuwt9,bhuwt9,ahdwt9,bhdwt9,
-                  pawrwt9,pawlwt9,pbwrwt9,pbwlwt9,pahuwt9,pahdwt9,pbhuwt9,pbhdwt9,
+riTable7, liTable7, uiTable7, diTable7,
+roTable7, loTable7, uoTable7, doTable7,
 
-                  a2wlwt9,b2wlwt9,a2wrwt9,b2wrwt9,a2huwt9,b2huwt9,a2hdwt9,b2hdwt9,
-                  a2wl9,b2wl9,a2wr9,b2wr9,a2hu9,b2hu9,a2hd9,b2hd9,
-                  mru19,mru29,nru19,nru29,mrd19,mrd29,nrd19,nrd29,mlu19,mlu29,nlu19,nlu29,mld19,mld29,nld19,nld29,
-                  z0wr9,z0wl9,z0hu9,z0hd9,
+w1rwt8,w1lwt8,h1uwt8,h1dwt8,w2rwt8,w2lwt8,h2uwt8,h2dwt8,
+pawr8,pawl8,pbwr8,pbwl8,pahu8,pahd8,pbhu8,pbhd8,
+awl8,bwl8,awr8,bwr8,ahu8,bhu8,ahd8,bhd8,
+awlwt8,bwlwt8,awrwt8,bwrwt8,ahuwt8,bhuwt8,ahdwt8,bhdwt8,
+pawrwt8,pawlwt8,pbwrwt8,pbwlwt8,pahuwt8,pahdwt8,pbhuwt8,pbhdwt8,
 
+a2wlwt8,b2wlwt8,a2wrwt8,b2wrwt8,a2huwt8,b2huwt8,a2hdwt8,b2hdwt8,
+a2wl8,b2wl8,a2wr8,b2wr8,a2hu8,b2hu8,a2hd8,b2hd8,
+mru18,mru28,nru18,nru28,mrd18,mrd28,nrd18,nrd28,mlu18,mlu28,nlu18,nlu28,mld18,mld28,nld18,nld28,
+z0wr8,z0wl8,z0hu8,z0hd8,
 
-                  p2parawr9,p2parawl9,p2parahu9,p2parahd9,
-                  p2parawrwt9,p2parawlwt9,p2parahuwt9,p2parahdwt9,
 
+p2parawr8,p2parawl8,p2parahu8,p2parahd8,
+p2parawrwt8,p2parawlwt8,p2parahuwt8,p2parahdwt8,
 
-                  riTable9, liTable9, uiTable9, diTable9,
-                  roTable9, loTable9, uoTable9, doTable9,
 
-                  w1rwt10,w1lwt10,h1uwt10,h1dwt10,w2rwt10,w2lwt10,h2uwt10,h2dwt10,
-                  pawr10,pawl10,pbwr10,pbwl10,pahu10,pahd10,pbhu10,pbhd10,
-                  awl10,bwl10,awr10,bwr10,ahu10,bhu10,ahd10,bhd10,
-                  awlwt10,bwlwt10,awrwt10,bwrwt10,ahuwt10,bhuwt10,ahdwt10,bhdwt10,
-                  pawrwt10,pawlwt10,pbwrwt10,pbwlwt10,pahuwt10,pahdwt10,pbhuwt10,pbhdwt10,
+riTable8, liTable8, uiTable8, diTable8,
+roTable8, loTable8, uoTable8, doTable8,
 
-                  a2wlwt10,b2wlwt10,a2wrwt10,b2wrwt10,a2huwt10,b2huwt10,a2hdwt10,b2hdwt10,
-                  a2wl10,b2wl10,a2wr10,b2wr10,a2hu10,b2hu10,a2hd10,b2hd10,
-                  mru110,mru210,nru110,nru210,mrd110,mrd210,nrd110,nrd210,mlu110,mlu210,nlu110,nlu210,mld110,mld210,nld110,nld210,
-                  z0wr10,z0wl10,z0hu10,z0hd10,
+w1rwt9,w1lwt9,h1uwt9,h1dwt9,w2rwt9,w2lwt9,h2uwt9,h2dwt9,
+pawr9,pawl9,pbwr9,pbwl9,pahu9,pahd9,pbhu9,pbhd9,
+awl9,bwl9,awr9,bwr9,ahu9,bhu9,ahd9,bhd9,
+awlwt9,bwlwt9,awrwt9,bwrwt9,ahuwt9,bhuwt9,ahdwt9,bhdwt9,
+pawrwt9,pawlwt9,pbwrwt9,pbwlwt9,pahuwt9,pahdwt9,pbhuwt9,pbhdwt9,
 
+a2wlwt9,b2wlwt9,a2wrwt9,b2wrwt9,a2huwt9,b2huwt9,a2hdwt9,b2hdwt9,
+a2wl9,b2wl9,a2wr9,b2wr9,a2hu9,b2hu9,a2hd9,b2hd9,
+mru19,mru29,nru19,nru29,mrd19,mrd29,nrd19,nrd29,mlu19,mlu29,nlu19,nlu29,mld19,mld29,nld19,nld29,
+z0wr9,z0wl9,z0hu9,z0hd9,
 
-                  p2parawr10,p2parawl10,p2parahu10,p2parahd10,
-                  p2parawrwt10,p2parawlwt10,p2parahuwt10,p2parahdwt10,
 
+p2parawr9,p2parawl9,p2parahu9,p2parahd9,
+p2parawrwt9,p2parawlwt9,p2parahuwt9,p2parahdwt9,
 
-                  riTable10, liTable10, uiTable10, diTable10,
-                  roTable10, loTable10, uoTable10, doTable10,
 
-                  TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
-                  ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
-                  TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
-                  TEST_UP_DOWN,TEST_LEFT_RIGHT
+riTable9, liTable9, uiTable9, diTable9,
+roTable9, loTable9, uoTable9, doTable9,
+
+w1rwt10,w1lwt10,h1uwt10,h1dwt10,w2rwt10,w2lwt10,h2uwt10,h2dwt10,
+pawr10,pawl10,pbwr10,pbwl10,pahu10,pahd10,pbhu10,pbhd10,
+awl10,bwl10,awr10,bwr10,ahu10,bhu10,ahd10,bhd10,
+awlwt10,bwlwt10,awrwt10,bwrwt10,ahuwt10,bhuwt10,ahdwt10,bhdwt10,
+pawrwt10,pawlwt10,pbwrwt10,pbwlwt10,pahuwt10,pahdwt10,pbhuwt10,pbhdwt10,
+
+a2wlwt10,b2wlwt10,a2wrwt10,b2wrwt10,a2huwt10,b2huwt10,a2hdwt10,b2hdwt10,
+a2wl10,b2wl10,a2wr10,b2wr10,a2hu10,b2hu10,a2hd10,b2hd10,
+mru110,mru210,nru110,nru210,mrd110,mrd210,nrd110,nrd210,mlu110,mlu210,nlu110,nlu210,mld110,mld210,nld110,nld210,
+z0wr10,z0wl10,z0hu10,z0hd10,
+
+
+p2parawr10,p2parawl10,p2parahu10,p2parahd10,
+p2parawrwt10,p2parawlwt10,p2parahuwt10,p2parahdwt10,
+
+
+riTable10, liTable10, uiTable10, diTable10,
+roTable10, loTable10, uoTable10, doTable10,
+
+TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
+ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
+TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
+TEST_UP_DOWN,TEST_LEFT_RIGHT
 )
 
 SHARE
-%{	
-  %include "read_table-lib"
+%{
+%include "read_table-lib"
 
-  void TEST_INPUT(char name[20])
+void TEST_INPUT(char name[20])
   {
     fprintf(stderr,"Component: %s (Guide_four_side) %s should  \n", NAME_CURRENT_COMP, name);
     fprintf(stderr,"           NOT be negative \n");

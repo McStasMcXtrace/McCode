@@ -11,9 +11,7 @@
 * Written by: KL
 * Date: November 20, 1998
 * Modified by: KL, 8 October 2001
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Neutron source with Gaussian or uniform divergence
 *
@@ -42,21 +40,21 @@
 * therefore not suited for large angles
 *
 * %P
-* xwidth:   (m)  Width of source
-* yheight:  (m)  Height of source
-* focus_aw:(deg) FWHM (Gaussian) or maximal (uniform) horz. width divergence
-* focus_ah:(deg) FWHM (Gaussian) or maximal (uniform) vert. height divergence
-* E0:      (meV) Mean energy of neutrons.
-* dE:      (meV) Energy half spread of neutrons.
-* lambda0: (Ang) Mean wavelength of neutrons (only relevant for E0=0)
-* dlambda: (Ang) Wavelength half spread of neutrons.
-* gauss:  (0|1)  Criterion: 0: uniform, 1: Gaussian distributions
-* flux:   [1/(s cm 2 st energy_unit)] flux per energy unit, Angs or meV
+* xwidth: [m]                        Width of source
+* yheight: [m]                       Height of source
+* focus_aw: [deg]                    FWHM (Gaussian) or maximal (uniform) horz. width divergence
+* focus_ah: [deg]                    FWHM (Gaussian) or maximal (uniform) vert. height divergence
+* E0: [meV]                          Mean energy of neutrons.
+* dE: [meV]                          Energy half spread of neutrons.
+* lambda0: [Ang]                     Mean wavelength of neutrons (only relevant for E0=0)
+* dlambda: [Ang]                     Wavelength half spread of neutrons.
+* gauss: [0|1]                       Criterion: 0: uniform, 1: Gaussian distributions
+* flux: [1/(s cm 2 st energy_unit)]  flux per energy unit, Angs or meV
 *
 * OUTPUT PARAMETERS:
-* sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
-* sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
-* p_init:   (1)  normalisation factor 1/'neutron_count'
+* sigmah: [rad]                      parameter 'sigma' of the Gaussian distribution for horizontal divergence
+* sigmav: [rad]                      parameter 'sigma' of the Gaussian distribution for vertical divergence
+* p_init: [1]                        normalisation factor 1/'neutron_count'
 *
 * %E
 *******************************************************************************/
@@ -68,11 +66,11 @@ OUTPUT PARAMETERS (thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, f
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
+double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
 %}
 INITIALIZE
 %{
-  sigmah = DEG2RAD*focus_aw/(sqrt(8.0*log(2.0)));
+sigmah = DEG2RAD*focus_aw/(sqrt(8.0*log(2.0)));
   sigmav = DEG2RAD*focus_ah/(sqrt(8.0*log(2.0)));
 
   if (xwidth < 0 || yheight < 0 || focus_aw < 0 || focus_ah < 0) {

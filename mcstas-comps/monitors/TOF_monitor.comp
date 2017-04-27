@@ -10,9 +10,7 @@
 * %I
 * Written by:  KN, M. Hagen
 * Date: August 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Rectangular Time-of-flight monitor.
 *
@@ -21,24 +19,24 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening [m]
-* xmax:     Upper x bound of detector opening [m]
-* ymin:     Lower y bound of detector opening [m]
-* ymax:     Upper y bound of detector opening [m]
-* xwidth:   Width of detector. Overrides xmin, xmax [m]
-* yheight:  Height of detector. Overrides ymin, ymax [m]
-* nt:       Number of time bins [1]
-* dt:       Length of each time bin [mu-s]
-* tmin:     Lower time limit [mu-s]
-* tmax:     Upper time limit [mu-s]
-* filename: Name of file in which to store the detector image [string]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* xwidth: [m]           Width of detector. Overrides xmin, xmax 
+* yheight: [m]          Height of detector. Overrides ymin, ymax 
+* nt: [1]               Number of time bins 
+* dt: [mu-s]            Length of each time bin 
+* tmin: [mu-s]          Lower time limit 
+* tmax: [mu-s]          Upper time limit 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* TOF_N:    Array of neutron counts
-* TOF_p:    Array of neutron weight counts
-* TOF_p2:   Array of second moments
+* TOF_N: []             Array of neutron counts
+* TOF_p: []             Array of neutron weight counts
+* TOF_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -46,23 +44,23 @@
 DEFINE COMPONENT TOF_monitor
 DEFINITION PARAMETERS (nt=20)
 SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-    xwidth=0, yheight=0, tmin=0, tmax=0, dt=1.0, restore_neutron=0)
+xwidth=0, yheight=0, tmin=0, tmax=0, dt=1.0, restore_neutron=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, t_min, t_max, delta_t)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
-  %{
-    double TOF_N[nt];
-    double TOF_p[nt];
-    double TOF_p2[nt];
-    double t_min, t_max, delta_t;
-  %}
+%{
+double TOF_N[nt];
+double TOF_p[nt];
+double TOF_p2[nt];
+double t_min, t_max, delta_t;
+%}
 
 INITIALIZE
-  %{
-    int i;
+%{
+int i;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {

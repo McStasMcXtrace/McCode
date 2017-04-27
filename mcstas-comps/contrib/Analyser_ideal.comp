@@ -10,9 +10,7 @@
 * %I
 * Written by: Erik Knudsen
 * Date: June 2010
-* Version: $Revision: 1.2 $
 * Origin: Risoe
-* Release: McStas 2.0
 *
 * (Unphysical) ideal analyzer.
 *
@@ -39,11 +37,11 @@ SETTING PARAMETERS (mx=0, my=0, mz=0)
 
 DECLARE
 %{
-  %}
+%}
 
 INITIALIZE
 %{
-  if (mx==1 && my==1 && mz==1) {
+if (mx==1 && my==1 && mz==1) {
     printf("Analyser_ideal: %s: NULL vector defined!\n"
 	   "ERROR      (px, py, pz). Exiting",
            NAME_CURRENT_COMP);

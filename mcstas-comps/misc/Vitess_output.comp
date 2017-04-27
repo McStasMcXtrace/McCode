@@ -8,9 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision$
 * Origin: Risoe/ILL
-* Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
 * Write neutron state parameters to VITESS neutron filename.
@@ -33,9 +31,9 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: Filename of neutron file to write. Default is standard output [string]
-* bufsize:  Size of neutron output buffer [records]
-* progress: If not zero, output dots as progress indicator [flag]
+* filename: [string]  Filename of neutron file to write. Default is standard output 
+* bufsize: [records]  Size of neutron output buffer 
+* progress: [flag]    If not zero, output dots as progress indicator 
 *
 * %E
 *******************************************************************************/
@@ -48,24 +46,24 @@ OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
-  %include "general"
-  %include "vitess-lib"
+%include "general"
+%include "vitess-lib"
 %}
 
 DECLARE
 %{
-  char *file;			/* path + filename             */
-  FILE *hfile;			/* Neutron output filename handle  */
-  Neutron *obuf;			/* Neutron output buffer       */
-  int pos;			/* Current position in buffer  */
-  double p_out;                   /* sum of output weight        */
-  double p2_out;                  /* square sum of output weight */
+char *file;			/* path + filename             */
+FILE *hfile;			/* Neutron output filename handle  */
+Neutron *obuf;			/* Neutron output buffer       */
+int pos;			/* Current position in buffer  */
+double p_out;                   /* sum of output weight        */
+double p2_out;                  /* square sum of output weight */
 %}
 
 INITIALIZE
 %{
-  file=NULL;
-  hfile=NULL;
+file=NULL;
+hfile=NULL;
 
 #if defined (USE_MPI)
     if (mpi_node_count > 1) {

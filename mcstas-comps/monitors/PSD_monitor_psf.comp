@@ -11,9 +11,7 @@
 * Written by: Kim Lefmann, Linda Udby
 * Date: Feb 3, 1998
 * Updated: Oct 15, 2007 (with psf)
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Position-sensitive monitor.
 *
@@ -26,22 +24,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening [m]
-* xmax:     Upper x bound of detector opening [m]
-* ymin:     Lower y bound of detector opening [m]
-* ymax:     Upper y bound of detector opening [m]
-* xwidth:   Width/diameter of detector (x). Overrides xmin, xmax [m]
-* yheight:  Height of detector (y). Overrides ymin, ymax [m]
-* nx:       Number of pixel columns [1]
-* ny:       Number of pixel rows [1]
-* filename: Name of file in which to store the detector image [string]
-* psf:      Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf [m]
+* xmin: [m]           Lower x bound of detector opening 
+* xmax: [m]           Upper x bound of detector opening 
+* ymin: [m]           Lower y bound of detector opening 
+* ymax: [m]           Upper y bound of detector opening 
+* xwidth: [m]         Width/diameter of detector (x). Overrides xmin, xmax 
+* yheight: [m]        Height of detector (y). Overrides ymin, ymax 
+* nx: [1]             Number of pixel columns 
+* ny: [1]             Number of pixel rows 
+* filename: [string]  Name of file in which to store the detector image 
+* psf: [m]            Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []           Array of neutron counts
+* PSD_p: []           Array of neutron weight counts
+* PSD_p2: []          Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -55,17 +53,17 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
-  %{
-    double PSD_N[nx][ny];
-    double PSD_p[nx][ny];
-    double PSD_p2[nx][ny];
-  %}
+%{
+double PSD_N[nx][ny];
+double PSD_p[nx][ny];
+double PSD_p2[nx][ny];
+%}
 
 INITIALIZE
-  %{
-    int i,j;
+%{
+int i,j;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {

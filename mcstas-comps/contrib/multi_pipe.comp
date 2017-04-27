@@ -10,8 +10,6 @@
 * %I
 * Written by: Uwe Filges
 * Date: March, 2005
-* Version: $Revision$
-* Release: McStas 1.12
 *
 * multi pipe circular slit.
 *
@@ -31,16 +29,16 @@
 * %P
 * INPUT PARAMETERS
 *
-* radius:    radius of a single hole
-* xmin:      Lower x bound (m)
-* xmax:      Upper x bound (m)
-* ymin:      Lower y bound (m)
-* ymax:      Upper y bound (m)
-* xwidth:    Width of slit plate. Overrides xmin,xmax. (m)
-* yheight:   Height of slit plate. Overrides ymin,ymax. (m)
-* gap:       distance between holes (m)
-* thickness: thickness of the pipe (m)
-* filename:  define user table of holes (str)
+* radius: []       radius of a single hole
+* xmin: [m]        Lower x bound 
+* xmax: [m]        Upper x bound 
+* ymin: [m]        Lower y bound 
+* ymax: [m]        Upper y bound 
+* xwidth: [m]      Width of slit plate. Overrides xmin,xmax. 
+* yheight: [m]     Height of slit plate. Overrides ymin,ymax. 
+* gap: [m]         distance between holes 
+* thickness: [m]   thickness of the pipe 
+* filename: [str]  define user table of holes 
 *
 * %E
 *******************************************************************************/
@@ -49,7 +47,7 @@ DEFINE COMPONENT multi_pipe
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, xmin,xmax,ymin,ymax,radius=0.0,gap=0.0,thickness=0.0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (pTable, user_file, ynum, xnum, diam, w_pipe, h_pipe, h_number)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 %include "read_table-lib"
@@ -57,24 +55,24 @@ SHARE
 
 DECLARE
 %{
-   t_Table pTable;
-   int user_file;
-   int ynum,xnum;
-   double diam;
-   double w_pipe,h_pipe;
-   int h_number;
+t_Table pTable;
+int user_file;
+int ynum,xnum;
+double diam;
+double w_pipe,h_pipe;
+int h_number;
 %}
 
 
 INITIALIZE
 %{
-  
-  char file_name[1024];
-  char *pos;
-  char *fu;
-  int  check;   
-  
-  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+
+char file_name[1024];
+char *pos;
+char *fu;
+int  check;
+
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0 && gap==0)

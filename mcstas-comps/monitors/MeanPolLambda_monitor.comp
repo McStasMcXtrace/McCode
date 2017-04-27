@@ -10,9 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.10
 *
 * Polarisation and wavelength sensitive monitor.
 *
@@ -25,23 +23,23 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   Width of detector [m]
-* yheight:  Height of detector [m]
-* mx:       X-component of monitor vector (can be negative) [1]
-* my:       Y-component of monitor vector (can be negative) [1]
-* mz:       Z-component of monitor vector (can be negative) [1]
-* nL:       Number of bins in wavelength [1]
-* Lmin:     Minimum wavelength detected [AA]
-* Lmax:     Maximum wavelength detected [AA]
-* filename: Name of file in which to store the data [string]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* xwidth: [m]           Width of detector 
+* yheight: [m]          Height of detector 
+* mx: [1]               X-component of monitor vector (can be negative) 
+* my: [1]               Y-component of monitor vector (can be negative) 
+* mz: [1]               Z-component of monitor vector (can be negative) 
+* nL: [1]               Number of bins in wavelength 
+* Lmin: [AA]            Minimum wavelength detected 
+* Lmax: [AA]            Maximum wavelength detected 
+* filename: [string]    Name of file in which to store the data 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* PolL_N:      Array of neutron counts [1]
-* PolL_p:      Array of neutron weight counts [1]
-* PolL_p2:     Array of second moments [1]
-* HelpArray:   Array of weight counts used for normalization [1]
+* PolL_N: [1]           Array of neutron counts 
+* PolL_p: [1]           Array of neutron weight counts 
+* PolL_p2: [1]          Array of second moments 
+* HelpArray: [1]        Array of weight counts used for normalization 
 *
 * %E
 *******************************************************************************/
@@ -57,19 +55,19 @@ OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, HelpArray)
 
 DECLARE
 %{
-  double PolL_N[nL];
-  double PolL_p[nL];
-  double PolL_p2[nL];
-  double HelpArray[nL];
+double PolL_N[nL];
+double PolL_p[nL];
+double PolL_p2[nL];
+double HelpArray[nL];
 %}
 
 INITIALIZE
 %{
-  int i;
+int i;
 
-  // Check that input parameteters makes sense
+// Check that input parameteters makes sense
 
-  if (Lmax<=Lmin) {
+if (Lmax<=Lmin) {
     fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"
 	   "ERROR. Exiting",
            NAME_CURRENT_COMP);

@@ -10,8 +10,6 @@
 * %I
 * Written by: Christian Nielsen
 * Date: 1999
-* Version: $Revision$
-* Release: McStas CVS_080902
 * Origin: Risoe
 *
 * Neutron guide with channels (bender section).
@@ -40,26 +38,26 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      (m)    Width at the guide entry
-* h1:      (m)    Height at the guide entry
-* w2:      (m)    Width at the guide exit
-* h2:      (m)    Height at the guide exit
-* l:       (m)    Length of guide
-* d:       (m)    Thickness of subdividing absorbing walls
-* nslit:   (1)    Number of channels in the guide (>= 1)
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off for all mirrors
-* Qcx:     (AA-1) Critical scattering vector for left and right vertical mirrors in each channel
-* Qcy:     (AA-1) Critical scattering vector for top and bottom mirrors
-* alphax:  (AA)   Slope of reflectivity for left and right vertical mirrors in each channel
-* alphay:  (AA)   Slope of reflectivity for top and bottom mirrors
-* mx:      (1)    m-value of material for left and right vertical mirrors in each channel. Zero means completely absorbing.
-* my:      (1)    m-value of material for top and bottom mirrors. Zero means completely absorbing.
-* nu:      (Hz)   Rotation frequency (round/s) for Fermi Chopper approximation
-* phase:   (deg)  Phase shift for the Fermi Chopper approximation
+* w1: [m]       Width at the guide entry
+* h1: [m]       Height at the guide entry
+* w2: [m]       Width at the guide exit
+* h2: [m]       Height at the guide exit
+* l: [m]        Length of guide
+* d: [m]        Thickness of subdividing absorbing walls
+* nslit: [1]    Number of channels in the guide (>= 1)
+* R0: [1]       Low-angle reflectivity
+* Qc: [AA-1]    Critical scattering vector
+* alpha: [AA]   Slope of reflectivity
+* m: [1]        m-value of material. Zero means completely absorbing.
+* W: [AA-1]     Width of supermirror cut-off for all mirrors
+* Qcx: [AA-1]   Critical scattering vector for left and right vertical mirrors in each channel
+* Qcy: [AA-1]   Critical scattering vector for top and bottom mirrors
+* alphax: [AA]  Slope of reflectivity for left and right vertical mirrors in each channel
+* alphay: [AA]  Slope of reflectivity for top and bottom mirrors
+* mx: [1]       m-value of material for left and right vertical mirrors in each channel. Zero means completely absorbing.
+* my: [1]       m-value of material for top and bottom mirrors. Zero means completely absorbing.
+* nu: [Hz]      Rotation frequency (round/s) for Fermi Chopper approximation
+* phase: [deg]  Phase shift for the Fermi Chopper approximation
 *
 * %D
 * Example values: mx=4 my=2 Qcx=Qcy=0.0219 W=1/300 alphax=alphay=6.49 R0=1
@@ -70,8 +68,8 @@
 DEFINE COMPONENT Guide_channeled
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
-  R0=0.995, Qc=0, alpha=0, m=0, nslit=1, d=0.0005,
-  Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, nu=0, phase=0)
+R0=0.995, Qc=0, alpha=0, m=0, nslit=1, d=0.0005,
+Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, nu=0, phase=0)
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE %{
@@ -79,16 +77,16 @@ SHARE %{
 %}
 DECLARE
 %{
-  double w1c;
-  double w2c;
-  double ww, hh;
-  double whalf, hhalf;
-  double lwhalf, lhhalf;
+double w1c;
+double w2c;
+double ww, hh;
+double whalf, hhalf;
+double lwhalf, lhhalf;
 %}
 
 INITIALIZE
 %{
-  if (!w2) w2=w1;
+if (!w2) w2=w1;
   if (!h2) h2=h1;
   if (nslit <= 0 || W <=0)
   { fprintf(stderr,"Guide_channeled: %s: nslit and W must be positive\n", NAME_CURRENT_COMP);

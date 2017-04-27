@@ -10,9 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.10c
 *
 * Spherical position-sensitive detector.
 *
@@ -25,17 +23,17 @@
 * %P
 * INPUT PARAMETERS:
 *
-* radius:   Radius of detector [m]
-* nx:       Number of pixel columns [1]
-* ny:       Number of pixel rows [1]
-* filename: Name of file in which to store the detector image [string]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* radius: [m]           Radius of detector 
+* nx: [1]               Number of pixel columns 
+* ny: [1]               Number of pixel rows 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
 *
 * %L
 * <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">Test
@@ -53,16 +51,16 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 
 DECLARE
 %{
-  double PSD_N[nx][ny];
-  double PSD_p[nx][ny];
-  double PSD_p2[nx][ny];
+double PSD_N[nx][ny];
+double PSD_p[nx][ny];
+double PSD_p2[nx][ny];
 %}
 
 INITIALIZE
 %{
-  int i,j;
+int i,j;
 
-  for (i=0; i<nx; i++)
+for (i=0; i<nx; i++)
     for (j=0; j<ny; j++)
     {
       PSD_N[i][j] = 0;

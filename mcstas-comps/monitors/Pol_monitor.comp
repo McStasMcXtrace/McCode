@@ -11,9 +11,7 @@
 * Written by: Peter Christiansen
 * Modified by  Erik B Knudsen
 * Date: July 2006
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.10
 *
 * Polarisation sensitive monitor.
 *
@@ -26,19 +24,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   Width of detector [m]
-* yheight:  Height of detector [m]
-* mx:       X-component of monitor vector (can be negative) [1]
-* my:       Y-component of monitor vector (can be negative) [1]
-* mz:       Z-component of monitor vector (can be negative) [1]
-* npol:     Number of channels [1]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* xwidth: [m]           Width of detector 
+* yheight: [m]          Height of detector 
+* mx: [1]               X-component of monitor vector (can be negative) 
+* my: [1]               Y-component of monitor vector (can be negative) 
+* mz: [1]               Z-component of monitor vector (can be negative) 
+* npol: [1]             Number of channels 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* Pol_N:      Array of neutron counts
-* Pol_p:      Array of neutron weight counts
-* Pol_p2:     Array of second moments
+* Pol_N: []             Array of neutron counts
+* Pol_p: []             Array of neutron weight counts
+* Pol_p2: []            Array of second moments
 *
 * %E
 *************************************************************************/
@@ -51,18 +49,18 @@ OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2, Psum, titlestring)
 
 DECLARE
 %{
-  double Pol_N;
-  double Pol_p;
-  double Pol_p2;
-  double Psum;
-  char titlestring[128];
+double Pol_N;
+double Pol_p;
+double Pol_p2;
+double Psum;
+char titlestring[128];
 %}
 
 INITIALIZE
 %{
-  // Check that input parameteters makes sense
+// Check that input parameteters makes sense
 
-  if (mx==0 && my==0 && mz==0) {
+if (mx==0 && my==0 && mz==0) {
     fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
 	    "ERROR      (mx, my, mz). Exiting",
 	    NAME_CURRENT_COMP);

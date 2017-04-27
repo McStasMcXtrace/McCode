@@ -10,9 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: August 4th 2010
-* Version: $Revision: 1.0$
 * Origin: ILL
-* Release: McStas 1.12b
 *
 * Reflecting surface (guide and mirror) with any shape, defined from an OFF file.
 *
@@ -45,21 +43,21 @@
 * %P
 * INPUT PARAMETERS:
 *
-* geometry:(str)  Name of the OFF/PLY file describing the guide geometry
-* xwidth:  (m)    Redimension the object bounding box on X axis is non-zero
-* yheight: (m)    Redimension the object bounding box on Y axis is non-zero
-* zdepth:  (m)    Redimension the object bounding box on Z axis is non-zero
-* center:  (1)    When set to 1, the object will be centered w.r.t. the local coordinate frame
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off
-* reflect: (str)  Reflectivity file name. Format [q(Angs-1) R(0-1)]
-* transmit:(1)    When true, non reflected neutrons are transmitted through the surfaces, instead of being absorbed. No material absorption is taken into account though
+* geometry: [str]              Name of the OFF/PLY file describing the guide geometry
+* xwidth: [m]                  Redimension the object bounding box on X axis is non-zero
+* yheight: [m]                 Redimension the object bounding box on Y axis is non-zero
+* zdepth: [m]                  Redimension the object bounding box on Z axis is non-zero
+* center: [1]                  When set to 1, the object will be centered w.r.t. the local coordinate frame
+* R0: [1]                      Low-angle reflectivity
+* Qc: [AA-1]                   Critical scattering vector
+* alpha: [AA]                  Slope of reflectivity
+* m: [1]                       m-value of material. Zero means completely absorbing.
+* W: [AA-1]                    Width of supermirror cut-off
+* reflect: [q(Angs-1) R(0-1)]  (str)  Reflectivity file name. Format 
+* transmit: [1]                When true, non reflected neutrons are transmitted through the surfaces, instead of being absorbed. No material absorption is taken into account though
 *
 * OUTPUT PARAMETERS:
-* SCATTERED:    number of reflected events
+* SCATTERED: []                number of reflected events
 *
 * %D
 * Example values: m=4 Qc=0.0219 W=1/300 alpha=6.49 R0=1
@@ -79,7 +77,7 @@
 DEFINE COMPONENT Guide_anyshape
 DEFINITION PARAMETERS (string reflect=0, string geometry=0)
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, center=0, transmit=0,
-                    R0=0.99, Qc=0.0219, alpha=3, m=2, W=0.003)
+R0=0.99, Qc=0.0219, alpha=3, m=2, W=0.003)
 OUTPUT PARAMETERS (pTable, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -92,13 +90,13 @@ SHARE
 
 DECLARE
 %{
-  off_struct offdata;
-  t_Table pTable;
+off_struct offdata;
+t_Table pTable;
 %}
 
 INITIALIZE
 %{
-  /* initialize OFF object from the file(s) */
+/* initialize OFF object from the file(s) */
   if (!off_init( geometry, xwidth, yheight, zdepth, !center, &offdata )) exit(-1);
 
   /* optionally initialize reflectivity curves */

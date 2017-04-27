@@ -9,9 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Neutron guide with gaussian waviness.
 *
@@ -29,32 +27,32 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      (m)    Width at the guide entry
-* h1:      (m)    Height at the guide entry
-* w2:      (m)    Width at the guide exit
-* h2:      (m)    Height at the guide exit
-* l:       (m)    length of guide
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off for all mirrors
+* w1: [m]         Width at the guide entry
+* h1: [m]         Height at the guide entry
+* w2: [m]         Width at the guide exit
+* h2: [m]         Height at the guide exit
+* l: [m]          length of guide
+* R0: [1]         Low-angle reflectivity
+* Qc: [AA-1]      Critical scattering vector
+* alpha: [AA]     Slope of reflectivity
+* m: [1]          m-value of material. Zero means completely absorbing.
+* W: [AA-1]       Width of supermirror cut-off for all mirrors
 *
-* alpha1:   (AA)   Slope of reflectivity left
-* m1:       (1)    m-value of material, left
-* W1:       (AA-1) Width of supermirror cut-off left
-* alpha2:   (AA)   Slope of reflectivity right
-* m2:       (1)    m-value of material, right.
-* W2:       (AA-1) Width of supermirror cut-off right
-* alpha3:   (AA)   Slope of reflectivity top
-* m3:       (1)    m-value of material, top.
-* W3:       (AA-1) Width of supermirror cut-off top
-* alpha4:   (AA)   Slope of reflectivity bottom
-* m4:       (1)    m-value of material, bottom.
-* W4:       (AA-1) Width of supermirror cut-off bottom
+* alpha1: [AA]    Slope of reflectivity left
+* m1: [1]         m-value of material, left
+* W1: [AA-1]      Width of supermirror cut-off left
+* alpha2: [AA]    Slope of reflectivity right
+* m2: [1]         m-value of material, right.
+* W2: [AA-1]      Width of supermirror cut-off right
+* alpha3: [AA]    Slope of reflectivity top
+* m3: [1]         m-value of material, top.
+* W3: [AA-1]      Width of supermirror cut-off top
+* alpha4: [AA]    Slope of reflectivity bottom
+* m4: [1]         m-value of material, bottom.
+* W4: [AA-1]      Width of supermirror cut-off bottom
 *
-* wavy_z:  [deg]  Waviness in the z-(flight-)direction
-* wavy_xy: (deg)  Waviness in the transverse direction
+* wavy_z: [deg]   Waviness in the z-(flight-)direction
+* wavy_xy: [deg]  Waviness in the transverse direction
 *
 * %E
 ******************************************************************************/
@@ -75,12 +73,12 @@ SHARE %{
 %}
 DECLARE
 %{
- double whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy;
+double whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy;
 %}
 
 INITIALIZE
 %{
-  if (m)     { m1=m2=m3=m4=m; }
+if (m)     { m1=m2=m3=m4=m; }
   if (alpha) { alpha1=alpha2=alpha3=alpha4=alpha; }
   if (W)     { W1=W2=W3=W4=W; }
 

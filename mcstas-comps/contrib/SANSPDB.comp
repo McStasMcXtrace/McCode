@@ -9,9 +9,7 @@
 * %I
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk) and Søren Kynde (kynde@nbi.dk)
 * Date: October 17, 2012
-* Version: $Revision$
 * Origin: KU-Science
-* Release: McStas 1.12c
 *
 * A sample describing a thin solution of proteins. This components must be compiled
 * with the -lgsl and -lgslcblas flags (and possibly linked to the appropriate
@@ -24,14 +22,14 @@
 * The component must have a valid .pdb-file as an argument.
 *
 * %P
-* RhoSolvent: [AA]		Scattering length density of the buffer.
-* Concentration: [mM]		Concentration of sample.
-* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
-* xwidth: [m]  		Dimension of component in the x-direction.
-* yheight: [m]		Dimension of component in the y-direction.
-* zdepth: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance: [m]		Distance from sample to detector (for focusing the scattered neutrons).
-* DetectorRadius: [m] 		Radius of the detector (for focusing the scattered neutrons).
+* RhoSolvent: [AA]               Scattering length density of the buffer.
+* Concentration: [mM]            Concentration of sample.
+* AbsorptionCrosssection: [1/m]  Absorption cross section of the sample.
+* xwidth: [m]                    Dimension of component in the x-direction.
+* yheight: [m]                   Dimension of component in the y-direction.
+* zdepth: [m]                    Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]  Distance from sample to detector (for focusing the scattered neutrons).
+* DetectorRadius: [m]            Radius of the detector (for focusing the scattered neutrons).
 * PDBFilepath: []		Path to the file describing the high resolution structure of the protein.
 *
 * %E
@@ -42,16 +40,16 @@ DEFINE COMPONENT SANSPDB
 DEFINITION PARAMETERS (NumberOfQBins = 200)
 
 SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-		    	xwidth, yheight, zdepth,
-			SampleToDetectorDistance, DetectorRadius,
-			string PDBFilepath = "PDBfile.pdb")
+xwidth, yheight, zdepth,
+SampleToDetectorDistance, DetectorRadius,
+string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
 
 SHARE
 %{
-	// Simple mathematical functions
-	int Sign(double x) {
+// Simple mathematical functions
+int Sign(double x) {
 		int Sign;
 		if (x > 0) {
 			Sign = 1;

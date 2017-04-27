@@ -10,9 +10,7 @@
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas CVS_080803
 *
 * A simple pulsed source for time-of-flight.
 *
@@ -24,17 +22,17 @@
 * %P
 * Input parameters:
 *
-* radius: (m)   Radius of source
-* Emin:   (meV) Lower edge of energy distribution
-* Emax:   (meV) Upper edge of energy distribution
-* target_index: (1) relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
-* dist:   (m)   Distance from source to the focusing rectangle
-* focus_xw: (m)   Width of focusing rectangle
-* focus_yh: (m)   Height of focusing rectangle
-* t0:     (mus) decay constant for low-energy neutrons
-* Ec:     (meV) Critical energy, below which the flux decay is constant
-* gamma:  (meV) energy dependence of decay time
-* flux:   [1/(s cm 2 st meV)] flux
+* radius: [m]                Radius of source
+* Emin: [meV]                Lower edge of energy distribution
+* Emax: [meV]                Upper edge of energy distribution
+* target_index: [1]          relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* dist: [m]                  Distance from source to the focusing rectangle
+* focus_xw: [m]              Width of focusing rectangle
+* focus_yh: [m]              Height of focusing rectangle
+* t0: [mus]                  decay constant for low-energy neutrons
+* Ec: [meV]                  Critical energy, below which the flux decay is constant
+* gamma: [meV]               energy dependence of decay time
+* flux: [1/(s cm 2 st meV)]  flux
 *
 * %E
 *******************************************************************************/
@@ -46,11 +44,11 @@ OUTPUT PARAMETERS (p_in)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double p_in;
+double p_in;
 %}
 INITIALIZE
 %{
-  p_in = flux*1e4*PI*radius*radius/mcget_ncount();
+p_in = flux*1e4*PI*radius*radius/mcget_ncount();
   if (Emin < Emax) p_in *= Emax-Emin;
   if (target_index && !dist)
   {

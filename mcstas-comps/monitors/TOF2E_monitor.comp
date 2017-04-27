@@ -10,9 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Helmuth Schoeber
 * Date: Sept. 13, 2006
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.9.1
 *
 * TOF-sensitive monitor, converting to energy
 *
@@ -25,28 +23,28 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening [m]
-* xmax:     Upper x bound of detector opening [m]
-* ymin:     Lower y bound of detector opening [m]
-* ymax:     Upper y bound of detector opening [m]
-* xwidth:   Width of detector. Overrides xmin, xmax [m]
-* yheight:  Height of detector. Overrides ymin, ymax [m]
-* Emin:     Minimum energy to detect [meV]
-* Emax:     Maximum energy to detect [meV]
-* nE:       Number of energy channels [1]
-* filename: Name of file in which to store the detector image [string]
-* T_zero:   Zero point in time [s]
-* L_flight: flight length user in conversion [m]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* xwidth: [m]           Width of detector. Overrides xmin, xmax 
+* yheight: [m]          Height of detector. Overrides ymin, ymax 
+* Emin: [meV]           Minimum energy to detect 
+* Emax: [meV]           Maximum energy to detect 
+* nE: [1]               Number of energy channels 
+* filename: [string]    Name of file in which to store the detector image 
+* T_zero: [s]           Zero point in time 
+* L_flight: [m]         flight length user in conversion 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* E_N:      Array of neutron counts
-* E_p:      Array of neutron weight counts
-* E_p2:     Array of second moments
-* S_p:      Sum of neutron weight counts
-* S_pE:     Sum of weighted energies
-* S_pE2:    Sum of weighted energy squared
+* E_N: []               Array of neutron counts
+* E_p: []               Array of neutron weight counts
+* E_p2: []              Array of second moments
+* S_p: []               Sum of neutron weight counts
+* S_pE: []              Sum of weighted energies
+* S_pE2: []             Sum of weighted energy squared
 *
 * %E
 *******************************************************************************/
@@ -58,17 +56,17 @@ OUTPUT PARAMETERS (E_N, E_p, E_p2, S_p, S_pE, S_pE2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
-  %{
-    double E_N[nE];
-    double E_p[nE], E_p2[nE];
-    double S_p, S_pE, S_pE2;
-  %}
+%{
+double E_N[nE];
+double E_p[nE], E_p2[nE];
+double S_p, S_pE, S_pE2;
+%}
 
 INITIALIZE
-  %{
-    int i;
+%{
+int i;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {

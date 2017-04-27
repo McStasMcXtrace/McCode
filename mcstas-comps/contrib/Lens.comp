@@ -11,9 +11,7 @@
 *
 * Written by: C. Monzat/E. Farhi/S. Desert/G. Euzen
 * Date: 2009
-* Version: $Revision 1.0$
 * Origin: ILL/LLB
-* Release: McStas 2.0
 *
 * Refractive lens with absorption, incoherent scattering and surface imperfection.
 *
@@ -73,24 +71,24 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* r1:        (m)     radius of the first circle describing the lens. r>0 means concave face, r<0 means convex, r=0 means plane
-* r2:        (m)     radius of the second circle describing the lens r>0 means concave face, r<0 means convex, r=0 means plane
-* focus1:    (m)     focal of the first parabola describing the lens
-* focus2:    (m)     focal of the second parabola describing the lens
-* phiy1:     (deg)   angle of plane1 (r1=0) around y vertical axis
-* phiy2:     (deg)   angle of plane2 (r2=0) around y vertical axis
-* thickness: (m)     thickness of the lens between its two  surfaces
-* radius:    (m)     radius of the lens section, e.g. beam size.
+* r1: [m]            radius of the first circle describing the lens. r>0 means concave face, r<0 means convex, r=0 means plane
+* r2: [m]            radius of the second circle describing the lens r>0 means concave face, r<0 means convex, r=0 means plane
+* focus1: [m]        focal of the first parabola describing the lens
+* focus2: [m]        focal of the second parabola describing the lens
+* phiy1: [deg]       angle of plane1 (r1=0) around y vertical axis
+* phiy2: [deg]       angle of plane2 (r2=0) around y vertical axis
+* thickness: [m]     thickness of the lens between its two  surfaces
+* radius: [m]        radius of the lens section, e.g. beam size.
 * density    (g/cm3) density of the material for the lens
-* weight:    (g/mol) molar mass of the material
-* focus_aw:  (deg)   vertical angle to forward focus after scattering
-* focus_ah:  (deg)   horizontal angle to forward focus after scattering
-* sigma_coh: (barn)  coherent cross section
-* sigma_inc: (barn)  incoherent cross section
-* sigma_abs: (barn)  thermal absorption cross section
-* p_interact:(1)     MC Probability for scattering the ray; otherwise transmit
-* RMS:       (Angs)  root mean square roughness of the surface
-* geometry:  (str)   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* weight: [g/mol]    molar mass of the material
+* focus_aw: [deg]    vertical angle to forward focus after scattering
+* focus_ah: [deg]    horizontal angle to forward focus after scattering
+* sigma_coh: [barn]  coherent cross section
+* sigma_inc: [barn]  incoherent cross section
+* sigma_abs: [barn]  thermal absorption cross section
+* p_interact: [1]    MC Probability for scattering the ray; otherwise transmit
+* RMS: [Angs]        root mean square roughness of the surface
+* geometry: [str]    Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
 *
 * %L
 * M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947)
@@ -114,23 +112,23 @@
 DEFINE COMPONENT Lens
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (r1=0,r2=0,focus1=0,focus2=0,phiy1=0,phiy2=0,
-  thickness=0.001,radius=0.015,
-  sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822,
-  density=3.148,weight=62.3018,
-  p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0, string geometry=0)
+thickness=0.001,radius=0.015,
+sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822,
+density=3.148,weight=62.3018,
+p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0, string geometry=0)
 OUTPUT PARAMETERS (rho, bc, my_s, my_a_v, mean_n, events)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  /* support for OFF/PLY geometry */
-  %include "read_table-lib"
-  %include "interoff-lib"
+/* support for OFF/PLY geometry */
+%include "read_table-lib"
+%include "interoff-lib"
 
-  off_struct offdata;
+off_struct offdata;
 
-  /* Lens_roughness: function to rotate normal vector around axis for roughness
-   *                 with specified tilt angle (deg)
+/* Lens_roughness: function to rotate normal vector around axis for roughness
+*                 with specified tilt angle (deg)
    * RETURNS: rotated nx,ny,nz coordinates
    */
   void Lens_roughness(double *nx, double *ny, double *nz, double tilt)

@@ -34,9 +34,9 @@
 *
 * INPUT PARAMETERS
 *
-* xwidth: width of sample volume (m)
-* yheight: height of sample volume (m)
-* zthick: thickness of sample volume (m)
+* xwidth: [m]   width of sample volume 
+* yheight: [m]  height of sample volume 
+* zthick: [m]   thickness of sample volume 
 * model: model no., real variable will be rounded. negative numbers interpreted as model #0, too large as #18.
 *     case 0 - no coherent scattering
 *     case 1 - polymer with Mw = 2.000g/mol
@@ -53,10 +53,10 @@
 *     ...
 *     case 18: free
 *
-* dsdw_inc: the incoherent background from the overall sample (cm-1), should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
-* sc_aim: the fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
-* sans_aim: the fraction of neutron paths used to represent the scattered neutrons in the sans-range (up to 1.0AA-1). rest is incoherent with Q>1AA-1.
-* singlesp: switches between multiple scattering (parameter zero 0.0) and single scattering (parameter 1.0). The sc_aim directs a fraction of paths to the first scattering process accordingly. The no. of paths for the second scattering process is derived from the real probability. Up to 10 scattering processes are considered.
+* dsdw_inc: []  the incoherent background from the overall sample (cm-1), should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
+* sc_aim: []    the fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
+* sans_aim: []  the fraction of neutron paths used to represent the scattered neutrons in the sans-range (up to 1.0AA-1). rest is incoherent with Q>1AA-1.
+* singlesp: []  switches between multiple scattering (parameter zero 0.0) and single scattering (parameter 1.0). The sc_aim directs a fraction of paths to the first scattering process accordingly. The no. of paths for the second scattering process is derived from the real probability. Up to 10 scattering processes are considered.
 *
 * %Link
 *

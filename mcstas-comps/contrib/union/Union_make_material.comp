@@ -6,7 +6,6 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * %D
@@ -29,16 +28,16 @@
 *
 * %P
 * INPUT PARAMETERS:
-* process_string:  [string] Comma seperated names of physical processes
-* my_absorption:   [1/m]    Inverse penetration depth from absorption at standard energy
-* absorber:        [0/1]    Control parameter, if set to 1 the material will have no scattering processes
+* process_string: [string]     Comma seperated names of physical processes
+* my_absorption: [1/m]         Inverse penetration depth from absorption at standard energy
+* absorber: [0/1]              Control parameter, if set to 1 the material will have no scattering processes
 *
 * OUTPUT PARAMETERS:
-* this_material:            Structure that contains information on this material
-* global_material_element:  Element of global_material_list which is a global variable
+* this_material: []            Structure that contains information on this material
+* global_material_element: []  Element of global_material_list which is a global variable
 *
 * GLOBAL PARAMETERS:
-* global_material_list:     List of all defined materials, available in the global scope
+* global_material_list: []     List of all defined materials, available in the global scope
 *
 * %L
 *

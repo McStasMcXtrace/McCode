@@ -10,9 +10,7 @@
 * %I
 * Written by:  C. Monzat/E. Farhi/S. Rozenkranz
 * Date: Nov 10th, 2009
-* Version: $Revision$
 * Origin: ILL
-* Release: McStas 2.0
 * 
 * Statistical (correlation) Chopper
 *
@@ -25,22 +23,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* yheight: (m)      Slit height (if = 0, equal to radius). Auto centering of beam at half height.
-* radius:  (m)      Radius of the disc
-* nu:      (Hz)     Frequency of the Chopper, omega=2*PI*nu
+* yheight: [m]     Slit height (if = 0, equal to radius). Auto centering of beam at half height.
+* radius: [m]      Radius of the disc
+* nu: [Hz]         Frequency of the Chopper, omega=2*PI*nu
 *                   (algebraic sign defines the direction of rotation)
-* sequence:(str)    Slit sequence around disk, with 0=closed, 1=open positions.
+* sequence: [str]  Slit sequence around disk, with 0=closed, 1=open positions.
 *                   NULL or "" will set a default sequence.
 *
 * Optional parameters:
-* isfirst: (0/1)    Set it to 1 for the first chopper position in a cw source
+* isfirst: [0/1]   Set it to 1 for the first chopper position in a cw source
 *                   (it then spreads the neutron time distribution)
-* n_pulse: (1)      Number of pulses (Only if isfirst)
-* jitter:  (s)      Jitter in the time phase
-* abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
-* delay:   (s)      Time 'delay'.
-* phase:   (deg)    Angular 'delay' (overrides delay)
-* verbose: (1)      Set to 1 to display Disk chopper configuration
+* n_pulse: [1]     Number of pulses (Only if isfirst)
+* jitter: [s]      Jitter in the time phase
+* abs_out: [0/1]   Absorb neutrons hitting outside of chopper radius?
+* delay: [s]       Time 'delay'.
+* phase: [deg]     Angular 'delay' (overrides delay)
+* verbose: [1]     Set to 1 to display Disk chopper configuration
 *
 * %L
 * R. Von Jan and R. Scherm. The statistical chopper for neutron time-of-flight spectroscopy. Nuclear Instruments and Methods, 80 (1970) 69-76.
@@ -48,18 +46,18 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT StatisticalChopper
-SETTING PARAMETERS (radius=0.5, yheight=0, nu, jitter=0, delay=0, isfirst=0, abs_out=1, phase=0, verbose=0, n_pulse=1, 
+SETTING PARAMETERS (radius=0.5, yheight=0, nu, jitter=0, delay=0, isfirst=0, abs_out=1, phase=0, verbose=0, n_pulse=1,
 string sequence="NULL")
 OUTPUT PARAMETERS (delta_y, height,omega, Sequence,SequenceIndex,nslit,m)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
-DECLARE 
+DECLARE
 %{
-  double delta_y,height,omega;
-  int *Sequence;      /* Array containing 0=closed and 1=opened*/
-  int *SequenceIndex; /* index of '1' in the sequence */
-  int nslit;
-  int m;              /* sum of opened slits ('1' in sequence) */
+double delta_y,height,omega;
+int *Sequence;      /* Array containing 0=closed and 1=opened*/
+int *SequenceIndex; /* index of '1' in the sequence */
+int nslit;
+int m;              /* sum of opened slits ('1' in sequence) */
 %}
 
 INITIALIZE 

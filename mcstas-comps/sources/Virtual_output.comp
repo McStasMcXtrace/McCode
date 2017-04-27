@@ -9,9 +9,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
 *
 * Detector-like component that writes neutron state parameters into an ascci-format
@@ -51,8 +49,8 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: [str] Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
-* bufsize:  [1]   Size of neutron output buffer default is 0, i.e. save all - recommended.
+* filename: [str]  Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
+* bufsize: [1]     Size of neutron output buffer default is 0, i.e. save all - recommended.
 *
 * %E
 *******************************************************************************/
@@ -66,19 +64,19 @@ OUTPUT PARAMETERS (DEFS, Vars)
 
 SHARE
 %{
-  %include "monitor_nd-lib"
+%include "monitor_nd-lib"
 %}
 
 DECLARE
 %{
-  char type[10];
-  MonitornD_Defines_type DEFS;
-  MonitornD_Variables_type Vars;
+char type[10];
+MonitornD_Defines_type DEFS;
+MonitornD_Variables_type Vars;
 %}
 
 INITIALIZE
 %{
-  sprintf(type,"text");
+sprintf(type,"text");
   long element_size=85; /* mean size per neutron for ascii storing */
 
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);

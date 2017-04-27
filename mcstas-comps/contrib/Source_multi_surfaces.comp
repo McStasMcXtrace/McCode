@@ -10,9 +10,7 @@
 * %I
 * Written by: Ludovic Giller, Uwe Filges
 * Date: 31.10.06
-* Version: $Revision$
 * Origin: PSI/Villigen
-* Release: McStas 1.10
 * Modified by:
 *
 * Rectangular neutron source with subareas - using wavelength spectra reading
@@ -72,27 +70,27 @@
 *                         Lmin=0.01,Lmax=10.0,filename="files_name.dat")
 *
 * %P
-* yheight: (m)   Source y-height
-* xwidth:  (m)   Source x-width
-* dist:    (m)   Distance to target along z axis
-* xw:      (m)   Width(x) of target
-* yh:      (m)   Height(y) of target
-* xdim:    (int) Number of subareas in the x direction
-* ydim:    (int) Number of subareas in the y direction
-* Lmin:    (AA)  Minimum wavelength of neutrons
-* Lmax:    (AA)  Maximum wavelength of neutrons
-* Emin:    (eV)  Minimum energy of neutrons
-* Emax:    (eV)  Maximum energy of neutrons
-* filename:   (str) Name of the file containing a list of the spectra file names
+* yheight: [m]     Source y-height
+* xwidth: [m]      Source x-width
+* dist: [m]        Distance to target along z axis
+* xw: [m]          Width(x) of target
+* yh: [m]          Height(y) of target
+* xdim: [int]      Number of subareas in the x direction
+* ydim: [int]      Number of subareas in the y direction
+* Lmin: [AA]       Minimum wavelength of neutrons
+* Lmax: [AA]       Maximum wavelength of neutrons
+* Emin: [eV]       Minimum energy of neutrons
+* Emax: [eV]       Maximum energy of neutrons
+* filename: [str]  Name of the file containing a list of the spectra file names
 *
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Source_multi_surfaces
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, yheight=0.16,xwidth=0.09,dist=1.18,xw=0.08,yh=0.15,xdim=4,ydim=4,
-  Emin=0.0,Emax=0.0,Lmin=0.0,Lmax=0.0)
+Emin=0.0,Emax=0.0,Lmin=0.0,Lmax=0.0)
 OUTPUT PARAMETERS (p_in)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 

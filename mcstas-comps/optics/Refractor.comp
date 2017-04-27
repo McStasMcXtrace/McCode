@@ -10,9 +10,7 @@
 * %I
 * Written by: E. Farhi, B. Cubitt
 * Date: Oct 2014
-* Version: $Revision: 4382 $
 * Origin: ILL
-* Release: McStas 2.1
 *
 * A refractor material/shape, which can be used to model e.g. lenses and prisms.
 *
@@ -92,30 +90,30 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:  (m)    width of box
-* yheight: (m)    height of box/cylinder
-* zdepth:  (m)    depth of box
-* radius:  (m)    radius of sphere/cylinder
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (Angs-1)  critical scattering vector, e.g. Qc=0.0219 for Ni coating. Set Qc=0 to use the bulk critical grazing angles.
-* sigma_coh: (barn)  coherent cross section of refracting material. Use negative value to indicate a negative coherent scattering length
-* sigma_inc: (barn)  incoherent cross section
-* sigma_abs: (barn)  thermal absorption cross section
-* density:   (g/cm3) density of the refracting material. density < 0 means the material is outside/before the shape.
-* weight:    (g/mol) molar mass of the refracting material
-* geometry:  (str)   OFF/PLY geometry file name, or NULL to use simple shape A spherical bi-concave lens can be obtained with geometry="lens_sphere" and given radius and zdepth
-* p_interact: (1)    MC Probability for scattering the ray; otherwise transmit. Use 0 to compute true probability, or specify it as e.g. 0.05
-* focus_scatter: (deg) angle in which to scatter in bulk, with probability 'p_interact'
-* RMS:       (Angs)  root mean square wavyness of the surface
-* verbose:   (1)     flag to display detailed component behaviour
-* p_scatter: (1)     flag to allow scattering in the refractor bulk
-* p_reflect: (1)     flag to allow reflection (grazing angle) at the surface
-* p_refract: (1)     flag to allow refraction at the refractor surface
+* xwidth: [m]           width of box
+* yheight: [m]          height of box/cylinder
+* zdepth: [m]           depth of box
+* radius: [m]           radius of sphere/cylinder
+* R0: [1]               Low-angle reflectivity
+* Qc: [Angs-1]          critical scattering vector, e.g. Qc=0.0219 for Ni coating. Set Qc=0 to use the bulk critical grazing angles.
+* sigma_coh: [barn]     coherent cross section of refracting material. Use negative value to indicate a negative coherent scattering length
+* sigma_inc: [barn]     incoherent cross section
+* sigma_abs: [barn]     thermal absorption cross section
+* density: [g/cm3]      density of the refracting material. density < 0 means the material is outside/before the shape.
+* weight: [g/mol]       molar mass of the refracting material
+* geometry: [str]       OFF/PLY geometry file name, or NULL to use simple shape A spherical bi-concave lens can be obtained with geometry="lens_sphere" and given radius and zdepth
+* p_interact: [1]       MC Probability for scattering the ray; otherwise transmit. Use 0 to compute true probability, or specify it as e.g. 0.05
+* focus_scatter: [deg]  angle in which to scatter in bulk, with probability 'p_interact'
+* RMS: [Angs]           root mean square wavyness of the surface
+* verbose: [1]          flag to display detailed component behaviour
+* p_scatter: [1]        flag to allow scattering in the refractor bulk
+* p_reflect: [1]        flag to allow reflection (grazing angle) at the surface
+* p_refract: [1]        flag to allow refraction at the refractor surface
 *
 * OUTPUT PARAMETERS:
-* theta1:    (deg)   incoming angle to the surface
-* theta2:    (deg)   outgoing angle to the surface
-* SCATTERED: 0=transmitted, 1=scattered in bulk, 2=refracted, 3=reflected
+* theta1: [deg]         incoming angle to the surface
+* theta2: [deg]         outgoing angle to the surface
+* SCATTERED: []         0=transmitted, 1=scattered in bulk, 2=refracted, 3=reflected
 *
 * %L
 * M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947)
@@ -141,28 +139,28 @@
 DEFINE COMPONENT Refractor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-  xwidth=0, yheight=0, zdepth=0, radius=0,
-  string geometry="NULL",
-  R0=0.99, sigma_coh=11.74, density=3.148, weight=62.3018,
-  sigma_inc=0, sigma_abs=0, Qc=0,
-  p_interact=0.05, RMS=0, focus_scatter=10, verbose=0,
-  p_scatter=1, p_reflect=1, p_refract=1)
+xwidth=0, yheight=0, zdepth=0, radius=0,
+string geometry="NULL",
+R0=0.99, sigma_coh=11.74, density=3.148, weight=62.3018,
+sigma_inc=0, sigma_abs=0, Qc=0,
+p_interact=0.05, RMS=0, focus_scatter=10, verbose=0,
+p_scatter=1, p_reflect=1, p_refract=1)
 
 OUTPUT PARAMETERS (rho, bc, offdata, theta1, theta2, mean_n, events)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "read_table-lib"
-  %include "interoff-lib"
-  %include "ref-lib"
+%include "read_table-lib"
+%include "interoff-lib"
+%include "ref-lib"
 
-  // two sphere separated with a given thickness
-  int lens_sphere_intersect_n(double *t0, double *t1,
-    double x, double y, double z,
-    double vx, double vy, double vz,
-    double r, double dz,
-    double *nx, double *ny, double *nz) {
+// two sphere separated with a given thickness
+int lens_sphere_intersect_n(double *t0, double *t1,
+double x, double y, double z,
+double vx, double vy, double vz,
+double r, double dz,
+double *nx, double *ny, double *nz) {
     /* two spherical lenses, concave, with given radius, thickness=zdepth at meniscus,
        plus cross section=xwidth*yheight */
     int    intersect1 = 0, intersect2 = 0;

@@ -11,9 +11,7 @@
 *
 * Written by: Emmanuel Farhi
 * Date: June 20th 2013
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 2.0
 *
 * A rotative frame along vertical axis
 *
@@ -31,11 +29,11 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* nu:      (Hz)   Rotation frequency (round/s) in the rotating option (vertical axis)
-* phase:   (deg)  Phase shift
+* nu: [Hz]      Rotation frequency (round/s) in the rotating option (vertical axis)
+* phase: [deg]  Phase shift
 *
 * OUTPUT PARAMETERS:
-* angle:   rotation angle [deg]
+* angle: [deg]  rotation angle 
 *
 * %End
 *******************************************************************************/
@@ -48,14 +46,14 @@ OUTPUT PARAMETERS (angle)
 
 DECLARE
 %{
-  double angle;
+double angle;
 %}
 
 TRACE
 %{
-  double dt=0;
+double dt=0;
 
-  if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
+if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
     /* approximation of rotating frame */
     /* current coordinates of neutron in centered static frame */
     Rotation R;

@@ -12,9 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * A circular neutron source with flat energy spectrum and arbitrary flux
 *
@@ -32,19 +30,19 @@
 * Example: Source_simple(radius=0.1, dist=2, focus_xw=.1, focus_yh=.1, E0=14, dE=2)
 *
 * %P
-* radius:  [m]   Radius of circle in (x,y,0) plane where neutrons are generated.
-* yheight: [m]   Height of rectangle in (x,y,0) plane where neutrons are generated.
-* xwidth:  [m]   Width of rectangle in (x,y,0) plane where neutrons are generated.
-* target_index: [1] relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
-* dist:    [m]   Distance to target along z axis.
-* focus_xw:[m]   Width of target
-* focus_yh:[m]   Height of target
-* E0:      [meV] Mean energy of neutrons.
-* dE:      [meV] Energy half spread of neutrons (flat or gaussian sigma).
-* lambda0: [AA]  Mean wavelength of neutrons.
-* dlambda: [AA]  Wavelength half spread of neutrons.
-* flux:    [1/(s*cm**2*st*energy unit)] flux per energy unit, Angs or meV if flux=0, the source emits 1 in 4*PI whole space.
-* gauss:   [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* radius: [m]                         Radius of circle in (x,y,0) plane where neutrons are generated.
+* yheight: [m]                        Height of rectangle in (x,y,0) plane where neutrons are generated.
+* xwidth: [m]                         Width of rectangle in (x,y,0) plane where neutrons are generated.
+* target_index: [1]                   relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* dist: [m]                           Distance to target along z axis.
+* focus_xw: [m]                       Width of target
+* focus_yh: [m]                       Height of target
+* E0: [meV]                           Mean energy of neutrons.
+* dE: [meV]                           Energy half spread of neutrons (flat or gaussian sigma).
+* lambda0: [AA]                       Mean wavelength of neutrons.
+* dlambda: [AA]                       Wavelength half spread of neutrons.
+* flux: [1/(s*cm**2*st*energy unit)]  flux per energy unit, Angs or meV if flux=0, the source emits 1 in 4*PI whole space.
+* gauss: [1]                          Gaussian (1) or Flat (0) energy/wavelength distribution
 *
 * %E
 *******************************************************************************/
@@ -52,21 +50,21 @@
 DEFINE COMPONENT Source_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0.1, yheight=0, xwidth=0,
-  dist=0, focus_xw=.045, focus_yh=.12,
-  E0=0, dE=0, lambda0=0, dlambda=0,
-  flux=1, gauss=0, int target_index=+1)
+dist=0, focus_xw=.045, focus_yh=.12,
+E0=0, dE=0, lambda0=0, dlambda=0,
+flux=1, gauss=0, int target_index=+1)
 OUTPUT PARAMETERS (pmul,square,srcArea)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double pmul, srcArea;
-  int square;
+double pmul, srcArea;
+int square;
 %}
 INITIALIZE
 %{
-  square = 0;
-  /* Determine source area */
-  if (radius && !yheight && !xwidth ) {
+square = 0;
+/* Determine source area */
+if (radius && !yheight && !xwidth ) {
     square = 0;
     srcArea = PI*radius*radius;
   } else if(yheight && xwidth) {

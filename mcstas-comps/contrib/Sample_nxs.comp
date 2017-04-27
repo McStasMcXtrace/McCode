@@ -8,7 +8,6 @@
 * Author: Mirko Boin
 * Date: Oct 2014
 * Origin: Helmholtz-Zentrum Berlin fuer Materialien und Energie (Germany)
-* Version: $Revision: 1.2$
 *
 * General powder/polycrystalline sample with neutron-matter interaction based
 *    on neutron cross section calculations of a unit cell
@@ -93,17 +92,17 @@
 *
 * INPUT PARAMETERS
 *
-* TransOnly:   enable/disable (=1/=0) the transmission only option
-* IncohScat:   enable/disable (=1/=0) incoherent scattering
-* MultiScat:   enable/disable (=1/=0) multiple scattering
-* xwidth:      horizontal dimension of sample, as a width [m]
-* yheight:     vertical dimension of sample, as a height [m]
-* zthick:      thickness of sample [m]
-* radius:      radius of sample in (x,z) plane [m]
-* nxsFileName: filename of the unit cell definition
-* max_hkl:     maximum (hkl) indices to consider for the nxs calculation, e.g. max_hkl=3 means (hkl)=333
+* TransOnly: []       enable/disable (=1/=0) the transmission only option
+* IncohScat: []       enable/disable (=1/=0) incoherent scattering
+* MultiScat: []       enable/disable (=1/=0) multiple scattering
+* xwidth: [m]         horizontal dimension of sample, as a width 
+* yheight: [m]        vertical dimension of sample, as a height 
+* zthick: [m]         thickness of sample 
+* radius: [m]         radius of sample in (x,z) plane 
+* nxsFileName: []     filename of the unit cell definition
+* max_hkl: []         maximum (hkl) indices to consider for the nxs calculation, e.g. max_hkl=3 means (hkl)=333
 * d_phi=0:     Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
-* strainFileName:   filename for simulating strain gradients
+* strainFileName: []  filename for simulating strain gradients
 *
 * %L
 * M. Boin (2012), <i>J. Appl. Cryst.</i> <b>45</b>, 603-607, <a href="http://dx.doi.org/10.1107/S0021889812016056">doi:10.1107/S0021889812016056</a>
@@ -121,8 +120,8 @@ DEFINE COMPONENT Sample_nxs
 DEFINITION PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1 )
 SETTING PARAMETERS ( xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="" )
 OUTPUT PARAMETERS (isrect,intersect,nxs_init_success,p_transmit,xsect_total,xsect_coherent,
-  xsect_incoherent,xsect_absorption,
-  lambda,velocity,fullpath,t1,t2,uc,A,mu_factor,sd,V2L)
+xsect_incoherent,xsect_absorption,
+lambda,velocity,fullpath,t1,t2,uc,A,mu_factor,sd,V2L)
 DEPENDENCY "-I@MCCODE_LIB@/share/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
 
 
@@ -134,25 +133,25 @@ SHARE
 %include "read_table-lib"
 
 enum StrainDistribution {
-  AxialSym1D,     /* 1D axial symmetric, i.e. cylinder sample with strain gradient along radius */
-  AxialSym2D      /* 2D axial symmetric, i.e. cylinder sample with strain gradient along radius and along height */
-  /*NoSym1D*/
+AxialSym1D,     /* 1D axial symmetric, i.e. cylinder sample with strain gradient along radius */
+AxialSym2D      /* 2D axial symmetric, i.e. cylinder sample with strain gradient along radius and along height */
+/*NoSym1D*/
 };
 
 typedef struct {
-  /** values from FILE **/
-  /* strains in the sample represented by lattice spacing */
-  int n_entries;          /* number of entries for hoop, radial, axial */
-  double *pos_x;          /* lists of all positions */
-  double *pos_y;
-  double *pos_z;
-  double *strains_hoop;   /* lists of all strain values */
-  double *strains_radial;
-  double *strains_axial;
-  double d0_hoop;         /* reference values */
-  double d0_radial;
-  double d0_axial;
-  enum StrainDistribution strain_distr;  /* strain distribution mode */
+/** values from FILE **/
+/* strains in the sample represented by lattice spacing */
+int n_entries;          /* number of entries for hoop, radial, axial */
+double *pos_x;          /* lists of all positions */
+double *pos_y;
+double *pos_z;
+double *strains_hoop;   /* lists of all strain values */
+double *strains_radial;
+double *strains_axial;
+double d0_hoop;         /* reference values */
+double d0_radial;
+double d0_axial;
+enum StrainDistribution strain_distr;  /* strain distribution mode */
 } StrainData;
 
 int readStrainFile( char *fileName, StrainData *sd )

@@ -8,9 +8,7 @@
 * %I
 * Written by: Peter Willendrup, derived from TOF_lambda_monitor.comp
 * Date: May 23, 2012
-* Version: $Revision$
 * Origin: DTU Physics
-* Release: McStas 1.12c
 *
 * Special "Brilliance" monitor.
 *
@@ -42,27 +40,27 @@
 * %P
 * INPUT PARAMETERS:
 *
-* nlam:       Number of bins in wavelength [1]
-* nt:         Number of bins in TOF [1]
-* t_0:        Minimum time [us]
-* t_1:        Maximum time [us]
-* lambda_0:   Minimum wavelength detected [AA]
-* lambda_1:   Maximum wavelength detected [AA]
-* filename:   Defines filenames for the detector images. Stored as:<br>Peak_&lt;filename&gt; and Mean_&lt;filename&gt; [string]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
-* Freq:       Source frequency. Use freq=1 for reactor source [Hz]
+* nlam: [1]             Number of bins in wavelength 
+* nt: [1]               Number of bins in TOF 
+* t_0: [us]             Minimum time 
+* t_1: [us]             Maximum time 
+* lambda_0: [AA]        Minimum wavelength detected 
+* lambda_1: [AA]        Maximum wavelength detected 
+* filename: [string]    Defines filenames for the detector images. Stored as:<br>Peak_&lt;filename&gt; and Mean_&lt;filename&gt; 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* Freq: [Hz]            Source frequency. Use freq=1 for reactor source 
 * srcarea:    Source area [cm^2]
-* tofcuts:    Flag to generate TOF-distributions as function of wavelength [1]
-* toflambda:  Flag to generate TOF-lambda distribution output [1]
-* source_dist:Distance from source. Beware when transporting through neutron optics! [m]
-* xwidth:     width of monitor [m]
-* yheight:    height of monitor [m]
+* tofcuts: [1]          Flag to generate TOF-distributions as function of wavelength 
+* toflambda: [1]        Flag to generate TOF-lambda distribution output 
+* source_dist: [m]      Distance from source. Beware when transporting through neutron optics! 
+* xwidth: [m]           width of monitor 
+* yheight: [m]          height of monitor 
 *
 * OUTPUT PARAMETERS:
 *
-* Div_N:    Array of neutron counts
-* Div_p:    Array of neutron weight counts
-* Div_p2:   Array of second moments
+* Div_N: []             Array of neutron counts
+* Div_p: []             Array of neutron weight counts
+* Div_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -74,38 +72,38 @@ OUTPUT PARAMETERS (tt_0, tt_1, BRIL_N, BRIL_p, BRIL_p2, BRIL_mean, BRIL_meanN, B
 //POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
-  %{
-    double BRIL_N[nt][nlam];
-    double BRIL_p[nt][nlam];
-    double BRIL_p2[nt][nlam];
-    double BRIL_mean[nlam];
-    double BRIL_meanN[nlam];
-    double BRIL_meanE[nlam];
-    double BRIL_peak[nlam];
-    double BRIL_peakN[nlam];
-    double BRIL_peakE[nlam];
+%{
+double BRIL_N[nt][nlam];
+double BRIL_p[nt][nlam];
+double BRIL_p2[nt][nlam];
+double BRIL_mean[nlam];
+double BRIL_meanN[nlam];
+double BRIL_meanE[nlam];
+double BRIL_peak[nlam];
+double BRIL_peakN[nlam];
+double BRIL_peakE[nlam];
 
-    double BRIL_shape[nt];
-    double BRIL_shapeN[nt];
-    double BRIL_shapeE[nt];
+double BRIL_shape[nt];
+double BRIL_shapeN[nt];
+double BRIL_shapeE[nt];
 
-    double tt_0, tt_1;
-    double xmin, xmax, ymin, ymax;
-    double ster;
-    double prsec;
-    double dlam;
-    double dt;
-  %}
+double tt_0, tt_1;
+double xmin, xmax, ymin, ymax;
+double ster;
+double prsec;
+double dlam;
+double dt;
+%}
 
 INITIALIZE
-  %{
-    prsec=1e-6;
+%{
+prsec=1e-6;
 
-    int i,j;
+int i,j;
 
-    tt_0 = t_0*prsec;
-    tt_1 = t_1*prsec;
-    dt=(t_1-t_0)*prsec/nt;
+tt_0 = t_0*prsec;
+tt_1 = t_1*prsec;
+dt=(t_1-t_0)*prsec/nt;
     dlam=(lambda_1-lambda_0)/(nlam-1);
     for (i=0; i<nlam; i++)
       {

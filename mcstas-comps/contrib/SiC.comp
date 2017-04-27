@@ -11,7 +11,6 @@
 * Written by: <a href="mailto:S.RYCROFT@IRI.TUDELFT.NL">S. Rycroft</a>
 * Date: Jan 2000
 * Origin: IRI.
-* Release: McStas 1.6
 *
 * SiC layer sample
 *
@@ -23,8 +22,8 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xlenght: (m)    length of SiC plate 
-* yheight: (m)    height of SiC plate
+* xlenght: [m]  length of SiC plate
+* yheight: [m]  height of SiC plate
 *
 * %E
 *******************************************************************************/
@@ -35,18 +34,18 @@ DEFINE COMPONENT SiC
 DEFINITION PARAMETERS (xlength, yheight)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS(ScatGrad)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double ScatGrad[85];
+double ScatGrad[85];
 %}
 
 
 INITIALIZE
 %{
-  int i;
-  
-  for (i = 0; i < 85; ++i)
+int i;
+
+for (i = 0; i < 85; ++i)
     ScatGrad[i] = 0;
   ScatGrad[1]=7.3106e-6;
   ScatGrad[81]=2.073e-6-7.3106e-6;

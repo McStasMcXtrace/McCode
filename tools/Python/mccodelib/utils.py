@@ -449,23 +449,24 @@ def read_define_instr(file):
     return ' '.join(lines)
 
 def read_define_comp(file):
+    ''' appends all read lines to return list '''
     end_conds = ('SHARE', 'DECLARE', 'INITIALIZE', 'TRACE')
     
     lines = []
     
     # get to DEFINE COMPONENT statement
     for l in file:
+        lines.append(l.strip())
         if not re.match('DEFINE[ \t]+COMPONENT[ \t]+', l):
             continue
         else:
-            lines.append(l.strip())
             break
     
     for l in file:
         m = re.match('[ ]*(\w+)', l)
+        lines.append(l.strip())
         if m and m.group(1) in end_conds:
             break
-        lines.append(l.strip())
     
     # look for closing 
     if not re.search('\)', lines[-1]):

@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 01st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.6
-* Version: $Revision$
 *
 * Neutron parameters spatial cross-correlation monitor.
 *
@@ -42,7 +40,7 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* monitor_comp: name of the associated Monitor_nD where the detection should take place [no quotes]
+* monitor_comp: [no quotes]  name of the associated Monitor_nD where the detection should take place 
 *
 * OUTPUT PARAMETERS:
 *
@@ -55,7 +53,7 @@
 DEFINE COMPONENT PreMonitor_nD
 DEFINITION PARAMETERS (monitor_comp)
 SETTING PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 /* Flag will be set to 1 automatically */
 /* unset by user in Monitor_nD if required (with 'not') */
@@ -64,7 +62,7 @@ SETTING PARAMETERS ()
 
 INITIALIZE
 %{
-    struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
     Vars->Flag_UsePreMonitor = 1;
     strncpy(Vars->UserName1, NAME_CURRENT_COMP, 64);
 %}

@@ -10,9 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision$
 * Origin: <a href="http://www.ill.fr/">ILL</a>
-* Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
 *
 * This component uses a filename of recorded neutrons from the reactor monte carlo
@@ -60,23 +58,23 @@
 *
 * %P
 * INPUT PARAMETERS
-* filename:     [str] Name of the MCNP PTRAC neutron input file. Empty string "" unactivates component
-* repeat_count: [1]   Number of times the source must be generated. 0 unactivates the component
-* verbose:      [0|1] Displays additional informations if set to 1
-* intensity:    [n/s] Intensity multiplication factor
-* nps:          [1]   Number of total events shot by MCNP to generate the PTRAC as indicated at the end of the MCNP 'o' file as 'source particle weight for summary table normalization' or alternatively 'nps = '.
-* autocenter:   [str] String which may contain following keywords. "translate" or "center"  to center the beam area AT (0,0,0) "rotate"    or "orient"  to center the beam velocity along Z "change axes"            to change coordinate system definition "rescale"                to adapt intensity to abs. units. with factor intensity/nps. Other words are ignored.
-* surface_id:   [1]   Index of the emitting MCNP surface to use. -1 for all.
-* MCNP_ANALYSE: [1]   Number of neutron events to read for file pre-analysis. Use 0 to analyze them all.
-* smooth:       [0/1] Smooth sparsed event files for file repetitions.
+* filename: [str]    Name of the MCNP PTRAC neutron input file. Empty string "" unactivates component
+* repeat_count: [1]  Number of times the source must be generated. 0 unactivates the component
+* verbose: [0|1]     Displays additional informations if set to 1
+* intensity: [n/s]   Intensity multiplication factor
+* nps: [1]           Number of total events shot by MCNP to generate the PTRAC as indicated at the end of the MCNP 'o' file as 'source particle weight for summary table normalization' or alternatively 'nps = '.
+* autocenter: [str]  String which may contain following keywords. "translate" or "center"  to center the beam area AT (0,0,0) "rotate"    or "orient"  to center the beam velocity along Z "change axes"            to change coordinate system definition "rescale"                to adapt intensity to abs. units. with factor intensity/nps. Other words are ignored.
+* surface_id: [1]    Index of the emitting MCNP surface to use. -1 for all.
+* MCNP_ANALYSE: [1]  Number of neutron events to read for file pre-analysis. Use 0 to analyze them all.
+* smooth: [0/1]      Smooth sparsed event files for file repetitions.
 *
 * OUTPUT PARAMETERS
-* head:   [char]        header buffer
-* nl:     [long]        nb of lines in header
-* mean_x: [m]      source center coordinates
-* mean_y: [m]      source center coordinates
-* mean_z: [m]      source center coordinates
-* angle2z:[rad] rotation angle required to orient beam along Z axis
+* head: [char]       header buffer
+* nl: [long]         nb of lines in header
+* mean_x: [m]        source center coordinates
+* mean_y: [m]        source center coordinates
+* mean_z: [m]        source center coordinates
+* angle2z: [rad]     rotation angle required to orient beam along Z axis
 *
 * %L
 * <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
@@ -90,15 +88,15 @@
 DEFINE COMPONENT Virtual_mcnp_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,
-                    int surface_id=-1,
-                    nps=0,smooth=1)
+int surface_id=-1,
+nps=0,smooth=1)
 OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,
-                   bx,by,bz,angle2z,mean_x, mean_y, mean_z,
-                   old_surface,surface,informed_event,informed_surface,
-                   min_x, min_y, min_z,    max_x , max_y , max_z ,
-                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz,
-                   mean_dx, mean_dy, mean_dz,
-                   n_count_extrapolated, repeat_cnt)
+bx,by,bz,angle2z,mean_x, mean_y, mean_z,
+old_surface,surface,informed_event,informed_surface,
+min_x, min_y, min_z,    max_x , max_y , max_z ,
+min_vx, min_vy, min_vz, max_vx, max_vy, max_vz,
+mean_dx, mean_dy, mean_dz,
+n_count_extrapolated, repeat_cnt)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

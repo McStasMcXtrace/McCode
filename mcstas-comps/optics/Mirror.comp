@@ -10,9 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Single mirror plate.
 *
@@ -36,16 +34,16 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:  (m)    width of mirror plate
-* yheight: (m)    height of mirror plate
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off
-* reflect: (str)  Name of reflectivity file. Format q(Angs-1) R(0-1)
-* transmit:(1)    When true, non reflected neutrons are transmitted through the mirror, instead of being absorbed.
-* center:  (1)    if true (1), the Mirror is centered arount AT position.
+* xwidth: [m]     width of mirror plate
+* yheight: [m]    height of mirror plate
+* R0: [1]         Low-angle reflectivity
+* Qc: [AA-1]      Critical scattering vector
+* alpha: [AA]     Slope of reflectivity
+* m: [1]          m-value of material. Zero means completely absorbing.
+* W: [AA-1]       Width of supermirror cut-off
+* reflect: [str]  Name of reflectivity file. Format q(Angs-1) R(0-1)
+* transmit: [1]   When true, non reflected neutrons are transmitted through the mirror, instead of being absorbed.
+* center: [1]     if true (1), the Mirror is centered arount AT position.
 *
 * %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
@@ -67,12 +65,12 @@ SHARE
 
 DECLARE
 %{
-  t_Table pTable;
+t_Table pTable;
 %}
 
 INITIALIZE
 %{
-  if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
+if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr,"Mirror: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
   }

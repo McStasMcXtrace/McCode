@@ -11,9 +11,7 @@
 *
 * Written by: Peter Christiansen
 * Date: 2006
-* Version: $Revision$
 * Origin: RISOE
-* Release: McStas 1.10
 *
 * Flat polarizaing monochromator crystal.
 *
@@ -70,18 +68,18 @@
 * %P
 * INPUT PARAMETERS:
 *
-* zwidth:  Width of crystal [m]
-* yheight: Height of crystal [m]
+* zwidth: [m]     Width of crystal 
+* yheight: [m]    Height of crystal 
 * mosaic : Mosaicity (FWHM) [arc minutes]
-* dspread: Relative d-spread (FWHM) [1]
-* Q:       Magnitude of scattering vector [AA-1]
-* Rup:     Reflectivity of neutrons with polarization up [1]
-* Rdown:   Reflectivity of neutrons with polarization down [1]
+* dspread: [1]    Relative d-spread (FWHM) 
+* Q: [AA-1]       Magnitude of scattering vector 
+* Rup: [1]        Reflectivity of neutrons with polarization up 
+* Rdown: [1]      Reflectivity of neutrons with polarization down 
 *
 * optional parameters
-* DM:      monochromator d-spacing instead of Q = 2*pi/DM [AA]
-* pThreshold: if probability>pThreshold then accept and weight else random
-* debug: if debug > 0, print out some info about the calculations
+* DM: [AA]        monochromator d-spacing instead of Q = 2*pi/DM 
+* pThreshold: []  if probability>pThreshold then accept and weight else random
+* debug: []       if debug > 0, print out some info about the calculations
 *
 * %E
 *****************************************************************************/
@@ -94,22 +92,22 @@ OUTPUT PARAMETERS (mos_rms, d_rms, mono_Q, FN, FM)
 
 SHARE
 %{
-  %include "pol-lib"
-  %}
+%include "pol-lib"
+%}
 
 DECLARE
 %{
-  double mos_rms; /* root-mean-square of mosaic, in radians */
-  double d_rms;   /* root-mean-square of d-spread, in AA */
-  double mono_Q;
+double mos_rms; /* root-mean-square of mosaic, in radians */
+double d_rms;   /* root-mean-square of d-spread, in AA */
+double mono_Q;
 
-  double FN; /* Unit cell nuclear structure factor */
-  double FM; /* Unit cell magnetic structure factor */
-  %}
+double FN; /* Unit cell nuclear structure factor */
+double FM; /* Unit cell magnetic structure factor */
+%}
 
 INITIALIZE
 %{
-  mos_rms = MIN2RAD*mosaic/sqrt(8*log(2));
+mos_rms = MIN2RAD*mosaic/sqrt(8*log(2));
 
   mono_Q = Q;
   if (DM != 0)

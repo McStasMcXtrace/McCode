@@ -10,9 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
-* Release: McStas CVS_080902
 * Modified by: E. Farhi, from Gravity_guide by nslit. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
 * Modified by: E. Farhi, 2D channel array. Correct focus bug (Dec 14th 2002)
@@ -57,47 +55,47 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      (m)    Width at the guide entry
-* h1:      (m)    Height at the guide entry
-* w2:      (m)    Width at the guide exit. If 0, use w1.
-* h2:      (m)    Height at the guide exit. If 0, use h1.
-* l:       (m)    length of guide
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing. m=0.65  glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond m=  0.65       0.47 1   1.18  2-6         1.01  1.12 for glass/SiO2, m=1 for Ni, 1.2 for Ni58, m=2-6 for supermirror. m=0.47 for Si
-* W:       (AA-1) Width of supermirror cut-off
-* d:       (m)    Thickness of subdividing walls
-* nslit:   (1)    Number of vertical channels in the guide (>= 1) (nslit-1 vertical dividing walls).
+* w1: [m]           Width at the guide entry
+* h1: [m]           Height at the guide entry
+* w2: [m]           Width at the guide exit. If 0, use w1.
+* h2: [m]           Height at the guide exit. If 0, use h1.
+* l: [m]            length of guide
+* R0: [1]           Low-angle reflectivity
+* Qc: [AA-1]        Critical scattering vector
+* alpha: [AA]       Slope of reflectivity
+* m: [1]            m-value of material. Zero means completely absorbing. m=0.65  glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond m=  0.65       0.47 1   1.18  2-6         1.01  1.12 for glass/SiO2, m=1 for Ni, 1.2 for Ni58, m=2-6 for supermirror. m=0.47 for Si
+* W: [AA-1]         Width of supermirror cut-off
+* d: [m]            Thickness of subdividing walls
+* nslit: [1]        Number of vertical channels in the guide (>= 1) (nslit-1 vertical dividing walls).
 *
 * Optional input parameters: (different ways for m-specifications)
 *
-* mleft:   (1)    m-value of material for left.   vert. mirror
-* mright:  (1)    m-value of material for right.  vert. mirror
-* mtop:    (1)    m-value of material for top.    horz. mirror
-* mbottom: (1)    m-value of material for bottom. horz. mirror
-* aleft:   (1)    alpha-value of left  vert. mirror
-* aright:  (1)    alpha-value of right vert. mirror
-* atop:    (1)    alpha-value of top   horz. mirror
-* abottom: (1)    alpha-value of left  horz. mirror
-* nhslit:  (1)    Number of horizontal channels in the guide (>= 1). (nhslit-1 horizontal dividing walls). this enables to have nslit*nhslit rectangular channels
-* G:       (m/s2) Gravitation norm. 0 value disables G effects.
-* wavy:    (deg)  Global guide waviness
-* wavy_z:  (deg)  Partial waviness along propagation axis
-* wavy_tb: (deg)  Partial waviness in transverse direction for top/bottom mirrors
-* wavy_lr: (deg)  Partial waviness in transverse direction for left/right mirrors
-* chamfers:(m)    Global chamfers specifications (in/out/mirror sides).
-* chamfers_z: (m) Input and output chamfers
-* chamfers_lr:(m) Chamfers on left/right mirror sides
-* chamfers_tb:(m) Chamfers on top/bottom mirror sides
-* nelements:(1)   Number of sections in the guide (length l/nelements).
-* reflect: (str)  Reflectivity file name. Format <q(Angs-1) R(0-1)>
-* nu:      (Hz)   Rotation frequency (round/s) for Fermi Chopper approximation
-* phase:   (deg)  Phase shift for the Fermi Chopper approximation
+* mleft: [1]        m-value of material for left.   vert. mirror
+* mright: [1]       m-value of material for right.  vert. mirror
+* mtop: [1]         m-value of material for top.    horz. mirror
+* mbottom: [1]      m-value of material for bottom. horz. mirror
+* aleft: [1]        alpha-value of left  vert. mirror
+* aright: [1]       alpha-value of right vert. mirror
+* atop: [1]         alpha-value of top   horz. mirror
+* abottom: [1]      alpha-value of left  horz. mirror
+* nhslit: [1]       Number of horizontal channels in the guide (>= 1). (nhslit-1 horizontal dividing walls). this enables to have nslit*nhslit rectangular channels
+* G: [m/s2]         Gravitation norm. 0 value disables G effects.
+* wavy: [deg]       Global guide waviness
+* wavy_z: [deg]     Partial waviness along propagation axis
+* wavy_tb: [deg]    Partial waviness in transverse direction for top/bottom mirrors
+* wavy_lr: [deg]    Partial waviness in transverse direction for left/right mirrors
+* chamfers: [m]     Global chamfers specifications (in/out/mirror sides).
+* chamfers_z: [m]   Input and output chamfers
+* chamfers_lr: [m]  Chamfers on left/right mirror sides
+* chamfers_tb: [m]  Chamfers on top/bottom mirror sides
+* nelements: [1]    Number of sections in the guide (length l/nelements).
+* reflect: [str]    Reflectivity file name. Format <q(Angs-1) R(0-1)>
+* nu: [Hz]          Rotation frequency (round/s) for Fermi Chopper approximation
+* phase: [deg]      Phase shift for the Fermi Chopper approximation
 *
 * OUTPUT PARAMETERS
 *
-* GVars:              (1) internal variables.
+* GVars: [1]        internal variables.
 * GVars.N_reflection: (1) Array of the cumulated Number of reflections.
 *                   N_reflection[0] total nb of reflections,
 *                   N_reflection[1,2,3,4] l/r/t/b reflections,
@@ -113,12 +111,12 @@
 DEFINE COMPONENT Guide_gravity
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
-  R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
-  mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
-  aleft=-1, aright=-1, atop=-1, abottom=-1,
-  wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
-  chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
-  nu=0, phase=0, string reflect="NULL")
+R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
+mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
+aleft=-1, aright=-1, atop=-1, abottom=-1,
+wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
+chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
+nu=0, phase=0, string reflect="NULL")
 OUTPUT PARAMETERS (GVars, pTable)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE

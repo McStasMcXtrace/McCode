@@ -10,8 +10,6 @@
 * %I
 * Written by: <a href="mailto hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: July 7th, 2006
-* Version:  $Revision$
-* Release: McStas 1.10
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 *
 * Detector-like component that writes neutron state parameters into a
@@ -40,7 +38,7 @@
 *
 * %P
 * INPUT PARAMETERS
-* filename:     [str] name of the MCNP5 neutron output file,
+* filename: [str]  name of the MCNP5 neutron output file,
 *                     or stdout if left to 0.
 *
 * %L
@@ -57,17 +55,17 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0)
 OUTPUT PARAMETERS (hfile)
 DEPENDENCY "@MCCODE_LIB@/libs/neutronics/neutronics-subs.o -lgfortran"
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
 
 #include <time.h>
 
- /**************************************
- *Function that returns current time to*
- *include into the output file header  *
- **************************************/
+/**************************************
+*Function that returns current time to*
+*include into the output file header  *
+**************************************/
 char *get_current_time(){
 	time_t tp;
 	if(time(&tp)!=-1){

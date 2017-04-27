@@ -10,9 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: February 2016
-* Version: $Revision$
 * Origin: DTU
-* Release: McStas 2.3
 *
 * Rectangular/circular diaphragm (alias of the Slit component)
 *
@@ -29,13 +27,13 @@
 *
 * %P
 *
-* radius: Radius of diaphragm in the z=0 plane, centered at Origo [m]
-* xmin: Lower x bound [m]
-* xmax: Upper x bound [m]
-* ymin: Lower y bound [m]
-* ymax: Upper y bound [m]
-* xwidth: Width of diaphragm. Overrides xmin, xmax. [m]
-* yheight: Height of diaphragm. Overrides ymin, ymax. [m]
+* radius: [m]   Radius of diaphragm in the z=0 plane, centered at Origo 
+* xmin: [m]     Lower x bound 
+* xmax: [m]     Upper x bound 
+* ymin: [m]     Lower y bound 
+* ymax: [m]     Upper y bound 
+* xwidth: [m]   Width of diaphragm. Overrides xmin, xmax. 
+* yheight: [m]  Height of diaphragm. Overrides ymin, ymax. 
 *
 *
 * %E

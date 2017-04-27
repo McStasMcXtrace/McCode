@@ -11,9 +11,7 @@
 *
 * Written by: Emmanuel Farhi
 * Date: June 20th 2013
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 2.0
 *
 * The counterpart of the Rotator component.
 *
@@ -30,10 +28,10 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* rotator: the name of the Rotator component used to initiate the rotation [no quotes]
+* rotator: [no quotes]  the name of the Rotator component used to initiate the rotation 
 *
 * OUTPUT PARAMETERS:
-* angle: [deg]  rotation angle
+* angle: [deg]          rotation angle
 *
 * %End
 *******************************************************************************/
@@ -46,7 +44,7 @@ OUTPUT PARAMETERS ()
 
 TRACE
 %{
-  double angle = MC_GETPAR(rotator, angle);
+double angle = MC_GETPAR(rotator, angle);
 
   if (angle) { /* rotate back neutron w/r to monochromator */
     /* approximation of rotating monochromator */

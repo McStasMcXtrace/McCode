@@ -9,9 +9,7 @@
 * %I
 * Written by: Henrich Frielinghaus
 * Date: Oct 2007
-* Version: 1.0
 * Origin: JCNS - FZ-Juelich
-* Release: McStas ????
 *
 * Slit - sorting in channels
 *
@@ -25,8 +23,8 @@
 * %P
 * INPUT PARAMETERS
 *
-* xw: width in X-dir (m) (full width, might be larger for trumpets)
-* yw: width in Y-dir (m) (full width, might be larger for trumpets)
+* xw: []  width in X-dir (m) (full width, might be larger for trumpets)
+* yw: []  width in Y-dir (m) (full width, might be larger for trumpets)
 *
 *
 * %E
@@ -43,8 +41,8 @@ INITIALIZE
 
 TRACE
 %{
-    PROP_Z0;
-    if (x<-0.5*xw/xcc || x>0.5*xw/xcc || y<-0.5*yw/ycc || y>0.5*yw/ycc)
+PROP_Z0;
+if (x<-0.5*xw/xcc || x>0.5*xw/xcc || y<-0.5*yw/ycc || y>0.5*yw/ycc)
       ABSORB;
     else
      {

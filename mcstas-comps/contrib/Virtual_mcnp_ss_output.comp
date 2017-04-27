@@ -9,9 +9,7 @@
 * %I
 * Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a>
 * Date: January, 2012
-* Version:  $Revision$
 * Origin: <a href="http://www.risoe.dtu.dk/">DTU</a>
-* Release: McStas 2.0
 *
 * This component uses a Source Surface type file of recorded neutrons from the
 * reactor monte carlo code MCNP as a source of particles.
@@ -57,8 +55,8 @@
 *
 * %P
 * INPUT PARAMETERS
-* file:  Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' (str)
-* verbose: Toggles debugging info on/off (1)
+* file: [str]   Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' 
+* verbose: [1]  Toggles debugging info on/off 
 *
 * %L
 * <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
@@ -84,27 +82,27 @@ SHARE
 
 #endif
 
- %}
+%}
 
 DECLARE
 %{
-  FILE *hfile;                    /* Neutron input file handle */
+FILE *hfile;                    /* Neutron input file handle */
 
-  double to_mcstas[8];
-  double from_mcstas[8];
-  unsigned int counterout;
+double to_mcstas[8];
+double from_mcstas[8];
+unsigned int counterout;
 %}
 
 INITIALIZE
 %{
-  counterout = 0;
+counterout = 0;
 
-  char  exit_flag=0;  /* set to 1 if end of simulation */
-  long   filesize  =0;
+char  exit_flag=0;  /* set to 1 if end of simulation */
+long   filesize  =0;
 
-  struct stat stfile;
-  /* Open neutron input file. */
-  /* (If empty filename given, present warning in case of verbose, perform nothing) */
+struct stat stfile;
+/* Open neutron input file. */
+/* (If empty filename given, present warning in case of verbose, perform nothing) */
 
   if (strcmp(file,"rssa")) {
     printf("MCNP_input: %s: Given filename is %s, please rename to 'rssa' and rerun!\n", NAME_CURRENT_COMP, file);

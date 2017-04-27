@@ -8,7 +8,6 @@
 * %I
 * Written by: Robert Dalgliesh
 * Date: June 2010
-* Version: 1.0
 * Origin: McStas 1.12b
 *
 * Multilayer Reflecting sample using matrix Formula.
@@ -33,25 +32,25 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth: (m) Width of substrate
-* zlength: (m) Length of substrate
-* ythick: (m)  Thickness of substrate
-* mu_inc: (m^-1) Incoherent scattering length
-* frac_inc: (1) Fraction of statistics to assign to incoherent scattering
-* V0: (AA^3) Unit cell volume, substrate
-* pack: (1)  Substrate packing factor
-* nlayer: (1)	Number of film layers
-* sldPar: (1)  (Angstoms ^-2) Scattering length Density's of layers
-* dPar:   (1)  (Angstroms) Thicknesses of film layers
-* sigmaPar: (1)  (Angstroms) r.m.s roughnesses of the interfaces
+* xwidth: [m]     Width of substrate
+* zlength: [m]    Length of substrate
+* ythick: [m]     Thickness of substrate
+* mu_inc: [m^-1]  Incoherent scattering length
+* frac_inc: [1]   Fraction of statistics to assign to incoherent scattering
+* V0: [AA^3]      Unit cell volume, substrate
+* pack: [1]       Substrate packing factor
+* nlayer: [1]     Number of film layers
+* sldPar: [1]     (Angstoms ^-2) Scattering length Density's of layers
+* dPar: [1]       (Angstroms) Thicknesses of film layers
+* sigmaPar: [1]   (Angstroms) r.m.s roughnesses of the interfaces
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_Sample
 DEFINITION PARAMETERS (xwidth = 0.2, zlength = 0.2,
-	 nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0},
-	 sigmaPar={5.0,5.0}, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
+nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0},
+sigmaPar={5.0,5.0}, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
 OUTPUT PARAMETERS (sldParPtr, dParPtr, sigmaParPtr, tx, ty, tz)
 DEPENDENCY "-lgsl -lgslcblas"
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -68,16 +67,16 @@ SHARE
 
 DECLARE
 %{
-  double sldParPtr[]   = sldPar;
-  double dParPtr[] = dPar;
-  double sigmaParPtr[] = sigmaPar;
-  double xmin, xmax, zmin, zmax;
-  double tx, ty, tz;
+double sldParPtr[]   = sldPar;
+double dParPtr[] = dPar;
+double sigmaParPtr[] = sigmaPar;
+double xmin, xmax, zmin, zmax;
+double tx, ty, tz;
 %}
 
 INITIALIZE
 %{
-  if (frac_inc>0) {
+if (frac_inc>0) {
     if (!(ythick) || !(mu_inc)) {
       fprintf(stderr,"Multilayer: error: %s: You requested a non-meaningful combination of frac_inc, ythick, mu_inc. EXIT\n", NAME_CURRENT_COMP);
       exit(1);

@@ -11,9 +11,7 @@
 * Modified from Res_sample, written by: Kristian Nielsen
 * Date: 1999
 * Written by: KL, 10 October 2004
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Sample for TOF resolution function calculation.
 *
@@ -45,24 +43,24 @@
 * %P
 * INPUT PARAMETERS:
 *
-* thickness: Thickness of hollow cylinder in (x,z) plane [m]
-* radius:   Outer radius of hollow cylinder [m]
-* yheight:  vert.  dimension of sample, as a height [m]
-* focus_r:  Radius of sphere containing target [m]
-* target_index: relative index of component to focus at, e.g. next is +1 [1]
-* time_bin: position of time bin [us]
-* time_width: width of time bin [us]
+* thickness: [m]     Thickness of hollow cylinder in (x,z) plane 
+* radius: [m]        Outer radius of hollow cylinder 
+* yheight: [m]       vert.  dimension of sample, as a height 
+* focus_r: [m]       Radius of sphere containing target 
+* target_index: [1]  relative index of component to focus at, e.g. next is +1 
+* time_bin: [us]     position of time bin 
+* time_width: [us]   width of time bin 
 *
 * Optional parameters
-* xwidth:   horiz. dimension of sample, as a width [m]
-* zdepth:   depth of sample [m]
-* focus_xw: horiz. dimension of a rectangular area [m]
-* focus_yh: vert.  dimension of a rectangular area [m]
-* focus_aw: horiz. angular dimension of a rectangular area [deg]
-* focus_ah: vert.  angular dimension of a rectangular area [deg]
-* target_x:
-* target_y: position of target to focus at [m]
-* target_z:
+* xwidth: [m]        horiz. dimension of sample, as a width 
+* zdepth: [m]        depth of sample 
+* focus_xw: [m]      horiz. dimension of a rectangular area 
+* focus_yh: [m]      vert.  dimension of a rectangular area 
+* focus_aw: [deg]    horiz. angular dimension of a rectangular area 
+* focus_ah: [deg]    vert.  angular dimension of a rectangular area 
+* target_x: []       
+* target_y: [m]      position of target to focus at 
+* target_z: []       
 * %E
 *******************************************************************************/
 
@@ -71,38 +69,38 @@ DEFINE COMPONENT TOFRes_sample
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (thickness=0,radius=0.01,yheight=0.05,focus_r=0.05,
-    time_bin=20000, time_width=10,
-    target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
-    focus_aw=0, focus_ah=0, xwidth=0, zdepth=0, int target_index=0)
+time_bin=20000, time_width=10,
+target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
+focus_aw=0, focus_ah=0, xwidth=0, zdepth=0, int target_index=0)
 
 OUTPUT PARAMETERS (res_struct, f, E0, dE)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  struct Res_sample_struct
-  {
-    double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
-    double rx,ry,rz,pi;
-    char   isrect;      /* true when sample is a box */
-    double distance;    /* when non zero, gives rect target distance */
-    double aw,ah;       /* rectangular angular dimensions */
-    double xw,yh;       /* rectangular metrical dimensions */
-    double tx,ty,tz;    /* target coords */
-  }
+struct Res_sample_struct
+{
+double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
+double rx,ry,rz,pi;
+char   isrect;      /* true when sample is a box */
+double distance;    /* when non zero, gives rect target distance */
+double aw,ah;       /* rectangular angular dimensions */
+double xw,yh;       /* rectangular metrical dimensions */
+double tx,ty,tz;    /* target coords */
+}
 %}
 
 DECLARE
 %{
-  double f, E0, dE;
-  Res_sample_struct res_struct;
+double f, E0, dE;
+Res_sample_struct res_struct;
 %}
 
 INITIALIZE
 %{
 
-  f = 50;
-  if (!radius || !yheight) {
+f = 50;
+if (!radius || !yheight) {
     if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else res_struct.isrect=1; }
   else res_struct.isrect=0;

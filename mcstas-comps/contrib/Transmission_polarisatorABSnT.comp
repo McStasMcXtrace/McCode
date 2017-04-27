@@ -24,32 +24,32 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:         (m)     Width at the polarizer entry
-* h1:         (m)     Height at the polarizer entry
-* w2:         (m)     Width at the polarizer exit
-* h2:         (m)     Height at the polarizer exit
-* l:          (m)     length of polarizer
-* R0:         (1)     Low-angle reflectivity of the outer guide
-* Qc:         (AA-1)  Critical scattering vector of the outer guide
-* W:          (AA-1)  Width of supermirror cut-off of the outer guide
-* alpha:      (AA)    Slope of reflectivity of the outer guide
-* mleft:      (1)     m-value of material for left.   vert. mirror of the outer guide
-* mright:     (1)     m-value of material for right.  vert. mirror of the outer guide
-* mtop:       (1)     m-value of material for top.    horz. mirror of the outer guide
-* mbottom:    (1)     m-value of material for bottom. horz. mirror of the outer guide
-* waferD:     (m)     Thickness of Si wafer
-* Si_i:       (barns) Scattering cross section per atom (barns)
-* Si_a:       (barns) Absorption cross section per atom (barns) at 2200m/s
-* R0_up:      (1)     Low-angle reflectivity of the Fe/Si-wafer for spin up neutrons
-* Qc_up:      (AA-1)  Critical scattering vector of the Fe/Si-wafer for spin up neutrons
-* W_up:       (AA-1)  Width of supermirror cut-off of the Fe/Si-wafer for spin up neutrons
-* alpha_up:   (AA)    Slope of reflectivity of the Fe/Si-wafer for spin up neutrons
-* mup:        (1)     m-value of the Fe/Si-wafer for spin up neutrons
-* R0_down:    (1)     Low-angle reflectivity of the Fe/Si-wafer for spin down neutrons
-* Qc_down:    (AA-1)  Critical scattering vector of the Fe/Si-wafer for spin down neutrons
-* W_down:     (AA-1)  Width of supermirror cut-off of the Fe/Si-wafer for spin down neutrons
-* alpha_down: (AA)    Slope of reflectivity of the Fe/Si-wafer for spin down neutrons
-* mdown:      (1)     m-value of the Fe/Si-wafer for spin down neutrons
+* w1: [m]           Width at the polarizer entry
+* h1: [m]           Height at the polarizer entry
+* w2: [m]           Width at the polarizer exit
+* h2: [m]           Height at the polarizer exit
+* l: [m]            length of polarizer
+* R0: [1]           Low-angle reflectivity of the outer guide
+* Qc: [AA-1]        Critical scattering vector of the outer guide
+* W: [AA-1]         Width of supermirror cut-off of the outer guide
+* alpha: [AA]       Slope of reflectivity of the outer guide
+* mleft: [1]        m-value of material for left.   vert. mirror of the outer guide
+* mright: [1]       m-value of material for right.  vert. mirror of the outer guide
+* mtop: [1]         m-value of material for top.    horz. mirror of the outer guide
+* mbottom: [1]      m-value of material for bottom. horz. mirror of the outer guide
+* waferD: [m]       Thickness of Si wafer
+* Si_i: [barns]     Scattering cross section per atom (barns)
+* Si_a: [barns]     Absorption cross section per atom (barns) at 2200m/s
+* R0_up: [1]        Low-angle reflectivity of the Fe/Si-wafer for spin up neutrons
+* Qc_up: [AA-1]     Critical scattering vector of the Fe/Si-wafer for spin up neutrons
+* W_up: [AA-1]      Width of supermirror cut-off of the Fe/Si-wafer for spin up neutrons
+* alpha_up: [AA]    Slope of reflectivity of the Fe/Si-wafer for spin up neutrons
+* mup: [1]          m-value of the Fe/Si-wafer for spin up neutrons
+* R0_down: [1]      Low-angle reflectivity of the Fe/Si-wafer for spin down neutrons
+* Qc_down: [AA-1]   Critical scattering vector of the Fe/Si-wafer for spin down neutrons
+* W_down: [AA-1]    Width of supermirror cut-off of the Fe/Si-wafer for spin down neutrons
+* alpha_down: [AA]  Slope of reflectivity of the Fe/Si-wafer for spin down neutrons
+* mdown: [1]        m-value of the Fe/Si-wafer for spin down neutrons
 * 
 * %E
 *******************************************************************************/
@@ -57,33 +57,33 @@
 DEFINE COMPONENT Transmission_polarisatorABSnT
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l, waferD, Si_i, Si_a, FeD,
-                    R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
-                    R0_up=0.99, Qc_up=0.0109, alpha_up=4.25, W_up=0.0025,
-                    R0_down=0.99, Qc_down=0.02174, alpha_down=6.25, W_down=0.001,
-                    mleft=-1, mright=-1, mtop=-1, mbottom=-1, mup=-1, mdown=-1)
+R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
+R0_up=0.99, Qc_up=0.0109, alpha_up=4.25, W_up=0.0025,
+R0_down=0.99, Qc_down=0.02174, alpha_down=6.25, W_down=0.001,
+mleft=-1, mright=-1, mtop=-1, mbottom=-1, mup=-1, mdown=-1)
 OUTPUT PARAMETERS (Vars)
 
 SHARE
 %{
 
 
-  typedef struct Polarizer_guide_Vars
-  {
-    double nx[8], ny[8], nz[8];
-    double wx[8], wy[8], wz[8];
-    double A[8], norm_n2[8], norm_n[8];
-    long   N_reflection[9];
-    double M[8];
-    double w1c;
-    double w2c;
-    double n_dot_v[8];
-    char   compcurname[256];
-  } Polarizer_guide_Vars_type;
+typedef struct Polarizer_guide_Vars
+{
+double nx[8], ny[8], nz[8];
+double wx[8], wy[8], wz[8];
+double A[8], norm_n2[8], norm_n[8];
+long   N_reflection[9];
+double M[8];
+double w1c;
+double w2c;
+double n_dot_v[8];
+char   compcurname[256];
+} Polarizer_guide_Vars_type;
 
-  void Polarizer_guide_Init(Polarizer_guide_Vars_type *aVars, 
-    MCNUM a_w1, MCNUM a_h1, MCNUM a_w2, MCNUM a_h2, MCNUM a_l, 
-    MCNUM a_R0, MCNUM a_Qc, MCNUM a_alpha, MCNUM a_W,
-    MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM a_mdown)
+void Polarizer_guide_Init(Polarizer_guide_Vars_type *aVars,
+MCNUM a_w1, MCNUM a_h1, MCNUM a_w2, MCNUM a_h2, MCNUM a_l,
+MCNUM a_R0, MCNUM a_Qc, MCNUM a_alpha, MCNUM a_W,
+MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM a_mdown)
   {
     int i;
 

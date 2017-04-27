@@ -10,9 +10,7 @@
 * %I
 * Written by: P Willendrup and E Klinkby, February 2014, derived from K Lefmann ESS_moderator_long
 * Modified by: J. Saroun (saroun@ujf.cas.cz)
-* Version: $Revision$
 * Origin: DTU
-* Release: McStas 2.1
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -56,24 +54,24 @@
 * %P
 * Input parameters:
 *
-* yheight_c: (m)    Height of the cold source
-* yheight_t: (m)    Height of the thermal source
-* xwidth_t: (m)    Edge of thermal source
-* xwidth_c: (m)    Width / arc-length opening of the cold source.
-* Lmin:   (AA)   Lower edge of wavelength distribution
-* Lmax:   (AA)   Upper edge of wavelength distribution
-* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
-* focus_xw:(m)   Width of focusing rectangle
-* focus_yh:(m)   Height of focusing rectangle
-* target_index:(1)  relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
-* n_pulses: (1)  Number of pulses simulated. 0 and 1 creates one pulse. The integrated intensity is constant
-* cold_frac: (1) Fraction of neutron statistics from cold source. It is implicitely assumed that supermirror allows each beamline to choose the desired fraction of cold and thermal neutrons (i.e. extreme idealization).
-* tmax_multiplier: (1) Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION. Only in combination with sourcedef="2013", "2014" or "2015"
-* beamport_angle: (deg) Direction within the beamport sector (0 < angle < extraction_opening for 2014, -extraction_opening/2 < angle < extraction_opening/2 for 2015) to direct neutrons. For sourcedef="2015", the only allowed values are 5,15,...,55 degrees measured from the central point.
-* extraction_opening: (deg) Width of extraction-area in degrees (60 or 120 degrees). 120 deg only in combination with sourcedef="2014" and "2015".
-* acc_power: (MW) Accelerator power in MW
-* sourcedef: (string) ESS source "database", values: "TDR", "2001", "2013", "2014", "2015"
-* isleft: (1) Fraction of thermal neutrons generated at the "left" moderator slab in case of "2013" or "2014"
+* yheight_c: [m]             Height of the cold source
+* yheight_t: [m]             Height of the thermal source
+* xwidth_t: [m]              Edge of thermal source
+* xwidth_c: [m]              Width / arc-length opening of the cold source.
+* Lmin: [AA]                 Lower edge of wavelength distribution
+* Lmax: [AA]                 Upper edge of wavelength distribution
+* dist: [m]                  Distance from source to focusing rectangle; at (0,0,dist)
+* focus_xw: [m]              Width of focusing rectangle
+* focus_yh: [m]              Height of focusing rectangle
+* target_index: [1]          relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* n_pulses: [1]              Number of pulses simulated. 0 and 1 creates one pulse. The integrated intensity is constant
+* cold_frac: [1]             Fraction of neutron statistics from cold source. It is implicitely assumed that supermirror allows each beamline to choose the desired fraction of cold and thermal neutrons (i.e. extreme idealization).
+* tmax_multiplier: [1]       Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION. Only in combination with sourcedef="2013", "2014" or "2015"
+* beamport_angle: [deg]      Direction within the beamport sector (0 < angle < extraction_opening for 2014, -extraction_opening/2 < angle < extraction_opening/2 for 2015) to direct neutrons. For sourcedef="2015", the only allowed values are 5,15,...,55 degrees measured from the central point.
+* extraction_opening: [deg]  Width of extraction-area in degrees (60 or 120 degrees). 120 deg only in combination with sourcedef="2014" and "2015".
+* acc_power: [MW]            Accelerator power in MW
+* sourcedef: [string]        ESS source "database", values: "TDR", "2001", "2013", "2014", "2015"
+* isleft: [1]                Fraction of thermal neutrons generated at the "left" moderator slab in case of "2013" or "2014"
 *
 * %E
 *******************************************************************************/
@@ -81,29 +79,29 @@
 DEFINE COMPONENT ESS_moderator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (isleft=0.9,
-		    Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
-		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2015", xwidth_c=0.1, xwidth_t=0.18, extraction_opening=120)
-  OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat,
-  cold,wasleft,cosine,tx,ty,tz,cx,cy,cz,cyl_radius,t1x,t1y,t1z,t2x,t2y,t2z,
-  modextras,cold_bril,thermal_bril,tfocus_width,  tfocus_time,  dt,r_empty,lambda,
-  xprime,yprime,zprime,sgnport, abs_beamport_angle, cos_beamport_angle, edge_thermal,
-  cos_thermal, cos_cold, sin_beamport_angle)
+Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
+int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2015", xwidth_c=0.1, xwidth_t=0.18, extraction_opening=120)
+OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat,
+cold,wasleft,cosine,tx,ty,tz,cx,cy,cz,cyl_radius,t1x,t1y,t1z,t2x,t2y,t2z,
+modextras,cold_bril,thermal_bril,tfocus_width,  tfocus_time,  dt,r_empty,lambda,
+xprime,yprime,zprime,sgnport, abs_beamport_angle, cos_beamport_angle, edge_thermal,
+cos_thermal, cos_cold, sin_beamport_angle)
 SHARE
 %{
-  %include "ess_source-lib"
+%include "ess_source-lib"
 %}
 
 DECLARE
 %{
-  // Weighting-oriented scalars
-  double l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat;
-  // Flag to indicate if originating from cold or thermal moderator
-  int cold;
-  // Flag to indicate if originating from left or right thermal slab
-  int wasleft;
-  // Flag to indicate if we should apply the solid angle correction from randvec
-  int cosine;
-  // Target coordinates (focusing)
+// Weighting-oriented scalars
+double l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat;
+// Flag to indicate if originating from cold or thermal moderator
+int cold;
+// Flag to indicate if originating from left or right thermal slab
+int wasleft;
+// Flag to indicate if we should apply the solid angle correction from randvec
+int cosine;
+// Target coordinates (focusing)
   double tx,ty,tz;
   // Displacement of cold moderator centre from comp origin, cold moderator radius 2014 only!
   double cx,cy,cz,cyl_radius;

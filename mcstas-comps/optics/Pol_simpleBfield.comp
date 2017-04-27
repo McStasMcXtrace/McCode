@@ -10,9 +10,7 @@
 * %I
 * Written by: Erik B Knudsen, Peter Christiansen and Peter Willendrup
 * Date: July 2011
-* Version: $Revision: 4382 $
 * Origin: RISOE
-* Release: McStas 1.12
 *
 * Magnetic field component.
 *
@@ -83,19 +81,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]       Width of opening.
-* yheight: [m]       Height of opening.
-* zdepth:  [m]       Length of field.
-* Bx:      [T]       Parameter used for x composant of field.
-* By:      [T]       Parameter used for y composant of field.
-* Bz:      [T]       Parameter used for z composant of field.
-* fieldFunction: [pointer] Function describing the magnetic field.
+* xwidth: [m]               Width of opening.
+* yheight: [m]              Height of opening.
+* zdepth: [m]               Length of field.
+* Bx: [T]                   Parameter used for x composant of field.
+* By: [T]                   Parameter used for y composant of field.
+* Bz: [T]                   Parameter used for z composant of field.
+* fieldFunction: [pointer]  Function describing the magnetic field.
 * filename: []        file where the magnetic field is tabulated.
 *
 * OUTPUT PARAMETERS:
 *
-* gz:             z-component of gravity [m/s/s]
-* parPtr:         Pointer to component magnet parameters [pointer]
+* gz: [m/s/s]               z-component of gravity 
+* parPtr: [pointer]         Pointer to component magnet parameters 
 *
 * %E
 ****************************************************************************/
@@ -103,15 +101,15 @@
 DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
 SETTING PARAMETERS (xwidth, yheight,zdepth,
-                    Bx, By, Bz,
-                    string filename="bfield.dat")
+Bx, By, Bz,
+string filename="bfield.dat")
 OUTPUT PARAMETERS(magnet, parPtr)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "pol-lib"
-  double fmax(double, double);
+%include "pol-lib"
+double fmax(double, double);
   double fmin(double, double);
 %}
 

@@ -10,9 +10,7 @@
 * %I
 * Written by: Markus Appel
 * Date: 2015-12-21
-* Version: $Revision: 1.1 $
 * Origin: ILL / FAU Erlangen-Nuernberg
-* Release: McStas 2.3
 * Based on a perfect crystal component by: Miguel A. Gonzalez, A. Dianoux June 2013 (ILL)
 *
 * Changelog:
@@ -50,71 +48,71 @@
 * %P
 * (A) Size, shape and position:
 * =============================
-* radius:         (m)     Radius of curvature, set to 0 for a flat surface. Default: 0
-* centerfocus:    (0/1)   Component origin is the center of the analyzer sphere if 1, if set to 0 the origin is on the analyzer surface. Default: 0
+* radius: [m]                  Radius of curvature, set to 0 for a flat surface. Default: 0
+* centerfocus: [0/1]           Component origin is the center of the analyzer sphere if 1, if set to 0 the origin is on the analyzer surface. Default: 0
 *
 * option 1
-*  ttmin:         (deg)
-*  ttmax:         (deg)   analyzer coverage angle in horizontal xz-plane between -180 and 180
-*  phimin:        (deg)
-*  phimax:        (deg)   vertical analyzer coverage between -90 and 90 (-180 and 180 if debyescherrer==1)
+* ttmin: [deg]                 
+* ttmax: [deg]                 analyzer coverage angle in horizontal xz-plane between -180 and 180
+* phimin: [deg]                
+* phimax: [deg]                vertical analyzer coverage between -90 and 90 (-180 and 180 if debyescherrer==1)
 * option 2
-*  tt0:           (deg)
-*  ttwidth:       (deg)   horizontal coverage as center and full width
-*  phi0:          (deg)
-*  phiwidth:      (deg)   vertical coverage as center and full width
+* tt0: [deg]                   
+* ttwidth: [deg]               horizontal coverage as center and full width
+* phi0: [deg]                  
+* phiwidth: [deg]              vertical coverage as center and full width
 * option 3
-*  tt0:           (deg)   angular center position in the horizontal plane (only if centerfocus==1)
-*  width:         (m)     absolute width
-*  phi0:          (deg)   angular vertical position (only if centerfocus==1)
-*  height:        (m)     absolute height (only if debyescherrer==0)
+* tt0: [deg]                   angular center position in the horizontal plane (only if centerfocus==1)
+* width: [m]                   absolute width
+* phi0: [deg]                  angular vertical position (only if centerfocus==1)
+* height: [m]                  absolute height (only if debyescherrer==0)
 *
-* debyescherrer:  (0/1)   bend analyzer following a Debye-Scherrer ring along scattering angle tt (twotheta) (phi = [-180...180] in that case). Default: 0
-* facette:        (m)     width of square crystal facettes arranged on the spherical surface (set 0 to disable). Default: 0 Warning: Facettation will fail at the poles along +-y axis.
-* facette_xi:     (deg)   random misalignemt of each facette. Default: 0
+* debyescherrer: [-180...180]  (0/1)   bend analyzer following a Debye-Scherrer ring along scattering angle tt (twotheta) (phi = 
+* facette: [m]                 width of square crystal facettes arranged on the spherical surface (set 0 to disable). Default: 0 Warning: Facettation will fail at the poles along +-y axis.
+* facette_xi: [deg]            random misalignemt of each facette. Default: 0
 *
 * (B) Neutron optics
 * ===================
-* tau:            (A^-1)  Scattering vector of the reflex (sometimes also called Q...)
-* lambda:         (A)     Alternatively to tau: backscattered wavelength
-* R0:                     Peak reflectivity. Default: 1
+* tau: [A^-1]                  Scattering vector of the reflex (sometimes also called Q...)
+* lambda: [A]                  Alternatively to tau: backscattered wavelength
+* R0: []                       Peak reflectivity. Default: 1
 *
 * Ewald/Darwin mode
-*  dtauovertau:           Plateau width of the Ewald/Darwin curve (see [1])
-*  dtauovertau_ext:       Relative variation of tau (randomized for each trajectory, full width)
-*  ewald:         (0/1)   Use Ewald curve if 1, Darwin curve if 0. Default: 1 (Ewald)
+* dtauovertau: [1]             Plateau width of the Ewald/Darwin curve (see 
+* dtauovertau_ext: []          Relative variation of tau (randomized for each trajectory, full width)
+* ewald: [0/1]                 Use Ewald curve if 1, Darwin curve if 0. Default: 1 (Ewald)
 *
 * Gaussian mode
-*  sigma:         (meV)   Width of the Gaussian reflectivity curve in meV (corresponding to the energy resolution). (The width will be transformed and the Gaussian is actually calculated in k-space.)
+* sigma: [meV]                 Width of the Gaussian reflectivity curve in meV (corresponding to the energy resolution). (The width will be transformed and the Gaussian is actually calculated in k-space.)
 *
 * Mirror mode
-*  ismirror:      (0/1)   Simply reflect all neutrons if 1. Good for debugging/visualization. Default: 0
+* ismirror: [0/1]              Simply reflect all neutrons if 1. Good for debugging/visualization. Default: 0
 *
 * (C) Doppler movement for monochromators (sinusoidal speed profile):
 * ===================================================================
-* speed:          (m/s)   Maximum Doppler speed. The actual monochromator velocity is randomized between -speed and +speed. Default: 0
-* amplitude:      (m)     Amplitude of the Doppler movement. Default: 0
+* speed: [m/s]                 Maximum Doppler speed. The actual monochromator velocity is randomized between -speed and +speed. Default: 0
+* amplitude: [m]               Amplitude of the Doppler movement. Default: 0
 *
-* smartphase:     (0/1)   Optimize Doppler phase for better MC efficiency if set to 1. *WARNING:* Experimental option! Always compare to a simulation without smartphase. Better do not use smartwidth with Ewald/Darwin curves due to their endless tails. Default: 0
-* smartwidth:     (meV)   Half width of the possible energy reflection window for smartphase. Default: 5*sigma OR 10*2*dtauovertau*E0
+* smartphase: [0/1]            Optimize Doppler phase for better MC efficiency if set to 1. *WARNING:* Experimental option! Always compare to a simulation without smartphase. Better do not use smartwidth with Ewald/Darwin curves due to their endless tails. Default: 0
+* smartwidth: [meV]            Half width of the possible energy reflection window for smartphase. Default: 5*sigma OR 10*2*dtauovertau*E0
 *
 * (D) Miscellaneous
 * ==================
-* exclusive:      (0/1)   If set to 1, absorb all neutrons that missed the monochromator/analyzer surface. Default: 0
-* transmit:       (0...1) Monte-Carlo probability of transmitting an event through the monochromator/analyzer surface. (Events with R=1.0 for DarwinE/Ewald curves are always reflected!). Default: 0
+* exclusive: [0/1]             If set to 1, absorb all neutrons that missed the monochromator/analyzer surface. Default: 0
+* transmit: [0...1]            Monte-Carlo probability of transmitting an event through the monochromator/analyzer surface. (Events with R=1.0 for DarwinE/Ewald curves are always reflected!). Default: 0
 *
 * Output parameters
 * ==================
-* tt:          (deg)   Position where the neutron hit (or missed) the analyzer sphere
-* phi:          (deg)   Position where the neutron hit (or missed) the analyzer sphere
-* xi:              (deg)   Reflection angle between neutron trajectory and analyzer surface normal
-* phid:            (rad)   Actual doppler phase during reflection [0,2*PI]
-* vd:              (m/s)   Actual doppler speed during reflection
-* zd:              (m)     Actual doppler displacement during reflection (zd>0 => displaced towards inc. beam from -z)
-* v0:              (m/s)   Backscattered neutron velocity
-* E0:              (meV)   Backscattered neutron energy
-* R:               (0...1) Reflectivity value (on Gauss/Darwin/Ewald curve)
-* eps:                     'abs(y)' from the Darwin/Ewald reflectivity formula [see 1], (y/sigma) for Gauss (see source code for details)
+* tt: [deg]                    Position where the neutron hit (or missed) the analyzer sphere
+* phi: [deg]                   Position where the neutron hit (or missed) the analyzer sphere
+* xi: [deg]                    Reflection angle between neutron trajectory and analyzer surface normal
+* phid: [rad]                  Actual doppler phase during reflection [0,2*PI]
+* vd: [m/s]                    Actual doppler speed during reflection
+* zd: [m]                      Actual doppler displacement during reflection (zd>0 => displaced towards inc. beam from -z)
+* v0: [m/s]                    Backscattered neutron velocity
+* E0: [meV]                    Backscattered neutron energy
+* R: [0...1]                   Reflectivity value (on Gauss/Darwin/Ewald curve)
+* eps: [see 1]                 'abs(y)' from the Darwin/Ewald reflectivity formula 
 *
 * %E
 *******************************************************************************/
@@ -122,20 +120,20 @@
 DEFINE COMPONENT PerfectCrystal
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ( ttmin=NAN, ttmax=NAN, tt0=NAN, ttwidth=NAN, width=NAN,
-                    phimin=NAN, phimax=NAN, phi0=NAN, phiwidth=NAN, height=NAN, debyescherrer=0,
-                    facette=0, facette_xi=0, centerfocus=0, radius=0, tau=NAN, lambda=NAN, R0=1.0,
-                    dtauovertau=NAN, dtauovertau_ext=0,
-                    ewald=1,sigma=NAN,ismirror=0,speed=0,amplitude=0,smartphase=0,
-                    smartwidth=NAN, exclusive=0, transmit=0, verbose=0 )
+phimin=NAN, phimax=NAN, phi0=NAN, phiwidth=NAN, height=NAN, debyescherrer=0,
+facette=0, facette_xi=0, centerfocus=0, radius=0, tau=NAN, lambda=NAN, R0=1.0,
+dtauovertau=NAN, dtauovertau_ext=0,
+ewald=1,sigma=NAN,ismirror=0,speed=0,amplitude=0,smartphase=0,
+smartwidth=NAN, exclusive=0, transmit=0, verbose=0 )
 OUTPUT PARAMETERS (
-   // official
-   tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps,
-   // internal
-   sin_facette_xi
-   )
+// official
+tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps,
+// internal
+sin_facette_xi
+)
 SHARE
 %{
-   // convert between spherical (r,tt,phi) and cartesian (x,y,z) coordinates (angles in deg)
+// convert between spherical (r,tt,phi) and cartesian (x,y,z) coordinates (angles in deg)
    // debyescherrer swaps axes
    void sph2cart(double *x,double *y,double *z, double r, double tt, double phi, int debyescherrer)
    {

@@ -8,9 +8,7 @@
 * %I
 * Written by: Erik B Knudsen
 * Date: Mar 2016
-* Version: $Revision$
 * Origin: DTU Physics
-* Release: McStas 2.3
 *
 * Detector-like component that writes neutron state parameters into an mcpl-format
 * binary, virtual-source neutron file.
@@ -39,14 +37,14 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename:        [str] Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
-* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
-* polarisationuse: [1]   Enable storing the polarisation state of the neutron.
-* doubleprec:      [1]   Use double precision storage
-* userflag:        [1]   Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
-* userflagcomment: [str] String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
-* merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI
-* keep_mpi_unmerged: [1] Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
+* filename: [str]         Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
+* verbose: [1]            If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
+* polarisationuse: [1]    Enable storing the polarisation state of the neutron.
+* doubleprec: [1]         Use double precision storage
+* userflag: [1]           Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
+* userflagcomment: [str]  String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
+* merge_mpi: [1]          Flag to indicate if output should be merged in case of MPI
+* keep_mpi_unmerged: [1]  Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
 * %E
 *******************************************************************************/
 
@@ -59,7 +57,7 @@ DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 SHARE
 %{
 #include <mcpl.h>
-  int mcpl_file_exist (char *filename)
+int mcpl_file_exist (char *filename)
   {
     struct stat   buffer;
     return (stat (filename, &buffer) == 0);

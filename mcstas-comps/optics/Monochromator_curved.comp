@@ -11,9 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas CVS_070701
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 * Modified by: EF, Feb 13th 2002:  Read reflectivity table
 * Modified by: EF, Oct 24th 2002:  Read transmission table
@@ -59,32 +57,32 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* zwidth:  horizontal width of an individual slab [m]
-* yheight: vertical height of an individual slab [m]
-* gap:     typical gap  between adjacent slabs [m]
-* NH:      number of slabs horizontal [int]
-* NV:      number of slabs vertical [int]
-* mosaich: Horisontal mosaic FWHM [arc minutes]
-* mosaicv: Vertical mosaic FWHM [arc minutes]
-* r0:      Maximum reflectivity. O unactivates component [1]
-* Q:       Scattering vector [AA-1]
-* RV:      radius of vertical focussing. flat for 0 [m]
-* RH:      radius of horizontal focussing. flat for 0 [m]
+* zwidth: [m]             horizontal width of an individual slab 
+* yheight: [m]            vertical height of an individual slab 
+* gap: [m]                typical gap  between adjacent slabs 
+* NH: [int]               number of slabs horizontal 
+* NV: [int]               number of slabs vertical 
+* mosaich: [arc minutes]  Horisontal mosaic FWHM 
+* mosaicv: [arc minutes]  Vertical mosaic FWHM 
+* r0: [1]                 Maximum reflectivity. O unactivates component 
+* Q: [AA-1]               Scattering vector 
+* RV: [m]                 radius of vertical focussing. flat for 0 
+* RH: [m]                 radius of horizontal focussing. flat for 0 
 *
 * optional parameters
-* DM:      monochromator d-spacing instead of Q=2*pi/DM [AA]
-* mosaic:  sets mosaich=mosaicv [arc minutes]
-* width:   total width of monochromator, along Z [m]
-* height:  total height of monochromator, along Y [m]
-* verbose: verbosity level [0/1]
-* reflect: reflectivity file name of text file as 2 columns [k, R] [str]
-* transmit:transmission file name of text file as 2 columns [k, T] [str]
-* t0:      transmission efficiency [1]
-* order:   specify the diffraction order, 1 is usually prefered. Use 0 for all [1]
+* DM: [AA]                monochromator d-spacing instead of Q=2*pi/DM 
+* mosaic: [arc minutes]   sets mosaich=mosaicv 
+* width: [m]              total width of monochromator, along Z 
+* height: [m]             total height of monochromator, along Y 
+* verbose: [0/1]          verbosity level 
+* reflect: [str]          reflectivity file name of text file as 2 columns [k, R] 
+* transmit: [str]         transmission file name of text file as 2 columns [k, T] 
+* t0: [1]                 transmission efficiency 
+* order: [1]              specify the diffraction order, 1 is usually prefered. Use 0 for all 
 *
 * OUTPUT PARAMETERS:
-* col:     column index for last hit blade [1:NH]
-* row:     row index for last hit blade [1:NV]
+* col: [1:NH]             column index for last hit blade 
+* row: [1:NV]             row index for last hit blade 
 *
 * %Link
 * <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000133.html">Additional note</a> from Peter Link.
@@ -99,30 +97,30 @@
 DEFINE COMPONENT Monochromator_curved
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect="NULL", string transmit="NULL",
-  zwidth=0.01, yheight=0.01,
-  gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
-  RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
+zwidth=0.01, yheight=0.01,
+gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
+RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,
-  SlabWidth,SlabHeight,rTable, tTable, row, col,tiltH,tiltV)
+SlabWidth,SlabHeight,rTable, tTable, row, col,tiltH,tiltV)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
 #ifndef GAUSS
-  /* Define these arrays only once for all instances. */
-  /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
-     James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103.
-     This reference is available from the Copenhagen UB2 library */
-  double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
-                -0.724417731360170, -0.570972172608539, -0.394151347077563,
-                -0.201194093997435, 0, 0.201194093997435,
-                0.394151347077563, 0.570972172608539, 0.724417731360170,
-                0.848206583410427, 0.937273392400706, 0.987992518020485};
-  double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
-                0.139570677926154, 0.166269205816994, 0.186161000115562,
-                0.198431485327111, 0.202578241925561, 0.198431485327111,
-                0.186161000115562, 0.166269205816994, 0.139570677926154,
-                0.107159220467172, 0.070366047488108, 0.030753241996117};
+/* Define these arrays only once for all instances. */
+/* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
+James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103.
+This reference is available from the Copenhagen UB2 library */
+double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
+-0.724417731360170, -0.570972172608539, -0.394151347077563,
+-0.201194093997435, 0, 0.201194093997435,
+0.394151347077563, 0.570972172608539, 0.724417731360170,
+0.848206583410427, 0.937273392400706, 0.987992518020485};
+double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
+0.139570677926154, 0.166269205816994, 0.186161000115562,
+0.198431485327111, 0.202578241925561, 0.198431485327111,
+0.186161000115562, 0.166269205816994, 0.139570677926154,
+0.107159220467172, 0.070366047488108, 0.030753241996117};
 
 
 #define GAUSS(x,mean,rms) \

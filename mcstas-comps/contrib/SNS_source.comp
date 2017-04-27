@@ -9,7 +9,6 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision$
 * Origin: SNS Project Oak Ridge National Laboratory
 *
 * A source that produces a time and energy distribution from the SNS moderator files
@@ -31,14 +30,14 @@
 *
 * %P
 * Input parameters:
-* filename:   Filename of source data
-* xwidth:  (m)   width of moderator
-* yheight: (m)   height of moderator
-* dist:   (m)   Distance from source to the focusing rectangle
-* xw:     (m)   Width of focusing rectangle
-* focus_yh:     (m)   Height of focusing rectangle
-* Emin: (meV)   minimum energy of neutron to generate
-* Emax: (meV)   maximum energy of neutron to generate
+* filename: []   Filename of source data
+* xwidth: [m]    width of moderator
+* yheight: [m]   height of moderator
+* dist: [m]      Distance from source to the focusing rectangle
+* xw: [m]        Width of focusing rectangle
+* focus_yh: [m]  Height of focusing rectangle
+* Emin: [meV]    minimum energy of neutron to generate
+* Emax: [meV]    maximum energy of neutron to generate
 * %E
 *******************************************************************************/
 
@@ -49,7 +48,7 @@ OUTPUT PARAMETERS (hdiv,vdiv,p_in)
 
 DECLARE
 %{
-  double xonly(double);
+double xonly(double);
   double Pfunc(double,double);
   double txonly(double);
   double tPfunc(double,double);
