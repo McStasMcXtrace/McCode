@@ -272,7 +272,7 @@ def read_header(file):
         if not re.match('[ ]*\*', l):
             if not re.match('[ ]*\/\*', l):
                 break
-        elif re.search('[ ]*\*\*', l):
+        elif re.search('[ ]*\*\*\*\*', l):
             break
     return ''.join(lines)
 
