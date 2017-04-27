@@ -90,7 +90,7 @@ class InstrTraceParser:
         return t
     
     # ignore whitespaces and tabs means that we do not tokenize them, but they are still applied in the regex checks defined above for our tokens
-    t_ignore = r' \t'
+    t_ignore = ' \t'
     
     def t_error(self, t):
         print('error: %s' % t.value)
