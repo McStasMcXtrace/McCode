@@ -251,7 +251,7 @@ def _parse_1D_monitor(text):
         m = re.search('\# component: ([\w]+)\n', text)
         data.component = m.group(1)
         '''# filename: Edet.dat'''
-        m = re.search('\# filename: ([\w\.]+)\n', text)
+        m = re.search('\# filename: ([\-\+\w\.]+)\n', text)
         data.filename = m.group(1)
         '''# title: Wavelength monitor'''
         m = re.search('\# title: (%s)\n' % freetext_pat, text)
@@ -318,7 +318,7 @@ def _parse_2D_monitor(text):
         m = re.search('\# component: ([\w]+)\n', text)
         data.component = m.group(1)
         '''# filename: PSD.dat'''
-        m = re.search('\# filename: ([\w\.]+)\n', text)
+        m = re.search('\# filename: ([\-\+\w\.]+)\n', text)
         data.filename = m.group(1)
         '''# title: PSD monitor'''
         m = re.search('\# title: (%s)\n' % freetext_pat, text)
