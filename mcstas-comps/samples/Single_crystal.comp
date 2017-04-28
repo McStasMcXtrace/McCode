@@ -111,49 +111,49 @@
 *
 * %P
 * INPUT PARAMETERS
-* radius: [m]                                             Outer radius of sample in (x,z) plane 
-* xwidth: [m]                                             Width of crystal 
-* yheight: [m]                                            Height of crystal 
-* zdepth: [m]                                             Depth of crystal (no extinction simulated) 
-* geometry: [str]                                         Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust 
-* delta_d_d: [1]                                          Lattice spacing variance, gaussian RMS 
-* mosaic: [arc minutes]                                   Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters. 
-* mosaic_a: [arc minutes]                                 Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model. 
-* mosaic_b: [arc minutes]                                 Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS. 
-* mosaic_c: [arc minutes]                                 Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS 
-* mosaic_AB: [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]  In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which  the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices). 
+* radius: [m]                                             Outer radius of sample in (x,z) plane
+* xwidth: [m]                                             Width of crystal
+* yheight: [m]                                            Height of crystal
+* zdepth: [m]                                             Depth of crystal (no extinction simulated)
+* geometry: [str]                                         Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* delta_d_d: [1]                                          Lattice spacing variance, gaussian RMS
+* mosaic: [arc minutes]                                   Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters.
+* mosaic_a: [arc minutes]                                 Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model.
+* mosaic_b: [arc minutes]                                 Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS.
+* mosaic_c: [arc minutes]                                 Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS
+* mosaic_AB: [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]  In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which  the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices).
 *
-* recip_cell: [1]                                         Choice of direct/reciprocal (0/1) unit cell definition 
-* ax:        Coordinates of first (direct/recip) unit cell vector [AA or AA^-1]
+* recip_cell: [1]                                         Choice of direct/reciprocal (0/1) unit cell definition
+* ax: [AA or AA^-1]                                       Coordinates of first (direct/recip) unit cell vector 
 * ay: []                                                  a on y axis
 * az: []                                                  a on z axis
-* bx:        Coordinates of second (direct/recip) unit cell vector [AA or AA^-1]
-* by: []                                                  b on y axis
+* bx: [AA or AA^-1]                                       Coordinates of second (direct/recip) unit cell vector
 * bz: []                                                  b on z axis
-* cx:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
+* by: []                                                  b on y axis
+* cx: [AA or AA^-1]                                       Coordinates of third (direct/recip) unit cell vector
 * cy: []                                                  c on y axis
 * cz: []                                                  c on z axis
-* reflections: [string]                                   File name containing structure factors of reflections. Use empty ("") or NULL for incoherent scattering only 
-* order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...) 
+* reflections: [string]                                   File name containing structure factors of reflections. Use empty ("") or NULL for incoherent scattering only
+* order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
 *
 * Optional input parameters
 *
-* p_transmit: [1]                                         Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics from weak reflections 
-* sigma_abs: [barns]                                      Absorption cross-section per unit cell at 2200 m/s 
-* sigma_inc: [barns]                                      Incoherent scattering cross-section per unit cell Use -1 to unactivate 
-* aa: [deg]                                               Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters 
-* bb: [deg]                                               Beta angle 
-* cc: [deg]                                               Gamma angle 
-* barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files 
-* RX: [m]                                                 Radius of horizontal along X lattice curvature. flat for 0 
-* RY: [m]                                                 Radius of vertical lattice curvature. flat for 0 
-* RZ: [m]                                                 Radius of horizontal along Z lattice curvature. flat for 0 
-* powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1 
-* PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0<PG<1 with main axis on 'c' 
+* p_transmit: [1]                                         Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics from weak reflections
+* sigma_abs: [barns]                                      Absorption cross-section per unit cell at 2200 m/s
+* sigma_inc: [barns]                                      Incoherent scattering cross-section per unit cell Use -1 to unactivate
+* aa: [deg]                                               Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters
+* bb: [deg]                                               Beta angle
+* cc: [deg]                                               Gamma angle
+* barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
+* RX: [m]                                                 Radius of horizontal along X lattice curvature. flat for 0
+* RY: [m]                                                 Radius of vertical lattice curvature. flat for 0
+* RZ: [m]                                                 Radius of horizontal along Z lattice curvature. flat for 0
+* powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1
+* PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0<PG<1 with main axis on 'c'
 *
 * OUTPUT PARAMETERS:
 *
-* hkl_info: [structure]                                   Internal 
+* hkl_info: [structure]                                   Internal
 * hkl_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
 * hkl_info.h:
 * hkl_info.k: wavevector indices of last coherent scattering event [Angs-1]
