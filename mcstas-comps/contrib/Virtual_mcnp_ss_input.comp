@@ -6,15 +6,13 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Virtual_mcnp_ss_input.comp
-
-* %I
-* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a> 
-* Date: January, 2012
-* Version:  $Revision$
-* Origin: <a href="http://www.risoe.dtu.dk/">DTU</a>
-* Release: McStas 2.0
 *
-* This component uses a Source Surface type file of recorded neutrons from the 
+* %I
+* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a>
+* Date: January, 2012
+* Origin: <a href="http://www.risoe.dtu.dk/">DTU</a>
+*
+* This component uses a Source Surface type file of recorded neutrons from the
 * reactor monte carlo code MCNP as a source of particles.
 *
 * %D
@@ -22,18 +20,18 @@
 * MCNP Monte Carlo code and converts them to make them suitable for a McStas simulation
 *
 * Note that axes orientation may be different between MCNP and McStas!
-* Note also that the conversion of between McStas and MCNP units and parameters 
+* Note also that the conversion of between McStas and MCNP units and parameters
 * is done automatically by this component - but the user must ensure that
 * geometry description matches between the two Monte Carlo codes.
 *
 * The verbose mode is highly recommended as it displays lots of useful informations.
 *
-* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR). 
-* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules 
+* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR).
+* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules
 * and subroutines collected in "subs.f"
-* For succesful compilation, it is required that these subroutines are compiled 
+* For succesful compilation, it is required that these subroutines are compiled
 * and linked to the instrument file:
-* 
+*
 *  mcstas dummy.instr  -> generates dummy.c
 *  gfortran -c subs.f  -> generates subs.f
 *  gcc -o runme.out dummy.c subs.o -lm -lgfortran  -> generates runme.out
@@ -49,16 +47,16 @@
 *         Or hardcode values of nhis & ntrk in either subs.f or Virtual_mcnp_ss_output.comp.
 *
 * EXAMPLE of usage:
-first a MCNP simulation is run
+*     first a MCNP simulation is run
 *     and at a relevant surface, a Source Surface Write card is given (e.g. for MCNP surface #1, add the line:
-*     SSW 1 
+*     SSW 1
 *     to the end of the input file.
 *     By this a ".w" file is produced, which then serves as input to the McStas simulation.
 * Present version: rename *.w to rssa, and make sure to put it in the dir from which McStas is run
 *
 * %P
-* file: Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' (str)
-* verbose: Toggles debugging info on/off (1)
+* file: [str]   Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' 
+* verbose: [1]  Toggles debugging info on/off 
 *
 * %L
 * <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
@@ -84,32 +82,32 @@ SHARE
 
 #endif
 
- %}
+%}
 
 DECLARE
 %{
-  FILE *hfile;                    /* Neutron input file handle */
+FILE *hfile;                    /* Neutron input file handle */
 
-  double to_mcstas[8];
-  double from_mcstas[8];
-  unsigned int ntrk;
-  unsigned int nhis;
-  unsigned int counter;
+double to_mcstas[8];
+double from_mcstas[8];
+unsigned int ntrk;
+unsigned int nhis;
+unsigned int counter;
 %}
 
 INITIALIZE
 %{
-  ntrk = 0;
-  nhis = 0;
-  counter = 0;
+ntrk = 0;
+nhis = 0;
+counter = 0;
 
 
-  char  exit_flag=0;  /* set to 1 if end of simulation */
-  long   filesize  =0;
+char  exit_flag=0;  /* set to 1 if end of simulation */
+long   filesize  =0;
 
-  struct stat stfile;
-  /* Open neutron input file. */
-  /* (If empty filename given, present warning in case of verbose, perform nothing) */
+struct stat stfile;
+/* Open neutron input file. */
+/* (If empty filename given, present warning in case of verbose, perform nothing) */
 
   if (strcmp(file,"rssa")) {
     printf("MCNP_input: %s. Given filename is %s, please rename to 'rssa' and rerun!\n", NAME_CURRENT_COMP, file);
@@ -124,13 +122,13 @@ INITIALIZE
 	fprintf(stderr, "MCNP_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
       } else if (verbose)
       printf("MCNP_input: %s: opening MCNP SSW file '%s' )\n", NAME_CURRENT_COMP, file);
-  
+
     readheader_(&ntrk,&nhis);
     if (verbose) printf("Number of histories in input MCNP SSW file: %d \n ", nhis);
     if (verbose) printf("Number of tracks in input MCNP SSW file: %d \n ", ntrk);
     if (verbose) printf("Analysing MCNP file %s (", file);
     if (verbose) printf(")\n");
-    
+
   } /* non-empty filename */
 
 %}
@@ -157,7 +155,7 @@ TRACE
 
     if ( counter >= (nhis-1) ) {
       result_read=EOF;
-      exit_flag = 1; 
+      exit_flag = 1;
     }
     counter++;
 
@@ -183,4 +181,3 @@ MCDISPLAY
 %}
 
 END
-

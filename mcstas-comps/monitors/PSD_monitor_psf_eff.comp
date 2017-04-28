@@ -11,9 +11,7 @@
 * Written by: Kim Lefmann, Linda Udby
 * Date: Feb 3, 1998
 * Updated: Oct 15, 2007 (with psf)
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Position-sensitive monitor.
 *
@@ -21,31 +19,30 @@
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector. Models 1/k behaviour and efficiency, based on user defined k0 and eff parameters.
 *
-* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-            nx=90, ny=90, filename="Output.psd")
+* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
-* psf:      Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf (m)
-* k0: Numerator in k0/k weighting (AA^-1)
-* eff: Detector efficiency (1)
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* xwidth: [m]           Width/diameter of detector (x). Overrides xmin, xmax 
+* yheight: [m]          Height of detector (y). Overrides ymin, ymax 
+* nx: [1]               Number of pixel columns 
+* ny: [1]               Number of pixel rows 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* psf: [m]              Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf 
+* k0: Numerator in k0/k weighting [AA^-1]
+* eff: [1]              Detector efficiency 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -57,18 +54,18 @@ SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, psf=0, 
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, weight)
 
 DECLARE
-  %{
-    double PSD_N[nx][ny];
-    double PSD_p[nx][ny];
-    double PSD_p2[nx][ny];
-    double weight;
-  %}
+%{
+double PSD_N[nx][ny];
+double PSD_p[nx][ny];
+double PSD_p2[nx][ny];
+double weight;
+%}
 
 INITIALIZE
-  %{
-    int i,j;
+%{
+int i,j;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
@@ -93,7 +90,7 @@ TRACE
     double xp,yp;
 
     PROP_Z0;
-    
+
     xp = x + psf*randnorm();
     yp = y + psf*randnorm();
 

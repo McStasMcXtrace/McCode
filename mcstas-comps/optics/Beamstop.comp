@@ -11,9 +11,7 @@
 *
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Release: McStas 1.6
 * Origin: Risoe
-* Version: $Revision$
 *
 * Rectangular/circular beam stop.
 *
@@ -30,13 +28,13 @@
 *
 * INPUT PARAMETERS
 *
-* radius: radius of the beam stop in the z=0 plane, centered at Origo (m)
-* xmin:   Lower x bound (m)
-* xmax:   Upper x bound (m)
-* ymin:   Lower y bound (m)
-* ymax:   Upper y bound (m)
-* xwidth: Width of beamstop (x). Overrides xmin,xmax. (m)
-* yheight:Height of beamstop (y). Overrides ymin,ymax. (m)
+* radius: [m]   radius of the beam stop in the z=0 plane, centered at Origo 
+* xmin: [m]     Lower x bound 
+* xmax: [m]     Upper x bound 
+* ymin: [m]     Lower y bound 
+* ymax: [m]     Upper y bound 
+* xwidth: [m]   Width of beamstop (x). Overrides xmin, xmax. 
+* yheight: [m]  Height of beamstop (y). Overrides ymin, ymax. 
 *
 * %END
 *******************************************************************************/
@@ -44,15 +42,15 @@
 DEFINE COMPONENT Beamstop
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-  xwidth=0, yheight=0, radius=0)
+xwidth=0, yheight=0, radius=0)
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 INITIALIZE
 %{
-  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
-  
+
   if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0 && radius == 0)
   { fprintf(stderr,"Beamstop: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
 %}

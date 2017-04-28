@@ -10,9 +10,7 @@
 * %I
 * Written by: Erik Bergbäck Knudsen (erkn@fysik.dtu.dk)
 * Date: June 2012
-* Version: $Revision$
 * Origin: DTU Physics
-* Release: McStas 2.0
 * 
 * Polarising bender.
 *
@@ -29,46 +27,46 @@
 *
 * INPUT PARAMETERS:
 *
-* xwidth:       Width at the guide entry (m)
-* yheight:      Height at the guide entry (m)
-* length:       length of guide along center (m)
-* radius:       curvature of a single plate/polarizer (+:curve left/-:right) (m) 
-* entry_radius: radius of the entrance window (option to xwidth)
-* nslits:       Number of slits (1)
-* d_substrate:  thickness of the glass substrate
-* channel_file: File name of file containing channel data. such as spacer widths etc. (see above)
-* reflect_file: File name of file containing reflectivity data parametrized either by q or m.
-* sigma_abs:    Absorption per unit cell at v=2200 m/s of spacers. Defaults to Al. (barn)
-* V0:           Volume of unit cell for spacers. Defaults to Al. (AA^3)
-* nspacer:      number of spacers per channel
-* debug:        if debug > 0 print out some internal parameters (1)
+* xwidth: [m]        Width at the guide entry 
+* yheight: [m]       Height at the guide entry 
+* length: [m]        length of guide along center 
+* radius: [m]        curvature of a single plate/polarizer (+:curve left/-:right) 
+* entry_radius: []   radius of the entrance window (option to xwidth)
+* nslits: [1]        Number of slits 
+* d_substrate: []    thickness of the glass substrate
+* channel_file: []   File name of file containing channel data. such as spacer widths etc. (see above)
+* reflect_file: []   File name of file containing reflectivity data parametrized either by q or m.
+* sigma_abs: [barn]  Absorption per unit cell at v=2200 m/s of spacers. Defaults to Al. 
+* V0: []             Volume of unit cell for spacers. Defaults to Al. (AA^3)
+* nspacer: []        number of spacers per channel
+* debug: [1]         if debug > 0 print out some internal parameters 
 *
 *
 * %L
 *
 * %E
-*/
+****************************************************************************/
 DEFINE COMPONENT Pol_bender_tapering
 DEFINITION PARAMETERS (string channel_file="channel.dat")
 SETTING PARAMETERS (xwidth=0, yheight, length, d_substrate, entry_radius=10, radius=100, G=9.8, int nslit=1, int debug=1,
-    string reflect_file=NULL, int drawOption=1, sigma_abs=0.231, V0=66.4, nspacer=5)
+string reflect_file=NULL, int drawOption=1, sigma_abs=0.231, V0=66.4, nspacer=5)
 OUTPUT PARAMETERS (prms)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "pol-lib"
-  %include "ref-lib"
-  %include "read_table-lib"
+%include "pol-lib"
+%include "ref-lib"
+%include "read_table-lib"
 #ifndef pol_reflect_spin_h
 #define pol_reflect_spin_h 1
 
 /***************************************************************************
- * Calculate new spin vector after reflection in a surface with reflectivities 
- * Rup and Rdown referring to the direction of the vector (mx,my,mz)
+* Calculate new spin vector after reflection in a surface with reflectivities
+* Rup and Rdown referring to the direction of the vector (mx,my,mz)
  * m is assumed to have unit length, - if zero the default m=(0,1,0) is used.
  * returns the fraction of intensity thus reflected (if Rup+Rdown<1) 
- *****************************************************************/
+ **************************************************************************/
 double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, double *sz, double mx, double my, double mz){
   double pm,ps1,ps2,pin;
   double s1x,s1y,s1z,s2x,s2y,s2z;

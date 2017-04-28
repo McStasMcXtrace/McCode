@@ -10,9 +10,7 @@
 * %I
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
-* Version: $Revision$
 * Origin: RISOE
-* Release: McStas 1.10
 *
 * Magnetic field component.
 *
@@ -48,7 +46,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* magnet_comp_stop: [no quotes] name of the component indicating start of the magnet volume.
+* magnet_comp_stop: [no quotes]  name of the component indicating start of the magnet volume.
 *
 * %E
 ****************************************************************************/
@@ -57,17 +55,17 @@ DEFINE COMPONENT Pol_simpleBfield_stop
 DEFINITION PARAMETERS (magnet_comp_stop)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "pol-lib"
+%include "pol-lib"
 %}
 
 TRACE
 %{
-  PROP_Z0;
-  mcmagnet_pop();
+PROP_Z0;
+mcmagnet_pop();
 %}
 
 END

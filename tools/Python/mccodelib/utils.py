@@ -5,7 +5,9 @@ import re
 import os
 import subprocess
 
-
+'''
+Component parser used by initial versions of mcgui. (More recent implementations exist.)
+'''
 class ComponentParInfo(object):
     ''' Component parameter info, used as ComponentParser.pars '''
     def __init__(self, par_info=None):
@@ -255,7 +257,7 @@ Utility functions related to mccode file handling.
 '''
 
 '''
-Utility functions for parsing an instrument file
+Utility functions for parsing instrument and component files.
 '''
 def read_header(file):
     '''
@@ -272,18 +274,24 @@ def read_header(file):
         if not re.match('[ ]*\*', l):
             if not re.match('[ ]*\/\*', l):
                 break
-        elif re.search('[ ]*\*\*', l):
+        elif re.search('[ ]*\*\*\*\*', l):
             break
     return ''.join(lines)
 
-class InstrHeaderInfo:
+class InstrCompHeaderInfo:
     field_cols = ['name', 'author', 'date', 'origin', 'site', 'short_description', 'description', 'test']
     lst_cols = ['params', 'params_docs', 'links']
     def __init__(self):
-        # legit info
         self.name = ''
-        self.params = []
         self.filepath = ''
+        # instr params
+        self.params = []
+        # comp params
+        self.setparams = []
+        self.defparams = []
+        self.outparams = []
+        # comp category
+        self.category = ''
         # doc info
         self.author = ''
         self.date = ''
@@ -296,15 +304,15 @@ class InstrHeaderInfo:
         self.links = []
     @staticmethod
     def __len__():
-        return len(InstrHeaderInfo.field_cols) + len(InstrHeaderInfo.lst_cols)
+        return len(InstrCompHeaderInfo.field_cols) + len(InstrCompHeaderInfo.lst_cols)
     @staticmethod
     def colname(idx):
         if idx >= 0 and idx <= 7:
-            return InstrHeaderInfo.field_cols[idx]
+            return InstrCompHeaderInfo.field_cols[idx]
         elif idx >= 8 and idx <= 10:
-            return InstrHeaderInfo.lst_cols[idx-8]
+            return InstrCompHeaderInfo.lst_cols[idx-8]
         else:
-            raise Exception("InstrHeaderInfo.colname: invalid index")
+            raise Exception("InstrCompHeaderInfo.colname: invalid index")
     def __getitem__(self, idx):
         if idx == 0: return self.name
         elif idx == 1: return self.author
@@ -318,7 +326,7 @@ class InstrHeaderInfo:
         elif idx == 9: return self.params_docs
         elif idx == 10: return self.links
         else:
-            raise Exception("InstrHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
+            raise Exception("InstrCompHeaderInfo.__getitem__: idx must be in range(%s)." % str(len(self)))
     def __setitem__(self, idx, value):
         if idx == 0: self.name = value
         elif idx == 1: self.author = value
@@ -332,16 +340,16 @@ class InstrHeaderInfo:
         elif idx == 9: self.params_docs = value
         elif idx == 10: self.links = value
         else:
-            raise Exception("InstrHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
+            raise Exception("InstrCompHeaderInfo.__setitem__: idx must be in range(%s)." % str(len(self)))
     def __str__(self):
         lst = [self.name, self.author, self.date, self.origin, self.site, self.short_descr, self.description, self.test]
         lst2 = [' '.join(d) for d in self.params_docs]
         lst3 = [' '.join([str(c) for c in p]) for p in self.params]
         lst4 = [l for l in self.links]
         return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3) + '\n\n- links:\n' + '\n'.join(lst4)
-    
-def parse_instr_header(text):
-    ''' Parses the header of an instrument file: LEGACY version. '''
+
+def parse_header(text):
+    ''' Parses the header of an instrument or component file: LEGACY version. '''
     # get rid of stars and empty padding lines
     lines = text.splitlines()
     new_lines = []
@@ -370,7 +378,7 @@ def parse_instr_header(text):
     # cut header into some sections
     bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
     bites.append(text[lst[4]:])
-    info = InstrHeaderInfo()
+    info = InstrCompHeaderInfo()
     
     # get author, date, origin, revision
     m1 = re.search('Written by:([^\n]*)\n', bites[0])
@@ -386,7 +394,18 @@ def parse_instr_header(text):
     if m4: info.version = m4.group(1).strip()
     
     m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
-    if m5: info.short_descr = m5.group(1).strip()
+    if m5:
+        info.short_descr = m5.group(1).strip()
+    else:
+        # component files dont have %INSTRUMENT_SITE tag, this is an alternative
+        m6 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+        if m6:
+            # remove all "Modified by" lines
+            nomodby = [] 
+            for l in m6.group(1).strip().splitlines():
+                if not re.match('Modified by:', l, flags=re.DOTALL):
+                    nomodby.append(l)
+            info.short_descr = '\n'.join(nomodby).strip()
     
     # description
     descr = bites[1]
@@ -403,7 +422,7 @@ def parse_instr_header(text):
     # params
     par_doc = None
     for l in bites[3].splitlines():
-        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^]+)\](.*)', l)
+        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]+)\][ \t]*(.*)', l)
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
@@ -437,9 +456,89 @@ def read_define_instr(file):
     
     return ' '.join(lines)
 
+def read_define_comp(file):
+    ''' appends all read lines to return list '''
+    end_conds = ('SHARE', 'DECLARE', 'INITIALIZE', 'TRACE')
+    
+    lines = []
+    
+    # get to DEFINE COMPONENT statement
+    for l in file:
+        lines.append(l.strip())
+        if not re.match('DEFINE[ \t]+COMPONENT[ \t]+', l):
+            continue
+        else:
+            break
+    
+    for l in file:
+        m = re.match('[ ]*(\w+)', l)
+        lines.append(l.strip())
+        if m and m.group(1) in end_conds:
+            break
+    
+    # look for closing 
+    if not re.search('\)', lines[-1]):
+        for l in file:
+            lines.append(l.strip())
+            if re.search('\)', l):
+                break
+    
+    return '\n'.join(lines)
+
+def get_comp_category(filepath):
+    ''' extract first folder name from file path '''
+    head = os.path.split(filepath)[0]
+    firstdir = os.path.split(head)[1]
+    return firstdir
+
+def parse_define_comp(text):
+    text = text.replace('\n', ' ')
+    
+    name = re.search('DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
+    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    defpar = []
+    if m:
+        defpar = parse_params(m.group(1))
+    m = re.search('SETTING[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    setpar = []
+    if m:
+        setpar = parse_params(m.group(1))
+    m = re.search('OUTPUT[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    outpar = []
+    if m:
+        outpar = parse_params(m.group(1))
+    
+    return (name, defpar, setpar, outpar)
+
+def parse_params(params_line):
+    ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
+    params = []
+    # p = (type, name, defvalue)
+    parts = [s.strip() for s in params_line.split(',')]
+    for part in parts:
+        tpe = None
+        dval = None
+        name = None
+        if re.match('string', part):
+            tpe = 'string'
+            part = part.replace('string', '').strip()
+        if re.match('int', part):
+            tpe = 'int'
+            part = part.replace('int', '').strip()
+        if re.search('=', part):
+            dval = part.split('=')[1].strip()
+            name = part.replace('=', '')
+            name = name.replace(dval, '').strip()
+        else:
+            name = part.strip()
+        if name is not None:
+            params.append((tpe, name, dval))
+    return params
+
 def parse_define_instr(text):
     '''
-    Parses a DEFINE INSTRUMENT statement from an instrument file. Not robust to "junk" in the input string.
+    Parses a DEFINE INSTRUMENT statement from an instrument file.
+    Not robust to "junk" in the input string.
     '''
     try:
         m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
@@ -447,30 +546,6 @@ def parse_define_instr(text):
         params = m.group(2).replace('\n', '').strip()
     except:
         return '', []
-    
-    def parse_params(params_line):
-        ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
-        params = []
-        # p = (type, name, defvalue)
-        parts = [s.strip() for s in params_line.split(',')]
-        for part in parts:
-            tpe = None
-            dval = None
-            name = None
-            if re.match('string', part):
-                tpe = 'string'
-                part = part.replace('string', '').strip()
-            if re.match('int', part):
-                tpe = 'int'
-                part = part.replace('int', '').strip()
-            if re.search('=', part):
-                dval = part.split('=')[1].strip()
-                name = part.replace('=', '')
-                name = name.replace(dval, '').strip()
-            if name is not None:
-                params.append((tpe, name, dval))
-        return params
-    
     return name, parse_params(params)
 
 def read_declare(file):

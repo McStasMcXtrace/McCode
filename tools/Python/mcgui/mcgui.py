@@ -393,6 +393,10 @@ class McGuiState(QtCore.QObject):
         if simtrace == 1 and not os.name == 'nt':
             runstr = runstr + ' &'
 
+        # Add prefix 'start' to background on Windows systems
+        if os.name == 'nt':
+            runtstr = 'start ' + runstr
+            
         # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
         

@@ -4,11 +4,8 @@
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Version: $Revision$
 * - Adjusted time intervals to be considered for sampling time  August 18,    2010
-* Version: $Revision$
 * - reworked and fixed sample_t=0 option                        September 24, 2010
-* Version: $Revision$
 * - added analog sampling of energy for sample_E=0              October 15,   2010
 *   the former sample_E=0 moved to sample_E=1 (uniform in energy)
 *   the former sample_E=1 moved to sample_E=2 (uniform in wavelength)
@@ -55,47 +52,47 @@
 *
 * %P
 * Input parameters:
-* filename:   Filename of source data 
-* xwidth:  (m)   width of moderator (default 0.1 m)
-* yheight: (m)   height of moderator (default 0.12 m)
-* dist:   (m)   Distance from source to the focusing rectangle (no default)
-* focus_xw:     (m)   Width of focusing rectangle (no default)
-* focus_yh:     (m)   Height of focusing rectangle (no default)
-* Emin: (meV)   minimum energy of neutrons (default 0.01 meV)
-* Emax: (meV)   maximum energy of neutrons (default 1e5 meV)
-* tinmin:(us)   minimum time of neutrons (default 0 us)
-* tinmax:(us)   maximum time of neutrons (default 2000 us)
-* sample_E:     sample energy from:  (default 0)
+* filename: []    Filename of source data
+* xwidth: [m]     width of moderator (default 0.1 m)
+* yheight: [m]    height of moderator (default 0.12 m)
+* dist: [m]       Distance from source to the focusing rectangle (no default)
+* focus_xw: [m]   Width of focusing rectangle (no default)
+* focus_yh: [m]   Height of focusing rectangle (no default)
+* Emin: [meV]     minimum energy of neutrons (default 0.01 meV)
+* Emax: [meV]     maximum energy of neutrons (default 1e5 meV)
+* tinmin: [us]    minimum time of neutrons (default 0 us)
+* tinmax: [us]    maximum time of neutrons (default 2000 us)
+* sample_E: []    sample energy from:  (default 0)
 *               0="probability distribution", 
 *               1="energy range", 
 *               2="lambda range", 
 *               3="log(energy) range"
-* sample_t:     sample t from:  (default 0)
+* sample_t: []    sample t from:  (default 0)
 *               0="probability distribution", 
 *               1="time range"
-* proton_T:(us) proton pulse length  (0 us)
-* p_power: (MW) proton power (default 2 MW)
-* n_pulses:     number of pulses (default 1)
+* proton_T: [us]  proton pulse length  (0 us)
+* p_power: [MW]   proton power (default 2 MW)
+* n_pulses: []    number of pulses (default 1)
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source_analytic
 DEFINITION PARAMETERS (string filename)
-SETTING PARAMETERS (xwidth=0.10, 
-                    yheight=0.12, 
-                    dist, 
-                    focus_xw, 
-                    focus_yh, 
-                    Emin=0.01, 
-                    Emax=1.0e5, 
-                    tinmin=0.0, 
-                    tinmax=2000.0, 
-                    sample_E=0, 
-                    sample_t=0, 
-                    proton_T=0.0, 
-                    p_power=2.0, 
-                    n_pulses=1.0)
+SETTING PARAMETERS (xwidth=0.10,
+yheight=0.12,
+dist,
+focus_xw,
+focus_yh,
+Emin=0.01,
+Emax=1.0e5,
+tinmin=0.0,
+tinmax=2000.0,
+sample_E=0,
+sample_t=0,
+proton_T=0.0,
+p_power=2.0,
+n_pulses=1.0)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in)
 
 SHARE
@@ -103,7 +100,7 @@ SHARE
 /*############################################################################################
 #
 #      slowing-down spectrum and two Maxwellians joined by a modified Wescott function
-# 
+#
 #      I(E) = I*1e12 * exp(-c/sqrt(E))
 #                * ( R1*E/(kT1)**2*exp(-E/kT1) + R2*E/(kT2)**2*exp(-E/kT2)
 #                    + R3*E/(kT3)**2*exp(-(E/kT3)**b) + D(E)*rho(E)/E**(1-a) )

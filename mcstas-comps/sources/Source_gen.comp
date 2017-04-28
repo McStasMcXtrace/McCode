@@ -10,9 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision$
 * Origin: ILL/Risoe
-* Release: McStas CVS_080730
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
@@ -28,10 +26,10 @@
 * parameters.
 *
 * The neutron energy/wavelength is distributed uniformly in wavelength between
-* Emin=E0-dE and Emax=E0+dE or Lmin=lambda0-dlambda and Lmax=lambda0+dlambda. 
+* Emin=E0-dE and Emax=E0+dE or Lmin=lambda0-dlambda and Lmax=lambda0+dlambda.
 * The I1 may be either arbitrary (I1=0), or specified in neutrons per steradian
-* per square cm per Angstrom per s. A Maxwellian spectra may be selected if you 
-* give the source temperatures (up to 3). 
+* per square cm per Angstrom per s. A Maxwellian spectra may be selected if you
+* give the source temperatures (up to 3).
 *
 * Finally, a file with the flux as a
 * function of the wavelength [lambda(AA) flux(n/s/cm^2/st/AA)] may be used
@@ -84,54 +82,41 @@
 * Validated by: K. Lieutenant
 *
 * %P
-* radius: [m]   Radius of circle in (x,y,0) plane where neutrons
-*               are generated. You may also use 'yheight' and 'xwidth' for a square source
-* target_index:(1) relative index of component to focus at, e.g. next is +1
-*                    this is used to compute 'dist' automatically.
-* focus_xw:[m]  Width of target.
-* focus_yh:[m]  Height of target.
+* radius: [m]           Radius of circle in (x,y,0) plane where neutrons are generated. You may also use 'yheight' and 'xwidth' for a square source
+* target_index: [1]     relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* focus_xw: [m]         Width of target.
+* focus_yh: [m]         Height of target.
 *
 * Energy or wavelength range must be defined by giving min and max value or
 * average and spread:
-* Emin:     [meV] Minimum energy of neutrons
-* Emax:     [meV] Maximum energy of neutrons
-* E0:       [meV] Mean energy of neutrons.
-* dE:       [meV] Energy spread of neutrons, half width.
-* Lmin:     [AA]  Minimum wavelength of neutrons
-* Lmax:     [AA]  Maximum wavelength of neutrons
-* lambda0:  [AA]  Mean wavelength of neutrons.
-* dlambda:  [AA]  Wavelength spread of neutrons,half width
+* Emin: [meV]           Minimum energy of neutrons
+* Emax: [meV]           Maximum energy of neutrons
+* E0: [meV]             Mean energy of neutrons.
+* dE: [meV]             Energy spread of neutrons, half width.
+* Lmin: [AA]            Minimum wavelength of neutrons
+* Lmax: [AA]            Maximum wavelength of neutrons
+* lambda0: [AA]         Mean wavelength of neutrons.
+* dlambda: [AA]         Wavelength spread of neutrons,half width
 *
 * Optional parameters:
-* dist:     [m]   Distance to target along z axis.
-* yheight:  [m]   Source y-height, then does not use radius parameter
-* xwidth:   [m]   Source x-width, then does not use radius parameter
-* zdepth:   [m]   Source z-zdepth, not anymore flat
-* focus_aw: (deg) maximal (uniform) horz. width divergence
-* focus_ah: (deg) maximal (uniform) vert. height divergence
-* T1:       [K]   Temperature of the Maxwellian source, 0=none
-* I1:       [1/(cm**2*sr)] Source flux per solid angle, area and Angstrom
-*                 if I1=0, the source emits 1 in 4*PI whole space.
-* T2:       [K]   Second Maxwellian source Temperature, 0=none
-* I2:       [1/(cm**2*sr)] Second Maxwellian Source flux
-* T3:       [K]   Third Maxwellian source Temperature, 0=none
-* I3:       [1/(cm**2*sr)] Third Maxwellian Source flux
-* flux_file:[str] Name of a two columns [lambda flux] text file that contains
-*                 the wavelength distribution of the flux in <b>either</b> [1/(s*cm**2*st)] <b>or</b> [1/(s*cm**2*st*AA)] (see flux_file_perAA flag)
-*                 Comments (#) and further columns are ignored. Format is
-*                 compatible with McStas/PGPLOT wavelength monitor files.
-*                 When specified, temperature and intensity values are ignored.
-* flux_file_perAA:[1] When true (1), indicates that flux file data is already per
-*                 Angstroem. If false, file data is per wavelength bin.
-* flux_file_log:[1]   When true, will transform the flux table in log scale to
-*                 improve the sampling. 
-* xdiv_file:[str] Name of the x-horiz. divergence distribution file, given as a
-*                 free format text matrix, preceeded with a line
-*                   '# xylimits: xmin xmax xdiv_min xdiv_max'
-* ydiv_file:[str] Name of the y-vert. divergence distribution file, given as a
-*                 free format text matrix, preceeded with a line
-*                   '# xylimits: ymin ymax ydiv_min ydiv_max'
-* verbose:  [0/1] display info about the source. -1 unactivate source.
+* dist: [m]             Distance to target along z axis.
+* yheight: [m]          Source y-height, then does not use radius parameter
+* xwidth: [m]           Source x-width, then does not use radius parameter
+* zdepth: [m]           Source z-zdepth, not anymore flat
+* focus_aw: [deg]       maximal (uniform) horz. width divergence
+* focus_ah: [deg]       maximal (uniform) vert. height divergence
+* T1: [K]               Temperature of the Maxwellian source, 0=none
+* I1: [1/(cm**2*sr)]    Source flux per solid angle, area and Angstrom if I1=0, the source emits 1 in 4*PI whole space.
+* T2: [K]               Second Maxwellian source Temperature, 0=none
+* I2: [1/(cm**2*sr)]    Second Maxwellian Source flux
+* T3: [K]               Third Maxwellian source Temperature, 0=none
+* I3: [1/(cm**2*sr)]    Third Maxwellian Source flux
+* flux_file: [str]      Name of a two columns [lambda flux] text file that contains the wavelength distribution of the flux in <b>either</b> [1/(s*cm**2*st)] <b>or</b> [1/(s*cm**2*st*AA)] (see flux_file_perAA flag) Comments (#) and further columns are ignored. Format is compatible with McStas/PGPLOT wavelength monitor files. When specified, temperature and intensity values are ignored.
+* flux_file_perAA: [1]  When true (1), indicates that flux file data is already per Aangstroem. If false, file data is per wavelength bin.
+* flux_file_log: [1]    When true, will transform the flux table in log scale to improve the sampling.
+* xdiv_file: [str]      Name of the x-horiz. divergence distribution file, given as a free format text matrix, preceeded with a line '# xylimits: xmin xmax xdiv_min xdiv_max'
+* ydiv_file: [str]      Name of the y-vert. divergence distribution file, given as a free format text matrix, preceeded with a line '# xylimits: ymin ymax ydiv_min ydiv_max'
+* verbose: [0/1]        display info about the source. -1 unactivate source.
 *
 * %L
 * P. Ageron, Nucl. Inst. Meth. A 284 (1989) 197
@@ -142,13 +127,13 @@
 DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string flux_file="NULL", string xdiv_file="NULL", string ydiv_file="NULL",
-		    radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=0, focus_ah=0,
-                    E0=0, dE=0, lambda0=0, dlambda=0, I1=1,
-                    yheight=0.1, xwidth=0.1, verbose=0, T1=0,
-                    flux_file_perAA=0, flux_file_log=0,
-                    Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,zdepth=0, int target_index=+1)
+radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=0, focus_ah=0,
+E0=0, dE=0, lambda0=0, dlambda=0, I1=1,
+yheight=0.1, xwidth=0.1, verbose=0, T1=0,
+flux_file_perAA=0, flux_file_log=0,
+Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,zdepth=0, int target_index=+1)
 OUTPUT PARAMETERS (p_in, lambda1, lambda2, lambda3, pTable, pTable_x, pTable_y,pTable_xmin, pTable_xmax, pTable_xsum, pTable_ymin, pTable_ymax, pTable_ysum, pTable_dxmin, pTable_dxmax, pTable_dymin, pTable_dymax)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -156,10 +141,10 @@ SHARE
 
 #ifndef SOURCE_GEN_DEF
 #define SOURCE_GEN_DEF
-  /*******************************************************************************
-  * str_dup_numeric: replaces non 'valid name' chars with spaces
-  *******************************************************************************/
-  char *str_dup_numeric(char *orig)
+/*******************************************************************************
+* str_dup_numeric: replaces non 'valid name' chars with spaces
+*******************************************************************************/
+char *str_dup_numeric(char *orig)
   {
     long i;
 
@@ -224,7 +209,7 @@ INITIALIZE
 
 
   double source_area, k;
-  
+
   if (target_index && !dist)
   {
     Coords ToTarget;
@@ -421,7 +406,7 @@ INITIALIZE
   Lmax = lambda0 + dlambda;
 
   /* compute initial weight factor p_in to get [n/s] */
-  if ((I1 > 0  && T1 >= 0) 
+  if ((I1 > 0  && T1 >= 0)
      || (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0")))
   { /* the I1,2,3 are usually in [n/s/cm2/st/AA] */
     if (radius)
@@ -518,11 +503,11 @@ TRACE
     lambda = lambda0+dlambda*randpm1();
     if (lambda <= 0) ABSORB;
     v = K2V*(2*PI/lambda);
-      
+
     if (!focus_ah && !focus_aw) {
       randvec_target_rect_real(&xf, &yf, &rf, &pdir,
        0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
-      
+
       dx = xf-x;
       dy = yf-y;
       rf = sqrt(dx*dx+dy*dy+dist*dist);
@@ -538,7 +523,7 @@ TRACE
       vx *= v; vy *= v; vz *= v;
     }
     p = p_in*pdir;
-    
+
     /* spectral dependency from files or Maxwellians */
     if (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0"))
     {
@@ -562,7 +547,7 @@ TRACE
     }
 
     /* optional x-xdiv and y-ydiv weightening: position=along columns, div=along rows */
-    if (xdiv_file && strlen(xdiv_file) 
+    if (xdiv_file && strlen(xdiv_file)
       && strcmp(xdiv_file,"NULL") && strcmp(xdiv_file,"0") && pTable_xsum > 0) {
       double i,j;
       j = (x-            pTable_xmin) /(pTable_xmax -pTable_xmin) *pTable_x.columns;
@@ -640,8 +625,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-

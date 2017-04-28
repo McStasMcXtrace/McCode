@@ -10,9 +10,7 @@
 * %I
 * Written by: Morten Sales, based on Pol_constBfield by Peter Christiansen
 * Date: 2013
-* Version: $Revision: 0.1 $
 * Origin: Helmholtz-Zentrum Berlin
-* Release: McStas 2.0
 *
 * Constant magnetic field in a isosceles triangular coil
 *
@@ -43,11 +41,11 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:     Width of opening [m]. 
-* yheight:    Height of opening [m]. 
-* zdepth:     zdepth of field [m].
-* B:          Magnetic field along y-direction inside triangle [T]         
-* Bguide:     Magnetic field along y-direction inside entire box [T]         
+* xwidth: [m]   Width of opening 
+* yheight: [m]  Height of opening 
+* zdepth: [m]   zdepth of field 
+* B: [T]        Magnetic field along y-direction inside triangle 
+* Bguide: [T]   Magnetic field along y-direction inside entire box 
 *
 * OUTPUT PARAMETERS:
 *
@@ -57,11 +55,11 @@
 DEFINE COMPONENT Pol_triafield
 SETTING PARAMETERS (xwidth, yheight, zdepth, B=0, Bguide=0)
 OUTPUT PARAMETERS(omegaL, omegaLguide)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
-     
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 SHARE
 %{
-  double IntersectWall(double pos, double vel, double wallpos) {
+double IntersectWall(double pos, double vel, double wallpos) {
     /* Function to calculate where the neutron hit the wall */
 
     if(vel==0)

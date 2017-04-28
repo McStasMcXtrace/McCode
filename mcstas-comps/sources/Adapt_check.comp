@@ -10,9 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Optimization specifier for the Source_adapt component.
 *
@@ -28,8 +26,7 @@
 * Example: Adapt_check(source_comp=MySource)
 *
 * %P
-* source_comp: [no quotes] The name of the Source_adapt component in the
-*                instrument definition.
+* source_comp: [no quotes]  The name of the Source_adapt component in the instrument definition.
 *
 * %E
 *******************************************************************************/
@@ -38,7 +35,7 @@ DEFINE COMPONENT Adapt_check
 DEFINITION PARAMETERS (source_comp)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
@@ -49,8 +46,8 @@ DECLARE
 
 TRACE
 %{
-  double new_v, psi;
-  struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
+double new_v, psi;
+struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
 
   if(p == 0)
     ABSORB;

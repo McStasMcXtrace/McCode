@@ -332,7 +332,7 @@ macro(installMCCODE)
     endforeach()
 
     # Python related batches special handling
-    foreach (name run.bat gui.bat plot-pyqtgraph.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat)
+    foreach (name run.bat gui.bat plot-pyqtgraph.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}

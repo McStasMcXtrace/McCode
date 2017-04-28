@@ -10,9 +10,7 @@
 * %IDENTIFICATION
 * Written by: Erik Knudsen (erkn@fysik.dtu.dk)
 * Date: 8/4-2008
-* Version: $Revision: 0.01 $
 * Origin: Risoe
-* Release: McStas 1.12b
 *
 * Ideal &pi;/2-rotator
 *
@@ -22,12 +20,12 @@
 * The geometry of the component is realized as a box, where the the spin is rotated at the z-midpoint.
 *
 * %PARAMETERS
-* xwidth: width of the component [m]
-* yheight: height of the component [m]
-* zdepth: thickness of the component [m] 
-* rx: x-component of the rotation axis
-* ry: y-component of the rotation axis
-* rz: z-component of the rotation axis
+* xwidth: [m]   width of the component 
+* yheight: [m]  height of the component 
+* zdepth: [m]   thickness of the component 
+* rx: []        x-component of the rotation axis
+* ry: []        y-component of the rotation axis
+* rz: []        z-component of the rotation axis
 *
 * %LINKS
 *
@@ -42,7 +40,7 @@ OUTPUT PARAMETERS()
 SHARE
 %{
 /* Declare structures and functions only once in each instrument. */
-#ifndef PI_2_ROTATOR 
+#ifndef PI_2_ROTATOR
 #define PI_2_ROTATOR 1
 #endif /* !PI_2_ROTATOR */
 %}
@@ -53,7 +51,7 @@ DECLARE
 
 INITIALIZE
 %{
-  double rr=scalar_prod(rx,ry,rz,rx,ry,rz);
+double rr=scalar_prod(rx,ry,rz,rx,ry,rz);
   if (rr!=1){
     rx=rx/sqrt(rr);
     ry=ry/sqrt(rr);

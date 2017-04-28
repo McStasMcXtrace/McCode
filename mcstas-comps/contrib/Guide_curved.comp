@@ -10,9 +10,7 @@
 * %I
 * Written by: Ross Stewart
 * Date: November 18 2003
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
-* Release: McStas 1.8
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * Non-focusing curved neutron guide.
@@ -32,15 +30,15 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      [m]    Width at the guide entry
-* h1:      [m]    Height at the guide entry
-* l:       [m]    length of guide
-* R0:      [1]    Low-angle reflectivity
-* Qc:      [AA-1] Critical scattering vector
-* alpha:   [AA]   Slope of reflectivity
-* m:       [1]    m-value of material. Zero means completely absorbing.
-* W:       [AA-1] Width of supermirror cut-off
-* curvature:[m]    Radius of curvature of the guide
+* w1: [m]         Width at the guide entry
+* h1: [m]         Height at the guide entry
+* l: [m]          length of guide
+* R0: [1]         Low-angle reflectivity
+* Qc: [AA-1]      Critical scattering vector
+* alpha: [AA]     Slope of reflectivity
+* m: [1]          m-value of material. Zero means completely absorbing.
+* W: [AA-1]       Width of supermirror cut-off
+* curvature: [m]  Radius of curvature of the guide
 *
 * %L
 * <a href="../optics/Bender.comp.html">Bender</a>
@@ -51,15 +49,15 @@ DEFINE COMPONENT Guide_curved
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, l, R0=0.995, Qc=0.0218, alpha=4.38, m=2, W=0.003, curvature=2700)
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
-  %include "ref-lib"
+%include "ref-lib"
 %}
 
 INITIALIZE
 %{
-  if (mcgravitation) fprintf(stderr,"WARNING: Guide_curved: %s: "
+if (mcgravitation) fprintf(stderr,"WARNING: Guide_curved: %s: "
     "This component produces wrong results with gravitation !\n"
     "Use Guide_gravity.\n",
     NAME_CURRENT_COMP);

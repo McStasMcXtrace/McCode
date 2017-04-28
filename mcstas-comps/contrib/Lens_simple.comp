@@ -10,8 +10,6 @@
 * %I
 * Written by: Henrich Frielinghaus
 * Date: June 2010
-* Version: 1.0
-* Release: McStas 1.12b
 * Origin: FZ Juelich
 * 
 * Rectangular/circular slit with parabolic/spherical LENS.
@@ -52,17 +50,17 @@
 * %P
 * INPUT PARAMETERS
 *
-* rho:      Scattering length density [m-2]
-* Rc:       Radius (concave: Rc>0) of biconcave lens    [m]
-* Nl:       Number of single lenses [1]
-* parab:    Switch (not 0 -> parabolic, for 0 spherical)
-* radius:   Radius of slit in the z=0 plane, centered at Origin (m)
-* xmin:     Lower x bound (m)
-* xmax:     Upper x bound (m)
-* ymin:     Lower y bound (m)
-* ymax:     Upper y bound (m)
+* rho: [m-2]   Scattering length density 
+* Rc: [m]      Radius (concave: Rc>0) of biconcave lens    
+* Nl: [1]      Number of single lenses 
+* parab: []    Switch (not 0 -> parabolic, for 0 spherical)
+* radius: [m]  Radius of slit in the z=0 plane, centered at Origin 
+* xmin: [m]    Lower x bound 
+* xmax: [m]    Upper x bound 
+* ymin: [m]    Lower y bound 
+* ymax: [m]    Upper y bound 
 * SigmaAL:  Absorption cross section per lambda (wavelength) [1/(m*AA)]
-* d0:       Minimum thickness in the centre of the lens [m]
+* d0: [m]      Minimum thickness in the centre of the lens 
 *
 * %E
 *******************************************************************************/
@@ -71,13 +69,13 @@
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (rho=5.16e14, Rc=0.02, Nl=7.0, parab=1.1,
-                    xmin=0, xmax=0, ymin=0, ymax=0, radius=0,
-                    SigmaAL=0.141, d0=0.002)
+xmin=0, xmax=0, ymin=0, ymax=0, radius=0,
+SigmaAL=0.141, d0=0.002)
 //  (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 INITIALIZE
 %{
- if (  (xmin >= xmax || ymin >= ymax) && radius == 0)
+if (  (xmin >= xmax || ymin >= ymax) && radius == 0)
     { fprintf(stderr,"Lens_simple: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
 %}
 

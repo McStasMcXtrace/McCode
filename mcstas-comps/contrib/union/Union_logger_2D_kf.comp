@@ -6,7 +6,6 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * A sample component to separate geometry and phsysics
@@ -46,18 +45,18 @@
 * %P
 * INPUT PARAMETERS:
 * // To be changed to kf instead of Q
-* Q_direction_1:   [string] kf direction for first axis ("x", "y" or "z")
-* Q1_max:          [1] histogram boundery, max kf value for first axis
-* Q1_min:          [1] histogram boundery, min kf value for first axis
-* n1:              [1] number of bins for first axis
-* Q_direction_2:   [string] kf direction for second axis ("x", "y" or "z")
-* Q2_max:          [1] histogram boundery, max kf value for second axis
-* Q2_min:          [1] histogram boundery, min kf value for second axis
-* n2:              [1] number of bins for second axis
-* target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
-* target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
-* order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
-* order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
+* Q_direction_1: [string]    kf direction for first axis ("x", "y" or "z")
+* Q1_max: [1]                histogram boundery, max kf value for first axis
+* Q1_min: [1]                histogram boundery, min kf value for first axis
+* n1: [1]                    number of bins for first axis
+* Q_direction_2: [string]    kf direction for second axis ("x", "y" or "z")
+* Q2_max: [1]                histogram boundery, max kf value for second axis
+* Q2_min: [1]                histogram boundery, min kf value for second axis
+* n2: [1]                    number of bins for second axis
+* target_geometry: [string]  Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* target_process: [string]   Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
+* order_total: [1]           Only log rays that scatter for the n'th time, 0 for all orders
+* order_volume: [1]          Only log rays that scatter for the n'th time in the same geometry
 * order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
 * logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 *
@@ -89,25 +88,25 @@ SHARE
 #endif
 
 struct temp_2D_kf_data_element_struct {
- int index_1;
- int index_2;
- double weight;
+int index_1;
+int index_2;
+double weight;
 };
 
 struct temp_2D_kf_data_struct {
-  int num_elements;
-  int allocated_elements;
-  struct temp_2D_kf_data_element_struct *elements;
+int num_elements;
+int allocated_elements;
+struct temp_2D_kf_data_element_struct *elements;
 };
 
 struct a_2D_kf_storage_struct {
-  struct Detector_2D_struct Detector_2D;
-  struct temp_2D_kf_data_struct temp_2D_kf_data;
-  int dim_1_choice;
-  int dim_2_choice;
-  int order;
-  int order_in_this_volume;
-  int order_process_in_this_volume;
+struct Detector_2D_struct Detector_2D;
+struct temp_2D_kf_data_struct temp_2D_kf_data;
+int dim_1_choice;
+int dim_2_choice;
+int order;
+int order_in_this_volume;
+int order_process_in_this_volume;
 };
 
 // record_to_temp

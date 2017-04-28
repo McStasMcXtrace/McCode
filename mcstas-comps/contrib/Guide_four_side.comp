@@ -7,8 +7,6 @@
 * %I
 * Written by: Tobias Panzner
 * Date: 07/08/2010
-* Version: $Revision: 1.1 $
-* Release: McStas 1.9
 * Origin: PSI
 *
 * Guide with four side walls
@@ -65,34 +63,34 @@
 *
 * GENERAL PARAMETERS (VALID FOR ALL SIDES):
 *
-* l:       [m]    length of guide (DEFAULT = 0)
+* l: [m]            length of guide (DEFAULT = 0)
 *
-* R0:      [1]    Low-angle reflectivity (DEFAULT = 0.99)
+* R0: [1]           Low-angle reflectivity (DEFAULT = 0.99)
 *
 * THE INNER WALLS OF THE INLAY ARE DEFINED BY:
 *
-* w1r:     [m]    Width at the right guide entry   (negative x-axis)
+* w1r: [m]          Width at the right guide entry   (negative x-axis)
 *                 (DEFAULT = 0)
 *
-* w2r:     [m]    Width at the right guide exit    (negative x-axis)
+* w2r: [m]          Width at the right guide exit    (negative x-axis)
 *                 (DEFAULT = 0)
 *
-* w1l:     [m]    Width at the left guide entry    (positive x-axis)
+* w1l: [m]          Width at the left guide entry    (positive x-axis)
 *                 (DEFAULT = 0)
 *
-* w2l:     [m]    Width at the left guide exit     (positive x-axis)
+* w2l: [m]          Width at the left guide exit     (positive x-axis)
 *                 (DEFAULT = 0)
 *
-* h1d:     [m]    Height at the bottom guide entry (negative y-axis)
+* h1d: [m]          Height at the bottom guide entry (negative y-axis)
 *                 (DEFAULT = 0)
 *
-* h2d:     [m]    Height at the bottom guide entry (negative y-axis)
+* h2d: [m]          Height at the bottom guide entry (negative y-axis)
 *                 (DEFAULT = 0)
 *
-* h1u:     [m]    Height at the top guide entry    (positive y-axis)
+* h1u: [m]          Height at the top guide entry    (positive y-axis)
 *                 (DEFAULT = 0)
 *
-* h2u:     [m]    Height at the top guide entry    (positive y-axis)
+* h2u: [m]          Height at the top guide entry    (positive y-axis)
 *                 (DEFAULT = 0)
 *
 * linwr     [m]   right horizontal wall: distance of 1st focal point
@@ -119,72 +117,72 @@
 * louthu   [m]    upper vertical wall: distance of 2nd focal point
 *                 and guide exit (DEFAULT = 0)
 *
-* RIreflect: (str)  Name of relfectivity file for the right inner wall.
+* RIreflect: [str]  Name of relfectivity file for the right inner wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
 *
-* LIreflect: (str)  Name of relfectivity file for the left inner wall.
+* LIreflect: [str]  Name of relfectivity file for the left inner wall.
 *                   Format [q(Angs-1) R(0-1)]   (DEFAULT : no file)
 * 
-* DIreflect: (str)  Name of relfectivity file for the bottom inner wall.
+* DIreflect: [str]  Name of relfectivity file for the bottom inner wall.
 *                   Format [q(Angs-1) R(0-1)] (DEFAULT : no file)
 *
-* UIreflect: (str)  Name of relfectivity file for the top inner wall. 
+* UIreflect: [str]  Name of relfectivity file for the top inner wall.
 *                   Format [q(Angs-1) R(0-1)]    (DEFAULT : no file)
 *
-* Qcxr:    [AA-1] Critical scattering vector for right vertical
+* Qcxr: [AA-1]      Critical scattering vector for right vertical
 *                 inner wall (DEFAULT = 0.0217)
 *
-* Qcxl:    [AA-1] Critical scattering vector for left vertical
+* Qcxl: [AA-1]      Critical scattering vector for left vertical
 *                 inner wall (DEFAULT = 0.0217)
 *
-* Qcyd:    [AA-1] Critical scattering vector for bottom inner wall
+* Qcyd: [AA-1]      Critical scattering vector for bottom inner wall
 *                 (DEFAULT = 0.0217)
 *
-* Qcyu:    [AA-1] Critical scattering vector for top inner wall
+* Qcyu: [AA-1]      Critical scattering vector for top inner wall
 *                 (DEFAULT = 0.0217)
 *
-* alphaxr: [AA]   Slope of reflectivity for right vertical
+* alphaxr: [AA]     Slope of reflectivity for right vertical
 *                 inner wall (DEFAULT = 6.07)
 *
-* alphaxl: [AA]   Slope of reflectivity for left vertical
+* alphaxl: [AA]     Slope of reflectivity for left vertical
 *                 inner wall (DEFAULT = 6.07)
 *
-* alphayd: [AA]   Slope of reflectivity for bottom inner wall
+* alphayd: [AA]     Slope of reflectivity for bottom inner wall
 *                 (DEFAULT = 6.07)
 *
-* alphayu: [AA]   Slope of reflectivity for top inner wall
+* alphayu: [AA]     Slope of reflectivity for top inner wall
 *                 (DEFAULT = 6.07)
 *
-* mxr:     [1]    m-value of material for right vertical inner wall.
+* mxr: [1]          m-value of material for right vertical inner wall.
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* mxl:     [1]    m-value of material for left vertical inner wall.
+* mxl: [1]          m-value of material for left vertical inner wall.
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* myd:     [1]    m-value of material for bottom inner wall
+* myd: [1]          m-value of material for bottom inner wall
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* myu:     [1]    m-value of material for top inner wall
+* myu: [1]          m-value of material for top inner wall
 *                  0 means the wall is absorbing.
 *		  -1 means the wall is transparent.
 *                 (DEFAULT = 3.6)
 *
-* Wxr:       [AA-1] Width of supermirror cut-off for right inner wall
+* Wxr: [AA-1]       Width of supermirror cut-off for right inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wxl:       [AA-1] Width of supermirror cut-off for left inner wall
+* Wxl: [AA-1]       Width of supermirror cut-off for left inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wyu:       [AA-1] Width of supermirror cut-off for top inner wall
+* Wyu: [AA-1]       Width of supermirror cut-off for top inner wall
 *                   (DEFAULT = 0.003)
 *
-* Wyd:       [AA-1] Width of supermirror cut-off for bottom inner wall
+* Wyd: [AA-1]       Width of supermirror cut-off for bottom inner wall
 *                   (DEFAULT = 0.003)
 *
 * rwallthick: [m]   thickness of the right wall (DEFAULT = 0.001 m)
@@ -197,28 +195,28 @@
 *
 *   THE OUTER WALLS OF THE INLAY ARE DEFINED BY: 
 *
-* ROreflect: (str)  Name of relfectivity file for the right outer wall.
+* ROreflect: [str]  Name of relfectivity file for the right outer wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
 *
-* LOreflect: (str)  Name of relfectivity file for the left outer wall.
+* LOreflect: [str]  Name of relfectivity file for the left outer wall.
 *                   Format [q(Angs-1) R(0-1)]   (DEFAULT : no file)
 * 
-* DOreflect: (str)  Name of relfectivity file for the bottom outer wall.
+* DOreflect: [str]  Name of relfectivity file for the bottom outer wall.
 *                   Format [q(Angs-1) R(0-1)] (DEFAULT : no file)
 *
-* UOreflect: (str)  Name of relfectivity file for the top outer wall.
+* UOreflect: [str]  Name of relfectivity file for the top outer wall.
 *                   Format [q(Angs-1) R(0-1)]    (DEFAULT : no file)
 *
-* QcxrOW:    [AA-1] Critical scattering vector for right vertical
+* QcxrOW: [AA-1]    Critical scattering vector for right vertical
 *                   outer wall (DEFAULT = 0.0217)
 *
-* QcxlOW:    [AA-1] Critical scattering vector for left vertical
+* QcxlOW: [AA-1]    Critical scattering vector for left vertical
 *                   outer wall (DEFAULT = 0.0217)
 *
-* QcydOW:    [AA-1] Critical scattering vector for bottom outer wall
+* QcydOW: [AA-1]    Critical scattering vector for bottom outer wall
 *                   (DEFAULT = 0.0217)
 *
-* QcyuOW:    [AA-1] Critical scattering vector for top outer wall
+* QcyuOW: [AA-1]    Critical scattering vector for top outer wall
 *                   (DEFAULT = 0.0217)
 *
 * alphaxrOW: [AA]   Slope of reflectivity for right vertical
@@ -233,36 +231,36 @@
 * alphayuOW: [AA]   Slope of reflectivity for top outer wall
 *                   (DEFAULT = 6.07)
 *
-* mxrOW:     [1]   m-value of material for right vertical outer wall
+* mxrOW: [1]        m-value of material for right vertical outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* mxlOW:     [1]   m-value of material for left vertical outer wall
+* mxlOW: [1]        m-value of material for left vertical outer wall
 *                  0 means the wall is absorbing.(DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* mydOW:     [1]   m-value of material for bottom outer wall
+* mydOW: [1]        m-value of material for bottom outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* myuOW:     [1]   m-value of material for top outer wall
+* myuOW: [1]        m-value of material for top outer wall
 *                  0 means the wall is absorbing. (DEFAULT)
 *		  -1 means the wall is transparent.
 *                  (DEFAULT = 0)
 *
-* WxrOW:       [AA-1] Width of supermirror cut-off for right outer wall
+* WxrOW: [AA-1]     Width of supermirror cut-off for right outer wall
 *                     (DEFAULT = 0.003)
 *
-* WxlOW:       [AA-1] Width of supermirror cut-off for left outer wall
+* WxlOW: [AA-1]     Width of supermirror cut-off for left outer wall
 *                     (DEFAULT = 0.003)
 *
-* WyuOW:       [AA-1] Width of supermirror cut-off for top outer wall
+* WyuOW: [AA-1]     Width of supermirror cut-off for top outer wall
 *                     (DEFAULT = 0.003)
 *
-* WydOW:       [AA-1] Width of supermirror cut-off for bottom outer wall
+* WydOW: [AA-1]     Width of supermirror cut-off for bottom outer wall
 *                     (DEFAULT = 0.003)
 *
 *
@@ -273,58 +271,58 @@
 DEFINE COMPONENT Guide_four_side
 DEFINITION PARAMETERS(string RIreflect=0, LIreflect=0, UIreflect=0, DIreflect=0, ROreflect=0, LOreflect=0, UOreflect=0, DOreflect=0)
 SETTING PARAMETERS (w1l=0.002,w2l=0.002,linwl=0,loutwl=0,
-                    w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
-                    h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
-                    h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
-                    l=0, R0=0.99,
-                    Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
-                    alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
-                    Wxr=0.003,Wxl=0.003,Wyu=0.003,Wyd=0.003,
-                    mxr=3.6, mxl=3.6, myu=3.6, myd=3.6,
-                    QcxrOW=0.0217,QcxlOW=0.0217,QcyuOW=0.0217, QcydOW=0.0217,
-                    alphaxlOW=6.07, alphaxrOW=6.07, alphayuOW=6.07, alphaydOW=6.07,
-                    WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
-                    mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
-		    rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001)
+w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
+h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
+h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
+l=0, R0=0.99,
+Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
+alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
+Wxr=0.003,Wxl=0.003,Wyu=0.003,Wyd=0.003,
+mxr=3.6, mxl=3.6, myu=3.6, myd=3.6,
+QcxrOW=0.0217,QcxlOW=0.0217,QcyuOW=0.0217, QcydOW=0.0217,
+alphaxlOW=6.07, alphaxrOW=6.07, alphayuOW=6.07, alphaydOW=6.07,
+WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
+mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
+rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001)
 
 OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
-                  pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
-                  awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
-                  awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
-                  pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
-                  t1,t2w1r,t2w1l,t2h1u,t2h1d,
-                  t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
+pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
+awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
+awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
+pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
+t1,t2w1r,t2w1l,t2h1u,t2h1d,
+t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
 
-		  a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
-                  a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
-                  mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
-                  z0wr,z0wl,z0hu,z0hd,
-		
+a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
+a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
+mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
+z0wr,z0wl,z0hu,z0hd,
 
-                  p2parawr,p2parawl,p2parahu,p2parahd,
-                  p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
 
-                  m,n,
-                  nz,nx,ny,n2,
-                  pf,
-                  vxin,vyin,vzin,
-                  q,
-                  xtest,ytest,
+p2parawr,p2parawl,p2parahu,p2parahd,
+p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
 
-                  riTable, liTable, uiTable, diTable,
-                  roTable, loTable, uoTable, doTable,
+m,n,
+nz,nx,ny,n2,
+pf,
+vxin,vyin,vzin,
+q,
+xtest,ytest,
 
-                  TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
-                  ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
-                  TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
-                  TEST_UP_DOWN,TEST_LEFT_RIGHT
+riTable, liTable, uiTable, diTable,
+roTable, loTable, uoTable, doTable,
+
+TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
+ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
+TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
+TEST_UP_DOWN,TEST_LEFT_RIGHT
 )
 
 SHARE
 %{
-  %include "read_table-lib"
+%include "read_table-lib"
 
-  void TEST_INPUT(char name[20])
+void TEST_INPUT(char name[20])
   {
     fprintf(stderr,"Component: %s (Guide_four_side) %s should  \n", NAME_CURRENT_COMP, name);
     fprintf(stderr,"           NOT be negative \n");

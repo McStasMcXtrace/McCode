@@ -8,9 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision$
 * Origin: Risoe/ILL
-* Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
 * Read neutron state parameters from VITESS neutron filename.
@@ -28,14 +26,13 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename:     Filename of neutron file to read. Default (NULL) is
-*               standard input. Empty string "" unactivates component [string]
-* bufsize:      Size of neutron input buffer [records]
-* repeat_count: Number of times to repeat each neutron read [1]
+* filename: [string]  Filename of neutron file to read. Default (NULL) is standard input. Empty string "" unactivates component 
+* bufsize: [records]  Size of neutron input buffer 
+* repeat_count: [1]   Number of times to repeat each neutron read 
 *
 * OUTPUT PARAMETERS
 *
-* finished:     Set to 1 when the last neutron has been read [int]
+* finished: [int]     Set to 1 when the last neutron has been read 
 *
 * %E
 *******************************************************************************/
@@ -45,7 +42,7 @@ DEFINE COMPONENT Vitess_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename = 0, int bufsize = 10000, repeat_count = 1)
 OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 %include "general"
@@ -54,27 +51,27 @@ SHARE
 
 DECLARE
 %{
-  char *file;		/* path + filename */
-  FILE *hfile;		/* Neutron input filename handle */
-  Neutron *ibuf;	/* Neutron input buffer */
-  int size;		/* Number of neutrons currently in buffer */
-  int pos;		/* Current position in buffer */
-  int rep;		/* Neutron repeat count */
-  int finished;		/* Set to 1 when last neutron read */
+char *file;		/* path + filename */
+FILE *hfile;		/* Neutron input filename handle */
+Neutron *ibuf;	/* Neutron input buffer */
+int size;		/* Number of neutrons currently in buffer */
+int pos;		/* Current position in buffer */
+int rep;		/* Neutron repeat count */
+int finished;		/* Set to 1 when last neutron read */
 %}
 
 INITIALIZE
 %{
-  file=NULL;
-  hfile=NULL;
-  ibuf=NULL;
-  size=0;
-  pos=0;
-  rep=0;
-  finished=0;
+file=NULL;
+hfile=NULL;
+ibuf=NULL;
+size=0;
+pos=0;
+rep=0;
+finished=0;
 
-  /* Open neutron input filename. */
-  if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdin")) {
+/* Open neutron input filename. */
+if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdin")) {
     hfile = stdin;
   } else if (!strlen(filename)) {
     hfile = NULL;

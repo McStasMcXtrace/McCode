@@ -11,16 +11,14 @@
 *
 * Written by: Emmanuel Farhi
 * Date: June 20th 2013
-* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 2.0
 *
 * A rotative frame along vertical axis
 *
 * %Description
 * All components positioned after this one are rotating at frequency 'nu' with
 * phase 'phase'. Use the Derotator component to put back the model steady.
-* The rotation is performed w.r.t. the position of the component, along the 
+* The rotation is performed w.r.t. the position of the component, along the
 * vertical axis 'y'.
 *
 * Example:
@@ -31,11 +29,11 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* nu:      (Hz)   Rotation frequency (round/s) in the rotating option (vertical axis)
-* phase:   (deg)  Phase shift
+* nu: [Hz]      Rotation frequency (round/s) in the rotating option (vertical axis)
+* phase: [deg]  Phase shift
 *
 * OUTPUT PARAMETERS:
-* angle:   rotation angle (deg)
+* angle: [deg]  rotation angle 
 *
 * %End
 *******************************************************************************/
@@ -44,18 +42,18 @@ DEFINE COMPONENT Rotator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nu=0, phase=0)
 OUTPUT PARAMETERS (angle)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-  double angle;
+double angle;
 %}
 
 TRACE
 %{
-  double dt=0;
-  
-  if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
+double dt=0;
+
+if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
     /* approximation of rotating frame */
     /* current coordinates of neutron in centered static frame */
     Rotation R;
@@ -67,14 +65,14 @@ TRACE
     /* rotate speed */
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   }
-  
+
 %}
 
 MCDISPLAY
 %{
   int ih;
 
- 
+
    if (nu || phase) {
       double radius = 0.1;
       /* cylinder to visualise the rotating frame */
@@ -83,6 +81,3 @@ MCDISPLAY
 %}
 
 END
-
-
-

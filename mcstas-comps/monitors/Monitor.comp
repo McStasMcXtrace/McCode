@@ -10,9 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: October 4, 1997
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Simple single detector/monitor.
 *
@@ -25,43 +23,43 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: Lower x bound of opening [m]
-* xmax: Upper x bound of opening [m]
-* ymin: Lower y bound of opening [m]
-* ymax: Upper y bound of opening [m]
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xmin: [m]             Lower x bound of opening 
+* xmax: [m]             Upper x bound of opening 
+* ymin: [m]             Lower y bound of opening 
+* ymax: [m]             Upper y bound of opening 
+* xwidth: [m]           Width of detector. Overrides xmin,xmax. 
+* yheight: [m]          Height of detector. Overrides ymin,ymax. 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* Nsum:  Number of neutron hits
-* psum:  Sum of neutron weights
-* p2sum: 2nd moment of neutron weights
+* Nsum: []              Number of neutron hits
+* psum: []              Sum of neutron weights
+* p2sum: []             2nd moment of neutron weights
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-    xwidth=0, yheight=0, restore_neutron=0)
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+xwidth=0, yheight=0, restore_neutron=0)
 OUTPUT PARAMETERS (Nsum, psum, p2sum)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
-  %{
-    double Nsum;
-    double psum, p2sum;
-  %}
+%{
+double Nsum;
+double psum, p2sum;
+%}
 
 INITIALIZE
-  %{
-    psum = 0;
-    p2sum = 0;
-    Nsum = 0;
+%{
+psum = 0;
+p2sum = 0;
+Nsum = 0;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {

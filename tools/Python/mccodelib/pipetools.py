@@ -152,7 +152,7 @@ class ParticlesTraceState(LineHandlerState):
     def add_line(self, line):
         def check(line):
             if len(line) > 5:
-                return line[:5] in ['SCATT', 'STATE', 'COMP:', 'ABSOR']
+                return line[:5] in ('SCATT', 'STATE', 'COMP:', 'ABSOR')
         
         if re.match('LEAVE:', line):
             self.block.append(line)
@@ -160,17 +160,21 @@ class ParticlesTraceState(LineHandlerState):
             self.active = False
         elif self.active and check(line):
             self.block.append(line)
+        elif re.match('ENTER:', line):
+            self.block.append(line)
+            self.active = True
         elif self.leaveflag and check(line):
             self.block.append(line)
             
             # inspect
-            accept_block = False
+            accept_block = True
             if self.inspect:
+                accept_block = False
                 for b in self.block:
-                    if self.inspect in b:
+                    if re.match('COMP: "%s"' % self.inspect, b):
                         accept_block = True
-            else:
-                accept_block = True
+                        break
+            
             if accept_block:
                 self.databox.add_particleblock(''.join(self.block))
                 if self.block_count > self.max_particles:
@@ -181,9 +185,6 @@ class ParticlesTraceState(LineHandlerState):
             
             self.block = []
             self.leaveflag = False
-        elif re.match('ENTER:', line):
-            self.block.append(line)
-            self.active = True
         else:
             self.databox.add_comment(line)
     
@@ -232,6 +233,8 @@ class TraceReader(Thread):
         Thread.__init__(self)
         self.daemon = True
         
+        self.debug = False
+        
     def run(self):
         try:
             ''' create a process given command and read, print and write to it depending on state '''
@@ -258,6 +261,8 @@ class TraceReader(Thread):
             
             while process.poll() == None:
                 stdoutdata = process.stdout.readline()
+                if self.debug:
+                    print("debug - TraceReader read line: %s" % stdoutdata.strip())
                 self.current.add_line(stdoutdata)
             
             # empty process buffer

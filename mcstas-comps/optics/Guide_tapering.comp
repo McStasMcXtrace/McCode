@@ -7,8 +7,6 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision$
-* Release: McStas 1.9
 * Origin: PSI
 * Modified by: Rob Dalgliesh, ISIS, 2007
 *
@@ -18,7 +16,7 @@
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
 * in the X-Y plane.
 * The guide may be tapered.
-* 
+*
 * The component includes a feature to read in self-defined functions for
 * guide tapering. Under the parameter 'option' the KEYWORD 'file=' offers
 * the possibility to read in parameters from an ASC-file. The file structure
@@ -44,15 +42,9 @@
 * 0.119250 0.119100 0.020000 0.020000
 * ...
 *
-*  Example1:Guide_tapering(w1=0.1, h1=0.18, linw=0.1, loutw=0.1,
-*  linh=0.1, louth=0.1, l=1.5, option="elliptical", R0=0.99,
-*  Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
-*  mx=1, my=1, segno=800)
+* Example1: Guide_tapering(w1=0.1, h1=0.18, linw=0.1, loutw=0.1, linh=0.1, louth=0.1, l=1.5, option="elliptical", R0=0.99, Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, mx=1, my=1, segno=800)
 *
-*  Example2:Guide_tapering(w1=0, h1=0, linw=0, loutw=0,
-*  linh=0, louth=0, l=1.5, option="file=ownfunction.txt", R0=0.99,
-*  Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
-*  mx=1, my=1)
+* Example2: Guide_tapering(w1=0, h1=0, linw=0, loutw=0, linh=0, louth=0, l=1.5, option="file=ownfunction.txt", R0=0.99, Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, mx=1, my=1)
 *
 * %BUGS
 * This component does not work with gravitation on. Use component Guide_gravity then.
@@ -60,41 +52,25 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      [m]    Width at the guide entry
-* h1:      [m]    Height at the guide entry
-* linw     [m]    distance from 1st focal point to real guide entry -
-*                 left and right horizontal mirrors
-* loutw    [m]    distance from real guide exit to 2nd focal point -
-*                 left and right horizontal mirrors
-* l:       [m]    length of guide
-* linh:    [m]    distance from 1st focal point to real guide entry -
-*                 top and bottom vertical mirrors
-* louth:   [m]    distance from real guide exit to 2nd focal point -
-*                 top and bottom vertical mirrors
-* option   [str]  define the input function for the curve of the guide walls
-*                 options are:
-*                 "elliptical"  - define elliptical function of guide walls
-*                 "parabolical" - define parabolical function of guide walls
-*                 "straight"    - define a straight elements guide
-*                 "file=[filename]" - read in ASC-file with arbitrary
-*                 definition for the curve of the guide walls
-* R0:      [1]    Low-angle reflectivity
-* Qcx:     [AA-1] Critical scattering vector for left and right vertical
-*                 mirrors in each channel
-* Qcy:     [AA-1] Critical scattering vector for top and bottom mirrors
-* alphax:  [AA]   Slope of reflectivity for left and right vertical
-*                 mirrors in each channel
-* alphay:  [AA]   Slope of reflectivity for top and bottom mirrors
-* mx:      [1]    m-value of material for left and right vertical mirrors
-*                 in each channel. Zero means completely absorbing. Negative 
-*                 value will adapt coating as e.g. m=mx*w1/w
-* my:      [1]    m-value of material for top and bottom mirrors. Zero
-*                 means completely absorbing. Negative value will adapt coating 
-*                 as e.g. m=my*h1/h
-* W:       [AA-1] Width of supermirror cut-off for all mirrors
-* segno:   [1]    number of segments (z-axis) for cutting the tube
-* curvature:[m]   guide horizontal radius of curvature. Zero means straight.
-* curvature_v:[m] guide vertical radius of curvature. Zero means straight.
+* w1: [m]           Width at the guide entry
+* h1: [m]           Height at the guide entry
+* linw     [m]    distance from 1st focal point to real guide entry - left and right horizontal mirrors
+* loutw    [m]    distance from real guide exit to 2nd focal point - left and right horizontal mirrors
+* l: [m]            length of guide
+* linh: [m]         distance from 1st focal point to real guide entry - top and bottom vertical mirrors
+* louth: [m]        distance from real guide exit to 2nd focal point - top and bottom vertical mirrors
+* option   [str]  define the input function for the curve of the guide walls options are: "elliptical"  - define elliptical function of guide walls "parabolical" - define parabolical function of guide walls "straight"    - define a straight elements guide"file=[filename]" - read in ASC-file with arbitrary definition for the curve of the guide walls
+* R0: [1]           Low-angle reflectivity
+* Qcx: [AA-1]       Critical scattering vector for left and right vertical mirrors in each channel
+* Qcy: [AA-1]       Critical scattering vector for top and bottom mirrors
+* alphax: [AA]      Slope of reflectivity for left and right vertical mirrors in each channel
+* alphay: [AA]      Slope of reflectivity for top and bottom mirrors
+* mx: [1]           m-value of material for left and right vertical mirrors in each channel. Zero means completely absorbing. Negative  value will adapt coating as e.g. m=mx*w1/w
+* my: [1]           m-value of material for top and bottom mirrors. Zero means completely absorbing. Negative value will adapt coating as e.g. m=my*h1/h
+* W: [AA-1]         Width of supermirror cut-off for all mirrors
+* segno: [1]        number of segments (z-axis) for cutting the tube
+* curvature: [m]    guide horizontal radius of curvature. Zero means straight.
+* curvature_v: [m]  guide vertical radius of curvature. Zero means straight.
 *
 * %End
 *
@@ -103,45 +79,45 @@
 DEFINE COMPONENT Guide_tapering
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string option=0, w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
-                    Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
-                    mx=1, my=1,segno=800,curvature=0,curvature_v=0)
+Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
+mx=1, my=1,segno=800,curvature=0,curvature_v=0)
 OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg,
-		  h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh, mxi ,u1 ,u2 ,div1, p2_para,
-		  test,Div1, i,ii,seg, fu, pos, file_name, ep, num, rotation_h,rotation_v)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh, mxi ,u1 ,u2 ,div1, p2_para,
+test,Div1, i,ii,seg, fu, pos, file_name, ep, num, rotation_h,rotation_v)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "ref-lib"
+%include "ref-lib"
 %}
 
 DECLARE
 %{
-  double *w1c;
-  double *w2c;
-  double *ww, *hh;
-  double *whalf, *hhalf;
-  double *lwhalf, *lhhalf;
-  double *h1_in, *h2_out, *w1_in, *w2_out;
-  double l_seg, h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh;
-  double mxi ,u1 ,u2 ,div1, p2_para;
-  double test,Div1;
-  int i,ii,seg;
-  char *fu;
-  char *pos;
-  char file_name[1024];
-  char *ep;
-  FILE *num;
-  double rotation_h, rotation_v;
+double *w1c;
+double *w2c;
+double *ww, *hh;
+double *whalf, *hhalf;
+double *lwhalf, *lhhalf;
+double *h1_in, *h2_out, *w1_in, *w2_out;
+double l_seg, h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh;
+double mxi ,u1 ,u2 ,div1, p2_para;
+double test,Div1;
+int i,ii,seg;
+char *fu;
+char *pos;
+char file_name[1024];
+char *ep;
+FILE *num;
+double rotation_h, rotation_v;
 %}
 
 INITIALIZE
 %{
-  rotation_h=0;
-  rotation_v=0;
+rotation_h=0;
+rotation_v=0;
 
-  // dynamic memory allocation is good
-  w1c = (double*)malloc(sizeof(double)*segno);
+// dynamic memory allocation is good
+w1c = (double*)malloc(sizeof(double)*segno);
   w2c = (double*)malloc(sizeof(double)*segno);
   ww = (double*)malloc(sizeof(double)*segno);
   hh = (double*)malloc(sizeof(double)*segno);
@@ -612,7 +588,7 @@ TRACE
       x += hadj; SCATTER; x -= hadj;
     } /* loop on reflections inside segment */
     x += hadj; /* Re-adjust origin */
-    
+
     /* rotate neutron according to actual guide curvature */
     if (rotation_h) {
       double nvx, nvy, nvz;
@@ -650,7 +626,7 @@ MCDISPLAY
   int i,ii;
 
   magnify("xy");
-  
+
   for (ii=0; ii < segno; ii++)
   {
      multiline(5,
@@ -668,7 +644,7 @@ MCDISPLAY
   }
   line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
   line(-w1/2.0, h1/2.0, 0.0, w1/2.0, h1/2.0, 0.0);
-  for(i=0; i<segno;i++)   
+  for(i=0; i<segno;i++)
   {
      line(-w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1),
      w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1));

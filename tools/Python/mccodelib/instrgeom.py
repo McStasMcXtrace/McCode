@@ -285,7 +285,7 @@ class RayBundle(object):
         bundle['numrays'] = len(lst)
         
         # min and max velocity
-        initial_speed = self.rays[0].get_speed()
+        initial_speed = self.rays[0].get_speed() if len(self.rays) > 0 else 0
         vmin = initial_speed
         vmax = initial_speed
         for r in self.rays:

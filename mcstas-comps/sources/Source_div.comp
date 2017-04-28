@@ -11,22 +11,20 @@
 * Written by: KL
 * Date: November 20, 1998
 * Modified by: KL, 8 October 2001
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Neutron source with Gaussian or uniform divergence
 *
 * %D
 * The routine is a rectangular neutron source, which has a gaussian or uniform
 * divergent output in the forward direction.
-* The neutron energy is distributed between lambda0-dlambda and 
+* The neutron energy is distributed between lambda0-dlambda and
 * lambda0+dlambda or between E0-dE and E0+dE. The flux unit is specified
 * in n/cm2/s/st/energy unit (meV or Angs).
 * In the case of uniform distribution (gauss=0), angles are uniformly distributed
 * between -focus_aw and +focus_aw as well as -focus_ah and +focus_ah.
-* For Gaussian distribution (gauss=1), 'focus_aw' and 'focus_ah' define the 
-* FWHM of a Gaussian distribution. Energy/wavelength distribution is also 
+* For Gaussian distribution (gauss=1), 'focus_aw' and 'focus_ah' define the
+* FWHM of a Gaussian distribution. Energy/wavelength distribution is also
 * Gaussian.
 *
 * Example: Source_div(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
@@ -42,21 +40,21 @@
 * therefore not suited for large angles
 *
 * %P
-* xwidth:   (m)  Width of source
-* yheight:  (m)  Height of source
-* focus_aw:(deg) FWHM (Gaussian) or maximal (uniform) horz. width divergence
-* focus_ah:(deg) FWHM (Gaussian) or maximal (uniform) vert. height divergence
-* E0:      (meV) Mean energy of neutrons.
-* dE:      (meV) Energy half spread of neutrons.
-* lambda0: (Ang) Mean wavelength of neutrons (only relevant for E0=0)
-* dlambda: (Ang) Wavelength half spread of neutrons.
-* gauss:  (0|1)  Criterion: 0: uniform, 1: Gaussian distributions
-* flux:   [1/(s*cm**2*st*energy unit)] flux per energy unit, Angs or meV
+* xwidth: [m]                        Width of source
+* yheight: [m]                       Height of source
+* focus_aw: [deg]                    FWHM (Gaussian) or maximal (uniform) horz. width divergence
+* focus_ah: [deg]                    FWHM (Gaussian) or maximal (uniform) vert. height divergence
+* E0: [meV]                          Mean energy of neutrons.
+* dE: [meV]                          Energy half spread of neutrons.
+* lambda0: [Ang]                     Mean wavelength of neutrons (only relevant for E0=0)
+* dlambda: [Ang]                     Wavelength half spread of neutrons.
+* gauss: [0|1]                       Criterion: 0: uniform, 1: Gaussian distributions
+* flux: [1/(s cm 2 st energy_unit)]  flux per energy unit, Angs or meV
 *
 * OUTPUT PARAMETERS:
-* sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
-* sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
-* p_init:   (-)  normalisation factor 1/'neutron_count'
+* sigmah: [rad]                      parameter 'sigma' of the Gaussian distribution for horizontal divergence
+* sigmav: [rad]                      parameter 'sigma' of the Gaussian distribution for vertical divergence
+* p_init: [1]                        normalisation factor 1/'neutron_count'
 *
 * %E
 *******************************************************************************/
@@ -65,14 +63,14 @@ DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, E0=0.0, dE=0.0, lambda0=0.0, dlambda=0.0, gauss=0, flux=1)
 OUTPUT PARAMETERS (thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
+double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
 %}
 INITIALIZE
 %{
-  sigmah = DEG2RAD*focus_aw/(sqrt(8.0*log(2.0)));
+sigmah = DEG2RAD*focus_aw/(sqrt(8.0*log(2.0)));
   sigmav = DEG2RAD*focus_ah/(sqrt(8.0*log(2.0)));
 
   if (xwidth < 0 || yheight < 0 || focus_aw < 0 || focus_ah < 0) {
@@ -104,9 +102,9 @@ INITIALIZE
     focus_xw=dist*tan(focus_aw*DEG2RAD);
     focus_yh=dist*tan(focus_ah*DEG2RAD);
   }
-  
+
   p_init  = flux*1e4*xwidth*yheight/mcget_ncount();
-  if (!focus_aw || !focus_ah) 
+  if (!focus_aw || !focus_ah)
     exit(printf("Source_div: %s: Zero divergence defined. \n"
                 "ERROR       Use non zero values for focus_aw and focus_ah.\n",
            NAME_CURRENT_COMP));
@@ -142,10 +140,10 @@ TRACE
     v = K2V*(2*PI/lambda);
   }
 
-  if (gauss==1) { 
+  if (gauss==1) {
     thetah = randnorm()*sigmah;
     thetav = randnorm()*sigmav;
-  } else { 
+  } else {
     thetah = randpm1()*focus_aw*DEG2RAD/2;
     thetav = randpm1()*focus_ah*DEG2RAD/2;
   }

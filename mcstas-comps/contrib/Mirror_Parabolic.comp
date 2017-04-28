@@ -10,9 +10,7 @@
 * %I
 * Written by: <a href="mailto:desert@drecam.cea.fr">Sylvain Desert</a>
 * Date: 2007
-* Version: $Revision$
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
-* Release: McStas 1.12
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * Parabolic mirror.
@@ -27,16 +25,16 @@
 *
 * %P
 * INPUT PARAMETERS:
-* xwidth:     (m) width of the illuminated parabola
-* xshift:     (m) distance between the beam centre and the symetric axis of the parabolla
-* yheight:    (m) height of the mirror
-* focus:      (m) focal length
-* reflect:  (str) Reflectivity file name. Format [q(Angs-1) R(0-1)]
-* R0:         [1] Low-angle reflectivity
-* Qc:      [AA-1] Critical scattering vector
-* alpha:     [AA] Slope of reflectivity
-* m:          [1] m-value of material. Zero means completely absorbing.
-* W:       [AA-1] Width of supermirror cut-off
+* xwidth: [m]                  width of the illuminated parabola
+* xshift: [m]                  distance between the beam centre and the symetric axis of the parabolla
+* yheight: [m]                 height of the mirror
+* focus: [m]                   focal length
+* reflect: [q(Angs-1) R(0-1)]  (str) Reflectivity file name. Format 
+* R0: [1]                      Low-angle reflectivity
+* Qc: [AA-1]                   Critical scattering vector
+* alpha: [AA]                  Slope of reflectivity
+* m: [1]                       m-value of material. Zero means completely absorbing.
+* W: [AA-1]                    Width of supermirror cut-off
 *
 * Example instrumentfile FocalisationMirrors.instr is available in the examples/ folder.
 *
@@ -46,27 +44,27 @@
 DEFINE COMPONENT Mirror_Parabolic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, xwidth=0.05, xshift=0.019, yheight=2e-4, focus=6.6e-4,
-  R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
+R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
 OUTPUT PARAMETERS (beta1, gamma1, err,nom,vz_neg,p_0, delta, angle,pTable)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
-  %include "read_table-lib"
-  %include "ref-lib"
+%include "read_table-lib"
+%include "ref-lib"
 %}
 
 DECLARE
 %{
-  double  beta1, gamma1;             /* parabola half-axis */
-  double delta, angle;               /* angle: angle between themirror and z-axis */
-  t_Table pTable;
-  int err,nom,vz_neg,p_0;            /* counts neutron absorbed for anormal reasons */
-%}  
+double  beta1, gamma1;             /* parabola half-axis */
+double delta, angle;               /* angle: angle between themirror and z-axis */
+t_Table pTable;
+int err,nom,vz_neg,p_0;            /* counts neutron absorbed for anormal reasons */
+%}
 
 INITIALIZE
 %{
-  double alpha1;                       /* width of the parabola */
-  if (reflect && strlen(reflect) && strcmp(reflect, "NULL") && strcmp(reflect,"0")) {
+double alpha1;                       /* width of the parabola */
+if (reflect && strlen(reflect) && strcmp(reflect, "NULL") && strcmp(reflect,"0")) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr,"Mirror_Parabolic: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
   }

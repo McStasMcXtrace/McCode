@@ -12,8 +12,6 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision$
-* Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: E. Farhi, Jul 2008: uniformize parameter names ()
 * Modified by: EF, Oct 2008: fix chopper orientation
@@ -57,12 +55,12 @@
 * INPUT PARAMETERS:
 *
 * Geometrical chopper constants:
-* radius:  (m)      chopper cylinder radius
-* yheight: (m)      Height of chopper
-* nslit:   (1)      number of chopper slits
-* length:  (m)      channel length of the Fermi chopper
-* w:       (m)      width of one chopper slit
-* xwidth:  (m)      optional total width of slit package
+* radius: [m]   chopper cylinder radius
+* yheight: [m]  Height of chopper
+* nslit: [1]    number of chopper slits
+* length: [m]   channel length of the Fermi chopper
+* w: [m]        width of one chopper slit
+* xwidth: [m]   optional total width of slit package
 
 * nu:      (Hz)     chopper frequency
 * eff:     (1)      efficiency = transmission x fraction of transparent material
@@ -86,31 +84,31 @@
 * %End
 *****************************************************************************/
 
-/* NOTE: 
- *   The initial component version (McStas version <= 1.12) was written 
- *   with an inverted coordinate frame orientation. This corresponds 
- *   to inverting the frequency and phase sign.
- */
- 
+/* NOTE:
+*   The initial component version (McStas version <= 1.12) was written
+*   with an inverted coordinate frame orientation. This corresponds
+*   to inverting the frequency and phase sign.
+*/
+
 DEFINE COMPONENT FermiChopper_ILL
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
-  yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0,
-  Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
-  zero_time=0, xwidth=0, verbose=0)
+yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0,
+Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
+zero_time=0, xwidth=0, verbose=0)
 OUTPUT PARAMETERS(FCVars)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 #ifndef FCILL_TimeAccuracy
 #define FCILL_TimeAccuracy 1e-8
 #define FCILL_MAXITER      10
-  /* Definition of internal variable structure: all counters */
-  struct FermiChopper_ILL_struct {
+/* Definition of internal variable structure: all counters */
+struct FermiChopper_ILL_struct {
 
-    /** other variables ********************************/
-    double omega, t0;  /* chopper rotation */
-  };
+/** other variables ********************************/
+double omega, t0;  /* chopper rotation */
+};
 
 
 /**************** DECLARING FUNCTIONS ***************************************/

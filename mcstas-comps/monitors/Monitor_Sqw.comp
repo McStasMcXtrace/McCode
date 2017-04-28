@@ -11,8 +11,6 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 31 jan 2014.
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 2.1
-* Version: $Revision$
 *
 * This component is a Sqw Monitor that records the dynamic structure factor S(q,w)
 * from a scattering location, seen from a detector location.
@@ -20,11 +18,11 @@
 * %Description
 * This component is a specialized Monitor_nD variation, which records the S(q,w)
 * scattering law. It accepts about the same parameters as the Monitor_nD, but makes
-* use of the 'q' and 'w' user variables. The neutrons are restored in their previous 
+* use of the 'q' and 'w' user variables. The neutrons are restored in their previous
 * state after neing detected (restore_neutron=1).
 *
-* The monitor records the intensity as a function of q=kf-ki and w=Ef-Ei were the 
-* 'f' refers to the component location, and the 'i' refers to the component located 
+* The monitor records the intensity as a function of q=kf-ki and w=Ef-Ei were the
+* 'f' refers to the component location, and the 'i' refers to the component located
 * at 'index' relative to the component location.
 *
 * The component uses automatic limits, and is thus not recommended with MPI/multiprocessing.
@@ -36,41 +34,35 @@
 *
 *   COMPONENT sqw = Monitor_Sqw(index=-1, radius=2, yheight=2, bins=128)
 *
-* This component can be used to generate dynamic structure factors comvolved with 
+* This component can be used to generate dynamic structure factors comvolved with
 * the instrument response, and compare with molecular dynamics results (using e.g. nMoldyn).
 * The incoming beam (e.g. at the sample) must be monochromatic.
 *
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]  Width of detector.
-* yheight: [m]  Height of detector.
-* zdepth:  [m]  Thickness of detector (z).
-* radius:  [m]  Radius of sphere/banana shape monitor
-* options: [str]  String that specifies the configuration of the monitor
-*                 The general syntax is "[x] options..." (see <b>Descr.</b>).
-* index:   [1]  Index of the component where scattering occurs with respect to
-*                 the location of the Monitor_Sqw location in the instrument description.
-*                 The index is usually negative, and should point to e.g. a 
-*                 Isotropic_Sqw, , PowderN, or Single_crystal instance.
-*                 index=-1 for the previous component.
+* xwidth: [m]      Width of detector.
+* yheight: [m]     Height of detector.
+* zdepth: [m]      Thickness of detector (z).
+* radius: [m]      Radius of sphere/banana shape monitor
+* options: [str]   String that specifies the configuration of the monitor The general syntax is "[x] options..." (see <b>Descr.</b>).
+* index: [1]       Index of the component where scattering occurs with respect to the location of the Monitor_Sqw location in the instrument description. The index is usually negative, and should point to e.g. a  Isotropic_Sqw, , PowderN, or Single_crystal instance. index=-1 for the previous component.
 *
 * Optional input parameters (override xwidth yheight zdepth):
-* xmin:   [m]    Lower x bound of opening
-* xmax:   [m]    Upper x bound of opening
-* ymin:   [m]    Lower y bound of opening
-* ymax:   [m]    Upper y bound of opening
-* zmin:   [m]    Lower z bound of opening
-* zmax:   [m]    Upper z bound of opening
-* filename:[str] Output file name. If not set an automatic file name is used.
-* bins:   [1]    Number of bins to force for all variables.
-*                Use 'bins' keyword in 'options' for heterogeneous bins
-* geometry:   [str] Name of an OFF file to specify a complex geometry detector
+* xmin: [m]        Lower x bound of opening
+* xmax: [m]        Upper x bound of opening
+* ymin: [m]        Lower y bound of opening
+* ymax: [m]        Upper y bound of opening
+* zmin: [m]        Lower z bound of opening
+* zmax: [m]        Upper z bound of opening
+* filename: [str]  Output file name. If not set an automatic file name is used.
+* bins: [1]        Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
+* geometry: [str]  Name of an OFF file to specify a complex geometry detector
 *
 * OUTPUT PARAMETERS:
 *
-* DEFS: structure containing Monitor_nD Defines [struct]
-* Vars: structure containing Monitor_nD variables [struct]
+* DEFS: [struct]   structure containing Monitor_nD Defines 
+* Vars: [struct]   structure containing Monitor_nD variables 
 *
 * %Link
 * <a href="Monitor_nD.html">Monitor_nD</a>
@@ -79,33 +71,33 @@
 *
 * %End
 ******************************************************************************/
-DEFINE COMPONENT Monitor_Sqw 
+DEFINE COMPONENT Monitor_Sqw
 DEFINITION PARAMETERS ( user3=FLT_MAX)
-SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, 
-  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
-  bins=0, min=-1e40, max=1e40,
-  int index=-1,string options=0, string filename=0,string geometry=0,string username3=0)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0,
+xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
+bins=0, min=-1e40, max=1e40,
+int index=-1,string options=0, string filename=0,string geometry=0,string username3=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector, mean_vx, mean_vy, mean_vz, sum_p, offdata)
 
 SHARE
 %{
-  %include "monitor_nd-lib"
+%include "monitor_nd-lib"
 %}
 
 DECLARE
 %{
-  MonitornD_Defines_type DEFS;
-  MonitornD_Variables_type Vars;
-  MCDETECTOR detector;
-  off_struct offdata;
-  double mean_vx, mean_vy, mean_vz, sum_p;
+MonitornD_Defines_type DEFS;
+MonitornD_Variables_type Vars;
+MCDETECTOR detector;
+off_struct offdata;
+double mean_vx, mean_vy, mean_vz, sum_p;
 %}
 
-INITIALIZE 
+INITIALIZE
 %{
-  char tmp[CHAR_BUF_LENGTH];
-  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+char tmp[CHAR_BUF_LENGTH];
+strcpy(Vars.compcurname, NAME_CURRENT_COMP);
   if (options != NULL)
     strncpy(Vars.option, options, CHAR_BUF_LENGTH);
   if (!strstr(Vars.option, "user1"))
@@ -117,25 +109,25 @@ INITIALIZE
   strncat(Vars.option," borders", CHAR_BUF_LENGTH);
   Vars.compcurpos = POS_A_CURRENT_COMP;
 
-  if (bins && !strstr(Vars.option, "bins")) { 
-    sprintf(tmp, " all bins=%ld ", (long)bins); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); 
+  if (bins && !strstr(Vars.option, "bins")) {
+    sprintf(tmp, " all bins=%ld ", (long)bins); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
   }
-  if (min > -FLT_MAX && max < FLT_MAX && !strstr(Vars.option, "limits")) { 
-    sprintf(tmp, " all limits=[%g %g]", min, max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); 
+  if (min > -FLT_MAX && max < FLT_MAX && !strstr(Vars.option, "limits")) {
+    sprintf(tmp, " all limits=[%g %g]", min, max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
   }
-  else if (min > -FLT_MAX) { 
-    sprintf(tmp, " all min=%g", min); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); 
+  else if (min > -FLT_MAX) {
+    sprintf(tmp, " all min=%g", min); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
   }
-  else if (max <  FLT_MAX) { 
-    sprintf(tmp, " all max=%g", max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); 
+  else if (max <  FLT_MAX) {
+    sprintf(tmp, " all max=%g", max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
   }
 
   strcpy(Vars.UserName1, "Momentum transfer Q [Angs-1]");
   strcpy(Vars.UserName2, "Energy transfer w [meV]");
   strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 128);
-  if (radius) { 
+  if (radius) {
     xwidth = zdepth = 2*radius;
-    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
+    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana"))
       strncat(Vars.option, " banana", CHAR_BUF_LENGTH);
     else if (!yheight && !strstr(Vars.option ,"sphere")) {
       strncat(Vars.option, " sphere", CHAR_BUF_LENGTH);
@@ -151,7 +143,7 @@ INITIALIZE
     } else {
       offflag=1;
     }
-  
+
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_Sqw: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
@@ -159,21 +151,21 @@ INITIALIZE
 
   if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
     strncpy(Vars.Mon_File, filename, 128);
-  
+
   Vars.Flag_parallel=1;
   detector.m = 0;
-  
+
   mean_vx=0; mean_vy=0; mean_vz=0; sum_p=0;
 %}
 
-TRACE 
+TRACE
 %{
   double  XY=0;
   double  t0 = 0;
   double  t1 = 0;
   double  pp;
   int     intersect   = 0;
-  
+
   if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
   if (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0"))
@@ -207,15 +199,15 @@ TRACE
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
   { intersect = 1; }
-  
-  
+
+
 
   if (intersect)
   {
     double rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp;
     double Ei, Ef;
-    
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) 
+
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND)
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
      || (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0")) )
     {
@@ -223,7 +215,7 @@ TRACE
       if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
         double y0,y1;
         /* propagate to intersection point as temporary variable to check top/bottom */
-        y0 = y+t0*vy; 
+        y0 = y+t0*vy;
         y1 = y+t1*vy;
         if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) t0 = t1;
         if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) t1 = t0;
@@ -243,25 +235,25 @@ TRACE
       }
     }
     SCATTER;
- 
+
     Ef = VS2E*(vx*vx+vy*vy+vz*vz);
-    
+
     /* get incoming beam velocity in 'initial' coordinate frame */
     RESTORE_NEUTRON(INDEX_CURRENT_COMP+index,
       rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
     mean_vx += rvx*rp; mean_vy += rvy*rp; mean_vz += rvz*rp;
     sum_p   += rp;
-    
+
     /* compute mean incoming energy and mean beam direction */
     rvx = mean_vx/sum_p; rvy = mean_vy/sum_p; rvz = mean_vz/sum_p;
     Ei  =  VS2E*(rvx*rvx+rvy*rvy+rvz*rvz);
-      
+
     Vars.UserVariable1=V2K*sqrt( (vx-rvx)*(vx-rvx)
                                 +(vy-rvy)*(vy-rvy)
                                 +(vz-rvz)*(vz-rvz) ); // Q = |Kf - Ki| with left/right sign
     Vars.UserVariable1 *= (x >= 0 ? 1 : -1);
     Vars.UserVariable2  = Ef-Ei;                      // E = Ef-Ei
-    
+
     /* send current neutron state to Monitor_nD_Trace */
     Vars.cp  = p;
     Vars.cx  = x;

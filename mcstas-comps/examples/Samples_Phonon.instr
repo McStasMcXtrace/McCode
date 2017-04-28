@@ -8,10 +8,10 @@
 * Date: Feb 2004
 * Origin: <a href="http://www.risoe.dk/">RISOE</a>
 * Written by: K. Lefmann <kim.lefmann@risoe.dk> RISOE, Feb 2004
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Simple test instrument for the Phonon_simple component
 *
-* %INSTRUMENT_SITE: Tests_samples
 *
 * %Description
 * Simple test instrument for the Phonon_simple component.

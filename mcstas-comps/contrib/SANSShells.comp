@@ -9,9 +9,7 @@
 * %I
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: October 17, 2012
-* Version: $Revision$
 * Origin: KU-Science
-* Release: McStas 1.12c
 *
 * A sample of monodisperse shell-like particles in solution.
 *
@@ -20,21 +18,16 @@
 * of monodisperse, shell-like particles.
 *
 * %P
-* R						    : [AA]		Average radius of the particles.
-* Thickness				    : [AA]		Thickness of the shell - so that the outer 
-*										radius is R + Thickness and the inner is 
-*										R - Thickness.
-* Concentration		  	    : [mM]		Concentration of sample.
-* DeltaRho  			    : [cm/AA^3]	Excess scattering length density of the 
-*                                   	particles.
-* AbsorptionCrosssection    : [1/m]		Absorption cross section of the sample.
-* xwidth    			    : [m]  		Dimension of component in the x-direction.
-* yheight   			    : [m]		Dimension of component in the y-direction.
-* zdepth    			    : [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered neutrons).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered neutrons).
+* R: [AA]                        Average radius of the particles.
+* Thickness: [AA]                Thickness of the shell - so that the outer radius is R + Thickness and the inner is R - Thickness.
+* Concentration: [mM]            Concentration of sample.
+* DeltaRho: [cm/AA^3]            Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m]  Absorption cross section of the sample.
+* xwidth: [m]                    Dimension of component in the x-direction.
+* yheight: [m]                   Dimension of component in the y-direction.
+* zdepth: [m]                    Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]  Distance from sample to detector (for focusing the scattered neutrons).
+* DetectorRadius: [m]            Radius of the detector (for focusing the scattered neutrons).
 *
 * %E
 *******************************************************************************/
@@ -44,33 +37,33 @@ DEFINE COMPONENT SANSShells
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (R = 100.0, Thickness = 5.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
+xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-	// Declarations	
-	double Prefactor;
-	double Absorption;
-	double q;
-	double NumberDensity;
+// Declarations
+double Prefactor;
+double Absorption;
+double q;
+double NumberDensity;
 
-	double RBig;
-	double RSmall;
+double RBig;
+double RSmall;
 
-	double VolumeBigSphere;
-	double VolumeSmallSphere;
-	double Volume;
+double VolumeBigSphere;
+double VolumeSmallSphere;
+double Volume;
 %}
 
 INITIALIZE
 %{
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
+// Rescale concentration into number of aggregates per m^3 times 10^-4
+NumberDensity = Concentration * 6.02214129e19;
 
-	// Computations
-	if (!xwidth || !yheight || !zdepth) {
+// Computations
+if (!xwidth || !yheight || !zdepth) {
 		printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
 	}
 
@@ -93,8 +86,8 @@ INITIALIZE
 
 TRACE
 %{
-	// Declarations	
-	double t0; 
+	// Declarations
+	double t0;
 	double t1;
 	double l_full;
 	double l;
@@ -103,8 +96,8 @@ TRACE
 	double FormfactorSmallSphere;
 	double Formfactor;
 	double SolidAngle;
-	double qx; 
-	double qy; 
+	double qx;
+	double qy;
 	double qz;
 	double v;
 	double dt;
@@ -127,7 +120,7 @@ TRACE
 		v = sqrt(pow(vx, 2) + pow(vy, 2) + pow(vz, 2));
 		l_full = v * (t1 - t0);
 		dt = rand01() * (t1 - t0) + t0;
-		PROP_DT(dt);                   
+		PROP_DT(dt);
 	    l = v * (dt - t0);
 
 		// Store properties of incoming neutron

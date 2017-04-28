@@ -10,9 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: March 2001
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Source with up to three Maxwellian distributions
 *
@@ -32,26 +30,25 @@
 * %P
 * Input parameters:
 *
-* yheight: (m)   Height of rectangular source
-* xwidth:  (m)   Width of rectangular source
-* Lmin:    (AA)  Lower edge of lambda distribution
-* Lmax:    (AA)  Upper edge of lambda distribution
-* lambda0: (AA)  Mean wavelength of neutrons.
-* dlambda: (AA)  Wavelength spread of neutrons.
-* target_index:(1) relative index of component to focus at, e.g. next is +1
-*                    this is used to compute 'dist' automatically.
-* focus_xw:(m)    Width of focusing rectangle
-* focus_yh:(m)    Height of focusing rectangle
-* T1:     (K)    1st temperature of thermal distribution
-* I1:     [1/(cm**2*st)] flux, 1 (in flux units, see above)
+* yheight: [m]        Height of rectangular source
+* xwidth: [m]         Width of rectangular source
+* Lmin: [AA]          Lower edge of lambda distribution
+* Lmax: [AA]          Upper edge of lambda distribution
+* lambda0: [AA]       Mean wavelength of neutrons.
+* dlambda: [AA]       Wavelength spread of neutrons.
+* target_index: [1]   relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* focus_xw: [m]       Width of focusing rectangle
+* focus_yh: [m]       Height of focusing rectangle
+* T1: [K]             1st temperature of thermal distribution
+* I1: [1/(cm**2*st)]  flux, 1 (in flux units, see above)
 *
 * Optional parameters:
-* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
-* T2:     (K)    2nd temperature of thermal distribution
-* T3:     (K)    3nd temperature of  - - -
-* I2:     [1/(cm**2*st)] flux, 2 (in flux units, see above)
-* I3:     [1/(cm**2*st)] flux, 3  - - -
-* size:   (m)    Edge of cube shaped source (for backward compatibility)
+* dist: [m]           Distance from source to focusing rectangle; at (0,0,dist)
+* T2: [K]             2nd temperature of thermal distribution
+* T3: [K]             3nd temperature of  - - -
+* I2: [1/(cm**2*st)]  flux, 2 (in flux units, see above)
+* I3: [1/(cm**2*st)]  flux, 3  - - -
+* size: [m]           Edge of cube shaped source (for backward compatibility)
 *
 * %E
 *******************************************************************************/
@@ -60,18 +57,18 @@ DEFINE COMPONENT Source_Maxwell_3
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (size=0, yheight=0, xwidth=0, Lmin, Lmax, dist, 
-  focus_xw, focus_yh,
-  T1, T2=300, T3=300, I1, I2=0, I3=0, 
-  int target_index=+1,lambda0=0, dlambda=0)
+SETTING PARAMETERS (size=0, yheight=0, xwidth=0, Lmin, Lmax, dist,
+focus_xw, focus_yh,
+T1, T2=300, T3=300, I1, I2=0, I3=0,
+int target_index=+1,lambda0=0, dlambda=0)
 
 OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  /* A normalised Maxwellian distribution : Integral over all l = 1 */
-  double SM3_Maxwell(double l, double temp)
+/* A normalised Maxwellian distribution : Integral over all l = 1 */
+double SM3_Maxwell(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
@@ -95,14 +92,14 @@ INITIALIZE
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   }
-  
+
   if (size>0) {
     w_source = h_source = size;
   } else {
     w_source = xwidth;
     h_source = yheight;
   }
-  if (lambda0) { 
+  if (lambda0) {
     Lmin=lambda0-dlambda;
     Lmax=lambda0+dlambda;
   }
@@ -171,7 +168,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-

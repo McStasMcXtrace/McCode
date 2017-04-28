@@ -12,8 +12,6 @@
 * Written by: Geza Zsigmond
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision$
-* Release: McStas 1.9
 * Modified by: adapted for McStas by <a href="mailto:lieutena@ill.fr">K. Lieutenant</a>, Mar 2005;
 *
 * Fermi chopper with absorbing walls using the VITESS module 'chopper_fermi'
@@ -72,40 +70,40 @@
 * reduction of transmission by a large shadowing cylinder underestimated
 *
 * %P
-* GeomOption:    [1]    option: 0:straight 1:parabolic 2:circular
-* zerotime:      [1]    option: 1:'set time to zero'  0: 'do not'
-* Nchannels:     [1]    number of channels of the Fermi chopper
-* Ngates:        [1]    number of gates defining the channel: 4=default, 6 or 8 for long wavelengths
-* freq:          [Hz]   number of rotations per second
-* height:        [m]    height of the Fermi chopper
-* width:         [m]    total width of the Fermi chopper
-* depth:         [m]    channel length of the Fermi chopper
-* r_curv:        [m]    radius of curvature of the curved Fermi chopper
-* diameter:      [m]    diameter of the shadowing cylinder
-* Phase:         [deg]  dephasing angle at zero time
-* wallwidth:     [m]    thickness of walls separating the channels
+* GeomOption: [1]       option: 0:straight 1:parabolic 2:circular
+* zerotime: [1]         option: 1:'set time to zero'  0: 'do not'
+* Nchannels: [1]        number of channels of the Fermi chopper
+* Ngates: [1]           number of gates defining the channel: 4=default, 6 or 8 for long wavelengths
+* freq: [Hz]            number of rotations per second
+* height: [m]           height of the Fermi chopper
+* width: [m]            total width of the Fermi chopper
+* depth: [m]            channel length of the Fermi chopper
+* r_curv: [m]           radius of curvature of the curved Fermi chopper
+* diameter: [m]         diameter of the shadowing cylinder
+* Phase: [deg]          dephasing angle at zero time
+* wallwidth: [m]        thickness of walls separating the channels
 * sGeomFileName: [str]  name of output file for geometry information
 *
 * OUTPUT PARAMETERS:
-* Option:        [-]    1: straight FC,  2: curved FC
-* CurvGeomOption:[-]    1: ideal shape (nearly parabolic)  2: circular
-* TOF:           [ms]   TOF of neutron under consideration
-* WL:            [Ang]  wavelength of neutron
-* radius_of_curv:[cm]   radius of curvature (curved FC)
-* main_depth:    [cm]   max. channel length due to diameter and total_width
-* shift_y:       [cm]   shift to channel actually written to geometry file
+* Option: [-]           1: straight FC,  2: curved FC
+* CurvGeomOption: [-]   1: ideal shape (nearly parabolic)  2: circular
+* TOF: [ms]             TOF of neutron under consideration
+* WL: [Ang]             wavelength of neutron
+* radius_of_curv: [cm]  radius of curvature (curved FC)
+* main_depth: [cm]      max. channel length due to diameter and total_width
+* shift_y: [cm]         shift to channel actually written to geometry file
 * angle_channel: [rad]  half of the curvature of a curved Fermi chopper
-* phase0:        [rad]  chopper phase at TOF of neutron to chopper centre
-* y_ch:          [cm]   position of gates perpendicular to flight direction
-* x_ch:          [cm]   position of gates along flight direction
-* coef_pi:       [-]    number of half-rotation to reach identical state
-* GeomFilePtr:   [-]    pointer to geometry file name
-* Pos:           [cm]   position of neutron
-* Dir:           [-]    flight direction of neutron
-* Neutrons:      [-]    neutron parameter set at end of chopper
-* pos_ch:        [cm]   centre position of the Fermi chopper
-* omega:         [1/s]  angular frequency of the chopper
-* optimal_wl:    [Ang]  wavelength of highest transmission of curved FC
+* phase0: [rad]         chopper phase at TOF of neutron to chopper centre
+* y_ch: [cm]            position of gates perpendicular to flight direction
+* x_ch: [cm]            position of gates along flight direction
+* coef_pi: [-]          number of half-rotation to reach identical state
+* GeomFilePtr: [-]      pointer to geometry file name
+* Pos: [cm]             position of neutron
+* Dir: [-]              flight direction of neutron
+* Neutrons: [-]         neutron parameter set at end of chopper
+* pos_ch: [cm]          centre position of the Fermi chopper
+* omega: [1/s]          angular frequency of the chopper
+* optimal_wl: [Ang]     wavelength of highest transmission of curved FC
 *
 *
 * %Link
@@ -119,41 +117,41 @@
 DEFINE COMPONENT Vitess_ChopperFermi
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string sGeomFileName=0, int GeomOption=0, int zerotime=0, int Nchannels=20, int Ngates=4,
-                    freq=300.0, height=0.05, width=0.04,
-                    depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
-                    wallwidth=0.0002)
+freq=300.0, height=0.05, width=0.04,
+depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
+wallwidth=0.0002)
 OUTPUT PARAMETERS (Option, CurvGeomOption, TOF, WL, radius_of_curv,
-                   main_depth, shift_y, angle_channel, phase0, y_ch, x_ch, coef_pi,
-                   XFILEName, GeomFilePtr, Pos, Dir, Neutrons, pos_ch, omega, optimal_wl)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+main_depth, shift_y, angle_channel, phase0, y_ch, x_ch, coef_pi,
+XFILEName, GeomFilePtr, Pos, Dir, Neutrons, pos_ch, omega, optimal_wl)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "general.c"
-  %include "intersection.c"
-  %include "vitess-lib"
+%include "general.c"
+%include "intersection.c"
+%include "vitess-lib"
 %}
 
 DECLARE
 %{
-  %include "chopper_fermi.h"   /* instance variables */
-  
-  double omega;      /* rotation frequency */
-  double optimal_wl; /* optimal wavelength */
-  VectorType pos_ch = {0.0, 0.0, 0.0};; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
-  
-  #define MCSTAS_SHARE
-  %include "chopper_fermi.c" /* include functions */
-  #undef MCSTAS_SHARE
+%include "chopper_fermi.h"   /* instance variables */
+
+double omega;      /* rotation frequency */
+double optimal_wl; /* optimal wavelength */
+VectorType pos_ch = {0.0, 0.0, 0.0};; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
+
+#define MCSTAS_SHARE
+%include "chopper_fermi.c" /* include functions */
+#undef MCSTAS_SHARE
 %}
 
 INITIALIZE
 %{
-  omega = 0.0;
-  optimal_wl = 0.0;
+omega = 0.0;
+optimal_wl = 0.0;
 
-  double x,y,z;
-  coords_get(POS_R_COMP_INDEX(INDEX_CURRENT_COMP), &x, &y, &z);
+double x,y,z;
+coords_get(POS_R_COMP_INDEX(INDEX_CURRENT_COMP), &x, &y, &z);
   pos_ch[0] = -100.0 * z;
   pos_ch[1] = -100.0 * x;
   pos_ch[2] = -100.0 * y;

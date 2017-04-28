@@ -10,26 +10,24 @@
 * %I
 * Written by: Erik Knudsen
 * Date: June 2010
-* Version: $Revision: 1.2 $
 * Origin: Risoe
-* Release: McStas 2.0
 *
 * (Unphysical) ideal analyzer.
 *
-* %D 
+* %D
 *
 * This is an ideal model of a polarization analyser device. Given a polarization vector
 * it "lets through" a scaled neutron weight. An imperfect analyzer could be modelled by an
-* analysis vector M with |M|<1.  
+* analysis vector M with |M|<1.
 *
 * Example: PolAnalyser_ideal(mx=0, my=1, mz=0)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* mx:        X-component of polarisation analysis vector (can be negative) (1)
-* my:        Y-component of polarisation analysis vector (can be negative) (1)
-* mz:        Z-component of polarisation analysis vector (can be negative) (1)
+* mx: [1]  X-component of polarisation analysis vector (can be negative) 
+* my: [1]  Y-component of polarisation analysis vector (can be negative) 
+* mz: [1]  Z-component of polarisation analysis vector (can be negative) 
 *
 * OUTPUT PARAMETERS:
 *
@@ -46,20 +44,20 @@ DECLARE
 
 INITIALIZE
 %{
-  if (mx==0 && my==0 && mz==0) {
+if (mx==0 && my==0 && mz==0) {
     printf("Analyser_ideal: %s: NULL vector defined!\n"
 	   "ERROR      (mx, my, mz)=(0,0,0). Exiting",
            NAME_CURRENT_COMP);
     exit(1);
   }
-  
+
   if ((mx*mx + my*my + mz*mz) > 1) {
     printf("Analyser_ideal: %s: Polarisation analysis vector (mx, my, mz) is unphysical!\n"
 	   "ERROR  mx*mx + my*my + mz*mz > 1. Exiting....",
            NAME_CURRENT_COMP);
     exit(1);
   }
-  
+
   NORM(mx,my,mz);
 %}
 

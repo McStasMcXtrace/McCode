@@ -10,9 +10,7 @@
 * %I
 * Written by: <a href="mailto:desert@drecam.cea.fr">Sylvain Desert</a>
 * Date: 2007
-* Version: $Revision$
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
-* Release: McStas 1.12
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * Elliptical mirror.
@@ -27,17 +25,17 @@
 *
 * %P
 * INPUT PARAMETERS:
-* yheight:    (m) height of the mirror 
-* focus:      (m) focal length (m)
-* interfocus: (m) Distance between the two elliptical focal points
-* zmin:       (m) z-axis coordinate of ellipse start
-* zmax:       (m) z-axis coordinate of ellipse end
-* reflect:  (str) Reflectivity file name. Format [q(Angs-1) R(0-1)]
-* R0:         [1] Low-angle reflectivity
-* Qc:      [AA-1] Critical scattering vector
-* alpha:     [AA] Slope of reflectivity
-* m:          [1] m-value of material. Zero means completely absorbing.
-* W:       [AA-1] Width of supermirror cut-off
+* yheight: [m]                 height of the mirror
+* focus: [m]                   focal length (m)
+* interfocus: [m]              Distance between the two elliptical focal points
+* zmin: [m]                    z-axis coordinate of ellipse start
+* zmax: [m]                    z-axis coordinate of ellipse end
+* reflect: [q(Angs-1) R(0-1)]  (str) Reflectivity file name. Format 
+* R0: [1]                      Low-angle reflectivity
+* Qc: [AA-1]                   Critical scattering vector
+* alpha: [AA]                  Slope of reflectivity
+* m: [1]                       m-value of material. Zero means completely absorbing.
+* W: [AA-1]                    Width of supermirror cut-off
 *
 * Example instrument file FocalisationMirrors.instr is available in the examples/ folder.
 *
@@ -47,10 +45,10 @@
 DEFINE COMPONENT Mirror_Elliptic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, focus=6.6e-4,interfocus=8.2, yheight=2e-4, zmin=0, zmax=0,
-  R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
-OUTPUT PARAMETERS (beta1, alpha1,beta2, alpha2, a, b,                        
-  delta,angle,pTable,old_x,old_y,old_z,err)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
+OUTPUT PARAMETERS (beta1, alpha1,beta2, alpha2, a, b,
+delta,angle,pTable,old_x,old_y,old_z,err)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
 #ifndef SIGN

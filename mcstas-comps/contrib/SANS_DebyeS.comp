@@ -11,8 +11,6 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision$
-* Release:    McStas 1.9
 *
 * Sample for Small Angle Neutron Scattering: Debye-Scherrer Ring
 *
@@ -38,11 +36,11 @@
 *
 * INPUT PARAMETERS
 *
-* transm  (1): coherent transmission of sample for the optical path "zdepth"
-* qDS  (AA-1): Scattering vector of Debye-Sherrer ring
-* xwidth  (m): horiz. dimension of sample, as a width (m)
-* yheight (m): vert.. dimension of sample, as a height (m)
-* zdepth  (m): thickness of sample (m)
+* transm: [1]   coherent transmission of sample for the optical path "zdepth"
+* qDS: [AA-1]   Scattering vector of Debye-Sherrer ring
+* xwidth: [m]   horiz. dimension of sample, as a width (m)
+* yheight: [m]  vert.. dimension of sample, as a height (m)
+* zdepth: [m]   thickness of sample (m)
 *
 * %Link
 * Sans_spheres component
@@ -54,15 +52,15 @@ DEFINE COMPONENT SANS_DebyeS
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zdepth=0.001)
 OUTPUT PARAMETERS (q_v)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double q_v;
+double q_v;
 %}
 
 INITIALIZE
 %{
-    if (!xwidth || !yheight || !zdepth) {
+if (!xwidth || !yheight || !zdepth) {
   exit(fprintf(stderr,"SANS_DebyeS: %s:  sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     }
 %}

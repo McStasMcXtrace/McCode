@@ -11,9 +11,7 @@
 * Written by: Roland Schedler <roland.schedler at hmi.de>
 * Modified by: using Collimator_radial Component
 * Date: October 2006
-* Version: $Revision$
 * Origin: HMI
-* Release: McStas 1.9
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * An exact radial Soller collimator.
@@ -34,15 +32,15 @@
 * %P
 * INPUT PARAMETERS:
 *
-* theta_min:   (deg)        Minimum Theta angle for the radial setting
-* theta_max:   (deg)        Maximum Theta angle for the radial setting
-* nslit:       (1)             Number of channels in the theta range
-* radius:      (m)          Inner radius (focus point to foil start point).
-* length:      (m)          Length of the foils / collimator
-* h_in:        (m)          Input  window height
-* h_out:       (m)          Output window height
-* d:           (m)          Thickness of the absorbing foils
-* verbose:     (0/1)        Gives additional information
+* theta_min: [deg]  Minimum Theta angle for the radial setting
+* theta_max: [deg]  Maximum Theta angle for the radial setting
+* nslit: [1]        Number of channels in the theta range
+* radius: [m]       Inner radius (focus point to foil start point).
+* length: [m]       Length of the foils / collimator
+* h_in: [m]         Input  window height
+* h_out: [m]        Output window height
+* d: [m]            Thickness of the absorbing foils
+* verbose: [0/1]    Gives additional information
 *
 * %E
 *******************************************************************************/
@@ -51,19 +49,19 @@
 DEFINE COMPONENT Exact_radial_coll
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (theta_min=-5, theta_max=5, nslit=100,
-                    radius=1.0, length=.5, h_in=.3, h_out=.4,
-                    d=0.0001, verbose=0)
+radius=1.0, length=.5, h_in=.3, h_out=.4,
+d=0.0001, verbose=0)
 OUTPUT PARAMETERS (alpha_in, alpha_out, out_radius, beta_in, beta_out, iw, ow,divergence,theta)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double alpha_in, alpha_out, beta_in, beta_out, theta;
-  double out_radius, iw, ow, divergence;
+double alpha_in, alpha_out, beta_in, beta_out, theta;
+double out_radius, iw, ow, divergence;
 %}
 INITIALIZE
 %{
-  /* check for input parameters */
-  if (radius <= 0) exit(printf("Exact_radial_coll: %s: radius must be positive\n", NAME_CURRENT_COMP));
+/* check for input parameters */
+if (radius <= 0) exit(printf("Exact_radial_coll: %s: radius must be positive\n", NAME_CURRENT_COMP));
   if (h_in <= 0) exit(printf("Exact_radial_coll: %s: h_in must be positive\n", NAME_CURRENT_COMP));
   if (h_out <= 0) exit(printf("Exact_radial_coll: %s: h_out must be positive\n", NAME_CURRENT_COMP));
   if (d <= 0) exit(printf("Exact_radial_coll: %s: d must be positive\n", NAME_CURRENT_COMP));

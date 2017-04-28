@@ -10,9 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann, modified to PSI use by Jonas Okkels Birk
 * Date: Aug 27, 2001
-* Version: $Revision$
 * Origin: ILL/Risoe
-* Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
@@ -76,56 +74,56 @@
 * Validated by: K. Lieutenant
 *
 * %P
-* radius: [m]   Radius of circle in (x,y,0) plane where neutrons
+* radius: [m]                 Radius of circle in (x,y,0) plane where neutrons
 *               are generated. You may also use 'h' and 'w' for a square source
-* dist:   [m]   Distance to target along z axis.
-* xw:     [m]   Width(x) of target.
+* dist: [m]                   Distance to target along z axis.
+* xw: [m]                     Width(x) of target.
 *               If dist=0.0, xw = full horz. div  in deg
-* yh:     [m]   Height(y) of target.
+* yh: [m]                     Height(y) of target.
 *               If dist=0.0, yh = full vert. div in deg
 *
 * Energy or wavelength range must be defined by giving min and max value or
 * average and spread:
-* Emin:     [meV] Minimum energy of neutrons
-* Emax:     [meV] Maximum energy of neutrons
-* E0:       [meV] Mean energy of neutrons.
-* dE:       [meV] Energy spread of neutrons, half width.
-* Lmin:     [AA]  Minimum wavelength of neutrons
-* Lmax:     [AA]  Maximum wavelength of neutrons
-* Lambda0:  [AA]  Mean wavelength of neutrons.
-* dLambda:  [AA]  Wavelength spread of neutrons,half width
+* Emin: [meV]                 Minimum energy of neutrons
+* Emax: [meV]                 Maximum energy of neutrons
+* E0: [meV]                   Mean energy of neutrons.
+* dE: [meV]                   Energy spread of neutrons, half width.
+* Lmin: [AA]                  Minimum wavelength of neutrons
+* Lmax: [AA]                  Maximum wavelength of neutrons
+* Lambda0: [AA]               Mean wavelength of neutrons.
+* dLambda: [AA]               Wavelength spread of neutrons,half width
 *
 * Optional parameters:
-* h:         [m]   Source y-height, then does not use radius parameter
-* w:         [m]   Source x-width, then does not use radius parameter
-* length:    [m]   Source z-length, not anymore flat
-* T1:        [K]   Temperature of the Maxwellian source, 0=none
-* I1:        [1/(cm**2*st)] Source flux per solid angle, area and Angstrom
-* T2:        [K]   Second Maxwellian source Temperature, 0=none
-* I2:        [1/(cm**2*st)] Second Maxwellian Source flux
-* T3:        [K]   Third Maxwellian source Temperature, 0=none
-* I3:        [1/(cm**2*st)] Third Maxwellian Source flux
-* HEtailA:   [1/(cm**2*st*AA)] Amplitude of heigh energy tail
-* HEtailL0:  [AA]  Offset of heigh energy tail
-* phi_init:  [degrees]  Angle abowe the x-z-plan that the source is amied at
-* theta_init:[degrees]  Angle from the z-axis in the x-z-plan that the source is amied at
-* flux_file: [str] Name of a two columns [lambda flux] text file that contains
+* h: [m]                      Source y-height, then does not use radius parameter
+* w: [m]                      Source x-width, then does not use radius parameter
+* length: [m]                 Source z-length, not anymore flat
+* T1: [K]                     Temperature of the Maxwellian source, 0=none
+* I1: [1/(cm**2*st)]          Source flux per solid angle, area and Angstrom
+* T2: [K]                     Second Maxwellian source Temperature, 0=none
+* I2: [1/(cm**2*st)]          Second Maxwellian Source flux
+* T3: [K]                     Third Maxwellian source Temperature, 0=none
+* I3: [1/(cm**2*st)]          Third Maxwellian Source flux
+* HEtailA: [1/(cm**2*st*AA)]  Amplitude of heigh energy tail
+* HEtailL0: [AA]              Offset of heigh energy tail
+* phi_init: [degrees]         Angle abowe the x-z-plan that the source is amied at
+* theta_init: [degrees]       Angle from the z-axis in the x-z-plan that the source is amied at
+* flux_file: [str]            Name of a two columns [lambda flux] text file that contains
 *                  the wavelength distribution of the flux in [1/(s*cm**2*st*AA)].
 *                  Comments (#) and further columns are ignored. Format is
 *                  compatible with McStas/PGPLOT wavelength monitor files.
 *                  When specified, temperature and intensity values are ignored.
-* flux_file_perAA: [1] When true (1), indicates that flux file data is already per
+* flux_file_perAA: [1]        When true (1), indicates that flux file data is already per
 *                      Angstroem. If false, file data is per wavelength bin.
-* flux_file_log:   [1] When true, will transform the flux table in log scale to
+* flux_file_log: [1]          When true, will transform the flux table in log scale to
 *                      improve the sampling. This may also cause
-* xdiv_file: [str] Name of the x-horiz. divergence distribution file, given as a
+* xdiv_file: [str]            Name of the x-horiz. divergence distribution file, given as a
 *                  free format text matrix, preceeded with a line
 *                    '# xylimits: xmin xmax xdiv_min xdiv_max'
-* ydiv_file: [str] Name of the y-vert. divergence distribution file, given as a
+* ydiv_file: [str]            Name of the y-vert. divergence distribution file, given as a
 *                  free format text matrix, preceeded with a line
 *                    '# xylimits: ymin ymax ydiv_min ydiv_max'
-* gaussian:  [0/1] Use gaussian divergence beam, normal distributions
-* verbose:   [0/1] display info about the source. -1 unactivate source.
+* gaussian: [0/1]             Use gaussian divergence beam, normal distributions
+* verbose: [0/1]              display info about the source. -1 unactivate source.
 *
 * %L
 * <a href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>
@@ -138,14 +136,14 @@
 DEFINE COMPONENT Source_gen4
 DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0)
 SETTING PARAMETERS (radius=0.0, dist=0, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
-                    h=0, w=0, gaussian=0, verbose=0, T1=0,
-                    flux_file_perAA=0, flux_file_log=0,
-                   
+h=0, w=0, gaussian=0, verbose=0, T1=0,
+flux_file_perAA=0, flux_file_log=0,
+
 Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0,phi_init=0,theta_init=0,HEtailA=0,HEtailL0=0)
 OUTPUT PARAMETERS (p_in,
-  lambda0, lambda02, L2P,
-  lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc,
-  pTable, pTable_x, pTable_y)
+lambda0, lambda02, L2P,
+lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc,
+pTable, pTable_x, pTable_y)
 
 SHARE
 %{

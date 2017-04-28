@@ -11,9 +11,7 @@
 *
 * Written by: Peter Willendrup
 * Date: November 2008
-* Release: McStas 1.12
 * Origin: Risoe
-* Version: $Revision$
 *
 * Box-shaped absorbing slab.
 *
@@ -22,16 +20,15 @@
 *
 * Example: Absorber(xmin=-0.01, xmax=0.01, ymin=-0.05, ymax=0.05, zmin=-0.2, zmax=0)
 *
-* %PAR
-*
+* %P
 * INPUT PARAMETERS
 *
-* xmin:   Lower x bound (m)
-* xmax:   Upper x bound (m)
-* ymin:   Lower y bound (m)
-* ymax:   Upper y bound (m)
-* zmin:   Lower z bound (m)
-* zmax:   Upper z bound (m)
+* xmin: [m]  Lower x bound 
+* xmax: [m]  Upper x bound 
+* ymin: [m]  Lower y bound 
+* ymax: [m]  Upper y bound 
+* zmin: [m]  Lower z bound 
+* zmax: [m]  Upper z bound 
 *
 * %END
 *******************************************************************************/
@@ -42,15 +39,15 @@ SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0)
 
 DECLARE
 %{
-  double t0,t1,xp,yp,zp,xm,ym,zm,xw, yh, zt;
+double t0,t1,xp,yp,zp,xm,ym,zm,xw, yh, zt;
 %}
 
 INITIALIZE
 %{
-  xw = xmax-xmin;
-  yh = ymax-ymin; 
-  zt = zmax-zmin;
-  xm = (xmax+xmin)/2;
+xw = xmax-xmin;
+yh = ymax-ymin;
+zt = zmax-zmin;
+xm = (xmax+xmin)/2;
   ym = (ymax+ymin)/2;
   zm = (zmax+zmin)/2;
   if (xw == 0 || yh == 0 || zt == 0)

@@ -10,7 +10,6 @@
 * Written by: Garrett Granroth
 * Date: 2 NOV 2004
 * Origin: SNS Oak Ridge,TN
-* Version: 0.4
 * 
 * Vertical T0 chopper contributed by Garrett Granroth, SNS.
 *
@@ -21,14 +20,14 @@
 * %P
 *  Input Parameters:
 *  
-*  len:  length of slot (m)
-*  w1: center width (m)
-*  w2: edgewidth
-*  nu:     frequency (Hz)
-*  delta:  time from edge of chopper to center Phase angle (sec)
-*  tc:     time when desired neutron is at the center of the chopper (sec)
-*  ymin:   Lower y bound (m)
-*  ymax:   Upper y bound (m)
+* len: [m]      length of slot 
+* w1: [m]       center width 
+* w2: []        edgewidth
+* nu: [Hz]      frequency 
+* delta: [sec]  time from edge of chopper to center Phase angle 
+* tc: [sec]     time when desired neutron is at the center of the chopper 
+* ymin: [m]     Lower y bound 
+* ymax: [m]     Upper y bound 
 *  
 *
 * %End
@@ -41,9 +40,9 @@ OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
 SHARE
 %{
 #ifndef FERMI_CHOP_DEFS
-#define FERMI_CHOP_DEFS   
-    /* routine to calculate acos in proper quadrant  range = 0 to 2PI*/ 
-    double acos0_2pi(double x,double y)
+#define FERMI_CHOP_DEFS
+/* routine to calculate acos in proper quadrant  range = 0 to 2PI*/
+double acos0_2pi(double x,double y)
      {
        if (y>0.0){ 
          return acos(x);

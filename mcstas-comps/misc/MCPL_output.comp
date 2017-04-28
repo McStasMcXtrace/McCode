@@ -3,21 +3,18 @@
 * McStas, neutron ray-tracing package
 *         Copyright (C) 1997-2017, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-
 * Component: MCPL_output
 *
 * %I
-* Written by: Erik B Knudsen 
+* Written by: Erik B Knudsen
 * Date: Mar 2016
-* Version: $Revision$
 * Origin: DTU Physics
-* Release: McStas 2.3
 *
-* Detector-like component that writes neutron state parameters into an mcpl-format 
+* Detector-like component that writes neutron state parameters into an mcpl-format
 * binary, virtual-source neutron file.
 *
 * %D
-* Detector-like component that writes neutron state parameters into an mcpl-format 
+* Detector-like component that writes neutron state parameters into an mcpl-format
 * binary, virtual-source neutron file.
 *
 * MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
@@ -25,14 +22,14 @@
 *
 * When used with MPI, the component will output #MPI nodes individual MCPL files that
 * can be merged using the mcpltool.
-* 
-* MCPL_output allows a few flags to tweak the output files: 
+*
+* MCPL_output allows a few flags to tweak the output files:
 * 1. If use_polarisation is unset (default) the polarisation vector will not be stored (saving space)
 * 2. If doubleprec is unset (default) data will be stored as 32 bit floating points, effectively cutting the output file size in half.
 * 3. Extra information may be attached to each ray in the form of a userflag, a user-defined variable wich is packed into 32 bits. If
 * the user variable does not fit in 32 bits the value will be truncated and likely garbage. If more than one variable is to be attached to
 * each neutron this must be packed into the 32 bits.
-* 
+*
 * These features are set this way to keep file sizes as manageable as possible.
 *
 * %BUGS
@@ -40,14 +37,14 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename:        [str] Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
-* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
-* polarisationuse: [1]   Enable storing the polarisation state of the neutron.
-* doubleprec:      [1]   Use double precision storage
-* userflag:        [1]   Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
-* userflagcomment: [str] String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
-* merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI 
-* keep_mpi_unmerged: [1] Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
+* filename: [str]         Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
+* verbose: [1]            If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
+* polarisationuse: [1]    Enable storing the polarisation state of the neutron.
+* doubleprec: [1]         Use double precision storage
+* userflag: [1]           Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
+* userflagcomment: [str]  String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
+* merge_mpi: [1]          Flag to indicate if output should be merged in case of MPI
+* keep_mpi_unmerged: [1]  Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
 * %E
 *******************************************************************************/
 
@@ -60,9 +57,9 @@ DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 SHARE
 %{
 #include <mcpl.h>
-  int mcpl_file_exist (char *filename)
+int mcpl_file_exist (char *filename)
   {
-    struct stat   buffer;   
+    struct stat   buffer;
     return (stat (filename, &buffer) == 0);
   }
 %}
@@ -110,7 +107,7 @@ INITIALIZE
         size = ftell(fp); // get current file pointer
         fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
         if ( size && (buffer=malloc(size))!=NULL){
-            if (size!=(fread(buffer,1,size,fp))){ 
+            if (size!=(fread(buffer,1,size,fp))){
 	      fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
             }
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
@@ -136,7 +133,7 @@ INITIALIZE
         mcpl_enable_doubleprec(outputfile);
     }
 
-#if defined (USE_MPI)   
+#if defined (USE_MPI)
   MPI_MASTER(
 #endif
 
@@ -144,7 +141,7 @@ INITIALIZE
     printf("MCPL_output verbose mode: after generating the mcpl-file it will be reread and a summary printed.\n");
     }
 
-#if defined (USE_MPI)   
+#if defined (USE_MPI)
 	    );
 #endif
 
@@ -187,7 +184,7 @@ TRACE
 
     nrm =sqrt(vx*vx + vy*vy + vz*vz);
     /*ekin is in MeV*/
-    particle->ekin = VS2E*nrm*nrm/1e9; 
+    particle->ekin = VS2E*nrm*nrm/1e9;
     particle->direction[0] = vx/nrm;
     particle->direction[1] = vy/nrm;
     particle->direction[2] = vz/nrm;
@@ -200,7 +197,7 @@ TRACE
         particle->userflags = (uint32_t) userflag;
     }
 
-#if defined (USE_MPI)   
+#if defined (USE_MPI)
   MPI_MASTER(
 #endif
     if (verbose==3 && mcrun_num<10) {
@@ -209,13 +206,13 @@ TRACE
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
     }
-#if defined (USE_MPI)   
+#if defined (USE_MPI)
   );
 #endif
 
 
     mcpl_add_particle(outputfile,particle);
-    
+
     SCATTER;
 %}
 
@@ -223,12 +220,12 @@ SAVE
 %{
 #ifdef USE_MPI
   if (merge_mpi && mpi_node_count > 1) {
-    mcpl_close_outfile(outputfile); 
+    mcpl_close_outfile(outputfile);
   } else {
-    mcpl_closeandgzip_outfile(outputfile);  
+    mcpl_closeandgzip_outfile(outputfile);
   }
 #else
-  mcpl_closeandgzip_outfile(outputfile);  
+  mcpl_closeandgzip_outfile(outputfile);
 #endif
 %}
 
@@ -237,7 +234,7 @@ FINALLY
 #ifdef USE_MPI
  MPI_Barrier(MPI_COMM_WORLD);
  MPI_MASTER(
-     /* Only attempt merge if requested and meaningful */ 
+     /* Only attempt merge if requested and meaningful */
      if (merge_mpi && mpi_node_count > 1) {
         char **mpi_node_files;
         char *merge_outfilename;
@@ -295,4 +292,3 @@ MCDISPLAY
 %}
 
 END
-

@@ -10,9 +10,7 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: 10.05.07
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.12
 * 
 * A Double-cylinder shaped all-incoherent scatterer
 * with elastic, quasielastic (Lorentzian), and tunneling (sharp) 
@@ -42,11 +40,11 @@
 *
 * %P
 * INPUT PARAMETERS:
-* radius: Outer radius of sample in (x,z) plane [m]
-* yheight:  vert.  dimension of sample, as a height [m]
-* thickness: Thickness of cylindrical sample in (x,z) plane [m]
-* focus_r:  Radius of disk containing target. Use 0 for full space [m]
-* target_index: relative index of component to focus at, e.g. next is +1 [1]
+* radius: [m]        Outer radius of sample in (x,z) plane 
+* yheight: [m]       vert.  dimension of sample, as a height 
+* thickness: [m]     Thickness of cylindrical sample in (x,z) plane 
+* focus_r: [m]       Radius of disk containing target. Use 0 for full space 
+* target_index: [1]  relative index of component to focus at, e.g. next is +1 
 *
 
 * Optional parameters
@@ -61,7 +59,7 @@
 * Vc:       Unit cell volume [AA^3]
 * p_interact: MC Probability for scattering the ray; otherwise transmit [1]
 * f_QE:     Fraction of quasielastic scattering [1]
-* f_tun:    Fraction of tunneling scattering (f_QE+f_tun < 1) [1] 
+* f_tun:    Fraction of tunneling scattering (f_QE+f_tun < 1) [1]
 * gamma:    Lorentzian width of quasielastic broadening (HWHM) [meV]
 * E_tun:    Tunneling energy [meV]
 * target_x:
@@ -83,17 +81,17 @@
 DEFINE COMPONENT Tunneling_sample
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (thickness=0, radius=0.01, focus_r = 0,
-		    p_interact = 1, f_QE=0, f_tun=0, gamma=0, E_tun=0, 
-  target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, sigma_abs=5.08, sigma_inc=4.935, Vc=13.827, int target_index=0)
+p_interact = 1, f_QE=0, f_tun=0, gamma=0, E_tun=0,
+target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0,
+focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, sigma_abs=5.08, sigma_inc=4.935, Vc=13.827, int target_index=0)
 OUTPUT PARAMETERS(ftun, fQE, VarsV)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  struct StructVarsV
-  {
-    double sigma_a; /* Absorption cross section per atom (barns) */
+struct StructVarsV
+{
+double sigma_a; /* Absorption cross section per atom (barns) */
     double sigma_i; /* Incoherent scattering cross section per atom (barns) */
     double rho;     /* Density of atoms (AA-3) */
     double my_s;

@@ -6,7 +6,6 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Version: $Revision: 0.8 $
 * Origin: Svanevej 19
 *
 *
@@ -30,8 +29,8 @@
 *
 * %P
 * INPUT PARAMETERS:
-*   allow_inside_start: Set to 1 if rays are expected to start inside a volume in this master
-*   history_limit:      Limits how many histories are recorded before stopping
+* allow_inside_start: []  Set to 1 if rays are expected to start inside a volume in this master
+* history_limit: []       Limits how many histories are recorded before stopping
 *
 * OUTPUT PARAMETERS:
 *
@@ -62,17 +61,17 @@ SHARE
 
 DECLARE
 %{
-  // Setting declare section, setting these at compile time is done to let the compiler optimize easier, 1 for enable, 0 for disable.
-  int verbal = 1;
-  int list_verbal = 1;
-  int trace_verbal = 0;
-  int enable_tagging = 1;
-  int finally_verbal = 0;
+// Setting declare section, setting these at compile time is done to let the compiler optimize easier, 1 for enable, 0 for disable.
+int verbal = 1;
+int list_verbal = 1;
+int trace_verbal = 0;
+int enable_tagging = 1;
+int finally_verbal = 0;
 
-  // It is possible to surpress warnings on starting volume by setting this to 1
-  int starting_volume_warning = 0;
+// It is possible to surpress warnings on starting volume by setting this to 1
+int starting_volume_warning = 0;
 
-  // Declare the global variables (not to be in output parameters)
+// Declare the global variables (not to be in output parameters)
   struct global_master_element_struct global_master_element;
   
   #ifndef MASTER_DETECTOR

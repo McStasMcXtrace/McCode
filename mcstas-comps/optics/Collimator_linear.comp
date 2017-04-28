@@ -10,9 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 * Modified by: GA, June 1999, added transmission
 *
 * A simple analytical Soller collimator (with triangular transmission).
@@ -23,25 +21,21 @@
 * actual neutron trajectory. A zero divergence disables collimation (then the
 * component works as a double slit).
 *
-* Example: Collimator_linear(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-*           length=0.25, divergence=40,transmission=0.7)
+* Example: Collimator_linear(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, length=0.25, divergence=40,transmission=0.7)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:       (m)              Lower x bound on slits
-* xmax:       (m)              Upper x bound on slits
-* ymin:       (m)              Lower y bound on slits
-* ymax:       (m)              Upper y bound on slits
-* xwidth:     (m)              Width of slits
-* yheight:    (m)              Height of slits
-* length:     (m)              Distance between input and output slits
-* divergence: (minutes of arc) Divergence horizontal angle (calculated as atan(d/length),
-*                              where d is the blade spacing)
-*
-* Optional parameters
-* transmission:(1)              Transmission of Soller (0<=t<=1)
-* divergenceV: (minutes of arc) Divergence vertical angle
+* xmin: [m]                      Lower x bound on slits
+* xmax: [m]                      Upper x bound on slits
+* ymin: [m]                      Lower y bound on slits
+* ymax: [m]                      Upper y bound on slits
+* xwidth: [m]                    Width of slits
+* yheight: [m]                   Height of slits
+* length: [m]                    Distance between input and output slits
+* divergence: [minutes of arc]   Divergence horizontal angle (calculated as atan(d/length), where d is the blade spacing)
+* transmission: [1]              Transmission of Soller (0<=t<=1)
+* divergenceV: [minutes of arc]  Divergence vertical angle
 *
 * %E
 *******************************************************************************/
@@ -51,14 +45,14 @@ DEFINE COMPONENT Collimator_linear
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.02, xmax=0.02, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, length=0.3, divergence=40,transmission=1, divergenceV=0)
 OUTPUT PARAMETERS (slope, slopeV)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-  double slope, slopeV;
+double slope, slopeV;
 %}
 INITIALIZE
 %{
-  slope = tan(MIN2RAD*divergence);
+slope = tan(MIN2RAD*divergence);
   slopeV= tan(MIN2RAD*divergenceV);
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }

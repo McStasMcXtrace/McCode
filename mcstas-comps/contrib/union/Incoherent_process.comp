@@ -6,7 +6,6 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * A sample component to separate geometry and phsysics
@@ -35,7 +34,7 @@
 *
 * %P
 * INPUT PARAMETERS:
-* sigma:  [barns]         Incoherent scattering cross section
+* sigma: [barns]  Incoherent scattering cross section
 * packing_factor [1]      How dense is the material compared to optimal 0-1
 * Unit_cell_volume [AA^3] Unit_cell_volume
 * Interact_fraction [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
@@ -67,12 +66,12 @@ SHARE
 
 
 struct Incoherent_physics_storage_struct{
-    // Variables that needs to be transfered between any of the following places:
-    // The initialize in this component
-    // The function for calculating my
-    // The function for calculating scattering
-    
-    double my_scattering;
+// Variables that needs to be transfered between any of the following places:
+// The initialize in this component
+// The function for calculating my
+// The function for calculating scattering
+
+double my_scattering;
 };
 
 // Function for calculating my in Incoherent case

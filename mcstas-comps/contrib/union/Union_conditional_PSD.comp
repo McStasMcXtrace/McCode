@@ -6,7 +6,6 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * A sample component to separate geometry and phsysics
@@ -44,7 +43,7 @@
 *
 * %P
 * INPUT PARAMETERS:
-* target_loggers:     [string] Comma seperated list of loggers this conditional should affect
+* target_loggers: [string]     Comma seperated list of loggers this conditional should affect
 * master_tagging=0    [1] Apply this conditional to the tagging system in next master
 * tagging_extend_index[1] Not currently used
 * time_min            [s] Min time (on psd), if not set ignored
@@ -53,11 +52,11 @@
 * last_volume_index   [1] Not used yet
 *
 * OUTPUT PARAMETERS:
-* this_material:            Structure that contains information on this material
-* global_material_element:  Element of global_material_list which is a global variable
+* this_material: []            Structure that contains information on this material
+* global_material_element: []  Element of global_material_list which is a global variable
 *
 * GLOBAL PARAMETERS:
-* global_material_list:     List of all defined materials, available in the global scope
+* global_material_list: []     List of all defined materials, available in the global scope
 *
 * %L
 *

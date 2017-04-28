@@ -10,42 +10,39 @@
 * %I
 * Written by: Peter Willendrup, derived from PSD_monitor by Kim Lefmann
 * Date: Feb 3, 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Position-sensitive monitor with a TOF signal pr. bin.
 *
 * %D
-* An (nx times ny) pixel PSD monitor with nt time bins pr pixel. 
+* An (nx times ny) pixel PSD monitor with nt time bins pr pixel.
 *
 * Will output 1 integrated PSD images plus an nt time bin TOF signal pr pixel.
 *
-* Example: PSD_monitor_TOF(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-            nx=90, ny=90, tmin=4000, tmax=7000, nt=1000, filename="Output")
+* Example: PSD_monitor_TOF(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, tmin=4000, tmax=7000, nt=1000, filename="Output")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* tmin:     Lower time bound (mu-s)
-* tmax:     Upper time bound (mu-s)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* nt:       Number of TOF bins (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* tmin: [mu-s]          Lower time bound 
+* tmax: [mu-s]          Upper time bound 
+* xwidth: [m]           Width/diameter of detector (x). Overrides xmin, xmax 
+* yheight: [m]          Height of detector (y). Overrides ymin, ymax 
+* nx: [1]               Number of pixel columns 
+* ny: [1]               Number of pixel rows 
+* nt: [1]               Number of TOF bins 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -58,19 +55,19 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, PSD_Ns, PSD_ps, PSD_p2s)
 
 DECLARE
 %{
-  double PSD_N[nx][ny][nt];
-  double PSD_p[nx][ny][nt];
-  double PSD_p2[nx][ny][nt];
-  double PSD_Ns[nx][ny];
-  double PSD_ps[nx][ny];
-  double PSD_p2s[nx][ny];
+double PSD_N[nx][ny][nt];
+double PSD_p[nx][ny][nt];
+double PSD_p2[nx][ny][nt];
+double PSD_Ns[nx][ny];
+double PSD_ps[nx][ny];
+double PSD_p2s[nx][ny];
 %}
 
 INITIALIZE
 %{
-  int i,j,k;
+int i,j,k;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
@@ -117,7 +114,7 @@ TRACE
       PSD_Ns[i][j]++;
       PSD_ps[i][j] += p;
       PSD_p2s[i][j] += p*p;
-      
+
       SCATTER;
     }
     if (restore_neutron) {
@@ -139,7 +136,7 @@ SAVE
         nx, ny,
         &PSD_Ns[0][0],&PSD_ps[0][0],&PSD_p2s[0][0],
         ff);
-  
+
   for (kk=0; kk<nx; kk++) {
     for (ll=0; ll<ny; ll++) {
       sprintf(ff, "%s_%i_%i",filename,kk,ll);

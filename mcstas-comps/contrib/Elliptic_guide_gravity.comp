@@ -10,9 +10,7 @@
 * %I
 * Written by: Henrik Bo Hoffmann Carlsen and Mads Bertelsen
 * Date: 27 Aug 2012
-* Version: 0.91
 * Origin: NBI
-* Release: McStas 2.1
 *
 * Perfect elliptic guide which allow for simulations with gravity.
 * The guide mirrors can be divided into segments with individual m-values.
@@ -35,80 +33,80 @@
 *
 * %P
 * INPUT PARAMETERS:
-* mvaluesright: (pointer) Pointer to array of m-values, right mirror
-* mvaluesleft: (pointer) - same, left mirror
-* mvaluestop: (pointer) - same, top mirror
-* mvaluesbottom: (pointer) - same, bottom mirror
-* seglength: (pointer) Pointer to array of segment lengths for discrete mirror description
-* l: (m) length of the guide
+* mvaluesright: [pointer]   Pointer to array of m-values, right mirror
+* mvaluesleft: [pointer]    - same, left mirror
+* mvaluestop: [pointer]     - same, top mirror
+* mvaluesbottom: [pointer]  - same, bottom mirror
+* seglength: [pointer]      Pointer to array of segment lengths for discrete mirror description
+* l: [m]                    length of the guide
 *
-* linxw: (m) distance from 1st focal point to guide entrance 
+* linxw: [m]                distance from 1st focal point to guide entrance
 *			- left and right horizontal mirrors
-* loutxw: (m) distance from 2nd focal point to guide exit 
+* loutxw: [m]               distance from 2nd focal point to guide exit
 *			- left and right horizontal mirrors
-* linyh: (m)	distance from 1st focal point to guide entrance 
+* linyh: [m]                distance from 1st focal point to guide entrance
 *		- top and bottom vertical mirrors
-* loutyh: (m) distance from 2nd focal point to guide exit 
+* loutyh: [m]               distance from 2nd focal point to guide exit
 *		- top and bottom vertical mirrors
-* xwidth: (m) 	width at the guide entry, mid or exit (see dimensionsAt)
-* yheight: (m) 	height at the guide entry, mid or exit (see dimensionsAt)
-* R0:		(1)		Low-angle reflectivity
-* Qc:		(AA-1) 	Critical scattering vector
-* alpha: 	(AA) 	Slope of reflectivity
-* m:		(1) 	m-value of material for all mirrors, 
+* xwidth: [m]               width at the guide entry, mid or exit (see dimensionsAt)
+* yheight: [m]              height at the guide entry, mid or exit (see dimensionsAt)
+* R0: [1]                   Low-angle reflectivity
+* Qc: [AA-1]                Critical scattering vector
+* alpha: [AA]               Slope of reflectivity
+* m: [1]                    m-value of material for all mirrors,
 *					zero means complete absorption.
-* W:		(AA-1) 	Width of supermirror cut-off
+* W: [AA-1]                 Width of supermirror cut-off
 *
-* alphatop: 	(AA) 	Slope of reflectivity for top horizontal mirror, 
+* alphatop: [AA]            Slope of reflectivity for top horizontal mirror,
 *						overwrites alpha
-* mtop: 		(1) 	m-value of material for top horizontal mirror, 
+* mtop: [1]                 m-value of material for top horizontal mirror,
 *						overwrites m
 *
-* alphabottom: 	(AA) 	Slope of reflectivity for bottom horizontal mirror
-* mbottom: 		(1) 	m-value of material for bottom horizontal mirror
+* alphabottom: [AA]         Slope of reflectivity for bottom horizontal mirror
+* mbottom: [1]              m-value of material for bottom horizontal mirror
 *
-* alpharight: 	(AA) 	Slope of reflectivity for right vertical mirror
-* mright: 		(1) 	m-value of material for right vertical mirror
+* alpharight: [AA]          Slope of reflectivity for right vertical mirror
+* mright: [1]               m-value of material for right vertical mirror
 *
-* alphaleft: 	(AA) 	Slope of reflectivity for left vertical mirror
-* mleft: 		(1) 	m-value of material for left vertical mirror
+* alphaleft: [AA]           Slope of reflectivity for left vertical mirror
+* mleft: [1]                m-value of material for left vertical mirror
 *
-* option: (string)	options are 'ellipse' and 'halfEllipse'. Ellipse is defined by 
+* option: [string]          options are 'ellipse' and 'halfEllipse'. Ellipse is defined by
 *					both the focal points, while halfEllipse locked the center 
 *					of the ellipse either the entrance or exit of the guide, and 
 *					use the focal point of the other end to define the ellipse
 *
-* dimensionsAt: (string) define whether xwidth and yheight sets the size of 
+* dimensionsAt: [string]    define whether xwidth and yheight sets the size of
 *						he opening, minor axis or the end of the guide.
 *
-* majorAxisxw: (m) direct defination of the guide geometry, will ignore 
+* majorAxisxw: [m]          direct defination of the guide geometry, will ignore
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis parallel to the z for the horizontal ellipse
-* minorAxisxw: (m) direct defination of the guide geometry, will ignore 
+* minorAxisxw: [m]          direct defination of the guide geometry, will ignore
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis Perpendicular to the z for the horizontal ellipse
-* majorAxisyh: (m) direct defination of the guide geometry, will ignore 
+* majorAxisyh: [m]          direct defination of the guide geometry, will ignore
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis parallel to the z for the vertical ellipse
-* minorAxisyh: (m) direct defination of the guide geometry, will ignore 
+* minorAxisyh: [m]          direct defination of the guide geometry, will ignore
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis Perpendicular to the z for the vertical ellipse
 *
-* majorAxisoffsetxw: (m) direct defination of the guide geometry, 
+* majorAxisoffsetxw: [m]    direct defination of the guide geometry,
 *							distance between the center of the horizontal 
 *							ellipse and the guide entrance							
-* majorAxisoffsetyh: (m) direct defination of the guide geometry, 
+* majorAxisoffsetyh: [m]    direct defination of the guide geometry,
 *							distance between the center of the vertical 
 *							ellipse and the guide entrance
-* verbose: (bool) Give extra information about calculations
-* curvature: (m) Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
+* verbose: [bool]           Give extra information about calculations
+* curvature: [m]            Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
 *
 * OUTPUT PARAMETERS
-* guideInfo: (1) 	structure containing internal variables
-* Gx: x-component of (m/s^2) local gravity vector 
-* Gy: y-component of (m/s^2) local gravity vector 
-* Gz: z-component of (m/s^2) local gravity vector 
-* dynamicalSegLength: (1) automatic generate length of specific m-value segments 
+* guideInfo: [1]            structure containing internal variables
+* Gx: []                    x-component of (m/s^2) local gravity vector
+* Gy: []                    y-component of (m/s^2) local gravity vector
+* Gz: []                    z-component of (m/s^2) local gravity vector
+* dynamicalSegLength: [1]   automatic generate length of specific m-value segments
 *					  if no seglength is given
 *
 * %D 
@@ -157,32 +155,32 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Elliptic_guide_gravity
-DEFINITION PARAMETERS(	
-	mvaluesright=NULL, mvaluesleft=NULL, mvaluestop=NULL, mvaluesbottom=NULL,
-	seglength=NULL	)
+DEFINITION PARAMETERS(
+mvaluesright=NULL, mvaluesleft=NULL, mvaluestop=NULL, mvaluesbottom=NULL,
+seglength=NULL	)
 SETTING PARAMETERS (l,
-		xwidth = 0,yheight = 0,
-		linxw = 0,loutxw = 0,
-		linyh = 0,loutyh = 0,
-		majorAxisxw = 0,minorAxisxw = 0,
-		majorAxisyh = 0,minorAxisyh = 0,
-		majorAxisoffsetxw = 0,
-		majorAxisoffsetyh = 0,
-		string dimensionsAt = "entrance",
-		string option = "ellipse",
-		R0=0.99, Qc=0.0218, alpha=6.07, m=2, W=0.003,
-	    alpharight=-1,  mright=-1, 
-	    alphaleft=-1,   mleft=-1, 
-	    alphatop=-1,    mtop=-1,  	
-	    alphabottom=-1, mbottom=-1,	
-		string verbose = "on", // on or off
-		enableGravity = 1.0,
-		curvature=0	)
+xwidth = 0,yheight = 0,
+linxw = 0,loutxw = 0,
+linyh = 0,loutyh = 0,
+majorAxisxw = 0,minorAxisxw = 0,
+majorAxisyh = 0,minorAxisyh = 0,
+majorAxisoffsetxw = 0,
+majorAxisoffsetyh = 0,
+string dimensionsAt = "entrance",
+string option = "ellipse",
+R0=0.99, Qc=0.0218, alpha=6.07, m=2, W=0.003,
+alpharight=-1,  mright=-1,
+alphaleft=-1,   mleft=-1,
+alphatop=-1,    mtop=-1,
+alphabottom=-1, mbottom=-1,
+string verbose = "on", // on or off
+enableGravity = 1.0,
+curvature=0	)
 
 OUTPUT PARAMETERS (
-	guideInfo,latestParticleCollision,Gx,Gy,Gz,
-	Gx0, Gy0, Gz0,Circ,dynamicalSegLength
-	)
+guideInfo,latestParticleCollision,Gx,Gy,Gz,
+Gx0, Gy0, Gz0,Circ,dynamicalSegLength
+)
 
 SHARE
 %{
@@ -193,13 +191,13 @@ SHARE
 ///////////////////////////////////////////////////////////////////////////
 
 /**
-	Sides of the guide
+Sides of the guide
 */
 enum Side {RightSide,TopSide,LeftSide,BottomSide,None};
 
 /**
-	The type of the collision is set in the collision function
-	and decide the functions called in trace()
+The type of the collision is set in the collision function
+and decide the functions called in trace()
 	Reflex (TODO change this name) calls the reflection function
 	Absorb calls the built in ABSORB funtion.
 	LeaveGuide calls break and end the calculations in this component

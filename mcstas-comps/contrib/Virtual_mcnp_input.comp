@@ -6,13 +6,11 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Virtual_mcnp_input.comp
-
+*
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision$
 * Origin: <a href="http://www.ill.fr/">ILL</a>
-* Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
 *
 * This component uses a filename of recorded neutrons from the reactor monte carlo
@@ -60,34 +58,23 @@
 *
 * %P
 * INPUT PARAMETERS
-* filename:     [str] Name of the MCNP PTRAC neutron input file. Empty string "" unactivates component
-* repeat_count: [1]   Number of times the source must be generated.
-*                           0 unactivates the component
-* verbose:      [0|1] Displays additional informations if set to 1
-* intensity:    [n/s] Intensity multiplication factor
-* nps:          [1]   Number of total events shot by MCNP to generate the PTRAC
-*                     as indicated at the end of the MCNP 'o' file
-*                     as 'source particle weight for summary table normalization'
-*                     or alternatively 'nps = '.
-* autocenter:   [str] String which may contain following keywords.
-*                     "translate" or "center"  to center the beam area AT (0,0,0)
-*                     "rotate"    or "orient"  to center the beam velocity along Z
-*                     "change axes"            to change coordinate system definition
-*                     "rescale"                to adapt intensity to abs. units.
-*                       with factor intensity/nps.
-*                     Other words are ignored.
-* surface_id:   [1]   Index of the emitting MCNP surface to use. -1 for all.
-* MCNP_ANALYSE: [1]   Number of neutron events to read for file pre-analysis.
-*                     Use 0 to analyze them all.
-* smooth:       [0/1] Smooth sparsed event files for file repetitions.
+* filename: [str]    Name of the MCNP PTRAC neutron input file. Empty string "" unactivates component
+* repeat_count: [1]  Number of times the source must be generated. 0 unactivates the component
+* verbose: [0|1]     Displays additional informations if set to 1
+* intensity: [n/s]   Intensity multiplication factor
+* nps: [1]           Number of total events shot by MCNP to generate the PTRAC as indicated at the end of the MCNP 'o' file as 'source particle weight for summary table normalization' or alternatively 'nps = '.
+* autocenter: [str]  String which may contain following keywords. "translate" or "center"  to center the beam area AT (0,0,0) "rotate"    or "orient"  to center the beam velocity along Z "change axes"            to change coordinate system definition "rescale"                to adapt intensity to abs. units. with factor intensity/nps. Other words are ignored.
+* surface_id: [1]    Index of the emitting MCNP surface to use. -1 for all.
+* MCNP_ANALYSE: [1]  Number of neutron events to read for file pre-analysis. Use 0 to analyze them all.
+* smooth: [0/1]      Smooth sparsed event files for file repetitions.
 *
 * OUTPUT PARAMETERS
-* head:   [char]        header buffer
-* nl:     [long]        nb of lines in header
-* mean_x: [double]      \
-* mean_y: [double]      source center coordinates
-* mean_z: [double]      /
-* angle2z:[double, rad] rotation angle required to orient beam along Z axis
+* head: [char]       header buffer
+* nl: [long]         nb of lines in header
+* mean_x: [m]        source center coordinates
+* mean_y: [m]        source center coordinates
+* mean_z: [m]        source center coordinates
+* angle2z: [rad]     rotation angle required to orient beam along Z axis
 *
 * %L
 * <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
@@ -101,16 +88,16 @@
 DEFINE COMPONENT Virtual_mcnp_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,
-                    int surface_id=-1,
-                    nps=0,smooth=1)
+int surface_id=-1,
+nps=0,smooth=1)
 OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,
-                   bx,by,bz,angle2z,mean_x, mean_y, mean_z,
-                   old_surface,surface,informed_event,informed_surface,
-                   min_x, min_y, min_z,    max_x , max_y , max_z ,
-                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, 
-                   mean_dx, mean_dy, mean_dz,
-                   n_count_extrapolated, repeat_cnt)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+bx,by,bz,angle2z,mean_x, mean_y, mean_z,
+old_surface,surface,informed_event,informed_surface,
+min_x, min_y, min_z,    max_x , max_y , max_z ,
+min_vx, min_vy, min_vz, max_vx, max_vy, max_vz,
+mean_dx, mean_dy, mean_dz,
+n_count_extrapolated, repeat_cnt)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -154,7 +141,7 @@ int mcnp_get_particle(FILE *hfile,float * tableau,int *old_surface,int *surface_
         new_surface=arg3;
 
         if (new_surface!=*surface_id && *surface_id!=-1) serr=1;
-        else 
+        else
           *informed_surface=new_surface;
 
         if (*old_surface!=-1 && !*informed_surface && new_surface!=*old_surface) {
@@ -162,8 +149,8 @@ int mcnp_get_particle(FILE *hfile,float * tableau,int *old_surface,int *surface_
         }
 
         *old_surface     =new_surface;
-        
-      } else if (count==9 && (!informed_surface || *informed_surface) 
+
+      } else if (count==9 && (!informed_surface || *informed_surface)
           && (!informed_event || (informed_event && (*informed_event==3000 || *informed_event==9000)))) {
         if(serr==0){
           tableau[0]=arg1;
@@ -182,7 +169,7 @@ int mcnp_get_particle(FILE *hfile,float * tableau,int *old_surface,int *surface_
         if (informed_event  && *informed_event) {
           exit_flag=1;
           printf("MCNP_input: Warning: skip line %s\n", str);
-          return (exit_flag); 
+          return (exit_flag);
         }
       }
       c=fgets(str,1024,hfile);
@@ -263,7 +250,7 @@ DECLARE
   int rep;                    /* Neutron repeat count */
   int repeat_cnt;             /* Repeat count, MPI taken into account */
   FILE *hfile;                /* Neutron input file handle */
-  
+
 
   char do_rotate, do_translate;
   double mean_x, mean_y, mean_z;
@@ -329,8 +316,8 @@ INITIALIZE
 
   if (!filename || !strcmp(filename,"") || !strcmp(filename,"0")  || !strcmp(filename,"NULL"))
     exit(printf("MCNP_input: %s: Empty file given, doing nothing!. Stop.\n", NAME_CURRENT_COMP));
- 
- 
+
+
   if (filename && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename, "0")) {
     stat(filename,&stfile);
     filesize = stfile.st_size;
@@ -354,7 +341,7 @@ INITIALIZE
     if (MCNP_ANALYSE) printf("%g events)\n", MCNP_ANALYSE);
     else printf("all events)\n");
   }
-  
+
   /* analyse MCNP file: count neutrons, get beam center and mean speed
    * do that for the first 1e4 neutrons, and extrapolates to file size */
 
@@ -434,7 +421,7 @@ INITIALIZE
       printf("  Beam mean energy:\n");
       printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
     }
-    
+
     if (autocenter) {
       if (strstr(autocenter, "rotate") || strstr(autocenter, "orient")) {
         do_rotate    = 1;
@@ -468,7 +455,7 @@ INITIALIZE
   } else {
     exit(printf("MCNP_input: %s: Error: file %s neutrons does not contain any neutron. \n",NAME_CURRENT_COMP, filename));
   }
-  
+
   /* reposition at start of filename (data start) */
   if (fseek(hfile, begin_neutrons,SEEK_SET)) {
     fprintf(stderr, "MCNP_input: %s: Error: Can not reset MCNP file (fseek error at analyse). \n",NAME_CURRENT_COMP);
@@ -486,7 +473,7 @@ INITIALIZE
   if (min_dv > fabs(max_vy-min_vy)) min_dv = fabs(max_vy-min_vy);
   if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
   min_vx = min_dv;
-  
+
   repeat_cnt = repeat_count;
 #if defined (USE_MPI)
   repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
@@ -577,19 +564,18 @@ FINALLY
   }
 %}
 
-MCDISPLAY 
+MCDISPLAY
 %{
   /* a box and a line in the main beam direction */
   double nx=mean_x, ny=mean_y, nz=mean_z;
   double dx=mean_dx,dy=mean_dy,dz=mean_dz;
   if (do_translate) nx=ny=nz=0;
   if (do_rotate)    { dx=dy=0; dz=.1; }
-  
+
   mcdis_box(nx,ny,nz, max_x-min_x, max_y-min_y, max_z-min_z);
   line(     nx,ny,nz, dx,dy,dz);
-  
+
 %}
 
 
 END
-

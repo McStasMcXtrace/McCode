@@ -10,9 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: Feb 3, 1998
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * Position-sensitive monitor.
 *
@@ -20,28 +18,27 @@
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector.
 *
-* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-            nx=90, ny=90, filename="Output.psd")
+* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* xwidth: [m]           Width of detector. Overrides xmin, xmax 
+* yheight: [m]          Height of detector. Overrides ymin, ymax 
+* nx: [1]               Number of pixel columns 
+* ny: [1]               Number of pixel rows 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -51,19 +48,19 @@ DEFINE COMPONENT PSD_monitor
 DEFINITION PARAMETERS (nx=90, ny=90)
 SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
-  %{
-    double PSD_N[nx][ny];
-    double PSD_p[nx][ny];
-    double PSD_p2[nx][ny];
-  %}
+%{
+double PSD_N[nx][ny];
+double PSD_p[nx][ny];
+double PSD_p2[nx][ny];
+%}
 INITIALIZE
-  %{
-    int i,j;
+%{
+int i,j;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {

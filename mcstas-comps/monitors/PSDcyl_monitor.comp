@@ -8,35 +8,32 @@
 * %I
 * Written by: Kim Lefmann
 * Date: October 26, 2000
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 *
 * A 2D Position-sensitive monitor. The shape is cylindrical with
-the axis vertical. The monitor covers the whole cylinder (360 degrees).
+* the axis vertical. The monitor covers the whole cylinder (360 degrees).
 *
 * %D
 * An (n times m) pixel PSD monitor with cylinder shape,
 * vertical axis, centered at (0,0,0).
 *
-* Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl",
-*           yheight=0.2, radius=0.1)
+* Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl", yheight=0.2, radius=0.1)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* yheight:  Height of detector (m)
-* radius:   Radius of detector (m)
-* nr:       Number of pixel (radial) columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* yheight: [m]          Height of detector 
+* radius: [m]           Radius of detector 
+* nr: [1]               Number of pixel (radial) columns 
+* ny: [1]               Number of pixel rows 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of neutron counts
-* PSD_p:    Array of neutron weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
 *
 * %E
 ******************************************************************************/
@@ -46,18 +43,18 @@ DEFINE COMPONENT PSDcyl_monitor
 DEFINITION PARAMETERS (nr=20, ny=20)
 SETTING PARAMETERS (string filename=0, yheight=0.3, radius=1, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
-  %{
-    double PSD_N[nr][ny];
-    double PSD_p[nr][ny];
-    double PSD_p2[nr][ny];
-  %}
+%{
+double PSD_N[nr][ny];
+double PSD_p[nr][ny];
+double PSD_p2[nr][ny];
+%}
 INITIALIZE
-  %{
-    int i,j;
+%{
+int i,j;
 
-    for (i=0; i<nr; i++)
+for (i=0; i<nr; i++)
      for (j=0; j<ny; j++)
      {
       PSD_N[i][j] = 0;

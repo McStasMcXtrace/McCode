@@ -6,13 +6,10 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Virtual_tripoli4_input.comp
-
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision$
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
-* Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
 *
 * This component reads a file of recorded neutrons from the reactor Monte Carlo
@@ -56,32 +53,25 @@
 *
 * %P
 * INPUT PARAMETERS
-* filename:     [str] Name of the Tripoli4.4 neutron input file. Empty string "" unactivates component
-* repeat_count: [1]   Number of times the source must be generated.
-*                           0 unactivates the component
-* verbose:      [0|1] Displays additional informations if set to 1
-* intensity:    [n/s] Initial total Source integrated intensity
-* autocenter:   [str] String which may contain following keywords.
-*                     "translate" or "center"  to center the beam area AT (0,0,0)
-*                     "rotate"    or "orient"  to center the beam velocity along Z
-*                     "rescale"                to adapt intensity to abs. units.
-*                     Other words are ignored.
-* T4_ANALYSE:   [1]   Number of neutron events to read for file pre-analysis.
-*                     Use 0 to analyze them all.
-* T4_ANALYSE_EMIN:    Minimal energy to use for file pre-analysis [meV]
-* T4_ANALYSE_EMAX:    Maximal energy to use for file pre-analysis [meV]
-* radius:       [m]   In the case the Tripoli4 batch file is a point, you may
-*                     specify a disk emission area for the source.
-* smooth:       [0/1] Smooth sparsed event files for file repetitions.
+* filename: [str]         Name of the Tripoli4.4 neutron input file. Empty string "" unactivates component
+* repeat_count: [1]       Number of times the source must be generated. 0 unactivates the component
+* verbose: [0|1]          Displays additional informations if set to 1
+* intensity: [n/s]        Initial total Source integrated intensity
+* autocenter: [str]       String which may contain following keywords. "translate" or "center"  to center the beam area AT (0,0,0) "rotate" or "orient" to center the beam velocity along Z "rescale" to adapt intensity to abs. units. Other words are ignored.
+* T4_ANALYSE: [1]         Number of neutron events to read for file pre-analysis. Use 0 to analyze them all.
+* T4_ANALYSE_EMIN: [meV]  Minimal energy to use for file pre-analysis 
+* T4_ANALYSE_EMAX: [meV]  Maximal energy to use for file pre-analysis 
+* radius: [m]             In the case the Tripoli4 batch file is a point, you may specify a disk emission area for the source.
+* smooth: [0/1]           Smooth sparsed event files for file repetitions.
 *
 * OUTPUT PARAMETERS
-* head:   [char]        header buffer
-* nl:     [long]        nb of lines in header
-* mean_x: [double]      \
-* mean_y: [double]      source center coordinates
-* mean_z: [double]      /
-* angle2z:[double, rad] rotation angle required to orient beam along Z axis
-* nbatch: [long]        number of read neutron batches
+* head: [char]            header buffer
+* nl: [long]              nb of lines in header
+* mean_x: [m]             source center coordinate
+* mean_y: [m]             source center coordinate
+* mean_z: [m]             source center coordinate
+* angle2z: [rad]          rotation angle required to orient beam along Z axis
+* nbatch: [long]          number of read neutron batches
 *
 * %L
 * <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>
@@ -97,12 +87,12 @@
 DEFINE COMPONENT Virtual_tripoli4_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=1,
-                    T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
+T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
 OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_filename,begin_batch,do_rotate,do_translate,
-                   bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
-                   min_x, min_y, min_z,    max_x , max_y , max_z ,
-                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
+min_x, min_y, min_z,    max_x , max_y , max_z ,
+min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -489,7 +479,7 @@ INITIALIZE
     if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
     min_vx = min_dv;
   } /* non-empty file */
-  
+
   repeat_cnt = repeat_count;
   #if defined (USE_MPI)
     repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
@@ -630,4 +620,3 @@ MCDISPLAY
 %}
 
 END
-

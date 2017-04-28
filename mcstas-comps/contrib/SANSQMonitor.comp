@@ -10,9 +10,7 @@
 * Written by: Søren Kynde (kynde@nbi.dk)
 * Rewritten by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: October 17, 2012
-* Version: $Revision$
 * Origin: KU-Science
-* Release: McStas 1.12c
 *
 * A circular detector measuring the radial average of intensity as a function 
 * of the momentum transform in the sample.
@@ -23,7 +21,7 @@
 *
 * %P
 * RadiusDetector	: [m]	Radius of the detector (in the xy-plane).
-* DistanceFromSample: [m] 	Distance from the sample to this component.
+* DistanceFromSample: [m]  Distance from the sample to this component.
 * LambdaMin  		: [AA]	Max sensitivity in lambda - used to compute the
 *							highest possible value of momentum transfer, q.
 * NumberOfBins      : []	Number of bins in the r (and q).
@@ -48,26 +46,26 @@ OUTPUT PARAMETERS (Nofq, Iofq, IofqSquared, NofR, IofR, IofRSquared)
 
 DECLARE
 %{
-    // Declarations
-    double TwoThetaMax;
-    double qMax;
+// Declarations
+double TwoThetaMax;
+double qMax;
 
-    double Nofq[NumberOfBins];
-    double Iofq[NumberOfBins];
-    double IofqSquared[NumberOfBins];
+double Nofq[NumberOfBins];
+double Iofq[NumberOfBins];
+double IofqSquared[NumberOfBins];
 
-    double NofR[NumberOfBins];
-    double IofR[NumberOfBins];
-    double IofRSquared[NumberOfBins];
+double NofR[NumberOfBins];
+double IofR[NumberOfBins];
+double IofRSquared[NumberOfBins];
 %}
 
 INITIALIZE
 %{
-	// Declarations
-    int i;
+// Declarations
+int i;
 
-	// Initializations
-    for (i = 0; i < NumberOfBins; ++i) {
+// Initializations
+for (i = 0; i < NumberOfBins; ++i) {
 		Nofq[i] = 0.0;
 		Iofq[i] = 0.0;
 		IofqSquared[i] = 0.0;

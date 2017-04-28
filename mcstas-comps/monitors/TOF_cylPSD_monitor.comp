@@ -10,32 +10,30 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 * Modified by: Kim Lefmann, October 9, 2001
 *
 * Cylindrical (2pi) PSD Time-of-flight monitor.
-* 
+*
 * %D
 *
 * %P
 * INPUT PARAMETERS:
 *
-* radius:   Cylinder radius (m)
-* yheight:  Cylinder height (m)
-* nt:       Number of time bins (1)
-* tmin:     Beginning of time window (mu-s)
-* tmax:     End of time window (mu-s)
-* nphi:     Number of angular bins (deg)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* radius: [m]           Cylinder radius 
+* yheight: [m]          Cylinder height 
+* nt: [1]               Number of time bins 
+* tmin: [mu-s]          Beginning of time window 
+* tmax: [mu-s]          End of time window 
+* nphi: [deg]           Number of angular bins 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
-* TOF_N:    Array of neutron counts
-* TOF_p:    Array of neutron weight counts
-* TOF_p2:   Array of second moments
+* TOF_N: []             Array of neutron counts
+* TOF_p: []             Array of neutron weight counts
+* TOF_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
@@ -44,21 +42,21 @@ DEFINE COMPONENT TOF_cylPSD_monitor
 DEFINITION PARAMETERS (nt=128, nphi=90)
 SETTING PARAMETERS (string filename=0, radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
-  %{
-    double TOF_N[nt][nphi];
-    double TOF_p[nt][nphi];
-    double TOF_p2[nt][nphi];
-    double binphi, tt_0, tt_1;
-  %}
+%{
+double TOF_N[nt][nphi];
+double TOF_p[nt][nphi];
+double TOF_p2[nt][nphi];
+double binphi, tt_0, tt_1;
+%}
 INITIALIZE
-  %{
-    int i,j;
+%{
+int i,j;
 
-    tt_0=tmin*1e-6;
-    tt_1=tmax*1e-6;
-    for (i=0; i<nt; i++)
+tt_0=tmin*1e-6;
+tt_1=tmax*1e-6;
+for (i=0; i<nt; i++)
       for (j=0; j<nphi; j++)
       {
         TOF_N[i][j] = 0;
@@ -95,7 +93,7 @@ TRACE
       TOF_N[i][j]++;
       TOF_p[i][j] += p;
       TOF_p2[i][j] += p*p;
-     } 
+     }
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
@@ -119,54 +117,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

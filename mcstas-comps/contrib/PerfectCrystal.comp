@@ -10,9 +10,7 @@
 * %I
 * Written by: Markus Appel
 * Date: 2015-12-21
-* Version: $Revision: 1.1 $
 * Origin: ILL / FAU Erlangen-Nuernberg
-* Release: McStas 2.3
 * Based on a perfect crystal component by: Miguel A. Gonzalez, A. Dianoux June 2013 (ILL)
 *
 * Changelog:
@@ -20,7 +18,7 @@
 *  - BUGFIX: correct neutron energy shift in Doppler mode
 *  - added option 'debyescherrer' to select analyzer geometry
 *  - added option 'facette' to approximate analyzer sphere by small, flat crystals
-* 
+*
 * Version 1.0
 *  - inital release
 *
@@ -28,107 +26,93 @@
 * %D
 * Perfect crystal component, primarily for use as monochromator and analyzer in
 * backscattering spectrometers. Reflection from a single Bragg reflex of a flat or
-* spherical surface is simulated using a Darwin, Ewald or Gaussian profile. Doppler 
+* spherical surface is simulated using a Darwin, Ewald or Gaussian profile. Doppler
 * movement of the monochromator is supported as well.
 *
 * Orientation of the crystal surface is *different* from other monochromator components!
 * Gravitational energy shift for tall analyzers should work in principle, but it not tested yet.
 * See the parameter description on how to define the geometry and properties.
-* 
+*
 * [1] Website for Backscattering Spectroscopy: http://www.ill.eu/sites/BS-review/index.htm
 *
 * Examples:
 * IN16B (ILL) Si111 large angle analyzers (approximate dimensions):
-* PerfectCrystal(radius=2, lambda=6.2708, sigma=0.24e-3, 
+* PerfectCrystal(radius=2, lambda=6.2708, sigma=0.24e-3,
 *                ttmin=40, ttmax=165, phimin=-45, phimax=+45, centerfocus=1)
 *
 * IN16B (ILL) Si111 Doppler monochromator:
 * PerfectCrystal(radius=2.165, lambda=6.2708, sigma=0.24e-3,
 *                width = 0.500, height = 0.250, centerfocus=0,
 *                speed = 4.7, amplitude = 0.075, exclusive=1)
-* 
+*
 * %P
 * (A) Size, shape and position:
 * =============================
-* radius:         (m)     Radius of curvature, set to 0 for a flat surface. Default: 0
-* centerfocus:    (0/1)   Component origin is the center of the analyzer sphere if 1,
-*                          if set to 0 the origin is on the analyzer surface. Default: 0
+* radius: [m]                  Radius of curvature, set to 0 for a flat surface. Default: 0
+* centerfocus: [0/1]           Component origin is the center of the analyzer sphere if 1, if set to 0 the origin is on the analyzer surface. Default: 0
 *
-* Parametrization with ...
-* option 1:
-*  ttmin:         (deg)
-*  ttmax:         (deg)   analyzer coverage angle in horizontal xz-plane between -180 and 180
-*  phimin:        (deg)   
-*  phimax:        (deg)   vertical analyzer coverage between -90 and 90 (-180 and 180 if debyescherrer==1)
-* option 2:
-*  tt0:           (deg)   
-*  ttwidth:       (deg)   horizontal coverage as center and full width
-*  phi0:          (deg)   
-*  phiwidth:      (deg)   vertical coverage as center and full width
-* option 3:
-*  tt0:           (deg)   angular center position in the horizontal plane (only if centerfocus==1)
-*  width:         (m)     absolute width
-*  phi0:          (deg)   angular vertical position (only if centerfocus==1)
-*  height:        (m)     absolute height (only if debyescherrer==0)
+* option 1
+* ttmin: [deg]                 
+* ttmax: [deg]                 analyzer coverage angle in horizontal xz-plane between -180 and 180
+* phimin: [deg]                
+* phimax: [deg]                vertical analyzer coverage between -90 and 90 (-180 and 180 if debyescherrer==1)
+* option 2
+* tt0: [deg]                   
+* ttwidth: [deg]               horizontal coverage as center and full width
+* phi0: [deg]                  
+* phiwidth: [deg]              vertical coverage as center and full width
+* option 3
+* tt0: [deg]                   angular center position in the horizontal plane (only if centerfocus==1)
+* width: [m]                   absolute width
+* phi0: [deg]                  angular vertical position (only if centerfocus==1)
+* height: [m]                  absolute height (only if debyescherrer==0)
 *
-* debyescherrer:  (0/1)   bend analyzer following a Debye-Scherrer ring along scattering angle tt (twotheta)
-*                         (phi = [-180...180] in that case). Default: 0
-* facette:        (m)     width of square crystal facettes arranged on the spherical surface (set 0 to disable). Default: 0
-*                         Warning: Facettation will fail at the poles along +-y axis.
-* facette_xi:     (deg)   random misalignemt of each facette. Default: 0
+* debyescherrer: [-180...180]  (0/1)   bend analyzer following a Debye-Scherrer ring along scattering angle tt (twotheta) (phi = 
+* facette: [m]                 width of square crystal facettes arranged on the spherical surface (set 0 to disable). Default: 0 Warning: Facettation will fail at the poles along +-y axis.
+* facette_xi: [deg]            random misalignemt of each facette. Default: 0
 *
-* (B) Neutron optics:
+* (B) Neutron optics
 * ===================
-* tau:            (A^-1)  Scattering vector of the reflex (sometimes also called Q...)
-* lambda:         (A)     Alternatively to tau: backscattered wavelength
-* R0:                     Peak reflectivity. Default: 1
+* tau: [A^-1]                  Scattering vector of the reflex (sometimes also called Q...)
+* lambda: [A]                  Alternatively to tau: backscattered wavelength
+* R0: []                       Peak reflectivity. Default: 1
 *
-* Ewald/Darwin mode:
-*  dtauovertau:           Plateau width of the Ewald/Darwin curve (see [1])
-*  dtauovertau_ext:       Relative variation of tau (randomized for each trajectory, full width)
-*  ewald:         (0/1)   Use Ewald curve if 1, Darwin curve if 0. Default: 1 (Ewald)
+* Ewald/Darwin mode
+* dtauovertau: [1]             Plateau width of the Ewald/Darwin curve (see 
+* dtauovertau_ext: []          Relative variation of tau (randomized for each trajectory, full width)
+* ewald: [0/1]                 Use Ewald curve if 1, Darwin curve if 0. Default: 1 (Ewald)
 *
-* Gaussian mode:
-*  sigma:         (meV)   Width of the Gaussian reflectivity curve in meV (corresponding to 
-*                         the energy resolution). 
-*                         (The width will be transformed and the Gaussian is actually calculated in k-space.)
+* Gaussian mode
+* sigma: [meV]                 Width of the Gaussian reflectivity curve in meV (corresponding to the energy resolution). (The width will be transformed and the Gaussian is actually calculated in k-space.)
 *
-* Mirror mode:
-*  ismirror:      (0/1)   Simply reflect all neutrons if 1. Good for debugging/visualization. Default: 0
+* Mirror mode
+* ismirror: [0/1]              Simply reflect all neutrons if 1. Good for debugging/visualization. Default: 0
 *
 * (C) Doppler movement for monochromators (sinusoidal speed profile):
 * ===================================================================
-* speed:          (m/s)   Maximum Doppler speed. The actual monochromator velocity is randomized between
-*                         -speed and +speed. Default: 0
-* amplitude:      (m)     Amplitude of the Doppler movement. Default: 0
+* speed: [m/s]                 Maximum Doppler speed. The actual monochromator velocity is randomized between -speed and +speed. Default: 0
+* amplitude: [m]               Amplitude of the Doppler movement. Default: 0
 *
-* smartphase:     (0/1)   Optimize Doppler phase for better MC efficiency if set to 1. 
-*                         *WARNING:* Experimental option! Always compare to a simulation 
-*                         without smartphase. Better do not use smartwidth with 
-*                         Ewald/Darwin curves due to their endless tails. Default: 0
-* smartwidth:     (meV)   Half width of the possible energy reflection window for smartphase. 
-*                         Default: 5*sigma OR 10*2*dtauovertau*E0
-* 
-* (D) Miscellaneous:
-* ==================
-* exclusive:      (0/1)   If set to 1, absorb all neutrons that missed the monochromator/analyzer surface.
-*                         Default: 0
-* transmit:       (0...1) Monte-Carlo probability of transmitting an event through the 
-*                         monochromator/analyzer surface. (Events with R=1.0 for DarwinE/Ewald curves
-*                         are always reflected!). Default: 0
+* smartphase: [0/1]            Optimize Doppler phase for better MC efficiency if set to 1. *WARNING:* Experimental option! Always compare to a simulation without smartphase. Better do not use smartwidth with Ewald/Darwin curves due to their endless tails. Default: 0
+* smartwidth: [meV]            Half width of the possible energy reflection window for smartphase. Default: 5*sigma OR 10*2*dtauovertau*E0
 *
-* Output parameters:
+* (D) Miscellaneous
 * ==================
-* tt,phi          (deg)   Position where the neutron hit (or missed) the analyzer sphere
-* xi              (deg)   Reflection angle between neutron trajectory and analyzer surface normal
-* phid            (rad)   Actual doppler phase during reflection [0,2*PI]
-* vd              (m/s)   Actual doppler speed during reflection
-* zd              (m)     Actual doppler displacement during reflection (zd>0 => displaced towards inc. beam from -z)
-* v0              (m/s)   Backscattered neutron velocity
-* E0              (meV)   Backscattered neutron energy
-* R               (0...1) Reflectivity value (on Gauss/Darwin/Ewald curve)
-* eps                     'abs(y)' from the Darwin/Ewald reflectivity formula [see 1],
-*                         (y/sigma) for Gauss (see source code for details) 
+* exclusive: [0/1]             If set to 1, absorb all neutrons that missed the monochromator/analyzer surface. Default: 0
+* transmit: [0...1]            Monte-Carlo probability of transmitting an event through the monochromator/analyzer surface. (Events with R=1.0 for DarwinE/Ewald curves are always reflected!). Default: 0
+*
+* Output parameters
+* ==================
+* tt: [deg]                    Position where the neutron hit (or missed) the analyzer sphere
+* phi: [deg]                   Position where the neutron hit (or missed) the analyzer sphere
+* xi: [deg]                    Reflection angle between neutron trajectory and analyzer surface normal
+* phid: [rad]                  Actual doppler phase during reflection [0,2*PI]
+* vd: [m/s]                    Actual doppler speed during reflection
+* zd: [m]                      Actual doppler displacement during reflection (zd>0 => displaced towards inc. beam from -z)
+* v0: [m/s]                    Backscattered neutron velocity
+* E0: [meV]                    Backscattered neutron energy
+* R: [0...1]                   Reflectivity value (on Gauss/Darwin/Ewald curve)
+* eps: [see 1]                 'abs(y)' from the Darwin/Ewald reflectivity formula 
 *
 * %E
 *******************************************************************************/
@@ -136,20 +120,20 @@
 DEFINE COMPONENT PerfectCrystal
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ( ttmin=NAN, ttmax=NAN, tt0=NAN, ttwidth=NAN, width=NAN,
-                    phimin=NAN, phimax=NAN, phi0=NAN, phiwidth=NAN, height=NAN, debyescherrer=0,
-                    facette=0, facette_xi=0, centerfocus=0, radius=0, tau=NAN, lambda=NAN, R0=1.0, 
-                    dtauovertau=NAN, dtauovertau_ext=0,
-                    ewald=1,sigma=NAN,ismirror=0,speed=0,amplitude=0,smartphase=0,
-                    smartwidth=NAN, exclusive=0, transmit=0, verbose=0 )
+phimin=NAN, phimax=NAN, phi0=NAN, phiwidth=NAN, height=NAN, debyescherrer=0,
+facette=0, facette_xi=0, centerfocus=0, radius=0, tau=NAN, lambda=NAN, R0=1.0,
+dtauovertau=NAN, dtauovertau_ext=0,
+ewald=1,sigma=NAN,ismirror=0,speed=0,amplitude=0,smartphase=0,
+smartwidth=NAN, exclusive=0, transmit=0, verbose=0 )
 OUTPUT PARAMETERS (
-   // official
-   tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps,
-   // internal
-   sin_facette_xi
-   )
+// official
+tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps,
+// internal
+sin_facette_xi
+)
 SHARE
 %{
-   // convert between spherical (r,tt,phi) and cartesian (x,y,z) coordinates (angles in deg)
+// convert between spherical (r,tt,phi) and cartesian (x,y,z) coordinates (angles in deg)
    // debyescherrer swaps axes
    void sph2cart(double *x,double *y,double *z, double r, double tt, double phi, int debyescherrer)
    {
@@ -167,7 +151,7 @@ SHARE
          *z = r * cosphi * cos(tt);
       }
    }
-   
+
    /*******************************************************************************
    * grandvec_target_circle: Choose random direction towards target at (x,y,z)
    * with given radius and gaussian area distribution.
@@ -211,7 +195,7 @@ SHARE
 
        if (costheta < -1)
          costheta = -1;
-         
+
        theta = acos(costheta); /* radius on circle */
        phi = rand0max(2 * PI); /* rotation on circle at given radius */
        /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
@@ -238,13 +222,13 @@ SHARE
      rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
    } /* randvec_target_circle */
 
-   
+
 %}
 DECLARE
 %{
    // official output variables
    double tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps;
-   
+
    // internal stuff
    double sin_facette_xi;
 %}
@@ -258,7 +242,7 @@ INITIALIZE
          NAME_CURRENT_COMP););
       exit(-1);
    }
-   
+
    //******************************************
    // position and size
    if ( !radius )
@@ -275,15 +259,15 @@ INITIALIZE
    else
    {
       // curved analyzer surface
-      
+
       //******************************************
       // Determine analyzer width
 
       // ttmin / ttmax
-      if ( !isnan(ttmin) && !isnan(ttmax) && isnan(tt0) && isnan(ttwidth) && isnan(width) ) 
+      if ( !isnan(ttmin) && !isnan(ttmax) && isnan(tt0) && isnan(ttwidth) && isnan(width) )
       {
          // all right.
-      }         
+      }
       // tt0 / ttwidth
       else if ( isnan(ttmin) && isnan(ttmax) && !isnan(ttwidth) && isnan(width) )
       {
@@ -319,15 +303,15 @@ INITIALIZE
             NAME_CURRENT_COMP););
          exit(-1);
       }
-            
+
       //******************************************
       // Determine analyzer height
-            
+
       // phimin / phimax
-      if ( !isnan(phimin) && !isnan(phimax) && isnan(phi0) && isnan(phiwidth) && isnan(height) ) 
+      if ( !isnan(phimin) && !isnan(phimax) && isnan(phi0) && isnan(phiwidth) && isnan(height) )
       {
          // all right, nothing to do.
-      }         
+      }
       // phi0 / phiwidth
       else if ( isnan(phimin) && isnan(phimax) && !isnan(phiwidth) && isnan(height) )
       {
@@ -363,7 +347,7 @@ INITIALIZE
          exit(-1);
       }
    }
-   
+
    if ( centerfocus && !radius )
    {
       MPI_MASTER(fprintf(stderr,
@@ -383,14 +367,14 @@ INITIALIZE
             NAME_CURRENT_COMP););
          exit(-1);
       }
-            
+
       if ( isnan(tau) )
          tau = 4*PI / lambda;
-         
+
       v0 = tau / 2.0 * K2V;
       E0 = SQR(v0) * VS2E;
-         
-      if ( isnan(dtauovertau) == isnan(sigma) ) 
+
+      if ( isnan(dtauovertau) == isnan(sigma) )
       {
          MPI_MASTER(fprintf(stderr,
             "PerfectCrystal: %s ERROR: Invalid parameters: provide either sigma or dtauovertau, or switch on ismirror\n",
@@ -405,10 +389,10 @@ INITIALIZE
          MPI_MASTER(fprintf(stderr,
             "PerfectCrystal: %s WARNING: dtauovertau and/or sigma is ignored with ismirror==1\n",
             NAME_CURRENT_COMP););
-      }         
+      }
    }
-   
-      
+
+
    if ( !( R0>=0 && R0<=1.0 ) )
    {
       MPI_MASTER(fprintf(stderr,
@@ -416,7 +400,7 @@ INITIALIZE
          NAME_CURRENT_COMP););
       exit(-1);
    }
-      
+
    if ( transmit < 0.0 || transmit > 1.0 )
    {
       MPI_MASTER(fprintf(stderr,
@@ -424,7 +408,7 @@ INITIALIZE
          NAME_CURRENT_COMP););
       exit(-1);
    }
-   
+
    // transform Gaussian sigma from energy (meV) to neutron velocity (m/s)
    if ( !isnan(sigma) )
       sigma /= 3.29106e-3 * tau;   // constant is hbar/2 in appropriate units
@@ -439,14 +423,14 @@ INITIALIZE
 
    if ( isnan(smartwidth) && !isnan(dtauovertau) )
       smartwidth = 10.0 * dtauovertau * v0;
-      
+
    if ( smartphase && !isnan(dtauovertau) )
    {
        MPI_MASTER(fprintf(stderr,
          "PerfectCrystal: %s WARNING: Using smartphase for ewald/darwin curves is probably a bad idea, because these curves have very long wings which will be cut off!!!\n",
          NAME_CURRENT_COMP););
    }
-   
+
    if (facette_xi)
    {
       if (facette_xi < 0)
@@ -456,7 +440,7 @@ INITIALIZE
             NAME_CURRENT_COMP););
          exit(-1);
       }
-      
+
       sin_facette_xi = sin(DEG2RAD*facette_xi);
    }
 
@@ -497,32 +481,32 @@ INITIALIZE
          PRINTVAR("exclusive",exclusive);
       );
    }
-   
+
 %}
 TRACE
-%{   
+%{
    double dt1, dt2, q0mod;
    double nx,ny,nz;
    int missed = 0;
-   
+
    // determine phase of doppler movement
    if ( (speed!=0) && smartphase)
    {
       // do something smart
       vmin = v0 - sqrt(SQR(vx)+SQR(vy)+SQR(vz)) - smartwidth;
       vmax = vmin + 2.0*smartwidth;
-      
+
       if ( (vmin>speed) || (vmax<-speed) )
          ABSORB;
-      
+
       if ( vmin < -speed )
          vmin = -speed;
-      
+
       if ( vmax > speed )
          vmax = speed;
-         
+
 //      fprintf(stderr,"%g  %g\n",vmin,vmax);
-         
+
       vd = vmin + (vmax-vmin)*rand01();
       phid = acos(vd/speed) + (rand01()<0.5?0:PI);
       zd = amplitude * sin(phid);
@@ -546,7 +530,7 @@ TRACE
       zd = 0;
       vd = 0;
    }
-   
+
    // Propagate to analyzer and determine surface normal
    if ( !radius )
    {
@@ -557,7 +541,7 @@ TRACE
          ABSORB;
       dt2 = (-z-zd) / vz;
       PROP_DT(dt2);
-      
+
       // see if the covered area is hit
       missed = !inside_rectangle(x,y,width,height);
 
@@ -567,13 +551,13 @@ TRACE
    else
    {
       // spherical analyzer, use spherical coordinates ...
-      
+
       // compute neutron path intersection with analyzer sphere
       if ( centerfocus )
          missed = !sphere_intersect(&dt1,&dt2,x,y,z+zd,vx,vy,vz,radius);
       else
          missed = !sphere_intersect(&dt1,&dt2,x,y,z+radius+zd,vx,vy,vz,radius);
-         
+
       if ( !missed )
       {
          // propoagate to surface
@@ -589,9 +573,9 @@ TRACE
             tt = - RAD2DEG * atan2(x,zprime);
             phi = RAD2DEG * asin( y/sqrt( SQR(x) + SQR(y) + SQR(zprime) ) );
          }
-         
+
          missed = (tt<ttmin || tt>ttmax || phi<phimin || phi>phimax);
-         
+
          if ( !missed )
          {
             // analyzer surface normal
@@ -608,16 +592,16 @@ TRACE
                   tt1 = DEG2RAD * tt;
                   phi1 = DEG2RAD * phi;
                }
-               
+
                phifacette = facette / radius;
                phin = floor( phi1 / phifacette + 0.5 ) * phifacette;
                ttfacette = facette / (radius*cos(phin));
                ttn = floor( tt1 / ttfacette + 0.5 ) * ttfacette;
-               
+
                nx = cos(phin)*sin(ttn);
                ny = -sin(phin);
                nz = -cos(phin)*cos(ttn);
-               
+
                if (facette_xi)
                {
                   grandvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,nz,sin_facette_xi);
@@ -631,7 +615,7 @@ TRACE
          }
       }
    }
-   
+
    // Do the reflection
    if ( !missed )
    {
@@ -641,7 +625,7 @@ TRACE
 
       // angle between surface normal and velocity (only used as output parameter for monitoring)
       xi = RAD2DEG * acos( - vperp / sqrt( SQR(vx) + SQR(vy) + SQR(vz+vd) ) );
-      
+
       // energy selection
       if (!ismirror)
       {
@@ -654,24 +638,24 @@ TRACE
             {
                this_tau *= 1.0 + 0.5*dtauovertau_ext*randpm1();
             }
-            
+
             eps = fabs( 4.0*vperp*V2K/this_tau + 2.0 ) / dtauovertau;
-            
+
             // Darwin/Ewald curve
             if ( eps > 1 )
             {
                if ( ewald )
-               {            
+               {
                   // energy selection with Ewald curve
                   R = 1.0 - sqrt(SQR(eps)-1.0) / eps;
                }
                else
-               {            
+               {
                   // energy selection with Darwin curve
                   R = eps - sqrt(SQR(eps)-1.0);
                   R *= R;
                }
-               
+
                R *= R0;
             }
             else
@@ -693,7 +677,7 @@ TRACE
          R = 1;
          eps = NAN;
       }
-      
+
       if ( transmit && (R!=1) && (rand01()<transmit) )
       {
          p *= (1.0 - R) / transmit;
@@ -712,7 +696,7 @@ TRACE
          vz -= q0mod*nz;
          if (R!=1)
             p *= R / (1.0-transmit);
-         
+
          if (R<1e-10)
             ABSORB;
          else
@@ -753,21 +737,21 @@ MCDISPLAY
       steps = 30;
    }
 
-   
+
    // mark the center with a sphere
 //   circle("xy",0,0,0,centerspheresize);
 //   circle("xz",0,0,0,centerspheresize);
 //   circle("yz",0,0,z0,centerspheresize);
-   
+
    // draw crystal surface
    if ( radius )
    {
       z0 = (centerfocus ? 0 : radius);
-      
+
       // curved surface
       dtt = (ttmax - ttmin) / (double)steps;
       dphi = (phimax - phimin) / (double)steps;
-      
+
       for (itt=0; itt<=ttsegments; itt++) {
          tt = ttmin + (ttmax - ttmin) * (double)itt / (double)ttsegments;
          for (istep=0; istep<steps; istep++) {
@@ -777,7 +761,7 @@ MCDISPLAY
             line(x1,y1,z1-z0,x2,y2,z2-z0);
          }
       }
-                  
+
       for (iphi=0; iphi<=phisegments; iphi++) {
          phi = phimin + (phimax - phimin) * (double)iphi / (double)phisegments;
          for (istep=0; istep<steps; istep++) {
@@ -787,11 +771,11 @@ MCDISPLAY
             line(x1,y1,z1-z0,x2,y2,z2-z0);
          }
       }
-      
+
       // additional dashed moving one
       if ( amplitude )
       {
-         
+
          sph2cart(&x1,&y1,&z1,radius,ttmin,phimin,debyescherrer);
          dashed_line(x1,y1,z1-z0-amplitude,x1,y1,z1-z0+amplitude,6);
          sph2cart(&x1,&y1,&z1,radius,ttmax,phimin,debyescherrer);
@@ -800,11 +784,11 @@ MCDISPLAY
          dashed_line(x1,y1,z1-z0-amplitude,x1,y1,z1-z0+amplitude,6);
          sph2cart(&x1,&y1,&z1,radius,ttmax,phimax,debyescherrer);
          dashed_line(x1,y1,z1-z0-amplitude,x1,y1,z1-z0+amplitude,6);
-         
+
          for (i=-1;i<=1;i+=2)
          {
             z0 = (centerfocus ? 0 : radius) + i * amplitude;
-            
+
             for (itt=0; itt<=ttsegments; itt++) {
                tt = ttmin + (ttmax - ttmin) * (double)itt / (double)ttsegments;
                for (istep=0; istep<steps; istep++) {
@@ -814,7 +798,7 @@ MCDISPLAY
                   dashed_line(x1,y1,z1-z0,x2,y2,z2-z0,1);
                }
             }
-                        
+
             for (iphi=0; iphi<=phisegments; iphi++) {
                phi = phimin + (phimax - phimin) * (double)iphi / (double)phisegments;
                for (istep=0; istep<steps; istep++) {
@@ -826,7 +810,7 @@ MCDISPLAY
             }
          }
       }
-      
+
    }
    else
    {
@@ -843,7 +827,7 @@ MCDISPLAY
             rectangle("xy",0.0,0.0,i * amplitude,width,height);
       }
    }
-               
+
 %}
 
 END

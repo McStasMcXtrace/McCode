@@ -10,9 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 * Modified by: Revised by: <a href="mailto:percival@physics.queensu.ca">Aaron M. Percival</a>
 * Modified by: 2007
 * Modified by: <a href="http://www.physics.queensu.ca">Queen's University Department of Physics</a>
@@ -56,35 +54,34 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:    (m)          Left edge of rectangular source
-* xmax:    (m)          Right edge
-* ymin:    (m)          Lower edge
-* ymax:    (m)          Upper edge
-* target_index:(1)      relative index of component to focus at, e.g. next is +1
-*                         this is used to compute 'dist' automatically.
-* dist:    (m)          Distance to target rectangle along z axis
-* focus_xw:(m)          Width of target
-* focus_yh:(m)          Height of target
-* E0:      (meV)        Mean energy of neutrons
-* dE:      (meV)        Energy spread (energy range is from E0-dE to E0+dE)
-* lambda0: (AA)         Mean wavelength of neutrons (if energy not specified)
-* dlambda: (AA)         Wavelength spread half width
-* flux:    (1/(cm**2*AA**st)) Absolute source flux
-* N_E:     (1)          Number of bins in energy (or wavelength) dimension
-* N_xpos:  (1)          Number of bins in horizontal position
-* N_xdiv:  (1)          Number of bins in horizontal divergence
-* alpha:   (1)          Learning cut-off factor (0 < alpha <= 1)
-* beta:    (1)          Aggressiveness of adaptive algorithm (0 < beta <= 1)
-* filename: (string)    Optional filename for adaptive distribution output
+* xmin: [m]           Left edge of rectangular source
+* xmax: [m]           Right edge
+* ymin: [m]           Lower edge
+* ymax: [m]           Upper edge
+* target_index: [1]   relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* dist: [m]           Distance to target rectangle along z axis
+* focus_xw: [m]       Width of target
+* focus_yh: [m]       Height of target
+* E0: [meV]           Mean energy of neutrons
+* dE: [meV]           Energy spread (energy range is from E0-dE to E0+dE)
+* lambda0: [AA]       Mean wavelength of neutrons (if energy not specified)
+* dlambda: [AA]       Wavelength spread half width
+* flux: []            (1/(cm 2 AA st)) Absolute source flux
+* N_E: [1]            Number of bins in energy (or wavelength) dimension
+* N_xpos: [1]         Number of bins in horizontal position
+* N_xdiv: [1]         Number of bins in horizontal divergence
+* alpha: [1]          Learning cut-off factor (0 < alpha <= 1)
+* beta: [1]           Aggressiveness of adaptive algorithm (0 < beta <= 1)
+* filename: [string]  Optional filename for adaptive distribution output
 *
 * OUTPUT PARAMETERS:
 *
-* p_in:  Internal, holds initial neutron weight
-* y_0:   Internal
-* C:     Internal
-* r_0:   Internal
-* count: Internal, counts neutrons emitted
-* adpt:  Internal structure shared with the Adapt_check component
+* p_in: []            Internal, holds initial neutron weight
+* y_0: []             Internal
+* C: []               Internal
+* r_0: []             Internal
+* count: []           Internal, counts neutrons emitted
+* adpt: []            Internal structure shared with the Adapt_check component
 *
 * %E
 *******************************************************************************/
@@ -94,42 +91,42 @@ DEFINE COMPONENT Source_adapt
 DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20)
 
 SETTING PARAMETERS (xmin=0,xmax=0,ymin=0,ymax=0, xwidth=0, yheight=0, string filename=0,
-  dist=0, focus_xw=0.05, focus_yh=0.1, 
-  E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13, int target_index=+1, alpha=0.25, beta=0.25)
+dist=0, focus_xw=0.05, focus_yh=0.1,
+E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13, int target_index=+1, alpha=0.25, beta=0.25)
 
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-  %include "adapt_tree-lib"
-  struct source_adapt
-  {
-    struct adapt_tree *atree; /* Adaptive search tree */
-    int idx;                  /* Index of current bin */
-    double *psi, *n;          /* Arrays of weight sums, neutron counts */
-    double psi_tot;           /* Total weight sum */
-    double pi, num;           /* Initial p, number of bins in tree */
-    double factor;            /* Adaption quality factor */
-    double a_beta;            /* Adaption agression factor */
-  } source_adapt;
+%include "adapt_tree-lib"
+struct source_adapt
+{
+struct adapt_tree *atree; /* Adaptive search tree */
+int idx;                  /* Index of current bin */
+double *psi, *n;          /* Arrays of weight sums, neutron counts */
+double psi_tot;           /* Total weight sum */
+double pi, num;           /* Initial p, number of bins in tree */
+double factor;            /* Adaption quality factor */
+double a_beta;            /* Adaption agression factor */
+} source_adapt;
 
 %}
 
 DECLARE
 %{
-  struct source_adapt adpt;
-  double count;                 /* Neutron counter */
-  double y_0, C, r_0;
-  double p_in;
+struct source_adapt adpt;
+double count;                 /* Neutron counter */
+double y_0, C, r_0;
+double p_in;
 %}
 
 INITIALIZE
 %{
-  int i;
-  double a, lambda_min, lambda_max, delta_lambda, source_area;
+int i;
+double a, lambda_min, lambda_max, delta_lambda, source_area;
 
-  if (target_index && !dist)
+if (target_index && !dist)
   {
     Coords ToTarget;
     double tx,ty,tz;
@@ -138,13 +135,13 @@ INITIALIZE
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   }
-  
+
   if (xwidth > 0) { xmin=-xwidth/2; xmax=-xmin; }
   if (yheight> 0) { ymin=-yheight/2; ymax=-ymin; }
-  
+
   adpt.num = N_E*N_xpos*N_xdiv;
   adpt.a_beta = beta;
-  
+
   if (E0 == 0) {
     lambda_min = lambda0 - dlambda; /* AAngstroem */
     lambda_max = lambda0 + dlambda;
@@ -216,21 +213,21 @@ TRACE
   phmin = atan2(-focus_yh/2.0 - y, dist);
   phmax = atan2( focus_yh/2.0 - y, dist);
   phi = phmin + rand01()*(phmax - phmin);
-  
+
   if(E0 == 0) {
   	lambda = lambda0 - dlambda + (i_E + rand01())*(2.0*dlambda/(double)N_E);
 	v = 3.956E3/lambda;
 	vy = v*sin(phi);
   	vx = v*cos(phi)*sin(theta);
 	vz = v*cos(phi)*cos(theta);
-  	
+
   }
   else {
   	E = E0 - dE + (i_E + rand01())*(2.0*dE/(double)N_E);
   	v = sqrt(E)*SE2V;
   	vy = v*sin(phi);
   	vx = v*cos(phi)*sin(theta);
-  	vz = v*cos(phi)*cos(theta);	
+  	vz = v*cos(phi)*cos(theta);
   }
 
   t = 0;
@@ -273,15 +270,15 @@ FINALLY
   {
     for(i = 0; i < adpt.num; i++)
       p1[i] = adpt.atree->v[i]/adpt.atree->total;
-    
+
     if(E0 == 0) {
     	DETECTOR_OUT_1D("Adaptive source Wavelength distribution",
         	    "Wavelength [AA]",
                     "Probability",
                     "lambda", lambda0 - dlambda, lambda0 + dlambda, adpt.num,
-    	            NULL, p1, NULL, filename);	    
+    	            NULL, p1, NULL, filename);
     }
-    else { 	
+    else {
     	DETECTOR_OUT_1D("Adaptive source energy distribution",
                     "Energy [meV]",
                     "Probability",

@@ -10,40 +10,38 @@
 * %I
 * Written by: Erik Knudsen
 * Date: June 2010
-* Version: $Revision: 1.2 $
 * Origin: Risoe
-* Release: McStas 2.0
 *
 * (Unphysical) ideal analyzer.
 *
 * %D 
-*
 *
 * Example: Analyser_ideal(mx=0, my=1, mz=0)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* mx:        X-component of polarisation analysis vector (can be negative) (1)
-* my:        Y-component of polarisation analysis  vector (can be negative) (1)
-* mz:        Z-component of polarisation analysis  vector (can be negative) (1)
+* mx: [1]  X-component of polarisation analysis vector (can be negative)
+* my: [1]  Y-component of polarisation analysis  vector (can be negative)
+* mz: [1]  Z-component of polarisation analysis  vector (can be negative)
 *
 * OUTPUT PARAMETERS:
 *
 * %E
 *******************************************************************************/
 
-  DEFINE COMPONENT Analyser_ideal
+DEFINE COMPONENT Analyser_ideal
+
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (mx=0, my=0, mz=0)
+SETTING PARAMETERS (mx=0, my=0, mz=0)
 
 DECLARE
 %{
-  %}
+%}
 
 INITIALIZE
 %{
-  if (mx==1 && my==1 && mz==1) {
+if (mx==1 && my==1 && mz==1) {
     printf("Analyser_ideal: %s: NULL vector defined!\n"
 	   "ERROR      (px, py, pz). Exiting",
            NAME_CURRENT_COMP);

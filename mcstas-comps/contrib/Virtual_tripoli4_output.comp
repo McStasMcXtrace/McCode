@@ -10,9 +10,7 @@
 * %I
 * Written by: <a href="mailtoguillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision$
 * Origin: <a href="http://www.cea-llb.fr">LLB</a>
-* Release: McStas 1.8
 *
 * Detector-like component that writes neutron state parameters into a
 * 'virtual source' neutron file when neutrons come from the source :
@@ -45,11 +43,11 @@
 *
 * %P
 * INPUT PARAMETERS
-* filename:     [str] name of the Tripoli4 neutron output file,
+* filename: [str]                     name of the Tripoli4 neutron output file,
 *                     or stdout if left to 0.
-* batch:        [1]   index of the Tripoli batch to generate, when no
+* batch: [1]                          index of the Tripoli batch to generate, when no
 *                     Tripoli4_input component is available in instrument.
-* Virtual_tripoli_input_comp: [comp] Name of the Tripoli4_input component
+* Virtual_tripoli_input_comp: [comp]  Name of the Tripoli4_input component
 *                             	     from which is to be obtained batch information
 *                              	     use '0' if not defined.
 *
@@ -65,21 +63,21 @@ DEFINE COMPONENT Virtual_tripoli4_output
 DEFINITION PARAMETERS (virtual_tripoli4_input_comp=0)
 SETTING PARAMETERS (string filename=0, batch=1)
 OUTPUT PARAMETERS (hfile,previous_batch)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 
 DECLARE
 %{
-  long previous_batch;
-  FILE *hfile;
+long previous_batch;
+FILE *hfile;
 %}
 
 INITIALIZE
 %{
-  previous_batch=0;
-  int i;
-  char ** head;
-  long nl;
+previous_batch=0;
+int i;
+char ** head;
+long nl;
 
 #if defined (USE_MPI)
   exit(printf("Tripoli4_output: %s: ERROR: This component can not be used in parallel execution mode (MPI). Abort.\n", NAME_CURRENT_COMP));

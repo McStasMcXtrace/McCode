@@ -11,8 +11,6 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision$
-* Release:    McStas 1.9
 * Modified by:   Kim Lefmann, 7 June 2005
 *
 * Position-sensitive monitor with radially averaging.
@@ -28,19 +26,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* rmax:     Outer radius of detector (m)
-* nr:       Number of concentric circles (1)
-* filename: Name of file in which to store the detector image (text)
-* filename_av: Name of file in which to store the averaged detector image (text)
+* rmax: [m]            Outer radius of detector 
+* nr: [1]              Number of concentric circles 
+* filename: [text]     Name of file in which to store the detector image 
+* filename_av: [text]  Name of file in which to store the averaged detector image 
 *
 * OUTPUT PARAMETERS:
 *
-* PSDr_N:      Array of neutron counts
-* PSDr_p:      Array of neutron weight counts
-* PSDr_p2:     Array of second moments
-* PSDr_av_N:   Array of neutron counts, averaged
-* PSDr_av_p:   Array of neutron weight counts, averaged
-* PSDr_av_p2:  Array of second moments, averaged
+* PSDr_N: []           Array of neutron counts
+* PSDr_p: []           Array of neutron weight counts
+* PSDr_p2: []          Array of second moments
+* PSDr_av_N: []        Array of neutron counts, averaged
+* PSDr_av_p: []        Array of neutron weight counts, averaged
+* PSDr_av_p2: []       Array of second moments, averaged
 *
 * %E
 *******************************************************************************/
@@ -50,20 +48,20 @@ DEFINE COMPONENT PSD_monitor_rad
 DEFINITION PARAMETERS (nr=100)
 SETTING PARAMETERS (string filename=0, string filename_av=0, rmax=0.2)
 OUTPUT PARAMETERS (PSDr_N, PSDr_p, PSDr_p2, PSDr_av_p, PSDr_av_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
-  %{
-    double PSDr_N[nr];
-    double PSDr_p[nr];
-    double PSDr_p2[nr];
-    double PSDr_av_p[nr];
-    double PSDr_av_p2[nr];
-  %}
+%{
+double PSDr_N[nr];
+double PSDr_p[nr];
+double PSDr_p2[nr];
+double PSDr_av_p[nr];
+double PSDr_av_p2[nr];
+%}
 INITIALIZE
-  %{
-    int i;
+%{
+int i;
 
-    for (i=0; i<nr; i++)
+for (i=0; i<nr; i++)
      {
       PSDr_N[i]  = 0;
       PSDr_p[i]  = 0;
