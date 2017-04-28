@@ -5,7 +5,9 @@ import re
 import os
 import subprocess
 
-
+'''
+Component parser used by initial versions of mcgui. (More recent implementations exist.)
+'''
 class ComponentParInfo(object):
     ''' Component parameter info, used as ComponentParser.pars '''
     def __init__(self, par_info=None):
@@ -255,7 +257,7 @@ Utility functions related to mccode file handling.
 '''
 
 '''
-Utility functions for parsing an instrument file
+Utility functions for parsing instrument and component files.
 '''
 def read_header(file):
     '''
@@ -280,10 +282,16 @@ class InstrCompHeaderInfo:
     field_cols = ['name', 'author', 'date', 'origin', 'site', 'short_description', 'description', 'test']
     lst_cols = ['params', 'params_docs', 'links']
     def __init__(self):
-        # legit info
         self.name = ''
-        self.params = []
         self.filepath = ''
+        # instr params
+        self.params = []
+        # comp params
+        self.setparams = []
+        self.defparams = []
+        self.outparams = []
+        # comp category
+        self.category = ''
         # doc info
         self.author = ''
         self.date = ''
@@ -414,7 +422,7 @@ def parse_header(text):
     # params
     par_doc = None
     for l in bites[3].splitlines():
-        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|;\*]+)\](.*)', l)
+        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]+)\][ \t]*(.*)', l)
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
@@ -480,16 +488,16 @@ def read_define_comp(file):
 def parse_define_comp(text):
     text = text.replace('\n', ' ')
     
-    name = re.search('DEFINE[ \t]+COMPONENT[ \t](\w+)', text).group(1)
-    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]+\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    name = re.search('DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
+    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
     defpar = []
     if m:
         defpar = parse_params(m.group(1))
-    m = re.search('SETTING[ \t]+PARAMETERS[ \t]+\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    m = re.search('SETTING[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
     setpar = []
     if m:
         setpar = parse_params(m.group(1))
-    m = re.search('OUTPUT[ \t]+PARAMETERS[ \t]+\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    m = re.search('OUTPUT[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
     outpar = []
     if m:
         outpar = parse_params(m.group(1))
@@ -515,6 +523,8 @@ def parse_params(params_line):
             dval = part.split('=')[1].strip()
             name = part.replace('=', '')
             name = name.replace(dval, '').strip()
+        else:
+            name = part.strip()
         if name is not None:
             params.append((tpe, name, dval))
     return params
