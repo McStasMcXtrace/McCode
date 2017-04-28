@@ -532,8 +532,8 @@ class McCodeEditorWindow(QtGui.QMainWindow):
 
         def __keyEventFilterFct(subject, object, event):
             if event.type() == QtCore.QEvent.KeyRelease:
-                # return & enter
-                if event.key() == 81:
+                # ctrl-q
+                if event.key() == 81 and int(event.modifiers()) == 67108864:
                     self.close()
             return False
         self.eventFilter = lambda o, e: __keyEventFilterFct(self.ui, o, e)
