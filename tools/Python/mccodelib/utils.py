@@ -347,7 +347,7 @@ class InstrCompHeaderInfo:
         lst3 = [' '.join([str(c) for c in p]) for p in self.params]
         lst4 = [l for l in self.links]
         return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3) + '\n\n- links:\n' + '\n'.join(lst4)
-    
+
 def parse_header(text):
     ''' Parses the header of an instrument or component file: LEGACY version. '''
     # get rid of stars and empty padding lines
@@ -484,6 +484,12 @@ def read_define_comp(file):
                 break
     
     return '\n'.join(lines)
+
+def get_comp_category(filepath):
+    ''' extract first folder name from file path '''
+    head = os.path.split(filepath)[0]
+    firstdir = os.path.split(head)[1]
+    return firstdir
 
 def parse_define_comp(text):
     text = text.replace('\n', ' ')

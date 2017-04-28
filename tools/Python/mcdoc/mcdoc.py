@@ -341,7 +341,7 @@ def repair_comp(localdir):
         for l in lines:
             print(l)
         
-        #continue
+        continue
         
         f.close()
         f = open(filename, 'w')
@@ -359,22 +359,70 @@ def get_html_filepath(filepath):
 
 class OverviewDocWriter:
     ''' Creates the mcdoc overview html page. '''
-    def __init__(self, instr_info_lst):
+    def __init__(self, comp_info_lst, instr_info_lst):
+        self.comp_info_lst = comp_info_lst
         self.instr_info_lst = instr_info_lst
         self.text = ''
     
     def create(self):
         ''' action code for create overview page! '''
-        # instr table
+        c_lst = self.comp_info_lst
         i_lst = self.instr_info_lst
         t = self.tab_line
-        ext = '' # exambles table
+        
+        # create comp tables
+        #'%TAB_LINES_SOURCES%', '%TAB_LINES_OPTICS%', '%TAB_LINES_SAMPLES%', '%TAB_LINES_MONITORS%', '%TAB_LINES_MISC%', '%TAB_LINES_OBSOLETE%',
+        # Sources
+        sources_lst = [c for c in self.comp_info_lst if c.category=='sources']
+        sources_tab = ''
+        for i in sources_lst:
+            sources_tab = sources_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        # Optics
+        optics_lst = [c for c in self.comp_info_lst if c.category=='optics']
+        optics_tab = ''
+        for i in optics_lst:
+            optics_tab = optics_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        # Samples
+        samples_lst = [c for c in self.comp_info_lst if c.category=='samples']
+        samples_tab = ''
+        for i in samples_lst:
+            samples_tab = samples_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        # Detectors
+        monitors_lst = [c for c in self.comp_info_lst if c.category=='monitors']
+        monitors_tab = ''
+        for i in monitors_lst:
+            monitors_tab = monitors_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        # Misc
+        misc_lst = [c for c in self.comp_info_lst if c.category=='misc']
+        misc_tab = ''
+        for i in misc_lst:
+            misc_tab = misc_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        # Contributed
+        contrib_lst = [c for c in self.comp_info_lst if c.category=='contrib']
+        contrib_tab = ''
+        for i in contrib_lst:
+            contrib_tab = contrib_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        # Obsolete
+        obsolete_lst = [c for c in self.comp_info_lst if c.category=='obsolete']
+        obsolete_tab = ''
+        for i in obsolete_lst:
+            obsolete_tab = obsolete_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        
+        # create instr examples table
+        ex_tab = ''
         for i in i_lst:
-            ext = ext + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'instr', i.short_descr) + '\n'
+            ex_tab = ex_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'instr', i.short_descr) + '\n'
         
         text = self.html
         text = text.replace('%TAB_HEAD%', self.tab_header)
-        text = text.replace('%TAB_LINES_EXAMPLES%', ext)
+        text = text.replace('%TAB_LINES_SOURCES%', sources_tab)
+        text = text.replace('%TAB_LINES_OPTICS%', optics_tab)
+        text = text.replace('%TAB_LINES_SAMPLES%', samples_tab)
+        text = text.replace('%TAB_LINES_MONITORS%', monitors_tab)
+        text = text.replace('%TAB_LINES_MISC%', misc_tab)
+        text = text.replace('%TAB_LINES_CONTRIB%', contrib_tab)
+        text = text.replace('%TAB_LINES_OBSOLETE%', obsolete_tab)
+        text = text.replace('%TAB_LINES_EXAMPLES%', ex_tab)
         
         self.text = text
         return self.text
@@ -399,7 +447,7 @@ class OverviewDocWriter:
 </TR>
 '''
     tags = ['%TAB_HEAD%',
-            '%TAB_LINES_SOURCES%', '%TAB_LINES_OPTICS%', '%TAB_LINES_SAMPLES%', '%TAB_LINES_MONITORS%', '%TAB_LINES_MISC%', '%TAB_LINES_OBSOLETE%',
+            '%TAB_LINES_SOURCES%', '%TAB_LINES_OPTICS%', '%TAB_LINES_SAMPLES%', '%TAB_LINES_MONITORS%', '%TAB_LINES_CONTRIB%', '%TAB_LINES_MISC%', '%TAB_LINES_OBSOLETE%',
             '%TAB_LINES_EXAMPLES%',
             '%TAB_LINES_LOCALCOMPS%', '%TAB_LINES_DATAFILES%', '%TAB_LINES_SHARE%',
             '%DATE%']
@@ -735,12 +783,18 @@ class CompParser(InstrParser):
         info.site = utils.get_instr_site_fromtxt(header)
         
         dfine = utils.read_define_comp(f)
-        
         name, setpar, defpar, outpar = utils.parse_define_comp(dfine)
         
         info.name = name
-        # TODO: upgrade info object to distinguish between the different types of pars
+        info.category = utils.get_comp_category(self.filename)
+        
+        # basically just for debug use
         info.params = setpar + defpar + outpar
+        
+        # these are used by CompDocWriter
+        info.setparams = setpar
+        info.defparams = defpar
+        info.outparams = outpar
         
         self.info = info
 
@@ -766,31 +820,38 @@ class CompDocWriter:
         h = h.replace(t[7], i.description)
         
         h = h.replace(t[8], self.par_header)
-        doc_rows = ''
-        for p in i.params:
+        doc_rows_in = ''
+        for p in i.setparams + i.defparams:
             lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
             doc = lst[0] if len(lst) > 0 else ''
-            doc_rows = doc_rows + '\n' + self.par_str % (p[0], p[1], doc, p[2])
-        h = h.replace(t[9], doc_rows)
+            doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+        h = h.replace(t[9], doc_rows_in)
         
-        h = h.replace(t[10], i.filepath)
-        h = h.replace(t[11], os.path.basename(i.filepath))
+        doc_rows_out = ''
+        for p in i.outparams:
+            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = lst[0] if len(lst) > 0 else ''
+            doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+        h = h.replace(t[10], doc_rows_out)
+        
+        h = h.replace(t[11], i.filepath)
+        h = h.replace(t[12], os.path.basename(i.filepath))
         
         # TODO: implement links writing
         lstr = ''
         for l in i.links:
             lstr = lstr + self.lnk_str % l + '\n'
-        h = h.replace(t[12], lstr)
+        h = h.replace(t[13], lstr)
         
-        h = h.replace(t[13], datetime.now().strftime("%Y%m%d"))
+        h = h.replace(t[14], datetime.now().strftime("%Y%m%d"))
         
         self.text = h
         return self.text
     
-    tags = ['%TITLE%', '%INSTRNAME%', '%SHORT_DESCRIPTION%',
+    tags = ['%TITLE%', '%COMPNAME%', '%SHORT_DESCRIPTION%',
             '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%DESCRIPTION%',
-            '%T_HEAD%', '%T_ROWS%',
-            '%INSTRFILE%', '%INSTRFILE_BASE%', '%LINKS%','%GENDATE%']
+            '%T_HEAD%', '%T_ROWS_IN%', '%T_ROWS_OUT%',
+            '%COMPFILE%', '%COMPFILE_BASE%', '%LINKS%','%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
     lnk_str = "<LI>%s"
@@ -813,7 +874,7 @@ class CompDocWriter:
  | <A href="#links">Links</A> ]
 </P>
 
-<H1>The <CODE>%INSTRNAME%</CODE> Instrument</H1>
+<H1>The <CODE>%COMPNAME%</CODE> Instrument</H1>
 
 %SHORT_DESCRIPTION%
 
@@ -837,13 +898,22 @@ the others are optional.
 
 <TABLE BORDER=1>
 %T_HEAD%
-%T_ROWS%
+%T_ROWS_IN%
+</TABLE>
+
+<H2><A NAME=ipar></A>Output parameters</H2>
+Parameters in <B>boldface</B> are required;
+the others are optional.
+
+<TABLE BORDER=1>
+%T_HEAD%
+%T_ROWS_OUT%
 </TABLE>
 
 <H2><A NAME=links></A>Links</H2>
 
 <UL>
-  <LI> <A HREF="%INSTRFILE%">Source code</A> for <CODE>%INSTRFILE_BASE%</CODE>.
+  <LI> <A HREF="%COMPFILE%">Source code</A> for <CODE>%COMPFILE_BASE%</CODE>.
   %LINKS%
 </UL>
 <HR>
@@ -856,8 +926,9 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated automatically by McDoc, Peter Willendrup
-&lt;<A HREF="mailto:peter.willendrup@risoe.dk">pkwi@fysik.dtu.dk</A>&gt; /
+Generated automatically by McDoc, Jakob Garde
+&lt;<A HREF="mailto:jaga@fysik.dtu.dk">jaga@fysik.dtu.dk</A>&gt; and Peter Willendrup
+&lt;<A HREF="mailto:peter.willendrup@fysik.dtu.dk">pkwi@fysik.dtu.dk</A>&gt; /
 %GENDATE%</ADDRESS>
 </BODY></HTML>
 '''
@@ -881,29 +952,41 @@ def main(args):
         repair_comp(localdir)
         quit()
     
-    # get lib dir
+    # get lib files
     libdir = mccode_config.configuration["MCCODE_LIB_DIR"]
     print("lib directory: " + libdir)
     lib_instr_files, lib_comp_files = utils.get_instr_comp_files(libdir)
+    
+    # local files
     local_instr_files, local_comp_files = utils.get_instr_comp_files(localdir)
     
-    # parse all instr files
-    instr_info_lst = []
-    files = []
-    #for f in local_instr_files:
+    # parse comp files
+    comp_info_lst = []
     for f in local_comp_files:
         try:
             print("parsing... %s" % f)
-            #info = InstrParser(f).parse()
             info = CompParser(f).parse()
             info.filepath = f
-            files.append(f)
+            comp_info_lst.append(info)
+        except:
+            print("failed parsing file: %s" % f)
+            quit()
+    print("parsed files: %s" % str(len(local_comp_files)))
+    
+    # parse instr files
+    instr_info_lst = []
+    for f in local_instr_files:
+        try:
+            print("parsing... %s" % f)
+            info = InstrParser(f).parse()
+            info.filepath = f
             instr_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
             quit()
-    print("parsed files: %s" % str(len(lib_instr_files)))
+    print("parsed files: %s" % str(len(local_instr_files)))
     
+    '''
     # debug mode - write files with a header property each, then quit
     if args.debug:
         text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
@@ -920,21 +1003,30 @@ def main(args):
         #  '\n'.join(info.links)
         write_file(utils.InstrCompHeaderInfo.colname(10), text)
         quit()
+    '''
     
-    # generate and save all html pages docs
-    html_files = []
+    # generate and save comp html doc pages
+    for i in range(len(comp_info_lst)):
+        p = comp_info_lst[i]
+        f = local_comp_files[i]
+        doc = CompDocWriter(p)
+        text = doc.create()
+        h = os.path.splitext(f)[0] + '.html'
+        print("writing doc file... %s" % h)
+        write_file(h, text)
+    
+    # generate and save instr html doc pages
     for i in range(len(instr_info_lst)):
         p = instr_info_lst[i]
-        f = files[i]
+        f = local_instr_files[i]
         doc = InstrDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
         print("writing doc file... %s" % h)
         write_file(h, text)
-        html_files.append(h)
-    
+        
     # write overview files, properly assembling links to instr- and html-files
-    masterdoc = OverviewDocWriter(instr_info_lst)
+    masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst)
     text = masterdoc.create()
     print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
     write_file('mcdoc.html', text)
