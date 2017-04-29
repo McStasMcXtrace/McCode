@@ -612,7 +612,7 @@ def save_instrfile(instr, text):
         instr = instr + '.instr'
     
     # TODO: add try-finally and error handling
-    f = open(str(instr), 'w')
+    f = open(str(instr), 'w', newline='\n')
     f.write(text)
     f.close()
     
