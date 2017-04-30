@@ -877,6 +877,7 @@ class McGuiAppController():
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
         mwui.actionPlot.triggered.connect(self.handlePlotResults)
+        mwui.actionPlotOther.triggered.connect(self.handlePlotOtherResults)
         mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         mwui.actionDisplay_2d.triggered.connect(self.handleMcDisplay2D)
         
