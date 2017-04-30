@@ -395,26 +395,30 @@ class McGuiState(QtCore.QObject):
 
         # Add prefix 'start' to background on Windows systems
         if os.name == 'nt':
-            runtstr = 'start ' + runstr
+            runstr = 'start ' + runstr
             
         # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
-        
+		
+        if not os.name=='nt':
         # run simulation in a background thread
-        self.__runthread = McRunQThread()
-        self.__runthread.cmd = runstr
-        self.__runthread.cwd = os.path.dirname(self.__instrFile)
-        self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
-        self.__runthread.terminated.connect(self.__runTerminated)
-        self.__runthread.thread_exception.connect(handleExceptionMsg)
-        self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
-        self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
-        self.__runthread.start()
-        
-        self.__emitter.message(runstr)
-        self.__emitter.status('Running simulation ...')
-        self.__fireSimStateUpdate()
-        
+            self.__runthread = McRunQThread()
+            self.__runthread.cmd = runstr
+            self.__runthread.cwd = os.path.dirname(self.__instrFile)
+            self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
+            self.__runthread.terminated.connect(self.__runTerminated)
+            self.__runthread.thread_exception.connect(handleExceptionMsg)
+            self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
+            self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
+            self.__runthread.start()
+            self.__emitter.message(runstr)
+            self.__emitter.status('Running simulation ...')
+            self.__fireSimStateUpdate()
+        else:
+            self.__emitter.message(runstr)
+            self.__emitter.status('Started simulation/trace in background shell...')
+            subprocess.Popen(runstr, shell=True)
+
     def __runFinished(self, process_returncode):
         if not self.__interrupted:
             self.__fireSimStateUpdate()
