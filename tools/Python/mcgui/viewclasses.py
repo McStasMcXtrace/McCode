@@ -122,7 +122,9 @@ class McView(object):
     def showOpenInstrumentDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookDir)
-        dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
+        
+        dlg.setNameFilters([mccode_config.configuration["MCCODE"]+" instruments (*.instr)", "All files (*)"]);
+        dlg.selectNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)")
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 

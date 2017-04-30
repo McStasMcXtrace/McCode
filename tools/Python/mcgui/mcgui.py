@@ -128,14 +128,13 @@ class McGuiState(QtCore.QObject):
     def loadInstrument(self, instr_file):
         # makes sure this is not a qstring
         instr_file = str(instr_file)
-        # file must exists and be .instr file:
-        if os.path.exists(instr_file) and (os.path.splitext(instr_file)[1] == '.instr'):
+        # file must exist:
+        if os.path.exists(instr_file):
             # handle .instr files loaded without full path
             if os.path.dirname(instr_file) != '':
                 realdir = os.path.dirname(os.path.abspath(instr_file))
-                print(realdir)
                 self.setWorkDir(realdir)
-                
+            
             instr_file = os.path.join(self.getWorkDir(), os.path.basename(instr_file))
             self.__instrFile = instr_file
             self.__fireInstrUpdate()
@@ -501,10 +500,10 @@ class McGuiAppController():
             self.emitter.message(open(comprev).read())
         
         
-        # load instrument file from command line pars
+        # load instrument file from command line pars, skipping scriptfile
         for a in sys.argv:
             if os.path.isfile(a):
-                if os.path.splitext(a)[1] == '.instr':
+                if not os.path.splitext(a)[1] == '.py':
                     if self.state.getInstrumentFile() == '':
                         self.state.loadInstrument(a)
         
