@@ -127,7 +127,13 @@ class McView(object):
         dlg.selectNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)")
         if dlg.exec_():
             return dlg.selectedFiles()[0]
-
+        
+    def showOpenPlotDirDlg(self, lookDir):
+        dlg = QtGui.QFileDialog()
+        dlg.setDirectory(lookDir)
+        dlg.ShowDirsOnly
+        return dlg.getExistingDirectory(self.mw,"Open a folder")
+        
     def showChangeWorkDirDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.Directory)
