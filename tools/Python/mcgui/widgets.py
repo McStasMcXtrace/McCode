@@ -155,6 +155,8 @@ class Ui_MainWindow(object):
         self.actionDisplay.setObjectName("actionDisplay")
         self.actionDisplay_2d = QtGui.QAction(MainWindow)
         self.actionDisplay_2d.setObjectName("actionDisplay_2d")
+        self.actionPlotOther = QtGui.QAction(MainWindow)
+        self.actionPlotOther.setObjectName("actionPlotOther")
         self.menuNew_From_Template.addAction(self.actionTempl_submenu)
         self.menuFile.addAction(self.actionNew_Instrument)
         self.menuFile.addAction(self.menuNew_From_Template.menuAction())
@@ -235,6 +237,8 @@ class Ui_MainWindow(object):
         self.actionMcdoc.setText(QtGui.QApplication.translate("MainWindow", "mcdoc Component Reference", None, QtGui.QApplication.UnicodeUTF8))
         self.actionDisplay.setText(QtGui.QApplication.translate("MainWindow", "Display-3D", None, QtGui.QApplication.UnicodeUTF8))
         self.actionDisplay_2d.setText(QtGui.QApplication.translate("MainWindow", "Display-2D", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPlotOther.setText(QtGui.QApplication.translate("MainWindow", "Plot Other Results", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPlotOther.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+P", None, QtGui.QApplication.UnicodeUTF8))
 
 
 ''' Instrument Editor
