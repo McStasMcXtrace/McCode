@@ -45,6 +45,6 @@ if [ "x$2" != "x" ]; then
     ./iscc McStas-${1}-metapackage32.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win32.exe
     mkdir dist/extras
-    cp support/Win32/MSMPI/* dist/extras
-    cp support/Win32/NeXus/* dist/extras
+    cp meta-pkgs/windows/MSMPI/*.* dist/extras
+    cp meta-pkgs/windows/NeXus/*.* dist/extras
 fi
