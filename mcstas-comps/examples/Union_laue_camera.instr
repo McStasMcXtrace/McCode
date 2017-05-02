@@ -1,22 +1,22 @@
 /*******************************************************************************
-*         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: templateLaue
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_manual_example
 *
 * %Identification
-* Written by: K. Nielsen
-* Date: June 2nd, 2010
-* Origin: ILL
-* Modified by: EF,
-* %INSTRUMENT_SITE: Templates
-*
-* A simple Laue diffractometer
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* %INSTRUMENT_SITE: Union_demos
 *
 * %Description
-* A single crystal sample is illuminated with a white cold beam.
-* Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
+* Laue camera using Union components for the sample
 *
-* %Example: templateLaue Detector: det_I=8.39706e+06
+* %Example: Detector: Banana_monitor_I=1.74328e+06
 *
 * %Parameters
 * delta_d_d: []               
@@ -25,18 +25,18 @@
 * dlam: []                    
 * radius: []                  
 * height: []                  
-* x_rotation_geometry: []     
+* x_rotation_geometry: []  rotates union geometry component
 * y_rotation_geometry: []     
-* x_rotation_geometry_ref: [] 
+* x_rotation_geometry_ref: [] rotates reference component
 * y_rotation_geometry_ref: [] 
-* x_rotation_process: []      
+* x_rotation_process: [] rotates powder process (crystal orientation)
 * y_rotation_process: []      
 * z_rotation_process: []      
 * geometry_interact: []       
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT templateLaue(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, radius = 0.01, height=0.01,
+DEFINE INSTRUMENT Union_laue_camera(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, radius = 0.01, height=0.01,
    x_rotation_geometry=0, y_rotation_geometry=0,
    x_rotation_geometry_ref=0, y_rotation_geometry_ref=0,
    x_rotation_process=0, y_rotation_process=0, z_rotation_process=0,
@@ -45,7 +45,6 @@ DEFINE INSTRUMENT templateLaue(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, radius 
 DECLARE
 %{
 int scattered_flag_instr;
-
 %}
 
 TRACE
