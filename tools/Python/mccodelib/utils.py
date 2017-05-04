@@ -489,6 +489,11 @@ def get_comp_category(filepath):
     ''' extract first folder name from file path '''
     head = os.path.split(filepath)[0]
     firstdir = os.path.split(head)[1]
+    # handle special case - sub folder of "contrib" folder
+    if firstdir not in ('sources', 'optics', 'samples', 'monitors', 'misc', 'contrib', 'obsolete'):
+        head2 = os.path.split(head)[0]
+        seconddir = os.path.split(head2)[1]
+        return seconddir
     return firstdir
 
 def parse_define_comp(text):
