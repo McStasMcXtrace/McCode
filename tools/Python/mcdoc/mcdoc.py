@@ -359,9 +359,10 @@ def get_html_filepath(filepath):
 
 class OverviewDocWriter:
     ''' Creates the mcdoc overview html page. '''
-    def __init__(self, comp_info_lst, instr_info_lst):
+    def __init__(self, comp_info_lst, instr_info_lst, mccode_libdir):
         self.comp_info_lst = comp_info_lst
         self.instr_info_lst = instr_info_lst
+        self.mccode_libdir = mccode_libdir
         self.text = ''
     
     def create(self):
@@ -414,6 +415,8 @@ class OverviewDocWriter:
             ex_tab = ex_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'instr', i.short_descr) + '\n'
         
         text = self.html
+        
+        text = text.replace('%MCCODE_LIBDIR%', self.mccode_libdir)
         text = text.replace('%TAB_HEAD%', self.tab_header)
         text = text.replace('%TAB_LINES_SOURCES%', sources_tab)
         text = text.replace('%TAB_LINES_OPTICS%', optics_tab)
@@ -446,7 +449,7 @@ class OverviewDocWriter:
 <TD>%s</TD>
 </TR>
 '''
-    tags = ['%TAB_HEAD%',
+    tags = ['%MCCODE_LIBDIR%', '%TAB_HEAD%',
             '%TAB_LINES_SOURCES%', '%TAB_LINES_OPTICS%', '%TAB_LINES_SAMPLES%', '%TAB_LINES_MONITORS%', '%TAB_LINES_CONTRIB%', '%TAB_LINES_MISC%', '%TAB_LINES_OBSOLETE%',
             '%TAB_LINES_EXAMPLES%',
             '%TAB_LINES_LOCALCOMPS%', '%TAB_LINES_DATAFILES%', '%TAB_LINES_SHARE%',
@@ -474,8 +477,9 @@ class OverviewDocWriter:
  | <A href="#share">share</A> ]
 </P>
 <P ALIGN=CENTER>
-[ <a href="file:///usr/share/mcstas/2.4beta02/doc/manuals/mcstas-manual.pdf">User Manual (fix link)</a>
-| <a href="file:///usr/share/mcstas/2.4beta02/doc/manuals/mcstas-components.pdf">Component Manual (fix link)</a> ]
+[ <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-manual.pdf">User Manual</a>
+| <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-components.pdf">Component Manual</a> ]
+| <a href="file://%MCCODE_LIBDIR%/">McCode lib dir</a> ]
 </P>
 
 <CENTER><H1>Components and Instruments from the Library for <i>McStas</i></H1></CENTER>
@@ -1026,7 +1030,7 @@ def main(args):
         write_file(h, text)
         
     # write overview files, properly assembling links to instr- and html-files
-    masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst)
+    masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
     text = masterdoc.create()
     print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
     write_file('mcdoc.html', text)
