@@ -1036,11 +1036,12 @@ def main(args):
     print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
     write_file('mcdoc.html', text)
     
-    # open a web-browser in a cross-platform way
-    try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'mcdoc.html'), shell=True)
-    except Exception as e:
-        raise Exception('Os-specific open browser: %s' % e.__str__())
+    # open a web-browser in a cross-platform way, unless --nobrowse has been enabled
+    if not args.nobrowse:
+        try:
+            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'mcdoc.html'), shell=True)
+        except Exception as e:
+            raise Exception('Os-specific open browser: %s' % e.__str__())
 
 
 if __name__ == '__main__':
@@ -1048,6 +1049,7 @@ if __name__ == '__main__':
     parser.add_argument('localdir', nargs='?', help='local dir to parse (in addition to lib dir)')
     parser.add_argument('--debug', action='store_true', help='enable debug mode')
     parser.add_argument('--repair', action='store_true', help='enable repair mode')
+    parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     
     args = parser.parse_args()
     
