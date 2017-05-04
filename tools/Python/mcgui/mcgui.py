@@ -382,11 +382,16 @@ class McGuiState(QtCore.QObject):
             if int(random_seed) > 0:
                 runstr = runstr + ' -s ' + str(random_seed)
         
+        # autoplot
+        autoplot = fixed_params[8]
+        if autoplot:
+            runstr = runstr + ' --autoplot'
+        
         # parse instrument params
         for p in params:
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
-        print('Running: '+runstr)
+        print('Running: ' + runstr)
         
         # Add & for backgrounding on Unix systems
         if simtrace == 1 and not os.name == 'nt':

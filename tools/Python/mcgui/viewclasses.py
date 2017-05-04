@@ -663,7 +663,10 @@ class McStartSimDialog(QtGui.QDialog):
         # output dir
         p7 = str(self.ui.edtOutputDir.text())
         
-        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7]
+        # autoplot
+        p8 = self.ui.cbxAutoPlot.isChecked()
+        
+        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8]
         
         # get dynamic params
         params = []
