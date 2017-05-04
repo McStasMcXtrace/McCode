@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: test
+* Instrument: Union_sample_picture_replica
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -13,20 +13,20 @@
 * Origin: University of Copenhagen
 * %INSTRUMENT_SITE:
 *
-* Simple test instrument for sample component.
 *
 * %Description
-* simple test instrument for sample component.
+* Reconstruction of a sample holder from picture.
+* All arms are 30 cm below the actual center point in order to avoid arms
+*  in the mcdisplay picture.
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* Example: Detector: detector_I=1982.98
 *
 * %Parameters
-* stick_displacement: [] 
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test(stick_displacement=0)
+DEFINE INSTRUMENT Union_sample_picture_replica()
 
 DECLARE
 %{
@@ -34,21 +34,22 @@ DECLARE
 
 TRACE
 
-COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
+COMPONENT Vanadium_incoherent = Incoherent_process(sigma=2*5.08,packing_factor=1,unit_cell_volume=27.66)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
+COMPONENT Vanadium = Union_make_material(my_absorption=2*5.08*100/27.66,process_string="Vanadium_incoherent")
 AT (0,0,0) ABSOLUTE
 
 // P0
-COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4) //,interact_fraction=0.8)
+COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4)
 AT (0,0,0) ABSOLUTE
 
 // P1
 COMPONENT Al_Powder = Powder_process(reflections="Al.laz")
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Al = Union_make_material(my_absorption=450*100*4*0.231/66.4)
+// Exagerated Al absorption in order to make absorption picture more clear
+COMPONENT Al = Union_make_material(my_absorption=150*100*4*0.231/66.4)
 AT (0,0,0) ABSOLUTE
 
 // P0
@@ -71,14 +72,10 @@ COMPONENT source = Source_div(
         dE = 0, flux = 1E9)
   AT (0,-0.05,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
-COMPONENT focus_stop = Arm()
-AT (0,0,0.1) RELATIVE source
-
-
 // Sample position
 COMPONENT beam_center = Arm()
 AT (0,-0.3,0.3) RELATIVE a1
-ROTATED (0,20,0) RELATIVE a1
+ROTATED (0,40,0) RELATIVE a1
 
 
 COMPONENT sample = Union_cylinder(radius=0.005,yheight=0.0265, priority=20,material_string="Cu")
@@ -179,9 +176,6 @@ COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE beam_center
 ROTATED(0,0,0) RELATIVE beam_center
 
-//COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
-//AT (0, 0, 0) RELATIVE beam_center
-//ROTATED (0,0,0) RELATIVE beam_center
 
 COMPONENT detector = PSD_monitor(xwidth=0.05, yheight=0.15, nx=200, ny=200, filename="PSD.dat", restore_neutron=1)
 AT (0,0,0.6) RELATIVE source

@@ -5,40 +5,47 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: test
+* Instrument: Union_demonstration
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE:
-*
-* Simple test instrument for sample component.
+* %INSTRUMENT_SITE: Union_demos
 *
 * %Description
-* simple test instrument for sample component.
+* Demonstration of Union components. Here four different powder samples are
+*  placed in a can each connected to a weird sample holder and contained in
+*  a cryostat. This unrealistic example is meant to show the syntax and the
+*  new possibilities when using the Union components.
+* With the standard source only two of the samples are illuminated, yet
+*  multiple scattering occur and events are thus taking place in the last
+*  two samples.
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* Example: Detector: m4pi_two_or_more_samples_I=0.0945567
 *
 * %Parameters
-* stick_displacement
+* stick_displacement [m] height displacement of sample stick
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test(stick_displacement=0)
+DEFINE INSTRUMENT Union_demonstration(stick_displacement=0)
 
 DECLARE
 %{
-int sample_1_index=27,sample_2_index=30,sample_3_index=33,sample_4_index=36; // Indexes of three samples
+int sample_1_index=27,sample_2_index=30,sample_3_index=33,sample_4_index=36; // Indexes of four samples
 int scattered_1,scattered_2,scattered_3,scattered_4;
 %}
 
 TRACE
 
-COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
+
+
+COMPONENT Vanadium_incoherent = Incoherent_process(sigma=5.08,packing_factor=1,unit_cell_volume=13.827)
 AT (0,0,0) ABSOLUTE
 
+// Here manual linking is used, the process string is writte explicitly
 COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
 AT (0,0,0) ABSOLUTE
 
@@ -83,6 +90,9 @@ AT (0,0,0) ABSOLUTE
 COMPONENT Au_powder = Powder_process(reflections="Au.laz",packing_factor=0.5)
 AT (0,0,0) ABSOLUTE
 
+// Here automatic linking is used, all process defined after the last make_material component
+//  is automatically collected in this next make_material component as the process string
+//  is not specified.
 COMPONENT Au_Ag_mix = Union_make_material(my_absorption=0.5*100*4*3.78/68.22+0.5*100*4*98.65/67.87)
 AT (0,0,0) ABSOLUTE
 
@@ -108,18 +118,6 @@ COMPONENT Cs_powder = Powder_process(reflections="Cs.laz")
 AT (0,0,0) ABSOLUTE
 
 COMPONENT Cs = Union_make_material(my_absorption=100*2*3.78/47.22)
-AT (0,0,0) ABSOLUTE
-
-// Fe definition
-// P0
-COMPONENT Fe_incoherent = Incoherent_process(sigma=2*0.4,packing_factor=1,unit_cell_volume=24.04)
-AT (0,0,0) ABSOLUTE
-
-// P1
-COMPONENT Fe_powder = Powder_process(reflections="Fe.laz")
-AT (0,0,0) ABSOLUTE
-
-COMPONENT Fe = Union_make_material(my_absorption=100*2*2.56/24.04)
 AT (0,0,0) ABSOLUTE
 
 
@@ -376,7 +374,7 @@ COMPONENT detector = PSD_monitor(xwidth=0.1, yheight=0.08, nx=200, ny=200, filen
 AT (0,-0.02,0.4) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
-// Removes events not scattering in the three selected samples
+// Removes events not scattering in at least two of the samples
 // mcdisplay --inspect=m4pi_two_samples shows only rays that scatters on all three
 //  since all others were removed before that component with this arm.
 COMPONENT arm_1 = Arm()
@@ -386,7 +384,9 @@ EXTEND
   if (scattered_1 + scattered_2 + scattered_3 + scattered_4 < 2) ABSORB;
 %}
 
-COMPONENT m4pi_two_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
+// Using mcdisplay and -inspect m4pi_two_or_more_samples one can show only
+//  trajectories where the ray scatters from two or more of the samples
+COMPONENT m4pi_two_or_more_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
 WHEN (scattered_1 + scattered_2 + scattered_3 + scattered_4 > 1)
 AT (0, 0, 0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center

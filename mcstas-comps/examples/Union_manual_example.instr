@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: test
+* Instrument: Union_manual_example
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -13,19 +13,17 @@
 * Origin: University of Copenhagen
 * %INSTRUMENT_SITE: Union_demos
 *
-* Simple test instrument for sample component.
-*
 * %Description
-* simple test instrument for sample component.
+* Example on using Union components from the Union project manual
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* Example: Detector: Banana_monitor_I=3.823e-05
 *
 * %Parameters
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test()
+DEFINE INSTRUMENT Union_manual_example()
 
 DECLARE
 %{

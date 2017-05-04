@@ -9,34 +9,13 @@
 * Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
-* A sample component to separate geometry and phsysics
 *
-* %D
-* Alpha version, no input system yet
-* Hardcode input to geometry engine
-* Allows complicated geometry by combination of simple shapes
+* This file sets up global lists needed for Union components to communicate with each other
+* These all have dynamically allocated memory somewhere in the structure, which is deallocated
+*  by the last Union_master.
 *
-* Algorithm:
-* Described elsewhere
 *
-* %P
-* INPUT PARAMETERS:
-* radius:  [m] Outer radius of sample in (x,z) plane
-*
-* OUTPUT PARAMETERS:
-* V_rho:  [AA^-3] Atomic density
-*
-* %L
-* The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
-*
-* %E
 ******************************************************************************/
-
-
-// This file sets up global lists needed for Union components to communicate with each other
-// These all have dynamically allocated memory somewhere in the structure, which is deallocated
-//  by the last Union_master.
-
 
 // Initialize global positions / rotations to transform lists
   // These are lists of pointers to positons / rotations, that will be updated from global frame
