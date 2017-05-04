@@ -641,6 +641,10 @@ class InstrParser:
         self.info = None
         self.has_parsed = False
     
+    def stub(self):
+        self.info = utils.InstrCompHeaderInfo()
+        self.has_parsed = True
+    
     def parse(self):
         try:
             self._parse()
@@ -958,7 +962,7 @@ def main(args):
     '''
     logging.basicConfig(level=logging.INFO)
     
-    usedir = args.libdir or mccode_config.configuration["MCCODE_LIB_DIR"]
+    usedir = args.crawl or mccode_config.configuration["MCCODE_LIB_DIR"]
     print("using source directory: " + usedir)
     
     '''
@@ -982,8 +986,8 @@ def main(args):
             comp_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
-            quit()
-    print("parsed files: %s" % str(len(comp_files)))
+            comp_info_lst.append(CompParser(f).stub())
+    print("parsed comp files: %s" % str(len(comp_files)))
     
     # parse instr files
     instr_info_lst = []
@@ -995,8 +999,8 @@ def main(args):
             instr_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
-            quit()
-    print("parsed files: %s" % str(len(instr_files)))
+            instr_info_lst.append(InstrParser(f).stub())
+    print("parsed instr files: %s" % str(len(instr_files)))
     
     '''
     # debug mode - write files with a header property each, then quit
@@ -1017,44 +1021,47 @@ def main(args):
         quit()
     '''
     
-    # generate and save comp html doc pages
-    for i in range(len(comp_info_lst)):
-        p = comp_info_lst[i]
-        f = comp_files[i]
-        doc = CompDocWriter(p)
-        text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
-        print("writing doc file... %s" % h)
-        write_file(h, text)
-    
-    # generate and save instr html doc pages
-    for i in range(len(instr_info_lst)):
-        p = instr_info_lst[i]
-        f = instr_files[i]
-        doc = InstrDocWriter(p)
-        text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
-        print("writing doc file... %s" % h)
-        write_file(h, text)
-    
-    # write overview files, properly assembling links to instr- and html-files
-    masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
-    text = masterdoc.create()
-    print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
     mcdoc_html = os.path.join(usedir,'mcdoc.html')
-    write_file(mcdoc_html, text)
+    # try-catch section for file write
+    try:
+        # generate and save comp html doc pages
+        for i in range(len(comp_info_lst)):
+            p = comp_info_lst[i]
+            f = comp_files[i]
+            doc = CompDocWriter(p)
+            text = doc.create()
+            h = os.path.splitext(f)[0] + '.html'
+            print("writing doc file... %s" % h)
+            write_file(h, text)
+        
+        # generate and save instr html doc pages
+        for i in range(len(instr_info_lst)):
+            p = instr_info_lst[i]
+            f = instr_files[i]
+            doc = InstrDocWriter(p)
+            text = doc.create()
+            h = os.path.splitext(f)[0] + '.html'
+            print("writing doc file... %s" % h)
+            write_file(h, text)
+        
+        # write overview files, properly assembling links to instr- and html-files
+        masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
+        text = masterdoc.create()
+        print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
+        write_file(mcdoc_html, text)
+    
+    except Exception as e:
+        print("Could not write to disk: %s" % e.__str__())
     
     # open a web-browser in a cross-platform way, unless --nobrowse has been enabled
     if not args.nobrowse:
-        try:
-            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], mcdoc_html), shell=True)
-        except Exception as e:
-            raise Exception('Os-specific open browser: %s' % e.__str__())
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], mcdoc_html), shell=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('libdir', nargs='?', help='dir to parse and write docpates to, defaults to current installation mccode lib dir')
+    parser.add_argument('namefilter', nargs='?', help='filter results by component/instriment name')
+    parser.add_argument('--crawl', help='Crawl from rootdir to write docpages to disk, defaults to current installation mccode lib dir')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     #parser.add_argument('--debug', action='store_true', help='enable debug mode')
     #parser.add_argument('--repair', action='store_true', help='enable repair mode')
