@@ -644,6 +644,7 @@ class InstrParser:
     def stub(self):
         self.info = utils.InstrCompHeaderInfo()
         self.has_parsed = True
+        return self.info
     
     def parse(self):
         try:
@@ -1002,6 +1003,11 @@ def main(args):
             instr_info_lst.append(InstrParser(f).stub())
     print("parsed instr files: %s" % str(len(instr_files)))
     
+    # apply a name-filter (matches instr / comp name, not filename)
+    if args.namefilter:
+        comp_info_lst = [c for c in comp_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
+        instr_info_lst = [c for c in comp_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
+    
     '''
     # debug mode - write files with a header property each, then quit
     if args.debug:
@@ -1060,9 +1066,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('namefilter', nargs='?', help='filter results by component/instriment name')
-    parser.add_argument('--crawl', help='Crawl from rootdir to write docpages to disk, defaults to current installation mccode lib dir')
-    parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
+    parser.add_argument('namefilter', nargs='?', help='Filter results by component/instrument definition name (not file-name or header-name). Ignores case.')
+    parser.add_argument('--crawl', help='Crawl from rootdir to write docpages to disk, defaults to current installation mccode lib dir.')
+    parser.add_argument('--nobrowse', action='store_true', help='Disable opening a webbrowser viewer.')
     #parser.add_argument('--debug', action='store_true', help='enable debug mode')
     #parser.add_argument('--repair', action='store_true', help='enable repair mode')
     
