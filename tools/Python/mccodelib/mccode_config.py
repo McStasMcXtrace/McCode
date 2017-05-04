@@ -116,29 +116,34 @@ def save_user_config():
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
+    if os.name == 'nt':
+        suffix='-pl'
+    else:
+        suffix='.pl'
+        
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display-mantid",
-                         prefix+"display.pl",
-                         prefix+"display.pl --format=Matlab",
-                         prefix+"display.pl --format=VRML", 
-                         prefix+"display.pl --format=Mantid",
+                         prefix+"display"+suffix,
+                         prefix+"display"+suffix+" --format=Matlab",
+                         prefix+"display"+suffix+" --format=VRML", 
+                         prefix+"display"+suffix+" --format=Mantid",
                          prefix+"display-matplotlib"]
     else:
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
-                         prefix+"display.pl",
-                         prefix+"display.pl --format=Matlab",
-                         prefix+"display.pl --format=VRML", 
+                         prefix+"display"+suffix,
+                         prefix+"display"+suffix+" --format=Matlab",
+                         prefix+"display"+suffix+" --format=VRML", 
                          prefix+"display-matplotlib"]
 
-    mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run.pl", prefix+"run.pl --format=NeXus"]
-    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot.pl", prefix+"plot.pl --format=Gnuplot", prefix+"plot.pl --format=Matlab",
+    mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst
