@@ -114,7 +114,7 @@ foreach(NAME ${SOURCENAMES}
   else()
     install(
       PROGRAMS "${WORK}/${P}${NAME}"
-      DESTINATION ${bin}
+      DESTINATION ${lib}/perlbin
       RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
       )
   endif()
