@@ -613,6 +613,8 @@ class McStartSimDialog(QtGui.QDialog):
             visible = True
         self.ui.lblInspect.setVisible(visible)
         self.ui.cbxInspect.setVisible(visible)
+        self.ui.cbxAutoPlot.setVisible(not visible)
+        self.ui.lblAutoPlot.setVisible(not visible)
 
     def getValues(self):
         ''' Return values:

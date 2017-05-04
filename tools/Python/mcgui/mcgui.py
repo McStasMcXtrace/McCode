@@ -384,7 +384,7 @@ class McGuiState(QtCore.QObject):
         
         # autoplot
         autoplot = fixed_params[8]
-        if autoplot:
+        if autoplot and simtrace == 0:
             runstr = runstr + ' --autoplot'
         
         # parse instrument params
