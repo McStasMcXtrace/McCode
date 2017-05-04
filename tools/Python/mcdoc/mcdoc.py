@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''
+Attempts to to parse component- and instrument files in subfolders, generate docpages and 
+browse the generated overview page, mccode.html. The first arg, libdir, determines the directory,
+which defaults to current installation "mccode lib dir".
+
+The attempt to browse a mcdoc.html can be omited by --nobrowse.
+'''
 import logging
 import argparse
 import sys
@@ -946,28 +953,28 @@ def write_file(filename, text):
 
 
 def main(args):
+    '''
+    Behavior: See file header.
+    '''
     logging.basicConfig(level=logging.INFO)
     
-    localdir = args.localdir or '.'
-    print("local directory: " + localdir)
+    usedir = args.libdir or mccode_config.configuration["MCCODE_LIB_DIR"]
+    print("using source directory: " + usedir)
     
+    '''
     # repair mode - do not run mcdoc, just the "repair" function
     if args.repair:
         #repair_instr(localdir)
-        repair_comp(localdir)
+        repair_comp(usedir)
         quit()
-    
-    # get lib files
-    libdir = mccode_config.configuration["MCCODE_LIB_DIR"]
-    print("lib directory: " + libdir)
-    lib_instr_files, lib_comp_files = utils.get_instr_comp_files(libdir)
+    '''
     
     # local files
-    local_instr_files, local_comp_files = utils.get_instr_comp_files(localdir)
+    instr_files, comp_files = utils.get_instr_comp_files(usedir)
     
     # parse comp files
     comp_info_lst = []
-    for f in local_comp_files:
+    for f in comp_files:
         try:
             print("parsing... %s" % f)
             info = CompParser(f).parse()
@@ -976,11 +983,11 @@ def main(args):
         except:
             print("failed parsing file: %s" % f)
             quit()
-    print("parsed files: %s" % str(len(local_comp_files)))
+    print("parsed files: %s" % str(len(comp_files)))
     
     # parse instr files
     instr_info_lst = []
-    for f in local_instr_files:
+    for f in instr_files:
         try:
             print("parsing... %s" % f)
             info = InstrParser(f).parse()
@@ -989,7 +996,7 @@ def main(args):
         except:
             print("failed parsing file: %s" % f)
             quit()
-    print("parsed files: %s" % str(len(local_instr_files)))
+    print("parsed files: %s" % str(len(instr_files)))
     
     '''
     # debug mode - write files with a header property each, then quit
@@ -1013,7 +1020,7 @@ def main(args):
     # generate and save comp html doc pages
     for i in range(len(comp_info_lst)):
         p = comp_info_lst[i]
-        f = local_comp_files[i]
+        f = comp_files[i]
         doc = CompDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
@@ -1023,33 +1030,34 @@ def main(args):
     # generate and save instr html doc pages
     for i in range(len(instr_info_lst)):
         p = instr_info_lst[i]
-        f = local_instr_files[i]
+        f = instr_files[i]
         doc = InstrDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
         print("writing doc file... %s" % h)
         write_file(h, text)
-        
+    
     # write overview files, properly assembling links to instr- and html-files
     masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
     text = masterdoc.create()
     print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
-    write_file('mcdoc.html', text)
+    mcdoc_html = os.path.join(usedir,'mcdoc.html')
+    write_file(mcdoc_html, text)
     
     # open a web-browser in a cross-platform way, unless --nobrowse has been enabled
     if not args.nobrowse:
         try:
-            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'mcdoc.html'), shell=True)
+            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], mcdoc_html), shell=True)
         except Exception as e:
             raise Exception('Os-specific open browser: %s' % e.__str__())
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('localdir', nargs='?', help='local dir to parse (in addition to lib dir)')
-    parser.add_argument('--debug', action='store_true', help='enable debug mode')
-    parser.add_argument('--repair', action='store_true', help='enable repair mode')
+    parser.add_argument('libdir', nargs='?', help='dir to parse and write docpates to, defaults to current installation mccode lib dir')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
+    #parser.add_argument('--debug', action='store_true', help='enable debug mode')
+    #parser.add_argument('--repair', action='store_true', help='enable repair mode')
     
     args = parser.parse_args()
     
