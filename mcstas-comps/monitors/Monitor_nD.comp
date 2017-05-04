@@ -237,8 +237,7 @@ INITIALIZE
   if (strstr(Vars.option, "source"))
     strcat(Vars.option, " list, x y z vx vy vz t sx sy sz ");
 
-  if (bins) { sprintf(tmp, " a
-ll bins=%ld ", (long)bins); strcat(Vars.option, tmp); }
+  if (bins) { sprintf(tmp, " all bins=%ld ", (long)bins); strcat(Vars.option, tmp); }
   if (min > -FLT_MAX && max < FLT_MAX) { sprintf(tmp, " all limits=[%g %g]", min, max); strcat(Vars.option, tmp); }
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
