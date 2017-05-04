@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import re
+import subprocess
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -1034,6 +1035,12 @@ def main(args):
     text = masterdoc.create()
     print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
     write_file('mcdoc.html', text)
+    
+    # open a web-browser in a cross-platform way
+    try:
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'mcdoc.html'), shell=True)
+    except Exception as e:
+        raise Exception('Os-specific open browser: %s' % e.__str__())
 
 
 if __name__ == '__main__':
