@@ -122,7 +122,7 @@ SETTING PARAMETERS ( xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, string 
 OUTPUT PARAMETERS (isrect,intersect,nxs_init_success,p_transmit,xsect_total,xsect_coherent,
 xsect_incoherent,xsect_absorption,
 lambda,velocity,fullpath,t1,t2,uc,A,mu_factor,sd,V2L)
-DEPENDENCY "-I@MCCODE_LIB@/share/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
+DEPENDENCY "-I@MCCODE_LIB@/libs/libnxs/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
 
 
 SHARE
@@ -167,6 +167,7 @@ int readStrainFile( char *fileName, StrainData *sd )
   int column_hoop = 0;
   int column_radial = 0;
   int column_axial = 0;
+  int status;
 
   sd->d0_hoop = sd->d0_radial = sd->d0_axial = 0.0;
 
