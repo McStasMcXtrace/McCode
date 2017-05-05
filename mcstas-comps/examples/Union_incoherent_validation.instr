@@ -11,17 +11,15 @@
 * Written by: Mads Bertelsen
 * Date: May 2016
 * Origin: Johns Hopkins University, Baltimore
-* %INSTRUMENT_SITE: Tests_samples
-*
-* Validation of union network against incoherent scattering component
+* %INSTRUMENT_SITE: Union_demos
 *
 * %Description
-* simple test instrument for sample component.
+* Validation of Union components against incoherent scattering component
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* Example: Detector: Banana_monitor_I=18.4632
 *
 * %Parameters
-* comp_select: []        
+* comp_select: [] 1: Union components, 2: Incoherent
 * sample_radius: []      
 * sample_height: []      
 * pack: []               
@@ -45,9 +43,6 @@ TRACE
 COMPONENT Vanadium_incoherent = Incoherent_process(sigma=sigma_inc_vanadium,packing_factor=pack,unit_cell_volume=Vc_vanadium)
 AT (0,0,0) ABSOLUTE
 
-//COMPONENT Vanadium_incoherent = Template_process(sigma=sigma_inc_vanadium,packing_factor=pack,unit_cell_volume=Vc_vanadium)
-//AT (0,0,0) ABSOLUTE
-
 COMPONENT Vanadium = Union_make_material(my_absorption=100*sigma_abs_vanadium/Vc_vanadium*pack,process_string="Vanadium_incoherent")
 AT (0,0,0) ABSOLUTE
 
@@ -55,7 +50,6 @@ COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_div(
-//        xwidth=0.0005, yheight=0.0005,focus_aw=15, focus_ah=15,
         xwidth=0.0005, yheight=0.0005,focus_aw=2, focus_ah=1.5,
         E0 = 10, dE = 0, flux=1E10)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
@@ -80,6 +74,9 @@ WHEN(comp_select == 2)
 AT (0,0,0) RELATIVE sample_position
 ROTATED (0,0,0) RELATIVE sample_position
 
+COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="4Pi_events.dat",restore_neutron=1)
+  AT (0, 0, 0) RELATIVE sample_position
+
 COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=200",filename="banana.dat",restore_neutron=1)
 AT (0,0,0) RELATIVE sample_position
 ROTATED (0,0,0) RELATIVE sample_position
@@ -103,8 +100,5 @@ ROTATED (45,-35,0) RELATIVE sample_position
 
 COMPONENT PSDlin_scattering_2 = PSDlin_monitor(xwidth=0.1, yheight=0.05, nx=100, filename="Output_scattering_2.psd",restore_neutron = 1)
 AT (0,0,0.5) RELATIVE scattering_arm_2
-
-COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="4Pi_events.dat",restore_neutron=1)
-  AT (0, 0, 0) RELATIVE sample_position
 
 END

@@ -128,14 +128,13 @@ class McGuiState(QtCore.QObject):
     def loadInstrument(self, instr_file):
         # makes sure this is not a qstring
         instr_file = str(instr_file)
-        # file must exists and be .instr file:
-        if os.path.exists(instr_file) and (os.path.splitext(instr_file)[1] == '.instr'):
+        # file must exist:
+        if os.path.exists(instr_file):
             # handle .instr files loaded without full path
             if os.path.dirname(instr_file) != '':
                 realdir = os.path.dirname(os.path.abspath(instr_file))
-                print(realdir)
                 self.setWorkDir(realdir)
-                
+            
             instr_file = os.path.join(self.getWorkDir(), os.path.basename(instr_file))
             self.__instrFile = instr_file
             self.__fireInstrUpdate()
@@ -383,11 +382,16 @@ class McGuiState(QtCore.QObject):
             if int(random_seed) > 0:
                 runstr = runstr + ' -s ' + str(random_seed)
         
+        # autoplot
+        autoplot = fixed_params[8]
+        if autoplot and simtrace == 0:
+            runstr = runstr + ' --autoplot'
+        
         # parse instrument params
         for p in params:
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
-        print('Running: '+runstr)
+        print('Running: ' + runstr)
         
         # Add & for backgrounding on Unix systems
         if simtrace == 1 and not os.name == 'nt':
@@ -395,26 +399,30 @@ class McGuiState(QtCore.QObject):
 
         # Add prefix 'start' to background on Windows systems
         if os.name == 'nt':
-            runtstr = 'start ' + runstr
+            runstr = 'start ' + runstr
             
         # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
-        
+		
+        if not os.name=='nt':
         # run simulation in a background thread
-        self.__runthread = McRunQThread()
-        self.__runthread.cmd = runstr
-        self.__runthread.cwd = os.path.dirname(self.__instrFile)
-        self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
-        self.__runthread.terminated.connect(self.__runTerminated)
-        self.__runthread.thread_exception.connect(handleExceptionMsg)
-        self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
-        self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
-        self.__runthread.start()
-        
-        self.__emitter.message(runstr)
-        self.__emitter.status('Running simulation ...')
-        self.__fireSimStateUpdate()
-        
+            self.__runthread = McRunQThread()
+            self.__runthread.cmd = runstr
+            self.__runthread.cwd = os.path.dirname(self.__instrFile)
+            self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
+            self.__runthread.terminated.connect(self.__runTerminated)
+            self.__runthread.thread_exception.connect(handleExceptionMsg)
+            self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
+            self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
+            self.__runthread.start()
+            self.__emitter.message(runstr)
+            self.__emitter.status('Running simulation ...')
+            self.__fireSimStateUpdate()
+        else:
+            self.__emitter.message(runstr)
+            self.__emitter.status('Started simulation/trace in background shell...')
+            subprocess.Popen(runstr, shell=True)
+
     def __runFinished(self, process_returncode):
         if not self.__interrupted:
             self.__fireSimStateUpdate()
@@ -497,10 +505,10 @@ class McGuiAppController():
             self.emitter.message(open(comprev).read())
         
         
-        # load instrument file from command line pars
+        # load instrument file from command line pars, skipping scriptfile
         for a in sys.argv:
             if os.path.isfile(a):
-                if os.path.splitext(a)[1] == '.instr':
+                if not os.path.splitext(a)[1] == '.py':
                     if self.state.getInstrumentFile() == '':
                         self.state.loadInstrument(a)
         
@@ -633,7 +641,26 @@ class McGuiAppController():
         
         self.emitter.message(cmd)
         self.emitter.status('Running plotter ...')
+
+    def handlePlotOtherResults(self):
+        self.emitter.status('')
+        resultdir = self.view.showOpenPlotDirDlg(os.getcwd())
+        print("Resultdir is " + resultdir)
+        cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
+        cwd = os.path.dirname(os.path.dirname(resultdir))
+
+        self._runthread = McRunQThread()
+        self._runthread.cmd = cmd
+        self._runthread.cwd = cwd
+        self._runthread.finished.connect(lambda: None)
+        self._runthread.terminated.connect(lambda: None)
+        self._runthread.thread_exception.connect(handleExceptionMsg)
+        self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
+        self._runthread.message.connect(lambda msg: self.emitter.message(msg))
+        self._runthread.start()
         
+        self.emitter.message(cmd)
+        self.emitter.status('Running plotter ...')        
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
@@ -855,6 +882,7 @@ class McGuiAppController():
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
         mwui.actionPlot.triggered.connect(self.handlePlotResults)
+        mwui.actionPlotOther.triggered.connect(self.handlePlotOtherResults)
         mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         mwui.actionDisplay_2d.triggered.connect(self.handleMcDisplay2D)
         

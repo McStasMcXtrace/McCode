@@ -11,17 +11,16 @@
 * Written by: Mads Bertelsen
 * Date: May 2016
 * Origin: Johns Hopkins University, Baltimore
-* %INSTRUMENT_SITE: Tests_samples
+* %INSTRUMENT_SITE: Union_demos
 *
-* Validation of union network against incoherent scattering component
 *
 * %Description
-* simple test instrument for sample component.
+*  Validation of Union powder against standard PowderN component. 
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* Example: Banana_monitor_I=20.1897
 *
 * %Parameters
-* comp_select: []         
+* comp_select: [1] 1: Union components, 2: PowderN
 * material_data_file: []  
 * E0: []                  
 * dE: []                  
@@ -43,8 +42,6 @@ DECLARE
 %{
 int single_scattering_flag;
 %}
-
-
 
 TRACE
 
@@ -93,13 +90,7 @@ if (SCATTERED) single_scattering_flag = 1;
 else single_scattering_flag = 0;
 %}
 
-COMPONENT cylinder_sample_sqw = Isotropic_Sqw(radius=sample_radius, yheight=sample_height, Sqw_coh=material_data_file, rho=2/Vc, powder_barns=1, powder_Vc = Vc)
- //sigma_inc = sigma_inc, sigma_abs = sigma_abs, d_phi=15)
-WHEN(comp_select == 3)
-AT (0,0,0) RELATIVE sample_position
-ROTATED (0,0,0) RELATIVE sample_position
-
-COMPONENT pre_detectors_m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="4Pi_events_pre.dat",restore_neutron=1)
+COMPONENT detectors_m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="4Pi_events.dat",restore_neutron=1)
   AT (0, 0, 0) RELATIVE sample_position
 
 COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=500",filename="banana.dat",restore_neutron=1)

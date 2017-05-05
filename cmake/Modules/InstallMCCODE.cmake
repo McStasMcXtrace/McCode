@@ -323,7 +323,7 @@ macro(installMCCODE)
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
-    foreach (name mccodeenv.bat mccodeguipl.bat mccodeguipy.bat mccodego.bat mccodetest.bat)
+    foreach (name mccodeenv.bat mccodego.bat mccodetest.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${name}
@@ -331,8 +331,8 @@ macro(installMCCODE)
       install(PROGRAMS ${WORK}/support/${name} DESTINATION ${bin})
     endforeach()
 
-    # Python related batches special handling
-    foreach (name run.bat gui.bat plot-pyqtgraph.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    # Python/Perl related batches special handling
+    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat gui-pl.bat plot-pyqtgraph.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}

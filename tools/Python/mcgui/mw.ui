@@ -197,6 +197,7 @@
     <addaction name="actionCompile_Instrument_MPI"/>
     <addaction name="separator"/>
     <addaction name="actionPlot"/>
+    <addaction name="actionPlotOther"/>
     <addaction name="actionDisplay"/>
     <addaction name="actionDisplay_2d"/>
    </widget>
@@ -343,6 +344,14 @@
   <action name="actionDisplay_2d">
    <property name="text">
     <string>Display-2D</string>
+   </property>
+  </action>
+  <action name="actionPlotOther">
+   <property name="text">
+    <string>Plot Other Results</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+P</string>
    </property>
   </action>
  </widget>

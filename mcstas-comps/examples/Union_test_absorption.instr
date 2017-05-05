@@ -11,39 +11,26 @@
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE:
+* %INSTRUMENT_SITE: Union_demos
 *
-* Simple test instrument for sample component.
 *
 * %Description
-* simple test instrument for sample component.
+* Testing an absorber made using the Union components. An absorber is made
+*  without processes and just the make_material component, and requires
+*  a few special cases.
+*
+* Example: Detector: screen_I=5.91451e-06
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test()
+DEFINE INSTRUMENT Union_test_absorption()
 
 DECLARE
 %{
-
 %}
 
 TRACE
-
-COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
-AT (0,0,0) ABSOLUTE
-
-//COMPONENT Vanadium_incoherent_2 = Incoherent_process(sigma=5.09,packing_factor=0.9,unit_cell_volume=13.9)
-//AT (0,0,0) ABSOLUTE
-
-COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
-AT (0,0,0) ABSOLUTE
-
-COMPONENT Al_incoherent = Incoherent_process(sigma=20,packing_factor=1,unit_cell_volume=66.4)
-AT (0,0,0) ABSOLUTE
-
-COMPONENT Al = Union_make_material(my_absorption=4)
-AT (0,0,0) ABSOLUTE
 
 COMPONENT absorber_material = Union_make_material(my_absorption=3,absorber=1)
 AT (0,0,0) ABSOLUTE
@@ -55,16 +42,16 @@ COMPONENT source = Source_div(
         xwidth=0.15, yheight=0.15,focus_aw=0.01, focus_ah=0.01,
         E0 = 10,
         dE = 0)
-  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
-
+  AT (0,0,0) RELATIVE a1
+  ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT beam_center = Arm()
 AT (0,0,1.4) RELATIVE a1
 ROTATED (0,0,0) RELATIVE a1
 
-COMPONENT masked_cylinder_1 = Union_cylinder(
+COMPONENT cylinder = Union_cylinder(
   radius = 0.05, yheight = 0.1,
-  priority=6, material_string="absorber_material",visualize=1)
+  priority=6, material_string="absorber_material")
 AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 

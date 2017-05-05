@@ -122,10 +122,18 @@ class McView(object):
     def showOpenInstrumentDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookDir)
-        dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
+        
+        dlg.setNameFilters([mccode_config.configuration["MCCODE"]+" instruments (*.instr)", "All files (*)"]);
+        dlg.selectNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)")
         if dlg.exec_():
             return dlg.selectedFiles()[0]
-
+        
+    def showOpenPlotDirDlg(self, lookDir):
+        dlg = QtGui.QFileDialog()
+        dlg.setDirectory(lookDir)
+        dlg.ShowDirsOnly
+        return dlg.getExistingDirectory(self.mw,"Open a folder")
+        
     def showChangeWorkDirDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.Directory)
@@ -605,6 +613,8 @@ class McStartSimDialog(QtGui.QDialog):
             visible = True
         self.ui.lblInspect.setVisible(visible)
         self.ui.cbxInspect.setVisible(visible)
+        self.ui.cbxAutoPlot.setVisible(not visible)
+        self.ui.lblAutoPlot.setVisible(not visible)
 
     def getValues(self):
         ''' Return values:
@@ -655,11 +665,14 @@ class McStartSimDialog(QtGui.QDialog):
         # output dir
         p7 = str(self.ui.edtOutputDir.text())
         
-        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7]
+        # autoplot
+        p8 = self.ui.cbxAutoPlot.isChecked()
+        
+        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8]
         
         # get dynamic params
         params = []
-        for w in self.__wParams:
+        for w in self._wParams:
             p = []
             p.append(str(w[0].text()).rstrip(':'))
             p.append(str(w[1].text()))
@@ -672,13 +685,13 @@ class McStartSimDialog(QtGui.QDialog):
         
         return fixed_params, params, inspect
     
-    __wParams = []
+    _wParams = []
     __oldParams = []
     def createParamsWidgets(self, params):
 
         # this logics keeps params values of existing/previous non-dummy widgets, for value reuse
         self.__oldParams = []
-        for w in self.__wParams:
+        for w in self._wParams:
             old_name = 'no_re_match'
             name_match = re.search('(.*):', w[0].text())
             if name_match:
@@ -692,7 +705,7 @@ class McStartSimDialog(QtGui.QDialog):
             grd.itemAt(i).widget().setParent(None)
 
         # prepare new params widgets
-        self.__wParams = []
+        self._wParams = []
 
         # insert custom params widgets
         i = -1
@@ -730,7 +743,7 @@ class McStartSimDialog(QtGui.QDialog):
             edt.setText(value)
             self.ui.gridGrid.addWidget(edt, y, x, 1, 1)
 
-            self.__wParams.append([lbl, edt])
+            self._wParams.append([lbl, edt])
 
             p_index += 1
                 
@@ -769,7 +782,7 @@ class McInsertComponentDialog(QtGui.QDialog):
 
         # mark/unmark params dynamic lineedits
         first_params_hit = True
-        for w in self.__wParams:
+        for w in self._wParams:
             if w[1].text() == '':
                 w[1].setStyleSheet("border: 3px solid red;")
                 dirty = True
@@ -792,7 +805,7 @@ class McInsertComponentDialog(QtGui.QDialog):
         if not dirty:
             super(McInsertComponentDialog, self).accept()
 
-    __wParams = []
+    _wParams = []
     def initComponentData(self, comp_parser):
         # parse component info
         comp_parser.parse()
@@ -811,8 +824,8 @@ class McInsertComponentDialog(QtGui.QDialog):
             grd.itemAt(i).widget().setParent(None)
 
         # populate and init params grd
-        self.__wParams = None
-        self.__wParams = []
+        self._wParams = None
+        self._wParams = []
         for i in range(len(comp_parser.pars)):
             par = ComponentParInfo(comp_parser.pars[i])
             if par.par_name == "string filename":
@@ -833,6 +846,8 @@ class McInsertComponentDialog(QtGui.QDialog):
             edt = QtGui.QLineEdit()
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + par.par_name)
+            edt.defval = par.default_value
+            self._initTbwFocusEvents(edt)
             if par.par_name == "filename":
                 edt.setText('"' + par.default_value + '"')
             else:
@@ -840,7 +855,7 @@ class McInsertComponentDialog(QtGui.QDialog):
             self.ui.gridParameters.addWidget(edt, y, x, 1, 1)
 
             # save widget references for use in self.getValues (also save the par default value)
-            self.__wParams.append([lbl, edt, edt.text()])
+            self._wParams.append([lbl, edt, edt.text()])
 
             # parameter docstring label
             x = 2
@@ -852,8 +867,8 @@ class McInsertComponentDialog(QtGui.QDialog):
 
         # fix tab-order
         q = self.ui.btnInsert
-        for i in range(len(self.__wParams)):
-            w = self.__wParams[i][1]
+        for i in range(len(self._wParams)):
+            w = self._wParams[i][1]
             self.setTabOrder(q, w)
             q = w
         self.setTabOrder(q, self.ui.edtAtX)
@@ -863,7 +878,51 @@ class McInsertComponentDialog(QtGui.QDialog):
         tbx.setText(str.lower(comp_parser.name))
         tbx.setFocus()
         tbx.selectAll()
+    
+    def _initTbwFocusEvents(self, w):
+        ''' we assume that w_edt has the member defval, which contains the default value '''
+        def _wEventFilter(subject, object, event):
+            ''' focus event handler '''
+            edt = QtGui.QLineEdit()
+            edt = subject
+            # handle focus on
+            if event.type() == QtCore.QEvent.FocusIn:
+                if edt.text() == edt.defval:
+                    edt.setText('')
+                    font = QtGui.QFont()
+                    font.setItalic(False)
+                    edt.setFont(font)
+                    edt.setStyleSheet("color: black;")
+                    edt.setCursorPosition(0)
+            
+            # handle focus off
+            elif event.type() == QtCore.QEvent.FocusOut:
+                if edt.text() == '':
+                    font = QtGui.QFont()
+                    font.setItalic(True)
+                    edt.setFont(font)
+                    edt.setStyleSheet("color: grey;")
+                    edt.setText(edt.defval)
+                elif edt.text() == edt.defval:
+                    edt.setText(edt.defval)
+                    font = QtGui.QFont()
+                    font.setItalic(True)
+                    edt.setFont(font)
+                    edt.setStyleSheet("color: grey;")
 
+            return False
+
+        # init
+        font = QtGui.QFont()
+        font.setItalic(True)
+        w.setStyleSheet("color: grey;")
+        w.setFont(font)
+        w.setText(w.defval)
+        
+        # set events
+        w.eventFilter = lambda o, e: _wEventFilter(w, o, e)
+        w.installEventFilter(w)
+    
     def getValues(self):
         '''
         inst_name : contents of instance name field
@@ -878,7 +937,7 @@ class McInsertComponentDialog(QtGui.QDialog):
 
         # get dynamic params
         params = []
-        for w in self.__wParams:
+        for w in self._wParams:
             p = []
             p.append(str(w[0].text()).rstrip(':'))
             p.append(str(w[1].text()))
@@ -908,7 +967,7 @@ class McInsertComponentDialog(QtGui.QDialog):
 
         # get dynamic params
         params = []
-        for w in self.__wParams:
+        for w in self._wParams:
             # proceed if typed value differs from the default value (also counting empty default values)
             if w[1].text() != w[2]:
                 p = []
@@ -1019,7 +1078,14 @@ class McConfigDialog(QtGui.QDialog):
         mccode_config.compilation[str(self.ui.edtMpicc.conf_var)] = str(self.ui.edtMpicc.text())
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
-
+        # Export selected variables to the system / mcrun
+        target_mccode=mccode_config.configuration["MCCODE"].upper()
+        # CFLAGS and CC:
+        os.environ[target_mccode + '_CFLAGS_OVERRIDE']=mccode_config.compilation[str(self.ui.edtCflags.conf_var)]
+        os.environ[target_mccode + '_CC_OVERRIDE']=mccode_config.compilation[str(self.ui.edtCC.conf_var)]
+        # MPIRUN and MPICC:
+        os.environ[target_mccode + '_MPICC_OVERRIDE']=mccode_config.compilation[str(self.ui.edtMpicc.conf_var)]
+        os.environ[target_mccode + '_MPIRUN_OVERRIDE']=mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)]
     def accept(self):
         self.__pullValuesTo_mccode_config()
 

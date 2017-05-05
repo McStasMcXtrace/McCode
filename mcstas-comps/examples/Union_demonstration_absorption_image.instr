@@ -13,12 +13,13 @@
 * Origin: University of Copenhagen
 * %INSTRUMENT_SITE: Union_demos
 *
-* Simple test instrument for sample component.
-*
 * %Description
-* simple test instrument for sample component.
+* Demonstration of Union components, here 4 different powder samoples in a
+*  weird sample holder contained in a cryostat is simulated.
+* This instrument file produces an absorption image of the setup.
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+*
+* Example: Detector: screen_I=0.0107579
 *
 * %Parameters
 * stick_displacement: [] 
@@ -26,23 +27,17 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test(stick_displacement=0)
+DEFINE INSTRUMENT Union_demonstration_absorption_image(stick_displacement=0)
 
 DECLARE
 %{
-int scattered_1;
-int scattered_2;
-int sample_1_index = 4;
-int sample_2_index = 6;
 %}
 
 TRACE
 
-COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
-AT (0,0,0) ABSOLUTE
 
-COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
-AT (0,0,0) ABSOLUTE
+// Material definitions here use automatic linking, meaning that all processes
+//  preceding each make_material component is included in that material.
 
 // P0
 COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4) //,interact_fraction=0.8)
@@ -54,7 +49,6 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT Al = Union_make_material(my_absorption=100*4*0.231/66.4)
 AT (0,0,0) ABSOLUTE
-
 
 // Cu definition
 // P0
@@ -112,17 +106,7 @@ AT (0,0,0) ABSOLUTE
 COMPONENT Cs = Union_make_material(my_absorption=100*2*3.78/47.22)
 AT (0,0,0) ABSOLUTE
 
-// Fe definition
-// P0
-COMPONENT Fe_incoherent = Incoherent_process(sigma=2*0.4,packing_factor=1,unit_cell_volume=24.04)
-AT (0,0,0) ABSOLUTE
 
-// P1
-COMPONENT Fe_Powder = Powder_process(reflections="Fe.laz")
-AT (0,0,0) ABSOLUTE
-
-COMPONENT Fe = Union_make_material(my_absorption=100*2*2.56/24.04)
-AT (0,0,0) ABSOLUTE
 
 COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
@@ -343,13 +327,6 @@ ROTATED (0,0,0) RELATIVE sample_4
 COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE beam_center
 ROTATED(0,30,20) RELATIVE beam_center
-EXTEND
-%{
-	if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
-	if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
-
-    // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
-%}
 
 COMPONENT screen = PSD_monitor(xwidth=0.45,ymin=-0.15,ymax=0.85,nx=500,ny=1200,filename="absoprtion_picture.dat",restore_neutron=1)
   AT (0,0,2) RELATIVE a1

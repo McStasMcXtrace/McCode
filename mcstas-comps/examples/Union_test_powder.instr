@@ -5,45 +5,38 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: test
+* Instrument: Union_test_powder
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE:
+* %INSTRUMENT_SITE: Union_demos
 *
-* Simple test instrument for sample component.
+* Simple test instrument for powder process in Union framework.
 *
 * %Description
 * simple test instrument for sample component.
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* Example: Detector: m4pi_I=4.23557e-06
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test()
+DEFINE INSTRUMENT Union_test_powder()
 
 DECLARE
 %{
 %}
 
 TRACE
-
-//COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
-//AT (0,0,0) ABSOLUTE
-
-//COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
-//AT (0,0,0) ABSOLUTE
-
-COMPONENT Al_incoherent = Incoherent_process(sigma=1.5,packing_factor=1,unit_cell_volume=66.4)
+COMPONENT test_incoherent = Incoherent_process(sigma=1.5,packing_factor=1,unit_cell_volume=66.4)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Al_powder = Powder_process(reflections="Al.laz") //,format=Lazy)
+COMPONENT test_powder = Powder_process(reflections="Al.laz")
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Al = Union_make_material(my_absorption=4)
+COMPONENT test_material = Union_make_material(my_absorption=4)
 AT (0,0,0) ABSOLUTE
 
 
@@ -51,7 +44,6 @@ COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_div(
-//        xwidth=0.0005, yheight=0.0005,focus_aw=15, focus_ah=15,
         xwidth=0.0005, yheight=0.0005,focus_aw=3, focus_ah=2,
         E0 = 100,
         dE = 0)
@@ -62,8 +54,8 @@ COMPONENT beam_center = Arm()
 AT (0,0,1.4) RELATIVE a1
 ROTATED (0,0,0) RELATIVE a1
 
-// 1
-COMPONENT test_powder_sample = Union_cylinder(radius=0.04,yheight=0.03,priority=5,material_string="Al")
+// V1
+COMPONENT test_powder_sample = Union_cylinder(radius=0.04,yheight=0.03,priority=5,material_string="test_material")
 AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
@@ -73,10 +65,6 @@ ROTATED(0,0,0) RELATIVE beam_center
 
 COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",restore_neutron=1)
   AT (0, 0, 0) RELATIVE beam_center
-
-
-
-
 
 
 END

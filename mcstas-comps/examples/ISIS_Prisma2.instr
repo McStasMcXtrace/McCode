@@ -25,7 +25,7 @@
 * line consists of the time-of-flight in microseconds followed by seven
 * intensities of neutrons from each individual analyser blade.
 *
-* %Example: TT=-30 Detector: mon9_I=2.75547e-08
+* %Example: TT=-30 Detector: mon9_I=7.4973e-08
 *
 * %Parameters
 * TT: [deg]    Take-off angle at the sample position, aka A4
@@ -88,6 +88,9 @@ COMPONENT mod = Moderator(
                           Emin = 10, Emax = 15,
                           Ec = 9.0, t0 = 37.15, gamma = 39.1)
      AT (0,0,0) ABSOLUTE
+EXTEND %{
+  neu_color=0;
+%}
 
 /* Use a slit to get the effect of a rectangular source. */
 COMPONENT modslit = Slit(xmin = -0.05, xmax = 0.05,
@@ -114,7 +117,7 @@ COMPONENT slit2 = Slit(xmin = -0.02, xmax = 0.02,
 COMPONENT mon2 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
      AT(0,0,9) RELATIVE mod
 
-COMPONENT sample = V_sample(
+COMPONENT sample = Incoherent(
         radius = 0.01,
 	thickness = 0.00999,
         yheight = 0.02,
@@ -139,55 +142,75 @@ COMPONENT mon4 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
 COMPONENT rita_ana = Arm()
      AT(0, 0, 0.58) relative a2 ROTATED (0, PHA, 0) RELATIVE a2
 
-COMPONENT ana1 = Monochromator_color(
+COMPONENT ana1 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 0)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos1) RELATIVE rita_ana
   ROTATED (0, PHA1, 0) RELATIVE rita_ana
+EXTEND %{
+  if(SCATTERED) neu_color=1;
+%}
 
-COMPONENT ana2 = Monochromator_color(
+COMPONENT ana2 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 1)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos2) RELATIVE rita_ana
   ROTATED (0, PHA2, 0) RELATIVE rita_ana
+EXTEND %{
+  if(SCATTERED) neu_color=2;
+%}
 
-COMPONENT ana3 = Monochromator_color(
+COMPONENT ana3 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 2)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos3) RELATIVE rita_ana
   ROTATED (0, PHA3, 0) RELATIVE rita_ana
+EXTEND %{
+  if(SCATTERED) neu_color=3;
+%}
 
-COMPONENT ana4 = Monochromator_color(
+COMPONENT ana4 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 3)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos4) RELATIVE rita_ana
   ROTATED (0, PHA4, 0) RELATIVE rita_ana
+EXTEND %{
+  if(SCATTERED) neu_color=4;
+%}
 
-COMPONENT ana5 = Monochromator_color(
+COMPONENT ana5 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 4)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos5) RELATIVE rita_ana
   ROTATED (0, PHA5, 0) RELATIVE rita_ana
+EXTEND %{
+  if(SCATTERED) neu_color=5;
+%}
 
-COMPONENT ana6 = Monochromator_color(
+COMPONENT ana6 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 5)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos6) RELATIVE rita_ana
   ROTATED (0, PHA6, 0) RELATIVE rita_ana
+EXTEND %{
+  if(SCATTERED) neu_color=6;
+%}
 
-COMPONENT ana7 = Monochromator_color(
+COMPONENT ana7 = Monochromator_flat(
         ymin=-0.0375,ymax=0.0375,zmin=-0.006,zmax=0.006,
         mosaich=prisma_ana_mosaic,mosaicv=prisma_ana_mosaic,
-        r0=prisma_ana_r0, Q=prisma_ana_q, color = 6)
+        r0=prisma_ana_r0, Q=prisma_ana_q)
   AT (0, 0, apos7) RELATIVE rita_ana
   ROTATED (0, PHA7, 0) RELATIVE rita_ana
-
+EXTEND %{
+  if(SCATTERED) neu_color=7;
+%}
 
 COMPONENT a3 = Arm()
      AT (0,0,0) relative rita_ana ROTATED (0,TTA,0) RELATIVE a2
@@ -204,13 +227,13 @@ COMPONENT psd = PSD_monitor(xmin = -0.05, xmax = 0.05,
                             filename = "prisma2.psd")
      AT(0,0,0.20) RELATIVE a3
 
-COMPONENT detector = TOF_monitor_color(xmin = -0.05, xmax = 0.05,
+ COMPONENT Detector = Monitor_nD(xmin = -0.05, xmax = 0.05,
                                  ymin = -0.05, ymax = 0.05,
-                                 nchan = 10000, dt = 10, maxcolor = 6,
+				 user1=neu_color, username1="Mono blade", options="user1 limits=[0 6] bins=7, t limits=[0 10000] bins=1000",
                                  filename = "prisma2.tof")
      AT (0,0,0.20) RELATIVE a3
 
 COMPONENT mon9 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
-     AT(0,0,0.01) RELATIVE detector
+     AT(0,0,0.01) RELATIVE Detector
 
 END

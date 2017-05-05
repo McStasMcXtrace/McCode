@@ -3,8 +3,7 @@
 @REM First, set up various environment variables
 @REM
 @REM Path related:
-@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\bin;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Scripts\\;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Library\\bin;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Library\\mingw-w64\\bin;c:\\strawberry\\perl\\bin;@CPACK_NSIS_INSTALL_ROOT@\\lib\\gnuplot\\bin;c:\\Program Files\\MPICH2\\bin;%PATH%
-@SET PATHEXT=%PATHEXT%;.pl;.py
+@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\bin;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Scripts\\;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Library\\bin;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Library\\mingw-w64\\bin;c:\\strawberry\\perl\\bin;c:\\Microsoft MPI\\Bin;%PATH%
 @REM
 @REM McStas related:
 @SET @FLAVOR_UPPER@=@CPACK_NSIS_INSTALL_ROOT@\\lib
@@ -17,5 +16,4 @@
 @SET PGPLOT_DIR=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp
 @SET PGPLOT_FONT=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp\\grfont.dat
 @SET PGPLOT_DEV=/gw
-@IF EXIST "c:\Program Files\MPICH2\bin\smpd.exe" start smpd -d
 
