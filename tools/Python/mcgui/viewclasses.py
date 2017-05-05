@@ -1076,7 +1076,14 @@ class McConfigDialog(QtGui.QDialog):
         mccode_config.compilation[str(self.ui.edtMpicc.conf_var)] = str(self.ui.edtMpicc.text())
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
-
+        # Export selected variables to the system / mcrun
+        target_mccode=mccode_config.configuration["MCCODE"].upper()
+        # CFLAGS and CC:
+        os.environ[target_mccode + '_CFLAGS_OVERRIDE']=mccode_config.compilation[str(self.ui.edtCflags.conf_var)]
+        os.environ[target_mccode + '_CC_OVERRIDE']=mccode_config.compilation[str(self.ui.edtCC.conf_var)]
+        # MPIRUN and MPICC:
+        os.environ[target_mccode + '_MPICC_OVERRIDE']=mccode_config.compilation[str(self.ui.edtMpicc.conf_var)]
+        os.environ[target_mccode + '_MPIRUN_OVERRIDE']=mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)]
     def accept(self):
         self.__pullValuesTo_mccode_config()
 

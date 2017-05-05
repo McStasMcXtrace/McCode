@@ -246,8 +246,10 @@ $ENV{'PGPLOT_DEV'} = $MCSTAS::mcstas_config{'PGDEV'} unless $ENV{'PGPLOT_DEV'};
 $MCSTAS::mcstas_config{'PGDEV'} = $ENV{'PGPLOT_DEV'};
 
 # override default CC/CFLAGS if MCSTAS/MCXTRACE_CC/CFLAGS defined
-$MCSTAS::mcstas_config{'CC'} = $ENV{'@FLAVOR_UPPER@_CC'} if defined($ENV{'@FLAVOR_UPPER@_CC'});
-$MCSTAS::mcstas_config{'CFLAGS'} = $ENV{'@FLAVOR_UPPER@_CFLAGS'} if defined($ENV{'@FLAVOR_UPPER@_CFLAGS'});
+$MCSTAS::mcstas_config{'CC'} = $ENV{'@FLAVOR_UPPER@_CC_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_CC_OVERRIDE'});
+$MCSTAS::mcstas_config{'CFLAGS'} = $ENV{'@FLAVOR_UPPER@_CFLAGS_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_CFLAGS_OVERRIDE'});
+$MCSTAS::mcstas_config{'MPICC'} = $ENV{'@FLAVOR_UPPER@_MPICC_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_MPICC_OVERRIDE'});
+$MCSTAS::mcstas_config{'MPIRUN'} = $ENV{'@FLAVOR_UPPER@_MPIRUN_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_MPIRUN_OVERRIDE'});
 
 # **** update fields depending on system specific configuration
 
