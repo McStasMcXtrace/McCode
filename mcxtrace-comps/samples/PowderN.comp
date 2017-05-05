@@ -821,11 +821,11 @@ INITIALIZE
     }
   }
 
-  if (!material || !strlen(material) || !strcmp(material, "NULL")) {
+  if (material || !strlen(material) || !strcmp(material, "NULL")) {
       int status;
       char **parsing;
-      if( (status=Table_Read(&(line_info.mat_table),material,0))!=0){
-          fprintf(stderr,"PowderN: %s Error reading absorption data from file %s - will proceed without absorption.\n",NAME_CURRENT_COMP,material);
+      if( (status=Table_Read(&(line_info.mat_table),material,0))==-1){
+          fprintf(stderr,"PowderN: %s Error reading material data from file %s.\n",NAME_CURRENT_COMP,material);
       }
       parsing=Table_ParseHeader(line_info.mat_table.header,
               "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
