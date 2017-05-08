@@ -20,10 +20,10 @@
 /***********************************************************************************/
 
 #define MCPL_VERSION_MAJOR 1
-#define MCPL_VERSION_MINOR 0
-#define MCPL_VERSION_PATCH 97
-#define MCPL_VERSION   10097 /* (10000*MAJOR+100*MINOR+PATCH)   */
-#define MCPL_VERSION_STR "1.0.97"
+#define MCPL_VERSION_MINOR 1
+#define MCPL_VERSION_PATCH 0
+#define MCPL_VERSION   10100 /* (10000*MAJOR+100*MINOR+PATCH)   */
+#define MCPL_VERSION_STR "1.1.0"
 #define MCPL_FORMATVERSION 3 /* Format version of written files */
 
 #ifdef __cplusplus
@@ -66,8 +66,8 @@ extern "C" {
   const char * mcpl_outfile_filename(mcpl_outfile_t);/* filename being written to (might have had .mcpl appended) */
 
   /* Optionally set global options or add info to the header: */
-  void mcpl_hdr_set_srcname(mcpl_outfile_t,const char *);/* Name of the generating application         */
-  void mcpl_hdr_add_comment(mcpl_outfile_t,const char *);/* Add one or more human-readable comments    */
+  void mcpl_hdr_set_srcname(mcpl_outfile_t, const char *);/* Name of the generating application         */
+  void mcpl_hdr_add_comment(mcpl_outfile_t, const char *);/* Add one or more human-readable comments    */
   void mcpl_hdr_add_data(mcpl_outfile_t, const char * key,
                          uint32_t ldata, const char * data);/* add binary blobs by key                  */
   void mcpl_enable_userflags(mcpl_outfile_t);/* to write the "userflags" info                           */
@@ -165,7 +165,7 @@ extern "C" {
   void mcpl_repair(const char * file1);
 
   /* For easily creating a standard mcpl-tool cmdline application: */
-  int mcpl_tool(int argc,char** argv);
+  int mcpl_tool(int argc, char** argv);
 
   /* Attempt to run gzip on a file (does not require MCPL_HASZLIB on unix) */
   /* Returns non-zero if gzipping was succesful.                           */

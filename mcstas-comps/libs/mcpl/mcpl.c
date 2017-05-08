@@ -122,51 +122,6 @@
 //  1: Format used during early development. No longer supported.                  //
 /////////////////////////////////////////////////////////////////////////////////////
 
-//////
-//
-//Possible future developments:
-//
-//  1) Support for particle groups ("events"). The file writing interface would
-//     get:
-//
-//       //If your particles should be grouped (into "events" typically),
-//       //mcpl_add_particle calls must come between calls to:
-//       void mcpl_begin_particle_group(mcpl_outfile_t);
-//       void mcpl_end_particle_group(mcpl_outfile_t);
-//
-//    And the file reading interface might get a special method as well. If we
-//    want to keep constant-size particles, we might need a flag on all
-//    particles with internal group-id, and a special read method which can be
-//    used to loop over particles in a group. Challenge: support empty events
-//    (fake particle with negative group id? - a bit wasteful but could at least
-//    contain info about number of empty events represented). Better might be to add
-//    a single unsigned integer at the start of each event with nparticles, but
-//    would loose fast skip-ahead capability.
-//
-// 2) Support chaining of input files (,;: separated + globable wildcards). This
-//    will likely need a pointer to next and previous files and to keep track of
-//    global event position. Should optionally test for file merge-ability (if
-//    not, what should the mcpl_hdr_... methods return? Always the info
-//    associated with the current event? Should there be a way to detect file
-//    transitions?).
-//
-// 3) Checksum to verify data integrity.
-//
-// 4) More complete endianness check (catch mixed-endian as well and test
-//    different types, not just uint32_t). Or perhaps simply write/read data
-//    with appropriate wrappers.
-//
-// 5) Speed up merges of large files by using sys/sendfile.h on linux (once all
-//    kernels are >= 2.6.33, which unfortunately excludes slc6), and equivalent
-//    on osx. Even better would be a "move operator version".
-//
-// 6) Consider writing .mcpl.gz files directly (through a large buffer
-//    presumably). Or to have compressed blocks internally.
-//
-// 7) Should use unsigned char* rather than char* for buffers?
-//
-//////
-
 //Rough platform detection (could be much more fine-grained):
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
 #  define MCPL_THIS_IS_UNIX
