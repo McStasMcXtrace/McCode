@@ -12,13 +12,15 @@ fi
 rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec todos \{\} \;
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
 find tools/Legacy-Perl-win -type f -exec todos \{\} \;
+find tools/Legacy-Perl-cmdline-win -type f -exec todos \{\} \;
 
 # 32-bit
 ./mkdist mcstas $1 "" "" mingw32 "" -- nsis
-./mkdist mcstas-comps $1 "" "" mingw32 "" -- nsis
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mingw32 "" -- nsis
-./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mingw32 "" -- nsis
+./mkdist mcstas-comps $1 mcstas-comps-win "" mingw32 "" -- nsis
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl-win/ "" mingw32 "" -- nsis
+./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline-win/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis

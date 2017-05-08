@@ -82,10 +82,10 @@ use Config;
      PREFIX => '',
      SUFFIX => '@DOT_PERL_SUFFIX@',
      PLOTTER => '@PLOTTER@',
-     RUNCMD => '@MCCODE_PREFIX@'.'run'.'@DOT_PERL_SUFFIX@',
-     PLOTCMD=> '@MCCODE_PREFIX@'.'plot'.'@DOT_PERL_SUFFIX@',
-     TRACECMD=> '@MCCODE_PREFIX@'.'display'.'@DOT_PERL_SUFFIX@',
-     DOCCMD=> '@MCCODE_PREFIX@'.'doc'.'@DOT_PERL_SUFFIX@',
+     RUNCMD => '@MCCODE_PREFIX@'.'run'.'@PL_TOOL_SUFFIX@',
+     PLOTCMD=> '@MCCODE_PREFIX@'.'plot'.'@PL_TOOL_SUFFIX@',
+     TRACECMD=> '@MCCODE_PREFIX@'.'display'.'@PL_TOOL_SUFFIX@',
+     DOCCMD=> '@MCCODE_PREFIX@'.'doc'.'@PL_TOOL_SUFFIX@',
      EDITOR => 1,
      TKPALETTE => '#c6c6c0',
      TKFONT => '-*-arial-normal-r-*-*-*-120-*-*-*-*-*-*',
@@ -106,8 +106,9 @@ use Config;
      MCGUI_CFLAGS => 0,
      MCGUI_PGMULTI => 0,
      GRID_PING => 0,
-     GRID_FORCECOMPILE => 0
-     );
+     GRID_FORCECOMPILE => 0,
+     VERSION => '@MCCODE_VERSION@'
+    );
 
 # FOOTER START
 

@@ -39,9 +39,9 @@ use lib $MCSTAS::perl_modules;
 require "mccode_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
-  print "$0: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl\n";
-  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl") {
+  print "$0: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl\n";
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl";
 }
 
 use strict;
@@ -629,16 +629,19 @@ sub menu_saveas {
 
 sub menu_save_config {
   my ($w) = @_;
-
+  
   my $initdir;
 
   if (-d $ENV{"HOME"}) {
-    if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'})) {
-      mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
-    }
-    $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
+      if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'})) {
+	  mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
+	  if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'})) {
+	      mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'};
+	  }
+      }
+      $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/"$MCSTAS::mcstas_config{'VERSION'};
   } else {
-    $initdir = $MCSTAS::perl_dir
+      $initdir = $MCSTAS::perl_dir
   }
   my $file = $w->getSaveFile(-defaultextension => ".perl",
                                 -title => "Select preference file name",

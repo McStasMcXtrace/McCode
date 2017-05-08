@@ -167,13 +167,15 @@ macro(setupMCCODE FLAVOR)
   # Define suffix-macros that include a leading dot "."
   addDot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
   addDot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
-
+  
   addDot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
   addDot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
 
   if(WINDOWS)
     # On windows we actually do -pl.bat in case of Perl
-    addDashDotBat(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
+    set(PL_TOOL_SUFFIX "-pl.bat")
+  else()
+    set(PL_TOOL_SUFFIX ".pl")
   endif()
 
 
