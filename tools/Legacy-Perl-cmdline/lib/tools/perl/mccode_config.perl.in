@@ -245,7 +245,13 @@ $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 $ENV{'PGPLOT_DEV'} = $MCSTAS::mcstas_config{'PGDEV'} unless $ENV{'PGPLOT_DEV'};
 $MCSTAS::mcstas_config{'PGDEV'} = $ENV{'PGPLOT_DEV'};
 
-# override default CC/CFLAGS if MCSTAS/MCXTRACE_CC/CFLAGS defined
+# Override default CC/CFLAGS if MCSTAS/MCXTRACE_CC/CFLAGS defined
+# - The first four sets are used on Windows, as the CMake/build-time variables are not correct for running
+# - The second set is what mcgui (py) uses to communicate the settings
+$MCSTAS::mcstas_config{'CC'} = $ENV{'@FLAVOR_UPPER@_CC'} if defined($ENV{'@FLAVOR_UPPER@_CC'});
+$MCSTAS::mcstas_config{'CFLAGS'} = $ENV{'@FLAVOR_UPPER@_CFLAGS'} if defined($ENV{'@FLAVOR_UPPER@_CFLAGS'});
+$MCSTAS::mcstas_config{'MPICC'} = $ENV{'@FLAVOR_UPPER@_MPICC'} if defined($ENV{'@FLAVOR_UPPER@_MPICC'});
+$MCSTAS::mcstas_config{'MPIRUN'} = $ENV{'@FLAVOR_UPPER@_MPIRUN'} if defined($ENV{'@FLAVOR_UPPER@_MPIRUN'});
 $MCSTAS::mcstas_config{'CC'} = $ENV{'@FLAVOR_UPPER@_CC_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_CC_OVERRIDE'});
 $MCSTAS::mcstas_config{'CFLAGS'} = $ENV{'@FLAVOR_UPPER@_CFLAGS_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_CFLAGS_OVERRIDE'});
 $MCSTAS::mcstas_config{'MPICC'} = $ENV{'@FLAVOR_UPPER@_MPICC_OVERRIDE'} if defined($ENV{'@FLAVOR_UPPER@_MPICC_OVERRIDE'});
