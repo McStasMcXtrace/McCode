@@ -639,7 +639,7 @@ sub menu_save_config {
 	      mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'};
 	  }
       }
-      $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/"$MCSTAS::mcstas_config{'VERSION'};
+      $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'};
   } else {
       $initdir = $MCSTAS::perl_dir
   }
