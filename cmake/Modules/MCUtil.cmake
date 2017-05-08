@@ -157,12 +157,24 @@ macro(setupMCCODE FLAVOR)
     endif()
   endmacro()
 
+  # Helper for adding leading "-" and trailing "bat"
+  macro(addDashDotBat name val)
+    if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
+      set(${name} "-${val}.bat")
+    endif()
+  endmacro()
+  
   # Define suffix-macros that include a leading dot "."
   addDot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
   addDot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
 
   addDot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
   addDot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
+
+  if(WINDOWS)
+    # On windows we actually do -pl.bat in case of Perl
+    addDashDotBat(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
+  endif()
 
 
   # Add some special Windows/Unix CPACK configuration
