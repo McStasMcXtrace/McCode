@@ -494,7 +494,6 @@ TRACE
     /* Pick a random time to reach the remote window */
     double trand = randpm1()* tfocus_width/2.0;
     double tfinal = tfocus_time + trand ;
-    //printf("final arrival time is %g = %g + %g\n",tfinal,tfocus_time,trand);
     /* Caculate which wavelength range this corresponds to when emitted within the maximal source time */
     double vz_min,vz_max;
     vz_min = tfocus_dist/tfinal;
@@ -503,25 +502,26 @@ TRACE
     } else {
       vz_max = 1e6;
     }
-    
     Lmax_sampled = (2*PI/V2K)/vz_min;
     Lmin_sampled = (2*PI/V2K)/vz_max;
-    /* Calculate which of these are possible with current Lmin-Lmax setting */
-    t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
-	
+    /* Check boundaries */
     Lmin_sampled = fmax(Lmin,Lmin_sampled);
     Lmax_sampled = fmin(Lmax,Lmax_sampled);
+
+    /* This is then the wavelength we pick */
+    lambda = rand01()*(Lmax_sampled-Lmin_sampled)+Lmin_sampled;
+    /* ... corresponding to this velocity */
+    double vtmp = (2*PI/V2K)/lambda;
+    /* ... and this emission time */
+    t = tfinal-tfocus_dist/vtmp;
     
     /* Ensure that all still looks reasonable */
     if (Lmin_sampled<Lmax_sampled && tfinal > t) {
-      double vtmp = tfocus_dist/(tfinal-t);
-      lambda = (2*PI/V2K)/vtmp;
       w_tfocus=(Lmax_sampled-Lmin_sampled)/(Lmax-Lmin);
     } else {
       /* Seems we couldn't focus this one... */
-      t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
-      lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
-      w_tfocus=1;
+      printf("This shouldn't happen!\n");
+      ABSORB;
     }
   } else {
     /* Simple, random wavelength @ random time */
