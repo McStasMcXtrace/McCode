@@ -799,9 +799,9 @@ class McGuiAppController():
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     def handleMcdoc(self):
-        mcdoc='mcdoc.pl'
+        mcdoc='mcdoc'
         if sys.platform == "win32":
-            mcdoc='start ' + mcdoc
+            mcdoc='start ' + mcdoc + '-pl.bat'
         subprocess.Popen(mcdoc, shell=True)
 
     def handleEnvironment(self):
