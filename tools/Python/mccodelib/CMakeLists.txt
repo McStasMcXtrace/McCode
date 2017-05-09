@@ -43,7 +43,11 @@ endif()
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+if (APPLE)
+  set(CFLAGS "-g -O2 -lm -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+else()
+  set(CFLAGS "-g -O2 -lm -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+endif()
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}")
