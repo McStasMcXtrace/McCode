@@ -37,6 +37,9 @@
 * type:  [int]   chopper package selected sloppy chopper = 1, B chopper = 2, Gd chopper = 3
 * m:     [float] m value of guides
 * 
+* %L 
+* <a href="http://www.isis.stfc.ac.uk/instruments/merlin">http://www.isis.stfc.ac.uk/instruments/merlin</a>
+* %E
 *******************************************************************************/
 DEFINE INSTRUMENT ISIS_MERLIN(E_min=1.0, E_max=2000.0, m=3.0,
 E_foc=80.0,nu_hz=200.0,int type=3)
