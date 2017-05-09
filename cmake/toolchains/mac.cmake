@@ -11,6 +11,7 @@ set(MPIRUN "mpirun --mca btl self,sm,vader")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
 set(PERL "/usr/bin/perl")
+set(CFLAGS "-g -lm -O2 -headerpad_max_install_names")
 
 # Plotting options
 
