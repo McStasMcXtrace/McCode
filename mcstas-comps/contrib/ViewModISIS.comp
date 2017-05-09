@@ -54,14 +54,14 @@
  * dist:     (m)   Distance from source surface to the focusing rectangle
  *
  *
- * Example 1:   ViewModISISver1(Face="msMerlin_160.mcstas", E0 = E_min, E1 = E_max,
- * tally=8.4, modPosition=0, modXsize=0.12, modZsize = 0.12,  xw = 0.094, yh = 0.094, dist = 1.6)
+ * Example 1:   ViewModISISver1(Face="TS1_S04_Merlin.mcstas", E0 = E_min, E1 = E_max,
+ *                               dist = 1.7, xw = 0.094, yh = 0.094, modPosition=0,tally=8.4,modXsize=0.12,modZsize=0.12)
  *
  * 	MERLIN simulation. 
  *	modPosition=0 so initial surface is at (near to) the moderator face.
  *	In this example,  xw and yh are chosen to be identical to the shutter opening dimension.
- *	dist = 1.6 is the 'real' distance to the shutter front face => This is TimeOffset value (=160 [cm])
- *	from msMerlin_160.mcstas file.
+ *	dist = 1.7 is the 'real' distance to the shutter front face => This is TimeOffset value (=170 [cm])
+ *	from TS1_S04_Merlin.mcstas file.
  *
  *
  * Example 2:   ViewModISISver1(Face="Let_timeTest_155.mcstas", E0 = E_min, E1 = E_max,
@@ -84,7 +84,7 @@
  *******************************************************************************/
 
 DEFINE COMPONENT ViewModISIS
-SETTING PARAMETERS (string Face,E0, E1,tally,modPosition,modXsize,modZsize,xw,yh,dist)
+SETTING PARAMETERS (string Face="TS1_S04_Merlin.mcstas",E0, E1,tally=8.4,modPosition=0,modXsize=0.12,modZsize=0.12,xw=0.094,yh=0.094,dist=1.7,int verbose=0)
 DECLARE
 %{
 
@@ -696,7 +696,7 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
   TS.EInt=(double*) malloc(TS.nEnergy*sizeof(double));     // Runing integral of energy 
   TS.TimeBin=(double*) malloc(TS.nTime*sizeof(double));
   TS.EnergyBin=(double*) malloc(TS.nEnergy*sizeof(double));
-  fprintf(stderr,"NUMBER %d %d \n",TS.nEnergy,TS.nTime);
+  if (verbose) fprintf(stderr,"NUMBER %d %d \n",TS.nEnergy,TS.nTime);
 
   Tsum=0.0;
   Ea=0.0;
@@ -735,8 +735,8 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
 		{
 		  Ftime=0;
 		  TS.EInt[eIndex+1]=Tsum;
-
-		  fprintf(stderr,"Energy %g %g \n",EtoLambda(Ea),(TS.EInt[eIndex+1]-TS.EInt[eIndex])*3.744905847e14);
+		  
+		  if (verbose) fprintf(stderr,"Energy %g %g \n",EtoLambda(Ea),(TS.EInt[eIndex+1]-TS.EInt[eIndex])*3.744905847e14);
 		}
 	      else
 		{
@@ -1107,7 +1107,7 @@ TRACE
   //  if (!modPosition) p*=TS.timeOffset;
 
 
-  if (!(Ncount % 100000))
+  if (verbose && !(Ncount % 100000))
     {
       fprintf(stderr,"FPos[%d]=> %g %g %g  \n",Ncount,x,y,z);
       fprintf(stderr,"FDir[%d]=> %g %g %g  \n",Ncount,vx,vy,vz);
