@@ -139,7 +139,8 @@ def plot_node(node, layout, viewmodel):
     
     # set keypress handlers 
     replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
-    back_cb = lambda: plot_node(node.parent, layout, viewmodel=viewmodel)
+    def back_cb(): 
+        if node.parent != None: plot_node(node.parent, layout, viewmodel=viewmodel)
     set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
 
 def print_help(nogui=False):
