@@ -137,7 +137,7 @@
 *
 * To dynamically define a number of bins, or limits:
 *   Use in DECLARE:    char op[256];
-*   Use in INITIALIZE: sprintf(op, "lambda limits=[g g], bins=i", lmin, lmax, lbin);
+*   Use in INITIALIZE: sprintf(op, "lambda limits=[%g %g], bins=%i", lmin, lmax, lbin);
 *   Use in TRACE:      Monitor_nD(... options=op ...)
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD</b>
@@ -163,7 +163,7 @@
 * yheight: [m]  Height of detector.
 * zdepth:  [m]  Thickness of detector (z).
 * radius:  [m]  Radius of sphere/banana shape monitor
-* options: [str]  String that specifies the configuration of the monitor The general syntax is "[x] options..." (see <b>Descr.</b>).
+* options: [str]  String that specifies the configuration of the monitor. The general syntax is "[x] options..." (see <b>Descr.</b>).
 *
 * Optional input parameters (override xwidth yheight zdepth):
 * xmin:   [m]    Lower x bound of opening
@@ -174,8 +174,8 @@
 * zmax:   [m]    Upper z bound of opening
 * filename: [str] Output file name (overrides file=XX option).
 * bins:   [1]    Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
-* min:    [u]    Minimum range value to force for all variables Use 'min' or 'limits' keyword in 'options' for other limits
-* max:    [u]    Maximum range value to force for all variables Use 'max' or 'limits' keyword in 'options' for other limits
+* min:    [u]    Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
+* max:    [u]    Maximum range value to force for all variables. Use 'max' or 'limits' keyword in 'options' for other limits
 * user1: [variable] Variable assigned to User1
 * user2: [variable] Variable assigned to User2
 * user3: [variable] Variable assigned to User3
