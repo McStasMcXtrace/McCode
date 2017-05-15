@@ -41,9 +41,8 @@ target_link_libraries(mcpltool m)
 
 add_executable(
   cif2hkl
-  ${CMAKE_SOURCE_DIR}/../tools/other/cif2hkl/cif2hkl.F90
+  ${CMAKE_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
 )
-
 
 if (NOT WINDOWS)
   add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
