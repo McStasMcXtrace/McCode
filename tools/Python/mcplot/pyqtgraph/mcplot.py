@@ -101,46 +101,48 @@ def plot_node(node, layout, viewmodel):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
-    # init
-    clear_window_and_handlers(layout)
+    # First check if we have been called with a meaningful node
+    if node:
+        # init
+        clear_window_and_handlers(layout)
     
-    # get references from node
-    data_lst = node.getdata_lst()
-    parent = node.parent
-    prim_lst = node.primaries
-    sec_lst = node.secondaries
+        # get references from node
+        data_lst = node.getdata_lst()
+        parent = node.parent
+        prim_lst = node.primaries
+        sec_lst = node.secondaries
     
-    # add plot instances and record viewbox results
-    n = len(data_lst)
-    viewbox_lst = []
-    for i in range(n):
-        viewbox_lst.append(add_plot(layout, data_lst[i], i, n, viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex()))
+        # add plot instances and record viewbox results
+        n = len(data_lst)
+        viewbox_lst = []
+        for i in range(n):
+            viewbox_lst.append(add_plot(layout, data_lst[i], i, n, viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex()))
     
-    # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
-    vn_dict_click = {}
-    vn_dict_rclick = {}
-    vn_dict_ctrlclick = {}
-    # for each primary node, a click is registered to it
-    for i in range(len(prim_lst)):
-        vn_dict_click[viewbox_lst[i]] = prim_lst[i]
-    # if parent exists, all right-clicks are registered to it
-    if parent:
-        for i in range(len(data_lst)):
-            vn_dict_rclick[viewbox_lst[i]] = parent
-    # for each secondary node, a ctrl-click is registered to it
-    for i in range(len(sec_lst)):
-        vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
+        # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
+        vn_dict_click = {}
+        vn_dict_rclick = {}
+        vn_dict_ctrlclick = {}
+        # for each primary node, a click is registered to it
+        for i in range(len(prim_lst)):
+            vn_dict_click[viewbox_lst[i]] = prim_lst[i]
+        # if parent exists, all right-clicks are registered to it
+        if parent:
+            for i in range(len(data_lst)):
+                vn_dict_rclick[viewbox_lst[i]] = parent
+        # for each secondary node, a ctrl-click is registered to it
+        for i in range(len(sec_lst)):
+            vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
     
-    # set mouse click handlers on the window
-    plot_node_cb = lambda node: plot_node(node, layout=layout, viewmodel=viewmodel)
-    set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
-    set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
-    set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
+        # set mouse click handlers on the window
+        plot_node_cb = lambda node: plot_node(node, layout=layout, viewmodel=viewmodel)
+        set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
+        set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
+        set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
     
-    # set keypress handlers 
-    replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
-    back_cb = lambda: plot_node(node.parent, layout, viewmodel=viewmodel)
-    set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
+        # set keypress handlers 
+        replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
+        back_cb = lambda: plot_node(node.parent, layout, viewmodel=viewmodel)
+        set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
 
 def print_help(nogui=False):
     if sys.platform == 'darwin':
