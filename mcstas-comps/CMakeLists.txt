@@ -39,6 +39,10 @@ add_executable(
 target_compile_options(mcpltool PUBLIC "-std=c99")
 target_link_libraries(mcpltool m)
 
+add_executable(
+  cif2hkl
+  ${CMAKE_SOURCE_DIR}/../tools/other/cif2hkl/cif2hkl.F90
+)
 
 
 if (NOT WINDOWS)
@@ -48,6 +52,10 @@ if (NOT WINDOWS)
   target_compile_options(mcpl PUBLIC "-std=c99")
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl{DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
 endif()
@@ -67,6 +75,10 @@ if(WINDOWS)
   )
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
+    )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl{DOT_EXE_SUFFIX}"
     DESTINATION ${bin}
     )
   add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
