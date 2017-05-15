@@ -78,7 +78,7 @@ if(WINDOWS)
     DESTINATION ${bin}
     )
   install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl{DOT_EXE_SUFFIX}"
+    PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
     DESTINATION ${bin}
     )
   add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
