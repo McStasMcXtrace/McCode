@@ -33,7 +33,6 @@
  * Face:        [string]  Etable filename
  * E0:          [meV]     Lower edge of energy distribution
  * E1:          [meV]     Upper edge of energy distribution
- * tally:       [m]       Distance from shutter face to point tally in full simulation (TEMPORARY TESTING PARAMETER ONLY)
  * modPosition: [int]     Defines the initial surface for neutron distribution production. Possible values = 0 (at moderator) or 1 (at shutter insert)
  * xw:          [m]       Moderator width
  * yh:          [m]       Moderator height
@@ -45,7 +44,7 @@
  *
  * Example 1:   ViewModISISver1(Face="TS1_S04_Merlin.mcstas", E0 = E_min, E1 = E_max,
  *                               dist = 1.7, focus_xw = 0.094, focus_yh = 0.094, modPosition=0,
- *                               tally=8.4,xw=0.12,yh=0.12)
+ *                               xw=0.12,yh=0.12)
  *
  * 	MERLIN simulation. 
  *	modPosition=0 so initial surface is at (near to) the moderator face.
@@ -55,7 +54,7 @@
  *
  *
  * Example 2:   ViewModISISver1(Face="Let_timeTest_155.mcstas", E0 = E_min, E1 = E_max,
- * tally=8.4, modPosition=1, xw=0.196, yh = 0.12, focus_xw = 0.04, focus_yh = 0.094, dist = 0.5)
+ *              modPosition=1, xw=0.196, yh = 0.12, focus_xw = 0.04, focus_yh = 0.094, dist = 0.5)
  *
  * 	LET simulation. 
  *	modPosition=1 so initial surface is at front face of shutter insert.
@@ -74,7 +73,7 @@
  *******************************************************************************/
 
 DEFINE COMPONENT ViewModISIS
-SETTING PARAMETERS (string Face="TS1_S04_Merlin.mcstas",E0, E1,tally=8.4,modPosition=0,xw=0.12,yh=0.12,focus_xw=0.094,focus_yh=0.094,dist=1.7,int verbose=0, beamcurrent=1)
+SETTING PARAMETERS (string Face="TS1_S04_Merlin.mcstas",E0, E1,modPosition=0,xw=0.12,yh=0.12,focus_xw=0.094,focus_yh=0.094,dist=1.7,int verbose=0, beamcurrent=1)
 DECLARE
 %{
 
