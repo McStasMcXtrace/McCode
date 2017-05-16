@@ -113,7 +113,6 @@ def save_user_config():
         if f:
             f.close()
 
-
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
     if os.name == 'nt':
@@ -148,3 +147,9 @@ def get_options():
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst
 
+def get_mccode_prefix():
+    ''' returns 'mc' or 'mx' depending on system configuration '''
+    if configuration["MCCODE"] == "mcstas":
+        return "mc"
+    else:
+        return "mx"
