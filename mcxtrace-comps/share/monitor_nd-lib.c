@@ -128,6 +128,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->SHAPE_BANANA =4;
     DEFS->SHAPE_BOX    =5;
     DEFS->SHAPE_PREVIOUS=6;
+    DEFS->SHAPE_OFF=7;
 
     Vars->Sphere_Radius     = 0;
     Vars->Cylinder_Height   = 0;
@@ -153,6 +154,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->He3_pressure      = 0;
     Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
+    Vars->Flag_OFF          = offflag;
+    Vars->OFF_polyidx       = -1;
     Vars->mean_dx=Vars->mean_dy=0;
     Vars->min_x = Vars->max_x  =0;
     Vars->min_y = Vars->max_y  =0;
@@ -556,7 +559,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
        strcpy(Short_Label[i],"Pixel_ID");
       else
       if (Set_Vars_Coord_Type == DEFS->COORD_T)
-          strcpy(Short_Label[i],"Time Of Flight");
+          strcpy(Short_Label[i],"Time_Of_Flight");
       else
       if (Set_Vars_Coord_Type == DEFS->COORD_PHASE)
           strcpy(Short_Label[i],"Phase");
@@ -787,7 +790,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
   /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
   if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List >= 2))
   {
-    if (Vars->Buffer_Size >= 20000 || Vars->Flag_List == 3)
+    if (Vars->Buffer_Size >= 1000000 || Vars->Flag_List == 3)
     { /* save current (possibly append) and re-use Buffer */
       Monitor_nD_Save(DEFS, Vars);
       Vars->Flag_List = 3;
@@ -847,7 +850,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
                 break;
               }
               Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
-              
             }
             if (!flag_outside) {
               Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];
@@ -947,7 +949,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) XY = k*K2E;
         else
-          if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI; } // { sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
+          if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI/k; } // { sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Vars->Photon_Counter;
         else
@@ -986,7 +988,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             }
             XY += Coord_Index[j]*Vars->Coord_BinProd[j-1];
           }
-	  if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
+	  //if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
           if (!flag_outside) XY += Vars->Coord_Min[i];
         }
         
@@ -1541,7 +1543,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
     double zmin;
     double zmax;
     int    i;
-    double hdiv_min=-180, hdiv_max=180, vdiv_min=-180, vdiv_max=180;
+    double hdiv_min=-180, hdiv_max=180, vdiv_min=-90, vdiv_max=90;
     char   restricted = 0;
 
     radius = Vars->Sphere_Radius;
@@ -1576,6 +1578,12 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
         hdiv_min = vdiv_min = angle;
         hdiv_max = vdiv_max = angle;
         restricted = 1; }
+      else if (Set_Vars_Coord_Type == DEFS->COORD_Y && abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)
+      {
+        vdiv_min = atan2(ymin,radius)*RAD2DEG;
+        vdiv_max = atan2(ymax,radius)*RAD2DEG;
+        restricted = 1;
+      }
     }
     /* full sphere */
     if ((!restricted && (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))

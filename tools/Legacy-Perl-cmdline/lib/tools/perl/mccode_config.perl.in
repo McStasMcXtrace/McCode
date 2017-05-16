@@ -80,7 +80,7 @@ use Config;
      MPIRUN => '@MPIRUN@',
      MPICC => '@MPICC@',
      PREFIX => '',
-     SUFFIX => '@DOT_PERL_SUFFIX@',
+     SUFFIX => '@PL_TOOL_SUFFIX@',
      PLOTTER => '@PLOTTER@',
      RUNCMD => '@MCCODE_PREFIX@'.'run'.'@PL_TOOL_SUFFIX@',
      PLOTCMD=> '@MCCODE_PREFIX@'.'plot'.'@PL_TOOL_SUFFIX@',

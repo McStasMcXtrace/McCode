@@ -716,7 +716,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius*1E4; /* disk shapes */
     }
 
-    
+
     if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS ) {
       if (abs(Vars->Flag_Shape) != DEFS->SHAPE_OFF) {  
 	Vars->Coord_Number = 0;
@@ -1151,7 +1151,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       }
       Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
       Vars->Buffer_Block = Vars->Buffer_Counter;
-      
+
       while (!While_End)
       { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) */
         /* simulation ended before Buffer was filled. Limits have to be computed, and stored events must be sent into histograms */

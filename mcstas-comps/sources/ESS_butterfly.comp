@@ -489,53 +489,28 @@ TRACE
   dz = zf-z;
   r = sqrt(dx*dx+dy*dy+dz*dz);
   
-  /* Are we using time focusing? */
-  if (tfocus_width>0) {
-    /* Pick a random time to reach the remote window */
-    double trand = randpm1()* tfocus_width/2.0;
-    double tfinal = tfocus_time + trand ;
-    /* Caculate which wavelength range this corresponds to when emitted within the maximal source time */
-    double vz_min,vz_max;
-    vz_min = tfocus_dist/tfinal;
-    if (tfinal>modextras.tmultiplier*ESS_SOURCE_DURATION) {
-      vz_max = tfocus_dist/(tfinal-modextras.tmultiplier*ESS_SOURCE_DURATION);
-    } else {
-      vz_max = 1e6;
-    }
-    Lmax_sampled = (2*PI/V2K)/vz_min;
-    Lmin_sampled = (2*PI/V2K)/vz_max;
-    /* Check boundaries */
-    Lmin_sampled = fmax(Lmin,Lmin_sampled);
-    Lmax_sampled = fmin(Lmax,Lmax_sampled);
+  lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
 
-    /* This is then the wavelength we pick */
-    lambda = rand01()*(Lmax_sampled-Lmin_sampled)+Lmin_sampled;
-    /* ... corresponding to this velocity */
-    double vtmp = (2*PI/V2K)/lambda;
-    /* ... and this emission time */
-    t = tfinal-tfocus_dist/vtmp;
-    
-    /* Ensure that all still looks reasonable */
-    if (Lmin_sampled<Lmax_sampled && tfinal > t) {
-      w_tfocus=(Lmax_sampled-Lmin_sampled)/(Lmax-Lmin);
-    } else {
-      /* Seems we couldn't focus this one... */
-      printf("This shouldn't happen!\n");
-      ABSORB;
-    }
-  } else {
-    /* Simple, random wavelength @ random time */
-    t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
-    lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
-    w_tfocus=1;
-  }
-  
   k = 2*PI/lambda;
   v = K2V*k;
 
   vz = v*dz/r;
   vy = v*dy/r;
   vx = v*dx/r;
+
+  /* Are we using time focusing? */
+  if (tfocus_width>0) {
+    double dt = tfocus_dist/vz;
+    t = tfocus_time-dt; /* Set time to hit time window center */
+    t += randpm1()*tfocus_width/2.0; 
+    if (t<0) ABSORB;                       /* Kill neutron if outside pulse duration */
+    if (t>modextras.tmultiplier*ESS_SOURCE_DURATION) ABSORB;
+    w_tfocus=tfocus_width/(modextras.tmultiplier*ESS_SOURCE_DURATION);
+  } else {
+    /* Simple, random wavelength @ random time */
+    t = rand01()*modextras.tmultiplier*ESS_SOURCE_DURATION;
+    w_tfocus=1;
+  }
   
   if (iscold) {          //case: cold moderator
     /* Apply simple engineering reality correction */
