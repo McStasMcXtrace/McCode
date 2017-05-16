@@ -21,5 +21,5 @@ display('***********************************************************************
 display(['Your Matlab/iFit should now be aware of your @FLAVOR@ ' ...
          'installation in @CPACK_NSIS_INSTALL_ROOT@.']);
 display(['For safety, please also set options.mcrun="@CPACK_NSIS_INSTALL_ROOT@\\bin\\@MCCODE_PREFIX@run in any iFit mcstas() ' ...
-         'run, as explained in http://ifit.mccode.org/McStas.html']
+         'run, as explained in http://ifit.mccode.org/McStas.html'])
 display('********************************************************************************');
