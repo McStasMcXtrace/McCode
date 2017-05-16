@@ -45,32 +45,28 @@ Changes in McStas v.2.4, May XXth, 2017
  McStas 2.4 is the fifth release in the 2.x series and fixes various issues with McStas 2.3, plus 
  provides important new developments.
 
- IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
- these to co-exist with 2.4. See https://github.com/McStasMcXtrace/McCode/tree/master/tools/migration-tool
- Also, please read the platform-specific notes below!
-
-
  Thanks:
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
    and McStas is all about!
 
 
  Tools:
- - From 2.4 we will default to use our new set of Python tools, the perl ones will stay around as a backup solution
+ - From 2.4 we will default to use our new set of Python tools, developed by Jakob Garde, DTU. 
+   The perl ones will stay around as a backup solution
    - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
  - Our Python tools are now Python 3 compliant
- - A mcgui editor in with a rich syntax highlighting
- - A mcrun utility script, with new features wrt. the legacy perl solution:
+ - A mcgui editor with rich syntax highlighting
+ - A mcrun utility script, with a few new features wrt. the legacy perl solution:
    - The feature --autoplot spawns your selected plotter on sim completion
    - The feature --multi (or -M) allows grid-scanning, i.e. multidimensional scans
-   - The --list (or -L) allows to make 1D-scans that are not equidistant or even filename strings etc…
- - A newly developed mcplot-pyqtgraph optically similar to the legacy mcplot solution, but with new features:
-   - Easy mouse-based zooming on individual monitor plots
+   - The --list (or -L) allows to make 1D-scans that are not equidistant, or even filename strings, etc…
+ - A newly developed mcplot-pyqtgraph, optically similar to the legacy mcplot solution, but with new features:
+   - Easy mouse-based zooming and panning on individual monitor plots
    - Colormaps can be changed for 2D-plots
-   - Select a single plot by clicking, get back to overview by right-clicking or pressing 'b'
+   - Select a single plot by clicking, get back to the overview by right-clicking, or by pressing 'b'
    - On scans ctrl-click (meta-click on OS X) to see monitor as function of scanned variable
    - On scans press 'x' to receive all scan points as individual plot windows
  - A newly developed mcdisplay-webgl
