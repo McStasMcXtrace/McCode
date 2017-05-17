@@ -88,7 +88,7 @@ Changes in McStas v.2.4, May 17th, 2017
    tool is NOT ready for distribution with McStas 2.4.) Please look inside the existing doc headers and adhere to the
    new format when writing new components.
  - MCPL library updated to v. 1.1
-   - See https://mctools.github.io/
+   - See https://mctools.github.io/mcpl/
    - MCPL_input allows to repeat input files an integer number of times
    - possible to modify particle energy, position and direction on repetition
    - MCPL_output has an option to merge generated output files in case of MPI
