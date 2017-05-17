@@ -8,7 +8,6 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.90 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -65,17 +64,16 @@
 *   any shape:       geometry=OFF file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
-*   It computes the intersection points of the neutron ray with the object  
+*   It computes the intersection points of the neutron ray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   It supports the OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
-*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
-*   The default size of the object depends of the OFF file data, but its 
+*   The default size of the object depends of the OFF file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
-
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -162,12 +160,8 @@
 *
 * %P
 * INPUT PARAMETERS:
-* Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w)
-*                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1.
-*                     Use 0, NULL or "" to disable.
-* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w).
-*                     Incoherent (self) part.
-*                     Use 0, NULL or "" to scatter isotropically (V-like).
+* Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w) Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1. Use 0, NULL or "" to disable.
+* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w). Incoherent (self) part. Use 0, NULL or "" to scatter isotropically (V-like).
 * sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
 * sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
@@ -177,58 +171,41 @@
 * Geometry parameters:
 * radius:       [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
 * xwidth:       [m] width for a box sample shape
-* yheight:      [m] Height of sample in vertical direction for box/cylinder
-*                     shapes
+* yheight:      [m] Height of sample in vertical direction for box/cylinder shapes
 * zdepth:       [m] depth for a box sample shape
-* thickness:    [m] Thickness of hollow sample
-*                     Negative value extends the hollow volume outside of the box/cylinder.
+* thickness:    [m] Thickness of hollow sample Negative value extends the hollow volume outside of the box/cylinder.
 *
 * OPTIONAL PARAMETERS:
-* concentric:   [1] Indicate that this component has a hollow geometry and
-*                   may contain other components. It should then be duplicated 
-*                   after the inside part (only for box, cylinder, sphere) [1] 
-*                   See description for an example.
-* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
-* order:        [1] Limit multiple scattering up to given order
-*                     0:all (default), 1:single, 2:double, ...
+* concentric:   [1] Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere). See description for an example.
+* geometry:   Name of an Object File Format (OFF) file for complex geometry. The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
+* order:        [1] Limit multiple scattering up to given order 0:all (default), 1:single, 2:double, ...
 * verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
-* d_phi:      [deg] scattering vertical angular spreading (usually the height
-*                     of the next component/detector). Use 0 for full space.
-*                     This is only relevant for single scattering (order=1).
-* save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors. This option 
-*                     is not available under Windows platforms.
+* d_phi:      [deg] scattering vertical angular spreading (usually the height of the next component/detector). Use 0 for full space. This is only relevant for single scattering (order=1).
+* save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors. This option is not available under Windows platforms.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 * qmin:    [Angs-1] Minimum Q value to use in S(q,w).
 * qmax:    [Angs-1] Maximum Q value to use in S(q,w).
 * wmin:       [meV] Minimum Energy value to use in S(q,w).
 * wmax:       [meV] Maximum Energy value to use in S(q,w).
-* threshold:    [1] Value under which S(Q,w) is not accounted for.
-*                     to set according to the S(Q,w) values, i.e. not too low.
-* p_interact:   [1] Force a given fraction of the beam to scatter, keeping
-*                   intensity right, to enhance small signals (-1 unactivate).
-* auto_norm:    [1] Normalize S(q,w) when -1. Use raw data when 0 (default),
-*                     multiply S(q,w) when auto_norm>0.
-* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
-*                   to optimal setting whenever required (recommended).
+* threshold:    [1] Value under which S(Q,w) is not accounted for. to set according to the S(Q,w) values, i.e. not too low.
+* p_interact:   [1] Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
+* auto_norm:    [1] Normalize S(q,w) when -1. Use raw data when 0 (default), multiply S(q,w) when auto_norm>0.
+* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned to optimal setting whenever required (recommended).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
 * powder_Vc:          [AA^3] volume of the unit cell
-* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in 
-*                              barns (barns=1 for laz, barns=0 for lau type files).
+* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
 *
 * OUTPUT PARAMETERS:
-* VarSqw : internal structure containing many members/info
-* VarSqw.dq wavevector transfer [Angs-1]
-* VarSqw.dw energy transfer [Angs-1]
-* VarSqw.type interaction type of event
-*         'c' (coherent),  't' (transmitted)
-*         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
-* SCATTERED: order of multiple scattering
+* VarSqw: [] internal structure containing many members/info
+* VarSqw_DOT_dq: [] wavevector transfer [Angs-1]
+* VarSqw_DOT_dw: [] energy transfer [Angs-1]
+* VarSqw_DOT_type: [] interaction type of event 'c' (coherent),  't' (transmitted) 'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
+* SCATTERED: [] order of multiple scattering
 *
 * %Links
 * E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
@@ -237,7 +214,7 @@
 * %L
 * Hugouvieux V, PhD, University of Montpellier II, France (2004).
 * %L
-* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a> 
+* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a>
 * %L
 * <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
 * %L
@@ -247,7 +224,7 @@
 * %L
 * <a href="http://www.crystallographica.com/">Crystallographica</a> software
 * %L
-* <a href="Example data file <a href="../data/He4_liq_coh.sqw">He4_liq_coh.sqw</a>
+* Example data file <a href="../data/He4_liq_coh.sqw">He4_liq_coh.sqw</a>
 * %L
 * The <a href="PowderN.html">PowderN</a> component.
 * %L
@@ -274,7 +251,7 @@ SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, string geometry=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
     p_interact=-1, auto_norm=0, powder_barns=1)
 OUTPUT PARAMETERS (VarSqw, columns, offdata)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 /*****************************************************************************/
 /*****************************************************************************/
 
@@ -451,14 +428,14 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   t_Table *retTable;
 
   flag_qSq = (Sqw->column_order[8]>0 && Sqw->column_order[6]>0);
-  
+
   if (Sqw->column_order[0] == 4 && Sqw->barns !=0)
     printf("Isotropic_sqw: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
-           "WARNING:       but F2 unit is set to powder_barns=1 (barns). Intensity might be 100 times too high.\n", 
+           "WARNING:       but F2 unit is set to powder_barns=1 (barns). Intensity might be 100 times too high.\n",
            Sqw->compname);
   if (Sqw->column_order[0] == 17 && Sqw->barns == 0)
     printf("Isotropic_sqw: %s: Powder file probably of type Lazy Pulver (laz)\n"
-           "WARNING:       but F2 unit is set to powder_barns=0 (fm^2). Intensity might be 100 times too low.\n", 
+           "WARNING:       but F2 unit is set to powder_barns=0 (fm^2). Intensity might be 100 times too low.\n",
            Sqw->compname);
 
   size = sqwTable.rows;
@@ -798,9 +775,9 @@ struct Sqw_Data_struct *Sqw_readfile(
     for (i=0; i<=24; i++) if (parsing[i]) free(parsing[i]);
     free(parsing);
   }
-  
+
   /* compute the scattering unit density from material weight and density */
-  /* the weight of the scattering element is the chemical formula molecular weight 
+  /* the weight of the scattering element is the chemical formula molecular weight
    * times the nb of chemical formulae in the scattering element (nb_atoms) */
   if (!Sqw->rho && mat_density > 0 && mat_weight > 0 && mat_at_nb > 0) {
     /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
@@ -808,11 +785,11 @@ struct Sqw_Data_struct *Sqw_readfile(
     Sqw->rho = mat_density/(mat_weight*mat_at_nb)/1e24*6.02214199e23;
     if (Sqw->verbose_output > 0) printf("Isotropic_Sqw_legacy: %s: Computing scattering unit density V_rho=%g [AA^-3] from file %s\n", Sqw->compname, Sqw->rho, file);
   }
-  
-  /* the scattering unit cross sections are the chemical formula ones 
+
+  /* the scattering unit cross sections are the chemical formula ones
    * times the nb of chemical formulae in the scattering element */
-  if (mat_at_nb > 0) { 
-    Sqw->s_abs *= mat_at_nb; Sqw->s_inc *= mat_at_nb; Sqw->s_coh *= mat_at_nb; 
+  if (mat_at_nb > 0) {
+    Sqw->s_abs *= mat_at_nb; Sqw->s_inc *= mat_at_nb; Sqw->s_coh *= mat_at_nb;
   }
 
   if (nblocks) {
@@ -846,7 +823,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       "               File must contain 3 blocks for [q,w,sqw] or Powder file\n");
     return(Sqw_Data);
   }
-  
+
   sprintf(Table_Array[0].filename, "%s#q", file);
   sprintf(Table_Array[1].filename, "%s#w", file);
   sprintf(Table_Array[2].filename, "%s#sqw", file);
@@ -911,13 +888,13 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname, file, Sqw_Data->nb_w, Sqw_Data->nb_q);
     return(NULL);
   }
-  
+
   /* compute axes steps */
   if (Sqw_Data->nb_q > 1)
     Sqw_Data->q_step = (Sqw_Data->q_max - Sqw_Data->q_min)/(Sqw_Data->nb_q-1);
   else
     Sqw_Data->q_step =  1;
-  
+
   if (Sqw_Data->nb_w > 1)
     Sqw_Data->w_step = (Sqw_Data->w_max - Sqw_Data->w_min)/(Sqw_Data->nb_w-1);
   else
@@ -1086,7 +1063,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     return(NULL);
   }
   /* normalize Pw distribution to 0:1 range */
-  for (j=0; j < (Sqw_Data->nb_w) ; 
+  for (j=0; j < (Sqw_Data->nb_w) ;
     Sqw_Data->SW[j++].cumul_proba /= Sqw_Data->SW[Sqw_Data->nb_w-1].cumul_proba
   );
   if (Sqw->verbose_output > 1)
@@ -1119,16 +1096,16 @@ struct Sqw_Data_struct *Sqw_readfile(
       q  = Table_Index(Table_Array[0], 0, i);
       Sqw_Data->SQW[j][i].Q     = q;
       Sqw_Data->SQW[j][i].value = Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
-      
+
       /* compute cumulated probability and take into account Jacobian with additional 'q' factor */
-      Sqw_Data->SQW[j][i].cumul_proba = q*Sqw_Data->SQW[j][i].value; 
+      Sqw_Data->SQW[j][i].cumul_proba = q*Sqw_Data->SQW[j][i].value;
       if (i) Sqw_Data->SQW[j][i].cumul_proba += Sqw_Data->SQW[j][i-1].cumul_proba;
     }
     /* normalize P(q|w) distribution to 0:1 range */
-    for (i=0; i < (Sqw_Data->nb_q) ; 
+    for (i=0; i < (Sqw_Data->nb_q) ;
     	Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba
     );
-    
+
   }
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw_legacy: %s: Generated P(Q|w)\n",
@@ -1263,12 +1240,12 @@ INITIALIZE
   else if (radius > 0 && yheight)        VarSqw.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       VarSqw.shape=2; /* sphere */
 
-  if (VarSqw.shape < 0) 
+  if (VarSqw.shape < 0)
     exit(fprintf(stderr,"Isotropic_Sqw_legacy: %s: sample has invalid dimensions.\n"
                         "ERROR          Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
-  
-  
-  
+
+
+
   if (thickness) {
     if (radius && (radius < fabs(thickness) )) {
       fprintf(stderr,"Isotropic_Sqw_legacy: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
@@ -1280,7 +1257,7 @@ INITIALIZE
                      "WARNING        Please check parameter values.\n", NAME_CURRENT_COMP);
     }
   }
-  
+
   if (VarSqw.verbose_output) {
     switch (VarSqw.shape) {
       case 0: printf("Isotropic_Sqw_legacy: %s: is a %s %s : radius=%f thickness=%f height=%f \n",
@@ -1387,7 +1364,7 @@ INITIALIZE
   VarSqw.w_min     = (wmin > 0 ? wmin : 0);
   VarSqw.q_max     = (qmax > 0 ? qmax : 0);
   VarSqw.q_min     = (qmin > 0 ? qmin : 0);
-  
+
 #ifdef WIN32
   save_sqw=0; /* SAVE Sqw generates mem error under windows (probably dynamic memory allocation) */
 #endif
@@ -1456,12 +1433,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
     } else {
       if (VarSqw.shape==0)
-        intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius-thickness, 
+        intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius-thickness,
           yheight-2*thickness > 0 ? yheight-2*thickness : yheight);
       else if (VarSqw.shape==1)
-        intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, 
-          xwidth-2*thickness > 0 ?  xwidth-2*thickness : xwidth, 
-          yheight-2*thickness > 0 ? yheight-2*thickness : yheight, 
+        intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz,
+          xwidth-2*thickness > 0 ?  xwidth-2*thickness : xwidth,
+          yheight-2*thickness > 0 ? yheight-2*thickness : yheight,
           zdepth-2*thickness > 0 ?  zdepth-2*thickness : zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius-thickness);
@@ -1479,9 +1456,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
         flag_ishollow=1;
       else if (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz, radius-thickness))
         flag_ishollow=1;
-      else if (VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz, 
-        xwidth-2*thickness > 0 ? xwidth-2*thickness : xwidth, 
-        yheight-2*thickness > 0 ? yheight-2*thickness : yheight, 
+      else if (VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz,
+        xwidth-2*thickness > 0 ? xwidth-2*thickness : xwidth,
+        yheight-2*thickness > 0 ? yheight-2*thickness : yheight,
         zdepth-2*thickness > 0 ? zdepth-2*thickness : zdepth))
         flag_ishollow=1;
     } else if (thickness<0) {
@@ -1985,8 +1962,8 @@ if (SCATTERED) {
 SAVE
 %{
   int  k;
-  
-  /* save_sqw=0 forced under Windows 
+
+  /* save_sqw=0 forced under Windows
      SAVE Sqw generates mem error under windows (probably dynamic memory allocation) */
 
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
@@ -2013,7 +1990,7 @@ SAVE
       )
 
       for (j=0; j < (Data_sqw.nb_w) ; j++) {
-        SW[j] = Data_sqw.SW[j].value; 
+        SW[j] = Data_sqw.SW[j].value;
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
       }

@@ -349,7 +349,7 @@ class InstrCompHeaderInfo:
         return '\n'.join(lst) + '\n\n- params docs:\n' + '\n'.join(lst2) + '\n\n- params:\n' + '\n'.join(lst3) + '\n\n- links:\n' + '\n'.join(lst4)
 
 def parse_header(text):
-    ''' Parses the header of an instrument or component file: LEGACY version. '''
+    ''' Parses the header of an instrument or component file '''
     # get rid of stars and empty padding lines
     lines = text.splitlines()
     new_lines = []
@@ -361,7 +361,7 @@ def parse_header(text):
     # get tag indices, and deal with cases of missing tags
     lst = [text.find('%I'), text.find('%D'), text.find('%E'), text.find('%P'), text.find('%L')]
     # missing %E tag
-    if lst[2] == -1: 
+    if lst[2] == -1:
         lst[2] = lst[3]
     # existing %I tag with missing %D tag handled like this
     if lst[0] > lst[1] and lst[2] > lst[1]: 
