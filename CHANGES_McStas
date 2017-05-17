@@ -36,11 +36,11 @@
 * Modified by: PW and JG May 2015: versions 2.2 and 2.2a
 * Modified by: PW March 2016: version 2.3
 * Modified by: PW May 2017: version 2.4
-* This file is part of McStas version 2.4, released May XX 2017.
+* This file is part of McStas version 2.4, released May 17th 2017.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v.2.4, May XXth, 2017
+Changes in McStas v.2.4, May 17th, 2017
 
  McStas 2.4 is the fifth release in the 2.x series and fixes various issues with McStas 2.3, plus 
  provides important new developments.
@@ -84,6 +84,9 @@ Changes in McStas v.2.4, May XXth, 2017
    - Allows very rich simulation of samples and sample environment
    - Several instrument files included to illustrate the capabilities and use
    - See http://media.mcstas.org/ESS_DMSC_20161117/DMSC_talk_MBertelsen_McStas_Union.mp4
+ - Component and Instrument documentation headers have been uniformised in preparation for a Python mcdoc. (This new
+   tool is NOT ready for distribution with McStas 2.4.) Please look inside the existing doc headers and adhere to the
+   new format when writing new components.
  - MCPL library updated to v. 1.1
    - See https://mctools.github.io/
    - MCPL_input allows to repeat input files an integer number of times
@@ -94,6 +97,13 @@ Changes in McStas v.2.4, May XXth, 2017
  - ESS_butterfly_MCPL.instr implements the use of MCPL files in the ESS butterfly geometry
  - PowderN can “flip” the d_phi focusing to “zoom” on a range of angles.
  - New PSD_monitor_TOF that outputs a TOF signal pr. PSD pixel (single files). Used in templateNMX_TOF.instr
+ - A version of Isotropic_Sqw from the McStas 2.0 release has been imported under the name of Isotropic_Sqw_legacy, 
+   since some users reported that release being in better agreement with experiments. 
+   - Some issues were corrected since 2.0 and fixed in today's component
+   - Today's component has a different set of issues, see e.g. https://github.com/McStasMcXtrace/McCode/issues/300
+ - By the help of a Japanse user, we have identified issues with the performance of the supermirror coating option
+   in FermiChopper.comp. We will investigate further and adress the issue over the course of 2017. Note that the 
+   component works as expected when not implementing supermirror slits.
  - Various bugfixes and improvements across the example instruments and component library
 
 
