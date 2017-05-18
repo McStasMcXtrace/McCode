@@ -1002,7 +1002,14 @@ class McConfigDialog(QtGui.QDialog):
         self.ui.btnOk.clicked.connect(self.accept)
         self.ui.btnSave.clicked.connect(self.save)
         self.ui.btnCancel.clicked.connect(self.reject)
-
+        
+        # set labels mccode-prefix
+        prefix = mccode_config.get_mccode_prefix()
+        self.ui.lblMcrun.setText("%srun" % prefix)
+        self.ui.lblMcplot.setText("%splot" % prefix)
+        self.ui.lblMcdisplay.setText("%sdisplay" % prefix)
+        
+        
     def initConfigData(self, args):
         # comboboxes
         mcrun_lst, mcplot_lst, mcdisplay_lst = mccode_config.get_options()
@@ -1086,6 +1093,7 @@ class McConfigDialog(QtGui.QDialog):
         # MPIRUN and MPICC:
         os.environ[target_mccode + '_MPICC_OVERRIDE']=mccode_config.compilation[str(self.ui.edtMpicc.conf_var)]
         os.environ[target_mccode + '_MPIRUN_OVERRIDE']=mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)]
+    
     def accept(self):
         self.__pullValuesTo_mccode_config()
 

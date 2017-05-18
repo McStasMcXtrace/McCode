@@ -36,19 +36,14 @@
 * Modified by: PW and JG May 2015: versions 2.2 and 2.2a
 * Modified by: PW March 2016: version 2.3
 * Modified by: PW May 2017: version 2.4
-* This file is part of McStas version 2.4, released May XX 2017.
+* This file is part of McStas version 2.4, released May 17th 2017.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v.2.4, May XXth, 2017
+Changes in McStas v.2.4, May 17th, 2017
 
  McStas 2.4 is the fifth release in the 2.x series and fixes various issues with McStas 2.3, plus 
  provides important new developments.
-
- IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
- these to co-exist with 2.4. See https://github.com/McStasMcXtrace/McCode/tree/master/tools/migration-tool
- Also, please read the platform-specific notes below!
-
 
  Thanks:
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
@@ -56,21 +51,22 @@ Changes in McStas v.2.4, May XXth, 2017
 
 
  Tools:
- - From 2.4 we will default to use our new set of Python tools, the perl ones will stay around as a backup solution
+ - From 2.4 we will default to use our new set of Python tools, developed by Jakob Garde, DTU. 
+   The perl ones will stay around as a backup solution
    - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
  - Our Python tools are now Python 3 compliant
- - A mcgui editor in with a rich syntax highlighting
- - A mcrun utility script, with new features wrt. the legacy perl solution:
+ - A mcgui editor with rich syntax highlighting
+ - A mcrun utility script, with a few new features wrt. the legacy perl solution:
    - The feature --autoplot spawns your selected plotter on sim completion
    - The feature --multi (or -M) allows grid-scanning, i.e. multidimensional scans
-   - The --list (or -L) allows to make 1D-scans that are not equidistant or even filename strings etc…
- - A newly developed mcplot-pyqtgraph optically similar to the legacy mcplot solution, but with new features:
-   - Easy mouse-based zooming on individual monitor plots
+   - The --list (or -L) allows to make 1D-scans that are not equidistant, or even filename strings, etc…
+ - A newly developed mcplot-pyqtgraph, optically similar to the legacy mcplot solution, but with new features:
+   - Easy mouse-based zooming and panning on individual monitor plots
    - Colormaps can be changed for 2D-plots
-   - Select a single plot by clicking, get back to overview by right-clicking or pressing 'b'
+   - Select a single plot by clicking, get back to the overview by right-clicking, or by pressing 'b'
    - On scans ctrl-click (meta-click on OS X) to see monitor as function of scanned variable
    - On scans press 'x' to receive all scan points as individual plot windows
  - A newly developed mcdisplay-webgl
@@ -88,8 +84,11 @@ Changes in McStas v.2.4, May XXth, 2017
    - Allows very rich simulation of samples and sample environment
    - Several instrument files included to illustrate the capabilities and use
    - See http://media.mcstas.org/ESS_DMSC_20161117/DMSC_talk_MBertelsen_McStas_Union.mp4
+ - Component and Instrument documentation headers have been uniformised in preparation for a Python mcdoc. (This new
+   tool is NOT ready for distribution with McStas 2.4.) Please look inside the existing doc headers and adhere to the
+   new format when writing new components.
  - MCPL library updated to v. 1.1
-   - See https://mctools.github.io/
+   - See https://mctools.github.io/mcpl/
    - MCPL_input allows to repeat input files an integer number of times
    - possible to modify particle energy, position and direction on repetition
    - MCPL_output has an option to merge generated output files in case of MPI
@@ -98,6 +97,13 @@ Changes in McStas v.2.4, May XXth, 2017
  - ESS_butterfly_MCPL.instr implements the use of MCPL files in the ESS butterfly geometry
  - PowderN can “flip” the d_phi focusing to “zoom” on a range of angles.
  - New PSD_monitor_TOF that outputs a TOF signal pr. PSD pixel (single files). Used in templateNMX_TOF.instr
+ - A version of Isotropic_Sqw from the McStas 2.0 release has been imported under the name of Isotropic_Sqw_legacy, 
+   since some users reported that release being in better agreement with experiments. 
+   - Some issues were corrected since 2.0 and fixed in today's component
+   - Today's component has a different set of issues, see e.g. https://github.com/McStasMcXtrace/McCode/issues/300
+ - By the help of a Japanse user, we have identified issues with the performance of the supermirror coating option
+   in FermiChopper.comp. We will investigate further and adress the issue over the course of 2017. Note that the 
+   component works as expected when not implementing supermirror slits.
  - Various bugfixes and improvements across the example instruments and component library
 
 

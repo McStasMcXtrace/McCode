@@ -37,6 +37,10 @@
 * Apr 2005: extensive external test, most problems solved (cf. 'Bugs')
 * Validated by: K. Lieutenant, E. Farhi
 *
+* %BUGS
+* May 2017: Issues in use of supermirror slit packages are being investigated. Is NOT solved for McStas 2.4. The component works correctly when not using supermirrors.
+* We suggest to instead use Guide_channeled with the rotate/derotate option shown in the test instrument Test_Fermi.instr. 
+*
 * limitations:
 * no absorbing blade width used
 *
@@ -50,7 +54,7 @@
 * w: [m]            width of one chopper slit
 * xwidth: [m]       optional total width of slit package
 * yheight: [m]      height of slit package
-* nu: [Hz]          chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm. Positive value corresponds to a clockwise rotation from X towards Z from above (y>0).
+* nu: [Hz]          chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm. Positive value corresponds to a counter-clockwise rotation around y.
 * eff: [1]          efficiency = transmission x fraction of transparent material
 * verbose: [1]      set to 1,2 or 3 gives debugging information
 * curvature: [m-1]  Curvature of slits (1/radius of curvature).
