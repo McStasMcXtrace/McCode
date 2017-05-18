@@ -121,7 +121,7 @@ INITIALIZE
     clrp=clr;
     clrp+=snprintf(clrp,2048,"%s",mcinstrument_exe);
     for (ii=0;ii<mcnumipar;ii++){
-        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].par);
+        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].val);
     }
     *(clrp-1)='\0';
     mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);
