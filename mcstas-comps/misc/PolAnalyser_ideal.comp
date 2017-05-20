@@ -25,9 +25,9 @@
 * %P
 * INPUT PARAMETERS:
 *
-* mx: [1]  X-component of polarisation analysis vector (can be negative) 
-* my: [1]  Y-component of polarisation analysis vector (can be negative) 
-* mz: [1]  Z-component of polarisation analysis vector (can be negative) 
+* mx: [1]  X-component of polarisation analysis vector -1<mx<1
+* my: [1]  Y-component of polarisation analysis vector -1<my<1
+* mz: [1]  Z-component of polarisation analysis vector -1<mz<1
 *
 * OUTPUT PARAMETERS:
 *
@@ -45,14 +45,14 @@ DECLARE
 INITIALIZE
 %{
 if (mx==0 && my==0 && mz==0) {
-    printf("Analyser_ideal: %s: NULL vector defined!\n"
+    printf("PolAnalyser_ideal: %s: NULL vector defined!\n"
 	   "ERROR      (mx, my, mz)=(0,0,0). Exiting",
            NAME_CURRENT_COMP);
     exit(1);
   }
 
   if ((mx*mx + my*my + mz*mz) > 1) {
-    printf("Analyser_ideal: %s: Polarisation analysis vector (mx, my, mz) is unphysical!\n"
+    printf("PolAnalyser_ideal: %s: Polarisation analysis vector (mx, my, mz) is unphysical!\n"
 	   "ERROR  mx*mx + my*my + mz*mz > 1. Exiting....",
            NAME_CURRENT_COMP);
     exit(1);
