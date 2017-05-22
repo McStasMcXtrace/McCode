@@ -82,14 +82,14 @@ def plot_1d_tof_rays(instr, rays, plt):
             pvt_lst = g.get_transformed_pos_vel_t_lst()
             t = t + [pvt[2] for pvt in pvt_lst]
             z = z + [pvt[0].z for pvt in pvt_lst]
-        plt.plot(t, z, symbol='o', symbolSize=7, pen=pg.mkPen(color=(110, 110, 110)))
+        plt.plot(t, z, symbol='o', symbolSize=7, pen=pg.mkPen(pg.getConfigOption('foreground')))
     
 
 def plot_2d_ray(coords, plt):
     ''' see get_2d_ray to understand the data structure '''
     x = np.array([p[0] for p in coords])
     y = np.array([p[1] for p in coords])
-    return plt.plot(x, y, pen=pg.mkPen(color=(255, 255, 255)))
+    return plt.plot(x, y, pen=pg.mkPen(pg.getConfigOption('foreground')))
 
 def get_2d_instrument(instr, plane='zy'):
     ''' returns a list of (compname, coords-lst) tuples, coords-lst being a list of 2-tuple points in the plane '''
@@ -533,6 +533,11 @@ def main(args):
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
     
+    if args.inv:
+        ## Switch to using white background and black foreground
+        pg.setConfigOption('background', 'w')
+        pg.setConfigOption('foreground', 'k')
+    
     gui = McDisplay2DGui(title=dirname)
     if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
@@ -549,6 +554,7 @@ if __name__ == '__main__':
     parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
+    parser.add_argument('-i', '--inv', action='store_true', help='invert background color')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
     
     args, unknown = parser.parse_known_args()
