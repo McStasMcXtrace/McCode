@@ -332,7 +332,7 @@ def main(args):
         if args.test:
             test_decfuncs(simfile)
 
-        if args.inv:
+        if args.invcanvas:
             ## Switch to using white background and black foreground
             pg.setConfigOption('background', 'w')
             pg.setConfigOption('foreground', 'k')
@@ -373,7 +373,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
-    parser.add_argument('-i', '--inv',  action='store_true', default=False, help='invert background color')
+    parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
     args = parser.parse_args()
 
     main(args)

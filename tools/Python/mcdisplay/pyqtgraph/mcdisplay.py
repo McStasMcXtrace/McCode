@@ -533,7 +533,7 @@ def main(args):
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
     
-    if args.inv:
+    if args.invcanvas:
         ## Switch to using white background and black foreground
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
@@ -554,7 +554,7 @@ if __name__ == '__main__':
     parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
-    parser.add_argument('-i', '--inv', action='store_true', help='invert background color')
+    parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
     
     args, unknown = parser.parse_known_args()
