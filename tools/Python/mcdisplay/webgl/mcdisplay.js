@@ -91,7 +91,7 @@ Main.prototype.addLight = function(center)
 }
 //  initialize the scene
 //
-Main.prototype.init = function(campos)
+Main.prototype.init = function(campos, invert)
 {
     this.scene = new THREE.Scene();
 
@@ -104,6 +104,9 @@ Main.prototype.init = function(campos)
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (invert) {
+        this.renderer.setClearColor( 0xffffff );
+    }
 
     element = document.getElementById("3dcanvas");
     console.log(element);
@@ -454,9 +457,10 @@ TraceLoader.prototype.loadParticles = function()
 }
 //  program controller
 //      campos_x/y/z  -  determines initial camera position, this is used with --inspect
-var Controller = function(campos_x, campos_y, campos_z, box_lst)
+var Controller = function(campos_x, campos_y, campos_z, box_lst, invert_canvas)
 {
     this.camPosInitial = new THREE.Vector3(campos_x, campos_y, campos_z);
+    this.invert_canvas = invert_canvas;
     this.box_lst = box_lst; // this would be [x_min, x_max, ...]
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_particledata, this.main);
@@ -472,7 +476,7 @@ Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 Controller.prototype.run = function()
 {
     // init mcdisplay
-    this.main.init(this.camPosInitial);
+    this.main.init(this.camPosInitial, this.invert_canvas);
 
     // execution loops
     var _this = this;
