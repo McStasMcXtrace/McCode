@@ -20,11 +20,12 @@ from mccodelib.utils import get_file_text_direct
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, campos, box, html_filename):
+    def __init__(self, templatefile, campos, box, html_filename, invcanvas=False):
         self.template = templatefile
         self.campos = campos
         self.box = box
         self.html_filename = html_filename
+        self.invcanvas = invcanvas
     
     def write(self):
         # load and modify
@@ -35,6 +36,7 @@ class SimpleWriter(object):
                 lines[i] = '        campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
                 box = self.box
                 lines[i+1] = '        box_x1 = %s, box_x2 = %s, box_y1 = %s, box_y2 = %s, box_z1 = %s, box_z2 = %s; // line written by SimpleWriter' % (str(box.x1), str(box.x2), str(box.y1), str(box.y2), str(box.z1), str(box.z2))
+                lines[i+2] = '        invert_canvas = %s; // line written by SimpleWriter' % 'true' if self.invcanvas else 'false'
         self.text = '\n'.join(lines)
         
         # write to disk
@@ -79,7 +81,7 @@ class DjangoWriter(object):
         finally:
             f.close()
 
-def _write_html(instrument, html_filepath, first=None, last=None):
+def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=False):
     ''' writes instrument definition to html/js '''
     box = instrument.get_boundingbox(first, last)
     box_total = instrument.get_boundingbox()
@@ -95,41 +97,41 @@ def _write_html(instrument, html_filepath, first=None, last=None):
     
     # render html
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
-    writer = SimpleWriter(templatefile, campos, box_total, html_filepath)
+    writer = SimpleWriter(templatefile, campos, box_total, html_filepath, invcanvas)
     writer.write()
 
-def write_browse(instrument, raybundle, dir, nobrowse=False):
+def write_browse(instrument, raybundle, dirname):
     ''' writes instrument definitions to html/ js '''
     # write mcdisplay.js
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, '_mcdisplay.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, '_mcdisplay.js'))
 
     # write other necessary .js files
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'three.min.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'three.min.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'three.min.js'))
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'dat.gui.min.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'dat.gui.min.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'dat.gui.min.js'))
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'OrbitControls.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'OrbitControls.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'OrbitControls.js'))
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'Lut.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'Lut.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'Lut.js'))
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'jquery.min.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dir, 'jquery.min.js'))
+    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'jquery.min.js'))
     
     # write html
-    html_filepath = os.path.join(dir, 'index.html')
-    _write_html(instrument, html_filepath, first=args.first, last=args.last)
+    html_filepath = os.path.join(dirname, 'index.html')
+    _write_html(instrument, html_filepath, first=args.first, last=args.last, invcanvas=args.invcanvas)
     
     # write instrument
     json_instr = 'MCDATA_instrdata = %s;' % json.dumps(instrument.jsonize(), indent=0)
-    file_save(json_instr, os.path.join(dir, '_instr.js'))
+    file_save(json_instr, os.path.join(dirname, '_instr.js'))
     
     # write particles
     json_neutr = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
-    file_save(json_neutr, os.path.join(dir, '_particles.js'))
+    file_save(json_neutr, os.path.join(dirname, '_particles.js'))
     
     # exit if nobrowse flag has been set
-    if nobrowse:
+    if args.nobrowse:
         return
     
     # open a web-browser in a cross-platform way
@@ -163,7 +165,7 @@ def main(args):
     raybundle = reader.read_particles()
     
     # write output files
-    write_browse(instrument, raybundle, dirname, args.nobrowse)
+    write_browse(instrument, raybundle, dirname)
     
     if debug:
         # this should enable template.html to load directly
@@ -175,6 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
+    parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
     parser.add_argument('--dirname', help='name of the output directory requested to mcrun')
     parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
