@@ -159,7 +159,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 /* Focusing for this use of the source is a little unphysical: 1x1cm @ 1m ~ 1e-4 steradian. To be useful in a "proper" instrument, you should of course illuminate your beamport fully!*/
 COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,c_performance=c_performance,t_performance=t_performance,dist=dist,target_index=index,cold_frac=cold, yheight=Yheight,
-				   focus_xw=0.01, focus_yh=0.01)
+				   focus_xw=0.12, focus_yh=0.12)
   WHEN (0==1) AT (DeltaX,0,DeltaZ) ABSOLUTE
   ROTATED (0, ANGLE, 0) ABSOLUTE
 
