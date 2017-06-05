@@ -1,4 +1,4 @@
-\documentclass[twoside,notitlepage,11pt,enabledeprecatedfontcommands]{scrreprt}
+\documentclass[twoside,11pt]{scrreprt}
 
 \input{preamble_comp.tex}
 
@@ -36,15 +36,12 @@
 \include{kernelcalls} % A as in manual
 \include{terms}       % B as in manual
 
-%\printbibheading
-\printbibliography
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Bibliography}}
-%\bibliography{mcxtrace}
-%\bibliographystyle{jacs}
+\sloppy
+\printbibliography%
 
-\printindex
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
-%\include{datablad_comp}
-
+\small
+\printindex%
 
 \end{document}
