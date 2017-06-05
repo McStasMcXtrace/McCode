@@ -20,10 +20,12 @@
 	<script>
         var campos_x = -26.3, campos_y = 26.3, campos_z = 26.3;
         var box_x1 = 0, box_x2 = 3, box_y1 = -0.3, box_y2 = 0.3, box_z1 = 49, box_z2 = 53;
+        var invert_canvas = false;
         // INSERT_CAMPOS_HERE
         // INSERT_BOX_HERE
+        // INSERT_INVERT_CANVAS_HERE
         var box_lst = [box_x1, box_x2, box_y1, box_y2, box_z1, box_z2];
-        var controller = new Controller(campos_x, campos_y, campos_z, box_lst);
+        var controller = new Controller(campos_x, campos_y, campos_z, box_lst, invert_canvas);
         var viewmodel = controller.viewmodel;
 
 		// UI event handlers interacting only(!!) with the viewmodel.
