@@ -74,7 +74,7 @@ if(WINDOWS)
 
 else()
   install(
-      FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
+    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
 endif()
