@@ -138,39 +138,29 @@
 *                Use only incoherent scattering if NULL or "" [string]
 *
 * Optional parameters:
-* d_phi:    Angle corresponding to the vertical angular range
-*             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
-* d_theta:  Longitudinal angle to focus to, i.e. lateral opening angle.
-*             This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0  
-* pack:     Packing factor [1]
-* Delta_d:  Global relative Delta_d/d spreading when the 'w' column
-*             is not available. Use 0 if ideal. [Angs]
-* format:   Name of the format, or list of column indexes
-*             (see Description). [no quotes]
-* p_inc:    Fraction of incoherently scattered xrays [1]
-* p_transmit: Fraction of transmitted (only attenuated) xrays [1]
-* p_interact: Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc [1]
-* concentric: Indicate that this component has a hollow geometry
-*               and may contain other components. It should then be duplicated
-*               after the inside part (only for box, cylinder, sphere) [1]
-* geometry:   Name of an Object File Format (OFF) or PLY file for complex geometry.
-*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
-* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2
-*             (barns=1 for laz, barns=0 for lau type files).[1]
-* Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
-* DW:       Global Debye-Waller factor when the 'DW' column
-*             is not available. Use 1 if included in F2 [1]
-* weight:   Atomic/molecular weight of material [g/mol]
-* density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
-* nb_atoms: Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell [1]
+* d_phi:   [deg]    Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* d_theta: [deg]    Longitudinal angle to focus to, i.e. lateral opening angle. This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0
+* focus_flip: [1]   Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
+* pack:    [1]      Packing factor
+* Delta_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
+* format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
+* p_inc:   [1]      Fraction of incoherently scattered rays.
+* p_transmit: [1]   Fraction of transmitted (only attenuated) rays.
+* p_interact: [1]   Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc.
+* concentric: [1]   Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere).
+* geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
+* barns:   [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
+* Vc:      [AA^3]   Volume of unit cell=nb atoms per cell/density of atoms.
+* DW:      [1]      Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
+* weight:  [g/mol]  Atomic/molecular weight of material [g/mol]
+* density: [g/cm^3] Density of material. rho=density/weight/1e24*N_A.
+* nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
 *
 * OUTPUT PARAMETERS:
-* line_info:      internal structure containing many members/info [struct]
-* line_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
-* line_info.dq:   wavevector transfer of last coherent scattering event [Angs-1]
+* line_info: [struct]     Internal structure containing many members/info [struct]
+* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
+* line_info.dq: [Angs^-1] Wavevector transfer of last coherent scattering event.
 *
-* %L
-* "Validation of a realistic powder sample using data from DMC at PSI" Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.
 * %L
 * See also: Single_crystal
 * %L
