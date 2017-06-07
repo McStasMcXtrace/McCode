@@ -145,6 +145,7 @@
 *
 * Optional parameters:
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing 
+* focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
 * pack: [1]            Packing factor 
 * delta_d_d: [0/1]     Global relative delta_d_d/d broadening when the 'w' column is not available. Use 0 if ideal. 
 * Strain: [ppm]        Global relative delta_d_d/d shift when the 'Strain' column is not available. Use 0 if ideal. 
