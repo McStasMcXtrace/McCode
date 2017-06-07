@@ -1,0 +1,1634 @@
+/**********************************************************************************************************************************
+*
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Polycrystal
+*
+* %I
+* Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
+*
+* Based on code by: Erik Knudsen, Kenichi Oikawa, and Alberto Cereser
+* Date: January 2015
+* Origin: University of Copenhagen
+* Release: McXtrace 1.0
+*
+* Polycrystal made from single crystal-like voxels
+*
+* %D
+* The component creates a threedimensional grid of cubic instances of the Single_crystal-component,through
+* which the rays are propagated. The component relies on a list of possible orientations and stretches of the
+* initial unit cell and a list correlating each voxel of the polycrystal to an entry in the list of rotations
+* and stretches.
+*
+* %P
+* MapFile:                   []     File describing, which orientation is found in which voxel
+* OrientationsFile;          []     File describing the different orientations
+* ReflectionsDatafile:       []     File describing the reflections in the relevant lattice (usually in .lau-format)
+* MaterialDatafile:          []     File describing the scattering and absorbtion properties of the material
+* xwidth:                    [m]    Width of the sample
+* yheight:                   [m]    Height of the sample
+* zdepth:                    [m]    Depth of the sample
+* ax:                        [AA]   x-coordinate of the first internal unit cell vector in the sample
+* ay:                        [AA]   y-coordinate of the first internal unit cell vector in the sample
+* az:                        [AA]   z-coordinate of the first internal unit cell vector in the sample
+* bx:                        [AA]   x-coordinate of the second internal unit cell vector in the sample
+* by:                        [AA]   y-coordinate of the second internal unit cell vector in the sample
+* bz:                        [AA]   z-coordinate of the second internal unit cell vector in the sample
+* cx:                        [AA]   x-coordinate of the third internal unit cell vector in the sample
+* cy:                        [AA]   y-coordinate of the third internal unit cell vector in the sample
+* cz:                        [AA]   z-coordinate of the third internal unit cell vector in the sample
+* Mosaicity:                 [moa]  Gaussian mosaicity
+* MosaicityA:                [moa]  Anisotropic mosaicity around the first unit cell vector
+* MosaicityB:                [moa]  Anisotropic mosaicity around the second unit cell vector
+* MosaicityC:                [moa]  Anisotropic mosaicity around the third unit cell vector
+* DeltadOverd:               []     Statistical description of the lattice spacing
+* ProbabilityOfTransmission: []     Probability that a ray will not interact with the sample
+* SigmaAbsorbtion:           [fm^2] Absorbtion crosssection of the sample
+* SigmaIncoherent:           [fm^2] Incoherent crosssection of the sample
+* MaxNumberOfReflections:    []     Highest number of allowed scattering events in the entire crystal - to prevent computationally
+*                                   expensive high-order multiple scattering. If this parameter is set to 0, all possible orders
+*                                   of scattering are considered.
+* Reciprocal:                []     If this parameter is set to 0, then the lattice vectors should be given in real space.
+*                                   Anything else implies that the vectors are given in reciprocal space.
+*
+* %E
+***********************************************************************************************************************************/
+
+DEFINE COMPONENT Polycrystal
+
+DEFINITION PARAMETERS()
+
+SETTING PARAMETERS(string MapFile,
+                   string OrientationsFile,
+                   string ReflectionsDatafile = "Si.lau",
+                   string MaterialDatafile    = "Si.txt",
+
+                   xwidth  = 0.0,
+                   yheight = 0.0,
+                   zdepth  = 0.0,
+
+                   ax = 5.43, ay = 0.00, az = 0.00,
+                   bx = 0.00, by = 5.43, bz = 0.00,
+                   cx = 0.00, cy = 0.00, cz = 5.43,
+
+                   Mosaicity  = 3.0,
+                   MosaicityA = 0.0,
+                   MosaicityB = 0.0,
+                   MosaicityC = 0.0,
+
+                   DeltadOverd               = 0.01,
+                   ProbabilityOfTransmission = 0.01,
+                   SigmaAbsorbtion           = 0.0,
+                   SigmaIncoherent           = 0.0,
+                   MaxNumberOfReflections    = 1
+                   Reciprocal                = 0)
+
+OUTPUT PARAMETERS()
+
+DECLARE
+%{
+    // External libraries
+    %include "read_table-lib"
+
+    // Structs for hkl-data
+    struct hklDataStruct {
+        // Miller indices
+        int h;
+        int k;
+        int l;
+
+        // Structure factor
+        double F2;
+
+        // Coordinates in reciprocal space
+        double Tau[3];
+        double TauLength;
+
+        // Local coordinate system
+        double u1[3];
+        double u2[3];
+        double u3[3];
+
+        // Gaussians
+        double Sigma[3];
+        double TotalSigma;
+
+        double m[3];
+        double GaussianCutoff;
+    };
+
+    struct TauDataStruct {
+        // Scattering properties
+        double Reflectivity;
+        double Crosssection;
+
+        // Index in reflection table
+        int Index;
+
+        //The following vectors are in local koordinates
+        //Initial wave vector
+        double ki[3];
+
+        // Rho = ki - tau
+        double Rho[3];
+        double RhoLength;
+
+        // Origin of the Ewald sphere tangent plane
+        double Origin[3];
+
+        // Normal vector of the Ewald sphere tanget plane
+        double NormalVector[3];
+
+        // Vectors spanning the Ewald sphere tangent plane
+        double b1[3];
+        double b2[3];
+
+        // Cholesky decomposition of the matrix L
+        double L11;
+        double L12;
+        double L22;
+
+        double DeterminantL;
+
+        // Center of Gaussian on tangent plane
+        double GaussCenterx;
+        double GaussCentery;
+    };
+
+    struct hklStruct {
+        // List of reflections
+        struct hklDataStruct *hklData;
+
+        // List of reflections close to the Ewald sphere
+        struct TauDataStruct *TauData;
+        int NumberOfReflections;
+
+        // Format of columns in list: [h, k, l, F, F2]
+        int ColumnOrder[5];
+
+        // Flags used to raise warnings
+        int Reciprocal;
+
+        // Sigma of Delta d / d
+        double DeltadOverd;
+
+        // Coordinates of unit cell vectors
+        double LatticeVectora[3];
+        double LatticeVectorb[3];
+        double LatticeVectorc[3];
+
+        double LatticeVectoraLength;
+        double LatticeVectorbLength;
+        double LatticeVectorcLength;
+
+        double ReciprocalLatticeVectora[3];
+        double ReciprocalLatticeVectorb[3];
+        double ReciprocalLatticeVectorc[3];
+
+        // Lattice parameters and angles
+        double LatticeAngleA;
+        double LatticeAngleB;
+        double LatticeAngleC;
+
+        // Absorbtion crosssection
+        double SigmaAbsorbtion;
+
+        // Incoherent crosssection
+        double SigmaIncoherent;
+
+        // Unit cell volume
+        double VolumeOfUnitCell;
+    };
+
+    // Struct for absorption-data
+    struct AbsorbtionStruct {
+        int muc;
+        t_Table Table;
+    };
+
+    // I/O Function for hkl-data
+    int ReadReflectionData(char *ReflectionsDatafile, struct hklStruct *hklInfo, double Mosaicity, double MosaicityA, double MosaicityB, double MosaicityC, double *MosaicityAB) {
+
+        // Declarations
+        int i;
+        int NumberOfRows;
+        int PrintOrientations = 0;
+
+        // Structs for storing read-in info
+        struct hklDataStruct *hklData;
+
+        t_Table sTable;
+
+        // Temporary variables
+        double Temp[3];
+
+        char **Parsing;
+        int FlagMissingFile = 0;
+        int NumberOfAtoms = 1;
+
+        // hkl-info
+        double asLength;
+        double bsLength;
+        double csLength;
+
+        double b1[3];
+        double b2[3];
+
+        // Mosaicity
+        double ConvertedMosaicityA;
+        double ConvertedMosaicityB;
+        double ConvertedMosaicityC;
+
+        // Vectors used to calculate anisotropic mosaicity
+        double XiA[3];
+        double XiALength;
+
+        double XiB[3];
+        double XiBLength;
+
+        double XiC[3];
+        double XiCLength;
+
+        double Jacobiann[3];
+        double Jacobianv[3];
+
+        // Variables used to calculate in-plane anisotropic mosaicity
+        double c1;
+        double c2;
+        double Determinant;
+        double SigmaTauC;
+
+        double em[3];
+        double TauA[3];
+        double TauB[3];
+
+        // Read file
+        if (!ReflectionsDatafile || !strlen(ReflectionsDatafile) || !strcmp(ReflectionsDatafile, "NULL") || !strcmp(ReflectionsDatafile, "0")) {
+            hklInfo->NumberOfReflections = 0;
+            FlagMissingFile = 1;
+        }
+
+        if (!FlagMissingFile) {
+            Table_Read(&sTable, ReflectionsDatafile, 1);
+
+            if (sTable.columns < 4) {
+                fprintf(stderr, "%s: Error: The number of columns in %s should be at least %d for [h, k, l, F2]\n", NAME_CURRENT_COMP, ReflectionsDatafile, 4);
+                return(0);
+            }
+
+            if (!sTable.rows) {
+                fprintf(stderr, "%s: Error: The number of rows in %s should be at least %d\n", NAME_CURRENT_COMP, ReflectionsDatafile, 1);
+                return(0);
+            } else {
+                NumberOfRows = sTable.rows;
+            }
+
+            // Parsing of header
+            Parsing = Table_ParseHeader(sTable.header,
+                    "sigma_abs",
+                    "sigma_a",
+                    "sigma_inc",
+                    "sigma_i",
+                    "column_h",
+                    "column_k",
+                    "column_l",
+                    "column_F",
+                    "column_F2",
+                    "Detla_d/d",
+                    "lattice_a",
+                    "lattice_b",
+                    "lattice_c",
+                    "lattice_aa",
+                    "lattice_bb",
+                    "lattice_cc",
+                    "nb_atoms",
+                    "multiplicity",
+                    NULL);
+
+            if (Parsing) {
+
+                if (Parsing[0] && !hklInfo->SigmaAbsorbtion)       hklInfo->SigmaAbsorbtion      = atof(Parsing[0]);
+                if (Parsing[1] && !hklInfo->SigmaAbsorbtion)       hklInfo->SigmaAbsorbtion      = atof(Parsing[1]);
+                if (Parsing[2] && !hklInfo->SigmaIncoherent)       hklInfo->SigmaIncoherent      = atof(Parsing[2]);
+                if (Parsing[3] && !hklInfo->SigmaIncoherent)       hklInfo->SigmaIncoherent      = atof(Parsing[3]);
+                if (Parsing[4])                   	    	       hklInfo->ColumnOrder[0]       = atoi(Parsing[4]);
+                if (Parsing[5])                   	    	       hklInfo->ColumnOrder[1]       = atoi(Parsing[5]);
+                if (Parsing[6])                   	    	       hklInfo->ColumnOrder[2]       = atoi(Parsing[6]);
+                if (Parsing[7])                   	    	       hklInfo->ColumnOrder[3]       = atoi(Parsing[7]);
+                if (Parsing[8])                   	    	       hklInfo->ColumnOrder[4]       = atoi(Parsing[8]);
+                if (Parsing[9] && hklInfo->DeltadOverd < 0)        hklInfo->DeltadOverd          = atof(Parsing[9]);
+                if (Parsing[10] && !hklInfo->LatticeVectoraLength) hklInfo->LatticeVectoraLength = atof(Parsing[10]);
+                if (Parsing[11] && !hklInfo->LatticeVectorbLength) hklInfo->LatticeVectorbLength = atof(Parsing[11]);
+                if (Parsing[12] && !hklInfo->LatticeVectorcLength) hklInfo->LatticeVectorcLength = atof(Parsing[12]);
+                if (Parsing[13] && !hklInfo->LatticeAngleA)        hklInfo->LatticeAngleA        = atof(Parsing[13]);
+                if (Parsing[14] && !hklInfo->LatticeAngleB)        hklInfo->LatticeAngleB        = atof(Parsing[14]);
+                if (Parsing[15] && !hklInfo->LatticeAngleC)        hklInfo->LatticeAngleC        = atof(Parsing[15]);
+                if (Parsing[16]) 					    	       NumberOfAtoms                 = atof(Parsing[16]);
+                if (Parsing[17]) 					               NumberOfAtoms                 = atof(Parsing[17]);
+
+                for (i = 0; i < 18; ++i) {
+
+                    if (Parsing[i]) {
+                        free(Parsing[i]);
+                    }
+                }
+
+                free(Parsing);
+            }
+        }
+
+        // Assign variables
+        if (NumberOfAtoms > 1) {
+            hklInfo->SigmaAbsorbtion *= NumberOfAtoms;
+            hklInfo->SigmaIncoherent *= NumberOfAtoms;
+        }
+
+        // Special cases for the structure definition
+        if (hklInfo->LatticeVectora[0] || hklInfo->LatticeVectora[1] || hklInfo->LatticeVectora[2]) {
+            hklInfo->LatticeVectoraLength = 0;
+        }
+
+        if (hklInfo->LatticeVectorb[0] || hklInfo->LatticeVectorb[1] || hklInfo->LatticeVectorb[2]) {
+            hklInfo->LatticeVectorbLength = 0;
+        }
+
+        if (hklInfo->LatticeVectorc[0] || hklInfo->LatticeVectorc[1] || hklInfo->LatticeVectorc[2]) {
+            hklInfo->LatticeVectorcLength = 0;
+        }
+
+        // Compute the norm from vector a if missing
+        if (hklInfo->LatticeVectora[0] || hklInfo->LatticeVectora[1] || hklInfo->LatticeVectora[2]) {
+            asLength = sqrt(hklInfo->LatticeVectora[0] * hklInfo->LatticeVectora[0] + hklInfo->LatticeVectora[1] * hklInfo->LatticeVectora[1] + hklInfo->LatticeVectora[2] * hklInfo->LatticeVectora[2]);
+
+            if (!hklInfo->LatticeVectorb[0] && !hklInfo->LatticeVectorb[1] && !hklInfo->LatticeVectorb[2]) {
+                hklInfo->LatticeVectoraLength = hklInfo->LatticeVectorbLength = asLength;
+            }
+
+            if (!hklInfo->LatticeVectorc[0] && !hklInfo->LatticeVectorc[1] && !hklInfo->LatticeVectorc[2]) {
+                hklInfo->LatticeVectoraLength = hklInfo->LatticeVectorcLength = asLength;
+            }
+        }
+
+        if (hklInfo->LatticeVectoraLength && !hklInfo->LatticeVectorbLength) {
+            hklInfo->LatticeVectorbLength = hklInfo->LatticeVectoraLength;
+        }
+
+        if (hklInfo->LatticeVectorbLength && !hklInfo->LatticeVectorcLength) {
+            hklInfo->LatticeVectorcLength = hklInfo->LatticeVectorbLength;
+        }
+
+        // Compute the lattive angles if not set from data file. Not used when in vector mode
+        if (hklInfo->LatticeVectoraLength && !hklInfo->LatticeAngleA) {
+            hklInfo->LatticeAngleA = 90;
+        }
+
+        if (hklInfo->LatticeAngleA && !hklInfo->LatticeAngleB) {
+            hklInfo->LatticeAngleB = hklInfo->LatticeAngleA;
+        }
+
+        if (hklInfo->LatticeAngleB && !hklInfo->LatticeAngleC) {
+            hklInfo->LatticeAngleC = hklInfo->LatticeAngleB;
+        }
+
+        // Parameters consistency checks
+        if (!hklInfo->LatticeVectora[0] && !hklInfo->LatticeVectora[1] && !hklInfo->LatticeVectora[2] && !hklInfo->LatticeVectoraLength) {
+            fprintf(stderr, "%s: Error: Wrong a lattice vector definition.\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        if (!hklInfo->LatticeVectorb[0] && !hklInfo->LatticeVectorb[1] && !hklInfo->LatticeVectorb[2] && !hklInfo->LatticeVectorbLength) {
+            fprintf(stderr, "%s: Error: Wrong b lattice vector definition.\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        if (!hklInfo->LatticeVectorc[0] && !hklInfo->LatticeVectorc[1] && !hklInfo->LatticeVectorc[2] && !hklInfo->LatticeVectorcLength) {
+            fprintf(stderr, "%s: Error: Wrong c lattice vector definition.\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Reciprocal) {
+            fprintf(stderr, "%s: Error: Selecting reciprocal cell and angles is unmeaningful.\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        // When lengths a, b, c and angles are given (instead of vectors a, b, c)
+        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC) {
+
+            if (hklInfo->LatticeVectoraLength) {
+                asLength = hklInfo->LatticeVectoraLength;
+            } else {
+                asLength = sqrt(pow(hklInfo->LatticeVectora[0], 2) +
+                        pow(hklInfo->LatticeVectora[1], 2) +
+                        pow(hklInfo->LatticeVectora[2], 2));
+            }
+
+            if (hklInfo->LatticeVectorbLength) {
+                bsLength = hklInfo->LatticeVectorbLength;
+            } else {
+                bsLength = sqrt(pow(hklInfo->LatticeVectorb[0], 2) +
+                        pow(hklInfo->LatticeVectorb[1], 2) +
+                        pow(hklInfo->LatticeVectorb[2], 2));
+            }
+
+            if (hklInfo->LatticeVectorcLength) {
+                csLength = hklInfo->LatticeVectorcLength;
+            } else {
+                csLength = sqrt(pow(hklInfo->LatticeVectorc[0], 2) +
+                        pow(hklInfo->LatticeVectorc[1], 2) +
+                        pow(hklInfo->LatticeVectorc[2], 2));
+            }
+
+            hklInfo->LatticeVectorb[2] = asLength;
+            hklInfo->LatticeVectorb[1] = 0.0;
+            hklInfo->LatticeVectorb[0] = 0.0;
+
+            hklInfo->LatticeVectora[2] = bsLength * cos(hklInfo->LatticeAngleC * DEG2RAD);
+            hklInfo->LatticeVectora[1] = bsLength * sin(hklInfo->LatticeAngleC * DEG2RAD);
+            hklInfo->LatticeVectora[0] = 0.0;
+
+            hklInfo->LatticeVectorc[2] = csLength * cos(hklInfo->LatticeAngleB * DEG2RAD);
+            hklInfo->LatticeVectorc[1] = csLength * (cos(hklInfo->LatticeAngleA * DEG2RAD) - cos(hklInfo->LatticeAngleC * DEG2RAD) * cos(hklInfo->LatticeAngleB * DEG2RAD)) / sin(hklInfo->LatticeAngleC * DEG2RAD);
+            hklInfo->LatticeVectorc[0] = sqrt(pow(csLength, 2) -
+                    pow(hklInfo->LatticeVectorc[2], 2) -
+                    pow(hklInfo->LatticeVectorc[1], 2));
+
+            if (PrintOrientations) {
+                fprintf(stderr, "%s: \nStructure: \na = %g b = %g c = %g \naa = %g bb = %g cc = %g \n", NAME_CURRENT_COMP, asLength, bsLength, csLength, hklInfo->LatticeAngleA, hklInfo->LatticeAngleB, hklInfo->LatticeAngleC);
+            }
+        } else {
+
+            if (!hklInfo->Reciprocal) {
+
+                if (PrintOrientations) {
+                    fprintf(stderr, "%s: \nStructure; \na = [%g, %g, %g] \nb = [%g, %g, %g] \nc = [%g, %g, %g] \n", NAME_CURRENT_COMP, hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
+                }
+
+            } else {
+
+                if (PrintOrientations) {
+                    fprintf(stderr, "%s: \nStructure: \na* = [%g, %g, %g] \nb* = [%g, %g, %g] \nc* = [%g, %g, %g] \n", NAME_CURRENT_COMP, hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
+                }
+            }
+        }
+
+        // Compute reciprocal or direct lattice vectors
+        if (!hklInfo->Reciprocal) {
+            vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->LatticeVectorb[0], hklInfo->LatticeVectorb[1], hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0], hklInfo->LatticeVectorc[1], hklInfo->LatticeVectorc[2]);
+            hklInfo->VolumeOfUnitCell = fabs(scalar_prod(hklInfo->LatticeVectora[0], hklInfo->LatticeVectora[1], hklInfo->LatticeVectora[2], Temp[0], Temp[1], Temp[2]));
+
+            hklInfo->ReciprocalLatticeVectora[0] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[0];
+            hklInfo->ReciprocalLatticeVectora[1] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[1];
+            hklInfo->ReciprocalLatticeVectora[2] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[2];
+
+            vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->LatticeVectorc[0], hklInfo->LatticeVectorc[1], hklInfo->LatticeVectorc[2], hklInfo->LatticeVectora[0], hklInfo->LatticeVectora[1], hklInfo->LatticeVectora[2]);
+
+            hklInfo->ReciprocalLatticeVectorb[0] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[0];
+            hklInfo->ReciprocalLatticeVectorb[1] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[1];
+            hklInfo->ReciprocalLatticeVectorb[2] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[2];
+
+            vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->LatticeVectora[0], hklInfo->LatticeVectora[1], hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0], hklInfo->LatticeVectorb[1], hklInfo->LatticeVectorb[2]);
+
+            hklInfo->ReciprocalLatticeVectorc[0] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[0];
+            hklInfo->ReciprocalLatticeVectorc[1] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[1];
+            hklInfo->ReciprocalLatticeVectorc[2] = 2.0 * M_PI / hklInfo->VolumeOfUnitCell * Temp[2];
+
+        } else {
+            hklInfo->ReciprocalLatticeVectora[0] = hklInfo->LatticeVectora[0];
+            hklInfo->ReciprocalLatticeVectora[1] = hklInfo->LatticeVectora[1];
+            hklInfo->ReciprocalLatticeVectora[2] = hklInfo->LatticeVectora[2];
+
+            hklInfo->ReciprocalLatticeVectorb[0] = hklInfo->LatticeVectorb[0];
+            hklInfo->ReciprocalLatticeVectorb[1] = hklInfo->LatticeVectorb[1];
+            hklInfo->ReciprocalLatticeVectorb[2] = hklInfo->LatticeVectorb[2];
+
+            hklInfo->ReciprocalLatticeVectorc[0] = hklInfo->LatticeVectorc[0];
+            hklInfo->ReciprocalLatticeVectorc[1] = hklInfo->LatticeVectorc[1];
+            hklInfo->ReciprocalLatticeVectorc[2] = hklInfo->LatticeVectorc[2];
+
+            // Compute the direct cell parameters for completeness
+            vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->ReciprocalLatticeVectorb[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorb[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorb[2] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorc[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorc[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorc[2] / (2 * M_PI));
+            hklInfo->VolumeOfUnitCell = 1.0 / fabs(scalar_prod(hklInfo->ReciprocalLatticeVectora[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[2] / (2.0 * M_PI), Temp[0], Temp[1], Temp[2]));
+
+            hklInfo->LatticeVectora[0] = Temp[0] * hklInfo->VolumeOfUnitCell;
+            hklInfo->LatticeVectora[1] = Temp[1] * hklInfo->VolumeOfUnitCell;
+            hklInfo->LatticeVectora[2] = Temp[2] * hklInfo->VolumeOfUnitCell;
+
+            vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->ReciprocalLatticeVectorc[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorc[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorc[2] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[2] / (2 * M_PI));
+
+            hklInfo->LatticeVectorb[0] = Temp[0] * hklInfo->VolumeOfUnitCell;
+            hklInfo->LatticeVectorb[1] = Temp[1] * hklInfo->VolumeOfUnitCell;
+            hklInfo->LatticeVectorb[2] = Temp[2] * hklInfo->VolumeOfUnitCell;
+
+            vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->ReciprocalLatticeVectora[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectora[2] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorb[0] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorb[1] / (2.0 * M_PI), hklInfo->ReciprocalLatticeVectorb[2] / (2 * M_PI));
+
+            hklInfo->LatticeVectorc[0] = Temp[0] * hklInfo->VolumeOfUnitCell;
+            hklInfo->LatticeVectorc[1] = Temp[1] * hklInfo->VolumeOfUnitCell;
+            hklInfo->LatticeVectorc[2] = Temp[2] * hklInfo->VolumeOfUnitCell;
+        }
+
+        if (FlagMissingFile) {
+            return(-1);
+        }
+
+        if (!hklInfo->ColumnOrder[0] || !hklInfo->ColumnOrder[1] || !hklInfo->ColumnOrder[2]) {
+            fprintf(stderr, "%s: Error: Wrong h, k, l column definition\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        if (!hklInfo->ColumnOrder[3] && !hklInfo->ColumnOrder[4]) {
+            fprintf(stderr, "%s: Error: Wrong F, F2 column definition\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        // Allocate hklDataStruct array
+        hklData = (struct hklDataStruct*) malloc(NumberOfRows * sizeof(struct hklDataStruct));
+
+        for (i = 0; i < NumberOfRows; i++) {
+            // Get data from table
+            /*hklData[i].h = Table_Index(sTable, i, hklInfo->ColumnOrder[0] - 1);*/
+            hklData[i].h = Table_Index(sTable, i, 0);
+
+            /*hklData[i].k = Table_Index(sTable, i, hklInfo->ColumnOrder[1] - 1);*/
+            hklData[i].k = Table_Index(sTable, i, 1);
+
+            /*hklData[i].l = Table_Index(sTable, i, hklInfo->ColumnOrder[2] - 1);*/
+            hklData[i].l = Table_Index(sTable, i, 2);
+
+            /*if (hklInfo->ColumnOrder[3]) {
+              hklData[i].F2 = pow(Table_Index(sTable, i, hklInfo->ColumnOrder[3] - 1), 2);
+
+              } else if (hklInfo->ColumnOrder[4]) {
+              hklData[i].F2 = Table_Index(sTable, i, hklInfo->ColumnOrder[4] - 1);
+
+              }*/
+
+            hklData[i].F2 = Table_Index(sTable, i, 6);
+
+            // Precompute some values
+            hklData[i].Tau[0] = hklData[i].h * hklInfo->ReciprocalLatticeVectora[0] +
+                hklData[i].k * hklInfo->ReciprocalLatticeVectorb[0] +
+                hklData[i].l * hklInfo->ReciprocalLatticeVectorc[0];
+
+            hklData[i].Tau[1] = hklData[i].h * hklInfo->ReciprocalLatticeVectora[1] +
+                hklData[i].k * hklInfo->ReciprocalLatticeVectorb[1] +
+                hklData[i].l * hklInfo->ReciprocalLatticeVectorc[1];
+
+            hklData[i].Tau[2] = hklData[i].h * hklInfo->ReciprocalLatticeVectora[2] +
+                hklData[i].k * hklInfo->ReciprocalLatticeVectorb[2] +
+                hklData[i].l * hklInfo->ReciprocalLatticeVectorc[2];
+
+            hklData[i].TauLength = sqrt(pow(hklData[i].Tau[0], 2) +
+                    pow(hklData[i].Tau[1], 2) +
+                    pow(hklData[i].Tau[2], 2));
+
+            hklData[i].u1[0] = hklData[i].Tau[0] / hklData[i].TauLength;
+            hklData[i].u1[1] = hklData[i].Tau[1] / hklData[i].TauLength;
+            hklData[i].u1[2] = hklData[i].Tau[2] / hklData[i].TauLength;
+
+            hklData[i].Sigma[0] = FWHM2RMS * hklInfo->DeltadOverd * hklData[i].TauLength;
+
+            // Find two arbitrary axes perpendicular to tau and each other
+            normal_vec(b1[0], b1[1], b1[2], hklData[i].u1[0], hklData[i].u1[1], hklData[i].u1[2]);
+            vec_prod(b2[0], b2[1], b2[2], hklData[i].u1[0], hklData[i].u1[1], hklData[i].u1[2], b1[0], b1[1], b1[2]);
+
+            // Find the two mosaic axes perpendicular to tau
+            if (Mosaicity > 0) {
+                // Use isotropic mosaic
+                hklData[i].u2[0] = b1[0];
+                hklData[i].u2[1] = b1[1];
+                hklData[i].u2[2] = b1[2];
+
+                hklData[i].Sigma[1] = FWHM2RMS * hklData[i].TauLength * MIN2RAD * Mosaicity;
+
+                hklData[i].u3[0] = b2[0];
+                hklData[i].u3[1] = b2[1];
+                hklData[i].u3[2] = b2[2];
+
+                hklData[i].Sigma[2] = FWHM2RMS * hklData[i].TauLength * MIN2RAD * Mosaicity;
+
+            } else if (MosaicityA > 0 && MosaicityB > 0 && MosaicityC > 0) {
+                // Use anisotropic mosaic
+                fprintf(stderr, "%s: Warning: You are using an experimental feature: anistropic mosaicity. Please examine your data carefully.\n", NAME_CURRENT_COMP);
+
+                // Compute the jacobian of (tau_v, tau_n) from rotations around the unit cell vectors
+                struct hklDataStruct *CurrenthklData = &(hklData[i]);
+
+                // Input parameters are in arc minutes
+                ConvertedMosaicityA = MosaicityA * MIN2RAD;
+                ConvertedMosaicityB = MosaicityB * MIN2RAD;
+                ConvertedMosaicityC = MosaicityC * MIN2RAD;
+
+                if(hklInfo->LatticeVectoraLength == 0) {
+                    hklInfo->LatticeVectoraLength = sqrt(pow(hklInfo->LatticeVectora[0], 2) +
+                            pow(hklInfo->LatticeVectora[1], 2) +
+                            pow(hklInfo->LatticeVectora[2], 2));
+                }
+
+                if(hklInfo->LatticeVectorbLength == 0) {
+                    hklInfo->LatticeVectorbLength = sqrt(pow(hklInfo->LatticeVectorb[0], 2) +
+                            pow(hklInfo->LatticeVectorb[1], 2) +
+                            pow(hklInfo->LatticeVectorb[2], 2));
+                }
+
+                if(hklInfo->LatticeVectorcLength == 0) {
+                    hklInfo->LatticeVectorcLength = sqrt(pow(hklInfo->LatticeVectorc[0], 2) +
+                            pow(hklInfo->LatticeVectorc[1], 2) +
+                            pow(hklInfo->LatticeVectorc[2], 2));
+                }
+
+                CurrenthklData->u2[0] = b1[0];
+                CurrenthklData->u2[1] = b1[1];
+                CurrenthklData->u2[2] = b1[2];
+
+                CurrenthklData->u3[0] = b2[0];
+                CurrenthklData->u3[1] = b2[1];
+                CurrenthklData->u3[2] = b2[2];
+
+                XiA[0] = CurrenthklData->Tau[0] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0];
+                XiA[1] = CurrenthklData->Tau[1] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1];
+                XiA[2] = CurrenthklData->Tau[2] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2];
+
+                XiB[0] = CurrenthklData->Tau[0] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0];
+                XiB[1] = CurrenthklData->Tau[1] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1];
+                XiB[2] = CurrenthklData->Tau[2] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2];
+
+                XiC[0] = CurrenthklData->Tau[0] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0];
+                XiC[1] = CurrenthklData->Tau[1] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1];
+                XiC[2] = CurrenthklData->Tau[2] - (M_2_PI * hklData[i].h / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2];
+
+                XiALength = sqrt(pow(XiA[0], 2) +
+                        pow(XiA[1], 2) +
+                        pow(XiA[2], 2));
+
+                XiBLength = sqrt(pow(XiB[0], 2) +
+                        pow(XiB[1], 2) +
+                        pow(XiB[2], 2));
+
+                XiCLength = sqrt(pow(XiC[0], 2) +
+                        pow(XiC[1], 2) +
+                        pow(XiC[2], 2));
+
+                vec_prod(Temp[0], Temp[1], Temp[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], CurrenthklData->u2[0], CurrenthklData->u2[1], CurrenthklData->u2[2]);
+                Jacobiann[0] = XiALength / hklInfo->LatticeVectoraLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectora[0], hklInfo->ReciprocalLatticeVectora[1], hklInfo->ReciprocalLatticeVectora[2], Temp[0], Temp[1], Temp[2]);
+
+                vec_prod(Temp[0], Temp[1], Temp[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], CurrenthklData->u2[0], CurrenthklData->u2[1], CurrenthklData->u2[2]);
+                Jacobiann[1] = XiBLength / hklInfo->LatticeVectorbLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectorb[0], hklInfo->ReciprocalLatticeVectorb[1], hklInfo->ReciprocalLatticeVectorb[2], Temp[0], Temp[1], Temp[2]);
+
+                vec_prod(Temp[0], Temp[1], Temp[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], CurrenthklData->u2[0], CurrenthklData->u2[1], CurrenthklData->u2[2]);
+                Jacobiann[2] = XiCLength / hklInfo->LatticeVectorcLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectorc[0], hklInfo->ReciprocalLatticeVectorc[1], hklInfo->ReciprocalLatticeVectorc[2], Temp[0], Temp[1], Temp[2]);
+
+                vec_prod(Temp[0], Temp[1], Temp[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], CurrenthklData->u3[0], CurrenthklData->u3[1], CurrenthklData->u3[2]);
+                Jacobianv[0] = XiALength / hklInfo->LatticeVectoraLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectora[0], hklInfo->ReciprocalLatticeVectora[1], hklInfo->ReciprocalLatticeVectora[2], Temp[0], Temp[1], Temp[2]);
+
+                vec_prod(Temp[0], Temp[1], Temp[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], CurrenthklData->u3[0], CurrenthklData->u3[1], CurrenthklData->u3[2]);
+                Jacobianv[1] = XiBLength / hklInfo->LatticeVectorbLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectorb[0], hklInfo->ReciprocalLatticeVectorb[1], hklInfo->ReciprocalLatticeVectorb[2], Temp[0], Temp[1], Temp[2]);
+
+                vec_prod(Temp[0], Temp[1], Temp[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], CurrenthklData->u3[0], CurrenthklData->u3[1], CurrenthklData->u3[2]);
+                Jacobianv[2] = XiCLength / hklInfo->LatticeVectorcLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectorc[0], hklInfo->ReciprocalLatticeVectorc[1], hklInfo->ReciprocalLatticeVectorc[2], Temp[0], Temp[1], Temp[2]);
+
+                // With the jacobian we can compute the sigmas in terms of the orthogonal vectors u2 and u3
+                CurrenthklData->Sigma[1] = ConvertedMosaicityA * fabs(Jacobianv[0]) +
+                    ConvertedMosaicityB * fabs(Jacobianv[1]) +
+                    ConvertedMosaicityC * fabs(Jacobianv[2]);
+
+                CurrenthklData->Sigma[2] = ConvertedMosaicityA * fabs(Jacobiann[0]) +
+                    ConvertedMosaicityB * fabs(Jacobiann[1]) +
+                    ConvertedMosaicityC * fabs(Jacobiann[2]);
+
+            } else if (MosaicityAB[0] != 0 && MosaicityAB[1] != 0) {
+
+                if ((MosaicityAB[2] == 0 && MosaicityAB[3] == 0 && MosaicityAB[4] == 0) || (MosaicityAB[5] == 0 && MosaicityAB[6] == 0 && MosaicityAB[7] == 0)) {
+                    fprintf(stderr,"%s: Error: In-plane mosaics are specified but one (or both) in-plane reciprocal vector is the zero vector.\n", NAME_CURRENT_COMP);
+                    return(0);
+                }
+
+                fprintf(stderr, "%s: Warning: You are using an experimental feature: \"in-plane\" anistropic mosaicity. Please examine your data carefully.\n", NAME_CURRENT_COMP);
+
+                struct hklDataStruct *CurrenthklData = &(hklData[i]);
+
+                // Convert Miller indices to taus
+                if (hklInfo->LatticeVectoraLength == 0) {
+                    hklInfo->LatticeVectoraLength = sqrt(hklInfo->LatticeVectora[0] * hklInfo->LatticeVectora[0] +
+                            hklInfo->LatticeVectora[1] * hklInfo->LatticeVectora[1] +
+                            hklInfo->LatticeVectora[2] * hklInfo->LatticeVectora[2]);
+                }
+
+                if (hklInfo->LatticeVectorbLength == 0) {
+                    hklInfo->LatticeVectorbLength = sqrt(hklInfo->LatticeVectorb[0] * hklInfo->LatticeVectorb[0] +
+                            hklInfo->LatticeVectorb[1] * hklInfo->LatticeVectorb[1] +
+                            hklInfo->LatticeVectorb[2] * hklInfo->LatticeVectorb[2]);
+                }
+
+                if (hklInfo->LatticeVectorcLength == 0) {
+                    hklInfo->LatticeVectorcLength = sqrt(hklInfo->LatticeVectorc[0] * hklInfo->LatticeVectorc[0] +
+                            hklInfo->LatticeVectorc[1] * hklInfo->LatticeVectorc[1] +
+                            hklInfo->LatticeVectorc[2] * hklInfo->LatticeVectorc[2]);
+                }
+
+                TauA[0] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0] +
+                        (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0] +
+                        (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0]);
+
+                TauA[1] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1] +
+                        (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1] +
+                        (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1]);
+
+                TauA[2] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2] +
+                        (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2] +
+                        (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2]);
+
+                TauB[0] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0] +
+                        (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0] +
+                        (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0]);
+
+                TauB[1] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1] +
+                        (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1] +
+                        (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1]);
+
+                TauB[2] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2] +
+                        (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2] +
+                        (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2]);
+
+                // Check determinants to see how we should compute the linear combination of a and b (to match c)
+                if ((Determinant = TauA[0] * TauB[1] - TauA[1] * TauB[0]) != 0){
+                    c1 = (CurrenthklData->Tau[0] * TauB[1] - CurrenthklData->Tau[1] * TauB[0]) / Determinant;
+                    c2 = (TauA[0] * CurrenthklData->Tau[1] - TauA[1] * CurrenthklData->Tau[0]) / Determinant;
+
+                }else if ((Determinant = TauA[1] * TauB[2] - TauA[2] * TauB[1]) != 0){
+                    c1 = (CurrenthklData->Tau[1] * TauB[2] - CurrenthklData->Tau[2] * TauB[1]) / Determinant;
+                    c2 = (TauA[1] * CurrenthklData->Tau[2] - TauA[2] * CurrenthklData->Tau[1]) / Determinant;
+
+                }else if ((Determinant = TauA[0] * TauB[2] - TauA[2] * TauB[0]) != 0){
+                    c1 = (CurrenthklData->Tau[0] * TauB[2] - CurrenthklData->Tau[2] * TauB[0]) / Determinant;
+                    c2 = (TauA[0] * CurrenthklData->Tau[2] - TauA[2] * CurrenthklData->Tau[0]) / Determinant;
+                }
+
+                if ((c1 == 0) && (c2 == 0)) {
+                    fprintf(stderr, "%s: Warning: Reflection tau[i] = (%g, %g, %g) has no component in defined mosaic plane.\n", NAME_CURRENT_COMP, CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2]);
+                }
+
+                // Compute linear combination => sig_tau_i = | c1*sig_tau_a + c2*sig_tau_b |  - also add in the minute to radian scaling factor
+                SigmaTauC = MIN2RAD * sqrt(pow(c1 * MosaicityAB[0], 2) +
+                        pow(c2 * MosaicityAB[1], 2));
+
+                CurrenthklData->u2[0] = b1[0];
+                CurrenthklData->u2[1] = b1[1];
+                CurrenthklData->u2[2] = b1[2];
+
+                CurrenthklData->u3[0] = b2[0];
+                CurrenthklData->u3[1] = b2[1];
+                CurrenthklData->u3[2] = b2[2];
+
+                // So now let's compute the rotation around planenormal TauA X TauB
+                // g_bar (unit normal of rotation plane) = TauA X TauB / norm(TauA X TauB)
+                vec_prod(Temp[0], Temp[1], Temp[2], TauA[0], TauA[1], TauA[2], TauB[0], TauB[1], TauB[2]);
+                vec_prod(em[0], em[1], em[2], CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2], Temp[0], Temp[1], Temp[2]);
+
+                NORM(em[0], em[1], em[2]);
+
+                CurrenthklData->Sigma[1] = CurrenthklData->TauLength * SigmaTauC * fabs(scalar_prod(em[0], em[1], em[2], CurrenthklData->u2[0], CurrenthklData->u2[1], CurrenthklData->u2[2]));
+                CurrenthklData->Sigma[2] = CurrenthklData->TauLength * SigmaTauC * fabs(scalar_prod(em[0], em[1], em[2], CurrenthklData->u3[0], CurrenthklData->u3[1], CurrenthklData->u3[2]));
+
+                //Protect against collapsing gaussians - these seem to be sensible values
+                if (CurrenthklData->Sigma[1] < 1e-5) {
+                    CurrenthklData->Sigma[1] = 1e-5;
+                }
+
+                if (CurrenthklData->Sigma[2] < 1e-5) {
+                    CurrenthklData->Sigma[2] = 1e-5;
+                }
+
+            } else {
+                fprintf(stderr, "%s: Error: Either mosaic or (mosaic_a, mosaic_b, mosaic_c) must be given and be > 0.\n", NAME_CURRENT_COMP);
+                return(0);
+            }
+
+            hklData[i].TotalSigma = hklData[i].Sigma[0] *
+                hklData[i].Sigma[1] *
+                hklData[i].Sigma[2];
+
+            hklData[i].m[0] = 1.0 / (2.0 * pow(hklData[i].Sigma[0], 2));
+            hklData[i].m[1] = 1.0 / (2.0 * pow(hklData[i].Sigma[1], 2));
+            hklData[i].m[2] = 1.0 / (2.0 * pow(hklData[i].Sigma[2], 2));
+
+            // Set Gauss cutoff to 5 times the maximal sigma
+            if (hklData[i].Sigma[0] > hklData[i].Sigma[1]) {
+
+                if(hklData[i].Sigma[0] > hklData[i].Sigma[2]) {
+                    hklData[i].GaussianCutoff = 5.0 * hklData[i].Sigma[0];
+                } else {
+                    hklData[i].GaussianCutoff = 5.0 * hklData[i].Sigma[2];
+                }
+            } else {
+                if(hklData[i].Sigma[1] > hklData[i].Sigma[2]) {
+                    hklData[i].GaussianCutoff = 5.0 * hklData[i].Sigma[1];
+                } else {
+                    hklData[i].GaussianCutoff = 5.0 * hklData[i].Sigma[2];
+                }
+            }
+        }
+
+        Table_Free(&sTable);
+
+        hklInfo->hklData = hklData;
+        hklInfo->NumberOfReflections = i;
+        hklInfo->TauData = malloc(i * sizeof(*hklInfo->TauData));
+
+        if (!hklInfo->TauData) {
+            fprintf(stderr, "%s: Error: Out of memory.\n", NAME_CURRENT_COMP);
+            return(0);
+        }
+
+        return(hklInfo->NumberOfReflections = i);
+    }
+
+    // Struct for description of absorption
+    int ReadAbsorbtionData(char *AbsorptionFile, struct AbsorbtionStruct *AbsorbtionInfo) {
+        // Declarations
+        int j;
+        int Status;
+        char **Parsing;
+
+        // Construct table
+        if (AbsorptionFile && strlen(AbsorptionFile) && strcmp(AbsorptionFile, "NULL")) {
+
+            if ((Status = Table_Read(&(AbsorbtionInfo->Table), AbsorptionFile, 0)) == -1) {
+                fprintf(stderr, "%s: Error: Could not parse file %s\n", NAME_CURRENT_COMP, AbsorptionFile);
+                exit(-1);
+            }
+
+            Parsing = Table_ParseHeader(AbsorbtionInfo->Table.header, "Z", "A[r]", "rho", NULL);
+
+            if (AbsorbtionInfo->Table.columns == 3) {
+                AbsorbtionInfo->muc = 1.0;
+            } else {
+                AbsorbtionInfo->muc = 5.0;
+            }
+
+            // Reorganize the data table a to use log(e) instead and rebin to use constantstep feature
+            for (j = 0;j < AbsorbtionInfo->Table.rows; j++){
+                AbsorbtionInfo->Table.data[j * AbsorbtionInfo->Table.columns] = log(AbsorbtionInfo->Table.data[j * AbsorbtionInfo->Table.columns]);
+            }
+
+            Table_Stat(&(AbsorbtionInfo->Table));
+
+            // Check for rebinning
+            if (10.0 * mcget_ncount() > (AbsorbtionInfo->Table.max_x - AbsorbtionInfo->Table.min_x) / (AbsorbtionInfo->Table.step_x)) {
+                printf("%s: Rebinning MaterialDatafile data (%s) for faster tracing.\n", NAME_CURRENT_COMP, AbsorptionFile);
+                Table_Rebin(&(AbsorbtionInfo->Table));
+            }
+
+            return 1;
+        } else {
+            // Create empty table
+            Table_Init(&(AbsorbtionInfo->Table), 2, 2);
+
+            AbsorbtionInfo->Table.data[0] = 0.0;
+            AbsorbtionInfo->Table.data[1] = 0.0;
+            AbsorbtionInfo->Table.data[2] = FLT_MAX;
+            AbsorbtionInfo->Table.data[3] = 0.0;
+
+            fprintf(stderr, "%s: Warning: MaterialDatafile file (%s) not found. Absorption set to 0.\n", NAME_CURRENT_COMP, AbsorptionFile);
+
+            return 1;
+        }
+    }
+
+    // Function used to get the dimensions of the voxels
+    int GetVoxelDimensions(t_Table *TableOfMap, int *NumberOfVoxelsx, double *Voxelxwidth, int *NumberOfVoxelsy, double *Voxelyheight, int *NumberOfVoxelsz, double *Voxelzdepth) {
+        // Declaration
+        int xValue=1;
+        int yValue=1;
+        int zValue=1;
+        // Get dimensions of voxels in from table header
+        char **parsing;
+        parsing=Table_ParseHeader(TableOfMap->header,"xdim","XDIM","XDim","ydim","YDIM","YDim","zdim","ZDIM","ZDim", "Dimensions:",NULL);
+        if(parsing[0]) xValue=strtol(parsing[0],NULL,0);
+        if(parsing[1]) xValue=strtol(parsing[1],NULL,0);
+        if(parsing[2]) xValue=strtol(parsing[2],NULL,0);
+        if(parsing[3]) yValue=strtol(parsing[3],NULL,0);
+        if(parsing[4]) yValue=strtol(parsing[4],NULL,0);
+        if(parsing[5]) yValue=strtol(parsing[5],NULL,0);
+        if(parsing[6]) zValue=strtol(parsing[6],NULL,0);
+        if(parsing[7]) zValue=strtol(parsing[7],NULL,0);
+        if(parsing[8]) zValue=strtol(parsing[8],NULL,0);
+        if(parsing[9]) sscanf(parsing[9],"%d x %d x %d",&xValue, &yValue, &zValue);
+
+        if (xValue*yValue*zValue==TableOfMap->rows){
+            *NumberOfVoxelsx = xValue;
+            *Voxelxwidth     = xwidth  / (double) xValue;
+
+            *NumberOfVoxelsy = yValue;
+            *Voxelyheight    = yheight / (double) yValue;
+
+            *NumberOfVoxelsz = zValue;
+            *Voxelzdepth     = zdepth  / (double) zValue;
+
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+
+    // Info on polycrystal
+    struct hklStruct *PolyInfo;
+    struct hklStruct hklInfo;
+    struct AbsorbtionStruct AbsorbtionInfo;
+
+    t_Table *TableOfMap;
+    t_Table *TableOfOrientations;
+
+    // Dimensions of voxels
+    double Voxelxwidth;
+    double Voxelyheight;
+    double Voxelzdepth;
+
+    int NumberOfVoxelsx;
+    int NumberOfVoxelsy;
+    int NumberOfVoxelsz;
+    %}
+
+
+INITIALIZE
+%{
+    // Declarations
+    int i;
+
+    Coords aOriginal;
+    Coords bOriginal;
+    Coords cOriginal;
+
+    Coords aCurrent;
+    Coords bCurrent;
+    Coords cCurrent;
+
+    Rotation CurrentRotationMatrix;
+
+    // In-plane anisotropy
+    double *MosaicityAB;
+
+    // Allocation of tables
+    TableOfMap = malloc(sizeof(t_Table));
+    if ( (i=Table_Read(TableOfMap, MapFile, 0))==-1){
+        fprintf(stderr,"Error(%s): Unable to read map file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,MapFile);
+        exit(-1);
+    }
+    TableOfOrientations = malloc(sizeof(t_Table));
+
+    if ( (i=Table_Read(TableOfOrientations, OrientationsFile, 0))==-1){
+        fprintf(stderr,"Error(%s): Unable to read orientation file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,OrientationsFile);
+        exit(-1);
+    }
+
+    PolyInfo = calloc(TableOfOrientations->rows, sizeof(struct hklStruct));
+
+    // Compute dimensions of voxels
+    if (GetVoxelDimensions(TableOfMap, &NumberOfVoxelsx, &Voxelxwidth, &NumberOfVoxelsy, &Voxelyheight, &NumberOfVoxelsz, &Voxelzdepth) == -1) {
+        fprintf(stderr, "%s: An error occured when assigning the dimensions of the polycrystal. Is the header appropriately formatted?", NAME_CURRENT_COMP);
+    }
+
+    // Coordinate calculations
+    aOriginal = coords_set(ax, ay, az);
+    bOriginal = coords_set(bx, by, bz);
+    cOriginal = coords_set(cx, cy, cz);
+
+    // Set up default hklInfo
+    hklInfo.LatticeVectora[0] = ax;
+    hklInfo.LatticeVectora[1] = ay;
+    hklInfo.LatticeVectora[2] = az;
+
+    hklInfo.LatticeVectorb[0] = bx;
+    hklInfo.LatticeVectorb[1] = by;
+    hklInfo.LatticeVectorb[2] = bz;
+
+    hklInfo.LatticeVectorc[0] = cx;
+    hklInfo.LatticeVectorc[1] = cy;
+    hklInfo.LatticeVectorc[2] = cz;
+
+    hklInfo.DeltadOverd     = DeltadOverd;
+    hklInfo.SigmaAbsorbtion = SigmaAbsorbtion;
+    hklInfo.SigmaIncoherent = SigmaIncoherent;
+
+    // Default format: h, k, l, F, F2
+    hklInfo.ColumnOrder[0] = 1;
+    hklInfo.ColumnOrder[1] = 2;
+    hklInfo.ColumnOrder[2] = 3;
+    hklInfo.ColumnOrder[3] = 0;
+    hklInfo.ColumnOrder[4] = 7;
+
+    // Read in structure factors and absorption info
+    ReadReflectionData(ReflectionsDatafile, &hklInfo, Mosaicity, MosaicityA, MosaicityB, MosaicityC, MosaicityAB);
+    ReadAbsorbtionData(MaterialDatafile, &AbsorbtionInfo);
+
+    // Print properties
+    fprintf(stderr, "\n");
+    fprintf(stderr, "%s: %d reflections found in %s.\n", NAME_CURRENT_COMP, hklInfo.NumberOfReflections, ReflectionsDatafile);
+    fprintf(stderr, "%s: %d different orientations found in %s.\n", NAME_CURRENT_COMP, (int) TableOfOrientations->rows, OrientationsFile);
+    fprintf(stderr, "%s: %d voxels organised in a %d by %d by %d-grid found in %s.\n", NAME_CURRENT_COMP, (int) TableOfMap->rows, NumberOfVoxelsx, NumberOfVoxelsy, NumberOfVoxelsz, MapFile);
+    fprintf(stderr, "%s: The voxels of the polycrystals have dimensions of %g m by %g m by %g m.\n", NAME_CURRENT_COMP, Voxelxwidth, Voxelyheight, Voxelzdepth);
+    fprintf(stderr, "%s: Volume of unit cell is %g AA^3.\n", NAME_CURRENT_COMP, hklInfo.VolumeOfUnitCell);
+    fprintf(stderr, "\n");
+
+    // Loop over all orientations
+    for (i = 0; i < TableOfOrientations->rows; ++i) {
+        PolyInfo[i] = hklInfo;
+        PolyInfo[i].Reciprocal = 0;
+
+        // Apply rotation to crystal vectors
+        memcpy(*CurrentRotationMatrix, &(TableOfOrientations->data[i * 9]), sizeof(CurrentRotationMatrix[0][0]) * 9);
+
+        aCurrent = rot_apply(CurrentRotationMatrix, aOriginal);
+        bCurrent = rot_apply(CurrentRotationMatrix, bOriginal);
+        cCurrent = rot_apply(CurrentRotationMatrix, cOriginal);
+
+        // Set the crystal parameters to the rotated ones
+        coords_get(aCurrent, &(PolyInfo[i].LatticeVectora[0]), &(PolyInfo[i].LatticeVectora[1]), &(PolyInfo[i].LatticeVectora[2]));
+        coords_get(bCurrent, &(PolyInfo[i].LatticeVectorb[0]), &(PolyInfo[i].LatticeVectorb[1]), &(PolyInfo[i].LatticeVectorb[2]));
+        coords_get(cCurrent, &(PolyInfo[i].LatticeVectorc[0]), &(PolyInfo[i].LatticeVectorc[1]), &(PolyInfo[i].LatticeVectorc[2]));
+
+        // Read reflections for the given orientation
+        ReadReflectionData(ReflectionsDatafile, &(PolyInfo[i]), Mosaicity, MosaicityA, MosaicityB, MosaicityC, MosaicityAB);
+    }
+%}
+
+
+TRACE
+%{
+    // Dummy integers
+    int i;
+    int j;
+
+    // Sample propagation
+    double l1 = 0.0;
+    double l2 = 0.0;
+    double l;
+
+    int Intersect = 0;
+    int IntersectVoxel = 1;
+    int BackgroundVoxel;
+
+    // Structs for hkl-data
+    struct hklDataStruct *CurrenthklData;
+
+    // List of reflections close to Ewald sphere
+    struct TauDataStruct *CurrentTauData;
+    int TauCount;
+
+    // Number of scattering events
+    int NumberOfScatteringEvents;
+
+    // Wavewectors
+    double ki[3];
+    double kiLength;
+
+    double kf[3];
+    double kfLength;
+
+    // The vector ki - tau
+    double Rho[3];
+    double RhoLength;
+
+    // Properties of crystal
+    double VolumeOfUnitCell;
+
+    // Vectors spanning the Ewald sphere tangent plane
+    double b1[3];
+    double b2[3];
+
+    // Matrix describing the 2D-Gaussian
+    double N11;
+    double N12;
+    double N22;
+    double DeterminantN;
+
+    double NInverse11;
+    double NInverse12;
+    double NInverse22;
+
+    // L = 1/2 * N^-1 (Cholesky decomposition)
+    double L11;
+    double L12;
+    double L22;
+    double DeterminantL;
+
+    // Center of 2D-Gaussian
+    double GaussCenterx;
+    double GaussCentery;
+
+    // Offset of 2D-Gaussian
+    double Alpha;
+
+    // Product of B * D * Origin
+    double Productx;
+    double Producty;
+
+    // Coherent reflectivity
+    double TotalReflectivity;
+
+    // Dummy variables used to select the final wavevector from the 2D-Gaussian
+    double z1;
+    double z2;
+    double y1;
+    double y2;
+
+    // Variables used in search for tau
+    double r;
+    double Sum;
+    double TauMax;
+
+    // Transmission, absorption and incoherence
+    double AbsorbtionCrosssection;
+    double AbsorbtionScatteringLength;
+
+    double IncoherentCrosssection;
+    double IncoherentScatteringLength;
+
+    double CoherentCrosssection;
+    double CoherentScatteringLength;
+
+    double TotalCrosssection;
+    double TotalScatteringLength;
+
+    double CrosssectionFactor;
+    double AbsorbtionMu;
+
+    // Monte Carlo-properties
+    double CalculatedProbabilityOfTransmission;
+    double MCTransmission;
+    double MCInteract;
+
+    // Indices of current voxel
+    int VoxelIndexx;
+    int VoxelIndexy;
+    int VoxelIndexz;
+
+    int PreviousVoxelIndexx = -10000;
+    int PreviousVoxelIndexy = -10000;
+    int PreviousVoxelIndexz = -10000;
+
+    double VoxelCenterx;
+    double VoxelCentery;
+    double VoxelCenterz;
+
+    int OrientationIndex;
+
+    // Compute intersection trajectory
+    Intersect = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
+
+    if (l2 < 0) {
+        Intersect = 0;
+    }
+
+    if (l1 > 0) {
+        PROP_DL(l1);
+    }
+
+    NumberOfScatteringEvents = 0;
+
+    // Scale x-ray to higher intensity
+    p *= 1e24;
+
+    // Begin computating if ray intersects crystal hull
+    while (Intersect) {
+
+        // Figure out which voxel the ray hit (the small added constant prevents errors on boundaries of the crystal hull
+        VoxelIndexx = floor((x + xwidth  / 2.0) / xwidth  * NumberOfVoxelsx + 1e-10);
+        VoxelIndexy = floor((y + yheight / 2.0) / yheight * NumberOfVoxelsy + 1e-10);
+        VoxelIndexz = floor((z + zdepth  / 2.0) / zdepth  * NumberOfVoxelsz + 1e-10);
+
+        if (VoxelIndexx >= NumberOfVoxelsx || VoxelIndexx < 0 ||
+                VoxelIndexy >= NumberOfVoxelsy || VoxelIndexy < 0 ||
+                VoxelIndexz >= NumberOfVoxelsz || VoxelIndexz < 0) {
+            Intersect = 0;
+
+            break;
+        }
+
+        // Check, if ray is stuck
+        if (PreviousVoxelIndexx == VoxelIndexx &&
+                PreviousVoxelIndexy == VoxelIndexy &&
+                PreviousVoxelIndexz == VoxelIndexz) {
+
+            ABSORB;
+        }
+
+        // Determine coordinates of voxel center
+        VoxelCenterx = (VoxelIndexx - (NumberOfVoxelsx - 1) / 2.0) * Voxelxwidth;
+        VoxelCentery = (VoxelIndexy - (NumberOfVoxelsy - 1) / 2.0) * Voxelyheight;
+        VoxelCenterz = (VoxelIndexz - (NumberOfVoxelsz - 1) / 2.0) * Voxelzdepth;
+
+        // Get hklInfo struct from table - orientation index is in the 4th column of TableOfMap (-1 since array is zero-indexed)
+        OrientationIndex = Table_Index(*TableOfMap, VoxelIndexx * (NumberOfVoxelsy * NumberOfVoxelsz) + VoxelIndexy * NumberOfVoxelsz + VoxelIndexz, 3) - 1;
+        VolumeOfUnitCell = PolyInfo[OrientationIndex].VolumeOfUnitCell;
+
+        // Check, if the ray is a void in the crystal
+        if (OrientationIndex != -1) {
+            BackgroundVoxel = 0;
+
+            // Prepare voxel loop
+            kiLength = sqrt(pow(kx, 2) +
+                    pow(ky, 2) +
+                    pow(kz, 2));
+
+            CrosssectionFactor = pow(2.0 * M_PI, 5.0 / 2.0) / (VolumeOfUnitCell * pow(kiLength, 2));
+
+            // Absorption cross-section
+            AbsorbtionMu               = Table_Value(AbsorbtionInfo.Table, log(kiLength * K2E), AbsorbtionInfo.muc);
+            AbsorbtionCrosssection     = /*PolyInfo[OrientationIndex].*/SigmaAbsorbtion * AbsorbtionMu;
+            AbsorbtionScatteringLength = AbsorbtionCrosssection / VolumeOfUnitCell;
+
+            // Incoherent scattering
+            IncoherentCrosssection     = /*PolyInfo[OrientationIndex].*/SigmaIncoherent;
+            IncoherentScatteringLength = IncoherentCrosssection / VolumeOfUnitCell;
+
+            // Get info from PolyInfo-struct
+            CurrenthklData = PolyInfo[OrientationIndex].hklData;
+            CurrentTauData = PolyInfo[OrientationIndex].TauData;
+
+        } else {
+            BackgroundVoxel = 1;
+        }
+
+        // Begin loop over multiple scattering events
+        IntersectVoxel = box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, Voxelxwidth, Voxelyheight, Voxelzdepth);
+
+        while (IntersectVoxel) {
+
+            // Remember current voxel
+            PreviousVoxelIndexx = VoxelIndexx;
+            PreviousVoxelIndexy = VoxelIndexy;
+            PreviousVoxelIndexz = VoxelIndexz;
+
+            // Check, if the x-ray is leaving the sample unexpectedly
+            if (!IntersectVoxel || l2 < -1e-9 || l1 > 1e-9) {
+                fprintf(stderr,	"%s: Warning: Ray number %d has unexpectedly left the crystal.\n l1 = %g l2 = %g x = %g y = %g z = %g kx = %g ky = %g kz = %g.\n", NAME_CURRENT_COMP, (int) mcget_run_num(), l1, l2, x, y, z, kx, ky, kz);
+
+                break;
+            }
+
+            if (BackgroundVoxel) {
+                PROP_DL(l2);
+
+                break;
+            }
+
+            // Copy incoming wave vector ki
+            ki[0] = kx;
+            ki[1] = ky;
+            ki[2] = kz;
+
+            // Calculate Intersection of Ewald sphere with reciprocal lattice points
+            CoherentCrosssection = 0.0;
+            TotalReflectivity    = 0.0;
+            TauMax               = 2.0 * kiLength / (1.0 - 5.0 * DeltadOverd);
+
+            j = 0;
+
+            for (i = 0; i < PolyInfo[OrientationIndex].NumberOfReflections; ++i) {
+
+                // End loop if the largest relevant length of tau has been reached
+                if (TauMax < CurrenthklData[i].TauLength) {
+                    break;
+                }
+
+                // Check, if this reciprocal lattice point is close enough to the Ewald sphere to make scattering possible
+                Rho[0] = ki[0] - CurrenthklData[i].Tau[0];
+                Rho[1] = ki[1] - CurrenthklData[i].Tau[1];
+                Rho[2] = ki[2] - CurrenthklData[i].Tau[2];
+
+                RhoLength = sqrt(pow(Rho[0], 2) +
+                        pow(Rho[1], 2) +
+                        pow(Rho[2], 2));
+
+                // Check if scattering is possible (cutoff of Gaussian tails)
+                if (fabs(RhoLength - kiLength) < CurrenthklData[i].GaussianCutoff) {
+
+                    // Store reflection
+                    CurrentTauData[j].Index = i;
+
+                    // Get ki vector in local coordinates
+                    CurrentTauData[j].ki[0] = ki[0] * CurrenthklData[i].u1[0] +
+                        ki[1] * CurrenthklData[i].u1[1] +
+                        ki[2] * CurrenthklData[i].u1[2];
+
+                    CurrentTauData[j].ki[1] = ki[0] * CurrenthklData[i].u2[0] +
+                        ki[1] * CurrenthklData[i].u2[1] +
+                        ki[2] * CurrenthklData[i].u2[2];
+
+                    CurrentTauData[j].ki[2] = ki[0] * CurrenthklData[i].u3[0] +
+                        ki[1] * CurrenthklData[i].u3[1] +
+                        ki[2] * CurrenthklData[i].u3[2];
+
+                    CurrentTauData[j].Rho[0] = CurrentTauData[j].ki[0] - CurrenthklData[i].TauLength;
+                    CurrentTauData[j].Rho[1] = CurrentTauData[j].ki[1];
+                    CurrentTauData[j].Rho[2] = CurrentTauData[j].ki[2];
+
+                    CurrentTauData[j].RhoLength = RhoLength;
+
+                    // Compute the tangent plane of the Ewald sphere
+                    CurrentTauData[j].NormalVector[0] = CurrentTauData[j].Rho[0] / CurrentTauData[j].RhoLength;
+                    CurrentTauData[j].NormalVector[1] = CurrentTauData[j].Rho[1] / CurrentTauData[j].RhoLength;
+                    CurrentTauData[j].NormalVector[2] = CurrentTauData[j].Rho[2] / CurrentTauData[j].RhoLength;
+
+                    CurrentTauData[j].Origin[0] = (kiLength - CurrentTauData[j].RhoLength) * CurrentTauData[j].NormalVector[0];
+                    CurrentTauData[j].Origin[1] = (kiLength - CurrentTauData[j].RhoLength) * CurrentTauData[j].NormalVector[1];
+                    CurrentTauData[j].Origin[2] = (kiLength - CurrentTauData[j].RhoLength) * CurrentTauData[j].NormalVector[2];
+
+                    // Compute unit vectors b1 and b2 that span the tangent plane
+                    normal_vec(b1[0], b1[1], b1[2], CurrentTauData[j].NormalVector[0], CurrentTauData[j].NormalVector[1], CurrentTauData[j].NormalVector[2]);
+                    vec_prod(b2[0], b2[1], b2[2], CurrentTauData[j].NormalVector[0], CurrentTauData[j].NormalVector[1], CurrentTauData[j].NormalVector[2], b1[0], b1[1], b1[2]);
+
+                    CurrentTauData[j].b1[0] = b1[0];
+                    CurrentTauData[j].b1[1] = b1[1];
+                    CurrentTauData[j].b1[2] = b1[2];
+
+                    CurrentTauData[j].b2[0] = b2[0];
+                    CurrentTauData[j].b2[1] = b2[1];
+                    CurrentTauData[j].b2[2] = b2[2];
+
+                    // Compute the 2D projection of the 3D Gauss of the reflection - the symmetric 2x2 matrix N describing the 2D gauss
+                    N11 = CurrenthklData[i].m[0] * pow(b1[0], 2) +
+                        CurrenthklData[i].m[1] * pow(b1[1], 2) +
+                        CurrenthklData[i].m[2] * pow(b1[2], 2);
+
+                    N12 = CurrenthklData[i].m[0] * b1[0] * b2[0] +
+                        CurrenthklData[i].m[1] * b1[1] * b2[1] +
+                        CurrenthklData[i].m[2] * b1[2] * b2[2];
+
+                    N22 = CurrenthklData[i].m[0] * pow(b2[0], 2) +
+                        CurrenthklData[i].m[1] * pow(b2[1], 2) +
+                        CurrenthklData[i].m[2] * pow(b2[2], 2);
+
+                    // The (symmetric) inverse matrix of N
+                    DeterminantN = N11 * N22 - pow(N12, 2);
+
+                    NInverse11 =  N22 / DeterminantN;
+                    NInverse12 = -N12 / DeterminantN;
+                    NInverse22 =  N11 / DeterminantN;
+
+                    // The Cholesky decomposition of 1/2 * NInverse (lower triangular L)
+                    L11 = sqrt(NInverse11 / 2.0);
+                    L12 = NInverse12 / (2.0 * L11);
+                    L22 = sqrt(NInverse22 / 2.0 - L12 * L12);
+
+                    CurrentTauData[j].L11 = L11;
+                    CurrentTauData[j].L12 = L12;
+                    CurrentTauData[j].L22 = L22;
+
+                    DeterminantL = L11 * L22;
+
+                    CurrentTauData[j].DeterminantL = DeterminantL;
+
+                    // Compute product
+                    Productx = b1[0] * CurrenthklData[i].m[0] * CurrentTauData[j].Origin[0] +
+                        b1[1] * CurrenthklData[i].m[1] * CurrentTauData[j].Origin[1] +
+                        b1[2] * CurrenthklData[i].m[2] * CurrentTauData[j].Origin[2];
+
+                    Producty = b2[0] * CurrenthklData[i].m[0] * CurrentTauData[j].Origin[0] +
+                        b2[1] * CurrenthklData[i].m[1] * CurrentTauData[j].Origin[1] +
+                        b2[2] * CurrenthklData[i].m[2] * CurrentTauData[j].Origin[2];
+
+                    // Center of 2D Gauss in plane coordinates
+                    GaussCenterx = -Productx * NInverse11 - Producty * NInverse12;
+                    GaussCentery = -Productx * NInverse12 - Producty * NInverse22;
+
+                    CurrentTauData[j].GaussCenterx = GaussCenterx;
+                    CurrentTauData[j].GaussCentery = GaussCentery;
+
+                    // Factor Alpha for the distance of the 2D Gauss from the origin
+                    Alpha = CurrenthklData[i].m[0] * pow(CurrentTauData[j].Origin[0], 2) +
+                        CurrenthklData[i].m[1] * pow(CurrentTauData[j].Origin[1], 2) +
+                        CurrenthklData[i].m[2] * pow(CurrentTauData[j].Origin[2], 2) -
+                        (pow(GaussCenterx, 2) * N11 +
+                         pow(GaussCentery, 2) * N22 +
+                         2.0 * GaussCenterx * GaussCentery * N12);
+
+                    CurrentTauData[j].Reflectivity = CrosssectionFactor * DeterminantL * exp(-Alpha) / CurrenthklData[i].TotalSigma;
+                    TotalReflectivity += CurrentTauData[j].Reflectivity;
+
+                    CurrentTauData[j].Crosssection = CurrentTauData[j].Reflectivity * CurrenthklData[i].F2;
+                    CoherentCrosssection += CurrentTauData[j].Crosssection;
+
+                    ++j;
+                }
+            }
+
+            TauCount = j;
+
+            if (TauCount == 0) {
+                IntersectVoxel = 0;
+                PROP_DL(l2);
+
+                break;
+            }
+
+            // Probabilities of the different possible interactions
+            TotalCrosssection        = AbsorbtionCrosssection + IncoherentCrosssection + CoherentCrosssection;
+            CoherentScatteringLength = CoherentCrosssection / VolumeOfUnitCell;
+            TotalScatteringLength    = TotalCrosssection / VolumeOfUnitCell;
+
+            // Calculate and account for transmission
+            CalculatedProbabilityOfTransmission = exp(-TotalScatteringLength * l2);
+
+            if (!NumberOfScatteringEvents && ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
+                MCTransmission = ProbabilityOfTransmission;
+
+            } else {
+                MCTransmission = CalculatedProbabilityOfTransmission;
+            }
+
+            MCInteract = 1.0 - MCTransmission;
+
+            if (MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
+                p *= CalculatedProbabilityOfTransmission / MCTransmission;
+                SCATTER;
+
+                IntersectVoxel = 0;
+                PROP_DL(l2);
+
+                break;
+            }
+
+            if (TotalScatteringLength < 0){
+                ABSORB;
+            }
+
+            if (MCInteract < 0) {
+                IntersectVoxel = 0;
+                PROP_DL(l2);
+
+                break;
+            }
+
+            // Scatter the ray
+            if (!NumberOfScatteringEvents) {
+                p *= fabs(1.0 - CalculatedProbabilityOfTransmission) / MCInteract;
+            }
+
+            // Calculate, where the ray is scattered - use linear sampling for weak scatterers
+            if (TotalScatteringLength * l2 < 1e-6) {
+                l = rand0max(l2);
+
+            } else {
+                l = -log(1.0 - rand0max(1.0 - exp(-TotalScatteringLength * l2))) / TotalScatteringLength;
+            }
+
+            // Propagate the ray to this point
+            PROP_DL(l);
+            ++NumberOfScatteringEvents;
+
+            // Account for absorption
+            p *= (CoherentScatteringLength + IncoherentScatteringLength) / TotalScatteringLength;
+
+            // Randomly select between coherent and incoherent scattering
+            if(rand0max(CoherentScatteringLength + IncoherentScatteringLength) < IncoherentScatteringLength) {
+                randvec_target_circle(&ki[0], &ki[1], &ki[2], NULL, kx, ky, kz, 0);
+
+                kx = ki[0];
+                ky = ki[1];
+                kz = ki[2];
+            } else {
+                if (TotalReflectivity < 0) {
+                    ABSORB;
+                }
+
+                // Decide, which reflection will interact with the ray
+                r = rand0max(TotalReflectivity);
+
+                Sum = 0;
+
+                for (j = 0; j < TauCount; ++j) {
+                    Sum += CurrentTauData[j].Reflectivity;
+
+                    if (Sum > r) {
+                        break;
+                    }
+                }
+
+                // If no suitable reflection is found - use the last one in the list (this should not happen in practice)
+                if (j >= TauCount) {
+                    fprintf(stderr, "%s: Error: Illegal tau search: r = %g, Sum = %g.\n", NAME_CURRENT_COMP, r, Sum);
+                    j = TauCount - 1;
+                }
+
+                i = CurrentTauData[j].Index;
+
+                // Pick scattered wavevector kf from 2D Gauss distribution
+                z1 = randnorm();
+                z2 = randnorm();
+
+                y1 = CurrentTauData[j].L11 * z1 + CurrentTauData[j].GaussCenterx;
+                y2 = CurrentTauData[j].L12 * z1 + CurrentTauData[j].L22 * z2 + CurrentTauData[j].GaussCentery;
+
+                kf[0] = CurrentTauData[j].Rho[0] + CurrentTauData[j].Origin[0] + CurrentTauData[j].b1[0] * y1 + CurrentTauData[j].b2[0] * y2;
+                kf[1] = CurrentTauData[j].Rho[1] + CurrentTauData[j].Origin[1] + CurrentTauData[j].b1[1] * y1 + CurrentTauData[j].b2[1] * y2;
+                kf[2] = CurrentTauData[j].Rho[2] + CurrentTauData[j].Origin[2] + CurrentTauData[j].b1[2] * y1 + CurrentTauData[j].b2[2] * y2;
+
+                // Normalize kf to length of ki to account for planer approximation of the Ewald sphere
+                kfLength = sqrt(pow(kf[0], 2) +
+                        pow(kf[1], 2) +
+                        pow(kf[2], 2));
+
+                kf[0] *= kiLength / kfLength;
+                kf[1] *= kiLength / kfLength;
+                kf[2] *= kiLength / kfLength;
+
+                // Adjust weight
+                p *= CurrentTauData[j].Crosssection * TotalReflectivity / (CoherentCrosssection * CurrentTauData[j].Reflectivity);
+
+                // Adjust direction of ray
+                kx = CurrenthklData[i].u1[0] * kf[0] +
+                    CurrenthklData[i].u2[0] * kf[1] +
+                    CurrenthklData[i].u3[0] * kf[2];
+
+                ky = CurrenthklData[i].u1[1] * kf[0] +
+                    CurrenthklData[i].u2[1] * kf[1] +
+                    CurrenthklData[i].u3[1] * kf[2];
+
+                kz = CurrenthklData[i].u1[2] * kf[0] +
+                    CurrenthklData[i].u2[2] * kf[1] +
+                    CurrenthklData[i].u3[2] * kf[2];
+            }
+
+            SCATTER;
+
+            // Calculate new trajectory (the 1.0001 has been added to make sure that the ray leaves the ray if it has to)
+            IntersectVoxel = box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, 1.0001 * Voxelxwidth, 1.0001 * Voxelyheight, 1.0001 * Voxelzdepth);
+
+            // End loop if maximum numer of scattering events has been reached
+            if (MaxNumberOfReflections && NumberOfScatteringEvents >= MaxNumberOfReflections) {
+                box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, xwidth, yheight, zdepth);
+
+                IntersectVoxel = 0;
+                Intersect = 0;
+                PROP_DL(l2);
+
+                break;
+            }
+        }
+    }
+
+    // Free appropriate pointers
+    //free(CurrenthklData);
+    //free(CurrentTauData);
+%}
+
+
+FINALLY
+%{
+    // Free remaining pointers
+    //free(PolyInfo);
+    Table_Free(TableOfMap);
+    Table_Free(TableOfOrientations);
+%}
+
+
+MCDISPLAY
+%{
+    int i;
+    int j;
+    int k;
+
+    double xmin;
+    double xmax;
+    double ymin;
+    double ymax;
+    double zmin;
+    double zmax;
+
+    for (i = 0; i < NumberOfVoxelsx; ++i) {
+        xmin = -0.5 * xwidth + Voxelxwidth * i;
+        xmax = -0.5 * xwidth + Voxelxwidth * (i + 1);
+
+        for (j = 0; j < NumberOfVoxelsy; ++j) {
+            ymin = -0.5 * yheight + Voxelyheight * j;
+            ymax = -0.5 * yheight + Voxelyheight * (j + 1);
+
+            for (k = 0; k < NumberOfVoxelsz; ++k) {
+                zmin = -0.5 * zdepth + Voxelzdepth * k;
+                zmax = -0.5 * zdepth + Voxelzdepth * (k + 1);
+
+                line(xmin, ymin, zmin, xmax, ymin, zmin);
+                line(xmin, ymin, zmin, xmin, ymax, zmin);
+                line(xmax, ymin, zmin, xmax, ymax, zmin);
+                line(xmin, ymax, zmin, xmax, ymax, zmin);
+
+                line(xmin, ymin, zmin, xmin, ymin, zmax);
+                line(xmax, ymin, zmin, xmax, ymin, zmax);
+                line(xmin, ymax, zmin, xmin, ymax, zmax);
+                line(xmax, ymax, zmin, xmax, ymax, zmax);
+
+                line(xmin, ymin, zmax, xmax, ymin, zmax);
+                line(xmin, ymin, zmax, xmin, ymax, zmax);
+                line(xmax, ymin, zmax, xmax, ymax, zmax);
+                line(xmin, ymax, zmax, xmax, ymax, zmax);
+            }
+        }
+    }
+%}
+
+
+END

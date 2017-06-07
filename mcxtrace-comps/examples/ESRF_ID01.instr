@@ -175,7 +175,7 @@ AT (0, 0, DistanceSourceToMonochromator) RELATIVE Source
 ROTATED (0, AngleMonochromator, 90) RELATIVE Source
 
 
-COMPONENT Monochromator1 = Perfect_crystal(
+COMPONENT Monochromator1 = Bragg_crystal(
 	length = Monochromator1Length, 
 	width  = Monochromator1Width
 ) 
@@ -195,7 +195,7 @@ AT (0, 0, DistanceBetweenMonochromators) RELATIVE Monochromator1Arm2
 ROTATED (0, AngleMonochromator, 90) RELATIVE Source
 
 
-COMPONENT Monochromator2 = Perfect_crystal(
+COMPONENT Monochromator2 = Bragg_crystal(
 	length = Monochromator2Length, 
 	width  = Monochromator2Width
 )
@@ -259,44 +259,45 @@ AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - DistanceOSAT
 /***********************/
 /* Pre-sample monitors */
 /***********************/
-/*COMPONENT DivergenceMonitor = Div_monitor(
+COMPONENT DivergenceMonitor = Divergence_monitor(
         xmin         = -2.0 * OSARadius, 
         xmax         =  2.0 * OSARadius, 
         ymin         = -2.0 * OSARadius, 
         ymax         =  2.0 * OSARadius,
-        nx           = 100, 
-        ny           = 100, 
-        filename     = "PSDMonitor.mcp",
+        nx           = 200, 
+        ny           = 200, 
+        filename     = "DivMonitor",
+        rad=1,
         restore_xray = 1
 )
-AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.003) RELATIVE SecondarySlit2*/
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.003) RELATIVE SecondarySlit2
 
 
-/*COMPONENT EnergyMonitor = E_monitor(
+COMPONENT EnergyMonitor = E_monitor(
         xmin         = -2.0 * OSARadius, 
         xmax         =  2.0 * OSARadius, 
         ymin         = -2.0 * OSARadius, 
         ymax         =  2.0 * OSARadius,
         Emin         = 0.95 * NominalEnergy, 
         Emax         = 1.05 * NominalEnergy, 
-        nE           = 50, 
-        filename     = "EnergyMonitor.mcp",
+        nE           = 200, 
+        filename     = "EnergyMonitor",
         restore_xray = 1
 )
-AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.002) RELATIVE SecondarySlit2*/
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.002) RELATIVE SecondarySlit2
 
 
-/*COMPONENT PSDMonitor = PSD_monitor(
+COMPONENT PSDMonitor = PSD_monitor(
         xmin         = -2.0 * OSARadius, 
         xmax         =  2.0 * OSARadius, 
         ymin         = -2.0 * OSARadius, 
         ymax         =  2.0 * OSARadius,
         nx           = 100, 
         ny           = 100, 
-        filename     = "PSDMonitor.mcp",
+        filename     = "PSDMonitor",
         restore_xray = 1
 )
-AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.001) RELATIVE SecondarySlit2*/
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.001) RELATIVE SecondarySlit2
 
 
 /***********************/
@@ -308,8 +309,8 @@ ROTATED (90.0 - Eta, Phi, 0) RELATIVE Source
 
 
 COMPONENT Sample = Polycrystal(
-	MapFile                   = "PolycrystalID01ESRF.mcp",
-        OrientationsFile          = "SlightStretch.txt",
+	MapFile                   = "polycrystal_1layer_2orts.map",
+        OrientationsFile          = "stretch_2orts.orts",
         ReflectionsDatafile       = "GeReduced.lau",
         //MaterialDatafile        = "Ge.txt",
 	xwidth                    = SamplexWidth,
