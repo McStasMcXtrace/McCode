@@ -900,20 +900,32 @@ DECLARE
     // Function used to get the dimensions of the voxels
     int GetVoxelDimensions(t_Table *TableOfMap, int *NumberOfVoxelsx, double *Voxelxwidth, int *NumberOfVoxelsy, double *Voxelyheight, int *NumberOfVoxelsz, double *Voxelzdepth) {
         // Declaration
-        int xValue;
-        int yValue;
-        int zvalue;
-
+        int xValue=1;
+        int yValue=1;
+        int zValue=1;
         // Get dimensions of voxels in from table header
-        if(sscanf(TableOfMap->header, "### Dimensions: %d by %d by %d", &xValue, &yValue, &zvalue) == 3) {
+        char **parsing;
+        parsing=Table_ParseHeader(TableOfMap->header,"xdim","XDIM","XDim","ydim","YDIM","YDim","zdim","ZDIM","ZDim", "Dimensions:",NULL);
+        if(parsing[0]) xValue=strtol(parsing[0],NULL,0);
+        if(parsing[1]) xValue=strtol(parsing[1],NULL,0);
+        if(parsing[2]) xValue=strtol(parsing[2],NULL,0);
+        if(parsing[3]) yValue=strtol(parsing[3],NULL,0);
+        if(parsing[4]) yValue=strtol(parsing[4],NULL,0);
+        if(parsing[5]) yValue=strtol(parsing[5],NULL,0);
+        if(parsing[6]) zValue=strtol(parsing[6],NULL,0);
+        if(parsing[7]) zValue=strtol(parsing[7],NULL,0);
+        if(parsing[8]) zValue=strtol(parsing[8],NULL,0);
+        if(parsing[9]) sscanf(parsing[9],"%d x %d x %d",&xValue, &yValue, &zValue);
+
+        if (xValue*yValue*zValue==TableOfMap->rows){
             *NumberOfVoxelsx = xValue;
             *Voxelxwidth     = xwidth  / (double) xValue;
 
             *NumberOfVoxelsy = yValue;
             *Voxelyheight    = yheight / (double) yValue;
 
-            *NumberOfVoxelsz = zvalue;
-            *Voxelzdepth     = zdepth  / (double) zvalue;
+            *NumberOfVoxelsz = zValue;
+            *Voxelzdepth     = zdepth  / (double) zValue;
 
             return 0;
         } else {
@@ -960,10 +972,16 @@ INITIALIZE
 
     // Allocation of tables
     TableOfMap = malloc(sizeof(t_Table));
-    Table_Read(TableOfMap, MapFile, 0);
-
+    if ( (i=Table_Read(TableOfMap, MapFile, 0))==-1){
+        fprintf(stderr,"Error(%s): Unable to read map file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,MapFile);
+        exit(-1);
+    }
     TableOfOrientations = malloc(sizeof(t_Table));
-    Table_Read(TableOfOrientations, OrientationsFile, 0);
+
+    if ( (i=Table_Read(TableOfOrientations, OrientationsFile, 0))==-1){
+        fprintf(stderr,"Error(%s): Unable to read orientation file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,OrientationsFile);
+        exit(-1);
+    }
 
     PolyInfo = calloc(TableOfOrientations->rows, sizeof(struct hklStruct));
 
