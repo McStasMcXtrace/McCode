@@ -43,8 +43,8 @@
 * dlambda:[AA]  Wavelength half spread of x-rays.
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
 * flux: [pht/s] total flux radiated from the source
-* randomphase: [] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
-* phase: [] Set phase to something given. 
+* randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
+* phase: [ ] Set phase to something given. 
 * %E
 *******************************************************************************/
 
