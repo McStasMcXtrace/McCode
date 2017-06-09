@@ -22,7 +22,8 @@
 * %Example: Guide=4 Detector: Monitor2_xy_I=0.00721742
 * %Example: Guide=5 Detector: Monitor2_xy_I=0.00721742
 * %Example: Guide=6 Detector: Monitor2_xy_I=0.00721742
-* %Example: Guide=7 Detector: Monitor2_xy_I=0.00683072
+* %Example: Guide=7 Detector: Monitor2_xy_I=0.00724912
+* %Example: Guide=8 Detector: Monitor2_xy_I=0.00683072
 *
 * %Parameters
 * Guide: [1]  Choice of Guide component to test, with 1=Guide, 2=Guide_channeled, 3=Guide_gravity, 4=Guide_wavy, 5=Guide_curved 6=Elliptic_guide_gravity 7=Guide_honeycomb
@@ -30,6 +31,11 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_Guides(int Guide=1)
+
+DECLARE
+%{
+  int Flag_anyshape_scatter;
+%}
 
 INITIALIZE
 %{
@@ -47,6 +53,8 @@ INITIALIZE
   case 6:
     printf("Using Elliptic_guide_gravity\n"); break;
   case 7:
+    printf("Using Guide_anyshape\n"); break;
+  case 8:
     printf("Using Guide_honeycomb\n"); break;
   }
 %}
@@ -62,6 +70,7 @@ COMPONENT Source = Source_gen(
   AT (0, 0, 0) RELATIVE PREVIOUS
 EXTEND %{
 	t = randtriangle()*1e-3;	/* 1 ms triangle time window */
+	Flag_anyshape_scatter=0;
 %}
 
 COMPONENT Monitor1_xt = Monitor_nD(
@@ -120,9 +129,31 @@ EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
 
+COMPONENT GuideA_prefix = Slit(xwidth=0.05, yheight=0.05)
+  WHEN (Guide == 7)
+AT (0,0,-0.0001) RELATIVE Guide_Position
+EXTEND %{
+  if (SCATTERED) Flag_anyshape_scatter++;
+%}
+
+COMPONENT GuideA = Guide_anyshape(geometry="Guide.off", R0=0.99, m=1)
+  WHEN (Guide == 7)
+  AT (0, 0, 0) RELATIVE Guide_Position
+EXTEND %{
+  if (SCATTERED) Flag_anyshape_scatter++;
+%}
+
+COMPONENT GuideA_sufffix = Slit(xwidth=0.05, yheight=0.05)
+  WHEN (Guide == 7)
+AT (0,0,1+0.0001) RELATIVE Guide_Position
+EXTEND %{
+  if (SCATTERED) Flag_anyshape_scatter++;
+  if (mcipGuide== 7 && !Flag_anyshape_scatter) ABSORB;
+%}
+  
 COMPONENT GuideH = Guide_honeycomb(
     w1 = 0.05, l = 1.0, R0 = 0.99, m=1, d=0)
-  WHEN (Guide == 7)
+  WHEN (Guide == 8)
   AT (0, 0, 0) RELATIVE Guide_Position
 EXTEND %{
   if (!SCATTERED) ABSORB;
