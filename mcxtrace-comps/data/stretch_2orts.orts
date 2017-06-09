@@ -1,0 +1,6 @@
+# 2 "orientations" for use with the polycrystal_1layer_2orts.map
+# file. This is used in the ESRF_ID01 model.
+# This uses a trick to "stretch" the unit cell of 1 orientation
+# slightly, instead of rotating it. 
+1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0
+1.007 0.0 0.0 0.0 1.007 0.0 0.0 0.0 1.007

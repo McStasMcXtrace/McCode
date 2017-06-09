@@ -60,6 +60,10 @@ def check_env_vars():
 
 def load_user_config():
     ''' loads a json user config to the dictionaries in this module '''
+    global configuration
+    global compilation
+    global platform
+    
     if os.name == 'nt':
         userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
     else:
@@ -73,11 +77,8 @@ def load_user_config():
     print("loading user configuration from " + userconfig)
     text = open(userconfig).read()
     obj = json.loads(text)
-    global configuration
     configuration = obj['configuration']
-    global compilation
     compilation = obj['compilation']
-    global platform
     platform = obj['platform']
 
 def save_user_config():
@@ -119,7 +120,7 @@ def get_options():
         suffix='-pl'
     else:
         suffix='.pl'
-        
+    
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
         mcdisplay_lst = [prefix+"display-webgl",
