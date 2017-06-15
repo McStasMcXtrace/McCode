@@ -113,7 +113,7 @@ def add_mcstas_options(parser):
         action='store_true', default=False,
         help='enable trace of neutron through instrument')
 
-    add('-g', '--gravitation',
+    add('-g', '--gravitation', '--gravity',
         action='store_true', default=False,
         help='enable gravitation for all trajectories')
 

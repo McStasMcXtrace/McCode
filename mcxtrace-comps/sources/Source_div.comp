@@ -61,9 +61,6 @@ OUTPUT PARAMETERS (prms, p_init, dist)
 
 SHARE
 %{
-#ifndef MX_COHERENT
-#define MX_COHERENT 0
-#endif
   %include "read_table-lib"
 %}
 

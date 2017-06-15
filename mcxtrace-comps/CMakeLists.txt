@@ -58,6 +58,9 @@ endforeach()
 # Include mcxtrace-comp revision tag file
 configure_file("${CMAKE_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
 
+# copy some descriptory files
+file(COPY "${CMAKE_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_SOURCE_DIR}/README" DESTINATION "${WORK}")
+
 if(WINDOWS)
   install(
     FILES "${WORK}/revision"
@@ -71,7 +74,7 @@ if(WINDOWS)
 
 else()
   install(
-    FILES "${WORK}/revision"
+    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
 endif()

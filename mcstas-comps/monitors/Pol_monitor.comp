@@ -29,7 +29,6 @@
 * mx: [1]               X-component of monitor vector (can be negative) 
 * my: [1]               Y-component of monitor vector (can be negative) 
 * mz: [1]               Z-component of monitor vector (can be negative) 
-* npol: [1]             Number of channels 
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:

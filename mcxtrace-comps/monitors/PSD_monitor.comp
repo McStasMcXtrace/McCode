@@ -133,14 +133,26 @@ TRACE
 SAVE
   %{
     if(!radius){
-      DETECTOR_OUT_2D(
-          "PSD monitor",
-          "X position [m]",
-          "Y position [m]",
-          xmin, xmax, ymin, ymax,
-          nx, ny,
-          *PSD_N,*PSD_p,*PSD_p2,
-          filename);
+        if(nx==1 && ny==1){
+            DETECTOR_OUT_0D("Intensity monitor " NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
+        }else if(nx==1){
+            DETECTOR_OUT_1D(
+                    "PSD_monitor","Y Position[m]", "Intensity", "Y",
+                    ymin,ymax,ny,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+        }else if (ny==1){
+            DETECTOR_OUT_1D(
+                    "PSD_monitor","X Position[m]", "Intensity", "X",
+                    xmin,xmax,nx,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+        }else{
+            DETECTOR_OUT_2D(
+                    "PSD monitor",
+                    "X position [m]",
+                    "Y position [m]",
+                    xmin, xmax, ymin, ymax,
+                    nx, ny,
+                    *PSD_N,*PSD_p,*PSD_p2,
+                    filename);
+        }
     }else{
       DETECTOR_OUT_1D(
           "PSD_monitor","Radial Position[m]", "Intensity", "R",

@@ -26,14 +26,11 @@
 * Flux is set in the unit photons/s
 *
 * %P
-* radius: [m]   Radius of circle in (x,y,0) plane where x-rays
-*               are generated.
-* yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
-*               are generated.
-* xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
-*               are generated. Overrides xmin and xmax.
-* xmax    [m]   upper bound of x-interval where photons are generated. 
-* xmin    [m]   Lower bound of x-interval where photons are generated.
+* radius: [m]   Radius of circle in (x,y,0) plane where x-rays are generated.
+* yheight: [m]   Height of rectangle in (x,y,0) plane where x-rays are generated.
+* xwidth:  [m]   Width of rectangle in (x,y,0) plane where x-rays are generated. Overrides xmin and xmax.
+* xmax:    [m]   upper bound of x-interval where photons are generated.
+* xmin:    [m]   Lower bound of x-interval where photons are generated.
 * dist:   [m]   Distance to target along z axis.
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
@@ -43,8 +40,8 @@
 * dlambda:[AA]  Wavelength half spread of x-rays.
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
 * flux: [pht/s] total flux radiated from the source
-* randomphase: [] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
-* phase: [] Set phase to something given. 
+* randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
+* phase: [ ] Set phase to something given. 
 * %E
 *******************************************************************************/
 
