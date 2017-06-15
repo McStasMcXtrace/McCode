@@ -297,12 +297,6 @@ FINALLY
     Table_Free(&ref_table);
 %}
 
-FINALLY
-%{
-    Table_Free(&ref_dat);
-%}
-
-
 MCDISPLAY
 %{
   /*
