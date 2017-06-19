@@ -60,6 +60,10 @@ def check_env_vars():
 
 def load_user_config():
     ''' loads a json user config to the dictionaries in this module '''
+    global configuration
+    global compilation
+    global platform
+    
     if os.name == 'nt':
         userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
     else:
@@ -73,11 +77,8 @@ def load_user_config():
     print("loading user configuration from " + userconfig)
     text = open(userconfig).read()
     obj = json.loads(text)
-    global configuration
     configuration = obj['configuration']
-    global compilation
     compilation = obj['compilation']
-    global platform
     platform = obj['platform']
 
 def save_user_config():
@@ -120,7 +121,7 @@ def get_options():
         suffix='-pl'
     else:
         suffix='.pl'
-        
+    
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
         mcdisplay_lst = [prefix+"display-webgl",
@@ -142,7 +143,11 @@ def get_options():
                          prefix+"display"+suffix+" --format=VRML", 
                          prefix+"display-matplotlib"]
 
-    mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    if os.name == 'nt':
+        mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    else:
+        mcrun_lst =     [prefix+"run", "mcsub_pbs "+prefix+"run", "mcsub_slurm "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+        
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 

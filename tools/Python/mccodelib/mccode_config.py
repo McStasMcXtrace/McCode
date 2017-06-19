@@ -114,6 +114,7 @@ def save_user_config():
         if f:
             f.close()
 
+
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
     if os.name == 'nt':
@@ -142,7 +143,11 @@ def get_options():
                          prefix+"display"+suffix+" --format=VRML", 
                          prefix+"display-matplotlib"]
 
-    mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    if os.name == 'nt':
+        mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    else:
+        mcrun_lst =     [prefix+"run", "mcsub_pbs "+prefix+"run", "mcsub_slurm "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+        
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 
