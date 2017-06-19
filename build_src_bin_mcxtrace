@@ -18,6 +18,7 @@ fi
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux64 "" -- src bin
+./mkdist mcxtrace-miniconda3 $1 support/rpm/miniconda3/ "" rpm64 "" -- src bin
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux64 "o" -- src bin
 
 #build metapackages?
