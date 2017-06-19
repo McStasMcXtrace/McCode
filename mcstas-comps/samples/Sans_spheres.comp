@@ -61,7 +61,7 @@
 
 DEFINE COMPONENT Sans_spheres
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_abs=0.50,
+SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_abs=0.05,
 xwidth=0, yheight=0, zdepth=0, radius=0,
 target_x = 0, target_y = 0, target_z = 6, int target_index=0,
 focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0,  focus_r=0)
