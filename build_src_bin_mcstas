@@ -19,6 +19,8 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- src bin
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux64 "" -- src bin
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" linux64 "" -- src bin
+./mkdist mcstas-miniconda3 $1 support/rpm/miniconda3/ "" linux64 "" -- src bin
+./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" linux64 "" -- src bin
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- src bin
 
 #build metapackages?

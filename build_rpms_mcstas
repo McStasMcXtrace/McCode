@@ -18,6 +18,7 @@ fi
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" rpm64 "" -- rpm
+./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" rpm64 "" -- rpm
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" rpm64 "" -- rpm
 
