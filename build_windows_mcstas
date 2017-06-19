@@ -29,6 +29,7 @@ find tools/Legacy-Perl-cmdline-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mingw32 "" -- nsis
+./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mingw32 "" -- nsis
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw32 "" -- nsis
 
 if [ "x$2" != "x" ]; then
