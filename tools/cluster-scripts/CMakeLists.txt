@@ -61,8 +61,12 @@ configure_file("${CMAKE_SOURCE_DIR}/mcsub_pbs.in" "${WORK}/mcsub_pbs" @ONLY)
 configure_file("${CMAKE_SOURCE_DIR}/mcsub_slurm.in" "${WORK}/mcsub_slurm" @ONLY)
 
 if(WINDOWS)
-  message(FATAL_ERROR "Windows not supported!\n"
-    "This package only makes sense on Unix platforms")
+  foreach(NAME "mcsub_pbs" "mcsub_slurm")
+    install(
+      FILES "${WORK}/${NAME}"
+      DESTINATION "${bin}/${NAME}.pl"
+      )
+  endforeach()
 else()
   foreach(NAME "mcsub_pbs" "mcsub_slurm")
     install(
