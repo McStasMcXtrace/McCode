@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from os import mkdir
 from os.path import isfile, isdir, abspath, dirname, basename, join
+from shutil import copyfile
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
@@ -64,6 +65,10 @@ def add_mcrun_options(parser):
     add('--autoplot',
         action='store_true',
         help='open plotter on generated dataset')
+    
+    add('--embed',
+        action='store_true', default=True,
+        help='store copy of instrument file in output directory')
     
     # Multiprocessing
     add('--mpi',
@@ -349,6 +354,11 @@ def main():
         if not options.ncount == 0.0:
             mcstas.run()
 
+    if options.embed is not None:
+        if isdir(options.dir):
+            LOG.info('Placing instr file copy %s in dataset %s',options.instr,options.dir)
+            copyfile(options.instr, join(options.dir,basename(options.instr)))
+            
     if options.autoplot is not None:
         if isdir(options.dir):
             LOG.info('Running plotter %s on dataset %s',mccode_config.configuration['MCPLOT'],options.dir)
