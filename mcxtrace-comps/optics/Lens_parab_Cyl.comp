@@ -28,14 +28,16 @@
 *
 * %P
 * Input parameters:
-* r:        [m] Radius of curvature (circular approximation at the tip of the profile) [m];
+* r:        [m] Radius of curvature (circular approximation at the tip of the profile).
 * yheight:  [m] The CRL's aperture along Y.
 * xwidth:   [m] The width of the CRL in the invariant direction x.
-* d:        [m] Distance between two surfaces of the lens along the propagation axis;
+* d:        [m] Distance between two surfaces of the lens along the propagation axis.
 * N:        [ ] Number of single lenses in a stack.
 * T:        [ ] Obsolete. Ignored but will be removed in next release.
 * rough_xy: [rad] RMS value of random slope along x and y.
 * rough_z:  [rad] RMS value of random slope along z.
+*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab_Cyl
