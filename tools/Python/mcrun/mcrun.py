@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from os import mkdir
 from os.path import isfile, isdir, abspath, dirname, basename, join
+from shutil import copyfile
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
@@ -65,6 +66,10 @@ def add_mcrun_options(parser):
         action='store_true',
         help='open plotter on generated dataset')
     
+    add('--embed',
+        action='store_true', default=True,
+        help='store copy of instrument file in output directory')
+    
     # Multiprocessing
     add('--mpi',
         metavar='NB_CPU',
@@ -113,7 +118,7 @@ def add_mcstas_options(parser):
         action='store_true', default=False,
         help='enable trace of neutron through instrument')
 
-    add('-g', '--gravitation',
+    add('-g', '--gravitation', '--gravity',
         action='store_true', default=False,
         help='enable gravitation for all trajectories')
 
@@ -208,7 +213,6 @@ def get_parameters(options):
             if len(interval) == 1:
                 fixed_params[key] = value
             else:
-                print("Yes")
                 LOG.debug('interval: %s', interval)
                 intervals[key] = interval
         else:
@@ -277,6 +281,7 @@ def main():
     LOG.info('Using directory: "%s"' % options.dir)
     if options.dir == "." or options.dir == "./" or options == ".\\":
         LOG.warning('Existing files in "%s" will be overwritten!' % options.dir)
+        LOG.warning(' - and datafiles catenated...')
         options.dir = '';
 
     # Run McStas
@@ -342,13 +347,18 @@ def main():
     if interval_points:
         scanner = Scanner(mcstas, intervals)
         scanner.set_points(interval_points)
-        mkdir(options.dir)
+        if (not options.dir == ''):
+            mkdir(options.dir)
         scanner.run()
     else:
         # Only run a simulation if we have a nonzero ncount
         if not options.ncount == 0.0:
             mcstas.run()
 
+    if isdir(options.dir):
+        LOG.info('Placing instr file copy %s in dataset %s',options.instr,options.dir)
+        copyfile(options.instr, join(options.dir,basename(options.instr)))
+            
     if options.autoplot is not None:
         if isdir(options.dir):
             LOG.info('Running plotter %s on dataset %s',mccode_config.configuration['MCPLOT'],options.dir)

@@ -24,6 +24,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-python-mcodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac "" -- OSXapp
 
 # Generate mxdoc pages

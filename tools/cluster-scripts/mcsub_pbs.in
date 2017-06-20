@@ -35,19 +35,19 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif(($ARGV[$i] =~ /^-e([0-9a-zA-Z_\.\@]+)$/) ||
             ($ARGV[$i] =~ /^--email=([0-9a-zA-Z_\.\@]+)$/)) {
         $mailrcpt = $1;
-    } elsif($ARGV[$i] =~ /mcrun/) {
-	# strip any reference to mcrun
+    } elsif($ARGV[$i] =~ /@MCCODE_PREFIX@run/) {
+	# strip any reference to @MCCODE_PREFIX@run
      } else {
         push @cmdline, $ARGV[$i]; }
 }
 
-# Figure out which mcstas is currently loaded
-my $mcstas_path = which('mcstas');
-my $mcstas_version =  basename(dirname(dirname(abs_path$mcstas_path)));
+# Figure out which mcstas/mcxtrace is currently loaded
+my $mccode_path = which('@FLAVOR@');
+my $mccode_version =  basename(dirname(dirname(abs_path$mccode_path)));
 
 if (@cmdline == 0) { $show_help=1; }
 if ($show_help) {
-die "Usage: $0 [options] [mcrun params] 
+die "Usage: $0 [options] [@MCCODE_PREFIX@run params] 
  -h        --help            Show this help
  -rN       --runtime=N       Specify maximum runtime (hours) [default $runtime]
  -qQNAME   --queue=QNAME     Specify wanted SLURM queue [default '$queue']
@@ -73,11 +73,11 @@ die "Usage: $0 [options] [mcrun params]
     print $OUT "### Queue name\n";
     print $OUT "#PBS -q $queue\n";
     print $OUT "\n\n";
-    print $OUT "module load mcstas/$mcstas_version\n";    
+    print $OUT "module load @FLAVOR@/$mccode_version\n";    
     print $OUT "\n";
-    print $OUT "### Set up mcrun line\n";
+    print $OUT "### Set up @MCCODE_PREFIX@run line\n";
     print $OUT "cd \$PBS_O_WORKDIR\n";
-    print $OUT "mcrun --mpi=".$nodes*$coresprnode." --machines=\$PBS_NODEFILE ";
+    print $OUT "@MCCODE_PREFIX@run --mpi=".$nodes*$coresprnode." --machines=\$PBS_NODEFILE ";
     print $OUT join(' ',@cmdline);
     if (!($mailrcpt eq "none")) {
       print $OUT "### Send mail on b)egin e)xit a)bort\n";
@@ -93,15 +93,15 @@ die "Usage: $0 [options] [mcrun params]
     print "Resources:\n";
     print "  $nodes nodes using all their cores on queue $queue, expected duration $runtime hours \n";
     print " \n";
-    print "mcrun Command to be submitted: \n";
-    print "  mcrun --mpi=".$nodes*coresprnode;
+    print "@MCCODE_PREFIX@run Command to be submitted: \n";
+    print "  @MCCODE_PREFIX@run --mpi=".$nodes*coresprnode;
     print join(' ',@cmdline);    print " \n";
     print " \n";
     print "Output/error messages will go to: \n";
     print "  $name.stdout and $name.stderr\n";
     print " \n";
     print "\nNOTE: Please compile your instrumentfile using\n";
-    print "        mcrun --mpi -c -n0 instrument.instr\n";
+    print "        @MCCODE_PREFIX@run --mpi -c -n0 instrument.instr\n";
     print "      before submitting!\n";
     print " \n";
 }

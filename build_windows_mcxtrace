@@ -12,21 +12,24 @@ fi
 rsync -avz --delete --exclude=".svn/" mcxtrace-comps/ mcxtrace-comps-win
 find mcxtrace-comps-win -type f -not -name \*.off -exec todos \{\} \;
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
 find tools/Legacy-Perl-win -type f -exec todos \{\} \;
+find tools/Legacy-Perl-cmdline-win -type f -exec todos \{\} \;
 
 # 32-bit
 ./mkdist mcxtrace $1 "" "" mingw32 "" -- nsis
 ./mkdist mcxtrace-comps $1 "" "" mingw32 "" -- nsis
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mingw32 "" -- nsis
-./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl-win/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline-win/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw32 "" -- nsis
-./mkdist mcxtrace-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw32 "" -- nsis
-./mkdist mcxtrace-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw32 "o" -- nsis
 
 if [ "x$2" != "x" ]; then
@@ -35,9 +38,16 @@ if [ "x$2" != "x" ]; then
     if [ ! -f PPDs.zip ]; then
 	wget http://ppds.mccode.org/PPDs.zip
     fi
+    if [ ! -f miniconda3.zip ]; then
+	echo Sorry! I need to download a miniconda3 for embedding - will take some time...
+	wget http://support.mccode.org/windows/miniconda3.zip
+    fi
     cd ..
 
     sed s/@VERSION@/${1}/g McXtrace-metapackage32.iss > McXtrace-${1}-metapackage32.iss
     ./iscc McXtrace-${1}-metapackage32.iss
     mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win32.exe
+    mkdir dist/extras
+    cp MSMPI/*.* dist/extras
+    cp NeXus/*.* dist/extras
 fi

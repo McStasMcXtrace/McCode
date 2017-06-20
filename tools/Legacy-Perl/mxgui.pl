@@ -587,11 +587,11 @@ sub menu_save_config {
   if (-d $ENV{"HOME"}) {
       if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'})) {
 	  mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
-	  if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}"/".$MCSTAS::mcstas_config{'VERSION'})) {
-	      mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}"/".$MCSTAS::mcstas_config{'VERSION'};
+	  if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'})) {
+	      mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'};
 	  }
       }
-      $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}"/".$MCSTAS::mcstas_config{'VERSION'};
+      $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'};
   } else {
     $initdir = $MCSTAS::perl_dir
   }

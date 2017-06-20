@@ -15,8 +15,14 @@
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 * Modified by: EBK 2010: adapted for x-rays:
+* Modified by: M. Schulz, March 2012 : allow to curve the crystal planes
+* Modified by: EF, PW, May 2014: code efficiency improvement when SPLIT is used
+* Modified by: EF, PW, 2015: powder/PG and texture mode
+* Modified by: PW, May 2017: Remove statement about being under validation
+* Modified by: PW, June 2017: Doc updates
 *
-* Mosaic single crystal with multiple scattering vectors.
+* Mosaic single crystal with multiple scattering vectors, optimised for speed
+* with large crystals and many reflections.
 *
 * %D
 * Single crystal with mosaic. Delta-D/D option for finite-size effects.
@@ -24,7 +30,36 @@
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_a, mosaic_b, and mosaic_c
 * parameters.
+* The crystal lattice can be bent locally, keeping the external geometry unchanged.
+* Curvature is spherical along vertical and horizontal axes.
 *
+* <b>Speed/stat optimisation using SPLIT</b>
+* In order to dramatically improve the simulation efficiency, we recommend to
+* use a SPLIT keyword on this component (or prior to it), as well as to disable
+* the multiple scattering handling by setting order=1. This is especially powerful
+* for large reflection lists such as with macromolecular proteins. When an incoming
+* particle is identical to the preceeding, reciprocal space initialisation is 
+* skipped, and a Monte Carlo choice is done on available reflections from the last
+* repciprocal space calculation! To assist the user in choosing a "relevant" value
+* of the SPLIT, a rolling average of the number of available reflections is
+* calculated and presented in the component output.
+*
+* <b>Mosacitiy modes:</b>
+* The component features three independent ways of parametrising mosaicity:
+*  a) The original algorithm where mosaicity is implemented by extending each 
+*     reflection by a Gaussian "cigar" in reciprocal space, characterised by
+*     the parameters mosaic and delta_d_d. 
+*     (Also known as "isotropic mosaicity".)
+*  b) A similar mode where mosaicities can be non-isotropic and given as the
+*     parameters mosaic_a, mosaic_b and mosaic_c, around the unit cell axes.
+*     (Also known as "anisotropic mosaicity".)
+*  c) Given two "macroscopically"/experimentally measured width/mosaicities 
+*     of two independent reflections, parametrised by the list 
+*     mosaic_AB = {mos_a, mos_b, a_h, a_k, a_l, b_h, b_k, b_l}, a set of 
+*     microscopic mosaicities as in b) are estimated (internally) and applied.
+*     (Also known as "phenomenological mosaicity".)
+*     
+* 
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
 *   box/plate:       xwidth x yheight x zdepth
@@ -52,6 +87,7 @@
 * point, and the 7-th number is the value of the structure factor |F|**2, in
 * barns. The rest of the numbers are not used; the file is in the format
 * output by the Crystallographica program.
+* The reflection list should be ordered by decreasing d-spacing values.
 * Lines begining by '#' are read as comments (ignored). Most sample parameters
 * may be defined from the data file header, following the same mechanism as
 * PowderN.

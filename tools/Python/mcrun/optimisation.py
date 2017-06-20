@@ -219,6 +219,8 @@ class Scanner:
         
         # each run will be in "dir/1", "dir/2", ...
         mcstas_dir = self.mcstas.options.dir
+        if mcstas_dir == '':
+            mcstas_dir ='.'
         
         for i, point in enumerate(self.points):
             par_values = []
