@@ -15,6 +15,8 @@
 * Modified by: M. Schulz, March 2012 : allow to curve the crystal planes
 * Modified by: EF, PW, May 2014: code efficiency improvement when SPLIT is used
 * Modified by: EF, PW, 2015: powder/PG and texture mode
+* Modified by: PW, May 2017: Remove statement about being under validation
+* Modified by: PW, June 2017: Doc updates
 *
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
@@ -28,11 +30,46 @@
 * The crystal lattice can be bent locally, keeping the external geometry unchanged.
 * Curvature is spherical along vertical and horizontal axes.
 *
+* <b>Speed/stat optimisation using SPLIT</b>
 * In order to dramatically improve the simulation efficiency, we recommend to
 * use a SPLIT keyword on this component (or prior to it), as well as to disable
-* the multiple scattering handling by setting order=1. This is especially powerfull
-* for large reflection lists such as with macromolecular proteins.
+* the multiple scattering handling by setting order=1. This is especially powerful
+* for large reflection lists such as with macromolecular proteins. When an incoming
+* particle is identical to the preceeding, reciprocal space initialisation is 
+* skipped, and a Monte Carlo choice is done on available reflections from the last
+* repciprocal space calculation! To assist the user in choosing a "relevant" value
+* of the SPLIT, a rolling average of the number of available reflections is
+* calculated and presented in the component output.
 *
+* <b>Mosacitiy modes:</b>
+* The component features three independent ways of parametrising mosaicity:
+*  a) The original algorithm where mosaicity is implemented by extending each 
+*     reflection by a Gaussian "cigar" in reciprocal space, characterised by
+*     the parameters mosaic and delta_d_d. 
+*     (Also known as "isotropic mosaicity".)
+*  b) A similar mode where mosaicities can be non-isotropic and given as the
+*     parameters mosaic_a, mosaic_b and mosaic_c, around the unit cell axes.
+*     (Also known as "anisotropic mosaicity".)
+*  c) Given two "macroscopically"/experimentally measured width/mosaicities 
+*     of two independent reflections, parametrised by the list 
+*     mosaic_AB = {mos_a, mos_b, a_h, a_k, a_l, b_h, b_k, b_l}, a set of 
+*     microscopic mosaicities as in b) are estimated (internally) and applied.
+*     (Also known as "phenomenological mosaicity".)
+*     
+* <b>Powder- and PG-mode</b>
+* When these two modes are used (powder=1 or PG=1), a randomised transformation
+* of the particle direction is made before and after scattering, thereby letting 
+* the single crystal behave as a crystallite of either a powder (crystallite
+* orientation fully randomised) or pyrolytic graphite (crystallite randomised around
+* the c-axis).
+* 
+* <b>Curved crystal mode</b>
+* The component features a method to curve the lattice planes slightly with respect
+* to the outer geometry of the crystal. The method is implemented as a transformation
+* on the particle direction vector, and should be used only in cases where
+*  a) The reflection lattice vector is ~ orthogonal to the crystal surface
+*  b) The modelled curvarture is "small" with respect to the crystal surface
+* 
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
 *   box/plate:       xwidth x yheight x zdepth
