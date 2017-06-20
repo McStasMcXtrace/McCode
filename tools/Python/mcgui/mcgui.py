@@ -250,7 +250,14 @@ class McGuiState(QtCore.QObject):
                 line = line.rstrip()
                 if re.search('CFLAGS=', line) :
                     label, flags = line.split('=', 1)
-                    cflags = cflags + ' ' + flags
+                    MCCODE_LIB = mccode_config.configuration["MCCODE_LIB_DIR"]
+                    # On windows, replace \ by / for safety
+                    if os.name == 'nt':
+                        MCCODE_LIB = re.sub(r'\\','/', MCCODE_LIB)
+                    flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
+                    flags = flags.split(' ')
+                    cflags = cflags + ' '.join(flags)
+
             
             # compile binary from mcstas .c file 
             bf = basenoext + '.' + mccode_config.platform["EXESUFFIX"] 
