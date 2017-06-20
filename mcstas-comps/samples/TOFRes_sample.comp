@@ -161,6 +161,7 @@ TRACE
     if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zdepth; } /* box sample */
     else {  /* Hollow cylinder sample */
       /* Neutron enters at t=t0. */
+      /* If cylinder hollow exists - and is NOT intersected */ 
       if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight) && thickness)
         t1 = t2 = t3;
       scat_factor = 2*(radius-thickness);
