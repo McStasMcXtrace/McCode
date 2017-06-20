@@ -101,20 +101,6 @@ TRACE
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
-/*      distribute phase among the pixels*/
-/*      for (i=0;i<nx;i++){*/
-/*        double dx;*/
-/*        dx=xwidth*(-0.5 + (i+0.5)/nx) - x_o;*/
-/*        for(j=0;j<ny;j++){*/
-/*          double dy,dl;*/
-/*          dy=yheight*(-0.5 + (j+0.5)/ny) - y_o;*/
-/*          dl=sqrt( dx*dx + dy*dy + z_o*z_o);*/
-/*          double nu;*/
-/*          nu=dl*k;*/
-/*          //printf("(i,j,dx,dy,dz,dl,nu,nu+phi)=(%d %d %g %g %g %g %g %g)\n",i,j,dx,dy,z_o,dl,nu, nu+phi_o);*/
-/*        }*/
-/*      }*/
-
 
       double dl,nu;
       dl=sqrt( (x-x_o)*(x-x_o) + (y*y_o)*(y-y_o) + z_o*z_o);
