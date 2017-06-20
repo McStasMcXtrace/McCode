@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-mgcui program 
+mcgui program 
 
 Initial version: spring of 2015.
 Release version: fall 2016.
