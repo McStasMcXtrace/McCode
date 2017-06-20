@@ -188,7 +188,7 @@ class McStas:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
             val = extra_opts.get(opt, default)
-            if val is not None:
+            if val is not None and val is not '':
                 args.extend(['--%s' % opt, str(val)])
 
         # Handle proxy options without values (flags)

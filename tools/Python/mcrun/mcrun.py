@@ -282,6 +282,7 @@ def main():
     LOG.info('Using directory: "%s"' % options.dir)
     if options.dir == "." or options.dir == "./" or options == ".\\":
         LOG.warning('Existing files in "%s" will be overwritten!' % options.dir)
+        LOG.warning(' - and datafiles catenated...')
         options.dir = '';
 
     # Run McStas
@@ -347,17 +348,17 @@ def main():
     if interval_points:
         scanner = Scanner(mcstas, intervals)
         scanner.set_points(interval_points)
-        mkdir(options.dir)
+        if (not options.dir == ''):
+            mkdir(options.dir)
         scanner.run()
     else:
         # Only run a simulation if we have a nonzero ncount
         if not options.ncount == 0.0:
             mcstas.run()
 
-    if options.embed is not None:
-        if isdir(options.dir):
-            LOG.info('Placing instr file copy %s in dataset %s',options.instr,options.dir)
-            copyfile(options.instr, join(options.dir,basename(options.instr)))
+    if isdir(options.dir):
+        LOG.info('Placing instr file copy %s in dataset %s',options.instr,options.dir)
+        copyfile(options.instr, join(options.dir,basename(options.instr)))
             
     if options.autoplot is not None:
         if isdir(options.dir):
