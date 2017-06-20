@@ -213,7 +213,6 @@ def get_parameters(options):
             if len(interval) == 1:
                 fixed_params[key] = value
             else:
-                print("Yes")
                 LOG.debug('interval: %s', interval)
                 intervals[key] = interval
         else:
