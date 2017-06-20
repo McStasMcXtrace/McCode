@@ -25,16 +25,16 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xmin:     [m] Lower x bound of detector opening.
+* xmax:     [m] Upper x bound of detector opening.
+* ymin:     [m] Lower y bound of detector opening.
+* ymax:     [m] Upper y bound of detector opening.
+* xwidth:   [m] Width of detector. Overrides xmin,xmax.
+* yheight:  [m] Height of detector. Overrides ymin,ymax.
+* nx:       [m] Number of pixel columns.
+* ny:       [m] Number of pixel rows.
+* filename: [m] Name of file in which to store the detector images (the suffixes .abs and .arg will be added).
+* restore_xray: If set, the monitor does not influence the xray state.
 *
 * OUTPUT PARAMETERS:
 *
