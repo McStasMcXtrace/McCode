@@ -28,14 +28,14 @@
 *
 * %P
 * Input parameters:
-* r [m] Radius of curvature (circular approximation at the tip of the profile) [m];
-* yheight [m] The CRL's aperture along Y.
-* xwidth [m] The width of the CRL in the invariant direction x.
-* d [m] Distance between two surfaces of the lens along the propagation axis;
-* N [ ] Number of single lenses in a stack.
-* T [ ] Obsolete. Ignored but will be removed in next release.
-* rough_xy [rms] - waviness along x and y
-* rough_z [rms] -waviness along z
+* r:        [m] Radius of curvature (circular approximation at the tip of the profile) [m];
+* yheight:  [m] The CRL's aperture along Y.
+* xwidth:   [m] The width of the CRL in the invariant direction x.
+* d:        [m] Distance between two surfaces of the lens along the propagation axis;
+* N:        [ ] Number of single lenses in a stack.
+* T:        [ ] Obsolete. Ignored but will be removed in next release.
+* rough_xy: [rad] RMS value of random slope along x and y.
+* rough_z:  [rad] RMS value of random slope along z.
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab_Cyl
@@ -202,6 +202,7 @@ INITIALIZE
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+
   prms->E=malloc(sizeof(double)*(T.rows+1));
   prms->f=malloc(sizeof(double)*(T.rows+1));
   prms->mu=malloc(sizeof(double)*(T.rows+1));
