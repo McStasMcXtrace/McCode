@@ -282,6 +282,7 @@ def main():
     LOG.info('Using directory: "%s"' % options.dir)
     if options.dir == "." or options.dir == "./" or options == ".\\":
         LOG.warning('Existing files in "%s" will be overwritten!' % options.dir)
+        LOG.warning(' - and datafiles catenated...')
         options.dir = '';
 
     # Run McStas
