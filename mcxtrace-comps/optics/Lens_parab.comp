@@ -22,13 +22,14 @@
 *
 * %P
 * Input parameters:
-* r: [m] Radius of curvature (circular approximation at the tip of the profile) [m]
-* r_ap: [m] Radius of circular aperture, which also defines the depth of the lens profile.
-* d: [m] Distance between two surfaces of the lens along the propagation axis. [m]
-* N: [m] Number of single lenses in a stack. [ ]
-* rough_xy [rad] RMS value of random slope error along x and y
-* rough_z [rad] RMS value of random slope error along z
-* 
+* r:        [m] Radius of curvature (circular approximation at the tip of the profile).
+* r_ap:     [m] Radius of circular aperture, which also defines the depth of the lens profile.
+* d:        [m] Distance between two surfaces of the lens along the propagation axis.
+* N:        [m] Number of single lenses in a stack.
+* rough_xy: [rad] RMS value of random slope error along x and y.
+* rough_z:  [rad] RMS value of random slope error along z.
+*
+* %E
 *******************************************************************************/
 
 
