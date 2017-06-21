@@ -147,39 +147,45 @@ SAVE
 
 #ifdef USE_MPI
     double *PSD_p_absbuf,*PSD_p_argbuf;
-    int *N_buf;
+    double *N_buf;
     if (mpi_node_rank==0){
-      PSD_p_absbuf=malloc(sizeof(double)*mpi_node_count);
-      PSD_p_argbuf=malloc(sizeof(double)*mpi_node_count);
-      N_buf=malloc(sizeof(int)*mpi_node_count);
+        PSD_p_absbuf=calloc(mpi_node_count,sizeof(double));
+        PSD_p_argbuf=calloc(mpi_node_count, sizeof(double));
+        N_buf=calloc(mpi_node_count,sizeof(double));
+    }else{
+        PSD_p_absbuf=NULL;
+        PSD_p_absbuf=NULL;
+        N_buf=NULL;
     }
+
     for (i=0;i<nx;i++){
       for(j=0;j<ny;j++){
-        //printf("%s %d %d\n",NAME_CURRENT_COMP,i,j);
         MPI_Gather(&(PSD_p_abs[i*ny+j]), 1, MPI_DOUBLE, PSD_p_absbuf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
         MPI_Gather(&(PSD_p_arg[i*ny+j]), 1, MPI_DOUBLE, PSD_p_argbuf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
-        MPI_Gather(&(PSD_N[i*ny+j]),1, MPI_INT, N_buf, 1, MPI_INT, 0,MPI_COMM_WORLD);
+        MPI_Gather(&(PSD_N[i][j]),1, MPI_DOUBLE, N_buf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
         if (mpi_node_rank==0){
           complex double tmp_phi=0;
-          int k,tmp_N=0;
+          unsigned long tmp_N=0;
+          int k;
           for (k=0;k<mpi_node_count;k++){
             tmp_phi+=PSD_p_absbuf[k]*cexp(I*PSD_p_argbuf[k]);
-            tmp_N+=N_buf[k];
+            tmp_N+=(unsigned long)N_buf[k];
           }
           PSD_p_abs[i*ny+j]=cabs(tmp_phi);
           PSD_p_arg[i*ny+j]=carg(tmp_phi);
-          PSD_N[i*ny+j]+=tmp_N;
+          PSD_N[i][j]=(unsigned long) tmp_N;
         }else{
-          /*this is necessary to ensure that whatever comes from the other nodes is just zeroes*/
-          PSD_p_abs[i*ny+j]=0;
-          PSD_p_arg[i*ny+j]=0;
-          PSD_N[i*ny+j]=0;
+            /*set all the other nodes' data to zero. The DETECTOR_OUT macros will do an unnecessary gather,
+              and so we don't want to add things twice.*/
+            PSD_p_abs[i*ny+j]=0;
+            PSD_p_arg[i*ny+j]=0;
+            PSD_N[i][j]=0;
         }
       }
     }
     /*doing it this way is inefficient since we send a lot of zeros across the network - but it should work*/ 
 #endif
-    
+
     DETECTOR_OUT_2D(
         "PSD monitor (absolute value)",
         "X position [m]",
@@ -188,7 +194,15 @@ SAVE
         nx, ny,
         PSD_N[0],PSD_p_abs,PSD_p2[0],
         filename_abs);
-    
+#ifdef USE_MPI
+    if(mpi_node_rank!=0){
+        /*DETECTOR_OUT macros do an AllRecv. Reset non-zero nodes' data to zero*/
+        memset(PSD_p_abs,0,nx*ny*sizeof(double));
+        memset(PSD_p_arg,0,nx*ny*sizeof(double));
+        memset(PSD_N[0],0,nx*ny*sizeof(double));
+    }
+#endif
+
     DETECTOR_OUT_2D(
         "PSD monitor (argument)",
         "X position [m]",
