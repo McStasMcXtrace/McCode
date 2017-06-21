@@ -61,8 +61,8 @@ DECLARE
 INITIALIZE
   %{
     int i,j;
-    double *p1,*p2,*p3;
-    complex double *p4;
+    double *p1,*p2;
+    complex double *p3;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
@@ -134,7 +134,7 @@ SAVE
     PSD_p_abs=calloc(nx*ny,sizeof(double));
     PSD_p_arg=calloc(nx*ny,sizeof(double));
     if(PSD_p_abs==NULL || PSD_p_arg==NULL){
-        fprintf("Error (%s): Buffer memory allocation error\nAborting\n.",NAME_CURRENT_COMP);exit(-1);
+        fprintf(stderr,"Error (%s): Buffer memory allocation error\nAborting\n.",NAME_CURRENT_COMP);exit(-1);
         exit(-1);
     }
 
@@ -186,7 +186,7 @@ SAVE
         "Y position [m]",
         xmin, xmax, ymin, ymax,
         nx, ny,
-        PSD_N[0],PSD_p_abs[0],&PSD_p2[0],
+        PSD_N[0],PSD_p_abs,PSD_p2[0],
         filename_abs);
     
     DETECTOR_OUT_2D(
@@ -195,15 +195,13 @@ SAVE
         "Y position [m]",
         xmin, xmax, ymin, ymax,
         nx, ny,
-        PSD_N[0],PSD_p_arg[0],PSD_p2[0],
+        (PSD_N[0]),PSD_p_arg,PSD_p2[0],
         filename_arg);
 %}
 FINALLY
 %{
    free(PSD_N[0]);
    free(PSD_N);
-   free(PSD_p[0]);
-   free(PSD_p);
    free(PSD_p2[0]);
    free(PSD_p2);
    free(PSD_phi[0]);
