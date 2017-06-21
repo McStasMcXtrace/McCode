@@ -102,7 +102,7 @@ INITIALIZE
   if (r!=0 && radius!=0){
       fprintf(stderr,"Warning (%s): parameter r = %g overrides old parameter name radius = %g.\n",NAME_CURRENT_COMP);
   }else if (r==0 && radius!=0){
-    fprintf(stderr,"Warning (%s): You are using the obsolescent parameter name radius. Please consider changing to r\n"NAME_CURRENT_COMP); 
+    fprintf(stderr,"Warning (%s): You are using the obsolescent parameter name radius. Please consider changing to r\n",NAME_CURRENT_COMP);
     r=radius;
   }
   if(r<=0){
