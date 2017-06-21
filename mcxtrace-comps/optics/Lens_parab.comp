@@ -49,7 +49,7 @@ SHARE
   typedef struct {
       double constants[6];
   } lens_parab;
-  
+
   incom_parab intersection_lens_parab(incom_parab a,lens_parab b, double rough_xy,double rough_z){
       incom_parab result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
       int i;
@@ -201,9 +201,8 @@ SHARE
     for(i=0;i<3;i++) { 
       result.k[i]=k_new[i]; 
     } 
-    return result; 
+    return result;
   }
-
 %}
 
 DECLARE
@@ -212,40 +211,30 @@ DECLARE
     int Z;
     double Ar, rho;
     double *E, *mu, *f;
+    t_Table T;
   } *prms;
 %} 
 
-INITIALIZE 
+INITIALIZE
 %{
   int status=0;
-  t_Table T;
-  if ( (status=Table_Read(&T,material_datafile,0))==-1){
+  prms=calloc(1,sizeof(*prms));
+
+  if ( (status=Table_Read(&(prms->T),material_datafile,0))==-1){
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
       exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
-  prms=calloc(1,sizeof(*prms));
+  header_parsed=Table_ParseHeader(prms->T.header,"Z","A[r]","rho",NULL);
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
-  prms->E=malloc(sizeof(double)*(T.rows+1));
-  prms->f=malloc(sizeof(double)*(T.rows+1));
-  prms->mu=malloc(sizeof(double)*(T.rows+1));
-  int i;
-  for(i=0;i<T.rows;i++){
-      prms->E[i]=T.data[i*T.columns];
-      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;/*mu is now in SI, [m^-1]*/
-      prms->f[i]=T.data[1+i*T.columns];
-  }
-  Table_Free(&T);
 %}
 
-TRACE 
+TRACE
 %{
   incom_parab incid,refr,outg;
   lens_parab parab;
-
   double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w;
 
   int i=0,nr;
@@ -259,37 +248,26 @@ TRACE
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
   /*Interpolation of Table Values*/
-  while (e>prms->E[i]){
-    i++;
-    if (prms->E[i]==-1){
-      fprintf(stderr,"Photon energy (%g keV) is outside of the lens' material data\n",e); ABSORB;
-    }
-  }
-  E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
-  mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
-  mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
-  f=(1-E)*prms->f[i-1]+E*prms->f[i]; 
+  mu=Table_Value(prms->T,e,5)*prms->rho*1e2;/*mu is now in SI, [m^-1]*/;
+
+  f=Table_Value(prms->T,e,1);
 
   /*Calculation of Refractive Index */
-
   rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-
   delta= 2.0*M_PI*RE*rhoel/(k*k);
-  beta=mu/(2.0*k); /*mu and k in  A^-1*/
+  beta= mu*1e-10/(2.0*k); /*mu and k in  A^-1*/
 
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
-
-  /*Ray Tracing*/
 
   incid.k[0]=kx;
   incid.k[1]=ky; 
   incid.k[2]=kz;
   
-  incid.coord[0]=x; 
-  incid.coord[1]=y; 
+  incid.coord[0]=x;
+  incid.coord[1]=y;
   incid.coord[2]=z;
-  
+
   d_total=0;
   for (nr=0;nr<=(N-1);nr++){
     parab.constants[3]=nr*d+nr*2*w; // d constant
@@ -327,6 +305,12 @@ TRACE
   /*Add absorption according to the path length inside the lens material*/
   p*=exp(-mu*d_total);
 
+%}
+
+FINALLY
+%{
+    Table_Free(&(prms->T));
+    free(prms);
 %}
 
 MCDISPLAY
