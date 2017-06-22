@@ -1,0 +1,103 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: 07/05/2013
+* Origin: DTU Physics
+* Release: McXtrace 1.0
+* Version: 0.2
+* %INSTRUMENT_SITE: None
+*
+* Test instrument for the Bending_magnet component
+*
+* %Description
+* This is a simple test-instrument for the bending magnet component. 
+*
+* Example: Test_BM.instr e0=12.5 de=0.5 Detector: emon_I=2.93198e+19
+*
+* %Parameters
+* e0: [keV] Central energy of the interval to be looked at
+* de: [keV] Half-width of energy interval
+* 
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_BM(SOURCE=0,e0=25,de=24.9)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT bm0 = Bending_magnet(
+    E0 = e0, dE = de, phase = 0, randomphase = 1, Ee = 2.4,
+    Ie = 0.4, tbunch = 0, B = 1.6)
+WHEN (SOURCE==0) AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT w1 = Wiggler(
+    E0 = e0, dE = de, phase = 0, randomphase = 1, Ee = 2.4,
+    Ie = 0.4, tbunch = 0, B = 1.6, K=10, Nper=41)
+WHEN (SOURCE==1) AT(0,0,0) RELATIVE Origin
+
+COMPONENT psd0 = PSD_monitor(
+    filename = "psd0", xwidth = 0.001, yheight = 0.001)
+AT (0, 0, 0.6) RELATIVE bm0
+
+COMPONENT emon = E_monitor(
+    xwidth=0.001, yheight=0.001,Emax=e0+de*1.1,Emin=e0-de*1.1, filename="emon0", nE=201)
+AT(0,0,1e-6) RELATIVE PREVIOUS
+
+COMPONENT psd1 = COPY(psd0)(filename="psd1")
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd2 = COPY(psd0)(filename="psd2")
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd3 = COPY(psd0)(filename="psd3")
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd4 = COPY(psd0)(filename="psd4")
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd5 = COPY(psd0)(filename="psd5")
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
