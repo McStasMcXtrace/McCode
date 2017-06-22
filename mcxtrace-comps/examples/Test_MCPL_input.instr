@@ -1,0 +1,82 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_MCPL_input
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Mar 2016
+* Origin: 
+* Release: McStas 2.3
+* Version: $Revision$
+* %INSTRUMENT_SITE: Tests_optics
+*
+* A test instrument for MCPL_input
+*
+* %Description
+*
+* This is a unit test for the MCPL_input component.
+*
+* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_MCPL_input(dummy=0)
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/MCPL/voutput.mcpl"
+
+INITIALIZE
+%{
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef MCPLPATH
+#define MCPLPATH=/usr/share/mcxtrace/1.4/MCPL/voutput.mcpl
+#endif
+
+#define MCPLFILE STR(MCPLPATH)
+
+printf("Using the input file: %s\n", MCPLFILE);
+
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read photons from an mcpl file*/
+
+COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1)
+AT( 0,0,0) RELATIVE PREVIOUS
+
+COMPONENT m1 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto lambda, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m2 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto x, auto y, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m3 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto t parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m4 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto E, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m5 = Monitor_nD(
+  xwidth=0.2, yheight=0.2, user1=22,
+  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
+) AT (0,0,0) ABSOLUTE
+
+
+END
+
+
