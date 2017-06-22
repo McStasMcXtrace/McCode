@@ -36,7 +36,6 @@ and the _rough versions themselves retired.
     monitors/DivE_monitor.comp
     monitors/DivPos_monitor.comp
     monitors/Divergence_monitor.comp
-    monitors/E_p1BW_monitor.comp
 
     optics/Bragg_crystal.comp: Superseeds Perfect_Crystal
     optics/Bragg_crystal_bent.comp: Bent crystal model
