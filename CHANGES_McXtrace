@@ -77,3 +77,4 @@ and the _rough versions themselves retired.
 10. Curved Bragg monochromator crystal
     Major improvements to the flat Bragg monochromator crystal
 11. Output in the NeXus-format.
+12. Data files can be read only once and reused by other components.
