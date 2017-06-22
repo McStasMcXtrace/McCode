@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: SAXS_saxslab (rename also the example and DEFINE lines below)
+* Instrument: JJ_SAXS (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Erik Knudsen (erkn@risoe.dtu.dk)
@@ -14,6 +14,8 @@
 * Crude model of a laboratory SAXS-instrument mimicking the type sold by SAXSlab/JJ-Xray Systems.
 *
 * %Description
+* This is a very sketchy model of a SAXS-system, related to the old design of JJ X-ray systems.
+* It has been superseeded by the SAXS_saxslab model.
 *
 *
 * %Parameters
@@ -31,7 +33,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT SAXS_saxlab(pin2_pos=0.2, pin3_pos=0.4, optic_L=0.1, sample_pos=0.2, detector_pos=2)
+DEFINE INSTRUMENT JJ_SAXS(pin2_pos=0.2, pin3_pos=0.4, optic_L=0.1, sample_pos=0.2, detector_pos=2)
 
 DECLARE
 %{

@@ -1,0 +1,170 @@
+/*********************************************************
+ * McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument : SAXS_saxslab
+*
+* %Identification
+* Written by : Erik Knudsen ( erkn@fysik.dtu.dk ) & Jana Baltser ( jana.baltser@fys.ku.dk )
+* Date : Apr 2017
+* Origin : NBI
+* Release : 1.4
+* Version : 1.0
+*
+* Description
+* The small-angle scattering (SAXS) instrument generally consists of the following parts:
+* the X-ray source ( the system includes rotating copper anode and KB multilayermirrors), 
+* a pinhole collimation system and a detector.
+* 
+* The geometry of this instument is such that an x-ray source (turned 45 deg.) shines light
+* on Montel mirror pair. The mirror pair is mounted such that the doubly reflected radiation
+* is deflected downwards (negative y-axis). This means the the mirror join is pointing upwards, and th
+* mirrors themselves extending +-45 degrees downwards.
+* There are slits attached to the mirror exits
+* This arrangement is designed to closesly resemble the SAXSlab system installed at
+* NBI (University of Copenhagen)
+* 
+* The evolution of the beam is tracked using a series of 2D PSD monitors situated along the beam axis,
+* which points slightly down.
+* In real life the beam axis is parallel to the ground and the source is shining slightly upwards.
+* 
+*
+* %Parameters
+* Gamma:    [deg] Nominal mirror glancing  angle
+* S1:       [m]   Distance from the source to the multilayer’s surface
+* S2:       [m]   Focal distance of the multilayer
+* L:        [m]   Distance between two mirrors
+* Energy:   [keV] Primary energy of the photon beam
+* mirrorin: [ ]   Flag controlling whether or not the mirror is active.
+* pin1:     [ ]   Flag controlling whther the 1st pinhole is active.
+* pin2:     [ ]   Flag controlling whther the 2nd pinhole is active.
+* pin3:     [ ]   Flag controlling whther the 3rd pinhole is active.
+* Lpsd1:    [m]   Distance from mirror centre to 1st diagnostic PSD.
+* Lpsd2:    [m]   Distance from vacumm chamber entry to 2nd diagnostic PSD.
+* Lpsd3:    [m]   Distance from vacumm chamber entry to 3rd diagnostic PSD.
+* detPos:   [m]   Distance from vacuum chamber entry to Detector.
+* detOffSet:[m]   detector offset perpendicular to the optical axis (roughly "up").=3e-2;
+*
+* %End
+**************************************************************/
+DEFINE INSTRUMENT SAXS_saxlab(Gamma=1.2 ,GammaP=0 ,S1=.045, S2 =.9, Energy=8.05,
+        int mirrorin=3, int pin1=1, int pin2=1, int pin3=1, Lpsd1=0.160, Lpsd2=0.15,Lpsd3=1.2,
+        detPos=1.41, detOffset=3e-2)
+
+DECLARE
+%{
+  const double sourceh =10e-6;
+  const double sourcev =10e-6;
+  const double divh=9e-3;
+  const double divv =9e-3;
+  const double slitsize =1.5e-3;
+  const double xdet = 0.106 ;
+  const double ydet = 0.084 ;
+
+  const double pin1_xw=1e-3;
+  const double pin1_yh=1e-3;
+
+  const double pin2_pos=0.2;
+  const double pin2_xw=1e-3;
+  const double pin2_yh=1e-3;
+
+  const double pin3_pos=0.4;
+  const double pin3_xw=1e-3;
+  const double pin3_yh=1e-3;
+  
+#define NXval 619
+#define NYval 487
+  double mwidth = 0.02;
+  double mlength = 0.06;
+  int Scatt;
+  double delta ;
+  const double detOffSet=3e-2;
+
+
+
+
+%}
+
+
+INITIALIZE
+%{
+  if (GammaP) Gamma=GammaP/sqrt(2);
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar( )
+AT ( 0 , 0 , 0 ) ABSOLUTE
+
+COMPONENT Source=Source_gaussian ( sig_x=sourceh , sig_y=sourcev ,
+sigPr_x=divh , sigPr_y=divv , dist =0.015 , E0 =8.07 ,dE=0.5 , flux =1e15 )
+AT( 0 , 0 , 0 ) RELATIVE Origin
+ROTATED (0,0,45) RELATIVE Origin
+
+COMPONENT energy_BEF=E_monitor (nE=500 , filename="energyBEF.dat",
+    xwidth=xdet ,yheight=ydet , Emin=7 ,Emax=9 , restore_xray =1)
+AT(0,0,1e-3) RELATIVE Origin
+
+COMPONENT mirrorentryslit=Slit (
+    xwidth=slitsize , yheight= slitsize )
+AT(0.0,0.63e-3, S1-mlength/2.0) RELATIVE Origin
+ROTATED (0,0,-135) RELATIVE Origin
+
+COMPONENT mirrormnt=Arm( )
+AT ( 0.0 , 0 , S1 ) RELATIVE Origin
+ROTATED ( 0 , 0 , -135 ) RELATIVE Origin
+
+COMPONENT xmirrorrot=Arm( )
+AT( 0 , 0 , 0 ) RELATIVE mirrormnt
+ROTATED(-Gamma, 0 , 0 ) RELATIVE mirrormnt
+
+COMPONENT ymirrorrot=Arm( )
+AT( 0 , 0 , 0 ) RELATIVE mirrormnt
+ROTATED ( 0 ,Gamma, 0 ) RELATIVE xmirrorrot
+
+COMPONENT mirror=TwinKB_ML( theta=Gamma, s1=S1 , s2=S2 , length=mlength , 
+        width=mwidth , R0=0 , reflectivity_datafile="Ref_W_B4C.txt")
+WHEN ( mirrorin ) AT(0,0,0) RELATIVE mirrormnt
+ROTATED (0,0,0) RELATIVE ymirrorrot
+
+COMPONENT mirrorout=Arm( )
+AT( 0 , 0 , 0 ) RELATIVE mirrormnt
+ROTATED (2*M_SQRT2*Gamma,0,0) RELATIVE Origin
+
+COMPONENT mirrorexit=Slit (
+  xwidth= slitsize , yheight= slitsize )
+AT( 0 ,-0.90e-3 - 2.17e-3, S1+mlength/2.0 ) RELATIVE Origin
+ROTATED ( 0 , 0 , -135 ) RELATIVE Origin
+
+COMPONENT pinhole1=Slit(xwidth=pin1_xw,yheight=pin1_yh)
+WHEN(pin1) AT(0,0,0.15) RELATIVE mirrorout
+
+COMPONENT psd1=PSD_monitor ( filename ="psd1.dat" , xwidth=xdet , yheight=ydet , restore_xray=1,
+        nx=NXval , ny=NYval )
+AT (0 ,0 ,Lpsd1 ) RELATIVE mirrorout
+
+COMPONENT pinhole2=Slit(xwidth=pin2_xw,yheight=pin2_yh)
+WHEN(pin2) AT(0,0,pin2_pos) RELATIVE mirrorout
+
+// now - inside the vacuum chamber mode
+COMPONENT psdin1=PSD_monitor (filename="psdin1.dat", xwidth=xdet,
+yheight=ydet, restore_xray=1 ,nx=NXval , ny=NYval )
+AT ( 0 , 0 , 1.540 ) RELATIVE mirrorout
+
+COMPONENT psdin2=PSD_monitor ( filename="psdin2.dat" , xwidth=xdet ,
+yheight=ydet , restore_xray =1 ,nx=NXval , ny=NYval )
+AT ( 0 , 0 , Lpsd2) RELATIVE psdin1
+
+COMPONENT pinhole3=Slit(xwidth=pin3_xw,yheight=pin3_yh)
+    WHEN(pin3) AT(0,0,pin3_pos) RELATIVE mirrorout
+
+COMPONENT psdin3=PSD_monitor ( filename="psdin3.dat" , xwidth=xdet ,
+yheight=ydet , restore_xray =1 ,nx=NXval , ny=NYval )
+AT ( 0 , 0 , Lpsd3) RELATIVE psdin1
+
+COMPONENT detector=PSD_monitor ( filename ="detector.dat" , xwidth=xdet ,
+yheight=ydet , restore_xray =0 ,nx=NXval , ny=NYval )
+AT ( 0 , detOffSet, detPos ) RELATIVE psdin1
+
+
+END
+
