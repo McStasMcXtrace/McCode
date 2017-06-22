@@ -1,0 +1,139 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: ZonePlate
+*
+* %I
+* Written by: Erik Knudsen
+* Date: June 16, 2009
+* Version: $Revision: 1.0$
+* Origin: DTU Physics
+* Release: McXtrace 1.4
+*
+* Zone plate based on Monte Carlo sampling of the Fresnel-Kirchhoff integral
+*
+* %D
+* A component which models a zone plate by consierding the plate a secondary source
+* and then by means of Monte Carlo sampling, evaluating the Fresnel-Kirchhoff integral
+* implicitly by resampling the beam in a window defined by the focus_xw,focus_yh parameters.
+* 
+* Caveat emptor: this is a computationally heavy component to run. 
+* The zone plate can be iether circular or linear. In the linear case, the "slits" are
+* along the x-axis.
+*
+* %P
+* radius:     [m]  The outer radius of the zone plate. Triggers a circular zone plate. Takes precedence over xwidth,yheight.
+* xwidth:     [m]  Width of linear zone plate. 
+* yheight:    [m]  Height of linear zone plate
+* L:          [m]  Focal length. 
+* lambda0:    [AA] The nominal wavelength that the zone plate is designed to focus.
+* focus_xw:   [m]  Width of the resampling window.
+* focus_yh:   [m]  Height of the resampling window.
+* dist:       [m]  Distance along the z-axis from zone plate to the resampling window.
+* focus_x0:   [m]  Offset of resampling window along the x-axis.
+* focus_y0:   [m]  Offset of resampling window along the y-axis.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT ZonePlate
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius=0,xwidth=0,yheight=0, L, lambda0,focus_x0=0, focus_y0=0, focus_xw, focus_yh,dist)
+OUTPUT PARAMETERS ( )
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+
+INITIALIZE
+%{
+
+%}
+
+TRACE
+%{
+  double K, lambda,rr;
+  int n;
+  PROP_Z0;
+  //lambda=2*M_PI/(sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)));
+  K=sqrt(L*lambda0*1e-10);
+
+  do {
+    if (radius && ((rr=x*x + y*y) < radius*radius) ){
+      /*ZP is circular and photon hits - check if in a clear zone*/
+      /*assume the plate is clear in the middle*/
+      n=(int) floor(rr/(K*K));
+      //printf("%g %g %d\n",rr,K,n);
+      if (n%2!=0){
+        /* n is odd - we're not clear*/
+        ABSORB;
+      }
+    } else if (!(x<-xwidth*0.5 || x>xwidth*0.5 || y<-yheight*0.5 || y>yheight*0.5)){
+      /*ZP is linear and photon hits - check if in a clear zone*/
+      n=(int) floor(x*x/(K*K));
+      //printf("%g %g %d\n",x*x,K,n);
+      if (n%2!=0){
+        ABSORB;
+      }
+    } else {
+      /*complete miss*/
+      RESTORE_XRAY(INDEX_CURRENT_COMP,x,y,z,kx,ky,kz,phi,t, Ex,Ey,Ez,p);
+      break;
+    }
+
+    if ( focus_xw ){
+      double posx,posy,posz,pdir,k;
+      coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
+
+      /*we have a target behind the zone plate - so we now consider the ray a Huygens wavelet.*/
+      double xf,yf,zf;
+      randvec_target_rect_real(&xf, &yf, &zf, &pdir, focus_x0/*-posx*/,focus_y0/*-posy*/,dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 0);
+      //printf("%g %g %g %g %g    %g %g %g   %g %g\n",xf,yf,zf,pdir,p,x,y,z,focus_x0,focus_y0);
+      //p*=pdir;
+      k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+      kx=(xf-x); ky=(yf-y); kz=(zf-z);
+      NORM(kx,ky,kz);
+      kx*=k;ky*=k;kz*=k;
+    }
+    SCATTER;
+
+  } while (0);
+%}
+
+
+MCDISPLAY
+%{
+  int n;
+  double rr,K,lambda;  
+  lambda=2*M_PI/lambda0;
+  K=sqrt(L*lambda0*1e-10);
+
+  magnify("xy");
+  if (radius != 0) {
+    for (n=0;n<12;n++){
+      rr=K*sqrt(n);
+      circle("xy",0,0,0,rr);
+    }
+    circle("xy",0,0,0,radius);
+  }else{
+/*    double xw, yh;*/
+/*    xw = (xmax - xmin)/2.0;*/
+/*    yh = (ymax - ymin)/2.0;*/
+/*    multiline(3, xmin-xw, (double)ymax, 0.0,*/
+/*              (double)xmin, (double)ymax, 0.0,*/
+/*              (double)xmin, ymax+yh, 0.0);*/
+/*    multiline(3, xmax+xw, (double)ymax, 0.0,*/
+/*              (double)xmax, (double)ymax, 0.0,*/
+/*              (double)xmax, ymax+yh, 0.0);*/
+/*    multiline(3, xmin-xw, (double)ymin, 0.0,*/
+/*              (double)xmin, (double)ymin, 0.0,*/
+/*              (double)xmin, ymin-yh, 0.0);*/
+/*    multiline(3, xmax+xw, (double)ymin, 0.0,*/
+/*              (double)xmax, (double)ymin, 0.0,*/
+/*              (double)xmax, ymin-yh, 0.0);*/
+  } 
+%}
+
+END
