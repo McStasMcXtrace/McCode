@@ -44,6 +44,7 @@
 * dist: [m] Distance from source plane to target window along the optical axis.
 * E0: [keV] Center of emitted energy spectrum (overrides lambda0).
 * dE: [keV] Half-width of emitted energy spectrum.
+* E1st: [keV] Energy of the fundmental (1st) undulator harmonic.
 * verbose: [ ] if nonzero, output extra information.
 * quick_integ: [ ] if nonzero, use faster (but less accurate) integration scheme.
 *
@@ -55,7 +56,8 @@
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
 SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
-        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0)
+        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0,
+        E1st=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 DEPENDENCY "-lgsl -lgslcblas"
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -117,6 +119,8 @@ DECLARE
   /*electron mass from CODATA in kg*/
   const double MELE=9.10938291e-31;
   //double besselj[nharm],besselh[nharm];
+
+
 %}
 
 
@@ -126,12 +130,22 @@ INITIALIZE
   
   prms.length=lu*Nper;
 
-  if( (!K && B<=0) || Ee<=0 || Ie<=0 ){
-    fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a sane set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
+  if( (!E1st && !K && B<=0) || Ee<=0 || Ie<=0 ){
+    fprintf(stderr, "Error (%s): E1st, K, B, Ee, and Ie do not have a sane set of values. Found (%g %g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,E1st,K,B,Ee,Ie);
     exit(1);
   }
 
-  if(B>0){
+  /*compute gamma*/
+  prms.gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+  prms.gamma2=prms.gamma*prms.gamma;
+  prms.igamma=1.0/prms.gamma;
+
+  if(E1st){
+      /*compute K and B from desired target energy*/
+      K=sqrt(2*(4*M_PI*prms.gamma2/(E2K*E1st*lu*1e10) -1));
+      B=2*M_PI*MELE*M_C*K/CELE/lu;
+      if (verbose) printf("Undulator (%s) (K,B)=f(E1st=%g)= (%g , %g)\n",NAME_CURRENT_COMP,E1st,K,B);
+  }else if(B>0){
     K=CELE*B*lu/(2*M_PI*MELE*M_C);
     if (verbose) printf("Undulator (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
   }else if (K){
@@ -148,10 +162,6 @@ INITIALIZE
     exit(1);
   }
 
-  /*compute gamma*/
-  prms.gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
-  prms.gamma2=prms.gamma*prms.gamma;
-  prms.igamma=1.0/prms.gamma;
 
   //printf("Undulator (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,prms.gamma,prms.igamma);
   /*compute characteristic energy in keV*/

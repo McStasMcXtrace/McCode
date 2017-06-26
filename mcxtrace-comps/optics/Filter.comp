@@ -108,8 +108,8 @@ INITIALIZE
       prms->shape=ANY; 
     }
   } else if(!xwidth || !yheight || !zdepth){
-    fprintf(stderr,"%s: Filter has zero effective volume\n",NAME_CURRENT_COMP);
-    exit(0);
+    fprintf(stderr,"Error (%s): Filter has zero effective volume\n",NAME_CURRENT_COMP);
+    exit(-1);
   }
   
   
@@ -151,11 +151,12 @@ TRACE
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
   }else if (prms->shape==ANY){
     status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
-    //if(status) printf("intersected off - object %d %g %g\n",status,l0,l1);
   } 
 
   if(status){
     PROP_DL(l0);
+    l1-=l0;
+
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
     /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
@@ -182,6 +183,13 @@ TRACE
       }
       status=filter_refract(&kx,&ky,&kz,nx,ny,nz,0.0,delta);
       SCATTER;
+
+      /*change of direction - we must now intersect again*/
+      if (prms->shape==CUBE) {
+          status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
+      }else if (prms->shape==ANY){
+          status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
+      }
     }
 
     /*change k ' we're now inside some material*/
@@ -190,7 +198,6 @@ TRACE
     kz*=1-delta;
 
     /*propagate to next intersection with filter (assumed to be exit)*/
-    l1-=l0; 
     p*=exp(-mu0*l1);
     SCATTER;
     PROP_DL(l1);

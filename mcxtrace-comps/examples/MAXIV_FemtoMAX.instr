@@ -1,0 +1,226 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Current Date
+* Origin: Your institution
+* Release: McXtrace 1.4
+* Version: 0.2
+* %INSTRUMENT_SITE: MAXIV
+*
+* Simulation of the FemtoMAX short pulse facility at MAX IV laboratory 
+*
+* %Description
+* This a a skeleton version of the FemtoMAX short-pulse facility at MAXIV
+*
+*
+* %Parameters
+* DXUS: [m] Horizontal opening of the user slit. 
+* DYUS: [m] Vertical opening of the user slit. 
+* MONO: [ ] Flag enabling the Crystal monochromator. 
+* MLMONO: [ ] Flag enabling the mulitlayer monochromator.
+* U2SRC:  [ ] Flag enabling wide source model. 
+* U3SRC:  [ ] Flag enabling the narrow source model. Overrides U2SRC.
+* RX:     [ ] X-rotation of the sample goniometer.
+* RY:     [ ] Y-rotation of the sample goniometer.
+*
+* %Link
+* https://www.maxiv.lu.se/accelerators-beamlines/beamlines/femtomax/
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=0, U2SRC=1, U3SRC=0,
+    RX=0, RY=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  double dxs1,dys1;
+  double dxs2,dys2;
+  double dxs3,dys3;
+
+  double gamma_fm,gamma_mono, gamma_mlmono;
+
+  double Ls_ml,Ld_ml;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  gamma_fm=1.2;
+  gamma_mono=1.2*MONO;
+  gamma_mlmono=1.2*MLMONO;
+
+  dxs1=1e-3;
+  dys1=1e-3;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT U2 = Source_div(
+    xwidth=1e-5,yheight=1e-5,focus_aw=1e-3, focus_ah=1e-3, E0=12.5, dE=10)
+WHEN(U2SRC) AT(0,0,0) RELATIVE Origin
+
+/*COMPONENT U2ss = Source_spectra(*/
+/*    spectra_stem_x=stemx,spectra_stem_y=stemy,*/
+/*    nE=51,E0=E0,dE=dE,Emin=5,Emax=15,nx=51,ny=51,npx=51,npy=51)*/
+/*WHEN (U2SRCss) AT(0,0,0) RELATIVE Origin*/
+
+COMPONENT U3 = Source_div(
+    xwidth=1e-6,yheight=1e-6, focus_aw=5e-6, focus_ah=2e-6, E0=12.5, dE=0.1)
+WHEN(U3SRC) AT(0,0,0) RELATIVE Origin
+
+/*COMPONENT U3ss = Source_spectra(*/
+/*    spectra_stem_x=stemx,spectra_stem_y=stemy,*/
+/*    nE=51,E0=E0,dE=dE,Emin=5,Emax=15,nx=51,ny=51,npx=51,npy=51)*/
+/*WHEN (U3SRCss) AT(0,0,6.65) RELATIVE U2*/
+
+
+COMPONENT screen = PSD_monitor(
+	xwidth=0.01, yheight=0.01, filename="fm_screen")
+AT(0,0,3.3) RELATIVE U3
+
+COMPONENT a0 = Arm()
+AT(-0.01,0,3.351) RELATIVE screen 
+ROTATED (0,2,0) RELATIVE screen
+
+/*COMPONENT Be_prism = Filter(*/
+/*    refraction = 1, xwidth = 0.1, yheight = 0.1, zdepth = 0.4)*/
+/*AT (0.05, 0, 0.2) RELATIVE a0*/
+/*ROTATED (0,0,0) RELATIVE a0*/
+
+COMPONENT a1 = Arm()
+AT (0, 0, 3.351) RELATIVE screen
+
+COMPONENT slit1 = Slit(
+	xwidth=dxs1, yheight=dys1)
+AT(0,0,0.9355) RELATIVE a1
+
+COMPONENT popin_yag1 = Monitor(
+	xwidth=1e-3, yheight=1e-3)
+AT(0,0, 0.3355) RELATIVE slit1
+
+
+COMPONENT mirror_arm0 = Arm()
+AT(0,0,3.28) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT focus_mirror0 = Mirror_curved(
+    coating = "Rh.txt", radius = 10, length = 1.2, width = 0.2)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (90,gamma_fm,0) RELATIVE PREVIOUS
+
+COMPONENT focus_mirror1 = COPY(focus_mirror0)
+  AT(0,0.21,0) RELATIVE focus_mirror0
+
+COMPONENT focus_mirror_exit0 = Arm()
+AT (0,0,0) RELATIVE focus_mirror1
+ROTATED (0,gamma_fm,0) RELATIVE focus_mirror1
+
+COMPONENT focus_mirror_exit1 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (-90,0,0) RELATIVE PREVIOUS
+
+COMPONENT slit2 = Slit(
+	xwidth=dxs2, yheight=dys2)
+  AT(0,0,1.2) RELATIVE focus_mirror_exit1
+
+COMPONENT popin_yag2 = COPY(popin_yag1)(yheight=1e-2)
+AT(0,0,0.4) RELATIVE slit2
+
+
+COMPONENT mono = Bragg_crystal(
+    material = "Si.txt", length = 0.8, width = 0.01,
+    V = 160.1826, h = 1, k = 1, l = 1, alpha = 0)
+WHEN(MONO) AT (0, 0, 0.6) RELATIVE PREVIOUS
+ROTATED (gamma_mono,0,0) RELATIVE PREVIOUS
+
+COMPONENT mono_exit = Arm()
+AT(0,0,0) RELATIVE mono
+ROTATED (gamma_mono,0,0) RELATIVE mono
+
+COMPONENT popin_yag_s1 = PSD_monitor(
+	xwidth=0.01, yheight=0.01, filename="fm_popin_yag_s1")
+AT(0,0,0.6) RELATIVE PREVIOUS
+
+
+COMPONENT multilayer_mono = Multilayer_elliptic(
+    reflectivity_datafile = "Ref_W_Si.txt",
+    theta = gamma_mlmono, s1 = Ls_ml, s2 = Ld_ml, length = 0.4,
+    width = 0.2, Emin=7, Estep=0.05, Emax=10)
+WHEN (MLMONO) AT (0, 0, 0.4) RELATIVE PREVIOUS
+ROTATED (0,gamma_mlmono,0) RELATIVE PREVIOUS
+
+COMPONENT multilayer_mono_exit = Arm()
+WHEN(MLMONO) AT(0,0,0) RELATIVE multilayer_mono
+ROTATED (0,gamma_mlmono,0) RELATIVE multilayer_mono
+
+COMPONENT slit3 = Slit(
+	xwidth=dxs3, yheight=dys3)
+  AT(0,0,0.4) RELATIVE focus_mirror_exit1
+
+COMPONENT Be_lenses = Lens_parab_Cyl(
+    material_datafile = "Be.txt", r = 0.5e-3, yheight = 100e-6,
+    d = 1e-4, N = 12)
+AT (0, 0, 0.6) RELATIVE PREVIOUS
+
+
+COMPONENT user_slit = Slit(
+    xwidth = DXUS, yheight = DYUS)
+AT (0, 0, 1) RELATIVE PREVIOUS
+
+
+COMPONENT popin_yag4 = COPY(popin_yag1)()
+AT(0,0,0.4) RELATIVE user_slit
+
+COMPONENT gonio0 = Arm()
+AT(0,0,0.84) RELATIVE PREVIOUS
+ROTATED (0,RY,0) RELATIVE PREVIOUS
+
+COMPONENT gonio1 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (RX,0,0) RELATIVE PREVIOUS 
+
+
+
+COMPONENT CAMP = PSD_monitor(
+	xwidth=0.1, yheight=0.1, filename="fm_CAMP")
+AT (0,0,2) RELATIVE gonio0
+
+COMPONENT EXAFS = PSD_monitor(
+	xwidth=0.1, yheight=0.1, filename="fm_EXAFS")
+AT (0,0,2.5) RELATIVE CAMP
+	
+COMPONENT Wall = PSD_monitor(
+	xwidth=0.1, yheight=0.1, filename="fm_Wall")
+AT (0,0,3) RELATIVE EXAFS
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+

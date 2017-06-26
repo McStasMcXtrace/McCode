@@ -1,0 +1,235 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2011, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component Spherical_Backscattering_Analyser
+*
+* %I
+* Written by: Nikolaos Tsapatsaris (with help from Peter Willendrup, Ruep Lechner, Heloisa Bordallo)
+* Date: 2015
+* Origin: Niels Bohr Institute
+* 
+* %D
+* Spherical backscattering analyser with variable reflectivity, and mosaic gaussian response.
+*
+* Based on earlier developments by Miguel A. Gonzalez 2000, Tilo Seydel 2007, Henrik Jacobsen 2011.
+*
+* Example:
+* COMPONENT doppler = Spherical_Backscattering_Analyser(
+*   xmin=0, xmax=0, ymin=0, ymax=0, mosaic=21.0, dspread=0.00035, Q=2.003886241, DM=0, radius=2.5, f_doppler=0, A_doppler=0, R0=1, debug=0)
+*
+* %P
+* xmax:          [m] Maximum absolute value of x =~ 0.5 * Width of the monochromator
+* ymax:          [m] Maximum absolute value of y =~ 0.5 * Height of the monochromator
+* radius:        [m] Curvature radius 
+* dspread:       [1] Relative d-sprea, FWHM
+* mosaic:  [arc min] Mosaicity, FWHM
+* Q:          [AA-1] Magnitude of scattering vector 
+* R0:            [1] Scalar, maximum reflectivity of neutrons
+* DM:           [AA] monochromator d-spacing instead of Q = 2*pi/DM
+* f_doppler:    [Hz] Frequency of doppler drive
+* A_doppler:     [m] Amplitude of doppler drive
+* debug:         [1] if debug > 0 print out some info about the calculations
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Spherical_Backscattering_Analyser
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, mosaic=21.0, dspread=0.00035, Q=2.003886241, DM=0, radius=2.5, f_doppler=0, A_doppler=0, R0=1, debug=0)
+OUTPUT PARAMETERS (d_rms, mos_rms, mono_Q)
+
+SHARE
+%{
+  double z_sphere(double xin, double yin, double rin) {
+    return -(rin - sqrt(rin*rin - xin*xin - yin*yin));
+  }
+
+%}
+
+DECLARE
+%{
+  double d_rms, mos_rms, mono_Q;
+%}
+
+INITIALIZE
+%{
+  mos_rms = MIN2RAD*mosaic/sqrt(8*log(2));
+  
+  mono_Q = Q;
+  if (DM != 0) 
+    mono_Q = 2*PI/DM;
+  
+  DM = 2*PI/mono_Q;
+  d_rms = dspread*DM/sqrt(8*log(2));
+%}
+
+TRACE
+%{  
+  double vel;
+    double sinTheta, lambdaBragg, lambda, dLambda2, sigmaLambda2;
+
+  double old_x, old_y, old_z, old_t, x0, y0, z0, xi, yi, zi;
+  double a, b, c, dt1, dt2, dt;
+  double nx, ny, nz, nmod, v;
+  double kproj, ydarwin, dkz, p_reflect; 
+  double q0mod, q0x, q0y, q0z, kix, kiy, kiz, kfx, kfy, kfz;
+        
+  double omega_doppler;
+  double v_doppler_inst;
+    
+  omega_doppler=2*PI*f_doppler;
+   old_x=x; old_y=y; old_z=z; old_t=t;
+    
+  // Time interval necessary for the neutron to reach the sphere: solve equation: neutron path (line) crosses monochromator (sphere). Center of sphere is at (0,0,-radius).
+
+//point on neutron path satisfies: xpath= x+vx*t, ypath=y+vy*t, zpath=z+vz*t;
+//point on monochromator sphere satisfies: radius^2=x^2+y^2+(z+r)^2
+//settings these equal gives an equation for t:
+  a = vx*vx + vy*vy + vz*vz;
+  b = 2.0 * ( vx*x + vy*y + vz*(z+radius) );  
+  c = x*x+y*y+z*z + 2*z*radius;
+  if ((b*b-4*a*c) < 0)
+     {
+      printf("Imaginary solutions. Something has gone wrong. Unphysical.\n");
+      ABSORB;
+     } 
+  dt1 = (-b + sqrt(b*b-4*a*c)) / (2.0*a);
+  dt2 = (-b - sqrt(b*b-4*a*c)) / (2.0*a);
+  if (dt1 > 0)
+     dt = dt1;
+  else
+     dt = dt2;   
+  // propagates the neutron the time dt, so it arrives to the sphere
+
+  PROP_DT(dt);
+  
+// ABSORB if neutron hits outside sphere
+  if (x<xmin || x>xmax || y<ymin || y>ymax)
+    ABSORB;
+
+//n is a vector pointing along the radius of the sphere
+  nx =x;
+  ny= y;
+  nz=(z+radius);
+//modulus of the vector  n
+nmod = sqrt(nx*nx+ny*ny+nz*nz);
+
+// change to moving coordinates (doppler motion parallel to Z) 
+  v_doppler_inst=A_doppler*omega_doppler*cos(omega_doppler*t);
+  kix = vx*V2K; kiy = vy*V2K ; kiz = vz*V2K + v_doppler_inst*V2K;
+
+// projection of the incident vector on the normal 
+   kproj = (kix*nx + kiy*ny + kiz*nz) / nmod;
+  
+  vel=sqrt(a);  
+  
+  sinTheta = fabs(K2V*kproj)/vel;  
+    
+    // calculate lambdaBragg
+    lambdaBragg = 2.0*DM*sinTheta;
+    
+    // calculate lambda of neutron
+    lambda = 2*PI/kproj;
+        
+    // calculate deltaLambda squared and sigmaLambda squared
+    dLambda2 = (lambda-lambdaBragg)*(lambda-lambdaBragg);
+    // The sigmaLambda is propagated by differentiating the bragg 
+    // condition: Lambda = 2*d*sinTheta
+  
+    sigmaLambda2 = 2.0*2.0 * sinTheta*sinTheta * d_rms*d_rms+2.0*2.0 * DM*DM * (1.0-sinTheta*sinTheta) * mos_rms*mos_rms;
+      
+    p_reflect = R0*exp(-dLambda2/(2.0*sigmaLambda2));
+
+      if (p_reflect < 1e-5)
+        {
+          ABSORB;
+        }
+        else
+        {
+    // reflection: kf = ki - Q0 (the projection): q points along the normal and to scatter elastically, the component of ki along the normal must change sign, i.e. q0mod=2kproj
+    q0mod = 2.0 * kproj;
+    q0x = (nx/nmod)*q0mod; q0y = (ny/nmod)*q0mod;  q0z = (nz/nmod)*q0mod;
+    kfx = kix - q0x;
+    kfy = kiy - q0y;
+    kfz = kiz - q0z;
+    
+      /* change to static coordinates */
+      kfz = kfz - v_doppler_inst*V2K;
+    
+      vx = K2V*kfx;       
+    vy = K2V*kfy;
+      vz = K2V*kfz;
+
+    p *= p_reflect; 
+    SCATTER;
+  }
+  
+    if(debug > 0) {
+      printf("\n Lambda: %f, Lambda_Bragg: %f\n", lambda, lambdaBragg);
+      printf("sigmaLambda: %f, R0: %f, p_reflect: %f\n", 
+       sqrt(sigmaLambda2), R0, p_reflect);}
+%}
+
+MCDISPLAY
+%{
+
+  /*  dashed_line(xmin,ymin,0,xmin,ymax,0,5);
+  dashed_line(xmin,ymax,0,xmax,ymax,0,5);
+  dashed_line(xmax,ymax,0,xmax,ymin,0,5);
+  dashed_line(xmax,ymin,0,xmin,ymin,0,5);*/
+
+/* Step across the sphere in 11x11 steps to show the analyzer geometry */
+  int i,j,N;
+  double yv1,yv2,zv1,zv2;
+  double xh1,xh2,zh1,zh2;
+  double xd1,xd2,yd1,yd2,xd3,xd4,yd3,yd4,zd1,zd2,zd3,zd4;
+  double dx,dy,dd;
+  N=11;
+  dx = (xmax-xmin)/(N-1);
+  dy = (ymax-ymin)/(N-1);
+  /* Horizontal, vertical, diagonal lines... */
+  xh1=xmin;
+  yv1=ymin;
+  xd1=xmin;
+  yd1=ymin;
+  xd3=xmin;
+  yd3=ymax;
+  for (i=0; i<N-1; i++) {
+    /* Calculate z-coordinates of 1st line-point(s)*/
+    zh1=z_sphere(xh1,ymin,radius);
+    zv1=z_sphere(xmin,yv1,radius);
+    zd1=z_sphere(xd1,yd1,radius);
+    zd3=z_sphere(xd3,yd3,radius);
+    /* 2nd point x-y values */
+    xh2=xh1+dx;
+    yv2=yv1+dy;
+
+    xd2=xd1+dx;
+    yd2=yd1+dy;
+
+    xd4=xd3+dx;
+    yd4=yd3-dy;
+    /* Calculate z-coordinates of 2nd set of line-point(s)*/
+    zh2=z_sphere(xh1,ymin,radius);
+    zv2=z_sphere(xmin,yv2,radius);
+    zd2=z_sphere(xd2,yd2,radius);
+    zd4=z_sphere(xd4,yd4,radius);
+    /* Horizontal: */
+    line(xh1,ymin,zh1,xh2,ymin,zh2);
+    line(xh1,ymax,zh1,xh2,ymax,zh2);
+    /* Vertical: */
+    line(xmin,yv1,zv1,xmin,yv2,zv2);
+    line(xmax,yv1,zv1,xmax,yv2,zv2);
+    /* Diagonal: */
+    line(xd1,yd1,zd1,xd2,yd2,zd2);
+    line(xd3,yd3,zd3,xd4,yd4,zd4);
+    /* Shift to next set of points ... */
+    xh1=xh2; yv1=yv2; xd1=xd2; yd1=yd2; xd3=xd4; yd3=yd4;
+  }
+  
+%}
+
+END

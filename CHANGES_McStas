@@ -36,10 +36,51 @@
 * Modified by: PW and JG May 2015: versions 2.2 and 2.2a
 * Modified by: PW March 2016: version 2.3
 * Modified by: PW May 2017: version 2.4
-* This file is part of McStas version 2.4, released May 17th 2017.
+* Modified by: PW June 2017: version 2.4.1
+* This file is part of McStas version 2.4.1, released June 26th 2017.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v.2.4.1, June 26th, 2017
+
+ McStas 2.4.1 is the sixth release in the 2.x series and fixes various issues with McStas 2.4, plus 
+ provides a small set of new developments.
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Fixes of issues from last release:
+ - A number of issues from 2.4 were corrected, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue%20is%3Aclosed%20label%3A%22McStas%202.4%22%20
+
+ Tools:
+ - As for 2.4 we the default set of tools are Python-based and developed by Jakob Garde, DTU. 
+   The perl ones will stay around as a backup solution
+   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
+   - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
+   - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
+ - Minor feature developments:
+   - The mcrun utility script now automatically stores a copy of the instr file in the dataset output folder
+   - mcplot-pyqtgraph, mcdisplay-pyqtgraph and mcdisplay-webgl provide the --invcanvas to select white backgrounds in
+     the plots (for now only available from the commandline!)
+   - When installed, the mcstas-clusterscripts package provides an easy way to generate SLURM or PBS cluster batchfiles.
+     The Python mcgui allows to access these via the File -> Configuration menu.
+
+ Components and instruments:
+ - MCPL library still at v. 1.1
+   - A minor issue in MCPL_output.comp was fixed
+ - Minor updates to the ESS_butterfly_MCPL.instr, see also:
+   https://confluence.esss.lu.se/display/MCSTAS/Using+MCPL+as+source+term+in+McStas
+ - SNS_BASIS - model of the BASIS backscattering instrument at SNS, from Niko Tsapatsaris, ESS.
+   Further serves as test instrument for two component contributions from the same author:
+   - Spherical_Backscattering_Analyser, a spherical backscattering analyser with variable reflectivity
+     and mosaic gaussian response.
+   - Guide_m, guide piece like the normal Guide.comp, but with independent reflectivity specification
+     for all four mirrors.
+
+
 Changes in McStas v.2.4, May 17th, 2017
 
  McStas 2.4 is the fifth release in the 2.x series and fixes various issues with McStas 2.3, plus 

@@ -33,14 +33,13 @@
 *
 * %P
 * Input parameters:
-* theta [degrees] - incident angle
-* s1 [m] - distance from the source to the multilayer
-* s2 [m] - focusing distance of the multilayer
-* length [m] - length of the mirrors
-* width [m] - width of the mirror along x-axis
-* R0 - reflectivity, R0=1 for an ideal situation, otherwise R0=0 - the code reads the reflectivity from the datafile
-*
-* (none)
+* theta: [deg] Incident angle
+* s1: [m]      Distance from the source to the multilayer
+* s2: [m]      Focusing distance of the multilayer
+* length: [m]  Length of the mirrors
+* width: [m]   Width of the mirror along x-axis
+* R0: [ ]      Constant reflectivity, R0=1 for an ideal situation. If R0=0, the code reads the reflectivity from the datafile
+* reflectivity_datafile: [str] File whih contains reflectivity data as a function of q.
 *
 * %E
 *******************************************************************************/
@@ -48,7 +47,7 @@
 DEFINE COMPONENT TwinKB_ML
 DEFINITION PARAMETERS (string reflectivity_datafile="Ref.txt")
 SETTING PARAMETERS (theta=1.2,s1,s2,length=0.6,width=0.2,R0=0)
-OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
+OUTPUT PARAMETERS (ref_table, a,b,c,M,Z0,Y0,xi,cost0, Q1, Q2)
 //STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 SHARE 
@@ -83,9 +82,8 @@ SHARE
 DECLARE
 %{
   double a,b,c,M,Z0,Y0,xi,cost0;
-  struct prms_multilayer_elliptic *prms_m;
-  Rotation Q1,Q2;  
-  
+  Rotation Q1,Q2;
+  t_Table ref_table;
 %}
 
 INITIALIZE
@@ -93,7 +91,7 @@ INITIALIZE
   /* calculation of the elliptical parameters according to the input mirror parameters:
   ellipse major axis a/2, minor axis b/2, M-magnification factor, Z0&Y0 - position of the mirror centre in the elliptical coordinate system.*/
   double Theta=DEG2RAD*theta; 
-  
+
   M=s2/s1;
   cost0 = (1-M)/sqrt(1-2*M + M*M + 4*M*(cos(Theta)*cos(Theta)));
   a = (s1*sqrt(1-cost0*cost0+cos(Theta)*cos(Theta)*cost0*cost0))/(cost0*cos(Theta)+sqrt(1-cost0*cost0+ (cos(Theta)*cos(Theta))*cost0*cost0));
@@ -105,26 +103,11 @@ INITIALIZE
   
   // reflectivity datafile parsing
   int status=0;
-  t_Table t;
-  if ((status=Table_Read(&t, reflectivity_datafile,0))==-1){
-    fprintf(stderr,"Error: Could not parse the file \"%s\" in COMP %s\n",reflectivity_datafile,NAME_CURRENT_COMP);
+   
+  if ((status=Table_Read(&ref_table, reflectivity_datafile,0))==-1){
+    fprintf(stderr,"Error: Could not parse the file \'%s\' in COMP %s\n",reflectivity_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
-  prms_m=malloc(sizeof(struct prms_multilayer_elliptic));
-  (prms_m->R)=malloc(sizeof(double *)*(t.rows));
-  (prms_m->Q)=malloc(sizeof(double)*(t.rows));
-    int i,j;
-    for (i=0;i<t.rows;i++){
-       prms_m->R[i]=malloc(sizeof(double)*(t.columns));
-    }
-    for (i=0;i<t.rows;i++){
-      prms_m->Q[i]=t.data[i*t.columns];
-   	for (j=0;j<t.columns;j++){
-	  prms_m->R[i][j]=t.data[i*t.columns+j];
-	}
-    }
-    
-    Table_Free(&t);
   
 %}
 
@@ -146,7 +129,6 @@ TRACE
   
   bounce=CHAR_MAX;
   while (bounce){
-  
     bounce=0;
     /*switch to the ellipsoid frames. Note that the order of x and y has been swapped in the second set of calls*/
     CoordTransME(&x_e1,&y_e1,&z_e1,x,y,z,Z0,Y0,xi);
@@ -290,44 +272,29 @@ TRACE
       printf("ko=(%g %g %g)\n",kx,ky,kz);
 #endif
     PROP_DL(FLT_EPSILON); 
+    if (R0){
+        p*=R0;
+    }else{
+        // Implementing the reflectivity.
+        double dSingle,lambda;	// dSingle - thickness of one layer of the multilayer, Å
+        double Q,Refl;
+        double ex1=z+Z0, ex2=-(-b*b*a*a+b*b*ex1*ex1)/(a*a);	// ex1 & ex2 - expressions to simplify the equation dSingle(z).
 
-    // Implementing the reflectivity.
-   int r=0, dNr, Nr;		// dNr - rounding integer of the d-spacing; Nr - the Nr of the dNr in the reflectivity table
-   double dSingle,lambda;	// dSingle - thickness of one layer of the multilayer, Å
-   double Q,Refl;
-   double ex1=z+Z0, ex2=-(-b*b*a*a+b*b*ex1*ex1)/(a*a);	// ex1 & ex2 - expressions to simplify the equation dSingle(z).
-   
-   lambda=2*M_PI/K;   
-   dSingle= (0.5*lambda)/cos( acos(sqrt(ex2)/sqrt(ex2 + c*c + 2*c*ex1 + ex1*ex1) ) - atan((ex1*b*b)/(sqrt(ex2)*a*a)) );
-   Q=sqrt((kx-kxo)*(kx-kxo)+(ky-kyo)*(ky-kyo)+(kz-kzo)*(kz-kzo));
+        lambda=2*M_PI/K;   
+        dSingle= (0.5*lambda)/cos( acos(sqrt(ex2)/sqrt(ex2 + c*c + 2*c*ex1 + ex1*ex1) ) - atan((ex1*b*b)/(sqrt(ex2)*a*a)) );
+        Q=sqrt((kx-kxo)*(kx-kxo)+(ky-kyo)*(ky-kyo)+(kz-kzo)*(kz-kzo));
 #ifdef MCDEBUG 
-   printf("ML d-spacing dSingle=%g,z=%g,K=%g,lambda=%g, wave-vector transfer Q=%g\n",dSingle,z,K,lambda,Q);
+        printf("ML d-spacing dSingle=%g,z=%g,K=%g,lambda=%g, wave-vector transfer Q=%g\n",dSingle,z,K,lambda,Q);
 #endif   
-   
-    while (r<=6000){
-      if(Q<(prms_m->Q[r])) break;
-      r++; 
+        Refl=Table_Value(ref_table, Q, 1);
+        p*=Refl;
     } 
-    
-    if (r<1)r=1;		/*check whether the table index overrruns itself*/
-    else if (r>6000) r=6000;
-    
-    dNr=round(dSingle); 	// rounding the d-spacing
-    if (dNr<20) dNr=20;		// check so it doesn't overrun the index: the dSingle_min=20, dSingle_max=55 (from the datafile)
-    else if (dNr>55) dNr=55;
+  }
+%}
 
-    Nr=dNr-20; 
-    Refl=prms_m->R[r-1][Nr-1];	
-#ifdef MCDEBUG_R    
-    printf(" Refl=%g, dNr=%i, Nr=%i, r=%i\n",Refl,dNr,Nr,r);  
-#endif    
-     // apply reflectivity
-    if (R0==0)
-      p*=Refl;
-    else if (R0==1)
-      p*=R0;
- 
-} 
+FINALLY
+%{
+    Table_Free(&ref_table);
 %}
 
 MCDISPLAY

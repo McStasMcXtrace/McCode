@@ -33,7 +33,6 @@
 * xwidth:   [m] The width of the CRL in the invariant direction x.
 * d:        [m] Distance between two surfaces of the lens along the propagation axis.
 * N:        [ ] Number of single lenses in a stack.
-* T:        [ ] Obsolete. Ignored but will be removed in next release.
 * rough_xy: [rad] RMS value of random slope along x and y.
 * rough_z:  [rad] RMS value of random slope along z.
 *
@@ -50,15 +49,15 @@ SHARE
 %{
   %include "read_table-lib"
   typedef struct {
-  double coord[3];
-  double k[3];
+      double coord[3];
+      double k[3];
   } data_lens_parab_Cyl;
   typedef struct {
-  double constants[6];
+      double constants[6];
   } param_lens_parab_Cyl;
  
   // intersect_parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
-   
+
   data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, param_lens_parab_Cyl b, double rough_xy, double rough_z){
     data_lens_parab_Cyl result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
@@ -171,8 +170,8 @@ SHARE
     
     for(i=0;i<3;i++) { 
       result.k[i]=k_new[i]; 
-    }   
-    
+    }
+
    return result;
   }
 %}
@@ -185,12 +184,11 @@ DECLARE
     double *E, *mu, *f;
     t_Table T;
   } *prms;
-%}   
-  
+%}
+
 INITIALIZE
 %{
   int status=0;
-  //t_Table T;
   prms=calloc(1,sizeof(*prms));
 
   if ( (status=Table_Read(&(prms->T),material_datafile,0))==-1){
@@ -232,21 +230,21 @@ TRACE
   f=Table_Value(prms->T,e,1);
 
   /*Calculation of Refractive Index */
-  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   delta= 2.0*M_PI*RE*rhoel/(k*k);
-  beta= mu/(2.0*k);          /*mu and k in  A^-1*/
-  
+  beta= mu/(2.0*k); /*mu and k in  A^-1*/
+
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
 
-  incid.k[0]=kx; 
+  incid.k[0]=kx;
   incid.k[1]=ky; 
   incid.k[2]=kz;
   
   incid.coord[0]=x;
   incid.coord[1]=y;
   incid.coord[2]=z;
- 
+
   d_total=0;
   for (nr=0;nr<=(N-1);nr++){
     parab_Cyl.constants[3]=nr*d+nr*2*w; // d constant
@@ -264,6 +262,7 @@ TRACE
     kx=refr.k[0]; 
     ky=refr.k[1]; 
     kz=refr.k[2];
+
     //alter parabolic input to match second parabola
     
     parab_Cyl.constants[3]=(nr+1)*d+nr*2*w;
@@ -279,12 +278,13 @@ TRACE
 
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
-   }
+  }
 
-  // transmission calculation
+  /*Add absorption according to the path length inside the lens material*/
   p*=exp(-mu*d_total);
 
 %}
+
 FINALLY
 %{
     Table_Free(&(prms->T));

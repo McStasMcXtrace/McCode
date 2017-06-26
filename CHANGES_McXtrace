@@ -10,18 +10,71 @@
 *
 *
 *************************************************************************/
-CHANGES in 1.3
+CHANGES in 1.4
 
 1. Source_pt, Source_flat, Source_gaussian, and Source_div now behave in the same manner wrt. phase. The relevant parameters
 are randomphase and phase. If randomphase is !=0 the phase is completely random, if ==0 the value of phase is used.
-2. EPSD_monitor: HAs a parameter nE which denotes a number of energy bins. if >1 the monitor will output a number of files
+2. EPSD_monitor: Has a parameter nE which denotes a number of energy bins. if >1 the monitor will output a number of files
 each corresponding to an energy bin.
 3. Lens_parab, Lens_parab_Cyl The functionality of the _rough versions of these components have been merged into the main components
 and the _rough versions themselves retired.
-4. New components: An experimental air-scatter componet has been added.
-5. Support for binary file dump of photons in the mcpl-format is added.
-6. On debian class systems, McXtrace now instals to /usr/share to be more standards compliant.
-7. Native FreeBSD support thrugh the ports system
+4. Support for binary file dump of photons in the mcpl-format is added.
+5. On debian class systems, McXtrace now installs to /usr/share to be more standards compliant.
+6. New Components:
+    sources/Undulator.comp: Undulator model based on Kim, 1989, “Characteristics of synchrotron radiation”
+    
+    samples/Incoherent.comp: Model sample of an incoherent scatterer
+    samples/Polycrystal.comp: Polycrystal sample based on Single_crystal formalism
+    samples/SasView_model.comp: All samples included in the SasModels module of SasView.
+    	Currently does not take in absorption into account
+    
+    misc/Air.comp: A “box” full of Air that may scatter-
+    misc/Focus.comp: Adds resampling to any component. I.e. causes the preceding object to become a secondary source.
+    misc/MCPL_input.comp: Interface components to read/write MCPL-format files. 
+    misc/MCPL_output.comp
+
+    monitors/DivE_monitor.comp
+    monitors/DivPos_monitor.comp
+    monitors/Divergence_monitor.comp
+    monitors/E_p1BW_monitor.comp
+
+    optics/Bragg_crystal.comp: Superseeds Perfect_Crystal
+    optics/Bragg_crystal_bent.comp: Bent crystal model
+    optics/Capillary.comp: Capillary tube with reflecting walls.
  
+    optics/Collimator_linear.comp: Ideal collimator models
+    optics/Collimator_radial.comp
+    optics/Mirror.comp: Simple flat mirror component
+    optics/Mirror_toroid.comp: Toroidal mirror
+ 
+    contrib/Detector_pn.comp: Detector model with quantum efficiency.
+    contrib/SAXS/SAXSCurve.comp: A set of SAXS-sample models
+    contrib/SAXS/SAXSCylinders.comp
+    contrib/SAXS/SAXSEllipticCylinders.comp
+    contrib/SAXS/SAXSLiposomes.comp
+    contrib/SAXS/SAXSNanodiscsFast.comp
+    contrib/SAXS/SAXSNanodiscsWithTagsFast.comp
+    contrib/SAXS/SAXSNanodiscsWithTags.comp
+    contrib/SAXS/SAXSNanodiscs.comp
+    contrib/SAXS/SAXSPDBFast.comp
+    contrib/SAXS/SAXSPDB.comp
+    contrib/SAXS/SAXSQMonitor.comp
+    contrib/SAXS/SAXSShells.comp
+    contrib/SAXS/SAXSSpheres.comp
 
+7. Example Instrument simulations:
+  - Full model of proposed DanMAX beamline
+  - Pump_probe_solvent: Example of disordered scattering in solution
+  - SAXS_saxlab: Laboratory SAXS setup with Montel optic
+  - template_1Slit_Diff & template_2Slit_Diff: examples of raytracing with coherent interference effects.
+  - ESRF_ID01: Microdiffraction beamline with polycrystal sample
+  - templateSasView: Example of using the (experimental) SasView interface 
+  ... and various Unit test/Example instruments
 
+8. New python/Qt based GUI/plotting tool
+9. Other Changes/additions:
+9. PowderN: incoherent scattering (computed from tables)
+10. Curved Bragg monochromator crystal
+    Major improvements to the flat Bragg monochromator crystal
+11. Output in the NeXus-format.
+12. Data files can be read only once and reused by other components.
