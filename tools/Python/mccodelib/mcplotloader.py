@@ -251,7 +251,7 @@ def _parse_1D_monitor(text):
         m = re.search('\# component: ([\w]+)\n', text)
         data.component = m.group(1)
         '''# filename: Edet.dat'''
-        m = re.search('\# filename: ([\-\+\w\.]+)\n', text)
+        m = re.search('\# filename: ([\-\+\w\.\,]+)\n', text)
         data.filename = m.group(1)
         '''# title: Wavelength monitor'''
         m = re.search('\# title: (%s)\n' % freetext_pat, text)
@@ -318,7 +318,7 @@ def _parse_2D_monitor(text):
         m = re.search('\# component: ([\w]+)\n', text)
         data.component = m.group(1)
         '''# filename: PSD.dat'''
-        m = re.search('\# filename: ([\-\+\w\.]+)\n', text)
+        m = re.search('\# filename: ([\-\+\w\.\,]+)\n', text)
         data.filename = m.group(1)
         '''# title: PSD monitor'''
         m = re.search('\# title: (%s)\n' % freetext_pat, text)
@@ -424,7 +424,7 @@ def _get_filenames_from_mccodesim(mccodesim):
     data_idx = text.find('begin data')
     filenames = []
     for line in text[data_idx:].splitlines():
-        m = re.search(r'filename: ([\w\._\-+]+)\s*', line)
+        m = re.search(r'filename: ([\w\.\,_\-+]+)\s*', line)
         if m: 
             filenames.append(join(dir, m.group(1)))
     return filenames
@@ -545,7 +545,7 @@ def _load_sweep_monitors(rootdir):
         line = f.readline().decode()
         while line:
             line = f.readline().decode()
-            m = re.match('  filename:\s+([\w\.]+)\s*\n', line)
+            m = re.match('  filename:\s+([\w\.\,]+)\s*\n', line)
             if m:
                 mons.append(join(subdir, m.group(1)))
         return mons
