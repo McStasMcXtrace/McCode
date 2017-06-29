@@ -1,0 +1,1037 @@
+/******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: SNS_BASIS 
+*
+* %Identification
+* Date: 2013-2015
+* Origin: NBI
+* Written by: N.Tsapatsaris (nikolaos.tsapatsaris@esss.se) and Peter K. Wilendrup (pkwi@fysik.dtu.dk)
+*
+* %INSTRUMENT_SITE: SNS
+*
+* %DESCRIPTION
+* The approximative, analytic SNS Source description of this instrument is realised 
+* by use of the ESS_moderator_short model, but weighted due to the opposite moderator
+* arrangement at the SNS and at the once-planned ESS short pluse facility. The correct
+* SNS Source File to use with SNS_Source is source_sct091_tu_02_1.dat.
+*
+* The instrument serves as a test instrument for the components
+* Spherical_Backscattering_Analyser, also written by by Niko Tsapatsaris with help from
+* Peter Willendrup and Guide_m by Niko Tsapatsaris.
+*
+* The instrument is based on models initially written by 
+* A) REL (ruep.lechner@gmail.com) and HNB (bordallo@nbi.ku.dk) with contributions 
+*   from Johan Jacobsen (johan.fett@gmail.com)
+* B) G. Granroth
+*
+* A virtual experiment on BASIS i.e. a comparison with real and simulation results were
+* published in AIP conference,DOI: 10.1051/epjconf/20158303015 and RSI, DOI: 10.1063/1.4961569
+* 
+* Instrument geometry parameters etc. were taken from the publication: 
+* "A time-of-flight backscattering spectrometer at the Spallation Neutron Source, BASIS" by
+* Mamontov, E.;   Herwig, K. W.; Neutron Scattering Science Division, Oak Ridge National Laboratory, 
+* Oak Ridge, Tennessee 37831, USA, in Review of Scientific Instruments,82(8),085109 - 085109-10, 2011
+*
+* This simulation uses the sample component Isotropic_Sqw. We are using the description for a Vanadium 
+* hollow cylindrical sample. One Arm Component is used to place the Analyser Component at an angle 
+* defined as ROT1.
+*
+* Example: mcrun BASIS_guide.instr Lam=6.4
+*
+* %Parameters
+* Lam:            [AA] Wavelength selected by the chopper system
+* Delta_Lam:      [AA] Wavelength spread selected by the chopper system
+* Lambda_min:     [AA] Minimum wavelength produced at the source
+* Lambda_max:     [AA] Maximum wavelength produced at the source
+* RadCurv:         [m] Radius of Curvature of the guide system
+* omega1:         [Hz] Frequency of the first DiskChopper
+* omega2:         [Hz] Frequency of the second DiskChopper
+* omega3:         [Hz] Frequency of the third DiskChopper
+* ch1_open:      [deg] Angular opening of the first Diskchopper
+* ch2_open:      [deg] Angular opening of the second Diskchopper
+* ch3_open:      [deg] Angular opening of the third Diskchopper
+* ROT1:          [deg] Positioning of central analyser wrt. the incoming beam, in the scattering plane
+* dROT:          [deg] Positioning of neighbouring analysers wrt. central analyser
+* AN_ROT:        [deg] Out-of-plane rotation of analysers wrt. scattering plane
+* TOTAL_LENGTH:    [m] Total length of the guide system
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT SNS_BASIS(
+	Lam=6.4, Lambda_min=5, Lambda_max=7, RadCurv=1000, omega1=60, omega2=60, omega3=60, ch1_open=51.4,  ch2_open=57.6, ch3_open=171.1, ROT1=90, AN_ROT=2, TOTAL_LENGTH = 84, dROT=11)
+
+//BASIS SNS 84m chopper settings (paper):7 m 9.25m and 50 m ch1_open=51.4,  ch2_open=57.6, ch3_open=171.1 freq= 60Hz
+//BASIS ESS 84m chopper settings: (Ruep+Heloisa) ch1_open=11.99,  ch2_open=13.44, ch3_open=39.92 freq=14Hz
+//BASIS ESS 84m chopper settings: (Niko reduce opening by frequency ratio) ch1_open=11.993,  ch2_open=13.44, ch3_open=39.923 freq=14Hz
+
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+
+//  mcrun --mpi=8 --ncount=2E7 BASIS_0003.instr
+
+
+DECLARE
+%{
+  double Omega1,Omega2,Omega3;
+  double TOTAL_LENGTH;
+  double Guide_extension; 
+  double E_min; 
+  double E_max;
+  double SGS3;
+  double End_Guide;
+  double Analyser;
+  double Detector1;
+  double  q_si111=2.003886241;
+  char myfilename_1 [128];
+  char myfilename_2 [128];
+  char myfilename_3 [128];
+  char myfilename_4 [128];
+  char myfilename_5 [128];
+  char myfilename_6 [128];
+  char myfilename_7 [128];
+  char myfilename_8 [128];
+  char myfilename_9 [128];
+  char myfilename_10 [128];
+  char myfilename_11 [128];
+  char myfilename_12 [128];
+  char myfilename_13 [128];
+  char myfilename_14 [128];
+  char myfilename_15 [128];
+  char myfilename_16 [128];
+  char myfilename_17 [128];
+  char myfilename_18 [128];
+  char myfilename_19 [128];
+ 
+  // Variable to help classify hits from different analyzer crystals
+  int groupNumber = 0;
+  
+  // Flags for absorbtion of unwanted events
+  int hitSample;
+  int hitAnalyzer;
+  
+  // Parameters to control neutron propagation and label neutrons
+  int flag_analyser_scatt;
+  
+  // Si111 analyser specifications
+  double an_x_min=-0.2325;
+  double an_x_max=0.2325;
+  double an_y_min=-0.49;
+  double an_y_max=0.49;
+  double analyser_focus_dist=1.2;
+  
+  // Graphite ANALYZER SECTION PARAMETERS
+  const double anaRadius     = 0.9068; // m
+  const double anaHeight     = 0.01; // m
+  const double anaWidth      = 0.01; // m
+  // We scale the mosaicity to take into account the d-spacing resolution!
+  /*   const double anaMosaicH    = 2.41*0.8*60; // arc minutes  */
+  /*   const double anaMosaicV    = 2.41*0.8*60; // arc minutes */
+  const double anaMosaicH    = 0.8*60; // arc minutes 
+  const double anaMosaicV    = 0.8*60; // arc minutes
+  //  const double anad          = 3.354; // 
+  const double anaQ          = 2*PI/3.354; // AA-1
+  
+  
+  double dist_sample_detector=0.2;
+  double myt,myx,myy;
+
+%}
+
+ 
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+
+
+INITIALIZE
+%{
+ // Omega1=2*PI*omega1/60;
+ // Omega2=2*PI*omega2/60;
+ // Omega3=2*PI*omega3/60;
+ Omega1=omega1;
+ Omega2=omega2;
+ Omega3=omega3;
+  
+  Guide_extension = TOTAL_LENGTH - 84.0 ;
+  SGS3 = 75.7305 + Guide_extension;
+  End_Guide = SGS3 + 8.0003;
+  Analyser = End_Guide + 2.7798;
+  Detector1 = Analyser - 2.2202;
+  sprintf(myfilename_1, "TOF_monitor_%g_just_before_Funnel", SGS3);
+  sprintf(myfilename_2, "Lam_monitor_%g_just_before_Funnel", SGS3);
+  sprintf(myfilename_3, "PSD_monitor_%g_just_before_Funnel", SGS3);
+  sprintf(myfilename_4, "TOF_monitor_%g_atEndof_Guide", End_Guide);
+  sprintf(myfilename_5, "Lam_monitor_%g_atEndof_Guide", End_Guide);
+  sprintf(myfilename_6, "PSD_monitor_%g_atEndof_Guide", End_Guide);
+  sprintf(myfilename_7, "TOF_monitor_%g_just_before_analyzer", Analyser);
+  sprintf(myfilename_8, "TOF_monitor_%g_just_before_analyzer_zoom", Analyser);   
+  sprintf(myfilename_9, "Lam_monitor_%g_just_before_analyzer", Analyser);
+  sprintf(myfilename_10, "Lam_monitor_%g_just_before_analyzer_zoom", Analyser);
+  sprintf(myfilename_11, "Energy_monitor_%g_just_before_analyzer", Analyser);
+  sprintf(myfilename_12, "Energy_monitor_%g_just_before_analyzer_zoom", Analyser);
+  sprintf(myfilename_13, "E_monitor_Det1_%g_close_to_sample", Detector1);
+  sprintf(myfilename_14, "E_monitor_Det1_%g_close_to_sample_zoom", Detector1);
+  sprintf(myfilename_15, "Lam_monitor_%g_close_to_sample", Detector1);
+  sprintf(myfilename_16, "Lam_monitor_%g_close_to_sample_zoom", Detector1);
+  sprintf(myfilename_17, "TOF_monitor_%g_close_to_sample", Detector1);
+  sprintf(myfilename_18, "TOF_monitor_%g_close_to_sample_zoom", Detector1);
+  sprintf(myfilename_19, "TOF_monitor_%g_close_to_sample_zoom_less_chan", Detector1);
+
+  E_min=81.82/(Lambda_max*Lambda_max);
+  E_max=81.82/(Lambda_min*Lambda_min);
+
+  printf("Energies as calculated by the instrument: %g - %g\n",E_min,E_max);
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */  
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+/* ============================== SOURCE =============================== */
+
+
+COMPONENT Source = ESS_moderator_short(size=0.11,
+		    dist=1.204, focus_xw=0.1, focus_yh=0.12, Lmin=Lambda_min, Lmax=Lambda_max, nu=60, T=50, tau=49e-6, tau1=0, tau2=7e-6, n=5, n2=5, chi2=0.9, I0=5.4e10, I2=9.2e10, branch1=0, branch2=0.5, branchframe=1)
+	AT (0,0,0) RELATIVE Origin
+EXTEND %{
+  p/=1.3;
+  p*=2.5;
+  //printf("Energies as calculated by the component: %g - %g\n",Emin,Emax);
+%}
+
+
+
+COMPONENT tofSTART = TOF_monitor(
+    nt = 1000, filename = "TOF_monitor_0,000m_from_Source", xwidth = 0.2, yheight = 0.2, tmin=100, tmax=700, restore_neutron = 1)
+  AT (0,0,0.11) RELATIVE Source
+  
+
+COMPONENT Source_Lam = L_monitor(
+    filename = "Lam_monitor_0,0001m_after_Source", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,Lmin = 0.5, Lmax =30, nL = 1000)
+  AT (0, 0,0.11+1e-4) RELATIVE Source
+
+COMPONENT Source_En = E_monitor(
+    filename = "E_monitor_0,0001m_after_Source", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,Emin = E_min*0.5, Emax = E_max*2, nE = 1000)
+  AT (0, 0, 0.11+2e-4) RELATIVE Source
+
+COMPONENT Gap0_start = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_0,0003m_after_Source",
+    restore_neutron = 1, xwidth = 0.4, yheight = 0.4)
+  AT (0, 0, 0.11+3e-4) RELATIVE Source
+
+COMPONENT Gap0_end_Lam = L_monitor(
+    filename = "Lam_monitor_1.2031m_after_Source", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = Lambda_min, Lmax = Lambda_max, nL = 1000)
+  AT (0, 0, 0.11+1.203+1e-4) RELATIVE Source
+
+COMPONENT Gap0_end_divx = Monitor_nD(options = "dx, auto,Gap0_end_Divx",restore_neutron = 1, xwidth = 0.10, yheight = 0.12 )
+  AT (0, 0, 0.11+1.203+2e-4) RELATIVE Source
+
+
+COMPONENT Gap0_end_divy = Monitor_nD(options = "dy, auto,Divy_Gap0_end_Divy",restore_neutron = 1, xwidth = 0.10, yheight = 0.12 )
+  AT (0, 0, 0.11+1.203+3e-4) RELATIVE Source
+
+
+/* ============================== GUIDE ================================ */
+
+
+COMPONENT Core_Vessel_Section = Guide(
+    w1 = 0.10, h1 = 0.12, w2 = 0.10, h2 = 0.12, l = 1.05, m = 1)
+  AT (0, 0, 1.204) RELATIVE Source
+
+/* ============================== Gap 1 ================================ */
+
+COMPONENT Gap1_start = Arm(
+    )
+  AT (0, 0, 1.05) RELATIVE Core_Vessel_Section
+
+COMPONENT Gap1_start_Lam = L_monitor(
+    filename = "Lam_monitor_2.2541m_atEndof_CVS", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 12.4, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE Gap1_start
+
+/* COMPONENT Gap1_start_PSD = PSD_monitor( */
+/*    nx = 100, ny = 100, filename = "PSD_monitor_2.2542m_atEndof_CVS", */
+/*    restore_neutron = 1, xwidth = 0.10, yheight = 0.12) */
+/*  AT (0, 0, 2e-4) RELATIVE Gap1_start */
+  
+COMPONENT Gap1_end_Lam = L_monitor(
+    filename = "Lam_monitor_2.295m_between_CVS_and_SGI", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 12.4, nL = 1000)
+  AT (0, 0, 0.041) RELATIVE Gap1_start
+
+/* COMPONENT Gap1_end_PSD = PSD_monitor( */
+/*    nx = 100, ny = 100, filename = "PSD_monitor_2.296m_between_CVS_and_SGI", */
+/*    restore_neutron = 1, xwidth = 0.10, yheight = 0.12) */
+/*  AT (0, 0, 0.042) RELATIVE Gap1_start */
+  
+COMPONENT Gap1_end = Arm(
+    )
+  AT (0, 0, 0.043) RELATIVE Gap1_start
+
+/* ============================== Shutter Guide Insert: This is a curved guide ================================ */
+
+
+COMPONENT Shutter_Guide_Insert = Guide_gravity(w1=0.10, h1=0.12, l=0.25,
+    mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+  AT (0, 0, 0.043) RELATIVE Gap1_start
+
+COMPONENT COPY(Shutter_Guide_Insert) = COPY(Shutter_Guide_Insert)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Shutter_Guide_Insert) = COPY(Shutter_Guide_Insert)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Shutter_Guide_Insert) = COPY(Shutter_Guide_Insert)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Shutter_Guide_Insert) = COPY(Shutter_Guide_Insert)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Shutter_Guide_Insert) = COPY(Shutter_Guide_Insert)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Shutter_Guide_Insert) = COPY(Shutter_Guide_Insert)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT Shutter_Guide_Insert_short = Guide_gravity(w1=0.10, h1=0.12, l=0.095,
+    mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.095/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+/* ==================== Gap 2 we added 0.001 to the length of the SGI to consider the little spaces rotation was added ======================== */
+
+COMPONENT Gap2_start = Arm(
+    )
+  AT (0, 0,0.095+3e-04) RELATIVE Shutter_Guide_Insert_short
+
+
+COMPONENT Gap2_start_Lam = L_monitor(
+    filename = "Lam_monitor_4,1431m_atEndof_SGI", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 12.4, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE Gap2_start
+
+COMPONENT Gap2_start_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_4,1432m_atEndof_SGI",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT Gap2_end_Lam = L_monitor(
+    filename = "Lam_monitor_4,195m_between_SGI_and_CGS1", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 40.0, nL = 1000)
+  AT (0, 0, 0.052) RELATIVE Gap2_start
+ROTATED (0, (0.052/RadCurv)*RAD2DEG, 0) RELATIVE Gap2_start
+
+COMPONENT Gap2_end_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_4,196m_between_SGI_and_CGS1",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 0.053) RELATIVE Gap2_start
+ROTATED (0, (0.053/RadCurv)*RAD2DEG, 0) RELATIVE Gap2_start
+
+COMPONENT Gap2_end = Arm(
+    )
+  AT (0, 0, 0.054) RELATIVE Gap2_start
+ROTATED (0, (0.054/RadCurv)*RAD2DEG, 0) RELATIVE Gap2_start
+
+/* ============================= Curved Guide Section 1: : This is a curved guide ================================ */
+/* This guide is 2.745 m = 0.25*10 + 0.245 pieces */
+
+COMPONENT Curved_Guide_Section_I = Guide_gravity(w1=0.10, h1=0.12, l=0.25, 
+mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0,0,0) RELATIVE Gap2_end
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_I) = COPY(Curved_Guide_Section_I)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.25/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT Curved_Guide_Section_I_short = Guide_gravity(w1=0.10, h1=0.12, l=0.245, 
+mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0, 0, 0.25+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.245/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+/* ==================== Gap 3  including the first disk chopper======================== */
+
+COMPONENT Gap3_start = Arm(
+    )
+  AT (0, 0, 0.245+1e-4) RELATIVE Curved_Guide_Section_I_short
+
+COMPONENT  Gap3_start_Lam = L_monitor(
+    filename = "Lam_monitor_6,9432m_just_before_Ch1", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE Gap3_start 
+
+COMPONENT CGS1_end = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_6,9433m_just_before_Ch1",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+COMPONENT before_Chopper1_ToF= TOF_monitor(
+    filename = "TOF_monitor_6,9434m_just_before_Ch1", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, tmin=0, tmax=155500, restore_neutron = 1, nt = 10000)
+  AT (0, 0,1e-4) RELATIVE PREVIOUS
+
+COMPONENT before_Chopper1_ToF_Z= TOF_monitor(
+    filename = "TOF_monitor_6,9434m_just_before_Ch1_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, tmin=1.05e4, tmax=1.2e4, restore_neutron = 1, nt = 10000)
+  AT (0, 0,1e-4) RELATIVE PREVIOUS
+
+/* ==================== Start First disk chopper======================== */
+
+
+COMPONENT Chopper1 = DiskChopper(radius=0.254, theta_0=ch1_open, nu=Omega1, nslit=1, delay=252.78*6.98319*Lam*1e-6,yheight=0.128)
+WHEN (Omega1>0) AT (0, 0, 0.04) RELATIVE Gap3_start
+ROTATED (0, (0.04/RadCurv)*RAD2DEG, 0) RELATIVE Gap3_start
+
+
+COMPONENT Chopper1_ToF= TOF_monitor(
+    filename = "TOF_monitor_6,9832m_just_after_Ch1", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, tmin=0, tmax=155500, restore_neutron = 1, nt = 10000)
+  AT (0, 0,1e-4) RELATIVE Chopper1
+
+COMPONENT Chopper1_ToF_Z= TOF_monitor(
+    filename = "TOF_monitor_6,9832m_just_after_Ch1_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, tmin=1.05e4, tmax=1.2e4, restore_neutron = 1, nt = 10000)
+  AT (0, 0,2e-4) RELATIVE Chopper1
+
+
+/* ==================== End First disk chopper======================== */
+
+
+COMPONENT Gap3_end_Lam = L_monitor(
+    filename = "Lam_monitor_7.0221m_just_after_Ch1", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0, 0.079) RELATIVE Gap3_start
+ROTATED (0, (0.079/RadCurv)*RAD2DEG, 0) RELATIVE Gap3_start
+
+
+COMPONENT Gap3_end_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_7.0223m_just_after_Ch1",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 0.079+2e-4) RELATIVE Gap3_start
+ROTATED (0, (0.079/RadCurv)*RAD2DEG, 0) RELATIVE Gap3_start
+
+COMPONENT Gap3_end = Arm(
+    )
+  AT (0, 0, 0.08) RELATIVE Gap3_start
+ROTATED (0, (0.08/RadCurv)*RAD2DEG, 0) RELATIVE Gap3_start
+
+/* ============================= Curved Guide Section 2: : This is a curved guide ================================ */
+/* This guide is 2.20 m = 0.275*8 pieces */
+
+COMPONENT Curved_Guide_Section_II = Guide_gravity(w1=0.10, h1=0.12, l=0.275, 
+mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0,0,0) RELATIVE Gap3_end
+
+COMPONENT COPY(Curved_Guide_Section_II) = COPY(Curved_Guide_Section_II)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_II) = COPY(Curved_Guide_Section_II)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_II) = COPY(Curved_Guide_Section_II)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_II) = COPY(Curved_Guide_Section_II)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_II) = COPY(Curved_Guide_Section_II)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_II) = COPY(Curved_Guide_Section_II)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT Curved_Guide_Section_II_last = Guide_gravity(w1=0.10, h1=0.12, l=0.275, 
+mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0, 0, 0.275+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (0.275/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+
+/* ============================== Gap 4 ================================ */
+COMPONENT Gap4_start = Arm(
+    )
+  AT (0, 0, 0.275) RELATIVE Curved_Guide_Section_II_last
+
+COMPONENT Gap4_start_Lam = L_monitor(
+    filename = "Lam_monitor_9,2239m_just_before_Ch2", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE Gap4_start
+
+COMPONENT Gap4_start_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_9,2241m_just_before_Ch2",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0,2e-4) RELATIVE PREVIOUS
+
+COMPONENT before_Chopper2_ToF= TOF_monitor(
+    filename = "TOF_monitor_9,2243m_just_before_Ch2", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=-2000, tmax=40000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 2e-4) RELATIVE PREVIOUS
+
+COMPONENT before_Chopper2_ToF_Z= TOF_monitor(
+    filename = "TOF_monitor_9,2243m_just_before_Ch2_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=1.4e4, tmax=1.6e4, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 2e-4) RELATIVE PREVIOUS
+
+
+/* ==================== Start Second disk chopper======================== */
+
+COMPONENT Chopper2 = DiskChopper(radius=0.254, theta_0=ch2_open, nu=Omega2, nslit=1, delay=252.78*9.26376*Lam*1e-6, yheight=0.128)
+WHEN (Omega2>0) AT (0, 0, 0.04) RELATIVE Gap4_start
+ROTATED (0, (0.04/RadCurv)*RAD2DEG, 0) RELATIVE Gap4_start
+
+COMPONENT Chopper2_ToF= TOF_monitor(
+    filename = "TOF_monitor_9,2639m_just_after_Ch2", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=-2000, tmax=40000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 1e-4) RELATIVE Chopper2
+
+COMPONENT Chopper2_ToF_Z= TOF_monitor(
+    filename = "TOF_monitor_9,2639m_just_after_Ch2_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=1.4e4, tmax=1.6e4, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 2e-4) RELATIVE Chopper2
+
+/* ==================== End Second disk chopper======================== */
+
+
+COMPONENT Gap4_end_Lam = L_monitor(
+    filename = "Lam_monitor_9,2737m_just_after_Ch2", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0, 0.05-1e-4) RELATIVE Gap4_start
+ROTATED (0, (0.05/RadCurv)*RAD2DEG, 0) RELATIVE Gap4_start
+
+
+COMPONENT Gap4_end_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_9,2738m_just_after_Ch2",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 0.05) RELATIVE Gap4_start
+ROTATED (0, (0.05/RadCurv)*RAD2DEG, 0) RELATIVE Gap4_start
+
+COMPONENT Gap4_end = Arm(
+    )
+  AT (0, 0, 0.05+1e-4) RELATIVE Gap4_start
+ROTATED (0, (0.05/RadCurv)*RAD2DEG, 0) RELATIVE Gap4_start
+
+/* ============================= Curved Guide Section 3: : This is a curved guide ================================ */
+/* This guide is 21.73 m = 2.0m*10 pieces + 1.73m last piece*/
+
+
+COMPONENT Curved_Guide_Section_III = Guide_gravity(w1=0.10, h1=0.12, l=2.0, 
+mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0,0,0) RELATIVE Gap4_end
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT COPY(Curved_Guide_Section_III) = COPY(Curved_Guide_Section_III)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (2.0/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+COMPONENT Curved_Guide_Section_III_short = Guide_gravity(w1=0.10, h1=0.12, l=1.73, 
+mleft = 1.0, mright = 2.5, mtop = 1.5, mbottom = 1.5)
+AT (0, 0, 2.0+1e-4) RELATIVE PREVIOUS
+ROTATED (0, (1.73/RadCurv)*RAD2DEG, 0) RELATIVE PREVIOUS
+
+
+COMPONENT CGS3_end_ToF = TOF_monitor(
+    filename = "TOF_monitor_31,0050m_atEndof_CGS3", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=155000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 1.73+1e-4) RELATIVE PREVIOUS
+
+COMPONENT CGS3_end_ToF_Z = TOF_monitor(
+    filename = "TOF_monitor_31,0050m_atEndof_CGS3_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=4.8e4, tmax=5.2e4, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 1.73+1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT CGS3_end_Lam = L_monitor(
+    filename = "Lam_monitor_31,0051m_atEndof_CGS3", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 12.4, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+
+/* =============Long Straight Guide, we added 0.001 to the length of the SGI to consider the little spaces between the 2m pieces forming the previous guide============= */
+
+COMPONENT Straight_Guide_Section_I = Guide(
+    w1 = 0.10, h1 = 0.12, w2 = 0.10, h2 = 0.12, l = 18.97,
+    m = 1.5)
+  AT (0, 0, 1.731 + 2e-4) RELATIVE Curved_Guide_Section_III_short
+
+/* ==================== Gap 5 ======================== */
+
+COMPONENT Gap5_start = Arm(
+    )
+  AT (0, 0, 18.97+1e-4) RELATIVE Straight_Guide_Section_I
+
+
+COMPONENT Gap5_start_ToF = TOF_monitor(
+    filename = "TOF_monitor_49,9763m_just_before_Ch3", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=155000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+COMPONENT Gap5_start_ToF_Z = TOF_monitor(
+    filename = "TOF_monitor_49,9763m_just_before_Ch3_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=7.8e4, tmax=8.2e4, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT Gap5_start_Lam = L_monitor(
+    filename = "Lam_monitor_49,9764m_just_before_Ch3", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0, 18.97+1e-4) RELATIVE Straight_Guide_Section_I
+
+COMPONENT Gap5_start_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_49,9765m_just_before_Ch3",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+/* ====================  Start Third disk chopper======================== */
+
+
+COMPONENT Chopper3 = DiskChopper(radius=0.254, theta_0=ch3_open, nu=Omega3, nslit=1, delay=252.78*49.996*Lam*1e-6, yheight=0.128)
+WHEN (Omega3>0) AT (0, 0, 0.025) RELATIVE Gap5_start
+
+
+COMPONENT Chopper3_ToF= TOF_monitor(
+    filename = "TOF_monitor_50,0013m_just_after_Ch3", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=155000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 0.025+1e-4) RELATIVE Gap5_start
+
+  COMPONENT Chopper3_ToF_Z= TOF_monitor(
+    filename = "TOF_monitor_50,0013m_just_after_Ch3_Z", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=7.8e4, tmax=8.2e4, restore_neutron = 1, nt = 1000)
+  AT (0, 0, 0.025+2e-4) RELATIVE Gap5_start
+
+
+/* ====================  End Third disk chopper======================== */
+
+
+COMPONENT Gap5_end_Lam = L_monitor(
+    filename = "Lam_monitor_50,0562m_just_after_Ch3", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 40.0, nL = 1000)
+  AT (0, 0, 0.08) RELATIVE Gap5_start
+
+
+COMPONENT Gap5_end_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_50,0563m_just_after_Ch3",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 0.08+1e-4) RELATIVE Gap5_start
+
+COMPONENT Gap5_end = Arm(
+    )
+  AT (0, 0, 0.08+2e-4) RELATIVE Gap5_start
+
+/* ============Straight guide section II ============= */
+
+COMPONENT Straight_Guide_Section_II = Guide(
+    w1 = 0.10, h1 = 0.12, w2 = 0.10, h2 = 0.12, l = 25.674,
+    m = 1.5)
+ AT (0, 0, 0) RELATIVE Gap5_end
+
+COMPONENT SGS2_end_Lam = L_monitor(
+    filename = "Lam_monitor_75,7305m_atEndof_SGS2", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 0.1, Lmax = 40.0, nL = 1000)
+  AT (0, 0, 25.674+1e-4) RELATIVE PREVIOUS
+
+COMPONENT SGS2_end_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_monitor_75,7305m_atEndof_SGS2",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+/* =============Guide Extension Section:  Straight Guide section III, this guide is an extension of the BASIS design============= */
+
+COMPONENT Straight_Guide_Section_III = Guide(
+    w1 = 0.10, h1 = 0.12, w2 = 0.10, h2 = 0.12, l = Guide_extension,
+    m = 1.5)
+ AT (0, 0, 25.674+2e-4) RELATIVE Straight_Guide_Section_II
+
+
+COMPONENT SG3_end_ToF = TOF_monitor(
+    filename = myfilename_1, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=555000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, Guide_extension+1e-4) RELATIVE  Straight_Guide_Section_III
+
+COMPONENT SG3_end_ToF_Z = TOF_monitor(
+    filename = "SG3_end_ToF_Zoom", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=555000, restore_neutron = 1, nt = 1000)
+  AT (0, 0, Guide_extension+2e-4) RELATIVE  Straight_Guide_Section_III
+
+
+COMPONENT SG3_end_Lam = L_monitor(
+    filename = myfilename_2, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4, Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+COMPONENT SG3_end_PSD = PSD_monitor(
+    nx = 100, ny = 100, filename = myfilename_3,
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+/* ========================== Funnel Guide Section ===================== */
+/*α = (Rm - R0) / (m Qc,Ni - Qc)*/
+// a(m=1.5) = 
+
+COMPONENT Funnel_1 = Guide_m(
+	h1=0.12, h2=0.1036, w1=0.1, w2=0.1, l=1.5, m_left=1.5, m_right=1.5, m_top=2.5, m_bottom=2.5, alpha_left=1.904, alpha_right=1.904, alpha_top=2.222, alpha_bottom=2.222)
+  AT (0, 0, Guide_extension+3e-4) RELATIVE Straight_Guide_Section_III
+
+/* COMPONENT Funnel_1 = Guide_tapering( */
+/*     option = "file=funnel1.txt", segno = 1, l = 1.5, mx=1.5, my=2.5) */
+/*   AT (0, 0, Guide_extension+3e-4) RELATIVE Straight_Guide_Section_III */
+
+COMPONENT PSD_post_funnel1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_post_funnel1",
+    restore_neutron = 1, xwidth = 0.12, yheight = 0.12)
+  AT (0, 0, 1.5+1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT Funnel_2 = Guide_m(
+	h1=0.1036, h2=0.0762, w1=0.1, w2=0.074, l = 2.5, m_left=2.5, m_right=2.5, m_top=2.5, m_bottom=2.5, alpha_left=2.222, alpha_right=2.222, alpha_top=2.222, alpha_bottom=2.222)
+  AT (0, 0, 1.5+2e-4) RELATIVE Funnel_1
+
+/* COMPONENT Funnel_2 = Guide_tapering( */
+/*     option = "file=funnel2.txt", segno = 1, l = 2.5, mx=2.5, my=2.5) */
+/*   AT (0, 0, 1.5+2e-4) RELATIVE Funnel_1 */
+
+COMPONENT PSD_post_funnel2 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_post_funnel2",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 2.5+1e-4) RELATIVE PREVIOUS
+
+COMPONENT Funnel_3 = Guide_m(
+	h1=0.0762, h2=0.068, w1=0.0740, w2=0.0663, l = 0.75, m_left=2.5, m_right=2.5, m_top=3.6, m_bottom=3.6, alpha_left=2.222, alpha_right=2.222, alpha_top=3.846, alpha_bottom=3.846)
+  AT (0, 0, 2.5+2e-4) RELATIVE Funnel_2
+
+/* COMPONENT Funnel_3 = Guide_tapering( */
+/*     option = "file=funnel3.txt", segno = 1, l = 0.75, mx=2.5, my=3.6) */
+/*   AT (0, 0, 2.5+2e-4) RELATIVE Funnel_2 */
+
+COMPONENT PSD_post_funnel3 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_post_funnel3",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 0.75+1e-4) RELATIVE PREVIOUS
+
+COMPONENT Funnel_4 = Guide_m(
+	h1=0.0680, h2=0.0325, w1=0.0663, w2=0.0325, l = 3.25, m_left=3.6, m_right=3.6, m_top=3.6, m_bottom=3.6, alpha_left=3.846, alpha_right=3.846, alpha_top=3.846, alpha_bottom=3.846)
+  AT (0, 0, 0.75+2e-4) RELATIVE Funnel_3
+
+/* COMPONENT Funnel_4 = Guide_tapering( */
+/*     option = "file=funnel4.txt", segno = 1, l = 3.25, mx=3.6, my=3.6) */
+/*   AT (0, 0, 0.75+2e-4) RELATIVE Funnel_3 */
+
+COMPONENT PSD_post_funnel4 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_post_funnel4",
+    restore_neutron = 1, xwidth = 0.10, yheight = 0.12)
+  AT (0, 0, 3.25+1e-4) RELATIVE PREVIOUS
+
+
+/* =============================END OF GUIDE================================== */
+
+COMPONENT Guide_End_ToF= TOF_monitor(
+    filename = myfilename_4, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=300000, restore_neutron = 1, nt = 10000)
+  AT (0, 0, 8+1e-4) RELATIVE Funnel_1
+
+COMPONENT Guide_End_ToF_Z= TOF_monitor(
+    filename = "Guide_End_ToF_Zoom", restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=1.32e5, tmax=1.335e5, restore_neutron = 1, nt = 200)
+  AT (0, 0, 8+2e-4) RELATIVE Funnel_1
+
+COMPONENT Guide_end_Lam  = L_monitor(
+    filename = myfilename_5, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  Lmin = 0.5, Lmax = 30.0, nL = 1000)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT Guide_end_divx = Monitor_nD(options = "dx, Guide_end_divx", min = -5, max = 5, restore_neutron = 1, xwidth = 0.10, yheight = 0.12, bins=200 )
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT Guide_end_divy = Monitor_nD(options = "dy,Guide_end_divy", min = -5, max = 5, restore_neutron = 1, xwidth = 0.10, yheight = 0.12, bins=200 )
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT Guide_end_PSD = PSD_monitor(
+    nx = 100, ny = 50, filename = myfilename_6,
+    restore_neutron = 1, xwidth = 0.04, yheight = 0.04)
+  AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+/* COMPONENT Guide_end_PSD_small = PSD_monitor( */
+/*    nx = 100, ny = 50, filename = "small_PSD_monitor_83,9296m_afterEndof_guide", */
+/*    restore_neutron = 1, xwidth = 0.01, yheight = 0.01) */
+/* AT (0, 0, 3.449) RELATIVE Funnel_4 */
+
+
+/* ========Split the neutrons that reach the sample, so that from each neutron 10 are made=============== */
+
+//SPLIT 10 
+COMPONENT Sample_split=Arm()
+AT (0,0,1e-4) RELATIVE PREVIOUS
+
+/* ========SAMPLE.V_rho(Å-3) is the Number of atoms in the unit cell/Unit cell volume in Å^3. For Vanadium Z=2 and Lattice Constant (Å): 3.020.=============== */
+
+/*
+COMPONENT Sample = Isotropic_Sqw(radius=0.035, yheight=0.07, V_rho=1/13.827,
+    sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0, order = 1, d_phi=18, )
+  AT (0, 0, 3.54) RELATIVE Funnel_4
+*/
+/* =============================ANALYZER ARMS================================= */
+
+/* Sample position monitor */
+
+COMPONENT SamplePos = PSD_monitor(xwidth=0.05,yheight=0.05,filename="SampleFlux", restore_neutron=1)
+AT (0, 0, 3.54) RELATIVE Funnel_4
+
+
+COMPONENT Sample = Isotropic_Sqw(radius=0.015, yheight=0.03, rho=1/13.827,
+    sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0, order = 1, d_phi=18)
+  AT (0, 0, 3.54) RELATIVE Funnel_4
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+/*
+COMPONENT Sample = V_sample(
+    radius_i = 0, radius_o = 0.015, h= 0.07,
+    focus_xw = 1.57, focus_yh = 0.98, target_index = 5)
+  AT (0, 0, 3.54) RELATIVE Funnel_4
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+*/
+
+COMPONENT An1_rot_axis=Arm()
+AT (0,0,0) RELATIVE Sample
+ROTATED (0,ROT1,0) RELATIVE Sample
+
+COMPONENT An2_rot_axis=Arm()
+AT (0,0,0) RELATIVE Sample
+ROTATED (0,ROT1-dROT,0) RELATIVE Sample
+
+COMPONENT An3_rot_axis=Arm()
+AT (0,0,0) RELATIVE Sample
+ROTATED (0,ROT1+dROT,0) RELATIVE Sample
+
+COMPONENT An1_ToF= TOF_monitor(
+    filename = myfilename_7, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=0, tmax=300000, restore_neutron = 1, nt = 10000)
+  AT (0, 0, 2.49) RELATIVE An1_rot_axis
+
+COMPONENT An1_ToF_variable_range = TOF_monitor(
+    filename = myfilename_8, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  tmin=1.362e5, tmax=1.38e5, restore_neutron = 1, nt = 200)
+  AT (0, 0, 2e-4) RELATIVE An1_ToF
+
+COMPONENT An1_Lam  = L_monitor(
+    filename = myfilename_9, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  Lmin = 2.0, Lmax = 10.0, nL = 1000)
+  AT (0, 0,2e-4) RELATIVE An1_ToF
+
+COMPONENT An1_Lam_variable_range = L_monitor(
+    filename = myfilename_10, restore_neutron = 1, xwidth = 0.4,
+    yheight = 0.4,  Lmin = 0.1, Lmax = 40.0, nL = 200)
+  AT (0, 0, 3e-4) RELATIVE An1_ToF
+
+COMPONENT An1_E = E_monitor (xmin=-0.05, xmax=0.05, ymin=-0.1, ymax=0.1,
+                Emin= 1.0, Emax= 6.0, nE=1000, filename=myfilename_11,restore_neutron = 1)
+  AT (0, 0, 1e-4) RELATIVE An1_Lam
+
+COMPONENT An1_E_variable_range = E_monitor (xmin=-0.05, xmax=0.05, ymin=-0.1, ymax=0.1,
+                Emin= 1.0, Emax= 6.0, nE=1000, filename=myfilename_12,restore_neutron = 1)
+  AT (0, 0, 2e-4) RELATIVE An1_Lam
+
+COMPONENT An1_rot_axis2=Arm()
+AT (0,0,2.5) RELATIVE An1_rot_axis
+ROTATED (AN_ROT,0,0) RELATIVE An1_rot_axis
+
+COMPONENT An2_rot_axis2=Arm()
+AT (0,0,2.5) RELATIVE An2_rot_axis
+ROTATED (AN_ROT,0,0) RELATIVE An2_rot_axis
+
+COMPONENT An3_rot_axis2=Arm()
+AT (0,0,2.5) RELATIVE An3_rot_axis
+ROTATED (AN_ROT,0,0) RELATIVE An3_rot_axis
+
+
+COMPONENT An1 = Spherical_Backscattering_Analyser(
+  xmin=-0.235, xmax=0.235, ymin=-0.49, ymax=0.49,
+  radius=2.5, Q = q_si111, mosaic=0.0, dspread=0.00035, R0=1, debug=0)
+  AT (0, 0, 0) RELATIVE An1_rot_axis2
+GROUP ANALYZERS
+
+COMPONENT An2 = Spherical_Backscattering_Analyser(
+  xmin=-0.235, xmax=0.235, ymin=-0.49, ymax=0.49,
+  radius=2.5, Q = q_si111, mosaic=0.0, dspread=0.00035, R0=1, debug=0)
+  AT (0, 0, 0) RELATIVE An2_rot_axis2
+GROUP ANALYZERS
+
+COMPONENT An3 = Spherical_Backscattering_Analyser(
+  xmin=-0.235, xmax=0.235, ymin=-0.49, ymax=0.49,
+  radius=2.5, Q = q_si111, mosaic=0.0, dspread=0.00035, R0=1, debug=0)
+  AT (0, 0, 0) RELATIVE An3_rot_axis2
+GROUP ANALYZERS
+
+
+/* Arms for positioning detectors*/
+
+COMPONENT ArmForDet1=Arm()
+AT (0,0,0) RELATIVE An1
+ROTATED (180+AN_ROT,0,0) RELATIVE An1
+
+COMPONENT Det1_E= E_monitor (xmin=-0.025, xmax=0.025, ymin=-0.025, ymax=0.025,
+                Emin=2.05, Emax=2.12, nE=200, filename=myfilename_13,restore_neutron = 1)
+  AT (0, 0, 2.23) RELATIVE ArmForDet1
+
+COMPONENT Det1_E_variable_range = E_monitor (xmin=-0.025, xmax=0.025, ymin=-0.025, ymax=0.025,
+                Emin=2.077, Emax=2.092, nE=200, filename=myfilename_14,restore_neutron = 1)
+  AT (0, 0, 2.23) RELATIVE ArmForDet1
+
+COMPONENT Det1_Lam  = L_monitor(
+    filename = myfilename_15, restore_neutron = 1, xwidth = 0.05,
+    yheight = 0.2,  Lmin = 4.267, Lmax = 8.267, nL = 1000)
+  AT (0, 0, 2.2302) RELATIVE ArmForDet1
+
+COMPONENT Det1_Lam_variable_range = L_monitor(
+    filename = myfilename_16, restore_neutron = 1, xwidth = 0.05,
+    yheight = 0.2,  Lmin = 6.1, Lmax = 6.3, nL = 1000)
+  AT (0, 0, 2.2302) RELATIVE ArmForDet1
+
+COMPONENT Det1_ToF= TOF_monitor(
+    filename = myfilename_17, restore_neutron = 1, xwidth = 0.05,
+    yheight = 0.2,  tmin=130000, tmax=150000, restore_neutron = 1, nt = 10000)
+  AT (0, 0, 2.2306) RELATIVE ArmForDet1
+
+COMPONENT Det1_ToF_variable_range = TOF_monitor(
+    filename = myfilename_18, restore_neutron = 1, xwidth = 0.05,
+    yheight = 0.2,  tmin=100000, tmax=160000, restore_neutron = 1, nt = 500)
+  AT (0, 0, 2.2306) RELATIVE ArmForDet1
+
+COMPONENT Det1_ToF_variable_range_lessnL = TOF_monitor(
+    filename = myfilename_19, restore_neutron = 1, xwidth = 0.05,
+    yheight = 0.2,  tmin=140200, tmax=141000, restore_neutron = 1, nt = 500)
+    AT (0, 0, 2.2306) RELATIVE ArmForDet1
+
+COMPONENT PSDcyl = Monitor_nD(yheight=0.4,radius=0.27,options="theta bins=180 limits=[0 180], y bins=201,   incoming", filename="PSDcyl")
+  AT (0,0.1,0) RELATIVE Sample
+
+COMPONENT TOFcyl = Monitor_nD(yheight=0.4,radius=0.2699,options="auto q, t limits=[0.140200 0.141000] bins=500, incoming", filename="TOFcyl")
+  AT (0,0.1,0) RELATIVE Sample
+
+
+//* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
