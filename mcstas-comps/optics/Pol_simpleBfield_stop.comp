@@ -46,26 +46,69 @@
 * %P
 * INPUT PARAMETERS:
 *
-* magnet_comp_stop: [no quotes]  name of the component indicating start of the magnet volume.
-*
+* magnet_comp_stop: [ ]  name of the component indicating start of the magnet volume.
+* 
 * %E
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_simpleBfield_stop
-DEFINITION PARAMETERS (magnet_comp_stop)
-SETTING PARAMETERS ()
-OUTPUT PARAMETERS()
+DEFINITION PARAMETERS (magnet_comp_stop=NULL)
+SETTING PARAMETERS (yheight, xwidth, zdepth, radius)
+OUTPUT PARAMETERS(prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-%include "pol-lib"
+    %include "pol-lib"
+%}
+
+INITIALIZE
+%{
+    /*if dimensions are set - we should use them - if not get them from the start component*/
+    if(magnet_stop_comp){
+        if (!yheight) yheight=MCGET_PAR(magnet_stop_comp);
+        if (!xwidth) xwidth=MCGET_PAR(magnet_stop_comp);
+        if (!zdepth) zdepth=MCGET_PAR(magnet_stop_comp);
+        if (!radius) radius=MCGET_PAR(magnet_stop_comp);
+    }
+    if(xwidth && yheight && zdepth){
+        prms.shape=BOX;
+    }else if (xwidth && yheight && !zdepth){
+        prms.shape=WINDOW;
+    }else if(radius && yheight){
+        prms.shape=CYLINDER;
+    }else{
+        prms.shape=NONE;
+    }  
 %}
 
 TRACE
 %{
-PROP_Z0;
-mcmagnet_pop();
+    double l0,l1,l2,l3;
+    int nofield=0;
+    /*enter through whatever object we are*/
+    switch (prms.SHAPE){
+        case BOX:
+            box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
+            if (l0>0) PROP_DL(l0);/*this is to get a hollow inside the field.*/
+            else PROP_DL(l1);
+            break;
+        case CYLINDER:
+            cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
+            if (l0>0) PROP_DL(l0);
+            else PROP_DL(l1);
+            break;
+        case WINDOW:
+            PROP_Z0;
+            /*terminate neutrons which miss the exit window*/
+            if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
+                ABSORB;
+            }
+            break;
+        case default:
+            PROP_Z0; 
+    }
+    mcmagnet_pop();
 %}
 
 END

@@ -58,7 +58,7 @@
 *      x y z Bx By Bz
 *    the B field map is resampled with Stepx*Stepy*Stepz points.
 *    Use Stepx=Stepy=Stepz=0 to skip resampling and use the table as is.
-* 5. resampled_3to3_magnetic_field
+* 5. table_magnetic_field
 *
 * Users may specify any other function with the required footprint to have any
 * other field. Note that coordinates refer the coordinate system defined by this
@@ -100,10 +100,8 @@
 
 DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth, yheight,zdepth,
-Bx, By, Bz,
-string filename="bfield.dat")
-OUTPUT PARAMETERS(magnet, parPtr)
+SETTING PARAMETERS (xwidth, yheight,zdepth, radius, Bx, By, Bz, string filename="bfield.dat")
+OUTPUT PARAMETERS(magnet, parPtr, prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -119,6 +117,10 @@ DECLARE
   /* Larmor frequency and scalar product threshold*/
   void *parPtr;
   mcmagnet_field_info *magnet;
+
+  struct {
+      enum {BOX,WINDOW,HOLLOW_CYLINDER, CYLINDER} shape;
+  } prms;
 %}
 
 INITIALIZE
@@ -154,18 +156,52 @@ INITIALIZE
 	    NAME_CURRENT_COMP);
     exit(1);
   }
+
+  /*initialize shape to either be window/box/cylinder*/
+  /*some logic here to enter through a box or cylinder*/
+  if(xwidth && yheight && zdepth){
+      prms.shape=BOX;
+  }else if (xwidth && yheight && !zdepth){
+      prms.shape=WINDOW;
+  }else if(radius && yheight){
+      prms.shape=CYLINDER;
+  }else{
+    prms.shape=NONE;  
+}  
 %}
 
 TRACE
 %{
-  //enter
-  PROP_Z0;
-  /*terminate neutrons which miss the component*/
-  if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
-    ABSORB;
-  }
-  mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
-//  mcmagnet_print_stack();
+    double l0,l1,l2,l3;
+    int hit;
+    /*enter through whatever object we are*/
+    switch (prms.SHAPE){
+        case BOX:
+            hit=box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
+            /*terminate neutrons which miss the component*/
+            if(!hit) ABSORB;
+            /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
+            if(l0>0) PROP_DL(l0);
+            break;
+        case CYLINDER:
+            hit=cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);
+            /*terminate neutrons which miss the component*/
+            if(!hit)ABSORB;
+            /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
+            if(l0>0) PROP_DL(l0);
+            break;
+        case WINDOW:
+            PROP_Z0;
+            if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
+                /*terminate neutrons which miss the component*/
+                ABSORB;
+            }
+            break;
+        case default:
+            PROP_Z0; 
+    }
+    mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
+    //  mcmagnet_print_stack();
 %}
 
 MCDISPLAY
