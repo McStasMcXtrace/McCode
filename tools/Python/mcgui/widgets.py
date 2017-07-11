@@ -545,7 +545,7 @@ class Ui_dlgStartSim(object):
         self.edtNodes.setText(QtGui.QApplication.translate("dlgStartSim", "2", None, QtGui.QApplication.UnicodeUTF8))
         self.lblSimTrace.setText(QtGui.QApplication.translate("dlgStartSim", "Simulation/Trace: ", None, QtGui.QApplication.UnicodeUTF8))
         self.lblSweepSteps.setText(QtGui.QApplication.translate("dlgStartSim", "Sweep steps (optional):", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblNeutronCount.setText(QtGui.QApplication.translate("dlgStartSim", "Particle count:", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblNeutronCount.setText(QtGui.QApplication.translate("dlgStartSim", "Ray count:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblMpi.setText(QtGui.QApplication.translate("dlgStartSim", "MPI:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblMpiNodes.setText(QtGui.QApplication.translate("dlgStartSim", "MPI node count:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblOutputDir.setText(QtGui.QApplication.translate("dlgStartSim", "Output subdir (optional):", None, QtGui.QApplication.UnicodeUTF8))
