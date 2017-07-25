@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib import utils
 from mccodelib import mccode_config
-from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D, PlotGraphPrint
+from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs, Data1D, Data2D, PlotGraphPrint
 
 class McPyqtgraphPlotter():
     '''
@@ -337,7 +337,7 @@ def main(args):
             pg.setConfigOption('background', 'w')
             pg.setConfigOption('foreground', 'k')
             
-        loader = McPlotDataLoader(simfile=simfile)
+        loader = McCodeDataLoader(simfile=simfile)
         try:
             loader.load()
         except Exception as e:

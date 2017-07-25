@@ -39,7 +39,7 @@ class PlotNode(object):
     def get_parent(self):
         return self.parent
     def getdata_lst(self):
-        ''' getdata always returns a list '''
+        ''' must return a list '''
 
 class PNMultiple(PlotNode):
     def __init__(self, data_handle_lst):
@@ -791,7 +791,7 @@ def load_monitor_folder(args):
 def throw_error(args):
     raise Exception('Could not load "%s".' % args['simfile'])
 
-class McPlotDataLoader():
+class McCodeDataLoader():
     ''' assembly and execution of mccode data loader flowchart '''
     def __init__(self, simfile):
         '''  '''
