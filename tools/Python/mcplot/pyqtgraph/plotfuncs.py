@@ -4,6 +4,33 @@ Atomic plot functions for mcplot-pyqtgraph
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
+from mccodelib.plotgraph import PNMultiple, PNSingle
+from mccodelib.mcplotloader import Data1D, Data2D
+
+
+class PlotFuncOptions(object):
+    def __init__(self, log, legend, icolormap, verbose, legend_fontsize):
+        self.log = log
+        self.legend = legend 
+        self.icolormap = icolormap 
+        self.verbose = verbose
+        self.legend_fontsize = legend_fontsize
+
+def plot(node, i, plt, opts):
+    if type(node) == PNSingle and i != 0:
+        raise Exception("inconsistent plot request, idx=%s" % str(i))
+    
+    data = node.getdata_idx(i)
+    
+    if type(data) is Data1D:
+        view_box = plot_Data1D(data, plt, log=opts.log, legend=opts.legend, icolormap=opts.icolormap, verbose=opts.verbose, legend_fontsize=opts.legend_fontsize)
+        return view_box, plt
+    elif type(data) is Data2D:
+        view_box, lyt = plot_Data2D(data, plt, log=opts.log, legend=opts.legend, icolormap=opts.icolormap, verbose=opts.verbose, legend_fontsize=opts.legend_fontsize)
+        return view_box, lyt
+    else:
+        raise Exception("unknown plot data type")
+
 
 GlobalColormap='none'
 

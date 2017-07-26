@@ -33,8 +33,12 @@ class PlotNode(object):
         return self.secondaries
     def get_parent(self):
         return self.parent
+    def getdata_idx(self, idx):
+        ''' must return a valid data handle index '''
     def getdata_lst(self):
         ''' must return a list '''
+    def getnumdata(self):
+        ''' must return the number of held data handles '''
 
 
 class PNMultiple(PlotNode):
@@ -44,8 +48,12 @@ class PNMultiple(PlotNode):
     def __init__(self, data_handle_lst):
         self._data_handle_lst = data_handle_lst
         super().__init__()
+    def getdata_idx(self, idx):
+        return self._data_handle_lst[idx].getdata()
     def getdata_lst(self):
         return [d.getdata() for d in self._data_handle_lst]
+    def getnumdata(self):
+        return len(self._data_handle_lst)
     def __str__(self):
         return 'PNMultiple'
 
@@ -57,8 +65,13 @@ class PNSingle(PlotNode):
     def __init__(self, data_handle):
         self._data_handle = data_handle
         super().__init__()
+    def getdata_idx(self, idx):
+        if idx != 0: raise Exception('PNSingle: getdata_idx: idx must be zero.')
+        return self._data_handle.getdata()
     def getdata_lst(self):
         return [self._data_handle.getdata()]
+    def getnumdata(self):
+        return 1
     def __str__(self):
         return 'PNSingle'
 

@@ -13,13 +13,13 @@ import PyQt4
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
-from plotfuncs import plot_Data1D, plot_Data2D
+import plotfuncs
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib import utils
 from mccodelib import mccode_config
-from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs, Data1D, Data2D, PlotGraphPrint
+from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs, PlotGraphPrint
 
 class McPyqtgraphPlotter():
     '''
@@ -39,7 +39,7 @@ class McPyqtgraphPlotter():
         
         # initiate event driven plot recursion
         plot_node(node, plt_layout, flipper)
-    
+
 def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
     
@@ -107,16 +107,16 @@ def plot_node(node, layout, viewmodel):
         clear_window_and_handlers(layout)
     
         # get references from node
-        data_lst = node.getdata_lst()
         parent = node.parent
         prim_lst = node.primaries
         sec_lst = node.secondaries
     
         # add plot instances and record viewbox results
-        n = len(data_lst)
+        #n = len(data_lst)
+        n = node.getnumdata()
         viewbox_lst = []
         for i in range(n):
-            viewbox_lst.append(add_plot(layout, data_lst[i], i, n, viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex()))
+            viewbox_lst.append(add_plot(layout, node, i, n, viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex()))
     
         # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
         vn_dict_click = {}
@@ -127,12 +127,12 @@ def plot_node(node, layout, viewmodel):
             vn_dict_click[viewbox_lst[i]] = prim_lst[i]
         # if parent exists, all right-clicks are registered to it
         if parent:
-            for i in range(len(data_lst)):
+            for i in range(n):
                 vn_dict_rclick[viewbox_lst[i]] = parent
         # for each secondary node, a ctrl-click is registered to it
         for i in range(len(sec_lst)):
             vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
-    
+        
         # set mouse click handlers on the window
         plot_node_cb = lambda node: plot_node(node, layout=layout, viewmodel=viewmodel)
         set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
@@ -143,6 +143,17 @@ def plot_node(node, layout, viewmodel):
         replot_cb = lambda: plot_node(node, layout, viewmodel=viewmodel)
         back_cb = lambda: plot_node(node.parent, layout, viewmodel=viewmodel)
         set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
+
+def get_modifiers(modname):
+    ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
+    if modname == "none":
+        return 0
+    if modname == "ctrl":
+        return 67108864
+    if modname == "shft":
+        return 33554432
+    if modname == "ctrl-shft":
+        return 100663296
 
 def print_help(nogui=False):
     if sys.platform == 'darwin':
@@ -241,17 +252,6 @@ def expand_subplots(sourcedir):
     for s in subdirs:
         subprocess.Popen('mcplot-pyqtgraph %s' % os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
-def get_modifiers(modname):
-    ''' get int codes for keyboardmodifiers '''
-    if modname == "none":
-        return 0
-    if modname == "ctrl":
-        return 67108864
-    if modname == "shft":
-        return 33554432
-    if modname == "ctrl-shft":
-        return 100663296
-
 def clear_window_and_handlers(rootui):
     ''' clears all click handlers on "rootui" '''
     rootui.clear()
@@ -295,7 +295,7 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
+def add_plot(layout, node, i, n, log=False, legend=True, icolormap=0):
     ''' constructs a plot from data and adds this to layout '''
     view_box = None
     plt = pg.PlotItem()
@@ -304,14 +304,10 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     verbose = n<=4
     legend_fontsize = (8, 14)[n<=2]
     
-    if type(data) is Data1D:
-        view_box = plot_Data1D(data, plt, log=log, legend=legend, icolormap=icolormap, verbose=verbose, legend_fontsize=legend_fontsize)
-        layout.addItem(plt, i / rowlen, i % rowlen)
-    elif type(data) is Data2D:
-        view_box, lyt = plot_Data2D(data, plt, log=log, legend=legend, icolormap=icolormap, verbose=verbose, legend_fontsize=legend_fontsize)
-        layout.addItem(lyt, i / rowlen, i % rowlen)
-    else:
-        raise Exception("unknown plot data type")
+    options = plotfuncs.PlotFuncOptions(log, legend, icolormap, verbose, legend_fontsize)
+    view_box, plt_itm = plotfuncs.plot(node, i, plt, options)
+
+    layout.addItem(plt_itm, i / rowlen, i % rowlen)
     
     return view_box
 
