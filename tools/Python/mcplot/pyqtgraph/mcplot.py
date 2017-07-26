@@ -25,9 +25,10 @@ class McPyqtgraphPlotter():
     '''
     PyQtGraph-based plotter class.
     '''
-    def __init__(self, plotgraph, sourcedir):
+    def __init__(self, plotgraph, sourcedir, plot_func):
         self.graph = plotgraph
         self.sourcedir = sourcedir
+        self.plot_func = plot_func
     
     def runplot(self):
         node = self.graph
@@ -35,10 +36,10 @@ class McPyqtgraphPlotter():
         plt_layout = create_plotwindow(title=self.sourcedir)
         
         # create the logflipper
-        flipper = LogFlipper(sourcedir=self.sourcedir)
-        
+        viewmodel = ViewModel(sourcedir=self.sourcedir)
+    
         # initiate event driven plot recursion
-        plot_node(node, plt_layout, flipper)
+        plot_node(node, self.plot_func, plt_layout, viewmodel)
 
 def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
@@ -70,7 +71,7 @@ def create_plotwindow(title):
     
     return layout
 
-class LogFlipper():
+class ViewModel():
     ''' 
     It is a kind of viewmodel, originally a log logstate housekeeping object, 
     extended by various other logstate variables as well.
@@ -97,7 +98,7 @@ class LogFlipper():
     def get_sourcedir(self):
         return self.sourcedir
 
-def plot_node(node, layout, viewmodel):
+def plot_node(node, plot_func, layout, viewmodel):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
@@ -116,7 +117,7 @@ def plot_node(node, layout, viewmodel):
         n = node.getnumdata()
         viewbox_lst = []
         for i in range(n):
-            viewbox_lst.append(add_plot(layout, node, i, n, viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex()))
+            viewbox_lst.append(add_plot(layout, node, plot_func, i, n, viewmodel))
     
         # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
         vn_dict_click = {}
@@ -134,7 +135,7 @@ def plot_node(node, layout, viewmodel):
             vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
         
         # set mouse click handlers on the window
-        plot_node_cb = lambda node: plot_node(node, layout=layout, viewmodel=viewmodel)
+        plot_node_cb = lambda node: plot_node(node, plot_func, layout=layout, viewmodel=viewmodel)
         set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
@@ -295,18 +296,28 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def add_plot(layout, node, i, n, log=False, legend=True, icolormap=0):
+def get_plot_func_opts(log, legend, icolormap, verbose, legend_fontsize):
+    ''' returns a dict for holding the plot options relevant for this plotting frontend '''
+    d = {}
+    d['log'] = log
+    d['legend'] = legend 
+    d['icolormap'] = icolormap 
+    d['verbose'] = verbose
+    d['legend_fontsize'] = legend_fontsize
+    return d
+
+#def add_plot(layout, node, plot_node_func, i, n, log=False, legend=True, icolormap=0):
+def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     ''' constructs a plot from data and adds this to layout '''
-    view_box = None
     plt = pg.PlotItem()
     rowlen = get_golden_rowlen(n)
     
     verbose = n<=4
     legend_fontsize = (8, 14)[n<=2]
     
-    options = plotfuncs.PlotFuncOptions(log, legend, icolormap, verbose, legend_fontsize)
-    view_box, plt_itm = plotfuncs.plot(node, i, plt, options)
-
+    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, legend_fontsize)
+    view_box, plt_itm = plot_node_func(node, i, plt, options)
+    
     layout.addItem(plt_itm, i / rowlen, i % rowlen)
     
     return view_box
@@ -351,7 +362,7 @@ def main(args):
         app = QtGui.QApplication(sys.argv)
         
         # set up
-        plotter = McPyqtgraphPlotter(graph, sourcedir=loader.directory)
+        plotter = McPyqtgraphPlotter(graph, sourcedir=loader.directory, plot_func=plotfuncs.plot)
         plotter.runplot()
         print_help(nogui=True)
         
