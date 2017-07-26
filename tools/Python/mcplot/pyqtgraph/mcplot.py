@@ -25,11 +25,19 @@ class McPyqtgraphPlotter():
     '''
     PyQtGraph-based plotter class.
     '''
-    def __init__(self, plotgraph, sourcedir, plot_func):
+    def __init__(self, plotgraph, sourcedir, plot_func, invcanvas):
         self.graph = plotgraph
         self.sourcedir = sourcedir
         self.plot_func = plot_func
-    
+        
+        # Qt app
+        self.app = QtGui.QApplication(sys.argv)
+        
+        if invcanvas:
+            # switch to using white background and black foreground
+            pg.setConfigOption('background', 'w')
+            pg.setConfigOption('foreground', 'k')
+        
     def runplot(self):
         node = self.graph
         
@@ -40,6 +48,10 @@ class McPyqtgraphPlotter():
     
         # initiate event driven plot recursion
         plot_node(node, self.plot_func, plt_layout, viewmodel)
+        
+        # start
+        sys.exit(self.app.exec_())
+
 
 def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
@@ -335,15 +347,10 @@ def main(args):
             simfile = ''
         else:
             simfile = args.simulation[0]
-        
         if args.test:
             test_decfuncs(simfile)
-
-        if args.invcanvas:
-            ## Switch to using white background and black foreground
-            pg.setConfigOption('background', 'w')
-            pg.setConfigOption('foreground', 'k')
-            
+        
+        # load data
         loader = McCodeDataLoader(simfile=simfile)
         try:
             loader.load()
@@ -352,22 +359,14 @@ def main(args):
             print('mcplot loader: ' + e.__str__())
             print_help(nogui=True)
             quit()
-        
         graph = loader.plot_graph
-        
         if args.test:
             printer = PlotGraphPrint(graph)
         
-        # Qt app
-        app = QtGui.QApplication(sys.argv)
-        
-        # set up
-        plotter = McPyqtgraphPlotter(graph, sourcedir=loader.directory, plot_func=plotfuncs.plot)
-        plotter.runplot()
+        # run pqtg frontend
+        plotter = McPyqtgraphPlotter(graph, sourcedir=loader.directory, plot_func=plotfuncs.plot, invcanvas=args.invcanvas)
         print_help(nogui=True)
-        
-        # start
-        sys.exit(app.exec_())
+        plotter.runplot()
         
     except KeyboardInterrupt:
         print('keyboard interrupt')
