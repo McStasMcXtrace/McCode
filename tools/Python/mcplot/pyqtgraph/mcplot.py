@@ -10,7 +10,8 @@ import sys
 import plotfuncs
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs, PlotGraphPrint
+from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs
+from mccodelib.plotgraph import PlotGraphPrint
 from mccodelib import pqtgfrontend
 
 
