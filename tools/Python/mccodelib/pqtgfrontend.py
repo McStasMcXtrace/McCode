@@ -10,8 +10,8 @@ import PyQt4
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
-import utils
-import mccode_config
+from . import utils
+from . import mccode_config
 from .mcplotloader import McCodeDataLoader, test_decfuncs, PlotGraphPrint
 
 

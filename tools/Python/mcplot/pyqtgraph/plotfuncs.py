@@ -1,9 +1,15 @@
 '''
 Atomic plot functions for mcplot-pyqtgraph
 '''
+import os
+import sys
 import numpy as np
 import pyqtgraph as pg
+
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from mccodelib.plotgraph import PNMultiple, PNSingle
 from mccodelib.mcplotloader import Data1D, Data2D
 
