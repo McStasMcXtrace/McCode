@@ -20,6 +20,21 @@ class McPyqtgraphPlotter():
     PyQtGraph-based plotter class.
     '''
     def __init__(self, plotgraph, sourcedir, plot_func, invcanvas):
+        '''
+        plotgraph: plotgraph root node
+        sourcedir: data files source directory
+        plot_funct: the user-specified matching user data.
+            Signature:
+                node     - plotgraph node
+                i        - int
+                plt      - pqtg plot object
+                opts     - (dict, see code)))
+                
+            returns: 
+                view_box - the click-able view box of the constructed plot object
+                plt      - the plot object to be added to the pqtg window 
+        inv_canvas: inverts background from black to white
+        '''
         self.graph = plotgraph
         self.sourcedir = sourcedir
         self.plot_func = plot_func
