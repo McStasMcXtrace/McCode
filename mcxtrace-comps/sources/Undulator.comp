@@ -208,7 +208,7 @@ TRACE
         prms.igamma=1.0/prms.gamma;
     }
 
-    /* the undulator's fundamental wavelength*/
+    /* the undulator's fundamental angular frequency*/
     w_u=2*M_PI*M_C/lu;
 
     /* now pick angles (\xi and \psi => \theta) within the focus_window 
