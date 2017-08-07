@@ -7,16 +7,12 @@ import logging
 import os
 import sys
 
-import matlab.engine # official mathworks impl
-
 import numpy as np
 import pyqtgraph as pg
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib import pqtgfrontend
 from mccodelib import plotgraph
-
-#import matlab_ef # Emmanuel Farhi's matlab interface
 
 
 '''
@@ -106,17 +102,21 @@ class IDataShadow:
         self.monitor = monitor
         self.axes_vals = axes_vals
 
+
 class IFuncShadow:
     def __init__(self, definition):
         self.definition = definition
 
-class IFitInterface:
+
+class IFitInterfaceOfficial:
     '''
     The lowest level above matlab, with special functions for getting
     data out of iFit objects of type iData and iFunc.
     '''
     def __init__(self):
-        self.eng = matlab.engine.start_matlab('-nodesktop', async=False)
+        import matlab.engine # official mathworks impl
+        self.eng = matlab.engine.start_matlab('-nodesktop -nosplash', async=False)
+        #self.eng = matlab.engine.start_matlab('-nodesktop -nosplash')
 
     def get_idata(self, varname):
         signal = np.array(self.eng.eval('%s.Signal' % varname, nargout=1))
@@ -150,6 +150,40 @@ class IFitInterface:
         self.eng.eval("" % expression, nargout=1)
 
 
+class IFitInterface:
+    '''
+    The lowest level above matlab, with special functions for getting
+    data out of iFit objects of type iData and iFunc.
+    '''
+    def __init__(self):
+        import matlab_ef # Emmanuel Farhi's matlab interface
+        self.eng = matlab_ef.Matlab()
+
+    def get_idata(self, varname):
+        signal = np.array(self.eng.get('%s.Signal' % varname))
+        error = np.array(self.eng.get('%s.Error' % varname))
+        monitor = None # np.array(self.eng.eval('%s.Monitor' % varname))
+        
+        axes_names = self.eng.get('%s.Axes' % varname)
+        firstaxes_vals = np.array(self.eng.get('a.%s' % axes_names))
+
+        return IDataShadow(signal, error, monitor, firstaxes_vals)
+
+    def get_ifunc(self, varname):
+        definition = self.eng.get('%s.Signal' % varname)
+        return IFuncShadow(definition)
+
+    def get(self, varname):
+        something = self.eng.get('%s' % varname)
+        return something
+
+    def assign(self, varname, expression):
+        self.eng.eval("%s = %s" % (varname, expression))
+
+    def eval(self, expression):
+        self.eng.eval("" % expression)
+
+
 '''
 Local script classes
 '''
@@ -159,9 +193,11 @@ class IFitLoaderSimple:
     '''
     def __init__(self, datafile):
         '''  '''
+        #import matlab_ef # Emmanuel Farhi's matlab interface
         self.datafile = datafile[0]
         self.plot_graph = None
         self.interface = IFitInterface()
+        #self.interface = IFitInterfaceOfficial()
         if not os.path.exists(self.datafile):
             raise Exception("requested file to load does not exist")
 
