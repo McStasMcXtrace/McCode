@@ -119,7 +119,7 @@ DECLARE
   mcmagnet_field_info *magnet;
 
   struct {
-      enum {BOX,WINDOW,HOLLOW_CYLINDER, CYLINDER} shape;
+      enum {BOX, WINDOW, CYLINDER, SPHERE, ANY} shape;
   } prms;
 %}
 
@@ -159,12 +159,16 @@ INITIALIZE
 
   /*initialize shape to either be window/box/cylinder*/
   /*some logic here to enter through a box or cylinder*/
-  if(xwidth && yheight && zdepth){
+  if(geometry){
+      prms.shape=ANY;
+  }else if(xwidth && yheight && zdepth){
       prms.shape=BOX;
   }else if (xwidth && yheight && !zdepth){
       prms.shape=WINDOW;
   }else if(radius && yheight){
       prms.shape=CYLINDER;
+  }else if (radius) {
+        prms.shape=SPHERE;
   }else{
     prms.shape=NONE;  
 }  
@@ -201,7 +205,9 @@ TRACE
             PROP_Z0; 
     }
     mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
-    //  mcmagnet_print_stack();
+#ifdef MCDEBUG
+     mcmagnet_print_stack();
+#endif
 %}
 
 MCDISPLAY

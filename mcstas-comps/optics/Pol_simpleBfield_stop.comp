@@ -53,7 +53,7 @@
 
 DEFINE COMPONENT Pol_simpleBfield_stop
 DEFINITION PARAMETERS (magnet_comp_stop=NULL)
-SETTING PARAMETERS (yheight, xwidth, zdepth, radius)
+SETTING PARAMETERS (string geometry="", yheight, xwidth, zdepth, radius)
 OUTPUT PARAMETERS(prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -71,12 +71,16 @@ INITIALIZE
         if (!zdepth) zdepth=MCGET_PAR(magnet_stop_comp);
         if (!radius) radius=MCGET_PAR(magnet_stop_comp);
     }
-    if(xwidth && yheight && zdepth){
+    if(geometry){
+        prms.shape=ANY;
+    }else if(xwidth && yheight && zdepth){
         prms.shape=BOX;
     }else if (xwidth && yheight && !zdepth){
         prms.shape=WINDOW;
     }else if(radius && yheight){
         prms.shape=CYLINDER;
+    }else if (radius) {
+        prms.shape=SPHERE;
     }else{
         prms.shape=NONE;
     }  
