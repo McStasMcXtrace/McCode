@@ -101,9 +101,8 @@ class McGuiState(QtCore.QObject):
     # [<canRun>, <canPlot>] each can be str 'True' or 'False'
     simStateUpdated = QtCore.pyqtSignal(list)
     
-    __cFile = ""
-    __binaryFile = ""
-    __resultFile = ""
+    __cFile = None
+    __binaryFile = None
     __dataDir = ""
     
     def __init__(self, emitter):
@@ -126,6 +125,18 @@ class McGuiState(QtCore.QObject):
         return self.__instrFile
     
     def loadInstrument(self, instr_file):
+        def get_bin_and_c_filenames(instr):
+            # assume instr exists
+            base = os.path.splitext(instr)[0]
+            
+            c_fn = base + '.c'
+            c_fn_exists = os.path.exists(c_fn)
+            
+            bin_fn = base + '.out'
+            bin_fn_exists = os.path.exists(bin_fn)
+            
+            return c_fn if c_fn_exists else None, bin_fn if bin_fn_exists else None
+        
         # makes sure this is not a qstring
         instr_file = str(instr_file)
         # file must exist:
@@ -137,8 +148,9 @@ class McGuiState(QtCore.QObject):
             
             instr_file = os.path.join(self.getWorkDir(), os.path.basename(instr_file))
             self.__instrFile = instr_file
+            self.__cFile, self.__binaryFile = get_bin_and_c_filenames(self.__instrFile)
             self.__fireInstrUpdate()
-            self.__emitter.status("Instrument: " + os.path.basename(instr_file))
+            self.__emitter.status("Instrument: " + os.path.basename(self.__instrFile))
             self.__fireSimStateUpdate()
         else:
             # TODO: throw exception
@@ -147,6 +159,8 @@ class McGuiState(QtCore.QObject):
         
     def unloadInstrument(self):
         self.__instrFile = ''
+        self.__cFile = None
+        self.__binaryFile = None
         self.__fireInstrUpdate()
         self.__fireSimStateUpdate()
         return True
@@ -239,7 +253,7 @@ class McGuiState(QtCore.QObject):
             # check
             if os.path.isfile(cf):
                 self.__cFile = cf
-                self.__emitter.message('    --> ' + self.__cFile)
+                self.__emitter.message('wrote ' + self.__cFile)
             else:
                 raise Exception('C file not found')
             
@@ -292,7 +306,7 @@ class McGuiState(QtCore.QObject):
             # check
             if os.path.isfile(bf):
                 self.__binaryFile = bf
-                self.__emitter.message('    --> ' + self.__binaryFile)
+                self.__emitter.message('wrote ' + self.__binaryFile)
                 self.__emitter.status('Instrument compiled')
             else:
                 raise Exception('compileAsync: Binary not found.')
@@ -787,6 +801,7 @@ class McGuiAppController():
         if new_instr_req != '':
             if self.view.closeCodeEditorWindow():
                 text = get_file_contents(instr_templ)
+                self.state.unloadInstrument()
                 new_instr = save_instrfile(new_instr_req, text)
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))

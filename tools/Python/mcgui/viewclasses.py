@@ -149,7 +149,7 @@ class McView(object):
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
-            return None, None
+            return None, None, None
 
     def showNewInstrDialog(self, lookdir):
         dlg = QtGui.QFileDialog()

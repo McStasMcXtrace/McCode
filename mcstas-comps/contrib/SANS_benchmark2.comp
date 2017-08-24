@@ -51,7 +51,8 @@
 *     case 10 - logarithmically spaced series of sharp peaks
 *     case 11 - logarithmically spaced series of sharp delta peaks !!!!!!
 *     ...
-*     case 18: free
+*     case 15 - sphere, R = 150 AA
+*     case 18   free
 *
 * dsdw_inc: []  the incoherent background from the overall sample (cm-1), should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
 * sc_aim: []    the fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
@@ -382,6 +383,20 @@ G   = (drho*drho*phi*4e-24*Pi*R*R*R/3.0);
 out  = 3.0*(sin(qR)-qR*cos(qR))/(qR*qR*qR);
 out *= G * out;
 break;
+
+
+case 15:          /* sphere, medium                    */
+R   = 150.0;      /* radius Angstroem                  */
+phi = 0.001;      /* concentration vol/vol             */
+
+qR  = Q*R;
+G   = (drho*drho*phi*4e-24*Pi*R*R*R/3.0);
+
+out  = 3.0*(sin(qR)-qR*cos(qR))/(qR*qR*qR);
+out *= G * out;
+break;
+
+
 
 
 case 6:          /* sphere, large                     */

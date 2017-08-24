@@ -12,7 +12,7 @@ import pickle
 from threading import Thread
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from mccodelib.mcplotloader import McPlotDataLoader
+from mccodelib.mcplotloader import McCodeDataLoader
 
 '''
 Protocol implementation.
@@ -34,7 +34,7 @@ class RCSimFile(RemoteCommand):
         self.simfile = simfile
     
     def impl(self):
-        loader = McPlotDataLoader(simfile=self.simfile)
+        loader = McCodeDataLoader(simfile=self.simfile)
         loader.load()
         graph = loader.plot_graph
         

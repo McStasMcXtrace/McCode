@@ -226,7 +226,7 @@ sub simulation_dialog {
     # ncounts/gravitation
     my $line = $opt_frame->Frame;
     $line->pack(-anchor => 'w', -fill => 'x');
-    my $choicencount = $line->Label(-text => "Neutron count:")->pack(-side => 'left');
+    my $choicencount = $line->Label(-text => "Ray count:")->pack(-side => 'left');
     my $ncount_entry = $line->Entry(-relief => 'sunken',
                                   -width=>10,
                                   -justify => 'right',

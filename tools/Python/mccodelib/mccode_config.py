@@ -5,8 +5,8 @@ import json
 mcstas/mcxtrace configuration.
 '''
 configuration = {
-    "MCCODE_VERSION": '2.4',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.4/',
+    "MCCODE_VERSION": '2.4.1',
+    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.4.1/',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
