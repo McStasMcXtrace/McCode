@@ -32,8 +32,8 @@ def plot(node, i, plt, opts):
         view_box, lyt = plot_Data2D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], legend_fontsize=opts['legend_fontsize'])
         return view_box, lyt
     else:
-        raise Exception("unknown plot data type")
-
+        # File was not loaded, silently ignore
+        return None, None
 
 GlobalColormap='none'
 

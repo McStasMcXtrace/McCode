@@ -338,7 +338,7 @@ def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     
     options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, legend_fontsize)
     view_box, plt_itm = plot_node_func(node, i, plt, options)
-    
-    layout.addItem(plt_itm, i / rowlen, i % rowlen)
+    if (view_box):
+        layout.addItem(plt_itm, i / rowlen, i % rowlen)
     
     return view_box
