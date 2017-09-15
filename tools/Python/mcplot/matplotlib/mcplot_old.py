@@ -397,70 +397,71 @@ def dumpfile(frmat):
     print("Saved " + Filename)
     # end dumpfile
 
-def display(this_File, comment):
+def display(this_file, comment):
     """
     Display data set from File: overview or scan data set. Installs button and keyboard events.
     Only returns after show().
       called from: main
-      input:  this_File file name to show as a string
+      input:  this_file file name to show as a string
       output: None
     """
-    from pylab import connect,subplot,gca,savefig,show,gcf
+    from pylab import connect, subplot, gca, savefig, show, gcf
     global scan_flag,scan_length
     
-    if this_File =="":
+    if this_file =="":
         # No filename given, assume mccode.sim in current dir
-        this_File = "mccode.sim"
+        this_file = "mccode.sim"
 
-    # FIX: make the path to this_File absolute to always get a non-empty dirname.
-    this_File = os.path.abspath(this_File)
+    # FIX: make the path to this_file absolute to always get a non-empty dirname.
+    this_file = os.path.abspath(this_file)
     
-    if os.path.isdir(this_File)==1:
+    if os.path.isdir(this_file)==1:
         # dirname given, assume mccode.sim in that dir.
-        this_File = os.path.join(this_File,'mccode.sim')
-
-    if os.path.dirname(this_File) != '':
+        this_file = os.path.join(this_file,'mccode.sim')
+    
+    if os.path.dirname(this_file) != '':
         pwd = os.getcwd()
-        os.chdir(os.path.dirname(this_File))
-        this_File = os.path.basename(this_File)
+        os.chdir(os.path.dirname(this_file))
+        this_file = os.path.basename(this_file)
 
-    if os.path.isfile(this_File)==0:
+    if os.path.isfile(this_file)==0:
         print(os.path.basename(sys.argv[0]) +": Dataset " + File + " does not exist!")
         exit()
     
     isBegin = lambda line: (line.strip()).startswith('begin')
     isCompFilename = lambda line: (line.strip()).startswith('filename:')
     # First, determine if this is single or overview plot...
-    SimFile = filter(isBegin, open(this_File).readlines())
+    sim_file = filter(isBegin, open(this_file).readlines())
     Datfile = 0;
-    if SimFile == []:
-        FS = read_monitor(this_File)
+    if sim_file == []:
+        FS = read_monitor(this_file)
         tpe = FS['tpe'].split('(')[0].strip()
         if tpe!='multiarray_1d':
             FS['FontSize']=8
             FS=display_single(FS)
             if options.Format!=None: 
-                savefig(this_File + "." + options.Format)
+                savefig(this_file + "." + options.Format)
                 print("Saved " + File + "." + options.Format)
             show()
             exit()
             Datfile = 1
 
     # Get filenames from the sim file
-    MonFiles = filter(isCompFilename, open(this_File).readlines())
-    MonFiles = list(MonFiles)
-    L = len(MonFiles)
+    mon_files = filter(isCompFilename, open(this_file).readlines())
+    mon_files = list(mon_files)
+    L = len(mon_files)
     
     # create main window
     gcf()
+    
     # Scan or overview?
     if L==0:
         """Scan view"""
         if Datfile==0:
             isFilename = lambda line: line.startswith('filename')
-            Scanfile = filter(isFilename, open(this_File).readlines()); 
+            Scanfile = filter(isFilename, open(this_file).readlines()); 
             Scanfile = Scanfile[0].split(': ')
-            Scanfile = os.path.join(os.path.dirname(this_File),Scanfile[1].strip())
+            Scanfile = os.path.join(os.path.dirname(this_file),Scanfile[1].strip())
             # Proceed to load scan datafile
             FS = read_monitor(Scanfile)
             L=(len(FS['variables'].split())-1)/2
@@ -493,18 +494,19 @@ def display(this_File, comment):
 #                ax = Axes3D(gcf())
 #            except ImportError:
             ax=gca()
-            MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip()
-            FS=read_monitor(MonFile)
-            FS['FontSize']=6
+            MonFile = mon_files[j].split(':')
+            MonFile = MonFile[1].strip()
+            FS = read_monitor(MonFile)
+            FS['FontSize'] = 6
             FSlist[len(FSlist):] = [FS]
-            FSlist[j]=display_single(FS)
+            FSlist[j] = display_single(FS)
     for xlabel_i in ax.get_xticklabels():
         xlabel_i.set_fontsize(6)
     for ylabel_i in ax.get_yticklabels():
         ylabel_i.set_fontsize(6)   
             
     if options.Format!=None:
-        savefig(this_File + "." + options.Format)
+        savefig(this_file + "." + options.Format)
         print("Saved " + File + "." + options.Format)
     else:
         from pylab import get_current_fig_manager
@@ -512,8 +514,8 @@ def display(this_File, comment):
         tb.set_message('File: ' + File + comment + ' mcplot: Keys: h=help [goc|x|pdnj] ' + File + comment);
         
     # install handlers for keyboard and mouse events
-
-    connect('button_press_event',click)
+    
+    connect('button_press_event', click)
     connect('key_press_event', keypress)
     
     os.chdir(pwd)
