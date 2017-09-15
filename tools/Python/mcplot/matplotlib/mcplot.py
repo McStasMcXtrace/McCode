@@ -9,9 +9,6 @@ import sys
 import math
 from matplotlib import pylab
 
-import plotfuncs
-from plotfuncs import plot_Data1D
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs
@@ -35,9 +32,6 @@ def plot_single_data(node, i, n, opts=None):
     subplt = pylab.subplot(dims[1],dims[0],i+1)
     
     data = node.getdata_idx(i)
-
-    pylab.title('%d' % i)
-    
     if type(data) is Data1D:
         pass
     elif type(data) is Data2D:
