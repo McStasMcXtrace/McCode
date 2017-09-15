@@ -7,6 +7,10 @@ import logging
 import os
 import sys
 import math
+import numpy as np
+#import matplotlib 
+#import tornado
+#matplotlib.use('WebAgg');
 from matplotlib import pylab
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -32,12 +36,103 @@ def plot_single_data(node, i, n, opts=None):
     subplt = pylab.subplot(dims[1],dims[0],i+1)
     
     data = node.getdata_idx(i)
+
+    pylab.title('%d' % i)
+    
     if type(data) is Data1D:
-        pass
+        
+        
+        xmin = data.xlimits[0]
+        xmax = data.xlimits[1]
+        
+        # data
+        x = np.array(data.xvals).astype(np.float)
+        y = np.array(data.yvals).astype(np.float)
+        yerr = np.array(data.y_err_vals).astype(np.float)
+                
+        pylab.xlim(xmin,xmax)
+
+        pylab.errorbar(x, y, yerr)
+        
+        '''
+        if options.log == True:
+            # handle Log intensity
+            invalid    = where(y <= 0)
+            valid      = where(y > 0)
+            min_valid  = min(y[valid])
+            y[invalid] = min_valid/10
+            dy=dy/y
+            y=log(y)
+            FileStruct['ylabel'] = "log(" + FileStruct['ylabel'] +")"
+        '''
+        
+        # ??? FileStruct['axes']=gca()
+        #Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
+        #      + FileStruct['title']
+        #if len(FileStruct['values'])>0:
+        #    Title = Title + '\n'
+        #    Title = Title + "I=" + FileStruct['values'].split()[0]
+        #    Title = Title + " E=" + FileStruct['values'].split()[1]
+        #    Title = Title + " N=" + FileStruct['values'].split()[2]
+        
+        
+        
+        
     elif type(data) is Data2D:
-        pass
+        
+        zvals = np.array(data.zvals)
+        
+        xmin = 1
+        xmax = 1
+        ymin = 1
+        ymax = 1
+        '''
+        
+        # 2D data set
+        mysize=FileStruct['data'].shape
+        I=FileStruct['data'][0:mysize[0]/3,...]
+        if options.log == True:
+            # handle Log intensity
+            invalid    = where(I <= 0)
+            valid      = where(I > 0)
+            min_valid  = min(I[valid])
+            I[invalid] = min_valid/10
+            I=log(I)
+        mysize=I.shape
+        Xmin = eval(FileStruct['xylimits'].split()[0])
+        Xmax = eval(FileStruct['xylimits'].split()[1])
+        Ymin = eval(FileStruct['xylimits'].split()[2])
+        Ymax = eval(FileStruct['xylimits'].split()[3])
+        #x = linspace(Xmin,Xmax,mysize[1])
+        y = linspace(Ymin,Ymax,mysize[0])
+        
+        FileStruct['axes']=gca()
+        xlim(Xmin,Xmax)
+        ylim(Ymin,Ymax)
+        
+        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
+              + FileStruct['title']
+        if options.log == True:
+            Title = Title + " (log plot)"        
+        Title = Title + "\nI=" + FileStruct['values'].split()[0]
+        Title = Title + " E=" + FileStruct['values'].split()[1]
+        Title = Title + " N=" + FileStruct['values'].split()[2]
+        colorbar()
+        
+        
+        '''
+        
+        
+        
+        
     else:
         raise Exception("unknown plot data type")
+    
+    
+    pylab.xlabel(data.xlabel)#,fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
+    pylab.ylabel(data.ylabel)#,fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
+    pylab.title('%d' % i)#, fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
+
     
     return subplt
 
@@ -57,16 +152,17 @@ class McMatplotlibPlotter():
         if not node:
             return
         
+        # clear
+        pylab.clf()
+        
         # plot data and keep subplots for the click area filter
         n = node.getnumdata()
         self.subplts = [plot_single_data(node, i, n) for i in range(n)]
         
         # click handlers
-        self.click_cbs = [lambda: self.plot_node(node=node) for node in node.primaries]
-        self.ctrl_cbs = [lambda: self.plot_node(node=node) for node in node.secondaries]
-        self.back_cb = None
-        if node.parent:
-            self.back_cb = lambda: self.plot_node(node=node.parent)
+        self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
+        self.ctrl_cbs = [lambda nde=n: self.plot_node(nde) for n in node.secondaries]
+        self.back_cb = lambda n=node.parent: self.plot_node(n) if node.parent else None
         self.event_dc_cid = pylab.connect('button_press_event', self._click_proxy)
         
         # set keypress handlers 
@@ -95,6 +191,7 @@ def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
             back_cb()
         elif ctrlmod and len(ctrl_cbs) > 0 and ctrlmod:
             idx = subplts.index(subplt)
+            print(idx)
             dc_cb()
             ctrl_cbs[idx]()
 
@@ -131,7 +228,7 @@ def main(args):
         plotter = McMatplotlibPlotter(sourcedir=loader.directory, invcanvas=args.invcanvas)
         pqtgfrontend.print_help(nogui=True)
         plotter.plot_node(rootnode)
-        
+    
     except KeyboardInterrupt:
         print('keyboard interrupt')
     except Exception as e:
