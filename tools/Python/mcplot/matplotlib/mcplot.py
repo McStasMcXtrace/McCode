@@ -75,22 +75,29 @@ def plot_single_data(node, i, n, opts=None):
         #    Title = Title + " E=" + FileStruct['values'].split()[1]
         #    Title = Title + " N=" + FileStruct['values'].split()[2]
         
-        
-        
-        
     elif type(data) is Data2D:
         
         zvals = np.array(data.zvals)
         
-        xmin = 1
-        xmax = 1
-        ymin = 1
-        ymax = 1
-        '''
+        xmin = data.xlimits[0]
+        xmax = data.xlimits[1]
+        ymin = data.xlimits[2]
+        ymax = data.xlimits[3]
         
-        # 2D data set
-        mysize=FileStruct['data'].shape
-        I=FileStruct['data'][0:mysize[0]/3,...]
+        mysize=zvals.shape
+        x = pylab.linspace(xmin, xmax, mysize[1])
+        y = pylab.linspace(ymin, ymax, mysize[0])
+        pylab.xlim(xmin, xmax)
+        pylab.ylim(ymin, ymax)
+        
+        
+        #from mpl_toolkits.mplot3d import Axes3D
+        #ax = Axes3D(pylab.gcf())
+        pylab.contour(x,y,zvals)
+        #ax.plot_surface(x,y,zvals)
+        pylab.colorbar()
+        
+        '''
         if options.log == True:
             # handle Log intensity
             invalid    = where(I <= 0)
@@ -98,13 +105,26 @@ def plot_single_data(node, i, n, opts=None):
             min_valid  = min(I[valid])
             I[invalid] = min_valid/10
             I=log(I)
-        mysize=I.shape
-        Xmin = eval(FileStruct['xylimits'].split()[0])
-        Xmax = eval(FileStruct['xylimits'].split()[1])
-        Ymin = eval(FileStruct['xylimits'].split()[2])
-        Ymax = eval(FileStruct['xylimits'].split()[3])
-        #x = linspace(Xmin,Xmax,mysize[1])
-        y = linspace(Ymin,Ymax,mysize[0])
+        
+#        try:
+#          # use mplot3d toolkit
+#          from mpl_toolkits.mplot3d import Axes3D
+#          from pylab import gcf
+#          
+#          ax = Axes3D(gcf())
+#          if options.contour==True:
+#            ax.contour(x,y,I)
+#          else:
+#            ax.plot_surface(x,y,I)
+#        
+#        except ImportError:
+        # use default flat rendering
+        #ax = gca()
+        #if options.contour==True:
+        #    h=contour(x,y,I)
+        #else:
+        #    h=pcolor(x,y,I)
+        
         
         FileStruct['axes']=gca()
         xlim(Xmin,Xmax)
@@ -121,8 +141,6 @@ def plot_single_data(node, i, n, opts=None):
         
         
         '''
-        
-        
         
         
     else:
@@ -191,7 +209,6 @@ def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
             back_cb()
         elif ctrlmod and len(ctrl_cbs) > 0 and ctrlmod:
             idx = subplts.index(subplt)
-            print(idx)
             dc_cb()
             ctrl_cbs[idx]()
 
