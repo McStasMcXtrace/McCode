@@ -114,7 +114,7 @@ def plot_single_data(node, i, n, log):
         pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
         
     else:
-        raise Exception("unknown plot data type")
+        print("Unsuported plot data type %s" % type(data))
     
     return subplt
 
@@ -203,7 +203,7 @@ def print_help(nogui=False):
     helplines.append('l              - toggle log')
     helplines.append('p              - save ps')
     helplines.append('d              - save pdf')
-    helplines.append('n              - save ong')
+    helplines.append('n              - save png')
     helplines.append('j              - save jpg')
     helplines.append('s              - native save dialog')
     helplines.append('F5             - replot')
