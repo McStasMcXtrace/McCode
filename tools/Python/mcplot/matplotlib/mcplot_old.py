@@ -54,6 +54,7 @@
 
 import sys
 import os
+import string
 import matplotlib
 matplotlib.use('Qt4Agg');
 
@@ -93,15 +94,15 @@ def display_single(FileStruct):
       input:  FileStruct as obtained from read_monitor()
       output: FileStruct data structure
     """
-    from pylab import gca, xlim, ylim, ylabel, xlabel, title, linspace, colorbar, log
+    from pylab import errorbar,gca,xlim,ylim,ylabel,xlabel,title,linspace,pcolor,colorbar,log,contour
     from numpy import where
-    tpe = FileStruct['type'].split('(')[0].strip()
+    type = FileStruct['type'].split('(')[0].strip()
 
-    if tpe == 'array_1d':
+    if type == 'array_1d':
         # 1D data set
         Xmin = eval(FileStruct['xlimits'].split()[0])
         Xmax = eval(FileStruct['xlimits'].split()[1])
-        #x=FileStruct['data'][:,0]
+        x=FileStruct['data'][:,0]
         y=FileStruct['data'][:,1]
         dy=FileStruct['data'][:,2]
         if options.log == True:
@@ -113,7 +114,7 @@ def display_single(FileStruct):
             dy=dy/y
             y=log(y)
             FileStruct['ylabel'] = "log(" + FileStruct['ylabel'] +")"
-        #h=errorbar(x,y,dy)
+        h=errorbar(x,y,dy)
         FileStruct['axes']=gca()
         xlim(Xmin,Xmax)
         Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
@@ -123,7 +124,7 @@ def display_single(FileStruct):
             Title = Title + "I=" + FileStruct['values'].split()[0]
             Title = Title + " E=" + FileStruct['values'].split()[1]
             Title = Title + " N=" + FileStruct['values'].split()[2]
-    elif tpe == 'array_2d':
+    elif type == 'array_2d':
         # 2D data set
         mysize=FileStruct['data'].shape
         I=FileStruct['data'][0:mysize[0]/3,...]
@@ -139,7 +140,7 @@ def display_single(FileStruct):
         Xmax = eval(FileStruct['xylimits'].split()[1])
         Ymin = eval(FileStruct['xylimits'].split()[2])
         Ymax = eval(FileStruct['xylimits'].split()[3])
-        #x = linspace(Xmin,Xmax,mysize[1])
+        x = linspace(Xmin,Xmax,mysize[1])
         y = linspace(Ymin,Ymax,mysize[0])
         
 #        try:
@@ -155,11 +156,11 @@ def display_single(FileStruct):
 #        
 #        except ImportError:
         # use default flat rendering
-        #ax = gca()
-        #if options.contour==True:
-        #    h=contour(x,y,I)
-        #else:
-        #    h=pcolor(x,y,I)
+        ax = gca()
+        if options.contour==True:
+            h=contour(x,y,I)
+        else:
+            h=pcolor(x,y,I)
         
         FileStruct['axes']=gca()
         xlim(Xmin,Xmax)
@@ -226,18 +227,18 @@ def read_monitor(this_File):
     Header = filter(isHeader, open(this_File).readlines())
     Header = list(Header)
     # Traverse header and define corresponding 'struct'
-    _str ="{"
+    str ="{"
     for j in range(0, len(Header)):
         # Field name and data
         Line = Header[j]; Line = Line[2:len(Line)].strip()
         Line = Line.split(':')
         Field = Line[0]
         Value = ''.join(':'.join(Line[1:len(Line)]).split("'"))
-        _str = _str + "'" + Field + "':'" + Value + "'"
+        str = str + "'" + Field + "':'" + Value + "'"
         if j<len(Header)-1:
-            _str = _str + ","
-    _str = _str + "}"
-    Filestruct = eval(_str)
+            str = str + ","
+    str = str + "}"
+    Filestruct = eval(str)
     # Add the data block:
     Filestruct['data']=loadtxt(this_File)
     Filestruct['fullpath'] = this_File
@@ -257,8 +258,8 @@ def get_monitor(FS,j):
     """
     # Ugly, hard-coded...
     data=FS['data'][:,(0,2*j+1,2*j+2)]
-    variables=FS['variables'].split()   
-    FSsingle={'xlimits':FS['xlimits'],'data':data,'component':variables[j+1],'values':'',
+    vars=FS['variables'].split()   
+    FSsingle={'xlimits':FS['xlimits'],'data':data,'component':vars[j+1],'values':'',
               'type':'array_1d(100)',
               'xlabel':FS['xlabel'],'ylabel':FS['ylabel'],'File':'Scan','title':'','FontSize':6}
     return FSsingle
@@ -271,17 +272,17 @@ def click(event):
       input:  event structure
       output: None
     """
-    from pylab import get_current_fig_manager, clf, connect, show
+    from pylab import get_current_fig_manager,get,gcf,figure,clf,connect,show
     tb = get_current_fig_manager().toolbar
     if event.button==1 and event.inaxes and tb.mode == '':
         g = event.inaxes
         # Determine number of clicked axis
-        #ax = get(gcf(),'axes')
+        ax = get(gcf(),'axes')
         jused = 0
         for j in range(0, len(FSlist)):
             FS = FSlist[j]
             if g==FS['axes']:
-                #h=figure()
+                h=figure()
                 clf()
                 FS=display_single(FS)
                 connect('key_press_event', keypress)
@@ -297,7 +298,7 @@ def keypress(event):
       input:  event structure
       output: None
     """
-    from pylab import close,text,title,show
+    from pylab import close,gcf,figure,gca,text,title,show
     event.key = event.key.lower()
     if event.key == 'q':
         close('all')
@@ -317,21 +318,21 @@ def keypress(event):
         tb = get_current_fig_manager().toolbar
         options.log = not options.log;
         if options.log == True:
-            tb.set_message('Log intensity scale selected for next plots');
+          tb.set_message('Log intensity scale selected for next plots');
         else:
-            tb.set_message('Linear intensity scale selected for next plots');
+          tb.set_message('Linear intensity scale selected for next plots');
     elif event.key == 'c':
         'toggle contour/normal'
-        #from pylab import get_current_fig_manager
+        from pylab import get_current_fig_manager
         tb = get_current_fig_manager().toolbar
         options.contour = not options.contour;
         if options.contour == True:
-            tb.set_message('Contour mode selected for next 2D plots');
+          tb.set_message('Contour mode selected for next 2D plots');
         else:
-            tb.set_message('Normal mode selected for next 2D plots');
+          tb.set_message('Normal mode selected for next 2D plots');
     elif event.key == 'h':
         'usage/help'
-        #h=figure()
+        h=figure()
         text(0.05,0.05,usage)
         title(os.path.basename(sys.argv[0]) + ": plotting tool for McCode data set",fontweight='bold')
         show()
@@ -355,9 +356,9 @@ def display_scanstep(this_File, relative_index):
 
     # are we managing a scan step overview ?
     if scan_flag == 0 or scan_length <= 1:
-        return
+      return
     
-    from pylab import close,figure
+    from pylab import gcf,close,figure
     
     # open or re-open scan_window
     if scan_window is not None:
@@ -366,102 +367,101 @@ def display_scanstep(this_File, relative_index):
     scan_window=figure()
     
     if scan_flag == 1:
-        index = 0
-        scan_flag = 2
+      index = 0
+      scan_flag = 2
     else:
-        index = scan_index + relative_index
+      index = scan_index + relative_index
     
     # check scan boundaries
     if index >= scan_length:
-        index = 0
+       index = 0
     elif index < 0:
-        index = scan_length-1
+      index = scan_length-1
 
     scan_index = index
     print("Loading " + os.path.join(this_File, "%i" % index))
     display(os.path.join(this_File, "%i" % index), "/%i" % index)
     # end display_scanstep
 
-def dumpfile(frmat):
+def dumpfile(format):
     """
     Save current fig to hardcopy. 
       called from: keypress
-      input:  frmat of hardcopy to generate, e.g. pdf, ps, png, ...
+      input:  format of hardcopy to generate, e.g. pdf, ps, png, ...
       output: None
     """
     global exp_counter
     from pylab import savefig
-    Filename = "mcplot_" + str(exp_counter) + "." + frmat
+    Filename = "mcplot_" + str(exp_counter) + "." + format
     exp_counter = exp_counter + 1
     savefig(Filename)
     print("Saved " + Filename)
     # end dumpfile
 
-def display(this_file, comment):
+def display(this_File, comment):
     """
     Display data set from File: overview or scan data set. Installs button and keyboard events.
     Only returns after show().
       called from: main
-      input:  this_file file name to show as a string
+      input:  this_File file name to show as a string
       output: None
     """
-    from pylab import connect, subplot, gca, savefig, show, gcf
+    from pylab import connect,subplot,gca,savefig,show,gcf
     global scan_flag,scan_length
     
-    if this_file =="":
+    if this_File =="":
         # No filename given, assume mccode.sim in current dir
-        this_file = "mccode.sim"
+        this_File = "mccode.sim"
 
-    # FIX: make the path to this_file absolute to always get a non-empty dirname.
-    this_file = os.path.abspath(this_file)
+    # FIX: make the path to this_File absolute to always get a non-empty dirname.
+    this_File = os.path.abspath(this_File)
     
-    if os.path.isdir(this_file)==1:
+    if os.path.isdir(this_File)==1:
         # dirname given, assume mccode.sim in that dir.
-        this_file = os.path.join(this_file,'mccode.sim')
-    
-    if os.path.dirname(this_file) != '':
-        pwd = os.getcwd()
-        os.chdir(os.path.dirname(this_file))
-        this_file = os.path.basename(this_file)
+        this_File = os.path.join(this_File,'mccode.sim')
 
-    if os.path.isfile(this_file)==0:
+    if os.path.dirname(this_File) != '':
+        pwd = os.getcwd()
+        os.chdir(os.path.dirname(this_File))
+        this_File = os.path.basename(this_File)
+
+    if os.path.isfile(this_File)==0:
         print(os.path.basename(sys.argv[0]) +": Dataset " + File + " does not exist!")
         exit()
     
     isBegin = lambda line: (line.strip()).startswith('begin')
     isCompFilename = lambda line: (line.strip()).startswith('filename:')
     # First, determine if this is single or overview plot...
-    sim_file = filter(isBegin, open(this_file).readlines())
+    SimFile = filter(isBegin, open(this_File).readlines())
     Datfile = 0;
-    if sim_file == []:
-        FS = read_monitor(this_file)
-        tpe = FS['tpe'].split('(')[0].strip()
-        if tpe!='multiarray_1d':
+    if SimFile == []:
+        FS = read_monitor(this_File)
+        type = FS['type'].split('(')[0].strip()
+        if type!='multiarray_1d':
             FS['FontSize']=8
             FS=display_single(FS)
             if options.Format!=None: 
-                savefig(this_file + "." + options.Format)
+                savefig(this_File + "." + options.Format)
                 print("Saved " + File + "." + options.Format)
             show()
             exit()
             Datfile = 1
 
     # Get filenames from the sim file
-    mon_files = filter(isCompFilename, open(this_file).readlines())
-    mon_files = list(mon_files)
-    L = len(mon_files)
+    MonFiles = filter(isCompFilename, open(this_File).readlines())
+    MonFiles = list(MonFiles)
+    L = len(MonFiles)
     
     # create main window
     gcf()
-    
     # Scan or overview?
     if L==0:
         """Scan view"""
         if Datfile==0:
             isFilename = lambda line: line.startswith('filename')
-            Scanfile = filter(isFilename, open(this_file).readlines()); 
+            Scanfile = filter(isFilename, open(this_File).readlines()); 
             Scanfile = Scanfile[0].split(': ')
-            Scanfile = os.path.join(os.path.dirname(this_file),Scanfile[1].strip())
+            Scanfile = os.path.join(os.path.dirname(this_File),Scanfile[1].strip())
             # Proceed to load scan datafile
             FS = read_monitor(Scanfile)
             L=(len(FS['variables'].split())-1)/2
@@ -494,19 +494,18 @@ def display(this_file, comment):
 #                ax = Axes3D(gcf())
 #            except ImportError:
             ax=gca()
-            MonFile = mon_files[j].split(':')
-            MonFile = MonFile[1].strip()
-            FS = read_monitor(MonFile)
-            FS['FontSize'] = 6
+            MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip()
+            FS=read_monitor(MonFile)
+            FS['FontSize']=6
             FSlist[len(FSlist):] = [FS]
-            FSlist[j] = display_single(FS)
+            FSlist[j]=display_single(FS)
     for xlabel_i in ax.get_xticklabels():
         xlabel_i.set_fontsize(6)
     for ylabel_i in ax.get_yticklabels():
         ylabel_i.set_fontsize(6)   
             
     if options.Format!=None:
-        savefig(this_file + "." + options.Format)
+        savefig(this_File + "." + options.Format)
         print("Saved " + File + "." + options.Format)
     else:
         from pylab import get_current_fig_manager
@@ -514,8 +513,8 @@ def display(this_file, comment):
         tb.set_message('File: ' + File + comment + ' mcplot: Keys: h=help [goc|x|pdnj] ' + File + comment);
         
     # install handlers for keyboard and mouse events
-    
-    connect('button_press_event', click)
+
+    connect('button_press_event',click)
     connect('key_press_event', keypress)
     
     os.chdir(pwd)
