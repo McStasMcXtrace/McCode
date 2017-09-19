@@ -37,10 +37,9 @@ def plot_single_data(node, i, n, opts=None):
     
     dims = calc_panel_size(n)
     subplt = pylab.subplot(dims[1],dims[0],i+1)
-    
     data = node.getdata_idx(i)
-
-    pylab.title('%d' % i)
+    
+    verbose = n == 1
     
     if type(data) is Data1D:
         # plot one-dimensional data
@@ -73,15 +72,6 @@ def plot_single_data(node, i, n, opts=None):
         except:
             title = '%s\n[%s]' % (data.component, data.filename)
         pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
-        
-        # ??? FileStruct['axes']=gca()
-        #Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
-        #      + FileStruct['title']
-        #if len(FileStruct['values'])>0:
-        #    Title = Title + '\n'
-        #    Title = Title + "I=" + FileStruct['values'].split()[0]
-        #    Title = Title + " E=" + FileStruct['values'].split()[1]
-        #    Title = Title + " N=" + FileStruct['values'].split()[2]
     
     elif type(data) is Data2D:
         
@@ -98,16 +88,17 @@ def plot_single_data(node, i, n, opts=None):
         pylab.xlim(xmin, xmax)
         pylab.ylim(ymin, ymax)
         
+        ''' out-commented code: alternative plot types '''
         #from mpl_toolkits.mplot3d import Axes3D
         #ax = Axes3D(pylab.gcf())
-        pylab.contour(x,y,zvals)
+        #pylab.contour(x,y,zvals)
         #ax.plot_surface(x,y,zvals)
+        pylab.pcolor(x,y,zvals)
         pylab.colorbar()
         
         pylab.xlabel(data.xlabel, fontsize=FONTSIZE, fontweight='bold')
         pylab.ylabel(data.ylabel, fontsize=FONTSIZE, fontweight='bold')
         
-        verbose = False
         try:
             title = '%s\nI = %s' % (data.component, data.values[0])
             if verbose:
@@ -124,48 +115,9 @@ def plot_single_data(node, i, n, opts=None):
             min_valid  = min(I[valid])
             I[invalid] = min_valid/10
             I=log(I)
-        
-#        try:
-#          # use mplot3d toolkit
-#          from mpl_toolkits.mplot3d import Axes3D
-#          from pylab import gcf
-#          
-#          ax = Axes3D(gcf())
-#          if options.contour==True:
-#            ax.contour(x,y,I)
-#          else:
-#            ax.plot_surface(x,y,I)
-#        
-#        except ImportError:
-        
-        # use default flat rendering
-        #ax = gca()
-        #if options.contour==True:
-        #    h=contour(x,y,I)
-        #else:
-        #    h=pcolor(x,y,I)
-        
-        
-        FileStruct['axes']=gca()
-        xlim(Xmin,Xmax)
-        ylim(Ymin,Ymax)
-        
-        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
-              + FileStruct['title']
-        if options.log == True:
-            Title = Title + " (log plot)"        
-        Title = Title + "\nI=" + FileStruct['values'].split()[0]
-        Title = Title + " E=" + FileStruct['values'].split()[1]
-        Title = Title + " N=" + FileStruct['values'].split()[2]
-        colorbar()
-        
-        
         '''
     else:
         raise Exception("unknown plot data type")
-    
-    
-    
     
     return subplt
 
