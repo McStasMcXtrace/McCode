@@ -180,8 +180,11 @@ class McMatplotlibPlotter():
         dc_cb = lambda: pylab.disconnect(self.event_dc_cid)
         click(event, subplts=self.subplts, click_cbs=self.click_cbs, ctrl_cbs=self.ctrl_cbs, back_cb=self.back_cb, dc_cb=dc_cb)
     
+    def _keypress_proxy(self, event):
+        keypress(event, back_cb=self.back_cb, replot_cb=self.replot_cb)
+    
     def plot_node(self, node):
-        '''  '''
+        ''' plot recursion method '''
         if not node:
             return
         
@@ -192,11 +195,17 @@ class McMatplotlibPlotter():
         n = node.getnumdata()
         self.subplts = [plot_single_data(node, i, n) for i in range(n)]
         
-        # click handlers
+        # create callbacks
         self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
         self.ctrl_cbs = [lambda nde=n: self.plot_node(nde) for n in node.secondaries]
         self.back_cb = lambda n=node.parent: self.plot_node(n) if node.parent else None
+        self.replot_cb = lambda n=node: self.plot_node(n) if node else None
+
+        # regiseter click events
         self.event_dc_cid = pylab.connect('button_press_event', self._click_proxy)
+        
+        # register keypress events
+        pylab.connect('key_press_event', self._keypress_proxy)
         
         # set keypress handlers 
         #replot_cb = lambda: plot_node(node)
@@ -205,8 +214,67 @@ class McMatplotlibPlotter():
         
         pylab.show()
 
+def keypress(event, back_cb, replot_cb):
+    key = event.key.lower()
+    
+    if key == 'q':
+        quit()
+    elif key == 'l':
+        toggle_log(replot_cb)
+    elif event.key == 'p':
+        dumpfile('ps')
+    elif event.key == 'd':
+        dumpfile('pdf')
+    elif event.key == 'n':
+        dumpfile('png')
+    elif event.key == 'j':
+        dumpfile('jpg')
+    elif key == 'b':
+        back_cb()
+    elif key == 'f5':
+        replot_cb()
+    elif key == 'f1' or key == 'h':
+        print_help()
+    elif key == 'b':
+        back_cb()
+
+def print_help(nogui=False):
+    if sys.platform == 'darwin':
+        modifier = 'Meta'
+    else:
+        modifier = 'ctrl'
+    
+    helplines = []
+    helplines.append('')
+    helplines.append('q              - quit')
+    helplines.append('p              - save ps')
+    helplines.append('d              - save pdf')
+    helplines.append('n              - save ong')
+    helplines.append('j              - save jpg')
+    helplines.append('s              - native save dialog')
+    helplines.append('l              - log toggle')
+    helplines.append('F1/h           - help')
+    helplines.append('F5             - replot')
+    helplines.append('click          - display subplot')
+    helplines.append('right-click/b  - back')
+    helplines.append('%s + click   - sweep monitors' % modifier)
+    print('\n'.join(helplines))
+
+exp_counter = 0
+def dumpfile(frmat):
+    """ save current fig to hardcopy """
+    global exp_counter
+    from pylab import savefig
+    filename = "mcplot_" + str(exp_counter) + "." + frmat
+    exp_counter = exp_counter + 1
+    savefig(filename)
+    print("Saved " + filename)
+    # end dumpfile
+
+def toggle_log(replot_cb):
+    print('toggle log stub...')
+
 def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
-    ''' universal click handler '''
     subplt = event.inaxes
     if not subplt:
         return False
@@ -250,7 +318,7 @@ def main(args):
         except Exception as e:
             # invallid input case:
             print('mcplot loader: ' + e.__str__())
-            pqtgfrontend.print_help(nogui=True)
+            print_help(nogui=True)
             quit()
         rootnode = loader.plot_graph
         if args.test:
@@ -258,7 +326,7 @@ def main(args):
         
         # run pqtg frontend
         plotter = McMatplotlibPlotter(sourcedir=loader.directory, invcanvas=args.invcanvas)
-        pqtgfrontend.print_help(nogui=True)
+        print_help(nogui=True)
         plotter.plot_node(rootnode)
     
     except KeyboardInterrupt:
