@@ -22,6 +22,9 @@ from mccodelib import pqtgfrontend
 from mccodelib.plotgraph import PNSingle
 from mccodelib.mcplotloader import Data1D, Data2D
 
+FONTSIZE = 10
+
+
 def plot_single_data(node, i, n, opts=None):
     ''' plot the data of node, at index i, to a subplot '''
     def calc_panel_size(nfigs):
@@ -40,19 +43,14 @@ def plot_single_data(node, i, n, opts=None):
     pylab.title('%d' % i)
     
     if type(data) is Data1D:
-        
-        
+        # plot one-dimensional data
         xmin = data.xlimits[0]
         xmax = data.xlimits[1]
+        pylab.xlim(xmin,xmax)
         
-        # data
         x = np.array(data.xvals).astype(np.float)
         y = np.array(data.yvals).astype(np.float)
         yerr = np.array(data.y_err_vals).astype(np.float)
-                
-        pylab.xlim(xmin,xmax)
-
-        pylab.errorbar(x, y, yerr)
         
         '''
         if options.log == True:
@@ -61,10 +59,20 @@ def plot_single_data(node, i, n, opts=None):
             valid      = where(y > 0)
             min_valid  = min(y[valid])
             y[invalid] = min_valid/10
-            dy=dy/y
+            yerr=yerr/y
             y=log(y)
             FileStruct['ylabel'] = "log(" + FileStruct['ylabel'] +")"
         '''
+        
+        pylab.errorbar(x, y, yerr)
+        
+        pylab.xlabel(data.xlabel, fontsize=FONTSIZE, fontweight='bold')
+        pylab.ylabel(data.ylabel, fontsize=FONTSIZE, fontweight='bold')
+        try:
+            title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+        except:
+            title = '%s\n[%s]' % (data.component, data.filename)
+        pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
         
         # ??? FileStruct['axes']=gca()
         #Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
@@ -74,7 +82,7 @@ def plot_single_data(node, i, n, opts=None):
         #    Title = Title + "I=" + FileStruct['values'].split()[0]
         #    Title = Title + " E=" + FileStruct['values'].split()[1]
         #    Title = Title + " N=" + FileStruct['values'].split()[2]
-        
+    
     elif type(data) is Data2D:
         
         zvals = np.array(data.zvals)
@@ -90,12 +98,23 @@ def plot_single_data(node, i, n, opts=None):
         pylab.xlim(xmin, xmax)
         pylab.ylim(ymin, ymax)
         
-        
         #from mpl_toolkits.mplot3d import Axes3D
         #ax = Axes3D(pylab.gcf())
         pylab.contour(x,y,zvals)
         #ax.plot_surface(x,y,zvals)
         pylab.colorbar()
+        
+        pylab.xlabel(data.xlabel, fontsize=FONTSIZE, fontweight='bold')
+        pylab.ylabel(data.ylabel, fontsize=FONTSIZE, fontweight='bold')
+        
+        verbose = False
+        try:
+            title = '%s\nI = %s' % (data.component, data.values[0])
+            if verbose:
+                title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+        except:
+            title = '%s\n[%s]' % (data.component, data.filename)
+        pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
         
         '''
         if options.log == True:
@@ -118,6 +137,7 @@ def plot_single_data(node, i, n, opts=None):
 #            ax.plot_surface(x,y,I)
 #        
 #        except ImportError:
+        
         # use default flat rendering
         #ax = gca()
         #if options.contour==True:
@@ -141,16 +161,11 @@ def plot_single_data(node, i, n, opts=None):
         
         
         '''
-        
-        
     else:
         raise Exception("unknown plot data type")
     
     
-    pylab.xlabel(data.xlabel)#,fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
-    pylab.ylabel(data.ylabel)#,fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
-    pylab.title('%d' % i)#, fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
-
+    
     
     return subplt
 
