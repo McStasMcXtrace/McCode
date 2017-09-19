@@ -951,7 +951,6 @@ TRACE
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
 
-          /*also apply the Polarization factor*/
 
 
           /* Choose point on Debye-Scherrer cone */
@@ -1002,6 +1001,16 @@ TRACE
           kx = tmp_kx;
           ky = tmp_ky;
           kz = tmp_kz;
+          
+          /*weight the outgoing signal according to polarization*/
+          if (Ex!=0 || Ey!=0 || Ez!=0){
+              double EE=sqrt(Ex*Ex+Ey*Ey+Ez*Ez);
+              double s=scalar_prod(kx,ky,kz,Ex,Ey,Ez)/k/EE;
+              p*=s*s;
+          }else{
+              /*unpolarized light in - means an effective reduction according to only theta*/
+              p*=(1+cos(theta))*0.5;
+          }
 
           /* Since now scattered and new direction given, calculate path to exit */
           if (line_info.shape == 1) {
