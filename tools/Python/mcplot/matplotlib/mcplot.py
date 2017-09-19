@@ -25,7 +25,7 @@ from mccodelib.mcplotloader import Data1D, Data2D
 FONTSIZE = 10
 
 
-def plot_single_data(node, i, n, opts=None):
+def plot_single_data(node, i, n, log):
     ''' plot the data of node, at index i, to a subplot '''
     def calc_panel_size(nfigs):
         nx = int(math.sqrt(nfigs*1.61803398875)) # golden ratio
@@ -42,7 +42,7 @@ def plot_single_data(node, i, n, opts=None):
     verbose = n == 1
     
     if type(data) is Data1D:
-        # plot one-dimensional data
+        ''' plot 1D data '''
         xmin = data.xlimits[0]
         xmax = data.xlimits[1]
         pylab.xlim(xmin,xmax)
@@ -51,22 +51,21 @@ def plot_single_data(node, i, n, opts=None):
         y = np.array(data.yvals).astype(np.float)
         yerr = np.array(data.y_err_vals).astype(np.float)
         
-        '''
-        if options.log == True:
+        ylabel = data.ylabel
+        if log == True:
             # handle Log intensity
-            invalid    = where(y <= 0)
-            valid      = where(y > 0)
-            min_valid  = min(y[valid])
+            invalid = np.where(y <= 0)
+            valid = np.where(y > 0)
+            min_valid = np.min(y[valid])
             y[invalid] = min_valid/10
-            yerr=yerr/y
-            y=log(y)
-            FileStruct['ylabel'] = "log(" + FileStruct['ylabel'] +")"
-        '''
+            yerr=yerr / y
+            y=np.log(y)
+            ylabel ="log(" + data.ylabel +")"
         
         pylab.errorbar(x, y, yerr)
         
         pylab.xlabel(data.xlabel, fontsize=FONTSIZE, fontweight='bold')
-        pylab.ylabel(data.ylabel, fontsize=FONTSIZE, fontweight='bold')
+        pylab.ylabel(ylabel, fontsize=FONTSIZE, fontweight='bold')
         try:
             title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
         except:
@@ -74,7 +73,7 @@ def plot_single_data(node, i, n, opts=None):
         pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
     
     elif type(data) is Data2D:
-        
+        ''' plot 2D data '''
         zvals = np.array(data.zvals)
         
         xmin = data.xlimits[0]
@@ -87,6 +86,13 @@ def plot_single_data(node, i, n, opts=None):
         y = pylab.linspace(ymin, ymax, mysize[0])
         pylab.xlim(xmin, xmax)
         pylab.ylim(ymin, ymax)
+        
+        if log == True:
+            invalid = np.where(zvals <= 0)
+            valid = np.where(zvals > 0)
+            min_valid = np.min(zvals[valid])
+            zvals[invalid] = min_valid/10
+            zvals = np.log(zvals)
         
         ''' out-commented code: alternative plot types '''
         #from mpl_toolkits.mplot3d import Axes3D
@@ -107,15 +113,6 @@ def plot_single_data(node, i, n, opts=None):
             title = '%s\n[%s]' % (data.component, data.filename)
         pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
         
-        '''
-        if options.log == True:
-            # handle Log intensity
-            invalid    = where(I <= 0)
-            valid      = where(I > 0)
-            min_valid  = min(I[valid])
-            I[invalid] = min_valid/10
-            I=log(I)
-        '''
     else:
         raise Exception("unknown plot data type")
     
@@ -126,17 +123,23 @@ class McMatplotlibPlotter():
     def __init__(self, sourcedir, invcanvas):
         self.sourcedir = sourcedir
         self.event_dc_cid = None
+        self.log = False
+    
+    def _flip_log(self):
+        self.log = not self.log
     
     def _click_proxy(self, event):
-        ''' state-updating proxy for click event handler '''
+        ''' state-updating proxy for click handler '''
         dc_cb = lambda: pylab.disconnect(self.event_dc_cid)
         click(event, subplts=self.subplts, click_cbs=self.click_cbs, ctrl_cbs=self.ctrl_cbs, back_cb=self.back_cb, dc_cb=dc_cb)
     
     def _keypress_proxy(self, event):
-        keypress(event, back_cb=self.back_cb, replot_cb=self.replot_cb)
+        ''' state-updating proxy for keypress handler '''
+        keypress(event, back_cb=self.back_cb, replot_cb=self.replot_cb, togglelog_cb=self._flip_log)
     
     def plot_node(self, node):
-        ''' plot recursion method '''
+        ''' plot recursion '''
+        # safety
         if not node:
             return
         
@@ -145,7 +148,7 @@ class McMatplotlibPlotter():
         
         # plot data and keep subplots for the click area filter
         n = node.getnumdata()
-        self.subplts = [plot_single_data(node, i, n) for i in range(n)]
+        self.subplts = [plot_single_data(node, i, n, self.log) for i in range(n)]
         
         # create callbacks
         self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
@@ -159,20 +162,17 @@ class McMatplotlibPlotter():
         # register keypress events
         pylab.connect('key_press_event', self._keypress_proxy)
         
-        # set keypress handlers 
-        #replot_cb = lambda: plot_node(node)
-        #back_cb = lambda: plot_node(node.parent)
-        #set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
-        
+        # show the plot
         pylab.show()
 
-def keypress(event, back_cb, replot_cb):
+def keypress(event, back_cb, replot_cb, togglelog_cb):
     key = event.key.lower()
     
     if key == 'q':
         quit()
     elif key == 'l':
-        toggle_log(replot_cb)
+        togglelog_cb()
+        replot_cb()
     elif event.key == 'p':
         dumpfile('ps')
     elif event.key == 'd':
@@ -199,13 +199,13 @@ def print_help(nogui=False):
     helplines = []
     helplines.append('')
     helplines.append('q              - quit')
+    helplines.append('F1/h           - help')
+    helplines.append('l              - toggle log')
     helplines.append('p              - save ps')
     helplines.append('d              - save pdf')
     helplines.append('n              - save ong')
     helplines.append('j              - save jpg')
     helplines.append('s              - native save dialog')
-    helplines.append('l              - log toggle')
-    helplines.append('F1/h           - help')
     helplines.append('F5             - replot')
     helplines.append('click          - display subplot')
     helplines.append('right-click/b  - back')
@@ -222,9 +222,6 @@ def dumpfile(frmat):
     savefig(filename)
     print("Saved " + filename)
     # end dumpfile
-
-def toggle_log(replot_cb):
-    print('toggle log stub...')
 
 def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
     subplt = event.inaxes
