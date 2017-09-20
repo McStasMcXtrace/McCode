@@ -17,7 +17,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs
 from mccodelib.plotgraph import PlotGraphPrint
-from mccodelib import pqtgfrontend
 
 from mccodelib.plotgraph import PNSingle
 from mccodelib.mcplotloader import Data1D, Data2D
@@ -120,7 +119,7 @@ def plot_single_data(node, i, n, log):
 
 class McMatplotlibPlotter():
     ''' matplotlib plotting frontend '''
-    def __init__(self, sourcedir, invcanvas):
+    def __init__(self, sourcedir):
         self.sourcedir = sourcedir
         self.event_dc_cid = None
         self.log = False
@@ -164,6 +163,15 @@ class McMatplotlibPlotter():
         
         # show the plot
         pylab.show()
+    
+    def html_node(self, node, fileobj):
+        '''  plots node and saves to html using mpld3 '''
+        import mpld3
+        
+        n = node.getnumdata()
+        self.subplts = [plot_single_data(node, i, n, self.log) for i in range(n)]
+        
+        mpld3.save_html(pylab.gcf(), fileobj)
 
 def keypress(event, back_cb, replot_cb, togglelog_cb):
     key = event.key.lower()
@@ -214,14 +222,13 @@ def print_help(nogui=False):
 
 exp_counter = 0
 def dumpfile(frmat):
-    """ save current fig to hardcopy """
+    """ save current fig to softcopy """
     global exp_counter
     from pylab import savefig
     filename = "mcplot_" + str(exp_counter) + "." + frmat
     exp_counter = exp_counter + 1
     savefig(filename)
     print("Saved " + filename)
-    # end dumpfile
 
 def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
     subplt = event.inaxes
@@ -273,10 +280,16 @@ def main(args):
         if args.test:
             PlotGraphPrint(rootnode)
         
-        # run pqtg frontend
-        plotter = McMatplotlibPlotter(sourcedir=loader.directory, invcanvas=args.invcanvas)
-        print_help(nogui=True)
-        plotter.plot_node(rootnode)
+        # start the plotter
+        plotter = McMatplotlibPlotter(sourcedir=loader.directory)
+        
+        if args.html:
+            # save to html and exit
+            plotter.html_node(rootnode, open('%s.html' % os.path.splitext(simfile)[0], 'w'))
+        else:
+            # display gui
+            print_help(nogui=True)
+            plotter.plot_node(rootnode)
     
     except KeyboardInterrupt:
         print('keyboard interrupt')
@@ -289,7 +302,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
-    parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
+    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3')
+    
     args = parser.parse_args()
     
     main(args)
