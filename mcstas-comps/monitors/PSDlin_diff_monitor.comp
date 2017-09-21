@@ -8,9 +8,7 @@
 * %I
 * Written by:  Kim Lefmann, Peter Willendrup, Linda Udby
 * Date: May 7, 2001
-* Version: $Revision: 4382 $
- Origin: Risoe
-* Release: McStas 1.6
+* Origin: Risoe
 *
 * Rectangular 1D PSD, measuring intensity vs. horizontal position, x
 * A second monitor shows the difference of intensities between in n'th and (n-1)'th pixels.
@@ -22,15 +20,15 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* nx:       Number of x bins (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* xwidth: [m]           Width of detector. Overrides xmin,xmax. 
+* yheight: [m]          Height of detector. Overrides ymin,ymax. 
+* nx: [1]               Number of x bins 
+* filename: [string]    Name of file in which to store the detector image 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
