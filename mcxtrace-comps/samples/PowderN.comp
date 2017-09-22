@@ -1009,7 +1009,7 @@ TRACE
               p*=s*s;
           }else{
               /*unpolarized light in - means an effective reduction according to only theta*/
-              p*=(1+cos(theta))*0.5;
+              p*=(1+cos(theta)*cos(theta))*0.5;
           }
 
           /* Since now scattered and new direction given, calculate path to exit */
