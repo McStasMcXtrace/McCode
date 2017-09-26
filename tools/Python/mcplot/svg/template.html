@@ -5,12 +5,77 @@
 </head>
 <body>
 <script>
-function plot(w, h, x, y, yerr) {
+function plot_wrap(w, h, x, y, yerr) {
+  var margin = 5;
+  var wlab = w - 2*margin;
+  var hlab = h - 2*margin;
+
+  // axis labels
+  var titx = wlab/2;
+  var tity = 0;
+  var xlabx = wlab/2;
+  var xlaby = hlab;
+  var ylabx = 0;
+  var ylaby = hlab/2;
+
+  var lblGroup = d3.select("body").append("svg")
+    .attr("width", w)
+    .attr("height", h)
+    .append("g")
+    .attr("transform", "translate(" + margin +"," + margin + ")");
+
+  var title = lblGroup
+    .append("text")
+    //.attr("x", titx)
+    //.attr("y", tity)
+    .text("title")
+    //.attr("dominant-baseline", "hanging")
+    .attr("text-anchor", "middle");
+
+  var xLabel = lblGroup
+    .append("text")
+    //.attr("x", xlabx)
+    //.attr("y", xlaby)
+    .text("xlabelgg")
+    .attr("dominant-baseline", "middle")
+    .attr("text-anchor", "middle");
+
+  var yLabel = lblGroup
+    .append("text")
+    .attr("x", ylabx)
+    .attr("y", ylaby)
+    .text("ylabel")
+    //.attr("transform", "rotate(-90," + ylabx + ',' + ylaby + ")")
+    //.attr("dominant-baseline", "middle")
+    .attr("text-anchor", "middle");
+
+  var dt = title.node().getBBox().height;
+  var dl = yLabel.node().getBBox().height; // height and width are confused here, due to the rotation
+  var db = xLabel.node().getBBox().height;
+
+  // position labels based on what was drawn
+  title.attr("transform", "translate(" + titx + "," + tity + dt/2 + ")");
+  xLabel.attr("transform", "translate(" + xlabx + "," + (xlaby-db/2) + ")");
+  yLabel.attr("transform", "rotate(-90," + ylabx + ',' + ylaby + ")  translate(" + 0 + "," + dl/2 + ")");
+
+  var wplt = wlab - dl;
+  var hplt = hlab - dt - db;
+  var xplt = dl;
+  var yplt = dt;
+
+  var axisgroup = lblGroup
+    .append("g")
+    .attr("transform", "translate(" + xplt +"," + yplt + ")");
+
+  plot(wplt, hplt, x, y, yerr, axisgroup);
+}
+
+function plot(w, h, x, y, yerr, anchorElement) {
   // axis size fractions and orego placement fraction
-  var xax_frac = 0.8;
-  var yax_frac = 0.8;
-  var x0_frac = 0.15;
-  var y0_frac = 0.15;
+  var xax_frac = 1;
+  var yax_frac = 1;
+  var x0_frac = 0;
+  var y0_frac = 0;
 
   // axes lengths
   var wi = xax_frac*w;
@@ -28,76 +93,45 @@ function plot(w, h, x, y, yerr) {
   }
 
   // set up axes
-  var svgContainer = d3.select("body").append("svg")
-                                      .attr("width", w)
-                                      .attr("height", h)
+  var svgContainer = anchorElement;
 
   var xScale = d3.scaleLinear()
-                 .domain([d3.min(x), d3.max(x)])
-                 .range([x0, x1]);
-  var xAxis = d3.axisBottom().scale(xScale);
+    .domain([d3.min(x), d3.max(x)])
+    .range([x0, x1]);
+  var xAxis = d3.axisBottom()
+    .ticks(5)
+    .scale(xScale);
   var xAxisGroup = svgContainer.append("g")
-                               .attr("transform", "translate(0," + y0 + ")")
-                               .call(xAxis);
-
+    .attr("transform", "translate(0," + y0 + ")")
+    .call(xAxis);
 
   var yScale = d3.scaleLinear()
-                 .domain([d3.min(y), d3.max(y)])
-                 .range([y0, y1]);
-  var yAxis = d3.axisLeft().scale(yScale);
+    .domain([d3.min(y), d3.max(y)])
+    .range([y0, y1]);
+  var yAxis = d3.axisLeft()
+    .ticks(5)
+    .scale(yScale);
   var yAxisGroup = svgContainer.append("g")
-                              .attr("transform", "translate(" + x0 + ", 0)")
-                              .call(yAxis);
-
-
+    .attr("transform", "translate(" + x0 + ", 0)")
+    .call(yAxis);
 
   // enter data points
   var pointGroup = svgContainer.append("g")
 
   var points = pointGroup.selectAll("circle")
-            .data(dataPoints)
-            .enter()
-            .append("circle")
-            .attr("cx", function(d) { return xScale(d["x"]) })
-            .attr("cy", function(d) { return yScale(d["y"]) })
-            .attr("r", 1);
-
-  // axis labels
-  lblData = [{ 'lbl' : 'xlabel', 'cx': x0 + wi/2, 'cy': h/* -(h-y0)/2*/, 'rot' : 0 },
-             { 'lbl' : 'ylabel', 'cx': x0/2,      'cy': y1 + hi/2, 'rot' : 0 }];
-  //lblData = [{'lbl' : 'xlabel', 'cx': 200, 'cy': 80, 'orient' : 'horizontal'},
-  //           {'lbl' : 'ylabel', 'cx': 20,  'cy': 50, 'orient' : 'vertical'}];
-
-  var lblGroup = svgContainer
-     .append("g")
-
-  var xlabx = x0 + wi/2;
-  var xlaby = h;
-  var xLabel = lblGroup
-     .append("text")
-     .attr("x", xlabx)
-     .attr("y", xlaby)
-     .text("xlabel")
-     //.attr("dominant-baseline", "middle");
-     .attr("text-anchor", "middle");
-
-  var ylabx = x0/5;
-  var ylaby = y1 + hi/2;
-  var yLabel = lblGroup
-     .append("text")
-     .attr("x", ylabx)
-     .attr("y", ylaby)
-     .text("ylabel")
-     .attr("transform", "rotate(-90," + ylabx + ',' + ylaby + ")")
-     .attr("dominant-baseline", "middle")
-     .attr("text-anchor", "middle");
+    .data(dataPoints)
+    .enter()
+    .append("circle")
+    .attr("cx", function(d) { return xScale(d["x"]) })
+    .attr("cy", function(d) { return yScale(d["y"]) })
+    .attr("r", 1);
 }
   var x = @X_DATA_ARRAY@;
   var y = @Y_DATA_ARRAY@;
   var yerr = @YERR_DATA_ARRAY@;
   var w = @WIDTH@;
   var h = @HEIGHT@;
-  plot(w, h, x, y, yerr);
+  plot_wrap(w, h, x, y, yerr);
 </script>
 </body>
 </html>
