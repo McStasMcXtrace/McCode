@@ -9,13 +9,18 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D
 from mccodelib.plotgraph import PNSingle
 
-def fillout_template(template, x, y, yerr):
+def fillout_template(template, x, y, yerr, xlabel, ylabel, title):
     '''  '''
     template = template.replace('@X_DATA_ARRAY@', x.__str__())
     template = template.replace('@Y_DATA_ARRAY@', y.__str__())
     template = template.replace('@YERR_DATA_ARRAY@', yerr.__str__())
     template = template.replace('@WIDTH@', str(500))
     template = template.replace('@HEIGHT@', str(300))
+    
+    template = template.replace('@XLABEL@', xlabel)
+    template = template.replace('@YLABEL@', ylabel)
+    template = template.replace('@TITLE@', title)
+    
     return template
 
 def main(args):
@@ -43,7 +48,7 @@ def main(args):
             x = data.xvals
             y = data.yvals
             yerr = data.y_err_vals
-            text = fillout_template(open('template.html').read(), x, y, yerr)
+            text = fillout_template(open('template.html').read(), x, y, yerr, data.xlabel, data.ylabel, data.title)
             for l in text.splitlines():
                 print(l)
             print("")
