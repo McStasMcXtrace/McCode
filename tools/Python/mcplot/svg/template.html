@@ -11,12 +11,6 @@ function plot_wrap(w, h, x, y, yerr) {
   var hlab = h - 2*margin;
 
   // axis labels
-  var titx = wlab/2;
-  var tity = 0;
-  var xlabx = wlab/2;
-  var xlaby = hlab;
-  var ylabx = 0;
-  var ylaby = hlab/2;
 
   var lblGroup = d3.select("body").append("svg")
     .attr("width", w)
@@ -36,7 +30,7 @@ function plot_wrap(w, h, x, y, yerr) {
     .append("text")
     //.attr("x", xlabx)
     //.attr("y", xlaby)
-    .text("xlabelgg")
+    .text("xlabel")
     .attr("dominant-baseline", "middle")
     .attr("text-anchor", "middle");
 
@@ -53,21 +47,28 @@ function plot_wrap(w, h, x, y, yerr) {
   var dl = yLabel.node().getBBox().height; // height and width are confused here, due to the rotation
   var db = xLabel.node().getBBox().height;
 
-  // position labels based on what was drawn
-  title.attr("transform", "translate(" + titx + "," + tity + dt/2 + ")");
-  xLabel.attr("transform", "translate(" + xlabx + "," + (xlaby-db/2) + ")");
-  yLabel.attr("transform", "rotate(-90," + ylabx + ',' + ylaby + ")  translate(" + 0 + "," + dl/2 + ")");
-
-  var wplt = wlab - dl;
-  var hplt = hlab - dt - db;
-  var xplt = dl;
+  var wplt = wlab - 3*dl;
+  var hplt = hlab - (dt + 2*db);
+  var xplt = 3*dl;
   var yplt = dt;
 
-  var axisgroup = lblGroup
+  var titx = wlab/2;
+  var tity = dt/2;
+  var xlabx = wplt/2 + xplt;
+  var xlaby = hlab - db/2;
+  var ylabx = dl/2;
+  var ylaby = yplt + hplt/2;
+
+  // position labels based on what was drawn
+  title.attr("transform", "translate(" + titx + "," + tity + ")");
+  xLabel.attr("transform", "translate(" + xlabx + "," + xlaby + ")");
+  yLabel.attr("transform", "rotate(-90," + ylabx + ',' + ylaby + ")  translate(" + ylabx + "," + ylaby + ")");
+
+  var axisGroup = lblGroup
     .append("g")
     .attr("transform", "translate(" + xplt +"," + yplt + ")");
 
-  plot(wplt, hplt, x, y, yerr, axisgroup);
+  plot(wplt, hplt, x, y, yerr, axisGroup);
 }
 
 function plot(w, h, x, y, yerr, anchorElement) {

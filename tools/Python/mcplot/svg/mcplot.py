@@ -14,8 +14,8 @@ def fillout_template(template, x, y, yerr):
     template = template.replace('@X_DATA_ARRAY@', x.__str__())
     template = template.replace('@Y_DATA_ARRAY@', y.__str__())
     template = template.replace('@YERR_DATA_ARRAY@', yerr.__str__())
-    template = template.replace('@WIDTH@', str(400))
-    template = template.replace('@HEIGHT@', str(250))
+    template = template.replace('@WIDTH@', str(500))
+    template = template.replace('@HEIGHT@', str(300))
     return template
 
 def main(args):
