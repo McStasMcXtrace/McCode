@@ -1006,7 +1006,7 @@ TRACE
           if (Ex!=0 || Ey!=0 || Ez!=0){
               double EE=sqrt(Ex*Ex+Ey*Ey+Ez*Ez);
               double s=scalar_prod(kx,ky,kz,Ex,Ey,Ez)/k/EE;
-              p*=s*s;
+              p*=(1-s)*(1-s);
           }else{
               /*unpolarized light in - means an effective reduction according to only theta*/
               p*=(1+cos(theta)*cos(theta))*0.5;
