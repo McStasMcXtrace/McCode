@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<head>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+<body>
+<script>
+  function plot(w, h, x, y, yerr) {
+    // axis size fractions and orego placement fraction
+    var xax_frac = 0.8;
+    var yax_frac = 0.8;
+    var x0_frac = 0.15;
+    var y0_frac = 0.15;
+
+    // axes lengths
+    var wi = xax_frac*w;
+    var hi = yax_frac*h;
+    // orego
+    var x0 = x0_frac*w;
+    var y0 = h - y0_frac*h;
+    // axes end coords
+    var x1 = x0 + wi;
+    var y1 = y0 - hi;
+
+    var dataPoints = []
+    for (var i=0; i < x.length; i++) {
+      dataPoints.push({"x" : x[i], "y" : y[i]});
+    }
+
+    // set up axes
+    var svgContainer = d3.select("body").append("svg")
+                                        .attr("width", w)
+                                        .attr("height", h)
+
+    var xScale = d3.scaleLinear()
+                   .domain([d3.min(x), d3.max(x)])
+                   .range([x0, x1]);
+    var xAxis = d3.axisBottom().scale(xScale);
+    var xAxisGroup = svgContainer.append("g")
+                                 .attr("transform", "translate(0," + y0 + ")")
+                                 .call(xAxis);
+
+    var yScale = d3.scaleLinear()
+                   .domain([d3.min(y), d3.max(y)])
+                   .range([y0, y1]);
+    var yAxis = d3.axisLeft().scale(yScale);
+    var yAxisGroup = svgContainer.append("g")
+                                .attr("transform", "translate(" + x0 + ", 0)")
+                                .call(yAxis);
+
+    // enter data points
+    var points = svgContainer.selectAll("circle")
+              .data(dataPoints)
+              .enter()
+              .append("circle")
+              .attr("cx", function(d) { return xScale(d["x"]) })
+              .attr("cy", function(d) { return yScale(d["y"]) })
+              .attr("r", 1);
+  }
+  var x = @X_DATA_ARRAY@;
+  var y = @Y_DATA_ARRAY@;
+  var yerr = @YERR_DATA_ARRAY@;
+  var w = @WIDTH@;
+  var h = @HEIGHT@;
+  plot(w, h, x, y, yerr);
+</script>
+</body>
+</html>

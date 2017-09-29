@@ -1,309 +1,186 @@
 #!/usr/bin/env python
-#
-# Implements Python interface for plotting McStas data output, with Matplotlib
-#
-#   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
-#   Risoe National Laborartory, Roskilde, Denmark
-#   Institut Laue Langevin, Grenoble, France
-#
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; version 2 of the License.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-# requirement: 
-#   python >= 2.4, python-matplotlib >= 0.91, numpy >= 1.1, 
-#   freetype >= 1.4, libpng >= 1.1
-
-# Usage: mcplot.py [options] <simfile | detectorfile | scanfile>
-#
-#  McCode plotting tool for simulation data.
-#
-#  Plots all monitor data from a simulation, scan or a single data file.
-#  When using e.g. -f ps or -f pdf, the program writes a hardcopy file
-#  (named as inputfile plus extension) and then exits.
-#
-#  Key shortcuts when plots are active:
-#    x or q closes current figure
-#    g      toggles grid on plots
-#    o      toggles linear/log intensity on plots
-#    c      toggles contour plots (2D)
-#    mouse  opens plot in separate window (from overview)
-#    p      dumps a Postscript graphic
-#    d      dumps a PDF graphic
-#    n      dumps a png graphic
-#    j      dumps a jpg graphic
-#  (some formats might not work on your platform)
-#
-# Options:
-#  -h, --help            show this help message and exit
-#  -f Format, --format=Format
-#                        Export plot in format (e.g. ps) and exit
-#  -l, --log             Plot results in log intensity scale
-#  -c, --contour         Plot matrixes using contours instead of images
-
-
-import sys
+'''
+matplotlib mcplot impl
+'''
+import argparse
+import logging
 import os
-import string
-import matplotlib
-matplotlib.use('Qt4Agg');
+import sys
+import math
+import numpy as np
+#import matplotlib 
+#import tornado
+#matplotlib.use('WebAgg');
+from matplotlib import pylab
 
-FSlist      = list()
-options     = 0
-scan_window = None  # hold single scan window when circulating scan steps
-scan_index  = 0     # hold current scan index (in scan_window)
-scan_flag   = 0     # indicates if data set is a scan one. 
-                    #   Set to 1 when showing overview. Set to 2 when starting to show separate scan steps
-scan_length = 0     # length of scan data set
-File        = 0     # hold initial filename/path to data set
-exp_counter = 0     # Incremented on each hardcopy
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-"""string used for Usage (--help) and 'h' key stroke on plot"""
-usage =         "usage: %s [options] <simfile | detectorfile | scanfile>\n\n" \
-                % os.path.basename(sys.argv[0])
-usage = usage + "  McCode plotting tool for simulation data (McCode format).\n\n"
-usage = usage + "  Plots all monitor data from a simulation, scan or a single data file.\n"
-usage = usage + "  When using e.g. -f ps or -f pdf, the program writes a hardcopy file\n"
-usage = usage + "    (named as inputfile plus extension) and then exits.\n\n"
-usage = usage + "  Key shortcuts when plots are active:\n"
-usage = usage + "    x or q closes application\n"
-usage = usage + "    g      toggles grid on plots\n"
-usage = usage + "    o      toggles linear/log intensity on plots\n"
-usage = usage + "    c      toggles contour plots (2D)\n"
-usage = usage + "    mouse  opens plot in separate window (from overview)\n"
-usage = usage + "    p      dumps a Postscript graphic\n"
-usage = usage + "    d      dumps a PDF graphic\n"
-usage = usage + "    n      dumps a PNG graphic\n"
-usage = usage + "    j      dumps a JPEG graphic\n"
-usage = usage + "  (some formats might not work on your platform)\n\n"
+from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs
+from mccodelib.plotgraph import PlotGraphPrint
 
-def display_single(FileStruct):
-    """
-    Plot a single 1D/2D axis with data, using matplotlib and optionally mplot3d.
-      called from: click, display
-      input:  FileStruct as obtained from read_monitor()
-      output: FileStruct data structure
-    """
-    from pylab import errorbar,gca,xlim,ylim,ylabel,xlabel,title,linspace,pcolor,colorbar,log,contour
-    from numpy import where
-    type = FileStruct['type'].split('(')[0].strip()
+from mccodelib.plotgraph import PNSingle
+from mccodelib.mcplotloader import Data1D, Data2D
 
-    if type == 'array_1d':
-        # 1D data set
-        Xmin = eval(FileStruct['xlimits'].split()[0])
-        Xmax = eval(FileStruct['xlimits'].split()[1])
-        x=FileStruct['data'][:,0]
-        y=FileStruct['data'][:,1]
-        dy=FileStruct['data'][:,2]
-        if options.log == True:
+FONTSIZE = 10
+
+
+def plot_single_data(node, i, n, log):
+    ''' plot the data of node, at index i, to a subplot '''
+    def calc_panel_size(nfigs):
+        nx = int(math.sqrt(nfigs*1.61803398875)) # golden ratio
+        ny = nfigs // nx + int(bool(nfigs % nx))
+        return nx, ny
+    
+    if type(node) == PNSingle and i != 0:
+        raise Exception("inconsistent plot request, idx=%s" % str(i))
+    
+    dims = calc_panel_size(n)
+    subplt = pylab.subplot(dims[1],dims[0],i+1)
+    data = node.getdata_idx(i)
+    
+    verbose = n == 1
+    
+    if type(data) is Data1D:
+        ''' plot 1D data '''
+        xmin = data.xlimits[0]
+        xmax = data.xlimits[1]
+        pylab.xlim(xmin,xmax)
+        
+        x = np.array(data.xvals).astype(np.float)
+        y = np.array(data.yvals).astype(np.float)
+        yerr = np.array(data.y_err_vals).astype(np.float)
+        
+        ylabel = data.ylabel
+        if log == True:
             # handle Log intensity
-            invalid    = where(y <= 0)
-            valid      = where(y > 0)
-            min_valid  = min(y[valid])
+            invalid = np.where(y <= 0)
+            valid = np.where(y > 0)
+            min_valid = np.min(y[valid])
             y[invalid] = min_valid/10
-            dy=dy/y
-            y=log(y)
-            FileStruct['ylabel'] = "log(" + FileStruct['ylabel'] +")"
-        h=errorbar(x,y,dy)
-        FileStruct['axes']=gca()
-        xlim(Xmin,Xmax)
-        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
-              + FileStruct['title']
-        if len(FileStruct['values'])>0:
-            Title = Title + '\n'
-            Title = Title + "I=" + FileStruct['values'].split()[0]
-            Title = Title + " E=" + FileStruct['values'].split()[1]
-            Title = Title + " N=" + FileStruct['values'].split()[2]
-    elif type == 'array_2d':
-        # 2D data set
-        mysize=FileStruct['data'].shape
-        I=FileStruct['data'][0:mysize[0]/3,...]
-        if options.log == True:
-            # handle Log intensity
-            invalid    = where(I <= 0)
-            valid      = where(I > 0)
-            min_valid  = min(I[valid])
-            I[invalid] = min_valid/10
-            I=log(I)
-        mysize=I.shape
-        Xmin = eval(FileStruct['xylimits'].split()[0])
-        Xmax = eval(FileStruct['xylimits'].split()[1])
-        Ymin = eval(FileStruct['xylimits'].split()[2])
-        Ymax = eval(FileStruct['xylimits'].split()[3])
-        x = linspace(Xmin,Xmax,mysize[1])
-        y = linspace(Ymin,Ymax,mysize[0])
+            yerr=yerr / y
+            y=np.log(y)
+            ylabel ="log(" + data.ylabel +")"
         
-#        try:
-#          # use mplot3d toolkit
-#          from mpl_toolkits.mplot3d import Axes3D
-#          from pylab import gcf
-#          
-#          ax = Axes3D(gcf())
-#          if options.contour==True:
-#            ax.contour(x,y,I)
-#          else:
-#            ax.plot_surface(x,y,I)
-#        
-#        except ImportError:
-        # use default flat rendering
-        ax = gca()
-        if options.contour==True:
-            h=contour(x,y,I)
-        else:
-            h=pcolor(x,y,I)
+        pylab.errorbar(x, y, yerr)
         
-        FileStruct['axes']=gca()
-        xlim(Xmin,Xmax)
-        ylim(Ymin,Ymax)
+        pylab.xlabel(data.xlabel, fontsize=FONTSIZE, fontweight='bold')
+        pylab.ylabel(ylabel, fontsize=FONTSIZE, fontweight='bold')
+        try:
+            title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+        except:
+            title = '%s\n[%s]' % (data.component, data.filename)
+        pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
+    
+    elif type(data) is Data2D:
+        ''' plot 2D data '''
+        zvals = np.array(data.zvals)
         
-        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' \
-              + FileStruct['title']
-        if options.log == True:
-            Title = Title + " (log plot)"        
-        Title = Title + "\nI=" + FileStruct['values'].split()[0]
-        Title = Title + " E=" + FileStruct['values'].split()[1]
-        Title = Title + " N=" + FileStruct['values'].split()[2]
-        colorbar()
+        xmin = data.xlimits[0]
+        xmax = data.xlimits[1]
+        ymin = data.xlimits[2]
+        ymax = data.xlimits[3]
         
-    xlabel(FileStruct['xlabel'],fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
-    ylabel(FileStruct['ylabel'],fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
-    title(Title, fontsize=FileStruct['FontSize']*1.5,fontweight='bold')
-    return FileStruct
-    # end display_single
-
-def calc_panel_size(num):
-    """
-    Compute size of subplot to use
-      called from: display
-      input:  number of slots to prepare
-      output: dimension of subplot
-    """
-    from pylab import sqrt
-    Panels = ( [1,1], [2,1], [2,2], [3,2], [3,3], [4,3], [5,3], [4,4],
-               [5,4], [6,4], [5,5], [6,5], [7,5], [6,6], [8,5], [7,6],
-               [9,5], [8,6], [7,7], [9,6], [8,7], [9,7], [8,8], [10,7],
-               [9,8], [11,7], [9,9], [11,8], [10,9], [12,8], [11,9],
-               [10,10] )
-    # Default size about sqrt($num) x sqrt($num).
-    ny = int(sqrt(num))
-    nx = int(num/ny)
+        mysize=zvals.shape
+        x = pylab.linspace(xmin, xmax, mysize[1])
+        y = pylab.linspace(ymin, ymax, mysize[0])
+        pylab.xlim(xmin, xmax)
+        pylab.ylim(ymin, ymax)
+        
+        if log == True:
+            invalid = np.where(zvals <= 0)
+            valid = np.where(zvals > 0)
+            min_valid = np.min(zvals[valid])
+            zvals[invalid] = min_valid/10
+            zvals = np.log(zvals)
+        
+        ''' out-commented code: alternative plot types '''
+        #from mpl_toolkits.mplot3d import Axes3D
+        #ax = Axes3D(pylab.gcf())
+        #pylab.contour(x,y,zvals)
+        #ax.plot_surface(x,y,zvals)
+        pylab.pcolor(x,y,zvals)
+        pylab.colorbar()
+        
+        pylab.xlabel(data.xlabel, fontsize=FONTSIZE, fontweight='bold')
+        pylab.ylabel(data.ylabel, fontsize=FONTSIZE, fontweight='bold')
+        
+        try:
+            title = '%s\nI = %s' % (data.component, data.values[0])
+            if verbose:
+                title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+        except:
+            title = '%s\n[%s]' % (data.component, data.filename)
+        pylab.title(title, fontsize=FONTSIZE, fontweight='bold')
+        
+    else:
+        print("Unsuported plot data type %s" % type(data))
     
-    if nx*ny < num:
-        nx = nx+1;
+    return subplt
+
+class McMatplotlibPlotter():
+    ''' matplotlib plotting frontend '''
+    def __init__(self, sourcedir):
+        self.sourcedir = sourcedir
+        self.event_dc_cid = None
+        self.log = False
     
-    fit = nx*ny - num
+    def _flip_log(self):
+        self.log = not self.log
     
-    for j in range(0, 31):
-        panel = Panels[j]
-        d = panel[0]*panel[1] - num
-        if d > 0:
-            if d < fit:
-                fit = d; nx = panel[0]; ny = panel[1]
-
-    return nx,ny
-    # end calc_panel_size
-
-def read_monitor(this_File):
-    """
-    Read a monitor file (McCode format) using loadtxt module
-      called from: display
-      input: this_File file name as a string
-      output: FileStruct data structure
-    """
-    from numpy import loadtxt
-
-    # Read header
-    isHeader = lambda line: line.startswith('#')
-    Header = filter(isHeader, open(this_File).readlines())
-    Header = list(Header)
-    # Traverse header and define corresponding 'struct'
-    str ="{"
-    for j in range(0, len(Header)):
-        # Field name and data
-        Line = Header[j]; Line = Line[2:len(Line)].strip()
-        Line = Line.split(':')
-        Field = Line[0]
-        Value = ''.join(':'.join(Line[1:len(Line)]).split("'"))
-        str = str + "'" + Field + "':'" + Value + "'"
-        if j<len(Header)-1:
-            str = str + ","
-    str = str + "}"
-    Filestruct = eval(str)
-    # Add the data block:
-    Filestruct['data']=loadtxt(this_File)
-    Filestruct['fullpath'] = this_File
-    Filestruct['File'] = this_File
-    print("Loading " + this_File)
+    def _click_proxy(self, event):
+        ''' state-updating proxy for click handler '''
+        dc_cb = lambda: pylab.disconnect(self.event_dc_cid)
+        click(event, subplts=self.subplts, click_cbs=self.click_cbs, ctrl_cbs=self.ctrl_cbs, back_cb=self.back_cb, dc_cb=dc_cb)
     
-    return Filestruct
-    # end read_monitor
+    def _keypress_proxy(self, event):
+        ''' state-updating proxy for keypress handler '''
+        keypress(event, back_cb=self.back_cb, replot_cb=self.replot_cb, togglelog_cb=self._flip_log)
+    
+    def plot_node(self, node):
+        ''' plot recursion '''
+        # safety
+        if not node:
+            return
+        
+        # clear
+        pylab.clf()
+        
+        # plot data and keep subplots for the click area filter
+        n = node.getnumdata()
+        self.subplts = [plot_single_data(node, i, n, self.log) for i in range(n)]
+        
+        # create callbacks
+        self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
+        self.ctrl_cbs = [lambda nde=n: self.plot_node(nde) for n in node.secondaries]
+        self.back_cb = lambda n=node.parent: self.plot_node(n) if node.parent else None
+        self.replot_cb = lambda n=node: self.plot_node(n) if node else None
 
-def get_monitor(FS,j):
-    """
-    Extract one of the monitor in scan steps
-      called from: display
-      input:  FileStruct obtained from read_monitor(scan data file) 
-              j          index of monitor column to extract
-      output: FileStruct with selected monitor 'j'
-    """
-    # Ugly, hard-coded...
-    data=FS['data'][:,(0,2*j+1,2*j+2)]
-    vars=FS['variables'].split()   
-    FSsingle={'xlimits':FS['xlimits'],'data':data,'component':vars[j+1],'values':'',
-              'type':'array_1d(100)',
-              'xlabel':FS['xlabel'],'ylabel':FS['ylabel'],'File':'Scan','title':'','FontSize':6}
-    return FSsingle
-    # end get_monitor
+        # regiseter click events
+        self.event_dc_cid = pylab.connect('button_press_event', self._click_proxy)
+        
+        # register keypress events
+        pylab.connect('key_press_event', self._keypress_proxy)
+        
+        # show the plot
+        pylab.show()
+    
+    def html_node(self, node, fileobj):
+        '''  plots node and saves to html using mpld3 '''
+        import mpld3
+        
+        n = node.getnumdata()
+        self.subplts = [plot_single_data(node, i, n, self.log) for i in range(n)]
+        
+        mpld3.save_html(pylab.gcf(), fileobj)
 
-def click(event):
-    """
-    Handle mouse click in the main matplotlib overview window, opens single monitor window
-      called from: display
-      input:  event structure
-      output: None
-    """
-    from pylab import get_current_fig_manager,get,gcf,figure,clf,connect,show
-    tb = get_current_fig_manager().toolbar
-    if event.button==1 and event.inaxes and tb.mode == '':
-        g = event.inaxes
-        # Determine number of clicked axis
-        ax = get(gcf(),'axes')
-        jused = 0
-        for j in range(0, len(FSlist)):
-            FS = FSlist[j]
-            if g==FS['axes']:
-                h=figure()
-                clf()
-                FS=display_single(FS)
-                connect('key_press_event', keypress)
-                jused = j
-        FSlist[jused]['axes']=g
-        show()
-    # end click
-
-def keypress(event):
-    """
-    Handle key shortcut in a window
-      called from: click, display
-      input:  event structure
-      output: None
-    """
-    from pylab import close,gcf,figure,gca,text,title,show
-    event.key = event.key.lower()
-    if event.key == 'q':
-        close('all')
-    elif event.key == 'x':
-        close('all')
+def keypress(event, back_cb, replot_cb, togglelog_cb):
+    key = event.key.lower()
+    
+    if key == 'q':
+        quit()
+    elif key == 'l':
+        togglelog_cb()
+        replot_cb()
     elif event.key == 'p':
         dumpfile('ps')
     elif event.key == 'd':
@@ -312,239 +189,122 @@ def keypress(event):
         dumpfile('png')
     elif event.key == 'j':
         dumpfile('jpg')
-    elif event.key == 'o' or event.key == 'l':
-        'toggle lin/log'
-        from pylab import get_current_fig_manager
-        tb = get_current_fig_manager().toolbar
-        options.log = not options.log;
-        if options.log == True:
-          tb.set_message('Log intensity scale selected for next plots');
-        else:
-          tb.set_message('Linear intensity scale selected for next plots');
-    elif event.key == 'c':
-        'toggle contour/normal'
-        from pylab import get_current_fig_manager
-        tb = get_current_fig_manager().toolbar
-        options.contour = not options.contour;
-        if options.contour == True:
-          tb.set_message('Contour mode selected for next 2D plots');
-        else:
-          tb.set_message('Normal mode selected for next 2D plots');
-    elif event.key == 'h':
-        'usage/help'
-        h=figure()
-        text(0.05,0.05,usage)
-        title(os.path.basename(sys.argv[0]) + ": plotting tool for McCode data set",fontweight='bold')
-        show()
-    elif event.key == 'right' or event.key == 'pagedown':
-        'show next scan step/monitor'
-        display_scanstep(File, +1)
-    elif event.key == 'left' or event.key == 'backspace' or event.key == 'pageup':
-        'show previous scan step/monitor'
-        display_scanstep(File, -1)
-    # end keypress
-    
-def display_scanstep(this_File, relative_index):
-    """
-    When displaying a scan data set, displays next/previous scan step in a separate window
-      called from: keypress
-      input:  this_File file name of scan data set/directory
-              relative_index +1 or -1 to indicate forward/backward circulate in scan steps
-      output: None
-    """
-    global scan_index,scan_window,scan_flag
+    elif key == 'b':
+        back_cb()
+    elif key == 'f5':
+        replot_cb()
+    elif key == 'f1' or key == 'h':
+        print_help()
+    elif key == 'b':
+        back_cb()
 
-    # are we managing a scan step overview ?
-    if scan_flag == 0 or scan_length <= 1:
-      return
-    
-    from pylab import gcf,close,figure
-    
-    # open or re-open scan_window
-    if scan_window is not None:
-        close(scan_window)
-        
-    scan_window=figure()
-    
-    if scan_flag == 1:
-      index = 0
-      scan_flag = 2
+def print_help(nogui=False):
+    if sys.platform == 'darwin':
+        modifier = 'Meta'
     else:
-      index = scan_index + relative_index
+        modifier = 'ctrl'
     
-    # check scan boundaries
-    if index >= scan_length:
-       index = 0
-    elif index < 0:
-      index = scan_length-1
+    helplines = []
+    helplines.append('')
+    helplines.append('q              - quit')
+    helplines.append('F1/h           - help')
+    helplines.append('l              - toggle log')
+    helplines.append('p              - save ps')
+    helplines.append('d              - save pdf')
+    helplines.append('n              - save png')
+    helplines.append('j              - save jpg')
+    helplines.append('s              - native save dialog')
+    helplines.append('F5             - replot')
+    helplines.append('click          - display subplot')
+    helplines.append('right-click/b  - back')
+    helplines.append('%s + click   - sweep monitors' % modifier)
+    print('\n'.join(helplines))
 
-    scan_index = index
-    print("Loading " + os.path.join(this_File, "%i" % index))
-    display(os.path.join(this_File, "%i" % index), "/%i" % index)
-    # end display_scanstep
-
-def dumpfile(format):
-    """
-    Save current fig to hardcopy. 
-      called from: keypress
-      input:  format of hardcopy to generate, e.g. pdf, ps, png, ...
-      output: None
-    """
+exp_counter = 0
+def dumpfile(frmat):
+    """ save current fig to softcopy """
     global exp_counter
     from pylab import savefig
-    Filename = "mcplot_" + str(exp_counter) + "." + format
+    filename = "mcplot_" + str(exp_counter) + "." + frmat
     exp_counter = exp_counter + 1
-    savefig(Filename)
-    print("Saved " + Filename)
-    # end dumpfile
+    savefig(filename)
+    print("Saved " + filename)
 
-def display(this_File, comment):
-    """
-    Display data set from File: overview or scan data set. Installs button and keyboard events.
-    Only returns after show().
-      called from: main
-      input:  this_File file name to show as a string
-      output: None
-    """
-    from pylab import connect,subplot,gca,savefig,show,gcf
-    global scan_flag,scan_length
-    
-    if this_File =="":
-        # No filename given, assume mccode.sim in current dir
-        this_File = "mccode.sim"
-
-    # FIX: make the path to this_File absolute to always get a non-empty dirname.
-    this_File = os.path.abspath(this_File)
-    
-    if os.path.isdir(this_File)==1:
-        # dirname given, assume mccode.sim in that dir.
-        this_File = os.path.join(this_File,'mccode.sim')
-
-    if os.path.dirname(this_File) != '':
-        pwd = os.getcwd()
-        os.chdir(os.path.dirname(this_File))
-        this_File = os.path.basename(this_File)
-
-    if os.path.isfile(this_File)==0:
-        print(os.path.basename(sys.argv[0]) +": Dataset " + File + " does not exist!")
-        exit()
-    
-    isBegin = lambda line: (line.strip()).startswith('begin')
-    isCompFilename = lambda line: (line.strip()).startswith('filename:')
-    # First, determine if this is single or overview plot...
-    SimFile = filter(isBegin, open(this_File).readlines())
-    Datfile = 0;
-    if SimFile == []:
-        FS = read_monitor(this_File)
-        type = FS['type'].split('(')[0].strip()
-        if type!='multiarray_1d':
-            FS['FontSize']=8
-            FS=display_single(FS)
-            if options.Format!=None: 
-                savefig(this_File + "." + options.Format)
-                print("Saved " + File + "." + options.Format)
-            show()
-            exit()
-            Datfile = 1
-
-    # Get filenames from the sim file
-    MonFiles = filter(isCompFilename, open(this_File).readlines())
-    MonFiles = list(MonFiles)
-    L = len(MonFiles)
-    
-    # create main window
-    gcf()
-    # Scan or overview?
-    if L==0:
-        """Scan view"""
-        if Datfile==0:
-            isFilename = lambda line: line.startswith('filename')
-            Scanfile = filter(isFilename, open(this_File).readlines()); 
-            Scanfile = Scanfile[0].split(': ')
-            Scanfile = os.path.join(os.path.dirname(this_File),Scanfile[1].strip())
-            # Proceed to load scan datafile
-            FS = read_monitor(Scanfile)
-            L=(len(FS['variables'].split())-1)/2
-            dims = calc_panel_size(L)
-            scan_flag = 1
-            for j in range(0, L):
-                FSsingle = get_monitor(FS,j)
-                subplot(dims[1],dims[0],j+1)
-#                try:
-#                    # use mplot3d toolkit
-#                    from mpl_toolkits.mplot3d import Axes3D
-#                    from pylab import gcf
-#                    ax = Axes3D(gcf())
-#                except ImportError:
-                ax=gca()
-                 
-                FSlist[len(FSlist):] = [FSsingle]
-                FSlist[j]=display_single(FSsingle)
-                scan_length = FSsingle['data'].shape[0]
-            
+def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
+    subplt = event.inaxes
+    if not subplt:
+        return False
     else:
-        """Overview or single monitor"""
-        dims = calc_panel_size(L)
-        for j in range(0, L):
-            subplot(dims[1],dims[0],j+1)
-#            try:
-#                # use mplot3d toolkit
-#                from mpl_toolkits.mplot3d import Axes3D
-#                from pylab import gcf
-#                ax = Axes3D(gcf())
-#            except ImportError:
-            ax=gca()
-            MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip()
-            FS=read_monitor(MonFile)
-            FS['FontSize']=6
-            FSlist[len(FSlist):] = [FS]
-            FSlist[j]=display_single(FS)
-    for xlabel_i in ax.get_xticklabels():
-        xlabel_i.set_fontsize(6)
-    for ylabel_i in ax.get_yticklabels():
-        ylabel_i.set_fontsize(6)   
-            
-    if options.Format!=None:
-        savefig(this_File + "." + options.Format)
-        print("Saved " + File + "." + options.Format)
-    else:
-        from pylab import get_current_fig_manager
-        tb = get_current_fig_manager().toolbar
-        tb.set_message('File: ' + File + comment + ' mcplot: Keys: h=help [goc|x|pdnj] ' + File + comment);
+        lclick = event.button==1
+        rclick = event.button==3
+        ctrlmod = event.key == 'control'
         
-    # install handlers for keyboard and mouse events
+        if lclick and len(click_cbs) > 0 and not ctrlmod:
+                idx = subplts.index(subplt)
+                dc_cb()
+                click_cbs[idx]()
+        elif rclick and back_cb: # right button
+            dc_cb()
+            back_cb()
+        elif ctrlmod and len(ctrl_cbs) > 0 and ctrlmod:
+            idx = subplts.index(subplt)
+            dc_cb()
+            ctrl_cbs[idx]()
 
-    connect('button_press_event',click)
-    connect('key_press_event', keypress)
+def main(args):
+    ''' load data from mcplot backend and send it to the pyqtgraph frontend above '''
+    logging.basicConfig(level=logging.INFO)
     
-    os.chdir(pwd)
-    show()
-    # end display
-
-if __name__ == "__main__":
-    """
-    Main mcplot entry point. 
-    Parse options, Read monitors, select overview/scan/single monitor
-    """
-    from optparse import OptionParser
-    parser = OptionParser(usage=usage)
-    parser.add_option("-f", "--format", dest="Format",
-                      help="Export plot in format (e.g. ps) and exit", 
-                      metavar="Format")
-    parser.add_option("-l", "--log",
-                      help="Plot results in log intensity scale", 
-                      action="store_true",dest="log")
-    parser.add_option("-c", "--contour",
-                      help="Plot matrixes using contours instead of images", 
-                      action="store_true",dest="contour")
+    # ensure keyboardinterrupt ctr-c
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     
-    (options, args) = parser.parse_args()
-    
-    File=''.join(args)
-
-    if options.Format!=None:
-        matplotlib.use(options.Format)
+    try:
+        if len(args.simulation) == 0:
+            simfile = ''
+        else:
+            simfile = args.simulation[0]
+        if args.test:
+            test_decfuncs(simfile)
         
-    display(File, "")
-    # End of __main__
+        # load data
+        loader = McCodeDataLoader(simfile=simfile)
+        try:
+            loader.load()
+        except Exception as e:
+            # invallid input case:
+            print('mcplot loader: ' + e.__str__())
+            print_help(nogui=True)
+            quit()
+        rootnode = loader.plot_graph
+        if args.test:
+            PlotGraphPrint(rootnode)
+        
+        # start the plotter
+        plotter = McMatplotlibPlotter(sourcedir=loader.directory)
+        
+        if args.html:
+            # save to html and exit
+            plotter.html_node(rootnode, open('%s.html' % os.path.splitext(simfile)[0], 'w'))
+        else:
+            # display gui
+            print_help(nogui=True)
+            plotter.plot_node(rootnode)
     
+    except KeyboardInterrupt:
+        print('keyboard interrupt')
+    except Exception as e:
+        print('mcplot error: %s' % e.__str__())
+        raise e
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('simulation', nargs='*', help='file or directory to plot')
+    parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
+    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3')
+    
+    args = parser.parse_args()
+    
+    main(args)
+

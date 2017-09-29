@@ -286,14 +286,18 @@ def _load_monitor(monitorfile):
         text = open(f).read()
         # determine 1D / 2D data
         
-        m = re.search('\# type: (array_\wd)', text)
+        m = re.search('\# type: (\w+)', text)
         typ = m.group(1)
-        if typ == 'array_1d':
+        if typ == 'array_0d':
+            print("load_monitor: Not loading 0d dataset %s" % monitorfile)
+            data = None
+        elif typ == 'array_1d':
             data = _parse_1D_monitor(text)
         elif typ == 'array_2d':
             data = _parse_2D_monitor(text)
         else:
-            raise Exception('load_monitor: unknown data format.')
+            print('load_monitor: unknown data format %s' % typ)
+            data = None
         return data
     
     data = DataHandle(load_fct=lambda m=monitorfile: load(monfile=m))
