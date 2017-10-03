@@ -5,7 +5,6 @@
 </head>
 <body>
 <script>
-
 function plot_wrap(w, h, x, y, yerr, xlabel, ylabel, title) {
   var margin = 5;
   var wlab = w - 2*margin;
@@ -83,9 +82,9 @@ function plot(w, h, x, y, yerr, anchorElement) {
   var x1 = x0 + wi;
   var y1 = y0 - hi;
 
-  var dataPoints = []
+  var data = []
   for (var i=0; i < x.length; i++) {
-    dataPoints.push({"x" : x[i], "y" : y[i]});
+    data.push({"x" : x[i], "y" : y[i]});
   }
 
   // zoom
@@ -95,14 +94,15 @@ function plot(w, h, x, y, yerr, anchorElement) {
     // create new scale ojects based on event
     var new_xScale = d3.event.transform.rescaleX(xScale);
     var new_yScale = d3.event.transform.rescaleY(yScale);
-    //console.log(d3.event.transform);
 
-    // update axes
+    // update axes using the new scales
     xAxisGroup.call(xAxis.scale(new_xScale));
     yAxisGroup.call(yAxis.scale(new_yScale));
 
-    // update circle
-    points.attr("transform", d3.event.transform);
+    // get a new data generator given the new scales
+    var lf = getLineFunc(new_xScale, new_yScale);
+    // clear & redraw based on the scaled data
+    drawPoints(lf);
   };
   var view = anchorElement.append("rect")
     .attr("class", "zoom")
@@ -143,13 +143,25 @@ function plot(w, h, x, y, yerr, anchorElement) {
   var pointGroup = anchorElement.append("g")
   .attr("clip-path", "url(#viewClip)");
 
-  var points = pointGroup.selectAll("circle")
-    .data(dataPoints)
-    .enter()
-    .append("circle")
-    .attr("cx", function(d) { return xScale(d["x"]) })
-    .attr("cy", function(d) { return yScale(d["y"]) })
-    .attr("r", 1);
+  // create initial scale object
+  lf = getLineFunc(xScale, yScale)
+  // draw data on initial zoom
+  var points = drawPoints(lf);
+
+  // data draw functions
+  function getLineFunc(xScl, yScl) {
+    return d3.line()
+    .x(function(d) { return xScl(d.x); })
+    .y(function(d) { return yScl(d.y); });
+  }
+  function drawPoints(lf) {
+    pointGroup.selectAll("path").remove();
+    pointGroup.append("path")
+      .attr("d", lf(data))
+      .attr("stroke", "black")
+      .attr("stroke-width", "1px")
+      .attr("fill", "none");
+  }
 }
 
   var x = @X_DATA_ARRAY@;
