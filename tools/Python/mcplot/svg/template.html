@@ -11,17 +11,28 @@ function plot_wrap(w, h, x, y, yerr, xlabel, ylabel, title) {
   var hlab = h - 2*margin;
 
   // axis labels
-
   var lblGroup = d3.select("body").append("svg")
     .attr("width", w)
     .attr("height", h)
     .append("g")
     .attr("transform", "translate(" + margin +"," + margin + ")");
 
+  // multi-line titles
+  var titleLines = title.split(/\r?\n/)
   var titleGrp = lblGroup
     .append("text")
-    .text(title)
+    .text(titleLines[0])
+    .attr("dominant-baseline", "hanging")
     .attr("text-anchor", "middle");
+  if (titleLines.length > 1) {
+    for (i=1; i<titleLines.length; i++) {
+      titleGrp
+        .append("tspan")
+        .attr("x", 0)
+        .attr("dy", "1.2em")
+        .text(titleLines[i]);
+    }
+  }
 
   var xLabelGrp = lblGroup
     .append("text")
@@ -36,6 +47,7 @@ function plot_wrap(w, h, x, y, yerr, xlabel, ylabel, title) {
     .text(ylabel)
     .attr("text-anchor", "middle");
 
+  //var dt = titleGrp.node().getBBox().height;
   var dt = titleGrp.node().getBBox().height;
   var dl = yLabelGrp.node().getBBox().height; // height and width are confused here, due to the rotation
   var db = xLabelGrp.node().getBBox().height;
@@ -43,10 +55,10 @@ function plot_wrap(w, h, x, y, yerr, xlabel, ylabel, title) {
   var wplt = wlab - 3.3*dl;
   var hplt = hlab - (1.3*dt + 2.1*db);
   var xplt = 3.3*dl;
-  var yplt = 1.3*dt;
+  var yplt = dt + 0.3*dl;
 
   var titx = wlab/2;
-  var tity = dt/2;
+  var tity = 0;//dt/2;
   var xlabx = wplt/2 + xplt;
   var xlaby = hlab - db/2;
   var ylabx = dl/2;
@@ -165,7 +177,6 @@ function plot(w, h, x, y, yerr, anchorElement) {
       .attr("fill", "none");
   }
 }
-
   var x = @X_DATA_ARRAY@;
   var y = @Y_DATA_ARRAY@;
   var yerr = @YERR_DATA_ARRAY@;
