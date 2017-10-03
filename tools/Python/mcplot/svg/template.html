@@ -5,6 +5,7 @@
 </head>
 <body>
 <script>
+
 function plot_wrap(w, h, x, y, yerr, xlabel, ylabel, title) {
   var margin = 5;
   var wlab = w - 2*margin;
@@ -87,16 +88,44 @@ function plot(w, h, x, y, yerr, anchorElement) {
     dataPoints.push({"x" : x[i], "y" : y[i]});
   }
 
-  // set up axes
-  var svgContainer = anchorElement;
+  // zoom
+  var zoom = d3.zoom()
+    .on("zoom", zoomFunction);
+  function zoomFunction() {
+    // create new scale ojects based on event
+    var new_xScale = d3.event.transform.rescaleX(xScale);
+    var new_yScale = d3.event.transform.rescaleY(yScale);
+    //console.log(d3.event.transform);
 
+    // update axes
+    xAxisGroup.call(xAxis.scale(new_xScale));
+    yAxisGroup.call(yAxis.scale(new_yScale));
+
+    // update circle
+    points.attr("transform", d3.event.transform);
+  };
+  var view = anchorElement.append("rect")
+    .attr("class", "zoom")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("style", "cursor: move; fill: none; pointer-events: all;")
+    .call(zoom);
+
+  // clip
+  var clip = anchorElement.append("clipPath")
+    .attr("id", "viewClip")
+    .append("rect")
+    .attr("width", w)
+    .attr("height", h);
+
+  // set up axes
   var xScale = d3.scaleLinear()
     .domain([d3.min(x), d3.max(x)])
     .range([x0, x1]);
   var xAxis = d3.axisBottom()
     .ticks(5)
     .scale(xScale);
-  var xAxisGroup = svgContainer.append("g")
+  var xAxisGroup = anchorElement.append("g")
     .attr("transform", "translate(0," + y0 + ")")
     .call(xAxis);
 
@@ -106,12 +135,13 @@ function plot(w, h, x, y, yerr, anchorElement) {
   var yAxis = d3.axisLeft()
     .ticks(5)
     .scale(yScale);
-  var yAxisGroup = svgContainer.append("g")
+  var yAxisGroup = anchorElement.append("g")
     .attr("transform", "translate(" + x0 + ", 0)")
     .call(yAxis);
 
   // enter data points
-  var pointGroup = svgContainer.append("g")
+  var pointGroup = anchorElement.append("g")
+  .attr("clip-path", "url(#viewClip)");
 
   var points = pointGroup.selectAll("circle")
     .data(dataPoints)
@@ -120,33 +150,8 @@ function plot(w, h, x, y, yerr, anchorElement) {
     .attr("cx", function(d) { return xScale(d["x"]) })
     .attr("cy", function(d) { return yScale(d["y"]) })
     .attr("r", 1);
-
-  // zoom
-  var zoom = d3.zoom()
-    .on("zoom", zoomFunction);
-  function zoomFunction() {
-    // create new scale ojects based on event
-    var new_xScale = d3.event.transform.rescaleX(xScale);
-    var new_yScale = d3.event.transform.rescaleY(yScale);
-    console.log(d3.event.transform);
-
-    // update axes
-    xAxisGroup.call(xAxis.scale(new_xScale));
-    yAxisGroup.call(yAxis.scale(new_yScale));
-
-    // update circle
-    points.attr("transform", d3.event.transform);
-  };
-  svgContainer.call(zoom);
-
-  // zoom event rect area
-  var view = svgContainer.append("rect")
-    .attr("class", "zoom")
-    .attr("width", w)
-    .attr("height", h)
-    .attr("style", "cursor: move; fill: none; pointer-events: all;")
-    .call(zoom);
 }
+
   var x = @X_DATA_ARRAY@;
   var y = @Y_DATA_ARRAY@;
   var yerr = @YERR_DATA_ARRAY@;
