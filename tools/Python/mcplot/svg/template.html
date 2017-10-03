@@ -124,6 +124,7 @@ function plot(w, h, x, y, yerr, anchorElement) {
     .range([x0, x1]);
   var xAxis = d3.axisBottom()
     .ticks(5)
+    .tickFormat(d3.format(".1e"))
     .scale(xScale);
   var xAxisGroup = anchorElement.append("g")
     .attr("transform", "translate(0," + y0 + ")")
@@ -134,6 +135,7 @@ function plot(w, h, x, y, yerr, anchorElement) {
     .range([y0, y1]);
   var yAxis = d3.axisLeft()
     .ticks(5)
+    .tickFormat(d3.format(".1e"))
     .scale(yScale);
   var yAxisGroup = anchorElement.append("g")
     .attr("transform", "translate(" + x0 + ", 0)")
