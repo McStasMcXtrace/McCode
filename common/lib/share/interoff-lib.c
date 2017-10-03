@@ -207,6 +207,13 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
     fprintf(stderr, "Error: Can not read 1st line in file %s (interoff/off_getBlocksIndex)\n", filename);
     exit(1);
   }
+  if (strlen(line)>5)
+  {
+      fprintf(stderr,"Error: First line in %s is too long (=%d). Possibly the line is not terminated by '\\n'.\n" 
+              "       The first line is required to be exactly 'OFF', '3' or 'ply'.\n",filename,strlen(line));
+      fclose(f);
+      return(NULL);
+  }
 
   if (strncmp(line,"OFF",3) && strncmp(line,"3",1) && strncmp(line,"ply",1))
   {

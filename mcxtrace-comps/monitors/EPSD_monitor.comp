@@ -58,7 +58,7 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, PSD_N_s, PSD_p_s, PSD_p2_s)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
-  %{
+%{
     double **PSD_N;
     double **PSD_p;
     double **PSD_p2;
@@ -66,10 +66,10 @@ DECLARE
     double PSD_N_s[nx][ny];
     double PSD_p_s[nx][ny];
     double PSD_p2_s[nx][ny];
-  %}
+%}
 
 INITIALIZE
-  %{
+%{
     int i,j;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
@@ -92,13 +92,14 @@ INITIALIZE
     if (nE>1){
         /*allocate memory for the data*/
         if( (PSD_N=calloc(nE, sizeof(*PSD_N)))==NULL ||
-                (PSD_p=calloc(nE, sizeof(*PSD_p)))==NULL || 
+                (PSD_p=calloc(nE, sizeof(*PSD_p)))==NULL ||
                 (PSD_p2=calloc(nE, sizeof(*PSD_p2)))==NULL ){
             fprintf(stderr,"Error(%s): Memory allocation error for energy bins.\n",NAME_CURRENT_COMP);
             exit(-1);
         }
         for (i=0;i<nE;i++){
             int status=0;
+;
             if( (PSD_N[i]=calloc(nx*ny, sizeof(**PSD_N)))==NULL ||
                     (PSD_p[i]=calloc(nx*ny, sizeof(**PSD_p)))==NULL || 
                     (PSD_p2[i]=calloc(nx*ny, sizeof(**PSD_p2)))==NULL ){
@@ -106,7 +107,7 @@ INITIALIZE
             }
         }
     }
-  %}
+%}
 
 TRACE
 %{
@@ -138,7 +139,7 @@ TRACE
 %}
 
 SAVE
-  %{
+%{
       if (nE<=1){
           DETECTOR_OUT_2D(
                   "PSD monitor",
@@ -152,7 +153,12 @@ SAVE
           int kk;
           char ff[256];
           char tt[256];
+
+          /*figure out padding to make the files appear in alphanuerical order*/
+          char  format[32];
+          snprintf(format,32,"%%s_%%0%ui",(int) floor(log(nE)/log(10.0))+1);
           sprintf(ff, "%s_Sum",filename);
+
           DETECTOR_OUT_2D(
                   "PSD monitor Energy Sum",
                   "X position [m]",
@@ -163,7 +169,7 @@ SAVE
                   ff);
   
           for (kk=0; kk<nE; kk++) {
-              sprintf(ff, "%s_%i",filename,kk);
+              sprintf(ff, format,filename,kk);
               sprintf(tt, "PSD monitor Energy slice %i ~ %g keV",kk,Emin+kk*(Emax-Emin)/nE);
               DETECTOR_OUT_2D(
                       tt,
@@ -174,7 +180,7 @@ SAVE
                       ff);
           }
       }
-  %}
+%}
 
 FINALLY
 %{

@@ -18,7 +18,7 @@
 * 2D detector for intensity as a function of both horizontal divergence
 * and wavelength.
 *
-* Example: Divlambda_monitor(nL=20, nh=20, filename="Output.div",
+* Example: DivLambda_monitor(nL=20, nh=20, filename="Output.div",
 *           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *           maxdiv_h=2, Lmin=2, Lmax=10)
 *
