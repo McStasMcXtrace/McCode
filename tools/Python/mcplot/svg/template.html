@@ -96,7 +96,7 @@ function plot(w, h, x, y, yerr, anchorElement) {
 
   var data = []
   for (var i=0; i < x.length; i++) {
-    data.push({"x" : x[i], "y" : y[i]});
+    data.push({ "x" : x[i], "y" : y[i], "p1": [x[i], y[i]-yerr[i]], "p2" : [x[i], y[i]+yerr[i]] });
   }
 
   // zoom
@@ -112,9 +112,9 @@ function plot(w, h, x, y, yerr, anchorElement) {
     yAxisGroup.call(yAxis.scale(new_yScale));
 
     // get a new data generator given the new scales
-    var lf = getLineFunc(new_xScale, new_yScale);
+    //var lf = getLineFunc();
     // clear & redraw based on the scaled data
-    drawPoints(lf);
+    drawPoints(new_xScale, new_yScale);
   };
   var view = anchorElement.append("rect")
     .attr("class", "zoom")
@@ -158,20 +158,36 @@ function plot(w, h, x, y, yerr, anchorElement) {
   .attr("clip-path", "url(#viewClip)");
 
   // create initial scale object
-  lf = getLineFunc(xScale, yScale)
+  //lf = getLineFunc(xScale, yScale)
   // draw data on initial zoom
-  var points = drawPoints(lf);
+  var points = drawPoints(xScale, yScale);
 
-  // data draw functions
-  function getLineFunc(xScl, yScl) {
-    return d3.line()
-    .x(function(d) { return xScl(d.x); })
-    .y(function(d) { return yScl(d.y); });
-  }
-  function drawPoints(lf) {
+  function drawPoints(xScl, yScl) {
+    // data draw functions
+    function getLineFunc(xs, ys) {
+      return d3.line()
+      .x(function(d) { return xs(d.x); })
+      .y(function(d) { return ys(d.y); });
+    }
+    var lf = getLineFunc(xScl, yScl);
+    // draw graph
     pointGroup.selectAll("path").remove();
-    pointGroup.append("path")
+    pointGroup.selectAll("line").remove();
+    graph = pointGroup.append("path")
       .attr("d", lf(data))
+      .attr("stroke", "black")
+      .attr("stroke-width", "1px")
+      .attr("fill", "none");
+
+    // draw error bars
+    pointGroup.selectAll("line")
+      .data(data)
+      .enter()
+      .append("line")
+      .attr("x1", function (d) { console.log(xScl(d.p1[0])); return xScl(d.p1[0]); })
+      .attr("y1", function (d) { return yScl(d.p1[1]); })
+      .attr("x2", function (d) { return xScl(d.p2[0]); })
+      .attr("y2", function (d) { return yScl(d.p2[1]); })
       .attr("stroke", "black")
       .attr("stroke-width", "1px")
       .attr("fill", "none");
