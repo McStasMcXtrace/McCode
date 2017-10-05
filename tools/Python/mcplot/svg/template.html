@@ -95,8 +95,11 @@ function plot(w, h, x, y, yerr, anchorElement) {
   var y1 = y0 - hi;
 
   var data = []
+  var dataErr = []
   for (var i=0; i < x.length; i++) {
-    data.push({ "x" : x[i], "y" : y[i], "p1": [x[i], y[i]-yerr[i]], "p2" : [x[i], y[i]+yerr[i]] });
+    data.push({ "x" : x[i], "y" : y[i] });
+    if (yerr[i] != 0)
+      dataErr.push({ "p1": [x[i], y[i]-yerr[i]], "p2" : [x[i], y[i]+yerr[i]] });
   }
 
   // zoom
@@ -181,7 +184,7 @@ function plot(w, h, x, y, yerr, anchorElement) {
 
     // draw error bars
     pointGroup.selectAll("line")
-      .data(data)
+      .data(dataErr)
       .enter()
       .append("line")
       .attr("x1", function (d) { console.log(xScl(d.p1[0])); return xScl(d.p1[0]); })
