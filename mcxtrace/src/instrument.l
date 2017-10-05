@@ -2,9 +2,9 @@
 
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+* McXtrace, x-ray tracing package
+*         Copyright (C) 2001-2017, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Kernel: instrument.l
@@ -13,7 +13,7 @@
 * Written by: K.N.
 * Date: Jul  1, 1997
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McXtrace 1.6
 * Version: $Revision$
 *
 * Flex scanner for instrument definition files.
