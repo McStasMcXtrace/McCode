@@ -81,6 +81,18 @@ def main(args):
                     color = lookup(cm, vals[i,j]/maxval)
                     img[i,j,:] = color
             
+            import io
+            
+            image = scipy.misc.toimage(img)
+            output = io.BytesIO()
+            image.save(output, format="png")
+            contents = output.getvalue()
+            output.close()
+            
+            import base64
+            encoded = base64.b64encode(contents)
+            print(encoded)
+            
             scipy.misc.imsave('outimage.png', img)
             
         else:
