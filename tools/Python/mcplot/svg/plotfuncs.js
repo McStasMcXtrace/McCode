@@ -14,9 +14,13 @@ function plot_2d(params) {
 }
 
 function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
+  // positioning
   var margin = 5;
   var wlab = w - 2*margin;
   var hlab = h - 2*margin;
+
+  // font size
+  var fontSizeStr = "14px";
 
   // axis labels
   var lblGroup = d3.select("body").append("svg")
@@ -31,7 +35,9 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
     .append("text")
     .text(titleLines[0])
     .attr("dominant-baseline", "hanging")
-    .attr("text-anchor", "middle");
+    .attr("text-anchor", "middle")
+    .style("font-size",fontSizeStr);
+
   if (titleLines.length > 1) {
     for (i=1; i<titleLines.length; i++) {
       titleGrp
@@ -46,14 +52,16 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
     .append("text")
     .text(xlabel)
     .attr("dominant-baseline", "middle")
-    .attr("text-anchor", "middle");
+    .attr("text-anchor", "middle")
+    .style("font-size",fontSizeStr);
 
   var yLabelGrp = lblGroup
     .append("text")
     .attr("x", ylabx)
     .attr("y", ylaby)
     .text(ylabel)
-    .attr("text-anchor", "middle");
+    .attr("text-anchor", "middle")
+    .style("font-size",fontSizeStr);
 
   var dt = titleGrp.node().getBBox().height;
   var dl = yLabelGrp.node().getBBox().height; // height and width are confused here, due to the rotation
@@ -61,7 +69,7 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
 
   var wplt = wlab - 3.3*dl;
   var hplt = hlab - (1.3*dt + 2.1*db);
-  var xplt = 3.3*dl;
+  var xplt = 4.0*dl;
   var yplt = dt + 0.3*dl;
 
   var titx = wlab/2;

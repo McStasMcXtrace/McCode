@@ -14,8 +14,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
 from mccodelib.plotgraph import PNSingle
 
-WIDTH = 500
-HEIGHT = 320
+WIDTH = 700
+HEIGHT = 480
 
 def get_html(template_name, params):
     '''  '''
@@ -104,7 +104,7 @@ def main(args):
             yerr = data.y_err_vals
             
             try:
-                title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+                title = '%s [%s] %s\nI = %s Err = %s N = %s\n %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
             except:
                 title = '%s\n[%s]' % (data.component, data.filename)
             
@@ -164,7 +164,7 @@ def main(args):
             try:
                 title = '%s\nI = %s' % (data.component, data.values[0])
                 if verbose:
-                    title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+                    title = '%s [%s] %s\nI = %s Err = %s N = %s\n %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
             except:
                 title = '%s\n[%s]' % (data.component, data.filename)
             
