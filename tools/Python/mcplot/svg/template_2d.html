@@ -6,29 +6,7 @@
 </head>
 <body>
 <script>
-  var xmin = @XMIN@;
-  var xmax = @XMAX@;
-  var ymin = @YMIN@;
-  var ymax = @YMAX@;
-  var img2dData = @IMAGE@;
-  var w = @WIDTH@;
-  var h = @HEIGHT@;
-  var xlabel = "@XLABEL@";
-  var ylabel = "@YLABEL@";
-  var title = "@TITLE@";
-
-  var params = {
-      'xmin' : xmin,
-      'xmax' : xmax,
-      'ymin' : ymin,
-      'ymax' : ymax,
-      'w' : w,
-      'h' : h,
-      'xlabel' : xlabel,
-      'ylabel' : ylabel,
-      'title' : title,
-      'img2dData' : img2dData,
-  }
+  var params = @PARAMS@;
   plot_2d(params);
 </script>
 </body>
