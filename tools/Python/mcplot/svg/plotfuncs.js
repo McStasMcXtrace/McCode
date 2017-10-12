@@ -55,7 +55,6 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
     .text(ylabel)
     .attr("text-anchor", "middle");
 
-  //var dt = titleGrp.node().getBBox().height;
   var dt = titleGrp.node().getBBox().height;
   var dl = yLabelGrp.node().getBBox().height; // height and width are confused here, due to the rotation
   var db = xLabelGrp.node().getBBox().height;
@@ -82,7 +81,6 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
     .attr("transform", "translate(" + xplt +"," + yplt + ")")
     .append("g");
 
-  //plotfunc_inner(wplt, hplt, xmin, xmax, ymin, ymax, img2dData, axisGroup);
   plotfunc_inner(wplt, hplt, axisGroup);
 }
 
@@ -177,9 +175,11 @@ function _plot_1d_data(w, h, x, y, yerr, anchorElement) {
   // axes lengths
   var wi = xax_frac*w;
   var hi = yax_frac*h;
+
   // orego
   var x0 = x0_frac*w;
   var y0 = h - y0_frac*h;
+
   // axes end coords
   var x1 = x0 + wi;
   var y1 = y0 - hi;
@@ -204,8 +204,6 @@ function _plot_1d_data(w, h, x, y, yerr, anchorElement) {
     xAxisGroup.call(xAxis.scale(new_xScale));
     yAxisGroup.call(yAxis.scale(new_yScale));
 
-    // get a new data generator given the new scales
-    //var lf = getLineFunc();
     // clear & redraw based on the scaled data
     drawPoints(new_xScale, new_yScale);
   };
@@ -250,8 +248,6 @@ function _plot_1d_data(w, h, x, y, yerr, anchorElement) {
   var pointGroup = anchorElement.append("g")
     .attr("clip-path", "url(#viewClip)");
 
-  // create initial scale object
-  //lf = getLineFunc(xScale, yScale)
   // draw data on initial zoom
   var points = drawPoints(xScale, yScale);
 
