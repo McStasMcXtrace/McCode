@@ -35,7 +35,7 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     
     return json.dumps(params, indent=4)
 
-def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, xlabel, ylabel, title):
+def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, xlabel, ylabel, title):
     '''  '''
     params = {}
     p = params
@@ -50,6 +50,9 @@ def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, xlabel, yla
     
     p['img2dData'] = image_str
     p['imgColorbar'] = colorbar_img_str
+
+    p['cbMin'] = cb_min
+    p['cbMax'] = cb_max
     
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
@@ -143,8 +146,11 @@ def main(args):
             xmax = data.xlimits[1]
             ymin = data.xlimits[2]
             ymax = data.xlimits[3]
-
-            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, data.xlabel, data.ylabel, data.title)
+            
+            cb_min = np.min(vals)
+            cb_max = np.max(vals)
+            
+            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, cb_min, cb_max, data.xlabel, data.ylabel, data.title)
             text = get_html('template_2d.html', json_str)
             
             for l in text.splitlines():

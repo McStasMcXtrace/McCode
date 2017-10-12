@@ -10,7 +10,7 @@ function plot_2d(params) {
   var p = params
   _plot_labels(
     p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'],
-    function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], anchor) });
+    function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], p['cbMin'], p['cbMax'], anchor) });
 }
 
 function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
@@ -84,9 +84,9 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
   plotfunc_inner(wplt, hplt, axisGroup);
 }
 
-function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, anchorElement) {
+function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbMin, cbMax, anchorElement) {
   // colorbar width
-  var w_cb = 75; // this is the total width of space, image and ticks
+  var w_cb = 70; // this is the total width of space, image and ticks
   var w_cbimg = 15;
   var w_cbticks = 30;
 
@@ -163,7 +163,7 @@ function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, anc
     .attr("xlink:href","data:image/jpg;base64," + img2dData);
 
   var cbScale = d3.scaleLinear()
-    .domain([0, 100])
+    .domain([cbMin, cbMax])
     .range([y0, y1]);
   var cbyAxis = d3.axisRight()
     .ticks(5)
