@@ -35,7 +35,7 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     
     return json.dumps(params, indent=4)
 
-def get_json_2d(xmin, xmax, ymin, ymax, image_str, colormap_img_str, xlabel, ylabel, title):
+def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, xlabel, ylabel, title):
     '''  '''
     params = {}
     p = params
@@ -49,7 +49,7 @@ def get_json_2d(xmin, xmax, ymin, ymax, image_str, colormap_img_str, xlabel, yla
     p['ymax'] = ymax
     
     p['img2dData'] = image_str
-    p['imgColorMap'] = colormap_img_str
+    p['imgColorbar'] = colorbar_img_str
     
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
@@ -131,20 +131,20 @@ def main(args):
                 img[255-i, 0] = color
             
             # e3ncode cm image
-            cm_img = scipy.misc.toimage(img)
+            cb_img = scipy.misc.toimage(img)
             output = io.BytesIO()
             
-            cm_img.save(output, format='png')
+            cb_img.save(output, format='png')
             contents = output.getvalue()
             output.close()
-            encoded_cm = str(base64.b64encode(contents)).lstrip('b').strip("\'")
+            encoded_cb = str(base64.b64encode(contents)).lstrip('b').strip("\'")
 
             xmin = data.xlimits[0]
             xmax = data.xlimits[1]
             ymin = data.xlimits[2]
             ymax = data.xlimits[3]
 
-            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cm, data.xlabel, data.ylabel, data.title)
+            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, data.xlabel, data.ylabel, data.title)
             text = get_html('template_2d.html', json_str)
             
             for l in text.splitlines():

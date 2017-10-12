@@ -10,7 +10,7 @@ function plot_2d(params) {
   var p = params
   _plot_labels(
     p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'],
-    function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], anchor) });
+    function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], anchor) });
 }
 
 function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
@@ -84,20 +84,19 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
   plotfunc_inner(wplt, hplt, axisGroup);
 }
 
-function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, anchorElement) {
-  // axis size fractions and orego placement fraction
-  var xax_frac = 1;
-  var yax_frac = 1;
-  var x0_frac = 0;
-  var y0_frac = 0;
+function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, anchorElement) {
+  // colorbar width
+  var w_cb = 75; // this is the total width of space, image and ticks
+  var w_cbimg = 15;
+  var w_cbticks = 30;
 
   // axes lengths
-  var wi = xax_frac*w;
-  var hi = yax_frac*h;
+  var wi = w - w_cb;
+  var hi = h;
   // orego
-  var x0 = x0_frac*w;
-  var y0 = h - y0_frac*h;
-  // axes end coords
+  var x0 = 0;
+  var y0 = h;
+  // end coords
   var x1 = x0 + wi;
   var y1 = y0 - hi;
 
@@ -157,12 +156,28 @@ function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, anchorElement) {
     .attr("clip-path", "url(#viewClip)")
     .call(zoom);
 
-  var img = pointGroup
-    .append("svg:image")
+  var img = pointGroup.append("svg:image")
     .attr('width', wi)
     .attr('height', hi)
     .attr('preserveAspectRatio', 'none')
     .attr("xlink:href","data:image/jpg;base64," + img2dData);
+
+  var cbScale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([y0, y1]);
+  var cbyAxis = d3.axisRight()
+    .ticks(5)
+    .tickFormat(d3.format(".1e"))
+    .scale(cbScale);
+  var cbAxisGroup = anchorElement.append("g")
+    .attr("transform", "translate(" + (x1 + w_cb - w_cbimg - w_cbticks) + ", 0)")
+    .call(cbyAxis);
+  var cb = cbAxisGroup.append("svg:image")
+    .attr('width', w_cbimg)
+    .attr('height', hi)
+    .attr("transform", "translate(" + (-w_cbimg) + ", 0)")
+    .attr('preserveAspectRatio', 'none')
+    .attr("xlink:href","data:image/jpg;base64," + imgColorbar);
 }
 
 function _plot_1d_data(w, h, x, y, yerr, anchorElement) {
