@@ -6,25 +6,7 @@
 </head>
 <body>
 <script>
-  var x = @X_DATA_ARRAY@;
-  var y = @Y_DATA_ARRAY@;
-  var yerr = @YERR_DATA_ARRAY@;
-  var w = @WIDTH@;
-  var h = @HEIGHT@;
-  var xlabel = "@XLABEL@";
-  var ylabel = "@YLABEL@";
-  var title = "@TITLE@";
-
-  var params = {
-    'x' : x,
-    'y' : y,
-    'yerr' : yerr,
-    'w' : w,
-    'h' : h,
-    'xlabel' : xlabel,
-    'ylabel' : ylabel,
-    'title' : title,
-  }
+  var params = @PARAMS@;
   plot_1d(params)
 </script>
 </body>

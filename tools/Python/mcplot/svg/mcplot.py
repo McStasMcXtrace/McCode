@@ -7,25 +7,32 @@ import numpy as np
 import scipy.misc
 import io
 import base64
+import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
 from mccodelib.plotgraph import PNSingle
 
-def fillout_template_1d(template, x, y, yerr, xlabel, ylabel, title):
+def get_html(template_name, params):
+    text = open(template_name).read()
+    text = text.replace("@PARAMS@", params)
+    return text
+
+def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     '''  '''
-    template = template.replace('@X_DATA_ARRAY@', x.__str__())
-    template = template.replace('@Y_DATA_ARRAY@', y.__str__())
-    template = template.replace('@YERR_DATA_ARRAY@', yerr.__str__())
-    template = template.replace('@WIDTH@', str(500))
-    template = template.replace('@HEIGHT@', str(300))
+    params = {}
+    p = params
+    p['w'] = 500
+    p['h'] = 300
+    p['x'] = x
+    p['y'] = y
+    p['yerr'] = yerr
+    p['xlabel'] = xlabel
+    p['ylabel'] = ylabel
+    p['title'] = title
     
-    template = template.replace('@XLABEL@', xlabel)
-    template = template.replace('@YLABEL@', ylabel)
-    template = template.replace('@TITLE@', title)
-    
-    return template
+    return json.dumps(params, indent=4)
 
 def fillout_template_2d(template, xmin, xmax, ymin, ymax, image_str, xlabel, ylabel, title):
     '''  '''
@@ -84,7 +91,8 @@ def main(args):
             x = data.xvals
             y = data.yvals
             yerr = data.y_err_vals
-            text = fillout_template_1d(open('template_1d.html').read(), x, y, yerr, data.xlabel, data.ylabel, data.title)
+            params_str = get_json_1d(x, y, yerr, data.xlabel, data.ylabel, data.title)
+            text = get_html('template_1d.html', params_str)
             for l in text.splitlines():
                 print(l)
             print("")
