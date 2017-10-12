@@ -67,7 +67,7 @@ def lookup(cm, x):
     a2 = c - xp
     # this should be better, but there are still some strange artefacts in the generated image
     #return np.add(cm[f], (xp-f)*(np.subtract(cm[c], cm[f])) ).astype(np.ubyte)
-    return cm[round(xp)]
+    return cm[np.int(np.round(xp))]
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
