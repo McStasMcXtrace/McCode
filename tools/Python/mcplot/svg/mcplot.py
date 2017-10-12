@@ -126,13 +126,14 @@ def main(args):
             
             # crate colormap 1 x 256 image
             img = np.zeros((256, 1, 4))
-            for i in reversed(range(256)):
+            for i in range(256):
                 color = lookup(cm, i/255)
-                img[i, 0] = color
+                img[255-i, 0] = color
             
             # e3ncode cm image
             cm_img = scipy.misc.toimage(img)
             output = io.BytesIO()
+            
             cm_img.save(output, format='png')
             contents = output.getvalue()
             output.close()
