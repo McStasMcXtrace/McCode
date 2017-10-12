@@ -14,6 +14,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
 from mccodelib.plotgraph import PNSingle
 
+WIDTH = 500
+HEIGHT = 320
+
 def get_html(template_name, params):
     '''  '''
     text = open(template_name).read()
@@ -24,8 +27,8 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     '''  '''
     params = {}
     p = params
-    p['w'] = 500
-    p['h'] = 300
+    p['w'] = WIDTH
+    p['h'] = HEIGHT
     p['x'] = x
     p['y'] = y
     p['yerr'] = yerr
@@ -40,8 +43,8 @@ def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_
     params = {}
     p = params
     
-    p['w'] = 500
-    p['h'] = 300
+    p['w'] = WIDTH
+    p['h'] = HEIGHT
     
     p['xmin'] = xmin
     p['xmax'] = xmax
@@ -99,7 +102,13 @@ def main(args):
             x = data.xvals
             y = data.yvals
             yerr = data.y_err_vals
-            params_str = get_json_1d(x, y, yerr, data.xlabel, data.ylabel, data.title)
+            
+            try:
+                title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+            except:
+                title = '%s\n[%s]' % (data.component, data.filename)
+            
+            params_str = get_json_1d(x, y, yerr, data.xlabel, data.ylabel, title)
             text = get_html('template_1d.html', params_str)
             for l in text.splitlines():
                 print(l)
@@ -150,7 +159,16 @@ def main(args):
             cb_min = np.min(vals)
             cb_max = np.max(vals)
             
-            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, cb_min, cb_max, data.xlabel, data.ylabel, data.title)
+            # generate the title
+            verbose = True
+            try:
+                title = '%s\nI = %s' % (data.component, data.values[0])
+                if verbose:
+                    title = '%s [%s]\n%s\nI = %s Err = %s N = %s; %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
+            except:
+                title = '%s\n[%s]' % (data.component, data.filename)
+            
+            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, cb_min, cb_max, data.xlabel, data.ylabel, title)
             text = get_html('template_2d.html', json_str)
             
             for l in text.splitlines():
