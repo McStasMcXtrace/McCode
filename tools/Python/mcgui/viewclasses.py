@@ -5,7 +5,7 @@ import sys
 import os
 import re
 from widgets import *
-from PyQt4 import Qsci
+from PyQt5 import Qsci, QtWidgets
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
@@ -35,8 +35,8 @@ class McView(object):
         self.mw.raise_()
     
     def showErrorDialogue(self, title, message):
-        msg = QtGui.QMessageBox()
-        msg.setIcon(QtGui.QMessageBox.Critical)
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Critical)
         msg.setWindowTitle(title)
         msg.setText(message)
         msg.exec_()
@@ -120,7 +120,7 @@ class McView(object):
     ''' UI actions
     '''
     def showOpenInstrumentDlg(self, lookDir):
-        dlg = QtGui.QFileDialog()
+        dlg = QtWidgets.QFileDialog()
         dlg.setDirectory(lookDir)
         
         dlg.setNameFilters([mccode_config.configuration["MCCODE"]+" instruments (*.instr)", "All files (*)"]);
@@ -129,14 +129,14 @@ class McView(object):
             return dlg.selectedFiles()[0]
         
     def showOpenPlotDirDlg(self, lookDir):
-        dlg = QtGui.QFileDialog()
+        dlg = QtWidgets.QFileDialog()
         dlg.setDirectory(lookDir)
         dlg.ShowDirsOnly
         return dlg.getExistingDirectory(self.mw,"Open a folder")
         
     def showChangeWorkDirDlg(self, lookDir):
-        dlg = QtGui.QFileDialog()
-        dlg.setFileMode(QtGui.QFileDialog.Directory)
+        dlg = QtWidgets.QFileDialog()
+        dlg.setFileMode(QtWidgets.QFileDialog.Directory)
         dlg.setDirectory(lookDir)
         if dlg.exec_():
             return dlg.selectedFiles()[0]
@@ -152,20 +152,19 @@ class McView(object):
             return None, None, None
 
     def showNewInstrDialog(self, lookdir):
-        dlg = QtGui.QFileDialog()
+        dlg = QtWidgets.QFileDialog()
         dlg.setDirectory(lookdir)
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
-        return dlg.getSaveFileNameAndFilter(parent=None, caption='Create Instrument file...')[0]
-
+        return dlg.getSaveFileName(parent=None, caption='Create Instrument file...')[0]
 
     def showNewInstrFromTemplateDialog(self, instr):
-        dlg = QtGui.QFileDialog()
-        return dlg.getSaveFileNameAndFilter(parent=None, caption='Create Instrument file from Template...', directory=instr)[0]
+        dlg = QtWidgets.QFileDialog()
+        return dlg.getSaveFileName(parent=None, caption='Create Instrument file from Template...', directory=instr)[0]
 
     def showSaveAsDialog(self, instr):
-        dlg = QtGui.QFileDialog()
-        dlg.setFileMode(QtGui.QFileDialog.AnyFile)
-        return dlg.getSaveFileNameAndFilter(parent=None, caption='Save Instrument As...', directory=instr)[0]
+        dlg = QtWidgets.QFileDialog()
+        dlg.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        return dlg.getSaveFileName(parent=None, caption='Save Instrument As...', directory=instr)[0]
 
     def showConfigDialog(self):
         dlg = McConfigDialog()
@@ -177,13 +176,13 @@ class McView(object):
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(self.mw, prefix+'gui: About', text)
+        QtWidgets.QMessageBox.about(self.mw, prefix+'gui: About', text)
 
 
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
 '''
-class McMainWindow(QtGui.QMainWindow):
+class McMainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(McMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
@@ -220,13 +219,13 @@ class McMainWindow(QtGui.QMainWindow):
 
             for j in range(len(instrs)):
                 action = menu.addAction(instrs[j])
-                action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
+                action.triggered.connect(lambda item=instrs_fulpath[j]: callback(item))
 
     def add_conf_menu(self,label):
-        confmenu = QtGui.QAction(self)
+        confmenu = QtWidgets.QAction(self)
         self.ui.menuFile.addAction(confmenu)
-        confmenu.setText(QtGui.QApplication.translate("MainWindow", label, None, QtGui.QApplication.UnicodeUTF8))
-        confmenu.setToolTip(QtGui.QApplication.translate("MainWindow", "mccode " + label, None, QtGui.QApplication.UnicodeUTF8))
+        confmenu.setText(QtWidgets.QApplication.translate("MainWindow", label, None))
+        confmenu.setToolTip(QtWidgets.QApplication.translate("MainWindow", "mccode " + label, None))
         return confmenu
 
     def closeEvent(self, event):
@@ -237,7 +236,7 @@ class McMainWindow(QtGui.QMainWindow):
 
 ''' Code editor window widgets wrapper class
 '''
-class McCodeEditorWindow(QtGui.QMainWindow):
+class McCodeEditorWindow(QtWidgets.QMainWindow):
     volatileDataExists = False
     volatileDataTransition = QtCore.pyqtSignal(bool)
     saveRequest = QtCore.pyqtSignal(str)
@@ -247,7 +246,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         self.ui =  Ui_EditorWindow()
         self.ui.setupUi(self)
 
-        sheight = QtGui.QDesktopWidget().availableGeometry().height()
+        sheight = QtWidgets.QDesktopWidget().availableGeometry().height()
         if sheight < 1080:
             self.resize(920, sheight)
 
@@ -268,13 +267,13 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             #elif event.type()== QtCore.QEvent.WindowDeactivate:
             #    print "widget window has lost focus"
 
-            edt = QtGui.QLineEdit()
+            edt = QtWidgets.QLineEdit()
             edt = subject
             # handle focus on
             if event.type() == QtCore.QEvent.FocusIn:
                 if edt.text() == 'search...':
                     edt.setText('')
-                    font = QtGui.QFont()
+                    font = QtWidgets.QFont()
                     font.setItalic(False)
                     self.__edtSearch.setFont(font)
                     edt.setStyleSheet("color: black;")
@@ -282,7 +281,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             # handle focus off
             elif event.type() == QtCore.QEvent.FocusOut:
                 if edt.text() == '':
-                    font = QtGui.QFont()
+                    font = QtWidgets.QFont()
                     font.setItalic(True)
                     self.__edtSearch.setFont(font)
                     edt.setStyleSheet("color: grey;")
@@ -303,7 +302,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
 
             return False
 
-        self.__edtSearch = QtGui.QLineEdit()
+        self.__edtSearch = QtWidgets.QLineEdit()
         self.__edtSearch.setObjectName("edtSearch")
         font = QtGui.QFont()
         font.setItalic(True)
@@ -364,7 +363,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
 
             for j in range(len(comp_names)):
                 action = menu.addAction(comp_names[j])
-                action.triggered[()].connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
+                action.triggered.connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
 
         self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
 
@@ -387,7 +386,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ''' hook to display a "save changes?" dialog if there are unsaved changes
         '''
         if self.volatileDataExists:
-            reply = QtGui.QMessageBox.question(self,
+            reply = QtWidgets.QMessageBox.question(self,
                                                'The instrument has been modified.',
                                                'Do you want to save changes?',
                                                'Save',      # default button, reply == 0
@@ -553,7 +552,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         self.volatileDataTransition.connect(self.__handleVolatileDataPresent)
 
     def __handleComponentBrowser(self):
-        dlg = QtGui.QFileDialog()
+        dlg = QtWidgets.QFileDialog()
         dlg.setDirectory(mccode_config.configuration["MCCODE_LIB_DIR"])
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+"component files (*.comp)");
         if dlg.exec_():
@@ -586,7 +585,7 @@ Supports reuse of widgets from sim to sim, to retain input values.
 Works as a dialog - call _exec(), probe for return behavior and
 state to proceed.
 '''
-class McStartSimDialog(QtGui.QDialog):
+class McStartSimDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(McStartSimDialog, self).__init__(parent)
         self._last_inspect_compnames = None
@@ -728,7 +727,7 @@ class McStartSimDialog(QtGui.QDialog):
             x = i % 6
             y = i / 6
 
-            lbl = QtGui.QLabel(self.ui.gbxGrid)
+            lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             lbl.setObjectName("lbl" + name)
             lbl.setText(name + ':')
@@ -737,7 +736,7 @@ class McStartSimDialog(QtGui.QDialog):
             i = i + 1
             x = i % 6
 
-            edt = QtGui.QLineEdit(self.ui.gbxGrid)
+            edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + name)
             edt.setText(value)
@@ -765,7 +764,7 @@ Supports reuse of widgets from sim to sim, to retain input values.
 Works as a dialog - call _exec(), probe for return behavior and
 state to proceed.
 '''
-class McInsertComponentDialog(QtGui.QDialog):
+class McInsertComponentDialog(QtWidgets.QDialog):
     __standard_le_style = None
     def __init__(self, parent=None):
         super(McInsertComponentDialog, self).__init__(parent)
@@ -836,14 +835,14 @@ class McInsertComponentDialog(QtGui.QDialog):
 
             # parameter name label
             x = 0
-            lbl = QtGui.QLabel()
+            lbl = QtWidgets.QLabel()
             lbl.setObjectName("lbl" + par.par_name)
             lbl.setText(par.par_name + ':')
             self.ui.gridParameters.addWidget(lbl, y, x, 1, 1)
 
             # parameter value line-edit
             x = 1
-            edt = QtGui.QLineEdit()
+            edt = QtWidgets.QLineEdit()
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + par.par_name)
             edt.defval = par.default_value
@@ -859,7 +858,7 @@ class McInsertComponentDialog(QtGui.QDialog):
 
             # parameter docstring label
             x = 2
-            lbl = QtGui.QLabel()
+            lbl = QtWidgets.QLabel()
             lbl.setWordWrap(True)
             lbl.setObjectName("lbl" + par.par_name + "_doc")
             lbl.setText(par.doc_and_unit)
@@ -883,13 +882,13 @@ class McInsertComponentDialog(QtGui.QDialog):
         ''' we assume that w_edt has the member defval, which contains the default value '''
         def _wEventFilter(subject, object, event):
             ''' focus event handler '''
-            edt = QtGui.QLineEdit()
+            edt = QtWidgets.QLineEdit()
             edt = subject
             # handle focus on
             if event.type() == QtCore.QEvent.FocusIn:
                 if edt.text() == edt.defval:
                     edt.setText('')
-                    font = QtGui.QFont()
+                    font = QtWidgets.QFont()
                     font.setItalic(False)
                     edt.setFont(font)
                     edt.setStyleSheet("color: black;")
@@ -898,14 +897,14 @@ class McInsertComponentDialog(QtGui.QDialog):
             # handle focus off
             elif event.type() == QtCore.QEvent.FocusOut:
                 if edt.text() == '':
-                    font = QtGui.QFont()
+                    font = QtWidgets.QFont()
                     font.setItalic(True)
                     edt.setFont(font)
                     edt.setStyleSheet("color: grey;")
                     edt.setText(edt.defval)
                 elif edt.text() == edt.defval:
                     edt.setText(edt.defval)
-                    font = QtGui.QFont()
+                    font = QtWidgets.QFont()
                     font.setItalic(True)
                     edt.setFont(font)
                     edt.setStyleSheet("color: grey;")
@@ -913,7 +912,7 @@ class McInsertComponentDialog(QtGui.QDialog):
             return False
 
         # init
-        font = QtGui.QFont()
+        font = QtWidgets.QFont()
         font.setItalic(True)
         w.setStyleSheet("color: grey;")
         w.setFont(font)
@@ -992,7 +991,7 @@ class McInsertComponentDialog(QtGui.QDialog):
 
 ''' mcgui config widgets wrapper class
 '''
-class McConfigDialog(QtGui.QDialog):
+class McConfigDialog(QtWidgets.QDialog):
     __standard_le_style = None
     def __init__(self, parent=None):
         super(McConfigDialog, self).__init__(parent)

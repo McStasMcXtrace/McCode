@@ -11,7 +11,8 @@ import webbrowser
 import subprocess
 import time
 import re
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+import PyQt5
 from viewclasses import McView
 from datetime import datetime
 
@@ -47,7 +48,7 @@ class McMessageEmitter(QtCore.QObject):
         
         self.logMessageUpdate.emit(msg, err_msg)
         self.__msgLog.append(msg)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
 
 ''' Asynchronous process execution QThread
@@ -838,7 +839,7 @@ class McGuiAppController():
         subprocess.Popen(scriptfile, shell=True)
         
     def handleDefault(self):
-        reply = QtGui.QMessageBox.question(self.view.mw,
+        reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Define system default?',
                                            'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?',
                                            'Yes',       # default button, reply == 0
@@ -849,7 +850,7 @@ class McGuiAppController():
              
 
     def handleDefaultMcguiPy(self):
-        reply = QtGui.QMessageBox.question(self.view.mw,
+        reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Python ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?',
                                            'Yes',       # default button, reply == 0
@@ -859,7 +860,7 @@ class McGuiAppController():
             subprocess.Popen('postinst osx_app_default py', shell=True)
 
     def handleDefaultMcguiPl(self):
-        reply = QtGui.QMessageBox.question(self.view.mw,
+        reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Perl ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?',
                                            'Yes',       # default button, reply == 0
@@ -942,7 +943,7 @@ def main():
         mccode_config.load_user_config()
         mccode_config.check_env_vars()
                 
-        mcguiApp = QtGui.QApplication(sys.argv)
+        mcguiApp = PyQt5.QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
         
         sys.exit(mcguiApp.exec_())
