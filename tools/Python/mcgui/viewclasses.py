@@ -208,6 +208,13 @@ class McMainWindow(QtWidgets.QMainWindow):
             - callback (func(str)): function which takes a single string parameter, call with full path
                                     name of selected instrument
         '''
+        class InfoHider:
+            def __init__(self, itm, cb):
+                self.itm = itm
+                self.cb = cb
+            def handle(self):
+                self.cb(self.itm)
+        
         self.ui.menuNew_From_Template.clear()
 
         for i in range(len(args)):
@@ -219,8 +226,11 @@ class McMainWindow(QtWidgets.QMainWindow):
 
             for j in range(len(instrs)):
                 action = menu.addAction(instrs[j])
-                action.triggered.connect(lambda item=instrs_fulpath[j]: callback(item))
-
+                
+                h = InfoHider(instrs_fulpath[j], callback)
+                action.h = h
+                action.triggered.connect(h.handle)
+    
     def add_conf_menu(self,label):
         confmenu = QtWidgets.QAction(self)
         self.ui.menuFile.addAction(confmenu)
@@ -273,7 +283,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             if event.type() == QtCore.QEvent.FocusIn:
                 if edt.text() == 'search...':
                     edt.setText('')
-                    font = QtWidgets.QFont()
+                    font = QtGui.QFont()
                     font.setItalic(False)
                     self.__edtSearch.setFont(font)
                     edt.setStyleSheet("color: black;")
@@ -281,7 +291,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             # handle focus off
             elif event.type() == QtCore.QEvent.FocusOut:
                 if edt.text() == '':
-                    font = QtWidgets.QFont()
+                    font = QtGui.QFont()
                     font.setItalic(True)
                     self.__edtSearch.setFont(font)
                     edt.setStyleSheet("color: grey;")
@@ -351,6 +361,13 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
     def initComponentMenu(self, args):
         ''' args - [category, comp_names[], comp_parsers[]]
         '''
+        class InfoHider:
+            def __init__(self, comp_parser, cb):
+                self.comp_parser = comp_parser
+                self.cb = cb
+            def handle(self):
+                self.cb(self.comp_parser)
+        
         all_comp_names = []
         for i in range(len(args)):
             category = args[i][0]
@@ -362,8 +379,12 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             menu = self.ui.menuInsert.addMenu(category)
 
             for j in range(len(comp_names)):
+                
+                h = InfoHider(comp_parsers[j], self.__handleComponentClicked)
                 action = menu.addAction(comp_names[j])
-                action.triggered.connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
+                action.h = h
+                action.triggered.connect(h.handle)
+                #action.triggered.connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
 
         self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
 
@@ -597,7 +618,6 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxSimTrace.currentIndexChanged.connect(lambda i: self._set_inspect_visible(i))
     
     def set_components(self, compnames):
-        
         if compnames == self._last_inspect_compnames:
             return
         self._last_inspect_compnames = compnames
@@ -888,7 +908,7 @@ class McInsertComponentDialog(QtWidgets.QDialog):
             if event.type() == QtCore.QEvent.FocusIn:
                 if edt.text() == edt.defval:
                     edt.setText('')
-                    font = QtWidgets.QFont()
+                    font = QtGui.QFont()
                     font.setItalic(False)
                     edt.setFont(font)
                     edt.setStyleSheet("color: black;")
@@ -897,14 +917,14 @@ class McInsertComponentDialog(QtWidgets.QDialog):
             # handle focus off
             elif event.type() == QtCore.QEvent.FocusOut:
                 if edt.text() == '':
-                    font = QtWidgets.QFont()
+                    font = QtGui.QFont()
                     font.setItalic(True)
                     edt.setFont(font)
                     edt.setStyleSheet("color: grey;")
                     edt.setText(edt.defval)
                 elif edt.text() == edt.defval:
                     edt.setText(edt.defval)
-                    font = QtWidgets.QFont()
+                    font = QtGui.QFont()
                     font.setItalic(True)
                     edt.setFont(font)
                     edt.setStyleSheet("color: grey;")
@@ -912,7 +932,7 @@ class McInsertComponentDialog(QtWidgets.QDialog):
             return False
 
         # init
-        font = QtWidgets.QFont()
+        font = QtGui.QFont()
         font.setItalic(True)
         w.setStyleSheet("color: grey;")
         w.setFont(font)
