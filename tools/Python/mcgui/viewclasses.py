@@ -272,11 +272,6 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         def __sbEventFilter(subject, object, event):
             ''' focus event handler '''
 
-            #if event.type() == QtCore.QEvent.WindowActivate:
-            #    print "widget window has gained focus"
-            #elif event.type()== QtCore.QEvent.WindowDeactivate:
-            #    print "widget window has lost focus"
-
             edt = QtWidgets.QLineEdit()
             edt = subject
             # handle focus on
@@ -384,7 +379,6 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                 action = menu.addAction(comp_names[j])
                 action.h = h
                 action.triggered.connect(h.handle)
-                #action.triggered.connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
 
         self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
 
