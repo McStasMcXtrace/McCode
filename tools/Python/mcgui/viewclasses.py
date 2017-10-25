@@ -402,19 +402,18 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         '''
         if self.volatileDataExists:
             reply = QtWidgets.QMessageBox.question(self,
-                                               'The instrument has been modified.',
-                                               'Do you want to save changes?',
-                                               'Save',      # default button, reply == 0
-                                               'Discard',   # reply == 1
-                                               'Cancel')    # reply == 2
-            if reply == 0:
+                                                   'The instrument has been modified.',
+                                                   'Do you want to save changes?',
+                                                   QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel,
+                                                   QtWidgets.QMessageBox.Cancel)
+            if reply == QtWidgets.QMessageBox.Save:
                 self.saveRequest.emit(self.__scintilla.text())
                 self.assumeDataSaved()
                 event.accept()
-            elif reply == 1:
+            elif reply == QtWidgets.QMessageBox.Discard:
                 self.assumeDataSaved()
                 event.accept()
-            elif reply == 2:
+            elif reply == QtWidgets.QMessageBox.Cancel:
                 event.ignore()
         else:
             event.accept()

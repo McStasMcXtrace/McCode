@@ -746,7 +746,7 @@ class McGuiAppController():
             return can_throw_func()
         except Exception as e:
             self.emitter.status("Instrument not saved")
-            self.view.showErrorDialogue("Error: Instrument not saved", "Instrument files should not be saved in directories, whose paths containing white-spaces.")
+            self.view.showErrorDialogue("Error: Instrument not saved", "Instrument files or paths should not contain white-spaces.")
             if raise_err:
                 raise e
             return False
