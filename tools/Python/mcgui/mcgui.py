@@ -52,7 +52,7 @@ class McMessageEmitter(QtCore.QObject):
 
 
 ''' Asynchronous process execution QThread
-'''        
+'''
 class McRunQThread(QtCore.QThread):
     thread_exception = QtCore.pyqtSignal(str)
     error = QtCore.pyqtSignal(str)
@@ -331,7 +331,7 @@ class McGuiState(QtCore.QObject):
             return False
     
     def interrupt(self):
-        # interrupt any running simulation
+        # interrupts any running simulation
         if self.__runthread:
             if self.__runthread.isRunning():
                 self.__runthread.terminate()
@@ -432,7 +432,6 @@ class McGuiState(QtCore.QObject):
             self.__runthread.cmd = runstr
             self.__runthread.cwd = os.path.dirname(self.__instrFile)
             self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
-            self.__runthread.terminated.connect(self.__runTerminated)
             self.__runthread.thread_exception.connect(handleExceptionMsg)
             self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
             self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
@@ -446,22 +445,11 @@ class McGuiState(QtCore.QObject):
             subprocess.Popen(runstr, shell=True)
 
     def __runFinished(self, process_returncode):
-        if not self.__interrupted:
-            self.__fireSimStateUpdate()
-            if process_returncode == 0:
-                self.__emitter.message('simulation done')
-            self.__emitter.message('')
-            self.__emitter.status('')
-        else: 
-            self.__fireSimStateUpdate()
-            self.__emitter.message('simulation interrupted')
-            self.__emitter.message('')
-            self.__emitter.status('Simulation interrupted')
-        self.__interrupted = False
-    
-    __interrupted = False
-    def __runTerminated(self):
-        self.__interrupted = True
+        self.__fireSimStateUpdate()
+        if process_returncode == 0:
+            self.__emitter.message('simulation done')
+        self.__emitter.message('')
+        self.__emitter.status('')
     
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
@@ -655,7 +643,6 @@ class McGuiAppController():
         self._runthread.cmd = cmd
         self._runthread.cwd = cwd
         self._runthread.finished.connect(lambda: None)
-        self._runthread.terminated.connect(lambda: None)
         self._runthread.thread_exception.connect(handleExceptionMsg)
         self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
         self._runthread.message.connect(lambda msg: self.emitter.message(msg))
