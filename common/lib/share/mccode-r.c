@@ -930,16 +930,15 @@ static void mcruninfo_out(char *pre, FILE *f)
 
   /* output parameter string ================================================ */
   for(i = 0; i < mcnumipar; i++) {
-    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
-      if (mcinputtable[i].par == NULL)
-        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
-      else
-        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-
-      fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
-    }
+      if (mcinputtable[i].par){
+          (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+          if(strlen(Parameters)){
+              fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
+          }else{
+              fprintf(f, "%sParam: %s\n", pre, mcinputtable[i].name);
+          }
+      } 
   }
-  fflush(f);
 } /* mcruninfo_out */
 
 /*******************************************************************************
