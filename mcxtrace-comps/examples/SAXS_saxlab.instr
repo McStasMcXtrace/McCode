@@ -30,7 +30,7 @@
 *
 * %Parameters
 * Gamma:    [deg] Nominal mirror glancing  angle
-* S1:       [m]   Distance from the source to the multilayer’s surface
+* S1:       [m]   Distance from the source to the multilayer's surface
 * S2:       [m]   Focal distance of the multilayer
 * L:        [m]   Distance between two mirrors
 * Energy:   [keV] Primary energy of the photon beam
