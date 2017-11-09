@@ -844,7 +844,7 @@ function data = mcplot_display(data, fig)
       'Callback',reset_callback);
       hm = uicontextmenu;
     else
-      hm = uimenu(gcf, 'Label','McCode','Accelerator','m');
+      hm = uimenu(gcf, 'Label','McCode','Accelerator','m', 'Tag', 'McCode_menu');
     end
     uimenu(hm, 'Label',['Save as ' filename '.png'], 'Callback', ...
       [ 'print(''-dpng'',''-noui'', ''' filename '.png''); disp(''Exported as ' filename '.png'')' ]);
@@ -871,6 +871,15 @@ function data = mcplot_display(data, fig)
   if isfield(data,'subplot'), data=rmfield(data,'subplot'); end
   % store data into plot UserData
   set(h, 'UserData', data, 'Tag',[ 'mcplot_data_' data.filename ]);
+  
+  % add an entry in the 'McCode' figure menu
+  hm = findobj(gcf, 'Tag', 'McCode_menu');
+  if isempty(hm) 
+    hm = uimenu(gcf, 'Label','McCode','Accelerator','m', 'Tag', 'McCode_menu');
+  end
+  uimenu(hm, 'Label',[ 'Open ' data.component ], 'Callback', ...
+      [ 'h=findobj(gcf, ''Tag'',[ ''mcplot_data_' data.filename ''' ]);' ...
+        'h=get(h,''userdata''); h.filename = ''' data.component '''; mcplot(h);' ]);
 
   % update data structure
   data.handle = h;
