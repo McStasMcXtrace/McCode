@@ -132,6 +132,12 @@ then
     PERLVER="SYSTEM"
     TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
     SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+elif [ "$OSXVER" == "13" ];
+then
+    # 10.13 aka High Sierra
+    PERLVER="SYSTEM"
+    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
 else
     echo "Your macOS is version $OSXVER which is unfortunately not supported for the McCode perl tools..."
     exit 1
