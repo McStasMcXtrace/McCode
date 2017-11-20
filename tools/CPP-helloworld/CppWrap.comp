@@ -1,0 +1,56 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: CppWrap
+*
+* %I
+*
+* Written by: Peter Willendrup
+* Date: June 2017
+* Origin: DTU
+*
+* Simple example of wrapping / calling a c++ library from McStas, Hello World style
+*
+* %D
+* Compile the enclosed snippets this way:
+*
+* g++ -fpic -shared hello.cpp -o libhello.so
+* g++ -fpic -shared hellowrap.cpp -L. -lhello -o libhellowrap.so
+*
+*
+* %P
+* Input parameters:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT CppWrap
+DEFINITION PARAMETERS (string something="default")
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+DEPENDENCY "-L. -lhellowrap"
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+INITIALIZE
+%{
+#include "hellowrap.h"
+  sayHi(something);
+%}
+
+TRACE
+%{
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END
