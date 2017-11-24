@@ -52,14 +52,14 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1: [m]           Width at the guide entry
-* h1: [m]           Height at the guide entry
-* linw     [m]    distance from 1st focal point to real guide entry - left and right horizontal mirrors
-* loutw    [m]    distance from real guide exit to 2nd focal point - left and right horizontal mirrors
-* l: [m]            length of guide
+* w1: [m]      Width at the guide entry
+* h1: [m]      Height at the guide entry
+* linw: [m]    distance from 1st focal point to real guide entry - left and right horizontal mirrors
+* loutw: [m]   distance from real guide exit to 2nd focal point - left and right horizontal mirrors
+* l: [m]       length of guide
 * linh: [m]         distance from 1st focal point to real guide entry - top and bottom vertical mirrors
 * louth: [m]        distance from real guide exit to 2nd focal point - top and bottom vertical mirrors
-* option   [str]  define the input function for the curve of the guide walls options are: "elliptical"  - define elliptical function of guide walls "parabolical" - define parabolical function of guide walls "straight"    - define a straight elements guide"file=[filename]" - read in ASC-file with arbitrary definition for the curve of the guide walls
+* option: [str]   define the input function for the curve of the guide walls options are: "elliptical" - define elliptical function of guide walls "parabolical" - define parabolical function of guide walls "straight"    - define a straight elements guide"file=[filename]" - read in ASC-file with arbitrary definition for the curve of the guide walls
 * R0: [1]           Low-angle reflectivity
 * Qcx: [AA-1]       Critical scattering vector for left and right vertical mirrors in each channel
 * Qcy: [AA-1]       Critical scattering vector for top and bottom mirrors
