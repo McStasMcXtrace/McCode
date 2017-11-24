@@ -8,7 +8,7 @@
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
 * Version: $Revision$
-* Origin: McStas release
+* Origin: McXtrace release 1.2
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
 * Modified by: KL,    22.05.03   (background)
@@ -16,7 +16,8 @@
 * Modified by: PW, LC 04.10.05   (Merge with Chapon Powder_multi)
 * Modified by: PW, KL 05.06.07   (Concentricity)
 * Modified by: EF,    17.10.08   (added any shape sample geometry)
-* Modified for X-ray use: EK, 28.10.10
+* Modified by: EK,    28.10.10   (for X-ray use)
+* Modified by: EK,               (Added options for incoherent scattering)
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
