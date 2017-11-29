@@ -1,0 +1,51 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: Peter Willendrup
+* Date: June 2017
+* Origin: DTU
+* %INSTRUMENT_SITE: Templates
+*
+* Simple test instument example of wrapping / calling a c++ library from McStas, Hello World style
+*
+* %D
+* Compile the enclosed snippets this way:
+*
+* g++ -fpic -shared hello.cpp -o libhello.so
+* g++ -fpic -shared hellowrap.cpp -L. -lhello -o libhellowrap.so
+*
+* - then compile the instrument as usual.
+*
+* Example: mcrun Test_CppWrap.instr saythis="HelloMcStasWorld"
+*
+* %P
+* saythis: [str] String to be printed from CppWrap initialize section
+*
+* %L
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_CppWrap(string saythis="HelloWorld")
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT Wrap = CppWrap(something=saythis)
+AT (0, 0, 0) ABSOLUTE
+
+FINALLY
+%{
+%}
+
+END
