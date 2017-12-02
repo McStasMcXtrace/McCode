@@ -11,7 +11,8 @@ import webbrowser
 import subprocess
 import time
 import re
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+import PyQt5
 from viewclasses import McView
 from datetime import datetime
 
@@ -47,11 +48,11 @@ class McMessageEmitter(QtCore.QObject):
         
         self.logMessageUpdate.emit(msg, err_msg)
         self.__msgLog.append(msg)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
 
 ''' Asynchronous process execution QThread
-'''        
+'''
 class McRunQThread(QtCore.QThread):
     thread_exception = QtCore.pyqtSignal(str)
     error = QtCore.pyqtSignal(str)
@@ -330,7 +331,7 @@ class McGuiState(QtCore.QObject):
             return False
     
     def interrupt(self):
-        # interrupt any running simulation
+        # interrupts any running simulation
         if self.__runthread:
             if self.__runthread.isRunning():
                 self.__runthread.terminate()
@@ -431,7 +432,6 @@ class McGuiState(QtCore.QObject):
             self.__runthread.cmd = runstr
             self.__runthread.cwd = os.path.dirname(self.__instrFile)
             self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
-            self.__runthread.terminated.connect(self.__runTerminated)
             self.__runthread.thread_exception.connect(handleExceptionMsg)
             self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
             self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
@@ -445,22 +445,11 @@ class McGuiState(QtCore.QObject):
             subprocess.Popen(runstr, shell=True)
 
     def __runFinished(self, process_returncode):
-        if not self.__interrupted:
-            self.__fireSimStateUpdate()
-            if process_returncode == 0:
-                self.__emitter.message('simulation done')
-            self.__emitter.message('')
-            self.__emitter.status('')
-        else: 
-            self.__fireSimStateUpdate()
-            self.__emitter.message('simulation interrupted')
-            self.__emitter.message('')
-            self.__emitter.status('Simulation interrupted')
-        self.__interrupted = False
-    
-    __interrupted = False
-    def __runTerminated(self):
-        self.__interrupted = True
+        self.__fireSimStateUpdate()
+        if process_returncode == 0:
+            self.__emitter.message('simulation done')
+        self.__emitter.message('')
+        self.__emitter.status('')
     
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
@@ -654,7 +643,6 @@ class McGuiAppController():
         self._runthread.cmd = cmd
         self._runthread.cwd = cwd
         self._runthread.finished.connect(lambda: None)
-        self._runthread.terminated.connect(lambda: None)
         self._runthread.thread_exception.connect(handleExceptionMsg)
         self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
         self._runthread.message.connect(lambda msg: self.emitter.message(msg))
@@ -758,7 +746,7 @@ class McGuiAppController():
             return can_throw_func()
         except Exception as e:
             self.emitter.status("Instrument not saved")
-            self.view.showErrorDialogue("Error: Instrument not saved", "Instrument files should not be saved in directories, whose paths containing white-spaces.")
+            self.view.showErrorDialogue("Error: Instrument not saved", "Instrument files or paths should not contain white-spaces.")
             if raise_err:
                 raise e
             return False
@@ -838,7 +826,7 @@ class McGuiAppController():
         subprocess.Popen(scriptfile, shell=True)
         
     def handleDefault(self):
-        reply = QtGui.QMessageBox.question(self.view.mw,
+        reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Define system default?',
                                            'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?',
                                            'Yes',       # default button, reply == 0
@@ -849,7 +837,7 @@ class McGuiAppController():
              
 
     def handleDefaultMcguiPy(self):
-        reply = QtGui.QMessageBox.question(self.view.mw,
+        reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Python ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?',
                                            'Yes',       # default button, reply == 0
@@ -859,7 +847,7 @@ class McGuiAppController():
             subprocess.Popen('postinst osx_app_default py', shell=True)
 
     def handleDefaultMcguiPl(self):
-        reply = QtGui.QMessageBox.question(self.view.mw,
+        reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Perl ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?',
                                            'Yes',       # default button, reply == 0
@@ -942,7 +930,7 @@ def main():
         mccode_config.load_user_config()
         mccode_config.check_env_vars()
                 
-        mcguiApp = QtGui.QApplication(sys.argv)
+        mcguiApp = PyQt5.QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
         
         sys.exit(mcguiApp.exec_())
