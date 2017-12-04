@@ -11,7 +11,7 @@ from datetime import datetime
 import numpy as np
 from enum import Enum
 
-import PyQt4
+import PyQt5
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample

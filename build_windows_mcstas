@@ -39,8 +39,9 @@ if [ "x$2" != "x" ]; then
 	wget http://ppds.mccode.org/PPDs.zip
     fi
     if [ ! -f miniconda3.zip ]; then
-	echo Sorry! I need to download a miniconda3 for embedding - will take some time...
-	wget http://support.mccode.org/windows/miniconda3.zip
+	echo Sorry! I need to download a miniconda3-qt5 for embedding - will take some time...
+	wget http://support.mccode.org/windows/miniconda3-qt5.zip
+	mv miniconda3-qt5.zip miniconda3.zip
     fi
     cd ..
 

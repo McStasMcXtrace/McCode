@@ -575,9 +575,13 @@ def get_instr_site_fromtxt(text):
 
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
-    f = open(instr_file, 'rb')
-    text = f.read().decode()
-    f.close()
+    try:
+        f = open(instr_file, 'rb')
+        text = f.read().decode()
+        f.close()
+    except:
+        text = '';
+        print("WARNING: \n  Attempt to parse instrument header faliled for: \n %s" % instr_file)
     
     site = '("%INSTRUMENT_SITE:" tag not found)'
     

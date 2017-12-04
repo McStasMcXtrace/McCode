@@ -20,7 +20,7 @@ canrun() {
         exit 127;
     fi
 
-    modules="PyQt4.Qsci"
+    modules="PyQt5.Qsci"
     cmd=""
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
