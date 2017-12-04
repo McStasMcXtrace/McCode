@@ -479,6 +479,7 @@ class McGuiState(QtCore.QObject):
                 s[0]=""
                 s = ' '.join(s)
                 s = s.split('=')
+                if s[1].endswith("NULL"): s[1] = ""
                 params.append(s)
         
         return params
