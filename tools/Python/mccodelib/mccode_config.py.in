@@ -71,7 +71,6 @@ def load_user_config():
     userconfig = os.path.join(userdir,"mccode_config.json")
     
     if not os.path.isfile(userconfig):
-        print("user config does not exist: %s" % userconfig)
         return
     
     print("loading user configuration from " + userconfig)
