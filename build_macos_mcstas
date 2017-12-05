@@ -57,7 +57,7 @@ echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo 
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda config --add channels conda-forge
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install python=3.4 pyqt=4.11.4 qscintilla2 pyqtgraph pyaml gcc openmpi ply -y -c conda-forge
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install pyqt qscintilla2 pyqtgraph pyaml gcc openmpi ply
 
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin

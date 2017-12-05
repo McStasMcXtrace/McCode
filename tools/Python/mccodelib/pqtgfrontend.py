@@ -6,7 +6,7 @@ import sys
 import math
 import subprocess
 
-import PyQt4
+import PyQt5
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 

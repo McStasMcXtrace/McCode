@@ -931,12 +931,14 @@ static void mcruninfo_out(char *pre, FILE *f)
   /* output parameter string ================================================ */
   for(i = 0; i < mcnumipar; i++) {
       if (mcinputtable[i].par){
-          (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-          if(strlen(Parameters)){
-              fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
-          }else{
-              fprintf(f, "%sParam: %s\n", pre, mcinputtable[i].name);
-          }
+	/* Parameters with a default value */
+	if(mcinputtable[i].val && strlen(mcinputtable[i].val)){
+	  (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+	  fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
+        /* ... and those without */
+	}else{
+	  fprintf(f, "%sParam: %s=NULL\n", pre, mcinputtable[i].name);
+	}
       } 
   }
 } /* mcruninfo_out */

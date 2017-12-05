@@ -184,7 +184,7 @@ sub simulation_dialog {
             }
             # entry text field
             $si{'Params'}{$p} = "" unless defined($si{'Params'}{$p});
-            if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p}))
+            if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p}) && not $ii->{'Params'}{$p} eq 'NULL')
             { $si{'Params'}{$p} = $ii->{'Params'}{$p}; }
             if ($typeabbrev{$type} eq "S" &&
             $si{'Params'}{$p} !~ /\".*\"/ &&
