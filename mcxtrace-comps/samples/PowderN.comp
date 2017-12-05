@@ -730,7 +730,7 @@ INITIALIZE
     else p_transmit=1-2*p_inc;
   } else if (p_inc + p_transmit == 1) {
     MPI_MASTER(
-    printf("PowderN: %s: You have requested all neutrons be attenuated\n"
+    printf("PowderN: %s: You have requested all photons be attenuated\n"
            "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
     );
   }
@@ -1132,7 +1132,7 @@ TRACE
         line_info.type = 't';
       }
       p *= pmul;
-    } /* Neutron leaving since it has passed already */
+    } /* Photon leaving since it has passed already */
   } /* else transmit non interacting xrays */
 
 %}
