@@ -36,6 +36,7 @@ Source: "Support\PPDs.zip"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "postsetup.bat"; DestDir: "{tmp}"
+Source: "python-install.bat"; DestDir: "{tmp}"
 Source: "dist\mcstas-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-comps-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-manuals-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
@@ -49,10 +50,10 @@ Source: "dist\mcstas-tools-matlab-mcplot-NSIS-@VERSION@-mingw32.exe"; DestDir: "
 Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
-Source: "Support\miniconda3.zip"; DestDir: "{tmp}"
-
+Source: "Support\Miniconda3-latest-Windows-x86.exe"; DestDir: "{tmp}"
 [Run]
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
+Filename: "{tmp}\python-install.bat"
 Filename: "{tmp}\postsetup.bat"
 Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
@@ -70,6 +71,5 @@ Filename: "{tmp}\mcstas-tools-matlab-mcplot-NSIS-@VERSION@-mingw32.exe"; Paramet
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-mantid-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
-Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\miniconda3.zip"; WorkingDir: "c:\mcstas-@VERSION@\"
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
