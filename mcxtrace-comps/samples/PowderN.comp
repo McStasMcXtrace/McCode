@@ -780,9 +780,9 @@ INITIALIZE
     printf("PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
   );
 
-  if (line_info.V_0 > 0 && p_inc && !line_info.sigma_i) {
+  if (line_info.V_0 > 0 && p_inc && (!line_info.sigma_i || !material)) {
   MPI_MASTER(
-    printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not set a material datafile (\'%s\') nor defined sigma_inc!\n", NAME_CURRENT_COMP, material);
   );
   }
 
