@@ -3590,7 +3590,7 @@ mcparseoptions(int argc, char *argv[])
 #ifdef USE_MPI
   if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
 #endif
-  if (usedir && strlen(usedir)) mcuse_dir(usedir);
+  if (usedir && strlen(usedir) && !mcdisable_output_files) mcuse_dir(usedir);
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
