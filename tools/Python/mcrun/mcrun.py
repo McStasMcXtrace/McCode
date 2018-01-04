@@ -205,6 +205,7 @@ def get_parameters(options):
     ''' Get fixed and scan/optimise parameters '''
     fixed_params = {}
     intervals = {}
+
     for param in options.params:
         if '=' in param:
             key, value = param.split('=', 1)
@@ -263,8 +264,15 @@ def main():
     # Set path of instrument-file after locating it
     options.instr = find_instr_file(args[0])
 
-    # Clean out quotes (perl mcgui requires this step)
-    options.params = map(clean_quotes, args[1:])
+    if options.param:
+        # load params from file 
+        text = open(options.param).read()
+        import re
+        params = re.findall('[^=^\s^t]+=[^=^\s^t]+', text)
+        options.params = map(clean_quotes, params)
+    else:
+        # Clean out quotes (perl mcgui requires this step)
+        options.params = map(clean_quotes, args[1:])
 
     # On windows, ensure that backslashes in the filename are escaped
     if sys.platform == "win32":
