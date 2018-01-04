@@ -515,6 +515,14 @@ def parse_define_comp(text):
     
     return (name, defpar, setpar, outpar)
 
+def clean_instr_def(defline):
+    ''' takes a typical output of read_define_instr() and extracts the "params string" for use with parse_params '''
+    m = re.search('\(([^(^)]*)\)', defline)
+    try:
+        return m.group(1)
+    except:
+        return None
+
 def parse_params(params_line):
     ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
     params = []
