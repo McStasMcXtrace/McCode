@@ -260,14 +260,16 @@ def main():
     # Parse options
     (options, args) = parser.parse_args()
 
+    # Write user config file and exit
+    if options.write_user_config:
+        mccode_config.save_user_config()
+        quit()
+
+    
     # Extract instrument and parameters
     if len(args) == 0:
         print(parser.get_usage())
         parser.exit()
-
-    if options.write_user_config:
-        mccode_config.save_user_config()
-        quit()
 
     # Set path of instrument-file after locating it
     options.instr = find_instr_file(args[0])
