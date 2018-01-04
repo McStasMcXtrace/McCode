@@ -93,6 +93,10 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='enable verbose output')
 
+    add('--write-user-config',
+        action='store_true', default=False,
+        help='generate a user config file')
+
     parser.add_option_group(opt)
 
 
@@ -260,6 +264,10 @@ def main():
     if len(args) == 0:
         print(parser.get_usage())
         parser.exit()
+
+    if options.write_user_config:
+        mccode_config.save_user_config()
+        quit()
 
     # Set path of instrument-file after locating it
     options.instr = find_instr_file(args[0])
