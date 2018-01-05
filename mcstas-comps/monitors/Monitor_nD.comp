@@ -448,7 +448,7 @@ TRACE
     if (pp==0.0)
     { ABSORB;
     }
-    else
+    else if(pp==1)
     {
       SCATTER;
     }
