@@ -48,7 +48,8 @@ class McMessageEmitter(QtCore.QObject):
         
         self.logMessageUpdate.emit(msg, err_msg)
         self.__msgLog.append(msg)
-        QtWidgets.QApplication.processEvents()
+        # NOTE: calling processEvents too often can lead to some sort of stack overflow, but side effects are to be investigated
+        #QtWidgets.QApplication.processEvents()
 
 
 ''' Asynchronous process execution QThread
