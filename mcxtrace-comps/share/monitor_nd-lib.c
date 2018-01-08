@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McXtrac, x-ray-tracing package
+* McXtrace, x-ray-tracing package
 *         Copyright 1997-2013, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -743,13 +743,15 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
   } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
-/* Monitor_nD_Trace: this routine is used to monitor one propagating photon  */
+/* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
+/* return values: 0=photon was absorbed, -1=photon was outside bounds, 1=photon was measured*/
 /* ========================================================================= */
 
-double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
+int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
 {
 
   double  XY=0, pp=0;
+  int     retval;
   long    i =0, j =0;
   double  Coord[MONnD_COORD_NMAX];
   long    Coord_Index[MONnD_COORD_NMAX];
@@ -1012,8 +1014,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
               if (Coord_Index[i] >= Vars->Coord_Bin[i]) Coord_Index[i] = Vars->Coord_Bin[i] - 1;
               if (Coord_Index[i] < 0) Coord_Index[i] = 0;
             }
-            if (0 > Coord_Index[i] || Coord_Index[i] >= Vars->Coord_Bin[i])
-              outsidebounds=1;
+            //if (0 > Coord_Index[i] || Coord_Index[i] >= Vars->Coord_Bin[i])
+            //  outsidebounds=1;
           } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
         }
         
@@ -1042,11 +1044,13 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             Vars->Mon2D_p[i][j] += pp;
             Vars->Mon2D_p2[i][j] += pp*pp;
           }
+          retval=1;
         } else {
+          retval=-1;
           outsidebounds=1; 
-          if (Vars->Flag_Absorb) pp=0;
+          if (Vars->Flag_Absorb) retval=0;
         }
-      } else if (!outsidebounds) {
+      } else {
         /* 1D and n1D case : Vars->Flag_Multiple */
         /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors (intensity is not included) */
           
@@ -1057,10 +1061,12 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
               Vars->Mon2D_N[i-1][j]++;
               Vars->Mon2D_p[i-1][j]  += pp;
               Vars->Mon2D_p2[i-1][j] += pp*pp;
-            } 
+            }
+            retval=1;
           } else { 
-            outsidebounds=1; 
-            if (Vars->Flag_Absorb) { pp=0; break; }
+            outsidebounds=1;
+            retval=-1;
+            if (Vars->Flag_Absorb) { retval=0; break; }
           }
         }
       }
@@ -1086,8 +1092,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
   Vars->Nsum++;
   Vars->psum  += pp;
   Vars->p2sum += pp*pp;
-  
-  return pp;
+
+  return retval;
 } /* end Monitor_nD_Trace */
 
 /* ========================================================================= */
