@@ -79,16 +79,17 @@ configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-matplotlib" @ON
 
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
+  set(BINS )
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-matplotlib")
+  set(BINS )
 endif()
 
 
 if(WINDOWS)
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -98,8 +99,9 @@ endif()
 
 if(NOT WINDOWS)
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
