@@ -223,75 +223,36 @@ class McGuiState(QtCore.QObject):
         try:
             # generate mcstas .c file from instrument
             nf = os.path.basename(self.__instrFile)
-            cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
-            process = subprocess.Popen(cmd, 
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE,
-                                       shell=True,
-                                       universal_newlines=True,
-                                       cwd=os.path.dirname(self.__instrFile))
-            self.__emitter.status('Compiling instrument to c ...')
-            self.__emitter.message('Compiling instrument to c ...')
-            self.__emitter.message(cmd)
-            
-            # read program output while the process is active
-            while process.poll() == None:
-                stdoutdata = process.stdout.readline().rstrip('\n')
-                self.__emitter.message(stdoutdata)
-                stderrdata = process.stderr.readline().rstrip('\n')
-                self.__emitter.message(stderrdata, err_msg=True)
-                time.sleep(0.05)
-            # flush until EOF
-            for stdoutdata in process.stdout:
-                self.__emitter.message(stdoutdata.rstrip('\n'))
-            for stderrdata in process.stderr:
-                self.__emitter.message(stderrdata.rstrip('\n'), err_msg=True)
-            
             # paths and filenames
             spl = os.path.splitext(os.path.basename(str(nf)))
             basenoext = spl[0]
             cf = basenoext + '.c'
-            
-            # check
-            if os.path.isfile(cf):
-                self.__cFile = cf
-                self.__emitter.message('wrote ' + self.__cFile)
-            else:
-                raise Exception('C file not found')
-            
-            # look for CFLAGS in the generated C code
-            cflags = mccode_config.compilation["CFLAGS"] 
-            ccode = open(self.__cFile)
-            for line in ccode:
-                line = line.rstrip()
-                if re.search('CFLAGS=', line) :
-                    label, flags = line.split('=', 1)
-                    MCCODE_LIB = mccode_config.configuration["MCCODE_LIB_DIR"]
-                    # On windows, replace \ by / for safety
-                    if os.name == 'nt':
-                        MCCODE_LIB = re.sub(r'\\','/', MCCODE_LIB)
-                    flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
-                    flags = flags.split(' ')
-                    cflags = cflags + ' '.join(flags)
+            bf = basenoext + '.' + mccode_config.platform["EXESUFFIX"]
 
-            
-            # compile binary from mcstas .c file 
-            bf = basenoext + '.' + mccode_config.platform["EXESUFFIX"] 
+            # Honour CFLAGS etc. in terminal environment:
+            os.environ[mccode_config.configuration["MCCODE"].upper() + "_OVERRIDE"] = mccode_config.configuration["MCCODE_LIB_DIR"]
+            os.environ[mccode_config.configuration["MCCODE"].upper() + "_CFLAGS_OVERRIDE"] = mccode_config.compilation["CFLAGS"]
+            os.environ[mccode_config.configuration["MCCODE"].upper() + "_CC_OVERRIDE"] = mccode_config.compilation["CC"]
+            os.environ[mccode_config.configuration["MCCODE"].upper() + "_MPICC_OVERRIDE"] = mccode_config.compilation["MPICC"]
+
             if mpi:
-                cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["MPIFLAGS"] + ' ' + cflags
+                cmd = mccode_config.configuration["MCRUN"] + ' -c --mpi=1 ' + nf + ' -n0 '
             else:
-                cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags
-           
+                cmd = mccode_config.configuration["MCRUN"] + ' -c ' + nf + ' -n0 '
             process = subprocess.Popen(cmd, 
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=True,
                                        universal_newlines=True,
                                        cwd=os.path.dirname(self.__instrFile))
-            self.__emitter.status('Compiling instrument to binary ...')
-            self.__emitter.message('Compiling instrument to binary ...')
+            self.__emitter.status('Compiling instrument via ' + mccode_config.configuration["MCRUN"])
+            self.__emitter.message('Setting environment:')
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_OVERRIDE" + "=\n " + mccode_config.configuration["MCCODE_LIB_DIR"] + "\n")
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_CFLAGS_OVERRIDE" + "=\n " + mccode_config.compilation["CFLAGS"] + "\n")
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_CC_OVERRIDE" + "=\n " + mccode_config.compilation["CC"] + "\n")
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_MPICC_OVERRIDE" + "=\n " + mccode_config.compilation["MPICC"] + "\n")
             self.__emitter.message(cmd)
-    
+            
             # read program output while the process is active
             while process.poll() == None:
                 stdoutdata = process.stdout.readline().rstrip('\n')
@@ -304,15 +265,7 @@ class McGuiState(QtCore.QObject):
                 self.__emitter.message(stdoutdata.rstrip('\n'))
             for stderrdata in process.stderr:
                 self.__emitter.message(stderrdata.rstrip('\n'), err_msg=True)
-                    
-            # check
-            if os.path.isfile(bf):
-                self.__binaryFile = bf
-                self.__emitter.message('wrote ' + self.__binaryFile)
-                self.__emitter.status('Instrument compiled')
-            else:
-                raise Exception('compileAsync: Binary not found.')
-            
+                        
             self.__fireSimStateUpdate()
         
         except: 
