@@ -3507,7 +3507,7 @@ mcparseoptions(int argc, char *argv[])
     else if(!strncmp("--ncount=", argv[i], 9))
       mcsetn_arg(&argv[i][9]);
     else if(!strcmp("-d", argv[i]) && (i + 1) < argc)
-      usedir=argv[++i];  /* will create directory after parsing all arguments (end of this function) */
+      usedir=argv[++i];  /* will create directory after parsing all arguments (end of this function) */
     else if(!strncmp("-d", argv[i], 2))
       usedir=&argv[i][2];
     else if(!strcmp("--dir", argv[i]) && (i + 1) < argc)
