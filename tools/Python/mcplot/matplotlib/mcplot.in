@@ -24,11 +24,11 @@ canrun() {
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
     done
-    python -c "${cmd}"
+    python3 -c "${cmd}"
 }
 
 if ( canrun ); then
-    python ${LIB}/${TOOL}.py $*
+    python3 ${LIB}/${TOOL}.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
