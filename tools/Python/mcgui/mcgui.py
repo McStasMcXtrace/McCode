@@ -154,6 +154,7 @@ class McGuiState(QtCore.QObject):
             self.__fireInstrUpdate()
             self.__emitter.status("Instrument: " + os.path.basename(self.__instrFile))
             self.__fireSimStateUpdate()
+            
         else:
             # TODO: throw exception
             self.__emitter.status('Could not load file: ' + instr_file)
@@ -476,9 +477,13 @@ class McGuiAppController():
                 if not os.path.splitext(a)[1] == '.py':
                     if self.state.getInstrumentFile() == '':
                         self.state.loadInstrument(a)
-        
+                        
+        # Shouldn't really be necessary, but otherwise App menu is inactive on macOS
+        # (was initially put in message/status update mechanism, but that caused other side-effects, see
+        #  https://github.com/McStasMcXtrace/McCode/issues/570 )
+        QtWidgets.QApplication.processEvents()
         self.view.showMainWindow()
-    
+        
     def initDynamicView(self):
         # load installed mcstas instruments:
         # construct args = [site, instr_fullpath[], instr_path_lst[]]
@@ -889,7 +894,7 @@ def main():
         mcguiApp.ctr = McGuiAppController()
         
         sys.exit(mcguiApp.exec_())
-    
+        
     except Exception as e: 
         print(e)
         raise
