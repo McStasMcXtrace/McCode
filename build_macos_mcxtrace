@@ -59,7 +59,7 @@ echo
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
 $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gcc openmpi -y
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy torndado
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy torndado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin
