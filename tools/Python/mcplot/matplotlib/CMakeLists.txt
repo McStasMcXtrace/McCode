@@ -61,11 +61,11 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mpld3, python3-tornado")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5"
+  "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mpld3, python3-tornado"
   )
 
 
@@ -79,16 +79,17 @@ configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-matplotlib" @ON
 
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
+  set(BINS )
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-matplotlib")
+  set(BINS )
 endif()
 
 
 if(WINDOWS)
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -98,8 +99,9 @@ endif()
 
 if(NOT WINDOWS)
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

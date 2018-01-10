@@ -19,6 +19,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mcodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
@@ -58,7 +59,7 @@ echo
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
 $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gcc openmpi -y
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy torndado
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin

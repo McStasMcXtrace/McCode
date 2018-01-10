@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-matplotlib mcplot impl
+matplotlib mcplot implementation
 '''
 import argparse
 import logging
@@ -8,10 +8,8 @@ import os
 import sys
 import math
 import numpy as np
-#import matplotlib 
-#import tornado
-#matplotlib.use('WebAgg');
-from matplotlib import pylab
+import matplotlib 
+import tornado
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -20,9 +18,15 @@ from mccodelib.plotgraph import PlotGraphPrint
 
 from mccodelib.plotgraph import PNSingle
 from mccodelib.mcplotloader import Data1D, Data2D
+from mccodelib.mccode_config import get_mccode_prefix
+filenamebase=get_mccode_prefix() + 'plot'
 
 FONTSIZE = 10
 
+# Global placeholder for later import of pylab inside main()
+# - necessary due to use of matplotlib.use() which has to happen
+# before import of pylab
+pylab=0
 
 def plot_single_data(node, i, n, log):
     ''' plot the data of node, at index i, to a subplot '''
@@ -220,13 +224,20 @@ def print_help(nogui=False):
     helplines.append('%s + click   - sweep monitors' % modifier)
     print('\n'.join(helplines))
 
-exp_counter = 0
 def dumpfile(frmat):
     """ save current fig to softcopy """
-    global exp_counter
     from pylab import savefig
-    filename = "mcplot_" + str(exp_counter) + "." + frmat
-    exp_counter = exp_counter + 1
+
+    global filenamebase
+    filename = '%s.%s' % (filenamebase, frmat)
+    # Check for existance of earlier exports
+    if os.path.isfile(filename):
+        index=1
+        filename = '%s_%i.%s' % (filenamebase, index, frmat )
+        while os.path.isfile(filename):
+            index += 1
+            filename = '%s_%i.%s' % (filenamebase, index, frmat)
+    
     savefig(filename)
     print("Saved " + filename)
 
@@ -266,7 +277,20 @@ def main(args):
             simfile = args.simulation[0]
         if args.test:
             test_decfuncs(simfile)
-        
+
+        if args.format:
+            matplotlib.use('template')
+
+        if args.backend:
+            try:
+                matplotlib.use(args.backend)
+            except Exception as e:
+                print('backend use error: ' + e.__str__())
+                return
+            
+        global pylab
+        from matplotlib import pylab
+
         # load data
         loader = McCodeDataLoader(simfile=simfile)
         try:
@@ -287,10 +311,16 @@ def main(args):
             # save to html and exit
             plotter.html_node(rootnode, open('%s.html' % os.path.splitext(simfile)[0], 'w'))
         else:
-            # display gui
+            # display gui / prepare graphics dump
             print_help(nogui=True)
             plotter.plot_node(rootnode)
-    
+            
+        if args.format:
+            try:
+                dumpfile(args.format)
+            except Exception as e:
+                print('dumpfile issue: ' + e.__str__())
+
     except KeyboardInterrupt:
         print('keyboard interrupt')
     except Exception as e:
@@ -303,6 +333,8 @@ if __name__ == '__main__':
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
     parser.add_argument('--html', action='store_true', help='save plot to html using mpld3')
+    parser.add_argument('--format', dest='format', help='save plot to pdf/png/eps... without bringing up window')
+    parser.add_argument('--backend', dest='backend', help='use non-default backend for matplotlib plot')
     
     args = parser.parse_args()
     
