@@ -441,9 +441,13 @@ Transform {
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("\n<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
-	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin+$dy/2.0)."\" y-end=\"".($transformations{$comp}[1]+$ymax-$dy/2.0)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
-	      write_process("</component>\n\n");
+	      write_process("\n<component type=\"".$type."_origin\" name=\"$comp\" idlist=\"".$type."-list\">\n");
+	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
+              write_process("</component>\n");
+              write_process("\n<type name=\"".$type."_origin\">\n");
+              write_process("\t<component type=\"".$type."\" >\n");
+	      write_process("\t\t<locations x=\"0.0\" y=\"".($ymin+$dy/2.0)."\" y-end=\"".($ymax-$dy/2.0)."\" n-elements=\"".$ny."\" z=\"0.0\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\" /> \n");
+	      write_process("\t</component>\n</type>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
 	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n");
 	      write_process("\t\t<locations r=\"".$radius."\" t=\"".($tmin+$dt/2.0)."\" t-end=\"".($tmax-$dt/(2.0))."\" n-elements=\"".$nt."\" rot=\"".($tmin+$dt/2.0)."\" rot-end=\"".($tmax-$dt/2.0)."\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\"/>\n");
