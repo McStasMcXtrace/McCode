@@ -61,11 +61,11 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mpld3")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mpld0, python3-tornado")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mpld3"
+  "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mpld3, python3-tornado"
   )
 
 
