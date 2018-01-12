@@ -1,1 +1,1 @@
-Please wget http://support.mccode.org/rpm/miniconda3.tgz before attempting to assemble package!
+Please run ./prepare.sh before attempting to assemble package!
