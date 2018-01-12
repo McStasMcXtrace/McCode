@@ -24,6 +24,7 @@ sudo -u vagrant rpmbuild --rebuild McCode/support/rpm/SRPMS/perl-PGPLOT-2.21-5.s
 sudo rpm -i rpmbuild/RPMS/x86_64/perl-PGPLOT-2.21-5.x86_64.rpm
 cd McCode
 sudo -u vagrant ./build_rpms_mcstas 2.5beta01 meta
+rm dist/mcstas-tools-matlab-mcplot*.rpm
 sudo rpm -i dist/*.rpm
 
 
