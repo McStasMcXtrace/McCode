@@ -11,5 +11,5 @@ export PATHBAK=$PATH
 export PATH=$PWD/miniconda3/bin:$PATH
 $PWD/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy tornado jinja2 mpld3
 export PATH=$PATHBAK
-sed -i +$PWD+/usr/local/mcstas/$1/+ $PWD/miniconda3/bin/conda
+sed -i.orig +\#!$PWD/miniconda3/bin/python+\#!/usr/local/mcstas/$1/miniconda3/bin/python/+ $PWD/miniconda3/bin/*
 tar cfz miniconda3.tgz miniconda3
