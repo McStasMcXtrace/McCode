@@ -4,6 +4,7 @@
 # format
 
 # Download the installer
+cd `basename $0`
 curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 chmod a+x Miniconda3-latest-Linux-x86_64.sh
 ./Miniconda3-latest-Linux-x86_64.sh -b -p $PWD/miniconda3/
@@ -13,3 +14,4 @@ $PWD/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib 
 export PATH=$PATHBAK
 sed -i.orig +\#!$PWD/miniconda3/bin/python+\#!/usr/local/mcstas/$1/miniconda3/bin/python/+ $PWD/miniconda3/bin/*
 tar cfz miniconda3.tgz miniconda3
+cd -
