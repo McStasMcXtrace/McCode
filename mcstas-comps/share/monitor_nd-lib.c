@@ -805,9 +805,9 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     }
   } /* end if Buffer realloc */
 
+  char    outsidebounds=0;
   while (!While_End)
   { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
-    char    outsidebounds=0;
     if ((Vars->Flag_Auto_Limits == 2) && (Vars->Coord_Number > 0))
     { /* Vars->Flag_Auto_Limits == 2: read back from Buffer (Buffer is filled or auto limits have been computed) */
       if (While_Buffer < Vars->Buffer_Block)
@@ -1043,11 +1043,8 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
             Vars->Mon2D_p[i][j] += pp;
             Vars->Mon2D_p2[i][j] += pp*pp;
           }
-          retval=1;
         } else {
-          retval=-1;
           outsidebounds=1; 
-          if (Vars->Flag_Absorb) retval=0;
         }
       } else {
         /* 1D and n1D case : Vars->Flag_Multiple */
@@ -1061,11 +1058,9 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
               Vars->Mon2D_p[i-1][j]  += pp;
               Vars->Mon2D_p2[i-1][j] += pp*pp;
             }
-            retval=1;
           } else { 
             outsidebounds=1;
-            retval=-1;
-            if (Vars->Flag_Absorb) { retval=0; break; }
+            break;
           }
         }
       }
@@ -1092,7 +1087,15 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
   Vars->psum  += pp;
   Vars->p2sum += pp*pp;
 
-  return retval;
+  /*determine return value: 1:neutron was in bounds and measured, -1: outside bounds, 0: outside bounds, should be absorbed.*/
+  if(outsidebounds){
+      if(Vars->Flag_Absorb){
+          return 0;
+      }else{
+          return -1;
+      }
+  }
+  return 1;
 } /* end Monitor_nD_Trace */
 
 /* ========================================================================= */
