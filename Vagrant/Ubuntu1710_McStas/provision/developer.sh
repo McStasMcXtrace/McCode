@@ -1,15 +1,15 @@
 #! /bin/bash
 
 # Install basic developer tools 
-
-sudo apt-get -y install build-essential flex bison gcc gfortran cmake python3 python3-pyqt5
-
 cd /etc/apt/sources.list.d
 sudo curl -O http://packages.mccode.org/debian/mccode.list
 cd -
+
 sudo apt-get -y update
-sudo apt-get -y dist-upgrade
-sudo apt-get -y install -y perl-tk pdl pgplot5 gnuplot libtk-codetext-perl
+sudo apt-get -y install build-essential flex bison gcc gfortran cmake python3 python3-pyqt5
+sudo apt-get -y install -y perl-tk pdl pgplot5 gnuplot libtk-codetext-perl libpgplot-perl
+
+
 cd /home/vagrant
 sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1
 

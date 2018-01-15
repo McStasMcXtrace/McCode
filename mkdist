@@ -470,7 +470,7 @@ make_NONE() {
 
 make_deb() {
     # default to linux32 when toolchain is incompatible
-    sane_toolchain "grep linux" linux32;
+    #sane_toolchain "grep linux" linux32;
     simple_cpack_file DEB "${NAME}" ".deb";
 }
 
