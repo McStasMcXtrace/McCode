@@ -8,7 +8,7 @@
 * Component: Pol_bender_tapering
 *
 * %I
-* Written by: Erik Bergbäck Knudsen (erkn@fysik.dtu.dk)
+* Written by: Erik Bergbaeck Knudsen (erkn@fysik.dtu.dk)
 * Date: June 2012
 * Origin: DTU Physics
 * 
@@ -16,31 +16,53 @@
 *
 * %D
 *
-* fileformat for channel file columns:
-* d-spacing1 d-spacing2 l_spacer d-coatingp1 d-coatingn1 [d-coatingp2] [dcoatingn2]  
+* A component modelling a set of identical blades bent to form a multcihannel (nslits)
+* bender. The bender has a cylindrically curved entry plane (Will be extended to also 
+* allow a flat entry plane).
+* 
+* The bender may also be tapered such that it can have focusing or defocusing porperties.
+* This may be specified through the "channel_file"-parameter, which points to a data file
+* in which the individual channels are defined by an entry- and an exit-width. 
 *
-* fileformat for reflectivity file:
-* #parameter = m 
-* q/m R(up) R(down)
+* The file format for channel file columns:
+* > #d-spacing1 d-spacing2 l_spacer d-coating1 d-coating2 
+* > 1e-3  0.8e-3 1e-5  1e-9 1e-9
+*  
+* Each blades is considered coated with a reflecting coating, whose thickness is defined in the
+* latter two columsn of the channel data file.
+* 
+* Coating reflectivities are read from
+* another data file with separate reflectivities for up and down spin. When a neutron ray hits a blade
+* the polarization vector associated with the ray is decomposed into spin-up and down
+* probablities, which in turn determines the overall reflectivity for this ray on the mirror.
+* Furthermore the probabilities are used to also reconstruct the polarization vector of the reflected
+* ray. 
 *
+* File format for the reflectivity file:
+* > #parameter = m 
+* > q/m R(up) R(down)
+*
+* The effect of spacers inside the channels is modelled by absorption only. The depth of the spacers
+* in a channel is considered constant for one channel (set in the channel data file), the number of 
+* them is constant across all channels and is an input parameter to the component.
+* 
 * %P
 *
 * INPUT PARAMETERS:
 *
-* xwidth: [m]        Width at the guide entry 
-* yheight: [m]       Height at the guide entry 
-* length: [m]        length of guide along center 
-* radius: [m]        curvature of a single plate/polarizer (+:curve left/-:right) 
-* entry_radius: []   radius of the entrance window (option to xwidth)
-* nslits: [1]        Number of slits 
-* d_substrate: []    thickness of the glass substrate
-* channel_file: []   File name of file containing channel data. such as spacer widths etc. (see above)
-* reflect_file: []   File name of file containing reflectivity data parametrized either by q or m.
-* sigma_abs: [barn]  Absorption per unit cell at v=2200 m/s of spacers. Defaults to Al. 
-* V0: []             Volume of unit cell for spacers. Defaults to Al. (AA^3)
-* nspacer: []        number of spacers per channel
-* debug: [1]         if debug > 0 print out some internal parameters 
-*
+* xwidth: [m]        Width at the bender entry. Currently unsupported.
+* yheight: [m]       Height at the bender entry. 
+* length: [m]        Length of blades that make up the bender. 
+* d_substrate: [m]   Thickness of the substrate.
+* entry_radius: [m]  Radius of curvature of the entrance window.
+* radius: [m]        Curvature of a single plate/polarizer. +:curve left/-:right 
+* nslits: [1]        Number of slits in the bender 
+* channel_file: [ ]  File name of file containing channel data. such as spacer widths etc. (see above for format)
+* reflect_file: [ ]  File name of file containing reflectivity data parametrized either by q or m.
+* sigma_abs: [barn]  Absorption per unit cell at v=2200 m/s of spacers. Defaults to literature value for Al. 
+* V0: [AA^3]         Volume of unit cell for spacers. Defaults to Al.
+* nspacer: [ ]       Number of spacers per channel.
+* debug: [ ]         If > 0 print out some internal parameters. 
 *
 * %L
 *
@@ -49,7 +71,7 @@
 DEFINE COMPONENT Pol_bender_tapering
 DEFINITION PARAMETERS (string channel_file="channel.dat")
 SETTING PARAMETERS (xwidth=0, yheight, length, d_substrate, entry_radius=10, radius=100, G=9.8, int nslit=1, int debug=1,
-string reflect_file=NULL, int drawOption=1, sigma_abs=0.231, V0=66.4, nspacer=5)
+        string reflect_file=NULL, sigma_abs=0.231, V0=66.4, nspacer=5)
 OUTPUT PARAMETERS (prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -212,7 +234,7 @@ TRACE
   Coords off;
   double xo,yo,zo,vox,voy,voz;
 
-  /*pro½pagate to entry surface (cylinder!)*/
+  /*propagate to entry surface (cylinder!)*/
   /*check which channel we're in, if any*/
   channel_no=0;
   if(xwidth){
@@ -221,7 +243,9 @@ TRACE
       /*Missed flat face bender. Leave neutron be*/
       channel_no=-1;
       RESTORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p); 
-    } 
+    }
+    fprintf(stderr,"Error(%s): flat face bender tapering is not supported yet. Please use a large entry_raidus instead. Aborting.\n", NAME_CURRENT_COMP);
+    exit(-1); 
   }else if(entry_radius){
     status=cylinder_intersect(&t0,&t1,x,y,z-(-entry_radius),vx,vy,vz,entry_radius,1000);
     if (entry_radius>0){
@@ -312,22 +336,9 @@ TRACE
 #endif
       }
       
-      /*mean of dx1 and dx2 is the radial coordinate of the channel centre (scaled by entry_radius so divide by that to get angle))*/
-      //rx=(dx1+dx2)*0.5 / entry_radius;
-
+      /*set a scatter upon entry*/
       SCATTER;
-
-      /*transform neutron to the channel*/
-      //rot_set_rotation(T,0,rx,0);
-      //rot_transpose(T,tT);
-      //off=coords_set(-entry_radius*sin(rx),0,entry_radius*(cos(rx)-1));
-      /*centre of channel is at r=(sin(rx)*entry_radius, 0, -entry_radius+cos(rx)*entry_radius) */
-      //mccoordschange(off,T,&x,&y,&z,&vx,&vy,&vz,&sx,&sy,&sz);
       
-      /*Have we hit the blades between the channels*/
-      //if ( x<-(prms.T.data[channel_no*prms.T.columns + 0]*0.5) || x>(prms.T.data[channel_no*prms.T.columns + 0]*0.5) ){
-      //    ABSORB;
-      //}
     }else{
       /*so it is a flat face bender*/
       channel_no=0;
@@ -340,17 +351,7 @@ TRACE
       }
       rx=(dx1+dx2)*0.5;
       SCATTER;
-      //rot_set_rotation(T,0,0,0);
-      //rot_transpose(T,tT);
-      //off=coords_set(-rx,0,0);
-      //mccoordschange(off,T,&x,&y,&z,&vx,&vy,&vz,&sx,&sy,&sz);
-      /*Have we hit the blades between the channels*/
-      if ( x<-(prms.T.data[channel_no*prms.T.columns + 0]*0.5) || x>(prms.T.data[channel_no*prms.T.columns + 0]*0.5) ){
-          ABSORB;
-      }
     } 
-    //printf("SCATT2: %g %g %g\n",x,y,z);
-
 
     /*now the channel number is known. Given the central curvature of bender we may compute the placement of inner and outer cylinders. */
     /*Some helper points and variables*/
@@ -439,7 +440,7 @@ TRACE
       if(tt==FLT_MAX){
         tt=0;
         branch=UNKNOWN;
-        fprintf(stderr,"Cannot determine scattering branch: t21=%g, t10=%g ,te=%g\n",t21,t10,te);
+        fprintf(stderr,"Cannot determine reflection branch: t21=%g, t10=%g ,te=%g\n",t21,t10,te);
         ABSORB;
       }
 
@@ -453,14 +454,8 @@ TRACE
           exit=1;
           break;
         case CYL:
-          //printf("scattering on cylinder %d : ei1i2=[%d %d %d], t21=%g, t10=%g ,te=%g\n",cyl,ie,i1,i2,t21,t10,te);
           /*we bounce on bender wall*/
-          //printf("we move: %g ",tt);
-          //printf("%g %g %g ",x,y,z);
-          //from_channel_frame(T,off);
           PROP_DT(tt);
-          //to_channel_frame(T,off);
-          //printf("%g %g %g\n",x,y,z);
           double nx,ny,nz,s,alpha,Q,Rup,Rdown;
           if (cyl==1){
             /*check if coated*/
@@ -525,9 +520,6 @@ TRACE
           }
           SCATTER;
 
-/*          if (z>length){*/
-/*            printf("EXCESS: %llu %d %d   %g %g %g     %g %g %g   %g %g %g     %g %g %g\n",mcget_run_num(),bounce,channel_no,xo,yo,zo,vox,voy,voz, x,y,z, vx,vy,vz);*/
-/*          }*/
           break;
       }
     }while (!exit);
