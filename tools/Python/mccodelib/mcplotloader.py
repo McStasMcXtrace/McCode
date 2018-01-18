@@ -394,6 +394,7 @@ def _load_multiplot_1D_lst(f_dat):
             data.yvals = yvals_lst[i]
             data.yvar = yvars[2*i]
             data.title = '%s' % (data.yvar)
+            data.component = data.title
             data.y_err_vals = yvals_err_lst[i]
             data_handle_lst.append(DataHandle(load_fct=None, data=data))
 
