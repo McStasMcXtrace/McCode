@@ -100,14 +100,14 @@
 
 DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth, yheight,zdepth, radius, Bx, By, Bz, string filename="bfield.dat")
+SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL)
 OUTPUT PARAMETERS(magnet, parPtr, prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
 %include "pol-lib"
-double fmax(double, double);
+  double fmax(double, double);
   double fmin(double, double);
 %}
 
@@ -171,7 +171,7 @@ INITIALIZE
         prms.shape=SPHERE;
   }else{
     prms.shape=NONE;  
-}  
+  }
 %}
 
 TRACE
@@ -179,20 +179,20 @@ TRACE
     double l0,l1,l2,l3;
     int hit;
     /*enter through whatever object we are*/
-    switch (prms.SHAPE){
+    switch (prms.shape){
         case BOX:
             hit=box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
             /*terminate neutrons which miss the component*/
             if(!hit) ABSORB;
             /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
-            if(l0>0) PROP_DL(l0);
+            if(l0>0) PROP_DT(l0);
             break;
         case CYLINDER:
             hit=cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);
             /*terminate neutrons which miss the component*/
             if(!hit)ABSORB;
             /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
-            if(l0>0) PROP_DL(l0);
+            if(l0>0) PROP_DT(l0);
             break;
         case WINDOW:
             PROP_Z0;
@@ -201,12 +201,12 @@ TRACE
                 ABSORB;
             }
             break;
-        case default:
+        default:
             PROP_Z0; 
     }
     mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
 #ifdef MCDEBUG
-     mcmagnet_print_stack();
+    mcmagnet_print_stack();
 #endif
 %}
 

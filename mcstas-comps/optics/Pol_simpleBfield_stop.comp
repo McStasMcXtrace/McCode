@@ -53,7 +53,7 @@
 
 DEFINE COMPONENT Pol_simpleBfield_stop
 DEFINITION PARAMETERS (magnet_comp_stop=NULL)
-SETTING PARAMETERS (string geometry="", yheight, xwidth, zdepth, radius)
+SETTING PARAMETERS (string geometry="", yheight=0, xwidth=0, zdepth=0, radius=0)
 OUTPUT PARAMETERS(prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -83,7 +83,7 @@ INITIALIZE
         prms.shape=SPHERE;
     }else{
         prms.shape=NONE;
-    }  
+    }
 %}
 
 TRACE
@@ -91,16 +91,16 @@ TRACE
     double l0,l1,l2,l3;
     int nofield=0;
     /*enter through whatever object we are*/
-    switch (prms.SHAPE){
+    switch (prms.shape){
         case BOX:
             box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
-            if (l0>0) PROP_DL(l0);/*this is to get a hollow inside the field.*/
-            else PROP_DL(l1);
+            if (l0>0) PROP_DT(l0);/*this is to get a hollow inside the field.*/
+            else PROP_DT(l1);
             break;
         case CYLINDER:
             cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
-            if (l0>0) PROP_DL(l0);
-            else PROP_DL(l1);
+            if (l0>0) PROP_DT(l0);
+            else PROP_DT(l1);
             break;
         case WINDOW:
             PROP_Z0;
@@ -109,7 +109,7 @@ TRACE
                 ABSORB;
             }
             break;
-        case default:
+        default:
             PROP_Z0; 
     }
     mcmagnet_pop();
