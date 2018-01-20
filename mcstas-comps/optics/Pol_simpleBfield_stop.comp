@@ -90,6 +90,7 @@ TRACE
 %{
     double l0,l1,l2,l3;
     int nofield=0;
+    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
     /*enter through whatever object we are*/
     switch (prms.shape){
         case BOX:

@@ -119,12 +119,13 @@ DECLARE
   mcmagnet_field_info *magnet;
 
   struct {
-      enum {BOX, WINDOW, CYLINDER, SPHERE, ANY} shape;
+      int shape;
   } prms;
 %}
 
 INITIALIZE
 %{
+  enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
   /* these default field functions are part of pol-lib */
   if (fieldFunction==const_magnetic_field){
     double *t=malloc(3*sizeof(double));
@@ -178,6 +179,8 @@ TRACE
 %{
     double l0,l1,l2,l3;
     int hit;
+    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+
     /*enter through whatever object we are*/
     switch (prms.shape){
         case BOX:
