@@ -64,9 +64,11 @@
 * other field. Note that coordinates refer the coordinate system defined by this
 * component.
 *
-* The magnetic field is turned on by an instance of this component, and turned
-* off by an instance of Pol_simpleBfield_stop. Anything in between is considered
-* inside the field.
+* If the concetric parameter is set to 1 the magnetic field is turned on by an
+* instance of this component, and turned off by an instance of Pol_simpleBfield_stop.
+* Anything in between is considered inside the field.
+* If concentric is nonzero the field is considered a closed component - neutrons are propagated
+* through the field region, and no other are cmoponents are permitted inside the field.
 *
 * When using table_magnetic_field or resampled_3to3_magnetic_field as
 * fieldFunction the input data is first resampled to speed up the interpolation.
@@ -84,23 +86,25 @@
 * xwidth: [m]               Width of opening.
 * yheight: [m]              Height of opening.
 * zdepth: [m]               Length of field.
+* radius: [m]               Radius of field if it is cylindrical or spherical.
 * Bx: [T]                   Parameter used for x composant of field.
 * By: [T]                   Parameter used for y composant of field.
 * Bz: [T]                   Parameter used for z composant of field.
 * fieldFunction: [pointer]  Function describing the magnetic field.
-* filename: []        file where the magnetic field is tabulated.
+* filename: [ ]             File where the magnetic field is tabulated.
+* concentric: [ ]           Allow components and/or other fields inside field. Requires a subsequent Pol_simpleBfield_stop component.
 *
 * OUTPUT PARAMETERS:
-*
-* gz: [m/s/s]               z-component of gravity 
-* parPtr: [pointer]         Pointer to component magnet parameters 
-*
+* magnet: [ ]
+* parPtr: [pointer]         Pointer to component magnet parameters.
+* prms:   [ ]               Structur containing the shape of the magnetic field.
 * %E
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL)
+SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL,
+        concentric=1)
 OUTPUT PARAMETERS(magnet, parPtr, prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -211,6 +215,32 @@ TRACE
 #ifdef MCDEBUG
     mcmagnet_print_stack();
 #endif
+
+    /*does the field "close/stop" itself*/
+    if (!concentric){
+        switch (prms.shape){
+            case BOX:
+                box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
+                if (l0>0) PROP_DT(l0);/*this is to get a hollow inside the field.*/
+                else PROP_DT(l1);
+                break;
+            case CYLINDER:
+                cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
+                if (l0>0) PROP_DT(l0);
+                else PROP_DT(l1);
+                break;
+            case WINDOW:
+                PROP_Z0;
+                /*terminate neutrons which miss the exit window*/
+                if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
+                    ABSORB;
+                }
+                break;
+            default:
+            PROP_Z0;
+        }
+        mcmagnet_pop();
+    }
 %}
 
 MCDISPLAY
