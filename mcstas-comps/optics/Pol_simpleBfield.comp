@@ -155,16 +155,9 @@ INITIALIZE
     parPtr=(void *)interpolator;
   }
 
-  if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {
-    fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
-	    "ERROR      (xwidth, yheight, zdepth). Exiting\n",
-	    NAME_CURRENT_COMP);
-    exit(1);
-  }
-
   /*initialize shape to either be window/box/cylinder*/
   /*some logic here to enter through a box or cylinder*/
-  if(geometry){
+  if(geometry && strlen(geometry)){
       prms.shape=ANY;
   }else if(xwidth && yheight && zdepth){
       prms.shape=BOX;
@@ -173,33 +166,51 @@ INITIALIZE
   }else if(radius && yheight){
       prms.shape=CYLINDER;
   }else if (radius) {
-        prms.shape=SPHERE;
+      prms.shape=SPHERE;
   }else{
-    prms.shape=NONE;  
+      prms.shape=NONE;
   }
+
+  if(prms.shape == WINDOW && !concentric){
+      printf("Warning (%s): Magnetic field has window shape and has concentric set => Field volume == 0.\n",NAME_CURRENT_COMP);
+  }
+  if(prms.shape == NONE) {
+      printf("Warning (%s): Magnetic field no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
+  }
+
 %}
 
 TRACE
 %{
-    double l0,l1,l2,l3;
+    double t0,t1;
     int hit;
     enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
 
     /*enter through whatever object we are*/
     switch (prms.shape){
         case BOX:
-            hit=box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
+            hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
             /*terminate neutrons which miss the component*/
             if(!hit) ABSORB;
             /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
-            if(l0>0) PROP_DT(l0);
+            if(t0>FLT_EPSILON) {
+                PROP_DT(t0);
+                t1-=t0;
+            }else if (t0<-FLT_EPSILON && concentric){
+                PROP_DT(t1);
+            }
             break;
         case CYLINDER:
-            hit=cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);
+            hit=cylinder_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius,yheight);
             /*terminate neutrons which miss the component*/
             if(!hit)ABSORB;
             /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
-            if(l0>0) PROP_DT(l0);
+            if(t0>FLT_EPSILON) {
+                PROP_DT(t0);
+                t1-=t0;
+            }else if (t0<-FLT_EPSILON && concentric){
+                PROP_DT(t1);
+            }
             break;
         case WINDOW:
             PROP_Z0;
@@ -209,7 +220,7 @@ TRACE
             }
             break;
         default:
-            PROP_Z0; 
+            PROP_Z0;
     }
     mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
 #ifdef MCDEBUG
@@ -220,14 +231,10 @@ TRACE
     if (!concentric){
         switch (prms.shape){
             case BOX:
-                box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
-                if (l0>0) PROP_DT(l0);/*this is to get a hollow inside the field.*/
-                else PROP_DT(l1);
+                PROP_DT(t1);
                 break;
             case CYLINDER:
-                cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
-                if (l0>0) PROP_DT(l0);
-                else PROP_DT(l1);
+                PROP_DT(t1);
                 break;
             case WINDOW:
                 PROP_Z0;
@@ -237,7 +244,7 @@ TRACE
                 }
                 break;
             default:
-            PROP_Z0;
+                PROP_Z0;
         }
         mcmagnet_pop();
     }

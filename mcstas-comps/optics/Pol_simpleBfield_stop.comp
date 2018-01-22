@@ -46,8 +46,8 @@
 * %P
 * INPUT PARAMETERS:
 *
-* magnet_comp_stop: [ ]  name of the component indicating start of the magnet volume.
-* 
+* magnet_comp_stop: [no qoutes]  name of the component indicating start of the magnet volume.
+*
 * %E
 ****************************************************************************/
 
@@ -59,7 +59,7 @@ OUTPUT PARAMETERS(prms)
 
 SHARE
 %{
-    %include "pol-lib"
+%include "pol-lib"
 %}
 DECLARE
 %{
@@ -96,20 +96,20 @@ INITIALIZE
 
 TRACE
 %{
-    double l0,l1,l2,l3;
+    double t0,t1;
     int nofield=0;
     enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
     /*enter through whatever object we are*/
     switch (prms.shape){
         case BOX:
-            box_intersect(&l0,&l1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
-            if (l0>0) PROP_DT(l0);/*this is to get a hollow inside the field.*/
-            else PROP_DT(l1);
+            box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
+            if (t0>0) PROP_DT(t0);/*this is to get a hollow inside the field.*/
+            else PROP_DT(t1);
             break;
         case CYLINDER:
-            cylinder_intersect(&l0,&l1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
-            if (l0>0) PROP_DT(l0);
-            else PROP_DT(l1);
+            cylinder_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
+            if (t0>0) PROP_DT(t0);
+            else PROP_DT(t1);
             break;
         case WINDOW:
             PROP_Z0;
@@ -119,7 +119,7 @@ TRACE
             }
             break;
         default:
-            PROP_Z0; 
+            PROP_Z0;
     }
     mcmagnet_pop();
 %}
