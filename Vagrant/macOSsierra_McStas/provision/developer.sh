@@ -1,3 +1,4 @@
+#!/bin/sh
 # For a full update, one would run
 # softwareupdate -iva
 
@@ -28,11 +29,3 @@ sudo mkdir -p /usr/local/bin
 sudo ln -sf /Applications/CMake.app/Contents/bin/cmake /usr/local/bin
 sudo ln -sf /Applications/CMake.app/Contents/bin/cpack /usr/local/bin
 
-sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1
-cd McCode
-echo "#!/bin/bash" > go.command
-echo cd /Users/vagrant/McCode >> go.command
-echo ./build_macos_mcstas 2.5beta01 >> go.command
-chown vagrant:staff go.command
-chmod a+x go.command
-sudo -u vagrant open go.command
