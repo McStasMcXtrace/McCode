@@ -13,13 +13,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
 from mccodelib.plotgraph import PNSingle
+from mccodelib import mccode_config
 
 WIDTH = 700
 HEIGHT = 480
 
 def get_html(template_name, params):
     '''  '''
-    text = open(template_name).read()
+    text = open(os.path.join(os.path.dirname(__file__),template_name)).read()
     text = text.replace("@PARAMS@", params)
     return text
 
