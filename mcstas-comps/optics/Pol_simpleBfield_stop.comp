@@ -71,14 +71,6 @@ INITIALIZE
 %{
     enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
     /*if a start component is given, and no geometry is set, inherent geometry from start comp.*/
-#ifdef magnet_comp_STOP
-    if (! (radius || yheight || xwidth || zdepth || geometry) ){
-        yheight=MC_GETPAR(magnet_comp_stop, yheight);
-        xwidth=MC_GETPAR(magnet_comp_stop, xwidth);
-        zdepth=MC_GETPAR(magnet_comp_stop, zdepth);
-        radius=MC_GETPAR(magnet_comp_stop, radius);
-        strncpy(geometry,MC_GETPAR(magnet_comp_stop, geometry), 1024);
-#endif
     if(geometry && strlen(geometry)){
         prms.shape=ANY;
     }else if(xwidth && yheight && zdepth){
