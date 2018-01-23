@@ -337,7 +337,7 @@ def _load_multiplot_1D_lst(f_dat):
     try:
         header = Data1D()
         header.component = ''
-        header.filename = 'mcstas.dat'
+        header.filename = 'mccode.dat'
         
         # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
