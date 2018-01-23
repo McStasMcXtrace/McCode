@@ -8,15 +8,29 @@ import scipy.misc
 import io
 import base64
 import json
+import subprocess
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
 from mccodelib.plotgraph import PNSingle
 from mccodelib import mccode_config
+from shutil import copyfile
 
 WIDTH = 700
 HEIGHT = 480
+
+def file_base_name(file_name):
+    if '.' in file_name:
+        separator_index = file_name.index('.')
+        base_name = file_name[:separator_index]
+        return base_name
+    else:
+        return file_name
+
+def path_base_name(path):
+    file_name = os.path.basename(path)
+    return file_base_name(file_name)
 
 def get_html(template_name, params):
     '''  '''
@@ -84,7 +98,24 @@ def main(args):
         simfile = ''
     else:
         simfile = args.simulation[0]
+
+    # Define directory and basename
+    simdir = os.path.dirname(simfile)
+    simbase = path_base_name(simfile)
+
+    # Store system stdout for later restoring
+    orig_stdout = sys.stdout
+    html_filepath=''
     
+    # If simfile includes a directory name, dump our js code there 
+    if os.path.isdir(simdir):
+        copyfile(os.path.join(os.path.dirname(__file__),'d3.v4.min.js'), os.path.join(simdir,'d3.v4.min.js'))
+        copyfile(os.path.join(os.path.dirname(__file__),'plotfuncs.js'), os.path.join(simdir,'plotfuncs.js'))
+        html_filepath=os.path.join(simdir,simbase + '.html')
+        f = open(html_filepath, 'w')
+        sys.stdout = f
+             
+        
     # load data
     loader = McCodeDataLoader(simfile=simfile)
     try:
@@ -93,7 +124,7 @@ def main(args):
         print('mcplot loader: ' + e.__str__())
         quit()
     node = loader.plot_graph
-    
+
     # write data to an html file
     if type(node) is PNSingle:
         print("\n\n")
@@ -114,7 +145,17 @@ def main(args):
             for l in text.splitlines():
                 print(l)
             print("")
-            
+            sys.stdout = orig_stdout 
+            # exit if nobrowse flag has been set
+            if args.nobrowse:
+                return
+    
+            # open a web-browser in a cross-platform way
+            try:
+                subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+            except Exception as e:
+                raise Exception('Os-specific open browser: %s' % e.__str__())
+                        
         elif type(data) is Data2D:
             
             vals = np.array(data.zvals)
@@ -175,6 +216,16 @@ def main(args):
             for l in text.splitlines():
                 print(l)
             print("")
+            sys.stdout = orig_stdout 
+            # exit if nobrowse flag has been set
+            if args.nobrowse:
+                return
+    
+            # open a web-browser in a cross-platform way
+            try:
+                subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+            except Exception as e:
+                raise Exception('Os-specific open browser: %s' % e.__str__())
             
         else:
             print("can only plot 1D data right now")
@@ -184,7 +235,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
-    
+    parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
+
     args = parser.parse_args()
     
     main(args)
