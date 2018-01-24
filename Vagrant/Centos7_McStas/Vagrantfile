@@ -49,17 +49,7 @@ Vagrant.configure(2) do |config|
   # 2.
   config.vm.provision "shell", path: "provision/developer.sh"
   # 3. 
-  # config.vm.provision "shell", path: "provision/mantid_old_versions.sh"  
+  config.vm.provision "shell", path: "provision/deps.sh"
   # 4.
-  # config.vm.provision "shell", path: "provision/mcstas.sh"
-  # 5.
-  # config.vm.provision "shell", path: "provision/libnexus0.sh"   
-  # 6.
-  #config.vm.provision "shell", path: "provision/mantid.sh"
-  # 7.
-  #config.vm.provision "shell", path: "provision/pyqtgraph.sh"
-  # 8.
-  #config.vm.provision "shell", path: "provision/mantid_dev2.sh"   
-  # 9.
-  #config.vm.provision "shell", path: "provision/anaconda.sh"
+  config.vm.provision "shell", path: "provision/mcstas.sh"   
 end
