@@ -16,7 +16,7 @@
 * is working. The field referred to by the default input parameter MF is 10 \mu T along the z-axis
 * at entry and flips to l0 \mu T along the negative z-axis halfway through
 *
-* %Example: -n1e4 MF=flipfield.dat pol_6_I=0.665777
+* %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=0.665777
 *   N.b. this example will not be run by autotest since it reuireq the presence of the file
 *    flipfield.dat in the working directory.
 *
