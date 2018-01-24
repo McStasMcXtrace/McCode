@@ -5,28 +5,37 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Arm
+* Component: Pol_FieldBox
 *
 * %I
 *
-* Written by: Kim Lefmann and Kristian Nielsen
-* Date: September 1997
+* Written by: Erik B Knudsen and P Willendrup
+* Date: 2013
 * Version: $Revision$
-* Release: McStas 1.6
+* Release: McStas 2.0
 * Origin: Risoe
 *
-* Box containing a constant magnetic field
+* Box containing a constant or tabled magnetic field
 *
 * %D
 *
+*
 * %P
+* fieldFunction: [ ] Should be either const_magnetic field or table_magnetic_field (unquoted in both cases).
+* xwidth:  [m] Width of the box containing the field.
+* yheight: [m] Height of the box containing the field.
+* zdepth:  [m] Depth of the box containing the field.
+* Bx:  [T] Magnetic field strength along the x-axis.
+* By:  [T] Magnetic field strength along the y-axis.
+* Bz:  [T] Magnetic field strength along the z-axis.
+* filename: [text] Name of file containing the magnetic field.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_FieldBox
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth,yheight,zdepth, Bx,By,Bz)
+SETTING PARAMETERS (xwidth,yheight,zdepth, Bx,By,Bz, filename="")
 OUTPUT PARAMETERS (field_parameters)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -37,9 +46,24 @@ SHARE
 
 DECLARE
 %{
-    double field_parameters[3];
+    double const field_parameters[3];
+    void *field_parameters;
+%}
+
+INITIALIZE
+%{
+  if (fieldFunction==table_magnetic_field){
+      /*initialize the interpolation vertex structure*/
+      struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
+      interpolator_info(interpolator);
+      field_parameters=(void *)interpolator;
+  }  else {
+      field_parameters = (void *) const_field_parameters;
+  }
 
 %}
+
+
 
 TRACE
 %{

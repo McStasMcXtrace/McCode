@@ -46,26 +46,74 @@
 * %P
 * INPUT PARAMETERS:
 *
-* magnet_comp_stop: [no quotes]  name of the component indicating start of the magnet volume.
+* magnet_comp_stop: [no qoutes]  name of the component indicating start of the magnet volume.
 *
 * %E
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_simpleBfield_stop
-DEFINITION PARAMETERS (magnet_comp_stop)
-SETTING PARAMETERS ()
-OUTPUT PARAMETERS()
+DEFINITION PARAMETERS (magnet_comp_stop=NULL)
+SETTING PARAMETERS (string geometry="", yheight=0, xwidth=0, zdepth=0, radius=0)
+OUTPUT PARAMETERS(prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
 %include "pol-lib"
 %}
+DECLARE
+%{
+    struct {
+        int shape;
+    } prms;
+%}
+INITIALIZE
+%{
+    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    /*if a start component is given, and no geometry is set, inherent geometry from start comp.*/
+    if(geometry && strlen(geometry)){
+        prms.shape=ANY;
+    }else if(xwidth && yheight && zdepth){
+        prms.shape=BOX;
+    }else if (xwidth && yheight && !zdepth){
+        prms.shape=WINDOW;
+    }else if(radius && yheight){
+        prms.shape=CYLINDER;
+    }else if (radius) {
+        prms.shape=SPHERE;
+    }else{
+        prms.shape=NONE;
+    }
+%}
 
 TRACE
 %{
-PROP_Z0;
-mcmagnet_pop();
+    double t0,t1;
+    int nofield=0;
+    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    /*enter through whatever object we are*/
+    switch (prms.shape){
+        case BOX:
+            box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
+            if (t0>0) PROP_DT(t0);/*this is to get a hollow inside the field.*/
+            else PROP_DT(t1);
+            break;
+        case CYLINDER:
+            cylinder_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
+            if (t0>0) PROP_DT(t0);
+            else PROP_DT(t1);
+            break;
+        case WINDOW:
+            PROP_Z0;
+            /*terminate neutrons which miss the exit window*/
+            if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
+                ABSORB;
+            }
+            break;
+        default:
+            PROP_Z0;
+    }
+    mcmagnet_pop();
 %}
 
 END
