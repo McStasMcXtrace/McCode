@@ -9,12 +9,12 @@
 * Origin: RISOE
 * %INSTRUMENT_SITE: Tests_polarization
 *
-* This instrument demonstrates how to use the Pol_simpleBfield
+* This instrument demonstrates how to use the Pol_Bfield
 * component with a user-specified fieldFunction.
 *
 * %Description
 * This instrument demonstrates how to use the component
-* Pol_simpleBfield with a user-specified fieldFunction.
+* Pol_Bfield with a user-specified fieldFunction.
 *
 * The fieldFunction is specified in the DECLARE section and defined active
 * using the fieldFunction parameter of the component. The example fieldFunction
@@ -106,12 +106,12 @@ COMPONENT armMSF = Arm()
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
 COMPONENT msf =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=MagnetLength, Bx=0, By=-0.678332e-4, Bz=0,
+Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=MagnetLength, Bx=0, By=-0.678332e-4, Bz=0,
 		 fieldFunction=magnetic_field_t)
      AT (0, 0, 0) RELATIVE armMSF
 
 COMPONENT msf_stop =
-Pol_simpleBfield_stop(magnet_comp_stop=msf)
+Pol_Bfield_stop()
 AT(0,0,MagnetLength) RELATIVE armMSF
 
 
