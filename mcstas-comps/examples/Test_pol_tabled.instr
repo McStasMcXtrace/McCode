@@ -85,8 +85,7 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT field = Pol_simpleBfield(
     xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,
-	Bx=0,By=1,Bz=0,fieldFunction=resampled_3to3_magnetic_field,
-        Stepx=8,Stepy=8,Stepz=8)
+    Bx=0,By=1,Bz=0,fieldFunction=table_magnetic_field)
 AT(0,0,1) RELATIVE PREVIOUS
 /*COMPONENT field = Pol_simpleBfield(*/
 /*    xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,*/
