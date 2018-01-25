@@ -301,6 +301,7 @@ do {
   /* alpha1 = (sigma_inc+sigma_abs*2200/v)/2/lambda;
   n      = 1-lambda*lambda*rho/2/PI*sqrt(bc*bc-alpha1*alpha1); */
   n   = sqrt(1-(lambda*lambda*rho*bc/PI));
+
   mean_n += n*p;
   events += p;
 
@@ -572,12 +573,12 @@ MCDISPLAY
 
     } else if (!r1 && focus1) { /* parabola1 */
       if (focus1>0){
-        dist_parab1=-radius*radius/(16*focus1);
+        dist_parab1=-radius*radius/(4*focus1);
       } else {
         dist_parab1=0.0;
       }
 
-      distance=-(radius*radius/4)/(4*focus1);
+      distance=-(radius*radius)/(4*focus1);
       eps=-distance/4;
       eps2=2*PI/4;
       while (focus1*distance<0) {
@@ -586,8 +587,8 @@ MCDISPLAY
           distance+=eps;
           theta_line=0;
           while (theta_line<2*PI){
-          line(sqrt(4*fabs(focus1)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus1)*(fabs(distance-eps)))*sin(theta_line),distance-eps-thickness/2,sqrt(4*fabs(focus1)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus1)*fabs(distance))*sin(theta_line),distance-thickness/2);
-          theta_line+=eps2;
+              line(sqrt(4*fabs(focus1)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus1)*(fabs(distance-eps)))*sin(theta_line),distance-eps-thickness/2,sqrt(4*fabs(focus1)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus1)*fabs(distance))*sin(theta_line),distance-thickness/2);
+              theta_line+=eps2;
           }
         } else {
           circle("xy",0,0,(radius*radius/4)/(4*focus1)+distance-thickness/2,sqrt((4*fabs(focus1)*fabs(distance))));
@@ -632,12 +633,12 @@ MCDISPLAY
       }
     } else if (!r2 && focus2) { /* parabola 2 */
       if (focus2>0){
-        dist_parab2=radius*radius/(16*focus2);
+        dist_parab2=radius*radius/(4*focus2);
       }else{
         dist_parab2=0.0;
       }
 
-      distance=(radius*radius/4)/(4*focus2);
+      distance=(radius*radius)/(4*focus2);
       height2=sqrt((4*focus2*fabs(distance)));
       eps=-distance/4;
       eps2=2*PI/4;
@@ -727,10 +728,10 @@ MCDISPLAY
 			  line(0,height,-thickness/2+dist_parab1,0,height,(thickness/2-radius/2*sin(phiy2))/cos(phiy2));
 		  }
 		  else {
-			  line(-radius/2,0,-thickness/2+dist_parab1,-radius/2,0,thickness/2+dist_parab2);
-			  line(radius/2,0,-thickness/2+dist_parab1,radius/2,0,thickness/2+dist_parab2);
-			  line(0,-radius/2,-thickness/2+dist_parab1,0,-radius/2,thickness/2+dist_parab2);
-			  line(0,radius/2,-thickness/2+dist_parab1,0,radius/2,thickness/2+dist_parab2);
+			  line(-radius,0,-thickness/2+dist_parab1,-radius,0,thickness/2+dist_parab2);
+			  line(radius,0,-thickness/2+dist_parab1,radius,0,thickness/2+dist_parab2);
+			  line(0,-radius,-thickness/2+dist_parab1,0,-radius,thickness/2+dist_parab2);
+			  line(0,radius,-thickness/2+dist_parab1,0,radius,thickness/2+dist_parab2);
 		  }
 	  }
   } /* end of not a OFF/PLY */
