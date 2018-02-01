@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1
+sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --recurse-submodules -depth=1
 cd McCode
 sudo -u vagrant git pull
 echo "#!/bin/bash" > go.command
