@@ -122,7 +122,7 @@ class Data2D(DataMcCode):
 ''' 
 Utility funcitons for loading and parsing mccode output files
 '''
-freetext_pat = '[\w \[\]\{\}\(\)\.\,\+\-\\\/\^\~]+'
+freetext_pat = '.+'
 
 def _parse_1D_monitor(text):
     ''' populates data fields of new Data1D object using the text from a mccode data file '''
@@ -224,7 +224,10 @@ def _parse_2D_monitor(text):
         '''# zvar: I '''
         m = re.search('\# zvar: (%s)\n' % freetext_pat, text)
         data.zvar = m.group(1)
-        '''# xylimits: -30 30 -30 30'''
+        '''
+        # xylimits: -30 30 -30 30
+        # xylimits: 0 5e+06 0.5 100
+        '''
         m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)\n', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
         
@@ -334,7 +337,7 @@ def _load_multiplot_1D_lst(f_dat):
     try:
         header = Data1D()
         header.component = ''
-        header.filename = 'mcstas.dat'
+        header.filename = 'mccode.dat'
         
         # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
@@ -394,6 +397,7 @@ def _load_multiplot_1D_lst(f_dat):
             data.yvals = yvals_lst[i]
             data.yvar = yvars[2*i]
             data.title = '%s' % (data.yvar)
+            data.component = data.title
             data.y_err_vals = yvals_err_lst[i]
             data_handle_lst.append(DataHandle(load_fct=None, data=data))
 

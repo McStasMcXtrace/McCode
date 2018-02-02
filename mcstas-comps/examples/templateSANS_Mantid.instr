@@ -102,7 +102,7 @@ COMPONENT PSDrad = PSD_monitor_rad(
   AT (0, 0, 3.02) RELATIVE sampleMantid
 
 COMPONENT nD_Mantid_1 = Monitor_nD(
-    options ="mantid square x limits=[-0.3 0.3] bins=128 y limits=[-0.3 0.3] bins=128, neutron pixel t, list all neutrons",
+    options ="mantid square x limits=[-0.3 0.3] bins=128 y limits=[-0.3 0.3] bins=128, neutron pixel min=0 t, list all neutrons",
     xmin = -0.3,
     xmax = 0.3,
     ymin = -0.3,

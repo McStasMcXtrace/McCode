@@ -123,6 +123,9 @@ DECLARE
 
 INITIALIZE
 %{
+
+  fprintf("Warning(%s): You are using an OBSOLETE component. Please update your instrument to use Pol_Bfield instead.\n",NAME_CURRENT_COMP);
+
   /* these default field functions are part of pol-lib */
   if (fieldFunction==const_magnetic_field){
     double *t=malloc(3*sizeof(double));

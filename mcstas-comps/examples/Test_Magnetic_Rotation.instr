@@ -97,7 +97,7 @@ PolLambda_monitor(xwidth=0.1, yheight=0.1,
      AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT magnetNum =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength,
+Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength,
 		 Bx = 0, By = Bmagnitude, Bz = 0,
 		 fieldFunction=rot_magnetic_field)
      AT (0, 0, 1.0) RELATIVE Origin
@@ -122,7 +122,7 @@ MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
      AT (0, 0, magnetLength/2) RELATIVE magnetNum
 */
 COMPONENT magnetNumCp =
-Pol_simpleBfield_stop(magnet_comp_stop=magnetNum)
+Pol_Bfield_stop()
   AT(0,0,magnetLength) RELATIVE magnetNum
 
 COMPONENT MPLMonNum2X =

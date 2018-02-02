@@ -61,7 +61,10 @@ SHARE
 %{
 %include "pol-lib"
 %}
-
+INITIALIZE
+%{
+  fprintf("Warning(%s): You are using an OBSOLETE component. Please update your instrument to use Pol_Bfield instead.\n",NAME_CURRENT_COMP);
+%}
 TRACE
 %{
 PROP_Z0;

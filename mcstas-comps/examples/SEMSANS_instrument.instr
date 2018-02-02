@@ -115,12 +115,12 @@ AT (0,0,vcoil_12_pos) RELATIVE Origin
 
 
 // START GUIDEFIELD 1
-COMPONENT Guide_field1 = Pol_simpleBfield(xwidth=0.4, yheight=0.4, zdepth=Guide1_depth, Bx=0, By=Bguide+Bextra, Bz=0,fieldFunction=const_magnetic_field)
+COMPONENT Guide_field1 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide+Bextra, Bz=0,fieldFunction=const_magnetic_field)
      AT (0,0,Guide1_pos) RELATIVE Origin
 
 
 // STOP GUIDE FIELD 1
-COMPONENT Guide_field1_cp = Pol_simpleBfield_stop(magnet_comp_stop=Guide_field1)
+COMPONENT Guide_field1_cp = Pol_Bfield_stop()
      AT (0,0,Guide1_pos+Guide1_depth) RELATIVE Origin
 
 
@@ -132,12 +132,12 @@ COMPONENT triacoil_1=Pol_triafield(
 
 
 // START GUIDEFIELD 2
-COMPONENT Guide_field2 = Pol_simpleBfield(xwidth=0.4, yheight=0.4, zdepth=Guide2_depth+flippos, Bx=0, By=Bguide, Bz=0,fieldFunction=const_magnetic_field)
+COMPONENT Guide_field2 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0,fieldFunction=const_magnetic_field)
      AT (0,0,Guide2_pos) RELATIVE Origin
 
 
 // STOP GUIDE FIELD 2
-COMPONENT Guide_field2_cp = Pol_simpleBfield_stop(magnet_comp_stop=Guide_field2)
+COMPONENT Guide_field2_cp = Pol_Bfield_stop()
   AT (0,0,Guide2_pos+Guide2_depth+flippos) RELATIVE Origin
 
 
@@ -153,12 +153,12 @@ AT (0,0,vcoil_34_pos+flippos) RELATIVE Origin
 
 
 // START GUIDEFIELD 3
-COMPONENT Guide_field3 = Pol_simpleBfield(xwidth=0.4, yheight=0.4, zdepth=Guide3_depth-flippos, Bx=0, By=Bguide, Bz=0,fieldFunction=const_magnetic_field)
+COMPONENT Guide_field3 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0,fieldFunction=const_magnetic_field)
      AT (0,0,Guide3_pos+flippos) RELATIVE Origin
 
 
 // STOP GUIDE FIELD 3
-COMPONENT Guide_field3_cp = Pol_simpleBfield_stop(magnet_comp_stop=Guide_field3)
+COMPONENT Guide_field3_cp = Pol_Bfield_stop()
      AT (0,0,Guide3_pos+Guide3_depth) RELATIVE Origin
 
 
@@ -170,12 +170,12 @@ COMPONENT triacoil_2=Pol_triafield(
 
 
 // START GUIDEFIELD 4
-COMPONENT Guide_field4 = Pol_simpleBfield(xwidth=0.4, yheight=0.4, zdepth=Guide4_depth, Bx=0, By=Bguide, Bz=0,fieldFunction=const_magnetic_field)
+COMPONENT Guide_field4 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0,fieldFunction=const_magnetic_field)
      AT (0,0,Guide4_pos) RELATIVE Origin
 
 
 // STOP GUIDE FIELD 4
-COMPONENT Guide_field4_cp = Pol_simpleBfield_stop(magnet_comp_stop=Guide_field4)
+COMPONENT Guide_field4_cp = Pol_Bfield_stop()
   AT (0,0,Guide4_pos+Guide4_depth) RELATIVE Origin
 
 //First v-coil of third v-coil pair
@@ -205,19 +205,19 @@ COMPONENT analyser=Analyser_ideal(mx=0,my=1,mz=0)
 
 		COMPONENT GratingSlit1_2 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (-1.0*grating_w - 1.0*grating_a, 0, grating_pos) RELATIVE Origin
- 		    GROUP Grating
+                        GROUP Grating
 
 		COMPONENT GratingSlit1_3 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (0, 0, grating_pos) RELATIVE Origin
-			 GROUP Grating
+                        GROUP Grating
 
 		COMPONENT GratingSlit1_4 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (1.0*grating_w + 1.0*grating_a, 0, grating_pos) RELATIVE Origin
- 		    GROUP Grating
+                        GROUP Grating
 
 		COMPONENT GratingSlit1_5 = Slit(xwidth=grating_w,yheight=5e-3)
 			AT (2.0*grating_w + 2.0*grating_a, 0, grating_pos) RELATIVE Origin
- 		    GROUP Grating
+                        GROUP Grating
 /*
 //THIS IS DOUBLE SLIT
 		COMPONENT GratingSlit2_1 = Slit(xwidth=grating_w,yheight=5e-3)

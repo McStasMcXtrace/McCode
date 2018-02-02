@@ -1620,8 +1620,8 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       
       /* check width and height of elements (sphere) to make sure the nb
          of plates remains limited */
-      if (width < 10  && NH > 1) { width = 10;  NH=(hdiv_max-hdiv_min)/width; }
-      if (height < 10 && NV > 1) { height = 10; NV=(vdiv_max-vdiv_min)/height; }
+      if (width < 10  && NH > 1) { width = 10;  NH=(hdiv_max-hdiv_min)/width; width=(hdiv_max-hdiv_min)/NH; }
+      if (height < 10 && NV > 1) { height = 10; NV=(vdiv_max-vdiv_min)/height; height= (vdiv_max-vdiv_min)/NV; }
       
       mcdis_magnify("xyz");
       for(ih = 0; ih < NH; ih++)
