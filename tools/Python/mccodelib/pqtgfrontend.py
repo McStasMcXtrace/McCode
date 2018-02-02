@@ -119,7 +119,7 @@ class ViewModel():
     def get_sourcedir(self):
         return self.sourcedir
 
-def plot_node(node, plot_func, layout, viewmodel):
+def plot_node(node, plot_func, layout, viewmodel, sync_zoom_obj_ids=[]):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
@@ -139,11 +139,15 @@ def plot_node(node, plot_func, layout, viewmodel):
         viewbox_lst = []
         for i in range(n):
             viewbox_lst.append(add_plot(layout, node, plot_func, i, n, viewmodel))
+        if id(node) in sync_zoom_obj_ids:
+            sync_views_zooming(viewbox_lst)
     
         # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
         vn_dict_click = {}
         vn_dict_rclick = {}
         vn_dict_ctrlclick = {}
+        # tag sync-zoom node id's (secondaries)
+        sync_zoom_obj_ids = sync_zoom_obj_ids + [id(n) for n in sec_lst]
         # for each primary node, a click is registered to it
         for i in range(len(prim_lst)):
             vn_dict_click[viewbox_lst[i]] = prim_lst[i]
@@ -156,7 +160,7 @@ def plot_node(node, plot_func, layout, viewmodel):
             vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
         
         # set mouse click handlers on the window
-        plot_node_cb = lambda node: plot_node(node, plot_func, layout=layout, viewmodel=viewmodel)
+        plot_node_cb = lambda node: plot_node(node, plot_func, layout=layout, viewmodel=viewmodel, sync_zoom_obj_ids=sync_zoom_obj_ids)
         set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
@@ -342,3 +346,14 @@ def add_plot(layout, node, plot_node_func, i, n, viewmodel):
         layout.addItem(plt_itm, i / rowlen, i % rowlen)
     
     return view_box
+
+def sync_views_zooming(vb_lst):
+    ''' replace individual viewbox vheel events with a new, global wheel event which calls all of them '''
+    org_wheel_events = [vb.wheelEvent for vb in vb_lst]
+    def modded_wheel_event(ev):
+        for vb in vb_lst:
+            org_wheel_events[vb_lst.index(vb)](ev)
+    for vb in vb_lst:
+        vb.wheelEvent = modded_wheel_event
+
+
