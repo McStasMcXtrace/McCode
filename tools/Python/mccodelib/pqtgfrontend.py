@@ -321,26 +321,25 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def get_plot_func_opts(log, legend, icolormap, verbose, legend_fontsize):
+def get_plot_func_opts(log, legend, icolormap, verbose, fontsize):
     ''' returns a dict for holding the plot options relevant for this plotting frontend '''
     d = {}
     d['log'] = log
     d['legend'] = legend 
     d['icolormap'] = icolormap 
     d['verbose'] = verbose
-    d['legend_fontsize'] = legend_fontsize
+    d['fontsize'] = fontsize
     return d
 
-#def add_plot(layout, node, plot_node_func, i, n, log=False, legend=True, icolormap=0):
 def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     ''' constructs a plot from data and adds this to layout '''
     plt = pg.PlotItem()
     rowlen = get_golden_rowlen(n)
     
     verbose = n<=4
-    legend_fontsize = (8, 14)[n<=2]
+    fontsize = (4, 10, 14)[int(n<=2) + int(n<12)]
     
-    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, legend_fontsize)
+    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, fontsize)
     view_box, plt_itm = plot_node_func(node, i, plt, options)
     if (view_box):
         layout.addItem(plt_itm, i / rowlen, i % rowlen)
