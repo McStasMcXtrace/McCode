@@ -190,26 +190,41 @@ SAVE
 #endif
 
     /*don't do the internal gather in DETECTOR_OUT_2D*/
-    //MPI_NOGATHER;
-    DETECTOR_OUT_2D(
-        "PSD monitor (absolute value)",
-        "X position [m]",
-        "Y position [m]",
-        xmin, xmax, ymin, ymax,
-        nx, ny,
-        PSD_N[0],PSD_p_abs,PSD_p2[0],
-        filename_abs);
+    if(nx==1 && ny==1){
+        DETECTOR_OUT_0D("Intensity monitor (absolute value)" NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p_abs[0][0], PSD_p2[0][0]);
+        DETECTOR_OUT_0D("Intensity monitor (argument)" NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p_arg[0][0], PSD_p2[0][0]);
+    }else if(nx==1){
+        DETECTOR_OUT_1D(
+                "PSD_monitor (absolute value)","Y Position[m]", "Intensity", "Y",
+                ymin,ymax,ny,&PSD_N[0][0],&PSD_p_abs[0][0],&PSD_p2[0][0],filename_abs);
+        DETECTOR_OUT_1D(
+                "PSD_monitor (argument)","Y Position[m]", "Intensity", "Y",
+                ymin,ymax,ny,&PSD_N[0][0],&PSD_p_arg[0][0],&PSD_p2[0][0],filename_arg);
+    }else if (ny==1){
+        DETECTOR_OUT_1D(
+                "PSD_monitor (absolute value)","X Position[m]", "Intensity", "X",
+                xmin,xmax,nx,&PSD_N[0][0],&PSD_p_abs[0][0],&PSD_p2[0][0],filename_abs);
+        DETECTOR_OUT_1D(
+                "PSD_monitor (argument)","X Position[m]", "Intensity", "X",
+                xmin,xmax,nx,&PSD_N[0][0],&PSD_p_arg[0][0],&PSD_p2[0][0],filename_arg);
+    }else{
+        //MPI_NOGATHER;
+        DETECTOR_OUT_2D(
+                "PSD_monitor (absolute value)",
+                "X position [m]","Y position [m]",
+                xmin, xmax, ymin, ymax, nx, ny,
+                PSD_N[0],PSD_p_abs,PSD_p2[0],
+                filename_abs);
 
-    /*don't do the internal gather in DETECTOR_OUT_2D*/
-    //MPI_NOGATHER;
-    DETECTOR_OUT_2D(
-        "PSD monitor (argument)",
-        "X position [m]",
-        "Y position [m]",
-        xmin, xmax, ymin, ymax,
-        nx, ny,
-        (PSD_N[0]),PSD_p_arg,PSD_p2[0],
-        filename_arg);
+        /*don't do the internal gather in DETECTOR_OUT_2D*/
+        //MPI_NOGATHER;
+        DETECTOR_OUT_2D(
+                "PSD_monitor (argument)",
+                "X position [m]","Y position [m]",
+                xmin, xmax, ymin, ymax, nx, ny,
+                (PSD_N[0]),PSD_p_arg,PSD_p2[0],
+                filename_arg);
+    }
 %}
 
 FINALLY
