@@ -1,7 +1,7 @@
 #! /bin/bash
 
 cd /home/vagrant
-sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1
+sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --recurse-submodules -depth=1
 
 sudo -u vagrant tar xzf McCode/support/Win32/Wine/dotwine.tgz
 

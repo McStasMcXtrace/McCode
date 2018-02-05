@@ -144,7 +144,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
     Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
     Vars->Coord_NumberNoPixel=0;   /* same but without counting PixelID */
-    Vars->Buffer_Block      = 10000;     /* Buffer size for list or auto limits */
+
+/* Allow to specify size of Monitor_nD buffer via a define*/
+#ifndef MONND_BUFSIZ
+    Vars->Buffer_Block      = 100000;     /* Buffer size for list or auto limits */
+#else
+	Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
+#endif
     Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
