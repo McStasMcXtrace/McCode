@@ -1435,9 +1435,6 @@ for($i = 0; $i < @ARGV; $i++) {
         $multi_view = 1;
     } elsif($ARGV[$i] =~ /--help|-h$/) {
         $show_help=1;
-    } elsif(($ARGV[$i] =~ /^-z([-0-9+.eE]+)$/) ||
-            ($ARGV[$i] =~ /^--zoom=([-0-9+.eE]+)$/)) {
-        $magnification = ($1 == 0 ? 1 : $1);
     } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
             ($ARGV[$i] eq "-fig") || ($ARGV[$i] eq "-scg") ||
             ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png") || ($ARGV[$i] eq "-ppm")) {
@@ -1493,7 +1490,6 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -m        --multi           Show the three instrument side views
  -T        --TOF             Special Time Of Flight acceptance diagram mode
            --tmax=TMAX       Maxiumum TOF [ms] (defaults to 50 ms)
- -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
            --param=FILE      Read input parameters from parameter file
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,VRML,Matlab,Mantid/NeXus}

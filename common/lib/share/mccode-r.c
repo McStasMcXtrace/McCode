@@ -2145,7 +2145,7 @@ mcsetseed(char *arg)
 *******************************************************************************/
 
 void mcdis_magnify(char *what){
-  printf("MCDISPLAY: magnify('%s')\n", what);
+  // Do nothing here, better use interactive zoom from the tools
 }
 
 void mcdis_line(double x1, double y1, double z1,
