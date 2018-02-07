@@ -73,7 +73,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   multiline(3, -(double)xw, 0.5*yw, 0.0,
                -0.5*xw,     0.5*yw, 0.0,
                -0.5*xw, (double)yw, 0.0);

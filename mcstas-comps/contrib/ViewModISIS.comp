@@ -1117,7 +1117,7 @@ MCDISPLAY
 
 
 
-  magnify("xy");
+  
   multiline(5,-0.5*TS.XAxis,-0.5*TS.ZAxis,0.0,
 	    0.5*TS.XAxis,-0.5*TS.ZAxis,0.0,
 	    0.5*TS.XAxis,0.5*TS.ZAxis,0.0,

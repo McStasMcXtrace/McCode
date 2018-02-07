@@ -427,7 +427,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xyz");
+  
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }

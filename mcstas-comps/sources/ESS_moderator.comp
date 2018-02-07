@@ -440,7 +440,7 @@ MCDISPLAY
 %{
   /* if (planar==0) { */
   /* Draw cold moderator as cylinder */
-  magnify("xz");
+  
   if (!strcasestr(sourcedef,"2015")) {
     circle("xz", cx,  cy+yheight_c/2.0, cz, cyl_radius);
     circle("xz", cx,  cy-yheight_c/2.0, cz, cyl_radius);

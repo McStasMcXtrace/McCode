@@ -2701,7 +2701,7 @@ FINALLY
 MCDISPLAY
 %{
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
-    magnify("xyz");
+    
     if(VarSqw.shape==1)
     {
       double xmin = -0.5*xwidth;

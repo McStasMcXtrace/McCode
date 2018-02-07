@@ -137,7 +137,7 @@ MCDISPLAY
   double R1 = (curvature - 0.5*w1);    /* radius of inside arc */
   double R2 = (curvature + 0.5*w1);    /* radius of outside arc */
 
-  magnify("xy");
+  
 
   for(j=0;j<n;j++) {
     z1 = ((double)j)*(R1*l/curvature)/(double)(n - 1);

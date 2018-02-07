@@ -252,7 +252,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("zy");
+  
   multiline(5, 0.0, (double)ymin, (double)zmin,
                0.0, (double)ymax, (double)zmin,
                0.0, (double)ymax, (double)zmax,

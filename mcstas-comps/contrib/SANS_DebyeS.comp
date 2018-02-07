@@ -117,7 +117,7 @@ MCDISPLAY
 %{
   double radius = 0;
   double h = 0;
-  magnify("xyz");
+  
   {
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;

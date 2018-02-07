@@ -75,7 +75,7 @@ MCDISPLAY
 %{
     double dx=xwidth/16;
     double dy=yheight/8;
-  magnify("xy");
+  
   box(0,0,0,xwidth,yheight,zdepth);
   
   line(dx,-dy,0,dx,-dy+yheight/2.0,0);

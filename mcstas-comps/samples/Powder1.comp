@@ -178,7 +178,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xyz");
+  
   if (!isrect) {
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);

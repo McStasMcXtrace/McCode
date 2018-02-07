@@ -114,7 +114,7 @@ MCDISPLAY
   double a;
   double xw, yh;
 
-  magnify("xy");
+  
   xw = xwidth/2.0;
   yh = yheight/2.0;
   /* Draw apertures */

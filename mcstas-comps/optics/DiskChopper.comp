@@ -166,7 +166,7 @@ MCDISPLAY
 
   int j;
   /* Arrays for storing geometry of slit/beamstop */
-  magnify("xy");
+  
   circle("xy", 0, -delta_y, 0, radius);
 
   /* Drawing the slit(s) */

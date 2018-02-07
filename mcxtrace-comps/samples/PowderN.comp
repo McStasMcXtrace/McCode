@@ -1166,7 +1166,7 @@ FINALLY
 MCDISPLAY
 %{
   if (line_info.V_0) {
-    magnify("xyz");
+    
     if (line_info.shape == 0) { /* cyl */
       circle("xz", 0,  yheight/2.0, 0, radius);
       circle("xz", 0, -yheight/2.0, 0, radius);

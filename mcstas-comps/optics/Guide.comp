@@ -199,7 +199,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   multiline(5,
             -w1/2.0, -h1/2.0, 0.0,
              w1/2.0, -h1/2.0, 0.0,

@@ -2026,7 +2026,7 @@ MCDISPLAY
 %{
   // mcdisplay is handled in the component files for each geometry and called here. The line function is only available in this section, and not through functions,
   //   so all the lines to be drawn for each volume are collected in a structure that is then drawn here.
-  magnify("xyz");
+  
   struct lines_to_draw lines_to_draw_master;
   for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
         if (Volumes[volume_index]->geometry.visualization_on == 1) {

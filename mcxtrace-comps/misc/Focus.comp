@@ -92,7 +92,7 @@ TRACE
 MCDISPLAY
 %{
  // nothing to display, really
-  magnify("xy");
+  
   rectangle("xy",0,0,0,2.0,2.0);
 %}
 

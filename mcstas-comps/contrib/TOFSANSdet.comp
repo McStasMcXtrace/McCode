@@ -918,7 +918,7 @@ MCDISPLAY
                                      hl3c=ddmax(hl3c,ddmax(xw3c/Nx,yh3c/Ny)*3.0);   /* leave some space for other data */
   vx3c = ddmin(ddmax(vx3,1.0),15.0);
 
-  magnify("xyz");
+  
 
   if (ds1c>0.0 && xw1c>0.0 && yh1c>0.0) {
     multiline(5, -0.5*xw1c, -0.5*yh1c, ds1c,

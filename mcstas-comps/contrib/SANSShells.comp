@@ -159,7 +159,7 @@ TRACE
 
 MCDISPLAY
 %{
-	magnify("xyz");
+	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 

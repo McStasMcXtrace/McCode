@@ -273,7 +273,7 @@ MCDISPLAY
   w2c = w1c; h1 = h; h2 = h;
   L = r*mWin; w1 = w; w2 = w;
 
-  magnify("xy");
+  
   for(i = 0; i < k; i++)
   {
     multiline(5,

@@ -164,7 +164,7 @@ MCDISPLAY
   double x_out_l, z_out_l, x_out_r, z_out_r;
   double window_theta, y1, y2;
 
-  magnify("xy");
+  
   window_theta = alpha_in + beta_in;
   y1 = h_in/2;
   y2 = h_out/2;

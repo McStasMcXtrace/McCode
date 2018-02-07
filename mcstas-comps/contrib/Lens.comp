@@ -539,7 +539,7 @@ FINALLY %{
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   double theta1,theta00=0,theta01=0,eps,eps2,theta_line,distance,height,height2,dist_parab1,dist_parab2;
   height=radius/2;
   height2=radius/2;

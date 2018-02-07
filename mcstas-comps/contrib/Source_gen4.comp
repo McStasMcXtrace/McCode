@@ -594,7 +594,7 @@ MCDISPLAY
 
   if ((h == 0) || (w == 0))
   {
-    magnify("xy");
+    
     circle("xy",0,0,0,radius);
     if (gaussian)
       circle("xy",0,0,0,radius/2);
@@ -604,7 +604,7 @@ MCDISPLAY
     xmin = -w/2; xmax = w/2;
     ymin = -h/2; ymax = h/2;
 
-    magnify("xy");
+    
     multiline(5, (double)xmin, (double)ymin, 0.0,
              (double)xmax, (double)ymin, 0.0,
              (double)xmax, (double)ymax, 0.0,

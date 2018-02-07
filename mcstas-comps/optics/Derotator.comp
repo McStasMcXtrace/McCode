@@ -60,7 +60,7 @@ double angle = MC_GETPAR(rotator, angle);
 
 MCDISPLAY
 %{
-  magnify("");
+  
 %}
 
 END

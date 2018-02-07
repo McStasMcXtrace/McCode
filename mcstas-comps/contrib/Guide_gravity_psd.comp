@@ -740,7 +740,7 @@ MCDISPLAY
     double y1,y2,y3,y4;
     double nel = (nelements > 11 ? 11 : nelements);
 
-    magnify("xy");
+    
     for (n=0; n<nel; n++)
     {
       double z0, z1;
@@ -787,7 +787,7 @@ MCDISPLAY
   }
   else {
     /* A bit ugly; hard-coded dimensions. */
-    magnify("");
+    
     line(0,0,0,0.2,0,0);
     line(0,0,0,0,0.2,0);
     line(0,0,0,0,0,0.2);

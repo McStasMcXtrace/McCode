@@ -108,7 +108,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   circle("xy",0,0,0,radius);
   if (dist) {
     dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);

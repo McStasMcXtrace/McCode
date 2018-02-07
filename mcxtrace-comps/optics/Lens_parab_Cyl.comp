@@ -293,7 +293,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   double z_c,zdepth,w;
   w=(yheight*yheight)/(8*r);
   zdepth=N*(2*w+d);
