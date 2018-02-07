@@ -1435,6 +1435,8 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("#define rectangle mcdis_rectangle");
   cout("#define box mcdis_box");
   cout("#define circle mcdis_circle");
+  cout("#define cylinder mcdis_cylinder");
+  cout("#define sphere mcdis_sphere");
   coutf("void %sdisplay(void) {", ID_PRE);
   cout("  printf(\"MCDISPLAY: start\\n\");");
   cout("  /* Components MCDISPLAY code. */");
@@ -1467,6 +1469,8 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("#undef rectangle");
   cout("#undef box");
   cout("#undef circle");
+  cout("#undef cylinder");
+  cout("#undef sphere");
 } /* cogen_mcdisplay */
 
 
