@@ -115,7 +115,8 @@ INITIALIZE
 
   if(!Gamma && !Lambda){
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
-    // reflectivity datafile parsing
+    prms_m->kinematical = 0;
+    /* reflectivity datafile parsing */
     int status=0;
     t_Table T;
     if ( (status=Table_Read(&T,reflectivity_datafile,0))==-1){

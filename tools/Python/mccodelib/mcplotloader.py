@@ -215,7 +215,7 @@ def _parse_2D_monitor(text):
         data.ylabel = m.group(1)
         
         '''# xvar: X'''
-        m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
+        m = re.search('\# xvar: (%s)\n' % freetext_pat, text)
         data.xvar = m.group(1)
         '''# yvar: Y '''
         m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
