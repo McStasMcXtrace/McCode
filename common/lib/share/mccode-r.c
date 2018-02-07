@@ -2268,6 +2268,9 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
     int i;
+    /*no lines make little sense - so trigger the default*/
+    if(N<=0) N=5;
+
     NORM(nx,ny,nz);
     double h_2=height/2.0;
     mcdis_Circle(x+nx*h_2,y+ny*h_2,z+nz*h_2,r,nx,ny,nz);
@@ -2291,10 +2294,13 @@ void mcdis_cylinder( double x, double y, double z,
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)
- * The sphere is drawn using N great circles.*/
+ * The sphere is drawn using N longitudes and N latitudes.*/
 void mcdis_sphere(double x, double y, double z, double r, int N){
     double nx,ny,nz;
     int i;
+    /*no lines make little sense - so trigger the default*/
+    if(N<=0) N=5;
+
     nx=0;ny=0;nz=1;
     mcdis_Circle(x,y,z,r,nx,ny,nz);
     for (i=1;i<N;i++){
