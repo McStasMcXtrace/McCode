@@ -1,0 +1,34 @@
+#!/bin/sh
+# Wrapper script for @P@plot-matplotlib-py
+
+# First ensure that we follow symlink if needed
+LINK=`readlink $0`
+
+# Am I a symlink?
+if [ "x$LINK" != "x" ]; then
+    LIB=`dirname $LINK`
+else
+    LIB=`dirname $0`
+fi
+LIB="$LIB/../tools/Python/@P@plot/matplotlib"
+TOOL="@P@plot"
+VERS="@MCCODE_VERSION@"
+
+canrun() {
+    if ! [ -x ${LIB}/${TOOL}.py ]; then
+        exit 127;
+    fi
+
+    modules="matplotlib numpy"
+    cmd=""
+    for name in ${modules}; do
+        cmd="${cmd}import ${name}; "
+    done
+    python3 -c "${cmd}"
+}
+
+if ( canrun ); then
+    python3 ${LIB}/${TOOL}.py $*
+else
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
+fi

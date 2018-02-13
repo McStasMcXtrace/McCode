@@ -540,7 +540,7 @@ line(x_plot[50],-ypos[50],zpos[50],x_plot[50],ypos[50],zpos[50]);
 //printf("ypos0=%f xpos0=%f ypos50=%f xpos50=%f",ypos[0], x_plot[0], ypos[50], x_plot[50]);
 
 /*  double xmax, xmin, ymax, ymin;
-  magnify("xy");
+  
 
   if (center == 0) {
     xmax= x1; xmin=0;

@@ -3,7 +3,7 @@
 echo
 echo Locating newest McCode package in /Applications/...
 echo
-NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
+NEWESTAPP=`ls -art /Applications | grep 'McStas\|McXtrace' | grep \.app | tail -1`
 echo Seems /Applications/$NEWESTAPP is where I should go...
 echo
 MCCODE=`echo $NEWESTAPP | cut -f2 -d/ | cut -f1 -d- | tr '[:upper:]' '[:lower:]'`
@@ -129,6 +129,12 @@ then
 elif [ "$OSXVER" == "12" ];
 then
     # 10.12 aka Sierra
+    PERLVER="SYSTEM"
+    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+elif [ "$OSXVER" == "13" ];
+then
+    # 10.13 aka High Sierra
     PERLVER="SYSTEM"
     TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
     SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"

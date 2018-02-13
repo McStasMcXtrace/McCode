@@ -392,7 +392,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("");
+  
   if (shape==CYLINDER){
     /*sample is a cylinder*/
     circle("xz", 0,  yheight/2.0, 0, radius);

@@ -1,0 +1,111 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Attenuating_mask
+*
+* %I
+*
+* Written by: Matteo Busi, Erik B Knudsen
+* Date: November 2017
+* Version: 1.0
+* Release: McXtrace 1.4
+* Origin: DTU Physics
+*
+* Attenuating_mask
+*
+* %D
+* This component models a mask of energy dependent attenuation. This consists of a rectangular grid of size
+* "xwidth*yheight", composed of multiple disks of finite thickness "zdepth" of an attenuating material "att_file", 
+* width "blocks_width" and period "blocks_dist"(i.e. distance between the center of each disk). 
+* If holed_mask mode is turned the model of the component is the opposite, i.e. the mask is composed of an 
+* attenuating slab of finite thickness and of size "xwidth*yheight", with apertures of desired width and period.
+*
+* %P
+* Input parameters:
+* att_file : [".txt"] File that contains the object information. (Default: "W.txt")
+* xwidth: [m] Horizontal width of the mask. (Default: 1e-1)
+* yheight: [m] Vertical height of the mask. (Default: 1e-1)
+* zdepth: [m] Thickness of the absorbing mask. (Default: 3e-3)
+* blocks_xwidth: [m] Width of the absorbing blocks in the x-direction. (Default: 3e-3)
+* blocks_xdist: [m] Distance between absorbing blocks in the x-direction. (Default: 10e-3)
+* blocks_yheight: [m] Height of the absorbing blocks in the y-direction. (Default: 3e-3)
+* blocks_ydist: [m] Distance between absorbing blocks in the y-direction. (Default: 10e-3)
+* holed_mask: [1] Set to 1 if the mask is a holed grid. (Default: 0)
+*  
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Attenuating_mask
+DEFINITION PARAMETERS (string att_file = "W.txt")
+SETTING PARAMETERS (xwidth = 1e-1, yheight = 1e-1, zdepth =10e-6, blocks_xwidth = 1e-3, blocks_xdist = 2.5e-3, blocks_yheight = 1e-3, blocks_ydist = 2.5e-2, holed_mask = 0)
+OUTPUT PARAMETERS ()
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+	double rho;
+	t_Table att_table;
+%}
+
+INITIALIZE
+%{	
+	int status=0;
+	if((status=Table_Read(&(att_table),att_file,0))==-1){ // load the attenuation crossection
+		fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",att_file,NAME_CURRENT_COMP); exit(-1);
+	}
+	/* checking the header for retrieving density */
+	char **header_parsed;
+	header_parsed = Table_ParseHeader(att_table.header,"rho",NULL);
+	if(header_parsed[0]){rho = strtod(header_parsed[0],NULL);}
+	else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",att_file); rho = 1;}
+	printf("Rho = %1.3f.\n\n",rho);
+%}
+
+TRACE
+%{		
+	int hit_sample = 0;
+	double d0, d1;
+	
+	hit_sample = box_intersect(&d0, &d1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);	// check intersection with the component
+	
+	if(hit_sample){
+		PROP_DL(d0);
+		double cosleftx = cos(2*PI*x/blocks_xdist);
+		double cosrightx = cos(PI*blocks_xwidth/blocks_xdist);
+		double coslefty = cos(2*PI*y/blocks_ydist);
+		double cosrighty = cos(PI*blocks_yheight/blocks_ydist);		
+		double k = sqrt(kx*kx+ky*ky+kz*kz);
+		double E = K2E*k;
+		if(holed_mask==0){ // mask composed of blocking disks
+			if((cosleftx>cosrightx || cosleftx==cosrightx) && (coslefty>cosrighty || coslefty==cosrighty)){ //absorbed
+			double mul = 1e2*(d1-d0)*rho*Table_Value(att_table,E,5);
+			p*=exp(-mul);
+			} //else transmitted
+		}
+		else{ // mask composed of apertures on a grating
+			if(cosleftx<cosrightx || coslefty<cosrighty){ //absorbed
+			double mul = 1e2*(d1-d0)*rho*Table_Value(att_table,E,5);
+			p*=exp(-mul);			
+			} //else transmitted
+		}
+		PROP_DL(d1-d0);
+	}
+%}
+
+MCDISPLAY
+%{
+	
+	box(0,0,0,xwidth,yheight,zdepth);
+%}
+
+END

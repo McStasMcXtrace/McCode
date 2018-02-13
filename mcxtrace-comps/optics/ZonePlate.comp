@@ -110,7 +110,7 @@ MCDISPLAY
   lambda=2*M_PI/lambda0;
   K=sqrt(L*lambda0*1e-10);
 
-  magnify("xy");
+  
   if (radius != 0) {
     for (n=0;n<12;n++){
       rr=K*sqrt(n);

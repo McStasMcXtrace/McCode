@@ -219,7 +219,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xz");
+  
 
   double radius,D;
   radius=3.3*Ee/B;;

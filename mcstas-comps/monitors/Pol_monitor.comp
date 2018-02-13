@@ -93,9 +93,11 @@ TRACE
     pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
 
     if(fabs(pol_proj)>1) {
-      fprintf(stderr, "Pol_monitor: %s: Pol vector longer than 1 (%g, %g %g %g)\n",
-	      NAME_CURRENT_COMP,pol_proj,sx,sy,sz);
-      exit(1);
+        if (fabs(pol_proj)<1+FLT_EPSILON){
+            pol_proj=1;
+        }else{
+            ABSORB;
+        }
     }
     Pol_N++;
     Psum  += p;
@@ -110,16 +112,18 @@ TRACE
 
 SAVE
 %{
-  Pol_p  /= Psum;
-  Pol_p2 /= Psum;
-  Pol_p2 -= Pol_p*Pol_p;
-  Pol_p2 /= Pol_N;
+  if (Psum && Pol_N){
+      Pol_p  /= Psum;
+      Pol_p2 /= Psum;
+      Pol_p2 -= Pol_p*Pol_p;
+      Pol_p2 /= Pol_N;
+  }
   DETECTOR_OUT_0D(titlestring, Pol_N, Pol_p, Pol_p2);
 %}
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   rectangle("xy", 0, 0, 0, xwidth, yheight);
 %}
 

@@ -9,12 +9,12 @@
 * Origin: RISOE
 * %INSTRUMENT_SITE: Tests_polarization
 *
-* This instrument demonstrates how to use the Pol_simpleBfield
+* This instrument demonstrates how to use the Pol_Bfield
 * component with a constant field.
 *
 * %Description
 * This instrument demonstrates how to use the component
-* Pol_simpleBfield with a constant field to make a Mezei Spin flipper.
+* Pol_Bfield with a constant field to make a Mezei Spin flipper.
 *
 * This instrument matches the example: Test_Pol_MSF (under tests)
 * made with the old component: Pol_constBfield
@@ -97,10 +97,10 @@ COMPONENT armMSF = Arm()
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
 COMPONENT msf =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0)
+Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0)
      AT (0, 0, 0) RELATIVE armMSF
 
-COMPONENT msfCp = Pol_simpleBfield_stop(magnet_comp_stop=msf)
+COMPONENT msfCp = Pol_Bfield_stop()
 AT (0, 0, MAGNETLENGTH) RELATIVE armMSF
 
 

@@ -645,7 +645,7 @@ MCDISPLAY
   double xpos, zpos;
   double ymax = yheight/2; 
   double ymin = -ymax;
-  magnify("xz");
+  
   /* cylinder top/center/bottom  */
   circle("xz", 0,ymax,0,radius);
   circle("xz", 0,0   ,0,radius);

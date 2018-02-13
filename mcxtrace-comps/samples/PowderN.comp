@@ -8,7 +8,7 @@
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
 * Version: $Revision$
-* Origin: McStas release
+* Origin: McXtrace release 1.2
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
 * Modified by: KL,    22.05.03   (background)
@@ -16,7 +16,8 @@
 * Modified by: PW, LC 04.10.05   (Merge with Chapon Powder_multi)
 * Modified by: PW, KL 05.06.07   (Concentricity)
 * Modified by: EF,    17.10.08   (added any shape sample geometry)
-* Modified for X-ray use: EK, 28.10.10
+* Modified by: EK,    28.10.10   (for X-ray use)
+* Modified by: EK,               (Added options for incoherent scattering)
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
@@ -729,7 +730,7 @@ INITIALIZE
     else p_transmit=1-2*p_inc;
   } else if (p_inc + p_transmit == 1) {
     MPI_MASTER(
-    printf("PowderN: %s: You have requested all neutrons be attenuated\n"
+    printf("PowderN: %s: You have requested all photons be attenuated\n"
            "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
     );
   }
@@ -779,9 +780,9 @@ INITIALIZE
     printf("PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
   );
 
-  if (line_info.V_0 > 0 && p_inc && !line_info.sigma_i) {
+  if (line_info.V_0 > 0 && p_inc && (!line_info.sigma_i || !material)) {
   MPI_MASTER(
-    printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not set a material datafile (\'%s\') nor defined sigma_inc!\n", NAME_CURRENT_COMP, material);
   );
   }
 
@@ -1131,7 +1132,7 @@ TRACE
         line_info.type = 't';
       }
       p *= pmul;
-    } /* Neutron leaving since it has passed already */
+    } /* Photon leaving since it has passed already */
   } /* else transmit non interacting xrays */
 
 %}
@@ -1165,7 +1166,7 @@ FINALLY
 MCDISPLAY
 %{
   if (line_info.V_0) {
-    magnify("xyz");
+    
     if (line_info.shape == 0) { /* cyl */
       circle("xz", 0,  yheight/2.0, 0, radius);
       circle("xz", 0, -yheight/2.0, 0, radius);

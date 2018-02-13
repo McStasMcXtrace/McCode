@@ -389,7 +389,7 @@ MCDISPLAY
 %{
   int i, j;
 
-  magnify("xy");
+  
 
   // draw box
   box(0, 0, length/2, xwidth, yheight, length);

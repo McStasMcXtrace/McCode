@@ -292,12 +292,12 @@ macro(installMCCODE)
     install (
       FILES "${WORK}/doc/man/${FLAVOR}.1"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/doc/man/man1
-      RENAME "${FLAVOR}${PROGRAM_SUFFIX}.1"
+      RENAME "${FLAVOR}.1"
       )
     install (
       FILES "${WORK}/doc/man/${FLAVOR_FMT}.1"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/doc/man/man1"
-      RENAME "${FLAVOR_FMT}${PROGRAM_SUFFIX}.1"
+      RENAME "${FLAVOR_FMT}.1"
       )
 
     # Binaries
@@ -332,7 +332,7 @@ macro(installMCCODE)
     endforeach()
 
     # Python/Perl related batches special handling
-    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}

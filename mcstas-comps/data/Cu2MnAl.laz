@@ -25,7 +25,7 @@
 # column_l  3
 # column_j  4   multiplicity 'j'
 # column_d  5   d-spacing 'd' in [Angs]
-# column_F2 6   norm of scattering factor |F| in [barn^0.5]
+# column_F  6   norm of scattering factor |F| in [barn^0.5]
 #
 # H   K   L     Mult    dspc         |Fc|
   1   1   1     8       3.36220      2.8716

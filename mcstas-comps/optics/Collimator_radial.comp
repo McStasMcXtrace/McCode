@@ -251,7 +251,7 @@ MCDISPLAY
   Soller_theta=fabs(theta_max-theta_min)/nchan; /* angular width of Soller */
 
   /* draw all channels, which also show housing */
-  magnify("xy");
+  
   for (i = 0; i < nchan; i++) {
 
     theta1 = i*Soller_theta+theta_min;

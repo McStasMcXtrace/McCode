@@ -609,7 +609,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   double width =(max_x-min_x)/2;
   double height=(max_y-min_y)/2;
   multiline(5, -width/2.0, -height/2.0, 0.0,

@@ -285,7 +285,7 @@ MCDISPLAY
   if (sig_x<sig_y) radius=sig_x;
   else radius=sig_y; 
 
-  magnify("xy");
+  
   circle("xy",0,0,0,radius);
 %}
 

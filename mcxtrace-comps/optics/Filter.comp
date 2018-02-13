@@ -237,7 +237,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   if (prms->shape==CUBE){
     box(0,0,0,xwidth,yheight,zdepth);
   }else if (prms->shape == ANY) {	/* OFF file */

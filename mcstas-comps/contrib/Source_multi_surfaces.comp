@@ -369,7 +369,7 @@ MCDISPLAY
   xmin = -xwidth/2; xmax = xwidth/2;
   ymin = -yheight/2; ymax = yheight/2;
 
-  magnify("xy");
+  
   multiline(5, (double)xmin, (double)ymin, 0.0,
         	   (double)xmax, (double)ymin, 0.0,
         	   (double)xmax, (double)ymax, 0.0,

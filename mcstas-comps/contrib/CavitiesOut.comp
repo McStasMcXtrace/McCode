@@ -54,7 +54,7 @@ if (x<-0.5*xw/xcc || x>0.5*xw/xcc || y<-0.5*yw/ycc || y>0.5*yw/ycc)
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   multiline(3, -(double)xw, 0.5*yw, 0.0,
                -0.5*xw,     0.5*yw, 0.0,
                -0.5*xw, (double)yw, 0.0);

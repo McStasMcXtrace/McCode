@@ -122,7 +122,7 @@ class Data2D(DataMcCode):
 ''' 
 Utility funcitons for loading and parsing mccode output files
 '''
-freetext_pat = '[\w \[\]\{\}\(\)\.\+\-\\\/\^\~]+'
+freetext_pat = '.+'
 
 def _parse_1D_monitor(text):
     ''' populates data fields of new Data1D object using the text from a mccode data file '''
@@ -150,7 +150,7 @@ def _parse_1D_monitor(text):
         m = re.search('\# xvar: ([\w]+)\n', text)
         data.xvar = m.group(1)
         '''# xlimits: 5.5 6.5'''
-        m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
+        m = re.search('\# xlimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+)\n', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)))
 
         '''# yvar: (I,I_err)'''
@@ -161,7 +161,7 @@ def _parse_1D_monitor(text):
         m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d\-\+\.e]+)\n', text)
         data.values = (Decimal(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
-        m = re.search('\# statistics: X0=([\d\.\-e]+); dX=([\d\.\-e]+);\n', text)
+        m = re.search('\# statistics: X0=([\d\.\-\+e]+); dX=([\d\.\-\+e]+);\n', text)
         data.statistics = 'X0=%.2E; dX=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)))
 
         # load the actual data
@@ -215,7 +215,7 @@ def _parse_2D_monitor(text):
         data.ylabel = m.group(1)
         
         '''# xvar: X'''
-        m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
+        m = re.search('\# xvar: (%s)\n' % freetext_pat, text)
         data.xvar = m.group(1)
         '''# yvar: Y '''
         m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
@@ -224,8 +224,11 @@ def _parse_2D_monitor(text):
         '''# zvar: I '''
         m = re.search('\# zvar: (%s)\n' % freetext_pat, text)
         data.zvar = m.group(1)
-        '''# xylimits: -30 30 -30 30'''
-        m = re.search('\# xylimits: ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
+        '''
+        # xylimits: -30 30 -30 30
+        # xylimits: 0 5e+06 0.5 100
+        '''
+        m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)\n', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
@@ -334,7 +337,7 @@ def _load_multiplot_1D_lst(f_dat):
     try:
         header = Data1D()
         header.component = ''
-        header.filename = 'mcstas.dat'
+        header.filename = 'mccode.dat'
         
         # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
@@ -394,6 +397,7 @@ def _load_multiplot_1D_lst(f_dat):
             data.yvals = yvals_lst[i]
             data.yvar = yvars[2*i]
             data.title = '%s' % (data.yvar)
+            data.component = data.title
             data.y_err_vals = yvals_err_lst[i]
             data_handle_lst.append(DataHandle(load_fct=None, data=data))
 

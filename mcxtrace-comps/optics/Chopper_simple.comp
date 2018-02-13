@@ -93,7 +93,7 @@ TRACE
 MCDISPLAY
 %{
   /*chopper is symbolically shown as a disc chopper, although it is not*/ 
-  magnify("xy");
+  
   rectangle("xy",0,0,0,xwidth,yheight);
   double delta,radius;
   delta=2*yheight;

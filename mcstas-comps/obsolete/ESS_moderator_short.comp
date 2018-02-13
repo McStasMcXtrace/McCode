@@ -225,7 +225,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   rectangle("xy", 0, 0, 0, size, size);
   if (dist) {
     dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);

@@ -296,7 +296,7 @@ MCDISPLAY
 %{
   int i;
 
-  magnify("xy");
+  
   for(i = 0; i < nslit; i++)
   {
     multiline(5,

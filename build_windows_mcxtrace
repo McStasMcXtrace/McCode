@@ -28,6 +28,7 @@ find tools/Legacy-Perl-cmdline-win -type f -exec todos \{\} \;
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw32 "o" -- nsis
@@ -38,12 +39,14 @@ if [ "x$2" != "x" ]; then
     if [ ! -f PPDs.zip ]; then
 	wget http://ppds.mccode.org/PPDs.zip
     fi
-    if [ ! -f miniconda3.zip ]; then
-	echo Sorry! I need to download a miniconda3 for embedding - will take some time...
-	wget http://support.mccode.org/windows/miniconda3.zip
+    if [ ! -f Miniconda3-latest-Windows-x86.exe ]; then
+	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
+	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86.exe
     fi
     cd ..
 
+    sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
+    sed s/@FLAVOR@/mcstas/g python-install.bat.in.2 > python-install.bat
     sed s/@VERSION@/${1}/g McXtrace-metapackage32.iss > McXtrace-${1}-metapackage32.iss
     ./iscc McXtrace-${1}-metapackage32.iss
     mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win32.exe

@@ -14968,7 +14968,7 @@ MCDISPLAY
   double mr10,ml10,mu10,md10,nr110,nl110,nu110,nd110,nr210,nl210,nu210,nd210;
   double lbwl10,lbwr10,lbhu10,lbhd10;
 
-  magnify("xy");
+  
 
 
   imax=100;										/* maximum points for every line in z direction*/

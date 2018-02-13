@@ -489,7 +489,7 @@ MCDISPLAY
     nMax = 10;
   }
 
-  magnify("xy");
+  
 
   // draw opening
   rectangle("xy", 0, 0, 0, xwidth, yheight);

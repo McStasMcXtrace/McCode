@@ -186,7 +186,7 @@ SAVE
 
 MCDISPLAY
 %{
-	magnify("xy");
+	
 	circle("xy", 0, 0, 0, RadiusDetector);
 %}
 

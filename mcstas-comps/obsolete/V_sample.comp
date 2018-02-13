@@ -318,7 +318,7 @@ TRACE
 
 MCDISPLAY
 %{		
-  magnify("xyz");
+  
   if (VarsV.shapetyp == 0) {
     circle("xz", 0,  h/2.0, 0, radius_i);
     circle("xz", 0,  h/2.0, 0, radius_o);

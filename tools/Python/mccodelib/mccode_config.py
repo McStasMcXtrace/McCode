@@ -71,7 +71,6 @@ def load_user_config():
     userconfig = os.path.join(userdir,"mccode_config.json")
     
     if not os.path.isfile(userconfig):
-        print("user config does not exist: %s" % userconfig)
         return
     
     print("loading user configuration from " + userconfig)
@@ -148,7 +147,7 @@ def get_options():
  
     mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
         
-    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
+    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst

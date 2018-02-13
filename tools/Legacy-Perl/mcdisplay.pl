@@ -388,8 +388,8 @@ Transform {
 	  $mantidcount2++;
 	  my ($xmin, $xmax, $ymin, $ymax, $nx, $ny, $pixelmin)  = split ",", $1;
 	  my $dx,$dy;
-	  $dx = ($xmax-$xmin)/($nx-1);
-	  $dy = ($ymax-$ymin)/($ny-1);
+	  $dx = ($xmax-$xmin)/($nx);
+	  $dy = ($ymax-$ymin)/($ny);
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
@@ -407,16 +407,16 @@ Transform {
 
 	      # Panel pixellation
 	      write_process("\<type name=\"MonNDtype-$mantidcount2\" is=\"RectangularDetector\" type=\"pixel-$mantidcount2\"\n");
-	      write_process("\txpixels=\"$nx\" xstart=\"".$xmin."\" xstep=\"".$dx."\"\n");
-	      write_process("\typixels=\"$ny\" ystart=\"".$ymin."\" ystep=\"".$dy."\">\n</type>\n");
+	      write_process("\txpixels=\"$nx\" xstart=\"".($xmin+$dx/(2.0))."\" xstep=\"".$dx."\"\n");
+	      write_process("\typixels=\"$ny\" ystart=\"".($ymin+$dy/(2.0))."\" ystep=\"".$dy."\">\n</type>\n");
 
 	      # Individual pixel
 	      write_process("<type is=\"detector\" name=\"pixel-$mantidcount2\">\n");
 	      write_process("\t<cuboid id=\"pixel-shape-$mantidcount2\">\n");
 	      write_process("\t\t<left-front-bottom-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t\t<left-front-top-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.00005\" />\n");
-	      write_process("\t\t<left-back-bottom-point x=\"".$dx/(-2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t\t<right-front-bottom-point x=\"".$dx/(2.0)."\" y=\"".($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<left-front-top-point x=\"".$dx/(2.0)."\" y=\"".($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<left-back-bottom-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.00005\" />\n");
+	      write_process("\t\t<right-front-bottom-point x=\"".-$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
 	      write_process("\t</cuboid>\n");
 	      write_process("\t<algebra val=\"pixel-shape-$mantidcount2\" />\n");
 	      write_process("</type>\n\n");
@@ -427,10 +427,10 @@ Transform {
 	  my ($radius, $tmin, $tmax, $ymin, $ymax, $nt, $ny, $pixelmin) = split ",", $1;
 	  
 	  my $dx,$dt,$dy, $j, $yval;
-	  $dt = ($tmax-$tmin)/($nt-1);
-	  $dy = ($ymax-$ymin)/($ny-1);
+	  $dt = ($tmax-$tmin)/($nt);
+	  $dy = ($ymax-$ymin)/($ny);
 	  # A quick estimate of the bin-width in carthesian coords...
-	  $dx = (2*3.1415*$radius*($tmax-$tmin)/360)/($nt-1);
+	  $dx = (2*3.1415*$radius*($tmax-$tmin)/360)/($nt);
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
@@ -441,12 +441,16 @@ Transform {
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("\n<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
-	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
-	      write_process("</component>\n\n");
+	      write_process("\n<component type=\"".$type."_origin\" name=\"$comp\" idlist=\"".$type."-list\">\n");
+	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
+              write_process("</component>\n");
+              write_process("\n<type name=\"".$type."_origin\">\n");
+              write_process("\t<component type=\"".$type."\" >\n");
+	      write_process("\t\t<locations x=\"0.0\" y=\"".($ymin+$dy/2.0)."\" y-end=\"".($ymax-$dy/2.0)."\" n-elements=\"".$ny."\" z=\"0.0\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\" /> \n");
+	      write_process("\t</component>\n</type>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
 	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n");
-	      write_process("\t\t<locations r=\"".$radius."\" t=\"".$tmin."\" t-end=\"".$tmax."\" n-elements=\"".$nt."\" rot=\"".$tmin."\" rot-end=\"".$tmax."\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\"/>\n");
+	      write_process("\t\t<locations r=\"".$radius."\" t=\"".($tmin+$dt/2.0)."\" t-end=\"".($tmax-$dt/(2.0))."\" n-elements=\"".$nt."\" rot=\"".($tmin+$dt/2.0)."\" rot-end=\"".($tmax-$dt/2.0)."\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\"/>\n");
 	      write_process("\t</component>\n\n");
 	      write_process("</type>\n\n");
 
@@ -454,9 +458,9 @@ Transform {
 	      write_process("<type is=\"detector\" name=\"pixel-$mantidcount2\">\n");
 	      write_process("\t<cuboid id=\"pixel-shape-$mantidcount2\">\n");
 	      write_process("\t\t<left-front-bottom-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t\t<left-front-top-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.00005\" />\n");
-	      write_process("\t\t<left-back-bottom-point x=\"".$dx/(-2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t\t<right-front-bottom-point x=\"".$dx/(2.0)."\" y=\"".($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<left-front-top-point x=\"".$dx/(2.0)."\" y=\"".($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<left-back-bottom-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.00005\" />\n");
+	      write_process("\t\t<right-front-bottom-point x=\"".-$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
 	      write_process("\t</cuboid>\n");
 	      write_process("\t<algebra val=\"pixel-shape-$mantidcount2\" />\n");
 	      write_process("</type>\n\n");
@@ -1431,9 +1435,6 @@ for($i = 0; $i < @ARGV; $i++) {
         $multi_view = 1;
     } elsif($ARGV[$i] =~ /--help|-h$/) {
         $show_help=1;
-    } elsif(($ARGV[$i] =~ /^-z([-0-9+.eE]+)$/) ||
-            ($ARGV[$i] =~ /^--zoom=([-0-9+.eE]+)$/)) {
-        $magnification = ($1 == 0 ? 1 : $1);
     } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
             ($ARGV[$i] eq "-fig") || ($ARGV[$i] eq "-scg") ||
             ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png") || ($ARGV[$i] eq "-ppm")) {
@@ -1489,7 +1490,6 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -m        --multi           Show the three instrument side views
  -T        --TOF             Special Time Of Flight acceptance diagram mode
            --tmax=TMAX       Maxiumum TOF [ms] (defaults to 50 ms)
- -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
            --param=FILE      Read input parameters from parameter file
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,VRML,Matlab,Mantid/NeXus}

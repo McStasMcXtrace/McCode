@@ -170,7 +170,7 @@ TRACE
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. */
-  magnify("");
+  
   if (radius_o && yheight_o){
     circle("xz",0, yheight_o/2.0,0,radius_o);
     circle("xz",0,-yheight_o/2.0,0,radius_o);

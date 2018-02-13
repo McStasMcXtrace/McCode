@@ -6,7 +6,7 @@ import sys
 import math
 import subprocess
 
-import PyQt4
+import PyQt5
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
@@ -119,7 +119,7 @@ class ViewModel():
     def get_sourcedir(self):
         return self.sourcedir
 
-def plot_node(node, plot_func, layout, viewmodel):
+def plot_node(node, plot_func, layout, viewmodel, sync_zoom_obj_ids=[]):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
@@ -139,11 +139,15 @@ def plot_node(node, plot_func, layout, viewmodel):
         viewbox_lst = []
         for i in range(n):
             viewbox_lst.append(add_plot(layout, node, plot_func, i, n, viewmodel))
+        if id(node) in sync_zoom_obj_ids:
+            sync_views_zooming(viewbox_lst)
     
         # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
         vn_dict_click = {}
         vn_dict_rclick = {}
         vn_dict_ctrlclick = {}
+        # tag sync-zoom node id's (secondaries)
+        sync_zoom_obj_ids = sync_zoom_obj_ids + [id(n) for n in sec_lst]
         # for each primary node, a click is registered to it
         for i in range(len(prim_lst)):
             vn_dict_click[viewbox_lst[i]] = prim_lst[i]
@@ -156,7 +160,7 @@ def plot_node(node, plot_func, layout, viewmodel):
             vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
         
         # set mouse click handlers on the window
-        plot_node_cb = lambda node: plot_node(node, plot_func, layout=layout, viewmodel=viewmodel)
+        plot_node_cb = lambda node: plot_node(node, plot_func, layout=layout, viewmodel=viewmodel, sync_zoom_obj_ids=sync_zoom_obj_ids)
         set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
@@ -317,28 +321,38 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def get_plot_func_opts(log, legend, icolormap, verbose, legend_fontsize):
+def get_plot_func_opts(log, legend, icolormap, verbose, fontsize):
     ''' returns a dict for holding the plot options relevant for this plotting frontend '''
     d = {}
     d['log'] = log
     d['legend'] = legend 
     d['icolormap'] = icolormap 
     d['verbose'] = verbose
-    d['legend_fontsize'] = legend_fontsize
+    d['fontsize'] = fontsize
     return d
 
-#def add_plot(layout, node, plot_node_func, i, n, log=False, legend=True, icolormap=0):
 def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     ''' constructs a plot from data and adds this to layout '''
     plt = pg.PlotItem()
     rowlen = get_golden_rowlen(n)
     
     verbose = n<=4
-    legend_fontsize = (8, 14)[n<=2]
+    fontsize = (4, 10, 14)[int(n<=2) + int(n<12)]
     
-    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, legend_fontsize)
+    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, fontsize)
     view_box, plt_itm = plot_node_func(node, i, plt, options)
     if (view_box):
         layout.addItem(plt_itm, i / rowlen, i % rowlen)
     
     return view_box
+
+def sync_views_zooming(vb_lst):
+    ''' replace individual viewbox vheel events with a new, global wheel event which calls all of them '''
+    org_wheel_events = [vb.wheelEvent for vb in vb_lst]
+    def modded_wheel_event(ev):
+        for vb in vb_lst:
+            org_wheel_events[vb_lst.index(vb)](ev)
+    for vb in vb_lst:
+        vb.wheelEvent = modded_wheel_event
+
+

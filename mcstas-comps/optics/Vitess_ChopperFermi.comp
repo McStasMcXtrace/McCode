@@ -210,7 +210,7 @@ MCDISPLAY
   rad  = diameter/2.0/100;
   ymin = -height/2.0/100;
   ymax =  height/2.0/100;
-  magnify("xz");
+  
   /* cylinder top/center/bottom  */
   circle("xz", 0,ymax,0,rad);
   circle("xz", 0,0   ,0,rad);

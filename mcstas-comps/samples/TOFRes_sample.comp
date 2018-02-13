@@ -231,7 +231,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xyz");
+  
   if(res_struct.isrect)
   {                             /* Flat sample. */
     double xmin = -0.5*xwidth;

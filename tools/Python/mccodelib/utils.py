@@ -515,6 +515,14 @@ def parse_define_comp(text):
     
     return (name, defpar, setpar, outpar)
 
+def clean_instr_def(defline):
+    ''' takes a typical output of read_define_instr() and extracts the "params string" for use with parse_params '''
+    m = re.search('\(([^(^)]*)\)', defline)
+    try:
+        return m.group(1)
+    except:
+        return None
+
 def parse_params(params_line):
     ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
     params = []
@@ -575,9 +583,13 @@ def get_instr_site_fromtxt(text):
 
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
-    f = open(instr_file, 'rb')
-    text = f.read().decode()
-    f.close()
+    try:
+        f = open(instr_file, 'rb')
+        text = f.read().decode()
+        f.close()
+    except:
+        text = '';
+        print("WARNING: \n  Attempt to parse instrument header faliled for: \n %s" % instr_file)
     
     site = '("%INSTRUMENT_SITE:" tag not found)'
     

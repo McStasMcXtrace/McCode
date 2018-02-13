@@ -9,12 +9,12 @@
 * Origin: RISOE
 * %INSTRUMENT_SITE: Tests_polarization
 *
-* This instrument demonstrates how to use the Pol_simpleBfield
+* This instrument demonstrates how to use the Pol_Bfield
 * component with a user-specified fieldFunction.
 *
 * %Description
 * This instrument demonstrates how to use the component
-* Pol_simpleBfield with a user-specified fieldFunction.
+* Pol_Bfield with a user-specified fieldFunction.
 *
 * The fieldFunction is specified in the DECLARE section and defined active
 * using the fieldFunction parameter of the component. The example fieldFunction
@@ -41,11 +41,14 @@ DECLARE
   double MagnetLength = 0.2;
   double SrcMagnetDist = 1;
 
+  double user_parameters[3];
+
   int magnetic_field_t(double x, double y, double z, double t,
-      double *bx, double *by, double *bz, void *data_Ptr) {
-    // Example of time-dependent field. Note parameters t0 and rho defined
+          double *bx, double *by, double *bz, void *data_Ptr) {
+      double *d=data_Ptr;
+      // Example of time-dependent field. Note parameters t0 and rho defined
     // just above, initialized below
-    *by =  (PI * (SrcMagnetDist + MagnetLength/2))/(omegaL*MagnetLength*t);
+    *by =  (PI * (d[2] + d[1]/2))/(d[0]*d[1]*t);
     *bx =  0;
     *bz =  0;
     return 1;
@@ -56,7 +59,9 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-
+    user_parameters[0]=omegaL;
+    user_parameters[1]=MagnetLength;
+    user_parameters[2]=SrcMagnetDist;
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -106,12 +111,12 @@ COMPONENT armMSF = Arm()
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
 COMPONENT msf =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=MagnetLength, Bx=0, By=-0.678332e-4, Bz=0,
-		 fieldFunction=magnetic_field_t)
-     AT (0, 0, 0) RELATIVE armMSF
+Pol_Bfield(xwidth=0.08, yheight=0.08,  Bx=0, By=-0.678332e-4, Bz=0,
+        fieldFunction=magnetic_field_t, field_prms=user_parameters)
+AT (0, 0, 0) RELATIVE armMSF
 
 COMPONENT msf_stop =
-Pol_simpleBfield_stop(magnet_comp_stop=msf)
+Pol_Bfield_stop()
 AT(0,0,MagnetLength) RELATIVE armMSF
 
 

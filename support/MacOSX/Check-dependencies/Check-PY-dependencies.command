@@ -3,7 +3,7 @@
 echo
 echo Locating newest McCode package in /Applications/...
 echo
-NEWESTAPP=`ls -art /Applications | grep Mc | grep \.app | tail -1`
+NEWESTAPP=`ls -art /Applications | grep 'McStas\|McXtrace' | grep \.app | tail -1`
 echo Seems /Applications/$NEWESTAPP is where I should go...
 echo
 MCCODE=`echo $NEWESTAPP | cut -f2 -d/ | cut -f1 -d- | tr '[:upper:]' '[:lower:]'`

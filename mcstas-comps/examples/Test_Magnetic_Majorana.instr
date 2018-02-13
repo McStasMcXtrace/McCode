@@ -9,12 +9,12 @@
 * Origin: RISOE
 * %INSTRUMENT_SITE: Tests_polarization
 *
-* This instrument demonstrates how to use the Pol_simpleBfield
+* This instrument demonstrates how to use the Pol_Bfield
 * component with a Majorana field.
 *
 * %Description
 * This instrument demonstrates how to use the component
-* Pol_simpleBfield with a so called Majorana field.
+* Pol_Bfield with a so called Majorana field.
 *
 * See: 
 * Seeger et al. NIM A: Volume 457, Issues 1-2 , 11 January 2001, Pages 338-346
@@ -95,12 +95,12 @@ COMPONENT armMagnet = Arm()
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
 COMPONENT msf =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength, 
+Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength, 
 		 Bx=Blarge, By=Bsmall, Bz=0,
 		 fieldFunction=majorana_magnetic_field)
      AT (0, 0, 0) RELATIVE armMagnet
 
-COMPONENT msfCp = Pol_simpleBfield_stop(magnet_comp_stop=msf)
+COMPONENT msfCp = Pol_Bfield_stop()
      AT (0, 0, magnetLength) RELATIVE armMagnet
 
 COMPONENT armMagnetEnd = Arm()

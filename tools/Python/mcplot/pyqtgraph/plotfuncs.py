@@ -18,7 +18,7 @@ def plot(node, i, plt, opts):
     '''
     node : plot node containing data
     i    : index of said data in node
-    opts : dict containing options such as --> log, legend, icolormap, verbose, legend_fontsize
+    opts : dict containing options such as --> log, legend, icolormap, verbose, fontsize
     '''
     if type(node) == PNSingle and i != 0:
         raise Exception("inconsistent plot request, idx=%s" % str(i))
@@ -26,10 +26,10 @@ def plot(node, i, plt, opts):
     data = node.getdata_idx(i)
     
     if type(data) is Data1D:
-        view_box = plot_Data1D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], legend_fontsize=opts['legend_fontsize'])
+        view_box = plot_Data1D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
         return view_box, plt
     elif type(data) is Data2D:
-        view_box, lyt = plot_Data2D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], legend_fontsize=opts['legend_fontsize'])
+        view_box, lyt = plot_Data2D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
         return view_box, lyt
     else:
         # File was not loaded, silently ignore
@@ -62,7 +62,7 @@ class ModLegend(pg.LegendItem):
         p.setBrush(pg.functions.mkBrush(0,0,0,100))
         p.drawRect(self.boundingRect())
 
-def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, legend_fontsize=10):
+def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data
     x = np.array(data.xvals).astype(np.float)
@@ -88,8 +88,11 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, le
     plt.setXRange(np.min(x), np.max(x), padding=0)
     
     # labels
-    plt.setLabels(title=" ",bottom=data.xlabel, left=data.ylabel)
-    
+    plt.setTitle(" ")
+    labelStyle = {'color': '#FFF', 'font-size': '%spt' % fontsize}
+    plt.getAxis('bottom').setLabel(data.xlabel, **labelStyle)
+    plt.getAxis('left').setLabel(data.ylabel, **labelStyle)
+
     # how to add labels with html styling:
     #plt.titleLabel.item.setHtml('<span style="font-size:5pt; text-align:center;color:#FFFFFF">data.component <br>hest</span>')
     #axis_style = {'color': '#FFF', 'font-size': '5pt'}
@@ -108,7 +111,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, le
     
     # commit
     if legend:
-        plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(legend_fontsize))
+        plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(fontsize))
         plt.legend.setParentItem(plt.vb)
         # this construct reduces the requiremet for header data in Data1D, in case of an error during parsing of the string
         try:
@@ -161,7 +164,7 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
-def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, legend_fontsize=10):
+def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, fontsize=10):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
     # data
     img = pg.ImageItem()
@@ -204,11 +207,14 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, l
     # plot area
     layout.addLabel(' ', 0, 0, colspan=2)
     layout.addItem(plt, 1, 0)
-    plt.setLabels(bottom=data.xlabel, left=data.ylabel)
+    labelStyle = {'color': '#FFF', 'font-size': '%spt' % fontsize}
+    plt.getAxis('bottom').setLabel(data.xlabel, **labelStyle)
+    plt.getAxis('left').setLabel(data.ylabel, **labelStyle)
+    
     plt.setMenuEnabled(False)
     
     if legend:
-        plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(legend_fontsize))
+        plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(fontsize))
         plt.legend.setParentItem(plt.vb)
         
         try:
@@ -225,37 +231,41 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, l
     plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)
     plt.getViewBox().setYRange(data.xlimits[2], data.xlimits[3], padding=0)
     
+    #
     # color bar
-    cbimg = pg.ImageItem()
-    numsteps = 100
-    arr_1 = pos_min + (pos_max - pos_min) * np.arange(numsteps)/(numsteps)
-    cbimg.setImage(np.array([arr_1]))
-    # calculate scaling and translation for the y-axis
-    dy = (pos_max - pos_min) / numsteps
-    # Prevent division by 0
-    if (dy==0):
-        dy=1;
-    ty = (pos_min) / dy
-    cbimg.scale(1, dy)
-    cbimg.translate(0,ty)
-    
-    cbimg.setLookupTable(lut)
-    
-    colorbar = layout.addPlot(1, 1)
-    colorbar.addItem(cbimg)
-    colorbar.setFixedWidth(40)
-    
-    pg.GradientEditorItem
-    
-    colorbar.axes['top']['item'].show()
-    colorbar.axes['top']['item'].setStyle(showValues=False)
-    colorbar.axes['bottom']['item'].show()
-    colorbar.axes['bottom']['item'].setStyle(showValues=False)
-    colorbar.axes['left']['item'].show()
-    colorbar.axes['left']['item'].setStyle(showValues=False)
-    colorbar.axes['right']['item'].show()
-    
-    colorbar.getViewBox().autoRange(padding=0)
+    #
+    if (fontsize >= 8):
+        cbimg = pg.ImageItem()
+        numsteps = 100
+        arr_1 = pos_min + (pos_max - pos_min) * np.arange(numsteps)/(numsteps)
+        cbimg.setImage(np.array([arr_1]))
+        # calculate scaling and translation for the y-axis
+        dy = (pos_max - pos_min) / numsteps
+        # Prevent division by 0
+        if (dy==0):
+            dy=1;
+        ty = (pos_min) / dy
+        cbimg.scale(1, dy)
+        cbimg.translate(0,ty)
+        
+        cbimg.setLookupTable(lut)
+        
+        colorbar = layout.addPlot(1, 1)
+        colorbar.addItem(cbimg)
+        colorbar.setFixedWidth(40)
+        
+        pg.GradientEditorItem
+        
+        colorbar.axes['top']['item'].show()
+        colorbar.axes['top']['item'].setStyle(showValues=False)
+        colorbar.axes['bottom']['item'].show()
+        colorbar.axes['bottom']['item'].setStyle(showValues=False)
+        colorbar.axes['left']['item'].show()
+        colorbar.axes['left']['item'].setStyle(showValues=False)
+        colorbar.axes['right']['item'].show()
+        
+        colorbar.getViewBox().autoRange(padding=0)
+        
     
     plt.layout_2d = layout
     
