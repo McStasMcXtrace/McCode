@@ -289,7 +289,7 @@ void *Table_File_List_store(t_Table *tab){
     t_Table *tab_p= Table_File_List_find(name,block_number,begin);
     if ( tab_p!=NULL ){
         /*table was found in the Table_File_List*/
-        printf("Reusing input file '%s' (Table_Read_Offset)\n", name);
+        // printf("Reusing input file '%s' (Table_Read_Offset)\n", name);
         *Table=*tab_p;
         return Table->rows*Table->columns;
     }
