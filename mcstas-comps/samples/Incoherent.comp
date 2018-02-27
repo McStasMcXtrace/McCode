@@ -394,7 +394,6 @@ TRACE
       if (deltaE==0) { 
 	if (rand01()<f_QE)	/* Quasielastic contribution */
 	  {
-	    E_i = VS2E*v_i*v_i;
 	    dE = gamma*tan(PI/2*randpm1());
 	    E_f = E_i + dE;
 	    if (E_f <= 0)
