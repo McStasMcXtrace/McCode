@@ -22,6 +22,7 @@
 * gw:      [m]   Opening-width of ellipitic guide
 * gh:      [m]   Opening-height of ellipitic guide
 * gL:      [m]   Length of ellipitic guide
+* gm:      [1]   M-value of the guide coating
 * delta1:  [m]   Optional focal displacement of guide wrt source
 * delta2:  [m]   Optional focal displacement of guide wrt sample position
 *
