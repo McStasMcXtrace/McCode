@@ -156,7 +156,7 @@ def plot_node(node, plot_func, layout, viewmodel, sync_zoom_obj_ids=[]):
             for i in range(n):
                 vn_dict_rclick[viewbox_lst[i]] = parent
         # for each secondary node, a ctrl-click is registered to it
-        for i in range(n):
+        for i in range(len(sec_lst)):
             vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
         
         # set mouse click handlers on the window
