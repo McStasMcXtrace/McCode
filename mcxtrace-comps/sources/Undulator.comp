@@ -252,7 +252,7 @@ TRACE
     theta2=xi*xi+psi*psi;
 
     k=E2K*e;
-    /*anguar frequency w:*/
+    /*angular frequency w:*/
     w=M_C*k*1e10;
 
     kx=xo;ky=yo;kz=dist;
