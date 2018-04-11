@@ -86,7 +86,7 @@ DECLARE
 	}
 
 	double foc_hori(double angle, double f) {
-		return 2.*f / fabs(sin(mono_angle));
+		return 2.*f / fabs(sin(angle));
 	}
 	/* ------------------------------------------------------------------------ */
 %}
@@ -108,12 +108,13 @@ INITIALIZE
 	/* negative values -> optimal monochromator curvatures */
 	if(mono_curvv < 0. || mono_curvh < 0.) {
 		/* focal length */
-		double f = 1./dist_mono_sample + 1./dist_src_mono;
+		/*double f_inv = 1./dist_mono_sample + 1./dist_src_mono;*/
+		double f_inv = 1./dist_mono_sample + 0.; /* here: perfectly parallel beam from infinity */
 
 		if(mono_curvv < 0.)
-			mono_curvv = foc_vert(mono_angle/180.*PI, f);
+			mono_curvv = foc_vert(mono_angle/180.*PI, 1./f_inv);
 		if(mono_curvh < 0.)
-			mono_curvh = foc_hori(mono_angle/180.*PI, f);
+			mono_curvh = foc_hori(mono_angle/180.*PI, 1./f_inv);
 	}
 
 	printf("----------------------------------------\n");
