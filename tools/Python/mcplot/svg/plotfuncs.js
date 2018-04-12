@@ -1,19 +1,21 @@
 // public plot 1d data
-function plot_1d(params) {
+function plot_1d(params, svg_branch=null) {
   var p = params
   _plot_labels(
-    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'],
+    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch,
     function(w, h, anchor) { _plot_1d_data(w, h, p['x'], p['y'], p['yerr'], anchor) });
 }
 // public plot 2d data
-function plot_2d(params) {
+function plot_2d(params, svg_branch=null) {
   var p = params
   _plot_labels(
-    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'],
+    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch,
     function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], p['cbMin'], p['cbMax'], anchor) });
 }
 
-function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
+function _plot_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
+  if (!svg_branch) svg_branch = d3.select("body").append("svg");
+
   // positioning
   var margin = 5;
   var wlab = w - 2*margin;
@@ -23,13 +25,14 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
   var fontSizeStr = "14px";
 
   // axis labels
-  var lblGroup = d3.select("body").append("svg")
+  var lblGroup = svg_branch
     .attr("width", w)
     .attr("height", h)
     .append("g")
     .attr("transform", "translate(" + margin +"," + margin + ")");
 
   // multi-line titles
+  if (!title) title="";
   var titleLines = title.split(/\r?\n/)
   var titleGrp = lblGroup
     .append("text")
