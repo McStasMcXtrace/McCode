@@ -1,19 +1,51 @@
 // public plot 1d data
 function plot_1d(params, svg_branch=null) {
   var p = params
-  _plot_labels(
-    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch,
-    function(w, h, anchor) { _plot_1d_data(w, h, p['x'], p['y'], p['yerr'], anchor) });
+  let hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+
+  let xmin = d3.min(p['x']);
+  let xmax = d3.max(p['x']);
+  let ymin = d3.min(p['y']);
+  let ymax = d3.max(p['y']);
+
+  _draw_1d_axes(hdl.wplt, hdl.hplt, xmin, xmax, ymin, ymax, hdl.axisGroup,
+    (ptGroup, xScl, yScl) => {
+       let yErrData = _makeErrorBarsData([p['x']], [p['y']], [p['yerr']]);
+      _drawPonts_1D(ptGroup, xScl, yScl,  [p['x']], [p['y']], yErrData);
+    }
+  );
+
+
+  return hdl;
 }
+function plot_1d_inexisting(params_lst, hdl) {
+  let x_lst = params_lst.map(p => p['x']);
+  let y_lst = params_lst.map(p => p['y']);
+  let yErr_lst = params_lst.map(p => p['yerr']);
+  let yErrData_lst = _makeErrorBarsData(x_lst, y_lst, yErr_lst);
+  let xmin = d3.min(x_lst[0]);
+  let xmax = d3.max(x_lst[0]);
+  let ymin = d3.min(y_lst[0]);
+  let ymax = d3.max(y_lst[0]);
+  //var points = _drawPonts_1D(pointGroup, xScale, yScale, x_lst, y_lst, yErrData_lst);
+  _draw_1d_axes(hdl.wplt, hdl.hplt, xmin, xmax, ymin, ymax, hdl.axisGroup,
+    (ptGroup, xScl, yScl) => {
+      _drawPonts_1D(ptGroup, xScl, yScl, x_lst, y_lst, yErrData_lst);
+    }
+  );
+  //_plot_1d_data(hdl.wplt, hdl.hplt, x_lst, y_lst, yErr_lst, hdl.axisGroup);
+}
+
 // public plot 2d data
 function plot_2d(params, svg_branch=null) {
   var p = params
-  _plot_labels(
+  _draw_labels(
     p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch,
     function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], p['cbMin'], p['cbMax'], anchor) });
 }
 
-function _plot_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
+// private
+function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
   if (!svg_branch) svg_branch = d3.select("body").append("svg");
 
   // positioning
@@ -92,10 +124,12 @@ function _plot_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
     .attr("transform", "translate(" + xplt +"," + yplt + ")")
     .append("g");
 
-  plotfunc_inner(wplt, hplt, axisGroup);
+  return { wplt: wplt, hplt: hplt, axisGroup: axisGroup };
+  //plotfunc_inner(wplt, hplt, axisGroup);
 }
 
-function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
+//function _plot_1d_data(w, h, x_lst, y_lst, yerr_lst, pltOrigoAnchor) {
+function _draw_1d_axes(w, h, xmin, xmax, ymin, ymax, pltOrigoAnchor, drawpointsCB) {
   // axis span points
   let x0 = 0;
   let y0 = h;
@@ -109,7 +143,8 @@ function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
     var new_yScale = d3.event.transform.rescaleY(yScale);
     xAxisGroup.call(xAxis.scale(new_xScale));
     yAxisGroup.call(yAxis.scale(new_yScale));
-    drawPonts_1D(pointGroup, new_xScale, new_yScale, x, y, yErrData);
+    //_drawPonts_1D(pointGroup, new_xScale, new_yScale, x_lst, y_lst, yErrData_lst);
+    drawpointsCB(pointGroup, new_xScale, new_yScale);
   });
   var view = pltOrigoAnchor.append("rect")
     .attr("width", w)
@@ -126,7 +161,7 @@ function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
 
   // axes
   var xScale = d3.scaleLinear()
-    .domain([d3.min(x), d3.max(x)])
+    .domain([xmin, xmax])
     .range([x0, x1]);
   var xAxis = d3.axisBottom()
     .ticks(5)
@@ -137,7 +172,7 @@ function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
     .call(xAxis);
 
   var yScale = d3.scaleLinear()
-    .domain([d3.min(y), d3.max(y)])
+    .domain([ymin, ymax])
     .range([y0, y1]);
   var yAxis = d3.axisLeft()
     .ticks(5)
@@ -151,31 +186,50 @@ function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
     .attr("clip-path", "url(#viewClip)");
 
   // draw on initial zoom
-  let yErrData = makeErrorBarsData(x, y, yerr);
-  var points = drawPonts_1D(pointGroup, xScale, yScale, x, y, yErrData);
+  //let yErrData_lst = _makeErrorBarsData(x_lst, y_lst, yerr_lst);
+  //var points = _drawPonts_1D(pointGroup, xScale, yScale, x_lst, y_lst, yErrData_lst);
+  drawpointsCB(pointGroup, xScale, yScale);
 }
 
-// generates error bar vertical line coordinates from x, y and yErr, NOTE: we loop over yErr, allowing it to be empty
-function makeErrorBarsData(x, y, yErr) {
-  var dataErr = [];
-  for (var i=0; i < yErr.length; i++) {
-    if (yErr[i] != 0)
+// generates error bar vertical line coordinates from x, y and yErr, NOTE: inner loop over yErr, allowing it to be empty
+function _makeErrorBarsData(x_lst, y_lst, yErr_lst) {
+  // WARNING HAX
+  let dataErr_lst = [];
+  for (var j=0;j<yErr_lst.length;j++) {
+    var dataErr = [];
+    let x = x_lst[j];
+    let y = y_lst[j];
+    let yErr = yErr_lst[j];
+
+    for (var i=0; i < yErr.length; i++) {
+      if (yErr[i] != 0)
       dataErr.push({ "p1": [x[i], y[i]-yErr[i]], "p2" : [x[i], y[i]+yErr[i]] });
+    }
+
+    dataErr_lst.push(dataErr);
   }
-  return dataErr;
+  return dataErr_lst;
 }
 
-function drawPonts_1D(ptGroup, xScl, yScl, x, y, yErrData) {
+function _drawPonts_1D(ptGroup, xScl, yScl, x_lst, y_lst, yErrData_lst) {
   //const colors = d3.scaleOrdinal().range(d3.schemeCategory20);
   var lf = d3.line()
     .x(function(d) { return xScl(d.x); })
     .y(function(d) { return yScl(d.y); });
 
-  // points
+  // clear
   ptGroup.selectAll("path").remove();
   ptGroup.selectAll("line").remove();
-  graph = ptGroup.append("path")
-    .attr("d", d3.line()
+
+  // draw
+  for (var j=0;j<x_lst.length;j++) {
+    let x = x_lst[j];
+    let y = y_lst[j];
+    let yErrData = yErrData_lst[j];
+
+    // points
+    ptGroup.append("path")
+      .attr("d", d3.line()
       .x( function(d, i) { return xScl(x[i]); })
       .y( function(d, i) { return yScl(y[i]); })
       (x) // since we use the function-wide scoped x, y directly, this just causes index generation
@@ -185,8 +239,8 @@ function drawPonts_1D(ptGroup, xScl, yScl, x, y, yErrData) {
     .attr("stroke-width", "1px")
     .attr("fill", "none");
 
-  // error bars
-  ptGroup.selectAll("line")
+    // error bars
+    ptGroup.selectAll("line")
     .data(yErrData)
     .enter()
     .append("line")
@@ -198,6 +252,8 @@ function drawPonts_1D(ptGroup, xScl, yScl, x, y, yErrData) {
     .attr("stroke", "black")
     .attr("stroke-width", "1px")
     .attr("fill", "none");
+
+  }
 }
 
 
