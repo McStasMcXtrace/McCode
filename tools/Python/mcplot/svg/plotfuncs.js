@@ -95,6 +95,112 @@ function _plot_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
   plotfunc_inner(wplt, hplt, axisGroup);
 }
 
+function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
+  // axis span points
+  let x0 = 0;
+  let y0 = h;
+  let x1 = w;
+  let y1 = 0;
+
+  // zoom
+  var zoom = d3.zoom()
+    .on("zoom", () => {
+    var new_xScale = d3.event.transform.rescaleX(xScale);
+    var new_yScale = d3.event.transform.rescaleY(yScale);
+    xAxisGroup.call(xAxis.scale(new_xScale));
+    yAxisGroup.call(yAxis.scale(new_yScale));
+    drawPonts_1D(pointGroup, new_xScale, new_yScale, x, y, yErrData);
+  });
+  var view = pltOrigoAnchor.append("rect")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("style", "cursor: move; fill: none; pointer-events: all;")
+    .call(zoom);
+
+  // clip
+  var clip = pltOrigoAnchor.append("clipPath")
+    .attr("id", "viewClip")
+    .append("rect")
+    .attr("width", w)
+    .attr("height", h);
+
+  // axes
+  var xScale = d3.scaleLinear()
+    .domain([d3.min(x), d3.max(x)])
+    .range([x0, x1]);
+  var xAxis = d3.axisBottom()
+    .ticks(5)
+    .tickFormat(d3.format(".1e"))
+    .scale(xScale);
+  var xAxisGroup = pltOrigoAnchor.append("g")
+    .attr("transform", "translate(0," + y0 + ")")
+    .call(xAxis);
+
+  var yScale = d3.scaleLinear()
+    .domain([d3.min(y), d3.max(y)])
+    .range([y0, y1]);
+  var yAxis = d3.axisLeft()
+    .ticks(5)
+    .tickFormat(d3.format(".1e"))
+    .scale(yScale);
+  var yAxisGroup = pltOrigoAnchor.append("g")
+    .attr("transform", "translate(" + x0 + ", 0)")
+    .call(yAxis);
+
+  var pointGroup = pltOrigoAnchor.append("g")
+    .attr("clip-path", "url(#viewClip)");
+
+  // draw on initial zoom
+  let yErrData = makeErrorBarsData(x, y, yerr);
+  var points = drawPonts_1D(pointGroup, xScale, yScale, x, y, yErrData);
+}
+
+// generates error bar vertical line coordinates from x, y and yErr, NOTE: we loop over yErr, allowing it to be empty
+function makeErrorBarsData(x, y, yErr) {
+  var dataErr = [];
+  for (var i=0; i < yErr.length; i++) {
+    if (yErr[i] != 0)
+      dataErr.push({ "p1": [x[i], y[i]-yErr[i]], "p2" : [x[i], y[i]+yErr[i]] });
+  }
+  return dataErr;
+}
+
+function drawPonts_1D(ptGroup, xScl, yScl, x, y, yErrData) {
+  //const colors = d3.scaleOrdinal().range(d3.schemeCategory20);
+  var lf = d3.line()
+    .x(function(d) { return xScl(d.x); })
+    .y(function(d) { return yScl(d.y); });
+
+  // points
+  ptGroup.selectAll("path").remove();
+  ptGroup.selectAll("line").remove();
+  graph = ptGroup.append("path")
+    .attr("d", d3.line()
+      .x( function(d, i) { return xScl(x[i]); })
+      .y( function(d, i) { return yScl(y[i]); })
+      (x) // since we use the function-wide scoped x, y directly, this just causes index generation
+    )
+    //.attr("stroke", function(d, i) { return colors(i); })
+    .attr("stroke", "black")
+    .attr("stroke-width", "1px")
+    .attr("fill", "none");
+
+  // error bars
+  ptGroup.selectAll("line")
+    .data(yErrData)
+    .enter()
+    .append("line")
+    .attr("x1", function (d) { return xScl(d.p1[0]); })
+    .attr("y1", function (d) { return yScl(d.p1[1]); })
+    .attr("x2", function (d) { return xScl(d.p2[0]); })
+    .attr("y2", function (d) { return yScl(d.p2[1]); })
+    //.attr("stroke", function(d, i) { return colors(i); })
+    .attr("stroke", "black")
+    .attr("stroke-width", "1px")
+    .attr("fill", "none");
+}
+
+
 function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbMin, cbMax, anchorElement) {
   // colorbar width
   var w_cb = 70; // this is the total width of space, image and ticks
@@ -189,102 +295,4 @@ function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbM
     .attr("transform", "translate(" + (-w_cbimg) + ", 0)")
     .attr('preserveAspectRatio', 'none')
     .attr("xlink:href","data:image/jpg;base64," + imgColorbar);
-}
-
-function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
-  // axis span points
-  let x0 = 0;
-  let y0 = h;
-  let x1 = w;
-  let y1 = 0;
-
-  var data = [];
-  var dataErr = [];
-  for (var i=0; i < x.length; i++) {
-    data.push({ "x" : x[i], "y" : y[i] });
-    if (yerr[i] != 0)
-      dataErr.push({ "p1": [x[i], y[i]-yerr[i]], "p2" : [x[i], y[i]+yerr[i]] });
-  }
-
-  // zoom
-  var zoom = d3.zoom()
-    .on("zoom", () => {
-    var new_xScale = d3.event.transform.rescaleX(xScale);
-    var new_yScale = d3.event.transform.rescaleY(yScale);
-    xAxisGroup.call(xAxis.scale(new_xScale));
-    yAxisGroup.call(yAxis.scale(new_yScale));
-    drawPoints(data, dataErr, pointGroup, new_xScale, new_yScale);
-  });
-  var view = pltOrigoAnchor.append("rect")
-    .attr("width", w)
-    .attr("height", h)
-    .attr("style", "cursor: move; fill: none; pointer-events: all;")
-    .call(zoom);
-
-  // clip
-  var clip = pltOrigoAnchor.append("clipPath")
-    .attr("id", "viewClip")
-    .append("rect")
-    .attr("width", w)
-    .attr("height", h);
-
-  // axes
-  var xScale = d3.scaleLinear()
-    .domain([d3.min(x), d3.max(x)])
-    .range([x0, x1]);
-  var xAxis = d3.axisBottom()
-    .ticks(5)
-    .tickFormat(d3.format(".1e"))
-    .scale(xScale);
-  var xAxisGroup = pltOrigoAnchor.append("g")
-    .attr("transform", "translate(0," + y0 + ")")
-    .call(xAxis);
-
-  var yScale = d3.scaleLinear()
-    .domain([d3.min(y), d3.max(y)])
-    .range([y0, y1]);
-  var yAxis = d3.axisLeft()
-    .ticks(5)
-    .tickFormat(d3.format(".1e"))
-    .scale(yScale);
-  var yAxisGroup = pltOrigoAnchor.append("g")
-    .attr("transform", "translate(" + x0 + ", 0)")
-    .call(yAxis);
-
-  var pointGroup = pltOrigoAnchor.append("g")
-    .attr("clip-path", "url(#viewClip)");
-
-  // draw on initial zoom
-  var points = drawPoints(data, dataErr, pointGroup, xScale, yScale);
-}
-
-function drawPoints(dta, dtaErr, ptGroup, xScl, yScl) {
-  //const colors = d3.scaleOrdinal().range(d3.schemeCategory20);
-  var lf = d3.line()
-    .x(function(d) { return xScl(d.x); })
-    .y(function(d) { return yScl(d.y); });
-
-  // points
-  ptGroup.selectAll("path").remove();
-  ptGroup.selectAll("line").remove();
-  graph = ptGroup.append("path")
-    .attr("d", lf(dta))
-    //.attr("stroke", function(d, i) { return colors(i); })
-    .attr("stroke", "black")
-    .attr("stroke-width", "1px")
-    .attr("fill", "none");
-
-  // error bars
-  ptGroup.selectAll("line")
-    .data(dtaErr)
-    .enter()
-    .append("line")
-    .attr("x1", function (d) { return xScl(d.p1[0]); })
-    .attr("y1", function (d) { return yScl(d.p1[1]); })
-    .attr("x2", function (d) { return xScl(d.p2[0]); })
-    .attr("y2", function (d) { return yScl(d.p2[1]); })
-    //.attr("stroke", function(d, i) { return colors(i); })
-    .attr("stroke", "black")
-    .attr("stroke-width", "1px")
-    .attr("fill", "none");
 }
