@@ -1,8 +1,8 @@
 class Plot1D {
   constructor(params, svg_branch=null) {
     let p = params;
+    this.params_lst = [params];
     let hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
-    this.hdl = hdl;
 
     let xmin = d3.min(p['x']);
     let xmax = d3.max(p['x']);
@@ -14,21 +14,27 @@ class Plot1D {
     this.yErrData_lst = _makeErrorBarsData([p['x']], [p['y']], [p['yerr']]);
 
     this.pointGroup = null;
+    this.last_xScale = null;
+    this.last_yScale = null;
 
     this._draw_1d_axes(hdl.wplt, hdl.hplt, xmin, xmax, ymin, ymax, hdl.axisGroup,
       (ptGroup, xScl, yScl) => {
         this._drawPoints(xScl, yScl);
       }
     );
-
   }
-  plotMore(params_lst) {
+  rePlotMany(params_lst) {
     this.x_lst = params_lst.map(p => p['x']);
     this.y_lst = params_lst.map(p => p['y']);
     let yErr_lst = params_lst.map(p => p['yerr']);
     this.yErrData_lst = _makeErrorBarsData(this.x_lst, this.y_lst, yErr_lst);
 
-    // TODO: trigger draw function call
+    this._drawPoints(this.last_xScale, this.last_yScale);
+  }
+  plotOneMore(params) {
+    this.params_lst.push(params);
+    this.rePlotMany(this.params_lst);
+    // TODO: do something about his so we don't have to replot everything every time...
   }
   _drawPoints(xScl, yScl) {
     //const colors = d3.scaleOrdinal().range(d3.schemeCategory20);
@@ -84,6 +90,8 @@ class Plot1D {
       yAxisGroup.call(yAxis.scale(new_yScale));
       //_drawPonts_1D(pointGroup, new_xScale, new_yScale, x_lst, y_lst, yErrData_lst);
       this._drawPoints(new_xScale, new_yScale);
+      this.last_xScale = new_xScale;
+      this.last_yScale = new_yScale;
     });
     var view = pltOrigoAnchor.append("rect")
       .attr("width", w)
@@ -121,6 +129,8 @@ class Plot1D {
       .attr("transform", "translate(" + x0 + ", 0)")
       .call(yAxis);
 
+    this.last_xScale = xScale;
+    this.last_yScale = yScale;
     this.pointGroup = pltOrigoAnchor.append("g")
       .attr("clip-path", "url(#viewClip)");
 
