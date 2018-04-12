@@ -192,26 +192,14 @@ function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbM
 }
 
 function _plot_1d_data(w, h, x, y, yerr, pltOrigoAnchor) {
-  // axis size fractions and orego placement fraction
-  var xax_frac = 1;
-  var yax_frac = 1;
-  var x0_frac = 0;
-  var y0_frac = 0;
+  // axis span points
+  let x0 = 0;
+  let y0 = h;
+  let x1 = w;
+  let y1 = 0;
 
-  // axes lengths
-  var wi = xax_frac*w;
-  var hi = yax_frac*h;
-
-  // orego
-  var x0 = x0_frac*w;
-  var y0 = h - y0_frac*h;
-
-  // axes end coords
-  var x1 = x0 + wi;
-  var y1 = y0 - hi;
-
-  var data = []
-  var dataErr = []
+  var data = [];
+  var dataErr = [];
   for (var i=0; i < x.length; i++) {
     data.push({ "x" : x[i], "y" : y[i] });
     if (yerr[i] != 0)
