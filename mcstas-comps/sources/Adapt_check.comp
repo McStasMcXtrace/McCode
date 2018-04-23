@@ -62,7 +62,7 @@ struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
 
 MCDISPLAY
 %{
-  magnify("");
+  
 %}
 
 END

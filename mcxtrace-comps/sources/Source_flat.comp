@@ -212,10 +212,10 @@ FINALLY
 MCDISPLAY
 %{
   if (square == 1) {
-    magnify("xy");
+    
     rectangle("xy",0,0,0,xwidth,yheight);
   } else {
-    magnify("xy");
+    
     circle("xy",0,0,0,radius);
   }
   if (dist) {

@@ -126,7 +126,7 @@ TRACE
 MCDISPLAY
 %{
   double xmax, xmin, ymax, ymin;
-  magnify("xy");
+  
 
   if (center == 0) {
     xmax= xwidth; xmin=0;

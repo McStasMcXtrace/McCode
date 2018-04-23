@@ -4616,7 +4616,7 @@ MCDISPLAY
   double lbwl2,lbwr2,lbhu2,lbhd2;
 
 
-  magnify("xy");
+  
 
 
   imax=100;										/* maximum points for every line in z direction*/

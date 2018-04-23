@@ -1215,7 +1215,7 @@ MCDISPLAY
 %{
   double h;
   h=yheight;
-  magnify("xyz");
+  
   if (xwidth>0) { /* box */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
@@ -1253,7 +1253,7 @@ MCDISPLAY
     } else {
     	int NH=24;
       int ih;
-			mcdis_magnify("xyz");
+			
 			for(ih = 0; ih < NH; ih++) {
 		    double phi0, phi1;
 		    double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;

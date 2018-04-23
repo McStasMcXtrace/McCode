@@ -94,7 +94,7 @@ TRACE
 MCDISPLAY
 %{
   int i;
-  magnify("xy");
+  
   for(i=0;i<N;i++){
     double xx;
     xx=(-(N-1)/2.0 +i)*d;

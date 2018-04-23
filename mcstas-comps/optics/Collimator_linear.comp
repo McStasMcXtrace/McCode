@@ -101,7 +101,7 @@ MCDISPLAY
   double x;
   int i;
 
-  magnify("xy");
+  
   for(x = xmin, i = 0; i <= 3; i++, x += (xmax - xmin)/3.0)
     multiline(5, x, (double)ymin, 0.0, x, (double)ymax, 0.0,
               x, (double)ymax, (double)length, x, (double)ymin, (double)length,

@@ -183,7 +183,7 @@ FINALLY
 MCDISPLAY
 %{
   double radius=0.05;
-  magnify("xy");
+  
   circle("xy",0,0,0,radius);
   circle("xz",0,0,0,radius);
   circle("yz",0,0,0,radius);

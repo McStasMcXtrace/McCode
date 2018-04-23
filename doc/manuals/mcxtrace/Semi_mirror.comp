@@ -64,7 +64,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("");
+  
   multiline(5, -xwidth/2.0, -yheight/2.0, 0.0,
                xwidth/2.0, -yheight/2.0, 0.0,
                xwidth/2.0, yheight/2.0, 0.0,

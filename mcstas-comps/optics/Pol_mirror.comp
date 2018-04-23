@@ -202,7 +202,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("zy");
+  
   rectangle("yz", 0, 0, 0, zwidth, yheight);
 %}
 

@@ -70,7 +70,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   if (radius != 0)
     circle("xy", 0, 0, 0, radius);
   else

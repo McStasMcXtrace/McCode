@@ -189,7 +189,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  magnify("");
+  
 %}
 
 END

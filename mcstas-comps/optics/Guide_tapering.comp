@@ -625,7 +625,7 @@ MCDISPLAY
   double x;
   int i,ii;
 
-  magnify("xy");
+  
 
   for (ii=0; ii < segno; ii++)
   {

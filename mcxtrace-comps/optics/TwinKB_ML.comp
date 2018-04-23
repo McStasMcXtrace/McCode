@@ -299,7 +299,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  /*magnify("");
+  /*
   rectangle("xz",0,0,0,width,length); */
   int i,j,N=10;
   double w_2=width/2.0;

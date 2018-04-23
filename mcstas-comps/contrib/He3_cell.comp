@@ -116,7 +116,7 @@ spins are transmitted (depending upon degree of polarisation of gas */
 
 MCDISPLAY
 %{
-  magnify("xyz");
+  
   circle("xy",0.0,0.0,-length/2.0,radius);
   circle("xy",0.0,0.0,length/2.0,radius);
   line(0.0,radius,-length/2.0,0.0,radius,length/2.0);

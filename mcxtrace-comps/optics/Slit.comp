@@ -104,7 +104,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   if (radius == 0) {
     double xw, yh;
     xw = (xmax - xmin)/2.0;

@@ -417,7 +417,7 @@ MCDISPLAY
 %{
 
   /* Draw cold moderator as cylinder */
-  magnify("xz");
+  
   circle("xz", 0,  yheight/2.0, 0, cyl_radius);
   circle("xz", 0,  -yheight/2.0, 0, cyl_radius);
   line(0, -yheight/2.0, cyl_radius, 0, yheight/2.0, cyl_radius);

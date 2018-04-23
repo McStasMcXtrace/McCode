@@ -153,7 +153,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   multiline(5, -(double)focus_xw/2.0, -(double)focus_yh/2.0, 0.0,
                 (double)focus_xw/2.0, -(double)focus_yh/2.0, 0.0,
                 (double)focus_xw/2.0,  (double)focus_yh/2.0, 0.0,

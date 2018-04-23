@@ -116,7 +116,7 @@ SAVE
 
 MCDISPLAY
 %{
-  magnify("");
+  
   circle("xy",0,0,0,radius);
   circle("xz",0,0,0,radius);
   circle("yz",0,0,0,radius);

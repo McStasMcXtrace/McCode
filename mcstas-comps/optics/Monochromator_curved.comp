@@ -463,7 +463,7 @@ MCDISPLAY
 %{
   int ih;
 
-  magnify("xy");
+  
   for(ih = 0; ih < NH; ih++)
   {
     int iv;

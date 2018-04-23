@@ -720,7 +720,7 @@ MCDISPLAY
 %{
 double h;
 h=yheight;
-magnify("xyz");
+
 if (!isrect) {
   circle("xz", 0,  h/2.0, 0, radius);
   circle("xz", 0, -h/2.0, 0, radius);

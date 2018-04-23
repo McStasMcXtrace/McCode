@@ -111,7 +111,7 @@ SAVE
 
 MCDISPLAY
 %{
-  magnify("");
+  
 %}
 
 END

@@ -174,7 +174,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  magnify("");
+  
 %}
 
 END

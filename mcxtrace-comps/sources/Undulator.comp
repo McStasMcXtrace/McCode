@@ -312,7 +312,7 @@ FINALLY
 %}
 MCDISPLAY
 %{
-  magnify("xz");
+  
   double zz,dz;
   const double xwidth=1e-2;
   const double D=dist;

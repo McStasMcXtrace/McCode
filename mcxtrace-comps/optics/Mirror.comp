@@ -129,7 +129,7 @@ TRACE
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. */
-  magnify("");
+  
   line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
   line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
   line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);

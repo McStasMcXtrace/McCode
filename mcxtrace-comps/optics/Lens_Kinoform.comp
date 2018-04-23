@@ -200,7 +200,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy"); // zdepth=0.002033
+   // zdepth=0.002033
   double zdepth=0.002033,w;
   w=xwidth/2;
   box(0,0,zdepth,w,yheight/2,zdepth);

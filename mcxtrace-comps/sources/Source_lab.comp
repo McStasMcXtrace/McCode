@@ -264,7 +264,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   double x1,y1,z1,x2,y2,z2,width_2,height_2;
   double dx,dy,dz;
   /*these are just dummies*/

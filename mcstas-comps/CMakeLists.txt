@@ -70,7 +70,7 @@ if (NOT WINDOWS)
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
   install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/ssw2mcpl{DOT_EXE_SUFFIX}"
+    PROGRAMS "${PROJECT_BINARY_DIR}/ssw2mcpl${DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
   install (
@@ -104,7 +104,7 @@ if(WINDOWS)
     DESTINATION ${bin}
     )
   install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/ssw2mcpl{DOT_EXE_SUFFIX}"
+    PROGRAMS "${PROJECT_BINARY_DIR}/ssw2mcpl${DOT_EXE_SUFFIX}"
     DESTINATION ${bin}
     )
   install (

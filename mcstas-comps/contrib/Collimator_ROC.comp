@@ -109,7 +109,7 @@ MCDISPLAY
 %{
   double ROC_angle,x0,z0,x1,z1;
 
-  magnify("xz");
+  
   for (ROC_angle=ROC_ttmin; ROC_angle <= ROC_ttmax; ROC_angle += ROC_pitch)
   {
    x0=ROC_ri*sin(ROC_angle*DEG2RAD);

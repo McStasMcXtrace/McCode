@@ -36,6 +36,7 @@
 DEFINE COMPONENT Absorber
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0)
+OUTPUT PARAMETERS (xw, yh, zt, xm, ym, zm)
 
 DECLARE
 %{
@@ -70,7 +71,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
+  
   box(xm, ym, zm, xw, yh, zt);
 %}
 

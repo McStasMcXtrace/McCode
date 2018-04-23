@@ -11,7 +11,7 @@
 * Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Mantid
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
 * etc. Will be developed further at later time.

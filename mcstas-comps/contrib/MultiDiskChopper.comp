@@ -340,7 +340,7 @@ FINALLY
 MCDISPLAY
 %{
   int j;
-  magnify("xy");
+  
   
   // the disk
   circle("xy", 0, delta_y, 0, radius);

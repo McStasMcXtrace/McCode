@@ -172,7 +172,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xyz");
+  
   if (!VarsV.isrect) {
     circle("xz", 0,  h/2.0, 0, radius_o);
     circle("xz", 0, -h/2.0, 0, radius_o);

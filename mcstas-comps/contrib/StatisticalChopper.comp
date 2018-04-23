@@ -226,7 +226,7 @@ MCDISPLAY
 %{
   int i;
   double radius_min=radius-height;
-  magnify("xy");
+  
   circle("xy", 0.0, -radius, 0.0, radius);
   for (i=0; i<m; i++) {
     /* draw a line at each slit center */

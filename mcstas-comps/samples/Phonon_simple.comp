@@ -366,7 +366,7 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xyz");
+  
   circle("xz", 0,  yheight/2.0, 0, radius);
   circle("xz", 0, -yheight/2.0, 0, radius);
   line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);

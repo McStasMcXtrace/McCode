@@ -260,7 +260,7 @@ MCDISPLAY
   double uradius;
   char *fu2;
 
-  magnify("xy");
+  
   multiline(5,
             xmin, ymin, 0.0,
             xmax, ymin, 0.0,
