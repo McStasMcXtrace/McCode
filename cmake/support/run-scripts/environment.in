@@ -10,6 +10,11 @@ done
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
+
+# On macOS, shorten TMPDIR 
+if [ "$(uname)" == "Darwin" ]; then
+    export TMPDIR=/tmp
+fi
 export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
 export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
 export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
