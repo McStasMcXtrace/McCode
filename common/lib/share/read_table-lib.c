@@ -44,10 +44,11 @@
 *******************************************************************************/
 void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier){
 
-    /* logic here is Read_Table should include a call to FIND. If found the return value shoud just be used as
-     * if the table had been read. If not found then read the table and STORE.
-     * Table_Free should include a call to GC. If this returns non-NULL then we shoudl proceed with freeing the memory
-     * associated with the table item - otherwise do nothing since there are more references that may need it.*/ 
+    /* logic here is Read_Table should include a call to FIND. If found the return value should just be used as
+     * if the table had been read from disk. If not found then read the table and STORE.
+     * Table_Free should include a call to GC. If this returns non-NULL then we should proceed with freeing the memory
+     * associated with the table item - otherwise only decrement the reference counter since there are more references
+     * that may need it.*/
 
     static t_Read_table_file_item read_table_file_list[1024];  
     static int read_table_file_count=0;
@@ -87,11 +88,12 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                         tr->table_ref->block_number == ((t_Table *)item)->block_number){
                     /*matching item found*/
                     if (tr->ref_count>1){
-                        /*the item is found - no garbage collection needed*/
+                        /*the item is found and no garbage collection needed*/
                         tr->ref_count--;
                         return NULL;
                     }else{
-                        /* The item is found - move remaining list items up one slot,
+                        /* The item is found and the reference counter is 1.
+                         * This means we should garbage collect. Move remaining list items up one slot,
                          * and return the table for garbage collection by caller*/
                         while (tr->table_ref!=NULL){
                             *tr=*(tr+1);
@@ -103,9 +105,11 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                 }
                 tr++;
             }
-            return (void *)0x1 ;/*item not found*/ 
-    } 
-
+            /* item not found, and so should be garbage collected. This could be the case if freeing a
+             * Table that has been constructed from code - not read from file. Return 0x1 to flag it for
+             * collection.*/
+            return (void *) 0x1 ;
+    }
 }
 
 /* Access functions to the handler*/
