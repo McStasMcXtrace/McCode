@@ -863,7 +863,9 @@ double Table_Value(t_Table Table, double X, long j)
 
 /*******************************************************************************
 * void Table_Free(t_Table *Table)
-*   ACTION: free a single Table
+*   ACTION: free a single Table. First Call Table_File_list_gc. If this returns
+*   non-zero it means there are more refernces to the table, and so the table
+*   should not bee freed.
 *   return: empty Table
 *******************************************************************************/
   void Table_Free(t_Table *Table)
@@ -1149,11 +1151,10 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 *******************************************************************************/
   void Table_Free_Array(t_Table *Table)
   {
-    long index=0;
+    long index;
     if (!Table) return;
-    while (Table[index].data || Table[index].header){
+    for (index=0;index < Table[0].array_length; index++){
             Table_Free(&Table[index]);
-            index++;
     }
     free(Table);
   } /* end Table_Free_Array */
