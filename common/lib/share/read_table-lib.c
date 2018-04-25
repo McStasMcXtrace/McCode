@@ -1103,7 +1103,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
     long allocated=256;
     long nelements=1;
 
-    /* fisrt allocate an initial empty t_Table array */
+    /* first allocate an initial empty t_Table array */
     Table_Array = (t_Table *)malloc(allocated*sizeof(t_Table));
     if (!Table_Array) {
       fprintf(stderr, "Error: Can not allocate memory %li (Table_Read_Array).\n",
@@ -1123,21 +1123,24 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
       /* access file at offset and get following block. Block number is from the set offset
        * hence the hardcoded 1 - i.e. the next block counted from offset.*/
       nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
-      /* if t_Table array is not long enough, expand and realocate */
-      if (block_number >= allocated-1) {
-        allocated += 256;
-        Table_Array = (t_Table *)realloc(Table_Array,
-           allocated*sizeof(t_Table));
-        if (!Table_Array) {
-          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
-              allocated*sizeof(t_Table));
-          *blocks = 0;
-          return (NULL);
-        }
+      /*if the block is empty - don't store it*/
+      if (nelements>0){
+          /* if t_Table array is not long enough, expand and realocate */
+          if (block_number >= allocated-1) {
+              allocated += 256;
+              Table_Array = (t_Table *)realloc(Table_Array,
+                      allocated*sizeof(t_Table));
+              if (!Table_Array) {
+                  fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
+                          allocated*sizeof(t_Table));
+                  *blocks = 0;
+                  return (NULL);
+              }
+          }
+          /* store it into t_Table array */
+          //snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
+          Table_Array[block_number-1] = Table;
       }
-      /* store it into t_Table array */
-      //snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
-      Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }
     /* send back number of extracted blocks */
