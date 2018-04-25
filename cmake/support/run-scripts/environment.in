@@ -23,7 +23,7 @@ echo The new shell started here is now set up for running this version of @FLAVO
 echo
 @FLAVOR@ -v
 echo
-echo To end using this version of mcstas, exit this shell.
+echo To end using this version of @FLAVOR@, exit this shell.
 echo
 export PS1='@FLAVOR@-@MCCODE_VERSION@ env \W \$ '
 if [ -x "\${SHELL}" ]; then
