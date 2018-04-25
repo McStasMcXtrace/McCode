@@ -307,7 +307,7 @@ def main(args):
         # start the plotter
         plotter = McMatplotlibPlotter(sourcedir=loader.directory)
         
-        if args.html:
+        if (sys.platform == "linux" or sys.platform == "linux2") & args.html:
             # save to html and exit
             plotter.html_node(rootnode, open('%s.html' % os.path.splitext(simfile)[0], 'w'))
         else:
@@ -332,7 +332,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
-    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3')
+
+    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3 (linux only)')
     parser.add_argument('--format', dest='format', help='save plot to pdf/png/eps... without bringing up window')
     parser.add_argument('--backend', dest='backend', help='use non-default backend for matplotlib plot')
     
