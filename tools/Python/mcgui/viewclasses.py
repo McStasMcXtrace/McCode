@@ -1078,6 +1078,9 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.edtNumNodes.setText(mccode_config.compilation["MPINODES"])
         self.ui.edtNumNodes.conf_var = "MPINODES"
 
+        self.ui.edtNumCols.setText(mccode_config.configuration["GUICOLS"])
+        self.ui.edtNumCols.conf_var = "GUICOLS"
+
     def __pullValuesTo_mccode_config(self):
         # mcrun combobox
         i = self.ui.cbxMcrun.currentIndex()
