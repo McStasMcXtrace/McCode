@@ -737,8 +737,8 @@ class McStartSimDialog(QtWidgets.QDialog):
                     value = old_value
 
             i = i + 1
-            x = i % 6
-            y = i / 6
+            x = i % (mccode_config.configuration["GUICOLS"]*2)
+            y = i / (mccode_config.configuration["GUICOLS"]*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -747,7 +747,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
 
             i = i + 1
-            x = i % 6
+            x = i % (mccode_config.configuration["GUICOLS"]*2)
 
             edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1077,6 +1077,9 @@ class McConfigDialog(QtWidgets.QDialog):
 
         self.ui.edtNumNodes.setText(mccode_config.compilation["MPINODES"])
         self.ui.edtNumNodes.conf_var = "MPINODES"
+
+        self.ui.edtNumCols.setText(mccode_config.configuration["GUICOLS"])
+        self.ui.edtNumCols.conf_var = "GUICOLS"
 
     def __pullValuesTo_mccode_config(self):
         # mcrun combobox
