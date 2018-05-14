@@ -15,7 +15,7 @@
 *
 * %Description
 * Fed by a wiggler, this beamline operates in monochromatic mode with an
-* operational energy tunable between 2.3 – 20 keV (0.6 - 5.3 Å).
+* operational energy tunable between 2.3 – 20 keV (0.6 - 5.3 AA).
 * The wavelength is chosen by a double monochromator crystal setup where either
 * Si 111 or Si 311 may be chosen. Furthermore a double mirror
 * setup may be used to to focus the beam onto a sample. The rotation of the
