@@ -19,16 +19,28 @@
 * Perfectly flat mirror
 *
 * %D
-* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane. 
+* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane. Reflectivity may be specified either as a number (R0)
+* or in a reflectivity file. If a filename is given it is expected to have the following format:
+* # e_min=1
+* # e_max=10.0
+* # e_step=1.0
+* # theta_min=1.0
+* # theta_max=11.0
+* # theta_step=1.0
+* 1.0 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1 0.0
+* 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1 0.0 0.0
+* ...
+* 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+* 
+* This example would yield reflectivity of 1 for a glancing angle and energy of 1 deg. and 1 keV respectively.
+* A glancing angle of 10 deg., at 1 keV would yield R=0.1  
 *
 * %P
 * Input parameters:
 * xwidth [m] The width of the mirror
 * zdepth [m] The length of the mirror
-* R0 [ ]  Constant reflecticity
-* reflec [ ] Filename containing reflectivities in a 2D matrix block parameterized by energy and galcing angle.
-*
-* (none)
+* R0 [ ]  Constant reflectivity
+* reflec [ ] Filename containing reflectivities in a 2D matrix block parameterized by energy and glancing angle. Overrides R0.
 *
 * %E
 *******************************************************************************/
