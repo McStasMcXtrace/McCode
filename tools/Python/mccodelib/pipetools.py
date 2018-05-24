@@ -196,7 +196,12 @@ class PostParticletraceState(LineHandlerState):
         try:
             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
         except:
-            pass
+            # The above os.killpg works fine on Unix, but on Win32 we can instead
+            try:
+                subprocess.call(['taskkill', '/F', '/T', '/PID',  str(self.process.pid)])
+            except:
+                pass
+
 
     def setprocess(self, process):
         self.process = process
