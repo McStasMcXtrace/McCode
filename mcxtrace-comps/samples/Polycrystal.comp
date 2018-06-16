@@ -868,11 +868,6 @@ DECLARE
                 AbsorbtionInfo->muc = 5.0;
             }
 
-            // Reorganize the data table a to use log(e) instead and rebin to use constantstep feature
-            for (j = 0;j < AbsorbtionInfo->Table.rows; j++){
-                AbsorbtionInfo->Table.data[j * AbsorbtionInfo->Table.columns] = log(AbsorbtionInfo->Table.data[j * AbsorbtionInfo->Table.columns]);
-            }
-
             Table_Stat(&(AbsorbtionInfo->Table));
 
             // Check for rebinning
@@ -1236,7 +1231,7 @@ TRACE
             CrosssectionFactor = pow(2.0 * M_PI, 5.0 / 2.0) / (VolumeOfUnitCell * pow(kiLength, 2));
 
             // Absorption cross-section
-            AbsorbtionMu               = Table_Value(AbsorbtionInfo.Table, log(kiLength * K2E), AbsorbtionInfo.muc);
+            AbsorbtionMu               = Table_Value(AbsorbtionInfo.Table, kiLength * K2E, AbsorbtionInfo.muc);
             AbsorbtionCrosssection     = /*PolyInfo[OrientationIndex].*/SigmaAbsorbtion * AbsorbtionMu;
             AbsorbtionScatteringLength = AbsorbtionCrosssection / VolumeOfUnitCell;
 
