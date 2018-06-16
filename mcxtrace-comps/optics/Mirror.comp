@@ -35,13 +35,16 @@
 * This example would yield reflectivity of 1 for a glancing angle and energy of 1 deg. and 1 keV respectively.
 * A glancing angle of 10 deg., at 1 keV would yield R=0.1  
 *
+* Alternatively a material datafile may be specified in the parameter coating - in which case an ab-initio reflectivity calculation is triggered.
+* A number of such datafiles are sullied with the McXtrace distribution.
+*
 * %P
 * Input parameters:
 * xwidth [m] The width of the mirror
 * zdepth [m] The length of the mirror
-* R0 [ ]  Constant reflectivity
-* reflec [ ] Filename containing reflectivities in a 2D matrix block parameterized by energy and glancing angle. Overrides R0.
-*
+* R0 [ ]  Constant reflectivity. Overrides reflec and coating.
+* reflec [ ] File containing reflectivities in a 2D matrix block parameterized by energy and glancing angle.
+* coating [ ] File containing material data if the Mirror has a singl ematerial coating.
 * %E
 *******************************************************************************/
 
