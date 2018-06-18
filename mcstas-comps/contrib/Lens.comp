@@ -335,18 +335,20 @@ do {
   /* compute incoming angles w.r.t surface */
   NORM(nx,ny,nz);
   vec_prod(ax,ay,az,nx,ny,nz,-vx,-vy,-vz);
-  theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
+  /* if n and v are parallel - no refraction.*/
+  if (ax!=0 || ay!=0 || az!=0){
+      theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
 
-  /* Fresnel formula for refraction */
-  theta2 = asin(sin(theta1)/n);
+      /* Fresnel formula for refraction */
+      theta2 = asin(sin(theta1)/n);
 
-  /* compute new velocity after refraction */
-  alpha1 = (sin(theta2))/(sin(theta1));
-  beta1  = (alpha1*v*cos(theta1))-(v*cos(theta2));
-  vx = beta1*nx + alpha1*vx;
-  vy = beta1*ny + alpha1*vy;
-  vz = beta1*nz + alpha1*vz;
-
+      /* compute new velocity after refraction */
+      alpha1 = (sin(theta2))/(sin(theta1));
+      beta1  = (alpha1*v*cos(theta1))-(v*cos(theta2));
+      vx = beta1*nx + alpha1*vx;
+      vy = beta1*ny + alpha1*vy;
+      vz = beta1*nz + alpha1*vz;
+  }
   /* ======================== Second face of the lens ========================= */
   /* determine intersection time to go to second surface */
   nx=ny=nz=0;
@@ -508,17 +510,20 @@ do {
   /* compute incoming angles w.r.t surface */
   NORM(nx,ny,nz);
   vec_prod(ax,ay,az,nx,ny,nz,-vx,-vy,-vz);
-  theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
+  /* if n and v are parallel - no refraction.*/
+  if (ax!=0 || ay!=0 || az!=0){
+      theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
 
-  /* Fresnel formula for refraction */
-  theta2=asin(sin(theta1)*n);
+      /* Fresnel formula for refraction */
+      theta2=asin(sin(theta1)*n);
 
-  /* compute new velocity after refraction */
-  alpha1 = (sin(theta2))/(sin(theta1));
-  beta1 = (alpha1*v*cos(theta1))-(v*cos(theta2));
-  vx = beta1*nx + alpha1*vx;
-  vy = beta1*ny + alpha1*vy;
-  vz = beta1*nz + alpha1*vz;
+      /* compute new velocity after refraction */
+      alpha1 = (sin(theta2))/(sin(theta1));
+      beta1 = (alpha1*v*cos(theta1))-(v*cos(theta2));
+      vx = beta1*nx + alpha1*vx;
+      vy = beta1*ny + alpha1*vy;
+      vz = beta1*nz + alpha1*vz;
+  }
 } while (dt>0); /* loop until no more intersection */
 
 %}
@@ -607,7 +612,7 @@ MCDISPLAY
           distance+=eps;
           zz=-thickness/2-radius*radius/(4*fabs(focus1))+distance;
           rpe=sqrt(4*fabs(focus1)*fabs(distance));
-          
+
           theta_line=0;
           while (theta_line<2*PI){
             line(rpe*cos(theta_line),rpe*sin(theta_line),zz, rp*cos(theta_line), rp*sin(theta_line), zz-eps);
