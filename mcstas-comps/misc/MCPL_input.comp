@@ -165,7 +165,7 @@ TRACE
 #endif
 
     if (verbose && used_neutrons<11) {
-      printf("id=%ld pdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+      printf("id=%"PRIu64" pdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     read_neutrons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);

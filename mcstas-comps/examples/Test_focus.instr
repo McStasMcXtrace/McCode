@@ -1,0 +1,234 @@
+/*******************************************************************************
+* Instrument: Test_focus
+*
+* %Identification
+* Written by: Tobias Weber (tweber@ill.fr)
+* Date: 3-Feb-2018
+* Origin: ILL
+* License: EUPL v1.2
+*
+* Focus testing, comparing Single_crystal and Monochromator_curved
+*
+* %Description
+* For mono_ideal=0 the Single_crystal component is used as monochromator,
+* for mono_ideal=1 Monochromator_curved is used with the same settings.
+*
+* The curvature of the monochromator can be set using mono_curvh and mono_curvv
+* for horizontal and vertical focusing, respectively.
+* For mono_curvh=0, mono_curvv=0 the monochromator is flat.
+* For mono_curvh=-1, mono_curvv=-1 optimal horizontal and vertical focusing is chosen.
+*
+* %End
+*******************************************************************************/
+
+
+DEFINE INSTRUMENT Test_focus(
+	/* wavelength */
+	double src_lam = 4.5, double src_dlam = 1.0,
+
+	/* 0: use Single_crystal, 1: use Monochromator_curved */
+	int mono_ideal = 0,
+
+	/* horizontal and vertical curvatures, -1: optimal, 0: flat */
+	double mono_curvh = -1, double mono_curvv = -1
+)
+
+
+DECLARE
+%{
+	/* Source */
+	double src_w = 0.1, src_h = 0.1;
+	double src_E = -1.;
+
+	/* Monochromator */
+	double mono_mosaic = 20.;
+	double mono_d = 3.355;
+	double mono_dd = 1e-4;
+	int mono_slabs_h = 32, mono_slabs_v = 32;
+	double mono_width = 0.1, mono_height = 0.1, mono_depth = 0.005;
+	const char *mono_refl = "C_graphite.laz";
+	const char *mono_R = "HOPG.rfl", *mono_T = "HOPG.trm";
+	double mono_a[3], mono_b[3], mono_c[3];
+	double mono_angle = -1.;
+
+	/* Distances */
+	double dist_src_mono = 1.;
+	double dist_mono_sample = 1.;
+
+	/* Detectors */
+	double mon_width = 0.25, mon_height = 0.25;
+
+
+	/* ------------------------------------------------------------------------ */
+	/* Helper functions */
+	double lam_to_k(double lam) {
+		return 2.*PI / lam;
+	}
+
+	double lam_to_v(double lam) {
+		double k = lam_to_k(lam);
+		double p = HBAR * k*1e10;
+		return p / MNEUTRON;
+	}
+
+	double lam_to_E(double lam) {
+		double v = lam_to_v(lam);
+		return v*v * VS2E;
+	}
+
+	double bragg_angle(double lam, double d) {
+		double dS = lam / (2.*d);
+		return asin(dS) * 180. / PI;
+	}
+
+	double foc_vert(double angle, double f) {
+		return 2.*f * fabs(sin(angle));
+	}
+
+	double foc_hori(double angle, double f) {
+		return 2.*f / fabs(sin(angle));
+	}
+	/* ------------------------------------------------------------------------ */
+%}
+
+
+INITIALIZE
+%{
+	/* crystal orientation */
+	mono_a[0] = +2.464; mono_a[1] = 0;     mono_a[2] = 0;
+	mono_b[0] = -1.232; mono_b[1] = 2.134; mono_b[2] = 0;
+	mono_c[0] = 0;      mono_c[1] = 0;     mono_c[2] = 6.711;
+
+	/* energy & angle */
+	if(src_E < 0.)
+		src_E = lam_to_E(src_lam);
+	if(mono_angle < 0.)
+		mono_angle = bragg_angle(src_lam, mono_d);
+
+	/* negative values -> optimal monochromator curvatures */
+	if(mono_curvv < 0. || mono_curvh < 0.) {
+		/* focal length */
+		/*double f_inv = 1./dist_mono_sample + 1./dist_src_mono;*/
+		double f_inv = 1./dist_mono_sample + 0.; /* here: perfectly parallel beam from infinity */
+
+		if(mono_curvv < 0.)
+			mono_curvv = foc_vert(mono_angle/180.*PI, 1./f_inv);
+		if(mono_curvh < 0.)
+			mono_curvh = foc_hori(mono_angle/180.*PI, 1./f_inv);
+	}
+
+	printf("----------------------------------------\n");
+	printf("lambda = %f A, k = %f 1/A\n", src_lam, lam_to_k(src_lam));
+	printf("monochromator vfoc = %f m, hfoc = %f m, theta = %f deg, d = %f\n",
+		mono_curvv, mono_curvh, mono_angle, mono_d);
+	printf("----------------------------------------\n");
+%}
+
+
+/* -------------------------------------------------------------------------- */
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Source */
+
+COMPONENT Src = Source_simple(
+	xwidth = src_w, yheight = src_h,
+	lambda0 = src_lam, dlambda = src_dlam, gauss = 0, flux = 1e10,
+	dist = dist_src_mono, focus_xw = mono_width*sin(mono_angle/180.0*PI), focus_yh = mono_height)
+AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND
+%{
+	/* perfect collimation, parallel beam */
+	vx = vy = 0;
+%}
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Mono */
+
+COMPONENT mono_arm1 = Arm()
+AT (0, 0, dist_src_mono) RELATIVE Src
+ROTATED (0, -mono_angle, 0) ABSOLUTE
+
+
+COMPONENT mono_crys = Single_crystal(
+	xwidth = mono_width, yheight = mono_height, zdepth = mono_depth,
+	mosaic = FWHM2RMS*mono_mosaic, delta_d_d = FWHM2RMS*mono_dd, reflections = mono_refl,
+	PG = 0, powder = 0, order = 0, recip_cell = 0, barns = 1,
+	RX = mono_curvh, RY = mono_curvv,
+	ax = mono_a[0],	ay = mono_a[1],	az = mono_a[2],
+	bx = mono_b[0], by = mono_b[1], bz = mono_b[2],
+	cx = mono_c[0], cy = mono_c[1], cz = mono_c[2])
+WHEN(mono_ideal == 0)
+AT (0, 0, 0) RELATIVE mono_arm1
+ROTATED (0, 90, 0) RELATIVE mono_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT mono_ideal = Monochromator_curved(
+	width = mono_width, height = mono_height,
+	DM = mono_d, mosaic = mono_mosaic,
+	NH = mono_slabs_h, NV = mono_slabs_v,
+	RV = -mono_curvv, RH = -mono_curvh,
+	r0 = 1, reflect = mono_R, t0 = 1, transmit = mono_T,
+	order = 0)
+WHEN(mono_ideal == 1)
+AT (0, 0, 0) RELATIVE mono_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+
+
+COMPONENT mono_arm2 = Arm()
+AT (0, 0, 0) RELATIVE mono_arm1
+ROTATED (0, -mono_angle, 0) RELATIVE mono_arm1
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Detectors */
+
+COMPONENT psdmon = PSD_monitor(
+	nx = 128, ny = 128,
+	filename = "psd.dat",
+	xwidth = mon_width, yheight = mon_height,
+	restore_neutron = 1)
+AT (0, 0, dist_mono_sample) RELATIVE mono_arm2
+
+COMPONENT divmon = Divergence_monitor(
+	nh = 128, nv = 128,
+	maxdiv_h = 3, maxdiv_v = 3,
+	filename = "div.dat",
+	xwidth = mon_width, yheight = mon_height,
+	restore_neutron = 1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT lmon = L_monitor(
+	nL = 128,
+	filename = "lam.dat",
+	xwidth = mon_width, yheight = mon_height,
+	Lmin = src_lam - src_dlam, Lmax = src_lam + src_dlam,
+	restore_neutron = 1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT emon = E_monitor(
+	nE = 128,
+	filename = "E.dat",
+	xwidth = mon_width, yheight = mon_height,
+	Emin = src_E - src_E*0.15, Emax = src_E + src_E*0.15,
+	restore_neutron = 1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+END
