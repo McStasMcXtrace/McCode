@@ -1,0 +1,76 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Sqq_w
+*
+* %Identification
+* Written by: P. Willendrup
+* Date: June, 2018
+* Origin: DTU
+*
+* %INSTRUMENT_SITE: Templates
+*
+* Test instrument for the Sqq_w_monitor component, derived from template_Laue 
+*
+* %Description
+*
+* %Parameters
+* lambda:    [A]      Central wavelength of wavelength distribution
+* dlambda:   [A]      Width of wavelength distribution
+* Rotation:  [deg]    Sample orientation
+* inelastic: [in 0:1] Fraction of statistics to scatter inelastically
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_Sqq_w(lambda=2.566,dlambda=0.02,Rotation=0, inelastic=0.1)
+
+DECLARE %{
+  double Samplechoice;
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+  radius=0.02, focus_xw=0.01, focus_yh=0.01, target_index=1,
+  lambda0=lambda, dlambda=dlambda, flux=1e12)
+AT (0,0,0) ABSOLUTE
+EXTEND %{
+  Samplechoice=rand01();
+%}
+
+ COMPONENT Phonon = Phonon_simple(
+    radius = 0.02, yheight = 0.03, sigma_abs = 0, sigma_inc = 0,
+    a = 6.71, b = 6.6460, M = 12.01, c = 26.5, DW = 1, T = 300)
+  WHEN (inelastic>0 && Samplechoice<inelastic)  AT (0, 0, 5.1) RELATIVE source
+  ROTATED (0, Rotation, 0) RELATIVE source
+EXTEND %{
+   p/=mcipinelastic;
+%}
+
+
+COMPONENT sample = Single_crystal(order=1, 
+     reflections = "fake.lau", mosaic=30, radius = 0.02, yheight = 0.03,   delta_d_d=1e-3,
+     ax =-6.71 , ay = 0, az =0 , bx =0 , by =0, bz = 6.71 , cx =0 , cy = 6.71 , cz =0, barns=1)
+  WHEN (inelastic<1 && Samplechoice>=inelastic) AT ( 0, 0, 5.1) RELATIVE source
+  ROTATED (0, Rotation, 0) RELATIVE source
+EXTEND %{
+   p/=(1-mcipinelastic);
+   // Remove direct beam
+   if(!SCATTERED) ABSORB;
+%}
+
+
+
+COMPONENT Sqqw = Sqq_w_monitor(filename="qa_vs_qb",nw=11,nqa=100,nqb=100,qamax=10,qbmax=10,index=-2)
+  AT (0,0,0) RELATIVE sample
+
+COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
+AT (0,0,0) RELATIVE sample
+
+END
+
