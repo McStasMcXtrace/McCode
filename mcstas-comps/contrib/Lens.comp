@@ -469,7 +469,11 @@ do {
     } else if (r2 && !focus2)
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "sphere", -r2);
     else if (!r2 && focus2)
-      dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", -focus2);
+      if (focus2>0){
+          dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", focus2);
+      }else{
+          dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2 - radius*radius/(4*fabs(focus2)) , radius, "parabola", focus2);
+      }
     else
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "plane", phiy2);
 
