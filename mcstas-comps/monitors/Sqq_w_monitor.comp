@@ -1,0 +1,190 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Sqq_w_monitor
+*
+* %I
+* Written by: Peter Willendrup
+* Date: June, 2018
+* Origin: DTU
+*
+* Monitor outputting a series of energy-planes in a subset of reciprocal space, spanned by 
+* scattering vectors qa(x,y,z) and qb(x,y,z).
+*
+* %D
+*
+* Geometry-less monitor (no propagation!) outputting a series of energy-planes in a subset of reciprocal 
+* space, spanned by scattering vectors qa(x,y,z) and qb(x,y,z).
+*
+* The assumption is that the "current" neutron represents the final state, whereas the incoming state
+* is found by restoring the neutron state "index" components earlier.
+*
+* Example: Sqq_w_monitor(filename="output",wmax=5,nw=11,nqa=100,nqb=100,qamax=10,qbmax=10,index=-2)
+*          AT (0,0,0) RELATIVE sample
+*
+* %P
+* INPUT PARAMETERS:
+*
+* qax:   [1]         x-component of 1st q-vector
+* qay:   [1]         y-component of 1st q-vector
+* qaz:   [1]         z-component of 1st q-vector
+* qbx:   [1]         x-component of 2nd q-vector
+* qby:   [1]         y-component of 2nd q-vector
+* qbz:   [1]         z-component of 2nd q-vector
+* qamax: [AA^-1]     Defines interval (-qamax,qamax) where monitor measures in nqa bins
+* qbmax: [AA^-1]     Defines interval (-qbmax,qbmax) where monitor measures in nqb bins
+* nqa:   [int]       Number of bins along qa direction
+* nqb:   [int]       Number of bins along qb direction
+* wmax:  [meV]       Defines the energy-transfer [-wmax,wmax] window to monitor in nw bins
+* nw:    [int]       Number of energy slices
+* filename: [string] Base filename to use, nw+1 files will be output
+*
+* OUTPUT PARAMETERS:
+*
+* M_N: []             3D array of neutron counts
+* M_p: []             3D array of neutron weight counts
+* N_p2: []            3D array of second moments
+* M_Ns: []            2D array of neutron counts
+* M_ps: []            2D array of neutron weight counts
+* N_p2s: []           2D array of second moments
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Sqq_w_monitor
+DEFINITION PARAMETERS (qax=1,qay=0,qaz=0,qbx=0,qby=1,qbz=0,qamax=2,qbmax=2,wmax=5,nqa=90, nqb=90, nw=10, string filename, index=-2)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (M_N, M_p, M_p2, M_Ns, M_ps, M_p2s)
+
+DECLARE
+%{
+double M_N[nw][nqa][nqb];
+double M_p[nw][nqa][nqb];
+double M_p2[nw][nqa][nqb];
+double M_Ns[nqa][nqb];
+double M_ps[nqa][nqb];
+double M_p2s[nqa][nqb];
+double qamin,qbmin,wmin;
+%}
+
+INITIALIZE
+%{
+int i,j,k;
+
+/* Make checks for limits on qa, qb, w grid */
+
+    for (i=0; i<nqa; i++)
+      for (j=0; j<nqb; j++) {
+	M_Ns[i][j] = 0;
+	M_ps[i][j] = 0;
+	M_p2s[i][j] = 0;
+	for (k=0; k<nw; k++) {
+	  M_N[k][i][j] = 0;
+	  M_p[k][i][j] = 0;
+	  M_p2[k][i][j] = 0;
+	}
+      }
+
+    qamin=-qamax;
+    qbmin=-qbmax;
+    wmin=-wmax;
+%}
+TRACE
+  %{
+    int i,j,k;
+    double rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp;
+    double Ei,Ef,E,Ki,Kf;
+    double qx,qy,qz;
+    double qqa, qqb;
+    double kix,kiy,kiz;
+    double kfx,kfy,kfz;
+    
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP+index, rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
+    /* Calculate energy transfer */
+    Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
+    Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
+    E=Ef-Ei;
+
+    /* calculate k vectors and momentum transfer*/
+    kix=vx;
+    kiy=vy;
+    kiz=vz;
+    kfx=rvx;
+    kfy=rvy;
+    kfz=rvz;
+    NORM(kix, kiy, kiz);
+    NORM(kfx, kfy, kfz);
+    
+    /* K-vector lengths */
+    Ki=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
+    Kf=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
+    kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
+    kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
+
+    qx=kfx-kix;
+    qy=kfy-kiy;
+    qz=kfz-kiz;
+
+    /* Calculate projections along qa and qb */
+    qqa = qx*qax + qy*qay + qz*qaz;
+    qqb = qx*qbx + qy*qby + qz*qbz;
+    
+    /* Check if we are within the selected q/e range */
+    if (fabs(qqa) <= qamax && fabs(qqb) <=qbmax && fabs(E) <= wmax) {
+      
+      i = floor((qqa - qamin)*nqa/(qamax - qamin));
+      j = floor((qqb - qbmin)*nqb/(qbmax - qbmin));
+      k = floor((E - wmin)*nw/(wmax - wmin));
+
+       M_N[k][i][j]++;
+      M_p[k][i][j] += p;
+      M_p2[k][i][j] += p*p;
+
+      M_Ns[i][j]++;
+      M_ps[i][j] += p;
+      M_p2s[i][j] += p*p;
+
+      SCATTER;
+    }
+%}
+
+SAVE
+%{
+  int kk,ll;
+  char ff[256];
+  char tt[256];
+  sprintf(ff, "%s_Sum",filename);
+  DETECTOR_OUT_2D(
+	"qa vs qb monitor E Sum",
+        "qa [AA^-1]",
+        "qa [AA^-1]",
+        qamin, qamax, qbmin, qbmax,
+        nqa, nqb,
+        &M_Ns[0][0],&M_ps[0][0],&M_p2s[0][0],
+        ff);
+
+  for (kk=0; kk<nw; kk++) {
+    sprintf(ff, "%s_%i",filename,kk);
+    sprintf(tt, "qa vs qb monitor E slice %i ~ %g meV",kk,kk*(wmax-wmin)/(nw-1)+wmin);
+    DETECTOR_OUT_2D(
+	tt,
+        "qa [AA^-1]",
+        "qb [AA^-1]",
+	qamin, qamax, qbmin, qbmax,
+        nqa, nqb,
+        &M_N[kk][0][0],&M_p[kk][0][0],&M_p2[kk][0][0],
+        ff);
+  }
+%}
+
+MCDISPLAY
+%{
+  /* Show nothing - nothing to show... */
+%}
+
+END

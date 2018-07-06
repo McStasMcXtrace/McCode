@@ -14,7 +14,7 @@
 * %Description
 * 
 *
-* Example: mcrun RTP_DIFF.instr lambda=2.36
+* Example: mcrun RTP_DIF.instr lambda=2.36 Detector: det_I=170
 *
 * %Parameters
 * lambda: [Angs]       Monochromator selected wavelength
