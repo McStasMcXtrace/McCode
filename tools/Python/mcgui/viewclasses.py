@@ -384,7 +384,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
 
     def initCodeEditor(self, instr):
         if instr != '':
-            self.__scintilla.setText(open(instr).read())
+            self.__scintilla.setText(open(instr, encoding='utf-8').read())
         else:
             self.__scintilla.setText('')
         self.setWindowTitle(mccode_config.configuration["MCCODE"] + ": " + instr)
