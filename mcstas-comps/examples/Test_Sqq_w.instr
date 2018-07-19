@@ -5,7 +5,7 @@
 *
 * %Identification
 * Written by: P. Willendrup
-* Date: June, 2018
+* Date: June-July, 2018
 * Origin: DTU
 *
 * %INSTRUMENT_SITE: Templates
@@ -19,12 +19,13 @@
 * dlambda:   [A]      Width of wavelength distribution
 * Rotation:  [deg]    Sample orientation
 * inelastic: [in 0:1] Fraction of statistics to scatter inelastically
+* gap:       [meV]    Phonon bandgap to apply (unphysical)
 *
 * %End
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Sqq_w(lambda=1,dlambda=0.01,Rotation=0, inelastic=0.8, Vel=26.5)
+DEFINE INSTRUMENT Test_Sqq_w(lambda=1,dlambda=0.01,Rotation=0, inelastic=0.8, Vel=26.5, gap=1.5)
 
 DECLARE %{
   double Samplechoice;
@@ -45,7 +46,7 @@ EXTEND %{
 
  COMPONENT Phonon = Phonon_simple(
     radius = 0.02, yheight = 0.03, sigma_abs = 0, sigma_inc = 0,
-    a = 6.71, b = 6.6460, M = 12.01, c = 26.5, DW = 1, T = 300)
+    a = 6.71, b = 6.6460, M = 12.01, c = Vel, DW = 1, T = 300, gap=gap)
   WHEN (inelastic>0 && Samplechoice<inelastic)  AT (0, 0, 5.1) RELATIVE source
   ROTATED (0, Rotation, 0) RELATIVE source
 EXTEND %{
