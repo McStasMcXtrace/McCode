@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Peter Willendrup
-* Date: June, 2018
+* Date: June-July, 2018
 * Origin: DTU
 *
 * Monitor outputting a series of energy-planes in a subset of reciprocal space, spanned by 
@@ -23,7 +23,7 @@
 * The assumption is that the "current" neutron represents the final state, whereas the incoming state
 * is found by restoring the neutron state "index" components earlier.
 *
-* Example: Sqq_w_monitor(filename="output",wmax=5,nw=11,nqa=100,nqb=100,qamax=10,qbmax=10,index=-2)
+* Example: Sqq_w_monitor(filename="output",Emin=0,Emax=5,nE=11,nqa=100,nqb=100,qamin=1,qamax=10,qbmin=1qbmax=10,index=-2)
 *          AT (0,0,0) RELATIVE sample
 *
 * %P
@@ -35,13 +35,16 @@
 * qbx:   [1]         x-component of 2nd q-vector
 * qby:   [1]         y-component of 2nd q-vector
 * qbz:   [1]         z-component of 2nd q-vector
-* qamax: [AA^-1]     Defines interval (-qamax,qamax) where monitor measures in nqa bins
-* qbmax: [AA^-1]     Defines interval (-qbmax,qbmax) where monitor measures in nqb bins
+* qamin: [AA^-1]     Defines interval (qamin,qamax) where monitor measures in nqa bins
+* qamax: [AA^-1]     Defines interval (qamin,qamax) where monitor measures in nqa bins
+* qbmin: [AA^-1]     Defines interval (qbmin,qbmax) where monitor measures in nqb bins
+* qbmax: [AA^-1]     Defines interval (qbmin,qbmax) where monitor measures in nqb bins
 * nqa:   [int]       Number of bins along qa direction
 * nqb:   [int]       Number of bins along qb direction
-* wmax:  [meV]       Defines the energy-transfer [-wmax,wmax] window to monitor in nw bins
-* nw:    [int]       Number of energy slices
-* filename: [string] Base filename to use, nw+1 files will be output
+* Emin:  [meV]       Defines the energy-transfer [Emin,Emax] window to monitor in nE bins
+* Emax:  [meV]       Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
+* nE:    [int]       Number of energy slices
+* filename: [string] Base filename to use, nE+1 files will be output
 *
 * OUTPUT PARAMETERS:
 *
@@ -57,19 +60,19 @@
 
 
 DEFINE COMPONENT Sqq_w_monitor
-DEFINITION PARAMETERS (qax=1,qay=0,qaz=0,qbx=0,qby=1,qbz=0,qamax=2,qbmax=2,wmax=5,nqa=90, nqb=90, nw=10, string filename, index=-2)
+DEFINITION PARAMETERS (qax=1,qay=0,qaz=0,qbx=0,qby=1,qbz=0,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (M_N, M_p, M_p2, M_Ns, M_ps, M_p2s)
 
 DECLARE
 %{
-double M_N[nw][nqa][nqb];
-double M_p[nw][nqa][nqb];
-double M_p2[nw][nqa][nqb];
+double M_N[nE][nqa][nqb];
+double M_p[nE][nqa][nqb];
+double M_p2[nE][nqa][nqb];
 double M_Ns[nqa][nqb];
 double M_ps[nqa][nqb];
 double M_p2s[nqa][nqb];
-double qamin,qbmin,wmin;
+double dE;
 %}
 
 INITIALIZE
@@ -83,16 +86,14 @@ int i,j,k;
 	M_Ns[i][j] = 0;
 	M_ps[i][j] = 0;
 	M_p2s[i][j] = 0;
-	for (k=0; k<nw; k++) {
+	for (k=0; k<nE; k++) {
 	  M_N[k][i][j] = 0;
 	  M_p[k][i][j] = 0;
 	  M_p2[k][i][j] = 0;
 	}
       }
 
-    qamin=-qamax;
-    qbmin=-qbmax;
-    wmin=-wmax;
+    dE=(Emax-Emin)/(1.0*nE-1);
 %}
 TRACE
   %{
@@ -135,13 +136,13 @@ TRACE
     qqb = qx*qbx + qy*qby + qz*qbz;
     
     /* Check if we are within the selected q/e range */
-    if (fabs(qqa) <= qamax && fabs(qqb) <=qbmax && fabs(E) <= wmax) {
+    if (qqa <= qamax && qqa >=qamin && qqb <=qbmax && qqb>=qbmin && E<= Emax && E>=Emin) {
       
       i = floor((qqa - qamin)*nqa/(qamax - qamin));
       j = floor((qqb - qbmin)*nqb/(qbmax - qbmin));
-      k = floor((E - wmin)*nw/(wmax - wmin));
+      k = floor((E - Emin)*nE/(Emax - Emin));
 
-       M_N[k][i][j]++;
+      M_N[k][i][j]++;
       M_p[k][i][j] += p;
       M_p2[k][i][j] += p*p;
 
@@ -168,9 +169,9 @@ SAVE
         &M_Ns[0][0],&M_ps[0][0],&M_p2s[0][0],
         ff);
 
-  for (kk=0; kk<nw; kk++) {
+  for (kk=0; kk<nE; kk++) {
     sprintf(ff, "%s_%i",filename,kk);
-    sprintf(tt, "qa vs qb monitor E slice %i ~ %g meV",kk,kk*(wmax-wmin)/(nw-1)+wmin);
+    sprintf(tt, "qa vs qb monitor E slice %i ~ %g meV",kk,dE*kk+Emin);
     DETECTOR_OUT_2D(
 	tt,
         "qa [AA^-1]",
