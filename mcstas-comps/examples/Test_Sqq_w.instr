@@ -24,7 +24,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Sqq_w(lambda=2.566,dlambda=0.02,Rotation=0, inelastic=0.1)
+DEFINE INSTRUMENT Test_Sqq_w(lambda=1,dlambda=0.01,Rotation=0, inelastic=0.8, Vel=26.5)
 
 DECLARE %{
   double Samplechoice;
@@ -66,7 +66,7 @@ EXTEND %{
 
 
 
-COMPONENT Sqqw = Sqq_w_monitor(filename="qa_vs_qb",nw=11,nqa=100,nqb=100,qamax=10,qbmax=10,index=-2)
+  COMPONENT Sqqw = Sqq_w_monitor(filename="qa_vs_qb",nE=32,nqa=401,nqb=401,qamin=0.5,qamax=4.5,qamin=0.5,qbmax=4.5,index=-2,Emin=0, Emax=16)
   AT (0,0,0) RELATIVE sample
 
 COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
