@@ -210,7 +210,6 @@ SAVE
     /*doing it this way is inefficient since we send a lot of zeros across the network - but it should work*/ 
 #endif
 
-    /*don't do the internal gather in DETECTOR_OUT_2D*/
     if(nx==1 && ny==1){
         DETECTOR_OUT_0D("Intensity monitor (absolute value)" NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p_abs[0], PSD_p2[0][0]);
         DETECTOR_OUT_0D("Intensity monitor (argument)" NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0]);
@@ -229,6 +228,7 @@ SAVE
                 "PSD_monitor (argument)","X Position[m]", "Intensity", "X",
                 xmin,xmax,nx,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg);
     }else{
+        /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
         DETECTOR_OUT_2D(
                 "PSD_monitor (absolute value)",
