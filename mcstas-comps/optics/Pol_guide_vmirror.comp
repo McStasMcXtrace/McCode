@@ -392,7 +392,7 @@ MCDISPLAY
   
 
   // draw box
-  box(0, 0, length/2, xwidth, yheight, length);
+  box(0, 0, length/2.0, xwidth, yheight, length);
 
   for(i = -1; i<=1; i+=2)
     for(j = -1; j<=1; j+=2)
