@@ -368,7 +368,7 @@ int calc_xsect_union(double v, double *qv, double *my_sv2, int count, double *su
       line_info->xs_compute++;
       //printf("line_info->xs_Nq[line] = %f, line_info->xs_sum[line] = %f, line_info->xs_compute = %d\n",line_info->xs_Nq[line],line_info->xs_sum[line],line_info->xs_compute);
     } else line_info->xs_reuse++;
-    line0 = Nq - 1;
+    line0 = Nq;
   }
   
   line_info->xs_calls++;
@@ -469,7 +469,7 @@ int Powder_physics_my(double *my,double *k_initial, union data_transfer_union da
           line_info->xs_compute++;
           //printf("line_info->xs_Nq[line] = %f, line_info->xs_sum[line] = %f, line_info->xs_compute = %d\n",line_info->xs_Nq[line],line_info->xs_sum[line],line_info->xs_compute);
         } else line_info->xs_reuse++;
-        line0 = line_info->Nq - 1;
+        line0 = line_info->Nq;
         }
           
         line_info->xs_calls++;
