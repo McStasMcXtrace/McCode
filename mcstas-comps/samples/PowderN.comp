@@ -15,6 +15,7 @@
 * Modified by: PW, LC 04.10.05   (Merge with Chapon Powder_multi)
 * Modified by: PW, KL 05.06.07   (Concentricity)
 * Modified by: EF,    17.10.08   (added any shape sample geometry)
+* Modified by: MB,    25.07.18   (fixed indexing bug in calc_xsect)
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
@@ -519,7 +520,7 @@ int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum,
       line_info->xs_sum[line]= *sum;
       line_info->xs_compute++;
     } else line_info->xs_reuse++;
-    line0 = Nq - 1;
+    line0 = Nq;
   }
 
   line_info->xs_calls++;
