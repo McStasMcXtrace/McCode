@@ -1,0 +1,58 @@
+#!/bin/sh
+
+PATH=$PATH:$PWD/tools/download-tool
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# Workaround for having CRLF linefeeds in a couple of windows packages
+rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
+find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
+find tools/Legacy-Perl-win -type f -exec unix2dos \{\} \;
+find tools/Legacy-Perl-cmdline-win -type f -exec unix2dos \{\} \;
+
+# 64-bit
+./mkdist mcstas $1 "" "" mingw64 "" -- nsis64
+./mkdist mcstas-comps $1 mcstas-comps-win "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl-win/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline-win/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mingw64 "" -- nsis64
+./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mingw64 "" -- nsis64
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
+
+if [ "x$2" != "x" ]; then
+    # Build the meta-packages also
+    cd meta-pkgs/windows/Support
+    if [ ! -f PPDs.zip ]; then
+	wget http://ppds.mccode.org/PPDs.zip
+    fi
+    if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
+	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
+	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe
+    fi
+    cd ..
+
+    sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
+    sed s/@FLAVOR@/mcstas/g python-install.bat.in.2 > python-install.bat
+
+    sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
+    ./iscc McStas-${1}-metapackage64.iss
+    mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
+    mkdir dist/extras
+    cp MSMPI/*.* dist/extras
+    cp NeXus/*.* dist/extras
+fi
