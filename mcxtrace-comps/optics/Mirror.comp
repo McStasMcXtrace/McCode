@@ -114,7 +114,6 @@ TRACE
         SCATTER;
         double q=2.0*s;
         double R=reflecq(&re,q,0,k*K2E,fabs(90-acos(s/k)*RAD2DEG));
-        //printf( "%g %g %g %g  %g %g %g %g %g\n",k, nx,ny,nz, kx,ky,kz,s,R); 
         p*=R;
     }else{
         /*missed mirror - restore xray*/
