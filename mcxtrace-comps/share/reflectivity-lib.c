@@ -3,6 +3,7 @@
 #include <math.h>
 #include <complex.h>
 
+/* Initialize a container objects for various types of reflectivity parametrization. */
 int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
   if (R==NULL){
     R=calloc(1,sizeof(t_Reflec));
@@ -72,7 +73,7 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
   return 0;
 }
 
-
+/*This section contains the functions that compute the actual reflectivity*/
 double complex reflec_coating(t_Reflec *r_handle, double q, double g){
   return 0.0;
 }
@@ -109,6 +110,7 @@ double complex reflec_eth_prmtc(t_Reflec *r_handle, double g, double e, double t
   return (double complex)r;
 }
 
+/* Entry function to Parratt's recursive algorithm for multilayers.*/
 double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k){
   double complex r,qp,rp;
   double k2;
@@ -118,8 +120,7 @@ double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k){
 
   qp=q;
   qpd=csqrt(q*q - 8*k2* *(pp->delta) + I*8*k2* *(pp->beta));
-  k2=k*k;//scalar_prod(mcnlkx,ky,kz,kx,ky,kz);
-  //k=sqrt(k2);
+  k2=k*k;
 
   if (pp->N>0){
     rp=(qp-qpd)/(qp+qpd);
@@ -131,52 +132,31 @@ double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k){
   }
   return r;
 }
+/* Lower layer function fo rParratt's recursive algorithm. Here recursion
+ * takes place by calls to itself.*/
+double complex parrat_reflec_bulk(int N, double *delta, double *beta, double *d, double k, double q){
+  double complex qp,rp,rr;
+  double k2=k*k;
+  double complex qinf;
+  double complex qpd,rpd,p; 
 
-/*double complex reflecc(t_Reflec *r_handle, double kix, double kiy, double kiz, double kfx, double kfy, double kfz, double g){*/
-/*    double complex r;*/
-/*    double q,qx,qy,qz;*/
-/*    double e,theta;*/
-/**/
-/*    qx=kfx-kix;qy=kfy-kiy; qz=kfz-kiz;*/
-/*    q=sqrt(scalar_prod(qx,qy,qz,qx,qy,qz));*/
-    /*using the normalized coordinate g which lies along the grading direction*/
-/*    switch(r_handle->type){*/
-/*        case CONSTANT:*/
-/*            r=r_handle->prms.rconst.R;*/
-/*            break;*/
-/*        case BARE:*/
-/*            r=reflec_bare(r_handle,q,g);*/
-/*            break;*/
-/*        case COATING:*/
-/*            r=reflec_coating(r_handle,q,g);*/
-/*            break;*/
-/*        case Q_PARAMETRIC:*/
-/*            r=reflec_q_prmtc(r_handle,q,g);*/
-/*            break;*/
-/*        case PARRATT:*/
-/*            {*/
-/*                double k=sqrt(kix*kix + kiy*kiy + kiz*kiz)*K2E;*/
-/*                r=reflec_parratt(r_handle,q,g,k);*/
-/*                break;*/
-/*            }*/
-/*        case ETH_PARAMETRIC:*/
-/*            {*/
-/*                double k=sqrt(kix*kix + kiy*kiy + kiz*kiz)*K2E;*/
-/*                double e=k*E2K;*/
-/*                theta=acos(scalar_prod(kix,kiy,kiz,kfx,kfy,kfz))/2.0;*/
-/*                r=reflec_eth_prmtc(r_handle,e,theta,g);*/
-/*                break;*/
-/*            }*/
-/*        case KINEMATIC:*/
-/*            r=reflec_kinematic(r_handle,q,g);*/
-/*            break;  */
-/*        default:*/
-/*            fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");*/
-/*            return 1.0;*/
-/*    }*/
-/*    return r;*/
-/*}*/
+  qp=csqrt(q*q - 8*k2* *delta + I*8*k2* *beta);
+  qpd=csqrt(q*q - 8*k2* *(delta+1) + I*8*k2* *(beta+1));
 
+  if (N>1){
+    rp=(qp-qpd)/(qp+qpd);
+    rpd=parrat_reflec_bulk(N-1,(delta+1),(beta+1),(d+1),k,q);
+    p=cexp(I*qpd* d[1]);
+    rr= (rp+p*rpd)/(1+rp*rpd*p);
+  }
+  if (N==1){
+    /*the bottom layer (on top of substrate)*/
+    rr=(qp-qpd)/(qp+qpd);
+  }
+  return rr;
+}
+
+/* Dispatcher functions that call the underlying computations depending on the type of reflectivity*/
 
 double complex refleccq( t_Reflec *r_handle, double q, double g, ...){
   double complex r;
@@ -263,43 +243,27 @@ double reflecq( t_Reflec *r_handle, double q, double g, ...){
     return r;
 }
 
-double complex parrat_reflec(int lc, double *delta, double *beta, double *d, double k, double q){
-  double complex qp,rp,rr;
-  double k2=k*k;
-  double complex qinf;
-  double qpd,rd,p; 
-  qp=q;
-  qpd=csqrt(q*q - 8*k2* *delta + I*8*k2* *beta);
-  if (lc>0){
-    rp=(qp-qpd)/(qp+qpd);
-    //rd=parrat_reflec_bulk(lc,delta,beta,d,k,q,0);
-    p=cexp(I*qpd* *d);
-    rr= (rp+p*rd)/(1+rp*rd*p);
-  }else{
-    return (qp-qpd)/(qp+qpd);
-  }
-  return rr; 
-}
+double refleceth( t_Reflec *r_handle,double e, double th, double g){
+    double q;
+    double k=e*E2K;
+    q=k*2.0*sin(th);
+    if(r_handle->type==PARRATT){
+        return reflecq(r_handle,q,g,k);
+    }else{
+        return reflecq(r_handle,q,g,e,th);
+    }
+}  
 
-double complex parrat_reflec_bulk(int N, double *delta, double *beta, double *d, double k, double q){
-  double complex qp,rp,rr;
-  double k2=k*k;
-  double complex qinf;
-  double complex qpd,rpd,p; 
+double complex reflecceth( t_Reflec *r_handle,double e, double th, double g){
+    double q;
+    double k=e*E2K;
+    q=k*2.0*sin(th);
+    if(r_handle->type==PARRATT){
+        return refleccq(r_handle,q,g,k);
+    }else{
+        return refleccq(r_handle,q,g,e,th);
+    }
+}  
 
-  qp=csqrt(q*q - 8*k2* *delta + I*8*k2* *beta);
-  qpd=csqrt(q*q - 8*k2* *(delta+1) + I*8*k2* *(beta+1));
 
-  if (N>1){
-    rp=(qp-qpd)/(qp+qpd);
-    rpd=parrat_reflec_bulk(N-1,(delta+1),(beta+1),(d+1),k,q);
-    p=cexp(I*qpd* d[1]);
-    rr= (rp+p*rpd)/(1+rp*rpd*p);
-  }
-  if (N==1){
-    /*the bottom layer (on top of substrate)*/
-    rr=(qp-qpd)/(qp+qpd);
-  }
-  return rr;
-}
 
