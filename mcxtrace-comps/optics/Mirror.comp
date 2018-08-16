@@ -42,16 +42,20 @@
 * Input parameters:
 * xwidth: [m] The width of the mirror
 * zdepth: [m] The length of the mirror
-* R0: [ ]  Constant reflectivity. Overrides reflec and coating.
-* reflec: [ ] File containing reflectivities in a 2D matrix block parameterized by energy and glancing angle.
-* coating: [ ] File containing material data if the Mirror has a singl ematerial coating.
+* yheight: [m] The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
+* R0: [ ]  Constant reflecticity
+* reflectivity: [ ] Filename containing reflectivities.
+* matrix: [ ] If nonzerothe refletivity is considered to be a E,theta -matrix, else it is parametrized by q.
+*
+* (none)
+*
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS ()
-    SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, R0=0, string reflec="", string coating="")
-OUTPUT PARAMETERS (reflec_table, prms)
+DEFINITION PARAMETERS ( string reflec="")
+SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, yheight=0, R0=0, string reflectivity="", matrix=0)
+OUTPUT PARAMETERS (reflec_table, prms,re)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -122,19 +126,31 @@ INITIALIZE
 
 TRACE
 %{
-    int status;
+    int status,hit;
     double l0,l1,l2,l3,tx,ty,tz;
+    double nx,ny,nz;
     
-    PROP_Y0;
-    if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
-        RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);
+    hit=1;
+    if(yheight){
+        PROP_X0;
+        if(y<-yheight/2.0|| y>yheight/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+            hit=0;
+        }else{
+            nx=1;
+            ny=0;
+            nz=0;
+        }
     }else{
-        SCATTER;
-        double nx,ny,nz;
-        nx=0;
-        ny=1;
-        nz=0;
-
+        PROP_Y0;
+        if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+            hit=0;
+        }else{
+            nx=0;
+            ny=1;
+            nz=0;
+        }
+    }
+    if(hit){
         double s=scalar_prod(kx,ky,kz,nx,ny,nz);
         double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
          
@@ -199,11 +215,18 @@ TRACE
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. */
-  
-  line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
-  line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
-  line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
-  line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+  magnify("");
+  if(yheight){
+      line(-yheight/2.0,0,-zdepth/2.0, yheight/2.0,0,-zdepth/2.0);
+      line(-yheight/2.0,0, zdepth/2.0, yheight/2.0,0, zdepth/2.0);
+      line(-yheight/2.0,0,-zdepth/2.0,-yheight/2.0,0, zdepth/2.0);
+      line( yheight/2.0,0,-zdepth/2.0, yheight/2.0,0, zdepth/2.0);
+  }else{
+      line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
+      line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+      line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
+      line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+  }
 %}
 
 END
