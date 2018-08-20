@@ -203,10 +203,6 @@ def keypress(event, back_cb, replot_cb, togglelog_cb):
         back_cb()
 
 def print_help(nogui=False):
-    if sys.platform == 'darwin':
-        modifier = 'Meta'
-    else:
-        modifier = 'ctrl'
     
     helplines = []
     helplines.append('')
@@ -221,7 +217,7 @@ def print_help(nogui=False):
     helplines.append('F5             - replot')
     helplines.append('click          - display subplot')
     helplines.append('right-click/b  - back')
-    helplines.append('%s + click   - sweep monitors' % modifier)
+    helplines.append('ctrl + click   - sweep monitors')
     print('\n'.join(helplines))
 
 def dumpfile(frmat):
