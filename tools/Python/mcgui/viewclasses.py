@@ -737,8 +737,8 @@ class McStartSimDialog(QtWidgets.QDialog):
                     value = old_value
 
             i = i + 1
-            x = i % (mccode_config.configuration["GUICOLS"]*2)
-            y = i / (mccode_config.configuration["GUICOLS"]*2)
+            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
+            y = i / (int(mccode_config.configuration["GUICOLS"])*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -747,7 +747,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
 
             i = i + 1
-            x = i % (mccode_config.configuration["GUICOLS"]*2)
+            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
 
             edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
