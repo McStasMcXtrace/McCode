@@ -42,7 +42,7 @@ where the normalization is taken to be $P(0)=1$.
   \begin{center}
     \psfrag{l1}{$l_1$}
     \psfrag{l2}{$l_2$}
-    \psfrag{lfull}{$l_{\rm full}$}
+    \psfrag{lfull}{$l_\textrm{full}$}
     \includegraphics[width=0.6\textwidth]{figures/scatter}
   \end{center}
 \caption{The geometry of a scattering event within a powder sample.}
@@ -72,20 +72,20 @@ from a distribution different from $\Pi(l_1,\Omega)$.
 By doing this, we must adjust $\pi_i$ according to
 the probability transformation rule (\ref{probrule}).
 If we {\em e.g.}\ choose the scattering depth, $l_1$,
-from a flat distribution in $[ 0 ; l_{\rm full} ]$,
+from a flat distribution in $[ 0 ; l_\textrm{full} ]$,
 and choose the directional dependence from $g(\Omega)$,
 we have a Monte Carlo probability
 \begin{equation}
-f(l_1,\Omega) = g(\Omega) / l_{\rm full} ,
+f(l_1,\Omega) = g(\Omega) / l_\textrm{full} ,
 \end{equation}
-$l_{\rm full}$ is here the path length through the sample
+$l_\textrm{full}$ is here the path length through the sample
 as taken by a non-scattered neutron (although we here
 assume that all simulated neutrons are being scattered).
 According to (\ref{probrule}), the neutron weight factor
 is now adjusted by the amount
 \begin{equation}     \label{sampleprob}
 \pi_i(l_1,\Omega) =
- \mu^s l_{\rm full} \exp \left[ - (l_1+l_2) (\mu^a + \mu^s) \right]
+ \mu^s l_\textrm{full} \exp \left[ - (l_1+l_2) (\mu^a + \mu^s) \right]
   \frac{\gamma(\Omega)}{g(\Omega)} .
 \end{equation}
 
@@ -135,14 +135,14 @@ Debye-Scherrer cone and the Debye-Scherrer circle.}
 
 Equation (\ref{Bragg}) may be cast into the form
 \begin{equation}
-|{\bf Q}| = 2 |{\bf k}| \sin \theta ,
+|\textbf{Q}| = 2 |\textbf{k}| \sin \theta ,
 \end{equation}
-where {\bf Q} is a vector of the reciprocal lattice, and {\bf k} is
+where \textbf{Q} is a vector of the reciprocal lattice, and \textbf{k} is
 the wave vector of the neutron. It is seen that only
-reciprocal vectors fulfilling $|{\bf Q}| < 2 |{\bf k}|$
+reciprocal vectors fulfilling $|\textbf{Q}| < 2 |\textbf{k}|$
 contribute to the scattering.
 For a complete treatment of the powder sample, one needs to take
-into account all these {\bf Q}-values, since each of them contribute
+into account all these \textbf{Q}-values, since each of them contribute
 to the attenuation.
 
 The textbook expression for the scattering intensity
@@ -151,10 +151,10 @@ much larger than the beam cross section, reads \cite{bacon}
 \begin{eqnarray}
 \label{e:slab}
 \frac{P}{P_0} &=& \frac{\lambda^3 l_s}{4\pi r} \frac{\rho'}{\rho}
-         t j N_c^2 |F({\bf Q})|^2 \exp(-2W)
-         \frac{\exp(-\mu^{\rm a} t / cos \theta)}{\sin^2(2\theta)} \\
-|F({\bf Q})|^2 &=&
- \left| \sum_j b_j \exp({\bf R}_j \cdot {\bf Q}) \right|^2 ,
+         t j N_c^2 |F(\textbf{Q})|^2 \exp(-2W)
+         \frac{\exp(-\mu^\textrm{a} t / cos \theta)}{\sin^2(2\theta)} \\
+|F(\textbf{Q})|^2 &=&
+ \left| \sum_j b_j \exp(\textbf{R}_j \cdot \textbf{Q}) \right|^2 ,
 \end{eqnarray}
 where the sum in the structure factor runs over all atoms in one unit cell.
 The meanings and units of the symbols are
@@ -168,7 +168,7 @@ $\rho'/\rho$ & 1 & Packing factor of the powder \\
 $t$   & m        & Slab thickness \\
 $j$   & 1        & Multiplicity of the reflection \\
 $N_c$ & m$^{-3}$ & Density of unit cells in bulk material\\
-$|F({\bf Q})|^2$ & m$^2$  & Structure factor \\
+$|F(\textbf{Q})|^2$ & m$^2$  & Structure factor \\
 $\exp(-2W)$ & 1  & Debye-Waller factor \\
 $\mu^a$ & m$^{-1}$ & Linear attenuation factor due to absorption. \\
 \end{tabular}\end{lstlisting}
@@ -177,7 +177,7 @@ In analogy with this, the textbook expression for a cylinder shaped powder
 sample, completely illuminated by the beam, reads \cite{bacon}
 \begin{equation}
 \frac{P}{\Psi_0} =
- \frac{V \rho'}{\rho} N_c^2 |F({\bf Q})|^2 j \exp(-2W)
+ \frac{V \rho'}{\rho} N_c^2 |F(\textbf{Q})|^2 j \exp(-2W)
                     \frac{A_{hkl}}{\sin(\theta)\sin(2\theta)}
                     \frac{l_s}{2\pi r} \frac{\lambda^3}{4} ,
 \end{equation}
@@ -202,8 +202,8 @@ Absorption factor & $\exp(-\mu^a t / \cos\theta)$ & $\rightarrow$ & $A_{hkl}$, \
 where $h$ and $w$ are the height and width of the sample, respectively.
 Often, one defines the {\em scattering power} as
 \begin{equation}
-Q \equiv N^2 \frac{|F({\bf Q})|^2 \lambda^3}{V \sin(2\theta)}
- = N_c^2 V \frac{\rho'}{\rho} \frac{|F({\bf Q})|^2 \lambda^3}{\sin(2\theta)} ,
+Q \equiv N^2 \frac{|F(\textbf{Q})|^2 \lambda^3}{V \sin(2\theta)}
+ = N_c^2 V \frac{\rho'}{\rho} \frac{|F(\textbf{Q})|^2 \lambda^3}{\sin(2\theta)} ,
 \end{equation}
 where $N$ is the number of unit cells.
 
@@ -214,23 +214,23 @@ approximation) only counts a fraction $f_d = l_s / (2 \pi r \sin(2 \theta))$
 of the scattered neutrons.
 One may now calculate the
 linear attenuation coefficient in the material due to scattering
-(from one {\bf Q}-value only):
+(from one \textbf{Q}-value only):
 \begin{equation}
 \label{e:attenu}
 \mu^s \equiv -\frac{1}{P_0} \frac{d(P/f_d)}{dl}
   = \frac{Q}{V} j \exp(-2W) \cos(\theta) .
 \end{equation}
 A powder sample will in general have several allowed reflections
-${\bf Q}_j$, which will all contribute to the attenuation.
+$\textbf{Q}_j$, which will all contribute to the attenuation.
 These reflections will have different values of
-$|F({\bf Q}_j)|^2$ (and hence of $Q_j$), $j_j$, $\exp(-2W_j)$,
+$|F(\textbf{Q}_j)|^2$ (and hence of $Q_j$), $j_j$, $\exp(-2W_j)$,
 and $\theta_j$.
 The total attenuation through the sample due to scattering is given by
-$\mu^s = \mu_{\rm inc}^s + \sum_j \mu^s_j $,
-where $\mu_{\rm inc}^s$ represents the incoherent scattering.
+$\mu^s = \mu_\textrm{inc}^s + \sum_j \mu^s_j $,
+where $\mu_\textrm{inc}^s$ represents the incoherent scattering.
 
 \subsection{This implementation}
-For component {\bf Powder1}, we assume that the sample
+For component \textbf{Powder1}, we assume that the sample
 has the shape of a solid cylinder.
 Further, the incoherent scattering is only taken into account
 by the attenuation of the beam, given by (\ref{e:attenu})
@@ -240,8 +240,8 @@ propagated through to the detector, but rather not generated at all.
 Focusing is performed by only scattering into one angular
 interval, $d\phi$ of the Debye-Scherrer circle. The center of this
 interval is located at the point where the Debye-Scherrer circle
-intersects the half-plane defined by the initial velocity, ${\bf v}_{\rm i}$,
-and a user-specified vector, {\bf f}.
+intersects the half-plane defined by the initial velocity, $\textbf{v}_\textrm{i}$,
+and a user-specified vector, \textbf{f}.
 Multiple scattering is not implemented.
 
 The input parameters for this component are
@@ -253,8 +253,8 @@ $\sigma_c^a$ & fm$^2$ & Absorption cross section per unit cell (at 2200 m/s) \\
 $\sigma_{i,c}^s$ & (fm)$^2$ & Incoherent scattering cross section per unit cell \\
 $\rho'/\rho$ & 1 & Packing factor \\
 $V_c$ & \AA$^3$ & Volume of unit cell \\
-${\bf Q}$ & \AA$^{-1}$ & The reciprocal lattice vector under consideration \\
-$|F({\bf Q}_j)|^2$ & (fm)$^2$ &
+$\textbf{Q}$ & \AA$^{-1}$ & The reciprocal lattice vector under consideration \\
+$|F(\textbf{Q}_j)|^2$ & (fm)$^2$ &
  Structure factor \\
 $j$ & 1 & Multiplicity of reflection \\
 $\exp(-2W)$ & 1 & Debye-Waller factor \\

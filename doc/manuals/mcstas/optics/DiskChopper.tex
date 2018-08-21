@@ -6,7 +6,7 @@
 
 %\component{DiskChopper}{Peter Willendrup, Ris\o\ (System)}{$\theta_0$,
 %  $R$, $h$, $\omega$, $n$, $t_0$, $\phi_0$}{IsFirst,
- % $n_{\rm pulse}$}{Based on Chopper by P Bernhardt, extensions K
+ % $n_\textrm{pulse}$}{Based on Chopper by P Bernhardt, extensions K
   %Hewitt Klen\o\ and R Bewey}
 \mcdoccomp{optics/DiskChopper.parms}
 
@@ -17,16 +17,16 @@ rotating axis parallel to the neutron beam. The disk consists of neutron
 absorbing materials. To form the pulses the disk has openings through which
 the neutrons can pass.
 
-Component {\bf DiskChopper} is an infinately thin, absorbing disc of
+Component \textbf{DiskChopper} is an infinately thin, absorbing disc of
 radius $R$ with $n$ slit openings of height $h$ and angular width
 $\theta_0$. The slits are symmetrically disposed on the disc. If
 unset, the slit height $h$ will extend to the centre of the disc ($h=R$).
 
-The {\bf DiskChopper} is self-centering, meaning that the centre of
+The \textbf{DiskChopper} is self-centering, meaning that the centre of
 the slit openings will automatically be positioned at the centre of
 the beam axis (see figure~\ref{f:chopper1}). To override this behaviour, set the paramter
 $compat=1$, positioning the chopper centre at height $-R$ - as
-implemented in the original {\bf Chopper} component.
+implemented in the original \textbf{Chopper} component.
 
 Optionally, each slit can have a central, absorbing insert - a
 \emph{beamstop} of angular width $\theta_1$. For more exotic chopper
@@ -63,7 +63,7 @@ $abs\_out=0$.
 When simulating the chopping of a continuous beam,
 most of the neutrons could easily be lost.
 To improve efficiency, one can set the flag \verb+IsFirst+, which will
-allow every neutron ray to pass the {\bf DiskChopper}, but modify the
+allow every neutron ray to pass the \textbf{DiskChopper}, but modify the
 time, $t$, to a (random) time at which it is possible to pass.
 %This can also be used with TOF-instruments, which often
 %define the starting time of the neutrons at
@@ -71,7 +71,7 @@ time, $t$, to a (random) time at which it is possible to pass.
 Of course, there should be only one ``first chopper'' in
 any simulation.
 To simulate frame overlap from a ``first chopper'', one can specify
-the number of frames to study by the parameter $n_{\rm pulse}$.
+the number of frames to study by the parameter $n_\textrm{pulse}$.
 
 For more advanced chopper geometries than those mentioned above, it is
 possible to set up a \texttt{GROUP} of choppers:
@@ -87,7 +87,7 @@ AT (0, 0, 1.1) RELATIVE Source
 GROUP Choppers
 \end{lstlisting}
 
-The result of such a {\bf DiskChopper} \texttt{GROUP}ing can be seen in
+The result of such a \textbf{DiskChopper} \texttt{GROUP}ing can be seen in
 figure \ref{f:chopper2}
 
 \begin{figure}[ht]

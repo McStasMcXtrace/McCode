@@ -4,10 +4,10 @@
 \index{Diffraction}
 \index{Small angle scattering}
 
-%\component{Sans\_spheres}{(System); Lise Arleth, Veterinary University of Denmark}{$R$, $x_w$, $y_h$, $z_t$, $r$, $\sigma_a$, $\phi$, $\Delta \rho$, $R_{\rm det}$, $d$}{}{}
+%\component{Sans\_spheres}{(System); Lise Arleth, Veterinary University of Denmark}{$R$, $x_w$, $y_h$, $z_t$, $r$, $\sigma_a$, $\phi$, $\Delta \rho$, $R_\textrm{det}$, $d$}{}{}
 \mcdoccomp{samples/Sans_spheres.parms}
 
-The component {\bf Sans\_spheres} models a sample of small independent
+The component \textbf{Sans\_spheres} models a sample of small independent
 spheres of radius $R$, which are uniformly distributed
 in a rectangular volume $x_w \times y_h \times z_t$ with a volume
 fraction $\phi$. The absorption cross section density for the spheres
@@ -25,10 +25,10 @@ The neutron intensity scattered into a solid angle $\Delta \Omega$
 for a flat isotropic SANS sample in transmission geometry
 is given by \cite{ILLblue}:
 \begin{equation}
-I_s(q) = \Psi \Delta\Omega T A z_{\rm max} \frac{d\sigma_v}{d\Omega}(q) ,
+I_s(q) = \Psi \Delta\Omega T A z_\textrm{max} \frac{d\sigma_v}{d\Omega}(q) ,
 \end{equation}
 where $\Psi$ is the neutron flux, $T$ is the sample transmission,
-$A$ is the illuminated sample area, and $z_{\rm max}$ the length of
+$A$ is the illuminated sample area, and $z_\textrm{max}$ the length of
 the neutron path through the sample.
 
 In this component, we consider only scattering from a thin solution
@@ -49,22 +49,22 @@ All neutrons, which hit the sample volume, are scattered.
 (Hence, no direct beam is simulated.)
 For scattered neutrons, the following steps are taken:
 \begin{enumerate}
-\item Choose a value of $q$ uniformly in the interval $[0;q_{\rm max}]$.
+\item Choose a value of $q$ uniformly in the interval $[0;q_\textrm{max}]$.
 \item Choose a polar angle, $\alpha$,
-  for the {\bf q}-vector uniformly in $[0;\pi]$.
+  for the \textbf{q}-vector uniformly in $[0;\pi]$.
 \item Scatter the neutron according to $(q,\alpha)$.
 \item Calculate and apply the correct weight factor correction.
 \end{enumerate}
 
 \subsection{Calculating the weight factor}
 The scattering position is found by a Monte Carlo choice uniformly
-along the whole (unscattered) beam path with the sample, length $l_{\rm full}$, giving
-$f_l = 1/l_{\rm full}$. The direction focusing on the detector gives
-(in an small angle approximation) $f_\Omega = d^2 / (\pi R_{\rm det}^2)$.
+along the whole (unscattered) beam path with the sample, length $l_\textrm{full}$, giving
+$f_l = 1/l_\textrm{full}$. The direction focusing on the detector gives
+(in an small angle approximation) $f_\Omega = d^2 / (\pi R_\textrm{det}^2)$.
 
 Hence, the total weight tranformation factor becomes % (more explanation to come)
 \begin{equation}
-\pi_j = l_{\rm full} (\pi R_{\rm det}^2 / d^2)/(4 \pi)
+\pi_j = l_\textrm{full} (\pi R_\textrm{det}^2 / d^2)/(4 \pi)
   n (\Delta\rho)^2 V^2 f(q) \exp(-\mu_a l) ,
 \end{equation}
 where $\mu_a$ is the linear attenuation factor due to absorption

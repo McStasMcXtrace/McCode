@@ -2,26 +2,26 @@
 \label{s:monitornd}
 \index{Monitors!The All-in-One monitor (Monitor\_nD)}
 
-%\component{Monitor\_nD}{System, E. Farhi}{$x_{\rm min}$, $x_{\rm max}$, $y_{\rm min}$, $y_{\rm max}$, options}{$file$, $x_{width}, y_{height}, z_{depth}$, $bins$, $min$, $max$}{}
+%\component{Monitor\_nD}{System, E. Farhi}{$x_\textrm{min}$, $x_\textrm{max}$, $y_\textrm{min}$, $y_\textrm{max}$, options}{$file$, $x_{width}, y_{height}, z_{depth}$, $bins$, $min$, $max$}{}
 \mcdoccomp{monitors/Monitor_nD.parms}
 
-The component {\bf Monitor\_nD} is a general Monitor that may output any
+The component \textbf{Monitor\_nD} is a general Monitor that may output any
 set of physical parameters regarding the passing neutrons. The
-generated files are either a set of 1D signals ([Intensity] {\it vs.}
-[Variable]), or a single 2D signal ([Intensity] {\it vs.} [Variable 1]
-{\it vs.} [Variable 1]), and possibly a simple long list of selected
+generated files are either a set of 1D signals ([Intensity] \textit{vs.}
+[Variable]), or a single 2D signal ([Intensity] \textit{vs.} [Variable 1]
+\textit{vs.} [Variable 1]), and possibly a simple long list of selected
 physical parameters for each neutron.
 
-The input parameters for {\bf Monitor\_nD} are its dimensions $x_{\rm
-  min}, x_{\rm max}, y_{\rm min}$, $y_{\rm max}$ (in meters) and an {\it
+The input parameters for \textbf{Monitor\_nD} are its dimensions $x_{\rm
+  min}, x_\textrm{max}, y_\textrm{min}$, $y_\textrm{max}$ (in meters) and an {\it
   options} string describing what to detect, and what to do with the
 signals, in clear language. The $x_{width}, y_{height}, z_{depth}$ may also be used to enter dimensions.
 
 Eventhough the possibilities of Monitor\_nD are numerous, its usage remains as simple as possible, specially in the \verb+options+ parameter, which 'understands' normal language.
-The formatting of the {\it options}
+The formatting of the \textit{options}
 parameter is free, as long as it contains some specific keywords, that
-can be sometimes followed by values. The {\it no} or {\it not} option
-modifier will revert next option. The {\it all} option can also affect a
+can be sometimes followed by values. The \textit{no} or \textit{not} option
+modifier will revert next option. The \textit{all} option can also affect a
 set of monitor configuration parameters (see below).
 
 As the usage of this component enables to monitor virtually anything, and thus the combinations of options and parameters is infinite, we shall only present the most basic configuration. The reader should refer to the on-line component help, using e.g. \verb+mcdoc Monitor_nD.comp+.
@@ -30,45 +30,45 @@ As the usage of this component enables to monitor virtually anything, and thus t
 
 The monitor shape can be selected among seven geometries:
 \begin{enumerate}
-\item{({\it square}) The default geometry is flat rectangular in ($xy$)
-    plane with dimensions $x_{\rm min}, x_{\rm max}, y_{\rm min}$,
-    $y_{\rm max}$, or $x_{width}, y_{height}$.}
-\item{({\it box}) A rectangular box with dimensions $x_{width}, y_{height}, z_{depth}$.}
-\item{({\it disk}) When choosing this geometry, the detector is a flat
+\item{(\textit{square}) The default geometry is flat rectangular in ($xy$)
+    plane with dimensions $x_\textrm{min}, x_\textrm{max}, y_\textrm{min}$,
+    $y_\textrm{max}$, or $x_{width}, y_{height}$.}
+\item{(\textit{box}) A rectangular box with dimensions $x_{width}, y_{height}, z_{depth}$.}
+\item{(\textit{disk}) When choosing this geometry, the detector is a flat
     disk in ($xy$) plane. The radius is then
     \begin{equation}
-      \mbox{radius} = \max ( \mbox{abs } [ x_{\rm min}, x_{\rm max}, y_{\rm
-        min}, y_{\rm max}, x_{width}/2, y_{height}/2 ] ).
+      \mbox{radius} = \max ( \mbox{abs } [ x_\textrm{min}, x_\textrm{max}, y_{\rm
+        min}, y_\textrm{max}, x_{width}/2, y_{height}/2 ] ).
     \end{equation}
     }
-\item{({\it sphere}) The detector is a sphere with the same radius as
-    for the {\it disk} geometry.}
-\item{({\it cylinder}) The detector is a cylinder with revolution axis
+\item{(\textit{sphere}) The detector is a sphere with the same radius as
+    for the \textit{disk} geometry.}
+\item{(\textit{cylinder}) The detector is a cylinder with revolution axis
     along $y$ (vertical). The radius in ($xz$) plane is
     \begin{equation}
-      \mbox{radius} =  \max ( \mbox{abs } [ x_{\rm min}, x_{\rm max}, x_{width}/2 ] ),
+      \mbox{radius} =  \max ( \mbox{abs } [ x_\textrm{min}, x_\textrm{max}, x_{width}/2 ] ),
     \end{equation}
     and the height along $y$ is
     \begin{equation}
-      \mbox{height} =  | y_{\rm max} - y_{\rm max} | {\rm or} y_{height}.
+      \mbox{height} =  | y_\textrm{max} - y_\textrm{max} | \textrm{or} y_{height}.
     \end{equation}
     }
-\item{({\it banana}) The same as the cylinder, but without the top/bottom caps, and on a restricted angular range. The angular range is specified using a \verb+theta+ variable limit specification in the \verb+options+.}
-\item{({\it previous}) The detector has the shape of the previous component. This may be a surface or a volume. In this case, the neutron is detected on previous component, and there is not neutron propagation.}
+\item{(\textit{banana}) The same as the cylinder, but without the top/bottom caps, and on a restricted angular range. The angular range is specified using a \verb+theta+ variable limit specification in the \verb+options+.}
+\item{(\textit{previous}) The detector has the shape of the previous component. This may be a surface or a volume. In this case, the neutron is detected on previous component, and there is not neutron propagation.}
 \end{enumerate}
 
 By default, the monitor is flat, rectangular. Of course, you can choose
-the orientation of the {\bf Monitor\_nD} in the instrument description
+the orientation of the \textbf{Monitor\_nD} in the instrument description
 file with the usual \texttt{ROTATED} modifier.
 
-For the {\it box}, {\it sphere} and {\it cylinder}, the outgoing neutrons are
+For the \textit{box}, \textit{sphere} and \textit{cylinder}, the outgoing neutrons are
 monitored by default, but you can choose to monitor incoming neutron
-with the {\it incoming} option.
+with the \textit{incoming} option.
 
-At last, the {\it slit} or {\it absorb} option will ask the component to
-absorb the neutrons that do not intersect the monitor. The {\it exclusive} option word removes neutrons which are similarly outside the monitor limits (that may be other than geometrical).
+At last, the \textit{slit} or \textit{absorb} option will ask the component to
+absorb the neutrons that do not intersect the monitor. The \textit{exclusive} option word removes neutrons which are similarly outside the monitor limits (that may be other than geometrical).
 
-The {\it parallel} option keyword is of common use in the case where the {\bf Monitor\_nD} is superposed with other components. It ensures that neutrons are detected independently of other geometrical constrains. This is generally the case when you need e.g. to place more than one monitor at the same place.
+The \textit{parallel} option keyword is of common use in the case where the \textbf{Monitor\_nD} is superposed with other components. It ensures that neutrons are detected independently of other geometrical constrains. This is generally the case when you need e.g. to place more than one monitor at the same place.
 
 \subsection{The neutron parameters that can be monitored}
 
@@ -101,16 +101,16 @@ user2 user3           to be assigned in an other component (see below)
 \end{lstlisting}
 
 To tell the component what you want to monitor, just add the variable
-names in the {\it options} parameter. The data will be sorted into {\it
-  bins} cells (default is 20), between some default {\it limits}, that
-can also be set by user. The {\it auto} option will automatically
+names in the \textit{options} parameter. The data will be sorted into {\it
+  bins} cells (default is 20), between some default \textit{limits}, that
+can also be set by user. The \textit{auto} option will automatically
 determine what limits should be used to have a good sampling of signals.
 
 \subsection{Important options}
 
 Each monitoring records the flux (sum of weights $p$) versus the
 given variables, except if the \verb+signal=<variable>+ word is used in the \verb+options+.
-The {\it cm2} option will ask to normalize the flux to the monitor section surface, and the \verb+capture+ option uses the gold foil integrated 'capture' flux weightening (up to the cadmium cut-off):\index{Monitors!Capture flux}
+The \textit{cm2} option will ask to normalize the flux to the monitor section surface, and the \verb+capture+ option uses the gold foil integrated 'capture' flux weightening (up to the cadmium cut-off):\index{Monitors!Capture flux}
 \begin{equation}
 \Phi_c = \int_0^{0.5 eV}{\frac{d\Phi}{d\lambda} \frac{\lambda}{\lambda_{2200 m/s}} d\lambda}
 \end{equation}
@@ -120,7 +120,7 @@ On the other hand, one may manually set the limits with the \verb+limits=[min ma
 
 The \verb+log+ and \verb+abs+ options should be positioned before each variable to specify logarithmic binning and absolute value respectively.
 
-The {\it borders} option will monitor variables that are outside
+The \textit{borders} option will monitor variables that are outside
 the limits. These values are then accumulated on the 'borders' of the
 signal.
 
@@ -128,36 +128,36 @@ signal.
 
 By default, the file names will be the component name, followed by a time stamp and
 automatic extensions showing what was monitored (such as
-\texttt{MyMonitor.x}). You can also set the filename in {\it options}
-with the {\it file} keyword followed by the file name that you want. The
+\texttt{MyMonitor.x}). You can also set the filename in \textit{options}
+with the \textit{file} keyword followed by the file name that you want. The
 extension will then be added if the name does not contain a dot (.).
 Finally, the $filename$ parameter may also be used.
 
 The output files format are standard 1D or 2D McStas detector files.
-The {\it no file} option will {\it unactivate} monitor, and make it a
+The \textit{no file} option will \textit{unactivate} monitor, and make it a
 single 0D monitor detecting integrated flux and counts.
-The {\it verbose} option will display the nature of the monitor, and the
+The \textit{verbose} option will display the nature of the monitor, and the
 names of the generated files.
 
 \subsubsection{The 2D output}
 
-When you ask the {\bf Monitor\_nD} to monitor only two variables (e.g.
-{\it options} = "x y"), a single 2D file of intensity versus these two
+When you ask the \textbf{Monitor\_nD} to monitor only two variables (e.g.
+\textit{options} = "x y"), a single 2D file of intensity versus these two
 correlated variables will be created.
 
 \subsubsection{The 1D output}
 
-The {\bf Monitor\_nD} can produce a set of 1D files, one for each
+The \textbf{Monitor\_nD} can produce a set of 1D files, one for each
 monitored variable, when using 1 or more than 2 variables, or when
-specifying the {\it multiple} keyword option.
+specifying the \textit{multiple} keyword option.
 
 \subsubsection{The List output}
 
-The {\bf Monitor\_nD} can additionally produce a {\it list} of variable
+The \textbf{Monitor\_nD} can additionally produce a \textit{list} of variable
 values for neutrons that pass into the monitor. This feature is additive
 to the 1D or 2D output. By default only 1000 events will be recorded in
-the file, but you can specify for instance "{\it list} 3000 neutrons" or
-"{\it list all} neutrons". This last option might require a lot of
+the file, but you can specify for instance "\textit{list} 3000 neutrons" or
+"\textit{list all} neutrons". This last option might require a lot of
 memory and generate huge files.
 
 \subsection{Monitor equivalences}
@@ -171,31 +171,31 @@ In the following table \ref{t:monitor-nd-equiv}, we show how the Monitor\_nD may
 \hline
 \MCS monitor & Monitor\_nD equivalent \\
 \hline
-Divergence\_monitor & {\it options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
+Divergence\_monitor & \textit{options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
                                 lambda bins=$nlam$ limits=[$\lambda_0$ $\lambda_1$] file=$file$"\\
-DivLambda\_monitor  & {\it options}="dx bins=$nh$   limits=[$-h_{max}/2 h_{max}/2$],
-                                    dy bins=$nv$   limits=[$-v_{max}/2 v_{max}/2$]" {\it filename}=$file$\\
-DivPos\_monitor     & {\it options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
-                                     x bins=$npos$" {\it xmin}=$x_{min}$ {\it xmax}=$x_{max}$ \\
-E\_monitor          & {\it options}="energy bins=$nchan$ limits=[$E_{min} E_{max}$]" \\
-EPSD\_monitor       & {\it options}="energy bins=$n_E$ limits=[$E_{min} E_{max}$], x bins=$nx$"
-                              {\it xmin}=$x_{min}$ {\it xmax}=$x_{max}$ \\
-Hdiv\_monitor       & {\it options}="dx bins=$nh$ limits=[$-h_{max}/2 h_{max}/2$]" {\it filename}=$file$ \\
-L\_monitor          & {\it options}="lambda bins=$nh$ limits=[$-\lambda_{max}/2 \lambda_{max}/2$]" {\it filename}=$file$ \\
-Monitor\_4PI        & {\it options}="sphere" \\
-Monitor            & {\it options}="unactivate" \\
-PSDcyl\_monitor     & {\it options}="theta bins=$nr$,y bins=$ny$, cylinder"
-{\it filename}=$file$ {\it yheight}=$height$ {\it xwidth}=2*radius\\
-PSDlin\_monitor     & {\it options}="x bins=$nx$" {\it xmin}=$x_{min}$ {\it xmax}=$x_{max}$ {\it ymin}=$y_{min}$ {\it ymax}=$y_{max}$ {\it filename}=$file$\\
-PSD\_monitor\_4PI    & {\it options}="theta y, sphere" \\
-PSD\_monitor        & {\it options}="x bins=$nx$, y bins=$ny$" {\it xmin}=$x_{min}$ {\it xmax}=$x_{max}$ {\it ymin}=$y_{min}$ {\it ymax}=$y_{max}$ {\it filename}=$file$\\
-TOF\_cylPSD\_monitor & {\it options}="theta bins=$n_\phi$, time bins=$nt$ limits=[$t_0, t_1$], cylinder" {\it filename}=$file$ {\it yheight}=$height$ {\it xwidth}=2*radius\\
-TOFLambda\_monitor  & {\it options}="lambda bins=$n_\lambda$ limits=[$\lambda_0$ $\lambda_1$], time bins=$nt$ limits=[$t_0, t_1$]" {\it filename}=$file$\\
-TOFlog\_mon         & {\it options}="log time bins=$nt$ limits=[$t_0, t_1$]" \\
-TOF\_monitor        & {\it options}="time bins=$nt$ limits=[$t_0, t_1$]" \\
+DivLambda\_monitor  & \textit{options}="dx bins=$nh$   limits=[$-h_{max}/2 h_{max}/2$],
+                                    dy bins=$nv$   limits=[$-v_{max}/2 v_{max}/2$]" \textit{filename}=$file$\\
+DivPos\_monitor     & \textit{options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
+                                     x bins=$npos$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \\
+E\_monitor          & \textit{options}="energy bins=$nchan$ limits=[$E_{min} E_{max}$]" \\
+EPSD\_monitor       & \textit{options}="energy bins=$n_E$ limits=[$E_{min} E_{max}$], x bins=$nx$"
+                              \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \\
+Hdiv\_monitor       & \textit{options}="dx bins=$nh$ limits=[$-h_{max}/2 h_{max}/2$]" \textit{filename}=$file$ \\
+L\_monitor          & \textit{options}="lambda bins=$nh$ limits=[$-\lambda_{max}/2 \lambda_{max}/2$]" \textit{filename}=$file$ \\
+Monitor\_4PI        & \textit{options}="sphere" \\
+Monitor            & \textit{options}="unactivate" \\
+PSDcyl\_monitor     & \textit{options}="theta bins=$nr$,y bins=$ny$, cylinder"
+\textit{filename}=$file$ \textit{yheight}=$height$ \textit{xwidth}=2*radius\\
+PSDlin\_monitor     & \textit{options}="x bins=$nx$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \textit{ymin}=$y_{min}$ \textit{ymax}=$y_{max}$ \textit{filename}=$file$\\
+PSD\_monitor\_4PI    & \textit{options}="theta y, sphere" \\
+PSD\_monitor        & \textit{options}="x bins=$nx$, y bins=$ny$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \textit{ymin}=$y_{min}$ \textit{ymax}=$y_{max}$ \textit{filename}=$file$\\
+TOF\_cylPSD\_monitor & \textit{options}="theta bins=$n_\phi$, time bins=$nt$ limits=[$t_0, t_1$], cylinder" \textit{filename}=$file$ \textit{yheight}=$height$ \textit{xwidth}=2*radius\\
+TOFLambda\_monitor  & \textit{options}="lambda bins=$n_\lambda$ limits=[$\lambda_0$ $\lambda_1$], time bins=$nt$ limits=[$t_0, t_1$]" \textit{filename}=$file$\\
+TOFlog\_mon         & \textit{options}="log time bins=$nt$ limits=[$t_0, t_1$]" \\
+TOF\_monitor        & \textit{options}="time bins=$nt$ limits=[$t_0, t_1$]" \\
 \hline
     \end{tabular}
-    \caption{Using Monitor\_nD in place of other components. All limits specifications may be advantageously replaced by an {\it auto} word preceeding each monitored variable. Not all file and dimension specifications are indicated (e.g. filename, xmin, xmax, ymin, ymax).}
+    \caption{Using Monitor\_nD in place of other components. All limits specifications may be advantageously replaced by an \textit{auto} word preceeding each monitored variable. Not all file and dimension specifications are indicated (e.g. filename, xmin, xmax, ymin, ymax).}
     \label{t:monitor-nd-equiv}
     }
   \end{center}
@@ -339,7 +339,7 @@ COMPONENT UserMonitor = Monitor_nD(
 
 \subsection{Monitoring neutron parameter correlations, PreMonitor\_nD}
 
-The first imediate usage of the Monitor\_nD component is when one requires to identify cross-correlations between some neutron parameters, e.g. position and divergence ({\it aka} phase-space diagram). This latter monitor would be merely obtained with:\index{Monitors!Neutron parameter correlations, PreMonitor\_nD}
+The first imediate usage of the Monitor\_nD component is when one requires to identify cross-correlations between some neutron parameters, e.g. position and divergence (\textit{aka} phase-space diagram). This latter monitor would be merely obtained with:\index{Monitors!Neutron parameter correlations, PreMonitor\_nD}
 \begin{lstlisting}
 options="x dx, auto", bins=30
 \end{lstlisting}
@@ -347,9 +347,9 @@ This example records the correlation between position and divergence of neutrons
 
 \component{PreMonitor\_nD}{System, E. Farhi}{comp}{}{}
 
-But it is also possible to search for cross-correlation between two part of the instrument simulation. One example is the acceptance phase-diagram, which shows the neutron caracteristics at the input required to reach the end of the simulation. This \emph{spatial} correlation may be revealed using the {\bf PreMonitor\_nD} component. This latter stores the neutron parameters at a given instrument location, to be used at an other Monitor\_nD location for monitoring.
+But it is also possible to search for cross-correlation between two part of the instrument simulation. One example is the acceptance phase-diagram, which shows the neutron caracteristics at the input required to reach the end of the simulation. This \emph{spatial} correlation may be revealed using the \textbf{PreMonitor\_nD} component. This latter stores the neutron parameters at a given instrument location, to be used at an other Monitor\_nD location for monitoring.
 
-The only parameter of {\bf PreMonitor\_nD} is the name of the associated Monitor\_nD instance, which should use the \verb+premonitor+ option, as in the following example:
+The only parameter of \textbf{PreMonitor\_nD} is the name of the associated Monitor\_nD instance, which should use the \verb+premonitor+ option, as in the following example:
 \begin{lstlisting}
 COMPONENT CorrelationLocation = PreMonitor_nD(comp = CorrelationMonitor)
 AT (...)
@@ -360,4 +360,4 @@ COMPONENT CorrelationMonitor  = Monitor_nD(
    options="x dx, auto, all bins=30, premonitor")
 AT (...)
 \end{lstlisting}
-which performs the same monitoring as the previous example, but with a spatial correlation constrain. Indeed, it records the position {\it vs} the divergence of neutrons at the correlation location, but only if they reach the monitoring position. All usual Monitor\_nD variables may be used, except the user variables. These latter may be defined as described in section \ref{s:monnd:user} in an EXTEND block.
+which performs the same monitoring as the previous example, but with a spatial correlation constrain. Indeed, it records the position \textit{vs} the divergence of neutrons at the correlation location, but only if they reach the monitoring position. All usual Monitor\_nD variables may be used, except the user variables. These latter may be defined as described in section \ref{s:monnd:user} in an EXTEND block.

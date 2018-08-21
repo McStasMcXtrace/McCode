@@ -33,7 +33,7 @@ PreModerators & 0.85 cm and 0.75 cm H$_2$O \\
 \label{desc}
 \end{center}
 \end{table}
-%Table 1: {\bf Description of Models}
+%Table 1: \textbf{Description of Models}
 
 TS1 model is from the tungsten target as currently installed and
 positioned. The model also includes the MERLIN moderator, this
@@ -58,8 +58,8 @@ working directory.
 The module requires a set of variables
 listed in Table~\ref{vars} and described below.
 
-The {\it Face} variable determines the moderator surface that will
-be viewed. There are two types of {\it Face} variable: i)  Views
+The \textit{Face} variable determines the moderator surface that will
+be viewed. There are two types of \textit{Face} variable: i)  Views
 from the centre of each moderator face defined by the name of the
 moderator, for TS1: Water, H2, CH4, Merlin and TS2: Hydrogen,
 Groove, Narrow, Broad. ii) Views seen by each beamline, for TS1:
@@ -72,16 +72,16 @@ The \MCS distribution includes some example moderator files for TS1 (water,h2,ch
 % (south) and TS2: E1-E9 (East) and W1-W9 (West).
 
 
-Variables {\it E0} and {\it E1} define an energy window for sampled neutrons.
+Variables \textit{E0} and \textit{E1} define an energy window for sampled neutrons.
 This can be used to increase the statistical
-accuracy of chopper and mirrored instruments. However, {\it E0} and
-{\it E1} cannot be equal (although they can be close). By default these arguments
+accuracy of chopper and mirrored instruments. However, \textit{E0} and
+\textit{E1} cannot be equal (although they can be close). By default these arguments
 select energy in meV, if negative values are given, selection will be in terms of Angstroms.
 
-Variables {\it dist}, {\it xw} and {\it yh} are the three
+Variables \textit{dist}, \textit{xw} and \textit{yh} are the three
 component which will determine the directional acceptance window.
 They define a rectangle with centre at (0,0,dist) from the
-moderator position and with width {\it xw} meters and height {\it yh} meters.
+moderator position and with width \textit{xw} meters and height \textit{yh} meters.
 The initial direction of all the neutrons are chosen (randomly) to
 originate from a point on the moderator surface and along a
 vector, such that without obstruction (and gravitational effects),
@@ -91,23 +91,23 @@ moderator and will be diverted/absorbed if they encountered other
 components. The guide system can be turned off by setting {\it
 dist} to zero.
 
-The {\it CAngle} variable is used to rotate the viewed direction
+The \textit{CAngle} variable is used to rotate the viewed direction
 of the moderator and reduces the effective solid angle of the
 moderator face. Currently it is only for the horizontal plane.
 This is redundant since there are beamline specific h.{\it{face}} files.
 
-The two variables {\it modYsize} and {\it modXsize}
+The two variables \textit{modYsize} and \textit{modXsize}
 allow the moderators to be effectively reduced/increased. If
 these variables are given  negative or zero values then they default to the actual
 visible surface size of the moderators.
 
-The last variable {\it SAC} will correct for the different solid angle seen by two
+The last variable \textit{SAC} will correct for the different solid angle seen by two
 focussing windows which are at different distances from the moderator surface. The
 normal measurement of flux is in neutrons/second/\AA/cm{$^2$}/str, but in a detector
 it is measured in neutrons/second. Therefore if all other denominators in the flux are
 multiplied out then the flux at a point-sized focus window should follow an inverse square law.
-This solid angle correction is made if the {\it SAC} variable is set equal to 1, it will not be
-calculated if {\it SAC} is set to zero. It is advisable to select this variable at all times as it will give the most realistic results
+This solid angle correction is made if the \textit{SAC} variable is set equal to 1, it will not be
+calculated if \textit{SAC} is set to zero. It is advisable to select this variable at all times as it will give the most realistic results
 
 \subsection{Comparing TS1 and TS2}
 The Flux data provided in both sets of h.{\it{face}} files is for 60 {$\mu$}Amp sources. To compare TS1 and TS2, the TS1 data must be multiplied by three (current average strength of TS1 source ~180 {$\mu$}Amps). When the 300 {$\mu$}Amp upgrade happens this factor should be revised accordingly.
