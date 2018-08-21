@@ -2,12 +2,12 @@ This document lists build dependencies and explains use of the ./build_* scripts
 
 !!! IMPORTANT !!! When cmake is listed below, it is silently assumed cmake >= cmake 3 which supports the "target_compile_options" directive
 
-* Debian packages for 32bit and 64bit systems. Input parameters - 1) release "name", i.e. 2.1
-build_debs_mcstas <release name>
-build_debs_mcxtrace <release name>
-Dependencies:
-cmake cpack texlive gcc flex bison build-essentials etoolbox poppler-utils texlive-latex-extra (Check on clean system if this is enough!!)
-Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
+
+* Debian packages ford 64bit systems. Input parameters - 1) release "name", i.e. 2.1
+1) First ensure you have build-dependencies by running the getdeps_debian script and following in-terminal instructions
+2) Then run the below command for your build. (the <meta> flag allows building "meta-packages" like mcstas-suite-python etc.)
+   build_debs_mcstas <release name> <meta>
+   build_debs_mcxtrace <release name> <meta>
 
 
 * RedHat packages for 32bit and 64bit systems. Input parameters - 1) release "name", i.e. 2.1
@@ -18,23 +18,28 @@ cmake cpack rpm texlive texlive-imakeidx texlive-biblatex texlive-idxlayout gcc 
 Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
-* "Generic Unix" == Linux 32bit and 64bit, tgz packages. Input parameters - 1) release "name", i.e. 2.1
-build_src_bin_mcstas <release name>
-build_src_bin_mcxtrace
-Dependencies:
-cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev etoolbox (Check on clean system if this is enough!!)
-Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
+* "Generic Unix" 64bit tgz packages. Input parameters - 1) release "name", i.e. 2.1
+1) First ensure you have build-dependencies by running on of the relevant getdeps_ scripts and following in-terminal instructions
+2) Then run the below command for your build (the <meta> flag allows building TAR-based "meta-packages")
+   build_src_bin_mcstas <release name>
+   build_src_bin_mcxtrace <release name>
 
 
 * Mac OS X packages for 64bit systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package
 1) First ensure you have build-dependencies by running the getdeps_mac script and following in-terminal instructions
 2) Then run the below command for your build (the <keep> flag allows to keep the built application bundle in /Applications and not do an arcive in dist/)
+   build_macos_mcstas <release name> <keep>
+   build_macos_mcxtrace <release name> <keep>
 
 
 * Windows packages for 32bit (and 64bit - running the 32bit version) systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package. Built on Linux!!
 build_windows_mcstas  <release name> <meta> 
 build_windows_mcxtrace  <release name> <meta> 
 Dependencies:
+
+
+
+
 
 (run dpkg --add-architecture i386)
 cmake cpack nsis texlive latexmk bibtex mingw-w64 flex bison libc6-dev wine-bin:i386 (Check on clean system if this is enough!!)
