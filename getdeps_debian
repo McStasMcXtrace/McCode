@@ -1,0 +1,5 @@
+#!/bin/sh
+echo 
+echo apt-get\'ing the dependencies using sudo:
+echo
+sudo apt-get install git cmake texlive gcc gfortran flex bison build-essential poppler-utils texlive-latex-extra
