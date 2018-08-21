@@ -10,7 +10,6 @@ cmake cpack texlive gcc flex bison build-essentials etoolbox poppler-utils texli
 Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
-
 * RedHat packages for 32bit and 64bit systems. Input parameters - 1) release "name", i.e. 2.1
 build_rpms_mcstas <release name>
 build_rpms_mcxtrace <release name>
@@ -27,17 +26,9 @@ cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev etoolbox (Check on c
 Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
-
 * Mac OS X packages for 64bit systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package
-build_macos_L-ML_mcstas  <release name> <meta>   / Lion and Mountain Lion
-build_macos_L-ML_mcxtrace  <release name> <meta>   / Lion and Mountain Lion
-build_macos_Maverics_mcstas  <release name> <meta>   / Mavericks
-build_macos_Maverics_mcxtrace  <release name> <meta>   / Mavericks
-build_macos_SL_mcstas  <release name> <meta>   / Snow Leopard
-build_macos_SL_mcxtrace  <release name> <meta>   / Snow Leopard
-Dependencies:
-cmake cpack texlive/MacTeX Xcode with commandline tools PackageMaker.app  (Check on clean system if this is enough!!)
-!! If need for any MacPorts / Fink / Brew software on the build machine - please add to END OF THE PATH variable rather than front... !!
+1) First ensure you have build-dependencies by running the getdeps_mac script and following in-terminal instructions
+2) Then run the below command for your build (the <keep> flag allows to keep the built application bundle in /Applications and not do an arcive in dist/)
 
 
 * Windows packages for 32bit (and 64bit - running the 32bit version) systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package. Built on Linux!!
