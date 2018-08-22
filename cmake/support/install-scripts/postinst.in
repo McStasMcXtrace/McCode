@@ -20,9 +20,9 @@ if [ "$1" == "osx_app_default" ]; then
     # Hook to change which mcgui will run using the App bundle 
     if [[ ${UNAME} = Darwin* ]]; then
 	PREFIX=`dirname $0`
-	cd $PREFIX/../../..
-	if [[ -x "./launcher-$2.sh" ]]; then
-	    cp launcher-$2.sh launcher.sh
+	cd $PREFIX/../../../../MacOS/
+	if [[ -x "./mccodegui.$2" ]]; then
+	    cp mccodegui.$2 mccodegui
 	    echo Set up your bundle to run the $2 version of mcgui
 	fi
 	cd -
