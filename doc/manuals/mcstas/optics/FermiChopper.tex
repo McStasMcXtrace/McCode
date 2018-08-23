@@ -121,7 +121,7 @@ The basis of the algorithm is to find the intersections of these spiral trajecto
 
 For this purpose, the \emph{Ridders's} root finding method was implemented \cite{NumRecip} in order to solve
 \begin{equation}
-x'(t) = d {\rm\ or\ } z'(t) = d
+x'(t) = d \textrm{\ or\ } z'(t) = d
 \label{eq:Ridder}
 \end{equation}
 This method provides faster and more accurate intersection determination than other common algorithms. E.g. the secant method fails more often and may give wrong results (outside chopper) whereas the bisection method (a.k.a Picard dichotomy) is slightly slower.
@@ -140,7 +140,7 @@ This method provides faster and more accurate intersection determination than ot
 \label{fig:TOFalg}
 \end{figure}
 
-The neutrons are first propagated to the outer chopper cylinder and their coordinates are transformed into the rotating frame using $T$. Neutrons outside the slit channel (chopper opening), or hitting the top and bottom caps are absorbed (yellow dots in Fig. \ref{fig:Overview}). The side from which the neutron approaches the chopper is known (positive or negative z'-axis of the rotating frame) so that the calculation of the time of interaction with the slit package entrance $t_1$ is performed solving $z' = \pm \frac\textrm{length}{2}$ in Eq. (\ref{eq:Txz}). Using the result of the numerical algorithms the neutron propagates to the entrance of the slit package (orange circles in Fig. \ref{fig:Overview}). Neutrons getting aside the slit package entrance are absorbed. Additionally, the slit package exit time $t_2$ is estimated the same way with $z' = \mp \frac\textrm{length}{2}$, in order to evaluate the whole time-of-flight in the chopper. The index of the slit which was hit is also computed, as we know the $x'$ coordinate in the rotating frame at the slit entrance.
+The neutrons are first propagated to the outer chopper cylinder and their coordinates are transformed into the rotating frame using $T$. Neutrons outside the slit channel (chopper opening), or hitting the top and bottom caps are absorbed (yellow dots in Fig. \ref{fig:Overview}). The side from which the neutron approaches the chopper is known (positive or negative z'-axis of the rotating frame) so that the calculation of the time of interaction with the slit package entrance $t_1$ is performed solving $z' = \pm \frac{\textrm{length}}{2}$ in Eq. (\ref{eq:Txz}). Using the result of the numerical algorithms the neutron propagates to the entrance of the slit package (orange circles in Fig. \ref{fig:Overview}). Neutrons getting aside the slit package entrance are absorbed. Additionally, the slit package exit time $t_2$ is estimated the same way with $z' = \mp \frac{\textrm{length}}{2}$, in order to evaluate the whole time-of-flight in the chopper. The index of the slit which was hit is also computed, as we know the $x'$ coordinate in the rotating frame at the slit entrance.
 
 Differentiating Eq. (\ref{eq:Txz}) for $x$ coordinate
 \begin{equation}
@@ -165,7 +165,7 @@ The propagation is finalized when determining the intersection of the neutron tr
 The effect of curvature can significantly improve the flux and energy resolution shape.
 
 As all $(zx)$ cordinates are transformed into $(z'x')$, the most efficient way to take into account the curvature is to include it in the transformation Eq. (\ref{eq:Txz}) by 'morphing' the curved rotating real space to a straight still frame. We use parabolic curvature for slits. Then instead of solving
-\begin{equation}x'(t) = d - \Delta_{x'}(z') {\rm\ where\ } \Delta_{x'}(z')=R_{slit}.(1-\sqrt{1-(z'/R_{slit})^2})
+\begin{equation}x'(t) = d - \Delta_{x'}(z') \textrm{\ where\ } \Delta_{x'}(z')=R_{slit}.(1-\sqrt{1-(z'/R_{slit})^2})
 \end{equation}
 with $\Delta$ being the gap between the straight tangent line at the slit center and the real slit shape, we perform the additional transformation
 \begin{equation}

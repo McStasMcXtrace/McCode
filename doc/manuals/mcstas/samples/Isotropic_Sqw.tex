@@ -73,7 +73,7 @@ Some easily measureable coherent quantities in a liquid are the \emph{static pai
 \rho g(\vec{r}) &=& \frac{1}{N} \sum_{i=1}^N \sum_{j \neq i} \langle \delta(\vec{r}+\vec{r}_i-\vec{r}_j) \rangle \\
 S(\vec{q}) &=&\int S(\vec q,\omega) d\omega \label{eq:sq} \\
            &=&1 + \rho \int_V [g(\vec{r})-1] e^{i\vec{q}.\vec{r}} d\vec{r} \\
-           &=&1 + \rho \int_{0}^{\infty} [g(r)-1] \frac{\sin(qr)}{qr} 4 \pi r^2 dr {\rm\ in\ isotropic\ materials.}
+           &=&1 + \rho \int_{0}^{\infty} [g(r)-1] \frac{\sin(qr)}{qr} 4 \pi r^2 dr \textrm{\ in\ isotropic\ materials.}
 \end{eqnarray}
 The latter expression, in isotropic materials, may be Fourier transformed as:
 \begin{equation}
@@ -86,7 +86,7 @@ In principle, $S_{inc}(q) = 1$ in all materials, but a $q$ dependence is rather 
 The static pair correlation function $g(r)$ is the probability to find a neighbouring atom at a given distance (unitless). Since $g(0) = 0$, Eq. (\ref{eq:gr-sq}) provides a useful normalisation sum-rule for coherent $S(q)$:
 \begin{equation}
 \label{eq:sq-nomr1}
-\int_0^\infty q^2 [S(q) - 1] dq = -2\pi^2\rho {\rm\ for\ coherent\ contribution.}
+\int_0^\infty q^2 [S(q) - 1] dq = -2\pi^2\rho \textrm{\ for\ coherent\ contribution.}
 \end{equation}
 This means that the integrated oscillations (around 1) of $S_{coh}(q)$ are directly related to the density of the material $\rho$.
 In practice, the function $S(q)$ is often known on a restricted range $q \in [0, q_{max} ]$, due to either limitations in the sample molecular dynamics simulation, or the measurement itself.
@@ -221,11 +221,11 @@ Anyway, in the diffractionists world, people do not usually define scattering wi
 When doing diffraction, and neglecting inelastic contribution as first approximation, we may integrate Eq. \ref{eq:d2sigma}, keeping $k_i = k_f$.
 \begin{eqnarray}
 \left(\frac{d\sigma}{d\Omega}\right)_\textrm{coh.el.}(|q|) &=& \int_0^\infty \frac{d^2\sigma_{coh}}{d\Omega dE_f} dE_f = \frac{N \sigma_{coh}}{4\pi} S_{coh}(q) \\
-& = & N\frac{(2\pi)^3}{V_0}\sum_{\boldsymbol{\tau}} \delta(\boldsymbol{\tau} - \boldsymbol{q})|F_{\boldsymbol{\tau}}|^2 {\rm\ from\ Eq.\ (\ref{eq:sigma_coh_el})}
+& = & N\frac{(2\pi)^3}{V_0}\sum_{\boldsymbol{\tau}} \delta(\boldsymbol{\tau} - \boldsymbol{q})|F_{\boldsymbol{\tau}}|^2 \textrm{\ from\ Eq.\ (\ref{eq:sigma_coh_el})}
 \end{eqnarray}
 with $V_0 = 1/\rho$ being the volume of a lattice unit cell. Then we come to the formal equivalence, in the powder case \cite{squires} (integration over Debye-Scherrer cones):
 \begin{eqnarray}\label{eq:sq-F2}
-S_{coh}(q) = \frac{\pi \rho}{2\sigma_{coh}} \frac{z(q)}{q^2} |F_q|^2 {\rm\ in\ a\ powder.}
+S_{coh}(q) = \frac{\pi \rho}{2\sigma_{coh}} \frac{z(q)}{q^2} |F_q|^2 \textrm{\ in\ a\ powder.}
 \end{eqnarray}
 for each lattice Bragg peak wave vector $q$.
 The normalisation rule Eq. (\ref{eq:sq-nomr1}) can not usually be applied for powders, as the $S(q)$ is a set of Dirac peaks for which the $\int q^2 S(q) dq$ is difficult to compute, and $S(q)$ does not converge to unity for large $q$. Each $F^2$ Dirac contribution may be broaden when specifiying a diffraction peak width.

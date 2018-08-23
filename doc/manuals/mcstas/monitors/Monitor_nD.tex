@@ -12,8 +12,8 @@ generated files are either a set of 1D signals ([Intensity] \textit{vs.}
 \textit{vs.} [Variable 1]), and possibly a simple long list of selected
 physical parameters for each neutron.
 
-The input parameters for \textbf{Monitor\_nD} are its dimensions $x_{\rm
-  min}, x_\textrm{max}, y_\textrm{min}$, $y_\textrm{max}$ (in meters) and an {\it
+The input parameters for \textbf{Monitor\_nD} are its dimensions $x_\textrm{
+  min}, x_\textrm{max}, y_\textrm{min}$, $y_\textrm{max}$ (in meters) and an \textit{
   options} string describing what to detect, and what to do with the
 signals, in clear language. The $x_{width}, y_{height}, z_{depth}$ may also be used to enter dimensions.
 
@@ -37,7 +37,7 @@ The monitor shape can be selected among seven geometries:
 \item{(\textit{disk}) When choosing this geometry, the detector is a flat
     disk in ($xy$) plane. The radius is then
     \begin{equation}
-      \mbox{radius} = \max ( \mbox{abs } [ x_\textrm{min}, x_\textrm{max}, y_{\rm
+      \mbox{radius} = \max ( \mbox{abs } [ x_\textrm{min}, x_\textrm{max}, y_\textrm{
         min}, y_\textrm{max}, x_{width}/2, y_{height}/2 ] ).
     \end{equation}
     }
@@ -101,7 +101,7 @@ user2 user3           to be assigned in an other component (see below)
 \end{lstlisting}
 
 To tell the component what you want to monitor, just add the variable
-names in the \textit{options} parameter. The data will be sorted into {\it
+names in the \textit{options} parameter. The data will be sorted into \textit{
   bins} cells (default is 20), between some default \textit{limits}, that
 can also be set by user. The \textit{auto} option will automatically
 determine what limits should be used to have a good sampling of signals.

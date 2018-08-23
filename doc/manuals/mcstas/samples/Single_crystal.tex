@@ -49,7 +49,7 @@ handles incoherent scattering and absorption. The incoherent scattering
 cross-section is supplied by the user as a constant
 $\sigma_\textrm{inc}$. The absorption cross-section is supplied by the user at
 2200~m/s, so the actual cross-section for a neutron of velocity $v$ is
-$\sigma_\textrm{abs} = \sigma_{2200} \frac\textrm{2200~m/s}{v}$.
+$\sigma_\textrm{abs} = \sigma_{2200} \frac{\textrm{2200~m/s}}{v}$.
 
 \subsection{The physical model}
 
@@ -219,7 +219,7 @@ as follows:
   points of interest, selecting those that are close enough to the Ewald
   sphere to have a non-vanishing scattering probability. From these,
   compute the total coherent cross-section $\sigma_\textrm{coh}$ (see
-  below), the absorption cross-section $\sigma_\textrm{abs} = \sigma_{\rm
+  below), the absorption cross-section $\sigma_\textrm{abs} = \sigma_\textrm{
   2200} \frac{\textrm{2200~m/s}}{v}$, and the total cross-section
   $\sigma_\textrm{tot} = \sigma_\textrm{coh}+\sigma_\textrm{inc}+\sigma_\textrm{abs}$.
 \item\label{enum:crystal-3} The transmission probability is
@@ -260,7 +260,7 @@ approximated with a plane tangential to the sphere, see
 figure~\ref{fig:crystal-scattering-tri}. The tangential point is taken
 to lie on the line between the center of the Ewald sphere
 $-\boldsymbol{k}_\textrm{i}$ and the reciprocal lattice point
-$\boldsymbol{\tau}$. Since the radius of the Ewald sphere is $k_{\rm
+$\boldsymbol{\tau}$. Since the radius of the Ewald sphere is $k_\textrm{
   i}$, this point is
 $$ \boldsymbol{o}=(k_\textrm{i}/\rho - 1)\boldsymbol{\rho} - \boldsymbol{\tau} $$
 where $\boldsymbol{\rho} = \boldsymbol{k}_\textrm{i} - \boldsymbol{\tau}$.
@@ -415,7 +415,7 @@ event: When deciding whether to transmit the neutron or not, when
 simulating absorption, and when selecting the reciprocal lattice vector
 $\boldsymbol{\tau}$ to scatter from.
 
-If the user has choosen a fixed transmission probability $f({\rm
+If the user has choosen a fixed transmission probability $f(\textrm{
   transmit}) = p_\textrm{transmit}$, the neutron weight must be adjusted by
 $$ \pi(\textrm{transmit}) = \frac{P(\textrm{transmit})}{f(\textrm{transmit})}
 $$
@@ -429,21 +429,21 @@ Absorption is never explicitly simulated, so the Monte Carlo probability
 of coherent or incoherent scattering is
 $f(\textrm{coh})+f(\textrm{inc}) = 1$.
 The physical probability of coherent or incoherent scattering is
-$$ P(\textrm{coh})+P(\textrm{inc}) = \frac{\sigma_\textrm{coh} + \sigma_{\rm
+$$ P(\textrm{coh})+P(\textrm{inc}) = \frac{\sigma_\textrm{coh} + \sigma_\textrm{
     inc}}{\sigma_\textrm{tot}}, $$
-so again a weight adjustment $\pi(\textrm{coh}|\textrm{inc}) = \Pi({\rm
+so again a weight adjustment $\pi(\textrm{coh}|\textrm{inc}) = \Pi(\textrm{
     coh}|\textrm{inc})/f(\textrm{coh}|\textrm{inc})$ is needed.
 
 When choosing the reciprocal lattice vector $\boldsymbol{\tau}$ to
 scatter from, the relative probability for $\boldsymbol{\tau}$ is
-$r_{\boldsymbol{\tau}} = \sigma_{{\rm
+$r_{\boldsymbol{\tau}} = \sigma_{\textrm{
     coh},\boldsymbol{\tau}}/|F_{\boldsymbol{\tau}}|^2$. This is done to
 get better statistics for weak reflections. The Monte Carlo probability
 for the reciprocal lattice vector $\boldsymbol{\tau}$ is thus
 $$ f(\boldsymbol{\tau}) =
 \frac{r_{\boldsymbol{\tau}}}{\sum_{\boldsymbol{\tau}} r_{\boldsymbol{\tau}}}
 $$
-whereas the physical probability is $P(\boldsymbol{\tau}) = \sigma_{{\rm
+whereas the physical probability is $P(\boldsymbol{\tau}) = \sigma_{\textrm{
     coh},\boldsymbol{\tau}}/\sigma_\textrm{coh}$. A weight adjustment is
 thus needed of
 $$

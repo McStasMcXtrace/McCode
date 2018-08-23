@@ -49,8 +49,8 @@ The \textbf{Source\_Optimizer} works as follow:
     arrays with \textit{bins} cells (default is 10 cells). This constitutes
     the \textit{Reference } source.}
 \item{\label {SourceOptimizer:step3}The \textbf{Monitor\_Optimizer} records
-    the \textit{good} neutrons (that reach it) and communicate an {\it
-      Optimized} beam requirement to the \textbf{Source\_Optimizer}. However, retains '{\it
+    the \textit{good} neutrons (that reach it) and communicate an \textit{
+      Optimized} beam requirement to the \textbf{Source\_Optimizer}. However, retains '\textit{
       keep}' percent of the original \textit{Reference} source is sent
     unmodified (default is 10 \%). The \textit{Optimized} source is thus:
 
@@ -97,8 +97,7 @@ $n$-dimensional array is needed.
 \subsection{Using the Source\_Optimizer}
 
 To use this component, just install the \textbf{Source\_Optimizer} after a
-source (but any location is possible afterwards in principle), and use the {\bf
-  Monitor\_Optimizer} at a location where you want to reach better
+source (but any location is possible afterwards in principle), and use the \textbf{Monitor\_Optimizer} at a location where you want to reach better
 statistics.
 
 \begin{lstlisting}
@@ -114,7 +113,7 @@ statistics.
     /* using more than one Monitor_Optimizer is possible */
 \end{lstlisting}
 
-The input parameter for \textbf{Source\_Optimizer} is a single {\it
+The input parameter for \textbf{Source\_Optimizer} is a single \textit{
   options} string that can contain some specific optimizer configuration
 settings in clear language. The formatting of the \textit{options}
 parameter is free, as long as it contains some specific keywords, that
