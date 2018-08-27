@@ -14,6 +14,13 @@ LIB="$LIB/../tools/Python/@P@plot/matplotlib"
 TOOL="@P@plot"
 VERS="@MCCODE_VERSION@"
 
+# Is this a mac?
+if [ `uname` != "Darwin" ]; then
+    PYTHON="python3"
+else
+    PYTHON="pythonw"
+fi
+
 canrun() {
     if ! [ -x ${LIB}/${TOOL}.py ]; then
         exit 127;
@@ -24,11 +31,11 @@ canrun() {
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
     done
-    python3 -c "${cmd}"
+    $PYTHON -c "${cmd}"
 }
 
 if ( canrun ); then
-    python3 ${LIB}/${TOOL}.py $*
+    $PYTHON ${LIB}/${TOOL}.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
