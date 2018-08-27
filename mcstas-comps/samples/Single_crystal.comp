@@ -1404,7 +1404,7 @@ FINALLY
   if (hkl_info.nb_refl_count) {
     double split_iterations = (double)hkl_info.nb_reuses/hkl_info.nb_refl_count + 1;
     double split_optimal    = (double)hkl_info.nb_refl/hkl_info.nb_refl_count;
-    if (split_optimal > split_iterations + 5)
+    if (split_optimal > split_iterations + 2)
       printf("Single_crystal: %s: Info: you may highly improve the computation efficiency by using\n"
         "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
         "  in the instrument description %s.\n",
