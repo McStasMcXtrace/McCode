@@ -231,7 +231,7 @@ def _parse_2D_monitor(text):
         # xylimits: -30 30 -30 30
         # xylimits: 0 5e+06 0.5 100
         '''
-        m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)\n', text)
+        m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)([\ \d\.\-\+e]*)\n', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
@@ -242,13 +242,13 @@ def _parse_2D_monitor(text):
         
         data.statistics = 'X0=%.2E; dX=%.2E; Y0=%.2E; dY=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)), Decimal(m.group(3)), Decimal(m.group(4)))
         '''# signal: Min=0; Max=1.20439e-18; Mean=4.10394e-21;'''
-        m = re.search('\# signal: Min=([\d\.\+\-e]+); Max=([\d\.\+\-e]+); Mean=([\d\.\+\-e]+);\n', text)
+        m = re.search('\# signal: Min=([\ \d\.\+\-e]+); Max=([\ \d\.\+\-e]+); Mean=([\ \d\.\+\-e]+);\n', text)
         data.signal = 'Min=%f; Max=%f; Mean=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         
         '''# Data [detector/PSD.dat] I:'''
         '''# Events [detector/PSD.dat] N:'''
         lines = text.splitlines()
-        dat = False
+        dat = True
         events = False
         for l in lines:
             if '# Data ' in l:
@@ -419,7 +419,7 @@ def _load_sweep_monitors(rootdir):
         dirsignature = (dirname, mnames)
         for f in fnames:
             # NOTE: this will attempt to load all files except for mccode.sim
-            if f not in mnames and f != 'mccode.sim':
+            if f not in mnames and f != 'mccode.sim' and f != 'mcstas.sim':
                 mnames.append(f)
         arg.append(dirsignature)
     
@@ -435,7 +435,13 @@ def _load_sweep_monitors(rootdir):
     # get the monitor ordering right by snooping the '  filename:' labels out of the scan point file 0/mccode.sim
     def get_subdir_monitors(subdir):
         mons = []
-        f = open(join(subdir, 'mccode.sim'), 'rb')
+        if os.path.exists(join(subdir, 'mccode.sim')):
+            indexfile='mccode.sim'
+        elif os.path.exists(join(subdir, 'mccode.sim')):
+            indexfile='mcstas.sim'
+        else:
+            return
+        f = open(join(subdir, indexfile), 'rb')
         line = f.readline().decode()
         while line:
             line = f.readline().decode()
@@ -498,7 +504,7 @@ def has_filename(args):
 def is_mccodesim_or_mccodedat(args):
     f = args['simfile']
     f_name = basename(f)
-    return (f_name == 'mccode.sim' or f_name == 'mccode.dat') and isfile(f)
+    return (f_name == 'mccode.sim' or f_name == 'mcstas.sim' or f_name == 'mccode.dat') and isfile(f)
 
 def is_monitorfile(args):
     f = args['simfile']
@@ -530,16 +536,22 @@ def is_mccodesim_w_monitors(args):
     f = args['simfile']
     d = args['directory']
     # checks mccode.sim existence
-    if not isfile(join(d, 'mccode.sim')):
-        return False
+    if isfile(join(d, 'mccode.sim')):
+        indexfile='mccode.sim'
+    elif isfile(join(d, 'mcstas.sim')):
+        indexfile='mcstas.sim'
     else:
-        f = join(d, 'mccode.sim')
-        args['simfile'] = f
+        return False
+
+    f = join(d, indexfile)
+    args['simfile'] = f
     
     # look for any "unkonwn" files, could be data files
     datfiles = glob.glob(join(d, '*'))
     if 'mccode.sim' in datfiles: 
         datfiles.remove('mccode.sim')
+    if 'mcstas.sim' in datfiles: 
+        datfiles.remove('mcstas.sim')
     if 'mccode.dat' in datfiles: 
         datfiles.remove('mccode.dat')
     return len(datfiles) > 0
@@ -551,6 +563,8 @@ def has_datfile(args):
     datfiles = glob.glob(join(d, '*'))
     if 'mccode.sim' in datfiles: 
         datfiles.remove('mccode.sim')
+    if 'mcstas.sim' in datfiles: 
+        datfiles.remove('mcstas.sim')
     if 'mccode.dat' in datfiles: 
         datfiles.remove('mccode.dat')
     if len(datfiles) > 0:
@@ -569,6 +583,8 @@ def has_multiple_datfiles(args):
     datfiles = glob.glob(join(d, '*'))
     if 'mccode.sim' in datfiles:
         datfiles.remove('mccode.sim')
+    if 'mcstas.sim' in datfiles:
+        datfiles.remove('mcstas.sim')
     if 'mccode.dat' in datfiles:
         datfiles.remove('mccode.dat')
     for f in datfiles:
@@ -609,7 +625,13 @@ def load_simulation(args):
     d = args['directory']
 
     # load monitor data handles
-    data_lst = _load_data_from_mcfiles(_get_filenames_from_mccodesim(join(d, 'mccode.sim')))
+    if isfile(join(d, 'mccode.sim')):
+        indexfile='mccode.sim'
+    elif isfile(join(d, 'mcstas.sim')):
+        indexfile='mcstas.sim'
+    else:
+        indexfile=''
+    data_lst = _load_data_from_mcfiles(_get_filenames_from_mccodesim(join(d, indexfile)))
 
     # construct two-level plot graph
     root = PNMultiple(data_lst)
@@ -624,7 +646,11 @@ def load_simulation(args):
 
 def load_sweep(args):
     d = args['directory']
-    f_sim = join(d, 'mccode.sim')
+    if isfile(join(d, 'mccode.sim')):
+        f_sim = join(d, 'mccode.sim')
+    elif isfile(join(d, 'mcstas.sim')):
+        f_sim = join(d, 'mcstas.sim')
+        
     f_dat = join(d, 'mccode.dat')
 
     # load primary data_handle, 1D sweep values
