@@ -17,7 +17,9 @@ typedef struct t_reflec_bare{
 
 typedef struct t_reflec_coating{
   char *matrl;
+  t_Table *T;
   double *d;
+  double rho,Z,At;
 }t_reflec_coating;
 
 typedef struct t_reflec_q_prmtc{
@@ -66,7 +68,7 @@ double complex refleccq(t_Reflec *r_handle, double q, double g, ... );
 double reflecq(t_Reflec *r_handle, double q, double g, ... );
 double complex reflecc(t_Reflec *r_handle, double kix, double kiy, double kiz, double kfx, double kfy, double kfz, double g );
 
-double complex reflec_coating(t_Reflec *r_handle, double q, double g);
+double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k);
 double complex reflec_bare(t_Reflec *r_handle, double q, double g);
 double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g);
 double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k);

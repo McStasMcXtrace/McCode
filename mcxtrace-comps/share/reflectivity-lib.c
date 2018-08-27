@@ -20,8 +20,26 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
       R->prms.rb=va_arg(ap,struct t_reflec_bare);
       break;
     case COATING:
-      R->prms.rc=va_arg(ap,struct t_reflec_coating);
-      break;
+      {
+          R->prms.rc.matrl=va_arg(ap,char *);
+          struct t_reflec_coating *ptr=&(R->prms.rc);
+          ptr->T=calloc(1,sizeof(t_Table));
+          if (ptr->matrl && strlen(ptr->matrl)){
+              if ( (Table_Read(ptr->T,ptr->matrl,0))==-1){
+                  fprintf(stderr,"Error(%s): Could not parse file \'%s\'\n",__FILE__,ptr->matrl);
+                  exit(-1);
+              }
+              char **header_parsed;
+              header_parsed=Table_ParseHeader(ptr->T->header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+              if(header_parsed[2]){ptr->rho=strtod(header_parsed[2],NULL);}
+              if(header_parsed[0]){ptr->Z=strtod(header_parsed[0],NULL);}
+              if(header_parsed[1]){ptr->At=strtod(header_parsed[1],NULL);}
+          }else{
+              fprintf(stderr,"Error(%s): No coating material file specified, yet a coating (\'%s\') is requested\n",__FILE__,ptr->matrl);
+              exit(-1);
+          }
+          break;
+      }
     case Q_PARAMETRIC:
       {
           R->prms.rqpm.fname=va_arg(ap,char *);
@@ -74,8 +92,36 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
 }
 
 /*This section contains the functions that compute the actual reflectivity*/
-double complex reflec_coating(t_Reflec *r_handle, double q, double g){
-  return 0.0;
+double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k){
+    struct t_reflec_coating *ptr=&(r_handle->prms.rc);
+    /*adjust p according to reflectivity*/
+    double Qc,f1,f2,na,e;
+    /*length of wavevector transfer may be compute from s and n_ above*/
+
+    /*interpolate in material data*/
+    e=K2E*k;
+    f1=Table_Value(*(ptr->T),e,1);
+    f2=Table_Value(*(ptr->T),e,2);
+    /*the conversion factor in  the end is to transform the atomic density from cm^-3 to AA^-3
+      -> therefore we get Q in AA^-1*/
+    na=NA*ptr->rho/ptr->At*1e-24;
+    Qc=4*sqrt(M_PI*na*RE*f1);
+
+    double complex qp,qn,rr;
+    double b_mu,R;
+
+    qn=q/Qc;
+    /*delta=na*r0*2*M_PI/k2*f1;*/
+    /*beta=na*r0*2*M_PI/k^2*f2; b_mu=beta*(2*k)^2 / Qc^2*/
+    b_mu=8*M_PI*na*RE*f2/(Qc*Qc);
+    if(qn==1){
+        qp=sqrt(b_mu)*(1+I);
+    }else {
+        qp=csqrt((qn*qn)-1+2*I*b_mu);
+    }
+    /*and from this compute the reflectivity*/
+    rr=(qn-qp)/(qn+qp);
+    return rr;
 }
 
 double complex reflec_bare(t_Reflec *r_handle, double q, double g){
@@ -172,8 +218,11 @@ double complex refleccq( t_Reflec *r_handle, double q, double g, ...){
       r=reflec_bare(r_handle,q,g);
       break;
     case COATING:
-      r=reflec_coating(r_handle,q,g);
-      break;
+      {
+          double k=va_arg(varg,double);
+          r=reflec_coating(r_handle,q,g,k);
+          break;
+      }
     case Q_PARAMETRIC:
       r=reflec_q_prmtc(r_handle,q,g);
       break;
@@ -214,8 +263,13 @@ double reflecq( t_Reflec *r_handle, double q, double g, ...){
             r=cabs(reflec_bare(r_handle,q,g));
             break;
         case COATING:
-            r=cabs(reflec_coating(r_handle,q,g));
-            break;
+            {
+                double k=va_arg(varg,double);
+                double complex rp;
+                rp=reflec_coating(r_handle,q,g,k);
+                r= creal(rp * conj(rp));
+                break;
+            }
         case Q_PARAMETRIC:
             r=cabs(reflec_q_prmtc(r_handle,q,g));
             break;
@@ -227,9 +281,9 @@ double reflecq( t_Reflec *r_handle, double q, double g, ...){
             }
         case ETH_PARAMETRIC:
             {
-                double e=va_arg(varg,double);
+                double k=va_arg(varg,double);
                 double theta=va_arg(varg,double);
-                r=cabs(reflec_eth_prmtc(r_handle,g,e,theta));
+                r=cabs(reflec_eth_prmtc(r_handle,g,k*K2E,theta));
                 break;
             }
         case KINEMATIC:
@@ -247,7 +301,7 @@ double refleceth( t_Reflec *r_handle,double e, double th, double g){
     double q;
     double k=e*E2K;
     q=k*2.0*sin(th);
-    if(r_handle->type==PARRATT){
+    if(r_handle->type==PARRATT || r_handle->type==COATING){
         return reflecq(r_handle,q,g,k);
     }else{
         return reflecq(r_handle,q,g,e,th);
