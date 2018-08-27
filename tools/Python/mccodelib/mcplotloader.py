@@ -131,7 +131,7 @@ def _parse_1D_monitor(text):
     try:
         # load essential header data
         '''# component: Ldetector'''
-        m = re.search('\# component: ([\w]+)\n', text)
+        m = re.search('\# component: ([\w\.]+)\n', text)
         data.component = m.group(1)
         '''# filename: Edet.dat'''
         m = re.search('\# filename: ([\-\+\w\.\,]+)\n', text)
