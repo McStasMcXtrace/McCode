@@ -4,7 +4,7 @@ and assembling it in a plot-friendly way.
 '''
 import glob
 import re
-from os.path import isfile, isdir, join, dirname, basename, splitext
+from os.path import isfile, isdir, join, dirname, basename, splitext, exists
 from os import walk
 from decimal import Decimal
 
@@ -435,9 +435,9 @@ def _load_sweep_monitors(rootdir):
     # get the monitor ordering right by snooping the '  filename:' labels out of the scan point file 0/mccode.sim
     def get_subdir_monitors(subdir):
         mons = []
-        if os.path.exists(join(subdir, 'mccode.sim')):
+        if exists(join(subdir, 'mccode.sim')):
             indexfile='mccode.sim'
-        elif os.path.exists(join(subdir, 'mccode.sim')):
+        elif exists(join(subdir, 'mccode.sim')):
             indexfile='mcstas.sim'
         else:
             return
