@@ -22,13 +22,13 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>droplet</string>
+	<string>mccodegui</string>
 	<key>CFBundleIconFile</key>
-	<string>droplet</string>
+	<string>mccodegui</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Droplet</string>
+	<string>Mccodegui</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>

@@ -54,7 +54,7 @@ usage() {
     echo ""
     echo "Available generators are: ${ALL_GENS}";
     echo ""
-    echo "McCode, Peter K Willendruo <pkwi@fysik.dtu.dk> || Erik B Knudsen <erkn@fysik.dtu.dk>";
+    echo "McCode, Peter K Willendrup <pkwi@fysik.dtu.dk> || Erik B Knudsen <erkn@fysik.dtu.dk>";
 }
 
 if [ "x$1" = "x" ]; then
@@ -496,6 +496,12 @@ make_nsis() {
     # Default to mingw32 when toolchain is incompatible
     sane_toolchain "grep mingw" mingw32;
     simple_cpack_file NSIS "${NAME}-NSIS" ".exe" "win32";
+}
+
+make_nsis64() {
+    # Default to mingw64 when toolchain is incompatible
+    sane_toolchain "grep mingw" mingw64;
+    simple_cpack_file NSIS64 "${NAME}-NSIS64" ".exe" "win??";
 }
 
 # create dist

@@ -66,20 +66,20 @@ endforeach()
 
 set(LATEX_OUTPUT_PATH "${PROJECT_BINARY_DIR}")
 add_latex_document(
-  manual.tex MANGLE_TARGET_NAMES
+  manual.tex 
   INPUTS ${LIST}
   DEPENDS sources.done samples.done optics.done monitors.done misc.done
   BIBFILES "mcxtrace.bib"
   USE_INDEX
-  DEFAULT_PDF
+  FORCE_PDF
   )
 add_latex_document(
-  Component_manual.tex MANGLE_TARGET_NAMES
+  Component_manual.tex 
   INPUTS ${LIST}
   DEPENDS sources.done samples.done optics.done monitors.done misc.done
   BIBFILES "mcxtrace.bib"
   USE_INDEX
-  DEFAULT_PDF
+  FORCE_PDF
   )
 
 install(FILES "${PROJECT_BINARY_DIR}/manual.pdf"

@@ -6,6 +6,10 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
 # 64-bit
 ./mkdist mcstas $1 "" "" rpm64 "" -- rpm
 ./mkdist mcstas-comps $1 "" "" rpm64 "" -- rpm

@@ -5,11 +5,11 @@
 \index{Concentric components}
 \label{powder}
 
-%\component{Powder\_N}{System}{$radius$, $thickness$, $h$, $xwidth$, $yheight$, $zdepth$, $\sigma_{\rm abs}$,
-%  $\sigma_{\rm inc}$, $Vc$, $f_{\rm pack}$, reflections, format, DW, concentic, and more}{}{}
+%\component{Powder\_N}{System}{$radius$, $thickness$, $h$, $xwidth$, $yheight$, $zdepth$, $\sigma_\textrm{abs}$,
+%  $\sigma_\textrm{inc}$, $Vc$, $f_\textrm{pack}$, reflections, format, DW, concentic, and more}{}{}
 \mcdoccomp{samples/PowderN.parms}
 
-The powder diffraction component {\bf PowderN} models a powder sample
+The powder diffraction component \textbf{PowderN} models a powder sample
 with background coming only from incoherent scattering and no
 multiple scattering. At the users choice, a given percentage of the incoming
 events may be transmitted (attenuated) to model the direct beam. The component can also
@@ -101,7 +101,7 @@ The Bragg scattering from the powder,
 $\sigma_c^s$ is calculated from the input file, with the parameters
 $Q$, $|F(Q)|^2$, and $j$ for the scattering vector, structure factor, and
 multiplicity, respectively. The volume of the unit cell is denoted $Vc$,
-while the sample packing factor is $f_{\rm pack}$.
+while the sample packing factor is $f_\textrm{pack}$.
 
 
 %Further, the incoherent scattering is only taken into account
@@ -113,8 +113,8 @@ while the sample packing factor is $f_{\rm pack}$.
 Focusing is performed by only scattering into one angular
 interval, $d\phi$ of the Debye-Scherrer circle. The center of this
 interval is located at the point where the Debye-Scherrer circle
-intersects the half-plane defined by the initial velocity, ${\bf v}_{\rm i}$,
-and a user-specified vector, {\bf f}.
+intersects the half-plane defined by the initial velocity, $\textbf{v}_\textrm{i}$,
+and a user-specified vector, \textbf{f}.
 
 %The input parameters for this component are
 %
@@ -125,8 +125,8 @@ and a user-specified vector, {\bf f}.
 %$\sigma_{i,c}^s$ & (fm)$^2$ & Incoherent scattering cross section per unit cell \\
 %$\rho'/\rho$ & 1 & Packing factor \\
 %$V_c$ & \AA$^3$ & Volume of unit cell \\
-%${\bf Q}$ & \AA$^{-1}$ & The reciprocal lattice vector under consideration \\
-%$|F({\bf Q}_j)|^2$ & (fm)$^2$ &
+%$\textbf{Q}$ & \AA$^{-1}$ & The reciprocal lattice vector under consideration \\
+%$|F(\textbf{Q}_j)|^2$ & (fm)$^2$ &
 % Structure factor \\
 %$j$ & 1 & Multiplicity of reflection \\
 %$\exp(-2W)$ & 1 & Debye-Waller factor \\
@@ -165,19 +165,19 @@ Debye-Scherrer cone (solid lines) and the Debye-Scherrer circle (grey).}
 
 Equation (\ref{Bragg}) may be cast into the form
 \begin{equation}
-|{\bf Q}| = 2 |{\bf k}| \sin \theta ,
+|\textbf{Q}| = 2 |\textbf{k}| \sin \theta ,
 \end{equation}
-where {\bf Q} is a vector of the reciprocal lattice, and {\bf k} is
+where \textbf{Q} is a vector of the reciprocal lattice, and \textbf{k} is
 the wave vector of the neutron. It is seen that only
-reciprocal vectors fulfilling $|{\bf Q}| < 2 |{\bf k}|$
+reciprocal vectors fulfilling $|\textbf{Q}| < 2 |\textbf{k}|$
 contribute to the scattering.
 For a complete treatment of the powder sample, one needs to take
-into account all these {\bf Q}-values, since each of them contribute
+into account all these \textbf{Q}-values, since each of them contribute
 to the attenuation.
 
 The strength of the Bragg reflections is given by their structure factors
 \begin{equation}
- \left| \sum_j b_j \exp({\bf R}_j \cdot {\bf Q}) \right|^2 ,
+ \left| \sum_j b_j \exp(\textbf{R}_j \cdot \textbf{Q}) \right|^2 ,
 \end{equation}
 where the sum runs over all atoms in one unit cell. This structure factor is
 non-zero only when $Q$ equals a reciprocal lattice vector.
@@ -185,7 +185,7 @@ non-zero only when $Q$ equals a reciprocal lattice vector.
 The textbook expression for the scattering cross section
 corresponding to one Debye-Scherrer cone reads \cite[ch.3.6]{squires}, with $V=N V_0$ being the total sample volume:
 \begin{equation}
-\sigma_{\rm cone}
+\sigma_\textrm{cone}
   = \frac{V}{V_0^2} \frac{\lambda^3}{4 \sin \theta} \sum_Q |F(Q)|^2 .
 \end{equation}
 For our purpose, this expression should be changed slightly.
@@ -196,7 +196,7 @@ and finally, the Debye-Waller factor is multiplied on the elastic cross section
 to take lattice vibrations into account (no inelastic background is simulated,
 however). We then reach
 \begin{eqnarray}
-\sigma_{\rm cone, Q}
+\sigma_\textrm{cone, Q}
  & = & j_Q f \exp(-2W) \frac{V}{V_0^2} \frac{\lambda^3}{4 \sin \theta} |F(Q)|^2 \\
  & = & f \exp(-2W) \frac{N}{V_0} \frac{4\pi^3}{k^2} \frac{j_Q |F(Q)|^2}{Q}
 \end{eqnarray}
@@ -204,7 +204,7 @@ in the thin sample approximation. For samples of finite thickness, the
 beam is being attenuated by the attenuation coefficient
 \begin{equation}
 \label{e:attenu}
-\mu_{\rm Q} = \sigma_{\rm cone,Q} / V .
+\mu_\textrm{Q} = \sigma_\textrm{cone,Q} / V .
 \end{equation}
 For calibration it may be useful to consider the total intensity
 scattered into a detector of effective height $h$, covering only
@@ -215,7 +215,7 @@ circle is $r \sin(2\theta)$. Thus, the detector (in a small angle
 approximation) counts a fraction $h / (2 \pi r \sin(2 \theta))$
 of the scattered neutrons, giving a resulting count intensity:
 \begin{equation}
-I = \Psi \sigma_{\rm cone,Q} \frac{h}{2 \pi r \sin(2\theta)} ,
+I = \Psi \sigma_\textrm{cone,Q} \frac{h}{2 \pi r \sin(2\theta)} ,
 \end{equation}
 where $\Psi$ is the flux at the sample position.
 
@@ -230,31 +230,31 @@ $r$    & m        & Distance from sample to detector \\
 $f$    & 1        & Packing factor of the powder \\
 $j$    & 1        & Multiplicity of the reflection \\
 $V_0$  & m$^{3}$  & Volume of unit cell\\
-$|F({\bf Q})|^2$ & m$^2$  & Structure factor \\
+$|F(\textbf{Q})|^2$ & m$^2$  & Structure factor \\
 $\exp(-2W)$ & 1  & Debye-Waller factor \\
-$\mu_{\rm Q}$ & m$^{-1}$ & Linear attenuation factor due to scattering from
+$\mu_\textrm{Q}$ & m$^{-1}$ & Linear attenuation factor due to scattering from
 one powder line. \\
 \end{tabular}
 \end{lstlisting}
 %
 %Often, one defines the {\em scattering power} as
 %\begin{equation}
-%Q \equiv N^2 \frac{|F({\bf Q})|^2 \lambda^3}{V \sin(2\theta)}
-% = N_c^2 V \frac{\rho'}{\rho} \frac{|F({\bf Q})|^2 \lambda^3}{\sin(2\theta)} ,
+%Q \equiv N^2 \frac{|F(\textbf{Q})|^2 \lambda^3}{V \sin(2\theta)}
+% = N_c^2 V \frac{\rho'}{\rho} \frac{|F(\textbf{Q})|^2 \lambda^3}{\sin(2\theta)} ,
 %\end{equation}
 %where $N$ is the number of unit cells.
 
 A powder sample will in general have several allowed reflections
-${\bf Q}_j$, which will all contribute to the attenuation.
+$\textbf{Q}_j$, which will all contribute to the attenuation.
 These reflections will have different values of
-$|F({\bf Q}_j)|^2$ (and hence of $Q_j$), $j_j$, $\exp(-2W_j)$,
+$|F(\textbf{Q}_j)|^2$ (and hence of $Q_j$), $j_j$, $\exp(-2W_j)$,
 and $\theta_j$.
 The total attenuation through the sample due to scattering is given by
-$\mu^s = \mu_{\rm inc}^s + \sum_j \mu^s_j $,
-where $\mu_{\rm inc}^s$ represents the incoherent scattering.
+$\mu^s = \mu_\textrm{inc}^s + \sum_j \mu^s_j $,
+where $\mu_\textrm{inc}^s$ represents the incoherent scattering.
 
 \subsection{Algorithm}
-The algorithm of {\bf PowderN} can be summarized as
+The algorithm of \textbf{PowderN} can be summarized as
 \begin{itemize}
 \item Check if the neutron ray intersects the sample (otherwise ignore
 the following).

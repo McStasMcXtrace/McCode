@@ -59,6 +59,7 @@ DECLARE
 %{
 double pmul, srcArea;
 int square;
+double tx,ty,tz;
 %}
 INITIALIZE
 %{
@@ -86,12 +87,16 @@ if (radius && !yheight && !xwidth ) {
   if (target_index && !dist)
   {
     Coords ToTarget;
-    double tx,ty,tz;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
+  } else if (dist) {
+    tx = 0;
+    ty = 0;
+    tz = dist;
   }
+
 
   if (srcArea <= 0) {
     printf("Source_simple: %s: Source area is <= 0 !\n ERROR - Exiting\n",
@@ -133,11 +138,11 @@ TRACE
    y=r*sin(chi);
  }
  randvec_target_rect_real(&xf, &yf, &rf, &pdir,
-			  0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+			  tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
  dx = xf-x;
  dy = yf-y;
- rf = sqrt(dx*dx+dy*dy+dist*dist);
+ rf = sqrt(dx*dx+dy*dy+rf*rf);
 
  p = pdir*pmul;
 
@@ -172,10 +177,10 @@ MCDISPLAY
     circle("xy",0,0,0,radius);
   }
   if (dist) {
-    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
-    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
-    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
-    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+    dashed_line(0,0,0, -focus_xw/2+tx,-focus_yh/2+ty,tz, 4);
+    dashed_line(0,0,0,  focus_xw/2+tx,-focus_yh/2+ty,tz, 4);
+    dashed_line(0,0,0,  focus_xw/2+tx, focus_yh/2+ty,tz, 4);
+    dashed_line(0,0,0, -focus_xw/2+tx, focus_yh/2+ty,tz, 4);
   }
 %}
 

@@ -737,8 +737,8 @@ class McStartSimDialog(QtWidgets.QDialog):
                     value = old_value
 
             i = i + 1
-            x = i % (mccode_config.configuration["GUICOLS"]*2)
-            y = i / (mccode_config.configuration["GUICOLS"]*2)
+            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
+            y = i / (int(mccode_config.configuration["GUICOLS"])*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -747,7 +747,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
 
             i = i + 1
-            x = i % (mccode_config.configuration["GUICOLS"]*2)
+            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
 
             edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1100,6 +1100,7 @@ class McConfigDialog(QtWidgets.QDialog):
         mccode_config.compilation[str(self.ui.edtMpicc.conf_var)] = str(self.ui.edtMpicc.text())
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
+        mccode_config.configuration[str(self.ui.edtNumCols.conf_var)] = str(self.ui.edtNumCols.text())
         # Export selected variables to the system / mcrun
         target_mccode=mccode_config.configuration["MCCODE"].upper()
         # CFLAGS and CC:
