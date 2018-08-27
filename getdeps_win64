@@ -7,4 +7,4 @@ sudo apt-get install git cmake gcc gfortran mingw-w64 gfortran-mingw-w64 flex bi
 mkdir /tmp/innosetup  
 cd /tmp/innosetup  
 wget http://files.jrsoftware.org/ispack/ispack-5.2.3.exe  
-wine ./ispack-5.2.3.exe
+wine ./ispack-5.2.3.exe /VERYSILENT /SUPPRESMSGBOXES
