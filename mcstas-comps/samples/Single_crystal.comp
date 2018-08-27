@@ -187,6 +187,7 @@
 * RY: [m]                                                 Radius of vertical along Y lattice curvature. flat for 0
 * powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1
 * PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0<PG<1 with main axis on 'c'
+* deltak: [AA-1]                                          Equality-threshold for use in SPLIT settings. If difference between all ki_{x,y,z} are less than deltak from previous particle, the two are considered alike enough to jump directly to the MC choice between 'active' reflections 
 *
 * OUTPUT PARAMETERS:
 *
@@ -279,7 +280,8 @@ ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
 p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0)
+aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
+deltak=1e-6)
 OUTPUT PARAMETERS(hkl_info, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
@@ -1212,9 +1214,9 @@ TRACE
 
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
-      if ( fabs(kix - hkl_info.kix) < 1e-6
-        && fabs(kiy - hkl_info.kiy) < 1e-6
-        && fabs(kiz - hkl_info.kiz) < 1e-6) {
+      if ( fabs(kix - hkl_info.kix) < deltak
+        && fabs(kiy - hkl_info.kiy) < deltak
+        && fabs(kiz - hkl_info.kiz) < deltak) {
         hkl_info.nb_reuses++;
       } else {
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
