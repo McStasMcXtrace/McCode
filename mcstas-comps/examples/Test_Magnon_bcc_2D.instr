@@ -79,8 +79,8 @@ EXTEND %{
 
 
 COMPONENT Lattice = Single_crystal(order=1, 
-     reflections = "bcc_fake.lau", mosaic=30, radius = 0.02, yheight = 0.03,   delta_d_d=1e-3,
-     ax =-6.71 , ay = 0, az =0 , bx =0 , by =0, bz = 6.71 , cx =0 , cy = 6.71 , cz =0, barns=1)
+     reflections = "BCC_fake.lau", mosaic=30, radius = 0.02, yheight = 0.03,   delta_d_d=1e-3,
+     ax =-aa , ay = 0, az =0 , bx =0 , by =0, bz = aa , cx =0 , cy = aa , cz =0, barns=1)
   WHEN (inelastic<1 && Samplechoice>=inelastic) AT ( 0, 0, 5.1) RELATIVE source
   ROTATED (0, Rotation, 0) RELATIVE source
 EXTEND %{
