@@ -949,11 +949,7 @@ static void mcformat_usedir(char *dir)
           "Directory output cannot be used with portable simulation (mcformat_usedir)\n");
   return;
 #else  /* !MC_PORTABLE */
-#ifndef WIN32
   if(!mcdisable_output_files && mkdir(dir, 0777))
-#else
-  if(!mcdisable_output_files && mkdir(dir))
-#endif
   {
     int errno_mkdir = errno;
     if (errno_mkdir == ENOENT) {
