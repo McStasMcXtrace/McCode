@@ -78,7 +78,7 @@ class Process:
         retval = fid.wait()
         if retval != 0:
             print(stderr)
-            exit(-1)
+            exit(retval)
 
         return stdout
 
