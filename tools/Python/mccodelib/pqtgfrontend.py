@@ -163,8 +163,11 @@ def plot_node(node, plot_func, layout, viewmodel, sync_zoom_obj_ids=[]):
         plot_node_cb = lambda node: plot_node(node, plot_func, layout=layout, viewmodel=viewmodel, sync_zoom_obj_ids=sync_zoom_obj_ids)
         set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
         set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
-        set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
-        
+
+        # set modifiers "alt" and "ctrl" for all platforms, since some may not work on win, darwin etc.
+        set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("alt"))
+        set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))        
+
         # set keypress handlers 
         replot_cb = lambda: plot_node(node, plot_func, layout, viewmodel=viewmodel)
         back_cb = lambda: plot_node(node.parent, plot_func, layout, viewmodel=viewmodel)
@@ -180,10 +183,14 @@ def get_modifiers(modname):
         return 33554432
     if modname == "ctrl-shft":
         return 100663296
+    if modname == "alt":
+        return 134217728
 
 def print_help(nogui=False):
     if sys.platform == 'darwin':
         modifier = 'Meta'
+    elif sys.platform == 'win32':
+        modifier = 'alt'
     else:
         modifier = 'ctrl'
     
@@ -354,5 +361,4 @@ def sync_views_zooming(vb_lst):
             org_wheel_events[vb_lst.index(vb)](ev)
     for vb in vb_lst:
         vb.wheelEvent = modded_wheel_event
-
 
