@@ -1,0 +1,138 @@
+/*******************************************************************************
+* Instrument: Test_DiskChoppers
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: September 2018
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Simple test instrument that compares the use of 2 DiskChoppers with one MultiDiskChopper
+*
+* %D
+* Simple test instrument that compares the use of 2 DiskChoppers with one MultiDiskChopper
+*
+* %Example: Test_DiskChoppers.instr chopper=0 Detector: Tofl_I=0.00277
+* %Example: Test_DiskChoppers.instr chopper=1 Detector: Tofl_I=0.00277
+* %P
+* chopper:  [int] chopper=0 selects two DiskChoppers, chopper=1 selects one MultiDiskChopper
+* lambda:   [AA] Mean wavelength produced from the source 
+* dlambda: [AA] Halfwidth of wavelenghts produced from the source
+* deltay:     [m]  Vertical displacement of MultiDiskChopper vertical centre of rotation (default is to be positioned like DiskChopper)
+*
+* %L
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_DiskChoppers(chopper=0,lambda=10, dlambda=9.9,deltay=-0.19)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+
+COMPONENT source_gen = Source_gen(
+    flux_file="NULL", 
+    xdiv_file="NULL", 
+    ydiv_file="NULL", 
+    radius=0.0, 
+    dist=10, 
+    focus_xw=0.045, 
+    focus_yh=0.12, 
+    focus_aw=0, 
+    focus_ah=0, 
+    E0=0, 
+    dE=0, 
+    lambda0=lambda, 
+    dlambda=dlambda, 
+    I1=1, 
+    yheight=0.1, 
+    xwidth=0.1, 
+    verbose=0, 
+    T1=0, 
+    flux_file_perAA=0, 
+    flux_file_log=0, 
+    Lmin=0, 
+    Lmax=0, 
+    Emin=0, 
+    Emax=0, 
+    T2=0, 
+    I2=0, 
+    T3=0, 
+    I3=0, 
+    zdepth=0, 
+    target_index=+1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+  t=rand01();
+%}
+
+COMPONENT diskchopper0 = DiskChopper(
+    theta_0=5, 
+    radius=0.25, 
+    yheight=0.12, 
+    nu=10, 
+    nslit=1, 
+    isfirst=0)
+WHEN (chopper==0) AT (0, 0, 10) RELATIVE PREVIOUS
+GROUP Disks
+
+COMPONENT diskchopper1= DiskChopper(
+    phase=45,
+    theta_0=5, 
+    radius=0.25, 
+    yheight=0.12, 
+    nu=10, 
+    nslit=1, 
+    isfirst=0)
+WHEN (chopper==0) AT (0, 0, 0) RELATIVE PREVIOUS
+GROUP Disks
+
+COMPONENT diskArm = Arm()
+WHEN (chopper==1) AT (0, 0, 0) RELATIVE PREVIOUS
+GROUP Disks
+EXTEND %{
+  if (mcipchopper==1) SCATTER;
+%}
+
+COMPONENT multi = MultiDiskChopper(
+    slit_center="0 45",
+    slit_width="5 5",
+    radius=0.25, 
+    delta_y=deltay,
+    nu=10, 
+    nslits=2, 
+    isfirst=0, abs_out=1)
+WHEN (chopper==1) AT (0, 0, 10) ABSOLUTE
+
+COMPONENT Tofl = TOFLambda_monitor(
+    tmin=0, 
+    tmax=1e6, 
+    filename="TOFlambda", 
+    xwidth=0.05, 
+    yheight=0.13, 
+    Lmin=lambda-dlambda, 
+    Lmax=lambda+dlambda)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="PSD", 
+    xwidth=0.05, 
+    yheight=0.13)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END
