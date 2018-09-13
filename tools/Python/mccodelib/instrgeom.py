@@ -437,7 +437,7 @@ def drawclass_factory(commandname, args, reduced=False):
 
 class DrawCommand(object):
     ''' superclass of all draw commands '''
-    def __init__(self, args):
+    def __init__(self, args=[]):
         self.args = floatify(args)
         self.args_str = ''
         self.key = ''
