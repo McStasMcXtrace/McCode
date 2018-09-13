@@ -6,6 +6,10 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
 # This is an app bundle being built, relocatable.
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
 ./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
@@ -34,7 +38,7 @@ cd $MCINSTALL_PREFIX/mcxtrace/$1/
 ./bin/mxdoc . -t
 cd $WORK
 
-if [ ! -f/Miniconda3-latest-MacOSX-x86_64.sh ]; then
+if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -47,8 +51,8 @@ fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-chmod a+x /Miniconda3-latest-MacOSX-x86_64.sh
-.//Miniconda3-latest-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
+chmod a+x Miniconda3-latest-MacOSX-x86_64.sh
+./Miniconda3-latest-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -59,7 +63,7 @@ echo
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
 $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gcc openmpi -y
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy torndado jinja2 mpld3
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy scipy pillow torndado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin

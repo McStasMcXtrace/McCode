@@ -203,7 +203,7 @@ TRACE
     }
     p*=pp;
     
-    /*if E0!=0 assume tables values are in keV, otherwise assume lambda i Å*/
+    /*if E0!=0 assume tables values are in keV, otherwise assume lambda i AA*/
     if (E0) {
       k=E2K*l;
     }else{

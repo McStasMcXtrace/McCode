@@ -14,6 +14,7 @@ configuration = {
     "TOOL_NAME": '@MCCODE_PREFIX@gui',
     "PARTICLE": '@MCCODE_PARTICLE@',
     "BROWSER": '@BROWSER@',
+    "GUICOLS": '3',
 }
 
 # Set environment variables according to the above

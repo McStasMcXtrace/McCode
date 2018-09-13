@@ -11,16 +11,16 @@ not changed much, and a long simulation of neutron rays
 ``surviving'' through the guide system could be reused
 for several simulations of the instrument back-end, speeding up
 the simulations by (typically) one or two orders of magnitude.
-The components for doing this trick is {\bf Virtual\_input} and
-{\bf Virtual\_output}, which stores and reads neutron rays, respectively.
+The components for doing this trick is \textbf{Virtual\_input} and
+\textbf{Virtual\_output}, which stores and reads neutron rays, respectively.
 
 Other components perform the simulation of the instrument
-resolution functions. These are {\bf Res\_sample} and {\bf TOF\_Res\_sample},
+resolution functions. These are \textbf{Res\_sample} and \textbf{TOF\_Res\_sample},
 which are to be
-placed at the sample position, and {\bf Res\_monitor}, that should
+placed at the sample position, and \textbf{Res\_monitor}, that should
 be localized at the position of the instrument detector.
 
-{\bf Progress\_bar} is a simulation utility that displays the simulation
+\textbf{Progress\_bar} is a simulation utility that displays the simulation
 status, but assumes the form of a component.
 
 \newpage

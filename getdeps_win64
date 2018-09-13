@@ -1,0 +1,10 @@
+#!/bin/sh
+echo 
+echo apt-get\'ing the dependencies using sudo:
+echo
+sudo apt-get install git cmake gcc gfortran mingw-w64 gfortran-mingw-w64 flex bison build-essential mingw-w64-x86-64-dev wine64 dos2unix nsis
+
+mkdir /tmp/innosetup  
+cd /tmp/innosetup  
+wget http://files.jrsoftware.org/ispack/ispack-5.2.3.exe  
+wine ./ispack-5.2.3.exe /VERYSILENT /SUPPRESMSGBOXES

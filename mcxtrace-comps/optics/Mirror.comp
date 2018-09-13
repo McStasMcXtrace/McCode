@@ -19,23 +19,38 @@
 * Perfectly flat mirror
 *
 * %D
-* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane. 
+* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane. Reflectivity may be specified either as a number (R0)
+* or in a reflectivity file. If a filename is given it is expected to have the following format:
+* # e_min=1
+* # e_max=10.0
+* # e_step=1.0
+* # theta_min=1.0
+* # theta_max=11.0
+* # theta_step=1.0
+* 1.0 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1 0.0
+* 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1 0.0 0.0
+* ...
+* 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+* 
+* This example would yield reflectivity of 1 for a glancing angle and energy of 1 deg. and 1 keV respectively.
+* A glancing angle of 10 deg., at 1 keV would yield R=0.1  
+*
+* Alternatively a material datafile may be specified in the parameter coating - in which case an ab-initio reflectivity calculation is triggered.
+* A number of such datafiles are sullied with the McXtrace distribution.
 *
 * %P
 * Input parameters:
 * xwidth [m] The width of the mirror
 * zdepth [m] The length of the mirror
-* R0 [ ]  Constant reflecticity
-* reflec [ ] Filename containing reflectivities in a 2D matrix block parameterized by energy and galcing angle.
-*
-* (none)
-*
+* R0 [ ]  Constant reflectivity. Overrides reflec and coating.
+* reflec [ ] File containing reflectivities in a 2D matrix block parameterized by energy and glancing angle.
+* coating [ ] File containing material data if the Mirror has a singl ematerial coating.
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS ( string reflec="")
-SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, R0=0)
+DEFINITION PARAMETERS ()
+    SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, R0=0, string reflec="", string coating="")
 OUTPUT PARAMETERS (reflec_table, prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -47,7 +62,10 @@ DECLARE
 %{  
     struct {
         double e_min,e_max,e_step,theta_min,theta_max,theta_step;
-        int use_reflec_table;
+        int use_reflec_table,use_coating;
+        int Z;
+        double At, rho;
+        t_Table T;
     } prms;
     t_Table reflec_table;
 
@@ -55,7 +73,7 @@ DECLARE
 
 INITIALIZE
 %{
-    if (reflec && strlen(reflec)) {
+    if (reflec && strlen(reflec) && ! R0) {
         char **header_parsed;
         t_Table *tp=&reflec_table;
         /* read 1st block data from file into tp */
@@ -77,17 +95,28 @@ INITIALIZE
         } else {
             exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
         }
-        if ((prms.e_max-prms.e_min) != ((tp->rows-1)*prms.e_step) )
+        if ((int) (prms.e_max-prms.e_min) != (int) ((tp->rows-1)*prms.e_step) )
         {
             exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        if ((prms.theta_max-prms.theta_min) != ((tp->columns-1)*prms.theta_step) )
+        if ((int)(prms.theta_max-prms.theta_min) != (int) ((tp->columns-1)*prms.theta_step) )
         {
             exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
         prms.use_reflec_table=1;
+    }else if (coating && strlen(coating) && ! R0){
+        if ( (Table_Read(&(prms.T),coating,0))==-1){
+            fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,coating);
+            exit(-1);
+        }
+        char **header_parsed;
+        header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+        prms.use_coating=1;
     }else{
-        prms.use_reflec_table=0;
+        prms.use_reflec_table=0;prms.use_coating=0;
     }
 %}
 
@@ -100,6 +129,7 @@ TRACE
     if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
         RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);
     }else{
+        SCATTER;
         double nx,ny,nz;
         nx=0;
         ny=1;
@@ -114,12 +144,52 @@ TRACE
 
         /*find energy, and glancing angle*/ 
         if (prms.use_reflec_table){
-            /*the get ref. by call to Table_value2d*/
+            /*get ref. by call to Table_value2d*/
             double R;
             double theta=RAD2DEG*(acos(s/k)-M_PI_2);
             double e=K2E*k;
             R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            printf("%g %g %g\n",e,theta,R);
             p*=R;
+        }else if (prms.use_coating){
+            /*compute reflectivity directly from material data*/
+
+            /*adjust p according to reflectivity*/
+            double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
+            /*length of wavevector transfer may be compute from s and n_ above*/
+            Q=fabs(2*s*sqrt(nx*nx+nz*nz));
+
+            /*interpolate in material data*/
+            k2=scalar_prod(kx,ky,kz,kx,ky,kz);
+            e=K2E*sqrt(k2);
+            f1=Table_Value(prms.T,e,1);
+
+            /*the conversion factor in  the end is to transform the atomic density from cm^-3 to AA^-3
+              -> therefore we get Q in AA^-1*/
+            na=NA*prms.rho/prms.At*1e-24;
+            Qc=4*sqrt(M_PI*na*RE*f1);
+
+            if (Q>Qc){
+                complex double qp;
+                double q,b_mu,R;
+
+                q=Q/Qc;
+                /*delta=na*r0*2*M_PI/k2*f1;*/
+                f2=Table_Value(prms.T,e,2);
+                /*beta=na*r0*2*M_PI/k2*f2;*/
+                /*b_mu=beta*(2*k)^2 / Qc^2*/
+                b_mu=4*M_PI*na*RE*f2/(Qc*Qc);
+                if(q==1){
+                    qp=sqrt(b_mu)*(1+I);
+                }else {
+                    qp=csqrt(q*q-1+2*I*b_mu);
+                }
+                /*and from this compute the reflectivity*/
+                R=cabs((q-qp)/(q+qp));
+                p*=R;
+                /*now also set the phase*/
+                phi+=carg((q-qp)/(q+qp));
+            }
         }else{
             p*=R0;
         }

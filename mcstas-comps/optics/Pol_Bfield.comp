@@ -68,7 +68,7 @@
 * instance of this component, and turned off by an instance of Pol_simpleBfield_stop.
 * Anything in between is considered inside the field.
 * If concentric is nonzero the field is considered a closed component - neutrons are propagated
-* through the field region, and no other are cmoponents are permitted inside the field.
+* through the field region, and no other components are permitted inside the field.
 *
 * When using table_magnetic_field as * fieldFunction the input data is first resampled 
 * to speed up the interpolation. 

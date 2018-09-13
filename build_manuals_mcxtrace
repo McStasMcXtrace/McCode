@@ -6,6 +6,10 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" noarch "o" -- NONE 
 echo
 echo LaTeX build of McXtrace manuals v $1 done!

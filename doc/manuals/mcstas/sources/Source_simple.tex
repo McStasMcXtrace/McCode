@@ -3,7 +3,7 @@ with a flat energy/wavelength spectrum}
 \label{source-simple}
 \index{Sources!Simple continuous source}
 
-%\component{Source\_simple}{System}{ $r_{\rm s}$, $z_{\rm foc}$, $w$, $h$, $E_0$, $\Delta E$, $\Psi$}{$\lambda_0$, $d\lambda$}{Validated. t=0}
+%\component{Source\_simple}{System}{ $r_\textrm{s}$, $z_\textrm{foc}$, $w$, $h$, $E_0$, $\Delta E$, $\Psi$}{$\lambda_0$, $d\lambda$}{Validated. t=0}
 \mcdoccomp{sources/Source_simple.parms}
 
 This component is
@@ -14,16 +14,16 @@ This component is not used for detailed time-of-flight simulations,
 so we put $t=0$ for all neutron rays.
 
 The initial neutron ray position is chosen randomly from within a
-circle of radius $r_{\rm s}$ in the $z=0$ plane.
+circle of radius $r_\textrm{s}$ in the $z=0$ plane.
 This geometry is a fair approximation
 of a cylindrical cold/thermal source with the beam going out along
 the cylinder axis.
 
 The initial neutron ray direction is focused onto a rectangular target of width
-$w$, height $h$, parallel to the $xy$ plane placed at $(0,0,z_{\rm foc})$.
+$w$, height $h$, parallel to the $xy$ plane placed at $(0,0,z_\textrm{foc})$.
 
 The initial weight of the created neutron ray, $p_0$, is set to the
-energy-integrated flux, $\Psi$, times the source area, $\pi r_{\rm s}^2$
+energy-integrated flux, $\Psi$, times the source area, $\pi r_\textrm{s}^2$
 times a solid-angle factor, which is basically the
 solid angle of the focusing rectangle.
 See also the section \ref{s:neutron-flux} on source flux.

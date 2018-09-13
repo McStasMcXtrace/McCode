@@ -6,6 +6,10 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
 # This is an app bundle being built, relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
 ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
@@ -60,7 +64,7 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install gcc openmpi -y
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install gcc openmpi gsl -y
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy scipy pillow tornado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets

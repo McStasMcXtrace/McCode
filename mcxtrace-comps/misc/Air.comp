@@ -144,11 +144,11 @@ TRACE
 
         /* The total probability for the (unpolarized) X-ray to interact with the air as a function of k is approximated with a 9th degree polynomium to the logarithm 
            of the total probability. This is done because the real expression had to be solved numerically.
-           The exp-polynomium has units of squared Ångström and to become the actual total scattering probabillity it has 
+           The exp-polynomium has units of squared AAngström and to become the actual total scattering probabillity it has 
            to be multiplied by l_full*P*NA/(R*T). The factor of P*NA/(R*T) does however have units of reciprocal cubed meters so we have
-           to scale by 10^-30 [m^2/Å^2] to match the polynomium. NB: The factor of (n_i/n)*P*NA/(R*T) constitues the particle number 
+           to scale by 10^-30 [m^2/AA^2] to match the polynomium. NB: The factor of (n_i/n)*P*NA/(R*T) constitues the particle number 
            density; while the factor of (n_i/n) is contained in the polynomium, the factor of P*NA/(R*T) has to be multiplied below.
-           The variable l_full has units of meters so it too has to be rescaled to Ångströms - hence we multiply by 10^10 [Å/m].*/
+           The variable l_full has units of meters so it too has to be rescaled to AAngströms - hence we multiply by 10^10 [AA/m].*/
 
         Ptot_sc_unpolarized = exp(-13.239209120968501922 + 7.7523973158902582507e-1*k - 1.9753647234751300397*k*k + 1.1395382484098412215*k*k*k - 3.5117800398913380701e-1*k*k*k*k + 6.493474609841591379e-2*k*k*k*k*k - 7.40740935645497008e-3*k*k*k*k*k*k + 5.1039561005291247e-4*k*k*k*k*k*k*k - 1.947399876590436e-5*k*k*k*k*k*k*k*k + 3.1587814532171995885e-7*k*k*k*k*k*k*k*k*k)*l_full*pressure*NA/(R_gas*temperature)*1e-30*1e10;
 

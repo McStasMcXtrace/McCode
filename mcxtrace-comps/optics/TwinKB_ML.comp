@@ -276,7 +276,7 @@ TRACE
         p*=R0;
     }else{
         // Implementing the reflectivity.
-        double dSingle,lambda;	// dSingle - thickness of one layer of the multilayer, Å
+        double dSingle,lambda;	// dSingle - thickness of one layer of the multilayer, AA
         double Q,Refl;
         double ex1=z+Z0, ex2=-(-b*b*a*a+b*b*ex1*ex1)/(a*a);	// ex1 & ex2 - expressions to simplify the equation dSingle(z).
 

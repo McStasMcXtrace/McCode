@@ -1,14 +1,17 @@
+
 @REM Script for installation of McStas/McXtrace-related Python plus modules
 @REM
 @echo Starting installation of miniconda to c:\@FLAVOR@-@VERSION@\miniconda3
 @echo ...
 @echo WARNING: Please wait, process may take several minutes to complete!
+@echo  (Pressing [enter] a few times to ensure something is happening is OK)
 @echo ...
-@start /wait "" Miniconda3-latest-Windows-x86.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
+@start /wait "" Miniconda3-latest-Windows-x86_64.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
+@echo Miniconda install completed, proceeding with McCode dependencies...
 @set PATH=c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts;%PATH%
-@conda config --add channels conda-forge
-@conda install qt pyqt qscintilla2 pyqtgraph pyaml ply matplotlib numpy tornado scipy pillow 
-@pip install mpld3
+@REM conda config --add channels conda-forge
+@conda install mingw -y
+@pip install pyqt5 qscintilla mpld3 pyqtgraph pyaml ply matplotlib numpy tornado scipy pillow
 @echo ...
 @echo Press a key below to exit this installation shell...
 @echo ...

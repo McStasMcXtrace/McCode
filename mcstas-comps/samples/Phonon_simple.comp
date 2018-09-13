@@ -8,8 +8,8 @@
 * Date: 04.02.04
 * Origin: Risoe
 *
-* A sample for phonon scattering
-* based on cross section expressions from Squires, Ch.3.
+* A sample for phonon scattering based on cross section expressions from Squires, Ch.3.
+* Possibility for adding an (unphysical) bandgap.
 *
 * %D
 * Single-cylinder shape.
@@ -49,6 +49,7 @@
 * target_y: [m]       position of target to focus at. Vertical coordinate
 * target_z: [m]       position of target to focus at. Straight ahead.
 * target_index: [1]   relative index of component to focus at, e.g. next is +1 
+* gap: [meV]          Bandgap energy (unphysical)
 *
 * OUTPUT PARAMETERS:
 * V_rho: [AA^-3]      Atomic density
@@ -64,7 +65,7 @@
 DEFINE COMPONENT Phonon_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,b,M,c,DW,T,
-target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0)
+		    target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0, gap=0)
 OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a_v, DV, parms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
@@ -188,7 +189,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       /* dispersion in units of meV  */
       double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
       double q, qx, qy, qz, Jq, res_phonon, res_neutron;
-      double ah, a, c;
+      double ah, a, c, gap;
 
       vf=parms[0];
       vi=parms[1];
@@ -200,16 +201,21 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       vi_z=parms[7];
       a   =parms[8];
       c   =parms[9];
+      gap =parms[10];
       ah=a/2.0;
 
 /*    printf("omega_q called with parameters vf= %g, vi=%g (%g %g %g) vv=(%g, %g, %g) \n",vf,vi,vi_x,vi_y,vi_z,vv_x,vv_y,vv_z); */
       qx=V2K*(vi_x-vf*vv_x);
       qy=V2K*(vi_y-vf*vv_y);
       qz=V2K*(vi_z-vf*vv_z);
-       q=sqrt(qx*qx+qy*qy+qz*qz);
+      q=sqrt(qx*qx+qy*qy+qz*qz);
       Jq=2*(cos(ah*(qx+qy))+cos(ah*(qx-qy))+cos(ah*(qx+qz))+cos(ah*(qx-qz))
              +cos(ah*(qy+qz))+cos(ah*(qy-qz)) );
-      res_phonon=c/a*sqrt(12-Jq);
+      if (gap>0) {
+	res_phonon=sqrt(gap*gap+(12-Jq)*(c*c)/(a*a));
+      } else {
+        res_phonon=c/a*sqrt(12-Jq);
+      }
       res_neutron = fabs(VS2E*(vi*vi-vf*vf));
 /*      if (fabs(res_phonon-res_neutron)<1e-3)
        printf("in omega_q: q=(%g %g %g), omega_phonon=%g, omega_neutron=%g\n ",
@@ -229,7 +235,7 @@ DECLARE
   double V_my_s;
   double V_my_a_v;
   double DV;
-  double parms[10];
+  double parms[11];
 %}
 INITIALIZE
 %{
@@ -316,6 +322,7 @@ TRACE
       parms[7]=vz_i;
       parms[8]=a;
       parms[9]=c;
+      parms[10]=gap;
     findroots(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q, parms);
     index=(int)floor(rand01()*nf);
 /*    printf("Root index: %i %g \n", index, vf_list[index]); */
@@ -356,6 +363,7 @@ TRACE
     p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
     p5 = b*b/M;  /* Cross section factor 2 */
     p *= p1*p2*p3*p4*p5;
+    SCATTER;
 
 /*    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
       printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g \n",

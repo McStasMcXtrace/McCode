@@ -14,6 +14,7 @@ configuration = {
     "TOOL_NAME": 'mcgui',
     "PARTICLE": 'neutron',
     "BROWSER": 'xdg-open',
+    "GUICOLS": '3',
 }
 
 # Set environment variables according to the above

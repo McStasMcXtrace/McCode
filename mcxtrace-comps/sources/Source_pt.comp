@@ -19,10 +19,10 @@
 * %D
 * A simple source model emitting photons from a point source uniformly into 4pi. A square target centered
 * on the Z-axis restricts the beam to that aperture.
-* If an input spectrum datafile (spectrum_file) is not specified, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda Å, whichever is given.
+* If an input spectrum datafile (spectrum_file) is not specified, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda AA, whichever is given.
 * The input spectrum file should be formatted such that x-ray energy/wavelength is in the first column and the intensity in the second. Any preceding
 * lines starting with # are considered part of the file header. If a datafile is given, a nonzero E¤0 value indicates that is is parametrized by energy ( in keV)
-* as opposed to wavelength (in Å). Wavelength is the default. 
+* as opposed to wavelength (in AA). Wavelength is the default.
 * Flux is given in the unit photons/s
 * 
 * Example: Source_pt(dist=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)

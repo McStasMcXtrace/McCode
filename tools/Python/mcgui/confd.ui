@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>328</width>
-    <height>499</height>
+    <height>555</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -53,6 +53,22 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridFlags">
+     <item row="1" column="0">
+      <widget class="QLineEdit" name="edtCC"/>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLineEdit" name="edtNumNodes"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblCc">
+       <property name="text">
+        <string>cc</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLineEdit" name="edtMpicc"/>
+     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="lblCflags">
        <property name="text">
@@ -67,8 +83,8 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLineEdit" name="edtCC"/>
+     <item row="3" column="0">
+      <widget class="QLineEdit" name="edtCflags"/>
      </item>
      <item row="10" column="0">
       <widget class="QLabel" name="lblNumnodes">
@@ -77,21 +93,8 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="lblCc">
-       <property name="text">
-        <string>cc</string>
-       </property>
-      </widget>
-     </item>
      <item row="7" column="0">
       <widget class="QLineEdit" name="edtMPIrun"/>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLineEdit" name="edtCflags"/>
-     </item>
-     <item row="11" column="0">
-      <widget class="QLineEdit" name="edtNumNodes"/>
      </item>
      <item row="4" column="0">
       <widget class="QLabel" name="lblMpicc">
@@ -100,8 +103,15 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
-      <widget class="QLineEdit" name="edtMpicc"/>
+     <item row="12" column="0">
+      <widget class="QLabel" name="lblNumocols">
+       <property name="text">
+        <string># parameter columns in run dialogue</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLineEdit" name="edtNumCols"/>
      </item>
     </layout>
    </item>

@@ -4,12 +4,24 @@ cmake_minimum_required(VERSION 2.6)
 set(FLAVOR mcxtrace)
 project(${FLAVOR}_manuals)
 
-
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+message( "CMAKE_SOURCE_DIR=        ${CMAKE_SOURCE_DIR}" )
+message( "CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}" )
+message( "CMAKE_CURRENT_LIST_DIR=  ${CMAKE_CURRENT_LIST_DIR}" )
+message( "PROJECT_SOURCE_DIR=      ${PROJECT_SOURCE_DIR}" )
+message( "PROJECT_BINARY_DIR=      ${PROJECT_BINARY_DIR}" )
+
+message( "include MCUtil" )
 include(MCUtil)
+message( "include UseLATEX" )
+include(UseLATEX)
+#set(PDFLATEX_COMPILER "/usr/bin/xelatex")
+message( "setup MCCODE" )
 setupMCCODE("${FLAVOR}")
 
 # CPack configuration
+message( "CPack configuration" )
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
 set(CPACK_PACKAGE_CONTACT       "erkn@fysik.dtu.dk")
@@ -40,65 +52,42 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")
 
 include(CPack)
 
-set(WORK "${PROJECT_BINARY_DIR}/work")
-
-add_custom_command(
-  OUTPUT "${WORK}/McCode"
-  COMMAND "./setup_links.sh" "${WORK}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  )
-
-
-file(GLOB LIST "*.tex" "*.sty" "*.bib" "*.bst" )
-foreach(NAME ${LIST})
-  file(COPY ${NAME} DESTINATION "${WORK}")
-endforeach()
-
-file(COPY Semi_mirror.comp DESTINATION "${WORK}")
-
-file(COPY figures DESTINATION "${WORK}")
-
-file(COPY sources DESTINATION "${WORK}")
-file(COPY samples DESTINATION "${WORK}")
-file(COPY optics DESTINATION "${WORK}")
-file(COPY monitors DESTINATION "${WORK}")
-file(COPY misc DESTINATION "${WORK}")
-file(COPY COMPprefix DESTINATION "${WORK}")
-file(COPY COMPheader DESTINATION "${WORK}")
-file(COPY COMPfooter DESTINATION "${WORK}")
+message( "LaTeX configuration" )
+# set(LATEX_OUTPUT_PATH ".")
+file(GLOB LIST RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "*.tex" "*.sty" "*.bib" "*.bst" "[m-s]*/*.tex" "figures/*" "Semi_mirror.comp")
 
 foreach(NAME sources samples optics monitors misc)
   add_custom_command(
-    OUTPUT "${WORK}/${NAME}.done"
-    COMMAND "${PROJECT_SOURCE_DIR}/get_mxdoc_snippets.sh" "${NAME} ${PROJECT_SOURCE_DIR}"
-    WORKING_DIRECTORY "${WORK}"
+    OUTPUT "${NAME}.done"
+    COMMAND "${PROJECT_SOURCE_DIR}/get_mxdoc_snippets.sh" "${NAME}" "${PROJECT_SOURCE_DIR}"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
 endforeach()
 
+set(LATEX_OUTPUT_PATH "${PROJECT_BINARY_DIR}")
+add_latex_document(
+  manual.tex 
+  INPUTS ${LIST}
+  DEPENDS sources.done samples.done optics.done monitors.done misc.done
+  BIBFILES "mcxtrace.bib"
+  USE_INDEX
+  FORCE_PDF
+  )
+add_latex_document(
+  Component_manual.tex 
+  INPUTS ${LIST}
+  DEPENDS sources.done samples.done optics.done monitors.done misc.done
+  BIBFILES "mcxtrace.bib"
+  USE_INDEX
+  FORCE_PDF
+  )
 
-foreach(NAME manual Component_manual)
-  add_custom_command(
-    OUTPUT "${WORK}/${NAME}.pdf"
-    DEPENDS "${WORK}/sources.done"
-    DEPENDS "${WORK}/samples.done"
-    DEPENDS "${WORK}/optics.done"
-    DEPENDS "${WORK}/monitors.done"
-    DEPENDS "${WORK}/misc.done"
-    COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}"
-    WORKING_DIRECTORY "${WORK}"
-    )
-  add_custom_target(
-    "COMPILE_MANUAL_${NAME}" ALL DEPENDS "${WORK}/McCode" "${WORK}/${NAME}.pdf"
-    )
-endforeach()
-
-
-install(FILES "${WORK}/manual.pdf"
+install(FILES "${PROJECT_BINARY_DIR}/manual.pdf"
   DESTINATION "${MANDEST}"
   RENAME "${MANUAL}"
 )
 
-install(FILES "${WORK}/Component_manual.pdf"
+install(FILES "${PROJECT_BINARY_DIR}/Component_manual.pdf"
   DESTINATION "${MANDEST}"
   RENAME "${CMANUAL}"
 )

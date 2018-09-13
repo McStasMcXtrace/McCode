@@ -50,13 +50,13 @@
  * length: [m] 			length of the crystal (along z-axis)
  * width: [m] 			width of the crystal (along x-axis)
  * material: [ ]			Si, Ge (maybe also GaAs?)
- * V: [Å^3]			unit cell volume
+ * V: [AA^3]			unit cell volume
  * h: [ ]                          Miller index of reflection
  * k: [ ]                          Miller index of reflection
  * l: [ ]                          Miller index of reflection
  * alpha: [rad]		 	asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
  * R0: [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
- * debye_waller_B: [Å^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
+ * debye_waller_B: [AA^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
  * crystal_type: [ ]
  *  Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
  *  Bragg_crystal_diamond: diamond
@@ -101,9 +101,9 @@ void MxBragg_DarwinReflectivity(double *R, double *Thetah, double *Theta0, doubl
         double lambda,theta,theta0,DeltaThetas,a,d,b,C,W,kappa,g,L;
         double F0r,F0i,Fhr,Fhi,psi0r,psi0i,psihr,psihi;
         
-        lambda = 2*PI/(E2K*E);  			/* wavelength in Å, E in keV, using built-in constants for safety    */
-        a = cbrt(V); 				/* side length of unit cubic cell (Å)*/
-        d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (Å)*/
+        lambda = 2*PI/(E2K*E);  			/* wavelength in AA, E in keV, using built-in constants for safety    */
+        a = cbrt(V); 				/* side length of unit cubic cell (AA)*/
+        d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (AA)*/
         theta = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
         b = sin(theta + alpha)/sin(theta - alpha);  /* asymmetry factor */
         

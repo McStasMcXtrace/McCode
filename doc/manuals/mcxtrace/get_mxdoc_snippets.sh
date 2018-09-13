@@ -4,11 +4,16 @@
 #
 #
 
+echo "$0 $1 $2 $3"
+pwd
+ls $1*
 DIRNAME=`basename $1`
 PW=$PWD
-PREFIX=$PWD/COMPprefix
-HEADER=$PWD/COMPheader
-FOOTER=$PWD/COMPfooter
+SRCDIR=$2
+echo "PW=$PWD, DN=$DIRNAME, SD=$SRCDIR"
+PREFIX=$SRCDIR/COMPprefix
+HEADER=$SRCDIR/COMPheader
+FOOTER=$SRCDIR/COMPfooter
 
 #search upwards for comps directory
 COMP_SOURCE_DIR=$PW
@@ -17,8 +22,9 @@ do
   COMP_SOURCE_DIR=${COMP_SOURCE_DIR%/*}
 done
 
-for COMP in `cat $DIRNAME/mxdoc_index`
+for COMP in `cat $SRCDIR/$DIRNAME/mxdoc_index`
 do
+    echo "get_mxdoc_snippets: generating $DIRNAME/${COMP}.parms"
     sed s/@COMP@/$COMP/g $PREFIX | sed s/@CAT@/$DIRNAME/g > $DIRNAME/$COMP.parms
     cat $HEADER >> $DIRNAME/$COMP.parms
     cd $COMP_SOURCE_DIR/mcxtrace-comps

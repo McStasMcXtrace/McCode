@@ -19,6 +19,9 @@
 * specify the radius (circular shape), or the rectangular bounds.
 * No transmission around the slit is allowed.
 *
+* Default geometry is a 0.02 x 0.02 slit, defined by xwidth and yheight
+* parameters.
+*
 * Example: Slit(xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01)
 *          Slit(radius=0.01)
 *
@@ -40,7 +43,7 @@
 
 DEFINE COMPONENT Slit
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01, radius=0, xwidth=0, yheight=0)
+  SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, radius=0, xwidth=0.02, yheight=0.02)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 INITIALIZE
