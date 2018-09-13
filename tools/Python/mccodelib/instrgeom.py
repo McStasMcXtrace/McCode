@@ -457,10 +457,10 @@ class DrawCommand(object):
     @classmethod
     def _calc_boundingbox(self, points, transform):
         ''' override to implement alternative OR implement get_points '''
-        if not points:
-            return
-        
         box = BoundingBox()
+        if not points:
+            return box
+
         x_set = []
         y_set = []
         z_set = []

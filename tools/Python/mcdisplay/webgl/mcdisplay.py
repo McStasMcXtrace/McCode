@@ -102,6 +102,10 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
 
 def write_browse(instrument, raybundle, dirname):
     ''' writes instrument definitions to html/ js '''
+    
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    
     # write mcdisplay.js
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
     file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, '_mcdisplay.js'))

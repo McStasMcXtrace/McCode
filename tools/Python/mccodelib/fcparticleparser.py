@@ -52,8 +52,8 @@ def d_iskeywd(args):
     m4 = re.match('STATE:', line)
     if m4:
         return 4
-    
-    raise Exception("something's wrong!")
+
+    raise Exception("wrong line: %s" % line)
 
 # process nodes implementation  --- NOTE: all process nodes increment line idx by one
 def p_newparticle(args):
@@ -147,7 +147,15 @@ class LineGetter(object):
     def current(self):
         if not self.idx >= len(self.lines):
             return self.lines[self.idx]
-    
+
+    def prev(self):
+        if not self.idx == 0:
+            return self.lines[self.idx-1]
+
+    def next(self):
+        if not self.idx == len(self.lines) - 1:
+            return self.lines[self.idx+1]
+
     def inc(self):
         self.idx += 1
     
