@@ -331,7 +331,6 @@ def _get_filenames_from_mccodesim(mccodesim):
             filenames.append(join(dir, m.group(1)))
         else:
             filenames.append('No file')
-    print(filenames + ' returned in _get_filenames_from_mccodesim')
     return filenames
 
 def _load_data_from_mcfiles(filenames):
