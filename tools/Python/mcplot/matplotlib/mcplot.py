@@ -9,7 +9,6 @@ import sys
 import math
 import numpy as np
 import matplotlib 
-import tornado
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
