@@ -13,7 +13,24 @@ def t_end(args):
     print("ended particle parsing")
 
 def t_error(args):
+    print(args['linegetter'].current())
     raise Exception("error")
+
+def t_error2(args):
+    print(args['linegetter'].current())
+    raise Exception("error2")
+
+def t_error3(args):
+    print(args['linegetter'].current())
+    raise Exception("error3")
+
+def t_error4(args):
+    print(args['linegetter'].current())
+    raise Exception("error4")
+
+def t_error5(args):
+    print(args['linegetter'].current())
+    raise Exception("error5")
 
 # decision nodes implementation
 def d_isenter(args):
@@ -29,6 +46,10 @@ def d_isstate(args):
 
 def d_isscatter(args):
     m = re.match('SCATTER:', args['linegetter'].current())
+    return m is not None
+
+def d_iscomp(args):
+    m = re.match('COMP:', args['linegetter'].current())
     return m is not None
 
 def d_isleave(args):
@@ -169,6 +190,10 @@ class FlowChartParticleTraceParser(object):
         t1 = FCNTerminal(key="begin", fct=t_begin)
         t2 = FCNTerminal(key="end", fct=t_end)
         t3 = FCNTerminal(key="error", fct=t_error)
+        t4 = FCNTerminal(key="error2", fct=t_error2)
+        t5 = FCNTerminal(key="error3", fct=t_error3)
+        t6 = FCNTerminal(key="error4", fct=t_error4)
+        t7 = FCNTerminal(key="error5", fct=t_error5)
         
         # decision nodes
         d0 = FCNDecisionBool(fct=d_done)
@@ -178,6 +203,7 @@ class FlowChartParticleTraceParser(object):
         d4 = FCNDecisionBool(fct=d_isstate)
         d5 = FCNDecisionBool(fct=d_isstate)
         d5_b = FCNDecisionBool(fct=d_isscatter)
+        d5_c = FCNDecisionBool(fct=d_iscomp)
         d6 = FCNDecisionBool(fct=d_isstate)
         d7 = FCNDecisionBool(fct=d_isstate)
         d8 = FCNDecisionBool(fct=d_isleave)
@@ -200,17 +226,18 @@ class FlowChartParticleTraceParser(object):
         d0.set_nodes(node_T=t2, node_F=d1)
         d1.set_nodes(node_T=p1, node_F=t3)
         p1.set_nodenext(node_next=d2)
-        d2.set_nodes(node_T=p2, node_F=t3)
+        d2.set_nodes(node_T=p2, node_F=t4)
         p2.set_nodenext(node_next=d3)
         d3.set_node_lst(node_lst=[p3, p5, p7, p9, p12])
         
         p3.set_nodenext(node_next=d4)
-        d4.set_nodes(node_T=p4, node_F=t3)
+        d4.set_nodes(node_T=p4, node_F=t5)
         p4.set_nodenext(node_next=d3)
         
         p5.set_nodenext(node_next=d5)
         d5.set_nodes(node_T=p6, node_F=d5_b)
-        d5_b.set_nodes(node_T=p5, node_F=t3)
+        d5_b.set_nodes(node_T=p5, node_F=d5_c)
+        d5_c.set_nodes(node_T=d3, node_F=t6)
         p6.set_nodenext(node_next=d3)
         
         p7.set_nodenext(node_next=d6)
@@ -219,7 +246,7 @@ class FlowChartParticleTraceParser(object):
         d8.set_nodes(node_T=p7, node_F=d3)
         
         p9.set_nodenext(node_next=d7)
-        d7.set_nodes(node_T=p10, node_F=t3)
+        d7.set_nodes(node_T=p10, node_F=t7)
         p10.set_nodenext(node_next=d0)
         
         p12.set_nodenext(node_next=d3)
