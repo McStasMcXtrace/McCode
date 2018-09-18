@@ -22,6 +22,9 @@ class DataMcCode(object):
     def __str__(self, *args, **kwargs):
         return self.title
 
+class Data0D(DataMcCode):
+    pass
+    
 class Data1D(DataMcCode):
     ''' 1d plots use this data type '''
     def __init__(self):
@@ -289,23 +292,25 @@ def _load_monitor(monitorfile):
     ''' deferred loading: returns a data handle, which the user must call getdata() on to load the actual data '''
     def load(monfile):
         f = monfile
-        text = open(f).read()
-        # determine 1D / 2D data
-        
-        m = re.search('\# type: (\w+)', text)
-        typ = m.group(1)
-        if typ == 'array_0d':
-            print("load_monitor: Not loading 0d dataset %s" % monitorfile)
-            data = None
-        elif typ == 'array_1d':
-            data = _parse_1D_monitor(text)
-        elif typ == 'array_2d':
-            data = _parse_2D_monitor(text)
+        if not f == 'No file':
+            text = open(f).read()
+            # determine 1D / 2D data
+            
+            m = re.search('\# type: (\w+)', text)
+            typ = m.group(1)
+            if typ == 'array_0d':
+                print("load_monitor: Not loading 0d dataset %s" % monitorfile)
+                data = Data0D()
+            elif typ == 'array_1d':
+                data = _parse_1D_monitor(text)
+            elif typ == 'array_2d':
+                data = _parse_2D_monitor(text)
+            else:
+                print('load_monitor: unknown data format %s' % typ)
+                data = None
+            return data
         else:
-            print('load_monitor: unknown data format %s' % typ)
-            data = None
-        return data
-    
+            return Data0D()
     data = DataHandle(load_fct=lambda m=monitorfile: load(monfile=m))
     
     return data
@@ -316,10 +321,17 @@ def _get_filenames_from_mccodesim(mccodesim):
     text = open(mccodesim).read()
     data_idx = text.find('begin data')
     filenames = []
-    for line in text[data_idx:].splitlines():
-        m = re.search(r'filename: ([\w\.\,_\-+]+)\s*', line)
+    secs = text.split('begin data')
+    for sec in secs[1:]:
+        m = None
+        for line in sec.splitlines():
+            if m == None:
+                m = re.search(r'filename: ([\w\.\,_\-+]+)\s*', line)
         if m: 
             filenames.append(join(dir, m.group(1)))
+        else:
+            filenames.append('No file')
+    print(filenames + ' returned in _get_filenames_from_mccodesim')
     return filenames
 
 def _load_data_from_mcfiles(filenames):
@@ -441,13 +453,22 @@ def _load_sweep_monitors(rootdir):
             indexfile='mcstas.sim'
         else:
             return
-        f = open(join(subdir, indexfile), 'rb')
-        line = f.readline().decode()
-        while line:
-            line = f.readline().decode()
-            m = re.match('  filename:\s+([\w\.\,]+)\s*\n', line)
-            if m:
-                mons.append(join(subdir, m.group(1)))
+
+        # Search for filenames - but also add dummy 'No file' in case of 0D monitor - fixed here
+        # instead of in mccode itself for backward compatibility - otherwise Perl code barfs
+        text = open(join(subdir, indexfile)).read()
+        secs = text.split('begin data')
+        for sec in secs[1:]:
+            m = None
+            for line in sec.splitlines():
+                if m == None:
+                    m = re.search(r'filename: ([\w\.\,_\-+]+)\s*', line)
+                    if m: 
+                        mons.append(join(subdir, m.group(1)))
+                        break
+            if not m:
+                mons.append('No file')
+                    
         return mons
    
     monitors_by_subdir = []
