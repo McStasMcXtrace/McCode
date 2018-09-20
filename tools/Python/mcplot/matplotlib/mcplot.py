@@ -155,7 +155,10 @@ class McMatplotlibPlotter():
         # create callbacks
         self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
         self.ctrl_cbs = [lambda nde=n: self.plot_node(nde) for n in node.secondaries]
-        self.back_cb = lambda n=node.parent: self.plot_node(n) if node.parent else None
+        # we need root node back click to prompt a replot, rather than to be ignored,
+        # because disconnect is always called by the click handler
+        bck_node = node.parent if node.parent else node 
+        self.back_cb = lambda n=bck_node: self.plot_node(n)
         self.replot_cb = lambda n=node: self.plot_node(n) if node else None
 
         # regiseter click events
