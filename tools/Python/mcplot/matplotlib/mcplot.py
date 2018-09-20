@@ -146,7 +146,7 @@ class McMatplotlibPlotter():
             return
         
         # clear
-        pylab.clf()
+        pylab.close()
         
         # plot data and keep subplots for the click area filter
         n = node.getnumdata()
@@ -246,12 +246,12 @@ def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
     else:
         lclick = event.button==1
         rclick = event.button==3
-        ctrlmod = event.key == 'control'
+        ctrlmod = event.key == 'control' or event.key == 'x'
         
         if lclick and len(click_cbs) > 0 and not ctrlmod:
-                idx = subplts.index(subplt)
-                dc_cb()
-                click_cbs[idx]()
+            idx = subplts.index(subplt)
+            dc_cb()
+            click_cbs[idx]()
         elif rclick and back_cb: # right button
             dc_cb()
             back_cb()
