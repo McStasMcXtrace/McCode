@@ -141,12 +141,23 @@ class Plot1D {
   }
 }
 
-// public plot 2d data
+// plot 2d
 function plot_2d(params, svg_branch=null) {
   var p = params
-  _draw_labels(
-    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch,
-    function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], p['cbMin'], p['cbMax'], anchor) });
+  let hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+
+  _plot_2d_data(
+    hdl.wplt,
+    hdl.hplt,
+    p['xmin'],
+    p['xmax'],
+    p['ymin'],
+    p['ymax'],
+    p['img2dData'],
+    p['imgColorbar'],
+    p['cbMin'],
+    p['cbMax'],
+    hdl.axisGroup);
 }
 
 // private
@@ -230,7 +241,6 @@ function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
     .append("g");
 
   return { wplt: wplt, hplt: hplt, axisGroup: axisGroup };
-  //plotfunc_inner(wplt, hplt, axisGroup);
 }
 
 // generates error bar vertical line coordinates from x, y and yErr, NOTE: inner loop over yErr, allowing it to be empty

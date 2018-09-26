@@ -77,7 +77,8 @@ class Process:
         # Check if process terminated correctly
         retval = fid.wait()
         if retval != 0:
-            raise ProcessException(self.executable, args, retval)
+            print(stderr)
+            exit(retval)
 
         return stdout
 

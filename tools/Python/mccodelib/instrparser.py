@@ -318,7 +318,7 @@ class InstrObjectConstructor:
                                         a23=float(cc.leaf[10]),
                                         a33=float(cc.leaf[11])
                                         )
-                                
+
                         comp = Component(name=name, pos=pos, rot=rot)
                         
                         # get draw commands (please print a parse tree with NodeTreePrint to understand this)
@@ -349,11 +349,14 @@ class InstrObjectConstructor:
 class MantidPixelLine(DrawCommand):
     def __init__(self, line_lst):
         self.line = line_lst
+        super().__init__()
 
 class MantidRectangularDetectorLine(DrawCommand):
     def __init__(self, line_lst):
         self.line = line_lst
+        super().__init__()
 
 class MantidBananaDetectorLine(DrawCommand):
     def __init__(self, line_lst):
         self.line = line_lst
+        super().__init__()

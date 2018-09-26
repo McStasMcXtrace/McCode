@@ -13,36 +13,39 @@
 * Origin: DTU
 *
 * Monitor outputting a series of energy-planes in a subset of reciprocal space, spanned by 
-* scattering vectors qa(x,y,z) and qb(x,y,z).
+* scattering vectors qa(x,z) and qb(x,z) in the component x-z plane.
 *
 * %D
 *
-* Geometry-less monitor (no propagation!) outputting a series of energy-planes in a subset of reciprocal 
-* space, spanned by scattering vectors qa(x,y,z) and qb(x,y,z).
+* Cylindrical monitor on the x-z plane outputting a series of energy-planes in a subset of reciprocal 
+* space, spanned by scattering vectors qa(x,z) and qb(x,z).
+*
+* The radius and yheight parameters are not used for propagation, but only to define the outgoing divergence 
+* limit considered when estimating k_f
 *
 * The assumption is that the "current" neutron represents the final state, whereas the incoming state
 * is found by restoring the neutron state "index" components earlier.
 *
-* Example: Sqq_w_monitor(filename="output",Emin=0,Emax=5,nE=11,nqa=100,nqb=100,qamin=1,qamax=10,qbmin=1qbmax=10,index=-2)
+* Example: Sqq_w_monitor(filename="output",radius=1, yheight=0.05, Emin=0,Emax=5,nE=11,nqa=100,nqb=100,qamin=1,qamax=10,qbmin=1qbmax=10,index=-2)
 *          AT (0,0,0) RELATIVE sample
 *
 * %P
 * INPUT PARAMETERS:
 *
-* qax:   [1]         x-component of 1st q-vector
-* qay:   [1]         y-component of 1st q-vector
-* qaz:   [1]         z-component of 1st q-vector
-* qbx:   [1]         x-component of 2nd q-vector
-* qby:   [1]         y-component of 2nd q-vector
-* qbz:   [1]         z-component of 2nd q-vector
-* qamin: [AA^-1]     Defines interval (qamin,qamax) where monitor measures in nqa bins
-* qamax: [AA^-1]     Defines interval (qamin,qamax) where monitor measures in nqa bins
-* qbmin: [AA^-1]     Defines interval (qbmin,qbmax) where monitor measures in nqb bins
-* qbmax: [AA^-1]     Defines interval (qbmin,qbmax) where monitor measures in nqb bins
-* nqa:   [int]       Number of bins along qa direction
-* nqb:   [int]       Number of bins along qb direction
-* Emin:  [meV]       Defines the energy-transfer [Emin,Emax] window to monitor in nE bins
-* Emax:  [meV]       Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
+* radius:  [m]       Cylinder radius
+* yheight: [m]       Cylinder height  
+* qax:     [1]       x-component of 1st q-vector
+* qaz:     [1]       z-component of 1st q-vector
+* qbx:     [1]       x-component of 2nd q-vector
+* qbz:     [1]       z-component of 2nd q-vector
+* qamin:   [AA^-1]   Defines interval (qamin,qamax) where monitor measures in nqa bins
+* qamax:   [AA^-1]   Defines interval (qamin,qamax) where monitor measures in nqa bins
+* qbmin:   [AA^-1]   Defines interval (qbmin,qbmax) where monitor measures in nqb bins
+* qbmax:   [AA^-1]   Defines interval (qbmin,qbmax) where monitor measures in nqb bins
+* nqa:     [int]     Number of bins along qa direction
+* nqb:     [int]     Number of bins along qb direction
+* Emin:    [meV]     Defines the energy-transfer [Emin,Emax] window to monitor in nE bins
+* Emax:    [meV]     Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
 * nE:    [int]       Number of energy slices
 * filename: [string] Base filename to use, nE+1 files will be output
 *
@@ -60,7 +63,7 @@
 
 
 DEFINE COMPONENT Sqq_w_monitor
-DEFINITION PARAMETERS (qax=1,qay=0,qaz=0,qbx=0,qby=1,qbz=0,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2)
+DEFINITION PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (M_N, M_p, M_p2, M_Ns, M_ps, M_p2s)
 
@@ -104,54 +107,70 @@ TRACE
     double qqa, qqb;
     double kix,kiy,kiz;
     double kfx,kfy,kfz;
+    double t0,t1;
     
-    RESTORE_NEUTRON(INDEX_CURRENT_COMP+index, rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
-    /* Calculate energy transfer */
-    Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
-    Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
-    E=Ef-Ei;
 
-    /* calculate k vectors and momentum transfer*/
-    kix=vx;
-    kiy=vy;
-    kiz=vz;
-    kfx=rvx;
-    kfy=rvy;
-    kfz=rvz;
-    NORM(kix, kiy, kiz);
-    NORM(kfx, kfy, kfz);
-    
-    /* K-vector lengths */
-    Ki=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
-    Kf=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
-    kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
-    kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
+    double nx,ny,nz;
+    nx=vx;
+    ny=vy;
+    nz=vz;
+    NORM(nx,ny,nz);
+    double v_div=scalar_prod(nx, ny, nz, 0, 1, 0);
+    /* Initial check to see if this neutron should be counted or not... */ 
+    if (fabs(v_div)<=yheight/radius && cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight)) {
+      if(t0<0 && t1>0) {	 
+	/* This one hits our cylindrical band, arriving from inside */
 
-    qx=kfx-kix;
-    qy=kfy-kiy;
-    qz=kfz-kiz;
-
-    /* Calculate projections along qa and qb */
-    qqa = qx*qax + qy*qay + qz*qaz;
-    qqb = qx*qbx + qy*qby + qz*qbz;
-    
-    /* Check if we are within the selected q/e range */
-    if (qqa <= qamax && qqa >=qamin && qqb <=qbmax && qqb>=qbmin && E<= Emax && E>=Emin) {
-      
-      i = floor((qqa - qamin)*nqa/(qamax - qamin));
-      j = floor((qqb - qbmin)*nqb/(qbmax - qbmin));
-      k = floor((E - Emin)*nE/(Emax - Emin));
-
-      M_N[k][i][j]++;
-      M_p[k][i][j] += p;
-      M_p2[k][i][j] += p*p;
-
-      M_Ns[i][j]++;
-      M_ps[i][j] += p;
-      M_p2s[i][j] += p*p;
-
-      SCATTER;
-    }
+	RESTORE_NEUTRON(INDEX_CURRENT_COMP+index, rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
+	/* Calculate energy transfer */
+	Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
+	Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
+	E=Ef-Ei;
+	
+	/* calculate k vectors and momentum transfer*/
+	kix=vx;
+	kiy=vy;
+	kiz=vz;
+	kfx=rvx;
+	kfy=rvy;
+	kfz=rvz;
+	NORM(kix, kiy, kiz);
+	NORM(kfx, kfy, kfz);
+	
+	/* K-vector lengths */
+	Ki=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
+	Kf=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
+	kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
+	kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
+	
+	qx=kfx-kix;
+	qy=kfy-kiy;
+	qz=kfz-kiz;
+	
+	/* Calculate projections along qa and qb */
+	qqa = qx*qax + qz*qaz;
+	qqb = qx*qbx + qz*qbz;
+	
+	/* Check if we are within the selected q/e range */
+	if (qqa <= qamax && qqa >=qamin && qqb <=qbmax && qqb>=qbmin && E<= Emax && E>=Emin) {
+	  
+	  i = floor((qqa - qamin)*nqa/(qamax - qamin));
+	  j = floor((qqb - qbmin)*nqb/(qbmax - qbmin));
+	  k = floor((E - Emin)*nE/(Emax - Emin));
+	  
+	  M_N[k][i][j]++;
+	  M_p[k][i][j] += p;
+	  M_p2[k][i][j] += p*p;
+	  
+	  M_Ns[i][j]++;
+	  M_ps[i][j] += p;
+	  M_p2s[i][j] += p*p;
+	  
+	  SCATTER;
+	}
+      } 
+    } 
+    /* Stuff that don't hit cylinder properly is disregarded */
 %}
 
 SAVE
@@ -185,7 +204,8 @@ SAVE
 
 MCDISPLAY
 %{
-  /* Show nothing - nothing to show... */
+  circle("xz", 0, -(yheight/2.0), 0, radius );
+  circle("xz", 0,  (yheight/2.0), 0, radius );
 %}
 
 END

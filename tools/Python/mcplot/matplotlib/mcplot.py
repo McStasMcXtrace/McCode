@@ -9,7 +9,6 @@ import sys
 import math
 import numpy as np
 import matplotlib 
-import tornado
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -147,7 +146,7 @@ class McMatplotlibPlotter():
             return
         
         # clear
-        pylab.clf()
+        pylab.close()
         
         # plot data and keep subplots for the click area filter
         n = node.getnumdata()
@@ -156,7 +155,10 @@ class McMatplotlibPlotter():
         # create callbacks
         self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
         self.ctrl_cbs = [lambda nde=n: self.plot_node(nde) for n in node.secondaries]
-        self.back_cb = lambda n=node.parent: self.plot_node(n) if node.parent else None
+        # we need root node back click to prompt a replot, rather than to be ignored,
+        # because disconnect is always called by the click handler
+        bck_node = node.parent if node.parent else node 
+        self.back_cb = lambda n=bck_node: self.plot_node(n)
         self.replot_cb = lambda n=node: self.plot_node(n) if node else None
 
         # regiseter click events
@@ -244,12 +246,12 @@ def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
     else:
         lclick = event.button==1
         rclick = event.button==3
-        ctrlmod = event.key == 'control'
+        ctrlmod = event.key == 'control' or event.key == 'x'
         
         if lclick and len(click_cbs) > 0 and not ctrlmod:
-                idx = subplts.index(subplt)
-                dc_cb()
-                click_cbs[idx]()
+            idx = subplts.index(subplt)
+            dc_cb()
+            click_cbs[idx]()
         elif rclick and back_cb: # right button
             dc_cb()
             back_cb()

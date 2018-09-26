@@ -1,6 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 PREFIX="$0"
+
+# Check if we are being called with a non-full path
+if [[ $PREFIX != "/"* ]]; then
+  PREFIX="$PWD/$PREFIX"
+fi
+
 # Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
 while [ -L "$PREFIX" ];
 do

@@ -51,32 +51,32 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
     p['title'] = title
-    
+
     return json.dumps(params, indent=4)
 
 def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, xlabel, ylabel, title):
     '''  '''
     params = {}
     p = params
-    
+
     p['w'] = WIDTH
     p['h'] = HEIGHT
-    
+
     p['xmin'] = xmin
     p['xmax'] = xmax
     p['ymin'] = ymin
     p['ymax'] = ymax
-    
+
     p['img2dData'] = image_str
     p['imgColorbar'] = colorbar_img_str
 
     p['cbMin'] = cb_min
     p['cbMax'] = cb_max
-    
+
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
     p['title'] = title
-    
+
     return json.dumps(params, indent=4)
 
 def get_cm():
@@ -98,10 +98,10 @@ def browse(html_filepath):
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
-    
+
 def main(args):
     logging.basicConfig(level=logging.INFO)
-    
+
     if len(args.simulation) == 0:
         simfile = ''
     else:
@@ -114,8 +114,8 @@ def main(args):
     # Store system stdout for later restoring
     f = sys.stdout
     html_filepath=''
-    # If simfile includes a directory name, dump our js code there 
-    if not(args.nohtml): 
+    # If simfile includes a directory name, dump our js code there
+    if not(args.nohtml):
         if os.path.isdir(simdir):
             copyfile(os.path.join(os.path.dirname(__file__),'d3.v4.min.js'), os.path.join(simdir,'d3.v4.min.js'))
             copyfile(os.path.join(os.path.dirname(__file__),'plotfuncs.js'), os.path.join(simdir,'plotfuncs.js'))
@@ -124,7 +124,7 @@ def main(args):
             else:
                 html_filepath=os.path.join(simdir,simbase + '.html')
             f = open(html_filepath, 'w')
-            
+
     # load data
     loader = McCodeDataLoader(simfile=simfile)
     try:
@@ -135,7 +135,7 @@ def main(args):
     node = loader.plot_graph
 
     data=None
-    
+
     # write data to an html file
     if type(node) is PNSingle:
         f.write("\n\n")
@@ -146,20 +146,20 @@ def main(args):
             return
         else:
             data = node.getdata_idx(args.index)
-    else: 
+    else:
         print("can only plot single data files")
 
     if type(data) is Data1D:
-    
+
         x = data.xvals
         y = data.yvals
         yerr = data.y_err_vals
-        
+
         try:
             title = '%s [%s] %s\nI = %s Err = %s N = %s\n %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
         except:
             title = '%s\n[%s]' % (data.component, data.filename)
-            
+
         params_str = get_json_1d(x, y, yerr, data.xlabel, data.ylabel, title)
         text = get_html('template_1d.html', params_str, os.path.basename(data.filename))
         for l in text.splitlines():
@@ -167,18 +167,18 @@ def main(args):
             f.write("")
         if not(args.nohtml):
             f.close()
-                
+
         # exit if nobrowse flag has been set
         if args.nobrowse:
             return
         else:
             browse(html_filepath)
-                        
+
     elif type(data) is Data2D:
-        
+
         vals = np.array(data.zvals)
         dims = np.shape(vals)
-        
+
         # create the 2d data as a png given our colormap
         img = np.zeros((dims[0], dims[1], 4))
         maxval = np.max(vals)
@@ -187,7 +187,7 @@ def main(args):
             for j in range(dims[1]):
                 color = lookup(cm, vals[i,j]/maxval)
                 img[i,j,:] = color
-            
+
         # encode png as base64 string
         image = scipy.misc.toimage(img)
         output = io.BytesIO()
@@ -195,17 +195,17 @@ def main(args):
         contents = output.getvalue()
         output.close()
         encoded_2d_data = str(base64.b64encode(contents)).lstrip('b').strip("\'")
-            
+
         # crate colormap 1 x 256 image
         img = np.zeros((256, 1, 4))
         for i in range(256):
             color = lookup(cm, i/255)
             img[255-i, 0] = color
-            
+
         # e3ncode cm image
         cb_img = scipy.misc.toimage(img)
         output = io.BytesIO()
-        
+
         cb_img.save(output, format='png')
         contents = output.getvalue()
         output.close()
@@ -215,10 +215,10 @@ def main(args):
         xmax = data.xlimits[1]
         ymin = data.xlimits[2]
         ymax = data.xlimits[3]
-            
+
         cb_min = np.min(vals)
         cb_max = np.max(vals)
-            
+
         # generate the title
         verbose = True
         try:
@@ -227,16 +227,16 @@ def main(args):
                 title = '%s [%s] %s\nI = %s Err = %s N = %s\n %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
         except:
             title = '%s\n[%s]' % (data.component, data.filename)
-            
+
         json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, cb_min, cb_max, data.xlabel, data.ylabel, title)
         text = get_html('template_2d.html', json_str, os.path.basename(data.filename))
-            
+
         for l in text.splitlines():
             f.write(l)
         f.write("")
         if not(args.nohtml):
             f.close()
-                
+
         # exit if nobrowse flag has been set
         if args.nobrowse:
             return
@@ -244,17 +244,15 @@ def main(args):
             browse(html_filepath)
     else:
         print("can only plot 1D/2D data right now - file " + simfile + " is of type " + type(data))
-    
-        
-    
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('--index', dest='index', type=int, help='Pick nth column from scan file')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     parser.add_argument('--nohtml', action='store_true', help='do not save html file')
-    
-    args = parser.parse_args()
-    
-    main(args)
 
+    args = parser.parse_args()
+
+    main(args)

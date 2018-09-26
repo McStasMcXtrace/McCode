@@ -44,7 +44,7 @@ class McView(object):
     def showCodeEditorWindow(self, instr):
         self.ew.initCodeEditor(instr)
         self.ew.show()
-        self.mw.raise_()
+        self.ew.raise_()
     
     def closeCodeEditorWindow(self):
         return self.ew.close()
