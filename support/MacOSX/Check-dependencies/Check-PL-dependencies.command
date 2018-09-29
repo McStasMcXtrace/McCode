@@ -148,8 +148,8 @@ else
     osascript -e "tell app \"System Events\" to display dialog \"Your macOS is version $OSXVER is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to work with High Sierra and Mojave?\""
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
-    then    #
-	10.14 aka Mojave
+    then    
+        # Assume that what works for 10.13 and 10.14 will also work here
 	PERLVER="SYSTEM"
 	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
 	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
