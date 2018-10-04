@@ -425,6 +425,8 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             comp_type, inst_name, params, atrel = dlg.getValues()
         else:
             return
+        
+        
 
         text = "COMPONENT " + inst_name + " = " + comp_type + "("
         i_max = len(params)-1
@@ -945,7 +947,8 @@ class McInsertComponentDialog(QtWidgets.QDialog):
 
         # instance name
         inst_name = self.ui.edtInstanceName.text()
-        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        m = re.match("Component: (.*)", self.windowTitle())
+        comp_type = m.group(1)
 
         # get dynamic params
         params = []
@@ -975,7 +978,8 @@ class McInsertComponentDialog(QtWidgets.QDialog):
         '''
         # instance name
         inst_name = self.ui.edtInstanceName.text()
-        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        m = re.match("Component: (.*)", self.windowTitle())
+        comp_type = m.group(1)
 
         # get dynamic params
         params = []
