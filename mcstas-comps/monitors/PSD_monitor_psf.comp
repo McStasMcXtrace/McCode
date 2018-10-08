@@ -34,6 +34,7 @@
 * ny: [1]             Number of pixel rows 
 * filename: [string]  Name of file in which to store the detector image 
 * psf: [m]            Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf 
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,7 +48,7 @@
 
 DEFINE COMPONENT PSD_monitor_psf
 DEFINITION PARAMETERS (nx=90, ny=90, string filename,restore_neutron=0)
-SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, psf=0)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, psf=0, int nowritefile=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -108,14 +109,16 @@ TRACE
 
 SAVE
   %{
-    DETECTOR_OUT_2D(
-        "PSD monitor",
-        "X position [cm]",
-        "Y position [cm]",
-        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
-        nx, ny,
-        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-        filename);
+    if (!nowritefile) {
+      DETECTOR_OUT_2D(
+          "PSD monitor",
+          "X position [cm]",
+          "Y position [cm]",
+          xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+          nx, ny,
+          &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+          filename);
+    }
   %}
 
 MCDISPLAY

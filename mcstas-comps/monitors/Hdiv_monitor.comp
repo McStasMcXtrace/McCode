@@ -34,6 +34,7 @@
 * h_maxdiv: [degrees]   Maximal vertical divergence detected 
 * filename: [string]    Name of file in which to store the detector image 
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,7 +49,7 @@
 DEFINE COMPONENT Hdiv_monitor
 DEFINITION PARAMETERS (nh=20)
 SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-xwidth=0, yheight=0, h_maxdiv=2, restore_neutron=0 )
+xwidth=0, yheight=0, h_maxdiv=2, restore_neutron=0, int nowritefile=0)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
@@ -104,6 +105,7 @@ TRACE
   %}
 SAVE
   %{
+    if (!nowritefile) {
     DETECTOR_OUT_1D(
         "horizontal divergence monitor",
         "horizontal divergence [deg]",
@@ -111,6 +113,7 @@ SAVE
         "divergence", -h_maxdiv, h_maxdiv, nh,
         &Div_N[0],&Div_p[0],&Div_p2[0],
         filename);
+    }
   %}
 
 MCDISPLAY

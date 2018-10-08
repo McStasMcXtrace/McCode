@@ -28,6 +28,7 @@
 * ny: [1]               Number of pixel rows 
 * filename: [string]    Name of file in which to store the detector image 
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -45,7 +46,7 @@
 
 DEFINE COMPONENT PSD_monitor_4PI
 DEFINITION PARAMETERS (nx=90, ny=90)
-SETTING PARAMETERS (string filename=0, radius=1, restore_neutron=0)
+SETTING PARAMETERS (string filename=0, radius=1, restore_neutron=0, int nowritefile=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -104,7 +105,8 @@ TRACE
 
 SAVE
 %{
-  DETECTOR_OUT_2D(
+  if (!nowritefile) {
+    DETECTOR_OUT_2D(
     "4PI PSD monitor",
     "Longitude [deg]",
     "Lattitude [deg]",
@@ -112,6 +114,7 @@ SAVE
     nx, ny,
     &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
     filename);
+  }
 %}
 
 MCDISPLAY
