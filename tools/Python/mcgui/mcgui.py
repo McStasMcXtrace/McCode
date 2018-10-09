@@ -574,7 +574,10 @@ class McGuiAppController():
                 return comps
             
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
-            fixed_params, new_instr_params, inspect = self.view.showStartSimDialog(instr_params, comps)
+            _a, _b, mcdisplays = mccode_config.get_options()
+            fixed_params, new_instr_params, inspect, mcdisplay = self.view.showStartSimDialog(instr_params, comps, mcdisplays)
+
+            print("selected mcdisplay: %s" % mcdisplay)
             
             self.emitter.status("")
             

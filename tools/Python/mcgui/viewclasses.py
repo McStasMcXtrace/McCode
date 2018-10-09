@@ -141,11 +141,12 @@ class McView(object):
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 
-    def showStartSimDialog(self, params, comps):
+    def showStartSimDialog(self, params, comps, mcdisplays):
         if self.__ssd == None:
             self.__ssd = McStartSimDialog()
         self.__ssd.createParamsWidgets(params)
         self.__ssd.set_components(comps)
+        self.__ssd.set_mcdisplays(mcdisplays)
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
@@ -605,13 +606,14 @@ class McStartSimDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(McStartSimDialog, self).__init__(parent)
         self._last_inspect_compnames = None
+        self._last_mcdisplays = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         self.ui.btnStart.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
         self._set_inspect_visible(False)
         self.ui.cbxSimTrace.currentIndexChanged.connect(lambda i: self._set_inspect_visible(i))
-    
+
     def set_components(self, compnames):
         if compnames == self._last_inspect_compnames:
             return
@@ -620,7 +622,16 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxInspect.addItem("-- None --")
         for c in compnames:
             self.ui.cbxInspect.addItem(c)
-        
+
+    def set_mcdisplays(self, mcdisplays):
+        if mcdisplays == self._last_mcdisplays:
+            return
+        self._last_mcdisplays = mcdisplays
+        self.ui.cbxMcdisplays.clear()
+        #self.ui.cbxMcdisplays.addItem("-- None --")
+        for m in mcdisplays:
+            self.ui.cbxMcdisplays.addItem(m)
+
     def _set_inspect_visible(self, sim_run_idx):
         visible = False
         if sim_run_idx == 1:
@@ -657,10 +668,10 @@ class McStartSimDialog(QtWidgets.QDialog):
 
         # steps
         p2 = self.ui.edtSteps.text()
-        
+
         # gravity
         p3 = self.ui.cbxGravity.currentIndex() == 1
-        
+
         # clustering option
         p4 = None
         if self.ui.cbxClustering.currentIndex() == 0:
@@ -697,7 +708,12 @@ class McStartSimDialog(QtWidgets.QDialog):
         if idx > 0:
             inspect = self._last_inspect_compnames[idx]
         
-        return fixed_params, params, inspect
+        mcdisplay = None
+        idx = self.ui.cbxMcdisplays.currentIndex()
+        if idx > 0:
+            mcdisplay = self._last_mcdisplays[idx]
+        
+        return fixed_params, params, inspect, mcdisplay
     
     _wParams = []
     __oldParams = []
