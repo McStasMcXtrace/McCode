@@ -638,6 +638,8 @@ class McStartSimDialog(QtWidgets.QDialog):
             visible = True
         self.ui.lblInspect.setVisible(visible)
         self.ui.cbxInspect.setVisible(visible)
+        self.ui.lblMcdisplays.setVisible(visible)
+        self.ui.cbxMcdisplays.setVisible(visible)
         self.ui.cbxAutoPlot.setVisible(not visible)
         self.ui.lblAutoPlot.setVisible(not visible)
 
