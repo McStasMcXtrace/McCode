@@ -131,6 +131,7 @@ def get_options():
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display-mantid",
                          prefix+"display"+suffix,
+                         prefix+"display"+suffix+" -m",
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML", 
                          prefix+"display"+suffix+" --format=Mantid",
@@ -141,6 +142,7 @@ def get_options():
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
+                         prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML", 
                          prefix+"display-matplotlib"]
