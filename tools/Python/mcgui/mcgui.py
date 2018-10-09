@@ -566,9 +566,9 @@ class McGuiAppController():
             def get_compnames(text):
                 ''' return a list of compnames from an instrument definition code text '''
                 comps = []
-                pat = 'COMPONENT[ ]+([\w0-9]+)[ ]+='
+                pat = 'COMPONENT[ ]+([\w0-9]+)[ ]*='
                 for l in text.splitlines():
-                    m = re.match(pat, l)
+                    m = re.search(pat, l)
                     if m:
                         comps.append(m.group(1))
                 return comps
