@@ -67,6 +67,12 @@ class McView(object):
         else:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
         self.mw.ui.txtbrwMcgui.append(text)
+    
+    def disableRunBtn(self):
+        self.mw.ui.btnRun.setEnabled(False)
+    
+    def enableRunBtn(self):
+        self.mw.ui.btnRun.setEnabled(True)
 
     def updateSimState(self, state=[]):
         enableRun = state[0] == 'True'
@@ -150,7 +156,7 @@ class McView(object):
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
-            return None, None, None
+            return None, None, None, None
 
     def showNewInstrDialog(self, lookdir):
         dlg = QtWidgets.QFileDialog()

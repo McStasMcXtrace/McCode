@@ -405,39 +405,6 @@ class McGuiState(QtCore.QObject):
             self.__emitter.message('simulation done')
         self.__emitter.message('')
         self.__emitter.status('')
-    
-    def getInstrParams(self):
-        # get instrument params using 'mcrun [instr] --info'
-        # returns: params: a list of [name, value] pairs 
-        cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.__instrFile) + " --info"
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE,
-                                   shell=True,
-                                   universal_newlines=True,
-                                   cwd=os.path.dirname(self.__instrFile))
-        # synchronous call
-        (stdoutdata, stderrdata) = process.communicate()
-        # note: communicate() always sets a process exit code
-        
-        if stderrdata:
-            self.__emitter.message(stderrdata, err_msg=True)
-        
-        if process.returncode != 0:
-            raise Exception('Instrument compile error.')
-        
-        # get parameters from info
-        params = []
-        for l in stdoutdata.splitlines():
-            if 'Param:' in l:
-                s = l.split()
-                s[0]=""
-                s = ' '.join(s)
-                s = s.split('=')
-                if s[1].endswith("NULL"): s[1] = ""
-                params.append(s)
-        
-        return params
 
 
 ''' Controller
@@ -557,11 +524,52 @@ class McGuiAppController():
             self.view.ew.save()
             
             self.emitter.status("Getting instrument params...")
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            self.view.disableRunBtn()
             try:
-                instr_params = self.state.getInstrParams()
+                class ThreadInfoHandler():
+                    def __init__(self):
+                        self.stdout_lst = []
+                        self.finished = False
+                    def stdout(self, msg):
+                        self.stdout_lst.append(msg)
+                    def finish(self):
+                        self.finished = True
+                def fail():
+                    raise Exception("get_instr_params failed")
+                handler = ThreadInfoHandler()
+                
+                somethread = McRunQThread()
+                somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
+                somethread.cwd = os.path.dirname(self.state.getInstrumentFile())
+                somethread.finished.connect(handler.finish)
+                somethread.thread_exception.connect(fail)
+                somethread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
+                somethread.message.connect(handler.stdout)
+                somethread.start()
+        
+                while not handler.finished:
+                    time.sleep(0.2)
+                    QtWidgets.QApplication.processEvents()
+                
+                params = []
+                for l in handler.stdout_lst:
+                    if 'Param:' in l:
+                        s = l.split()
+                        s[0]=""
+                        s = ' '.join(s)
+                        s = s.split('=')
+                        if s[1].endswith("NULL"): s[1] = ""
+                        params.append(s)
+
+                instr_params = params
+                
             except:
                 self.emitter.status("Instrument compile error")
                 raise
+            finally:
+                QtWidgets.QApplication.restoreOverrideCursor()
+                self.view.enableRunBtn()
             
             def get_compnames(text):
                 ''' return a list of compnames from an instrument definition code text '''
