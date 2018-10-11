@@ -27,21 +27,20 @@
 * %P
 * INPUT PARAMETERS
 *
-* xwidth: Width of lens aperture. (m)
-* yheight:Height of lens aperture. (m)
-* material_datafile: file where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
-* N: The number of successive lenses in the stack. ( )
-* r: The radius of curvature of the lens (m)
-* radius: Obsolete: Used if r==0, but will be removed in next release. (m)
+* xwidth:  [m] Width of lens aperture.
+* yheight: [m] Height of lens aperture.
+* material_datafile: [ ] File where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website.
+* N:       [ ] The number of successive lenses in the stack.
+* r:       [ ] The radius of curvature of the lens.
 * Optional parameters:
-* T: Transmission efficiency of the lens. ( )
-* verbose: Extra information for debugging. ( ) 
+* T:       [ ] Transmission efficiency of the lens.
+* verbose: [ ] Extra information for debugging. 
 *
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
-DEFINITION PARAMETERS (string material_datafile="Be.txt",verbose=0)
-SETTING PARAMETERS (xwidth,yheight,T=1,r=0,radius=0,N=1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth,yheight,T=1,r=0, int N=1, int verbose=0, string material_datafile="Be.txt")
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -99,12 +98,6 @@ INITIALIZE
   prms->delta[T.rows]=-FLT_MAX;
   
   Table_Free(&T);
-  if (r!=0 && radius!=0){
-      fprintf(stderr,"Warning (%s): parameter r = %g overrides old parameter name radius = %g.\n",NAME_CURRENT_COMP);
-  }else if (r==0 && radius!=0){
-    fprintf(stderr,"Warning (%s): You are using the obsolescent parameter name radius. Please consider changing to r\n",NAME_CURRENT_COMP);
-    r=radius;
-  }
   if(r<=0){
     fprintf(stderr,"Error (%s): No meaningful radius of curvature found r=%g.\n",NAME_CURRENT_COMP,r);
     exit(-1);
