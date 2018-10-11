@@ -522,22 +522,22 @@ def debug_file_save(data, filename):
 def main(args):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
-    
+
     # output directory
     dirname = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
     if args.dirname:
         dirname = args.dirname
-    
+
     # set up a pipe, read and parse the particle trace
     reader = McDisplayReader(args, n=100, dir=dirname)
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
-    
+
     if args.invcanvas:
         ## Switch to using white background and black foreground
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
-    
+
     gui = McDisplay2DGui(title=dirname)
     if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
@@ -556,13 +556,17 @@ if __name__ == '__main__':
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
-    
+
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
     if len(unknown)>0:
         args.instr_options = unknown
-    
+
+    # enable ^C termination
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     try:
         main(args)
     except KeyboardInterrupt:
