@@ -585,7 +585,8 @@ class McGuiAppController():
             _a, _b, mcdisplays = mccode_config.get_options()
             fixed_params, new_instr_params, inspect, mcdisplay = self.view.showStartSimDialog(instr_params, comps, mcdisplays)
 
-            mccode_config.configuration["MCDISPLAY"] = mcdisplay
+            if mcdisplay != None:
+                mccode_config.configuration["MCDISPLAY"] = mcdisplay
             
             self.emitter.status("")
             
