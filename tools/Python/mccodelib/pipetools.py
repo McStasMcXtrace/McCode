@@ -271,19 +271,13 @@ class TraceReader(Thread):
                         print("debug - TraceReader read line: %s" % data.strip())
 
                 for data in process.stderr:
-                    self.current.add_line(data)
+                    print(data.strip())
 
                 poll = process.poll()
 
             # fail state exit status from mcrun process
             if poll != 0:
                 raise Exception("process exited with code: %s" % str(poll))
-
-            # empty process buffer
-            for stdoutdata in process.stdout:
-                self.current.add_line(stdoutdata)
-            for stderrdata in process.stderr:
-                self.current.add_line(stderrdata)
 
             # If we made it all the way here, sim has ended or been killed
             self.databox.set_particlesdone()
