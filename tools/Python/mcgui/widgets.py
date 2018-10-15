@@ -87,7 +87,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.gbxMessages)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -141,6 +141,8 @@ class Ui_MainWindow(object):
         self.actionDisplay_2d.setObjectName("actionDisplay_2d")
         self.actionPlotOther = QtWidgets.QAction(MainWindow)
         self.actionPlotOther.setObjectName("actionPlotOther")
+        self.actionMcDocCurrent = QtWidgets.QAction(MainWindow)
+        self.actionMcDocCurrent.setObjectName("actionMcDocCurrent")
         self.menuNew_From_Template.addAction(self.actionTempl_submenu)
         self.menuFile.addAction(self.actionNew_Instrument)
         self.menuFile.addAction(self.menuNew_From_Template.menuAction())
@@ -161,8 +163,10 @@ class Ui_MainWindow(object):
         self.menuSimulation.addAction(self.actionPlotOther)
         self.menuSimulation.addAction(self.actionDisplay)
         self.menuSimulation.addAction(self.actionDisplay_2d)
-        self.menuHelp.addAction(self.actionMcdoc)
         self.menuHelp.addSeparator()
+        self.menuHelp.addAction(self.actionMcDocCurrent)
+        self.menuHelp.addSeparator()
+        self.menuHelp.addAction(self.actionMcdoc)
         self.menuHelp.addAction(self.actionMcstas_User_Manual)
         self.menuHelp.addAction(self.actionMcstas_Component_Manual)
         self.menuHelp.addAction(self.actionMcstas_Web_Page)
@@ -222,6 +226,7 @@ class Ui_MainWindow(object):
         self.actionDisplay_2d.setText(_translate("MainWindow", "Display-2D"))
         self.actionPlotOther.setText(_translate("MainWindow", "Plot Other Results"))
         self.actionPlotOther.setShortcut(_translate("MainWindow", "Ctrl+Shift+P"))
+        self.actionMcDocCurrent.setText(_translate("MainWindow", "mcdoc current instrument"))
 
 
 ''' Instrument Editor

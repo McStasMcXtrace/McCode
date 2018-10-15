@@ -781,10 +781,17 @@ class McGuiAppController():
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     def handleMcdoc(self):
-        mcdoc='%sdoc' % mccode_config.get_mccode_prefix()
+        cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
-            mcdoc='start ' + mcdoc + '-pl.bat'
-        subprocess.Popen(mcdoc, shell=True)
+            cmd='start ' + cmd + '-pl.bat'
+        subprocess.Popen(cmd, shell=True)
+
+    def handleMcdocCurrentInstr(self):
+        cmd='%sdoc %s' % (mccode_config.get_mccode_prefix(), self.state.getInstrumentFile() )
+        print(cmd)
+        if sys.platform == "win32":
+            cmd='start ' + cmd + '-pl.bat'
+        subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
         if not sys.platform == 'win32':
@@ -859,6 +866,7 @@ class McGuiAppController():
         mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         mwui.actionDisplay_2d.triggered.connect(self.handleMcDisplay2D)
         
+        mwui.actionMcDocCurrent.triggered.connect(self.handleMcdocCurrentInstr)
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
         mwui.actionMcstas_User_Manual.triggered.connect(self.handleHelpPdf)
