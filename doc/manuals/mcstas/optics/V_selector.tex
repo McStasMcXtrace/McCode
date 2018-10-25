@@ -13,7 +13,7 @@
 \label{f:vselector}
 \end{figure}
 
-The component {\bf V\_selector} models a rotating velocity
+The component \textbf{V\_selector} models a rotating velocity
 selector constructed from $N$ collimator blades
 arranged radially on an axis. Two identical slits ($height \times width$)
 at a 12 o'clock position allow
@@ -22,7 +22,7 @@ The blades are "twisted" on the axis so that a stationary
 velocity selector does not transmit neutrons; the total
 twist angle is denoted $\phi$ (in degrees).
 
-Further input parameters for {\bf V\_selector} 
+Further input parameters for \textbf{V\_selector} 
 the distance between apertures, $L_0$, the length of the
 collimator blades, $L_1$, the height from rotation axix to the slit
 centre, $r_0$, the rotation speed $\omega$ (in rpm), 
@@ -30,7 +30,7 @@ and the blade thickness $t$.
 
 The local coordinate system has its Origo at the slit centre.
 
-The component {\rm Selector} produces equivalent results.
+The component \textrm{Selector} produces equivalent results.
 
 \subsection{Velocity selector transmission}
 
@@ -52,8 +52,8 @@ positions (assuming zero thickness of blades), we arrive at a transmission facto
 T = \left\{
  \begin{array}{ll}
  1 - (N/2\pi ) |\phi-\omega L / V| &
-        {\rm if}\;   (N/2\pi )|\phi -\omega L / V| < 1 \\
-    0  &  {\rm otherwise}
+        \textrm{if}\;   (N/2\pi )|\phi -\omega L / V| < 1 \\
+    0  &  \textrm{otherwise}
  \end{array} \right.
 \end{equation}
 where $N$ is the number of collimator blades.

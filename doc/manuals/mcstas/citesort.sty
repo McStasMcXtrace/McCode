@@ -26,7 +26,7 @@
 \@min\m@ne%
 \@cite{%
   \@for \@citeb:=#2\do {\@ifundefined {b@\@citeb}%
-    {\@h@ld\@citea\@tempcntb\m@ne{\bf ?}%
+    {\@h@ld\@citea\@tempcntb\m@ne\textbf{?}%
     \@warning {Citation `\@citeb ' on page \thepage \space undefined}}%
 {\@minsofar\z@ \@for \@scan@cites:=#2\do {%
   \@ifundefined{b@\@scan@cites}%

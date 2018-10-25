@@ -163,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -205,8 +205,10 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionMcdoc"/>
     <addaction name="separator"/>
+    <addaction name="actionMcDocCurrent"/>
+    <addaction name="separator"/>
+    <addaction name="actionMcdoc"/>
     <addaction name="actionMcstas_User_Manual"/>
     <addaction name="actionMcstas_Component_Manual"/>
     <addaction name="actionMcstas_Web_Page"/>
@@ -352,6 +354,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+P</string>
+   </property>
+  </action>
+  <action name="actionMcDocCurrent">
+   <property name="text">
+    <string>mcdoc current instrument</string>
    </property>
   </action>
  </widget>

@@ -9,7 +9,6 @@ import sys
 import math
 import numpy as np
 import matplotlib 
-import tornado
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -147,7 +146,7 @@ class McMatplotlibPlotter():
             return
         
         # clear
-        pylab.clf()
+        pylab.close()
         
         # plot data and keep subplots for the click area filter
         n = node.getnumdata()
@@ -156,7 +155,10 @@ class McMatplotlibPlotter():
         # create callbacks
         self.click_cbs = [lambda nde=n: self.plot_node(nde) for n in node.primaries]
         self.ctrl_cbs = [lambda nde=n: self.plot_node(nde) for n in node.secondaries]
-        self.back_cb = lambda n=node.parent: self.plot_node(n) if node.parent else None
+        # we need root node back click to prompt a replot, rather than to be ignored,
+        # because disconnect is always called by the click handler
+        bck_node = node.parent if node.parent else node 
+        self.back_cb = lambda n=bck_node: self.plot_node(n)
         self.replot_cb = lambda n=node: self.plot_node(n) if node else None
 
         # regiseter click events
@@ -203,10 +205,6 @@ def keypress(event, back_cb, replot_cb, togglelog_cb):
         back_cb()
 
 def print_help(nogui=False):
-    if sys.platform == 'darwin':
-        modifier = 'Meta'
-    else:
-        modifier = 'ctrl'
     
     helplines = []
     helplines.append('')
@@ -221,7 +219,7 @@ def print_help(nogui=False):
     helplines.append('F5             - replot')
     helplines.append('click          - display subplot')
     helplines.append('right-click/b  - back')
-    helplines.append('%s + click   - sweep monitors' % modifier)
+    helplines.append('ctrl + click   - sweep monitors')
     print('\n'.join(helplines))
 
 def dumpfile(frmat):
@@ -248,12 +246,12 @@ def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
     else:
         lclick = event.button==1
         rclick = event.button==3
-        ctrlmod = event.key == 'control'
+        ctrlmod = event.key == 'control' or event.key == 'x'
         
         if lclick and len(click_cbs) > 0 and not ctrlmod:
-                idx = subplts.index(subplt)
-                dc_cb()
-                click_cbs[idx]()
+            idx = subplts.index(subplt)
+            dc_cb()
+            click_cbs[idx]()
         elif rclick and back_cb: # right button
             dc_cb()
             back_cb()
@@ -307,7 +305,7 @@ def main(args):
         # start the plotter
         plotter = McMatplotlibPlotter(sourcedir=loader.directory)
         
-        if args.html:
+        if (sys.platform == "linux" or sys.platform == "linux2") & args.html:
             # save to html and exit
             plotter.html_node(rootnode, open('%s.html' % os.path.splitext(simfile)[0], 'w'))
         else:
@@ -332,7 +330,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
-    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3')
+
+    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3 (linux only)')
     parser.add_argument('--format', dest='format', help='save plot to pdf/png/eps... without bringing up window')
     parser.add_argument('--backend', dest='backend', help='use non-default backend for matplotlib plot')
     

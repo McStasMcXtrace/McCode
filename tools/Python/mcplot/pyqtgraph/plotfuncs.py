@@ -11,7 +11,7 @@ from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.plotgraph import PNMultiple, PNSingle
-from mccodelib.mcplotloader import Data1D, Data2D
+from mccodelib.mcplotloader import Data0D, Data1D, Data2D
 
 
 def plot(node, i, plt, opts):
@@ -31,6 +31,9 @@ def plot(node, i, plt, opts):
     elif type(data) is Data2D:
         view_box, lyt = plot_Data2D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
         return view_box, lyt
+    elif type(data) is Data0D:
+        view_box = plot_Data0D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
+        return view_box, plt
     else:
         # File was not loaded, silently ignore
         return None, None
@@ -62,6 +65,15 @@ class ModLegend(pg.LegendItem):
         p.setBrush(pg.functions.mkBrush(0,0,0,100))
         p.drawRect(self.boundingRect())
 
+def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
+    ''' create an empty plotItem '''
+    # data
+    plt.setMenuEnabled(False)
+    vb = plt.getViewBox()
+    plt.setTitle("Monitor section without filename (0D mon)")
+    return vb
+
+        
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data

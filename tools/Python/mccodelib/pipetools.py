@@ -196,7 +196,12 @@ class PostParticletraceState(LineHandlerState):
         try:
             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
         except:
-            pass
+            # The above os.killpg works fine on Unix, but on Win32 we can instead
+            try:
+                subprocess.call(['taskkill', '/F', '/T', '/PID',  str(self.process.pid)])
+            except:
+                pass
+
 
     def setprocess(self, process):
         self.process = process
@@ -257,23 +262,26 @@ class TraceReader(Thread):
             # and particles to end the process in max particle count is exceeded
             self.allstates['prompt'].setprocess(process)
             self.allstates['post_particles'].setprocess(process)
-            
-            
-            while process.poll() == None:
-                stdoutdata = process.stdout.readline()
-                if self.debug:
-                    print("debug - TraceReader read line: %s" % stdoutdata.strip())
-                self.current.add_line(stdoutdata)
-            
-            # empty process buffer
-            for stdoutdata in process.stdout:
-                self.current.add_line(stdoutdata)
-            for stderrdata in process.stderr:
-                self.current.add_line(stderrdata)
+
+            poll = process.poll()
+            while poll == None:
+                for data in process.stdout:
+                    self.current.add_line(data)
+                    if self.debug:
+                        print("debug - TraceReader read line: %s" % data.strip())
+
+                for data in process.stderr:
+                    print(data.strip())
+
+                poll = process.poll()
+
+            # fail state exit status from mcrun process
+            if poll != 0:
+                raise Exception("process exited with code: %s" % str(poll))
 
             # If we made it all the way here, sim has ended or been killed
             self.databox.set_particlesdone()
-            
+
         except Exception as e:
             self.exc_obj = e
 
@@ -325,7 +333,7 @@ class McrunPipeMan(object):
     
     def start_pipe(self):
         self.reader.start()
-    
+
     def join(self):
         self.reader.join(1000)
         if self.reader.exc_obj:

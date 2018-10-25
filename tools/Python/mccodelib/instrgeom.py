@@ -437,7 +437,7 @@ def drawclass_factory(commandname, args, reduced=False):
 
 class DrawCommand(object):
     ''' superclass of all draw commands '''
-    def __init__(self, args):
+    def __init__(self, args=[]):
         self.args = floatify(args)
         self.args_str = ''
         self.key = ''
@@ -457,10 +457,10 @@ class DrawCommand(object):
     @classmethod
     def _calc_boundingbox(self, points, transform):
         ''' override to implement alternative OR implement get_points '''
-        if not points:
-            return
-        
         box = BoundingBox()
+        if not points:
+            return box
+
         x_set = []
         y_set = []
         z_set = []

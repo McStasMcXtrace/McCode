@@ -1,3 +1,36 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: templateVanadiumMultipleScat_Mantid
+*
+* %Identification
+* Written by: Mads Bertelsen (UCPH), Anders Markvardsen (ISIS), Peter Willendrup (DTU)
+* Date: 19th Dec 2003.
+* %INSTRUMENT_SITE: Mantid
+*
+* Test instrument demonstrating use of the McStas-Mantid coupling for studies of multiple
+* scattering. Will be developed further at later time.
+*
+* %Description
+* Very simple test instrument demonstrating use of the McStas-Mantid coupling for studies 
+* of multiple scattering
+*
+* Needed steps:
+* 1) Compile your instrument with NeXus library support
+* 2) Generate an IDF using 
+*         mcdisplay.pl --format=Mantid templateVanadiumMultipleScat_Mantid -n0
+* 3) mcrun templateVanadiumMultipleScat_Mantid -n1e6 --format=NeXus
+*
+* %Parameters
+*
+* %Link
+*
+* %End
+*******************************************************************************/
 DEFINE INSTRUMENT templateVanadiumMultipleScat_Mantid()
 
 DECLARE

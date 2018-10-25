@@ -118,7 +118,7 @@ INITIALIZE
 	AngleMonochromator = RAD2DEG * asin(M_PI / (NominalEnergy * E2K * dSi111));
 
 	// Convert energy to wavelength
-	fprintf(stderr, "Target wavelength is %g Å. \n", 12.39842 / NominalEnergy);
+	fprintf(stderr, "Target wavelength is %g AA. \n", 12.39842 / NominalEnergy);
 	fprintf(stderr, "The monochromators will be rotated by %g degrees. \n", AngleMonochromator);
 
 	// Energy bandwidth

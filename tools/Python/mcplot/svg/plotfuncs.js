@@ -1,19 +1,169 @@
-// public plot 1d data
-function plot_1d(params) {
-  var p = params
-  _plot_labels(
-    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'],
-    function(w, h, anchor) { _plot_1d_data(w, h, p['x'], p['y'], p['yerr'], anchor) });
-}
-// public plot 2d data
-function plot_2d(params) {
-  var p = params
-  _plot_labels(
-    p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'],
-    function(w, h, anchor) { _plot_2d_data(w, h, p['xmin'], p['xmax'], p['ymin'], p['ymax'], p['img2dData'], p['imgColorbar'], p['cbMin'], p['cbMax'], anchor) });
+class Plot1D {
+  constructor(params, svg_branch=null) {
+    let p = params;
+    this.params_lst = [params];
+    let hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+
+    let xmin = d3.min(p['x']);
+    let xmax = d3.max(p['x']);
+    let ymin = d3.min(p['y']);
+    let ymax = d3.max(p['y']);
+
+    this.x_lst = [p['x']];
+    this.y_lst = [p['y']];
+    this.yErrData_lst = _makeErrorBarsData([p['x']], [p['y']], [p['yerr']]);
+
+    this.pointGroup = null;
+    this.last_xScale = null;
+    this.last_yScale = null;
+
+    this._draw_1d_axes(hdl.wplt, hdl.hplt, xmin, xmax, ymin, ymax, hdl.axisGroup,
+      (ptGroup, xScl, yScl) => {
+        this._drawPoints(xScl, yScl);
+      }
+    );
+  }
+  rePlotMany(params_lst) {
+    this.x_lst = params_lst.map(p => p['x']);
+    this.y_lst = params_lst.map(p => p['y']);
+    let yErr_lst = params_lst.map(p => p['yerr']);
+    this.yErrData_lst = _makeErrorBarsData(this.x_lst, this.y_lst, yErr_lst);
+
+    this._drawPoints(this.last_xScale, this.last_yScale);
+  }
+  plotOneMore(params) {
+    this.params_lst.push(params);
+    this.rePlotMany(this.params_lst);
+    // TODO: do something about his so we don't have to replot everything every time...
+  }
+  _drawPoints(xScl, yScl) {
+    //const colors = d3.scaleOrdinal().range(d3.schemeCategory20);
+    this.pointGroup.selectAll("path").remove();
+    this.pointGroup.selectAll("line").remove();
+
+    // draw
+    for (var j=0;j<this.x_lst.length;j++) {
+      let x = this.x_lst[j];
+      let y = this.y_lst[j];
+      let yErrData = this.yErrData_lst[j];
+
+      // points
+      this.pointGroup.append("path")
+          .attr("d", d3.line()
+          .x( function(d, i) { return xScl(x[i]); })
+          .y( function(d, i) { return yScl(y[i]); })
+          (x) // since we use the function-wide scoped x, y directly, this just causes index generation
+        )
+        //.attr("stroke", function(d, i) { return colors(i); })
+        .attr("stroke", "black")
+        .attr("stroke-width", "1px")
+        .attr("fill", "none");
+
+      // error bars
+      this.pointGroup.selectAll("line")
+        .data(yErrData)
+        .enter()
+        .append("line")
+        .attr("x1", function (d) { return xScl(d.p1[0]); })
+        .attr("y1", function (d) { return yScl(d.p1[1]); })
+        .attr("x2", function (d) { return xScl(d.p2[0]); })
+        .attr("y2", function (d) { return yScl(d.p2[1]); })
+        //.attr("stroke", function(d, i) { return colors(i); })
+        .attr("stroke", "black")
+        .attr("stroke-width", "1px")
+        .attr("fill", "none");
+    }
+  }
+  _draw_1d_axes(w, h, xmin, xmax, ymin, ymax, pltOrigoAnchor, drawpointsCB) {
+    // axis span points
+    let x0 = 0;
+    let y0 = h;
+    let x1 = w;
+    let y1 = 0;
+
+    // zoom
+    var zoom = d3.zoom()
+      .on("zoom", () => {
+      var new_xScale = d3.event.transform.rescaleX(xScale);
+      var new_yScale = d3.event.transform.rescaleY(yScale);
+      xAxisGroup.call(xAxis.scale(new_xScale));
+      yAxisGroup.call(yAxis.scale(new_yScale));
+      //_drawPonts_1D(pointGroup, new_xScale, new_yScale, x_lst, y_lst, yErrData_lst);
+      this._drawPoints(new_xScale, new_yScale);
+      this.last_xScale = new_xScale;
+      this.last_yScale = new_yScale;
+    });
+    var view = pltOrigoAnchor.append("rect")
+      .attr("width", w)
+      .attr("height", h)
+      .attr("style", "cursor: move; fill: none; pointer-events: all;")
+      .call(zoom);
+
+    // clip
+    var clip = pltOrigoAnchor.append("clipPath")
+      .attr("id", "viewClip")
+      .append("rect")
+      .attr("width", w)
+      .attr("height", h);
+
+    // axes
+    var xScale = d3.scaleLinear()
+      .domain([xmin, xmax])
+      .range([x0, x1]);
+    var xAxis = d3.axisBottom()
+      .ticks(5)
+      .tickFormat(d3.format(".1e"))
+      .scale(xScale);
+    var xAxisGroup = pltOrigoAnchor.append("g")
+      .attr("transform", "translate(0," + y0 + ")")
+      .call(xAxis);
+
+    var yScale = d3.scaleLinear()
+      .domain([ymin, ymax])
+      .range([y0, y1]);
+    var yAxis = d3.axisLeft()
+      .ticks(5)
+      .tickFormat(d3.format(".1e"))
+      .scale(yScale);
+    var yAxisGroup = pltOrigoAnchor.append("g")
+      .attr("transform", "translate(" + x0 + ", 0)")
+      .call(yAxis);
+
+    this.last_xScale = xScale;
+    this.last_yScale = yScale;
+    this.pointGroup = pltOrigoAnchor.append("g")
+      .attr("clip-path", "url(#viewClip)");
+
+    // draw on initial zoom
+    //let yErrData_lst = _makeErrorBarsData(x_lst, y_lst, yerr_lst);
+    //var points = _drawPonts_1D(pointGroup, xScale, yScale, x_lst, y_lst, yErrData_lst);
+    this._drawPoints(xScale, yScale);
+  }
 }
 
-function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
+// plot 2d
+function plot_2d(params, svg_branch=null) {
+  var p = params
+  let hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+
+  _plot_2d_data(
+    hdl.wplt,
+    hdl.hplt,
+    p['xmin'],
+    p['xmax'],
+    p['ymin'],
+    p['ymax'],
+    p['img2dData'],
+    p['imgColorbar'],
+    p['cbMin'],
+    p['cbMax'],
+    hdl.axisGroup);
+}
+
+// private
+function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
+  if (!svg_branch) svg_branch = d3.select("body").append("svg");
+
   // positioning
   var margin = 5;
   var wlab = w - 2*margin;
@@ -23,13 +173,14 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
   var fontSizeStr = "14px";
 
   // axis labels
-  var lblGroup = d3.select("body").append("svg")
+  var lblGroup = svg_branch
     .attr("width", w)
     .attr("height", h)
     .append("g")
     .attr("transform", "translate(" + margin +"," + margin + ")");
 
   // multi-line titles
+  if (!title) title="";
   var titleLines = title.split(/\r?\n/)
   var titleGrp = lblGroup
     .append("text")
@@ -89,7 +240,27 @@ function _plot_labels(w, h, xlabel, ylabel, title, plotfunc_inner) {
     .attr("transform", "translate(" + xplt +"," + yplt + ")")
     .append("g");
 
-  plotfunc_inner(wplt, hplt, axisGroup);
+  return { wplt: wplt, hplt: hplt, axisGroup: axisGroup };
+}
+
+// generates error bar vertical line coordinates from x, y and yErr, NOTE: inner loop over yErr, allowing it to be empty
+function _makeErrorBarsData(x_lst, y_lst, yErr_lst) {
+  // WARNING HAX
+  let dataErr_lst = [];
+  for (var j=0;j<yErr_lst.length;j++) {
+    var dataErr = [];
+    let x = x_lst[j];
+    let y = y_lst[j];
+    let yErr = yErr_lst[j];
+
+    for (var i=0; i < yErr.length; i++) {
+      if (yErr[i] != 0)
+      dataErr.push({ "p1": [x[i], y[i]-yErr[i]], "p2" : [x[i], y[i]+yErr[i]] });
+    }
+
+    dataErr_lst.push(dataErr);
+  }
+  return dataErr_lst;
 }
 
 function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbMin, cbMax, anchorElement) {
@@ -186,122 +357,4 @@ function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbM
     .attr("transform", "translate(" + (-w_cbimg) + ", 0)")
     .attr('preserveAspectRatio', 'none')
     .attr("xlink:href","data:image/jpg;base64," + imgColorbar);
-}
-
-function _plot_1d_data(w, h, x, y, yerr, anchorElement) {
-  // axis size fractions and orego placement fraction
-  var xax_frac = 1;
-  var yax_frac = 1;
-  var x0_frac = 0;
-  var y0_frac = 0;
-
-  // axes lengths
-  var wi = xax_frac*w;
-  var hi = yax_frac*h;
-
-  // orego
-  var x0 = x0_frac*w;
-  var y0 = h - y0_frac*h;
-
-  // axes end coords
-  var x1 = x0 + wi;
-  var y1 = y0 - hi;
-
-  var data = []
-  var dataErr = []
-  for (var i=0; i < x.length; i++) {
-    data.push({ "x" : x[i], "y" : y[i] });
-    if (yerr[i] != 0)
-      dataErr.push({ "p1": [x[i], y[i]-yerr[i]], "p2" : [x[i], y[i]+yerr[i]] });
-  }
-
-  // zoom
-  var zoom = d3.zoom()
-    .on("zoom", zoomFunction);
-  function zoomFunction() {
-    // create new scale ojects based on event
-    var new_xScale = d3.event.transform.rescaleX(xScale);
-    var new_yScale = d3.event.transform.rescaleY(yScale);
-
-    // update axes using the new scales
-    xAxisGroup.call(xAxis.scale(new_xScale));
-    yAxisGroup.call(yAxis.scale(new_yScale));
-
-    // clear & redraw based on the scaled data
-    drawPoints(new_xScale, new_yScale);
-  };
-  var view = anchorElement.append("rect")
-    .attr("class", "zoom")
-    .attr("width", w)
-    .attr("height", h)
-    .attr("style", "cursor: move; fill: none; pointer-events: all;")
-    .call(zoom);
-
-  // clip
-  var clip = anchorElement.append("clipPath")
-    .attr("id", "viewClip")
-    .append("rect")
-    .attr("width", w)
-    .attr("height", h);
-
-  // set up axes
-  var xScale = d3.scaleLinear()
-    .domain([d3.min(x), d3.max(x)])
-    .range([x0, x1]);
-  var xAxis = d3.axisBottom()
-    .ticks(5)
-    .tickFormat(d3.format(".1e"))
-    .scale(xScale);
-  var xAxisGroup = anchorElement.append("g")
-    .attr("transform", "translate(0," + y0 + ")")
-    .call(xAxis);
-
-  var yScale = d3.scaleLinear()
-    .domain([d3.min(y), d3.max(y)])
-    .range([y0, y1]);
-  var yAxis = d3.axisLeft()
-    .ticks(5)
-    .tickFormat(d3.format(".1e"))
-    .scale(yScale);
-  var yAxisGroup = anchorElement.append("g")
-    .attr("transform", "translate(" + x0 + ", 0)")
-    .call(yAxis);
-
-  // enter data points
-  var pointGroup = anchorElement.append("g")
-    .attr("clip-path", "url(#viewClip)");
-
-  // draw data on initial zoom
-  var points = drawPoints(xScale, yScale);
-
-  function drawPoints(xScl, yScl) {
-    // data draw functions
-    function getLineFunc(xs, ys) {
-      return d3.line()
-      .x(function(d) { return xs(d.x); })
-      .y(function(d) { return ys(d.y); });
-    }
-    var lf = getLineFunc(xScl, yScl);
-    // draw graph
-    pointGroup.selectAll("path").remove();
-    pointGroup.selectAll("line").remove();
-    graph = pointGroup.append("path")
-      .attr("d", lf(data))
-      .attr("stroke", "black")
-      .attr("stroke-width", "1px")
-      .attr("fill", "none");
-
-    // draw error bars
-    pointGroup.selectAll("line")
-      .data(dataErr)
-      .enter()
-      .append("line")
-      .attr("x1", function (d) { return xScl(d.p1[0]); })
-      .attr("y1", function (d) { return yScl(d.p1[1]); })
-      .attr("x2", function (d) { return xScl(d.p2[0]); })
-      .attr("y2", function (d) { return yScl(d.p2[1]); })
-      .attr("stroke", "black")
-      .attr("stroke-width", "1px")
-      .attr("fill", "none");
-  }
 }

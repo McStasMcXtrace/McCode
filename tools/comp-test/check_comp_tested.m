@@ -1,4 +1,15 @@
 function [not_tested, tested, instr_code, comps, instrs] = check_comp_tested(pw)
+% check_comp_tested: test components wether they are used in example instruments.
+%
+% Example: check_comp_tested McCode/mcstas-comps
+%
+% input:
+%  pw: parent directory to be tested. Is searched recursively for .comp and .instr.
+%      when missing, the current directory is used.
+% output:
+%  not_tested: list of components which are not tested (cellstr)
+%  tested:     list of components which are tested (cellstr)
+
 
 if nargin == 0, pw = [];  end
 if isempty(pw), pw = pwd; end

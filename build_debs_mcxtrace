@@ -6,6 +6,10 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
 # From 1.4 onwards, let McXtrace reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr/share/
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+echo 
+echo Yum\'ing the dependencies using sudo:
+echo
+sudo yum groupinstall 'Development Tools'
+sudo yum install epel-release
+sudo yum install cmake
+sudo ln -sf /usr/bin/cmake3 /usr/local/bin/cmake
+sudo ln -sf /usr/bin/cpack3 /usr/local/bin/cpack

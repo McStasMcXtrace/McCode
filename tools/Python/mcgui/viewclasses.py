@@ -44,7 +44,7 @@ class McView(object):
     def showCodeEditorWindow(self, instr):
         self.ew.initCodeEditor(instr)
         self.ew.show()
-        self.mw.raise_()
+        self.ew.raise_()
     
     def closeCodeEditorWindow(self):
         return self.ew.close()
@@ -67,6 +67,12 @@ class McView(object):
         else:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
         self.mw.ui.txtbrwMcgui.append(text)
+    
+    def disableRunBtn(self):
+        self.mw.ui.btnRun.setEnabled(False)
+    
+    def enableRunBtn(self):
+        self.mw.ui.btnRun.setEnabled(True)
 
     def updateSimState(self, state=[]):
         enableRun = state[0] == 'True'
@@ -141,15 +147,16 @@ class McView(object):
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 
-    def showStartSimDialog(self, params, comps):
+    def showStartSimDialog(self, params, comps, mcdisplays):
         if self.__ssd == None:
             self.__ssd = McStartSimDialog()
         self.__ssd.createParamsWidgets(params)
         self.__ssd.set_components(comps)
+        self.__ssd.set_mcdisplays(mcdisplays)
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
-            return None, None, None
+            return None, None, None, None
 
     def showNewInstrDialog(self, lookdir):
         dlg = QtWidgets.QFileDialog()
@@ -384,7 +391,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
 
     def initCodeEditor(self, instr):
         if instr != '':
-            self.__scintilla.setText(open(instr).read())
+            self.__scintilla.setText(open(instr, encoding='utf-8').read())
         else:
             self.__scintilla.setText('')
         self.setWindowTitle(mccode_config.configuration["MCCODE"] + ": " + instr)
@@ -425,6 +432,8 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             comp_type, inst_name, params, atrel = dlg.getValues()
         else:
             return
+        
+        
 
         text = "COMPONENT " + inst_name + " = " + comp_type + "("
         i_max = len(params)-1
@@ -603,13 +612,14 @@ class McStartSimDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(McStartSimDialog, self).__init__(parent)
         self._last_inspect_compnames = None
+        self._last_mcdisplays = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         self.ui.btnStart.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
         self._set_inspect_visible(False)
         self.ui.cbxSimTrace.currentIndexChanged.connect(lambda i: self._set_inspect_visible(i))
-    
+
     def set_components(self, compnames):
         if compnames == self._last_inspect_compnames:
             return
@@ -618,13 +628,24 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxInspect.addItem("-- None --")
         for c in compnames:
             self.ui.cbxInspect.addItem(c)
-        
+
+    def set_mcdisplays(self, mcdisplays):
+        if mcdisplays == self._last_mcdisplays:
+            return
+        self._last_mcdisplays = mcdisplays
+        self.ui.cbxMcdisplays.clear()
+        #self.ui.cbxMcdisplays.addItem("-- None --")
+        for m in mcdisplays:
+            self.ui.cbxMcdisplays.addItem(m)
+
     def _set_inspect_visible(self, sim_run_idx):
         visible = False
         if sim_run_idx == 1:
             visible = True
         self.ui.lblInspect.setVisible(visible)
         self.ui.cbxInspect.setVisible(visible)
+        self.ui.lblMcdisplays.setVisible(visible)
+        self.ui.cbxMcdisplays.setVisible(visible)
         self.ui.cbxAutoPlot.setVisible(not visible)
         self.ui.lblAutoPlot.setVisible(not visible)
 
@@ -655,10 +676,10 @@ class McStartSimDialog(QtWidgets.QDialog):
 
         # steps
         p2 = self.ui.edtSteps.text()
-        
+
         # gravity
         p3 = self.ui.cbxGravity.currentIndex() == 1
-        
+
         # clustering option
         p4 = None
         if self.ui.cbxClustering.currentIndex() == 0:
@@ -695,7 +716,12 @@ class McStartSimDialog(QtWidgets.QDialog):
         if idx > 0:
             inspect = self._last_inspect_compnames[idx]
         
-        return fixed_params, params, inspect
+        mcdisplay = None
+        idx = self.ui.cbxMcdisplays.currentIndex()
+        if idx > 0:
+            mcdisplay = self._last_mcdisplays[idx]
+        
+        return fixed_params, params, inspect, mcdisplay
     
     _wParams = []
     __oldParams = []
@@ -737,8 +763,8 @@ class McStartSimDialog(QtWidgets.QDialog):
                     value = old_value
 
             i = i + 1
-            x = i % 6
-            y = i / 6
+            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
+            y = i / (int(mccode_config.configuration["GUICOLS"])*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -747,7 +773,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
 
             i = i + 1
-            x = i % 6
+            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
 
             edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -945,7 +971,8 @@ class McInsertComponentDialog(QtWidgets.QDialog):
 
         # instance name
         inst_name = self.ui.edtInstanceName.text()
-        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        m = re.match("Component: (.*)", self.windowTitle())
+        comp_type = m.group(1)
 
         # get dynamic params
         params = []
@@ -975,7 +1002,8 @@ class McInsertComponentDialog(QtWidgets.QDialog):
         '''
         # instance name
         inst_name = self.ui.edtInstanceName.text()
-        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        m = re.match("Component: (.*)", self.windowTitle())
+        comp_type = m.group(1)
 
         # get dynamic params
         params = []
@@ -1078,6 +1106,9 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.edtNumNodes.setText(mccode_config.compilation["MPINODES"])
         self.ui.edtNumNodes.conf_var = "MPINODES"
 
+        self.ui.edtNumCols.setText(mccode_config.configuration["GUICOLS"])
+        self.ui.edtNumCols.conf_var = "GUICOLS"
+
     def __pullValuesTo_mccode_config(self):
         # mcrun combobox
         i = self.ui.cbxMcrun.currentIndex()
@@ -1097,6 +1128,7 @@ class McConfigDialog(QtWidgets.QDialog):
         mccode_config.compilation[str(self.ui.edtMpicc.conf_var)] = str(self.ui.edtMpicc.text())
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
+        mccode_config.configuration[str(self.ui.edtNumCols.conf_var)] = str(self.ui.edtNumCols.text())
         # Export selected variables to the system / mcrun
         target_mccode=mccode_config.configuration["MCCODE"].upper()
         # CFLAGS and CC:

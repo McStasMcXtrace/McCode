@@ -117,14 +117,18 @@ INITIALIZE
     fclose(fp);
 
     int ii;
-    char clr[2048],*clrp;
-    clrp=clr;
-    clrp+=snprintf(clrp,2048,"%s",mcinstrument_exe);
-    for (ii=0;ii<mcnumipar;ii++){
-        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].val);
+    char *clr,clbuf[CHAR_BUF_LENGTH];
+    if ( (clr=calloc(CHAR_BUF_LENGTH*(mcnumipar+1)+1,sizeof(char)))==NULL){
+        fprintf(stderr,"Error(%s): Memory allocation error in %s\n.",NAME_CURRENT_COMP);
+        exit(-1);
     }
-    *(clrp)='\0';
+    strncat(clr,mcinstrument_exe,CHAR_BUF_LENGTH);
+    for (ii=0;ii<mcnumipar;ii++){
+        snprintf(clbuf,CHAR_BUF_LENGTH," %s=%s",mcinputtable[ii].name,mcinputtable[ii].val);
+        strncat(clr,clbuf,CHAR_BUF_LENGTH);
+    }
     mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);
+    free(clr);
 
     if (polarisationuse) {
         mcpl_enable_polarisation(outputfile);

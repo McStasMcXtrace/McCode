@@ -17,6 +17,7 @@
 * Modified by: EF, PW, 2015: powder/PG and texture mode
 * Modified by: PW, May 2017: Remove statement about being under validation
 * Modified by: PW, June 2017: Doc updates
+* Modified by: T. Weber, October 2017: new focus code
 *
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
@@ -183,10 +184,10 @@
 * cc: [deg]                                               Gamma angle
 * barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
 * RX: [m]                                                 Radius of horizontal along X lattice curvature. flat for 0
-* RY: [m]                                                 Radius of vertical lattice curvature. flat for 0
-* RZ: [m]                                                 Radius of horizontal along Z lattice curvature. flat for 0
+* RY: [m]                                                 Radius of vertical along Y lattice curvature. flat for 0
 * powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1
 * PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0<PG<1 with main axis on 'c'
+* deltak: [AA-1]                                          Equality-threshold for use in SPLIT settings. If difference between all ki_{x,y,z} are less than deltak from previous particle, the two are considered alike enough to jump directly to the MC choice between 'active' reflections 
 *
 * OUTPUT PARAMETERS:
 *
@@ -279,7 +280,8 @@ ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
 p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0)
+aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
+deltak=1e-6)
 OUTPUT PARAMETERS(hkl_info, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
@@ -932,6 +934,23 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     }
 
 
+
+    /* rotate vector counterclockwise */
+    void vec_rotate_2d(double* x, double* y, double angle) {
+        double c, s;
+        double newx, newy;
+
+        c = cos(angle);
+        s = sin(angle);
+
+        newx = *x*c - *y*s;
+        newy = *x*s + *y*c;
+
+        *x = newx;
+        *y = newy;
+    }
+
+
 #endif /* !SINGLE_CRYSTAL_DECL */
 %}
 
@@ -1072,6 +1091,14 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
+  double curv_xangle;
+  double curv_yangle;
+
+  double _vx;
+  double _vy;
+  double _vz;
+
+
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1143,30 +1170,53 @@ TRACE
       }
 
 
+
+      /* ------------------------------------------------------------------------- */
       /* lattice curvature option: rotate neutron velocity */
-      if (RX || RY || RZ) {
-        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RX),0,0,1); }
-		    else { b1x=vx; b1y=vy; b1z=vz; }
-		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, atan2(y,RY),1,0,0); }
-		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, atan2(z,RZ),0,1,0); }
-        else { b1x=b2x; b1y=b2y; b1z=b2z; }
-		    kix = V2K*b1x;
-        kiy = V2K*b1y;
-        kiz = V2K*b1z;
-      } else {
-        kix = V2K*vx;
-        kiy = V2K*vy;
-        kiz = V2K*vz;
+      /* WARNING: cannot be used together with the PG c-rotation! */
+      curv_xangle = 0;
+      curv_yangle = 0;
+
+      _vx = vx;
+      _vy = vy;
+      _vz = vz;
+
+      if(RY) { /* rotate v around x axis based on y pos, for vertical focus */
+          curv_yangle = atan2(y, RY);
+          vec_rotate_2d(&vy,&vz, curv_yangle);
+          vec_rotate_2d(&sy,&sz, curv_yangle);
+
+          /*changing y,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&y,&z, curv_yangle);
       }
+      if(RX) { /* rotate v around y axis based on x pos, for horizontal focus */
+          curv_xangle = atan2(x, RX);
+          vec_rotate_2d(&vx,&vz, curv_xangle);
+          vec_rotate_2d(&sx,&sz, curv_xangle);
+
+          /*changing x,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&x,&z, curv_xangle);
+      }
+
+      kix = V2K*vx;
+      kiy = V2K*vy;
+      kiz = V2K*vz;
+      vx = _vx;
+      vy = _vy;
+      vz = _vz;
+      /* ------------------------------------------------------------------------- */
+
+
 
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
-      if ( fabs(kix - hkl_info.kix) < 1e-6
-        && fabs(kiy - hkl_info.kiy) < 1e-6
-        && fabs(kiz - hkl_info.kiz) < 1e-6) {
+      if ( fabs(kix - hkl_info.kix) < deltak
+        && fabs(kiy - hkl_info.kiy) < deltak
+        && fabs(kiz - hkl_info.kiz) < deltak) {
         hkl_info.nb_reuses++;
       } else {
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
@@ -1305,16 +1355,30 @@ TRACE
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
       }
+
+
+
+      /* ------------------------------------------------------------------------- */
       /* lattice curvature option: rotate back neutron velocity */
-      if (RZ || RY) {
-        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    -atan2(x,RX),0,0,1); }
-		    else { b1x=vx; b1y=vy; b1z=vz; }
-		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, -atan2(y,RY),1,0,0); }
-		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, -atan2(z,RZ),0,1,0); }
-        else { b1x=b2x; b1y=b2y; b1z=b2z; }
-        vx=b1x; vy=b1y; vz=b1z;
-	    }
+      if(RX) {
+          vec_rotate_2d(&vx,&vz, -curv_xangle);
+          vec_rotate_2d(&sx,&sz, -curv_xangle);
+
+          /*changing x,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&x,&z, -curv_xangle);
+      }
+      if(RY) {
+          vec_rotate_2d(&vy,&vz, -curv_yangle);
+          vec_rotate_2d(&sy,&sz, -curv_yangle);
+
+          /*changing y,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&y,&z, -curv_yangle);
+      }
+      /* ------------------------------------------------------------------------- */
+
+
 
       SCATTER;
       if (powder) { /* orientation of crystallite is no longer random */
@@ -1342,7 +1406,7 @@ FINALLY
   if (hkl_info.nb_refl_count) {
     double split_iterations = (double)hkl_info.nb_reuses/hkl_info.nb_refl_count + 1;
     double split_optimal    = (double)hkl_info.nb_refl/hkl_info.nb_refl_count;
-    if (split_optimal > split_iterations + 5)
+    if (split_optimal > split_iterations + 2)
       printf("Single_crystal: %s: Info: you may highly improve the computation efficiency by using\n"
         "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
         "  in the instrument description %s.\n",

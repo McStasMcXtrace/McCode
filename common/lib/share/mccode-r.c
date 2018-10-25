@@ -44,9 +44,13 @@
 // UNIX specific headers (non-Windows)
 #if defined(__unix__) || defined(__APPLE__)
 #include <unistd.h>
-#include <sys/stat.h>
 #endif
 
+#include <sys/stat.h>
+
+#ifdef _WIN32 
+# define  mkdir( D, M )   _mkdir( D ) 
+#endif 
 
 #ifndef DANSE
 #ifdef MC_ANCIENT_COMPATIBILITY
@@ -102,8 +106,8 @@ int mc_MPI_Sum(double *sbuf, long count)
     while (offset < count) {
       if (!length || offset+length > count-1) length=count-offset;
       else length=MPI_REDUCE_BLOCKSIZE;
-      if (MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
-              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
+      if (MPI_Reduce((double*)(sbuf+offset), (double*)(rbuf+offset),
+              length, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD) != MPI_SUCCESS)
         return MPI_ERR_COUNT;
       offset += length;
     }

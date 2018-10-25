@@ -277,11 +277,15 @@ do {
     coords_get(n, &nx, &ny, &nz);
   } else if (r1 && !focus1)
     dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2, radius, "sphere", r1);
-  else if (!r1 && focus1)
-    dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2, radius, "parabola", -focus1);
-  else
+  else if (!r1 && focus1){
+      if (focus1>0){
+          dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2, radius, "parabola", -focus1);
+      }else{
+          dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2 + radius*radius/(4*fabs(focus1)) , radius, "parabola", -focus1);
+      }
+  }else{
     dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2, radius, "plane", phiy1);
-
+  }
   if (dt <= 0) break; /* no intersection: exit from main loop */
 
   /* propagate to surface (1) */
@@ -301,7 +305,7 @@ do {
   /* alpha1 = (sigma_inc+sigma_abs*2200/v)/2/lambda;
   n      = 1-lambda*lambda*rho/2/PI*sqrt(bc*bc-alpha1*alpha1); */
   n   = sqrt(1-(lambda*lambda*rho*bc/PI));
-
+  
   mean_n += n*p;
   events += p;
 
@@ -331,18 +335,20 @@ do {
   /* compute incoming angles w.r.t surface */
   NORM(nx,ny,nz);
   vec_prod(ax,ay,az,nx,ny,nz,-vx,-vy,-vz);
-  theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
+  /* if n and v are parallel - no refraction.*/
+  if (ax!=0 || ay!=0 || az!=0){
+      theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
 
-  /* Fresnel formula for refraction */
-  theta2 = asin(sin(theta1)/n);
+      /* Fresnel formula for refraction */
+      theta2 = asin(sin(theta1)/n);
 
-  /* compute new velocity after refraction */
-  alpha1 = (sin(theta2))/(sin(theta1));
-  beta1  = (alpha1*v*cos(theta1))-(v*cos(theta2));
-  vx = beta1*nx + alpha1*vx;
-  vy = beta1*ny + alpha1*vy;
-  vz = beta1*nz + alpha1*vz;
-
+      /* compute new velocity after refraction */
+      alpha1 = (sin(theta2))/(sin(theta1));
+      beta1  = (alpha1*v*cos(theta1))-(v*cos(theta2));
+      vx = beta1*nx + alpha1*vx;
+      vy = beta1*ny + alpha1*vy;
+      vz = beta1*nz + alpha1*vz;
+  }
   /* ======================== Second face of the lens ========================= */
   /* determine intersection time to go to second surface */
   nx=ny=nz=0;
@@ -360,11 +366,15 @@ do {
     coords_get(n, &nx, &ny, &nz);
   } else if (r2 && !focus2)
     dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "sphere", -r2);
-  else if (!r2 && focus2)
-    dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", focus2);
-  else
+  else if (!r2 && focus2){
+      if (focus2>0){
+          dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", focus2);
+      }else{
+          dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2 - radius*radius/(4*fabs(focus2)) , radius, "parabola", focus2);
+      }
+  }else{
     dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "plane", phiy2);
-
+  }
   if (dt <= 0) break; /* no intersection: exit from main loop */
 
   /* =============== Absorption and scattering between the two faces =========== */
@@ -459,7 +469,11 @@ do {
     } else if (r2 && !focus2)
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "sphere", -r2);
     else if (!r2 && focus2)
-      dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", -focus2);
+      if (focus2>0){
+          dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "parabola", focus2);
+      }else{
+          dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2 - radius*radius/(4*fabs(focus2)) , radius, "parabola", focus2);
+      }
     else
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, "plane", phiy2);
 
@@ -500,17 +514,20 @@ do {
   /* compute incoming angles w.r.t surface */
   NORM(nx,ny,nz);
   vec_prod(ax,ay,az,nx,ny,nz,-vx,-vy,-vz);
-  theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
+  /* if n and v are parallel - no refraction.*/
+  if (ax!=0 || ay!=0 || az!=0){
+      theta1 = atan2(sqrt(ax*ax+ay*ay+az*az),scalar_prod(nx,ny,nz,-vx,-vy,-vz));
 
-  /* Fresnel formula for refraction */
-  theta2=asin(sin(theta1)*n);
+      /* Fresnel formula for refraction */
+      theta2=asin(sin(theta1)*n);
 
-  /* compute new velocity after refraction */
-  alpha1 = (sin(theta2))/(sin(theta1));
-  beta1 = (alpha1*v*cos(theta1))-(v*cos(theta2));
-  vx = beta1*nx + alpha1*vx;
-  vy = beta1*ny + alpha1*vy;
-  vz = beta1*nz + alpha1*vz;
+      /* compute new velocity after refraction */
+      alpha1 = (sin(theta2))/(sin(theta1));
+      beta1 = (alpha1*v*cos(theta1))-(v*cos(theta2));
+      vx = beta1*nx + alpha1*vx;
+      vy = beta1*ny + alpha1*vy;
+      vz = beta1*nz + alpha1*vz;
+  }
 } while (dt>0); /* loop until no more intersection */
 
 %}
@@ -539,7 +556,7 @@ FINALLY %{
 
 MCDISPLAY
 %{
-  
+  magnify("xy");
   double theta1,theta00=0,theta01=0,eps,eps2,theta_line,distance,height,height2,dist_parab1,dist_parab2;
   height=radius/2;
   height2=radius/2;
@@ -587,15 +604,22 @@ MCDISPLAY
           distance+=eps;
           theta_line=0;
           while (theta_line<2*PI){
-              line(sqrt(4*fabs(focus1)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus1)*(fabs(distance-eps)))*sin(theta_line),distance-eps-thickness/2,sqrt(4*fabs(focus1)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus1)*fabs(distance))*sin(theta_line),distance-thickness/2);
-              theta_line+=eps2;
+             line(sqrt(4*fabs(focus1)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus1)*(fabs(distance-eps)))*sin(theta_line),distance-eps-thickness/2,sqrt(4*fabs(focus1)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus1)*fabs(distance))*sin(theta_line),distance-thickness/2);
+          theta_line+=eps2;
           }
         } else {
-          circle("xy",0,0,(radius*radius/4)/(4*focus1)+distance-thickness/2,sqrt((4*fabs(focus1)*fabs(distance))));
-          distance+=eps;
           theta_line=0;
-          while (theta_line<2*PI) {
-            line(sqrt(4*fabs(focus1)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus1)*(fabs(distance-eps)))*sin(theta_line),distance+(radius*radius/4)/(4*focus1)-eps-thickness/2,sqrt(4*fabs(focus1)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus1)*fabs(distance))*sin(theta_line),distance+(radius*radius/4)/(4*focus1)-thickness/2);
+          double rp,rpe,zz;
+          rp=sqrt(4*fabs(focus1)*fabs(distance));
+          zz=-thickness/2-radius*radius/(4*fabs(focus1))+distance;
+          circle("xy",0,0,zz,rp);
+          distance+=eps;
+          zz=-thickness/2-radius*radius/(4*fabs(focus1))+distance;
+          rpe=sqrt(4*fabs(focus1)*fabs(distance));
+
+          theta_line=0;
+          while (theta_line<2*PI){
+            line(rpe*cos(theta_line),rpe*sin(theta_line),zz, rp*cos(theta_line), rp*sin(theta_line), zz-eps);
             theta_line+=eps2;
           }
         }
@@ -644,7 +668,7 @@ MCDISPLAY
       eps2=2*PI/4;
       while (focus2*distance>0){
         if (focus2>0) {
-          circle("xy",0,0,distance+thickness/2,sqrt((4*focus2*fabs(distance))));
+          circle("xy",0,0,distance+thickness/2,sqrt((4*fabs(focus2)*fabs(distance))));
           distance+=eps;
           theta_line=0;
           while (theta_line<2*PI) {
@@ -652,11 +676,17 @@ MCDISPLAY
             theta_line+=eps2;
           }
         } else {
-          circle("xy",0,0,-(radius*radius/4)/(4*focus2)+distance+thickness/2,sqrt((4*fabs(focus2)*fabs(distance))));
+          double rp,rpe,zz;
+          rp=sqrt(4*fabs(focus2)*fabs(distance));
+          zz=thickness/2+(radius*radius)/(4*fabs(focus2))+distance;
+          circle("xy",0,0,zz,rp);
           distance+=eps;
+          zz=thickness/2+(radius*radius)/(4*fabs(focus2))+distance;
+          rpe=sqrt(4*fabs(focus2)*fabs(distance));
+          
           theta_line=0;
           while (theta_line<2*PI){
-            line(sqrt(4*fabs(focus2)*(fabs(distance-eps)))*cos(theta_line),sqrt(4*fabs(focus2)*(fabs(distance-eps)))*sin(theta_line),distance-eps+thickness/2-(radius*radius/4)/(4*focus2),sqrt(4*fabs(focus2)*fabs(distance))*cos(theta_line),sqrt(4*fabs(focus2)*fabs(distance))*sin(theta_line),distance+thickness/2-(radius*radius/4)/(4*focus2));
+            line(rpe*cos(theta_line),rpe*sin(theta_line),zz, rp*cos(theta_line), rp*sin(theta_line), zz-eps);
             theta_line+=eps2;
           }
         }

@@ -759,11 +759,6 @@ SHARE
       }else{
         abs->muc=5;
       }
-      /*reorganize the data table a to use log(e) instead and rebin to use constantstep feature*/
-      int j;
-      for (j=0;j<abs->table.rows;j++){
-        abs->table.data[j*abs->table.columns]=log(abs->table.data[j*abs->table.columns]);
-      }/*now in terms of log e instead of just e - makes for better rebinning*/
       Table_Stat(&(abs->table));
       if(10*(double)mcget_ncount()>(abs->table.max_x-abs->table.min_x)/(abs->table.step_x)){
         /*it is probably worth Rebinning*/
@@ -921,7 +916,7 @@ TRACE
       
     /*absorption cross-section */
     do {
-      double mu=Table_Value(abs_info.table,log(ki*K2E),abs_info.muc);
+      double mu=Table_Value(abs_info.table,ki*K2E,abs_info.muc);
       abs_xsect = hkl_info.sigma_a*mu;
       /*assume the given sigma a is like taken from the NIST file*/
     }while (0);

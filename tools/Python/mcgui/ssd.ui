@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>464</width>
-    <height>506</height>
+    <height>553</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,7 +97,7 @@
           </item>
          </widget>
         </item>
-        <item row="6" column="2">
+        <item row="7" column="2">
          <widget class="QLineEdit" name="edtSteps">
           <property name="text">
            <string/>
@@ -107,7 +107,7 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="2">
+        <item row="5" column="2">
          <widget class="QLineEdit" name="edtNeutronCnt">
           <property name="text">
            <string>1000000</string>
@@ -117,7 +117,7 @@
           </property>
          </widget>
         </item>
-        <item row="11" column="2">
+        <item row="12" column="2">
          <widget class="QLineEdit" name="edtNodes">
           <property name="text">
            <string>2</string>
@@ -140,14 +140,14 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
+        <item row="7" column="1">
          <widget class="QLabel" name="lblSweepSteps">
           <property name="text">
            <string>Sweep steps (optional):</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
+        <item row="5" column="1">
          <widget class="QLabel" name="lblNeutronCount">
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;pre style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Courier New,courier';&quot;&gt;The Ray count specifies the statistical granularity of your &lt;/span&gt;&lt;/pre&gt;&lt;pre style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Courier New,courier';&quot;&gt;simulation and is NOT equal to the number of particles simulated. &lt;/span&gt;&lt;/pre&gt;&lt;pre style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Courier New,courier';&quot;&gt;For a thorough explanation, see the chapter &amp;quot;Monte Carlo &lt;/span&gt;&lt;/pre&gt;&lt;pre style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Courier New,courier';&quot;&gt;Techniques and simulation strategy&amp;quot; in the user manual.&lt;/span&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -157,34 +157,34 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="1">
+        <item row="9" column="1">
          <widget class="QLabel" name="lblMpi">
           <property name="text">
            <string>MPI:</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="1">
+        <item row="12" column="1">
          <widget class="QLabel" name="lblMpiNodes">
           <property name="text">
            <string>MPI node count:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="6" column="1">
          <widget class="QLabel" name="lblOutputDir">
           <property name="text">
            <string>Output subdir (optional):</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="2">
+        <item row="6" column="2">
          <widget class="QLineEdit" name="edtOutputDir"/>
         </item>
         <item row="1" column="2">
          <widget class="QComboBox" name="cbxInspect"/>
         </item>
-        <item row="8" column="2">
+        <item row="9" column="2">
          <widget class="QComboBox" name="cbxClustering">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -216,17 +216,27 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
+        <item row="3" column="2">
          <widget class="QCheckBox" name="cbxAutoPlot">
           <property name="text">
            <string/>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
+        <item row="3" column="1">
          <widget class="QLabel" name="lblAutoPlot">
           <property name="text">
            <string>Autoplot:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QComboBox" name="cbxMcdisplays"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="lblMcdisplays">
+          <property name="text">
+           <string>McDisplay</string>
           </property>
          </widget>
         </item>

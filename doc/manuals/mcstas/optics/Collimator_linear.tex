@@ -4,7 +4,7 @@
 %\component{Collimator\_linear}{System}{$x_{min}$, $x_{max}$, $y_{min}$, $y_{max}$, $L$, $\delta$}{}{}
 \mcdoccomp{optics/Collimator_linear.parms}
 
-{\bf Collimator\_linear} models a standard linear Soller blade collimator.
+\textbf{Collimator\_linear} models a standard linear Soller blade collimator.
 The collimator has two identical rectangular openings,
 defined by the $x$ and $y$ values. Neutrons not clearing both
 openings are ABSORB'ed.
@@ -19,21 +19,21 @@ so that the component only consists of two rectangular apertures.
 
 For a more detailed Soller collimator simulation,
 taking every blade into account, it is possible to use
-{\bf Channeled\_guide} with absorbing walls, 
+\textbf{Channeled\_guide} with absorbing walls, 
 see section~\ref{s:channeled_guide}.
 
 \begin{figure}[h!]
   \begin{center}
-    \psfrag{xmin}[c][c]{$x_{\rm min}$}
-    \psfrag{xmax}[c][c]{$x_{\rm max}$}
-    \psfrag{ymin}[c][c]{$y_{\rm min}$}
-    \psfrag{ymax}[c][c]{$y_{\rm max}$}
+    \psfrag{xmin}[c][c]{$x_\textrm{min}$}
+    \psfrag{xmax}[c][c]{$x_\textrm{max}$}
+    \psfrag{ymin}[c][c]{$y_\textrm{min}$}
+    \psfrag{ymax}[c][c]{$y_\textrm{max}$}
     \psfrag{delta}[c][c]{$\delta$}
     \includegraphics[width=0.7\textwidth]{figures/collimator}
   \end{center}
 \caption{The geometry of a simple Soller blade collimators:
 The real Soller collimator, seen from the top (left),
-and a sketch of the component {\bf Soller} (right).
+and a sketch of the component \textbf{Soller} (right).
 The symbols are defined in the text.}
 \label{f:collimator}
 \end{figure}
@@ -57,7 +57,7 @@ Often, the approximation $T \approx 1-|\eta_h|/\delta$ is used, giving
 a triangular transmission profile.
 
 \subsection{Algorithm}
-The algorithm of {\rm Collimator\_linear} is roughly as follows:
+The algorithm of \textrm{Collimator\_linear} is roughly as follows:
 \begin{enumerate}
 \item Check by propagation if the neutron ray clear the entry and exit slits,
 otherwise ABSORB.

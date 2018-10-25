@@ -183,7 +183,7 @@ FUNCTION {emphasize}
 FUNCTION {boldface}
 { duplicate$ empty$
     { pop$ "" }
-    { "{\bf " swap$ * "}" * }
+    { "\textbf{" swap$ * "}" * }
   if$
 }
 

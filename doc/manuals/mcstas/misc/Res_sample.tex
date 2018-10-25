@@ -2,7 +2,7 @@
 \label{s:res_sample}
 \index{Samples!Resolution function, sample for}
 
-%\component{Res\_sample}{(System); Alan Tennant, HMI}{$r$, $r$, $h$, $r_{\rm focus}$, $x_{\rm target}$, $y_{\rm target}$, $z_{\rm target}$, $E_0$, $\Delta E$ }{$x_w$, $y_h$, $z_d$, $x_{\rm focus}$, $y_{\rm focus}$, $a_{\rm v, focus}$, $a_{\rm h, focus}$, target index}{}
+%\component{Res\_sample}{(System); Alan Tennant, HMI}{$r$, $r$, $h$, $r_\textrm{focus}$, $x_\textrm{target}$, $y_\textrm{target}$, $z_\textrm{target}$, $E_0$, $\Delta E$ }{$x_w$, $y_h$, $z_d$, $x_\textrm{focus}$, $y_\textrm{focus}$, $a_\textrm{v, focus}$, $a_\textrm{h, focus}$, target index}{}
 \mcdoccomp{misc/Res_sample.parms}
 
 The component \textbf{Res\_sample} scatters neutron rays isotropically
@@ -14,11 +14,11 @@ within specified intervals.
 The component is meant
 for computation of the resolution function, but may also be used
 for test and debugging purposes. For actual calculations of the resolution
-function, {\bf Res\_sample} should be used
+function, \textbf{Res\_sample} should be used
 together with \textbf{Res\_monitor}, described in
 section~\ref{s:res_monitor}.
 
-The shape of {\rm Res\_sample} is either a hollow cylinder
+The shape of \textrm{Res\_sample} is either a hollow cylinder
 or a rectangular box.
 The hollow cylinder shape is
 specified with the outer radius, $r$ and thickness,
@@ -58,8 +58,8 @@ the interval $[E_0-\Delta E; E_0+\Delta E]$ which hence must be
 chosen large enough to cover all interesting neutron energies.
 Similarly, the scattered
 direction is chosen in a user-specified range,
-either within a sphere of radius $r_{\rm focus}$, within a rectangular
-target with measures $(x_{\rm focus}, y_{\rm focus})$
+either within a sphere of radius $r_\textrm{focus}$, within a rectangular
+target with measures $(x_\textrm{focus}, y_\textrm{focus})$
 or in the specified angular range. This target is positioned at the $x_{target}$, $y_{target}$, $z_{target}$ point in space, or using the target\_index for which e.g. 1 is the further component, -1 is the previous, etc...
 
 A special feature, used when computing resolution functions, is that the
@@ -67,7 +67,7 @@ component stores complete information about the scattering event in the
 output parameter \textit{res\_struct}. The information includes initial
 and final wave vectors, the coordinates of the scattering point, and the
 neutron weight after the scattering event. From this information the
-scattering parameters $({\bf Q}, \omega)$ can be recorded
+scattering parameters $(\textbf{Q}, \omega)$ can be recorded
 for every scattering event and used to compute the resolution function.
 For an example of using the
 information in the output parameter, see the description of the

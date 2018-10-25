@@ -29,11 +29,11 @@
 * focus_yh [m]: y-height of target
 * focus_x0 [m]: x-center of target
 * focus_y0 [m]: y-center of target
-*
+* focus_absolute [ ]: Flag - if non-zero, focus_x0 and focus_y0 are in absolute (lab) coordinates.
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Focus
-SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0) 
+SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0, int focus_absolute=1) 
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -44,7 +44,7 @@ DECLARE
 
 INITIALIZE
 %{
-  if ((fabs(focus_xw) < 1e-9) || (fabs(focus_yh) < 1e-9)) {
+  if ((fabs(focus_xw) < 0) || (fabs(focus_yh) < 0)) {
     fprintf(stderr,"%s: you have to specify a target area\n", NAME_CURRENT_COMP); 
     exit(0);
   }
@@ -53,6 +53,7 @@ INITIALIZE
 TRACE
 %{
   double k;
+  double posx,posy,posz,pdir;
 
   PROP_Z0;
 
@@ -64,27 +65,33 @@ TRACE
   /*
    * "focus" target code stolen from slit.comp
    */
-  if (fabs(focus_xw) > 1e-9 ){
+  if (focus_absolute){
+      /*x0,y0 are given in the laboratory system (default)*/
      /*
       * focusing occurs only through the phase shift introduced above
       */
-     double posx,posy,posz,pdir;
-
      coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
+  }else{
+      /*x0,y0 are relative to the present component*/
+      posx=0;posy=0;
+  }
 
-     /*
-      * we have a target, so we now consider the 
-      * ray a Huygens wavelet.
+  /*
+   * we have a target, so we now consider the 
+   * ray a Huygens wavelet.
       */
-     double xf,yf,zf;
-     randvec_target_rect_real(&xf, &yf, &zf, &pdir,
-         focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh, 
-         ROT_A_CURRENT_COMP, x, y, z, 0);
-     
-     kx=(xf-x); ky=(yf-y); kz=(zf-z);
-     NORM(kx,ky,kz);
-     kx*=k;ky*=k;kz*=k;
-  } 
+  double xf,yf,zf;
+  if (fabs(focus_xw)>DBL_EPSILON || fabs(focus_yh)>DBL_EPSILON){
+      randvec_target_rect_real(&xf, &yf, &zf, &pdir,
+              focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh, 
+              ROT_A_CURRENT_COMP, x, y, z, 0);
+  }else{
+      xf=focus_x0-posx;yf=focus_y0-posy;zf=dist;
+  }
+  kx=(xf-x); ky=(yf-y); kz=(zf-z);
+  NORM(kx,ky,kz);
+  kx*=k;ky*=k;kz*=k;
+
   SCATTER;
 %}
 

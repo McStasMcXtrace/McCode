@@ -55922,35 +55922,44 @@ program cif2hkl
       if (argv(1:2) == "-h" .or. argv(1:6) == "--help") then
         call print_usage(pgmname, message)
         write(*,*) trim(message)
+        stop
       end if
       if (argv(1:2) == "-v" .or. argv(1:9) == "--version") then
         call print_version(pgmname, message)
         write(*,*) trim(message)
+        stop
       end if
       if ( (argv(1:8) == "--lambda" .or. argv(1:2) == "-l") .and. i<argc) then
         i=i+1
         call getarg(i, argv)
         read(argv, *) lambda
+        cycle
       end if
       if ( (argv(1:5) == "--out".or. argv(1:2) == "-o") .and. i < argc) then
         i=i+1
         call getarg(i, outfile)
+        cycle
       end if
       if ( (argv(1:6) == "--mode".or. argv(1:2) == "-m") .and. i < argc) then
         i=i+1
         call getarg(i, mode)
+        cycle
       end if
       if (argv(1:2) == "-p" .or. argv(1:3) == "--p") then
         powxtal = "p"
+        cycle
       end if
       if (argv(1:2) == "-x" .or. argv(1:3) == "--x") then
         powxtal = "x"
+        cycle
       end if
       if (argv(1:8) == "-verbose" .or. argv(1:9) == "--verbose") then
         verbose = 1
+        cycle
       end if
       if (argv(1:4) == "--no") then
         powxtal = "-"
+        cycle
       end if
       if (argv(1:1) .ne. '-') then
         ! convert argv[i]: process conversion
@@ -55964,6 +55973,7 @@ program cif2hkl
 
         ! revert outfile to default
         outfile = ""
+        cycle
       end if
     end do
   end if

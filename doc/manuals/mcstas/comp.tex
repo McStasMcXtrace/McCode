@@ -37,12 +37,12 @@ The original authors will still appear both in the component code and in the
 
 \section{Symbols for neutron scattering and simulation}
 In the description of the theory behind the component functionality
-we will use the usual symbols {\bf r} for the position
-$(x,y,z)$ of the particle (unit m), and {\bf v} for
+we will use the usual symbols \textbf{r} for the position
+$(x,y,z)$ of the particle (unit m), and \textbf{v} for
 the particle velocity $(v_x, v_y, v_z)$ (unit m/s).
 Another essential quantity is the neutron wave vector
-${\bf k} = m_{\rm n} {\bf v}/\hbar$ , where
-$m_{\rm n}$ is the neutron mass. {\bf k} is usually given in
+$\textbf{k} = m_\textrm{n} \textbf{v}/\hbar$ , where
+$m_\textrm{n}$ is the neutron mass. \textbf{k} is usually given in
 \AA$^{-1}$, while neutron energies are given in meV.
 The neutron wavelength is the reciprocal wave vector,
 $\lambda=2 \pi / k$.
@@ -54,18 +54,18 @@ an interaction with the component in question.
 %This is of particular importance in sample components, where the
 %wave vector change is denoted the {\em scattering vector}
 %\begin{equation}\label{eq:q-transfert}
-%{\bf q} \equiv {\bf k}_{\rm i} - {\bf k}_{\rm f} .
+%\textbf{q} \equiv \textbf{k}_\textrm{i} - \textbf{k}_\textrm{f} .
 %\end{equation}
 %In analogy, the {\em energy transfer} is given by
 %\begin{equation}\label{eq:w-transfert}
-%\hbar \omega \equiv E_{\rm i}-E_{\rm f} =
-%\frac{\hbar^2}{2 m_{\rm n}} \left( k_{\rm i}^2 - k_{\rm f}^2 \right).
+%\hbar \omega \equiv E_\textrm{i}-E_\textrm{f} =
+%\frac{\hbar^2}{2 m_\textrm{n}} \left( k_\textrm{i}^2 - k_\textrm{f}^2 \right).
 %\end{equation}
 
 The spin of the neutron is given a special treatment. Despite
 the fact that each physical neutron has a well defined spin value,
 the \MCS spin vector
-{\bf s} can have any length between zero (unpolarized beam) and unity
+\textbf{s} can have any length between zero (unpolarized beam) and unity
 (totally polarized beam). Further, all three cartesian components of
 the spin vector are present simultaneously, although this is physically
 not permitted by quantum mechanics.
@@ -113,7 +113,7 @@ File extensions are not compulsory but help in identifying relevant files per ap
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/data} & Description \\
+       \textbf{MCSTAS/data} & Description \\
        \hline
  *.lau & Laue pattern file, as issued from Crystallographica.
        For use with Single\_crystal, PowderN, and Isotropic\_Sqw.
@@ -142,42 +142,42 @@ File extensions are not compulsory but help in identifying relevant files per ap
     \begin{tabular}{|l|rrr|rr|p{0.2\textwidth}|}
 
       \hline
-      {\bf MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
+      \textbf{MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
           File name     & [barns]     & [barns]    & [barns]    & [K]        & [m/s] & \\
       \hline
-Ag.laz             & 4.407     & 0.58     &{\bf 63.3}      &1234.9    &2600&\\
+Ag.laz             & 4.407     & 0.58     &\textbf{63.3}      &1234.9    &2600&\\
 Al2O3\_sapphire.laz & 15.683    & 0.0188   &0.4625    &2273      &   &\\
 Al.laz             & 1.495     & 0.0082   &0.231     &933.5     &5100& .lau\\
-Au.laz             & 7.32      & 0.43     &{\bf 98.65}     &1337.4    &{\bf 1740}&\\
-B4C.laz            & 19.71     & 6.801    &{\bf 3068}      &2718      &     &\\
-Ba.laz             & 3.23      & 0.15     &29.0      &1000      &{\bf 1620}&\\
+Au.laz             & 7.32      & 0.43     &\textbf{98.65}     &1337.4    &\textbf{1740}&\\
+B4C.laz            & 19.71     & 6.801    &\textbf{3068}      &2718      &     &\\
+Ba.laz             & 3.23      & 0.15     &29.0      &1000      &\textbf{1620}&\\
 Be.laz             & 7.63      & 0.0018   &0.0076    &1560      &13000&\\
 BeO.laz            & 11.85     & 0.003    &0.008     &2650      &   & .lau\\
-Bi.laz             & 9.148     & 0.0084   &0.0338    &544.5     &{\bf 1790}&\\
+Bi.laz             & 9.148     & 0.0084   &0.0338    &544.5     &\textbf{1790}&\\
 C60.lau            & 5.551     & 0.001    &0.0035    &          &   &\\
 C\_diamond.laz      & 5.551     & 0.001    &0.0035    &4400      &18350 & .lau\\
 C\_graphite.laz     & 5.551     & 0.001    &0.0035    &3800      &18350 & .lau\\
-Cd.laz             & 3.04      & 3.46     &{\bf 2520}      &594.2     &2310&\\
+Cd.laz             & 3.04      & 3.46     &\textbf{2520}      &594.2     &2310&\\
 Cr.laz             & 1.660     & 1.83     &3.05      &2180      &5940&\\
-Cs.laz             & 3.69      & 0.21     &29.0      &301.6     &{\bf 1090}  & $c$ in liquid\\
+Cs.laz             & 3.69      & 0.21     &29.0      &301.6     &\textbf{1090}  & $c$ in liquid\\
 Cu.laz             & 7.485     & 0.55     &3.78      &1357.8    &3570&\\
 Fe.laz             & 11.22     & 0.4      &2.56      &1811      &4910&\\
 Ga.laz             & 6.675     & 0.16     &2.75      &302.91    &2740&\\
-Gd.laz             & 29.3      & 151      &{\bf 49700}     &1585      &2680&\\
+Gd.laz             & 29.3      & 151      &\textbf{49700}     &1585      &2680&\\
 Ge.laz             & 8.42      & 0.18     &2.2       &1211.4    &5400  & \\
 H2O\_ice\_1h.laz     & 7.75      & 160.52   &0.6652    &273       &     &\\
-Hg.laz             & 20.24     & 6.6      &{\bf 372.3}     &234.32    &{\bf 1407}&\\
+Hg.laz             & 20.24     & 6.6      &\textbf{372.3}     &234.32    &\textbf{1407}&\\
 I2.laz             & 7.0       & 0.62     &12.3      &386.85    &   &\\
-In.laz             & 2.08      & 0.54     &{\bf 193.8}     &429.75    &{\bf 1215}&\\
-K.laz              & .69       & 0.27     &2.1       &336.53    &{\bf 2000}&\\
-LiF.laz            & 4.46      & 0.921    &{\bf 70.51}     &1140      &   &\\
-Li.laz             & 0.454     & 0.92     &{\bf 70.5}      &453.69    &6000&\\
+In.laz             & 2.08      & 0.54     &\textbf{193.8}     &429.75    &\textbf{1215}&\\
+K.laz              & .69       & 0.27     &2.1       &336.53    &\textbf{2000}&\\
+LiF.laz            & 4.46      & 0.921    &\textbf{70.51}     &1140      &   &\\
+Li.laz             & 0.454     & 0.92     &\textbf{70.5}      &453.69    &6000&\\
 Nb.laz             & 8.57      & 0.0024   &1.15      &2750      &3480&\\
 Ni.laz             & 13.3      & 5.2      &4.49      &1728      &4970&\\
-Pb.laz             & 11.115    & 0.003    &0.171     &600.61    &{\bf 1260}&\\
+Pb.laz             & 11.115    & 0.003    &0.171     &600.61    &\textbf{1260}&\\
 Pd.laz             & 4.39      & 0.093    &6.9       &1828.05   &3070&\\
 Pt.laz             & 11.58     & 0.13     &10.3      &2041.4    &2680&\\
-Rb.laz             & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & \\
+Rb.laz             & 6.32      & 0.5      &0.38      &312.46    &\textbf{1300}  & \\
 Se\_alpha.laz       & 7.98      & 0.32     &11.7      &494       &3350&\\
 Se\_beta.laz        & 7.98      & 0.32     &11.7      &494       &3350&\\
 Si.laz             & 2.163     & 0.004    &0.171     &1687      &2200&\\
@@ -186,13 +186,13 @@ SiO2\_quartzb.laz   & 10.625    & 0.0056   &0.1714    &1140      &      & .lau\\
 Sn\_alpha.laz       & 4.871     & 0.022    &0.626     &505.08    &     &\\
 Sn\_beta.laz        & 4.871     & 0.022    &0.626     &505.08    &2500&\\
 Ti.laz             & 1.485     & 2.87     &6.09      &1941      &4140&\\
-Tl.laz             & 9.678     & 0.21     &3.43      &577       &{\bf 818}&\\
+Tl.laz             & 9.678     & 0.21     &3.43      &577       &\textbf{818}&\\
 V.laz              & .0184     & 4.935    &5.08      &2183      &4560&\\
 Zn.laz             & 4.054     & 0.077    &1.11      &692.68    &3700&\\
 Zr.laz             & 6.44      & 0.02     &0.185     &2128      &3800&\\
       \hline
     \end{tabular}\end{small}
-    \caption{Powders of the \MCS library \cite{icsd_ill,ILLblue}. Low $c$ and high $\sigma_{abs}$ materials are highlighted. Files are given in LAZY format, but may exist as well in Crystallographica {\it .lau} format as well.}
+    \caption{Powders of the \MCS library \cite{icsd_ill,ILLblue}. Low $c$ and high $\sigma_{abs}$ materials are highlighted. Files are given in LAZY format, but may exist as well in Crystallographica \textit{.lau} format as well.}
     \label{t:powders-data}
     \index{Library!Components!data}
     }
@@ -206,10 +206,10 @@ Zr.laz             & 6.44      & 0.02     &0.185     &2128      &3800&\\
     \begin{tabular}{|l|rrr|rr|p{0.2\textwidth}|}
 
       \hline
-      {\bf MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
+      \textbf{MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
           File name     & [barns]     & [barns]    & [barns]    & [K]        & [m/s] & \\
       \hline
-Cs\_liq\_tot.sqw                      & 3.69      & 0.21     &29.0      &301.6     &{\bf 1090}  & liquid cesium. Bodensteiner et al, Phys. Rev. A, 45 (1992) 5709 and 46 (1992) 3574.\\
+Cs\_liq\_tot.sqw                      & 3.69      & 0.21     &29.0      &301.6     &\textbf{1090}  & liquid cesium. Bodensteiner et al, Phys. Rev. A, 45 (1992) 5709 and 46 (1992) 3574.\\
 D2\_liq\_21\_tot.sqw                  & 7.64      & 0        &0.00052   &21        &      & liquid deuterium. Measured. Frei et al, PHYSICAL REVIEW B 80 (2009) 064301 \\
 D2\_pow\_21\_tot.sqw                  & 7.64      & 0        &0.00052   &12        &      & powder deuterium. Measured. Frei et al, PHYSICAL REVIEW B 80 (2009) 064301 \\
 D2O\_liq\_290\_coh and D\_liq\_290\_inc &15.4     & 4.1      &0.0012    &290       &      & liquid heavy water. Classical MD. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
@@ -217,11 +217,11 @@ D2O\_liq\_290\_tot                    &15.4       & 4.1      &0.0012    &290    
 Ge\_liq\_coh.sqw and Ge\_liq\_inc.sqw & 8.42      & 0.18     &2.2       &1211.4    &5400  & liquid germanium. Ab-initio MD. Hugouvieux V, Farhi E, Johnson MR, et al., PRB 75 (2007) 104208 \\
 H2O\_liq\_290\_coh and H2O\_liq\_290\_inc &7.75   & 161      &0.665     &290       &1530  & liquid water. Classical MD. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
 H2O\_liq\_290\_tot                    &7.75       & 161      &0.665     &290       &1530  & liquid water. Measured. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
-He4\_liq\_coh.sqw                     & 1.34      & 0        &0.00747   &2         &{\bf 240}   & liquid helium. Measured (constant width). R.J. Donnelly et al., J. Low Temp. Phys., 44 (1981) 471\\
-He4\_liq\_1\_coh.sqw                  & 1.34      & 0        &0.00747   &1         &{\bf 240}   & liquid helium. Measured. K. Andersen et al, J Phys Cond Mat, 6 (1994) 821\\
-Ne\_liq\_tot.sqw                      & 2.62      & 0.008    &0.039     &24.56     &{\bf 591}   & liquid neon. Measured. Buyers, Sears et al, Phys Rev A 11 (1975) 697\\
-Rb\_liq\_coh.sqw and Rb\_liq\_inc.sqw & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & liquid rubidium. Classical MD. E. Farhi, V. Hugouvieux, M.R. Johnson, W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 \\
-Rb\_liq\_tot.sqw                      & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & liquid rubidium. Measured. J. Copley et al, PRA 9 (1974) 1656 and PRL 32 (1974) 49 \\
+He4\_liq\_coh.sqw                     & 1.34      & 0        &0.00747   &2         &\textbf{240}   & liquid helium. Measured (constant width). R.J. Donnelly et al., J. Low Temp. Phys., 44 (1981) 471\\
+He4\_liq\_1\_coh.sqw                  & 1.34      & 0        &0.00747   &1         &\textbf{240}   & liquid helium. Measured. K. Andersen et al, J Phys Cond Mat, 6 (1994) 821\\
+Ne\_liq\_tot.sqw                      & 2.62      & 0.008    &0.039     &24.56     &\textbf{591}   & liquid neon. Measured. Buyers, Sears et al, Phys Rev A 11 (1975) 697\\
+Rb\_liq\_coh.sqw and Rb\_liq\_inc.sqw & 6.32      & 0.5      &0.38      &312.46    &\textbf{1300}  & liquid rubidium. Classical MD. E. Farhi, V. Hugouvieux, M.R. Johnson, W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 \\
+Rb\_liq\_tot.sqw                      & 6.32      & 0.5      &0.38      &312.46    &\textbf{1300}  & liquid rubidium. Measured. J. Copley et al, PRA 9 (1974) 1656 and PRL 32 (1974) 49 \\
       \hline
     \end{tabular}\end{small}
     \caption{Liquids of the \MCS library \cite{icsd_ill,ILLblue}. Low $c$ and high $\sigma_{abs}$ materials are highlighted.}
@@ -259,10 +259,10 @@ as well as the documentation of specific components, e.g with:
  mcdoc --text <name>
  mcdoc <file.comp>
 \end{lstlisting}
-The first line will search for all components matching the {\it name},
+The first line will search for all components matching the \textit{name},
 and display their help section as text. For instance, \verb+mcdoc .laz+ will list all available Lazy data files, whereas \verb+mcdoc --text Monitor+ will list most Monitors.
 The second example will display the help corresponding to
-the {\it file.comp} component, using your
+the \textit{file.comp} component, using your
 BROWSER\index{Environment variable!BROWSER} setting, or as text if unset.
 The \verb+--help+ option will display the command help, as usual.
 
@@ -283,6 +283,6 @@ After correction of a bug in 'Guide\_gravity', both components worked perfectly 
 
 \section{Disclaimer, bugs}\index{Bugs}
 
-We would like to emphasize that the usage of both the \MCS software, as well as its components are the responsability of the users. Indeed, obtaining accurate and reliable results requires a substantial work when writing instrument descriptions. This also means that users should read carefully both the documentation from the manuals \cite{mcstasmanual} and from the component itself (using \verb+mcdoc+ {\it comp}) before reporting errors. Most anomalous results often originate from a wrong usage of some part of the package.
+We would like to emphasize that the usage of both the \MCS software, as well as its components are the responsability of the users. Indeed, obtaining accurate and reliable results requires a substantial work when writing instrument descriptions. This also means that users should read carefully both the documentation from the manuals \cite{mcstasmanual} and from the component itself (using \verb+mcdoc+ \textit{comp}) before reporting errors. Most anomalous results often originate from a wrong usage of some part of the package.
 
 Anyway, if you find that either the documentation is not clear, or the behavior of the simulation is undoubtedly anomalous, you should report this to us at \verb+mcstas@risoe.dk+ and refer to our special bug/request reporting service \cite{github_issue_webpage}.

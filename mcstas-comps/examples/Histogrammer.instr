@@ -117,7 +117,7 @@ COMPONENT Origin = Progress_bar()
 /* event file readers *********************************************************/
 
 COMPONENT Virtualinput = Virtual_input(
-  filename=VirtualI_filename, type=type)
+  filename=VirtualI_filename)
 WHEN (file_mode ==1)  AT (0, 0, 0) RELATIVE Origin
 
 
