@@ -41,7 +41,7 @@
 
 DEFINE COMPONENT Lens_parab_Cyl
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, N=1, rough_z=0, rough_xy=0)
+SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, int N=1, rough_z=0, rough_xy=0)
 OUTPUT PARAMETERS (prms,parab)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -279,7 +279,6 @@ TRACE
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
   }
-
   /*Add absorption according to the path length inside the lens material*/
   p*=exp(-mu*d_total);
 
