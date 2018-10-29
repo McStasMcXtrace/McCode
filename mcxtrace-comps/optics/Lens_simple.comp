@@ -29,6 +29,8 @@
 *
 * xwidth:  [m] Width of lens aperture.
 * yheight: [m] Height of lens aperture.
+* radius:  [m] Radius of lens aperture (overrides xwidth & yheight).
+* f:       [m] Focal length - overrides the material_datafile - and diregards chromatic aberration.
 * material_datafile: [ ] File where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website.
 * N:       [ ] The number of successive lenses in the stack.
 * r:       [ ] The radius of curvature of the lens.
@@ -40,7 +42,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth,yheight,T=1,r=0, int N=1, int verbose=0, string material_datafile="Be.txt")
+SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=0, int N=1, int verbose=0, f=1, string material_datafile="Be.txt")
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -51,114 +53,111 @@ SHARE
 
 DECLARE
 %{
-  double xmax,xmin,ymax,ymin;
-
   struct {
     int Z;
     double At, rho;
     double *E,*delta;
+    t_Table Tb;
   } *prms;
-
 %}
 
 INITIALIZE
 %{
   int status=0;
  
-  if(!xwidth || !yheight){
+  if(!r && !(xwidth && yheight) ){
     fprintf(stderr,"%s: Lens has zero effective area\n",NAME_CURRENT_COMP);
-    exit(0);
-  }
-  xmax=xwidth/2.0;
-  xmin=-xmax;
-  ymax=yheight/2.0;
-  ymin=-ymax;
-
-  t_Table T;
-  if ( (status=Table_Read(&T,material_datafile,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
-  char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","sigma[a]");
-  prms=calloc(1,sizeof(*prms));
-  if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
-  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
-  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
-  prms->E=malloc(sizeof(double)*(T.rows+1));
-  prms->delta=malloc(sizeof(double)*(T.rows+1));
-
-  int i;
-  for (i=0;i<T.rows;i++){
-    prms->E[i]=T.data[i*T.columns];
-    prms->delta[i]=pow(2*M_PI/(T.data[i*T.columns]*E2K),2)*1e-20 * T.data[1+i*T.columns] * prms->rho/prms->At*1e6 * RE *1e-10 * NA* 0.5*M_1_PI;
-  }
-
-  prms->E[T.rows]=-1.0;
-  prms->delta[T.rows]=-FLT_MAX;
   
-  Table_Free(&T);
   if(r<=0){
-    fprintf(stderr,"Error (%s): No meaningful radius of curvature found r=%g.\n",NAME_CURRENT_COMP,r);
-    exit(-1);
+      fprintf(stderr,"Error (%s): No meaningful radius of curvature found r=%g.\n",NAME_CURRENT_COMP,r);
+      exit(-1);
   }
 
+  prms=calloc(1,sizeof(*prms));
+  if (!f && material_datafile && strlen(material_datafile)){
+      if ( (status=Table_Read(&(prms->Tb),material_datafile,0))==-1){
+          fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+          exit(-1);
+      }
+      char **header_parsed;
+      header_parsed=Table_ParseHeader(prms->Tb.header,"Z","A[r]","rho","sigma[a]");
+      if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
+      if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
+      if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+  }
+
+  if (T==0){
+      fprintf(stderr,"Warning (%s): Transmission is set to 0 and no material set. All X-rays will be absorbed by lens\n.",NAME_CURRENT_COMP);
+  }
 %}
 
 TRACE
 %{
   double sx,sy,sz,s;  
+  double s2x,s2y,s2z,s2;  
   double F,k,e,theta,alpha,delta;
+  double f1,rhoel;
+
   PROP_Z0;
-  if (x >xmin && x<xmax && y>ymin && y<ymax){
-    SCATTER;
-    if(T==0) 
+  if (r && x*x+y*y<r*r){
+      SCATTER;
+  }else if (xwidth && (x >-xwidth*0.5 && x<xwidth*0.5 && y>-yheight*0.5 && y<yheight*0.5)){
+      SCATTER;
+  }else{
       ABSORB;
-    else
-      p*=T;
-    
-    /*change direction towards focal*/
-    /*Focal length given by lambda and delta*/
-    k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-    e=K2E*k;
-    int i=0;
-    double alpha,delta;
-    while (e>prms->E[i])
-    {
-      i++;
-      if (prms->E[i]==-1) {
-          if(verbose) fprintf(stderr,"Photon energy (%g keV) outside Lens data range.\n",e);
-          ABSORB;
-      } 
-    }
-    /*protect against out of range errors*/
-    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
-    delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
-    F=r/2/delta/N;
-    /*Only focusing in the y-direction for now.*/
-    /*auxiliary vector s*/ 
-    sx=0;sy=-y;sz=F;
-    s=sqrt(scalar_prod(sx,sy,sz,sx,sy,sz));
-    theta=acos(scalar_prod(sx,sy,sz,0,0,1)/s);
-    if (y<0)theta=-theta; /*if y is negative rotation should be ccw*/
-    /*apply the rotation around the x-axis to focus in y*/
-    Rotation R;
-    R[0][0]=1; R[0][1]=0;R[0][2]=0;
-    R[1][0]=0; R[1][1]=cos(theta); R[1][2]=-sin(theta);
-    R[2][0]=0; R[2][1]=sin(theta); R[2][2]=cos(theta);
-    /*reuse the vector s as temp storage*/
-    sx=kx;
-    sy=ky*R[1][1]+kz*R[1][2];
-    sz=ky*R[2][1]+kz*R[2][2];
-    kx=sx;ky=sy;kz=sz;
   }
-  else{
-    ABSORB;
+
+  /*change direction towards focal point*/
+  if(!f){
+      /*Focal length given by lambda and delta*/
+      k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+      e=K2E*k;
+      f1=Table_Value(prms->Tb,e,1);
+
+      /*Calculation of Refractive Index */
+      rhoel= f1*NA*(prms->rho*1e-24)/prms->At; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+      delta= 2.0*M_PI*RE*rhoel/(k*k);
+      F=r/2/delta/N;
+  }else{
+      /*focal length is a scalar*/
+      F=f;
   }
+
+  /*Only focusing in the y-direction for now.*/
+
+
+  /*auxiliary vector s*/
+  sx=0;sy=-y;sz=F;
+  s=sqrt(scalar_prod(sx,sy,sz,sx,sy,sz));
+  theta=acos(scalar_prod(sx,sy,sz,0,0,1)/s);
+  if (y<0)theta=-theta; /*if y is negative rotation should be ccw*/
+  /*apply the rotation around the x-axis to focus in y*/
+  Rotation R;
+  R[0][0]=1; R[0][1]=0;R[0][2]=0;
+  R[1][0]=0; R[1][1]=cos(theta); R[1][2]=-sin(theta);
+  R[2][0]=0; R[2][1]=sin(theta); R[2][2]=cos(theta);
+  /*reuse the vector s as temp storage*/
+  sx=kx;
+  sy=ky*R[1][1]+kz*R[1][2];
+  sz=ky*R[2][1]+kz*R[2][2];
+  
+  /*rotate around a vector parallel to x.*/
+  rotate(s2x,s2y,s2z, kx,ky,kz, theta, 1, 0, 0);
+
+  kx=s2x;ky=s2y;kz=s2z;
+  //printf("s= %g %g %g   s2= %g %g %g\n",sx,sy,sz,s2x,s2y,s2z);
+
+  /*set the phase shift*/
+  //printf("PHI %.15e ",phi);
+  phi+=k*1e10*((x*x+y*y)/2*F); /*k in AA⁻1 but x,y and f are in m. conversion factor.*/
+  //printf("%.15e %.8e\n", phi, k*1e10*((x*x+y*y)/2*F));
 %}
 
 FINALLY
 %{
+  Table_Free(&(prms->Tb));
   free(prms);
 %}
 
