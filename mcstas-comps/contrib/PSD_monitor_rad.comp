@@ -30,6 +30,7 @@
 * nr: [1]              Number of concentric circles 
 * filename: [text]     Name of file in which to store the detector image 
 * filename_av: [text]  Name of file in which to store the averaged detector image 
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -46,7 +47,7 @@
 
 DEFINE COMPONENT PSD_monitor_rad
 DEFINITION PARAMETERS (nr=100)
-SETTING PARAMETERS (string filename=0, string filename_av=0, rmax=0.2)
+SETTING PARAMETERS (string filename=0, string filename_av=0, rmax=0.2, int nowritefile=0)
 OUTPUT PARAMETERS (PSDr_N, PSDr_p, PSDr_p2, PSDr_av_p, PSDr_av_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
@@ -88,6 +89,7 @@ TRACE
   %}
 SAVE
   %{
+    if (!nowritefile) {
     int i;
     for(i=0; i<nr; i++)
      {
@@ -109,6 +111,7 @@ SAVE
         "r", 0.5*rmax/nr, rmax+0.5*rmax/nr, nr,
         &PSDr_N[0],&PSDr_av_p[0],&PSDr_av_p2[0],
         filename_av);
+    }
   %}
 
 MCDISPLAY

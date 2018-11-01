@@ -22,15 +22,21 @@
 ***********************************************************************/
 
 DEFINE COMPONENT Mirror_curved
-DEFINITION PARAMETERS (string coating="Be.txt")
-SETTING PARAMETERS ( radius=1, length=0.2, width=0.2, R0=1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius=1, length=0.2, width=0.2, R0=1, string coating="Be.txt")
 OUTPUT PARAMETERS(prms,prmsp)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
-DECLARE
+SHARE
 %{
 #include <complex.h>
   %include "read_table-lib"
+%}
+
+
+
+DECLARE
+%{
   struct {
     int Z;
     double At, rho;
@@ -86,6 +92,9 @@ TRACE
       }else{
         dl=l1;
       }
+    }else{
+        /*particle misses the mirror completely (l0<0 and l1<0)*/
+        RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
 
     /*correction for only solving in xz-plane*/
@@ -150,7 +159,7 @@ TRACE
         }
       }else{
         /*R0 !=0 -> use that for reflectivity*/
-        p*=R0;
+          p*=R0;
       }
     }
   }else if(fabs(kx)<DBL_EPSILON && fabs(kz)<DBL_EPSILON && ky!=0){

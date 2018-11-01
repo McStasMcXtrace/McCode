@@ -405,39 +405,6 @@ class McGuiState(QtCore.QObject):
             self.__emitter.message('simulation done')
         self.__emitter.message('')
         self.__emitter.status('')
-    
-    def getInstrParams(self):
-        # get instrument params using 'mcrun [instr] --info'
-        # returns: params: a list of [name, value] pairs 
-        cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.__instrFile) + " --info"
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE,
-                                   shell=True,
-                                   universal_newlines=True,
-                                   cwd=os.path.dirname(self.__instrFile))
-        # synchronous call
-        (stdoutdata, stderrdata) = process.communicate()
-        # note: communicate() always sets a process exit code
-        
-        if stderrdata:
-            self.__emitter.message(stderrdata, err_msg=True)
-        
-        if process.returncode != 0:
-            raise Exception('Instrument compile error.')
-        
-        # get parameters from info
-        params = []
-        for l in stdoutdata.splitlines():
-            if 'Param:' in l:
-                s = l.split()
-                s[0]=""
-                s = ' '.join(s)
-                s = s.split('=')
-                if s[1].endswith("NULL"): s[1] = ""
-                params.append(s)
-        
-        return params
 
 
 ''' Controller
@@ -557,24 +524,69 @@ class McGuiAppController():
             self.view.ew.save()
             
             self.emitter.status("Getting instrument params...")
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            self.view.disableRunBtn()
             try:
-                instr_params = self.state.getInstrParams()
+                class ThreadInfoHandler():
+                    def __init__(self):
+                        self.stdout_lst = []
+                        self.finished = False
+                    def stdout(self, msg):
+                        self.stdout_lst.append(msg)
+                    def finish(self):
+                        self.finished = True
+                def fail():
+                    raise Exception("get_instr_params failed")
+                handler = ThreadInfoHandler()
+                
+                somethread = McRunQThread()
+                somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
+                somethread.cwd = os.path.dirname(self.state.getInstrumentFile())
+                somethread.finished.connect(handler.finish)
+                somethread.thread_exception.connect(fail)
+                somethread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
+                somethread.message.connect(handler.stdout)
+                somethread.start()
+        
+                while not handler.finished:
+                    time.sleep(0.2)
+                    QtWidgets.QApplication.processEvents()
+                
+                params = []
+                for l in handler.stdout_lst:
+                    if 'Param:' in l:
+                        s = l.split()
+                        s[0]=""
+                        s = ' '.join(s)
+                        s = s.split('=')
+                        if s[1].endswith("NULL"): s[1] = ""
+                        params.append(s)
+
+                instr_params = params
+                
             except:
                 self.emitter.status("Instrument compile error")
                 raise
+            finally:
+                QtWidgets.QApplication.restoreOverrideCursor()
+                self.view.enableRunBtn()
             
             def get_compnames(text):
                 ''' return a list of compnames from an instrument definition code text '''
                 comps = []
-                pat = 'COMPONENT[ ]+([\w0-9]+)[ ]+='
+                pat = 'COMPONENT[ ]+([\w0-9]+)[ ]*='
                 for l in text.splitlines():
-                    m = re.match(pat, l)
+                    m = re.search(pat, l)
                     if m:
                         comps.append(m.group(1))
                 return comps
             
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
-            fixed_params, new_instr_params, inspect = self.view.showStartSimDialog(instr_params, comps)
+            _a, _b, mcdisplays = mccode_config.get_options()
+            fixed_params, new_instr_params, inspect, mcdisplay = self.view.showStartSimDialog(instr_params, comps, mcdisplays)
+
+            if mcdisplay != None:
+                mccode_config.configuration["MCDISPLAY"] = mcdisplay
             
             self.emitter.status("")
             
@@ -769,10 +781,17 @@ class McGuiAppController():
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     def handleMcdoc(self):
-        mcdoc='%sdoc' % mccode_config.get_mccode_prefix()
+        cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
-            mcdoc='start ' + mcdoc + '-pl.bat'
-        subprocess.Popen(mcdoc, shell=True)
+            cmd='start ' + cmd + '-pl.bat'
+        subprocess.Popen(cmd, shell=True)
+
+    def handleMcdocCurrentInstr(self):
+        cmd='%sdoc %s' % (mccode_config.get_mccode_prefix(), self.state.getInstrumentFile() )
+        print(cmd)
+        if sys.platform == "win32":
+            cmd='start ' + cmd + '-pl.bat'
+        subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
         if not sys.platform == 'win32':
@@ -847,6 +866,7 @@ class McGuiAppController():
         mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         mwui.actionDisplay_2d.triggered.connect(self.handleMcDisplay2D)
         
+        mwui.actionMcDocCurrent.triggered.connect(self.handleMcdocCurrentInstr)
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
         mwui.actionMcstas_User_Manual.triggered.connect(self.handleHelpPdf)

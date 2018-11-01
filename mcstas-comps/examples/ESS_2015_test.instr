@@ -9,7 +9,7 @@
 * Origin: NPI Rez
 * %INSTRUMENT_SITE: ESS
 *
-* Test of the ESS-2015 moderator model with updated component ESS_moderator_corr.comp  .
+* Test of the ESS-2015 moderator model with updated component ESS_moderator.comp  .
 *
 * %Description
 * Measures flux projected on a 1cm^2 target at 100 m,
@@ -83,7 +83,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-  COMPONENT Source=ESS_moderator_corr(yheight_t=Yheight,yheight_c=Yheight,focus_xw=0.01,focus_yh=0.01,target_index=+6,
+  COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,focus_xw=0.01,focus_yh=0.01,target_index=+6,
    Lmin=lmin,Lmax=lmax, cold_frac=frac, sourcedef=srcdef, acc_power=power, n_pulses=np, beamport_angle=ANGLE)
   AT (0, 0, 0) RELATIVE  Origin
 EXTEND %{
