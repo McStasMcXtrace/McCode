@@ -67,25 +67,24 @@ class McRunQThread(QtCore.QThread):
             # check cmd is set
             if self.cmd == '':
                 raise Exception('McRunQThread: Set cmd before running Start()')
-            
+
             # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
             # not readable live
             process = subprocess.Popen(self.cmd, 
                                        stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
                                        stdin=subprocess.PIPE,
                                        shell=True,
                                        universal_newlines=True,
                                        cwd=self.cwd)
-            
+
             for stdoutdata in process.stdout:
                 self.message.emit(stdoutdata.rstrip('\n'))
 
             for stderrdata in process.stderr:
                 self.error.emit(stderrdata.rstrip('\n'))
-                
+
             self.process_returncode = process.returncode
-                        
         except:
             (type, value, traceback) = sys.exc_info()
             self.thread_exception.emit(value.message)
