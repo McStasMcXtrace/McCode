@@ -831,7 +831,7 @@ class McGuiAppController():
     def connectCallbacks(self):        
         # connect UI widget signals to our handlers/logics
         # NOTICE: This explicit widget access is an exception - all widget access is otherwise handled by the view classes
-        
+
         mwui = self.view.mw.ui
         mwui.actionQuit.triggered.connect(self.handleExit)
         mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
@@ -848,7 +848,7 @@ class McGuiAppController():
             self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)
             self.view.mw.add_conf_menu('Use Python App').triggered.connect(self.handleDefaultMcguiPy)
             self.view.mw.add_conf_menu('Use Perl App').triggered.connect(self.handleDefaultMcguiPl)            
-            
+
         # If not on Windows add menu point to make current mccode the system default
         if not sys.platform == 'win32':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
@@ -856,7 +856,7 @@ class McGuiAppController():
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
         mwui.btnEdit.clicked.connect(self.handleEditInstrument)
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
-        
+
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
@@ -864,7 +864,7 @@ class McGuiAppController():
         mwui.actionPlotOther.triggered.connect(self.handlePlotOtherResults)
         mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         mwui.actionDisplay_2d.triggered.connect(self.handleMcDisplay2D)
-        
+
         mwui.actionMcDocCurrent.triggered.connect(self.handleMcdocCurrentInstr)
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
@@ -872,13 +872,15 @@ class McGuiAppController():
         mwui.actionMcstas_Component_Manual.triggered.connect(self.handleHelpPdfComponents)
         mwui.actionAbout.triggered.connect(self.handleHelpAbout)
         
+        self.view.ew.ui.actionSave_As.triggered.connect(self.handleSaveAs)
+
         ew = self.view.ew
         ew.saveRequest.connect(self.handleSaveInstrument)
-        
+
         st = self.state
         st.simStateUpdated.connect(self.view.updateSimState)
         st.instrumentUpdated.connect(self.view.updateInstrument)
-        
+
         emitter = self.emitter
         emitter.statusUpdate.connect(self.view.updateStatus)
         emitter.logMessageUpdate.connect(self.view.updateLog)
@@ -891,24 +893,23 @@ def handleExceptionMsg(msg):
 ''' Program execution
 '''
 def main():
-    
     # ensure keyboardinterrupt ctr-c
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    
+
     try:
         mccode_config.load_user_config()
         mccode_config.check_env_vars()
-                
+
         mcguiApp = PyQt5.QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
-        
+
         sys.exit(mcguiApp.exec_())
-        
+
     except Exception as e: 
         print(e)
         raise
-    
+
 
 if __name__ == '__main__':
     main()
