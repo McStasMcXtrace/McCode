@@ -57,6 +57,8 @@ DEFINE COMPONENT Mask
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, string mask, invert=0, virtual=0)
 OUTPUT PARAMETERS (prms,masking)
+//DEPENDENCY "-lpng -DUSE_PNG"
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 SHARE
 %{
@@ -180,8 +182,8 @@ INITIALIZE
           }else if(bd==16){
             tuplelen=3;
             tuple_normalizer=0xFFFFFFFFFFFF;
-        }
-        break;
+          }
+          break;
         case PNG_COLOR_TYPE_RGB_ALPHA:
           if(bd==8){
             tuplelen=4;
@@ -252,7 +254,9 @@ TRACE
     }else{
       masking=1.0-Table_Index(prms.table,j,i);
     }
-    p*=masking;
+    if(!virtual){
+        p*=masking;
+    }
     SCATTER;
   }
 
