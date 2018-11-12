@@ -66,7 +66,7 @@ class McRunQThread(QtCore.QThread):
         try:
             # check cmd is set
             if self.cmd == '':
-                raise Exception('McRunQThread: Set cmd before running Start()')
+                raise Exception("McRunQThread: Set cmd before running 'start'")
 
             # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
             # not readable live
@@ -81,13 +81,9 @@ class McRunQThread(QtCore.QThread):
             for stdoutdata in process.stdout:
                 self.message.emit(stdoutdata.rstrip('\n'))
 
-            for stderrdata in process.stderr:
-                self.error.emit(stderrdata.rstrip('\n'))
-
             self.process_returncode = process.returncode
-        except:
-            (type, value, traceback) = sys.exc_info()
-            self.thread_exception.emit(value.message)
+        except Exception as e:
+            self.thread_exception.emit(str(e))
             
 
 ''' State
@@ -534,15 +530,13 @@ class McGuiAppController():
                         self.stdout_lst.append(msg)
                     def finish(self):
                         self.finished = True
-                def fail():
-                    raise Exception("get_instr_params failed")
                 handler = ThreadInfoHandler()
                 
                 somethread = McRunQThread()
                 somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
                 somethread.cwd = os.path.dirname(self.state.getInstrumentFile())
                 somethread.finished.connect(handler.finish)
-                somethread.thread_exception.connect(fail)
+                somethread.thread_exception.connect(handleExceptionMsg)
                 somethread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
                 somethread.message.connect(handler.stdout)
                 somethread.start()
