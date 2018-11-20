@@ -144,9 +144,9 @@ TRACE
 	kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
 	kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
 	
-	qx=kfx-kix;
-	qy=kfy-kiy;
-	qz=kfz-kiz;
+	qx=kix-kfx;
+	qy=kiy-kfy;
+	qz=kiz-kfz;
 	
 	/* Calculate projections along qa and qb */
 	qqa = qx*qax + qz*qaz;
