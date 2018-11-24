@@ -59,14 +59,16 @@ fi
 
 # Check if development headers are in place, especially math.h...
 if [ ! -f /usr/include/math.h ]; then
-    echo "math.h header found in /usr/include!"
+    echo "math.h header NOT found in /usr/include!"
     echo "Attemping to locate installable package with headers "
-    HEADERS=`find /Library/Developer/CommandLineTools/Packages -name \*headers\*pkg`
-    NUMHEADERS=`echo $HEADERS | wc -l`
-    if [[ $NUMHEADERS == 1 ]];
+    HEADERS=`find /Library/Developer/CommandLineTools/Packages -name *pkg`
+    NUMHEADERS=`find /Library/Developer/CommandLineTools/Packages -name *pkg | wc -l | bc`
+    echo $NUMHEADERS
+    echo $HEADERS - i.e. $NUMHEADERS
+    if [[ "$NUMHEADERS" == "1" ]];
     then
 	echo "Excellent, one header package found, attempting install!"
-	osascript -e "tell app \"System Events\" to display dialog \"Development headers were not installed in /usr/include and found a matching package, spawning installation. \n\n!! Please rerun this tool after installation completes !!\""
+	osascript -e "tell app \"System Events\" to display dialog \"Development headers were not installed in /usr/include and I found a matching package \n\n $HEADERS \n\n--> Suggesting to spawn installation. \n\n Please rerun this tool after installation completes !!\""
 	rc1=$?;
 	if [[ $rc1 == 0 ]]; 
 	then
@@ -84,20 +86,20 @@ if [ ! -f /usr/include/math.h ]; then
 	else
 	    echo
 	    echo
-	    echo "!! Not requesting Xcode cmdline install !!"
+	    echo "!! Not requesting header package install !!"
 	    echo
 	    echo
 	    sleep 3
             exit 1
 	fi
-    elif [[ $NUMHEADERS == 0 ]];
+    elif [[ "$NUMHEADERS" == "0" ]];
     then
 	echo "Argh! No package found, inform user!"
 	osascript -e "tell app \"System Events\" to display dialog \"Development headers were not installed in /usr/include and I did NOT FIND a matching package to install! Please ask McCode Developers what to do with your given version of macOS and Xcode tools!!!\""
 	exit 1
     else
 	echo "Argh! More than one package found, inform user!"
-	osascript -e "tell app \"System Events\" to display dialog \"Development headers were not installed in /usr/include and I did found several possible packages install! Please try to pick one yourself from the folder that will now open...!!!\""
+	osascript -e "tell app \"System Events\" to display dialog \"Development headers were not installed in /usr/include and I found several possible packages install! Please try to pick one yourself from the folder that will now open...!!!\""
 	if [[ $rc1 == 0 ]]; 
 	then
 	    echo
@@ -122,7 +124,7 @@ if [ ! -f /usr/include/math.h ]; then
 	fi
     fi
 else
-    echo Excellent, math.h header found in /usr/include!
+    echo Excellent, math.h header already found in /usr/include!
 fi
 
 # Check if XQuartz is installed 
