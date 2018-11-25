@@ -177,8 +177,8 @@ osascript -e "tell app \"System Events\" to display dialog \"We recommend that y
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
-    echo sudo chown -R $USER:staff /usr/local
-    sudo chown -R $USER:staff /usr/local
+    echo sudo chown -R $USER:staff /usr/local/*
+    sudo chown -R $USER:staff /usr/local/*
     mkdir -p /usr/local/bin
 else
     echo "Not taking ownership of /usr/local..."
