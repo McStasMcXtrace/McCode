@@ -134,8 +134,7 @@ def get_options():
                          prefix+"display"+suffix+" -m",
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML", 
-                         prefix+"display"+suffix+" --format=Mantid",
-                         prefix+"display-matplotlib"]
+                         prefix+"display"+suffix+" --format=Mantid"]
     else:
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
@@ -144,8 +143,7 @@ def get_options():
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",
-                         prefix+"display"+suffix+" --format=VRML", 
-                         prefix+"display-matplotlib"]
+                         prefix+"display"+suffix+" --format=VRML"]
 
  
     mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
