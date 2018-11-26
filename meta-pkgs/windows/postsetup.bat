@@ -6,6 +6,7 @@
 @REM  -> is what is present in http://support.mccode.org/windows/miniconda3.zip
 @REM
 @set PATH=c:\\strawberry\\perl\\bin;%PATH%
-@call c:\\strawberry\\perl\\bin\\ppm.bat install PDL
-@call c:\\strawberry\\perl\\bin\\ppm.bat install PGPLOT
-@call c:\\strawberry\\perl\\bin\\ppm.bat install Tk
+@call c:\\strawberry\\perl\\bin\\ppm.bat install PDL PGPLOT Tk
+@unzip Tk-CodeText-0.3.4.zip
+@cd Tk-CodeText-0.3.4
+@c:\\strawberry\\perl\\bin\gmake install
