@@ -7,6 +7,36 @@
 *
 * Component: Single_crystal_inelastic
 *
+* The component handles a 4D S(q,w) material dispersion, and scatters neutrons 
+* out of it. It is based on the Isotropic_Sqw methodology, extended to 4D. 
+
+* A number of approximations are applied:
+*
+*  - geometry is restricted to box, cylinder and sphere
+*  - ignore absorption, multiple scattering and incoherent scattering
+*  - no temperature handling. The temperature must be taken into account when 
+*      generating the S(q,w) data sets, which should contain Bose/detailed balance.
+*  - intensity is used as provided by the S(q,w) data set
+*  
+* We recommend that you first try the Test_Single_crystal_inelastic example to 
+* learn how to use this complex component.
+*
+* 4D S(q,w) data files
+* --------------------
+*
+* The input data file derives from other McStas formats. It may contain structural
+* information as in Lau/Laz files, and a list of S(q,w) [one per row] with 5 columns
+*
+*   [ H K L E S(q,w) ]
+*
+* An example file example.sqw4 is provided in the McStas/Data directory.
+*
+* You may generate such files using <a href="http://ifit.mccode.org">iFit </a> such as:
+*
+*   s = sqw_vaks('defaults');             % a 4D model
+*   d = iData(s);                         % use default coarse grid for axes [-0.5:0.5]
+*   saveas(d, 'sx_coh.sqw4', 'mcstas');   % export to 4D Sqw file
+*
 * %VALIDATION:
 * This component is undergoing validation.
 *
