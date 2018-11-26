@@ -32,9 +32,6 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "Support\PPDs.zip"; DestDir: "{tmp}"
-Source: "Support\unzip.exe"; DestDir: "{tmp}"
-Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "postsetup.bat"; DestDir: "{tmp}"
 Source: "python-install.bat"; DestDir: "{tmp}"
 Source: "dist\mcstas-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
@@ -53,7 +50,6 @@ Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.e
 Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "Support\Miniconda3-latest-Windows-x86_64.exe"; DestDir: "{tmp}"
 [Run]
-Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\python-install.bat"
 Filename: "{tmp}\postsetup.bat"
 Filename: "{tmp}\mcstas-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
