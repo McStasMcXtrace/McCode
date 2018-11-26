@@ -12,7 +12,7 @@
 * %D
 * Example instrument showing how to calculate brilliance transfer using L_monitor's and WHEN statements
 *
-* %Example: mcrun -n1e7 BTsimple.instr lambda=10 Detector: Brilliance_transfer.dat_I=75.4758
+* %Example: -n1e7 BTsimple.instr lambda=10 Detector: Brilliance_transfer.dat_I=75.4758
 *
 * %P
 * lambda:  [AA]  Central wavelength produced at the source
