@@ -517,7 +517,7 @@ class McGuiAppController():
         else:
             # ensure auto-save
             self.view.ew.save()
-            
+
             self.emitter.status("Getting instrument params...")
             QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             self.view.disableRunBtn()
@@ -531,7 +531,7 @@ class McGuiAppController():
                     def finish(self):
                         self.finished = True
                 handler = ThreadInfoHandler()
-                
+
                 somethread = McRunQThread()
                 somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
                 somethread.cwd = os.path.dirname(self.state.getInstrumentFile())
@@ -540,11 +540,11 @@ class McGuiAppController():
                 somethread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
                 somethread.message.connect(handler.stdout)
                 somethread.start()
-        
+
                 while not handler.finished:
                     time.sleep(0.2)
                     QtWidgets.QApplication.processEvents()
-                
+
                 params = []
                 for l in handler.stdout_lst:
                     if 'Param:' in l:
@@ -556,14 +556,14 @@ class McGuiAppController():
                         params.append(s)
 
                 instr_params = params
-                
+
             except:
                 self.emitter.status("Instrument compile error")
                 raise
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
                 self.view.enableRunBtn()
-            
+
             def get_compnames(text):
                 ''' return a list of compnames from an instrument definition code text '''
                 comps = []
@@ -573,19 +573,24 @@ class McGuiAppController():
                     if m:
                         comps.append(m.group(1))
                 return comps
-            
+
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
-            _a, _b, mcdisplays = mccode_config.get_options()
-            fixed_params, new_instr_params, inspect, mcdisplay = self.view.showStartSimDialog(instr_params, comps, mcdisplays)
+            _a, mcplots, mcdisplays = mccode_config.get_options()
+            fixed_params, new_instr_params, inspect, mcdisplay, mcplot = self.view.showStartSimDialog(
+                instr_params, comps, mcdisplays, mcplots)
 
             if mcdisplay != None:
                 mccode_config.configuration["MCDISPLAY"] = mcdisplay
-            
+            if mcplot != None:
+                mccode_config.configuration["MCPLOT"] = mcplot
+                # we have to (silently) save config now, because this option is executed by mcrun
+                mccode_config.save_user_config()
+
             self.emitter.status("")
-            
+
             if fixed_params != None:
                 self.state.run(fixed_params, new_instr_params, inspect)
-        
+
     def handleConfiguration(self):
         self.view.showConfigDialog()
         

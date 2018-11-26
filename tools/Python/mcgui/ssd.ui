@@ -216,13 +216,6 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QCheckBox" name="cbxAutoPlot">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="1">
          <widget class="QLabel" name="lblAutoPlot">
           <property name="text">
@@ -239,6 +232,9 @@
            <string>McDisplay</string>
           </property>
          </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QComboBox" name="cbxAutoPlotters"/>
         </item>
        </layout>
       </item>
