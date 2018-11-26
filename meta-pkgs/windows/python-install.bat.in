@@ -11,6 +11,7 @@
 @set PATH=c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts;%PATH%
 @REM conda config --add channels conda-forge
 @conda install mingw -y
+@conda install -c msys2 m2w64-gsl -y
 @pip install pyqt5 qscintilla mpld3 pyqtgraph pyaml ply matplotlib numpy tornado scipy pillow
 @echo ...
 @echo Press a key below to exit this installation shell...
