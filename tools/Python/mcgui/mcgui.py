@@ -208,11 +208,17 @@ class McGuiState(QtCore.QObject):
             if os.path.isfile(self.__cFile):
                 os.remove(self.__cFile)
                 self.__cFile = ''
-        
+
+        # that wait cursor
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        def compile_complete():
+            self.__emitter.message('compile thread done\n')
+            QtWidgets.QApplication.restoreOverrideCursor()
+
         # compile simulation in a background thread
         self.compilethread = QtCore.QThread()
         self.compilethread.run = lambda: self.compileAsync(mpi, self.__thread_exc_signal)
-        self.compilethread.finished.connect(lambda: self.__emitter.message('compile thread done \n'))
+        self.compilethread.finished.connect(compile_complete)
         self.compilethread.start()
         
     def compileAsync(self, mpi, thread_exc_signal):
