@@ -41,9 +41,6 @@ find tools/Legacy-Perl-cmdline-win -type f -exec unix2dos \{\} \;
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f PPDs.zip ]; then
-	wget http://ppds.mccode.org/PPDs.zip
-    fi
     if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
 	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe

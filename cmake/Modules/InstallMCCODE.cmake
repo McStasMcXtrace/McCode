@@ -211,12 +211,6 @@ macro(installMCCODE)
 
   configure_directory ("src/*" "work/src")
 
-  # Generate man pages
-  message("-- Preparing man files")
-  file(MAKE_DIRECTORY "work/doc/man")
-  configure_directory("doc/man/*" "work/doc/man")
-
-
   ## Include source directories for building
   include_directories(
     "${PROJECT_BINARY_DIR}/work/src"             # rewritten files from output dir
@@ -288,18 +282,6 @@ macro(installMCCODE)
   installLib("${WORK}/lib/")
 
   if(NOT WINDOWS)
-    # Man pages
-    install (
-      FILES "${WORK}/doc/man/${FLAVOR}.1"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/doc/man/man1
-      RENAME "${FLAVOR}.1"
-      )
-    install (
-      FILES "${WORK}/doc/man/${FLAVOR_FMT}.1"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/doc/man/man1"
-      RENAME "${FLAVOR_FMT}.1"
-      )
-
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"

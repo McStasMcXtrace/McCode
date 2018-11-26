@@ -126,27 +126,27 @@ TRACE
 	/* Calculate energy transfer */
 	Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
 	Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
-	E=Ef-Ei;
+	E=Ei-Ef;
 	
 	/* calculate k vectors and momentum transfer*/
-	kix=vx;
-	kiy=vy;
-	kiz=vz;
-	kfx=rvx;
-	kfy=rvy;
-	kfz=rvz;
+	kix=rvx;
+	kiy=rvy;
+	kiz=rvz;
+	kfx=vx;
+	kfy=vy;
+	kfz=vz;
 	NORM(kix, kiy, kiz);
 	NORM(kfx, kfy, kfz);
 	
 	/* K-vector lengths */
-	Ki=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
-	Kf=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
+	Ki=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
+	Kf=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
 	kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
 	kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
 	
-	qx=kfx-kix;
-	qy=kfy-kiy;
-	qz=kfz-kiz;
+	qx=kix-kfx;
+	qy=kiy-kfy;
+	qz=kiz-kfz;
 	
 	/* Calculate projections along qa and qb */
 	qqa = qx*qax + qz*qaz;
@@ -184,7 +184,7 @@ SAVE
   DETECTOR_OUT_2D(
 	"qa vs qb monitor E Sum",
         "qa [AA^-1]",
-        "qa [AA^-1]",
+        "qb [AA^-1]",
         qamin, qamax, qbmin, qbmax,
         nqa, nqb,
         &M_Ns[0][0],&M_ps[0][0],&M_p2s[0][0],
