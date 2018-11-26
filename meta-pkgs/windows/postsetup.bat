@@ -9,4 +9,4 @@
 @call c:\\strawberry\\perl\\bin\\ppm.bat install PDL PGPLOT Tk
 @unzip Tk-CodeText-0.3.4.zip
 @cd Tk-CodeText-0.3.4
-@c:\\strawberry\\perl\\bin\gmake install
+@c:\\strawberry\\C\\bin\\gmake install
