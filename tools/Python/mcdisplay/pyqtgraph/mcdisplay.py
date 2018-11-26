@@ -352,7 +352,10 @@ class McDisplay2DGui(object):
         if False:
             print(event.key())
         
-        if event.key() == 81:                # q
+        if event.key() == 66:                   # b
+            if self.zoomstate == self.ZoomState.ZOOM:
+                self._unzoom()
+        if event.key() == 81:                   # q
             QtGui.QApplication.quit()
         elif event.key() == 80:                 # p
             self._dumpfile(format='png')
