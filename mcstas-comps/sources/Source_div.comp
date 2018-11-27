@@ -141,11 +141,17 @@ TRACE
   }
 
   if (gauss==1) {
-    thetah = randnorm()*sigmah;
-    thetav = randnorm()*sigmav;
+      thetah = randnorm()*sigmah;
+      thetav = randnorm()*sigmav;
   } else {
-    thetah = randpm1()*focus_aw*DEG2RAD/2;
-    thetav = randpm1()*focus_ah*DEG2RAD/2;
+      /*find limits of uniform sampling scheme for vertical divergence.
+        thetav should be acos(1-2*U) for U\in[0,1]. for theta measured from vertical axis
+        we only use a sub-interval for U and measure from horizontal plane.*/
+      double sample_lim1,u2;
+      sample_lim1=(1-cos(M_PI_2 - focus_ah/2.0*DEG2RAD))*0.5;
+      u2=randpm1()*(sample_lim1-0.5) + 0.5;
+      thetav = acos(1-2*u2) - M_PI_2;
+      thetah = randpm1()*focus_aw*DEG2RAD/2;
   }
 
   tan_h = tan(thetah);
