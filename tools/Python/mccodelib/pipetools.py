@@ -190,6 +190,7 @@ class ParticlesTraceState(LineHandlerState):
     
 class PostParticletraceState(LineHandlerState):
     ''' this state does nothing, so nothing happens from now on '''
+    waskilled = False
     def add_line(self, line):
         # Only kill if PID still can be killed, buffered stream data
         # means that we could enter here multiple times still.
@@ -201,7 +202,7 @@ class PostParticletraceState(LineHandlerState):
                 subprocess.call(['taskkill', '/F', '/T', '/PID',  str(self.process.pid)])
             except:
                 pass
-
+        self.waskilled = True
 
     def setprocess(self, process):
         self.process = process
@@ -277,7 +278,8 @@ class TraceReader(Thread):
 
             # fail state exit status from mcrun process
             if poll != 0:
-                raise Exception("process exited with code: %s" % str(poll))
+                if not self.allstates['post_particles'].waskilled:
+                    raise Exception("process exited with code: %s" % str(poll))
 
             # If we made it all the way here, sim has ended or been killed
             self.databox.set_particlesdone()
