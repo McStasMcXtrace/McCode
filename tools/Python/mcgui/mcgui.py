@@ -529,14 +529,19 @@ class McGuiAppController():
             self.view.disableRunBtn()
             try:
                 class ThreadInfoHandler():
-                    def __init__(self):
+                    def __init__(self, forwardmsg=None):
                         self.stdout_lst = []
                         self.finished = False
+                        self.forwardmsg = forwardmsg
                     def stdout(self, msg):
                         self.stdout_lst.append(msg)
+                        if self.forwardmsg:
+                            self.forwardmsg(msg)
                     def finish(self):
                         self.finished = True
-                handler = ThreadInfoHandler()
+                def msg(msg, em=self.emitter):
+                    em.message(msg, err_msg=True)
+                handler = ThreadInfoHandler(lambda msg, em=self.emitter: em.message(msg, err_msg=True))
 
                 somethread = McRunQThread()
                 somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
