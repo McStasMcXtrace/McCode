@@ -19,6 +19,8 @@ rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
 find tools/Legacy-Perl-win -type f -exec unix2dos \{\} \;
 find tools/Legacy-Perl-cmdline-win -type f -exec unix2dos \{\} \;
+# Patch the Multilayer_sample to allow compilation with GSL
+sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw-w64\\+g' mcstas-comps-win/contrib/Multilayer_Sample.comp
 
 # 64-bit
 ./mkdist mcstas $1 "" "" mingw64 "" -- nsis64
