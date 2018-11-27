@@ -363,7 +363,7 @@ class McGuiState(QtCore.QObject):
         # autoplot
         autoplot = fixed_params[8]
         if autoplot and simtrace == 0:
-            runstr = runstr + ' --autoplot'
+            runstr = runstr + ' --autoplot' +  ' --autoplotter=' + mccode_config.configuration["MCPLOT"]
         
         # parse instrument params
         for p in params:
@@ -582,15 +582,13 @@ class McGuiAppController():
 
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
             _a, mcplots, mcdisplays = mccode_config.get_options()
-            fixed_params, new_instr_params, inspect, mcdisplay, mcplot = self.view.showStartSimDialog(
+            fixed_params, new_instr_params, inspect, mcdisplay, autoplotter = self.view.showStartSimDialog(
                 instr_params, comps, mcdisplays, mcplots)
 
             if mcdisplay != None:
                 mccode_config.configuration["MCDISPLAY"] = mcdisplay
-            if mcplot != None:
-                mccode_config.configuration["MCPLOT"] = mcplot
-                # we have to (silently) save config now, because this option is executed by mcrun
-                mccode_config.save_user_config()
+            if autoplotter != None:
+                mccode_config.configuration["MCPLOT"] = autoplotter
 
             self.emitter.status("")
 
