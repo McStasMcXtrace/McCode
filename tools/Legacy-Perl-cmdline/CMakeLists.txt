@@ -158,16 +158,6 @@ if(NOT WINDOWS)
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/"
   )
   
-  # Generate man pages
-  set(LIST doc run)
-  foreach(NAME ${LIST})
-
-    set(filepath "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1")
-
-    configure_file("doc/man/${P}${NAME}.1.in" "${filepath}" @ONLY)
-    install(FILES "${filepath}" DESTINATION ${FLAVOR}/${MCCODE_VERSION}/doc/man/man1)
-
-  endforeach()
 endif()
 
 

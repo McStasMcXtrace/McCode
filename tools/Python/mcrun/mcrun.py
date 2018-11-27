@@ -66,6 +66,11 @@ def add_mcrun_options(parser):
         action='store_true',
         help='open plotter on generated dataset')
     
+    add('--autoplotter',
+        action='store',
+        type=str,
+        help='specify the plotter used with --autoplot')
+
     add('--embed',
         action='store_true', default=True,
         help='store copy of instrument file in output directory')
@@ -376,11 +381,15 @@ def main():
     if isdir(options.dir):
         LOG.info('Placing instr file copy %s in dataset %s',options.instr,options.dir)
         copyfile(options.instr, join(options.dir,basename(options.instr)))
-            
+
     if options.autoplot is not None:
+        autoplotter = mccode_config.configuration['MCPLOT']
+        # apply selected autoplotter, if used
+        if options.autoplotter is not None:
+            autoplotter = options.autoplotter
         if isdir(options.dir):
             LOG.info('Running plotter %s on dataset %s',mccode_config.configuration['MCPLOT'],options.dir)
-            Process(mccode_config.configuration['MCPLOT']).run([options.dir])
+            Process(autoplotter).run([options.dir])
 
 if __name__ == '__main__':
     try:

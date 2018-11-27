@@ -147,16 +147,17 @@ class McView(object):
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 
-    def showStartSimDialog(self, params, comps, mcdisplays):
+    def showStartSimDialog(self, params, comps, mcdisplays, mcplots):
         if self.__ssd == None:
             self.__ssd = McStartSimDialog()
         self.__ssd.createParamsWidgets(params)
         self.__ssd.set_components(comps)
         self.__ssd.set_mcdisplays(mcdisplays)
+        self.__ssd.set_mcplots(mcplots)
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
-            return None, None, None, None
+            return None, None, None, None, None
 
     def showNewInstrDialog(self, lookdir):
         dlg = QtWidgets.QFileDialog()
@@ -613,6 +614,7 @@ class McStartSimDialog(QtWidgets.QDialog):
         super(McStartSimDialog, self).__init__(parent)
         self._last_inspect_compnames = None
         self._last_mcdisplays = None
+        self._last_mcplots = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         self.ui.btnStart.clicked.connect(self.accept)
@@ -634,9 +636,17 @@ class McStartSimDialog(QtWidgets.QDialog):
             return
         self._last_mcdisplays = mcdisplays
         self.ui.cbxMcdisplays.clear()
-        #self.ui.cbxMcdisplays.addItem("-- None --")
         for m in mcdisplays:
             self.ui.cbxMcdisplays.addItem(m)
+
+    def set_mcplots(self, mcplots):
+        if mcplots == self._last_mcplots:
+            return
+        self._last_mcplots = mcplots
+        self.ui.cbxAutoPlotters.clear()
+        self.ui.cbxAutoPlotters.addItem("-- None --")
+        for m in mcplots:
+            self.ui.cbxAutoPlotters.addItem(m)
 
     def _set_inspect_visible(self, sim_run_idx):
         visible = False
@@ -646,8 +656,6 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxInspect.setVisible(visible)
         self.ui.lblMcdisplays.setVisible(visible)
         self.ui.cbxMcdisplays.setVisible(visible)
-        self.ui.cbxAutoPlot.setVisible(not visible)
-        self.ui.lblAutoPlot.setVisible(not visible)
 
     def getValues(self):
         ''' Return values:
@@ -699,7 +707,11 @@ class McStartSimDialog(QtWidgets.QDialog):
         p7 = str(self.ui.edtOutputDir.text())
         
         # autoplot
-        p8 = self.ui.cbxAutoPlot.isChecked()
+        mcplot = None
+        idx = self.ui.cbxAutoPlotters.currentIndex()
+        p8 = idx > 0
+        if idx > 0:
+            mcplot = self._last_mcplots[idx-1]
         
         fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8]
         
@@ -718,11 +730,11 @@ class McStartSimDialog(QtWidgets.QDialog):
         
         mcdisplay = None
         idx = self.ui.cbxMcdisplays.currentIndex()
-        if idx > 0:
+        if p0 == SimTraceEnum.TRACE:
             mcdisplay = self._last_mcdisplays[idx]
         
-        return fixed_params, params, inspect, mcdisplay
-    
+        return fixed_params, params, inspect, mcdisplay, mcplot
+
     _wParams = []
     __oldParams = []
     def createParamsWidgets(self, params):

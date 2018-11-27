@@ -66,7 +66,7 @@ class McRunQThread(QtCore.QThread):
         try:
             # check cmd is set
             if self.cmd == '':
-                raise Exception('McRunQThread: Set cmd before running Start()')
+                raise Exception("McRunQThread: Set cmd before running 'start'")
 
             # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
             # not readable live
@@ -81,13 +81,9 @@ class McRunQThread(QtCore.QThread):
             for stdoutdata in process.stdout:
                 self.message.emit(stdoutdata.rstrip('\n'))
 
-            for stderrdata in process.stderr:
-                self.error.emit(stderrdata.rstrip('\n'))
-
             self.process_returncode = process.returncode
-        except:
-            (type, value, traceback) = sys.exc_info()
-            self.thread_exception.emit(value.message)
+        except Exception as e:
+            self.thread_exception.emit(str(e))
             
 
 ''' State
@@ -212,11 +208,17 @@ class McGuiState(QtCore.QObject):
             if os.path.isfile(self.__cFile):
                 os.remove(self.__cFile)
                 self.__cFile = ''
-        
+
+        # that wait cursor
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        def compile_complete():
+            self.__emitter.message('compile thread done\n')
+            QtWidgets.QApplication.restoreOverrideCursor()
+
         # compile simulation in a background thread
         self.compilethread = QtCore.QThread()
         self.compilethread.run = lambda: self.compileAsync(mpi, self.__thread_exc_signal)
-        self.compilethread.finished.connect(lambda: self.__emitter.message('compile thread done \n'))
+        self.compilethread.finished.connect(compile_complete)
         self.compilethread.start()
         
     def compileAsync(self, mpi, thread_exc_signal):
@@ -361,7 +363,7 @@ class McGuiState(QtCore.QObject):
         # autoplot
         autoplot = fixed_params[8]
         if autoplot and simtrace == 0:
-            runstr = runstr + ' --autoplot'
+            runstr = runstr + ' --autoplot' +  ' --autoplotter=' + mccode_config.configuration["MCPLOT"]
         
         # parse instrument params
         for p in params:
@@ -521,36 +523,39 @@ class McGuiAppController():
         else:
             # ensure auto-save
             self.view.ew.save()
-            
+
             self.emitter.status("Getting instrument params...")
             QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             self.view.disableRunBtn()
             try:
                 class ThreadInfoHandler():
-                    def __init__(self):
+                    def __init__(self, forwardmsg=None):
                         self.stdout_lst = []
                         self.finished = False
+                        self.forwardmsg = forwardmsg
                     def stdout(self, msg):
                         self.stdout_lst.append(msg)
+                        if self.forwardmsg:
+                            self.forwardmsg(msg)
                     def finish(self):
                         self.finished = True
-                def fail():
-                    raise Exception("get_instr_params failed")
-                handler = ThreadInfoHandler()
-                
+                def msg(msg, em=self.emitter):
+                    em.message(msg, err_msg=True)
+                handler = ThreadInfoHandler(lambda msg, em=self.emitter: em.message(msg, err_msg=True))
+
                 somethread = McRunQThread()
                 somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
                 somethread.cwd = os.path.dirname(self.state.getInstrumentFile())
                 somethread.finished.connect(handler.finish)
-                somethread.thread_exception.connect(fail)
+                somethread.thread_exception.connect(handleExceptionMsg)
                 somethread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
                 somethread.message.connect(handler.stdout)
                 somethread.start()
-        
+
                 while not handler.finished:
                     time.sleep(0.2)
                     QtWidgets.QApplication.processEvents()
-                
+
                 params = []
                 for l in handler.stdout_lst:
                     if 'Param:' in l:
@@ -562,14 +567,14 @@ class McGuiAppController():
                         params.append(s)
 
                 instr_params = params
-                
+
             except:
                 self.emitter.status("Instrument compile error")
                 raise
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
                 self.view.enableRunBtn()
-            
+
             def get_compnames(text):
                 ''' return a list of compnames from an instrument definition code text '''
                 comps = []
@@ -579,19 +584,22 @@ class McGuiAppController():
                     if m:
                         comps.append(m.group(1))
                 return comps
-            
+
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
-            _a, _b, mcdisplays = mccode_config.get_options()
-            fixed_params, new_instr_params, inspect, mcdisplay = self.view.showStartSimDialog(instr_params, comps, mcdisplays)
+            _a, mcplots, mcdisplays = mccode_config.get_options()
+            fixed_params, new_instr_params, inspect, mcdisplay, autoplotter = self.view.showStartSimDialog(
+                instr_params, comps, mcdisplays, mcplots)
 
             if mcdisplay != None:
                 mccode_config.configuration["MCDISPLAY"] = mcdisplay
-            
+            if autoplotter != None:
+                mccode_config.configuration["MCPLOT"] = autoplotter
+
             self.emitter.status("")
-            
+
             if fixed_params != None:
                 self.state.run(fixed_params, new_instr_params, inspect)
-        
+
     def handleConfiguration(self):
         self.view.showConfigDialog()
         

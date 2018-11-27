@@ -5,12 +5,14 @@
 @REM conda install -c cogsci qscintilla2=2.9.3
 @REM  -> is what is present in http://support.mccode.org/windows/miniconda3.zip
 @REM
-@set PATH=c:\\strawberry\\perl\\bin;%PATH%
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Astro-FITS-Header.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Convert-UU.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Tk.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Tk-CodeText.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/Math-Amoeba.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/OpenGL.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/PDL.ppd
-@call c:\\strawberry\\perl\\bin\\ppm.bat install http://ppds.mccode.org/PGPLOT.ppd
+@set PATH=c:\\strawberry\\perl\\bin;PATH=c:\\strawberry\\c\\bin;%PATH%
+@echo Installing Perl modules PDL, PGPLOT,Tk
+@call c:\\strawberry\\perl\\bin\\ppm.bat install PDL PGPLOT Tk
+@echo Building Tk-CodeText locally
+@unzip Tk-CodeText-0.3.4.zip
+@cd Tk-CodeText-0.3.4
+@perl Makefile.PL
+@gmake
+@gmake install
+@echo Done installing all Perl modules!
+pause

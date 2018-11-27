@@ -30,9 +30,17 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mac "" -- OSXapp
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mac "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac "" -- OSXapp
+
+# NCrystal installation:
+export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/ncrystal/
+./mkdist mcstas-comps-ncrystal $1 mcstas-comps/libs/ncrystal/ "" mac "" -- OSXapp
+
+export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
 # Generate mcdoc pages
 WORK=`pwd`
@@ -70,6 +78,12 @@ export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 
+# - Nasty hack: rebuild the cif2hkl binary as static
+cd $MCINSTALL_PREFIX/mcstas/$1/libs/cif2hkl
+gfortran -c cif2hkl.F90 -o cif2hkl.o
+ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -macosx_version_min 10.10.0 -lSystem $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libgfortran.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libquadmath.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/gcc/x86_64-apple-darwin11.4.2/4.8.5/libgcc.a cif2hkl.o
+
+cd $WORK
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then

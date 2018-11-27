@@ -19,6 +19,8 @@ rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
 find tools/Legacy-Perl-win -type f -exec unix2dos \{\} \;
 find tools/Legacy-Perl-cmdline-win -type f -exec unix2dos \{\} \;
+# Patch the Multilayer_sample to allow compilation with GSL
+sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw-w64\\+g' mcstas-comps-win/contrib/Multilayer_Sample.comp
 
 # 64-bit
 ./mkdist mcstas $1 "" "" mingw64 "" -- nsis64
@@ -41,9 +43,6 @@ find tools/Legacy-Perl-cmdline-win -type f -exec unix2dos \{\} \;
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f PPDs.zip ]; then
-	wget http://ppds.mccode.org/PPDs.zip
-    fi
     if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
 	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe
