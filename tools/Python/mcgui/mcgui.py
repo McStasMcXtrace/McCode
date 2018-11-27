@@ -27,7 +27,7 @@ class McMessageEmitter(QtCore.QObject):
     statusUpdate = QtCore.pyqtSignal(str)
     __statusLog = []
     
-    logMessageUpdate = QtCore.pyqtSignal(str, bool)
+    logMessageUpdate = QtCore.pyqtSignal(str, bool, bool)
     __msgLog = []
     
     def status(self, status):
@@ -40,13 +40,13 @@ class McMessageEmitter(QtCore.QObject):
         self.__statusLog.append(status)
         
     
-    def message(self, msg, err_msg=False):
+    def message(self, msg, err_msg=False, gui=False):
         ''' message log messages (simulation progress etc.)
         '''
         if msg == None:
             return
         
-        self.logMessageUpdate.emit(msg, err_msg)
+        self.logMessageUpdate.emit(msg, err_msg, gui)
         self.__msgLog.append(msg)
         # NOTE: calling processEvents too often can lead to some sort of stack overflow, but side effects are to be investigated
         #QtWidgets.QApplication.processEvents()
@@ -392,18 +392,18 @@ class McGuiState(QtCore.QObject):
             self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
             self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
             self.__runthread.start()
-            self.__emitter.message(runstr)
+            self.__emitter.message(runstr, gui=True)
             self.__emitter.status('Running simulation ...')
             self.__fireSimStateUpdate()
         else:
-            self.__emitter.message(runstr)
+            self.__emitter.message(runstr, gui=True)
             self.__emitter.status('Started simulation/trace in background shell...')
             subprocess.Popen(runstr, shell=True)
 
     def __runFinished(self, process_returncode):
         self.__fireSimStateUpdate()
         if process_returncode == 0:
-            self.__emitter.message('simulation done')
+            self.__emitter.message('simulation done', gui=True)
         self.__emitter.message('')
         self.__emitter.status('')
 
@@ -436,7 +436,7 @@ class McGuiAppController():
         # Print MCCODE revision data if these exist
         comprev = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "revision")
         if os.path.exists(comprev):
-            self.emitter.message(open(comprev).read())
+            self.emitter.message(open(comprev).read(), gui=True)
         
         
         # load instrument file from command line pars, skipping scriptfile
@@ -540,8 +540,8 @@ class McGuiAppController():
                     def finish(self):
                         self.finished = True
                 def msg(msg, em=self.emitter):
-                    em.message(msg, err_msg=True)
-                handler = ThreadInfoHandler(lambda msg, em=self.emitter: em.message(msg, err_msg=True))
+                    em.message(msg)
+                handler = ThreadInfoHandler(lambda msg, em=self.emitter: em.message(msg))
 
                 somethread = McRunQThread()
                 somethread.cmd = mccode_config.configuration["MCRUN"] + ' ' + os.path.basename(self.state.getInstrumentFile()) + " --info"
@@ -627,7 +627,7 @@ class McGuiAppController():
         self._runthread.message.connect(lambda msg: self.emitter.message(msg))
         self._runthread.start()
         
-        self.emitter.message(cmd)
+        self.emitter.message(cmd, gui=True)
         self.emitter.status('Running plotter ...')
 
     def handlePlotOtherResults(self):
@@ -647,15 +647,15 @@ class McGuiAppController():
         self._runthread.message.connect(lambda msg: self.emitter.message(msg))
         self._runthread.start()
         
-        self.emitter.message(cmd)
+        self.emitter.message(cmd, gui=True)
         self.emitter.status('Running plotter ...')        
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
         try:
             cmd = 'mcdisplay-webgl --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
-            self.emitter.message(cmd)
-            self.emitter.message('')
+            self.emitter.message(cmd, gui=True)
+            self.emitter.message('', gui=True)
             
             def messg(s): self.emitter.message(s)
             def messg_err(s): self.emitter.message(s, err_msg=True)
@@ -667,8 +667,8 @@ class McGuiAppController():
         self.emitter.status('Running mcdisplay-webgl...')
         try:
             cmd = 'mcdisplay-pyqtgraph --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
-            self.emitter.message(cmd)
-            self.emitter.message('')
+            self.emitter.message(cmd, gui=True)
+            self.emitter.message('', gui=True)
             
             def messg(s): self.emitter.message(s)
             def messg_err(s): self.emitter.message(s, err_msg=True)
@@ -711,8 +711,8 @@ class McGuiAppController():
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
-            self.emitter.message("Instrument closed")
-            self.emitter.status("Instrument closed")
+            self.emitter.message("Instrument closed", gui=True)
+            self.emitter.status("Instrument closed", gui=True)
     
     def handleSaveInstrument(self, text):
         result = self.state.saveInstrumentIfFileExists(text)
@@ -784,7 +784,7 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
-                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)))
+                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)), gui=True)
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     def handleMcdoc(self):

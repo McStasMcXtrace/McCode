@@ -61,9 +61,11 @@ class McView(object):
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
 
-    def updateLog(self, text='', error=False):
+    def updateLog(self, text='', error=False, gui=False):
         if error:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
+        elif gui:
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('blue'))
         else:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
         self.mw.ui.txtbrwMcgui.append(text)
