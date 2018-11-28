@@ -393,12 +393,12 @@ class OverviewDocWriter:
         optics_lst = [c for c in self.comp_info_lst if c.category=='optics']
         optics_tab = ''
         for c in optics_lst:
-            optics_tab = optics_tab + t % (get_html_filepath(i.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
+            optics_tab = optics_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Samples
         samples_lst = [c for c in self.comp_info_lst if c.category=='samples']
         samples_tab = ''
         for c in samples_lst:
-            samples_tab = samples_tab + t % (get_html_filepath(i.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
+            samples_tab = samples_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Detectors
         monitors_lst = [c for c in self.comp_info_lst if c.category=='monitors']
         monitors_tab = ''
