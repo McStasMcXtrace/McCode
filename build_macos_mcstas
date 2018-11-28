@@ -21,6 +21,8 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-comps $1 "" "" mac "" -- OSXapp
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac "" -- OSXapp
+# Patch mccode_config.perl to ensure we use gcc...
+sed -i.bak s+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc+gcc+g $MCINSTALL_PREFIX/mcstas/$1/tools/Perl/perl/mccode_config.perl
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
