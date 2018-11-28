@@ -367,16 +367,19 @@ def get_html_filepath(filepath):
 
 class OverviewDocWriter:
     ''' Creates the mcdoc overview html page. '''
-    def __init__(self, comp_info_lst, instr_info_lst, mccode_libdir):
+    def __init__(self, comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_libdir):
         self.comp_info_lst = comp_info_lst
         self.instr_info_lst = instr_info_lst
+        self.comp_info_local_lst = comp_info_local_lst
+        self.instr_info_local_lst = instr_info_local_lst
         self.mccode_libdir = mccode_libdir
         self.text = ''
     
     def create(self):
         ''' action code for create overview page! '''
-        c_lst = self.comp_info_lst
         i_lst = self.instr_info_lst
+        c_loc_lst = self.comp_info_local_lst
+        i_loc_lst = self.instr_info_local_lst
         t = self.tab_line
         
         # create comp tables
@@ -384,44 +387,53 @@ class OverviewDocWriter:
         # Sources
         sources_lst = [c for c in self.comp_info_lst if c.category=='sources']
         sources_tab = ''
-        for i in sources_lst:
-            sources_tab = sources_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in sources_lst:
+            sources_tab = sources_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Optics
         optics_lst = [c for c in self.comp_info_lst if c.category=='optics']
         optics_tab = ''
-        for i in optics_lst:
-            optics_tab = optics_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in optics_lst:
+            optics_tab = optics_tab + t % (get_html_filepath(i.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Samples
         samples_lst = [c for c in self.comp_info_lst if c.category=='samples']
         samples_tab = ''
-        for i in samples_lst:
-            samples_tab = samples_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in samples_lst:
+            samples_tab = samples_tab + t % (get_html_filepath(i.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Detectors
         monitors_lst = [c for c in self.comp_info_lst if c.category=='monitors']
         monitors_tab = ''
-        for i in monitors_lst:
-            monitors_tab = monitors_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in monitors_lst:
+            monitors_tab = monitors_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Misc
         misc_lst = [c for c in self.comp_info_lst if c.category=='misc']
         misc_tab = ''
-        for i in misc_lst:
-            misc_tab = misc_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in misc_lst:
+            misc_tab = misc_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Contributed
         contrib_lst = [c for c in self.comp_info_lst if c.category=='contrib']
         contrib_tab = ''
-        for i in contrib_lst:
-            contrib_tab = contrib_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in contrib_lst:
+            contrib_tab = contrib_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Obsolete
         obsolete_lst = [c for c in self.comp_info_lst if c.category=='obsolete']
         obsolete_tab = ''
-        for i in obsolete_lst:
-            obsolete_tab = obsolete_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'comp', i.short_descr) + '\n'
+        for c in obsolete_lst:
+            obsolete_tab = obsolete_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         
         # create instr examples table
         ex_tab = ''
         for i in i_lst:
             ex_tab = ex_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'instr', i.short_descr) + '\n'
+
+        # create local instrs / comps table
+        local_comp_tab = ''
+        for c in c_loc_lst:
+            local_comp_tab  = local_comp_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         
+        local_instr_tab = ''
+        for i in i_loc_lst:
+            local_instr_tab = local_instr_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'instr', i.short_descr) + '\n'
+
         text = self.html
         
         text = text.replace('%MCCODE_LIBDIR%', self.mccode_libdir)
@@ -434,6 +446,11 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_CONTRIB%', contrib_tab)
         text = text.replace('%TAB_LINES_OBSOLETE%', obsolete_tab)
         text = text.replace('%TAB_LINES_EXAMPLES%', ex_tab)
+        text = text.replace('%TAB_LINES_INSTR_LOCAL%', local_instr_tab)
+        text = text.replace('%TAB_LINES_COMPS_LOCAL%', local_comp_tab)
+        text = text.replace('%LINK_FILECOLON_DATA%', 'file://%s/data' % self.mccode_libdir)
+        text = text.replace('%LINK_FILECOLON_SHARE%', 'file://%s/share' % self.mccode_libdir)
+        text = text.replace('%GENDATE%', '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
         
         self.text = text
         return self.text
@@ -457,11 +474,20 @@ class OverviewDocWriter:
 <TD>%s</TD>
 </TR>
 '''
-    tags = ['%MCCODE_LIBDIR%', '%TAB_HEAD%',
-            '%TAB_LINES_SOURCES%', '%TAB_LINES_OPTICS%', '%TAB_LINES_SAMPLES%', '%TAB_LINES_MONITORS%', '%TAB_LINES_CONTRIB%', '%TAB_LINES_MISC%', '%TAB_LINES_OBSOLETE%',
+    tags = ['%MCCODE_LIBDIR%',
+            '%TAB_HEAD%',
+            '%TAB_LINES_SOURCES%',
+            '%TAB_LINES_OPTICS%',
+            '%TAB_LINES_SAMPLES%',
+            '%TAB_LINES_MONITORS%',
+            '%TAB_LINES_CONTRIB%',
+            '%TAB_LINES_MISC%',
+            '%TAB_LINES_OBSOLETE%',
             '%TAB_LINES_EXAMPLES%',
-            '%TAB_LINES_LOCALCOMPS%', '%TAB_LINES_DATAFILES%', '%TAB_LINES_SHARE%',
-            '%DATE%']
+            '%TAB_LINES_LOCAL%',
+            '%LINK_FILECOLON_DATA%',
+            '%LINK_FILECOLON_SHARE%',
+            '%GENDATE%']
     html = '''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
@@ -480,9 +506,10 @@ class OverviewDocWriter:
  | <A href="#contrib">contrib</A>
  | <A href="#obsolete">obsolete</A>
  | <A href="#examples">examples</A>
- | <A href="#local">local</A>
- | <A href="#data">data</A>
- | <A href="#share">share</A> ]
+ | <A href="#localcomps">local comps</A>
+ | <A href="#localinstrs">local instruments</A>
+ | <A href="%LINK_FILECOLON_DATA%">data</A>
+ | <A href="%LINK_FILECOLON_SHARE%">share</A> ]
 </P>
 <P ALIGN=CENTER>
 [ <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-manual.pdf">User Manual</a>
@@ -491,9 +518,6 @@ class OverviewDocWriter:
 </P>
 
 <CENTER><H1>Components and Instruments from the Library for <i>McStas</i></H1></CENTER>
-
-<P> Names in <B>Boldface</B> denote components that are properly
-documented with comments in the source code.</P>
 
 <P><A NAME="sources"></A>
 <B><FONT COLOR="#FF0000">Sources</FONT></B>
@@ -529,7 +553,7 @@ documented with comments in the source code.</P>
 
 
 <P><A NAME="monitors"></A>
-<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>
+<B><FONT COLOR="#FF0000">Detectors and monitors</FONT></B>
 <TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 
 %TAB_HEAD%
@@ -551,7 +575,7 @@ documented with comments in the source code.</P>
 
 
 <P><A NAME="contrib"></A>
-<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>
+<B><FONT COLOR="#FF0000">Contributed components</FONT></B>
 <TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 
 %TAB_HEAD%
@@ -562,7 +586,7 @@ documented with comments in the source code.</P>
 
 
 <P><A NAME="obsolete"></A>
-<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>
+<B><FONT COLOR="#FF0000">Obsolete (avoid usage whenever possible)</FONT></B>
 <TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 
 %TAB_HEAD%
@@ -583,40 +607,28 @@ documented with comments in the source code.</P>
 </TABLE>
 
 
-<P><A NAME="local"></A>
+<P><A NAME="localcomps"></A>
 <B><FONT COLOR="#FF0000">Local components</FONT></B>
 <TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 
 %TAB_HEAD%
 
-%TAB_LINES_LOCALCOMPS%
+%TAB_LINES_INSTR_LOCAL%
 
 </TABLE>
 
 
-<P><A NAME="data"></A>
-<B><FONT COLOR="#FF0000">Data files</FONT></B>
+<P><A NAME="localinstrs"></A>
+<B><FONT COLOR="#FF0000">Local instruments</FONT></B>
 <TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 
 %TAB_HEAD%
 
-%TAB_LINES_DATAFILES%
+%TAB_LINES_COMPS_LOCAL%
 
 </TABLE>
 
 
-<P><A NAME="share"></A>
-<B><FONT COLOR="#FF0000">Shared libraries</FONT></B>
-<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
-
-%TAB_HEAD%
-
-%TAB_LINES_SHARE%
-
-</TABLE>
-
-
-<P>This Component list was updated on %DATE%.
 <HR WIDTH="100%">
 <CENTER>
 [ <A href="http://www.mcstas.org/"><I>McStas web site</I></A> ]
@@ -624,11 +636,7 @@ documented with comments in the source code.</P>
 
 <P><BR>
 <ADDRESS>
-Generated by mcdoc.pl,
-Maintained by Emmanuel Farhi &lt;<a href="mailto:farhi@ill.fr">farhi@ill.fr</a>>,
-Peter Willendrup &lt;<a href="mailto:peter.willendrup@risoe.dk">peter.willendrup@risoe.dk</a>>,
-and Erik B Knudsen &lt;<a href="mailto:erkn@fysik.dtu.dk">erkn@fysik.dtu.dk</a>>.
-Contact us for any comments.
+Generated on %GENDATE%
 </ADDRESS>
 </BODY>
 </HTML>
@@ -694,8 +702,10 @@ class InstrDocWriter:
         h = h.replace(t[8], self.par_header)
         doc_rows = ''
         for p in i.params:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
             doc = lst[0] if len(lst) > 0 else ''
+            if p[0] == None:
+                p = ("", p[1], p[2])
             doc_rows = doc_rows + '\n' + self.par_str % (p[0], p[1], doc, p[2])
         h = h.replace(t[9], doc_rows)
         
@@ -708,17 +718,28 @@ class InstrDocWriter:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[12], lstr)
         
-        h = h.replace(t[13], datetime.now().strftime("%Y%m%d"))
+        h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+
         
         self.text = h
         return self.text
     
-    tags = ['%TITLE%', '%INSTRNAME%', '%SHORT_DESCRIPTION%',
-            '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%DESCRIPTION%',
-            '%T_HEAD%', '%T_ROWS%',
-            '%INSTRFILE%', '%INSTRFILE_BASE%', '%LINKS%','%GENDATE%']
+    tags = ['%TITLE%',
+            '%INSTRNAME%',
+            '%SHORT_DESCRIPTION%',
+            '%SITE%',
+            '%AUTHOR%',
+            '%ORIGIN%',
+            '%DATE%',
+            '%DESCRIPTION%',
+            '%T_HEAD%',
+            '%T_ROWS%',
+            '%INSTRFILE%',
+            '%INSTRFILE_BASE%',
+            '%LINKS%',
+            '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    par_header = par_str % ('Unit', 'Name', 'Description', 'Default')
     lnk_str = "<LI>%s"
     
     
@@ -782,9 +803,8 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated automatically by McDoc, Peter Willendrup
-&lt;<A HREF="mailto:peter.willendrup@risoe.dk">pkwi@fysik.dtu.dk</A>&gt; /
-%GENDATE%</ADDRESS>
+Generated on %GENDATE%
+</ADDRESS>
 </BODY></HTML>
 '''
 
@@ -860,15 +880,26 @@ class CompDocWriter:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[13], lstr)
         
-        h = h.replace(t[14], datetime.now().strftime("%Y%m%d"))
-        
+        h = h.replace(t[14], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+
         self.text = h
         return self.text
     
-    tags = ['%TITLE%', '%COMPNAME%', '%SHORT_DESCRIPTION%',
-            '%SITE%', '%AUTHOR%', '%ORIGIN%', '%DATE%', '%DESCRIPTION%',
-            '%T_HEAD%', '%T_ROWS_IN%', '%T_ROWS_OUT%',
-            '%COMPFILE%', '%COMPFILE_BASE%', '%LINKS%','%GENDATE%']
+    tags = ['%TITLE%',
+            '%COMPNAME%',
+            '%SHORT_DESCRIPTION%',
+            '%SITE%',
+            '%AUTHOR%',
+            '%ORIGIN%',
+            '%DATE%',
+            '%DESCRIPTION%',
+            '%T_HEAD%',
+            '%T_ROWS_IN%',
+            '%T_ROWS_OUT%',
+            '%COMPFILE%',
+            '%COMPFILE_BASE%',
+            '%LINKS%',
+            '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
     lnk_str = "<LI>%s"
@@ -943,10 +974,8 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated automatically by McDoc, Jakob Garde
-&lt;<A HREF="mailto:jaga@fysik.dtu.dk">jaga@fysik.dtu.dk</A>&gt; and Peter Willendrup
-&lt;<A HREF="mailto:peter.willendrup@fysik.dtu.dk">pkwi@fysik.dtu.dk</A>&gt; /
-%GENDATE%</ADDRESS>
+Generated on %GENDATE%
+</ADDRESS>
 </BODY></HTML>
 '''
 
@@ -962,10 +991,10 @@ def main(args):
     Behavior: See file header.
     '''
     logging.basicConfig(level=logging.INFO)
-    
+
     usedir = args.crawl or mccode_config.configuration["MCCODE_LIB_DIR"]
     print("using source directory: " + usedir)
-    
+
     '''
     # repair mode - do not run mcdoc, just the "repair" function
     if args.repair:
@@ -973,17 +1002,18 @@ def main(args):
         repair_comp(usedir)
         quit()
     '''
-    
+
     # local files
     instr_files, comp_files = utils.get_instr_comp_files(usedir)
-    
+    instr_files_local, comp_files_local = utils.get_instr_comp_files('.')
+
     # parse comp files
     comp_info_lst = []
     for f in comp_files:
         try:
             print("parsing... %s" % f)
             info = CompParser(f).parse()
-            info.filepath = f
+            info.filepath = os.path.abspath(f)
             comp_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
@@ -996,17 +1026,45 @@ def main(args):
         try:
             print("parsing... %s" % f)
             info = InstrParser(f).parse()
-            info.filepath = f
+            info.filepath = os.path.abspath(f)
             instr_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
             instr_info_lst.append(InstrParser(f).stub())
     print("parsed instr files: %s" % str(len(instr_files)))
+
+    # parse comp files
+    comp_info_local_lst = []
+    for f in comp_files_local:
+        try:
+            print("parsing... %s" % f)
+            info = CompParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            comp_info_local_lst.append(info)
+        except:
+            print("failed parsing file: %s" % f)
+            comp_info_local_lst.append(CompParser(f).stub())
+    print("parsed comp files: %s" % str(len(comp_files_local)))
+    
+    # parse instr files
+    instr_info_local_lst = []
+    for f in instr_files_local:
+        try:
+            print("parsing... %s" % f)
+            info = InstrParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            instr_info_local_lst.append(info)
+        except:
+            print("failed parsing file: %s" % f)
+            instr_info_local_lst.append(InstrParser(f).stub())
+    print("parsed instr files: %s" % str(len(instr_files_local)))
     
     # apply a name-filter (matches instr / comp name, not filename)
     if args.namefilter:
         comp_info_lst = [c for c in comp_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
-        instr_info_lst = [c for c in comp_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
+        instr_info_lst = [c for c in instr_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
+        comp_info_local_lst = [c for c in comp_info_local_lst if re.search(args.namefilter.lower(), c.name.lower())]
+        instr_info_local_lst = [c for c in instr_info_local_lst if re.search(args.namefilter.lower(), c.name.lower())]
     
     '''
     # debug mode - write files with a header property each, then quit
@@ -1030,6 +1088,7 @@ def main(args):
     mcdoc_html = os.path.join(usedir,'mcdoc.html')
     # try-catch section for file write
     try:
+        print("writing lib files...")
         # generate and save comp html doc pages
         for i in range(len(comp_info_lst)):
             p = comp_info_lst[i]
@@ -1039,7 +1098,7 @@ def main(args):
             h = os.path.splitext(f)[0] + '.html'
             print("writing doc file... %s" % h)
             write_file(h, text)
-        
+
         # generate and save instr html doc pages
         for i in range(len(instr_info_lst)):
             p = instr_info_lst[i]
@@ -1050,8 +1109,29 @@ def main(args):
             print("writing doc file... %s" % h)
             write_file(h, text)
         
+        print("writing local files...")
+        # generate and save local comp html doc pages
+        for i in range(len(comp_info_local_lst)):
+            p = comp_info_local_lst[i]
+            f = comp_files_local[i]
+            doc = CompDocWriter(p)
+            text = doc.create()
+            h = os.path.splitext(f)[0] + '.html'
+            print("writing doc file... %s" % h)
+            write_file(h, text)
+
+        # generate and save local instr html doc pages
+        for i in range(len(instr_info_local_lst)):
+            p = instr_info_local_lst[i]
+            f = instr_files_local[i]
+            doc = InstrDocWriter(p)
+            text = doc.create()
+            h = os.path.splitext(f)[0] + '.html'
+            print("writing doc file... %s" % h)
+            write_file(h, text)
+        
         # write overview files, properly assembling links to instr- and html-files
-        masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
+        masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
         text = masterdoc.create()
         print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
         write_file(mcdoc_html, text)
