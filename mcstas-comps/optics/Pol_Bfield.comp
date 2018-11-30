@@ -132,21 +132,21 @@ INITIALIZE
       a[2]=Bz;
       parPtr=(void *) a;
   } else if (fieldFunction==rot_magnetic_field){
-    double *a=malloc(2*sizeof(double));
-    a[0]=By;
-    a[1]=zdepth;
-    parPtr=(void *) a;
+      double *a=malloc(2*sizeof(double));
+      a[0]=By;
+      a[1]=zdepth;
+      parPtr=(void *) a;
   } else if (fieldFunction==majorana_magnetic_field){
-    double *a=malloc(3*sizeof(double));
-    a[0]=Bx;
-    a[1]=By;
-    a[2]=zdepth;
-    parPtr=(void *) a;
+      double *a=malloc(3*sizeof(double));
+      a[0]=Bx;
+      a[1]=By;
+      a[2]=zdepth;
+      parPtr=(void *) a;
   } else if (fieldFunction==table_magnetic_field){
     /*initialize the interpolation vertex structure*/
-    struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
-    interpolator_info(interpolator);
-    parPtr=(void *) interpolator;
+      struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
+      interpolator_info(interpolator);
+      parPtr=(void *) interpolator;
   }
   /*if not set yet, parPtr can be overridden by the external userland pointer*/
   if(!parPtr && field_prms){
@@ -190,7 +190,7 @@ TRACE
             hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
             /*terminate neutrons which miss the component*/
             if(!hit) ABSORB;
-            /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
+            /*If we do hit - propagate to the start of the field unless the neutron is already there.*/
             if(t0>FLT_EPSILON) {
                 PROP_DT(t0);
                 t1-=t0;
@@ -202,7 +202,7 @@ TRACE
             hit=cylinder_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius,yheight);
             /*terminate neutrons which miss the component*/
             if(!hit)ABSORB;
-            /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
+            /*If we do hit - propagate to the start of the field unless the neutron is already there.*/
             if(t0>FLT_EPSILON) {
                 PROP_DT(t0);
                 t1-=t0;
