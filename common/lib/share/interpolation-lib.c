@@ -528,7 +528,9 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     v.space_dimensionality=interpolator->space_dimensionality;
     vertex *w =kdtree_nearestNeighbour(&v, interpolator->kdtree);
     if (!w) return NULL;
-    for (i=0; i<interpolator->field_dimensionality; field[i]=w->data[i++]);
+    for (i=0; i<interpolator->field_dimensionality; i++){
+        field[i]=w->data[i];
+    }
     return (w->data);
 
   } else 
