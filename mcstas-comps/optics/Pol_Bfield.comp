@@ -250,8 +250,28 @@ TRACE
 
 MCDISPLAY
 %{
-  
-  rectangle("xy",0,0,0,xwidth,yheight);
+    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    switch (prms.shape){
+        case BOX:
+            box(0,0,0,xwidth,yheight,zdepth);
+            break;
+        case CYLINDER:
+            circle("xz",0, yheight/2.0,0,radius);
+            circle("xz",0,-yheight/2.0,0,radius);
+            line(-radius,-yheight/2.0,0,-radius,yheight/2.0,0);
+            line( radius,-yheight/2.0,0, radius,yheight/2.0,0);
+            line(0,-yheight/2.0,-radius,yheight/2.0,-radius);
+            line(0,-yheight/2.0, radius,yheight/2.0, radius);
+            break;
+        case SPHERE:
+            circle("xz",0,0,0,radius);
+            circle("xy",0,0,0,radius);
+            circle("yz",0,0,0,radius);
+            break;
+        case WINDOW:
+            rectangle("xy",0,0,0,xwidth,yheight);
+            break;
+    }
 %}
 
 END
