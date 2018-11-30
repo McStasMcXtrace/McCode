@@ -128,8 +128,8 @@ MCDISPLAY
             circle("xz",0,-yheight/2.0,0,radius);
             line(-radius,-yheight/2.0,0,-radius,yheight/2.0,0);
             line( radius,-yheight/2.0,0, radius,yheight/2.0,0);
-            line(0,-yheight/2.0,-radius,yheight/2.0,-radius);
-            line(0,-yheight/2.0, radius,yheight/2.0, radius);
+            line(0,-yheight/2.0,-radius,0,yheight/2.0,-radius);
+            line(0,-yheight/2.0, radius,0,yheight/2.0, radius);
             break;
         case SPHERE:
             circle("xz",0,0,0,radius);
