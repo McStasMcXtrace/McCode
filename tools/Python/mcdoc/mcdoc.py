@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Attempts to to parse component- and instrument files in subfolders, generate docpages and 
-browse the generated overview page, mccode.html. The first arg, libdir, determines the directory,
-which defaults to current installation "mccode lib dir".
+Generates html docpages from mccode instrument and component files.
 
-The attempt to browse a mcdoc.html can be omited by --nobrowse.
+Every file gets a html docpage. An overview page is also written.
+
+Default (no args): Read installed docpage.
+
+Supply a directory for system as well as local results, and a name filter for 
+filtered results.
 '''
 import logging
 import argparse
@@ -446,8 +449,8 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_CONTRIB%', contrib_tab)
         text = text.replace('%TAB_LINES_OBSOLETE%', obsolete_tab)
         text = text.replace('%TAB_LINES_EXAMPLES%', ex_tab)
-        text = text.replace('%TAB_LINES_INSTR_LOCAL%', local_instr_tab)
         text = text.replace('%TAB_LINES_COMPS_LOCAL%', local_comp_tab)
+        text = text.replace('%TAB_LINES_INSTR_LOCAL%', local_instr_tab)
         text = text.replace('%LINK_FILECOLON_DATA%', 'file://%s/data' % self.mccode_libdir)
         text = text.replace('%LINK_FILECOLON_SHARE%', 'file://%s/share' % self.mccode_libdir)
         text = text.replace('%GENDATE%', '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
@@ -613,7 +616,7 @@ class OverviewDocWriter:
 
 %TAB_HEAD%
 
-%TAB_LINES_INSTR_LOCAL%
+%TAB_LINES_COMPS_LOCAL%
 
 </TABLE>
 
@@ -624,7 +627,7 @@ class OverviewDocWriter:
 
 %TAB_HEAD%
 
-%TAB_LINES_COMPS_LOCAL%
+%TAB_LINES_INSTR_LOCAL%
 
 </TABLE>
 
@@ -980,34 +983,20 @@ Generated on %GENDATE%
 '''
 
 
-def write_file(filename, text):
-    f = open(filename, 'w')
-    f.write(text)
-    f.close()
+def write_file(filename, text, failsilent=False):
+    try:
+        f = open(filename, 'w')
+        f.write(text)
+        f.close()
+    except Exception as e:
+        if failsilent:
+            pass
+        else:
+            raise e
 
+def parse_and_filter(indir, namefilter=None):
+    instr_files, comp_files = utils.get_instr_comp_files(indir)
 
-def main(args):
-    '''
-    Behavior: See file header.
-    '''
-    logging.basicConfig(level=logging.INFO)
-
-    usedir = args.crawl or mccode_config.configuration["MCCODE_LIB_DIR"]
-    print("using source directory: " + usedir)
-
-    '''
-    # repair mode - do not run mcdoc, just the "repair" function
-    if args.repair:
-        #repair_instr(localdir)
-        repair_comp(usedir)
-        quit()
-    '''
-
-    # local files
-    instr_files, comp_files = utils.get_instr_comp_files(usedir)
-    instr_files_local, comp_files_local = utils.get_instr_comp_files('.')
-
-    # parse comp files
     comp_info_lst = []
     for f in comp_files:
         try:
@@ -1020,7 +1009,6 @@ def main(args):
             comp_info_lst.append(CompParser(f).stub())
     print("parsed comp files: %s" % str(len(comp_files)))
     
-    # parse instr files
     instr_info_lst = []
     for f in instr_files:
         try:
@@ -1033,126 +1021,101 @@ def main(args):
             instr_info_lst.append(InstrParser(f).stub())
     print("parsed instr files: %s" % str(len(instr_files)))
 
-    # parse comp files
-    comp_info_local_lst = []
-    for f in comp_files_local:
-        try:
-            print("parsing... %s" % f)
-            info = CompParser(f).parse()
-            info.filepath = os.path.abspath(f)
-            comp_info_local_lst.append(info)
-        except:
-            print("failed parsing file: %s" % f)
-            comp_info_local_lst.append(CompParser(f).stub())
-    print("parsed comp files: %s" % str(len(comp_files_local)))
-    
-    # parse instr files
-    instr_info_local_lst = []
-    for f in instr_files_local:
-        try:
-            print("parsing... %s" % f)
-            info = InstrParser(f).parse()
-            info.filepath = os.path.abspath(f)
-            instr_info_local_lst.append(info)
-        except:
-            print("failed parsing file: %s" % f)
-            instr_info_local_lst.append(InstrParser(f).stub())
-    print("parsed instr files: %s" % str(len(instr_files_local)))
-    
-    # apply a name-filter (matches instr / comp name, not filename)
-    if args.namefilter:
-        comp_info_lst = [c for c in comp_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
-        instr_info_lst = [c for c in instr_info_lst if re.search(args.namefilter.lower(), c.name.lower())]
-        comp_info_local_lst = [c for c in comp_info_local_lst if re.search(args.namefilter.lower(), c.name.lower())]
-        instr_info_local_lst = [c for c in instr_info_local_lst if re.search(args.namefilter.lower(), c.name.lower())]
-    
-    '''
-    # debug mode - write files with a header property each, then quit
-    if args.debug:
-        text = '\n'.join(['%4d: \n%s' % (i, files[i]) for i in range(len(files))])
-        write_file('files', text)
-        
-        for i in range(utils.InstrCompHeaderInfo.__len__()-3):
-            text = '\n'.join(['%4d: %s' % (j, instr_info_lst[j][i]) for j in range(len(instr_info_lst))])
-            write_file(utils.InstrCompHeaderInfo.colname(i), text)
-        for i in range(8, 10):
-            text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(['%-20s, %-10s, %s' % (str(k[0]), str(k[1]), str(k[2])) for k in instr_info_lst[j][i]])) for j in range(len(instr_info_lst))])
-            write_file(utils.InstrCompHeaderInfo.colname(i), text)
-        
-        text = '\n'.join(['%4d: \n%s' % (j, '\n'.join(instr_info_lst[j][10])) for j in range(len(instr_info_lst))])
-        #  '\n'.join(info.links)
-        write_file(utils.InstrCompHeaderInfo.colname(10), text)
+    if namefilter != None:
+        comp_info_lst = [c for c in comp_info_lst if re.search(namefilter.lower(), c.name.lower())]
+        instr_info_lst = [c for c in instr_info_lst if re.search(namefilter.lower(), c.name.lower())]
+
+    return comp_info_lst, instr_info_lst, comp_files, instr_files
+
+def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files):
+    ''' Writes component and instrument docs files '''
+    for i in range(len(comp_infos)):
+        p = comp_infos[i]
+        f = comp_files[i]
+        doc = CompDocWriter(p)
+        text = doc.create()
+        h = os.path.splitext(f)[0] + '.html'
+        print("writing doc file... %s" % h)
+        write_file(h, text, failsilent=True)
+
+    for i in range(len(instr_infos)):
+        p = instr_infos[i]
+        f = instr_files[i]
+        doc = InstrDocWriter(p)
+        text = doc.create()
+        h = os.path.splitext(f)[0] + '.html'
+        print("writing doc file... %s" % h)
+        write_file(h, text, failsilent=True)
+
+
+def main(args):
+    logging.basicConfig(level=logging.INFO)
+
+    usedir = mccode_config.configuration["MCCODE_LIB_DIR"]    
+    if args.dir==None and args.install==None and args.namefilter==None:
+        ''' browse system docs and exit '''
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
         quit()
-    '''
-    
-    mcdoc_html = os.path.join(usedir,'mcdoc.html')
-    # try-catch section for file write
-    try:
-        print("writing lib files...")
-        # generate and save comp html doc pages
-        for i in range(len(comp_info_lst)):
-            p = comp_info_lst[i]
-            f = comp_files[i]
-            doc = CompDocWriter(p)
-            text = doc.create()
-            h = os.path.splitext(f)[0] + '.html'
-            print("writing doc file... %s" % h)
-            write_file(h, text)
 
-        # generate and save instr html doc pages
-        for i in range(len(instr_info_lst)):
-            p = instr_info_lst[i]
-            f = instr_files[i]
-            doc = InstrDocWriter(p)
-            text = doc.create()
-            h = os.path.splitext(f)[0] + '.html'
-            print("writing doc file... %s" % h)
-            write_file(h, text)
-        
-        print("writing local files...")
-        # generate and save local comp html doc pages
-        for i in range(len(comp_info_local_lst)):
-            p = comp_info_local_lst[i]
-            f = comp_files_local[i]
-            doc = CompDocWriter(p)
-            text = doc.create()
-            h = os.path.splitext(f)[0] + '.html'
-            print("writing doc file... %s" % h)
-            write_file(h, text)
+    elif args.install == True:
+        ''' write system doc files '''
+        if args.namefilter:
+            print("will not write filtered system docs, exiting...")
+            quit()
+        print("writing mccode system docs files...")
+        if args.dir:
+            usedir = args.dir
+            print("using custom dir: %s" % usedir)
 
-        # generate and save local instr html doc pages
-        for i in range(len(instr_info_local_lst)):
-            p = instr_info_local_lst[i]
-            f = instr_files_local[i]
-            doc = InstrDocWriter(p)
-            text = doc.create()
-            h = os.path.splitext(f)[0] + '.html'
-            print("writing doc file... %s" % h)
-            write_file(h, text)
-        
-        # write overview files, properly assembling links to instr- and html-files
-        masterdoc = OverviewDocWriter(comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_config.configuration['MCCODE_LIB_DIR'])
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir)
+        write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
+
+        masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
         text = masterdoc.create()
-        print('writing master doc file... %s' % os.path.abspath('mcdoc.html'))
-        write_file(mcdoc_html, text)
-    
-    except Exception as e:
-        print("Could not write to disk: %s" % e.__str__())
-    
-    # open a web-browser in a cross-platform way, unless --nobrowse has been enabled
-    if not args.nobrowse:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], mcdoc_html), shell=True)
+
+        mcdoc_html_filepath = os.path.join(usedir,'mcdoc.html')
+        print('writing master doc file... %s' % mcdoc_html_filepath)
+        write_file(mcdoc_html_filepath, text)
+
+    elif args.dir != None or args.namefilter != None:
+        ''' third and forth use case: filtered and/or local results '''
+        filter = '.*'
+        usedir = mccode_config.configuration['MCCODE_LIB_DIR']
+        if args.namefilter:
+            filter = args.namefilter
+
+        # system
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, filter)
+        write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
+
+        # local
+        comp_infos_local = []
+        instr_infos_local = []
+        if args.dir != None:
+            usedir = args.dir
+            comp_infos_local, instr_infos_local, comp_files, instr_files = parse_and_filter(args.dir, filter)
+            write_doc_files_or_continue(comp_infos_local, instr_infos_local, comp_files, instr_files)
+
+        masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
+        text = masterdoc.create()
+
+        mcdoc_html_filepath = os.path.join(usedir, 'mcdoc.html')
+        print('writing master doc file... %s' % mcdoc_html_filepath)
+        write_file(mcdoc_html_filepath, text)
+
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('namefilter', nargs='?', help='Filter results by component/instrument definition name (not file-name or header-name). Ignores case.')
-    parser.add_argument('--crawl', help='Crawl from rootdir to write docpages to disk, defaults to current installation mccode lib dir.')
-    parser.add_argument('--nobrowse', action='store_true', help='Disable opening a webbrowser viewer.')
-    #parser.add_argument('--debug', action='store_true', help='enable debug mode')
-    #parser.add_argument('--repair', action='store_true', help='enable repair mode')
-    
+    parser.add_argument('namefilter', nargs='?', help='filter results by name')
+    parser.add_argument('--install', '-i', action='store_true', help='generate installation master doc page')
+    parser.add_argument('--dir', '-d', help='include results from a custom directory (recursive)')
+
     args = parser.parse_args()
     
-    main(args)
+    try:
+        main(args)
+    except Exception as e:
+        print(str(e))
 
