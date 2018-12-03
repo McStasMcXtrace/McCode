@@ -733,7 +733,7 @@ class InstrDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
     lnk_str = "<LI>%s"
     
     
@@ -899,7 +899,7 @@ class CompDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
     lnk_str = "<LI>%s"
     
     
@@ -920,7 +920,7 @@ class CompDocWriter:
  | <A href="#links">Links</A> ]
 </P>
 
-<H1>The <CODE>%COMPNAME%</CODE> Instrument</H1>
+<H1>The <CODE>%COMPNAME%</CODE> Component</H1>
 
 %SHORT_DESCRIPTION%
 
