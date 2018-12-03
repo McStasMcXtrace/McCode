@@ -212,9 +212,11 @@ TRACE
     if (ismpislave || repeating) {
       // Direction-MC:
       double tmpx,tmpy,tmpz;
-      // Position-MC:
-      randvec_target_circle(&d0, &d1, &d2, NULL, particle->direction[0], particle->direction[1], particle->direction[2], sin(dir_smear*DEG2RAD));
-      NORM(d0,d1,d2);
+      // Position-MC, only in case of non-zero dir_smear):
+      if (dir_smear) {
+	randvec_target_circle(&d0, &d1, &d2, NULL, particle->direction[0], particle->direction[1], particle->direction[2], sin(dir_smear*DEG2RAD));
+	NORM(d0,d1,d2);
+      }
     }
     
     vx=d0*nrm;
