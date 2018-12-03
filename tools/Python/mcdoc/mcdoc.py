@@ -1052,7 +1052,7 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]    
-    if args.dir==None and args.install==None and args.namefilter==None:
+    if args.dir==None and args.install==False and args.namefilter==None:
         ''' browse system docs and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
         quit()
