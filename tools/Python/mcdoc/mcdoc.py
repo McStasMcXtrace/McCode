@@ -653,22 +653,12 @@ class InstrParser:
         self.has_parsed = False
     
     def stub(self):
+        ''' fallback parsing '''
         self.info = utils.InstrCompHeaderInfo()
         self.has_parsed = True
         return self.info
     
     def parse(self):
-        try:
-            self._parse()
-            self.has_parsed = True
-        except:
-            self._parse_legacy()
-        return self.info
-        
-    def _parse(self):
-        raise Exception()
-    
-    def _parse_legacy(self):
         ''' parses the given file '''
         f = open(self.filename)
         logging.debug('parsing file "%s"' % self.filename)
@@ -680,6 +670,7 @@ class InstrParser:
         info.name, info.params = utils.parse_define_instr(dfine)
         
         self.info = info
+        return self.info
 
 
 class InstrDocWriter:
@@ -705,11 +696,11 @@ class InstrDocWriter:
         h = h.replace(t[8], self.par_header)
         doc_rows = ''
         for p in i.params:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
-            doc = lst[0] if len(lst) > 0 else ''
-            if p[0] == None:
-                p = ("", p[1], p[2])
-            doc_rows = doc_rows + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
+            unit = unit[0] if len(unit) > 0 else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = doc[0] if len(doc) > 0 else ''
+            doc_rows = doc_rows + '\n' + self.par_str % (p[1], unit, doc, p[2])
         h = h.replace(t[9], doc_rows)
         
         h = h.replace(t[10], i.filepath)
@@ -742,7 +733,7 @@ class InstrDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Unit', 'Name', 'Description', 'Default')
+    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
     lnk_str = "<LI>%s"
     
     
@@ -813,7 +804,7 @@ Generated on %GENDATE%
 
 
 class CompParser(InstrParser):
-    def _parse_legacy(self):
+    def parse(self):
         ''' override '''
         f = open(self.filename)
         logging.debug('parsing file "%s"' % self.filename)
@@ -837,7 +828,7 @@ class CompParser(InstrParser):
         info.outparams = outpar
         
         self.info = info
-
+        return self.info
 
 class CompDocWriter:
     ''' create html doc text by means of a instr parser '''
@@ -862,16 +853,20 @@ class CompDocWriter:
         h = h.replace(t[8], self.par_header)
         doc_rows_in = ''
         for p in i.setparams + i.defparams:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
-            doc = lst[0] if len(lst) > 0 else ''
-            doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
+            unit = unit[0] if len(unit) > 0 else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = doc[0] if len(doc) > 0 else ''
+            doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[1], unit, doc, p[2])
         h = h.replace(t[9], doc_rows_in)
         
         doc_rows_out = ''
         for p in i.outparams:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
-            doc = lst[0] if len(lst) > 0 else ''
-            doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
+            unit = unit[0] if len(unit) > 0 else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = doc[0] if len(doc) > 0 else ''
+            doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[1], unit, doc, p[2])
         h = h.replace(t[10], doc_rows_out)
         
         h = h.replace(t[11], i.filepath)
@@ -995,6 +990,7 @@ def write_file(filename, text, failsilent=False):
             raise e
 
 def parse_and_filter(indir, namefilter=None):
+    ''' read and parse headers and definitions of component and instrument files '''
     instr_files, comp_files = utils.get_instr_comp_files(indir)
 
     comp_info_lst = []
@@ -1008,7 +1004,7 @@ def parse_and_filter(indir, namefilter=None):
             print("failed parsing file: %s" % f)
             comp_info_lst.append(CompParser(f).stub())
     print("parsed comp files: %s" % str(len(comp_files)))
-    
+
     instr_info_lst = []
     for f in instr_files:
         try:
