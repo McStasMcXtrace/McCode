@@ -1746,8 +1746,9 @@ MCDETECTOR mcdetector_out_0D_nexus(MCDETECTOR detector)
   return(detector);
 } /* mcdetector_out_0D_ascii */
 
-MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
+MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector_inc)
 {
+  MCDETECTOR detector = detector_inc;
   MPI_MASTER(
   mcdatainfo_out_nexus(nxhandle, detector);
   mcdetector_out_data_nexus(nxhandle, detector);
@@ -1755,8 +1756,9 @@ MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
   return(detector);
 } /* mcdetector_out_1D_ascii */
 
-MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
+MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector_inc)
 {
+  MCDETECTOR detector = detector_inc;
   MPI_MASTER(
   mcdatainfo_out_nexus(nxhandle, detector);
   mcdetector_out_data_nexus(nxhandle, detector);
