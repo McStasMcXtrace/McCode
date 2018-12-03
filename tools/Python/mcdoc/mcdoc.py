@@ -1048,11 +1048,22 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]    
-    if args.dir==None and args.install==False and args.namefilter==None:
+    if args.dir==None and args.install==False and args.namefilter==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
         quit()
-
+    elif args.manual == True:
+        ''' open manual and exit ''' 
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        quit()
+    elif args.comps == True:
+        ''' open component manual and exit '''
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        quit()
+    elif args.web == True:
+        ''' open website and exit '''
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'http://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
+        quit()
     elif args.install == True:
         ''' write system doc files '''
         if args.namefilter:
@@ -1107,7 +1118,10 @@ if __name__ == '__main__':
     parser.add_argument('namefilter', nargs='?', help='filter results by name')
     parser.add_argument('--install', '-i', action='store_true', help='generate installation master doc page')
     parser.add_argument('--dir', '-d', help='include results from a custom directory (recursive)')
-
+    parser.add_argument('--manual','-m', action='store_true', help='open the system manual')
+    parser.add_argument('--comps','-c', action='store_true', help='open the component manual')
+    parser.add_argument('--web','-w', action='store_true', help='open the '+mccode_config.configuration['MCCODE']+' website')
+    
     args = parser.parse_args()
     
     try:
