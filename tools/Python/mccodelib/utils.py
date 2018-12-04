@@ -423,6 +423,7 @@ def parse_header(text):
     par_doc = None
     for l in bites[3].splitlines():
         m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]*)\][ \t]*(.*)', l)
+        par_doc = (None, None, None)
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
@@ -544,12 +545,12 @@ def parse_params(params_line):
             tpe = 'int'
             part = part.replace('int', '').strip()
         if re.search('=', part):
-            dval = part.split('=')[1].strip()
-            name = part.replace('=', '')
-            name = name.replace(dval, '').strip()
+            m = re.match("(.*)=(.*)", part)
+            dval = m.group(2)
+            name = m.group(1)
         else:
             name = part.strip()
-        if name is not None:
+        if name not in (None, "", ):
             params.append((tpe, name, dval))
     return params
 
