@@ -1564,23 +1564,20 @@ struct Sqw_Data_struct *Sqw_readfile(
         balance = Sqw_quantum_correction(w, Sqw->Temperature, Sqw->Q_correction);
       else if (!Sqw->sqw_classical) {  /* data is quantum (contains Bose) */
         if (sqw_full < 0) { /* quantum but mirrored/symmetric value (was missing in file) */
-          if (T>0)
+          if (T)
             /* prefer to use T computed from file for mirroring */
-            balance *= Sqw_quantum_correction(w, T/2,Sqw->Q_correction); /* apply Bose where missing */
-          else if (Sqw->Temperature>0)
-            balance *= Sqw_quantum_correction(w, Sqw->Temperature/2,Sqw->Q_correction); /* apply Bose where missing */
+            balance *= exp(w/(T*Sqw->T2E));                /* apply Bose where missing */
+          else if (Sqw->Temperature)
+            balance *= exp(w/(Sqw->Temperature*Sqw->T2E)); /* apply Bose where missing */
         }
         /* test if T computed from file matches requested T, else apply correction */
         if (T && Sqw->Temperature > 0 && Sqw->Temperature != T) {
-          balance *= Sqw_quantum_correction( w, -T,Sqw->Q_correction); /* make it a classical data set: remove computed/read T from quantum data file */
-          balance *= Sqw_quantum_correction( w, Sqw->Temperature,Sqw->Q_correction); /* then apply Bose to requested temperature */
+          balance *= exp(-w/(T*Sqw->T2E)/2);                /* make it a classical data set: remove computed/read T from quantum data file */
+          balance *= exp( w/(Sqw->Temperature*Sqw->T2E)/2); /* then apply Bose to requested temperature */
         }
       }
       
       /* update Sqw value */
-      if (0 && (!balance || !sqw_full))
-        printf("WARNING:       %s: q=%g w=%g balance=%g sqw_full=%g.\n",
-             Sqw->compname, q, w, balance, sqw_full);
       sqw_full = fabs(sqw_full)*balance;
       Table_SetElement(&Sqw_full, index_q, index_w, sqw_full);
       /* sum up the S(q) (0-th moment) = w0 */
