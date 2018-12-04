@@ -678,12 +678,12 @@ class InstrDocWriter:
     def __init__(self, info):
         self.info = info
         self.text = ''
-    
+
     def create(self):
         i = self.info
         t = self.tags
         h = self.html
-        
+
         h = h.replace(t[0], i.name)
         h = h.replace(t[1], i.name)
         h = h.replace(t[2], i.short_descr)
@@ -692,17 +692,22 @@ class InstrDocWriter:
         h = h.replace(t[5], i.origin)
         h = h.replace(t[6], i.date)
         h = h.replace(t[7], i.description)
-        
+
         h = h.replace(t[8], self.par_header)
         doc_rows = ''
+
         for p in i.params:
             unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
             unit = unit[0] if len(unit) > 0 else ''
+            defval = p[2] if p[2] != None else ''
             doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
             doc = doc[0] if len(doc) > 0 else ''
-            doc_rows = doc_rows + '\n' + self.par_str % (p[1], unit, doc, p[2])
+            if defval == '':
+                doc_rows = doc_rows + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+            else:
+                doc_rows = doc_rows + '\n' + self.par_str % (p[1], unit, doc, defval)
         h = h.replace(t[9], doc_rows)
-        
+
         h = h.replace(t[10], i.filepath)
         h = h.replace(t[11], os.path.basename(i.filepath))
         
@@ -714,10 +719,9 @@ class InstrDocWriter:
         
         h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
-        
         self.text = h
         return self.text
-    
+
     tags = ['%TITLE%',
             '%INSTRNAME%',
             '%SHORT_DESCRIPTION%',
@@ -733,10 +737,10 @@ class InstrDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
     lnk_str = "<LI>%s"
-    
-    
+
     html = '''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML><HEAD>
@@ -849,40 +853,49 @@ class CompDocWriter:
         h = h.replace(t[5], i.origin)
         h = h.replace(t[6], i.date)
         h = h.replace(t[7], i.description)
-        
+
         h = h.replace(t[8], self.par_header)
         doc_rows_in = ''
+
         for p in i.setparams + i.defparams:
             unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
             unit = unit[0] if len(unit) > 0 else ''
-            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            defval = p[2] if p[2] != None else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
             doc = doc[0] if len(doc) > 0 else ''
-            doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[1], unit, doc, p[2])
+            if defval == '':
+                doc_rows_in = doc_rows_in + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+            else:
+                doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[1], unit, doc, defval)
         h = h.replace(t[9], doc_rows_in)
-        
+
         doc_rows_out = ''
         for p in i.outparams:
             unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
             unit = unit[0] if len(unit) > 0 else ''
-            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            defval = p[2] if p[2] != None else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
             doc = doc[0] if len(doc) > 0 else ''
-            doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[1], unit, doc, p[2])
+            if defval == '':
+                doc_rows_out = doc_rows_out + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+            else:
+                doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[1], unit, doc, defval)
         h = h.replace(t[10], doc_rows_out)
-        
+
         h = h.replace(t[11], i.filepath)
         h = h.replace(t[12], os.path.basename(i.filepath))
-        
+
         # TODO: implement links writing
         lstr = ''
         for l in i.links:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[13], lstr)
-        
+
         h = h.replace(t[14], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
         self.text = h
         return self.text
-    
+
     tags = ['%TITLE%',
             '%COMPNAME%',
             '%SHORT_DESCRIPTION%',
@@ -899,6 +912,7 @@ class CompDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
     lnk_str = "<LI>%s"
     
