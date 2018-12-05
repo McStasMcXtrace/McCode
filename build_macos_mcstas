@@ -44,11 +44,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
-# Generate mcdoc pages
 WORK=`pwd`
-cd $MCINSTALL_PREFIX/mcstas/$1/
-./bin/mcdoc . -t
-cd $WORK
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
@@ -85,7 +81,13 @@ cd $MCINSTALL_PREFIX/mcstas/$1/libs/cif2hkl
 gfortran -c cif2hkl.F90 -o cif2hkl.o
 ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -macosx_version_min 10.10.0 -lSystem $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libgfortran.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libquadmath.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/gcc/x86_64-apple-darwin11.4.2/4.8.5/libgcc.a cif2hkl.o
 
+export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
+
+# Generate mcdoc pages
+cd $MCINSTALL_PREFIX/mcstas/$1/
+./miniconda/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
 cd $WORK
+
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then
