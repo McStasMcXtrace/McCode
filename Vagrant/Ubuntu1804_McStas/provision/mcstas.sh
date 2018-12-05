@@ -11,8 +11,9 @@ cd McCode
 sudo -u vagrant git pull
 sudo ./getdeps_debian
 # Build the debs
-sudo -u vagrant ./build_debs_mcstas 2.5
-rm dist/mcstas-tools-matlab-mcplot-*
-sudo dpkg -i dist/mcstas-*2.5-*.deb
-sudo apt-get -y -f install
+sudo -u vagrant ./build_debs_mcstas 2.5 meta
+mv meta-pkgs/deb/*2.5* dist
+#rm dist/mcstas-tools-matlab-mcplot-*
+#sudo dpkg -i dist/mcstas-*2.5-*.deb
+#sudo apt-get -y -f install
 
