@@ -242,9 +242,9 @@ class MantidPixelWriter:
 <type is="detector" name="rectangular_det_type">
     <cuboid id="pixel-shape-0">
         <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        <left-front-top-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.00005" />
-        <left-back-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        <right-front-bottom-point x="X_STP_HALF" y="Y_STP_HALF" z="0.0" />
+        <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
+        <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+        <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
     </cuboid>
     <algebra val="pixel-shape-0" />
 </type>'''
@@ -305,9 +305,9 @@ class MantidPixelWriter:
 <type is="detector" name="pixel-0">
     <cuboid id="pixel-shape-0">
         <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        <left-front-top-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.00005" />
-        <left-back-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        <right-front-bottom-point x="X_STP_HALF" y="Y_STP_HALF" z="0.0" />
+        <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
+        <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+        <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
     </cuboid>
     <algebra val="pixel-shape-0"/>
 </type>
