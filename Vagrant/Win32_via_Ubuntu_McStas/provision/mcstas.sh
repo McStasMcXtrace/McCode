@@ -1,7 +1,7 @@
 #! /bin/bash
 
 cd /home/vagrant
-sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --recurse-submodules 
+sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules 
 
 #sudo -u vagrant tar xzf McCode/support/Win32/Wine/dotwine.tgz
 
@@ -15,5 +15,5 @@ sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --recurse
 cd McCode
 git pull
 ./getdeps_win64
-sudo -u vagrant ./build_windows_mcstas test meta
+sudo -u vagrant ./build_windows_mcstas 2.5 meta
 
