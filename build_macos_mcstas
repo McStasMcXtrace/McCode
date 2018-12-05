@@ -83,6 +83,7 @@ ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -m
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
+cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
 
