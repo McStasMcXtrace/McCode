@@ -84,9 +84,7 @@ ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -m
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
 # Generate mcdoc pages
-cd $MCINSTALL_PREFIX/mcstas/$1/
-./miniconda/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
-cd $WORK
+$MCINSTALL_PREFIX/mcstas/$1/miniconda/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
