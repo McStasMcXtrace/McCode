@@ -2,4 +2,4 @@
 echo 
 echo apt-get\'ing the dependencies using sudo:
 echo
-sudo apt-get install git cmake texlive gcc gfortran flex bison build-essential poppler-utils texlive-latex-extra texlive-bibtex-extra texlive-pstricks texlive-science equivs
+sudo apt-get -y install git cmake texlive gcc gfortran flex bison build-essential poppler-utils texlive-latex-extra texlive-bibtex-extra texlive-pstricks texlive-science equivs
