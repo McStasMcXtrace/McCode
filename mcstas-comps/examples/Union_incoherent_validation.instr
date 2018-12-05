@@ -16,7 +16,7 @@
 * %Description
 * Validation of Union components against incoherent scattering component
 *
-* %Example: Detector: Banana_monitor_I=18.4632
+* Example: Detector: Banana_monitor_I=18.4632
 *
 * %Parameters
 * comp_select: [] 1: Union components, 2: Incoherent

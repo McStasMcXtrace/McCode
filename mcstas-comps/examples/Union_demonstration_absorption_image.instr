@@ -19,7 +19,7 @@
 * This instrument file produces an absorption image of the setup.
 *
 *
-* %Example: Detector: screen_I=0.0107579
+* Example: Detector: screen_I=0.0107579
 *
 * %Parameters
 * stick_displacement: [] 

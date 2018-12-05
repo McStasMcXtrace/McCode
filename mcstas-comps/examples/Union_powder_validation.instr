@@ -17,7 +17,7 @@
 * %Description
 *  Validation of Union powder against standard PowderN component. 
 *
-* %Example: Banana_monitor_I=20.1897
+* Example: Banana_monitor_I=20.1897
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: PowderN

@@ -15,7 +15,7 @@
 *
 * Simple test instrument for mask functionality in Union framework.
 *
-* %Example: Detector: m4pi_I=2.27579e-07
+* Example: Detector: m4pi_I=2.27579e-07
 *
 * %Description
 * simple test instrument for sample component.
