@@ -16,7 +16,7 @@
 * %Description
 *  Powder in Al can
 *
-* Example: Detector: Banana_monitor_I=9.84391e-09
+* %Example: Detector: Banana_monitor_I=9.84391e-09
 *
 * %Parameters
 * material_data_file: [string] Name of data file for powder sample

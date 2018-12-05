@@ -18,7 +18,7 @@
 * %Description
 * simple test instrument for sample component.
 *
-* Example: stick_displacement=0 Detector: banana_detector_tof_I=566.295
+* %Example: stick_displacement=0 Detector: banana_detector_tof_I=566.295
 *
 * %Parameters
 * stick_displacement: [m] Displacement of sample stick
