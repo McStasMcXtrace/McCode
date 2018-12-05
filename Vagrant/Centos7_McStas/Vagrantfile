@@ -11,7 +11,7 @@ Vagrant.configure(2) do |config|
   # Centos 7
   config.vm.box = "centos/7"
   config.vm.define HOST_NAME do |h|
-  config.vbguest.auto_update = true
+  #config.vbguest.auto_update = true
   end
 
   # This is the hostname that the virtual machine uses internally.
