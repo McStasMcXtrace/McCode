@@ -219,7 +219,7 @@ else
 fi
 
 # Check if mcdoc is installed and if it needs to run
-if [ -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc.pl ] && \
+if [ -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc ] && \
     [ -d ${PREFIX}/${FLAVOR}/${VERSION}/examples ]; then
-    ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc.pl --text &>/dev/null
+    ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc -i &>/dev/null
 fi

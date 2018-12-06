@@ -126,13 +126,13 @@ foreach(NAME ${SOURCENAMES}
 endforeach()
 
 # On Unix, also put a doc without pl suffix, as there is no equivalent on the python side
-if(NOT WINDOWS)
-  install(
-    PROGRAMS "${WORK}/${P}doc"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}doc"
-      )
-endif()
+#if(NOT WINDOWS)
+#  install(
+#    PROGRAMS "${WORK}/${P}doc"
+#    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+#    RENAME "${P}doc"
+#      )
+#endif()
 
 # Generate mccode_config.perl and mccode_reconfigure
 configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONLY)
