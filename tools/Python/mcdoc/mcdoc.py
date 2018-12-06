@@ -1120,11 +1120,11 @@ def main(args):
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
         text = masterdoc.create()
 
-        mcdoc_html_filepath = os.path.join(usedir, 'mcdoc.html')
-        print('writing master doc file... %s' % mcdoc_html_filepath)
+        mcdoc_html_filepath = os.path.join('.', 'mcdoc.html')
+        print('writing local overview doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.','mcdoc.html')), shell=True)
 
 
 if __name__ == '__main__':
