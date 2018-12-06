@@ -51,6 +51,7 @@ Source: "dist\mcstas-tools-matlab-mcplot-NSIS64-@VERSION@-mingw64.exe"; DestDir:
 Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcdoc-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "Support\Miniconda3-latest-Windows-x86_64.exe"; DestDir: "{tmp}"
 [Run]
 Filename: "{tmp}\python-install.bat"
@@ -72,5 +73,7 @@ Filename: "{tmp}\mcstas-tools-matlab-mcplot-NSIS64-@VERSION@-mingw64.exe"; Param
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcdoc-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "c:\mcstas-@VERSION@\bin\mcdoc"; Parameters: "-i"
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

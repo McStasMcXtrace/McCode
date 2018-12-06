@@ -79,7 +79,7 @@ configure_file("${CMAKE_SOURCE_DIR}/mcdoc.in" "${WORK}/${P}doc" @ONLY)
 
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mdoc.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdoc.py")
 else()
   set(BINS "${PROJECT_SOURCE_DIR}/mcdoc.py" "${WORK}/${P}doc")
 endif()
