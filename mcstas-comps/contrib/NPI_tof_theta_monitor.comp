@@ -1,0 +1,202 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: NPI_tof_theta_monitor
+*
+* %I
+* Written by:  Kim Lefmann
+* Date: October 2000
+* Version: $Revision: 1.1 $
+* Origin: Risoe
+* Release: McStas 1.6
+* Modified by: Kim Lefmann, October 9, 2001
+* Modified by: J Navrátil (NPI Řež), December 10, 2015
+*
+* Cylindrical (2pi) PSD Time-of-flight monitor.
+* 
+* %D
+* Derived from TOF_cylPSD_monitor.
+* Code is extended by the option allowing to define range of scattering angles, therefore creating only a part of the cylinder surface.
+* The plot is transposed when compared to TOF_cylPSD_monitor: scattering angles are on the horizontal axis.
+*
+*
+* Example:	TOF_cylPSD_monitor_NPI(nt = 1024, nphi = 960, filename = "Output.dat",
+*			radius = 2, yheight = 1.0, tmin = 3e4, tmax = 12e4, amin = 75, amax = 105, restore_neutron = 1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* Inherited from NPI_tof_theta_monitor:
+* radius:   Cylinder radius (m)
+* yheight:  Cylinder height (m)
+* nt:       Number of time bins (1)
+* tmin:     Beginning of time window (mu-s)
+* tmax:     End of time window (mu-s)
+* nphi:     Number of angular bins (deg)
+* amin:		minimum angle to detect (deg)
+* amax:		maximum angle to detect (deg)
+* filename: Name of file in which to store the detector image (text)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
+*
+* Newly added
+* amin:	[deg]	minimum of scattering angle to be detected
+* amax: [deg]	maximum of scattering angle to be detected
+*
+* OUTPUT PARAMETERS:
+*
+* TOF_N:    Array of neutron counts
+* TOF_p:    Array of neutron weight counts
+* TOF_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT NPI_tof_theta_monitor
+DEFINITION PARAMETERS (nt=128, na=90)
+SETTING PARAMETERS (string filename=0, radius=1, yheight=0.3, tmin, tmax, amin, amax, restore_neutron=1, verbose=0)
+OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, th2_min, th2_max, dth, dtof, tt_0, tt_1)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+SHARE
+  %{
+
+  %}
+DECLARE
+  %{
+    double TOF_N[na][nt];
+    double TOF_p[na][nt];
+    double TOF_p2[na][nt];
+    double th2_min, th2_max, dth, dtof;
+	double tt_0, tt_1;
+  %}
+INITIALIZE
+  %{	
+	th2_min = amin*DEG2RAD;
+	th2_max = amax*DEG2RAD;
+	dth=(th2_max-th2_min)/na;
+    tt_0=tmin*1e-6;
+    tt_1=tmax*1e-6;
+	dtof=(tt_1-tt_0)/nt;
+	int i,j;
+    for (i=0; i<na; i++) {
+      for (j=0; j<nt; j++)
+      {
+        TOF_N[i][j] = 0;
+        TOF_p[i][j] = 0;
+        TOF_p2[i][j] = 0;
+      }
+	}
+	if (verbose) {
+		printf("%s: range 2theta=(%g,%g), time(%g,%g)\n",NAME_CURRENT_COMP,amin,amax,tmin/1000,tmax/1000);
+	}
+  %}
+TRACE
+  %{
+    int i,j;
+    double t0,t1,theta2;
+	double cos2;
+	int cross=cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight);
+
+	/* don't allow intersections with top/bottom cylinder walls
+	   only neutrons from inside are allowed 
+	*/
+	if ( (cross!=1) ||  (t0>0) || (t1<0) ) {
+		p=0;
+	} else {
+		PROP_DT(t1);
+		 
+    /* Calculate pixel */
+		if (fabs(y)<(0.5*yheight)) {
+			cos2=z/sqrt(radius*radius+y*y);
+			theta2=acos(cos2);
+			if (theta2>th2_min && theta2< th2_max) {
+				i = (int)floor((theta2-th2_min)/dth+0.5);
+				j = (int)floor((t-tt_0)/dtof+0.5);
+				if ( j>=0 && j<nt && i>=0 && i<na ) {
+					TOF_N[i][j]++;
+					TOF_p[i][j] += p;
+					TOF_p2[i][j] += p*p;
+				} else {
+				}
+			}
+		} else {
+          p=0;  /*... not necessary ? */
+		}
+	}
+	if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "Cylindrical monitor ToF x 2theta",
+        "Scattering angle [deg]",
+		"Time-of-flight [\\gms]",
+        amin, amax, tmin, tmax, 
+        na, nt,
+        &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("y");
+  circle("xz", 0,0,0,radius);
+%}
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
