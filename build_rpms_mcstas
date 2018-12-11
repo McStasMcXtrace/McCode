@@ -43,6 +43,6 @@ if [ "x$2" != "x" ]; then
     rpmbuild -bb --target x86_64 $controlfile
     mv $controlfile.bak $controlfile
   done
-  cp $HOME/rpmbuild/RPMS/x86_64/mcstas-suite-*rpm $WORK/dist
+  mv $HOME/rpmbuild/RPMS/x86_64/mcstas-suite-*rpm $WORK/dist
   cp $WORK/INSTALL-McStas/Linux/centos/README.md $WORK/dist
 fi
