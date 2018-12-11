@@ -42,4 +42,6 @@ if [ "x$2" != "x" ]; then
     equivs-build $controlfile
     mv $controlfile.bak $controlfile
   done
+
+  cp $WORK/INSTALL-McStas/Linux/debian/README.md $WORK/dist
 fi
