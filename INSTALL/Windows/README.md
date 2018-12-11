@@ -1,4 +1,4 @@
-# This directory contains packages for McStas 2.5 on Windows 64 bit systems
+# Installation of McStas 2.5 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
