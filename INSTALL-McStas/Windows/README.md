@@ -2,9 +2,12 @@
 
 
 ## IMPORTANT A:
-* If you are behind a proxy server, please use the command
+* If you are behind a proxy server, please use the commands
 	```bash
-	set HTTP_PROXY=http://your_proxy_ip:port
+		set HTTP_PROXY=http://your_proxy_ip:port
+	```
+	```bash
+		set HTTPS_PROXY=https://your_proxy_ip:port
 	```
 in a cmd.exe shell and start the Perl and McStas installers from there
 	
@@ -24,3 +27,7 @@ BEFORE  attempting to install the McStas metapackage!!!
 posted at http://www.mcstas.org/news/2016.html under the heading of
 "Use Microsofts 'Windows subsystem for Linux' for running McStas 
 under Windows 10"
+
+## In case of issues
+Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
+
