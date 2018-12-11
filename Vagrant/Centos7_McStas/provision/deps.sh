@@ -12,7 +12,7 @@ cd /home/vagrant
 sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules
 
 sudo -u vagrant rpmbuild --rebuild McCode/support/rpm/SRPMS/perl-ExtUtils-F77-1.16-5.el6.src.rpm
-sudo rpm -i rpmbuild/RPMS/noarch/perl-ExtUtils-F77-1.16-5.el7.centos.noarch.rpm
+sudo rpm -i rpmbuild/RPMS/noarch/perl-ExtUtils-F77-1.16-5.el7.noarch.rpm
 sudo -u vagrant rpmbuild --rebuild McCode/support/rpm/SRPMS/perl-PGPLOT-2.21-5.src.rpm
 sudo rpm -i rpmbuild/RPMS/x86_64/perl-PGPLOT-2.21-5.x86_64.rpm
 
