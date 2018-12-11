@@ -10,7 +10,7 @@ sudo apt-get update
 
 # Look for McStas packages to install
 ```bash
-mcstas@debian:~$ apt-cache search mcstas | grep -v 2.5
+mcstas@debian:~$ apt-cache search mcstas | grep -v 2.0 |grep -v 2.1 | grep -v 2.2 | grep -v 2.3 | grep -v 2.4
 mcstas-2.5 - mcstas built using CMake
 mcstas-comps-2.5 - mcstas-comps built using CMake
 mcstas-manuals-2.5 - mcstas_manuals built using CMake
