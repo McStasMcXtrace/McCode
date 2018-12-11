@@ -606,8 +606,11 @@ def get_instr_site(instr_file):
         
     return site
 
-def get_instr_comp_files(mydir):
-    ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir" ''' 
+def get_instr_comp_files(mydir, recursive=True):
+    ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir"
+    
+    181211: added recursive, defaults to True to preserve backwards compatibility
+    ''' 
     files_instr = [] 
     files_comp = []
     
@@ -617,6 +620,8 @@ def get_instr_comp_files(mydir):
                 files_instr.append(dirpath + '/' + f)
             if os.path.splitext(f)[1] == '.comp':
                 files_comp.append(dirpath + '/' + f)
+        if not recursive:
+            break
     
     return files_instr, files_comp
 
