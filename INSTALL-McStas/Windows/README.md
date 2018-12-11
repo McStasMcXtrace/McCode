@@ -4,9 +4,10 @@
 ## IMPORTANT A:
 * If you are behind a proxy server, please use the commands
 	```bash
-set HTTP_PROXY=http://your_proxy_ip:port
-
-set HTTPS_PROXY=https://your_proxy_ip:port
+		set HTTP_PROXY=http://your_proxy_ip:port
+	```
+	```bash
+		set HTTPS_PROXY=https://your_proxy_ip:port
 	```
 in a cmd.exe shell and start the Perl and McStas installers from there
 	
