@@ -7,7 +7,7 @@
 specific [Debian/Ubuntu](debian/README.md) or  [CentOS](centos/README.md) 
 
 * For other systems, please either
- ** Use the instructions for
+ * Use the instructions for
  [pre-configured source code](src/README.md)
- ** Build directly from the repo [build instructions](https://github.com/McStasMcXtrace/McCode/wiki/Building-McStas-McXtrace)
- ** You are welcome to contact us in case of issues, e.g. via [mcstas-users](mailto:mcstas-users@mcstas.org)
+ * Build directly from the repo [build instructions](https://github.com/McStasMcXtrace/McCode/wiki/Building-McStas-McXtrace)
+ * You are welcome to contact us in case of issues, e.g. via [mcstas-users](mailto:mcstas-users@mcstas.org)
