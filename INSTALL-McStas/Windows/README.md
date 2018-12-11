@@ -27,3 +27,7 @@ BEFORE  attempting to install the McStas metapackage!!!
 posted at http://www.mcstas.org/news/2016.html under the heading of
 "Use Microsofts 'Windows subsystem for Linux' for running McStas 
 under Windows 10"
+
+## In case of issues
+Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
+
