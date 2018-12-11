@@ -6,7 +6,7 @@ After following the below steps your package manager should now be aware of mcst
 cd /etc/apt/sources.list.d
 sudo wget http://packages.mccode.org/debian/mccode.list
 sudo apt-get update
-``
+```
 
 # Look for McStas packages to install
 ```bash
@@ -32,6 +32,7 @@ The meta-packages mcstas-suite-perl and mcstas-suite-python allows you to instal
 ```bash
 sudo apt-get install mcstas-suite-python
 ```
+# Optionals
 Optionally install iFit to visualize results using a Matlab environment (for free, no license needed).
 Optionally install a VRML/X3D plotter such as Freewrl or InstantReality.
 Optionally, you can install the NeXus format libraries to be able to export data files in HDF5.
