@@ -41,3 +41,8 @@ Please report any trouble with the repository to [mcstas-users](mailto:mcstas-us
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
 dpkg, the packages are available for download at http://download.mcstas.org/current/linux/debian/mcstas-2.5-deb64
+
+## In case of issues
+Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
+
+
