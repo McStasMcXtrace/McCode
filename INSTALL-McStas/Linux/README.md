@@ -1,6 +1,6 @@
 # Install McStas 2.5 on Linux and Unix.
 
-* We provide Debian packages, RedHat packages, and tar.gz's of and "preconfigured" source code.
+* We provide Debian packages, RedHat packages, and tar.gz's of "preconfigured" source code.
 
 * **NOTE!!!** The preferred way of installing on Debian/Ubuntu or CentOS
 7 type systems is by adding our repository!!! Please consult the
