@@ -26,6 +26,3 @@ cd /home/vagrant
 sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules 
 cd McCode
 sudo -u vagrant ./build_rpms_fedora29_mcstas 2.5 meta
-mv meta-pkgs/rpm/*2.5* dist/
-#rm dist/mcstas-tools-matlab-mcplot*.rpm
-#sudo rpm -i dist/*.rpm
