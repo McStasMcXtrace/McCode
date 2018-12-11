@@ -563,7 +563,6 @@ class McGuiAppController():
                         s[0]=""
                         s = ' '.join(s)
                         s = s.split('=')
-                        if s[1].endswith("NULL"): s[1] = ""
                         params.append(s)
 
                 instr_params = params
