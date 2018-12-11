@@ -64,4 +64,5 @@ if [ "x$2" != "x" ]; then
     cp Perl/*.msi dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
+    cp INSTALL-McStas/Windows/README.md dist
 fi
