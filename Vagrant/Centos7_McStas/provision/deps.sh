@@ -6,7 +6,7 @@ curl -O http://packages.mccode.org/rpm/mccode.repo
 sudo cp mccode.repo /etc/yum.repos.d/
 sudo yum update
 sudo yum -y upgrade
-sudo yum install -y perl-Tk perl-PDL pgplot pgpplot-dev libtk-codetext-perl
+sudo yum install -y perl-Tk perl-PDL pgplot pgpplot-dev libtk-codetext-perl git
 cd /home/vagrant
 
 sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules
