@@ -9,3 +9,12 @@ sudo yum -y install cmake
 sudo ln -sf /usr/bin/cmake3 /usr/local/bin/cmake
 sudo ln -sf /usr/bin/cpack3 /usr/local/bin/cpack
 sudo yum install -y git flex bison rpm-build gcc-gfortran 
+curl -O http://packages.mccode.org/rpm/mccode.repo
+sudo cp mccode.repo /etc/yum.repos.d/
+sudo yum update
+sudo yum -y upgrade
+sudo yum install -y perl-Tk perl-PDL pgplot pgplot-devel libtk-codetext-perl
+sudo yum install -y cmake3 perl-Extuils-Makemaker
+sudo ln -sf /bin/cmake3 /usr/bin/cmake
+sudo ln -sf /bin/cpack3 /usr/bin/cpack
+
