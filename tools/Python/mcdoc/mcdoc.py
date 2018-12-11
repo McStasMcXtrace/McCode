@@ -1103,8 +1103,8 @@ def main(args):
         if args.dir is not None:
             usedir = args.dir
 
-        instr = re.match('[\w0-9]+\.instr', args.namefilter)
-        comp = re.match('[\w0-9]+\.comp', args.namefilter)
+        instr = re.search('[\w0-9]+\.instr', args.namefilter)
+        comp = re.search('[\w0-9]+\.comp', args.namefilter)
 
         f = os.path.join(usedir, args.namefilter)
         f_html = ''
