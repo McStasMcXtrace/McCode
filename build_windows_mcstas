@@ -61,4 +61,7 @@ if [ "x$2" != "x" ]; then
     mkdir dist/extras
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
+    cp Perl/*.msi dist/
+    mkdir dist/single-packages
+    mv dist/mcstas-* dist/single-packages
 fi
