@@ -1098,15 +1098,27 @@ def main(args):
         print('writing master doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-    elif args.namefilter is not None and re.match('[\w0-9]+\.instr', args.namefilter):
+    elif args.namefilter is not None and re.search('\.', args.namefilter):
         usedir = '.'
         if args.dir is not None:
             usedir = args.dir
+
+        instr = re.match('[\w0-9]+\.instr', args.namefilter)
+        comp = re.match('[\w0-9]+\.comp', args.namefilter)
+
         f = os.path.join(usedir, args.namefilter)
-        f_html = f.replace('instr', 'html')
-        info = InstrParser(f).parse()
-        info.filepath = os.path.abspath(f)
-        write_doc_files_or_continue([], [info], [], [f])
+        f_html = ''
+        if instr:
+            f_html = f.replace('instr', 'html')
+            info = InstrParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            write_doc_files_or_continue([], [info], [], [f])
+        elif comp:
+            f_html = f.replace('comp', 'html')
+            info = CompParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            write_doc_files_or_continue([info], [], [f], [])
+
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
 
     elif args.dir != None or args.namefilter != None:
