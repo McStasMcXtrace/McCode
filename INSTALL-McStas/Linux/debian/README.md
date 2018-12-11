@@ -38,3 +38,6 @@ Optionally install a VRML/X3D plotter such as Freewrl or InstantReality.
 Optionally, you can install the NeXus format libraries to be able to export data files in HDF5.
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
 
+# Installing without adding the repo
+If you want to attempt installing our debian packages manually via
+dpkg, the packages are available for download at http://download.mcstas.org/current/linux/debian/mcstas-2.5-deb64
