@@ -28,7 +28,7 @@
 *
 * %End
 ****************************************************************************/
-DEFINE INSTRUMENT Test_Magnetic_Rotation(RESTORENEUT=1)
+DEFINE INSTRUMENT Test_Magnetic_Rotation()
 
 DECLARE
 %{
@@ -67,81 +67,59 @@ TRACE
 /* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
 COMPONENT Origin = Progress_bar()
-     AT (0,0,0) ABSOLUTE
+AT (0,0,0) ABSOLUTE
 
 COMPONENT source =
-Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01, lambda0 = 5,
-	      dlambda = 4.99, flux = 1)
-     AT (0, 0, 0) RELATIVE Origin
+Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01,
+        lambda0 = 5.0, dlambda = 4.99, flux = 1)
+AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT polSetter =
 Set_pol(py=1)
-     AT (0, 0, 0.5) RELATIVE Origin
+AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1x =
 PolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=1, my=0, mz=0, filename="pollambdaMon1x.data")
-     AT (0, 0, 0.75) RELATIVE Origin
+AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1y =
 PolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=1, mz=0, filename="pollambdaMon1y.data")
-     AT (0, 0, 0.75) RELATIVE Origin
+AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1z =
 PolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=0, mz=1, filename="pollambdaMon1z.data")
-     AT (0, 0, 0.75) RELATIVE Origin
+AT (0, 0, 0.75) RELATIVE Origin
 
-COMPONENT magnetNum =
-Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength,
+
+COMPONENT magnetNum = Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength,
 		 Bx = 0, By = Bmagnitude, Bz = 0,
-		 fieldFunction=rot_magnetic_field)
-     AT (0, 0, 1.0) RELATIVE Origin
-/*
-COMPONENT MPLMonNum2X_1 =
-MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
-		  nL=100, Lmin = 0.0, Lmax = 10.0,
-		  mx=1, my=0, mz=0, filename="MPLMonNum2X_1.data")
-     AT (0, 0, magnetLength/2) RELATIVE magnetNum
-*/
+                 fieldFunction=rot_magnetic_field, concentric=0)
+AT (0, 0, 1.0) RELATIVE Origin
 
-COMPONENT MPLMonNum2Y_1 =
-MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
-		  nL=100, Lmin = 0.0, Lmax = 10.0,
-		  mx=0, my=1, mz=0, filename="MPLMonNum2Y_1.data",restore_neutron=RESTORENEUT)
-     AT (0, 0, magnetLength/2) RELATIVE magnetNum
-/*
-COMPONENT MPLMonNum2Z_1 =
-MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
-		  nL=100, Lmin = 0.0, Lmax = 10.0,
-		  mx=0, my=0, mz=1, filename="MPLMonNum2Z_1.data")
-     AT (0, 0, magnetLength/2) RELATIVE magnetNum
-*/
-COMPONENT magnetNumCp =
-Pol_Bfield_stop()
-  AT(0,0,magnetLength) RELATIVE magnetNum
 
 COMPONENT MPLMonNum2X =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
 		  mx=1, my=0, mz=0, filename="MPLMonNum2X.data")
-     AT (0, 0, 1.5) RELATIVE Origin
+AT (0, 0, 2.5) RELATIVE Origin
 
 COMPONENT MPLMonNum2Y =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
 		  mx=0, my=1, mz=0, filename="MPLMonNum2Y.data")
-     AT (0, 0, 1.5) RELATIVE Origin
+AT (0, 0, 2.5) RELATIVE Origin
 
 COMPONENT MPLMonNum2Z =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
 		  mx=0, my=0, mz=1, filename="MPLMonNum2Z.data")
-     AT (0, 0, 1.5) RELATIVE Origin
+AT (0, 0, 2.5) RELATIVE Origin
 
 
 /* This section is executed when the simulation ends (C code). Other    */

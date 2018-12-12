@@ -249,8 +249,8 @@ int rot_magnetic_field(double x, double y, double z, double t,
   if (!data) return 0;
   double Bmagnitude=((double *)data)[0];//   = mcMagnetData[1];
   double magnetLength=((double *)data)[1];// = mcMagnetData[5];
-  *bx =  Bmagnitude * sin(PI/2*z/magnetLength);
-  *by =  Bmagnitude * cos(PI/2*z/magnetLength);
+  *bx =  Bmagnitude * sin(PI/2*(z+magnetLength/2.0)/magnetLength);
+  *by =  Bmagnitude * cos(PI/2*(z+magnetLength/2.0)/magnetLength);
   *bz =  0;
   //printf("mag field at (x,y,z)=( %g %g %g ) t=%g is B=( %g %g %g )\n",x,y,z,t,*bx,*by,*bz);
   return 1;
@@ -419,9 +419,7 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   // get initial B-field value
   mcMagneticField(mc_pol_x, mc_pol_y, mc_pol_z, mc_pol_time,
 		  &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp,NULL);
-
   do {
-
     mc_pol_Bx = 0; mc_pol_By = 0; mc_pol_Bz = 0; mc_pol_phiz = 0;
     mc_pol_BxStart = mc_pol_BxTemp; mc_pol_ByStart = mc_pol_ByTemp;
     mc_pol_BzStart = mc_pol_BzTemp;
@@ -484,7 +482,6 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
 	     mc_pol_sx_in, mc_pol_sy_in, mc_pol_sz_in,
 	     mc_pol_phiz, mc_pol_Bx, mc_pol_By, mc_pol_Bz);
     }
-
   } while (mc_pol_deltaT>0);
 
   // change back spin coordinates from lab system to local system
