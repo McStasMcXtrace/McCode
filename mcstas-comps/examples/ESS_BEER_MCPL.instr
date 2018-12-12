@@ -201,7 +201,7 @@ Emax = L2E/pow(Lmin,2);
 /* Messages 
 --------------------------------*/
 printf("Chopper delay = %g, mod_period = %g [ms]\n", det_t0*1000, det_mod_dt*1000);
-printf("Mean ToF [ms]: %g\n", tof/1000);
+printf("Mean ToF [ms] = %g\n", tof/1000);
 printf("Selected energy range: %g to %g meV\n", Emin, Emax);
 %}
 
