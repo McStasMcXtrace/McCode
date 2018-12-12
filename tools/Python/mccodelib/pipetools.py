@@ -3,6 +3,7 @@ Tools for piping a process to the terminal for std I/O.
 Buffering and low-level filtering. Thread management.
 '''
 import re
+import subprocess
 from subprocess import Popen, PIPE
 from threading import Thread, Event
 import os
@@ -279,7 +280,9 @@ class TraceReader(Thread):
             # fail state exit status from mcrun process
             if poll != 0:
                 if not self.allstates['post_particles'].waskilled:
-                    raise Exception("process exited with code: %s" % str(poll))
+                    self.databox.set_instrdone()
+                    self.databox.set_particlesdone()
+                    raise Exception("TraceReader - mcrun process exited with code: %s" % str(poll))
 
             # If we made it all the way here, sim has ended or been killed
             self.databox.set_particlesdone()
@@ -339,6 +342,7 @@ class McrunPipeMan(object):
     def join(self):
         self.reader.join(1000)
         if self.reader.exc_obj:
+            print(self.reader.databox.get_comments())
             raise self.reader.exc_obj
     
     def read_particles(self):

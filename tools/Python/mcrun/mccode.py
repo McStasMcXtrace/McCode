@@ -77,7 +77,8 @@ class Process:
         # Check if process terminated correctly
         retval = fid.wait()
         if retval != 0:
-            print(stderr)
+            if stderr != None:
+                print(stderr)
             exit(retval)
 
         return stdout
