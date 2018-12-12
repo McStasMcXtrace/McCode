@@ -52,30 +52,34 @@ Changes in McStas v.2.5, December 12th, 2018
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
    and McStas is all about!
 
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ 
  Fixes of issues from last release:
  - A number of issues from 2.4.1 were corrected, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
 
- Plus lots of work in genereal:
+ Plus lots of work in general:
  https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F1+
 
  Tools:
- - As for the earlier few releses, the default set of tools are Python-based and developed by Jakob Garde, DTU. 
+ - As for the earlier few releases the default set of tools are Python-based and developed by Jakob Garde, DTU. 
    The Perl ones are still around as a backup solution, handy for those that prefer "the oldschool way"
    - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the Perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the Perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
-   - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
+   - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
  - Feature developments:
    - mcgui: For a quick visualisation of your instrument, simply use Simulation -> Display-2D and Display-3D (will use the
-     default instrument parameters)
-   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilitities as comboboxes
+     default instrument parameters
+   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilities as comboboxes
    - mcdoc: We now provide a mcdoc utility based on Python
 
  Platforms:
  - Our Windows release is finally 64bit. Also further prepackages GSL for use e.g. with Multilayer_sample.comp from
    R. Dalgliesh (ISIS)
- - If you want to use NeXus and / or MPI on Windows, please ensure to install Strawberry Perl!
+ - If you want to use NeXus and / or MPI on Windows, please ensure to install Strawberry perl!
 
  Libraries:
  - NCrystal library from T. Kittelmann (ESS) and X.X. Cai (DTU Nutech/ESS) is distributed with McStas on Unix
@@ -1912,4 +1916,3 @@ Changes in McStas v1.1, March 31, 1999:
 Changes in McStas v1.0, October 26, 1998:
 
  - Initial release.
-
