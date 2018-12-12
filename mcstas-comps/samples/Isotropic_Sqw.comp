@@ -1760,7 +1760,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     double local_val = 0;
     double w         = -w_max + index_w * w_step;
     for (index_q=0; index_q < q_bins ; index_q++) { /* integrate on all q values */
-      local_val += Table_Index(Sqw_full, index_q, index_w)*q_step; /* S(q,w) */
+      local_val += Table_Index(Sqw_full, index_q, index_w)*q_step*index_q*q_step; /* q*S(q,w) */
     }
     Sqw_Data->SW[index_w].omega = w;
     sum                  += local_val; /* S(w)=\int S(q,w) dq */
