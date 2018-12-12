@@ -37,10 +37,112 @@
 * Modified by: PW March 2016: version 2.3
 * Modified by: PW May 2017: version 2.4
 * Modified by: PW June 2017: version 2.4.1
-* This file is part of McStas version 2.4.1, released June 26th 2017.
+* Modified by: PW December 2018: version 2.5
+* This file is part of McStas version 2.5, released December 12th 2018.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v.2.5, December 12th, 2018
+
+ McStas 2.5 is the seventh release in the 2.x series and fixes various issues with McStas 2.4.1, plus 
+ many new developments. McStas 2.5 is also the 20th anniversary release of McStas - 1.0 was released
+ in October 1998!
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Fixes of issues from last release:
+ - A number of issues from 2.4.1 were corrected, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
+
+ Plus lots of work in genereal:
+ https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F1+
+
+ Tools:
+ - As for the earlier few releses we the default set of tools are Python-based and developed by Jakob Garde, DTU. 
+   The perl ones are still around as a backup solution, handy for those that prefer the "oldschool way"
+   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
+   - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
+   - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
+ - Feature developments:
+   - mcgui: For a quick visualisation of your instrument, simply use Simulation -> Display-2D and Display-3D (will use the
+     default instrument parameters
+   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilitities as comboboxes
+   - mcdoc: We now provide a mcdoc utility based on Python
+
+ Platforms:
+ - Our Windows release is finally 64bit. Also further prepackages GSL for use e.g. with Multilayer_sample.comp from
+   R. Dalgliesh (ISIS)
+ - If you want to use NeXus and / or MPI on Windows, please ensure to install Strawberry perl!
+
+ Libraries:
+ - NCrystal library from T. Kittelmann (ESS) and X.X. Cai (DTU Nutech/ESS) is distributed with McStas on Unix
+   platforms. To use it, carry out the below steps:
+     mcstas:~/NCryst$ mcstas-2.5-environment 
+     mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
+     mcstas:~/NCryst$ ncrystal_preparemcstasdir 
+     mcstas:~/NCryst$ cp $MCSTAS/examples/NCrystal_example_mcstas.instr .
+     mcstas:~/NCryst$ mcrun -c NCrystal_example_mcstas.instr 
+ - MCPL library from the same authors now included at v. 1.2.3
+
+ Components:
+ - Single_crystal_inelastic.comp is a development from Duc Le (ISIS) and presents our attempt at a general,
+   inelastic single crystal component. iFit can be used to generate its input, see
+   http://ifit.mccode.org/McStas.html#mozTocId36233
+ - E_4PI.comp is a monitor also from Duc Le, used to illustrate the output of his inelastic component in the
+   instrument Test_Single_crystal_inelastic.instr
+ - Magnon_bcc.comp is new inelastic component from K. Lefmann (KU), used in Test_Magnon_bcc_TAS.instr and
+   Test_Magnon_bcc_2D.instr 
+ - Isotropic_Sqw.comp from E. Farhi has recieved a number of important edits, including correctiono of a bug
+   found by S. Bellissmia (CNR) relating to detailed balance
+ - PowderN received a bugfix from M. Bertelsen (KU) and a set of focusing patches from J. Saroun (NPI)
+ - NPI_tof_dhkl_detector.comp and NPI_tof_theta_monitor.comp are new monitor components from J. Saroun (NPI),
+   used in his model of the ESS BEER instrument, see below.
+ - Guide_multichannel.comp is a new component from J. Saroun (NPI), based on Guide_channeled.comp. It allows to
+   simulate bi-spectral extraction optics.
+ - Sqq_w_monitor.comp is a development from P. Willendrup (DTU) and is a "scattering plane" monitor that outputs
+   a set of energy-slices over a (qh,qk) reciprocal space plane, used in Test_Magnon_bcc_2D.instr
+ - Pol_guide_mirror.comp is a development from E. Knudsen (DTU) which among other use cases allows to simulate a
+   so-called "frame overlap mirror" as envisioned for multiple ESS instruments.
+ - Pol_Bfield.comp from E. Knudsen (DTU) has been updated to allow more flexible geometry and "rotatable" tabulated
+   field descriptions. It replaces Pol_simpleBfield which is now in obsolete.
+ - Absorber.comp received a bugfix thanks  to Artur Glavic (PSI)
+ - FermiChopper.comp had a long-standing issue when using supermirror coatings in the slit-package which is
+   now fixed, thanks to Ryoichi Kajimoto (J-PARC) 
+ - All monitors can now suppress file-output when their standard input parameter "nowritefile" is true. The idea
+   is to be able to suppress (some) output at runtime, e.g. in simulations with lots of monitors.
+
+ Instruments:
+ - ESS_Testbeamline_HZB_V20.instr from Alaa Al-Falahat and Robin Woracek (ESS/HZB) is a model of the ESS test-
+   beamline in Berlin.
+ - ESS_BEER_MCPL.instr from J. Saroun (NPI) is a model of the ESS BEER secondary spectrometer. It uses MCPL input
+   calculated via SIMRES
+ - BTsimple.instr from P. Willendrup (DTU) shows a simple method to calculate brillance transfer through a guide
+   system
+ - ILL_H142_D11.instr and ILL_H142_D33.instr from E. Farhi (ILL) are models of the optics in the two well-known
+   ILL SANS instruments
+ - ILL_H5_new.instr from E. Farhi (ILL) is a model of the ILL IN5 spectrometer after the guide upgrade in 2011
+ - ILL_IN5_Spots.instr modified byP. Willendrup (DTU) is a model of the ILL IN5 spectrometer with multiple
+   resolution-calculation options. 
+ - ISIS_IMAT.instr from G. Burca (ISIS) is a model of the ISIS IMAT engineering-beamline.
+ - ISIS_SANS2d_Mantid.instr from T. R. Nielsen (ESS) is a model of the ISIS SANS2d instrument with sample and
+   a Mantid output possibility
+ - ISIS_TOSCA_preupgrade.instr and ISIS_TOSCA_preupgrade_Mantid.instr from P. Willendrup and S. Mukhopadhyay,
+   based on an earlier model by  M.Zanetti are models of the TOSCA spectrometer at ISIS
+ - NCrystal_example_mcstas.instr by X.X. Cai (DTU/ESS) is used to illustrate the use of the NCrystal library
+   in McStas
+ - Test_DiskChoppers.instr by P. Willendrup (DTU) compares the use of 2 DiskChoppers with one MultiDiskChopper
+ - Test_Magnon_bcc_TAS.instr from K. Lefmann (KU) and Test_Magnon_bcc_2D.instr P. Willendrup (DTU) illustrate
+   the use of the new Magnon_bcc.comp
+ - Test_Single_crystal_inelastic.instr from Duc Le (ISIS) is a test instrument for Single_crystal_inelastic.comp
+ - Test_Pol_Guide_mirror.instr from E. Knudsen (DTU) is a test instrument for Pol_guide_mirror.comp
+ - Test_focus.instr from T. Weber (ILL) compares focusing by Single_crystal and Monochromator_curved
+
+We hope you will enjoy this 20th anniversary release!!!
+
+
 Changes in McStas v.2.4.1, June 26th, 2017
 
  McStas 2.4.1 is the sixth release in the 2.x series and fixes various issues with McStas 2.4, plus 
