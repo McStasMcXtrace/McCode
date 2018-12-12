@@ -52,34 +52,30 @@ Changes in McStas v.2.5, December 12th, 2018
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
    and McStas is all about!
 
- Installation:
- - Our install docs are now available on the McCode GitHub page at
- https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
- 
  Fixes of issues from last release:
  - A number of issues from 2.4.1 were corrected, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
 
- Plus lots of work in general:
+ Plus lots of work in genereal:
  https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F1+
 
  Tools:
- - As for the earlier few releases the default set of tools are Python-based and developed by Jakob Garde, DTU. 
-   The perl ones are still around as a backup solution, handy for those that prefer the "oldschool way"
+ - As for the earlier few releses, the default set of tools are Python-based and developed by Jakob Garde, DTU. 
+   The Perl ones are still around as a backup solution, handy for those that prefer "the oldschool way"
    - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
-   - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
-   - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
-   - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
+   - On Unix platforms, the Perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
+   - On Windows, the Perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
+   - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
  - Feature developments:
    - mcgui: For a quick visualisation of your instrument, simply use Simulation -> Display-2D and Display-3D (will use the
-     default instrument parameters
-   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilities as comboboxes
+     default instrument parameters)
+   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilitities as comboboxes
    - mcdoc: We now provide a mcdoc utility based on Python
 
  Platforms:
  - Our Windows release is finally 64bit. Also further prepackages GSL for use e.g. with Multilayer_sample.comp from
    R. Dalgliesh (ISIS)
- - If you want to use NeXus and / or MPI on Windows, please ensure to install Strawberry perl!
+ - If you want to use NeXus and / or MPI on Windows, please ensure to install Strawberry Perl!
 
  Libraries:
  - NCrystal library from T. Kittelmann (ESS) and X.X. Cai (DTU Nutech/ESS) is distributed with McStas on Unix
@@ -103,13 +99,13 @@ Changes in McStas v.2.5, December 12th, 2018
    found by S. Bellissmia (CNR) relating to detailed balance
  - PowderN received a bugfix from M. Bertelsen (KU) and a set of focusing patches from J. Saroun (NPI)
  - NPI_tof_dhkl_detector.comp and NPI_tof_theta_monitor.comp are new monitor components from J. Saroun (NPI),
-   used in his model of the ESS BEER instrument, see below.
+   used in his model of the ESS BEER instrument, see below
  - Guide_multichannel.comp is a new component from J. Saroun (NPI), based on Guide_channeled.comp. It allows to
    simulate bi-spectral extraction optics.
  - Sqq_w_monitor.comp is a development from P. Willendrup (DTU) and is a "scattering plane" monitor that outputs
    a set of energy-slices over a (qh,qk) reciprocal space plane, used in Test_Magnon_bcc_2D.instr
  - Pol_guide_mirror.comp is a development from E. Knudsen (DTU) which among other use cases allows to simulate a
-   so-called "frame overlap mirror" as envisioned for multiple ESS instruments.
+   so-called "frame overlap mirror" as envisioned for multiple ESS instruments
  - Pol_Bfield.comp from E. Knudsen (DTU) has been updated to allow more flexible geometry and "rotatable" tabulated
    field descriptions. It replaces Pol_simpleBfield which is now in obsolete.
  - Absorber.comp received a bugfix thanks  to Artur Glavic (PSI)
@@ -120,7 +116,7 @@ Changes in McStas v.2.5, December 12th, 2018
 
  Instruments:
  - ESS_Testbeamline_HZB_V20.instr from Alaa Al-Falahat and Robin Woracek (ESS/HZB) is a model of the ESS test-
-   beamline in Berlin.
+   beamline in Berlin
  - ESS_BEER_MCPL.instr from J. Saroun (NPI) is a model of the ESS BEER secondary spectrometer. It uses MCPL input
    calculated via SIMRES
  - BTsimple.instr from P. Willendrup (DTU) shows a simple method to calculate brillance transfer through a guide
@@ -129,8 +125,8 @@ Changes in McStas v.2.5, December 12th, 2018
    ILL SANS instruments
  - ILL_H5_new.instr from E. Farhi (ILL) is a model of the ILL IN5 spectrometer after the guide upgrade in 2011
  - ILL_IN5_Spots.instr modified byP. Willendrup (DTU) is a model of the ILL IN5 spectrometer with multiple
-   resolution-calculation options. 
- - ISIS_IMAT.instr from G. Burca (ISIS) is a model of the ISIS IMAT engineering-beamline.
+   resolution-calculation options
+ - ISIS_IMAT.instr from G. Burca (ISIS) is a model of the ISIS IMAT engineering-beamline
  - ISIS_SANS2d_Mantid.instr from T. R. Nielsen (ESS) is a model of the ISIS SANS2d instrument with sample and
    a Mantid output possibility
  - ISIS_TOSCA_preupgrade.instr and ISIS_TOSCA_preupgrade_Mantid.instr from P. Willendrup and S. Mukhopadhyay,
