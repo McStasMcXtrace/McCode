@@ -52,6 +52,10 @@ Changes in McStas v.2.5, December 12th, 2018
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
    and McStas is all about!
 
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ 
  Fixes of issues from last release:
  - A number of issues from 2.4.1 were corrected, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
