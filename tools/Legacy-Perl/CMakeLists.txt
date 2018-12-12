@@ -65,14 +65,14 @@ endif()
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot-x11, sed, bc, libtk-codetext-perl"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, sed, bc, libtk-codetext-perl"
   )
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "freewrl")
 
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, perl, perl-Tk, perl-PDL, pgplot, perl-PGPLOT, gnuplot, sed, bc, libtk-codetext-perl"
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, perl, perl-Tk, perl-PDL, pgplot, perl-PGPLOT, sed, bc, libtk-codetext-perl"
   )
 set(CPACK_RPM_SPEC_MORE_DEFINE "AutoReq: no")
 

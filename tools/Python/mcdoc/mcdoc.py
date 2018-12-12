@@ -1003,10 +1003,10 @@ def write_file(filename, text, failsilent=False):
         else:
             raise e
 
-def parse_and_filter(indir, namefilter=None):
+def parse_and_filter(indir, namefilter=None, recursive=False):
     ''' read and parse headers and definitions of component and instrument files '''
-    instr_files, comp_files = utils.get_instr_comp_files(indir)
-
+    instr_files, comp_files = utils.get_instr_comp_files(indir, recursive)
+    print("parsing in... ", indir)
     comp_info_lst = []
     for f in comp_files:
         try:
@@ -1088,7 +1088,7 @@ def main(args):
             usedir = args.dir
             print("using custom dir: %s" % usedir)
 
-        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir)
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, recursive=True)
         write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
 
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
@@ -1098,15 +1098,39 @@ def main(args):
         print('writing master doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
+    elif args.namefilter is not None and re.search('\.', args.namefilter):
+        usedir = '.'
+        if args.dir is not None:
+            usedir = args.dir
+
+        instr = re.search('[\w0-9]+\.instr', args.namefilter)
+        comp = re.search('[\w0-9]+\.comp', args.namefilter)
+
+        f = os.path.join(usedir, args.namefilter)
+        f_html = ''
+        if instr:
+            f_html = f.replace('instr', 'html')
+            info = InstrParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            write_doc_files_or_continue([], [info], [], [f])
+        elif comp:
+            f_html = f.replace('comp', 'html')
+            info = CompParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            write_doc_files_or_continue([info], [], [f], [])
+
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+
     elif args.dir != None or args.namefilter != None:
-        ''' third and forth use case: filtered and/or local results '''
-        filter = '.*'
+        ''' filtered and/or local results '''
+        flter = '.*'
         usedir = mccode_config.configuration['MCCODE_LIB_DIR']
+        rec = True
         if args.namefilter:
-            filter = args.namefilter
+            flter = args.namefilter
 
         # system
-        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, filter)
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, flter, recursive=True)
         write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
 
         # local
@@ -1114,7 +1138,7 @@ def main(args):
         instr_infos_local = []
         if args.dir != None:
             usedir = args.dir
-            comp_infos_local, instr_infos_local, comp_files, instr_files = parse_and_filter(args.dir, filter)
+            comp_infos_local, instr_infos_local, comp_files, instr_files = parse_and_filter(args.dir, flter, recursive=False)
             write_doc_files_or_continue(comp_infos_local, instr_infos_local, comp_files, instr_files)
 
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)

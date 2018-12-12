@@ -50,7 +50,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT h15_d11(Lambda=4.51, string Config="Borkron_1972", Lc=0, iLc=5, 
+DEFINE INSTRUMENT ILL_H15_D11(Lambda=4.51, string Config="Borkron_1972", Lc=0, iLc=5, 
   Chamfers=0.0002, Waviness=2.5e-5)
 
 /* H15_D11@ILL simulation for McStas. E. Farhi <farhi@ill.fr> August 2003

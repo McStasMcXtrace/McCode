@@ -10,6 +10,8 @@ fi
 git submodule init
 git submodule update
 
+WORK=`pwd`
+
 # From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr/share/
 
@@ -42,4 +44,7 @@ if [ "x$2" != "x" ]; then
     equivs-build $controlfile
     mv $controlfile.bak $controlfile
   done
+
+  mv $WORK/meta-pkgs/deb/mcstas-suite*${1}*.deb $WORK/dist
+  cp $WORK/INSTALL-McStas/Linux/debian/README.md $WORK/dist
 fi
