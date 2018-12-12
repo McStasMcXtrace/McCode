@@ -56,20 +56,20 @@ Changes in McStas v.2.5, December 12th, 2018
  - A number of issues from 2.4.1 were corrected, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
 
- Plus lots of work in genereal:
+ Plus lots of work in general:
  https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F1+
 
  Tools:
- - As for the earlier few releses we the default set of tools are Python-based and developed by Jakob Garde, DTU. 
+ - As for the earlier few releases the default set of tools are Python-based and developed by Jakob Garde, DTU. 
    The perl ones are still around as a backup solution, handy for those that prefer the "oldschool way"
    - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
-   - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
+   - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
  - Feature developments:
    - mcgui: For a quick visualisation of your instrument, simply use Simulation -> Display-2D and Display-3D (will use the
      default instrument parameters
-   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilitities as comboboxes
+   - mcgui: The run-dialogue now gives quick access to all mcdisplay and mcplot utilities as comboboxes
    - mcdoc: We now provide a mcdoc utility based on Python
 
  Platforms:
