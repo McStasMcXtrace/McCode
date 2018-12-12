@@ -31,6 +31,10 @@ WORK=`pwd`
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" rpm64 "" -- rpm
 
+export MCINSTALL_PREFIX=/usr/local/mcstas/$1/ncrystal/
+./mkdist mcstas-ncrystal $1 3rdparty-build/ncrystal "" deb64 "" -- deb
+export MCINSTALL_PREFIX=/usr/local/
+
 #build metapackages?
 if [ "x$2" != "x" ]; then
   ./support/rpm/miniconda3/prepare.sh $1
