@@ -248,12 +248,12 @@ class McGuiState(QtCore.QObject):
                                        universal_newlines=True,
                                        cwd=os.path.dirname(self.__instrFile))
             self.__emitter.status('Compiling instrument via ' + mccode_config.configuration["MCRUN"])
-            self.__emitter.message('Setting environment:')
-            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_OVERRIDE" + "=\n " + mccode_config.configuration["MCCODE_LIB_DIR"] + "\n")
-            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_CFLAGS_OVERRIDE" + "=\n " + mccode_config.compilation["CFLAGS"] + "\n")
-            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_CC_OVERRIDE" + "=\n " + mccode_config.compilation["CC"] + "\n")
-            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_MPICC_OVERRIDE" + "=\n " + mccode_config.compilation["MPICC"] + "\n")
-            self.__emitter.message(cmd)
+            self.__emitter.message('Setting environment:', gui=True)
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_OVERRIDE" + "=\n " + mccode_config.configuration["MCCODE_LIB_DIR"] + "\n", gui=True)
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_CFLAGS_OVERRIDE" + "=\n " + mccode_config.compilation["CFLAGS"] + "\n", gui=True)
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_CC_OVERRIDE" + "=\n " + mccode_config.compilation["CC"] + "\n", gui=True)
+            self.__emitter.message(mccode_config.configuration["MCCODE"].upper() + "_MPICC_OVERRIDE" + "=\n " + mccode_config.compilation["MPICC"] + "\n", gui=True)
+            self.__emitter.message(cmd, gui=True)
             
             # read program output while the process is active
             while process.poll() == None:
@@ -793,10 +793,10 @@ class McGuiAppController():
         subprocess.Popen(cmd, shell=True)
 
     def handleMcdocCurrentInstr(self):
-        cmd='%sdoc %s' % (mccode_config.get_mccode_prefix(), self.state.getInstrumentFile() )
-        print(cmd)
+        cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
-            cmd='start ' + cmd + '.bat'
+            cmd ='start ' + cmd + '.bat'
+        cmd = cmd + ' %s' % self.state.getInstrumentFile()
         subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
