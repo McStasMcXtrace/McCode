@@ -132,10 +132,9 @@ INITIALIZE
       a[2]=Bz;
       parPtr=(void *) a;
   } else if (fieldFunction==rot_magnetic_field){
-      double *a=malloc(2*sizeof(double));
-      a[0]=By;
-      a[1]=zdepth;
-      parPtr=(void *) a;
+      parPtr=(void *)malloc(2*sizeof(double));
+      ( *( (double *)parPtr +0) )=By;
+      ( *( (double *)parPtr +1) )=zdepth;
   } else if (fieldFunction==majorana_magnetic_field){
       double *a=malloc(3*sizeof(double));
       a[0]=Bx;
