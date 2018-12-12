@@ -563,7 +563,6 @@ class McGuiAppController():
                         s[0]=""
                         s = ' '.join(s)
                         s = s.split('=')
-                        if s[1].endswith("NULL"): s[1] = ""
                         params.append(s)
 
                 instr_params = params
@@ -790,14 +789,14 @@ class McGuiAppController():
     def handleMcdoc(self):
         cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
-            cmd='start ' + cmd + '-pl.bat'
+            cmd='start ' + cmd + '.bat'
         subprocess.Popen(cmd, shell=True)
 
     def handleMcdocCurrentInstr(self):
         cmd='%sdoc %s' % (mccode_config.get_mccode_prefix(), self.state.getInstrumentFile() )
         print(cmd)
         if sys.platform == "win32":
-            cmd='start ' + cmd + '-pl.bat'
+            cmd='start ' + cmd + '.bat'
         subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
@@ -815,7 +814,8 @@ class McGuiAppController():
         reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Define system default?',
                                            'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?'),
-        if reply == QtWidgets.QMessageBox.Yes:
+ 
+        if reply[0] == QtWidgets.QMessageBox.Yes:
              subprocess.Popen('postinst set_mccode_default', shell=True)
              
 
@@ -823,14 +823,14 @@ class McGuiAppController():
         reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Python ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?')
-        if reply == QtWidgets.QMessageBox.Yes:
+        if reply[0] == QtWidgets.QMessageBox.Yes:
             subprocess.Popen('postinst osx_app_default py', shell=True)
 
     def handleDefaultMcguiPl(self):
         reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Perl ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?')
-        if reply == QtWidgets.QMessageBox.Yes:
+        if reply[0] == QtWidgets.QMessageBox.Yes:
             subprocess.Popen('postinst osx_app_default pl', shell=True)
 
         

@@ -1,11 +1,8 @@
 #!/bin/sh
 
-sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --recurse-submodules -depth=1
+sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules 
 cd McCode
 sudo -u vagrant git pull
-echo "#!/bin/bash" > go.command
-echo cd /Users/vagrant/McCode >> go.command
-echo ./build_macos_mcstas 2.5beta01 >> go.command
-chown vagrant:staff go.command
-chmod a+x go.command
-sudo -u vagrant open go.command
+sudo -u vagrant ./getdeps_mac
+./build_macos_mcstas 2.5
+sudo chown -R vagrant:staff dist

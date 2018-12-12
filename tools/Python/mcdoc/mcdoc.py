@@ -653,22 +653,12 @@ class InstrParser:
         self.has_parsed = False
     
     def stub(self):
+        ''' fallback parsing '''
         self.info = utils.InstrCompHeaderInfo()
         self.has_parsed = True
         return self.info
     
     def parse(self):
-        try:
-            self._parse()
-            self.has_parsed = True
-        except:
-            self._parse_legacy()
-        return self.info
-        
-    def _parse(self):
-        raise Exception()
-    
-    def _parse_legacy(self):
         ''' parses the given file '''
         f = open(self.filename)
         logging.debug('parsing file "%s"' % self.filename)
@@ -680,6 +670,7 @@ class InstrParser:
         info.name, info.params = utils.parse_define_instr(dfine)
         
         self.info = info
+        return self.info
 
 
 class InstrDocWriter:
@@ -687,12 +678,12 @@ class InstrDocWriter:
     def __init__(self, info):
         self.info = info
         self.text = ''
-    
+
     def create(self):
         i = self.info
         t = self.tags
         h = self.html
-        
+
         h = h.replace(t[0], i.name)
         h = h.replace(t[1], i.name)
         h = h.replace(t[2], i.short_descr)
@@ -701,17 +692,22 @@ class InstrDocWriter:
         h = h.replace(t[5], i.origin)
         h = h.replace(t[6], i.date)
         h = h.replace(t[7], i.description)
-        
+
         h = h.replace(t[8], self.par_header)
         doc_rows = ''
+
         for p in i.params:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
-            doc = lst[0] if len(lst) > 0 else ''
-            if p[0] == None:
-                p = ("", p[1], p[2])
-            doc_rows = doc_rows + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
+            unit = unit[0] if len(unit) > 0 else ''
+            defval = p[2] if p[2] != None else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
+            doc = doc[0] if len(doc) > 0 else ''
+            if defval == '':
+                doc_rows = doc_rows + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+            else:
+                doc_rows = doc_rows + '\n' + self.par_str % (p[1], unit, doc, defval)
         h = h.replace(t[9], doc_rows)
-        
+
         h = h.replace(t[10], i.filepath)
         h = h.replace(t[11], os.path.basename(i.filepath))
         
@@ -723,10 +719,9 @@ class InstrDocWriter:
         
         h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
-        
         self.text = h
         return self.text
-    
+
     tags = ['%TITLE%',
             '%INSTRNAME%',
             '%SHORT_DESCRIPTION%',
@@ -742,10 +737,10 @@ class InstrDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Unit', 'Name', 'Description', 'Default')
+    par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
     lnk_str = "<LI>%s"
-    
-    
+
     html = '''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML><HEAD>
@@ -813,7 +808,7 @@ Generated on %GENDATE%
 
 
 class CompParser(InstrParser):
-    def _parse_legacy(self):
+    def parse(self):
         ''' override '''
         f = open(self.filename)
         logging.debug('parsing file "%s"' % self.filename)
@@ -837,7 +832,7 @@ class CompParser(InstrParser):
         info.outparams = outpar
         
         self.info = info
-
+        return self.info
 
 class CompDocWriter:
     ''' create html doc text by means of a instr parser '''
@@ -858,36 +853,49 @@ class CompDocWriter:
         h = h.replace(t[5], i.origin)
         h = h.replace(t[6], i.date)
         h = h.replace(t[7], i.description)
-        
+
         h = h.replace(t[8], self.par_header)
         doc_rows_in = ''
+
         for p in i.setparams + i.defparams:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
-            doc = lst[0] if len(lst) > 0 else ''
-            doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
+            unit = unit[0] if len(unit) > 0 else ''
+            defval = p[2] if p[2] != None else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
+            doc = doc[0] if len(doc) > 0 else ''
+            if defval == '':
+                doc_rows_in = doc_rows_in + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+            else:
+                doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[1], unit, doc, defval)
         h = h.replace(t[9], doc_rows_in)
-        
+
         doc_rows_out = ''
         for p in i.outparams:
-            lst = [pd[2] for pd in i.params_docs if p[1] == pd[0]] # TODO: rewrite to speed up 
-            doc = lst[0] if len(lst) > 0 else ''
-            doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[0], p[1], doc, p[2])
+            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
+            unit = unit[0] if len(unit) > 0 else ''
+            defval = p[2] if p[2] != None else ''
+            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
+            doc = doc[0] if len(doc) > 0 else ''
+            if defval == '':
+                doc_rows_out = doc_rows_out + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+            else:
+                doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[1], unit, doc, defval)
         h = h.replace(t[10], doc_rows_out)
-        
+
         h = h.replace(t[11], i.filepath)
         h = h.replace(t[12], os.path.basename(i.filepath))
-        
+
         # TODO: implement links writing
         lstr = ''
         for l in i.links:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[13], lstr)
-        
+
         h = h.replace(t[14], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
         self.text = h
         return self.text
-    
+
     tags = ['%TITLE%',
             '%COMPNAME%',
             '%SHORT_DESCRIPTION%',
@@ -904,7 +912,8 @@ class CompDocWriter:
             '%LINKS%',
             '%GENDATE%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('Name', 'Unit', 'Description', 'Default')
+    par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
     lnk_str = "<LI>%s"
     
     
@@ -925,7 +934,7 @@ class CompDocWriter:
  | <A href="#links">Links</A> ]
 </P>
 
-<H1>The <CODE>%COMPNAME%</CODE> Instrument</H1>
+<H1>The <CODE>%COMPNAME%</CODE> Component</H1>
 
 %SHORT_DESCRIPTION%
 
@@ -994,9 +1003,10 @@ def write_file(filename, text, failsilent=False):
         else:
             raise e
 
-def parse_and_filter(indir, namefilter=None):
-    instr_files, comp_files = utils.get_instr_comp_files(indir)
-
+def parse_and_filter(indir, namefilter=None, recursive=False):
+    ''' read and parse headers and definitions of component and instrument files '''
+    instr_files, comp_files = utils.get_instr_comp_files(indir, recursive)
+    print("parsing in... ", indir)
     comp_info_lst = []
     for f in comp_files:
         try:
@@ -1008,7 +1018,7 @@ def parse_and_filter(indir, namefilter=None):
             print("failed parsing file: %s" % f)
             comp_info_lst.append(CompParser(f).stub())
     print("parsed comp files: %s" % str(len(comp_files)))
-    
+
     instr_info_lst = []
     for f in instr_files:
         try:
@@ -1052,11 +1062,22 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]    
-    if args.dir==None and args.install==None and args.namefilter==None:
+    if args.dir==None and args.install==False and args.namefilter==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
         quit()
-
+    elif args.manual == True:
+        ''' open manual and exit ''' 
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        quit()
+    elif args.comps == True:
+        ''' open component manual and exit '''
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        quit()
+    elif args.web == True:
+        ''' open website and exit '''
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'http://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
+        quit()
     elif args.install == True:
         ''' write system doc files '''
         if args.namefilter:
@@ -1067,7 +1088,7 @@ def main(args):
             usedir = args.dir
             print("using custom dir: %s" % usedir)
 
-        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir)
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, recursive=True)
         write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
 
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
@@ -1077,15 +1098,39 @@ def main(args):
         print('writing master doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
+    elif args.namefilter is not None and re.search('\.', args.namefilter):
+        usedir = '.'
+        if args.dir is not None:
+            usedir = args.dir
+
+        instr = re.search('[\w0-9]+\.instr', args.namefilter)
+        comp = re.search('[\w0-9]+\.comp', args.namefilter)
+
+        f = os.path.join(usedir, args.namefilter)
+        f_html = ''
+        if instr:
+            f_html = f.replace('instr', 'html')
+            info = InstrParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            write_doc_files_or_continue([], [info], [], [f])
+        elif comp:
+            f_html = f.replace('comp', 'html')
+            info = CompParser(f).parse()
+            info.filepath = os.path.abspath(f)
+            write_doc_files_or_continue([info], [], [f], [])
+
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+
     elif args.dir != None or args.namefilter != None:
-        ''' third and forth use case: filtered and/or local results '''
-        filter = '.*'
+        ''' filtered and/or local results '''
+        flter = '.*'
         usedir = mccode_config.configuration['MCCODE_LIB_DIR']
+        rec = True
         if args.namefilter:
-            filter = args.namefilter
+            flter = args.namefilter
 
         # system
-        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, filter)
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, flter, recursive=True)
         write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
 
         # local
@@ -1093,17 +1138,17 @@ def main(args):
         instr_infos_local = []
         if args.dir != None:
             usedir = args.dir
-            comp_infos_local, instr_infos_local, comp_files, instr_files = parse_and_filter(args.dir, filter)
+            comp_infos_local, instr_infos_local, comp_files, instr_files = parse_and_filter(args.dir, flter, recursive=False)
             write_doc_files_or_continue(comp_infos_local, instr_infos_local, comp_files, instr_files)
 
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
         text = masterdoc.create()
 
-        mcdoc_html_filepath = os.path.join(usedir, 'mcdoc.html')
-        print('writing master doc file... %s' % mcdoc_html_filepath)
+        mcdoc_html_filepath = os.path.join('.', 'mcdoc.html')
+        print('writing local overview doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.','mcdoc.html')), shell=True)
 
 
 if __name__ == '__main__':
@@ -1111,7 +1156,10 @@ if __name__ == '__main__':
     parser.add_argument('namefilter', nargs='?', help='filter results by name')
     parser.add_argument('--install', '-i', action='store_true', help='generate installation master doc page')
     parser.add_argument('--dir', '-d', help='include results from a custom directory (recursive)')
-
+    parser.add_argument('--manual','-m', action='store_true', help='open the system manual')
+    parser.add_argument('--comps','-c', action='store_true', help='open the component manual')
+    parser.add_argument('--web','-w', action='store_true', help='open the '+mccode_config.configuration['MCCODE']+' website')
+    
     args = parser.parse_args()
     
     try:

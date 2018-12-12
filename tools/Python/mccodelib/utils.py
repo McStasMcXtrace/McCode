@@ -422,10 +422,16 @@ def parse_header(text):
     # params
     par_doc = None
     for l in bites[3].splitlines():
-        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]+)\][ \t]*(.*)', l)
+        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]*)\][ \t]*(.*)', l)
+        par_doc = (None, None, None)
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
+        else:
+            m = re.match('(\w+):[ \t]*(.*)', l)
+            if m:
+                par_doc = (m.group(1), "", m.group(2).strip())
+                info.params_docs.append(par_doc)
     
     # links
     for l in bites[4].splitlines():
@@ -500,11 +506,11 @@ def parse_define_comp(text):
     text = text.replace('\n', ' ')
     
     name = re.search('DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
-    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
     defpar = []
     if m:
         defpar = parse_params(m.group(1))
-    m = re.search('SETTING[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    m = re.search('SETTING[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
     setpar = []
     if m:
         setpar = parse_params(m.group(1))
@@ -539,12 +545,12 @@ def parse_params(params_line):
             tpe = 'int'
             part = part.replace('int', '').strip()
         if re.search('=', part):
-            dval = part.split('=')[1].strip()
-            name = part.replace('=', '')
-            name = name.replace(dval, '').strip()
+            m = re.match("(.*)=(.*)", part)
+            dval = m.group(2)
+            name = m.group(1)
         else:
             name = part.strip()
-        if name is not None:
+        if name not in (None, "", ):
             params.append((tpe, name, dval))
     return params
 
@@ -600,8 +606,11 @@ def get_instr_site(instr_file):
         
     return site
 
-def get_instr_comp_files(mydir):
-    ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir" ''' 
+def get_instr_comp_files(mydir, recursive=True):
+    ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir"
+    
+    181211: added recursive, defaults to True to preserve backwards compatibility
+    ''' 
     files_instr = [] 
     files_comp = []
     
@@ -611,6 +620,8 @@ def get_instr_comp_files(mydir):
                 files_instr.append(dirpath + '/' + f)
             if os.path.splitext(f)[1] == '.comp':
                 files_comp.append(dirpath + '/' + f)
+        if not recursive:
+            break
     
     return files_instr, files_comp
 

@@ -8,6 +8,7 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+WORK=`pwd`
 # Ensure our 3rd party modules are in place and updated
 git submodule init
 git submodule update
@@ -39,6 +40,7 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
@@ -51,11 +53,18 @@ if [ "x$2" != "x" ]; then
 
     sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
     sed s/@FLAVOR@/mcstas/g python-install.bat.in.2 > python-install.bat
-
+    sed s/@VERSION@/${1}/g docupdate.bat.in > docupdate.bat.in.2
+    sed s/@FLAVOR@/mcstas/g docupdate.bat.in.2 > docupdate.bat
+    
     sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
     ./iscc McStas-${1}-metapackage64.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
     mkdir dist/extras
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
+    cp Perl/*.msi dist/
+    cp $WORK/INSTALL-McStas/Windows/README.md dist/
+    mkdir dist/single-packages
+    mv dist/mcstas-* dist/single-packages
+    cp INSTALL-McStas/Windows/README.md dist
 fi
