@@ -3,12 +3,11 @@
 '''
 Generates html docpages from mccode instrument and component files.
 
-Every file gets a html docpage. An overview page is also written.
+A docpage is generated for every instrument and component file, and an 
+overview page is written and browsed. Default option Read installed docpage.
 
-Default (no args): Read installed docpage.
-
-Supply a directory for system as well as local results, and a name filter for 
-filtered results.
+Specify a directory to add local results, and a search term for filtered or 
+specific file results.
 '''
 import logging
 import argparse
@@ -1062,7 +1061,7 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]    
-    if args.dir==None and args.install==False and args.namefilter==None and args.manual==False and args.comps==False and args.web==False:
+    if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
         quit()
@@ -1080,7 +1079,7 @@ def main(args):
         quit()
     elif args.install == True:
         ''' write system doc files '''
-        if args.namefilter:
+        if args.searchterm:
             print("will not write filtered system docs, exiting...")
             quit()
         print("writing mccode system docs files...")
@@ -1098,36 +1097,38 @@ def main(args):
         print('writing master doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-    elif args.namefilter is not None and re.search('\.', args.namefilter):
+    elif args.searchterm is not None and re.search('\.', args.searchterm):
         usedir = '.'
         if args.dir is not None:
             usedir = args.dir
+        f = os.path.join(usedir, args.searchterm)
+        if not os.path.isfile(f):
+            print("is not a file: %s" % f)
+            quit()
 
-        instr = re.search('[\w0-9]+\.instr', args.namefilter)
-        comp = re.search('[\w0-9]+\.comp', args.namefilter)
+        instr = re.search('[\w0-9]+\.instr', args.searchterm)
+        comp = re.search('[\w0-9]+\.comp', args.searchterm)
 
-        f = os.path.join(usedir, args.namefilter)
-        f_html = ''
         if instr:
             f_html = f.replace('instr', 'html')
             info = InstrParser(f).parse()
             info.filepath = os.path.abspath(f)
             write_doc_files_or_continue([], [info], [], [f])
+            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
         elif comp:
             f_html = f.replace('comp', 'html')
             info = CompParser(f).parse()
             info.filepath = os.path.abspath(f)
             write_doc_files_or_continue([info], [], [f], [])
+            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
-
-    elif args.dir != None or args.namefilter != None:
+    elif args.dir != None or args.searchterm != None:
         ''' filtered and/or local results '''
         flter = '.*'
         usedir = mccode_config.configuration['MCCODE_LIB_DIR']
         rec = True
-        if args.namefilter:
-            flter = args.namefilter
+        if args.searchterm:
+            flter = args.searchterm
 
         # system
         comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, flter, recursive=True)
@@ -1153,9 +1154,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('namefilter', nargs='?', help='filter results by name')
+    parser.add_argument('searchterm', nargs='?', help='search filter or .instr/.comp file')
     parser.add_argument('--install', '-i', action='store_true', help='generate installation master doc page')
-    parser.add_argument('--dir', '-d', help='include results from a custom directory (recursive)')
+    parser.add_argument('--dir', '-d', help='add search results from this directory')
     parser.add_argument('--manual','-m', action='store_true', help='open the system manual')
     parser.add_argument('--comps','-c', action='store_true', help='open the component manual')
     parser.add_argument('--web','-w', action='store_true', help='open the '+mccode_config.configuration['MCCODE']+' website')
