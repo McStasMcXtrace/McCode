@@ -25,7 +25,7 @@
 *
 * %End
 ******************************************************************************/
-DEFINE INSTRUMENT Test_Pol_Guide_Vmirror(int polariserIn=1, int Nov=0)
+DEFINE INSTRUMENT Test_Pol_Guide_mirror(int polariserIn=1, int Nov=0)
 
 DECLARE
 %{
