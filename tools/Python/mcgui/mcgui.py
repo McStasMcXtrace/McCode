@@ -793,10 +793,10 @@ class McGuiAppController():
         subprocess.Popen(cmd, shell=True)
 
     def handleMcdocCurrentInstr(self):
-        cmd='%sdoc %s' % (mccode_config.get_mccode_prefix(), self.state.getInstrumentFile() )
-        print(cmd)
+        cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
-            cmd='start ' + cmd + '.bat'
+            cmd ='start ' + cmd + '.bat'
+        cmd = cmd + ' %s' % self.state.getInstrumentFile()
         subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):

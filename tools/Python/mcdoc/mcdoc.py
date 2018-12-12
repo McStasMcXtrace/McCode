@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 from datetime import datetime
+from os.path import join, basename
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
@@ -1110,13 +1111,13 @@ def main(args):
         comp = re.search('[\w0-9]+\.comp', args.searchterm)
 
         if instr:
-            f_html = f.replace('instr', 'html')
+            f_html = os.path.splitext(f)[0] + ".html"
             info = InstrParser(f).parse()
             info.filepath = os.path.abspath(f)
             write_doc_files_or_continue([], [info], [], [f])
             subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
         elif comp:
-            f_html = f.replace('comp', 'html')
+            f_html = os.path.splitext(f)[0] + ".html"
             info = CompParser(f).parse()
             info.filepath = os.path.abspath(f)
             write_doc_files_or_continue([info], [], [f], [])
