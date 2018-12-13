@@ -57,6 +57,17 @@ export data files in HDF5.
 ## Install without repo use
 If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-CentOS_7.3/
 
+# Adding support for NCrystal
+Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
+```bash
+sudo yum install mcstas-ncrystal-2.5
+```
+- which then has the side effect that some symlinks are broken. Hence also please reinstall e.g. mcstas-tools-python-mcrun-2.5:
+```bash
+sudo yum reinstall mcstas-tools-python-mcrun-2.5
+```
+
+
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
 
