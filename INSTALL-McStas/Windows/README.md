@@ -25,7 +25,7 @@ BEFORE  attempting to install the McStas metapackage!!!
 
 * An alternative to installing this version is to follow the instructions
 posted under [WSL](WSL/README.md) to install the 
-"Use Microsofts 'Windows subsystem for Linux" and run the Debian binaries
+"Windows subsystem for Linux" and run the Debian binaries there
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
