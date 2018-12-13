@@ -6,6 +6,8 @@
 * Date: 3-Feb-2018
 * Origin: ILL
 * License: EUPL v1.2
+* 
+* %INSTRUMENT_SITE:Tests_optics
 *
 * Focus testing, comparing Single_crystal and Monochromator_curved
 *

@@ -5,7 +5,7 @@
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
 * Date: September 2018
 * Origin: DTU
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Simple test instrument that compares the use of 2 DiskChoppers with one MultiDiskChopper
 *
