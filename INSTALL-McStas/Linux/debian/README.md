@@ -42,7 +42,7 @@ Please report any trouble with the repository to [mcstas-users](mailto:mcstas-us
 If you want to attempt installing our debian packages manually via
 dpkg, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-deb64/
 
-# Adding support for NCrystal
+## Adding support for NCrystal
 Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
 ```bash
 sudo apt-get install mcstas-ncrystal-2.5
