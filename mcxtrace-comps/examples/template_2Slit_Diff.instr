@@ -58,7 +58,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source=Source_pt(
-    focus_xw=6e-6, focus_yh=0.8e-6, dist=1, lambda0=2.0, dE=0, gauss=1)
+    focus_xw=6e-6, focus_yh=0.8e-6, dist=1, lambda0=2.0, dE=0, gauss=1, randomphase=0)
 AT(0,0,0) RELATIVE Origin
 
 COMPONENT s1 = Slit(
