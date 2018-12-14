@@ -55,7 +55,7 @@ Optionally, you can install the NeXus format libraries to be able to
 export data files in HDF5.
 
 ## Install without repo use
-If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-CentOS_7.3/
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-CentOS_7/
 
 ## Adding support for NCrystal
 Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
