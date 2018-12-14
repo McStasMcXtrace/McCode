@@ -75,8 +75,8 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install gcc openmpi gsl -y
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy scipy pillow tornado jinja2 mpld3
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install gcc openmpi gsl matplotlib -y
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply numpy scipy pillow tornado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
