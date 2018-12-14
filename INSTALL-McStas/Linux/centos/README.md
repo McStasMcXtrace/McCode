@@ -4,9 +4,12 @@ McStas provides a package repository for use with RedHat-based distributions, su
 
 
 ## Add the McCode repo to your system
+```bash
 cd /etc/yum.repos.d
 sudo wget http://packages.mccode.org/rpm/mccode.repo
 sudo yum update
+```
+
 
 ## Add the EPEL extensions to your system
 On some RPM-oriented systems like RHEL, CentOS or Scientific Linux, you may also need to install the EPEL extensions to resolve some dependencies. See e.g. [this webpage](https://www.cyberciti.biz/faq/installing-rhel-epel-repo-on-centos-redhat-7-x/) for further instructions.
