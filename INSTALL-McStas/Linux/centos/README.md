@@ -53,12 +53,6 @@ sudo yum install mcstas-suite-python
 **NOTE** that the Python based package should automatically include
 all dependencies, and hence is preferred!
 
-## Optionals
-Optionally install iFit to visualize results using a Matlab environment (for free, no license needed).
-Optionally install a VRML/X3D plotter such as Freewrl or InstantReality.
-Optionally, you can install the NeXus format libraries to be able to
-export data files in HDF5.
-
 ## Install without repo use
 If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-CentOS_7/
 
