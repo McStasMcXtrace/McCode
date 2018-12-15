@@ -12,8 +12,10 @@ sudo yum update
 
 
 ## Add the EPEL extensions to your system
-On some RPM-oriented systems like RHEL, CentOS or Scientific Linux, you may also need to install the EPEL extensions to resolve some dependencies. See e.g. [this webpage](https://www.cyberciti.biz/faq/installing-rhel-epel-repo-on-centos-redhat-7-x/) for further instructions.
-
+```bash
+sudo yum install epel-release
+sudo yum update
+```
 
 ## Look for the packages descriptions on your system
 After following the above steps your package manager should now be aware of mcstas
