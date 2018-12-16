@@ -8,6 +8,9 @@ sudo wget http://packages.mccode.org/debian/mccode.list
 sudo apt-get update
 ```
 
+# Debian only:
+On Debian you will further have to install the non-free repository to have access to all McStas tool parts. See https://wiki.debian.org/SourcesList
+
 # Look for McStas packages to install
 ```bash
 mcstas@debian:~$ apt-cache search mcstas | grep -v 2.0 |grep -v 2.1 | grep -v 2.2 | grep -v 2.3 | grep -v 2.4
