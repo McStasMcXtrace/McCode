@@ -22,3 +22,4 @@ make
 sudo make install
 ```
 
+You will of course have to install needed dependencies along the way, we suggest having a look at BUILD_DEPENDENCIES.TXT and the getdeps_ scripts from the top of the repo for inspiration.
