@@ -2,10 +2,15 @@
 
 * We provide Debian packages, RedHat packages, and tar.gz's of "preconfigured" source code.
 
-* **NOTE!!!** The preferred way of installing on Debian/Ubuntu or CentOS
-7 type systems is by adding our repository!!! Please consult the
-specific [Debian/Ubuntu](debian/README.md) or  [CentOS](centos/README.md). [Fedora](fedora/README.md) is also supported, but without an rpm repository
+## The repo way
+The preferred way of installing on Debian/Ubuntu or CentOS
+7 type systems is by adding our respective **deb** or **rpm** repository!!! Please consult the
+specific [Debian/Ubuntu](debian/README.md) or  [CentOS](centos/README.md).
 
+## The non-repo way
+* Other systems like [Fedora](fedora/README.md) are also supported, but without an rpm repository. 
+
+## Favorite system not available?
 * For other systems, please either
  * Use the instructions for
  [pre-configured source code](src/README.md)
