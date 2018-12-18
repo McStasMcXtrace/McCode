@@ -1,6 +1,11 @@
 #!/bin/sh
 # Script to facilitate the installation of McStas 2.5 on TrueOS 18.6
-
+#
+# WARNING: While this installs, you may still need to hack various things, e.g. set
+# setenv LD_PRELOAD /usr/local/lib/gcc7/libgcc_s.so.1 to come around the error of
+# /lib/libgcc_s.so.1: version GCC_4.8.0 required by /usr/local/lib/gcc7/libgfortran.so.4 not found
+# Also, the DBUS service needs to be running for the Qt apps to run...
+#
 sudo pkg install cmake gcc pgplot p5-PGPLOT p5-Tk PDL bash flex bison py36-qt5 py36-yaml py36-ply py36-matplotlib py36-numpy py36-pyqtgraph
 
 sudo ln -sf /usr/local/bin/bash /bin
