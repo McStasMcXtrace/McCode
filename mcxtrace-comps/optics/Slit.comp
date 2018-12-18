@@ -10,9 +10,7 @@
 * %I
 * Written by: Erik Knudsen
 * Date: June 16, 2009
-* Version: $Revision: 1.0$
 * Origin: DTU Physics
-* Release: McXtrace 0.1
 *
 * Rectangular/circular slit
 *
@@ -32,10 +30,10 @@
 * INPUT PARAMETERS:
 *
 * radius: [m] Radius of slit in the z=0 plane, centered at Origin.
-* xmin: [m] Lower x bound.
-* xmax: [m] Upper x bound.
-* ymin: [m] Lower y bound.
-* ymax: [m] Upper y bound.
+* xmin: [m]   Lower x bound.
+* xmax: [m]   Upper x bound.
+* ymin: [m]   Lower y bound.
+* ymax: [m]   Upper y bound.
 * xwidth: [m] Width of slit. Overrides xmin,xmax.
 * yheight:[m] Height of slit. Overrides ymin,ymax.
 *
@@ -59,11 +57,22 @@ OUTPUT PARAMETERS ()
 
 INITIALIZE
 %{
-  if (xwidth)  { xmax=xwidth/2;  xmin=-xmax; }
-  if (yheight) { ymax=yheight/2; ymin=-ymax; }
-  if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
-    { fprintf(stderr,"Slit: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
-
+if (xwidth > 0)  {
+  if (!xmin && !xmax) {
+    xmax=xwidth/2;  xmin=-xmax;
+  } else {
+    fprintf(stderr,"Slit: %s: Error: please specify EITHER xmin & xmax or xwidth\n", NAME_CURRENT_COMP); exit(-1);
+  }
+ }
+ if (yheight > 0) {
+   if (!ymin && !ymax) {
+     ymax=yheight/2; ymin=-ymax;
+   } else {
+     fprintf(stderr,"Slit: %s: Error: please specify EITHER ymin & ymax or ywidth\n", NAME_CURRENT_COMP); exit(-1);
+   }
+ }
+ if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
+    { fprintf(stderr,"Slit: %s: Warning: Running with CLOSED slit - is this intentional?? \n", NAME_CURRENT_COMP); }
 
   if ( (focus_xw || focus_yh) && !( (focus_xw && dist) || (focus_yh && dist) ) ){
     fprintf(stderr,"Error (%s): Inconsistent target definition\n",NAME_CURRENT_COMP);
