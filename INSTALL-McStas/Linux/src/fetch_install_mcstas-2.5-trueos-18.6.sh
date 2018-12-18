@@ -1,4 +1,5 @@
 #!/bin/sh
+# Script to facilitate the installation of McStas 2.5 on TrueOS 18.6
 
 sudo pkg install cmake gcc pgplot p5-PGPLOT p5-Tk PDL bash flex bison py36-qt5 py36-yaml py36-ply py36-matplotlib py36-numpy
 
