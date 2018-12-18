@@ -2,7 +2,7 @@
 
 sudo pkg install cmake gcc pgplot p5-PGPLOT p5-Tk PDL bash flex bison py36-qt5 py36-yaml py36-ply py36-matplotlib py36-numpy
 
-sudo ln -sf /usr/local/bin/bash /usr/bin
+sudo ln -sf /usr/local/bin/bash /bin
 
 WORK=`pwd`
 
@@ -140,3 +140,7 @@ sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
 cd ..
 
 cd $WORK
+
+# Make this version the system-wide mcstas
+sudo /usr/local/mcstas/2.5/bin/postinst set_mccode_default
+
