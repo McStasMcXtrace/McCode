@@ -29,12 +29,20 @@
 * scattering is constant isotropic (Vanadium like).
 * In case you only have one S(q,w) data containing both coherent and
 * incoherent contributions you should e.g. use 'Sqw_coh' and set 'sigma_coh'
-* to the total scattering cross section.
-* The implementation assumes that the S(q,w) data is normalized, i.e. S(q)
-* goes to 1 for large q. If this is not the case, the component can do that
-* when 'norm=-1'. Alternatively, the S(q,w) data will be multiplied by
-* 'norm' for positive values. Both non symmetric and classical S(q,w)
-* data sets are handled by mean of the 'classical' parameter (see below).
+* to the total scattering cross section. Set sigma_coh and sigma_inc to -1 to unactivate.
+*
+* The implementation will automatically nornalise S(q,w) so that S(q) -> 1 at 
+* large q (parameter norm=-1). Alternatively, the S(q,w) data will be multiplied 
+* by 'norm' for positive values. Use norm=0 or 1 to use the raw data as input.
+*
+* The material temperature can be defined in the S(q,w) data files (see below)
+* or set manually as parameter T. Setting T=-1 disables detailed balance.
+* Setting T=-2 attempts to guess the temperature from the input S(q,w) data
+* which must then be non-classical and extend on both energy sides (+/-).
+* To use the S(q,w) data as is, without temperature effect, set T=-1 and norm=1.
+*
+* Both non symmetric (quantum) and classical S(q,w) data sets can be given by mean 
+* of the 'classical' parameter (see below).
 *
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
@@ -125,7 +133,7 @@
 * the S(q,w) is NOT symmetrised (classical). If the S(q,w) data set includes both
 * negative and positive energy values, setting 'classical=-1' will attempt to
 * guess what type of S(q,w) it is. The temperature can also be determined this way.
-* In case you do not know if the data is classical or quantum, assume it is classical
+* In case you do not know if the data is classical or quantum, assume it is usually classical
 * at high temperatures, and quantum otherwise (T  < typical mode excitations).
 * The positive energy values correspond to Stokes processes, i.e. material gains
 * energy, and neutrons loose energy. The energy range is symmetrized to allow up
@@ -182,7 +190,7 @@
 * sigma_inc: [barns]          Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs: [barns]          Absorption cross-section at 2200 m/s. Use -1 to unactivate.
 * rho: [AA-3]                 Density of scattering elements (nb atoms/unit cell V_0).
-* T: [K]                      Temperature of sample, detailed balance. Use T=0 to disable it. and T=-1 to automatically set it from non-classical S(q,w).
+* T: [K]                      Temperature of sample, detailed balance. Use T=-1 to disable it, and T=-2 to guess it from non-classical S(q,w) input.
 *
 * Geometry parameters:
 * radius: [m]                 Outer radius of sample in (x,z) plane. cylinder/sphere.
@@ -201,7 +209,7 @@
 * density: [g/cm^3]           density of material. V_rho=density/weight/1e24*N_A
 * threshold: [1]              Value under which S(Q,w) is not accounted for. to set according to the S(Q,w) values, i.e. not too low.
 * p_interact: [1]             Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
-* norm: [1]                   Normalize S(q,w) when -1 (default). Use raw data when 0, multiply S(q,w) when norm>0.
+* norm: [1]                   Normalize S(q,w) when -1 (default). Use raw data when 1, multiplier for S(q,w) when norm>0.
 * classical: [1]              Assumes the S(q,w) data from the files is a classical S(q,w), and multiply that data by exp(hw/2kT) on up/down energy sides. Use 0 when obtained from raw experiments, 1 from molecular dynamics. Use -1 to guess from a data set including both energy sides.
 * quantum_correction: [str]   Specify the type of quantum correction to use "Boltzmann"/"Schofield","harmonic"/"Bader" or "standard"/"Frommhold" (default)
 *
@@ -499,6 +507,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 
   flag_qSq = (Sqw->column_order[8]>0 && Sqw->column_order[6]>0);
 
+  MPI_MASTER(
   if (Sqw->column_order[0] == 4 && Sqw->barns !=0)
     printf("Isotropic_sqw: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
            "WARNING:       but F2 unit is set to powder_barns=1 (barns). Intensity might be 100 times too high.\n",
@@ -507,7 +516,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
     printf("Isotropic_sqw: %s: Powder file probably of type Lazy Pulver (laz)\n"
            "WARNING:       but F2 unit is set to powder_barns=0 (fm^2). Intensity might be 100 times too low.\n",
            Sqw->compname);
-
+  );
   size = sqwTable.rows;
   MPI_MASTER(
   if (Sqw->verbose_output > 0) {
@@ -520,7 +529,6 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 
   for (i=0; i<size; i++)
     {
-      /*      printf("Reading in line %i\n",i);*/
       double j=0, d=0, w=0, DWfactor=0, F2=0, Sq=-1, q=0;
       int index;
 
@@ -560,8 +568,10 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       F2 = (F2 >= 0 ? F2 : 0);
       d = (q > 0 ? 2*PI/d : 0);
       if (j == 0 || d == 0 || q == 0) {
+        MPI_MASTER(
         printf("Isotropic_sqw: %s: Warning: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", Sqw->compname, i);
+        );
         continue;
       }
       list[list_count].j = j;
@@ -595,9 +605,11 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       /*      set back multiplicity of previous lines to 1 */
         if (Sqw->verbose_output > 2 && (mult_count == list[list_count-1].j
         || (mult_count == list[list_count].j && i == size-1))) {
+          MPI_MASTER(
           printf("Isotropic_Sqw: %s: Setting multiplicity to 1 for lines [%i:%i]\n"
                   "         (d-spacing %g is duplicated %i times)\n",
             Sqw->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
+          );
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
           mult_count   = 1;
           q_count = q;
@@ -791,7 +803,7 @@ double Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
 * Sqw_diagnosis: Computes Sqw_classical, moments and physical quantities
 *                make consistency checks, and output some data files
 *   Return: output files and information displayed
-* Used in: Sqw_init (2)
+* Used in: Sqw_init (2) only by MASTER node with MPI
 *****************************************************************************/
 void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Data)
 {
@@ -826,7 +838,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       printf("Isotropic_Sqw: %s: Cannot allocate S_cl(q,w) Table (%lix%i).\n"
              "WARNING          Skipping S(q,w) diagnosis.\n",
              Sqw->compname, Sqw_Data->q_bins, 1);
-        return;
+      return;
     }
     sprintf(Sqw_cl.filename,
       "S(q,w)_cl from %s (dynamic structure factor, classical)",
@@ -1030,7 +1042,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
           printf("# Jump relaxation time         tau=%g [ns] (Egelstaff Eq 11.8 p220)\n", u2*1e-2/6/D);
       }
     }
-    ); /* end MASTER in MPI mode */
+    ); /* MPI_MASTER */
 
     /* density of states (generalized) */
     if (!Table_Init(&Gqw, Sqw_Data->q_bins, Sqw_Data->w_bins)) {
@@ -1212,7 +1224,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (parsing[15] && !Sqw->s_coh)   Sqw->s_coh=atof(parsing[15]);
     if (parsing[16] && !Sqw->s_coh)   Sqw->s_coh=atof(parsing[16]);
     if (parsing[17] && !Sqw->Temperature) Sqw->Temperature=atof(parsing[17]); /* from user or file */
-    if (parsing[17] && !T_file)       T_file=atof(parsing[17]); /* from file */
+    if (parsing[17] )                 T_file=atof(parsing[17]); /* from file */
     if (parsing[18])                  Sqw->column_order[8]=atoi(parsing[18]);
     if (parsing[19])                  Sqw->column_order[7]=atoi(parsing[19]);
     if (parsing[20] && !Sqw->mat_rho)     Sqw->mat_rho    =atof(parsing[20]);
@@ -1257,17 +1269,21 @@ struct Sqw_Data_struct *Sqw_readfile(
       t_Table *newTable   = NULL;
       newTable = Sqw_read_PowderN(Sqw, Table_Array[0]);
       if (!newTable) {
+        MPI_MASTER(
         printf("Isotropic_Sqw: %s: ERROR importing powder line file %s.\n"
                "               Check format definition.\n",
               Sqw->compname, file);
+        );
         exit(-1);
       } else flag=0;
       Table_Free_Array(Table_Array);
       Table_Array = newTable;
     } else if (nblocks != 3) {
+      MPI_MASTER(
       printf("Isotropic_Sqw: %s: ERROR "
              "File %s contains %li block%s instead of 3.\n",
               Sqw->compname, file, nblocks, (nblocks == 1 ? "" : "s"));
+      );
     } else { flag=0; Sqw->barns=0; /* Sqw files do not use powder_barns */ }
   }
 
@@ -1275,9 +1291,11 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (flag) Sqw->verbose_output = 2;
 
   if (flag) {
+    MPI_MASTER(
     if (nblocks) printf("ERROR          Wrong file format.\n"
       "               Disabling contribution.\n"
       "               File must contain 3 blocks for [q,w,sqw] or Powder file (1 block, laz,lau).\n");
+    );
     return(Sqw_Data);
   }
 
@@ -1300,9 +1318,11 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* is there enough qw data in file to proceed ? */
   if (q_bins_file <= 1 || w_bins_file <= 0) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: Data file %s has incomplete q or omega information (%lix%li).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, file, q_bins_file, w_bins_file);
+    );
     return(Sqw_Data);
   }
 
@@ -1416,7 +1436,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     q_file2full[index_q] = index_q_file;
   }
 
-  /* (4) now we build Sqw on full Q,W ranges, using the Q,W table lookup above */
+  /* (4) now we build Sqw on full Q,W ranges, using the Q,W table lookup above -> Sqw_full */
   for (index_q=0; index_q < q_bins; index_q++) {
 
     double q           = index_q*q_step; /* q value in Sqw_full ; q_min = 0 */
@@ -1453,7 +1473,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* if only one S(q,w) side is given, it is symmetrised by mirroring, then M1=0 */
 
   /* (5) test if the Sqw_full is classical or not by computing the 1st moment (=0 for classical) */
-  /* also compute temperature (quantum case) if not set */
+  /* also compute temperature (quantum case) from file if not set */
   for (index_q=0; index_q < q_bins; index_q++) {
 
     double q           = index_q*q_step; /* q value in Sqw_full ; q_min = 0 */
@@ -1463,6 +1483,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       double sqw_full = Table_Index(Sqw_full, index_q, index_w);
       long   index_mw = w_bins-1-index_w;        /* opposite w index in S(q,w) */
       double sqw_opp  = Table_Index(Sqw_full, index_q, index_mw);
+      double T_defined= T_file ? T_file : Sqw->Temperature; /* T better from file, else from user */
 
       /* the analysis must be done only on values which exist on both sides */
       /* as integrals must be symmetric, and Bose factor requires both sides as well */
@@ -1476,8 +1497,8 @@ struct Sqw_Data_struct *Sqw_readfile(
         M1      += w*sqw_full*w_step;
         M1_count++;
         /* we assume it is quantum (non symmetric) and check that its symmetrized version has M1_cl=0 */
-        if (Sqw->Temperature > 0) {
-          sqw_opp = sqw_full * Sqw_quantum_correction(-w,Sqw->Temperature,Sqw->Q_correction); /* Sqw_cl */
+        if (T_defined > 0) {
+          sqw_opp = sqw_full * Sqw_quantum_correction(-w, T_defined,Sqw->Q_correction); /* Sqw_cl */
           M1_cl      += w*sqw_opp*w_step;
           M1_cl_count++;
         } else if (Sqw->mat_weight) {
@@ -1504,29 +1525,46 @@ struct Sqw_Data_struct *Sqw_readfile(
       /* M1 for classical is closer to 0 than for quantum one */
       Sqw->sqw_classical = 0; /* initial data from file seems to be quantum (non classical) */
     } else { /* M1_cl > M1 > 2*w_step */
+      MPI_MASTER(
       printf("Isotropic_Sqw: %s: I do not know if S(q,w) data is classical or quantum.\n"
              "WARNING        First moment M1=%g M1_cl=%g for file %s. Defaulting to classical case.\n",
                  Sqw->compname, M1, M1_cl, file);
+      );
     }
   }
   if (Sqw->sqw_classical < 0) Sqw->sqw_classical=1; /* default when quantum/classical choice is not set */
   
+  /* (5b) set temperature. Temperatures defined are:
+  *   T_file:           temperature read from the .sqw file
+  *   T:                temperature computed from the quantum Sqw using detailed balance
+  *   Sqw->Temperature: temperature defined by user, or read from file when not set
+  */
+ 
+  
+  /* display some warnings about the computed temperature */
+  if (T > 3000) T=0; /* unrealistic */
   if (!T_file && T) {
-    if (Sqw->Temperature < 0)    Sqw->Temperature = fabs(T);
     MPI_MASTER(
-    if (Sqw->verbose_output > 0 && T < 3000) {
-      printf(  "Isotropic_Sqw: %s: Temperature computed from S(q,w) data from %s is T=%g [K] (not set here).\n",
+    if (Sqw->verbose_output > 0) {
+      printf(  "Isotropic_Sqw: %s: Temperature computed from S(q,w) data from %s is T=%g [K].\n",
         Sqw->compname, file, T);
-      if (Sqw->Temperature == 0)
-        printf("Warning:       %s: Use T=-1 to set it. Currently using T=%g, i.e. no detailed balance.\n",
-          Sqw->compname, Sqw->Temperature);
-    }
-    if (!Sqw->sqw_classical && Sqw->Temperature>0 && fabs(Sqw->Temperature - T) > 0.1*Sqw->Temperature)
-      printf("WARNING:       %s: The temperature %g [K] guessed from the non-classical\n"
-             "               S(q,w) %s does not match the requested T=%g [K].\n",
-             Sqw->compname, T, file, Sqw->Temperature);
     );
-  } else T=T_file;
+    }
+  }
+  
+  if (Sqw->Temperature == 0) {
+    Sqw->Temperature = T_file ? T_file : T; /* 0:  not set: we use file value, else computed */
+  } else if (Sqw->Temperature ==-1) {
+    Sqw->Temperature = 0;                   /* -1: no detailed balance. Display message at end of INIT */
+  } else if (Sqw->Temperature ==-2) {
+    Sqw->Temperature = T ? T : T_file;      /* -2: use guessed value when available */
+  } /* else let value as it is (e.g. >0) */
+  
+  if (Sqw->verbose_output > 0 && Sqw->Temperature) {
+    MPI_MASTER(
+    printf(  "Isotropic_Sqw: %s: Temperature set to T=%g [K]\n", Sqw->compname, Sqw->Temperature);
+    );
+  }
 
   MPI_MASTER(
   if (Sqw->verbose_output > 0 && w_bins > 1)
@@ -1537,12 +1575,6 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
   /* compute the \int q^2 S(q) for normalisation */
-  
-  /* temperatures defined
-  * T_file:           temperature read from the .sqw file
-  * T:                temperature computed from the quantum Sqw using detailed balance
-  * Sqw->Temperature: temperature defined by user, or read from file when not set
-  */
   
   MPI_MASTER(
   if (Sqw->sqw_classical && Sqw->verbose_output > 0 && Sqw->Temperature > 0)
@@ -1589,12 +1621,14 @@ struct Sqw_Data_struct *Sqw_readfile(
   } /* index_q */
 
   if (!sum) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: No valid data in the selected (Q,w) range: sum(S)=0\n"
            "ERROR          Available Sqw data is\n",
       Sqw->compname);
     printf("                 q=[%g:%g] w=[%g:%g]\n",
            q_min_file, q_max_file,
            w_min_file, w_max_file);
+    );
     Table_Free(&Sqw_full);
     return(NULL);
   }
@@ -1771,8 +1805,10 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   if (!sum) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: Total S(q,w) intensity is NULL.\n"
            "ERROR          Exiting.\n", Sqw->compname);
+    );
     Table_Free(&Sqw_full);
     Table_Free(&iqSq);
     return(NULL);
@@ -1783,9 +1819,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     Sqw_Data->SW[index_w].cumul_proba /= Sqw_Data->SW[w_bins-1].cumul_proba;
   }
 
-  if (Sqw->verbose_output > 2)
+  if (Sqw->verbose_output > 2) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: Generated normalized SW[%li] in range [0:%g]\n",
       Sqw->compname, w_bins, Sqw_Data->SW[w_bins-1].cumul_proba);
+    );
+  }
 
   /* (10) Compute P(Q|w) probability ======================================== */
 
@@ -1830,9 +1869,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     );
 
   }
-  if (Sqw->verbose_output > 2)
+  if (Sqw->verbose_output > 2) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: Generated P(Q|w)\n",
       Sqw->compname);
+    );
+  }
 
   /* (11) generate quick lookup tables for SW and SQW ======================= */
 
@@ -1875,9 +1917,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     Sqw_Data->QW_lookup = QW_lookup;
   }
-  if ((Sqw_Data->QW_lookup || Sqw_Data->SW_lookup) && Sqw->verbose_output > 2)
+  if ((Sqw_Data->QW_lookup || Sqw_Data->SW_lookup) && Sqw->verbose_output > 2) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: Generated lookup tables with %li entries\n",
       Sqw->compname, Sqw->lookup_length);
+    );
+  }
 
   return(Sqw_Data);
 } /* end Sqw_readfile */
@@ -1910,9 +1955,11 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
 
   d_coh->type = 'c';
   Sqw->Data_inc.type = 'i';
+  MPI_MASTER(
   if (d_coh && !d_coh->intensity && Sqw->s_coh)
     printf("Isotropic_Sqw: %s: Coherent scattering Sqw intensity is null.\n"
            "Warning        Disabling coherent scattering.\n", Sqw->compname);
+  );
   if (d_inc && d_coh && d_inc->intensity && d_coh->intensity) {
     char msg[80];
     strcpy(msg, "");
@@ -1925,11 +1972,13 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
       strcpy(msg, "Q axis limits");
     if (d_inc->w_max != d_coh->w_max)
       strcpy(msg, "Energy axis limits");
+    MPI_MASTER(
     if (strlen(msg)) {
       printf("Isotropic_Sqw: %s: Sqw data from files %s and %s do not match\n"
              "WARNING        wrong %s\n",
              Sqw->compname, file_coh, file_inc, msg);
     }
+    );
   }
 
   if (!ret) ret=d_inc->intensity+d_coh->intensity;
@@ -1978,13 +2027,17 @@ INITIALIZE
 
   if (thickness) {
     if (radius && (radius < fabs(thickness) )) {
+      MPI_MASTER(
       fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
                      "WARNING        Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      );
       thickness=0;
     }
     else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) {
+      MPI_MASTER(
       fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (box).\n"
                      "WARNING        Please check parameter values.\n", NAME_CURRENT_COMP);
+      );
     }
   }
   MPI_MASTER(
@@ -2008,9 +2061,11 @@ INITIALIZE
   );
 
   if (concentric && !thickness) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s:Can not use concentric mode\n"
            "WARNING        on non hollow shape. Ignoring.\n",
            NAME_CURRENT_COMP);
+    );
     concentric=0;
   }
 
@@ -2057,13 +2112,17 @@ INITIALIZE
     VarSqw.mat_rho = 1/powder_Vc;
   /* import the data files ================================================== */
   if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: ERROR importing data files (Sqw_init coh=%s inc=%s).\n",NAME_CURRENT_COMP, Sqw_coh, Sqw_inc);
+    );
   }
   if ( VarSqw.s_coh < 0) VarSqw.s_coh=0;
   if ( VarSqw.s_inc < 0) VarSqw.s_inc=0;
   if ( VarSqw.s_abs < 0) VarSqw.s_abs=0;
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.mat_rho <= 0) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: WARNING: Null density (V_rho). Unactivating component.\n",NAME_CURRENT_COMP);
+    );
     VarSqw.s_coh=VarSqw.s_inc=0;
   }
   /* 100: convert from barns to fm^2 */
@@ -2086,9 +2145,11 @@ INITIALIZE
   if (d_phi > PI) d_phi = 0; /* V_scatt on 4*PI */
 
   if (d_phi && order != 1) {
+    MPI_MASTER(
     printf("Isotropic_Sqw: %s: Focusing can only apply for single\n"
            "               scattering. Setting to order=1.\n",
            NAME_CURRENT_COMP);
+    );
     order = 1;
   }
 
@@ -2408,15 +2469,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
       double alpha=0, alpha0;
       /* give us a limited number of tries for scattering: choose W then Q */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
-        double randmax;
+
         /* MC choice: energy transfer w=Ei-Ef in the S(w) = SW */
         omega = 0;
-        /* limit energy transfer range in -w_max:Ei */
-        index_w  = (long)floor((1+Ei/Data_sqw.w_max)/2*Data_sqw.w_bins);
-        if (index_w >= Data_sqw.w_bins) index_w = Data_sqw.w_bins-1;
-        randmax  = Data_sqw.SW[index_w].cumul_proba;
-        tmp_rand = rand0max(randmax < 1 ? randmax : 1);
-
+        tmp_rand = rand01();
         /* energy index for rand > cumul SW */
         index_w  = Sqw_search_SW(Data_sqw, tmp_rand);
         VarSqw.rw = (double)index_w;
@@ -2451,16 +2507,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
 
         /* MC choice: momentum transfer Q in P(Q|w) */
-        /* limit momentum choice to 0:Q1=SE2V*V2K*(sqrt(Ei)+sqrt(Ei+w)) ? */
-        if (omega <= Ei)
-          index_q = (long)floor(
-                (SE2V*V2K*(sqrt(Ei)+sqrt(Ei-omega))
-                /Data_sqw.q_max)*Data_sqw.q_bins);
-        else
-          index_q = (long)floor(2*k/Data_sqw.q_max*Data_sqw.q_bins);
-
-        randmax  = Data_sqw.SQW[index_w][index_q].cumul_proba;
-        tmp_rand = rand0max(randmax < 1 ? randmax : 1);
+        tmp_rand = rand01();
 
         /* momentum index for rand > cumul SQ|W */
         index_q  = Sqw_search_Q_proba_per_w(Data_sqw, tmp_rand, index_w);
@@ -2501,9 +2548,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
           }
         } else {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable q transfer\n"
-               "               for w=%g\n",
-            NAME_CURRENT_COMP, omega);
+            printf("Isotropic_Sqw: %s: Warning: No suitable q transfer for w=%g.\n",
+              NAME_CURRENT_COMP, omega);
           VarSqw.neutron_removed++;
           continue; /* no Q value for this w choice */
         }
