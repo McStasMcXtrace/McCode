@@ -1,0 +1,82 @@
+/*******************************************************************************
+* Instrument: McStas_Single_crystal
+*
+* %I
+* Written by: Erik B Knudsen erkn@fysik.dtu.dk
+* Date: Dec. 2018
+* Origin: DTU Physics
+* %INSTRUMENT_SITE: SINE2020
+*
+* Wrapper for use of Single_crystal in SIMRES
+*
+* %D
+* This instrument provides an MCPL-based interface for the use of Single_crystal in the SIMRES package.
+* The instrument has been developed in the context of WP8 in the SINE2020 project  and is part of
+* deliverable D8.8.
+*
+* (EU Horizon 2020 research and innovation programme under grant agreement No 654000).
+*
+* The default material is Al as a cylinder of radius 0.01 m x height 0.02 m
+*
+* Example: McStas_Single_crystal reflections=Al.lau radius=0.01 yheight=0.02
+*
+* %P
+* reflections: 	[string] 	Input file for reflections, laz and lau formats from McStas accepted
+* geometry: 	[string] 	Name of an Object File  Format  (OFF)  or  PLY file for complex geometry.
+* radius:		[m]	Sample radius
+* xwidth:		[m]	Sample width along x
+* yheight:		[m]	Sample height along y
+* zdepth:		[m]	Sample depth along z
+* delta_d_d: [1]                Lattice spacing variance, gaussian RMS
+* mosaic: [arc minutes]         Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters.
+* mosaic_a: [arc minutes]       Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model.
+* mosaic_b: [arc minutes]       Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS.
+* mosaic_c: [arc minutes]       Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS
+* barns:    [1]	                Flag to indicate if |F 2| from "reflections" is in barns or fm2 (barns = 1 for laz, barns = 0 for lau type files).
+* order:    [1]                 Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
+* rot_x:    [deg]	        Sample rotation around x
+* rot_y:    [deg]	        Sample rotation around y
+* rot_z:    [deg]	        Sample rotation around z
+*
+* %L
+* Website for the <a href="https://mctools.github.io/mcpl">MCPL</a> particle exchange format
+* Website for the <a href="http://neutron.ujf.cas.cz/ restrax/">SIMRES</a> package
+* Website for <a href="https://www.sine2020.eu/randd-activities/e-tools.html">WP8 in EU-SINE2020</a>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT McStas_Single_crystal(string reflections="Al.lau",
+        string geometry="", radius=1e-2, xwidth=0, yheight=2e-2, zdepth=0,
+        delta_d_d=1e-3,mosaic=1, mosaic_a=0, mosaic_b=0, mosaic_c=0,
+        barns=0, order=0, rot_x=0, rot_y=0, rot_z=0)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+
+
+%}
+
+TRACE
+
+COMPONENT mcpl_in = MCPL_input(filename="McStas_Single_crystal_in.mcpl")
+AT(0,0,0) ABSOLUTE
+
+COMPONENT SX = Single_crystal(reflections=reflections,geometry=geometry,
+        radius=radius, xwidth=xwidth, yheight=yheight, zdepth=zdepth,
+        delta_d_d=delta_d_d, mosaic=mosaic, mosaic_a=mosaic_a, mosaic_b=mosaic_b, mosaic_c=mosaic_c,
+        barns=barns, order=order)
+AT(0,0,0) ABSOLUTE
+ROTATED (rot_x,rot_y,rot_z) ABSOLUTE
+
+COMPONENT mcpl_out = MCPL_output(filename="McStas_Single_crystal_out.mcpl")
+AT(0,0,0) ABSOLUTE
+
+FINALLY
+%{
+%}
+
+END
