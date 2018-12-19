@@ -480,6 +480,11 @@ make_rpm() {
     simple_cpack_file RPM "${NAME}" ".rpm";
 }
 
+make_justinst() {
+    simple_cpack_file APP "${NAME}" ".deb";
+}
+
+
 make_OSXpkg() {
     # Default to mac toolchain when something else was chosen
     sane_toolchain "grep mac" mac;
