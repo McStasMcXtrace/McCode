@@ -1,0 +1,80 @@
+/*******************************************************************************
+* Instrument: McStas_PowdeN
+*
+* %I
+* Written by: Peter Willendrup
+* Date: December 2018
+* Origin: DTU
+* %INSTRUMENT_SITE: SINE2020
+*
+* Wrapper instrument for use of PowderN in SIMRES
+*
+* %D
+* This instrument provides an MCPL-based interface for the use of PowderN in the SIMRES package.
+* The instrument has been developed in the context of WP8 in the SINE2020 project and is part of
+* deliverable D8.8.
+*
+* (EU Horizon 2020 research and innovation programme under grant agreement No 654000).
+*
+* The default material is Al as a cylinder of radius 0.01 m x height 0.07 m
+*
+* Example: McStas_PowderN reflections=Al.lau radius=0.01 yheight=0.07
+*
+* %P
+* reflections: 	[string] 	Input file for reflections, laz and lau formats from McStas accepted
+* geometry: 	[string] 	Name of an Object File  Format  (OFF)  or  PLY file for complex geometry.
+* radius:		[m]		Sample radius
+* xwidth:		[m]		Sample width along x
+* yheight:		[m]		Sample height along y
+* zdepth:		[m]		Sample depth along z
+* thickness:	[m]		Thickness of hollow sample
+* pack:		[m]		Packing factor.
+* d_omega:	[deg]	Horizontal (incoherent only) focusing limit [deg]
+* d_phi:		[deg]	Vertical focusing limit [deg]
+* focus_flip: 	[1]		Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If nonzero, d_phi is measured against zy-plane.
+* tth_sign: 	[1]		Sign of the scattering angle. If 0, the sign is chosen randomly
+* barns:		[1]		Flag to indicate if |F 2| from "reflections" is in barns or fm2 (barns = 1 for laz, barns = 0 for lau type files).
+* rot_x:		[deg]	Sample rotation around x
+* rot_y:		[deg]	Sample rotation around y
+* rot_z:		[deg]	Sample rotation around z
+*
+* %L
+* Website for the <a href="https://mctools.github.io/mcpl">MCPL</a> particle exchange format
+* Website for the <a href="http://neutron.ujf.cas.cz/ restrax/">SIMRES</a> package
+* Website for <a href="https://www.sine2020.eu/randd-activities/e-tools.html">WP8 in EU-SINE2020</a>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT McStas_PowderN(string reflections="Al.lau", string geometry="", radius=0.01, xwidth=0, yheight=0.07, zdepth=0,
+						thickness=0, pack=1, d_omega=0, d_phi=0, focus_flip=0, tth_sign=0, barns=0, rot_x=0, rot_y=0, rot_z=0)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT mcpl_in = MCPL_input(filename="McStas_PowderN_in.mcpl")
+AT(0,0,0) ABSOLUTE
+
+COMPONENT PowderN = PowderN(reflections=reflections,geometry=geometry,
+        radius=radius, xwidth=xwidth, yheight=yheight, zdepth=zdepth,
+        thickness=thickness, pack=pack,
+	d_omega=d_omega, d_phi=d_phi,
+        focus_flip=focus_flip, tth_sign=tth_sign,
+        barns=barns)
+AT(0,0,0) ABSOLUTE
+ROTATED (rot_x,rot_y,rot_z) ABSOLUTE
+
+COMPONENT mcpl_out = MCPL_output(filename="McStas_PowderN_out.mcpl")
+AT(0,0,0) ABSOLUTE
+
+FINALLY
+%{
+%}
+
+END
