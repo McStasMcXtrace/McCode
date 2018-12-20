@@ -711,7 +711,7 @@ class McGuiAppController():
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
             self.emitter.message("Instrument closed", gui=True)
-            self.emitter.status("Instrument closed", gui=True)
+            self.emitter.status("Instrument closed")
     
     def handleSaveInstrument(self, text):
         result = self.state.saveInstrumentIfFileExists(text)
