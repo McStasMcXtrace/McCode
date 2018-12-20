@@ -4,13 +4,18 @@ McStas provides a package repository for use with RedHat-based distributions, su
 
 
 ## Add the McCode repo to your system
+```bash
 cd /etc/yum.repos.d
 sudo wget http://packages.mccode.org/rpm/mccode.repo
 sudo yum update
+```
+
 
 ## Add the EPEL extensions to your system
-On some RPM-oriented systems like RHEL, CentOS or Scientific Linux, you may also need to install the EPEL extensions to resolve some dependencies. See e.g. [this webpage](https://www.cyberciti.biz/faq/installing-rhel-epel-repo-on-centos-redhat-7-x/) for further instructions.
-
+```bash
+sudo yum install epel-release
+sudo yum update
+```
 
 ## Look for the packages descriptions on your system
 After following the above steps your package manager should now be aware of mcstas
@@ -48,14 +53,19 @@ sudo yum install mcstas-suite-python
 **NOTE** that the Python based package should automatically include
 all dependencies, and hence is preferred!
 
-## Optionals
-Optionally install iFit to visualize results using a Matlab environment (for free, no license needed).
-Optionally install a VRML/X3D plotter such as Freewrl or InstantReality.
-Optionally, you can install the NeXus format libraries to be able to
-export data files in HDF5.
-
 ## Install without repo use
-If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/debian/mcstas-2.5-rpm64
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-CentOS_7/
+
+## Adding support for NCrystal
+Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
+```bash
+sudo yum install mcstas-ncrystal-2.5
+```
+- which then has the side effect that some symlinks are broken. Hence also please reinstall e.g. mcstas-tools-python-mcrun-2.5:
+```bash
+sudo yum reinstall mcstas-tools-python-mcrun-2.5
+```
+
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)

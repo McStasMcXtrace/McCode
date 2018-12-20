@@ -8,6 +8,9 @@ sudo wget http://packages.mccode.org/debian/mccode.list
 sudo apt-get update
 ```
 
+# Debian only:
+On Debian you will further have to install the non-free repository to have access to all McStas tool parts. See https://wiki.debian.org/SourcesList
+
 # Look for McStas packages to install
 ```bash
 mcstas@debian:~$ apt-cache search mcstas | grep -v 2.0 |grep -v 2.1 | grep -v 2.2 | grep -v 2.3 | grep -v 2.4
@@ -40,7 +43,17 @@ Please report any trouble with the repository to [mcstas-users](mailto:mcstas-us
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at http://download.mcstas.org/current/linux/debian/mcstas-2.5-deb64
+dpkg, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.5-deb64/
+
+## Adding support for NCrystal
+Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
+```bash
+sudo apt-get install mcstas-ncrystal-2.5
+```
+- which then has the side effect that some symlinks are broken. Hence also please reinstall e.g. mcstas-tools-python-mcrun-2.5:
+```bash
+sudo apt-get install --reinstall mcstas-tools-python-mcrun-2.5
+```
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
