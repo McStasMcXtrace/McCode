@@ -1034,8 +1034,8 @@ def parse_and_filter(indir, namefilter=None, recursive=False):
     if namefilter != None:
         comp_info_lst = [c for c in comp_info_lst if re.search(namefilter.lower(), c.name.lower())]
         instr_info_lst = [c for c in instr_info_lst if re.search(namefilter.lower(), c.name.lower())]
-        comp_files = [f for f in comp_files if re.search(namefilter+'$', os.path.splitext(os.path.basename(f))[0])]
-        instr_files = [f for f in instr_files if re.search(namefilter+'$', os.path.splitext(os.path.basename(f))[0])]
+        comp_files = [f for f in comp_files if re.search(namefilter, os.path.splitext(os.path.basename(f))[0])]
+        instr_files = [f for f in instr_files if re.search(namefilter, os.path.splitext(os.path.basename(f))[0])]
 
     return comp_info_lst, instr_info_lst, comp_files, instr_files
 
@@ -1064,22 +1064,27 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]
+
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
         quit()
+
     elif args.manual == True:
         ''' open manual and exit ''' 
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
         quit()
+
     elif args.comps == True:
         ''' open component manual and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
         quit()
+
     elif args.web == True:
         ''' open website and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'http://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
         quit()
+
     elif args.install == True:
         ''' write system doc files '''
         if args.searchterm:
@@ -1100,40 +1105,6 @@ def main(args):
         print('writing master doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-    elif args.searchterm is not None and re.search('\.', args.searchterm):
-        usedir = '.'
-        if args.dir is not None:
-            usedir = args.dir
-        f = os.path.join(usedir, args.searchterm)
-        if not os.path.isfile(f):
-            # attempt to find the file in the mccode library
-            usedir = mccode_config.configuration["MCCODE_LIB_DIR"]
-            flter = os.path.splitext(os.path.basename(args.searchterm))[0]
-            comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, flter, recursive=True)
-            if len(comp_files) == 1:
-                f = comp_files[0]
-            elif len(instr_files) == 1:
-                f = instr_files[0]
-            else:
-                print("no local or mccode lib matches for: %s" % args.searchterm)
-                quit()
-
-        instr = re.search('[\w0-9]+\.instr', args.searchterm)
-        comp = re.search('[\w0-9]+\.comp', args.searchterm)
-
-        if instr:
-            f_html = os.path.splitext(f)[0] + ".html"
-            info = InstrParser(f).parse()
-            info.filepath = os.path.abspath(f)
-            write_doc_files_or_continue([], [info], [], [f])
-            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
-        elif comp:
-            f_html = os.path.splitext(f)[0] + ".html"
-            info = CompParser(f).parse()
-            info.filepath = os.path.abspath(f)
-            write_doc_files_or_continue([info], [], [f], [])
-            subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
-
     elif args.dir != None or args.searchterm != None:
         ''' filtered and/or local results '''
         flter = '.*'
@@ -1141,6 +1112,47 @@ def main(args):
         rec = True
         if args.searchterm:
             flter = args.searchterm
+
+        # single, specific file
+        if args.searchterm is not None and re.search('\.', args.searchterm):
+            usedir2 = '.'
+            if args.dir is not None:
+                usedir2 = args.dir
+            f = os.path.join(usedir2, args.searchterm)
+            
+            # find matcing filenames
+            instr_files, comp_files = utils.get_instr_comp_files(mccode_config.configuration['MCCODE_LIB_DIR'], True)
+            comp_files = [f for f in comp_files if os.path.basename(f) == args.searchterm]
+            instr_files = [f for f in instr_files if os.path.basename(f) == args.searchterm]
+
+            # accumulate results
+            results = []
+            if os.path.isfile(f):
+                results.append(f)
+            results.extend(instr_files)
+            results.extend(comp_files)
+            if len(results) == 1:
+                f = results[0]
+
+                instr = re.search('[\w0-9]+\.instr', args.searchterm)
+                comp = re.search('[\w0-9]+\.comp', args.searchterm)
+
+                if instr:
+                    f_html = os.path.splitext(f)[0] + ".html"
+                    info = InstrParser(f).parse()
+                    info.filepath = os.path.abspath(f)
+                    write_doc_files_or_continue([], [info], [], [f])
+                    subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+                elif comp:
+                    f_html = os.path.splitext(f)[0] + ".html"
+                    info = CompParser(f).parse()
+                    info.filepath = os.path.abspath(f)
+                    write_doc_files_or_continue([info], [], [f], [])
+                    subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+                quit()
+            # there were multiple matches - fall back to general search term mode
+            else:
+                flter = os.path.splitext(os.path.basename(args.searchterm))[0]
 
         # system
         comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, flter, recursive=True)
@@ -1153,6 +1165,10 @@ def main(args):
             usedir = args.dir
             comp_infos_local, instr_infos_local, comp_files, instr_files = parse_and_filter(args.dir, flter, recursive=False)
             write_doc_files_or_continue(comp_infos_local, instr_infos_local, comp_files, instr_files)
+
+        if len(comp_infos_local) + len(instr_infos_local) + len(comp_infos) + len(instr_infos) == 0:
+            print("no matches found")
+            quit()
 
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
         text = masterdoc.create()
