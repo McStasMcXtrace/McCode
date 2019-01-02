@@ -1034,6 +1034,8 @@ def parse_and_filter(indir, namefilter=None, recursive=False):
     if namefilter != None:
         comp_info_lst = [c for c in comp_info_lst if re.search(namefilter.lower(), c.name.lower())]
         instr_info_lst = [c for c in instr_info_lst if re.search(namefilter.lower(), c.name.lower())]
+        comp_files = [f for f in comp_files if re.search(namefilter+'$', os.path.splitext(os.path.basename(f))[0])]
+        instr_files = [f for f in instr_files if re.search(namefilter+'$', os.path.splitext(os.path.basename(f))[0])]
 
     return comp_info_lst, instr_info_lst, comp_files, instr_files
 
@@ -1061,7 +1063,7 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
 def main(args):
     logging.basicConfig(level=logging.INFO)
 
-    usedir = mccode_config.configuration["MCCODE_LIB_DIR"]    
+    usedir = mccode_config.configuration["MCCODE_LIB_DIR"]
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
@@ -1104,8 +1106,17 @@ def main(args):
             usedir = args.dir
         f = os.path.join(usedir, args.searchterm)
         if not os.path.isfile(f):
-            print("is not a file: %s" % f)
-            quit()
+            # attempt to find the file in the mccode library
+            usedir = mccode_config.configuration["MCCODE_LIB_DIR"]
+            flter = os.path.splitext(os.path.basename(args.searchterm))[0]
+            comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, flter, recursive=True)
+            if len(comp_files) == 1:
+                f = comp_files[0]
+            elif len(instr_files) == 1:
+                f = instr_files[0]
+            else:
+                print("no local or mccode lib matches for: %s" % args.searchterm)
+                quit()
 
         instr = re.search('[\w0-9]+\.instr', args.searchterm)
         comp = re.search('[\w0-9]+\.comp', args.searchterm)
