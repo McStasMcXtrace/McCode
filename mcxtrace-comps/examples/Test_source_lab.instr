@@ -28,7 +28,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_source_lab()
+DEFINE INSTRUMENT Test_source_lab(Emin=1, Emax=40)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -58,9 +58,10 @@ COMPONENT Origin = Progress_bar()
 
 /* /usr/local/lib/mcxtrace-1.1/data/Ga.tx t*/
 COMPONENT source = Source_lab(
-    width=1e-3,height=1e-3,thickness=200e-6,dist=1e-2,tube_current=5,E0=40,focus_xw=1e-3,focus_yh=1e-3,material_datafile="Mo.txt"
-    )
-  AT (0, 0, 0) RELATIVE Origin
+    width=1e-3,height=1e-3,thickness=200e-6,dist=1e-2,tube_current=5,
+    E0=40,focus_xw=1e-3,focus_yh=1e-3,material_datafile="Mo.txt",
+    Emin=Emin, Emax=Emax)
+AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT emon0=E_monitor(
       Emin=0, Emax=80, nE=200, filename="emon0", xwidth=1e-2, yheight=1e-2)

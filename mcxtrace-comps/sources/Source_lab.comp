@@ -67,7 +67,7 @@ SHARE
   %include "read_table-lib"
     
   /*here are some material data- currently only for Cu, Mo and W*/
-  const struct xray_em_data{
+  struct xray_em_data{
     int Z;/*atom number*/
     double Ek;/*ionazation energy*/
     double w_k;/*flourescence yield*/
@@ -94,8 +94,9 @@ DECLARE
     int Z;
     double At,rho;
     t_Table T;
-    const struct xray_em_data *em_p;
+    struct xray_em_data *em_p;
     double Icont,Ichar;
+    int linemin,linemax;
   } prms; 
   double p_continous;
   double mu=0.2e-6;
@@ -147,13 +148,29 @@ INITIALIZE
     double Bk=1.2e-5*pow(prms.em_p->Ek,1.67)*exp(-0.077*prms.Z);
     prms.Ichar=tube_current/CELE*4*M_PI*(E0/prms.em_p->Ek-1)*Bk;
     double Ichar_tot=0;
+    int linec=0;
+    prms.linemin=0;
+    prms.linemax=prms.em_p->linec;
     for (ii=0;ii<prms.em_p->linec;ii++){
+      /*if the interval [Emin,Emax] contains 5 sigma of the characteristic peak - use full peak.*/
+      if (Emin>prms.em_p->e[ii]+5*prms.em_p->w[ii] ){
+        /*way below of energy limit - do not use.*/
+        prms.linemin=ii;
+      }else if ( Emax<prms.em_p->e[ii]-5*prms.em_p->w[ii]){
+        /*way above of energy limit - do not use.*/
+        prms.linemax= prms.linemax<ii?prms.linemax:ii;
+      }else{
+        linec++;
+      }
       if(Emax>prms.em_p->e[ii]+5*prms.em_p->w[ii] && Emin<prms.em_p->e[ii]-5*prms.em_p->w[ii]){
         Ichar_tot+=prms.em_p->i[ii];
       }else{
+          /*We only partially use the peak - so update the relative intensity to reflect that*/
         Ichar_tot+=prms.em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-prms.em_p->e[ii])/prms.em_p->w[ii]) - erf(M_SQRT1_2*(Emin-prms.em_p->e[ii])/prms.em_p->w[ii]) );
+        prms.em_p->i[ii]= prms.em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-prms.em_p->e[ii])/prms.em_p->w[ii]) - erf(M_SQRT1_2*(Emin-prms.em_p->e[ii])/prms.em_p->w[ii]) );
       }
-    } 
+    }
+
     p_continous=prms.Icont/(prms.Ichar*Ichar_tot+prms.Icont);
     printf("Bk,Ico,Ich,Icht,p_c=%g %g %g %g %g\n",Bk,prms.Icont,prms.Ichar,Ichar_tot,p_continous);
   }else{
@@ -218,14 +235,18 @@ TRACE
     const struct xray_em_data *pt=prms.em_p;
     /*characteristic radiation*/
     /*first pick a possible line*/
-    r=rand01()*pt->linec;
+    r=rand01()*(prms.linemax-prms.linemin) + prms.linemin;
     int lineno=(int)floor(r);
     if (lineno==pt->linec) {
       lineno--;/*we might get overflow*/
     }
     pmul=pt->i[lineno]*prms.Ichar;
-    k=E2K*(randnorm()*pt->w[lineno]+pt->e[lineno]);
-    
+    double e=(randnorm()*pt->w[lineno]+pt->e[lineno]);
+    /*this can be very inefficient*/
+    while (e<Emin || e>Emax){
+        e=(randnorm()*pt->w[lineno]+pt->e[lineno]);
+    }
+    k=E2K*e;
     pmul*=(1-p_continous)/frac;
     /*correct for not having the full E-window if so*/
 
