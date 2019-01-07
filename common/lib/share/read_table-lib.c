@@ -73,9 +73,7 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
         case STORE:
             /*find an available slot and store references to table there*/
             tr=&(read_table_file_list[read_table_file_count++]);
-            tr->table_ref=(t_Table *)calloc(1,sizeof(t_Table));
-            /*copy the contents of the table handle*/
-            *(tr->table_ref)= *((t_Table *) item);
+            tr->table_ref = ((t_Table *) item);
             tr->ref_count++;
             return NULL;
         case GC:
