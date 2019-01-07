@@ -283,7 +283,7 @@ def main():
         # load params from file 
         text = open(options.param).read()
         import re
-        params = re.findall('[^=^\s^t]+=[^=^\s^t]+', text)
+        params = re.findall('[\w0-9]+=[^=\s]+', text)
         options.params = map(clean_quotes, params)
     else:
         # Clean out quotes (perl mcgui requires this step)

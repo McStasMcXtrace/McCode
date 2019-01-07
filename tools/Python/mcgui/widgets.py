@@ -367,7 +367,7 @@ class Ui_EditorWindow(object):
 class Ui_dlgStartSim(object):
     def setupUi(self, dlgStartSim):
         dlgStartSim.setObjectName("dlgStartSim")
-        dlgStartSim.resize(464, 553)
+        dlgStartSim.resize(492, 561)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(dlgStartSim)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.gbxGrid = QtWidgets.QGroupBox(dlgStartSim)
