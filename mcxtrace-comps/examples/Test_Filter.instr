@@ -24,6 +24,7 @@
 *
 * %Example: DL=4.9 L0=5 filter_mat=Si Detector: l_mon1_I=1.31502e-07
 * %Example: DL=4.9 L0=5 filter_mat=Rh Detector: l_mon1_I=4.04921e-29
+* %Example: -n5e6 DL=4.9 L0=5 filter_mat=Ti F2=1 Detector: lmon1=1.14111e-08
 *
 * %Link
 * A reference/HTML link for more information
@@ -31,7 +32,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Filter(string filter_mat="Rh",thickness=100e-6,L0=1,DL=0.1)
+DEFINE INSTRUMENT Test_Filter(string filter_mat="Rh",thickness=100e-6,L0=1,DL=0.1, F2=0)
 
 DECLARE
 %{
@@ -65,6 +66,11 @@ COMPONENT filter = Filter(
     material_datafile=matfilename,xwidth=0.1,yheight=0.1,zdepth=thickness
 )
 AT (0,0,0.5) RELATIVE Source
+
+COMPONENT filter2 = Filter(
+    material_datafile=matfilename,xwidth=0.1, yheight=0.1, zdepth=thickness
+)
+WHEN(F2) AT (0,0,0.5+thickness+1e-3) RELATIVE Source
 
 COMPONENT l_mon1 = L_monitor(
     filename="l_mon1",nL=200,xwidth=0.1, yheight=0.1, Lmin=L0-1.1*DL, Lmax=L0+1.1*DL
