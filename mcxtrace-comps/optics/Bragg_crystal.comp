@@ -22,7 +22,10 @@
  * Bragg_crystal.comp supercedes Perfect_Crystal.comp with major edits and corrections.
  *
  * Reads atomic formfactors from a data input file.
- * The PerfectCrystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
+ *
+ * The crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
+ * The crystal planes from which the reflection is made must lie in the X-Z plane on the unbent crystal rotated
+ * by an angle alpha about the x axis with respect to the crystal surface.
  *
  * The crystal is positioned such that the long axis of the crystal surface coincides with
  * z-axis. The angle between the Bragg planes and the crystal surface is alpha
@@ -47,21 +50,23 @@
  *
  * %P
  * INPUT PARAMETERS
- * length: [m] 			length of the crystal (along z-axis)
- * width: [m] 			width of the crystal (along x-axis)
- * material: [ ]			Si, Ge (maybe also GaAs?)
- * V: [AA^3]			unit cell volume
- * h: [ ]                          Miller index of reflection
- * k: [ ]                          Miller index of reflection
- * l: [ ]                          Miller index of reflection
- * alpha: [rad]		 	asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
- * R0: [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
+ * width:   [m]    x width of the crystal.
+ * length:  [m]    z depth (length) of the crystal.
+ * material: [ ]   Si, Ge (maybe also GaAs?)
+ * V:       [AA^3] unit cell volume
+ * h:       [ ]    Miller index of reflection
+ * k:       [ ]    Miller index of reflection
+ * l:       [ ]    Miller index of reflection
+ * alpha:   [rad]  asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
+ *    alpha is defined so that positive alpha reduces the Bragg angle to the plane i.e. alpha=Thetain grazes the planes.
+ *    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
+ *    around the diffraction axis.
+ * R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
  * debye_waller_B: [AA^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
- * crystal_type: [ ]
- *  Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
- *  Bragg_crystal_diamond: diamond
- *  Bragg_crystal_fcc: fcc
- *  Bragg_crystal_fcc: bcc
+ * crystal_type: [ ] 1 => Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+ *      2 => Bragg_crystal_diamond: diamond
+ *      3 => Bragg_crystal_fcc: fcc
+ *      4 => Bragg_crystal_fcc: bcc
  *
  * %E
  *******************************************************************************/

@@ -19,6 +19,8 @@
  * Bent, perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
  * %D
+ * Bragg_crystal_bent.comp supercedes Perfect_Crystal_bent.comp with major edits and corrections.
+ *
  * Reads atomic formfactors from a data input file.
  *
  * The crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
@@ -47,8 +49,8 @@
  * x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
  * y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
  * z_c:     [m]    long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
- * width:   [m]    x height (width) of the mirror.
- * length:  [m]    z depth (length) of the mirror.
+ * width:   [m]    x width of the crystal.
+ * length:  [m]    z depth (length) of the crystal.
  * lattice_x_a: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
  * lattice_y_b: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
  * lattice_z_c: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
