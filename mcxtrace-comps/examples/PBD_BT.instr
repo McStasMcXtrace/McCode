@@ -1,0 +1,330 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: PBD with mirror and monochromator
+*
+* %Identification
+* Written by: Marcus H. Mendenhall (marcus.mendenhall@nist.gov)
+* Date: Current Date
+* Origin: Your institution
+* Release: McXtrace 1.0
+* Version: 0.2
+* %INSTRUMENT_SITE: NIST
+*
+* Mockup of 219/B004 PBD
+*
+* %Description
+* This is a preliminary setup of the PBD, using single-bounce crystals instead of 3-bounce crystals 
+*
+* Example: mxrun-1.1 --mpi=8 rigaku_source.out --dir=scan --format=PGPLOT --ncount=1000000 beam_vert=0.005 beam_hor=0.001 slit_vert=0.001 slit_hor=0.002 omega=53.35 theta=160.05 xtal_len=0.1 xtal_wid=0.02
+* %Parameters
+* Par1: [unit] Parameter1 description
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+/* note: the mirror (Mirror-Id.: 4148a) has d=3.8 nm at the center, which for 0.15406 nm radiation, gives a full deflection angle of 2.32 degrees */
+DEFINE INSTRUMENT PBD(source_y=0.0, source_rotation=0.0, beam_vert=0.002, beam_hor=0.001,
+  mirror_length = 0.05,  
+  mirror_full_deflection_angle=2.32, 
+  mirror_center_distance=0.1, mirror_focal_error=0.0,
+  mirror_rotation_angle=-2.32, mirror_y_offset=0.0, int use_mirror=1, 
+  mono_rotation=0.0, int use_mono=1, double  mono_detuning_seconds=34, 
+  double mono_misalignment_angle_arcsec=0, double mono_incident_angle_deg=3.0,  
+  slit_1_vert=0.001, slit_1_hor=0.0015, slit_2_vert=0.005, slit_2_hor=0.002, 
+  emin=8.046, emax=8.050, 
+  omega=106.715, theta=-160.0725,
+  crystal_central_angle=53.355, int hh=4, int kk=4, int ll=0,
+  int use_flat_source=0, int stop_at_energy=0, 
+  int use_3_bounce=1, string run_setup="nosetup",
+  string polarization="0")
+
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+#define inch 0.0254
+#define crystal_1_back_length (1.895*inch)
+#define crystal_1_front_length (0.960*inch)
+#define crystal_1_channel_width (0.628*inch)
+#define crystal_2_back_length (3.141*inch)
+#define crystal_2_front_length  (1.583*inch)
+#define crystal_2_channel_width (1.047*inch)
+    const double debye_waller_B=0.4632;
+
+    /* set up the parameters for the focusing mirror..
+       note that the mirror_parabolic.comp has a mirror with surface y=z^2/a^2 + x^2 / b^2 = z^2/(4 p)+x^2/b^2
+       where 'p' is the focal length of the parabola
+       Since a parabola with equation 4 p y = z^2 has a focal length of p,
+       the focal length of such a mirror is p=a^2/4 (assuming b=infinity), or a=sqrt(4*p).
+       Also, the vertex of the mirror is the located at y=-p.
+       To focus along the 'z' axis, it must be rotated 90 degrees around 'x'.
+
+       If the mirror is operated at a half deflection angle of theta_m near its active center, 
+       the angle of the surface is theta_m=arctan(dy/dz)=arctan(z/(2 p)) so tan(theta_m)=z/(2 p), but z=l sin(2 theta_m)
+       so p=l sin(2 theta_m)/(2 tan(theta_m)) = l (2 cos(theta_m) sin(theta_m)) / (2 sin(theta_m)/cos(theta_m)) = l sin(theta_m)^2 
+       where 'l' is the distance from the focus to the active center.
+*/
+
+    double mirror_focal_length, mirror_tantheta, mirror_tansq, mirror_cosrot, mirror_sinrot;
+    double mirror_vertex_x, mirror_vertex_z;
+    double mirror_a, mirror_face_offset;
+
+    const double mono_channel_width=0.37*inch; /* from Albert MONO.dwg */
+    double mono_misalignment_angle;
+
+    const double mono_face_length=1.08*inch; /* ditto */
+    const double silicon_lattice_V=160.19329232; /* Angstroms^3 */
+    const int mono_hh=2, mono_kk=2, mono_ll=0;
+    const double mono_center_wavelength=1.5405925; /* kalpha 1,1 from Cu Kalpha paper */
+    double mono_omega_deg, mono_alpha_deg, mono_lattice_d, mono_dhkl;
+    double alphax, alphay, alphaz; /* monochromator asymmetry vector */
+%}
+
+/* The INITIALIZE section is executed WHEN the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+    double theta_m_rad=mirror_full_deflection_angle/2.0*DEG2RAD;
+    double sth=sin(theta_m_rad);
+    mirror_focal_length=mirror_center_distance*sth*sth;
+    mirror_a=sqrt(4*mirror_focal_length);
+    mirror_cosrot=cos(2*theta_m_rad);
+    mirror_sinrot=-sin(2*theta_m_rad);
+    mirror_vertex_z= -mirror_focal_length-mirror_center_distance*mirror_cosrot;
+    mirror_vertex_x=  mirror_center_distance*mirror_sinrot;
+
+    fprintf(stderr, "mirror vertex=(%.3f,%.3f), focal length (mm)= %.3f \n",
+            mirror_vertex_x, mirror_vertex_z, mirror_focal_length*1000);
+
+    mono_lattice_d=pow(silicon_lattice_V, 1./3.);
+    mono_dhkl=mono_lattice_d/sqrt(mono_hh*mono_hh+mono_kk*mono_kk+mono_ll*mono_ll);
+    mono_omega_deg=asin(mono_center_wavelength/(2.0*mono_dhkl))/DEG2RAD;
+    mono_alpha_deg=-(mono_omega_deg-mono_incident_angle_deg);
+    mono_misalignment_angle=mono_misalignment_angle_arcsec/3600.;
+
+    fprintf(stderr, "monochromator angle, alpha = %.6f, %.6f\n", mono_omega_deg, mono_alpha_deg);
+
+    alphax=0; alphay=cos(mono_alpha_deg*DEG2RAD); alphaz=-sin(mono_alpha_deg*DEG2RAD);
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,1) ABSOLUTE
+
+COMPONENT PBD_Rigaku = Source_lab_lorentzian(
+    material_datafile = "Cu.txt", width = beam_vert, height = beam_hor,
+    E0 = 40, Emin = emin, Emax=emax, focus_xw = slit_1_vert, focus_yh = slit_1_hor,
+    take_off = 6, dist = mirror_center_distance-.03, tube_current = 0.3)   WHEN  use_flat_source == 0
+AT (0,source_y, 0) RELATIVE Origin
+ROTATED (source_rotation, 0, 90) RELATIVE Origin
+EXTEND %{
+    if(mcippolarization[0]=='0') {
+        Ex=0; Ey=0; Ez=0;
+    } else if (mcippolarization[0]=='x') {
+        Ex=0; Ey=1; Ez=0; // x & y are reversed by 90 degree rotation of source
+    } else if (mcippolarization[0]=='y') {
+        Ex=1; Ey=0; Ez=0; // x & y are reversed by 90 degree rotation of source
+    } else {
+        fprintf(stderr, "invalid polarization\n");
+        exit(1);
+    }	
+%}
+
+COMPONENT mirror_arm = Arm()
+AT (0,0,mirror_center_distance+mirror_focal_error) RELATIVE Origin
+ROTATED (0, mirror_rotation_angle,0) RELATIVE Origin
+
+COMPONENT mirror = Mirror_parabolic(R=1, a=mirror_a, b=0, 
+    xmin=-0.01, xmax=0.01, ymin=mirror_center_distance-mirror_length/2, ymax=mirror_center_distance+mirror_length/2, zmin=0, zmax=1) WHEN use_mirror!=0
+AT (mirror_vertex_x,0, mirror_vertex_z) RELATIVE mirror_arm
+ROTATED (0,90,90) RELATIVE mirror_arm
+
+/*
+COMPONENT mirror_psd = PSD_monitor(
+    nx = 100, ny = 100, filename = "mirror.psd", restore_xray = 1,
+    xwidth = 0.05, yheight = 0.05)
+  AT (0, 0, mirror_center_distance+0.02) RELATIVE Origin
+  ROTATED (0, 0, 0) RELATIVE Origin
+*/
+
+COMPONENT monochromator_arm=Arm()
+AT (0,0,0.25) RELATIVE mirror_arm
+ROTATED (0,mono_rotation,90) RELATIVE mirror_arm
+
+COMPONENT mono_silicon_1a = Bragg_crystal_BC(
+    material = "Si.txt", length = mono_face_length, width = 0.75*inch, 
+    alphax=alphax, alphay=alphay, alphaz=alphaz,
+    V=160.19329232,  debye_waller_B=0.4632,
+    h=mono_hh, k=mono_kk, l=mono_ll, crystal_type=Bragg_crystal_diamond) WHEN use_mono!=0
+AT (0, 0 , -mono_face_length/2.0-0.005) RELATIVE monochromator_arm
+ROTATED (180+mono_incident_angle_deg+mono_detuning_seconds/3600.0,0, -mono_misalignment_angle/2) RELATIVE monochromator_arm
+
+COMPONENT first_crystal_spect = E_monitor(
+    nE = 200, filename = "mono_1_spect", xwidth = 0.2, yheight = 0.2,
+    Emin = emin, Emax = emax, restore_xray = 1) WHEN stop_at_energy
+AT (0, -mono_channel_width/2, 0) RELATIVE monochromator_arm
+ROTATED (90, 0, 0) RELATIVE monochromator_arm
+
+COMPONENT  mono_silicon_1b = COPY(mono_silicon_1a) WHEN use_mono!=0
+AT (0, -mono_channel_width, -mono_face_length/2.0-0.005) RELATIVE monochromator_arm
+ROTATED (mono_incident_angle_deg+mono_detuning_seconds/3600.0,0, -mono_misalignment_angle/2) RELATIVE monochromator_arm
+
+COMPONENT mono_block=Beamstop(ymax=0.01, ymin=-mono_channel_width+0.001, xmin=-0.1, xmax=0.1) WHEN use_mono !=0
+AT (0,0,0) RELATIVE monochromator_arm
+ROTATED (0,0,0) RELATIVE monochromator_arm
+
+COMPONENT  mono_silicon_1c = COPY(mono_silicon_1a)(alphaz=-alphaz) WHEN use_mono!=0
+AT (0, -mono_channel_width, mono_face_length/2.0+0.005) RELATIVE monochromator_arm
+ROTATED (-mono_incident_angle_deg-mono_detuning_seconds/3600.0, 0, mono_misalignment_angle/2) RELATIVE monochromator_arm
+
+COMPONENT  mono_silicon_1d = COPY(mono_silicon_1c) WHEN use_mono!=0
+AT (0, 0, mono_face_length/2.0+0.005) RELATIVE monochromator_arm
+ROTATED (180-mono_incident_angle_deg-mono_detuning_seconds/3600.0, 0, mono_misalignment_angle/2) RELATIVE monochromator_arm
+
+COMPONENT slit_2 = Slit(
+    xwidth = slit_2_hor, yheight = slit_2_vert)
+AT (0, 0, 0.1) RELATIVE monochromator_arm
+ROTATED (0, 0, 0) RELATIVE mirror_arm
+
+COMPONENT incoming_spectrum_mon = E_monitor(
+    nE = 200, filename = "mono_all_spect", xwidth = 0.2, yheight = 0.2,
+    Emin = emin, Emax = emax, restore_xray = 1) 
+AT (0, 0, .11) RELATIVE monochromator_arm
+ROTATED (0, 0, 0) RELATIVE mirror_arm
+EXTEND %{
+    if(mcipstop_at_energy) ABSORB;
+%}
+
+COMPONENT silicon_1_arm = Arm()
+AT (0,0,1.0) RELATIVE mirror_arm
+ROTATED (0, 0, 90) RELATIVE mirror_arm
+
+COMPONENT silicon_1_arm_2 = Arm()
+AT (0, 0, 0) RELATIVE silicon_1_arm
+ROTATED (-(omega+theta), 0, 0) RELATIVE silicon_1_arm
+
+/* this is the middle arm of the crystal, but should be MISSED by the beam, so it is a stop */
+
+
+COMPONENT crystal_1_front_shadow_1 = Beamstop(
+    ymin = -crystal_1_front_length/2,
+    ymax = crystal_1_front_length/2, xmin = -0.01, xmax = 0.01) WHEN (use_3_bounce != 0)
+AT (0, -2*crystal_1_channel_width, 0) RELATIVE silicon_1_arm_2
+ROTATED (90, 0, 0) RELATIVE silicon_1_arm_2
+
+COMPONENT silicon_1a = Bragg_crystal_BC(
+    material = "Si.txt", length = crystal_1_back_length, width = 0.02,
+   alphax=0, alphay=1, alphaz=0, 
+   V=160.19329232,  debye_waller_B=debye_waller_B,
+    h=hh, k=kk, l=ll, crystal_type=Bragg_crystal_diamond)
+AT (0, -crystal_1_channel_width*use_3_bounce, 0) RELATIVE silicon_1_arm_2
+ROTATED (180, 0, 0) RELATIVE silicon_1_arm_2
+
+COMPONENT silicon_1b = COPY(silicon_1a)(length = crystal_1_front_length) WHEN (use_3_bounce != 0)
+AT (0, -2*crystal_1_channel_width, 0) RELATIVE silicon_1_arm_2
+ROTATED (0, 0, 0) RELATIVE silicon_1_arm_2
+
+COMPONENT silicon_1c = COPY(silicon_1a)  WHEN (use_3_bounce != 0)
+AT (0, -crystal_1_channel_width, 0) RELATIVE silicon_1_arm_2
+ROTATED (180, 0, 0) RELATIVE silicon_1_arm_2
+
+/* another shadow */
+COMPONENT crystal_1_front_shadow_2 = Beamstop(
+    ymin = -crystal_1_front_length/2,
+    ymax = crystal_1_front_length/2, xmin = -0.01, xmax = 0.01) WHEN (use_3_bounce != 0)
+AT (0, -2*crystal_1_channel_width, 0) RELATIVE silicon_1_arm_2
+ROTATED (90, 0, 0) RELATIVE silicon_1_arm_2
+
+COMPONENT diffracted_arm = Arm()
+AT (0, 0, 0) RELATIVE silicon_1_arm
+ROTATED (0,-(theta+crystal_central_angle), 90) RELATIVE mirror_arm
+
+COMPONENT crystal_2_arm = Arm()
+AT (0, 0, 0.27) RELATIVE diffracted_arm
+ROTATED (crystal_central_angle, 0, 0) RELATIVE diffracted_arm
+
+/* another shadow */
+COMPONENT crystal_2_front_shadow_1 = Beamstop(
+    ymin = -crystal_2_front_length/2,
+    ymax = crystal_2_front_length/2, xmin = -0.01, xmax = 0.01) WHEN (use_3_bounce != 0)
+AT (0, -2*crystal_2_channel_width, 0) RELATIVE crystal_2_arm
+ROTATED (90, 0, 0) RELATIVE crystal_2_arm
+
+/* note that crystal 2 is mounted at a fixed angle off of the 2theta center so it is at theta again */
+COMPONENT silicon_2a = COPY(silicon_1a) ( length = crystal_2_back_length)
+AT (0, -crystal_2_channel_width*use_3_bounce, 0) RELATIVE crystal_2_arm
+ROTATED (180, 0, 0) RELATIVE crystal_2_arm
+
+/* note that crystal 2 is mounted at a fixed angle off of the 2theta center so it is at theta again */
+COMPONENT silicon_2b = COPY(silicon_1a)(length = crystal_2_front_length) WHEN (use_3_bounce != 0)
+AT (0, -2*crystal_2_channel_width, 0) RELATIVE crystal_2_arm
+ROTATED (0, 0, 0) RELATIVE crystal_2_arm
+
+/* note that crystal 2 is mounted at a fixed angle off of the 2theta center so it is at theta again */
+COMPONENT silicon_2c = COPY(silicon_1a)(length = crystal_2_back_length) WHEN (use_3_bounce != 0)
+AT (0, -crystal_2_channel_width, 0) RELATIVE crystal_2_arm
+ROTATED (180, 0, 0) RELATIVE crystal_2_arm
+
+/* another shadow */
+COMPONENT crystal_2_front_shadow_2 = Beamstop(
+    ymin = -crystal_2_front_length/2,
+    ymax = crystal_2_front_length/2, xmin = -0.01, xmax = 0.01) WHEN (use_3_bounce != 0)
+AT (0, -2*crystal_2_channel_width, 0) RELATIVE crystal_2_arm
+ROTATED (90, 0, 0) RELATIVE crystal_2_arm
+
+COMPONENT camera_arm = Arm()
+AT (0, 0, 0) RELATIVE crystal_2_arm
+ROTATED (crystal_central_angle, 0, 0 ) RELATIVE crystal_2_arm
+
+COMPONENT spectrum_mon = E_monitor(
+    nE = 200, filename = "emon", xwidth = 0.2, yheight = 0.2,
+    Emin = emin, Emax = emax, restore_xray = 1) WHEN (!stop_at_energy) 
+AT (0, 0, .10) RELATIVE camera_arm
+
+COMPONENT camera = PSD_monitor(
+    nx = 487, ny = 197, xwidth = 83.8e-3, yheight = 33.5e-3,
+    filename="psd_1") WHEN (!stop_at_energy)
+AT (0,0,0.11) RELATIVE camera_arm
+ROTATED (0,0,90) RELATIVE camera_arm
+
+/* This section is executed WHEN the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

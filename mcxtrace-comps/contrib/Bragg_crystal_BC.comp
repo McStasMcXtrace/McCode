@@ -1,0 +1,243 @@
+/*******************************************************************************
+ *
+ * McXtrace, X-ray tracing package
+ *         Copyright, All rights reserved
+ *         Risoe National Laboratory, Roskilde, Denmark
+ *         Institut Laue Langevin, Grenoble, France
+ *         University of Copenhagen, Copenhagen, Denmark
+ *
+ * Component: Bragg_crystal_BC
+ *
+ * %I
+ *
+ * Bragg_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
+ * It is based on the full vector math and exact solution  of the dispersion relation in
+ * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
+ 
+ * This code has been validated against both experimental data
+ * (2 channel-cut 3-bounce Si 440 crystals together in non-dispersive mode, at Cu kalpha)
+ * and against theoretical rocking rocking curves from XOP for Si220 at Sc kalpha and Si440 at Cu kalpha.
+ *
+ * Non-copyright notice:
+ * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
+ * This is not an official contribution, in that the results are in no way certified by NIST.
+ *
+ * Date: May, 2017
+ * Version: 1.0
+ * Release: McXtrace 1.2
+ * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
+ * marcus.mendenhall@nist.gov
+ *
+ * Changelog:
+ *
+ *
+ * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ *
+ * %D
+ * Reads atomic formfactors from a data input file.
+ * The PerfectCrystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
+ *
+ * The crystal is positioned such that the long axis of the crystal surface coincides with
+ * z-axis and the outer normal to the crystal surface is along +y.
+ *
+ * %D
+ *
+ * %P
+ * Input parameters:
+ * length [m] 			length of the crystal (along z-axis)
+ * width [m] 			width of the crystal (along x-axis)
+ * Material 			Si, Ge (maybe also GaAs?)
+ * V [Å^3]			unit cell volume
+ * h [ ]                          Miller index of reflection
+ * k [ ]                          Miller index of reflection
+ * l [ ]                          Miller index of reflection
+ * alpha (unit vector)	 	normal to crystal planes.  crystal surface itself has normal [0,1,0].
+ * R0 [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
+ * debye_waller_B [Å^2]		debye-waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp
+ * crystal_type:
+ *  Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
+ *  Bragg_crystal_diamond: diamond
+ *  Bragg_crystal_fcc: fcc
+ *  Bragg_crystal_fcc: bcc
+ *
+ * %E
+ *******************************************************************************/
+
+DEFINE COMPONENT Bragg_crystal_BC
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",
+                    double alphax=0.0, alphay = 1.0, alphaz = 0.0,
+                    R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
+                    structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
+OUTPUT PARAMETERS (prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+SHARE
+%{
+
+%include "perfect_crystals-lib"
+
+%}
+
+DECLARE
+%{
+    struct {
+        int Z;
+        double rho,At,f_rel,f_nt;
+        t_Table m_t;
+        t_Table f0_t;
+    }prms;
+    
+%}
+
+INITIALIZE
+%{
+    fflush(NULL); // put diagnostics in order!
+    int status;
+    if (material){
+        if ((status=Table_Read(&(prms.m_t),material,0))==-1){
+            fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
+            exit(-1);
+        }
+        char **header_parsed;
+        header_parsed=Table_ParseHeader(prms.m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+    }else{
+        fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP);
+    }
+    if(form_factors){
+        if ((status=Table_Read(&(prms.f0_t),form_factors,0))==-1){
+            fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
+            exit(-1);
+        }
+    }
+    
+    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+    fflush(NULL);
+
+%}
+
+TRACE
+%{
+    double E;				// (keV) x-ray energy
+    double K; 				// length of k-vector
+    double tin;				// 'time' of intersection of ray with y=0 plane (which include the crystal surface)
+    double x_int,y_int,z_int;		// intersection with the y=0 plane
+    double dist;				// distance from position at t=0 to the y=0 plane
+    double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
+    double Rpi, Rsig, R;          // Reflectivity values calculated by MxBraggDarwinReflectivityBC() function for each incoming photon
+    
+    /* get the photon's kvector and energy */
+    K=sqrt(kx*kx+ky*ky+kz*kz);
+    E = K2E*K; /* use built-in constants for consistency */
+    /* make unit vector in the direction of k :*/
+    double k0hat[3] = {kx/K, ky/K, kz/K};			// unit vector in the direction of k-vector.
+    double kk0[3]={kx,ky,kz};
+    
+#ifdef MCDEBUG
+    fflush(NULL); // make sure all error messages are in order!
+#endif
+    
+    /*intersection calculation*/
+    tin = -y/k0hat[1];
+    if (tin > 1e-8){
+        /* check whether our intersection lies within the boundaries of the crystal*/
+        x_int=x+k0hat[0]*tin;
+        y_int=y+k0hat[1]*tin;
+        z_int=z+k0hat[2]*tin;
+        
+        if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
+            dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
+            PROP_DL(dist); 			/* now the photon is on the crystal surface, ready to be reflected... */
+            SCATTER;
+            double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
+            f00 = prms.Z;
+            f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
+            fp  = Table_Value(prms.m_t,E,1)-prms.Z;
+            fpp = Table_Value(prms.m_t,E,2);
+            
+            double nhat[3]={0,1,0}; // crystal surface normal is yhat, and is set up by mcxtrace to be into the crystal
+            
+            double alpha[3]={alphax, alphay, alphaz};
+            double Rsig, Rpi;
+            double kh[3], sig_axis[3], pi_axis[3];
+            int fail;
+            
+            fail=MxBraggDarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
+                  k0hat, nhat, alpha,
+                  f00, f0h, fp, fpp, V, h, k, l,
+                  debye_waller_B, E,
+                  crystal_type, structure_factor_scale_r, structure_factor_scale_i
+              );
+            
+            cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction */
+            /* sig_axis is the sigma direction, as returned by Bragg_Geometry inside DarwinReflectivityBT */
+            /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
+            cross(pi_axis, k0hat, sig_axis, 1);
+            
+            /* update outgoing direction vector kx, ky, kz = kh, fully scaled outgoing k vector */
+            kx=kh[0]; ky=kh[1]; kz=kh[2];
+            
+            /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
+            double Esig=(Ex*sig_axis[0]+Ey*sig_axis[1]+Ez*sig_axis[2]);
+            double Epi= (Ex* pi_axis[0]+Ey* pi_axis[1]+Ez* pi_axis[2]);
+            if(Esig==0 && Epi==0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
+                double phi=rand01()*PI/2;
+                Esig=cos(phi); Epi=sin(phi);
+            }
+            Esig=Esig*sqrt(Rsig);
+            Epi=Epi*sqrt(Rpi);
+            R=Esig*Esig+Epi*Epi; /* projected reflectivity, squared back to intensity */
+            
+            double pi1_axis[3];
+            /* pi1 is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
+            cross(pi1_axis, kh, sig_axis,1);
+            
+            /* a linear combination of these is still perpendicular to k, but has the correct polarization weighting */
+            Ex=Epi*pi1_axis[0]+Esig*sig_axis[0];
+            Ey=Epi*pi1_axis[1]+Esig*sig_axis[1];
+            Ez=Epi*pi1_axis[2]+Esig*sig_axis[2];
+            NORM(Ex, Ey, Ez);
+            
+#ifdef MCDEBUG
+            fprintf(stderr,"Crystal: %s: Rsig=%.4g Rpi=%.4g "
+                    " k0=(%.8f, %.8f, %.8f), nhat=(%.8f, %.8f, %.8f) alpha=(%.8f, %.8f, %.8f), "
+                    " kout=(%.8f, %.8f, %.8f) "
+                    " axis=(%.8f, %.8f, %.8f) E=(%.4f, %.4f, %.4f) \n",
+                    NAME_CURRENT_COMP, Rsig, Rpi, 
+                    kk0[0], kk0[1], kk0[2], nhat[0], nhat[1], nhat[2],
+                    alpha[0], alpha[1], alpha[2], 
+                    kh[0], kh[1], kh[2], 
+                    sig_axis[0], sig_axis[1], sig_axis[2], Ex, Ey, Ez);
+#endif      
+            /* apply Darwin reflectivity if not is supplied from outside*/
+            if (!R0){
+                p*=R;
+            }else{
+                p*=R0;
+            }
+            /*catch dead rays*/
+            if (p==0) ABSORB;
+        } else {
+            RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+        }
+    }
+    
+#ifdef MCDEBUG
+    fflush(stderr);
+    fflush(stdout); // make sure all error messages are in order! 
+#endif
+
+%}
+
+MCDISPLAY
+%{
+    magnify("");
+    rectangle("xz",0,0,0,width,length); // display crystal outline
+    line(0,0,0,alphax*(width+length)/2.0, alphay*(width+length)/2.0, alphaz*(width+length)/2.0); // display alpha vector
+%}
+
+END
+
