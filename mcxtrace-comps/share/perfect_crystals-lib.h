@@ -1,18 +1,18 @@
-#ifndef BRAGG_CRYSTALS_H
-#define BRAGG_CRYSTALS_H
-    
+#ifndef MXBRAGG_CRYSTALS_H
+#define MXBRAGG_CRYSTALS_H
+
 #include <complex.h>
 
 enum {Bragg_crystal_explicit=0, Bragg_crystal_diamond, Bragg_crystal_fcc,Bragg_crystal_bcc};
 
 /* make proper function declaration to be standards-compliant */
 
-int MxBraggDiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
+int MxBragg_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
         const double k0[3], const double nhat[3],
         const double H[3],
         double complex chi0, double complex chih_chihbar, double C, int nroots);
 
-int MxBraggDarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
+int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
         const double k0hat[3], const double nhat[3],
         const double alpha[3],
         double f00, double f0h, double fp, double fpp, double V, int h, int k, int l,
@@ -20,7 +20,7 @@ int MxBraggDarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
         int crystal_type, double fscaler, double fscalei);
 
 /*This is the old Darwin function*/
-void MxBraggDarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
+void MxBragg_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
         double f00, double f0h, double fp, double fpp, double V, double alpha, int h, int k, int l,
         double debye_waller_B, double E, double Thetain, int pol,
         int crystal_type, double fscaler, double fscalei);
@@ -37,4 +37,4 @@ void cross(double res[3], const double v1[3], const double v2[3], int unitize);
     else { r1=(-b+sqrtfn(b*b-4*a*c))/(2*a); } \
     r2=(c/a)/r1; }
 
-#endif /* BRAGG_CRYSTALS_H SHARE section */
+#endif /* MXBRAGG_CRYSTALS_H SHARE section */

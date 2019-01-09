@@ -127,7 +127,7 @@ TRACE
     double x_int,y_int,z_int;		// intersection with the y=0 plane
     double dist;				// distance from position at t=0 to the y=0 plane
     double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-    double Rpi, Rsig, R;          // Reflectivity values calculated by MxBraggDarwinReflectivityBC() function for each incoming photon
+    double Rpi, Rsig, R;          // Reflectivity values calculated by MxBragg_DarwinReflectivityBC() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
@@ -165,7 +165,7 @@ TRACE
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
             
-            fail=MxBraggDarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
+            fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha,
                   f00, f0h, fp, fpp, V, h, k, l,
                   debye_waller_B, E,

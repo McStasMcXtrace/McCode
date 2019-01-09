@@ -1,7 +1,7 @@
 #ifndef MXBRAGG_CRYSTALS_C
 #define MXBRAGG_CRYSTALS_C
 
-int MxBraggDarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
+int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
                          const double k0hat[3], const double nhat[3],
                          const double alpha[3],
                          double f00, double f0h, double fp, double fpp, double V, int h, int k, int l,
@@ -105,7 +105,7 @@ int MxBraggDarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
         double complex kqvals[4], xi0vals[4], xihvals[4];
         
         // warning: valid only for centrosymmetric crystals here where chih=chihbar
-        int fail=MxBraggDiffractionDispersion(kqvals, xi0vals, xihvals,
+        int fail=MxBragg_DiffractionDispersion(kqvals, xi0vals, xihvals,
                    k0, nhat, H, chi0, chih*chih, C, 1); // get first (interesting) root only
 
         double complex kq=kqvals[0];
@@ -155,7 +155,7 @@ void cross(double res[3], const double v1[3], const double v2[3], int unitize)
     }
 }
     
-int MxBraggDiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
+int MxBragg_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
                           const double k0[3], const double nhat[3],
                           const double H[3],
                           double complex chi0, double complex chih_chihbar, double C, int nroots){
@@ -261,7 +261,7 @@ int MxBraggDiffractionDispersion(double complex kqvals[4], double complex xi0[4]
     return fail;
 }
     
-void MxBraggDarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
+void MxBragg_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
                              double f00, double f0h, double fp, double fpp, double V, double alpha, int h, int k, int l,
                              double debye_waller_B, double E, double Thetain, int pol,
                             int crystal_type, double fscaler, double fscalei
