@@ -44,185 +44,45 @@
  * 
  * %P
  * INPUT PARAMETERS
- * x_a: [m] 1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
- * y_b: [m] 2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
- * z_c: [m]     long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
- * width: [m] x height (width) of the mirror.
- * length: [m] z depth (length) of the mirror.
- * lattice_x_a, lattice_y_b, lattice_z_c [m]:  curvature matrix for underlying lattice, for bent/ground/rebent crystals
- *    THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
- *
- * material: [ ]		Si, Ge (maybe also GaAs?)
- * V: [AA^3]			unit cell volume
- * h: [ ]                          Miller index of reflection
- * k: [ ]                          Miller index of reflection
- * l: [ ]                          Miller index of reflection
- * alpha: [rad]		 	asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
+ * x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
+ * y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
+ * z_c:     [m]    long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
+ * width:   [m]    x height (width) of the mirror.
+ * length:  [m]    z depth (length) of the mirror.
+ * lattice_x_a: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
+ * lattice_y_b: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
+ * lattice_z_c: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
+ * material: [ ]   Si, Ge (maybe also GaAs?)
+ * V:       [AA^3] unit cell volume
+ * h:       [ ]    Miller index of reflection
+ * k:       [ ]    Miller index of reflection
+ * l:       [ ]    Miller index of reflection
+ * alpha:   [rad]  asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
  *    alpha is defined so that positive alpha reduces the Bragg angle to the plane i.e. alpha=Thetain grazes the planes.
  *    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
  *    around the diffraction axis.
- * R0: [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
+ * R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
  * debye_waller_B: [AA^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
- * crystal_type: [ ]
- *  Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
- *  Bragg_crystal_diamond: diamond
- *  Bragg_crystal_fcc: fcc
- *  Bragg_crystal_fcc: bcc
+ * crystal_type: [ ] 1 => Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+ *      2 => Bragg_crystal_diamond: diamond
+ *      3 => Bragg_crystal_fcc: fcc
+ *      4 => Bragg_crystal_fcc: bcc
  *
  * %E
  *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_bent
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (x_a=0, y_b=1., z_c=1., lattice_x_a=0, lattice_y_b=1., lattice_z_c=1.,
-length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
-  R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
-    structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
+SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, lattice_x_a=0, lattice_y_b=1.0, lattice_z_c=1.0,
+        length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
+        R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
+        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
-#ifndef MXBRAGG_CRYSTALS
-#define MXBRAGG_CRYSTALS 1
-
-enum {Bragg_crystal_explicit=0, Bragg_crystal_diamond, Bragg_crystal_fcc, Bragg_crystal_bcc};
-
-/* make proper function declaration to be standards-compliant */
-void MxBragg_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
-                         double f00, double f0h, double fp, double fpp, double V, double alpha, int h, int k, int l,
-                         double debye_waller_B, double E, double Thetain, int pol,
-                        int crystal_type, double fscaler, double fscalei
-                         );
-
-    %include "read_table-lib"
-#include <complex.h>
-    /* something that would be relevant for ALL crystals */
-    void MxBragg_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
-                             double f00, double f0h, double fp, double fpp, double V, double alpha, int h, int k, int l,
-                             double debye_waller_B, double E, double Thetain, int pol,
-                            int crystal_type, double fscaler, double fscalei
-                             )
-    {
-        
-        double lambda,theta,theta0,DeltaThetas,a,d,b,C,W,kappa,g,L;
-        double F0r,F0i,Fhr,Fhi,psi0r,psi0i,psihr,psihi;
-        
-        lambda = 2*PI/(E2K*E);  			/* wavelength in AA, E in keV, using built-in constants for safety    */
-        a = cbrt(V); 				/* side length of unit cubic cell (AA)*/
-        d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (AA)*/
-        theta = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
-        b = sin(theta + alpha)/sin(theta - alpha);  /* asymmetry factor */
-        
-        *Theta0 = Thetain - alpha; 			/* (rad) angle between Bragg planes and incident ray */
-        *Thetah = b*(*Theta0 - theta) + theta;   	/* (rad) Angle between Bragg planes and reflected ray */
-        /*check if Bragg angle is less than alpha. If so return 0 reflectivity*/
-        if (theta<alpha) {
-            *R=0;
-            *DeltaTheta0 = -1; /*to mark it irrelevant*/
-        }
-        
-        /* Define polarization factor: */
-        switch(pol){
-            case 0:
-                C = (1 + fabs(cos(2*theta)))/2;         	/* unpolarized */
-                break;
-            case 1:
-                C = fabs(cos(2*theta));  		/* polarization in the scattering plane */
-                break;
-            case 2:
-                C = 1;                          	/* polarization perpendicular to the scattering plane*/
-                break;
-        }
-        
-        /* structure factor rules from:
-            https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
-        */
-
-        switch(crystal_type) {
-            case Bragg_crystal_explicit:
-                /* use explicitly provided structure factor scale factor */
-                break;
-            case Bragg_crystal_diamond: /* diamond lattice rules */
-                if (((h+k+l)%2) != 0){ 		/* (111) etc. odd sum eflection */
-                    fscaler=fscalei=4.0;
-                }
-                else if (((h+k+l)%4)==0){ 		/* (400) etc. h+k+l=4n reflection */
-                    fscaler=8; fscalei=0;
-                } else {
-                    /* any other reflection is forbidden, will get a divide-by-zero somewhere, but user is
-                        responsible for only using allowed reflections */
-                    fscaler=0; fscalei=0;
-                }
-                break;
-            case Bragg_crystal_fcc: /* fcc lattice rules */
-                {
-                    int hpar=h%2, kpar=k%2, lpar=l%2;
-                    if ( hpar==kpar && kpar==lpar ) { /* all parities the same */
-                        fscaler=4.0; fscalei=0.0;
-                    }
-                    else { 		/* mixed parity forbidden */
-                        fscaler=0; fscalei=0;
-                    }
-                }
-                break;
-            case Bragg_crystal_bcc: /* bcc lattice rules */
-                if ( ((h+k+l)%2) == 0 ) { /* h+k+l even */
-                    fscaler=2.0; fscalei=0.0;
-                }
-                else { 		/* otherwise forbidden */
-                    fscaler=0; fscalei=0;
-                }
-                break;
-           default:
-                fscaler=0; fscalei=0; /* fail later if unknown crystal type */
-                break;
-        }
-
-        F0r=8*(f00+fp);
-        F0i=8*fpp;
-        double scalemag=sqrt(fscaler*fscaler+fscalei*fscalei);
-        Fhr=scalemag*(f0h+fp);
-        Fhi=scalemag*fpp;
-
-        double main_scale=RE*lambda*lambda/(PI*V);
-        double M=debye_waller_B*SQR(sin(Thetain)/lambda)*(2./3.); /* temperature factor */
-        psi0r = F0r*main_scale;
-        psi0i = F0i*main_scale;
-        psihr = Fhr*main_scale*exp(-M); /* Eq 23*/
-        psihi = Fhi*main_scale*exp(-M); /* only angle-dependent part gets scaled by temp factor */
-        
-        W = 0.5 * (sqrt(b) + 1/sqrt(b)) * psi0r/(C * psihr) +  sqrt(b)*sin(2*theta)*(theta - *Theta0)/(C * psihr); /* eq 28*/
-        kappa = psihi/psihr;                                              	/* eq 22 */
-        g = 0.5*(sqrt(b) + 1/sqrt(b))*psi0i/(C*psihr);               	/* eq 21 */
-        L = (1/(1 + kappa*kappa))*( W*W + g*g + sqrt(SQR(W*W - g*g - 1 + kappa*kappa) + 4*SQR(g*W - kappa)));
-        
-        /* *R = L - sqrt(L*L - 1); */
-        /* replace x-sqrt(x^2-1) with exactly equal 1/(x+sqrt(x^2-1)) to avoid roundoff when x is large ... MHM */
-        *R = 1/(L + sqrt(L*L - 1));
-        
-        DeltaThetas = psi0r/sin(2*theta);               	/* eq 32 */
-#ifdef MCDEBUG
-        printf("E,lambda= %f , %f \n",E,lambda);
-        printf("theta= %f \n",theta*180/PI);
-        printf("Theta0, Thetah= %f %f \n",*Theta0*180/PI,*Thetah*180/PI);
-        printf("theta = %g rad, alpha=%g rad.\n",theta,alpha);
-        printf("b,sqrt(b)= %f %f\n",b,sqrt(b));
-        printf("1/sqrt(b)= %f \n",1/sqrt(b));
-        printf("Fhr, Fhi, F0r, F0i= %g %g %g %g\n",Fhr, Fhi, F0r, F0i);
-        printf("psihr, psihi, psi0r, psi0i= %g %g %g %g\n",psihr, psihi, psi0r, psi0i);
-        printf("sqrt(b)*sin(2*theta)= %g \n",sqrt(b)*sin(2*theta));
-        printf("C, pis0r,C * psihr= %g %g %g\n",C, psi0r,C * psihr);
-        printf("W= %f \n",W);
-        printf("kappa= %f \n",kappa);
-        printf("g= %f \n",g);
-        printf("L= %f \n",L);
-        printf("R= %f \n",*R);
-        printf("DeltaThetas %f \n",3600*DeltaThetas*180/PI);
-#endif
-        *DeltaTheta0 = 0.5*(1 + 1/b)*DeltaThetas;                        	/* center of reflectivity curve is at theta + DeltaTheta0 eq 31 */
-    }
-#endif /* MXBRAGG_CRYSTALS */
+    %include "perfect_crystals-lib"
 %}
 
 DECLARE
@@ -259,14 +119,13 @@ INITIALIZE
             exit(-1);
         }
     }
-  a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
-  b2inv=1/(y_b*y_b);
-  c2inv=1/(z_c*z_c);
+    a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
+    b2inv=1/(y_b*y_b);
+    c2inv=1/(z_c*z_c);
 
-  l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
-  l_b2inv=1/(lattice_y_b*lattice_y_b);
-  l_c2inv=1/(lattice_z_c*lattice_z_c);
-
+    l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
+    l_b2inv=1/(lattice_y_b*lattice_y_b);
+    l_c2inv=1/(lattice_z_c*lattice_z_c);
 %}
 
 TRACE
