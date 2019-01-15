@@ -33,6 +33,8 @@
  * The reference point of the crystal is the ellipsoid centre, offset by one half-axis along the y-axis.
  * (See the component manual for Elliptic_mirror for a drawing).
  *
+ * N.B. The component does not work for negative curvature, nor for rays hitting the back of the monochromator.
+ *
  * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
  *
  * Non-copyright notice:
