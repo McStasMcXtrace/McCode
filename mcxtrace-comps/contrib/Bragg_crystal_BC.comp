@@ -2,34 +2,17 @@
  *
  * McXtrace, X-ray tracing package
  *         Copyright, All rights reserved
- *         Risoe National Laboratory, Roskilde, Denmark
+ *         DTU Physics, Kgs. Lyngby, Denmark
  *         Institut Laue Langevin, Grenoble, France
- *         University of Copenhagen, Copenhagen, Denmark
  *
  * Component: Bragg_crystal_BC
  *
  * %I
- *
- * Bragg_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
- * It is based on the full vector math and exact solution  of the dispersion relation in
- * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
- 
- * This code has been validated against both experimental data
- * (2 channel-cut 3-bounce Si 440 crystals together in non-dispersive mode, at Cu kalpha)
- * and against theoretical rocking rocking curves from XOP for Si220 at Sc kalpha and Si440 at Cu kalpha.
- *
- * Non-copyright notice:
- * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
- * This is not an official contribution, in that the results are in no way certified by NIST.
- *
  * Date: May, 2017
  * Version: 1.0
  * Release: McXtrace 1.2
  * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
  * marcus.mendenhall@nist.gov
- *
- * Changelog:
- *
  *
  * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
@@ -40,25 +23,36 @@
  * The crystal is positioned such that the long axis of the crystal surface coincides with
  * z-axis and the outer normal to the crystal surface is along +y.
  *
- * %D
+ * N.B. The component does not work for rays hitting the back of the monochromator.
+ *
+ * Bragg_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
+ * It is based on the full vector math and exact solution  of the dispersion relation in
+ * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
+ *
+ * This code has been validated against both experimental data
+ * (2 channel-cut 3-bounce Si 440 crystals together in non-dispersive mode, at Cu kalpha)
+ * and against theoretical rocking rocking curves from XOP for Si220 at Sc kalpha and Si440 at Cu kalpha.
+ *
+ * Non-copyright notice:
+ * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
+ * This is not an official contribution, in that the results are in no way certified by NIST.
  *
  * %P
- * Input parameters:
- * length [m] 			length of the crystal (along z-axis)
- * width [m] 			width of the crystal (along x-axis)
- * Material 			Si, Ge (maybe also GaAs?)
- * V [Å^3]			unit cell volume
- * h [ ]                          Miller index of reflection
- * k [ ]                          Miller index of reflection
- * l [ ]                          Miller index of reflection
- * alpha (unit vector)	 	normal to crystal planes.  crystal surface itself has normal [0,1,0].
- * R0 [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
- * debye_waller_B [Å^2]		debye-waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp
- * crystal_type:
- *  Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
- *  Bragg_crystal_diamond: diamond
- *  Bragg_crystal_fcc: fcc
- *  Bragg_crystal_fcc: bcc
+ * INPUT PARAMETERS
+ * width:   [m]    x width of the crystal.
+ * length:  [m]    z depth (length) of the crystal.
+ * material: [ ]   Si, Ge (maybe also GaAs?)
+ * V:       [AA^3] unit cell volume
+ * h:       [ ]    Miller index of reflection
+ * k:       [ ]    Miller index of reflection
+ * l:       [ ]    Miller index of reflection
+ * alpha: (unit vector)	 	normal to crystal planes.  crystal surface itself has normal [0,1,0].
+ * R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
+ * debye_waller_B: [AA^2] Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
+ * crystal_type: [ ] 1 => Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+ *      2 => Bragg_crystal_diamond: diamond
+ *      3 => Bragg_crystal_fcc: fcc
+ *      4 => Bragg_crystal_fcc: bcc
  *
  * %E
  *******************************************************************************/
@@ -66,17 +60,15 @@
 DEFINE COMPONENT Bragg_crystal_BC
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",
-                    double alphax=0.0, alphay = 1.0, alphaz = 0.0,
-                    R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
-                    structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
+        alphax=0.0, alphay = 1.0, alphaz = 0.0,
+        R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
+        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
-
-%include "perfect_crystals-lib"
-
+    %include "perfect_crystals-lib"
 %}
 
 DECLARE
