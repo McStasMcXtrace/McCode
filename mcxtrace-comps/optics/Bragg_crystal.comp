@@ -38,12 +38,12 @@
  * This code has been validated against both experimental data
  * (2 channel-cut 3-bounce Si 440 crystals together in non-dispersive mode, at Cu kalpha)
  * and against theoretical rocking rocking curves from XOP for Si220 at Sc kalpha and Si440 at Cu kalpha.
- * 
+ *
  * Changelog:  
  * December 1, 2016:  results for (1,1,1) etc. with complex form factor made to agree with XOP
  *
  * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
- * 
+ *
  * Non-copyright notice:
  * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States. 
  * This is not an official contribution, in that the results are in no way certified by NIST.
@@ -62,7 +62,7 @@
  *    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
  *    around the diffraction axis.
  * R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
- * debye_waller_B: [AA^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
+ * debye_waller_B: [AA^2] Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
  * crystal_type: [ ] 1 => Bragg_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
  *      2 => Bragg_crystal_diamond: diamond
  *      3 => Bragg_crystal_fcc: fcc
