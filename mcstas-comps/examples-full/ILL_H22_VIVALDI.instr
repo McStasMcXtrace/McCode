@@ -1,0 +1,160 @@
+/*******************************************************************************  
+* McStas instrument definition URL=http://mcstas.risoe.dk     
+*   
+* Instrument: ILL_H22_D1B
+*   
+* %Identification 
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: June, 2008
+* Origin:ILL
+* %INSTRUMENT_SITE: ILL   
+*   
+* The VIVALDI Laue diffractometer on the H22 curved thermal guide at the ILL    
+*   
+* %Description    
+* VIVALDI (Very-Intense, Vertical-Axis Laue DIffractometer) provides a tool for
+* development of new diffraction experiments, and is complementary to other ILL
+* single-crystal diffractometers. Fields of interest for experiments on VIVALDI
+* include magnetism, charge density waves, high-pressure studies and structural
+* phase transitions. VIVALDI allows rapid preliminary investigation of new
+* materials, even when only small single crystals are available. The detector is
+* also suitable for some types of diffuse scattering experiments on a
+* monochromatic beam. 
+*
+* VIVALDI is located at the end of the thermal guide H22. The full thermal
+* spectrum can be accepted without detrimental overlap of reflections for
+* primitive unit cells up to 25 Angs on edge. 
+*
+* This model include a cryostat and container description, with a crystal sample.
+*
+* %Example: lambda=3 Detector: PSD_Vivaldi_I=2.6e+08
+*
+* Input parameters:
+* m: [1]   m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda:    [AA]  mean incident wavelength.
+* dlambda:   [AA]  wavelength full width.
+* crystal:   [str] File name for crystal description (LAU)
+* verbose:   [1]   Print DIF configuration. 0 to be quiet
+*   
+* %End      
+*******************************************************************************/  
+
+DEFINE INSTRUMENT ILL_H22_VIVALDI(lambda=3, dlambda=2.2, 
+  string crystal="YBaCuO.lau", string container="V.laz", verbose=1)
+
+/* The DECLARE section allows us to declare variables or  small      */       
+/* functions in C syntax. These may be used in the whole instrument. */       
+DECLARE     
+%{
+/* flags to separate scattering processes */
+double flag_container,flag_sample,flag_env;
+double L2=5.5;  /* sample position wrt last guide element entry [m] */
+double L3=0.32; /* detector diameter */
+%}  
+
+/* The INITIALIZE section is executed when the simulation starts     */       
+/* (C code). You may use them as component parameter values. */       
+INITIALIZE  
+%{  
+
+if (verbose) {    
+  printf("%s: Detailed VIVALDI configuration\n", NAME_CURRENT_COMP);
+  printf("* Incoming beam: lambda=%.4g-%.4g [Angs]\n",   
+    lambda-dlambda, lambda+dlambda);  
+  printf("* Sample: '%s' in Al cryostat.\n", crystal);    
+}   
+
+%}  
+
+/* Here comes the TRACE section, where the actual      */       
+/* instrument is defined as a sequence of components.  */       
+TRACE   
+
+%include "ILL_H22.instr"    
+
+/* additional horizontal divergence monitor at end of guide */
+/* also defines a static position to orient remaining instrument */
+/* gap 0.5 m for D1A/D1B */
+COMPONENT D2B_Mono_Dx = Monitor_nD(
+  xwidth=0.03, yheight=0.2, restore_neutron=1,
+  options="dx, all auto, per cm2, slit")     
+AT (0, 0, 0.25) RELATIVE PREVIOUS     
+
+COMPONENT H22_7 = Guide_gravity(
+  w1=0.03, h1=0.2, l=9.585,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m, W=gW)
+AT (0, 0, 0.25) RELATIVE PREVIOUS       
+  
+/* gap 0.5 m for SALSA */
+COMPONENT SALSA_Mono_Dx = Monitor_nD(
+  xwidth=0.03, yheight=0.2, restore_neutron=1,
+  options="dx, all auto, per cm2, slit", restore_neutron=1)     
+AT (0, 0, 0.25+9.585) RELATIVE PREVIOUS
+
+/* H22: straight guide to VIVALDI, L=5 m, HxW=50x30 */
+
+COMPONENT H22_8 = Guide_gravity(
+  w1=0.03, h1=0.05, l=5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=1, W=gW)
+AT (0, 0, 0.25) RELATIVE PREVIOUS
+
+/* sample after .5 m */
+
+/* sample position ********************************************************** */
+SPLIT COMPONENT SamplePos=Arm()
+AT (0, 0, L2) RELATIVE PREVIOUS
+EXTEND %{
+  flag_container=flag_sample=flag_env=0;
+%}
+  
+COMPONENT Environment_in=PowderN(
+  radius = 0.05, yheight = 0.1, thickness=0.002,
+  reflections="Al.laz", concentric=1, d_phi=RAD2DEG*atan2(0.5,L3), 
+  p_transmit=0.95, p_inc=0, barns=1)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  flag_env=SCATTERED;
+%}
+
+COMPONENT Container_in=PowderN(radius=0.008/2+1e-4, thickness=1e-4, yheight=0.05,
+  reflections=container, concentric=1, d_phi=RAD2DEG*atan2(0.5,L3) ,
+  p_transmit=0.93, p_inc=0.05)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  flag_container=SCATTERED;
+%}
+
+COMPONENT Sample=Single_crystal(
+  xwidth = 0.01, yheight = 0.01, zdepth = 0.01, 
+  delta_d_d = 1e-4, mosaic = 5, 
+  ax = 3.8186, ay = 0, az = 0, bx = 0, by = 3.8843, bz = 0,
+  cx = 0, cy = 0, cz = 11.6777, reflections = crystal, p_transmit=-1)
+AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED)
+    flag_sample=SCATTERED;
+%}  
+
+COMPONENT Container_out=COPY(Container_in)(concentric=0)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED) flag_container=1;
+%}
+
+COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED) flag_env=1;
+%}
+
+COMPONENT PSD_Vivaldi = Monitor_nD(
+ xwidth= L3,
+ ymin = -0.25, ymax = 0.25,
+ options="theta limits=[-180 180], y, all bins=180, cylinder")
+WHEN (flag_container || flag_sample || flag_env)
+AT (0, 0, 0) RELATIVE SamplePos
+
+END 
+
+
+

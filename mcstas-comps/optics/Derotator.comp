@@ -1,0 +1,66 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Derotator
+*
+* %I
+*
+* Written by: Emmanuel Farhi
+* Date: June 20th 2013
+* Origin: <a href="http://www.ill.fr">ILL</a>
+*
+* The counterpart of the Rotator component.
+*
+* %Description
+* A component which stops the rotative frame set by the Rotator component.
+* Its position should better coincide with the Rotator instance.
+* Components preceding the Derotator are rotating, all following are steady.
+*
+* Example:
+*   R=Rotator(nu=14, phase=0)
+*   ...
+*   DR=Derotator(rotator=R)
+*   AT (0,0,0) RELATIVE R
+*
+* %Parameters
+* INPUT PARAMETERS:
+* rotator: [no quotes]  the name of the Rotator component used to initiate the rotation 
+*
+* OUTPUT PARAMETERS:
+* angle: [deg]          rotation angle
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Derotator
+DEFINITION PARAMETERS (rotator)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+TRACE
+%{
+double angle = MC_GETPAR(rotator, angle);
+
+  if (angle) { /* rotate back neutron w/r to monochromator */
+    /* approximation of rotating monochromator */
+    /* current coordinates of neutron in centered static frame */
+    Rotation R;
+    rot_set_rotation(R, 0, angle*DEG2RAD, 0); /* will rotate back neutron: positive side */
+    /* apply rotation to centered coordinates */
+    coords_get(rot_apply(R, coords_set(x,y,z)), &x, &y, &z);
+    /* rotate speed */
+    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+  }
+%}
+
+MCDISPLAY
+%{
+  
+%}
+
+END

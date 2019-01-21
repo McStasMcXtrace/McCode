@@ -1,0 +1,95 @@
+/*******************************************************************************
+* Instrument: FZJ_KWS2_Lens
+*
+* %Identification
+* Written by: Henrich Frielinghaus
+* Date: June 2010
+* Origin: FZ Juelich
+*
+* %INSTRUMENT_SITE: FZ_Juelich
+*
+* FZ Juelich KWS2 SANS, serving as test instrument for the Lens_simple component.
+*
+* %Description
+* This instrument is a test instrument for the Lens_simple component.
+*
+* Notice effect of gravitation on the final beam.
+*
+* %Example: lambda=20.15 Detector: detector_I=3.4633E+01
+*
+* %Parameters
+* lambda: [AA]   Mean wavelength of neutrons
+* dlambda: [AA]  Wavelength spread of neutrons (fwhm)
+* FLUX: [1]      Source flux normalization constant
+* NGblen: [1]    Defining source radius (is \sqrt(2)*NGblen)
+* Cblen: [m]     Dimension of rectangular guide
+* Clen: [m]      Distance source-guide
+* Dlen: [m]      Placement of final detector
+* Rlense: [m]    Radius of lens
+*
+* %Link
+* The Lens_simple component
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT FZJ_KWS2_Lens(lambda=20.15, dlambda=2.015, FLUX=1e8, NGblen=0.03, Cblen=0.005, Clen = 20.0, Dlen = 20.0, Rlense=0.025)
+
+TRACE
+
+
+COMPONENT origin = Arm()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  mcgravitation = 0;
+%}
+
+COMPONENT source = Source_simple(
+    radius = sqrt(2)*NGblen, dist = Clen, focus_xw = Cblen, focus_yh = Cblen,
+    lambda0 = lambda, dlambda = dlambda*1.5, flux = FLUX)
+  AT (0, 0, 0) RELATIVE origin
+
+COMPONENT guide = Guide(w1=Cblen, h1=Cblen, w2=Cblen, h2=Cblen, l=20.0,
+                        R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
+  AT (0, 0, Clen) RELATIVE source
+
+COMPONENT select= V_selector(xwidth=Cblen, yheight=Cblen, zdepth=0.30, radius=0.12,
+                             alpha=48.298, length=0.25, d=0.0004,
+                             nu=DEG2RAD*48.298/(V2Q*lambda*0.25),
+                             nslit=PI/fabs(PI*48.298/180.0*0.5*dlambda/lambda
+                                       - atan(0.5*Cblen/10.0) )
+                            )
+  AT (0,0, 20.151) RELATIVE guide
+
+
+/* Collimation */
+
+COMPONENT Cguide= Guide(w1=Cblen, h1=Cblen, w2=Cblen, h2=Cblen, l=40.0-Clen,
+                        R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
+  AT (0, 0, 0.151) RELATIVE select
+
+COMPONENT Capert= Slit(xmin=-0.5*Cblen,xmax=0.5*Cblen,ymin=-0.5*Cblen,ymax=0.5*Cblen)
+  AT (0,0,40.001-Clen) RELATIVE Cguide
+
+COMPONENT gr2 = Arm()
+  AT (0,0,40.002-Clen) RELATIVE Cguide
+EXTEND %{
+  mcgravitation = 1;
+%}
+
+COMPONENT Lense2= Lens_simple(Rc=0.02, Nl=3, parab=1.1, radius=Rlense, d0=0.002)
+  AT (0,0,40.002) RELATIVE Cguide
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 384, filename = "PSD.dat", xmin = -0.03,
+    xmax = 0.03, ymin = -0.15, ymax = 0.03)
+  AT (0, 0, 20.0+Dlen+Clen) RELATIVE Cguide
+
+COMPONENT gr3 = Arm()
+  AT (0, 0, 0.002) RELATIVE detector
+EXTEND %{
+  mcgravitation = 0;
+%}
+
+FINALLY
+%{
+%}
+END

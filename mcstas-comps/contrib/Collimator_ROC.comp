@@ -1,0 +1,127 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Collimator_ROC
+*
+* %IDENTIFICATION
+*
+* Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
+* Date: 15 May 2000
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
+* Modified by: J.Ollivier Nov 2001: cleaned the code
+*
+* Radial Oscillationg Collimator (ROC)
+*
+* %DESCRIPTION
+*
+* This is an implementation of an Ideal radial oscillating collimator,
+* which is usually placed between a polycrystalline sample and a linear
+* curved position sensitive detector on a 2-axis diffractometer like D20.
+* The transfer function has been implemented analytically, as this is
+* much more efficient than doing Monte-Caqrlo (MC) choices and to absorb
+* many neutrons on the absorbing blades. The function is basically triangular
+* (except for rather 'exotic' focuss apertures) and depends on the distance
+* from the projection of the focus centre to the plane perpendicular to the
+* collimator planes to the intersection of the same projection of the velocity
+* vector of the neutron with a line that is perpendicular to it and containing
+* the same projection of the focus centre. The oscillation is assumed to be
+* absolutely regular and so shading each angle the same way. All neutrons not
+* hitting the collimator core will be absorbed.
+*
+* Example: Collimator_ROC(
+*     ROC_pitch=5, ROC_ri=0.15, ROC_ro=0.3, ROC_h=0.15,
+*     ROC_ttmin=-25, ROC_ttmax=135, ROC_sign=-1)
+*
+* %PARAMETERS
+*
+* INPUT PARAMETERS:
+*
+* ROC_pitch: [deg]  Angular pitch between the absorbing blades
+* ROC_ri: [m]       Inner radius of the collimator
+* ROC_ro: [m]       Outer radius of the collimator
+* ROC_h: [m]        Height of the collimator
+* ROC_ttmin: [deg]  Lower scattering angle limit
+* ROC_ttmax: [deg]  Higher scattering angle limit
+* ROC_sign: [1]     Chirality/takeoff sign
+*
+* %LINKS
+* <a href="http://www.ill.fr/d20/">D20 diffractometer at the ILL</a>
+*
+* %END
+*
+*******************************************************************************/
+
+
+DEFINE COMPONENT Collimator_ROC
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (ROC_pitch=1, ROC_ri=0.4, ROC_ro=1.2, ROC_h=0.153,
+ROC_ttmin=0, ROC_ttmax=100, ROC_sign=1)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+INITIALIZE
+%{
+if (ROC_pitch <= 0 || ROC_ri > ROC_ro || ROC_ro <= 0
+|| ROC_h <=0 || ROC_ttmin > ROC_ttmax)
+  fprintf(stderr,"Collimator_ROC: error: %s: Invalid geometrical parameters.\n", NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+  double ROC_angle,x0,z0,x1,z1,a,r,xp,zp;
+  double d,dt,pi,t0,t1,t2,t3,twotheta;
+
+  if (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, ROC_ri, ROC_h) && t1 > 0)
+  {
+    int MyAbsorb = 0;
+
+    if (t0 < 0) t0 = t1;
+    twotheta = -atan2(x+vx*t0,z+vz*t0);
+    if (( (double)ROC_sign*twotheta*RAD2DEG >= ROC_ttmin ) && ( (double)ROC_sign*twotheta*RAD2DEG <= ROC_ttmax ))
+    {
+      if (cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, ROC_ro, ROC_h) && t3 >0)
+      {
+        dt=(x*vz-z*vx)/(vx*vx+vz*vz);
+        xp=vz*dt;
+        zp=-vx*dt;
+        d=sqrt(xp*xp+zp*zp);
+        pi=1.0-RAD2DEG*fabs(asin(d/ROC_ro)-asin(d/ROC_ri))/ROC_pitch;
+        if (pi>0)
+           p*=pi;
+        else MyAbsorb = 1;
+      }
+      else MyAbsorb = 1;
+    }
+    else MyAbsorb = 1;
+    if (MyAbsorb)
+    {
+      PROP_DT(t0);
+      ABSORB;
+    }
+  }
+  else ABSORB;
+
+%}
+MCDISPLAY
+%{
+  double ROC_angle,x0,z0,x1,z1;
+
+  
+  for (ROC_angle=ROC_ttmin; ROC_angle <= ROC_ttmax; ROC_angle += ROC_pitch)
+  {
+   x0=ROC_ri*sin(ROC_angle*DEG2RAD);
+   z0=ROC_ri*cos(ROC_angle*DEG2RAD);
+   x1=x0/ROC_ri*ROC_ro;
+   z1=z0/ROC_ri*ROC_ro;
+   multiline(5,
+    x0,  ROC_h/2, z0,
+    x0, -ROC_h/2, z0,
+    x1, -ROC_h/2, z1,
+    x1,  ROC_h/2, z1,
+    x0,  ROC_h/2, z0);
+  }
+%}
+END

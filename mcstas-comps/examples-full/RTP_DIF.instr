@@ -1,0 +1,188 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: RTP_DIF
+*
+* %Identification
+* Written by: E. Farhi and Megat Harun Al-Rashid
+* Date: June 2014
+* Origin: ILL/RTP
+* %INSTRUMENT_SITE: TRIGA
+*
+* A powder diffractometer at Reactor TRIGA PUSPATI (Malaysia)
+*
+* %Description
+* 
+*
+* Example: mcrun RTP_DIF.instr lambda=2.36 Detector: det_I=170
+*
+* %Parameters
+* lambda: [Angs]       Monochromator selected wavelength
+* DM: [Angs]           d-spacing for the monochromator reflection
+* Mono_tilt: [deg]     Tilt angle magnitude for the inner/outer mono slabs
+* powder: [str]        Filename of the powder sample
+* det_rotation: [deg]  Rotation of the portable detector
+*
+* %Link
+* <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>
+* %Link
+* M. Sufi et al., J. AppL Cryst. (1997). 30, 884-888 [doi:10.1107/S0021889897001738]
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT RTP_DIF(lambda=2.36, DM=3.355, Mono_tilt=0, string powder="Na2Ca3Al2F14.laz", det_rotation=45)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  double mono_index=0;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  printf("%s: Monochromator take-off angle=%g [deg]\n", 
+    NAME_CURRENT_COMP, 2*asin(lambda/2/DM)*RAD2DEG);
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* the source is focused in wavelength to provide 5 Angs neutrons */
+/* to study the Be filter, use white beam e.g. dlambda = 4.5      */
+COMPONENT source = Source_gen(
+    radius = .154/2,
+    dist = 1.16+1.50, focus_xw = .11, focus_yh = .03, lambda0 = lambda,
+    dlambda = .2, I1 = 2.79e12/4/PI, T1 = 300)
+  AT (0, 0, 0) RELATIVE Origin
+  
+COMPONENT CoarseCollimator1 = Guide(w1=.154, h1=.154, l=1.16125,m=0)
+  AT (0, 0, .01) RELATIVE PREVIOUS
+  
+COMPONENT CoarseCollimator2 = Guide(w1=.11, h1=.11, l=1.5,m=0)
+  AT (0, 0, 1.16125+0.003) RELATIVE PREVIOUS
+
+/* a slit that also detects wavelength */
+COMPONENT lmon = Monitor_nD(
+  xwidth=.11, options="slit disk, auto wavelength", bins=50)
+  AT (0, 0, 1.5+0.01) RELATIVE PREVIOUS
+
+/* Be filter ---------------------------------------------------------------- */
+COMPONENT Be_Position = Arm()
+  AT (0, 0, .147+.15/2) RELATIVE PREVIOUS
+
+/* monochromator ------------------------------------------------------------ */
+SPLIT COMPONENT mono_cradle = Arm()
+  AT (0, 0, .145+.15/2+.176) RELATIVE Be_Position
+  
+COMPONENT mono_rotation = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, -asin(lambda/2/DM)*RAD2DEG, 0) RELATIVE mono_cradle
+  EXTEND %{
+    mono_index=0;
+  %}
+
+COMPONENT mono1 = Monochromator_curved(
+    width=.11, height=.03, NH=1,NV=1, RH=0, RV=0,
+    DM=DM, mosaich=48, mosaicv=48,
+    reflect="HOPG.rfl",transmit="HOPG.trm")
+  AT (-.01, 0, 0) RELATIVE mono_rotation
+  ROTATED (0, Mono_tilt, 0) RELATIVE mono_rotation
+  EXTEND %{
+    if (SCATTERED) mono_index=1;
+  %}
+
+COMPONENT mono2 = COPY(mono1)
+  AT (0, 0, 0) RELATIVE mono_rotation
+  ROTATED (0, 0, 0) RELATIVE mono_rotation
+  EXTEND %{
+    if (SCATTERED) mono_index=2;
+  %}
+  
+COMPONENT mono3 = COPY(mono1)
+  AT (0.01, 0, 0) RELATIVE mono_rotation
+  ROTATED (0, -Mono_tilt, 0) RELATIVE mono_rotation
+  EXTEND %{
+    if (SCATTERED) mono_index=3;
+  %}
+  
+COMPONENT mono_takeoff = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, -2*asin(lambda/2/DM)*RAD2DEG, 0) RELATIVE mono_cradle
+
+COMPONENT psd_transmit = Monitor_nD(xwidth=.12, yheight=.12, options="x y", bins=50)
+  AT (0, 0, 0.25) RELATIVE mono_cradle
+  GROUP mono_rt
+
+/* primary collimator (flight path) 3.8 m ----------------------------------- */
+COMPONENT psd_reflect = Monitor_nD(xwidth=.12, yheight=.12, options="x y", bins=50)
+  AT (0, 0, 0.574) RELATIVE mono_takeoff
+  GROUP mono_rt
+
+COMPONENT lmon_reflect = Monitor_nD(
+  xwidth=.02, yheight=.02, user1=mono_index,
+  options="disk slit, auto wavelength, user1 limits=[0 4]", bins=50)
+  AT (0, 0, 0.575) RELATIVE mono_takeoff
+ 
+COMPONENT sample_psd = Monitor_nD(
+  xwidth=.02, yheight=.02, options="disk slit, x y", bins=50)
+  AT (0, 0, 0.575+.50) RELATIVE mono_takeoff
+
+/* sample ------------------------------------------------------------------- */
+/* from JAC 1997: flux at sample = 3900 n/s/cm2 */
+SPLIT 100 COMPONENT sample_position = Arm()
+  AT (0, 0, .575+.5+.01) RELATIVE mono_takeoff
+  
+COMPONENT container_in = PowderN(
+  radius=0.01/2, yheight=0.04, thickness=-50e-6,
+  reflections="V.laz", concentric=1, d_phi=50, p_transmit=.95)
+  AT (0, 0, 0) RELATIVE sample_position
+
+COMPONENT sample = PowderN(
+  radius=0.01/2, yheight=0.04, reflections=powder, d_phi=atan2(0.5,1)*RAD2DEG)
+  AT (0, 0, 0) RELATIVE sample_position
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT container_out = COPY(container_in)(concentric=0)
+  AT (0, 0, 0) RELATIVE sample_position
+  
+COMPONENT sample_out = Arm()
+  AT (0,0,0) RELATIVE sample_position
+  ROTATED (0,det_rotation,0) RELATIVE sample_position
+  
+COMPONENT det_big = Monitor_nD( options="banana theta limits=[-150 150] bins=300, y bins=64",
+  radius=1, yheight=.5)
+  AT (0, 0, 0) RELATIVE sample_position
+
+/* secondary flight path (detector tube) 4m --------------------------------- */
+COMPONENT det = Monitor_nD(xwidth=.5, yheight=.0254, bins=25, options="x")
+  AT (0, 0, 1) RELATIVE sample_out
+
+  
+COMPONENT reactor = Shape(radius=.7/2, yheight=.4)
+  AT (0,0,-.35) RELATIVE Origin
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+

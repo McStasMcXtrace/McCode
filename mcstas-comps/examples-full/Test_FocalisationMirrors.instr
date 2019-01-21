@@ -1,0 +1,120 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Focalisation device
+*
+* %Identification
+* Written by: <a href="mailto:desert@drecam.cea.fr">Sylvain Desert</a>
+* Date: 2007.
+* Origin: <a href="http://www-llb.cea.fr/">LLB</a>
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Test instrument for neutron focalisation with a set of supermirrors.
+* No guide / velocity selector
+* One parabolic SM converges the incoming beam to its focal point, then one
+* elliptic SM (with primary focal point at same location as parabolic SM focal point)
+* images the focal point onto the detector.
+*
+* %Description
+* Test instrument for the MirrorElli and MirrorPara components
+*
+* %Example: G=1 Detector: monPSD_I=2.50457e-16
+*
+* %Parameters
+* Qmin: [AA^-1]      Minimum momentum transfer on the detector
+* G: [1]             Ratio of the mirror focal length = increase in accepted divergence angle
+* H: [m]             Height of mirrors
+* F: [m]             Parabolic focal
+* DET: [m]           Distance between the two elliptic focal points
+* lambda: [AA]       Mean wavelength of neutrons
+* divergence: [deg]  Source divergence
+* BeamWidth: [m]     Length of the source to focalize
+* TetaMin: [deg]     Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron)
+*
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_FocalisationMirrors(Qmin=.0001,G=1,H=.0001,F=.00066,DET=8.2,lambda=14,divergence=.1,BeamWidth=.05,TetaMin=3)
+
+DECLARE %{
+  float T;       /* (Tan(2*Theta))^2 */
+  float x1b;
+  float y1b;
+  float x2b;
+  float y2b;
+  float xf;
+  float x1h;
+  float y1h;
+  float x2h;
+  float y2h;
+  float Ellia;	 /* Major axis of the ellipse */
+  float Ellib;	 /* Minor axis of the ellipse */
+  float BS;	 /* BeamStop size on the detector */
+  float rayon1;	 /* Spatial filter radius */
+  float A;
+  float Delta;
+%}
+
+INITIALIZE %{
+  T=(tan(TetaMin*DEG2RAD))*(tan(TetaMin*DEG2RAD));
+  x1b=.5*(2*F+4*F/T+sqrt((2*F+4*F/T)*(2*F+4*F/T)-4*F*F));
+  y1b=sqrt(4*F*x1b);
+  y1h=y1b+BeamWidth;
+  x1h=y1h*y1h/4/F;
+  xf=(y1h*y1h-4*F*F)/4/F;
+  Ellia=DET/2+G*F;
+  Ellib=sqrt(Ellia*Ellia-(DET*DET/4));
+  A=y1b/(x1b-F);
+  Delta=(DET/Ellia/Ellia-2*A*A*F/Ellib/Ellib)*(DET/Ellia/Ellia-2*A*A*F/Ellib/Ellib)-4*(1/Ellia/Ellia+A*A/Ellib/Ellib)*(DET*DET/4/Ellia/Ellia+A*A*F*F/Ellib/Ellib-1);
+  x2b=(2*A*A*F/Ellib/Ellib-DET/Ellia/Ellia-sqrt(Delta))/2/(1/Ellia/Ellia+A*A/Ellib/Ellib);
+  A=y1h/(x1h-F);
+  Delta=(DET/Ellia/Ellia-2*A*A*F/Ellib/Ellib)*(DET/Ellia/Ellia-2*A*A*F/Ellib/Ellib)-4*(1/Ellia/Ellia+A*A/Ellib/Ellib)*(DET*DET/4/Ellia/Ellia+A*A*F*F/Ellib/Ellib-1);
+  x2h=(2*A*A*F/Ellib/Ellib-DET/Ellia/Ellia-sqrt(Delta))/2/(1/Ellia/Ellia+A*A/Ellib/Ellib);
+  y2b=Ellib*sqrt((1-(x2b+Ellia)*(x2b+Ellia)/Ellia/Ellia));
+  y2h=Ellib*sqrt((1-(x2h+Ellia)*(x2h+Ellia)/Ellia/Ellia));
+  BS=Qmin*lambda/2/PI*(DET+x2h);
+  rayon1=BS*4*G*F/DET/T;
+%}
+
+TRACE
+
+COMPONENT base=Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source1 = Source_gen(focus_aw = divergence , focus_ah = .0001, lambda0=lambda,
+			       dlambda=0.01, yheight = H/1000, xwidth = BeamWidth)
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT mirpara = Mirror_Parabolic(reflect="supermirror_m3.rfl", xwidth = BeamWidth, xshift=y1b,
+				  yheight = H*2, focus = F)
+AT (-(y1b+BeamWidth/2), 0,0.1001) RELATIVE base
+
+COMPONENT filter = Slit(xmin = 0, xmax = .1, yheight = 2*H)
+AT ((rayon1+y1h)/(x1h-F)*(x1b-x1h)+y1h,0, x1h-x1b) RELATIVE PREVIOUS
+
+COMPONENT spatialfilter = Slit(radius=rayon1)
+AT (0, 0, xf) RELATIVE mirpara
+
+COMPONENT mirelli = Mirror_Elliptic(reflect="supermirror_m3.rfl",focus= F*G, interfocus = DET, yheight = H*2,
+				  zmin=-x2b-DET/2, zmax=-x2h-DET/2)
+AT (0, 0, DET/2-G*F+x1h) RELATIVE mirpara
+
+COMPONENT monPSD = PSD_monitor(nx = 100, ny = 1, filename = "det.txt", xwidth = 3*BS,
+			       yheight = .01)
+AT (0, 0, DET/2) RELATIVE mirelli
+
+FINALLY
+%{
+  printf("%s: end of simulation\n", NAME_CURRENT_COMP);
+  printf("T=%f \n X1B=%f et Y1B=%f \n X1H=%f et Y1H=%f \n a=%f et b=%f \n X2H=%f et X2B=%f \n Y2H=%f et Y2B=%f\n\n",T,x1b,y1b,x1h,y1h,Ellia,Ellib,x2h,x2b,y2h,y2b);
+  printf(" Delta=%f\n rayon1=%f\n",Delta,rayon1);
+  printf(" Zmin=%f\n Zmax=%f\n",-x2b+x1h,-x2h+x1h);
+  printf(" BS=%f\n xF=%f\n",BS,xf);
+%}
+
+END

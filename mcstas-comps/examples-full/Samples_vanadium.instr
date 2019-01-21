@@ -1,0 +1,94 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Samples_vanadium
+*
+* %Identification
+* Written by: Kristian Nielsen and Kim Lefmann
+* Date: 1998
+* Origin: Risoe
+* %INSTRUMENT_SITE: Tests_samples
+*
+* A test instrument using a vanadium cylinder
+*
+* %Description
+* This instrument shows the vanadium sample scattering anisotropy.
+* This is an effect of attenuation of the beam in the cylindrical sample.
+*
+* %Example: ROT=0 Detector: PSD_4pi_I=7.97023e-05
+*
+* %Parameters
+* ROT: [deg]  Rotation angle of the PSD monitor
+*
+* %Link
+* The McStas User manual
+* The McStas tutorial
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Samples_vanadium(ROT=0)
+
+DECLARE
+%{
+  double coll_div = 60;
+%}
+
+TRACE
+
+COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
+
+/* Next, we need some neutrons. Let's place a neutron  */
+/* source. Refer to documentation of Source_simple to  */
+/* understand the different input parameters.          */
+/* The source component is placed RELATIVE to the arm  */
+/* component, meaning that modifying the position or   */
+/* orientation of the arm will also affect the source  */
+/* component (and other components after that one...)  */
+COMPONENT source = Source_simple(radius = 0.015, dist = 1,
+  focus_xw=0.024, focus_yh=0.015, E0=5, dE=0.2)
+  AT (0,0,0) RELATIVE arm
+
+/* Here we have a soller - placed to improve beam      */
+/* divergence.                                         */
+/* The component is placed at a distance RELATIVE to   */
+/* a previous component...                             */
+COMPONENT collimator = Collimator_linear(length = 0.2,
+  divergence = coll_div, xwidth = 0.04, yheight=0.06)
+  AT (0, 0, 0.4) RELATIVE arm
+
+/* We also need something to 'shoot at' - here a sample*/
+/* made from vanadium, an isotropic scatterer. Options */
+/* are available to restrict the solid angle in which  */
+/* neutrons are emitted (no need to simulate neutrons  */
+/* that we know for sure will not reach the rest of    */
+/* instrument).                                        */
+/* Other options for smart targeting are available -   */
+/* refer to component documentation for info.          */
+COMPONENT target = V_sample(thickness = 0.004, radius = 0.012,
+  yheight = 0.015, focus_r = 0, pack = 1,
+  target_x = 0, target_y = 0, target_z = 1)
+  AT (0,0,1) RELATIVE arm
+
+/* Here, a secondary arm - or reference point, placed  */
+/* on the sample position. The ROT parameter above     */
+/* defines rotation of this arm (and components        */
+/* relative to the arm)                                */
+COMPONENT arm2 = Arm()
+  AT (0,0,0) RELATIVE target
+  ROTATED (0,ROT,0) relative arm
+
+/* For data output, let us place a detector. This       */
+/* detector is not very realistic, since it has a spher-*/
+/* ical shape with a 10 m radius, but has the advantage */
+/* that EVERYTHING emitted from the sample will be      */
+/* picked up. Notice that this component changes        */
+/* orientation with the ROT input parameter of the      */
+/* instrument.                                          */
+COMPONENT PSD_4pi = PSD_monitor_4PI(radius=10, nx=101, ny=51,
+  filename="vanadium.psd")
+  AT (0,0,0) RELATIVE arm2
+END

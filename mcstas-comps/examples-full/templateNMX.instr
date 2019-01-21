@@ -1,0 +1,57 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: templateNMX
+*
+* %Identification
+* Written by: K. Nielsen
+* Date: June 2nd, 2010
+* Origin: ILL
+* Modified by: EF, PW
+* %INSTRUMENT_SITE: Templates
+*
+* A simple Laue NMX diffractometer for macromolecules, adapted from the classic
+* templateLaue instrument.
+*
+* %Description
+* A single crystal sample is illuminated with a white cold beam.
+* Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
+*
+* Example: templateNMX REPS=50 reflections=Rubredoxin.lau Detector: det_I=210.788
+* Example: templateNMX REPS=700 reflections=PPase_D_P1.lau Detector: det_I=29.6512
+*
+* %Parameters
+* REPS: []        
+* reflections: [] 
+*
+* %End
+*******************************************************************************/
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT templateNMX(REPS=43, string reflections="Rubredoxin.lau")
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+  radius=0.02, focus_xw=0.001, focus_yh=0.001,
+  lambda0=7, dlambda=5, flux=1e12)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT slit = Slit(
+  xwidth=0.001, yheight=0.001)
+AT (0,0,5) RELATIVE source
+
+SPLIT REPS COMPONENT sample = Single_crystal(
+          xwidth=0.001, yheight=0.001, zdepth=0.001, mosaic=1e-4,
+          reflections=reflections)
+AT (0,0,0.10) RELATIVE slit
+EXTEND %{
+  if (!SCATTERED) ABSORB; /* perfect beam stop */
+%}
+
+COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
+AT (0,0,0) RELATIVE sample
+
+END

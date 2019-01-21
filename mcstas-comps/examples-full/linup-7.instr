@@ -1,0 +1,245 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: TAS1_Powder
+*
+* %Identification
+* Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
+* Date: 1998
+* Origin: Risoe
+* %INSTRUMENT_SITE: Risoe
+*
+* The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
+* Laboratory used with a powder sample.
+*
+* %Description
+* This instrument is the conventional cold-source triple-axis spectrometer TAS1
+* at Risoe National Laboratory. It does not exist anymore, but was used as the
+* first detailed work performed with the McStas package.
+* The sample is a powder and the analyzer is a single plate.
+*
+* %Example: PHM=-37.077 Detector: sng_I=2.26723e-07
+*
+* %Parameters
+* PHM: [deg]   Monochromator rotation angle, aka A1
+* TTM: [deg]   Monochromator take-off angle, aka A2
+* TT: [deg]    Take-off angle at the sample position, aka A4
+* OMA: [deg]   Analyzer rotation angle, aka A5
+* TTA: [deg]   Take-off angle at the analyzer position, aka A6
+* C1: [min]    Collimator 1 aperture (mono-sample arm)
+* OMC1: [deg]  Tilt angle of the Collimator 1
+* C2: [min]    Collimator 2 aperture (sample-ana arm)
+* C3: [min]    Collimator 3 aperture (ana-detector arm)
+*
+* %Link
+* The McStas User manual
+* A. Abrahamsen, N. B. Christensen, and E. Lauridsen. McStas simulations of the TAS1 spectrometer. Student's report, Niels Bohr Institute, University of Copenhagen, 1998.
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT TAS1_Powder(PHM=-37.077,TTM=-74,TT=33.52, TTA=0,C1=30,OMC1=5.5,C2=28,C3=67, OMA=-17.45)
+
+DECLARE
+%{
+/* Mosaicity used on monochromator and analysator */
+double tas1_mono_mosaic = 45; /* Measurements indicate its really 45' */
+double tas1_ana_mosaic = 45;  /* Measurements indicate its really 45' */
+/* Q vector for bragg scattering with monochromator and analysator */
+double tas1_mono_q = 2*1.87325; /* Fake 2nd order scattering for 20meV */
+double tas1_mono_r0 = 0.6;
+double tas1_ana_q = 1.87325;  /* 20meV */
+double tas1_ana_r0 = 0.6;
+
+double OMC1_d;
+
+double mpos0, mpos1, mpos2, mpos3, mpos4, mpos5, mpos6, mpos7;
+double mrot0, mrot1, mrot2, mrot3, mrot4, mrot5, mrot6, mrot7;
+%}
+
+INITIALIZE
+%{
+  double d = 0.0125;    /* 12.5 mm between slab centers. */
+  double phi = 0.5443;    /* Rotation between adjacent slabs. */
+  mpos0 = -3.5*d; mrot0 = -3.5*phi;
+  mpos1 = -2.5*d; mrot1 = -2.5*phi;
+  mpos2 = -1.5*d; mrot2 = -1.5*phi;
+  mpos3 = -0.5*d; mrot3 = -0.5*phi;
+  mpos4 =  0.5*d; mrot4 =  0.5*phi;
+  mpos5 =  1.5*d; mrot5 =  1.5*phi;
+  mpos6 =  2.5*d; mrot6 =  2.5*phi;
+  mpos7 =  3.5*d; mrot7 =  3.5*phi;
+
+  OMC1_d = OMC1/60.0;
+%}
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+  radius = 0.060,
+  dist = 3.288,
+  focus_xw = 0.042, focus_yh = 0.082,
+  E0 = 20,     /* 20 meV */
+  dE = 0.82    /* Sufficient for TAS1 geometry */
+)
+  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT slit1 = Slit(
+  xmin=-0.020, xmax=0.065,
+  ymin = -0.075, ymax = 0.075)
+  AT (0, 0, 1.1215) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT slit2 = Slit(
+  xmin = -0.020, xmax = 0.020,
+  ymin = -0.040, ymax = 0.040)
+  AT (0,0,1.900) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT slit3 = Slit(
+  xmin = -0.021, xmax = 0.021,
+  ymin = -0.041, ymax = 0.041)
+  AT (0,0,3.288) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT focus_mono = Arm()
+  AT (0, 0, 3.56) RELATIVE a1 ROTATED (0, PHM, 0) RELATIVE a1
+
+COMPONENT m0 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos0, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot0) RELATIVE focus_mono
+
+COMPONENT m1 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos1, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot1) RELATIVE focus_mono
+
+COMPONENT m2 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos2, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot2) RELATIVE focus_mono
+
+COMPONENT m3 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos3, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot3) RELATIVE focus_mono
+
+COMPONENT m4 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos4, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot4) RELATIVE focus_mono
+
+COMPONENT m5 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos5, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot5) RELATIVE focus_mono
+
+COMPONENT m6 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos6, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot6) RELATIVE focus_mono
+
+COMPONENT m7 = Monochromator_flat(
+  zmin=-0.0375,zmax=0.0375,ymin=-0.006,ymax=0.006,
+  mosaich=tas1_mono_mosaic,mosaicv=tas1_mono_mosaic,
+  r0=tas1_mono_r0, Q=tas1_mono_q)
+  AT (0, mpos7, 0) RELATIVE focus_mono
+  ROTATED (0, 0, mrot7) RELATIVE focus_mono
+
+COMPONENT a2 = Arm()
+  AT (0,0,0) RELATIVE focus_mono ROTATED (0, TTM, 0) RELATIVE a1
+
+COMPONENT slitMS1 = Slit(
+  xmin = -0.0105, xmax = 0.0105, ymin = -0.035, ymax = 0.035)
+  AT (0,0,0.565) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT slitMS2 = Slit(
+  xmin = -0.0105, xmax = 0.0105, ymin = -0.035, ymax = 0.035)
+  AT (0,0,0.855) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT c1 = Collimator_linear(
+  xmin = -0.02, xmax = 0.02, ymin = -0.0375, ymax = 0.0375,
+  length = 0.250, divergence = C1)
+  AT (0, 0, 0.87) RELATIVE a2 ROTATED (0,OMC1_d,0) RELATIVE a2
+
+COMPONENT slitMS3 = Slit(radius = 0.025)
+  AT (0,0,1.130) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT slitMS4 = Slit(radius = 0.025)
+  AT (0,0,1.180) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT slitMS5 = Slit(radius = 0.0275)
+  AT (0,0,1.230) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT mon = Monitor(
+  xmin = -0.025, xmax = 0.025, ymin = -0.0375, ymax = 0.0375)
+  AT (0, 0, 1.280) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT emon1 = E_monitor(
+  xmin = -0.01, xmax = 0.01, ymin = -0.1, ymax = 0.1,
+  Emin = 19.25, Emax = 20.75, nE = 35,
+  filename = "linup_7_1.vmon")
+  AT(0, 0, 1.5) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+SPLIT COMPONENT sample = Powder1(
+  radius = 0.007,
+  yheight = 0.015,
+  q = 1.8049,
+  d_phi = 4,
+  pack = 1, j = 6, DW = 1,
+  F2 = 56.8,
+  Vc = 85.0054, sigma_abs = 0.463)
+  AT (0, 0, 1.565) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
+
+COMPONENT a3 = Arm()
+  AT (0,0,0) RELATIVE sample ROTATED (0, TT, 0) RELATIVE a2
+
+COMPONENT c2 = Collimator_linear(
+  xmin = -0.02, xmax = 0.02, ymin = -0.0315, ymax = 0.0315,
+  length = 0.300, divergence = C2)
+  AT (0, 0, 0.370) RELATIVE a3 ROTATED (0,0,0) RELATIVE a3
+
+COMPONENT ana = Monochromator_flat(
+  zmin = -0.0375, zmax = 0.0375,
+  ymin = -0.024, ymax = 0.024,
+  mosaich = tas1_ana_mosaic, mosaicv = tas1_ana_mosaic,
+  r0 = tas1_ana_r0, Q = tas1_ana_q)
+  AT (0, 0, 0.770) RELATIVE a3 ROTATED (0, OMA, 0) RELATIVE a3
+
+COMPONENT a4 = Arm()
+  AT (0, 0, 0) RELATIVE ana ROTATED (0, TTA, 0) RELATIVE a3
+
+COMPONENT c3 = Collimator_linear(
+  xmin = -0.02, xmax = 0.02, ymin = -0.05, ymax = 0.05,
+  length = 0.270, divergence = C3)
+  AT (0,0,0.104) RELATIVE a4 ROTATED (0,0,0) RELATIVE a4
+
+COMPONENT sng = Monitor(
+  xmin = -0.01, xmax = 0.01, ymin = -0.045, ymax = 0.045)
+  AT(0, 0, 0.43) RELATIVE a4 ROTATED (0,0,0) RELATIVE a4
+
+COMPONENT emon2 = E_monitor(
+  xmin = -0.0125, xmax = 0.0125, ymin = -0.05, ymax = 0.05,
+  Emin = 19.25, Emax = 20.75, nE = 35,
+  filename = "linup_7_2.vmon")
+  AT(0, 0, 0.430001) RELATIVE a4 ROTATED (0,0,0) RELATIVE a4
+
+END

@@ -1,0 +1,91 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Written by: Erik B Knudsen
+* Date: May 2017
+* Version: $Revision$
+* Release: McStas 2.4
+* Origin: DTU Physics
+*
+* Component: Pol_RFSF_ideal
+*
+*
+* %I
+*
+* Ideal model of a spin flipper
+*
+* %D
+* This component simply mirrors the polarization vector of the neutron
+* ray in the plane through (0,0,0) with normal nx,ny,nz.
+* The flipper is surrounded by a perfectly absorbing box. Neutron rays not hitting
+* the box are left untouched.
+*
+* %P
+* Input parameters:
+* nx:    [ ] x-component of the normal vector of the flipping plane.
+* ny:    [ ] y-component of the normal vector of the flipping plane.
+* nz:    [ ] z-component of the normal vector of the flipping plane.
+* xwidth: [m] width of the spin flipper.
+* yheight: [m] height of the spin flipper.
+* zdepth: [m] length of the spin flipper.
+*
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_SF_ideal
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nx=0, ny=1, nz=0, xwidth=0.1, yheight=0.1, zdepth=0.1)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+TRACE
+%{
+    int hit;
+    double t0,t1;
+    hit=box_intersect(&t0,&t1, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
+    if(hit){
+        PROP_DT(t0);
+        if(fabs(z- -zdepth*0.5)>DBL_EPSILON){
+            /*neutron must have hit the side walls*/
+            ABSORB;
+        }
+        /*move to center of box and flip*/
+        PROP_Z0;
+        SCATTER;
+        double s=scalar_prod(sx,sy,sz,nx,ny,nz);
+        if (s!=0){
+            sx-=2*s*nx;
+            sy-=2*s*ny;
+            sz-=2*s*nz;
+        }
+        PROP_DT((t1-t0)/2);/*propagate the remaining distance to the box exit*/
+        if(fabs(z-zdepth*0.5)>DBL_EPSILON){
+            ABSORB;
+        }
+    }
+
+
+%}
+
+MCDISPLAY
+%{
+    double dx=xwidth/16;
+    double dy=yheight/8;
+  
+  box(0,0,0,xwidth,yheight,zdepth);
+  
+  line(dx,-dy,0,dx,-dy+yheight/2.0,0);
+  line(-dx,dy,0,-dx,dy-yheight/2.0,0);
+  line(dx,-dy+yheight/2.0,0, dx+xwidth/16,-dy+yheight-yheight/16,0);
+  line(dx,-dy+yheight/2.0,0, dx-xwidth/16,-dy+yheight-yheight/16,0);
+  
+  line(-dx,dy-yheight/2.0,0, -dx+xwidth/16,dy-yheight+yheight/16,0);
+  line(-dx,dy-yheight/2.0,0, -dx-xwidth/16,dy-yheight+yheight/16,0);
+
+%}
+
+END

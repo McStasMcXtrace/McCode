@@ -1,0 +1,269 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: ILL_Lagrange
+*
+* %Identification
+* Written by: E. Farhi
+* Date: 13 Apr 2006
+* Origin: LLB/ILL
+* %INSTRUMENT_SITE: ILL
+*
+* IN1-Lagrange hot neutrons spectrometer for liquids at the ILL.
+*
+* %Description
+* IN1-Lagrange hot neutrons spectrometer for liquids at the ILL.
+*
+* The dedicated liquid and amorphous instrument Lagrange is a spectrometer with 
+* constant final neutron energy, and variable incoming neutron energy.
+* The analyser is a focusing barrel covered with PG analyser, all focusing to
+* the detector. The flux is thus very high, and the resolution is that given
+* buy the PG crystal mocaicity.
+*
+* The monochromator take-off angle is 2Theta_M ~ 20-25 deg, variable. The available 
+* monochromators are all vertically focusing, Cu (200) for 0.7 Angs, Cu (220) 
+* for 0.5 Angs.
+*
+* Cu       002 DM=1.807 AA
+* Cu       220 DM=1.278 AA
+* PG       002 DM=3.355 AA
+*--------------------------
+* %Example: lambda=0.897 Detector: Detector_I=21.7527
+*
+* %Parameters
+* lambda: [Angs]  Wavelength at monochromator
+* DM: [Angs]      d-spacing of monochromator
+* RV: [m]         Monochromator vertical curvature, 0=flat, -1=automatic
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* coh: [str]      File name for sample coherent scattering contribution
+* inc: [str]      File name for sample incoherent scattering contribution
+* verbose: [1]    Print spectrometer configuration. 0 to be quiet
+*
+* %Link
+* The <a href="http://www.ill.eu/d4">D4 diffractometer</a> at the ILL
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_Lagrange(lambda=0.897, DM = 1.807, RV = -1, string coh = "Rb_liq_coh.sqw", string inc = "Rb_liq_inc.sqw", L1 = 6.35, L2 = 2.55, L3=0.901, verbose=1)
+
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  double A1,A5; /* rotation of monok and analyser */
+  double RVA;   /* focusing of analyser */
+  double RotateNeutron=30; /* the angle to rotate neutron so that neutrons go to the analyser */
+int flag_env=0;
+%}
+
+INITIALIZE
+%{
+  double L;
+  double KI, Vi, EI;
+  double KF, Vf, EF, DA, lambdaF;
+
+  /* incoming beam */
+  KI = (2*PI)/lambda;
+  A1 =asin(lambda/(2*DM))*RAD2DEG; 
+  A1 *= -1;
+  L = 1/(1/L1+1/L2);
+  if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
+  Vi = K2V*fabs(KI);
+  EI = VS2E*Vi*Vi;
+
+  /* analyser beam */
+  DA = 3.355; /* PG002 d-spacing */
+  EF = 4.5;
+  Vf = sqrt(EF/VS2E);
+  KF = Vf*V2K;
+  lambdaF = (2*PI)/KF;
+  A5 = asin(lambdaF/(2*DA))*RAD2DEG; 
+  RVA = fabs(L3/2/cos(A5*DEG2RAD));
+  
+  /* display information */
+  if (verbose) {
+    printf("%s: Detailed Lagrange configuration\n", NAME_CURRENT_COMP);
+    printf("* Incoming beam:  lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s] \n\n",
+      lambda, EI, KI, Vi);
+    printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A1=%.4g [deg]\n",
+      DM, RV, (!RV ? "flat" : "curved"), A1);
+    printf("* Analyser:       DA=%.4g [Angs] RV=%.4g [m] %s, take-off A5=%.4g [deg]\n",
+      DA, RVA, "curved", A5);
+    printf("* Outgoing beam:  lambda=%.4g [Angs] EF=%.4g [meV]  KF=%.4g [Angs-1] Vf=%g [m/s] \n",
+      lambdaF, EF, KF, Vf);
+  }
+  RV = -fabs(RV);
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* Hot source at the ILL */
+COMPONENT Source = Source_gen(
+    xwidth = 0.05, yheight=0.20, dist = L1, focus_xw = fabs(0.18*sin(A1*DEG2RAD)), focus_yh = 0.20,
+    lambda0 = lambda, dlambda = lambda*0.03,
+    T1=1695,I1=1.74e13,T2=708,I2=3.9e12)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT PSD = PSD_monitor(
+     nx = 20, ny = 20, filename = "PSD1", xwidth = 0.03,
+     yheight = 0.03)
+   AT (0, 0, L1-0.5) RELATIVE Source
+
+/* L_monitor: just sensitive to the neutron wavelength. 1D histogram measured in AA*/
+COMPONENT Lmon1 = L_monitor(
+    nL = 50, filename = "Lmon1", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+/* monochromator cradle ===================================================== */
+COMPONENT mono_cradle = Arm()
+  AT (0, 0, L1) RELATIVE Origin
+  ROTATED (0, A1, 0) RELATIVE Origin
+
+SPLIT COMPONENT Monok = Monochromator_curved(
+    width = 0.18, height = 0.2, NH = 1, NV = 7, RV=RV,
+    mosaich = 30, mosaicv = 30, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_cradle
+
+/* TIP: positioning diffraction direction for monok (order 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, 2*A1, 0) RELATIVE Origin
+
+// COMPONENT Lmon2 = L_monitor(
+//     nL = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
+//     Lmin = lambda*0.95, Lmax = lambda*1.05)
+//   AT (0, 0, 0.2) RELATIVE mono_out
+  
+/* sample =================================================================== */
+  
+// COMPONENT Sample_mon = Monitor_nD(
+//     bins=20, xwidth = 0.03, yheight = 0.03, options="x y, per cm2")
+//   AT (0, 0, L2-0.05) RELATIVE mono_out
+
+SPLIT COMPONENT SamplePosition = Arm()
+  AT (0, 0, L2) RELATIVE mono_out
+EXTEND %{
+  flag_env=0;
+%}
+
+COMPONENT cryostat_in = PowderN(radius=0.035, yheight=.1,reflections="Al.laz", thickness=2e-3, concentric=1,p_interact=0.1)
+  AT (0, 0, 0) RELATIVE SamplePosition
+  EXTEND %{
+  if (SCATTERED) flag_env++;
+%}
+
+COMPONENT Sample = Isotropic_Sqw(
+    Sqw_coh = coh, Sqw_inc = inc, radius = 0.008/2,
+    yheight = 0.04, p_interact=1, order=1, verbose=0)
+  AT (0, 0, 0) RELATIVE SamplePosition
+EXTEND
+%{
+  if (!SCATTERED) ABSORB; /* TIP: perfect beamstop */
+%}
+
+COMPONENT cryostat_out = COPY(cryostat_in)(concentric=0)
+   AT (0, 0, 0) RELATIVE SamplePosition
+EXTEND %{
+  if (SCATTERED) flag_env++;
+%}
+/*
+COMPONENT BeFilter = Isotropic_Sqw(radius=0.1,yheight=.1,Sqw_coh="Be.laz", p_interact=1)
+   AT (0, -.1, 0) RELATIVE SamplePosition
+EXTEND %{
+  if (SCATTERED) flag_env++;
+%}
+*/
+
+/* perfect detector: 1D(theta) */
+//COMPONENT Diff_BananaTheta = Monitor_nD(
+//    options = "sphere, angle limits=[-180 180], bins=360",
+//    radius = L3, restore_neutron=1)
+//  AT (0, 0, 0) RELATIVE Sample
+
+///* perfect detector: 2D(theta,y) to see diffraction rings */
+//COMPONENT Diff_BananaPSD = Monitor_nD(
+//    options = "sphere, theta limits=[-180 180] bins=180, phi bins=25 limits=[-90 90]",
+//    radius = L3*1.005, restore_neutron=1)
+//  AT (0, 0, 0) RELATIVE Sample
+
+/* The detector is L3 below the sample.
+   In between, the analyser stands on a barrel with radius 37 cm at center
+ */
+ 
+COMPONENT Barrel_PSD_monitor = Monitor_nD(
+  options = "banana, theta limits=[-180 180] bins=360, y bins=50",
+  radius  = L3*sin(A5*DEG2RAD)/2, yheight = L3, restore_neutron=1
+  )
+  AT (0,-L3/2,0) RELATIVE Sample
+  EXTEND %{
+    RotateNeutron = RAD2DEG*atan2(vx,vz);
+  %}
+  
+COMPONENT Barrel_PSD_monitor2 = COPY(Barrel_PSD_monitor)
+  (options = "banana, theta limits=[-180 180] bins=360, energy limits=[0 100] bins=50",
+    restore_neutron=1)
+  AT (0,-L3/2,0) RELATIVE Sample
+
+/* now we should rotate the neutron by RotateNeutron angle to bring it in the YZ plane */
+COMPONENT RotateNeutron = Arm()
+  AT (0,0,0) RELATIVE Sample
+  EXTEND %{
+
+/* this code is copied from Rotator.comp which parameters are set static at INIT */
+/* here we want a dynamic rotation for every neutron */
+    Rotation R;
+    rot_set_rotation(R, 0, RotateNeutron*DEG2RAD, 0); /* will rotate neutron instead of comp: negative side */
+    /* apply rotation to centered coordinates */
+    coords_get(rot_apply(R, coords_set(x,y,z)),    &x, &y, &z);
+    /* rotate speed */
+    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+  %}
+
+/* all neutrons are now with x=vx=0 */
+COMPONENT Barrel_PSD_monitor3 = Monitor_nD
+  (xwidth=0.01, yheight=0.669, options = "energy limits=[0 100] bins=100, y bins=20",
+    restore_neutron=1)
+  AT (0,-L3/2,L3*sin(A5*DEG2RAD)/2) RELATIVE Sample
+  
+/* install the analyser. Reflectivity at Ef=4.5 Kf=1.474 -> R=0.81 */
+COMPONENT AnalyserMount = Arm()
+  AT (0,-L3/2,L3*sin(A5*DEG2RAD)/2) RELATIVE Sample
+  
+COMPONENT Analyser = Monochromator_curved(
+  width=.05, height=0.669, RV=RVA, NV=11, NH=1, DM=3.355, reflect="HOPG.rfl")
+  AT (0,0,0)       RELATIVE AnalyserMount
+  ROTATED (0,90,0) RELATIVE AnalyserMount
+  EXTEND %{
+    if (!SCATTERED) ABSORB; /* perferct beam stop to account for the B4C block */
+  %}
+
+COMPONENT DetectorMount = Arm()
+  AT (0,-L3, 0) RELATIVE Sample
+  
+COMPONENT Detector = Monitor_nD(
+  xwidth=.01, yheight=.1, options="energy limits=[0 100] bins=100, y bins=50", restore_neutron=1)
+  AT (0, 0, 0)       RELATIVE DetectorMount
+  ROTATED (90, 0, 0) RELATIVE DetectorMount
+  
+COMPONENT Detector_Sqw = Monitor_Sqw(
+  xwidth=.01, yheight=.1, index=-12, 
+  options="user1 limits=[0 10] bins=20, user2 limits=[-100 100] bins=100")
+  AT (0, 0, 0)       RELATIVE DetectorMount
+  ROTATED (90, 0, 0) RELATIVE DetectorMount
+
+COMPONENT Detector_Sqw_env = COPY(PREVIOUS)
+WHEN (flag_env)
+AT (0, 0, 0)       RELATIVE PREVIOUS
+
+END
+
+
+
+

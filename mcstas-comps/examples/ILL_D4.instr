@@ -1,0 +1,160 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: ILL_D4
+*
+* %Identification
+* Written by: E. Farhi
+* Date: 13 Apr 2006
+* Origin: LLB/ILL
+* %INSTRUMENT_SITE: ILL
+*
+* D4 Diffractometer for liquids at the ILL.
+*
+* %Description
+* D4 Diffractometer for liquids at the ILL, installed on the hot source.
+*
+* The dedicated liquid and amorphous instrument D4 is a two-axis diffractometer
+* equipped with nine 1D position sensitive microstrip detectors. In this model,
+* a PSD banana detector is also present.
+*
+* The monochromator take-off angle is 2Theta_M ~ 20-25 deg, variable. The available 
+* monochromators are all vertically focusing, Cu (200) for 0.7 Angs, Cu (220) 
+* for 0.5 Angs.
+*
+* Cu       002 DM=1.807 AA
+* Cu       220 DM=1.278 AA
+* 
+* %Example: lambda=0.7 Detector: BananaTheta_I=1.44351e+06
+*
+* %Parameters
+* lambda: [Angs]  Wavelength at monochromator
+* DM: [Angs]      d-spacing of monochromator
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* sample: [str]   File name for powder/liquid description LAU/LAZ/qSq/Sqw
+* verbose: [1]    Print DIF configuration. 0 to be quiet
+*
+* %Link
+* The <a href="http://www.ill.eu/d4">D4 diffractometer</a> at the ILL
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 , string sample="SiO2_liq.qSq", RV=-1, L1=6.4, L2=2.61, L3=1.148, verbose=1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double A1; /* rotation of monok and d-spacing */
+double RV; /* vertical curvature of monochromator */
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+double L;
+double KI, Vi, EI;
+
+A1 =asin(lambda/(2*DM))*RAD2DEG;
+A1 *= -1;
+L = 1/(1/L1+1/L2);
+if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
+KI=2*PI/lambda;
+Vi = K2V*fabs(KI);
+EI = VS2E*Vi*Vi;
+
+if (verbose) {
+  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
+  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+    lambda, EI, KI, Vi);
+  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A1=%.4g [deg]\n",
+    DM, RV, (!RV ? "flat" : "curved"), A1);
+}
+ RV = -fabs(RV);;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* Hot source at the ILL */
+COMPONENT Source = Source_gen(
+    xwidth = 0.05, yheight=0.20, dist = L1, focus_xw = fabs(0.18*sin(A1*DEG2RAD)), focus_yh = 0.20,
+    lambda0 = lambda, dlambda = lambda*0.03,
+    T1=1695,I1=1.74e13,T2=708,I2=3.9e12)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT PSD = PSD_monitor(
+     nx = 20, ny = 20, filename = "PSD1", xwidth = 0.03,
+     yheight = 0.03)
+   AT (0, 0, L1-0.5) RELATIVE Source
+
+COMPONENT Lmon1 = L_monitor(
+    nL = 50, filename = "Lmon1", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+/* TIP: monochromator cradle */
+COMPONENT mono_cradle = Arm()
+  AT (0, 0, L1) RELATIVE Origin
+  ROTATED (0, A1, 0) RELATIVE Origin
+
+/* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
+SPLIT COMPONENT Monok = Monochromator_curved(
+    width = 0.18, height = 0.2, NH = 1, NV = 7, RV=RV,
+    mosaich = 30, mosaicv = 30, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_cradle
+
+/* TIP: positioning diffraction direction for monok (order 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, 2*A1, 0) RELATIVE Origin
+
+COMPONENT Lmon2 = L_monitor(
+    nL = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.2) RELATIVE mono_out
+  
+COMPONENT Sample_mon = Monitor_nD(
+    bins=10, xwidth = 0.03, yheight = 0.03, options="x y, per cm2")
+  AT (0, 0, L2-0.05) RELATIVE mono_out
+
+/*SPLIT COMPONENT Sample = PowderN(*/
+/*    reflections = sample, radius = 0.008/2, pack=0.8,*/
+/*    yheight = 0.04, d_phi=atan(0.10/L3)*RAD2DEG, p_inc=0.0107)*/
+/*  AT (0, 0, L2) RELATIVE mono_out*/
+/*EXTEND*/
+/*%{*/
+/*if (!SCATTERED) ABSORB;  TIP: perfect beamstop */
+/*%}*/
+
+SPLIT COMPONENT Sample = Isotropic_Sqw(
+    Sqw_coh = sample, radius = 0.008/2,
+    yheight = 0.04, d_phi=atan(0.10/L3)*RAD2DEG)
+  AT (0, 0, L2) RELATIVE mono_out
+EXTEND
+%{
+  if (!SCATTERED) ABSORB; /* TIP: perfect beamstop */
+%}
+
+/* perfect detector: 1D(theta) */
+COMPONENT BananaTheta = Monitor_nD(
+    options = "banana, theta limits=[0 180], bins=360",
+    xwidth = 2*L3, yheight = 0.10)
+  AT (0, 0, 0) RELATIVE Sample
+
+/* perfect detector: 2D(theta,y) to see diffraction rings */
+COMPONENT BananaPSD = Monitor_nD(
+    options = "banana, theta limits=[0 180] bins=360, y bins=50",
+    xwidth = 2*L3*1.005, yheight = 0.5)
+  AT (0, 0, 0) RELATIVE Sample
+
+END
+

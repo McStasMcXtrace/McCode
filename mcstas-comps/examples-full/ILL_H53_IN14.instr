@@ -1,0 +1,295 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2011, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: ILL_H53_IN14
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 2006
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* %INSTRUMENT_SITE: ILL
+*
+* IN14 cold triple-axis machine (TAS) on guide H53 with sample
+*
+* %Description
+* IN14 is a high flux cold neutron three-axis spectrometer situated on a straight
+* 58Ni coated guide looking at the horizontal cold source. IN14 is equipped with
+* a vertically curved (002) pyrolytic graphite monochromator. A polarising bender
+* can be inserted after the monochromator, for polarised neutron work.
+*
+* The sample, analyser and detector units are mounted on standard Tanzboden
+* modules and the distance between these units may be changed if necessary. For
+* sample positioning, two motorized arcs (+/- 20deg), and two horizontal 
+* translation tables (+/- 10 mm) are available. Soller collimators can be easily 
+* inserted before and after the sample, and before the detector.
+*
+* Three horizontally focusing analysers are available: (002) pyrolytic graphite,
+* bent Si(111), and Heusler (111) for polarised neutrons.
+*
+* In this TAS configuration, PG002 is used as monochromator analyser, 
+* with a single type detector.
+*
+* %Example: KI=1.55 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=7.5962E+07
+*
+* %Parameters
+* KI: [Angs-1]  central wavevector for incoming neutrons
+* QM: [Angs-1]  wavevector transfer modulus at the sample
+* EN: [meV]     energy transfer at the sample
+* verbose: []   
+* WM: []        
+* HM: []        
+* NHM: []       
+* NVM: []       
+* RMV: []       
+* DM: []        
+* WA: []        
+* HA: []        
+* NHA: []       
+* NVA: []       
+* RAV: []       
+* RAH: []       
+* DA: []        
+* SM: []        
+* SS: []        
+* SA: []        
+* L1: []        
+* L2: []        
+* L3: []        
+* L4: []        
+*
+* %Link
+* The <a href="http://www.ill.fr/in14">IN14 TAS</a> at the ILL
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H53_IN14(KI=1.55, QM=1.0, EN=0.0, verbose=1, WM=0.15, HM=0.12,  NHM=1,  NVM=9, RMV=-1,         DM=3.355, WA=0.20, HA=0.10,  NHA=11, NVA=1, RAV=0, RAH=-1,  DA=3.355, SM=1, SS=-1, SA=1, L1=7.0, L2=2.12, L3=1.37, L4=0.7)
+
+DECLARE
+
+%{
+/* guide coating parameters Klaus values*/
+
+double gR0          = 1;
+double gQc          = 0.021;
+double gAlpha       = 2.33;
+double gW           = 2e-3;
+double gMvalue      = 1.2;
+
+
+/* ==================== Source description ==================== */
+
+double EN;
+double D_EN;
+double EMIN, EMAX;
+
+double sLmbdMinS =  2.0;
+double sLmbdMaxS =  7.0;
+double sLmbdMinM =  0.0;
+double sLmbdMaxM = 20.0;
+double sLmbdMonoMin;
+double sLmbdMonoMax;
+
+double sT1=413.5,sI1=10.22e12,sT2=145.8,sI2=3.44e13,sT3=40.1 ,sI3=2.78e13;
+
+/* guide curvatures */
+
+double gRh          = 4000;
+
+/* guide section parameters (total length/number of elements) */
+
+double gH 	    = 0.12;
+double L_H53_COM    = 6.0  /4.0, Rh_H53_COM = 0; 
+double L_H53_C1     = 3.5  /3.0, Rh_H53_C1  = 0; 
+double L_H53_C2     = 9.5  /7.0, Rh_H53_C2  = 0; 
+double L_H53_C3     = 3.0  /3.0, Rh_H53_C3  = 0; 
+double L_H53_P1     = 6.0  /4.0, Rh_H53_P1  = 0; 
+double L_H53_P2     = 7.5  /5.0, Rh_H53_P2  = 0; 
+double L_H53_P3     = 7.5  /5.0, Rh_H53_P3  = 0; 
+double L_H53_P4     = 7.5  /5.0, Rh_H53_P4  = 0; 
+
+/* gaps and Al window parameters */
+
+double Al_Thickness = 0.002;
+double gGap         = 0.001;
+
+/* wavelength for monochromator */
+
+double lambda       = 6.271;
+double dlambda;
+
+%}
+/* end of DECLARE */
+
+INITIALIZE
+%{
+
+/* element rotations = element length / curvature radius * RAD2DEG */
+
+if (gRh) {
+  Rh_H53_C2  = L_H53_C2 /gRh*RAD2DEG;
+  Rh_H53_C3  = L_H53_C3 /gRh*RAD2DEG;
+  Rh_H53_P1  = L_H53_P1 /gRh*RAD2DEG;
+  Rh_H53_P2  = L_H53_P2 /gRh*RAD2DEG;
+  Rh_H53_P3  = L_H53_P3 /gRh*RAD2DEG;
+  Rh_H53_P4  = L_H53_P4 /gRh*RAD2DEG;
+}
+
+lambda=2*PI/KI;
+dlambda=lambda*0.015;
+printf("%s: Incoming wavelength lambda=%g [Angs]\n", NAME_CURRENT_COMP, lambda);
+
+%}
+/* end of INITIALIZE */
+
+TRACE
+/* Source description */
+
+COMPONENT Origin = Arm()
+  AT (0,0,0) ABSOLUTE
+  
+COMPONENT HCS = Source_gen(
+  radius   = 0.21,
+  dist     = 2.155,
+  focus_xw       = 0.06,
+  focus_yh       = 0.12,
+  Lmin     = lambda-dlambda,
+  Lmax     = lambda+dlambda,
+  T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13,T3=40.1 ,I3=2.78e13,
+  verbose  = 1)
+  AT (0, 0, 0) RELATIVE Origin
+  
+COMPONENT Entrance = Arm()
+AT (0,0,2.155) RELATIVE PREVIOUS ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT NiGuide_entrance = Arm()
+AT (0,0,0) RELATIVE PREVIOUS ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT NiGuide = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=2.775, 
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT H53_BOG1 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.860, 
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,2.775+.025) RELATIVE NiGuide
+
+/* this is the O.P. Gap 12 mm  */
+
+COMPONENT H53_BOG2 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=1.440, 
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,0.860+.012) RELATIVE PREVIOUS
+
+COMPONENT H53_BOG3 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.74, 
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,1.44+.012) RELATIVE PREVIOUS
+
+COMPONENT Al_window8 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.74+0.01) RELATIVE PREVIOUS
+
+/* gap 75 mm (V.S) */
+
+COMPONENT Mon_VS_L  = Monitor_nD(
+  xwidth=0.06, yheight=0.12,
+  options="wavelength, limits=[0 29.0],  per cm2, bins=60, parallel, file = MON_VS_L.dat")
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT Mon_VS_XY  = Monitor_nD(
+  xwidth=0.06, yheight=0.12,
+  options="x y, capture, per cm2, parallel, all bins=40,file = MON_VS_XY.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Al_window9 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.06) RELATIVE PREVIOUS
+
+COMPONENT CarterVS1 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.499,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,0.015) RELATIVE PREVIOUS
+
+COMPONENT Mon_VS1_L  = Monitor_nD(
+  xwidth=0.06, yheight=0.12,
+  options="wavelength, limits=[0 29.0],  per cm2, bins=60, parallel")
+AT (0,0,0.5) RELATIVE PREVIOUS
+
+COMPONENT CarterVS2 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.499,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+/* H53-COM: Carter COM: L=6 m in 4 elements R horiz=0 m */
+
+COMPONENT H53_COM = Arm()
+AT (0,0,0.506) RELATIVE PREVIOUS
+
+
+COMPONENT Mon_VS2_L  = Monitor_nD(
+  xwidth=0.06, yheight=0.12,
+  options="wavelength, limits=[0 29.0],  per cm2, bins=60, parallel")
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+
+COMPONENT H53_COM_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_1 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_COM,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_2 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_COM,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_3 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_COM,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_4 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_COM,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS
+
+/* H53-C1: Carter C1 L=3.5 m in 3 elements Rh=0 m */
+
+COMPONENT H53_C1 = Arm()
+AT (0,0,Al_Thickness+0.006) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_1 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_C1,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_2 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_C1,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_3 = Guide(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_C1,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS
+/* Monochromator description */
+
+COMPONENT H53_C1_Shift = Arm()
+AT (0,0,0.3) RELATIVE PREVIOUS
+
+%include "templateTAS.instr"
+
+END

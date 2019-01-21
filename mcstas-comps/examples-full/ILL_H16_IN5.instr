@@ -1,0 +1,39 @@
+/********************************************************************
+*
+* Instrument: ILL_H16_IN5
+*
+* %Identification
+* Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero
+* Date: Jan 2004-2009
+* Origin: ILL
+*
+* %INSTRUMENT_SITE: ILL
+*
+*   The full IN5B: H16 guide & chopper system + sample + PSD and tof detector
+*
+* %Description
+*
+*  The IN5@ILL TOF spectrometer from cold source to final detector, with sample.
+*  The detector model includes Fe housing and tube cross talk absorbing masks
+*  with angle restriction (neutrons that scatter in Fe in front of a tube and
+*  enter a different tube are absorbed).
+*
+* %Example: lambda=4.5 Detector: Det_sample_t_I=3.4043e+07
+* %Example: lambda=4.5 Detector: Det_PSD_I=1.1e6
+*
+* %Parameters
+* lambda: [AA]   mean incident wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
+* %Link
+* The <a href="http://www.ill.eu/in5">IN5@ILL</a> cold time of flight instrument
+*
+* %E
+************************************************************************/
+DEFINE INSTRUMENT ILL_H16_IN5(lambda=4.5, dlambda=0.09)
+
+TRACE
+
+%include "ILL_H16.instr"
+%include "ILL_IN5.instr"
+
+END

@@ -1,0 +1,63 @@
+/*****************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Samples_Phonon
+*
+* %Identification
+* Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
+* Date: Feb 2004
+* Origin: <a href="http://www.risoe.dk/">RISOE</a>
+* Written by: K. Lefmann <kim.lefmann@risoe.dk> RISOE, Feb 2004
+* %INSTRUMENT_SITE: Tests_samples
+*
+* Simple test instrument for the Phonon_simple component
+*
+*
+* %Description
+* Simple test instrument for the Phonon_simple component.
+* Refer to the component documentation for further instructions.
+*
+* %Example: E=10 -n 1e5 Detector: mon1_I=1.80177e-22
+*
+* %Parameters
+* E: []    
+* DE: []   
+* HDIV: [] 
+* VDIV: [] 
+* TT: []   
+* OM: []   
+* C: []    
+*
+* %End
+******************************************************************************/
+DEFINE INSTRUMENT Samples_Phonon(E=10, DE=0, HDIV=1e-4, VDIV=1e-4, TT=72.69, OM=-43.3, C=8)
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+	xwidth=0.0005, yheight=0.0005,
+  focus_aw=HDIV, focus_ah=VDIV,
+	E0 = E,
+	dE = DE)
+  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT sample = Phonon_simple(
+     radius=0.01, yheight=0.02, focus_r=0.001,
+     target_index=+2,
+     sigma_abs=0.17, sigma_inc=0.003, b=0.90, M=208,
+     c=C, a=4.95, DW=1.00, T=300)
+  AT (0, 0, 1.00) RELATIVE a1 ROTATED (0,OM,0) RELATIVE a1
+
+COMPONENT a2=Arm()
+  AT (0, 0, 0) RELATIVE sample ROTATED (0,TT,0) RELATIVE a1
+
+COMPONENT mon1 = E_monitor(
+    nE = 400, filename = "e.dat", xmin = -0.01, xmax = 0.01,
+    ymin = -0.02, ymax = 0.02, Emin = 0, Emax = 40)
+  AT (0, 0, 1) RELATIVE a2
+
+
+END

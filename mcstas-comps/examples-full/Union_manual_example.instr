@@ -1,0 +1,83 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_manual_example
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* %INSTRUMENT_SITE: Union_demos
+*
+* %Description
+* Example on using Union components from the Union project manual
+*
+* Example: Detector: Banana_monitor_I=3.823e-05
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_manual_example()
+
+DECLARE
+%{
+%}
+
+TRACE
+
+COMPONENT Al_inc = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_powder = Powder_process(reflections="Al.laz",d_phi=20)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al = Union_make_material(my_absorption=100*4*0.231/66.4,process_string="Al_inc,Al_powder")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Fe_inc = Incoherent_process(sigma=2*0.4,packing_factor=1,unit_cell_volume=24.04)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Fe_powder = Powder_process(reflections="Fe.laz",d_phi=20)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Fe = Union_make_material(my_absorption=100*2*2.56/24.04,process_string="Fe_inc,Fe_powder")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Progress = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_simple(xwidth=.05, yheight=.05, dist=2, focus_xw=.05, focus_yh=.05, E0=15, dE=2)
+AT (0,0,0) RELATIVE Progress
+
+COMPONENT Guide = Guide_gravity(w1=0.05, h1=0.05, w2=0.05, h2=0.05, l=12, R0=0.99, Qc=0.0219, alpha=6.07, m=3.0, W=0.003)
+AT (0,0,2) RELATIVE Source
+
+COMPONENT sample_position = Arm()
+AT (0,0,12.5) RELATIVE Guide
+
+COMPONENT Hexagonal_container_1 = Union_box(xwidth=0.01, yheight=0.04, xwidth2=0.01+2*0.01*sin(30*DEG2RAD), zdepth=0.01*cos(30*DEG2RAD), priority=1, material_string="Al", p_interact=0.3)
+AT (0,0,-0.5*0.01*cos(30*DEG2RAD)-0.00001) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+
+COMPONENT Hexagonal_container_2 = Union_box(xwidth=0.01+2*0.01*sin(30*DEG2RAD), yheight=0.04, xwidth2=0.01, zdepth=0.01*cos(30*DEG2RAD), priority=2, material_string="Al", p_interact=0.3)
+AT (0,0,0.5*0.01*cos(30*DEG2RAD)+0.00001) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+
+COMPONENT Sample = Union_cylinder(radius=0.008, yheight=0.36, priority=3, material_string="Fe", p_interact=0.5)
+AT (0,0,0) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+
+COMPONENT Master = Union_master()
+AT(0,0,0) RELATIVE sample_position
+
+COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=200",filename="banana.dat")
+AT (0,0,0) RELATIVE sample_position
+
+
+END

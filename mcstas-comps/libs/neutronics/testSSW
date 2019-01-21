@@ -1,0 +1,23 @@
+Surface source test
+1   101  -1.6  -1    imp:n=1
+2   102  -1.0  -2  1 imp:n=1
+3    0         -3  2 imp:n=1
+4    0             3 imp:n=0
+
+1 sph  0 0 0 5
+2 sph  0 0 0 10
+3 sph  0 0 0 15
+
+mode n
+sdef par 1 erg=100
+m101  6000 1
+m102  1001 2  8016 1
+nps   1000000
+f2:n 1 2  3
+ssw 2
+ptrac file = asc 
+      max  = -1000000
+      write = all
+      event = sur
+      filter = 2,jsu
+PRDMP  2J  -1

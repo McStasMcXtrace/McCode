@@ -1,0 +1,108 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Al_window
+*
+* %I
+* Written by: S. Roth
+* Date:       Jul 31, 2001
+* Origin:     FRM-II
+* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
+*
+* Aluminium window in the beam
+*
+* %D
+*
+* Aluminium window in the beam
+*
+* Example: Al_window(thickness=0.002)
+*
+* %BUGS
+* Only handles the absorption, and window has infinite width/height
+*
+* %P
+* INPUT PARAMETERS:
+* thickness: [m]  Al Window thickness 
+*
+*
+* Variables calculated in the component
+*
+* Al_my_s     : Attenuation factor due to scattering [m^-1]
+* Al_my_a     : Attenuation factor due to absorbtion [m^-1]
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Al_window
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (thickness=0.001)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SHARE
+%{
+/* ToDo: Should be component local names. */
+#ifndef AL_WINDOW
+#define avogadro 6.022 /* 10E23 Atoms per mole (mol-1) */
+#define Al_sigma_a .231 /* Absorption cross section per atom (barns) at 2200m/s */
+#define Al_sigma_i .0082 /* Incoherent scattering cross section per atom (barns) */
+#define Al_rho 2.7 /* density (gcm-3) */
+#define Al_mmol 27 /* molar mass Al (gmol-1) */
+#define Al_my_s (Al_rho / Al_mmol * Al_sigma_i * avogadro * 10) /* inc. XS (barn) */
+#define Al_my_a_v (Al_rho / Al_mmol * Al_sigma_a * avogadro * 10 * 2200 )
+/* Define Constants for Polynomial Fit of
+  sigma_tot(lambda)=A+B1*X+B2*X^2+B3*X^3+B4*X^4+... */
+#define Al_pf_A 1.34722
+#define Al_pf_B1 .12409
+#define Al_pf_B2 .01078
+#define Al_pf_B3 -3.25895e-5
+#define Al_pf_B4 3.74731e-6
+#define AL_WINDOW
+#endif
+%}
+
+TRACE
+%{
+  double v;                     /* Neutron velocity */
+  double dt0;     /* Flight times through sample */
+  double dist;
+  double Al_s_tot_lambda,Al_my_tot,Al_my_a ; /* total XS (barn), total scattering length (m-1), absorption scat. length */
+  double lambda; /* neutrons wavelength */
+
+  PROP_Z0;
+
+  dt0=thickness/vz;
+  v=sqrt(vx*vx+vy*vy+vz*vz);
+  PROP_DT(dt0);
+  dist=v*dt0;
+
+  lambda=sqrt(81.81/(VS2E*v*v));
+  Al_s_tot_lambda= Al_pf_A+Al_pf_B1*lambda+ Al_pf_B2*lambda*lambda+ Al_pf_B3*lambda*lambda*lambda;
+  Al_s_tot_lambda+=Al_pf_B4*lambda*lambda*lambda*lambda;
+  Al_my_tot=Al_rho / Al_mmol * Al_s_tot_lambda * avogadro * 10;
+  Al_my_a = Al_my_a_v/v;
+
+  p *=exp(-Al_my_a*dist);/* neutron passes window without any interaction */
+
+  /* TODO: scatter in Debye-Scherrer cone */
+
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END
+
+
+
+
+

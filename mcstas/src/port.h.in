@@ -1,0 +1,71 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: port.h
+*
+* %Identification
+* Written by: K.N.
+* Date: Nov 11, 1998
+* Origin: Risoe
+* Release: McStas CVS_090602
+* Version: $Revision$
+*
+* Header file for portability related stuff.
+*
+* $Id$
+*
+*******************************************************************************/
+
+/* Machintosh specific compiler defines. */
+#ifdef __dest_os
+#if (__dest_os == __mac_os)
+#define MAC
+#endif
+#endif
+
+/* File system details. */
+#ifndef MC_PATHSEP_C
+#ifdef WIN32
+#define MC_PATHSEP_S "\\"
+#define MC_PATHSEP_C '\\'
+#define CURRENT_DIR_S "."
+#else  /* !WIN32 */
+#ifdef MAC
+#define MC_PATHSEP_S ":"
+#define MC_PATHSEP_C ':'
+#define CURRENT_DIR_S ""	/* Apparently no Mac equivalent for this. */
+#else  /* !WIN32 && !MAC */
+#define MC_PATHSEP_S "/"
+#define MC_PATHSEP_C '/'
+#define CURRENT_DIR_S "."
+#endif /* !MAC */
+#endif /* !WIN32 */
+#endif /* MC_PATHSEP_C */
+
+#ifndef @MCCODE_LIBENV@
+#ifdef MAC
+#define @MCCODE_LIBENV@ ":@MCCODE_TARNAME@:lib" /* ToDo: What to put here? */
+#else  /* !MAC */
+#define @MCCODE_LIBENV@ "@MCCODE_LIB@"
+#endif /* !MAC */
+#endif /* MCSTAS */
+
+#ifdef WIN32
+#define MCCODE_BUGREPORT "www.@MCCODE_TARNAME@.org"
+#endif
+
+#ifndef HAVE_STRCASECMP
+int strcasecmp(char *, char *);
+#endif
+#ifndef HAVE_STRCASESTR
+char *strcasestr (char *haystack, char *needle);
+#endif
+
+#ifndef HAVE_FDOPEN
+#include <stdio.h>
+FILE *fdopen(int descr, const char *mode);
+#endif /* HAVE_FDOPEN */

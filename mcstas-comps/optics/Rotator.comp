@@ -1,0 +1,83 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Rotator
+*
+* %I
+*
+* Written by: Emmanuel Farhi
+* Date: June 20th 2013
+* Origin: <a href="http://www.ill.fr">ILL</a>
+*
+* A rotative frame along vertical axis
+*
+* %Description
+* All components positioned after this one are rotating at frequency 'nu' with
+* phase 'phase'. Use the Derotator component to put back the model steady.
+* The rotation is performed w.r.t. the position of the component, along the
+* vertical axis 'y'.
+*
+* Example:
+*   R=Rotator(nu=14, phase=0)
+*   ...
+*   DR=Derotator(rotator=R)
+*   AT (0,0,0) RELATIVE R
+*
+* %Parameters
+* INPUT PARAMETERS:
+* nu: [Hz]      Rotation frequency (round/s) in the rotating option (vertical axis)
+* phase: [deg]  Phase shift
+*
+* OUTPUT PARAMETERS:
+* angle: [deg]  rotation angle 
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Rotator
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nu=0, phase=0)
+OUTPUT PARAMETERS (angle)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+double angle;
+%}
+
+TRACE
+%{
+double dt=0;
+
+if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
+    /* approximation of rotating frame */
+    /* current coordinates of neutron in centered static frame */
+    Rotation R;
+    dt     = -z/vz; /* time shift to center of component */
+    angle  = fmod(360*nu*(t+dt)+phase, 360); /* in deg */
+    rot_set_rotation(R, 0, -angle*DEG2RAD, 0); /* will rotate neutron instead of comp: negative side */
+    /* apply rotation to centered coordinates */
+    coords_get(rot_apply(R, coords_set(x,y,z)),    &x, &y, &z);
+    /* rotate speed */
+    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+  }
+
+%}
+
+MCDISPLAY
+%{
+  int ih;
+
+
+   if (nu || phase) {
+      double radius = 0.1;
+      /* cylinder to visualise the rotating frame */
+      circle("xz", 0, 0, 0,radius);
+    }
+%}
+
+END

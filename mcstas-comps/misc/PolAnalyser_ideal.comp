@@ -1,0 +1,103 @@
+/*****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PolAnalyser_ideal
+*
+* %I
+* Written by: Erik Knudsen
+* Date: June 2010
+* Origin: Risoe
+*
+* (Unphysical) ideal analyzer.
+*
+* %D
+*
+* This is an ideal model of a polarization analyser device. Given a polarization vector
+* it "lets through" a scaled neutron weight. An imperfect analyzer could be modelled by an
+* analysis vector M with |M|<1.
+*
+* Example: PolAnalyser_ideal(mx=0, my=1, mz=0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* mx: [1]  X-component of polarisation analysis vector -1<mx<1
+* my: [1]  Y-component of polarisation analysis vector -1<my<1
+* mz: [1]  Z-component of polarisation analysis vector -1<mz<1
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT PolAnalyser_ideal
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (mx=0, my=0, mz=0)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+if (mx==0 && my==0 && mz==0) {
+    printf("PolAnalyser_ideal: %s: NULL vector defined!\n"
+	   "ERROR      (mx, my, mz)=(0,0,0). Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  if ((mx*mx + my*my + mz*mz) > 1) {
+    printf("PolAnalyser_ideal: %s: Polarisation analysis vector (mx, my, mz) is unphysical!\n"
+	   "ERROR  mx*mx + my*my + mz*mz > 1. Exiting....",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  NORM(mx,my,mz);
+%}
+
+TRACE
+%{
+  double prob_up;
+
+  prob_up=(1+scalar_prod(sx,sy,sz,mx,my,mz))/2.0;
+
+  if (prob_up>0) {
+      /*adjust weight accordingly (i.e. monte carlo choice with prob. 1)*/
+      p*=prob_up;
+      sx=mx;sy=my;sz=mz;
+      SCATTER;
+  } else {
+      ABSORB;
+  }
+
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+
+  line(0,0,0,0.2*mx,0.2*my,0.2*mz);
+  /*draw the arrowhead*/
+  double cos2=cos(2*DEG2RAD);
+  double sin2=sin(2*DEG2RAD);
+  multiline(4,0.18*(mx*cos2+my*sin2),0.18*(-mx*sin2+my*cos2),0.18*mz,
+      0.18*(mx*cos2+mz*sin2),0.18*my,0.18*(-mx*sin2+mz*cos2),
+      0.18*mx,0.18*(my*cos2+mz*sin2),0.18*(-my*sin2+mz*cos2),
+      0.18*(mx*cos2+my*sin2),0.18*(-mx*sin2+my*cos2),0.18*mz);
+
+  line(0.2*mx,0.2*my,0.2*mz,0.18*(mx*cos2+my*sin2),0.18*(-mx*sin2+my*cos2),0.18*mx);
+  line(0.2*mx,0.2*my,0.2*mz,0.18*(mx*cos2+mz*sin2),0.18*my,0.18*(-mx*sin2+mz*cos2));
+  line(0.2*mx,0.2*my,0.2*mz,0.18*mx,0.18*(my*cos2+mz*sin2),0.18*(-my*sin2+mz*cos2));
+%}
+
+END

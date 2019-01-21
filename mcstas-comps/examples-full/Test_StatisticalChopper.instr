@@ -1,0 +1,83 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Test_StatisticalChopper
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 1st Dec 2009.
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* %INSTRUMENT_SITE: Tests_optics
+*
+* An example using a statistical/correlation chopper and its de-correlation monitor
+*
+* %Description
+* This instrument is a simple model of a kind of TOF instrument, with powder sample
+* and statistical chopper. The de-correlation is also performed in a dedicated monitor.
+*
+* %Example: lambda=1 Detector: time_mon2_I=6.03103e-13
+*
+* %Parameters
+* lambda: [Angs]  source wavelength
+*
+* %L
+* R. Von Jan and R. Scherm. The statistical chopper for neutron time-of-flight spectroscopy. Nuclear Instruments and Methods, 80 (1970) 69-76.
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_StatisticalChopper(lambda=1)
+
+TRACE
+
+COMPONENT base=Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+
+// COMPONENT source1 = Moderator(radius = 0.0707, dist = 18, xw = 0.11, yh = 0.11,
+//                    E0 = 10, E1 = 15, Ec = 9.0, t0 = 37.15, gam = 39.1)
+// AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT source1 = Source_simple(xwidth=0.026, yheight=0.026,
+  lambda0=lambda, dlambda=0.00001,
+  focus_xw=0.005, focus_yh=0.05, dist=1.2)
+AT (0,0,.001) relative PREVIOUS
+EXTEND %{
+  t=randpm1()*255/60/1487;
+%}
+
+COMPONENT before_stat_chop =  Monitor_nD(
+         options = "auto time bins=1000",
+         xwidth = 0.11, yheight = 0.11)
+     AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT chop1 = StatisticalChopper(nu=1487.0*60/255, verbose=1)
+AT (0,0,1) relative PREVIOUS
+
+COMPONENT after_stat_chop =  Monitor_nD(
+         options = "auto time bins=1001",
+         xwidth = 0.11, yheight = 0.11)
+     AT (0,0,0.01) RELATIVE PREVIOUS
+
+SPLIT COMPONENT Sample = Isotropic_Sqw(xwidth=.005, yheight=.05, zdepth=2e-3,
+  Sqw_coh="Na2Ca3Al2F14.laz", // Sqw_coh="Rb_liq_coh.sqw", Sqw_inc="Rb_liq_inc.sqw",
+  p_interact=0.99, d_phi=atan2(0.1,2)*RAD2DEG)
+AT (0,0,.2) relative PREVIOUS
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT ChopMon2 = StatisticalChopper_Monitor(
+         options ="banana auto time bins=500, y bins=100",
+         radius=2, yheight=0.11, comp=chop1, restore_neutron=1)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT time_mon2 =  Monitor_nD(
+         options = "banana, auto time,bins=1002",
+         radius=2.1, yheight = 0.11)
+     AT (0,0,0) RELATIVE PREVIOUS
+
+END

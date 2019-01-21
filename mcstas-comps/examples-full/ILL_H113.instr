@@ -1,0 +1,539 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H113
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: April 7, 2004
+* Origin:ILL
+* %INSTRUMENT_SITE: ILL
+*
+* The H113 supermirror ballistic curved cold guide at the ILL
+*
+* %Description
+* The H113 supermirror ballistic curved cold guide at the ILL feeding PF1b
+*
+* %Example: lambda=10 Detector: GuideOut_Phic_I=2.3402e+10
+*
+* %Parameters
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam.
+* mip: [1]       m-value of in-pile guide coating (3.5 first meters of guide)
+*
+* %Link
+* The <a href="http://www.ill.fr/YellowBook/PF1">PF1b beam line</a> at the ILL
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H113(m=2, lambda=10, dlambda=9.9, mip=1.2)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+/* VCS (H1) source parameters */
+double sT1=216.8,sI1=1.24e+13;
+double sT2=33.9, sI2=1.02e+13;
+double sT3=16.7 ,sI3=3.0423e+12;
+/* guide coating parameters */
+double gR0          = 1;
+double gQc          = 0.021;
+double gAlpha       = 4.07;
+double gW           = 1.0/300.0;
+/* gaps and Al windows parameters */
+double Al_Thickness = 0.002;
+double gGap         = 0.001;
+/* guide curvatures */
+double gRh          = -4000; /* clockwise */
+/* guide section parameters (total length/number of elements) */
+double L_H113_2 =5.5  /6,  Rh_H113_2 =0;
+double L_H113_3 =3.0  /3,  Rh_H113_3 =0;
+double L_H113_4 =10.0 /10, Rh_H113_4 =0; /* divergent 60-90 */
+double L_H113_5 =11.0 /11, Rh_H113_5 =0;
+double L_H113_6 =11.0 /11, Rh_H113_6 =0;
+double L_H113_7 =11.0 /11, Rh_H113_7 =0;
+double L_H113_8 =11.0 /11, Rh_H113_8 =0;
+double L_H113_9 =10.0 /10, Rh_H113_9 =0; /* convergent 90-60 */
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+
+/* Element rotations = Element length / Curvature Radius * RAD2DEG */
+	if (gRh) {
+		Rh_H113_5  = L_H113_5 /gRh*RAD2DEG;
+		Rh_H113_6  = L_H113_6 /gRh*RAD2DEG;
+		Rh_H113_7  = L_H113_7 /gRh*RAD2DEG;
+		Rh_H113_8  = L_H113_8 /gRh*RAD2DEG;
+	}
+	printf("Instrument: %s (H113@ILL ballistic cold guide on VCS).\n", NAME_CURRENT_COMP);
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, and even replaced by a Progress_bar  */
+/* component. Other useful keywords are : ROTATED EXTEND GROUP PREVIOUS */
+/* Also think about adding a neutron source !                           */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT VCS = Source_gen(
+  yheight  = 0.22,
+  xwidth   = 0.14,
+  dist     = 2.525,
+  focus_xw = 0.068,
+  focus_yh = 0.2,
+  lambda0     = lambda,
+  dlambda     = dlambda,
+  T1       = sT1,
+  I1       = sI1,
+  T2       = sT2,
+  I2       = sI2,
+  T3       = sT3,
+  I3       = sI3,
+  verbose  = 1)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT Al_window1 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.21) RELATIVE VCS
+
+COMPONENT Al_window2 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.61) RELATIVE VCS
+
+COMPONENT Al_window3 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.78) RELATIVE VCS
+
+COMPONENT Al_window4 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.92) RELATIVE VCS
+
+COMPONENT Al_window5 = Al_window(thickness=Al_Thickness)
+AT (0,0,2.43) RELATIVE VCS
+
+/* H113-1: L=3.17 m in 1 element. no curvature */
+
+COMPONENT PinkCarter = Guide_gravity(
+  w1=0.068, h1=0.2, w2=0.062, h2=0.2, l=3.170,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
+AT (0,0,2.525) RELATIVE VCS
+
+COMPONENT FirstObturator = Guide_gravity(
+  w1=0.061, h1=0.2, w2=0.061, h2=0.2, l=0.228,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
+AT (0,0,3.17+0.02) RELATIVE PinkCarter
+
+/* ******************** swiming pool guide ******************** */
+
+/* H113-2: L=5.5 m in 6 elements R horiz=4000 m */
+
+COMPONENT H113_2 = Arm()
+AT (0,0,3.59) RELATIVE PinkCarter
+
+COMPONENT H113_2_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_1 = Guide_gravity(
+  w1=0.06, h1=0.2, w2=0.06, h2=0.2, l=L_H113_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_2,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_2 = COPY(PREVIOUS)
+AT (0,0,L_H113_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_2,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_3 = COPY(PREVIOUS)
+AT (0,0,L_H113_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_2,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_4 = COPY(PREVIOUS)
+AT (0,0,L_H113_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_2,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_5 = COPY(PREVIOUS)
+AT (0,0,L_H113_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_2,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_6 = COPY(PREVIOUS)
+AT (0,0,L_H113_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_2,0) RELATIVE PREVIOUS
+
+COMPONENT H113_2_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_2+gGap) RELATIVE PREVIOUS
+
+/* gap 0.198 m (VS) */
+
+/* H113-3: L=3 m in 3 elements Rh=4000 m. */
+
+COMPONENT H113_3 = Arm()
+AT (0,0,0.198) RELATIVE PREVIOUS
+
+COMPONENT H113_3_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_3_1 = Guide_gravity(
+  w1=0.06, h1=0.2, w2=0.06, h2=0.2, l=L_H113_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_3,0) RELATIVE PREVIOUS
+
+COMPONENT H113_3_2 = COPY(PREVIOUS)
+AT (0,0,L_H113_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_3,0) RELATIVE PREVIOUS
+
+COMPONENT H113_3_3 = COPY(PREVIOUS)
+AT (0,0,L_H113_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_3,0) RELATIVE PREVIOUS
+
+COMPONENT H113_3_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_3+gGap) RELATIVE PREVIOUS
+
+/* gap 0.06 m */
+
+/* H113-4: L=10 m in 10 elements Rh=4000 m. divergent 60-90 */
+
+COMPONENT H113_4 = Arm()
+AT (0,0,0.03) RELATIVE PREVIOUS
+
+COMPONENT H113_4_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_1 = Guide_gravity(
+  w1=0.06, h1=0.2, w2=(0.06*9+0.09*1)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_2 = Guide_gravity(
+  w1=(0.06*9+0.09*1)/10, h1=0.2, w2=(0.06*8+0.09*2)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_3 = Guide_gravity(
+  w1=(0.06*8+0.09*2)/10, h1=0.2, w2=(0.06*7+0.09*3)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_4 = Guide_gravity(
+  w1=(0.06*7+0.09*3)/10, h1=0.2, w2=(0.06*6+0.09*4)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_5 = Guide_gravity(
+  w1=(0.06*6+0.09*4)/10, h1=0.2, w2=(0.06*5+0.09*5)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_6 = Guide_gravity(
+  w1=(0.06*5+0.09*5)/10, h1=0.2, w2=(0.06*4+0.09*6)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_7 = Guide_gravity(
+  w1=(0.06*4+0.09*6)/10, h1=0.2, w2=(0.06*3+0.09*7)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_8 = Guide_gravity(
+  w1=(0.06*3+0.09*7)/10, h1=0.2, w2=(0.06*2+0.09*8)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_9 = Guide_gravity(
+  w1=(0.06*2+0.09*8)/10, h1=0.2, w2=(0.06*1+0.09*9)/10, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_10 = Guide_gravity(
+  w1=(0.06*1+0.09*9)/10, h1=0.2, w2=0.09, h2=0.2, l=L_H113_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_4,0) RELATIVE PREVIOUS
+
+COMPONENT H113_4_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_4+gGap) RELATIVE PREVIOUS
+
+/* gap 0.09 m */
+
+/* H113-5: L=11 m in 11 elements Rh=4000 m. */
+
+COMPONENT H113_5 = Arm()
+AT (0,0,0.03) RELATIVE PREVIOUS
+
+COMPONENT H113_5_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_1 = Guide_gravity(
+  w1=0.09, h1=0.2, w2=0.09, h2=0.2, l=L_H113_5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_2 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_3 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_4 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_5 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_6 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_7 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_8 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_9 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_10 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_11 = COPY(PREVIOUS)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_5,0) RELATIVE PREVIOUS
+
+COMPONENT H113_5_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_5+gGap) RELATIVE PREVIOUS
+
+/* gap .330 m (VTE) */
+
+/* ******************** after the VTE ******************** */
+
+/* H113-6: L=11 m in 11 elements Rh=4000 m. */
+
+COMPONENT H113_6 = Arm()
+AT (0,0,0.03) RELATIVE PREVIOUS
+
+COMPONENT H113_6_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_1 = Guide_gravity(
+  w1=0.09, h1=0.2, w2=0.09, h2=0.2, l=L_H113_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_2 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_3 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_4 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_5 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_6 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_7 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_8 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_9 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_10 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_11 = COPY(PREVIOUS)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_6,0) RELATIVE PREVIOUS
+
+COMPONENT H113_6_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_6+gGap) RELATIVE PREVIOUS
+
+/* H113-6: L=11 m in 11 elements Rh=4000 m. */
+
+COMPONENT H113_7 = Arm()
+AT (0,0,0.03) RELATIVE PREVIOUS
+
+COMPONENT H113_7_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_1 = Guide_gravity(
+  w1=0.09, h1=0.2, w2=0.09, h2=0.2, l=L_H113_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_2 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_3 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_4 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_5 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_6 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_7 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_8 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_9 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_10 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_11 = COPY(PREVIOUS)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_7,0) RELATIVE PREVIOUS
+
+COMPONENT H113_7_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_7+gGap) RELATIVE PREVIOUS
+
+/* H113-8: L=11 m in 11 elements Rh=4000 m. */
+
+COMPONENT H113_8 = Arm()
+AT (0,0,0.03) RELATIVE PREVIOUS
+
+COMPONENT H113_8_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_1 = Guide_gravity(
+  w1=0.09, h1=0.2, w2=0.09, h2=0.2, l=L_H113_8,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_2 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_3 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_4 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_5 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_6 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_7 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_8 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_9 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_10 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_11 = COPY(PREVIOUS)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_8,0) RELATIVE PREVIOUS
+
+COMPONENT H113_8_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_8+gGap) RELATIVE PREVIOUS
+
+/* H113-9: L=10 m in 10 elements Rh=4000 m. converging part 90-60 */
+
+COMPONENT H113_9 = Arm()
+AT (0,0,0.03) RELATIVE PREVIOUS
+
+COMPONENT H113_9_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_1 = Guide_gravity(
+  w1=0.09, h1=0.2, w2=(0.09*9+0.06*1)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_2 = Guide_gravity(
+  w1=(0.09*9+0.06*1)/10, h1=0.2, w2=(0.09*8+0.06*2)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_3 = Guide_gravity(
+  w1=(0.09*8+0.06*2)/10, h1=0.2, w2=(0.09*7+0.06*3)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_4 = Guide_gravity(
+  w1=(0.09*7+0.06*3)/10, h1=0.2, w2=(0.09*6+0.06*4)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_5 = Guide_gravity(
+  w1=(0.09*6+0.06*4)/10, h1=0.2, w2=(0.09*5+0.06*5)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_6 = Guide_gravity(
+  w1=(0.09*5+0.06*5)/10, h1=0.2, w2=(0.09*4+0.06*6)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_7 = Guide_gravity(
+  w1=(0.09*4+0.06*6)/10, h1=0.2, w2=(0.09*3+0.06*7)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_8 = Guide_gravity(
+  w1=(0.09*3+0.06*7)/10, h1=0.2, w2=(0.09*2+0.06*8)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_9 = Guide_gravity(
+  w1=(0.09*2+0.06*8)/10, h1=0.2, w2=(0.09*1+0.06*9)/10, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_10 = Guide_gravity(
+  w1=(0.09*1+0.06*9)/10, h1=0.2, w2=0.06, h2=0.2, l=L_H113_9,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m = m, W=gW)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H113_9,0) RELATIVE PREVIOUS
+
+COMPONENT H113_9_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H113_9+gGap) RELATIVE PREVIOUS
+
+/* gap 0.06 m */
+
+/* PF1b position */
+
+COMPONENT GuideOut = Arm() AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_xy = Monitor_nD(
+  xwidth=0.06, yheight=0.2, restore_neutron=1,
+  options="x y, per cm2, slit")
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_dxdy = Monitor_nD(
+  xwidth=0.06, yheight=0.2, restore_neutron=1,
+  options="dx dy, all auto, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_Phic = Monitor_nD(
+  xwidth=0.06, yheight=0.2, restore_neutron=1,
+  options="per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_L = Monitor_nD(
+  xwidth=0.06, yheight=0.2, restore_neutron=1,
+  options="lambda, limits=[1 21] bins=20, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END

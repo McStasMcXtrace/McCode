@@ -1,0 +1,74 @@
+# TITLE  Al4 Cu8 Mn4 [Cubic, Centric (-1 at origin)]
+#        a         b         c        alpha     beta      gamma
+# CELL   5.82350   5.82350   5.82350  90.00000  90.00000  90.00000
+# SPCGRP  F m -3 m [Number 225]
+#                    X         Y         Z         B         Occ       Spin      Charge
+# Atom  Al           0.00000   0.00000   0.00000   0.00000   0.02083   0.00000   0.00000
+# Atom  Cu           0.25000   0.25000   0.25000   0.00000   0.04167   0.00000   0.00000
+# Atom  Mn           0.50000   0.50000   0.50000   0.00000   0.02083   0.00000   0.00000
+# COMMAND cif2hkl Cu2MnAl.cif --output Cu2MnAl.laz (modified)
+# CIF2HKL (c) ILL 2012 E. Farhi <farhi@ill.eu> based on CrysFML
+# DATE    13/09/2017 at 16:02:19
+#
+# Physical parameters:
+# sigma_coh        72.85657 coherent   scattering cross section in [barn]
+# sigma_inc         6.04349 incoherent scattering cross section in [barn]
+# sigma_abs        84.36400 absorption scattering cross section in [barn]
+# density           4.23329 in [g/cm^3]
+# weight          836.04639 in [g/mol]
+# Vc              197.49326 volume of unit cell in [A^3]
+# lattice_a         5.82350 lattice parameter a in [Angs]
+#
+# Format parameters: Crystallographica format
+# column_h  1
+# column_k  2
+# column_l  3
+# column_j  4   multiplicity 'j'
+# column_d  5   d-spacing 'd' in [Angs]
+# column_F  6   norm of scattering factor |F| in [barn^0.5]
+#
+# H   K   L     Mult    dspc         |Fc|
+  1   1   1     8       3.36220      2.8716
+  2   0   0     6       2.91175      6.2868
+  2   2   0    12       2.05892      6.062
+  3   1   1    24       1.75585      2.8716
+  2   2   2     8       1.68110      6.2868
+  4   0   0     6       1.45587      6.062
+  3   3   1    24       1.33600      2.8716
+  4   2   0    24       1.30217      6.2868
+  4   2   2    24       1.18872      6.062
+  5   1   1    24       1.12073      2.8716
+  3   3   3     8       1.12073      2.8716
+  4   4   0    12       1.02946      6.062
+  5   3   1    48       0.98435      2.8716
+  4   4   2    24       0.97058      6.2868
+  6   0   0     6       0.97058      6.2868
+  6   2   0    24       0.92078      6.062
+  5   3   3    24       0.88808      2.8716
+  6   2   2    24       0.87793      6.2868
+  4   4   4     8       0.84055      6.062
+  5   5   1    24       0.81545      2.8716
+  7   1   1    24       0.81545      2.8716
+  6   0   4    24       0.80757      6.2868
+  6   4   2    48       0.77820      6.062
+  7   3   1    48       0.75816      2.8716
+  5   5   3    24       0.75816      2.8716
+  8   0   0     6       0.72794      6.062
+  7   3   3    24       0.71145      2.8716
+  6   4   4    24       0.70620      6.2868
+  8   2   0    24       0.70620      6.2868
+  8   2   2    24       0.68631      6.062
+  6   6   0    12       0.68631      6.062
+  5   5   5     8       0.67244      2.8716
+  7   5   1    48       0.67244      2.8716
+  6   6   2    24       0.66800      6.2868
+  8   4   0    24       0.65109      6.062
+  7   5   3    48       0.63921      2.8716
+  9   1   1    24       0.63921      2.8716
+  8   4   2    48       0.63540      6.2868
+  6   6   4    24       0.62079      6.062
+  9   3   1    48       0.61047      2.8716
+  8   4   4    24       0.59436      6.062
+  9   3   3    24       0.58528      2.8716
+  7   5   5    24       0.58528      2.8716
+

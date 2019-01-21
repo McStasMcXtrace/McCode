@@ -1,0 +1,312 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: ISIS_SANS2d 
+*
+* %Identification
+* Written by: Richard Heenan with edits by Peter Willendrup
+* Date: 2014
+* Origin: ISIS, DTU Fysik
+* %INSTRUMENT_SITE: ISIS
+*
+* This instrument models the ISIS TS2 SANS2d instrument.
+*
+* %Description
+* This instrument models the ISIS TS2 SANS2d instrument up to the sample position.
+*
+* From the author:
+* <p><b>IMPORTANT:</b> The instrument model does not currently include a correct moderator description 
+* - and the results it produces have not been validated against experimental results.
+* <p>The actual bender is continuously curved, here use straight segments approx.with gravity.
+* 1/7/10 L1=4m  increased gap between bender exit and S1 slit from .247 to .286m
+* At 4m we actually use 1.75 to 16.5 angstrom. 
+* <p>Note "2m guides" are actually 1.985m long (new ones will be 1.981m) so "real gaps" are included below, losses are pro-rata the gap/guide lengths.
+* <p>Both rear & front detectors are 980mm square and offset 150 above beam (would only use 100mm with hindsight) 
+* <p>Rear detector can be offset -300mm or +269mm sideways.
+* <p>Front detector is closest at approx 1.4m,  furthest at approx((read det position) - 1.6m) , offset  up to -1200mm sideways 
+* there are 2 baffles between front & rear detector
+* <p>NIMROD (W5) spectrum might better than SANS2d (E2) spectrum for liquid H2 face incurent use.
+* Stu Ansell's McStas spectra for TS-2 actually have no angle variation included.
+* In reality spectra and backgrounds will vary, fast background is likely much higher on ZOOM(E1) than SANS2d (E2)
+* <p>RKH 2014
+*
+* %Parameters
+* L1: [m]       Variable distance from 1st to 2nd variable slit
+* S6: [m]       Radius of slit S6 (last of the optis slits)
+* A1w: [m]      Width of first collimation slit, rectangular slit
+* A1h: [m]      Height of first collimation slit, rectangular slit
+* A2: [m]       Radius of second collimation slit, circular slit
+* Lmin: [AA]    Minimum wavelength to produce at the source
+* Lmax: [AA]    Maximum wavelength to produce at the source
+* model_nr: []  SANS_benchmark2 SANS sample nr. E.g. 5: sphere(r=50AA), 15: sphere(r=150AA)
+* 
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ISIS_SANS2d_Mantid(L1=3.926, A1w=0.030, A1h=0.02, S6=0.006, A2=0.006, Lmin=1, Lmax=14, model_nr=15.0)
+/* F2409w3p5, cf run 5226, L1=4m, A1=30x20, S6=12, A2=12, 1.75-16.5 ang */
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  /* Initialize to a know non-meaningful value */
+
+%}
+
+
+COMPONENT Origin = Arm()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT isis_source = ISIS_moderator(
+    Face = "E2", Emin = -Lmax, Emax = -Lmin, dist = 3.68,
+    focus_xw = 0.0365, focus_yh = 0.021, xwidth = -1, yheight = -1,
+    CAngle = 0.0, SAC = 1)
+  AT (0.0, 0.0, 0.00001) RELATIVE Origin
+  ROTATED(0.0, 0.0, 0.0) RELATIVE Origin
+
+COMPONENT lmon1 = L_monitor(
+    nL = 140, filename = "lmon1.dat", xmin = -0.04,
+    xmax = 0.04, ymin = -0.03, ymax = 0.03, Lmin = 0.0,
+    Lmax = 17.0)
+  AT (0.0, 0.0, 3.698) RELATIVE isis_source
+
+COMPONENT psd1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "psd1.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.05, ymax = 0.05)
+  AT (0.0, 0.0, 3.699) RELATIVE isis_source
+
+COMPONENT bender1 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 3.7) RELATIVE isis_source
+  ROTATED (0.0, 0.137099, 0.0) RELATIVE isis_source
+
+COMPONENT bender2 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender1
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender1
+
+COMPONENT bender3 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender2
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender2
+
+COMPONENT bender4 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender3
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender3
+
+COMPONENT bender5 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender4
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender4
+
+COMPONENT bender6 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender5
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender5
+
+COMPONENT bender7 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender6
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender6
+
+COMPONENT bender8 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender7
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender7
+
+COMPONENT bender9 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender8
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender8
+
+COMPONENT bender10 = Guide_gravity(
+    w1 = .0355, h1 = .020, w2 = .0355, h2 = .020, d = .0005, nslit = 9,
+    mleft = 1, mright = 3, mtop = 1, mbottom = 1, wavy = 0,  l = 0.3245)
+  AT (0, 0, 0.325) RELATIVE bender9
+  ROTATED (0.0, 0.1375099, 0.0) RELATIVE bender9
+
+COMPONENT lmonb = L_monitor(
+    nL = 140, filename = "lmonB.dat", xmin = -0.018,
+    xmax = 0.018, ymin = -0.018, ymax = 0.018, Lmin = 0.0,
+    Lmax = 17.0)
+  AT (0.0, 0.0, 0.326) RELATIVE bender10
+
+COMPONENT psd2 = PSD_monitor(
+    nx = 100, ny = 100, filename = "psd2.dat", xmin = -0.025,
+    xmax = 0.025, ymin = -0.025, ymax = 0.025)
+  AT (0.0, 0.0, 0.001) RELATIVE lmonb
+
+  /*                                  guide_in is S1 */
+COMPONENT guide_in = Slit(
+    xmin = -0.015, xmax = 0.015, ymin = -.01, ymax = +.01)
+  AT (0, 0, 0.2845) RELATIVE psd2
+  
+/*                                    guide entrance = bender exit + 286.5 + 7.5mm = 6.95+.295= 7.245m 
+*                                     old guides are 1.985m long (i.e. 7.5mm gap each end), new ones 1.981m */
+
+COMPONENT guide_straight1 = Guide_gravity(
+    w1 = .030, h1 = .020, w2 = .030, h2 = .020, l = 1.985, 
+    mleft = 1, mright = 1, mtop = 1, mbottom = 1, wavy = 0)
+  AT (0, 0, 0.0075) RELATIVE guide_in
+
+COMPONENT guide_straight2 = Guide_gravity(
+    w1 = .030, h1 = .020, w2 = .030, h2 = .020, l = 1.985, 
+    mleft = 1, mright = 1, mtop = 1, mbottom = 1, wavy = 0)
+  AT (0, 0, 2.000) RELATIVE guide_straight1
+
+COMPONENT guide_straight3 = Guide_gravity(
+    w1 = .030, h1 = .020, w2 = .030, h2 = .020, l = 1.985, 
+    mleft = 1, mright = 1, mtop = 1, mbottom = 1, wavy = 0)
+  AT (0, 0, 2.000) RELATIVE guide_straight2
+
+COMPONENT guide_straight4 = Guide_gravity(
+    w1 = .030, h1 = .020, w2 = .030, h2 = .020, l = 1.985, 
+    mleft = 1, mright = 1, mtop = 1, mbottom = 1, wavy = 0)
+  AT (0, 0, 2.000) RELATIVE guide_straight3
+
+COMPONENT psd3 = PSD_monitor(
+    nx = 100, ny = 100, filename = "psd3.dat", xmin = -0.030,
+    xmax = 0.030, ymin = -0.030, ymax = 0.030)
+  AT (0.0, 0.0, 7.999) RELATIVE guide_in
+
+/*                                    APERTURE1 is Sn at guide exit */
+COMPONENT aperture1 = Slit(
+    xwidth = A1w, yheight=A1h)
+  AT (0, 0, 8.000) RELATIVE guide_in
+
+/*                                   proper Monitor 2, make fill whole beam */
+COMPONENT lmonitor2 = L_monitor(
+    nL = 140, filename = "lmonitor2.dat", xmin = -0.0155,
+    xmax = 0.0155, ymin = -0.0105, ymax = 0.0105, Lmin = 0.0,
+    Lmax = 17.0)
+  AT (0.0, 0.0, 2.651) RELATIVE aperture1
+
+/*                                    S6 is at ~ 18.087m ~.801m after S5 */
+COMPONENT S6 = Slit(
+    radius = S6 )
+  AT (0, 0, 2.800) RELATIVE aperture1
+
+ /* Mantid needs a straight instrument-axis for correct ki-transformation of the events.
+	The following Arm is a trick to ensure this - and is propagated length of the primary optics 
+	"back" from the orientation of the last guide-element / slit /...
+ */
+COMPONENT sourceMantid = Arm()
+	AT (0, 0, -18.087) RELATIVE S6
+
+ /*                         Asnout ~ shutter -150 ~ 19.362-.150 =19.212,    M3-Asnout = 19.497 - 19.212 = .285m 
+*                           S2 at S1+4m = 11.2865m       19.212-11.286= 7.926 */
+  COMPONENT APERTURE2 = Slit(
+    radius = A2)
+  AT (0, 0, L1 ) RELATIVE aperture1
+
+// Spectrum before sample
+COMPONENT lmon2 = L_monitor(
+    nL = 140, filename = "Edet0.dat", xmin = -0.0075,
+    xmax = 0.0075, ymin = -0.0075, ymax = 0.0075, Lmin = 0.0,
+    Lmax = 17.0)
+  AT (0.0, 0.0, 0.285) RELATIVE APERTURE2
+
+COMPONENT psd4 = PSD_monitor(
+    nx = 100, ny = 100, filename = "psd4.dat", xmin = -0.0075,
+    xmax = 0.0075, ymin = -0.0075, ymax = 0.0075)
+  AT (0.0, 0.0, 0.286) RELATIVE APERTURE2
+
+
+COMPONENT psd5 = PSD_monitor(
+    nx = 100, ny = 100, filename = "psd5.dat", xmin = -0.0075,
+    xmax = 0.0075, ymin = -0.0075, ymax = 0.0075,
+		restore_neutron=1)
+  AT (0.0, 0.0, 0.18) RELATIVE psd4
+
+SPLIT COMPONENT sampleMantid = SANS_benchmark2(
+      xwidth=0.01, 
+      yheight=0.01, 
+      zthick=0.001, 
+      model=model_nr,
+      dsdw_inc=0.0, 
+      sc_aim=1.0, 
+      sans_aim=1.00, 
+      singlesp = 1.0)
+AT (0, 0, 0.2) RELATIVE psd4
+EXTEND %{
+        if (!SCATTERED) ABSORB;
+%}
+
+
+COMPONENT detector = PSD_monitor(
+    nx = 200, ny = 200, 
+    filename = "PSD.dat", 
+    xmin = -0.5,
+    xmax = 0.5, 
+    ymin = -0.5, 
+    ymax = 0.5,
+    restore_neutron = 1)
+AT (0, 0, 3.9) RELATIVE sampleMantid
+
+
+
+COMPONENT nD_Mantid_1 = Monitor_nD(
+	options ="mantid square x limits=[-0.5 0.5] bins=200 y limits=[-0.5 0.5] bins=200, neutron pixel t, list all neutrons",
+    xmin = -0.5,
+    xmax = 0.5,
+    ymin = -0.5,
+    ymax = 0.5,
+    restore_neutron = 1,
+    filename = "bank01_events.dat")
+  AT (0, 0, 3.9) RELATIVE sampleMantid
+
+
+
+COMPONENT lmon_post = L_monitor(
+    nL = 140, filename = "lmonitor_post.dat", xmin = -0.5,
+    xmax = 0.5, ymin = -0.5, ymax = 0.5, Lmin = 0.0,
+    Lmax = 17.0,
+    restore_neutron = 1)
+  AT (0.0, 0.0, 3.9) RELATIVE sampleMantid
+
+FINALLY
+%{
+%}
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

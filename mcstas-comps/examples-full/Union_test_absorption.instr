@@ -1,0 +1,68 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: test
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* %INSTRUMENT_SITE: Union_demos
+*
+*
+* %Description
+* Testing an absorber made using the Union components. An absorber is made
+*  without processes and just the make_material component, and requires
+*  a few special cases.
+*
+* Example: Detector: screen_I=5.91451e-06
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_test_absorption()
+
+DECLARE
+%{
+%}
+
+TRACE
+
+COMPONENT absorber_material = Union_make_material(my_absorption=3,absorber=1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+        xwidth=0.15, yheight=0.15,focus_aw=0.01, focus_ah=0.01,
+        E0 = 10,
+        dE = 0)
+  AT (0,0,0) RELATIVE a1
+  ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT beam_center = Arm()
+AT (0,0,1.4) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT cylinder = Union_cylinder(
+  radius = 0.05, yheight = 0.1,
+  priority=6, material_string="absorber_material")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+COMPONENT test_sample = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+
+COMPONENT screen = PSD_monitor(xwidth=0.2,yheight=0.2,nx=200,ny=200,filename="absoprtion_picture.dat",restore_neutron=1)
+  AT (0,0,2) RELATIVE a1
+
+
+
+END

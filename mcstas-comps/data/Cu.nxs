@@ -1,0 +1,14 @@
+#
+# This is an nxs parameter file
+#
+space_group = 225
+lattice_a = 3.61
+lattice_b = 3.61
+lattice_c = 3.61
+lattice_alpha = 90.000000
+lattice_beta = 90.000000
+lattice_gamma = 90.000000
+debye_temp=344.5
+
+# label  b_coherent  sigma_inc  sigma_abs  molar_mass  x  y  z
+add_atom = Cu 7.718 0.55 3.769 63.55 0.0 0.0 0.0

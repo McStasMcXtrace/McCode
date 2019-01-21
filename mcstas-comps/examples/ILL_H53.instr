@@ -1,0 +1,433 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H53
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: April 7, 2004
+* Origin:ILL
+* %INSTRUMENT_SITE: ILL
+*
+* The H53 curved cold guide at the ILL
+*
+* %Description
+* The H53 curved cold guide at the ILL feeding IN14, IN16, D16, ADAM, CRYO-EDM
+*
+* %Example: m=1.2 dlambda=8.5 Detector: H53_P5_Out_Phic_I=1.8081e+10
+*
+* %Parameters
+* m: [1]         m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip: [1]       m-value of in-pile guide coating
+* lambda: [AA]   central wavelength
+* dlambda: [AA]  wavelength half width. Use e.g. 0.8*lambda for white beam
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H53(m=1.2, lambda=10, dlambda=9.9, mip=1.2)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+/* HCS (H5) source 'Measured' parameters */
+double sT3=413.5,sI3=10.22e12;
+double sT2=145.8,sI2=3.44e13;
+double sT1=40.1 ,sI1=2.78e13;
+/* guide coating parameters */
+double gR0          = 1;
+double gQc          = 0.021;
+double gAlpha       = 4.07;
+double gW           = 1.0/300.0;
+/* gaps and Al windows parameters */
+double Al_Thickness = 0.002;
+double gGap         = 0.001;
+/* guide curvatures */
+double gRh          = 4000; /* anti-clockwise */
+/* guide section parameters (total length/number of elements) */
+double L_H53_COM =6.0  /4,  Rh_H53_COM =0;
+double L_H53_C1  =3.5  /3,  Rh_H53_C1  =0;
+double L_H53_C2  =9.5  /7,  Rh_H53_C2  =0;
+double L_H53_C3  =3.0  /3,  Rh_H53_C3  =0;
+double L_H53_P1  =6.0  /4, Rh_H53_P1  =0;
+double L_H53_P2  =7.5  /5, Rh_H53_P2  =0;
+double L_H53_P3  =7.5  /5, Rh_H53_P3  =0;
+double L_H53_P4  =7.5  /5, Rh_H53_P4  =0;
+double L_H53_P5  =5.5  /3, Rh_H53_P5  =0;
+double L_H53_P6  =4.295/3, Rh_H53_P6  =0;
+double L_H53_P7  =0.552/1, Rh_H53_P7  =0;
+
+/* capture flux positions from moderator: 21.4    28.4    61.2 */
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+
+/* Element rotations = Element length / Curvature Radius * RAD2DEG */
+	if (gRh) {
+		Rh_H53_C2  = L_H53_C2 /gRh*RAD2DEG;
+		Rh_H53_C3  = L_H53_C3 /gRh*RAD2DEG;
+		Rh_H53_P1  = L_H53_P1 /gRh*RAD2DEG;
+		Rh_H53_P2  = L_H53_P2 /gRh*RAD2DEG;
+		Rh_H53_P3  = L_H53_P3 /gRh*RAD2DEG;
+		Rh_H53_P4  = L_H53_P4 /gRh*RAD2DEG;
+	}
+printf("Instrument: %s (H53@ILL cold guide on HCS).\n", NAME_CURRENT_COMP);
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, and even replaced by a Progress_bar  */
+/* component. Other useful keywords are : ROTATED EXTEND GROUP PREVIOUS */
+/* Also think about adding a neutron source !                           */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT HCS = Source_gen(
+  radius   = 0.21,
+  dist     = 2.155,
+  focus_xw = 0.06,
+  focus_yh = 0.12,
+  lambda0     = lambda,
+  dlambda     = dlambda,
+  T1       = sT1,
+  I1       = sI1,
+  T2       = sT2,
+  I2       = sI2,
+  T3       = sT3,
+  I3       = sI3,
+  verbose  = 1)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT Al_window1 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.21) RELATIVE HCS
+
+COMPONENT Al_window2 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.61) RELATIVE HCS
+
+COMPONENT Al_window3 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.78) RELATIVE HCS
+
+COMPONENT Al_window4 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.92) RELATIVE HCS
+
+COMPONENT Al_window5 = Al_window(thickness=Al_Thickness)
+AT (0,0,2.15) RELATIVE HCS
+
+/* H53-0: L=2.775 m in 1 element. no curvature */
+
+COMPONENT NiGuide = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=2.775,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
+AT (0,0,2.155) RELATIVE HCS
+
+COMPONENT Al_window6 = Al_window(thickness=Al_Thickness)
+AT (0,0,2.775+0.01) RELATIVE PREVIOUS
+
+/* gap 25 mm */
+
+COMPONENT Al_window7 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.02) RELATIVE PREVIOUS
+
+COMPONENT H53_BOG1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.860,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = mip, W=gW)
+AT (0,0,2.775+.025) RELATIVE NiGuide
+
+/* this is the O.P. Gap 12 mm  */
+COMPONENT H53_BOG2 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=1.440,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = mip, W=gW)
+AT (0,0,0.860+.012) RELATIVE PREVIOUS
+
+COMPONENT H53_BOG3 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.74,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = mip, W=gW)
+AT (0,0,1.44+.012) RELATIVE PREVIOUS
+
+COMPONENT Al_window8 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.74+0.01) RELATIVE PREVIOUS
+
+/* gap 75 mm (V.S) */
+
+COMPONENT Al_window9 = Al_window(thickness=Al_Thickness)
+AT (0,0,0.06) RELATIVE PREVIOUS
+
+COMPONENT CarterVS1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.499,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,0.74+0.075) RELATIVE H53_BOG3
+
+COMPONENT CarterVS2 = COPY(PREVIOUS)
+AT (0,0,0.5) RELATIVE PREVIOUS
+
+/* H53-COM: Carter COM: L=6 m in 6 elements R horiz=0 m */
+
+COMPONENT H53_COM = Arm()
+AT (0,0,0.5+0.006) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_COM,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_4 = COPY(PREVIOUS)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_COM,0) RELATIVE PREVIOUS
+
+COMPONENT H53_COM_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_COM+gGap) RELATIVE PREVIOUS
+
+/* H53-C1: Carter C1 L=4 m in 3 elements Rh=0 m */
+
+COMPONENT H53_C1 = Arm()
+AT (0,0,Al_Thickness+0.006) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_C1,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C1_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS
+
+/* IN14: gap 450 mm */
+
+/* H53-4: L=7.973 m in 8 elements Rh=4000 m */
+
+COMPONENT H53_C2 = Arm()
+AT (0,0,0.450+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_C2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_4 = COPY(PREVIOUS)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_5 = COPY(PREVIOUS)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_6 = COPY(PREVIOUS)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_7 = COPY(PREVIOUS)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C2_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_C2+gGap) RELATIVE PREVIOUS
+
+/* gap 0.0095 m */
+
+/* H53-C3: Carter Cloison C3 L=3 m in 3 elements Rh=4000 m */
+
+COMPONENT H53_C3 = Arm()
+AT (0,0,Al_Thickness+0.0095) RELATIVE PREVIOUS
+
+COMPONENT H53_C3_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C3_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_C3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C3_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_C3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C3_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_C3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_C3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_C3_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_C3+gGap) RELATIVE PREVIOUS
+
+/* gap .368 m (VTE) */
+
+/* ******************** VTE position. Coming in ILL22 ******************** */
+
+/* H53-P1: Carter Poutre1 L=6 m in 4 elements Rh=4000 m */
+
+COMPONENT H53_P1 = Arm()
+AT (0,0,0.368+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT H53_P1_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P1_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P1,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P1_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_P1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P1_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_P1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P1_4 = COPY(PREVIOUS)
+AT (0,0,L_H53_P1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P1,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P1_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_P1+gGap) RELATIVE PREVIOUS
+
+/* H53-P2: Carter Poutre2 L=7.5 m in 5 elements Rh=4000 m */
+
+COMPONENT H53_P2 = Arm()
+AT (0,0,0.006+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_P2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_P2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_4 = COPY(PREVIOUS)
+AT (0,0,L_H53_P2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_5 = COPY(PREVIOUS)
+AT (0,0,L_H53_P2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P2,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P2_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_P2+gGap) RELATIVE PREVIOUS
+
+/* H53-P3: Carter Poutre3 L=7.5 m in 5 elements Rh=4000 m */
+
+COMPONENT H53_P3 = Arm()
+AT (0,0,0.0075+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_P3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_P3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_4 = COPY(PREVIOUS)
+AT (0,0,L_H53_P3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_5 = COPY(PREVIOUS)
+AT (0,0,L_H53_P3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P3,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P3_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_P3+gGap) RELATIVE PREVIOUS
+
+/* H53-P4: Carter Poutre4 L=7.5 m in 5 elements Rh=4000 m */
+
+COMPONENT H53_P4 = Arm()
+AT (0,0,0.0075+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P4,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_P4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P4,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_P4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P4,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_4 = COPY(PREVIOUS)
+AT (0,0,L_H53_P4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P4,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_5 = COPY(PREVIOUS)
+AT (0,0,L_H53_P4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P4,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P4_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_P4+gGap) RELATIVE PREVIOUS
+
+/* End of H53. Begining of H53B *************************************** */
+
+/* IN16 position. Gap .500 */
+
+/* H53-P5: Carter Poutre5 L=5 m in 3 elements Rh=0 m */
+
+COMPONENT H53_P5 = Arm()
+AT (0,0,0.5+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_In = Al_window(thickness=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_1 = Guide_gravity(
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P5,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_2 = COPY(PREVIOUS)
+AT (0,0,L_H53_P5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P5,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_3 = COPY(PREVIOUS)
+AT (0,0,L_H53_P5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P5,0) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_Out = Al_window(thickness=Al_Thickness)
+AT (0,0,L_H53_P5+gGap) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_Out_Phic = Monitor_nD(options="capture per cm2", xwidth=0.06, yheight=0.12)
+AT (0,0,0.005) RELATIVE PREVIOUS
+
+/* D16 position. Gap .200 */
+
+/* H53-P6: Carter Poutre6 L=4.295x0.120x0.060 m in 3 elements Rh=0 m */
+
+/* ADAM position. gap .524 */
+
+/* H53-P7: Carter Poutre7 L=.552x0.120x0.060 m in 3 elements Rh=0 m */
+
+/* PF1a/CRYO-EDM position. gap .156 */
+
+END

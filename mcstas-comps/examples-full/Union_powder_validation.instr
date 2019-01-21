@@ -1,0 +1,130 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: incoherent_validation
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: May 2016
+* Origin: Johns Hopkins University, Baltimore
+* %INSTRUMENT_SITE: Union_demos
+*
+*
+* %Description
+*  Validation of Union powder against standard PowderN component. 
+*
+* Example: Banana_monitor_I=20.1897
+*
+* %Parameters
+* comp_select: [1] 1: Union components, 2: PowderN
+* material_data_file: []  
+* E0: []                  
+* dE: []                  
+* sample_radius: []       
+* sample_height: []       
+* pack: []                
+* sigma_inc: []           
+* sigma_abs: []           
+* Vc: []                  
+* geometry_interact: []   
+* incoherent_fraction: [] 
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_powder_validation(int comp_select=1, string material_data_file = "Al.laz",E0 = 100,dE = 2,sample_radius=0.01,sample_height=0.01,pack=1,sigma_inc=0.0328,sigma_abs=0.924,Vc=66.4,geometry_interact=0.5,incoherent_fraction=0.2)
+
+DECLARE
+%{
+int single_scattering_flag;
+%}
+
+TRACE
+
+COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc,packing_factor=pack,unit_cell_volume=Vc,interact_fraction=incoherent_fraction)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Powder_process = Powder_process(reflections=material_data_file, d_phi=30) //,format=Lazy)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT test_material = Union_make_material(my_absorption=100*sigma_abs/Vc*pack, process_string="Powder_process,Incoherent_process")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+        xwidth=0.0005, yheight=0.0005,focus_aw=1.5, focus_ah=1.5,
+        E0 = E0, dE = dE, flux=1E10)
+  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT sample_position = Arm()
+AT (0,0,1) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT cylinder_sample_union = Union_cylinder(radius=sample_radius, yheight=sample_height, priority=1, material_string="test_material", p_interact = geometry_interact)
+WHEN(comp_select == 1)
+AT (0,0,0) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+
+COMPONENT test_sample = Union_master()
+WHEN(comp_select == 1)
+AT(0,0,1) RELATIVE a1
+EXTEND
+%{
+if (number_of_scattering_events == 1) single_scattering_flag = 1;
+else single_scattering_flag = 0;
+%}
+
+COMPONENT cylinder_sample_powder = PowderN(reflections=material_data_file, radius=sample_radius, yheight=sample_height, pack=pack, p_interact=0.8, thickness=0, d_phi=30)
+WHEN(comp_select == 2)
+AT (0,0,0) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+EXTEND
+%{
+if (SCATTERED) single_scattering_flag = 1;
+else single_scattering_flag = 0;
+%}
+
+COMPONENT detectors_m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="4Pi_events.dat",restore_neutron=1)
+  AT (0, 0, 0) RELATIVE sample_position
+
+COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=500",filename="banana.dat",restore_neutron=1)
+AT (0,0,0) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+
+COMPONENT Banana_monitor_single = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=500",filename="banana_single.dat",restore_neutron=1)
+WHEN (single_scattering_flag == 1)
+AT (0,0,0) RELATIVE sample_position
+ROTATED (0,0,0) RELATIVE sample_position
+
+COMPONENT PSDlin_transmission = PSDlin_monitor(xwidth=0.1, yheight=0.01, nx=100, filename="Output_transmission_lin.psd",restore_neutron = 1)
+AT (0,0,0.5) RELATIVE sample_position
+
+COMPONENT PSD_transmission = PSD_monitor(xmin=-0.05,xmax=0.05,ymin=-0.05,ymax=0.05, nx=100, ny=100, filename="Output_transmission.psd",restore_neutron = 1)
+AT (0,0,0.5) RELATIVE sample_position
+
+COMPONENT scattering_arm = Arm()
+AT (0,0,0) RELATIVE sample_position
+ROTATED (0,25,0) RELATIVE sample_position
+
+COMPONENT PSDlin_scattering = PSDlin_monitor(xwidth=0.1, yheight=0.05, nx=100, filename="Output_scattering.psd",restore_neutron = 1)
+AT (0,0,0.5) RELATIVE scattering_arm
+
+COMPONENT PSDlin_scattering_single = PSDlin_monitor(xwidth=0.1, yheight=0.05, nx=100, filename="Output_scattering_single.psd",restore_neutron = 1)
+WHEN (single_scattering_flag == 1)
+AT (0,0,0.5) RELATIVE scattering_arm
+
+
+COMPONENT scattering_arm_2 = Arm()
+AT (0,0,0) RELATIVE sample_position
+ROTATED (45,-10,0) RELATIVE sample_position
+
+COMPONENT PSDlin_scattering_2 = PSDlin_monitor(xwidth=0.1, yheight=0.05, nx=100, filename="Output_scattering_2.psd",restore_neutron = 1)
+AT (0,0,0.5) RELATIVE scattering_arm_2
+
+END

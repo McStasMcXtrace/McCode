@@ -1,0 +1,1 @@
+../libs/libnxs/sginfo.h

@@ -1,0 +1,164 @@
+/**************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_triafield
+* 
+* %I
+* Written by: Morten Sales, based on Pol_constBfield by Peter Christiansen
+* Date: 2013
+* Origin: Helmholtz-Zentrum Berlin
+*
+* Constant magnetic field in a isosceles triangular coil
+*
+* %D
+*
+* Rectangular box with constant B field along y-axis (up) in a isosceles triangle. 
+* There is a guide (or precession) field as well. It is along y in the entire rectangular box.
+* A neutron hitting outside the box opening or the box sides is absorbed.
+*
+*
+*     __________________
+*    |        /\        |
+*    | Bguide/  \Bguide |      x
+*    |      /    \      |      ^
+*    |     /      \     |      |
+*    |    /   B    \    |      |-----> z
+*    |   /   and    \   |
+*    |  /   Bguide   \  |
+*    | /              \ |
+*    |/________________\|
+*
+* The angle of the inclination of the triangular field boundary is given by the arctangent to xwidth/(0.5*zdepth)
+*
+* This component does NOT take gravity into account.
+*
+* Example: Pol_triafield(xwidth=0.1, yheight=0.1, zdepth=0.2, B=1e-3, Bguide=0.0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xwidth: [m]   Width of opening 
+* yheight: [m]  Height of opening 
+* zdepth: [m]   zdepth of field 
+* B: [T]        Magnetic field along y-direction inside triangle 
+* Bguide: [T]   Magnetic field along y-direction inside entire box 
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_triafield
+SETTING PARAMETERS (xwidth, yheight, zdepth, B=0, Bguide=0)
+OUTPUT PARAMETERS(omegaL, omegaLguide)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE
+%{
+double IntersectWall(double pos, double vel, double wallpos) {
+    /* Function to calculate where the neutron hit the wall */
+
+    if(vel==0)
+      return -1;
+    
+    if(vel>0)
+      return (wallpos-pos)/vel;
+    else 
+      return (-wallpos-pos)/vel;
+  }
+%}
+
+DECLARE
+%{
+  /* Larmor frequency */
+  double omegaL;
+  double omegaLguide;
+%}
+
+INITIALIZE
+%{
+  omegaL = 0;  
+  omegaLguide = 0;  
+
+
+  double velocity = 0, time = 0;
+  
+  if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {
+    fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
+	    "ERROR      (xwidth, yheight, zdepth). Exiting\n",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  omegaL	  = -1.832472e8 * (B - Bguide); // B and Bguide is in Tesla
+  omegaLguide = -1.832472e8 * Bguide;       // Bguide is in Tesla
+  %}
+
+TRACE
+%{
+  double deltaT, deltaTx, deltaTy, sx_in1, sz_in1, sx_in2, sz_in2, iz1, iz2, denom1, denom2, deltaTtria;
+  
+  PROP_Z0;
+  if (!inside_rectangle(x, y, xwidth, yheight))
+    ABSORB;
+  
+  // Time spent in Bguide-field
+  deltaT = zdepth/vz;
+    
+  // This calculates the intersections on the xz-plane between the neutron trajectory and the triangular field boundaries
+  // The neutron trajectory is given by the points    (        x, 0,       0) and (     x+vx, 0,       vz)
+  // The first field boundary is given by the points  (-xwidth/2, 0,       0) and ( xwidth/2, 0, zdepth/2)
+  // The second field boundary is given by the points ( xwidth/2, 0,zdepth/2) and (-xwidth/2, 0,   zdepth)
+  // iz1 and iz2 are the z-values for the intersection
+    denom1 = (-vz)*((-xwidth/2)-xwidth/2)-(x-(x+vx))*(-zdepth/2);
+    iz1    = ((-x*vz)*(-zdepth/2)-(-vz)*(-(-xwidth/2)*zdepth/2))/denom1;
+    
+    denom2 = (-vz)*(xwidth/2-(-xwidth/2))-(x-(x+vx))*(zdepth/2-zdepth);
+    iz2    = ((-x*vz)*(zdepth/2-zdepth)-(-vz)*(zdepth/2*(-xwidth/2)-xwidth/2*zdepth))/denom2;
+  // Time spent in triangular B-field
+    deltaTtria	= (iz2-iz1)/vz;
+
+  // check that track goes throgh without hitting the walls
+  if (!inside_rectangle(x+vx*deltaT, y+vy*deltaT, xwidth, yheight)) {
+    
+    // Propagate to the wall and absorb
+    deltaTx = IntersectWall(x, vx, xwidth/2);
+    deltaTy = IntersectWall(y, vy, yheight/2);
+
+    if (deltaTx>=0 && deltaTx<deltaTy)
+      deltaT = deltaTx;
+    else
+      deltaT = deltaTy;
+    
+    PROP_DT(deltaT);  
+    
+    ABSORB;
+  }  
+  
+  PROP_DT(deltaT);  
+  
+  // These are the incoming spin directions 
+  sx_in1 = sx;
+  sz_in1 = sz;
+  
+  // This calculates the spin rotation caused by the guide/precession field
+  sz_in2 = cos(omegaLguide*deltaT)*sz_in1 - sin(omegaLguide*deltaT)*sx_in1;
+  sx_in2 = sin(omegaLguide*deltaT)*sz_in1 + cos(omegaLguide*deltaT)*sx_in1;
+
+  // This calculated the spin rotation caused by the triangular field
+  sz = cos(omegaL*deltaTtria)*sz_in2 - sin(omegaL*deltaTtria)*sx_in2;
+  sx = sin(omegaL*deltaTtria)*sz_in2 + cos(omegaL*deltaTtria)*sx_in2;
+  %}
+
+MCDISPLAY
+%{
+  
+  
+  box(0, 0, 0, xwidth, yheight, zdepth);
+  %}
+
+END

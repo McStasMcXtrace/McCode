@@ -1,0 +1,397 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_demonstration
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* %INSTRUMENT_SITE: Union_demos
+*
+* %Description
+* Demonstration of Union components. Here four different powder samples are
+*  placed in a can each connected to a weird sample holder and contained in
+*  a cryostat. This unrealistic example is meant to show the syntax and the
+*  new possibilities when using the Union components.
+* With the standard source only two of the samples are illuminated, yet
+*  multiple scattering occur and events are thus taking place in the last
+*  two samples.
+*
+* Example: Detector: m4pi_two_or_more_samples_I=0.0945567
+*
+* %Parameters
+* stick_displacement [m] height displacement of sample stick
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_demonstration(stick_displacement=0)
+
+DECLARE
+%{
+int sample_1_index=27,sample_2_index=30,sample_3_index=33,sample_4_index=36; // Indexes of four samples
+int scattered_1,scattered_2,scattered_3,scattered_4;
+%}
+
+TRACE
+
+
+
+COMPONENT Vanadium_incoherent = Incoherent_process(sigma=5.08,packing_factor=1,unit_cell_volume=13.827)
+AT (0,0,0) ABSOLUTE
+
+// Here manual linking is used, the process string is writte explicitly
+COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
+AT (0,0,0) ABSOLUTE
+
+// P0
+COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4) //,interact_fraction=0.8)
+AT (0,0,0) ABSOLUTE
+
+// P1
+COMPONENT Al_powder = Powder_process(reflections="Al.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al = Union_make_material(my_absorption=100*4*0.231/66.4,process_string="Al_incoherent,Al_powder")
+AT (0,0,0) ABSOLUTE
+
+
+// Cu definition
+// P0
+COMPONENT Cu_incoherent = Incoherent_process(sigma=4*0.55,packing_factor=1,unit_cell_volume=47.22)
+AT (0,0,0) ABSOLUTE
+
+// P1
+COMPONENT Cu_powder = Powder_process(reflections="Cu.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Cu = Union_make_material(my_absorption=100*4*3.78/47.22,process_string="Cu_incoherent,Cu_powder")
+AT (0,0,0) ABSOLUTE
+
+// Ag Au mix definition
+// P0
+COMPONENT Ag_incoherent = Incoherent_process(sigma=4*0.58,packing_factor=1,unit_cell_volume=68.22,packing_factor=0.5)
+AT (0,0,0) ABSOLUTE
+
+// P1
+COMPONENT Ag_powder = Powder_process(reflections="Ag.laz",packing_factor=0.5)
+AT (0,0,0) ABSOLUTE
+
+// P2
+COMPONENT Au_incoherent = Incoherent_process(sigma=4*0.43,packing_factor=1,unit_cell_volume=67.87,packing_factor=0.5)
+AT (0,0,0) ABSOLUTE
+
+// P3
+COMPONENT Au_powder = Powder_process(reflections="Au.laz",packing_factor=0.5)
+AT (0,0,0) ABSOLUTE
+
+// Here automatic linking is used, all process defined after the last make_material component
+//  is automatically collected in this next make_material component as the process string
+//  is not specified.
+COMPONENT Au_Ag_mix = Union_make_material(my_absorption=0.5*100*4*3.78/68.22+0.5*100*4*98.65/67.87)
+AT (0,0,0) ABSOLUTE
+
+// Cd definition
+// P0
+COMPONENT Cd_incoherent = Incoherent_process(sigma=2*3.46,packing_factor=1,unit_cell_volume=43.11)
+AT (0,0,0) ABSOLUTE
+
+// P1
+COMPONENT Cd_powder = Powder_process(reflections="Cd.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Cd = Union_make_material(my_absorption=100*2*2520/43.11)
+AT (0,0,0) ABSOLUTE
+
+// Cs definition
+// P0
+COMPONENT Cs_incoherent = Incoherent_process(sigma=2*0.55,packing_factor=1,unit_cell_volume=47.22)
+AT (0,0,0) ABSOLUTE
+
+// P1
+COMPONENT Cs_powder = Powder_process(reflections="Cs.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Cs = Union_make_material(my_absorption=100*2*3.78/47.22)
+AT (0,0,0) ABSOLUTE
+
+
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+// Source for transmission picture
+//COMPONENT source = Source_div(
+//        xwidth=0.12, yheight=0.12,focus_aw=0.5, focus_ah=0.5,
+//        E0 = 50,
+//        dE = 0, flux = 1E9)
+//  AT (0,-0.02,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT source = Source_div(
+        xwidth=0.04, yheight=0.08,focus_aw=0.05, focus_ah=0.05,
+        E0 = 50,
+        dE = 0, flux = 1E9)
+  AT (0.013,-0.02,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,3) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT drum_center = Arm()
+AT (0,0.38,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+// V1
+COMPONENT cryostat_mountin_plate = Union_cylinder(radius=0.12,yheight=0.01,priority=7,material_string="Al")
+AT (0,-0.103,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V2
+COMPONENT cryostat_drum_walls = Union_cylinder(radius=0.2,yheight=0.57,priority=8,material_string="Al")
+AT (0,0,0) RELATIVE drum_center
+ROTATED (0,0,0) RELATIVE drum_center
+
+// V3
+COMPONENT cryostat_drum_vacuum = Union_cylinder(radius=0.19,yheight=0.55,priority=9,material_string="Vacuum")
+AT (0,0,0) RELATIVE drum_center
+ROTATED (0,0,0) RELATIVE drum_center
+
+// V4
+COMPONENT outer_cryostat_wall = Union_cylinder(radius=0.1,yheight=0.2,priority=10,material_string="Al",p_interact=0.2)
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V5
+COMPONENT outer_cryostat_vacuum = Union_cylinder(radius=0.09,yheight=0.2,priority=11,material_string="Vacuum")
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V6
+COMPONENT inner_cryostat_wall = Union_cylinder(radius=0.06,yheight=0.16,priority=12,material_string="Al",p_interact=0.2)
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V7
+COMPONENT inner_cryostat_vacuum = Union_cylinder(radius=0.05,yheight=0.15,priority=13,material_string="Vacuum")
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V8
+COMPONENT sample_stick_walls = Union_cylinder(radius=0.04,yheight=0.605,priority=14,material_string="Al")
+AT (0,0.39,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V9
+COMPONENT sample_stick_vacuum = Union_cylinder(radius=0.035,yheight=0.64,priority=15,material_string="Vacuum")
+AT (0,0.4,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+COMPONENT sample_rod_bottom = Arm()
+AT (0,0.05+stick_displacement,0) RELATIVE beam_center
+ROTATED (0,85,0) RELATIVE beam_center
+
+// V10
+COMPONENT sample_rod = Union_cylinder(radius=0.0075,yheight=0.7,priority=25,material_string="Al")
+AT (0,0.35,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V11
+COMPONENT sample_rod_collar_1 = Union_cylinder(radius=0.034,yheight=0.02,priority=17,material_string="Al")
+AT (0,0.048,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V12
+COMPONENT sample_rod_collar_2 = Union_cylinder(radius=0.034,yheight=0.02,priority=18,material_string="Al")
+AT (0,0.14,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V13
+COMPONENT sample_rod_collar_3 = Union_cylinder(radius=0.034,yheight=0.02,priority=19,material_string="Al")
+AT (0,0.34,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V14
+COMPONENT sample_rod_collar_4 = Union_cylinder(radius=0.034,yheight=0.02,priority=20,material_string="Al")
+AT (0,0.635,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V15
+COMPONENT sample_rod_collar_1_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=21,material_string="Vacuum")
+AT (0,0.048-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V16
+COMPONENT sample_rod_collar_2_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=22,material_string="Vacuum")
+AT (0,0.14-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V17
+COMPONENT sample_rod_collar_3_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=23,material_string="Vacuum")
+AT (0,0.34-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V18
+COMPONENT sample_rod_collar_4_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=24,material_string="Vacuum")
+AT (0,0.635-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V19
+COMPONENT sample_holder1 = Union_box(xwidth=0.01,yheight=0.05,zdepth=0.004,priority=35,material_string="Al",p_interact=0.3)
+AT (0,0,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V20
+COMPONENT sample_holder2 = Union_box(xwidth=0.0099,yheight=0.004,zdepth=0.03/0.85,priority=51,material_string="Al",p_interact=0.3)
+AT (0,-0.03,0.03*0.35+0.004) RELATIVE sample_rod_bottom
+ROTATED (25,0,0) RELATIVE sample_rod_bottom
+
+// V21
+COMPONENT sample_holder3 = Union_box(xwidth=0.0098,yheight=0.004,zdepth=0.03/0.85,priority=52,material_string="Al",p_interact=0.3)
+AT (0,-0.03,-0.03*0.35-0.004) RELATIVE sample_rod_bottom
+ROTATED (-25,0,0) RELATIVE sample_rod_bottom
+
+// V22
+COMPONENT sample_holder4 = Union_box(xwidth=0.01,yheight=0.07,zdepth=0.004,priority=53,material_string="Al",p_interact=0.3)
+AT (0,-0.03-0.035-0.005,0.03) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V23
+COMPONENT sample_holder5 = Union_box(xwidth=0.01,yheight=0.07,zdepth=0.004,priority=54,material_string="Al",p_interact=0.3)
+AT (0,-0.03-0.035-0.005,-0.03) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V24
+COMPONENT sample_holder_bottom = Union_box(xwidth=0.0098,yheight=0.004,zdepth=0.058,priority=42,material_string="Al",p_interact=0.3)
+AT (0,-0.03-0.067-0.007,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V25
+COMPONENT sample_holder_top_shelf = Union_box(xwidth=0.0098,yheight=0.004,zdepth=0.058,priority=43,material_string="Al",p_interact=0.3)
+AT (0,-0.045+0.003,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V26
+COMPONENT sample_holder_middle_shelf = Union_box(xwidth=0.0098,yheight=0.004,zdepth=0.058,priority=44,material_string="Al",p_interact=0.3)
+AT (0,-0.072,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// V27
+COMPONENT sample_1 = Union_cylinder(radius=0.0045,yheight=0.02,priority=63,material_string="Cu",p_interact=0.6)
+AT (0,-0.002-0.01-0.003,0.015) RELATIVE sample_holder_top_shelf
+ROTATED (0,0,0) RELATIVE sample_holder_top_shelf
+
+// V28
+COMPONENT sample_1_container = Union_cylinder(radius=0.0052,yheight=0.023,priority=62,material_string="Al",p_interact=0.3)
+AT (0,0,0) RELATIVE sample_1
+ROTATED (0,0,0) RELATIVE sample_1
+
+// V29
+COMPONENT sample_1_container_rim = Union_cylinder(radius=0.007,yheight=0.002,priority=61,material_string="Al",p_interact=0.3)
+AT (0,0.023*0.5,0) RELATIVE sample_1
+ROTATED (0,0,0) RELATIVE sample_1
+
+// V30
+COMPONENT sample_2 = Union_cylinder(radius=0.0045,yheight=0.02,priority=73,material_string="Au_Ag_mix",p_interact=0.6)
+AT (0,-0.002-0.01-0.003,-0.015) RELATIVE sample_holder_top_shelf
+ROTATED (0,0,0) RELATIVE sample_holder_top_shelf
+
+// V31
+COMPONENT sample_2_container = Union_cylinder(radius=0.0052,yheight=0.023,priority=72,material_string="Al",p_interact=0.3)
+AT (0,0,0) RELATIVE sample_2
+ROTATED (0,0,0) RELATIVE sample_2
+
+// V32
+COMPONENT sample_2_container_rim = Union_cylinder(radius=0.007,yheight=0.002,priority=71,material_string="Al",p_interact=0.3)
+AT (0,0.023*0.5,0) RELATIVE sample_2
+ROTATED (0,0,0) RELATIVE sample_2
+
+// V33
+COMPONENT sample_3 = Union_cylinder(radius=0.0045,yheight=0.02,priority=83,material_string="Cd",p_interact=0.6)
+AT (0,-0.002-0.01-0.003,0.015) RELATIVE sample_holder_middle_shelf
+ROTATED (0,0,0) RELATIVE sample_holder_middle_shelf
+
+// V34
+COMPONENT sample_3_container = Union_cylinder(radius=0.0052,yheight=0.023,priority=82,material_string="Al",p_interact=0.3)
+AT (0,0,0) RELATIVE sample_3
+ROTATED (0,0,0) RELATIVE sample_3
+
+// V35
+COMPONENT sample_3_container_rim = Union_cylinder(radius=0.007,yheight=0.002,priority=81,material_string="Al",p_interact=0.3)
+AT (0,0.023*0.5,0) RELATIVE sample_3
+ROTATED (0,0,0) RELATIVE sample_3
+
+// V36
+COMPONENT sample_4 = Union_cylinder(radius=0.0045,yheight=0.02,priority=93,material_string="Cs",p_interact=0.6)
+AT (0,-0.002-0.01-0.003,-0.015) RELATIVE sample_holder_middle_shelf
+ROTATED (0,0,0) RELATIVE sample_holder_middle_shelf
+
+// V37
+COMPONENT sample_4_container = Union_cylinder(radius=0.0052,yheight=0.023,priority=92,material_string="Al",p_interact=0.3)
+AT (0,0,0) RELATIVE sample_4
+ROTATED (0,0,0) RELATIVE sample_4
+
+// V38
+COMPONENT sample_4_container_rim = Union_cylinder(radius=0.007,yheight=0.002,priority=91,material_string="Al",p_interact=0.3)
+AT (0,0.023*0.5,0) RELATIVE sample_4
+ROTATED (0,0,0) RELATIVE sample_4
+
+
+COMPONENT test_sample = Union_master(history_limit=1000000)
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+EXTEND
+%{
+if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
+if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
+if (scattered_flag[sample_3_index] > 0) scattered_3 = 1; else scattered_3 = 0;
+if (scattered_flag[sample_4_index] > 0) scattered_4 = 1; else scattered_4 = 0;
+%}
+
+
+
+COMPONENT detector_position = Arm()
+AT (0,0,0.03) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+
+COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
+AT (0, 0, 0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=500",filename="banana.dat",restore_neutron=1)
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT detector = PSD_monitor(xwidth=0.1, yheight=0.08, nx=200, ny=200, filename="PSD.dat", restore_neutron=1)
+AT (0,-0.02,0.4) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// Removes events not scattering in at least two of the samples
+// mcdisplay --inspect=m4pi_two_samples shows only rays that scatters on all three
+//  since all others were removed before that component with this arm.
+COMPONENT arm_1 = Arm()
+  AT (0, 0, 0) RELATIVE beam_center
+EXTEND
+%{
+  if (scattered_1 + scattered_2 + scattered_3 + scattered_4 < 2) ABSORB;
+%}
+
+// Using mcdisplay and -inspect m4pi_two_or_more_samples one can show only
+//  trajectories where the ray scatters from two or more of the samples
+COMPONENT m4pi_two_or_more_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
+WHEN (scattered_1 + scattered_2 + scattered_3 + scattered_4 > 1)
+AT (0, 0, 0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+
+
+END

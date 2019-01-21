@@ -1,0 +1,84 @@
+## begin version 0.98 fit file header             
+## generated at 33
+## output reported is for 10x12 viewed area.       
+## normalized to  2.0807e+14 p/pulse and  1.000 GeV
+## (2MW, 1GeV, 60 Hz)
+## from binned performance data file a1Gw2-14-f5.dat
+## headerend
+##
+## section 1 key spectral fit
+##
+## Fitting function:    
+##      I(E) = I*1e12 * exp(-c/sqrt(E))
+##                * ( R1*E/(k*T1)**2*exp(-E/(k*T1)) + R2*E/(k*T2)**2*exp(-E/(k*T2)
+##                    + R3*E/(k*T3)**2*exp(-(E/(k*T3))**b) + D(E)*rho(E)/E**(1-a) )
+##      with 
+##      D(E) = 1/(1+(Ecut/E)**s)    
+##      rho(E) = 1 + delta*exp(-x)(1 + x +0.5*x**2)
+##      x(E) = g*(E-2B); for E>2B
+##           = 0;        for E<=2B
+##
+##      constants:
+##      k = 1.3805e-23 J/K = 8.617e-5 eV/K
+##      B = 7.36e-3 eV
+##     
+##      parameters:
+##        c  ,   R1   ,   T1,   R2,   T2,   R3,   T3,   a,   b,   Ecut ,   s,   delta,   g,   I
+## data start
+      0.0130178102492447  0.554858386626411  8.040108219079  29.3485445303343  75.0124045806805  -22.4650094884998  139.672194754607  0.0205277868714707  1.33438819147692  0.025  0.784941653874819  0.58827359088817  22.5261799898391  0.445169898485473
+##
+## end section 1
+## 
+## section 2: pulse shape fit
+## using the fit function
+##      f(E,t) = (1-R)*A/2*(A*(t-to*10))**2 *exp(-A*(t-to*10)) 
+##                    +R*B*(A/(A-B))**3 *[ exp(-B*(t-to*10)) 
+##                      - exp(-A*(t-to*10))*(1+(A-B)*(t-to*10)+0.5*(A-B)**2*(t-to*10)**2) ]
+##   with 
+##      A, B, R, to
+##
+## headerend
+##
+## subsection 1 fit of parameter A=A(E)
+## Fitting function: Pade' type   
+##      f(x) = a*x**b*(1+c*x+d*x**2+(x/f)**g)/(1+h*x+i*x**2+(x/j)**k)
+##   with 
+##      a,b,c,d,f,g,h,i,j,k
+## data start
+     0.0399279768298785 0.120623496760744 6422.00156041897 20277.9999999135 0.000260638396515814 1.97489547510975 11295.994790811 15563.0007495448 0.000331837080516871 1.60882470957286
+## 
+## end subsection 1
+## 
+## subsection 2 fit of parameter B=B(E)
+## Fitting function: Pade' type   
+##      f(x) = a*x**b*(1+c*x+d*x**2+(x/f)**g)/(1+h*x+i*x**2+(x/j)**k)
+##   with 
+##      a,b,c,d,f,g,h,i,j,k
+## data start
+     4.39728836708163e-06 -0.611666753382916 9838.50434185119 223226.725686448 0.0257616821647625 6.16371963684883 48.1112313898745 140.205983510691 0.0945346732581669 5.08993181970233
+## 
+## end subsection 2
+## 
+## 
+## subsection 3 fit of parameter R=R(E)
+## fitting function Padee type   
+##      f(x) = a*x**b*(1+c*x+d*c**2+(x/f)**g)/(1+h*x+i*x**2+(x/j)**k)
+##   with 
+##      a,b,c,d,f,g,h,i,j,k
+## data start
+      0.375199440859348  0.0 -8688.71146281067  4093.58785204162  0.000116493138318376  1.01045652433027  -30.9508955297774  12069.2487106212  52.9597626305915 1.01045652433027
+## 
+## end subsection 3
+## 
+## 
+## subsection 4 fit of parameter to=to(E)
+## fitting function Padee type   
+##      f(x) = a*x**b*(1+c*x+d*c**2+(x/f)**g)/(1+h*x+i*x**2+(x/j)**k)
+##   with 
+##      a,b,c,d,f,g,h,i,j,k
+## data start
+      1.30000000029868  -0.0500000231745506  -195  564  3.12644057092531e-07  0.99999998268024  -100  72  4.78716944081376e-06  1.40000001896424
+## 
+## end subsection 4
+## 
+## end section 2

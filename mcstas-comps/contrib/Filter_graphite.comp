@@ -1,0 +1,108 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Filter_graphite
+*
+* %IDENTIFICATION
+*
+* Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
+* Date: 07 March 2000
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
+*
+* Pyrolytic graphite filter (analytical model)
+*
+* %DESCRIPTION
+*
+* This rectangular pyrolytic graphite filter uses an analytical model
+* with linear interpolation on the neutron wavelength
+* This type of filter is e.g. used to supress higher harmonics, such as
+* the 1.2 AA contribution to the 2.4 AA obtained by a highly oriented
+* pyrolytic graphite (HOPG) monochromator.
+*
+* Example: Filter_graphite(xmin=-.05, xmax=.05, ymin=-.05, ymax=.05, length=1.0)
+*
+* %PARAMETERS
+*
+* INPUT PARAMETERS:
+*
+* xmin: [m]     Lower x bound
+* xmax: [m]     Upper x bound
+* ymin: [m]     Lower y bound
+* ymax: [m]     Upper y bound
+* length: [m]   Thickness of graphite plate
+* xwidth: [m]   Width of filter. Overrides xmin,xmax. 
+* yheight: [m]  Height of filter. Overrides ymin,ymax. 
+*
+* %END
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Filter_graphite
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=-0.16, xmax=0.16, ymin=-0.16, ymax=0.16, length=0.05, xwidth=0, yheight=0)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+INITIALIZE
+%{
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  
+  if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0)
+  { fprintf(stderr,"Filter_graphite: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
+%}
+
+TRACE
+%{
+  double L,L1,L0,T1,T0, Filt_T;
+  double dt;
+  PROP_Z0;
+  L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+  if (x<xmin || x>xmax || y<ymin || y>ymax) ABSORB;
+  dt = length/vz;
+  PROP_DT(dt);
+  if (x<xmin || x>xmax || y<ymin || y>ymax) ABSORB;
+  if (L>2.60)            {L1= L  ;L0=2.60;T1=0.06;T0=0.06;};
+  if (L<2.60 && L>=2.40) {L1=2.60;L0=2.40;T1=0.06;T0=0.05;};
+  if (L<2.40 && L>=2.30) {L1=2.40;L0=2.30;T1=0.05;T0=0.09;};
+  if (L<2.30 && L>=2.20) {L1=2.30;L0=2.20;T1=0.09;T0=0.22;};
+  if (L<2.20 && L>=2.00) {L1=2.20;L0=2.00;T1=0.22;T0=0.34;};
+  if (L<2.00 && L>=1.90) {L1=2.00;L0=1.90;T1=0.34;T0=0.61;};
+  if (L<1.90 && L>=1.80) {L1=1.90;L0=1.80;T1=0.61;T0=0.23;};
+  if (L<1.80 && L>=1.60) {L1=1.80;L0=1.60;T1=0.23;T0=0.25;};
+  if (L<1.60 && L>=1.40) {L1=1.60;L0=1.40;T1=0.25;T0=0.27;};
+  if (L<1.40 && L>=1.30) {L1=1.40;L0=1.30;T1=0.27;T0=0.53;};
+  if (L<1.30 && L>=1.20) {L1=1.30;L0=1.20;T1=0.53;T0=0.98;};
+  if (L<1.20 && L>=1.10) {L1=1.20;L0=1.10;T1=0.98;T0=0.89;};
+  if (L<1.10 && L>=1.00) {L1=1.10;L0=1.00;T1=0.89;T0=0.52;};
+  if (L<1.00 && L>=0.87) {L1=1.00;L0=0.87;T1=0.52;T0=0.47;};
+  if (L<0.87)            {L1=0.87;L0= L  ;T1=0.47;T0=0.47;};
+  Filt_T=(T0+(L-L0)/(L1-L0)*(T1-T0))*100.0;
+  Filt_T = exp(-Filt_T*length);
+  p*=Filt_T;
+  SCATTER;
+%}
+
+MCDISPLAY
+%{
+  
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+  multiline(5, (double)xmin, (double)ymin, (double)length,
+               (double)xmax, (double)ymin, (double)length,
+               (double)xmax, (double)ymax, (double)length,
+               (double)xmin, (double)ymax, (double)length,
+               (double)xmin, (double)ymin, (double)length);
+  line(xmin, ymin, 0.0, xmin, ymin, length);
+  line(xmax, ymin, 0.0, xmax, ymin, length);
+  line(xmin, ymax, 0.0, xmin, ymax, length);
+  line(xmax, ymax, 0.0, xmax, ymax, length);
+%}
+END

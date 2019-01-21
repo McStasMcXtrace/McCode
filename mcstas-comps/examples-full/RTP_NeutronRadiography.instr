@@ -1,0 +1,127 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: RTP_NeutronRadiography.instr
+*
+* %Identification
+* Written by: E. Farhi and Megat Harun Al-Rashid
+* Date: June 2014
+* Origin: ILL/RTP
+* %INSTRUMENT_SITE: TRIGA
+*
+* The radiography instrument installed at Reactor TRIGA PUSPATI (Malaysia)
+*
+* %Description
+* This is a radiography station installed on a radial beam port 3 at the Reactor TRIGA 
+* PUSPATI (RTP). It uses the thermal beam port 3.
+* The sample is made of 2 concentric cylinders made of Cu and Fe.
+*
+* Example: mcrun RTP_NeutronRadiography.instr theta=20 phi=10
+*
+* %Parameters
+* theta: [deg]  horizontal rotation of the object
+* phi: [deg]    vertical rotation of the object
+*
+* %Link
+* <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>
+* %Link
+* M. Sufi et al., J. AppL Cryst. (1997). 30, 884-888 [doi:10.1107/S0021889897001738]
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT RTP_NeutronRadiography(theta=0, phi=0)
+
+DECLARE
+%{
+  double sample_scattered=0;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* the source is focused in wavelength to provide 5 Angs neutrons */
+/* to study the Be filter, use white beam e.g. dlambda = 4.5      */
+COMPONENT source = Source_gen(
+    radius = .154/2,
+    dist = 1.16+1.50, focus_xw = .07, focus_yh = .07, lambda0 = 5,
+    dlambda = 4.5, I1 = 2.79e12/25, T1 = 300)
+  AT (0, 0, 0) RELATIVE Origin
+  
+COMPONENT CoarseCollimator1 = Guide(w1=.154, h1=.154, l=1.16125,m=0)
+  AT (0, 0, .01) RELATIVE PREVIOUS
+  
+COMPONENT CoarseCollimator2 = Guide(w1=.2,h1=.2,l=1.5,m=0)
+  AT (0, 0, 1.16125+0.003) RELATIVE PREVIOUS
+
+/* a slit that also detects wavelength */
+COMPONENT lmon = Monitor_nD(
+  xwidth=.2, options="slit disk, auto wavelength", bins=50)
+  AT (0, 0, 1.5+0.01) RELATIVE PREVIOUS
+
+COMPONENT sample_position = Arm()
+  AT (0,0,.4) RELATIVE PREVIOUS
+
+/* sample position, with rotation */
+COMPONENT sample_position_rotated = Arm()
+  AT (0,0,0) RELATIVE PREVIOUS
+  ROTATED (phi, 0, theta) RELATIVE PREVIOUS
+  EXTEND %{
+    sample_scattered=0;
+  %}
+
+COMPONENT sample_outer1 = PowderN(radius=.03/2, yheight=0.05,
+  reflections="Fe.laz", concentric=1, thickness=0.01/2)
+  AT (0,0,0) RELATIVE sample_position_rotated
+  EXTEND %{
+    if (SCATTERED) sample_scattered+=SCATTERED;
+  %}
+  
+COMPONENT sample_inner = PowderN(radius=.02/2, yheight=0.04,
+  reflections="Cu.laz")
+  AT (0,0,0) RELATIVE sample_position_rotated
+  EXTEND %{
+    if (SCATTERED) sample_scattered+=SCATTERED;
+  %}
+  
+COMPONENT sample_outer2 = COPY(sample_outer1)(concentric=0)
+  AT (0,0,0) RELATIVE sample_position_rotated
+  EXTEND %{
+    if (SCATTERED) sample_scattered+=SCATTERED;
+  %}
+
+
+/* image plate/film with efficiency */
+COMPONENT image_plate_ideal = Monitor_nD(xwidth=.3, yheight=.3,
+  options="x y", bins=1000)
+  AT (0,0,.1) RELATIVE sample_position
+EXTEND %{
+  /* take into account ZnS scintillator efficiency */
+  double eff=0.5;
+  double v=sqrt(vx*vx+vy*vy+vz*vz);
+  p *= 1.0-exp(3960.0/v*log(1.0-eff/100.0));
+%}
+
+COMPONENT image_plate_eff = COPY(image_plate_ideal)
+  AT (0,0,.1+1e-3) RELATIVE sample_position
+  
+COMPONENT image_plate_scattered = COPY(image_plate_ideal)
+  WHEN(sample_scattered)
+  AT (0,0,.1+1e-3) RELATIVE sample_position
+  
+COMPONENT reactor = Shape(radius=.7/2, yheight=.4)
+  AT (0,0,-.35) RELATIVE Origin
+
+END
+
+

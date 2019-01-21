@@ -1,0 +1,51 @@
+/*******************************************************************************
+* Instrument: Demo_shape_primitives
+*
+* %I
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Feb 2018
+* Origin: DTU Physics
+* %INSTRUMENT_SITE: Templates
+*
+* Demonstration instrument of some shapes used for mcdisplay
+*
+* %D
+* This instrument will display a cylinder, a sphere, and a box,
+* when run with mcdisplay. Otherwise does nothing.
+*
+*
+* %P
+*
+* %L
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Demo_shape_primitives()
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT shape0 = Shape(radius=0.5)
+AT(0,0,.5) RELATIVE PREVIOUS
+
+COMPONENT shape1 = Shape(radius=0.5, yheight=0.5)
+AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT shape2 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234)
+AT(0,0,1) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END

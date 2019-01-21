@@ -1,0 +1,188 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Scatter_log_mvalues
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan. 13st 2013
+* Origin: DTU Fysik
+* %INSTRUMENT_SITE: Templates
+*
+* Example instrument of Scatter_logger feature advanced usage
+*
+* %Description
+*
+* This instrument is an example of how to use thet newly developed (and experimental)
+* Scatter_logger family of components in McStas.
+* In this example a set of Monitor_nD's are used to monitor the m-value needed to reflect neutrons.
+* This is done by binning the impinging intesity by m-value and z-coordinate along the length of the guide.
+* Furthermore reflections events are split among themonitors by their seuqential number: Only the first
+* reflection is considered by mnd1, the second by mnd2 etc. All reflection are bundled into mnttot
+*
+* Also included (but commented out) is a code-snippet that would dump the lost neutrons to stdout
+*
+* Example: Test_Scatter_log_mvalues LENGTH=10
+*
+* %Parameters
+*
+* %Link
+* <a href="http://orbit.dtu.dk/files/57025387/prod11375088187360.NO_P_v8.pdf">Esben Klinkby talk at NOP&D 2013</a>
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Scatter_log_mvalues()
+
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+
+  double mvalue;
+  int reflc;
+
+  /*This is the specialized pseudo-neutron function that computes
+   necessary m-value from logged before and after SCATTER neutron states*/
+  int necessary_m_value(double *ns_tilde, struct Generalized_State_t *S0, struct Generalized_State_t *S1){
+    /*Compute a pseudo state from before and after SCATTER*/
+    ns_tilde[0]=S1->_x;ns_tilde[1]=S1->_y;ns_tilde[2]=S1->_z;
+    ns_tilde[3]=S0->_vx;ns_tilde[4]=S0->_vy;ns_tilde[5]=S0->_vz;
+    ns_tilde[6]=S1->_t;
+    ns_tilde[7]=S1->_sx;ns_tilde[8]=S1->_sy;ns_tilde[9]=S1->_sz;
+    ns_tilde[10]=S0->_p;
+
+    /*compute m-value and index of reflection to expose them to the rest of the instrument*/
+    double v = sqrt(S0->_vx*S0->_vx+S0->_vy*S0->_vy+S0->_vz*S0->_vz);
+    double k = v*V2K;
+    double scal_prod = scalar_prod(S0->_vx,S0->_vy,S0->_vz,S1->_vx,S1->_vy,S1->_vz) / (v*v);
+    if ( (S0->_vx)==(S1->_vx) && ((S0->_vy)==(S1->_vy)) ) {
+      mvalue=0.0;
+      ns_tilde[10]=0;
+    }else{
+      double theta  = 0.5*acos(scalar_prod(S0->_vx,S0->_vy,S0->_vz,S1->_vx,S1->_vy,S1->_vz)/(v*v));
+      mvalue = 2*k*sin(theta)/0.0219;
+      reflc=S1->_idx;
+    }
+    return 0;
+  }
+%}
+
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT src = Source_simple(
+    radius = 0.1, dist = 1, focus_xw = 0.1, focus_yh = 0.1, lambda0=5, dlambda=4.9)
+AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT psd0=PSD_monitor(
+    xwidth=0.1, yheight=0.1, filename="psd0")
+AT(0,0,0.5) RELATIVE PREVIOUS
+
+COMPONENT s1=Scatter_logger()
+AT(0,0,1) RELATIVE src
+
+COMPONENT guide_simple = Guide(
+    w1 = 0.1, h1 = 0.1, w2 = 0.1, h2 = 0.1, l = 10, R0 = 0.99,
+    Qc = 0.0219, alpha = 6.07, m = 2, W = 0.003)
+AT (0, 0, 1) RELATIVE src
+
+COMPONENT s2=Scatter_logger_stop(logger=s1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+/*The iterator test code*/
+
+COMPONENT a0=Arm()
+AT(0,0,0) ABSOLUTE
+
+COMPONENT iter1 = Scatter_log_iterator(compute_func=necessary_m_value)
+AT(0,0,0) ABSOLUTE
+
+/*monitor the m-value needed for 1st reflection*/
+COMPONENT mnd1=Monitor_nD (
+    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd1.dat")
+WHEN(reflc==1) AT(0,0,5) RELATIVE guide_simple
+ROTATED (90,0,0) RELATIVE guide_simple
+
+/*monitor the m-value needed for 2nd reflection*/
+COMPONENT mnd2=Monitor_nD (
+    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd2.dat")
+WHEN(reflc==2) AT(0,0,5) RELATIVE guide_simple
+ROTATED (90,0,0) RELATIVE guide_simple
+
+/*monitor the m-value needed for 3rd reflection*/
+COMPONENT mnd3=Monitor_nD (
+    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd3.dat")
+WHEN(reflc==3) AT(0,0,5) RELATIVE guide_simple
+ROTATED (90,0,0) RELATIVE guide_simple
+
+/*monitor the m-value needed for 4th reflection*/
+COMPONENT mnd4=Monitor_nD (
+    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd4.dat")
+WHEN(reflc==4) AT(0,0,5) RELATIVE guide_simple
+ROTATED (90,0,0) RELATIVE guide_simple
+
+/*monitor the m-value needed for all reflection*/
+COMPONENT mndtot=Monitor_nD (
+    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    options="previous no slit y bins=100 user1 limits=[0 4]", filename="mndtot.dat")
+WHEN (reflc!=0) AT(0,0,5) RELATIVE guide_simple
+ROTATED (90,0,0) RELATIVE guide_simple
+
+/*COMPONENT printout = Arm()*/
+/*AT(0,0,0) ABSOLUTE*/
+/*EXTEND*/
+/*%{*/
+  /*print the neutron state*/
+/*  printf("SCATTERLOG_ITERATOR: %llu %g %g %g  %g %g %g  %g  %g %g %g  %g  %d %d\n", \*/
+/*	     mcget_run_num(),x,y,z, vx, vy, vz, t, \*/
+/*	     sx, sy, sz, p, reflc, INDEX_CURRENT_COMP);*/
+/*%}*/
+
+
+
+COMPONENT iter2 = Scatter_log_iterator_stop(iterator=iter1)
+AT(0,0,0) RELATIVE iter1
+
+COMPONENT a1 = Arm()
+AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+  /*This is necessary to reset the monitored values*/
+  reflc=0;mvalue=0;
+%}
+JUMP a0 WHEN(MC_GETPAR(iter2,loop))
+
+COMPONENT axxx=Arm()
+At(0,0,12) ABSOLUTE
+ 
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

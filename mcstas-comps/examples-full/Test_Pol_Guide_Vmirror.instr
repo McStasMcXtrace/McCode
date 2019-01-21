@@ -1,0 +1,158 @@
+/******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Pol_Guide_Vmirror
+*
+* %Identification
+* Written by: Peter Christiansen
+* Date: July 2006
+* Origin: RISOE
+* %INSTRUMENT_SITE: Tests_polarization
+*
+* Test Pol_guide_Vmirror.
+*
+* %Description
+* A simple description of the V4 instrument in Berlin as explained in:
+* NIM A 451 (2000) 474-479
+*
+* %Example: polariserIn=1 Detector: psdPolGuide_I=3.95407e+12
+*
+* %Parameters
+* polariserIn: [] 
+*
+* %Link
+*
+* %End
+******************************************************************************/
+DEFINE INSTRUMENT Test_Pol_Guide_Vmirror(int polariserIn=1)
+
+DECLARE
+%{
+#define GUIDEREF 0.99
+#define MIRRORREF 0.99
+  %}
+
+INITIALIZE
+%{
+  %}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+     AT (0,0,0) ABSOLUTE
+
+COMPONENT source =
+Source_simple(radius = 0.05, dist = 5.0, focus_xw = 0.03, focus_yh = 0.05, lambda0 = 11,
+	      dlambda = 10, flux = 1e14)
+     AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT lamStart =
+L_monitor(nL = 30, filename = "lambdaStart.dat",
+	  xwidth = 0.10, yheight = 0.10,
+	  Lmin = 1, Lmax = 21)
+     AT (0, 0, 4.8) RELATIVE Origin
+
+COMPONENT psdStart =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdStart.dat")
+     AT (0, 0, 4.8) RELATIVE Origin
+
+// For the vmirror component in V4 at BENSC Berlin we have
+// From NIM A 451 (2000) 474-479
+// length: 1.2 m, gap width: 3 cm, gap height: 5 cm
+// theta critical side: theta_crit_ni=1.73mrad/AA
+// using Qcrit = 4*pi*sin (theta_crit)
+// gives Qc=0.02174 which is close to McStas default 0.0219
+// so we use m_side = 1.0 and default McStas parameters except R0=1
+// m_up = 3.5/1.73 ~ 2
+// m_down = 0.7/1.73 ~ 0.4
+//                         R0      Qc       alpha  m     W
+COMPONENT POLguidevmirror =
+Pol_guide_vmirror(xwidth = 0.03, yheight = 0.05,
+		  length = 1.8, debug=0,
+		  rPar    ={GUIDEREF,  1.0*0.0219, 6.07, 1, 0.003},
+		  rUpPar  ={MIRRORREF, 2.0*0.0219, 6.07, 1, 0.003},
+		  rDownPar={MIRRORREF, 0.4*0.0219, 6.07, 1, 0.003})
+     WHEN (polariserIn>0) AT (0, 0, 5.0) RELATIVE Origin
+
+COMPONENT NONPOLguide =
+Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
+      l = 1.8, m = 1.0, R0=GUIDEREF)
+     WHEN (polariserIn<=0) AT (0, 0, 5.0) RELATIVE Origin
+
+COMPONENT armGuide = Arm()
+     AT (0, 0, 6.8)
+     RELATIVE Origin
+
+COMPONENT Guide =
+Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
+      l = 11.0, m = 1.0, R0=GUIDEREF)
+     AT (0, 0, 0) RELATIVE armGuide
+
+COMPONENT armlambdaStop = Arm()
+     AT (0, 0, 11.0)
+     RELATIVE armGuide
+
+COMPONENT lamStopPolGuide =
+L_monitor(nL = 20, filename = "lambdaStopPolGuide.dat",
+	  xwidth = 0.10, yheight = 0.10,
+	  Lmin = 3, Lmax = 19)
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+COMPONENT psdPolGuide =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdPolGuide.dat")
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+COMPONENT pollambdaMonitorX =
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=20, Lmin = 1, Lmax = 21, npol=41,
+		  mx=1, filename="pollambdaMonX.data")
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+COMPONENT pollambdaMonitorY =
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=20, Lmin = 1, Lmax = 21, npol=41,
+		  my=1, filename="pollambdaMonY.data")
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+COMPONENT pollambdaMonitorZ =
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=20, Lmin = 1, Lmax = 21, npol=41,
+		  mz=1, filename="pollambdaMonZ.data")
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+COMPONENT MPLMon2X =
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 1, Lmax = 21,
+		      mx=1, my=0, mz=0, filename="MPLMon2X.data")
+     AT (0, 0, 0.10) RELATIVE armlambdaStop
+
+COMPONENT MPLMon2Y =
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 1, Lmax = 21,
+		      mx=0, my=1, mz=0, filename="MPLMon2Y.data")
+     AT (0, 0, 0.10) RELATIVE armlambdaStop
+
+COMPONENT MPLMon2Z =
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 1, Lmax = 21,
+		      mx=0, my=0, mz=1, filename="MPLMon2Z.data")
+     AT (0, 0, 0.10) RELATIVE armlambdaStop
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END

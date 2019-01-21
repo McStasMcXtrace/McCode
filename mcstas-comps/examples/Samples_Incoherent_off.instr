@@ -1,0 +1,57 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Samples_Incoherent_off
+*
+* %Identification
+* Written by: Reynald ARNERIN
+* Date: June 12th, 2008
+* Origin: ILL
+* %INSTRUMENT_SITE: Tests_samples
+*
+* Instrument to demonstrate the usage of OFF shape samples with totally absorbing material.
+*
+* %Description
+* Instrument to demonstrate the usage of OFF shape samples with totally absorbing material.
+* The Incoherent component is here used with a description file. The shape may be scaled
+* forcing the size of the bounding box.
+*
+* %Example: geometry="socket.off" Detector: monitor_I=0.0150169
+*
+* %Parameters
+* geometry: [string]  Name of the OFF file describing the sample shape
+*
+* %Link
+* http://shape.cs.princeton.edu/benchmark/documentation/off_format.html
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Samples_Incoherent_off(string geometry="socket.off")
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_gen(
+    radius = 0.05, dist = 1, focus_xw = .1, focus_yh = .1, E0 = 14, dE = .5)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT sample=Incoherent(geometry=geometry, xwidth=0, yheight=0, zdepth=0.15,
+	focus_xw=1, focus_yh=1, target_index=1)
+AT (0,0,1.5) RELATIVE source /*ROTATED (0,90,0) RELATIVE source*/
+
+COMPONENT monitor = Monitor_nD(xwidth=1,yheight=1,options="x y, all bins=300")
+  AT (0, 0, 2) RELATIVE source
+
+EXTEND
+%{
+	if(SCATTERED) ABSORB;
+%}
+
+END
+
+
+
+
+

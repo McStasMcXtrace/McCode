@@ -1,0 +1,82 @@
+/*******************************************************************************
+*
+* Instrument: Test_Sources
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Mar 2016
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_MCPL_etc
+*
+* A test instrument for MCPL_output
+*
+* %Description
+*
+* This is a unit test for the MCPL_output component.
+*
+* %Example: -n1e3 merge=0 Detector: m1_I=2.42284e+11
+*
+* %Parameters
+* merge: [1]  Flag to indicate if we should merge the output in case of MPI
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_MCPL_output(merge=1)
+
+DECLARE
+%{
+    int32_t flag;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* the source ============================================================== */
+COMPONENT sa = Source_Maxwell_3( /* flux in n/s/cm2/st/AA */
+  Lmin=1, Lmax=11, dist=1, focus_xw=0.1, focus_yh=0.1,
+  xwidth=0.01, yheight=0.01,
+  T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13, T3=16.7 ,I3=3.0423e+12
+)
+AT (0,0,0) ABSOLUTE
+EXTEND %{
+  t=1e-3*rand01();
+  flag=(uint32_t)mcget_run_num();
+%}
+
+/* the output ============================================================== */
+COMPONENT vout = MCPL_output(
+     filename="voutput", verbose=1, userflag=flag, userflagcomment="Neutron Id", merge_mpi=merge)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT m1 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto lambda, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m2 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto x, auto y, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m3 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto t parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m4 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto E, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m5 = Monitor_nD(
+  xwidth=0.2, yheight=0.2, user1=2112,
+  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"
+) AT (0,0,0) ABSOLUTE
+
+END

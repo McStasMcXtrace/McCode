@@ -1,0 +1,84 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Beamstop
+*
+* %ID
+*
+* Written by: Kristian Nielsen
+* Date: January 2000
+* Origin: Risoe
+*
+* Rectangular/circular beam stop.
+*
+* %D
+* A simple rectangular or circular beam stop.
+* Infinitely thin and infinitely absorbing.
+* The beam stop is by default rectangular. You may either
+* specify the radius (circular shape), or the rectangular bounds.
+*
+* Example: Beamstop(xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05)
+*          Beamstop(radius=0.1)
+*
+* %PAR
+*
+* INPUT PARAMETERS
+*
+* radius: [m]   radius of the beam stop in the z=0 plane, centered at Origo 
+* xmin: [m]     Lower x bound 
+* xmax: [m]     Upper x bound 
+* ymin: [m]     Lower y bound 
+* ymax: [m]     Upper y bound 
+* xwidth: [m]   Width of beamstop (x). Overrides xmin, xmax. 
+* yheight: [m]  Height of beamstop (y). Overrides ymin, ymax. 
+*
+* %END
+*******************************************************************************/
+
+DEFINE COMPONENT Beamstop
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+xwidth=0, yheight=0, radius=0)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+INITIALIZE
+%{
+if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+  if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0 && radius == 0)
+  { fprintf(stderr,"Beamstop: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
+%}
+
+TRACE
+%{
+    double Time = t;
+    ALLOW_BACKPROP;
+    PROP_Z0;
+    Time = t - Time;
+    if ((Time>=0) && ((radius!=0) && (x*x + y*y <= radius*radius))
+    || ((Time>=0) && (radius==0) && (x>xmin && x<xmax && y>ymin && y<ymax)))
+      ABSORB;
+    else
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+%}
+
+MCDISPLAY
+%{
+  
+  if (radius != 0)
+    circle("xy", 0, 0, 0, radius);
+  else
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

@@ -1,0 +1,36 @@
+#
+# This is an nxs parameter file
+#
+
+# define the unit cell parameters:
+#   space_group                      - the space group number or Hermann or Hall symbol [string]
+#   lattice_a, ...b, ...c            - the lattice spacings a,b,c [angstrom]
+#   lattice_alpha, ...beta, ...gamma - the lattice angles alpha,beta,gamma [degree]
+#   debye_temp                       - the Debye temperature [K]
+
+space_group=194
+lattice_a=3.209
+lattice_b=0
+lattice_c=5.211
+lattice_alpha=0
+lattice_beta=0
+lattice_gamma=0
+debye_temp=400.0
+
+# add atoms to the unit cell:
+# notation is "atom_number = name b_coh sigma_inc sigma_abs_2200 molar_mass x y z"
+#   name           - labels the current atom/isotope  [string]
+#   b_coh          - the coherent scattering length [fm]
+#   sigma_inc      - the incoherent scattering cross section [barns]
+#   sigma_abs_2200 - the absorption cross sect. at 2200 m/s [barns]
+#   molar_mass     - the Molar mass [g/mol]
+#   x y z          - the Wyckoff postion of the atom inside the unit cell
+#
+# e.g.: add_atom = Fe 9.45 0.4 2.56 55.85 0.0 0.0 0.0
+
+[atoms]
+add_atom = Mg 5.375 0.08 0.063 24.31 0.0 0.0 0.0
+
+
+
+

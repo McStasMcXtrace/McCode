@@ -1,0 +1,655 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Template TAS instrument
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 2006
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* %INSTRUMENT_SITE: Templates
+*
+* Template RESCAL type triple-axis machine (TAS)
+*
+* %Description
+* This instrument is a simple model of triple-axis spectrometer.
+* It is directly illuminated by the moderator,
+* and has curved monochromator and analyzer.
+* Sample can be specified as a powder, liquid/amorphous or a pure incoherent
+* scatterer (e.g. vanadium, which is the default).
+* Sample geometry can be spherical or cylindrical.
+* For PG002 monochromator/analyzer setting, a reflectivity curve vs. wavelength
+* is used, else reflectivity is set to 70 %. To suppress collimators, set their
+* divergence to 0 (ALFn BETn).
+* Default instrument geometry is from IN20@ILL with PG monochromator/analyzer.
+*
+* Monochromator lattice parameter
+* PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
+* PG       004 DM=1.607 AA
+* Heusler  111 DM=3.362 AA (Cu2MnAl)
+* CoFe         DM=1.771 AA (Co0.92Fe0.08)
+* Ge       111 DM=3.266 AA
+* Ge       311 DM=1.714 AA
+* Ge       511 DM=1.089 AA
+* Ge       533 DM=0.863 AA
+* Si       111 DM=3.135 AA
+* Cu       111 DM=2.087 AA
+* Cu       002 DM=1.807 AA
+* Cu       220 DM=1.278 AA
+* Cu       111 DM=2.095 AA
+*
+* IN22 configuration (at H25 thermal m=2 guide end):
+*     KI=3.84, QM=1.0, EN=0.0, verbose=1,
+*     WM=0.15, HM=0.12,    NHM=1, NVM=9, RMV=-1,
+*     WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1,
+*     SM=-1, SS=1, SA=-1,
+*     L1=10.0, L2=1.7, L3=1.0, L4=0.8
+*
+* IN8 Configuration: with Copper optics
+*     KF=5, KI=0, QM=0.5, EN=5, verbose=1
+*     WM=0.23, HM=0.19, RMH=-1, RMV=-1, DM=1.807, NHM=15, NVM=15,
+*     WA=0.16, HA=0.08, RAH=-1, RAV=-1, DA=2.087, NHA=15, NVA=15,
+*     L1=2.33
+*
+* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=2.55907e+08
+* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=256
+*
+* %Parameters
+* KI: [Angs-1]            Incoming neutron wavevector
+* KF: [Angs-1]            Outgoing neutron wavevector
+* EI: [meV]               Incoming neutron energy
+* EF: [meV]               Outgoing neutron energy
+* QH: [rlu]               Measurement QH position in crystal
+* QK: [rlu]               Measurement QK position in crystal
+* QL: [rlu]               Measurement QL position in crystal
+* EN: [meV]               Energy transfer in crystal
+* QM: [Angs-1]            Wavevector transfer in crystal
+* KFIX: [Angs-1]          Fixed KI or KF value for Rescal compatibility
+* FX: [1:KI,2:KF]         Fixed KI or KF type for Rescal compatibility
+* L1: [m]                 Source-Monochromator distance. Contains 1st Collimator of length 5.34
+* L2: [m]                 Monochromator-Sample distance. Contains 2nd Collimator of length 0.35
+* L3: [m]                 Sample-Analyzer distance. Contains 3rd Collimator of length 0.40
+* L4: [m]                 Analyzer-detector distance. Contains 4th Collimator of length 0.24
+* SM: [1:left, -1:right]  Scattering sense of beam from Monochromator
+* SS: [1:left, -1:right]  Scattering sense of beam from Sample
+* SA: [1:left, -1:right]  Scattering sense of beam from Analyzer
+* DM: [Angs]              Monochromator d-spacing
+* DA: [Angs]              Analyzer d-spacing
+* RMV: [m]                Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* RMH: [m]                Monochromator horizontal curvature, 0 for flat, -1 for automatic setting
+* RAV: [m]                Analyzer vertical curvature, 0 for flat, -1 for automatic setting
+* RAH: [m]                Analyzer horizontal curvature, 0 for flat, -1 for automatic setting
+* ETAM: [arc min]         Monochromator mosaic
+* ETAA: [arc min]         Analyzer mosaic
+* ALF1: [arc min]         Horizontal collimation from Source to Monochromator
+* ALF2: [arc min]         Horizontal collimation from Monochromator to Sample A
+* ALF3: [arc min]         Horizontal collimation from Sample to Analyzer
+* ALF4: [arc min]         Horizontal collimation from Analyzer to Detector
+* BET1: [arc min]         Vertical collimation from Source to Monochromator
+* BET2: [arc min]         Vertical collimation from Monochromator to Sample A
+* BET3: [arc min]         Vertical collimation from Sample to Analyzer
+* BET4: [arc min]         Vertical collimation from Analyzer to Detector
+* AS: [Angs]              Sample lattice parameter A
+* BS: [Angs]              Sample lattice parameter B
+* CS: [Angs]              Sample lattice parameter C
+* AA: [deg]               Angle between lattice vectors B,C
+* BB: [deg]               Angle between lattice vectors C,A
+* CC: [deg]               Angle between lattice vectors A,B
+* AX: [rlu]               First reciprocal lattice vector in scattering plane, X
+* AY: [rlu]               First reciprocal lattice vector in scattering plane, Y
+* AZ: [rlu]               First reciprocal lattice vector in scattering plane, Z
+* BX: [rlu]               Second reciprocal lattice vector in scattering plane, X
+* BY: [rlu]               Second reciprocal lattice vector in scattering plane, Y
+* BZ: [rlu]               Second reciprocal lattice vector in scattering plane, Z
+* A1: [deg]               Monohromator rotation angle
+* A2: [deg]               Monohromator take-off angle
+* A3: [deg]               Sample rotation angle
+* A4: [deg]               Sample take-off angle
+* A5: [deg]               Analyzer rotation angle
+* A6: [deg]               Analyzer take-off angle
+* verbose: [1]            print TAS configuration. 0 to be quiet
+*
+* WM: [m]                 Width of monochromator
+* HM: [m]                 Height of monochromator
+* NVM: [1]                Number of vertical slabs composing the monochromator
+* NHM: [1]                Number of horizontal slabs composing the monochromator
+* WA: [m]                 Width of analyzer
+* HA: [m]                 Height of analyzer
+* NVA: [1]                Number of vertical slabs composing the analyzer
+* NHA: [1]                Number of horizontal slabs composing the analyzer
+*
+* Sqw_coh: [str]          sample coherent S(q,w) file name. Use LAZ/LAU or SQW file
+* Sqw_inc: [str]          sample incoherent S(q,w) file name. Use NULL to scatter incoherently
+* radius: [m]             outer radius of sample hollow cylinder/sphere
+* height: [m]             sample height. Use 0 for a spherical shape
+* thickness: [m]          thickness of sample hollow cylinder. 0 for bulk
+*
+* %Link
+* Rescal for Matlab at http://www.ill.eu/instruments-support/computing-for-science/cs-software/all-software/matlab-ill/
+* %Link
+* Restrax at http://omega.ujf.cas.cz/restrax/
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT templateTAS( KI=2.662, KF=0, EI=0, EF=0, QH=0, QK=0, QL=0, EN=0, QM=0, KFIX=0, FX=0, L1=9, L2=2.1, L3=1.5, L4=0.7, SM=1, SS=-1, SA=1, DM=3.3539, DA=3.3539, RMV=-1, RMH=0, RAV=0, RAH=-1, ETAM=30, ETAA=30, ALF1=60, ALF2=60, ALF3=60, ALF4=60, BET1=120, BET2=120, BET3=120, BET4=120, AS=6.28, BS=6.28, CS=6.28, AA=90, BB=90, CC=90, AX=1, AY=0, AZ=0, BX=0, BY=1, BZ=0, verbose=1, A1=0,A2=0,A3=0,A4=0,A5=0,A6=0, NHM=1, NVM=9, WM=0.10, HM=0.12, NHA=9, NVA=1, WA=0.10, HA=0.12, string Sqw_coh="NULL", string Sqw_inc="NULL", radius=0.01, thickness=0.005, height=0.05 )
+
+DECLARE
+%{
+  struct sample_struct {
+    double as, bs, cs;
+    double aa, bb, cc;
+    double ax, ay, az;
+    double bx, by, bz;
+  } sample;
+
+  struct machine_hkl_struct {
+    double dm, da;
+    double l1, l2, l3, l4;
+    double sm, ss, sa;
+    double etam, etaa, kfix, fx;
+    double alf1, alf2, alf3, alf4;
+    double bet1, bet2, bet3, bet4;
+    double ki, kf, ei, ef;
+    double qh, qk, ql, en;
+  } machine_hkl;
+
+  struct machine_real_struct {
+    double a1,a2,a3,a4,a5,a6;
+    double rmh, rmv, rah, rav;
+    double qm, qs, qt[3];
+    char   message[256];
+  } machine_real;
+
+  struct machine_real_struct qhkl2angles(
+    struct sample_struct      sample,
+    struct machine_hkl_struct machine_hkl,
+    struct machine_real_struct machine_real) {
+
+      /* code from TASMAD/t_rlp.F:SETRLP */
+      double qhkl[3];
+      double alpha[3];
+      double a[3];
+      double aspv[3][2];
+      double cosa[3], sina[3];
+      double cosb[3], sinb[3];
+      double b[3], c[3], s[4][4];
+      double vv[3][3], bb[3][3];
+      double arg, cc;
+      int i,j,k,l,m,n;
+      char liquid_case=1;
+      /* transfer parameters to local arrays */
+      qhkl[0]   = machine_hkl.qh; /* HKL target */
+      qhkl[1]   = machine_hkl.qk;
+      qhkl[2]   = machine_hkl.ql;
+      alpha[0]  = sample.aa; /* cell angles */
+      alpha[1]  = sample.bb;
+      alpha[2]  = sample.cc;
+      a[0]      = sample.as; /* cell parameters */
+      a[1]      = sample.bs;
+      a[2]      = sample.cs;
+      aspv[0][0]= sample.ax; /* cell axis A */
+      aspv[1][0]= sample.ay;
+      aspv[2][0]= sample.az;
+      aspv[0][1]= sample.bx; /* cell axis B */
+      aspv[1][1]= sample.by;
+      aspv[2][1]= sample.bz;
+
+      /* default return values */
+      strcpy(machine_real.message, "");
+      machine_real.a3 = machine_real.a4 = 0;
+      machine_real.a1 = machine_real.a5 = 0;
+
+      /* if using HKL positioning in crystal (QM = 0) */
+      if (machine_real.qm <= 0) {
+        liquid_case = 0;
+        /* compute reciprocal cell */
+        for (i=0; i< 3; i++)
+          if (a[i] <=0) sprintf(machine_real.message, "Lattice parameters a[%i]=%g", i, a[i]);
+          else {
+            a[i]    /= 2*PI;
+            alpha[i]*= DEG2RAD;
+            cosa[i]  = cos(alpha[i]);
+            sina[i]  = sin(alpha[i]);
+          }
+        cc = cosa[0]*cosa[0]+cosa[1]*cosa[1]+cosa[2]*cosa[2]; /* norm */
+        cc = 1 + 2*cosa[0]*cosa[1]*cosa[2] - cc;
+        if (cc <= 0) sprintf(machine_real.message, "Lattice angles (AA,BB,CC) cc=%g", cc);
+        else cc = sqrt(cc);
+
+        if (strlen(machine_real.message)) return machine_real;
+
+        /* compute bb */
+        j=1; k=2;
+        for (i=0; i<3; i++) {
+          b[i] = sina[i]/(a[i]*cc);
+          cosb[i] = (cosa[j]*cosa[k] - cosa[i])/(sina[j]*sina[k]);
+          sinb[i] = sqrt(1 - cosb[i]*cosb[i]);
+          j=k; k=i;
+        }
+
+        bb[0][0] = b[0];
+        bb[1][0] = 0;
+        bb[2][0] = 0;
+        bb[0][1] = b[1]*cosb[2];
+        bb[1][1] = b[1]*sinb[2];
+        bb[2][1] = 0;
+        bb[0][2] = b[2]*cosb[1];
+        bb[1][2] =-b[2]*sinb[1]*cosa[0];
+        bb[2][2] = 1/a[2];
+
+        /* compute vv */
+        for (k=0; k< 3; k++)
+          for (i=0; i< 3; i++) vv[k][i] = 0;
+
+        for (k=0; k< 2; k++)
+          for (i=0; i< 3; i++)
+            for (j=0; j< 3; j++)
+              vv[k][i] += bb[i][j]*aspv[j][k];
+
+        for (m=2; m>=1; m--)
+          for (n=0; n<3; n++) {
+            i = (int)fmod(m+1,3); j= (int)fmod(m+2,3);
+            k = (int)fmod(n+1,3); l= (int)fmod(n+2,3);
+            vv[m][n]=vv[i][k]*vv[j][l]-vv[i][l]*vv[j][k];
+          }
+
+        for (i=0; i< 3; i++) { /* compute norm(vv) */
+          c[i]=0;
+          for (j=0; j< 3; j++)
+            c[i] += vv[i][j]*vv[i][j];
+          if (c[i]>0) c[i] =  sqrt(c[i]);
+          else {
+            sprintf(machine_real.message, "Vectors A and B, c[%i]=%g", i, c[i]);
+            return machine_real;
+          }
+        }
+
+        for (i=0; i< 3; i++) /* normalize vv */
+          for (j=0; j< 3; j++)
+            vv[j][i] /= c[j];
+
+        for (i=0; i< 3; i++) /* compute S */
+          for (j=0; j< 3; j++) {
+            s[i][j] = 0;
+            for (k=0; k< 3; k++)
+              s[i][j] += vv[i][k]*bb[k][j];
+          }
+        s[3][3]=1;
+        for (i=0;  i< 3;  i++)  s[3][i]=s[i][3]=0;
+
+        /* compute q modulus and transverse component */
+        machine_real.qs = 0;
+        for (i=0; i< 3; i++) {
+          machine_real.qt[i] = 0;
+          for (j=0; j< 3; j++) machine_real.qt[i] += qhkl[j]*s[i][j];
+          machine_real.qs += machine_real.qt[i]*machine_real.qt[i];
+        }
+        if (machine_real.qs > 0) machine_real.qm = sqrt(machine_real.qs);
+        else sprintf(machine_real.message, "Q modulus too small QM^2=%g", machine_real.qs);
+      } else {
+        machine_real.qs = machine_real.qm*machine_real.qm;
+      }
+      /* end if  qm <= 0 ********************************************* */
+
+      /* positioning of monochromator and analyser */
+      arg = PI/machine_hkl.dm/machine_hkl.ki;
+      if (fabs(arg > 1))
+        sprintf(machine_real.message, "Monochromator can not reach this KI. arg=%g", arg);
+      else {
+        if (machine_hkl.dm <= 0 || machine_hkl.ki <= 0)
+          strcpy(machine_real.message, "Monochromator DM=0 or KI=0.");
+        else
+          machine_real.a1 = asin(arg)*RAD2DEG;
+        machine_real.a1 *= machine_hkl.sm;
+      }
+      machine_real.a2=2*machine_real.a1;
+
+      arg = PI/machine_hkl.da/machine_hkl.kf;
+      if (fabs(arg > 1))
+        sprintf(machine_real.message, "Analyzer can not reach this KF. arg=%g",arg);
+      else {
+        if (machine_hkl.da <= 0 || machine_hkl.kf <= 0)
+          strcpy(machine_real.message, "Analyzer DA=0 or KF=0.");
+        else
+          machine_real.a5 = asin(arg)*RAD2DEG;
+        machine_real.a5 *= machine_hkl.sa;
+      }
+      machine_real.a6=2*machine_real.a5;
+      if (strlen(machine_real.message)) return machine_real;
+
+
+      /* code from TASMAD/t_conv.F:SAM_CASE */
+      arg = (machine_hkl.ki*machine_hkl.ki + machine_hkl.kf*machine_hkl.kf - machine_real.qs)
+          / (2*machine_hkl.ki*machine_hkl.kf);
+      if (fabs(arg) < 1)
+        machine_real.a4 = RAD2DEG*acos(arg);
+      else
+        sprintf(machine_real.message, "Q modulus too big. Can not close triangle. arg=%g", arg);
+      machine_real.a4 *= machine_hkl.ss;
+
+      if (!liquid_case) { /* compute a3 in crystals */
+        machine_real.a3 =
+            -atan2(machine_real.qt[1],machine_real.qt[0])
+            -acos( (machine_hkl.kf*machine_hkl.kf-machine_real.qs-machine_hkl.ki*machine_hkl.ki)
+                  /(-2*machine_real.qm*machine_hkl.ki) );
+        machine_real.a3 *= RAD2DEG*(machine_real.a4 > 0 ? 1 : -1 );
+    }
+
+    return machine_real;
+  } /* qhkl2angles */
+%}
+/* end of DECLARE */
+
+INITIALIZE
+%{
+double Vi, Vf;
+char   anglemode = 0;
+
+if (KFIX && FX) {
+  if      (FX == 1) KI = KFIX;
+  else if (FX == 2) KF = KFIX;
+}
+
+/* determine neutron energy from input */
+if (KI && !EI) {
+  Vi = K2V*fabs(KI);
+  EI = VS2E*Vi*Vi;
+}
+if (KF && !EF) {
+  Vf = K2V*fabs(KF);
+  EF = VS2E*Vf*Vf;
+}
+
+machine_real.a1 = A1;
+machine_real.a2 = A2;
+machine_real.a3 = A3;
+machine_real.a4 = A4;
+machine_real.a5 = A5;
+machine_real.a6 = A6;
+
+if (A1 || A2 || A3 || A4 || A5 || A6) anglemode=1;
+
+if (!anglemode) {
+  if (!EI && !EF)
+      exit(fprintf(stderr,
+        "%s: ERROR: neutron beam energy is not defined (EI, EF, KI, KF)\n",
+        NAME_CURRENT_COMP));
+
+  /* energy conservation */
+  if (EI)
+    EF = EI - EN;
+  else if (EF)
+    EI = EF + EN;
+
+  /* determine remaining neutron energies */
+  if (!KI && EI) {
+    Vi = SE2V*sqrt(EI);
+    KI = V2K*Vi;
+  }
+  if (!KF && EF) {
+    Vf = SE2V*sqrt(EF);
+    KF = V2K*Vf;
+  }
+
+  if (!QM && !QH && !QK && !QL)
+    exit(fprintf(stderr,
+      "%s: ERROR: No Q transfer defined (QM, QH, QK, QL)\n",
+      NAME_CURRENT_COMP));
+} else {
+  /* compute KI, KF if angles are consistent */
+  if (!KI && fabs(A2-2*A1) < 0.01) {
+    KI  = PI/DM/fabs(sin(DEG2RAD*A1*SM));
+  }
+  if (!KF && fabs(A6-2*A5) < 0.01) {
+    KF  = PI/DA/fabs(sin(DEG2RAD*A5*SA));
+  }
+  double qs=(KI*KI + KF*KF - cos(A4*DEG2RAD*SS)*(2*KI*KF));
+  if (!QM && qs>=0) QM = sqrt(qs);
+  else fprintf(stderr,
+      "%s: Warning: Can not compute Q-modulus from A4=%g [deg].\n",
+      NAME_CURRENT_COMP,A4);
+}
+
+/* transfer sample parameters */
+sample.aa = AA;
+sample.bb = BB;
+sample.cc = CC;
+sample.as = AS;
+sample.bs = BS;
+sample.cs = CS;
+sample.ax = AX;
+sample.ay = AY;
+sample.az = AZ;
+sample.bx = BX;
+sample.by = BY;
+sample.bz = BZ;
+
+/* transfer target parameters */
+machine_hkl.ki = KI;
+machine_hkl.kf = KF;
+machine_hkl.ei = EI;
+machine_hkl.ef = EF;
+machine_hkl.qh = QH;
+machine_hkl.qk = QK;
+machine_hkl.ql = QL;
+machine_hkl.en = EN;
+machine_real.qm = QM;
+
+if (verbose) {
+  printf("%s: Detailed TAS configuration\n", NAME_CURRENT_COMP);
+  printf("* Incoming beam: EI=%.4g [meV] KI=%.4g [Angs-1] Vi=%g [m/s]\n", EI, KI, Vi);
+  printf("* Outgoing beam: EF=%.4g [meV] KF=%.4g [Angs-1] Vf=%g [m/s]\n", EF, KF, Vf);
+}
+
+/* transfer machine parameters */
+machine_hkl.l1 = L1;
+machine_hkl.l2 = L2;
+machine_hkl.l3 = L3;
+machine_hkl.l4 = L4;
+machine_hkl.sm = SM;
+machine_hkl.ss = SS;
+machine_hkl.sa = SA;
+machine_hkl.dm = DM;
+machine_hkl.da = DA;
+machine_real.rmv= RMV;
+machine_real.rmh= RMH;
+machine_real.rav= RAV;
+machine_real.rah= RAH;
+machine_hkl.etam= ETAM;
+machine_hkl.etaa= ETAA;
+machine_hkl.alf1= ALF1;
+machine_hkl.alf2= ALF2;
+machine_hkl.alf3= ALF3;
+machine_hkl.alf4= ALF4;
+machine_hkl.bet1= BET1;
+machine_hkl.bet2= BET2;
+machine_hkl.bet3= BET3;
+machine_hkl.bet4= BET4;
+
+/* geometry tests w/r to collimator lengths */
+if (machine_hkl.l1 <= 1)
+  fprintf(stderr, "%s: Warning: L1 too short. Min=1\n", NAME_CURRENT_COMP);
+
+if (machine_hkl.l2 <= 0.35)
+  exit(fprintf(stderr, "%s: ERROR: L2 too short. Min=0.35\n", NAME_CURRENT_COMP));
+
+if (machine_hkl.l3 <= 0.40)
+  exit(fprintf(stderr, "%s: ERROR: L3 too short. Min=0.40\n", NAME_CURRENT_COMP));
+
+if (machine_hkl.l4 <= 0.24)
+  exit(fprintf(stderr, "%s: ERROR: L4 too short. Min=0.24\n", NAME_CURRENT_COMP));
+
+if (!anglemode) {
+  machine_real = qhkl2angles(sample, machine_hkl, machine_real);
+  if (strlen(machine_real.message))
+    exit(fprintf(stderr, "%s: ERROR: %s [qhkl2angles]\n",
+      NAME_CURRENT_COMP, machine_real.message));
+}
+
+/* compute optimal curvatures */
+double L;
+L = 1/(1/L1+1/L2);
+if (RMV < 0) machine_real.rmv = fabs(2*L*sin(DEG2RAD*machine_real.a1));
+if (RMH < 0) machine_real.rmh = fabs(2*L/sin(DEG2RAD*machine_real.a1));
+L = 1/(1/L3+1/L4);
+if (RAV < 0) machine_real.rav = fabs(2*L*sin(DEG2RAD*machine_real.a5));
+if (RAH < 0) machine_real.rah = fabs(2*L/sin(DEG2RAD*machine_real.a5));
+
+if (verbose) {
+  printf("* Transfer:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
+  printf("Angles: A1=%.4g A2=%.4g A3=%.4g A4=%.4g A5=%.4g A6=%.4g [deg]\n",
+    machine_real.a1, machine_real.a2,
+    machine_real.a3, machine_real.a4,
+    machine_real.a5, machine_real.a6);
+  printf("Monochromator: DM=%.4g [Angs] RMH=%.4g [m] RMV=%.4g [m] %s\n",
+    machine_hkl.dm, machine_real.rmh, machine_real.rmv,
+    (!machine_real.rmh && !machine_real.rmv ? "flat" : "curved"));
+  printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
+    machine_hkl.da, machine_real.rah, machine_real.rav,
+    (!machine_real.rah && !machine_real.rav ? "flat" : "curved"));
+
+  printf("Sample:        ");
+    if (strcmp(Sqw_coh, "NULL") && !strstr(Sqw_coh, ".laz") && !strstr(Sqw_coh, ".lau"))
+      printf("Isotropic (liquid/polymer) %s\n", Sqw_coh);
+    if (!strcmp(Sqw_coh, "NULL"))
+      printf("Incoherent\n");
+    if (strstr(Sqw_coh, ".laz") || strstr(Sqw_coh, ".lau"))
+      printf("Powder %s\n", Sqw_coh);
+}
+
+machine_real.rmv = fabs(machine_real.rmv)*machine_hkl.sm;
+machine_real.rmh = fabs(machine_real.rmh)*machine_hkl.sm;
+machine_real.rav = fabs(machine_real.rav)*machine_hkl.sa;
+machine_real.rah = fabs(machine_real.rah)*machine_hkl.sa;
+
+%}
+/* end of INITIALIZE */
+
+TRACE
+/* Source description */
+
+REMOVABLE COMPONENT Origin=Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+/* a flat constant source */
+REMOVABLE COMPONENT Source = Source_gen(
+  radius  = 0.10,
+  dist = machine_hkl.l1,
+  focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
+  T1 = 683.7, I1 = 0.5874e13, T2 = 257.7, I2 = 2.5094e13, T3 =  16.7, I3 = 0.10343e13,
+  E0 = machine_hkl.ei,
+  dE = machine_hkl.ei*0.03)
+AT (0,0,0) ABSOLUTE
+
+REMOVABLE COMPONENT SC1 = Collimator_linear(
+  xmin =-WM/2, ymin =-HM/2,
+  xmax = WM/2, ymax = HM/2,
+  length = machine_hkl.l1/2,
+  divergence=ALF1,
+  divergenceV=BET1)
+WHEN (ALF1 && BET1)
+AT (0, 0, machine_hkl.l1/4) ABSOLUTE
+
+REMOVABLE COMPONENT Guide_out=Arm()
+AT (0, 0, machine_hkl.l1-0.2) ABSOLUTE
+
+COMPONENT Mono_Cradle = Arm()
+  AT (0, 0, 0.2) RELATIVE PREVIOUS
+
+SPLIT COMPONENT PG1Xtal = Monochromator_curved(
+  width  = WM,
+  height = HM,
+  NH=NHM, NV=NVM,
+  RV=machine_real.rmv, RH=machine_real.rmh,
+  DM=machine_hkl.dm, mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7),
+  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
+AT (0, 0, 0) RELATIVE Mono_Cradle
+ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
+
+/*                                on mono, pointing towards sample */
+COMPONENT Mono_Out = Arm()
+  AT (0,0,0) RELATIVE Mono_Cradle
+  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Cradle
+
+  COMPONENT D4_SC2_1D = Monitor_nD(
+  xmin = -0.0420/2, xmax = 0.0420/2,
+  ymin = -0.1200/2, ymax = 0.1200/2,
+  options="lambda, cm2, auto")
+AT (0, 0, (machine_hkl.l2-0.35)/3) RELATIVE Mono_Out
+
+COMPONENT SC2 = Collimator_linear(
+  xmin =-0.04/2, ymin =-0.07/2,
+  xmax = 0.04/2, ymax = 0.07/2,
+  length = 0.35,
+  divergence=ALF2,
+  divergenceV=BET2)
+WHEN (ALF2 && BET2)
+AT (0, 0, (machine_hkl.l2-0.35)/2) RELATIVE Mono_Out
+
+SPLIT COMPONENT Sample_Cradle = Monitor_nD(xwidth=0.01, yheight=0.01, options="per cm2", restore_neutron=1)
+  AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
+  ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
+
+/* Sqw when Sqw_coh is not NULL/.laz/.lau */
+COMPONENT Sample = Isotropic_Sqw(
+  radius = radius, thickness=thickness, yheight = height,
+  Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, p_interact=0.95, order=1, d_phi=RAD2DEG*atan2(HA,machine_hkl.l3) )
+AT (0,0,0) RELATIVE Sample_Cradle
+
+COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
+  AT (0,0,0) RELATIVE Sample_Cradle
+  ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
+
+COMPONENT D7_SC3_1D = Monitor_nD(
+  xwidth = 0.06, yheight = HA, bins=50, restore_neutron=1,
+  options="theta energy, all auto, banana")
+AT (0, 0, 0) RELATIVE Sample_Out
+
+COMPONENT SC3 =Collimator_linear(
+  xmin =-0.06/2, ymin =-0.12/2,
+  xmax = 0.06/2, ymax = 0.12/2,
+  length = 0.40,
+  divergence=ALF3,
+  divergenceV=BET3)
+WHEN (ALF3 && BET3)
+AT (0, 0, (machine_hkl.l3-0.40)/2) RELATIVE Sample_Out
+
+COMPONENT Ana_Cradle = Arm()
+  AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
+
+SPLIT COMPONENT PG2Xtal = Monochromator_curved(
+  width  = WA,
+  height = HA,
+  NH=NHA, NV=NVA,
+  RV=machine_real.rav, RH=machine_real.rah,
+  DM=machine_hkl.da, mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7),
+  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
+AT (0, 0, 0) RELATIVE Ana_Cradle
+ROTATED (0, machine_real.a5, 0) RELATIVE Ana_Cradle
+
+COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
+  AT (0,0,0) RELATIVE Ana_Cradle
+  ROTATED (0, machine_real.a6, 0) RELATIVE Ana_Cradle
+
+COMPONENT SC4 =Collimator_linear(
+  xmin =-0.06/2, ymin =-0.12/2,
+  xmax = 0.06/2, ymax = 0.12/2,
+  length = 0.24,
+  divergence=ALF4,
+  divergenceV=BET4)
+WHEN (ALF4 && BET4)
+AT (0, 0, (machine_hkl.l4-0.24)/2) RELATIVE Ana_Out
+
+/* vertical 3He Detector */
+COMPONENT He3H = PSD_monitor(
+  xmin = -0.025400, xmax = 0.025400,
+  ymin = -0.042850, ymax = 0.042850,
+  nx=20, ny=20, filename="He3H.psd")
+AT (0, 0, machine_hkl.l4) RELATIVE Ana_Out
+
+END

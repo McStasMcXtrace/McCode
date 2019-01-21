@@ -1,0 +1,72 @@
+/******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Mezei_SNS_decoupled_poisoned.instr
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: May 2913
+* Origin: DTU Physics
+*
+* %INSTRUMENT_SITE: SNS
+*
+* Simple instrumentfile for estimating SNS brilliance, moderator is a rescaled ESS short-pulsed Mezei description.
+*
+* %DESCRIPTION
+*
+* Simple instrumentfile for estimating SNS brilliance, moderator is a rescaled ESS short-pulsed Mezei description.
+*
+* %Parameters
+* Lambda_min: [AA]  
+* Lambda_max: [AA]  
+*
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Mezei_SNS_decoupled_poisoned(Lambda_min=0.5,Lambda_max=20)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+
+DECLARE
+%{
+  double E_min;
+  double E_max;
+%}
+
+INITIALIZE
+%{
+  E_min=81.82/(Lambda_max*Lambda_max);
+  E_max=81.82/(Lambda_min*Lambda_min);
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = ESS_moderator_short(size=0.01,
+				       dist=1, focus_xw=0.01, focus_yh=0.01, Lmin=Lambda_min, Lmax=Lambda_max, nu=60, T=50, tau=49e-6, tau1=0, tau2=7e-6, n=5, n2=5, chi2=0.9,
+		    I0=2.7e10, I2=4.6e10, branch1=0, branch2=0.5, branchframe=1)
+   AT (0,0,0) RELATIVE Origin
+EXTEND %{
+  /* Cold moderator is downstream @ SNS, was designed to be upstream at ESS */
+  p/=1.3;
+  /* 5MW to 1.4MW */
+  p/=5;
+  p*=1.4;
+%}
+
+COMPONENT Brillmon = Brilliance_monitor(
+    nlam = 196, nt = 1201, filename = "brill", t_0 = 0,
+    t_1 = 1200, lambda_0 = Lambda_min, lambda_1 = Lambda_max,
+    Freq =60.0)
+  AT (0, 0, 0.0000001) RELATIVE Source
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+/* The END token marks the instrument definition end */
+END

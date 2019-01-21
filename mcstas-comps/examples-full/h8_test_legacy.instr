@@ -1,0 +1,271 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2011, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: h8_test_legacy
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 1st Feb 2001.
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* %INSTRUMENT_SITE: Brookhaven
+*
+* The former thermal H8 triple-axis spectrometer from Brookhaven reactor, 1.12c-comparable
+*
+* %Description
+* This instrument is a simple model of the thermal H8 triple-axis spectrometer
+* from former Brookhaven reactor. It is directly illuminated by the moderator,
+* and has flat monochromator and analyzer. Sample is a vanadium cylinder.
+* Such an instrument was used for the Monte Carlo neutron simulation package
+* cross comparison related in paper "A Model Instrument for Monte Carlo Code
+* Comparisons", Neutron News 13 (No. 4), 24-29 (2002).
+*
+* This version of the instrument does not use the SPLIT keyword and is comparable
+* to the version provided with McStas 1.12c. Has been added for benchmarking
+* purposes only.
+*
+* Example: mcrun h8_test_legacy.instr Lambda=2.36
+*
+* %Parameters
+* Lambda: [Angs]  source energy
+*
+* %Link
+* Neutron News 13 (No. 4), 24-29 (2002).
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT h8_test_legacy(Lambda=2.36)
+
+DECLARE
+%{
+  #define VERSION "1.7"
+  double DM         = 3.3539;   /* Monochromator d-spacing in Angs */
+                                /* PG002 Orders : 1st 3.355 2e 1.6775, 3e 1.1183 */
+
+/* to compute */
+  double A1,A2;
+  double A3,A4;
+  double A5,A6;
+  double mono_q, Ei;
+%}
+/* end of DECLARE */
+
+INITIALIZE
+%{
+  int    ORDER = 1;
+  double vi, Ki;
+  int    SM,SS,SA;
+  char hostname[256];
+
+  /* SM : scattering at mono to the right (-1)/left(+1) */
+  /* SS : scattering at sample to the right (-1)/left(+1) */
+  /* SA : scattering at analyser to the right (-1)/left(+1) */
+  SM = 1; SS = -1; SA = 1;
+
+/*  SM = 0; SS = -0; SA = 0; */
+
+  mono_q = 2*PI*ORDER/DM;  /* Q mono in Angs-1 */
+
+  Ki = 2*PI/Lambda;
+  vi = K2V*fabs(Ki);
+  Ei = VS2E*vi*vi;
+
+  A2 = asin(mono_q/2/Ki)*RAD2DEG*2;
+  A4 = A2; A6 = A2;
+
+  A2 *= SM;       /* A1 : mono theta (crystal) */
+  A1 = A2/2;    /* A2 : mono 2 theta (arm to sample) */
+  A4 *= SS;       /* A3 : sample theta */
+  A3 = A4/2;    /* A4 : sample 2 theta (arm to analyser) */
+  A6 *= SA;       /* A5 : analyser theta (crystal) */
+  A5 = A6/2;    /* A6 : analyser 2 theta (arm to Dector) */
+
+  strcpy(hostname, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
+
+  printf("Instrument : H8, v%s (21/02/01) on %s.\n",VERSION,hostname);
+  printf("Monochromator : (DM = %g)\n",DM);
+  printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
+  printf("Ki = %.4g Angs-1 Energy = %.4g meV\nVelocity = %.4g m/s, Lambda = %.4g Angs\n", Ki, Ei, vi,
+Lambda);
+%}
+/* end of INITIALIZE */
+
+TRACE
+/* Source description */
+COMPONENT Origin=Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+/* a flat constant source */
+COMPONENT Source = Source_simple(
+  radius  = 0.10,
+  dist = 2.7473,
+  focus_xw = 0.031, focus_yh = 0.054,
+  E0 = Ei,
+  dE = 0.5)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT D0_Source = PSD_monitor(
+  xmin = -0.015, xmax = 0.015,
+  ymin = -0.027, ymax = 0.027,
+  nx=20, ny=20, filename="D0_Source.psd")
+AT (0, 0, 0.0001) RELATIVE Source
+
+/* SC1 collimator. 40'=3 slots, 20'=6 slots */
+
+COMPONENT SC1 = Guide(
+  w1 = 0.031, h1 = 0.054,
+  w2 = 0.031, h2 = 0.054,
+  l = 0.9144,
+  R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
+AT (0.0, 0, 2.7473) RELATIVE Source
+
+COMPONENT D1_SC1_Out = PSD_monitor(
+  xmin = -0.015, xmax = 0.015,
+  ymin = -0.027, ymax = 0.027,
+  nx=20, ny=20, filename="D1_SC1_Out.psd")
+AT (0.0, 0, 0.9145) RELATIVE SC1
+
+COMPONENT As1 = Slit(
+  xmin = -0.022250,  xmax = 0.022250,
+  ymin = -0.031750,  ymax = 0.031750)
+AT (0, 0, 3.6998) RELATIVE Source
+
+COMPONENT As2 = Slit(
+  xmin = -0.022250,  xmax = 0.022250,
+  ymin = -0.031750,  ymax = 0.031750)
+AT (0, 0, 4.0808) RELATIVE Source
+
+COMPONENT As3 = Slit(
+  xmin = -0.022250,  xmax = 0.022250,
+  ymin = -0.031750,  ymax = 0.031750)
+AT (0, 0, 4.1189) RELATIVE Source
+
+COMPONENT As4 = Slit(
+  xmin = -0.022250,  xmax = 0.022250,
+  ymin = -0.031750,  ymax = 0.031750)
+AT (0, 0, 4.4141) RELATIVE Source
+
+COMPONENT D2_A4 = PSD_monitor(
+  xmin = -0.022250,  xmax = 0.022250,
+  ymin = -0.031750,  ymax = 0.031750,
+  nx=20, ny=20, filename="D2_A4.psd")
+AT (0, 0, 0.0001) RELATIVE As4
+
+COMPONENT Mono_Cradle = Arm()
+  AT (0, 0, 5.2746) RELATIVE Source ROTATED (0, A1, 0) RELATIVE Source
+
+COMPONENT PG1Xtal = Monochromator_flat(
+  zmin = -0.05, zmax = 0.05,
+  ymin = -0.04, ymax = 0.04,
+  mosaich = 40, mosaicv = 40,
+  r0 = 0.7, Q=mono_q)
+AT (0, 0, 0.0001) RELATIVE Mono_Cradle
+
+/*                                on mono, pointing towards sample */
+COMPONENT Mono_Out = Arm()
+  AT (0,0,0.0002) RELATIVE Mono_Cradle ROTATED (0, A2, 0) RELATIVE Source
+
+/* D3 should be in transmission, there at 222.2 mm */
+
+COMPONENT D4_SC2_In = PSD_monitor(
+  xmin = -0.015900, xmax = 0.015900,
+  ymin = -0.024750, ymax = 0.024750,
+  nx=20, ny=20, filename="D4_SC2_In.psd")
+AT (0, 0, 0.2222) RELATIVE Mono_Out
+
+/* SC2 collimator. 40'=4 slots, 20'=8 slots */
+COMPONENT SC2 = Guide(
+  w1 = 0.0318, h1 = 0.0495,
+  w2 = 0.0318, h2 = 0.0495,
+  l = 0.6096,
+  R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
+AT (0, 0, 0.2223) RELATIVE Mono_Out
+
+COMPONENT D5_SC2_Out = PSD_monitor(
+  xmin = -0.015900, xmax = 0.015900,
+  ymin = -0.024750, ymax = 0.024750,
+  nx=20, ny=20, filename="D5_SC2_Out.psd")
+AT (0, 0, 0.6097) RELATIVE SC2
+
+COMPONENT Sample_Cradle = Arm()
+AT (0, 0, 0.7811) RELATIVE D5_SC2_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
+
+COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
+AT (0,0,0) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
+
+COMPONENT Sample = V_sample(
+ radius_i = 0.0, radius = 0.0064, yheight = 0.0254,
+ focus_r = 0.035, pack = 1,
+ target_x = 0, target_y = 0, target_z = 0.234)
+AT (0,0,0) RELATIVE Sample_Out
+
+/* D6 should be in transmission, there at 235.0 mm */
+
+COMPONENT D7_SC3_In = PSD_monitor(
+  xmin = -0.023900, xmax = 0.023900,
+  ymin = -0.024500, ymax = 0.024500,
+  nx=20, ny=20, filename="D7_SC3_In.psd")
+AT (0, 0, 0.2349) RELATIVE Sample_Out
+
+/* SC3 collimator. 40' = 12 slots, 20'=24 slots */
+COMPONENT SC3 = Guide(
+  w1 = 0.0478, h1 = 0.0490,
+  w2 = 0.0478, h2 = 0.0490,
+  l = 0.3048,
+  R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
+AT (0, 0, 0.2350) RELATIVE Sample_Out
+
+COMPONENT D8_SC3_Out = PSD_monitor(
+  xmin = -0.023900, xmax = 0.023900,
+  ymin = -0.024500, ymax = 0.024500,
+  nx=20, ny=20, filename="D8_SC3_Out.psd")
+AT (0, 0, 0.3047) RELATIVE SC3
+
+
+COMPONENT Ana_Cradle = Arm()
+  AT (0, 0, 0.1397) RELATIVE D8_SC3_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
+
+COMPONENT PG2Xtal = Monochromator_flat(
+  zmin = -0.05, zmax = 0.05,
+  ymin = -0.04, ymax = 0.04,
+  mosaich = 40, mosaicv = 40,
+  r0 = 0.7, Q=mono_q)
+AT (0, 0, 0) RELATIVE Ana_Cradle
+
+COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
+AT (0,0,0) RELATIVE Ana_Cradle ROTATED (0, A6, 0) RELATIVE Sample_Out
+
+/* D9 should be in transmission, there at 336.6 mm */
+
+COMPONENT D10_SC4_In = PSD_monitor(
+  xmin = -0.023900, xmax = 0.023900,
+  ymin = -0.024500, ymax = 0.024500,
+  nx=20, ny=20, filename="D10_SC4_In.psd")
+AT (0, 0, 0.3365) RELATIVE Ana_Out
+
+/* SC4 collimator. 80' = 6 slots */
+COMPONENT SC4 = Guide(
+  w1 = 0.0478, h1 = 0.0490,
+  w2 = 0.0478, h2 = 0.0490,
+  l = 0.3048,
+  R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
+AT (0, 0, 0.3366) RELATIVE Ana_Out
+
+/* vertical 3He Detector */
+/*
+COMPONENT He3S = PSD_monitor(
+  xmin = -0.025400, xmax = 0.025400,
+  ymin = -0.042850, ymax = 0.042850,
+  options="x y, all bins=50")
+AT (0, 0, 0.3048+0.00001) RELATIVE SC4
+*/
+COMPONENT He3H = PSD_monitor(
+  xmin = -0.025400, xmax = 0.025400,
+  ymin = -0.042850, ymax = 0.042850,
+  nx=20, ny=20, filename="He3H.psd")
+AT (0, 0, 0.3049) RELATIVE SC4
+
+END

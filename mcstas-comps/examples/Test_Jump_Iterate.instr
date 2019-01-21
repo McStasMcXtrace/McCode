@@ -1,0 +1,100 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: Test_Jump_Iterate
+*
+* %Identification
+* Written by: E. Farhi
+* Date: March 30, 2015
+* Origin:ILL
+* %INSTRUMENT_SITE: Tests_grammar
+*
+* A test of the JUMP ITERATE keyword to describe a long curved guide in a concise way.
+*
+* %Description
+*
+* A curved guide made of only two guide elements which are iterated with  slight
+* rotation in between, to describe a long curved guide. 
+* 
+* %Example: L=60 Detector: Mon_LambdaDX_Out_I=0.790318
+*
+* %Parameters
+* L: [m]      total length of curved section
+* numel: [1]  number of guide elements, each of length L/numel
+* R: [m]      curvature radius
+* width: [m]  width of guide element
+* m: [1]      super-mirror coating wrt Ni, e.g. m=2
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Jump_Iterate(L=60, numel=30, R=1500, width=0.03, m=2)
+
+DECLARE %{
+  double d=0.001; /* gap between guide elements */
+%}
+
+INITIALIZE %{
+  if (numel < 2) {
+    printf("%s: The number of guide elements numel=%f is smaller than 2. Abort.\n",
+      NAME_CURRENT_COMP, numel);
+    exit(-1);
+  }
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_simple(
+  xwidth=0.05, yheight=0.05, dist=0.5, focus_xw=width, focus_yh=0.2,
+  lambda0=10, dlambda=9.5)
+  AT (0,0,0) RELATIVE Origin
+  
+COMPONENT CG_In = Arm()
+  AT (0,0,0.5) RELATIVE Origin
+  
+COMPONENT Mon_LambdaX_In = Monitor_nD(
+  options="x, lambda limits=[.5 19.5]", bins=100,
+  xwidth=.04, yheight=0.3, restore_neutron=1)
+  AT      ( 0 , 0 , 0 ) RELATIVE PREVIOUS
+  
+COMPONENT Mon_LambdaDX_In = COPY(PREVIOUS)
+  (options="dx limits=[-2 2], lambda limits=[.5 19.5]")
+  AT      ( 0 , 0 , 0 ) RELATIVE PREVIOUS
+
+/* the first guide element is fixed */
+COMPONENT CG_1 = Guide_gravity ( m=m, alpha=1e-4,
+  w1=width, h1=0.2, w2=width, h2=0.2, l=10)
+  AT      ( 0 , 0 , 0 ) RELATIVE CG_In
+
+/* the other guide elements are in a loop =================================== */
+
+/* the component is rotated only once. When redirected after JUMP
+ * the neutron is NOT rotated there. Rotation must occur at the JUMP origin. */
+COMPONENT CG_2_Position = Arm( )
+  AT      ( 0 , 0 , 10 ) RELATIVE PREVIOUS
+  
+COMPONENT CG_2 = COPY(CG_1)(l=L/numel)
+  AT      ( 0 , 0 , d/2 ) RELATIVE PREVIOUS
+  ROTATED ( 0 , (L/numel+d )/R*RAD2DEG , 0 ) RELATIVE PREVIOUS
+
+/* it is necessary to propagate the neutron to Z=0 after the guide
+ * else next iteration would have dt=z/v < 0, and ABSORB
+ * we put a monitor that records all reflected events */
+COMPONENT CG_2_out = COPY(Mon_LambdaDX_In)(restore_neutron=0)
+  AT      ( 0 , 0 , L/numel+d/2 ) RELATIVE PREVIOUS
+  JUMP CG_2_Position ITERATE numel
+  
+/* end of loop =============================================================== */
+
+COMPONENT CG_Out = Arm() 
+  AT ( 0 , 0 , 0.1 ) RELATIVE CG_2_out
+  
+COMPONENT Mon_LambdaX_Out = COPY(Mon_LambdaX_In)(xwidth=1)
+  AT      ( 0 , 0 , 0 ) RELATIVE CG_Out
+  
+COMPONENT Mon_LambdaDX_Out = COPY(Mon_LambdaDX_In)(xwidth=0.1)
+  AT      ( 0 , 0 , 0 ) RELATIVE CG_Out
+
+END

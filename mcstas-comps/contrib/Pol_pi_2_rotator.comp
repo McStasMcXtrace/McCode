@@ -1,0 +1,94 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pi_2_rotator
+*
+* %IDENTIFICATION
+* Written by: Erik Knudsen (erkn@fysik.dtu.dk)
+* Date: 8/4-2008
+* Origin: Risoe
+*
+* Ideal &pi;/2-rotator
+*
+* %Description
+* Simple, idelized, component that turns the polarization exactly &pi;/2 around the specified vector
+* vector (rx,ry,rx).
+* The geometry of the component is realized as a box, where the the spin is rotated at the z-midpoint.
+*
+* %PARAMETERS
+* xwidth: [m]   width of the component 
+* yheight: [m]  height of the component 
+* zdepth: [m]   thickness of the component 
+* rx: []        x-component of the rotation axis
+* ry: []        y-component of the rotation axis
+* rz: []        z-component of the rotation axis
+*
+* %LINKS
+*
+* %END
+****************************************************************************/
+
+DEFINE COMPONENT Pol_pi_2_rotator
+DEFINITION PARAMETERS()
+SETTING PARAMETERS(xwidth, yheight, zdepth, rx,ry,rz)
+OUTPUT PARAMETERS()
+
+SHARE
+%{
+/* Declare structures and functions only once in each instrument. */
+#ifndef PI_2_ROTATOR
+#define PI_2_ROTATOR 1
+#endif /* !PI_2_ROTATOR */
+%}
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+double rr=scalar_prod(rx,ry,rz,rx,ry,rz);
+  if (rr!=1){
+    rx=rx/sqrt(rr);
+    ry=ry/sqrt(rr);
+    rz=rz/sqrt(rr);
+  }
+%}
+
+TRACE
+%{
+  double t1,t2=0;
+  double rxs_x,rxs_y,rxs_z,rdots; 
+  /*check to see if we actually hit the component*/
+  if(!box_intersect(&t1, &t2, x, y, z, vx, vy, vz,xwidth, yheight, zdepth))
+  {
+    ABSORB;
+  }
+
+
+  /*if so, propagate to the halfway point - i.e. the z-center fo the turner*/
+  PROP_DT((t2-t1)/2.0);
+  /*now turn spin and set SCATTERED, This to get a reference pt in mcdisplay*/
+
+  /*rodrigues' formula gives a rotation of v around u as: v_rot=cos(phi)v + sin(phi) u x v +(1-cos(phi)) (u.v)u*/
+  rdots=scalar_prod(rx,ry,rz,sx,sy,sz);
+  vec_prod(rxs_x,rxs_y,rxs_z,rx,ry,rz,sx,sy,sz);
+  sx=rxs_x+ rdots*rx;
+  sy=rxs_y+ rdots*ry;
+  sz=rxs_z+ rdots*rz;
+  
+  SCATTERED;
+
+%}
+
+MCDISPLAY
+%{
+  box((double) 0.0,(double) 0.0,(double) 0.0,
+      (double)xwidth,(double)yheight,(double)zdepth);
+
+%}
+END

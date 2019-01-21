@@ -1,0 +1,66 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: templateLaueGPU
+*
+* %Identification
+* Written by: K. Nielsen
+* Date: June 2nd, 2010
+* Origin: ILL
+* Release: McStas CVS-080208
+* Version: $Revision: 4382 $
+* Modified by: EF, 
+* %INSTRUMENT_SITE: Templates
+*
+* A simple Laue diffractometer
+*
+* %Description
+* A single crystal sample is illuminated with a white cold beam.
+* Based on a Lauel tutorial written by K. Nielsen, Feb 7, 2000.
+*
+* Example: templateLaue_SXonly Detector: det_I=8.39706e+06
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+
+// -lOpenCL -DUSE_OPENCL 
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT templateLaueGPU(string sample="leucine.lau")
+DEPENDENCY " -I@MCCODE_LIB@/share @OPENCL_CFLAGS@ -DUSE_OPENCL -DMC_RAND_ALG=1"
+/* Use MT from the GPU */
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+  radius=0.02, focus_xw=0.01, focus_yh=0.01, 
+  lambda0=4, dlambda=1, flux=1e12)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT slit = Slit(
+  xwidth=0.01, yheight=0.01)
+AT (0,0,5) RELATIVE source
+
+COMPONENT Sample_pos = Arm()
+AT (0,0,0.10) RELATIVE slit
+
+COMPONENT Sample = Single_crystal(
+          xwidth=0.01, yheight=0.01, zdepth=0.01,
+          delta_d_d=1e-4, mosaic = 5, sigma_inc=0,
+          reflections=sample, order=1)
+AT (0,0,0.10) RELATIVE Sample_pos
+//ROTATED (5, 10, 15) RELATIVE Sample_pos
+EXTEND %{
+  if (!SCATTERED) ABSORB; /* perfect beam stop */
+%}
+
+COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
+AT (0,0,0) RELATIVE Sample_pos
+
+END
+

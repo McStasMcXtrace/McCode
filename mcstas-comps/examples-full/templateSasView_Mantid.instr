@@ -1,0 +1,113 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2016, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: templateSasView_Mantid
+*
+* %Identification
+* Written by: Peter Willendrup and Torben Nielsen
+* Date: 25 Jan 2016
+* Origin: DTU, European Spallation Source ERIC
+* Modified by: Based on templatesSANS.instr by Kim Lefmann
+* %INSTRUMENT_SITE: Templates
+*
+* Test instrument for the SasView_model component generating event data for Mantid. No guide / velocity selector
+* etc.
+*
+* %Description
+* Very simple test instrument for the SasView_model component.
+*
+* Modified to show a proof of concept method for storing a 'Mantid friendly' type of NeXus file.
+*
+* Needed steps (McStas):
+* 1) Compile your instrument with NeXus library and ISO c99 support
+* 2) Generate an IDF using mcdisplay templateSANS_Mantid --format=Mantid -n0
+* 3) mcrun templateSasView_Mantid -n1e6 --format=NeXus
+*
+* Needed steps (Mantid):
+* a) Load McStas NeXus file
+* b) Run Mantid algorithm: 'ConvertUnits' using the 'wavelenth' and 'elastic' options
+* c) Run Mantid algorithm: 'Qxy' using the options 'MaxQxy=0.6', 'DeltaQ=0.003', 'SolidAngleWeighting=False'
+*
+* %Parameters
+* lambda: [AA]   Mean wavelength of neutrons
+* dlambda: [AA]  Wavelength spread of neutrons
+*
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT templateSasView_Mantid(lambda=6, dlambda=0.05)
+
+DECLARE %{
+%}
+
+INITIALIZE %{
+%}
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm()
+  AT (0, 0, 0) ABSOLUTE
+
+COMPONENT sourceMantid = Source_simple(
+    radius = 0.02, dist = 3, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = lambda, dlambda = dlambda, flux = 1e8)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+COMPONENT LdetectorPRE = L_monitor(
+    nL = 1000, filename = "Edet1.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 5.5,
+    Lmax = 6.5)
+AT (0,0,0.05) RELATIVE coll2
+
+
+SPLIT COMPONENT sampleMantid = SasView_model(model_index=10, model_scale=1,  model_pars={ 4, 1, 20, 400, 60, 60 },
+model_abs=0.0,
+                         xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=3.6, focus_yh=3.6, target_index=1)
+   AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+       if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xmin = -1.5,
+    xmax = 1.5, ymin = -1.5, ymax = 1.5)
+  AT (0, 0, 3) RELATIVE sampleMantid
+
+COMPONENT Ldetector = L_monitor(
+    nL = 1000, filename = "Edet.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 5.5,
+    Lmax = 6.5)
+  AT (0, 0, 3.01) RELATIVE sampleMantid
+
+
+COMPONENT PSDrad = PSD_monitor_rad(
+    filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
+  AT (0, 0, 3.02) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_1 = Monitor_nD(
+    options ="mantid square x limits=[-1.5 1.5] bins=198 y limits=[-1.5 1.5] bins=198, neutron pixel t, list all neutrons",
+    xmin = -1.5,
+    xmax = 1.5,
+    ymin = -1.5,
+    ymax = 1.5,
+    restore_neutron = 1,
+    filename = "bank01_events.dat")
+  AT (0, 0, 3.1) RELATIVE sampleMantid
+
+END

@@ -1,0 +1,128 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_PreMonitor_nD
+*
+* %Identification
+* Written by: E. Farhi
+* Date: 13 Apr 2015
+* Origin: LLB
+* %INSTRUMENT_SITE: Tests_optics
+*
+* A test of the PreMonitor_nD component
+*
+* %Description
+* A test of the PreMonitor_nD component showing the effective usable part
+* reflected from a monochromator.
+*
+* Example: ETA=1 lambda=1 Detector: Mon_Sample=1.36e+08
+*
+* %Parameters
+* lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* DM: [Angs]      d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* ETA: [min]      Monochromator mosaic (gaussian)
+* verbose: [1]    Print DIF configuration. 0 to be quiet
+* SM: [1]         Scattering sense of beam from Monochromator. 1:left, -1:right
+* RH: []          
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_PreMonitor_nD(lambda=1, DM=3.355, RV=-1, RH=-1, L1=17, L2=3.2, ETA=30, verbose=1, THETA_M=0, SM=1)
+
+INITIALIZE
+%{
+double L;
+double KI, Vi, EI;
+
+if (!THETA_M && lambda && DM)
+	THETA_M =asin(lambda/(2*DM))*RAD2DEG;
+else if (THETA_M && !lambda && DM)
+	lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
+else if (THETA_M && lambda)
+	DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
+	
+THETA_M *= SM; /* take-off direction left or right */	
+
+/* test input parameters */
+if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
+      "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
+      NAME_CURRENT_COMP, THETA_M, DM, lambda));
+
+if (L1<1.1) L = L2;
+else        L = 1/(1/L1+1/L2);
+if (RV < 0) RV = fabs(2*L*sin(DEG2RAD*THETA_M));
+if (RH < 0) RH = fabs(2*L/sin(DEG2RAD*THETA_M));
+KI=2*PI/lambda;
+Vi = K2V*fabs(KI);
+EI = VS2E*Vi*Vi;
+
+if (ETA<=0)    ETA   =30;
+
+if (verbose) {
+  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
+  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+    lambda, EI, KI, Vi);
+  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] RH=%.4g [m] %s, take-off THETA_M=%.4g [deg]\n",
+    DM, RV, RH, (!RV && !RH ? "flat" : "curved"), THETA_M*2);
+}
+
+RV = fabs(RV)*SM;
+RH = fabs(RH)*SM;
+
+%}
+
+
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_gen(
+    radius = 0.11, dist = L1-L2, focus_xw = 0.1, focus_yh = 0.15,
+    lambda0 = lambda, dlambda = lambda*0.01,
+    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
+  AT (0, 0, 0) RELATIVE Origin
+  
+/* TIP: monochromator cradle */
+COMPONENT mono_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+  
+COMPONENT Mon_Source = Monitor_nD(
+  xwidth=0.1, yheight=0.15,
+  options="x y")
+AT (0, 0, -L2) RELATIVE mono_cradle
+  
+COMPONENT Mon_PreMono = PreMonitor_nD(
+  monitor_comp=Mon_Sample
+  )
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+SPLIT COMPONENT Monok = Monochromator_curved(
+    width = 0.1, height = 0.15, NH = 11, NV = 11, RV=RV,RH=RH,
+    mosaich = ETA, mosaicv = ETA, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, THETA_M, 0) RELATIVE mono_cradle
+
+/* TIP: positioning diffraction direction for monok (order 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, 2*THETA_M, 0) RELATIVE mono_cradle
+
+COMPONENT Mon_SampleXY = Monitor_nD(
+  xwidth=0.1, yheight=0.1, options="x y", restore_neutron=1)
+  AT (0, 0, L2) RELATIVE mono_out
+  
+COMPONENT S1 = Slit(xwidth=0.01, yheight=0.01)
+  AT (0, 0, L2-.01) RELATIVE mono_out
+
+COMPONENT Mon_Sample = Monitor_nD(
+  xwidth=0.1, yheight=0.15, options="x y, premonitor")
+  AT (0, 0, L2) RELATIVE mono_out
+
+END
+

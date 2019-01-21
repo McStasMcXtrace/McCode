@@ -1,0 +1,203 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: test
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* %INSTRUMENT_SITE: Union_demos
+*
+* %Description
+* Simple test instrument showing absorption image of a cryostat with vanadium
+*  sample using the Union components.
+*
+* Example: Detector: screen_I=0.00925
+*
+* %Parameters
+* stick_displacement: [m] Displacement of sample stick
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_test_absorption_image(stick_displacement=0)
+
+DECLARE
+%{
+%}
+
+TRACE
+
+
+COMPONENT Vanadium_incoherent = Incoherent_process(sigma=2*5.08,packing_factor=1,unit_cell_volume=27.66)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Vanadium = Union_make_material(my_absorption=2*5.08*100/27.66,process_string="Vanadium_incoherent")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4) //,interact_fraction=0.8)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_powder = Powder_process(reflections="Al.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al = Union_make_material(my_absorption=100*4*0.231/66.4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Absorber_incoherent = Incoherent_process(sigma=2.2,packing_factor=1,unit_cell_volume=13.827)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Absorber = Union_make_material(my_absorption=1000,absorber=1)
+AT (0,0,0) ABSOLUTE
+
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+        xwidth=0.45, yheight=1.1,focus_aw=0.1, focus_ah=0.1,
+        E0 = 10,
+        dE = 0)
+  AT (0,0.35,0) RELATIVE a1
+  ROTATED (0,0,0) RELATIVE a1
+
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,1.4) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT drum_center = Arm()
+AT (0,0.38,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 1
+COMPONENT cryostat_mountin_plate = Union_cylinder(radius=0.12,yheight=0.01,priority=7,material_string="Al")
+AT (0,-0.103,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 2
+COMPONENT cryostat_drum_walls = Union_cylinder(radius=0.2,yheight=0.57,priority=8,material_string="Al")
+AT (0,0,0) RELATIVE drum_center
+ROTATED (0,0,0) RELATIVE drum_center
+
+// 3
+COMPONENT cryostat_drum_vacuum = Union_cylinder(radius=0.19,yheight=0.55,priority=9,material_string="Vacuum")
+AT (0,0,0) RELATIVE drum_center
+ROTATED (0,0,0) RELATIVE drum_center
+
+// 4
+COMPONENT outer_cryostat_wall = Union_cylinder(radius=0.1,yheight=0.2,priority=10,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 5
+COMPONENT outer_cryostat_vacuum = Union_cylinder(radius=0.09,yheight=0.2,priority=11,material_string="Vacuum")
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 6
+COMPONENT inner_cryostat_wall = Union_cylinder(radius=0.06,yheight=0.16,priority=12,material_string="Al")
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 7
+COMPONENT inner_cryostat_vacuum = Union_cylinder(radius=0.05,yheight=0.15,priority=13,material_string="Vacuum")
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 8
+COMPONENT sample_stick_walls = Union_cylinder(radius=0.04,yheight=0.605,priority=14,material_string="Al")
+AT (0,0.39,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 9
+COMPONENT sample_stick_vacuum = Union_cylinder(radius=0.035,yheight=0.64,priority=15,material_string="Vacuum")
+AT (0,0.4,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT sample_rod_bottom = Arm()
+AT (0,0.05+stick_displacement,0) RELATIVE beam_center
+ROTATED (0,45,0) RELATIVE beam_center
+
+// 10
+COMPONENT sample_rod = Union_cylinder(radius=0.0075,yheight=0.7,priority=25,material_string="Al")
+AT (0,0.35,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 11
+COMPONENT sample_rod_collar_1 = Union_cylinder(radius=0.034,yheight=0.02,priority=17,material_string="Al")
+AT (0,0.048,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 12
+COMPONENT sample_rod_collar_2 = Union_cylinder(radius=0.034,yheight=0.02,priority=18,material_string="Al")
+AT (0,0.14,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 13
+COMPONENT sample_rod_collar_3 = Union_cylinder(radius=0.034,yheight=0.02,priority=19,material_string="Al")
+AT (0,0.34,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 14
+COMPONENT sample_rod_collar_4 = Union_cylinder(radius=0.034,yheight=0.02,priority=20,material_string="Al")
+AT (0,0.635,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 15
+COMPONENT sample_rod_collar_1_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=21,material_string="Vacuum")
+AT (0,0.048-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 16
+COMPONENT sample_rod_collar_2_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=22,material_string="Vacuum")
+AT (0,0.14-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 17
+COMPONENT sample_rod_collar_3_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=23,material_string="Vacuum")
+AT (0,0.34-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 18
+COMPONENT sample_rod_collar_4_vacuum = Union_cylinder(radius=0.03,yheight=0.016,priority=24,material_string="Vacuum")
+AT (0,0.635-0.005,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 19
+COMPONENT sample_holder1 = Union_box(xwidth=0.01,yheight=0.035,zdepth=0.002,priority=35,material_string="Absorber")
+AT (0,-0.014+0.02,0) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 20
+COMPONENT sample_holder2 = Union_box(xwidth=0.009,yheight=0.002,zdepth=0.015,priority=36,material_string="Absorber")
+AT (0,0.02+-0.014-0.01501+0.0001-0.004,0.0075-0.003*0.5) RELATIVE sample_rod_bottom
+ROTATED (10,0,0) RELATIVE sample_rod_bottom
+
+// 21
+COMPONENT sample_holder3 = Union_box(xwidth=0.01,yheight=0.05,zdepth=0.002,priority=37,material_string="Absorber")
+AT (0,0.02-0.014-0.01501-0.004+0.002*0.5-0.025+0.00001-0.001,0.015-0.003) RELATIVE sample_rod_bottom
+ROTATED (0,0,0) RELATIVE sample_rod_bottom
+
+// 22
+COMPONENT sample = Union_cylinder(radius=0.008,yheight=0.042,priority=38,material_string="Vanadium")
+AT (0,-0.01,-0.011) RELATIVE sample_holder3
+ROTATED (-7,0,32) RELATIVE sample_holder3
+
+
+COMPONENT test_sample = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+
+COMPONENT screen = PSD_monitor(
+   xwidth=0.4,ymin=-0.15,ymax=0.85,
+   nx=500,ny=1200,filename="absoprtion_picture.dat",restore_neutron=1)
+  AT (0,0,2) RELATIVE a1
+
+END

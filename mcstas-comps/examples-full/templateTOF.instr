@@ -1,0 +1,189 @@
+/*******************************************************************************
+* Instrument: templateTOF.instr
+*
+* %Identification
+* Written by: E. Farhi
+* Date: Jan 2004
+* Origin: ILL
+*
+* %INSTRUMENT_SITE: Templates
+*
+* A test instrument for the S(q,w) sample, with furnace/container
+*
+* %Description
+* This instrument is a test instrument for the S(q,w) sample.
+* It produces a tof-angle and q-energy detectors and also exports the
+* S(q,w) and S(q) data.
+* The sample environment is a single cylinder.
+* The sample container has the same shape as the sample itself, but is not
+* active when using a spherical sample shape (height=0).
+* detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
+*
+* %Example: E0=4.94 Detector:  M_single_coh_I=3.5e-11
+* %Example: E0=33 dE=1.07 dt=9.6e-6 Detector: M_single_coh_I=5.93372e-10
+*
+* %Parameters
+* E0: [meV]                   incident neutron beam energy
+* dE: [meV]                   incident neutron beam energy spread
+* dt: [s]                     time spread from chopper distribution
+* coh: [str]                  sample coherent Sqw data file or NULL
+* inc: [str]                  sample incoherent Sqw data file or NULL
+* radius: [m]                 radius of sample (outer)
+* thickness: [m]              thickness of sample. 0=filled
+* yheight: [m]                height of sample. 0=sphere
+* container: [str]            container material or NULL
+* container_thickness: [m]    container thickness
+* environment: [str]          sample environment material or NULL
+* environment_radius: [m]     sample environment outer radius
+* environment_thickness: [m]  sample environment thickness
+*
+* %Link
+* The Isotropic_Sqw sample
+* %Link
+* The Samples_Isotropic_Sqw example instrument
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6, string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw", thickness=1e-4,yheight=0.0168,radius=0.005, string container="Nb.laz", container_thickness=50e-6, string environment="Al.laz", environment_radius=0.025, environment_thickness=2e-3)
+
+DECLARE
+%{
+
+  /* monitoring sample env */
+ double vi;
+/* flags per detector */
+ char flag_single;    /* sample single scatt */
+ char flag_multi;     /* sample multi scatt */
+ char flag_env;    /* sample environment scatt */
+ char flag_container;  /* container scatt */
+
+ char op[256];
+ double dt0;
+
+%}
+
+INITIALIZE
+%{
+  vi=SE2V*sqrt(E0);
+  double ki=V2K*vi;
+  double t0=1.25/vi; // time from sample to det.
+  double lambda=2*PI/ki;
+  sprintf(op,   "energy limits=[%g %g] bins=50, theta limits=[5 175] bins=150, banana, parallel", 0.5*E0, 2*E0);
+
+  printf("%s: lambda=%g [Angs], k=%g [Angs-1], v=%g [m/s], E=%g [meV]. Time=[%g %g %g]\n",
+    NAME_CURRENT_COMP, lambda,ki,vi, E0, t0*.75, t0, t0*1.5);
+  printf("%s: sample is %s, with %s%s geometry.\n",
+    NAME_CURRENT_COMP, coh, thickness ? "hollow " : "", yheight ? "cylindrical" : "spherical");
+  if (yheight && container_thickness)
+    printf("%s: container is %s (outer cylinder)\n", NAME_CURRENT_COMP, container);
+  if (environment_thickness > 0)
+    printf("%s: external environment is %s\n", NAME_CURRENT_COMP, environment);
+  dt0=dt;
+  if (environment_thickness > 0 && radius > environment_radius-environment_thickness)
+    exit(printf("%s: sample radius %g is larger than sample environment %g\n",
+      NAME_CURRENT_COMP, radius, environment_radius-environment_thickness));
+  if (container_thickness > 0 && environment_thickness > 0 && yheight > 0
+      && radius+container_thickness+0.0001 > environment_radius-environment_thickness)
+    exit(printf("%s: sample container radius %g is larger than sample environment %g\n",
+      NAME_CURRENT_COMP, radius+container_thickness+0.0001, environment_radius-environment_thickness));
+%}
+
+TRACE
+
+COMPONENT a1 = Progress_bar(percent=5)
+  AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+ flag_single=flag_multi=flag_env=flag_container=0;
+%}
+
+/* thermal source */
+COMPONENT csource = Source_gen(
+   radius = 0.02, focus_xw = 2*radius, focus_yh = yheight ? yheight : 2*radius, dist = 2.88,
+   E0 = E0, dE = dE/2,
+   T1=300.0,I1=1)
+AT (0,0,0) RELATIVE a1
+
+COMPONENT SampleIn=Arm()
+AT (0,0,2.88) RELATIVE a1
+
+/* sample position */
+/* external shield */
+COMPONENT Environment_in=Isotropic_Sqw(
+  radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
+  Sqw_coh=environment, concentric=1, verbose=0
+) WHEN (environment_thickness > 0)
+AT (0, 0, 0) RELATIVE SampleIn
+EXTEND %{
+  if (SCATTERED) flag_env=1;
+%}
+
+/* sample container */
+COMPONENT Container_in=Isotropic_Sqw(
+  radius = radius+0.0001+container_thickness, yheight = yheight, thickness=container_thickness,
+  Sqw_coh=container, concentric=1, verbose=0
+  ) WHEN(yheight && container_thickness > 0)
+AT (0, 0, 0) RELATIVE SampleIn
+EXTEND
+%{
+  if (SCATTERED) flag_container=1;
+%}
+
+COMPONENT Sample_in=Isotropic_Sqw(
+  radius = radius, thickness=thickness, yheight = yheight,
+  Sqw_coh=coh, Sqw_inc=inc, p_interact=0.9
+) AT (0, 0, 0) RELATIVE SampleIn
+EXTEND
+%{
+  if      (SCATTERED == 1) flag_single=(VarSqw.type == 'c' ? 1 : 2);
+  else if (SCATTERED >  1) flag_multi =(VarSqw.type == 'c' ? 1 : 2);
+  else                     flag_multi =flag_single=0;
+  t = randtriangle()*2*dt0;  // we assume that in the real instrument, the chopper is close to sample
+%}
+
+COMPONENT Container_out=COPY(Container_in)(concentric=0)
+WHEN(yheight && container_thickness)
+AT (0, 0, 0) RELATIVE SampleIn
+EXTEND
+%{
+  if (SCATTERED) flag_container=1;
+%}
+
+/* external shield */
+COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
+WHEN (environment_thickness > 0)
+AT (0, 0, 0) RELATIVE SampleIn
+EXTEND %{
+  if (SCATTERED) flag_env=1;
+%}
+
+
+COMPONENT SampleOut = Arm()
+AT (0, 0, 0) RELATIVE SampleIn
+
+/* theta - time detectors */
+/* 2.54 cm det at 1.25 m from sample = 1.16 deg horz coverage */
+
+COMPONENT M_total = Monitor_nD(
+ xwidth=2.5, yheight=0.4,
+ options=op)
+AT (0,0,0) RELATIVE SampleOut
+
+/* single coherent */
+COMPONENT M_single_coh = COPY(M_total)
+  WHEN (flag_single == 1)
+AT (0,0,0) RELATIVE SampleOut
+
+/* single incoherent */
+COMPONENT M_single_inc = COPY(M_total)
+  WHEN (flag_single == 2)
+AT (0,0,0) RELATIVE SampleOut
+
+COMPONENT M_multi = COPY(M_total)
+  WHEN (flag_multi)
+AT (0,0,0) RELATIVE SampleOut
+
+COMPONENT M_env_container = COPY(M_total)
+  WHEN (flag_env || flag_container)
+AT (0,0,0) RELATIVE SampleOut
+
+END

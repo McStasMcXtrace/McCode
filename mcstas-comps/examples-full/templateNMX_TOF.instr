@@ -1,0 +1,128 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: templateNMX_TOF
+*
+* %Identification
+* Written by: K. Nielsen
+* Date: June 2nd, 2010
+* Origin: DTU
+* Modified by: EF, PW
+* %INSTRUMENT_SITE: Templates
+*
+* A simple Laue NMX TOF diffractometer for macromolecules, adapted from templateNMX
+* and templateLaue instruments.
+*
+* Demonstrates use of PSD_monitor_TOF.
+*
+* Example: templateNMX_TOF.instr REPS=53 reflections=Rubredoxin.lau theta=-40.85 phi=15.188 xw=0.012 yh=0.012 tmin=13000 tmax=15000 Detector: det_I=264.326
+* Example: templateNMX_TOF.instr REPS=5 reflections=YBaCuO.lau theta=-91.1 phi=0 xw=0.012 yh=0.012 tmax=7000 tmin=5000 Detector: det_I=6277.74
+*
+* %Description
+* A single crystal sample is illuminated with a white cold beam.
+* Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
+*
+* %Parameters
+* REPS: []        
+* reflections: [] 
+* theta: []       
+* phi: []         
+* xw: []          
+* yh: []          
+* tmin: []        
+* tmax: []        
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT templateNMX_TOF(REPS=53, string reflections="Rubredoxin.lau",theta=-40.85,phi=15.188,xw=0.012,yh=0.012,tmin=0,tmax=2e5)
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+  radius=0.02, focus_xw=0.001, focus_yh=0.001,
+  lambda0=7, dlambda=5, flux=1e12)
+AT (0,0,0) ABSOLUTE
+EXTEND %{
+ t=1e-4*rand01();
+%}
+
+COMPONENT slit = Slit(
+  xwidth=0.001, yheight=0.001)
+AT (0,0,5) RELATIVE source
+
+COMPONENT toflambda_monitor0 = TOFLambda_monitor(
+    nL=101,
+    tmin=0,
+    tmax=2e4,
+    filename="toflambda0",
+    xwidth=0.001,
+    yheight=0.001,
+    Lmin=2,
+    Lmax=12,
+    restore_neutron=1)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+SPLIT REPS COMPONENT sample = Single_crystal(
+          xwidth=0.001, yheight=0.001, zdepth=0.001, mosaic=1e-4,
+          reflections=reflections)
+AT (0,0,0.10) RELATIVE slit
+EXTEND %{
+  if (!SCATTERED) ABSORB; /* perfect beam stop */
+%}
+
+COMPONENT DetArm = Arm()
+AT (0,0,0) RELATIVE sample
+ROTATED (0,theta,0) RELATIVE sample
+
+COMPONENT DetArm2 = Arm()
+AT (0,0,0) RELATIVE DetArm
+ROTATED (phi,0,0) RELATIVE DetArm
+
+
+COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd", restore_neutron=1)
+AT (0,0,0) RELATIVE sample
+
+COMPONENT psd_monitorBIG = PSD_monitor(
+    filename="PSDrawBIG",
+    xwidth=1,
+    yheight=1,
+    restore_neutron=1)
+AT (0, 0, 1.001) RELATIVE DetArm2
+ROTATED (0,0,0) RELATIVE DetArm2
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="PSDraw",
+    xwidth=xw,
+    nx=5,ny=5,
+    yheight=yh,
+    restore_neutron=1)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+COMPONENT toflambda_monitor = TOFLambda_monitor(
+    nL=101,
+    tmin=tmin,
+    tmax=tmax,
+    filename="toflambda",
+    xwidth=xw,
+    yheight=yh,
+    Lmin=2,
+    Lmax=12)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+COMPONENT psd_tof_monitor = PSD_monitor_TOF(
+    nx=5,
+    ny=5,
+    nt=100,
+    filename="PSDtof",
+    xwidth=xw,
+    yheight=yh,
+    tmin=tmin,
+    tmax=tmax)
+AT (0, 0, 1.01) RELATIVE DetArm2
+
+END
