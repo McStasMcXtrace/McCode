@@ -135,12 +135,14 @@ INITIALIZE
 
   
     a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
-    b2inv=1/(y_b*y_b);
-    c2inv=1/(z_c*z_c);
+    b2inv=(y_b)?1/(y_b*y_b):0;
+    c2inv=(z_c)?1/(z_c*z_c):0;
+
 
     l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
-    l_b2inv=1/(lattice_y_b*lattice_y_b);
-    l_c2inv=1/(lattice_z_c*lattice_z_c);
+    l_b2inv=(lattice_y_b)?1/(lattice_y_b*lattice_y_b):0;
+    l_c2inv=(lattice_z_c)?1/(lattice_z_c*lattice_z_c):0;
+
 
     cos_alpha0=cos(alpha);
     sin_alpha0=sin(alpha);
@@ -200,8 +202,10 @@ TRACE
         xx0=x+kxu*t0; yy0=y+kyu*t0; zz0=z+kzu*t0;
         xx1=x+kxu*t1; yy1=y+kyu*t1; zz1=z+kzu*t1;
 
-        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0);
-        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0);
+        /*Check if we hit the mirror and whether the hit it is in front of the ray.
+         * This does not account for mirror curvature */
+        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0) && t0>0;
+        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0) && t1>0;
         int doit=hit0 || hit1;
         if(hit0 && !hit1) PROP_DL(t0); /* only one intersection actually on mirror */
         else if (hit1 && !hit0) PROP_DL(t1); /* other intersection */
