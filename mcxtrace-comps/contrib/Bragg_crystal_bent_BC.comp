@@ -314,28 +314,60 @@ TRACE
 
 MCDISPLAY
 %{
-  int i,j,N=12;
-  double t,xx,yy,zz,xx0,yy0,zz0;
+  int i,j,N=12, M=12;
+  double aa,bb,cc;
+  double vmax,vmin,umax,umin;
   magnify("");
 #ifdef MCDEBUG
   printf("Bent Crystal(%s): plot params (%f %f %f) (%f %f %f) %f %f\n", NAME_CURRENT_COMP,
     x_a, y_b, z_c, a2inv, b2inv, c2inv, width, length);
   fflush(NULL);
 #endif
-  xx=width/2.0;
+
+  /*use the circumference of the ellipse/4 = the the ratio between that and the crystal length/2 should be reasonably close to umax/pi_2*/
+  /*according to Ramanujan 1914*/
+  double Pv=M_PI*(3*(z_c+y_b)- sqrt( (3*z_c+y_b)*(z_c+3*y_b)));
+  double Pu=M_PI*(3*(x_a+y_b)- sqrt( (3*x_a+y_b)*(x_a+3*y_b)));
+
+  vmax = length/2.0 /(Pv/4.0) * M_PI_2;
+  vmin=-vmax;
+
+  umax = width/2.0 /(Pu/4.0) * M_PI_2;
+  umin=-umax;
+
   for (j=0;j<N;j++){
-    zz=j*length/(N-1)-length/2.0;
-    yy=-sqrt((1-zz*zz*c2inv)/b2inv);
-    if(j) multiline(5,
-        -xx,yy0+y_b,zz0,
-         xx,yy0+y_b,zz0,
-         xx, yy+y_b,zz,
-        -xx, yy+y_b,zz,
-        -xx,yy0+y_b,zz0); /* draw a rectangular slice of the mirror */
-    zz0=zz;
-    yy0=yy; 
+      double v0,v1;
+      v0=j*(vmax-vmin)/N + vmin;
+      v1=(j+1)*(vmax-vmin)/N + vmin;
+
+      for (i=0;i<M;i++){
+          double u0,u1;
+          u0=i*(umax-umin)/M + umin;
+          u1=(i+1)*(umax-umin)/M + umin;
+          double nx,ny,nz,l0,l1;
+          double x[4],y[4],z[4];
+          /*assuming 0,0,0 is inside are inside the ellisoid*/
+          nx=cos(v0)*sin(u0);ny=cos(v0)*cos(u0);nz=sin(v0);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[0]=nx*l1; y[0]=ny*l1; z[0]=nz*l1;
+
+          nx=cos(v0)*sin(u1);ny=cos(v0)*cos(u1);nz=sin(v0);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[1]=nx*l1; y[1]=ny*l1; z[1]=nz*l1;
+
+          nx=cos(v1)*sin(u1);ny=cos(v1)*cos(u1);nz=sin(v1);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[2]=nx*l1; y[2]=ny*l1; z[2]=nz*l1;
+
+          nx=cos(v1)*sin(u0);ny=cos(v1)*cos(u0);nz=sin(v1);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[3]=nx*l1; y[3]=ny*l1; z[3]=nz*l1;
+
+          multiline(5, x[0],y_b-y[0],z[0], x[1],y_b-y[1],z[1], x[2],y_b-y[2],z[2], x[3],y_b-y[3],z[3], x[0],y_b-y[0],z[0]);
+      }
   }
-  line(0.,0.,0., 0., cos_alpha0*(width+length)/2.0, sin_alpha0*(width+length)/2.0); // display alpha vector
+
+  line(0.,y_b,0., 0., y_b-cos_alpha0*(width+length)/2.0, sin_alpha0*(width+length)/2.0); // display alpha vector
 %}
 
 END
