@@ -563,7 +563,7 @@ int cogen_comp_declare(struct comp_inst *comp)
 
     coutf("/* Parameters for component type '%s' */",
      comp->def->name);
-    coutf("struct class_%s_struct {", comp->def->name);
+    coutf("struct class_%s {", comp->def->name);
       /* make struct: set, pos, rot, declare block */
     coutf("  char     _name[256]; /* e.g. %s */", comp->name);
     coutf("  char     _type[256]; /* %s */", comp->def->name);
@@ -579,10 +579,10 @@ int cogen_comp_declare(struct comp_inst *comp)
   } /* define class type parameter structure when not done yet (only once) */
 
   /* instantiate one structure per component instance */
-  coutf("struct class_%s_struct _%s_static;", comp->def->name, comp->name);
-  coutf("struct class_%s_struct *_%s = &_%s_static;",
+  coutf("struct class_%s _%s_var;", comp->def->name, comp->name);
+  coutf("struct class_%s *_%s = &_%s_var;",
     comp->def->name, comp->name, comp->name);
-  coutf("#pragma acc declare create ( _%s_static )", comp->name);
+  coutf("#pragma acc declare create ( _%s_var )", comp->name);
   coutf("#pragma acc declare create ( _%s )", comp->name);
   cout("");
 
@@ -781,7 +781,7 @@ int cogen_comp_section_class(struct comp_inst *comp,
     coutf("/* this function is common to all component type %s with %s code (SHARE) */",
       comp->def->name, section);
 
-    coutf("struct class_%s_struct *class_%s_%s(struct class_%s_struct *comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
+    coutf("struct class_%s *class_%s_%s(struct class_%s *comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
     {
