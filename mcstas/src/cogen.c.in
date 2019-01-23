@@ -181,7 +181,7 @@ static void
 code_set_source(char *filename, int linenum)
 {
   if(linenum > 0)
-    coutf("#line %d \"%s\"", linenum, filename);
+    coutf("//#line %d \"%s\"", linenum, filename);
 }
 
 /*******************************************************************************
@@ -191,7 +191,7 @@ static void
 code_reset_source(void)
 {
   /* Note: the number after #line refers to the line AFTER the directive. */
-  coutf("#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
+  coutf("//#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
 }
 
 /*******************************************************************************
