@@ -5,8 +5,8 @@ import json
 mcstas/mcxtrace configuration.
 '''
 configuration = {
-    "MCCODE_VERSION": '2.4.1',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.4.1/',
+    "MCCODE_VERSION": '3.0',
+    "MCCODE_LIB_DIR": '/usr/share/mcstas/3.0',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
@@ -25,7 +25,7 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-g -lm -O2',
+    "CFLAGS": '-g -lm -std=c99 -O2',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "CC": 'gcc',
