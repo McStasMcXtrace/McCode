@@ -2501,7 +2501,7 @@ void coords_print(Coords a) {
   return;
 }
 
-mcstatic inline void coords_norm(Coords* c) {
+mcstatic void coords_norm(Coords* c) {
 	double temp = coords_sp(*c,*c);
 
 	// Skip if we will end dividing by zero
@@ -2666,7 +2666,7 @@ void rot_print(Rotation rot) {
  * Vector product: used by vec_prod (mccode-r.h). Use coords_xp for Coords.
  */
 #pragma acc routine seq
-inline void vec_prod_func(double *x, double *y, double *z,
+void vec_prod_func(double *x, double *y, double *z,
 		double x1, double y1, double z1,
 		double x2, double y2, double z2) {
     *x = (y1)*(z2) - (y2)*(z1);
@@ -2678,7 +2678,7 @@ inline void vec_prod_func(double *x, double *y, double *z,
  * Scalar product: use coords_sp for Coords.
  */
 #pragma acc routine seq
-inline double scalar_prod(
+double scalar_prod(
 		double x1, double y1, double z1,
 		double x2, double y2, double z2) {
 	return ((x1 * x2) + (y1 * y2) + (z1 * z2));

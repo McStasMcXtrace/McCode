@@ -456,16 +456,16 @@ int display(void);
 /* simple vector algebra ==================================================== */
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
 	vec_prod_func(&x, &y, &z, x1, y1, z1, x2, y2, z2)
-mcstatic inline void vec_prod_func(double *x, double *y, double *z,
+mcstatic void vec_prod_func(double *x, double *y, double *z,
 		double x1, double y1, double z1, double x2, double y2, double z2);
 
-mcstatic inline double scalar_prod(
+mcstatic double scalar_prod(
 		double x1, double y1, double z1, double x2, double y2, double z2);
 
 #pragma acc routine seq
 #define NORM(x,y,z) \
 	norm_func(&x, &y, &z)
-mcstatic inline void norm_func(double *x, double *y, double *z) {
+mcstatic void norm_func(double *x, double *y, double *z) {
 	double temp = (*x * *x) + (*y * *y) + (*z * *z);
 	if (temp != 0) {
 		temp = sqrt(temp);
@@ -534,7 +534,7 @@ double coords_sp(Coords a, Coords b);
 Coords coords_xp(Coords b, Coords c);
 double coords_len(Coords a);
 void   coords_print(Coords a);
-mcstatic inline void coords_norm(Coords* c);
+mcstatic void coords_norm(Coords* c);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
 int  rot_test_identity(Rotation t);
