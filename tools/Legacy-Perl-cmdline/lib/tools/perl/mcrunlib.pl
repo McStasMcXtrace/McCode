@@ -290,7 +290,7 @@ sub get_out_file_next {
       # Replace any @MCCODE_LIB@ by the McStas system path
       $mcstas_cflags =~ s/\@MCCODE_LIB\@/${MCSTAS::sys_dir}/g;
     }
-    my $libs = "-lm ";
+    my $libs = "-lm -std=c99 ";
     if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
       $libs .= " -DUSE_MPI ";
       $cc      = $MCSTAS::mcstas_config{'MPICC'};
