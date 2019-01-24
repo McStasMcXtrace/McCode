@@ -463,7 +463,7 @@ ROTATED (0,0,0) RELATIVE center_det
 COMPONENT Det_PSD = PSD_Detector(
     yheight = 3.0, radius = 4.0, zdepth = 0.02600, awidth=(ang_fin-ang_ini)*PI/180*4.0,
     nx = 384, ny = 128, //type = "events",
-    PressureConv = 4.75, PressureStop = 1.25, Threshold=100,
+    PressureConv = 4.75, PressureStop = 1.25, threshold=100,
     borderx=-1, bordery=-1, LensOn = 1, filename = "in5det.dat",
     FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCF4.table")
 AT (0,0,0) RELATIVE center_det
