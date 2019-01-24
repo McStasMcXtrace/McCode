@@ -28,9 +28,9 @@
 * image-plates, which completely surround the crystal and allows large numbers
 * of reflections to be recorded simultaneously. Data are collected using a
 * quasi-Laue method in order to provide a rapid survey of reciprocal space, while
-* reducing the background on the detector compared to use of the full white beam. 
+* reducing the background on the detector compared to use of the full white beam.
 *
-* LADI: 
+* LADI:
 * Guide H143:
 *               H14_1     H14_2     H14_3 [OT1] H143_1 [OT2]  H143_2    last
 * Length  [m]   6.8       6         21          30            35        1
@@ -49,7 +49,7 @@
 * lambda: [Angs]      wavelength
 * dlambda: [Angs]     wavelength HALF spread.
 * reflections: [str]  list of reflections describing the sample SX
-*   
+*
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT ILL_H143_LADI(lambda=3.2, dlambda=1, string reflections="leucine.lau")
@@ -59,17 +59,19 @@ DECLARE
   /* gaps and Al windows parameters */
   double Al_Thickness = 0.002;
   double gGap         = 0.001;
-  
+
   /* guide section parameters (total length/number of elements) */
   double L_H14_1= 2.0;      /* length of elements */
   double L_H14_2= 6.0/5;
   double L_H14_3= 21.0/11;
   double L_H143_1=30.0/15;
   double L_H143_2=35.0/14;  /* +1m at end */
-  
+
   double Rh_H14_2,  Rh_H14_3;
   double Rv_H143_1, Rv_H143_2;
 
+  double v;
+  double eff;
 %}
 
 INITIALIZE
@@ -94,7 +96,7 @@ AT(0,0,0) ABSOLUTE
 
 /* In this model, capture flux at OT1 is 0.842e10. Was measured as 1e10
 
-   The results must thus be scaled by +1.1876 
+   The results must thus be scaled by +1.1876
  */
 COMPONENT VCS = Source_gen(
   yheight  = 0.22,
@@ -417,33 +419,33 @@ AT (0,0,0.01) RELATIVE PREVIOUS
 
 COMPONENT slit2 = Slit(radius=.02/2)
   AT (0,0,0.35) RELATIVE PREVIOUS
-  
+
 COMPONENT slit3 = Slit(radius=.012/2)
   AT (0,0,0.58) RELATIVE PREVIOUS
-  
+
 COMPONENT slit4 = Slit(radius=.006/2)
   AT (0,0,0.48) RELATIVE PREVIOUS
 
 COMPONENT sample_pos1 = Monitor_nD(
-  xwidth=.01, yheight=.01, options="lambda limits=[2.9 3.3]", bins=10, 
+  xwidth=.01, yheight=.01, options="lambda limits=[2.9 3.3]", bins=10,
   restore_neutron=1)
   AT (0,0,0.3) RELATIVE PREVIOUS
-  
+
 COMPONENT sample_pos2 = Monitor_nD(
-  xwidth=.01, yheight=.01, options="lambda limits=[3.5 4.5]", bins=10, 
+  xwidth=.01, yheight=.01, options="lambda limits=[3.5 4.5]", bins=10,
   restore_neutron=1)
   AT (0,0,0.3) RELATIVE PREVIOUS
-  
+
 COMPONENT sample_Phic1 = Monitor_nD(
-  xwidth=.01, yheight=.01, options="capture lambda limits=[2.9 3.3]", bins=10, 
+  xwidth=.01, yheight=.01, options="capture lambda limits=[2.9 3.3]", bins=10,
   restore_neutron=1)
   AT (0,0,0.3) RELATIVE PREVIOUS
-  
+
 COMPONENT sample_Phic2 = Monitor_nD(
-  xwidth=.01, yheight=.01, options="capture lambda limits=[3.5 4.5]", bins=10, 
+  xwidth=.01, yheight=.01, options="capture lambda limits=[3.5 4.5]", bins=10,
   restore_neutron=1)
   AT (0,0,0.3) RELATIVE PREVIOUS
-  
+
 SPLIT 50 COMPONENT sample = Single_crystal(
   xwidth=0.01, yheight=0.01, zdepth=0.01,
   mosaic = 5, reflections="leucine.lau")
@@ -452,14 +454,14 @@ SPLIT 50 COMPONENT sample = Single_crystal(
 EXTEND %{
   /* take into account detector efficiency (absorption law) */
   if (!SCATTERED) ABSORB;
-  double eff=0.5;
-  double v=sqrt(vx*vx+vy*vy+vz*vz);
+  eff=0.5;
+  v=sqrt(vx*vx+vy*vy+vz*vz);
   p *= 1.0-exp(3960.0/v*log(1.0-eff/100.0));
 %}
-  
+
 COMPONENT ImagePlate = Monitor_nD(
   radius = 0.2, yheight= 0.45,
   options="banana, theta limits=[-180 180] bins=1250, y bins=450")
   AT (0,0,0) RELATIVE sample_pos1
-  
+
 END
