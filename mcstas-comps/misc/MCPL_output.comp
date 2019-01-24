@@ -120,7 +120,7 @@ INITIALIZE
     char clr[2048],*clrp;
     clrp=clr;
     clrp+=snprintf(clrp,2048,"%s",instrument_exe);
-    for (ii=0;ii<mcnumipar;ii++){
+    for (ii=0;ii<numipar;ii++){
         clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].val);
     }
     *(clrp)='\0';
