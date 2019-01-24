@@ -68,8 +68,8 @@ EXTEND %{
   /* take into account ZnS scintillator efficiency */
   if (!SCATTERED) ABSORB;
   double eff=0.5;
-  double v=sqrt(vx*vx+vy*vy+vz*vz);
-  p *= 1.0-exp(3960.0/v*log(1.0-eff/100.0));
+  double vloc=sqrt(vx*vx+vy*vy+vz*vz);
+  p *= 1.0-exp(3960.0/vloc*log(1.0-eff/100.0));
 %}
 
 COMPONENT sample_out = Arm()
