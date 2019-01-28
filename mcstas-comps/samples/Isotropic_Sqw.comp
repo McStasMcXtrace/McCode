@@ -31,8 +31,8 @@
 * incoherent contributions you should e.g. use 'Sqw_coh' and set 'sigma_coh'
 * to the total scattering cross section. Set sigma_coh and sigma_inc to -1 to unactivate.
 *
-* The implementation will automatically nornalise S(q,w) so that S(q) -> 1 at
-* large q (parameter norm=-1). Alternatively, the S(q,w) data will be multiplied
+* The implementation will automatically nornalise S(q,w) so that S(q) -> 1 at 
+* large q (parameter norm=-1). Alternatively, the S(q,w) data will be multiplied 
 * by 'norm' for positive values. Use norm=0 or 1 to use the raw data as input.
 *
 * The material temperature can be defined in the S(q,w) data files (see below)
@@ -41,7 +41,7 @@
 * which must then be non-classical and extend on both energy sides (+/-).
 * To use the S(q,w) data as is, without temperature effect, set T=-1 and norm=1.
 *
-* Both non symmetric (quantum) and classical S(q,w) data sets can be given by mean
+* Both non symmetric (quantum) and classical S(q,w) data sets can be given by mean 
 * of the 'classical' parameter (see below).
 *
 * Additionally, for single order scattering (order=1), you may restrict the
@@ -139,6 +139,8 @@
 * energy, and neutrons loose energy. The energy range is symmetrized to allow up
 * and down scattering, taking into account detailed balance exp(-hw/2kT).
 *
+* You may also generate such S(q,w) 2D files using <a href="http://ifit.mccode.org/McStas.html#mozTocId297488">iFit </a>
+*
 * <b>Powder file format:</b>
 * Files for coherent elastic powder scattering may also be used.
 * Format specification follows the same principle as in the PowderN
@@ -209,6 +211,7 @@
 * p_interact: [1]             Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
 * norm: [1]                   Normalize S(q,w) when -1 (default). Use raw data when 1, multiplier for S(q,w) when norm>0.
 * classical: [1]              Assumes the S(q,w) data from the files is a classical S(q,w), and multiply that data by exp(hw/2kT) on up/down energy sides. Use 0 when obtained from raw experiments, 1 from molecular dynamics. Use -1 to guess from a data set including both energy sides.
+* quantum_correction: [str]   Specify the type of quantum correction to use "Boltzmann"/"Schofield","harmonic"/"Bader" or "standard"/"Frommhold" (default)
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd: [1]              global Delta_d/d spreading, or 0 if ideal.
@@ -265,12 +268,12 @@
 DEFINE COMPONENT Isotropic_Sqw
 DEFINITION PARAMETERS (powder_format=Undefined)
 SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, string geometry=0,
-radius=0,thickness=0,
-xwidth=0, yheight=0, zdepth=0,
-threshold=1e-20, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
-rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, classical=-1,
-powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-p_interact=-1, norm=-1, powder_barns=1)
+  radius=0,thickness=0,
+  xwidth=0, yheight=0, zdepth=0,
+  threshold=1e-20, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
+  rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, classical=-1,
+  powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
+  p_interact=-1, norm=-1, powder_barns=1, string quantum_correction="Frommhold")
 OUTPUT PARAMETERS (VarSqw, columns, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 /*****************************************************************************/
@@ -354,8 +357,8 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double mat_rho;
   double mat_weight;
   double mat_density;
-  double Temperature;
-  int    shape;  /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
+  double Temperature; /* temperature from the data file */
+  int    shape;       /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
 
   double sqw_threshold;       /* options to tune S(q,w) */
   double sqw_classical;
@@ -365,6 +368,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double Dd, DWfactor;
 
   double T2E;                 /* constants */
+  char   Q_correction[256];
   double sqSE2K;
 
   int    maxloop;             /* flags to monitor caught warnings */
@@ -427,6 +431,49 @@ off_struct offdata;
 /* gaussian distribution to appply around Bragg peaks in a powder */
 double Sqw_powder_gauss(double x, double mean, double rms) {
   return (exp(-(x-mean)*(x-mean)/(2*rms*rms))/(sqrt(2*PI)*rms));
+}
+
+/* Sqw_quantum_correction
+*
+* Return the 'quantum correction factor Q so that:
+*
+*   S(q, w) = Q(w) S*(q,w) 
+*   S(q,-w) = exp(-hw/kT) S(q,w)
+*   S(q, w) = exp( hw/kT) S(q,-w)
+*
+* with S*=classical limit and Q(w) defined below. For omega > 0, S(q,w) > S(q,-w)
+*
+* input:
+*   w: energy      [meV]
+*   T: temperature [K]
+*   type: 'Schofield' or 'Boltzmann'        Q = exp(hw/kT/2)
+*         'harmonic'  or 'Bader'            Q = hw/kT./(1-exp(-hw/kT))
+*         'standard'  or 'Frommhold'        Q = 2./(1+exp(-hw/kT)) [recommended]
+*
+* References:
+*  B. Hehr, http://www.lib.ncsu.edu/resolver/1840.16/7422 PhD manuscript (2010).
+*  S. A. Egorov, K. F. Everitt and J. L. Skinner. J. Phys. Chem., 103, 9494 (1999).
+*  P. Schofield. Phys. Rev. Lett., 4, 239 (1960).
+*  J. S. Bader and B. J. Berne. J. Chem. Phys., 100, 8359 (1994).
+*  T. D. Hone and G. A. Voth. J. Chem. Phys., 121, 6412 (2004).
+*  L. Frommhold. Collision-induced absorption in gases, 1 st ed., Cambridge
+*    Monographs on Atomic, Molecular, and Chemical Physics, Vol. 2,
+*    Cambridge Univ. Press: London (1993).
+        
+ */
+double Sqw_quantum_correction(double hw, double T, char *type) {
+  double Q   = 1;
+  double kT  = T/11.605;  /* [K] -> [meV = 1000*KB/e] */
+  if (!hw || !T) return 1;
+  if (type == NULL || !strcmp(type, "standard") 
+                   || !strcmp(type, "Frommhold") || !strcmp(type, "default"))
+    Q = 2/(1+exp(-hw/kT));
+  if (!strcmp(type, "Schofield") || !strcmp(type, "Boltzmann"))
+    Q = exp(hw/kT/2);
+  if (!strcmp(type, "harmonic") || !strcmp(type, "Bader"))
+    Q = hw/kT/(1-exp(-hw/kT));
+    
+  return Q;
 }
 
 /*****************************************************************************
@@ -855,11 +902,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     double w_c         = 0;
     double w_l         = 0;
 
-#ifdef USE_MPI
-    for (index_w=mpi_node_rank; index_w < Sqw_Data->w_bins; index_w+=mpi_node_count) {
-#else
     for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
-#endif
+
       double w = -Sqw_Data->w_max + index_w*Sqw_Data->w_step; /* w value in Sqw_full */
       double sqw_cl      =0;
       double sqw_full    =0;
@@ -877,7 +921,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       /* compute classical Sqw and S(q)_cl */
       if (Sqw->Temperature > 0) {
         double n;
-        sqw_cl = sqw_full * exp(-w/(Sqw->Temperature*Sqw->T2E)/2);
+        sqw_cl = sqw_full * Sqw_quantum_correction(-w,Sqw->Temperature,Sqw->Q_correction);
         if (!Table_SetElement(&Sqw_cl, index_q, index_w, sqw_cl))
           printf("Isotropic_Sqw: %s: "
                  "Error when setting Sqw_cl[%li q=%g,%li w=%g]=%g from file %s\n",
@@ -886,13 +930,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       }
       sq    += sqw_full;
     } /* for index_w */
-#ifdef USE_MPI
-    /* sum all bits of the integrals with MPI */
-    if (mpi_node_count > 1) {
-      mc_MPI_Sum(&sq, 1); mc_MPI_Sum(&sq_cl, 1);
-      mc_MPI_Sum(&w1, 1); mc_MPI_Sum(&w3, 1);
-    }
-#endif
+
     sq    *= Sqw_Data->w_step;         /* S(q) = \int S(q,w) dw = structure factor */
     sq_cl *= Sqw_Data->w_step;
     /* find minimal reliable q value (not interpolated) */
@@ -1130,6 +1168,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   double M1          = 0;
   double M1_cl       = 0;
   double T           = 0;
+  double T_file      = 0;
   long   T_count     = 0;
   long   M1_count    = 0;
   long   M1_cl_count = 0;
@@ -1337,11 +1376,8 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   for (index_w=0; index_w < w_bins; w_file2full[index_w++]=0);
 
-#ifdef USE_MPI
-  for (index_w=mpi_node_rank; index_w < w_bins; index_w+=mpi_node_count) {
-#else
   for (index_w=0; index_w < w_bins; index_w++) {
-#endif
+
     double w = -w_max + index_w*w_step; /* w value in Sqw_full */
     double index_w_file=0;              /* w index in Sqw file */
     char   found=0;
@@ -1376,20 +1412,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     w_file2full[index_w] = index_w_file;
   }
-#ifdef USE_MPI
-  /* sum all bits of the table with MPI */
-  if (mpi_node_count > 1)
-    mc_MPI_Sum(w_file2full, w_bins);
-#endif
 
   double q_file2full[q_bins];
   for   (index_q=0; index_q < q_bins; q_file2full[index_q++]=0);
 
-#ifdef USE_MPI
-  for (index_q=mpi_node_rank; index_q < q_bins; index_q+=mpi_node_count) {
-#else
   for (index_q=0; index_q < q_bins; index_q++) {
-#endif
+
     double q           = index_q*q_step; /* q value in Sqw_full ; q_min = 0 */
     double index_q_file= 0;              /* q index in Sqw file */
 
@@ -1407,15 +1435,10 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     q_file2full[index_q] = index_q_file;
   }
-#ifdef USE_MPI
-  /* sum all bits of the table with MPI */
-  if (mpi_node_count > 1)
-    mc_MPI_Sum(q_file2full, q_bins);
-#endif
 
   /* (4) now we build Sqw on full Q,W ranges, using the Q,W table lookup above -> Sqw_full */
   for (index_q=0; index_q < q_bins; index_q++) {
-#endif
+
     double q           = index_q*q_step; /* q value in Sqw_full ; q_min = 0 */
     double index_q_file= 0;              /* q index in Sqw file */
 
@@ -1443,11 +1466,6 @@ struct Sqw_Data_struct *Sqw_readfile(
                Sqw->compname, index_q, q, index_w, w, fabs(sqw_file), file);
     } /* for index_w */
   } /* for index_q */
-#ifdef USE_MPI
-  /* sum all bits of the Sqw_full with MPI */
-  if (mpi_node_count > 1)
-    mc_MPI_Sum(Sqw_full.data, q_bins*w_bins);
-#endif
 
   /* free memory and store limits for new full Sqw table */
   Table_Free_Array(Table_Array);
@@ -1457,7 +1475,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* (5) test if the Sqw_full is classical or not by computing the 1st moment (=0 for classical) */
   /* also compute temperature (quantum case) from file if not set */
   for (index_q=0; index_q < q_bins; index_q++) {
-#endif
+
     double q           = index_q*q_step; /* q value in Sqw_full ; q_min = 0 */
 
     for (index_w=0; index_w < w_bins; index_w++) {
@@ -1494,15 +1512,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       } /* both side from file */
     } /*index_w */
   } /*index_q */
-#ifdef USE_MPI
-  /* sum all bits of the means with MPI */
-  if (mpi_node_count > 1) {
-    double tmp;
-    mc_MPI_Sum(&T, 1);     tmp=(double)T_count; mc_MPI_Sum(&tmp, 1);     T_count = (long)tmp;
-    mc_MPI_Sum(&M1, 1);    tmp=(double)M1_count; mc_MPI_Sum(&tmp, 1);    M1_count = (long)tmp;
-    mc_MPI_Sum(&M1_cl, 1); tmp=(double)M1_cl_count; mc_MPI_Sum(&tmp, 1); M1_cl_count = (long)tmp;
-  }
-#endif
+
   if (T_count)     T     /= T_count;     /* mean temperature from Bose ratio */
   if (M1_count)    M1    /= M1_count;
   if (M1_cl_count) M1_cl /= M1_cl_count; /* mean energy value along q range */
@@ -1523,14 +1533,14 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
   }
   if (Sqw->sqw_classical < 0) Sqw->sqw_classical=1; /* default when quantum/classical choice is not set */
-
+  
   /* (5b) set temperature. Temperatures defined are:
   *   T_file:           temperature read from the .sqw file
   *   T:                temperature computed from the quantum Sqw using detailed balance
   *   Sqw->Temperature: temperature defined by user, or read from file when not set
   */
-
-
+ 
+  
   /* display some warnings about the computed temperature */
   if (T > 3000) T=0; /* unrealistic */
   if (!T_file && T) {
@@ -1541,7 +1551,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     );
     }
   }
-
+  
   if (Sqw->Temperature == 0) {
     Sqw->Temperature = T_file ? T_file : T; /* 0:  not set: we use file value, else computed */
   } else if (Sqw->Temperature ==-1) {
@@ -1549,7 +1559,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   } else if (Sqw->Temperature ==-2) {
     Sqw->Temperature = T ? T : T_file;      /* -2: use guessed value when available */
   } /* else let value as it is (e.g. >0) */
-
+  
   if (Sqw->verbose_output > 0 && Sqw->Temperature) {
     MPI_MASTER(
     printf(  "Isotropic_Sqw: %s: Temperature set to T=%g [K]\n", Sqw->compname, Sqw->Temperature);
@@ -1565,11 +1575,11 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
   /* compute the \int q^2 S(q) for normalisation */
-
+  
   MPI_MASTER(
   if (Sqw->sqw_classical && Sqw->verbose_output > 0 && Sqw->Temperature > 0)
-    printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor with T=%g [K] on %s file (classical/symmetric).\n",
-      Sqw->compname, Sqw->Temperature, file);
+    printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor with T=%g [K] on %s file (classical/symmetric) using '%s' quantum correction\n",
+      Sqw->compname, Sqw->Temperature, file, Sqw->Q_correction);
   );
   for   (index_q=0; index_q < q_bins; index_q++) {
     double sq          = 0;
@@ -1580,33 +1590,35 @@ struct Sqw_Data_struct *Sqw_readfile(
       double sqw_full  = Table_Index(Sqw_full, index_q, index_w);
 
       /* do we use a symmetric S(q,w) from real G(r,t) from e.g. MD ? */
+      
       if (Sqw->sqw_classical && Sqw->Temperature > 0) /* data is symmetric, we apply Bose factor */
         /* un-symmetrize Sqw(file) * exp(hw/kT/2) on both sides */
-        balance = exp(w/(Sqw->Temperature*Sqw->T2E)/2);
+        balance = Sqw_quantum_correction(w, Sqw->Temperature, Sqw->Q_correction);
       else if (!Sqw->sqw_classical) {  /* data is quantum (contains Bose) */
         if (sqw_full < 0) { /* quantum but mirrored/symmetric value (was missing in file) */
           if (T)
-            /* prefer to use T from file for mirroring */
-            balance *= exp(w/(T*Sqw->T2E)); /* apply Bose where missing */
-          else if (Sqw->Temperature>0)
+            /* prefer to use T computed from file for mirroring */
+            balance *= exp(w/(T*Sqw->T2E));                /* apply Bose where missing */
+          else if (Sqw->Temperature)
             balance *= exp(w/(Sqw->Temperature*Sqw->T2E)); /* apply Bose where missing */
         }
-        /* test if T from file matches requested T, else apply correction */
+        /* test if T computed from file matches requested T, else apply correction */
         if (T && Sqw->Temperature > 0 && Sqw->Temperature != T) {
-          balance *= exp(-w/(T*Sqw->T2E)/2);                /* make it a classical data set */
-          balance *= exp( w/(Sqw->Temperature*Sqw->T2E)/2); /* then apply Bose to proper temperature */
+          balance *= exp(-w/(T*Sqw->T2E)/2);                /* make it a classical data set: remove computed/read T from quantum data file */
+          balance *= exp( w/(Sqw->Temperature*Sqw->T2E)/2); /* then apply Bose to requested temperature */
         }
       }
+      
       /* update Sqw value */
       sqw_full = fabs(sqw_full)*balance;
       Table_SetElement(&Sqw_full, index_q, index_w, sqw_full);
       /* sum up the S(q) (0-th moment) = w0 */
       sq       += sqw_full;
-    }
+    } /* index_w */
     sq    *= w_step;         /* S(q)  = \int S(q,w) dw    = structure factor */
     iq2Sq += q*q*sq*q_step;  /* iq2Sq = \int q^2 S(q) dq  = used for g-sum rule (normalisation) */
     sum   += sq*q_step;      /* |S|   = \int S(q,w) dq dw = total integral value in file */
-  }
+  } /* index_q */
 
   if (!sum) {
     MPI_MASTER(
@@ -1737,12 +1749,9 @@ struct Sqw_Data_struct *Sqw_readfile(
   Sqw_Data->Sqw  = Sqw_full; /* store the S(q,w) Table (matrix) for Sqw_integrate_iqSq */
 
   /* this loop takes time: use MPI when available */
-#ifdef USE_MPI
-  /* each MPI node executes 1/node_count portion of the integral */
-  for (index_w=mpi_node_rank; index_w < Sqw_Data->iqSq_length; index_w+=mpi_node_count) {
-#else
+
   for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
-#endif
+
     /* Ei = energy of incoming neutron, typically 0:w_max or 0:2*q_max */
     double Ei; /* neutron energy value in Sqw_full, up to 2*w_max */
     double Ki, Vi;
@@ -1756,11 +1765,6 @@ struct Sqw_Data_struct *Sqw_readfile(
                           /2/Ki/Ki * Sqw_integrate_iqSq(Sqw_Data, Ei);
     Table_SetElement(&iqSq, index_w, 0, Sigma );
   }
-#ifdef USE_MPI
-  /* sum all bits of the integral with MPI */
-  if (mpi_node_count > 1)
-    mc_MPI_Sum(iqSq.data, Sqw_Data->iqSq_length);
-#endif
 
   sprintf(iqSq.filename, "[sigma/2Ki^2 int q S(q,w) dq dw] from %s", file);
   iqSq.min_x  = 0;
@@ -1790,7 +1794,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     double local_val = 0;
     double w         = -w_max + index_w * w_step;
     for (index_q=0; index_q < q_bins ; index_q++) { /* integrate on all q values */
-      local_val += Table_Index(Sqw_full, index_q, index_w)*q_step; /* S(q,w) */
+      local_val += Table_Index(Sqw_full, index_q, index_w)*q_step*index_q*q_step; /* q*S(q,w) */
     }
     Sqw_Data->SW[index_w].omega = w;
     sum                  += local_val; /* S(w)=\int S(q,w) dq */
@@ -2002,7 +2006,7 @@ INITIALIZE
 %{
   int i;
   /* check for parameters */
-  columns = (int[]){17,6,0,0,0,0,0,13,0 };
+  columns = (int[])powder_format;
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
@@ -2091,6 +2095,10 @@ INITIALIZE
   VarSqw.lookup_length=100;
   VarSqw.mat_weight    = weight;
   VarSqw.mat_density   = density;
+  if (quantum_correction && strlen(quantum_correction)) 
+    strncpy(VarSqw.Q_correction, quantum_correction, 256);
+  else
+    strncpy(VarSqw.Q_correction, "default", 256);
 
   /* PowderN compatibility members */
   VarSqw.Dd        = powder_Dd;
@@ -2750,7 +2758,7 @@ FINALLY
 MCDISPLAY
 %{
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
-
+    
     if(VarSqw.shape==1)
     {
       double xmin = -0.5*xwidth;
