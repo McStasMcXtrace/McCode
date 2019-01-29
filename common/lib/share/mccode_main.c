@@ -3,9 +3,11 @@
 *******************************************************************************/
 int mccode_main(int argc, char *argv[])
 {
-/*  double run_num = 0; */
+  /*  double run_num = 0; */
   time_t  t;
   clock_t ct;
+
+
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -23,11 +25,13 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-ct = clock();    /* we use clock rather than time to set the default seed */
-mcseed=(long)ct;
+
+  ct = clock();    /* we use clock rather than time to set the default seed */
+  mcseed=(long)ct;
+
 
 #ifdef USE_MPI
-/* *** print number of nodes *********************************************** */
+  /* *** print number of nodes *********************************************** */
   if (mpi_node_count > 1) {
     MPI_MASTER(
     printf("Simulation '%s' (%s): running on %i nodes (master is '%s', MPI version %i.%i).\n",
@@ -38,16 +42,19 @@ mcseed=(long)ct;
     mcseed += mpi_node_rank; /* make sure we use different seeds per noe */
   }
 #endif /* USE_MPI */
+
+
   srandom(mcseed);
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
-/* *** parse options ******************************************************* */
+  /* *** parse options ******************************************************* */
   SIG_MESSAGE("[" __FILE__ "] main START");
-  mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
-           getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
+  mcformat = getenv(FLAVOR_UPPER "_FORMAT") ?
+             getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
   instrument_exe = argv[0]; /* store the executable path */
   /* read simulation parameters and options */
   mcparseoptions(argc, argv); /* sets output dir and format */
+
 
 #ifdef USE_MPI
   if (mpi_node_count > 1) {
@@ -56,7 +63,10 @@ mcseed=(long)ct;
     mcseed += mpi_node_rank; /* make sure we use different seeds per node */
   }
 #endif
+
+
   srandom(mcseed);
+
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS
@@ -101,9 +111,14 @@ mcseed=(long)ct;
     signal( SIGSEGV,SIG_IGN);   /* segmentation violation */
 #endif
 #endif /* !NOSIGNALS */
+
+
+  // init
   siminfo_init(NULL); /* open SIM */
   SIG_MESSAGE("[" __FILE__ "] main INITIALISE");
   init();
+
+
 #ifndef NOSIGNALS
 #ifdef SIGINT
   if (signal( SIGINT ,sighandler) == SIG_IGN)
@@ -125,30 +140,42 @@ mcseed=(long)ct;
 #include "mccode_attaches.c"
 #endif
 
-#pragma acc parallel loop
+
+  #pragma acc parallel loop
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
 
+
 /* Initialise RNG in CUDA case */
 #if MC_RAND_ALG == 5
-      curandState_t MCRANDstate;
-      long long seq = Xmcrun_num;
+    curandState_t MCRANDstate;
+    long long seq = Xmcrun_num;
 #undef random
 #define random twister_initdraw(mcseed,particleN._uid,particleN.MCRANDstate);
-      /*#define prinf(...) printf_GPU(__VA_ARGS__)
-	#define fprinf(...) fprintf_GPU(__VA_ARGS__)*/
+    /*
+    #define prinf(...) printf_GPU(__VA_ARGS__)
+	  #define fprinf(...) fprintf_GPU(__VA_ARGS__)
+    */
 #endif
 /* End RNG in CUDA case */
 
-      particle particleN = mcgenstate(); // initial particle
-      particleN._uid = Xmcrun_num;
+
+    particle particleN = mcgenstate(); // initial particle
+    particleN._uid = Xmcrun_num;
+
+
 /* CUDA */
 #if MC_ALG_RAND == 5
-      particleN.MCRANDstate = MCRANDstate;
+    particleN.MCRANDstate = MCRANDstate;
 #endif
-      raytrace(particleN);
-    }
+
+
+    raytrace(particleN);
+  }
+
+
   /* Likely we need an undef random here... */
+
 
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */
@@ -159,12 +186,15 @@ mcseed=(long)ct;
   }
 #endif
 
-/* save/finally executed by master node/thread */
+
+  // save/finally executed by master node/thread
   finally();
+
 
 #ifdef USE_MPI
   MPI_Finalize();
 #endif /* USE_MPI */
+
 
   return 0;
 } /* mccode_main */
