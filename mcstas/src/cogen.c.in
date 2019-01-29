@@ -1,4 +1,4 @@
-/*******************************************************************************
+instrument_var/*******************************************************************************
 *
 * McCode system component cogen.c.in:
 * McStas/McXtrace, neutron/xray ray-tracing package
@@ -1189,9 +1189,9 @@ int cogen_decls(struct instr_def *instr)
   cout( "  struct instrument_parameters_struct _parameters; /* instrument parameters */");
   if (index)
     cout( "  struct instrument_logic_struct logic; /* instrument logic */");
-  cout( "} instrument_static;");
-  cout("struct instrument_struct *instrument = & instrument_static;");
-  cout("#pragma acc declare create ( instrument_static )");
+  cout( "} instrument_var;");
+  cout("struct instrument_struct *instrument = & instrument_var;");
+  cout("#pragma acc declare create ( instrument_var )");
   cout("#pragma acc declare create ( instrument )");
   cout("");
 
@@ -1204,11 +1204,11 @@ int cogen_decls(struct instr_def *instr)
     if (strlen(i_formal->id)) {
       if (i_formal->isoptional  // needed to avoid double quotes in strings
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
-        coutf("  \"%s\", &(instrument_static._parameters._%s), %s, %s, ", i_formal->id,
+        coutf("  \"%s\", &(instrument_var._parameters._%s), %s, %s, ", i_formal->id,
             i_formal->id, instr_formal_type_names[i_formal->type],
             exp_tostring(i_formal->default_value));
       else
-        coutf("  \"%s\", &(instrument_static._parameters._%s), %s, \"%s\", ", i_formal->id,
+        coutf("  \"%s\", &(instrument_var._parameters._%s), %s, \"%s\", ", i_formal->id,
             i_formal->id, instr_formal_type_names[i_formal->type],
             i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
     }
