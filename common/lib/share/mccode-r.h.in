@@ -426,15 +426,15 @@ void mcdisplay(void);
 /* simple vector algebra ==================================================== */
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
 	vec_prod_func(&x, &y, &z, x1, y1, z1, x2, y2, z2)
-mcstatic inline void vec_prod_func(double *x, double *y, double *z,
+mcstatic void vec_prod_func(double *x, double *y, double *z,
 		double x1, double y1, double z1, double x2, double y2, double z2);
 
-mcstatic inline double scalar_prod(
+mcstatic double scalar_prod(
 		double x1, double y1, double z1, double x2, double y2, double z2);
 
 #define NORM(x,y,z) \
 	norm_func(&x, &y, &z)
-mcstatic inline void norm_func(double *x, double *y, double *z) {
+mcstatic void norm_func(double *x, double *y, double *z) {
 	double temp = (*x * *x) + (*y * *y) + (*z * *z);
 	if (temp != 0) {
 		temp = sqrt(temp);
@@ -445,7 +445,7 @@ mcstatic inline void norm_func(double *x, double *y, double *z) {
 }
 #define normal_vec(nx, ny, nz, x, y, z) \
     normal_vec_func(&(nx), &(ny), &(nz), x, y, z)
-mcstatic inline void normal_vec_func(double *nx, double *ny, double *nz,
+mcstatic void normal_vec_func(double *nx, double *ny, double *nz,
     double x, double y, double z);
 
 /**
@@ -504,7 +504,7 @@ double coords_sp(Coords a, Coords b);
 Coords coords_xp(Coords b, Coords c);
 double coords_len(Coords a);
 void   coords_print(Coords a);
-mcstatic inline void coords_norm(Coords* c);
+mcstatic void coords_norm(Coords* c);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
 int  rot_test_identity(Rotation t);
