@@ -1962,9 +1962,9 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
   char yvar[CHAR_BUF_LENGTH];
   
   /* create short axes labels */
-  if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[2]='\0'; }
+  if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[strcspn(xvar,"\n\r ")]='\0'; }
   else strcpy(xvar, "x");
-  if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
+  if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[strcspn(yvar,"\n\r ")]='\0'; }
   else strcpy(yvar, "y");
 
   MCDETECTOR detector;
