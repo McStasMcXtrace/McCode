@@ -133,16 +133,13 @@ INITIALIZE
         }
     }
 
-  
     a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
     b2inv=(y_b)?1/(y_b*y_b):0;
     c2inv=(z_c)?1/(z_c*z_c):0;
 
-
     l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
     l_b2inv=(lattice_y_b)?1/(lattice_y_b*lattice_y_b):0;
     l_c2inv=(lattice_z_c)?1/(lattice_z_c*lattice_z_c):0;
-
 
     cos_alpha0=cos(alpha);
     sin_alpha0=sin(alpha);
