@@ -7,7 +7,7 @@
 *
 * Component: SiC
 *
-*%I
+* %I
 * Written by: <a href="mailto:S.RYCROFT@IRI.TUDELFT.NL">S. Rycroft</a>
 * Date: Jan 2000
 * Origin: IRI.
@@ -16,7 +16,7 @@
 *
 * %D
 * SiC layer sample
-* 
+*
 * Example: SiC()
 *
 * %P
@@ -28,36 +28,34 @@
 * %E
 *******************************************************************************/
 
-
-
 DEFINE COMPONENT SiC
-DEFINITION PARAMETERS (xlength, yheight)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xlength, yheight)
 OUTPUT PARAMETERS(ScatGrad)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
-double ScatGrad[85];
+  double ScatGrad[85];
+  double xlength;
+  double yheight;
 %}
-
 
 INITIALIZE
 %{
-int i;
+  int i;
 
-for (i = 0; i < 85; ++i)
+  for (i = 0; i < 85; ++i)
     ScatGrad[i] = 0;
   ScatGrad[1]=7.3106e-6;
   ScatGrad[81]=2.073e-6-7.3106e-6;
 %}
 
-
 TRACE
 %{
   double dt, q;
 
-/* Variables added for Rayleigh Appproximation. */
-
+  /* Variables added for Rayleigh Appproximation. */
   double realZ,imagZ;
   double csZ,snZ,Qc,R0;
   int i,Z,q_count;
@@ -66,7 +64,6 @@ TRACE
   R0=1.0;
 
   /* First check if neutron has the right direction. */
-
   if(vz != 0.0 && (dt = -z/vz) >= 0)
   {
     double old_x = x, old_y = y;
@@ -109,15 +106,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
+
 %}
 
 END
-
-
-
-
-
-
-
-

@@ -25,8 +25,8 @@
 * Date: October 18, 2010
 * Origin: SNS Oak Ridge National Laboratory
 *
-* A source that produces a time and energy distribution from 
-* parameterized SNS moderator files  
+* A source that produces a time and energy distribution from
+* parameterized SNS moderator files
 *
 * %D
 * Produces a time-of-flight spectrum from SNS moderator files
@@ -34,13 +34,13 @@
 * <strong>IMPORTANT: The output units of this component are N/pulse</strong>
 * <strong>IMPORTANT: The component needs a FULL PATH to the source input file</strong>
 * Notes:
-* (1) the raw moderator files are per Sr.  The parameters focus_xw focus_yh and dist 
-* provide the solid angle with which the beam line is served. 
-* The best practice is to set focus_xw and focus_yh to the width and height of the 
-* closest beam component, and dist as the distance from the moderator 
+* (1) the raw moderator files are per Sr.  The parameters focus_xw focus_yh and dist
+* provide the solid angle with which the beam line is served.
+* The best practice is to set focus_xw and focus_yh to the width and height of the
+* closest beam component, and dist as the distance from the moderator
 * location to this component.
 * (2) Be sure that Emin and Emax are within the limits of 1e-5 to 100 eV
-* (3) the proton pulse length T determines short- and long-pulse mode 
+* (3) the proton pulse length T determines short- and long-pulse mode
 *
 * Beamport definitions:
 * BL11: a1Gw2-11-f5_fit_fit.dat
@@ -63,12 +63,12 @@
 * tinmin: [us]    minimum time of neutrons (default 0 us)
 * tinmax: [us]    maximum time of neutrons (default 2000 us)
 * sample_E: []    sample energy from:  (default 0)
-*               0="probability distribution", 
-*               1="energy range", 
-*               2="lambda range", 
+*               0="probability distribution",
+*               1="energy range",
+*               2="lambda range",
 *               3="log(energy) range"
 * sample_t: []    sample t from:  (default 0)
-*               0="probability distribution", 
+*               0="probability distribution",
 *               1="time range"
 * proton_T: [us]  proton pulse length  (0 us)
 * p_power: [MW]   proton power (default 2 MW)
@@ -78,23 +78,24 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source_analytic
-DEFINITION PARAMETERS (string filename)
-SETTING PARAMETERS (xwidth=0.10,
-yheight=0.12,
-dist,
-focus_xw,
-focus_yh,
-Emin=0.01,
-Emax=1.0e5,
-tinmin=0.0,
-tinmax=2000.0,
-sample_E=0,
-sample_t=0,
-proton_T=0.0,
-p_power=2.0,
-n_pulses=1.0)
-OUTPUT PARAMETERS (hdiv,vdiv,p_in,
-  CL, CU, para_sp, para_a,para_b,para_R,para_to,csfE, CItot)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  string filename
+  xwidth=0.10,
+  yheight=0.12,
+  dist,
+  focus_xw,
+  focus_yh,
+  Emin=0.01,
+  Emax=1.0e5,
+  tinmin=0.0,
+  tinmax=2000.0,
+  sample_E=0,
+  sample_t=0,
+  proton_T=0.0,
+  p_power=2.0,
+  n_pulses=1.0)
+OUTPUT PARAMETERS (hdiv,vdiv,p_in, CL, CU, para_sp, para_a,para_b,para_R,para_to,csfE, CItot)
 
 SHARE
 %{
@@ -105,8 +106,8 @@ SHARE
 #      I(E) = I*1e12 * exp(-c/sqrt(E))
 #                * ( R1*E/(kT1)**2*exp(-E/kT1) + R2*E/(kT2)**2*exp(-E/kT2)
 #                    + R3*E/(kT3)**2*exp(-(E/kT3)**b) + D(E)*rho(E)/E**(1-a) )
-#      with 
-#      D(E) = 1/(1+(Ecut/E)**s)    
+#      with
+#      D(E) = 1/(1+(Ecut/E)**s)
 #      rho(E) = 1 + delta*exp(-x)(1 + x +0.5*x**2)
 #      x(E) = g*(E-2B); for E>2B
 #           = 0;        for E<=2B
@@ -114,7 +115,7 @@ SHARE
 #      constants:
 #      k = 1.3805e-23 J/K = 8.617e-5 eV/K
 #      B = 7.36e-3 eV
-#     
+#
 #      parameters:
 #      I1
 #      c
@@ -130,31 +131,31 @@ SHARE
 #      s
 #      delta
 #      g
-#*/   
+#*/
 double spectral_function( double para[14], double E )
 {
   double c, R1, T1, R2, T2, R3, T3, a, b, Ecut, s, delta, g, Io;
   double D, x, B, k, rho, arg1, arg2, arg3, arg4, arg5, arg6;
- 
+
   /* constants */
   k =  8.617e-5;
   B =  7.36e-3;
 
   /* initialization of parameters */
   c    = para[0];     ;
-  R1   = para[1];   
-  T1   = para[2];   
-  R2   = para[3];   
-  T2   = para[4];   
-  R3   = para[5];   
-  T3   = para[6];   
-  a    = para[7];   
-  b    = para[8];   
-  Ecut = para[9];   
-  s    = para[10];  
-  delta= para[11];  
-  g    = para[12];  
-  Io   = para[13];  
+  R1   = para[1];
+  T1   = para[2];
+  R2   = para[3];
+  T2   = para[4];
+  R3   = para[5];
+  T3   = para[6];
+  a    = para[7];
+  b    = para[8];
+  Ecut = para[9];
+  s    = para[10];
+  delta= para[11];
+  g    = para[12];
+  Io   = para[13];
 
   /* evaluation of spectral function */
   D  = 1.0/(1+pow(Ecut/E,s));
@@ -171,14 +172,14 @@ double spectral_function( double para[14], double E )
 }
 
 /*############################################################################################
-#  
+#
 #  prepares a vector of 1000 equiprobable energies in the range of Emin to Emax
 #  from the spectral distribution function
 #  returns the 1001 bin boundaries in array csfE
 #  returns the specctral integral in the range Emin to Emax in CItot
 #
 */
-double prepare_cumulative_spectral_function (  double *csfE, double Emin, double Emax, 
+double prepare_cumulative_spectral_function (  double *csfE, double Emin, double Emax,
                                                double para[14] )
 {
   double E, E0, E1, CI, dCI, CItot, I0, I1, arg;
@@ -232,21 +233,21 @@ double prepare_cumulative_spectral_function (  double *csfE, double Emin, double
 /*#############################################################################################
 #
 #      Short-pulse Ikeda Carpenter energy-time brightness function
-# 
-#        f(E,t) = a/2 *( (1-R)(a*t)**2 *exp(-a*t) 
+#
+#        f(E,t) = a/2 *( (1-R)(a*t)**2 *exp(-a*t)
 #               +2*R*a**2*b/(a-b)**3 *[ exp(-b*t) - exp(-a*t)*(1+(a-b)*t+0.5*(a-b)**2*t**2) ] }
-#      with 
+#      with
 #
 #        t=t-to
-#     
+#
 #      parameters:
-#      
+#
 #        a
 #        b
 #        R
 #        to
 #*/
-double f_sp (double para[4], double t) 
+double f_sp (double para[4], double t)
 {
   double a, b, R, to;
   double tt, eat, ebt, arg1, arg2, arg3, arg4;
@@ -254,7 +255,7 @@ double f_sp (double para[4], double t)
   b = para[1];
   R = para[2];
   to= para[3];
-    
+
   tt = t - to*10.0;
   if(tt<0.0) {tt=0.0;}
   eat  = exp(-a*tt);
@@ -272,19 +273,19 @@ double f_sp (double para[4], double t)
 #
 #      cummulative f_sp short pulse distribution function
 #      derived anlytically
-# 
+#
 #      F(t) = (1-R)*(1-(gamma*exp(-a*(t-to)))                        for t-to >0
-#             *R *(1-delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a) 
+#             *R *(1-delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a)
 #              *(1 + (a-b)/a *(a*(t-to) +1) +((a-b)/a)**2 *gamma))
-#           = 0                                                      for t-to <=0  
-#             
-#      with 
-#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1          
+#           = 0                                                      for t-to <=0
+#
+#      with
+#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1
 #         delta = a**3/(a-b)**3
 #         tm = max(to,(t-T))
 #
 #      f_sp(t) = F(tm) -F(t)
-#     
+#
 #      parameters:
 #         a  = proportial to scattering cross section
 #         b  = decay constant of longest living flux eigenfunction
@@ -302,22 +303,22 @@ double cummulative_f_sp (double para[4], double t)
   b = para[1];
   R = para[2];
   to= para[3];
-   
+
   ambda = (a-b)/a;
-  ambda2= ambda*ambda; 
+  ambda2= ambda*ambda;
   delta = pow(1/ambda,3);
 
   tt=t-to*10.0;
   if(tt<0.0) {tt=0.0;}
 
-  gt  = 0.5*pow(a*tt,2) + a*tt + 1.0;        
+  gt  = 0.5*pow(a*tt,2) + a*tt + 1.0;
   eat = exp(-a*tt);
   ebt = exp(-b*tt);
   arg1  = 1.0-gt*eat;
   arg2  = delta*(1 -ebt);
   arg3  = delta*b/a*eat*(1.0 + ambda*(a*tt+1.0) + ambda2*gt);
   arg4  = delta*b/a*(1+ambda+ambda2);
-  arg5  = (1.0-R)*arg1 + R*(arg2+arg3-arg4); 
+  arg5  = (1.0-R)*arg1 + R*(arg2+arg3-arg4);
 
   return(arg5);
 }
@@ -325,19 +326,19 @@ double cummulative_f_sp (double para[4], double t)
 /*#############################################################################################
 #
 #      samples t from f_sp within interval [tmin,tmax]
-# 
+#
 #      F(t) = (1-R)*(1-(gamma*exp(-a*(t-to)))                        for t-to >0
-#             *R *(1-delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a) 
+#             *R *(1-delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a)
 #              *(1 + (a-b)/a *(a*(t-to) +1) +((a-b)/a)**2 *gamma))
-#           = 0                                                      for t-to <=0  
-#             
-#      with 
-#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1          
+#           = 0                                                      for t-to <=0
+#
+#      with
+#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1
 #         delta = a**3/(a-b)**3
 #         tm = max(to,(t-T))
 #
 #      f_sp(t) = F(tm) -F(t)
-#     
+#
 #      parameters:
 #         a  = proportial to scattering cross section
 #         b  = decay constant of longest living flux eigenfunction
@@ -355,14 +356,14 @@ double sample_t_from_f_sp (double para[4], double tmin, double tmax, double rand
   eps = 1.0e-4;
 
   Imax  = cummulative_f_sp(para, tmax);
-  /* 
+  /*
     printf(" tmax=%e",tmax);
     printf(" Imax=%e",Imax);
     printf("\n");
   */
 
   Imin  = cummulative_f_sp(para, tmin);
-  /* 
+  /*
     printf(" tmin=%e",tmin);
     printf(" Imin=%e",Imin);
     printf("\n");
@@ -385,7 +386,7 @@ double sample_t_from_f_sp (double para[4], double tmin, double tmax, double rand
     }
     arg  = cummulative_f_sp(para, t);
     arg  = (arg -Imin)*renorm;
- 
+
     diff = arg - randd;
     if(n>50){
       printf(" sample_t_from_f_sp exeeds 50 iterations!\n");
@@ -402,7 +403,7 @@ double sample_t_from_f_sp (double para[4], double tmin, double tmax, double rand
        tp = t;
        fp = arg;
     }
-  } 
+  }
   /* printf("tmin=%f tmax=%f Imin=%e Imax=%e t=%e n=%d\n", ttmin, ttmax, Imin, Imax, t, n); */
   *p_t = Imax-Imin;
   return(t);
@@ -410,24 +411,24 @@ double sample_t_from_f_sp (double para[4], double tmin, double tmax, double rand
 
 /*#############################################################################################
 #
-#      Long-pulse Ikeda Carpenter function 
+#      Long-pulse Ikeda Carpenter function
 #
 #      proton pulse is a atep function with pulse length T (Heavyside function)
 #
 #      folded with the Ikeada Carpenter Function f_sp
-# 
+#
 #      F(t) = (-1/T)*(1-R)*(gamma*exp(-a*(t-to))                     for t-to >0
-#             (-1/T)*delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a) 
+#             (-1/T)*delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a)
 #              *(1 + (a-b)/a *(a*(t-to) +1) +((a-b)/a)**2 *gamma)
-#           = 0                                                      for t-to <=0  
-#             
-#      with 
-#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1          
+#           = 0                                                      for t-to <=0
+#
+#      with
+#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1
 #         delta = R*a**3/(a-b)**3
 #         tm = max(to,(t-T))
 #
 #      f_lp(t) = F(tm) - F(t)
-#     
+#
 #      parameters:
 #         a  = proportial to scattering cross section
 #         b  = decay constant of longest living flux eigenfunction
@@ -443,9 +444,9 @@ double f_lp (double para[4], double t, double T)
   b = para[1];
   R = para[2];
   to= para[3];
-    
+
   ambda = (a-b)/a;
-  ambda2= ambda*ambda; 
+  ambda2= ambda*ambda;
   delta = pow(ambda,-3);
 
   /* upper time boundary */
@@ -453,7 +454,7 @@ double f_lp (double para[4], double t, double T)
   if(tt<0.0) {tt=0.0;}
   eat  = exp(-a*tt);
   ebt  = exp(-b*tt);
-  gt   = 0.5*pow(a*tt,2) + a*tt + 1.0;        
+  gt   = 0.5*pow(a*tt,2) + a*tt + 1.0;
   arg1  = gt*eat;
   arg2  = delta*(ebt - eat*b/a*(1.0 + ambda*(a*tt+1.0) + ambda2*gt));
   Imax  = (1.0-R)*arg1 + R*arg2;
@@ -472,7 +473,7 @@ double f_lp (double para[4], double t, double T)
   if(tt<0.0) {tt=0.0;}
   eat  = exp(-a*tt);
   ebt  = exp(-b*tt);
-  gt   = 0.5*pow(a*tt,2) + a*tt + 1.0;        
+  gt   = 0.5*pow(a*tt,2) + a*tt + 1.0;
   arg1  = gt*eat;
   arg2  = delta*(ebt - eat*b/a*(1.0 + ambda*(a*tt+1.0) + ambda2*gt));
   Imin  = (1.0-R)*arg1 + R*arg2;
@@ -496,26 +497,26 @@ double f_lp (double para[4], double t, double T)
 #
 #      Ikeda carpenter function integrated twice over time
 #      base function used for calculating cumulative long-pulse time distribution function
-# 
+#
 #      FF(t) = (-1/T)*(1-R)*(-1/a)*gamma*exp(-a*(t-to))                     for t-to >0
-#             +(-1/T)*R*delta*(-1/b)*(exp(-b*(t-to)) 
+#             +(-1/T)*R*delta*(-1/b)*(exp(-b*(t-to))
 #             +(-1/T)*R*delta*(b/a**2)
 #                        *(1+2*ambda + ambda*a*t + ambda**2*gamma)
 #                        *exp(-a*(t-to))
-#           = 0                                                             for t-to <=0  
-#             
-#      with 
-#         gamma = 0.5*(a*(t-to))**2 +2*a*(t-to) +3          
+#           = 0                                                             for t-to <=0
+#
+#      with
+#         gamma = 0.5*(a*(t-to))**2 +2*a*(t-to) +3
 #         ambda =(a-b)/a
 #         delta = ambda**(-3)
 #
 #      remember:
-#         F(t)    = integral(f_sp(t))          
+#         F(t)    = integral(f_sp(t))
 #         f_sp(t) = short-pulse emission time distribution
 #         f_lp(t) = integral_(T-t^t(f_sp(t))
 #                 = (F(t)-F((t-T))/T
 #      hence:
-#         FF(t) = integral(F(t))   
+#         FF(t) = integral(F(t))
 #
 #      parameters:
 #         a  = proportial to scattering cross section
@@ -539,11 +540,11 @@ double integral_integral_IC (double para[4], double t, double T)
   ambda  = (a-b)/a;
   ambda2 = ambda*ambda;
   delta = pow(ambda,-3);
- 
+
   /* integrate 0 to T */
   eat   = exp(-a*tt);
   ebt   = exp(-b*tt);
-  gamma = 0.5*pow(a*tt,2) + 2.0*a*tt + 3.0;       
+  gamma = 0.5*pow(a*tt,2) + 2.0*a*tt + 3.0;
   arg1  = gamma/a*eat;
   arg2  = delta/b*ebt;
   arg3  = delta*b/a/a*(1.0+2.0*ambda+ambda*a*tt+ambda2*gamma)*eat;
@@ -568,27 +569,27 @@ double integral_integral_IC (double para[4], double t, double T)
 #
 #      cummulative distribution function f_lp
 #      integrated analytically:from f_lp
-# 
+#
 #      FF(t) = (-1/T)*(1-R)*(-1/a)*gamma*exp(-a*(t-to))                     for t-to >0
-#             +(-1/T)*R*delta*(-1/b)*(exp(-b*(t-to)) 
+#             +(-1/T)*R*delta*(-1/b)*(exp(-b*(t-to))
 #             +(-1/T)*R*delta*(b/a**2)
 #                        *(1+2*ambda + ambda*a*t + ambda**2*gamma)
 #                        *exp(-a*(t-to))
-#           = 0                                                             for t-to <=0  
-#             
-#      with 
-#         gamma = 0.5*(a*(t-to))**2 +2*a*(t-to) +3          
+#           = 0                                                             for t-to <=0
+#
+#      with
+#         gamma = 0.5*(a*(t-to))**2 +2*a*(t-to) +3
 #         ambda =(a-b)/a
 #         delta = ambda**(-3)
 #         tm = max(to,(t-T))
 #
 #      remember:
-#         F(t)    = integral(f_sp(t))          
+#         F(t)    = integral(f_sp(t))
 #         f_sp(t) = short-pulse emission time distribution
 #         f_lp(t) = integral_(T-t^t(f_sp(t))
 #                 = (F(t)-F((t-T))/T
 #      hence:
-#         FF(t) = integral(F(t))   
+#         FF(t) = integral(F(t))
 #         CI(t) = integral_0^t(f_lp(t))
 #               = FF(t) - FF(tm) + f_lp(0)*(t-to)
 #      with
@@ -617,7 +618,7 @@ double cummulative_f_lp (double para[4], double t, double T)
   ambda2 = ambda*ambda;
   delta = pow(ambda,-3);
   phi   = (1.0-R)+ R*delta*(1.0 - b/a*(1.0+ambda+ambda2));
- 
+
   /* integrate 0 to T */
   tt=t-to*10.;
   if(tt<0.0) {tt=0.0;}
@@ -628,9 +629,9 @@ double cummulative_f_lp (double para[4], double t, double T)
   else {
     // need to check why we need to add 1.0 here
     arg  = integral_integral_IC(para,t,T) - integral_integral_IC(para,t-T,T)
-            + phi;  
+            + phi;
   }
-    
+
   /*
   printf(" t=%e", t);
   printf(" arg=%e",arg);
@@ -643,7 +644,7 @@ double cummulative_f_lp (double para[4], double t, double T)
 /*#############################################################################################
 #
 #      sample t from f_lp  within interval [tmin,tmax]
-# 
+#
 #      parameters:
 #         para[0]= a  = proportial to scattering cross section
 #         para[0]= b  = decay constant of longest living flux eigenfunction
@@ -651,10 +652,10 @@ double cummulative_f_lp (double para[4], double t, double T)
 #         para[0]= to = delay time
 #         T  = proton pulse length
 #         tmin = time interval lower boundary
-#         tmax = time interval upper boundary 
+#         tmax = time interval upper boundary
 #         randd = random number of interval [0,1]
 #*/
-double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, double T, 
+double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, double T,
                            double randd, double *p_t)
 {
   double arg;
@@ -717,7 +718,7 @@ double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, d
       tp = t;
       fp = arg;
     }
-  } 
+  }
   /* printf("tmin=%f tmax=%f Imin=%e Imax=%e t=%e n=%d\n", ttmin, ttmax, CImin, CImax, t, n); */
   *p_t = CImax-CImin;
   return(t);
@@ -727,10 +728,10 @@ double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, d
 /*#############################################################################################
 #
 #      Pade type fitting function
-# 
+#
 #      f(x) = log(a*x**b*(1+c*x+d*x**2+(x/f)**g)/(1+h*x+i*x**2+(x/j)**k))
-#               
-#      with 
+#
+#      with
 #      a,b,c,d,f,g,h,i,j,k
 #
 #
@@ -738,7 +739,7 @@ double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, d
 double pade_function (double para[10], double E)
 {
   double a, b, c, d, f, g, h, i, j, k;
- 
+
     a = para[0];
     b = para[1];
     c = para[2];
@@ -749,7 +750,7 @@ double pade_function (double para[10], double E)
     i = para[7];
     j = para[8];
     k = para[9];
-   
+
     return(a*pow(E,b)*(1+c*E+d*E*E+pow(E/f,g))/(1+h*E+i*E*E+pow(E/j,k)));
 }
 
@@ -757,7 +758,7 @@ double pade_function (double para[10], double E)
 
 DECLARE
 %{
-  double hdiv, vdiv;   
+  double hdiv, vdiv;
   double p_in, CL, CU;
   double para_sp[14];
   double para_a[10];
@@ -768,7 +769,7 @@ DECLARE
 %}
 
 INITIALIZE
-%{  
+%{
   char line[1000];
   int linelength=1000;
   int k, kk;
@@ -786,48 +787,48 @@ INITIALIZE
   while( (fgets(line,linelength,fp) != NULL) && (strchr(line,'#') != NULL) ){
     printf("%s",line);
   }
-  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le %le %le %le %le", &para_sp[0], &para_sp[1], &para_sp[2], 
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le %le %le %le %le", &para_sp[0], &para_sp[1], &para_sp[2],
 	    &para_sp[3], &para_sp[4], &para_sp[5], &para_sp[6], &para_sp[7], &para_sp[8], &para_sp[9], &para_sp[10],
             &para_sp[11], &para_sp[12], &para_sp[13]);
 
-  /* a parameter of emission time distribuation */ 
+  /* a parameter of emission time distribuation */
   while( (fgets(line,linelength,fp) != NULL) && (strchr(line,'#') != NULL) ){
     printf("%s",line);
   }
-  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_a[0], &para_a[1], &para_a[2], 
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_a[0], &para_a[1], &para_a[2],
 	    &para_a[3], &para_a[4], &para_a[5], &para_a[6], &para_a[7], &para_a[8], &para_a[9]);
   if(kk!=10) {
     printf("para_a: insufficient number of data entries read\n");
     abort();
   }
 
-  /* b parameter of emission time distribuation */ 
-  while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){ 
+  /* b parameter of emission time distribuation */
+  while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
     printf("%s",line);
   }
-  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_b[0], &para_b[1], &para_b[2], 
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_b[0], &para_b[1], &para_b[2],
 	    &para_b[3], &para_b[4], &para_b[5], &para_b[6], &para_b[7], &para_b[8], &para_b[9]);
   if(kk!=10) {
     printf("para_b: insufficient number of data entries read\n");
     abort();
   }
 
-  /* R parameter of emission time distribuation */ 
+  /* R parameter of emission time distribuation */
   while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
     printf("%s",line);
   }
-  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_R[0], &para_R[1], &para_R[2], 
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_R[0], &para_R[1], &para_R[2],
 	    &para_R[3], &para_R[4], &para_R[5], &para_R[6], &para_R[7], &para_R[8], &para_R[9]);
   if(kk!=10) {
     printf("para_R: kk=%d  insufficient number of data entries read\n", kk);
     abort();
   }
 
-  /* to parameter of emission time distribuation */ 
+  /* to parameter of emission time distribuation */
   while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
     printf("%s",line);
   }
-  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_to[0], &para_to[1], &para_to[2], 
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_to[0], &para_to[1], &para_to[2],
 	    &para_to[3], &para_to[4], &para_to[5], &para_to[6], &para_to[7], &para_to[8], &para_to[9]);
   if(kk!=10) {
     printf("para_R: insufficient number of data entries read\n");
@@ -887,7 +888,7 @@ INITIALIZE
     printf(" n_pulses must be greater zero\n");
     abort();
   }
- 
+
 /* Normalization */
   // Calculate solid Angle
   p_in = focus_xw*focus_yh/(dist*dist);
@@ -896,7 +897,7 @@ INITIALIZE
   // Normalize to proton power
   p_in *= p_power/2.0;
   // Normalize to number of pulses
-  p_in *= n_pulses; 
+  p_in *= n_pulses;
 
 /* constants for conversion into wavelength and lethargy units */
   CL = (1.0/sqrt(Emin*1e-3)-1.0/sqrt(Emax*1e-3))/(Emax-Emin)*1e3;
@@ -904,7 +905,7 @@ INITIALIZE
 
 %}
 TRACE
-%{    
+%{
   double theta,phi,v,E,Eval,tval;
   double hdivmin,hdivmax,vdivmin,vdivmax;
   double p_E, p_t, para_t[4], p_sa, randd, ttmin, ttmax;
@@ -917,7 +918,7 @@ TRACE
   hdivmin=atan(-(focus_xw/2.0+x)/dist);
   vdivmax=atan((focus_yh/2.0-y)/dist);
   vdivmin=atan(-(focus_yh/2.0+y)/dist);
-  theta = hdivmin + (hdivmax-hdivmin)*rand01(); /* Small angle approx. */ 
+  theta = hdivmin + (hdivmax-hdivmin)*rand01(); /* Small angle approx. */
   phi = vdivmin + (vdivmax-vdivmin)*rand01();
   hdiv=theta;
   vdiv=phi;
@@ -937,7 +938,7 @@ TRACE
   }
   else if(sample_E==1){
     Eval=(Emin+(Emax-Emin)*rand01())*1e-3;
-    p_sa = 1.0;   
+    p_sa = 1.0;
     p_E = spectral_function(para_sp, Eval) * (Emax-Emin)*1e-3;
   }
   else if(sample_E==2) {
@@ -945,7 +946,7 @@ TRACE
     p_sa = CL*2.0*pow(Eval,1.5);
     p_E = spectral_function(para_sp, Eval) * (Emax-Emin)*1e-3;
   }
-  else if(sample_E==3) { 
+  else if(sample_E==3) {
     Eval = exp(log(Emin) +(log(Emax)-log(Emin))*rand01())*1e-3;
     p_sa = CU*Eval;
     p_E = spectral_function(para_sp, Eval) * (Emax-Emin)*1e-3;
@@ -953,7 +954,7 @@ TRACE
   else {
     printf("sample_E allows only values 0, 1, 2 or 3!\n");
     abort();
-  }  
+  }
 
   /* determine tval from emisstime distribution */
   para_t[0] = pade_function(para_a, Eval);
@@ -1006,10 +1007,10 @@ TRACE
   }
   else {
     printf("sample_t allows only values 0 or 1!\n");
-  }  
+  }
 
   E = Eval*1000.0;  /* Convert Energy from eV to meV */
-  t = tval*1e-6;      /* Convert time from mus to S */  
+  t = tval*1e-6;      /* Convert time from mus to S */
   v = SE2V*sqrt(E);
   /* Calculate components of velocity vector such that the neutron is within the focusing rectangle */
   vz = v*cos(phi)*cos(theta);   /* Small angle approx. */
@@ -1024,7 +1025,7 @@ TRACE
 %}
 FINALLY
 %{
-  
+
 %}
 
 MCDISPLAY

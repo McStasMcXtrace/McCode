@@ -55,8 +55,8 @@
 * Present version: rename *.w to rssa, and make sure to put it in the dir from which McStas is run
 *
 * %P
-* file: [str]   Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' 
-* verbose: [1]  Toggles debugging info on/off 
+* file: [str]   Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa'
+* verbose: [1]  Toggles debugging info on/off
 *
 * %L
 * <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
@@ -68,8 +68,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_mcnp_ss_input
-DEFINITION PARAMETERS (string file="rssa")
-SETTING PARAMETERS (verbose=1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string file="rssa", verbose=1)
 OUTPUT PARAMETERS(hfile, to_mcstas,from_mcstas,ntrk,nhis,counter)
 DEPENDENCY "-L@MCCODE_LIB@/libs/neutronics/ -lneutronics -lgfortran"
 
@@ -178,7 +178,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  
+
 %}
 
 END

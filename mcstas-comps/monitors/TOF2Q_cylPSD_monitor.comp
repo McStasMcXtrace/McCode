@@ -23,20 +23,20 @@
 * %P
 * INPUT PARAMETERS:
 *
-* radius: [m]           Cylinder radius 
-* yheight: [m]          Cylinder height 
-* nQ: [1]               Number of Q bins 
-* ny: [1]               Number of y bins 
-* yheight: [m]          Height of cylinder 
-* ymin: [m]             Minimum value of y monitored 
-* ymax: [m]             Maximum value of y monitored 
+* radius: [m]           Cylinder radius
+* yheight: [m]          Cylinder height
+* nQ: [1]               Number of Q bins
+* ny: [1]               Number of y bins
+* yheight: [m]          Height of cylinder
+* ymin: [m]             Minimum value of y monitored
+* ymax: [m]             Maximum value of y monitored
 * Qmin: []              Beginning of Q-range
 * Qmax: []              End of Q-range
-* T_zero: [s]           Beginning of time window 
+* T_zero: [s]           Beginning of time window
 * L_flight: []          Nominal flightpath moderator--detector
 * theta: []             Nominal grazing angle
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,8 +48,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF2Q_cylPSD_monitor
-DEFINITION PARAMETERS (nQ, string filename, ny)
-SETTING PARAMETERS (radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, restore_neutron=0,theta)
+DEFINITION PARAMETERS (nQ, ny)
+SETTING PARAMETERS (string filename, radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, restore_neutron=0,theta)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 
 DECLARE

@@ -42,8 +42,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source
-DEFINITION PARAMETERS (filename)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.12, dist, focus_xw, focus_yh, Emin, Emax)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename, xwidth=0.1, yheight=0.12, dist, focus_xw, focus_yh, Emin, Emax)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in,
   inxvec,inyvec,Pvec,xylength,tcol, Ecol,
   txval, tyval, tPvec, Ptmat, EPmax, EPmin,INorm,INorm2,
@@ -57,7 +57,7 @@ SHARE %{
   /* ----------------------------------------------------------------
       routine to load E, I and t I data from SNS source files
   -----------------------------------------------------------------*/
-  void sns_source_load(char fname[], double *xvec, double *yvec, int xcol, int ycol, 
+  void sns_source_load(char fname[], double *xvec, double *yvec, int xcol, int ycol,
     int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
     FILE *fp;
@@ -251,7 +251,7 @@ double integtrap(double (*func)(double,double,double*,double*),double prev,doubl
  }
 } /* integtrap */
 
-double integ1(double (*func)(double,double,double*,double*),double low, double high, double err, 
+double integ1(double (*func)(double,double,double*,double*),double low, double high, double err,
   double len, double *xvec, double *yvec)
 {
   double out,outprev;
@@ -305,7 +305,7 @@ Routine for calculating Probability distribution
 // Pcalc(xonly,llim,hlim,inxvec,Pvec,xylength,&idxstart,&idxstop, inyvec);
 // xonly(double x,double xylength,double *inxvec,double *inyvec)
 void Pcalc(double (*func)(double,double,double*,double*),
-  double llim, double hlim, double *xvec, double *Prob, int veclen, 
+  double llim, double hlim, double *xvec, double *Prob, int veclen,
   int *idxstart, int *idxstop, double *inyvec)
 {
   int idx1,idx2;
@@ -347,7 +347,7 @@ Routine for calculating t Probability distribution
 ----------------------------------------------------------------------------*/
 // tPcalc(txonly,ltlim,htlim,tcol,tPvec,ntvals,&tidxstart,&tidxstop, txval,tyval);
 // txonly(double t,double ntvals,double *txval,double *tyval)
-void tPcalc(double (*func)(double,double,double*,double*),double llim, double hlim, 
+void tPcalc(double (*func)(double,double,double*,double*),double llim, double hlim,
   double *xvec, double *Prob, int veclen, int *idxstart, int *idxstop,
   double *txval,double *tyval)
 {
@@ -421,9 +421,9 @@ DECLARE
   double **Ptmat;
   double EPmax, EPmin,INorm,INorm2;
   int ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals;
-  
 
-  
+
+
 %}
 
 INITIALIZE

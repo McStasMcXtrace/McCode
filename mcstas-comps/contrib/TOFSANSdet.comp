@@ -24,10 +24,10 @@
 *
 * %P
 * INPUT PARAMETERS:
-* plenght: [s]  pulse lenght 
+* plenght: [s]  pulse lenght
 * ssdist: []    Source-Sample distance for TOF calculation.
 * coldis: []    Collimation length
-* Sthckn: [cm]  sample thickness 
+* Sthckn: [cm]  sample thickness
 * ds1: []       distance of detector 1
 * xw1: []       width  of detector 1 (0 for off)
 * yh1: []       height of detector 1 (0 for off)
@@ -41,14 +41,14 @@
 * yh3: []       height.............3
 * hl3: []       hole...............3 (beam stop, used for primary beam detection)
 * vx3: []       vertical extension of beam stop down (in case of gravity off set 0.0, otherwise value larger than 1.0)
-* tmin: [s]     Beginning of time window 
-* tmax: [s]     End of time window 
+* tmin: [s]     Beginning of time window
+* tmax: [s]     End of time window
 * Nx: []        Number of horizontal detector pixels (detector 1,2,3) better leave unchanged
 * Ny: []        Number of vertical   detector pixels (detector 1,2,3) better leave unchanged
 * Nt: []        Number of time bins                  (detector 1,2,3) better leave unchanged
-* qmin: [1/A]   Lower limit of q-range 
-* qmax: [1/A]   Upper limit of q-range 
-* Nq: [1]       Number of q-bins 
+* qmin: [1/A]   Lower limit of q-range
+* qmax: [1/A]   Upper limit of q-range
+* Nq: [1]       Number of q-bins
 * fname: []     file name (first part without extensions)
 * rstneu:    restore neutron after treatment ??? (0.0 = no)
 * centol: []    tolerance of center determination (if center larger than centol*calculated_center then set back to theory)
@@ -66,7 +66,8 @@
 
 DEFINE COMPONENT TOFSANSdet
 DEFINITION PARAMETERS (Nq=100)
-SETTING PARAMETERS (string fname=0, plength=0.00286, ssdist=27.0, coldis = 20.0, Sthckn = 0.1,
+SETTING PARAMETERS (
+  plength=0.00286, ssdist=27.0, coldis = 20.0, Sthckn = 0.1,
   ds1=1.0,  xw1=0.0, yh1=0.0, hl1=0.0,                /* first one switched off */
   ds2=5.0,  xw2=1.0, yh2=1.0, hl2=0.2,
   ds3=20.0, xw3=1.0, yh3=1.0, hl3=0.04,
@@ -76,7 +77,9 @@ SETTING PARAMETERS (string fname=0, plength=0.00286, ssdist=27.0, coldis = 20.0,
   qmin=0.0005, qmax=0.11, // Nq=500.0, <<<<<<<<<<<<<<<<< defined above
   rstneu = 0.0,
   centol = 0.1, inttol = 0.0001, qcal=1.0)
-OUTPUT PARAMETERS (simplN,simplI,simplIe,
+OUTPUT PARAMETERS (
+  string fname=0,
+  simplN,simplI,simplIe,
   Nxc,Nyc,Ntc,Nqc,
   TSdNf,TSdpf,TSdp2f,
   ds1c,ds2c,ds3c,
@@ -93,39 +96,36 @@ OUTPUT PARAMETERS (simplN,simplI,simplIe,
 
 SHARE
 %{
-#include <stdlib.h>
-#define TSdN(i,j,s,k)  TSdNf[i+Nxc*(j+Nyc*(s+Ntc*(k)))]
-#define TSdp(i,j,s,k)  TSdpf[i+Nxc*(j+Nyc*(s+Ntc*(k)))]
-#define TSdp2(i,j,s,k) TSdp2f[i+Nxc*(j+Nyc*(s+Ntc*(k)))]
-#define calibQ(i,j)    calibQf[i+Nqc*(j)]
-#define calibN(i,j)    calibNf[i+Nqc*(j)]
-#define calibI(i,j)    calibIf[i+Nqc*(j)]
-#define calibIe(i,j)   calibIef[i+Nqc*(j)]
-#define calibWt(i,j)   calibWtf[i+Nqc*(j)]
-#define sectnQ(i,j)    sectnQf[i+Nqc*(j)]
-#define sectnN(i,j)    sectnNf[i+Nqc*(j)]
-#define sectnI(i,j)    sectnIf[i+Nqc*(j)]
-#define sectnIe(i,j)   sectnIef[i+Nqc*(j)]
-#define sectnWt(i,j)   sectnWtf[i+Nqc*(j)]
+  #include <stdlib.h>
+  #define TSdN(i,j,s,k)  TSdNf[i+Nxc*(j+Nyc*(s+Ntc*(k)))]
+  #define TSdp(i,j,s,k)  TSdpf[i+Nxc*(j+Nyc*(s+Ntc*(k)))]
+  #define TSdp2(i,j,s,k) TSdp2f[i+Nxc*(j+Nyc*(s+Ntc*(k)))]
+  #define calibQ(i,j)    calibQf[i+Nqc*(j)]
+  #define calibN(i,j)    calibNf[i+Nqc*(j)]
+  #define calibI(i,j)    calibIf[i+Nqc*(j)]
+  #define calibIe(i,j)   calibIef[i+Nqc*(j)]
+  #define calibWt(i,j)   calibWtf[i+Nqc*(j)]
+  #define sectnQ(i,j)    sectnQf[i+Nqc*(j)]
+  #define sectnN(i,j)    sectnNf[i+Nqc*(j)]
+  #define sectnI(i,j)    sectnIf[i+Nqc*(j)]
+  #define sectnIe(i,j)   sectnIef[i+Nqc*(j)]
+  #define sectnWt(i,j)   sectnWtf[i+Nqc*(j)]
 
-double ddmin(double A, double B) {
-if (A<B) return A; else return B;
-};
+  double ddmin(double A, double B) {
+  if (A<B) return A; else return B;
+  };
 
-double ddmax(double A, double B) {
-if (A>B) return A; else return B;
-};
+  double ddmax(double A, double B) {
+  if (A>B) return A; else return B;
+  };
 
-int iimin(int A, int B) {
-if (A<B) return A; else return B;
-};
+  int iimin(int A, int B) {
+  if (A<B) return A; else return B;
+  };
 
-int iimax(int A, int B) {
-if (A>B) return A; else return B;
-};
-
-
-
+  int iimax(int A, int B) {
+  if (A>B) return A; else return B;
+  };
 %}
 
 DECLARE
@@ -154,7 +154,7 @@ DECLARE
 INITIALIZE
 %{
    int i,j,s,k;
-   
+
    storez = 0.0;
    storen = 0.0;
 
@@ -198,7 +198,7 @@ INITIALIZE
    if (hl2c<=0.0) {hl2c = 0.0;} else {hl2c=ddmax(hl2c,ddmax(xw2c/Nx,yh2c/Ny)*3.0);};
                                       hl3c=ddmax(hl3c,ddmax(xw3c/Nx,yh3c/Ny)*3.0);   /* leave some space for other data */
    vx3c = ddmin(ddmax(vx3,1.0),15.0);
-   
+
    if (!fname || !strlen(fname)) exit(printf("TOFSANSdet: %s: invalid output filename fname.\n", NAME_CURRENT_COMP));
 
 /* if (fname.empty()) fname="SANSareaDet";    */
@@ -302,7 +302,7 @@ TRACE
         TSdp2(i,j,s,k)+= p*p;
         TSdN(i-1,j,s,k)++;                             /* weight for x */
         TSdp(i-1,j,s,k) += p;
-        TSdp2(i-1,j,s,k)+= p*x; 
+        TSdp2(i-1,j,s,k)+= p*x;
         TSdN(i,j-1,s,k)++;                             /* weight for y */
         TSdp(i,j-1,s,k) += p;
         TSdp2(i,j-1,s,k)+= p*y;
@@ -514,7 +514,7 @@ SAVE
               for (i=imn; i<=imx; i++)
                 for (j=jmn; j<=jmx; j++)
                   { if (i<im3 || i>im4 || j<jm3 || j>jm4)  {
- 
+
 //                    if (i<5 && j<5)  fprintf(stdout,"i");
 
                       cimn = i-0.5;
@@ -787,7 +787,7 @@ SAVE
                             };
                           };
                         };
-                      };          // here check if primary intensity was enough 
+                      };          // here check if primary intensity was enough
 
 //                    if (j==30 && i==30 && LAM>4.08 && LAM<4.30) fprintf(stdout,"%g %g %g %i \n",LAM,OMG,QQQ,kkk);
 
@@ -930,7 +930,7 @@ MCDISPLAY
                                      hl3c=ddmax(hl3c,ddmax(xw3c/Nx,yh3c/Ny)*3.0);   /* leave some space for other data */
   vx3c = ddmin(ddmax(vx3,1.0),15.0);
 
-  
+
 
   if (ds1c>0.0 && xw1c>0.0 && yh1c>0.0) {
     multiline(5, -0.5*xw1c, -0.5*yh1c, ds1c,

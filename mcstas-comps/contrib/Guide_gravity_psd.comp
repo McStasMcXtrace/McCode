@@ -114,8 +114,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_gravity_psd
-DEFINITION PARAMETERS (nxpsd, filenameT, filenameB, filenameL, filenameR)
-SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
+DEFINITION PARAMETERS (nxpsd)
+SETTING PARAMETERS (string filenameT, string filenameB, string filenameL, string filenameR, w1, h1, w2=0, h2=0, l,
 R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
 mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
 aleft=-1, aright=-1, atop=-1, abottom=-1,
@@ -740,7 +740,7 @@ MCDISPLAY
     double y1,y2,y3,y4;
     double nel = (nelements > 11 ? 11 : nelements);
 
-    
+
     for (n=0; n<nel; n++)
     {
       double z0, z1;
@@ -787,7 +787,7 @@ MCDISPLAY
   }
   else {
     /* A bit ugly; hard-coded dimensions. */
-    
+
     line(0,0,0,0.2,0,0);
     line(0,0,0,0,0.2,0);
     line(0,0,0,0,0,0.2);

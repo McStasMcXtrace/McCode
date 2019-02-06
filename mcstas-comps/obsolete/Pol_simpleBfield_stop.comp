@@ -14,11 +14,11 @@
 *
 * Magnetic field component.
 *
-* %D 
+* %D
 *
 * End of magnetic field region defined by a previous Pol_simpleBfield component.
 *
-* The component is concentric. It means that it requires a 
+* The component is concentric. It means that it requires a
 *
 * // START MAGNETIC FIELD
 * COMPONENT msf =
@@ -46,13 +46,11 @@
 * %P
 * INPUT PARAMETERS:
 *
-* magnet_comp_stop: [no quotes]  name of the component indicating start of the magnet volume.
-*
 * %E
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_simpleBfield_stop
-DEFINITION PARAMETERS (magnet_comp_stop)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */

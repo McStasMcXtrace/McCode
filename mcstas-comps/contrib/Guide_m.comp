@@ -39,18 +39,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      (m)    Width at the guide entry
-* h1:      (m)    Height at the guide entry
-* w2:      (m)    Width at the guide exit
-* h2:      (m)    Height at the guide exit
-* l:       (m)    length of guide
+* w1: [m]         Width at the guide entry
+* h1: [m]         Height at the guide entry
+* w2: [m]         Width at the guide exit
+* h2: [m]         Height at the guide exit
+* l: [m]          Length of guide
+*
 * For all planes
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off
-* reflect: (str)  Reflectivity file name. Format [q(Angs-1) R(0-1)]
+* R0: [1]         Low-angle reflectivity
+* Qc: [AA-1]      Critical scattering vector
+* alpha: [AA]     Slope of reflectivity
+* m: [1]          m-value of material. Zero means completely absorbing.
+* W: [AA-1]       Width of supermirror cut-off
+* reflect: [str]  Reflectivity file name. Format [q(Angs-1) R(0-1)]
 *
 * %D
 * Example values: m=4 Qc=0.0219 W=1/300 alpha=6.49 R0=1
@@ -59,24 +60,23 @@
 *
 * Mirror reflectivity files
 * For the simulation of the guide surfaces Mirrotron reflectivity files [6] were used as a template for creating reflectivity files in VITESS using the following mathematical description:
-*R = 1/2 R0(1 - tanh((Q - m Qc,Ni)/W) (1 - α(Q - Qc)) 
-*using 
-*α = (Rm - R0) / (m Qc,Ni - Qc).
+* R = 1/2 R0(1 - tanh((Q - m Qc,Ni)/W) (1 - α(Q - Qc))
+* using
+* α = (Rm - R0) / (m Qc,Ni - Qc).
 *
 *
-*m =Qmax/Qmax(Ni)	Reflectivity at Q=m*Qc(Ni)	Width of cut-off Alpha
-*1	  0.99	0.003   0.000
-*1.5  0.97	0.003   1.904
-*2	  0.95	0.003   1.904
-*2.5  0.92	0.003   2.222
-*3.6  0.78	0.003	3.846
-*4    0.75  0.003   3.333 
-
+* m = Qmax/Qmax(Ni)	Reflectivity at Q=m*Qc(Ni)	Width of cut-off Alpha
+* 1	  0.99	0.003   0.000
+* 1.5  0.97	0.003   1.904
+* 2	  0.95	0.003   1.904
+* 2.5  0.92	0.003   2.222
+* 3.6  0.78	0.003	3.846
+* 4    0.75  0.003   3.333
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_m
-DEFINITION PARAMETERS (string reflect=0)
-SETTING PARAMETERS (w1, h1, w2, h2, l, R0_left=0.99, R0_right=0.99, R0_top=0.99, R0_bottom=0.99, Qc_left=0.0219, Qc_right=0.0219, Qc_top=0.0219, Qc_bottom=0.0219, alpha_left=6.07, alpha_right=6.07, alpha_top=6.07, alpha_bottom=6.07, m_left=2, m_right=2, m_top=2, m_bottom=2, W_left=0.003, W_right=0.003 , W_top=0.003 , W_bottom=0.003)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string reflect=0, w1, h1, w2, h2, l, R0_left=0.99, R0_right=0.99, R0_top=0.99, R0_bottom=0.99, Qc_left=0.0219, Qc_right=0.0219, Qc_top=0.0219, Qc_bottom=0.0219, alpha_left=6.07, alpha_right=6.07, alpha_top=6.07, alpha_bottom=6.07, m_left=2, m_right=2, m_top=2, m_bottom=2, W_left=0.003, W_right=0.003 , W_top=0.003 , W_bottom=0.003)
   OUTPUT PARAMETERS (pTable,m,alpha,Qc,R0,W)
 
 
@@ -251,7 +251,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
+
   multiline(5,
             -w1/2.0, -h1/2.0, 0.0,
              w1/2.0, -h1/2.0, 0.0,

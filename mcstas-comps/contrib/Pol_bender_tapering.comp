@@ -11,66 +11,67 @@
 * Written by: Erik Bergbaeck Knudsen (erkn@fysik.dtu.dk)
 * Date: June 2012
 * Origin: DTU Physics
-* 
+*
 * Polarising bender.
 *
 * %D
 *
 * A component modelling a set of identical blades bent to form a multcihannel (nslits)
-* bender. The bender has a cylindrically curved entry plane (Will be extended to also 
+* bender. The bender has a cylindrically curved entry plane (Will be extended to also
 * allow a flat entry plane).
-* 
+*
 * The bender may also be tapered such that it can have focusing or defocusing porperties.
 * This may be specified through the "channel_file"-parameter, which points to a data file
-* in which the individual channels are defined by an entry- and an exit-width. 
+* in which the individual channels are defined by an entry- and an exit-width.
 *
 * The file format for channel file columns:
-* > #d-spacing1 d-spacing2 l_spacer d-coating1 d-coating2 
+* > #d-spacing1 d-spacing2 l_spacer d-coating1 d-coating2
 * > 1e-3  0.8e-3 1e-5  1e-9 1e-9
-*  
+*
 * Each blades is considered coated with a reflecting coating, whose thickness is defined in the
 * latter two columsn of the channel data file.
-* 
+*
 * Coating reflectivities are read from
 * another data file with separate reflectivities for up and down spin. When a neutron ray hits a blade
 * the polarization vector associated with the ray is decomposed into spin-up and down
 * probablities, which in turn determines the overall reflectivity for this ray on the mirror.
 * Furthermore the probabilities are used to also reconstruct the polarization vector of the reflected
-* ray. 
+* ray.
 *
 * File format for the reflectivity file:
-* > #parameter = m 
+* > #parameter = m
 * > q/m R(up) R(down)
 *
 * The effect of spacers inside the channels is modelled by absorption only. The depth of the spacers
-* in a channel is considered constant for one channel (set in the channel data file), the number of 
+* in a channel is considered constant for one channel (set in the channel data file), the number of
 * them is constant across all channels and is an input parameter to the component.
-* 
+*
 * %P
 *
 * INPUT PARAMETERS:
 *
 * xwidth: [m]        Width at the bender entry. Currently unsupported.
-* yheight: [m]       Height at the bender entry. 
-* length: [m]        Length of blades that make up the bender. 
+* yheight: [m]       Height at the bender entry.
+* length: [m]        Length of blades that make up the bender.
 * d_substrate: [m]   Thickness of the substrate.
 * entry_radius: [m]  Radius of curvature of the entrance window.
-* radius: [m]        Curvature of a single plate/polarizer. +:curve left/-:right 
-* nslits: [1]        Number of slits in the bender 
+* radius: [m]        Curvature of a single plate/polarizer. +:curve left/-:right
+* nslits: [1]        Number of slits in the bender
 * channel_file: [ ]  File name of file containing channel data. such as spacer widths etc. (see above for format)
 * reflect_file: [ ]  File name of file containing reflectivity data parametrized either by q or m.
-* sigma_abs: [barn]  Absorption per unit cell at v=2200 m/s of spacers. Defaults to literature value for Al. 
+* sigma_abs: [barn]  Absorption per unit cell at v=2200 m/s of spacers. Defaults to literature value for Al.
 * V0: [AA^3]         Volume of unit cell for spacers. Defaults to Al.
 * nspacer: [ ]       Number of spacers per channel.
-* debug: [ ]         If > 0 print out some internal parameters. 
+* debug: [ ]         If > 0 print out some internal parameters.
 *
 * %L
 *
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Pol_bender_tapering
-DEFINITION PARAMETERS (string channel_file="channel.dat")
-SETTING PARAMETERS (xwidth=0, yheight, length, d_substrate, entry_radius=10, radius=100, G=9.8, int nslit=1, int debug=1,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string channel_file="channel.dat", xwidth=0, yheight, length,
+        d_substrate, entry_radius=10, radius=100, G=9.8, int nslit=1, int debug=1,
         string reflect_file=NULL, sigma_abs=0.231, V0=66.4, nspacer=5)
 OUTPUT PARAMETERS (prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -87,7 +88,7 @@ SHARE
 * Calculate new spin vector after reflection in a surface with reflectivities
 * Rup and Rdown referring to the direction of the vector (mx,my,mz)
  * m is assumed to have unit length, - if zero the default m=(0,1,0) is used.
- * returns the fraction of intensity thus reflected (if Rup+Rdown<1) 
+ * returns the fraction of intensity thus reflected (if Rup+Rdown<1)
  **************************************************************************/
 double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, double *sz, double mx, double my, double mz){
   double pm,ps1,ps2,pin;
@@ -109,7 +110,7 @@ double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, do
   double phiu=((pm)+1)/2.0;
   double phid=(1-(pm))/2.0;
 
-  /*the relative fractions generate the new fraction*/ 
+  /*the relative fractions generate the new fraction*/
   if(phiu*Rup+phid*Rdown){
     pm=(phiu*Rup - phid*Rdown)/(phiu*Rup+phid*Rdown);
     pin=phiu*Rup+phid*Rdown;
@@ -130,8 +131,8 @@ double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, do
   return pin;
 }
   /***************************************************************************
- * Calculate new spin vector after reflection in a surface with reflectivities 
- * Rup and Rdown referring to the y-axis (up)  
+ * Calculate new spin vector after reflection in a surface with reflectivities
+ * Rup and Rdown referring to the y-axis (up)
  *****************************************************************/
 inline double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, double *sz){
   return pol_reflect_spin_ref(Rup, Rdown, sx, sy, sz, 0.0, 0.0, 0.0);
@@ -146,7 +147,7 @@ inline double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, 
   }while(0);
 #endif
 
-#ifndef from_channel_frame 
+#ifndef from_channel_frame
 #define from_channel_frame(rot,offset)\
   do {\
     double cx,cy,cz;\
@@ -177,7 +178,7 @@ DECLARE
 INITIALIZE
 %{
   int status,i;
-  
+
   if(xwidth && entry_radius){
     fprintf(stderr,"Warning (%s): Both xwidth and entry_radius set. Entry_radius overrides xwidth\n",NAME_CURRENT_COMP);
     xwidth=0;
@@ -187,7 +188,7 @@ INITIALIZE
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",channel_file,NAME_CURRENT_COMP);
     exit(-1);
   }
-  
+
   /*compute total opening and exit face of bender*/
   prms.rw=(prms.T.rows+1)*d_substrate;/*the substrate thickness * number of blades*/
   prms.rw_q=(prms.T.rows+1)*d_substrate;/*the substrate thickness * number of blades*/
@@ -214,7 +215,7 @@ INITIALIZE
     prms.by_q=0;
   }else{
     prms.by_q=1;
-  }    
+  }
 
   /*Now do computations on the channel edge curvatures and store in a table
    *We need 2 cols for entry position, 2 for q (flat face exit pos), 2 for centre of curvature and 2 for exit pos
@@ -242,10 +243,10 @@ TRACE
     if ( y<-0.5*yheight || y>0.5*yheight ||x<-0.5*xwidth || x>0.5*xwidth) {
       /*Missed flat face bender. Leave neutron be*/
       channel_no=-1;
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p); 
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p);
     }
     fprintf(stderr,"Error(%s): flat face bender tapering is not supported yet. Please use a large entry_raidus instead. Aborting.\n", NAME_CURRENT_COMP);
-    exit(-1); 
+    exit(-1);
   }else if(entry_radius){
     status=cylinder_intersect(&t0,&t1,x,y,z-(-entry_radius),vx,vy,vz,entry_radius,1000);
     if (entry_radius>0){
@@ -258,7 +259,7 @@ TRACE
     if (!status || t1<0 || y<-0.5*yheight || y>0.5*yheight ||x<entry_radius*sin(-0.5*prms.rw/entry_radius) || x>entry_radius*sin(0.5*prms.rw/entry_radius)){
       /*Missed curved face bender. leave neutron be*/
       channel_no=-1;
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p);  
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p);
     }
   }
   if(channel_no!=-1){
@@ -276,7 +277,7 @@ TRACE
         ABSORB;
       }
       dx1 = dx2 +prms.T.data[channel_no*prms.T.columns + 0];
-      
+
       cphi=cos(length/radius);
       sphi=sin(length/radius);
 
@@ -285,12 +286,12 @@ TRACE
 
       p2x= entry_radius*sin(dx2/entry_radius); /*channel entry coordinates*/
       p2z= entry_radius*(cos(dx2/entry_radius)-1);
-      p1x= entry_radius*sin(dx1/entry_radius);  
+      p1x= entry_radius*sin(dx1/entry_radius);
       p1z= entry_radius*(cos(dx1/entry_radius)-1);
 
       dx2_q = -0.5*prms.rw_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
       dx1_q = dx2_q + prms.T.data[channel_no*prms.T.columns + 1];
-        
+
       q2x= q0x - dx2_q*(-cphi);/*exit point of outer channel edge (without correction for channel blade length)*/
       q2z= q0z - dx2_q*(sphi);
       q1x= q0x - dx1_q*(-cphi);/*exit point of inner channel edge (without correction for channel blade length)*/
@@ -299,7 +300,7 @@ TRACE
 #ifdef MCDEBUG
         printf("%sPTS: %i %g %g %g %g %g %g %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,p1x,p1z,p2x,p2z,q1x,q1z,q2x,q2z,q0x,q0z);
 #endif
-      
+
       while ( !( x> entry_radius*sin(dx2/entry_radius) && x< entry_radius*sin(dx1/entry_radius) ) ){
         channel_no++;
         if(channel_no>prms.T.rows && x>entry_radius*sin((dx2+d_substrate+1e-6)/entry_radius)  ){
@@ -322,11 +323,11 @@ TRACE
         dx1_q= dx2_q+prms.T.data[channel_no*prms.T.columns + 1];
 
 
-        p2x= entry_radius*sin(dx2/entry_radius);  
+        p2x= entry_radius*sin(dx2/entry_radius);
         p2z= entry_radius*(cos(dx2/entry_radius)-1);
-        p1x= entry_radius*sin(dx1/entry_radius);  
+        p1x= entry_radius*sin(dx1/entry_radius);
         p1z= entry_radius*(cos(dx1/entry_radius)-1);
-          
+
         q2x= q0x - dx2_q*(-cphi);/*exit point of outer channel edge (without correction for channel blade length)*/
         q2z= q0z - dx2_q*(sphi);
         q1x= q0x - dx1_q*(-cphi);/*exit point of inner channel edge (without correction for channel blade length)*/
@@ -335,10 +336,10 @@ TRACE
         printf("%sPTS: %d %g %g %g %g %g %g %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,p1x,p1z,p2x,p2z,q1x,q1z,q2x,q2z,q0x,q0z);
 #endif
       }
-      
+
       /*set a scatter upon entry*/
       SCATTER;
-      
+
     }else{
       /*so it is a flat face bender*/
       channel_no=0;
@@ -351,13 +352,13 @@ TRACE
       }
       rx=(dx1+dx2)*0.5;
       SCATTER;
-    } 
+    }
 
     /*now the channel number is known. Given the central curvature of bender we may compute the placement of inner and outer cylinders. */
     /*Some helper points and variables*/
 
-    double h1,D1,h2,D2; 
-    /*helper variables to to compute intersection points of circles*/ 
+    double h1,D1,h2,D2;
+    /*helper variables to to compute intersection points of circles*/
     /*We need to put h1 and h2  to the side the bender is curving to - hence the sign operation*/
     D1=sqrt( (q1x-p1x)*(q1x-p1x) + (q1z-p1z)*(q1z-p1z) ) ;
     h1=(radius<0?-1:1)*sqrt( radius*radius - 0.25*D1*D1);
@@ -409,7 +410,7 @@ TRACE
       t10=t10<=0?FLT_MAX:t10;
       t21=t21<=0?FLT_MAX:t21;
       te=te<=0?FLT_MAX:te;
-      
+
       /*if radius<0 the edge on the positve x side becomes the outer one.
        * This means we chould compare t11 with t20, so in that case swap, and the algorithm should work*/
       if (radius<0){
@@ -436,7 +437,7 @@ TRACE
          * since by design the neutron is always outside cyl. 1.*/
         branch = TOPBOTTOM;
         tt=0;
-      } 
+      }
       if(tt==FLT_MAX){
         tt=0;
         branch=UNKNOWN;
@@ -527,7 +528,7 @@ TRACE
     /*add spacer absorption*/
     double v,pmul;
     v=sqrt(scalar_prod(vx,vy,vz,vx,vy,vz));
-    pmul = exp( - (nspacer*Table_Index(prms.T,channel_no,2)) * (sigma_abs*2200*100/V0/v)); 
+    pmul = exp( - (nspacer*Table_Index(prms.T,channel_no,2)) * (sigma_abs*2200*100/V0/v));
     p*=pmul;
 
     SCATTER;
@@ -548,13 +549,13 @@ MCDISPLAY
     channel_no=0;
     dx2 = -0.5*prms.rw + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
     dx1 = dx2 +prms.T.data[channel_no*prms.T.columns + 0];
-      
+
     dx2_q = -0.5*prms.rw_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
     dx1_q = dx2_q + prms.T.data[channel_no*prms.T.columns + 1];
 
     for (channel_no=0;channel_no<prms.T.rows;channel_no++){
       if (prms.T.rows>20 && channel_no!=0 && channel_no!=prms.T.rows-1 && channel_no%5!=0){
-        /*update the relative coordinates of the channel entry and exits but don't actually draw anything*/ 
+        /*update the relative coordinates of the channel entry and exits but don't actually draw anything*/
         dx2=dx1 + prms.T.data[channel_no*prms.T.columns + 3] + d_substrate + prms.T.data[channel_no*prms.T.columns + 4];
         dx1=dx2 + prms.T.data[channel_no*prms.T.columns + 0];
 
@@ -569,7 +570,7 @@ MCDISPLAY
          * inner edge (dx1) : outer edge + channel width*/
         p2x= entry_radius*sin(dx2/entry_radius); /*channel entry coordinates*/
         p2z= entry_radius*(cos(dx2/entry_radius)-1);
-        p1x= entry_radius*sin(dx1/entry_radius);  
+        p1x= entry_radius*sin(dx1/entry_radius);
         p1z= entry_radius*(cos(dx1/entry_radius)-1);
       }
 
@@ -586,7 +587,7 @@ MCDISPLAY
       q1z= q0z - dx1_q*(sphi);
 
 
-      double h1,D1,h2,D2; /*helper variables to to compute intersection points of circles*/ 
+      double h1,D1,h2,D2; /*helper variables to to compute intersection points of circles*/
       D1=sqrt( (q1x-p1x)*(q1x-p1x) + (q1z-p1z)*(q1z-p1z) ) ;
       h1=(radius<0?-1:1)*sqrt( radius*radius - 0.25*D1*D1);
       D2=sqrt( (q2x-p2x)*(q2x-p2x) + (q2z-p2z)*(q2z-p2z) ) ;
@@ -606,7 +607,7 @@ MCDISPLAY
       ro2x=p2x;
       ro2z=p2z;
       multiline(5,ro1x,yh2,ro1z, ro1x,-yh2,ro1z, ro2x,-yh2,ro2z, ro2x,yh2,ro2z, ro1x,yh2,ro1z);
-        
+
       cphi=cos(dl/radius);
       sphi=sin(dl/radius);
       /*now find the exit points to place exit plane of circle segment*/
@@ -616,12 +617,12 @@ MCDISPLAY
       r2x=c2x + cphi*(p2x-c2x) + sphi*(p2z-c2z);
       r2z=c2z - sphi*(p2x-c2x) + cphi*(p2z-c2z);
       /*loop until exit*/
-      while (dl<=length){   
+      while (dl<=length){
         line(ro1x, yh2,ro1z,r1x, yh2,r1z);
         line(ro2x, yh2,ro2z,r2x, yh2,r2z);
         line(ro1x,-yh2,ro1z,r1x,-yh2,r1z);
         line(ro2x,-yh2,ro2z,r2x,-yh2,r2z);
-        
+
         /*update dl*/
         dl+=length/N;
         /*store old exit in ro1x etc.*/
@@ -629,7 +630,7 @@ MCDISPLAY
         ro1z=r1z;
         ro2x=r2x;
         ro2z=r2z;
-        
+
         cphi=cos(dl/radius);
         sphi=sin(dl/radius);
         /*now find the exit points to place exit plane of circle segment*/
@@ -645,8 +646,8 @@ MCDISPLAY
       line(ro1x,-yh2,ro1z,r1x,-yh2,r1z);
       line(ro2x,-yh2,ro2z,r2x,-yh2,r2z);
       multiline(5,ro1x,yh2,ro1z, ro1x,-yh2,ro1z, ro2x,-yh2,ro2z, ro2x,yh2,ro2z, ro1x,yh2,ro1z);
-        
-      /*update the relative coordinates of the channel entry and exits*/ 
+
+      /*update the relative coordinates of the channel entry and exits*/
       dx2=dx1 + prms.T.data[channel_no*prms.T.columns + 3] + d_substrate + prms.T.data[channel_no*prms.T.columns + 4];
       dx1=dx2 + prms.T.data[channel_no*prms.T.columns + 0];
 

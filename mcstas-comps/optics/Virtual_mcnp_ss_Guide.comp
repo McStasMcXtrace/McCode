@@ -67,8 +67,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_mcnp_ss_Guide
-DEFINITION PARAMETERS (string reflect=0)
-SETTING PARAMETERS (w1, h1, w2, h2, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string reflect=0, w1, h1, w2, h2, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
 OUTPUT PARAMETERS (pTable,from_mcstas,ntrk,nhis)
 
 SHARE
@@ -248,7 +248,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
+
   multiline(5,
             -w1/2.0, -h1/2.0, 0.0,
              w1/2.0, -h1/2.0, 0.0,
