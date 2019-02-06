@@ -905,10 +905,10 @@ static void mcinfo_out(char *pre, FILE *f)
 } /* mcinfo_out */
 
 /*******************************************************************************
-* mcruninfo_out: output simulation tags/info (both in SIM and data files)
+* mcruninfo_out_backend: output simulation tags/info (both in SIM and data files)
 * Used in: mcsiminfo_init (ascii case), mcdetector_out_xD_ascii
 *******************************************************************************/
-static void mcruninfo_out(char *pre, FILE *f)
+static void mcruninfo_out_backend(char *pre, FILE *f, int info)
 {
   int i;
   char Parameters[CHAR_BUF_LENGTH];
@@ -934,18 +934,30 @@ static void mcruninfo_out(char *pre, FILE *f)
 
   /* output parameter string ================================================ */
   for(i = 0; i < mcnumipar; i++) {
-      if (mcinputtable[i].par){
-	/* Parameters with a default value */
+      if (!info){
+          (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+          fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
+      }else{
+        /*if an info run, some variables might not have values. Flag these by "NULL"*/
 	if(mcinputtable[i].val && strlen(mcinputtable[i].val)){
-	  (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-	  fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
-        /* ... and those without */
-	}else{
-	  fprintf(f, "%sParam: %s=NULL\n", pre, mcinputtable[i].name);
+            /* ... those with defautl values*/
+            (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+            fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
+        }else{
+            /* ... and those without */
+            fprintf(f, "%sParam: %s=NULL\n", pre, mcinputtable[i].name);
 	}
-      } 
+      }
   }
-} /* mcruninfo_out */
+} /* mcruninfo_out_backend */
+
+/************************
+* wrapper function to mcruninfo_out_backend
+*  Regular runs use this whereas the single call from mcinfo is directly to the backend
+*************************/
+static void mcruninfo_out(char *pre, FILE *f){
+    mcruninfo_out_backend(pre,f,0);
+}
 
 /*******************************************************************************
 * mcsiminfo_out:    wrapper to fprintf(mcsiminfo_file)
@@ -2085,7 +2097,7 @@ mcinfo(void)
   mcinfo_out("  ", stdout);
   fprintf(stdout, "end instrument\n");
   fprintf(stdout, "begin simulation: %s\n", mcdirname ? mcdirname : ".");
-  mcruninfo_out("  ", stdout);
+  mcruninfo_out_backend("  ", stdout,1);
   fprintf(stdout, "end simulation\n");
   exit(0); /* includes MPI_Finalize in MPI mode */
 } /* mcinfo */
