@@ -906,7 +906,7 @@ static void mcinfo_out(char *pre, FILE *f)
 
 /*******************************************************************************
 * mcruninfo_out_backend: output simulation tags/info (both in SIM and data files)
-* Used in: mcsiminfo_init (ascii case), mcdetector_out_xD_ascii
+* Used in: mcsiminfo_init (ascii case), mcdetector_out_xD_ascii, mcinfo(stdout)
 *******************************************************************************/
 static void mcruninfo_out_backend(char *pre, FILE *f, int info)
 {
