@@ -33,8 +33,6 @@
  * The reference point of the crystal is the ellipsoid centre, offset by one half-axis along the y-axis.
  * (See the component manual for Elliptic_mirror for a drawing).
  *
- * N.B. The component does not work for negative curvature, nor for rays hitting the back of the monochromator.
- *
  * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
  *
  * Non-copyright notice:
@@ -123,13 +121,23 @@ INITIALIZE
             exit(-1);
         }
     }
+
     a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
-    b2inv=1/(y_b*y_b);
-    c2inv=1/(z_c*z_c);
+    b2inv=(y_b)?1/(y_b*y_b):0;
+    c2inv=(z_c)?1/(z_c*z_c):0;
 
     l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
-    l_b2inv=1/(lattice_y_b*lattice_y_b);
-    l_c2inv=1/(lattice_z_c*lattice_z_c);
+    l_b2inv=(lattice_y_b)?1/(lattice_y_b*lattice_y_b):0;
+    l_c2inv=(lattice_z_c)?1/(lattice_z_c*lattice_z_c):0;
+
+
+    printf("Component %s: curve=(%.5f %.5f %.5f) lcurve=(%.3f %.5f %.5f)\n\n",NAME_CURRENT_COMP,
+            a2inv, b2inv, c2inv, l_a2inv, l_b2inv, l_c2inv
+          );
+
+    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+
+    fflush(NULL); // put diagnostics in order!
 %}
 
 TRACE
@@ -143,7 +151,7 @@ TRACE
     double Theta0;			// (rad) angle between the Bragg planes and the incident ray
     double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
     double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
-    double Rpi, Rsig, R;          // Reflectivity value calculated by DarwinReflectivity() function for each incoming photon
+    double Rpi, Rsig, R;          // Reflectivity value calculated by MxBragg_DarwinReflectivity() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
@@ -172,8 +180,10 @@ TRACE
         xx0=x+kxu*t0; yy0=y+kyu*t0; zz0=z+kzu*t0;
         xx1=x+kxu*t1; yy1=y+kyu*t1; zz1=z+kzu*t1;
 
-        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0);
-        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0);
+        /*Check if we hit the mirror and whether the hit it is in front of the ray.
+         * This does not account for mirror curvature */
+        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0) && t0>0;
+        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0) && t1>0;
         int doit=hit0 || hit1;
         if(hit0 && !hit1) PROP_DL(t0); /* only one intersection actually on mirror */
         else if (hit1 && !hit0) PROP_DL(t1); /* other intersection */
