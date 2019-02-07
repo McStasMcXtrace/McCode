@@ -57,10 +57,10 @@
  * R0 [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
  * debye_waller_B [Å^2]	debye-waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp,
  * crystal_type:
- *  NIST_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
- *  NIST_crystal_diamond: diamond
- *  NIST_crystal_fcc: fcc
- *  NIST_crystal_fcc: bcc
+ *  Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
+ *  Mx_crystal_diamond: diamond
+ *  Mx_crystal_fcc: fcc
+ *  Mx_crystal_fcc: bcc
  *
 
  * %D

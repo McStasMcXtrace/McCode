@@ -23,10 +23,10 @@ void Mx_CubicCrystalChi(double complex *chi0, double complex *chih, double *k0ma
     double fscale0;
     
     switch(crystal_type) {
-        case Bragg_crystal_explicit:
+        case Mx_crystal_explicit:
             /* use explicitly provided structure factor scale factor */
             break;
-        case Bragg_crystal_diamond: /* diamond lattice rules */
+        case Mx_crystal_diamond: /* diamond lattice rules */
             if (((h+k+l)%2) != 0){ 		/* (111) etc. odd sum eflection */
                 fscaleh=4+4*I;
                 fscale0=8;
@@ -41,7 +41,7 @@ void Mx_CubicCrystalChi(double complex *chi0, double complex *chih, double *k0ma
                 fscale0=0;
             }
             break;
-        case Bragg_crystal_fcc: /* fcc lattice rules */
+        case Mx_crystal_fcc: /* fcc lattice rules */
         {
             int hpar=h%2, kpar=k%2, lpar=l%2;
             if ( hpar==kpar && kpar==lpar ) { /* all parities the same */
@@ -54,7 +54,7 @@ void Mx_CubicCrystalChi(double complex *chi0, double complex *chih, double *k0ma
             }
         }
             break;
-        case Bragg_crystal_bcc: /* bcc lattice rules */
+        case Mx_crystal_bcc: /* bcc lattice rules */
             if ( ((h+k+l)%2) == 0 ) { /* h+k+l even */
                 fscaleh=2;
                 fscale0=2;
@@ -109,7 +109,7 @@ int Mx_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
         double K0[3], Kh[3];
         double complex kqvals[4], xi0vals[4], xihvals[4];
 
-        int fail=DiffractionDispersion(kqvals, xi0vals, xihvals,
+        int fail=Mx_DiffractionDispersion(kqvals, xi0vals, xihvals,
                    k0, nhat, H, chi0, chih*chihbar, C, 1); // get first (interesting) root only
 
         double complex kq=kqvals[0];
@@ -318,7 +318,7 @@ int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
         double C=(i==0)?fabs(cos(2*thetaB)) : 1; // polarization factor
         double complex kqvals[4], xi0vals[4], xihvals[4];
 
-        int fail=DiffractionDispersion(kqvals, xi0vals, xihvals,
+        int fail=Mx_DiffractionDispersion(kqvals, xi0vals, xihvals,
                    k0, nhat, H, chi0, chih*chihbar, C, 2); // get first 2 (alpha and beta) roots only
 
         double complex a1=2*xi0vals[0]/(k0mag*C*chih);  // complex Eha/E0a from B&C eq. 24
@@ -431,10 +431,10 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
      */
 
     switch(crystal_type) {
-        case Bragg_crystal_explicit:
+        case Mx_crystal_explicit:
             /* use explicitly provided structure factor scale factor */
             break;
-        case Bragg_crystal_diamond: /* diamond lattice rules */
+        case Mx_crystal_diamond: /* diamond lattice rules */
             if (((h+k+l)%2) != 0){ 		/* (111) etc. odd sum eflection */
                 fscaler=fscalei=4.0;
             }
@@ -446,7 +446,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
                 fscaler=0; fscalei=0;
             }
             break;
-        case Bragg_crystal_fcc: /* fcc lattice rules */
+        case Mx_crystal_fcc: /* fcc lattice rules */
             {
                 int hpar=h%2, kpar=k%2, lpar=l%2;
                 if ( hpar==kpar && kpar==lpar ) { /* all parities the same */
@@ -457,7 +457,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
                 }
             }
             break;
-        case Bragg_crystal_bcc: /* bcc lattice rules */
+        case Mx_crystal_bcc: /* bcc lattice rules */
             if ( ((h+k+l)%2) == 0 ) { /* h+k+l even */
                 fscaler=2.0; fscalei=0.0;
             }
