@@ -85,6 +85,51 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
+
+/* SECTION: Dynamic Arrays ================================================== */
+
+typedef double* Array1d;
+typedef double** Array2d;
+typedef double*** Array3d;
+
+Array1d create_arr1d(int n){
+  Array1d arr2d;
+  arr2d = calloc(n, sizeof(double));
+  return arr2d;
+}
+void destroy_arr1d(Array1d a){
+  free(a);
+}
+
+Array2d create_arr2d(int nx, int ny){
+  Array2d arr2d;
+  arr2d = calloc(nx, sizeof(double *));
+
+  double *p1;
+  p1 = calloc(nx*ny, sizeof(double));
+
+  int i;
+  for (i=0; i<nx; i++){
+    arr2d[i] = &(p1[i*ny]);
+  }
+  return arr2d;
+}
+void destroy_arr2d(Array2d a){
+  free(a[0]);
+  free(a);
+}
+
+Array3d create_arr3d(int nx, int ny, int nz){
+  Array3d arr3d;
+  printf("create_arr3d has not been implemented, exiting...");
+  exit(0);
+}
+void destroy_arr3d(Array3d a){
+  printf("destroy_arr3d has not been implemented, exiting...");
+  exit(0);
+}
+
+
 /* SECTION: MPI handling ==================================================== */
 
 #ifdef USE_MPI
@@ -3967,7 +4012,3 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
 
 #endif /* !MCCODE_H */
 /* End of file "mccode-r.c". */
-
-
-
-// END MCCODE-R
