@@ -24,12 +24,12 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth: [m]           Width of detector 
-* yheight: [m]          Height of detector 
-* mx: [1]               X-component of monitor vector (can be negative) 
-* my: [1]               Y-component of monitor vector (can be negative) 
-* mz: [1]               Z-component of monitor vector (can be negative) 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* xwidth: [m]           Width of detector
+* yheight: [m]          Height of detector
+* mx: [1]               X-component of monitor vector (can be negative)
+* my: [1]               Y-component of monitor vector (can be negative)
+* mz: [1]               Z-component of monitor vector (can be negative)
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -39,43 +39,43 @@
 *
 * %E
 *************************************************************************/
-
 DEFINE COMPONENT Pol_monitor
-DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, restore_neutron=0)
-SETTING PARAMETERS (mx=0, my=0, mz=0)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, restore_neutron=0, mx=0, my=0, mz=0)
+
 OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2, Psum, titlestring)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-double Pol_N;
-double Pol_p;
-double Pol_p2;
-double Psum;
-char titlestring[128];
+  double Pol_N;
+  double Pol_p;
+  double Pol_p2;
+  double Psum;
+  char titlestring[128];
 %}
 
 INITIALIZE
 %{
-// Check that input parameteters makes sense
-
-if (mx==0 && my==0 && mz==0) {
+  // Check that input parameteters makes sense
+  if (mx==0 && my==0 && mz==0) {
     fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
-	    "ERROR      (mx, my, mz). Exiting",
-	    NAME_CURRENT_COMP);
+      "ERROR      (mx, my, mz). Exiting",
+      NAME_CURRENT_COMP);
     exit(1);
   }
 
   if ((xwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
-	    "ERROR      (xwidth,yheight). Exiting",
-	    NAME_CURRENT_COMP);
+      "ERROR      (xwidth,yheight). Exiting",
+      NAME_CURRENT_COMP);
     exit(1);
   }
-  sprintf(titlestring,"Polarisation monitor m=(%g %g %g) %s",mx,my,mz,NAME_CURRENT_COMP);
+  sprintf(titlestring, "Polarisation monitor m=(%g %g %g) %s", mx, my, mz, NAME_CURRENT_COMP);
 
   // Initialize variables
-
   NORM(mx, my, mz);
   Psum=0;
   Pol_N = 0;
@@ -89,7 +89,6 @@ TRACE
 
   PROP_Z0;
   if (inside_rectangle(x, y, xwidth, yheight)){
-
     pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
 
     if(fabs(pol_proj)>1) {
@@ -123,7 +122,6 @@ SAVE
 
 MCDISPLAY
 %{
-  
   rectangle("xy", 0, 0, 0, xwidth, yheight);
 %}
 
