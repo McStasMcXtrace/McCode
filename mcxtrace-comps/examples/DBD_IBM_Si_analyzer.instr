@@ -177,7 +177,7 @@ ROTATED (0, 0, 0) RELATIVE sample_arm
 COMPONENT si_crystal = Bragg_crystal(
     material = "Si.txt", length = 0.05, width = 0.05,
    V=si_volume,  debye_waller_B=0.4632,
-   alphax=0, alphay=1, alphaz=0,
+   alpha=alpha,
    h=si_hh, k=si_kk, l=si_ll, crystal_type=Mx_crystal_diamond) WHEN (use_si_crystal != 0)
 AT (0, 0, 2*focal_distance) RELATIVE sample_arm
 ROTATED (-two_theta_si/2.0, 0 ,0) RELATIVE sample_arm
