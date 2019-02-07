@@ -26,10 +26,10 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth: [m]     Width of opening 
-* yheight: [m]    Height of opening 
-* length: [m]     Length of field 
-* B: [Gauss]      Magnetic field along y-direction 
+* xwidth: [m]     Width of opening
+* yheight: [m]    Height of opening
+* length: [m]     Length of field
+* B: [Gauss]      Magnetic field along y-direction
 * fliplambda: []  lambda for calculating B field
 * flipangle: []   Angle flipped for lambda = fliplambda fliplambda and flipangle overrides B so a neutron with s= (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =(cos(flipangle), sin(flipangle), 0) after the section.
 *
@@ -37,18 +37,19 @@
 *
 * %E
 *******************************************************************************/
-
 DEFINE COMPONENT Pol_constBfield
-DEFINITION PARAMETERS (xwidth, yheight, length)
-SETTING PARAMETERS (B=0, fliplambda=0, flipangle=180)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (xwidth, yheight, length, B=0, fliplambda=0, flipangle=180)
+
 OUTPUT PARAMETERS(omegaL)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-double IntersectWall(double pos, double vel, double wallpos) {
+  double IntersectWall(double pos, double vel, double wallpos) {
     /* Function to calculate where the neutron hit the wall */
-
     if(vel==0)
       return -1;
 
@@ -82,8 +83,7 @@ INITIALIZE
   // omegaL/B = -2*mu_n/hbar = -2.0*1.913*5.051e-27/1.055e-34
   omegaL = -2 * PI * 29.16e6 * B * 1e-4; // B is in Gauss
 
-  if(fliplambda>0) {
-
+  if(fliplambda>0){
     velocity = K2V*2*PI/fliplambda;
     time = length/velocity;
 
@@ -96,9 +96,7 @@ INITIALIZE
     printf("Pol_constBfield: %s: Magnetic field set to B=%f Gauss\n",
            NAME_CURRENT_COMP, B);
   }
-
-
-  %}
+%}
 
 TRACE
 %{
@@ -147,8 +145,6 @@ TRACE
 
 MCDISPLAY
 %{
-  
-
   box(0, 0, length/2, xwidth, yheight, length);
 %}
 
