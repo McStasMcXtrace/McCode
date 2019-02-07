@@ -23,17 +23,17 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: [m]             Lower x bound of detector opening 
-* xmax: [m]             Upper x bound of detector opening 
-* ymin: [m]             Lower y bound of detector opening 
-* ymax: [m]             Upper y bound of detector opening 
-* xwidth: [m]           Width of detector. Overrides xmin, xmax. 
-* yheight: [m]          Height of detector. Overrides ymin, ymax. 
-* Lmin: [AA]            Minimum wavelength to detect 
-* Lmax: [AA]            Maximum wavelength to detect 
-* nL: [1]               Number of wavelength channels 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax.
+* yheight: [m]          Height of detector. Overrides ymin, ymax.
+* Lmin: [AA]            Minimum wavelength to detect
+* Lmax: [AA]            Maximum wavelength to detect
+* nL: [1]               Number of wavelength channels
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -43,79 +43,89 @@
 *
 * %E
 *******************************************************************************/
-
 DEFINE COMPONENT L_monitor
-DEFINITION PARAMETERS (nL=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-xwidth=0, yheight=0, Lmin, Lmax, restore_neutron=0)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nL=20, string filename=0,
+  xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
+  Lmin, Lmax, restore_neutron=0)
+
 OUTPUT PARAMETERS (L_N, L_p, L_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-double L_N[nL];
-double L_p[nL], L_p2[nL];
+  Array1d L_N;
+  Array1d L_p;
+  Array1d L_p2;
 %}
 
 INITIALIZE
 %{
-int i;
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("L_monitor: %s: Null detection area !\n"
+      "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+      NAME_CURRENT_COMP);
+    exit(0);
+  }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("L_monitor: %s: Null detection area !\n"
-                   "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
-    }
+  L_N = create_arr1d(nL);
+  L_p = create_arr1d(nL);
+  L_p2 = create_arr1d(nL);
 
-    for (i=0; i<nL; i++)
-    {
-      L_N[i] = 0;
-      L_p[i] = 0;
-      L_p2[i] = 0;
-    }
-  %}
+  int i;
+  for (i=0; i<nL; i++)
+  {
+    L_N[i] = 0;
+    L_p[i] = 0;
+    L_p2[i] = 0;
+  }
+%}
 
 TRACE
-  %{
-    int i;
-    double L;
-
-    PROP_Z0;
-    if (x>xmin && x<xmax && y>ymin && y<ymax)
+%{
+  PROP_Z0;
+  if (x>xmin && x<xmax && y>ymin && y<ymax)
+  {
+    double L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+    int i = floor((L-Lmin)*nL/(Lmax-Lmin));
+    if(i >= 0 && i < nL)
     {
-      L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
-      i = floor((L-Lmin)*nL/(Lmax-Lmin));
-      if(i >= 0 && i < nL)
-      {
-        L_N[i]++;
-        L_p[i] += p;
-        L_p2[i] += p*p;
-        SCATTER;
-      }
+      L_N[i]++;
+      L_p[i] += p;
+      L_p2[i] += p*p;
+      SCATTER;
     }
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
 
 SAVE
-  %{
-    DETECTOR_OUT_1D(
-        "Wavelength monitor",
-        "Wavelength [AA]",
-        "Intensity",
-        "L", Lmin, Lmax, nL,
-        &L_N[0],&L_p[0],&L_p2[0],
-        filename);
-  %}
+%{
+  DETECTOR_OUT_1D(
+    "Wavelength monitor",
+    "Wavelength [AA]",
+    "Intensity",
+    "L", Lmin, Lmax, nL,
+    &L_N[0],&L_p[0],&L_p2[0],
+    filename);
+%}
+
+FINALLY
+%{
+  destroy_arr1d(L_N);
+  destroy_arr1d(L_p);
+  destroy_arr1d(L_p2);
+%}
 
 MCDISPLAY
 %{
-  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,
