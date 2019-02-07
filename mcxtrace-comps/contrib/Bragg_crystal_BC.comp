@@ -18,7 +18,7 @@
  *
  * %D
  * Reads atomic formfactors from a data input file.
- * The PerfectCrystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
+ * The Bragg_Crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
  *
  * The crystal is positioned such that the long axis of the crystal surface coincides with
  * z-axis and the outer normal to the crystal surface is along +y.
@@ -119,16 +119,15 @@ TRACE
     double x_int,y_int,z_int;		// intersection with the y=0 plane
     double dist;				// distance from position at t=0 to the y=0 plane
     double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-    double Rpi, Rsig, R;          // Reflectivity values calculated by MxBragg_DarwinReflectivityBC() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
     E = K2E*K; /* use built-in constants for consistency */
     /* make unit vector in the direction of k :*/
     double k0hat[3] = {kx/K, ky/K, kz/K};			// unit vector in the direction of k-vector.
-    double kk0[3]={kx,ky,kz};
     
 #ifdef MCDEBUG
+    double kk0[3]={kx,ky,kz};
     fflush(NULL); // make sure all error messages are in order!
 #endif
     
@@ -153,19 +152,24 @@ TRACE
             double nhat[3]={0,1,0}; // crystal surface normal is yhat, and is set up by mcxtrace to be into the crystal
             
             double alpha[3]={alphax, alphay, alphaz};
-            double Rsig, Rpi;
+            double Rsig, Rpi, R;
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
+
+            double complex chi0, chih;
+            double k0mag, hscale, thetaB;
+
+            Mx_CubicCrystalChi(&chi0, &chih, &k0mag, &hscale, &thetaB,
+                         f00, f0h, fp, fpp, V, h, k, l,
+                         debye_waller_B, E,
+                         crystal_type,structure_factor_scale_r,structure_factor_scale_i);
             
-            fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
+            fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha,
-                  f00, f0h, fp, fpp, V, h, k, l,
-                  debye_waller_B, E,
-                  crystal_type, structure_factor_scale_r, structure_factor_scale_i
+                  chi0, chih, chih, k0mag, hscale, thetaB
               );
             
             cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction */
-            /* sig_axis is the sigma direction, as returned by Bragg_Geometry inside DarwinReflectivityBT */
             /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
             cross(pi_axis, k0hat, sig_axis, 1);
             

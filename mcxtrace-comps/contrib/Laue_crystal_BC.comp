@@ -171,7 +171,7 @@ TRACE
             double complex chi0, chih;
             double k0mag, hscale, thetaB;
             
-            CubicCrystalChi(&chi0, &chih, &k0mag, &hscale, &thetaB,
+            Mx_CubicCrystalChi(&chi0, &chih, &k0mag, &hscale, &thetaB,
                          f00, f0h, fp, fpp, V, h, k, l,
                          debye_waller_B, E,
                          crystal_type,structure_factor_scale_r,structure_factor_scale_i);
@@ -184,7 +184,7 @@ TRACE
  
             double Rsig, Rpi, Tsig, Tpi, Asig, Api;
             double kh[3], sig_axis[3], pi_axis[3];
-            fail=LaueReflectivityBC(&Rsig, &Rpi, &Tsig, &Tpi, &Asig, &Api,
+            fail=Mx_LaueReflectivityBC(&Rsig, &Rpi, &Tsig, &Tpi, &Asig, &Api,
                   kh, // these are the return values
                   k0hat, nhat, alpha,
                   chi0, chih, chih, k0mag, hscale, thetaB, thickness
