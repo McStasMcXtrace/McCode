@@ -50,9 +50,9 @@
 *
 * OUTPUT PARAMETERS:
 *
-* localG: [m/s/s]  Gravity vector in guide reference system 
-* normalTop: [1]   One of several normal vectors used for defining the geometry 
-* pointTop: [1]    One of several points used for defining the geometry 
+* localG: [m/s/s]  Gravity vector in guide reference system
+* normalTop: [1]   One of several normal vectors used for defining the geometry
+* pointTop: [1]    One of several points used for defining the geometry
 * rParPtr:      One of several pointers to reflection parameters used with the ref. functions. []
 * SCATTERED: []    is 1 for reflected, and 2 for transmitted neutrons
 *
@@ -63,23 +63,29 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_vmirror
-DEFINITION PARAMETERS (xwidth, yheight, length,
-  rFunc   =StdReflecFunc, rUpFunc=rFunc, rDownFunc=rFunc,
-  rPar    ={1.0, 0.0219, 4.07, 3.2, 0.003},
-  rUpPar  =rPar, rDownPar=rPar,
+DEFINITION PARAMETERS (
+  rFunc=StdReflecFunc,
+  rUpFunc=rFunc,
+  rDownFunc=rFunc,
+  rUpPar=rPar,
+  rDownPar=rPar,
+  rPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   useTables=0)
-SETTING PARAMETERS (int debug=0)
+SETTING PARAMETERS (
+  xwidth, yheight, length,
+  int debug=0)
 OUTPUT PARAMETERS (localG,
   normalTop, normalBot, normalLeft, normalRight, normalInOut,
   pointTop, pointBot, pointLeft, pointRight,
   pointIn, pointOut,
   rParPtr, rUpParPtr, rDownParPtr)
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-%include "pol-lib"
-%include "ref-lib"
+  %include "pol-lib"
+  %include "ref-lib"
 %}
 
 DECLARE
@@ -97,7 +103,8 @@ DECLARE
   double *rUpParPtr;
   double *rDownParPtr;
 #endif
-  %}
+
+%}
 
 INITIALIZE
 %{
@@ -175,8 +182,7 @@ INITIALIZE
   // A normal vector is (1, 0, 0)
   normalRight  = coords_set(1, 0, 0);
   pointRight = coords_set(-xwidth/2, 0, 0);
-
-  %}
+%}
 
 TRACE
 %{
@@ -335,7 +341,7 @@ TRACE
 
     Q = 2*coords_sp(vVec, *normalPointer)*V2K;
 
-    if(!mirrorReflect) {
+    if (!mirrorReflect) {
       // we have hit one of the sides. Always reflect.
       vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
       rFunc(fabs(Q), rParPtr, &refWeight);
@@ -384,22 +390,17 @@ TRACE
     if(debug>0)
       fprintf(stdout, "Pol_guide_vmirror: %s: End v: (%f, %f, %f)\n", NAME_CURRENT_COMP, vx, vy, vz);
   }
-
-  %}
+%}
 
 MCDISPLAY
 %{
   int i, j;
-
-  
-
   // draw box
   box(0, 0, length/2, xwidth, yheight, length);
 
   for(i = -1; i<=1; i+=2)
     for(j = -1; j<=1; j+=2)
       line(0, j*yheight/2, 0, i*xwidth/2, j*yheight/2, length);
-
-  %}
+%}
 
 END
