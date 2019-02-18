@@ -87,6 +87,7 @@ our $max_iteration=20;
 our $data_dir_saved = undef;
 my  $optim_prec=1e-3;
 our $optfile;                   # Default filename for storing of optim history
+my  $seed=0;                      # Used for communicating a seed down a --test run
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -185,12 +186,14 @@ sub parse_args {
         }
         # Standard McStas options passed through unchanged to simulations.
         elsif(/^--(seed)\=(.*)$/) {
-            push @options, "--$1=$2";
+	    push @options, "--$1=$2";
+	    $seed=$2;
         } elsif(/^-([s])(.+)$/) {
             push @options, "-$1$2";
         } elsif(/^--(seed)$/) {
             push @options, "--$1=$ARGV[++$i]";
-        } elsif(/^-([s])$/) {
+	    $seed=$ARGV[++$i];
+	} elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
         } elsif(/^--(format)$/ || /^--(plotter)$/) {
             $MCSTAS::mcstas_config{'PLOTTER'} = $ARGV[$i];
@@ -1197,7 +1200,7 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
 
 if ($exec_test && $ncount) {
   my $status;
-  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test, $cflags, $mpi, $ncount, $sim_def);
+  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test, $cflags, $mpi, $ncount, $sim_def, $seed);
   if (defined $status) {
     print STDERR "mcrun: $status\n";
     exit(1);
