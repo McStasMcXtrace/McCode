@@ -46,15 +46,19 @@ OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 
 DECLARE
 %{
-  DArray2d TOF_N = create_darr2d(nt, nphi);
-  DArray2d TOF_p = create_darr2d(nt, nphi);
-  DArray2d TOF_p2 = create_darr2d(nt, nphi);
+  DArray2d TOF_N;
+  DArray2d TOF_p;
+  DArray2d TOF_p2;
   double binphi, tt_0, tt_1;
 %}
 
 INITIALIZE
 %{
   int i,j;
+
+  TOF_N = create_darr2d(nt, nphi);
+  TOF_p = create_darr2d(nt, nphi);
+  TOF_p2 = create_darr2d(nt, nphi);
 
   tt_0 = tmin*1e-6;
   tt_1 = tmax*1e-6;
