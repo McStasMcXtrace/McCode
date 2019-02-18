@@ -28,8 +28,9 @@ if (isfolder(dirA) && isfolder(dirB))
                 title(['B - ' num2str(j)])
                 subplot(rows,3,(j-1)*2+j+2)
                 plot(A(j)-B(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
-                figure
                 title(['diff - ' num2str(j)])
+                
+                figure % for the row-oriented output
                 subplot(1,3,1)
                 plot(A(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
                 title(['A - ' num2str(j)])
@@ -40,7 +41,7 @@ if (isfolder(dirA) && isfolder(dirB))
                 plot(A(j)-B(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
                 title(['diff - ' num2str(j)])
                 [FILEPATH,NAME,EXT] = fileparts(A(j).filename);
-                sgtitle(strvcat('Comparison A vs B: ',['A: ' dirA],['B: ' dirB], ['Monitor: ' NAME EXT]), 'interpreter','none')
+                sgtitle(strvcat('Comparison A vs B:', ['Monitor: ' NAME EXT]), 'interpreter','none')
                 print(gcf, '-dsvg', ['Subplots_' num2str(j) '_' dirA '_vs_' dirB '.svg']);
             end
             figure(fig)
