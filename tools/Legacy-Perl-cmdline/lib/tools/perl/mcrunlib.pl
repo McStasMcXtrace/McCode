@@ -373,7 +373,7 @@ sub get_out_file {
 
 # McStas/McXtrace selftest procedure: copy LIB/examples and execute
 sub do_test {
-  my ($printer,$force, $plotter, $exec_test, $cflags, $mpi, $ncount, $sim_def) = @_;
+  my ($printer,$force, $plotter, $exec_test, $cflags, $mpi, $ncount, $sim_def, $seed) = @_;
   my $pwd=getcwd;
 
   &$printer( "# $MCSTAS::mcstas_config{'MCCODE'} self-test ($MCSTAS::mcstas_config{'RUNCMD'} --test)");
@@ -469,7 +469,7 @@ sub do_test {
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
       if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
 
-      
+      if($seed>0) { $this_cmd .= " --seed=$seed"; }
       if ($cflags==0) { $this_cmd .= " --no-cflags"; }
       
       &$printer("Executing: $this_cmd");
