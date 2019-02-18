@@ -63,9 +63,9 @@ POLARISATION PARAMETERS (sx, sy, sz)
 
 DECLARE
 %{
-  Array2d PSD_N;
-  Array2d PSD_p;
-  Array2d PSD_p2;
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
 
 INITIALIZE
@@ -82,9 +82,9 @@ INITIALIZE
     exit(0);
   }
 
-  PSD_N = create_arr2d(nx, ny);
-  PSD_p = create_arr2d(nx, ny);
-  PSD_p2 = create_arr2d(nx, ny);
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
 
   for (i=0; i<nx; i++){
     for (j=0; j<ny; j++){
@@ -133,9 +133,9 @@ SAVE
 
 FINALLY
 %{
-  destroy_arr2d(PSD_N);
-  destroy_arr2d(PSD_p);
-  destroy_arr2d(PSD_p2);
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
 %}
 
 MCDISPLAY

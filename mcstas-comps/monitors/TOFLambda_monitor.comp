@@ -58,9 +58,9 @@ OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
 
 DECLARE
 %{
-  Array2d TOFL_N;
-  Array2d TOFL_p;
-  Array2d TOFL_p2;
+  DArray2d TOFL_N;
+  DArray2d TOFL_p;
+  DArray2d TOFL_p2;
   double tt_0, tt_1;
 %}
 
@@ -78,9 +78,9 @@ INITIALIZE
     exit(0);
   }
 
-  TOFL_N = create_arr2d(nt, nL);
-  TOFL_p = create_arr2d(nt, nL);
-  TOFL_p2 = create_arr2d(nt, nL);
+  TOFL_N = create_darr2d(nt, nL);
+  TOFL_p = create_darr2d(nt, nL);
+  TOFL_p2 = create_darr2d(nt, nL);
   tt_0 = tmin*1e-6;
   tt_1 = tmax*1e-6;
   for (i=0; i<nL; i++){
@@ -129,9 +129,9 @@ SAVE
 
 FINALLY
 %{
-  destroy_arr2d(TOFL_N);
-  destroy_arr2d(TOFL_p);
-  destroy_arr2d(TOFL_p2);
+  destroy_darr2d(TOFL_N);
+  destroy_darr2d(TOFL_p);
+  destroy_darr2d(TOFL_p2);
 %}
 
 MCDISPLAY

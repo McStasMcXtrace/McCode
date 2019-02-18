@@ -183,17 +183,17 @@ extern int traceenabled, defaultmain;
 
 
 /* SECTION: Dynamic Arrays */
-typedef double* Array1d;
-Array1d create_arr1d(int n);
-void destroy_arr1d(Array1d a);
+typedef double* DArray1d;
+DArray1d create_darr1d(int n);
+void destroy_darr1d(DArray1d a);
 
-typedef double** Array2d;
-Array2d create_arr2d(int nx, int ny);
-void destroy_arr2d(Array2d a);
+typedef double** DArray2d;
+DArray2d create_darr2d(int nx, int ny);
+void destroy_darr2d(DArray2d a);
 
-typedef double*** Array3d;
-Array3d create_arr3d(int nx, int ny, int nz);
-void destroy_arr3d(Array3d a);
+typedef double*** DArray3d;
+DArray3d create_darr3d(int nx, int ny, int nz);
+void destroy_darr3d(DArray3d a);
 
 
 /* MPI stuff */

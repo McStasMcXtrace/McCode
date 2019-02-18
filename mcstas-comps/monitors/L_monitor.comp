@@ -56,9 +56,9 @@ OUTPUT PARAMETERS (L_N, L_p, L_p2)
 
 DECLARE
 %{
-  Array1d L_N;
-  Array1d L_p;
-  Array1d L_p2;
+  DArray1d L_N;
+  DArray1d L_p;
+  DArray1d L_p2;
 %}
 
 INITIALIZE
@@ -73,9 +73,9 @@ INITIALIZE
     exit(0);
   }
 
-  L_N = create_arr1d(nL);
-  L_p = create_arr1d(nL);
-  L_p2 = create_arr1d(nL);
+  L_N = create_darr1d(nL);
+  L_p = create_darr1d(nL);
+  L_p2 = create_darr1d(nL);
 
   int i;
   for (i=0; i<nL; i++)
@@ -119,9 +119,9 @@ SAVE
 
 FINALLY
 %{
-  destroy_arr1d(L_N);
-  destroy_arr1d(L_p);
-  destroy_arr1d(L_p2);
+  destroy_darr1d(L_N);
+  destroy_darr1d(L_p);
+  destroy_darr1d(L_p2);
 %}
 
 MCDISPLAY
