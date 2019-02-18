@@ -14,25 +14,39 @@ if (isfolder(dirA) && isfolder(dirB))
         if (length(A)==length(B))
             C=A-B;
             rows=length(A);
+            dirB=strrep(dirB,'/','+');
+            dirA=strrep(dirA,'/','+');
 
             fig=figure
             for j=1:length(A)
+                figure(fig)
                 subplot(rows,3,(j-1)*2+j)
-                plot(A(j)); view([0 0 1]); axis tight
+                plot(A(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
                 title(['A - ' num2str(j)])
                 subplot(rows,3,(j-1)*2+j+1)
-                plot(B(j)); view([0 0 1]); axis tight
+                plot(B(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
                 title(['B - ' num2str(j)])
                 subplot(rows,3,(j-1)*2+j+2)
-                plot(A(j)-B(j)); view([0 0 1]); axis tight
+                plot(A(j)-B(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
+                figure
                 title(['diff - ' num2str(j)])
+                subplot(1,3,1)
+                plot(A(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
+                title(['A - ' num2str(j)])
+                subplot(1,3,2)
+                plot(B(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
+                title(['B - ' num2str(j)])
+                subplot(1,3,3)
+                plot(A(j)-B(j)); view([0 0 1]); axis tight; if not(any(size(A(j))==1)) colorbar; end
+                title(['diff - ' num2str(j)])
+                [FILEPATH,NAME,EXT] = fileparts(A(j).filename);
+                sgtitle(strvcat('Comparison A vs B: ',['A: ' dirA],['B: ' dirB], ['Monitor: ' NAME EXT]), 'interpreter','none')
+                print(gcf, '-dpdf', ['Subplots_' num2str(j) '_' dirA '_vs_' dirB '.pdf']);
             end
-
+            figure(fig)
             sgtitle(strvcat('Comparison A vs B: ',['A: ' dirA],['B: ' dirB]), 'interpreter','none')
-            dirB=strrep(dirB,'/','_');
-            dirA=strrep(dirA,'/','_');
             print(fig, '-dpdf', ['Comparison_' dirA '_vs_' dirB '.pdf']);
-            close
+            close all
         else
             display('And the datasets should be of the same dimension!');
         end
