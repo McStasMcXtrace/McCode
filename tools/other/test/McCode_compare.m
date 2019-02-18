@@ -41,12 +41,12 @@ if (isfolder(dirA) && isfolder(dirB))
                 title(['diff - ' num2str(j)])
                 [FILEPATH,NAME,EXT] = fileparts(A(j).filename);
                 sgtitle(strvcat('Comparison A vs B: ',['A: ' dirA],['B: ' dirB], ['Monitor: ' NAME EXT]), 'interpreter','none')
-                print(gcf, '-dpdf', ['Subplots_' num2str(j) '_' dirA '_vs_' dirB '.pdf']);
+                print(gcf, '-dsvg', ['Subplots_' num2str(j) '_' dirA '_vs_' dirB '.svg']);
             end
             figure(fig)
             sgtitle(strvcat('Comparison A vs B: ',['A: ' dirA],['B: ' dirB]), 'interpreter','none')
             print(fig, '-dpdf', ['Comparison_' dirA '_vs_' dirB '.pdf']);
-            close all
+            
         else
             display('And the datasets should be of the same dimension!');
         end
