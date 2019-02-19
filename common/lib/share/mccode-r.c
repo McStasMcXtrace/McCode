@@ -121,12 +121,33 @@ void destroy_darr2d(DArray2d a){
 
 DArray3d create_darr3d(int nx, int ny, int nz){
   DArray3d arr3d;
-  printf("create_arr3d has not been implemented, exiting...");
-  exit(0);
+  int i, j;
+
+  // 1d
+  arr3d = calloc(nx, sizeof(double **));
+
+  // d2
+  double **p1;
+  p1 = calloc(nx*ny, sizeof(double *));
+
+  for (i=0; i<nx; i++){
+    arr3d[i] = &(p1[i*ny]);
+  }
+
+  // 3d
+  double *p2;
+  p2 = calloc(nx*ny*nz, sizeof(double));
+  for (i=0; i<nx; i++){
+    for (j=0; j<ny; i++){
+      arr3d[i][j] = &(p2[(i*ny+j)*nz]);
+    }
+  }
+  return arr3d;
 }
 void destroy_darr3d(DArray3d a){
-  printf("destroy_arr3d has not been implemented, exiting...");
-  exit(0);
+  free(a[0][0]);
+  free(a[0]);
+  free(a);
 }
 
 
