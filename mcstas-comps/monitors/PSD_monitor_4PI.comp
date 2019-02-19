@@ -23,11 +23,11 @@
 * %P
 * INPUT PARAMETERS:
 *
-* radius: [m]           Radius of detector 
-* nx: [1]               Number of pixel columns 
-* ny: [1]               Number of pixel rows 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* radius: [m]           Radius of detector
+* nx: [1]               Number of pixel columns
+* ny: [1]               Number of pixel rows
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -42,25 +42,31 @@
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS (nx=90, ny=90)
-SETTING PARAMETERS (string filename=0, radius=1, restore_neutron=0)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nx=90, ny=90, string filename=0, radius=1, restore_neutron=0)
+
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-double PSD_N[nx][ny];
-double PSD_p[nx][ny];
-double PSD_p2[nx][ny];
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
 
 INITIALIZE
 %{
-int i,j;
+  int i, j;
 
-for (i=0; i<nx; i++)
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
+
+  for (i=0; i<nx; i++)
     for (j=0; j<ny; j++)
     {
       PSD_N[i][j] = 0;
@@ -114,9 +120,15 @@ SAVE
     filename);
 %}
 
+FINALLY
+%{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
 MCDISPLAY
 %{
-  
   circle("xy",0,0,0,radius);
   circle("xz",0,0,0,radius);
   circle("yz",0,0,0,radius);

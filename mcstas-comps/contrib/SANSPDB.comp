@@ -37,7 +37,7 @@
 
 DEFINE COMPONENT SANSPDB
 
-DEFINITION PARAMETERS (NumberOfQBins = 200)
+DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
 xwidth, yheight, zdepth,
@@ -535,7 +535,7 @@ TRACE
 
 MCDISPLAY
 %{
-	
+
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 

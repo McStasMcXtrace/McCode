@@ -23,17 +23,17 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth: [m]           Width of detector 
-* yheight: [m]          Height of detector 
-* mx: [1]               X-component of monitor vector (can be negative) 
-* my: [1]               Y-component of monitor vector (can be negative) 
-* mz: [1]               Z-component of monitor vector (can be negative) 
-* nL: [1]               Number of bins in wavelength 
-* npol: [1]             Number of bins in Pol 
-* Lmin: [AA]            Minimum wavelength detected 
-* Lmax: [AA]            Maximum wavelength detected 
-* filename: [string]    Name of file in which to store the data 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* xwidth: [m]           Width of detector
+* yheight: [m]          Height of detector
+* mx: [1]               X-component of monitor vector (can be negative)
+* my: [1]               Y-component of monitor vector (can be negative)
+* mz: [1]               Z-component of monitor vector (can be negative)
+* nL: [1]               Number of bins in wavelength
+* npol: [1]             Number of bins in Pol
+* Lmin: [AA]            Minimum wavelength detected
+* Lmax: [AA]            Maximum wavelength detected
+* filename: [string]    Name of file in which to store the data
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -45,25 +45,25 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PolLambda_monitor
-DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, npol=21, restore_neutron=0)
-SETTING PARAMETERS (string filename, mx=0, my=0, mz=0, Lmin, Lmax)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, npol=21, restore_neutron=0,
+  string filename, mx=0, my=0, mz=0, Lmin, Lmax)
 OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-double PolL_N[nL][npol];
-double PolL_p[nL][npol];
-double PolL_p2[nL][npol];
+  DArray2d PolL_N;
+  DArray2d PolL_p;
+  DArray2d PolL_p2;
 %}
 
 INITIALIZE
 %{
-int i, j;
+  int i, j;
 
-// Check that input parameteters makes sense
-
-if (Lmax<=Lmin) {
+  // Check that input parameteters makes sense
+  if (Lmax<=Lmin) {
     fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"
 	   "ERROR. Exiting",
            NAME_CURRENT_COMP);
@@ -85,8 +85,11 @@ if (Lmax<=Lmin) {
   }
 
   // Initialize variables
-
   NORM(mx, my, mz);
+
+  PolL_N = create_darr2d(nL, npol);
+  PolL_p = create_darr2d(nL, npol);
+  PolL_p2 = create_darr2d(nL, npol);
 
   for (i=0; i<npol; i++) {
     for (j=0; j<nL; j++) {
@@ -140,9 +143,15 @@ SAVE
 		  filename);
 %}
 
+FINALLY
+%{
+  destroy_darr2d(PolL_N);
+  destroy_darr2d(PolL_p);
+  destroy_darr2d(PolL_p2);
+%}
+
 MCDISPLAY
 %{
-  
   rectangle("xy", 0, 0, 0, xwidth, yheight);
 %}
 

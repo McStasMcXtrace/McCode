@@ -114,16 +114,22 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_gravity_psd
-DEFINITION PARAMETERS (nxpsd)
-SETTING PARAMETERS (string filenameT, string filenameB, string filenameL, string filenameR, w1, h1, w2=0, h2=0, l,
-R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
-mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
-aleft=-1, aright=-1, atop=-1, abottom=-1,
-wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
-chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
-nu=0, phase=0, string reflect="NULL")
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nxpsd,
+  string filenameT, string filenameB, string filenameL, string filenameR,
+  w1, h1, w2=0, h2=0, l,
+  R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
+  mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
+  aleft=-1, aright=-1, atop=-1, abottom=-1,
+  wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
+  chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
+  nu=0, phase=0, string reflect="NULL")
+
 OUTPUT PARAMETERS (GVars, pTable,PSDlin_Nxp, PSDlin_pxp, PSDlin_p2xp, PSDlin_Nyp, PSDlin_pyp, PSDlin_p2yp, PSDlin_Nxn, PSDlin_pxn, PSDlin_p2xn, PSDlin_Nyn, PSDlin_pyn, PSDlin_p2yn)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 SHARE
 %{
 %include "ref-lib"
@@ -383,25 +389,23 @@ DECLARE
 %{
   Gravity_guide_Vars_type GVars;
   /* added  four PSD monitors */
-  double PSDlin_Nxp[nxpsd];
-  double PSDlin_pxp[nxpsd];
-  double PSDlin_p2xp[nxpsd];
+  DArray1d PSDlin_Nxp;
+  DArray1d PSDlin_pxp;
+  DArray1d PSDlin_p2xp;
 
-  double PSDlin_Nxn[nxpsd];
-  double PSDlin_pxn[nxpsd];
-  double PSDlin_p2xn[nxpsd];
+  DArray1d PSDlin_Nxn;
+  DArray1d PSDlin_pxn;
+  DArray1d PSDlin_p2xn;
 
-  double PSDlin_Nyp[nxpsd];
-  double PSDlin_pyp[nxpsd];
-  double PSDlin_p2yp[nxpsd];
+  DArray1d PSDlin_Nyp;
+  DArray1d PSDlin_pyp;
+  DArray1d PSDlin_p2yp;
 
-  double PSDlin_Nyn[nxpsd];
-  double PSDlin_pyn[nxpsd];
-  double PSDlin_p2yn[nxpsd];
+  DArray1d PSDlin_Nyn;
+  DArray1d PSDlin_pyn;
+  DArray1d PSDlin_p2yn;
 
   double currentPOS;
-
-
 
   t_Table pTable;
 %}
@@ -460,6 +464,22 @@ INITIALIZE
 
   /* added lines 417 - 432 to init PSD's */
   /* int i; */
+
+  PSDlin_Nxp = create_darr1d(nxpsd);
+  PSDlin_pxp = create_darr1d(nxpsd);
+  PSDlin_p2xp = create_darr1d(nxpsd);
+
+  PSDlin_Nxn = create_darr1d(nxpsd);
+  PSDlin_pxn = create_darr1d(nxpsd);
+  PSDlin_p2xn = create_darr1d(nxpsd);
+
+  PSDlin_Nyp = create_darr1d(nxpsd);
+  PSDlin_pyp = create_darr1d(nxpsd);
+  PSDlin_p2yp = create_darr1d(nxpsd);
+
+  PSDlin_Nyn = create_darr1d(nxpsd);
+  PSDlin_pyn = create_darr1d(nxpsd);
+  PSDlin_p2yn = create_darr1d(nxpsd);
 
   for (i=0; i<nxpsd; i++) {
       PSDlin_Nxp[i] = 0;
@@ -725,15 +745,30 @@ SAVE
 
 FINALLY
 %{
-if (GVars.warnings > 100) {
-  fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
-  fprintf(stderr,"%s: warning: This message has been repeated %g times\n", GVars.compcurname, GVars.warnings);
-}
+  if (GVars.warnings > 100) {
+    fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+    fprintf(stderr,"%s: warning: This message has been repeated %g times\n", GVars.compcurname, GVars.warnings);
+  }
+
+  destroy_darr1d(PSDlin_Nxp);
+  destroy_darr1d(PSDlin_pxp);
+  destroy_darr1d(PSDlin_p2xp);
+
+  destroy_darr1d(PSDlin_Nxn);
+  destroy_darr1d(PSDlin_pxn);
+  destroy_darr1d(PSDlin_p2xn);
+
+  destroy_darr1d(PSDlin_Nyp);
+  destroy_darr1d(PSDlin_pyp);
+  destroy_darr1d(PSDlin_p2yp);
+
+  destroy_darr1d(PSDlin_Nyn);
+  destroy_darr1d(PSDlin_pyn);
+  destroy_darr1d(PSDlin_p2yn);
 %}
 
 MCDISPLAY
 %{
-
   if (l > 0 && nelements > 0) {
     int i,j,n;
     double x1,x2,x3,x4;

@@ -12,7 +12,7 @@
 * Date: October 17, 2012
 * Origin: KU-Science
 *
-* A circular detector measuring the radial average of intensity as a function 
+* A circular detector measuring the radial average of intensity as a function
 * of the momentum transform in the sample.
 *
 * %D
@@ -30,7 +30,7 @@
 * Lambda0			: []	If lambda is given, the momentum transfers of all
 *							rays are computed from this value. Otherwise,
 *							instrumental effects are negated.
-* restore_xray      : []	If set to 1, the component restores the original 
+* restore_xray      : []	If set to 1, the component restores the original
 *							x-ray.
 *
 * %E
@@ -38,13 +38,13 @@
 
 DEFINE COMPONENT SANSQMonitor
 
-DEFINITION PARAMETERS (NumberOfBins = 100)
+DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (string RFilename = "RDetector", string qFilename = "QDetector",
+SETTING PARAMETERS (NumberOfBins = 100,
+  string RFilename = "RDetector", string qFilename = "QDetector",
   RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0, restore_neutron = 0)
 
-OUTPUT PARAMETERS (TwoThetaMax,qMax,Nofq,Iofq,IofqSquared,
-  NofR,IofR,IofRSquared)
+OUTPUT PARAMETERS (TwoThetaMax, qMax, Nofq, Iofq, IofqSquared, NofR, IofR, IofRSquared)
 
 DECLARE
 %{
@@ -52,26 +52,34 @@ DECLARE
   double TwoThetaMax;
   double qMax;
 
-  double Nofq[NumberOfBins];
-  double Iofq[NumberOfBins];
-  double IofqSquared[NumberOfBins];
+  DArray1d Nofq;
+  DArray1d Iofq;
+  DArray1d IofqSquared;
 
-  double NofR[NumberOfBins];
-  double IofR[NumberOfBins];
-  double IofRSquared[NumberOfBins];
+  DArray1d NofR;
+  DArray1d IofR;
+  DArray1d IofRSquared;
 %}
 
 INITIALIZE
 %{
-// Declarations
-int i;
+  // Declarations
+  int i;
 
-// Initializations
-for (i = 0; i < NumberOfBins; ++i) {
+  Nofq = create_darr1d(NumberOfBins);
+  Iofq = create_darr1d(NumberOfBins);
+  IofqSquared = create_darr1d(NumberOfBins);
+
+  NofR = create_darr1d(NumberOfBins);
+  IofR = create_darr1d(NumberOfBins);
+  IofRSquared = create_darr1d(NumberOfBins);
+
+  // Initializations
+  for (i = 0; i < NumberOfBins; ++i) {
 		Nofq[i] = 0.0;
 		Iofq[i] = 0.0;
 		IofqSquared[i] = 0.0;
-    }
+  }
 
 	TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
 	qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
@@ -92,10 +100,10 @@ TRACE
 	double qLow;
 	double qHigh;
 
-	double TwoThetaLow; 
+	double TwoThetaLow;
 	double TwoThetaHigh;
 	double AreaOfSlice;
-    
+
   PROP_Z0;
 
 	// Computation of R
@@ -122,12 +130,12 @@ TRACE
 		TwoThetaHigh = atan(RHigh / DistanceFromSample);
 
 		AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
-	
+
 		++NofR[i];
 		IofR[i] += p / AreaOfSlice;
 		IofRSquared[i] += pow(p / AreaOfSlice, 2);
     }
-      
+
 	// Put neutron in the correct q-bin
     if (q < qMax) {
 		i = floor(NumberOfBins * q / qMax);
@@ -139,7 +147,7 @@ TRACE
 		TwoThetaHigh = asin(qHigh * Lambda / (4.0 * PI));
 
 		AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
-	
+
 		++Nofq[i];
 		Iofq[i] += p / AreaOfSlice;
 		IofqSquared[i] += pow(p / AreaOfSlice, 2);
@@ -156,39 +164,49 @@ TRACE
 SAVE
 %{
 	// Output I(r)
-    DETECTOR_OUT_1D(
-        "QMonitor - Radially averaged distribution",
-        "Radius [m]",
-        "I(r)",
-        "r", 
-		0.0, 
-		RadiusDetector, 
-		NumberOfBins,
-        &NofR[0],
-		&IofR[0],
-		&IofRSquared[0],
-        RFilename
+  DETECTOR_OUT_1D(
+    "QMonitor - Radially averaged distribution",
+    "Radius [m]",
+    "I(r)",
+    "r",
+  	0.0,
+  	RadiusDetector,
+  	NumberOfBins,
+    &NofR[0],
+  	&IofR[0],
+  	&IofRSquared[0],
+    RFilename
 	);
 
 	// Output I(q)
-    DETECTOR_OUT_1D(
-        "QMonitor - Distribution in q (Radially averaged)",
-        "q [1 / AA]",
-        "I(q)",
-        "q", 
-		0.0, 
-		qMax, 
-		NumberOfBins,
-        &Nofq[0],
-		&Iofq[0],
-		&IofqSquared[0],
-        qFilename
+  DETECTOR_OUT_1D(
+    "QMonitor - Distribution in q (Radially averaged)",
+    "q [1 / AA]",
+    "I(q)",
+    "q",
+  	0.0,
+  	qMax,
+  	NumberOfBins,
+    &Nofq[0],
+  	&Iofq[0],
+  	&IofqSquared[0],
+    qFilename
 	);
+%}
+
+FINALLY
+%{
+  destroy_darr1d(Nofq);
+  destroy_darr1d(Iofq);
+  destroy_darr1d(IofqSquared);
+
+  destroy_darr1d(NofR);
+  destroy_darr1d(IofR);
+  destroy_darr1d(IofRSquared);
 %}
 
 MCDISPLAY
 %{
-	
 	circle("xy", 0, 0, 0, RadiusDetector);
 %}
 

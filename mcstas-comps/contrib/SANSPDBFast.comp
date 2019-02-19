@@ -40,25 +40,26 @@
 
 DEFINE COMPONENT SANSPDBFast
 
-DEFINITION PARAMETERS (NumberOfQBins = 200)
+DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-xwidth, yheight, zdepth,
-SampleToDetectorDistance, DetectorRadius,
-qMin = 0.001, qMax = 0.5,
-string PDBFilepath = "PDBfile.pdb")
+SETTING PARAMETERS (NumberOfQBins = 200,
+	RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
+	xwidth, yheight, zdepth,
+	SampleToDetectorDistance, DetectorRadius,
+	qMin = 0.001, qMax = 0.5,
+	string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-// Declarations
-double Absorption;
-double q;
-double NumberDensity;
-const int OrderOfHarmonics;
+	// Declarations
+	double Absorption;
+	double q;
+	double NumberDensity;
+	const int OrderOfHarmonics;
 
-// Arrays for storing q and I(q)
+	// Arrays for storing q and I(q)
 	double * qArray;
 	double * IArray;
 
@@ -601,7 +602,7 @@ TRACE
 
 MCDISPLAY
 %{
-	
+
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 

@@ -24,19 +24,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: [m]             Lower x bound of detector opening 
-* xmax: [m]             Upper x bound of detector opening 
-* ymin: [m]             Lower y bound of detector opening 
-* ymax: [m]             Upper y bound of detector opening 
-* xwidth: [m]           Width/diameter of detector (x). Overrides xmin, xmax 
-* yheight: [m]          Height of detector (y). Overrides ymin, ymax 
-* nx: [1]               Number of pixel columns 
-* ny: [1]               Number of pixel rows 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
-* psf: [m]              Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf 
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width/diameter of detector (x). Overrides xmin, xmax
+* yheight: [m]          Height of detector (y). Overrides ymin, ymax
+* nx: [1]               Number of pixel columns
+* ny: [1]               Number of pixel rows
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* psf: [m]              Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf
 * k0: Numerator in k0/k weighting [AA^-1]
-* eff: [1]              Detector efficiency 
+* eff: [1]              Detector efficiency
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,34 +47,40 @@
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT PSD_monitor_psf_eff
-DEFINITION PARAMETERS (nx=90, ny=90)
-SETTING PARAMETERS (string filename=0, xmin=0, xmax=0, ymin=0, ymax=0, 
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nx=90, ny=90, string filename=0, xmin=0, xmax=0, ymin=0, ymax=0,
   xwidth=0, yheight=0, psf=0, k0=1, eff=1, restore_neutron=0)
+
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, weight)
 
 DECLARE
 %{
-double PSD_N[nx][ny];
-double PSD_p[nx][ny];
-double PSD_p2[nx][ny];
-double weight;
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
+  double weight;
 %}
 
 INITIALIZE
 %{
-int i,j;
+  int i, j;
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   if ((xmin >= xmax) || (ymin >= ymax)) {
-          printf("PSD_monitor: %s: Null detection area !\n"
-                 "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-         NAME_CURRENT_COMP);
+    printf("PSD_monitor: %s: Null detection area !\n"
+           "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
     exit(0);
   }
+
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
 
   for (i=0; i<nx; i++) {
     for (j=0; j<ny; j++)
@@ -87,45 +93,51 @@ if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
 %}
 
 TRACE
-  %{
-    int i,j;
-    double xp,yp;
+%{
+  int i,j;
+  double xp,yp;
 
-    PROP_Z0;
+  PROP_Z0;
 
-    xp = x + psf*randnorm();
-    yp = y + psf*randnorm();
+  xp = x + psf*randnorm();
+  yp = y + psf*randnorm();
 
-    if (xp>xmin && xp<xmax && yp>ymin && yp<ymax)
-    {
-      weight = eff * k0 / (V2K*sqrt(vx*vx + vy*vy + vz*vz));
-      i = floor((xp - xmin)*nx/(xmax - xmin));
-      j = floor((yp - ymin)*ny/(ymax - ymin));
-      PSD_N[i][j]++;
-      PSD_p[i][j] += p*weight;
-      PSD_p2[i][j] += p*p*weight*weight;
-      SCATTER;
-    }
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+  if (xp>xmin && xp<xmax && yp>ymin && yp<ymax)
+  {
+    weight = eff * k0 / (V2K*sqrt(vx*vx + vy*vy + vz*vz));
+    i = floor((xp - xmin)*nx/(xmax - xmin));
+    j = floor((yp - ymin)*ny/(ymax - ymin));
+    PSD_N[i][j]++;
+    PSD_p[i][j] += p*weight;
+    PSD_p2[i][j] += p*p*weight*weight;
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
 
 SAVE
-  %{
-    DETECTOR_OUT_2D(
-        "PSD monitor",
-        "X position [cm]",
-        "Y position [cm]",
-        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
-        nx, ny,
-        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-        filename);
-  %}
+%{
+  DETECTOR_OUT_2D(
+      "PSD monitor",
+      "X position [cm]",
+      "Y position [cm]",
+      xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+      nx, ny,
+      &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+      filename);
+%}
+
+FINALLY
+%{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
 
 MCDISPLAY
 %{
-  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

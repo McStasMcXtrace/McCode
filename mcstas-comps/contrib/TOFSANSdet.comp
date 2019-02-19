@@ -65,8 +65,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOFSANSdet
-DEFINITION PARAMETERS (Nq=100)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
+  Nq=100,
   plength=0.00286, ssdist=27.0, coldis = 20.0, Sthckn = 0.1,
   ds1=1.0,  xw1=0.0, yh1=0.0, hl1=0.0,                /* first one switched off */
   ds2=5.0,  xw2=1.0, yh2=1.0, hl2=0.2,
@@ -130,784 +131,730 @@ SHARE
 
 DECLARE
 %{
-    int Nxc,Nyc,Ntc,Nqc;
-    double *TSdNf;
-    double *TSdpf;
-    double *TSdp2f;
-    double ds1c,ds2c,ds3c;
-    double xw1c,xw2c,xw3c;
-    double yh1c,yh2c,yh3c;
-    double hl1c,hl2c,hl3c;
-    double vx3c;
-    double Pic;
+  int Nxc, Nyc, Ntc, Nqc;
+  double *TSdNf;
+  double *TSdpf;
+  double *TSdp2f;
+  double ds1c, ds2c, ds3c;
+  double xw1c, xw2c, xw3c;
+  double yh1c, yh2c, yh3c;
+  double hl1c, hl2c, hl3c;
+  double vx3c;
+  double Pic;
 
-//  double simplQ[Nq];
-    double simplN[Nq];
-    double simplI[Nq];
-    double simplIe[Nq];
+  DArray1d simplN;
+  DArray1d simplI;
+  DArray1d simplIe;
 
-    double Ncount,Pcount;
-    double storez,storen;
+  double Ncount, Pcount;
+  double storez, storen;
 %}
-
 
 INITIALIZE
 %{
-   int i,j,s,k;
+  int i, j, s, k;
 
-   storez = 0.0;
-   storen = 0.0;
+  simplN = create_darr1d(Nq);
+  simplI = create_darr1d(Nq);
+  simplIe = create_darr1d(Nq);
 
-   Nxc = floor( ddmin(ddmax(Nx,16.0),512.0) + 0.50);
-   Nyc = floor( ddmin(ddmax(Ny,16.0),512.0) + 0.50);
-   Ntc = floor( ddmin(ddmax(Nt,10.0),2000.0)+ 0.50);
-   Nqc = floor( ddmin(ddmax(Nq,1.00),2000.0)+ 0.50);
+  storez = 0.0;
+  storen = 0.0;
 
-   TSdNf = (double*)malloc(sizeof(double)*Nxc*Nyc*Ntc*3);
-   TSdpf = (double*)malloc(sizeof(double)*Nxc*Nyc*Ntc*3);
-   TSdp2f= (double*)malloc(sizeof(double)*Nxc*Nyc*Ntc*3);
+  Nxc = floor( ddmin(ddmax(Nx,16.0),512.0) + 0.50);
+  Nyc = floor( ddmin(ddmax(Ny,16.0),512.0) + 0.50);
+  Ntc = floor( ddmin(ddmax(Nt,10.0),2000.0)+ 0.50);
+  Nqc = floor( ddmin(ddmax(Nq,1.00),2000.0)+ 0.50);
 
-   for (i=0; i<Nxc; i++)
-       for (j=0; j<Nyc; j++)
-           for (s=0; s<Ntc; s++)
-               for(k=0; k<3; k++)
-           {
-               TSdN(i,j,s,k)  = 0.0;
-               TSdp(i,j,s,k)  = 0.0;
-               TSdp2(i,j,s,k) = 0.0;
-           };
+  TSdNf = (double*)malloc(sizeof(double)*Nxc*Nyc*Ntc*3);
+  TSdpf = (double*)malloc(sizeof(double)*Nxc*Nyc*Ntc*3);
+  TSdp2f= (double*)malloc(sizeof(double)*Nxc*Nyc*Ntc*3);
 
-   ds1c = ddmax(ds1,0.0);
-   ds2c = ddmax(ds2,0.0);
-   ds3c = ddmax(ds3,0.0);
-   if (ds2c>=ds3c) ds2c = 0.0;
-   if (ds1c>=ds2c) ds1c = 0.0;
-   xw1c = ddmax(xw1,0.0);
-   yh1c = ddmax(yh1,0.0);
-   xw2c = ddmax(xw2,0.0);
-   yh2c = ddmax(yh2,0.0);
-   xw3c = ddmax(xw3,0.0);
-   yh3c = ddmax(yh3,0.0);
-   hl1c = hl1;
-   hl2c = hl2;
-   hl3c = hl3;
-   if (ds3c==0.0) {xw3c=0.0; yh3c=0.0; hl3c=0.0;};
-   if (ds2c==0.0) {xw2c=0.0; yh2c=0.0; hl2c=0.0;};
-   if (ds1c==0.0) {xw1c=0.0; yh1c=0.0; hl1c=0.0;};
-   if (hl1c<=0.0) {hl1c = 0.0;} else {hl1c=ddmax(hl1c,ddmax(xw1c/Nx,yh1c/Ny)*3.0);};
-   if (hl2c<=0.0) {hl2c = 0.0;} else {hl2c=ddmax(hl2c,ddmax(xw2c/Nx,yh2c/Ny)*3.0);};
-                                      hl3c=ddmax(hl3c,ddmax(xw3c/Nx,yh3c/Ny)*3.0);   /* leave some space for other data */
-   vx3c = ddmin(ddmax(vx3,1.0),15.0);
+  for (i=0; i<Nxc; i++)
+    for (j=0; j<Nyc; j++)
+      for (s=0; s<Ntc; s++)
+        for(k=0; k<3; k++)
+        {
+          TSdN(i,j,s,k)  = 0.0;
+          TSdp(i,j,s,k)  = 0.0;
+          TSdp2(i,j,s,k) = 0.0;
+        };
 
-   if (!fname || !strlen(fname)) exit(printf("TOFSANSdet: %s: invalid output filename fname.\n", NAME_CURRENT_COMP));
+  ds1c = ddmax(ds1,0.0);
+  ds2c = ddmax(ds2,0.0);
+  ds3c = ddmax(ds3,0.0);
+  if (ds2c>=ds3c) ds2c = 0.0;
+  if (ds1c>=ds2c) ds1c = 0.0;
+  xw1c = ddmax(xw1,0.0);
+  yh1c = ddmax(yh1,0.0);
+  xw2c = ddmax(xw2,0.0);
+  yh2c = ddmax(yh2,0.0);
+  xw3c = ddmax(xw3,0.0);
+  yh3c = ddmax(yh3,0.0);
+  hl1c = hl1;
+  hl2c = hl2;
+  hl3c = hl3;
+  if (ds3c==0.0) {xw3c=0.0; yh3c=0.0; hl3c=0.0;};
+  if (ds2c==0.0) {xw2c=0.0; yh2c=0.0; hl2c=0.0;};
+  if (ds1c==0.0) {xw1c=0.0; yh1c=0.0; hl1c=0.0;};
+  if (hl1c<=0.0) {hl1c = 0.0;} else {hl1c=ddmax(hl1c,ddmax(xw1c/Nx,yh1c/Ny)*3.0);};
+  if (hl2c<=0.0) {hl2c = 0.0;} else {hl2c=ddmax(hl2c,ddmax(xw2c/Nx,yh2c/Ny)*3.0);};
+                                    hl3c=ddmax(hl3c,ddmax(xw3c/Nx,yh3c/Ny)*3.0);   /* leave some space for other data */
+  vx3c = ddmin(ddmax(vx3,1.0),15.0);
 
-/* if (fname.empty()) fname="SANSareaDet";    */
+  if (!fname || !strlen(fname)) exit(printf("TOFSANSdet: %s: invalid output filename fname.\n", NAME_CURRENT_COMP));
 
-   Pic  = 3.141592653589793238462643;
+  /* if (fname.empty()) fname="SANSareaDet";    */
 
-   Ncount = 0.0;
-   Pcount = 0.0;
+  Pic  = 3.141592653589793238462643;
+
+  Ncount = 0.0;
+  Pcount = 0.0;
 %}
 
 TRACE
-  %{
-    int i,j,s,k;
-    double tt, zpos;
-    double absflg;
+%{
+  int i,j,s,k;
+  double tt, zpos;
+  double absflg;
 
-    PROP_Z0;
-    zpos = 0.0;
-    absflg = 0.0;
+  PROP_Z0;
+  zpos = 0.0;
+  absflg = 0.0;
 
-    storez += vz*t;
-    storen++;
+  storez += vz*t;
+  storen++;
 
-//  if (p<0.0) fprintf(stdout,"x");
-
-    k = 0;
-    if (xw1c>0.0 && yh1c>0.0) {
-       tt = (ds1c-zpos)/vz;                               // for all functionality the gravity direction should be in -y direction
-       PROP_DT(tt);
-       zpos = ds1c;
-       if (fabs(x)<0.5*xw1c && fabs(y)<0.5*yh1c && (fabs(x)>0.5*hl1c || fabs(y)>0.5*hl1c)) {
-         tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
-         absflg = 1.0;
-         s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
-         i = floor( (x+0.5*xw1c)*Nxc/ xw1c );
-         j = floor( (y+0.5*yh1c)*Nyc/ yh1c );
-         if (s>=0 && s<Ntc) {
-           TSdN(i,j,s,k)++;
-           TSdp(i,j,s,k) += p;
-           TSdp2(i,j,s,k)+= p*p;
-         };
-         SCATTER;
+  k = 0;
+  if (xw1c>0.0 && yh1c>0.0) {
+     tt = (ds1c-zpos)/vz;                               // for all functionality the gravity direction should be in -y direction
+     PROP_DT(tt);
+     zpos = ds1c;
+     if (fabs(x)<0.5*xw1c && fabs(y)<0.5*yh1c && (fabs(x)>0.5*hl1c || fabs(y)>0.5*hl1c)) {
+       tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
+       absflg = 1.0;
+       s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
+       i = floor( (x+0.5*xw1c)*Nxc/ xw1c );
+       j = floor( (y+0.5*yh1c)*Nyc/ yh1c );
+       if (s>=0 && s<Ntc) {
+         TSdN(i,j,s,k)++;
+         TSdp(i,j,s,k) += p;
+         TSdp2(i,j,s,k)+= p*p;
        };
-    };
+       SCATTER;
+     };
+  };
 
-    k = 1;
-    if (xw2c>0.0 && yh2c>0.0 && absflg==0.0) {
-       tt = (ds2c-zpos)/vz;
-       PROP_DT(tt);
-       zpos = ds2c;
-       if (fabs(x)<0.5*xw2c && fabs(y)<0.5*yh2c && (fabs(x)>0.5*hl2c || fabs(y)>0.5*hl2c)) {
-         tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
-         absflg = 1.0;
-         s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
-         i = floor( (x+0.5*xw2c)*Nxc/ xw2c );
-         j = floor( (y+0.5*yh2c)*Nyc/ yh2c );
-         if (s>=0 && s<Ntc) {
-           TSdN(i,j,s,k)++;
-           TSdp(i,j,s,k) += p;
-           TSdp2(i,j,s,k)+= p*p;
-         };
-         SCATTER;
+  k = 1;
+  if (xw2c>0.0 && yh2c>0.0 && absflg==0.0) {
+     tt = (ds2c-zpos)/vz;
+     PROP_DT(tt);
+     zpos = ds2c;
+     if (fabs(x)<0.5*xw2c && fabs(y)<0.5*yh2c && (fabs(x)>0.5*hl2c || fabs(y)>0.5*hl2c)) {
+       tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
+       absflg = 1.0;
+       s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
+       i = floor( (x+0.5*xw2c)*Nxc/ xw2c );
+       j = floor( (y+0.5*yh2c)*Nyc/ yh2c );
+       if (s>=0 && s<Ntc) {
+         TSdN(i,j,s,k)++;
+         TSdp(i,j,s,k) += p;
+         TSdp2(i,j,s,k)+= p*p;
        };
-    };
+       SCATTER;
+     };
+  };
 
-    k = 2;
-    if (xw3c>0.0 && yh3c>0.0 && absflg==0.0) {
-       tt = (ds3c-zpos)/vz;
-       PROP_DT(tt);
-       zpos = ds3c;
-       if (fabs(x)<0.5*xw3c && fabs(y)<0.5*yh3c && (fabs(x)>0.5*hl3c || y>0.5*hl3c || y<(0.5-vx3c)*hl3c)) {
-         tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
-         absflg = 1.0;
-         s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
-         i = floor( (x+0.5*xw3c)*Nxc/ xw3c );
-         j = floor( (y+0.5*yh3c)*Nyc/ yh3c );
-         if (s>=0 && s<Ntc) {
-           TSdN(i,j,s,k)++;
-           TSdp(i,j,s,k) += p;
-           TSdp2(i,j,s,k)+= p*p;
-         };
-         SCATTER;
+  k = 2;
+  if (xw3c>0.0 && yh3c>0.0 && absflg==0.0) {
+     tt = (ds3c-zpos)/vz;
+     PROP_DT(tt);
+     zpos = ds3c;
+     if (fabs(x)<0.5*xw3c && fabs(y)<0.5*yh3c && (fabs(x)>0.5*hl3c || y>0.5*hl3c || y<(0.5-vx3c)*hl3c)) {
+       tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
+       absflg = 1.0;
+       s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
+       i = floor( (x+0.5*xw3c)*Nxc/ xw3c );
+       j = floor( (y+0.5*yh3c)*Nyc/ yh3c );
+       if (s>=0 && s<Ntc) {
+         TSdN(i,j,s,k)++;
+         TSdp(i,j,s,k) += p;
+         TSdp2(i,j,s,k)+= p*p;
        };
-    };
+       SCATTER;
+     };
+  };
 
-    Ncount += absflg;
+  Ncount += absflg;
 
-    k = 2;
-    tt = (ds3c-zpos)/vz;
-    if (tt>0.0) PROP_DT(tt);
-    zpos = ds3c;
-    if (fabs(x)<=0.5*hl3c && y<=0.5*hl3c && y>=(0.5-vx3c)*hl3c) {
-      tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
-      absflg = 1.0;
-      s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
-      i = Nxc/2;
-      j = Nyc/2;
-      if (s>=0 && s<Ntc) {
-        TSdN(i,j,s,k)++;
-        TSdp(i,j,s,k) += p;
-        TSdp2(i,j,s,k)+= p*p;
-        TSdN(i-1,j,s,k)++;                             /* weight for x */
-        TSdp(i-1,j,s,k) += p;
-        TSdp2(i-1,j,s,k)+= p*x;
-        TSdN(i,j-1,s,k)++;                             /* weight for y */
-        TSdp(i,j-1,s,k) += p;
-        TSdp2(i,j-1,s,k)+= p*y;
-      };
-      SCATTER;
-      Pcount++;
+  k = 2;
+  tt = (ds3c-zpos)/vz;
+  if (tt>0.0) PROP_DT(tt);
+  zpos = ds3c;
+  if (fabs(x)<=0.5*hl3c && y<=0.5*hl3c && y>=(0.5-vx3c)*hl3c) {
+    tt     = t - 0.5*plength;                        // Actual time of flight minus one half pulsewidth.
+    absflg = 1.0;
+    s = floor( (tt-tmin)   *Ntc/(tmax-tmin) );       /* Bin number */
+    i = Nxc/2;
+    j = Nyc/2;
+    if (s>=0 && s<Ntc) {
+      TSdN(i,j,s,k)++;
+      TSdp(i,j,s,k) += p;
+      TSdp2(i,j,s,k)+= p*p;
+      TSdN(i-1,j,s,k)++;                             /* weight for x */
+      TSdp(i-1,j,s,k) += p;
+      TSdp2(i-1,j,s,k)+= p*x;
+      TSdN(i,j-1,s,k)++;                             /* weight for y */
+      TSdp(i,j-1,s,k) += p;
+      TSdp2(i,j-1,s,k)+= p*y;
     };
+    SCATTER;
+    Pcount++;
+  };
 
 /*  if (absflg!=0.0) ABSORB;   */
 
-    if (rstneu!=0.0) {  RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);  };
+  if (rstneu!=0.0) {  RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);  };
 
-  %}
+%}
 
 SAVE
-  %{
-    int i,j,s,k,qi,si;
-//  int kkk;
-    double dsA[3],xwA[3],yhA[3],hlA[3];
-    dsA[0] = ds1c;
-    dsA[1] = ds2c;
-    dsA[2] = ds3c;
-    xwA[0] = xw1c;
-    xwA[1] = xw2c;
-    xwA[2] = xw3c;
-    yhA[0] = yh1c;
-    yhA[1] = yh2c;
-    yhA[2] = yh3c;
-    hlA[0] = hl1c;
-    hlA[1] = hl2c;
-    hlA[2] = hl3c;
+%{
+  int i,j,s,k,qi,si;
+  double dsA[3],xwA[3],yhA[3],hlA[3];
+  dsA[0] = ds1c;
+  dsA[1] = ds2c;
+  dsA[2] = ds3c;
+  xwA[0] = xw1c;
+  xwA[1] = xw2c;
+  xwA[2] = xw3c;
+  yhA[0] = yh1c;
+  yhA[1] = yh2c;
+  yhA[2] = yh3c;
+  hlA[0] = hl1c;
+  hlA[1] = hl2c;
+  hlA[2] = hl3c;
 
-    double q1,q2,qstp,qminl,qmaxl,qcalf;
-    double time,time3,s3cl,s3sw;
-    int    s3,s3sg,kfl;
-    double wght1,wght2;
-    double xcen,ycen,prIn,vvz,yguess,maxint;
-    double ic1,ic2,ic3,ic4,jc1,jc2,jc3,jc4;
-    int    imn,imx,im3,im4,jmn,jmx,jm3,jm4;
-    double cimn,cimx,cjmn,cjmx;
-    double Xi,Yj,Ni,Nj,delN,scali,scalj,scal;
-    double TNw2, CSw,  SNwh;
-    double dsA2, DIS1, DIS2, LAM,  QQQ, OMG, AREA, AR2, FAK, determ;
-    double Q11,Q21,Q12,Q22;
-    double N11,N21,N12,N22;
-    double Qx,Qy;
-    double Nmn,Nmx,T00,Tmn,Tmx;
-    double Nit,Njt,NNt,Ttt,Qstp;
-    double Qmn,Qmx;
-    int    qq1,qq2;
-    double qmn,qmx,qst,qqq;
-    double tmn,tmx,tst,ttt;
-    double NNN,Int,Err,Wt;
-    double Qxx,Qyy,Qdx,Qdy;
+  double q1,q2,qstp,qminl,qmaxl,qcalf;
+  double time,time3,s3cl,s3sw;
+  int    s3,s3sg,kfl;
+  double wght1,wght2;
+  double xcen,ycen,prIn,vvz,yguess,maxint;
+  double ic1,ic2,ic3,ic4,jc1,jc2,jc3,jc4;
+  int    imn,imx,im3,im4,jmn,jmx,jm3,jm4;
+  double cimn,cimx,cjmn,cjmx;
+  double Xi,Yj,Ni,Nj,delN,scali,scalj,scal;
+  double TNw2, CSw,  SNwh;
+  double dsA2, DIS1, DIS2, LAM,  QQQ, OMG, AREA, AR2, FAK, determ;
+  double Q11,Q21,Q12,Q22;
+  double N11,N21,N12,N22;
+  double Qx,Qy;
+  double Nmn,Nmx,T00,Tmn,Tmx;
+  double Nit,Njt,NNt,Ttt,Qstp;
+  double Qmn,Qmx;
+  int    qq1,qq2;
+  double qmn,qmx,qst,qqq;
+  double tmn,tmx,tst,ttt;
+  double NNN,Int,Err,Wt;
+  double Qxx,Qyy,Qdx,Qdy;
 
-    char   filename[99];
+  char   filename[99];
 
-//  double* calibQf;
-    double* calibNf;
-    double* calibIf;
-    double* calibIef;
-    double* calibWtf;
-//  double* sectnQf;
-    double* sectnNf;
-    double* sectnIf;
-    double* sectnIef;
-    double* sectnWtf;
+  double* calibNf;
+  double* calibIf;
+  double* calibIef;
+  double* calibWtf;
+  double* sectnNf;
+  double* sectnIf;
+  double* sectnIef;
+  double* sectnWtf;
 
-//  simplQ  = (double*)malloc(sizeof(double)*Nqc);
-//  simplN  = (double*)malloc(sizeof(double)*Nqc);
-//  simplI  = (double*)malloc(sizeof(double)*Nqc);
-//  simplIe = (double*)malloc(sizeof(double)*Nqc);
-//  calibQf = (double*)malloc(sizeof(double)*Nqc*4);
-    calibNf = (double*)malloc(sizeof(double)*Nqc*4);
-    calibIf = (double*)malloc(sizeof(double)*Nqc*4);
-    calibIef= (double*)malloc(sizeof(double)*Nqc*4);
-    calibWtf= (double*)malloc(sizeof(double)*Nqc*4);
-//  sectnQf = (double*)malloc(sizeof(double)*Nqc*20);
-    sectnNf = (double*)malloc(sizeof(double)*Nqc*20);
-    sectnIf = (double*)malloc(sizeof(double)*Nqc*20);
-    sectnIef= (double*)malloc(sizeof(double)*Nqc*20);
-    sectnWtf= (double*)malloc(sizeof(double)*Nqc*20);
+  calibNf = (double*)malloc(sizeof(double)*Nqc*4);
+  calibIf = (double*)malloc(sizeof(double)*Nqc*4);
+  calibIef= (double*)malloc(sizeof(double)*Nqc*4);
+  calibWtf= (double*)malloc(sizeof(double)*Nqc*4);
+  sectnNf = (double*)malloc(sizeof(double)*Nqc*20);
+  sectnIf = (double*)malloc(sizeof(double)*Nqc*20);
+  sectnIef= (double*)malloc(sizeof(double)*Nqc*20);
+  sectnWtf= (double*)malloc(sizeof(double)*Nqc*20);
 
-    storez /= storen;
-//  if (ssdist>0.1*storez) storez = ssdist;
+  storez /= storen;
 
-//    fprintf(stdout,"%g %g \n",Ncount,Pcount);
-//    fprintf(stdout,"point1");
-//    fprintf(stdout,"xxxx %g %g \n",storez,ssdist);
+  i = Nxc/2;                                     /* calculate center values on beam stop */
+  j = Nyc/2;
+  k = 2;
+  maxint = 0.0;
+  for (s=0; s<Ntc; s++) {
+  if (TSdp(i,j,s,k)>0.0) {
+    TSdp2(i-1,j,s,k) /= TSdp(i-1,j,s,k);
+    TSdp2(i,j-1,s,k) /= TSdp(i,j-1,s,k);
+    maxint = ddmax(maxint,TSdp(i,j,s,k));
+    };
+  };
+  maxint *= inttol;
 
-      i = Nxc/2;                                     /* calculate center values on beam stop */
-      j = Nyc/2;
-      k = 2;
-      maxint = 0.0;
+
+  qstp = log(qmax/qmin)/Nqc;
+  qminl= log(qmin);
+  qmaxl= log(qmax);
+
+  for (qi=0; qi<Nqc; qi++) {
+    simplN[qi] = 0.0;
+    simplI[qi] = 0.0;
+    simplIe[qi]= 0.0;
+    for (si=0; si<4; si++) {
+      calibN(qi,si) = 0.0;
+      calibI(qi,si) = 0.0;
+      calibIe(qi,si)= 0.0;
+      calibWt(qi,si)= 0.0;
+    };
+    for (si=0; si<20; si++) {
+      sectnN(qi,si) = 0.0;
+      sectnI(qi,si) = 0.0;
+      sectnIe(qi,si)= 0.0;
+      sectnWt(qi,si)= 0.0;
+    };
+  };
+
+
+  kfl = 0;
+  for (k=0; k<3; k++) {
+    if (dsA[k]>0.0 && xwA[k]>0.0 && yhA[k]>0.0) {
       for (s=0; s<Ntc; s++) {
-      if (TSdp(i,j,s,k)>0.0) {
-        TSdp2(i-1,j,s,k) /= TSdp(i-1,j,s,k);
-        TSdp2(i,j-1,s,k) /= TSdp(i,j-1,s,k);
-        maxint = ddmax(maxint,TSdp(i,j,s,k));
-//      fprintf(stdout," %g ",maxint);
-        };
-      };
-      maxint *= inttol;
-//    fprintf(stdout," %g ",maxint);
-
-//    fprintf(stdout,"point2");
-
-      qstp = log(qmax/qmin)/Nqc;
-      qminl= log(qmin);
-      qmaxl= log(qmax);
-
-      for (qi=0; qi<Nqc; qi++) {
-//      q1 = qmin * exp(qi*qstp);
-//      q2 = q1   * exp(qstp);
-//      simplQ[qi] = 0.5*(q1+q2);
-        simplN[qi] = 0.0;
-        simplI[qi] = 0.0;
-        simplIe[qi]= 0.0;
-        for (si=0; si<4; si++) {
-//        calibQ(qi,si) = simplQ[qi];
-          calibN(qi,si) = 0.0;
-          calibI(qi,si) = 0.0;
-          calibIe(qi,si)= 0.0;
-          calibWt(qi,si)= 0.0;
-        };
-        for (si=0; si<20; si++) {
-//        sectnQ(qi,si) = simplQ[qi];
-          sectnN(qi,si) = 0.0;
-          sectnI(qi,si) = 0.0;
-          sectnIe(qi,si)= 0.0;
-          sectnWt(qi,si)= 0.0;
-        };
-      };
-
-//    fprintf(stdout,"point3");
-
-      kfl = 0;
-      for (k=0; k<3; k++) {
-//      fprintf(stdout,"pointK");
-        if (dsA[k]>0.0 && xwA[k]>0.0 && yhA[k]>0.0) {
-          for (s=0; s<Ntc; s++) {
-//          fprintf(stdout,"S");
-            time  = tmin + (s+0.5)*(tmax-tmin)/Ntc;
-            time3 = time*(ssdist+ds3c)/(ssdist+dsA[k]);
-            s3cl  = (time3-tmin)*Ntc/(tmax-tmin);
-            s3    = floor(s3cl);
-            s3sw  = s3cl-s3-0.5;
-            if (s3sw<0.0) {s3sg = -1;} else {s3sg = 1;};
-            if (s3>=0 && s3<Ntc) {
-              i = Nxc/2;
-              j = Nyc/2;
-              xcen = TSdp2(i-1,j,s3,2);
-              ycen = TSdp2(i,j-1,s3,2);
-              prIn = TSdp(i,j,s3,2);
-              if (prIn>=maxint) {wght1=1.0-fabs(s3sw);} else {wght1=0.0;};
-              wght2 = 0.0;
-              if (s3+s3sg>=0 && s3+s3sg<Ntc) {
-                if (TSdp(i,j,s3+s3sg,2)>=maxint) wght2=fabs(s3sw);
-                if (wght1+wght2>0.0) {
-                  xcen = (wght2*TSdp2(i-1,j,s3+s3sg,2) + wght1*xcen)/(wght1+wght2);
-                  ycen = (wght2*TSdp2(i,j-1,s3+s3sg,2) + wght1*ycen)/(wght1+wght2);
-                  prIn = (wght2*TSdp(i,j,s3+s3sg,2)    + wght1*prIn)/(wght1+wght2);
-                } else {
-                  xcen = 0.0;
-                  ycen = 0.0;
-                  prIn = 0.0;
-                };
-              };
-              prIn *= (ssdist+ds3c)/(ssdist+dsA[k]);                             // correct for spreading of times
-//            fprintf(stdout,"%g %g \n",maxint,prIn);
-              if (fabs(xcen)>hlA[2]*centol) {xcen=0.0;} else {xcen *= dsA[k]/ds3c;};
-              if (mcgravitation==0) {if (fabs(ycen)>hlA[2]*centol) {ycen=0.0;} else {ycen *= dsA[k]/ds3c;}; }
-                               else {vvz    = (ssdist+ds3c)/time3;
-                                     yguess = 0.5*GRAVITY*(pow(0.5*coldis+ds3c,2)-0.25*coldis*coldis)/(vvz*vvz);
-                                     if (fabs(ycen-yguess)>hlA[2]*centol) {ycen=yguess;} else
-                                                                          {ycen*=(pow(0.5*coldis+dsA[k],2)-0.25*coldis*coldis)/(pow(0.5*coldis+ds3c,2)-0.25*coldis*coldis);}; };
-              if (kfl==0) {
-                ic1 = -0.5;
-                ic2 = Nxc-0.5;
-                jc1 = -0.5;
-                jc2 = Nyc-0.5;
-                imn = 0;
-                imx = Nxc-1;
-                jmn = 0;
-                jmx = Nyc-1;
-              } else {
-                ic1 =  ddmax((-0.5*hlA[k-1]*dsA[k]/dsA[k-1]+xcen)*Nxc/xwA[k]+0.5*(Nxc-1),   -0.5);
-                ic2 =  ddmin(( 0.5*hlA[k-1]*dsA[k]/dsA[k-1]+xcen)*Nxc/xwA[k]+0.5*(Nxc-1),Nxc-0.5);
-                jc1 =  ddmax((-0.5*hlA[k-1]*dsA[k]/dsA[k-1]+ycen)*Nyc/yhA[k]+0.5*(Nyc-1),   -0.5);
-                jc2 =  ddmin(( 0.5*hlA[k-1]*dsA[k]/dsA[k-1]+ycen)*Nyc/yhA[k]+0.5*(Nyc-1),Nyc-0.5);
-                imn =  floor( ic1+0.5);
-                imx = -floor(-ic2+0.5);
-                jmn =  floor( jc1+0.5);
-                jmx = -floor(-jc2+0.5);
-              };
-              ic3 =  -0.5*hlA[k]*Nxc/xwA[k]+0.5*(Nxc-1);
-              ic4 =   0.5*hlA[k]*Nxc/xwA[k]+0.5*(Nxc-1);
-              jc3 =  -0.5*hlA[k]*Nyc/yhA[k]+0.5*(Nyc-1);
-              jc4 =   0.5*hlA[k]*Nyc/yhA[k]+0.5*(Nyc-1);
-              im3 = -floor(-ic3-0.5);
-              im4 =  floor( ic4-0.5);
-              jm3 = -floor(-jc3-0.5);
-              jm4 =  floor( jc4-0.5);
-
-//            fprintf(stdout,"s3 %g %g %g %g %3i %3i %3i %3i \n",ic1,ic2,ic3,ic4,imn,imx,im3,im4);
-
-//            if (imn<0 || jmn<0 || imx>Nxc-1 || jmx>Nyc-1)  fprintf(stdout,"error in index imn...");
-
-              for (i=imn; i<=imx; i++)
-                for (j=jmn; j<=jmx; j++)
-                  { if (i<im3 || i>im4 || j<jm3 || j>jm4)  {
-
-//                    if (i<5 && j<5)  fprintf(stdout,"i");
-
-                      cimn = i-0.5;
-                      cimx = i+0.5;
-                      cjmn = j-0.5;
-                      cjmx = j+0.5;
-                      if (i==imn) cimn=ic1;
-                      if (i==imx) cimx=ic2;
-                      if (cimn<=ic3 && cimx>=ic3) cimx = ic3;
-                      if (cimn<=ic4 && cimx>=ic4) cimn = ic4;
-                      if (j==jmn) cjmn=jc1;
-                      if (j==jmx) cjmx=jc2;
-                      if (cjmn<=jc3 && cjmx>=jc3) cjmx = jc3;
-                      if (cjmn<=jc4 && cjmx>=jc4) cjmn = jc4;
-                      AREA = (cimx-cimn)*(cjmx-cjmn);
-
-                      dsA2 = dsA[k]*dsA[k];
-
-                      delN = 0.1;                                 /* variation size for derivatives */
-
-                      Xi= (-0.5+(i+0.5+delN)/Nxc)*xwA[k]-xcen;    /* derivative in X     */
-                      Yj= (-0.5+(j+0.5     )/Nyc)*yhA[k]-ycen;
-                      DIS1 = Xi*Xi+Yj*Yj;
-                      DIS2 = dsA2+DIS1;
-                      LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
-                      TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
-                      CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
-                      SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
-                      QQQ  = 4.0*Pic*SNwh/LAM;
-                      Q21  = QQQ/sqrt(DIS1);
-                      Q11  = Xi*Q21;
-                      Q21 *= Yj;
-
-                      Xi= (-0.5+(i+0.5     )/Nxc)*xwA[k]-xcen;    /* derivative in Y     */
-                      Yj= (-0.5+(j+0.5+delN)/Nyc)*yhA[k]-ycen;
-                      DIS1 = Xi*Xi+Yj*Yj;
-                      DIS2 = dsA2+DIS1;
-                      LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
-                      TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
-                      CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
-                      SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
-                      QQQ  = 4.0*Pic*SNwh/LAM;
-                      Q22  = QQQ/sqrt(DIS1);
-                      Q12  = Xi*Q22;
-                      Q22 *= Yj;
-
-                      Xi= (-0.5+(i+0.5)/Nxc)*xwA[k]-xcen;         /* main Q              */
-                      Yj= (-0.5+(j+0.5)/Nyc)*yhA[k]-ycen;
-                      DIS1 = Xi*Xi+Yj*Yj;
-                      DIS2 = dsA2+DIS1;
-                      LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
-                      TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
-                      CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
-                      SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
-                      QQQ  = 4.0*Pic*SNwh/LAM;
-                      Qy   = QQQ/sqrt(DIS1);
-                      Qx   = Xi*Qy;
-                      Qy  *= Yj;
-
-                      Q11  = (Q11-Qx)/delN;
-                      Q21  = (Q21-Qy)/delN;
-                      Q12  = (Q12-Qx)/delN;
-                      Q22  = (Q22-Qy)/delN;
-
-                      determ = Q11*Q22-Q21*Q12;
-                      N11  =  Q22/determ;
-                      N21  = -Q21/determ;
-                      N12  = -Q12/determ;
-                      N22  =  Q11/determ;
-
-                      OMG  = CSw*xwA[k]*yhA[k]/((Nxc*Nyc)*DIS2);
-
-                      qi   = floor(log(QQQ/qmin)/qstp);           /* dump the original intensities */
-                      if (qi>=0 && qi<Nqc) {
-                        qcalf = 1.0;
-                        if (qcal!=0.0) {
-                          q1 = qmin * exp(qi*qstp);
-                          q2 = q1   * exp(qstp);
-                          qcalf = q2-q1;
-                        };
-                        simplN[qi] += TSdN(i,j,s,k);
-                        simplI[qi] += TSdp(i,j,s,k) / qcalf;
-                        simplIe[qi]+= TSdp2(i,j,s,k)/(qcalf*qcalf);
-                      };
-
-                      if (prIn>=maxint) {
-
-                      if (yhA[k]/Nyc>xwA[k]/Nxc) {
-                        scali = 1.0;
-                        scalj = yhA[k]*Nxc/(xwA[k]*Nyc);
-                        scal  = xwA[k]/Nxc;
-                      } else {
-                        scali = xwA[k]*Nyc/(yhA[k]*Nxc);
-                        scalj = 1.0;
-                        scal  = yhA[k]/Nyc;
-                      };
-
-                      Ni   = i+0.5-(0.5+xcen/xwA[k])*Nxc*scali;   /* (0,0) center */
-                      Nj   = j+0.5-(0.5+ycen/yhA[k])*Nyc*scalj;
-                      Nmn  = Ni*Ni+Nj*Nj;                         /* find minimal and maximal Qs and phis */
-                      Nmx  = Nmn;
-                      T00  = atan2(Nj,Ni);
-                      Tmn  = T00;
-                      Tmx  = T00;
-
-                      Nit  = Ni+scali;                            /* (1,0) */
-                      Njt  = Nj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-//                    Nit  = Ni+scali;                            /* (1,1) */
-                      Njt  = Nj+scalj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-                      Nit  = Ni;                                  /* (0,1) */
-//                    Njt  = Nj+scalj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-                      Nit  = Ni-scali;                            /* (-1,1) */
-//                    Njt  = Nj+scalj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-//                    Nit  = Ni-scali;                            /* (-1,0) */
-                      Njt  = Nj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-//                    Nit  = Ni-scali;                            /* (-1,-1) */
-                      Njt  = Nj-scalj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-                      Nit  = Ni;                                  /* (0,-1) */
-//                    Njt  = Nj-scalj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-                      Nit  = Ni+scali;                            /* (1,-1) */
-//                    Njt  = Nj-scalj;
-                      NNt  = Nit*Nit+Njt*Njt;
-                      Ttt  = atan2(Njt,Nit);
-                      if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
-                      if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
-                      Nmn  = ddmin(Nmn,NNt);
-                      Nmx  = ddmax(Nmx,NNt);
-                      Tmn  = ddmin(Tmn,Ttt);
-                      Tmx  = ddmax(Tmx,Ttt);
-
-                      DIS1 = Nmn*scal*scal;                       /* minimum Q provides largest distance */
-                      DIS2 = dsA2+DIS1;
-                      LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
-                      TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
-                      CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
-                      SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
-                      Qmn  = 4.0*Pic*SNwh/LAM;
-                      Qmx  = QQQ*QQQ/Qmn;
-
-//                    Nmn  = sqrt(Nmn);                           // not needed anymore
-//                    Nmx  = sqrt(Nmx);
-
-                      LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(dsA2));
-                      Qstp = 2.0*Pic*min(xwA[k]/Nxc,yhA[k]/Nyc)/(sqrt(dsA2)*LAM);
-
-                      qq1  = iimax( floor(log(Qmn/qmin)/qstp-1.0),    0);
-                      qq2  = iimin(-floor(log(qmin/Qmx)/qstp-1.0),Nqc-1);
-
-//                    if (j==30 && i==30) fprintf(stdout,"%g %g %g %g %i %i \n",QQQ,Qmn,Qmx,Qstp,qq1,qq2);
-//                    if (j==30 && i==30) fprintf(stdout,"%g %g %g %g %g \n",QQQ,Q11,Q12,Q21,Q22);
-//                    if (j==30 && i==30 && LAM>4.08 && LAM<4.30) fprintf(stdout,"%g %g %g %i %i %g %g %g %g %g %g \n",LAM,OMG,QQQ,qq1,qq2,scali,scalj,N11,N22,Qstp,prIn);
-//                    if (j==30 && i==30 && LAM>4.08 && LAM<4.30) fprintf(stdout,"   %g %g %g \n",Qmn,Qmx,AREA);
-
-//                    kkk =0;
-
-                      for (qi=qq1; qi<=qq2; qi++) {
-//                      if (qi==qq1) fprintf(stdout,"q");
-                        q1 = qmin * exp(qi*qstp);
-                        q2 = q1   * exp(qstp);
-                        if (q2-q1<=1.5*Qstp) {
-                          qmn = sqrt(q1*q2);
-                          qmx = qmn;
-                          qst = Qstp;
-                          qmx+= 1e-6*qst;
-                        } else {
-                          qmn = q1 + 0.5*Qstp;
-                          qmx = q2 - 0.5*Qstp;
-                          qst = (qmx-qmn)/floor((qmx-qmn)/Qstp+0.5);
-                          qmx+= 1e-6*qst;
-                        };
-                        for (qqq=qmn; qqq<=qmx; qqq+=qst) {
-                          tst = 2.0*Pic/ddmax(floor(4.0*Pic*qqq/Qstp+0.5),12.0);
-                          tmn =  tst* floor( Tmn/tst-1.0);
-                          tmx = -tst*(floor(-Tmx/tst-1.0)-1e-6);
-                          if (tmx-tmn>=2.0*Pic) tmx = tmn + 2.0*Pic + 1e-6*tst;
-                          for (ttt=tmn; ttt<=tmx; ttt+=tst) {
-                            Qxx = qqq*cos(ttt)-Qx;
-                            Qyy = qqq*sin(ttt)-Qy;
-                            Ni  = fabs(N11*Qxx+N12*Qyy);
-                            Nj  = fabs(N21*Qxx+N22*Qyy);
-//                          if (j==30 && i==30 && qi==qq1 && qqq==qmn && ttt==tmn && LAM>4.08 && LAM<4.30) fprintf(stdout,"   %g %g %g %g %g %g %g %g %g %g %g \n",QQQ,Qxx,Qyy,Ni,Nj,qmn,qmx,qst,tmn,tmx,tst);
-                            if (Ni<1.0 && Nj<1.0) {
-//                            kkk++;
-                              AR2  = (1.0-Ni)*(1.0-Nj);
-                              FAK  = prIn * Sthckn * OMG;
-                              NNN  = AR2*TSdN(i,j,s,k);
-                              Int  = AR2*TSdp(i,j,s,k) / FAK;
-                              Err  = AR2*TSdp2(i,j,s,k)/(FAK*FAK);
-                              Wt   = AR2*AREA;
-
-                              calibN(qi,k) += NNN;
-                              calibI(qi,k) += Int;
-                              calibIe(qi,k)+= Err;
-                              calibWt(qi,k)+= Wt;
-                              calibN(qi,3) += NNN;
-                              calibI(qi,3) += Int;
-                              calibIe(qi,3)+= Err;
-                              calibWt(qi,3)+= Wt;
-
-                              si = floor(s3cl*20.0/Ntc);
-//                            if (si>=20 || si<0) fprintf(stdout,"Error in time");
-                              sectnN(qi,si) += NNN;
-                              sectnI(qi,si) += Int;
-                              sectnIe(qi,si)+= Err;
-                              sectnWt(qi,si)+= Wt;
-
-                            };
-                          };
-                        };
-                      };          // here check if primary intensity was enough
-
-//                    if (j==30 && i==30 && LAM>4.08 && LAM<4.30) fprintf(stdout,"%g %g %g %i \n",LAM,OMG,QQQ,kkk);
-
-                      };
-                    };
-                  };
+        time  = tmin + (s+0.5)*(tmax-tmin)/Ntc;
+        time3 = time*(ssdist+ds3c)/(ssdist+dsA[k]);
+        s3cl  = (time3-tmin)*Ntc/(tmax-tmin);
+        s3    = floor(s3cl);
+        s3sw  = s3cl-s3-0.5;
+        if (s3sw<0.0) {s3sg = -1;} else {s3sg = 1;};
+        if (s3>=0 && s3<Ntc) {
+          i = Nxc/2;
+          j = Nyc/2;
+          xcen = TSdp2(i-1,j,s3,2);
+          ycen = TSdp2(i,j-1,s3,2);
+          prIn = TSdp(i,j,s3,2);
+          if (prIn>=maxint) {wght1=1.0-fabs(s3sw);} else {wght1=0.0;};
+          wght2 = 0.0;
+          if (s3+s3sg>=0 && s3+s3sg<Ntc) {
+            if (TSdp(i,j,s3+s3sg,2)>=maxint) wght2=fabs(s3sw);
+            if (wght1+wght2>0.0) {
+              xcen = (wght2*TSdp2(i-1,j,s3+s3sg,2) + wght1*xcen)/(wght1+wght2);
+              ycen = (wght2*TSdp2(i,j-1,s3+s3sg,2) + wght1*ycen)/(wght1+wght2);
+              prIn = (wght2*TSdp(i,j,s3+s3sg,2)    + wght1*prIn)/(wght1+wght2);
+            } else {
+              xcen = 0.0;
+              ycen = 0.0;
+              prIn = 0.0;
             };
           };
-          kfl = 1;
+          prIn *= (ssdist+ds3c)/(ssdist+dsA[k]);                             // correct for spreading of times
+          if (fabs(xcen)>hlA[2]*centol) {xcen=0.0;} else {xcen *= dsA[k]/ds3c;};
+          if (mcgravitation==0) {if (fabs(ycen)>hlA[2]*centol) {ycen=0.0;} else {ycen *= dsA[k]/ds3c;}; }
+                           else {vvz    = (ssdist+ds3c)/time3;
+                                 yguess = 0.5*GRAVITY*(pow(0.5*coldis+ds3c,2)-0.25*coldis*coldis)/(vvz*vvz);
+                                 if (fabs(ycen-yguess)>hlA[2]*centol) {ycen=yguess;} else
+                                                                      {ycen*=(pow(0.5*coldis+dsA[k],2)-0.25*coldis*coldis)/(pow(0.5*coldis+ds3c,2)-0.25*coldis*coldis);}; };
+          if (kfl==0) {
+            ic1 = -0.5;
+            ic2 = Nxc-0.5;
+            jc1 = -0.5;
+            jc2 = Nyc-0.5;
+            imn = 0;
+            imx = Nxc-1;
+            jmn = 0;
+            jmx = Nyc-1;
+          } else {
+            ic1 =  ddmax((-0.5*hlA[k-1]*dsA[k]/dsA[k-1]+xcen)*Nxc/xwA[k]+0.5*(Nxc-1),   -0.5);
+            ic2 =  ddmin(( 0.5*hlA[k-1]*dsA[k]/dsA[k-1]+xcen)*Nxc/xwA[k]+0.5*(Nxc-1),Nxc-0.5);
+            jc1 =  ddmax((-0.5*hlA[k-1]*dsA[k]/dsA[k-1]+ycen)*Nyc/yhA[k]+0.5*(Nyc-1),   -0.5);
+            jc2 =  ddmin(( 0.5*hlA[k-1]*dsA[k]/dsA[k-1]+ycen)*Nyc/yhA[k]+0.5*(Nyc-1),Nyc-0.5);
+            imn =  floor( ic1+0.5);
+            imx = -floor(-ic2+0.5);
+            jmn =  floor( jc1+0.5);
+            jmx = -floor(-jc2+0.5);
+          };
+          ic3 =  -0.5*hlA[k]*Nxc/xwA[k]+0.5*(Nxc-1);
+          ic4 =   0.5*hlA[k]*Nxc/xwA[k]+0.5*(Nxc-1);
+          jc3 =  -0.5*hlA[k]*Nyc/yhA[k]+0.5*(Nyc-1);
+          jc4 =   0.5*hlA[k]*Nyc/yhA[k]+0.5*(Nyc-1);
+          im3 = -floor(-ic3-0.5);
+          im4 =  floor( ic4-0.5);
+          jm3 = -floor(-jc3-0.5);
+          jm4 =  floor( jc4-0.5);
+
+
+          for (i=imn; i<=imx; i++)
+            for (j=jmn; j<=jmx; j++)
+              { if (i<im3 || i>im4 || j<jm3 || j>jm4)  {
+
+
+                  cimn = i-0.5;
+                  cimx = i+0.5;
+                  cjmn = j-0.5;
+                  cjmx = j+0.5;
+                  if (i==imn) cimn=ic1;
+                  if (i==imx) cimx=ic2;
+                  if (cimn<=ic3 && cimx>=ic3) cimx = ic3;
+                  if (cimn<=ic4 && cimx>=ic4) cimn = ic4;
+                  if (j==jmn) cjmn=jc1;
+                  if (j==jmx) cjmx=jc2;
+                  if (cjmn<=jc3 && cjmx>=jc3) cjmx = jc3;
+                  if (cjmn<=jc4 && cjmx>=jc4) cjmn = jc4;
+                  AREA = (cimx-cimn)*(cjmx-cjmn);
+
+                  dsA2 = dsA[k]*dsA[k];
+
+                  delN = 0.1;                                 /* variation size for derivatives */
+
+                  Xi= (-0.5+(i+0.5+delN)/Nxc)*xwA[k]-xcen;    /* derivative in X     */
+                  Yj= (-0.5+(j+0.5     )/Nyc)*yhA[k]-ycen;
+                  DIS1 = Xi*Xi+Yj*Yj;
+                  DIS2 = dsA2+DIS1;
+                  LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
+                  TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
+                  CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
+                  SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
+                  QQQ  = 4.0*Pic*SNwh/LAM;
+                  Q21  = QQQ/sqrt(DIS1);
+                  Q11  = Xi*Q21;
+                  Q21 *= Yj;
+
+                  Xi= (-0.5+(i+0.5     )/Nxc)*xwA[k]-xcen;    /* derivative in Y     */
+                  Yj= (-0.5+(j+0.5+delN)/Nyc)*yhA[k]-ycen;
+                  DIS1 = Xi*Xi+Yj*Yj;
+                  DIS2 = dsA2+DIS1;
+                  LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
+                  TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
+                  CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
+                  SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
+                  QQQ  = 4.0*Pic*SNwh/LAM;
+                  Q22  = QQQ/sqrt(DIS1);
+                  Q12  = Xi*Q22;
+                  Q22 *= Yj;
+
+                  Xi= (-0.5+(i+0.5)/Nxc)*xwA[k]-xcen;         /* main Q              */
+                  Yj= (-0.5+(j+0.5)/Nyc)*yhA[k]-ycen;
+                  DIS1 = Xi*Xi+Yj*Yj;
+                  DIS2 = dsA2+DIS1;
+                  LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
+                  TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
+                  CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
+                  SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
+                  QQQ  = 4.0*Pic*SNwh/LAM;
+                  Qy   = QQQ/sqrt(DIS1);
+                  Qx   = Xi*Qy;
+                  Qy  *= Yj;
+
+                  Q11  = (Q11-Qx)/delN;
+                  Q21  = (Q21-Qy)/delN;
+                  Q12  = (Q12-Qx)/delN;
+                  Q22  = (Q22-Qy)/delN;
+
+                  determ = Q11*Q22-Q21*Q12;
+                  N11  =  Q22/determ;
+                  N21  = -Q21/determ;
+                  N12  = -Q12/determ;
+                  N22  =  Q11/determ;
+
+                  OMG  = CSw*xwA[k]*yhA[k]/((Nxc*Nyc)*DIS2);
+
+                  qi   = floor(log(QQQ/qmin)/qstp);           /* dump the original intensities */
+                  if (qi>=0 && qi<Nqc) {
+                    qcalf = 1.0;
+                    if (qcal!=0.0) {
+                      q1 = qmin * exp(qi*qstp);
+                      q2 = q1   * exp(qstp);
+                      qcalf = q2-q1;
+                    };
+                    simplN[qi] += TSdN(i,j,s,k);
+                    simplI[qi] += TSdp(i,j,s,k) / qcalf;
+                    simplIe[qi]+= TSdp2(i,j,s,k)/(qcalf*qcalf);
+                  };
+
+                  if (prIn>=maxint) {
+
+                  if (yhA[k]/Nyc>xwA[k]/Nxc) {
+                    scali = 1.0;
+                    scalj = yhA[k]*Nxc/(xwA[k]*Nyc);
+                    scal  = xwA[k]/Nxc;
+                  } else {
+                    scali = xwA[k]*Nyc/(yhA[k]*Nxc);
+                    scalj = 1.0;
+                    scal  = yhA[k]/Nyc;
+                  };
+
+                  Ni   = i+0.5-(0.5+xcen/xwA[k])*Nxc*scali;   /* (0,0) center */
+                  Nj   = j+0.5-(0.5+ycen/yhA[k])*Nyc*scalj;
+                  Nmn  = Ni*Ni+Nj*Nj;                         /* find minimal and maximal Qs and phis */
+                  Nmx  = Nmn;
+                  T00  = atan2(Nj,Ni);
+                  Tmn  = T00;
+                  Tmx  = T00;
+
+                  Nit  = Ni+scali;                            /* (1,0) */
+                  Njt  = Nj;
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Njt  = Nj+scalj;
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Nit  = Ni;                                  /* (0,1) */
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Nit  = Ni-scali;                            /* (-1,1) */
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Njt  = Nj;
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Njt  = Nj-scalj;
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Nit  = Ni;                                  /* (0,-1) */
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  Nit  = Ni+scali;                            /* (1,-1) */
+                  NNt  = Nit*Nit+Njt*Njt;
+                  Ttt  = atan2(Njt,Nit);
+                  if (fabs(Ttt+2.0*Pic-T00)<fabs(Ttt-T00)) Ttt+=2.0*Pic;
+                  if (fabs(Ttt-2.0*Pic-T00)<fabs(Ttt-T00)) Ttt-=2.0*Pic;
+                  Nmn  = ddmin(Nmn,NNt);
+                  Nmx  = ddmax(Nmx,NNt);
+                  Tmn  = ddmin(Tmn,Ttt);
+                  Tmx  = ddmax(Tmx,Ttt);
+
+                  DIS1 = Nmn*scal*scal;                       /* minimum Q provides largest distance */
+                  DIS2 = dsA2+DIS1;
+                  LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(DIS2));
+                  TNw2 = DIS1/dsA2;                           /* tan (theta) squared */
+                  CSw  = 1.0/sqrt(1.0+TNw2);                  /* cos (theta)         */
+                  SNwh = sqrt(0.5*(1.0-CSw));                 /* sin (theta/2)       */
+                  Qmn  = 4.0*Pic*SNwh/LAM;
+                  Qmx  = QQQ*QQQ/Qmn;
+
+                  LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(dsA2));
+                  Qstp = 2.0*Pic*min(xwA[k]/Nxc,yhA[k]/Nyc)/(sqrt(dsA2)*LAM);
+
+                  qq1  = iimax( floor(log(Qmn/qmin)/qstp-1.0),    0);
+                  qq2  = iimin(-floor(log(qmin/Qmx)/qstp-1.0),Nqc-1);
+
+
+                  for (qi=qq1; qi<=qq2; qi++) {
+                    q1 = qmin * exp(qi*qstp);
+                    q2 = q1   * exp(qstp);
+                    if (q2-q1<=1.5*Qstp) {
+                      qmn = sqrt(q1*q2);
+                      qmx = qmn;
+                      qst = Qstp;
+                      qmx+= 1e-6*qst;
+                    } else {
+                      qmn = q1 + 0.5*Qstp;
+                      qmx = q2 - 0.5*Qstp;
+                      qst = (qmx-qmn)/floor((qmx-qmn)/Qstp+0.5);
+                      qmx+= 1e-6*qst;
+                    };
+                    for (qqq=qmn; qqq<=qmx; qqq+=qst) {
+                      tst = 2.0*Pic/ddmax(floor(4.0*Pic*qqq/Qstp+0.5),12.0);
+                      tmn =  tst* floor( Tmn/tst-1.0);
+                      tmx = -tst*(floor(-Tmx/tst-1.0)-1e-6);
+                      if (tmx-tmn>=2.0*Pic) tmx = tmn + 2.0*Pic + 1e-6*tst;
+                      for (ttt=tmn; ttt<=tmx; ttt+=tst) {
+                        Qxx = qqq*cos(ttt)-Qx;
+                        Qyy = qqq*sin(ttt)-Qy;
+                        Ni  = fabs(N11*Qxx+N12*Qyy);
+                        Nj  = fabs(N21*Qxx+N22*Qyy);
+                        if (Ni<1.0 && Nj<1.0) {
+                          AR2  = (1.0-Ni)*(1.0-Nj);
+                          FAK  = prIn * Sthckn * OMG;
+                          NNN  = AR2*TSdN(i,j,s,k);
+                          Int  = AR2*TSdp(i,j,s,k) / FAK;
+                          Err  = AR2*TSdp2(i,j,s,k)/(FAK*FAK);
+                          Wt   = AR2*AREA;
+
+                          calibN(qi,k) += NNN;
+                          calibI(qi,k) += Int;
+                          calibIe(qi,k)+= Err;
+                          calibWt(qi,k)+= Wt;
+                          calibN(qi,3) += NNN;
+                          calibI(qi,3) += Int;
+                          calibIe(qi,3)+= Err;
+                          calibWt(qi,3)+= Wt;
+
+                          si = floor(s3cl*20.0/Ntc);
+                          sectnN(qi,si) += NNN;
+                          sectnI(qi,si) += Int;
+                          sectnIe(qi,si)+= Err;
+                          sectnWt(qi,si)+= Wt;
+
+                        };
+                      };
+                    };
+                  };          // here check if primary intensity was enough
+
+                  };
+                };
+              };
         };
       };
+      kfl = 1;
+    };
+  };
 
-//    fprintf(stdout,"point4");
 
-      for (qi=0; qi<Nqc; qi++) {
-        for (si=0; si<4; si++) {
-          if (calibI(qi,si)>0.0 && calibWt(qi,si)>0.0) {
-//          if (qi==110) fprintf(stdout,"%g\n",calibWt(qi,si));
-            calibI(qi,si) /= calibWt(qi,si);
-            calibIe(qi,si)/= calibWt(qi,si)*calibWt(qi,si);
-          };
-        };
-        for (si=0; si<20; si++) {
-          if (sectnI(qi,si)>0.0 && sectnWt(qi,si)>0.0) {
-            sectnI(qi,si) /= sectnWt(qi,si);
-            sectnIe(qi,si)/= sectnWt(qi,si)*sectnWt(qi,si);
-          };
-        };
+  for (qi=0; qi<Nqc; qi++) {
+    for (si=0; si<4; si++) {
+      if (calibI(qi,si)>0.0 && calibWt(qi,si)>0.0) {
+        calibI(qi,si) /= calibWt(qi,si);
+        calibIe(qi,si)/= calibWt(qi,si)*calibWt(qi,si);
       };
+    };
+    for (si=0; si<20; si++) {
+      if (sectnI(qi,si)>0.0 && sectnWt(qi,si)>0.0) {
+        sectnI(qi,si) /= sectnWt(qi,si);
+        sectnIe(qi,si)/= sectnWt(qi,si)*sectnWt(qi,si);
+      };
+    };
+  };
 
-//  fprintf(stdout,"point5");
+  i=0;
+  while(i<99 && fname[i]>0) {filename[i]=fname[i]; i++;}
+  i=iimin(i,87);
+  j=i;
+  filename[j] = '_'; j++;
+  filename[j] = 'c'; j++;
+  filename[j] = 'p'; j++;
+  filename[j] = 's'; j++;
+  filename[j] = '_'; j++;
+  filename[j] = 'a'; j++;
+  filename[j] = 'l'; j++;
+  filename[j] = 'l'; j++;
+  filename[j] = '.'; j++;
+  filename[j] = 'd'; j++;
+  filename[j] = 'a'; j++;
+  filename[j] = 't'; j++;
+  filename[j] = 0;
 
-    i=0;
-    while(i<99 && fname[i]>0) {filename[i]=fname[i]; i++;}
-    i=iimin(i,87);
-    j=i;
-    filename[j] = '_'; j++;
+  DETECTOR_OUT_1D(
+    "TOFSANSdet.comp",
+    "log(Q) [AA^(-1)]",
+    "I(Q) [cps]",
+    "log(Q) [AA^(-1)]", qminl, qmaxl, Nq,
+    &simplN[0], &simplI[0], &simplIe[0], filename
+    );
+
+  for (si=0; si<4; si++) {
+
+    j=i+1;
     filename[j] = 'c'; j++;
-    filename[j] = 'p'; j++;
-    filename[j] = 's'; j++;
+    filename[j] = 'a'; j++;
+    filename[j] = 'l'; j++;
+    filename[j] = 'i'; j++;
+    filename[j] = 'b'; j++;
     filename[j] = '_'; j++;
-    filename[j] = 'a'; j++;
-    filename[j] = 'l'; j++;
-    filename[j] = 'l'; j++;
-    filename[j] = '.'; j++;
-    filename[j] = 'd'; j++;
-    filename[j] = 'a'; j++;
-    filename[j] = 't'; j++;
-    filename[j] = 0;
+    filename[j] = 49+si;
+
+    for (qi=0; qi<Nqc; qi++) {
+     simplN[qi]= calibN(qi,si);
+     simplI[qi]= calibI(qi,si);
+     simplIe[qi]=calibIe(qi,si);
+    };
 
     DETECTOR_OUT_1D(
-            "TOFSANSdet.comp",
-            "log(Q) [AA^(-1)]",
-            "I(Q) [cps]",
-            "log(Q) [AA^(-1)]", qminl, qmaxl, Nq,
-            &simplN[0], &simplI[0], &simplIe[0], filename
-            );
+      "TOFSANSdet.comp",
+      "log(Q) [AA^(-1)]",
+      "I(Q) [cm-1]",
+      "log(Q) [AA^(-1)]", qminl, qmaxl, Nq,
+      &simplN[0], &simplI[0], &simplIe[0], filename
+      );
+  };
 
-    for (si=0; si<4; si++) {
 
-      j=i+1;
-      filename[j] = 'c'; j++;
-      filename[j] = 'a'; j++;
-      filename[j] = 'l'; j++;
-      filename[j] = 'i'; j++;
-      filename[j] = 'b'; j++;
-      filename[j] = '_'; j++;
-      filename[j] = 49+si;
+  for (si=0; si<20; si++) {
 
-      for (qi=0; qi<Nqc; qi++) {
-//     simplQ[qi]= calibQ(qi,si);
-       simplN[qi]= calibN(qi,si);
-       simplI[qi]= calibI(qi,si);
-       simplIe[qi]=calibIe(qi,si);
-      };
+    j=i+1;
+    filename[j] = 's'; j++;
+    filename[j] = 'e'; j++;
+    filename[j] = 'c'; j++;
+    filename[j] = 't'; j++;
+    filename[j] = '_'; j++;
+    filename[j] = 48+(si/10);          j++;
+    filename[j] = 48+(si-10*(si/10));
 
-      DETECTOR_OUT_1D(
-              "TOFSANSdet.comp",
-              "log(Q) [AA^(-1)]",
-              "I(Q) [cm-1]",
-              "log(Q) [AA^(-1)]", qminl, qmaxl, Nq,
-              &simplN[0], &simplI[0], &simplIe[0], filename
-              );
+
+    for (qi=0; qi<Nqc; qi++) {
+     simplN[qi]= sectnN(qi,si);
+     simplI[qi]= sectnI(qi,si);
+     simplIe[qi]=sectnIe(qi,si);
     };
 
+    DETECTOR_OUT_1D(
+      "TOFSANSdet.comp",
+      "log(Q) [AA^(-1)]",
+      "I(Q) [cm-1]",
+      "log(Q) [AA^(-1)]", qminl, qmaxl, Nq,
+      &simplN[0], &simplI[0], &simplIe[0], filename
+      );
+  };
+%}
 
-    for (si=0; si<20; si++) {
-
-      j=i+1;
-      filename[j] = 's'; j++;
-      filename[j] = 'e'; j++;
-      filename[j] = 'c'; j++;
-      filename[j] = 't'; j++;
-      filename[j] = '_'; j++;
-      filename[j] = 48+(si/10);          j++;
-      filename[j] = 48+(si-10*(si/10));
-
-
-      for (qi=0; qi<Nqc; qi++) {
-//     simplQ[qi]= sectnQ(qi,si);
-       simplN[qi]= sectnN(qi,si);
-       simplI[qi]= sectnI(qi,si);
-       simplIe[qi]=sectnIe(qi,si);
-      };
-
-      DETECTOR_OUT_1D(
-              "TOFSANSdet.comp",
-              "log(Q) [AA^(-1)]",
-              "I(Q) [cm-1]",
-              "log(Q) [AA^(-1)]", qminl, qmaxl, Nq,
-              &simplN[0], &simplI[0], &simplIe[0], filename
-              );
-    };
-    %}
-
-
+FINALLY
+%{
+  destroy_darr1d(simplN);
+  destroy_darr1d(simplI);
+  destroy_darr1d(simplIe);
+%}
 
 MCDISPLAY
 %{
-
   ds1c = ddmax(ds1,0.0);
   ds2c = ddmax(ds2,0.0);
   ds3c = ddmax(ds3,0.0);
@@ -969,4 +916,4 @@ MCDISPLAY
                  -0.5*hl3c, (0.5-vx3c)*hl3c, ds3c);       };
 %}
 
-        END
+END

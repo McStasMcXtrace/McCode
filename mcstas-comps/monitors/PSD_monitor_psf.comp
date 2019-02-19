@@ -70,7 +70,7 @@ DECLARE
 
 INITIALIZE
 %{
-  int i,j;
+  int i, j;
 
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }

@@ -27,13 +27,13 @@
 * %P
 * INPUT PARAMETERS:
 *
-* rmax: [m]              Outer radius of detector 
-* nr: [1]                Number of concentric circles 
-* filename: [string]     Name of file in which to store the detector image 
-* filename_av: [string]  Name of file in which to store the averaged detector image 
-* nt: [1]                Number of time bins 
-* tmin: [mu-s]           Beginning of time window 
-* tmax: [mu-s]           End of time window 
+* rmax: [m]              Outer radius of detector
+* nr: [1]                Number of concentric circles
+* filename: [string]     Name of file in which to store the detector image
+* filename_av: [string]  Name of file in which to store the averaged detector image
+* nt: [1]                Number of time bins
+* tmin: [mu-s]           Beginning of time window
+* tmax: [mu-s]           End of time window
 * *
 * OUTPUT PARAMETERS:
 *
@@ -48,90 +48,105 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_PSD_monitor_rad
-DEFINITION PARAMETERS (nr=100, nt=100)
-SETTING PARAMETERS (string filename="", string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nr=100, nt=100,
+  string filename="", string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS (TOFPSDr_N, TOFPSDr_p, TOFPSDr_p2, TOFPSDr_av_p, TOFPSDr_av_p2)
 
 DECLARE
 %{
-double tt_0, tt_1;
-double TOFPSDr_N[nt][nr];
-double TOFPSDr_p[nt][nr];
-double TOFPSDr_p2[nt][nr];
-double TOFPSDr_av_p[nt][nr];
-double TOFPSDr_av_p2[nt][nr];
+  double tt_0, tt_1;
+
+  DArray2d TOFPSDr_N;
+  DArray2d TOFPSDr_p;
+  DArray2d TOFPSDr_p2;
+  DArray2d TOFPSDr_av_p;
+  DArray2d TOFPSDr_av_p2;
 %}
 
 INITIALIZE
 %{
-int i,j;
+  int i, j;
 
-tt_0=tmin*1e-6;
-tt_1=tmax*1e-6;
-for (i=0; i<nt; i++)
-      for (j=0; j<nr; j++)
-      {
-        TOFPSDr_N[i][j] = 0;
-        TOFPSDr_p[i][j] = 0;
-        TOFPSDr_p2[i][j] = 0;
-      }
-  %}
+  TOFPSDr_N = create_darr2d(nt, nr);
+  TOFPSDr_p = create_darr2d(nt, nr);
+  TOFPSDr_p2 = create_darr2d(nt, nr);
+  TOFPSDr_av_p = create_darr2d(nt, nr);
+  TOFPSDr_av_p2 = create_darr2d(nt, nr);
+
+  tt_0=tmin*1e-6;
+  tt_1=tmax*1e-6;
+  for (i=0; i<nt; i++)
+    for (j=0; j<nr; j++)
+    {
+      TOFPSDr_N[i][j] = 0;
+      TOFPSDr_p[i][j] = 0;
+      TOFPSDr_p2[i][j] = 0;
+    }
+%}
 
 TRACE
-  %{
-    int i,j;
-    double dt,radpos;
+%{
+  int i,j;
+  double dt,radpos;
 
-    PROP_Z0;
+  PROP_Z0;
 
-    radpos = sqrt(x*x+y*y);
-    i = floor((t-tt_0)*nt/(tt_1-tt_0));              /* Bin number */
-    j = floor(nr*radpos/rmax);
+  radpos = sqrt(x*x+y*y);
+  i = floor((t-tt_0)*nt/(tt_1-tt_0));              /* Bin number */
+  j = floor(nr*radpos/rmax);
 
-    if (radpos < rmax && i>=0 && i < nt)
-    {
-      TOFPSDr_N[i][j]++;
-      TOFPSDr_p[i][j] += p;
-      TOFPSDr_p2[i][j]+= p*p;
-      SCATTER;
-    }
+  if (radpos < rmax && i>=0 && i < nt)
+  {
+    TOFPSDr_N[i][j]++;
+    TOFPSDr_p[i][j] += p;
+    TOFPSDr_p2[i][j]+= p*p;
+    SCATTER;
+  }
 
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
 
 SAVE
-  %{
-    int i,j;
-    for(i=0; i<nt; i++)
-     for(j=0; j<nr; j++)
-      {
-       TOFPSDr_av_p[i][j]  = TOFPSDr_p[i][j]  / (PI*rmax*rmax/(nr*nr)*(2*j+1.0));
-       TOFPSDr_av_p2[i][j] = TOFPSDr_p2[i][j]
-           / (PI*rmax*rmax/(nr*nr)*(2*j+1.0)) / (PI*rmax*rmax/(nr*nr)*(2*j+1.0));
-      }
-    DETECTOR_OUT_2D(
-        "TOF PSD monitor radial sum",
-        "Time-of-flight [\\gms]",
-	"Radius [m]",
-        tmin, tmax, 0, rmax,
-	nt, nr,
-	&TOFPSDr_N[0][0],&TOFPSDr_p[0][0],&TOFPSDr_p2[0][0],
-        filename);
-    DETECTOR_OUT_2D(
-        "TOF PSD monitor radial average",
-        "Time-of-flight [\\gms]",
-	"Radius [m]",
-        tmin, tmax, 0, rmax,
-	nt, nr,
-        &TOFPSDr_N[0][0],&TOFPSDr_av_p[0][0],&TOFPSDr_av_p2[0][0],
-        filename_av);
-  %}
+%{
+  int i, j;
+  for(i=0; i<nt; i++)
+    for(j=0; j<nr; j++) {
+      TOFPSDr_av_p[i][j]  = TOFPSDr_p[i][j]  / (PI*rmax*rmax/(nr*nr)*(2*j+1.0));
+      TOFPSDr_av_p2[i][j] = TOFPSDr_p2[i][j]
+        / (PI*rmax*rmax/(nr*nr)*(2*j+1.0)) / (PI*rmax*rmax/(nr*nr)*(2*j+1.0));
+    }
+  DETECTOR_OUT_2D(
+    "TOF PSD monitor radial sum",
+    "Time-of-flight [\\gms]",
+    "Radius [m]",
+    tmin, tmax, 0, rmax,
+    nt, nr,
+    &TOFPSDr_N[0][0],&TOFPSDr_p[0][0],&TOFPSDr_p2[0][0],
+    filename);
+  DETECTOR_OUT_2D(
+    "TOF PSD monitor radial average",
+    "Time-of-flight [\\gms]",
+    "Radius [m]",
+    tmin, tmax, 0, rmax,
+    nt, nr,
+    &TOFPSDr_N[0][0],&TOFPSDr_av_p[0][0],&TOFPSDr_av_p2[0][0],
+    filename_av);
+%}
+
+FINALLY
+%{
+  destroy_darr2d(TOFPSDr_N);
+  destroy_darr2d(TOFPSDr_p);
+  destroy_darr2d(TOFPSDr_p2);
+  destroy_darr2d(TOFPSDr_av_p);
+  destroy_darr2d(TOFPSDr_av_p2);
+%}
 
 MCDISPLAY
 %{
-  
   circle("xy",0,0,0,rmax);
 %}
 
