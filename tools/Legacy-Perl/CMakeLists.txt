@@ -133,7 +133,7 @@ configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY immediate)
 configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
 
 # Configure launcher
-configure_file(lib/tools/launcher/McCode.desktop.in work/@NAME@.desktop @ONLY)
+configure_file(lib/tools/launcher/McCode.desktop.in work/${NAME}.desktop @ONLY)
 
 exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 
@@ -146,7 +146,7 @@ if(NOT WINDOWS)
   )
 
   install(
-    FILES "${WORK}/@NAME@.desktop" "lib/tools/launcher/@FLAVOR@-pl.png"
+    FILES "${WORK}/${NAME}.desktop" "lib/tools/launcher/${FLAVOR}-pl.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
   ) 
 
