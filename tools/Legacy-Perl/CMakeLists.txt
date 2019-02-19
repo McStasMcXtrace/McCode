@@ -129,8 +129,8 @@ endforeach()
 
 
 # Generate perl header
-configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY immediate)
-configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
+configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY)
+configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY)
 
 # Configure launcher
 configure_file(lib/tools/launcher/McCode.desktop.in work/${NAME}.desktop @ONLY)
