@@ -91,13 +91,14 @@
     #   sigma_inc      - the incoherent scattering cross section [barns]
     #   sigma_abs_2200 - the absorption cross sect. at 2200 m/s [barns]
     #   molar_mass     - the Molar mass [g/mol]
+    #   site occupancy - the site occupation factor SOF [0;1]
     #   x y z          - the Wyckoff postion of the atom inside the unit cell
     #
     # e.g.: add_atom = Fe 9.45 0.4 2.56 55.85 0.0 0.0 0.0
 
     [atoms]
-    add_atom=Na 3.63 1.62 0.53 22.99 0.0 0.0 0.0
-    add_atom=Cl 9.577 5.3 33.5 35.45 0.5 0.5 0.5
+    add_atom=Na 3.63 1.62 0.53 22.99 1.0 0.0 0.0 0.0
+    add_atom=Cl 9.577 5.3 33.5 35.45 1.0 0.5 0.5 0.5
     \endverbatim
 
     \section copyright_sec Copyright
@@ -238,14 +239,13 @@ static int _generateWyckoffPositions( NXS_UnitCell *uc )
   T_RTMx SMx;
   int iList;
   T_SgInfo SgInfo;
+  double tempNumberOfAtoms = 0.0;
 
   SgInfo = uc->sgInfo;
 
   nTrV = SgInfo.LatticeInfo->nTrVector;
 
   nLoopInv = Sg_nLoopInv(&SgInfo);
-
-  uc->nAtoms = 0;
 
   for( iAtomInfo=0; iAtomInfo<uc->nAtomInfo; iAtomInfo++ )
   {
@@ -307,9 +307,11 @@ static int _generateWyckoffPositions( NXS_UnitCell *uc )
       }
     }
 
-    uc->nAtoms += ai.nAtoms;
+    tempNumberOfAtoms += ai.nAtoms * ai.siteOccupation;
     uc->atomInfoList[iAtomInfo] = ai;
   }
+  uc->nAtoms = (unsigned int)floor(tempNumberOfAtoms+0.5);
+
   return NXS_ERROR_OK;
 }
 
@@ -358,8 +360,8 @@ double nxs_calcFSquare( NXS_HKL *hklReflex, NXS_UnitCell *uc )
         cos_exp += cos( exponent );
       }
     }
-    sin_exp *= exp_B_iso * uc->atomInfoList[i].b_coherent;
-    cos_exp *= exp_B_iso * uc->atomInfoList[i].b_coherent;
+    sin_exp *= exp_B_iso * uc->atomInfoList[i].b_coherent * uc->atomInfoList[i].siteOccupation;
+    cos_exp *= exp_B_iso * uc->atomInfoList[i].b_coherent * uc->atomInfoList[i].siteOccupation;
     real += cos_exp;
     imag += sin_exp;
   }
@@ -535,7 +537,6 @@ int nxs_initUnitCell( NXS_UnitCell *uc )
   /* at first some initialization for SgInfo */
   T_SgInfo SgInfo;
   const T_TabSgName *tsgn = NULL;
-  double a,b,c,alpha,beta,gamma;
 
   SgInfo.MaxList = 192;
   SgInfo.ListSeitzMx = malloc( SgInfo.MaxList * sizeof(*SgInfo.ListSeitzMx) );
@@ -563,46 +564,6 @@ int nxs_initUnitCell( NXS_UnitCell *uc )
   uc->crystalSystem = SgInfo.XtalSystem;
   uc->sgInfo = SgInfo;
 
-  /* get the unit cell volume depending on crystal system*/
-  uc->volume = 0.0;
-  a = uc->a;
-  b = uc->b;
-  c = uc->c;
-  alpha = uc->alpha;
-  beta = uc->beta;
-  gamma = uc->gamma;
-
-  /* V = a * b * c * sqrt(1 - cos(alpha)^2 - cos(beta)^2 - cos(gamma)^2
-                            + 2 * cos(alpha) * cos(beta) * cos(gamma))
-  */
-  switch( uc->crystalSystem )
-  {
-    /* XS_Cubic */
-    case 7:   uc->volume = a*a*a;
-              break;
-    /* XS_Hexagonal */
-    case 6:   uc->volume = 0.866025*a*a*c; /* = a*a*c * sin(M_PI/3.0) */
-              break;
-    /* XS_Trigonal */
-    case 5:   uc->volume = 0.866025*a*a*c; /* = a*a*c * sin(M_PI/3.0) */
-              break;
-    /* XS_Tetragonal */
-    case 4:   uc->volume = a*a*c;
-              break;
-    /* XS_Orthorhombic */
-    case 3:   uc->volume = a*b*c;
-              break;
-    /* XS_Monoclinic */
-    case 2:   uc->volume = a*b*c * sin(beta);
-              break;
-    /* XS_Triclinic */
-    case 1:   uc->volume = a*b*c * sqrt( 1.0 - cos(alpha)*cos(alpha) - cos(beta)*cos(beta) - cos(gamma)*cos(gamma) + 2.0*cos(alpha)*cos(beta)*cos(gamma) );
-              break;
-    /* XS_Unknown */
-    case 0:   break;
-    default:  break;
-  }
-
   /*
   printf( "\n# --------------------\n# ");
   PrintFullHM_SgName(tsgn, ' ', stdout);
@@ -620,16 +581,6 @@ int nxs_initUnitCell( NXS_UnitCell *uc )
   printf( "# GeneratorList: %i %i %i %i\n", SgInfo.Generator_iList[0], SgInfo.Generator_iList[1],
           SgInfo.Generator_iList[2], SgInfo.Generator_iList[3] );
   */
-
-  // some default values to start with
-  uc->temperature = 293.0;
-  uc->mass = 0.0;
-  uc->density = 0.0;
-  uc->nAtomInfo = 0;
-  uc->atomInfoList = NULL;
-
-  if( uc->mph_c2 > 1E-6 )
-    uc->__flag_mph_c2 = 0;
 
   return NXS_ERROR_OK;
 }
@@ -695,54 +646,12 @@ static double calcR(double x)
  */
 int nxs_addAtomInfo( NXS_UnitCell *uc, NXS_AtomInfo ai )
 {
-  double x;
-
-  /* if debyeTemp was not given as a parameter */
-  if( uc->debyeTemp<1E-6 )
-  {
-    // maybe a calculation/estimation of debyeTemp from atom-specific Debye temperatures
-    // is possible in future; then such a calculation should be called here
-    // Instead a standard value is set if no debyeTemp was given before
-    uc->debyeTemp = 300.0;
-  }
-
   uc->atomInfoList = (NXS_AtomInfo*)realloc( uc->atomInfoList, sizeof(NXS_AtomInfo)*(uc->nAtomInfo+1) );
   if( !uc->atomInfoList )
     return NXS_ERROR_MEMORYALLOCATIONFAILED;
 
   uc->nAtomInfo++;
-  //ai.M_m = ai.molarMass*ATOMIC_MASS_U_kg/MASS_NEUTRON_kg;
-  ai.M_m = ai.molarMass * 0.99140954426;
-
-  // Single phonon part after A.K. Freund (1983) Nucl. Instr. Meth. 213, 495-501
-  ai.sph =  sqrt( uc->debyeTemp ) / ai.M_m;
-  x = uc->debyeTemp/uc->temperature;
-  if( x <= 6 )
-    ai.sph *= calcR(x);
-  else
-    ai.sph *= 3.29708964927644 * pow(x,-3.5);
-
-  // from S. Vogel (2000) Thesis, Kiel University
-  ai.phi_1 = _calcPhi_1( 1/x );
-  ai.B_iso = 5.7451121E3 * ai.phi_1 / ai.molarMass / uc->debyeTemp;
-  ai.phi_3 = _calcPhi_3( 1/x );
-
   uc->atomInfoList[uc->nAtomInfo-1] = ai;
-  _generateWyckoffPositions( uc );
-
-  uc->mass += (double)(uc->atomInfoList[uc->nAtomInfo-1].nAtoms) * uc->atomInfoList[uc->nAtomInfo-1].molarMass;
-
-  //uc->density = uc->mass / uc->volume / AVOGADRO * 1E24; // [g/cm^3]
-  uc->density = uc->mass / uc->volume / 0.60221417930; // [g/cm^3]
-
-  /* if mph_c2 was not given as a parameter */
-  if( uc->__flag_mph_c2 )
-  {
-    // from A.K. Freund (1983) Nucl. Instr. Meth. 213, 495-501
-    // this needs further investigation as the fit in Freund's paper is not sufficient for all atoms,
-    //uc->mph_c2 = 4.27 * exp( uc->mass*ATOMIC_MASS_U_kg/MASS_NEUTRON_kg/uc->nAtoms / 61.0 );
-    uc->mph_c2 = 4.27 * exp( uc->mass*0.01625261547/uc->nAtoms );
-  }
 
   return NXS_ERROR_OK;
 }
@@ -761,36 +670,124 @@ int nxs_addAtomInfo( NXS_UnitCell *uc, NXS_AtomInfo ai )
  */
 int nxs_initHKL( NXS_UnitCell *uc )
 {
-  unsigned int ai, i,j;
+  double x;
+  NXS_AtomInfo *ai;
+  unsigned int i,j;
   double tmp;
   T_SgInfo SgInfo;
   int minH, minK, minL, max_hkl, restriction, h,k,l;
   NXS_HKL *hkl;
   unsigned long index_count;
 
-  /*
-  int pos;
-  printf( "# Generated Positions:\n" );
-  for( ai=0; ai<uc->nAtomInfo; ai++ )
-    for( pos=0; pos<uc->atomInfoList[ai].nAtoms; pos++ )
-      printf( "#   %s   %.3f, %.3f, %.3f\n", uc->atomInfoList[ai].label,uc->atomInfoList[ai].x[pos],
-              uc->atomInfoList[ai].y[pos], uc->atomInfoList[ai].z[pos] );
-  printf( "Rel. Unit cell mass: %f [g/mol]\n", uc->mass );
-  printf( "Unit cell volume: %f [AA^3]\n", uc->volume );
-  printf( "Unit cell density: %f [g/cm^3]\n", uc->density );
-  */
+  /* get the unit cell volume depending on crystal system*/
+  double a,b,c,alpha,beta,gamma;
 
-  /* at first calculate average sigmaCoherent and sigmaIncoherent for unit cell */
+  uc->volume = 0.0;
+  a = uc->a;
+  b = uc->b;
+  c = uc->c;
+  alpha = uc->alpha;
+  beta = uc->beta;
+  gamma = uc->gamma;
+
+  /* V = a * b * c * sqrt(1 - cos(alpha)^2 - cos(beta)^2 - cos(gamma)^2
+                            + 2 * cos(alpha) * cos(beta) * cos(gamma))
+  */
+  switch( uc->crystalSystem )
+  {
+    /* XS_Cubic */
+    case 7:   uc->volume = a*a*a;
+              break;
+    /* XS_Hexagonal */
+    case 6:   uc->volume = 0.866025*a*a*c; /* = a*a*c * sin(M_PI/3.0) */
+              break;
+    /* XS_Trigonal */
+    case 5:   uc->volume = 0.866025*a*a*c; /* = a*a*c * sin(M_PI/3.0) */
+              break;
+    /* XS_Tetragonal */
+    case 4:   uc->volume = a*a*c;
+              break;
+    /* XS_Orthorhombic */
+    case 3:   uc->volume = a*b*c;
+              break;
+    /* XS_Monoclinic */
+    case 2:   uc->volume = a*b*c * sin(beta);
+              break;
+    /* XS_Triclinic */
+    case 1:   uc->volume = a*b*c * sqrt( 1.0 - cos(alpha)*cos(alpha) - cos(beta)*cos(beta) - cos(gamma)*cos(gamma) + 2.0*cos(alpha)*cos(beta)*cos(gamma) );
+              break;
+    /* XS_Unknown */
+    case 0:   break;
+    default:  break;
+  }
+
+  // some default values to start with
+//  uc->temperature = 293.0;
+//  uc->mass = 0.0;
+//  uc->density = 0.0;
+//  uc->nAtomInfo = 0;
+//  uc->atomInfoList = NULL;
+
+  if( uc->mph_c2 > 1E-6 )
+    uc->__flag_mph_c2 = 0;
+
+  /* if debyeTemp was not given as a parameter */
+  if( uc->debyeTemp<1E-6 )
+  {
+    // maybe a calculation/estimation of debyeTemp from atom-specific Debye temperatures
+    // is possible in future; then such a calculation should be called here
+    // Instead a standard value is set if no debyeTemp was given before
+    uc->debyeTemp = 300.0;
+  }
+
+  for( i=0; i<uc->nAtomInfo; i++ )
+  {
+    ai = &(uc->atomInfoList[i]);
+    //ai->M_m = ai->molarMass*ATOMIC_MASS_U_kg/MASS_NEUTRON_kg;
+    ai->M_m = ai->molarMass * 0.99140954426;
+
+    // Single phonon part after A.K. Freund (1983) Nucl. Instr. Meth. 213, 495-501
+    ai->sph =  sqrt( uc->debyeTemp ) / ai->M_m;
+    x = uc->debyeTemp/uc->temperature;
+    if( x <= 6 )
+      ai->sph *= calcR(x);
+    else
+      ai->sph *= 3.29708964927644 * pow(x,-3.5);
+
+    // from S. Vogel (2000) Thesis, Kiel University
+    ai->phi_1 = _calcPhi_1( 1/x );
+    ai->B_iso = 5.7451121E3 * ai->phi_1 / ai->molarMass / uc->debyeTemp;
+    ai->phi_3 = _calcPhi_3( 1/x );
+
+    _generateWyckoffPositions( uc );
+
+    uc->mass += (double)(ai->nAtoms) * ai->molarMass * ai->siteOccupation;
+  }
+
+  //uc->density = uc->mass / uc->volume / AVOGADRO * 1E24; // [g/cm^3]
+  if( uc->density < 1E-6 )
+    uc->density = uc->mass / uc->volume / 0.60221417930; // [g/cm^3]
+
+  /* if mph_c2 was not given as a parameter */
+  if( uc->__flag_mph_c2 )
+  {
+    // from A.K. Freund (1983) Nucl. Instr. Meth. 213, 495-501
+    // this needs further investigation as the fit in Freund's paper is not sufficient for all atoms,
+    //uc->mph_c2 = 4.27 * exp( uc->mass*ATOMIC_MASS_U_kg/MASS_NEUTRON_kg/uc->nAtoms / 61.0 );
+    uc->mph_c2 = 4.27 * exp( uc->mass*0.01625261547/uc->nAtoms );
+  }
+
+  /* calculate average sigmaCoherent and sigmaIncoherent for unit cell */
 
   tmp = 0.0;
   uc->avgSigmaIncoherent = 0.0;
   uc->avgSigmaCoherent = 0.0;
 
-  for( ai=0; ai<uc->nAtomInfo; ai++ )
+  for( i=0; i<uc->nAtomInfo; i++ )
   {
-    uc->avgSigmaCoherent += uc->atomInfoList[ai].b_coherent * uc->atomInfoList[ai].nAtoms;
-    uc->avgSigmaIncoherent += uc->atomInfoList[ai].sigmaIncoherent * uc->atomInfoList[ai].nAtoms;
-    tmp += uc->atomInfoList[ai].b_coherent * uc->atomInfoList[ai].b_coherent * uc->atomInfoList[ai].nAtoms;
+    uc->avgSigmaCoherent += uc->atomInfoList[i].b_coherent * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
+    uc->avgSigmaIncoherent += uc->atomInfoList[i].sigmaIncoherent * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
+    tmp +=  uc->atomInfoList[i].siteOccupation * uc->atomInfoList[i].b_coherent * uc->atomInfoList[i].b_coherent * uc->atomInfoList[i].nAtoms;
   }
   tmp = tmp / uc->nAtoms;
   uc->avgSigmaIncoherent = uc->avgSigmaIncoherent / uc->nAtoms;
@@ -954,7 +951,7 @@ double nxs_Absorption( double lambda, NXS_UnitCell* uc )
   unsigned int i;
   for( i=0; i<uc->nAtomInfo; i++ )
   {
-    sigma += uc->atomInfoList[i].sigmaAbsorption * uc->atomInfoList[i].nAtoms;
+    sigma += uc->atomInfoList[i].sigmaAbsorption * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
   xsect_abs = sigma / 1.798 * lambda;
 
@@ -979,7 +976,7 @@ double nxs_IncoherentElastic( double lambda, NXS_UnitCell* uc )
   for( i=0; i<uc->nAtomInfo; i++ )
   {
     double value = lambda*lambda / 2.0 / uc->atomInfoList[i].B_iso;
-    s_el_inc += value * ( 1.0 - exp(-1.0/value) ) * uc->atomInfoList[i].nAtoms;
+    s_el_inc += value * ( 1.0 - exp(-1.0/value) ) * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
 
   xsect_inc_el = s_el_inc * uc->avgSigmaIncoherent;
@@ -1016,7 +1013,7 @@ double nxs_IncoherentInelastic( double lambda, NXS_UnitCell* uc )
     s_el_inc = value * ( 1.0 - exp(-1.0/value) );
     A = uc->atomInfoList[i].M_m;
     s_total_inc = A/(A+1.0)*A/(A+1.0) * ( 1.0 + 9.0 * phi1_phi3 * value/A/A );
-    xsect_inc_inel += (s_total_inc - s_el_inc) * uc->atomInfoList[i].nAtoms;
+    xsect_inc_inel += (s_total_inc - s_el_inc) * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
 
   xsect_inc_inel = xsect_inc_inel * uc->avgSigmaIncoherent;
@@ -1053,7 +1050,7 @@ double nxs_CoherentInelastic( double lambda, NXS_UnitCell* uc )
     s_el_inc = value * ( 1.0 - exp(-1.0/value) );
     A = uc->atomInfoList[i].M_m;
     s_total_inc = A/(A+1.0)*A/(A+1.0) * ( 1.0 + 9.0 * phi1_phi3 * value/A/A );
-    xsect_coh_inel += (s_total_inc - s_el_inc) * uc->atomInfoList[i].nAtoms;
+    xsect_coh_inel += (s_total_inc - s_el_inc) * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
   xsect_coh_inel = xsect_coh_inel * uc->avgSigmaCoherent;
   return xsect_coh_inel;
@@ -1064,7 +1061,7 @@ double nxs_CoherentInelastic( double lambda, NXS_UnitCell* uc )
 /**
  * \fn double nxs_TotalInelastic( double lambda, NXS_UnitCell* uc )
  * This function is provided for convenience and to be downward compatible to earlier versions of the nxs library.
- * It currently links to nxs_TotalInelastic_BINDER().
+ * It currently links to nxs_TotalInelastic_COMBINED().
  *
  * @param lambda wavelength in &Aring;
  * @param uc NXS_UnitCell struct
@@ -1106,7 +1103,7 @@ double nxs_TotalInelastic_BINDER( double lambda, NXS_UnitCell* uc )
     s_el_inc = value * ( 1.0 - exp(-1.0/value) );
     A = uc->atomInfoList[i].M_m;
     s_total_inc = A/(A+1.0)*A/(A+1.0) * ( 1.0 + 9.0 * phi1_phi3 * value/A/A );
-    xsect_total_inel += (s_total_inc - s_el_inc) * uc->atomInfoList[i].nAtoms;
+    xsect_total_inel += (s_total_inc - s_el_inc) * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
 
   return xsect_total_inel * (uc->avgSigmaCoherent+uc->avgSigmaIncoherent);
@@ -1154,7 +1151,7 @@ double nxs_SinglePhonon( double lambda, NXS_UnitCell* uc )
 
   double sph = 0.0;
   for( i=0; i<uc->nAtomInfo; i++ )
-    sph += uc->atomInfoList[i].sph * uc->atomInfoList[i].nAtoms;
+    sph += uc->atomInfoList[i].sph * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
 
   return sph * (uc->avgSigmaCoherent+uc->avgSigmaIncoherent) / 35.90806936252971 / sqrt(neutronEnergy);
 }
@@ -1198,7 +1195,7 @@ double nxs_MultiPhonon_CASSELS( double lambda, NXS_UnitCell* uc )
     double value = lambda*lambda / 2.0 / uc->atomInfoList[i].B_iso;
     double s_el_inc = value * ( 1.0 - exp(-1.0/value) );
     double A = uc->atomInfoList[i].M_m;
-    mph += A/(A+1.0)*A/(A+1.0) * (1 - s_el_inc) * uc->atomInfoList[i].nAtoms;
+    mph += A/(A+1.0)*A/(A+1.0) * (1 - s_el_inc) * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
   return mph *= (uc->avgSigmaCoherent+uc->avgSigmaIncoherent);
 }
@@ -1266,11 +1263,11 @@ double nxs_MultiPhonon_FREUND( double lambda, NXS_UnitCell* uc )
 
     /* BT+B0=Biso, i.e. no need to calculate BT and B0 here */
     // double B0 = 2872.568576905348 / (A*uc->atomInfoList[i].debyeTemp);
-    // double x = uc->atomInfoList[i].debyeTemp / uc->temperature;
+    // double x = uc->debyeTemp / uc->temperature;
     // double BT = 4.0 * B0 * phi(x) / x;
 
     double mphPerAtom = A*A / ( (1.0+A)*(1.0+A) ) * ( 1.0 - exp( -uc->atomInfoList[i].B_iso * C2_times_Energy) );
-    mph += mphPerAtom * uc->atomInfoList[i].nAtoms;
+    mph += mphPerAtom * uc->atomInfoList[i].nAtoms * uc->atomInfoList[i].siteOccupation;
   }
   return mph * (uc->avgSigmaCoherent+uc->avgSigmaIncoherent);
 }
@@ -1650,12 +1647,29 @@ int nxs_readParameterFile( const char* fileName, NXS_UnitCell *uc, NXS_AtomInfo 
               ai.sigmaAbsorption = strtod(strtok( NULL, " \t" ), &endptr);  /* sigma_abs_2200 */
               ai.molarMass = strtod(strtok( NULL, " \t" ), &endptr);        /* molar_mass */
 
-              /* for compatibility to earlier versions of nxs the atom specific entry of a */
-              /* Debye temperature is also allowed. If not given, -1.0 is set and continue with x y z */
+              /* site occupation factor */
+              /* for compatibility to earlier versions of nxs this can be empty */
+              /* If given, check whether assigned to SOF or DebyeTemp ...and then continue with x y z */
               if( nwords>8 )
-                ai.debyeTemp = strtod(strtok( NULL, " \t" ), &endptr);      /* debye_temp */
+              {
+                double tmp = strtod(strtok( NULL, " \t" ), &endptr);
+                if( tmp > 1.0)
+                {
+                  ai.siteOccupation = 1.0;  /* SOF */
+                  ai.debyeTemp = tmp;      /* debye_temp */
+                }
+                else
+                {
+                  ai.siteOccupation = tmp;  /* SOF */
+                  ai.debyeTemp = -1.0;       /* debye_temp */
+                }
+              }
               else
+              /* if not given set default values for SOF and DebyeTemp */
+              {
+                ai.siteOccupation = 1.0;
                 ai.debyeTemp = -1.0;
+              }
 
               /* the Wyckoff postion of the atom inside the unit cell */
               ai.x[0] = strtod(strtok( NULL, " \t" ), &endptr);             /* x */
@@ -1712,7 +1726,7 @@ int nxs_saveParameterFile( const char* fileName, NXS_UnitCell *uc )
     return NXS_ERROR_SAVINGFILE;
   }
 
-  fprintf( file, "#\n# This is an nxs parameter file\n#\n%s = %s\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n\n# label  b_coherent  sigma_inc  sigma_abs  molar_mass  debye_temp  x  y  z\n",
+  fprintf( file, "#\n# This is an nxs parameter file\n#\n%s = %s\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n%s = %f\n\n# label  b_coherent  sigma_inc  sigma_abs  molar_mass  sof  x  y  z\n",
         NXS_keys[0], uc->spaceGroup, NXS_keys[1], uc->a, NXS_keys[2], uc->b, NXS_keys[3], uc->c, NXS_keys[4], uc->alpha, NXS_keys[5], uc->beta, NXS_keys[6], uc->gamma, NXS_keys[8], uc->mph_c2, NXS_keys[9], uc->debyeTemp);
 
   for(i=0; i<uc->nAtomInfo; i++)
@@ -1721,10 +1735,7 @@ int nxs_saveParameterFile( const char* fileName, NXS_UnitCell *uc )
          NXS_keys[7], uc->atomInfoList[i].label, uc->atomInfoList[i].b_coherent, uc->atomInfoList[i].sigmaIncoherent,
          uc->atomInfoList[i].sigmaAbsorption, uc->atomInfoList[i].molarMass );
 
-    /* if debye temp value is stored to atomInfo store it */
-    /* this is maybe removed in the future */
-    if( uc->atomInfoList[i].debyeTemp<1E-6 )
-      fprintf( file, "%f ", uc->atomInfoList[i].debyeTemp );
+    fprintf( file, "%f ", uc->atomInfoList[i].siteOccupation );
 
     fprintf( file, "%f %f %f\n", uc->atomInfoList[i].x[0], uc->atomInfoList[i].y[0], uc->atomInfoList[i].z[0] );
   }

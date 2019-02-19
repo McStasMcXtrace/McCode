@@ -28,7 +28,7 @@ extern "C"
 #include "sginfo.h"
 
 
-#define NXSLIB_VERSION 1.5
+#define NXSLIB_VERSION 20170727
 
 
 /**
@@ -87,16 +87,41 @@ extern "C"
     \endcode
 
     \copyright
-    nxs - neutron cross sections (c) 2010-2014 Mirko Boin
+    nxs - neutron cross sections (c) 2010-2016 Mirko Boin
 
     The nxs library includes the SgInfo library, whose free usage is granted by the following notice:
 
     Space Group Info (c) 1994-96 Ralf W. Grosse-Kunstleve
-    Permission to use and distribute this software and its documentation for noncommercial
-    use and without fee is hereby granted, provided that the above copyright notice appears
-    in all copies and that both that copyright notice and this permission notice appear in
-    the supporting documentation. It is not allowed to sell this software in any way. This
-    software is not in the public domain.
+    Redistribution and use in source and binary forms, with or without modification, are permitted
+    provided that the following conditions are met:
+
+    (1) Redistributions of source code must retain the above copyright notice, this list of
+        conditions and the following disclaimer.
+    (2) Redistributions in binary form must reproduce the above copyright notice, this list of
+        conditions and the following disclaimer in the documentation and/or other materials provided
+        with the distribution.
+    (3) Neither the name of the SgInfo - Space Group Info copyright holder nor the names of its
+        contributors may be used to endorse or promote products derived from this software without
+        specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+    CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+    IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+    OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+    You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the
+    features, functionality or performance of the source code ("Enhancements") to anyone; however, if
+    you choose to make your Enhancements available either publicly, or directly to the SgInfo - Space
+    Group Info copyright holder, without imposing a separate written license agreement for such
+    Enhancements, then you hereby grant the following license: a nonexclusive, royalty-free perpetual
+    license to install, use, modify, prepare derivative works, incorporate into other computer software,
+    distribute, and sublicense such enhancements or derivative works thereof, in binary and source code
+    form.
+
 */
 
 #define MAX_CHARS_SPACEGROUP 40
@@ -174,8 +199,9 @@ typedef struct NXS_AtomInfo {
   double sigmaIncoherent; /*!< in [\f$barn = 10^{-24} cm^2\f$] */
   double b_coherent;      /*!< in [fm] */
   double molarMass;       /*!< Molar mass in [\f$u = 1.66 \times 10^{-27} kg\f$] */
-  double M_m;             /*! M/m = molarMass*ATOMIC_MASS_U_kg/MASS_NEUTRON_kg  / */
+  double M_m;             /*!< M/m = molarMass*ATOMIC_MASS_U_kg/MASS_NEUTRON_kg */
   double debyeTemp;       /*!< Debye temperature in [K] */
+  double siteOccupation;  /*!< Site occupation factor */
   double phi_1;           /*!< \f$\varphi_1\f$ */
   double phi_3;           /*!< \f$\varphi_3\f$ */
   double B_iso;           /*!< \f$B_{iso}\f$ the isotropic atomic displacement factor */
