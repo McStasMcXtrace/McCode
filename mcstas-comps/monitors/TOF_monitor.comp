@@ -19,18 +19,18 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: [m]             Lower x bound of detector opening 
-* xmax: [m]             Upper x bound of detector opening 
-* ymin: [m]             Lower y bound of detector opening 
-* ymax: [m]             Upper y bound of detector opening 
-* xwidth: [m]           Width of detector. Overrides xmin, xmax 
-* yheight: [m]          Height of detector. Overrides ymin, ymax 
-* nt: [1]               Number of time bins 
-* dt: [mu-s]            Length of each time bin 
-* tmin: [mu-s]          Lower time limit 
-* tmax: [mu-s]          Upper time limit 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax
+* yheight: [m]          Height of detector. Overrides ymin, ymax
+* nt: [1]               Number of time bins
+* dt: [mu-s]            Length of each time bin
+* tmin: [mu-s]          Lower time limit
+* tmax: [mu-s]          Upper time limit
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -42,88 +42,102 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_monitor
-DEFINITION PARAMETERS (nt=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-xwidth=0, yheight=0, tmin=0, tmax=0, dt=1.0, restore_neutron=0)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nt=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+  xwidth=0, yheight=0, tmin=0, tmax=0, dt=1.0, restore_neutron=0)
+
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, t_min, t_max, delta_t)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-double TOF_N[nt];
-double TOF_p[nt];
-double TOF_p2[nt];
-double t_min, t_max, delta_t;
+  DArray1d TOF_N;
+  DArray1d TOF_p;
+  DArray1d TOF_p2;
+  double t_min, t_max, delta_t;
 %}
 
 INITIALIZE
 %{
-int i;
+  int i;
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("TOF_monitor: %s: Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
-    }
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+          printf("TOF_monitor: %s: Null detection area !\n"
+                 "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+         NAME_CURRENT_COMP);
+    exit(0);
+  }
 
-    for (i=0; i<nt; i++)
-    {
-      TOF_N[i] = 0;
-      TOF_p[i] = 0;
-      TOF_p2[i] = 0;
-    }
-    if (tmax!=0)
-    {
-      t_max=tmax;
-      t_min=tmin;
-      delta_t=(t_max-t_min)/nt;
-    }
-    else
-    {
-     delta_t=dt;
-     t_min=0;
-     t_max=nt*dt+tmin;
-    }
-  %}
+  TOF_N = create_darr1d(nt);
+  TOF_p = create_darr1d(nt);
+  TOF_p2 = create_darr1d(nt);
+
+  for (i=0; i<nt; i++)
+  {
+    TOF_N[i] = 0;
+    TOF_p[i] = 0;
+    TOF_p2[i] = 0;
+  }
+  if (tmax!=0)
+  {
+    t_max=tmax;
+    t_min=tmin;
+    delta_t=(t_max-t_min)/nt;
+  }
+  else
+  {
+    delta_t=dt;
+    t_min=0;
+    t_max=nt*dt+tmin;
+  }
+%}
 
 TRACE
-  %{
-    int i;
+%{
+  int i;
 
-    PROP_Z0;
-    if (x>xmin && x<xmax && y>ymin && y<ymax)
-    {
-      i = floor((1E6*t-t_min)/delta_t);              /* Bin number */
-      if(i >= 0 && i < nt) {
-        TOF_N[i]++;
-        TOF_p[i] += p;
-        TOF_p2[i] += p*p;
-        SCATTER;
-      }
+  PROP_Z0;
+  if (x>xmin && x<xmax && y>ymin && y<ymax)
+  {
+    i = floor((1E6*t-t_min)/delta_t);              /* Bin number */
+    if(i >= 0 && i < nt) {
+      TOF_N[i]++;
+      TOF_p[i] += p;
+      TOF_p2[i] += p*p;
+      SCATTER;
     }
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
 
 SAVE
-  %{
-    DETECTOR_OUT_1D(
-        "Time-of-flight monitor",
-        "Time-of-flight [\\gms]",
-        "Intensity",
-        "t", t_min, t_max, nt,
-        &TOF_N[0],&TOF_p[0],&TOF_p2[0],
-        filename);
-  %}
+%{
+  DETECTOR_OUT_1D(
+      "Time-of-flight monitor",
+      "Time-of-flight [\\gms]",
+      "Intensity",
+      "t", t_min, t_max, nt,
+      &TOF_N[0],&TOF_p[0],&TOF_p2[0],
+      filename);
+%}
+
+FINALLY
+%{
+  destroy_darr1d(TOF_N);
+  destroy_darr1d(TOF_p);
+  destroy_darr1d(TOF_p2);
+%}
 
 MCDISPLAY
 %{
-  
+
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

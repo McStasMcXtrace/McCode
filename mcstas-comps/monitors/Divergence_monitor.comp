@@ -25,21 +25,21 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: [m]             Lower x bound of detector opening 
-* xmax: [m]             Upper x bound of detector opening 
-* ymin: [m]             Lower y bound of detector opening 
-* ymax: [m]             Upper y bound of detector opening 
-* xwidth: [m]           Width of detector. Overrides xmin, xmax 
-* yheight: [m]          Height of detector. Overrides ymin, ymax 
-* nv: [1]               Number of pixel columns 
-* nh: [1]               Number of pixel rows 
-* nx: [1]               
-* ny: [1]               Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane 
-* nz: [1]               
-* maxdiv_v: [degrees]   Maximal vertical divergence detected 
-* maxdiv_h: [degrees]   Maximal vertical divergence detected 
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax
+* yheight: [m]          Height of detector. Overrides ymin, ymax
+* nv: [1]               Number of pixel columns
+* nh: [1]               Number of pixel rows
+* nx: [1]
+* ny: [1]               Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane
+* nz: [1]
+* maxdiv_v: [degrees]   Maximal vertical divergence detected
+* maxdiv_h: [degrees]   Maximal vertical divergence detected
 * filename: []          Name of file in which to store the detector image text
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,88 +50,106 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Divergence_monitor
-DEFINITION PARAMETERS (nh=20, nv=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-xwidth=0, yheight=0, maxdiv_h=2, maxdiv_v=2, restore_neutron=0, nx=0, ny=0, nz=1)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nh=20, nv=20,
+  string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+  xwidth=0, yheight=0, maxdiv_h=2, maxdiv_v=2, restore_neutron=0, nx=0, ny=0, nz=1)
+
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
-double Div_N[nh][nv];
-double Div_p[nh][nv];
-double Div_p2[nh][nv];
+  DArray2d Div_N;
+  DArray2d Div_p;
+  DArray2d Div_p2;
 %}
+
 INITIALIZE
 %{
-int i,j;
+  int i,j;
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("Divergence_monitor: %s: Null detection area !\n"
-                   "ERROR               (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("Divergence_monitor: %s: Null detection area !\n"
+           "ERROR               (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
-      exit(0);
-    }
+    exit(0);
+  }
 
-    for (i=0; i<nh; i++)
-     for (j=0; j<nv; j++)
-     {
+  Div_N = create_darr2d(nh, nv);
+  Div_p = create_darr2d(nh, nv);
+  Div_p2 = create_darr2d(nh, nv);
+
+  for (i=0; i<nh; i++)
+    for (j=0; j<nv; j++)
+    {
       Div_N[i][j] = 0;
       Div_p[i][j] = 0;
       Div_p2[i][j] = 0;
-     }
-    NORM(nx,ny,nz);
-  %}
-TRACE
-  %{
-    int i,j;
-    double h_div, v_div;
-    double v, vn;
+    }
+  NORM(nx,ny,nz);
+%}
 
-    PROP_Z0;
-    if (x>xmin && x<xmax && y>ymin && y<ymax)
+TRACE
+%{
+  int i,j;
+  double h_div, v_div;
+  double v, vn;
+
+  PROP_Z0;
+  if (x>xmin && x<xmax && y>ymin && y<ymax)
+  {
+    /* Find length of projection onto the [nx ny nz] axis */
+    vn = scalar_prod(vx, vy, vz, nx, ny, nz);
+    h_div = RAD2DEG*atan2(vx,vn);
+    v_div = RAD2DEG*atan2(vy,vn);
+    if (h_div < maxdiv_h && h_div > -maxdiv_h &&
+        v_div < maxdiv_v && v_div > -maxdiv_v)
     {
-      /* Find length of projection onto the [nx ny nz] axis */
-      vn = scalar_prod(vx, vy, vz, nx, ny, nz);
-      h_div = RAD2DEG*atan2(vx,vn);
-      v_div = RAD2DEG*atan2(vy,vn);
-      if (h_div < maxdiv_h && h_div > -maxdiv_h &&
-          v_div < maxdiv_v && v_div > -maxdiv_v)
-      {
-        i = floor((h_div + maxdiv_h)*nh/(2.0*maxdiv_h));
-        j = floor((v_div + maxdiv_v)*nv/(2.0*maxdiv_v));
-        Div_N[i][j]++;
-        Div_p[i][j] += p;
-        Div_p2[i][j] += p*p;
-        SCATTER;
-      }
+      i = floor((h_div + maxdiv_h)*nh/(2.0*maxdiv_h));
+      j = floor((v_div + maxdiv_v)*nv/(2.0*maxdiv_v));
+      Div_N[i][j]++;
+      Div_p[i][j] += p;
+      Div_p2[i][j] += p*p;
+      SCATTER;
     }
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
 SAVE
-  %{
-    DETECTOR_OUT_2D(
-        "Divergence monitor",
-        "X divergence [deg]",
-        "Y divergence [deg]",
-        -maxdiv_h, maxdiv_h, -maxdiv_v, maxdiv_v,
-        nh, nv,
-        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
-        filename);
-  %}
+%{
+  DETECTOR_OUT_2D(
+      "Divergence monitor",
+      "X divergence [deg]",
+      "Y divergence [deg]",
+      -maxdiv_h, maxdiv_h, -maxdiv_v, maxdiv_v,
+      nh, nv,
+      &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+      filename);
+%}
+
+FINALLY
+%{
+  destroy_darr2d(Div_N);
+  destroy_darr2d(Div_p);
+  destroy_darr2d(Div_p2);
+%}
 
 MCDISPLAY
-  %{
-    
-    multiline(5, (double)xmin, (double)ymin, 0.0,
-                 (double)xmax, (double)ymin, 0.0,
-                 (double)xmax, (double)ymax, 0.0,
-                 (double)xmin, (double)ymax, 0.0,
-                 (double)xmin, (double)ymin, 0.0);
+%{
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
 %}
 
 END

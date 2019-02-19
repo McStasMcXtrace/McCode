@@ -24,18 +24,18 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: [m]             Lower x bound of detector opening 
-* xmax: [m]             Upper x bound of detector opening 
-* ymin: [m]             Lower y bound of detector opening 
-* ymax: [m]             Upper y bound of detector opening 
-* xwidth: [m]           Width of detector. Overrides xmin,xmax. 
-* yheight: [m]          Height of detector. Overrides ymin,ymax. 
-* Emin: [meV]           Lower bound of energy 
-* Emax: [meV]           Upper bound of energy 
-* nx: [1]               Number of pixel columns in scattering plane 
-* nE: [1]               Number of energy bins 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin,xmax.
+* yheight: [m]          Height of detector. Overrides ymin,ymax.
+* Emin: [meV]           Lower bound of energy
+* Emax: [meV]           Upper bound of energy
+* nx: [1]               Number of pixel columns in scattering plane
+* nE: [1]               Number of energy bins
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,71 +47,85 @@
 *******************************************************************************/
 
 DEFINE COMPONENT EPSD_monitor
-DEFINITION PARAMETERS (nx=20, nE=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-xwidth=0, yheight=0, Emin, Emax, restore_neutron=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nx=20, nE=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+  xwidth=0, yheight=0, Emin, Emax, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
-double PSD_N[nx][nE];
-double PSD_p[nx][nE];
-double PSD_p2[nx][nE];
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
+
 INITIALIZE
 %{
-int i,j;
+  int i,j;
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("EPSD_monitor: %s: Null detection area !\n"
-                   "ERROR         (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("EPSD_monitor: %s: Null detection area !\n"
+           "ERROR         (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
-      exit(0);
-    }
+    exit(0);
+  }
 
-    for (i=0; i<nx; i++)
-     for (j=0; j<nE; j++)
-     {
+  PSD_N = create_darr2d(nx, nE);
+  PSD_p = create_darr2d(nx, nE);
+  PSD_p2 = create_darr2d(nx, nE);
+
+  for (i=0; i<nx; i++)
+    for (j=0; j<nE; j++)
+    {
       PSD_N[i][j] = 0;
       PSD_p[i][j] = 0;
       PSD_p2[i][j] = 0;
-     }
-  %}
+    }
+%}
 TRACE
-  %{
-    int i,j;
-    double E,v;
+%{
+  int i,j;
+  double E,v;
 
-    PROP_Z0;
-    v=vx*vx+vy*vy+vz*vz;
-    E=VS2E*(vx*vx+vy*vy+vz*vz);
-/*      printf("(x,y,E,v,p) = (%g, %g, %g, %g, %g)\n",x,y,E,v,p); */
-    if (x>xmin && x<xmax && y>ymin && y<ymax && E>Emin && E<Emax)
-    {
-      i = floor((x - xmin)*nx/(xmax - xmin));
-      j = floor((E - Emin)*nE/(Emax - Emin));
-      PSD_N[i][j]++;
-      PSD_p[i][j] += p;
-      PSD_p2[i][j] += p*p;
-    }
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+  PROP_Z0;
+  v=vx*vx+vy*vy+vz*vz;
+  E=VS2E*(vx*vx+vy*vy+vz*vz);
+/*  printf("(x,y,E,v,p) = (%g, %g, %g, %g, %g)\n",x,y,E,v,p); */
+  if (x>xmin && x<xmax && y>ymin && y<ymax && E>Emin && E<Emax)
+  {
+    i = floor((x - xmin)*nx/(xmax - xmin));
+    j = floor((E - Emin)*nE/(Emax - Emin));
+    PSD_N[i][j]++;
+    PSD_p[i][j] += p;
+    PSD_p2[i][j] += p*p;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
 SAVE
-  %{
-    DETECTOR_OUT_2D("EPSD monitor", "Position [m]", "Energy [meV]",
-        xmin, xmax, Emin, Emax, nx, nE,
-        &PSD_N[0][0], &PSD_p[0][0], &PSD_p2[0][0],
-        filename);
-  %}
+%{
+  DETECTOR_OUT_2D("EPSD monitor", "Position [m]", "Energy [meV]",
+      xmin, xmax, Emin, Emax, nx, nE,
+      &PSD_N[0][0], &PSD_p[0][0], &PSD_p2[0][0],
+      filename);
+%}
+
+FINALLY
+%{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
 
 MCDISPLAY
 %{
-  
+
 %}
 
 END
