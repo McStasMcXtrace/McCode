@@ -29,42 +29,44 @@
  * The crystal is positioned such that the long axis of the crystal surface coincides with
  * z-axis and the outer normal to the crystal surface is along +y.
  *
- *        The ratio of the transmitted beam and forward-diffracted Borrman-effect beam is a hack.  The sum of the
- *        two is exactly right, but the actual ratio depends critically on geometry, and I just put in a wild estimate
- *        to allow one to demonstrate what the Borrmann effect looks like. If this is turned on, the displacement of the
- *        transmitted beam and forward diffracted beam at the back side of the crystal will be correctly computed.
- *        This displacement is only exact for symmetrical Laue; asymmetrical computation requires more effort,
- *        and is probably not worth it.
- *        Since 99% of uses of this will have the transmitted beam turned off, I have not tried to be too correct with this.
- *
- * Changelog:
- *
- *
+ * The ratio of the transmitted beam and forward-diffracted Borrman-effect beam is a hack.  The sum of the
+ * two is exactly right, but the actual ratio depends critically on geometry, and I just put in a wild estimate
+ * to allow one to demonstrate what the Borrmann effect looks like. If this is turned on, the displacement of the
+ * transmitted beam and forward diffracted beam at the back side of the crystal will be correctly computed.
+ * This displacement is only exact for symmetrical Laue; asymmetrical computation requires more effort,
+ * and is probably not worth it.
+ * The sampling of these processes are controlled by the 3 variables transmission_sampling, forward_diffraction_sampling,
+ * and laue_sampling. Since 99% of uses of this will have the transmitted beam turned off, and use laue diffraction mode,
+ * the values should be just 0,0,1. If the general behavior of the transmitted beams
+ * is interesting, use 1,1,1 which samples all beams equally.  Results weights are adjusted for this,
+ * so computed intensities won't be affected.
  *
  * %D
  *
  * %P
  * Input parameters:
- * width:   [m] width of the crystal.
- * length:  [m] zdepth (length) of the crystal.
- * thickness:  [m]  thickness of crystal (along y-axis, the surface normal)
- * material: [ ]   Si ("Si.txt"), Ge ("Ge.txt")
- * form_factors         "FormFactors.txt" from McXtrace install, usually
- * V:       [AA^3] unit cell volume
- * h:     [ ]    1st Miller index of reflection
- * k:     [ ]    2nd Miller index of reflection
- * l:     [ ]    3rd Miller index of reflection
- * alpha: (unit vector)	 	normal to crystal planes, usually [0,0,1] for symmetric Laue.  crystal surface itself has normal [0,1,0].
+ * width:         [m] width of the crystal.
+ * length:        [m] zdepth (length) of the crystal.
+ * thickness:     [m] thickness of crystal (along y-axis, the surface normal)
+ * material:      [ ] Si ("Si.txt"), Ge ("Ge.txt")
+ * form_factors   [ ] "FormFactors.txt" from McXtrace install, usually
+ * V:             [AA^3] unit cell volume
+ * h:             [ ] 1st Miller index of reflection
+ * k:             [ ] 2nd Miller index of reflection
+ * l:             [ ] 3rd Miller index of reflection
+ * alphax:        [ ] x component of normal (unit vector) to crystal planes. Vector is usually [0,0,1] for symmetric Laue. Crystal surface itself has normal [0,1,0].
+ * alphay:        [ ] y component of normal (unit vector) to crystal planes.
+ * alphaz:        [ ] z component of normal (unit vector) to crystal planes.
  * debye_waller_B: [AA^2] Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp, 0.4632
- * crystal_type: [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+ * crystal_type:  [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
  *      2 => Mx_crystal_diamond: diamond
  *      3 => Mx_crystal_fcc: fcc
  *      4 => Mx_crystal_fcc: bcc
- * structure_factor_scale_r,i    complex explicit override of structure factor multiplier for crystal structure if Bragg_crystal_explicit
- * transmission_sampling, forward_diffraction_sampling, laue_sampling  statistical sampling of each
- *        diffraction mode.  Usually, for Laue diffraction, just 0,0,1.  If the general behavior of the transmitted beams
- *        is interesting, use 1,1,1 which samples all beams equally.  Results weights are adjusted for this,
- *        so computed intensities won't be affected.
+ * structure_factor_scale_r: [ ] real part of complex explicit override of structure factor multiplier for crystal structure if Bragg_crystal_explicit
+ * structure_factor_scale_i: [ ] imaginary part of complex explicit override of structure factor multiplier for crystal structure if Bragg_crystal_explicit
+ * transmission_sampling:    [ ] enable sampling of transmission diffraction mode.
+ * forward_diffraction_sampling:  [ ]  enable sampling of forward diffraftion mode.
+ * laue_sampling:            [ ] enable sampling of laue diffraction mode.
  *
  *
  * %E
