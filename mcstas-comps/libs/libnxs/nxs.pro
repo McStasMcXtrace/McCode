@@ -1,3 +1,10 @@
+#-------------------------------------------------
+# created by Mirko Boin
+#            Helmholtz-Zentrum Berlin (HZB)
+#            boin@helmholtz-berlin.de
+#-------------------------------------------------
+
+include( ../build.pri )
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -30,3 +37,6 @@ win32-msvc* { #ms-compiler
 OTHER_FILES += \
     Doxyfile \
     nxs-files/*
+
+
+INSTALLS += target

@@ -1,13 +1,14 @@
 /*****************************************************************************
 * McStas, neutron ray-tracing package
 *         Copyright (C) 1997-2012 Risoe National Laboratory, Roskilde, Denmark
-*
-* Component: Sample_nxs
+
+* Component: sample_nxs
 *
 * %IDENTIFICATION
 * Author: Mirko Boin
-* Date: Oct 2014
+* Date: Jan 2019
 * Origin: Helmholtz-Zentrum Berlin fuer Materialien und Energie (Germany)
+* Version: $Revision: 1.3$
 *
 * General powder/polycrystalline sample with neutron-matter interaction based
 *    on neutron cross section calculations of a unit cell
@@ -15,26 +16,26 @@
 * %DESCRIPTION
 * Features:
 *      - coherent and incoherent scattering, absorption and transmission
-*      - multiple scattering
+*      - multiple scattering 
 *      - wavelength-dependent neutron cross section calculation
 *      - unit cell definition (via input file)
 *      - focussing option for scattered neutrons (via d_phi)
 *      - strain gradient simulation for axial symmetric samples (...to be extended)
 *
-* Geometry is a powder filled cylinder or a box defined by radius or xwidth,
+* Geometry is a powder filled cylinder or a box defined by radius or xwidth, 
 * yheight, zthick respectively. The component handles coherent and incoherent
 * scattering (also multiple scattering), absorption and transmission. Hence, it
 * is suitable for diffraction (scattering) and imaging (transmission) instruments
 * at the same time. In order to improve the neutron statistics at the detector
 * these individual features can be enabled/disabled using TransOnly, IncohScat,
-* MultiScat.
+* MultiScat. 
 * For example, if scattering shall not be monitored (e.g. imaging), then TransOnly
 * can be set to 1 to let the component calculate the neutron transmission through
 * the sample only. Likewise, incoherent scattering can be switched on and off.
-*
+* 
 * The decision of whether a neuron shall be scattered, absorbed or transmitted is
 * based on the wavelength-dependent neutron cross sections (nxs), i.e. the neutron
-* velocity is used here. These cross sections represent the individual scattering
+* velocity is used here. These cross sections represent the individual scattering 
 * and absorption probabilities for each individual neutron. However, the calculation
 * of neutron cross sections depends on the material defined for this sample component.
 * Therefore, several input parameters such as the crystal structure and the atoms
@@ -72,37 +73,43 @@
 * The above example defines a pure (fcc) aluminium. Other example files are provided.
 * Alternatively, a fallback mechanism exists to simulate an alpha-Fe (bcc) sample
 * if an input file is missing. But have a look for warning messages during simulation to
-* make sure you are not running the fallback alpha-Fe simulation accidently!
+* make sure you are not running the fallback alpha-Fe simulation accidently! 
 *
 * CHANGELOG:
 *    v1.0 - first official release with McStas 2.0
 *    v1.1 - enabled strain distribution
 *    v1.2 - use updated libnxs (global Debye temp -> parameter files changed)
-*         - corrected sigma incoherent
+*         - corrected sigma incoherent  
 *         - updated towards McStas 2.1 conventions
-*
+*    v1.3 - bugfixes
+
+
 * For details, please contact the author and visit the nxs website and/or the repository.
 * NXS Website: <a href="http://www.helmholtz-berlin.de/people/boin/nxs_en.html">http://www.helmholtz-berlin.de/people/boin/nxs_en.html</a>
 * NXS Repository: <a href="http://bitbucket.org/mirkoboin/nxs">http://bitbucket.org/mirkoboin/nxs</a>
 *
-* %EXAMPLES
-* COMPONENT sample = Sample_nxs( yheight = 0.005, radius = 0.0025, nxsFileName = "Al.nxs",
-*                                max_hkl=8, TransOnly = 0, IncohScat = 1, MultiScat = 0, d_phi = 110.0 )
+*
 * %PARAMETERS
 *
 * INPUT PARAMETERS
 *
-* TransOnly: []       enable/disable (=1/=0) the transmission only option
-* IncohScat: []       enable/disable (=1/=0) incoherent scattering
-* MultiScat: []       enable/disable (=1/=0) multiple scattering
-* xwidth: [m]         horizontal dimension of sample, as a width 
-* yheight: [m]        vertical dimension of sample, as a height 
-* zthick: [m]         thickness of sample 
-* radius: [m]         radius of sample in (x,z) plane 
-* nxsFileName: []     filename of the unit cell definition
-* max_hkl: []         maximum (hkl) indices to consider for the nxs calculation, e.g. max_hkl=3 means (hkl)=333
-* d_phi=0:     Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
-* strainFileName: []  filename for simulating strain gradients
+* TransOnly:   enable/disable (=1/=0) the transmission only option
+* IncohScat:   enable/disable (=1/=0) incoherent scattering
+* MultiScat:   enable/disable (=1/=0) multiple scattering
+* xwidth:      horizontal dimension of sample, as a width [m]
+* yheight:     vertical dimension of sample, as a height [m]
+* zthick:      thickness of sample [m]
+* radius:      radius of sample in (x,z) plane [m]
+* nxsFileName: filename of the unit cell definition
+* max_hkl:     maximum (hkl) indices to consider for the nxs calculation, e.g. max_hkl=3 means (hkl)=333
+* d_phi=0:     Angle corresponding to the vertical angular range
+*              to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
+* strainFileName:   filename for simulating strain gradients
+* sample_temp: sample temperature [K]
+*
+* %EXAMPLES
+* COMPONENT sample = sample_nxs( yheight = 0.005, radius = 0.0025, nxsFileName = "Al.nxs",
+*                                max_hkl=8, TransOnly = 0, IncohScat = 1, MultiScat = 0, d_phi = 110.0 )
 *
 * %L
 * M. Boin (2012), <i>J. Appl. Cryst.</i> <b>45</b>, 603-607, <a href="http://dx.doi.org/10.1107/S0021889812016056">doi:10.1107/S0021889812016056</a>
@@ -118,11 +125,12 @@
 
 DEFINE COMPONENT Sample_nxs
 DEFINITION PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1 )
-SETTING PARAMETERS ( xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="" )
+SETTING PARAMETERS ( xwidth=0, yheight=0, zthick=0, radius=0, thickness=0, string geometry=0, string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="", sample_temp=293.0 )
 OUTPUT PARAMETERS (isrect,intersect,nxs_init_success,p_transmit,xsect_total,xsect_coherent,
 xsect_incoherent,xsect_absorption,
 lambda,velocity,fullpath,t1,t2,uc,A,mu_factor,sd,V2L)
 DEPENDENCY "-I@MCCODE_LIB@/libs/libnxs/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
+
 
 
 SHARE
@@ -131,33 +139,35 @@ SHARE
 
 %include "nxs.h"
 %include "read_table-lib"
-
+%include "interoff-lib"
+  
 enum StrainDistribution {
-AxialSym1D,     /* 1D axial symmetric, i.e. cylinder sample with strain gradient along radius */
-AxialSym2D      /* 2D axial symmetric, i.e. cylinder sample with strain gradient along radius and along height */
-/*NoSym1D*/
+  AxialSym1D,     /* 1D axial symmetric, i.e. cylinder sample with strain gradient along radius */
+  AxialSym2D      /* 2D axial symmetric, i.e. cylinder sample with strain gradient along radius and along height */
+  /*NoSym1D*/
 };
 
 typedef struct {
-/** values from FILE **/
-/* strains in the sample represented by lattice spacing */
-int n_entries;          /* number of entries for hoop, radial, axial */
-double *pos_x;          /* lists of all positions */
-double *pos_y;
-double *pos_z;
-double *strains_hoop;   /* lists of all strain values */
-double *strains_radial;
-double *strains_axial;
-double d0_hoop;         /* reference values */
-double d0_radial;
-double d0_axial;
-enum StrainDistribution strain_distr;  /* strain distribution mode */
+  /** values from FILE **/
+  /* strains in the sample represented by lattice spacing */
+  int n_entries;          /* number of entries for hoop, radial, axial */
+  double *pos_x;          /* lists of all positions */
+  double *pos_y;
+  double *pos_z;
+  double *strains_hoop;   /* lists of all strain values */
+  double *strains_radial;
+  double *strains_axial;
+  double d0_hoop;         /* reference values */
+  double d0_radial;
+  double d0_axial;
+  enum StrainDistribution strain_distr;  /* strain distribution mode */
 } StrainData;
 
 int readStrainFile( char *fileName, StrainData *sd )
 {
   /* read the file */
   t_Table dataTable;
+  Table_Read(&dataTable, fileName, 1); /* read 1st block data from file into table */
   int i;
   char **parsing;
 
@@ -167,20 +177,11 @@ int readStrainFile( char *fileName, StrainData *sd )
   int column_hoop = 0;
   int column_radial = 0;
   int column_axial = 0;
-  int status;
-
+  
   sd->d0_hoop = sd->d0_radial = sd->d0_axial = 0.0;
-
-  /*try to read the strain data from a file - return immidiately if not succesful*/
-  status=Table_Read(&dataTable, fileName, 1); /* read 1st block data from file into table */
-  if(status==-1){
-      fprintf(stderr,"%s: Warning: Could not read table from '%s' - using default values.\n", NAME_CURRENT_COMP, fileName);
-      sd->n_entries = 0;
-      return -1;
-  }
-
+  
   /* parsing of header for sample parameters */
-  parsing = Table_ParseHeader( dataTable.header,"d0_hoop","d0_radial","d0_axial",NULL );
+  parsing = Table_ParseHeader( dataTable.header,"d0_hoop","d0_radial","d0_axial",NULL );  
   if (parsing)
   {
     if( parsing[0] )
@@ -223,10 +224,10 @@ int readStrainFile( char *fileName, StrainData *sd )
       if (parsing[i])
         free(parsing[i]);
     free(parsing);
-
+    
     /* decide which strain distribution is stored in the file */
     int minimum_columns = 4;
-    if( column_radius )
+    if( column_radius ) 
     {
       sd->strain_distr = AxialSym1D;
       minimum_columns = 4;
@@ -236,7 +237,7 @@ int readStrainFile( char *fileName, StrainData *sd )
       sd->strain_distr = AxialSym2D;
       minimum_columns = 5;
     }
-
+    
     /* check if data exists (at least minimum number of columns) */
     if( dataTable.columns < minimum_columns )
     {
@@ -244,7 +245,7 @@ int readStrainFile( char *fileName, StrainData *sd )
       sd->n_entries = 0;
       return -1;
     }
-
+    
 
     /* allocate data array */
     sd->pos_x = (double*)malloc(dataTable.rows*sizeof(double));
@@ -266,7 +267,7 @@ int readStrainFile( char *fileName, StrainData *sd )
     };
     struct list_struct* dataList = (struct list_struct*)malloc( sizeof(struct list_struct)*sd->n_entries );
 
-
+    
     for (i=0; i<sd->n_entries; i++)
     {
       dataList[i].pos_x = Table_Index(dataTable, i, column_radius-1);
@@ -284,7 +285,7 @@ int readStrainFile( char *fileName, StrainData *sd )
     }
     /* (re-)sort the data set to evaluate it in the TRACE section */
     qsort( dataList, dataTable.rows, sizeof(struct list_struct), pos_x_compare );
-
+    
     if( sd->strain_distr == AxialSym2D )
     {
       int pos_y_compare( const void *par1, const void *par2)
@@ -293,19 +294,19 @@ int readStrainFile( char *fileName, StrainData *sd )
       }
       qsort( dataList, dataTable.rows, sizeof(struct list_struct), pos_y_compare );
     }
-
+    
     for (i=0; i<sd->n_entries; i++)
     {
       sd->pos_x[i] = dataList[i].pos_x;
-
+      
       if( sd->strain_distr == AxialSym2D )
         sd->pos_y[i] = dataList[i].pos_y;
-
+        
       sd->strains_hoop[i] = dataList[i].hoop;
       sd->strains_radial[i] = dataList[i].radial;
       sd->strains_axial[i] = dataList[i].axial;
     }
-
+    
     /* data set is now sorted */
   }
   return 0;
@@ -319,37 +320,18 @@ int readStrainFile( char *fileName, StrainData *sd )
 DECLARE
 %{
 
-int isrect;
-int intersect;
+int shape;
+off_struct offdata;
 int nxs_init_success;
 
-/* probabilities */
-double p_transmit;
-
 /* cross sections */
-double xsect_total;
 double xsect_coherent;
 double xsect_incoherent;
 double xsect_absorption;
 
-
-/* wavelength + velocity of the neutron */
-double lambda;
-double velocity;
-
-/* neutron path through the sample */
-double fullpath;
-
-/* intersection times */
-double t1;
-double t2;
-
 /* sample */
 NXS_UnitCell uc;
-NXS_AtomInfo *atomInfoList;
 
-double A;
-double mu_factor;
 StrainData sd;
 
 /* velocity to lambda conversion */
@@ -361,22 +343,36 @@ double V2L;
 
 INITIALIZE
 %{
+fprintf(stderr, "%s: Using libnxs version %s\n", NAME_CURRENT_COMP, nxs_version());
 
-isrect = 0;
-/* check sample geometry (box or cylinder?) */
-if ( !radius || !yheight )
+shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+if( geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0") )
 {
-  if ( !xwidth || !yheight || !zthick )
-    exit( fprintf(stderr, "Error: %s has no volume (zero dimension)\n", NAME_CURRENT_COMP) );
-  else
-    isrect = 1;
+  if( off_init(geometry, xwidth, yheight, zthick, 0, &offdata) )
+  {
+    shape = 3; /* arbitrary */
+    thickness=0; //concentric=0;
+  }
 }
+else if( xwidth && yheight && zthick )
+  shape = 1;  /* box */
+else if (radius > 0 &&  yheight)
+  shape = 0; /* cylinder */
+else if (radius > 0 && !yheight)
+  shape = 2; /* sphere */
 
+if( shape < 0 ) 
+  exit( fprintf(stderr,"Sample_nxs %s has invalid dimensions.\n"
+    "ERROR: Please check parameter values (xwidth, yheight, zthick, radius).\n", NAME_CURRENT_COMP) );
 
-if( readStrainFile( strainFileName, &sd ) )
+  
+if( strainFileName[0] != '\0' )
 {
-  fprintf(stderr, "%s: No strain data found! Recalculation of d-values not used.\n", NAME_CURRENT_COMP);
-  sd.n_entries = 0;
+  if( readStrainFile( strainFileName, &sd ) )
+  {
+    fprintf(stderr, "%s: No strain data found! Recalculation of d-values not used.\n", NAME_CURRENT_COMP);
+    sd.n_entries = 0;
+  }
 }
 
 if (TransOnly)
@@ -389,10 +385,10 @@ if (TransOnly)
 else
 {
   if (IncohScat)
-    fprintf(stderr, "%s: Allowing incoherent scattering.\n", NAME_CURRENT_COMP);
+    fprintf(stderr, "%s: Enabling incoherent scattering.\n", NAME_CURRENT_COMP);
   if (MultiScat)
   {
-    fprintf(stderr, "%s: Allowing multiple scattering.\n", NAME_CURRENT_COMP);
+    fprintf(stderr, "%s: Enabling multiple scattering.\n", NAME_CURRENT_COMP);
     if (d_phi)
     {
       fprintf(stderr, "%s: WARNING: No focussing possible in multiple scattering mode. Setting d_phi=0.\n", NAME_CURRENT_COMP);
@@ -401,14 +397,19 @@ else
   }
 }
 
-
 /* read unit cell parameters from file and initialise hkl */
 uc = nxs_newUnitCell();
-int numAtoms = nxs_readParameterFile( nxsFileName, &uc, &atomInfoList);
+NXS_AtomInfo *atomInfoList = NULL;
+int numAtoms = 0;
+if( nxsFileName[0] != '\0' )
+  numAtoms = nxs_readParameterFile( nxsFileName, &uc, &atomInfoList); 
 if( numAtoms < 1 )
 {
   /* fallback solution: if no file exists, use alpha_iron */
-  fprintf(stderr, "%s: WARNING: nxs parameter file %s NOT found! Using default values...\n", NAME_CURRENT_COMP, nxsFileName);
+  if( nxsFileName[0] != '\0' )
+    fprintf(stderr, "%s: WARNING: nxs parameter file %s NOT found!\n", NAME_CURRENT_COMP, nxsFileName);
+  fprintf(stderr, "%s: Using default values for bcc iron (alpha-Fe)...\n", NAME_CURRENT_COMP, nxsFileName);
+
   strncpy(uc.spaceGroup,"229",MAX_CHARS_SPACEGROUP);
   uc.a = 2.866; uc.alpha = 90.0; uc.debyeTemp = 464.0;
   NXS_AtomInfo ai;
@@ -430,27 +431,20 @@ if( NXS_ERROR_OK != nxs_initUnitCell(&uc) )
 else
 {
   nxs_init_success = 1;
-  uc.temperature = 293.0;
+  uc.temperature = sample_temp;
   for( i=0; i<numAtoms; i++ )
     nxs_addAtomInfo( &uc, atomInfoList[i] );
 
   uc.maxHKL_index = max_hkl;
   nxs_initHKL( &uc );
-
   if( sd.n_entries>0 )
   {
     if( sd.d0_hoop<=1E-6 ) sd.d0_hoop = uc.a;
     if( sd.d0_radial<=1E-6 ) sd.d0_radial = uc.a;
     if( sd.d0_axial<=1E-6 ) sd.d0_axial = uc.a;
   }
-
-  /* factor for the calculation of the attenuation */
-  mu_factor = 1.0 / uc.volume;
-
   V2L = 2.0 * PI / V2K;
 }
-
-
 
 %}
 
@@ -463,14 +457,27 @@ int i;
 double strain_axial;
 double strain_hoop;
 double strain_radial;
-intersect = 0;
+int intersect = 0;
+double p_transmit;
+double lambda;
+double velocity;
+double fullpath;
+/* intersection times */
+double t1;
+double t2;
+
+double xsect_total;
+
 
 /* box or cylinder? */
-if ( isrect )
-  intersect = box_intersect(&t1,&t2,x,y,z,vx,vy,vz,xwidth, yheight, zthick);
-else
+if ( shape == 0 )
   intersect = cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius, yheight);
-
+else if( shape == 1 )
+  intersect = box_intersect(&t1,&t2,x,y,z,vx,vy,vz,xwidth, yheight, zthick);
+//else if( shape == 2 )
+//  intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
+else if( shape == 3 )
+  intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 
 /* neutron intersects? */
 if( intersect && (t2>0) && nxs_init_success )
@@ -491,7 +498,7 @@ if( intersect && (t2>0) && nxs_init_success )
     fullpath = velocity * (t2-t1);
 
     /* change the neutron weight */
-    p_transmit = exp( -xsect_total * mu_factor * fullpath*1E2 );
+    p_transmit = exp( -xsect_total * fullpath*1E2 / uc.volume );
     p *= p_transmit;
   }
   /* ...also handle scattering events */
@@ -508,7 +515,7 @@ if( intersect && (t2>0) && nxs_init_success )
       PROP_DT( path + t1 );
       // printf("%i: t1=%f  t2=%f\n",ms_loop, t1*1000,t2*1000);
       path = path * velocity;
-
+      
       /******** consider strain data... ********/
       if( sd.n_entries>0)
       {
@@ -541,7 +548,7 @@ if( intersect && (t2>0) && nxs_init_success )
           strain_hoop = (sd.strains_hoop[i] - sd.strains_hoop[i-1]) / (sd.pos_x[i] - sd.pos_x[i-1]) * (pos - sd.pos_x[i-1]) + sd.strains_hoop[i-1];
           strain_radial = (sd.strains_radial[i] - sd.strains_radial[i-1]) / (sd.pos_x[i] - sd.pos_x[i-1]) * (pos - sd.pos_x[i-1]) + sd.strains_radial[i-1];
         }
-
+      
         /* now take care of the neutron flight direction */
         /* use sin2psi calculation to determine current dvalue */
 
@@ -559,7 +566,7 @@ if( intersect && (t2>0) && nxs_init_success )
         double d_axial = strain_axial*sd.d0_axial*1E-6+sd.d0_axial;
         dvalue = (dvalue-d_axial) * sin2psi + d_axial;
 
-        /* re-init nxs calculation & adjust lattice spacings for all hkl...*/
+        /* re-init nxs calculation & adjust lattice spacings for all hkl...*/ 
         for( i=0; i<uc.nHKL; i++ )
         {
           uc.a = dvalue;
@@ -572,17 +579,17 @@ if( intersect && (t2>0) && nxs_init_success )
         xsect_absorption = nxs_Absorption(lambda, &uc );
         xsect_total = xsect_coherent + xsect_incoherent + xsect_absorption;
       }
-
+      
       /* path through the sample */
       fullpath = velocity * (t2-t1);
-      p_transmit = exp( -xsect_total * mu_factor * fullpath*1E2 );
+      p_transmit = exp( -xsect_total * fullpath*1E2 / uc.volume );
 
       /* check if neutron interacts with or transmits through the sample */
       if( p_transmit < rand01() )
       {
         double roulette_ball = rand01() *  (xsect_total);
         double norm = lambda*lambda*1E-2 / 2.0 / uc.volume;
-
+      
         /* ******************** */
         /*  SCATTER coherently  */
         /* ******************** */
@@ -596,7 +603,7 @@ if( intersect && (t2>0) && nxs_init_success )
             max_hkl++;
             contrib += uc.hklList[max_hkl].FSquare * uc.hklList[max_hkl].multiplicity * uc.hklList[max_hkl].dhkl;
           }
-
+          
           /* determine lattice plane (for scattering) */
           roulette_ball = rand01() * contrib;
           contrib = 0.0;
@@ -606,7 +613,7 @@ if( intersect && (t2>0) && nxs_init_success )
             if( roulette_ball < contrib )
               break;
           }
-
+        
           /* get scattering angle */
           double theta = asin( lambda / 2.0 / uc.hklList[j].dhkl );
           if( isnan(theta) )
@@ -620,9 +627,9 @@ if( intersect && (t2>0) && nxs_init_success )
           double tmp_vx, tmp_vy, tmp_vz;
           double vout_x, vout_y, vout_z;
           double arg, d_phi0;
-
+          
           if (d_phi)
-          {
+          { 
             arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
             if (arg < -1 || arg > 1)
               d_phi = 0;
@@ -644,8 +651,8 @@ if( intersect && (t2>0) && nxs_init_success )
           }
           else
             d_phi0 = PI*randpm1();
-
-
+          
+          
           vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, 1,0,0);
           if (!tmp_vx && !tmp_vy && !tmp_vz) { tmp_vx=tmp_vz=0; tmp_vy=1; }
           /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
@@ -656,7 +663,7 @@ if( intersect && (t2>0) && nxs_init_success )
           vy = tmp_vy;
           vz = tmp_vz;
         }
-
+        
         /* ******************** */
         /* SCATTER incoherently */
         /* ******************** */
@@ -667,7 +674,7 @@ if( intersect && (t2>0) && nxs_init_success )
           {
             double solid_angle;
             randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 0, 0, 1, 2.0*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
-
+            
             vx *= velocity;
             vy *= velocity;
             vz *= velocity;
@@ -682,20 +689,27 @@ if( intersect && (t2>0) && nxs_init_success )
           ms_loop = 0;
           ABSORB;
         } /* end of if-else( roulette_ball <= xsect_coherent ) */
-
-
+        
+        
         int err = 0;
-        if (isrect && !box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zthick) || t2<0) err=1;
-        else if(!isrect && !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight) || t2<0) err=1;
+        if( shape==0 && !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight) || t2<0 )
+          err=1;
+        else if( shape==1 && !box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zthick) || t2<0 )
+          err=1;
+        else if( shape==2 && !sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius) || t2<0 )
+          err=1;
+        else if( shape==3 && !off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata) || t2<0 )
+          err=1;
 
-        if (err) {
-          /* Strange error: did not hit cylinder */
-          fprintf(stderr, "Sample_nxs: FATAL ERROR: Did not hit sample from inside.\n, t1=%f  t2=%f\n", t1, t2);
+        if( err )
+        {
+          /* Strange error */
+          fprintf(stderr, "sample_nxs: FATAL ERROR: Did not hit sample from inside.\n, t1=%f  t2=%f\n", t1, t2);
           ABSORB;
         }
         t1 = 0.0;
         SCATTER;
-
+        
       } /* end of if( p_transmit < rand01() ) */
       else
       {
@@ -703,9 +717,9 @@ if( intersect && (t2>0) && nxs_init_success )
         /* without any interaction or neutron weight change */
         ms_loop = 0;
       }
-
+      
     } /* end of while( ms_loop-- ) */
-
+      
   } /* end of if-else(bTransOnly) */
 
 } /* end of if(box_intersect) */
@@ -718,17 +732,33 @@ if( intersect && (t2>0) && nxs_init_success )
 
 MCDISPLAY
 %{
-double h;
-h=yheight;
 
-if (!isrect) {
-  circle("xz", 0,  h/2.0, 0, radius);
-  circle("xz", 0, -h/2.0, 0, radius);
-  line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
-  line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
-  line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
-  line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
-} else {
+magnify("xyz");
+if( geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0") )
+{	/* OFF file */
+  off_display(offdata);
+}
+else if( radius > 0 &&  yheight )
+{	/* cylinder */
+  circle("xz", 0,  yheight/2.0, 0, radius);
+  circle("xz", 0, -yheight/2.0, 0, radius);
+  line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+  line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+  line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+  line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+  if( thickness )
+  {
+    double radius_i=radius-thickness;
+    circle("xz", 0,  yheight/2.0, 0, radius_i);
+    circle("xz", 0, -yheight/2.0, 0, radius_i);
+    line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
+    line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
+    line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
+  }
+}
+else if( xwidth && yheight )
+{ /* box/rectangle XY */
   double xmin = -0.5*xwidth;
   double xmax =  0.5*xwidth;
   double ymin = -0.5*yheight;
@@ -736,20 +766,27 @@ if (!isrect) {
   double zmin = -0.5*zthick;
   double zmax =  0.5*zthick;
   multiline(5, xmin, ymin, zmin,
-            xmax, ymin, zmin,
-            xmax, ymax, zmin,
-            xmin, ymax, zmin,
-            xmin, ymin, zmin);
+               xmax, ymin, zmin,
+               xmax, ymax, zmin,
+               xmin, ymax, zmin,
+               xmin, ymin, zmin);
   multiline(5, xmin, ymin, zmax,
-            xmax, ymin, zmax,
-            xmax, ymax, zmax,
-            xmin, ymax, zmax,
-            xmin, ymin, zmax);
+               xmax, ymin, zmax,
+               xmax, ymax, zmax,
+               xmin, ymax, zmax,
+               xmin, ymin, zmax);
   line(xmin, ymin, zmin, xmin, ymin, zmax);
   line(xmax, ymin, zmin, xmax, ymin, zmax);
   line(xmin, ymax, zmin, xmin, ymax, zmax);
   line(xmax, ymax, zmin, xmax, ymax, zmax);
 }
+else if ( radius > 0 && !yheight )
+{	/* sphere */
+  circle("xy", 0,  0.0, 0, radius);
+  circle("xz", 0,  0.0, 0, radius);
+  circle("yz", 0,  0.0, 0, radius);        
+}
+  
 %}
 
 END
