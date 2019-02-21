@@ -124,8 +124,7 @@
 *                  and 5 degrees, in 10 bins, into "mon1.A" output 1D file
 *   options = "sphere theta phi outgoing"  for a sphere PSD detector (out
 *                  beam)  and saves into file "MyMon_[Date_ID].th_ph"
-*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height
-         banana detector
+*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height banana detector
 *   options = "angle radius all auto"   is a 2D monitor with automatic limits
 *   options = "list=1000 kx ky kz energy" records 1000 neutron event in a file
 *   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
