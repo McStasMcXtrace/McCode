@@ -29,7 +29,7 @@
 the default mcstas/mcxtrace on your machine:
  * mcgui    (python) - Use "File -> Set as default"
  * mcgui.pl (perl)   - Use "Tools -> Set this McCode as sys default"
- * Furhter menu points in the same place allows to configure the app to run the perl or python UI
+ * Further menu points in the same place allows to configure the app to run the perl or python UI
 
 * If you need support for NeXus output, please follow the instructions
   at https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#install-nexus
