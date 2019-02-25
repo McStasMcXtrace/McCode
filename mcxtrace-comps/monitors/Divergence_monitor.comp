@@ -28,22 +28,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* nv:       Number of pixel columns (1)
-* nh:       Number of pixel rows (1)
-* nx:       (1)
-* ny:       Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.(1)
-* nz:       (1)
-* maxdiv_v: Maximal vertical divergence detected (degrees/rad)
-* maxdiv_h: Maximal horizontal divergence detected (degrees/rad)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
-* rad:   If set - divergence will be measured in radians. (1)
+* xmin: [m]             Lower x bound of detector opening 
+* xmax: [m]             Upper x bound of detector opening 
+* ymin: [m]             Lower y bound of detector opening 
+* ymax: [m]             Upper y bound of detector opening 
+* xwidth: [m]           Width of detector. Overrides xmin, xmax 
+* yheight: [m]          Height of detector. Overrides ymin, ymax 
+* nv: [1]               Number of pixel columns 
+* nh: [1]               Number of pixel rows 
+* nx: [1]               
+* ny: [1]               Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane 
+* nz: [1]               
+* maxdiv_v: [degrees]   Maximal vertical divergence detected 
+* maxdiv_h: [degrees]   Maximal horizontal divergence detected 
+* filename: []          Name of file in which to store the detector image text
+* restore_xray: [1]     If set, the monitor does not influence the photon state 
+* rad:  [1]             If set - divergence will be measured in radians.
 *
 * OUTPUT PARAMETERS:
 *

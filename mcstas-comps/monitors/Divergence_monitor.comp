@@ -37,7 +37,7 @@
 * ny: [1]               Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane 
 * nz: [1]               
 * maxdiv_v: [degrees]   Maximal vertical divergence detected 
-* maxdiv_h: [degrees]   Maximal vertical divergence detected 
+* maxdiv_h: [degrees]   Maximal horizontal divergence detected 
 * filename: []          Name of file in which to store the detector image text
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 * nowritefile: [1]      If set, monitor will skip writing to disk
