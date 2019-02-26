@@ -558,6 +558,7 @@ int cogen_comp_declare(struct comp_inst *comp)
     if (!nb_parameters)
       coutf("  char %s_has_no_parameters;", comp->def->name);
     coutf("}; /* class_%s_parameters */", comp->def->name);
+
     cogen_defundef(comp, comp->def->def_par, PAR_UNDEF); // undef after cogen_comp_init_defpar
     cout("");
 
@@ -1069,6 +1070,72 @@ int cogen_comp_trace(struct comp_inst *comp, struct instr_def *instr)
 {
   return(cogen_comp_section(comp, instr, "TRACE", "trace",
     comp->def->trace_code, &(comp->def->flag_defined_trace)));
+}
+
+/*******************************************************************************
+* Returns a new list with the (unique) type names of components in instr.
+*   instr: an instrument definition structure
+*******************************************************************************/
+List get_comp_type_names(struct instr_def *instr)
+{
+  List_handle allcomps;
+  List_handle types;
+  List types_lst;
+
+  struct comp_inst *comp;
+  char* tpe;
+
+  allcomps = list_iterate(instr->complist);
+  types_lst = list_create();
+
+  while((comp = list_next(allcomps)) != NULL) {
+    if (!_list_contains_str(types_lst, comp->def->name)) {
+      list_add(types_lst, comp->def->name);
+    }
+    coutf("// %s:%s:%i:%i", comp->name, comp->def->name, comp->def->counter_instances, &comp->def);
+  }
+  list_iterate_end(allcomps);
+
+  coutf("//");
+
+  types = list_iterate(types_lst);
+  while((tpe = list_next(types)) != NULL) {
+    coutf("// TYPES %s", tpe);
+  }
+  list_iterate_end(types);
+
+  return types_lst;
+}
+int _list_contains_str(List l, char* str){
+  List_handle iter;
+  iter = list_iterate(l);
+  char* e;
+  while((e = list_next(iter)) != NULL) {
+    if (!strcmp(e, str)) return 1;
+  }
+  return 0;
+}
+
+/*******************************************************************************
+*
+*
+*******************************************************************************/
+void cogen_getvarpars_fct(struct instr_def *instr)
+{
+  cout("void* _getvar_parameters(char* compname)");
+  cout("/* enables the MC_GETPAR and MC_GET macros use with setpars (cogen3) */");
+  cout("{");
+
+  List_handle iter;
+  iter = list_iterate(instr->complist);
+  struct comp_inst *comp;
+
+  while((comp = list_next(iter)) != NULL) {
+    coutf("  if (!strcmp(compname, \"%s\")) return (void *) &_%s->_parameters;", comp->name, comp->name);
+  }
+  list_iterate_end(iter);
+
+  cout("}");
 }
 
 /*******************************************************************************
@@ -2098,6 +2165,9 @@ cogen(char *output_name, struct instr_def *instr)
   warnings += cogen_save(instr);
   warnings += cogen_finally(instr);
   warnings += cogen_display(instr);
+
+  cogen_getvarpars_fct(instr);
+
   embed_file("mccode_main.c");
 
   if (verbose && warnings)
@@ -2109,6 +2179,7 @@ cogen(char *output_name, struct instr_def *instr)
   /* This writes a snippet c-code with calls to acc_attach for OpenACC use */
   output_handle = fopen("mccode_attaches.c", "w");
   warnings += cogen_acc_attach(instr);
+
 
 
 } /* cogen */

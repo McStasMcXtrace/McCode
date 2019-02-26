@@ -316,6 +316,8 @@ char  *mcsig_message;
 #define MC_GET2(comp, field) (_ ## comp->field)
 #define MC_GET(comp, field) MC_GET2(comp,field)
 
+// setting parameters based/runtime MC_GETPAR equivalent
+void* _getvar_parameters(char* compname);
 
 /* Retrieve component information from the kernel */
 /* Name, position and orientation (both absolute and relative)  */
