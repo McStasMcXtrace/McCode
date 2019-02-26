@@ -71,8 +71,12 @@ EXTEND %{
 %}
 
 COMPONENT ChopMon2 = StatisticalChopper_Monitor(
-         options ="banana auto time bins=500, y bins=100",
-         radius=2, yheight=0.11, comp=chop1, restore_neutron=1)
+  options ="banana auto time bins=500,
+  y bins=100",
+  radius=2,
+  yheight=0.11,
+  comp="chop1",
+  restore_neutron=1)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT time_mon2 =  Monitor_nD(

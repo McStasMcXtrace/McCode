@@ -27,7 +27,7 @@
 * ETA: [min]      Monochromator mosaic (gaussian)
 * verbose: [1]    Print DIF configuration. 0 to be quiet
 * SM: [1]         Scattering sense of beam from Monochromator. 1:left, -1:right
-* RH: []          
+* RH: []
 *
 * %End
 *******************************************************************************/
@@ -44,8 +44,8 @@ else if (THETA_M && !lambda && DM)
 	lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
 else if (THETA_M && lambda)
 	DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
-	
-THETA_M *= SM; /* take-off direction left or right */	
+
+THETA_M *= SM; /* take-off direction left or right */
 
 /* test input parameters */
 if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
@@ -87,18 +87,18 @@ REMOVABLE COMPONENT Source = Source_gen(
     lambda0 = lambda, dlambda = lambda*0.01,
     T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
   AT (0, 0, 0) RELATIVE Origin
-  
+
 /* TIP: monochromator cradle */
 COMPONENT mono_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
-  
+
 COMPONENT Mon_Source = Monitor_nD(
   xwidth=0.1, yheight=0.15,
   options="x y")
 AT (0, 0, -L2) RELATIVE mono_cradle
-  
+
 COMPONENT Mon_PreMono = PreMonitor_nD(
-  monitor_comp=Mon_Sample
+  monitor_comp="Mon_Sample"
   )
 AT (0, 0, 0) RELATIVE PREVIOUS
 
@@ -116,7 +116,7 @@ COMPONENT mono_out = Arm()
 COMPONENT Mon_SampleXY = Monitor_nD(
   xwidth=0.1, yheight=0.1, options="x y", restore_neutron=1)
   AT (0, 0, L2) RELATIVE mono_out
-  
+
 COMPONENT S1 = Slit(xwidth=0.01, yheight=0.01)
   AT (0, 0, L2-.01) RELATIVE mono_out
 
@@ -125,4 +125,3 @@ COMPONENT Mon_Sample = Monitor_nD(
   AT (0, 0, L2) RELATIVE mono_out
 
 END
-

@@ -12,7 +12,7 @@
 * Example instrument of Scatter_logger feature usage for detection of lost instensity
 *
 * %Description
-* 
+*
 * This instrument is an example of how to use thet newly developed (and experimental)
 * Scatter_logger family of components in McStas. In this example the neutrons deposited in the
 * guide wall of a LENGTH m long straight guide are monitored bytwo instances of Monitor_nD
@@ -78,7 +78,7 @@ COMPONENT guide_simple = Guide(
     Qc = 0.0219, alpha = 6.07, m = 2, W = 0.003)
 AT (0, 0, 1) RELATIVE src
 
-COMPONENT s2=Scatter_logger_stop(logger=s1)
+COMPONENT s2=Scatter_logger_stop(logger="s1")
 AT(0,0,0) RELATIVE PREVIOUS
 
 /*The iterator test code*/
@@ -110,7 +110,7 @@ ROTATED (90,0,0) RELATIVE guide_simple
 /*%}*/
 /**/
 
-COMPONENT iter2 = Scatter_log_iterator_stop(iterator=iter1)
+COMPONENT iter2 = Scatter_log_iterator_stop(iterator="iter1")
 AT(0,0,0) RELATIVE iter1
 
 COMPONENT a1 = Arm()
@@ -119,7 +119,7 @@ JUMP a0 WHEN(MC_GETPAR(iter2,loop))
 
 COMPONENT axxx=Arm()
 At(0,0,12) ABSOLUTE
- 
+
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
 FINALLY
@@ -127,4 +127,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-

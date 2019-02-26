@@ -62,7 +62,7 @@ COMPONENT guide_simple = Guide(
     Qc = 0.0219, alpha = 6.07, m = 2, W = 0.003)
   AT (0, 0, 0.0022) RELATIVE src
 
-  COMPONENT s2=Scatter_logger_stop(logger=s1)
+  COMPONENT s2=Scatter_logger_stop(logger="s1")
 AT(0,0,0) RELATIVE PREVIOUS
 
 /*The iterator test code*/
@@ -100,7 +100,7 @@ EXTEND
 %}
 
 
-COMPONENT iter2 = Scatter_log_iterator_stop(iterator=iter1)
+COMPONENT iter2 = Scatter_log_iterator_stop(iterator="iter1")
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT a1 = Arm()
