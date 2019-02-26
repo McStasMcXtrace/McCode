@@ -48,28 +48,27 @@ DECLARE
 
 INITIALIZE
 %{
-if (px==1 && py==1 && pz==1)
+  if (px==0 && py==0 && pz==0)
   {
-    printf("Set_pol: %s: NULL vector defined!\n"
-	   "ERROR      (px, py, pz). Exiting",
+      printf("WARNING: Set_pol(%s): NULL vector defined. Polarizer is inactive.\n"
            NAME_CURRENT_COMP);
-    exit(1);
   }
 
-  if ((px*px + py*py + pz*pz) > 1)
+  if ((px*px + py*py + pz*pz) > FLT_EPSILON)
   {
-    printf("Set_pol: %s: Polarisation vector (px, py, pz) is unphysical!\n"
-	   "ERROR  px*px + py*py + pz*pz > 1. Exiting....",
+      printf("WARNING: Set_pol(%s): Polarisation vector (px, py, pz) is unphysical!\n"
+            "px*px + py*py + pz*pz = %.18e> 1. Renormalizing...\n",(px*px + py*py + pz*pz),
            NAME_CURRENT_COMP);
-    exit(1);
+      NORM(px,py,pz);
   }
 
-  if(randomOn!=0)
-    printf("Set_pol: %s: Setting polarisation randomly.\n",
+  if(randomOn!=0){
+    printf("Set_pol(%s) Setting polarisation randomly.\n",
            NAME_CURRENT_COMP);
-  else
-    printf("Set_pol: %s: Setting polarisation to (%f, %f, %f)\n",
+  }else{
+    printf("Set_pol(%s) Setting polarisation to (%f, %f, %f)\n",
            NAME_CURRENT_COMP, px, py, pz);
+  }
 %}
 
 TRACE
