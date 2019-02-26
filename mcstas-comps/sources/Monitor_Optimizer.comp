@@ -31,13 +31,13 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xmin: [m]       Lower x bound of monitor opening 
-* xmax: [m]       Upper x bound of monitor opening 
-* ymin: [m]       Lower y bound of monitor opening 
-* ymax: [m]       Upper y bound of monitor opening 
+* xmin: [m]       Lower x bound of monitor opening
+* xmax: [m]       Upper x bound of monitor opening
+* ymin: [m]       Lower y bound of monitor opening
+* ymax: [m]       Upper y bound of monitor opening
 * optim_comp: []  name of the Source_Optimizer component in the instrument definition. Do not use quotes (no quotes)
-* xwidth: [m]     Width of monitor. Overrides xmin,xmax. 
-* yheight: [m]    Height of monitor. Overrides ymin,ymax. 
+* xwidth: [m]     Width of monitor. Overrides xmin,xmax.
+* yheight: [m]    Height of monitor. Overrides ymin,ymax.
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,8 +50,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor_Optimizer
-DEFINITION PARAMETERS (optim_comp)
-SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string optim_comp,
+  xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (This_Monitor_id)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -253,7 +254,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  
+
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

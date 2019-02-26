@@ -28,7 +28,7 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* rotator: [no quotes]  the name of the Rotator component used to initiate the rotation 
+* rotator: [no quotes]  the name of the Rotator component used to initiate the rotation
 *
 * OUTPUT PARAMETERS:
 * angle: [deg]          rotation angle
@@ -37,8 +37,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Derotator
-DEFINITION PARAMETERS (rotator)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string rotator)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -60,7 +60,7 @@ double angle = MC_GETPAR(rotator, angle);
 
 MCDISPLAY
 %{
-  
+
 %}
 
 END

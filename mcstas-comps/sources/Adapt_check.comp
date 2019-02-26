@@ -32,8 +32,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Adapt_check
-DEFINITION PARAMETERS (source_comp)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string source_comp)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -46,8 +46,8 @@ DECLARE
 
 TRACE
 %{
-double new_v, psi;
-struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
+  double new_v, psi;
+  struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
 
   if(p == 0)
     ABSORB;
@@ -62,7 +62,7 @@ struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
 
 MCDISPLAY
 %{
-  
+
 %}
 
 END

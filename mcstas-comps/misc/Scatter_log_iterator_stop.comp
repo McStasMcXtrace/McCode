@@ -9,7 +9,7 @@
 *
 * %I
 *
-* Written by: Erik B Knudsen 
+* Written by: Erik B Knudsen
 * Date: November 2012
 * Version: $Revision: 1.21 $
 * Release: McStas 2.1
@@ -36,12 +36,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Scatter_log_iterator_stop
-DEFINITION PARAMETERS (iterator)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string iterator)
 OUTPUT PARAMETERS (loop)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
-SHARE 
+SHARE
 %{
 %}
 
@@ -50,7 +50,7 @@ DECLARE
   int loop;
 %}
 
-INITIALIZE 
+INITIALIZE
 %{
   loop=1;
 %}
@@ -83,7 +83,7 @@ scatter_iterator_stop:
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. */
-  
+
   line(0,0,0,0.2,0,0);
   line(0,0,0,0,0.2,0);
   line(0,0,0,0,0,0.2);

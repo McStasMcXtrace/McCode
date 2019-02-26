@@ -27,15 +27,15 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Scatter_logger_stop
-DEFINITION PARAMETERS (logger)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string logger)
 OUTPUT PARAMETERS ()
 
 SHARE
 %{
-#define SCATTER0\
-do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
+  #define SCATTER0\
+  do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+  mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
 %}
 
 DECLARE
@@ -61,7 +61,7 @@ TRACE
 #undef mcabsorb
 #define mcabsorb mcabsorbAll
 
-scatter_logger_stop:
+  scatter_logger_stop:
 
   if (bounce_store_index<BOUNCE_LOG_SIZE){
     struct Generalized_State_t *bp;
@@ -80,7 +80,7 @@ scatter_logger_stop:
     bp->_nid=0;
     bp->_comp=0;
     bounce_store_index++;
-  }else if(bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun){
+  } else if (bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun) {
     printf("Warning (%s): Scatter_log overrun - cannot set stop bit. Aborting\n",NAME_CURRENT_COMP);
     exit(1);
   }

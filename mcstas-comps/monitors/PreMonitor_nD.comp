@@ -40,7 +40,7 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* monitor_comp: [no quotes]  name of the associated Monitor_nD where the detection should take place 
+* monitor_comp: [no quotes]  name of the associated Monitor_nD where the detection should take place
 *
 * OUTPUT PARAMETERS:
 *
@@ -51,27 +51,28 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PreMonitor_nD
-DEFINITION PARAMETERS (monitor_comp)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string monitor_comp)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
-/* Flag will be set to 1 automatically */
+  /* Flag will be set to 1 automatically */
 /* unset by user in Monitor_nD if required (with 'not') */
 /* Monitor_nD with premonitor should check that a PreMonitor exists */
 /* if Flag==0 in option parsing -> no pre monitor -> warning, normal monitor */
 
 INITIALIZE
 %{
-struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
-    Vars->Flag_UsePreMonitor = 1;
-    strncpy(Vars->UserName1, NAME_CURRENT_COMP, 64);
+  struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+
+  Vars->Flag_UsePreMonitor = 1;
+  strncpy(Vars->UserName1, NAME_CURRENT_COMP, 64);
 %}
 
 TRACE
 %{
     struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
-    /* directly act on MonitornD_Variables pointer, do not need to update */
 
+    /* directly act on MonitornD_Variables pointer, do not need to update */
     if (Vars->Flag_UsePreMonitor == 1)
     {
         Vars->cp = p;
@@ -92,11 +93,10 @@ TRACE
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. 0.1 m */
-  
+
   line(0,0,0,0.1,0,0);
   line(0,0,0,0,0.1,0);
   line(0,0,0,0,0,0.1);
 %}
 
 END
-

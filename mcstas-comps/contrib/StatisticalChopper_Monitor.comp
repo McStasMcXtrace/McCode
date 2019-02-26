@@ -15,24 +15,24 @@
 * Monitor designed to compute the autocorrelation signal for the Statistical Chopper
 *
 * %Description
-* This component is a time sensitive monitor which calculates the cross 
-* correlation between the pseudo random sequence of a statistical chopper 
+* This component is a time sensitive monitor which calculates the cross
+* correlation between the pseudo random sequence of a statistical chopper
 * and the signal received. It mainly uses fonctions of component Monitor_nD.
 * It is possible to use the various options of the Monitor_nD but the user MUST NOT
-* specify "time" in the options. Auto detection of the time limits is possible if the 
+* specify "time" in the options. Auto detection of the time limits is possible if the
 * user chooses tmin=>tmax.
 *
 * StatisticalChopper_Monitor(options ="banana bins=500, abs theta limits=[5,105],bins=1000")
 *
 * %Parameters
 * INPUT PARAMETERS:
-* comp: [StatisticalChopper]  name of the component monitored. Do not use quotes 
-* tmin: [s]                   minimal time of detection 
-* tmax: [s]                   maximal time of detection 
+* comp: [StatisticalChopper]  name of the component monitored. Do not use quotes
+* tmin: [s]                   minimal time of detection
+* tmax: [s]                   maximal time of detection
 *
 * OUTPUT PARAMETERS:
-* delta_t: [s]                interval of time of the detection 
-* T_p: [s]                    period of the statistical chopper comp 
+* delta_t: [s]                interval of time of the detection
+* T_p: [s]                    period of the statistical chopper comp
 *
 * %L
 * R. Von Jan and R. Scherm. The statistical chopper for neutron time-of-flight spectroscopy. Nuclear Instruments and Methods, 80 (1970) 69-76.
@@ -40,8 +40,8 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
-DEFINITION PARAMETERS (comp)
-SETTING PARAMETERS (tmin=0.0,tmax=0.0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string comp, tmin=0.0,tmax=0.0)
 OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -69,7 +69,7 @@ if (!strstr(Vars.option, "time")) {
     sprintf(op,"auto %s",Vars.option);
   }
   strcpy(Vars.option,op);
-  
+
   /* re-initialize Monitor_nD */
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight,zdepth,xmin,xmax,ymin,ymax,zmin,zmax,0);
 
@@ -85,7 +85,7 @@ SAVE
   #undef xmax
   #undef ymin
   #undef ymax
-  
+
   /* the detector file written by the Monitor_nD is stored in a 'MCDETECTOR detector' structure */
 
   /* get back information from the StatisticalChopper */
@@ -95,29 +95,29 @@ SAVE
   int   *Sequence= MC_GETPAR(comp,Sequence);
   double c       = (double)(m-1)/(double)(nslit-1); /* duty cycle */
   int    f;      /* number of periods in the detected time range */
-  
-  
+
+
   /* save results, but do not free pointers */
   detector = Monitor_nD_Save(&DEFS, &Vars);
-  
+
   f = (int)floor((detector.xmax-detector.xmin)*nu);
   if (f < 1) f=1;
-  
+
   if (detector.intensity && m >= 1 && f >= 1 && nslit > 1 && detector.m > 1 && c < 1 && nu > 0 && Sequence) {
-  
+
     double S_sum = 0;
     int    i,j,k; /* indices for loops */
-    
+
     /* copy raw detector as correlation base */
     long correlation_m = detector.m/f; /* new time binning for autocorrelation */
-    
+
     double p0[correlation_m*detector.n*detector.p]; /* static arrays to store correlation monitor */
     double p1[correlation_m*detector.n*detector.p];
     double p2[correlation_m*detector.n*detector.p];
-    
+
     /* initialize arrays to zero */
     for (i=0;i<correlation_m*detector.n*detector.p;i++) p0[i]=p1[i]=p2[i]=0;
-    
+
     /* indices in loops for detector */
     /* p1[i][j] = p1[index] with index= (!detector.istransposed ? i*n*p + j : i+j*m); */
 
@@ -139,8 +139,8 @@ SAVE
     }
 
     /* Normalization of p1 compared to detector.p1: must have same integrated intensity */
-    /* normalizations: 
-      coeff_ZS=(S_sum/detector.intensity)*f; 
+    /* normalizations:
+      coeff_ZS=(S_sum/detector.intensity)*f;
       coeff_ZS=(S_sum/(m*detector.intensity-detector.min/nu))*(m*f*(1-m/nslit)+m);
     */
     double coeff_ZS=(S_sum/(m*detector.intensity-detector.min/nu))*(m*f*(1.0-(double)m/nslit)+m);
@@ -166,7 +166,7 @@ SAVE
       if (p2[i] > 0) p2[i] = (p0[i] > 1 ? ((p0[i]-1)*p2[i]*p2[i] + p1[i]*p1[i]/p0[i])/p0[i]
                                         : p1[i]);
     }
-    
+
     char file[CHAR_BUF_LENGTH];
     sprintf(file, "%s_corr", filename ? filename : NAME_CURRENT_COMP);
 
@@ -183,11 +183,11 @@ SAVE
         p0,p1,p2,file);
 
   }
-  
+
 %}
 
-FINALLY COPY Monitor_nD 
+FINALLY COPY Monitor_nD
 
-MCDISPLAY COPY Monitor_nD 
+MCDISPLAY COPY Monitor_nD
 
 END
