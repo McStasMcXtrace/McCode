@@ -62,7 +62,8 @@ SETTING PARAMETERS (string monitor_comp)
 
 INITIALIZE
 %{
-  struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+  struct MonitornD_Variables *Vars = &( ((class_Monitor_nD_parameters *) _getvar_parameters(monitor_comp))->Vars );
+
 
   Vars->Flag_UsePreMonitor = 1;
   strncpy(Vars->UserName1, NAME_CURRENT_COMP, 64);
@@ -70,7 +71,7 @@ INITIALIZE
 
 TRACE
 %{
-    struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+    struct MonitornD_Variables *Vars = &( ((class_Monitor_nD_parameters *) _getvar_parameters(monitor_comp))->Vars );
 
     /* directly act on MonitornD_Variables pointer, do not need to update */
     if (Vars->Flag_UsePreMonitor == 1)

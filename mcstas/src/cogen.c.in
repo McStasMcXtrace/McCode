@@ -1131,7 +1131,7 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   struct comp_inst *comp;
 
   while((comp = list_next(iter)) != NULL) {
-    coutf("  if (!strcmp(compname, \"%s\")) return (void *) &_%s->_parameters;", comp->name, comp->name);
+    coutf("  if (!strcmp(compname, \"%s\")) return (void *) &(_%s->_parameters);", comp->name, comp->name);
   }
   list_iterate_end(iter);
 
