@@ -57,13 +57,10 @@ INITIALIZE
   }
 
   if(randomOn!=0){
-    printf("INFO: Set_pol(%s): Setting polarisation randomly.\n",
-           NAME_CURRENT_COMP);
-  }else if (px==0 && py==0 && pz==0){
-      printf("WARNING: Set_pol(%s): NULL vector defined. Polarizer is inactive.\n"
+    printf("INFO: Set_pol(%s): Setting polarization randomly.\n",
            NAME_CURRENT_COMP);
   }else{
-    printf("INFO: Set_pol(%s): Setting polarisation to (%f, %f, %f)\n",
+    printf("INFO: Set_pol(%s): Setting polarization to (%f, %f, %f)\n",
            NAME_CURRENT_COMP, px, py, pz);
   }
 %}
