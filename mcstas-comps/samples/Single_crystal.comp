@@ -28,6 +28,13 @@
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_a, mosaic_b, and mosaic_c
 * parameters.
+* 
+* The p_transmit parameter may be used to steer the available statistics towards 
+* the desired branch. The default value indicates that 10% of the available rays
+* will be used to describe the transmitted beam. Setting p_transmit=-1 causes the
+* component to use the physical scattering probabilities also for sampling. Note 
+* that this may be highly inefficient for weakly scattering samples. 
+* 
 * The crystal lattice can be bent locally, keeping the external geometry unchanged.
 * Curvature is spherical along vertical and horizontal axes.
 *
@@ -279,7 +286,7 @@ recip_cell=0, barns=0,
 ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
-p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
+p_transmit = 0.1, sigma_abs = 0, sigma_inc = 0,
 aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
 deltak=1e-6)
 OUTPUT PARAMETERS(hkl_info, offdata)
