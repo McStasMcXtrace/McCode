@@ -50,8 +50,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor_Optimizer
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string optim_comp,
+DEFINITION PARAMETERS (string optim_comp)
+SETTING PARAMETERS (
   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (This_Monitor_id)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -67,7 +67,9 @@ int This_Monitor_id;
 
 INITIALIZE
 %{
-struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+  // TODO: This should be upgraded to cogen3 GETPAR version, but no test
+  // instrument was found for this component.
+  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
 
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }

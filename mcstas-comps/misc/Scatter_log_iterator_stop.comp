@@ -58,14 +58,14 @@ INITIALIZE
 
 TRACE
 %{
-scatter_iterator_stop:
+  scatter_iterator_stop:
   loop=1;
-  struct Generalized_State_t *s1=MC_GETPAR(iterator,s1);
+  struct Generalized_State_t *s1 = MC_GETPAR3(Scatter_log_iterator, iterator, s1);
 
   if (s1->_p==-1){
     /*we have reached the end - unset loop and reset neutron state to whatever it was before we entered the pseudo neutron iterator*/
     loop=0;
-    double *ns=MC_GETPAR(iterator,nstate_initial);
+    double *ns = MC_GETPAR3(Scatter_log_iterator, iterator, nstate_initial);
     x=ns[0];y=ns[1];z=ns[2];
     vx=ns[3];vy=ns[4];vz=ns[5];
     t=ns[6];
@@ -73,7 +73,8 @@ scatter_iterator_stop:
     p=ns[10];
 
     free(ns);
-    MC_GETPAR(iterator,nstate_initial)=NULL;
+    *MC_GETPAR3(Scatter_log_iterator, iterator, nstate_initial) = NULL;
+
     /* Restore std ABSORB */
 #undef mcabsorb
 #define mcabsorb mcabsorbAll

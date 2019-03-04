@@ -41,7 +41,7 @@
 *******************************************************************************/
 DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string comp, tmin=0.0,tmax=0.0)
+SETTING PARAMETERS (string comp, tmin=0.0, tmax=0.0)
 OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -89,13 +89,16 @@ SAVE
   /* the detector file written by the Monitor_nD is stored in a 'MCDETECTOR detector' structure */
 
   /* get back information from the StatisticalChopper */
-  int    m       = MC_GETPAR(comp,m);               /* number of appertures in the sequence */
-  int    nslit   = MC_GETPAR(comp,nslit);           /* length of the sequence (number of possible slits around disk) */
-  double nu      = MC_GETPAR(comp,nu);
-  int   *Sequence= MC_GETPAR(comp,Sequence);
-  double c       = (double)(m-1)/(double)(nslit-1); /* duty cycle */
-  int    f;      /* number of periods in the detected time range */
+  int *m_ptr = MC_GETPAR3(StatisticalChopper, comp, m); /* number of appertures in the sequence */
+  int m = *m_ptr;
+  int *nslit_ptr = MC_GETPAR3(StatisticalChopper, comp, nslit); /* length of the sequence (number of possible slits around disk) */
+  int nslit = *nslit_ptr;
+  double *nu = MC_GETPAR3(StatisticalChopper, comp, nu);
+  double nu = *nu_ptr;
+  int *Sequence= MC_GETPAR3(StatisticalChopper, comp, Sequence);
 
+  double c = (double)(m-1)/(double)(nslit-1); /* duty cycle */
+  int f; /* number of periods in the detected time range */
 
   /* save results, but do not free pointers */
   detector = Monitor_nD_Save(&DEFS, &Vars);

@@ -47,7 +47,7 @@ DECLARE
 TRACE
 %{
   double new_v, psi;
-  struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
+  struct source_adapt *adpt = MC_GETPAR3(Source_adapt, source_comp, adpt));
 
   if(p == 0)
     ABSORB;
