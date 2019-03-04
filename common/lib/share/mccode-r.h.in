@@ -316,7 +316,17 @@ char  *mcsig_message;
 #define MC_GET2(comp, field) (_ ## comp->field)
 #define MC_GET(comp, field) MC_GET2(comp,field)
 
-// setting parameters based/runtime MC_GETPAR equivalent
+/* Setting parameters based/runtime MC_GETPAR equivalent, jg-20190304.
+* Note:
+*   This macro will provide a typed pointer to the component parameter given
+*   by the symbol "par".
+* Usame:
+*   Arguments "type" and "par" are defines, so you should use the pure symbols
+*   here. However, compname is a string containing the component name. This is
+*   what enables the component parameter get via a setting parameter.
+*/
+#define MC_GETPAR3(type, compname, par) &( ((class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
+/* The body of this function depends on the instrument, and is generated. */
 void* _getvar_parameters(char* compname);
 
 /* Retrieve component information from the kernel */
