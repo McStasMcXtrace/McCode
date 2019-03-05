@@ -304,50 +304,23 @@ char  *mcsig_message;
 #define POS_R_COMP_INDEX(index) \
     (instrument->_position_relative[index])
 
-/* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
-* after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
-* component sample. Such are the joys of ANSI C.
-/* number of SCATTER calls in current comp: mcScattered defined in generated C code */
-/* Anyway the usage of MCGETPAR requires that we use sometimes bare names...
-*/
-#define MC_GETPAR2(comp, par) (_ ## comp->_parameters.par)
-#define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
-/* Flag to indicate if neutron needs to be restored: mcRestore defined in generated C code */
-#define MC_GET2(comp, field) (_ ## comp->field)
-#define MC_GET(comp, field) MC_GET2(comp,field)
-
-/* Setting parameters based/runtime MC_GETPAR equivalent, jg-20190304.
-* Note:
-*   This macro will provide a typed pointer to the component parameter given
-*   by the symbol "par".
-* Usame:
-*   Arguments "type" and "par" are defines, so you should use the pure symbols
-*   here. However, compname is a string containing the component name. This is
-*   what enables the component parameter get via a setting parameter.
-*/
-#define MC_GETPAR3(type, compname, par) &( ((class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
+// JG: Setting parameters based/runtime MC_GETPAR equivalent
+#define MC_GETPAR3(type, compname, par) \
+    &( ((class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
 /* The body of this function depends on the instrument, and is generated. */
 void* _getvar_parameters(char* compname);
 
-/* Retrieve component information from the kernel */
-/* Name, position and orientation (both absolute and relative)  */
-/* Any component: For "redundancy", see comment by KN */
-#define NAME_COMP(comp) MC_GET(comp, _name)
-#define TYPE_COMP(comp) MC_GET(comp, _type)
-#define INDEX_COMP(comp) MC_GET(comp, _index)
-#define POS_A_COMP(comp) MC_GET(comp, _position_absolute)
-#define POS_R_COMP(comp) MC_GET(comp, _position_relative)
-#define ROT_A_COMP(comp) MC_GET(comp, _rotation_absolute)
-#define ROT_R_COMP(comp) MC_GET(comp, _rotation_relative)
-
 /* Current component name, index, position and orientation */
-#define INDEX_CURRENT_COMP INDEX_COMP(MYSELF)
-#define NAME_CURRENT_COMP NAME_COMP(MYSELF)
-#define TYPE_CURRENT_COMP TYPE_COMP(MYSELF)
-#define POS_A_CURRENT_COMP POS_A_COMP(MYSELF)
-#define POS_R_CURRENT_COMP POS_R_COMP(MYSELF)
-#define ROT_A_CURRENT_COMP ROT_A_COMP(MYSELF)
-#define ROT_R_CURRENT_COMP ROT_R_COMP(MYSELF)
+// JG: these macros work because, using class-based functions, "comp" is usually
+// the local variable of the active/current component
+#define INDEX_CURRENT_COMP (comp->_index)
+#define NAME_CURRENT_COMP (comp->_name)
+#define TYPE_CURRENT_COMP (comp->_type)
+#define POS_A_CURRENT_COMP (comp->_position_absolute)
+#define POS_R_CURRENT_COMP (comp->_position_relative)
+#define ROT_A_CURRENT_COMP (comp->_rotation_absolute)
+#define ROT_R_CURRENT_COMP (comp->_rotation_relative)
+
 
 /* MCDISPLAY/trace and debugging message sent to stdout */
 #ifdef MC_TRACE_ENABLED

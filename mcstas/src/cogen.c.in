@@ -433,9 +433,6 @@ int cogen_comp_declare(struct comp_inst *comp)
   int warnings     =0;
   int nb_parameters=0;
 
-  //if (verbose) fprintf(stderr, "Writing component   %s=%s() [%i] DECLARE\n",
-  //  comp->name, comp->def->name, comp->index);
-
   if (!comp->def->flag_defined_structure) {
     int index=0;
 
@@ -623,8 +620,6 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
         val =  par->isoptional ? exp_tostring(par->default_value) : NULL;
       }
 
-
-
       if (val) {
         if (par->type == instr_type_string) {
           if (strcmp(val, "0") && strcmp(val, "NULL")) { /* when value is not NULL (avoid warning at compile) */
@@ -764,34 +759,43 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
 *
 * called by: cogen_[section]
 ***************************************************************************** */
-int cogen_comp_section_class(struct comp_inst *comp,
-                       struct instr_def *instr, char *section, char *section_lower,
-                       struct code_block *code, int *flag_defined_common)
+int cogen_comp_section_class(
+  struct comp_inst *comp,
+  struct instr_def *instr,
+  char *section,
+  char *section_lower,
+  struct code_block *code,
+  int *flag_defined_common)
 {
-  int    warnings=0;
+  int warnings = 0;
 
   /* nothing to do when no component code, except for INITIALISE and TRACE with EXTEND*/
   if (!code || list_len(code->lines) <= 0)
     return(0); /* no [section] code to write */
 
   /* generate SHARED [section] for all components of given type ************* */
-  if (list_len(comp->def->def_par) == 0 /* no DEFINITION parameters */
-      && !*flag_defined_common && comp->def->counter_instances > 1) {
+  // JG: if a function should be generated, it should be a class fct (except for setpos)
+  if (
+    list_len(comp->def->def_par) == 0 /* no DEFINITION parameters */
+    && !*flag_defined_common) {
+
     /* we may use a common function for each comp type */
-    *flag_defined_common = 1; /* set flag so that definition [section] is done once */
+
+    *flag_defined_common = 1; /* set flag so that definition [section] is done only once */
     coutf("/* this function is common to all component type %s with %s code (SHARE) */",
       comp->def->name, section);
 
-    coutf("class_%s *class_%s_%s(class_%s *comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
+    coutf("class_%s *class_%s_%s(class_%s *comp",
+      comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
     {
       coutf("  , particle *" MCCODE_PARTICLE ") {",
         comp->def->name, comp->def->name, section_lower, comp->def->name);
-
       cout("  ABSORBED=SCATTERED=RESTORE=0;");
       cout("");
-    } else cout(") {");
+    } else
+      cout(") {");
 
     cogen_defundef(comp, comp->def->set_par, LOCAL_INSTANCE_PAR_REF); // [par] -> comp->parameters.[par]
     cogen_defundef(comp, comp->def->out_par, LOCAL_INSTANCE_PAR_REF);
@@ -805,10 +809,9 @@ int cogen_comp_section_class(struct comp_inst *comp,
 
     cout("  return(comp);");
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
-
     cout("");
-
   } /* generated SHARED [section] for component given type */
+
   return(*flag_defined_common);
 } /* cogen_comp_section_class */
 
@@ -828,37 +831,34 @@ int cogen_comp_section(struct comp_inst *comp,
                        struct instr_def *instr, char *section, char *section_lower,
                        struct code_block *code, int *flag_defined_common)
 {
-  int    warnings=0;
-  int    i=0;
-  int    flag_define_aliases=1;
+  int warnings = 0;
+  int i = 0;
+  int flag_define_aliases = 1;
 
   /* nothing to do when no component code, except for INITIALISE and TRACE with EXTEND*/
   if (strcmp(section, "INITIALISE") && strcmp(section, "TRACE")
     && code && list_len(code->lines) <= 0)
     return(0); /* no [section] code to write */
+
+  // TODO: EXTEND code must be written specifically in the class fct, inside a compname switch!
   if (!strcmp(section, "TRACE") && code && list_len(code->lines) <= 0
     && list_len(comp->extend->lines) <= 0)
     return(0); /* no TRACE code and no EXTEND to write */
 
-  coutf("/* component %s=%s() %s */",
-    comp->name, comp->def->name, section);
+  coutf("/* component %s=%s() %s */", comp->name, comp->def->name, section);
 
   /* the [section] instance function **************************************** */
   if (!strcmp(section, "TRACE")) {
     cout("#pragma acc routine seq");
-    coutf("particle *_%s_%s(particle *" MCCODE_PARTICLE ")",
-      comp->name, section_lower);
+    coutf("particle *_%s_%s(particle *" MCCODE_PARTICLE ")", comp->name, section_lower);
   } else
-    coutf("int _%s_%s(void)",
-      comp->name, section_lower);
+    coutf("int _%s_%s(void)", comp->name, section_lower);
   cout("{");
 
   /* determine if we need to define all the state and comp parameters */
   if (list_len(comp->extend->lines) <= 0 && *flag_defined_common && strcmp(section, "INITIALISE"))
     flag_define_aliases=0;
   else
-    coutf( "  #define _MYSELF _%s", comp->name);
-
     /* init parameters. These can then be used in position/rotation syntax */
     /* all these parameters have a #define pointing to the real name space in structure */
     coutf("  SIG_MESSAGE(\"[_%s_%s] component %s=%s() %s [%s:%i]\");",
@@ -886,9 +886,8 @@ int cogen_comp_section(struct comp_inst *comp,
   if (flag_define_aliases)
     warnings += cogen_comp_init_defpar(comp); // specific to each instance
 
-
- /* define alias to SETTING and OUTPUT parameters */
- if (flag_define_aliases) {
+  /* define alias to SETTING and OUTPUT parameters */
+  if (flag_define_aliases) {
     cogen_defundef(comp, comp->def->set_par, GLOBAL_INSTANCE_PAR_REF);
     cogen_defundef(comp, comp->def->out_par, GLOBAL_INSTANCE_PAR_REF);
   }
@@ -909,9 +908,8 @@ int cogen_comp_section(struct comp_inst *comp,
     } else {
       /* else we call the common init function for each comp type */
       if (!strcmp(section, "TRACE")) {
-	cout("#pragma acc routine seq");
-        coutf("  class_%s_%s(_%s, " MCCODE_PARTICLE");",
-          comp->def->name, section_lower, comp->name);
+        cout("#pragma acc routine seq");
+        coutf("  class_%s_%s(_%s, " MCCODE_PARTICLE");", comp->def->name, section_lower, comp->name);
       }
       else
         coutf("  class_%s_%s(_%s);",
@@ -933,7 +931,6 @@ int cogen_comp_section(struct comp_inst *comp,
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->def_par, PAR_UNDEF);
-    coutf("  #undef _MYSELF");
   }
 
   if (!strcmp(section, "TRACE")) {
@@ -948,7 +945,10 @@ int cogen_comp_section(struct comp_inst *comp,
   return(warnings);
 } /* cogen_comp_section */
 
-
+/*******************************************************************************
+* JG: this function should be the only comp instance function generator
+*
+*******************************************************************************/
 int cogen_comp_setpos(struct comp_inst *comp, struct comp_inst *last, struct instr_def *instr)
 {
   int warnings=0;
@@ -956,18 +956,15 @@ int cogen_comp_setpos(struct comp_inst *comp, struct comp_inst *last, struct ins
     comp->name, comp->def->name, "SETTING, POSITION/ROTATION");
 
   /* the set+pos/rot instance function **************************************** */
-  coutf("int _%s_%s(void)",
-      comp->name, "setpos");
+  coutf("int _%s_%s(void)", comp->name, "setpos");
   cout("{ /* sets initial component parameters, position and rotation */");
-
-  coutf( "  #define _MYSELF _%s", comp->name);
 
   /* init parameters. These can then be used in position/rotation syntax */
   /* all these parameters have a #define pointing to the real name space in structure */
   coutf("  SIG_MESSAGE(\"[_%s_%s] component %s=%s() %s [%s:%i]\");",
-        comp->name, "setpos", comp->name, comp->def->name, "SETTING",
-        comp->def->init_code && comp->def->init_code->quoted_filename ? comp->def->init_code->quoted_filename : comp->def->name,
-        comp->def->init_code && comp->def->init_code->linenum > 0 ? comp->def->init_code->linenum : 0);
+    comp->name, "setpos", comp->name, comp->def->name, "SETTING",
+    comp->def->init_code && comp->def->init_code->quoted_filename ? comp->def->init_code->quoted_filename : comp->def->name,
+    comp->def->init_code && comp->def->init_code->linenum > 0 ? comp->def->init_code->linenum : 0);
 
   coutf("  stracpy(_%s->_name, \"%s\", 16384);", comp->name, comp->name);
   coutf("  stracpy(_%s->_type, \"%s\", 16384);", comp->name, comp->def->name);
@@ -983,6 +980,8 @@ int cogen_comp_setpos(struct comp_inst *comp, struct comp_inst *last, struct ins
   cogen_comp_init_par(comp, instr, "PRIVATE");  // specific to each instance
 
   /* undef aliases */
+  // JG: see comment in "cogen_comp_init_par(" why this is needed
+  // TODO: is it??
   cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
   cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
   cogen_defundef(comp, comp->def->def_par, PAR_UNDEF);
@@ -990,13 +989,9 @@ int cogen_comp_setpos(struct comp_inst *comp, struct comp_inst *last, struct ins
   /* position/rotation */
   cogen_comp_init_position(comp, last, instr); // specific to each instance
 
-
-  coutf("  #undef _MYSELF");
-
   coutf("  instrument->counter_N[%i]  = instrument->counter_P[%i] = instrument->counter_P2[%i] = 0;",
         comp->index, comp->index, comp->index);
   coutf("  instrument->counter_AbsorbProp[%i]= 0;", comp->index);
-
   cout("  return(0);");
 
   coutf("} /* _%s_%s */", comp->name, "setpos");
@@ -1117,8 +1112,9 @@ int _list_contains_str(List l, char* str){
 }
 
 /*******************************************************************************
-*
-*
+* Generates the function that returns (a void pointer to) a component instance,
+* based on the component name as a string. Used by defpars-free version of
+* GETPAR macro.
 *******************************************************************************/
 void cogen_getvarpars_fct(struct instr_def *instr)
 {
@@ -1150,11 +1146,11 @@ void cogen_getvarpars_fct(struct instr_def *instr)
 *******************************************************************************/
 int cogen_decls(struct instr_def *instr)
 {
-  List_handle liter;            /* For list iteration. */
-  struct comp_inst *comp;       /* Component instance. */
-  struct instr_formal *i_formal;/* Name of instrument formal parameter. */
-  long index   =0;
-  int  warnings=0;
+  List_handle liter;             /* For list iteration. */
+  struct comp_inst *comp;        /* Component instance. */
+  struct instr_formal *i_formal; /* Name of instrument formal parameter. */
+  long index = 0;
+  int  warnings = 0;
 
   /* a previous call to cogen_header writes the file header */
 
@@ -1324,6 +1320,8 @@ int cogen_decls(struct instr_def *instr)
   index=0;
   while(comp = list_next(liter)) {
     comp->index=++index;        /* comp index starts at 1, as in instrument.y */
+    // JG: "counter_instances" no longer matters, because all code except setpos
+    // uses class fcts
     comp->def->counter_instances++;
     warnings  += cogen_comp_declare(comp);
   }
@@ -1344,7 +1342,6 @@ int cogen_decls(struct instr_def *instr)
   cout("");
 
   return(warnings);
-
 } /* cogen_decls */
 
 /* *****************************************************************************
@@ -1371,7 +1368,6 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
   cout("");
 
   /* call components to write their code section */
-  cout( "#define _MYSELF comp");
   if (!strcmp(section, "DISPLAY")) {
     /* User DECLARE code from component definitions (for each instance). */
     cout("  #define magnify     mcdis_magnify");
@@ -1399,28 +1395,21 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
       warnings += cogen_comp_display_class(comp, instr);
   }
   list_iterate_end(liter);
-  cout( "#undef _MYSELF");
   cout("");
 
   /* then the instance code */
+  // JG: generate setpos component instance functions
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
     if (!strcmp(section, "INITIALISE")) {
       warnings += cogen_comp_setpos(comp, last, instr);
-      warnings += cogen_comp_init(comp, instr);
       last = comp;
     }
-    else if (!strcmp(section, "SAVE"))
-      warnings += cogen_comp_save(comp, instr);
-    else if (!strcmp(section, "FINALLY"))
-      warnings += cogen_comp_finally(comp, instr);
-    else if (!strcmp(section, "DISPLAY"))
-      warnings += cogen_comp_display(comp, instr);
   }
+
   list_iterate_end(liter);
   if (!strcmp(section, "DISPLAY")) {
-    /* User DECLARE code from component definitions (for each instance). */
     cout("  #undef magnify");
     cout("  #undef line");
     cout("  #undef dashed_line");
@@ -1434,11 +1423,11 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
   cout("");
 
   /* then write the instrument main code, which calls component ones */
-  cout("#define _MYSELF instrument");
   coutf("int %s(%s) { /* called by mccode_main for %s:%s */",
     section_lower,
     !strcmp(section, "SAVE") ? "FILE *handle" : "void",
-    instr->name, section);
+    instr->name,
+    section);
 
   if (!strcmp(section, "INITIALISE"))
   {
@@ -1471,13 +1460,13 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
     cogen_defundef(NULL, instr->formals, PAR_UNDEF);
   }
 
-  /* must set+pos/rot before comp and instr INIT code */
+  // JG: generate setpos() calls, one pr. component instance
+  /* must set pos/rot before comp and instr INIT code */
   if (!strcmp(section, "INITIALISE")) {
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL)
     {
-      coutf("  _%s_%s(); /* type %s */",
-          comp->name, "setpos", comp->def->name);
+      coutf("  _%s_%s(); /* type %s */", comp->name, "setpos", comp->def->name);
     }
     list_iterate_end(liter);
     cout("");
@@ -1499,15 +1488,16 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
       comp_code = comp->def->finally_code;
     else if (!strcmp(section, "DISPLAY"))
       comp_code = comp->def->display_code;
-    if (!strcmp(section, "INITIALISE") || list_len(comp_code->lines) > 0) {
-      /* each component code is executed once, iteratively */
-      /* a return code can be set, but does not prevent other components to execute */
-      coutf("  _%s_%s(); /* type %s */",
-        comp->name, section_lower, comp->def->name);
+
+    if (list_len(comp_code->lines) > 0) {
+      /* each component is called once, iteratively */
+      coutf("  class_%s_%s(_%s);", comp->def->name, section_lower, comp->name);
     }
+    cout("");
   }
   list_iterate_end(liter);
 
+  // JG: end the instrument sequential comps calls section
   if (!strcmp(section, "INITIALISE")) {
     /* Output graphics representation of components. */
     coutf("  if (mcdotrace) display();");
@@ -1522,7 +1512,6 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
   cout("");
   cout("  return(0);");
   coutf("} /* %s */", section_lower);
-  cout( "#undef _MYSELF");
   cout("");
 
   return(warnings);
@@ -1595,7 +1584,6 @@ int cogen_acc_attach(struct instr_def *instr)
   return(warnings);
 } /* cogen_acc_attach */
 
-
 /*******************************************************************************
 * cogen_trace: Generate the TRACE section.
 * Extended Grammar:
@@ -1614,11 +1602,11 @@ int cogen_trace(struct instr_def *instr)
      ARRAY: handled in grammar: AT/ROTATED copy instance at different locations, use {} or [] vectors
    */
 
-  List_handle       liter;
-  struct comp_inst *comp=NULL;
-  int               warnings=0;
-  int               i=0;
-  int               split_counts=0;
+  List_handle liter;
+  struct comp_inst *comp = NULL;
+  int warnings = 0;
+  int i = 0;
+  int split_counts = 0;
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
@@ -1637,96 +1625,42 @@ int cogen_trace(struct instr_def *instr)
   if (verbose) fprintf(stderr, "Writing components %s\n",
     "TRACE");
 
-  cout("/* *****************************************************************************");
+  cout("/*******************************************************************************");
   coutf("* components %s", "TRACE");
-  cout("***************************************************************************** */");
+  cout("*******************************************************************************/");
   cout("");
 
-  /* count if components classes are used more than once */
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL) {
-    if (comp->def->counter_instances > 1) i++; /* 'i' is set when at least one class is used more than once */
-  }
-  list_iterate_end(liter);
-
-  /* define all common function for component "classes" (SHARE TRACE) if needed */
-  if (i > 0) {
-    /* define state parameters for all TRACE definition/common/shared functions */
-    for(i = 0; i < NUM_STATE_PARS; i++)
-      coutf("#define %s (" MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
-    /* define SCATTERED, ABSORB and RESTORE macros */
-    coutf("#define %s (" MCCODE_PARTICLE "->%s)", "SCATTERED", "_scattered");
-    coutf("#define %s (" MCCODE_PARTICLE "->%s)", "RESTORE"  , "_restore");
-    coutf("#define RESTORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-      "memcpy(" MCCODE_PARTICLE ", &"
-      "instrument->_trajectory[_index], sizeof(particle));",
-      list_len(instr->complist));
-    coutf("#define STORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-      "memcpy(&instrument->_trajectory[_index], "
-      MCCODE_PARTICLE ", sizeof(particle));",
-      list_len(instr->complist));
-    coutf("#define %s (" MCCODE_PARTICLE "->%s)", "ABSORBED" , "_absorbed");
-    #if MCCODE_PROJECT == 1     /* neutron */
-    cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(comp); } while(0)");
-    #elif MCCODE_PROJECT == 2   /* xray */
-    cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(comp); } while(0)");
-    #endif
-    cout( "#define ABSORB ABSORB0");
-    cout( "#define _MYSELF comp");
-
-    liter = list_iterate(instr->complist);
-    while((comp = list_next(liter)) != NULL)
-      if (comp->def->counter_instances > 1)
-        warnings += cogen_comp_trace_class(comp,instr);
-    list_iterate_end(liter);
-
-    for(i = 0; i < NUM_STATE_PARS; i++)
-      coutf("#undef %s", statepars_all[i]);
-    /* undefine SCATTERED, ABSORBED and RESTORE macros */
-    cout("#undef SCATTERED");
-    cout("#undef RESTORE"  );
-    cout("#undef RESTORE_NEUTRON"  );
-    cout("#undef STORE_NEUTRON"  );
-    cout("#undef ABSORBED" );
-    cout("#undef ABSORB");
-    cout("#undef ABSORB0");
-    cout("#undef _MYSELF");
-    cout("");
-  } /* end trace for classes */
-
-  /* call components to write their code section */
-  /* define state parameters */
+  /* define all common function for component "classes" */
+  /* define state parameters for all TRACE definition/common/shared functions */
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("#define %s (" MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
 
-  /* define SCATTERED, ABSORBED and RESTORE macros */
+  /* define SCATTERED, ABSORB and RESTORE macros */
+  // JG: defines for the entire trace section
   coutf("#define %s (" MCCODE_PARTICLE "->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (" MCCODE_PARTICLE "->%s)", "RESTORE"  , "_restore");
   coutf("#define RESTORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-      "memcpy(" MCCODE_PARTICLE ", &"
-      "instrument->_trajectory[_index], sizeof(particle));",
-      list_len(instr->complist));
-    coutf("#define STORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-      "memcpy(&instrument->_trajectory[_index], "
-      MCCODE_PARTICLE ", sizeof(particle));",
-      list_len(instr->complist));
+    "memcpy(" MCCODE_PARTICLE ", &"
+    "instrument->_trajectory[_index], sizeof(particle));",
+    list_len(instr->complist));
+  coutf("#define STORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
+    "memcpy(&instrument->_trajectory[_index], "
+    MCCODE_PARTICLE ", sizeof(particle));",
+    list_len(instr->complist));
   coutf("#define %s (" MCCODE_PARTICLE "->%s)", "ABSORBED" , "_absorbed");
   #if MCCODE_PROJECT == 1     /* neutron */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(" MCCODE_PARTICLE ");} while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(comp); } while(0)");
   #elif MCCODE_PROJECT == 2   /* xray */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(" MCCODE_PARTICLE ");} while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(comp); } while(0)");
   #endif
   cout( "#define ABSORB ABSORB0");
+
+  // JG: generate trace class fcs
   liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL)
-    warnings += cogen_comp_trace(comp, instr);
+  while((comp = list_next(liter)) != NULL) {
+    warnings += cogen_comp_trace_class(comp, instr);
+  }
   list_iterate_end(liter);
-  cout("");
-  cout("#undef ABSORB");
-  cout("#undef ABSORB0");
-  /* instrument section comment */
-  if (verbose) fprintf(stderr, "Writing instrument '%s' %s\n",
-    instr->name, "TRACE");
 
   cout("/* *****************************************************************************");
   coutf("* instrument '%s' %s", instr->name, "TRACE");
@@ -1735,7 +1669,8 @@ int cogen_trace(struct instr_def *instr)
 
   /* Experimental support for OpenACC CPU parallelisation */
   cout("#pragma acc routine seq");
-  /* then write the main code, which calls component ones */
+
+  /* Write the main code, which calls component trace functions */
   coutf("int raytrace(particle " MCCODE_PARTICLE "_particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("  particle *" MCCODE_PARTICLE " = &" MCCODE_PARTICLE "_particle;");
   cout("");
@@ -1816,13 +1751,12 @@ int cogen_trace(struct instr_def *instr)
     }
 
     if (comp->split || comp->when || list_len(comp->jump) > 0) {
-      coutf("      #define _MYSELF _%s", comp->name);
       warnings += cogen_comp_init_defpar(comp); // specific to each instance
       cogen_defundef(comp, comp->def->set_par, GLOBAL_INSTANCE_PAR_REF);
       cogen_defundef(comp, comp->def->out_par, GLOBAL_INSTANCE_PAR_REF);
     }
-    // coordinate transformations (wrt to PREVIOUS)
 
+    // coordinate transformations (wrt to PREVIOUS)
     cout( "      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
 
     coutf("        if (_%s->_rotation_is_identity) {", comp->name);
@@ -1835,14 +1769,20 @@ int cogen_trace(struct instr_def *instr)
 
     /* call the component when there are TRACE and/or EXTEND lines */
     coutf("      STORE_NEUTRON(%i);", comp->index);
+
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
       if (comp->when) { // WHEN
         char *exp=exp_tostring(comp->when);
         coutf("      if (%s) // conditional WHEN execution", exp);
         str_free(exp);
       }
-      /* call the component instance TRACE function */
-      coutf("      _%s_trace(" MCCODE_PARTICLE ");%s", comp->name, list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
+
+      // JG: call the class based TRACE function
+      coutf("      class_%s_trace(_%s, " MCCODE_PARTICLE ");%s",
+        comp->def->name,
+        comp->name,
+        list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
+
       cout( "      if (RESTORE) ");
       coutf( "        RESTORE_NEUTRON(%i);", comp->index);
     };
@@ -1851,8 +1791,8 @@ int cogen_trace(struct instr_def *instr)
       cogen_defundef(comp, comp->def->def_par, PAR_UNDEF);
       cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
       cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
-      cout("      #undef _MYSELF");
     }
+
     /* if we have a JUMP, change the index */
     // JUMP
     if(list_len(comp->jump) > 0) {
@@ -1903,8 +1843,6 @@ int cogen_trace(struct instr_def *instr)
 
   /* handle ABSORB when no more comp, go to next comp, and RESTORE */
 
-
-
   /* now we close the SPLIT loops, unrolled from last to 1st */
   liter = list_iterate_back(instr->complist);
   while((comp = list_previous(liter)) != NULL) {
@@ -1927,21 +1865,23 @@ int cogen_trace(struct instr_def *instr)
   /* undefine state parameters */
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("#undef %s", statepars_all[i]);
-  /* undefine SCATTERED, ABSORBED and RESTORE macros */
-  cout("  #undef SCATTERED");
-  cout("  #undef RESTORE");
-  cout("  #undef RESTORE_NEUTRON"  );
-  cout("  #undef STORE_NEUTRON"  );
-  cout("  #undef ABSORBED");
-  cout("  #undef ABSORB");
-  cout("  #undef ABSORB0");
 
   cout("");
   cout("  return(" MCCODE_PARTICLE "->_index);");
   coutf("} /* raytrace */");
 
-  return(warnings);
+  // JG: undef everything after the "raytrace" function
+  for(i = 0; i < NUM_STATE_PARS; i++)
+    coutf("#undef %s", statepars_all[i]);
+  cout("#undef SCATTERED");
+  cout("#undef RESTORE"  );
+  cout("#undef RESTORE_NEUTRON"  );
+  cout("#undef STORE_NEUTRON"  );
+  cout("#undef ABSORBED" );
+  cout("#undef ABSORB");
+  cout("#undef ABSORB0");
 
+  return(warnings);
 } /* cogen_trace */
 
 /*******************************************************************************
@@ -2142,9 +2082,7 @@ void
 cogen(char *output_name, struct instr_def *instr)
 {
   fprintf(stdout, "cogen(char *output_name, struct instr_def *instr)\n");
-
-
-  int warnings=0;
+  int warnings = 0;
 
   /* INITIALISE output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
@@ -2183,7 +2121,5 @@ cogen(char *output_name, struct instr_def *instr)
   /* This writes a snippet c-code with calls to acc_attach for OpenACC use */
   output_handle = fopen("mccode_attaches.c", "w");
   warnings += cogen_acc_attach(instr);
-
-
 
 } /* cogen */
