@@ -20,8 +20,11 @@
 * MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
 * between e.g. MCNP(X), Geant4 and McStas.
 *
-* When used with MPI, the component will output #MPI nodes individual MCPL files that
-* can be merged using the mcpltool.
+* When used with MPI, the component first outputs #MPI nodes individual MCPL files that
+* may be merged (the default). If, in addition, keep_mpi_unmerged is set, the constituent
+* parts of the merged mcpl-file are kept.
+*
+* N.b. Any file extension given will be replaced by .mcpl
 *
 * MCPL_output allows a few flags to tweak the output files:
 * 1. If use_polarisation is unset (default) the polarisation vector will not be stored (saving space)
@@ -74,16 +77,31 @@ DECLARE
 INITIALIZE
 %{
     char extension[128]="";
-    char *myfilename;
+    char *myfilename,*stripext;
+
+    /*strip extension from filename*/
+    if (stripext=strrchr(filename,'.')){
+#if defined (USE_MPI)
+        MPI_MASTER(
+            fprintf(stdout, "WARNING: (%s): the \"%s\" file extension will be overwritten by \".mcpl\"\n",NAME_CURRENT_COMP,stripext);
+        );
+#else
+        fprintf(stdout, "WARNING: (%s): the \"%s\" file extension will be overwritten by \".mcpl\"\n",NAME_CURRENT_COMP,stripext);
+#endif
+        *stripext='\0';
+    }
 
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
-    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    if(keep_mpi_unmerged){
+        MPI_MASTER(fprintf(stdout, "INFO: (%s): You are keeping unmerged MCPL_output. %i files: %s_node_#i.mcpl.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    }
     sprintf(extension,"node_%i.mcpl",mpi_node_rank);
 #else
     sprintf(extension,"mcpl");
 #endif
-    /*add output dir (if applicable) to the output filename and add extension if */
+
+    /*add output dir (if applicable) to the output filename and add standard extension*/
     myfilename=mcfull_file(filename,extension);
 
     char line[256];
