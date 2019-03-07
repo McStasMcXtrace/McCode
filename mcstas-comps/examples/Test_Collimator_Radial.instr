@@ -23,7 +23,7 @@
 *
 * %Parameters
 * Collimator: [1]  Choice of radial collimator component to test, with 1=Collimator_Radial, 2=Collimator_ROC, 3=Exact_radial_coll.
-* Powder: []       
+* Powder: []
 *
 * %End
 *******************************************************************************/
@@ -31,7 +31,7 @@ DEFINE INSTRUMENT Test_Collimator_Radial(int Collimator=1, string Powder="Na2Ca3
 
 INITIALIZE
 %{
-  printf("\n%s: ", NAME_CURRENT_COMP);
+  printf("\nTest_Collimator_Radial: ");
   switch (Collimator) {
   case 1:
     printf("Using Collimator_Radial\n"); break;

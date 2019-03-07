@@ -88,8 +88,6 @@ DEFINE INSTRUMENT ILL_BRISP(DM=3.355, string coh="V.laz", string inc="NULL", str
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-
-
   double LCE      = 1.0;       /* distance fermi chopper <--> sample   */
   double LME;                  /* distance monochromator <--> sample   */
   double LCC;                  /* [m] Chopper1-Chopper2 distance */
@@ -127,7 +125,7 @@ INITIALIZE
 
   DELAY   = LCC/vi;           /* neutron propagation time between choppers [s] */
 
-  printf("Instrument %s:\n\tTime of Flight Neutron Spectrometer for Small Angle Inelastic Scattering\n", NAME_CURRENT_COMP);
+  printf("Instrument ILL_BRISP:\n\tTime of Flight Neutron Spectrometer for Small Angle Inelastic Scattering\n");
   printf("Monochr. Bragg angle     [deg] %g\n",  A1);
   printf("Wavelength               [AA]  %g\n",  lambda);
   printf("Neutron velocity         [m/s] %g\n",  vi);

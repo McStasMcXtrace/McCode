@@ -80,7 +80,7 @@ INITIALIZE
 
   strcpy(hostname, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
 
-  printf("Instrument:     %s on %s.\n",NAME_CURRENT_COMP, hostname);
+  printf("Instrument:     BNL_H8 on %s.\n", hostname);
   printf("Monochromator : DM = %g\n",DM);
   printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
   printf("Ki = %.4g Angs-1 Energy = %.4g meV\nVelocity = %.4g m/s, lambda = %.4g Angs\n", Ki, Ei, vi,

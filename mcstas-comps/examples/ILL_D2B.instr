@@ -73,74 +73,72 @@ DEFINE INSTRUMENT ILL_D2B(lambda=1.594, DM=0, string Powder="Na2Ca3Al2F14.laz", 
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-double U,V,W;   /* Caglioti UVW parameters */
-double L0;
+	double U,V,W;   /* Caglioti UVW parameters */
+	double L0;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-double L;
-double KI, Vi, EI;
-double ALPHA3_Opt;
+	double L;
+	double KI, Vi, EI;
+	double ALPHA3_Opt;
 
-if (!THETA_M && lambda && DM)
-	THETA_M =asin(lambda/(2*DM))*RAD2DEG;
-else if (THETA_M && !lambda && DM)
-	lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
-else if (THETA_M && lambda)
-	DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
-	
-THETA_M *= SM; /* take-off direction left or right */
+	if (!THETA_M && lambda && DM)
+		THETA_M =asin(lambda/(2*DM))*RAD2DEG;
+	else if (THETA_M && !lambda && DM)
+		lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
+	else if (THETA_M && lambda)
+		DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
 
-/* test input parameters */
-if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
-      "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
-      NAME_CURRENT_COMP, THETA_M, DM, lambda));
+	THETA_M *= SM; /* take-off direction left or right */
 
-/* perform additional computations */
-if (!L1)    L = L2;
-else        L = 1/(1/L1+1/L2);
-if (RV < 0) RV=2*L*sin(DEG2RAD*THETA_M);
-KI = 2*PI/lambda;
-Vi = K2V*fabs(KI);
-EI = VS2E*Vi*Vi;
+	/* test input parameters */
+	if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
+	      "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
+	      NAME_CURRENT_COMP, THETA_M, DM, lambda));
 
-if (ALPHA1<0)  ALPHA1=600;
-if (ALPHA2<0)  ALPHA2=600;
-if (ALPHA3<0)  ALPHA3=600;
-if (ETA<=0)    ETA   =30;
+	/* perform additional computations */
+	if (!L1)    L = L2;
+	else        L = 1/(1/L1+1/L2);
+	if (RV < 0) RV=2*L*sin(DEG2RAD*THETA_M);
+	KI = 2*PI/lambda;
+	Vi = K2V*fabs(KI);
+	EI = VS2E*Vi*Vi;
 
-/* compute Cagioloti U,V,W and L0 (intensity) */
-U = 4*(ALPHA1*ALPHA1 * ALPHA2*ALPHA2 + ALPHA1*ALPHA1 * ETA*ETA + ALPHA2*ALPHA2 * ETA*ETA)
-     /(tan(THETA_M*DEG2RAD)*tan(THETA_M*DEG2RAD) * (ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA));
-     
-V = 4*ALPHA2*ALPHA2*(ALPHA1*ALPHA1 +2*ETA*ETA)
-     /(tan(THETA_M*DEG2RAD) * (ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA));
-     
-W = ALPHA3*ALPHA3+(ALPHA1*ALPHA1 * ALPHA2*ALPHA2 + 4*ALPHA2*ALPHA2 * ETA*ETA)
-                 /(ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA);
-L0 = (ALPHA1*ETA*ALPHA2*ALPHA3/tan(fabs(THETA_M)*DEG2RAD))
-   / sqrt(ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA);
-   
-ALPHA3_Opt = 1/sqrt(1/ALPHA1/ALPHA1+1/ALPHA2/ALPHA2+1/ETA/ETA);
+	if (ALPHA1<0)  ALPHA1=600;
+	if (ALPHA2<0)  ALPHA2=600;
+	if (ALPHA3<0)  ALPHA3=600;
+	if (ETA<=0)    ETA   =30;
 
-if (verbose) {
-  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
-  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
-    lambda, EI, KI, Vi);
-  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off 2*THETA_M=%.4g [deg]\n",
-    DM, RV, (!RV ? "flat" : "curved"), THETA_M*2);
-  printf("* Resolution:     Caglioti              U=%g V=%g W=%g [deg^2]\n", U/60/60, V/60/60, W/60/60);
-  printf("                  Optimal          ALPHA3=%g [min]\n",  ALPHA3_Opt);
-  printf("                  Optimal resolution A1/2=%g [min]\n",  ALPHA3_Opt/sqrt(2));
-  printf("                  Normalized Intensity L0=%g [min^3]\n", L0);
-}
+	/* compute Cagioloti U,V,W and L0 (intensity) */
+	U = 4*(ALPHA1*ALPHA1 * ALPHA2*ALPHA2 + ALPHA1*ALPHA1 * ETA*ETA + ALPHA2*ALPHA2 * ETA*ETA)
+	     /(tan(THETA_M*DEG2RAD)*tan(THETA_M*DEG2RAD) * (ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA));
 
-RV = fabs(RV)*SM;
+	V = 4*ALPHA2*ALPHA2*(ALPHA1*ALPHA1 +2*ETA*ETA)
+	     /(tan(THETA_M*DEG2RAD) * (ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA));
 
+	W = ALPHA3*ALPHA3+(ALPHA1*ALPHA1 * ALPHA2*ALPHA2 + 4*ALPHA2*ALPHA2 * ETA*ETA)
+	                 /(ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA);
+	L0 = (ALPHA1*ETA*ALPHA2*ALPHA3/tan(fabs(THETA_M)*DEG2RAD))
+	   / sqrt(ALPHA1*ALPHA1 + ALPHA2*ALPHA2 + 4*ETA*ETA);
 
+	ALPHA3_Opt = 1/sqrt(1/ALPHA1/ALPHA1+1/ALPHA2/ALPHA2+1/ETA/ETA);
+
+	if (verbose) {
+	  printf("ILL_D2B: Detailed DIF configuration\n");
+	  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+	    lambda, EI, KI, Vi);
+	  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off 2*THETA_M=%.4g [deg]\n",
+	    DM, RV, (!RV ? "flat" : "curved"), THETA_M*2);
+	  printf("* Resolution:     Caglioti              U=%g V=%g W=%g [deg^2]\n", U/60/60, V/60/60, W/60/60);
+	  printf("                  Optimal          ALPHA3=%g [min]\n",  ALPHA3_Opt);
+	  printf("                  Optimal resolution A1/2=%g [min]\n",  ALPHA3_Opt/sqrt(2));
+	  printf("                  Normalized Intensity L0=%g [min^3]\n", L0);
+	}
+
+	RV = fabs(RV)*SM;
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -151,7 +149,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 /* source with constant flux. Directly send neutron events to monochromator area */
-COMPONENT Source = Source_gen(dist = 11, focus_xw = fabs(0.05*fabs(sin(DEG2RAD*THETA_M))), focus_yh = 0.3, radius=0.11, 
+COMPONENT Source = Source_gen(dist = 11, focus_xw = fabs(0.05*fabs(sin(DEG2RAD*THETA_M))), focus_yh = 0.3, radius=0.11,
 	lambda0 = lambda, dlambda = lambda*0.01,
 	T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12)
   AT (0, 0, 0) RELATIVE Origin
@@ -176,7 +174,7 @@ COMPONENT Alpha_One = Collimator_linear(
   xwidth = 0.07, yheight = 0.30, length = 0.70, divergence = ALPHA1, transmission = 1.0)
   WHEN (ALPHA1>0)
   AT (0, 0, L1-1.045) RELATIVE Origin
-  
+
 COMPONENT Slit_Mono = Slit(xwidth = 0.05, yheight = 0.3)
   AT (0, 0, L1-0.1) RELATIVE Origin
 
@@ -191,7 +189,7 @@ COMPONENT D2B_ALPHA1_Div = Monitor_nD(
 COMPONENT D2B_Mono_Lambda = Monitor_nD(
      options="lambda, all auto",
      bins = 40, xwidth = 0.1, yheight = 0.3, restore_neutron=1)
-   AT (0, 0, 0) RELATIVE PREVIOUS   
+   AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* TIP: monochromator cradle */
 COMPONENT mono_cradle = Arm()
@@ -218,7 +216,7 @@ COMPONENT Alpha_Two = Collimator_linear(
     xwidth = 0.05, yheight = 0.2, length = 0.2, divergence = ALPHA2, transmission = 1.0)
   WHEN (ALPHA2>0)
   AT (0, 0, L2-0.25) RELATIVE mono_out
-  
+
 COMPONENT Slit_Sample = Slit(xwidth = 0.01, yheight = 0.05)
   AT (0, 0, L2-0.02) RELATIVE mono_out
 
@@ -229,7 +227,7 @@ COMPONENT D2B_ALPHA2_Div = Monitor_nD(
 COMPONENT D2B_Sample_Lambda = Monitor_nD(
      options="lambda, all auto",
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
-   AT (0, 0, 0) RELATIVE PREVIOUS   
+   AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* sample position */
 SPLIT COMPONENT Arm_Sample = Arm()
@@ -238,12 +236,12 @@ SPLIT COMPONENT Arm_Sample = Arm()
 COMPONENT Container_in = PowderN(reflections="V.laz", radius = 0.0025+0.00051, thickness = 0.0005, yheight = 0.04,
                          concentric = 1, p_interact=0.1, d_phi=RAD2DEG*atan2(Dheight+0.05,L3))
   AT (0, 0, 0) RELATIVE Arm_Sample
-    
+
 COMPONENT Sample = PowderN(
     reflections = Powder, radius = 0.0025, d_phi=RAD2DEG*atan2(Dheight+0.05,L3),
     yheight = 0.04)
   AT (0, 0, 0) RELATIVE Arm_Sample
-  
+
 COMPONENT Container_out = COPY(Container_in)(concentric=0)
   AT (0, 0, 0) RELATIVE Arm_Sample
 
@@ -253,14 +251,14 @@ COMPONENT collimador_radial = Collimator_radial(
     divergence=ALPHA3,verbose=1,approx=1,
     theta_min=-165, theta_max=-5, radius=L3-0.3-0.01)
   WHEN (ALPHA3>0)
-	AT (0, 0, 0) RELATIVE Sample  
+	AT (0, 0, 0) RELATIVE Sample
 
 /* perfect detector: 1D(theta) */
 COMPONENT D2B_BananaTheta = Monitor_nD(
     options = "banana, angle limits=[5 165], bins=3200",
     radius = L3, yheight = Dheight, restore_neutron=1)
   AT (0, 0, 0) RELATIVE Sample
-  
+
 COMPONENT D2B_BananaThetaCenter = Monitor_nD(
     options = "banana, angle limits=[5 165], bins=3200",
     radius = L3, yheight = 0.1, restore_neutron=1)
@@ -274,4 +272,3 @@ COMPONENT D2B_BananaPSD = Monitor_nD(
 
 /* The END token marks the instrument definition end */
 END
-

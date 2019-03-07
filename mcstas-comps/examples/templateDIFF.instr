@@ -90,7 +90,7 @@ INITIALIZE
 	if (ETA<=0)    ETA   =30;
 
 	if (verbose) {
-	  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
+	  printf("templateDIFF: Detailed DIF configuration\n");
 	  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
 	    lambda, EI, KI, Vi);
 	  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off THETA_M=%.4g [deg]\n",
