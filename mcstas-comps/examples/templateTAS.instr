@@ -402,8 +402,7 @@ INITIALIZE
 
   if (!QM && !QH && !QK && !QL)
     exit(fprintf(stderr,
-      "%s: ERROR: No Q transfer defined (QM, QH, QK, QL)\n",
-      NAME_CURRENT_COMP));
+      "templateTAS: ERROR: No Q transfer defined (QM, QH, QK, QL)\n"));
 } else {
   /* compute KI, KF if angles are consistent */
   if (!KI && fabs(A2-2*A1) < 0.01) {
@@ -415,8 +414,8 @@ INITIALIZE
   double qs=(KI*KI + KF*KF - cos(A4*DEG2RAD*SS)*(2*KI*KF));
   if (!QM && qs>=0) QM = sqrt(qs);
   else fprintf(stderr,
-      "%s: Warning: Can not compute Q-modulus from A4=%g [deg].\n",
-      NAME_CURRENT_COMP,A4);
+      "templateTAS: Warning: Can not compute Q-modulus from A4=%g [deg].\n",
+      A4);
 }
 
 /* transfer sample parameters */
@@ -445,7 +444,7 @@ machine_hkl.en = EN;
 machine_real.qm = QM;
 
 if (verbose) {
-  printf("%s: Detailed TAS configuration\n", NAME_CURRENT_COMP);
+  printf("templateTAS: Detailed TAS configuration\n");
   printf("* Incoming beam: EI=%.4g [meV] KI=%.4g [Angs-1] Vi=%g [m/s]\n", EI, KI, Vi);
   printf("* Outgoing beam: EF=%.4g [meV] KF=%.4g [Angs-1] Vf=%g [m/s]\n", EF, KF, Vf);
 }
@@ -477,22 +476,22 @@ machine_hkl.bet4= BET4;
 
 /* geometry tests w/r to collimator lengths */
 if (machine_hkl.l1 <= 1)
-  fprintf(stderr, "%s: Warning: L1 too short. Min=1\n", NAME_CURRENT_COMP);
+  fprintf(stderr, "templateTAS: Warning: L1 too short. Min=1\n");
 
 if (machine_hkl.l2 <= 0.35)
-  exit(fprintf(stderr, "%s: ERROR: L2 too short. Min=0.35\n", NAME_CURRENT_COMP));
+  exit(fprintf(stderr, "templateTAS: ERROR: L2 too short. Min=0.35\n"));
 
 if (machine_hkl.l3 <= 0.40)
-  exit(fprintf(stderr, "%s: ERROR: L3 too short. Min=0.40\n", NAME_CURRENT_COMP));
+  exit(fprintf(stderr, "templateTAS: ERROR: L3 too short. Min=0.40\n"));
 
 if (machine_hkl.l4 <= 0.24)
-  exit(fprintf(stderr, "%s: ERROR: L4 too short. Min=0.24\n", NAME_CURRENT_COMP));
+  exit(fprintf(stderr, "templateTAS: ERROR: L4 too short. Min=0.24\n"));
 
 if (!anglemode) {
   machine_real = qhkl2angles(sample, machine_hkl, machine_real);
   if (strlen(machine_real.message))
-    exit(fprintf(stderr, "%s: ERROR: %s [qhkl2angles]\n",
-      NAME_CURRENT_COMP, machine_real.message));
+    exit(fprintf(stderr, "templateTAS: ERROR: %s [qhkl2angles]\n",
+      machine_real.message));
 }
 
 /* compute optimal curvatures */
