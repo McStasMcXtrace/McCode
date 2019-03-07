@@ -50,10 +50,10 @@ EXTEND %{
   Energy = VS2E*(vx*vx+vy*vy+vz*vz);
 %}
   
-COMPONENT MCPLlow = MCPL_output(filename="E_low.mcpl.gz")
+COMPONENT MCPLlow = MCPL_output(filename="E_low")
 WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT MCPLhigh = MCPL_output(filename="E_high.mcpl.gz")
+COMPONENT MCPLhigh = MCPL_output(filename="E_high")
 WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT Elow = Monitor_nD(filename="E_low", options="previous auto E")
