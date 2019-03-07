@@ -63,6 +63,12 @@ WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT MCPLhigh = MCPL_output(filename="E_high.mcpl.gz")
 WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
 
+COMPONENT Elow = Monitor_nD(filename="E_low", options="previous auto E")
+WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Ehigh = Monitor_nD(filename="E_high", options="previous auto E")
+WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
+  
 FINALLY
 %{
 %}
