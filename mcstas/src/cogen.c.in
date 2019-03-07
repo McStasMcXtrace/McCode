@@ -163,8 +163,10 @@ coutf(char *format, ...)
 static void
 code_set_source(char *filename, int linenum)
 {
-  if(linenum > 0)
-    coutf("//#line %d \"%s\"", linenum, filename);
+  // jg-20190307: We have disabled line pragmas for now, although they may
+  //   return at a later date.
+  //if(linenum > 0)
+  //  coutf("#line %d \"%s\"", linenum, filename);
 }
 
 /*******************************************************************************
@@ -173,8 +175,10 @@ code_set_source(char *filename, int linenum)
 static void
 code_reset_source(void)
 {
+  // jg-20190307: We have disabled line pragmas for now, although they may
+  //   return at a later date.
   /* Note: the number after #line refers to the line AFTER the directive. */
-  coutf("//#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
+  //coutf("//#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
 }
 
 /*******************************************************************************
@@ -249,6 +253,8 @@ embed_file(char *name)
   char buf[4096];
   FILE *f;
   int last;
+
+  coutf("/* embedding file \"%s\" */", name);
 
   if (!symtab_lookup(lib_instances, name))
   {
@@ -707,10 +713,22 @@ int cogen_comp_section_class(
   int *flag_defined_common)
 {
   int warnings = 0;
+  List_handle liter;
+  struct comp_inst *extendcomp = NULL;
 
-  /* nothing to do when no component code, except for INITIALISE and TRACE with EXTEND */
-  // TODO: add the TRACE with EXTEND condition
-  if (!code || list_len(code->lines) <= 0)
+  // in case of TRACE, count EXTEND blocks for this component type
+  int cnt_extend = 0;
+  if (!strcmp(section, "TRACE")) {
+    liter = list_iterate(instr->complist);
+    while((extendcomp = list_next(liter)) != NULL) {
+      if (list_len(extendcomp->extend->lines) > 0 && (!strcmp(extendcomp->def->name, comp->def->name)))
+        cnt_extend++;
+    }
+    list_iterate_end(liter);
+  }
+
+  // proceed if comp type has trace code or EXTEND */
+  if ((!code || list_len(code->lines) <= 0) && cnt_extend == 0)
     return(0);
 
   /* generate class functions (unless flagged already done) */
@@ -719,10 +737,9 @@ int cogen_comp_section_class(
     // set flag so that definition [section] is done only once
     *flag_defined_common = 1;
 
+    // write class fct footprint
     coutf("class_%s *class_%s_%s(class_%s *comp",
       comp->def->name, comp->def->name, section_lower, comp->def->name);
-
-    // JG: shouldn't this be done one level up, for all of the trace section at once?
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
     {
       coutf("  , particle *" MCCODE_PARTICLE ") {",
@@ -738,6 +755,24 @@ int cogen_comp_section_class(
     // SHARED comp [section] code here
     codeblock_out(code); // component definition code common to all instances, needs defines
 
+    // EXTEND blocks written here, as component name switch, if any
+    if (!strcmp("TRACE", section) && cnt_extend > 0) {
+      cout("");
+      cout("  // EXTEND code here");
+
+      liter = list_iterate(instr->complist);
+      while((extendcomp = list_next(liter)) != NULL) {
+        if (list_len(extendcomp->extend->lines) > 0
+          && (!strcmp(extendcomp->def->name, comp->def->name))
+          ) {
+            coutf("  if (!strcmp(comp->_name, \"%s\")) {", extendcomp->name);
+            codeblock_out(extendcomp->extend);
+            cout("  }");
+        }
+      }
+      cout("");
+      list_iterate_end(liter);
+    }
     /* undefine aliases */
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
