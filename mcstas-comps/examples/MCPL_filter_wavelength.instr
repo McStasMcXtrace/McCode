@@ -17,21 +17,29 @@
 * %P
 * MCPLfile:   [str] Defines the MCPL input file to process
 * wavelength: [AA]  Defines a threshold wavelength to split the MCPLfile at
+* min:        [AA]  Minimum wavelength in Monitor_nD plots
+* max:        [AA]  Maximum wavelength in Monitor_nD plots
+* bins:       [1]   Number of bins in Monitor_nD plots
 *
 * %L
 * <reference/HTML link>
 * MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT MCPL_filter_wavelength(string MCPLfile="my.mcpl.gz", wavelength=0.5)
+DEFINE INSTRUMENT MCPL_filter_wavelength(string MCPLfile="my.mcpl.gz", wavelength=0.5, max=20, min=0, int bins=100)
 
 DECLARE
 %{
   double Wavelength;
+  char monopts1[128];
+  char monopts2[128];
 %}
 
 INITIALIZE
 %{
+  sprintf(monopts1,"previous lambda limits=[%g %g] bins=%i",min, wavelength, bins);
+  sprintf(monopts2,"previous lambda limits=[%g %g] bins=%i",wavelength, max, bins);
+
 %}
 
 TRACE
@@ -56,10 +64,11 @@ WHEN (Wavelength < wavelength) AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT MCPLhigh = MCPL_output(filename="L_high")
 WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Llow = Monitor_nD(filename="L_low", options="previous auto lambda")
+
+COMPONENT Llow = Monitor_nD(filename="L_low", options=monopts1)
 WHEN (Wavelength < wavelength) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Lhigh = Monitor_nD(filename="L_high", options="previous auto lambda")
+COMPONENT Lhigh = Monitor_nD(filename="L_high", options=monopts1)
 WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
   
 FINALLY
