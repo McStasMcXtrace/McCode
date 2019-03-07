@@ -184,7 +184,7 @@ static void
 codeblock_out(struct code_block *code)
 {
   List_handle liter;                /* For list iteration. */
-  char *line;                        /* Single code line. */
+  char *line;                       /* Single code line. */
 
   if(list_len(code->lines) <= 0)
     return;
@@ -206,7 +206,7 @@ static void
 codeblock_out_brace(struct code_block *code)
 {
   List_handle liter;                /* For list iteration. */
-  char *line;                        /* Single code line. */
+  char *line;                       /* Single code line. */
 
   if(list_len(code->lines) <= 0)
     return;
@@ -363,31 +363,30 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
 
 /* *****************************************************************************
 * cogen_comp_declare: write the declaration part from the component instance
-*   that is the component parameter structure, with positioning stuff
+*   that is, the component parameter structure and positioning code.
 * input:  a component instance structure pointer (not modified)
 * output: number of warning/errors to fix.
 *
-* code is generated at root level of C file: only C definitions, no initialisers !
+* code is generated at root level of C file: only C definitions, no initialisers!
 * called by: cogen_decls
 ***************************************************************************** */
 int cogen_comp_declare(struct comp_inst *comp)
 {
-  int warnings     =0;
-  int nb_parameters=0;
+  int warnings = 0;
+  int nb_parameters = 0;
 
   if (!comp->def->flag_defined_structure) {
-    int index=0;
+    int index = 0;
 
     coutf("/* component %s=%s() [%i] DECLARE */",
       comp->name, comp->def->name, comp->index);
 
     comp->def->flag_defined_structure = 1;
-    coutf("/* Parameter definition for component type '%s' */",
-      comp->def->name);
+    coutf("/* Parameter definition for component type '%s' */", comp->def->name);
     coutf("struct struct_%s_parameters {", comp->def->name);
 
     /* put there setting, output and declare code */
-    for (index=0; index <2; index++) {
+    for (index=0; index<2; index++) {
       List l = (index == 0 ? comp->def->set_par : comp->def->out_par);
 
       if(list_len(l) > 0)
@@ -538,8 +537,7 @@ int cogen_comp_declare(struct comp_inst *comp)
 static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
                                 char *section)
 {
-  List l = !strcmp(section, "SETTING") ?
-             comp->def->set_par : comp->def->out_par;
+  List l = !strcmp(section, "SETTING") ? comp->def->set_par : comp->def->out_par;
 
   if(list_len(l) > 0)
   {
@@ -591,10 +589,13 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
 *         previous component pointer or NULL (for relative stuff)
 *         the instrument structure
 *
-* code is generated in function [comp]_init
-* called by: cogen_comp_init
+* code is generated in function [comp]_setpos
+* called by: cogen_comp_setpos
 ***************************************************************************** */
-static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *last, struct instr_def *instr)
+static void cogen_comp_init_position(
+  struct comp_inst *comp,
+  struct comp_inst *last,
+  struct instr_def *instr)
 {
   char d2r[] = "DEG2RAD";
   struct comp_inst *relcomp; /* Component relative to. */
@@ -756,7 +757,10 @@ int cogen_comp_section_class(
 * Generates the only comp instance function, setpos
 *
 *******************************************************************************/
-int cogen_comp_setpos(struct comp_inst *comp, struct comp_inst *last, struct instr_def *instr)
+int cogen_comp_setpos(
+  struct comp_inst *comp,
+  struct comp_inst *last,
+  struct instr_def *instr)
 {
   int warnings=0;
   coutf("/* component %s=%s() %s */",
@@ -870,8 +874,6 @@ int cogen_decls(struct instr_def *instr)
   } else {
 
     liter = list_iterate(instr->formals);
-
-
     while(i_formal = list_next(liter))
     {
       if (i_formal->id && strlen(i_formal->id)) {
@@ -961,12 +963,12 @@ int cogen_decls(struct instr_def *instr)
       if (i_formal->isoptional  // needed to avoid double quotes in strings
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
         coutf("  \"%s\", &(instrument_var._parameters._%s), %s, %s, ", i_formal->id,
-            i_formal->id, instr_formal_type_names[i_formal->type],
-            exp_tostring(i_formal->default_value));
+              i_formal->id, instr_formal_type_names[i_formal->type],
+              exp_tostring(i_formal->default_value));
       else
         coutf("  \"%s\", &(instrument_var._parameters._%s), %s, \"%s\", ", i_formal->id,
-            i_formal->id, instr_formal_type_names[i_formal->type],
-            i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
+              i_formal->id, instr_formal_type_names[i_formal->type],
+              i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
     }
   }
   list_iterate_end(liter);
@@ -1012,8 +1014,7 @@ int cogen_decls(struct instr_def *instr)
   index=0;
   while(comp = list_next(liter)) {
     comp->index=++index;        /* comp index starts at 1, as in instrument.y */
-    // JG: "counter_instances" no longer matters, because all code except setpos
-    // uses class fcts
+    // TODO: "counter_instances" no longer matters due to class functions
     comp->def->counter_instances++;
     warnings  += cogen_comp_declare(comp);
   }
@@ -1047,7 +1048,7 @@ int cogen_decls(struct instr_def *instr)
 int cogen_section(struct instr_def *instr, char *section, char *section_lower,
   struct code_block *code)
 {
-  int         warnings =0;
+  int warnings = 0;
   List_handle liter;
   struct comp_inst *comp=NULL, *last=NULL;
 
@@ -1154,8 +1155,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cogen_defundef(NULL, instr->formals, PAR_UNDEF);
   }
 
-  // JG: generate setpos() calls, one pr. component instance
-  /* must set pos/rot before comp and instr INIT code */
+  /* generate setpos() calls, one pr. component instance */
   if (!strcmp(section, "INITIALISE")) {
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL)
@@ -1191,7 +1191,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
   }
   list_iterate_end(liter);
 
-  // JG: end the instrument sequential comps calls section
+  /* end the instrument sequential comps calls section */
   if (!strcmp(section, "INITIALISE")) {
     /* Output graphics representation of components. */
     coutf("  if (mcdotrace) display();");
@@ -1216,10 +1216,9 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 ***************************************************************************** */
 int cogen_acc_attach(struct instr_def *instr)
 {
-  int         warnings =0;
-  List_handle
-  liter = list_iterate(instr->complist);
-  struct comp_inst *comp;       /* Component instance. */
+  int warnings = 0;
+  List_handle liter = list_iterate(instr->complist);
+  struct comp_inst *comp;
   cout("#include <openacc.h>");
   while((comp = list_next(liter)) != NULL)
     {
@@ -1276,7 +1275,7 @@ int cogen_trace(struct instr_def *instr)
   cout("");
 
   /* define state parameters for all TRACE*/
-  for(i = 0; i < NUM_STATE_PARS; i++)
+  for(i=0; i<NUM_STATE_PARS; i++)
     coutf("#define %s (" MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
@@ -1363,7 +1362,6 @@ int cogen_trace(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
-    struct comp_inst *comp2=NULL;
 
     /* the SPLIT loop must be set before we enter further component blocks */
     if (comp->split) {
@@ -1372,12 +1370,12 @@ int cogen_trace(struct instr_def *instr)
       coutf("    instrument->logic.Split_%s_particle=" MCCODE_PARTICLE "_particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    if (!ABSORBED && " MCCODE_PARTICLE "->_index == %i) ", comp->index);
       coutf("    for (" "instrument->logic.Split_%s = 0; "
-                          "instrument->logic.Split_%s< %s; "
-                          "instrument->logic.Split_%s++) {",
+                        "instrument->logic.Split_%s< %s; "
+                        "instrument->logic.Split_%s++) {",
         comp->name, comp->name, exp, comp->name);
       str_free(exp);
       cout( "    {");
-    } // for split
+    }
     else
       coutf("    if (!ABSORBED && " MCCODE_PARTICLE "->_index == %i) {", comp->index);
 
@@ -1396,7 +1394,6 @@ int cogen_trace(struct instr_def *instr)
 
     // coordinate transformations (wrt to PREVIOUS)
     cout( "      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
-
     coutf("        if (_%s->_rotation_is_identity) {", comp->name);
     coutf("          coords_get("
       "coords_add(coords_set(x,y,z), _%s->_position_relative),"
@@ -1409,7 +1406,8 @@ int cogen_trace(struct instr_def *instr)
     coutf("      STORE_NEUTRON(%i);", comp->index);
 
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
-      if (comp->when) { // WHEN
+      // WHEN
+      if (comp->when) {
         char *exp=exp_tostring(comp->when);
         coutf("      if (%s) // conditional WHEN execution", exp);
         str_free(exp);
@@ -1424,7 +1422,7 @@ int cogen_trace(struct instr_def *instr)
       coutf( "        RESTORE_NEUTRON(%i);", comp->index);
     };
 
-    /* undef what was done above */
+    /* undef */
     if (comp->split || comp->when || list_len(comp->jump) > 0) {
       cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
       cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
