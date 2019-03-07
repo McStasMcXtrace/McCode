@@ -1,0 +1,69 @@
+/*******************************************************************************
+* Instrument: MCPL_filter_wavelength
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: 2019-03
+* Origin: DTU
+* %INSTRUMENT_SITE: Tools
+*
+* Filtering-by-wavelength instrument file for processing MCPL input files
+*
+* %D
+* 
+* Example: Split an MCPL file at an energy of 0.5 meV
+* mcrun MCPL_filter_radius MCPLfile=my.mcpl.gz energy=0.5
+*
+* %P
+* MCPLfile:   [str] Defines the MCPL input file to process
+* wavelength: [AA]  Defines a threshold wavelength to split the MCPLfile at
+*
+* %L
+* <reference/HTML link>
+* MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT MCPL_filter_wavelength(string MCPLfile="my.mcpl.gz", wavelength=0.5)
+
+DECLARE
+%{
+  double Wavelength;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read neutrons from an mcpl file*/
+
+COMPONENT MCPLinput = MCPL_input(filename=MCPLfile,verbose=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Calc = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  Wavelength = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+%}
+  
+COMPONENT MCPLlow = MCPL_output(filename="L_low.mcpl.gz")
+WHEN (Wavelength < wavelength) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT MCPLhigh = MCPL_output(filename="L_high.mcpl.gz")
+WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Llow = Monitor_nD(filename="L_low", options="previous auto lambda")
+WHEN (Wavelength < wavelength) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Lhigh = Monitor_nD(filename="L_high", options="previous auto lambda")
+WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
+  
+FINALLY
+%{
+%}
+
+END
