@@ -1,25 +1,18 @@
 /*******************************************************************************
-* Instrument: ESS_butterfly_MCPL_test
+* Instrument: MCPL_filter_radius
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
-* Date: 2017-04
+* Date: 2019-03
 * Origin: DTU
 * %INSTRUMENT_SITE: Tools
 *
-* Flexible histogramming instrument file for processing MCPL input files using Monitor_nD
+* Filtering-by-radius instrument file for processing MCPL input files 
 *
 * %D
-* Flexible histogramming instrument file for processing MCPL input files using Monitor_nD.
 * 
-* Example1: Multiple 1D histograms of position, velocity, divergence, time and wavelength, use
-* NDoptions=1 defines options="previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda"
-*
-* Example2: 2D x-y plot of beam cross section:
-* NDoptions=2 defines options="previous, auto, x, y"
-* 
-* Example3: 2D TOF-lambda plot of beam:
-* NDoptions=3 defines options="previous, auto, tof, lambda"
+* Example: Split an MCPL file at a radius of 2.5 m from the origin
+* mcrun MCPL_filter_radius MCPLfile=my.mcpl.gz radius=2.5
 *
 * %P
 * MCPLfile:  [str] Defines the MCPL input file to process
