@@ -1354,6 +1354,11 @@ int cogen_trace(struct instr_def *instr)
   cout("");
   cout("  /* init variables and counters for TRACE */");
 
+  // we need this override, since "comp" is not defined in raytrace() - see section-wide define
+  cout("  #define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB ABSORB0");
+
+
   /* Debugging (initial state). */
   cout("  DEBUG_ENTER();");
   cout("  DEBUG_STATE();");
@@ -1536,7 +1541,7 @@ int cogen_trace(struct instr_def *instr)
   cout("  return(" MCCODE_PARTICLE "->_index);");
   coutf("} /* raytrace */");
 
-  // JG: undef everything after the "raytrace" function
+  // undef everything after the "raytrace" function
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("#undef %s", statepars_all[i]);
   cout("#undef SCATTERED");
