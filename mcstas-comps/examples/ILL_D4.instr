@@ -18,13 +18,13 @@
 * equipped with nine 1D position sensitive microstrip detectors. In this model,
 * a PSD banana detector is also present.
 *
-* The monochromator take-off angle is 2Theta_M ~ 20-25 deg, variable. The available 
-* monochromators are all vertically focusing, Cu (200) for 0.7 Angs, Cu (220) 
+* The monochromator take-off angle is 2Theta_M ~ 20-25 deg, variable. The available
+* monochromators are all vertically focusing, Cu (200) for 0.7 Angs, Cu (220)
 * for 0.5 Angs.
 *
 * Cu       002 DM=1.807 AA
 * Cu       220 DM=1.278 AA
-* 
+*
 * %Example: lambda=0.7 Detector: BananaTheta_I=1.44351e+06
 *
 * %Parameters
@@ -48,33 +48,33 @@ DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 , string sample="SiO2_liq.qSq", RV
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-double A1; /* rotation of monok and d-spacing */
-double RV; /* vertical curvature of monochromator */
+  double A1; /* rotation of monok and d-spacing */
+  double RV; /* vertical curvature of monochromator */
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-double L;
-double KI, Vi, EI;
+  double L;
+  double KI, Vi, EI;
 
-A1 =asin(lambda/(2*DM))*RAD2DEG;
-A1 *= -1;
-L = 1/(1/L1+1/L2);
-if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
-KI=2*PI/lambda;
-Vi = K2V*fabs(KI);
-EI = VS2E*Vi*Vi;
+  A1 =asin(lambda/(2*DM))*RAD2DEG;
+  A1 *= -1;
+  L = 1/(1/L1+1/L2);
+  if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
+  KI=2*PI/lambda;
+  Vi = K2V*fabs(KI);
+  EI = VS2E*Vi*Vi;
 
-if (verbose) {
-  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
-  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
-    lambda, EI, KI, Vi);
-  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A1=%.4g [deg]\n",
-    DM, RV, (!RV ? "flat" : "curved"), A1);
-}
- RV = -fabs(RV);;
+  if (verbose) {
+    printf("ILL_D4: Detailed DIF configuration\n");
+    printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+      lambda, EI, KI, Vi);
+    printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A1=%.4g [deg]\n",
+      DM, RV, (!RV ? "flat" : "curved"), A1);
+  }
+  RV = -fabs(RV);;
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -121,7 +121,7 @@ COMPONENT Lmon2 = L_monitor(
     nL = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
     Lmin = lambda*0.95, Lmax = lambda*1.05)
   AT (0, 0, 0.2) RELATIVE mono_out
-  
+
 COMPONENT Sample_mon = Monitor_nD(
     bins=10, xwidth = 0.03, yheight = 0.03, options="x y, per cm2")
   AT (0, 0, L2-0.05) RELATIVE mono_out
@@ -157,4 +157,3 @@ COMPONENT BananaPSD = Monitor_nD(
   AT (0, 0, 0) RELATIVE Sample
 
 END
-

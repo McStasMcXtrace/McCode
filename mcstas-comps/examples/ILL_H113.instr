@@ -33,45 +33,43 @@ DEFINE INSTRUMENT ILL_H113(m=2, lambda=10, dlambda=9.9, mip=1.2)
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-/* VCS (H1) source parameters */
-double sT1=216.8,sI1=1.24e+13;
-double sT2=33.9, sI2=1.02e+13;
-double sT3=16.7 ,sI3=3.0423e+12;
-/* guide coating parameters */
-double gR0          = 1;
-double gQc          = 0.021;
-double gAlpha       = 4.07;
-double gW           = 1.0/300.0;
-/* gaps and Al windows parameters */
-double Al_Thickness = 0.002;
-double gGap         = 0.001;
-/* guide curvatures */
-double gRh          = -4000; /* clockwise */
-/* guide section parameters (total length/number of elements) */
-double L_H113_2 =5.5  /6,  Rh_H113_2 =0;
-double L_H113_3 =3.0  /3,  Rh_H113_3 =0;
-double L_H113_4 =10.0 /10, Rh_H113_4 =0; /* divergent 60-90 */
-double L_H113_5 =11.0 /11, Rh_H113_5 =0;
-double L_H113_6 =11.0 /11, Rh_H113_6 =0;
-double L_H113_7 =11.0 /11, Rh_H113_7 =0;
-double L_H113_8 =11.0 /11, Rh_H113_8 =0;
-double L_H113_9 =10.0 /10, Rh_H113_9 =0; /* convergent 90-60 */
-
+	/* VCS (H1) source parameters */
+	double sT1 = 216.8, sI1 = 1.24e+13;
+	double sT2 = 33.9, sI2 = 1.02e+13;
+	double sT3 = 16.7, sI3 = 3.0423e+12;
+	/* guide coating parameters */
+	double gR0 = 1;
+	double gQc = 0.021;
+	double gAlpha = 4.07;
+	double gW = 1.0/300.0;
+	/* gaps and Al windows parameters */
+	double Al_Thickness = 0.002;
+	double gGap = 0.001;
+	/* guide curvatures */
+	double gRh = -4000; /* clockwise */
+	/* guide section parameters (total length/number of elements) */
+	double L_H113_2 =5.5  /6,  Rh_H113_2 = 0;
+	double L_H113_3 =3.0  /3,  Rh_H113_3 = 0;
+	double L_H113_4 =10.0 /10, Rh_H113_4 = 0; /* divergent 60-90 */
+	double L_H113_5 =11.0 /11, Rh_H113_5 = 0;
+	double L_H113_6 =11.0 /11, Rh_H113_6 = 0;
+	double L_H113_7 =11.0 /11, Rh_H113_7 = 0;
+	double L_H113_8 =11.0 /11, Rh_H113_8 = 0;
+	double L_H113_9 =10.0 /10, Rh_H113_9 = 0; /* convergent 90-60 */
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-
-/* Element rotations = Element length / Curvature Radius * RAD2DEG */
+	/* Element rotations = Element length / Curvature Radius * RAD2DEG */
 	if (gRh) {
 		Rh_H113_5  = L_H113_5 /gRh*RAD2DEG;
 		Rh_H113_6  = L_H113_6 /gRh*RAD2DEG;
 		Rh_H113_7  = L_H113_7 /gRh*RAD2DEG;
 		Rh_H113_8  = L_H113_8 /gRh*RAD2DEG;
 	}
-	printf("Instrument: %s (H113@ILL ballistic cold guide on VCS).\n", NAME_CURRENT_COMP);
+	printf("Instrument: ILL_H113 (H113@ILL ballistic cold guide on VCS).\n");
 %}
 
 /* Here comes the TRACE section, where the actual      */

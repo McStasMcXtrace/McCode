@@ -1,5 +1,5 @@
 /********************************************************************
-* 
+*
 * Instrument: ILL_H16_IN5
 *
 * %Identification
@@ -26,7 +26,7 @@
 ************************************************************************/
 DEFINE INSTRUMENT ILL_H16(lambda=10, dlambda=9.9, m=1)
 DECLARE
-%{  
+%{
 //---Guide (1st part of guide) --------------------------------------
   double L_Guide1, L_Guide21;
   double L_Guide22, L_Guide23;             // gerade dimensions
@@ -38,17 +38,17 @@ DECLARE
   //---Reactor & Krumm Guide coating (2nd part of guide) ------------
   double alt_Guide_Qc,alt_Guide_Ro,alt_Guide_alpha,alt_Guide_W;
   double L_reactor_guide; // total length of the reactor guide
-                          // from the source to the VTE valve  
-  double L_source_sample;           
+                          // from the source to the VTE valve
+  double L_source_sample;
   //---Neue Guide coating--------------------------------------------
   double Guide_Qc,Guide_Ro,Guide_alpha,Guide_W;
 %}
 
 
-  
+
 INITIALIZE
 %{
-  
+
 //==========================================================================
 //                Source
 //==========================================================================
@@ -61,19 +61,19 @@ INITIALIZE
 //==========================================================================
   L_reactor_guide = 33.30127; // Total length: Source-VTE [m]
   L_gap      = 0.2130;     // gap VTE+OT-H16
-  L_Guide1  = 4.3900;     // for gerade Guide1 
-  L_Guide21 = 0.6950;     // for gerade Guide21 
-  L_Guide22 = 0.1300;     // for gerade Guide22 
-  L_Guide23 = 0.69500;    // for gerade Guide23 
+  L_Guide1  = 4.3900;     // for gerade Guide1
+  L_Guide21 = 0.6950;     // for gerade Guide21
+  L_Guide22 = 0.1300;     // for gerade Guide22
+  L_Guide23 = 0.69500;    // for gerade Guide23
   disk_gap   = 0.02;       // full gap at choppers
-  L_Guide3  = 5.5125;     // for gerade Guide3 
-  L_Guide41 = 0.7425;     // for gerade Guide41 
-  L_Guide42 = 0.0350;     // for gerade Guide42 
-  L_Guide43 = 0.7500;     // for gerade Guide43 
-  L_Guide44 = 0.0350;     // for gerade Guide44 
-  L_Guide45 = 0.7900;     // for gerade Guide45 
-  mono_gap   = 0.0300;     // gap for the 1st monitor 
-  L_Collimator= 0.1300;     // for gerade Collimator 
+  L_Guide3  = 5.5125;     // for gerade Guide3
+  L_Guide41 = 0.7425;     // for gerade Guide41
+  L_Guide42 = 0.0350;     // for gerade Guide42
+  L_Guide43 = 0.7500;     // for gerade Guide43
+  L_Guide44 = 0.0350;     // for gerade Guide44
+  L_Guide45 = 0.7900;     // for gerade Guide45
+  mono_gap   = 0.0300;     // gap for the 1st monitor
+  L_Collimator= 0.1300;     // for gerade Collimator
   L_CollSample= 0.2400-0.025;     // the sample chamber size & keep
                                  // place for the vana sample
 
@@ -83,28 +83,28 @@ INITIALIZE
   L_source_sample+= disk_gap+L_Guide44+disk_gap+L_Guide45;
   L_source_sample+= mono_gap+L_Collimator+L_CollSample+0.025+0.0009;
 
-  printf("Instrument: %s (H16@ILL cold guide on VCS).\n  Total lenght Source - Sample = %f [m].\n\n",
-    NAME_CURRENT_COMP, L_source_sample);
+  printf("Instrument: ILL_H16 (H16@ILL cold guide on VCS).\n  Total lenght Source - Sample = %f [m].\n\n",
+    L_source_sample);
 
   // Alt Guide coating
   alt_Guide_Qc    = 0.021745; // for m=1 alpha and W aren't used.
-  alt_Guide_Ro    = 0.995;    
-  alt_Guide_alpha = 6.07;   
-  alt_Guide_W     = 0.0023;   
+  alt_Guide_Ro    = 0.995;
+  alt_Guide_alpha = 6.07;
+  alt_Guide_W     = 0.0023;
   // New Guide and super-mirors
   Guide_Qc    = 0.02275;
   Guide_Ro    = 0.996;
   Guide_alpha = 5.75;
   Guide_W     = 0.00125;
- 
+
 %}
 
-   
-   
+
+
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_//
 
 
-TRACE 
+TRACE
 
 COMPONENT arm = Progress_bar(percent=10) AT (0,0,0) ABSOLUTE
 
@@ -129,7 +129,7 @@ COMPONENT VCS = Source_gen(
 /*    The H16 Guide     */
 /*--------------------*/
 
-// zuerste, die gerade Teil 
+// zuerste, die gerade Teil
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 //(6x499.7mm+0.3mm gap, 301.27mm+20mm gap, 230mm+170mm gap)
 //-----------------------------------------------------------------
@@ -182,7 +182,7 @@ COMPONENT gerade_in_pile8 = Guide(
 AT (0,0,0.32127) RELATIVE gerade_in_pile7
 
 
-// The "MAN" Guide 
+// The "MAN" Guide
 // ^^^^^^^^^^^^^^^^^^^^^^^
 //(29 Teilen nach ein 170mm gap)
 //------------------------------------------------------
@@ -191,77 +191,77 @@ COMPONENT krumm1 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.7497,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,0.400)     RELATIVE gerade_in_pile8 
+AT      (0,0,0.400)     RELATIVE gerade_in_pile8
 ROTATED (0,0.018630,0)  RELATIVE gerade_in_pile8
 
 COMPONENT krumm2 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,0.750)     RELATIVE krumm1 
+AT      (0,0,0.750)     RELATIVE krumm1
 ROTATED (0,0.0079,0)    RELATIVE krumm1
 
 COMPONENT krumm3 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm2 
+AT      (0,0,1.000)     RELATIVE krumm2
 ROTATED (0,0.02115,0)   RELATIVE krumm2
 
 COMPONENT krumm4 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm3 
+AT      (0,0,1.000)     RELATIVE krumm3
 ROTATED (0,0.021240,0)  RELATIVE krumm3
 
 COMPONENT krumm5 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.7497,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm4 
+AT      (0,0,1.000)     RELATIVE krumm4
 ROTATED (0,0.018630,0)  RELATIVE krumm4
 
 COMPONENT krumm6 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,0.750)     RELATIVE krumm5 
+AT      (0,0,0.750)     RELATIVE krumm5
 ROTATED (0,0.018540,0)  RELATIVE krumm5
 
 COMPONENT krumm7 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.4997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm6 
+AT      (0,0,1.000)     RELATIVE krumm6
 ROTATED (0,0.015930,0)  RELATIVE krumm6
 
 COMPONENT krumm8 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,0.500)     RELATIVE krumm7 
+AT      (0,0,0.500)     RELATIVE krumm7
 ROTATED (0,0.018990,0)  RELATIVE krumm7
 
 COMPONENT krumm9 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm8 
+AT      (0,0,1.000)     RELATIVE krumm8
 ROTATED (0,0.021240,0)  RELATIVE krumm8
 
 COMPONENT krumm10 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm9 
+AT      (0,0,1.000)     RELATIVE krumm9
 ROTATED (0,0.021240,0)  RELATIVE krumm9
 
 COMPONENT krumm11 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm10 
+AT      (0,0,1.000)     RELATIVE krumm10
 ROTATED (0,0.021240,0)  RELATIVE krumm10
 
 COMPONENT krumm12 =Guide(
@@ -282,7 +282,7 @@ COMPONENT krumm14 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm13 
+AT      (0,0,1.000)     RELATIVE krumm13
 ROTATED (0,0.021240,0)  RELATIVE krumm13
 
 COMPONENT krumm15 =Guide(
@@ -296,35 +296,35 @@ COMPONENT krumm16 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm15 
+AT      (0,0,1.000)     RELATIVE krumm15
 ROTATED (0,0.021240,0)  RELATIVE krumm15
 
 COMPONENT krumm17 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.4997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm16 
+AT      (0,0,1.000)     RELATIVE krumm16
 ROTATED (0,0.015930,0)  RELATIVE krumm16
 
 COMPONENT krumm18 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,0.500)     RELATIVE krumm17 
+AT      (0,0,0.500)     RELATIVE krumm17
 ROTATED (0,0.015930,0)  RELATIVE krumm17
 
 COMPONENT krumm19 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm18 
+AT      (0,0,1.000)     RELATIVE krumm18
 ROTATED (0,0.021240,0)  RELATIVE krumm18
 
 COMPONENT krumm20 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm19 
+AT      (0,0,1.000)     RELATIVE krumm19
 ROTATED (0,0.021240,0)  RELATIVE krumm19
 
 COMPONENT krumm21 =Guide(
@@ -338,7 +338,7 @@ COMPONENT krumm22 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm21 
+AT      (0,0,1.000)     RELATIVE krumm21
 ROTATED (0,0.021240,0)  RELATIVE krumm21
 
 COMPONENT krumm23 =Guide(
@@ -352,7 +352,7 @@ COMPONENT krumm24 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm23 
+AT      (0,0,1.000)     RELATIVE krumm23
 ROTATED (0,0.021240,0)  RELATIVE krumm23
 
 COMPONENT krumm25 =Guide(
@@ -373,21 +373,21 @@ COMPONENT krumm27 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,0.750)     RELATIVE krumm26 
+AT      (0,0,0.750)     RELATIVE krumm26
 ROTATED (0,0.018540,0)  RELATIVE krumm26
 
 COMPONENT krumm28 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm27 
+AT      (0,0,1.000)     RELATIVE krumm27
 ROTATED (0,0.021240,0)  RELATIVE krumm27
 
 COMPONENT krumm29 =Guide(
   w1 = 0.030, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = 0.9997,
   R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha,
   m = m, W = alt_Guide_W)
-AT      (0,0,1.000)     RELATIVE krumm28 
+AT      (0,0,1.000)     RELATIVE krumm28
 ROTATED (0,0.021240,0)  RELATIVE krumm28
 
 /*---------------------------------------------------------*/
@@ -416,5 +416,3 @@ COMPONENT GuideOut_L = Monitor_nD(
 AT (0,0,0) RELATIVE PREVIOUS
 
 END
-
-

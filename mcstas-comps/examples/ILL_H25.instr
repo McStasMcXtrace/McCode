@@ -75,7 +75,7 @@ INITIALIZE
 		Rh_H25_8  = L_H25_8 /gRh*RAD2DEG;
 	}
 
-	printf("Instrument: %s (H25@ILL thermal guide).\n", NAME_CURRENT_COMP);
+	printf("Instrument: ILL_H25 (H25@ILL thermal guide).\n");
 
 %}
 /* end of INITIALIZE */

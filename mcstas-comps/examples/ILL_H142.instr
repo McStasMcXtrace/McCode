@@ -34,35 +34,35 @@ DEFINE INSTRUMENT ILL_H142(m=1, lambda=10, dlambda=9.9, gH=0.12, mip=1)
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-/* VCS (H1) source parameters */
-double sT1=216.8,sI1=1.24e+13;
-double sT2=33.9, sI2=1.02e+13;
-double sT3=16.7 ,sI3=3.0423e+12;
-/* guide coating parameters */
-double gR0          = 1;
-double gQc          = 0.021;
-double gAlpha       = 4.07;
-double gW           = 1.0/300.0;
-/* gaps and Al windows parameters */
-double Al_Thickness = 0.002;
-double gGap         = 0.001;
-/* guide curvatures */
-double gRh          = 2700; /* anti-clockwise */
-/* guide section parameters (total length/number of elements) */
-double L_H142_2 =6.0  /6,  Rh_H142_2 =0;
-double L_H142_3 =9.473/10, Rh_H142_3 =0; /* end: d ~ 15.5 moderator at -5.9 */
-double L_H142_4 =6.973/7,  Rh_H142_4 =0; /* end: d ~ 22.5 ... */
-double L_H142_5 =4.75 /5,  Rh_H142_5 =0; /* VTE is at the end of this section */
-double L_H142_6 =12.5/10, Rh_H142_6 =0; /* end of H142 MAN spec sheet after 2 elements */
-double L_H142_7 =12.5/10, Rh_H142_7 =0;
-double L_H142_8 =12.5/10, Rh_H142_8 =0;
-double L_H142_9 =12.5/10, Rh_H142_9 =0;
-double L_H142_10=12.5/10, Rh_H142_10=0;
-double L_H142_11=12.5/10, Rh_H142_11=0;
-double L_H142_12=7.5/6,   Rh_H142_12=0; /* straight */
-double L_H142_13=2.5/2,   Rh_H142_13=0; /* straight */
+  /* VCS (H1) source parameters */
+  double sT1=216.8,sI1=1.24e+13;
+  double sT2=33.9, sI2=1.02e+13;
+  double sT3=16.7 ,sI3=3.0423e+12;
+  /* guide coating parameters */
+  double gR0          = 1;
+  double gQc          = 0.021;
+  double gAlpha       = 4.07;
+  double gW           = 1.0/300.0;
+  /* gaps and Al windows parameters */
+  double Al_Thickness = 0.002;
+  double gGap         = 0.001;
+  /* guide curvatures */
+  double gRh          = 2700; /* anti-clockwise */
+  /* guide section parameters (total length/number of elements) */
+  double L_H142_2 =6.0  /6,  Rh_H142_2 =0;
+  double L_H142_3 =9.473/10, Rh_H142_3 =0; /* end: d ~ 15.5 moderator at -5.9 */
+  double L_H142_4 =6.973/7,  Rh_H142_4 =0; /* end: d ~ 22.5 ... */
+  double L_H142_5 =4.75 /5,  Rh_H142_5 =0; /* VTE is at the end of this section */
+  double L_H142_6 =12.5/10, Rh_H142_6 =0; /* end of H142 MAN spec sheet after 2 elements */
+  double L_H142_7 =12.5/10, Rh_H142_7 =0;
+  double L_H142_8 =12.5/10, Rh_H142_8 =0;
+  double L_H142_9 =12.5/10, Rh_H142_9 =0;
+  double L_H142_10=12.5/10, Rh_H142_10=0;
+  double L_H142_11=12.5/10, Rh_H142_11=0;
+  double L_H142_12=7.5/6,   Rh_H142_12=0; /* straight */
+  double L_H142_13=2.5/2,   Rh_H142_13=0; /* straight */
 
-/* capture flux positions from moderator: 21.4    28.4    61.2 */
+  /* capture flux positions from moderator: 21.4    28.4    61.2 */
 
 %}
 
@@ -71,21 +71,21 @@ double L_H142_13=2.5/2,   Rh_H142_13=0; /* straight */
 INITIALIZE
 %{
 
-/* Element rotations = Element length / Curvature Radius * RAD2DEG */
-if (gRh) {
-  Rh_H142_2  = L_H142_2 /gRh*RAD2DEG;
-  Rh_H142_3  = L_H142_3 /gRh*RAD2DEG;
-  Rh_H142_4  = L_H142_4 /gRh*RAD2DEG;
-  Rh_H142_5  = L_H142_5 /gRh*RAD2DEG;
-  Rh_H142_6  =-L_H142_6 /gRh*RAD2DEG; /* S curved */
-  Rh_H142_7  =-L_H142_7 /gRh*RAD2DEG;
-  Rh_H142_8  =-L_H142_8 /gRh*RAD2DEG;
-  Rh_H142_9  =-L_H142_9 /gRh*RAD2DEG;
-  Rh_H142_10 =-L_H142_10/gRh*RAD2DEG;
-  Rh_H142_11 =-L_H142_11/gRh*RAD2DEG;
-}
+  /* Element rotations = Element length / Curvature Radius * RAD2DEG */
+  if (gRh) {
+    Rh_H142_2  = L_H142_2 /gRh*RAD2DEG;
+    Rh_H142_3  = L_H142_3 /gRh*RAD2DEG;
+    Rh_H142_4  = L_H142_4 /gRh*RAD2DEG;
+    Rh_H142_5  = L_H142_5 /gRh*RAD2DEG;
+    Rh_H142_6  =-L_H142_6 /gRh*RAD2DEG; /* S curved */
+    Rh_H142_7  =-L_H142_7 /gRh*RAD2DEG;
+    Rh_H142_8  =-L_H142_8 /gRh*RAD2DEG;
+    Rh_H142_9  =-L_H142_9 /gRh*RAD2DEG;
+    Rh_H142_10 =-L_H142_10/gRh*RAD2DEG;
+    Rh_H142_11 =-L_H142_11/gRh*RAD2DEG;
+  }
 
-printf("Instrument: %s (H142@ILL cold guide on VCS).\n", NAME_CURRENT_COMP);
+  printf("Instrument: ILL_H142 (H142@ILL cold guide on VCS).\n");
 
 %}
 

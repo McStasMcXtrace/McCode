@@ -60,7 +60,6 @@ DECLARE
 /* The INITIALIZE section is executed when the simulation starts     */
 INITIALIZE
 %{
-
   /* Element rotations = Element length / Curvature Radius * RAD2DEG */
   if (gRh) {
     Rh_H15_2  = L_H15_2 /gRh*RAD2DEG;
@@ -68,8 +67,7 @@ INITIALIZE
     Rh_H15_4  = L_H15_4 /gRh*RAD2DEG;
     Rh_H15_5  = L_H15_5 /gRh*RAD2DEG;
   }
-  printf("Instrument: %s (H15@ILL cold guide on VCS).\n", NAME_CURRENT_COMP);
-
+  printf("Instrument: ILL_H15 (H15@ILL cold guide on VCS).\n");
 %}
 
 /* Here comes the TRACE section, where the actual      */

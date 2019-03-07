@@ -43,10 +43,10 @@
 * det_takeoff: [deg]      Detector takeoff angle - positive anti-clockwise from incident beam
 * cor_to_det: [m]         Distance between sample centre of rotation and detector
 * dangle_interest: [deg]  Delta angle of interenterest.
-* hi_res: []              
-* mono_Si_type: []        
-* inc_slit_sep: []        
-* full_instrument: []     
+* hi_res: []
+* mono_Si_type: []
+* inc_slit_sep: []
+* full_instrument: []
 * full_instrument: []        When 1, simulates the complete instrument. When 0, only simulate from the outlet collimator
 *
 * %Link
@@ -54,157 +54,179 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT SAFARI_PITSI( source_lam_min=0.5, source_lam_max=2.0, hi_res=0, mono_Si_type=551, mono_mosh=30, mono_mosv=30, mono_dx=0, mono_dy=0, mono_dz=0, mono_takeoff=90.0, mono_dtilt=0,mono_r_h=5.0,mono_r_v=3.572, port_takeoff=90.0, inc_slit_rot=0, inc_slit_dx=0, inc_slit_to_cor=0.01, inc_slit_width=0.006, inc_slit_height=0.05, inc_slit_sep=0, mono_to_cor=2.5, sample_dx=0, sample_dy=0, sample_dz=0, sample_dom=0, det_takeoff=-114.375, cor_to_det=1.179, dangle_interest=125, full_instrument=1)
-
+DEFINE INSTRUMENT SAFARI_PITSI(
+  source_lam_min=0.5,
+  source_lam_max=2.0,
+  hi_res=0, mono_Si_type=551,
+  mono_mosh=30,
+  mono_mosv=30,
+  mono_dx=0,
+  mono_dy=0,
+  mono_dz=0,
+  mono_takeoff=90.0,
+  mono_dtilt=0,
+  mono_r_h=5.0,
+  mono_r_v=3.572,
+  port_takeoff=90.0,
+  inc_slit_rot=0,
+  inc_slit_dx=0,
+  inc_slit_to_cor=0.01,
+  inc_slit_width=0.006,
+  inc_slit_height=0.05,
+  inc_slit_sep=0,
+  mono_to_cor=2.5,
+  sample_dx=0,
+  sample_dy=0,
+  sample_dz=0,
+  sample_dom=0,
+  det_takeoff=-114.375,
+  cor_to_det=1.179,
+  dangle_interest=125,
+  full_instrument=1)
 
 DECLARE
 %{
-double hi_res, port_takeoff;
+  double hi_res, port_takeoff;
 
-double mono_Si_type, mono_mosh, mono_mosv;
-double mono_dx, mono_dy, mono_dz;
-double mono_takeoff, mono_dtilt, mono_r_h, mono_r_v;
-double mono_r_req_v;
-double mono_pts_v, mono_pts_h, focal_dist;
-double a,b,c,d,y;      //Gaussian fit params
+  double mono_Si_type, mono_mosh, mono_mosv;
+  double mono_dx, mono_dy, mono_dz;
+  double mono_takeoff, mono_dtilt, mono_r_h, mono_r_v;
+  double mono_r_req_v;
+  double mono_pts_v, mono_pts_h, focal_dist;
+  double a,b,c,d,y;      //Gaussian fit params
 
-double inc_slit_rot, inc_slit_dx, inc_slit_to_cor;
-double inc_slit_width, inc_slit_height, inc_slit_sep;
-double mono_to_cor;
-double sample_dx, sample_dy, sample_dz, sample_dom;
+  double inc_slit_rot, inc_slit_dx, inc_slit_to_cor;
+  double inc_slit_width, inc_slit_height, inc_slit_sep;
+  double mono_to_cor;
+  double sample_dx, sample_dy, sample_dz, sample_dom;
 
-double det_takeoff, cor_to_det, dangle_interest, ndet, det_cover_angle;
-double det_width, det_height;
+  double det_takeoff, cor_to_det, dangle_interest, ndet, det_cover_angle;
+  double det_width, det_height;
 
-double diff_slit_dx, diff_slit_to_cor;
-double diff_slit_width, diff_slit_height;
+  double diff_slit_dx, diff_slit_to_cor;
+  double diff_slit_width, diff_slit_height;
 
-double inc_slit_xmin, inc_slit_xmax, inc_slit_ymin, inc_slit_ymax;
-double inc_slit_xmin_h, inc_slit_xmax_h, inc_slit_ymin_w, inc_slit_ymax_w;
-double diff_slit_xmin, diff_slit_xmax, diff_slit_ymin, diff_slit_ymax;
-double wafer_d, start_wafer_pos, mono_turns, mono_Rh_req, mono_d, mono_q;
-double lam;
-double as;
-int msw;
+  double inc_slit_xmin, inc_slit_xmax, inc_slit_ymin, inc_slit_ymax;
+  double inc_slit_xmin_h, inc_slit_xmax_h, inc_slit_ymin_w, inc_slit_ymax_w;
+  double diff_slit_xmin, diff_slit_xmax, diff_slit_ymin, diff_slit_ymax;
+  double wafer_d, start_wafer_pos, mono_turns, mono_Rh_req, mono_d, mono_q;
+  double lam;
+  double as;
+  int msw;
 
-double chamber_col_start, chamber_col_length, outside_chamber_collimator_w, outside_chamber_collimator_h;
+  double chamber_col_start, chamber_col_length, outside_chamber_collimator_w, outside_chamber_collimator_h;
 
-double from_col=1;
-double full_instrument;
-
-
+  double from_col=1;
+  double full_instrument;
 %}
 
 INITIALIZE
 %{
-printf ("\n------------------\n");
+  printf ("\n------------------\n");
 
-/* Constants */
-if (port_takeoff == 70.0) {
-  chamber_col_start=0.44057;   //from the monochromator diffraction center
-  chamber_col_length=1.464;
-  outside_chamber_collimator_w=0.01954;
-  outside_chamber_collimator_h=0.04099;
-} else {        //90 degrees
-  chamber_col_start=0.414;   //from the monochromator diffraction center
-  chamber_col_length=1.3458;
-  outside_chamber_collimator_w=0.02186;
-  outside_chamber_collimator_h=0.04853;
-}
+  /* Constants */
+  if (port_takeoff == 70.0) {
+    chamber_col_start=0.44057;   //from the monochromator diffraction center
+    chamber_col_length=1.464;
+    outside_chamber_collimator_w=0.01954;
+    outside_chamber_collimator_h=0.04099;
+  } else {        //90 degrees
+    chamber_col_start=0.414;   //from the monochromator diffraction center
+    chamber_col_length=1.3458;
+    outside_chamber_collimator_w=0.02186;
+    outside_chamber_collimator_h=0.04853;
+  }
 
+  /* Incident slit */
+  inc_slit_xmin = -inc_slit_width/2.0;
+  inc_slit_xmax = inc_slit_width/2.0;
+  inc_slit_ymin = -inc_slit_height/2.0;
+  inc_slit_ymax = inc_slit_height/2.0;
+  if (inc_slit_sep < 0) {      //Emperical formula. Linear dependance derived from measurements: sep=13.18mm when width=0.13mm; sep=4.18mm when width=4.95mm
+    inc_slit_sep= -1.86721992 * inc_slit_width + 0.0134227385;
+  }
+  printf ("Incident slit separation = %.4lf mm\n",inc_slit_sep*1000);
 
-
-
-/* Incident slit */
-inc_slit_xmin = -inc_slit_width/2.0;
-inc_slit_xmax = inc_slit_width/2.0;
-inc_slit_ymin = -inc_slit_height/2.0;
-inc_slit_ymax = inc_slit_height/2.0;
-if (inc_slit_sep < 0) {      //Emperical formula. Linear dependance derived from measurements: sep=13.18mm when width=0.13mm; sep=4.18mm when width=4.95mm
-  inc_slit_sep= -1.86721992 * inc_slit_width + 0.0134227385;
-}
-printf ("Incident slit separation = %.4lf mm\n",inc_slit_sep*1000);
-
-if (inc_slit_sep == 0) {      //No gap, so horisonal and vertical slits lie ontop of each other and can have same dimensions
-  inc_slit_xmin_h = inc_slit_xmin;
-  inc_slit_xmax_h = inc_slit_xmax;
-  inc_slit_ymin_w = inc_slit_ymin;
-  inc_slit_ymax_w = inc_slit_ymax;
-} else {        //Perform some trig to be sure that none of the neutrons are accidentally cut of
-  double col_to_slit = (mono_to_cor-inc_slit_to_cor) - (mono_to_cor-chamber_col_start+chamber_col_length);
-  inc_slit_ymax_w = 1.01*(inc_slit_ymax + (0.023745 + inc_slit_ymax)*inc_slit_sep/col_to_slit);
-  if (inc_slit_ymax_w < inc_slit_ymax) inc_slit_ymax_w = inc_slit_ymax;
-  inc_slit_ymin_w = -inc_slit_ymax_w;
-  inc_slit_xmax_h = -1.01*(((0.01077+inc_slit_xmax)*inc_slit_sep/col_to_slit)-inc_slit_xmax);
-  if (inc_slit_xmax_h < inc_slit_xmax) inc_slit_xmax_h = inc_slit_xmax;
-  inc_slit_xmin_h = - inc_slit_xmax_h;
-}
-printf ("Height slit: width=%.4lfmm, height=%.4lfmm\n",2*inc_slit_xmax_h*1000, 2*inc_slit_ymax*1000);
-printf ("Width  slit: width=%.4lfmm, height=%.4lfmm\n",2*inc_slit_xmax*1000, 2*inc_slit_ymax_w*1000);
+  if (inc_slit_sep == 0) {      //No gap, so horisonal and vertical slits lie ontop of each other and can have same dimensions
+    inc_slit_xmin_h = inc_slit_xmin;
+    inc_slit_xmax_h = inc_slit_xmax;
+    inc_slit_ymin_w = inc_slit_ymin;
+    inc_slit_ymax_w = inc_slit_ymax;
+  } else {        //Perform some trig to be sure that none of the neutrons are accidentally cut of
+    double col_to_slit = (mono_to_cor-inc_slit_to_cor) - (mono_to_cor-chamber_col_start+chamber_col_length);
+    inc_slit_ymax_w = 1.01*(inc_slit_ymax + (0.023745 + inc_slit_ymax)*inc_slit_sep/col_to_slit);
+    if (inc_slit_ymax_w < inc_slit_ymax) inc_slit_ymax_w = inc_slit_ymax;
+    inc_slit_ymin_w = -inc_slit_ymax_w;
+    inc_slit_xmax_h = -1.01*(((0.01077+inc_slit_xmax)*inc_slit_sep/col_to_slit)-inc_slit_xmax);
+    if (inc_slit_xmax_h < inc_slit_xmax) inc_slit_xmax_h = inc_slit_xmax;
+    inc_slit_xmin_h = - inc_slit_xmax_h;
+  }
+  printf ("Height slit: width=%.4lfmm, height=%.4lfmm\n",2*inc_slit_xmax_h*1000, 2*inc_slit_ymax*1000);
+  printf ("Width  slit: width=%.4lfmm, height=%.4lfmm\n",2*inc_slit_xmax*1000, 2*inc_slit_ymax_w*1000);
 
 
-/*
-PoiConst = 0.2;
-miu = 0.00004;
-F = 4.1534*0.01;
-D = 0.000725;*/
+  /*
+  PoiConst = 0.2;
+  miu = 0.00004;
+  F = 4.1534*0.01;
+  D = 0.000725;*/
 
-/* Monochromator */
-wafer_d = (6.0/13.0/1000.0);    //Wafer diameter. Total blade diameter (6mm) made up from 13? wafers
-start_wafer_pos = 6.0 * wafer_d;  //In order to have the middle waver situated at the centre of the port takeoff
+  /* Monochromator */
+  wafer_d = (6.0/13.0/1000.0);    //Wafer diameter. Total blade diameter (6mm) made up from 13? wafers
+  start_wafer_pos = 6.0 * wafer_d;  //In order to have the middle waver situated at the centre of the port takeoff
 
-msw=(int)mono_Si_type;
-mono_d=0.0;
-switch (msw) {
-  case 422: mono_d = 1.10858; break;
-  case 400: mono_d = 1.35773; break;
-  case 311: mono_d = 1.63748; break;
-  case 511: mono_d = 1.04518; break;
-  case 111: mono_d = 3.135; break;
-  case 331: mono_d = 1.24594; break;
-  case 551: mono_d = 0.76049; break;
+  msw=(int)mono_Si_type;
+  mono_d=0.0;
+  switch (msw) {
+    case 422: mono_d = 1.10858; break;
+    case 400: mono_d = 1.35773; break;
+    case 311: mono_d = 1.63748; break;
+    case 511: mono_d = 1.04518; break;
+    case 111: mono_d = 3.135; break;
+    case 331: mono_d = 1.24594; break;
+    case 551: mono_d = 0.76049; break;
 
-}
+  }
 
-mono_q = 2*PI/mono_d;
-double mono_omega = fabs(mono_takeoff/2.0);
-lam=2.0*mono_d*sin(DEG2RAD*mono_omega);
-printf ("mono_Si_type = %i, mono_d=%.4lfA, mono_omega = %.2lfdeg, lambda = %.4lfA\n",msw, mono_d, mono_omega, lam);
+  mono_q = 2*PI/mono_d;
+  double mono_omega = fabs(mono_takeoff/2.0);
+  lam=2.0*mono_d*sin(DEG2RAD*mono_omega);
+  printf ("mono_Si_type = %i, mono_d=%.4lfA, mono_omega = %.2lfdeg, lambda = %.4lfA\n",msw, mono_d, mono_omega, lam);
 
-/* Monochromator-sample distance Vertical*/
-mono_pts_v=55.55+(805.55-55.55)/(1.0/0.9)*(1.0/mono_r_v); //emperical formula that equates number of Control Pts to the radius. Derived from '13-09-23 Necsa Si Monochromator Data Sheet'
-as = -tan(2*DEG2RAD*mono_omega)/(tan(DEG2RAD*mono_omega));
-focal_dist = mono_r_v*(1-(0.5/as))*sin(DEG2RAD*mono_omega);
-printf ("Monochromator Vertical to focal point = %.4lfm (%.2lf Control Pts)\n",focal_dist, mono_pts_v);
-double mono_r_req_v = mono_to_cor/((1-(0.5/as))*sin(DEG2RAD*mono_omega));
-mono_pts_v=55.55+(805.55-55.55)/(1.0/0.9)*(1.0/mono_r_req_v); //emperical formula that equates number of Control Pts to the radius. Derived from '13-09-23 Necsa Si Monochromator Data Sheet'
-printf ("To Vertical focus on COR at %.3lfm, let mono_r_v = %.4lfm (%.2lf Pts)\n",mono_to_cor,mono_r_req_v, mono_pts_v);
+  /* Monochromator-sample distance Vertical*/
+  mono_pts_v=55.55+(805.55-55.55)/(1.0/0.9)*(1.0/mono_r_v); //emperical formula that equates number of Control Pts to the radius. Derived from '13-09-23 Necsa Si Monochromator Data Sheet'
+  as = -tan(2*DEG2RAD*mono_omega)/(tan(DEG2RAD*mono_omega));
+  focal_dist = mono_r_v*(1-(0.5/as))*sin(DEG2RAD*mono_omega);
+  printf ("Monochromator Vertical to focal point = %.4lfm (%.2lf Control Pts)\n",focal_dist, mono_pts_v);
+  double mono_r_req_v = mono_to_cor/((1-(0.5/as))*sin(DEG2RAD*mono_omega));
+  mono_pts_v=55.55+(805.55-55.55)/(1.0/0.9)*(1.0/mono_r_req_v); //emperical formula that equates number of Control Pts to the radius. Derived from '13-09-23 Necsa Si Monochromator Data Sheet'
+  printf ("To Vertical focus on COR at %.3lfm, let mono_r_v = %.4lfm (%.2lf Pts)\n",mono_to_cor,mono_r_req_v, mono_pts_v);
 
-/* Monochromator-sample distance Horisontal*/
-a = 0.227642476966334;  //Gausian fitted parameters for Control Pts against curvature. y=a*exp((x-b)^2/(-2*c^2))+d
-b = 427.435873967018;  //
-c = 141.018775963938;
-d = 0.000855170045959246;
-y = 1.0/mono_r_h;    //curvature
-mono_pts_h = b + c * sqrt(2*log((y-d)/a));
-as = -tan(2*DEG2RAD*mono_omega)/(tan(DEG2RAD*mono_omega));
-focal_dist = mono_r_h*(1-(0.5/as))*sin(DEG2RAD*mono_omega);
-printf ("Monochromator Horizontan to focal point = %.4lfm (%.2lf Control Pts)\n",focal_dist, mono_pts_h);
+  /* Monochromator-sample distance Horisontal*/
+  a = 0.227642476966334;  //Gausian fitted parameters for Control Pts against curvature. y=a*exp((x-b)^2/(-2*c^2))+d
+  b = 427.435873967018;  //
+  c = 141.018775963938;
+  d = 0.000855170045959246;
+  y = 1.0/mono_r_h;    //curvature
+  mono_pts_h = b + c * sqrt(2*log((y-d)/a));
+  as = -tan(2*DEG2RAD*mono_omega)/(tan(DEG2RAD*mono_omega));
+  focal_dist = mono_r_h*(1-(0.5/as))*sin(DEG2RAD*mono_omega);
+  printf ("Monochromator Horizontan to focal point = %.4lfm (%.2lf Control Pts)\n",focal_dist, mono_pts_h);
 
-//mono_Rh_req = mono_to_cor/((1-(0.5/as))*sin(DEG2RAD*mono_omega));
-//mono_turns=(1005.5/mono_Rh_req)-13;    //emperical formula that equates the number of turns of the motor to the curvature. Taken from Multi-wafer silicon monochromator for stress machine at SAFARI, South Africa. Mihai Popovici
-//printf ("To focus on COR at %.3lfm, let mono_r_h = %.4lfm (%.2lf turns)\n",mono_to_cor,mono_Rh_req, mono_turns);
+  //mono_Rh_req = mono_to_cor/((1-(0.5/as))*sin(DEG2RAD*mono_omega));
+  //mono_turns=(1005.5/mono_Rh_req)-13;    //emperical formula that equates the number of turns of the motor to the curvature. Taken from Multi-wafer silicon monochromator for stress machine at SAFARI, South Africa. Mihai Popovici
+  //printf ("To focus on COR at %.3lfm, let mono_r_h = %.4lfm (%.2lf turns)\n",mono_to_cor,mono_Rh_req, mono_turns);
 
-/* Number of detectors to construct and calculates the angle offset between them */
-det_width=0.66;
-det_height=0.38;
-det_cover_angle = 2.0*RAD2DEG*atan((det_width/2.0)/cor_to_det);
-ndet = ceil(dangle_interest/det_cover_angle);
-printf ("Single detector coverage:%.2lf deg. %i detectors coverage angle: %.2f deg\n",\
-  det_cover_angle, (int)ndet, ndet*det_cover_angle);
+  /* Number of detectors to construct and calculates the angle offset between them */
+  det_width=0.66;
+  det_height=0.38;
+  det_cover_angle = 2.0*RAD2DEG*atan((det_width/2.0)/cor_to_det);
+  ndet = ceil(dangle_interest/det_cover_angle);
+  printf ("Single detector coverage:%.2lf deg. %i detectors coverage angle: %.2f deg\n",\
+    det_cover_angle, (int)ndet, ndet*det_cover_angle);
 
 
-printf ("------------------\n\n");
+  printf ("------------------\n\n");
 %}
 
 TRACE
@@ -219,9 +241,6 @@ COMPONENT Reactorbeam = Arm()
 COMPONENT Prim_axes = Arm()
   AT (0, 0, 5.140) RELATIVE Reactorbeam
   ROTATED (0, port_takeoff, 0) RELATIVE Reactorbeam
-
-
-
 
 COMPONENT  Source = Source_gen(
     radius = 0.0905, dist = 2.86805, focus_xw = 0.1, focus_yh = 0.05,
@@ -510,36 +529,41 @@ COMPONENT DIV_Center_of_rotation = Divergence_monitor(
   target_x = 0, target_y = 0, target_z = 1)
   AT (0,0,0) RELATIVE Sample_location
   EXTEND
-    %{
-      if (!SCATTERED) ABSORB;
+  %{
+    if (!SCATTERED) ABSORB;
   %}*/
 
 SPLIT COMPONENT Sample = PowderN(
     reflections = "Fe.laz", radius = 0.006,
     yheight = 0.05)
   AT (0,0,0) RELATIVE Sample_location
- EXTEND
+  EXTEND
   %{
     if (!SCATTERED) ABSORB;
   %}
 
- /*
+/*
 SPLIT COMPONENT Sample = Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
 mosaic = 5, reflections="YBaCuO.lau")
   AT (0,0,0) RELATIVE Sample_location
   EXTEND
   %{
     if (!SCATTERED) ABSORB;
-  %}**/
+  %}
+*/
 
-/*COMPONENT PSD_After_Sample_location = PSD_monitor(
+/*
+COMPONENT PSD_After_Sample_location = PSD_monitor(
     nx = 100, ny = 100, filename = "PSD_After_Sample_location",
     xmin = -0.2, xmax = 0.2, ymin = -0.2, ymax = 0.2)
-  AT (0, 0, 1) RELATIVE Sample_location */
+  AT (0, 0, 1) RELATIVE Sample_location
+*/
 
-/*COMPONENT DiffBeamStop = Beamstop(
+/*
+COMPONENT DiffBeamStop = Beamstop(
     xmin = -0.2,xmax = 0.2, ymin=-0.2, ymax=0.2)
-  AT (0, 0, mono_to_cor+1.35) RELATIVE Prim_axes*/
+  AT (0, 0, mono_to_cor+1.35) RELATIVE Prim_axes
+*/
 
 
 //**************************************************************************************************

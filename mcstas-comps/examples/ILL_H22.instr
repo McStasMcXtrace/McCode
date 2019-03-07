@@ -47,7 +47,7 @@ DECLARE
   double L_H22_5 =4.75 /5,  Rh_H22_5 =0;
   double L_H22_6 =60/60,    Rh_H22_6 =0;
 
-/* capture flux positions from moderator: 21.4    28.4    61.2 */
+  /* capture flux positions from moderator: 21.4    28.4    61.2 */
 
 %}
 
@@ -55,7 +55,6 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-
   /* Element rotations = Element length / Curvature Radius * RAD2DEG */
   if (gRh) {
     Rh_H22_3  = L_H22_3 /gRh*RAD2DEG;
@@ -63,8 +62,7 @@ INITIALIZE
     Rh_H22_5  = L_H22_5 /gRh*RAD2DEG;
     Rh_H22_6  = L_H22_6 /gRh*RAD2DEG;
   }
-  printf("Instrument: %s (H22@ILL thermal guide).\n", NAME_CURRENT_COMP);
-
+  printf("Instrument: ILL_H22 (H22@ILL thermal guide).\n");
 %}
 
 /* Here comes the TRACE section, where the actual      */

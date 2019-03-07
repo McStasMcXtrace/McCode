@@ -30,34 +30,34 @@ DEFINE INSTRUMENT ILL_H53(m=1.2, lambda=10, dlambda=9.9, mip=1.2)
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-/* HCS (H5) source 'Measured' parameters */
-double sT3=413.5,sI3=10.22e12;
-double sT2=145.8,sI2=3.44e13;
-double sT1=40.1 ,sI1=2.78e13;
-/* guide coating parameters */
-double gR0          = 1;
-double gQc          = 0.021;
-double gAlpha       = 4.07;
-double gW           = 1.0/300.0;
-/* gaps and Al windows parameters */
-double Al_Thickness = 0.002;
-double gGap         = 0.001;
-/* guide curvatures */
-double gRh          = 4000; /* anti-clockwise */
-/* guide section parameters (total length/number of elements) */
-double L_H53_COM =6.0  /4,  Rh_H53_COM =0;
-double L_H53_C1  =3.5  /3,  Rh_H53_C1  =0;
-double L_H53_C2  =9.5  /7,  Rh_H53_C2  =0;
-double L_H53_C3  =3.0  /3,  Rh_H53_C3  =0;
-double L_H53_P1  =6.0  /4, Rh_H53_P1  =0;
-double L_H53_P2  =7.5  /5, Rh_H53_P2  =0;
-double L_H53_P3  =7.5  /5, Rh_H53_P3  =0;
-double L_H53_P4  =7.5  /5, Rh_H53_P4  =0;
-double L_H53_P5  =5.5  /3, Rh_H53_P5  =0;
-double L_H53_P6  =4.295/3, Rh_H53_P6  =0;
-double L_H53_P7  =0.552/1, Rh_H53_P7  =0;
+	/* HCS (H5) source 'Measured' parameters */
+	double sT3=413.5,sI3=10.22e12;
+	double sT2=145.8,sI2=3.44e13;
+	double sT1=40.1 ,sI1=2.78e13;
+	/* guide coating parameters */
+	double gR0          = 1;
+	double gQc          = 0.021;
+	double gAlpha       = 4.07;
+	double gW           = 1.0/300.0;
+	/* gaps and Al windows parameters */
+	double Al_Thickness = 0.002;
+	double gGap         = 0.001;
+	/* guide curvatures */
+	double gRh          = 4000; /* anti-clockwise */
+	/* guide section parameters (total length/number of elements) */
+	double L_H53_COM =6.0  /4,  Rh_H53_COM =0;
+	double L_H53_C1  =3.5  /3,  Rh_H53_C1  =0;
+	double L_H53_C2  =9.5  /7,  Rh_H53_C2  =0;
+	double L_H53_C3  =3.0  /3,  Rh_H53_C3  =0;
+	double L_H53_P1  =6.0  /4, Rh_H53_P1  =0;
+	double L_H53_P2  =7.5  /5, Rh_H53_P2  =0;
+	double L_H53_P3  =7.5  /5, Rh_H53_P3  =0;
+	double L_H53_P4  =7.5  /5, Rh_H53_P4  =0;
+	double L_H53_P5  =5.5  /3, Rh_H53_P5  =0;
+	double L_H53_P6  =4.295/3, Rh_H53_P6  =0;
+	double L_H53_P7  =0.552/1, Rh_H53_P7  =0;
 
-/* capture flux positions from moderator: 21.4    28.4    61.2 */
+	/* capture flux positions from moderator: 21.4    28.4    61.2 */
 
 %}
 
@@ -65,8 +65,7 @@ double L_H53_P7  =0.552/1, Rh_H53_P7  =0;
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-
-/* Element rotations = Element length / Curvature Radius * RAD2DEG */
+	/* Element rotations = Element length / Curvature Radius * RAD2DEG */
 	if (gRh) {
 		Rh_H53_C2  = L_H53_C2 /gRh*RAD2DEG;
 		Rh_H53_C3  = L_H53_C3 /gRh*RAD2DEG;
@@ -75,8 +74,7 @@ INITIALIZE
 		Rh_H53_P3  = L_H53_P3 /gRh*RAD2DEG;
 		Rh_H53_P4  = L_H53_P4 /gRh*RAD2DEG;
 	}
-printf("Instrument: %s (H53@ILL cold guide on HCS).\n", NAME_CURRENT_COMP);
-
+	printf("Instrument: ILL_H53 (H53@ILL cold guide on HCS).\n");
 %}
 
 /* Here comes the TRACE section, where the actual      */

@@ -60,44 +60,44 @@ DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355, string Powder="Na2Ca3Al2F14.l
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-double L;
-double KI, Vi, EI;
+	double L;
+	double KI, Vi, EI;
 
-if (!THETA_M && lambda && DM)
-	THETA_M =asin(lambda/(2*DM))*RAD2DEG;
-else if (THETA_M && !lambda && DM)
-	lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
-else if (THETA_M && lambda)
-	DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
+	if (!THETA_M && lambda && DM)
+		THETA_M =asin(lambda/(2*DM))*RAD2DEG;
+	else if (THETA_M && !lambda && DM)
+		lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
+	else if (THETA_M && lambda)
+		DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
 
-THETA_M *= SM; /* take-off direction left or right */
+	THETA_M *= SM; /* take-off direction left or right */
 
-/* test input parameters */
-if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
-      "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
-      NAME_CURRENT_COMP, THETA_M, DM, lambda));
+	/* test input parameters */
+	if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
+	      "templateDIFF: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
+	      THETA_M, DM, lambda));
 
-if (L1<1.1) L = L2;
-else        L = 1/(1/L1+1/L2);
-if (RV < 0) RV=fabs(2*L*sin(DEG2RAD*THETA_M));
-KI=2*PI/lambda;
-Vi = K2V*fabs(KI);
-EI = VS2E*Vi*Vi;
+	if (L1<1.1) L = L2;
+	else        L = 1/(1/L1+1/L2);
+	if (RV < 0) RV=fabs(2*L*sin(DEG2RAD*THETA_M));
+	KI=2*PI/lambda;
+	Vi = K2V*fabs(KI);
+	EI = VS2E*Vi*Vi;
 
-if (ALPHA1< 0) ALPHA1=600;
-if (ALPHA2< 0) ALPHA2=600;
-if (ALPHA3< 0) ALPHA3=600;
-if (ETA<=0)    ETA   =30;
+	if (ALPHA1< 0) ALPHA1=600;
+	if (ALPHA2< 0) ALPHA2=600;
+	if (ALPHA3< 0) ALPHA3=600;
+	if (ETA<=0)    ETA   =30;
 
-if (verbose) {
-  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
-  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
-    lambda, EI, KI, Vi);
-  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off THETA_M=%.4g [deg]\n",
-    DM, RV, (!RV ? "flat" : "curved"), THETA_M*2);
-}
+	if (verbose) {
+	  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
+	  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+	    lambda, EI, KI, Vi);
+	  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off THETA_M=%.4g [deg]\n",
+	    DM, RV, (!RV ? "flat" : "curved"), THETA_M*2);
+	}
 
-RV = fabs(RV)*SM;
+	RV = fabs(RV)*SM;
 
 %}
 

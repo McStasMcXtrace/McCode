@@ -31,12 +31,12 @@ DEFINE INSTRUMENT Test_Selectors(int selector=1, lambda=4, phi=48.3, d_vs=0.25)
 
 INITIALIZE
 %{
-  printf("\n%s: ", NAME_CURRENT_COMP);
+  printf("\nTest_Selectors: ");
   switch (selector) {
   case 1:
     printf("Using V_selector\n"); break;
   case 2:
-    printf("Using Selector\n"); break;  
+    printf("Using Selector\n"); break;
   }
 %}
 
@@ -44,15 +44,15 @@ TRACE
 
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
-  
-COMPONENT Source = Source_simple(dist=1, radius=0.03, focus_xw=0.03, focus_yh=0.05, 
+
+COMPONENT Source = Source_simple(dist=1, radius=0.03, focus_xw=0.03, focus_yh=0.05,
                                  lambda0=lambda, dlambda=lambda*0.15)
   AT (0,0,0) ABSOLUTE
 
 COMPONENT VS1   = V_selector(xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=phi,
            length=d_vs, d=0.0004, nu=3956*phi*DEG2RAD/(2*PI*lambda*d_vs), nslit=72)
   WHEN (selector == 1)
-  AT (0, 0, 1+0.3/2) RELATIVE Source 
+  AT (0, 0, 1+0.3/2) RELATIVE Source
 
 COMPONENT VS2   = Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, length=d_vs,
            nslit=72,d=0.0004, radius=0.12, alpha=phi, nu=3956*phi*DEG2RAD/(2*PI*lambda*d_vs))
@@ -62,4 +62,3 @@ COMPONENT VS2   = Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, l
 COMPONENT VS_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="auto wavelength")
   AT (0,0,1+d_vs+0.1) RELATIVE Source
 END
-

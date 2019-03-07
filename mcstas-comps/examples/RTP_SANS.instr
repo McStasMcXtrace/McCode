@@ -32,7 +32,7 @@
 * DM: [Angs]            d-spacing for the monochromator reflection
 * Mono_tilt: [deg]      angle tilt between the 3 monochromator layers
 * mono_rotation: [deg]  additional monochromator offset rotation for e.g rocking curves
-* Be_Filter_depth: []   
+* Be_Filter_depth: []
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>
@@ -60,8 +60,7 @@ INITIALIZE
   /* distance used for focusing [m] */
   L  = 4;
 
-  printf("%s: Monochromator take-off angle=%g [deg]\n",
-    NAME_CURRENT_COMP, 2*A1);
+  printf("RTP_SANS: Monochromator take-off angle=%g [deg]\n", 2*A1);
 %}
 
 /* Here comes the TRACE section, where the actual      */
