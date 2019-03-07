@@ -1,0 +1,70 @@
+/*******************************************************************************
+* Instrument: ESS_butterfly_MCPL_test
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: 2017-04
+* Origin: DTU
+* %INSTRUMENT_SITE: Tools
+*
+* Flexible histogramming instrument file for processing MCPL input files using Monitor_nD
+*
+* %D
+* Flexible histogramming instrument file for processing MCPL input files using Monitor_nD.
+* 
+* Example1: Multiple 1D histograms of position, velocity, divergence, time and wavelength, use
+* NDoptions=1 defines options="previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda"
+*
+* Example2: 2D x-y plot of beam cross section:
+* NDoptions=2 defines options="previous, auto, x, y"
+* 
+* Example3: 2D TOF-lambda plot of beam:
+* NDoptions=3 defines options="previous, auto, tof, lambda"
+*
+* %P
+* MCPLfile:  [str] Defines the MCPL input file to process
+* radius:    [m]   Defines a threshold distance to split the MCPLfile at
+*
+* %L
+* <reference/HTML link>
+* MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT MCPL_filter_radius(string MCPLfile="my.mcpl.gz", radius=2.5)
+
+DECLARE
+%{
+  double Radius;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read neutrons from an mcpl file*/
+
+COMPONENT MCPLinput = MCPL_input(filename=MCPLfile,verbose=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Calc = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  Radius = sqrt(x*x+y*y+z*z);
+%}
+  
+COMPONENT MCPLlow = MCPL_output(filename="R_short.mcpl.gz")
+WHEN (Radius < radius) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT MCPLhigh = MCPL_output(filename="R_long.mcpl.gz")
+WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END
