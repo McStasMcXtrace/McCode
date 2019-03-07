@@ -53,7 +53,7 @@ INITIALIZE
     strcpy(sample_str, "None"); break;
   }
 
-  printf("%s: sample is selected as %s\n", NAME_CURRENT_COMP, sample_str);
+  printf("SANS_KWS2_AnySample: sample is selected as %s\n", sample_str);
 %}
 
 TRACE

@@ -37,7 +37,10 @@
 *
 * %E
 ************************************************************************/
-DEFINE INSTRUMENT ILL_IN5(lambda=4.5,dlambda=0.05,speed=8500, ratio=0.5, string housing="Fe.laz", string coh="Y3Fe5O12_YIG.laz", string inc="NULL", thickness=0, height=0.025, radius=0.005, order=0)
+DEFINE INSTRUMENT ILL_IN5(lambda=4.5,dlambda=0.05,speed=8500, ratio=0.5,
+  string housing="Fe.laz", string coh="Y3Fe5O12_YIG.laz", string inc="NULL",
+  thickness=0, height=0.025, radius=0.005, order=0)
+
 DECLARE
 %{
 
@@ -69,8 +72,6 @@ DECLARE
   double ang_ini, ang_fin, det_angle;
 %}
 
-
-
 INITIALIZE
 %{
   int i;
@@ -95,8 +96,8 @@ INITIALIZE
   L_Collimator= 0.1300;           // for gerade Collimator
   L_CollSample= 0.2400-0.025;     // the sample chamber size & keep
 
-  printf("Instrument: %s (IN5 disk chopper time-of-flight spectrometer).\n  Wavelength lambda=%g [Angs]\n",
-    NAME_CURRENT_COMP, lambda);
+  printf("Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).\n  Wavelength lambda=%g [Angs]\n",
+    lambda);
 
   // Alt Guide coating
   alt_Guide_Qc    = 0.021745; // for m=1 alpha and W aren't used.

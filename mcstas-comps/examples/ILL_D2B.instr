@@ -67,7 +67,9 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_D2B(lambda=1.594, DM=0, string Powder="Na2Ca3Al2F14.laz", RV=-1, L1=16.05, L2=2.645, L3=1.3, verbose=1, ALPHA1=18,ALPHA2=11,ALPHA3=5, ETA=12, THETA_M=67.5, TILT=0, SM=1, Dheight=0.3,coating=0)
+DEFINE INSTRUMENT ILL_D2B(lambda=1.594, DM=0, string Powder="Na2Ca3Al2F14.laz",
+	RV=-1, L1=16.05, L2=2.645, L3=1.3, verbose=1, ALPHA1=18,ALPHA2=11,ALPHA3=5,
+	ETA=12, THETA_M=67.5, TILT=0, SM=1, Dheight=0.3,coating=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -96,8 +98,8 @@ INITIALIZE
 
 	/* test input parameters */
 	if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
-	      "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
-	      NAME_CURRENT_COMP, THETA_M, DM, lambda));
+	      "ILL_D2B: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
+	      THETA_M, DM, lambda));
 
 	/* perform additional computations */
 	if (!L1)    L = L2;

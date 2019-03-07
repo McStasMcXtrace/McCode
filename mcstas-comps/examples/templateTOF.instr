@@ -43,21 +43,24 @@
 * The Samples_Isotropic_Sqw example instrument
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6, string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw", thickness=1e-4,yheight=0.0168,radius=0.005, string container="Nb.laz", container_thickness=50e-6, string environment="Al.laz", environment_radius=0.025, environment_thickness=2e-3)
+DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6,
+  string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw", thickness=1e-4,
+  yheight=0.0168,radius=0.005, string container="Nb.laz",
+  container_thickness=50e-6, string environment="Al.laz",
+  environment_radius=0.025, environment_thickness=2e-3)
 
 DECLARE
 %{
-
   /* monitoring sample env */
- double vi;
-/* flags per detector */
- char flag_single;    /* sample single scatt */
- char flag_multi;     /* sample multi scatt */
- char flag_env;    /* sample environment scatt */
- char flag_container;  /* container scatt */
+  double vi;
+  /* flags per detector */
+  char flag_single;    /* sample single scatt */
+  char flag_multi;     /* sample multi scatt */
+  char flag_env;    /* sample environment scatt */
+  char flag_container;  /* container scatt */
 
- char op[256];
- double dt0;
+  char op[256];
+  double dt0;
 
 %}
 
@@ -69,22 +72,22 @@ INITIALIZE
   double lambda=2*PI/ki;
   sprintf(op,   "energy limits=[%g %g] bins=50, theta limits=[5 175] bins=150, banana, parallel", 0.5*E0, 2*E0);
 
-  printf("%s: lambda=%g [Angs], k=%g [Angs-1], v=%g [m/s], E=%g [meV]. Time=[%g %g %g]\n",
-    NAME_CURRENT_COMP, lambda,ki,vi, E0, t0*.75, t0, t0*1.5);
-  printf("%s: sample is %s, with %s%s geometry.\n",
-    NAME_CURRENT_COMP, coh, thickness ? "hollow " : "", yheight ? "cylindrical" : "spherical");
+  printf("templateTOF: lambda=%g [Angs], k=%g [Angs-1], v=%g [m/s], E=%g [meV]. Time=[%g %g %g]\n",
+    lambda,ki,vi, E0, t0*.75, t0, t0*1.5);
+  printf("templateTOF: sample is %s, with %s%s geometry.\n",
+    coh, thickness ? "hollow " : "", yheight ? "cylindrical" : "spherical");
   if (yheight && container_thickness)
-    printf("%s: container is %s (outer cylinder)\n", NAME_CURRENT_COMP, container);
+    printf("templateTOF: container is %s (outer cylinder)\n", container);
   if (environment_thickness > 0)
-    printf("%s: external environment is %s\n", NAME_CURRENT_COMP, environment);
+    printf("templateTOF: external environment is %s\n", environment);
   dt0=dt;
   if (environment_thickness > 0 && radius > environment_radius-environment_thickness)
-    exit(printf("%s: sample radius %g is larger than sample environment %g\n",
-      NAME_CURRENT_COMP, radius, environment_radius-environment_thickness));
+    exit(printf("templateTOF: sample radius %g is larger than sample environment %g\n",
+      radius, environment_radius-environment_thickness));
   if (container_thickness > 0 && environment_thickness > 0 && yheight > 0
       && radius+container_thickness+0.0001 > environment_radius-environment_thickness)
-    exit(printf("%s: sample container radius %g is larger than sample environment %g\n",
-      NAME_CURRENT_COMP, radius+container_thickness+0.0001, environment_radius-environment_thickness));
+    exit(printf("templateTOF: sample container radius %g is larger than sample environment %g\n",
+      radius+container_thickness+0.0001, environment_radius-environment_thickness));
 %}
 
 TRACE
