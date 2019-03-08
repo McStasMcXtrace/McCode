@@ -1,0 +1,111 @@
+/*******************************************************************************
+* Instrument: MCPL2Mantid_flat
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: 2019-03
+* Origin: DTU
+* %INSTRUMENT_SITE: Tools
+*
+* Instrument taking MCPL input giving Mantid-compatible NeXus output.
+*
+* %D
+* Instrument taking MCPL input giving Mantid-compatible NeXus output. 
+*
+* 1) The instrument coordintate system coincides with the MCPL-file coordinates.
+* 2) The sourceMantid position is freely positionable in that space
+* 3) The sampleMantid position is freely positionable in that space
+* 4) The detector is a single, flat pixellated panel freely positionable in that space
+*
+* An example mcpl input file corresponding to the default geometry can be generated using
+* templateSANS_MCPL
+*
+* %P
+* MCPLfile:  [str] Defines the MCPL input file to process
+* sourceX:   [m]   sourceMantid x-position wrt. MCPL coords
+* sourceY:   [m]   sourceMantid y-position wrt. MCPL coords
+* sourceZ:   [m]   sourceMantid z-position wrt. MCPL coords
+* sampleX:   [m]   sampleMantid x-position wrt. MCPL coords
+* sampleY:   [m]   sampleMantid y-position wrt. MCPL coords
+* sampleZ:   [m]   sampleMantid z-position wrt. MCPL coords
+* detectorX: [m]   nD_Mantid_0 x-position wrt. MCPL coords
+* detectorY: [m]   nD_Mantid_0 y-position wrt. MCPL coords
+* detectorZ: [m]   nD_Mantid_0 z-position wrt. MCPL coords
+* detrotX:   [m]   nD_Mantid_0 x-rotation wrt. MCPL coords
+* detrotY:   [m]   nD_Mantid_0 y-rotation wrt. MCPL coords
+* detrotZ:   [m]   nD_Mantid_0 z-rotation wrt. MCPL coords
+* xwidth:    [m]   nD_Mantid_0 xwidth
+* yheight:   [m]   nD_Mantid_0 yheight
+* xbins:     [1]   nD_Mantid_0 x-bins
+* ybins:     [1]   nD_Mantid_0 y-bins
+*
+* %L
+* <reference/HTML link>
+* MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT MCPL_filter_energy(string MCPLfile="my.mcpl.gz", sourceX=0, sourceY=0, sourceZ=-10, 
+				     sampleX=0, sampleY=0, sampleZ=0,
+				     detectorX=0, detectorY=0, detectorZ=6,
+				     detrotX=0, detrotY=0, detrotZ=0,
+				     xwidth=0.6, yheight=0.6, int xbins=128, int ybins=128)
+
+DECLARE
+%{
+  char monopts1[128];
+  char monopts2[128];
+  double xmin,xmax,ymin,ymax;
+%}
+
+INITIALIZE
+%{
+  xmin = -xwidth/2.0;
+  xmax = xwidth/2.0;
+  ymin = -yheight/2.0;
+  ymax = yheight/2.0;
+  
+  sprintf(monopts1,"square x limits=[%g %g] bins=%d y limits=[%g %g] bins=%d", xmin, xmax, xbins, ymin, ymax, ybins);
+  sprintf(monopts2,"mantid square x limits=[%g %g] bins=%d y limits=[%g %g] bins=%d, neutron pixel min=0 t, list all neutrons", xmin, xmax, xbins, ymin, ymax, ybins);
+  printf("%s\n",monopts1);
+  printf("%s\n",monopts2);
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read neutrons from an mcpl file*/
+
+COMPONENT MCPLinput = MCPL_input(filename=MCPLfile,verbose=1)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT sourceMantid = Arm()
+AT(sourceX,sourceY,sourceZ) ABSOLUTE
+
+COMPONENT sampleMantid = Arm()
+AT(sampleX,sampleY,sampleZ) ABSOLUTE
+
+COMPONENT PSD = Monitor_nD(
+    options = monopts1,
+    xwidth=xwidth,
+    yheight=yheight,
+    restore_neutron = 1,
+    filename = "PSD")
+  AT (detectorX, detectorY, detectorZ) ABSOLUTE
+  ROTATED (detrotX, detrotY, detrotZ) ABSOLUTE
+
+COMPONENT nD_Mantid_1 = Monitor_nD(
+    options = monopts2,
+    xwidth=xwidth,
+    yheight=yheight,
+    restore_neutron = 1,
+    filename = "bank01_events.dat")
+  AT (detectorX, detectorY, detectorZ) ABSOLUTE
+  ROTATED (detrotX, detrotY, detrotZ) ABSOLUTE
+
+FINALLY
+%{
+%}
+
+END
