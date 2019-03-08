@@ -467,6 +467,7 @@ struct instr_def
     char *source;   /* Name of source file for definition */
     char *quoted_source;      /* File name quoted for inclusion in C */
     struct code_block *decls; /* Code for declarations */
+    struct code_block *vars;  /* Code for particle variables */
     struct code_block *inits; /* Code for initializations */
     struct code_block *saves; /* Code executed to save data */
     struct code_block *finals;/* Code for simulation end */

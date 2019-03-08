@@ -72,6 +72,7 @@
 %token TOK_AT         "AT"
 %token TOK_COMPONENT  "COMPONENT"
 %token TOK_DECLARE    "DECLARE"
+%token TOK_VARS       "VARS"
 %token TOK_DEFINE     "DEFINE"
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
@@ -117,7 +118,7 @@
 
 %type <instance> component compref reference instref
 %type <groupinst> groupdef groupref
-%type <ccode>   code codeblock share declare initialize trace extend save finally display
+%type <ccode>   code codeblock share declare vars initialize trace extend save finally display
 %type <coords>  coords
 %type <exp>     exp topexp topatexp genexp genatexp when split
 %type <actuals> actuallist actuals actuals1
@@ -513,6 +514,16 @@ declare:    /* empty */
       }
 ;
 
+vars:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "VARS" codeblock
+      {
+        $$ = $2;
+      }
+;
+
 initialize:   /* empty */
       {
         $$ = codeblock_new();
@@ -654,7 +665,8 @@ display:    /* empty */
 
 /* read instrument definition and catenate if this not the first instance */
 instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
-      { if (!instrument_definition->formals) instrument_definition->formals = $4;
+      {
+        if (!instrument_definition->formals) instrument_definition->formals = $4;
         else { if (list_len($4)) list_cat(instrument_definition->formals,$4); }
         if (!instrument_definition->name)    instrument_definition->name = $3;
         else {
@@ -662,16 +674,18 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      dependency declare initialize instr_trace save finally "END"
+      dependency declare vars initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $7;
         else list_cat(instrument_definition->decls->lines, $7->lines);
-        if (!instrument_definition->inits) instrument_definition->inits = $8;
-        else list_cat(instrument_definition->inits->lines, $8->lines);
-        if (!instrument_definition->saves) instrument_definition->saves = $10;
-        else list_cat(instrument_definition->saves->lines, $10->lines);
-        if (!instrument_definition->finals) instrument_definition->finals = $11;
-        else list_cat(instrument_definition->finals->lines, $11->lines);
+        if (!instrument_definition->vars) instrument_definition->vars = $8;
+        else list_cat(instrument_definition->vars->lines, $8->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $9;
+        else list_cat(instrument_definition->inits->lines, $9->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $11;
+        else list_cat(instrument_definition->saves->lines, $11->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $12;
+        else list_cat(instrument_definition->finals->lines, $12->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
