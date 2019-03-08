@@ -42,7 +42,7 @@
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX, int repeat_count=1, E_smear=0, pos_smear=0, dir_smear=0)
-OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons,used_neutrons)
+OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons,used_neutrons,inactive)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
@@ -60,6 +60,7 @@ long long used_neutrons;
 int repeat_cnt;
 int repeating;
 int ismpislave;
+int inactive;
 %}
 
 INITIALIZE
@@ -67,7 +68,10 @@ INITIALIZE
 char line[256];
 long long ncount;
 
-if(Emax<Emin){
+if (filename && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename,"0") && repeat_count>0) {
+  /* We got a proper filename, do the rest of the work */
+  inactive=0;
+  if(Emax<Emin){
         fprintf(stderr,"Warning(%s): Nonsensical energy interval: E=[%g,%g]. Aborting.\n",NAME_CURRENT_COMP,Emin,Emax);
         exit(-1);
     }
@@ -118,15 +122,20 @@ if(Emax<Emin){
     
 #endif
     repeating = 0;
-
+} else {
+  /* Not presented with a reasonable filename, skip further action */
+  inactive=1;
+  printf("%s: filename is NULL or empty, skipping init and reads\n", NAME_CURRENT_COMP);
+}
 %}
 
 TRACE
 %{
-    long long ncount;
+  long long ncount;
 
-    double nrm;
-    const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
+  double nrm;
+  const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
+  if(!inactive) {
     particle = mcpl_read(inputfile);
 
     ncount=mcget_ncount();
@@ -234,15 +243,17 @@ TRACE
     p /= mpi_node_count;
 #endif    
     SCATTER;
+  }
 %}
 
 SAVE
 %{
-    mcpl_close_file(inputfile);  
+  if(!inactive) mcpl_close_file(inputfile);  
 %}
 
 FINALLY
 %{
+  if(!inactive) {
     long long ncount;
 
     ncount=mcget_ncount();
@@ -254,8 +265,7 @@ FINALLY
         fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld particles in general, of which only %ld are neutrons (within the wanted energy interval).\n"
                 "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles,used_neutrons);
     }
-
-
+  }
 %}
 
 MCDISPLAY
