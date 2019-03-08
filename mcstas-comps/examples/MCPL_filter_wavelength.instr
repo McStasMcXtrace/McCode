@@ -68,7 +68,7 @@ WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT Llow = Monitor_nD(filename="L_low", options=monopts1)
 WHEN (Wavelength < wavelength) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Lhigh = Monitor_nD(filename="L_high", options=monopts1)
+COMPONENT Lhigh = Monitor_nD(filename="L_high", options=monopts2)
 WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
   
 FINALLY

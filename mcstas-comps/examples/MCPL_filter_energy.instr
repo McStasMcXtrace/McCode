@@ -67,7 +67,7 @@ WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT Elow = Monitor_nD(filename="E_low", options=monopts1)
 WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Ehigh = Monitor_nD(filename="E_high", options=options=monopts2)
+COMPONENT Ehigh = Monitor_nD(filename="E_high", options=monopts2)
 WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
   
 FINALLY
