@@ -161,14 +161,14 @@ TRACE
        ABSORB;
     }
     read_neutrons++;
-
+    
     /* check energy range*/
     if ( particle->ekin<Emin*1e-9 || particle->ekin>Emax*1e-9 ) {
         /*Particle energy out of range - terminate to trigger next ray*/
         ABSORB;
     }
     used_neutrons++;
-    
+    SCATTER;
 #if defined (USE_MPI)   
   MPI_MASTER(
 #endif
