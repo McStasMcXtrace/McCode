@@ -11,8 +11,8 @@
 *
 * %D
 * 
-* Example: Split an MCPL file at an energy of 0.5 meV
-* mcrun MCPL_filter_radius MCPLfile=my.mcpl.gz energy=0.5
+* Example: Split an MCPL file at a wavelength of 0.5 AA
+* mcrun MCPL_filter_wavelength MCPLfile=my.mcpl.gz wavelength=0.5
 *
 * %P
 * MCPLfile:   [str] Defines the MCPL input file to process

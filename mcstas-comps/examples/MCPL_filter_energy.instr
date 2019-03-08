@@ -12,7 +12,7 @@
 * %D
 * 
 * Example: Split an MCPL file at an energy of 0.5 meV
-* mcrun MCPL_filter_radius MCPLfile=my.mcpl.gz energy=0.5
+* mcrun MCPL_filter_energy MCPLfile=my.mcpl.gz energy=0.5
 *
 * %P
 * MCPLfile:  [str] Defines the MCPL input file to process
