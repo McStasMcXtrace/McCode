@@ -1,0 +1,74 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: templateSANS_MCPL
+*
+* %Identification
+* Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
+* Date: 19th Dec 2003.
+* Origin: <a href="http://www.risoe.dk">Risoe</a>
+* %INSTRUMENT_SITE: Templates
+*
+* Test instrument for the Sans_spheres component. No guide / velocity selector
+* etc. Will be developed further at later time. Behaves like the normal templateSANS
+* but dumps all events in an MCPL file.
+*
+* %Description
+* Very simple test instrument for the Sans_spheres component
+*
+* %Example: lambda=6 Detector: detector_I=6.56942e-17
+*
+* %Parameters
+* lambda: [AA]          Mean wavelength of neutrons
+* dlambda: [AA]         Wavelength spread of neutrons
+* r: [AA]               Radius of scattering hard spheres
+* PHI: [1]              Particle volume fraction
+* Delta_Rho: [fm/AA^3]  Excess scattering length density
+* sigma_abs: [barns]    Absorption cross section at 2200 m/s
+*
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT templateSANS_MCPL(lambda=6, dlambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, sigma_abs=0.5)
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm(
+    )
+  AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+    radius = 0.02, dist = 3, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = lambda, dlambda = dlambda, flux = 1e8)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+SPLIT COMPONENT sample = Sans_spheres(
+  R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=sigma_abs,
+  xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=0.6, focus_yh=0.6, target_index=2)
+   AT (0,0,0.2) RELATIVE coll2
+
+
+COMPONENT STOP = Beamstop(
+    radius = 0.02)
+  AT (0, 0, 2.9) RELATIVE sample
+
+COMPONENT vout=MCPL_output(filename="output")
+  AT (0,0,0) RELATIVE sample  
+  
+END
