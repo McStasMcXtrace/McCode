@@ -54,7 +54,7 @@ macro(installMCCODE)
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
 
   include(CPack)
-  
+
   string(TIMESTAMP MCCODE_YEAR "%Y")
 
   ## Add global definitions
@@ -234,7 +234,7 @@ macro(installMCCODE)
     WORKING_DIRECTORY work/src
   )
 
-  # Handling of system-provided random functions on windows - 
+  # Handling of system-provided random functions on windows -
   # needed only in the link step for mccode and -format
   if(WINDOWS)
     AppendDef(random=rand)
@@ -255,6 +255,7 @@ macro(installMCCODE)
  	  work/src/port.c
 	  work/src/port.h
 	  work/src/symtab.c
+	  work/src/re.c
 
     # files generated with flex and bison
  	  work/src/lex.yy.c
