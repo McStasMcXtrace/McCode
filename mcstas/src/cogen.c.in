@@ -988,7 +988,7 @@ int cogen_decls(struct instr_def *instr)
   cout("#pragma acc declare create ( instrument )");
   cout("");
 
-  /* 4. Table of instrument parameters. Used in mcparseoptions and various output functions */
+  /* 3. Table of instrument parameters. Used in mcparseoptions and various output functions */
   coutf("int numipar = %d;", numipar);
   coutf("struct mcinputtable_struct mcinputtable[] = {");
   liter = list_iterate(instr->formals);
@@ -1011,7 +1011,7 @@ int cogen_decls(struct instr_def *instr)
   coutf("};");
   cout("");
 
-  /* 5. Component SHAREs. */
+  /* 4. Component SHAREs. */
   liter = list_iterate(instr->complist);
   index=0;
   while(comp = list_next(liter))
@@ -1041,7 +1041,7 @@ int cogen_decls(struct instr_def *instr)
     cout("");
   }
 
-  /* 6. write component declares */
+  /* 5. write component declares */
   cout("");
   cout("/* ********************** component definition declarations. **************** */");
   cout("");
@@ -1051,13 +1051,15 @@ int cogen_decls(struct instr_def *instr)
     comp->index=++index;        /* comp index starts at 1, as in instrument.y */
     // TODO: "counter_instances" no longer matters due to class functions
     comp->def->counter_instances++;
-    warnings  += cogen_comp_declare(comp);
+    warnings += cogen_comp_declare(comp);
   }
   list_iterate_end(liter);
   coutf("int mcNUMCOMP = %d;", list_len(instr->complist));
+  coutf("");
 
-  /* 7. User's declarations from the instrument definition file. */
+  /* 6. User's declarations from the instrument definition file. */
   cout("/* User declarations from instrument definition. Can define functions. */");
+
   codeblock_out(instr->decls);
   cout("");
 
@@ -1263,7 +1265,7 @@ int cogen_acc_attach(struct instr_def *instr)
   return(warnings);
 } /* cogen_acc_attach */
 
-/*******************************************************************************
+/* *****************************************************************************
 * cogen_trace: Generate the TRACE section.
 * Extended Grammar:
 *   WHEN: the trace section of comp is embraced in a: if (when) { ...  }
@@ -1274,7 +1276,7 @@ int cogen_acc_attach(struct instr_def *instr)
 *   JUMP:  sends @MCCODE_PARTICLE@ to the JumpTrace labels, either with condition
 *          or condition is (counter < iterations)
 *   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
-*******************************************************************************/
+***************************************************************************** */
 int cogen_trace(struct instr_def *instr)
 {
    /* TODO:
@@ -1312,6 +1314,17 @@ int cogen_trace(struct instr_def *instr)
   /* define state parameters for all TRACE*/
   for(i=0; i<NUM_STATE_PARS; i++)
     coutf("#define %s (" MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
+
+  /* def user variables as state pars */
+  cout("// user variables:");
+  List_handle liter2;
+  liter2 = list_iterate(instr->user_vars);
+  char *var;
+  while(var = list_next(liter2)) {
+    coutf("#define %s (" MCCODE_PARTICLE "->%s)", var, var);
+  }
+  list_iterate_end(liter2);
+  cout("");
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (" MCCODE_PARTICLE "->%s)", "SCATTERED", "_scattered");
@@ -1357,7 +1370,6 @@ int cogen_trace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
   cout("  #define ABSORB ABSORB0");
-
 
   /* Debugging (initial state). */
   cout("  DEBUG_ENTER();");
@@ -1544,6 +1556,18 @@ int cogen_trace(struct instr_def *instr)
   // undef everything after the "raytrace" function
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("#undef %s", statepars_all[i]);
+
+  /* undef user variables as state pars */
+  cout("// user variables:");
+  List_handle liter3;
+  liter3 = list_iterate(instr->user_vars);
+  char *var2;
+  while(var2 = list_next(liter3)) {
+    coutf("#undef %s", var2);
+  }
+  list_iterate_end(liter3);
+  cout("");
+
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
   cout("#undef RESTORE_NEUTRON"  );
@@ -1554,6 +1578,7 @@ int cogen_trace(struct instr_def *instr)
 
   return(warnings);
 } /* cogen_trace */
+
 
 /*******************************************************************************
 * Output code for the mcstas runtime system. Default is to copy the runtime
@@ -1636,6 +1661,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#else");
   cout("#include <math.h>");
   cout("#endif");
+
+  // generate particle struct
   cout("struct particle_struct {");
   cout("  double x,y,z; /* position [m] */");
 #if MCCODE_PROJECT == 1   /* neutron */
@@ -1655,10 +1682,26 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
+
+
+  /* Append variables from instr VARS block to particle struct (user vars,
+  *  always double). Also store these strings in in the appropriate instrument
+  *  list for later def/undef as state variables (see cogen_trace). */
+
+  instr->user_vars = list_create();
+  if (get_user_particle_vars(instr->decls, instr->user_vars)) {
+    cout("  // user variables:");
+    List_handle liter;
+    liter = list_iterate(instr->user_vars);
+    char *var;
+    while(var = list_next(liter)) {
+      coutf("  double %s;", var);
+    }
+    list_iterate_end(liter);
+  }
   cout("};");
   cout("typedef struct particle_struct particle;");
   cout("");
-
 
   if(instr->include_runtime)
   {
@@ -1743,7 +1786,51 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   if(instr->use_default_main)
     cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
+
 } /* cogen_header */
+
+/*******************************************************************************
+* get_user_particle_vars: Extracts user variables from code block and adds them
+*   as new strings to the list vars.
+*
+* code: code block containing user variablse to be extracted.
+* vars: variable name strings are added to this list
+* returns: the number of vars added
+*******************************************************************************/
+int get_user_particle_vars(struct code_block *code, List vars) {
+  if(list_len(code->lines) <= 0)
+    return(0);
+
+  List_handle myiter;
+  myiter = list_iterate(code->lines);
+  char *l;
+  int idx = -1, pos, len, ans = 0;
+
+  while(l = list_next(myiter)) {
+    do {
+      idx = re_match("CG_ADD_PARTICLE_VAR(", l); // CG macro start pos
+      if (idx > -1) {
+        pos = idx+20;
+        len = re_match(")", l+pos); // CG macro rbrack
+
+        if (len > -1) {
+          char* vn = (char*) malloc((len + 1) * sizeof(char)); // assign to new location
+          strncpy(vn, l+pos, len);
+          list_add(vars, vn);
+          l = l + pos + len + 1; // inc line to pos after macro rbrack
+          ans++;
+        }
+        else {
+          // TODO: how is this done properly?
+          printf("error in CG macro declaration, exiting...");
+          exit(0);
+        }
+      }
+    } while(idx > -1);
+  }
+  return(ans);
+}
+
 
 /*******************************************************************************
 * cogen: the code generator

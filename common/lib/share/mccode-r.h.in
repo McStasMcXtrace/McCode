@@ -299,20 +299,21 @@ char  *mcsig_message;
 
 /* wrapper to get absolute and relative position of comp */
 /* mccomp_posa and mccomp_posr are defined in McStas generated C code */
-#define POS_A_COMP_INDEX(index) \
-    (instrument->_position_absolute[index])
-#define POS_R_COMP_INDEX(index) \
-    (instrument->_position_relative[index])
+#define POS_A_COMP_INDEX(index) (instrument->_position_absolute[index])
+#define POS_R_COMP_INDEX(index) (instrument->_position_relative[index])
 
-// JG: Setting parameters based/runtime MC_GETPAR equivalent
+/* setting parameters based MC_GETPAR */
 #define MC_GETPAR3(type, compname, par) \
     &( ((class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
-/* The body of this function depends on the instrument, and is generated. */
+/* the body of this function depends on component instances, and is cogen'd */
 void* _getvar_parameters(char* compname);
 
+/* CG macros are instructions for the cogen step, and should disappear */
+CG_ADD_PARTICLE_VAR(var) do {} while(0)
+
 /* Current component name, index, position and orientation */
-// JG: these macros work because, using class-based functions, "comp" is usually
-// the local variable of the active/current component
+/* These macros work because, using class-based functions, "comp" is usually
+*  the local variable of the active/current component. */
 #define INDEX_CURRENT_COMP (comp->_index)
 #define NAME_CURRENT_COMP (comp->_name)
 #define TYPE_CURRENT_COMP (comp->_type)
