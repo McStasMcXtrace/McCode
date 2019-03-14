@@ -72,7 +72,7 @@
 %token TOK_AT         "AT"
 %token TOK_COMPONENT  "COMPONENT"
 %token TOK_DECLARE    "DECLARE"
-%token TOK_VARS       "VARS"
+%token TOK_USERVARS   "USERVARS"
 %token TOK_DEFINE     "DEFINE"
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
@@ -118,7 +118,7 @@
 
 %type <instance> component compref reference instref
 %type <groupinst> groupdef groupref
-%type <ccode>   code codeblock share declare vars initialize trace extend save finally display
+%type <ccode>   code codeblock share declare uservars initialize trace extend save finally display
 %type <coords>  coords
 %type <exp>     exp topexp topatexp genexp genatexp when split
 %type <actuals> actuallist actuals actuals1
@@ -514,11 +514,11 @@ declare:    /* empty */
       }
 ;
 
-vars:    /* empty */
+uservars:    /* empty */
       {
         $$ = codeblock_new();
       }
-    | "VARS" codeblock
+    | "USERVARS" codeblock
       {
         $$ = $2;
       }
@@ -674,7 +674,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      dependency declare vars initialize instr_trace save finally "END"
+      dependency declare uservars initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $7;
         else list_cat(instrument_definition->decls->lines, $7->lines);

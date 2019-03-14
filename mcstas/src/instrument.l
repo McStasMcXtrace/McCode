@@ -108,7 +108,7 @@ ABSOLUTE      return TOK_ABSOLUTE;
 AT            return TOK_AT;
 COMPONENT     return TOK_COMPONENT;
 DECLARE       return TOK_DECLARE;
-VARS          return TOK_VARS;
+USERVARS      return TOK_USERVARS;
 DEFINE        return TOK_DEFINE;
 DEFINITION    return TOK_DEFINITION;
 END           return TOK_END;
