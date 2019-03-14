@@ -309,7 +309,11 @@ char  *mcsig_message;
 void* _getvar_parameters(char* compname);
 
 /* CG macros are instructions for the cogen step, and should disappear */
-CG_ADD_PARTICLE_VAR(var) do {} while(0)
+#define CG_ADD_PARTICLE_VAR(var) do {} while(0)
+/* used in component implementations to get the user var matching a string */
+#define GET_PARTICLE_DVAR(varname) ((double*) _get_particle_var(varname, neutron)) /* MCCODE_PARTICLE */
+/* the body of this function depends on user particle vars, and is cogen'd */
+void* _get_particle_var(char *token, particle *p);
 
 /* Current component name, index, position and orientation */
 /* These macros work because, using class-based functions, "comp" is usually

@@ -144,7 +144,7 @@
 * the instrument:
 *      COMPONENT MyMonitor = Monitor_nD(
 *       xwidth = 0.1, yheight = 0.1,
-*       user1=age, username1="Age of the Captain [years]",
+*       user1="age", username1="Age of the Captain [years]",
 *       options="user1, auto")
 *      AT ...
 *
@@ -158,36 +158,36 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]  Width of detector.
-* yheight: [m]  Height of detector.
-* zdepth:  [m]  Thickness of detector (z).
-* radius:  [m]  Radius of sphere/banana shape monitor
-* options: [str]  String that specifies the configuration of the monitor. The general syntax is "[x] options..." (see <b>Descr.</b>).
+* xwidth: [m]            Width of detector.
+* yheight: [m]           Height of detector.
+* zdepth: [m]            Thickness of detector (z).
+* radius: [m]            Radius of sphere/banana shape monitor
+* options: [str]         String that specifies the configuration of the monitor. The general syntax is "[x] options..." (see <b>Descr.</b>).
 *
 * Optional input parameters (override xwidth yheight zdepth):
-* xmin:   [m]    Lower x bound of opening
-* xmax:   [m]    Upper x bound of opening
-* ymin:   [m]    Lower y bound of opening
-* ymax:   [m]    Upper y bound of opening
-* zmin:   [m]    Lower z bound of opening
-* zmax:   [m]    Upper z bound of opening
-* filename: [str] Output file name (overrides file=XX option).
-* bins:   [1]    Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
-* min:    [u]    Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
-* max:    [u]    Maximum range value to force for all variables. Use 'max' or 'limits' keyword in 'options' for other limits
-* user1: [variable] Variable assigned to User1
-* user2: [variable] Variable assigned to User2
-* user3: [variable] Variable assigned to User3
-* username1:  [str] Name assigned to User1
-* username2:  [str] Name assigned to User2
-* username3:  [str] Name assigned to User3
+* xmin: [m]              Lower x bound of opening
+* xmax: [m]              Upper x bound of opening
+* ymin: [m]              Lower y bound of opening
+* ymax: [m]              Upper y bound of opening
+* zmin: [m]              Lower z bound of opening
+* zmax: [m]              Upper z bound of opening
+* filename: [str]        Output file name (overrides file=XX option).
+* bins: [1]              Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
+* min: [u]               Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
+* max: [u]               Maximum range value to force for all variables. Use 'max' or 'limits' keyword in 'options' for other limits
+* user1: [string]        Variable assigned to User1
+* user2: [string]        Variable assigned to User2
+* user3: [string]        Variable assigned to User3
+* username1: [str]       Name assigned to User1
+* username2: [str]       Name assigned to User2
+* username3: [str]       Name assigned to User3
 * restore_neutron: [0|1] If set, the monitor does not influence the neutron state. Equivalent to setting the 'parallel' option.
-* geometry:   [str] Name of an OFF file to specify a complex geometry detector
+* geometry: [str]        Name of an OFF file to specify a complex geometry detector
 *
 * OUTPUT PARAMETERS:
 *
-* DEFS: structure containing Monitor_nD Defines [struct]
-* Vars: structure containing Monitor_nD variables [struct]
+* DEFS: [struct]         structure containing Monitor_nD Defines
+* Vars: [struct]         structure containing Monitor_nD variables
 *
 * %Link
 * <a href="PreMonitor_nD.html">PreMonitor_nD</a>
@@ -195,15 +195,17 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX)
-SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  string user1="NULL", string user2="NULL", string user3="NULL",
+  xwidth=0, yheight=0, zdepth=0,
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0,
   bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0,
   string options="NULL", string filename="NULL",string geometry="NULL",
   string username1="NULL", string username2="NULL", string username3="NULL"
   )
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector,offdata)
+OUTPUT PARAMETERS (DEFS, Vars, detector, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -310,9 +312,9 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  if (user1 != FLT_MAX) Vars.UserVariable1 = user1;
-  if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
-  if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
+  if (strcmp(user1,"NULL")) Vars.UserVariable1 = *(GET_PARTICLE_DVAR(user1));
+  if (strcmp(user2,"NULL")) Vars.UserVariable2 = *(GET_PARTICLE_DVAR(user2));
+  if (strcmp(user3,"NULL")) Vars.UserVariable3 = *(GET_PARTICLE_DVAR(user3));
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);

@@ -850,7 +850,7 @@ int cogen_comp_acc_attach(struct comp_inst *comp, struct instr_def *instr)
 void cogen_getvarpars_fct(struct instr_def *instr)
 {
   cout("void* _getvar_parameters(char* compname)");
-  cout("/* enables the MC_GETPAR and MC_GET macros use with setpars (cogen3) */");
+  cout("/* enables settings parameters based use of the GETPAR macro */");
   cout("{");
 
   List_handle iter;
@@ -863,6 +863,30 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   list_iterate_end(iter);
 
   cout("}");
+  cout("");
+}
+
+/*******************************************************************************
+* Generates the function that returns a particle var ptr of type void*,
+* based on the variable name as a string. Required for GET_PARTICLE_VAR macros.
+*******************************************************************************/
+void cogen_getparticlevar_fct(struct instr_def *instr)
+{
+  cout("void* _get_particle_var(char *token, particle *p)");
+  cout("/* enables setpars based use of GET_PARTICLE_DVAR macro and similar */");
+  cout("{");
+
+  List_handle iter;
+  iter = list_iterate(instr->user_vars);
+  char *varname;
+
+  while(varname = list_next(iter)) {
+    coutf("  if (!strcmp(token, \"%s\")) return (void *) &(p->%s);", varname, varname);
+  }
+  list_iterate_end(iter);
+
+  cout("}");
+  cout("");
 }
 
 /*******************************************************************************
@@ -1868,6 +1892,7 @@ cogen(char *output_name, struct instr_def *instr)
   warnings += cogen_section(instr, "DISPLAY", "display", NULL);
 
   cogen_getvarpars_fct(instr);
+  cogen_getparticlevar_fct(instr);
 
   embed_file("mccode_main.c");
 
