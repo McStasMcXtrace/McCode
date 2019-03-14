@@ -2013,7 +2013,7 @@ INITIALIZE
 %{
   int i;
   /* check for parameters */
-  columns = (int[])powder_format;
+  columns = (int*)powder_format;
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
