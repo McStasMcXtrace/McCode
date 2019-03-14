@@ -151,7 +151,7 @@
 * Fullprof:          { 4,0,8,0,0,5,0, 0,0 }
 * Undefined:         { 0,0,0,0,0,0,0, 0,0 }
 * Lazy:              {17,6,0,0,0,0,0,13,0 }
-* qSq:               {-1,0,0,0,0,0,1, 0,0 }  /* special case for [q,Sq] table */
+* qSq:               {-1,0,0,0,0,0,1, 0,0 }  // special case for [q,Sq] table
 * or:                {j,d,F2,DW,Delta_d/d,1/2d,q,F,strain}
 *
 * or column indexes (starting from 1) given as comments in the file header
