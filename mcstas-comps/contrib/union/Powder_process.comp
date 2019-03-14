@@ -33,6 +33,8 @@
 *
 * %P
 * INPUT PARAMETERS:
+* format [vector]         Crystallographica { 4,5,7,0,0,0,0,0,0 }, Fullprof { 4,0,8,0,0,5,0,0,0 }, Lazy {17,6,0,0,0,0,0,13,0 }, Undefined: { 0,0,0,0,0,0,0,0,0 }
+*
 * Interact_fraction [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 * packing_factor [1]      How dense is the material compared to optimal 0-1
 * For rest, see PowderN component which this is based on
@@ -45,9 +47,14 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Powder_process
-DEFINITION PARAMETERS (format=Undefined)
-SETTING PARAMETERS(string reflections="NULL",packing_factor=1, Vc=0, delta_d_d=0, DW=0, nb_atoms=1, d_phi=0, density=0, weight=0, barns=1, Strain=0, interact_fraction=-1)
-OUTPUT PARAMETERS (This_process,Powder_storage,effective_my_scattering,d_phi,line_info,columns)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(
+  vector format={ 0,0,0,0,0,0,0,0,0 },
+  string reflections="NULL",
+  packing_factor=1, Vc=0, delta_d_d=0, DW=0, nb_atoms=1, d_phi=0, density=0,
+  weight=0, barns=1, Strain=0, interact_fraction=-1)
+OUTPUT PARAMETERS(
+  This_process, Powder_storage, effective_my_scattering, d_phi, line_info, columns)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -71,6 +78,7 @@ SHARE
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL_UNION
 #define POWDERN_DECL_UNION
+
 /* format definitions in the order {j d F2 DW Dd inv2d q F strain} */
 #ifndef Crystallographica
 #define Crystallographica { 4,5,7,0,0,0,0,0,0 }
@@ -126,7 +134,7 @@ double v; /* last velocity (cached) */
     };
 
   off_struct offdata_union;
-  
+
   // PN_list_compare *****************************************************************
 
   int PN_list_compare_union (void const *a, void const *b)
@@ -134,7 +142,7 @@ double v; /* last velocity (cached) */
      struct line_data_union const *pa = a;
      struct line_data_union const *pb = b;
      double s = pa->q - pb->q;
-     
+
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
@@ -316,16 +324,16 @@ double v; /* last velocity (cached) */
         flag=0;
       }
       list_count++;
-    } /* end for */ 
-    
+    } /* end for */
+
     Table_Free(&sTable);
-    
+
     /* sort the list with increasing q */
     qsort(list, list_count, sizeof(struct line_data_union),  PN_list_compare_union);
-    
-    printf("PowderN: %s: Read %i reflections from file '%s'\n", 
+
+    printf("PowderN: %s: Read %i reflections from file '%s'\n",
       info->compname, list_count, SC_file);
-    
+
     info->list  = list;
     info->count = list_count;
 
@@ -340,14 +348,14 @@ int calc_xsect_union(double v, double *qv, double *my_sv2, int count, double *su
   struct line_info_struct_union *line_info) {
   int    Nq = 0, line=0, line0=0;
   *sum=0;
-  
+
   //printf("Line_info when entering cross_section calculation\n");
   //printf("v = %f, qv = %f, my_sv2 = %f, count = %d, sum = %f\n",v,*qv,*my_sv2,count,*sum);
   //printf("v = %f\n",v);
   //printf("line_info->v = %f, line_info->v_min = %f, line_info->v_max = %f, line_info->neutron_passed = %f\n",line_info->v,line_info->v_min,line_info->v_max,line_info->neutron_passed);
   //printf("line_info->xs_reuses = %d, line_info->xs_compute = %d\n",line_info->xs_reuse,line_info->xs_compute);
-  
-  
+
+
   /* check if a line_info element has been recorded already */
   if (v >= line_info->v_min && v <= line_info->v_max && line_info->neutron_passed >= CHAR_BUF_LENGTH) {
     line = (int)floor(v - line_info->v_min)*CHAR_BUF_LENGTH/(line_info->v_max - line_info->v_min);
@@ -370,16 +378,16 @@ int calc_xsect_union(double v, double *qv, double *my_sv2, int count, double *su
     } else line_info->xs_reuse++;
     line0 = Nq - 1;
   }
-  
+
   line_info->xs_calls++;
-  
+
   for(line=line0; line<count; line++) {
     if (qv[line] <= 2*v) { /* q < 2*kf: restrict structural range */
       *sum += my_sv2[line];
       if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
     } else break;
   }
-  
+
   //printf("cross_section function to return %d lines to scatter with, with cross section sum %f \n",Nq,*sum);
   return(Nq);
 } /* calc_xsect_union */
@@ -393,7 +401,7 @@ struct Powder_physics_storage_struct{
     // The initialize in this component
     // The function for calculating my
     // The function for calculating scattering
-    
+
     struct line_info_struct_union *line_info_storage;
     double my_scattering;
     double vertical_angular_limit;
@@ -408,23 +416,23 @@ int Powder_physics_initialize(union data_transfer_union data_transfer) {
 // Function for calculating my in a test case.
 int Powder_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
     //*my = data_transfer.pointer_to_a_Powder_physics_storage_struct->my_scattering;
-    
-    
+
+
     int method_switch = 1;
     // For test
     int line_v,line0,line,count;
-    
+
     // Should not interfer with the global variables
     double vx = k_initial[0]*K2V;
     double vy = k_initial[1]*K2V;
     double vz = k_initial[2]*K2V;
-    
+
     // Not sure one can do this, but I do not see why not
     struct line_info_struct_union *line_info = data_transfer.pointer_to_a_Powder_physics_storage_struct->line_info_storage;
-    
+
     double v = sqrt(vx*vx + vy*vy + vz*vz);
     //printf("Velocity = %f \n",v);
-    
+
     //printf("line_info->v = %f, line_info->v_min = %f, line_info->v_max = %f, line_info->neutron_passed = %f\n",line_info->v,line_info->v_min,line_info->v_max,line_info->neutron_passed);
     // Here the maximum and minimum v is recorded, should this be for scattering events or cross section calculations?
     if (line_info->neutron_passed < CHAR_BUF_LENGTH) {
@@ -432,7 +440,7 @@ int Powder_physics_my(double *my,double *k_initial, union data_transfer_union da
       if (v > line_info->v_max) line_info->v_max = v;
       line_info->neutron_passed++;
     }
-    
+
     if (method_switch == 1) {
     // Here the cross section is calculated and stored
     if ( fabs(v - line_info->v) < 1e-6) {
@@ -471,9 +479,9 @@ int Powder_physics_my(double *my,double *k_initial, union data_transfer_union da
         } else line_info->xs_reuse++;
         line0 = line_info->Nq - 1;
         }
-          
+
         line_info->xs_calls++;
-          
+
         for(line=line0; line<count; line++) {
           if (line_info->q_v[line] <= 2*v) { /* q < 2*kf: restrict structural range */
             line_info->my_s_v2_sum += line_info->my_s_v2[line];
@@ -485,11 +493,11 @@ int Powder_physics_my(double *my,double *k_initial, union data_transfer_union da
         line_info->nb_refl_count++;
       }
     }
-    
+
      *my = line_info->my_s_v2_sum/(v*v);
     //printf("Returned my scattering of %f \n",*my);
     //printf("compute = %d and reuse = %d \n",line_info->xs_compute,line_info->xs_reuse);
-    
+
     return 1;
 };
 
@@ -499,25 +507,25 @@ int Powder_physics_scattering(double *k_final, double *k_initial, double *weight
     // This component need to write to its storage transfer for each event, is that possible with this structure?
     struct line_info_struct_union *line_info = data_transfer.pointer_to_a_Powder_physics_storage_struct->line_info_storage;
     double vertical_angular_limit = data_transfer.pointer_to_a_Powder_physics_storage_struct->vertical_angular_limit;
-    
-    
+
+
     // Should not interfer with the global variables
     double vx = k_initial[0]*K2V;
     double vy = k_initial[1]*K2V;
     double vz = k_initial[2]*K2V;
-    
+
     double v = sqrt(vx*vx + vy*vy + vz*vz);
-    
+
     int line;
     double arg;
     double theta;
     double alpha,alpha0;
-    
+
     double vout_x,vout_y,vout_z;
     double tmp_vx,tmp_vy,tmp_vz;
     double nx,ny,nz;
     double my_s_n;
-    
+
     // copy from PowderN component
     if (line_info->count > 0) {
           /* choose line */
@@ -579,14 +587,14 @@ int Powder_physics_scattering(double *k_final, double *k_initial, double *weight
           vx = tmp_vx;
           vy = tmp_vy;
           vz = tmp_vz;
-        
+
           k_final[0] = V2K*vx; k_final[1] = V2K*vy; k_final[2] = V2K*vz;
-        
+
           //*weight *= line_info->Nq*my_s_n; I believe my_s_n is part of the correction for sampling posistion, not to be done here
           *weight *= line_info->Nq*my_s_n/line_info->my_s_v2_sum*v*v;
-        
+
           //printf("my_s_n = %f \n",my_s_n);
-        
+
           // What to do with my_s_n ?
           /*
           pmul  = line_info->Nq*l_full*my_s_n*exp(-(line_info->my_a_v/v+my_s)*(l+l_1))
@@ -594,12 +602,12 @@ int Powder_physics_scattering(double *k_final, double *k_initial, double *weight
           */
           // Correction in case of vertical_angular_limit focusing - BUT only when d_phi != 0
           if (vertical_angular_limit) *weight *= alpha/PI;
-          
-        
+
+
           line_info->type = 'c';
           line_info->dq = line_info->q_v[line]*V2K;
-          
-          
+
+
         } else {
         /* else transmit <-- No powder lines in file */
         printf("Error, need lines in the PowderN input file\n");
@@ -637,7 +645,7 @@ INITIALIZE
 %{
 
   // Initialize done in the component
-  
+
   // Copy from PowderN component
   int i=0;
   struct line_data_union *L;
@@ -736,7 +744,7 @@ INITIALIZE
 
   Powder_storage.line_info_storage = &line_info;
   Powder_storage.vertical_angular_limit = d_phi;
-  
+
   // Need to specify if this process is isotropic
   This_process.non_isotropic_rot_index = -1; // Yes (powder)
   //This_process.non_isotropic_rot_index =  1;  // No (single crystal)
@@ -746,7 +754,7 @@ INITIALIZE
   This_process.data_transfer.pointer_to_a_Powder_physics_storage_struct->my_scattering = effective_my_scattering;
   This_process.probability_for_scattering_function = &Powder_physics_my;
   This_process.scattering_function = &Powder_physics_scattering;
-    
+
   // This will be the same for all process's, and can thus be moved to an include.
   This_process.process_p_interact = interact_fraction;
   sprintf(This_process.name,NAME_CURRENT_COMP);
