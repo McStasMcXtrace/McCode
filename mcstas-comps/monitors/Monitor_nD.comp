@@ -312,9 +312,9 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  if (strcmp(user1,"NULL")) Vars.UserVariable1 = *(GET_PARTICLE_DVAR(user1));
-  if (strcmp(user2,"NULL")) Vars.UserVariable2 = *(GET_PARTICLE_DVAR(user2));
-  if (strcmp(user3,"NULL")) Vars.UserVariable3 = *(GET_PARTICLE_DVAR(user3));
+  if (strcmp(user1,"NULL")) Vars.UserVariable1 = *(GET_PARTICLE_VAR_DPTR(user1));
+  if (strcmp(user2,"NULL")) Vars.UserVariable2 = *(GET_PARTICLE_VAR_DPTR(user2));
+  if (strcmp(user3,"NULL")) Vars.UserVariable3 = *(GET_PARTICLE_VAR_DPTR(user3));
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
