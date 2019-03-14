@@ -44,12 +44,12 @@
 * %P
 * INPUT PARAMETERS
 * filename: [str]                     name of the Tripoli4 neutron output file,
-*                     or stdout if left to 0.
+*                                     or stdout if left to 0.
 * batch: [1]                          index of the Tripoli batch to generate, when no
-*                     Tripoli4_input component is available in instrument.
+*                                     Tripoli4_input component is available in instrument.
 * Virtual_tripoli_input_comp: [comp]  Name of the Tripoli4_input component
-*                             	     from which is to be obtained batch information
-*                              	     use '0' if not defined.
+*                             	      from which is to be obtained batch information
+*                              	      use '0' if not defined.
 *
 * %L
 * <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>
@@ -74,10 +74,12 @@ FILE *hfile;
 
 INITIALIZE
 %{
-previous_batch=0;
-int i;
-char ** head;
-long nl;
+  previous_batch=0;
+  int i;
+  char *** head_ptr;
+  char ** head;
+  long *nl_ptr;
+  long nl;
 
 #if defined (USE_MPI)
   exit(printf("Tripoli4_output: %s: ERROR: This component can not be used in parallel execution mode (MPI). Abort.\n", NAME_CURRENT_COMP));
@@ -100,10 +102,13 @@ long nl;
   fprintf(hfile,"# Format: Tripoli4 data text file with header\n");
 #ifdef TRIPOLI4_INPUT_DEFS
   /* use header information from Virtual_tripoli4_input component instance */
-  // TODO: update to use the cogen3 version of GETPAR, see PreMonitor_nD
-  head = (MC_GETPAR(virtual_tripoli4_input_comp, head));/* header buffer */
-  // TODO: update to use the cogen3 version of GETPAR, see PreMonitor_nD
-  nl   = (MC_GETPAR(virtual_tripoli4_input_comp, nl));  /* nb of lines in header */
+  /* WARNING: the next four lines are untested, this was the best possible without
+  *  an example instrument */
+  head_ptr = (char***)(MC_GETPAR3(Virtual_tripoli4_input, head));
+  head = *head_ptr;
+  nl_ptr = (long*)(MC_GETPAR3(Virtual_tripoli4_input, nl));
+  nl = *nl_ptr;
+
   for(i=0;i<nl;++i){
     fprintf(hfile,head[i]);
   }
