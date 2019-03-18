@@ -867,29 +867,6 @@ void cogen_getvarpars_fct(struct instr_def *instr)
 }
 
 /*******************************************************************************
-* Generates the function that returns a particle var ptr of type void*,
-* based on the variable name as a string. Required for GET_PARTICLE_VAR macros.
-*******************************************************************************/
-void cogen_getparticlevar_fct(struct instr_def *instr)
-{
-  cout("void* _get_particle_var(char *token, particle *p)");
-  cout("/* enables setpars based use of GET_PARTICLE_DVAR macro and similar */");
-  cout("{");
-
-  List_handle iter;
-  iter = list_iterate(instr->user_vars);
-  char *varname;
-
-  while(varname = list_next(iter)) {
-    coutf("  if (!strcmp(token, \"%s\")) return (void *) &(p->%s);", varname, varname);
-  }
-  list_iterate_end(iter);
-
-  cout("}");
-  cout("");
-}
-
-/*******************************************************************************
 * cogen_decls: write the declaration part from the instrument description
 *   that is the particle definition, the instrument parameters, the DECLARE part,
 *   and all SHARE sections from components.
@@ -1713,13 +1690,18 @@ cogen_header(struct instr_def *instr, char *output_name)
   *  list for later def/undef as state variables (see cogen_trace). */
 
   instr->user_vars = list_create();
-  if (get_user_particle_vars(instr->decls, instr->user_vars)) {
+  instr->user_vars_types = list_create();
+  if (get_user_particle_vars(instr->decls, instr->user_vars, instr->user_vars_types)) {
     cout("  // user variables:");
     List_handle liter;
+    List_handle liter2;
     liter = list_iterate(instr->user_vars);
+    liter2 = list_iterate(instr->user_vars_types);
     char *var;
+    char *tpe;
     while(var = list_next(liter)) {
-      coutf("  double %s;", var);
+      tpe = list_next(liter2);
+      coutf("  %s %s;", tpe, var);
     }
     list_iterate_end(liter);
   }
@@ -1727,6 +1709,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("typedef struct particle_struct particle;");
   cout("");
 
+
+  /* embed runtime files */
   if(instr->include_runtime)
   {
     cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
@@ -1819,36 +1803,60 @@ cogen_header(struct instr_def *instr, char *output_name)
 *
 * code: code block containing user variablse to be extracted.
 * vars: variable name strings are added to this list
+* types: type strings, the stuff preceding the variable name in the user decl.
 * returns: the number of vars added
 *******************************************************************************/
-int get_user_particle_vars(struct code_block *code, List vars) {
+int get_user_particle_vars(struct code_block *code, List vars, List types) {
   if(list_len(code->lines) <= 0)
     return(0);
 
   List_handle myiter;
   myiter = list_iterate(code->lines);
+
   char *l;
-  int idx = -1, pos, len, ans = 0;
+  int idx = -1;
+  int pos = -1;
+  int len = -1;
+  int pos_tpe = -1;
+  int len_tpe = -1;
+  int pos_vn = -1;
+  int len_vn = -1;
+  int ans = 0;
 
   while(l = list_next(myiter)) {
     do {
-      idx = re_match("CG_ADD_PARTICLE_VAR(", l); // CG macro start pos
-      if (idx > -1) {
-        pos = idx+20;
-        len = re_match(")", l+pos); // CG macro rbrack
+      // line must match this format
+      pos = re_match("\\w[\\s\\w]+\\s+\\w+;", l); // match general var decl pat
+
+      if (pos <= -1) {
+        // skip
+      }
+      else {
+        len = re_match("\\s+\\w+;", l+pos); // end of type string
+
+        char *tpe = (char*) malloc((len + 1) * sizeof(char)); // new location
+        *(tpe+len) = '\0'; // null terminate
 
         if (len > -1) {
-          char* vn = (char*) malloc((len + 1) * sizeof(char)); // assign to new location
-          strncpy(vn, l+pos, len);
-          list_add(vars, vn);
-          l = l + pos + len + 1; // inc line to pos after macro rbrack
-          ans++;
+          strncpy(tpe, l+pos, len);
+          list_add(types, tpe);
         }
-        else {
-          // TODO: how is this done properly?
-          printf("error in CG macro declaration, exiting...");
-          exit(0);
+
+        pos = re_match("\\w+;", l); // match start of varname
+        if (pos > -1) {
+          len = re_match(";", l+pos); // match end of varname
+
+          if (len > -1) {
+            char *vn = (char*) malloc((len + 1) * sizeof(char)); // new location
+            *(vn+len) = '\0'; // null terminate
+
+            strncpy(vn, l+pos, len);
+            list_add(vars, vn);
+            l = l + pos + len + 1; // inc line to pos after scolon
+            ans++;
+          }
         }
+
       }
     } while(idx > -1);
   }
@@ -1892,7 +1900,6 @@ cogen(char *output_name, struct instr_def *instr)
   warnings += cogen_section(instr, "DISPLAY", "display", NULL);
 
   cogen_getvarpars_fct(instr);
-  cogen_getparticlevar_fct(instr);
 
   embed_file("mccode_main.c");
 

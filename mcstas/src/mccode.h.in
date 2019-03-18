@@ -508,6 +508,7 @@ struct instr_def
     int has_included_instr;   /* Flag set when instruments are %included in instr */
     char dependency[1024];    /* stores all dependencies needed to compile, from comps and instr */
     List user_vars;           /* stores custom particle user variables */
+    List user_vars_types;     /* stores custom particle user variable types */
   };
 
 struct jump_struct
