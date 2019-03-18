@@ -752,6 +752,14 @@ int cogen_comp_section_class(
     cogen_defundef(comp, comp->def->set_par, LOCAL_INSTANCE_PAR_REF); // [par] -> comp->parameters.[par]
     cogen_defundef(comp, comp->def->out_par, LOCAL_INSTANCE_PAR_REF);
 
+
+    // TODO: symbolic parameters defundef
+    // 1) loop through set par values
+    // 2) match against instr->user_vars
+    // 3) manually write a #define line here
+    // 4) repeat the process below, for #undef
+
+
     // SHARED comp [section] code here
     codeblock_out(code); // component definition code common to all instances, needs defines
 
@@ -789,7 +797,7 @@ int cogen_comp_section_class(
 
 /*******************************************************************************
 *
-* Generates the only comp instance function, setpos
+* Generates the only comp instance function, setpos.
 *
 *******************************************************************************/
 int cogen_comp_setpos(
@@ -859,6 +867,31 @@ void cogen_getvarpars_fct(struct instr_def *instr)
 
   while((comp = list_next(iter)) != NULL) {
     coutf("  if (!strcmp(compname, \"%s\")) return (void *) &(_%s->_parameters);", comp->name, comp->name);
+  }
+  list_iterate_end(iter);
+
+  cout("}");
+  cout("");
+}
+
+/*******************************************************************************
+* Generates the function that returns a particle var ptr of type void*,
+* based on the variable name as a string.
+*
+* Required for GET_PARTICLE_VAR macros used in component code.
+*******************************************************************************/
+void cogen_getparticlevar_fct(struct instr_def *instr)
+{
+  cout("void* _get_particle_var(char *token, particle *p)");
+  cout("/* enables setpars based use of GET_PARTICLE_DVAR macro and similar */");
+  cout("{");
+
+  List_handle iter;
+  iter = list_iterate(instr->user_vars);
+  char *varname;
+
+  while(varname = list_next(iter)) {
+    coutf("  if (!strcmp(token, \"%s\")) return (void *) &(p->%s);", varname, varname);
   }
   list_iterate_end(iter);
 
@@ -1900,6 +1933,7 @@ cogen(char *output_name, struct instr_def *instr)
   warnings += cogen_section(instr, "DISPLAY", "display", NULL);
 
   cogen_getvarpars_fct(instr);
+  cogen_getparticlevar_fct(instr);
 
   embed_file("mccode_main.c");
 
