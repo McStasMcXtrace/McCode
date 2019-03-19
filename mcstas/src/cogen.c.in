@@ -1724,7 +1724,7 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
-  if (get_user_particle_vars(instr->decls, instr->user_vars, instr->user_vars_types)) {
+  if (get_user_particle_vars(instr->vars, instr->user_vars, instr->user_vars_types)) {
     cout("  // user variables:");
     List_handle liter;
     List_handle liter2;
