@@ -1954,6 +1954,22 @@ int get_user_particle_vars(struct code_block *code, List vars, List types) {
       }
     } while(idx > -1);
   }
+
+  // warning/error if code block contains '=' char
+  int warnings = 0;
+  if(list_len(code->lines) > 0) {
+    List_handle liter;
+    char *line;
+    liter = list_iterate(code->lines);
+    while(line = list_next(liter))
+      if (strchr(line, '=')) warnings++;
+    list_iterate_end(liter);
+  }
+  if (warnings)
+    fprintf(stderr,"Warning: USERVARS block contains %i assignments (= sign).\n"
+                   "         Move them into an EXTEND section. May fail at compile.\n"
+                   , warnings);
+
   return(ans);
 }
 
