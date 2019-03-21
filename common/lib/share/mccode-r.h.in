@@ -308,11 +308,6 @@ char  *mcsig_message;
 /* the body of this function depends on component instances, and is cogen'd */
 void* _getvar_parameters(char* compname);
 
-/* used in component implementations to get the user var matching a string */
-#define GET_PARTICLE_VAR_DPTR(varname) ((double*) _get_particle_var(varname, neutron)) /* MCCODE_PARTICLE */
-/* the body of this function depends on user particle vars, and is cogen'd */
-void* _get_particle_var(char *token, particle *p);
-
 /* Current component name, index, position and orientation */
 /* These macros work because, using class-based functions, "comp" is usually
 *  the local variable of the active/current component. */

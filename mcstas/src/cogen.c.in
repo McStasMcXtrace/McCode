@@ -123,11 +123,11 @@ static char *quoted_output_file_name = NULL;  /* str_quote()'ed name of output f
 
 /* Convert instrument formal parameter type numbers to their enum name. */
 char *instr_formal_type_names[] =
-  { "instr_type_int", "instr_type_string", "instr_type_char", "instr_type_vector", "instr_type_double" };
+  { "instr_type_int", "instr_type_string", "instr_type_char", "instr_type_vector", "instr_type_double", "instr_type_symbol" };
 
 /* 'char' and 'MCNUM' are for static array allocations */
 char *instr_formal_type_names_real[] =
-  { "long", "char*", "char", "MCNUM*", "MCNUM"};
+  { "long", "char*", "char", "MCNUM*", "MCNUM", "double"};
 
 /*******************************************************************************
 * Output a single line of code
@@ -468,11 +468,12 @@ int cogen_comp_declare(struct comp_inst *comp)
           }
 
           /* scalar parameter */
+
           if (c_formal->type != instr_type_string)
             coutf("  %s %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
           else  /* array parameter */
-            coutf("  %s %s[16384];",
-              instr_formal_type_names_real[c_formal->type+1], c_formal->id);
+            coutf("  %s %s[16384];", instr_formal_type_names_real[c_formal->type+1], c_formal->id);
+
         } /* while c_formal */
         list_iterate_end(liter);
       } /* if(list_len(l) > 0) */
@@ -557,7 +558,7 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
       if (!strcmp(section, "SETTING")) {
         struct Symtab_entry *entry;
         entry = symtab_lookup(comp->setpar, par->id);
-        val   = exp_tostring(entry->val); /* replaced by instrument parameter when exsists */
+        val   = exp_tostring(entry->val); /* replaced by instrument parameter when exists */
         code_set_source(instr->quoted_source, exp_getlineno(entry->val));
       } else {
         val =  par->isoptional ? exp_tostring(par->default_value) : NULL;
@@ -567,16 +568,20 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
         if (par->type == instr_type_string) {
           if (strcmp(val, "0") && strcmp(val, "NULL")) { /* when value is not NULL (avoid warning at compile) */
             coutf("  if(%s && strlen(%s))", val, val);
-            coutf("    stracpy(_%s->_parameters.%s, %s ? %s : \"\", 16384);",
-              comp->name, par->id, val, val);
+            coutf("    stracpy(_%s->_parameters.%s, %s ? %s : \"\", 16384);", comp->name, par->id, val, val);
             coutf("  else ");
           }
-          coutf("_%s->_parameters.%s[0]='\\0';",
-            comp->name, par->id);
-        } else if (par->type == instr_type_vector) {
+          coutf("  _%s->_parameters.%s[0]='\\0';", comp->name, par->id);
+        }
+        else if (par->type == instr_type_vector) {
           coutf("  _%s->_parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
+        }
+        else if (par->type == instr_type_symbol) {
+          // the user vars value is particle specific, init to null
+          coutf("  _%s->_parameters.%s = \'\\0\';", comp->name, par->id);
         } else
           coutf("  _%s->_parameters.%s = %s;", comp->name, par->id, val);
+
         str_free(val);
       }
       /* define the symbol right after assignment so that we can use it in further parameters */
@@ -740,6 +745,8 @@ int cogen_comp_section_class(
     // write class fct footprint
     coutf("class_%s *class_%s_%s(class_%s *comp",
       comp->def->name, comp->def->name, section_lower, comp->def->name);
+
+    // TRACE add particle parameter to footprint
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
     {
       coutf("  , particle *" MCCODE_PARTICLE ") {",
@@ -749,16 +756,65 @@ int cogen_comp_section_class(
     } else
       cout(") {");
 
+    // def-undef component pars
     cogen_defundef(comp, comp->def->set_par, LOCAL_INSTANCE_PAR_REF); // [par] -> comp->parameters.[par]
     cogen_defundef(comp, comp->def->out_par, LOCAL_INSTANCE_PAR_REF);
 
+    // TRACE assign user var values, instance specific switch
+    if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
+    {
+      // loop setup
+      List_handle piter;
+      struct comp_iformal *par;
+      List_handle citer;
+      struct comp_inst *loopcomp;
+      struct Symtab_entry *entry;
 
-    // TODO: symbolic parameters defundef
-    // 1) loop through set par values
-    // 2) match against instr->user_vars
-    // 3) manually write a #define line here
-    // 4) repeat the process below, for #undef
+      // determine if user vars are activated
+      int has_user_vars = 0;
+      char *val=NULL;
+      piter = list_iterate(comp->def->set_par);
+      while((par = list_next(piter)) != NULL) {
+        // get parameter value from component parameters name-value structure
+        entry = symtab_lookup(comp->setpar, par->id);
+        val = exp_tostring(entry->val);
 
+        if (par->type == instr_type_symbol
+          && strcmp(val, "\0")
+          && strcmp(val, "NULL"))
+        {
+          has_user_vars = 1;
+          break;
+        }
+      }
+      list_iterate_end(piter);
+
+      if (has_user_vars) {
+        // loop components
+        citer = list_iterate(instr->complist);
+        while((loopcomp = list_next(citer)) != NULL) {
+          if ((!strcmp(comp->def->name, loopcomp->def->name))) {
+            coutf("  if(!strcmp(\"%s\", comp->_name)) {", loopcomp->name);
+
+            // loop pars
+            piter = list_iterate(loopcomp->def->set_par);
+            while(par = list_next(piter)) {
+              if (par->type == instr_type_symbol) {
+                entry = symtab_lookup(loopcomp->setpar, par->id);
+                val = exp_tostring(entry->val);
+                coutf("    %s = %s;", par->id, val);
+              }
+            }
+            list_iterate_end(piter);
+
+            coutf("  }");
+          }
+        }
+        list_iterate_end(citer);
+
+        coutf("");
+      } // type has activated user vars
+    }
 
     // SHARED comp [section] code here
     codeblock_out(code); // component definition code common to all instances, needs defines
@@ -810,7 +866,7 @@ int cogen_comp_setpos(
     comp->name, comp->def->name, "SETTING, POSITION/ROTATION");
 
   /* the set+pos/rot instance function **************************************** */
-  coutf("int _%s_%s(void)", comp->name, "setpos");
+  coutf("int _%s_setpos(void)", comp->name);
   cout("{ /* sets initial component parameters, position and rotation */");
 
   /* init parameters. These can then be used in position/rotation syntax */
@@ -820,6 +876,7 @@ int cogen_comp_setpos(
     comp->def->init_code && comp->def->init_code->quoted_filename ? comp->def->init_code->quoted_filename : comp->def->name,
     comp->def->init_code && comp->def->init_code->linenum > 0 ? comp->def->init_code->linenum : 0);
 
+  // set comp name, comp type-name
   coutf("  stracpy(_%s->_name, \"%s\", 16384);", comp->name, comp->name);
   coutf("  stracpy(_%s->_type, \"%s\", 16384);", comp->name, comp->def->name);
   coutf("  _%s->_index=%i;", comp->name, comp->index);
@@ -1083,10 +1140,11 @@ int cogen_decls(struct instr_def *instr)
   index=0;
   while(comp = list_next(liter)) {
     comp->index=++index;        /* comp index starts at 1, as in instrument.y */
-    // TODO: "counter_instances" no longer matters due to class functions
+    // NOTE: "counter_instances" no longer matters, due to class functions
     comp->def->counter_instances++;
     warnings += cogen_comp_declare(comp);
   }
+
   list_iterate_end(liter);
   coutf("int mcNUMCOMP = %d;", list_len(instr->complist));
   coutf("");
@@ -1107,6 +1165,7 @@ int cogen_decls(struct instr_def *instr)
 
   return(warnings);
 } /* cogen_decls */
+
 
 /* *****************************************************************************
 * cogen_section: write a section part from the instrument description
@@ -1402,6 +1461,8 @@ int cogen_trace(struct instr_def *instr)
   cout("  /* init variables and counters for TRACE */");
 
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
+  cout("  #undef ABSORB0");
+  cout("  #undef ABSORB");
   cout("  #define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
   cout("  #define ABSORB ABSORB0");
 

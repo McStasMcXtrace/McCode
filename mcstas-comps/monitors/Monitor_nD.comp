@@ -197,13 +197,13 @@
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-  string user1="NULL", string user2="NULL", string user3="NULL",
+  symbol user1=FLT_MAX, symbol user2=FLT_MAX, symbol user3=FLT_MAX,
   xwidth=0, yheight=0, zdepth=0,
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0,
   bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0,
   string options="NULL", string filename="NULL",string geometry="NULL",
   string username1="NULL", string username2="NULL", string username3="NULL"
-  )
+)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -312,9 +312,9 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  if (strcmp(user1,"NULL")) Vars.UserVariable1 = *(GET_PARTICLE_VAR_DPTR(user1));
-  if (strcmp(user2,"NULL")) Vars.UserVariable2 = *(GET_PARTICLE_VAR_DPTR(user2));
-  if (strcmp(user3,"NULL")) Vars.UserVariable3 = *(GET_PARTICLE_VAR_DPTR(user3));
+  Vars.UserVariable1 = user1;
+  Vars.UserVariable2 = user2;
+  Vars.UserVariable3 = user3;
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);

@@ -394,6 +394,8 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_string;
         } else if(!strcmp($1, "vector")) {
           formal->type = instr_type_vector;
+        } else if(!strcmp($1, "symbol")) {
+          formal->type = instr_type_symbol;
         } else {
           print_error("ERROR: Illegal type %s for component "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
@@ -449,6 +451,8 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_string;
         } else if(!strcmp($1, "vector")) {
           formal->type = instr_type_vector;
+        } else if(!strcmp($1, "symbol")) {
+          formal->type = instr_type_symbol;
         } else {
           print_error("ERROR: Illegal type %s for component "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
