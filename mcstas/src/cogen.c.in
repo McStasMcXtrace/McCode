@@ -1372,10 +1372,6 @@ int cogen_acc_attach(struct instr_def *instr)
 ***************************************************************************** */
 int cogen_trace(struct instr_def *instr)
 {
-   /* TODO:
-     ARRAY: handled in grammar: AT/ROTATED copy instance at different locations, use {} or [] vectors
-   */
-
   List_handle liter;
   struct comp_inst *comp = NULL;
   int warnings = 0;
