@@ -30,13 +30,13 @@
 * %P
 * Input parameters:
 *
-* compute_func: [] Address of the function that computes a psuedo neutron from before and after scatter states.
+* compute_func: [ ] Address of the function that computes a psuedo neutron from before and after scatter states.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Scatter_log_iterator
-  DEFINITION PARAMETERS (compute_func=NULL)
+DEFINITION PARAMETERS (compute_func=NULL)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (nstate_initial,s0,s1)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
@@ -78,6 +78,7 @@ DECLARE
 
   double *nstate_initial;
   
+  int optics_not_hit;
 
   /*need a pointer to the structure set up by the logger*/
 %}
@@ -91,6 +92,7 @@ INITIALIZE
   }
   nstate_initial=NULL;
     
+  optics_not_hit=0;
 %}
 
 
@@ -99,6 +101,7 @@ TRACE
 
   /*I am the start of the pseudo neutron iterator*/
   if (nstate_initial==NULL){
+    optics_not_hit=0; /* Fresh start, resetting variable */
     double *ns=nstate_initial=calloc(11,sizeof(double));
     ns[0]=x;ns[1]=y; ns[2]=z;
     ns[3]=vx;ns[4]=vy;ns[5]=vz;
@@ -113,7 +116,7 @@ TRACE
 #define mcabsorb scatter_iterator_stop
   }
 
-  if (s1->_p!=-1){
+  if (s1->_p>=0){
     /*a neutron weight of -1 is nonsensical. I.e. if s1->p>=0, it means there are two states in the log from which we can compute a pseudo-neutron*/
     double nstate[11];
     if ( pseudo_neutron_state_function(nstate,s0,s1) ){
@@ -128,11 +131,14 @@ TRACE
     s0++;
     s1++;
   }else if (Bounce_store[1]._p==-1){
+  /*This can happen now only in the case optics was not hit, i.e. no reflection, no absorption*/
     x=s0->_x;y=s0->_y;z=s0->_z;
     vx=s0->_vx;vy=s0->_vy;vz=s0->_vz;
     t=s0->_t;
     sx=s0->_sx;sy=s0->_sy;sz=s0->_sz;
     p=s0->_p;
+    optics_not_hit = 1;
+  //  fprintf(stdout,"No interactions with optics. Use \"optics_not_hit\" variable to JUMP at scatter_logger_stop and avoid sending to ScatterLogIterator those neutrons which were actually not scattered.\n");
   } else {
     fprintf(stderr,"This should not happen. Period.\n");
     exit(1);

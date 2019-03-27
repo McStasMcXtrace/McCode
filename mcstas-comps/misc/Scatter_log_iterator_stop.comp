@@ -30,7 +30,7 @@
 * %P
 * Input parameters:
 *
-* iterator: [] Instance name of the Scatter_log_iterator log component preceeding this one.
+* iterator: [ ] Instance name of the Scatter_log_iterator log component preceeding this one.
 *
 * %E
 *******************************************************************************/
@@ -77,6 +77,26 @@ scatter_iterator_stop:
     /* Restore std ABSORB */
 #undef mcabsorb
 #define mcabsorb mcabsorbAll
+  // printf("No ABSORB after the iterator\n");
+  } else if (s1->_p==-2) { 
+  /*if the weight equals -2 it means that the neutron was absorbed in components within the scatter_logger (see scatter logger definition) 
+    and should not be propagated further after this iterator*/
+  // printf("Performing ABSORB after the iterator\n");
+   /*we have reached the end - unset loop and reset neutron state to whatever it was before we entered the pseudo neutron iterator*/
+    loop=0;
+    double *ns=MC_GETPAR(iterator,nstate_initial);
+    x=ns[0];y=ns[1];z=ns[2];
+    vx=ns[3];vy=ns[4];vz=ns[5];
+    t=ns[6];
+    sx=ns[7];sy=ns[8];sz=ns[9];
+    p=ns[10];
+
+    free(ns);
+    MC_GETPAR(iterator,nstate_initial)=NULL;
+    /* Restore std ABSORB */
+#undef mcabsorb
+#define mcabsorb mcabsorbAll
+    ABSORB; 
   }
 %}
 

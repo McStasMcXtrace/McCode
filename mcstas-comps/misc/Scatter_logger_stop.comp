@@ -10,6 +10,7 @@
 * %I
 *
 * Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby
+* Modified by: R. Konovalenko
 * Date: January 2013
 * Origin: DTU Physics / DTU Nutech
 *
@@ -21,7 +22,7 @@
 * %P
 * Input parameters:
 *
-* logger: []  The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components.
+* logger: [ ] The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components.
 *
 * %E
 *******************************************************************************/
@@ -34,8 +35,11 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #define SCATTER0\
-do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
+    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
+#define ABSORB0\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
 %}
 
 DECLARE
@@ -58,6 +62,9 @@ TRACE
 #undef SCATTER
 #define SCATTER SCATTER0
 
+#undef ABSORB
+#define ABSORB ABSORB0
+
 #undef mcabsorb
 #define mcabsorb mcabsorbAll
 
@@ -76,7 +83,7 @@ scatter_logger_stop:
     bp->_sy=0;
     bp->_sz=0;
     bp->_t=0;
-    bp->_p=-1;
+    if(absorbed_in_optics==1) bp->_p=-2; else bp->_p=-1;
     bp->_nid=0;
     bp->_comp=0;
     bounce_store_index++;

@@ -75,11 +75,55 @@ SHARE
 			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0);\
 } while(0)
 
+#define ABSORB_LOG do { /*printf("DOING ABSORB_LOG\n");*/ \
+    if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
+      struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
+     /* if( (bp-1)->_p!=p || (bp-1)->_vx!=vx || (bp-1)->_vy!=vy || (bp-1)->_vz!=vz )*//*<-- Check removed, works wrong if neutron is absorbed at the entrance*/{\
+        Coords ctmp=POS_A_CURRENT_COMP;\
+        Coords _r = coords_set(x,y,z);\
+        Coords _v = coords_set(vx,vy,vz);\
+        Coords _s = coords_set(sx,sy,sz);\
+        Coords _rg,_vg,_sg;\
+        Rotation _Rt;\
+        rot_transpose(ROT_A_CURRENT_COMP,_Rt);\
+        _rg=coords_add(rot_apply(_Rt,_r),ctmp);\
+        _vg=rot_apply(_Rt,_v);\
+        _sg=rot_apply(_Rt,_s);\
+        coords_get(_rg,&(bp->_x),&(bp->_y),&(bp->_z));\
+        coords_get(_vg,&(bp->_vx),&(bp->_vy),&(bp->_vz));\
+	/*bp->_vx=0.; bp->_vy=0.; bp->_vz=0.;*/\
+        /*vx=0; vy=0;vz=0;*/\
+        coords_get(_sg,&(bp->_sx),&(bp->_sy),&(bp->_sz));\
+        bp->_t=t;\
+        bp->_p=0.;\
+        bp->_nid=mcget_run_num();\
+        bp->_comp=INDEX_CURRENT_COMP;\
+        bp->_idx=bounce_store_index;\
+       /* printf("Recording absorption event, writing state (%d) to the buffer, r: %g %g %g v: %g %g %g p:%g\n",\
+                bounce_store_index, bp->_x, bp->_y, bp->_z, bp->_vx, bp->_vy, bp->_vz, bp->_p);*/\
+        bounce_store_index++;\
+      }\
+    }else if(bounce_store_index==(BOUNCE_LOG_SIZE-1) && !bounce_store_overrun){\
+      printf("Warning (%s): Scatter_log overrun at %llu - not logging any more events\n",NAME_CURRENT_COMP,mcget_run_num());\
+      bounce_store_overrun=1;\
+    }\
+absorbed_in_optics=1;\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0);\
+} while(0)
+
+
 #define SCATTER0\
     do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
 			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
 
-  const int BOUNCE_LOG_SIZE=1000000;
+#define ABSORB0\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
+
+
+
+  const int BOUNCE_LOG_SIZE=10000000;
   struct Generalized_State_t *Bounce_store;
 
 %}
@@ -88,11 +132,13 @@ DECLARE
 %{
   int bounce_store_index;
   int bounce_store_overrun;
+  int absorbed_in_optics;
 %}
 
 INITIALIZE
 %{
   bounce_store_index=0;
+  absorbed_in_optics=0;
   if ( (Bounce_store=malloc(sizeof(*Bounce_store)*BOUNCE_LOG_SIZE))==NULL){
     fprintf(stderr,"Error: Scatter_logger: Cannot allocate memory for %d Generalized_State_ts of size %d bytes\n",BOUNCE_LOG_SIZE,sizeof(*Bounce_store));
     exit(-1);
@@ -106,9 +152,14 @@ TRACE
 #undef SCATTER
 #define SCATTER SCATTER_LOG
 
+#undef ABSORB
+#define ABSORB ABSORB_LOG
+
 #undef mcabsorb
 #define mcabsorb scatter_logger_stop
   bounce_store_index=0;/*we are now starting logging so we should start afresh*/
+  absorbed_in_optics=0;
+
   if (bounce_store_index<BOUNCE_LOG_SIZE){
     struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);
     Coords ctmp=POS_A_CURRENT_COMP;
