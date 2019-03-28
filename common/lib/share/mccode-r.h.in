@@ -319,6 +319,8 @@ void* _getvar_parameters(char* compname);
 #define ROT_A_CURRENT_COMP (comp->_rotation_absolute)
 #define ROT_R_CURRENT_COMP (comp->_rotation_relative)
 
+#define NAME_INSTRUMENT (instrument->_name)
+
 
 /* MCDISPLAY/trace and debugging message sent to stdout */
 #ifdef MC_TRACE_ENABLED
