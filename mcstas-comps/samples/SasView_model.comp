@@ -2121,26 +2121,26 @@
 * model_index: []    Index of the applied sasview model. Recompile instrument for changes to take effect.
 * model_scale: []    Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors  can be related to the scattering intensity by the particle volume fraction.
 * model_pars: []     Model parameters are given as a set of comma-separated values enclosed by {}, e.g. {60} for the model index 21 (the guinier model). Consult the sasview docs for further info.
-* model_abs: [1/m]   Absorption cross section density at 2200 m/s 
+* model_abs: [1/m]   Absorption cross section density at 2200 m/s
 *
 * Input parameters:
 *
-* radius: [m]        Outer radius of sample in (x,z) plane for cylinder/sphere 
-* xwidth: [m]        horiz. dimension of sample, as a width 
-* yheight: [m]       vert . dimension of sample, as a height for cylinder/box 
-* zdepth: [m]        depth of sample 
-* target_index: [1]  Relative index of component to focus at, e.g. next is +1 
-* focus_xw: [m]      horiz. dimension of a rectangular area 
-* focus_yh: [m]      vert.  dimension of a rectangular area 
-* focus_aw: [deg]    horiz. angular dimension of a rectangular area 
-* focus_ah: [deg]    vert.  angular dimension of a rectangular area 
-* focus_r: [m]       Detector (disk-shaped) radius 
+* radius: [m]        Outer radius of sample in (x,z) plane for cylinder/sphere
+* xwidth: [m]        horiz. dimension of sample, as a width
+* yheight: [m]       vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m]        depth of sample
+* target_index: [1]  Relative index of component to focus at, e.g. next is +1
+* focus_xw: [m]      horiz. dimension of a rectangular area
+* focus_yh: [m]      vert.  dimension of a rectangular area
+* focus_aw: [deg]    horiz. angular dimension of a rectangular area
+* focus_ah: [deg]    vert.  angular dimension of a rectangular area
+* focus_r: [m]       Detector (disk-shaped) radius
 *
 * Optional parameters:
 *
-* target_x: [m]      relative focus target position 
-* target_y: [m]      relative focus target position 
-* target_z: [m]      relative focus target position 
+* target_x: [m]      relative focus target position
+* target_y: [m]      relative focus target position
+* target_z: [m]      relative focus target position
 *
 * Variables calculated in the component:
 *
@@ -2155,33 +2155,32 @@
 
 DEFINE COMPONENT SasView_model
 
-DEFINITION PARAMETERS (
-model_index=21,
-model_scale= 1.0,
-model_pars={60},
-model_abs=0.5
-)
+DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (
-xwidth=0,
-yheight=0,
-zdepth=0,
-radius=0,
-target_x=0,
-target_y=0,
-target_z=6,
-int target_index=0,
-focus_xw=0,
-focus_yh=0,
-focus_aw=0,
-focus_ah=0,
-focus_r=0)
+  model_index=21,
+  model_scale=1.0,
+  vector model_pars={60},
+  model_abs=0.5,
+  xwidth=0,
+  yheight=0,
+  zdepth=0,
+  radius=0,
+  target_x=0,
+  target_y=0,
+  target_z=6,
+  int target_index=0,
+  focus_xw=0,
+  focus_yh=0,
+  focus_aw=0,
+  focus_ah=0,
+  focus_r=0)
 
-OUTPUT PARAMETERS ( 
+OUTPUT PARAMETERS (
     model_pars_ptr,
-    my_a_v, 
+    my_a_v,
     shape)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DEPENDENCY "-std=c99"
 
 SHARE %{
@@ -2198,7 +2197,7 @@ DECLARE
 
 INITIALIZE
 %{
-  model_pars_ptr = (float[])model_pars;
+  model_pars_ptr = (float*)model_pars;
 shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
 if (xwidth && yheight && zdepth)
     shape=1;
@@ -2299,7 +2298,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
+
   if (shape == 0) {	/* cylinder */
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);

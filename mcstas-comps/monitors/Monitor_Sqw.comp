@@ -73,10 +73,12 @@
 ******************************************************************************/
 DEFINE COMPONENT Monitor_Sqw
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string user3="NULL", xwidth=0, yheight=0, zdepth=0,
-xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
-bins=0, min=-1e40, max=1e40,
-int index=-1,string options=0, string filename=0,string geometry=0,string username3=0)
+SETTING PARAMETERS (symbol user3=FLT_MAX,
+  xwidth=0, yheight=0, zdepth=0,
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
+  bins=0, min=-1e40, max=1e40,
+  int index=-1, string options=0, string filename=0, string geometry=0,
+  string username3=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector, mean_vx, mean_vy, mean_vz, sum_p, offdata)
 
@@ -166,7 +168,7 @@ TRACE
   double  pp;
   int     intersect   = 0;
 
-  if (strcmp(user3, "NULL")) Vars.UserVariable3 = *(GET_PARTICLE_VAR_DPTR(user3));
+  Vars.UserVariable3 = user3;
 
   if (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0"))
   {
