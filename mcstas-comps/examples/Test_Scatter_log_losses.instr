@@ -90,14 +90,14 @@ COMPONENT iter1 = Scatter_log_iterator()
 AT(0,0,0) ABSOLUTE
 
 COMPONENT mnd1=Monitor_nD (
-  restore_neutron=1, yheight=LENGTH, radius=M_SQRT2*0.1,options="cylinder previous no slit y", filename="mnd1.dat")
-AT(0,0,LENGTH/2.0) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+  restore_neutron=1, options="previous no slit z", filename="mnd1.dat")
+AT(0,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 COMPONENT mnd2=Monitor_nD (
-  restore_neutron=1, yheight=1, radius=M_SQRT2*0.1,options="cylinder previous no slit y,l limits=[0 10]", filename="mnd2.dat")
-AT(0,0,LENGTH-0.5) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+  restore_neutron=1,options="previous no slit z,l limits=[0 10]", filename="mnd2.dat")
+AT(0,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 /*COMPONENT printout = Arm()*/
 /*AT(0,0,0) ABSOLUTE*/

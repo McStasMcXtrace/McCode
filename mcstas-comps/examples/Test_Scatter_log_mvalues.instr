@@ -118,38 +118,38 @@ AT(0,0,0) ABSOLUTE
 
 /*monitor the m-value needed for 1st reflection*/
 COMPONENT mnd1=Monitor_nD (
-    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
-    options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd1.dat")
+    restore_neutron=1, user1=mvalue, username1="m",
+    options="previous no slit z bins=100 user1 limits=[0 4]", filename="mnd1.dat")
 WHEN(reflc==1) AT(0,0,5) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 /*monitor the m-value needed for 2nd reflection*/
 COMPONENT mnd2=Monitor_nD (
-    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    restore_neutron=1, user1=mvalue, username1="m",
     options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd2.dat")
 WHEN(reflc==2) AT(0,0,5) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 /*monitor the m-value needed for 3rd reflection*/
 COMPONENT mnd3=Monitor_nD (
-    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    restore_neutron=1, user1=mvalue, username1="m",
     options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd3.dat")
 WHEN(reflc==3) AT(0,0,5) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 /*monitor the m-value needed for 4th reflection*/
 COMPONENT mnd4=Monitor_nD (
-    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    restore_neutron=1, user1=mvalue, username1="m",
     options="previous no slit y bins=100 user1 limits=[0 4]", filename="mnd4.dat")
 WHEN(reflc==4) AT(0,0,5) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 /*monitor the m-value needed for all reflection*/
 COMPONENT mndtot=Monitor_nD (
-    restore_neutron=1, yheight=10, user1=mvalue, username1="m", radius=M_SQRT2*0.1,
+    restore_neutron=1, user1=mvalue, username1="m",
     options="previous no slit y bins=100 user1 limits=[0 4]", filename="mndtot.dat")
 WHEN (reflc!=0) AT(0,0,5) RELATIVE guide_simple
-ROTATED (90,0,0) RELATIVE guide_simple
+ROTATED (0,0,0) RELATIVE guide_simple
 
 /*COMPONENT printout = Arm()*/
 /*AT(0,0,0) ABSOLUTE*/
