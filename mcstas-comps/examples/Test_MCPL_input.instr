@@ -1,0 +1,88 @@
+/*******************************************************************************
+*
+* Instrument: Test_Sources
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Mar 2016
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_MCPL_etc
+*
+* A test instrument for MCPL_input
+*
+* %Description
+*
+* This is a unit test for the MCPL_input component.
+*
+* %Example: -n1e3 repeat=1 Detector: m1_I=2.42284e+11
+*
+* %Parameters
+*
+* repeat: [1]       Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
+* E_smear: [1]      When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
+* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_MCPL_input(repeat=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
+
+DECLARE
+%{
+  long long ncount_i;
+  
+  #define QUOTE(name) #name
+  #define STR(macro) QUOTE(macro)
+
+  #ifndef MCPLPATH
+  #define MCPLPATH=/usr/share/mcstas/2.3/MCPL/voutput.mcpl
+  #endif
+
+  #define MCPLFILE STR(MCPLPATH)
+%}
+
+INITIALIZE
+%{
+
+
+printf("Using the input file: %s\n", MCPLFILE);
+
+ ncount_i=0;
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0, 0, 0) ABSOLUTE/* read neutrons from an mcpl file*/
+
+COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
+AT( 0,0,0) RELATIVE PREVIOUS
+
+COMPONENT m1 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto lambda, parallel, previous", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m2 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto x, auto y, parallel, previous", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m3 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto t parallel, previous", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m4 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto E, parallel, previous", bins=40
+) AT (0,0,0) ABSOLUTE
+
+  COMPONENT m5 = Monitor_nD(
+  xwidth=0.2, yheight=0.2, user1=2112,
+  options="parallel, previous, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"
+) AT (0,0,0) ABSOLUTE
+
+
+END

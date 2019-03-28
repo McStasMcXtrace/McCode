@@ -1,0 +1,59 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H142_IN12
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: April 7, 2004
+* Origin:ILL
+* %INSTRUMENT_SITE: ILL
+*
+* The H142 S-curved cold guide at the ILL feeding IN12 TAS spectrometer
+*
+* %Description
+* The H142 beam is the only S-curved guide at the ILL. It is used here to feed
+* the IN12 TAS spectrometer (classical configuration).
+*
+* %Example: KI=2.662 QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=8.5e+06
+*
+* %Parameters
+* m: [1]        m-value of guide coating (H14/H142)
+* KI: [Angs-1]  central wavevector for incoming neutrons
+* QM: [Angs-1]  wavevector transfer modulus at the sample
+* EN: [meV]     energy transfer at the sample
+* verbose: []
+* WM: []
+* HM: []
+* NHM: []
+* NVM: []
+* RMV: []
+* WA: []
+* HA: []
+* NHA: []
+* NVA: []
+* RAH: []
+* L2: []
+* L3: []
+* L4: []
+*
+* %Link
+* The <a href="http://www.ill.fr/in12">IN12 TAS</a> at the ILL
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H142_IN12(m=1, KI=2.662, QM=1.0, EN=0.0, verbose=1, WM=0.08, HM=0.12,    NHM=1, NVM=6, RMV=-1, WA=0.121, HA=0.118,  NHA=11, NVA=1, RAH=-1, L2=1.726, L3=1.300, L4=0.710)
+
+INITIALIZE
+%{
+  lambda=2*PI/KI;
+  dlambda=lambda*0.015;
+  printf("%s: Incoming wavelength lambda=%g [Angs]\n", NAME_INSTRUMENT, lambda);
+%}
+
+TRACE
+
+%include "ILL_H142.instr"
+%include "templateTAS.instr"
+
+END

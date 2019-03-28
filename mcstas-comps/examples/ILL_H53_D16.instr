@@ -1,0 +1,219 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H53
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: Oct 7, 2008
+* Origin:ILL
+* %INSTRUMENT_SITE: ILL
+*
+* The D16 diffractometer/reflectometer on the H53 curved cold guide at the ILL
+*
+* %Description
+* The H53 (120 x 60 mm2) curved cold guide feeds D16 (after IN14, and IN16).
+* D16 is a two-circle diffractometer. The primary white beam is reflected by a
+* focussing pyrolytic graphite monochromator (122 x 60 mm2 with mosaicity 0.7
+* deg) providing an important flux at the sample. The monochromator housing has
+* two beam holes at take-off angles of 90 deg and 115 deg, corresponding to 4.7
+* Angs and 5.6 Angs beams and incorporates the slit systems.
+*
+* Example: m=1.2 Detector: Det_psd_I=6.4729E+03
+*
+* %Parameters
+* lambda: [Angs]   Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* DM: [Angs]       d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]   Monochromator take-off angle, computed from lambda and DM if left as 0.
+* TILT: [deg]      Monochromator additional tilt, for rocking curves
+* dlambda: [AA]    wavelength half width.
+* RV: [m]          Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]          Guide-Monochromator distance
+* L2: [m]          Monochromator-Sample distance
+* L3: [m]          Sample-Detector distance
+* Powder: [str]    File name for powder description.
+*                If set to NULL, use a 100 Angs particule colloid
+* verbose: [1]     Print DIF configuration. 0 to be quiet
+* TwoTheta: [deg]  Detector rotation (in plane)
+* RadiusDet: [m]   Detector entrance window radius
+* DetEthick: [m]   Detector entrance window thickness
+* DetEgap: [m]     Detector entrance window gap to flat detector inner window
+* DetVthick: [m]   Detector active volume thickness
+*
+* %Link
+* The <a href="http://www.ill.fr/d16">D16 diffractometer</a> at the ILL
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H53_D16(lambda=4.7, DM=3.355, dlambda=0.05, string Powder="Na2Ca3Al2F14.laz", RV=-1, L1=0.1, L2=2.8, L3=1.0, THETA_M=44.46, TwoTheta=0, RadiusDet=0.36, DetEthick=.01, DetEgap=0.08, DetVthick=5e-3, verbose=1, TILT=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+/* D16 parameters */
+char flag_al=0, flag_sample=0;
+
+/* capture flux positions from moderator: 21.4    28.4    61.2 */
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+double KI, Vi, EI;
+
+if (!THETA_M && lambda && DM)
+	THETA_M =asin(lambda/(2*DM))*RAD2DEG;
+else if (THETA_M && !lambda && DM)
+	lambda = fabs(sin(THETA_M*DEG2RAD))*2*DM;
+else if (THETA_M && lambda)
+	DM = fabs(lambda/sin(DEG2RAD*THETA_M)/2.0);
+
+/* test input parameters */
+if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
+      "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
+      NAME_INSTRUMENT, THETA_M, DM, lambda));
+
+if (RV < 0) RV=2*L2*sin(DEG2RAD*THETA_M);
+KI=2*PI/lambda;
+Vi = K2V*fabs(KI);
+EI = VS2E*Vi*Vi;
+
+if (verbose) {
+  printf("%s: Detailed D16 configuration on H53@ILL\n", NAME_INSTRUMENT);
+  printf("* Incoming beam: lambda=%.4g +/- %g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+    lambda, dlambda, EI, KI, Vi);
+  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off THETA_M=%.4g [deg]\n",
+    DM, RV, (!RV ? "flat" : "curved"), THETA_M*2);
+  printf("* MILAND Detector: entrance window radius=%g [m] thickness=%g [m] gap=%g [m]\n",
+    RadiusDet, DetEthick, DetEgap);
+}
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+%include "ILL_H53.instr"
+
+/* position of D16 */
+/* The beam at the monochromator position is asymetric due to the curved section. */
+
+/* TIP: monochromator cradle */
+COMPONENT mono_cradle = Arm()
+AT (0,0,L1) RELATIVE PREVIOUS
+
+COMPONENT Mono_XY = Monitor_nD(
+  options="x y, all auto",
+  xwidth=0.06, yheight=.12, restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
+SPLIT COMPONENT mono = Monochromator_curved(
+    width = 0.08, height = 0.122, NH = 1, NV = 7, RV=RV,
+    mosaich = 40, mosaicv = 40, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, THETA_M+TILT, 0) RELATIVE PREVIOUS
+
+/* TIP: positioning diffraction direction for monok (order 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, 2*THETA_M, 0) RELATIVE mono_cradle
+
+COMPONENT Sample_pos = Arm()
+AT (0, 0, L2) RELATIVE mono_out
+
+COMPONENT slit1 = Slit(radius=5e-3)
+AT (0, 0, -0.1) RELATIVE Sample_pos
+
+COMPONENT D16_flux = Monitor_nD(
+  xwidth=0.02, yheight=0.03,
+  options="auto lambda, all bins=20, per cm2", restore_neutron=1)
+  AT (0, 0, 0) RELATIVE Sample_pos
+
+SPLIT COMPONENT D16_xy = Monitor_nD(
+  xwidth=0.02, yheight=0.03,
+  options="x y, all bins=20, per cm2", restore_neutron=1)
+  AT (0, 0, 0) RELATIVE Sample_pos
+EXTEND %{
+  flag_sample=0;
+%}
+
+COMPONENT SampleP = PowderN(
+    reflections = Powder, radius = 0.005, yheight = 0.03, d_phi=RAD2DEG*atan2(0.32,L3))
+WHEN (Powder && strlen(Powder) && strcmp(Powder,"NULL"))
+AT (0, 0, 0) RELATIVE Sample_pos
+EXTEND %{
+  if (SCATTERED) flag_sample=1;
+%}
+
+COMPONENT SampleC = Sans_spheres(
+  R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_abs = 50,
+  radius = 0.005, yheight = 0.03,
+  target_index=+2, focus_xw=0.32, focus_yh=0.32)
+WHEN (!Powder || !strlen(Powder) || !strcmp(Powder,"NULL"))
+AT (0, 0, 0) RELATIVE Sample_pos
+EXTEND %{
+  if (SCATTERED) flag_sample=1;
+%}
+
+COMPONENT D16_BananaTheta = Monitor_nD(
+    options = "banana, theta limits=[-10 120], bins=340",
+    radius = L3, yheight = 0.32, restore_neutron=1)
+  WHEN (flag_sample)
+  AT (0, 0, 0) RELATIVE Sample_pos
+
+COMPONENT Det_dir = Arm()
+AT(0,0,0) RELATIVE Sample_pos
+ROTATED (0, TwoTheta, 0) RELATIVE Sample_pos
+
+COMPONENT slit2 = Slit(radius=5e-3)
+AT (0, 0, 0.1) RELATIVE Det_dir
+
+COMPONENT Det_pos = Arm()
+AT(0,0,L3) RELATIVE Det_dir
+EXTEND %{
+    flag_al=0;
+%}
+
+COMPONENT Det_input = PowderN(
+  reflections="Al.laz", radius=RadiusDet, thickness=DetEthick, concentric=1, p_transmit=0.8, p_inc=0.05)
+AT(0,0,RadiusDet) RELATIVE Det_pos
+EXTEND %{
+  if (SCATTERED) flag_al=1;
+%}
+
+COMPONENT Det_input_flat = PowderN(
+  reflections="Al.laz", xwidth=0.5, yheight=0.5, zdepth=5e-3, p_transmit=0.8, p_inc=0.05)
+AT(0,0,DetEgap) RELATIVE Det_pos
+EXTEND %{
+  if (SCATTERED) flag_al=1;
+%}
+
+COMPONENT Det_psd_flat = Monitor_nD(
+  xwidth=0.32, yheight=0.32, options="x y", bins=50)
+AT(0,0,0.005) RELATIVE PREVIOUS
+
+COMPONENT Det_psd_flat_q = Monitor_nD(
+  xwidth=0.5, yheight=0.5, options="auto radius", bins=50)
+  WHEN (flag_sample)
+AT(0,0,0.001) RELATIVE PREVIOUS
+
+COMPONENT Det_psd_flat_al = Monitor_nD(
+  xwidth=0.32, yheight=0.32, options="x y", bins=50)
+  WHEN (flag_al)
+AT(0,0,0.001) RELATIVE PREVIOUS
+
+COMPONENT Det_psd = PSD_Detector(
+  xwidth=0.32, yheight=0.32, nx=320, ny=320,
+  zdepth=DetVthick,
+  PressureConv=13, PressureStop=1.5,
+  FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCF4.table",
+  filename="D16.psd")
+  WHEN (flag_sample || flag_al)
+AT(0,0,0.015) RELATIVE PREVIOUS
+
+END

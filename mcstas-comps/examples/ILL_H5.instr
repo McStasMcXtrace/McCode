@@ -1,0 +1,1212 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H5
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: May, 2011
+* Origin:ILL
+* Release: McStas 2.0
+* Version: $Revision: 1.0 $
+* %INSTRUMENT_SITE: ILL
+*
+* The full H5 cold guide at the ILL, with IN14, D16, Super-Adam, IN15, D22
+* This is the geometry before the major H5 guide hall upgrade (up to 2013).
+*
+* %Description
+*
+* This model decribes the full H5 cold guide at the ILL, with IN14, IN16, D16,
+* Super-Adam, IN15, D22.
+*
+* The IN14 Cold neutron three-axis spectrometer IN14
+* The IN16 Cold neutron backscattering spectrometer IN16
+*   simulated down to the 2nd deflector, and does not include the full
+*   backscattering geometry.
+* The D16 Small momentum transfer diffractometer D16 is realistic
+* The SuperADAM reflectometer is used in low angle diffraction mode.
+* The IN15 Spin-echo spectrometer
+*   is simulated with an incoming polarized beam, but not with a full spin-echo
+*   description.
+* The D22 Large dynamic range small-angle diffractometer
+*   is fully simulated
+* The CryoEDM with its polarized beam
+
+* For each instrument, a sample can be specified (liquid/powder/amorphous),
+* with monitoring of the scattering in angular (diffraction) and energy modes
+* (for spectroscopy).
+*
+* %Parameters
+*      lambda:  central wavelength band for guide illumination [Angs]
+*     dlambda:  half width of guide wavelength band [Angs]
+* IN14_lambda:  IN14 monochromator setting wavelength. Usual 2.4 and 4.2 [Angs]
+* IN16_lambda:  IN16 monochromator setting wavelength. Usual 3.3 and 6.3 [Angs]
+*  D16_lambda:  D16  monochromator setting wavelength. Usual 4.7 and 5.6 [Angs]
+* SADAM_lambda: SuperADAM monochromator setting wavelength. Usual 4.4 [Angs]
+*  IN15_lambda: IN15 velocity selector setting wavelength [Angs]
+*   D22_lambda: D22  velocity selector setting wavelength [Angs]
+*  IN14_sample: IN14 liquid/powder/amorphous sample [string]
+*  IN16_sample: IN16 liquid/powder/amorphous sample [string]
+*   D16_sample: D16  liquid/powder/amorphous sample [string]
+* SADAM_sample: SuperADAM liquid/powder/amorphous sample [string]
+*   D22_sample: D22  liquid/powder/amorphous sample [string]
+* D22_collimation: D22 collimation length and sample-detector distance [m]
+*
+* %Link
+* The NoteDPT11 at the ILL
+* %L
+* Daily notes from K. Andersen about the H5 project
+* %L
+* Mirotron drawing MR-0656-000 for the IN15 V-mirror geometry
+* %End
+*******************************************************************************/
+
+/* Flux given at sample positions from <www.ill.fr>
+ILL_H5: IN14: A1=38.7506 [deg] RMV=2.02467 [m] lambda=4.2 [Angs] sample=Rb_liq_coh.sqw
+  Flux 1.6e7 (with Be filter) -- 2.6e8
+ILL_H5: IN16: A1=69.8672 [deg] RMV=2.01006 [m] lambda=6.3 [Angs] sample=Rb_liq_coh.sqw
+  Flux 5e4
+ILL_H5: D16:  A1=56.5716 [deg] RMV=3.02043 [m] lambda=5.6 [Angs] sample=H2O_liq.qSq
+  Flux 1e7 -- 4.6e7
+ILL_H5: SuperADAM: A1=40.9756 [deg] RMV=2.90659 [m] lambda=4.4 [Angs] sample=SiO2_quartza.laz
+  Flux 1.4e6 - 5e7
+ILL_H5: IN15: nu=21774.9 [rmp] lambda=6.5 [Angs] sample=Vanadium (polarized)
+  Flux ?
+ILL_H5: D22:  nu=23589.5 [rpm] lambda=4.5 [Angs] sample=H2O_liq.qSq
+  Flux 1.2e8 -- 7.1e7
+ */
+
+DEFINE INSTRUMENT ILL_H5(
+  lambda=5, dlambda=4.5,
+  IN14_lambda=4.2, IN16_lambda=6.3, D16_lambda=5.6,   SADAM_lambda=4.4,
+  IN15_lambda=6.5,    D22_lambda=4.5,   D22_collimation=2,
+  string IN14_sample="Rb_liq_coh.sqw", string  IN16_sample="Rb_liq_coh.sqw",
+  string D16_sample="H2O_liq.qSq",     string SADAM_sample="SiO2_quartza.laz",
+  string D22_sample="H2O_liq.qSq",
+  IN14_RMV=-1,IN16_RMV=-1,D16_RMV=-1,SADAM_RMV=-1)
+
+DECLARE %{
+
+  /* HCS (H5) source 'Measured' parameters */
+  double sT3=413.5,sI3=10.22e12;
+  double sT2=145.8,sI2=3.44e13;
+  double sT1=40.1 ,sI1=2.78e13;
+
+  /* guide coating parameters */
+  double gR0          = 1;
+  double gQc          = 0.0216;
+  double gAlpha       = 4.07;
+  double gW           = 1.0/300.0;
+
+  double Al_Thickness = 0.001;
+  double gGap         = 0.001;
+
+  double IN14_DM      = 3.355; /* PG002 */
+  double IN14_A1      = 0;
+  double IN14_L       = 2.12;
+
+  double IN16_DM      = 3.355; /* PG002 */
+  double IN16_A1      = 0;
+  double IN16_L       = 1.4;
+
+  double D16_DM       = 3.355; /* PG002 */
+  double D16_A1       = 0;
+  double D16_L        = 2.8;
+
+  double SADAM_DM     = 3.355; /* PG002 */
+  double SADAM_A1     = 0;
+  double SADAM_L      = 3.36;
+
+  double CryoEDM_L    = 0.3;
+
+  double IN15_L       = 3.7;
+  double IN15_nu      = 0;
+  double  D22_nu      = 0;
+
+  double flag         = 0;
+%}
+
+INITIALIZE %{
+  double L;
+  /* the effective guide divergence is 1.2*0.1*lambda*pi/180 for m=1.2 */
+  /* the effective inguide length for focusing is thus
+         (0.12/2)/(1.2*0.1*lambda*PI/180)
+
+  /* compute H53 parameters: IN14 */
+  IN14_A1  = asin(IN14_lambda/2/IN14_DM)*RAD2DEG;
+       L   = 1/(1/IN14_L+1/( (0.12/2)/(1.2*0.1*IN14_lambda*PI/180) ));
+  if (IN14_RMV<0)
+  IN14_RMV = 2*L*sin(DEG2RAD*fabs(IN14_A1));
+  printf("%s: IN14: A1=%g [deg] RMV=%g [m] lambda=%g [Angs] sample=%s\n",
+    NAME_INSTRUMENT, IN14_A1, IN14_RMV, IN14_lambda, IN14_sample);
+
+
+  /* compute H53 parameters: IN16 */
+  IN16_A1  = asin(IN16_lambda/2/IN16_DM)*RAD2DEG;
+       L   = 1/(1/IN16_L+1/( (0.12/2)/(1.2*0.1*IN16_lambda*PI/180) ));
+  if (IN16_RMV<0)
+  IN16_RMV = 2*L*sin(DEG2RAD*fabs(IN16_A1));
+  printf("%s: IN16: A1=%g [deg] RMV=%g [m] lambda=%g [Angs] sample=%s\n",
+    NAME_INSTRUMENT, IN16_A1, IN16_RMV, IN16_lambda, IN16_sample);
+
+  /* compute H53 parameters: D16 */
+  D16_A1   = asin(D16_lambda/2/D16_DM)*RAD2DEG;
+      L    = 1/(1/D16_L+1/( (0.12/2)/(1.2*0.1*D16_lambda*PI/180) ));
+  if (D16_RMV<0)
+  D16_RMV  = 2*L*sin(DEG2RAD*fabs(D16_A1));
+  printf("%s: D16:  A1=%g [deg] RMV=%g [m] lambda=%g [Angs] sample=%s\n",
+    NAME_INSTRUMENT, D16_A1, D16_RMV, D16_lambda, D16_sample);
+
+  /* compute H53 parameters: SuperADAM */
+  SADAM_A1 = asin(SADAM_lambda/2/SADAM_DM)*RAD2DEG;
+        L  = 1/(1/SADAM_L+1/( (0.12/2)/(1.2*0.1*SADAM_lambda*PI/180) ));
+  if (SADAM_RMV<0)
+  SADAM_RMV= 2*L*sin(DEG2RAD*fabs(SADAM_A1));
+  printf("%s: SuperADAM: A1=%g [deg] RMV=%g [m] lambda=%g [Angs] sample=%s\n",
+    NAME_INSTRUMENT, SADAM_A1, SADAM_RMV, SADAM_lambda, SADAM_sample);
+
+  /* compute H51 parameters: IN15 Velocity Selector */
+  IN15_nu  = 3956*64.4*DEG2RAD/2/PI/IN15_lambda/0.25;
+  printf("%s: IN15: nu=%g [rmp] lambda=%g [Angs] sample=%s\n",
+    NAME_INSTRUMENT, IN15_nu*60, IN15_lambda, "Vanadium (polarized)");
+
+  /* compute H51 parameters: D22 Velocity Selector */
+  D22_nu   = 3956*48.3*DEG2RAD/2/PI/D22_lambda/0.25;
+  printf("%s: D22:  nu=%g [rpm] lambda=%g [Angs] sample=%s\n",
+    NAME_INSTRUMENT, D22_nu*60, D22_lambda, D22_sample);
+
+%}
+
+TRACE
+
+/* ================================ H5 common =============================== */
+
+COMPONENT Origin = Progress_bar()
+AT(0,0,0) ABSOLUTE
+
+COMPONENT HCS = Source_gen(
+  radius   = 0.21/2,
+  zdepth   = 0.15,
+  dist     = 2.155,
+  focus_xw = 0.123,
+  focus_yh = 0.120,
+  lambda0     = lambda,
+  dlambda     = dlambda,
+  T1       = sT1,
+  I1       = sI1,
+  T2       = sT2,
+  I2       = sI2,
+  T3       = sT3,
+  I3       = sI3,
+  verbose  = 1)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT HCS_Al  = PowderN(
+  reflections="Al.laz", xwidth=0.17, yheight=0.12, zdepth=Al_Thickness, p_interact=0.05, p_inc=0.005, p_transmit=0.9450, d_phi=10)
+AT (0,0,0.21) RELATIVE HCS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)
+AT (0,0,0.61) RELATIVE HCS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)
+AT (0,0,0.78) RELATIVE HCS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)
+AT (0,0,0.92) RELATIVE HCS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)
+AT (0,0,2.15) RELATIVE HCS
+
+/* Ni common guide: wide entry window for all guides */
+COMPONENT H5 = Monitor_nD(xwidth=0.04+0.004+0.015+0.004+0.06, yheight=0.12,
+  options="x y, slit", bins=50)
+AT(0,0,2.155) RELATIVE HCS
+
+/* distribute the beam along channels: we use monitors to define the beam sections+JUMP */
+COMPONENT H53_origin = COPY(H5)(options="dx limits=[-6 6] dy limits=[-6 6]", xwidth=0.06, restore_neutron=1)
+AT ((0.04+0.004+0.015+0.004+0.06)/2-0.06/2,0,0)             RELATIVE H5 ROTATED (0,1.1439,0) RELATIVE H5
+JUMP H53_Start WHEN SCATTERED
+
+COMPONENT H52_origin = COPY(H5)(options="dx limits=[-6 6] dy limits=[-6 6]", xwidth=0.015, restore_neutron=1)
+AT ((0.04+0.004+0.015+0.004+0.06)/2-0.06-0.004-0.015/2,0,0) RELATIVE H5 ROTATED (0,0.2065,0) RELATIVE H5
+JUMP H52_Start WHEN SCATTERED
+
+COMPONENT H51_origin = COPY(H5)(options="dx limits=[-6 6] dy limits=[-6 6]", xwidth=0.04, restore_neutron=1)
+AT (-(0.04+0.004+0.015+0.004+0.06)/2+0.04/2,0,0)            RELATIVE H5 ROTATED (0,-1.3269,0) RELATIVE H5
+JUMP H51_Start WHEN SCATTERED
+
+                       /* start of guide sections */
+
+/* ================================ H53 ===================================== */
+/* feeds: IN14, CryoEDM, D16, Super-Adam, Wasp */
+
+COMPONENT H53_Start = Arm()
+AT (0,0,0) RELATIVE H53_origin
+
+COMPONENT H53_inpile = Guide_gravity(h1=0.12,w1=0.06, m=1.2, l=2.775,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = 1.2, W=gW)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H53_Al = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,2.775+0.005) RELATIVE PREVIOUS
+
+/* Gap 25 mm before BOG (barillet obturateur general). Carter BOG             */
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.015) RELATIVE PREVIOUS
+
+COMPONENT H53_Obt_1 = COPY(H53_inpile)(l=0.860)
+AT (0,0,2.775+0.025) RELATIVE H53_inpile
+
+COMPONENT H53_Obt_2 = COPY(H53_inpile)(l=1.440)
+AT (0,0,0.860+0.012) RELATIVE PREVIOUS
+
+COMPONENT H53_Obt_3 = COPY(H53_inpile)(l=0.740)
+AT (0,0,1.440+0.012) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.74+0.01) RELATIVE PREVIOUS
+
+/* Gap 75 mm after BOG (barillet obturateur general): VS */
+
+COMPONENT H53_Obt_Out = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.06) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* Sections 2,3,4 in NoteDPT11/H53 - straight. Length=10.5 m down to IN14     */
+/* Carter VS+Movable+Common+C1                                                */
+
+COMPONENT H53_VSComC1 = COPY(H53_inpile)(l=10.5,nelements=9)
+AT (0,0,0.74+0.075) RELATIVE H53_Obt_3
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,10.5+0.01) RELATIVE PREVIOUS
+
+                  /* Gap 450 mm: IN14 Monochromator */
+
+                              /* IN14 */
+
+COMPONENT H53_IN14_Monochromator_Cradle = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,10.5+0.450/2) RELATIVE H53_VSComC1
+EXTEND %{
+  flag=0;
+%}
+
+/* IN14 monochromator PG002 w15*h12 7 blades vertically focusing. Sample at 2.12 m */
+COMPONENT H53_IN14_Monochromator = Monochromator_curved(
+  width  = 0.15, height = 0.12, NH=1, NV=7,
+  RV=IN14_RMV, RH=0, DM=IN14_DM, mosaich = 30, mosaicv = 30,
+  r0 = 1, reflect="HOPG.rfl", transmit="HOPG.trm")
+AT      (0,0,0)       RELATIVE H53_IN14_Monochromator_Cradle
+ROTATED (0,IN14_A1,0) RELATIVE H53_IN14_Monochromator_Cradle
+EXTEND %{
+  flag=SCATTERED;
+%}
+
+COMPONENT H53_IN14_Monochromator_Jumper = Arm()
+AT       (0,0,0)       RELATIVE H53_IN14_Monochromator_Cradle
+JUMP H53_IN14_Transmit WHEN !flag
+
+COMPONENT H53_IN14_Monochromator_Out = Arm()
+AT      (0,0,0)         RELATIVE H53_IN14_Monochromator_Cradle
+ROTATED (0,2*IN14_A1,0) RELATIVE H53_IN14_Monochromator_Cradle
+
+COMPONENT H53_IN14_Sample_Div = Monitor_nD(xwidth=0.05, yheight=0.05,
+  options="dx limits=[-2 2], dy limits=[-2 2]", bins=50, restore_neutron=1)
+AT (0,0,IN14_L) RELATIVE H53_IN14_Monochromator_Out
+
+COMPONENT H53_IN14_Sample_XY = Monitor_nD(xwidth=0.10, yheight=0.10,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,IN14_L) RELATIVE H53_IN14_Monochromator_Out
+
+COMPONENT H53_IN14_Sample_L = Monitor_nD(xwidth=0.10, yheight=0.10,
+  options="lambda limits=[1 10]", bins=50, restore_neutron=1)
+AT (0,0,IN14_L) RELATIVE H53_IN14_Monochromator_Out
+
+COMPONENT H53_IN14_Sample = Isotropic_Sqw(radius=0.005,yheight=0.05,
+  Sqw_coh=IN14_sample, Sqw_inc=NULL, d_phi=30)
+AT (0,0,IN14_L) RELATIVE H53_IN14_Monochromator_Out
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT H53_IN14_Spectrometer = Monitor_nD(radius=0.5, yheight=0.3,
+  options="angle limits=[-150 150] bins=50, energy limits=[0 30], banana", restore_neutron=1)
+AT (0,0,0) RELATIVE H53_IN14_Sample
+
+COMPONENT H53_IN14_Diffractometer = Monitor_nD(radius=1, yheight=0.3,options="theta bins=100 limits=[-150 150], y, banana")
+AT (0,0,0) RELATIVE H53_IN14_Sample
+EXTEND %{
+  ABSORB; /* neutron ends on the IN14 sample */
+%}
+
+/* For fun we add the IN14 2nd spectrometer */
+COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
+  AT (0,0,0) RELATIVE H53_IN14_Sample
+  ROTATED (0, -42, 0) RELATIVE H53_IN14_Monochromator_Out
+
+COMPONENT SC3 =Collimator_linear(
+  xmin =-0.06/2, ymin =-0.12/2,
+  xmax = 0.06/2, ymax = 0.12/2,
+  length = 0.40)
+AT (0, 0, 0.5) RELATIVE Sample_Out
+
+COMPONENT Ana_Cradle = Arm()
+  AT (0, 0, 1.37) RELATIVE Sample_Out
+
+COMPONENT PG2Xtal = Monochromator_curved(
+  width  = .2, height = .1,
+  NH=11, NV=1, RV=0, RH=0,
+  DM=3.355, mosaich = 30, mosaicv = 30, r0 = 0.7)
+AT (0, 0, 0) RELATIVE Ana_Cradle
+ROTATED (0, 21, 0) RELATIVE Ana_Cradle
+
+COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
+  AT (0,0,0) RELATIVE Ana_Cradle
+  ROTATED (0, 42, 0) RELATIVE Ana_Cradle
+
+COMPONENT SC4 =Collimator_linear(
+  xmin =-0.06/2, ymin =-0.12/2,
+  xmax = 0.06/2, ymax = 0.12/2,
+  length = 0.24)
+AT (0, 0, 0.25) RELATIVE Ana_Out
+
+/* vertical 3He Detector */
+COMPONENT He3H = Monitor(
+  xmin = -0.025400, xmax = 0.025400,
+  ymin = -0.042850, ymax = 0.042850)
+AT (0, 0, 0.7) RELATIVE Ana_Out
+
+                             /* end of IN14 */
+
+COMPONENT H53_IN14_Transmit = Arm()
+AT (0,0,0) RELATIVE H53_IN14_Monochromator_Cradle
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.450/2-0.01) RELATIVE H53_IN14_Transmit
+
+COMPONENT H53_C2_Start = Arm()
+AT (0,0,0.450/2)      RELATIVE H53_IN14_Transmit
+
+/* Section 5 in NoteDPT11 - curved guide l=12.488 R=4000 m - 10 elements      */
+/* Carter C2+Passage                                                          */
+COMPONENT H53_C2 = COPY(H53_inpile)(l=12.488/10)
+AT (0,0,0)                         RELATIVE H53_C2_Start
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE H53_C2_Start
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_C2) = COPY(H53_C2)
+AT (0,0,12.488/10)                 RELATIVE PREVIOUS
+ROTATED (0,12.488/10/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,12.488/10+0.001) RELATIVE PREVIOUS
+
+/* VTE space+OT H53: 108 mm + 2 mm Al window */
+
+COMPONENT H53_VTE = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.108/2-0.001) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(zdepth=0.002,xwidth=0.06)
+AT (0,0,0.108/2-0.05) RELATIVE PREVIOUS
+
+/* Section 6 in NoteDPT11 - curved guide l=25.465 R=4000 m - 19 elements      */
+/* Carter Poutre 1-4                                                          */
+
+COMPONENT H53_P14 = COPY(H53_inpile)(l=25.465/19)
+AT (0,0,0.05)                      RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H53_P14) = COPY(H53_P14)
+AT (0,0,25.465/19)                 RELATIVE PREVIOUS
+ROTATED (0,25.465/19/4000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,25.465/19+0.001) RELATIVE PREVIOUS
+
+                  /* Gap 500 mm: IN16 Monochromator */
+
+                              /* IN16 */
+
+COMPONENT H53_IN16_Monochromator_Cradle = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.500/2-0.001) RELATIVE PREVIOUS
+EXTEND %{
+  flag=0;
+%}
+
+/* IN16 Monochromator PG002 w11*h12 7 blades vertically focusing. 'Sample' at 1.4 m */
+COMPONENT H53_IN16_Monochromator = Monochromator_curved(
+  width  = 0.11, height = 0.12, NH=1, NV=7,
+  RV=IN16_RMV, RH=0, DM=IN16_DM, mosaich = 40, mosaicv = 40,
+  r0 = 1, reflect="HOPG.rfl")
+AT      (0,0,0)       RELATIVE H53_IN16_Monochromator_Cradle
+ROTATED (0,IN16_A1,0) RELATIVE H53_IN16_Monochromator_Cradle
+EXTEND %{
+  flag=SCATTERED;
+%}
+
+COMPONENT H53_IN16_Monochromator_Jumper = Arm()
+AT       (0,0,0)       RELATIVE H53_IN16_Monochromator_Cradle
+JUMP H53_IN16_Transmit WHEN !flag
+
+COMPONENT H53_IN16_Monochromator_Out = Arm()
+AT      (0,0,0)         RELATIVE H53_IN16_Monochromator_Cradle
+ROTATED (0,2*IN16_A1,0) RELATIVE H53_IN16_Monochromator_Cradle
+
+/* IN16 2nd deflector position (before the Doppler) at 1.4 m from in-guide Monochromator */
+/* in principle, a super-mirror focusing collimator and a Be filter are in between */
+COMPONENT H53_IN16_Sample_Div = Monitor_nD(xwidth=0.05, yheight=0.05,
+  options="dx limits=[-2 2], dy limits=[-2 2]", bins=50, restore_neutron=1)
+AT (0,0,IN16_L) RELATIVE H53_IN16_Monochromator_Out
+
+COMPONENT H53_IN16_Sample_XY = Monitor_nD(xwidth=0.1, yheight=0.1,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,IN16_L) RELATIVE H53_IN16_Monochromator_Out
+
+COMPONENT H53_IN16_Sample_L = Monitor_nD(xwidth=0.1, yheight=0.1,
+  options="lambda limits=[1 10]", bins=50, restore_neutron=1)
+AT (0,0,IN16_L) RELATIVE H53_IN16_Monochromator_Out
+
+COMPONENT H53_IN16_Sample = Isotropic_Sqw(radius=0.005,yheight=0.05,
+  Sqw_coh=IN16_sample, Sqw_inc=NULL, d_phi=30)
+AT (0,0,IN16_L) RELATIVE H53_IN16_Monochromator_Out
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT H53_IN16_Spectrometer = Monitor_nD(radius=0.5, yheight=0.3,
+  options="angle limits=[-150 150] bins=50, energy limits=[0 30], banana", restore_neutron=1)
+AT (0,0,0) RELATIVE H53_IN16_Sample
+
+COMPONENT H53_IN16_Diffractometer = Monitor_nD(radius=1, yheight=0.3,options="theta bins=100 limits=[-150 100], y, banana")
+AT (0,0,0) RELATIVE H53_IN16_Sample
+EXTEND %{
+  ABSORB; /* neutron ends on the IN16 2nd deflector */
+%}
+
+COMPONENT H53_IN16_Transmit = Arm()
+AT (0,0,0) RELATIVE H53_IN16_Monochromator_Cradle
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.500/2-0.01) RELATIVE H53_IN16_Transmit
+
+COMPONENT H53_P5_Start = Arm()
+AT (0,0,0.500/2)      RELATIVE H53_IN16_Transmit
+
+/* Section 7 in NoteDPT11 - straight guide l=5.460 - 6 elements      */
+/* Carter Poutre 5                                                           */
+COMPONENT H53_P5 = COPY(H53_inpile)(l=5.460, nelements=6)
+AT (0,0,0)            RELATIVE H53_P5_Start
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,5.460+0.001) RELATIVE PREVIOUS
+
+                  /* Gap 200 mm: D16 Monochromator */
+
+                              /* D16 */
+
+COMPONENT H53_D16_Monochromator_Cradle = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.200/2-0.001) RELATIVE PREVIOUS
+EXTEND %{
+  flag=0;
+%}
+
+/* D16 Monochromator PG002 w6*h12 7 blades vertically focusing. 'Sample' at 2.8 m */
+COMPONENT H53_D16_Monochromator = Monochromator_curved(
+  width  = 0.06, height = 0.12, NH=1, NV=7,
+  RV=D16_RMV, RH=0, DM=D16_DM, mosaich = 40, mosaicv = 40,
+  r0 = 1, reflect="HOPG.rfl")
+AT      (0,0,0)      RELATIVE H53_D16_Monochromator_Cradle
+ROTATED (0,D16_A1,0) RELATIVE H53_D16_Monochromator_Cradle
+EXTEND %{
+  flag=SCATTERED;
+%}
+
+COMPONENT H53_D16_Monochromator_Jumper = Arm()
+AT       (0,0,0)       RELATIVE H53_D16_Monochromator_Cradle
+JUMP H53_D16_Transmit WHEN !flag
+
+COMPONENT H53_D16_Monochromator_Out = Arm()
+AT      (0,0,0)        RELATIVE H53_D16_Monochromator_Cradle
+ROTATED (0,2*D16_A1,0) RELATIVE H53_D16_Monochromator_Cradle
+
+COMPONENT H53_D16_Sample_Div = Monitor_nD(xwidth=0.05, yheight=0.05,
+  options="dx limits=[-2 2], dy limits=[-2 2]", bins=50, restore_neutron=1)
+AT (0,0,D16_L) RELATIVE H53_D16_Monochromator_Out
+
+COMPONENT H53_D16_Sample_XY = Monitor_nD(xwidth=0.1, yheight=0.1,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,D16_L) RELATIVE H53_D16_Monochromator_Out
+
+COMPONENT H53_D16_Sample_L = Monitor_nD(xwidth=0.1, yheight=0.1,
+  options="lambda limits=[1 10]", bins=50, restore_neutron=1)
+AT (0,0,D16_L) RELATIVE H53_D16_Monochromator_Out
+
+COMPONENT H53_D16_Sample = Isotropic_Sqw(radius=0.005,yheight=0.05,
+  Sqw_coh=D16_sample, Sqw_inc=NULL, d_phi=30)
+AT (0,0,D16_L) RELATIVE H53_D16_Monochromator_Out
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT H53_D16_Detector = Monitor_nD(
+  xwidth=0.32, yheight=0.32, options="x y", bins=50, restore_neutron=1)
+AT (0,0,1.1) RELATIVE H53_D16_Sample
+
+COMPONENT H53_D16_Spectrometer = Monitor_nD(radius=0.5, yheight=0.3,
+  options="angle limits=[-150 150] bins=50, energy limits=[0 30], banana", restore_neutron=1)
+AT (0,0,0) RELATIVE H53_D16_Sample
+
+COMPONENT H53_D16_Diffractometer = Monitor_nD(radius=1, yheight=0.3,options="theta bins=100 limits=[-150 150], y, banana")
+AT (0,0,0) RELATIVE H53_D16_Sample
+EXTEND %{
+  ABSORB; /* neutron ends on the D16 sample position */
+%}
+
+COMPONENT H53_D16_Transmit = Arm()
+AT (0,0,0) RELATIVE H53_D16_Monochromator_Cradle
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.200/2-0.01) RELATIVE H53_D16_Transmit
+
+COMPONENT H53_P6_Start = Arm()
+AT (0,0,0.200/2)      RELATIVE H53_D16_Transmit
+
+/* Section 8 in NoteDPT11 - straight guide l=4.295 - 5 elements      */
+/* Carter Poutre 6                                                           */
+COMPONENT H53_P6 = COPY(H53_inpile)(l=4.295, nelements=5)
+AT (0,0,0)            RELATIVE H53_P6_Start
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,4.295+0.001) RELATIVE PREVIOUS
+
+                  /* Gap 524 mm: SuperADAM Monochromator */
+
+                              /* SuperADAM */
+
+COMPONENT H53_SADAM_Monochromator_Cradle = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.524/2-0.001) RELATIVE PREVIOUS
+EXTEND %{
+  flag=0;
+%}
+
+/* D16 Monochromator PG002 w6*h12 7 blades vertically focusing. 'Sample' at 2.8 m */
+COMPONENT H53_SADAM_Monochromator = Monochromator_curved(
+  width  = 0.06, height = 0.12, NH=1, NV=7,
+  RV=SADAM_RMV, RH=0, DM=SADAM_DM, mosaich = 40, mosaicv = 40,
+  r0 = 1, reflect="HOPG.rfl")
+AT      (0,0,0)      RELATIVE H53_SADAM_Monochromator_Cradle
+ROTATED (0,SADAM_A1,0) RELATIVE H53_SADAM_Monochromator_Cradle
+EXTEND %{
+  flag=SCATTERED;
+%}
+
+COMPONENT H53_SADAM_Monochromator_Jumper = Arm()
+AT       (0,0,0)       RELATIVE H53_SADAM_Monochromator_Cradle
+JUMP H53_SADAM_Transmit WHEN !flag
+
+COMPONENT H53_SADAM_Monochromator_Out = Arm()
+AT      (0,0,0)        RELATIVE H53_SADAM_Monochromator_Cradle
+ROTATED (0,2*SADAM_A1,0) RELATIVE H53_SADAM_Monochromator_Cradle
+
+COMPONENT H53_SADAM_Sample_Div = Monitor_nD(xwidth=0.05, yheight=0.05,
+  options="dx limits=[-2 2], dy limits=[-2 2]", bins=50, restore_neutron=1)
+AT (0,0,SADAM_L) RELATIVE H53_SADAM_Monochromator_Out
+
+COMPONENT H53_SADAM_Sample_XY = Monitor_nD(xwidth=0.1, yheight=0.1,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,SADAM_L) RELATIVE H53_SADAM_Monochromator_Out
+
+COMPONENT H53_SADAM_Sample_L = Monitor_nD(xwidth=0.1, yheight=0.1,
+  options="lambda limits=[1 10]", bins=50, restore_neutron=1)
+AT (0,0,SADAM_L) RELATIVE H53_SADAM_Monochromator_Out
+
+COMPONENT H53_SADAM_Sample = Isotropic_Sqw(radius=0.005,yheight=0.05,
+  Sqw_coh=SADAM_sample, Sqw_inc=NULL, d_phi=30)
+AT (0,0,SADAM_L) RELATIVE H53_SADAM_Monochromator_Out
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT H53_SADAM_Detector = Monitor_nD(
+  xwidth=0.32, yheight=0.32, options="x y", bins=50, restore_neutron=1)
+AT (0,0,1.1) RELATIVE H53_SADAM_Sample
+
+COMPONENT H53_SADAM_Spectrometer = Monitor_nD(radius=0.5, yheight=0.3,
+  options="angle limits=[-150 150] bins=50, energy limits=[0 30], banana", restore_neutron=1)
+AT (0,0,0) RELATIVE H53_SADAM_Sample
+
+COMPONENT H53_SADAM_Diffractometer = Monitor_nD(radius=1, yheight=0.3,options="theta bins=100 limits=[-150 150], y, banana")
+AT (0,0,0) RELATIVE H53_SADAM_Sample
+EXTEND %{
+  ABSORB; /* neutron ends on the SuperADAM sample position */
+%}
+
+COMPONENT H53_SADAM_Transmit = Arm()
+AT (0,0,0) RELATIVE H53_SADAM_Monochromator_Cradle
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.524/2-0.01) RELATIVE H53_SADAM_Transmit
+
+COMPONENT H53_P7_Start = Arm()
+AT (0,0,0.524/2)      RELATIVE H53_SADAM_Transmit
+
+/* Section 9 in NoteDPT11 - straight guide l=0.5 - 5 elements      */
+/* Carter Poutre 7                                                           */
+COMPONENT H53_P7 = COPY(H53_inpile)(l=0.5, nelements=5)
+AT (0,0,0)            RELATIVE H53_P7_Start
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.06)
+AT (0,0,0.5+0.001) RELATIVE PREVIOUS
+
+                              /* Cryo-EDM */
+
+COMPONENT H53_CryoEDM_In = Arm()
+AT (0,0,CryoEDM_L)         RELATIVE PREVIOUS
+
+COMPONENT H53_CryoEDM_In_L = Monitor_nD(xwidth=0.06, yheight=0.12,
+  options="lambda limits=[1 10]", bins=100, restore_neutron=1)
+AT (0,0,0) RELATIVE H53_CryoEDM_In
+
+COMPONENT H53_CryoEDM_mirror_center = Arm()
+AT (0,0,2.45/2) RELATIVE H53_CryoEDM_In
+
+COMPONENT H53_CryoEDM_polariser = Pol_mirror(zwidth = 2.45, yheight = 0.055,
+  rUpPar  ={1.0, 0.0219, 4.07, 3.2, 0.003},
+  rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003}, p_reflect=0.95)
+AT (0, 0, 0) RELATIVE H53_CryoEDM_mirror_center
+ROTATED (0, 2, 0) RELATIVE H53_CryoEDM_mirror_center
+EXTEND %{
+  flag=SCATTERED;
+%}
+
+COMPONENT H53_CryoEDM_mirror_outdir = Arm()
+AT (0,0,0) RELATIVE H53_CryoEDM_mirror_center
+ROTATED (0, 4, 0) RELATIVE H53_CryoEDM_mirror_center
+
+COMPONENT H53_CryoEDM_mirror_ReflectXY = Monitor_nD(xwidth=0.04, restore_neutron=1, yheight=0.055, bins=50)
+WHEN flag==1
+AT (0,0,2.5/2)                  RELATIVE H53_CryoEDM_mirror_outdir
+
+COMPONENT H53_CryoEDM_mirror_TransmitXY = COPY(H53_CryoEDM_mirror_ReflectXY)
+WHEN flag==2
+AT (0,0,2.5/2)                  RELATIVE H53_CryoEDM_mirror_center
+EXTEND %{
+  if (flag == 2) ABSORB;
+%}
+
+COMPONENT H53_CryoEDM_Sample_L = Monitor_nD(xwidth=0.06, yheight=0.12,
+  options="lambda limits=[1 10]", bins=100, restore_neutron=1)
+AT (0,0,2.45/2+0.2) RELATIVE H53_CryoEDM_mirror_outdir
+
+COMPONENT H53_CryoEDM_Sample_Div = COPY(H53_CryoEDM_Sample_L)(options="dx limits=[-2 2], dy limits=[-2 2]")
+AT (0,0,0) RELATIVE H53_CryoEDM_Sample_L
+
+COMPONENT H53_CryoEDM_Sample_XY = COPY(H53_CryoEDM_Sample_L)(options="x y")
+AT (0,0,0) RELATIVE H53_CryoEDM_Sample_L
+EXTEND %{
+  ABSORB; /* end of H53 */
+%}
+
+
+/* ================================ H52 ===================================== */
+/* feeds: nothing (end prematurely) */
+
+COMPONENT H52_Start = Arm()
+AT (0,0,0) RELATIVE H52_origin
+
+COMPONENT H52_inpile = COPY(H53_inpile)(w1=0.015, m=1.2, l=2.775)
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* Gap 25 mm before BOG (barillet obturateur general). Carter BOG             */
+
+COMPONENT H52_Obt_1 = COPY(PREVIOUS)(l=0.853)
+AT (0,0,2.775+0.025) RELATIVE PREVIOUS
+
+COMPONENT H52_Obt_2 = COPY(PREVIOUS)(l=1.460)
+AT (0,0,0.853+0.012) RELATIVE PREVIOUS
+
+COMPONENT H52_Obt_3 = COPY(PREVIOUS)(l=0.727)
+AT (0,0,1.460+0.012) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.015)
+AT (0,0,0.727+0.01) RELATIVE PREVIOUS
+
+COMPONENT H52_Obt_Out = COPY(H5)(xwidth=0.015, restore_neutron=1)
+AT (0,0,0.06) RELATIVE PREVIOUS
+EXTEND %{
+  ABSORB; /* beamstop */
+%}
+
+/* ================================ H51 ===================================== */
+/* feeds: IN15, D22 */
+
+COMPONENT H51_Start = Arm()
+AT (0,0,0) RELATIVE H51_origin
+
+COMPONENT H51_inpile = COPY(H53_inpile)(w1=0.04, m=1.2, l=2.775)
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* Gap 25 mm before BOG (barillet obturateur general). Carter BOG             */
+
+COMPONENT H51_Obt_1 = COPY(PREVIOUS)(l=0.863)
+AT (0,0,2.775+0.025) RELATIVE PREVIOUS
+
+COMPONENT H51_Obt_2 = COPY(PREVIOUS)(l=1.433)
+AT (0,0,0.863+0.012) RELATIVE PREVIOUS
+
+COMPONENT H51_Obt_3 = COPY(PREVIOUS)(l=0.745)
+AT (0,0,1.433+0.012) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.04)
+AT (0,0,0.745+0.01) RELATIVE PREVIOUS
+
+/* Gap 75 mm after BOG (barillet obturateur general): VS */
+
+COMPONENT H51_Obt_Out = COPY(H5)(xwidth=0.04, restore_neutron=1)
+AT (0,0,0.06) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.04)
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* Sections 2,3 in NoteDPT11/H51 - curved R=3000 m. Length=2.5 m down to splitter */
+/* Carter VS+Movable+Common                                                   */
+
+COMPONENT H51_S2 = COPY(H53_inpile)(w1=0.04, l=2.5/3, m=1.2)
+AT (0,0,0.05)                      RELATIVE PREVIOUS
+
+COMPONENT COPY(H51_S2) = COPY(H51_S2)
+AT (0,0,2.5/3)                    RELATIVE PREVIOUS
+ROTATED (0,-2.5/3/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H51_S2) = COPY(H51_S2)
+AT (0,0,2.5/3)                    RELATIVE PREVIOUS
+ROTATED (0,-2.5/3/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT HCS_Al_H51 = COPY(HCS_Al)(xwidth=0.04)
+AT (0,0,2.5/3+0.01) RELATIVE PREVIOUS
+
+/* Splitter (polarising "Deviateur") H511/H512 L=1.5                          */
+/* D22 in transmission, IN15 in reflection: 79.70-76.45 = 3.25 deg angle      */
+/* bottom   part direct to d22 height=55mm                                    */
+/* top part part in reflection to in15 height=55mm: transmitted part lost     */
+
+/* split the beam to either D22 or IN15  (monitors)                           */
+COMPONENT H51_S2_Out = COPY(H5)(xwidth=0.04, yheight=0.12)
+AT (0,0,0.05) RELATIVE PREVIOUS
+
+COMPONENT H51_split_2 = COPY(H5)(xwidth=0.04, restore_neutron=1, yheight=0.055)
+AT (0,0.12/2-0.055/2,0)  RELATIVE H51_S2_Out
+JUMP H512_Start WHEN SCATTERED
+
+COMPONENT H51_split_1 = COPY(H5)(xwidth=0.04, restore_neutron=1, yheight=0.055)
+AT (0,-0.12/2+0.055/2,0)  RELATIVE H51_S2_Out
+JUMP H511_Start WHEN SCATTERED
+
+/* H511 bottom to IN15 ====================================================== */
+COMPONENT H511_Start = Arm()
+AT (0,0,0) RELATIVE H51_split_1
+
+COMPONENT H511_mirror_centre = Arm()
+AT (0,0,0.75) RELATIVE H511_Start
+EXTEND %{
+  flag=0;
+%}
+
+/* polarising splitter: an iterating assembly of polarising */
+/* The single polariser is enough and simpler to handle. We ignore the surrouding m=1.2 guide */
+COMPONENT IN15_polariser = Pol_mirror(zwidth = 1.5, yheight = 0.055,
+  rUpPar  ={1.0, 0.0219, 4.07, 3.2, 0.003},
+  rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003}, p_reflect=0.95)
+AT (0, 0, 0) RELATIVE H511_mirror_centre ROTATED (0, -1.5, 0) RELATIVE H511_mirror_centre
+EXTEND %{
+  flag=SCATTERED;
+%}
+
+COMPONENT H511_mirror_outdir = Arm()
+AT (0,0,0) RELATIVE H511_mirror_centre ROTATED (0, -3, 0) RELATIVE H511_mirror_centre
+
+COMPONENT H511_mirror_ReflectXY = Monitor_nD(xwidth=0.04, restore_neutron=1, yheight=0.055, bins=50)
+WHEN flag==1
+AT (0,0,0.755)                  RELATIVE H511_mirror_outdir
+
+COMPONENT H511_mirror_TransmitXY = COPY(H511_mirror_ReflectXY)
+WHEN flag==2
+AT (0,0,0.755)                  RELATIVE H511_mirror_centre
+EXTEND %{
+  if (flag == 2) ABSORB;
+%}
+
+COMPONENT H511_mirror_outdXY = COPY(H511_mirror_ReflectXY)(options="dx limits=[-2 2], dy limits=[-2 2]")
+AT (0,0,0)                      RELATIVE H511_mirror_ReflectXY
+
+COMPONENT H511_S3 = COPY(H51_S2)(l=3, nelements=2, h1=0.055)
+AT (0,0,0.755)                      RELATIVE H511_mirror_outdir
+
+COMPONENT H511_S9 = COPY(H51_S2)(l=16.483-0.05, nelements=13, m=1, h1=0.055)
+AT (0,0,3.005)                      RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.04)
+AT (0,0,16.483+0.001-0.05) RELATIVE PREVIOUS
+
+/* VTE space+OT H511: 108 mm + 2 mm Al window */
+
+COMPONENT H511_VTE = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.108/2-0.001) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(zdepth=0.002,xwidth=0.04)
+AT (0,0,0.108/2-0.05) RELATIVE PREVIOUS
+
+COMPONENT H511_S10 = COPY(H51_S2)(l=1, m=1, h1=0.055)
+AT (0,0,0.05) RELATIVE PREVIOUS
+
+/* IN15 Velocity Selector EADS/Astrium NVS 024 in 60 cm gap */
+COMPONENT IN15_Vselector = V_selector(xwidth=0.04, yheight=0.055, zdepth=0.30, radius=0.12,
+  alpha=64.4, length=0.25, d=0.0004, nu=IN15_nu, nslit=36)
+AT (0,0,1+0.3) RELATIVE H511_S10
+
+/* H511/IN15 guide L=9.5 m, m=1 */
+COMPONENT H511_BeforeV = COPY(H511_S10)(l=9.5,nelements=6)
+AT (0,0,0.3) RELATIVE PREVIOUS
+
+/* IN15 polarising V-mirror                                       */
+COMPONENT IN15_Vpolariser = Pol_guide_vmirror(xwidth = 0.04, yheight = 0.055,
+		  length = 0.43,
+		  rPar    ={1, 1.0*0.0219, 4.07, 1, 0.003},
+		  rUpPar  ={1, 3.2*0.0219, 4.07, 1, 0.003},
+		  rDownPar={1, 0.4*0.0219, 4.07, 1, 0.003})
+AT (0,0,9.5+0.01) RELATIVE PREVIOUS
+
+COMPONENT H511_AfterV = COPY(H511_S10)(l=3, nelements=2)
+AT (0,0,0.44) RELATIVE PREVIOUS
+
+/* sample at 3.7 m */
+COMPONENT H511_IN15_Sample_Div = Monitor_nD(xwidth=0.02, yheight=0.05,
+  options="dx limits=[-2 2], dy limits=[-2 2]", bins=100, restore_neutron=1)
+AT (0,0,IN15_L) RELATIVE H511_AfterV
+
+COMPONENT H511_IN15_Sample_XY = Monitor_nD(xwidth=0.02, yheight=0.05,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,IN15_L) RELATIVE H511_AfterV
+
+COMPONENT H511_IN15_Sample_L = Monitor_nD(xwidth=0.02, yheight=0.05,
+  options="lambda limits=[1 10]", bins=50, restore_neutron=1)
+AT (0,0,IN15_L) RELATIVE H511_AfterV
+
+COMPONENT H511_IN15_Sample = Incoherent(radius=0.005,yheight=0.05,
+  focus_aw=180, focus_ah=30, target_index=+1)
+AT (0,0,IN15_L) RELATIVE H511_AfterV
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT H511_IN15_Detector = Monitor_nD(xwidth=0.32, yheight=0.32,
+  options="x y", restore_neutron=1, bins=32)
+AT (0,0,4.6) RELATIVE H511_IN15_Sample
+
+COMPONENT H511_IN15_Spectrometer = Monitor_nD(radius=0.5, yheight=0.3,
+  options="angle limits=[-150 150] bins=50, energy limits=[0 5], banana", restore_neutron=1)
+AT (0,0,0) RELATIVE H511_IN15_Sample
+
+COMPONENT H511_IN15_Diffractometer = Monitor_nD(radius=1,yheight=0.3, options="theta bins=100 limits=[-150 150], y, banana")
+AT (0,0,0) RELATIVE H511_IN15_Sample
+EXTEND %{
+  ABSORB; /* neutron ends on the SuperADAM sample position */
+%}
+
+/* H512 top to D22 ========================================================== */
+COMPONENT H512_Start = Arm()
+AT (0,0,0) RELATIVE H51_split_2
+
+/* Sections 3,4,5,6 in NoteDPT11/H51 - curved R=3000 m. Length=2.5 m down to VTE */
+/* Carter C1-C4                                                               */
+
+COMPONENT H512_S36 = COPY(H53_inpile)(w1=0.04, l=20.85/16, h1=0.055, m=1.2)
+AT (0,0,0.0)                      RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H512_S36) = COPY(H512_S36)
+AT (0,0,20.85/16)                    RELATIVE PREVIOUS
+ROTATED (0,-20.85/16/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT HCS_Al_H512 = COPY(HCS_Al)(xwidth=0.04)
+AT (0,0,20.85/16+0.01) RELATIVE PREVIOUS
+
+/* VTE space+OT H512: 108 mm + 2 mm Al window */
+
+COMPONENT H512_VTE = COPY(H5)(xwidth=0.06, restore_neutron=1)
+AT (0,0,0.108/2-0.001) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(zdepth=0.002,xwidth=0.04)
+AT (0,0,0.108/2-0.05) RELATIVE PREVIOUS
+
+COMPONENT H51_S78 = COPY(H53_inpile)(w1=0.04, l=6.0/4, h1=0.055, m=1.2)
+AT (0,0,0.05)                      RELATIVE PREVIOUS
+
+COMPONENT COPY(H51_S78) = COPY(H51_S78)
+AT (0,0,6.0/4)                    RELATIVE PREVIOUS
+ROTATED (0,-6.0/4/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H51_S78) = COPY(H51_S78)
+AT (0,0,6.0/4)                    RELATIVE PREVIOUS
+ROTATED (0,-6.0/4/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(H51_S78) = COPY(H51_S78)
+AT (0,0,6.0/4)                    RELATIVE PREVIOUS
+ROTATED (0,-6.0/4/3000*RAD2DEG,0) RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(zdepth=0.002,xwidth=0.04)
+AT (0,0,6.0/4+0.01) RELATIVE PREVIOUS
+
+/* 3 m to V selector, straight */
+
+COMPONENT H512_S11 = COPY(H53_inpile)(w1=0.04, l=3.0, nelements=2, h1=0.055, m=1.2)
+AT (0,0,0.01)                      RELATIVE PREVIOUS
+
+COMPONENT COPY(HCS_Al) = COPY(HCS_Al)(xwidth=0.04)
+AT (0,0,3+0.01) RELATIVE PREVIOUS
+
+COMPONENT D22_PreV = Monitor_nD(xwidth=0.04, yheight=0.05,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+/* D22 Velocity Selector: just like D11 EADS/Astrium NVS 023 in 60 cm gap */
+COMPONENT D22_Vselector = V_selector(xwidth=0.04, yheight=0.05, zdepth=0.30, radius=0.12,
+  alpha=48.3, length=0.25, d=0.0004, nu=D22_nu, nslit=72)
+AT (0,0,3+0.01+0.3+0.01) RELATIVE H512_S11
+
+COMPONENT D22_Collimation = COPY(H53_inpile)(w1=0.04,
+  l=20-D22_collimation, nelements=ceil(D22_collimation/1.5), m=1.2)
+AT (0,0,0.3) RELATIVE D22_Vselector
+
+COMPONENT D22_Sample_Pos = Arm()
+AT (0,0,20+0.3) RELATIVE D22_Vselector
+
+COMPONENT H51_D22_Sample_Div = Monitor_nD(xwidth=0.02, yheight=0.05,
+  options="dx limits=[-2 2], dy limits=[-2 2]", bins=100, restore_neutron=1)
+AT (0,0,0) RELATIVE D22_Sample_Pos
+
+COMPONENT H51_D22_Sample_XY = Monitor_nD(xwidth=0.02, yheight=0.05,
+  options="x y", bins=50, restore_neutron=1)
+AT (0,0,0) RELATIVE D22_Sample_Pos
+
+COMPONENT H51_D22_Sample_L = Monitor_nD(xwidth=0.02, yheight=0.05,
+  options="lambda limits=[1 10]", bins=50, restore_neutron=1)
+AT (0,0,0) RELATIVE D22_Sample_Pos
+
+COMPONENT H51_D22_Sample = Isotropic_Sqw(radius=0.005,yheight=0.05,
+  Sqw_coh=D22_sample, Sqw_inc=NULL, d_phi=20)
+AT (0,0,0) RELATIVE D22_Sample_Pos
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT D22_Detector = Monitor_nD(xwidth=1, yheight=1, options="x y", bins=128)
+AT (0,0,D22_collimation) RELATIVE D22_Sample_Pos
+EXTEND %{
+  ABSORB; /* H512 end here */
+%}
+
+COMPONENT D22_Detector_vessel = Shape(radius=1.5, yheight=20)
+AT (0,0,11) RELATIVE D22_Sample_Pos ROTATED (90,0,0) RELATIVE D22_Sample_Pos
+/* NOTE: wasp 75*120 V selector                                               */
+
+/* ========================= end of simulation ============================== */
+
+/* inactive components for rendering purposes */
+
+COMPONENT BOG = Shape(radius=0.735, yheight=0.3)
+AT (0,0,6.55) RELATIVE HCS
+
+COMPONENT H53_IN14_Drum = Shape(radius=0.45, yheight=0.3)
+AT (0,0,0) RELATIVE H53_IN14_Monochromator_Cradle
+
+COMPONENT H53_IN16_Drum = Shape(radius=0.2, yheight=0.3)
+AT (0,0,0) RELATIVE H53_IN16_Monochromator_Cradle
+
+COMPONENT H53_D16_Drum = Shape(radius=0.2, yheight=0.3)
+AT (0,0,0) RELATIVE H53_D16_Monochromator_Cradle
+
+COMPONENT H53_SADAM_Drum = Shape(radius=0.2, yheight=0.3)
+AT (0,0,0) RELATIVE H53_SADAM_Monochromator_Cradle
+
+COMPONENT Traversee = Shape(xwidth=2, yheight=0.5)
+AT (0,0,31.6) RELATIVE HCS
+
+/* core at 0.7 m, 44.8 deg */
+COMPONENT Core_Centre = Arm()
+AT (0,0,0) RELATIVE HCS ROTATED (0,44.8+180,0) RELATIVE HCS
+
+/* core radius=0.3 m */
+COMPONENT Core = Shape (radius=0.3, yheight=0.7)
+AT (0,0,0.7) RELATIVE Core_Centre ROTATED (0,0,0) RELATIVE Origin
+
+/* D2O vessel radius=1.25 m */
+COMPONENT D2O_Vessel = Shape (radius=1.25, yheight=1)
+AT (0,0,0) RELATIVE Core
+
+/* H2O vessel radius=1.25 m */
+COMPONENT H2O_Vessel = Shape (radius=4.9, yheight=1.2)
+AT (0,0,0) RELATIVE Core
+
+/* H20 radius=4.9 m, ILL5=707 pixels=31.5 m,
+   D22 V at 40.54m from HCS
+   D22 V to sample=20.85 m
+   D22 det length = 20 m */
+
+END

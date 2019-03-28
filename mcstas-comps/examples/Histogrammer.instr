@@ -1,0 +1,166 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Histogrammer
+*
+* %Identification
+* Written by: Peter Willendrup (peter.willendrup@risoe.dk)
+* Date: 2007-03-19
+* Origin: Risoe
+* %INSTRUMENT_SITE: Tools
+*
+* Takes eventfile input (Virtual_input/Vitess/MCNP/Tripoli4/MCPL formats) and applies Monitor_nD to generate
+* histograms. Histograms can be chosen freely using the options string, see mcdoc Monitor_nD.comp
+*
+*
+* %Description
+*
+* Takes any possible  McStas eventfile inputs (Virtual_input/Vitess/MCNP/Tripoli4 formats) and applies
+* Monitor_nD to generate user-selectable neutron histograms.
+*
+* The 'options' parameter allows to customize the type of histogram to generate.
+* We suggest:
+*   "sphere theta phi outgoing previous" (this is the default)
+*   "previous, multiple, auto, x, y, z, vx, vy, vz, hdiv, vdiv, tof, lambda"
+*   "previous, auto, x, y"
+*   "previous, auto, tof, lambda"
+*
+* Example: mcrun Histogrammer.instr MODE=0
+*   - Gives information on the input parameters
+*
+* Example: mcrun Histogrammer.instr filename="events.dat" MODE=1 options="sphere theta phi outgoing previous"
+*   - Reads a Virtual_output generated event file and applies a spherical PSD
+*
+* %Parameters
+* MODE: [int]         Input file mode/format - 0 for help on usage 1=McStas,2=Vitess,3=MCNP,4=Tripoli4,5=MCPL
+* filename: [string]  Specifies input event file
+* options: [string]   Specifies the histogramming rules used by Monitor_nD.
+*                     It <b>MUST</b> contain the 'previous' word - see mcdoc Monitor_nD
+* bufsize: [int]      Vitess_input 'buffersize' parameter - see mcdoc Vitess_input
+* xwidth: [m]         Horizontal width of detector, or diameter for banana,cylinder and shpere geometry
+* yheight: [m]        Vertical height of detector, for plate, cylinder, banana shape
+*
+* %BUGS
+* The options string currently does not work with commas (mcrun interprets this as scan parms)
+*
+* %Link
+* <a href="../sources/Virtual_input.html">Virtual_input</a> component (McStas event file)
+* %Link
+* <a href="../misc/Vitess_input.html">Vitess_input</a> component (Vitess event file)
+* %Link
+* <a href="../contrib/Virtual_mcnp_input.html">Virtual_mcnp_input</a> component (MCNP PTRAC event file)
+* %Link
+* <a href="../contrib/Virtual_tripoli4_input.html">Virtual_tripoli4_input</a> component (Tripoli4 BATCH event file)
+* %Link
+* <a href="../monitors/Monitor_nD.html">Monitor_nD</a> component (detector/histogrammer)
+* %Link
+* <a href="../misc/MCPL_input.html">MCPL_input</a> component (MCPL event file)
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Histogrammer(string filename=0, int MODE=0 ,
+  string options="sphere theta phi outgoing previous",
+  int bufsize=10000, xwidth=0.1, yheight=0.1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+   int   file_mode;
+   char *VirtualI_filename;
+   char *Vitess_filename;
+   char *Tripoli_filename;
+   char *MCNP_filename;
+   char *MCPL_filename;
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  file_mode = MODE;
+  /* Set all filenames empty */
+  VirtualI_filename = NULL;
+  Vitess_filename   = NULL;
+  Tripoli_filename  = NULL;
+  MCNP_filename     = NULL;
+  MCPL_filename     = NULL;
+  if (file_mode == 0) {
+    printf("\n%s usage:\n'filename' input event file (in Virtual_input/Vitess/MCNP/Tripoli4 formats)\n", NAME_INSTRUMENT);
+    printf("'MODE':\n");
+    printf("  0 - Print this help and exit)\n");
+    printf("  1 - Virtual_input event file\n");
+    printf("  2 - Vitess event file\n");
+    printf("  3 - MCNP p-trac event file\n");
+    printf("  4 - Tripoli4 event file\n");
+    printf("  5 - MCPL event file\n");
+    printf("'options' - options string for Monitor_nD, see mcdoc Monitor_nD.comp\n\n");
+    printf("'bufsize' parameter only relevant for Vitess_input (MODE==2), see mcdoc Vitess_input.comp\n\n");
+
+    exit(0);
+  } else if (file_mode == 1) {
+    printf("%s: Mode is 1 (Virtual_input event file)\n", NAME_INSTRUMENT);
+    VirtualI_filename = filename;
+  } else if (file_mode == 2) {
+    printf("%s: Mode is 2 (Vitess_input event file)\n", NAME_INSTRUMENT);
+    if (!strcmp(filename,"stdin")) {
+      Vitess_filename = NULL;
+    } else {
+      Vitess_filename = filename;
+    }
+  } else if (file_mode == 3) {
+    printf("%s: Mode is 3 (MCNP p-trac event file)\n", NAME_INSTRUMENT);
+    MCNP_filename = filename;
+  } else if (file_mode == 4) {
+    printf("%s: Mode is 4 (Tripoli4 event file)\n", NAME_INSTRUMENT);
+    Tripoli_filename = filename;
+  } else if (file_mode == 5) {
+    printf("%s: Mode is 5 (MCPL event file)\n", NAME_INSTRUMENT);
+    MCPL_filename = filename;
+  }
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* event file readers *********************************************************/
+
+COMPONENT Virtualinput = Virtual_input(
+  filename=VirtualI_filename)
+WHEN (file_mode ==1)  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT VITESSinput = Vitess_input(
+  filename=Vitess_filename, bufsize=bufsize)
+WHEN (file_mode ==2)  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT MCNPinput = Virtual_mcnp_input(
+  filename=MCNP_filename, verbose=1, autocenter="translate rotate rescale")
+WHEN (file_mode ==3)  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT TRIPOLI4input = Virtual_tripoli4_input(
+  filename=Tripoli_filename, verbose=1, autocenter="translate rotate rescale")
+WHEN (file_mode ==4)  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT MCPLinput = MCPL_input(
+  filename=MCPL_filename, verbose=1)
+WHEN (file_mode ==5)  AT (0, 0, 0) RELATIVE Origin
+
+/* end   file readers *********************************************************/
+
+/*COMPONENT Sphere = PSD_monitor_4PI(*/
+/*    nx = 360, ny = 360, filename = "kugle.dat", radius = 1)*/
+/*    AT (0, 0, 0) RELATIVE Origin */
+
+COMPONENT Monitor = Monitor_nD(options=options,xwidth=xwidth,yheight=yheight)
+  AT (0, 0, 0) RELATIVE Origin
+
+END

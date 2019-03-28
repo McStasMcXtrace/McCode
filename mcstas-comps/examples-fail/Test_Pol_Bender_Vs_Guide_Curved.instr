@@ -1,0 +1,162 @@
+/******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Pol_Bender_Vs_Guide_Curved
+*
+* %Identification
+* Written by: Peter Christiansen (peter.christiansen@risoe.dk)
+* Date: July 2006
+* Origin: RISOE
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Test that Pol_bender and Guide_curved intensities are the same.
+*
+* %Description
+*
+* Using the WHEN keyword 2 Pol_bender (pos and neg radius) are
+* compared to a Pol_guide.
+* The intensity on the monitor should be roughly 0.000228
+* with mean 8.65+-0.62 AA.
+*
+* %Example: guideLength=10 Detector: psdGuide_I=0.0022
+*
+* %Parameters
+* guideLength: [] 
+* guideRadius: [] 
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_Pol_Bender_Vs_Guide_Curved(guideLength=10.0, guideRadius=100.0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  double randomSwitch;
+
+  double calcAlpha(double length, double radius) {
+    // calculate angle of arm after curved guide
+    return RAD2DEG * length/radius;
+  }
+
+  double calcX(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*(1.0-cos(alpha));
+  }
+
+  double calcZ(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*sin(alpha);
+  }
+  %}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+     AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+  // Multiply probability by 3 because we have 3 cases
+  p*=3.0;
+  randomSwitch = rand01();
+  %}
+
+COMPONENT source =
+Source_simple(radius = 0.01, dist = 1.2, focus_xw = 0.08, focus_yh = 0.08, lambda0 = 5,
+	      dlambda = 4.5, flux = 1)
+     AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT lamStart =
+L_monitor(nL = 20, filename = "lambdaStart.dat", xwidth = 0.10,
+	  yheight = 0.10, Lmin = 0.0, Lmax = 10)
+     AT (0, 0, 0.1) RELATIVE Origin
+
+COMPONENT psdStart =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdStart.dat")
+     AT (0, 0, 0.15) RELATIVE Origin
+
+COMPONENT bender1 =
+Pol_bender(xwidth = 0.08, yheight = 0.08, length = guideLength,
+	   radius = guideRadius, nslit=1)
+     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 1.2) RELATIVE Origin
+
+COMPONENT bender2 =
+Pol_bender(xwidth = 0.08, yheight = 0.08, length = guideLength,
+	   radius = -guideRadius, nslit=1)
+     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 1.2) RELATIVE Origin
+
+COMPONENT guide =
+Guide_curved(w1 = 0.08, h1 = 0.08, l = guideLength, curvature = guideRadius)
+     WHEN (randomSwitch > 2.0/3) AT (0, 0, 1.2) RELATIVE Origin
+
+COMPONENT armlambdaStop1 = Arm()
+     AT (calcX(guideLength, guideRadius), 0, calcZ(guideLength, guideRadius)+1.2)
+     RELATIVE Origin
+ROTATED (0, calcAlpha(guideLength, guideRadius), 0) RELATIVE Origin
+
+COMPONENT armlambdaStop2 = Arm()
+     AT (calcX(guideLength, -guideRadius), 0, calcZ(guideLength, -guideRadius)+1.2)
+     RELATIVE Origin
+ROTATED (0, calcAlpha(guideLength, -guideRadius), 0) RELATIVE Origin
+
+COMPONENT lamStopBender1 =
+L_monitor(nL = 20, filename = "lambdaStopBender1.dat", xwidth = 0.20,
+	  yheight = 0.20, Lmin = 0.0, Lmax = 10)
+     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
+
+COMPONENT psdBender1 =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdBender1.dat")
+     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
+
+COMPONENT lamStopBender2 =
+L_monitor(nL = 20, filename = "lambdaStopBender2.dat", xwidth = 0.20,
+	  yheight = 0.20, Lmin = 0.0, Lmax = 10)
+     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop2
+
+COMPONENT psdBender2 =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdBender2.dat")
+     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop2
+
+COMPONENT lamStopGuide =
+L_monitor(nL = 20, filename = "lambdaStopGuide.dat", xwidth = 0.20,
+	  yheight = 0.20, Lmin = 0.0, Lmax = 10)
+     WHEN (randomSwitch > 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
+
+COMPONENT psdGuide =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdGuide.dat")
+     WHEN (randomSwitch > 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END

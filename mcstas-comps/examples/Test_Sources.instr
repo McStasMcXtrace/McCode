@@ -1,0 +1,155 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: Test_Sources
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: Aug 3, 2008
+* Origin:ILL
+* %INSTRUMENT_SITE: Tests_optics
+*
+* A test instrument to compare sources
+*
+* %Description
+* A test instrument to compare sources and check they provide the valid
+* sprectrum and intensity. It shows that the first 4 flat sources are equivalent,
+* the 2 Maxwellian sources as well.
+*
+* WARNING: Result of test no. 1 for Source_adapt.comp is not correct if MPI is used, as
+* that source component does not support MPI.
+*
+* %Example: source=1 Detector: m1_I=9.97273e+11
+* %Example: source=2 Detector: m1_I=9.48467e+11
+* %Example: source=3 Detector: m1_I=9.96553e+11
+* %Example: source=4 Detector: m1_I=9.966e+11
+* %Example: source=5 Detector: m1_I=2.4279e+11
+* %Example: source=6 Detector: m1_I=2.42284e+11
+* %Example: source=7 Detector: m1_I=2.2362e+11
+* %Example: source=8 Detector: m1_I=5.0787e+13
+*
+* %Parameters
+* source: [1]  selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
+* Lmin: []
+* Lmax: []
+* Lmin: []
+* Lxax: []
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Sources(int source=0, Lmin=1, Lmax=11)
+
+DECLARE
+%{
+  double Lambda0, dLambda;
+%}
+
+INITIALIZE
+%{
+  printf("%s: ", NAME_INSTRUMENT);
+  switch (source) {
+  case 1:
+    printf("Using Source_adapt\n"); break;
+  case 2:
+    printf("Using Source_div\n"); break;
+  case 3:
+    printf("Using Source_simple\n"); break;
+  case 4:
+    printf("Using Source_gen (flat spectrum)\n"); break;
+  case 5:
+    printf("Using Source_gen\n"); break;
+  case 6:
+    printf("Using Source_Maxwell_3\n"); break;
+  case 7:
+    printf("Using ESS_moderator_long\n"); break;
+  case 8:
+    printf("Using Moderator\n"); break;
+  }
+  printf("Studied wavelength range is [%g %g] AA\n", Lmin, Lmax);
+  dLambda=(Lmax-Lmin)/2;
+  Lambda0=(Lmax+Lmin)/2;
+
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* the sources ============================================================== */
+COMPONENT sa1 = Source_adapt( /* flux in n/s/cm2/st/AA */
+  xwidth=0.01, yheight=0.01,
+  dist=1, focus_xw=0.1, focus_yh=0.1,
+  lambda0=Lambda0, dlambda=dLambda, flux=1e13
+) WHEN (source == 1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa2 = Source_div(  /* flux in n/s/cm2/st/AA */
+  xwidth=0.01, yheight=0.01, focus_aw=2*RAD2DEG*atan(0.1/1.0/2), focus_ah=2*RAD2DEG*atan(0.1/1.0/2), lambda0=Lambda0, dlambda=dLambda, gauss=0, flux=1e13
+) WHEN (source == 2)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa3 = Source_simple(   /* flux in n/s/cm2/st/AA */
+  xwidth=0.01, yheight=0.01,
+  dist=1, focus_xw=0.1, focus_yh=0.1,
+  lambda0=Lambda0, dlambda=dLambda, flux=1e13
+) WHEN (source == 3)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa4 = Source_gen(  /* flux in n/s/cm2/st/AA */
+  Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1,
+  xwidth=0.01, yheight=0.01,
+  I1=1e+13
+) WHEN (source == 4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa5 = Source_gen(  /* flux in n/s/cm2/st/AA */
+  Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1,
+  xwidth=0.01, yheight=0.01, verbose=1,
+  T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13, T3=16.7 ,I3=3.0423e+12
+) WHEN (source == 5)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa6 = Source_Maxwell_3( /* flux in n/s/cm2/st/AA */
+  Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1,
+  xwidth=0.01, yheight=0.01,
+  T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13, T3=16.7 ,I3=3.0423e+12
+) WHEN (source == 6)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa7 = ESS_moderator_long(  /* flux in n/s/cm2/st/AA */
+  Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1,
+  yheight=0.01, width_c=0.01, cyl_radius=0, nu = 1000.0/60.0, T = 50, tau = 287e-6, tau1 = 0,
+  tau2 = 20e-6, d =0.002, n = 20, n2 = 5, chi2 = 0.9,
+  I0 = 6.9e11, I2 = 27.6e10, branch1 = 1, branch2 = 0.5,
+  branch_tail = 0.1) WHEN (source == 7)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sa8 = Moderator( /* flux in n/s/cm2/st */
+  radius = 0.01*sqrt(2), dist=1, focus_xw=0.1, focus_yh=0.1,
+  Emin =81.81/(Lmax*Lmax), Emax = 81.81/(Lmin*Lmin), Ec = 9.0, t0 = 37.15, gamma = 39.1, flux=1e13
+) WHEN (source == 8)
+AT (0,0,0) ABSOLUTE
+
+/* the monitor ============================================================== */
+COMPONENT a1 = Adapt_check(
+  source_comp="sa1"
+) WHEN (source == 1)
+AT (0,0,1) ABSOLUTE
+
+COMPONENT m1 = Monitor_nD(
+  xwidth=0.1, yheight=0.1,
+  options="auto lambda", bins=40
+) AT (0,0,1) ABSOLUTE
+
+COMPONENT m2 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto x, auto y, parallel", bins=40
+) AT (0,0,1) ABSOLUTE
+
+COMPONENT m3 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto dx, auto dy, parallel", bins=40
+) AT (0,0,1) ABSOLUTE
+
+END

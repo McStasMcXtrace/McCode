@@ -1,0 +1,473 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_IN13
+*
+* %Identification
+* Written by: E. Farhi and A. Dennison
+* Date: March 25, 2015
+* Origin:ILL
+* %INSTRUMENT_SITE: ILL
+*
+* IN13 Thermal neutron backscattering spectrometer (without guide)
+*
+* %Description
+* IN13 Thermal neutron backscattering spectrometer (without guide)
+*
+* Because of its high energy resolution and high momentum transfer the
+* backscattering spectrometer IN13 is particularly useful for the microscopic
+* study of single particle motions (jump reorientation, rotational and
+* translational diffusion, tunnelling) observed by incoherent neutron scattering.
+*
+* The high energy resolution of the order of a few μeV together with the
+* availability of high momentum transfer (Q<4.9 Å-1) makes the spectrometer IN13
+* particularly useful for the microscopic study of single particle motions (jump
+* reorientation, rotational and translational diffusion, tunnelling) observed by
+* incoherent neutron scattering. The instrument partly fills the gap of (Q, ω)
+* space between IN10 and IN5.
+*
+* Temperature gradient monochromator
+* The monochromator and analyser CaF2(422) crystals are oriented in near
+* backscattering geometry thereby achieving an energy resolution of a few μeV. The
+* energy of the incident neutrons is scanned by variation of the temperature of
+* the monochromator at a fixed Bragg-angle. In an optional mode the 10 mm thick
+* monochromator crystals are kept at a fixed temperature gradient and energy
+* variation is performed by scanning the monochromator Bragg-angle. This achieves
+* an increased flux at the sample position and slightly increases the energy
+* resolution width.
+*
+* A vertically curved Graphite deflector focusses the beam onto
+* the sample. The scattered neutrons are energy analysed by a set of seven
+* spherically curved composite crystal analysers, each covering a large solid
+* angle of 0.18 sr. An additional three circular analysers centred around the
+* transmitted beam cover the small-angle region.
+*
+* The neutron time-of-flight is used to suppress (i) the background of neutrons
+* scattered directly from the sample into the detectors and (ii) second order
+* contamination. The neutrons are counted with a cylindrical multidetector
+* consisting of 35 3He detector tubes, arranged in staggered circular rows. The
+* small Q range from 0.2 to 0.8 Å-1 is covered by a 3He Position Sensitive
+* Detector (PSD) arranged to see the circular analysers in exact backscattering.
+*
+* Monochromator: CaF2(422)
+*   temperature range:  -125 < ΔE/µeV < 150
+*   angular range:       81° < θM < 89°
+*   incident energy:     16.45 meV (TM≥25°C)
+*   incident wavelength: 2.23 Å
+*   energy resolution:   8 µeV
+*
+* Deflector: PG(002)
+*
+* Sample: here incoherent elastic scatterer (Vanadium)
+*   sample size          3.5 x 3.5 cm2
+*   flux at sample       2e4 n cm-2 s-1 (when fed from H24, NOT in this model)
+*
+* Analyser: CaF2(422)
+*   Q-range:             0.2 < Q/Å-1 < 4.9
+*   Q-resolution:        ΔQ/Å-1 < 0.1
+*
+* %Example: TM=301 Detector: SamposPSD_I=5905.14
+*
+* %Parameters
+* RMV: [m]           monochromator vertical curvature. Use 0=flat, -1=auto.
+* RDV: [m]           deflector vertical curvature. Use 0=flat, -1=auto.
+* RDH: [m]           deflector horizontal curvature. Use 0=flat, -1=auto.
+* TM: [K]            monochromator temperature, from 77 to 500 K
+* LMD: [m]           monochromator-deflector distance
+* CaF2mos: [arcmin]  monochromator mosaic
+* mos_ana: [arcmin]  analyser mosaic
+* gW: []
+*
+* %Link
+* The <a href="http://www.ill.fr/YellowBook/IN3">IN3 TAS</a> at the ILL
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_IN13( RMV=0, RDV=4.6, RDH=0, TM=301, LMD=1.8, mos_ana=2, CaF2mos=10, gW=0.030)
+
+DECLARE
+%{
+
+  /* Declaration of IN13 instrument parameters */
+
+  /*temperature things for mono*/
+  double beta1=1.9406e-5, beta2=1.8744e-8, T0=301;
+  double d0 =  1.1115;
+
+
+  double DM;
+
+  /* Monochromator general parameters */
+
+  /*mono angle*/
+  double TH0 =-88.31; /* this is fixed. Bragg spot moves aside, and so does the deflector and spectrometer */
+  /*gap from guide exit/source-mono*/
+  double GM = 0.2;
+  /*nominal wavelength for IN13*/
+  double IN13lam; /* should be around 2.23 */
+  double IN13energy;
+  /*monochromator crystal mosaic spread*/
+  double CaF2mos = 2.5;
+
+  /* Deflector general parameters*/
+
+  /* deflector angle */
+  double dTH0;
+
+
+  double LDS = 2.3; /* distance from deflector to sample */
+  double LSD = 0.25;/* sample to detector */
+  double LSA = 1.0; /* sample to analyser */
+
+  /* Incident beam collimation is 2 slits. Slit distances and sizes can be set here. */
+  /* At other take-off angles this will need to be implemented as a function in below section. */
+  double defl_slit = 0.5;
+  double S1W = 0.1;
+  double S1H = 0.15;
+  double S2W = 0.03;
+  double S2H = 0.04;
+
+  double RotateNeutronX; /* the angle to rotate neutron so that neutrons go to the analyser */
+  double RotateNeutronY; /* the angle to rotate neutron so that neutrons go to the analyser */
+  double RVA;            /* curvature of analyser (local approx) */
+
+  double flag_mono_transmitted=0;
+  double flag_sample=0;
+
+  Rotation R; /* rotation */
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  double L1;
+  double mGuide=2;
+  double Ki,Vi;
+
+  /* This expression calculates the d-spacing of a CaF2 crystal in function
+	  of the temperature x. Data found in Bee, Quasielastic Neutron Scattering,
+	  Hilger, 1988. For the nominal wavelength of 2.23A the value of TEM should be set
+	  to TEM= (gives d-spacing of 1.115A)
+    */
+  DM      = d0*(1+beta1*(TM-T0)+beta2/2*(TM-T0)*(TM-T0));
+  IN13lam = fabs(2*DM*sin(TH0*DEG2RAD));     /* should be around 2.23 */
+  dTH0    = asin(IN13lam/(2*1.607))*RAD2DEG; /* Defelector half take-off */
+
+  Ki         = 2*PI/IN13lam;
+  Vi         = K2V*Ki;
+  IN13energy = VS2E*Vi*Vi;
+
+  L1 = 0.15/( mGuide/4 * 0.1 * IN13lam * DEG2RAD ); /* divergence from guide */
+
+  /* curvature radii: automatic setting from optical formulae */
+  if (RMV < 0) {
+    double L  = 1/(1/L1 + 1/(LMD+LDS));
+    RMV = 2*L*sin(DEG2RAD*TH0);
+  }
+
+  RMV = fabs(RMV)*(TH0 > 0 ? 1 : -1);
+
+  if (RDV < 0) {
+    double L =1/(1/(L1+LMD) + 1/LDS);
+    RDV = 2*L*sin(DEG2RAD*dTH0);
+  }
+  if (RDH < 0) {
+    double L =1/(1/(L1+LMD) + 1/LDS);
+    RDH = 2*L/sin(DEG2RAD*dTH0);
+  }
+
+  RDV = fabs(RDV)*(dTH0 > 0 ? 1 : -1);
+  RDH = fabs(RDH)*(dTH0 > 0 ? 1 : -1);
+
+  RVA = 1/((1/LSA)+(1/(LSA+LSD))); /* we use e.g. 20 cm from sample to detector */
+
+  /* display some stuff */
+  MPI_MASTER(
+    printf ("%s: IN13 Thermal neutron backscattering spectrometer\n",
+      NAME_INSTRUMENT);
+    printf ("  Monochromator CaF2(422) lambda=%3.2f [Angs] Ei=%g [meV] RMV=%g [m]\n",
+      IN13lam, IN13energy, RMV);
+    printf ("  Deflector PG(002): angle=%3.2f [deg] RDV=%g [m] RDH=%g [m]\n",dTH0, RDV, RDH);
+  );
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* should be located at the end of the H24@ILL guide */
+REMOVABLE COMPONENT Progress = Progress_bar()
+  AT (0, 0, 0)  ABSOLUTE
+
+REMOVABLE COMPONENT Source = Source_gen(
+  lambda0=IN13lam, dlambda=0.005, xwidth=0.03, yheight=.125,
+  focus_xw=0.045*sin(TH0*DEG2RAD), focus_yh=0.15, target_index=+1,
+  I1=2e11, T1=300)
+  AT (0, 0, 0)  ABSOLUTE
+
+REMOVABLE COMPONENT EndOfFakeGuide = Arm()
+  AT (0, 0, 3.8) RELATIVE PREVIOUS
+
+/*
+   Monochromator Coordinate System =============================================
+*/
+COMPONENT mono_pos = Arm()
+AT (0, 0, 0.2)      RELATIVE PREVIOUS
+
+COMPONENT CaF2_incoming = Monitor_nD(
+  xwidth=0.05, yheight=0.17, options="x y", bins=100, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE mono_pos
+
+SPLIT COMPONENT mono_cradle = Arm()
+AT (0, 0, 0)        RELATIVE mono_pos
+ROTATED (0, TH0, 0) RELATIVE mono_pos
+
+
+COMPONENT CaF2_mono = Monochromator_curved(width=0.045, height=0.15, NV=3, NH=1,
+  DM = DM, mosaic=CaF2mos, RV=RMV)
+  AT (0, 0, 0) RELATIVE mono_cradle
+  EXTEND %{
+    flag_mono_transmitted = !SCATTERED;
+  %}
+
+COMPONENT CaF2_transmitted = Monitor_nD(
+  xwidth=0.05, yheight=0.17, options="x y", bins=100, restore_neutron=1)
+  WHEN (flag_mono_transmitted)
+  AT (0, 0, 0.3) RELATIVE mono_pos
+  EXTEND %{
+    if (SCATTERED) ABSORB;
+  %}
+
+/*
+COMPONENT CaF2_crys1 = Single_crystal(
+    reflections = need_CaF2_file_here.lau, xwidth = 0.045,
+    yheight = 0.045, zdepth = 0.01, mosaic = 2.5, order = 1)
+  AT (0, 0.045, 0) RELATIVE mono_cradle
+  ROTATED (0, 0, -atan2(.045, RMV)) RELATIVE monocradle
+
+COMPONENT CaF2_crys1 = Single_crystal(
+    reflections = need_CaF2_file_here.lau, xwidth = 0.045,
+    yheight = 0.045, zdepth = 0.01, mosaic = 2.5, order = 1)
+  AT (0, 0.045, 0) RELATIVE mono_cradle
+  ROTATED (0, 0, 0) RELATIVE monocradle
+
+COMPONENT CaF2_crys1 = Single_crystal(
+    reflections = need_CaF2_file_here.lau, xwidth = 0.045,
+    yheight = 0.045, zdepth = 0.01, mosaic = 2.5, order = 1)
+  AT (0, 0.045, 0) RELATIVE mono_cradle
+  ROTATED (0, 0, atan2(.045, RMV)) RELATIVE monocradle
+*/
+
+ /*
+   This is the mono-deflector axis
+*/
+COMPONENT out_mono = Arm()
+AT(0, 0, 0) RELATIVE mono_cradle
+ROTATED (0, TH0, 0) RELATIVE mono_cradle
+
+/*
+   Deflector Coordinate System =================================================
+*/
+
+SPLIT COMPONENT defl_cradle = Arm()
+AT (0, 0, LMD) RELATIVE out_mono
+ROTATED (0, dTH0, 0) RELATIVE out_mono
+
+/* beam there is about 7x16 cm */
+COMPONENT Defl_XY = Monitor_nD(
+    bins=90, options="x y", restore_neutron = 1,
+    filename = "Defl_XY.psd", xwidth = 0.07, yheight = 0.2)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+  ROTATED (0, 90, 0) RELATIVE PREVIOUS
+
+COMPONENT Defl_lambda = L_monitor(
+    nL = 500, filename = "Defl_lambda.lam", xwidth = 0.07,
+    yheight = 0.2, Lmin = 0, Lmax = 3, restore_neutron = 1)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT IN13_deflector = Monochromator_curved(width=0.05, height=9*1.5e-2, NV=9, NH=9,
+  DM = 1.607, mosaic=50, RV=RDV, RH=RDH)
+  AT (0,0,0) RELATIVE defl_cradle
+  EXTEND %{
+    if (!SCATTERED) ABSORB;
+  %}
+
+/*
+   Claudia Mondelli's deflector model
+	DENNISON: variation on model based on actual focus and mosaic of individual crystals
+	Values and location of crystals in mono are taken from IN13 deflector schematic.
+	Crystals are defined from top to bottom of deflector.
+	HalfDW = 2.5 cm
+	mosaic = 46 54 45 44 40 49 53 48 63
+*/
+
+/*
+   This is the deflector-sample axis
+*/
+COMPONENT out_defl = Arm()
+AT(0, 0, 0) RELATIVE defl_cradle
+ROTATED (0, dTH0, 0) RELATIVE defl_cradle
+
+COMPONENT source_slit = Slit(
+    xwidth = S1W, yheight = S1H)
+  AT (0, 0, defl_slit) RELATIVE out_defl
+
+COMPONENT sample_slit = Slit(
+    xwidth = 0.03, yheight = 0.04)
+  AT (0, 0, LDS-0.3) RELATIVE out_defl
+
+SPLIT COMPONENT SamplePos = Arm()
+  AT (0, 0, LDS) RELATIVE out_defl
+
+COMPONENT SamposPSD = PSD_monitor(
+    nx = 100, ny = 100, restore_neutron = 1,
+    filename = "SamposPSD.psd", xwidth = 0.1, yheight = 0.1)
+  AT (0, 0, 0) RELATIVE SamplePos
+
+COMPONENT SamposEnergy = Monitor_nD(
+    options="energy",
+    bins=100, min=IN13energy-20e-3, max=IN13energy+20e-3,
+    restore_neutron = 1,
+    xwidth = 0.1, yheight = 0.1)
+  AT (0, 0, 0) RELATIVE SamplePos
+
+COMPONENT SamposPSDcm2 = Monitor_nD(
+  options="x y", xwidth=.01, yheight=.01, restore_neutron = 1)
+  AT (0, 0, 0) RELATIVE SamplePos
+
+/* Vanadium sample ========================================================== */
+/* incoming beam at 86.4 deg (GIMP)
+   left  analyser side: 36.2 deg from incoming beam
+   right analyser side: +180 from left side
+ */
+COMPONENT Sample = Incoherent(xwidth=0.03, yheight=0.05, zdepth=0.5e-3,
+  focus_ah=2*atan2(0.62/2,LSA)*RAD2DEG)
+  AT (0, 0, 0)     RELATIVE SamplePos
+  ROTATED (0,45,0) RELATIVE SamplePos
+  EXTEND %{
+    if (!SCATTERED) ABSORB;
+    flag_sample = SCATTERED;
+  %}
+
+COMPONENT PSD_scattered = Monitor_nD
+  (xwidth=2, bins=180, yheight=1,
+    options = "sphere theta limits=[-60 120], y limits=[-0.17 0.17]",
+    restore_neutron=1)
+  AT (0,0,0) RELATIVE SamplePos
+
+/* now we should rotate the neutron by RotateNeutron angle to bring it in the YZ plane */
+COMPONENT RotateNeutron = Arm()
+  AT (0,0,0)       RELATIVE SamplePos
+  ROTATED (0,90,0) RELATIVE SamplePos
+  EXTEND %{
+
+/* this code is copied from Rotator.comp which parameters are set static at INIT
+ * here we want a dynamic rotation for every neutron
+ * the rotation angle must be computed modulo the maximum divergence, so that we
+ * retain the full beam divergence on the analyser.
+ * The max divergence is given by the deflector size seen from the sample, adding
+ * the sample size. Deflector: width=0.05, height=9*1.5e-2
+ */
+    double   n;
+    double   RX, RY;
+
+    RotateNeutronX  = atan2(0.05+0.03, LDS);
+    RX              = atan2(vx,vz);
+    n               = nearbyint(RX/RotateNeutronX); /* e.g. 2 deg */
+    RotateNeutronX *= n; /* RotateNeutronX is quantified */
+
+    rot_set_rotation(R, 0, RotateNeutronX, 0); /* will rotate neutron instead of comp: negative side */
+    /* apply rotation to centered coordinates */
+    coords_get(rot_apply(R, coords_set(x,y,z)),    &x, &y, &z);
+    /* rotate speed */
+    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+
+    RotateNeutronY  = atan2(9*1.5e-2+0.05, LDS); /* e.g. 4.6 deg */
+    RY              = atan2(vy,vz);
+    n               = nearbyint(RY/RotateNeutronY);
+    RotateNeutronY *= n; /* RotateNeutronY is quantified */
+
+    rot_set_rotation(R, -RotateNeutronY, 0, 0); /* will rotate neutron instead of comp: negative side */
+    /* apply rotation to centered coordinates */
+    coords_get(rot_apply(R, coords_set(x,y,z)),    &x, &y, &z);
+    /* rotate speed */
+    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+    RotateNeutronY *= RAD2DEG;
+    RY             *= RAD2DEG;
+    RX             *= RAD2DEG;
+
+    /* absorb if the rotation does not fit in the analyser active area */
+    if (!(-60 < RX && RX < 120)) ABSORB;
+    if (!(-17 < RY && RY < 17)) ABSORB;
+
+    /* keep exact rotation angle for the final detector */
+    RotateNeutronX  = RX;
+
+  %}
+
+/* install the analyser. */
+COMPONENT AnalyserMount = Arm()
+  AT (0,0,LSA)       RELATIVE RotateNeutron
+
+/* d-spacing is CaF2 one, at reference T=301 K */
+
+/* in case you want to see how the beam is gathered onto a smaller analyser plate:
+COMPONENT Analyser_In = Monitor_nD(
+  xwidth=2*atan2(0.05+0.03, LDS)*LSA, yheight=2*atan2(9*1.5e-2+0.05, LDS)*LSA,
+  options="x y", restore_neutron=1)
+AT (0,0,0)       RELATIVE AnalyserMount
+*/
+COMPONENT Analyser = Monochromator_curved(
+  width=2*atan2(0.05+0.03, LDS)*LSA, height=2*atan2(9*1.5e-2+0.05, LDS)*LSA,
+  RV=RVA, RH=RVA, NV=10, NH=10, DM=1.1115, mosaic=mos_ana, gap=0 )
+  AT (0,0,0)       RELATIVE AnalyserMount
+  ROTATED(0,90,0)  RELATIVE AnalyserMount
+  EXTEND %{
+    if (!SCATTERED) ABSORB; /* perfect beam stop to account for the B4C block */
+  %}
+
+/* compensate the initial rotation: rotate back to recover vertical beam distribution */
+COMPONENT Sample_copy = COPY(Sample)(p_interact=0.1)
+  AT (0, 0, 0)     RELATIVE SamplePos
+  ROTATED (0,45,0) RELATIVE SamplePos
+  EXTEND %{
+    flag_sample += SCATTERED;
+
+    rot_set_rotation(R, RotateNeutronY*DEG2RAD, 0, 0);
+
+    coords_get(rot_apply(R, coords_set(x,y,z)),    &x, &y, &z);
+
+    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+  %}
+
+/* detector is backwards
+   35 tubes + PSD small angle = 3 more angles (integrated in angle)
+   height 25 cm, diameter 2.54 P=4bars+1bars
+   4440 cm3 at 5 bars: 20 bar.L
+   could use 2-3 layers of 1/2" tubes
+*/
+
+COMPONENT DetectorMount = Arm()
+  AT (0,0,-LSD) RELATIVE RotateNeutron
+
+COMPONENT Detector = Monitor_nD(
+  xwidth=0.1, yheight=.25, user1=RotateNeutronX, username1="Angle [deg]",
+  options="user1 limits=[-60 120], y", restore_neutron=1, bins=100)
+  AT (0, 0, 0)       RELATIVE DetectorMount
+
+COMPONENT DetectorEnergy = Monitor_nD(
+    options="energy",
+    bins=100, min=IN13energy-20e-3, max=IN13energy+20e-3,
+    restore_neutron = 1,
+    xwidth=.1, yheight=.25)
+  AT (0, 0, 0) RELATIVE DetectorMount
+
+COMPONENT DetectorShape = Monitor_nD(
+  xwidth=LSD*2, yheight=.25,
+  options="banana, theta limits=[-240 -60]")
+  AT (0, 0, 0) RELATIVE SamplePos
+
+/* End of section bastardised from ILL-Lagrange */
+
+END

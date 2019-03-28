@@ -1,0 +1,561 @@
+/*******************************************************************************
+*   McStas simulation of the Materials Probe for Internal Strain Investigations (SAFARI_MPISI)
+*
+* Instrument: SAFARI_MPISI
+*
+* %Identification
+* Written by: Deon Marais (deon.marais@necsa.co.za)
+* Date: September 2013
+* Origin: Necsa
+* Release: McStas 2.0
+* Version: $Revision 0.1 $
+* %INSTRUMENT_SITE: Necsa
+*
+* Materials Probe for Internal Strain Investigations
+*
+* %Description
+* Necsa Neutron Strain Scanner located at beam port 5 of the SAFARI-1 research reactor, South Africa
+*
+* %Parameters
+* source_lam_min:  [Angs]     Minimum wavelenth of source
+* source_lam_max:  [Angs]    Maximum wavelenth of source
+* hi_res:        Selects hi-resolution(1) or hi-intensity(0) reactor beam through primary shutter
+* mono_Si_type:      Monochromator Silicon type options: 422 400 311 511 111 331
+* mono_mosh:    [arc min]  Monochromator horizontal mosaicity
+* mono_mosv:    [arc min]  Monochromator vertical mosaicity
+* mono_dx:    [m]    Monochromator delta x - positive to left of reactor beam
+* mono_dy:    [m]    Monochromator delta y - positive upward of reactor beam
+* mono_dz:    [m]    Monochromator delta z - positive along reactor beam
+* mono_takeoff:  [deg]    Monochromator takeoff angle - positive anti-clockwise from reactor beam
+* mono_dtilt:    [deg]    Monochromator tilt angle - not implemented yet
+* mono_Rh:    [m]    Monochromator horizontal focus radius
+* port_takeoff:  [deg]    Port takeoff angle - positive anti clockwise from reactor beam
+* chamber_window_rad  [m]    Chamber window radius. If this is 0, there is no window
+* inc_slit_rot:  [deg]    Incident slit delta rotation - not implemented yet
+* inc_slit_dx:    [m]    Incident slit delta x position - positive to left of incident beam
+* inc_slit_to_cor:  [m]    Incident slit to sample stage center of rotation
+* inc_slit_width:  [m]    Incident slit width 0.00013m to 0.005m
+* inc_slit_height:  [m]    Incident slit height 0m to 0.02m
+* inc_slit_sep:      Incident slit separation between width and height. <0:use emperical calc, >=0:distance in m
+* mono_to_cor:    [m]    Distance between monochromator and center of rotation
+* sample_dx:    [m]    Sample delta x - positive to left of incident beam if sample_dom=0
+* sample_dy:    [m]    Sample delta y - positive upword of incident beam
+* sample_dz:    [m]    Sample delta x - positive along of incident beam if sample_dom=0
+* sample_dom:    [deg]    Sample delta omega - positive anti-clockwise from incident beam
+* det_takeoff:    [deg]    Detector takeoff angle - positive anti-clockwise from incident beam
+* cor_to_det:    [m]    Distance between sample centre of rotation and detector
+* diff_slit_dx:  [m]    Diffracted slit delta x position - positive to left of diffracted beam
+* diff_slit_to_cor:  [deg]    Distance between centre of rotation and diffracted slit
+* diff_slit_width:  [m]    Diffracted slit width
+* diff_slit_height:  [m]    Diffracted slit height
+* full_instrument:      When 1, simulates the complete instrument. When 0, only simulate from the outlet collimator
+*
+* %Link
+* The South African Nuclear Energy Corporation <a href="http://www.necsa.co.za"> website</a>
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT SAFARI_MPISI( source_lam_min=0.5, source_lam_max=2.0,
+      hi_res=0,
+      mono_Si_type=311, mono_mosh=30, mono_mosv=30,
+      mono_dx=0, mono_dy=0, mono_dz=0, mono_takeoff=-83.5, mono_dtilt=0,mono_Rh=3.572,
+      port_takeoff=-83.5, chamber_window_rad=0.05534,
+      inc_slit_rot=0, inc_slit_dx=0, inc_slit_to_cor=0.005,
+      inc_slit_width=0.005, inc_slit_height=0.02, inc_slit_sep=-1,
+      mono_to_cor=2.5, sample_dx=0, sample_dy=0, sample_dz=0, sample_dom=0,
+      det_takeoff=90, cor_to_det=1.148,
+      diff_slit_dx=0, diff_slit_to_cor=0.005,
+      diff_slit_width=0.005, diff_slit_height=0.02,
+      full_instrument=1)
+
+
+
+DECLARE
+%{
+double hi_res, port_takeoff,chamber_window_rad;
+double mono_Si_type, mono_mosh, mono_mosv;
+double mono_dx, mono_dy, mono_dz;
+double mono_takeoff, mono_dtilt, mono_Rh;
+double inc_slit_rot, inc_slit_dx, inc_slit_to_cor;
+double inc_slit_width, inc_slit_height, inc_slit_sep;
+double mono_to_cor;
+double sample_dx, sample_dy, sample_dz, sample_dom;
+double det_takeoff, cor_to_det;
+double diff_slit_dx, diff_slit_to_cor;
+double diff_slit_width, diff_slit_height;
+
+double inc_slit_xmin, inc_slit_xmax, inc_slit_ymin, inc_slit_ymax;
+double inc_slit_xmin_h, inc_slit_xmax_h, inc_slit_ymin_w, inc_slit_ymax_w;
+double diff_slit_xmin, diff_slit_xmax, diff_slit_ymin, diff_slit_ymax;
+double wafer_d, start_wafer_pos, mono_turns, mono_Rh_req, mono_d, mono_q;
+double lam;
+double focal_dist;
+double as;
+int msw;
+
+double chamber_col_start, chamber_col_length;
+
+double from_col=1;
+double full_instrument;
+
+
+%}
+
+INITIALIZE
+%{
+printf ("\n------------------\n");
+
+/* Constants */
+chamber_col_start=0.8615;   //from the diffraction center
+chamber_col_length=0.919;
+
+
+/* Incident slit */
+inc_slit_xmin = -inc_slit_width/2.0;
+inc_slit_xmax = inc_slit_width/2.0;
+inc_slit_ymin = -inc_slit_height/2.0;
+inc_slit_ymax = inc_slit_height/2.0;
+if (inc_slit_sep < 0) {      //Emperical formula. Linear dependance derived from measurements: sep=13.18mm when width=0.13mm; sep=4.18mm when width=4.95mm
+  inc_slit_sep= -1.86721992 * inc_slit_width + 0.0134227385;
+}
+printf ("Incident slit separation = %.4lf mm\n",inc_slit_sep*1000);
+
+if (inc_slit_sep == 0) {      //No gap, so horisonal and vertical slits lie ontop of each other and can have same dimensions
+  inc_slit_xmin_h = inc_slit_xmin;
+  inc_slit_xmax_h = inc_slit_xmax;
+  inc_slit_ymin_w = inc_slit_ymin;
+  inc_slit_ymax_w = inc_slit_ymax;
+} else {        //Perform some trig to be sure that none of the neutrons are accidentally cut of
+  double col_to_slit = (mono_to_cor-inc_slit_to_cor) - (mono_to_cor-chamber_col_start+chamber_col_length);
+  inc_slit_ymax_w = 1.01*(inc_slit_ymax + (0.023745 + inc_slit_ymax)*inc_slit_sep/col_to_slit);
+  if (inc_slit_ymax_w < inc_slit_ymax) inc_slit_ymax_w = inc_slit_ymax;
+  inc_slit_ymin_w = -inc_slit_ymax_w;
+  inc_slit_xmax_h = -1.01*(((0.01077+inc_slit_xmax)*inc_slit_sep/col_to_slit)-inc_slit_xmax);
+  if (inc_slit_xmax_h < inc_slit_xmax) inc_slit_xmax_h = inc_slit_xmax;
+  inc_slit_xmin_h = - inc_slit_xmax_h;
+}
+printf ("Height slit: width=%.4lfmm, height=%.4lfmm\n",2*inc_slit_xmax_h*1000, 2*inc_slit_ymax*1000);
+printf ("Width  slit: width=%.4lfmm, height=%.4lfmm\n",2*inc_slit_xmax*1000, 2*inc_slit_ymax_w*1000);
+
+
+/* Diffracted slit */
+diff_slit_xmin = -diff_slit_width/2.0;
+diff_slit_xmax = diff_slit_width/2.0;
+diff_slit_ymin = -diff_slit_height/2.0;
+diff_slit_ymax = diff_slit_height/2.0;
+
+/*
+PoiConst = 0.2;
+miu = 0.00004;
+F = 4.1534*0.01;
+D = 0.000725;*/
+
+/* Monochromator */
+wafer_d = (11.89/13.0/1000);    //Wafer diameter. Total blade diameter (11.89mm) made up from 13 wafers
+start_wafer_pos = 6.0 * wafer_d;  //In order to have the middle waver situated at the centre of the port takeoff
+
+msw=(int)mono_Si_type;
+switch (msw) {
+  case 422: mono_d = 1.10858; break;
+  case 400: mono_d = 1.35773; break;
+  case 311: mono_d = 1.63748; break;
+  case 511: mono_d = 1.04518; break;
+  case 111: mono_d = 3.135; break;
+  case 331: mono_d = 1.24594; break;
+  case 551: mono_d = 0.76049; break;
+
+}
+
+
+mono_q = 2*PI/mono_d;
+double mono_omega = fabs(mono_takeoff/2.0);
+lam=2.0*mono_d*sin(DEG2RAD*mono_omega);
+printf ("mono_Si_type = %i, mono_d=%.4lfA, mono_omega = %.2lfdeg, lambda = %.4lfA\n",msw,mono_d,mono_omega,lam);
+
+/* Monochromator-sample distance*/
+mono_turns=(1005.5/mono_Rh)-13;    //emperical formula that equates the number of turns of the motor to the curvature. Taken from Multi-wafer silicon monochromator for stress machine at SAFARI, South Africa. Mihai Popovici
+as = -tan(2*DEG2RAD*mono_omega)/(tan(DEG2RAD*mono_omega));
+focal_dist = mono_Rh*(1-(0.5/as))*sin(DEG2RAD*mono_omega);
+printf ("Monochromator to focal point = %.4lfm (%.2lf turns)\n",focal_dist, mono_turns);
+
+mono_Rh_req = mono_to_cor/((1-(0.5/as))*sin(DEG2RAD*mono_omega));
+mono_turns=(1005.5/mono_Rh_req)-13;    //emperical formula that equates the number of turns of the motor to the curvature. Taken from Multi-wafer silicon monochromator for stress machine at SAFARI, South Africa. Mihai Popovici
+printf ("To focus on COR at %.3lfm, let mono_Rh = %.4lfm (%.2lf turns)\n",mono_to_cor,mono_Rh_req, mono_turns);
+
+printf ("------------------\n\n");
+
+%}
+
+TRACE
+//**************************************************************************************************
+//Source
+COMPONENT Progress = Progress_bar(percent=10,flag_save=0)
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Reactorbeam = Arm()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Prim_axes = Arm()
+  AT (0, 0, 5.55177) RELATIVE Reactorbeam
+  ROTATED (0, port_takeoff, 0) RELATIVE Reactorbeam
+
+
+
+
+COMPONENT  Source = Source_gen(
+    radius = 0.0905, dist = 2.86805, focus_xw = 0.1, focus_yh = 0.05,
+    Lmin = source_lam_min, Lmax = source_lam_max, I1 = 0)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Reactorbeam
+
+COMPONENT PSD_Source = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_Source",
+    xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Reactorbeam
+
+COMPONENT LAM_Source = L_monitor(
+    nL = 100, Lmin = source_lam_min, Lmax = source_lam_max,
+    filename = "LAM_Source.out",
+    xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Reactorbeam
+
+
+COMPONENT Window_before_filter = Slit(
+    xmin = -0.05, xmax = 0.05, ymin = -0.02922, ymax = 0.02922)
+  WHEN (full_instrument==1)
+  AT (0, 0, 3.24045) RELATIVE Reactorbeam
+
+//**************************************************************************************************
+//Filter
+// The Al2O3_sapphire.trm filter is specified for a 0.0508m thickness,
+// ours is 0.15876m thick, therefore thickness will be defined as 3.1752
+COMPONENT Sapphire_filter = Filter_gen(
+    filename = "Al2O3_sapphire.trm", options = "multiply",
+    xmin = -0.053975, xmax = 0.053975 , ymin = -0.0381, ymax = 0.0381, thickness=3.125)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Window_before_filter
+
+COMPONENT Window_after_filter = Slit(
+    xmin = -0.05, xmax = 0.05, ymin = -0.032005, ymax = 0.032005)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0.15876) RELATIVE Sapphire_filter
+
+COMPONENT LAM_After_sapphire = L_monitor(
+    nL = 100, Lmin = source_lam_min, Lmax = source_lam_max,
+    filename = "LAM_After_sapphire.out",
+    xmin = -0.05, xmax = 0.05, ymin = -0.032005, ymax = 0.032005)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Window_after_filter
+
+COMPONENT PSD_After_sapphire = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_After_sapphire",
+    xmin = -0.05*1.1, xmax = 0.05*1.1, ymin = -0.032005*1.1, ymax = 0.032005*1.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Window_after_filter
+
+
+COMPONENT HighResOutlet = Slit(
+    xmin = -0.0325, xmax = 0.0325, ymin = -0.06, ymax = 0.06)
+  WHEN ((hi_res==1) && (full_instrument==1))
+  AT (0, 0, 4.84055) RELATIVE Reactorbeam
+
+COMPONENT HighIntensityOutlet = Slit(
+    xmin = -0.05, xmax = 0.05, ymin = -0.06, ymax = 0.06)
+  WHEN ((hi_res==0) && (full_instrument==1))
+  AT (0, 0, 4.84055) RELATIVE Reactorbeam
+
+COMPONENT PSD_After_Outlet = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_After_Outlet",
+    xmin = -0.05*1.1, xmax = 0.05*1.1, ymin = -0.06*1.1, ymax = 0.06*1.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 4.84055) RELATIVE Reactorbeam
+
+//**************************************************************************************************
+//Monochromator
+COMPONENT Mono_axis = Arm()
+  AT (0+mono_dx, 0+mono_dy, 5.55177+mono_dz) RELATIVE Reactorbeam
+  ROTATED (0, mono_takeoff/2.0, 0) RELATIVE Reactorbeam
+
+
+//RV=-1.59 fixed
+COMPONENT Blade_1 = Monochromator_curved(
+ //  zwidth = 0.016163, yheight = 0.137/27.0, gap = (141-137)/27.0/1000.0, NH = 51, NV = 27,
+   zwidth = 0.2/51.0, yheight = 0.137/27.0, gap = (141-137)/27.0/1000.0, NH = 51, NV = 27,
+   mosaich = mono_mosh,  mosaicv = mono_mosv, r0 = 1.0, t0 = 1.0, RV = -1.59, RH = -mono_Rh,
+   DM = mono_d )
+  WHEN (full_instrument==1)
+  AT ( -start_wafer_pos, 0,0) RELATIVE Mono_axis
+  GROUP Monochro
+
+COMPONENT Blade_2 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_3 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_4 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_5 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_6 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_7 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_8 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_9 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_10 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_11 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_12 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT Blade_13 = COPY(Blade_1)
+  WHEN (full_instrument==1)
+  AT (wafer_d,0,0) RELATIVE PREVIOUS
+  GROUP Monochro
+
+COMPONENT PSD_BehindMono = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_BehindMono.out",
+    //xmin = -0.13, xmax = 0.13, ymin = -0.1125, ymax = 0.1125)
+    xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
+  AT (0, 0, 5.8) RELATIVE Reactorbeam
+  GROUP Monochro
+
+COMPONENT LAM_BehindMono = L_monitor(
+    nL = 100, Lmin = source_lam_min, Lmax = source_lam_max,
+    filename = "LAM_BehindMono.out",
+    //xmin = -0.13, xmax = 0.13, ymin = -0.1125, ymax = 0.1125)
+    xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
+  AT (0, 0, 5.8) RELATIVE Reactorbeam
+  GROUP Monochro
+
+COMPONENT ReactorBeamStop = Beamstop(
+    xmin = -0.1,xmax = 0.1, ymin=-0.1, ymax=0.1)
+  AT (0, 0, 5.8) RELATIVE Reactorbeam
+
+
+
+//**************************************************************************************************
+//Chamber Collimator
+//COMPONENT Prim_axes = Arm()
+//  AT (0, 0, 5.55177) RELATIVE Reactorbeam
+//  ROTATED (0, port_takeoff, 0) RELATIVE Reactorbeam
+
+  //About at the inside surface of the secondary shutter
+COMPONENT PSD_At_sec_shutter = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_At_sec_shutter.out",
+    xmin = -0.13, xmax = 0.13, ymin = -0.1125, ymax = 0.1125)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0.31) RELATIVE Prim_axes
+
+COMPONENT LAM_At_sec_shutter = L_monitor(
+    nL = 100, Lmin = source_lam_min, Lmax = source_lam_max,
+    filename = "LAM_At_sec_shutter.out",
+    xmin = -0.13, xmax = 0.13, ymin = -0.1125, ymax = 0.1125)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT PSD_Before_inside_chamber_window = PSD_monitor(
+      nx = 100, ny = 100, filename = "PSD_Before_inside_chamber_window.out",
+      xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0.41668) RELATIVE Prim_axes
+
+COMPONENT Inside_chamber_window = Slit(
+      radius = chamber_window_rad)
+  WHEN ((full_instrument==1) && (chamber_window_rad>0))
+  AT (0, 0, 0.41668) RELATIVE Prim_axes
+
+COMPONENT PSD_After_inside_chamber_window = PSD_monitor(
+      nx = 100, ny = 100, filename = "PSD_After_inside_chamber_window.out",
+      xmin = -0.05534*1.1, xmax = 0.05534*1.1, ymin = -0.05534*1.1, ymax = 0.05534*1.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Inside_chamber_window
+
+COMPONENT Inside_chamber_collimator = Slit(
+      xmin = -0.021, xmax = 0.021, ymin = -0.0425, ymax = 0.0425)
+  WHEN (full_instrument==1)
+  AT (0, 0, chamber_col_start) RELATIVE Prim_axes
+
+COMPONENT PSD_After_inside_chamber_collimator = PSD_monitor(
+      nx = 100, ny = 100, filename = "PSD_After_inside_chamber_collimator.out",
+      xmin = -0.021*1.1, xmax = 0.021*1.1, ymin = -0.0425*1.1, ymax = 0.0425*1.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Inside_chamber_collimator
+
+COMPONENT Outside_chamber_collimator = Slit(
+      xmin = -0.012545, xmax = 0.012545, ymin = -0.02012, ymax = 0.02012)
+  WHEN (full_instrument==1)
+  AT (0, 0, chamber_col_length) RELATIVE Inside_chamber_collimator
+
+COMPONENT PSD_Outside_chamber_collimator_1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_Outside_chamber_collimator_1.out",
+    xmin = -0.012545*1.1, xmax = 0.012545*1.1, ymin = -0.02012*1.1, ymax = 0.02012*1.1)
+  WHEN (full_instrument==1)
+  AT (0, 0, 0) RELATIVE Outside_chamber_collimator
+
+COMPONENT Source_capture = Virtual_output(
+  filename="Source_capture.dat")
+   WHEN (full_instrument==1)
+   AT (0, 0, chamber_col_start+chamber_col_length) RELATIVE Prim_axes
+
+ /*
+COMPONENT Colimator_source = Virtual_input(
+  filename="C:\\mcstas-2.0\\workspace\\Source_capture.dat",verbose=1, repeat_count=1, smooth=1)
+   WHEN (full_instrument==0)
+   AT (0, 0, chamber_col_start+chamber_col_length) RELATIVE Prim_axes
+ */
+
+COMPONENT PSD_Outside_chamber_collimator = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_Outside_chamber_collimator.out",
+    xmin = -0.012545*1.1, xmax = 0.012545*1.1, ymin = -0.02012*1.1, ymax = 0.02012*1.1)
+  AT (0, 0, chamber_col_start+chamber_col_length) RELATIVE Prim_axes
+
+//**************************************************************************************************
+//Incident slit
+
+COMPONENT Incident_slit_h = Slit(
+      xmin = inc_slit_xmin_h, xmax = inc_slit_xmax_h, ymin = inc_slit_ymin, ymax = inc_slit_ymax)
+  AT (inc_slit_dx, 0, mono_to_cor-inc_slit_to_cor-inc_slit_sep) RELATIVE Prim_axes
+
+COMPONENT Incident_slit_w = Slit(
+      xmin = inc_slit_xmin, xmax = inc_slit_xmax, ymin = inc_slit_ymin_w, ymax = inc_slit_ymax_w)
+  AT (inc_slit_dx, 0, mono_to_cor-inc_slit_to_cor) RELATIVE Prim_axes
+
+COMPONENT PSD_After_Incident_slit_w = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_After_Incident_slit_w.out",
+    xmin = inc_slit_xmin*1.5, xmax = inc_slit_xmax*1.5, ymin = inc_slit_ymin*1.5, ymax = inc_slit_ymax*1.5)
+  AT (0, 0, 0) RELATIVE Incident_slit_w
+
+COMPONENT Center_of_rotation = Arm()
+  AT (0, 0, mono_to_cor) RELATIVE Prim_axes
+
+
+//**************************************************************************************************
+//Sample
+
+COMPONENT Sample_rotation = Arm()
+  AT (0, 0, 0) RELATIVE Center_of_rotation
+  ROTATED (0, sample_dom, 0) RELATIVE Center_of_rotation
+
+COMPONENT Sample_location = Arm()
+  AT (sample_dx, sample_dy, sample_dz) RELATIVE Sample_rotation
+
+
+/*COMPONENT PSD_Center_of_rotation = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_Center_of_rotation",
+    xmin = inc_slit_xmin*1.5, xmax = inc_slit_xmax*1.5, ymin = inc_slit_ymin*1.5, ymax = inc_slit_ymax*1.5)
+  AT (0, 0, 0) RELATIVE Center_of_rotation
+
+COMPONENT DIV_Center_of_rotation = Divergence_monitor(
+    nh = 100, nv = 100, filename = "DIV_Center_of_rotation",
+    xmin = inc_slit_xmin*1.5, xmax = inc_slit_xmax*1.5, ymin = inc_slit_ymin*1.5, ymax = inc_slit_ymax*1.5)
+  AT (0, 0, 0) RELATIVE Center_of_rotation*/
+
+/*COMPONENT Sample =  V_sample(radius = 0.005,
+  yheight = 0.05, focus_r = 0, pack = 1,
+  target_x = 0, target_y = 0, target_z = 1)
+  AT (0,0,0) RELATIVE Sample_location*/
+
+SPLIT COMPONENT Sample = PowderN(
+    reflections = "Fe.laz", radius = 0.005,
+    yheight = 0.05)
+  AT (0,0,0) RELATIVE Sample_location
+  /*EXTEND
+  %{
+    if (!SCATTERED) ABSORB;
+  %}*/
+
+ /*
+SPLIT COMPONENT Sample = Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
+mosaic = 5, reflections="YBaCuO.lau")
+  AT (0,0,0) RELATIVE Sample_location
+  EXTEND
+  %{
+    if (!SCATTERED) ABSORB;
+  %}**/
+
+/*COMPONENT PSD_After_Sample_location = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_After_Sample_location",
+    xmin = -0.2, xmax = 0.2, ymin = -0.2, ymax = 0.2)
+  AT (0, 0, 1) RELATIVE Sample_location */
+
+  COMPONENT DiffBeamStop = Beamstop(
+      xmin = -0.2,xmax = 0.2, ymin=-0.2, ymax=0.2)
+  AT (0, 0, mono_to_cor+0.4) RELATIVE Prim_axes
+
+//**************************************************************************************************
+//Secondary Slit
+COMPONENT Det_axis = Arm(
+    )
+  AT (0, 0, 0) RELATIVE Center_of_rotation
+  ROTATED (0, det_takeoff, 0) RELATIVE Center_of_rotation
+
+
+/*COMPONENT Diffracted_slit = Slit(
+      xmin = diff_slit_xmin, xmax = diff_slit_xmax, ymin = diff_slit_ymin, ymax = diff_slit_ymax)
+  AT (0, 0, diff_slit_to_cor) RELATIVE Det_axis
+
+COMPONENT PSD_After_Diffracted_slit = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_After_Diffracted_slit.out",
+    xmin = inc_slit_xmin*1.1, xmax = inc_slit_xmax*1.1, ymin = inc_slit_ymin*1.1, ymax = inc_slit_ymax*1.1)
+  AT (0, 0, 0) RELATIVE Diffracted_slit */
+
+
+//**************************************************************************************************
+//Detector
+
+/*COMPONENT PSD_4pi = PSD_monitor_4PI(radius=0.7, nx=101, ny=51,
+  filename="vanadium.psd")
+  AT (0,0,0) RELATIVE Det_axis*/
+
+
+
+COMPONENT PSD_Detector = PSD_monitor(
+    nx = 300, ny = 100, filename = "PSD_Detector", xmin = -0.15,
+    xmax = 0.15, ymin = -0.15, ymax = 0.15)
+  AT (0, 0, cor_to_det) RELATIVE Det_axis
+
+
+
+
+FINALLY
+%{
+%}
+END

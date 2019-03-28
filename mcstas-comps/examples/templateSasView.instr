@@ -1,0 +1,79 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: templateSasView
+*
+* %Identification
+* Written by: Kim Lefmann
+* Date: 19th Dec 2003.
+* Origin: Risoe
+* Modified by: Torben  Nielsen 25 Jan. 2016
+*
+* %INSTRUMENT_SITE: Templates
+*
+* Test instrument for the SasView_model component. No guide / velocity selector
+* etc.
+*
+* %Description
+* Very simple test instrument for the SasView_model component
+*
+* %Parameters
+* lambda: [AA]   Mean wavelength of neutrons
+* dlambda: [AA]  Wavelength spread of neutrons
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT templateSasView(lambda=6, dlambda=0.05)
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm(
+    )
+  AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+    radius = 0.02, dist = 3, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = lambda, dlambda = dlambda, flux = 1e8)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+// Example sphere
+SPLIT COMPONENT sample = SasView_model(model_index=47, model_scale=1,   model_pars={ 1, 7, 200 },
+model_abs=0.0,
+                         xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+   AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+       if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  AT (0, 0, 3) RELATIVE sample
+
+COMPONENT Ldetector = L_monitor(
+    nL = 1000, filename = "Edet.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 5.5,
+    Lmax = 6.5)
+  AT (0, 0, 3.01) RELATIVE sample
+
+COMPONENT PSDrad = PSD_monitor_rad(
+    filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
+  AT (0, 0, 3.02) RELATIVE sample
+
+END

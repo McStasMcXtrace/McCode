@@ -1,0 +1,131 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Guides_Curved
+*
+* %Identification
+* Written by: P. Willendrup, DTU Fysik
+* Date: Nov 1st, 2013
+* Origin: DTU Fysik
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Cross comparison of curved Guide components
+*
+* %Description
+* Cross comparison of curved Guide components, using McStas and
+* contributed components. It shows that all implementations are to good approximation equivalent.
+*
+* %Example: Guide=1 Detector: Monitor2_xy1_I=0.00224746
+* %Example: Guide=2 Detector: Monitor2_xy2_I=0.00177338
+* %Example: Guide=3 Detector: Monitor2_xy3_I=0.00186028
+* %Example: Guide=4 Detector: Monitor2_xy4_I=0.00168562
+*
+* %Parameters
+* Guide: [1]      Choice of Guide component to test, with 1=Guide_curved 2=Elliptic_guide_gravity, 3=Pol_bender, 4=Bender.
+* curvature: [m]  Radius of curvature
+* length: [m]     Length of the guide
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Guides_Curved(int Guide=1, curvature=1000, length=100)
+
+DECLARE
+%{
+  double Circumf, Arcangle, angle, ex, ey, ez, rx, ry, rz, lz;
+
+  double calcAlpha(double length, double radius) {
+    // calculate angle of arm after curved guide
+    return RAD2DEG * length/radius;
+  }
+
+  double calcX(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*(1.0-cos(alpha));
+  }
+
+  double calcZ(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*sin(alpha);
+  }
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_gen(
+   focus_xw = 0.05, focus_yh = 0.05, lambda0 = 3.39, dlambda = 0.3,
+   yheight = 0.05, xwidth = 0.05)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+	t = randtriangle()*1e-3;	/* 1 ms triangle time window */
+%}
+
+COMPONENT Monitor1_xt = Monitor_nD(
+    options = "x y", xwidth = 0.05, yheight = 0.05)
+  AT (0, 0, 1) RELATIVE PREVIOUS
+
+ COMPONENT Guide_Position = Arm( )
+  AT (0, 0, 0.1) RELATIVE PREVIOUS
+
+COMPONENT GuideR = Guide_curved(
+    w1 = 0.05, h1 = 0.05, l = length, curvature=curvature)
+  WHEN (Guide == 1)
+  AT (0, 0, 0) RELATIVE Guide_Position
+
+
+// Current implementation seems to have the opposite sign in the curvature than Guide_curved.
+// Does not bend the guide but bends the neutron, via adding centripetal force in gravity
+COMPONENT GuideEl = Elliptic_guide_gravity(
+  xwidth = 0.05, yheight=0.05, l = length,
+  linxw=1e6, linyh=1e6, loutxw=1e6, loutyh=1e6, dimensionsAt="mid", curvature=-curvature)
+  WHEN (Guide == 2)
+  AT (0, 0, 0) RELATIVE Guide_Position
+
+// For visibility in mcdisplay this component bends the other way
+COMPONENT GuideB = Pol_bender(xwidth = 0.05, yheight = 0.05, length = length, radius=-curvature,
+	     nslit=1)
+WHEN (Guide == 3)  AT (0, 0, 0) RELATIVE Guide_Position
+
+// Does not bend the guide but bends the neutron
+COMPONENT GuideB2 = Bender(w = 0.05, h = 0.05, r=curvature, Win=length/curvature,k=1)
+WHEN (Guide == 4)  AT (0, 0, 0) RELATIVE Guide_Position
+
+COMPONENT RArm=Arm()
+  AT (calcX(length, curvature),0,calcZ(length, curvature)) RELATIVE GuideR
+  ROTATED (0, calcAlpha(length,curvature),0) RELATIVE GuideR
+
+COMPONENT Monitor2_xy1 = Monitor_nD(
+    options = "x y", xwidth = 0.07, yheight = 0.07)
+WHEN (Guide == 1)
+ AT (0, 0, 2) RELATIVE RArm
+
+
+COMPONENT Monitor2_xy2 = Monitor_nD(
+    options = "x y", xwidth = 0.07, yheight = 0.07)
+  WHEN (Guide == 2)
+  AT (0, 0, length+2) RELATIVE Guide_Position
+
+COMPONENT BArm=Arm()
+  AT (calcX(length, -curvature),0,calcZ(length, curvature)) RELATIVE GuideR
+  ROTATED (0, calcAlpha(length,-curvature),0) RELATIVE GuideR
+
+COMPONENT Monitor2_xy3 = Monitor_nD(
+    options = "x y", xwidth = 0.07, yheight = 0.07)
+WHEN (Guide == 3)
+ AT (0, 0, 2) RELATIVE BArm
+
+COMPONENT Monitor2_xy4 = Monitor_nD(
+    options = "x y", xwidth = 0.07, yheight = 0.07)
+  WHEN (Guide == 4)
+  AT (0, 0, length+2) RELATIVE Guide_Position
+
+COMPONENT dummy = PSD_monitor_4PI(filename="junk", radius=length+1.1, restore_neutron=1)
+  WHEN (1==0 ) AT (0,0,0) ABSOLUTE
+END

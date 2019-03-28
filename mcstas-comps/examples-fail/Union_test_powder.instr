@@ -1,0 +1,70 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_test_powder
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* %INSTRUMENT_SITE: Union_demos
+*
+* Simple test instrument for powder process in Union framework.
+*
+* %Description
+* simple test instrument for sample component.
+*
+* Example: Detector: m4pi_I=4.23557e-06
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_test_powder()
+
+DECLARE
+%{
+%}
+
+TRACE
+COMPONENT test_incoherent = Incoherent_process(sigma=1.5,packing_factor=1,unit_cell_volume=66.4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT test_powder = Powder_process(reflections="Al.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT test_material = Union_make_material(my_absorption=4)
+AT (0,0,0) ABSOLUTE
+
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+        xwidth=0.0005, yheight=0.0005,focus_aw=3, focus_ah=2,
+        E0 = 100,
+        dE = 0)
+  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,1.4) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+// V1
+COMPONENT test_powder_sample = Union_cylinder(radius=0.04,yheight=0.03,priority=5,material_string="test_material")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT test_sample = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+
+COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",restore_neutron=1)
+  AT (0, 0, 0) RELATIVE beam_center
+
+
+END
