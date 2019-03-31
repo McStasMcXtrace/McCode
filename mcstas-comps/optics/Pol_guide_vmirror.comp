@@ -63,14 +63,14 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_vmirror
-DEFINITION PARAMETERS (xwidth, yheight, length,
+DEFINITION PARAMETERS (
 rFunc=StdReflecFunc, rUpFunc=StdReflecFunc,
 rDownFunc=StdReflecFunc,
 rPar    ={1.0, 0.0219, 4.07, 3.2, 0.003},
 rUpPar  ={1.0, 0.0219, 4.07, 3.2, 0.003},
-rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003},
-useTables=0)
-SETTING PARAMETERS (int debug=0)
+rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003})
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, length=0.5, int debug=0,
+    useTables=0, allow_inside_start=0)
 OUTPUT PARAMETERS (localG,
 normalTop, normalBot, normalLeft, normalRight, normalInOut,
 pointTop, pointBot, pointLeft, pointRight,
@@ -174,7 +174,7 @@ INITIALIZE
   normalRight  = coords_set(1, 0, 0);
   pointRight = coords_set(-xwidth/2, 0, 0);
 
-  %}
+%}
 
 TRACE
 %{
@@ -190,8 +190,10 @@ TRACE
   // Pol variables
   double FN, FM, Rup, Rdown, refWeight;
 
-  /* Propagate neutron to guide entrance. */
-  PROP_Z0;
+  if(!allow_inside_start || z<0){
+    /* Propagate neutron to guide entrance. */
+    PROP_Z0;
+  }
 
   if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
@@ -201,7 +203,6 @@ TRACE
     normalMirror  = coords_set(norm*length, 0, -norm*xwhalf);
     pointMirror = coords_set(0, 0, 0);
   } else {
-
     // "right" opening
     normalMirror  = coords_set(norm*length, 0, norm*xwhalf);
     pointMirror = coords_set(0, 0, 0);
@@ -263,7 +264,6 @@ TRACE
       time=tSide;
 
     if (tMirror>tThreshold && tMirror<time) {
-
       time=tMirror;
       mirrorReflect = 1; // flag to show which reflection function to use
     }
@@ -365,7 +365,7 @@ TRACE
 	      SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
       }
 
-      if (sx*sx+sy*sy+sz*sz>1.000001) { // check that polarisation is meaningfull
+      if (sx*sx+sy*sy+sz*sz>1.000001) { // check that polarisation is meaningful
         fprintf(stderr, "Pol_guide_vmirror: %s: polarisation |s|=%g > 1 s=[%g,%g,%g]\n",
           NAME_CURRENT_COMP, sx*sx+sy*sy+sz*sz, sx, sy, sz);
       }
