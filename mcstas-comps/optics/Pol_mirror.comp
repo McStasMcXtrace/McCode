@@ -55,14 +55,14 @@
 * %P
 * INPUT PARAMETERS:
 *
-* zwidth: [m]     Width of the mirror 
-* yheight: [m]    Height of the mirror 
-* rUpFunc: [1]    Reflection function for spin up (q, *par, *r) 
-* rUpPar: [1]     Parameters for rUpFunc 
-* rDownFunc: [1]  Reflection function for spin down (q, *par, *r) 
-* rDownPar: [1]   Parameters for rDownFunc 
-* useTables: [1]  Parameters are 0: Values, 1: Table names 
-* p_reflect: [1]  Proportion of reflected events. Use 0 to only get the transmitted beam, and 1 to get only the reflected beam. Use -1 to use the mirror reflectivity. This value is purely computational and is not related to the actual reflectivity 
+* zwidth: [m]     Width of the mirror
+* yheight: [m]    Height of the mirror
+* rUpFunc: [1]    Reflection function for spin up (q, *par, *r)
+* rUpPar: [1]     Parameters for rUpFunc
+* rDownFunc: [1]  Reflection function for spin down (q, *par, *r)
+* rDownPar: [1]   Parameters for rDownFunc
+* useTables: [1]  Parameters are 0: Values, 1: Table names
+* p_reflect: [1]  Proportion of reflected events. Use 0 to only get the transmitted beam, and 1 to get only the reflected beam. Use -1 to use the mirror reflectivity. This value is purely computational and is not related to the actual reflectivity
 *
 * OUTPUT PARAMETERS:
 * SCATTERED: []   is 1 for reflected, and 2 for transmitted neutrons
@@ -73,10 +73,19 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_mirror
-DEFINITION PARAMETERS (useTables=0, 
-  rUpFunc=StdReflecFunc, rDownFunc=rUpFunc,
-  rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar)
-SETTING PARAMETERS (p_reflect=-1, zwidth, yheight)
+
+DEFINITION PARAMETERS (
+  /*useTables=0,*/
+  /*rUpFunc=StdReflecFunc,*/
+  /*rDownFunc=rUpFunc,*/)
+
+SETTING PARAMETERS (
+  vector rUpPar={0.99,0.0219,6.07,2.0,0.003},
+  vector rDownPar={0.99,0.0219,6.07,2.0,0.003},
+  p_reflect=-1,
+  zwidth,
+  yheight)
+
 OUTPUT PARAMETERS  (rUpParPtr, rDownParPtr)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -114,8 +123,8 @@ INITIALIZE
     exit(1);
   }
 #else // use function call with vector parameters
-  rUpParPtr   = (double [])rUpPar;
-  rDownParPtr = (double [])rDownPar;
+  rUpParPtr   = (double *)rUpPar;
+  rDownParPtr = (double *)rDownPar;
 #endif
 
   if ((zwidth<=0) || (yheight <= 0)) {
@@ -142,8 +151,14 @@ TRACE
     Q = fabs(2*vx*V2K);
 
     // calculate reflection probability
-    rUpFunc(Q, rUpParPtr, &Rup);
-    rDownFunc(Q, rDownParPtr, &Rdown);
+
+    // downgraded from defpars version
+    //rUpFunc(Q, rUpParPtr, &Rup);
+    StdReflecFunc(Q, rUpParPtr, &Rup);
+
+    // downgraded from defpars version
+    //rDownFunc(Q, rDownParPtr, &Rdown);
+    StdReflecFunc(Q, rDownParPtr, &Rdown);
 
     if(Rup != Rdown) {
 
@@ -206,7 +221,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
+
   rectangle("yz", 0, 0, 0, zwidth, yheight);
 %}
 
