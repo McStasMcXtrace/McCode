@@ -308,6 +308,8 @@ char  *mcsig_message;
 /* the body of this function depends on component instances, and is cogen'd */
 void* _getvar_parameters(char* compname);
 
+#define INSTRUMENT_GETPAR(par) (instrument->_parameters._ ## par)
+
 /* Current component name, index, position and orientation */
 /* These macros work because, using class-based functions, "comp" is usually
 *  the local variable of the active/current component. */
