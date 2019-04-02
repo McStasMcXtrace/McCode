@@ -64,14 +64,14 @@
 
 DEFINE COMPONENT Pol_guide_vmirror
 DEFINITION PARAMETERS (
-  rFunc=StdReflecFunc,
-  rUpFunc=rFunc,
-  rDownFunc=rFunc,
-  rUpPar=rPar,
-  rDownPar=rPar,
-  rPar={1.0, 0.0219, 4.07, 3.2, 0.003},
-  useTables=0)
+  /*rFunc=StdReflecFunc,*/
+  /*rUpFunc=StdReflecFunc,*/
+  /*rDownFunc=StdReflecFunc,*/
+  /*useTables=0 */)
 SETTING PARAMETERS (
+  vector rUpPar={1.0, 0.0219, 4.07, 3.2, 0.003},
+  vector rDownPar={1.0, 0.0219, 4.07, 3.2, 0.003},
+  vector rPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   xwidth, yheight, length,
   int debug=0)
 OUTPUT PARAMETERS (localG,
@@ -128,9 +128,9 @@ INITIALIZE
     exit(1);
   }
 #else // use function call with vector parameters
-  rParPtr     = (double [])rPar;
-  rUpParPtr   = (double [])rUpPar;
-  rDownParPtr = (double [])rDownPar;
+  rParPtr     = (double *)rPar;
+  rUpParPtr   = (double *)rUpPar;
+  rDownParPtr = (double *)rDownPar;
 #endif
 
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
@@ -344,13 +344,24 @@ TRACE
     if (!mirrorReflect) {
       // we have hit one of the sides. Always reflect.
       vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
-      rFunc(fabs(Q), rParPtr, &refWeight);
+
+      // NOTE: changed from defpars version
+      //rFunc(fabs(Q), rParPtr, &refWeight);
+      StdReflecFunc(fabs(Q), rParPtr, &refWeight);
+
       p *= refWeight;
 
     } else {
       // we have hit one of the mirrors
-      rUpFunc(fabs(Q), rUpParPtr, &Rup);
-      rDownFunc(fabs(Q), rDownParPtr, &Rdown);
+
+      // NOTE: changed from defpars version
+      //rUpFunc(fabs(Q), rUpParPtr, &Rup);
+      StdReflecFunc(fabs(Q), rUpParPtr, &Rup);
+
+      // NOTE: changed from defpars version
+      //rDownFunc(fabs(Q), rDownParPtr, &Rdown);
+      StdReflecFunc(fabs(Q), rDownParPtr, &Rdown);
+
       if (Rup <  0)   ABSORB;
       if (Rup >  1)   Rup =1 ;
       if (Rdown <  0) ABSORB;
