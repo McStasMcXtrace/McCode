@@ -160,7 +160,7 @@ int mccode_main(int argc, char *argv[])
 /* End RNG in CUDA case */
 
 
-    particle particleN = mcgenstate(); // initial particle
+    _class_particle particleN = mcgenstate(); // initial particle
     particleN._uid = Xmcrun_num;
 
 

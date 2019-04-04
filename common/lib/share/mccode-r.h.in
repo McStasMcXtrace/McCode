@@ -304,7 +304,7 @@ char  *mcsig_message;
 
 /* setting parameters based MC_GETPAR */
 #define MC_GETPAR3(type, compname, par) \
-    &( ((class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
+    &( ((_class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
 /* the body of this function depends on component instances, and is cogen'd */
 void* _getvar_parameters(char* compname);
 
@@ -313,13 +313,13 @@ void* _getvar_parameters(char* compname);
 /* Current component name, index, position and orientation */
 /* These macros work because, using class-based functions, "comp" is usually
 *  the local variable of the active/current component. */
-#define INDEX_CURRENT_COMP (comp->_index)
-#define NAME_CURRENT_COMP (comp->_name)
-#define TYPE_CURRENT_COMP (comp->_type)
-#define POS_A_CURRENT_COMP (comp->_position_absolute)
-#define POS_R_CURRENT_COMP (comp->_position_relative)
-#define ROT_A_CURRENT_COMP (comp->_rotation_absolute)
-#define ROT_R_CURRENT_COMP (comp->_rotation_relative)
+#define INDEX_CURRENT_COMP (_comp->_index)
+#define NAME_CURRENT_COMP (_comp->_name)
+#define TYPE_CURRENT_COMP (_comp->_type)
+#define POS_A_CURRENT_COMP (_comp->_position_absolute)
+#define POS_R_CURRENT_COMP (_comp->_position_relative)
+#define ROT_A_CURRENT_COMP (_comp->_rotation_absolute)
+#define ROT_R_CURRENT_COMP (_comp->_rotation_relative)
 
 #define NAME_INSTRUMENT (instrument->_name)
 
@@ -448,7 +448,7 @@ double randtriangle(void);
 
 #ifndef DANSE
 int init(void);
-int raytrace(particle);
+int raytrace(_class_particle);
 int save(FILE *);
 int finally(void);
 int display(void);
@@ -544,7 +544,7 @@ void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
 Coords rot_apply(Rotation t, Coords a);
 
-void mccoordschange(Coords a, Rotation t, particle *particle);
+void mccoordschange(Coords a, Rotation t, _class_particle *particle);
 void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz);
 
 double mcestimate_error(double N, double p1, double p2);
@@ -555,7 +555,7 @@ void mcreadparams(void);
                 double t, double sx, double sy, double sz, double p);
 */
 #pragma acc routine seq
-particle mcgenstate(void);
+_class_particle mcgenstate(void);
 
 /* trajectory/shape intersection routines */
 int inside_rectangle(double, double, double, double);

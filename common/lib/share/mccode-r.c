@@ -2754,7 +2754,7 @@ double scalar_prod(
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
 *******************************************************************************/
 #pragma acc routine seq
-void mccoordschange(Coords a, Rotation t, particle *particle)
+void mccoordschange(Coords a, Rotation t, _class_particle *particle)
 {
   Coords b, c;
 

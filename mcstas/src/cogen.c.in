@@ -328,7 +328,7 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
           c_formal->id, comp->name, c_formal->id);
         break;
       case LOCAL_INSTANCE_PAR_REF:
-        coutf("  #define %s (comp->_parameters.%s)",
+        coutf("  #define %s (_comp->_parameters.%s)",
           c_formal->id, c_formal->id);
         break;
       case INSTRUMENT_PAR_VALUE:
@@ -389,7 +389,7 @@ int cogen_comp_declare(struct comp_inst *comp)
 
     comp->def->flag_defined_structure = 1;
     coutf("/* Parameter definition for component type '%s' */", comp->def->name);
-    coutf("struct struct_%s_parameters {", comp->def->name);
+    coutf("struct _struct_%s_parameters {", comp->def->name);
 
     /* put there setting, output and declare code */
     for (index=0; index<2; index++) {
@@ -501,13 +501,13 @@ int cogen_comp_declare(struct comp_inst *comp)
     }
     if (!nb_parameters)
       coutf("  char %s_has_no_parameters;", comp->def->name);
-    coutf("}; /* struct_%s_parameters */", comp->def->name);
-    coutf("typedef struct struct_%s_parameters class_%s_parameters;",
+    coutf("}; /* _struct_%s_parameters */", comp->def->name);
+    coutf("typedef struct _struct_%s_parameters _class_%s_parameters;",
       comp->def->name, comp->def->name);
     cout("");
 
     coutf("/* Parameters for component type '%s' */", comp->def->name);
-    coutf("struct struct_%s {", comp->def->name);
+    coutf("struct _struct_%s {", comp->def->name);
     /* make struct: set, pos, rot, declare block */
     coutf("  char     _name[256]; /* e.g. %s */", comp->name);
     coutf("  char     _type[256]; /* %s */", comp->def->name);
@@ -517,14 +517,14 @@ int cogen_comp_declare(struct comp_inst *comp)
     cout( "  Rotation _rotation_absolute;");
     cout( "  Rotation _rotation_relative; /* wrt PREVIOUS */");
     cout( "  int      _rotation_is_identity;");
-    coutf("  class_%s_parameters _parameters;", comp->def->name);
+    coutf("  _class_%s_parameters _parameters;", comp->def->name);
     cout("};");
-    coutf("typedef struct struct_%s class_%s;", comp->def->name, comp->def->name);
+    coutf("typedef struct _struct_%s _class_%s;", comp->def->name, comp->def->name);
   } /* define class type parameter structure when not done yet (only once) */
 
   /* instantiate one structure per component instance */
-  coutf("class_%s _%s_var;", comp->def->name, comp->name);
-  coutf("class_%s *_%s = &_%s_var;", comp->def->name, comp->name, comp->name);
+  coutf("_class_%s _%s_var;", comp->def->name, comp->name);
+  coutf("_class_%s *_%s = &_%s_var;", comp->def->name, comp->name, comp->name);
   coutf("#pragma acc declare create ( _%s_var )", comp->name);
   coutf("#pragma acc declare create ( _%s )", comp->name);
   cout("");
@@ -743,13 +743,13 @@ int cogen_comp_section_class(
     *flag_defined_common = 1;
 
     // write class fct footprint
-    coutf("class_%s *class_%s_%s(class_%s *comp",
+    coutf("_class_%s *class_%s_%s(_class_%s *_comp",
       comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
     {
-      coutf("  , particle *" MCCODE_PARTICLE ") {",
+      coutf("  , _class_particle *" MCCODE_PARTICLE ") {",
         comp->def->name, comp->def->name, section_lower, comp->def->name);
       cout("  ABSORBED=SCATTERED=RESTORE=0;");
       cout("");
@@ -794,7 +794,7 @@ int cogen_comp_section_class(
         citer = list_iterate(instr->complist);
         while((loopcomp = list_next(citer)) != NULL) {
           if ((!strcmp(comp->def->name, loopcomp->def->name))) {
-            coutf("  if(!strcmp(\"%s\", comp->_name)) {", loopcomp->name);
+            coutf("  if(!strcmp(\"%s\", _comp->_name)) {", loopcomp->name);
 
             // loop pars
             piter = list_iterate(loopcomp->def->set_par);
@@ -829,7 +829,7 @@ int cogen_comp_section_class(
         if (list_len(extendcomp->extend->lines) > 0
           && (!strcmp(extendcomp->def->name, comp->def->name))
           ) {
-            coutf("  if (!strcmp(comp->_name, \"%s\")) {", extendcomp->name);
+            coutf("  if (!strcmp(_comp->_name, \"%s\")) {", extendcomp->name);
             codeblock_out(extendcomp->extend);
             cout("  }");
         }
@@ -841,7 +841,7 @@ int cogen_comp_section_class(
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
 
-    cout("  return(comp);");
+    cout("  return(_comp);");
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
     cout("");
 
@@ -905,7 +905,7 @@ int cogen_comp_setpos(
 
 int cogen_comp_acc_attach(struct comp_inst *comp, struct instr_def *instr)
 {
-  coutf("acc_attach( (void**)&mcinstance_%s );", comp->name);
+  coutf("acc_attach( (void**)&_%s );", comp->name);
 }
 
 /*******************************************************************************
@@ -939,7 +939,7 @@ void cogen_getvarpars_fct(struct instr_def *instr)
 *******************************************************************************/
 void cogen_getparticlevar_fct(struct instr_def *instr)
 {
-  cout("void* _get_particle_var(char *token, particle *p)");
+  cout("void* _get_particle_var(char *token, _class_particle *p)");
   cout("/* enables setpars based use of GET_PARTICLE_DVAR macro and similar */");
   cout("{");
 
@@ -993,7 +993,7 @@ int cogen_decls(struct instr_def *instr)
   cout("");
 
   int numipar=0;
-  cout("struct struct_instrument_parameters {");
+  cout("struct _struct_instrument_parameters {");
 
   if (!list_len(instr->formals)) {
     coutf("  char %s_has_no_parameter;", instr->name);
@@ -1010,7 +1010,7 @@ int cogen_decls(struct instr_def *instr)
     list_iterate_end(liter);
   }
   cout("};");
-  cout("typedef struct struct_instrument_parameters class_instrument_parameters;");
+  cout("typedef struct _struct_instrument_parameters _class_instrument_parameters;");
   cout("");
 
   /* check if we have GROUP, SPLIT and JUMP */
@@ -1049,7 +1049,7 @@ int cogen_decls(struct instr_def *instr)
       }
       if (comp->split) {
         coutf("  long Split_%s; /* this is the SPLIT counter decremented down to 0 */", comp->name);
-        coutf("  particle Split_%s_particle; /* this is the particle to duplicate */", comp->name);
+        coutf("  _class_particle Split_%s_particle; /* this is the particle to duplicate */", comp->name);
       }
     }
     cout("};");
@@ -1058,24 +1058,24 @@ int cogen_decls(struct instr_def *instr)
   }
 
   /* 2b. instrument structure */
-  cout("struct instrument_struct {");
+  cout("struct _instrument_struct {");
   coutf("  char   _name[256]; /* the name of this instrument e.g. '%s' */", instr->name);
   cout( "/* Counters per component instance */");
   coutf("  double counter_AbsorbProp[%i]; /* absorbed events in PROP routines */", list_len(instr->complist)+2);
   coutf("  double counter_N[%i], counter_P[%i], counter_P2[%i]; /* event counters after each component instance */",
     list_len(instr->complist)+2, list_len(instr->complist)+2, list_len(instr->complist)+2);
-  coutf("  particle _trajectory[%i]; /* current trajectory for STORE/RESTORE */", list_len(instr->complist)+2);
+  coutf("  _class_particle _trajectory[%i]; /* current trajectory for STORE/RESTORE */", list_len(instr->complist)+2);
   cout( "/* Components position table (absolute and relative coords) */");
   coutf("  Coords _position_relative[%i]; /* positions of all components */",
     list_len(instr->complist)+2);
   coutf("  Coords _position_absolute[%i];",
     list_len(instr->complist)+2);
-  cout( "  class_instrument_parameters _parameters; /* instrument parameters */");
+  cout( "  _class_instrument_parameters _parameters; /* instrument parameters */");
   if (index)
     cout( "  struct instrument_logic_struct logic; /* instrument logic */");
-  cout( "} instrument_var;");
-  cout("struct instrument_struct *instrument = & instrument_var;");
-  cout("#pragma acc declare create ( instrument_var )");
+  cout( "} _instrument_var;");
+  cout("struct _instrument_struct *instrument = & _instrument_var;");
+  cout("#pragma acc declare create ( _instrument_var )");
   cout("#pragma acc declare create ( instrument )");
   cout("");
 
@@ -1088,11 +1088,11 @@ int cogen_decls(struct instr_def *instr)
     if (strlen(i_formal->id)) {
       if (i_formal->isoptional  // needed to avoid double quotes in strings
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
-        coutf("  \"%s\", &(instrument_var._parameters._%s), %s, %s, ", i_formal->id,
+        coutf("  \"%s\", &(_instrument_var._parameters._%s), %s, %s, ", i_formal->id,
               i_formal->id, instr_formal_type_names[i_formal->type],
               exp_tostring(i_formal->default_value));
       else
-        coutf("  \"%s\", &(instrument_var._parameters._%s), %s, \"%s\", ", i_formal->id,
+        coutf("  \"%s\", &(_instrument_var._parameters._%s), %s, \"%s\", ", i_formal->id,
               i_formal->id, instr_formal_type_names[i_formal->type],
               i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
     }
@@ -1420,17 +1420,17 @@ int cogen_trace(struct instr_def *instr)
   coutf("#define %s (" MCCODE_PARTICLE "->%s)", "RESTORE"  , "_restore");
   coutf("#define RESTORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
     "memcpy(" MCCODE_PARTICLE ", &"
-    "instrument->_trajectory[_index], sizeof(particle));",
+    "instrument->_trajectory[_index], sizeof(_class_particle));",
     list_len(instr->complist));
   coutf("#define STORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
     "memcpy(&instrument->_trajectory[_index], "
-    MCCODE_PARTICLE ", sizeof(particle));",
+    MCCODE_PARTICLE ", sizeof(_class_particle));",
     list_len(instr->complist));
   coutf("#define %s (" MCCODE_PARTICLE "->%s)", "ABSORBED" , "_absorbed");
   #if MCCODE_PROJECT == 1     /* neutron */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(comp); } while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
   #elif MCCODE_PROJECT == 2   /* xray */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(comp); } while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(_comp); } while(0)");
   #endif
   cout( "#define ABSORB ABSORB0");
 
@@ -1451,8 +1451,8 @@ int cogen_trace(struct instr_def *instr)
   cout("#pragma acc routine seq");
 
   /* Write the main code, which calls component trace functions */
-  coutf("int raytrace(particle " MCCODE_PARTICLE "_particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
-  cout("  particle *" MCCODE_PARTICLE " = &" MCCODE_PARTICLE "_particle;");
+  coutf("int raytrace(_class_particle " MCCODE_PARTICLE "particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
+  cout("  _class_particle *" MCCODE_PARTICLE " = &" MCCODE_PARTICLE "particle;");
   cout("");
   cout("  /* init variables and counters for TRACE */");
 
@@ -1510,7 +1510,7 @@ int cogen_trace(struct instr_def *instr)
     if (comp->split) {
       char *exp=exp_tostring(comp->split);
       coutf("    /* start SPLIT at %s */", comp->name);
-      coutf("    instrument->logic.Split_%s_particle=" MCCODE_PARTICLE "_particle;", comp->name); // store incoming particle state at SPLIT
+      coutf("    instrument->logic.Split_%s_particle=" MCCODE_PARTICLE "particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    if (!ABSORBED && " MCCODE_PARTICLE "->_index == %i) ", comp->index);
       coutf("    for (" "instrument->logic.Split_%s = 0; "
                         "instrument->logic.Split_%s< %s; "
@@ -1525,7 +1525,7 @@ int cogen_trace(struct instr_def *instr)
     coutf("      /* component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     if (comp->split) {
       char *exp = exp_tostring(comp->split);
-      coutf("      " MCCODE_PARTICLE "_particle="
+      coutf("      " MCCODE_PARTICLE "particle="
         "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
     }
@@ -1754,7 +1754,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#endif");
 
   // generate particle struct
-  cout("struct particle_struct {");
+  cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
 #if MCCODE_PROJECT == 1   /* neutron */
   cout("  double vx,vy,vz; /* velocity [m/s] */");
@@ -1796,7 +1796,7 @@ cogen_header(struct instr_def *instr, char *output_name)
     list_iterate_end(liter);
   }
   cout("};");
-  cout("typedef struct particle_struct particle;");
+  cout("typedef struct _struct_particle _class_particle;");
   cout("");
 
 

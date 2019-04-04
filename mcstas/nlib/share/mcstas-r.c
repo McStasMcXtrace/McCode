@@ -48,13 +48,13 @@ int (*mcMagneticField) (double, double, double, double,
 #ifndef MCSTAS_H
 
 /*******************************************************************************
-* mcsetstate: transfer parameters into global McStas variables 
+* mcsetstate: transfer parameters into global McStas variables
 *******************************************************************************/
 #pragma acc routine seq
-particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
            double t, double sx, double sy, double sz, double p)
 {
-  particle mcneutron;
+  _class_particle mcneutron;
 
   mcneutron.x  = x;
   mcneutron.y  = y;
@@ -72,7 +72,7 @@ particle mcsetstate(double x, double y, double z, double vx, double vy, double v
   mcneutron._absorbed  = 0;
   mcneutron._restore   = 0;
   mcneutron._scattered = 0;
-  
+
   return(mcneutron);
 } /* mcsetstate */
 
@@ -80,7 +80,7 @@ particle mcsetstate(double x, double y, double z, double vx, double vy, double v
 * mcgetstate: get neutron parameters from particle structure
 *******************************************************************************/
 #pragma acc routine seq
-particle mcgetstate(particle mcneutron, double *x, double *y, double *z,
+_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *t,
                double *sx, double *sy, double *sz, double *p)
 {
@@ -99,10 +99,10 @@ particle mcgetstate(particle mcneutron, double *x, double *y, double *z,
 
 
 /*******************************************************************************
-* mcgenstate: set default neutron parameters 
+* mcgenstate: set default neutron parameters
 *******************************************************************************/
 #pragma acc routine seq
-particle mcgenstate(void)
+_class_particle mcgenstate(void)
 {
   return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
   /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
@@ -126,10 +126,10 @@ mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
   *y = b.y;
   *z = b.z;
 
-  if ( (vz && vy  && vx) && (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) ) 
+  if ( (vz && vy  && vx) && (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) )
     mccoordschange_polarisation(t, vx, vy, vz);
 
-  if ( (sz && sy  && sx) && (*sz != 0.0 || *sx != 0.0 || *sy != 0.0) ) 
+  if ( (sz && sy  && sx) && (*sz != 0.0 || *sx != 0.0 || *sy != 0.0) )
     mccoordschange_polarisation(t, sx, sy, sz);
 
 }
@@ -138,7 +138,7 @@ mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
 * mcrestore_neutron: restores neutron coodinates from global array
 *******************************************************************************/
 #pragma acc routine seq
-particle
+_class_particle
 mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *t,
                double *sx, double *sy, double *sz, double *p)
@@ -155,15 +155,15 @@ mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
     *sy =  *dptr++;
     *sz =  *dptr++;
     *p  =  *dptr;
-    
+
     return mcsetstate(*x, *y, *z, *vx, *vy, *vz, *t, *sx, *sy, *sz, *p);
 } /* mcrestore_neutron */
 
 /* intersection routines ==================================================== */
 
 /*******************************************************************************
-* inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight) 
-* return 0 if outside and 1 if inside 
+* inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight)
+* return 0 if outside and 1 if inside
 *******************************************************************************/
 int inside_rectangle(double x, double y, double xwidth, double yheight)
 {
@@ -177,7 +177,7 @@ int inside_rectangle(double x, double y, double xwidth, double yheight)
  * box_intersect: compute time intersection with a box
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting times dt_in and dt_out
- * This function written by Stine Nyborg, 1999. 
+ * This function written by Stine Nyborg, 1999.
  *******************************************************************************/
 #pragma acc routine sequential
 int box_intersect(double *dt_in, double *dt_out,
@@ -295,7 +295,7 @@ int box_intersect(double *dt_in, double *dt_out,
  * returns 0 when no intersection is found
  *      or 2/4/8/16 bits depending on intersection,
  *     and resulting times t0 and t1
- * Written by: EM,NB,ABA 4.2.98 
+ * Written by: EM,NB,ABA 4.2.98
   *******************************************************************************/
 #pragma acc routine sequential
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
@@ -351,7 +351,7 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 /*******************************************************************************
  * sphere_intersect: Calculate intersection between a line and a sphere.
  * returns 0 when no intersection is found
- *      or 1 in case of intersection with resulting times t0 and t1 
+ *      or 1 in case of intersection with resulting times t0 and t1
  *******************************************************************************/
 #pragma acc routine sequential
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
