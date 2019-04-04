@@ -26,7 +26,7 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* comp: [StatisticalChopper]  name of the component monitored. Do not use quotes
+* comp: [StatisticalChopper]  quoted name of the component monitored
 * tmin: [s]                   minimal time of detection
 * tmax: [s]                   maximal time of detection
 *
