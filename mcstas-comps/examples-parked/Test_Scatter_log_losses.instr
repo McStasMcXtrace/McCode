@@ -115,7 +115,7 @@ AT(0,0,0) RELATIVE iter1
 
 COMPONENT a1 = Arm()
 AT (0,0,0) ABSOLUTE
-JUMP a0 WHEN(MC_GETPAR(iter2,loop))
+JUMP a0 WHEN(MC_GETPAR3(Scatter_log_iterator_stop, "iter2", loop))
 
 COMPONENT axxx=Arm()
 At(0,0,12) ABSOLUTE

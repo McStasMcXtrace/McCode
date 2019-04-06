@@ -23,7 +23,7 @@
 * N.B. This component should be immediately followed by a construction like:
 * COMPONENT a1 = Arm()
 * AT (0,0,0) ABSOLUTE
-* JUMP a0 WHEN(MC_GETPAR(iterator_stop_comp_name,loop))
+* JUMP a0 WHEN(MC_GETPAR3(Scatter_log_iterator_stop, iterator_stop_comp_name, "iter2",loop))
 *
 * This is to extract the value of the loop variable from the innards of this component
 *

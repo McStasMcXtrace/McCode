@@ -105,7 +105,7 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT a1 = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
-JUMP a0 WHEN(MC_GETPAR(iter2,loop))
+JUMP a0 WHEN(MC_GETPAR3(Scatter_log_iterator_stop, "iter2",loop))
 
 FINALLY
 %{

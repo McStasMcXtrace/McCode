@@ -173,7 +173,7 @@ EXTEND
   /*This is necessary to reset the monitored values*/
   reflc=0;mvalue=0;
 %}
-JUMP a0 WHEN(MC_GETPAR(iter2,loop))
+JUMP a0 WHEN(MC_GETPAR3(iterator_stop_comp_name, "iter2", loop))
 
 COMPONENT axxx=Arm()
 At(0,0,12) ABSOLUTE
