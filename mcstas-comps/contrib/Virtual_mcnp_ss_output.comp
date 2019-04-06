@@ -55,8 +55,8 @@
 *
 * %P
 * INPUT PARAMETERS
-* file: [str]   Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' 
-* verbose: [1]  Toggles debugging info on/off 
+* file: [str]   Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa'
+* verbose: [1]  Toggles debugging info on/off
 *
 * %L
 * <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
@@ -68,8 +68,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_mcnp_ss_output
-DEFINITION PARAMETERS(string file="rssa")
-SETTING PARAMETERS (verbose=1)
+DEFINITION PARAMETERS()
+SETTING PARAMETERS (string file="rssa", verbose=1)
 OUTPUT PARAMETERS(hfile,to_mcstas,from_mcstas,counterout,ntrk,nhis)
 DEPENDENCY "-L@MCCODE_LIB@/libs/neutronics/ -lneutronics -lgfortran"
 
@@ -125,7 +125,7 @@ INITIALIZE
     // put hardcoded nhis and ntrk values here
     //    ntrk=10;
     //    nhis=10;
-    ntrk=10;  
+    ntrk=10;
     nhis=10;  // Number of histories in MCNP SSW file
     writeheader_(&ntrk,&nhis);
 
@@ -185,7 +185,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  
+
 %}
 
 END
