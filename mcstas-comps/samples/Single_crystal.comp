@@ -514,21 +514,21 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     } else {
       if (!info->recip) {
         printf("Single_crystal: %s structure a=[%g,%g,%g] b=[%g,%g,%g] c=[%g,%g,%g] ",
-	       (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
-	       info->m_bx ,info->m_by ,info->m_bz,
-	       info->m_cx ,info->m_cy ,info->m_cz);
+               (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+               info->m_bx ,info->m_by ,info->m_bz,
+               info->m_cx ,info->m_cy ,info->m_cz);
       } else {
         printf("Single_crystal: %s structure a*=[%g,%g,%g] b*=[%g,%g,%g] c*=[%g,%g,%g] ",
-	       (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
-	       info->m_bx ,info->m_by ,info->m_bz,
-	       info->m_cx ,info->m_cy ,info->m_cz);
+               (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+               info->m_bx ,info->m_by ,info->m_bz,
+               info->m_cx ,info->m_cy ,info->m_cz);
       }
     }
     /* Compute reciprocal or direct lattice vectors. */
     if (!info->recip) {
       vec_prod(tmp_x, tmp_y, tmp_z,
-	       info->m_bx, info->m_by, info->m_bz,
-	       info->m_cx, info->m_cy, info->m_cz);
+               info->m_bx, info->m_by, info->m_bz,
+               info->m_cx, info->m_cy, info->m_cz);
       info->V0 = fabs(scalar_prod(info->m_ax, info->m_ay, info->m_az, tmp_x, tmp_y, tmp_z));
       printf("V0=%g\n", info->V0);
 
@@ -555,8 +555,8 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
       info->csz = info->m_cz;
 
       vec_prod(tmp_x, tmp_y, tmp_z,
-	       info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
-	       info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
+               info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
+               info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
       info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
       printf("V0=%g\n", info->V0);
 
@@ -914,16 +914,18 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
     /* Functions for "reorientation", powder and PG modes */
     /* Powder, forward */
-    void randrotate(double *nx, double *ny, double *nz, double a, double b) {
-      double nvx, nvy, nvz;
-      rotate(nvx,nvy,nvz, *nx, *ny, *nz, a, 1, 0, 0);
-      rotate(*nx,*ny,*nz, nvx,nvy,nvz, b, 0, 1, 0);
+    void randrotate(double *nx, double *ny, double *nz, double a, double b, double c) {
+      double x1, y1, z1, x2, y2, z2;
+      rotate(x1, y1, z1, *nx,*ny,*nz, a, 1, 0, 0); /* <1> = rot(<n>,a) */
+      rotate(x2, y2, z2,  x1, y1, z1, b, 0, 1, 0); /* <2> = rot(<1>,b) */
+      rotate(*nx,*ny,*nz, x2, y2, z2, c, 0, 0, 1); /* <n> = rot(<2>,c) */
     }
     /* Powder, back */
-    void randderotate(double *nx, double *ny, double *nz, double a, double b) {
-      double nvx, nvy, nvz;
-      rotate(nvx,nvy,nvz,*nx,*ny,*nz, -b, 0, 1, 0);
-      rotate(*nx, *ny, *nz, nvx,nvy,nvz, -a, 1, 0, 0);
+    void randderotate(double *nx, double *ny, double *nz, double a, double b, double c) {
+      double x1, y1, z1, x2, y2, z2;
+      rotate(x1, y1, z1, *nx,*ny,*nz, -c, 0,0,1);
+      rotate(x2, y2, z2,  x1, y1, z1, -b, 0,1,0);
+      rotate(*nx,*ny,*nz, x2, y2, z2, -a, 1,0,0);
     }
     /* PG, forward */
     void PGrotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
@@ -1023,7 +1025,7 @@ INITIALIZE
 
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+          if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3;
     }
   }
@@ -1041,17 +1043,17 @@ INITIALIZE
 
   if (powder && PG)
     exit(fprintf(stderr,"Single_crystal: %s: powder and PG modes can not be used together!\n"
-	     "ERROR           Please use EITHER powder or PG mode.\n", NAME_CURRENT_COMP));
+             "ERROR           Please use EITHER powder or PG mode.\n", NAME_CURRENT_COMP));
 
   if (powder && !(order==1)) {
     fprintf(stderr,"Single_crystal: %s: powder mode means implicit choice of no multiple scattering!\n"
-	    "WARNING setting order=1\n", NAME_CURRENT_COMP);
+            "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
   }
 
   if (PG && !(order==1)) {
     fprintf(stderr,"Single_crystal: %s: PG mode means implicit choice of no multiple scattering!\n"
-	    "WARNING setting order=1\n", NAME_CURRENT_COMP);
+            "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
   }
 
@@ -1141,7 +1143,7 @@ TRACE
 
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
-      double Alpha, Beta;
+      double Alpha, Beta, Gamma;
 
       if (hkl_info.shape == 0)
         intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1167,13 +1169,14 @@ TRACE
 
       /* (1). Compute incoming wave vector ki */
       if (powder) { /* orientation of crystallite is random */
-	Alpha = randpm1()*PI*powder;
-	Beta = randpm1()*PI/2;
-	randrotate(&vx, &vy, &vz, Alpha, Beta);
+        Alpha = randpm1()*PI*powder;
+        Beta  = randpm1()*PI/2;
+        Gamma = randpm1()*PI;
+        randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
-      if (PG) { /* orientation of crystallite is random */
-	Alpha = rand01()*2*PI*PG;
-	PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
+      if (PG) { /* orientation of crystallite is random along <c> axis */
+        Alpha = rand01()*2*PI*PG;
+        PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
 
@@ -1271,27 +1274,27 @@ TRACE
       {
         p *= p_trans/mc_trans;
         intersect=0;
-	if (powder) { /* orientation of crystallite is longer random */
-	  randderotate(&vx, &vy, &vz, Alpha, Beta);
-	}
-	if (PG) { /* orientation of crystallite is longer random */
-	  PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cz, hkl_info.m_cz);
-	}
-	break;
+        if (powder) { /* orientation of crystallite is longer random */
+          randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+        }
+        if (PG) { /* orientation of crystallite is longer random */
+          PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cz, hkl_info.m_cz);
+        }
+        break;
       }
       if(tot_xlen <= 0){
         ABSORB;
       }
       if(mc_interact <= 0)        /* Protect against rounding errors */
         { intersect=0;
-	  if (powder) { /* orientation of crystallite is no longer random */
-	    randderotate(&vx, &vy, &vz, Alpha, Beta);
-	  }
-	  if (PG) { /* orientation of crystallite is longer random */
-	    PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
-	  }
-	  break;
-	}
+          if (powder) { /* orientation of crystallite is no longer random */
+            randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+          }
+          if (PG) { /* orientation of crystallite is no longer random, rotation around <c> */
+            PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
+          }
+          break;
+        }
       if (!event_counter) p *= fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the neutron, taking
          secondary extinction into account. */
@@ -1389,10 +1392,10 @@ TRACE
 
       SCATTER;
       if (powder) { /* orientation of crystallite is no longer random */
-	  randderotate(&vx, &vy, &vz, Alpha, Beta);
+        randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
       if (PG) { /* orientation of crystallite is longer random */
-	PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
+        PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
       /* exit if multiple scattering order has been reached */
       if (order && event_counter >= order) { intersect=0; break; }
@@ -1425,7 +1428,7 @@ FINALLY
 MCDISPLAY
 %{
   
-  if (hkl_info.shape == 0) {	/* cylinder */
+  if (hkl_info.shape == 0) {        /* cylinder */
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
@@ -1433,7 +1436,7 @@ MCDISPLAY
     line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
     line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
   }
-  else if (hkl_info.shape == 1) { 	/* box */
+  else if (hkl_info.shape == 1) {         /* box */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
@@ -1455,12 +1458,12 @@ MCDISPLAY
     line(xmin, ymax, zmin, xmin, ymax, zmax);
     line(xmax, ymax, zmin, xmax, ymax, zmax);
   }
-  else if (hkl_info.shape == 2) {	/* sphere */
+  else if (hkl_info.shape == 2) {        /* sphere */
     circle("xy", 0,  0.0, 0, radius);
     circle("xz", 0,  0.0, 0, radius);
     circle("yz", 0,  0.0, 0, radius);
   }
-  else if (hkl_info.shape == 3) {	/* OFF file */
+  else if (hkl_info.shape == 3) {        /* OFF file */
     off_display(offdata);
   }
 %}
