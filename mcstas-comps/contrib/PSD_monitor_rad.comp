@@ -31,6 +31,7 @@
 * filename: [text]     Name of file in which to store the detector image 
 * filename_av: [text]  Name of file in which to store the averaged detector image 
 * nowritefile: [1]      If set, monitor will skip writing to disk
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,7 +48,8 @@
 
 DEFINE COMPONENT PSD_monitor_rad
 DEFINITION PARAMETERS (nr=100)
-SETTING PARAMETERS (string filename=0, string filename_av=0, rmax=0.2, int nowritefile=0)
+SETTING PARAMETERS (string filename=0, string filename_av=0, rmax=0.2, int nowritefile=0,
+  restore_neutron=0)
 OUTPUT PARAMETERS (PSDr_N, PSDr_p, PSDr_p2, PSDr_av_p, PSDr_av_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
@@ -85,6 +87,10 @@ TRACE
       PSDr_p[i] += p;
       PSDr_p2[i]+= p*p;
       SCATTER;
+    }
+    
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
 SAVE
