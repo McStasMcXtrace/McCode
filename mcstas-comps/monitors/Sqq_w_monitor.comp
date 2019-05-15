@@ -48,7 +48,8 @@
 * Emax:    [meV]     Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
 * nE:    [int]       Number of energy slices
 * filename: [string] Base filename to use, nE+1 files will be output
-* nowritefile: [1]      If set, monitor will skip writing to disk
+* nowritefile: [1]   If set, monitor will skip writing to disk
+* nosum: [1]         If set, monitor will skip writing the energy-summed array to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -64,7 +65,7 @@
 
 
 DEFINE COMPONENT Sqq_w_monitor
-DEFINITION PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2, int nowritefile=0)
+DEFINITION PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2, int nowritefile=0, int nosum=1)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (M_N, M_p, M_p2, M_Ns, M_ps, M_p2s)
 
@@ -177,9 +178,11 @@ TRACE
 SAVE
 %{
     if (!nowritefile) {
+      
   int kk,ll;
   char ff[256];
   char tt[256];
+  if (!nosum) {
   sprintf(ff, "%s_Sum",filename);
   DETECTOR_OUT_2D(
 	"qa vs qb monitor E Sum",
@@ -189,7 +192,7 @@ SAVE
         nqa, nqb,
         &M_Ns[0][0],&M_ps[0][0],&M_p2s[0][0],
         ff);
-
+  }
   for (kk=0; kk<nE; kk++) {
     sprintf(ff, "%s_%i",filename,kk);
     sprintf(tt, "qa vs qb monitor E slice %i ~ %g meV",kk,dE*kk+Emin);
