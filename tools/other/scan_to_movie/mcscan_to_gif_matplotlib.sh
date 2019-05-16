@@ -43,15 +43,14 @@ if [ -d $1 ]; then
     do
 	SUBDIR=`echo "$(($i-1))"`
 	if [ -f $SUBDIR/$2 ]; then
-	    mcplot.pl -psc $EXTRA ./$SUBDIR/$2
-	    convert -rotate 90 $SUBDIR/$2.ps $SUBDIR/$2.png
+	    mcplot-matplotlib --format png $EXTRA ./$SUBDIR/$2
 	fi
-	echo "$SUBDIR/$2.png \\"
-	echo "$SUBDIR/$2.png \\" >> runme.sh
     done
-    echo " $STARTDIR/Movie_$2.gif" >> runme.sh
+    FILES=`ls -rt mcplot*png | xargs echo`
+    echo " $FILES $STARTDIR/Movie_$2.gif" >> runme.sh
+    echo " rm mcplot*png " >> runme.sh
     chmod a+x runme.sh
-    echo Running movie creation command...
+    echo Running movie creation / cleanup commands...
     ./runme.sh
     echo Done!
 else
