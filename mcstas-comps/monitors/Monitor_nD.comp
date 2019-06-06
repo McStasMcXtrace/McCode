@@ -477,15 +477,15 @@ TRACE
 SAVE
 %{
   /* save results, but do not free pointers */
-  detector = Monitor_nD_Save(&DEFS, &Vars);
+  if (!nowritefile) {
+    detector = Monitor_nD_Save(&DEFS, &Vars);
+  }
 %}
 
 FINALLY
 %{
   /* free pointers */
-  if (!nowritefile) {
-    Monitor_nD_Finally(&DEFS, &Vars);
-  }
+  Monitor_nD_Finally(&DEFS, &Vars);
 %}
 
 MCDISPLAY
