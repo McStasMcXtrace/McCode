@@ -8,7 +8,7 @@
 * Component: PSD_monitor
 *
 * %I
-* Written by: Erik Knudsen
+* Written by: Erik B Knudsen
 * Date: June 22, 2009
 * Version: $Revision$
 * Origin: Risoe
@@ -29,42 +29,48 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* radius:   Radius of circular detetor (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* nr:       Number of radial pixels (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin,xmax.
+* yheight: [m]          Height of detector. Overrides ymin,ymax.
+* radius:  [m]          Radius of circular detetor.
+* nx: [1]               Number of pixel columns.
+* ny: [1]               Number of pixel rows.
+* nr: [1]               Number of radial pixels.
+* filename: [1]         Name of file in which to store the detector image.
+* restore_xray: [1]     If set, the monitor does not influence the xray state.
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
-* PSD_N:    Array of xray counts
-* PSD_p:    Array of xray weight counts
-* PSD_p2:   Array of second moments
+* PSD_N: []             Array of xray counts
+* PSD_p: []             Array of xray weight counts
+* PSD_p2: []            Array of second moments
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor
-DEFINITION PARAMETERS (nx=90, ny=90,nr=0, string filename=0, restore_xray=0)
-  SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, radius=0)
+  DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, radius=0, restore_xray=1, int nowritefile=0, int nx=90, int ny=90, int nr=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
-  %{
+%{
     double **PSD_N;
     double **PSD_p;
     double **PSD_p2;
-  %}
+    
+    double PSD_N_s[nx][ny];
+    double PSD_p_s[nx][ny];
+    double PSD_p2_s[nx][ny];
+%}
+
 INITIALIZE
-  %{
+%{
     int i,j;
     double *p1,*p2,*p3;
 
@@ -100,10 +106,10 @@ INITIALIZE
       *PSD_p2=calloc(nr,sizeof(double));
     }
 
-  %}
 TRACE
-  %{
-    int i,j;
+%{
+    int i,j,k;
+    double e;
 
     PROP_Z0;
     if (!radius){
@@ -129,10 +135,12 @@ TRACE
     if (restore_xray) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  %}
+%}
+
 SAVE
-  %{
-    if(!radius){
+%{
+    if(!nowritefile){
+      if(!radius){
         if(nx==1 && ny==1){
             DETECTOR_OUT_0D("Intensity monitor " NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
         }else if(nx==1){
@@ -153,13 +161,13 @@ SAVE
                     *PSD_N,*PSD_p,*PSD_p2,
                     filename);
         }
-    }else{
-      DETECTOR_OUT_1D(
+      }else{
+        DETECTOR_OUT_1D(
           "PSD_monitor","Radial Position[m]", "Intensity", "R",
           0,radius,nr,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+      }
     }
-
-  %}
+%}
 
 FINALLY
 %{

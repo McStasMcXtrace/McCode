@@ -27,17 +27,18 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* Lmin:     Minimum wavelength to detect (AA)
-* Lmax:     Maximum wavelength to detect (AA)
-* nL:       Number of wavelength channels (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the x-ray state (1)
+* xmin: [m]         Lower x bound of detector opening
+* xmax: [m]         Upper x bound of detector opening
+* ymin: [m]         Lower y bound of detector opening
+* ymax: [m]         Upper y bound of detector opening
+* xwidth: [m]       Width of detector. Overrides xmin,xmax.
+* yheight: [m]      Height of detector. Overrides ymin,ymax.
+* Lmin: [AA]        Minimum wavelength to detect
+* Lmax: [AA]        Maximum wavelength to detect
+* nL: [1]           Number of wavelength channels
+* filename: [1]     Name of file in which to store the detector image
+* restore_xray: [1] If set, the monitor does not influence the xray state
+* nowritefile: [1]  If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -51,16 +52,16 @@
 DEFINE COMPONENT L_monitor
 DEFINITION PARAMETERS (nL=20, string filename=0)
 SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-  xwidth=0, yheight=0, Lmin, Lmax, restore_xray=0)
+  xwidth=0, yheight=0, Lmin, Lmax, restore_xray=0, int nowritefile=0)
 OUTPUT PARAMETERS (L_N, L_p, L_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
-  %{
+%{
     double L_N[nL];
     double L_p[nL], L_p2[nL];
-  %}
+%}
 INITIALIZE
-  %{
+%{
     int i;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
@@ -79,9 +80,10 @@ INITIALIZE
       L_p[i] = 0;
       L_p2[i] = 0;
     }
-  %}
+%}
+
 TRACE
-  %{
+%{
     int i;
     double L;
 
@@ -101,9 +103,11 @@ TRACE
     if (restore_xray) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  %}
+%}
+
 SAVE
-  %{
+%{
+  if(!nowritefile){
     DETECTOR_OUT_1D(
         "Wavelength monitor",
         "Wavelength [AA]",
@@ -111,11 +115,11 @@ SAVE
         "L", Lmin, Lmax, nL,
         &L_N[0],&L_p[0],&L_p2[0],
         filename);
-  %}
+  }
+%}
 
 MCDISPLAY
 %{
-  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

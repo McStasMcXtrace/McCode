@@ -28,17 +28,18 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* Emin:     Minimum energy to detect (keV)
-* Emax:     Maximum energy to detect (keV)
-* nE:       Number of energy channels (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xmin: [m]         Lower x bound of detector opening
+* xmax: [m]         Upper x bound of detector opening
+* ymin: [m]         Lower y bound of detector opening
+* ymax: [m]         Upper y bound of detector opening
+* xwidth: [m]       Width of detector. Overrides xmin,xmax.
+* yheight: [m]      Height of detector. Overrides ymin,ymax.
+* Emin: [keV]       Minimum energy to detect
+* Emax: [keV]       Maximum energy to detect
+* nE: [1]           Number of energy channels
+* filename: [1]     Name of file in which to store the detector image
+* restore_xray: [1] If set, the monitor does not influence the xray state
+* nowritefile: [1]  If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -52,7 +53,7 @@
 DEFINE COMPONENT E_monitor
 DEFINITION PARAMETERS (nE=20, string filename=0)
 SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-  xwidth=0, yheight=0, Emin, Emax, restore_xray=0)
+  xwidth=0, yheight=0, Emin, Emax, restore_xray=0, int nowritefile=0)
 OUTPUT PARAMETERS (E_N, E_p, E_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
@@ -61,7 +62,7 @@ DECLARE
     double E_p[nE], E_p2[nE];
 %}
 INITIALIZE
-  %{
+%{
     int i;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
@@ -80,9 +81,10 @@ INITIALIZE
       E_p[i] = 0;
       E_p2[i] = 0;
     }
-  %}
+%}
+
 TRACE
-  %{
+%{
     int i;
     double E;
 
@@ -103,9 +105,11 @@ TRACE
     if (restore_xray) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  %}
+%}
+
 SAVE
-  %{
+%{
+  if(!nowritefile){
     DETECTOR_OUT_1D(
         "Energy monitor",
         "Energy [keV]",
@@ -113,11 +117,11 @@ SAVE
         "E", Emin, Emax, nE,
         &E_N[0],&E_p[0],&E_p2[0],
         filename);
-  %}
+  }
+%}
 
 MCDISPLAY
 %{
-  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

@@ -31,6 +31,7 @@
 * ny:       Number of pixel rows (1)
 * filename: Name of file in which to store the detector image (text)
 * restore_xray: If set, the monitor does not influence the xray state (1)
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -45,8 +46,8 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS (nx=90, ny=90, string filename=0)
-SETTING PARAMETERS (radius=1, restore_xray=0)
+DEFINITION PARAMETERS (nx=90, ny=90)
+SETTING PARAMETERS (string filename=0, radius=1, restore_xray=0, int nowritefile=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -103,14 +104,16 @@ TRACE
 
 SAVE
 %{
-  DETECTOR_OUT_2D(
-    "4PI PSD monitor",
-    "Longitude [deg]",
-    "Lattitude [deg]",
-    -180, 180, -90, 90,
-    nx, ny,
-    &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-    filename);
+  if(!nowritefile){
+    DETECTOR_OUT_2D(
+        "4PI PSD monitor",
+        "Longitude [deg]",
+        "Lattitude [deg]",
+        -180, 180, -90, 90,
+        nx, ny,
+        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+        filename);
+  }
 %}
 
 MCDISPLAY
