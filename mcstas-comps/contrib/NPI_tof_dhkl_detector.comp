@@ -12,6 +12,7 @@
 * Release: McStas 2.5
 * Last update: 30/11/2018
 *
+* %D
 * A cylindrical detector which converts time-of-flight data (x,y,z,time) to a 1D diffractogram in dhkl. 
 * The detector model includes finite detection depth, spatial and time resolution. Optionally, the component
 * exports position and time coordinates of detection events in an ASCII file.   
