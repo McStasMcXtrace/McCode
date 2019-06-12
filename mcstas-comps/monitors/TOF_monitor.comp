@@ -19,18 +19,18 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin: [m]             Lower x bound of detector opening 
-* xmax: [m]             Upper x bound of detector opening 
-* ymin: [m]             Lower y bound of detector opening 
-* ymax: [m]             Upper y bound of detector opening 
-* xwidth: [m]           Width of detector. Overrides xmin, xmax 
-* yheight: [m]          Height of detector. Overrides ymin, ymax 
-* nt: [1]               Number of time bins 
-* dt: [mu-s]            Length of each time bin 
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax
+* yheight: [m]          Height of detector. Overrides ymin, ymax
+* nt: [1]               Number of time bins
+* dt: [mu-s]            Length of each time bin
 * tmin: [mu-s]          Lower time limit 
-* tmax: [mu-s]          Upper time limit 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* tmax: [mu-s]          Upper time limit
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:

@@ -32,7 +32,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Scatter_log_losses(LENGTH=10)
+DEFINE INSTRUMENT Test_Scatter_log_losses(LENGTH=10, verbose=0)
 
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -99,16 +99,16 @@ COMPONENT mnd2=Monitor_nD (
 AT(0,0,0) RELATIVE guide_simple
 ROTATED (0,0,0) RELATIVE guide_simple
 
-/*COMPONENT printout = Arm()*/
-/*AT(0,0,0) ABSOLUTE*/
-/*EXTEND*/
-/*%{*/
+COMPONENT printout = Arm()
+WHEN(verbose) AT(0,0,0) ABSOLUTE
+EXTEND
+%{
   /*print the neutron state*/
-/*  printf("SCATTERLOG_ITERATOR: %llu %g %g %g  %g %g %g  %g  %g %g %g  %g  %d\n", \*/
-/*	     mcget_run_num(),x,y,z, vx, vy, vz, t, \*/
-/*	     sx, sy, sz, p, INDEX_CURRENT_COMP);*/
-/*%}*/
-/**/
+  printf("SCATTERLOG_ITERATOR: %llu %g %g %g  %g %g %g  %g  %g %g %g  %g  %d\n", \
+	     mcget_run_num(),x,y,z, vx, vy, vz, t, \
+	     sx, sy, sz, p, INDEX_CURRENT_COMP);
+%}
+
 
 COMPONENT iter2 = Scatter_log_iterator_stop(iterator=iter1)
 AT(0,0,0) RELATIVE iter1

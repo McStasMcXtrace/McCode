@@ -330,7 +330,7 @@ TRACE
   double bose_factor;        /* Calculated value of the Bose factor */
   double omega;              /* energy transfer */
   int nf, index;                   /* Number of allowed final velocities */
-  double vf_list[2];             /* List of allowed final velocities */
+  double vf_list[7];             /* List of allowed final velocities */
   double J_factor, coherence_factor;            /* Jacobian from delta fnc.s in cross section  + AFM coherence factor */
   double f1, f2;            /* probed values of omega_q minus omega */
   double p1,p2,p3,p4,p5;    /* temporary multipliers */
@@ -430,6 +430,7 @@ TRACE
     p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
     p5 = coherence_factor;  /* Cross section factor 2 */
     p *= p1*p2*p3*p4*p5;
+    SCATTER;
 
  if (verbose==1){    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
       printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g, coherence %g \n",

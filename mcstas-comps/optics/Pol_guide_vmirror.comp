@@ -184,7 +184,8 @@ TRACE
   const double norm = 1.0/sqrt(xwhalf*xwhalf + length*length);
   double R;
 
-  Coords normalMirror, pointMirror;
+  Coords normalMirror1, pointMirror1;
+  Coords normalMirror2, pointMirror2;
   Coords* normalPointer = 0;
 
   // Pol variables
@@ -198,18 +199,14 @@ TRACE
   if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
 
-  if(x>0) {
-    // "left" opening
-    normalMirror  = coords_set(norm*length, 0, -norm*xwhalf);
-    pointMirror = coords_set(0, 0, 0);
-  } else {
-    // "right" opening
-    normalMirror  = coords_set(norm*length, 0, norm*xwhalf);
-    pointMirror = coords_set(0, 0, 0);
-  }
+  normalMirror1  = coords_set(norm*length, 0, -norm*xwhalf);
+  pointMirror1 = coords_set(0, 0, 0);
+  normalMirror2  = coords_set(norm*length, 0, norm*xwhalf);
+  pointMirror2 = coords_set(0, 0, 0);
+  
 
   for(;;) {
-    double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror;
+    double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror1, tMirror2;
     double tUp, tSide, time, endtime;
     double Q; //, dummy1, dummy2, dummy3;
     Coords vVec, xVec;
@@ -243,9 +240,13 @@ TRACE
 		    coords_sp(normalInOut, vVec),
 		    coords_sp(normalInOut, coords_sub(xVec, pointOut)));
 
-    solve_2nd_order(&tMirror, NULL, 0.5*coords_sp(normalMirror,localG),
-		    coords_sp(normalMirror, vVec),
-		    coords_sp(normalMirror, coords_sub(xVec, pointMirror)));
+    solve_2nd_order(&tMirror1, NULL, 0.5*coords_sp(normalMirror1,localG),
+		    coords_sp(normalMirror1, vVec),
+		    coords_sp(normalMirror1, coords_sub(xVec, pointMirror1)));
+
+    solve_2nd_order(&tMirror2, NULL, 0.5*coords_sp(normalMirror2,localG),
+		    coords_sp(normalMirror2, vVec),
+		    coords_sp(normalMirror2, coords_sub(xVec, pointMirror2)));
 
     /* Choose appropriate reflection time */
     if (tTop>tThreshold && (tTop<tBot || tBot<=tThreshold))
@@ -263,9 +264,13 @@ TRACE
     else
       time=tSide;
 
-    if (tMirror>tThreshold && tMirror<time) {
-      time=tMirror;
+    if (tMirror1>tThreshold && tMirror1<time) {
+      time=tMirror1;
       mirrorReflect = 1; // flag to show which reflection function to use
+    }
+    if (tMirror2>tThreshold && tMirror2<time) {
+      time=tMirror2;
+      mirrorReflect = 2; // flag to show which reflection function to use
     }
 
     if (time<=tThreshold)
@@ -326,8 +331,10 @@ TRACE
       normalPointer = &normalRight;
     else if(time==tLeft)
       normalPointer = &normalLeft;
-    else if(time==tMirror)
-      normalPointer = &normalMirror;
+    else if(time==tMirror1)
+      normalPointer = &normalMirror1;
+    else if(time==tMirror2)
+      normalPointer = &normalMirror2;
     else
       fprintf(stderr, "Pol_guide_vmirror: %s: This should never happen!!!!\n", NAME_CURRENT_COMP);
 
@@ -388,8 +395,6 @@ TRACE
 MCDISPLAY
 %{
   int i, j;
-
-  
 
   // draw box
   box(0, 0, length/2.0, xwidth, yheight, length);
