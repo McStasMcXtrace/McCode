@@ -122,10 +122,10 @@ def plot_single_data(node, i, n, log):
 
 class McMatplotlibPlotter():
     ''' matplotlib plotting frontend '''
-    def __init__(self, sourcedir):
+    def __init__(self, sourcedir, log):
         self.sourcedir = sourcedir
         self.event_dc_cid = None
-        self.log = False
+        self.log = log
     
     def _flip_log(self):
         self.log = not self.log
@@ -278,7 +278,7 @@ def main(args):
 
         if args.format:
             matplotlib.use('template')
-
+                       
         if args.backend:
             try:
                 matplotlib.use(args.backend)
@@ -303,7 +303,7 @@ def main(args):
             PlotGraphPrint(rootnode)
         
         # start the plotter
-        plotter = McMatplotlibPlotter(sourcedir=loader.directory)
+        plotter = McMatplotlibPlotter(sourcedir=loader.directory,log=args.log)
         
         if (sys.platform == "linux" or sys.platform == "linux2") & args.html:
             # save to html and exit
@@ -333,6 +333,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--html', action='store_true', help='save plot to html using mpld3 (linux only)')
     parser.add_argument('--format', dest='format', help='save plot to pdf/png/eps... without bringing up window')
+    parser.add_argument('--log', action='store_true', help='initiate plot(s) with log of signal')
     parser.add_argument('--backend', dest='backend', help='use non-default backend for matplotlib plot')
     
     args = parser.parse_args()

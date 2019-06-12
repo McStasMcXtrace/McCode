@@ -71,8 +71,10 @@ TRACE
 %{
     PROP_Z0;
     if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
-    || ((radius != 0) && (x*x + y*y > radius*radius)))
+	|| ((radius != 0) && (x*x + y*y > radius*radius))) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
       ABSORB;
+    }
     else
         SCATTER;
 %}
