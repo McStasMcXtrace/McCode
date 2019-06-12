@@ -802,7 +802,7 @@ INITIALIZE
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<line_info.count; i++)
     {
-        line_info.my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+        line_info.my_s_k2[i] = 4*PI*PI*PI* 1.0 *(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0)
                  *(L[i].j * L[i].F2 / L[i].q)*line_info.XsectionFactor;
       /* Is not yet divided by k^2 */
@@ -902,6 +902,14 @@ TRACE
         line_info.nb_refl_count++;
     }
 
+    if(pack!=1){
+      /*apply packing factor correction*/
+      line_info.my_a *= pack;
+      line_info.my_inc *= pack;
+      line_info.my_s_k2_sum *=pack;
+    }
+
+
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
       if (line_info.flag_warning < 100)
@@ -947,7 +955,7 @@ TRACE
             arg = line_info.q[line]*(1+line_info.w[line]*randnorm())/(2.0*k);
           else
             arg = line_info.q[line]/(2.0*k);
-          my_s_n = line_info.my_s_k2[line]/(k*k);
+          my_s_n = pack*line_info.my_s_k2[line]/(k*k);
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
