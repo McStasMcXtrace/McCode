@@ -1,0 +1,132 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright (C), All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         Copenhagen Univeristy, Copenhagen, Denmark
+*
+* Component: E_monitor
+*
+* %I
+* Written by: Erik Knudsen
+* Based on neutron component written by Kristian Nielsen and Kim Lefmann
+*
+* Date: June 22, 2009
+* Version: $Revision$
+* Origin: Risoe
+* Release: McXtrace 0.1
+*
+* Energy-sensitive monitor.
+*
+* %D
+* A square single monitor that measures the energy of the incoming x-rays.
+*
+* Example: E_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*                 Emin=1, Emax=50, nE=20, filename="Output.nrj")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]         Lower x bound of detector opening
+* xmax: [m]         Upper x bound of detector opening
+* ymin: [m]         Lower y bound of detector opening
+* ymax: [m]         Upper y bound of detector opening
+* xwidth: [m]       Width of detector. Overrides xmin,xmax.
+* yheight: [m]      Height of detector. Overrides ymin,ymax.
+* Emin: [keV]       Minimum energy to detect
+* Emax: [keV]       Maximum energy to detect
+* nE: [1]           Number of energy channels
+* filename: [1]     Name of file in which to store the detector image
+* restore_xray: [1] If set, the monitor does not influence the xray state
+* nowritefile: [1]  If set, monitor will skip writing to disk
+*
+* OUTPUT PARAMETERS:
+*
+* E_N:      Array of x.ray counts
+* E_p:      Array of x-ray weight counts
+* E_p2:     Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Phi_monitor
+DEFINITION PARAMETERS (nPhi=20, string filename=0)
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+    xwidth=0, yheight=0, Phimin=0, Phimax=2*M_PI, restore_xray=0, int nowritefile=0)
+OUTPUT PARAMETERS (Phi_N, Phi_p, Phi_p2)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+DECLARE
+%{
+  double Phi_N[nPhi];
+  double Phi_p[nPhi], Phi_p2[nPhi];
+%}
+INITIALIZE
+%{
+    int i;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("E_monitor: %s: Null detection area !\n"
+                   "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nPhi; i++)
+    {
+      Phi_N[i] = 0;
+      Phi_p[i] = 0;
+      Phi_p2[i] = 0;
+    }
+%}
+
+TRACE
+%{
+    int i;
+    double Phi, iPhi;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      Phi = modf(phi*M_1_PI*0.5,&iPhi)*2*M_PI;
+
+      i = floor((Phi-Phimin)*nPhi/(Phimax-Phimin));
+      if(i >= 0 && i < nPhi)
+      {
+        Phi_N[i]++;
+        Phi_p[i] += p;
+        Phi_p2[i] += p*p;
+        SCATTER;
+      }
+    }
+    if (restore_xray) {
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+    }
+%}
+
+SAVE
+%{
+  if(!nowritefile){
+    DETECTOR_OUT_1D(
+        "Phase monitor",
+        "Phase [ ]",
+        "Intensity",
+        "Phi", Phimin, Phimax, nPhi,
+        &Phi_N[0],&Phi_p[0],&Phi_p2[0],
+        filename);
+  }
+%}
+
+MCDISPLAY
+%{
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
