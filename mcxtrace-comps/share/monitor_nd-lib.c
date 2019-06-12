@@ -912,8 +912,10 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = Vars->ckz;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PHASE) XY = Vars->cphi;
-        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHASE){
+          double icphi;
+          XY = modf(Vars->cphi*M_1_PI*0.5,&icphi)*M_PI*2.0;
+        }else
         if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = Vars->ct;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = Vars->cp;
