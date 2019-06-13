@@ -676,8 +676,8 @@ class McGuiAppController():
             self.emitter.status('')
     
     def handleHelpWeb(self):
-        # open the mcstas homepage
-        mcurl = 'http://www.mcstas.org'
+        # open the relevant homepage
+        mcurl = 'http://www.'+mccode_config.configuration["MCCODE"]+'.org'
         webbrowser.open_new_tab(mcurl)
     
     def handleHelpPdf(self):
