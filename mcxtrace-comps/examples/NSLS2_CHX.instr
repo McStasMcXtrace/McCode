@@ -28,12 +28,12 @@
 * L3: [m] Position of the Kinoform lens.
 * Energy: [keV] primary energy used at the beamline.
 * 
-* %Example: NSLS2_CHX -n1e6 L=33.5 L2=35.3 L3=44 Energy=10 Detector: Det_ff_I=2.82787e+16 
+* %Example: NSLS2_CHX -n1e6 L=33.5 L2=35.3 L3=44 Energy=10 Detector: Det_ff_I=3.09756e+16
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT NSLS2_CHX(L=33.5,L2=35.3,L3=44,Energy=10)
+DEFINE INSTRUMENT NSLS2_CHX(L=33.5,L2=35.3,L3=44,Energy=10, dEnergy=0.5)
 
 DECLARE
 %{
@@ -55,7 +55,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Source = Source_gaussian(sig_x=source_h,sig_y=source_v,sigPr_x=div_h,sigPr_y=div_v,E0=Energy,dE=0,dist=L,flux=4e18)
+COMPONENT Source = Source_gaussian(sig_x=source_h,sig_y=source_v,sigPr_x=div_h,sigPr_y=div_v,E0=Energy,dE=dEnergy,dist=L,flux=4e18)
 AT (0, 0, 0) RELATIVE Origin
 
    
@@ -74,7 +74,7 @@ AT (0,0,L2) RELATIVE Origin
 COMPONENT Det_f=PSD_monitor(filename="psd_f.dat",xwidth=.4e-3,yheight=.4e-3, restore_xray=1, nx=200, ny=200)
 AT (0,0,43.98) RELATIVE Origin
 
-COMPONENT Kinoform=Lens_parab_Cyl(r=.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21, material_datafile="Be.txt")
+COMPONENT Kinoform=Lens_parab_Cyl(r=0.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21, material_datafile="Be.txt")
 AT (0,0,L3) RELATIVE Origin
 ROTATED (0,0 ,90) RELATIVE Origin
 

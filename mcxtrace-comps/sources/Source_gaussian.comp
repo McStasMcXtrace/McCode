@@ -88,12 +88,6 @@ INITIALIZE
     exit(1);
   }
 
-  /*calculate the X-ray weight from the flux*/
-  if (flux){//pmul=flux;
-    prms.pmul=flux*1.0/(double)mcget_ncount();
-  }else{
-    prms.pmul=1.0/(double)mcget_ncount();
-  }
 
   if (spectrum_file){
     /*read spectrum from file*/
@@ -163,15 +157,18 @@ INITIALIZE
     }
   }
 
-  /*corrections for energy range*/
-  if(spectrum_file){
+  /*calculate the X-ray weight from the flux*/
+  if (flux){//pmul=flux;
+    prms.pmul=flux*1.0/(double)mcget_ncount();
+    if(E0 && dE){
+      prms.pmul*=2*dE;
+    }else if (lambda0 && dlambda){
+      prms.pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
+    }
+  }else if(spectrum_file){
       prms.pmul*=(prms.T.data[(prms.T.rows-1)*prms.T.columns]-prms.T.data[0]);
   }else{
-      if(E0){
-          prms.pmul*=2*dE;
-      }else{
-          prms.pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
-      }
+    prms.pmul=1.0/(double)mcget_ncount();
   }
 %}
 
