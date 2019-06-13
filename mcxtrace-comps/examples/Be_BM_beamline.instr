@@ -9,13 +9,13 @@
 * Origin: Ris&oslash; DTU
 * Release: McXtrace 0.1_alpha
 * Version: $Revision$
-* %INSTRUMENT_SITE: None
+* %INSTRUMENT_SITE: DTU
 *
 * Be-lens Bending Magnet, Low Budget Monochromatic (pink) X-ray beamline
 *
 * %Description
 * This is a proof of concept beamline to test an idea of how to build a low-cost
-* monochromtic beamline. Idea is to let a åolychromatic beam impinge on a focusing
+* monochromtic beamline. Idea is to let a polychromatic beam impinge on a focusing
 * Be-lens and put a slit in the focal pt. of the lens for the desired wavelength. Any
 * other wavelengths present in the beam will not be focussed prefectly and may be
 * by the slit.

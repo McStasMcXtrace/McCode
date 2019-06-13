@@ -9,6 +9,7 @@
 * Origin : NBI
 * Release : 1.4
 * Version : 1.0
+* %INSTRUMENT_SITE: SAXSLAB
 *
 * Description
 * The small-angle scattering (SAXS) instrument generally consists of the following parts:
