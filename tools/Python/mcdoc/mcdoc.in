@@ -17,33 +17,10 @@ TOOL="@P@doc"
 VERS="@MCCODE_VERSION@"
 
 canrun() {
-    if ! [ -x ${LIB}/${TOOL}.py ]; then
+    if ! [ -x ${LIB}/mcdoc.py ]; then
         exit 127;
     fi
 }
-
-canrun_i() {
-    if ! [ -x ${LIB}/${TOOL}.m ]; then
-        exit 127;
-    fi
-    
-    # is ifit on the path?
-    if ! [ `which ifit` ]; then
-            exit 127;
-    fi
-}
-
-canrun_o() {
-    if ! [ -x ${LIB}/${TOOL}.m ]; then
-        exit 127;
-    fi
-    
-    # is octave on the path?
-    if ! [ `which octave` ]; then
-            exit 127;
-    fi
-}
-
 
 if ( canrun ); then
     python3 ${LIB}/mcdoc.py $*
