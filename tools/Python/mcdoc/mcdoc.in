@@ -46,7 +46,7 @@ canrun_o() {
 
 
 if ( canrun ); then
-    python3 ${LIB}/${TOOL}.py $*
+    python3 ${LIB}/mcdoc.py $*
 else
     echo ":: Failed to run Python  ${TOOL}, trying Perl ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
