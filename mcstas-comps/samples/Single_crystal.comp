@@ -183,7 +183,7 @@
 *
 * Optional input parameters
 *
-* p_transmit: [1]                                         Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics from weak reflections
+* p_transmit: [1]                                         Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics of the scattering pattern wrt. the attenuated, direct beam. It is typically beneficial to leave this parameter at a value << 1.
 * sigma_abs: [barns]                                      Absorption cross-section per unit cell at 2200 m/s
 * sigma_inc: [barns]                                      Incoherent scattering cross-section per unit cell Use -1 to unactivate
 * aa: [deg]                                               Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters
@@ -286,7 +286,7 @@ recip_cell=0, barns=0,
 ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
-p_transmit = 0.1, sigma_abs = 0, sigma_inc = 0,
+p_transmit = 0.001, sigma_abs = 0, sigma_inc = 0,
 aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
 deltak=1e-6)
 OUTPUT PARAMETERS(hkl_info, offdata)
