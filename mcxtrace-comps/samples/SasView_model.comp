@@ -2290,7 +2290,7 @@ TRACE
     // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
     
-    l_1 = v*t1;
+    l_1 = k*t1;
     p *= l_full*solid_angle/(4*PI)*Iq_out*exp(-my_a_k*(l+l_1));
     
     SCATTER;
