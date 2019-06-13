@@ -44,6 +44,7 @@ OUTPUT PARAMETERS (reflec_table, prms)
 
 SHARE
 %{
+#include <complex.h>
 %}
 
 DECLARE
