@@ -166,7 +166,7 @@ INITIALIZE
       prms.pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
     }
   }else if(spectrum_file){
-      prms.pmul*=(prms.T.data[(prms.T.rows-1)*prms.T.columns]-prms.T.data[0]);
+      prms.pmul=(prms.T.data[(prms.T.rows-1)*prms.T.columns]-prms.T.data[0]);
   }else{
     prms.pmul=1.0/(double)mcget_ncount();
   }
