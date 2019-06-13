@@ -6,9 +6,7 @@
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Mar 2016
-* Origin: 
-* Release: McStas 2.3
-* Version: $Revision$
+* Origin: DTU
 * %INSTRUMENT_SITE: Tests
 *
 * A test instrument for MCPL_output
@@ -17,10 +15,10 @@
 *
 * This is a unit test for the MCPL_output component.
 *
-* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
-*
+* %Example: -n1e3 merge=0 Detector: m1_I=7.9657e-08
 *
 * %Parameters
+* merge: [1]  Flag to indicate if we should merge the output in case of MPI
 *
 * %End
 *******************************************************************************/
@@ -76,9 +74,7 @@ COMPONENT m4 = Monitor_nD(
 
 COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=22,
-  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
+  options="parallel, photon, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
 ) AT (0,0,0) ABSOLUTE
 
 END
-
-
