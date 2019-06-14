@@ -81,7 +81,7 @@ if (NOT WINDOWS)
 endif()
 
 # Install mcxtrace components
-foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
+foreach(name contrib data examples misc monitors obsolete optics samples share sources editors libs)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
 
