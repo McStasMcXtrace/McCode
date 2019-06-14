@@ -4,7 +4,7 @@
 * Instrument: ESRF-ID11-nanofocus beamline
 *
 * %Identification
-* Written by: E. Knudsen (erkn@risoe.dtu.dk)
+* Written by: E. B. Knudsen (erkn@fysik.dtu.dk)
 * Date: Nov. 26th, 2009
 * Origin: Ris&oslash; DTU
 * Release: McXtrace 0.1_alpha
@@ -13,6 +13,8 @@
 *
 * %Description
 * Model of the ESRF ID11 Transfocator based beamline.
+*
+* %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.117986
 *
 * %Parameters
 * ANGLE [deg] Rotation (misalignment) of first transfocator 
@@ -23,7 +25,6 @@
 * SI_N [ ] Number of Si lenses in Si microfocus chip transfocator @94 m
 * IVT1BE [ ] If nonzero the set of Be-lenses is chosen for the IVT @31.5m. If 0 the Al set is active.
 * 
-* %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.285899 
 * %Link
 * http://www.esrf.eu/UsersAndScience/Experiments/StructMaterials/ID11/ID11Source
 * %End
