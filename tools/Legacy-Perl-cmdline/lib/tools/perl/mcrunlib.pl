@@ -444,8 +444,7 @@ sub do_test {
     my $k;
     if (!@val_par) {
     	&$printer("Instrument without test: $base");
-	# No reason to use cflags on instruments without test condition
-    	my $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} -c -n0 --no-cflags $base";
+    	my $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} -c -n0 $base";
     	&$printer("Executing: $this_cmd");
     	my $res = qx/$this_cmd/;
     	if ($child_error_code) {
