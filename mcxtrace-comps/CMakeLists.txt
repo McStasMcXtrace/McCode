@@ -61,7 +61,6 @@ add_executable(
 
 if (NOT WINDOWS)
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
-  add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
   target_compile_options(mcpl PUBLIC "-fPIC" "-std=c99")
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
@@ -114,7 +113,6 @@ if(WINDOWS)
     DESTINATION ${bin}
     )
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
-  add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
   target_compile_options(mcpl PUBLIC "-std=c99") 
 else()
   install(
