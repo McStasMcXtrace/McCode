@@ -60,11 +60,9 @@ add_executable(
 )
 
 if (NOT WINDOWS)
-  add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
   add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
   target_compile_options(mcpl PUBLIC "-fPIC" "-std=c99")
-  target_compile_options(nxs PUBLIC "-fPIC" "-std=c99")
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
@@ -115,7 +113,6 @@ if(WINDOWS)
     PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
     DESTINATION ${bin}
     )
-  add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
   add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
   target_compile_options(mcpl PUBLIC "-std=c99") 
