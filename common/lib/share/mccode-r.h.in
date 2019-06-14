@@ -273,7 +273,7 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
 #  define M_1_PI 1.0/M_PI
 #  define M_2_PI 2*M_1_PI
 # endif
-#endiff
+#endif
 
 #define RAD2MIN  ((180*60)/PI)
 #define MIN2RAD  (PI/(180*60))
