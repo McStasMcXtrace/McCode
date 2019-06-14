@@ -24,7 +24,7 @@
 * e.g. total detector intensity as a function of position, one can map out impurities in the sample by  
 * their scattering properties.
 *
-* Example: ESRF_ID01.instr SampleMosicity=1.0 Detector: PSDMonitor_I=3.26027e-05
+* %Example: ESRF_ID01.instr SampleMosaicity=1.0 Detector: PSDMonitor_I=3.26027e-05
 *
 * %Parameters
 * DistanceSampleToDetector: [m]   Distance from sample to detector

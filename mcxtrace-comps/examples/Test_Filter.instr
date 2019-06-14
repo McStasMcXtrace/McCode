@@ -24,7 +24,7 @@
 *
 * %Example: DL=4.9 L0=5 filter_mat=Si Detector: l_mon1_I=1.31502e-07
 * %Example: DL=4.9 L0=5 filter_mat=Rh Detector: l_mon1_I=4.04921e-29
-* %Example: -n5e6 DL=4.9 L0=5 filter_mat=Ti F2=1 Detector: lmon1=1.14111e-08
+* %Example: -n5e6 DL=4.9 L0=5 filter_mat=Ti F2=1 Detector: l_mon1_I=1.14111e-08
 *
 * %Link
 * A reference/HTML link for more information
