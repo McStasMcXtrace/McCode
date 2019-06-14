@@ -31,24 +31,57 @@ set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 include(CPack)
 
 ## Build mcpltool
-#add_executable(
-#  mcpltool
-#  libs/mcpl/tool.c
-#  libs/mcpl/mcpl.c
-#)
-#target_compile_options(mcpltool PUBLIC "-std=c99")
-#target_link_libraries(mcpltool m)
+add_executable(
+  mcpltool
+  libs/mcpl/tool.c
+)
+target_compile_options(mcpltool PUBLIC "-fPIC" "-std=c99")
+target_link_libraries(mcpltool m)
 
+## Build ssw2mcpl
+add_executable(
+  ssw2mcpl
+  libs/mcpl/ssw2mcpl.c
+)
+target_compile_options(ssw2mcpl PUBLIC "-std=c99")
+target_link_libraries(ssw2mcpl m)
 
+## Build mcpl2ssw
+add_executable(
+  mcpl2ssw
+  libs/mcpl/mcpl2ssw.c
+)
+target_compile_options(mcpl2ssw PUBLIC "-std=c99")
+target_link_libraries(mcpl2ssw m)
 
-#if (NOT WINDOWS)
-#  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
-#  target_compile_options(mcpl PUBLIC "-std=c99")
-#  install (
-#    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
-#    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-#  )
-#endif()
+add_executable(
+  cif2hkl
+  ${CMAKE_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
+)
+
+if (NOT WINDOWS)
+  add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
+  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+  add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
+  target_compile_options(mcpl PUBLIC "-fPIC" "-std=c99")
+  target_compile_options(nxs PUBLIC "-fPIC" "-std=c99")
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/ssw2mcpl${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpl2ssw${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+endif()
 
 # Install mcxtrace components
 foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
@@ -66,12 +99,26 @@ if(WINDOWS)
     FILES "${WORK}/revision"
     DESTINATION "${lib}"
   )
-#  install (
-#    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
-#    DESTINATION ${bin}
-#    )
-#  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
-
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
+    )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/ssw2mcpl${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
+    )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpl2ssw${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
+    )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
+    )
+  add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
+  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+  add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
+  target_compile_options(mcpl PUBLIC "-std=c99") 
 else()
   install(
     FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
@@ -80,7 +127,7 @@ else()
 endif()
 
 if (NOT WINDOWS)
-    #  install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
+    install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
 else()
-    #  install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
+    install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
 endif()
