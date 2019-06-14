@@ -24,6 +24,8 @@
 * e.g. total detector intensity as a function of position, one can map out impurities in the sample by  
 * their scattering properties.
 *
+* Example: ESRF_ID01.instr SampleMosicity=1.0 Detector: PSDMonitor_I=3.26027e-05
+*
 * %Parameters
 * DistanceSampleToDetector: [m]   Distance from sample to detector
 * NominalEnergy:            [keV] Nominal energy of photons after monochromation
@@ -234,7 +236,6 @@ AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2 - 0.00001) RELATI
 
 
 COMPONENT FresnelZonePlate = ZonePlate(
-	cut      = 0.0,
 	radius   = FZPRadius, 
 	L        = FZPFocalLength, 
 	lambda0  = 12.39842 / NominalEnergy,
