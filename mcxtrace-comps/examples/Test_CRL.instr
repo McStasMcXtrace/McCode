@@ -13,9 +13,9 @@
 *
 * Unit test instrument for various lens components.
 *
-* Example: Test_CRL.instr LENS=0 SRC=1 L1=35.047 L2=17.523 line_I=6.00571e-13
-* Example: Test_CRL.instr LENS=1 SRC=1 L1=35.047 L2=17.523 pt_I=3.23877e-13
-* Example: Test_CRL.instr LENS=2 SRC=1 L1=35.047 L2=17.523 line_I=6.47719e-13
+* %Example: Test_CRL.instr LENS=0 L1=35.047 L2=17.523 Detector: line_I=6.00571e-13
+* %Example: Test_CRL.instr LENS=1 L1=35.047 L2=17.523 Detector: pt_I=3.01094e-13
+* %Example: Test_CRL.instr LENS=2 L1=35.047 L2=17.523 Detector: line_I=6.47719e-13
 *
 *
 * %Parameters
@@ -66,13 +66,13 @@ AT(0,0,0.01) RELATIVE source
 
 
 COMPONENT crl1dsimple = Lens_simple(
-    material_datafile="Be.txt",radius=0.5e-3,xwidth=1e-4,yheight=2e-4,
-    N=10, T=1)
+    material_datafile="Be.txt",r=0.5e-3,xwidth=1e-4,yheight=2e-4,
+    N=10)
 WHEN(LENS==2) AT (0,0,L1) RELATIVE Origin
 
 COMPONENT crl2d = Lens_parab(
     material_datafile = "Be.txt", r = 0.5e-3, yheight = 2e-4,
-    d = .1e-3, N = 10, T=1)
+    d = .1e-3, N = 10)
 WHEN (LENS==1)  AT (0, 0, L1) RELATIVE Origin
 
 COMPONENT crl1d = Lens_parab_Cyl(
