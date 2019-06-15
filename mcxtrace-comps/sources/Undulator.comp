@@ -239,8 +239,8 @@ TRACE
         y=randnorm()*sigey;
     }
 
-    xi=fabs(atan2(xo/dist));
-    psi=fabs(atan2(yo/dist));
+    xi=fabs(atan2(xo,dist));
+    psi=fabs(atan2(yo,dist));
     /* This has to be after (xi,psi), else it will be convoluted into the weight calculation.*/
     if(sigepx){
         xo+=randnorm()*sigepx*dist;

@@ -54,7 +54,7 @@ DECLARE
     mcpl_file_t inputfile;
     long long nparticles;
     long long read_photons;
-    long long used_phottons;
+    long long used_photons;
 
 %}
 
@@ -146,9 +146,9 @@ TRACE
     z=particle->position[2]/100;
 
     if(polarisationuse){
-        sx=particle->polarisation[0];
-        sy=particle->polarisation[1];
-        sz=particle->polarisation[2];
+        Ex=particle->polarisation[0];
+        Ey=particle->polarisation[1];
+        Ez=particle->polarisation[2];
     }
 
     nrm = particle->ekin *1e3*E2K;
