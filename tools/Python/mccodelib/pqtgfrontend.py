@@ -5,6 +5,7 @@ import os
 import sys
 import math
 import subprocess
+import numpy as np
 
 import PyQt5
 import pyqtgraph as pg
@@ -13,6 +14,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 from . import utils
 from . import mccode_config
 from .mcplotloader import McCodeDataLoader, test_decfuncs, PlotGraphPrint
+from .plotgraph import PNMultiple
+from .mcplotloader import Data2D
 
 
 class McPyqtgraphPlotter():
@@ -337,6 +340,19 @@ def get_plot_func_opts(log, legend, icolormap, verbose, fontsize):
     d['verbose'] = verbose
     d['fontsize'] = fontsize
     return d
+
+def get_multiplot_colorbar_limits(node):
+    if type(node) == PNMultiple:
+        cbmin = float("inf")
+        cbmax = float("-inf")
+        for data in node.getdata_lst():
+            if type(data) == Data2D: 
+                localmin = np.min(np.array(data.zvals))
+                localmax = np.max(np.array(data.zvals))
+                cbmin = np.min(cbmin, localmin)
+                cbmax = np.max(cbmax, localmax)
+        return cbmin, cbmax
+    return None, None
 
 def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     ''' constructs a plot from data and adds this to layout '''
