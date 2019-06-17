@@ -190,7 +190,7 @@ COMPONENT SecondPinhole = Slit(
 COMPONENT Sample = SAXSNanodiscsWithTagsFast(
 	xwidth = 0.01,
 	yheight = 0.01,
-//	zdepth = 0.01,
+	zdepth = 0.01,
 	SampleToDetectorDistance = DistanceFromSampleToDetector,
 	DetectorRadius = RadiusOfDetector
 )
