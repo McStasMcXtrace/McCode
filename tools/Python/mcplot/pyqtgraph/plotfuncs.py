@@ -101,9 +101,8 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
     
     # labels
     plt.setTitle(" ")
-    labelStyle = {'color': '#FFF', 'font-size': '%spt' % fontsize}
-    plt.getAxis('bottom').setLabel(data.xlabel, **labelStyle)
-    plt.getAxis('left').setLabel(data.ylabel, **labelStyle)
+    plt.getAxis('bottom').setLabel(data.xlabel)
+    plt.getAxis('left').setLabel(data.ylabel)
 
     # how to add labels with html styling:
     #plt.titleLabel.item.setHtml('<span style="font-size:5pt; text-align:center;color:#FFFFFF">data.component <br>hest</span>')
