@@ -146,7 +146,8 @@
 * Delta_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
 * format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
 * p_inc:   [1]      Fraction of incoherently scattered rays.
-* p_transmit: [1]   Fraction of transmitted (only attenuated) rays.
+* p_transmit: [1]   Fraction of transmitted (only attenuated) rays. Used to improve statistics of the scattering pattern 
+*                   wrt. the attenuated, direct beam. It is typically beneficial to leave this parameter at a value << 1.
 * p_interact: [1]   Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc.
 * concentric: [1]   Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere).
 * geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
