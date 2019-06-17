@@ -22,42 +22,29 @@
 * on the belt proteins.
 *
 * %P
-* AxisRatio						: []		Axis ratio of the bilayer patch.
-* NumberOfLipids				: []		Number of lipids per nanodisc.
-* AreaPerLipidHeadgroup			: [AA^2]	Area per lipid headgroup - default is 
-*											POPC.
-* HeightOfMSP					: [AA]		Height of the belt protein - default is
-*											MSP1D1.
-* RadiusOfGyrationForHisTag		: [AA]		Radius of gyration for the his-tag.
-* VolumeOfOneMSP				: [AA^3]	Volume of one belt protein - default is
-*											MSP1D1.
-* VolumeOfHeadgroup				: [AA^3]	Volume of one lipid headgroup - default 
-*											is POPC.
-* VolumeOfCH2Tail				: [AA^3]	Volume of the CH2-chains of one lipid - 
-* 											default is POPC.
-* VolumeOfCH3Tail				: [AA^3]	Volume of the CH3-tails of one lipid - 
-* 											default is POPC.
-* VolumeOfOneHisTag				: [AA^3]	Volume of one his-tag.
-* ScatteringLengthOfOneMSP		: [cm]		Scattering length of one belt protein - 
-* 											default is MSP1D1.		
-* ScatteringLengthOfHeadgroup	: [cm]		Scattering length of one lipid headgroup
-* 											- default is POPC.
-* ScatteringLengthOfCH2Tail		: [cm]		Scattering length of the CH2-chains of   
-*											one lipid - default is POPC.
-* ScatteringLengthOfCH3Tail		: [cm]		Scattering length of the CH3-tails of  
-*											one lipid - default is POPC.
-* ScatteringLengthOfOneHisTag	: [cm]		Scattering length of one his-tag.
-* Roughness						: []		Factor used to smear the interfaces
-*											of the nanodisc.
-* Concentration		  			: [mM]		Concentration of sample.
-* AbsorptionCrosssection  		: [1/m]		Absorption cross section of the sample.
-* xwidth    			  		: [m]  		Dimension of component in the x-direction.
-* yheight   			  		: [m]		Dimension of component in the y-direction.
-* zdepth    			  		: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance		: [m]		Distance from sample to detector (for 
-*											focusing the scattered x-rays).
-* DetectorRadius          		: [m] 		Radius of the detector (for focusing the 
-*											scattered x-rays).
+* AxisRatio: []         Axis ratio of the bilayer patch.
+* NumberOfLipids: []    Number of lipids per nanodisc.
+* AreaPerLipidHeadgroup: [AA^2] Area per lipid headgroup - default is POPC.
+* HeightOfMSP: [AA]     Height of the belt protein - default is MSP1D1.
+* RadiusOfGyrationForHisTag: [AA] Radius of gyration for the his-tag.
+* VolumeOfOneMSP: [AA^3]    Volume of one belt protein - default is MSP1D1.
+* VolumeOfHeadgroup: [AA^3] Volume of one lipid headgroup - default is POPC.
+* VolumeOfCH2Tail: [AA^3]   Volume of the CH2-chains of one lipid - default is POPC.
+* VolumeOfCH3Tail: [AA^3]   Volume of the CH3-tails of one lipid - default is POPC.
+* VolumeOfOneHisTag: [AA^3] Volume of one his-tag.
+* ScatteringLengthOfOneMSP: [cm]    Scattering length of one belt protein - default is MSP1D1.
+* ScatteringLengthOfHeadgroup: [cm] Scattering length of one lipid headgroup - default is POPC.
+* ScatteringLengthOfCH2Tail: [cm]   Scattering length of the CH2-chains of one lipid - default is POPC.
+* ScatteringLengthOfCH3Tail: [cm]   Scattering length of the CH3-tails of one lipid - default is POPC.
+* ScatteringLengthOfOneHisTag: [cm] Scattering length of one his-tag.
+* Roughness: []         Factor used to smear the interfaces of the nanodisc.
+* Concentration: [mM]   Concentration of sample.
+* AbsorptionCrosssection: [1/m]	Absorption cross section of the sample.
+* xwidth: [m]  		Dimension of component in the x-direction.
+* yheight: [m]		Dimension of component in the y-direction.
+* zdepth: [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m] Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m]   Radius of the detector (for focusing the scattered x-rays).
 *
 * %E
 *******************************************************************************/
@@ -72,43 +59,14 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
 					Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (Absorption,q,NumberDensity,DeltaRhoHead,DeltaRhoBelt,DeltaRhoCH2Tail,DeltaRhoCH3Tail,DeltaRhoTag,MajorSemiAxis, MinorSemiAxis,ThicknessOfBelt,HeightOfBelt,HeightOfLipids, HeightOfTails, HeightOfCH3)
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
-DECLARE
+SHARE
 %{
-	// Declarations	
-	double Absorption;
-	double q;
-	double NumberDensity;
-
-	// Scattering lengths
-	double RhoWater;
-	double RhoBelt;
-	double RhoHead;
-	double RhoCH2Tail;
-	double RhoCH3Tail;
-	double RhoTag;
-
-	double DeltaRhoHead;
-	double DeltaRhoBelt;
-	double DeltaRhoCH2Tail;
-	double DeltaRhoCH3Tail;
-	double DeltaRhoTag;
-
-	// Geometric properties
-	double MajorSemiAxis; 
-	double MinorSemiAxis;
-	double ThicknessOfBelt;
-
-	double HeightOfBelt;
-	double HeightOfLipids; 
-	double HeightOfTails; 
-	double HeightOfCH3;
-
-	// Functions used for compution the formfactor of a cylinder
-	double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta) 
+	// Functions used to compute the formfactor of a cylinder
+	double NDwTags_FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta) 
 	{
 		double const ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
 
@@ -119,7 +77,7 @@ DECLARE
 	}
 
 	// Functions used to compute the characteristics of the histidine tags
-	double Debye(double q, double r)
+	double NDwTags_Debye(double q, double r)
 	{
 		// Variables needed in functions
 		double ReturnValue;
@@ -137,7 +95,7 @@ DECLARE
 		return ReturnValue;
 	}
 
-	double XiRodWithoutEndcaps(double q, double r, double l, double Alpha)
+	double NDwTags_XiRodWithoutEndcaps(double q, double r, double l, double Alpha)
 	{
 		// Variables needed in function
 		double ReturnValue;
@@ -148,7 +106,7 @@ DECLARE
 		return ReturnValue;
 	}
 
-	double PsiHammouda(double x)
+	double NDwTags_PsiHammouda(double x)
 	{
 		// Variables used in function
 		double ReturnValue;
@@ -160,7 +118,7 @@ DECLARE
 	}
 
 	// Computation of the intensity from a given nanodisc
-	double IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt, 
+	double NDwTags_IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt, 
 											 double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3, double RadiusOfGyrationForHisTag, double VolumeOfOneHisTag,
 											 double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail, double DeltaRhoTag)
 	{
@@ -219,19 +177,19 @@ DECLARE
 				Beta = (j + 0.5) * BetaStep;
 
 				// Compute formfactors
-				FormfactorOfBelt = (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis * FormfactorCylinder(q, OuterMajorSemiAxis, OuterMinorSemiAxis, HeightOfBelt, Alpha, Beta) -
-								    PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis * FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfBelt, Alpha, Beta)) / 
+				FormfactorOfBelt = (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis * NDwTags_FormfactorCylinder(q, OuterMajorSemiAxis, OuterMinorSemiAxis, HeightOfBelt, Alpha, Beta) -
+								    PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis * NDwTags_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfBelt, Alpha, Beta)) / 
 								   (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis);
 
-				FormfactorOfHeads = (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis * FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfLipids, Alpha, Beta) -
-								     PI * HeightOfTails  * MajorSemiAxis * MinorSemiAxis * FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails , Alpha, Beta)) / 
+				FormfactorOfHeads = (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis * NDwTags_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfLipids, Alpha, Beta) -
+								     PI * HeightOfTails  * MajorSemiAxis * MinorSemiAxis * NDwTags_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails , Alpha, Beta)) / 
 								    (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis);
 
-				FormfactorOfCH2Tail = (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis * FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails, Alpha, Beta) -
-								       PI * HeightOfCH3   * MajorSemiAxis * MinorSemiAxis * FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3  , Alpha, Beta)) / 
+				FormfactorOfCH2Tail = (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis * NDwTags_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails, Alpha, Beta) -
+								       PI * HeightOfCH3   * MajorSemiAxis * MinorSemiAxis * NDwTags_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3  , Alpha, Beta)) / 
 								      (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis);
 
-				FormfactorOfCH3Tail = FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3, Alpha, Beta);
+				FormfactorOfCH3Tail = NDwTags_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3, Alpha, Beta);
     
 				// Compute amplitudes
 				AmplitudeOfBelt    = DeltaRhoBelt * VolumeOfBelt * FormfactorOfBelt;
@@ -243,14 +201,14 @@ DECLARE
 				IntensityDisc = pow(AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail, 2);
 
 				// Add the histidine tags
-		        FormfactorOfTags = XiRodWithoutEndcaps(q, AverageRadiusOfBelt + RadiusOfGyrationForHisTag, HeightOfBelt, Alpha);
+		        FormfactorOfTags = NDwTags_XiRodWithoutEndcaps(q, AverageRadiusOfBelt + RadiusOfGyrationForHisTag, HeightOfBelt, Alpha);
 
-		        Crosscorrelation = 2.0f * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * pow(FormfactorOfTags, 2) * pow(PsiHammouda(q * RadiusOfGyrationForHisTag), 2);
+		        Crosscorrelation = 2.0f * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * pow(FormfactorOfTags, 2) * pow(NDwTags_PsiHammouda(q * RadiusOfGyrationForHisTag), 2);
 
-		        Autocorrelation  = 2.0f * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * Debye(q, RadiusOfGyrationForHisTag);
+		        Autocorrelation  = 2.0f * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * NDwTags_Debye(q, RadiusOfGyrationForHisTag);
 
 		        Disccorrelation  = 4.0f * (AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail) * 
-									      DeltaRhoTag * VolumeOfOneHisTag * FormfactorOfTags * PsiHammouda(q * RadiusOfGyrationForHisTag);
+			    DeltaRhoTag * VolumeOfOneHisTag * FormfactorOfTags * NDwTags_PsiHammouda(q * RadiusOfGyrationForHisTag);
 
 		        IntensityPart = IntensityDisc + Crosscorrelation + Autocorrelation + Disccorrelation;
 
@@ -261,39 +219,72 @@ DECLARE
 
 		return Intensity;
 	}
+
+%}
+
+DECLARE
+%{
+      // Declarations
+      double Absorption;
+      double q;
+      double NumberDensity;
+
+      // Scattering lengths
+      double DeltaRhoHead;
+      double DeltaRhoBelt;
+      double DeltaRhoCH2Tail;
+      double DeltaRhoCH3Tail;
+      double DeltaRhoTag;
+
+      // Geometric properties
+      double MajorSemiAxis;
+      double MinorSemiAxis;
+      double ThicknessOfBelt;
+
+      double HeightOfBelt;
+      double HeightOfLipids;
+      double HeightOfTails;
+      double HeightOfCH3;
 %}
 
 INITIALIZE
 %{
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
+    // Rescale concentration into number of aggregates per m^3 times 10^-4
+    NumberDensity = Concentration * 6.02214129e19;
 
-	// Computations
-	if (!xwidth || !yheight || !zdepth) {
-		printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
-	}
+    // Computations
+    if (!xwidth || !yheight || !zdepth) {
+      printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
+    }
 
-	Absorption = AbsorptionCrosssection;
+    Absorption = AbsorptionCrosssection;
 
-	// Scattering properties of different components
-	const double ScatteringLengthOfWater = 2.82E-12;
-	const double VolumeOfWater = 30.0;
+    // Scattering properties of different components
+    const double ScatteringLengthOfWater = 2.82E-12;
+    const double VolumeOfWater = 30.0;
+    // Scattering lengths
+    double RhoWater;
+    double RhoBelt;
+    double RhoHead;
+    double RhoCH2Tail;
+    double RhoCH3Tail;
+    double RhoTag;
 
-	RhoWater   = ScatteringLengthOfWater     / VolumeOfWater;
-	RhoBelt    = ScatteringLengthOfOneMSP    / VolumeOfOneMSP;
-	RhoHead    = ScatteringLengthOfHeadgroup / VolumeOfHeadgroup;
-	RhoCH2Tail = ScatteringLengthOfCH2Tail   / VolumeOfCH2Tail;
-	RhoCH3Tail = ScatteringLengthOfCH3Tail   / VolumeOfCH3Tail;
-	RhoTag     = ScatteringLengthOfOneHisTag / VolumeOfOneHisTag;
+    RhoWater   = ScatteringLengthOfWater     / VolumeOfWater;
+    RhoBelt    = ScatteringLengthOfOneMSP    / VolumeOfOneMSP;
+    RhoHead    = ScatteringLengthOfHeadgroup / VolumeOfHeadgroup;
+    RhoCH2Tail = ScatteringLengthOfCH2Tail   / VolumeOfCH2Tail;
+    RhoCH3Tail = ScatteringLengthOfCH3Tail   / VolumeOfCH3Tail;
+    RhoTag     = ScatteringLengthOfOneHisTag / VolumeOfOneHisTag;
 
-	DeltaRhoBelt	= RhoBelt    - RhoWater;
-	DeltaRhoHead    = RhoHead    - RhoWater;
-	DeltaRhoCH2Tail = RhoCH2Tail - RhoWater;
-	DeltaRhoCH3Tail = RhoCH3Tail - RhoWater;
-	DeltaRhoTag     = RhoTag     - RhoWater;
+    DeltaRhoBelt    = RhoBelt    - RhoWater;
+    DeltaRhoHead    = RhoHead    - RhoWater;
+    DeltaRhoCH2Tail = RhoCH2Tail - RhoWater;
+    DeltaRhoCH3Tail = RhoCH3Tail - RhoWater;
+    DeltaRhoTag     = RhoTag     - RhoWater;
 
-	// Geometric properties of different components
-	const double AreaOfLipids = NumberOfLipids * AreaPerLipidHeadgroup / 2.0f;
+    // Geometric properties of different components
+    const double AreaOfLipids = NumberOfLipids * AreaPerLipidHeadgroup / 2.0f;
 
     MinorSemiAxis = sqrt(AreaOfLipids / (PI * AxisRatio));
     MajorSemiAxis = MinorSemiAxis * AxisRatio;
@@ -302,7 +293,7 @@ INITIALIZE
     HeightOfTails  = 2.0f * (VolumeOfCH2Tail + VolumeOfCH3Tail) / AreaPerLipidHeadgroup;
     HeightOfCH3    = 2.0f * VolumeOfCH3Tail / AreaPerLipidHeadgroup;
 
-	ThicknessOfBelt = sqrt(pow(MinorSemiAxis + MajorSemiAxis, 2) / 4.0 + 2 * VolumeOfOneMSP / (PI * HeightOfMSP)) - (MajorSemiAxis + MinorSemiAxis) / 2.0;
+    ThicknessOfBelt = sqrt(pow(MinorSemiAxis + MajorSemiAxis, 2) / 4.0 + 2.0 * VolumeOfOneMSP / (PI * HeightOfMSP)) - (MajorSemiAxis + MinorSemiAxis) / 2.0;
 %}
 
 TRACE
@@ -366,8 +357,8 @@ TRACE
 		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
 		// Compute scattering
-		Intensity = exp(- pow(q * Roughness, 2)) * IntensityOfEmptyNanodiscsWithTags(q, MajorSemiAxis, MinorSemiAxis, ThicknessOfBelt, HeightOfMSP, HeightOfLipids, HeightOfTails, HeightOfCH3, 
-																			 		 RadiusOfGyrationForHisTag, VolumeOfOneHisTag, DeltaRhoBelt, DeltaRhoHead, DeltaRhoCH2Tail, DeltaRhoCH3Tail, DeltaRhoTag);
+		Intensity = exp(- pow(q * Roughness, 2)) * NDwTags_IntensityOfEmptyNanodiscsWithTags(q, MajorSemiAxis, MinorSemiAxis, ThicknessOfBelt, HeightOfMSP, HeightOfLipids, HeightOfTails, HeightOfCH3,
+                    RadiusOfGyrationForHisTag, VolumeOfOneHisTag, DeltaRhoBelt, DeltaRhoHead, DeltaRhoCH2Tail, DeltaRhoCH3Tail, DeltaRhoTag);
 
 		p *= l_full * SolidAngle / (4.0 * PI) * NumberDensity * Intensity * exp(- Absorption * (l + l1));
 
