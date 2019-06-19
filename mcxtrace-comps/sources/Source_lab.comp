@@ -205,15 +205,13 @@ TRACE
   double px,py,pz; 
   Coords P;
 
-  /* transform initial coords to ones relative to the exit window which is our reference point*/
+  /* transform initial coords to ones in a frame with origin at the center of e-beam with optical axis pointing towards exit window*/
   P=coords_set(x1,y1,z1);
   P=coords_add(rot_apply(R_xray_gen,P),O_xray_gen);
   coords_get(P,&x,&y,&z);
 
-  //mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1, 0,0,0, 0,0,0);
 
   /*set a scatter pt at the generation pt*/
-  //x=x1;y=y1;z=z1;
   SCATTER;
 
   /*randvec_target_rect_real computes a target point and a solid angle correction factor, hence the k-vector has to be computed from
@@ -288,11 +286,11 @@ TRACE
     /*exit through top of anode slab*/
     ie=plane_intersect(&l0,x,y,z,kx,ky,kz,nx,ny,nz,0,0,0);
     if(l0<0){
+      ABSORB;
     }
   }
   mu_abs=Table_Value(prms.T, k*K2E, 5)*prms.rho*1e2; /*mu_abs in m^-1*/
   p*=exp(-l0*mu_abs);
-  //printf("%g %g %g %g\n",k*K2E,mu_abs,exp(-l0*mu_abs),Table_Value(prms.T, k*K2E, 5) );
   /*set a random phase - and propagate to the exit window*/
   phi=rand01()*2*M_PI;
 %}
