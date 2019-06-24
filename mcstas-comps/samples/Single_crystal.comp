@@ -183,7 +183,7 @@
 *
 * Optional input parameters
 *
-* p_transmit: [1]                                         Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics of the scattering pattern wrt. the attenuated, direct beam. It is typically beneficial to leave this parameter at a value << 1.
+* p_transmit: [1]                                         Monte Carlo probability for neutrons to be transmitted without any scattering. Used to improve statistics of the scattering pattern wrt. the attenuated, direct beam. It is typically beneficial to leave this parameter at a value << 1. Use the value -1 to deactivate any stratified sampling and partition probabilities fully in accordance with the material cross-sections.
 * sigma_abs: [barns]                                      Absorption cross-section per unit cell at 2200 m/s
 * sigma_inc: [barns]                                      Incoherent scattering cross-section per unit cell Use -1 to unactivate
 * aa: [deg]                                               Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters

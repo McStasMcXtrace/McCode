@@ -4,49 +4,50 @@
 *           Risoe National Laboratory, Roskilde, Denmark
 *           Institut Laue Langevin, Grenoble, France
 *
-* Component: SAXSSpheres
+* Component: SAXSCylinders
 *
 * %I
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
-* Based on a SANS-component in McStas by Peter Willendrup
 * Date: May 2, 2012
 * Version: $Revision$
 * Origin: KU-Science
 * Release: McXtrace 1.0
 *
-* A sample of monodisperse spherical particles in solution.
+* A sample of monodisperse cylindrical particles in solution.
 *
 * %D
-* A simple component simulating the scattering from a box-shaped, thin solution
-* of monodisperse, spherical particles.
+* A component simulating the scattering from a box-shaped, thin solution
+* of monodisperse, cylindrical particles.
 *
 * %P
-* R						  : [AA]		Radius of the spherical particles.
-* Concentration		  	  : [mM]		Concentration of sample.
-* DeltaRho  			  : [cm/AA^3]	Excess scattering length density of the 
-*								   	    particles.
-* AbsorptionCrosssection  : [1/m]		Absorption cross section of the sample.
-* xwidth    			  : [m]  		Dimension of component in the x-direction.
-* yheight   			  : [m]			Dimension of component in the y-direction.
-* zdepth    			  : [m]			Dimension of component in the z-direction.
-* SampleToDetectorDistance: [m]			Distance from sample to detector (for 
+* R							; [AA]		Semiaxis of the cross section of the 
+*										cylinder.
+* Height					: [AA]		Height of the cylinder.
+* Concentration		  		: [mM]		Concentration of sample.
+* DeltaRho					: [cm/AA^3]	Excess scattering length density of the
+*										particles.
+* AbsorptionCrosssection  	: [1/m]		Absorption cross section of the sample.
+* xwidth    			  	: [m]  		Dimension of component in the x-direction.
+* yheight   			  	: [m]		Dimension of component in the y-direction.
+* zdepth    			  	: [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
 *										focusing the scattered x-rays).
-* DetectorRadius          : [m] 		Radius of the detector (for focusing the 
+* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
 *										scattered x-rays).
 *
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT SAXSSpheres
+DEFINE COMPONENT SAXSCylinders
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (R = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
+SETTING PARAMETERS (R = 40.0, Height = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)
+/*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{
@@ -67,7 +68,7 @@ INITIALIZE
 		printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
 	}
 
-	Prefactor = NumberDensity * pow(4.0 / 3.0 * PI * pow(R, 3), 2) * pow(DeltaRho, 2);
+	Prefactor = NumberDensity * pow(PI * Height * pow(R, 2), 2) * pow(DeltaRho, 2);
 
 	Absorption = AbsorptionCrosssection;
 %}
@@ -76,11 +77,13 @@ TRACE
 %{
 	// Declarations	
 	double l0; 
-	double l1;
+	double l1; 
 	double l_full;
 	double l;
 	double l_1;
-	double Formfactor;
+	double Formfactor1;
+	double Formfactor2;
+	double Intensity;
 	double SolidAngle;
 	double qx; 
 	double qy; 
@@ -91,6 +94,14 @@ TRACE
 	double ky_i;
 	double kz_i;
 	char Intersect = 0;
+
+	// variables needed for integration over alpha
+	int i;
+	const int NumberOfSteps = 30;
+	double Alpha;
+	const double AlphaMin = 0;
+	const double AlphaMax = PI / 2.0;
+	const double AlphaStep = (AlphaMax - AlphaMin) / (1.0 * NumberOfSteps);
 
 	// Computation
 	Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
@@ -131,9 +142,18 @@ TRACE
 		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
 		// Compute scattering
-		Formfactor = 3.0 * (sin(q * R) - q * R * cos(q * R)) / pow(q * R, 3);
+		Intensity = 0.0;
 
-		p *= l_full * SolidAngle / (4.0 * PI) * Prefactor * pow(Formfactor, 2) * exp(- Absorption * (l + l1));
+		for (i = 0; i < NumberOfSteps; ++i) {
+			Alpha = (i + 0.5) * AlphaStep;
+    
+			Formfactor1 = j1(q * R * sin(Alpha)) / (q * R * sin(Alpha));
+			Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
+
+			Intensity += sin(Alpha) * Prefactor * pow(2 * Formfactor1 * Formfactor2, 2) * AlphaStep;
+		}
+
+		p *= l_full * SolidAngle / (4.0 * PI) * Intensity * exp(- Absorption * (l + l1));
 
 		SCATTER;
 	}

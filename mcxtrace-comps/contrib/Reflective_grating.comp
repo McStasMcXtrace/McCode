@@ -1,0 +1,281 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component:MultiPurpose_reflective_grating
+*
+* %I
+*
+* Written by: Kristian Soerensen and Philip Smith (s154443@win.dtu.dk)
+* Date: June 2018
+* Version: 1.4
+* Release: McXtrace 1.4
+* Origin: DTU
+*
+* A reflective, multi purpose grating.
+*
+* %D
+* A reflective grating that diffracts the incicence photon. 
+* The grating is in the XZ-plane. It then reflects the incomming photon using a MC picked angle, the span of this angle is given by d_phi (default=1)
+*  
+* Two modes are possible;
+*  0) Lamellar grating.
+*  1) Blazed grating.
+* 
+* Using Lamellar mode, the grating is diffracted using only the incomming and MC angle.
+* Using the Blazed mode, the grating diffracts the photon using the blazed angle.
+*
+* The grating adjusts the weight of the given photon according to its direction based on:
+*  1) The incoming photon.
+*  2) Directional sampling.
+*  3) Outgoing angle.
+*  3) Interference and diffraction patterns.
+* If d_phi=0 and blazed=0, a perfectly reflecting mirror is simulated.
+*
+*
+* %P
+* Input parameters:
+* xwidth: [m]    The width of the grating.
+* zdepth: [m]    The length of the grating.
+* R0:[ ]         Constant reflecticity of the grating [0;1].
+* r_rho: [l/mm]  Number of lines pr mm of the grating. 
+* b: [AA]        Width of the spacing i Angstrom. If zero, default is found using r_rho/3.
+* d: [AA]        Width of the slits in Angstrom. If zero, default is found using r_rho.
+* N: [ ]         Number of slits. If Zero, default is found using r_rho.
+* blazed: [ ]    If nonzero, on-balzed condition will be used. If zero, lamellar conditions is used.
+* cff: [ ]       fixed focus constant for the blazed grating. (Not fully developed yet)
+* Blazed_angle: [deg]     Blaze angle. This overrides cff.
+* d_phi: [deg]   MC picked angle in the range [-d_phi/2 ; d_phi/2 ].
+* display: [ ]   If non-zero, information will be displayed. Nb. generates much output.
+*
+*
+* %E
+*Blazed:
+*COMPONENT Grating_blazed = MultiPurpose_reflective_grating(
+*blazed=1,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =800,b=0,N_slits=0,d=0,cff=0,blazed_angle=2)
+*
+*Lamellar:
+*COMPONENT Grating_lamellar = MultiPurpose_reflective_grating(
+*blazed=0,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =1200,b=0,N_slits=0,d=0,cff=0,blazed_angle=0)
+*
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Reflective_grating
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (d_phi=1, R0=1, r_rho =800,b=0,N_slits=0,d=0,cff=0,blazed_angle=0, zdepth=0.015, xwidth=0.136, int blazed=0, int display=0)
+OUTPUT PARAMETERS ()
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+SHARE
+%{
+%}
+
+
+/********************************************************************************************
+In DECLARE section, small functions or varibles can be defined and used in the entire grating.
+********************************************************************************************/
+DECLARE
+%{
+#include <complex.h>
+  %include "read_table-lib"
+    double N_slits, b,d;
+    double DirectionalSamplingFactor;
+%}
+
+
+/********************************************************************************************
+The INITIALIZE section run each statement once. 
+********************************************************************************************/
+INITIALIZE
+%{
+    int status;
+
+    if (blazed){
+      printf("\n Warning(%s) : The blazed option is experimental.\n",NAME_CURRENT_COMP);
+    }
+    if (d_phi>30){
+      if(display){      
+        printf("\n Warning(%s) : d_phi of:%f is high.\n",NAME_CURRENT_COMP,d_phi); 
+      } 
+    }
+    if (blazed && !blazed_angle){
+      printf("Error(%s) : No blaze angle is given under blazed conditions.\n",NAME_CURRENT_COMP);
+      exit(-1);
+    }
+
+    if (N_slits<0 || b<0 || d<0 || r_rho<0 || d_phi<0 || blazed<0 || blazed_angle<0 || zdepth<0 || xwidth<0 || cff<0 || blazed<0 || blazed_angle<0){
+      printf("Error(%s) : Negative input parameter given.\n",NAME_CURRENT_COMP);
+      exit(-1);
+    }
+    if (!blazed && blazed_angle){
+      printf("Error(%s) : A blazed angle is given, but not a blazing mode. \n",NAME_CURRENT_COMP);
+      exit(-1);
+    }
+    if (!r_rho){
+      printf("Error(%s) : Need line density [l/mm] to define grating. \n",NAME_CURRENT_COMP);
+      exit(-1);
+    }
+    if (R0<0 || R0>1){
+      printf("Error(%s) reflectivity (%f) is specified but is not in [0:1]. \n",NAME_CURRENT_COMP,R0);
+      exit(-1);
+    }
+    if (cff){
+      printf("Warning(%s): A cff (%f) is given. This is not fully developed. \n",NAME_CURRENT_COMP,R0);
+    }
+
+    if(!d){
+      // Angstrom/linje
+      d=10000000/r_rho; 
+    }
+    if(!N_slits){
+      // Number of slits 
+      N_slits=(zdepth*1000)*r_rho; 
+    } 
+    if(!b){
+      // Approximated slit-width in Angstrom
+      b=d/3;
+    }
+    if(display){      
+      printf("\n Line width, d=%f [AA]. Number of slits,  N=%f. Slit width, b=%f [AA].\n \n",d,N_slits,b);  
+    }   
+
+    DirectionalSamplingFactor=((2*(d_phi*DEG2RAD))/(4*PI));       
+%}
+
+
+
+TRACE
+%{
+  /********************************************************************************************
+    Initializing by simulating a perfectly reflecting mirror:
+   ********************************************************************************************/
+
+  /*Placing the grating on the Y axis. */
+  PROP_Y0;
+  /*If the photon is passing the grating, it shouldn't be reflected. Instead, for book-keeping, it is restored to previoulsy state before the component using RESTORE_XRAY */
+  if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+    RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);
+  }else{
+    double nx,ny,nz,theta_rand,Gamma,gamma,placeHolderIn,placeHolderOut,comp_angle,nlength,DiffractionInterferenceFactor,diffracted_beta_cff;
+    /* Normal vector for the grating*/
+    nx=0;
+    ny=1;
+    nz=0;
+    // scalar-product, s and lenght of k.
+    double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+    double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    nlength=sqrt(scalar_prod(nx,ny,nz,nx,ny,nz)); // Note, nlength should be 1.
+
+    // outgoing vector for a perfectly reflecting mirror.
+    kx=kx-2*s*nx;
+    ky=ky-2*s*ny;
+    kz=kz-2*s*nz;
+    // Outgoing grazing angle for a perfectly reflecting mirror using angle between two vectors.
+    comp_angle = acos(s/(k*nlength))-M_PI_2;  
+    // MC picked angle going from +- d_phi
+    theta_rand =DEG2RAD*(rand01()*d_phi - (d_phi*0.5));
+
+    /********************************************************************************************
+      If the grating is blazed:
+     ********************************************************************************************/
+    if(blazed && blazed_angle){
+      /*
+         If there is a blazed angle. This will be used to find the outgoing angle based on
+         angle_in + angle_out = 2*blazed_angle.
+         For simplicity in the code, this is done in steps of two. 
+         - Finding outgoing kx,ky,kz.
+       */
+      kx=kx;
+      ky=(ky*cos(-2*blazed_angle*DEG2RAD)-kz*sin(-2*blazed_angle*DEG2RAD));
+      kz=(ky*sin(-2*blazed_angle*DEG2RAD)+kz*cos(-2*blazed_angle*DEG2RAD));
+      kx=kx;
+      /* Adding the random angle. */
+      ky=(ky*cos(theta_rand)-kz*sin(theta_rand));
+      kz=(ky*sin(theta_rand)+kz*cos(theta_rand));
+      k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));                
+      if(display) {      
+        printf("Using the cff= %f, the diffracted angle is found again to: %f\n",cff,diffracted_beta_cff);
+      }               
+    }
+    if(cff && blazed && !blazed_angle){
+      /* Note the cff mode is just proof of concept. This is not fully developed. */
+      /* Using cff to find diffracted angle (either found cff or given) */
+      diffracted_beta_cff = -(M_PI_2-acos(cff*cos(M_PI_2-comp_angle)));
+      /*Finding outgoing kx,ky,kz.*/
+      kx=kx;
+      ky=(ky*cos(diffracted_beta_cff)-kz*sin(diffracted_beta_cff));
+      kz=(ky*sin(diffracted_beta_cff)+kz*cos(diffracted_beta_cff));
+      /*using old k and n to find new based on rotation matrix and MC picked angle.*/
+      kx=kx;
+      ky=(ky*cos(theta_rand)-kz*sin(theta_rand));
+      kz=(ky*sin(theta_rand)+kz*cos(theta_rand));
+      k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
+      if(display){      
+        printf("Incidence grazing angle = %f, found diffracted incidence angle = %f, MC angle=%f,  With cff=%f and MC, the grazing angle of diffraction   is: %f \n",comp_angle*RAD2DEG,diffracted_beta_cff*RAD2DEG,theta_rand*RAD2DEG,cff,(diffracted_beta_cff+theta_rand)*RAD2DEG);
+      }  
+    }
+    /********************************************************************************************
+      If the grating is lamellar:
+     ********************************************************************************************/        
+    if(!blazed){
+      /* If grating isn't blazed, lamellar grating is used.
+         Thus finding outgoing angle only from ingoing angle.
+         using old k and n and rotation matrix.*/
+      kx=kx;
+      ky=(ky*cos(theta_rand)-kz*sin(theta_rand));
+      kz=(ky*sin(theta_rand)+kz*cos(theta_rand));
+      k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
+      if(display){      
+        printf("Incidence grazing angle: %f deg. \n Reflecting grazing angle: %f deg \n",comp_angle*RAD2DEG,(theta_rand+comp_angle)*RAD2DEG);
+      }  
+    }
+
+    /************************************************************************************************************
+      Finding the weight using diffraction theory. 
+     *************************************************************************************************************/               
+    if (blazed && !blazed_angle && cff){
+      placeHolderIn = sin(comp_angle+diffracted_beta_cff); 
+      placeHolderOut = sin(comp_angle+diffracted_beta_cff+theta_rand); // asin angle out
+    } 
+    if (blazed && blazed_angle){
+      placeHolderIn = sin(comp_angle+2*blazed_angle*DEG2RAD); 
+      placeHolderOut = sin(comp_angle+2*blazed_angle*DEG2RAD+theta_rand); // asin angle out 
+    } 
+    if (!blazed){
+      placeHolderIn = sin(comp_angle); 
+      placeHolderOut = sin(comp_angle+theta_rand); // asin angle out
+    }        
+    /* Phase for interference pattern:  k = wave vector, d = lines/Angstrom, b=width in Angsgrom */
+    gamma = k*d*(placeHolderOut-placeHolderIn);
+    /* Phase for diffraction pattern */
+    Gamma = k*b*(placeHolderOut-placeHolderIn);
+    if(display){      
+      printf("\n Original weight= %e    \n with MC angle= %f , gamma = %f and  Gamma=%f. And DirectionalSamplingFactor=%f and DiffractionInterferenceFactor=%e,  the weight is updated. \n",p,theta_rand*RAD2DEG,gamma,Gamma,DirectionalSamplingFactor,DiffractionInterferenceFactor);
+    }           
+    DiffractionInterferenceFactor=((sin(Gamma/2)/(Gamma/2))*(sin(Gamma/2)/(Gamma/2)))*((sin(N_slits*gamma/2)/sin(gamma/2))*(sin(N_slits*gamma/2)/sin(gamma/2)));
+    p=p*DirectionalSamplingFactor*(DiffractionInterferenceFactor/(pow(N_slits,2)));
+    if(display){      
+      printf("New weight = %e . \n",p);
+    }  		
+  }
+
+%}
+
+/************************************************************************************************************
+  Making lines to illustrace with the TRACE option.
+*************************************************************************************************************/ 
+MCDISPLAY
+%{
+  magnify("");
+  line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
+  line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+  line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
+  line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+%}
+
+END
