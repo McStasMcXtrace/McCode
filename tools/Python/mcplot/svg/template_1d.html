@@ -6,8 +6,8 @@
 <body>
 <script>
   var params = @PARAMS@;
-
-  let plt = new Plot1D(params);
+  let svg_branch = d3.select("body").append("svg");
+  let plt = new Plot1D(params, null, null, svg_branch);
 </script>
 <p>
 <a href="@DATAFILE@">Click for ascii data</a>
