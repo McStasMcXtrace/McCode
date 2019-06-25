@@ -75,14 +75,14 @@ class Plot1D {
   rgstrMouseCtrlClickPlot(f) { this._mouseCtrlClickPlotListeners.push(f); }
   fireMouseCtrlClickPlot(...args) { _pltfc_fireEvents(this._mouseCtrlClickPlotListeners, "mouseCtrlClickPlot", ...args); }
 
-  constructor(params, wname, svg_branch, logscale=false) {
+  constructor(params, svg_branch, logscale=false, wname = null) {
     this._mouseClickPlotListeners = [];
     this._mouseRClickPlotListeners = [];
     this._mouseCtrlClickPlotListeners = [];
 
     let p = params;
     this.params_lst = [params];
-    this.wname = wname;
+    this.wname = wname; // optinal parameter is used with a "plotwindow" element for view clipping
     this.hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
 
     this.xmin = d3.min(p['x']);
@@ -297,35 +297,166 @@ class Plot1D {
   }
 }
 
-// plot 2d
-function plot_2d(params, svg_branch, log=false) {
-  var p = params
-  let hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
 
-  let data = p['img2dData'];
-  let cb = p['imgColorbar'];
-  let cbmin = p['cbMin'];
-  let cbmax = p['cbMax'];
-  if (log==true) {
-    data = p['img2dDataLog'];
-    cb = p['imgColorbarLog'];
-    cbmin = p['cbMinLog'];
-    cbmax = p['cbMaxLog'];
+class Plot2D {
+  rgstrMouseClickPlot(f) { this._mouseClickPlotListeners.push(f); } // supports x,y args
+  fireMouseClickPlot(...args) { _pltfc_fireEvents(this._mouseClickPlotListeners, "mouseClickPlot", ...args); }
+  rgstrMouseRClickPlot(f) { this._mouseRClickPlotListeners.push(f); }
+  fireMouseRClickPlot(...args) { _pltfc_fireEvents(this._mouseRClickPlotListeners, "mouseRClickPlot", ...args); }
+  rgstrMouseCtrlClickPlot(f) { this._mouseCtrlClickPlotListeners.push(f); }
+  fireMouseCtrlClickPlot(...args) { _pltfc_fireEvents(this._mouseCtrlClickPlotListeners, "mouseCtrlClickPlot", ...args); }
+
+  constructor(params, svg_branch, log=false) {
+    this._mouseClickPlotListeners = [];
+    this._mouseRClickPlotListeners = [];
+    this._mouseCtrlClickPlotListeners = [];
+
+    this._plot_2d(params, svg_branch, log);
   }
 
-  _plot_2d_data(
-    hdl.wplt,
-    hdl.hplt,
-    p['xmin'],
-    p['xmax'],
-    p['ymin'],
-    p['ymax'],
-    data,
-    cb,
-    cbmin,
-    cbmax,
-    hdl.axisGroup);
+  // plot 2d
+  _plot_2d(params, svg_branch, log) {
+    var p = params
+    this.hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+
+    let data = p['img2dData'];
+    let cb = p['imgColorbar'];
+    let cbmin = p['cbMin'];
+    let cbmax = p['cbMax'];
+    if (log==true) {
+      data = p['img2dDataLog'];
+      cb = p['imgColorbarLog'];
+      cbmin = p['cbMinLog'];
+      cbmax = p['cbMaxLog'];
+    }
+
+    this._plot_2d_data(
+      this.hdl.wplt,
+      this.hdl.hplt,
+      p['xmin'],
+      p['xmax'],
+      p['ymin'],
+      p['ymax'],
+      data,
+      cb,
+      cbmin,
+      cbmax,
+      this.hdl.axisGroup);
+
+    // put some mouse events on the axisgroup
+    self = this;
+    this.hdl.axisGroup
+      .on("click", function(d) {
+        if (d3.event.ctrlKey)
+          self.fireMouseCtrlClickPlot();
+        else
+          self.fireMouseClickPlot();
+      })
+      .on("contextmenu", function () {
+        d3.event.preventDefault();
+        self.fireMouseRClickPlot();
+      });
+  }
+  _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbMin, cbMax, anchorElement) {
+    // colorbar width
+    var w_cb = 85; // this is the total width of space, image and ticks
+    var w_cbimg = 15;
+    var w_cbticks = 45;
+
+    // axes lengths
+    var wi = w - w_cb;
+    var hi = h;
+    // orego
+    var x0 = 0;
+    var y0 = h;
+    // end coords
+    var x1 = x0 + wi;
+    var y1 = y0 - hi;
+
+    // zoom
+    var zoom = d3.zoom()
+      .on("zoom", zoomFunction);
+
+    function zoomFunction() {
+      // create new scale ojects based on event
+      var new_xScale = d3.event.transform.rescaleX(xScale);
+      var new_yScale = d3.event.transform.rescaleY(yScale);
+
+      // update axes using the new scales
+      xAxisGroup.call(xAxis.scale(new_xScale));
+      yAxisGroup.call(yAxis.scale(new_yScale));
+
+      // apply pan/zoom to the image
+      img.attr("transform", d3.event.transform);
+    };
+    var view = anchorElement.append("rect")
+      .attr("class", "zoom")
+      .attr("width", w)
+      .attr("height", h)
+      .attr("style", "cursor: crosshair; fill: none; pointer-events: all;");
+
+    // clip
+    var clip = anchorElement.append("clipPath")
+      .attr("id", "viewClip")
+      .append("rect")
+      .attr("width", wi)
+      .attr("height", hi);
+
+    // set up axes
+    var xScale = d3.scaleLinear()
+      .domain([xmin, xmax])
+      .range([x0, x1]);
+    var xAxis = d3.axisBottom()
+      .ticks(5)
+      .tickFormat(d3.format(".2e"))
+      .scale(xScale);
+    var xAxisGroup = anchorElement.append("g")
+      .attr("transform", "translate(0," + y0 + ")")
+      .classed("noselect", true)
+      .call(xAxis);
+
+    var yScale = d3.scaleLinear()
+      .domain([ymin, ymax])
+      .range([y0, y1]);
+    var yAxis = d3.axisLeft()
+      .ticks(5)
+      .tickFormat(d3.format(".2e"))
+      .scale(yScale);
+    var yAxisGroup = anchorElement.append("g")
+      .attr("transform", "translate(" + x0 + ", 0)")
+      .classed("noselect", true)
+      .call(yAxis);
+
+    var pointGroup = anchorElement.append("g")
+      .attr("clip-path", "url(#viewClip)")
+      .call(zoom);
+
+    var img = pointGroup.append("svg:image")
+      .attr('width', wi)
+      .attr('height', hi)
+      .attr('preserveAspectRatio', 'none')
+      .attr("xlink:href","data:image/jpg;base64," + img2dData);
+
+    var cbScale = d3.scaleLinear()
+      .domain([cbMin, cbMax])
+      .range([y0, y1]);
+    var cbyAxis = d3.axisRight()
+      .ticks(5)
+      .tickFormat(d3.format(".2e"))
+      .scale(cbScale);
+    var cbAxisGroup = anchorElement.append("g")
+      .attr("transform", "translate(" + (x1 + w_cb - w_cbimg - w_cbticks) + ", 0)")
+      .classed("noselect", true)
+      .call(cbyAxis);
+    var cb = cbAxisGroup.append("svg:image")
+      .attr('width', w_cbimg)
+      .attr('height', hi)
+      .attr("transform", "translate(" + (-w_cbimg) + ", 0)")
+      .attr('preserveAspectRatio', 'none')
+      .attr("xlink:href","data:image/jpg;base64," + imgColorbar);
+  }
 }
+
 
 // private
 function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
@@ -432,103 +563,4 @@ function _makeErrorBarsData(x_lst, y_lst, yErr_lst) {
     dataErr_lst.push(dataErr);
   }
   return dataErr_lst;
-}
-
-function _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbMin, cbMax, anchorElement) {
-  // colorbar width
-  var w_cb = 85; // this is the total width of space, image and ticks
-  var w_cbimg = 15;
-  var w_cbticks = 45;
-
-  // axes lengths
-  var wi = w - w_cb;
-  var hi = h;
-  // orego
-  var x0 = 0;
-  var y0 = h;
-  // end coords
-  var x1 = x0 + wi;
-  var y1 = y0 - hi;
-
-  // zoom
-  var zoom = d3.zoom()
-    .on("zoom", zoomFunction);
-
-  function zoomFunction() {
-    // create new scale ojects based on event
-    var new_xScale = d3.event.transform.rescaleX(xScale);
-    var new_yScale = d3.event.transform.rescaleY(yScale);
-
-    // update axes using the new scales
-    xAxisGroup.call(xAxis.scale(new_xScale));
-    yAxisGroup.call(yAxis.scale(new_yScale));
-
-    // apply pan/zoom to the image
-    img.attr("transform", d3.event.transform);
-  };
-  var view = anchorElement.append("rect")
-    .attr("class", "zoom")
-    .attr("width", w)
-    .attr("height", h)
-    .attr("style", "cursor: crosshair; fill: none; pointer-events: all;");
-
-  // clip
-  var clip = anchorElement.append("clipPath")
-    .attr("id", "viewClip")
-    .append("rect")
-    .attr("width", wi)
-    .attr("height", hi);
-
-  // set up axes
-  var xScale = d3.scaleLinear()
-    .domain([xmin, xmax])
-    .range([x0, x1]);
-  var xAxis = d3.axisBottom()
-    .ticks(5)
-    .tickFormat(d3.format(".2e"))
-    .scale(xScale);
-  var xAxisGroup = anchorElement.append("g")
-    .attr("transform", "translate(0," + y0 + ")")
-    .classed("noselect", true)
-    .call(xAxis);
-
-  var yScale = d3.scaleLinear()
-    .domain([ymin, ymax])
-    .range([y0, y1]);
-  var yAxis = d3.axisLeft()
-    .ticks(5)
-    .tickFormat(d3.format(".2e"))
-    .scale(yScale);
-  var yAxisGroup = anchorElement.append("g")
-    .attr("transform", "translate(" + x0 + ", 0)")
-    .classed("noselect", true)
-    .call(yAxis);
-
-  var pointGroup = anchorElement.append("g")
-    .attr("clip-path", "url(#viewClip)")
-    .call(zoom);
-
-  var img = pointGroup.append("svg:image")
-    .attr('width', wi)
-    .attr('height', hi)
-    .attr('preserveAspectRatio', 'none')
-    .attr("xlink:href","data:image/jpg;base64," + img2dData);
-
-  var cbScale = d3.scaleLinear()
-    .domain([cbMin, cbMax])
-    .range([y0, y1]);
-  var cbyAxis = d3.axisRight()
-    .ticks(5)
-    .tickFormat(d3.format(".2e"))
-    .scale(cbScale);
-  var cbAxisGroup = anchorElement.append("g")
-    .attr("transform", "translate(" + (x1 + w_cb - w_cbimg - w_cbticks) + ", 0)")
-    .classed("noselect", true)
-    .call(cbyAxis);
-  var cb = cbAxisGroup.append("svg:image")
-    .attr('width', w_cbimg)
-    .attr('height', hi)
-    .attr("transform", "translate(" + (-w_cbimg) + ", 0)")
-    .attr('preserveAspectRatio', 'none')
-    .attr("xlink:href","data:image/jpg;base64," + imgColorbar);
 }
