@@ -214,13 +214,12 @@ def main(args):
         quit()
     node = loader.plot_graph
 
+    # generate html files
     plotgraph_recurse(node, plotfunc)
 
-    # TODO: browse the main plot file / don't
-    #if args.nobrowse:
-    #    return
-    #else:
-    #    browse(html_filepath)
+    # browse if input was a specific, and therefore browsable, file
+    if not args.nobrowse and os.path.isfile(simfile):
+        browse(os.path.splitext(simfile)[0] + ".html")
 
 
 if __name__ == '__main__':
