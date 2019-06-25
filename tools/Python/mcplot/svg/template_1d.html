@@ -6,8 +6,11 @@
 <body>
 <script>
   var params = @PARAMS@;
-  let svg_branch = d3.select("body").append("svg");
-  let plt = new Plot1D(params, null, null, svg_branch);
+  var plt = new Plot1D(params, null, d3.select("body").append("svg"));
+
+  plt.rgstrMouseClickPlot( () => { console.log("click"); } );
+  plt.rgstrMouseCtrlClickPlot( () => { console.log("ctrl click"); } );
+  plt.rgstrMouseRClickPlot( () => { console.log("right click"); } );
 </script>
 <p>
 <a href="@DATAFILE@">Click for ascii data</a>

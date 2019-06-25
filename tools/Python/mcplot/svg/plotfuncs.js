@@ -51,14 +51,39 @@ function binsearch(lst, target) {
   }
 }
 
+
+function _pltfc_fireEvents(lst, sCaller, ...args) {
+  // Utility function to help listener interfaces.
+  let f = null;
+  for (i=0;i<lst.length;i++) {
+    f = lst[i];
+    try {
+      f(...args);
+    }
+    catch(error) {
+      console.log("fail calling " + sCaller + " listener: ", error);
+    }
+  }
+}
+
+
 class Plot1D {
-  constructor(params, wname, clickPlotCB, svg_branch, logscale=false) {
+  rgstrMouseClickPlot(f) { this._mouseClickPlotListeners.push(f); } // supports x,y args
+  fireMouseClickPlot(...args) { _pltfc_fireEvents(this._mouseClickPlotListeners, "mouseClickPlot", ...args); }
+  rgstrMouseRClickPlot(f) { this._mouseRClickPlotListeners.push(f); }
+  fireMouseRClickPlot(...args) { _pltfc_fireEvents(this._mouseRClickPlotListeners, "mouseRClickPlot", ...args); }
+  rgstrMouseCtrlClickPlot(f) { this._mouseCtrlClickPlotListeners.push(f); }
+  fireMouseCtrlClickPlot(...args) { _pltfc_fireEvents(this._mouseCtrlClickPlotListeners, "mouseCtrlClickPlot", ...args); }
+
+  constructor(params, wname, svg_branch, logscale=false) {
+    this._mouseClickPlotListeners = [];
+    this._mouseRClickPlotListeners = [];
+    this._mouseCtrlClickPlotListeners = [];
+
     let p = params;
     this.params_lst = [params];
     this.wname = wname;
     this.hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
-
-    this.clickPlotCB = clickPlotCB;
 
     this.xmin = d3.min(p['x']);
     this.xmax = d3.max(p['x']);
@@ -257,8 +282,15 @@ class Plot1D {
         xpt = x[idx];
         ypt = y[idx];
 
-        self.clickPlotCB(xpt.toExponential(4), ypt.toExponential(4))
-      } );
+        if (d3.event.ctrlKey)
+          self.fireMouseCtrlClickPlot(xpt.toExponential(4), ypt.toExponential(4));
+        else
+          self.fireMouseClickPlot(xpt.toExponential(4), ypt.toExponential(4));
+      })
+      .on("contextmenu", function () {
+        d3.event.preventDefault();
+        self.fireMouseRClickPlot();
+      });
 
     // draw on initial zoom
     this._drawPoints(xScale, yScale);
