@@ -6,7 +6,7 @@
 <body>
 <script>
   var params = @PARAMS@;
-  var plt = new Plot1D(params, null, d3.select("body").append("svg"));
+  var plt = new Plot1D(params, d3.select("body").append("svg"));
 
   plt.rgstrMouseClickPlot( () => { console.log("click"); } );
   plt.rgstrMouseCtrlClickPlot( () => { console.log("ctrl click"); } );

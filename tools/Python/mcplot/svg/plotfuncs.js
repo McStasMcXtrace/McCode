@@ -267,7 +267,11 @@ class Plot1D {
       .attr("clip-path", "url(#viewClip_"+this.wname+")");
 
     // when clicked, print x axis value to console
-    let self = this;
+    // WARNING: plt1_self may behave like a global variable, this should be rewritten,
+    //    but unfortunately, we need the >caller's this< for d3.mouse(this) to work,
+    //    meaning that this particular design isn't great in js, or should be implemented
+    //    differently
+    let plt1_self = this;
     axisGroup
       .on("click", function(d) {
         let m = d3.mouse(this);
@@ -275,21 +279,21 @@ class Plot1D {
         let ypt = yScale.invert(m[1]);
 
         // only report on the first data set
-        let x = self.x_lst[0];
-        let y = self.y_lst[0];
+        let x = plt1_self.x_lst[0];
+        let y = plt1_self.y_lst[0];
         let idx = binsearch(x, xpt);
 
         xpt = x[idx];
         ypt = y[idx];
 
         if (d3.event.ctrlKey)
-          self.fireMouseCtrlClickPlot(xpt.toExponential(4), ypt.toExponential(4));
+          plt1_self.fireMouseCtrlClickPlot(xpt.toExponential(4), ypt.toExponential(4));
         else
-          self.fireMouseClickPlot(xpt.toExponential(4), ypt.toExponential(4));
+          plt1_self.fireMouseClickPlot(xpt.toExponential(4), ypt.toExponential(4));
       })
       .on("contextmenu", function () {
         d3.event.preventDefault();
-        self.fireMouseRClickPlot();
+        plt1_self.fireMouseRClickPlot();
       });
 
     // draw on initial zoom
@@ -344,18 +348,17 @@ class Plot2D {
       this.hdl.axisGroup);
 
     // put some mouse events on the axisgroup
-    self = this;
     this.hdl.axisGroup
       .on("click", function(d) {
         if (d3.event.ctrlKey)
-          self.fireMouseCtrlClickPlot();
+          this.fireMouseCtrlClickPlot();
         else
-          self.fireMouseClickPlot();
-      })
+          this.fireMouseClickPlot();
+      }.bind(this))
       .on("contextmenu", function () {
         d3.event.preventDefault();
-        self.fireMouseRClickPlot();
-      });
+        this.fireMouseRClickPlot();
+      }.bind(this));
   }
   _plot_2d_data(w, h, xmin, xmax, ymin, ymax, img2dData, imgColorbar, cbMin, cbMax, anchorElement) {
     // colorbar width
