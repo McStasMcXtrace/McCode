@@ -6,6 +6,7 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
+* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 *
@@ -38,7 +39,7 @@
 * For rest, see PowderN component which this is based on
 *
 * OUTPUT PARAMETERS:
-* V_rho: [AA^-3]  Atomic density
+* V_rho:  [AA^-3] Atomic density
 *
 *
 * %E
@@ -65,9 +66,9 @@ SHARE
 
 // Share section of PowderN 8/3 2016 from McStas.org
 
-/* used for reading data table from file */
-%include "read_table-lib"
-%include "interoff-lib"
+  /* used for reading data table from file */
+  %include "read_table-lib"
+  %include "interoff-lib"
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL_UNION
 #define POWDERN_DECL_UNION
@@ -79,43 +80,43 @@ SHARE
 #define Undefined         { 0,0,0,0,0,0,0,0,0 }
 #endif
 
-struct line_data_union
-{
-double F2;                  /* Value of structure factor */
-double q;                   /* Qvector */
-int j;                      /* Multiplicity */
-double DWfactor;            /* Debye-Waller factor */
-double w;                   /* Intrinsic line width */
-double Epsilon;             /* Strain=delta_d_d/d shift in ppm */
-};
+  struct line_data_union
+    {
+      double F2;                  /* Value of structure factor */
+      double q;                   /* Qvector */
+      int j;                      /* Multiplicity */
+      double DWfactor;            /* Debye-Waller factor */
+      double w;                   /* Intrinsic line width */
+      double Epsilon;             /* Strain=delta_d_d/d shift in ppm */
+    };
 
-struct line_info_struct_union
-{
-struct line_data_union *list;     /* Reflection array */
-int  count;                  /* Number of reflections */
-double Dd;
-double DWfactor;
-double V_0;
-double rho;
-double at_weight;
-double at_nb;
-double sigma_a; // should not be used
-double sigma_i; // should not be used
-char   compname[256];
-double flag_barns;
-int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
-int    column_order[9]; /* column signification */
-int    flag_warning;
-char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
-double dq;    /* wavevector transfer [Angs-1] */
-double Epsilon; /* global strain in ppm */
-double XsectionFactor;
-double my_s_v2_sum;
-double my_a_v;
-double my_inc;
-double *w_v,*q_v, *my_s_v2;
-double radius_i,xwidth_i,yheight_i,zdepth_i; // not to be used, but still here
-double v; /* last velocity (cached) */
+  struct line_info_struct_union
+    {
+      struct line_data_union *list;     /* Reflection array */
+      int  count;                  /* Number of reflections */
+      double Dd;
+      double DWfactor;
+      double V_0;
+      double rho;
+      double at_weight;
+      double at_nb;
+      double sigma_a; // should not be used
+      double sigma_i; // should not be used
+      char   compname[256];
+      double flag_barns;
+      int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
+      int    column_order[9]; /* column signification */
+      int    flag_warning;
+      char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
+      double dq;    /* wavevector transfer [Angs-1] */
+      double Epsilon; /* global strain in ppm */
+      double XsectionFactor;
+      double my_s_v2_sum;
+      double my_a_v;
+      double my_inc;
+      double *w_v,*q_v, *my_s_v2;
+      double radius_i,xwidth_i,yheight_i,zdepth_i; // not to be used, but still here
+      double v; /* last velocity (cached) */
       double Nq;
       int    nb_reuses, nb_refl, nb_refl_count;
       double v_min, v_max;

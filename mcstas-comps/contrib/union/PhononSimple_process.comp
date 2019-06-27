@@ -1,0 +1,536 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Anders Komar Ravn, based on template by Mads Bertelsen and Phonon_Simple
+* Date: 20.08.15
+* Version: $Revision: 0.1 $
+* Origin:
+*
+* %D
+*
+* This is a template for a new contributor to create their own physical process.
+* The comments in this file are meant to teach the user about creating their own
+*  process file, rather than explaining this one. For comments on how this code works,
+*  look in the Incoherent_process.comp.
+*
+* Part of the Union components, a set of components that work together and thus
+*  sperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components like this one
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box / Union_cylinder, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+* Only in step 4 will any simulation happen, and per default all geometries
+*  defined before the master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union_components
+*
+*
+* Algorithm:
+* Described elsewhere
+*
+* %P
+* INPUT PARAMETERS:
+* unit_cell_volume: [AA^3]   Unit cell volume
+* a: [AA]   fcc lattice constant
+* c: [meV*AA]  Velocity of sound
+* M: [unit]  Nucleus atomic mass in units
+* b: [fm] scattring length
+* MC: [1] steps in numerical integral
+*
+* OUTPUT PARAMETERS:
+* PhononSimple_storage      // Important to update this output paramter
+* effective_my_scattering   // Variable used in initialize
+*
+* %L
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT PhononSimple_process
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1,a=4.95,c=10,M=207.2,b=9.4,T=290,DW=1,longitudinal=1,transverse=1)
+OUTPUT PARAMETERS (This_process,PhononSimple_storage,effective_my_scattering)
+
+SHARE
+%{
+#ifndef Union
+#define Union $Revision: 0.8 $
+
+#include "Union_functions.c"
+#include "Union_initialization.c"
+
+#endif
+
+// Very important to add a pointer to this struct in the Union_functions.c file
+struct PhononSimple_physics_storage_struct{
+    // Variables that needs to be transfered between any of the following places:
+    // The initialize in this component
+    // The function for calculating my
+    // The function for calculating scattering
+    
+    double k_init;
+    double kk_x;
+    double kk_y;
+    double kk_z;
+    double ki_x;
+    double ki_y;
+    double ki_z;
+    
+    // Avoid duplicates of output parameters and setting parameters in naming
+    double atom_mass_au;
+    double V_rho;
+    double my_scattering;
+    int mc_steps;
+    double DW_factor;
+    
+    double k_f[3];
+    double k_final;
+    double aa;
+    double bb;
+    double cc;
+    double my_constant;
+    double Temp;
+    double solid_angle;
+    double parms[10];
+    int enable_longitudinal;
+    int enable_transverse;
+    
+    Coords pol_vector;
+    int pol_mode;
+};
+
+/* Ridder's false position algorithm for finding roots. */
+#define T2E (1/11.605)   /* Kelvin to meV */
+
+double nbose_union(double omega, double T)  /* Other name ?? */
+  {
+    double nb;
+
+    nb= (omega>0) ? 1+1/(exp(omega/(T*T2E))-1) : 1/(exp(-omega/(T*T2E))-1);
+    return nb;
+  }
+#undef T2E
+/* Routine types from Numerical Recipies book */
+#define UNUSED (-1.11e30)
+#define MAXRIDD 60
+
+void fatalerror_union(char *s)
+  {
+     fprintf(stderr,"%s \n",s);
+     exit(1);
+  }
+
+double zridd_union(double (*func)(double*), double x1, double x2, double *parms, double xacc)
+    {
+      int j;
+      double ans, fh, fl, fm, fnew, s, xh, xl, xm, xnew;
+
+/*      printf("zridd called with brackets %g %g acceptance %g \n",x1,x2,xacc);
+      printf("and %i parameters %g %g %g %g %g \n",Nparms,parms[0],parms[1],parms[2],parms[3], parms[4]); */
+      parms[0]=x1;
+      fl=(*func)(parms);
+      parms[0]=x2;
+      fh=(*func)(parms);
+/*      printf("Function values: %g %g \n",fl,fh); */
+      if (fl*fh >= 0)
+      {
+        if (fl==0) return x1;
+        if (fh==0) return x2;
+        return UNUSED;
+      }
+      else
+      {
+        xl=x1;
+        xh=x2;
+        ans=UNUSED;
+        for (j=1; j<MAXRIDD; j++)
+        {
+          xm=0.5*(xl+xh);
+          parms[0]=xm;
+          fm=(*func)(parms);
+          s=sqrt(fm*fm-fl*fh);
+          if (s == 0.0)
+            return ans;
+          xnew=xm+(xm-xl)*((fl >= fh ? 1.0 : -1.0)*fm/s);
+          if (fabs(xnew-ans) <= xacc)
+            return ans;
+          ans=xnew;
+          parms[0]=ans;
+          fnew=(*func)(parms);
+          if (fnew == 0.0) return ans;
+          if (fabs(fm)*SIGN(fnew) != fm)
+          {
+            xl=xm;
+            fl=fm;
+            xh=ans;
+            fh=fnew;
+          }
+          else
+            if (fabs(fl)*SIGN(fnew) != fl)
+            {
+              xh=ans;
+              fh=fnew;
+            }
+            else
+              if(fabs(fh)*SIGN(fnew) != fh)
+              {
+                xl=ans;
+                fl=fnew;
+              }
+              else
+                fatalerror_union("never get here in zridd");
+          if (fabs(xh-xl) <= xacc)
+            return ans;
+        }
+        fatalerror_union("zridd exceeded maximum iterations");
+      }
+      return 0.0;  /* Never get here */
+    }
+
+#define ROOTACC 1e-8
+  int findroots_union(double brack_low, double brack_mid, double brack_high, double *list, int* index, double (*f)(double*), double *parms)
+    {
+      double root,range=brack_mid-brack_low;
+      int i, steps=100;
+
+     for (i=0; i<steps; i++)
+     {
+      root = zridd_union(f, brack_low+range*i/(int)steps,
+                   brack_low+range*(i+1)/(int)steps, 
+                   (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+/*        printf("findroots found a  low root: %g \n",root); */
+      }
+     }
+      root = zridd_union(f, brack_mid, brack_high, (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+/*        printf("findroots found a high root: %g \n",root); */
+      }
+    }
+
+  double omega_q_union(double* parms)
+    {
+      /* dispersion in units of meV  */
+      double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
+      double q, qx, qy, qz, Jq, res_phonon, res_neutron;
+      double ah, a, c;
+
+      vf=parms[0];
+      vi=parms[1];
+      vv_x=parms[2];
+      vv_y=parms[3];
+      vv_z=parms[4];
+      vi_x=parms[5];
+      vi_y=parms[6];
+      vi_z=parms[7];
+      a   =parms[8];
+      c   =parms[9];
+      ah=a/2.0;
+
+/*    printf("omega_q called with parameters vf= %g, vi=%g (%g %g %g) vv=(%g, %g, %g) \n",vf,vi,vi_x,vi_y,vi_z,vv_x,vv_y,vv_z); */
+      qx=V2K*(vi_x-vf*vv_x);
+      qy=V2K*(vi_y-vf*vv_y);
+      qz=V2K*(vi_z-vf*vv_z);
+       q=sqrt(qx*qx+qy*qy+qz*qz);
+      Jq=2*(cos(ah*(qx+qy))+cos(ah*(qx-qy))+cos(ah*(qx+qz))+cos(ah*(qx-qz))
+             +cos(ah*(qy+qz))+cos(ah*(qy-qz)) );
+      res_phonon=c/a*sqrt(12-Jq);
+      res_neutron = fabs(VS2E*(vi*vi-vf*vf));
+/*      if (fabs(res_phonon-res_neutron)<1e-3)
+       printf("in omega_q: q=(%g %g %g), omega_phonon=%g, omega_neutron=%g\n ",
+             qx,qy,qz,res_phonon,res_neutron); */
+/*      printf("omega_q returning %g - %g\n",res_phonon,res_neutron); */
+
+      return (res_phonon - res_neutron);
+    }
+#undef UNUSED
+#undef MAXRIDD
+
+
+// Function for calculating my, the inverse penetration depth (for only this scattering process).
+// The input for this function and its order may not be changed, but the names may be updated.
+int PhononSimple_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+
+   double k_length = sqrt(k_initial[0]*k_initial[0]+k_initial[1]*k_initial[1]+k_initial[2]*k_initial[2]);
+   //printf("energy = %f \n",k_length*K2V*k_length*K2V*VS2E);
+   double v_i = k_length * K2V;
+   
+   double a,b,c,T;
+   double vf_list[6]; /* List of allowed final velocities */
+   int nf,index;
+   double *parms;
+   double f1,f2,J_factor;
+   double DV = 0.001; /* Velocity change used for numerical derivative */
+   double omega;
+   double v_f;
+   double k_f[3],k_final;
+   double kappa2,kappa_x,kappa_y,kappa_z;
+   double solid_angle;
+   
+   a=data_transfer.pointer_to_a_PhononSimple_storage_struct->aa;
+   b=data_transfer.pointer_to_a_PhononSimple_storage_struct->bb;
+   c=data_transfer.pointer_to_a_PhononSimple_storage_struct->cc;
+   T=data_transfer.pointer_to_a_PhononSimple_storage_struct->Temp;
+   
+   Coords k_out;
+   focus_data->focusing_function(&k_out,&solid_angle,focus_data);
+   NORM(k_out.x,k_out.y,k_out.z);
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->solid_angle = solid_angle;
+    
+   // Avoid allocating the array for each neutron
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[0] = -1;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[1] = v_i;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[2] = k_out.x;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[3] = k_out.y;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[4] = k_out.z;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[5] = k_initial[0]*K2V;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[6] = k_initial[1]*K2V;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[7] = k_initial[2]*K2V;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[8] = a;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[9] = c;
+   
+   parms = &data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[0];
+   
+   nf = 0;
+   findroots_union(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q_union, parms);
+   index=(int)floor(rand01()*nf);
+
+   if (nf > 4 || index > 3) {
+     printf("index = %d, nf = %d \n",index, nf);
+     printf("energy = %f \n",k_length*K2V*k_length*K2V*VS2E);
+   }
+
+   v_f=vf_list[index];
+   //parms[0]=v_f-DV;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[0]=v_f-DV;
+   f1=omega_q_union(parms);
+   //parms[0]=v_f+DV;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->parms[0]=v_f+DV;
+   f2=omega_q_union(parms);
+   //J_factor = fabs(f2-f1)/(2*DV*K2V);
+   J_factor = fabs(f2-f1)/(2*DV);
+   omega=VS2E*(v_i*v_i-v_f*v_f); /* unit of energy */
+   
+   k_final = v_f * V2K;
+   k_f[0] = k_out.x * k_final;
+   k_f[1] = k_out.y * k_final;
+   k_f[2] = k_out.z * k_final;
+   
+   kappa_x = k_initial[0]-k_f[0];
+   kappa_y = k_initial[1]-k_f[1];
+   kappa_z = k_initial[2]-k_f[2];
+   kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
+   
+   double pol_weight_factor;
+   if (data_transfer.pointer_to_a_PhononSimple_storage_struct->enable_transverse == 1 && data_transfer.pointer_to_a_PhononSimple_storage_struct->enable_longitudinal == 1) {
+     pol_weight_factor = kappa2;
+   } else {
+   // polarization mode
+   // Find nearest bragg point. FCC: HKL all even or odd.
+   double h_value,k_value,l_value;
+   h_value = kappa_x*a*0.5/PI;
+   k_value = kappa_y*a*0.5/PI;
+   l_value = kappa_z*a*0.5/PI;
+   
+   int h_guess,k_guess,l_guess;
+   h_guess = floor(h_value);
+   k_guess = floor(k_value);
+   l_guess = floor(l_value);
+   
+   int h_check,k_check,l_check;
+   int nearest_bragg_h,nearest_bragg_k,nearest_bragg_l;
+   int check_sum;
+   
+       double dist,min_dist = 99999;
+       for (h_check=h_guess;h_check<h_guess+2;h_check++) {
+         for (k_check=k_guess;k_check<k_guess+2;k_check++) {
+           for (l_check=l_guess;l_check<l_guess+2;l_check++) {
+             check_sum = h_check % 2 + k_check % 2 + l_check % 2;
+             if (check_sum == 0 || check_sum==3) {
+               dist=sqrt((h_value-h_check)*(h_value-h_check)+(k_value-k_check)*(k_value-k_check)+(l_value-l_check)*(l_value*l_check));
+               if (dist < min_dist) {
+                 min_dist = dist;
+                 nearest_bragg_h = h_check;
+                 nearest_bragg_k = k_check;
+                 nearest_bragg_l = l_check;
+               }
+             }
+           }
+         }
+       }
+       
+     double k_phonon_h,k_phonon_k,k_phonon_l;
+     k_phonon_h = kappa_x - nearest_bragg_h;
+     k_phonon_k = kappa_y - nearest_bragg_k;
+     k_phonon_l = kappa_z - nearest_bragg_l;
+     
+     NORM(k_phonon_h,k_phonon_k,k_phonon_l);
+     
+     if (data_transfer.pointer_to_a_PhononSimple_storage_struct->enable_longitudinal == 1) {
+       pol_weight_factor = (kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l)*(kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l);
+     }
+     
+     if (data_transfer.pointer_to_a_PhononSimple_storage_struct->enable_transverse == 1) {
+       pol_weight_factor = kappa_x*kappa_x+kappa_y*kappa_y+kappa_z*kappa_z - (kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l)*(kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l);
+     }
+     
+     //Coords pol_vector = data_transfer.pointer_to_a_PhononSimple_storage_struct->pol_vector;
+     //pol_weight_factor = k_phonon_h*pol_vector.x + k_phonon_k*pol_vector.y + k_phonon_l*pol_vector.z;
+     /*
+     // This test shows the predicted behavior where all nearest bragg sets corresponds to Bragg peaks.
+     printf("--------------------------------------------\n");
+     printf("hkl input     = [%1.3f %1.3f %1.3f] \n",h_value,k_value,l_value);
+     printf("Nearest bragg = [%d     %d    %d] \n",nearest_bragg_h,nearest_bragg_k,nearest_bragg_l);
+     */
+   }
+   
+   
+
+   //*my = nf*V_rho*(k_final/k_length)*DW*(kappa2*K2V*K2V*VS2E)/fabs(omega)*nbose(omega,T)*2*VS2E*K2V*k_final/J_factor*b*b/M;
+   // my_constant = V_rho*DW*K2V*K2V*VS2E*2*VS2E*K2V*b*b/M // done in initialize
+
+   //*my = (double) nf*k_final/k_length*kappa2/fabs(omega)*nbose_union(omega,T)*k_final/J_factor*data_transfer.pointer_to_a_PhononSimple_storage_struct->my_constant;
+   
+   *my = (double) nf*k_final/k_length*pol_weight_factor/fabs(omega)*nbose_union(omega,T)*k_final/J_factor*data_transfer.pointer_to_a_PhononSimple_storage_struct->my_constant;
+   
+   //*my = 10;
+   
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->k_final = k_final;
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[0] = k_f[0];
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[1] = k_f[1];
+   data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[2] = k_f[2];
+
+    // Simple case, just retrive the parameter saved from initialize
+    return 1;
+};
+
+// Function that provides description of a basic scattering event.
+// Do not change the
+int PhononSimple_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+
+    // k_final and k_initial are passed as pointers to double vector[3]
+    //double k_length = data_transfer.pointer_to_a_Template_physics_storage_struct->k_init;
+    //printf("Naar vi her til?\n");
+    
+    k_final[0] = data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[0];
+    k_final[1] = data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[1];
+    k_final[2] = data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[2];
+    
+    *weight *= 0.25/PI*data_transfer.pointer_to_a_PhononSimple_storage_struct->solid_angle;
+    
+    // A pointer to k_final is returned, and the wavevector will be set to k_final after a scattering event
+    return 1; // return 1 is sucess, return 0 is failure, and the ray will be absorbed.
+              // failure should not happen, as this function will only be called when
+              // the cross section for the current k_initial is above zero.
+
+    // There is access to the data_transfer from within the scattering function
+    // In this case the only variable is my, but it could be read by:
+    // double my = data_transfer.pointer_to_a_Template_physics_storage_struct->my_scattering;
+    // One can assume that if the scattering function is running, the my fuction was
+    //  executed just before and for the same k_initial.
+
+};
+
+%}
+
+DECLARE
+%{
+// Declare for this component, to do calculations on the input / store in the transported data
+struct PhononSimple_physics_storage_struct PhononSimple_storage; // Replace template with your own name here
+
+// Variables needed in initialize of this function.
+double effective_my_scattering;
+double sigma_const;
+
+// Needed for transport to the main component, will be the same for all processes
+struct global_process_element_struct global_process_element;
+struct scattering_process_struct This_process;
+
+// These lines help with future error correction, and tell other Union components
+//  that at least one process have been defined.
+#ifndef PROCESS_DETECTOR
+    // Obsolete
+	//struct pointer_to_global_process_list global_process_list = {0,NULL};
+	#define PROCESS_DETECTOR dummy
+#endif
+%}
+
+INITIALIZE
+%{
+
+  // Initialize done in the component
+  //PhononSimple_storage.my_scattering = effective_my_scattering;
+  PhononSimple_storage.aa = a; // lattice side length
+  PhononSimple_storage.bb = b; // scattering length
+  PhononSimple_storage.cc = c; // speed of sound
+  //PhononSimple_storage.V_rho = 4.0/(a*a*a);
+  //PhononSimple_storage.Atom_mass_au = M;
+  //PhononSimple_storage.mc_steps = MCsteps;
+  //PhononSimple_storage.DW_factor = DW;
+  PhononSimple_storage.Temp = T;
+  
+  /*
+  if (!pol_h && !pol_k && !pol_l)
+    PhononSimple_storage.pol_mode = 0;
+  else {
+    PhononSimple_storage.pol_mode = 1;
+    NORM(pol_h,pol_k,pol_l);
+    PhononSimple_storage.pol_vector.x = pol_h;
+    PhononSimple_storage.pol_vector.y = pol_k;
+    PhononSimple_storage.pol_vector.z = pol_l;
+  }
+  */
+  
+  if (longitudinal > 0.5)
+    PhononSimple_storage.enable_longitudinal = 1;
+  else
+    PhononSimple_storage.enable_longitudinal = 0;
+  
+  if (transverse > 0.5)
+    PhononSimple_storage.enable_transverse = 1;
+  else
+    PhononSimple_storage.enable_transverse = 0;
+    
+  if (PhononSimple_storage.enable_transverse == 0 && PhononSimple_storage.enable_longitudinal == 0) {
+    printf("PhononSimple_process named %s has no branches as both longitudinal and transverse is disabled! \n");
+    exit(1);
+  }
+  
+  PhononSimple_storage.my_constant = packing_factor*4.0/(a*a*a)*DW*K2V*K2V*VS2E*2*VS2E*K2V*b*b/M;
+  // my_constant = V_rho*DW*K2V*K2V*VS2E*2*VS"E*K2V*b*b/M // done in initialize
+  
+  // Need to specify if this process is isotropic
+  //This_process.non_isotropic_rot_index = -1; // Yes (powder)
+  This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // Packing the data into a structure that is transported to the main component
+  This_process.data_transfer.pointer_to_a_PhononSimple_storage_struct = &PhononSimple_storage;
+  This_process.probability_for_scattering_function = &PhononSimple_my;
+  This_process.scattering_function = &PhononSimple_scattering;
+
+  // This will be the same for all process's, and can thus be moved to an include.
+  sprintf(This_process.name,NAME_CURRENT_COMP);
+  This_process.process_p_interact = interact_fraction;
+  rot_copy(This_process.rotation_matrix,ROT_A_CURRENT_COMP);
+  sprintf(global_process_element.name,NAME_CURRENT_COMP);
+  global_process_element.component_index = INDEX_CURRENT_COMP;
+  global_process_element.p_scattering_process = &This_process;
+  add_element_to_process_list(&global_process_list,global_process_element);
+ %}
+
+TRACE
+%{
+    // Trace should be empty, the simulation is done in Union_master
+%}
+
+END

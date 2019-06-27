@@ -6,6 +6,7 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
+* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * A sample component to separate geometry and phsysics
@@ -45,18 +46,18 @@
 * %P
 * INPUT PARAMETERS:
 * // To be changed to kf instead of Q
-* Q_direction_1: [string]    kf direction for first axis ("x", "y" or "z")
-* Q1_max: [1]                histogram boundery, max kf value for first axis
-* Q1_min: [1]                histogram boundery, min kf value for first axis
-* n1: [1]                    number of bins for first axis
-* Q_direction_2: [string]    kf direction for second axis ("x", "y" or "z")
-* Q2_max: [1]                histogram boundery, max kf value for second axis
-* Q2_min: [1]                histogram boundery, min kf value for second axis
-* n2: [1]                    number of bins for second axis
-* target_geometry: [string]  Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
-* target_process: [string]   Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
-* order_total: [1]           Only log rays that scatter for the n'th time, 0 for all orders
-* order_volume: [1]          Only log rays that scatter for the n'th time in the same geometry
+* Q_direction_1:   [string] kf direction for first axis ("x", "y" or "z")
+* Q1_max:          [1] histogram boundery, max kf value for first axis
+* Q1_min:          [1] histogram boundery, min kf value for first axis
+* n1:              [1] number of bins for first axis
+* Q_direction_2:   [string] kf direction for second axis ("x", "y" or "z")
+* Q2_max:          [1] histogram boundery, max kf value for second axis
+* Q2_min:          [1] histogram boundery, min kf value for second axis
+* n2:              [1] number of bins for second axis
+* target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
+* order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
+* order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
 * order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
 * logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 *
@@ -88,25 +89,25 @@ SHARE
 #endif
 
 struct temp_2D_kf_data_element_struct {
-int index_1;
-int index_2;
-double weight;
+ int index_1;
+ int index_2;
+ double weight;
 };
 
 struct temp_2D_kf_data_struct {
-int num_elements;
-int allocated_elements;
-struct temp_2D_kf_data_element_struct *elements;
+  int num_elements;
+  int allocated_elements;
+  struct temp_2D_kf_data_element_struct *elements;
 };
 
 struct a_2D_kf_storage_struct {
-struct Detector_2D_struct Detector_2D;
-struct temp_2D_kf_data_struct temp_2D_kf_data;
-int dim_1_choice;
-int dim_2_choice;
-int order;
-int order_in_this_volume;
-int order_process_in_this_volume;
+  struct Detector_2D_struct Detector_2D;
+  struct temp_2D_kf_data_struct temp_2D_kf_data;
+  int dim_1_choice;
+  int dim_2_choice;
+  int order;
+  int order_in_this_volume;
+  int order_process_in_this_volume;
 };
 
 // record_to_temp
@@ -285,6 +286,23 @@ void write_temp_to_perm_2D_kf(union logger_data_union *data_union) {
     storage->Detector_2D.Array_p[storage->temp_2D_kf_data.elements[index].index_1][storage->temp_2D_kf_data.elements[index].index_2] += storage->temp_2D_kf_data.elements[index].weight;
     
     storage->Detector_2D.Array_p2[storage->temp_2D_kf_data.elements[index].index_1][storage->temp_2D_kf_data.elements[index].index_2] += storage->temp_2D_kf_data.elements[index].weight*storage->temp_2D_kf_data.elements[index].weight;
+  }
+  clear_temp_2D_kf(data_union);
+}
+
+void write_temp_to_perm_final_p_2D_kf(union logger_data_union *data_union, double final_weight) {
+
+  struct a_2D_kf_storage_struct *storage;
+  storage = data_union->p_2D_kf_storage;
+
+  int index;
+  // Add all data points to the historgram, they are saved as index / weight combinations
+  for (index=0;index<storage->temp_2D_kf_data.num_elements;index++) {
+    storage->Detector_2D.Array_N[storage->temp_2D_kf_data.elements[index].index_1][storage->temp_2D_kf_data.elements[index].index_2]++;
+    
+    storage->Detector_2D.Array_p[storage->temp_2D_kf_data.elements[index].index_1][storage->temp_2D_kf_data.elements[index].index_2] += final_weight;
+    
+    storage->Detector_2D.Array_p2[storage->temp_2D_kf_data.elements[index].index_1][storage->temp_2D_kf_data.elements[index].index_2] += final_weight*final_weight;
   }
   clear_temp_2D_kf(data_union);
 }
@@ -528,7 +546,10 @@ INITIALIZE
   this_logger.logger_extend_index = logger_conditional_extend_index;
   this_logger.function_pointers.active_record_function = &record_to_perm_2D_kf;  // Assume no conditional
   this_logger.function_pointers.inactive_record_function = &record_to_temp_2D_kf; // If an assume is present, these two pointers are switched
+  // Temp to perm functions, and standard identifier
+  this_logger.function_pointers.select_t_to_p = 1; // 1: temp_to_perm, 2: temp_to_perm_final_p
   this_logger.function_pointers.temp_to_perm = &write_temp_to_perm_2D_kf;
+  this_logger.function_pointers.temp_to_perm_final_p = &write_temp_to_perm_final_p_2D_kf;
   this_logger.function_pointers.clear_temp = &clear_temp_2D_kf;
   // Initializing for conditional
   this_logger.conditional_list.num_elements = 0;

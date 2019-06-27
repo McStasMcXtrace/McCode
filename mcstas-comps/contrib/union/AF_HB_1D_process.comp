@@ -1,0 +1,340 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Mads Bertelsen
+* Date: 20.08.15
+* Version: $Revision: 0.1 $
+* Origin: Svanevej 19
+*
+*
+* %D
+*
+* This is a template for a new contributor to create their own physical process.
+* The comments in this file are meant to teach the user about creating their own 
+*  process file, rather than explaining this one. For comments on how this code works,
+*  look in the Incoherent_process.comp.
+*
+* Part of the Union components, a set of components that work together and thus
+*  sperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components like this one
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box / Union_cylinder, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+* Only in step 4 will any simulation happen, and per default all geometries
+*  defined before the master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union_components
+*
+*
+* Algorithm:
+* Described elsewhere
+*
+* %P
+* INPUT PARAMETERS:
+* unit_cell_volume: [AA^3]   Unit cell volume (set either unit_cell_volume or number density)
+* number_density    [1/AA^3] Number of scatteres per volume
+* J_interaction:    [meV]    Exchange constant
+* A_constant        [unitless] constant from Müller paper 1981, probably somewhere between 1 and 1.5
+* atom_distance     [Å] distance between atom's in chain
+*
+* OUTPUT PARAMETERS:
+* Template_storage          // Important to update this output paramter
+* effective_my_scattering   // Variable used in initialize
+*
+*
+*
+* %L
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT AF_HB_1D_process // Remember to change the name of process here
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(atom_distance=1,number_density=0,unit_cell_volume=0,A_constant=1,J_interaction=1,packing_factor=1,interact_fraction=-1)
+OUTPUT PARAMETERS (This_process,AF_HB_1D_storage,effective_my_scattering)
+
+SHARE
+%{
+#ifndef Union
+#define Union $Revision: 0.8 $
+
+#include "Union_functions.c"
+#include "Union_initialization.c"
+
+#endif
+
+struct physical_constants_AF_HB_1D{
+    // List of constants to be passed between functions
+    double a; // Scattering length
+    double J; // Interaction strength
+    double A; // Constant from Müller conjecture
+    double Atom_dist; // Distance between atoms
+    double q2unit_less;
+    double integral_pre_factor;
+    //double weight_factor;
+};
+
+// Very important to add a pointer to this struct in the Union_functions.c file
+struct AF_HB_1D_physics_storage_struct{
+    // Variables that needs to be transfered between any of the following places:
+    // The initialize in this component
+    // The function for calculating my
+    // The function for calculating scattering
+    
+    double current_total_cross_section;
+    double number_density_internal;
+    struct physical_constants_AF_HB_1D physical_constants;
+};
+
+double eval_Sqw_AF_HB_1D(double q, double w, struct physical_constants_AF_HB_1D *constants) {
+    // Evaluate Sqw, here q should be in units of "rad", from normalizing with atom distance
+    // w is here an energy transfer in meV
+    //printf("Sqw called with q = %f and w = %e\n",q,w);
+    if (w > 0.5*PI*constants->J*fabs(sin(q)) ) {
+      if (w < PI*constants->J*fabs(sin(0.5*q)) ) {
+        //return constants->A/(sqrt(w*w-0.25*PI*PI*constants->J*constants->J*fabs(sin(q))*fabs(sin(q))));
+        // The result is currently returned in 1/meV.
+        double result = constants->A/(sqrt(w*w-0.25*PI*PI*constants->J*constants->J*fabs(sin(q))*fabs(sin(q))));
+        //printf("Sqw returns = %e\n",result);
+        return result;
+      } else return 0;
+    } else return 0;
+}
+
+double numerical_integral_AF_HB_1D(double *k_initial,struct physical_constants_AF_HB_1D *constants) {
+    // returns cross section for this k_i
+    
+    double k_i_length;
+    k_i_length = sqrt(k_initial[0]*k_initial[0]+k_initial[1]*k_initial[1]+k_initial[2]*k_initial[2]);
+    
+    int theta_step,N_theta_steps=200;
+    double theta,theta_step_size,q_z;
+    
+    // Theta from 0 to Pi
+    theta_step_size = PI/N_theta_steps;
+    
+    int E_transfer_step,N_E_transfer_steps=200;
+    double E_transfer,E_transfer_step_size;
+    
+    // E_transfer [meV]
+    // k [Å^-1]
+    // Avoid transfering more energy than the ray have
+    if (PI*constants->J < k_i_length*k_i_length*K2V*K2V*VS2E)
+      // Largest omega necessary: PI*J
+      E_transfer_step_size = PI*constants->J/N_E_transfer_steps;
+    else E_transfer_step_size = k_i_length*k_i_length*K2V*K2V*VS2E/N_E_transfer_steps;
+    
+    double t_value; // length of final wavevector for certain theta/E_transfer choice.
+    
+    double integral_value = 0;
+    for (theta_step=0;theta_step<N_theta_steps;theta_step++) {
+      theta = theta_step*theta_step_size;
+      
+      for (E_transfer_step=0;E_transfer_step<N_E_transfer_steps;E_transfer_step++) {
+        E_transfer = E_transfer_step*E_transfer_step_size;
+      
+        t_value = sqrt(k_i_length*k_i_length-E_transfer*SE2V*V2K*SE2V*V2K);
+        q_z = (k_initial[2] - t_value*cos(theta))*constants->q2unit_less;
+        // May consider to translate q_z into first Brilluion zone, but not necessary
+        
+        integral_value += t_value*eval_Sqw_AF_HB_1D(q_z,E_transfer,constants)*sin(theta)*theta_step_size*E_transfer_step_size;
+      }
+    }
+    
+    //printf("integral_value after loop = %e\n",integral_value);
+    return 2*PI*constants->integral_pre_factor*integral_value/k_i_length;
+}
+
+
+// Function for calculating my, the inverse penetration depth (for only this scattering process).
+// The input for this function and its order may not be changed, but the names may be updated.
+int AF_HB_1D_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+    // *k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] which describes the wavevector
+
+    struct physical_constants_AF_HB_1D *p_constants = &data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->physical_constants;
+    
+    // Need to numerically solve integral to calculate cross section
+    double cross_section = numerical_integral_AF_HB_1D(k_initial,p_constants);
+    
+    //printf("Returned cross_section = %e\n",cross_section);
+    data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->current_total_cross_section = cross_section;
+    
+    // Number density given in units of 1E10*Å^-3, cross section in Å^2, returns 1/m.
+    *my = data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->number_density_internal*cross_section;
+    
+    //printf("Returned my = %e\n",*my);
+    return 1;
+};
+
+// Function that provides description of a basic scattering event.
+// Do not change the
+int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+    
+    // Unpack the physical constants struct
+    struct physical_constants_AF_HB_1D *p_constants = &data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->physical_constants;
+
+    // k_final and k_initial are passed as pointers to double vector[3]
+    double k_length = sqrt(k_initial[0]*k_initial[0]+k_initial[1]*k_initial[1]+k_initial[2]*k_initial[2]);
+
+    Coords r_out;
+    // choose a random direction vector in the specified focusing area
+    double solid_angle;
+    focus_data->focusing_function(&r_out,&solid_angle,focus_data);
+    NORM(r_out.x,r_out.y,r_out.z);
+
+    
+    // random energy transfer is now selected between 0 and PI*J
+    // Need to ensure not transfering more energy than the ray has
+    
+    // Kim's proposal to use uniform E_transfer sampling, but will be outside of S(q,w) non-zero region often
+    double E_transfer,E_range,E_i = k_length*k_length*K2V*K2V*VS2E;
+    
+    if (PI*p_constants->J < E_i)
+      E_range = PI*p_constants->J;
+    else
+      E_range = E_i;
+    
+    E_transfer = E_range*rand01();
+    
+    double k_f = sqrt(k_length*k_length - E_transfer*SE2V*V2K*SE2V*V2K);
+    
+    
+    //printf("---- E in scatter function --- \n");
+    //printf("E_initial  = %e \n",k_length*k_length*hbar*hbar*0.5/m_neutron);
+    //printf("E_initial  = %e \n",k_length*k_length*K2V*K2V*VS2E);
+    //printf("E_initial  = %e \n",E_i);
+    //printf("E_transfer = %e \n",E_transfer);
+    //printf("E_final    = %e \n",k_f*k_f*K2V*K2V*VS2E);
+    
+    k_final[0] = r_out.x*k_f; k_final[1] = r_out.y*k_f; k_final[2] = r_out.z*k_f;
+    //printf("k_final = (%lf,%lf,%lf)\n",k_final[0],k_final[1],k_final[2]);
+    
+    double q[3];
+    q[0] = k_initial[0] - k_final[0];
+    q[1] = k_initial[1] - k_final[1];
+    q[2] = k_initial[2] - k_final[2];
+    
+    double sqw_value;
+    if ((sqw_value = eval_Sqw_AF_HB_1D(p_constants->q2unit_less*q[2],E_transfer,p_constants)) > 0) {
+      // Weight factor constants done in initialize, solid angle/ wavevector lengths and swq missing.
+      //printf("Scattering: Sqw(%f,%f) = %E \n",p_constants->q2unit_less*q[2],E_transfer,sqw_value);
+      *weight *= p_constants->integral_pre_factor*E_range*solid_angle*k_f/k_length*sqw_value/data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->current_total_cross_section;
+      return 1;
+    } else return 0; // Ray absorbed as Sqw == 0
+    
+    // A pointer to k_final is returned, and the wavevector will be set to k_final after a scattering event
+    //return 1; // return 1 is sucess, return 0 is failure, and the ray will be absorbed.
+              // failure should not happen, as this function will only be called when
+              // the cross section for the current k_initial is above zero.
+    
+    // There is access to the data_transfer from within the scattering function
+    // In this case the only variable is my, but it could be read by:
+    // double my = data_transfer.pointer_to_a_Template_physics_storage_struct->my_scattering;
+    // One can assume that if the scattering function is running, the my fuction was
+    //  executed just before and for the same k_initial.
+    
+};
+
+%}
+
+DECLARE
+%{
+// Declare for this component, to do calculations on the input / store in the transported data
+struct AF_HB_1D_physics_storage_struct AF_HB_1D_storage; // Replace template with your own name here
+
+// Variables needed in initialize of this function.
+double effective_my_scattering;
+
+// Needed for transport to the main component, will be the same for all processes
+struct global_process_element_struct global_process_element;
+struct scattering_process_struct This_process;
+
+// These lines help with future error correction, and tell other Union components
+//  that at least one process have been defined.
+#ifndef PROCESS_DETECTOR
+    // Obsolete
+	//struct pointer_to_global_process_list global_process_list = {0,NULL};
+	#define PROCESS_DETECTOR dummy
+#endif
+%}
+
+INITIALIZE
+%{
+  
+  if ((unit_cell_volume==0) && (number_density==0)) {
+    printf("ERROR in Union process AF_HB_1D named %s, set either unit_cell_volume or number_density.\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if ((unit_cell_volume>0) && (number_density>0)) {
+    printf("ERROR in Union process AF_HB_1D named %s, only set one of unit_cell_volume or number_density.\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (J_interaction < 0) {
+    printf("ERROR in Union process AF_HB_1D named %s, exchange constant J_interaction needs to be positive (AF).\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (unit_cell_volume>0) number_density = 1/unit_cell_volume; // Unit of 1/Å^3
+  
+  // Packing factor taken into account by decreasing number density
+  number_density = number_density*packing_factor;
+  
+  AF_HB_1D_storage.physical_constants.q2unit_less = atom_distance;
+  AF_HB_1D_storage.number_density_internal = number_density*1E10; // Unit conversion so n*sigma gets units of 1/m.
+  
+  AF_HB_1D_storage.physical_constants.J = J_interaction;
+  AF_HB_1D_storage.physical_constants.A = A_constant;
+  AF_HB_1D_storage.physical_constants.Atom_dist = atom_distance;
+  
+  // prefactor 0.5
+  // Integral pre factors is (gyromagnetic ratio * r_0 * g)^2
+  // gyromagnetic ratio = -1.913 [unitless]
+  // classical electron radius = 2.817940E-15 [m] -> Å = 2.817940E-5 [Å]
+  // g factor for electron = 2.0023 [unitless]
+  
+  //AF_HB_1D_storage.physical_constants.integral_pre_factor = 1.832471E8*1.832471E8*2.81794E-15*2.81794E-15*2.0023*2.0023;
+  AF_HB_1D_storage.physical_constants.integral_pre_factor = 0.5*1.913*1.913*2.81794E-5*2.81794E-5*2.0023*2.0023;
+  
+  // Factor: 0.5
+  // Focusing area correction: done in direction choice
+  // Energy range correction: done in code
+  // Scattering density: 1/V0 = number_density
+  // Constant term in diff cross section: integral_pre_factor (calculated in initialize)
+  // 1E10 to make units of weight factor from Å to m.
+  
+  //AF_HB_1D_storage.physical_constants.weight_factor = 1E10*number_density*AF_HB_1D_storage.physical_constants.integral_pre_factor;
+  //AF_HB_1D_storage.physical_constants.weight_factor = AF_HB_1D_storage.physical_constants.integral_pre_factor;
+  
+  // Need to specify if this process is isotropic
+  //This_process.non_isotropic_rot_index = -1; // Yes (powder)
+  This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // Packing the data into a structure that is transported to the main component
+  This_process.data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct = &AF_HB_1D_storage;
+  This_process.probability_for_scattering_function = &AF_HB_1D_physics_my;
+  This_process.scattering_function = &AF_HB_1D_physics_scattering;
+
+  // This will be the same for all process's, and can thus be moved to an include.
+  sprintf(This_process.name,NAME_CURRENT_COMP);
+  This_process.process_p_interact = interact_fraction;
+  rot_copy(This_process.rotation_matrix,ROT_A_CURRENT_COMP);
+  sprintf(global_process_element.name,NAME_CURRENT_COMP);
+  global_process_element.component_index = INDEX_CURRENT_COMP;
+  global_process_element.p_scattering_process = &This_process;
+  add_element_to_process_list(&global_process_list,global_process_element);
+ %}
+
+TRACE
+%{
+    // Trace should be empty, the simulation is done in Union_master
+%}
+
+END

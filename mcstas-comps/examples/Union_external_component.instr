@@ -168,9 +168,28 @@ COMPONENT sample_rod_collar_4_vacuum = Union_cylinder(radius=0.03,yheight=0.016,
 AT (0,0.635-0.005,0) RELATIVE sample_rod_bottom
 ROTATED (0,0,0) RELATIVE sample_rod_bottom
 
+// The sample exit volume should be around the external component and have number of activations one less than other volumes
 COMPONENT sample_exit = Union_cylinder(radius=0.011,yheight=0.031,priority=100,material_string="Exit",number_of_activations=1)
 AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
+
+// These loggers will only show scattering in the Union part, so it will look as if there is no sample
+// The loggers will record scattering from all master components, so both before and after sample
+COMPONENT logger_space_zx_all = Union_logger_2D_space(
+ n1 = 500, n2 = 500,
+ D1_min = -0.25, D1_max = 0.25,
+ D2_min = -0.25, D2_max = 0.25,
+ D_direction_1 = "z", D_direction_2 = "x",
+ filename = "space_zx.dat")
+AT (0,0,0) RELATIVE beam_center
+
+COMPONENT logger_space_zy_all = Union_logger_2D_space(
+ n1 = 500, n2 = 500,
+ D1_min = -0.25, D1_max = 0.25,
+ D2_min = -0.25, D2_max = 0.25,
+ D_direction_1 = "z", D_direction_2 = "y",
+ filename = "space_zy.dat")
+AT (0,0,0) RELATIVE beam_center
 
 COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE beam_center
@@ -187,7 +206,6 @@ EXTEND
 %{
   if (SCATTERED) powderN_scat = 1; else powderN_scat = 0;
 %}
-
 
 COMPONENT test_sample_after = Union_master(allow_inside_start=1)
 AT(0,0,0) RELATIVE beam_center
@@ -211,6 +229,7 @@ COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, th
 AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
+// This monitor is only active for neutrons that scattered in the external powderN sample, showing it is simulated
 COMPONENT Banana_monitor_powderN = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=500",filename="banana_powderN.dat",restore_neutron=1)
 WHEN (powderN_scat==1)
 AT (0,0,0) RELATIVE beam_center
