@@ -79,6 +79,9 @@ Coords Bounding_Box_Center;
 double Bounding_Box_Radius;
 };
 
+// A number of functions below use Dot() as scalar product, replace by coords_sp define
+#define Dot(a, b) coords_sp(a, b)
+
 // Function for transforming a ray position / velocity to a local frame
 Coords transform_position(Coords ray_position, Coords component_position, Rotation component_t_rotation) {
 
@@ -882,24 +885,6 @@ This function was created by Martin Olsen at NBI on september 20, 2018.
 int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
 // Unpack parameters
 
-  double Dot(Coords A,Coords B){
-  /*
-  Takes two coordinates and returns the scalar product. This function might be a dublicate.
-
-  This function was created by Martin Olsen at NBI on september 27, 2018.
-  */
-
-  double Sum = 0;
-
-  Sum += A.x*B.x;// X
-  Sum += A.y*B.y;// Y
-  Sum += A.z*B.z;// Z
-
-  return Sum;
-
-  };
-
-
     Coords center = geometry->center;
     int n_facets = geometry->geometry_parameters.p_mesh_storage->n_facets;
     double *normal_x = geometry->geometry_parameters.p_mesh_storage->normal_x;
@@ -1146,24 +1131,6 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
 
 
 int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
-
-  double Dot(Coords A,Coords B){
-  /*
-  Takes two coordinates and returns the scalar product. This function might be a dublicate.
-
-  This function was created by Martin Olsen at NBI on september 27, 2018.
-  */
-
-  double Sum = 0;
-
-  Sum += A.x*B.x;// X
-  Sum += A.y*B.y;// Y
-  Sum += A.z*B.z;// Z
-
-  return Sum;
-
-  };
-
 
     /*
     double radius_top = geometry->geometry_parameters.p_mesh_storage->mesh_radius_top;
