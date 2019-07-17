@@ -26,13 +26,17 @@ def plot(node, i, plt, opts):
     data = node.getdata_idx(i)
     
     if type(data) is Data1D:
-        view_box = plot_Data1D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
+        view_box = plot_Data1D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'],
+                               verbose=opts['verbose'], fontsize=opts['fontsize'])
         return view_box, plt
     elif type(data) is Data2D:
-        view_box, lyt = plot_Data2D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
+        view_box, lyt = plot_Data2D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'],
+                                    verbose=opts['verbose'], fontsize=opts['fontsize'],
+                                    cbmin=opts.get('cbmin', None), cbmax=opts.get('cbmax', None))
         return view_box, lyt
     elif type(data) is Data0D:
-        view_box = plot_Data0D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'], verbose=opts['verbose'], fontsize=opts['fontsize'])
+        view_box = plot_Data0D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'],
+                               verbose=opts['verbose'], fontsize=opts['fontsize'])
         return view_box, plt
     else:
         # File was not loaded, silently ignore
@@ -172,7 +176,7 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
-def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, fontsize=10):
+def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, fontsize=10, cbmin=None, cbmax=None):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
     # data
     img = pg.ImageItem()
@@ -201,11 +205,11 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     img.translate(data.xlimits[0]/dx,data.xlimits[2]/dy)
     
     # color map (by lookup table)
-    pos_min = np.min(dataset)
-    pos_max = np.max(dataset)
+    cb_pos_min = cbmin if cbmin else np.min(dataset)
+    cb_pos_max = cbmax if cbmax else np.max(dataset)
     
-    colormap = get_color_map(icolormap, pos_min, pos_max)
-    lut = colormap.getLookupTable(pos_min, pos_max, 256)
+    colormap = get_color_map(icolormap, cb_pos_min, cb_pos_max)
+    lut = colormap.getLookupTable(cb_pos_min, cb_pos_max, 256)
     img.setLookupTable(lut)
 
     # graphics layout with a plotitem and a gradienteditoritem
@@ -245,14 +249,14 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     if (fontsize >= 8):
         cbimg = pg.ImageItem()
         numsteps = 100
-        arr_1 = pos_min + (pos_max - pos_min) * np.arange(numsteps)/(numsteps)
+        arr_1 = cb_pos_min + (cb_pos_max - cb_pos_min) * np.arange(numsteps)/(numsteps)
         cbimg.setImage(np.array([arr_1]))
         # calculate scaling and translation for the y-axis
-        dy = (pos_max - pos_min) / numsteps
+        dy = (cb_pos_max - cb_pos_min) / numsteps
         # Prevent division by 0
         if (dy==0):
             dy=1;
-        ty = (pos_min) / dy
+        ty = (cb_pos_min) / dy
         cbimg.scale(1, dy)
         cbimg.translate(0,ty)
         

@@ -331,7 +331,7 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def get_plot_func_opts(log, legend, icolormap, verbose, fontsize):
+def get_plot_func_opts(log, legend, icolormap, verbose, fontsize, cbmin=None, cbmax=None):
     ''' returns a dict for holding the plot options relevant for this plotting frontend '''
     d = {}
     d['log'] = log
@@ -339,18 +339,33 @@ def get_plot_func_opts(log, legend, icolormap, verbose, fontsize):
     d['icolormap'] = icolormap 
     d['verbose'] = verbose
     d['fontsize'] = fontsize
+    if cbmin != None and cbmax != None:
+        d['cbmin'] = cbmin
+        d['cbmax'] = cbmax
     return d
 
-def get_multiplot_colorbar_limits(node):
+def get_sweep_multiplot_colorbar_limits(node):
     if type(node) == PNMultiple:
         cbmin = float("inf")
         cbmax = float("-inf")
+        monname = None
         for data in node.getdata_lst():
+            if type(data) != Data2D:
+                continue
+
+            # make sure all nodes in the multiplot have the same component name (indicating comparable (sweep) data)
+            if monname == None:
+                monname = data.component
+            else:
+                if data.component != monname:
+                    return None, None
+
+            # update min/max values
             if type(data) == Data2D: 
                 localmin = np.min(np.array(data.zvals))
                 localmax = np.max(np.array(data.zvals))
-                cbmin = np.min(cbmin, localmin)
-                cbmax = np.max(cbmax, localmax)
+                cbmin = min(cbmin, localmin)
+                cbmax = max(cbmax, localmax)
         return cbmin, cbmax
     return None, None
 
@@ -362,7 +377,8 @@ def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     verbose = n<=4
     fontsize = (4, 10, 14)[int(n<=2) + int(n<12)]
     
-    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, fontsize)
+    cbmin, cbmax = get_sweep_multiplot_colorbar_limits(node)
+    options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, fontsize, cbmin, cbmax)
     view_box, plt_itm = plot_node_func(node, i, plt, options)
     if (view_box):
         layout.addItem(plt_itm, i / rowlen, i % rowlen)
