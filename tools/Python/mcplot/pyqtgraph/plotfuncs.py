@@ -66,12 +66,9 @@ class ModLegend(pg.LegendItem):
         p.drawRect(self.boundingRect())
 
 def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
-    ''' create an empty plotItem '''
-    # data
-    plt.setMenuEnabled(False)
-    vb = plt.getViewBox()
-    plt.setTitle("Monitor section without filename (0D mon)")
-    return vb
+    ''' creates an empty plot '''
+    plt.setTitle("zero-dim monitor")
+    return plt.getViewBox()
 
         
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
