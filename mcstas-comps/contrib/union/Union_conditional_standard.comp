@@ -6,6 +6,7 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
+* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * A sample component to separate geometry and phsysics
@@ -38,17 +39,22 @@
 *  long as the tagging system is active, so you may want to increase the number
 *  of histories allowed by that master component before stopping.
 *
+* overwrite_logger_weight can be used to force the loggers this conditional
+*  controls to write the final weight for each scattering event, instead of the
+*  recorded value.
+*
 * %P
 * INPUT PARAMETERS:
-* target_loggers: [string]  Comma seperated list of loggers this conditional should affect
+* target_loggers:     [string] Comma seperated list of loggers this conditional should affect
 * master_tagging=0    [1] Apply this conditional to the tagging system in next master
 * tagging_extend_index[1] Not currently used
 * time_min            [s] Min time, if not set ignored
 * time_max            [s] Max time, if not set ignored
 * E_min               [meV] Max energy, if not set ignored
 * E_max               [meV] Min energy, if not set ignored
-* total_order_min     [1] Max time, if not set ignored
-* total_order_max     [1] Min time, if not set ignored
+* total_order_min     [1] Min scattering order, if not set ignored
+* total_order_max     [1] Max scattering order, if not set ignored
+* overwrite_logger_weight [1] Default = 0, overwrite = 1
 * last_volume_index   [1] Not used yet
 *
 *
@@ -63,7 +69,7 @@
 
 DEFINE COMPONENT Union_conditional_standard
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, time_min=0, time_max=0, E_min=0, E_max=0, total_order_min=0, total_order_max=0, last_volume_index=-1) // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
+SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, time_min=0, time_max=0, E_min=0, E_max=0, total_order_min=0, total_order_max=0, last_volume_index=-1,overwrite_logger_weight=0) // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
 OUTPUT PARAMETERS (accepted_loggers_all,accepted_loggers_specific,accepted_tagging,found_logger,loop_index,return_value,this_conditional_data,this_data_union)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -348,6 +354,9 @@ INITIALIZE
         found_logger->function_pointers.inactive_record_function = temp_function_pointer;
       }
       
+      if (overwrite_logger_weight == 1)
+        found_logger->function_pointers.select_t_to_p = 2;
+      
       // Add a pointer to this conditional function to the list of conditionals for this logger
       add_function_to_conditional_list(&found_logger->conditional_list,&conditional_function_standard,&this_data_union);
     }
@@ -366,6 +375,9 @@ INITIALIZE
         found_logger->function_pointers.active_record_function = found_logger->function_pointers.inactive_record_function;
         found_logger->function_pointers.inactive_record_function = temp_function_pointer;
       }
+      
+      if (overwrite_logger_weight == 1)
+        found_logger->function_pointers.select_t_to_p = 2;
       
       // Add a pointer to this conditional function to the list of conditionals for this logger
       add_function_to_conditional_list(&found_logger->conditional_list,&conditional_function_standard,&this_data_union);

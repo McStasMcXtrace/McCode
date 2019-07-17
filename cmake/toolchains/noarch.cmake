@@ -5,6 +5,7 @@ set(ARCH   "noarch")
 # Commands for running various external tools
 set(BROWSER "open")
 set(VRMLVIEW "open")
+set(TOOLS_CC "cc")
 set(MPICC "mpicc")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")

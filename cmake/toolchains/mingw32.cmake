@@ -18,6 +18,7 @@ include(MinGW)
 # Commands for running various external tools
 set(BROWSER "start")
 set(VRMLVIEW "start")
+set(TOOLS_CC "gcc")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
 set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available

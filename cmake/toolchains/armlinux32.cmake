@@ -1,7 +1,7 @@
 # the name of the target operating system
 SET(CMAKE_SYSTEM_NAME "Linux")
 SET(ARCH   "armhf")
-SET(CC "gcc")
+set(TOOLS_CC "gcc")
 
 # Commands for running various external tools
 set(BROWSER "xdg-open")

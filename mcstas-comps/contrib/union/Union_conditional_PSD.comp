@@ -6,6 +6,7 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
+* Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
 * A sample component to separate geometry and phsysics
@@ -39,24 +40,29 @@
 *  of histories allowed by that master component before stopping.
 *
 * This conditional is a little special, because it needs to be placed in space.
-*  It's center location is like a psd.'
+*  It's center location is like a psd.
+*
+* overwrite_logger_weight can be used to force the loggers this conditional
+*  controls to write the final weight for each scattering event, instead of the
+*  recorded value.
 *
 * %P
 * INPUT PARAMETERS:
-* target_loggers: [string]     Comma seperated list of loggers this conditional should affect
+* target_loggers:     [string] Comma seperated list of loggers this conditional should affect
 * master_tagging=0    [1] Apply this conditional to the tagging system in next master
 * tagging_extend_index[1] Not currently used
 * time_min            [s] Min time (on psd), if not set ignored
 * time_max            [s] Max time (on psd), if not set ignored
+* overwrite_logger_weight [1] Default = 0, overwrite = 1
 * end_volume          [1] Not used yet
 * last_volume_index   [1] Not used yet
 *
 * OUTPUT PARAMETERS:
-* this_material: []            Structure that contains information on this material
-* global_material_element: []  Element of global_material_list which is a global variable
+* this_material:            Structure that contains information on this material
+* global_material_element:  Element of global_material_list which is a global variable
 *
 * GLOBAL PARAMETERS:
-* global_material_list: []     List of all defined materials, available in the global scope
+* global_material_list:     List of all defined materials, available in the global scope
 *
 * %L
 *
@@ -65,7 +71,7 @@
 
 DEFINE COMPONENT Union_conditional_PSD
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, xwidth, yheight,time_min=0, time_max=0) // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
+SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, xwidth, yheight,time_min=0, time_max=0, overwrite_logger_weight=0) // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
 OUTPUT PARAMETERS (accepted_loggers_all,accepted_loggers_specific,accepted_tagging,found_logger,loop_index,return_value,this_conditional_data,this_data_union)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -121,7 +127,7 @@ int manual_linking_logger_function_conditional(char *input_string, struct pointe
     // Need to check a input_string of text for an occurance of name. If it is in the inputstring, yes return 1, otherwise 0.
    char *token;
    int loop_index;
-   char local_string[512];
+   char local_string[1024];
    
    strcpy(local_string,input_string);
    // get the first token
@@ -187,7 +193,7 @@ struct global_tagging_conditional_element_struct *new_tagging_element;
 INITIALIZE
 %{
 
-  //printf("starded conditional initialize \n");
+  printf("starded conditional initialize \n");
   
   // If time range is set, use it
   if (time_min == time_max)
@@ -252,6 +258,8 @@ INITIALIZE
     // Certain loggers were selected, find the indicies in the global_specific_volumes_logger_list / global_all_volume_list
     // Create accepted_loggers_specific / accepted_loggers_all
     
+    //printf("Reached target logger section \n");
+    
     return_value = manual_linking_logger_function_conditional(target_loggers, &global_all_volume_logger_list, &accepted_loggers_all);
     return_value += manual_linking_logger_function_conditional(target_loggers, &global_specific_volumes_logger_list, &accepted_loggers_specific);
     //return_value += manual_linking_tagging_function_conditional(target_loggers, &global_tagging_conditional_list, &accepted_tagging);
@@ -285,6 +293,9 @@ INITIALIZE
         found_logger->function_pointers.inactive_record_function = temp_function_pointer;
       }
       
+      if (overwrite_logger_weight == 1)
+        found_logger->function_pointers.select_t_to_p = 2;
+      
       // Add a pointer to this conditional function to the list of conditionals for this logger
       add_function_to_conditional_list(&found_logger->conditional_list,&conditional_function_PSD,&this_data_union);
     }
@@ -303,6 +314,9 @@ INITIALIZE
         found_logger->function_pointers.active_record_function = found_logger->function_pointers.inactive_record_function;
         found_logger->function_pointers.inactive_record_function = temp_function_pointer;
       }
+      
+      if (overwrite_logger_weight == 1)
+        found_logger->function_pointers.select_t_to_p = 2;
       
       // Add a pointer to this conditional function to the list of conditionals for this logger
       add_function_to_conditional_list(&found_logger->conditional_list,&conditional_function_PSD,&this_data_union);
