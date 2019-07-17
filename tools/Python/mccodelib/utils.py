@@ -454,7 +454,7 @@ def read_define_instr(file):
             lines.append(l.strip())
             break
     
-    if not re.search('\)', lines[-1]):
+    if len(lines) > 0 and not re.search('\)', lines[-1]):
         for l in file:
             lines.append(l.strip())
             if re.search('\)', l):
@@ -532,8 +532,39 @@ def clean_instr_def(defline):
 def parse_params(params_line):
     ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
     params = []
-    # p = (type, name, defvalue)
-    parts = [s.strip() for s in params_line.split(',')]
+
+    def par_rec(substr, lst):
+        try:
+            # handle parameter sections including curly bracket default values (case 2)
+            m1 = re.match('([^,{]+),(.*)', substr) # not comma or curl, then a comma
+            m2 = re.match('([^,{]+\{[^}]*\}\s*),(.*)', substr) # not comma or curl, then not a right curl, then a rigt curlt, then a comma
+    
+            if m1:
+                lst.append(m1.group(1)) 
+                substr = m1.group(2)
+            elif m2:
+                lst.append(m2.group(1))
+                substr = m2.group(2)
+            else:
+                # the end
+                return lst
+    
+            # continue recursion
+            return par_rec(substr, lst)
+        except Exception as e:
+            print("error", e)
+
+    # split the line into parts corresponding to each parameter definition
+    params_line = params_line.lstrip('(').rstrip(')') # secure brackets stripped
+    if '{' in params_line:
+        # NOTE: this may exceed python max recursion depth in some cases, e.g. guide_four_sides_10_shells
+        # however, this version is required for parsing {a,b,c} style default values
+        # TODO: reimplement into a while-based iteration rather than a recursion
+        parts = par_rec(params_line, [])
+    else:
+        parts = [s.strip() for s in params_line.split(',')]
+
+    # parse each parameter
     for part in parts:
         tpe = None
         dval = None
@@ -609,7 +640,7 @@ def get_instr_site(instr_file):
 def get_instr_comp_files(mydir, recursive=True):
     ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir"
     
-    181211: added recursive, defaults to True to preserve backwards compatibility
+    181211: added recursive dir search, defaults to True to preserve backwards compatibility
     ''' 
     files_instr = [] 
     files_comp = []
