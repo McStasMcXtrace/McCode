@@ -1036,8 +1036,8 @@ def parse_and_filter(indir, namefilter=None, recursive=False, printlog=False):
     if namefilter != None:
         comp_info_lst = [c for c in comp_info_lst if re.search(namefilter.lower(), c.name.lower())]
         instr_info_lst = [c for c in instr_info_lst if re.search(namefilter.lower(), c.name.lower())]
-        comp_files = [f for f in comp_files if re.search(namefilter, os.path.splitext(os.path.basename(f))[0])]
-        instr_files = [f for f in instr_files if re.search(namefilter, os.path.splitext(os.path.basename(f))[0])]
+        comp_files = [f for f in comp_files if re.search(namefilter.lower(), os.path.splitext(os.path.basename(f))[0].lower())]
+        instr_files = [f for f in instr_files if re.search(namefilter.lower(), os.path.splitext(os.path.basename(f))[0].lower())]
 
     return comp_info_lst, instr_info_lst, comp_files, instr_files
 
