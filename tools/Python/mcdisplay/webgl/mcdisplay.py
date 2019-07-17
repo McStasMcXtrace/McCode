@@ -100,7 +100,7 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
     writer = SimpleWriter(templatefile, campos, box_total, html_filepath, invcanvas)
     writer.write()
 
-def write_browse(instrument, raybundle, dirname):
+def write_browse(instrument, raybundle, dirname, instrname):
     ''' writes instrument definitions to html/ js '''
     
     if not os.path.exists(dirname):
@@ -133,6 +133,10 @@ def write_browse(instrument, raybundle, dirname):
     # write particles
     json_neutr = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
     file_save(json_neutr, os.path.join(dirname, '_particles.js'))
+
+    # write McCode instrument
+    instr_filepath = instrname
+    file_save(get_file_text_direct(instr_filepath), os.path.join(dirname, instrname))
     
     # exit if nobrowse flag has been set
     if args.nobrowse:
@@ -169,7 +173,7 @@ def main(args):
     raybundle = reader.read_particles()
     
     # write output files
-    write_browse(instrument, raybundle, dirname)
+    write_browse(instrument, raybundle, dirname, args.instr)
     
     if debug:
         # this should enable template.html to load directly
