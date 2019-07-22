@@ -2519,7 +2519,7 @@ int cone_overlaps_cone(struct geometry_struct *geometry1,struct geometry_struct 
         }
     }
     
-    struct pointer_to_1d_coords_list cone_2_points = geometry1->shell_points(geometry2,resoultuion);
+    struct pointer_to_1d_coords_list cone_2_points = geometry2->shell_points(geometry2,resoultuion);
 
     // Test geometry 2 points inside geometry 1
     for (i = 0 ; i < cone_2_points.num_elements ; i++){
@@ -3117,7 +3117,7 @@ int cone_overlaps_cylinder(struct geometry_struct *geometry_cone,struct geometry
         }
     }
 
-    struct pointer_to_1d_coords_list cone_2_points = geometry_cone->shell_points(geometry_cylinder,resoultuion);
+    struct pointer_to_1d_coords_list cone_2_points = geometry_cylinder->shell_points(geometry_cylinder,resoultuion);
 
     // Test geometry 2 points inside geometry 1
     for (i = 0 ; i < cone_2_points.num_elements ; i++){
