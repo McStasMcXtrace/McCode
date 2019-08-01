@@ -43,7 +43,7 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     p['title'] = title
     return json.dumps(params, indent=4)
 
-def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, xlabel, ylabel, title):
+def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, image_str_log, colorbar_img_str_log, cb_min_log, cb_max_log, xlabel, ylabel, title):
     params = {}
     p = params
     p['w'] = WIDTH
@@ -52,10 +52,17 @@ def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_
     p['xmax'] = xmax
     p['ymin'] = ymin
     p['ymax'] = ymax
+
     p['img2dData'] = image_str
     p['imgColorbar'] = colorbar_img_str
     p['cbMin'] = cb_min
     p['cbMax'] = cb_max
+    
+    p['img2dDataLog'] = image_str_log
+    p['imgColorbarLog'] = colorbar_img_str_log
+    p['cbMinLog'] = cb_min_log 
+    p['cbMaxLog'] = cb_max_log
+    
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
     p['title'] = title
@@ -99,7 +106,10 @@ def plotfunc(node):
 
         data = node.getdata_idx(0)
         f = data.filepath
-        f = os.path.join(os.path.dirname(f), os.path.splitext(os.path.basename(f))[0] + ".html")
+        if logscale==True:
+            f = os.path.join(os.path.dirname(f), os.path.splitext(os.path.basename(f))[0] + "_log.html")
+        else:
+            f = os.path.join(os.path.dirname(f), os.path.splitext(os.path.basename(f))[0] + ".html")
         if os.path.exists(f):
             os.remove(f)
         f = open(f, 'w')
@@ -124,13 +134,13 @@ def plotfunc(node):
 
             # create the 2d data as a png given our colormap
             img = np.zeros((dims[0], dims[1], 4))
+            img_log = np.zeros((dims[0], dims[1], 4))
             maxval = np.max(vals)
             cm = get_cm()
             for i in range(dims[0]):
                 for j in range(dims[1]):
                     color = lookup(cm, vals[i,j]/maxval)
                     img[i,j,:] = color
-    
             # encode png as base64 string
             image = scipy.misc.toimage(img)
             output = io.BytesIO()
@@ -138,29 +148,66 @@ def plotfunc(node):
             contents = output.getvalue()
             output.close()
             encoded_2d_data = str(base64.b64encode(contents)).lstrip('b').strip("\'")
-    
-            # crate colormap 1 x 256 image
+
+
+            # create log data as another png
+            img_log = np.zeros((dims[0], dims[1], 4))
+            minval = 1e19
+            for row in vals:
+                for val in row:
+                    if val > 0 and val < minval:
+                        minval = val
+            minval_log = np.log10(minval/10)
+            signal_log = np.ma.log10(vals).filled(minval_log) # masked array filling in zeros (zero must be mask false...)
+            maxval_log = np.max(signal_log)
+            for i in range(dims[0]):
+                for j in range(dims[1]):
+                    try:
+                        img_log[i,j,:] = lookup(cm, (signal_log[i][j] - minval_log)/(maxval_log - minval_log))
+                    except Exception as e:
+                        print(e)
+            # encode png as base64 string
+            image_log= scipy.misc.toimage(img_log)
+            output = io.BytesIO()
+            image_log.save(output, format="png")
+            encoded_2d_data_log = str(base64.b64encode(output.getvalue())).lstrip('b').strip("\'")
+            output.close()
+
+            # crate the colorbar as a 1 x 256 image
             img = np.zeros((256, 1, 4))
             for i in range(256):
                 color = lookup(cm, i/255)
                 img[255-i, 0] = color
-    
-            # e3ncode cm image
             cb_img = scipy.misc.toimage(img)
             output = io.BytesIO()
-    
             cb_img.save(output, format='png')
             contents = output.getvalue()
             output.close()
             encoded_cb = str(base64.b64encode(contents)).lstrip('b').strip("\'")
-    
+
+            # log color bar
+            tmpimg = np.zeros((256, 1, 4))
+            for i in range(256):
+                color = lookup(cm, i/255)
+                tmpimg[255-i, 0] = color
+            cb_img_log = scipy.misc.toimage(tmpimg)
+            output = io.BytesIO()
+            cb_img_log.save(output, format='png')
+            encoded_cb_log = str(base64.b64encode(output.getvalue())).lstrip('b').strip("\'")
+            output.close()
+
+            # axis limits
             xmin = data.xlimits[0]
             xmax = data.xlimits[1]
             ymin = data.xlimits[2]
             ymax = data.xlimits[3]
+
+            # color bar limits
             cb_min = np.min(vals)
             cb_max = np.max(vals)
-    
+            cb_min_log = np.min(signal_log)
+            cb_max_log = np.max(signal_log)
+
             # generate the title
             verbose = True
             try:
@@ -169,10 +216,13 @@ def plotfunc(node):
                     title = '%s [%s] %s\nI = %s Err = %s N = %s\n %s' % (data.component, data.filename, data.title, data.values[0], data.values[1], data.values[2], data.statistics)
             except:
                 title = '%s\n[%s]' % (data.component, data.filename)
-    
-            json_str = get_json_2d(xmin, xmax, ymin, ymax, encoded_2d_data, encoded_cb, cb_min, cb_max, data.xlabel, data.ylabel, title)
+
+            json_str = get_json_2d(xmin, xmax, ymin, ymax, 
+                                   encoded_2d_data, encoded_cb, cb_min, cb_max,
+                                   encoded_2d_data_log, encoded_cb_log, cb_min_log, cb_max_log,
+                                   data.xlabel, data.ylabel, title)
             text = get_html('template_2d.html', json_str, os.path.basename(data.filename))
-    
+
             for l in text.splitlines():
                 f.write(l)
             f.write("")
@@ -227,7 +277,10 @@ def main(args):
 
     # browse if input was a specific, and therefore browsable, file
     if not args.nobrowse and os.path.isfile(simfile):
-        browse(os.path.splitext(simfile)[0] + ".html")
+        if not logscale:
+            browse(os.path.splitext(simfile)[0] + ".html")
+        else:
+            browse(os.path.splitext(simfile)[0] + "_log.html")
 
 
 if __name__ == '__main__':
