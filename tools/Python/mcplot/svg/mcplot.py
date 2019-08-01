@@ -28,6 +28,7 @@ def get_html(template_name, params, simfile):
     
     logscalestr = "true" if logscale==True else "false"
     text = text.replace("@LOGSCALE@", logscalestr)
+    text = text.replace("@LIBPATH@", libpath)
     return text
 
 def get_json_1d(x, y, yerr, xlabel, ylabel, title):
@@ -241,6 +242,7 @@ def plotgraph_recurse(node, action_on_node):
         plotgraph_recurse(secondary_child, action_on_node)
 
 logscale = False
+libpath = ""
 def main(args):
     logging.basicConfig(level=logging.INFO)
 
@@ -253,13 +255,20 @@ def main(args):
     global logscale
     if args.log: 
         logscale = True
+    global libpath
+    if args.libpath:
+        libpath = args.libpath[0] + "/"
     
     # TODO: safeguard, exit: if simfile is not a file or a directory
 
-    # copy js to plot dir
-    if os.path.isdir(simdir):
-        copyfile(os.path.join(os.path.dirname(__file__),'d3.v4.min.js'), os.path.join(simdir, 'd3.v4.min.js'))
-        copyfile(os.path.join(os.path.dirname(__file__),'plotfuncs.js'), os.path.join(simdir, 'plotfuncs.js'))
+    if libpath == "":
+        # libdir undefined, copy js lib files to plotting dir
+        if os.path.isdir(simdir):
+            copyfile(os.path.join(os.path.dirname(__file__),'d3.v4.min.js'), os.path.join(simdir, 'd3.v4.min.js'))
+            copyfile(os.path.join(os.path.dirname(__file__),'plotfuncs.js'), os.path.join(simdir, 'plotfuncs.js'))
+        elif os.path.isdir(simfile):
+            copyfile(os.path.join(os.path.dirname(__file__),'d3.v4.min.js'), os.path.join(simfile, 'd3.v4.min.js'))
+            copyfile(os.path.join(os.path.dirname(__file__),'plotfuncs.js'), os.path.join(simfile, 'plotfuncs.js'))
         
         # TODO: the task of creating the main plot file
 
@@ -288,6 +297,7 @@ if __name__ == '__main__':
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     parser.add_argument('--log', action='store_true', help='enable logscale on plot')
+    parser.add_argument('--libpath', nargs='*', help='js lib files path')
 
     args = parser.parse_args()
 
