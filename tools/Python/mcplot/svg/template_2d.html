@@ -6,7 +6,7 @@
 <body>
 <script>
   var params = @PARAMS@;
-  plt = new Plot2D(params, d3.select("body").append("svg"));
+  var plt = new Plot2D(params, d3.select("body").append("svg"), logscale=@LOGSCALE@);
 
   plt.rgstrMouseClickPlot( () => { console.log("click"); } );
   plt.rgstrMouseCtrlClickPlot( () => { console.log("ctrl click"); } );

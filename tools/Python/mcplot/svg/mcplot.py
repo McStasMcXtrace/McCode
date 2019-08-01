@@ -25,6 +25,9 @@ def get_html(template_name, params, simfile):
     text = open(os.path.join(os.path.dirname(__file__),template_name)).read()
     text = text.replace("@PARAMS@", params)
     text = text.replace("@DATAFILE@", simfile)
+    
+    logscalestr = "true" if logscale==True else "false"
+    text = text.replace("@LOGSCALE@", logscalestr)
     return text
 
 def get_json_1d(x, y, yerr, xlabel, ylabel, title):
@@ -187,6 +190,7 @@ def plotgraph_recurse(node, action_on_node):
     for secondary_child in node.get_secondaries():
         plotgraph_recurse(secondary_child, action_on_node)
 
+logscale = False
 def main(args):
     logging.basicConfig(level=logging.INFO)
 
@@ -195,6 +199,10 @@ def main(args):
     else:
         simfile = args.simulation[0]
     simdir = os.path.dirname(simfile)
+    
+    global logscale
+    if args.log: 
+        logscale = True
     
     # TODO: safeguard, exit: if simfile is not a file or a directory
 
@@ -226,6 +234,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
+    parser.add_argument('--log', action='store_true', help='enable logscale on plot')
 
     args = parser.parse_args()
 
