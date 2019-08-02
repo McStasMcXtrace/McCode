@@ -80,10 +80,18 @@ class Plot1D {
     this._mouseRClickPlotListeners = [];
     this._mouseCtrlClickPlotListeners = [];
 
+    // plot size - fixed or expand to window size
     let p = params;
+    let width = p['w'];
+    let height = p['h'];
+    if (p['autosize']) {
+      width = document.documentElement.clientWidth;
+      height = document.documentElement.clientHeight;
+    }
+
     this.params_lst = [params];
     this.wname = wname; // optinal parameter is used with a "plotwindow" element for view clipping
-    this.hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+    this.hdl = _draw_labels(width, height, p['xlabel'], p['ylabel'], p['title'], svg_branch);
 
     this.xmin = d3.min(p['x']);
     this.xmax = d3.max(p['x']);
@@ -320,8 +328,16 @@ class Plot2D {
 
   // plot 2d
   _plot_2d(params, svg_branch, log) {
-    var p = params
-    this.hdl = _draw_labels(p['w'], p['h'], p['xlabel'], p['ylabel'], p['title'], svg_branch);
+    // plot size - fixed or expand to window size
+    var p = params;
+    let width = p['w'];
+    let height = p['h'];
+    if (p['autosize']) {
+      width = document.documentElement.clientWidth;
+      height = document.documentElement.clientHeight;
+    }
+
+    this.hdl = _draw_labels(width, height, p['xlabel'], p['ylabel'], p['title'], svg_branch);
 
     let data = p['img2dData'];
     let cb = p['imgColorbar'];

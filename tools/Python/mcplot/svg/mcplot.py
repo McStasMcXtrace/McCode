@@ -42,6 +42,8 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
     p['title'] = title
+    if autosize:
+        p['autosize'] = True
     return json.dumps(params, indent=4)
 
 def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, image_str_log, colorbar_img_str_log, cb_min_log, cb_max_log, xlabel, ylabel, title):
@@ -67,6 +69,8 @@ def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_
     p['xlabel'] = xlabel
     p['ylabel'] = ylabel
     p['title'] = title
+    if autosize:
+        p['autosize'] = True
     return json.dumps(params, indent=4)
 
 def get_cm():
@@ -243,6 +247,7 @@ def plotgraph_recurse(node, action_on_node):
 
 logscale = False
 libpath = ""
+autosize = False
 def main(args):
     logging.basicConfig(level=logging.INFO)
 
@@ -258,6 +263,9 @@ def main(args):
     global libpath
     if args.libpath:
         libpath = args.libpath[0] + "/"
+    global autosize
+    if args.autosize:
+        autosize = True
     
     # TODO: safeguard, exit: if simfile is not a file or a directory
 
@@ -297,6 +305,7 @@ if __name__ == '__main__':
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     parser.add_argument('--log', action='store_true', help='enable logscale on plot')
+    parser.add_argument('--autosize', action='store_true', help='expand to window size on load')
     parser.add_argument('--libpath', nargs='*', help='js lib files path')
 
     args = parser.parse_args()
