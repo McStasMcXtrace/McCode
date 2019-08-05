@@ -211,6 +211,10 @@ class Plot1D {
     let x1 = w;
     let y1 = 0;
 
+    // font size - normal/small mode
+    var fontSizeStr = _get_fontsize_str(w, h);
+    var tickSize = _get_ticksize_int(w, h);
+
     // zoom
     var zoom = d3.zoom()
       .on("zoom", () => {
@@ -243,8 +247,10 @@ class Plot1D {
     var xAxis = d3.axisBottom()
       .ticks(5)
       .tickFormat(d3.format(".2e"))
+      .tickSize(tickSize)
       .scale(xScale);
     var xAxisGroup = axisGroup.append("g")
+      .style("font-size", fontSizeStr)
       .attr("transform", "translate(0," + y0 + ")")
       .classed("noselect", true)
       .call(xAxis);
@@ -263,8 +269,10 @@ class Plot1D {
     var yAxis = d3.axisLeft()
       .ticks(5)
       .tickFormat(d3.format(".2e"))
+      .tickSize(tickSize)
       .scale(yScale);
     var yAxisGroup = axisGroup.append("g")
+      .style("font-size", fontSizeStr)
       .attr("transform", "translate(" + x0 + ", 0)")
       .classed("noselect", true)
       .call(yAxis);
@@ -382,6 +390,12 @@ class Plot2D {
     var w_cbimg = 15;
     var w_cbticks = 45;
 
+    if (_is_small_mode(w, h)) {
+      var w_cb = 10; // this is the total width of space, image and ticks
+      var w_cbimg = 3;
+      var w_cbticks = 0;
+    }
+
     // axes lengths
     var wi = w - w_cb;
     var hi = h;
@@ -391,6 +405,10 @@ class Plot2D {
     // end coords
     var x1 = x0 + wi;
     var y1 = y0 - hi;
+
+    // font size
+    var fontSizeStr = _get_fontsize_str(w, h);
+    var tickSize = _get_ticksize_int(w, h);
 
     // zoom
     var zoom = d3.zoom()
@@ -428,8 +446,10 @@ class Plot2D {
     var xAxis = d3.axisBottom()
       .ticks(5)
       .tickFormat(d3.format(".2e"))
+      .tickSize(tickSize)
       .scale(xScale);
     var xAxisGroup = anchorElement.append("g")
+      .style("font-size", fontSizeStr)
       .attr("transform", "translate(0," + y0 + ")")
       .classed("noselect", true)
       .call(xAxis);
@@ -440,8 +460,10 @@ class Plot2D {
     var yAxis = d3.axisLeft()
       .ticks(5)
       .tickFormat(d3.format(".2e"))
+      .tickSize(tickSize)
       .scale(yScale);
     var yAxisGroup = anchorElement.append("g")
+      .style("font-size", fontSizeStr)
       .attr("transform", "translate(" + x0 + ", 0)")
       .classed("noselect", true)
       .call(yAxis);
@@ -462,8 +484,10 @@ class Plot2D {
     var cbyAxis = d3.axisRight()
       .ticks(5)
       .tickFormat(d3.format(".2e"))
+      .tickSize(tickSize)
       .scale(cbScale);
     var cbAxisGroup = anchorElement.append("g")
+      .style("font-size", fontSizeStr)
       .attr("transform", "translate(" + (x1 + w_cb - w_cbimg - w_cbticks) + ", 0)")
       .classed("noselect", true)
       .call(cbyAxis);
@@ -476,6 +500,21 @@ class Plot2D {
   }
 }
 
+function _get_fontsize_str(w, h) {
+  if (_is_small_mode(w, h))
+    return "5px";
+  else
+    return "14px";
+}
+function _get_ticksize_int(w, h) {
+  if (_is_small_mode(w, h))
+    return 3;
+  else
+    return 6;
+}
+function _is_small_mode(w, h) {
+  return (w<300 || h<300);
+}
 
 // private
 function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
@@ -487,7 +526,7 @@ function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
   var hlab = h - 2*margin;
 
   // font size
-  var fontSizeStr = "14px";
+  var fontSizeStr = _get_fontsize_str(w, h);
 
   // axis labels
   var lblGroup = svg_branch
@@ -504,9 +543,9 @@ function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
     .text(titleLines[0])
     .attr("dominant-baseline", "hanging")
     .attr("text-anchor", "middle")
-    .style("font-size",fontSizeStr);
+    .style("font-size", fontSizeStr);
 
-  if (titleLines.length > 1) {
+  if (titleLines.length > 1 && !_is_small_mode(w, h)) {
     for (i=1; i<titleLines.length; i++) {
       titleGrp
         .append("tspan")
@@ -521,7 +560,7 @@ function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
     .text(xlabel)
     .attr("dominant-baseline", "middle")
     .attr("text-anchor", "middle")
-    .style("font-size",fontSizeStr)
+    .style("font-size", fontSizeStr)
     .classed("noselect", true);
 
   var yLabelGrp = lblGroup
@@ -530,7 +569,7 @@ function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
     .attr("y", ylaby)
     .text(ylabel)
     .attr("text-anchor", "middle")
-    .style("font-size",fontSizeStr)
+    .style("font-size", fontSizeStr)
     .classed("noselect", true);
 
   var dt = titleGrp.node().getBBox().height;
