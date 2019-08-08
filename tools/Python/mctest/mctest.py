@@ -6,8 +6,10 @@ import json
 import os
 from os.path import basename, join, isdir, splitext
 from os import mkdir
+from collections import OrderedDict
 import sys
 import re
+import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils
@@ -18,19 +20,46 @@ class InstrTest:
     def __init__(self, sourcefile, localfile):
         self.sourcefile = sourcefile
         self.localfile = localfile
+        self.instrname = splitext(basename(sourcefile))[0]
+        self.hastest = False
         self.parvals = ""
         self.detector = ""
-    def get_json_str(self):
-        return json.dumps({
-            "sourcefile", self.sourcefile,
-            "localfile", self.localfile,
-            "parvals", self.parvals,
-            "detector", self.detector,
-        })
+        self.compiled = False
+        self.compiletime = None
+        self.ran = False
+        self.runtime = None
+    def get_json_repr(self):
+        return {
+            "sourcefile"  : self.sourcefile,
+            "localfile"   : self.localfile,
+            "instrname"   : self.instrname,
+            "parvals"     : self.parvals,
+            "detector"    : self.detector,
+            "compiled"    : self.compiled,
+            "compiletime" : self.compiletime, 
+            "ran"         : self.ran,
+            "runtime"     : self.runtime,
+        }
 
+def print_to_console(str):
+    ''' used with popen wrapper '''
+    logging.info(str)
+
+def print_to_console_debug(str):
+    ''' used with popen wrapper '''
+    logging.debug(str)
+
+class LineLogger():
+    def __init__(self):
+        self.lst = []
+    def logline(self, str):
+        self.lst.append(str)
+    def save(self, filename):
+        text = "\n".join(self.lst) + "\n"
+        open(filename, 'w').write(text)
 
 def branch_test(mcstasroot, branchname, testroot):
-    ''' will test a single mcstas "branch" or version '''
+    ''' test a single mcstas "branch" or version that is present on the system '''
     # create test dir
     branchdir = join(mcstasroot, branchname)
     testdir = join(testroot, branchname)
@@ -43,6 +72,11 @@ def branch_test(mcstasroot, branchname, testroot):
     # copy instr files and record info
     logging.info("finding instrument files in %s ..." % branchdir)
     instrs, comps = utils.get_instr_comp_files(branchdir, recursive=True)
+    instrs.sort()
+    
+    # DEBUG!:
+    #instrs = instrs[:5]
+
     logging.info("copying instruments to test dir %s, extracting test examples..." % testdir)
     tests = []
     for f in instrs:
@@ -64,21 +98,65 @@ def branch_test(mcstasroot, branchname, testroot):
         if m:
             test.parvals = m.group(1).strip()
             test.detector = m.group(2).strip()
+            test.hastest = True
             logging.info("TEST   : %s" % instrname)
         else:
             logging.info("NO TEST: %s" % instrname)
 
-    # TODO: enable environment
+    # modify environment
+    os.environ["MCSTAS"] = branchdir
+    oldpath = os.environ["PATH"]
+    os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
+    try:
+        # compile, record time
+        for test in tests:
+            log = LineLogger()
+            t1 = time.time()
+            cmd = "mcrun --info %s" % test.localfile
+            #utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=print_to_console, stderr_cb=print_to_console)
+            utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+            t2 = time.time()
+            test.compiled = True
+            test.compiletime = t2 - t1
+            log.save(join(testdir, test.instrname, "std.txt"))
+    
+        # run, record time
+        for test in tests:
+            log = LineLogger()
+            if not test.hastest:
+                continue
+            t1 = time.time()
+            cmd = "mcrun %s %s" % (test.localfile, test.parvals)
+            #utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=print_to_console, stderr_cb=print_to_console)
+            utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+            t2 = time.time()
+            test.ran = True
+            test.runtime = t2 - t1
+            log.save(join(testdir, test.instrname, "std.txt"))
 
-    # TODO: compile, record time
+    finally:
+        # clean up path changes
+        del os.environ["MCSTAS"]
+        os.environ["PATH"] = oldpath
 
-    # TODO: run, record time
+    # TODO: check results against monitor values
 
-    # TODO: save test objects to disk
+    # save test objects to disk
+    for test in tests:
+        text = json.dumps(test.get_json_repr())
+        f = join(testdir, test.instrname, test.instrname + '.json')
+        open(f, 'w').write(text)
+
+    # save giant all-containing test object on disk
+    results = OrderedDict()
+    for test in tests:
+        results[test.instrname] = test.get_json_repr()
+    f = join(testdir, "results.json")
+    open(f, 'w').write(json.dumps(results, indent=4))
 
 
 def main(args):
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     # setup
     testroot = "/tmp/mctest-test"
@@ -86,16 +164,21 @@ def main(args):
     if args.mcstasroot:
         mcstasroot = args.mcstasroot
     logging.info("using mcstas root: %s" % mcstasroot)
-    
+    logging.info("")
     dirnames = []
+    brancnames = []
     for (dirpath, dirnames, files) in os.walk(mcstasroot):
         break
+    for d in dirnames:
+            for (_, _, files) in os.walk(join(mcstasroot, d)):
+                break
+            if "environment" in files:
+                brancnames.append(d)
     if args.versions:
-        logging.info("subfolders of %s:" % testroot) 
-        for v in dirnames:
-            print(v)
+        for v in brancnames:
+            logging.info(v)
         logging.info("")
-        logging.info("use --version=someversion to only test that version")
+        logging.info("use --version=[version] to test a specific version...")
         quit()
 
     # create root test folder
@@ -118,8 +201,6 @@ def main(args):
         dirnames = [selected_version]
     for branchdirname in dirnames:
         branch_test(mcstasroot, branchdirname, testdir)
-
-    #logging.info("integration test complete")
 
 
 if __name__ == '__main__':
