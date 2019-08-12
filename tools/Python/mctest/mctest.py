@@ -115,7 +115,7 @@ def branch_test(mcstasroot, branchname, testroot):
     # quickly find max instrument name lenth for pretty output
     maxnamelen = 0
     for f in instrs:
-        l = len(basename(f))
+        l = len(basename(f)) - 5
         if l > maxnamelen:
             maxnamelen = l
     # copy instrument files and extract tests
@@ -139,10 +139,10 @@ def branch_test(mcstasroot, branchname, testroot):
             test.parvals = m.group(1).strip()
             test.detector = m.group(2).strip()
             test.hastest = True
-            formatstr = "%-" + "%ds: TEST" % (maxnamelen+1)
+            formatstr = "%-" + "%ds: TEST" % maxnamelen
             logging.info(formatstr % instrname)
         else:
-            formatstr = "%-" + "%ds: NO TEST" % (maxnamelen+1)
+            formatstr = "%-" + "%ds: NO TEST" % maxnamelen
             logging.info(formatstr % instrname)
 
     # modify environment
@@ -164,11 +164,11 @@ def branch_test(mcstasroot, branchname, testroot):
             test.compiletime = t2 - t1
             # log to terminal
             if test.compiled:
-                formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
+                formatstr = "%-" + "%ds: " % maxnamelen + \
                     "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
                 logging.info(formatstr % test.instrname)
             else:
-                formatstr = "%-" + "%ds: COMPILE ERROR" % (maxnamelen+1)
+                formatstr = "%-" + "%ds: COMPILE ERROR" % maxnamelen
                 logging.info(formatstr % instrname + ", " + cmd)
             # record compile success/fail and time
             log.save(join(testdir, test.instrname, "compile_std.txt"))
