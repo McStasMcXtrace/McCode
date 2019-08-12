@@ -10,6 +10,7 @@ from collections import OrderedDict
 import sys
 import re
 import time
+import math
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils
@@ -50,14 +51,20 @@ def print_to_console_debug(str):
     logging.debug(str)
 
 class LineLogger():
-    ''' allows logging lines to memory, to be saved to disk later on '''
+    ''' log lines to memory, then save to disk '''
     def __init__(self):
         self.lst = []
-    def logline(self, str):
-        self.lst.append(str)
+    def logline(self, addstr):
+        self.lst.append(addstr)
     def save(self, filename):
         text = "\n".join(self.lst) + "\n"
-        open(filename, 'w').write(text)
+        f = open(filename, 'w').write(text)
+        f.close()
+    def find(self, searchstr):
+        for l in self.lst:
+            if re.search(searchstr, l):
+                return True
+        return False
 
 def test_env_settings(mcstasroot, branchname):
     ''' test mcstas vesion switching mechanism '''
@@ -91,7 +98,10 @@ def branch_test(mcstasroot, branchname, testroot):
         quit()
 
     # copy instr files and record info
-    logging.info("finding instrument files in %s ..." % branchdir)
+    logging.info("")
+    logging.info("")
+    logging.info("Testing branch:         %s" % branchname)
+    logging.info("Finding instruments in: %s" % branchdir)
     instrs, _ = utils.get_instr_comp_files(branchdir, recursive=True)
     instrs.sort()
 
@@ -100,8 +110,15 @@ def branch_test(mcstasroot, branchname, testroot):
     #instrs = instrs[:5]
 
 
-    logging.info("copying instruments to test dir %s, extracting test examples..." % testdir)
+    logging.info("Copying instruments to: %s" % testdir)
     tests = []
+    # quickly find max instrument name lenth for pretty output
+    maxnamelen = 0
+    for f in instrs:
+        l = len(basename(f))
+        if l > maxnamelen:
+            maxnamelen = l
+    # copy instrument files and extract tests
     for f in instrs:
         instrname = splitext(basename(f))[0]
         instrdir = join(testdir, instrname)
@@ -122,9 +139,11 @@ def branch_test(mcstasroot, branchname, testroot):
             test.parvals = m.group(1).strip()
             test.detector = m.group(2).strip()
             test.hastest = True
-            logging.info("TEST   : %s" % instrname)
+            formatstr = "%-" + "%ds: TEST" % (maxnamelen+1)
+            logging.info(formatstr % instrname)
         else:
-            logging.info("NO TEST: %s" % instrname)
+            formatstr = "%-" + "%ds: NO TEST" % (maxnamelen+1)
+            logging.info(formatstr % instrname)
 
     # modify environment
     os.environ["MCSTAS"] = branchdir
@@ -132,17 +151,31 @@ def branch_test(mcstasroot, branchname, testroot):
     os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
     try:
         # compile, record time
+        logging.info("")
+        logging.info("Compiling instruments...")
         for test in tests:
             log = LineLogger()
             t1 = time.time()
             cmd = "mcrun --info %s" % test.localfile
             utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
             t2 = time.time()
-            test.compiled = True
+            # TODO: detect success / failure from process return code
+            test.compiled = not log.find("error:")
             test.compiletime = t2 - t1
-            log.save(join(testdir, test.instrname, "std.txt"))
+            # log to terminal
+            if test.compiled:
+                formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
+                    "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
+                logging.info(formatstr % test.instrname)
+            else:
+                formatstr = "%-" + "%ds: COMPILE ERROR" % (maxnamelen+1)
+                logging.info(formatstr % instrname + ", " + cmd)
+            # record compile success/fail and time
+            log.save(join(testdir, test.instrname, "compile_std.txt"))
 
         # run, record time
+        logging.info("")
+        logging.info("Running tests...")
         for test in tests:
             log = LineLogger()
             if not test.hastest:
@@ -151,9 +184,19 @@ def branch_test(mcstasroot, branchname, testroot):
             cmd = "mcrun %s %s" % (test.localfile, test.parvals)
             utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
             t2 = time.time()
-            test.ran = True
+            # TODO: detect success / failure from process return code
+            test.ran = not log.find("error:")
             test.runtime = t2 - t1
-            log.save(join(testdir, test.instrname, "std.txt"))
+            # log to terminal
+            if test.compiled:
+                formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
+                    "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
+                logging.info(formatstr % test.instrname)
+            else:
+                formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
+                logging.info(formatstr % instrname + ", " + cmd)
+            # record success/fail and run time
+            log.save(join(testdir, test.instrname, "run_std.txt"))
 
     finally:
         # clean up path changes
@@ -189,9 +232,11 @@ def main(args):
     logging.info("Using mcstas root: %s" % mcstasroot)
     if args.testenv:
         logging.info("Test environment mode, using output of 'mcstas --vesion'")
+        logging.info("")
     if args.versions:
         logging.info("Subfolders containing an 'environment' file are:")
-    logging.info("")
+        logging.info("")
+
     dirnames = []
     branchnames = []
     for (_, dirnames, _) in os.walk(mcstasroot):
@@ -241,5 +286,9 @@ if __name__ == '__main__':
     parser.add_argument('--testenv', action='store_true', help='display local mcstas installations')
     args = parser.parse_args()
 
-    main(args)
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        print()
+
 
