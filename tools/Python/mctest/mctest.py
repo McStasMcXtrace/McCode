@@ -59,7 +59,6 @@ class LineLogger():
     def save(self, filename):
         text = "\n".join(self.lst) + "\n"
         f = open(filename, 'w').write(text)
-        f.close()
     def find(self, searchstr):
         for l in self.lst:
             if re.search(searchstr, l):
