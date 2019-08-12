@@ -272,6 +272,9 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
 #  define M_PI_4 M_PI/4.0
 #  define M_1_PI 1.0/M_PI
 #  define M_2_PI 2*M_1_PI
+#  define M_2_SQRTPI 2/sqrt(M_PI)
+#  define M_SQRT2 sqrt(2)
+#  define M_SQRT1_2 sqrt(1/2)
 # endif
 #endif
 
