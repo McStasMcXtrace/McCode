@@ -20,20 +20,20 @@
 * of monodisperse, shell-like particles.
 *
 * %P
-* R						  : [AA]		Average radius of the particles.
-* Thickness				  : [AA]		Thickness of the shell - so that the outer 
+* R: [AA]		Average radius of the particles.
+* Thickness: [AA]		Thickness of the shell - so that the outer 
 *										radius is R + Thickness and the inner is 
 *										R - Thickness.
-* Concentration		  	  : [mM]		Concentration of sample.
-* DeltaRho  			  : [cm/AA^3]	Excess scattering length density of the 
+* Concentration: [mM]		Concentration of sample.
+* DeltaRho: [cm/AA^3]	Excess scattering length density of the 
 *                                   	particles.
-* AbsorptionCrosssection  : [1/m]		Absorption cross section of the sample.
-* xwidth    			  : [m]  		Dimension of component in the x-direction.
-* yheight   			  : [m]			Dimension of component in the y-direction.
-* zdepth    			  : [m]			Dimension of component in the z-direction.
+* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
+* xwidth: [m]  		Dimension of component in the x-direction.
+* yheight: [m]			Dimension of component in the y-direction.
+* zdepth: [m]			Dimension of component in the z-direction.
 * SampleToDetectorDistance: [m]			Distance from sample to detector (for 
 *										focusing the scattered x-rays).
-* DetectorRadius          : [m] 		Radius of the detector (for focusing the 
+* DetectorRadius: [m] 		Radius of the detector (for focusing the 
 *										scattered x-rays).
 *
 * %E
@@ -46,7 +46,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R = 100.0, Thickness = 5.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (Prefactor, Absorption, q, NumberDensity, RBig, RSmall, VolumeBigSphere, VolumeSmallSphere, Volume)
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 

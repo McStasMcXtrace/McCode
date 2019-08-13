@@ -18,7 +18,7 @@
 * Polycrystal made from single crystal-like voxels
 *
 * %D
-* The component creates a threedimensional grid of cubic instances of the Single_crystal-component,through
+* The component creates a three-dimensional grid of cubic instances of the Single_crystal-component,through
 * which the rays are propagated. The component relies on a list of possible orientations and stretches of the
 * initial unit cell and a list correlating each voxel of the polycrystal to an entry in the list of rotations
 * and stretches.
@@ -86,9 +86,13 @@ SETTING PARAMETERS(string MapFile,
                    MaxNumberOfReflections    = 1
                    Reciprocal                = 0)
 
-OUTPUT PARAMETERS()
+OUTPUT PARAMETERS(
+  PolyInfo,hklInfo,AbsorbtionInfo,
+  TableOfMap,TableOfOrientations,
+  Voxelxwidth,Voxelyheight,Voxelzdepth,
+  NumberOfVoxelsx,NumberOfVoxelsy,NumberOfVoxelsz)
 
-DECLARE
+SHARE
 %{
     // External libraries
     %include "read_table-lib"
@@ -173,7 +177,7 @@ DECLARE
         int Reciprocal;
 
         // Sigma of Delta d / d
-        double DeltadOverd;
+        double DeltadOverd1;
 
         // Coordinates of unit cell vectors
         double LatticeVectora[3];
@@ -194,10 +198,10 @@ DECLARE
         double LatticeAngleC;
 
         // Absorbtion crosssection
-        double SigmaAbsorbtion;
+        double SigmaAbsorbtion1;
 
         // Incoherent crosssection
-        double SigmaIncoherent;
+        double SigmaIncoherent1;
 
         // Unit cell volume
         double VolumeOfUnitCell;
@@ -310,16 +314,16 @@ DECLARE
 
             if (Parsing) {
 
-                if (Parsing[0] && !hklInfo->SigmaAbsorbtion)       hklInfo->SigmaAbsorbtion      = atof(Parsing[0]);
-                if (Parsing[1] && !hklInfo->SigmaAbsorbtion)       hklInfo->SigmaAbsorbtion      = atof(Parsing[1]);
-                if (Parsing[2] && !hklInfo->SigmaIncoherent)       hklInfo->SigmaIncoherent      = atof(Parsing[2]);
-                if (Parsing[3] && !hklInfo->SigmaIncoherent)       hklInfo->SigmaIncoherent      = atof(Parsing[3]);
+                if (Parsing[0] && !hklInfo->SigmaAbsorbtion1)    hklInfo->SigmaAbsorbtion1     = atof(Parsing[0]);
+                if (Parsing[1] && !hklInfo->SigmaAbsorbtion1)    hklInfo->SigmaAbsorbtion1     = atof(Parsing[1]);
+                if (Parsing[2] && !hklInfo->SigmaIncoherent1)    hklInfo->SigmaIncoherent1     = atof(Parsing[2]);
+                if (Parsing[3] && !hklInfo->SigmaIncoherent1)    hklInfo->SigmaIncoherent1     = atof(Parsing[3]);
                 if (Parsing[4])                   	    	       hklInfo->ColumnOrder[0]       = atoi(Parsing[4]);
                 if (Parsing[5])                   	    	       hklInfo->ColumnOrder[1]       = atoi(Parsing[5]);
                 if (Parsing[6])                   	    	       hklInfo->ColumnOrder[2]       = atoi(Parsing[6]);
                 if (Parsing[7])                   	    	       hklInfo->ColumnOrder[3]       = atoi(Parsing[7]);
                 if (Parsing[8])                   	    	       hklInfo->ColumnOrder[4]       = atoi(Parsing[8]);
-                if (Parsing[9] && hklInfo->DeltadOverd < 0)        hklInfo->DeltadOverd          = atof(Parsing[9]);
+                if (Parsing[9] && hklInfo->DeltadOverd1 < 0)       hklInfo->DeltadOverd1         = atof(Parsing[9]);
                 if (Parsing[10] && !hklInfo->LatticeVectoraLength) hklInfo->LatticeVectoraLength = atof(Parsing[10]);
                 if (Parsing[11] && !hklInfo->LatticeVectorbLength) hklInfo->LatticeVectorbLength = atof(Parsing[11]);
                 if (Parsing[12] && !hklInfo->LatticeVectorcLength) hklInfo->LatticeVectorcLength = atof(Parsing[12]);
@@ -342,8 +346,8 @@ DECLARE
 
         // Assign variables
         if (NumberOfAtoms > 1) {
-            hklInfo->SigmaAbsorbtion *= NumberOfAtoms;
-            hklInfo->SigmaIncoherent *= NumberOfAtoms;
+            hklInfo->SigmaAbsorbtion1 *= NumberOfAtoms;
+            hklInfo->SigmaIncoherent1 *= NumberOfAtoms;
         }
 
         // Special cases for the structure definition
@@ -588,7 +592,7 @@ DECLARE
             hklData[i].u1[1] = hklData[i].Tau[1] / hklData[i].TauLength;
             hklData[i].u1[2] = hklData[i].Tau[2] / hklData[i].TauLength;
 
-            hklData[i].Sigma[0] = FWHM2RMS * hklInfo->DeltadOverd * hklData[i].TauLength;
+            hklData[i].Sigma[0] = FWHM2RMS * hklInfo->DeltadOverd1 * hklData[i].TauLength;
 
             // Find two arbitrary axes perpendicular to tau and each other
             normal_vec(b1[0], b1[1], b1[2], hklData[i].u1[0], hklData[i].u1[1], hklData[i].u1[2]);
@@ -893,7 +897,7 @@ DECLARE
     }
 
     // Function used to get the dimensions of the voxels
-    int GetVoxelDimensions(t_Table *TableOfMap, int *NumberOfVoxelsx, double *Voxelxwidth, int *NumberOfVoxelsy, double *Voxelyheight, int *NumberOfVoxelsz, double *Voxelzdepth) {
+    int GetVoxelDimensions(t_Table *TableOfMap, int *NumberOfVoxelsx, double *Voxelxwidth, int *NumberOfVoxelsy, double *Voxelyheight, int *NumberOfVoxelsz, double *Voxelzdepth, double xwidth, double yheight, double zdepth) {
         // Declaration
         int xValue=1;
         int yValue=1;
@@ -927,6 +931,11 @@ DECLARE
             return -1;
         }
     }
+  /* end of SHARE */
+%} 
+
+
+DECLARE %{
 
     // Info on polycrystal
     struct hklStruct *PolyInfo;
@@ -944,7 +953,7 @@ DECLARE
     int NumberOfVoxelsx;
     int NumberOfVoxelsy;
     int NumberOfVoxelsz;
-    %}
+%}
 
 
 INITIALIZE
@@ -981,7 +990,9 @@ INITIALIZE
     PolyInfo = calloc(TableOfOrientations->rows, sizeof(struct hklStruct));
 
     // Compute dimensions of voxels
-    if (GetVoxelDimensions(TableOfMap, &NumberOfVoxelsx, &Voxelxwidth, &NumberOfVoxelsy, &Voxelyheight, &NumberOfVoxelsz, &Voxelzdepth) == -1) {
+    if (GetVoxelDimensions(TableOfMap, 
+      &NumberOfVoxelsx, &Voxelxwidth, &NumberOfVoxelsy, &Voxelyheight, &NumberOfVoxelsz, &Voxelzdepth,
+      xwidth, yheight, zdepth) == -1) {
         fprintf(stderr, "%s: An error occured when assigning the dimensions of the polycrystal. Is the header appropriately formatted?", NAME_CURRENT_COMP);
     }
 
@@ -1003,9 +1014,9 @@ INITIALIZE
     hklInfo.LatticeVectorc[1] = cy;
     hklInfo.LatticeVectorc[2] = cz;
 
-    hklInfo.DeltadOverd     = DeltadOverd;
-    hklInfo.SigmaAbsorbtion = SigmaAbsorbtion;
-    hklInfo.SigmaIncoherent = SigmaIncoherent;
+    hklInfo.DeltadOverd1    = DeltadOverd;
+    hklInfo.SigmaAbsorbtion1= SigmaAbsorbtion;
+    hklInfo.SigmaIncoherent1= SigmaIncoherent;
 
     // Default format: h, k, l, F, F2
     hklInfo.ColumnOrder[0] = 1;

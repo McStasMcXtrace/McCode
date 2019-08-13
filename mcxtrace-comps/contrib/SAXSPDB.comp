@@ -24,17 +24,17 @@
 * The component must have a valid .pdb-file as an argument.
 *
 * %P
-* RhoSolvent  			  : [AA]	Scattering length density of the buffer.
-* Concentration		  	  : [mM]	Concentration of sample.
-* AbsorptionCrosssection  : [1/m]	Absorption cross section of the sample.
-* xwidth    			  : [m]  	Dimension of component in the x-direction.
-* yheight   			  : [m]		Dimension of component in the y-direction.
-* zdepth    			  : [m]		Dimension of component in the z-direction.
+* RhoSolvent: [AA]	Scattering length density of the buffer.
+* Concentration: [mM]	Concentration of sample.
+* AbsorptionCrosssection: [1/m]	Absorption cross section of the sample.
+* xwidth: [m]  	Dimension of component in the x-direction.
+* yheight: [m]		Dimension of component in the y-direction.
+* zdepth: [m]		Dimension of component in the z-direction.
 * SampleToDetectorDistance: [m]		Distance from sample to detector (for 
 *									focusing the scattered x-rays).
-* DetectorRadius          : [m] 	Radius of the detector (for focusing the 
+* DetectorRadius: [m] 	Radius of the detector (for focusing the 
 *									scattered x-rays).
-* PDBFilepath			  : []		Path to the file describing the high resolution
+* PDBFilepath: []		Path to the file describing the high resolution
 *									structure of the protein.
 *
 * %E
@@ -49,21 +49,18 @@ SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosss
 					SampleToDetectorDistance, DetectorRadius,
 					string PDBFilepath = "PDBfile.pdb")
 
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (Absorption,NumberDensity,Matrix,NumberOfResidues,Protein)
+DEPENDENCY "-lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
-DECLARE
-%{
-	// Declarations
-	double Absorption;
-	double NumberDensity;
-	#define OrderOfHarmonics 21
-
-	// GSL libraries
+SHARE %{
+  // GSL libraries
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
+	
+	#define OrderOfHarmonics 21
 
 	// Simple mathematical functions
 	int Sign(double x) {
@@ -113,7 +110,7 @@ DECLARE
 	struct Protein
 	{
 		BeadStruct *Beads;
-		int NumberOfResidues;
+		int NumberOfResiduesP;
 	};
 	typedef struct Protein ProteinStruct;
 
@@ -190,6 +187,13 @@ DECLARE
 		    }
 		}
 	}
+%}
+
+DECLARE
+%{
+	// Declarations
+	double Absorption;
+	double NumberDensity;
 
 	// Protein properties
 	double complex ** Matrix;
@@ -268,7 +272,7 @@ INITIALIZE
 	// Declaration of the protein struct
 	void InitializeProtein(ProteinStruct *Protein, int NumberOfResiduesInFile)
 	{
-		Protein->NumberOfResidues = NumberOfResiduesInFile;
+		Protein->NumberOfResiduesP = NumberOfResiduesInFile;
 		Protein->Beads = calloc((size_t) NumberOfResiduesInFile, sizeof(BeadStruct));
 	}
 
@@ -276,7 +280,7 @@ INITIALIZE
 	void ReadAminoPDB(char PDBFilename[256], ProteinStruct *Protein)
 	{
 		// Declarations and input		
-		int NumberOfResidues = Protein->NumberOfResidues;
+		int NumberOfResidues = Protein->NumberOfResiduesP;
 		BeadStruct *Residue = Protein->Beads;
 		FILE *PDBFile;
 		

@@ -22,12 +22,12 @@
 *
 * %P
 * Input parameters:
-* r1 - radius of the profile along the X axis;
-* r2 - radius of the profile along the Y axis;
-* w - parabola parameter, constraining it along the propagation axis;
-* d - distance between two surfaces of the lens along the propagation axis;
-* N - amount of single lenses in a stack.
-* T - transmission of the lens
+* r1: radius of the profile along the X axis;
+* r2: radius of the profile along the Y axis;
+* w: parabola parameter, constraining it along the propagation axis;
+* d: distance between two surfaces of the lens along the propagation axis;
+* N: amount of single lenses in a stack.
+* T: transmission of the lens
 * 
 * 
 * attenuation coefficient mu is taken from the NIST database and 
@@ -40,7 +40,7 @@
 DEFINE COMPONENT Lens_elliptical
 DEFINITION PARAMETERS (string material_datafile="Be_data.txt")
 SETTING PARAMETERS (r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (prms,Re,Na)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

@@ -173,7 +173,7 @@ DECLARE
 	double ThicknessOfBelt;
 
 	double HeightOfBelt;
-	double HeightOfLipid;
+	double HeightOfLipids;
 	double HeightOfTails;
 	double HeightOfCH3;
 

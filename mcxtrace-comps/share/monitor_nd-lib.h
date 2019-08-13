@@ -77,7 +77,6 @@
     int COORD_DIM   ; /* next token is a bin value */
     int COORD_FIL   ; /* next token is a filename */
     int COORD_EVNT  ; /* next token is a buffer size value */
-    //int COORD_3HE   ; /* next token is a 3He pressure value */
     int COORD_LOG   ; /* next variable will be in log scale */
     int COORD_ABS   ; /* next variable will be in abs scale */
     int COORD_SIGNAL; /* next variable will be the signal var */
@@ -112,7 +111,6 @@
     char   Flag_log          ;   /* log10 of the flux */
     char   Flag_parallel     ;   /* set photon state back after detection (parallel components) */
     char   Flag_Binary_List  ;
-    char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
     int    Flag_OFF          ;   /* Flag to indicate external geometry from OFF file */
     unsigned long OFF_polyidx;   /* When intersection is done externally by off_intersect, this gives the 
@@ -139,7 +137,6 @@
     double ckx, cky, ckz;
     double cEx, cEy, cEz;
     double ct, cphi, cp;
-    double He3_pressure;
     char   Flag_UsePreMonitor    ;   /* use a previously stored photon parameter set */
     char   UserName1[128];
     char   UserName2[128];

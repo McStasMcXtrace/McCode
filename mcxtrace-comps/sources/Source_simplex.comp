@@ -18,6 +18,9 @@
 * %D
 * This source model reads the dumped radiation field output from Simplex and samples it to be used
 * in McXtrace.
+*
+* <a href="http://radiant.harima.riken.go.jp/simplex/">Simplex</a> is a simulator
+* and postprocessor for free-electron laser experiments.
 * 
 * %P
 * focus_xw:[m]  Width of target.
@@ -29,6 +32,10 @@
 * s0: [m] back end of pulse time sampling windows scaled by c^-1. 
 * s1: [m] front end of pulse time sampling window scaled by c^-1.
 * focus_a: [rad] mean divergence angle.
+*
+* %L
+* Tanaka, Journal of Synchrotron Radiation 22, 1319 (2015) http://journals.iucr.org/s/issues/2015/05/00/gb5029/
+* http://radiant.harima.riken.go.jp/simplex/
 * 
 * %E
 *****************************************************************************/

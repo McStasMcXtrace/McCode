@@ -43,7 +43,7 @@
 DEFINE COMPONENT Shadow_output
 DEFINITION PARAMETERS (string file = 0, int bufsize = 1000)
 SETTING PARAMETERS (int progress = 0)
-OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
+OUTPUT PARAMETERS (filename,hfile, obuf, pos, reclen, ncol, i, iflag, p_out, p2_out)
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 SHARE

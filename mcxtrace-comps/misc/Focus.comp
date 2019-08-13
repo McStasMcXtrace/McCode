@@ -34,7 +34,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Focus
 SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0, int focus_absolute=1) 
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE

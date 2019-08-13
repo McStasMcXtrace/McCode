@@ -56,7 +56,7 @@
 DEFINE COMPONENT Mask
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, string mask, invert=0, virtual=0)
-OUTPUT PARAMETERS (prms,masking)
+OUTPUT PARAMETERS (prms,masking,filter_row)
 //DEPENDENCY "-lpng -DUSE_PNG"
 
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 

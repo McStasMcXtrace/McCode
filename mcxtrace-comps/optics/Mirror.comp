@@ -40,11 +40,11 @@
 *
 * %P
 * Input parameters:
-* xwidth [m] The width of the mirror
-* zdepth [m] The length of the mirror
-* R0 [ ]  Constant reflectivity. Overrides reflec and coating.
-* reflec [ ] File containing reflectivities in a 2D matrix block parameterized by energy and glancing angle.
-* coating [ ] File containing material data if the Mirror has a singl ematerial coating.
+* xwidth: [m] The width of the mirror
+* zdepth: [m] The length of the mirror
+* R0: [ ]  Constant reflectivity. Overrides reflec and coating.
+* reflec: [ ] File containing reflectivities in a 2D matrix block parameterized by energy and glancing angle.
+* coating: [ ] File containing material data if the Mirror has a singl ematerial coating.
 * %E
 *******************************************************************************/
 
