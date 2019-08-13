@@ -47,7 +47,7 @@
 DEFINE COMPONENT Mirror_elliptic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R=1, a=0, b=0, c=1, width=0, length=0, yheight=1, zdepth=1)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (a2,b2,c2,Ox,Oy,Oz)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE

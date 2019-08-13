@@ -72,7 +72,7 @@ SETTING PARAMETERS (frac=0.3, pressure=101325, temperature=273.15+21.1,
         target_x=0, target_y=0, target_z=6, int target_index=0, 
         focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, focus_r=0)
 
-OUTPUT PARAMETERS (shape)
+OUTPUT PARAMETERS (shape,an,bn,cn,ao,bo,co,aar,bar,car)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 DECLARE
