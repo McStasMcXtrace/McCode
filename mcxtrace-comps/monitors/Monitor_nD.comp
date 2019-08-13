@@ -35,15 +35,12 @@
 * The 'cylinder' and 'banana' option will change that for a banana shape
 * The 'sphere' option simulates spherical detector. The 'box' is a box.
 * The cylinder, sphere and banana should be centered on the scattering point.
-* The monitored flux may be per monitor unit area, and weighted by
-* a lambda/lambda(2200m/s) factor to obtain standard integrated capture flux.
+* The monitored flux may be per monitor unit area.
 * In normal configuration, the Monitor_nD measures the current parameters
 * of the photon that is beeing detected. But a PreMonitor_nD component can
 * be used in order to study correlations between a photon being detected in
 * a Monitor_nD place, and given parameters that are monitored elsewhere
 * (at <b>PreMonitor_nD</b>).
-* The monitor can also act as a 3He gas detector, taking into account the
-* detection efficiency.
 *
 * The 'bins' and 'limits' modifiers are to be used after each variable,
 * and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv bins=10
@@ -60,11 +57,11 @@
 *     x y z radius          [m]      Distance, Position and norm
 *     xy, yz, xz            [m]      Radial position in xy, yz and xz plane
 *     kxy kyz kxz           [Angs-1] Radial wavevector in xy, yz and xz plane
-*     vxy vyz vxz           [m/s]    Radial velocity in xy, yz and xz plane
 *     t time                [s]      Time of Flight
 *     energy omega          [keV]    energy of photon
 *     lambda wavelength     [Angs]   wavelength of photon
-*     sx sy sz              [1]      Spin
+*     Ex Ey Ez              [1]      wave electric polarization
+*     phase                 [rad]    wave phase
 *     vdiv ydiv dy          [deg]    vertical divergence (y)
 *     hdiv divergence xdiv  [deg]    horizontal divergence (x)
 *     angle                 [deg]    divergence from <z> direction
@@ -75,7 +72,7 @@
 *     user2 user3           to be assigned in an other component (see below)
 *
 *     p intensity flux      [phts/s  or  phts/cm^2/s]
-*     ncounts n neutron     [1]      neutron ID, i.e current event index
+*     ncounts n             [1]      event ID, i.e current event index
 *     pixel id              [1]      pixelID in histogram made of preceeding vars, e.g. 'theta y'. To set an offset PixelID use the 'min=value' keyword. Sets event mode.
 *
 * <b>Other options keywords are:</b>
@@ -85,7 +82,6 @@
 *     binary {float|double}     with 'source' option, saves in compact files
 *     bins=[bins=20]            Number of bins in the detector along dimension
 *     borders                   To also count off-limits photons (X < min or X > max)
-*     capture                   weight by lambda/lambda(2200m/s) capture flux
 *     exclusive                 absorb photon out of monitor limits
 *     file=string               Detector image file name. default is component name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det

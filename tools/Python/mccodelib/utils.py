@@ -4,6 +4,7 @@ Analysis tools for mcstas component files and instrument files.
 import re
 import os
 import subprocess
+from datetime import datetime
 
 '''
 Component parser used by initial versions of mcgui. (More recent implementations exist.)
@@ -702,23 +703,27 @@ def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
             fct(*args)
     if not cwd:
         cwd = os.getcwd()
-    
-    # open the process with all bells & whistles
-    process = subprocess.Popen(cmd, 
-                               stdout=subprocess.PIPE, 
-                               stderr=subprocess.PIPE,
-                               stdin=subprocess.PIPE,
-                               shell=True,
-                               universal_newlines=True,
-                               cwd=cwd)
-    # flush until EOF
-    for stdoutdata in process.stdout:
-        call_if_not_none(stdout_cb, stdoutdata.rstrip('\n'))
-    for stderrdata in process.stderr:
-        call_if_not_none(stderr_cb, stderrdata.rstrip('\n'))
-    
-    return process.returncode
 
+    try:
+        # open the process with all bells & whistles
+        process = subprocess.Popen(cmd, 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   shell=True,
+                                   universal_newlines=True,
+                                   cwd=cwd)
+        # flush until EOF
+        for stdoutdata in process.stdout:
+            call_if_not_none(stdout_cb, stdoutdata.rstrip('\n'))
+        for stderrdata in process.stderr:
+            call_if_not_none(stderr_cb, stderrdata.rstrip('\n'))
+
+        return process.returncode
+    except Exception as e:
+        ''' unicode read error safe-guard '''
+        print("run_subtool_to_completion: An error occurred, %s" % str(e))
+        return -1
 
 def start_subtool_then_return(cmd, cwd=None):
     '''
@@ -731,7 +736,7 @@ def start_subtool_then_return(cmd, cwd=None):
             fct(*args)
     if not cwd:
         cwd = os.getcwd()
-    
+
     # open the process with all bells & whistles
     process = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
@@ -740,7 +745,7 @@ def start_subtool_then_return(cmd, cwd=None):
                                shell=True,
                                universal_newlines=True,
                                cwd=cwd)
-    
+
     return process.returncode
 
 def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
@@ -756,7 +761,7 @@ def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
         while os.path.isfile(outputfile):
             index += 1
             outputfile = '%s_%i.%s' % (filenamebase, index, format)
-            
+
     if format=='png':
         exporter = pg.exporters.ImageExporter(scene)
         exporter.export(outputfile)
@@ -778,4 +783,8 @@ def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
         raise Exception('png, and svg are the only supported file formats (format=%s)' % format)
     if os.path.isfile(outputfile):
         print('Graphics output ' + outputfile + ' saved')
+
+
+def get_datetimestr():
+    return datetime.strftime(datetime.now(), "%Y%m%d_%H%M_%S")
 

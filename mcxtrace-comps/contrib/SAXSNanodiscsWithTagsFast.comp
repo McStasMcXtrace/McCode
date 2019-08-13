@@ -22,47 +22,47 @@
 * to simulate the instrument.
 *
 * %P
-* AxisRatio						: []		Axis ratio of the bilayer patch.
-* NumberOfLipids				: []		Number of lipids per nanodisc.
-* AreaPerLipidHeadgroup			: [AA^2]	Area per lipid headgroup - default is 
+* AxisRatio:      []		Axis ratio of the bilayer patch.
+* NumberOfLipids: []		Number of lipids per nanodisc.
+* AreaPerLipidHeadgroup: [AA^2]	Area per lipid headgroup - default is 
 *											POPC.
-* HeightOfMSP					: [AA]		Height of the belt protein - default is
+* HeightOfMSP:  [AA]		Height of the belt protein - default is
 *											MSP1D1.
-* RadiusOfGyrationForHisTag		: [AA]		Radius of gyration for the his-tag.
-* VolumeOfOneMSP				: [AA^3]	Volume of one belt protein - default is
+* RadiusOfGyrationForHisTag: [AA]		Radius of gyration for the his-tag.
+* VolumeOfOneMSP:     [AA^3]	Volume of one belt protein - default is
 *											MSP1D1.
-* VolumeOfHeadgroup				: [AA^3]	Volume of one lipid headgroup - default 
+* VolumeOfHeadgroup:  [AA^3]	Volume of one lipid headgroup - default 
 *											is POPC.
-* VolumeOfCH2Tail				: [AA^3]	Volume of the CH2-chains of one lipid - 
+* VolumeOfCH2Tail:    [AA^3]	Volume of the CH2-chains of one lipid - 
 * 											default is POPC.
-* VolumeOfCH3Tail				: [AA^3]	Volume of the CH3-tails of one lipid - 
+* VolumeOfCH3Tail:    [AA^3]	Volume of the CH3-tails of one lipid - 
 * 											default is POPC.
-* VolumeOfOneHisTag				: [AA^3]	Volume of one his-tag.
-* ScatteringLengthOfOneMSP		: [cm]		Scattering length of one belt protein - 
+* VolumeOfOneHisTag:  [AA^3]	Volume of one his-tag.
+* ScatteringLengthOfOneMSP:     [cm]		Scattering length of one belt protein - 
 * 											default is MSP1D1.		
-* ScatteringLengthOfHeadgroup	: [cm]		Scattering length of one lipid headgroup
+* ScatteringLengthOfHeadgroup:  [cm]		Scattering length of one lipid headgroup
 * 											- default is POPC.
-* ScatteringLengthOfCH2Tail		: [cm]		Scattering length of the CH2-chains of   
+* ScatteringLengthOfCH2Tail:    [cm]		Scattering length of the CH2-chains of   
 *											one lipid - default is POPC.
-* ScatteringLengthOfCH3Tail		: [cm]		Scattering length of the CH3-tails of  
+* ScatteringLengthOfCH3Tail:    [cm]		Scattering length of the CH3-tails of  
 *											one lipid - default is POPC.
-* ScatteringLengthOfOneHisTag	: [cm]		Scattering length of one his-tag.
-* Roughness						: []		Factor used to smear the interfaces
+* ScatteringLengthOfOneHisTag:  [cm]		Scattering length of one his-tag.
+* Roughness:      []		Factor used to smear the interfaces
 *											of the nanodisc.
-* Concentration		  			: [mM]		Concentration of sample.
-* AbsorptionCrosssection  		: [1/m]		Absorption cross section of the sample.
-* xwidth    			  		: [m]  		Dimension of component in the x-direction.
-* yheight   			  		: [m]		Dimension of component in the y-direction.
-* zdepth    			  		: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance		: [m]		Distance from sample to detector (for 
+* Concentration:  [mM]		Concentration of sample.
+* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
+* xwidth:         [m]  		Dimension of component in the x-direction.
+* yheight:        [m]		Dimension of component in the y-direction.
+* zdepth:         [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]		Distance from sample to detector (for 
 *											focusing the scattered x-rays).
-* DetectorRadius          		: [m] 		Radius of the detector (for focusing the 
+* DetectorRadius: [m] 		Radius of the detector (for focusing the 
 *											scattered x-rays).
-* qMin					  		: [AA^-1]   Lowest q-value, for which a point is gene-
+* qMin:           [AA^-1]   Lowest q-value, for which a point is gene-
 *											rated in the scattering profile
-* qMax					  		: [AA^-1]   Highest q-value, for which a point is gene-
+* qMax:           [AA^-1]   Highest q-value, for which a point is gene-
 *											rated in the scattering profile
-* NumberOfQBins			  		: []		Number of points generated in inital
+* NumberOfQBins:  []		Number of points generated in inital
 * 											scattering profile.
 *
 * %E

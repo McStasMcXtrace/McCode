@@ -23,19 +23,18 @@
 * compute the scattering of any given photon.
 *
 * %P
-* DeltaRho					: [cm/AA^3]	Excess scattering length density of the
-*										particles.
-* Volume					: [AA^3]	Volume of the particles.
-* Concentration		  		: [mM]		Concentration of sample.
-* AbsorptionCrosssection  	: [1/m]		Absorption cross section of the sample.
-* xwidth    			  	: [m]  		Dimension of component in the x-direction.
-* yheight   			  	: [m]		Dimension of component in the y-direction.
-* zdepth    			  	: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered x-rays).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered x-rays).
-* FileWithCurve				: []		Datafile with the given I(q).
+* DeltaRho:       [cm/AA^3]	Excess scattering length density of the particles.
+* Volume:         [AA^3]	Volume of the particles.
+* Concentration:  [mM]		Concentration of sample.
+* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
+* xwidth:         [m]  		Dimension of component in the x-direction.
+* yheight:        [m]		  Dimension of component in the y-direction.
+* zdepth:         [m]		  Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]		Distance from sample to detector (for 
+*										      focusing the scattered x-rays).
+* DetectorRadius: [m] 		Radius of the detector (for focusing the 
+*										      scattered x-rays).
+* FileWithCurve:  []		  Datafile with the given I(q).
 *
 * %E
 *******************************************************************************/
@@ -50,7 +49,7 @@ SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 10000.0,
 					SampleToDetectorDistance, DetectorRadius,
 					string FileWithCurve = "Curve.dat")
 
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (Absorption,q,Q,I,ForwardScattering,Prefactor,NumberOfDatapoints,NumberDensity)
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
