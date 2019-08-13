@@ -540,19 +540,23 @@ function _draw_labels(w, h, xlabel, ylabel, title, svg_branch, plotfunc_inner) {
   var titleLines = title.split(/\r?\n/)
   var titleGrp = lblGroup
     .append("text")
-    .text(titleLines[0])
     .attr("dominant-baseline", "hanging")
     .attr("text-anchor", "middle")
     .style("font-size", fontSizeStr);
 
   if (titleLines.length > 1 && !_is_small_mode(w, h)) {
-    for (i=1; i<titleLines.length; i++) {
+    for (i=0; i<titleLines.length; i++) {
       titleGrp
         .append("tspan")
         .attr("x", 0)
-        .attr("dy", "1.2em")
+        .attr("dy", "15px")
         .text(titleLines[i]);
     }
+  } else {
+      titleGrp
+        .append("tspan")
+	.attr("x", 0)
+        .text(titleLines[0]);  
   }
 
   var xLabelGrp = lblGroup
