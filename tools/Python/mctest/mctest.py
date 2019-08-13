@@ -22,25 +22,47 @@ class InstrTest:
         self.sourcefile = sourcefile
         self.localfile = localfile
         self.instrname = splitext(basename(sourcefile))[0]
-        self.hastest = False
+        self.hastest = None
+
         self.parvals = ""
         self.detector = ""
-        self.compiled = False
+        self.targetval = None
+
+        self.compiled = None
         self.compiletime = None
-        self.ran = False
+        self.ran = None
         self.runtime = None
+        self.testcomplete = False
+    def extract_detector_parvals(self, text=None):
+        ''' extracts parameter values, detector and targetvalue, assuming [detector]_I=[targetvalue] '''
+        if text is None:
+            text = open(self.localfile).read()
+        m = re.search("\%Example\:([^\n]*)Detector\:([^\n]*)_I=([0-9.]+)", text)
+        if m:
+            self.parvals = m.group(1).strip()
+            self.detector = m.group(2).strip()
+            self.targetval = m.group(3).strip()
+            self.hastest = True
+        else:
+            self.hastest = False
     def get_json_repr(self):
         return {
-            "sourcefile"  : self.sourcefile,
-            "localfile"   : self.localfile,
-            "instrname"   : self.instrname,
-            "parvals"     : self.parvals,
-            "detector"    : self.detector,
-            "compiled"    : self.compiled,
-            "compiletime" : self.compiletime, 
-            "ran"         : self.ran,
-            "runtime"     : self.runtime,
+            "sourcefile"   : self.sourcefile,
+            "localfile"    : self.localfile,
+            "instrname"    : self.instrname,
+            "hastest"      : self.hastest,
+            "parvals"      : self.parvals,
+            "detector"     : self.detector,
+            "targetval"    : self.targetval,
+            "compiled"     : self.compiled,
+            "compiletime"  : self.compiletime, 
+            "ran"          : self.ran,
+            "runtime"      : self.runtime,
+            "testcomplete" : self.testcomplete,
         }
+    def save(self, infolder):
+        text = json.dumps(self.get_json_repr())
+        f = open(join(infolder, self.instrname) + ".json", 'w').write(text)
 
 def print_to_console(str):
     ''' used with popen wrapper '''
@@ -85,7 +107,7 @@ def test_env_settings(mcstasroot, branchname):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
-def branch_test(mcstasroot, branchname, testroot):
+def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
     ''' test a single mcstas "branch" or version that is present on the system '''
     # create test dir
     branchdir = join(mcstasroot, branchname)
@@ -104,20 +126,19 @@ def branch_test(mcstasroot, branchname, testroot):
     instrs, _ = utils.get_instr_comp_files(branchdir, recursive=True)
     instrs.sort()
 
+    # limt runs if required
+    if limitinstrs:
+        instrs = instrs[:limitinstrs]
 
-    # DEBUG!:
-    #instrs = instrs[:5]
-
-
+    # copy instrument files and extract tests
     logging.info("Copying instruments to: %s" % testdir)
     tests = []
-    # quickly find max instrument name lenth for pretty output
+    # max instr name length for pretty-output
     maxnamelen = 0
     for f in instrs:
         l = len(basename(f)) - 5
         if l > maxnamelen:
             maxnamelen = l
-    # copy instrument files and extract tests
     for f in instrs:
         instrname = splitext(basename(f))[0]
         instrdir = join(testdir, instrname)
@@ -133,11 +154,8 @@ def branch_test(mcstasroot, branchname, testroot):
         tests.append(test)
 
         # extract and record %Example info from text
-        m = re.search("\%Example\:([^\n]*)Detector\:([^\n]*)", text)
-        if m:
-            test.parvals = m.group(1).strip()
-            test.detector = m.group(2).strip()
-            test.hastest = True
+        test.extract_detector_parvals(text)
+        if test.hastest:
             formatstr = "%-" + "%ds: TEST" % maxnamelen
             logging.info(formatstr % instrname)
         else:
@@ -151,7 +169,7 @@ def branch_test(mcstasroot, branchname, testroot):
     try:
         # compile, record time
         logging.info("")
-        logging.info("Compiling instruments...")
+        logging.info("Compiling instruments [seconds]...")
         for test in tests:
             log = LineLogger()
             t1 = time.time()
@@ -169,8 +187,11 @@ def branch_test(mcstasroot, branchname, testroot):
             else:
                 formatstr = "%-" + "%ds: COMPILE ERROR" % maxnamelen
                 logging.info(formatstr % instrname + ", " + cmd)
-            # record compile success/fail and time
+            # record compile stdout/err
             log.save(join(testdir, test.instrname, "compile_std.txt"))
+
+            # save (incomplete) test results to disk
+            test.save(infolder=join(testdir, test.instrname))
 
         # run, record time
         logging.info("")
@@ -194,30 +215,29 @@ def branch_test(mcstasroot, branchname, testroot):
             else:
                 formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
                 logging.info(formatstr % instrname + ", " + cmd)
-            # record success/fail and run time
+
+            # record run stdout/err
             log.save(join(testdir, test.instrname, "run_std.txt"))
+
+            # TOO: check monitor against target value
+
+            # save test result to disk
+            test.testcomplete = True
+            test.save(infolder=join(testdir, test.instrname))
 
     finally:
         # clean up path changes
         del os.environ["MCSTAS"]
         os.environ["PATH"] = oldpath
 
-    #
-    # TODO: check results against monitor values
-    #
-
-    # save test objects to disk
-    for test in tests:
-        text = json.dumps(test.get_json_repr())
-        f = join(testdir, test.instrname, test.instrname + '.json')
-        open(f, 'w').write(text)
-
-    # save giant all-containing test object on disk
-    results = OrderedDict()
-    for test in tests:
-        results[test.instrname] = test.get_json_repr()
-    f = join(testdir, "results.json")
-    open(f, 'w').write(json.dumps(results, indent=4))
+        # save summary containing all test objects by instrname
+        try:
+            results = OrderedDict()
+            for test in tests:
+                results[test.instrname] = test.get_json_repr()
+            open(join(testdir, "results.json"), 'w').write(json.dumps(results, indent=4))
+        except Exception as e:
+            logging.error("could not save master results file: %s" % str(e))
 
 
 def main(args):
@@ -235,6 +255,13 @@ def main(args):
     if args.versions:
         logging.info("Subfolders containing an 'environment' file are:")
         logging.info("")
+    testlimit = None
+    if args.limit:
+        try:
+            testlimit = int(args.limit[0])
+        except:
+            logging.info("--limit must be a number")
+            quit()
 
     dirnames = []
     branchnames = []
@@ -274,13 +301,14 @@ def main(args):
         if args.testenv:
             test_env_settings(mcstasroot, branchdirname)
         else:
-            branch_test(mcstasroot, branchdirname, testdir)
+            branch_test(mcstasroot, branchdirname, testdir, testlimit)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mcstasroot', nargs='?', help='select custom mcstas root')
     parser.add_argument('--version', nargs=1, help='select mcstas installation to test')
+    parser.add_argument('--limit', nargs=1, help='do only the first [num] tests')
     parser.add_argument('--versions', action='store_true', help='display local mcstas installations')
     parser.add_argument('--testenv', action='store_true', help='display local mcstas installations')
     args = parser.parse_args()
