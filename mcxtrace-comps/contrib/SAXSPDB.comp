@@ -42,14 +42,15 @@
 
 DEFINE COMPONENT SAXSPDB
 
-DEFINITION PARAMETERS (NumberOfQBins = 200)
+DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, 
 					SampleToDetectorDistance, DetectorRadius,
 					string PDBFilepath = "PDBfile.pdb")
 
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (Absorption, NumberDensity, OrderOfHarmonics)
+DEPENDENCY "-std=c99 -lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
@@ -58,7 +59,7 @@ DECLARE
 	// Declarations
 	double Absorption;
 	double NumberDensity;
-	#define OrderOfHarmonics 21
+        const int OrderOfHarmonics=21;
 
 	// GSL libraries
 	#include <gsl/gsl_sf_legendre.h>
@@ -144,7 +145,7 @@ DECLARE
 		// Convert bead position to spherical coordinates
 		const double Radius = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 		const double Theta  = acos(z / Radius);
-		const double Concentration    = acos(x / (Radius * sin(Theta))) * Sign(y);
+                const double Concentration    = acos(x / (Radius * sin(Theta))) * copysign(1.0,y);
 
 		// Expand protein structure on harmonics
 		gsl_sf_bessel_jl_array(OrderOfHarmonics, q * Radius, Bessel);
