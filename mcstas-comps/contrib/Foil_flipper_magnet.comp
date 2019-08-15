@@ -36,6 +36,7 @@
 * Byheight: [m]  height of the B-field of the component 
 * Bzdepth: [m]   thickness of the B-field of the component 
 * phi: [rd]      angle (from the xz-plane) of the foil-spinflipper inside the magnet 
+* foilthick: [um] Thickness of the magnetized foil
 * Bx: [T]        Parameter used for x composant of field.
 * By: [T]        Parameter used for y composant of field.
 * Bz: [T]        Parameter used for z composant of field.
@@ -52,7 +53,7 @@ This comment will not be exported to mcdoc
 
 DEFINE COMPONENT Foil_flipper_magnet
 DEFINITION PARAMETERS(field_function=const_magnetic_field, stray_field_function=NULL)
-SETTING PARAMETERS(xwidth, yheight, zdepth, Bxwidth=-1, Byheight=-1, Bzdepth=-1, phi=0.0, Bx,By,Bz,foil_in=1, verbose=0)
+SETTING PARAMETERS(xwidth, yheight, zdepth, Bxwidth=-1, Byheight=-1, Bzdepth=-1, phi=0.0, foilthick=0.0, Bx,By,Bz,foil_in=1, verbose=0)
 OUTPUT PARAMETERS(stray_fields,instray_magnet,outstray_magnet,inside_magnet,hit_foil)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
@@ -62,9 +63,43 @@ SHARE
 #ifndef POL_LIB_H
 %include "pol-lib"
 #endif
-void foil_spin_flip(double *sx, double *sy, double *sz, double lambda, double phi){
+
+
+void foil_spin_rot(double *sx, double *sy, double *sz, double *vx, double *vy, double *vz, double phi, double th, double b){
       /*the spin flip is actually a precession around the field vector - in this case this vector is
-       * in the foil plane, perp. to X, i.e. Z rotated by phi.*/ 
+       * in the foil plane, perp. to X, i.e. Z rotated by phi.*/
+      double ux,uy,uz,s,cx,cy,cz;
+      double theta,v,lamb,teff;
+
+          /*now use (0,0,1) as a vector to rotate (flip) around to mimic the use of correction coils.*/
+          ux=uy=0;uz=1;
+	  if (b < 0) {
+		uy = -uy;
+		uz = -uz;
+	  }
+	  v=sqrt(*vx * *vx + *vy * *vy + *vz * *vz);
+	  lamb = 2*PI*K2V/v;
+	  teff = th/sin(phi);
+	  /* Calculate the flipping angle theta by c*t*Bs*lambda
+	   * where c is the neutron precession constant [T^-1*m^-2], t is the
+	   * foil thickness [um], Bs is the induced magnetic field strength
+	   * in the foil [T] and lambda is the neutron wavelength [m] */
+	  theta = 4.6368*1e14*teff*1e-6*1*lamb*1e-10;
+      /*Rodigues formula for roatating a vector around a unit vector.
+       * v_rot=v*cos(theta) + uxv * sin(theta) + (u dot v)u(1-cos(theta)*/
+
+	  cx=*sz*uy-*sy*uz;
+	  cy=*sx*uz-*sz*ux;
+	  cz=*sy*ux-*sx*uy;
+      s=scalar_prod(ux,uy,uz,*sx,*sy,*sz);
+      *sx=*sx*cos(theta) + cx*sin(theta) + s*ux*(1-cos(theta));
+      *sy=*sy*cos(theta) + cy*sin(theta) + s*uy*(1-cos(theta));
+      *sz=*sz*cos(theta) + cz*sin(theta) + s*uz*(1-cos(theta));
+    }
+
+void foil_spin_flip(double *sx, double *sy, double *sz, double lamb, double phi){
+      /*the spin flip is actually a precession around the field vector - in this case this vector is
+       * in the foil plane, perp. to X, i.e. Z rotated by phi.*/
       double ux,uy,uz,s;
       ux=0;uy=sin(phi);uz=cos(phi);
       /*Rodigues formula for roatating a vector around a unit vector.
@@ -232,7 +267,11 @@ TRACE
           t4=t4-dt;
           t2=t2-dt;
           /* at the foil - so flip spin/polarization*/
-          foil_spin_flip(&sx,&sy,&sz,0.0,phi);
+		  if (foilthick == 0.0){
+			foil_spin_flip(&sx,&sy,&sz,0.0,phi);
+		  }else{
+			foil_spin_rot(&sx , &sy , &sz , &vx , &vy , &vz , phi , foilthick, By);
+		  }
           hit_foil=1;
       }
   }
