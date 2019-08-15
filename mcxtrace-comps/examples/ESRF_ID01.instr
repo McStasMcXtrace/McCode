@@ -177,7 +177,7 @@ AT (0, 0, DistanceSourceToMonochromator) RELATIVE Source
 ROTATED (0, AngleMonochromator, 90) RELATIVE Source
 
 
-COMPONENT Monochromator1 = Bragg_crystal(
+COMPONENT Monochromator1 = Perfect_crystal(
 	length = Monochromator1Length, 
 	width  = Monochromator1Width
 ) 
@@ -197,7 +197,7 @@ AT (0, 0, DistanceBetweenMonochromators) RELATIVE Monochromator1Arm2
 ROTATED (0, AngleMonochromator, 90) RELATIVE Source
 
 
-COMPONENT Monochromator2 = Bragg_crystal(
+COMPONENT Monochromator2 = Perfect_crystal(
 	length = Monochromator2Length, 
 	width  = Monochromator2Width
 )
