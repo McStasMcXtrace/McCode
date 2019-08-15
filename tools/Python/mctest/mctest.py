@@ -27,6 +27,7 @@ class InstrTest:
         self.parvals = ""
         self.detector = ""
         self.targetval = None
+        self.detectorval = None
 
         self.compiled = None
         self.compiletime = None
@@ -41,7 +42,7 @@ class InstrTest:
         if m:
             self.parvals = m.group(1).strip()
             self.detector = m.group(2).strip()
-            self.targetval = m.group(3).strip()
+            self.targetval = float(m.group(3).strip())
             self.hastest = True
         else:
             self.hastest = False
@@ -54,6 +55,7 @@ class InstrTest:
             "parvals"      : self.parvals,
             "detector"     : self.detector,
             "targetval"    : self.targetval,
+            "detectorval"  : self.detectorval,
             "compiled"     : self.compiled,
             "compiletime"  : self.compiletime, 
             "ran"          : self.ran,
@@ -61,8 +63,8 @@ class InstrTest:
             "testcomplete" : self.testcomplete,
         }
     def save(self, infolder):
-        text = json.dumps(self.get_json_repr())
-        f = open(join(infolder, self.instrname) + ".json", 'w').write(text)
+        text = json.dumps(self.get_json_repr(), indent=4)
+        f = open(join(infolder, self.instrname) + "_results.json", 'w').write(text)
 
 def print_to_console(str):
     ''' used with popen wrapper '''
@@ -84,7 +86,7 @@ class LineLogger():
     def find(self, searchstr):
         for l in self.lst:
             if re.search(searchstr, l):
-                return True
+                return l
         return False
 
 def test_env_settings(mcstasroot, branchname):
@@ -125,6 +127,10 @@ def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
     logging.info("Finding instruments in: %s" % branchdir)
     instrs, _ = utils.get_instr_comp_files(branchdir, recursive=True)
     instrs.sort()
+    # empty branch?
+    if len(instrs) == 0:
+        logging.info("no instruments found")
+        return
 
     # limt runs if required
     if limitinstrs:
@@ -195,7 +201,7 @@ def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
 
         # run, record time
         logging.info("")
-        logging.info("Running tests...")
+        logging.info("Running tests [seconds] [frac_acc]...")
         for test in tests:
             log = LineLogger()
             if not test.hastest:
@@ -208,18 +214,23 @@ def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
             test.ran = not log.find("error:")
             test.runtime = t2 - t1
             # log to terminal
-            if test.compiled:
-                formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
-                    "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
-                logging.info(formatstr % test.instrname)
-            else:
-                formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
-                logging.info(formatstr % instrname + ", " + cmd)
+            if test.ran:
+                # extract detector value
+                m = re.search(test.detector+"_I=([0-9.]+)", log.find(test.detector))
+                if m:
+                    test.detectorval = float(m.group(1))
+                accuracy_frac = test.detectorval / test.targetval
 
+                formatstr = "%-" + "%ds: " % maxnamelen + \
+                    "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
+                accstr = \
+                    "{:3d}.".format(math.floor(accuracy_frac)) + str(accuracy_frac-int(accuracy_frac)).split('.')[1][:2]
+                logging.info((formatstr % test.instrname) + "    %s" % accstr)
+            else:
+                formatstr = "%-" + "%ds: RUNTIME ERROR" % maxnamelen
+                logging.info(formatstr % instrname + ", " + cmd)
             # record run stdout/err
             log.save(join(testdir, test.instrname, "run_std.txt"))
-
-            # TOO: check monitor against target value
 
             # save test result to disk
             test.testcomplete = True
