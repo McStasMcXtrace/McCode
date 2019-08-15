@@ -43,7 +43,6 @@
 * R0_M1: [ ]            Constant relectivity of Mirror2 [0;1].
 * zm_mirror2: [m]       distance(z) to mirror2 from previous component.
 * R0_M2: [ ]            Constant relectivity of Mirror2 [0;1].
-* R0_PGM: [ ]           Constant reflectivty of the choice of grating. (Note, this applies for both NIM and cPGM). 
 * zm_mirror3: [m]       distance(z) to mirror3 from previous component.
 * theta_mirror3: [deg]  glancing angle of mirror3.
 * R0_M3: [ ]            Constant relectivity of Mirror3 [0;1].
@@ -58,9 +57,8 @@
 * McXtrace komponent definition:
 * http://www.mcxtrace.org
 * Further reading:
-* [Link til vores egen rapport]
 *
-* %E MAXIV_Bloch E0=0.03 dE=0 undK=0 lu=0.016 Nper=187 zm_mirror1=14 theta_mirror1=3 R0_M1=1 zm_mirror2=2 theta_mirror2=4 R0_M2=1 theta_PG1=4 grating_mode=0 zm_mirror3=1 theta_mirror3=3 R0_M3=1 zm_ExitSlit=9 xwidth_ExSlit=0.005 yheight_ExSlit=0.005 zm_mirror4=19 theta_mirror4=3 R0_M4=1 R0_PGM=1 SourceChoice=0 cff=2.25 n=800 m=3 Exitslit_yshift=2 display=0
+* %E MAXIV_Bloch E0=0.03 dE=0 undK=0 lu=0.016 Nper=187 zm_mirror1=14 theta_mirror1=3 R0_M1=1 zm_mirror2=2 R0_M2=1  grating_mode=0 zm_mirror3=1 theta_mirror3=3 R0_M3=1 zm_ExitSlit=9 xwidth_ExSlit=0.005 yheight_ExSlit=0.005 zm_mirror4=19 theta_mirror4=3 R0_M4=1 SourceChoice=0 cff=2.25 n=800 m=3 Exitslit_yshift=2 display=0
 *
 * %N
 *
@@ -110,9 +108,9 @@ DECLARE
    double M2_theta_error,theta_PG1_error,X_error,y_error ,pitch_error ,yaw_error ,roll_error ,X_error_PGM ,Y_error_PGM ,Z_error_PGM, pitch_error_PGM ,yaw_error_PGM ,roll_error_PGM ,Z_error_exitSlit,
 Opening_error_exitslit;
    /* MISC*/
-      double R0_cPGM, R0_NIM,d;
-      double MCAngleVariation;
-      double d,a,bb,c,vinkel,beta_wl,beta_rho,angle_grating,alpha,beta,mirror2_angle;
+   double R0_cPGM, R0_NIM,d;
+   double MCAngleVariation;
+   double d,a,bb,c,vinkel,beta_wl,beta_rho,angle_grating,alpha,beta,mirror2_angle;
 %}
 
 
@@ -278,8 +276,8 @@ if(E0 && dE){
   printf("\n Error: No Energy is given! \n");
   exit(-1);
 }
-monitor_wl_min = 12.239/monitor_Emin;
-monitor_wl_max = 12.239/monitor_Emax;
+monitor_wl_max = 12.3984/monitor_Emin;
+monitor_wl_min = 12.3984/monitor_Emax;
 
 /*******************************************************
 7)
@@ -287,12 +285,12 @@ Error messages:
 *******************************************************/
 if (angle_grating>30 || angle_grating<0)
 {
-  printf("Error: cPGM grating angle is out of bounds(%f DEG). Simulation ended",theta_cPGM);
+  printf("Error: cPGM grating angle is out of bounds(%f DEG). Simulation ended",angle_grating);
   exit(-1);
 }
 if (mirror2_angle>21 || mirror2_angle<0)
 {
-  printf("Error: M2 angle is out of bounds(%f DEG). Simulation ended",theta_mirror2);
+  printf("Error: M2 angle is out of bounds(%f DEG). Simulation ended",mirror2_angle);
   exit(-1);
 }
 if (theta_PG_NIM>30 || theta_PG_NIM<0)
@@ -341,10 +339,10 @@ AT(0,0,0) RELATIVE origin
 /****************************************
  Monitors After source:
 ****************************************/
-COMPONENT Source_E_monitor = E_monitor(filename="source_E_monitor",xwidth=5e-3,yheight=5e-3,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+COMPONENT Source_E_monitor = E_monitor(nE=101,filename="source_E_monitor",xwidth=5e-3,yheight=5e-3,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
 AT (0, 0, 1) RELATIVE PREVIOUS
 
-COMPONENT Source_wl_monitor = L_monitor(filename="source_wl_monitor",xwidth=5e-3,yheight=5e-3,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
+COMPONENT Source_wl_monitor = L_monitor(nL=101,filename="source_wl_monitor",xwidth=5e-3,yheight=5e-3,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT Source_psd_monitor = PSD_monitor(filename="Source_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.06,yheight=0.06)
@@ -383,11 +381,11 @@ COMPONENT Toroidal_Monitor_arm2= Arm()
 AT(0,0,1) RELATIVE Toroidal_Monitor_arm1
 ROTATED (0,90,90) RELATIVE Toroidal_Monitor_arm1
 
-COMPONENT M1_E_monitor = E_monitor(filename="M1_E_monitor", xwidth=0.06,yheight=0.06,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+COMPONENT M1_E_monitor = E_monitor(nE=101,filename="M1_E_monitor", xwidth=0.06,yheight=0.06,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (90,0,90) RELATIVE PREVIOUS
 
-COMPONENT M1_wl_monitor = L_monitor(filename="M1_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
+COMPONENT M1_wl_monitor = L_monitor(nL=101,filename="M1_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT M1_psd_monitor = PSD_monitor(filename="M1_psd_monitor",nx = 271,ny = 271,xwidth=0.06,yheight=0.06,restore_xray=1)
@@ -429,7 +427,7 @@ AT (0, 0, 0) RELATIVE M2_rotation_arm3
 ROTATED (0,0, 0) RELATIVE M2_rotation_arm3
 
 COMPONENT Plane_grating = Reflective_grating(
-    d_phi=2*MCAngleVariation,
+    d_phi=MCAngleVariation,
     blazed=blazed,
     cff=cff,
     blazed_angle=blazed_angle,
@@ -443,7 +441,7 @@ COMPONENT Plane_grating_perfect_mirror = Mirror(
     zdepth=0.136,xwidth=0.015,R0=R0_PG)
 WHEN (!grating_mode && perfectMirrors)
 AT (0, 0, 0) RELATIVE PG1_arm
-ROTATED (-theta_cPGM,0, 0) RELATIVE PG1_arm
+ROTATED (-angle_grating,0, 0) RELATIVE PG1_arm
 
 /**************************************************************
 NIM  mode:
@@ -463,7 +461,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-theta_NIM,-2*theta_mirror1, 0) RELATIVE origin
 
 COMPONENT Laminar_Grating = Reflective_grating(
-    d_phi=40,blazed=0,cff=0,display=0,blazed_angle=0,zdepth=0.136,xwidth=0.015,R0=R0_PG,r_rho=r_rho,b=0,N_slits=0,d=0)
+    d_phi=4,blazed=0,cff=0,display=0,blazed_angle=0,zdepth=0.136,xwidth=0.015,R0=R0_PG,r_rho=r_rho,b=0,N_slits=0,d=0)
 WHEN (grating_mode)
 AT (0, 0, 0) RELATIVE PG1_arm
 ROTATED (-theta_PG_NIM,0, 0) RELATIVE PG1_arm
@@ -475,11 +473,11 @@ COMPONENT Monochromator_Monitor_arm= Arm()
 AT(0,F,2.7) RELATIVE PG1_arm 
 ROTATED (0,0,0) RELATIVE PG1_arm
 
-COMPONENT Monochromator_E_monitor = E_monitor(filename="AfterMonochromator_E_monitor", xwidth=0.06,yheight=0.06+(F/8),Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+COMPONENT Monochromator_E_monitor = E_monitor(nE=101,filename="AfterMonochromator_E_monitor", xwidth=0.06,yheight=0.06+(F/8),Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Monochromator_wl_monitor = L_monitor(filename="AfterMonochromator_wl_monitor",xwidth=0.06,yheight=0.06+(F/8),Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
+COMPONENT Monochromator_wl_monitor = L_monitor(nL=101,filename="AfterMonochromator_wl_monitor",xwidth=0.06,yheight=0.06+(F/8),Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT Monochromator_psd_monitor = PSD_monitor(filename="AfterMonochromator_psd_monitor",nx = 40,ny = 100,xwidth=0.06,yheight=0.06+(F/8),restore_xray=1)
@@ -497,21 +495,21 @@ COMPONENT M3_arm= Arm()
 AT(0,F,3) RELATIVE cPGM_arm 
 ROTATED (0,theta_mirror3,0) RELATIVE cPGM_arm
 
-COMPONENT m3Psd=PSD_monitor(xwidth=0.5, yheight=0.5, filename="m3psd")
+COMPONENT m3Psd=PSD_monitor(xwidth=0.5, yheight=0.5, filename="m3psd", restore_xray=1)
 AT(0,0,0) RELATIVE M3_arm
 
 COMPONENT mirror3 = Mirror_curved(
     R0=1,
     radius=0.94205, 
-    length=0.2,
-    width=0.06)
+    length=0.06,
+    width=0.2)
 AT (0, 0, 0) RELATIVE M3_arm
-ROTATED (0, 0, 0) RELATIVE M3_arm
+ROTATED (90, 0, 0) RELATIVE M3_arm
 EXTEND
 %{
-    if(!SCATTERED){
-        ABSORB;
-    }
+/*    if(!SCATTERED){*/
+/*        ABSORB;*/
+/*    }*/
 %}
 /*    else{*/
 /*        printf("through\n");*/
@@ -527,12 +525,12 @@ EXTEND
 /*ROTATED (0, 0, 90) RELATIVE M3_arm*/
 /**/
 COMPONENT Exit_slit_arm0= Arm()
-AT(0,0,0) RELATIVE PREVIOUS 
-ROTATED (0,0,0) RELATIVE PREVIOUS
+AT(0,0,0) RELATIVE M3_arm 
+ROTATED (0,0,0) RELATIVE M3_arm
 
 COMPONENT M4_arm1= Arm()
 AT(0,0,0) RELATIVE Exit_slit_arm0 
-ROTATED (theta_mirror3,0,0) RELATIVE Exit_slit_arm0
+ROTATED (0,theta_mirror3,0) RELATIVE Exit_slit_arm0
 
 /****************************************
  Monitors After Mirror 3
@@ -542,11 +540,11 @@ COMPONENT M3_Monitor_arm= Arm()
 AT(0,0,0.5) RELATIVE M4_arm1 
 ROTATED (0,90,90) RELATIVE M4_arm1
 
-COMPONENT M3_E_monitor = E_monitor(filename="M3_E_monitor", xwidth=0.04,yheight=0.03,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+COMPONENT M3_E_monitor = E_monitor(nE=101,filename="M3_E_monitor", xwidth=0.04,yheight=0.03,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (90,0,90) RELATIVE PREVIOUS
 
-COMPONENT M3_wl_monitor = L_monitor(filename="M3_wl_monitor",xwidth=0.04,yheight=0.03,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
+COMPONENT M3_wl_monitor = L_monitor(nL=101,filename="M3_wl_monitor",xwidth=0.04,yheight=0.03,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT M3_psd_monitor = PSD_monitor(filename="M3_psd_monitor",nx = 171,ny = 171,xwidth=0.04,yheight=0.03,restore_xray=1)
@@ -579,10 +577,10 @@ ROTATED (0,0,90) RELATIVE ExT_arm2
 COMPONENT M4Before_psd_monitor = PSD_monitor(filename="M4Before_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.2,yheight=0.2)
 AT (0, 0, 1) RELATIVE Exitslit
 
-COMPONENT M4Before_e_monitor = E_monitor(filename="M4Before_e_monitor",xwidth=0.2,yheight=0.2,Emin=0,Emax=50,restore_xray=1)
+COMPONENT M4Before_e_monitor = E_monitor(nE=101,filename="M4Before_e_monitor",xwidth=0.2,yheight=0.2,Emin=0,Emax=2,restore_xray=1)
 AT (0, 0, 1) RELATIVE Exitslit
 
-COMPONENT M4Before_wl_monitor = L_monitor(filename="M4Before_wl_monitor",xwidth=0.2,yheight=0.2,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
+COMPONENT M4Before_wl_monitor = L_monitor(nL=101,filename="M4Before_wl_monitor",xwidth=0.2,yheight=0.2,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 1) RELATIVE Exitslit
 
 /**************************************************************
@@ -614,10 +612,10 @@ COMPONENT M4_psd_monitor = PSD_monitor(filename="M4_psd_monitor",restore_xray=1,
 AT (0, 0, 0.3) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 
-COMPONENT M4_e_monitor = E_monitor(filename="M4_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=50,restore_xray=1)
+COMPONENT M4_e_monitor = E_monitor(nE=101,filename="M4_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=2,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT M4_wl_monitor = L_monitor(filename="M4_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
+COMPONENT M4_wl_monitor = L_monitor(nL=101,filename="M4_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 
@@ -652,10 +650,10 @@ COMPONENT Filter_psd_monitor = PSD_monitor(filename="Filter_psd_monitor",restore
 AT (0, 0, 1) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE M4_Monitor_Arm
 
-COMPONENT Filter_e_monitor = E_monitor(filename="Filter_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=50,restore_xray=0)
+COMPONENT Filter_e_monitor = E_monitor(nE=101,filename="Filter_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=50,restore_xray=0)
 AT (0, 0, 0) RELATIVE M4_Monitor_Arm
 
-COMPONENT Filter_wl_monitor = L_monitor(filename="Filter_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=0)
+COMPONENT Filter_wl_monitor = L_monitor(nL=101,filename="Filter_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=0)
 AT (0, 0, 0) RELATIVE M4_Monitor_Arm
 */
 
