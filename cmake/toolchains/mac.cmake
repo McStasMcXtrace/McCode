@@ -3,7 +3,7 @@ set(CMAKE_SYSTEM_NAME "Darwin")
 set(ARCH   "amd64")
 
 # Commands for running various external tools
-set(CC "clang")
+set(TOOLS_CC "clang")
 set(BROWSER "open")
 set(VRMLVIEW "open")
 set(MPICC "mpicc.clang")

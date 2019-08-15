@@ -50,7 +50,7 @@ SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosss
 					qMin = 0.001, qMax = 0.5,
 					string PDBFilepath = "PDBfile.pdb")
 
-OUTPUT PARAMETERS (Absorption,NumberDensity,OrderOfHarmonics)
+OUTPUT PARAMETERS (Absorption,q,NumberDensity,OrderOfHarmonics,qArray,IArray)
 DEPENDENCY "-lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/

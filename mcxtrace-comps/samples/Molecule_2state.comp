@@ -64,7 +64,7 @@ SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,initial_s
         psimin=0,psimax=M_PI_2, etamin=-M_PI, etamax=M_PI,
     radius=0, yheight=0, xwidth=0, zdepth=0,
     concentration=1,p_transmit=0.1,q_parametric=0, Emax=80)
-OUTPUT PARAMETERS (delta_q,prms,shape)
+OUTPUT PARAMETERS (delta_q,prms,Prms, shape)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE

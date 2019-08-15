@@ -13,15 +13,17 @@
 * Origin: Risoe
 * Release: McXtrace 1.2
 *
-* Interface source for importing GENESIS 1.3 generated X-ray pulses into McXtrace
+* Interface source for importing GENESIS 1.3 generated X-ray pulses into McXtrace.
 * 
 * %D
 * This source model reads the dumped radiation field output from GENESIS 1.3 and samples it to be used
 * in McXtrace.
-* 
-* 
-* Example: Source_pt(dist=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)
 *
+* <a href="http://genesis.web.psi.ch/">Genesis 1.3</a> is a simulation code to calculate 
+* the performance of Free-Electron Lasers (FEL), where the kinetic energy of 
+* electrons is transferred into a tunable, high-brightness radiation source (DESY,PSI).
+* 
+* Example: Source_genesis13(dist=1)
 *
 * %P
 * focus_xw:[m]  Width of target.
@@ -34,6 +36,9 @@
 * s1: [m] front end of pulse time sampling window scaled by c^-1.
 * focus_a: [rad] mean divergence angle.
 *
+* %L
+* http://genesis.web.psi.ch
+*
 * %E
 ***********************************************************************/
 
@@ -41,7 +46,7 @@ DEFINE COMPONENT Source_genesis13
 DEFINITION PARAMETERS (gridpoints=101)
 SETTING PARAMETERS (string fname="template.out",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
     meshsize=1e-5, nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS (prms,e,l)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

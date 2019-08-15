@@ -1,0 +1,88 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_demonstration
+*
+* %Identification
+* Written by: Martin Olsen
+* Date: September 2015
+* Origin: Niels Bohr Instituttet, Universitetsparken 5
+* %INSTRUMENT_SITE: Union_demos
+*
+* %Description
+* Demonstration of Union components. Loads a 3D stl file and simulates it as a
+* mesh.
+*
+* %Parameters
+* rot_x: [deg] rotation of object around x axis
+* rot_y: [deg] rotation of object around y axis
+*
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_knot(rot_x=0, rot_y=0)
+
+DECLARE
+%{
+%}
+
+TRACE
+
+COMPONENT test_incoherent = Incoherent_process(sigma=5.08,packing_factor=1,unit_cell_volume=13.827)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT test = Union_make_material(my_absorption=100,process_string="test_incoherent")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+        xwidth=0.12, yheight=0.12,focus_aw=1, focus_ah=1,
+        lambda0 = 4.8621,
+        dlambda = 0.001, flux = 1E9)
+  AT (0,0,0) RELATIVE a1
+
+COMPONENT  mesh1 = Union_mesh(filename="knot.stl", priority=100, material_string="test", p_interact=0.3)
+AT (0, 0, 0.25) RELATIVE a1
+ROTATED (rot_x, rot_y, 0) RELATIVE a1
+
+COMPONENT  mesh2 = Union_mesh(filename="knot.stl", priority=101, material_string="test", p_interact=0.3)
+AT (0, 0, 0.05) RELATIVE mesh1
+ROTATED (-rot_x, -rot_y, 0) RELATIVE a1
+
+COMPONENT logger_space_all = Union_logger_2D_space(filename="space_horizontal.dat",
+D_direction_1="z", n1=600, D1_min=-0.1, D1_max=0.1,
+D_direction_2="x", n2=600, D2_min=-0.1, D2_max=0.1)
+AT (0,0,0.25) RELATIVE a1
+
+COMPONENT logger_space_all2 = Union_logger_2D_space(filename="space_vertical.dat",
+D_direction_1="z", n1=600, D1_min=-0.1, D1_max=0.1,
+D_direction_2="y", n2=600, D2_min=-0.1, D2_max=0.1)
+AT (0,0,0.25) RELATIVE a1
+
+COMPONENT logger_space_all3 = Union_logger_2D_space(filename="space_otherOne.dat",
+D_direction_1="x", n1=600, D1_min=-0.1, D1_max=0.1,
+D_direction_2="y", n2=600, D2_min=-0.1, D2_max=0.1)
+AT (0,0,0.25) RELATIVE a1
+
+COMPONENT knot = Union_master(history_limit=1000000, allow_inside_start=1)
+AT(0,0,0.15) RELATIVE a1
+ROTATED(30,0,0) RELATIVE a1
+
+// PLOTS:
+COMPONENT psd = PSD_monitor(nx=200,ny=200,
+    filename="PSD",
+    xwidth=0.1,
+    yheight=0.1,
+    restore_neutron=1)
+AT (0, 0, 0.75) RELATIVE a1
+
+
+
+END

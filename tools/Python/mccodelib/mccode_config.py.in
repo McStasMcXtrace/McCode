@@ -28,7 +28,7 @@ compilation = {
     "CFLAGS": '@CFLAGS@',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "CC": 'gcc',
+    "CC": '@TOOLS_CC@',
     "MPICC": '@MPICC@',
     "MPIRUN": '@MPIRUN@',
     "MPINODES": '4',

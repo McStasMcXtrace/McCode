@@ -18,6 +18,7 @@ class DataMcCode(object):
     ''' base type holding only the data object's title '''
     def __init__(self, *args, **kwargs):
         self.title = ''
+        self.filepath = ''
 
     def __str__(self, *args, **kwargs):
         return self.title
@@ -53,6 +54,8 @@ class Data1D(DataMcCode):
     
     def clone(self):
         data = Data1D()
+        
+        data.filepath = self.filepath
         
         data.component = self.component
         data.filename = self.filename
@@ -308,6 +311,7 @@ def _load_monitor(monitorfile):
             else:
                 print('load_monitor: unknown data format %s' % typ)
                 data = None
+            data.filepath = f
             return data
         else:
             return Data0D()

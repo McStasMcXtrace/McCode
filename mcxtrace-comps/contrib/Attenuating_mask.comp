@@ -43,7 +43,7 @@
 DEFINE COMPONENT Attenuating_mask
 DEFINITION PARAMETERS (string att_file = "W.txt")
 SETTING PARAMETERS (xwidth = 1e-1, yheight = 1e-1, zdepth =10e-6, blocks_xwidth = 1e-3, blocks_xdist = 2.5e-3, blocks_yheight = 1e-3, blocks_ydist = 2.5e-2, holed_mask = 0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (rho,att_table)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

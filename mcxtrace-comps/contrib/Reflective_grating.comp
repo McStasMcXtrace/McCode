@@ -68,16 +68,12 @@
 DEFINE COMPONENT Reflective_grating
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (d_phi=1, R0=1, r_rho =800,b=0,N_slits=0,d=0,cff=0,blazed_angle=0, zdepth=0.015, xwidth=0.136, int blazed=0, int display=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (N_slits, b,d,DirectionalSamplingFactor)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
-
-SHARE
-%{
-%}
 
 
 /********************************************************************************************
-In DECLARE section, small functions or varibles can be defined and used in the entire grating.
+In DECLARE section, small functions or variables can be defined and used in the entire grating.
 ********************************************************************************************/
 DECLARE
 %{

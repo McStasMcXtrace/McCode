@@ -1003,43 +1003,45 @@ def write_file(filename, text, failsilent=False):
         else:
             raise e
 
-def parse_and_filter(indir, namefilter=None, recursive=False):
+def parse_and_filter(indir, namefilter=None, recursive=False, printlog=False):
     ''' read and parse headers and definitions of component and instrument files '''
     instr_files, comp_files = utils.get_instr_comp_files(indir, recursive)
-    print("parsing in... ", indir)
+    print("parsing root folder:", indir)
     comp_info_lst = []
     for f in comp_files:
         try:
-            print("parsing... %s" % f)
+            if printlog:
+                print("parsing comp... %s" % f)
             info = CompParser(f).parse()
             info.filepath = os.path.abspath(f)
             comp_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
             comp_info_lst.append(CompParser(f).stub())
-    print("parsed comp files: %s" % str(len(comp_files)))
+    print("comp files: %s" % str(len(comp_files)))
 
     instr_info_lst = []
     for f in instr_files:
         try:
-            print("parsing... %s" % f)
+            if printlog:
+                print("parsing instr... %s" % f)
             info = InstrParser(f).parse()
             info.filepath = os.path.abspath(f)
             instr_info_lst.append(info)
         except:
             print("failed parsing file: %s" % f)
             instr_info_lst.append(InstrParser(f).stub())
-    print("parsed instr files: %s" % str(len(instr_files)))
+    print("instr files: %s" % str(len(instr_files)))
 
     if namefilter != None:
         comp_info_lst = [c for c in comp_info_lst if re.search(namefilter.lower(), c.name.lower())]
         instr_info_lst = [c for c in instr_info_lst if re.search(namefilter.lower(), c.name.lower())]
-        comp_files = [f for f in comp_files if re.search(namefilter, os.path.splitext(os.path.basename(f))[0])]
-        instr_files = [f for f in instr_files if re.search(namefilter, os.path.splitext(os.path.basename(f))[0])]
+        comp_files = [f for f in comp_files if re.search(namefilter.lower(), os.path.splitext(os.path.basename(f))[0].lower())]
+        instr_files = [f for f in instr_files if re.search(namefilter.lower(), os.path.splitext(os.path.basename(f))[0].lower())]
 
     return comp_info_lst, instr_info_lst, comp_files, instr_files
 
-def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files):
+def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files, printlog=False):
     ''' Writes component and instrument docs files '''
     for i in range(len(comp_infos)):
         p = comp_infos[i]
@@ -1047,7 +1049,8 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         doc = CompDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
-        print("writing doc file... %s" % h)
+        if printlog:
+            print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
 
     for i in range(len(instr_infos)):
@@ -1056,7 +1059,8 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         doc = InstrDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
-        print("writing doc file... %s" % h)
+        if printlog:
+            print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
 
 
@@ -1090,20 +1094,23 @@ def main(args):
         if args.searchterm:
             print("will not write filtered system docs, exiting...")
             quit()
-        print("writing mccode system docs files...")
+        print("writing mccode distribution docs...")
         if args.dir:
             usedir = args.dir
             print("using custom dir: %s" % usedir)
 
-        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, recursive=True)
-        write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files)
+        comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, recursive=True, printlog=args.verbose)
+        write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files, args.verbose)
 
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
         text = masterdoc.create()
 
         mcdoc_html_filepath = os.path.join(usedir,'mcdoc.html')
-        print('writing master doc file... %s' % mcdoc_html_filepath)
-        write_file(mcdoc_html_filepath, text)
+        try:
+            write_file(mcdoc_html_filepath, text)
+            print("master doc file: %s" % mcdoc_html_filepath)
+        except Exception as e:
+            print('ERROR writing master doc file: %s', e)
 
     elif args.dir != None or args.searchterm != None:
         ''' filtered and/or local results '''
@@ -1174,7 +1181,8 @@ def main(args):
         text = masterdoc.create()
 
         mcdoc_html_filepath = os.path.join('.', 'mcdoc.html')
-        print('writing local overview doc file... %s' % mcdoc_html_filepath)
+        if args.verbose:
+            print('writing local overview doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.','mcdoc.html')), shell=True)
@@ -1188,6 +1196,8 @@ if __name__ == '__main__':
     parser.add_argument('--manual','-m', action='store_true', help='open the system manual')
     parser.add_argument('--comps','-c', action='store_true', help='open the component manual')
     parser.add_argument('--web','-w', action='store_true', help='open the '+mccode_config.configuration['MCCODE']+' website')
+    parser.add_argument('--verbose','-b', action='store_true', help='prints a parsing log during execution')
+    
     
     args = parser.parse_args()
     

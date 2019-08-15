@@ -113,7 +113,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_DIM    =3;    /* next token is a bin value */
     DEFS->COORD_FIL    =4;    /* next token is a filename */
     DEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
-    //DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
     DEFS->COORD_LOG    =64;   /* next variable will be in log scale */
     DEFS->COORD_ABS    =128;  /* next variable will be in abs scale */
     DEFS->COORD_SIGNAL =256;  /* next variable will be the signal var */
@@ -151,8 +150,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Buffer_Size       = 0;
     Vars->UserVariable1     = 0;
     Vars->UserVariable2     = 0;
-    Vars->He3_pressure      = 0;
-    Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
     Vars->Flag_OFF          = offflag;
     Vars->OFF_polyidx       = -1;
@@ -282,12 +279,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
             Vars->Flag_List = 1; }
           Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
-        //if (Set_Coord_Mode == DEFS->COORD_3HE)  /* pressure=%g */
-        //{
-        //    Vars->He3_pressure = atof(token);
-        //    Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
-        //}
-
+        
         /* now look for general option keywords */
         if (!strcmp(token, "borders"))  {Vars->Flag_With_Borders = 1; iskeyword=1; }
         if (!strcmp(token, "verbose"))  {Vars->Flag_Verbose      = 1; iskeyword=1; }
@@ -317,7 +309,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "box"))     { Vars->Flag_Shape = DEFS->SHAPE_BOX; iskeyword=1; }
         if (!strcmp(token, "previous")) { Vars->Flag_Shape = DEFS->SHAPE_PREVIOUS; iskeyword=1; }
         if (!strcmp(token, "parallel")){ Vars->Flag_parallel = 1; iskeyword=1; }
-        if (!strcmp(token, "capture")) { Vars->Flag_capture = 1; iskeyword=1; }
         if (!strcmp(token, "auto") && (Flag_auto != -1)) {
           Vars->Flag_Auto_Limits = 1;
           if (Flag_All) Flag_auto = -1;
@@ -325,8 +316,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           iskeyword=1; Flag_All=0; }
         if (!strcmp(token, "premonitor")) {
           Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
-        if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
-          Vars->He3_pressure = 3; iskeyword=1; }
         if (!strcmp(token, "no") || !strcmp(token, "not")) { Flag_No = 1;  iskeyword=1; }
         if (!strcmp(token, "signal")) Set_Coord_Mode = DEFS->COORD_SIGNAL;
 
@@ -599,13 +588,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       strncat(Vars->Coord_Label[0], "]", 30);
     }
 
-    /* update label 'signal per bin' if more than 1 bin */
-    if (XY > 1 && Vars->Coord_Number) {
-      if (Vars->Flag_capture)
-        printf("Monitor_nD: %s: Using capture flux weightening on %ld bins.\n"
-               "WARNING     Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", Vars->compcurname, (long)XY);
-    }
-
     strcat(Vars->Monitor_Label, " Monitor");
     if (Vars->Flag_Shape == DEFS->SHAPE_SQUARE) strcat(Vars->Monitor_Label, " (Square)");
     if (Vars->Flag_Shape == DEFS->SHAPE_DISK)   strcat(Vars->Monitor_Label, " (Disk)");
@@ -743,7 +725,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
   } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
-/* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
+/* Monitor_nD_Trace: this routine is used to monitor one propagating particle */
 /* return values: 0=photon was absorbed, -1=photon was outside bounds, 1=photon was measured*/
 /* ========================================================================= */
 

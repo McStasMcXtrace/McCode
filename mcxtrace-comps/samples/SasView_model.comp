@@ -2181,7 +2181,7 @@ SETTING PARAMETERS (
     focus_r=0)
 
 OUTPUT PARAMETERS ( 
-    my_a_k,
+    my_a_k, q, model_pars,
     shape)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DEPENDENCY "-std=c99"
