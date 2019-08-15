@@ -24,24 +24,18 @@
 * The component must have a valid .pdb-file as an argument.
 *
 * %P
-* RhoSolvent  			  : [AA]	Scattering length density of the buffer.
-* Concentration		  	  : [mM]	Concentration of sample.
-* AbsorptionCrosssection  : [1/m]	Absorption cross section of the sample.
-* xwidth    			  : [m]  	Dimension of component in the x-direction.
-* yheight   			  : [m]		Dimension of component in the y-direction.
-* zdepth    			  : [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance: [m]		Distance from sample to detector (for 
-*									focusing the scattered x-rays).
-* DetectorRadius          : [m] 	Radius of the detector (for focusing the 
-*									scattered x-rays).
-* qMin					  : [AA^-1] Lowest q-value, for which a point is gene-
-*									rated in the scattering profile
-* qMax					  : [AA^-1] Highest q-value, for which a point is gene-
-*									rated in the scattering profile
-* NumberOfQBins			  : []		Number of points generated in inital
-* 									scattering profile.
-* PDBFilepath			  : []		Path to the file describing the high resolution
-*									structure of the protein.
+* RhoSolvent: [AA]    Scattering length density of the buffer.
+* Concentration: [mM] Concentration of sample.
+* AbsorptionCrosssection: [1/m]	Absorption cross section of the sample.
+* xwidth: [m]         Dimension of component in the x-direction.
+* yheight: [m]        Dimension of component in the y-direction.
+* zdepth: [m]         Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m] Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m] Radius of the detector (for focusing the scattered x-rays).
+* qMin: [AA^-1]       Lowest q-value, for which a point is generated in the scattering profile
+* qMax: [AA^-1]       Highest q-value, for which a point is generated in the scattering profile
+* NumberOfQBins: []   Number of points generated in inital scattering profile.
+* PDBFilepath: []     Path to the file describing the high resolution structure of the protein.
 *
 * %E
 *******************************************************************************/
@@ -56,7 +50,8 @@ SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosss
 					qMin = 0.001, qMax = 0.5,
 					string PDBFilepath = "PDBfile.pdb")
 
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (Absorption,NumberDensity,OrderOfHarmonics)
+DEPENDENCY "-lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
@@ -64,7 +59,6 @@ DECLARE
 %{
 	// Declarations
 	double Absorption;
-	double q;
 	double NumberDensity;
 	const int OrderOfHarmonics = 21;
 
@@ -534,6 +528,7 @@ TRACE
 	double qy; 
 	double qz;
 	double k;
+        double q;
 	double dl;
 	double kx_i;
 	double ky_i;
