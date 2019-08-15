@@ -104,7 +104,7 @@ Coords pointTop, pointBot, pointLeft, pointRight, pointIn, pointOut;
   double rUpParPtr[]   = (double [])rUpPar;
   double rDownParPtr[] = (double [])rDownPar;
 #endif
-  %}
+%}
 
 INITIALIZE
 %{
@@ -128,7 +128,6 @@ INITIALIZE
     exit(1);
   }
 #endif
-
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
     fprintf(stderr, "Pol_guide_mirror: %s: NULL or negative length scale!\n"
 	                  "ERROR      (xwidth,yheight,length). Exiting\n",
@@ -178,11 +177,18 @@ INITIALIZE
   // A normal vector is (1, 0, 0)
   normalRight  = coords_set(1, 0, 0);
   pointRight = coords_set(-xwidth/2, 0, 0);
-
-  %}
+%}
 
 TRACE
 %{
+#if (useTables)
+#undef rFunc
+#undef rUpFunc
+#undef rDownFunc
+#define rFunc TableReflecFunc
+#define rUpFunc TableReflecFunc
+#define rDownFunc TableReflecFunc
+#endif
   /* time threshold */
   const double tThreshold = 1e-10/sqrt(vx*vx + vy*vy + vz*vz);
   const double xwhalf = xwidth/2;
@@ -200,6 +206,8 @@ TRACE
 
   if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
+
+  SCATTER;
 
   normalMirror  = coords_set(norm*length, 0, -norm*xwidth);
   pointMirror = coords_set(-xwhalf, 0, 0);
@@ -242,6 +250,12 @@ TRACE
     solve_2nd_order(&tMirror, NULL, 0.5*coords_sp(normalMirror,localG),
 		    coords_sp(normalMirror, vVec),
 		    coords_sp(normalMirror, coords_sub(xVec, pointMirror)));
+
+    double nx,ny,nz,px,py,pz;
+    coords_get(normalMirror,&nx,&ny,&nz);
+    coords_get(pointMirror,&px,&py,&pz);
+    plane_intersect(&tMirror, x,y,z,vx,vy,vz, nx, ny, nz, px, py, pz);
+
 
     /* Choose appropriate reflection time */
     if (tTop>tThreshold && (tTop<tBot || tBot<=tThreshold))
@@ -313,7 +327,7 @@ TRACE
     PROP_DT(time);
     if (mcgravitation)
       vVec = coords_set(vx, vy, vz);
-    SCATTER;
+    //SCATTER;
 
     if(time==tTop)
       normalPointer = &normalTop;
@@ -335,9 +349,9 @@ TRACE
       vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
       rFunc(fabs(Q), rParPtr, &refWeight);
       p *= refWeight;
-
+      SCATTER;
     } else {
-      // we have hit one of the mirrors
+      // we have hit the mirror
       rUpFunc(fabs(Q), rUpParPtr, &Rup);
       rDownFunc(fabs(Q), rDownParPtr, &Rdown);
       if (Rup <  0)   ABSORB;
@@ -347,19 +361,20 @@ TRACE
 
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
-      // check that refWeight is meaningfull
+      // check that refWeight is meaningful
       if (refWeight <  0) ABSORB;
       if (refWeight >  1) refWeight =1 ;
 
-      if (rand01()<refWeight) {
-	      //reflect: SCATTERED==1 for reflection
-
+      if ( rand01()<refWeight) {
 	      vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
 	      SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);
+              SCATTER;
+              mr++;
+              snprintf(scatproc+strlen(scatproc),1024,"%s","r");
       } else {
-	      // transmit: SCATTERED==2 for transmission
-	      SCATTER;
 	      SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
+              mt++;
+              snprintf(scatproc+strlen(scatproc),1024,"%s","t");
       }
 
       if (sx*sx+sy*sy+sz*sz>1.000001) { // check that polarisation is meaningfull
@@ -376,11 +391,19 @@ TRACE
     // set new velocity vector
     coords_get(vVec, &vx, &vy, &vz);
 
-    if(debug>0)
+    if(debug>0){
       fprintf(stdout, "Pol_guide_mirror: %s: End v: (%f, %f, %f)\n", NAME_CURRENT_COMP, vx, vy, vz);
+    }
   }
-
-  %}
+#if (useTables)
+#undef rFunc
+#undef rUpFunc
+#undef rDownFunc
+#define rFunc StdReflecFunc
+#define rUpFunc StdReflecFunc
+#define rDownFunc StdReflecFunc
+#endif
+%}
 
 MCDISPLAY
 %{
