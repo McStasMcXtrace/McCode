@@ -147,7 +147,7 @@ def plotfunc(node):
                     color = lookup(cm, vals[i,j]/maxval)
                     img[i,j,:] = color
             # encode png as base64 string
-            image = scipy.misc.toimage(img)
+            image = scipy.misc.toimage(np.flipud(img))
             output = io.BytesIO()
             image.save(output, format="png")
             contents = output.getvalue()
@@ -172,7 +172,7 @@ def plotfunc(node):
                     except Exception as e:
                         print(e)
             # encode png as base64 string
-            image_log= scipy.misc.toimage(img_log)
+            image_log= scipy.misc.toimage(np.flipud(img_log))
             output = io.BytesIO()
             image_log.save(output, format="png")
             encoded_2d_data_log = str(base64.b64encode(output.getvalue())).lstrip('b').strip("\'")
