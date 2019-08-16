@@ -17,7 +17,7 @@
 *
 * Design study model of the DanMAX PowderX/Imaging beamline.
 * This early version uses a Gaussian approximation source, and a simple bandpass filter
-* as the mulitlayer.
+* as the multilayer.
 *
 * %Example: MAXIV_DanMAX_pxrd1d.instr -c -n1e6 E0=15 PXRD_SIMPLE=1 Detector: dm_strip_banana_I=0.00151938
 *
@@ -40,12 +40,9 @@
 * DMM_e0: [keV]    The energy to tune the ML monochromator to. May be different from E0. If 0 the DMM is controlled by DMM_angle.
 * OH_2DCRL_N: [ ]  Number of 2D focus CRLs in the optics hutch transfocator. 0 means transfocator is inactive.
 * PXRD_SIMPLE: [ ] If zero - the full powder diffraction strip detector is active, else a single circular approximation is active.
-* pxrd_2d_tthc: [ ] Rotation around the sample tube (i.e. the x-axis) of the 2d-area detector arm.
-* pxrd_2d_y: [m]   Offset of 2d-area detector centre perpendicular to the detector arm.
 * pxrd_strip_tth0: [deg] Angle offset of the PXRD 1d-strip detector from the optical axis. 
 * debugMon: [ ]    If nonzero, all intermediate monitors appear for debugging purposes.
-* beamStop_1D: [ ] If nonzero, a beamstop sits between the sample and the PXRD 1d-strip detector.
-* beamStop_2D: [ ] If nonzero, a beamstop is inserted between sample and PXRD 2d-detector.
+* beamStop: [ ] If nonzero, a beamstop is in between sample and PXRD 1d-strip detector.
 * %End
 *******************************************************************************/
 
@@ -59,8 +56,8 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd1d(E0=35,DE=0.05,undK=0,undDetune=4,
         DCM=1, DMM=0,
         OH_2DCRL_N=11,EH_2DCRL_N=0, D_EH_2DCRL=0,
         PXRD_SIMPLE=1, sample_radius=100e-6,
-        pxrd_2d_y=0, pxrd_2d_tthc=0,
-        pxrd_strip_tth0=0, debugMon=1, beamStop_1D=0, beamStop_2D=1)
+        pxrd_strip_tth0=0, 
+        debugMon=1, beamStop=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -118,13 +115,11 @@ DECLARE
     char dm_strip_banana_options[512];/*string containing parameter for circular appr of mythen detctector.*/ 
     double sample_radius;
 
-    double pxrd_2d_tthc;
-    //double pxrd_2d_y;
     const double pxrd_2d_px=172e-6;
     const double pxrd_2d_py=172e-6;
     const int pxrd_2d_nx=1475;
     const int pxrd_2d_ny=1679;
-    int h=5;
+    int h;
 
 %}
 
@@ -228,27 +223,24 @@ INITIALIZE
     pxrd_sampleap_w=PXRDsampleap_w;
 
     /*calculate harmonic order and fundamental harmonic of the undulator*/
-    if (E0>15.757){
-      h=7;
-    }
-    if (E0>20.253){
-      h=9;
-    }
-    if (E0>24.753){
-      h=11;
-    }
-    if (E0>29.254){
-      h=13;
-    }
     if (E0>33.755){
       h=15;
+    } else if (E0>29.254){
+      h=13;
+    } else if (E0>24.753){
+      h=11;
+    } else if (E0>20.253){
+      h=9;
+    } else if (E0>15.757){
+      h=7;
+    } else {
+      h=5;
     }
-
     E1st=E0/h+(undDetune/1000);
 
-    printf("DanMAX_undulator: fundamental energy: %g, harmonic= %d, target energy= %g\n",E1st, h, E0);
+    printf("INFO: DanMAX_undulator: fundamental energy: %g, harmonic= %d, target energy= %g\n",E1st, h, E0);
 
-    printf("strip prms: %g %g %g %g\n",dm_strip_deth,dm_strip_detw, dm_strip_tthc, dm_strip_tth0);
+    printf("INFO: DanMAX: PXRD 1d-strip prms: %g %g %g %g\n",dm_strip_deth,dm_strip_detw, dm_strip_tthc, dm_strip_tth0);
 
 %}
 /* Here comes the TRACE section, where the actual      */
@@ -423,7 +415,6 @@ COMPONENT oh_2dcrl= Lens_parab(
 WHEN (OH_2DCRL_N) AT(beam_xoff,0,8.418) RELATIVE oh0
 
 
-/* post CRL monitors: only in simulations, not a real BPM */
 
 /* Aperture forming the exit of the optics hutch */
 COMPONENT oh_end_ap = Slit(
@@ -478,8 +469,6 @@ AT(0,0,0) RELATIVE Imaging
 /*        r=eh_2dcrl_r, r_ap=eh_2dcrl_ap, material_datafile="Be.txt", N=eh_2dcrl_N, d=30e-6)*/
 /*WHEN (EH_2DCRL_N) AT(0,0,d_eh_2dcrl) RELATIVE Imaging*/
 
-
-
 /*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
 /*XXX                               PXRD_1D                                XXX*/
 /*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
@@ -509,7 +498,7 @@ AT (0, 0, 0) RELATIVE pxrd_1d_pt
 ROTATED (0,0,90) RELATIVE pxrd_1d_pt
 
 COMPONENT beamstop1 = Beamstop(radius = 1e-3)
-WHEN(beamStop_1D) AT(0,0,150e-3) RELATIVE pxrd_1d_pt
+WHEN(beamStop) AT(0,0,150e-3) RELATIVE pxrd_1d_pt
 
 /* MythenII 24k */
 COMPONENT mythen_0a = Arm()
@@ -712,11 +701,6 @@ COMPONENT mythen_23 = COPY(mythen_0)(filename="mythen_23")
 WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_23a
 GROUP mythen
 
-/*Far field table*/
-/*COMPONENT FarField = Arm()*/
-/*AT(0,0,12) RELATIVE eh0*/
-/*COMPONENT FarField_monitor = COPY(src_mon)(filename="FarField_monitor")*/
-/*AT(0,0,0) RELATIVE FarField*/
 
 FINALLY
 %{
