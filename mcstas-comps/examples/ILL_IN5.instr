@@ -199,7 +199,7 @@ INITIALIZE
 
   ang_ini = -11.9175;            //angular range of de detector in degrees
   ang_fin = 134.8172;            //
-  det_angle = abs(ang_fin-ang_ini)/2.0 + ang_ini;
+  det_angle = fabs(ang_fin-ang_ini)/2.0 + ang_ini;
 
 %}
 

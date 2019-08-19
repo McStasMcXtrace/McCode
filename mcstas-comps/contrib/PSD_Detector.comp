@@ -1201,13 +1201,13 @@ FINALLY
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
-      printf("PSD_Detector: %s: Saved %Li events (from buffer) in file %s\n",
+      printf("PSD_Detector: %s: Saved %lld events (from buffer) in file %s\n",
              NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
       if (bufsize < Vars.Nsum)
         printf("WARNING         When using this source, intensities must be multiplied\n"
                "                by a factor %g\n", (double)Vars.Nsum/bufsize);
     } else
-      printf("PSD_Detector: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      printf("PSD_Detector: %s: Saved %lld events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
   }
 %}
 

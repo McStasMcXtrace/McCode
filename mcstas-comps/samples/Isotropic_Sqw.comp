@@ -1455,7 +1455,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       index_w_file = w_file2full[index_w];
       /* get Sqw_file element, with bi-linear interpolation from file */
       /* when the initial file does not contain the energy, the opposite element (-w) is used */
-      sqw_file     = Table_Value2d(Table_Array[2], index_q_file, abs(index_w_file));
+      sqw_file     = Table_Value2d(Table_Array[2], index_q_file, fabs(index_w_file));
       /* apply the minimum threshold to remove noisy background in S(q,w) */
       if (sqw_file < Sqw->sqw_threshold) sqw_file = 0;
       else if (index_w_file < 0)         sqw_file = -sqw_file; /* negative == mirrored from other side */

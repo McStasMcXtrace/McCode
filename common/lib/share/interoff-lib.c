@@ -209,7 +209,7 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
   }
   if (strlen(line)>5)
   {
-      fprintf(stderr,"Error: First line in %s is too long (=%d). Possibly the line is not terminated by '\\n'.\n" 
+      fprintf(stderr,"Error: First line in %s is too long (=%lu). Possibly the line is not terminated by '\\n'.\n" 
               "       The first line is required to be exactly 'OFF', '3' or 'ply'.\n",filename,strlen(line));
       fclose(f);
       return(NULL);
@@ -513,7 +513,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
       continue; 
     }
     if (ret != 3) {
-      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init). Read %i values.\n", 
+      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %ld in file %s (interoff/off_init). Read %ld values.\n", 
         i, offfile, ret);
       exit(2);
     }
@@ -600,7 +600,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
       continue; 
     }
     if (ret != 1) {
-      fprintf(stderr, "Error: can not read polygon %i length in file %s (interoff/off_init)\n", 
+      fprintf(stderr, "Error: can not read polygon %ld length in file %s (interoff/off_init)\n", 
         i, offfile);
       exit(3);
     }
