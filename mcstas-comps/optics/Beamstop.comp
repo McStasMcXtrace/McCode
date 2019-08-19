@@ -61,7 +61,7 @@ TRACE
     ALLOW_BACKPROP;
     PROP_Z0;
     Time = t - Time;
-    if ((Time>=0) && ((radius!=0) && (x*x + y*y <= radius*radius))
+    if (((Time>=0) && ((radius!=0) && (x*x + y*y <= radius*radius)))
     || ((Time>=0) && (radius==0) && (x>xmin && x<xmax && y>ymin && y<ymax)))
       ABSORB;
     else
