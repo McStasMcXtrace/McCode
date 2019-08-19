@@ -174,7 +174,7 @@ void *Table_File_List_store(t_Table *tab){
     {
       char dir[1024];
 
-      if (!hfile && mcinstrument_source && strlen(mcinstrument_source)) /* search in instrument source location */
+      if (!hfile && mcinstrument_source[0] != '\0' && strlen(mcinstrument_source)) /* search in instrument source location */
       {
         char *path_pos   = NULL;
         /* extract path: searches for last file separator */
@@ -189,7 +189,7 @@ void *Table_File_List_store(t_Table *tab){
           }
         }
       }
-      if (!hfile && mcinstrument_exe && strlen(mcinstrument_exe)) /* search in PWD instrument executable location */
+      if (!hfile && mcinstrument_exe[0] != '\0' && strlen(mcinstrument_exe)) /* search in PWD instrument executable location */
       {
         char *path_pos   = NULL;
         /* extract path: searches for last file separator */
@@ -602,7 +602,7 @@ void *Table_File_List_store(t_Table *tab){
     if (Rows * Columns != count_in_array)
     {
       fprintf(stderr, "Warning: Read_Table :%s %s Data has %li values that should be %li x %li\n",
-        (Table->filename ? Table->filename : ""),
+        (Table->filename[0] != '\0' ? Table->filename : ""),
         (!block_number ? " catenated" : ""),
         count_in_array, Rows, Columns);
       Columns = count_in_array; Rows = 1;
@@ -894,7 +894,7 @@ double Table_Value(t_Table Table, double X, long j)
     if (!Table.block_number) strcpy(buffer, "catenated");
     else sprintf(buffer, "block %li", Table.block_number);
     printf("Table from file '%s' (%s)",
-      Table.filename ? Table.filename : "", buffer);
+      Table.filename[0] != '\0' ? Table.filename : "", buffer);
     if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
       printf(" is %li x %li ", Table.rows, Table.columns);
