@@ -45,7 +45,7 @@ sudo rpm -i mcstas-ncrystal-2.5-rpm64.rpm
 ```
 which then has the side effect that some symlinks are broken. Hence also please reinstall e.g. mcstas-tools-python-mcrun-2.5:
 ```bash
-sudo rpm -i mcstas-2.5-rpm64.rpm mcstas-tools-python-mcrun-2.5-rpm64.rpm
+sudo rpm -i --replacepkgs mcstas-2.5-rpm64.rpm mcstas-tools-python-mcrun-2.5-rpm64.rpm
 ```
 Further the example instrument [NCrystal_example_mcstas.instr](http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-Fedora29/NCrystal_example_mcstas.instr) is provided separately as it is missing the the mcstas-comps package...
 
