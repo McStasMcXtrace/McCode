@@ -5,8 +5,7 @@ Follow the instructions at https://rpmfusion.org/Configuration
 
 ## Install dependencies
 ```bash
-sudo yum install perl pgplot perl-PGPLOT perl-Tk perl-PDL
-perl python2
+sudo yum install pgplot perl-PGPLOT perl-Tk perl-PDL perl python2
 ```
 
 ## Install the remaining packages manually
