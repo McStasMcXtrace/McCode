@@ -29,7 +29,8 @@ mcstas-tools-python-mcdoc-2.5-rpm64.rpm \
 mcstas-tools-python-mcgui-2.5-rpm64.rpm \
 mcstas-tools-python-mcplot-matplotlib-2.5-rpm64.rpm \
 mcstas-tools-python-mcplot-pyqtgraph-2.5-rpm64.rpm \
-mcstas-tools-python-mcrun-2.5-rpm64.rpm```
+mcstas-tools-python-mcrun-2.5-rpm64.rpm
+```
 * And for McStas + legacy perl tools:
 ```bash
 rpm -i mcstas-clusterscripts-2.5-rpm64.rpm \
