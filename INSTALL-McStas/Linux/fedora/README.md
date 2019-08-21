@@ -10,7 +10,7 @@ perl python2
 ```
 
 ## Install the remaining packages manually
-* Downlooad the [all-rpms](http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-Fedora29/all-rmps.tgz)
+* Downlooad the [all-rpms](http://download.mcstas.org/current/linux/mcstas-2.5-rpm64-Fedora29/all-rpms.tgz)
 * Unpack the archive
 * Install the libtk-codetext-perl-0.3.4-2.noarch.rpm
 ```bash
