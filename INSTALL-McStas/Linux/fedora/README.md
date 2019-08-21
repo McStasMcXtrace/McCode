@@ -41,7 +41,7 @@ sudo rpm -i mcstas-tools-perl-2.5-rpm64.rpm
 ## Installing and using NCrystal
 Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
 ```bash
-sudo rpm -i install mcstas-ncrystal-2.5-rpm64.rpm
+sudo rpm -i mcstas-ncrystal-2.5-rpm64.rpm
 ```
 which then has the side effect that some symlinks are broken. Hence also please reinstall e.g. mcstas-tools-python-mcrun-2.5:
 ```bash
