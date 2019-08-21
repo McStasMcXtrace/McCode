@@ -33,7 +33,7 @@ mcstas-tools-python-mcrun-2.5-rpm64.rpm
 ```
 * And for McStas + legacy perl tools:
 ```bash
-rpm -i mcstas-clusterscripts-2.5-rpm64.rpm \
+sudo rpm -i mcstas-clusterscripts-2.5-rpm64.rpm \
 mcstas-comps-2.5-rpm64.rpm \
 mcstas-manuals-2.5-rpm64.rpm \
 mcstas-suite-perl-2.5-1.x86_64.rpm \
