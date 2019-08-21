@@ -31,13 +31,9 @@ mcstas-tools-python-mcplot-matplotlib-2.5-rpm64.rpm \
 mcstas-tools-python-mcplot-pyqtgraph-2.5-rpm64.rpm \
 mcstas-tools-python-mcrun-2.5-rpm64.rpm
 ```
-* And for McStas + legacy perl tools:
+* And add these extra packages to also install the legacy perl tools:
 ```bash
-sudo rpm -i mcstas-clusterscripts-2.5-rpm64.rpm \
-mcstas-comps-2.5-rpm64.rpm \
-mcstas-manuals-2.5-rpm64.rpm \
-mcstas-suite-perl-2.5-1.x86_64.rpm \
-mcstas-tools-perl-2.5-rpm64.rpm \
+sudo rpm -i mcstas-tools-perl-2.5-rpm64.rpm \
 mcstas-tools-perl-cmdline-2.5-rpm64.rpm
 ```
 * (there are also other packages available that are optional, but
