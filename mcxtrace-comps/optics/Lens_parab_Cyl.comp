@@ -95,12 +95,14 @@ SHARE
  
     if (D<0) {
         /*ray does not intersect the parabola*/
-	fprintf(stderr,"line 89: D<0 %s\n",NAME_CURRENT_COMP);
         return result;
-      }
+    }
     if (A==0){
       /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
-      if (B==0){ fprintf(stderr, "line 92: Division by zero in %s\n",NAME_CURRENT_COMP); return result;}
+      if (B==0){ 
+        /*incident vector is either 0 or parallel to the x-axis - no intersection*/
+        return result;
+      }
       t[0]=-C/B; 
       for (i=0;i<=2;i++){
 	result.coord[i]=p[i]+t[0]*knorm[i]; 
@@ -109,11 +111,11 @@ SHARE
       double qq;
       if (B<0){
 	qq=-0.5*(B-sqrt(D));
-        }else{
-          qq=-0.5*(B+sqrt(D));
-	}
-        t[0]=qq/A; 
-        t[1]=C/qq;
+      }else{
+        qq=-0.5*(B+sqrt(D));
+      }
+      t[0]=qq/A; 
+      t[1]=C/qq;
       
       for(i=0;i<=2;i++){
 	p_tmp[i]=p[i]+t[0]*knorm[i];

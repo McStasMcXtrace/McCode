@@ -88,17 +88,16 @@ SHARE
       D=B*B-4.0*A*C;
     
     if (D<0) { /*ray does not intersect the parabola*/
-        fprintf(stderr,"line 96: D<0 %s\n","Lens_parab");
         return result;
     }
     if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
         if(B==0){
-            fprintf(stderr, "Division by zero in %s\n","Lens_parab");
-            return result;
+          /*incident k-vector is 0. Should not happen*/
+          return result;
         }
         t[0]=-C/B;
         for(i=0; i<=2; i++){
-            result.coord[i]=p[i]+t[0]*knorm[i];
+          result.coord[i]=p[i]+t[0]*knorm[i];
         }
     } else {
         double qq;
