@@ -220,9 +220,6 @@ TRACE
   parab_Cyl.constants[1]=yheight;
   parab_Cyl.constants[2]=xwidth;
   
-  parab_Cyl.constants[6]=rough_xy;
-  parab_Cyl.constants[7]=rough_z;
-  
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
