@@ -5,16 +5,14 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
+* %I
 * Written by: Erik B Knudsen
 * Date: May 2017
 * Version: $Revision$
 * Release: McStas 2.4
 * Origin: DTU Physics
 *
-* Component: Pol_RFSF_ideal
-*
-*
-* %I
+* Component: Pol_SF_ideal
 *
 * Ideal model of a spin flipper
 *
