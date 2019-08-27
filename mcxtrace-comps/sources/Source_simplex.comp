@@ -19,8 +19,10 @@
 * This source model reads the dumped radiation field output from Simplex and samples it to be used
 * in McXtrace.
 *
-* <a href="http://radiant.harima.riken.go.jp/simplex/">Simplex</a> is a simulator
-* and postprocessor for free-electron laser experiments.
+* SIMPLEX is a computer program to support designing the accelerator components 
+* in the FEL facility and help the FEL user estimate the optical properties of 
+* FEL radiation. Various kinds of FEL simulations can be performed using SIMPLEX.
+* See <a href="http://spectrax.org/simplex/index.html">SIMPLEX</a>.
 * 
 * %P
 * focus_xw:[m]  Width of target.

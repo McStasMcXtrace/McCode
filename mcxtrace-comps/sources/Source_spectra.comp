@@ -21,7 +21,15 @@
 *
 * This is a source component for connecting SPECTRA -output files with McXtrace.
 *
-*  
+* SPECTRA is an application software to calculate optical properties of synchrotron 
+* radiation (SR) emitted from bending magnets, wigglers (conventional and elliptical) 
+* and undulators (conventional, helical, elliptical and figure-8). Calculations 
+* of radiation from an arbitrary magnetic field distribution are also available. 
+* Parameters on the electron beam and the source can be edited completely on 
+* graphical user interfaces (GUIs) and it is possible to show the calculation 
+* result graphically. The energy spectrum and radiation power after transmitting 
+* various filters and convolution of detector's resolution are also available. 
+* See <a href="http://spectrax.org/spectra/">SPECTRA</a>.
 *
 * %VALIDATION
 *
@@ -50,6 +58,7 @@
 *
 * %L
 * Tanaka, J. Synchrotron Rad. (2001). 8, 1221-1228. https://doi.org/10.1107/S090904950101425X
+* http://spectrax.org/spectra/
 *
 * %E
 *******************************************************************************/
