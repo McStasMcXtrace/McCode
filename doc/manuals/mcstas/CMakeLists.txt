@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 2.6)
 # This will install McStas components
 set(FLAVOR mcstas)
 project(${FLAVOR}_manuals NONE)
-
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 message( "CMAKE_SOURCE_DIR=        ${CMAKE_SOURCE_DIR}" )
@@ -19,7 +18,6 @@ include(UseLATEX)
 # set(PDFLATEX_COMPILER "/usr/bin/xelatex")
 message( "setup MCCODE" )
 setupMCCODE("${FLAVOR}")
-
 # CPack configuration
 message( "CPack configuration" )
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
@@ -54,7 +52,7 @@ include(CPack)
 
 message( "LaTeX configuration" )
 # set(LATEX_OUTPUT_PATH ".")
-file(GLOB LIST RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "*.tex" "*.sty" "*.bib" "*.bst" "[m-s]*/*.tex" "figures/*")
+file(GLOB LIST RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "*.tex" "*.sty" "*.bib" "*.bst" "[m-s]*/*.tex" "[m-s]*/*.parms" "figures/*")
 
 foreach(NAME sources samples optics monitors misc)
   add_custom_command(
@@ -64,7 +62,7 @@ foreach(NAME sources samples optics monitors misc)
     )
 endforeach()
 
-set(LATEX_OUTPUT_PATH "${PROJECT_BINARY_DIR}")
+set(LATEX_OUTPUT_PATH "${PROJECT_BINARY_DIR}/build")
 add_latex_document(
   manual.tex 
   INPUTS ${LIST}
