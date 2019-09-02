@@ -369,12 +369,8 @@ TRACE
 	      vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
 	      SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);
               SCATTER;
-              mr++;
-              snprintf(scatproc+strlen(scatproc),1024,"%s","r");
       } else {
 	      SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
-              mt++;
-              snprintf(scatproc+strlen(scatproc),1024,"%s","t");
       }
 
       if (sx*sx+sy*sy+sz*sz>1.000001) { // check that polarisation is meaningfull
