@@ -13,9 +13,9 @@ physical parameters for each photon ray.
 
 The input parameters for \textbf{Monitor\_nD} are its dimensions \textit{xmin, xmax, ymin, ymax} (in metres) and an \textit{
   options} string describing what to detect, and what to do with the
-  signals, in clear language. The \textit{xwidth, yheight, zdepth} may also be used to enter dimensions.
+signals, in clear language. The \textit{xwidth, yheight, zdepth} may also be used to enter dimensions.
 
-  Eventhough the possibilities of Monitor\_nD are numerous, its usage remains as simple as possible, specially in the \textit{options} parameter, which 'understands' normal language.
+Eventhough the possibilities of Monitor\_nD are numerous, its usage remains as simple as possible, specially in the \textit{options} parameter, which 'understands' normal language.
 The formatting of the \textit{options}
 parameter is free, as long as it contains some specific keywords, that
 can be sometimes followed by values. The \textit{no} or \textit{not} option
@@ -119,6 +119,8 @@ the most significant monitored histogram. This option should preceed each
 variable, or be located after all variables in which case they are all
 affected.
 On the other hand, one may manually set the limits with the \verb+limits=[min max]+ option.
+If no limits are set monitor\_nd uses predefined limits that usually make sense for most x-ray scattering simulations. Example: the default upper energy limit is $100$ meV, but may be changed with an options string like
+\verb+options="energy limits 0 200"+. Note that the limits also apply in list mode (see below).
 
 The \verb+log+ and \verb+abs+ options should be positioned before each variable to specify logarithmic binning and absolute value respectively.
 
@@ -159,8 +161,11 @@ The \textbf{Monitor\_nD} can additionally produce a \textit{list} of variable
 values for photons that pass into the monitor. This feature is additive
 to the 1D or 2D output. By default only 1000 events will be recorded in
 the file, but you can specify for instance "\textit{list} 3000 photons" or
-"\textit{list all} photons". Bear in mind that this last option might require a lot of
-memory and generate huge files.
+"\textit{list all} photons". This last option may require a lot of
+memory and generate huge files. Note that the limits to the measured parameters also apply in this mode.
+To exemplify, a monitor\_nd instance with the option string \verb+"list all k"+ will \emph{only} record those photons which have a  below $2000$ AA$^{-1}$,
+whereas an instance with the option string \verb+"list all kx ky kz 0 2000"+ will record all photons with $|k_x,k_y|<2000$ AA$^{-1}$ and $0<v_z<2000$ AA$^{-1}$. 
+Thus, in this latter case, any neutron travelling in the negative z-direction will be disregarded.
 
 \subsection{Monitor equivalences}
 
