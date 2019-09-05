@@ -23,12 +23,12 @@
 *
 * %P
 * Input parameters:
-* xwidth: [m] The width of the mirror
-* zdepth: [m] The length of the mirror
+* xwidth:  [m] The width of the mirror
+* zdepth:  [m] The length of the mirror
 * yheight: [m] The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
-* R0: [ ]  Constant reflecticity
+* R0:      [ ] Constant reflecticity
 * reflectivity: [ ] Filename containing reflectivities.
-* matrix: [ ] If nonzerothe refletivity is considered to be a E,theta -matrix, else it is parametrized by q.
+* rtype:   [ ] Type of reflectivity parametrization. 0 means to infer the kind from the reflectivity file.
 *
 * (none)
 *
@@ -36,9 +36,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS ( string reflec="")
-SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, yheight=0, R0=0, string reflectivity="", matrix=0)
-OUTPUT PARAMETERS (reflec_table, prms,re)
+DEFINITION PARAMETERS (reflec="")
+SETTING PARAMETERS (string reflectivity=0, zdepth=0.1, xwidth=0.01, yheight=0, R0=0, rtype=0)
+OUTPUT PARAMETERS (reflec_table, prms, re)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -61,19 +61,21 @@ DECLARE
 INITIALIZE
 %{
     int status;
-    if (reflec && strlen(reflectivity)) {
-        if (!matrix){
-            status=reflec_Init(&re,Q_PARAMETRIC,reflectivity);
-        }else{
-            status=reflec_Init(&re,ETH_PARAMETRIC,reflectivity);
-        }
+
+    if (reflec && strlen(reflec)){
+      fprintf(stderr,"WARNING (%s): You have specified the reflec parameter. This is deprecated - please use \'reflectivity\' instead\n");
+    }
+
+    if (reflectivity && strlen(reflectivity)) {
+      status=reflec_Init(&re,NONE,reflectivity);
     }else{
-        status=reflec_Init(&re,CONSTANT,R0);
+      /*assume a constant refletivity*/
+      status=reflec_Init(&re,CONSTANT,R0);
     }
 
     if(status!=0){
-        fprintf(stderr,"Error(%s): Could not interpret reflectivity. exitstatus = %d\n", NAME_CURRENT_COMP,status);
-        exit(-1);
+      fprintf(stderr,"ERROR (%s): Could not interpret reflectivity. Aborting.\n", NAME_CURRENT_COMP);
+      exit(-1);
     }
 
 %}

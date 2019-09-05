@@ -4,12 +4,19 @@
 #include <stdarg.h>
 double Table_Value2d(t_Table, double, double);
 
-enum reflec_Type  {CONSTANT=0,BARE, COATING, Q_PARAMETRIC, PARRATT, ETH_PARAMETRIC, KINEMATIC};
+enum reflec_Type  {NONE=0,CONSTANT=1,BARE, COATING, Q_PARAMETRIC, PARRATT, ETH_PARAMETRIC, KINEMATIC};
+#define NAME_CONSTANT "constant"
+#define NAME_BARE "bare"
+#define NAME_COATING "coating"
+#define NAME_Q_PARAMETRIC "q"
+#define NAME_PARRATT "parratt"
+#define NAME_ETH_PARAMETRIC "eth"
+#define NAME_KINEMATIC "kinematic"
 
 typedef struct t_reflec_constant{
   double R;
 } t_reflec_constant;
- 
+
 typedef struct t_reflec_bare{
   char *matrl;
   double d;
@@ -37,7 +44,7 @@ typedef struct t_reflec_parratt{
 typedef struct t_reflec_kinematic{
   int N;/**The number of bilayers in the multilayer*/
   double zeta;/**The thickness of the bilayer*/
-  double Gamma, Lambda;/** */ 
+  double Gamma, Lambda;/** */
   double rho_AB;/**Electron density contrast between material A and B*/
 } t_reflec_kinematic;
 
@@ -49,7 +56,7 @@ typedef struct t_reflec_eth_prmtc{
 } t_reflec_theta_e_prmtc;
 
 typedef struct reflec_T {
-  enum reflec_Type type; 
+  enum reflec_Type type;
   union {
     struct t_reflec_bare rb;
     struct t_reflec_coating rc;
@@ -62,7 +69,8 @@ typedef struct reflec_T {
 } t_Reflec;
 
 /* reflectivity-lib.c */
-int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...);
+int reflec_Init(t_Reflec *R, enum reflec_Type type, ...);
+int reflec_Init_File(t_Reflec *R, char* filename);
 
 double complex refleccq(t_Reflec *r_handle, double q, double g, ... );
 double reflecq(t_Reflec *r_handle, double q, double g, ... );
@@ -75,3 +83,4 @@ double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k);
 double complex reflec_kinematical(t_Reflec *r_handle, double q, double g);
 double complex parrat_reflec_bulk(int lc, double *delta, double *beta, double *d, double k, double q);
 double complex reflec_eth_prmtc(t_Reflec *r_handle, double e, double theta, double g);
+enum reflec_Type get_table_reflec_type(t_Table *t);
