@@ -127,7 +127,7 @@ COMPONENT Sample4= SAXSLiposomes(
 )
 WHEN(SAMPLE==4) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-
+/*
 COMPONENT Sample5= SAXSNanodiscs(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -136,8 +136,9 @@ COMPONENT Sample5= SAXSNanodiscs(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==5) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
+*/
 
-
+/*
 COMPONENT Sample6= SAXSNanodiscsWithTags(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -146,8 +147,8 @@ COMPONENT Sample6= SAXSNanodiscsWithTags(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==6) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
+*/
 
-/*
 
 
 COMPONENT Sample7 = SAXSPDB(
@@ -161,7 +162,7 @@ COMPONENT Sample7 = SAXSPDB(
 	PDBFilepath = "3V03.pdb"
 )
 WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-
+/*
 
 COMPONENT Sample8 = SAXSCurve(
 	FileWithCurve = "Curve.mcp",
@@ -192,7 +193,7 @@ COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE=10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-
+*/
 
 COMPONENT Sample11 = SAXSPDBFast(
 	xwidth = 0.01,
@@ -204,7 +205,7 @@ COMPONENT Sample11 = SAXSPDBFast(
     qMax = 0.9
 )
 WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
+
 
 COMPONENT Beamstop = Beamstop(
 	radius = 0.001
