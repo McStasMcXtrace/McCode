@@ -50,7 +50,7 @@ SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosss
 					string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS (Absorption,NumberDensity, OrderOfHarmics, Matrix,NumberOfResidues,Protein)
-DEPENDENCY "std=c99 -lgsl -lgslcblas"
+DEPENDENCY "-std=c99 -I @MCCODE_LIB@/miniconda3/include -lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
@@ -60,7 +60,6 @@ SHARE %{
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
 	
-	#define OrderOfHarmonics 21
 
 	// Simple mathematical functions
 	int Sign(double x) {
@@ -115,9 +114,9 @@ SHARE %{
 	typedef struct Protein ProteinStruct;
 
 	// Function used to compute scattering from protein
-	void ExpandStructure(double complex ** Matrix, ProteinStruct *Protein, int ResidueID, double q, double RhoSolvent) 
+        void ExpandStructure(double complex ** Matrix, ProteinStruct *Protein, int OrderOfHarmonics, int ResidueID, double q, double RhoSolvent)
 	{
-		// Dummy integers
+                // Dummy integers
 		int i;
 		int j;
 
@@ -156,7 +155,7 @@ SHARE %{
 	}
 
 	// Function used to generate intensity for a given q-value
-	double ComputeIntensity(double complex ** Matrix) 
+        double ComputeIntensity(double complex ** Matrix, int OrderOfHarmonics)
 	{
 		// Declarations
 		int i;
@@ -538,10 +537,10 @@ TRACE
 		ResetMatrix(Matrix, OrderOfHarmonics);
 
 		for (i = 0; i < NumberOfResidues; ++i) {
-			ExpandStructure(Matrix, &Protein, i, q, RhoSolvent);		
+                  ExpandStructure(Matrix, &Protein, OrderOfHarmonics, i, q, RhoSolvent);
 		}
 
-	 	Intensity = ComputeIntensity(Matrix);
+                Intensity = ComputeIntensity(Matrix, OrderOfHarmonics);
 
 		// Compute new weight
 		p *= l_full * SolidAngle / (4.0 * PI) * NumberDensity * Intensity * exp(- Absorption * (l + l1));
