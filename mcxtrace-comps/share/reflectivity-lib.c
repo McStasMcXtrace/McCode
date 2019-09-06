@@ -65,11 +65,21 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
           break;
       }
     case PARRATT:
-      R->prms.rp=va_arg(ap,struct t_reflec_parratt);
-      break;
+      {
+        R->prms.rp.N = va_arg(ap,int);
+        R->prms.rp.d = va_arg(ap,double *);
+        R->prms.rp.delta = va_arg(ap,double *);
+        R->prms.rp.beta = va_arg(ap,double *);
+        break;
+      }
     case KINEMATIC:
-      R->prms.rk=va_arg(ap,struct t_reflec_kinematic);
-      break;
+      {
+        R->prms.rk.N = va_arg(ap,int);
+        R->prms.rk.Gamma = va_arg(ap,double);
+        R->prms.rk.Lambda = va_arg(ap,double);
+        R->prms.rk.rho_AB = va_arg(ap,double);
+        break;
+      }
     case ETH_PARAMETRIC:
       {
         R->prms.rethpm.fname=va_arg(ap,char *);
@@ -104,141 +114,144 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
   return 0;
 }
 
-/* Initialize a container objects for various types of reflectivity parametrization using
+/* Initialize a container object for various types of reflectivity parametrization using
  * an input file as source.*/
+
 int reflec_Init_File(t_Reflec *R, char *filename){
     if (R==NULL){
-        R=calloc(1,sizeof(t_Reflec));
+      R=calloc(1,sizeof(t_Reflec));
     }
-    t_Table table;
-    int status = Table_Read(&table, filename, 1);
+    /*a pointer representation has to be used here - otherwise the memory may be garbage collected
+      upon return from this function.*/
+    t_Table *table=malloc(sizeof(t_Table));
+
+    int status = Table_Read(table, filename, 1);
     if(status == -1){
         fprintf(stderr,"Error (%s) Error: Could not read file \"%s\"\n",__FILE__,filename);
         exit(1);
     }
-    R->type=get_table_reflec_type(&table);
+    R->type=get_table_reflec_type(table);
 
     switch(R->type){
-        case CONSTANT:
+      case CONSTANT:
         {
-            R->prms.rconst.R=Table_Index(table, 0, 0);
-            break;
+          R->prms.rconst.R=Table_Index(*table, 0, 0);
+          break;
         }
 
-        case BARE:
+      case BARE:
         {
-            char** header_parsed=Table_ParseHeader(table.header,"#material=", "#d=", NULL);
-            if(!header_parsed[0] || !header_parsed[1] ){
-                fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
-                exit(-1);
-            }
-            R->prms.rb.matrl=header_parsed[0];
-            R->prms.rb.d=strtod(header_parsed[1], NULL);
-            break;
+          char** header_parsed=Table_ParseHeader(table->header,"#material=", "#d=", NULL);
+          if(!header_parsed[0] || !header_parsed[1] ){
+            fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
+            exit(-1);
+          }
+          R->prms.rb.matrl=header_parsed[0];
+          R->prms.rb.d=strtod(header_parsed[1], NULL);
+          break;
         }
 
-        case COATING:
+      case COATING:
         {
-            char **header_parsed=Table_ParseHeader(table.header, "#material=", "#Z=", "#A[r]=", "#rho=", "#d=", NULL);
-            if(!(header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3] && header_parsed[4])){
-                fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
-                exit(-1);
+          char **header_parsed=Table_ParseHeader(table->header, "#material=", "#Z=", "#A[r]=", "#rho=", "#d=", NULL);
+          if(!(header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3] && header_parsed[4])){
+            fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
+            exit(-1);
+          } else {
+            R->prms.rc.matrl=header_parsed[0];
+            R->prms.rc.T = table;
+            R->prms.rc.d = malloc(sizeof(double));
+            *(R->prms.rc.d) = strtod(header_parsed[4], NULL);
+            R->prms.rc.rho=strtod(header_parsed[3],NULL);
+            R->prms.rc.Z=strtod(header_parsed[1],NULL);
+            R->prms.rc.At=strtod(header_parsed[2],NULL);
+          }
+          break;
+        }
+
+      case Q_PARAMETRIC:
+        {
+          R->prms.rqpm.fname=filename;
+          R->prms.rqpm.T=table;
+          R->prms.rqpm.qmin=Table_Index(*table,0,0);
+          R->prms.rqpm.qmax=Table_Index(*table,table->rows,0);
+          break;
+        }
+
+      case PARRATT:
+        {
+          char **header_parsed = Table_ParseHeader(table->header, "#N=", "#d=", "#delta=", "#beta=", NULL);
+          if (! (header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3])){
+            fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
+            exit(-1);
+          }
+          R->prms.rp.N = strtol(header_parsed[0], NULL, 10);
+          R->prms.rp.d = malloc(sizeof(double));
+          *(R->prms.rp.d) = strtod(header_parsed[1], NULL);
+          R->prms.rp.delta = malloc(sizeof(double));
+          *(R->prms.rp.delta) = strtod(header_parsed[2], NULL);
+          R->prms.rp.beta = malloc(sizeof(double));
+          *(R->prms.rp.beta) = strtod(header_parsed[3], NULL);
+          break;
+        }
+
+      case KINEMATIC:
+        {
+          char **header_parsed = Table_ParseHeader(table->header, "#N=", "#gamma=", "#lambda=", "#rho_ab=", NULL);
+          if (! (header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3] && header_parsed[4])){
+            fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
+            exit(-1);
+          }
+
+          R->prms.rk.N = strtol(header_parsed[0], NULL, 10);
+          R->prms.rk.Gamma = strtod(header_parsed[2], NULL);
+          R->prms.rk.Lambda = strtod(header_parsed[3], NULL);
+          R->prms.rk.rho_AB = strtod(header_parsed[4], NULL);
+          break;
+        }
+
+      case ETH_PARAMETRIC:
+        {
+          R->prms.rethpm.fname=filename;
+          R->prms.rethpm.T=table;
+
+          /*parse header for E_min E_max etc.*/
+          char **header_parsed = Table_ParseHeader(table->header,"e_min=","e_max=","theta_min=","theta_max=",NULL);
+          if (!(header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3])){
+            fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename); //1619
+            exit(-1);
+          }
+          R->prms.rethpm.emin=strtod(header_parsed[0],NULL);
+          R->prms.rethpm.emax=strtod(header_parsed[1],NULL);
+          R->prms.rethpm.thetamin=strtod(header_parsed[2],NULL);
+          R->prms.rethpm.thetamax=strtod(header_parsed[3],NULL);
+          int rows = R->prms.rethpm.T->rows;
+          int cols = R->prms.rethpm.T->columns;
+          if(rows == 0){ //implies cols == 0 as well
+            fprintf(stderr,"Error (%s): File %s contains no table.",__FILE__, filename);
+            exit(1);
+          } else {
+            if(rows == 1){
+              printf("File %s contains only a single row. Setting e_step = 0", filename);
+              R->prms.rethpm.estep=0;
             } else {
-                R->prms.rc.matrl=header_parsed[0];
-                R->prms.rc.T = &table;
-                R->prms.rc.d = malloc(sizeof(double));
-                *(R->prms.rc.d) = strtod(header_parsed[4], NULL);
-                R->prms.rc.rho=strtod(header_parsed[3],NULL);
-                R->prms.rc.Z=strtod(header_parsed[1],NULL);
-                R->prms.rc.At=strtod(header_parsed[2],NULL);
+              R->prms.rethpm.estep=(R->prms.rethpm.emax - R->prms.rethpm.emin)/(rows-1);
             }
-            break;
-        }
-
-        case Q_PARAMETRIC:
-        {
-            R->prms.rqpm.fname=filename;
-            R->prms.rqpm.T=&table;
-            R->prms.rqpm.qmin=Table_Index(table,0,0);
-            R->prms.rqpm.qmax=Table_Index(table,table.rows,0);
-            break;
-        }
-
-        case PARRATT:
-        {
-            char **header_parsed = Table_ParseHeader(table.header, "#N=", "#d=", "#delta=", "#beta=", NULL);
-            if (! (header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3])){
-                fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
-                exit(-1);
-            }
-            R->prms.rp.N = strtol(header_parsed[0], NULL, 10);
-            R->prms.rp.d = malloc(sizeof(double));
-            *(R->prms.rp.d) = strtod(header_parsed[1], NULL);
-            R->prms.rp.delta = malloc(sizeof(double));
-            *(R->prms.rp.delta) = strtod(header_parsed[2], NULL);
-            R->prms.rp.beta = malloc(sizeof(double));
-            *(R->prms.rp.beta) = strtod(header_parsed[3], NULL);
-            break;
-        }
-
-        case KINEMATIC:
-        {
-            char **header_parsed = Table_ParseHeader(table.header, "#N=", "#zeta=", "#gamma=", "#lambda=", "#rho_ab=", NULL);
-            if (! (header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3] && header_parsed[4])){
-                fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
-                exit(-1);
-            }
-
-            R->prms.rk.N = strtol(header_parsed[0], NULL, 10);
-            R->prms.rk.zeta = strtod(header_parsed[1], NULL);
-            R->prms.rk.Gamma = strtod(header_parsed[2], NULL);
-            R->prms.rk.Lambda = strtod(header_parsed[3], NULL);
-            R->prms.rk.rho_AB = strtod(header_parsed[4], NULL);
-            break;
-        }
-
-        case ETH_PARAMETRIC:
-        {
-            R->prms.rethpm.fname=filename;
-            R->prms.rethpm.T=&table;
-
-            /*parse header for E_min E_max etc.*/
-            char **header_parsed = Table_ParseHeader(table.header,"e_min=","e_max=","theta_min=","theta_max=",NULL);
-            if (!(header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3])){
-                fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename); //1619
-                exit(-1);
-            }
-            R->prms.rethpm.emin=strtod(header_parsed[0],NULL);
-            R->prms.rethpm.emax=strtod(header_parsed[1],NULL);
-            R->prms.rethpm.thetamin=strtod(header_parsed[2],NULL);
-            R->prms.rethpm.thetamax=strtod(header_parsed[3],NULL);
-            int rows = R->prms.rethpm.T->rows;
-            int cols = R->prms.rethpm.T->columns;
-            if(rows == 0){ //implies cols == 0 as well
-                fprintf(stderr,"Error (%s): File %s contains no table.",__FILE__, filename);
-                exit(1);
+            if(cols == 1){
+              printf("File %s contains only a single column. Setting theta_step = 0", filename);
+              R->prms.rethpm.thetastep=0;
             } else {
-                if(rows == 1){
-                    printf("File %s contains only a single row. Setting e_step = 0", filename);
-                    R->prms.rethpm.estep=0;
-                } else {
-                    R->prms.rethpm.estep=(R->prms.rethpm.emax - R->prms.rethpm.emin)/(rows-1);
-                }
-                if(cols == 1){
-                    printf("File %s contains only a single column. Setting theta_step = 0", filename);
-                    R->prms.rethpm.thetastep=0;
-                } else {
-                    R->prms.rethpm.thetastep=(R->prms.rethpm.thetamax - R->prms.rethpm.thetamin)/(cols-1);
-                }
+              R->prms.rethpm.thetastep=(R->prms.rethpm.thetamax - R->prms.rethpm.thetamin)/(cols-1);
             }
-            break;
+          }
+          break;
         }
 
-        default:
-            fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n",__FILE__);
-            free(R);
-            R=NULL;
-            return 1;
+      default:
+        {
+          fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n",__FILE__);
+          return 1;
+        }
     }
     return 0;
 }
@@ -251,7 +264,16 @@ enum reflec_Type get_table_reflec_type(t_Table *t){
         printf("Couldn't read type from reflectivity table file.");
         exit(-1);
     }
-    printf("Type: %s\n", type);
+    /*for this to work well we need to trim the type string*/
+    while (isspace(*type)){
+      type++;
+    }
+    char *back = type+strlen(type);
+    while (isspace(*(--back))){
+      *(back++)='\0';
+    }
+
+    printf("Type: \'%s\'\n", type);
     if(strcmp(type, NAME_CONSTANT) == 0){
         return CONSTANT;
     } else if(strcmp(type, NAME_BARE) == 0){
@@ -267,7 +289,7 @@ enum reflec_Type get_table_reflec_type(t_Table *t){
     } else if(strcmp(type, NAME_KINEMATIC) == 0){
         return KINEMATIC;
     } else {
-        printf("%s is not a known parametrization!", type);
+        printf("\'%s\'; is not a known parametrization!", type);
         exit(-1);
     }
 }
@@ -310,10 +332,13 @@ double complex reflec_bare(t_Reflec *r_handle, double q, double g){
 }
 
 double complex reflec_kinematic(t_Reflec *r_handle, double q, double g){
-    double complex r;
+    double complex r1,rN;
     struct t_reflec_kinematic *ptr=&(r_handle->prms.rk);
-    r=2*I*RE* ptr->rho_AB * (pow(ptr->Gamma,2.0)*ptr->Lambda/ptr->zeta) * sin(M_PI*ptr->Lambda*ptr->zeta)/(ptr->Lambda*ptr->zeta);
-    return r;
+    double zeta=ptr->Lambda*q/(2*M_PI);
+    double beta=0;
+    r1 = -2*I*RE* ptr->rho_AB * (pow(ptr->Lambda,2.0)*ptr->Gamma/zeta) * sin(M_PI*ptr->Gamma*zeta)/(M_PI*ptr->Gamma*zeta);
+    rN = r1*(1-cexp(I*2*M_PI*zeta*ptr->N)*exp(-beta*ptr->N))/(1-cexp(I*2*M_PI*zeta)*exp(beta));
+    return rN;
 }
 
 double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g){
@@ -392,40 +417,50 @@ double complex refleccq( t_Reflec *r_handle, double q, double g, ...){
     va_start(varg,g);
 
     switch(r_handle->type){
-        case CONSTANT:
-        r=r_handle->prms.rconst.R;
-        break;
-        case BARE:
-        r=reflec_bare(r_handle,q,g);
-        break;
-        case COATING:
+      case CONSTANT:
         {
-            double k=va_arg(varg,double);
-            r=reflec_coating(r_handle,q,g,k);
-            break;
+          r=r_handle->prms.rconst.R;
+          break;
         }
-        case Q_PARAMETRIC:
-        r=reflec_q_prmtc(r_handle,q,g);
-        break;
-        case PARRATT:
+      case BARE:
         {
-            double k=va_arg(varg,double);
-            r=reflec_parratt(r_handle,q,g,k);
-            break;
+          r=reflec_bare(r_handle,q,g);
+          break;
         }
-        case ETH_PARAMETRIC:
+      case COATING:
         {
-            double e=va_arg(varg,double);
-            double theta=va_arg(varg,double);
-            r=reflec_eth_prmtc(r_handle,g,e,theta);
-            break;
+          double k=va_arg(varg,double);
+          r=reflec_coating(r_handle,q,g,k);
+          break;
         }
-        case KINEMATIC:
-        r=reflec_kinematic(r_handle,q,g);
-        break;
-        default:
-        fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");
-        return 1.0;
+      case Q_PARAMETRIC:
+        {
+          r=reflec_q_prmtc(r_handle,q,g);
+          break;
+        }
+      case PARRATT:
+        {
+          double k=va_arg(varg,double);
+          r=reflec_parratt(r_handle,q,g,k);
+          break;
+        }
+      case ETH_PARAMETRIC:
+        {
+          double e=va_arg(varg,double);
+          double theta=va_arg(varg,double);
+          r=reflec_eth_prmtc(r_handle,g,e,theta);
+          break;
+        }
+      case KINEMATIC:
+        {
+          r=reflec_kinematic(r_handle,q,g);
+          break;
+        }
+      default:
+        {
+          fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");
+          return 1.0;
+        }
     }
     va_end(varg);
     return r;
@@ -437,13 +472,17 @@ double reflecq( t_Reflec *r_handle, double q, double g, ...){
     va_start(varg,g);
 
     switch(r_handle->type){
-        case CONSTANT:
-        r=cabs(r_handle->prms.rconst.R);
-        break;
-        case BARE:
-        r=cabs(reflec_bare(r_handle,q,g));
-        break;
-        case COATING:
+      case CONSTANT:
+        {
+          r=cabs(r_handle->prms.rconst.R);
+          break;
+        }
+      case BARE:
+        {
+          r=cabs(reflec_bare(r_handle,q,g));
+          break;
+        }
+      case COATING:
         {
             double k=va_arg(varg,double);
             double complex rp;
@@ -451,28 +490,34 @@ double reflecq( t_Reflec *r_handle, double q, double g, ...){
             r= creal(rp * conj(rp));
             break;
         }
-        case Q_PARAMETRIC:
-        r=cabs(reflec_q_prmtc(r_handle,q,g));
-        break;
-        case PARRATT:
+      case Q_PARAMETRIC:
         {
-            double k=va_arg(varg,double);
-            r=cabs(reflec_parratt(r_handle,q,g,k));
-            break;
+          r=cabs(reflec_q_prmtc(r_handle,q,g));
+          break;
         }
-        case ETH_PARAMETRIC:
+      case PARRATT:
+        {
+          double k=va_arg(varg,double);
+          r=cabs(reflec_parratt(r_handle,q,g,k));
+          break;
+        }
+      case ETH_PARAMETRIC:
         {
             double k=va_arg(varg,double);
             double theta=va_arg(varg,double);
             r=cabs(reflec_eth_prmtc(r_handle,g,k*K2E,theta));
             break;
         }
-        case KINEMATIC:
-        r=cabs(reflec_kinematic(r_handle,q,g));
-        break;
-        default:
-        fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");
-        return 1.0;
+      case KINEMATIC:
+        {
+          r=cabs(reflec_kinematic(r_handle,q,g));
+          break;
+        }
+      default:
+        {
+          fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");
+          return 1.0;
+        }
     }
     va_end(varg);
     return r;

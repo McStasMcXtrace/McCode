@@ -43,8 +43,8 @@ typedef struct t_reflec_parratt{
 /**Multilayer in the kinematical approximation*/
 typedef struct t_reflec_kinematic{
   int N;/**The number of bilayers in the multilayer*/
-  double zeta;/**The thickness of the bilayer*/
-  double Gamma, Lambda;/** */
+  double Gamma;/**The fraction of thickness of high e-density material*/
+  double Lambda;/**The thickness of the bilayer*/
   double rho_AB;/**Electron density contrast between material A and B*/
 } t_reflec_kinematic;
 
