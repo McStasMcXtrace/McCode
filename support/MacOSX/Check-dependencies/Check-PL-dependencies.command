@@ -28,21 +28,24 @@ xcode-select --print-path
 rc=$?; 
 if [[ $rc != 0 ]]; 
 then 
-    XCODE=0
-    osascript -e "tell app \"System Events\" to display dialog \"Xcode commandline tools not installed, spawning installation. \n\n!! Please rerun this tool after installation completes !!\""
+    osascript -e "tell app \"System Events\" to display dialog \"Xcode commandline tools not installed, spawning installation. \n\n!! Please give your password for sudo access in the terminal !!\n\n!! Please rerun this tool after installation completes !!\""
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then
 	echo
 	echo
-	echo "******************************************************"
-	echo "* Requesting installation of Xcode commandline tools *"
-	echo "*                                                    *"
-	echo "* Please rerun dependency script after Xcode install *"
-	echo "******************************************************"
+	echo "*********************************************************"
+	echo "* Requesting installation of Xcode commandline tools    *"
+	echo "* in terminal!                                          *"
+	echo "*                                                       *"
+	echo "* Please give your password for sudo access if prompted *" 
+	echo "*                                                       *"
+	echo "* Please rerun dependency script after Xcode install    *"
+	echo "*********************************************************"
 	echo
 	sleep 3
-	xcode-select --install
+	sudo Xcode-select --reset
+	sudo xcode-select --install
 	exit 0
     else
 	echo
