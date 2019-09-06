@@ -69,7 +69,7 @@ INITIALIZE
     if (reflectivity && strlen(reflectivity)) {
       status=reflec_Init(&re,NONE,reflectivity);
     }else{
-      /*assume a constant refletivity*/
+      /*assume a constant reflectivity*/
       status=reflec_Init(&re,CONSTANT,R0);
     }
 
