@@ -17,8 +17,8 @@
 * Tests the correct working of the mulitlyer_elliptic component both using a
 * reflectivity file and the kinematical approximation. 
 *
-* Example: Test_ML_elliptic.instr s1=1 s2=2 gamma=1.2 fromfile=0 Detector: emonsingle_I=8.79613e-11
-* Example: Test_ML_elliptic.instr s1=1 s2=2 gamma=1.2 fromfile=1 Detector: emonsingle_I=6.1809e-10
+* %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=0 Detector: emon1_I=6.91956e-21
+* %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=1 Detector: emon1_I=4.61321e-21
 *
 * %Parameters
 * s1: [m] Distance from source focus to multilayer centre.
