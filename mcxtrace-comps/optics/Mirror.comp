@@ -67,7 +67,7 @@ INITIALIZE
     }
 
     if (reflectivity && strlen(reflectivity)) {
-      status=reflec_Init(&re,NONE,reflectivity);
+      status=reflec_Init(&re,COATING_UNDEFINED,reflectivity);
     }else{
       /*assume a constant reflectivity*/
       status=reflec_Init(&re,CONSTANT,R0);

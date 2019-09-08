@@ -121,8 +121,8 @@ INITIALIZE
   if(!Gamma && !Lambda){
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
     prms_m->kinematical = 0;
-    /* reflectivity datafile parsing NONE - means set the type according to what is found in the file*/
-    status=reflec_Init(&(prms_m->re),NONE,reflectivity_datafile);
+    /* reflectivity datafile parsing COATING_UNDEFINED - means set the type according to what is found in the file*/
+    status=reflec_Init(&(prms_m->re),COATING_UNDEFINED,reflectivity_datafile);
   }else{
     prms_m->kinematical = 1;
     status=reflec_Init(&(prms_m->re), KINEMATIC, N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-deinsty material in layer, thickness of layer, e-density contrast*/

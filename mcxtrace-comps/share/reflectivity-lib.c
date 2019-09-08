@@ -13,7 +13,7 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
   va_start(ap,typ);
   R->type=typ;
   switch(typ){
-    case NONE:
+    case COATING_UNDEFINED:
       {
         /*no type is given: Assume that it is stated as a #param=<TYPE>
           item in the datafile header*/
