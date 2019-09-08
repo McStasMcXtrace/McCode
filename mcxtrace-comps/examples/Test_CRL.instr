@@ -13,9 +13,9 @@
 *
 * Unit test instrument for various lens components.
 *
-* %Example: Test_CRL.instr LENS=0 L1=35.047 L2=17.523 Detector: line_I=6.00571e-13
+* %Example: Test_CRL.instr LENS=0 L1=35.047 L2=17.523 Detector: line_I=1.20107e-12
 * %Example: Test_CRL.instr LENS=1 L1=35.047 L2=17.523 Detector: pt_I=3.01094e-13
-* %Example: Test_CRL.instr LENS=2 L1=35.047 L2=17.523 Detector: line_I=6.47719e-13
+* %Example: Test_CRL.instr LENS=2 L1=35.047 L2=17.523 Detector: line_I=1.2957e-12
 *
 *
 * %Parameters
@@ -90,7 +90,7 @@ COMPONENT pt = PSD_monitor(
 AT(0,0,L2) RELATIVE crl2d
 
 COMPONENT line = PSD_monitor(
-    restore_xray=1, xwidth=.4e-3,yheight=1e-4/4.0, filename="line")
+    restore_xray=1, xwidth=.4e-3,yheight=1e-1/2.0, filename="line")
 AT(0,0,L2) RELATIVE crl2d
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
