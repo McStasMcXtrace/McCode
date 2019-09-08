@@ -139,7 +139,6 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
-                         prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",
