@@ -42,7 +42,6 @@ DECLARE
 
 INITIALIZE
 %{
-  snprintf(matfilename,254,"%s.txt",filter_mat);
 %}
 
 
