@@ -17,7 +17,7 @@
 * Very simple setup to compare intensities diffracted by Monochromators. 
 * It shows that implementations are equivalent.
 *
-* %Example: Test_Mono -n 1e6 Mono=1 Detector: emon_I=6.97053e-16
+* %Example: Test_Mono -n 1e6 Mono=1 Detector: emon_I=5.39036e-17
 *
 * %Parameters
 * INPUT PARAMETERS:
