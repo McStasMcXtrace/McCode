@@ -14,7 +14,7 @@
 * %D
 * A simple undulator with parameters as in Kim, 1989 (sec. 4).
 *
-* %Example: Test_undulator.instr minh=1 maxh=2 FAST=1 Detector: e_monitor1_I=4.95623e+14
+* %Example: Test_undulator.instr minh=1 maxh=2 FAST=1 Detector: e_monitor1_I=2.34947e+14
 *
 * %P
 * minh: [ ] lowest harmonic to include in the simulation
@@ -81,10 +81,10 @@ COMPONENT slit = Slit(xwidth=0.6e-3,yheight=0.6e-3)
     AT(0,0,20) RELATIVE Origin
 
 COMPONENT e_monitor1 = COPY(e_monitor)(filename="emon1")
-AT(0,0,20) RELATIVE Origin
+AT(0,0,20+1e-6) RELATIVE Origin
 
 COMPONENT psd_monitor1 = COPY(psd_monitor)(filename="psd1", xwidth=10.1e-3, yheight=10.1e-3)
-AT(0,0,20) RELATIVE Origin
+AT(0,0,20+2e-6) RELATIVE Origin
 // insert components here (e.g. Insert -> Source -> ...)
 
 
