@@ -24,7 +24,7 @@
 *
 * %Example: DL=4.9 L0=5 filter_mat="Si.txt" Detector: l_mon1_I=1.31502e-07
 * %Example: DL=4.9 L0=5 filter_mat="Rh.txt" Detector: l_mon1_I=4.04921e-29
-* %Example: -n5e6 DL=4.9 L0=5 filter_mat=Ti F2=1 Detector: l_mon1_I=1.14111e-08
+* %Example: -n5e6 DL=4.9 L0=5 filter_mat="Ti.txt" F2=1 Detector: l_mon1_I=1.14111e-08
 *
 * %Link
 * A reference/HTML link for more information
@@ -36,8 +36,6 @@ DEFINE INSTRUMENT Test_Filter(string filter_mat="Rh.txt",thickness=100e-6,L0=1,D
 
 DECLARE
 %{
-  char matfilename[255];
-
 %}
 
 INITIALIZE
@@ -62,12 +60,12 @@ COMPONENT l_mon0 = L_monitor(
 AT (0,0,1e-6) RELATIVE Source
 
 COMPONENT filter = Filter(
-    material_datafile=matfilename,xwidth=0.1,yheight=0.1,zdepth=thickness
+    material_datafile=filter_mat, xwidth=0.1,yheight=0.1,zdepth=thickness
 )
 AT (0,0,0.5) RELATIVE Source
 
 COMPONENT filter2 = Filter(
-    material_datafile=matfilename,xwidth=0.1, yheight=0.1, zdepth=thickness
+    material_datafile=filter_mat,xwidth=0.1, yheight=0.1, zdepth=thickness
 )
 WHEN(F2) AT (0,0,0.5+thickness+1e-3) RELATIVE Source
 
