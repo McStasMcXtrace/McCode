@@ -66,7 +66,6 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
   )
 
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
@@ -120,11 +119,5 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}display-webgl"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display-webgl${DOT_PYTHON_SUFFIX}"
-    )
-  # Make webgl mcdisplay available as mcdisplay/mxdisplay
-  install(
-    PROGRAMS "${WORK}/${P}display-webgl-py"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display"
     )
 endif()
