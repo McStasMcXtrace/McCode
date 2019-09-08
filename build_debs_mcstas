@@ -18,15 +18,15 @@ export MCINSTALL_PREFIX=/usr/share/
 # 64-bit
 ./mkdist mcstas $1 "" "" deb64 "" -- deb
 ./mkdist mcstas-comps $1 "" "" deb64 "" -- deb
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" deb64 "" -- deb
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" deb64 "" -- deb
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" deb64 "" -- deb
-./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" deb64 "" -- deb
