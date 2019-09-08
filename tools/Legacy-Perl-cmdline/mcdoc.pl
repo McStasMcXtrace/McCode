@@ -548,7 +548,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   -m    --manual   Open the $pkgname User manual\n";
       print "   -c    --comp     Open the $pkgname Component manual\n";
       print "   -t    --text     For single component, display as text\n";
-      print "   -w    --web      Open the $pkgname web page http://www.mcstas.org/\n";
+      print "   -w    --web      Open the $pkgname web page http://www." . lc($pkgname) . ".org/\n";
       if($pkgname=~/^mcstas/i){
         print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
         print "DOC:      Please visit http://www.mcstas.org/\n";
