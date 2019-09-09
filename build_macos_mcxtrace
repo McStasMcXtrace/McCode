@@ -63,7 +63,7 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gcc openmpi -y
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gsl openmpi -y
 $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy scipy pillow jinja2 mpld3
 #tornado
 export PATH=$PATHBAK
