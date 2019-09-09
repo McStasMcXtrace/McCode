@@ -56,17 +56,6 @@ all dependencies, and hence is preferred!
 ## Install without repo use
 If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-1.5rc1-rpm64-CentOS_7/
 
-## Adding support for NCrystal
-Unfortunately, the mcstas-suite-\*-2.5 packages did not include the mcstas-ncrystal-2.5 package and hence needs to be installed independently, i.e.
-```bash
-sudo yum install mcstas-ncrystal-2.5
-```
-- which then has the side effect that some symlinks are broken. Hence also please reinstall e.g. mcstas-tools-python-mcrun-2.5:
-```bash
-sudo yum reinstall mcstas-tools-python-mcrun-2.5
-```
-
-
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
 
