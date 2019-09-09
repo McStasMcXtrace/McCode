@@ -25,6 +25,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mcodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
@@ -62,7 +63,7 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gcc openmpi -y
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gsl openmpi -y
 $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy scipy pillow jinja2 mpld3
 #tornado
 export PATH=$PATHBAK
