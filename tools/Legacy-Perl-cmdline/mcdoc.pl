@@ -34,7 +34,8 @@ our $out_file      = ""; # default name for output of catalog will be index
 my $use_local     = 0;  # true when also looking into current path
 my $single_comp_name = 0;  # component single name
 my $browser       = $MCSTAS::mcstas_config{'BROWSER'};
-my $is_forced     = 0; # true when force re-writting of existing HTML
+my $is_forced     = 0; # true when force re-writing of existing HTML
+my $is_exact      = 0; # true when used for generating TeX docs from comp headers, i.e. we KNOW there is a comp like this
 my @valid_names; # Full list of possible comp matches
 my $HTTP_SYSDIR = $MCSTAS::sys_dir; 
 if (!($Config{'osname'} eq 'MSWin32')) {
@@ -355,6 +356,14 @@ sub add_comp_section_html {
     if(opendir(DIR, $sec)) {
         my @comps = readdir(DIR);
         closedir DIR;
+	if ($is_exact) {
+          # test if the given comp/instr name is an actual file name
+          if (-f "$sec/$single_comp_name") {
+            @comps = ($single_comp_name);
+          } else {
+	    @comps = ();
+	  }
+        }
         if ($is_forced) {
           # test if the given comp/instr name is an actual file name
           if (-f "$single_comp_name") {
@@ -380,8 +389,9 @@ END
         my ($comp, $name);
         my $single_comp_name_base;
         # extract the requested comp/instr name to look for, removing possible path
-        $single_comp_name_base= basename($single_comp_name);
 
+        $single_comp_name_base= lc basename($single_comp_name);
+	
         for $name (sort(@comps)) {
             my $comp = "$sec/$name";
             my $does_match = 0;
@@ -390,12 +400,7 @@ END
             next if (-d "$name"); # skip directories
             # extract the scanned comp/instr name from lib, removing possible path
             $name_base = basename($name);  # with extension
-            if ($single_comp_name_base =~ /^(.*)\.(com|comp|cmp|instr)$/i) {
-	      # requested doc name includes extension: search exact match
-              if((lc $name_base) =~ (lc $single_comp_name_base)) {
-                $does_match = 2;
-              }
-            } elsif ((lc $name_base) =~ (lc $single_comp_name_base)) {
+            if ((lc $name_base) =~ (lc $single_comp_name_base)) {
 	      # requested doc name does not contain an extension: search all matches
               $does_match = 1;
             }
@@ -431,7 +436,8 @@ END
               }
 
             }
-            last if $does_match == 2;
+	    # This should in fact never happen
+	    last if $does_match == 2;
         } # end for
         if ($filehandle) {
           print $filehandle <<END;
@@ -536,13 +542,16 @@ for($i = 0; $i < @ARGV; $i++) {
         $use_local = 1;
   } elsif(/^--force$/i || /^-f$/i) {
         $is_forced = 1;
+  } elsif(/^--exact$/i || /^-e$/i) {
+        $is_exact = 1;
   } elsif(/^--out-file\=(.*)$/ || /^-o(.+)$/) {
         $out_file = $1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       my $pkgname=$MCSTAS::mcstas_config{'PKGNAME'};
       print "Usage: $0 [options] <dir|file>\n";
       print "Generate/show component/instrument documentation using $browser\n";
-      print "   -f    --force    Force re-writting of existing HTML doc locally\n";
+      print "   -f    --force    Force re-writing of existing HTML doc locally\n";
+      print "   -e    --exact    Do docs for a comp we KNOW exist, i.e. for TeX manual\n";
       print "   -h    --help     Show this help\n";
       print "   -l    --tools    Display the $pkgname tools list\n";
       print "   -m    --manual   Open the $pkgname User manual\n";
