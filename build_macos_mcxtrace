@@ -36,7 +36,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 # Generate mxdoc pages
 WORK=`pwd`
 cd $MCINSTALL_PREFIX/mcxtrace/$1/
-./bin/mxdoc . -t
+./bin/mxdoc -i
 cd $WORK
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
