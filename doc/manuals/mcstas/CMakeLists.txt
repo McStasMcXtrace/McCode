@@ -62,7 +62,7 @@ foreach(NAME sources samples optics monitors misc)
     )
 endforeach()
 
-set(LATEX_OUTPUT_PATH "${PROJECT_BINARY_DIR}/build")
+set(LATEX_OUTPUT_PATH "${PROJECT_BINARY_DIR}")
 add_latex_document(
   manual.tex 
   INPUTS ${LIST}
