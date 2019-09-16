@@ -59,15 +59,16 @@ INITIALIZE
 
 TRACE
 %{
-    double dl,x0,y0,z0;
+    double dz,z0=z;
     ALLOW_BACKPROP;
     PROP_Z0;
-    dl=sqrt((x-x0)*(x-x0)+(y-y0)*(y-y0)+(z-z0)*(z-z0));
-    if ((dl>=0) && ((radius!=0) && (x*x + y*y <= radius*radius))
-    || ((dl>=0) && (radius==0) && (x>xmin && x<xmax && y>ymin && y<ymax)))
+    dz=z-z0;/*dz<0 means photon must travel backwards to hit beamstop*/
+    if ( ((dz>=0) && ((radius!=0) && (x*x + y*y <= radius*radius)))
+        || ((dz>=0) && (radius==0) && (x>xmin && x<xmax && y>ymin && y<ymax)) ){
       ABSORB;
-    else
+    } else {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+    }
 %}
 
 MCDISPLAY
