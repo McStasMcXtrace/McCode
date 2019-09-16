@@ -226,7 +226,7 @@ TRACE
   MPI_MASTER(
 #endif
     if (verbose==3 && mcrun_num<10) {
-      printf("id=%ld\tpdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+      printf("id=%llu\tpdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     mcrun_num, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
