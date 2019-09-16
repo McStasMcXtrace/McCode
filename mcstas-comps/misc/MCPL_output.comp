@@ -137,7 +137,7 @@ INITIALIZE
     int ii;
     char *clr,clbuf[CHAR_BUF_LENGTH];
     if ( (clr=calloc(CHAR_BUF_LENGTH*(mcnumipar+1)+1,sizeof(char)))==NULL){
-        fprintf(stderr,"Error(%s): Memory allocation error.\n.",NAME_CURRENT_COMP);
+        fprintf(stderr,"Error(%s): Memory allocation error.\n",NAME_CURRENT_COMP);
         exit(-1);
     }
     strncat(clr,mcinstrument_exe,CHAR_BUF_LENGTH);
