@@ -154,7 +154,7 @@ INITIALIZE
   }
 
   if (sigex <0 || sigey<0){
-   fprintf(stderr, "Error (%s): sigex and sigey must be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
+   fprintf(stderr, "Error (%s): sigex (= %g) and sigey (= %g) must both be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
     exit(1);
   }
   if (dist<=0 || focus_xw < 0 || focus_yh < 0){
