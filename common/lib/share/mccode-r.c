@@ -138,7 +138,7 @@ DArray3d create_darr3d(int nx, int ny, int nz){
   double *p2;
   p2 = calloc(nx*ny*nz, sizeof(double));
   for (i=0; i<nx; i++){
-    for (j=0; j<ny; i++){
+    for (j=0; j<ny; j++){
       arr3d[i][j] = &(p2[(i*ny+j)*nz]);
     }
   }
