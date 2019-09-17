@@ -1,3 +1,5 @@
+#ifndef ARRAYS_C
+#define ARRAYS_C
 #include <stdlib.h>
 
 typedef double* DArray1d;
@@ -61,3 +63,4 @@ void destroy_darr3d(DArray3d a){
   free(a[0]);
   free(a);
 }
+#endif
