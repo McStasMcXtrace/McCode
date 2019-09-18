@@ -114,7 +114,7 @@ INITIALIZE
   }
 
   if(form_factors){
-      if (status=Table_Read(&(f0),form_factors,0)==-1){
+      if ((status=Table_Read(&(f0),form_factors,0))==-1){
           fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
           exit(-1);
       }
