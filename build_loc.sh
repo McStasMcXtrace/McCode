@@ -9,7 +9,7 @@ WORK=`pwd`
 
 export MCINSTALL_PREFIX=/usr/share/
 
-./mkdist mcstas 3.0-test "" "" deb64 "" -- justinst
-./mkdist mcstas-comps 3.0-test "" "" deb64 "" -- justinst
+./mkdist mcstas 3.0-dev "" "" deb64 "" -- justinst
+./mkdist mcstas-comps 3.0-dev "" "" deb64 "" -- justinst
 # can be out-commented after the first build iteration:
-./mkdist mcstas-tools-perl-cmdline 3.0-test tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-perl-cmdline 3.0-dev tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
