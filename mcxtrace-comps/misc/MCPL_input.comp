@@ -77,12 +77,12 @@ INITIALIZE
         nparticles=ncount;
     }else{
         printf("Message(%s): MCPL file (%s) produced with %s.\n",NAME_CURRENT_COMP,filename,mcpl_hdr_srcname(inputfile));
-        printf("Message(%s): MCPL file (%s) contains %ld particles.\n",NAME_CURRENT_COMP,filename,nparticles); 
+        printf("Message(%s): MCPL file (%s) contains %lld particles.\n",NAME_CURRENT_COMP,filename,nparticles); 
     }
 
 #if defined (USE_MPI)
     mcset_ncount(mpi_node_count*nparticles);
-    MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
+    MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %lld events at each of the %i MPI nodes = %lld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
 #endif
 
     read_photons=0;
@@ -130,7 +130,7 @@ TRACE
 #endif
 
     if (verbose && used_photons<11) {
-      printf("id=%ld\tpdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+      printf("id=%lld\tpdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     read_photons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
@@ -180,10 +180,10 @@ FINALLY
 
     ncount=mcget_ncount();
     if (used_photons!=read_photons){
-        fprintf(stdout,"Message(%s): You have used %ld of %ld photons available in the MCPL file.\n",NAME_CURRENT_COMP,used_photons,read_photons);
+        fprintf(stdout,"Message(%s): You have used %lld of %lld photons available in the MCPL file.\n",NAME_CURRENT_COMP,used_photons,read_photons);
     }
     if (ncount != used_photons){
-        fprintf(stderr,"Warning (%s): You requested %ld photons from a file which contains %ld particles in general, of which only %ld are photons (within the wanted energy interval).\n"
+        fprintf(stderr,"Warning (%s): You requested %lld photons from a file which contains %lld particles in general, of which only %lld are photons (within the wanted energy interval).\n"
                 "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles,used_photons);
     }
 
