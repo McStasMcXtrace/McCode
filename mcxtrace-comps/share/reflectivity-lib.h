@@ -14,7 +14,7 @@ enum reflec_Type  {COATING_UNDEFINED=0,CONSTANT=1,BARE, COATING, Q_PARAMETRIC, P
 #define NAME_KINEMATIC "kinematic"
 
 typedef struct t_reflec_constant{
-  double R;
+  double complex R;
 } t_reflec_constant;
 
 typedef struct t_reflec_bare{
