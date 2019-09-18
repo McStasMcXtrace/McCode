@@ -63,7 +63,7 @@ INITIALIZE
     int status;
 
     if (reflec && strlen(reflec)){
-      fprintf(stderr,"WARNING (%s): You have specified the reflec parameter. This is deprecated - please use \'reflectivity\' instead\n");
+      fprintf(stderr,"WARNING (%s): You have specified the reflec parameter. This is deprecated - please use \'reflectivity\' instead\n", NAME_CURRENT_COMP);
     }
 
     if (reflectivity && strlen(reflectivity)) {
