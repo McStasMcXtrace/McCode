@@ -85,7 +85,9 @@
 #endif /* !WIN32 */
 #endif /* MC_PATHSEP_C */
 
-
+#ifndef WIN32
+#define _POSIX_SOURCE
+#endif
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
