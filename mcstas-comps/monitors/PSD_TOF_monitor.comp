@@ -55,8 +55,7 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, PSD_Ns, PSD_ps, PSD_p2s)
 
 
 SHARE %{
-%include "arrays.h"
-%include "arrays.c"
+%include "array-lib"
 %}
 
 DECLARE

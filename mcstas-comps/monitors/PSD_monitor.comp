@@ -54,8 +54,7 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE %{
-%include "arrays.h"
-%include "arrays.c"
+%include "array-lib"
 %}
 
 DECLARE
