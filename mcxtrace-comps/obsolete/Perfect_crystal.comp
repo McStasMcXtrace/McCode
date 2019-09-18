@@ -171,7 +171,7 @@ INITIALIZE
 %{
   int status;
   if (material){
-    if (status=Table_Read(&(prms.m_t),material,0)==-1){
+    if ((status=Table_Read(&(prms.m_t),material,0))==-1){
       fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
       exit(-1);
     }
@@ -181,10 +181,10 @@ INITIALIZE
     if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
     if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
   }else{
-    fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP,material);
+    fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP);
   }
   if(form_factors){
-    if (status=Table_Read(&(prms.f0_t),form_factors,0)==-1){
+    if ((status=Table_Read(&(prms.f0_t),form_factors,0))==-1){
       fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
       exit(-1);
     }
@@ -228,7 +228,7 @@ TRACE
   if (tin>=0){
     /* check whether our intersection lies within the boundaries of the crystal*/
     x_int=x+kxu*tin;
-    y_int=y+kyu*tin;V,
+    y_int=y+kyu*tin;
     z_int=z+kzu*tin;
     
     if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
