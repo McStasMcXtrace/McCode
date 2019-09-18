@@ -63,39 +63,39 @@ COMPONENT Origin = Progress_bar()
 COMPONENT s1g = Source_gaussian(
     sig_x = 1e-3, sig_y = 2e-3, sigPr_x = 1e-3, sigPr_y = 2e-3,
     flux = 1, dist = 1, gauss = 0, E0 = 5, dE = 1)
-WHEN (SRC==0)  AT (0, 0, 0) RELATIVE Origin
+WHEN SRC==0  AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT s2g = Source_gaussian(
     sig_x = 1e-3, sig_y = 2e-3, sigPr_x = 1e-3, sigPr_y = 2e-3,
     flux = 1, dist = 1, gauss = 1, lambda0 = 2.5, dlambda = 0.2)
-WHEN (SRC==1)  AT (0, 0, 0) RELATIVE Origin
+WHEN SRC==1  AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT s1p = Source_pt(
     focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, E0 = 5,
     dE = 1, gauss = 0)
-WHEN (SRC==2)  AT (0, 0, 0) RELATIVE Origin
+WHEN SRC==2  AT (0, 0, 0) RELATIVE Origin
 COMPONENT s2p = Source_pt(
     focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, lambda0 = 2.5,
     dlambda = 0.2, gauss = 1)
-WHEN (SRC==3)  AT (0, 0, 0) RELATIVE Origin
+WHEN SRC==3  AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT s1f = Source_flat(
     xwidth=1e-3, yheight=2e-3, focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, E0 = 5,
      dE = 1, gauss = 0)
-WHEN (SRC==4)  AT (0, 0, 0) RELATIVE Origin
+WHEN SRC==4  AT (0, 0, 0) RELATIVE Origin
 COMPONENT s2f = Source_flat(
     xwidth=1e-3, yheight=2e-3, focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, lambda0 = 2.5,
      dlambda = 0.2, gauss = 1)
-WHEN (SRC==5)  AT (0, 0, 0) RELATIVE Origin
+WHEN SRC==5  AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT s1d = Source_div(
     xwidth=1e-3, yheight=1e-3, focus_aw=2e-3, focus_ah=0.5e-3, E0=5, dE=1, gauss=0, gauss_a=1
 )
-WHEN (SRC==6) AT (0,0,0) RELATIVE Origin
+WHEN SRC==6 AT (0,0,0) RELATIVE Origin
 COMPONENT s2d = Source_div(
     xwidth=1e-3, yheight=1e-3, focus_aw=2e-3, focus_ah=0.5e-3, lambda0=2.5, dlambda=0.2, gauss=1, gauss_a=0
 )
-WHEN (SRC==7) AT (0,0,0) RELATIVE Origin
+WHEN SRC==7 AT (0,0,0) RELATIVE Origin
 
 
 
