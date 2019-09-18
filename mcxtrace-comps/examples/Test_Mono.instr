@@ -104,23 +104,23 @@ ROTATED (-OMM, 0, 0) RELATIVE generic_source
   
 COMPONENT Mono_obso = Perfect_crystal(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
-WHEN(Mono==0) AT (0, 0, 0) RELATIVE Mono_Arm
+WHEN Mono==0 AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono1 = Bragg_crystal(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
-WHEN(Mono==1) AT (0, 0, 0) RELATIVE Mono_Arm
+WHEN Mono==1 AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono1b = Bragg_crystal_bent(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0,y_b=BEND, lattice_y_b=BEND, z_c=BEND, lattice_z_c=BEND)
-WHEN(Mono==2) AT (0, 0, 0) RELATIVE Mono_Arm
+WHEN Mono==2 AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT MonoBC = Bragg_crystal_BC(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alphay=1)
-WHEN(Mono==3) AT (0, 0, 0) RELATIVE Mono_Arm
+WHEN Mono==3 AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT MonoBCb = Bragg_crystal_bent_BC(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
-WHEN(Mono==4) AT (0, 0, 0) RELATIVE Mono_Arm
+WHEN Mono==4 AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono_Out = Arm()
 AT (0, 0, 0) RELATIVE Mono_Arm
