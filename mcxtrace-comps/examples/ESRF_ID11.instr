@@ -62,14 +62,14 @@ COMPONENT id11_source=Source_div(
     xwidth=source_h,yheight=source_v,focus_aw=source_div_h,focus_ah=source_div_v, E0=30, dE=0.9, gauss=1
 
 )
-WHEN (SOURCE==0) AT (0,0,0) RELATIVE PREVIOUS
+WHEN SOURCE==0 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT generic_source=Source_gaussian(
     lambda0=0.413, dlambda=0.412,
     sig_x=0.057e-3, sig_y=0.01e-3, 
     sigPr_x=0.6e-3,sigPr_y=0.6e-3, dist=29
 )
-WHEN (SOURCE==1) AT (0,0,0) RELATIVE PREVIOUS
+WHEN SOURCE==1 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT psd0 = PSD_monitor(nx=301,ny=301,filename="psd0.dat",xwidth=0.002,yheight=0.002)
 AT (0,0,28.9) RELATIVE Origin
@@ -84,7 +84,7 @@ AT (0,0,29.1) RELATIVE Origin
   /*in -vacuum transfocator*/
 COMPONENT transfocator1=Lens_simple(
     xwidth=2e-1,yheight=2e-1,N=T1_N, material_datafile="Be.txt",r=300e-6)
-WHEN(IVT1BE) AT(0,0,31.5) RELATIVE Origin
+WHEN (IVT1BE) AT(0,0,31.5) RELATIVE Origin
 ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
 
 COMPONENT transfocator2=Lens_simple(
