@@ -175,7 +175,7 @@ TRACE
           };
           break;
         default:
-          1;
+          break;
       }
       status=filter_refract(&kx,&ky,&kz,nx,ny,nz,0.0,delta);
       SCATTER;
@@ -211,7 +211,7 @@ TRACE
           };
           break;
         default:
-          1;
+          break;
       }
       SCATTER;
       status=filter_refract(&kx,&ky,&kz,nx,ny,nz,delta,0.0);
