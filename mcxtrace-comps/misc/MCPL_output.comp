@@ -83,7 +83,7 @@ INITIALIZE
     char *myfilename,*stripext;
 
     /*strip extension from filename*/
-    if (stripext=strrchr(filename,'.')){
+    if ((stripext=strrchr(filename,'.'))){
 #if defined (USE_MPI)
         MPI_MASTER(
             fprintf(stdout, "WARNING: (%s): the \"%s\" file extension will be overwritten by \".mcpl\"\n",NAME_CURRENT_COMP,stripext);
@@ -121,7 +121,7 @@ INITIALIZE
     /*also add the instrument file and the command line as blobs*/
     FILE *fp;
     if( (fp=fopen(mcinstrument_source,"rb"))!=NULL){
-        unsigned char *buffer;
+        char *buffer;
         int size,status;
         /*find the file size by seeking to end, "tell" the position, and then go back again*/
         fseek(fp, 0L, SEEK_END);
