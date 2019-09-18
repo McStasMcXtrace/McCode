@@ -322,6 +322,7 @@ SHARE
       Table_Free(&table);
       return 1;
     }
+    return -1;
   }
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
