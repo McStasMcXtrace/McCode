@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
+WORK=`pwd`
+
+# From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=$WORK/testbuilds/
+rm -rf $MCINSTALL_PREFIX/*
+rm -rf dist/*
+mkdir -p buildlogs
+
+# 64-bit debian
+./mkdist mcstas 2.x-test "" "" deb64 "" -- justinst &> buildlogs/mcstas_deb.log
+./mkdist mcstas-comps 2.x-test "" "" deb64 "" -- justinst &> buildlogs/mcstas-comps_deb.log
+./mkdist mcstas-tools-perl-cmdline 2.x-test tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst &> buildlogs/mcstas-tools_deb.log
+
+export MCSTAS=$MCINSTALL_PREFIX/mcstas/2.x-test
+export MCSTAS_TOOLS=$MCSTAS/tools/Perl/
+export PATH=$MCSTAS/miniconda3/bin:$MCSTAS/bin:$PATH
+
+cd buildlogs
+mcrun.pl --test &> mcstas-test_deb.log

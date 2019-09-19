@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update
+
+WORK=`pwd`
+
+# From 2.1 onwards, let Mcxtrace reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=$WORK/testbuilds/
+rm -rf $MCINSTALL_PREFIX/*
+rm -rf dist/*
+mkdir -p buildlogs
+
+# 64-bit debian
+./mkdist mcxtrace 1.x-test "" "" mac "" -- justinst &> buildlogs/mcxtrace_mac.log
+./mkdist mcxtrace-comps 1.x-test "" "" mac "" -- justinst &> buildlogs/mcxtrace-comps_mac.log
+./mkdist mcxtrace-tools-perl-cmdline 1.x-test tools/Legacy-Perl-cmdline/ "" mac "" -- justinst &> buildlogs/mcxtrace-tools_mac.log
+
+export MCXTRACE=$MCINSTALL_PREFIX/mcxtrace/1.x-test
+export MCXTRACE_TOOLS=$MCXTRACE/tools/Perl/
+export PATH=$MCXTRACE/miniconda3/bin:$MCXTRACE/bin:$PATH
+
+cd buildlogs
+mxrun.pl --test &> mcxtrace-test_mac.log
