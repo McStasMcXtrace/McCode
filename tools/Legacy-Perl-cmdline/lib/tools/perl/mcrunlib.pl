@@ -467,7 +467,7 @@ sub do_test {
       # check command
       $this_cmd =~ s/$base.instr//;
       $this_cmd =~ s/$base//;
-      $this_cmd = "$base.instr $this_cmd"; } # Add full instr name before parameters 
+      $this_cmd = "$base.instr $this_cmd"; # Add full instr name before parameters 
       if ($this_cmd !~ m/$MCSTAS::mcstas_config{'RUNCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'PLOTCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'TRACECMD'}/)
                                  { $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} $this_cmd"; } # omitted $MCSTAS::mcstas_config{'RUNCMD'} ?
       if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
