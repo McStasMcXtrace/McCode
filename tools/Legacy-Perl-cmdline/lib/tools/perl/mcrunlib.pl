@@ -457,7 +457,11 @@ sub do_test {
     	}
     }
     for ($k=0; $k<@val_par; $k++) { # loop on tests
-      if ($k == 0) { &$printer("INSTRUMENT $base:\n  $data->{'identification'}{'short'}"); }
+      if ($k == 0) {
+	&$printer("INSTRUMENT $base:\n  $data->{'identification'}{'short'}");
+	# Create subdirectory base:
+	mkdir($base);
+      }
       my $this_cmd =$val_par[$k];
       $index++;
       # check command
@@ -467,7 +471,7 @@ sub do_test {
       if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
-      if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
+      if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d ". File::Spec->catfile($base, $k); }
 
       if($seed>0) { $this_cmd .= " --seed=$seed"; }
       if ($cflags==0) { $this_cmd .= " --no-cflags"; }
