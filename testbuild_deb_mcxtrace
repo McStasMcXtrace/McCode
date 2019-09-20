@@ -13,13 +13,39 @@ rm -rf dist/*
 mkdir -p buildlogs
 
 # 64-bit debian
+echo "*********************************************************"
+echo "* Building mcxtrace                                     *"
+echo "*********************************************************"
 ./mkdist mcxtrace 1.x-test "" "" deb64 "" -- justinst &> buildlogs/mcxtrace_deb.log
+echo "- Done! Build log available in buildlogs/mcxtrace_deb.log"
+echo
+echo "*********************************************************"
+echo "* Building mcxtrace-comps                               *"
+echo "*********************************************************"
 ./mkdist mcxtrace-comps 1.x-test "" "" deb64 "" -- justinst &> buildlogs/mcxtrace-comps_deb.log
+echo "- Done! Build log available in buildlogs/mcxtrace-comps_deb.log"
+echo
+echo "*********************************************************"
+echo "* Building Perl-based commandline tools                 *"
+echo "*********************************************************"
 ./mkdist mcxtrace-tools-perl-cmdline 1.x-test tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst &> buildlogs/mcxtrace-tools_deb.log
+echo "- Done! Build log available in buildlogs/mcxtrace-tools_deb.log"
+echo
 
 export MCXTRACE=$MCINSTALL_PREFIX/mcxtrace/1.x-test
 export MCXTRACE_TOOLS=$MCXTRACE/tools/Perl/
 export PATH=$MCXTRACE/miniconda3/bin:$MCXTRACE/bin:$PATH
 
 cd buildlogs
-mxrun.pl --test &> mcxtrace-test_deb.log
+echo "*********************************************************"
+echo "* Running integration test with GCC                      *"
+echo "*********************************************************"
+export MCXTRACE_CC=gcc
+mxrun.pl --test &> mcxtrace-test_deb_gcc.log
+echo "- Done! Test log available in buildlogs/mcxtrace-test_deb_gcc.log"
+echo "*********************************************************"
+echo "* Running integration test with CLANG                   *"
+echo "*********************************************************"
+export MCXTRACE_CC=clang
+mxrun.pl --test &> mcxtrace-test_deb_clang.log
+echo "- Done! Test log available in buildlogs/mcxtrace-test_deb_clang.log"
