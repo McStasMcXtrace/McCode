@@ -268,9 +268,9 @@ INITIALIZE
              "            Defaulting to normal Monitor dimensions.\n",
              NAME_CURRENT_COMP, geometry);
       strcpy(geometry, "");
-    } 
-  } else {
+    }  else {
       offflag=1;
+    }
   }
 
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax &&
