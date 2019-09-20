@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Ensure our 3rd party modules are in place and updated
 git submodule init
