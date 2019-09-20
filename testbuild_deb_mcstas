@@ -6,9 +6,8 @@ git submodule update
 
 WORK=`pwd`
 
-# From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=$WORK/testbuilds/
-rm -rf $MCINSTALL_PREFIX/*
+rm -rf $MCINSTALL_PREFIX/mcstas/2.x-test/
 rm -rf dist/*
 mkdir -p buildlogs
 
@@ -47,5 +46,6 @@ echo "*********************************************************"
 echo "* Running integration test with CLANG                   *"
 echo "*********************************************************"
 export MCSTAS_CC=clang
+export MCSTAS_CFLAGS="-g -lm -O2 -stdlib=libc++"
 mcrun.pl --test &> mcstas-test_deb_clang.log
 echo "- Done! Test log available in buildlogs/mcstas-test_deb_clang.log"
