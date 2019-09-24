@@ -145,27 +145,15 @@ int mccode_main(int argc, char *argv[])
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
 
-
-/* Initialise RNG in CUDA case */
-#ifdef USE_PGI
-    curandState_t MCRANDstate;
-    long long seq = Xmcrun_num;
-#undef random
-#define random twister_initdraw(mcseed,particleN._uid,particleN.MCRANDstate);
-    /*
-    #define prinf(...) printf_GPU(__VA_ARGS__)
-	  #define fprinf(...) fprintf_GPU(__VA_ARGS__)
-    */
-#endif
-/* End RNG in CUDA case */
-
-
     _class_particle particleN = mcgenstate(); // initial particle
     particleN._uid = Xmcrun_num;
 
 
 /* CUDA */
 #ifdef USE_PGI
+    curandState_t MCRANDstate;
+    long long seq = Xmcrun_num;
+    curand_init(mcseed+seq, seq, 0ULL, &MCRANDstate);
     particleN.MCRANDstate = MCRANDstate;
 #endif
 

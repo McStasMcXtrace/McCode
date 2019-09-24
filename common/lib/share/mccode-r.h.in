@@ -401,12 +401,13 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
    of CUDA libs - and otherwise fail */
 #  include "openacc_curand.h"
 #  define MC_RAND_MAX ((unsigned int) 0xffffffff)
-#  define srandom mc_srandom
+#  define srandom mt_srandom
 // TODO: redefine random
-#  define random randjunk
+#  define rand01() curand_uniform(particle.MCRANDstate) 
+/* Pure 'random()' should not actually be called on device */
+#  define random() rand01()
 #  define printf_sys printf
 #  define fprintf_sys fprintf
-float twister_initdraw(int seed, int t_id, curandState_t* state);
 #endif
 
 typedef int mc_int32_t;

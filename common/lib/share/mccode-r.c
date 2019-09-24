@@ -3397,20 +3397,7 @@ unsigned long mt_random(void)
 /* End of McCode random number routine. */
 
 
-/* CUDA-based mersenne twister */
-#ifdef USE_PGI
-#pragma acc routine seq nohost
-float
-twister_initdraw(int seed, int t_id, curandState_t* state) {
-  long long seq = t_id;
-  long long s = seed;
-  if (state == NULL)
-    curand_init(seed, seq, 0ULL, state);
-  return curand_uniform(state);
-}
-#endif
-/* end CUDA algo */
-
+/* CUDA-based mersenne twister is called directly via curand_uniform */
 
 /* randnorm: generate a random number from normal law */
 #pragma acc routine seq
@@ -3455,7 +3442,7 @@ double randtriangle(void) {
 /**
  * Random number between 0.0 and 1.0 (including?)
  */
-#pragma acc routine seq
+
 double rand01() {
 	double randnum;
 	randnum = (double) random();
