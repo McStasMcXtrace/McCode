@@ -391,21 +391,19 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 /* selection of random number generator. default is MT */
 #ifndef USE_PGI
-#define USE_PGI 0
-#endif
-
-#if USE_PGI == 0
    /* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 #  define random mt_random
 #  define srandom mt_srandom
+
 #else
-  /* Use CUDA rand algo - we should check for availability
-     of CUDA libs - and otherwise fail*/
+/* Use CUDA rand algo - we should check for availability
+   of CUDA libs - and otherwise fail */
 #  include "openacc_curand.h"
 #  define MC_RAND_MAX ((unsigned int) 0xffffffff)
 #  define srandom mc_srandom
-#  define random randjunk /* random will be overwritten in main pragma loop */
+// TODO: redefine random
+#  define random randjunk
 #  define printf_sys printf
 #  define fprintf_sys fprintf
 float twister_initdraw(int seed, int t_id, curandState_t* state);

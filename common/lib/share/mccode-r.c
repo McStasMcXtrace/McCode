@@ -3393,19 +3393,12 @@ unsigned long mt_random(void)
 #undef MATRIX_A
 #undef UPPER_MASK
 #undef LOWER_MASK
-
 /* End of "Mersenne Twister". */
-
 /* End of McCode random number routine. */
 
-#pragma acc routine seq
-unsigned long randjunk()
-{
-  return 12345;
-}
 
 /* CUDA-based mersenne twister */
-#if USE_PGI == 1
+#ifdef USE_PGI
 #pragma acc routine seq nohost
 float
 twister_initdraw(int seed, int t_id, curandState_t* state) {

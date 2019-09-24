@@ -127,7 +127,7 @@ int mccode_main(int argc, char *argv[])
 #endif /* !NOSIGNALS */
 
 /* ================ main particle generation/propagation loop ================ */
-#if defined (USE_MPI)
+#ifdef USE_MPI
   /* sliced Ncount on each MPI node */
   mcncount = mpi_node_count > 1 ?
     floor(mcncount / mpi_node_count) :
@@ -135,7 +135,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 
 /* main particle event loop */
-#if USE_PGI == 1
+#ifdef USE_PGI
 #include <openacc.h>
 #include "mccode_attaches.c"
 #endif
@@ -147,7 +147,7 @@ int mccode_main(int argc, char *argv[])
 
 
 /* Initialise RNG in CUDA case */
-#if USE_PGI == 1
+#ifdef USE_PGI
     curandState_t MCRANDstate;
     long long seq = Xmcrun_num;
 #undef random
@@ -165,14 +165,13 @@ int mccode_main(int argc, char *argv[])
 
 
 /* CUDA */
-#if USE_PGI == 1
+#ifdef USE_PGI
     particleN.MCRANDstate = MCRANDstate;
 #endif
 
 
     raytrace(particleN);
   }
-
 
   /* Likely we need an undef random here... */
 
