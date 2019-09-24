@@ -280,26 +280,18 @@ char  *mcsig_message;
 #ifndef PI
 # ifdef M_PI
 #  define PI M_PI
-
-// WARNING: with this addition mcstas does not build on some systems
-// (Ubuntu, mac). Should mcstas itself be built using with c99?
-// NOTE: However, since mcstas-r.h is "runetime", it should probably
-// not be included in mcstas. Runtime and cogen code should be kept apart.
-
-//# else
+# else
 /* When using c99 in the CFLAGS, some of these consts
    are lost... Perhaps we should in fact include everything from
    https://www.gnu.org/software/libc/manual/html_node/Mathematical-Constants.html
 */
-//#  define PI 3.14159265358979323846
-//#  define M_PI PI
-//#  define M_PI_2 M_PI/2.0
-//#  define M_PI_4 M_PI/4.0
-//#  define M_1_PI 1.0/M_PI
-//#  define M_2_PI 2*M_1_PI
-//# endif
-
-#endif
+#  define PI 3.14159265358979323846
+#  define M_PI PI
+#  define M_PI_2 M_PI/2.0
+#  define M_PI_4 M_PI/4.0
+#  define M_1_PI 1.0/M_PI
+#  define M_2_PI 2*M_1_PI
+# endif
 #endif
 
 #define RAD2MIN  ((180*60)/PI)
