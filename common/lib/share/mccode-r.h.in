@@ -390,35 +390,16 @@ void mcdis_cylinder( double x, double y, double z,
 void mcdis_sphere(double x, double y, double z, double r, int N);
 
 /* selection of random number generator. default is MT */
-#ifndef MC_RAND_ALG
-#define MC_RAND_ALG 1
+#ifndef USE_PGI
+#define USE_PGI 0
 #endif
 
-#if MC_RAND_ALG == 0
-   /* Use system random() (not recommended). */
-#define random random
-#  define MC_RAND_MAX RAND_MAX
-#elif MC_RAND_ALG == 1
+#if USE_PGI == 0
    /* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 #  define random mt_random
 #  define srandom mt_srandom
-#elif MC_RAND_ALG == 2
-   /* Algorithm used in McStas CVS-080208 and earlier (not recommended). */
-#  define MC_RAND_MAX 0x7fffffff
-#  define random mc_random
-#  define srandom mc_srandom
-#elif MC_RAND_ALG == 3
-  /* "Mersenne Twister" generate by opencl with GPU. */
-#  define MC_RAND_MAX ((unsigned int) 0xffffffff)
-#  define random  mt_random_opencl
-#  define srandom mt_srandom_opencl
-//#  define srandom mt_srandom
-#elif MC_RAND_ALG == 4
-  /* Pure testing purposes, returns the "random" number 0.5 */
-#define random randjunk
-#  define MC_RAND_MAX RAND_MAX
-#elif MC_RAND_ALG == 5
+#else
   /* Use CUDA rand algo - we should check for availability
      of CUDA libs - and otherwise fail*/
 #  include "openacc_curand.h"
@@ -428,8 +409,6 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define printf_sys printf
 #  define fprintf_sys fprintf
 float twister_initdraw(int seed, int t_id, curandState_t* state);
-#else
-#  error "Bad value for random number generator choice."
 #endif
 
 typedef int mc_int32_t;

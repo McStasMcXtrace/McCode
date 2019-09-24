@@ -135,7 +135,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 
 /* main particle event loop */
-#if MC_RAND_ALG == 5
+#if USE_PGI == 1
 #include <openacc.h>
 #include "mccode_attaches.c"
 #endif
@@ -147,7 +147,7 @@ int mccode_main(int argc, char *argv[])
 
 
 /* Initialise RNG in CUDA case */
-#if MC_RAND_ALG == 5
+#if USE_PGI == 1
     curandState_t MCRANDstate;
     long long seq = Xmcrun_num;
 #undef random
@@ -165,7 +165,7 @@ int mccode_main(int argc, char *argv[])
 
 
 /* CUDA */
-#if MC_ALG_RAND == 5
+#if USE_PGI == 1
     particleN.MCRANDstate = MCRANDstate;
 #endif
 

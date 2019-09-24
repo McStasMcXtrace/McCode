@@ -1746,7 +1746,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#define M_SQRT2 1.4142135623730951  /* sqrt(2) */");
   cout("#endif");
 
-  cout("#if MC_RAND_ALG==5");
+  cout("#if USE_PGI==1");
   cout("#include <openacc_curand.h>");
   cout("#include <accelmath.h>");
   cout("#else");
@@ -1763,7 +1763,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
 #endif
-  cout("#if MC_RAND_ALG == 5");
+  cout("#if USE_PGI == 1");
   cout("  curandState_t MCRANDstate; /* CUDA RNG state */");
   cout("#endif");
   cout("  double t, p;    /* time, event weight */");

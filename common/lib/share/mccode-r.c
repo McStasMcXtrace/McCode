@@ -3405,7 +3405,7 @@ unsigned long randjunk()
 }
 
 /* CUDA-based mersenne twister */
-#if MC_RAND_ALG == 5
+#if USE_PGI == 1
 #pragma acc routine seq nohost
 float
 twister_initdraw(int seed, int t_id, curandState_t* state) {
