@@ -263,13 +263,15 @@ macro(installMCCODE)
   )
 
 
-  ## Build McFormat executable
-  add_executable(
+  if (NOT enable_mcxtrace)
+    ## Build McFormat executable
+    add_executable(
 	  "${FLAVOR_FMT}"
 	  work/src/mcformat.c
-  )
-  ## McFormat needs to be linked against m
-  target_link_libraries(${FLAVOR_FMT} m)
+    )
+    ## McFormat needs to be linked against m
+    target_link_libraries(${FLAVOR_FMT} m)
+  endif()
 
   ## Add install targets
   include(MCUtil)
@@ -286,12 +288,13 @@ macro(installMCCODE)
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    )
-    install (
-      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    )
-
+      )
+    if (NOT enable_mcxtrace)
+      install (
+        PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
+        DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+      )
+    endif()
     foreach (name environment module)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
@@ -326,12 +329,15 @@ macro(installMCCODE)
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
-    )
-    install (
-      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${bin}
-    )
-
+      )
+    
+    if (NOT enable_mcxtrace)    
+      install (
+        PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
+        DESTINATION ${bin}
+      )
+    endif()
+  
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
       DESTINATION ${bin}
