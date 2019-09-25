@@ -32,11 +32,12 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "Support\PPDs.zip"; DestDir: "{tmp}"
+Source: "Support\Tk-CodeText-0.3.4.zip"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "postsetup.bat"; DestDir: "{tmp}"
 Source: "python-install.bat"; DestDir: "{tmp}"
+Source: "docupdate.bat"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-comps-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-manuals-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
@@ -52,7 +53,6 @@ Source: "dist\mcxtrace-tools-python-mxdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64
 Source: "Support\Miniconda3-latest-Windows-x86_64.exe"; DestDir: "{tmp}"
 
 [Run]
-Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\python-install.bat"
 Filename: "{tmp}\postsetup.bat"
 Filename: "{tmp}\mcxtrace-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
@@ -68,6 +68,7 @@ Filename: "{tmp}\mcxtrace-tools-python-mxplot-matplotlib-NSIS64-@VERSION@-mingw6
 Filename: "{tmp}\mcxtrace-tools-python-mxdisplay-webgl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-python-mxdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\miniconda3.zip"; WorkingDir: "c:\mcxtrace-@VERSION@\"
+Filename: "{tmp}\docupdate.bat";
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
