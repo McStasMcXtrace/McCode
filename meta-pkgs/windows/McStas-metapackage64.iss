@@ -32,9 +32,6 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "Support\Tk-CodeText-0.3.4.zip"; DestDir: "{tmp}"
-Source: "Support\unzip.exe"; DestDir: "{tmp}"
-Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "postsetup.bat"; DestDir: "{tmp}"
 Source: "python-install.bat"; DestDir: "{tmp}"
 Source: "docupdate.bat"; DestDir: "{tmp}"
