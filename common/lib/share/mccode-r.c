@@ -3224,7 +3224,7 @@ mc_random (void)
 }
 
 void
-mc_srandom (unsigned int x)
+mc_srandom(unsigned int x)
 {
   /* We must make sure the seed is not 0.  Take arbitrarily 1 in this case.  */
   state[0] = x ? x : 1;
@@ -3243,7 +3243,7 @@ mc_srandom (unsigned int x)
     fptr = &state[rand_sep];
     rptr = &state[0];
     for (i = 0; i < 10 * rand_deg; ++i)
-      random ();
+      mt_random();
   }
 }
 
@@ -3387,7 +3387,6 @@ unsigned long mt_random(void)
 
     return y;
 }
-
 #undef N
 #undef M
 #undef MATRIX_A
@@ -3401,7 +3400,7 @@ unsigned long mt_random(void)
 
 /* randnorm: generate a random number from normal law */
 #pragma acc routine seq
-double randnorm(void)
+double randnorm_cpu(void)
 {
   double v1, v2, s;
   int phase = 0;
@@ -3411,8 +3410,8 @@ double randnorm(void)
   {
     do
     {
-      u1 = rand01();
-      u2 = rand01();
+      u1 = rand01_cpu();
+      u2 = rand01_cpu();
       v1 = 2*u1 - 1;
       v2 = 2*u2 - 1;
       s = v1*v1 + v2*v2;
@@ -3433,8 +3432,8 @@ double randnorm(void)
  * Generate a random number from -1 to 1 with triangle distribution
  */
 #pragma acc routine seq
-double randtriangle(void) {
-	double randnum = rand01();
+double randtriangle_cpu(void) {
+	double randnum = rand01_cpu();
 	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
 	else return(sqrt(2*randnum)-1);
 }
@@ -3443,9 +3442,9 @@ double randtriangle(void) {
  * Random number between 0.0 and 1.0 (including?)
  */
 
-double rand01() {
+double rand01_cpu() {
 	double randnum;
-	randnum = (double) random();
+	randnum = (double) mt_random();
 	randnum /= (double) MC_RAND_MAX + 1;
 	return randnum;
 }
@@ -3454,9 +3453,9 @@ double rand01() {
  * Return a random number between 1 and -1
  */
 #pragma acc routine seq
-double randpm1() {
+double randpm1_cpu() {
 	double randnum;
-	randnum = (double) random();
+	randnum = (double) mt_random();
 	randnum /= ((double) MC_RAND_MAX + 1) / 2;
 	randnum -= 1;
 	return randnum;
@@ -3466,9 +3465,9 @@ double randpm1() {
  * Return a random number between 0 and max.
  */
 #pragma acc routine seq
-double rand0max(double max) {
+double rand0max_cpu(double max) {
 	double randnum;
-	randnum = (double) random();
+	randnum = (double) mt_random();
 	randnum /= ((double) MC_RAND_MAX + 1) / max;
 	return randnum;
 }
@@ -3477,8 +3476,8 @@ double rand0max(double max) {
  * Return a random number between min and max.
  */
 #pragma acc routine seq
-double randminmax(double min, double max) {
-	return rand0max(max - min) + max;
+double randminmax_cpu(double min, double max) {
+	return rand0max_cpu(max - min) + max;
 }
 
 /**

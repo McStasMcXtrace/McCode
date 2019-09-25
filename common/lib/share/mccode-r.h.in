@@ -391,47 +391,75 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 /* selection of random number generator. default is MT */
 #ifndef USE_PGI
-   /* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
+/* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 #  define random mt_random
 #  define srandom mt_srandom
+
+#  define rand01 rand01_cpu
+#  define randpm1 randpm1_cpu
+#  define rand0max rand0max_cpu
+#  define randminmax randminmax_cpu
+#  define randnorm randnorm_cpu
+#  define randtriangle randtriangle_cpu
 
 #else
 /* Use CUDA rand algo - we should check for availability
    of CUDA libs - and otherwise fail */
 #  include "openacc_curand.h"
 #  define MC_RAND_MAX ((unsigned int) 0xffffffff)
+#  define random() /* TODO: set this */
 #  define srandom mt_srandom
-// TODO: redefine random
-#  define rand01() curand_uniform(particle.MCRANDstate) 
-/* Pure 'random()' should not actually be called on device */
-#  define random() rand01()
+
+#  define rand01() curand_uniform(particle.MCRANDstate)
+#  define randpm1 /* TODO: set this */
+#  define rand0max /* TODO: set this */
+#  define randminmax /* TODO: set this */
+#  define randnorm /* TODO: set this */
+#  define randtriangle /* TODO: set this */
+
 #  define printf_sys printf
 #  define fprintf_sys fprintf
 #endif
 
+/*
+* Random number generation.
+*
+* On the CPU, random alg. Marsenne Twister iteration state is handled
+* internally. On the GPU however, every ray needs to keep track of its iteration
+* state. The state variable is tied to the particle truct instance.
+*
+* This means that GPU random number functions need access to the particle
+* context. Thus,separate functions exist for the CPU/GPU, and universally
+* used symbols like "randnorm" and "rand01" are set as defines.
+*/
+
+// random number generation (MT on the CPU)
 typedef int mc_int32_t;
 mc_int32_t mc_random(void);
 void mc_srandom (unsigned int x);
 unsigned long mt_random(void);
 void mt_srandom (unsigned long x);
 
+// GPUs don't have i/o
+/*int printf_GPU(const char *format, ...);
+  int fprintf_GPU(FILE *stream, const char *format, ...);*/
+
+// random number genration CPU
+double rand01_cpu();
+double randpm1_cpu();
+double rand0max_cpu(double max);
+double randminmax_cpu(double min, double max);
+double randnorm_cpu(void);
+double randtriangle_cpu(void);
+
+// random number generation GPU
+
+
 #ifdef USE_OPENCL
 #include "opencl-lib.h"
 #include "opencl-lib.c"
 #endif
-
-/*int printf_GPU(const char *format, ...);
-  int fprintf_GPU(FILE *stream, const char *format, ...);*/
-
-unsigned long randjunk();
-double rand01();
-double randpm1();
-double rand0max(double max);
-double randminmax(double min, double max);
-
-double randnorm(void);
-double randtriangle(void);
 
 #ifndef DANSE
 int init(void);
