@@ -1740,13 +1740,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#define M_SQRT2 1.4142135623730951  /* sqrt(2) */");
   cout("#endif");
 
-  cout("#ifdef USE_PGI");
-  cout("#include <openacc_curand.h>");
-  cout("#include <accelmath.h>");
-  cout("#else");
-  cout("#include <math.h>");
-  cout("#endif");
-
   // generate particle struct
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");

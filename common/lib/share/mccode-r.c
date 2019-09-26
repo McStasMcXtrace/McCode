@@ -3137,120 +3137,12 @@ void randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_
   }
 } /* randvec_target_rect_real */
 
+
 /* SECTION: random numbers ================================================== */
 
-/*
- * Copyright (c) 1983 Regents of the University of California.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms are permitted
- * provided that the above copyright notice and this paragraph are
- * duplicated in all such forms and that any documentation,
- * advertising materials, and other materials related to such
- * distribution and use acknowledge that the software was developed
- * by the University of California, Berkeley.  The name of the
- * University may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
- * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- */
-
-/*
- * This is derived from the Berkeley source:
- *        @(#)random.c        5.5 (Berkeley) 7/6/88
- * It was reworked for the GNU C Library by Roland McGrath.
- * Rewritten to use reentrant functions by Ulrich Drepper, 1995.
- */
-
-/*******************************************************************************
-* Modified for McStas from glibc 2.0.7pre1 stdlib/random.c and
-* stdlib/random_r.c.
-*
-* This way random() is more than four times faster compared to calling
-* standard glibc random() on ix86 Linux, probably due to multithread support,
-* ELF shared library overhead, etc. It also makes McStas generated
-* simulations more portable (more likely to behave identically across
-* platforms, important for parrallel computations).
-*******************************************************************************/
-
-
-#define        TYPE_3                3
-#define        BREAK_3                128
-#define        DEG_3                31
-#define        SEP_3                3
-
-static mc_int32_t randtbl[DEG_3 + 1] =
-  {
-    TYPE_3,
-
-    -1726662223, 379960547, 1735697613, 1040273694, 1313901226,
-    1627687941, -179304937, -2073333483, 1780058412, -1989503057,
-    -615974602, 344556628, 939512070, -1249116260, 1507946756,
-    -812545463, 154635395, 1388815473, -1926676823, 525320961,
-    -1009028674, 968117788, -123449607, 1284210865, 435012392,
-    -2017506339, -911064859, -370259173, 1132637927, 1398500161,
-    -205601318,
-  };
-
-static mc_int32_t *fptr = &randtbl[SEP_3 + 1];
-static mc_int32_t *rptr = &randtbl[1];
-static mc_int32_t *state = &randtbl[1];
-#define rand_deg DEG_3
-#define rand_sep SEP_3
-static mc_int32_t *end_ptr = &randtbl[sizeof (randtbl) / sizeof (randtbl[0])];
-
-mc_int32_t
-mc_random (void)
-{
-  mc_int32_t result;
-
-  *fptr += *rptr;
-  /* Chucking least random bit.  */
-  result = (*fptr >> 1) & 0x7fffffff;
-  ++fptr;
-  if (fptr >= end_ptr)
-  {
-    fptr = state;
-    ++rptr;
-  }
-  else
-  {
-    ++rptr;
-    if (rptr >= end_ptr)
-      rptr = state;
-  }
-  return result;
-}
-
-void
-mc_srandom(unsigned int x)
-{
-  /* We must make sure the seed is not 0.  Take arbitrarily 1 in this case.  */
-  state[0] = x ? x : 1;
-  {
-    long int i;
-    for (i = 1; i < rand_deg; ++i)
-    {
-      /* This does:
-         state[i] = (16807 * state[i - 1]) % 2147483647;
-         but avoids overflowing 31 bits.  */
-      long int hi = state[i - 1] / 127773;
-      long int lo = state[i - 1] % 127773;
-      long int test = 16807 * lo - 2836 * hi;
-      state[i] = test + (test < 0 ? 2147483647 : 0);
-    }
-    fptr = &state[rand_sep];
-    rptr = &state[0];
-    for (i = 0; i < 10 * rand_deg; ++i)
-      mt_random();
-  }
-}
 
 /* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
 /* See http://www.math.keio.ac.jp/~matumoto/emt.html for original source. */
-
-
 /*
    A C-program for MT19937, with initialization improved 2002/1/26.
    Coded by Takuji Nishimura and Makoto Matsumoto.
@@ -3293,9 +3185,7 @@ mc_srandom(unsigned int x)
    http://www.math.keio.ac.jp/matumoto/emt.html
    email: matumoto@math.keio.ac.jp
 */
-
 #include <stdio.h>
-
 /* Period parameters */
 #define N 624
 #define M 397
@@ -3306,7 +3196,7 @@ mc_srandom(unsigned int x)
 unsigned long mt[N]; /* the array for the state vector  */
 int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
 
-/* initializes mt[N] with a seed */
+// initializes mt[N] with a seed
 void mt_srandom(unsigned long s)
 {
     mt[0]= s & 0xffffffffUL;
@@ -3321,10 +3211,9 @@ void mt_srandom(unsigned long s)
         /* for >32 bit machines */
     }
 }
-
-/* initialize by an array with array-length */
-/* init_key is the array for initializing keys */
-/* key_length is its length */
+/* Initialize by an array with array-length.
+   Init_key is the array for initializing keys.
+   key_length is its length. */
 void init_by_array(unsigned long init_key[], unsigned long key_length)
 {
     int i, j, k;
@@ -3349,7 +3238,6 @@ void init_by_array(unsigned long init_key[], unsigned long key_length)
 
     mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */
 }
-
 /* generates a random number on [0,0xffffffff]-interval */
 unsigned long mt_random(void)
 {
@@ -3393,13 +3281,8 @@ unsigned long mt_random(void)
 #undef UPPER_MASK
 #undef LOWER_MASK
 /* End of "Mersenne Twister". */
-/* End of McCode random number routine. */
 
-
-/* CUDA-based mersenne twister is called directly via curand_uniform */
-
-/* randnorm: generate a random number from normal law */
-#pragma acc routine seq
+// randnorm: generate a random number from normal law
 double randnorm_cpu(void)
 {
   double v1, v2, s;
@@ -3427,32 +3310,20 @@ double randnorm_cpu(void)
   phase = 1 - phase;
   return X;
 }
-
-/**
- * Generate a random number from -1 to 1 with triangle distribution
- */
-#pragma acc routine seq
+// Generate a random number from -1 to 1 with triangle distribution
 double randtriangle_cpu(void) {
 	double randnum = rand01_cpu();
 	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
 	else return(sqrt(2*randnum)-1);
 }
-
-/**
- * Random number between 0.0 and 1.0 (including?)
- */
-
+// Random number between 0.0 and 1.0 (including?)
 double rand01_cpu() {
 	double randnum;
 	randnum = (double) mt_random();
 	randnum /= (double) MC_RAND_MAX + 1;
 	return randnum;
 }
-
-/**
- * Return a random number between 1 and -1
- */
-#pragma acc routine seq
+// Return a random number between 1 and -1
 double randpm1_cpu() {
 	double randnum;
 	randnum = (double) mt_random();
@@ -3460,25 +3331,42 @@ double randpm1_cpu() {
 	randnum -= 1;
 	return randnum;
 }
-
-/**
- * Return a random number between 0 and max.
- */
-#pragma acc routine seq
+// Return a random number between 0 and max.
 double rand0max_cpu(double max) {
 	double randnum;
 	randnum = (double) mt_random();
 	randnum /= ((double) MC_RAND_MAX + 1) / max;
 	return randnum;
 }
-
-/**
- * Return a random number between min and max.
- */
-#pragma acc routine seq
+// Return a random number between min and max.
 double randminmax_cpu(double min, double max) {
 	return rand0max_cpu(max - min) + max;
 }
+
+
+/*
+RNG for GPU specific routines below, all based on the native cuda rand01
+equivalent, curand_uniform (see mccode-r.h).
+
+The footprint of the _gpu variants need to include a state variable, since each
+gpu thread needs to keep track of rng iteration independently, and this must
+be handled explicitly.
+*/
+#ifdef USE_PGI
+#pragma acc routine seq nohost
+double randpm1_gpu(curandState_t* state) {
+	return ((double) curand_uniform(state) - 0.5) * 2;
+}
+#pragma acc routine seq nohost
+double rand0max_gpu(double max, curandState_t* state) {
+	return (double) curand_uniform(state) * max;
+}
+#pragma acc routine seq nohost
+double randminmax_gpu(double min, double max, curandState_t* state) {
+  return (double) curand_uniform(state) * (max - min) + max;
+}
+#endif
+
 
 /**
  * Wrapper functions for fprintf / printf on GPU
