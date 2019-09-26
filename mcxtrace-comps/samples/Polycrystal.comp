@@ -1497,7 +1497,7 @@ TRACE
                 ky = ki[1];
                 kz = ki[2];
             } else {
-                if (TotalReflectivity < 0) {
+                if (TotalReflectivity <= 0) {
                     ABSORB;
                 }
 
@@ -1509,7 +1509,7 @@ TRACE
                 for (j = 0; j < TauCount; ++j) {
                     Sum += CurrentTauData[j].Reflectivity;
 
-                    if (Sum > r) {
+                    if (Sum >= r) {
                         break;
                     }
                 }
