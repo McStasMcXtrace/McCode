@@ -596,6 +596,8 @@ SHARE
             // Find the two mosaic axes perpendicular to tau
             if (Mosaicity > 0) {
                 // Use isotropic mosaic
+                hklData[i].Sigma[0] = FWHM2RMS * hklData[i].TauLength * MIN2RAD * Mosaicity;
+
                 hklData[i].u2[0] = b1[0];
                 hklData[i].u2[1] = b1[1];
                 hklData[i].u2[2] = b1[2];
