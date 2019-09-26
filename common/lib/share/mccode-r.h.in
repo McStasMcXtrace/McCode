@@ -415,8 +415,8 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 #  define rand01() curand_uniform(&_particle->MCRANDstate)
 #  define randpm1() randpm1_gpu(&_particle->MCRANDstate)
-#  define rand0max() rand0max_gpu(&_particle->MCRANDstate)
-#  define randminmax() randminmax_gpu(&_particle->MCRANDstate)
+#  define rand0max(p1) rand0max_gpu(p1, &_particle->MCRANDstate)
+#  define randminmax(p1, p2) randminmax_gpu(p1, p2, &_particle->MCRANDstate)
 #  define randnorm /* TODO: use CUDA equivalent */
 #  define randtriangle /* TODO: set this */
 

@@ -1964,7 +1964,6 @@ int get_user_particle_vars(struct code_block *code, List vars, List types) {
 void
 cogen(char *output_name, struct instr_def *instr)
 {
-  fprintf(stdout, "cogen(char *output_name, struct instr_def *instr)\n");
   int warnings = 0;
 
   /* INITIALISE output file. */
