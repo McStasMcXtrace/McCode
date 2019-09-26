@@ -299,7 +299,7 @@ SHARE
                     "column_h",
                     "column_k",
                     "column_l",
-                    "column_F",
+                    "column_F ",
                     "column_F2",
                     "Detla_d/d",
                     "lattice_a",
@@ -552,24 +552,19 @@ SHARE
 
         for (i = 0; i < NumberOfRows; i++) {
             // Get data from table
-            /*hklData[i].h = Table_Index(sTable, i, hklInfo->ColumnOrder[0] - 1);*/
-            hklData[i].h = Table_Index(sTable, i, 0);
+            hklData[i].h = Table_Index(sTable, i, hklInfo->ColumnOrder[0] - 1);
 
-            /*hklData[i].k = Table_Index(sTable, i, hklInfo->ColumnOrder[1] - 1);*/
-            hklData[i].k = Table_Index(sTable, i, 1);
+            hklData[i].k = Table_Index(sTable, i, hklInfo->ColumnOrder[1] - 1);
 
-            /*hklData[i].l = Table_Index(sTable, i, hklInfo->ColumnOrder[2] - 1);*/
-            hklData[i].l = Table_Index(sTable, i, 2);
+            hklData[i].l = Table_Index(sTable, i, hklInfo->ColumnOrder[2] - 1);
 
-            /*if (hklInfo->ColumnOrder[3]) {
+            if (hklInfo->ColumnOrder[3]) {
               hklData[i].F2 = pow(Table_Index(sTable, i, hklInfo->ColumnOrder[3] - 1), 2);
 
               } else if (hklInfo->ColumnOrder[4]) {
               hklData[i].F2 = Table_Index(sTable, i, hklInfo->ColumnOrder[4] - 1);
 
-              }*/
-
-            hklData[i].F2 = Table_Index(sTable, i, 6);
+              }
 
             // Precompute some values
             hklData[i].Tau[0] = hklData[i].h * hklInfo->ReciprocalLatticeVectora[0] +
