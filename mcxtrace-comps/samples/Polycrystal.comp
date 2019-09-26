@@ -83,8 +83,8 @@ SETTING PARAMETERS(string MapFile,
                    ProbabilityOfTransmission = 0.01,
                    SigmaAbsorbtion           = 0.0,
                    SigmaIncoherent           = 0.0,
-                   MaxNumberOfReflections    = 1
-                   Reciprocal                = 0)
+                   MaxNumberOfReflections    = 1,
+                   int Reciprocal            = 0)
 
 OUTPUT PARAMETERS(
   PolyInfo,hklInfo,AbsorbtionInfo,
@@ -174,7 +174,7 @@ SHARE
         int ColumnOrder[5];
 
         // Flags used to raise warnings
-        int Reciprocal;
+        int Reciprocal1;
 
         // Sigma of Delta d / d
         double DeltadOverd1;
@@ -413,7 +413,7 @@ SHARE
             return(0);
         }
 
-        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Reciprocal) {
+        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Reciprocal1) {
             fprintf(stderr, "%s: Error: Selecting reciprocal cell and angles is unmeaningful.\n", NAME_CURRENT_COMP);
             return(0);
         }
@@ -464,7 +464,7 @@ SHARE
             }
         } else {
 
-            if (!hklInfo->Reciprocal) {
+            if (!hklInfo->Reciprocal1) {
 
                 if (PrintOrientations) {
                     fprintf(stderr, "%s: \nStructure; \na = [%g, %g, %g] \nb = [%g, %g, %g] \nc = [%g, %g, %g] \n", NAME_CURRENT_COMP, hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
@@ -479,7 +479,7 @@ SHARE
         }
 
         // Compute reciprocal or direct lattice vectors
-        if (!hklInfo->Reciprocal) {
+        if (!hklInfo->Reciprocal1) {
             vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->LatticeVectorb[0], hklInfo->LatticeVectorb[1], hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0], hklInfo->LatticeVectorc[1], hklInfo->LatticeVectorc[2]);
             hklInfo->VolumeOfUnitCell = fabs(scalar_prod(hklInfo->LatticeVectora[0], hklInfo->LatticeVectora[1], hklInfo->LatticeVectora[2], Temp[0], Temp[1], Temp[2]));
 
@@ -1017,6 +1017,7 @@ INITIALIZE
     hklInfo.DeltadOverd1    = DeltadOverd;
     hklInfo.SigmaAbsorbtion1= SigmaAbsorbtion;
     hklInfo.SigmaIncoherent1= SigmaIncoherent;
+    hklInfo.Reciprocal1     = Reciprocal;
 
     // Default format: h, k, l, F, F2
     hklInfo.ColumnOrder[0] = 1;
@@ -1041,7 +1042,6 @@ INITIALIZE
     // Loop over all orientations
     for (i = 0; i < TableOfOrientations->rows; ++i) {
         PolyInfo[i] = hklInfo;
-        PolyInfo[i].Reciprocal = 0;
 
         // Apply rotation to crystal vectors
         memcpy(*CurrentRotationMatrix, &(TableOfOrientations->data[i * 9]), sizeof(CurrentRotationMatrix[0][0]) * 9);
