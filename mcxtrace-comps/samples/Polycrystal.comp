@@ -1159,7 +1159,6 @@ TRACE
     // Monte Carlo-properties
     double CalculatedProbabilityOfTransmission;
     double MCTransmission;
-    double MCInteract;
 
     // Indices of current voxel
     int VoxelIndexx;
@@ -1441,8 +1440,6 @@ TRACE
                 MCTransmission = CalculatedProbabilityOfTransmission;
             }
 
-            MCInteract = 1.0 - MCTransmission;
-
             if (MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
                 p *= CalculatedProbabilityOfTransmission;
                 SCATTER;
@@ -1455,13 +1452,6 @@ TRACE
 
             if (TotalScatteringLength < 0){
                 ABSORB;
-            }
-
-            if (MCInteract < 0) {
-                IntersectVoxel = 0;
-                PROP_DL(l2);
-
-                break;
             }
 
             // Scatter the ray
