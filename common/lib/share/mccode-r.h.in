@@ -463,7 +463,7 @@ double randtriangle_cpu(void);
 
 #ifndef DANSE
 int init(void);
-int raytrace(_class_particle);
+int raytrace(_class_particle*);
 int save(FILE *);
 int finally(void);
 int display(void);

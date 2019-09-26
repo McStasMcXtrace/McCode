@@ -110,10 +110,6 @@
 #define MCCODE_LIBENV @MCCODE_LIBENV@
 #endif
 
-#ifndef MCCODE_PARTICLE
-#define MCCODE_PARTICLE @MCCODE_PARTICLE@
-#endif
-
 /* Functions for outputting code. */
 
 /* Handle for output file. */
@@ -749,7 +745,7 @@ int cogen_comp_section_class(
     // TRACE add particle parameter to footprint
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
     {
-      coutf("  , _class_particle *" MCCODE_PARTICLE ") {",
+      coutf("  , _class_particle *_particle) {",
         comp->def->name, comp->def->name, section_lower, comp->def->name);
       cout("  ABSORBED=SCATTERED=RESTORE=0;");
       cout("");
@@ -1364,9 +1360,9 @@ int cogen_acc_attach(struct instr_def *instr)
 *   WHEN: the trace section of comp is embraced in a: if (when) { ...  }
 *   GROUP: defines a global Group_<name> flag which gets true when one of the
 *          comps SCATTER. Rest of GROUP is then skipped.
-*          ABSORB @MCCODE_PARTICLE@ are sent to label absorbComp at the end of component
+*          ABSORB _particle are sent to label absorbComp at the end of component
 *          and next comp in GROUP is tested.
-*   JUMP:  sends @MCCODE_PARTICLE@ to the JumpTrace labels, either with condition
+*   JUMP:  sends _particle to the JumpTrace labels, either with condition
 *          or condition is (counter < iterations)
 *   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
 ***************************************************************************** */
@@ -1402,7 +1398,7 @@ int cogen_trace(struct instr_def *instr)
 
   /* define state parameters for all TRACE*/
   for(i=0; i<NUM_STATE_PARS; i++)
-    coutf("#define %s (" MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
+    coutf("#define %s (_particle->%s)", statepars_all[i], statepars_all[i]);
 
   /* def user variables as state pars */
   cout("// user variables:");
@@ -1410,23 +1406,22 @@ int cogen_trace(struct instr_def *instr)
   liter2 = list_iterate(instr->user_vars);
   char *var;
   while(var = list_next(liter2)) {
-    coutf("#define %s (" MCCODE_PARTICLE "->%s)", var, var);
+    coutf("#define %s (_particle->%s)", var, var);
   }
   list_iterate_end(liter2);
   cout("");
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
-  coutf("#define %s (" MCCODE_PARTICLE "->%s)", "SCATTERED", "_scattered");
-  coutf("#define %s (" MCCODE_PARTICLE "->%s)", "RESTORE"  , "_restore");
+  coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
+  coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
   coutf("#define RESTORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-    "memcpy(" MCCODE_PARTICLE ", &"
+    "memcpy(_particle, &"
     "instrument->_trajectory[_index], sizeof(_class_particle));",
     list_len(instr->complist));
   coutf("#define STORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-    "memcpy(&instrument->_trajectory[_index], "
-    MCCODE_PARTICLE ", sizeof(_class_particle));",
+    "memcpy(&instrument->_trajectory[_index], _particle, sizeof(_class_particle));",
     list_len(instr->complist));
-  coutf("#define %s (" MCCODE_PARTICLE "->%s)", "ABSORBED" , "_absorbed");
+  coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   #if MCCODE_PROJECT == 1     /* neutron */
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
   #elif MCCODE_PROJECT == 2   /* xray */
@@ -1451,8 +1446,7 @@ int cogen_trace(struct instr_def *instr)
   cout("#pragma acc routine seq");
 
   /* Write the main code, which calls component trace functions */
-  coutf("int raytrace(_class_particle " MCCODE_PARTICLE "particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
-  cout("  _class_particle *" MCCODE_PARTICLE " = &" MCCODE_PARTICLE "particle;");
+  coutf("int raytrace(_class_particle* _particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
   cout("  /* init variables and counters for TRACE */");
 
@@ -1510,8 +1504,8 @@ int cogen_trace(struct instr_def *instr)
     if (comp->split) {
       char *exp=exp_tostring(comp->split);
       coutf("    /* start SPLIT at %s */", comp->name);
-      coutf("    instrument->logic.Split_%s_particle=" MCCODE_PARTICLE "particle;", comp->name); // store incoming particle state at SPLIT
-      coutf("    if (!ABSORBED && " MCCODE_PARTICLE "->_index == %i) ", comp->index);
+      coutf("    instrument->logic.Split_%s_particle=_particle;", comp->name); // store incoming particle state at SPLIT
+      coutf("    if (!ABSORBED && _particle->_index == %i) ", comp->index);
       coutf("    for (" "instrument->logic.Split_%s = 0; "
                         "instrument->logic.Split_%s< %s; "
                         "instrument->logic.Split_%s++) {",
@@ -1520,12 +1514,12 @@ int cogen_trace(struct instr_def *instr)
       cout( "    {");
     }
     else
-      coutf("    if (!ABSORBED && " MCCODE_PARTICLE "->_index == %i) {", comp->index);
+      coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
 
     coutf("      /* component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     if (comp->split) {
       char *exp = exp_tostring(comp->split);
-      coutf("      " MCCODE_PARTICLE "particle="
+      coutf("      _particle="
         "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
     }
@@ -1542,7 +1536,7 @@ int cogen_trace(struct instr_def *instr)
       "coords_add(coords_set(x,y,z), _%s->_position_relative),"
       "&x, &y, &z);", comp->name);
     cout( "        } else");
-    coutf("          mccoordschange(_%s->_position_relative, _%s->_rotation_relative, " MCCODE_PARTICLE ");", comp->name, comp->name);
+    coutf("          mccoordschange(_%s->_position_relative, _%s->_rotation_relative, _particle);", comp->name, comp->name);
     cout( "      } else flag_nocoordschange=0;");
 
     /* call the component when there are TRACE and/or EXTEND lines */
@@ -1556,7 +1550,7 @@ int cogen_trace(struct instr_def *instr)
         str_free(exp);
       }
 
-      coutf("      class_%s_trace(_%s, " MCCODE_PARTICLE ");%s",
+      coutf("      class_%s_trace(_%s, _particle);%s",
         comp->def->name,
         comp->name,
         list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
@@ -1582,13 +1576,13 @@ int cogen_trace(struct instr_def *instr)
         if (this_jump->iterate) {
           coutf("      if (++instrument->logic.Jump_%s_%s < %s) { /* test for iteration */",
             comp->name, this_jump->target, exp);
-          coutf("        " MCCODE_PARTICLE "->_index = %i;", this_jump->target_index-1);
+          coutf("        _particle->_index = %i;", this_jump->target_index-1);
           cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
           coutf("      } else " "instrument->logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
             comp->name, this_jump->target);
         } else {
           coutf("      if (%s) {/* conditional JUMP to %s */", exp, this_jump->target);
-          coutf("        " MCCODE_PARTICLE "->_index=%i;", this_jump->target_index-1);
+          coutf("        _particle->_index=%i;", this_jump->target_index-1);
           cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
           cout( "      }");
         }
@@ -1604,7 +1598,7 @@ int cogen_trace(struct instr_def *instr)
         comp->group->first_comp, comp->group->first_comp_index,
         comp->group->last_comp,  comp->group->last_comp_index);
       // skip_following_when_scattered (to end of group)
-      coutf("      if (SCATTERED) " MCCODE_PARTICLE "->_index = %i; // when SCATTERED in GROUP: reach exit of GROUP after %s",
+      coutf("      if (SCATTERED) _particle->_index = %i; // when SCATTERED in GROUP: reach exit of GROUP after %s",
         comp->group->last_comp_index, comp->group->last_comp);
       // final_absorb_when_all_not_scattered
       if (comp->index == comp->group->last_comp_index)
@@ -1613,7 +1607,7 @@ int cogen_trace(struct instr_def *instr)
         coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
     }
 
-    coutf("      " MCCODE_PARTICLE "->_index++;");
+    coutf("      _particle->_index++;");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
 
   } /* end while comp list (case) */
@@ -1630,7 +1624,7 @@ int cogen_trace(struct instr_def *instr)
   }
   list_iterate_end(liter);
   /*   propagate to next component */
-  coutf("    if (" MCCODE_PARTICLE "->_index > %d)", list_len(instr->complist));
+  coutf("    if (_particle->_index > %d)", list_len(instr->complist));
   /* if we reach the last component, and nothing happened, ABSORB */
   cout( "      ABSORBED++; /* absorbed when passed all components */");
 
@@ -1641,7 +1635,7 @@ int cogen_trace(struct instr_def *instr)
   cout("  DEBUG_STATE()");
 
   cout("");
-  cout("  return(" MCCODE_PARTICLE "->_index);");
+  cout("  return(_particle->_index);");
   coutf("} /* raytrace */");
 
   // undef everything after the "raytrace" function

@@ -3510,7 +3510,7 @@ mchelp(char *pgmname)
   fprintf(stderr,
 "Options are:\n"
 "  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
-"  -n COUNT  --ncount=COUNT   Set number of " MCCODE_PARTICLE "s to simulate.\n"
+"  -n COUNT  --ncount=COUNT   Set number of particles to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -t        --trace          Enable trace of " MCCODE_PARTICLE "s through instrument.\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"

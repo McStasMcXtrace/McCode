@@ -158,7 +158,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 
 
-    raytrace(particleN);
+    raytrace(&particleN);
   }
 
   /* Likely we need an undef random here... */
