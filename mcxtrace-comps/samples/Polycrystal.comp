@@ -1444,7 +1444,7 @@ TRACE
             MCInteract = 1.0 - MCTransmission;
 
             if (MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
-                p *= CalculatedProbabilityOfTransmission / MCTransmission;
+                p *= CalculatedProbabilityOfTransmission;
                 SCATTER;
 
                 IntersectVoxel = 0;
@@ -1466,7 +1466,7 @@ TRACE
 
             // Scatter the ray
             if (!NumberOfScatteringEvents) {
-                p *= fabs(1.0 - CalculatedProbabilityOfTransmission) / MCInteract;
+                p *= 1.0 - CalculatedProbabilityOfTransmission;
             }
 
             // Calculate, where the ray is scattered - use linear sampling for weak scatterers
