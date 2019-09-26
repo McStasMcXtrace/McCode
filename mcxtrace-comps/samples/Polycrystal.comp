@@ -1200,10 +1200,10 @@ TRACE
     // Begin computating if ray intersects crystal hull
     while (Intersect) {
 
-        // Figure out which voxel the ray hit (the small added constant prevents errors on boundaries of the crystal hull
-        VoxelIndexx = floor((x + xwidth  / 2.0) / xwidth  * NumberOfVoxelsx + 1e-10);
-        VoxelIndexy = floor((y + yheight / 2.0) / yheight * NumberOfVoxelsy + 1e-10);
-        VoxelIndexz = floor((z + zdepth  / 2.0) / zdepth  * NumberOfVoxelsz + 1e-10);
+        // Figure out which voxel the ray hit (the small added constant prevents errors on boundaries of the crystal hull)
+        VoxelIndexx = floor((x + xwidth  / 2.0) / xwidth  * NumberOfVoxelsx + copysign(1e-10,kx));
+        VoxelIndexy = floor((y + yheight / 2.0) / yheight * NumberOfVoxelsy + copysign(1e-10,ky));
+        VoxelIndexz = floor((z + zdepth  / 2.0) / zdepth  * NumberOfVoxelsz + copysign(1e-10,kz));
 
         if (VoxelIndexx >= NumberOfVoxelsx || VoxelIndexx < 0 ||
                 VoxelIndexy >= NumberOfVoxelsy || VoxelIndexy < 0 ||
