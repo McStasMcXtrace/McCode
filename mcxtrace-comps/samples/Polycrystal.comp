@@ -1435,14 +1435,14 @@ TRACE
             // Calculate and account for transmission
             CalculatedProbabilityOfTransmission = exp(-TotalScatteringLength * l2);
 
-            if (!NumberOfScatteringEvents && ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
+            if (ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
                 MCTransmission = ProbabilityOfTransmission;
 
             } else {
                 MCTransmission = CalculatedProbabilityOfTransmission;
             }
 
-            if (MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
+            if (NumberOfScatteringEvents >= MaxNumberOfReflections || MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
                 p *= CalculatedProbabilityOfTransmission;
                 SCATTER;
 
@@ -1457,9 +1457,7 @@ TRACE
             }
 
             // Scatter the ray
-            if (!NumberOfScatteringEvents) {
-                p *= 1.0 - CalculatedProbabilityOfTransmission;
-            }
+            p *= 1.0 - CalculatedProbabilityOfTransmission;
 
             // Calculate, where the ray is scattered - use linear sampling for weak scatterers
             if (TotalScatteringLength * l2 < 1e-6) {
@@ -1544,23 +1542,13 @@ TRACE
                 kz = CurrenthklData[i].u1[2] * kf[0] +
                     CurrenthklData[i].u2[2] * kf[1] +
                     CurrenthklData[i].u3[2] * kf[2];
+
             }
 
             SCATTER;
 
             // Calculate new trajectory (the 1.0001 has been added to make sure that the ray leaves the ray if it has to)
             IntersectVoxel = box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, 1.0001 * Voxelxwidth, 1.0001 * Voxelyheight, 1.0001 * Voxelzdepth);
-
-            // End loop if maximum numer of scattering events has been reached
-            if (MaxNumberOfReflections && NumberOfScatteringEvents >= MaxNumberOfReflections) {
-                box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, xwidth, yheight, zdepth);
-
-                IntersectVoxel = 0;
-                Intersect = 0;
-                PROP_DL(l2);
-
-                break;
-            }
         }
     }
 
