@@ -49,6 +49,7 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32 
+#include <direct.h>
 # define  mkdir( D, M )   _mkdir( D ) 
 #endif 
 
