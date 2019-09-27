@@ -949,11 +949,8 @@ static void mcformat_usedir(char *dir)
           "Directory output cannot be used with portable simulation (mcformat_usedir)\n");
   return;
 #else  /* !MC_PORTABLE */
-#ifndef WIN32
   if(!mcdisable_output_files && mkdir(dir, 0777))
-#else
-  if(!mcdisable_output_files && mkdir(dir))
-#endif
+/*#endif*/
   {
     int errno_mkdir = errno;
     if (errno_mkdir == ENOENT) {
@@ -1128,7 +1125,7 @@ int mcformat_convert(char *name)
   if ((stbuf.st_mode & S_IFMT) == S_IFDIR) { /* dir: recursive call */
     char *upper_dir= mcdirname;
     char *name_win=name;
-#ifdef WIN32
+#if (defined(_WIN32) || defined(__WIN32__))
     if (isalpha(name[0]) && name[1] == ':') name_win += 2;  // skip Windows disk label before cat
 #endif
     char *lower_dir= mcoutputdir ? str_cat(mcoutputdir, MC_PATHSEP_S, name_win, NULL)
