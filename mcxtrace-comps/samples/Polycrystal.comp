@@ -1432,18 +1432,25 @@ TRACE
             CoherentScatteringLength = CoherentCrosssection / VolumeOfUnitCell;
             TotalScatteringLength    = TotalCrosssection / VolumeOfUnitCell;
 
+            if (TotalScatteringLength < 0){
+                ABSORB;
+            }
+
             // Calculate and account for transmission
             CalculatedProbabilityOfTransmission = exp(-TotalScatteringLength * l2);
 
-            if (ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
+            if (NumberOfScatteringEvents >= MaxNumberOfReflections) {
+                MCTransmission = 1.0;
+
+            } else if (ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
                 MCTransmission = ProbabilityOfTransmission;
 
             } else {
                 MCTransmission = CalculatedProbabilityOfTransmission;
             }
 
-            if (NumberOfScatteringEvents >= MaxNumberOfReflections || MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
-                p *= CalculatedProbabilityOfTransmission;
+            if (MCTransmission > 0.0 && (MCTransmission >= 1.0 || rand01() < MCTransmission)) {
+                p *= CalculatedProbabilityOfTransmission / MCTransmission;
                 SCATTER;
 
                 IntersectVoxel = 0;
@@ -1452,12 +1459,8 @@ TRACE
                 break;
             }
 
-            if (TotalScatteringLength < 0){
-                ABSORB;
-            }
-
             // Scatter the ray
-            p *= 1.0 - CalculatedProbabilityOfTransmission;
+            p *= (1.0 - CalculatedProbabilityOfTransmission) / (1.0 - MCTransmission);
 
             // Calculate, where the ray is scattered - use linear sampling for weak scatterers
             if (TotalScatteringLength * l2 < 1e-6) {
