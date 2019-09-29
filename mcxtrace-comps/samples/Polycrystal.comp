@@ -1190,9 +1190,6 @@ TRACE
 
     NumberOfScatteringEvents = 0;
 
-    // Scale x-ray to higher intensity
-    p *= 1e24;
-
     // Begin computating if ray intersects crystal hull
     while (Intersect) {
 
