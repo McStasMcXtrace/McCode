@@ -235,7 +235,7 @@ def plotfunc(node, simdir):
         # NOTE: this line effectively means that we can only plot one PNMultiple pr. scan sweep, and it must be the one with 
         # "mccode.sim" as the filename property on all (1D overview) data objects
 
-        is_overview = False not in [d.filename == "mccode.sim" for d in data_lst]
+        is_overview = False not in [d.filename == "mccode.dat" for d in data_lst]
         if is_overview:
             f = os.path.join(simdir, "mccode.html")
         else:
@@ -341,8 +341,8 @@ def main(args):
         quit()
     rootnode = loader.plot_graph
 
-    # generate html files
-    plotgraph_recurse(rootnode, lambda node, sd=simdir: plotfunc(node, sd))
+    # generate html file (single plotting only)
+    plotfunc(rootnode, simdir)
 
     # browse if input was a specific, and therefore browsable, file
     if not args.nobrowse and os.path.isfile(simfile):
