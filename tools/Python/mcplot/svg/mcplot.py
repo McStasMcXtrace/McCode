@@ -263,11 +263,13 @@ def plotfunc(node, simdir):
             i = i + 1
             htmlid = "plt_%d" % i
 
-            # small, overview-style plots
+            # small, overview-style plots, autosize can not be enabled
             global WIDTH
             global HEIGHT
             WIDTH = 290
             HEIGHT = 290
+            global autosize
+            autosize = False
 
             # get params
             if type(d) is Data1D:
