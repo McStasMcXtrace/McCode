@@ -58,7 +58,8 @@ def get_json_1d(x, y, yerr, xlabel, ylabel, title):
         p['autosize'] = True
     return json.dumps(params, indent=4)
 
-def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, image_str_log, colorbar_img_str_log, cb_min_log, cb_max_log, xlabel, ylabel, title):
+def get_json_2d(xmin, xmax, ymin, ymax, image_str, colorbar_img_str, cb_min, cb_max, image_str_log,
+                colorbar_img_str_log, cb_min_log, cb_max_log, xlabel, ylabel, title):
     params = {}
     p = params
     p['w'] = WIDTH
@@ -258,6 +259,14 @@ def plotfunc(node, simdir):
         for d in data_lst:
             i = i + 1
             htmlid = "plt_%d" % i
+
+            # small, overview-style plots
+            global WIDTH
+            global HEIGHT
+            WIDTH = 290
+            HEIGHT = 290
+
+            # get params
             if type(d) is Data1D:
                 params = get_params_str_1D(d)
             elif type(d) is Data2D:
