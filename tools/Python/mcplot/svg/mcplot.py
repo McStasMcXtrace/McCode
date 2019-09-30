@@ -238,7 +238,10 @@ def plotfunc(node, simdir):
 
         is_overview = False not in [d.filename == "mccode.dat" for d in data_lst]
         if is_overview:
-            f = os.path.join(simdir, "mccode.html")
+            if logscale == True:
+                f = os.path.join(simdir, "mccode_log.html")
+            else:
+                f = os.path.join(simdir, "mccode.html")
         else:
             # TODO: implement - what's the filepath?
             return
