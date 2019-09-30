@@ -281,10 +281,10 @@ def plotfunc(node, simdir):
         # assemble html
         text = '''<!DOCTYPE html>
 <head>
-  <script src="d3.v4.min.js"></script>
-  <script src="plotfuncs.js"></script>
+  <script src="%sd3.v4.min.js"></script>
+  <script src="%splotfuncs.js"></script>
 </head>
-<body>\n''' + divs_txt + "\n\n<script>\n" + create_txt + "\n</script>\n</body>\n</html>\n"
+<body>\n''' % (libpath, libpath) + divs_txt + "\n\n<script>\n" + create_txt + "\n</script>\n</body>\n</html>\n"
 
     # create 1D html
     elif type(data) is Data1D:
