@@ -2750,6 +2750,17 @@ double scalar_prod(
 	return ((x1 * x2) + (y1 * y2) + (z1 * z2));
 }
 
+#pragma acc routine seq
+mcstatic void norm_func(double *x, double *y, double *z) {
+	double temp = (*x * *x) + (*y * *y) + (*z * *z);
+	if (temp != 0) {
+		temp = sqrt(temp);
+		*x /= temp;
+		*y /= temp;
+		*z /= temp;
+	}
+}
+
 /*******************************************************************************
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
 *******************************************************************************/
@@ -3364,6 +3375,12 @@ double rand0max_gpu(double max, curandState_t* state) {
 #pragma acc routine seq nohost
 double randminmax_gpu(double min, double max, curandState_t* state) {
   return (double) curand_uniform(state) * (max - min) + max;
+}
+#pragma acc routine seq nohost
+double randtriangle_gpu(curandState_t* state) {
+	double randnum = curand_uniform(state);
+	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
+	else return(sqrt(2*randnum)-1);
 }
 #endif
 

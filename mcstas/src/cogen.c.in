@@ -1741,6 +1741,11 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#endif");
 
   // generate particle struct
+  cout("");
+  cout("#ifdef USE_PGI");
+  cout("#include <openacc_curand.h>");
+  cout("#endif");
+  cout("");
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
 #if MCCODE_PROJECT == 1   /* neutron */
