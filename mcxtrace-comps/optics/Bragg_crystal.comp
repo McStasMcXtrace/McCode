@@ -21,6 +21,10 @@
  * %D
  * Bragg_crystal.comp supercedes Perfect_Crystal.comp with major edits and corrections.
  *
+ * For details see:
+ * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
+ * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
+ *
  * Reads atomic formfactors from a data input file.
  *
  * The crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
