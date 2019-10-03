@@ -461,7 +461,7 @@ double randtriangle_cpu(void);
 double randpm1_gpu(curandState_t* state);
 double rand0max_gpu(double max, curandState_t* state);
 double randminmax_gpu(double min, double max, curandState_t* state);
-double randtriangle_gpu(curandState_t* state)
+double randtriangle_gpu(curandState_t* state);
 #endif
 
 #ifdef USE_OPENCL
