@@ -2917,6 +2917,7 @@ int solve_2nd_order(double *t1, double *t2,
  * with given radius.
  * If radius is zero, choose random direction in full 4PI, no target.
  ******************************************************************************/
+#ifndef USE_PGI
 void randvec_target_circle_cpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double radius)
 {
@@ -2974,6 +2975,7 @@ void randvec_target_circle_cpu(double *xo, double *yo, double *zo, double *solid
   /* [xyz]o = [xyz]t rotated phi around n[xyz] */
   rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
 }
+#endif
 #pragma acc routine seq nohost
 void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double radius,
@@ -3041,6 +3043,7 @@ void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid
  * width=phi_y=[0,2*PI] (radians)
  * If height or width is zero, choose random direction in full 4PI, no target.
  *******************************************************************************/
+#ifndef USE_PGI
 void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo, double *solid_angle,
                double xi, double yi, double zi, double width, double height, Rotation A)
 {
@@ -3102,6 +3105,7 @@ void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo, double 
   coords_get(tmp, &*xo, &*yo, &*zo);
 
 }
+#endif
 #pragma acc routine seq nohost
 void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double width, double height, Rotation A,
@@ -3180,6 +3184,7 @@ void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double 
  * a define (see mcstas-r.h) pointing here. If you use the old rouine, you are NOT
  * taking the local emmission coordinate into account.
 *******************************************************************************/
+#ifndef USE_PGI
 void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi,
         double width, double height, Rotation A,
@@ -3263,6 +3268,7 @@ void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *so
     }
   }
 }
+#endif
 #pragma acc routine seq nohost
 void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi,
