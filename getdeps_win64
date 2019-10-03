@@ -7,4 +7,4 @@ sudo apt-get -y install git cmake gcc gfortran mingw-w64 gfortran-mingw-w64 flex
 mkdir /tmp/innosetup  
 cd /tmp/innosetup  
 wget http://files.jrsoftware.org/is/6/innosetup-6.0.2.exe
-wine ./innosetup-6.0.2.exe /VERYSILENT /SUPPRESMSGBOXES
+wine ./innosetup-6.0.2.exe /VERYSILENT /SUPPRESSMSGBOXES
