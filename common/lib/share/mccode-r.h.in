@@ -407,7 +407,6 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #else
 /* Use CUDA rand algo - we should check for availability
    of CUDA libs - and otherwise fail */
-#  include "openacc_curand.h"
 #  include <openacc_curand.h>
 #  include <accelmath.h>
 #  define random() /* TODO: set this */
@@ -565,36 +564,65 @@ double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);
 
 /* this is now in mcstas-r.h and mcxtrace-r.h as the number of state parameters is no longer equal*/
-/* void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-                double t, double sx, double sy, double sz, double p);
-*/
-#pragma acc routine seq
 _class_particle mcgenstate(void);
 
 /* trajectory/shape intersection routines */
 int inside_rectangle(double, double, double, double);
 int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
-    double vx, double vy, double vz, double dx, double dy, double dz);
+      double vx, double vy, double vz, double dx, double dy, double dz);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
-    double vx, double vy, double vz, double r, double h);
+      double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
-                 double vx, double vy, double vz, double r);
+      double vx, double vy, double vz, double r);
 /* second order equation roots */
 int solve_2nd_order(double *t1, double *t2,
-    double A,  double B,  double C);
+      double A,  double B,  double C);
+
 
 /* random vector generation to shape */
-void randvec_target_circle(double *xo, double *yo, double *zo,
-    double *solid_angle, double xi, double yi, double zi, double radius);
-#define randvec_target_sphere randvec_target_circle
-void randvec_target_rect_angular(double *xo, double *yo, double *zo,
-    double *solid_angle,
-               double xi, double yi, double zi, double height, double width, Rotation A);
-#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9)  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
-void randvec_target_rect_real(double *xo, double *yo, double *zo,
-    double *solid_angle,
-	       double xi, double yi, double zi, double height, double width, Rotation A,
-			 double lx, double ly, double lz, int order);
+
+/* jg-20191003: Gpu versions need to apppend _particle for gpu rng functions,
+ * which depend on the particle struct MCRANDstate variable, but this has to be
+ * transparent to component use of randvec shape functions. */
+
+// interface (shared)
+#  define randvec_target_sphere randvec_target_circle
+#  define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9) \
+        randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
+#ifndef USE_PGI
+// interface (cpu)
+#  define randvec_target_circle       randvec_target_circle_cpu
+#  define randvec_target_rect_angular randvec_target_rect_angular_cpu
+#  define randvec_target_rect_real    randvec_target_rect_real_cpu
+#else
+// interface (gpu, appending _particle)
+#  define randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, radius) \
+        randvec_target_circle_gpu(xo, yo, zo, solid_angle, xi, yi, zi, radius, _particle)
+#  define randvec_target_rect_angular(xo, yo, zo, solid_angle, xi, yi, zi, height, width, Rotation A) \
+        randvec_target_rect_angular_gpu(xo, yo, zo, solid_angle, xi, yi, zi, height, width, Rotation A, _particle)
+#  define randvec_target_rect_real(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order) \
+        randvec_target_rect_real_gpu(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order, _particle)
+#endif
+// headers (cpu)
+void randvec_target_circle_cpu(double *xo, double *yo, double *zo,
+      double *solid_angle, double xi, double yi, double zi, double radius);
+void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo,
+      double *solid_angle,
+      double xi, double yi, double zi, double height, double width, Rotation A);
+void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *solid_angle,
+      double xi, double yi, double zi, double height, double width, Rotation A,
+      double lx, double ly, double lz, int order);
+// heaaders (gpu)
+void randvec_target_circle_gpu(double *xo, double *yo, double *zo,
+      double *solid_angle, double xi, double yi, double zi, double radius,
+      _class_particle _particle);
+void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo,
+      double *solid_angle, double xi, double yi, double zi, double height,
+      double width, Rotation A, _class_particle _particle);
+void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+      double xi, double yi, double zi, double height, double width, Rotation A,
+      double lx, double ly, double lz, int order, _class_particle _particle);
+
 
 /* this is the main() */
 int mccode_main(int argc, char *argv[]);
@@ -612,6 +640,7 @@ int mccode_main(int argc, char *argv[]);
 #ifndef CHAR_BUF_LENGTH
 #define CHAR_BUF_LENGTH 1024
 #endif
+
 
 /* I/O section part ========================================================= */
 

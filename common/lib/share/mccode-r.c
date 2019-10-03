@@ -2917,9 +2917,8 @@ int solve_2nd_order(double *t1, double *t2,
  * with given radius.
  * If radius is zero, choose random direction in full 4PI, no target.
  ******************************************************************************/
-#pragma acc routine seq
-void randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
-               double xi, double yi, double zi, double radius)
+void randvec_target_circle_cpu(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi, double radius)
 {
   double l2, phi, theta, nx, ny, nz, xt, yt, zt, xu, yu, zu;
 
@@ -2974,7 +2973,67 @@ void randvec_target_circle(double *xo, double *yo, double *zo, double *solid_ang
   rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
   /* [xyz]o = [xyz]t rotated phi around n[xyz] */
   rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
-} /* randvec_target_circle */
+}
+#pragma acc routine seq nohost
+void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi, double radius,
+        _class_particle _particle)
+{
+  double l2, phi, theta, nx, ny, nz, xt, yt, zt, xu, yu, zu;
+
+  if(radius == 0.0)
+  {
+    /* No target, choose uniformly a direction in full 4PI solid angle. */
+    theta = acos (1 - rand0max(2));
+    phi = rand0max(2 * PI);
+    if(solid_angle)
+      *solid_angle = 4*PI;
+    nx = 1;
+    ny = 0;
+    nz = 0;
+    yi = sqrt(xi*xi+yi*yi+zi*zi);
+    zi = 0;
+    xi = 0;
+  }
+  else
+  {
+    double costheta0;
+    l2 = xi*xi + yi*yi + zi*zi; /* sqr Distance to target. */
+    costheta0 = sqrt(l2/(radius*radius+l2));
+    if (radius < 0) costheta0 *= -1;
+    if(solid_angle)
+    {
+      /* Compute solid angle of target as seen from origin. */
+        *solid_angle = 2*PI*(1 - costheta0);
+    }
+
+    /* Now choose point uniformly on circle surface within angle theta0 */
+    theta = acos (1 - rand0max(1 - costheta0)); /* radius on circle */
+    phi = rand0max(2 * PI); /* rotation on circle at given radius */
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
+       perpendicular axis u=i x n and then angle phi around i. */
+    if(xi == 0 && zi == 0)
+    {
+      nx = 1;
+      ny = 0;
+      nz = 0;
+    }
+    else
+    {
+      nx = -zi;
+      nz = xi;
+      ny = 0;
+    }
+  }
+
+  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
+  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
+  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
+  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
+}
+/* randvec_target_circle */
 
 /*******************************************************************************
  * randvec_target_rect_angular: Choose random direction towards target at
@@ -2982,8 +3041,7 @@ void randvec_target_circle(double *xo, double *yo, double *zo, double *solid_ang
  * width=phi_y=[0,2*PI] (radians)
  * If height or width is zero, choose random direction in full 4PI, no target.
  *******************************************************************************/
-#pragma acc routine seq
-void randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_angle,
+void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo, double *solid_angle,
                double xi, double yi, double zi, double width, double height, Rotation A)
 {
   double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
@@ -3043,7 +3101,71 @@ void randvec_target_rect_angular(double *xo, double *yo, double *zo, double *sol
   tmp = rot_apply(A, tmp);
   coords_get(tmp, &*xo, &*yo, &*zo);
 
-} /* randvec_target_rect_angular */
+}
+#pragma acc routine seq nohost
+void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi, double width, double height, Rotation A,
+        _class_particle _particle)
+{
+  double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
+  Coords tmp;
+  Rotation Ainverse;
+
+  rot_transpose(A, Ainverse);
+
+  if(height == 0.0 || width == 0.0)
+  {
+    randvec_target_circle(xo, yo, zo, solid_angle,
+               xi, yi, zi, 0);
+    return;
+  }
+  else
+  {
+    if(solid_angle)
+    {
+      /* Compute solid angle of target as seen from origin. */
+      *solid_angle = 2*fabs(width*sin(height/2));
+    }
+
+    /* Go to global coordinate system */
+
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(Ainverse, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
+    /* Now choose point uniformly on the unit sphere segment with angle theta/phi */
+    phi   = width*randpm1()/2.0;
+    theta = asin(randpm1()*sin(height/2.0));
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around
+       n, and then phi around u. */
+    if(xi == 0 && zi == 0)
+    {
+      nx = 1;
+      ny = 0;
+      nz = 0;
+    }
+    else
+    {
+      nx = -zi;
+      nz = xi;
+      ny = 0;
+    }
+  }
+
+  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
+  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
+  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, nx, ny, nz);
+  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xu,  yu,  zu);
+
+  /* Go back to local coordinate system */
+  tmp = coords_set(*xo, *yo, *zo);
+  tmp = rot_apply(A, tmp);
+  coords_get(tmp, &*xo, &*yo, &*zo);
+
+}
+/* randvec_target_rect_angular */
 
 /*******************************************************************************
  * randvec_target_rect_real: Choose random direction towards target at (xi,yi,zi)
@@ -3058,11 +3180,10 @@ void randvec_target_rect_angular(double *xo, double *yo, double *zo, double *sol
  * a define (see mcstas-r.h) pointing here. If you use the old rouine, you are NOT
  * taking the local emmission coordinate into account.
 *******************************************************************************/
-#pragma acc routine seq
-void randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
-               double xi, double yi, double zi,
-               double width, double height, Rotation A,
-               double lx, double ly, double lz, int order)
+void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi,
+        double width, double height, Rotation A,
+        double lx, double ly, double lz, int order)
 {
   double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
   double cos_theta;
@@ -3079,7 +3200,6 @@ void randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_
   }
   else
   {
-
     /* Now choose point uniformly on rectangle within width x height */
     dx = width*randpm1()/2.0;
     dy = height*randpm1()/2.0;
@@ -3138,11 +3258,97 @@ void randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_
       *solid_angle = width * height / (dist_p * dist_p);
       int counter;
       for (counter = 0; counter < order; counter++) {
-	*solid_angle = *solid_angle * cos_theta;
+        *solid_angle = *solid_angle * cos_theta;
       }
     }
   }
-} /* randvec_target_rect_real */
+}
+#pragma acc routine seq nohost
+void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi,
+        double width, double height, Rotation A,
+        double lx, double ly, double lz, int order,
+        _class_particle _particle)
+{
+  double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
+  double cos_theta;
+  Coords tmp;
+  Rotation Ainverse;
+
+  rot_transpose(A, Ainverse);
+
+  if(height == 0.0 || width == 0.0)
+  {
+    randvec_target_circle(xo, yo, zo, solid_angle,
+               xi, yi, zi, 0);
+    return;
+  }
+  else
+  {
+    /* Now choose point uniformly on rectangle within width x height */
+    dx = width*randpm1()/2.0;
+    dy = height*randpm1()/2.0;
+
+    /* Determine distance to target plane*/
+    dist = sqrt(xi*xi + yi*yi + zi*zi);
+    /* Go to global coordinate system */
+
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(Ainverse, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
+    /* Determine vector normal to trajectory axis (z) and gravity [0 1 0] */
+    vec_prod(nx, ny, nz, xi, yi, zi, 0, 1, 0);
+
+    /* This now defines the x-axis, normalize: */
+    n_norm=sqrt(nx*nx + ny*ny + nz*nz);
+    nx = nx/n_norm;
+    ny = ny/n_norm;
+    nz = nz/n_norm;
+
+    /* Now, determine our y-axis (vertical in many cases...) */
+    vec_prod(mx, my, mz, xi, yi, zi, nx, ny, nz);
+    m_norm=sqrt(mx*mx + my*my + mz*mz);
+    mx = mx/m_norm;
+    my = my/m_norm;
+    mz = mz/m_norm;
+
+    /* Our output, random vector can now be defined by linear combination: */
+
+    *xo = xi + dx * nx + dy * mx;
+    *yo = yi + dx * ny + dy * my;
+    *zo = zi + dx * nz + dy * mz;
+
+    /* Go back to local coordinate system */
+    tmp = coords_set(*xo, *yo, *zo);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &*xo, &*yo, &*zo);
+
+    /* Go back to local coordinate system */
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
+    if (solid_angle) {
+      /* Calculate vector from local point to remote random point */
+      lx = *xo - lx;
+      ly = *yo - ly;
+      lz = *zo - lz;
+      dist_p = sqrt(lx*lx + ly*ly + lz*lz);
+
+      /* Adjust the 'solid angle' */
+      /* 1/r^2 to the chosen point times cos(\theta) between the normal */
+      /* vector of the target rectangle and direction vector of the chosen point. */
+      cos_theta = (xi * lx + yi * ly + zi * lz) / (dist * dist_p);
+      *solid_angle = width * height / (dist_p * dist_p);
+      int counter;
+      for (counter = 0; counter < order; counter++) {
+        *solid_angle = *solid_angle * cos_theta;
+      }
+    }
+  }
+}
+/* randvec_target_rect_real */
 
 
 /* SECTION: random numbers ================================================== */
