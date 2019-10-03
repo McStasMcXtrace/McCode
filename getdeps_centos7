@@ -8,7 +8,7 @@ sudo yum -y install epel-release
 sudo yum -y install cmake
 sudo ln -sf /usr/bin/cmake3 /usr/local/bin/cmake
 sudo ln -sf /usr/bin/cpack3 /usr/local/bin/cpack
-sudo yum install -y git flex bison rpm-build gcc-gfortran 
+sudo yum install -y git flex bison rpm-build gcc-gfortran gsl-devel 
 curl -O http://packages.mccode.org/rpm/mccode.repo
 sudo cp mccode.repo /etc/yum.repos.d/
 sudo yum update
