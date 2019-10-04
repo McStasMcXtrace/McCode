@@ -542,7 +542,7 @@ void *Table_File_List_store(t_Table *tab){
                 } else { /* store into data array */
                   if (count_in_array >= malloc_size) {
                     /* realloc data buffer if necessary */
-                    malloc_size = count_in_array+CHAR_BUF_LENGTH;
+                    malloc_size = count_in_array*1.5;
                     Data = (double*) realloc(Data, malloc_size*sizeof(double));
                     if (Data == NULL) {
                       fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
