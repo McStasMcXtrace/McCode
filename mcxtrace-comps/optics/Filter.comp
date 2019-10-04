@@ -166,16 +166,23 @@ TRACE
     if(refraction){
       switch (prms->shape){
         case CUBE:
-          if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
-            nx=1.0;ny=0.0;nz=0.0;
-          }else if( fabs(y-yheight*0.5)<FLT_EPSILON || fabs(y+yheight*0.5)<FLT_EPSILON ){ 
-            nx=0.0;ny=1.0;nz=0.0;
-          }else if( fabs(z-zdepth*0.5)<FLT_EPSILON || fabs(z+zdepth*0.5)<FLT_EPSILON ){ 
-            nx=0.0;ny=0.0;nz=1.0;
-          };
-          break;
+          {
+            if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
+              nx=1.0;ny=0.0;nz=0.0;
+            }else if( fabs(y-yheight*0.5)<FLT_EPSILON || fabs(y+yheight*0.5)<FLT_EPSILON ){ 
+              nx=0.0;ny=1.0;nz=0.0;
+            }else if( fabs(z-zdepth*0.5)<FLT_EPSILON || fabs(z+zdepth*0.5)<FLT_EPSILON ){ 
+              nx=0.0;ny=0.0;nz=1.0;
+            };
+            break;
+          }
         default:
-          break;
+          {
+            /*refraction is for now only supported with box-shape*/
+            nx=kx;ny=ky;nz=kz;
+            NORM(nx,ny,nz);
+            break;
+          }
       }
       status=filter_refract(&kx,&ky,&kz,nx,ny,nz,0.0,delta);
       SCATTER;
@@ -202,16 +209,23 @@ TRACE
     if(refraction){
       switch (prms->shape){
         case CUBE:
-          if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
-            nx=1.0;ny=0.0;nz=0.0;
-          }else if( fabs(y-yheight*0.5)<FLT_EPSILON || fabs(y+yheight*0.5)<FLT_EPSILON ){ 
-            nx=0.0;ny=1.0;nz=0.0;
-          }else if( fabs(z-zdepth*0.5)<FLT_EPSILON || fabs(z+zdepth*0.5)<FLT_EPSILON ){ 
-            nx=0.0;ny=0.0;nz=1.0;
-          };
+          {
+            if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
+              nx=1.0;ny=0.0;nz=0.0;
+            }else if( fabs(y-yheight*0.5)<FLT_EPSILON || fabs(y+yheight*0.5)<FLT_EPSILON ){ 
+              nx=0.0;ny=1.0;nz=0.0;
+            }else if( fabs(z-zdepth*0.5)<FLT_EPSILON || fabs(z+zdepth*0.5)<FLT_EPSILON ){ 
+              nx=0.0;ny=0.0;nz=1.0;
+            }
           break;
+          }
         default:
-          break;
+          {
+            /*refraction is for now only supported with box-shape*/
+            nx=kx;ny=ky;nz=kz;
+            NORM(nx,ny,nz);
+            break;
+          }
       }
       SCATTER;
       status=filter_refract(&kx,&ky,&kz,nx,ny,nz,delta,0.0);
