@@ -9,5 +9,5 @@ sudo curl -O http://download.virtualbox.org/virtualbox/rpm/rhel/virtualbox.repo
 
 sudo yum update
 sudo yum -y groups install "GNOME Desktop"
-
+sudo yum -y install git
 
