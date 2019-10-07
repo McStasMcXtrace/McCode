@@ -95,6 +95,8 @@ _class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, doub
   *sy =  mcneutron.sy;
   *sz =  mcneutron.sz;
   *p  =  mcneutron.p;
+
+  return(mcneutron);
 } /* mcgetstate */
 
 

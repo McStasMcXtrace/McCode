@@ -948,6 +948,7 @@ void cogen_getparticlevar_fct(struct instr_def *instr)
   }
   list_iterate_end(iter);
 
+  cout("  return 0;");
   cout("}");
   cout("");
 }

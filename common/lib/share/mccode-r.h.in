@@ -614,13 +614,13 @@ void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *so
 // heaaders (gpu)
 void randvec_target_circle_gpu(double *xo, double *yo, double *zo,
       double *solid_angle, double xi, double yi, double zi, double radius,
-      _class_particle _particle);
+      _class_particle* _particle);
 void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo,
       double *solid_angle, double xi, double yi, double zi, double height,
-      double width, Rotation A, _class_particle _particle);
+      double width, Rotation A, _class_particle* _particle);
 void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *solid_angle,
       double xi, double yi, double zi, double height, double width, Rotation A,
-      double lx, double ly, double lz, int order, _class_particle _particle);
+      double lx, double ly, double lz, int order, _class_particle* _particle);
 #endif
 
 /* this is the main() */

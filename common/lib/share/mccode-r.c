@@ -2979,7 +2979,7 @@ void randvec_target_circle_cpu(double *xo, double *yo, double *zo, double *solid
 #pragma acc routine seq nohost
 void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double radius,
-        _class_particle _particle)
+        _class_particle* _particle)
 {
   double l2, phi, theta, nx, ny, nz, xt, yt, zt, xu, yu, zu;
 
@@ -3109,7 +3109,7 @@ void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo, double 
 #pragma acc routine seq nohost
 void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double width, double height, Rotation A,
-        _class_particle _particle)
+        _class_particle* _particle)
 {
   double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
   Coords tmp;
@@ -3274,7 +3274,7 @@ void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *so
         double xi, double yi, double zi,
         double width, double height, Rotation A,
         double lx, double ly, double lz, int order,
-        _class_particle _particle)
+        _class_particle* _particle)
 {
   double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
   double cos_theta;
@@ -3578,11 +3578,11 @@ double randpm1_gpu(curandState_t* state) {
 }
 #pragma acc routine seq nohost
 double rand0max_gpu(double max, curandState_t* state) {
-	return (double) curand_uniform(state) * max;
+	return ((double) curand_uniform(state)) * max;
 }
 #pragma acc routine seq nohost
 double randminmax_gpu(double min, double max, curandState_t* state) {
-  return (double) curand_uniform(state) * (max - min) + max;
+  return ((double) curand_uniform(state)) * (max - min) + max;
 }
 #pragma acc routine seq nohost
 double randtriangle_gpu(curandState_t* state) {
