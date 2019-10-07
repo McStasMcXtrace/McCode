@@ -97,7 +97,6 @@ DArray1d create_darr1d(int n){
 #pragma acc routine seq
 void destroy_darr1d(DArray1d a){
   free(a);
-  return 1;
 }
 
 #pragma acc routine seq
@@ -118,7 +117,6 @@ DArray2d create_darr2d(int nx, int ny){
 void destroy_darr2d(DArray2d a){
   free(a[0]);
   free(a);
-  return 1;
 }
 
 #pragma acc routine seq
@@ -152,7 +150,6 @@ void destroy_darr3d(DArray3d a){
   free(a[0][0]);
   free(a[0]);
   free(a);
-  return 1;
 }
 
 
