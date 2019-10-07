@@ -739,6 +739,7 @@ int cogen_comp_section_class(
     *flag_defined_common = 1;
 
     // write class fct footprint
+    coutf("#pragma acc routine seq");
     coutf("_class_%s *class_%s_%s(_class_%s *_comp",
       comp->def->name, comp->def->name, section_lower, comp->def->name);
 
