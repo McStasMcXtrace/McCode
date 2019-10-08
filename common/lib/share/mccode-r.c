@@ -91,18 +91,18 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #pragma acc routine seq
 DArray1d create_darr1d(int n){
   DArray1d arr2d;
-  arr2d = calloc(n, sizeof(double));
+  //arr2d = calloc(n, sizeof(double));
   return arr2d;
 }
 #pragma acc routine seq
 void destroy_darr1d(DArray1d a){
-  free(a);
+  //free(a);
 }
 
 #pragma acc routine seq
 DArray2d create_darr2d(int nx, int ny){
   DArray2d arr2d;
-  arr2d = calloc(nx, sizeof(double *));
+  /*arr2d = calloc(nx, sizeof(double *));
 
   double *p1;
   p1 = calloc(nx*ny, sizeof(double));
@@ -110,18 +110,19 @@ DArray2d create_darr2d(int nx, int ny){
   int i;
   for (i=0; i<nx; i++){
     arr2d[i] = &(p1[i*ny]);
-  }
+  }*/
   return arr2d;
 }
 #pragma acc routine seq
 void destroy_darr2d(DArray2d a){
-  free(a[0]);
-  free(a);
+  //free(a[0]);
+  //free(a);
 }
 
 #pragma acc routine seq
 DArray3d create_darr3d(int nx, int ny, int nz){
   DArray3d arr3d;
+  /*
   int i, j;
 
   // 1d
@@ -142,14 +143,14 @@ DArray3d create_darr3d(int nx, int ny, int nz){
     for (j=0; j<ny; j++){
       arr3d[i][j] = &(p2[(i*ny+j)*nz]);
     }
-  }
+  }*/
   return arr3d;
 }
 #pragma acc routine seq
 void destroy_darr3d(DArray3d a){
-  free(a[0][0]);
-  free(a[0]);
-  free(a);
+  //free(a[0][0]);
+  //free(a[0]);
+  //free(a);
 }
 
 
@@ -2539,6 +2540,7 @@ Coords coords_xp(Coords b, Coords c) {
 }
 
 /* coords_len: Gives length of coords set. */
+#pragma acc routine seq
 double coords_len(Coords a) {
   return sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
 }
@@ -2609,8 +2611,8 @@ mcstatic void coords_norm(Coords* c) {
 * rot_set_rotation: Get transformation for rotation first phx around x axis,
 * then phy around y, then phz around z.
 *******************************************************************************/
-void
-rot_set_rotation(Rotation t, double phx, double phy, double phz)
+#pragma acc routine seq
+void rot_set_rotation(Rotation t, double phx, double phy, double phz)
 {
   if ((phx == 0) && (phy == 0) && (phz == 0)) {
     t[0][0] = 1.0;

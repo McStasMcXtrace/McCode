@@ -739,9 +739,11 @@ int cogen_comp_section_class(
     *flag_defined_common = 1;
 
     // write class fct footprint
-    coutf("#pragma acc routine seq");
-    coutf("_class_%s *class_%s_%s(_class_%s *_comp",
-      comp->def->name, comp->def->name, section_lower, comp->def->name);
+
+    // TRACE only compile gpu variant
+    if (!strcmp(section, "TRACE"))
+      coutf("#pragma acc routine seq");
+    coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
@@ -1416,13 +1418,7 @@ int cogen_trace(struct instr_def *instr)
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
-  coutf("#define RESTORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-    "memcpy(_particle, &"
-    "instrument->_trajectory[_index], sizeof(_class_particle));",
-    list_len(instr->complist));
-  coutf("#define STORE_NEUTRON(_index, ...) if (_index>=0 && _index<=%i) "
-    "memcpy(&instrument->_trajectory[_index], _particle, sizeof(_class_particle));",
-    list_len(instr->complist));
+  coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   #if MCCODE_PROJECT == 1     /* neutron */
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
