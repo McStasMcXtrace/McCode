@@ -89,9 +89,9 @@ class LineLogger():
                 return l
         return False
 
-def test_env_settings(mcstasroot, branchname):
+def test_env_settings(mccoderoot, branchname):
     ''' test mcstas vesion switching mechanism '''
-    branchdir = join(mcstasroot, branchname)
+    branchdir = join(mccoderoot, branchname)
 
     os.environ["MCSTAS"] = branchdir
     oldpath = os.environ["PATH"]
@@ -109,10 +109,10 @@ def test_env_settings(mcstasroot, branchname):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
-def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
+def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
     ''' test a single mcstas "branch" or version that is present on the system '''
     # create test dir
-    branchdir = join(mcstasroot, branchname)
+    branchdir = join(mccoderoot, branchname)
     testdir = join(testroot, branchname)
     try:
         mkdir(testdir)
@@ -163,10 +163,10 @@ def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
         test.extract_detector_parvals(text)
         if test.hastest:
             formatstr = "%-" + "%ds: TEST" % maxnamelen
-            logging.info(formatstr % instrname)
+            logging.debug(formatstr % instrname)
         else:
             formatstr = "%-" + "%ds: NO TEST" % maxnamelen
-            logging.info(formatstr % instrname)
+            logging.debug(formatstr % instrname)
 
     # modify environment
     os.environ["MCSTAS"] = branchdir
@@ -252,15 +252,18 @@ def branch_test(mcstasroot, branchname, testroot, limitinstrs=None):
 
 
 def main(args):
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     # setup
     testroot = "/tmp/mctest-test"
-    mcstasroot = "/usr/share/mcstas/"
-    if args.mcstasroot:
-        mcstasroot = args.mcstasroot
-    logging.info("Using mcstas root: %s" % mcstasroot)
-    if args.testenv:
+    mccoderoot = "/usr/share/mcstas/"
+    if args.mccoderoot:
+        mccoderoot = args.mccoderoot
+    logging.info("Using mcstas root: %s" % mccoderoot)
+    if args.testenvs:
         logging.info("Test environment mode, using output of 'mcstas --vesion'")
         logging.info("")
     if args.versions:
@@ -276,10 +279,10 @@ def main(args):
 
     dirnames = []
     branchnames = []
-    for (_, dirnames, _) in os.walk(mcstasroot):
+    for (_, dirnames, _) in os.walk(mccoderoot):
         break
     for d in dirnames:
-        for (_, _, files) in os.walk(join(mcstasroot, d)):
+        for (_, _, files) in os.walk(join(mccoderoot, d)):
             break
         if "environment" in files:
             branchnames.append(d)
@@ -292,36 +295,37 @@ def main(args):
 
     # create root test folder
     if not os.path.exists(testroot):
-        if not args.testenv:
+        if not args.testenvs:
             mkdir(testroot)
     if not os.path.exists(testroot):
         logging.info("test root folder could not be craeted, exiting...")
         quit()
     testdir = join(testroot, utils.get_datetimestr())
-    if not os.path.exists(testdir) and not args.testenv:
+    if not os.path.exists(testdir) and not args.testenvs:
         mkdir(testdir)
 
     # iterate mcstas branches
-    if args.version != None:
-        selected_version = args.version[0]
-        if not isdir(join(mcstasroot, selected_version)):
+    if args.testversion != None:
+        selected_version = args.testversion
+        if not isdir(join(mccoderoot, selected_version)):
             logging.info("mcstas vesion %s could not be found, exiting..." % selected_version)
             quit()
         dirnames = [selected_version]
     for branchdirname in dirnames:
-        if args.testenv:
-            test_env_settings(mcstasroot, branchdirname)
+        if args.testenvs:
+            test_env_settings(mccoderoot, branchdirname)
         else:
-            branch_test(mcstasroot, branchdirname, testdir, testlimit)
+            branch_test(mccoderoot, branchdirname, testdir, testlimit)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mcstasroot', nargs='?', help='select custom mcstas root')
-    parser.add_argument('--version', nargs=1, help='select mcstas installation to test')
-    parser.add_argument('--limit', nargs=1, help='do only the first [num] tests')
-    parser.add_argument('--versions', action='store_true', help='display local mcstas installations')
-    parser.add_argument('--testenv', action='store_true', help='display local mcstas installations')
+    parser.add_argument('testversion', nargs="?", help='mccode version to test')
+    parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mcstas installations')
+    parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
+    parser.add_argument('--versions', action='store_true', help='display local versions')
+    parser.add_argument('--testenvs', action='store_true', help='more detailed local versions info')
+    parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
     args = parser.parse_args()
 
     try:
