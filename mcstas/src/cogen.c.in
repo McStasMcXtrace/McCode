@@ -1486,10 +1486,9 @@ int cogen_trace(struct instr_def *instr)
     }
   }
 
-  cout("");
   cout("  /* the main iteration loop for one incoming neutron */");
   cout("  while (!ABSORBED) { /* iterate neutron event until absorbed */");
-
+  cout("    _class_particle _particle_save;");
   cout("    /* send neutron event to component instance, one after the other */");
   cout("    char flag_nocoordschange=0;");
 
@@ -1536,10 +1535,9 @@ int cogen_trace(struct instr_def *instr)
     cout( "        } else");
     coutf("          mccoordschange(_%s->_position_relative, _%s->_rotation_relative, _particle);", comp->name, comp->name);
     cout( "      } else flag_nocoordschange=0;");
+    cout( "      _particle_save = *_particle;");
 
     /* call the component when there are TRACE and/or EXTEND lines */
-    coutf("      STORE_NEUTRON(%i);", comp->index);
-
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
       // WHEN
       if (comp->when) {
@@ -1553,8 +1551,8 @@ int cogen_trace(struct instr_def *instr)
         comp->name,
         list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
-      cout( "      if (RESTORE) ");
-      coutf( "        RESTORE_NEUTRON(%i);", comp->index);
+      cout( "      if (_particle->_restore)");
+      coutf( "        *_particle = _particle_save;", comp->index);
     };
 
     /* undef */
