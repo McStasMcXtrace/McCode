@@ -88,7 +88,7 @@ class LineLogger():
         return False
 
 def test_env_settings(mccoderoot, branchname):
-    ''' test mcstas vesion switching mechanism '''
+    ''' test mccode vesion switching mechanism '''
     branchdir = join(mccoderoot, branchname)
 
     os.environ["MCSTAS"] = branchdir
@@ -108,7 +108,7 @@ def test_env_settings(mccoderoot, branchname):
     os.environ["PATH"] = oldpath
 
 def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
-    ''' test a single mcstas "branch" or version that is present on the system '''
+    ''' test a single mccode "branch" or version that is present on the system '''
     # create test dir
     branchdir = join(mccoderoot, branchname)
     testdir = join(testroot, branchname)
@@ -247,11 +247,13 @@ def main(args):
         logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     # setup
-    testroot = "/tmp/mctest-test"
+    testroot = "/tmp/mctest"
+    if args.testroot:
+        testroot = args.testroot
     mccoderoot = "/usr/share/mcstas/"
     if args.mccoderoot:
         mccoderoot = args.mccoderoot
-    logging.info("Using mcstas root: %s" % mccoderoot)
+    logging.info("Using mccode root: %s" % mccoderoot)
     if args.testenvs:
         logging.info("Test environment mode, using output of 'mcstas --vesion'")
         logging.info("")
@@ -293,11 +295,11 @@ def main(args):
     if not os.path.exists(testdir) and not args.testenvs:
         mkdir(testdir)
 
-    # iterate mcstas branches
+    # iterate mccode branches
     if args.testversion != None:
         selected_version = args.testversion
         if not isdir(join(mccoderoot, selected_version)):
-            logging.info("mcstas vesion %s could not be found, exiting..." % selected_version)
+            logging.info("mccode vesion %s could not be found, exiting..." % selected_version)
             quit()
         dirnames = [selected_version]
     for branchdirname in dirnames:
@@ -310,7 +312,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
-    parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mcstas installations')
+    parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mccode installations')
+    parser.add_argument('--testroot', nargs='?', help='output test results under this root folder')
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
     parser.add_argument('--versions', action='store_true', help='display local versions')
     parser.add_argument('--testenvs', action='store_true', help='more detailed local versions info')
