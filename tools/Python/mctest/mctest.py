@@ -191,8 +191,8 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
                     "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
                 logging.info(formatstr % test.instrname)
             else:
-                formatstr = "%-" + "%ds: COMPILE ERROR" % maxnamelen
-                logging.info(formatstr % instrname + ", " + cmd)
+                formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
+                logging.info(formatstr % instrname + cmd)
             # record compile stdout/err
             log.save(join(testdir, test.instrname, "compile_std.txt"))
 
