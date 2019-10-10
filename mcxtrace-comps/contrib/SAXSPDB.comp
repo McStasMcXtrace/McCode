@@ -45,12 +45,11 @@ DEFINE COMPONENT SAXSPDB
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, 
-					SampleToDetectorDistance, DetectorRadius,
-					string PDBFilepath = "PDBfile.pdb")
+    xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius,
+    string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS (Absorption,NumberDensity, OrderOfHarmics, Matrix,NumberOfResidues,Protein)
-DEPENDENCY "-std=c99 -I @MCCODE_LIB@/miniconda3/include -lgsl -lgslcblas"
+DEPENDENCY "-std=c99 -I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 

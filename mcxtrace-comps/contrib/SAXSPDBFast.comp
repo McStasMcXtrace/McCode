@@ -45,13 +45,11 @@ DEFINE COMPONENT SAXSPDBFast
 DEFINITION PARAMETERS (NumberOfQBins = 200)
 
 SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, 
-					SampleToDetectorDistance, DetectorRadius,
-					qMin = 0.001, qMax = 0.5,
-					string PDBFilepath = "PDBfile.pdb")
+    xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius,
+    qMin = 0.001, qMax = 0.5, string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS (Absorption,q,NumberDensity,OrderOfHarmonics,qArray,IArray)
-DEPENDENCY "-lgsl -lgslcblas"
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas"
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
