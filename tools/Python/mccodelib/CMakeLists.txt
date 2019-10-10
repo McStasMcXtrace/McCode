@@ -36,8 +36,10 @@ set(TOOLS_NAME "tools/Python/mccodelib")
 
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
+  set(MCCODE_LOCATION "${lib}/")
 else()
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+  set(MCCODE_LOCATION "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/")
 endif()
 
 
