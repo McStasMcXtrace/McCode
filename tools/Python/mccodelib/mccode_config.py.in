@@ -7,7 +7,7 @@ Dynamic vs static LIBDIR location
 '''
 LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
 LIBDIR_FALLBACK = '@MCCODE_LOCATION@'
-if sys.platform == 'darwin'
+if sys.platform == 'darwin':
     LIBDIR = LIBDIR_FALLBACK
     
 '''
