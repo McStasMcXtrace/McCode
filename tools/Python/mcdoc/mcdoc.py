@@ -454,7 +454,13 @@ class OverviewDocWriter:
         text = text.replace('%LINK_FILECOLON_DATA%', 'file://%s/data' % self.mccode_libdir)
         text = text.replace('%LINK_FILECOLON_SHARE%', 'file://%s/share' % self.mccode_libdir)
         text = text.replace('%GENDATE%', '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
-        
+
+        #some McXtrace specific edits
+        if (mccode_config.get_mccode_prefix() == 'mx'):
+          text = text.replace('McStas','McXtrace')
+          text = text.replace('mcstas','mcxtrace')
+          test = text.replace('MCSTAS','MCXTRACE')
+
         self.text = text
         return self.text
     
@@ -1071,7 +1077,7 @@ def main(args):
 
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'mcdoc.html')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
         quit()
 
     elif args.manual == True:
@@ -1105,7 +1111,7 @@ def main(args):
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
         text = masterdoc.create()
 
-        mcdoc_html_filepath = os.path.join(usedir,'mcdoc.html')
+        mcdoc_html_filepath = os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')
         try:
             write_file(mcdoc_html_filepath, text)
             print("master doc file: %s" % mcdoc_html_filepath)
@@ -1180,12 +1186,12 @@ def main(args):
         masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
         text = masterdoc.create()
 
-        mcdoc_html_filepath = os.path.join('.', 'mcdoc.html')
+        mcdoc_html_filepath = os.path.join('.', mccode_config.get_mccode_prefix()+'doc.html')
         if args.verbose:
             print('writing local overview doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.','mcdoc.html')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.',mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
 
 
 if __name__ == '__main__':

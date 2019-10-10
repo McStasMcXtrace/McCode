@@ -56,7 +56,8 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
     sed s/@FLAVOR@/mcstas/g python-install.bat.in.2 > python-install.bat
     sed s/@VERSION@/${1}/g docupdate.bat.in > docupdate.bat.in.2
-    sed s/@FLAVOR@/mcstas/g docupdate.bat.in.2 > docupdate.bat
+    sed s/@P@/mc/g docupdate.bat.in.2 >docupdate.bat.in.3
+    sed s/@FLAVOR@/mcstas/g docupdate.bat.in.3 > docupdate.bat
 
     sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
     ./iscc McStas-${1}-metapackage64.iss
