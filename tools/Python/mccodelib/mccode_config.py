@@ -1,6 +1,15 @@
 import os
 import json
+import sys
 
+'''
+Dynamic vs static LIBDIR location
+'''
+LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
+LIBDIR_FALLBACK = '/usr/share/mcstas/2.5-dev/'
+if sys.platform == 'darwin':
+    LIBDIR = LIBDIR_FALLBACK
+    
 '''
 mcstas/mcxtrace configuration.
 '''
