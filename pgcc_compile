@@ -1,0 +1,1 @@
+pgcc -ta=tesla:cc60,managed,nollvm -Minfo=accel -DUSE_PGI -DNOSIGNALS _mini.c 
