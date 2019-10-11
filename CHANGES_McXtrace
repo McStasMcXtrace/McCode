@@ -10,6 +10,44 @@
 *
 *
 *************************************************************************/
+CHANGES in 1.5
+
+1. Standardized reflectivity library, making it mush simpler to deal with reflectivity files
+2. The shipped MCPL-library has been updated
+3. Updated and streamlines the installation procedure - such that windows and Mac installs are now (almost completely sandboxed).
+4. New components:
+        1. Bragg_crystal (replacing Perfect_crystal)
+        2. Bragg_crystal_BC
+        3. Laue_crystal_BC
+        4. Reflective grating
+        5. SAXS_samples series
+        6. Attenuating_mask
+        7. Phi_monitor: Phase monitor.
+5. Updates to components:
+        1. Mirror comp - can now be either in the xz or yz-plane
+        2. Virtual option to Mask-component - used to artifically add a 2D-pattern to a subsequent component.
+        3. Mirrors now use the refletivity library
+        4. Source_lab: Add Ag as an anode material
+        5. Source_lab: Default is now to use lorentzian line-shapes
+        6. Undulator: Easier to compile with GSL on windows
+        7. PowderN Major improvement in the way incoherent scattering is handled
+        8. Monitors: Monitors now have a nowritefile option to dynamically disable monitor (useful if an instrument has a lot of monitors)
+        9. PSD_monitor: pixel count can now be set by a variable
+        10. PSD_monitor_coh: optionally rays are now treated as if they hit a pixel center. This avoids convoluting the pixel shape in the interference pattern
+        11. MCPL: encode polarization vector 
+6. several new example and updated instruments:
+        1. MAXIV_Bloch
+        2. MAXIV_DanMax
+        3. DBD_IBM_Si_analyzer
+        4. PDB_BT
+        5. Template_Johann_spectrometer
+        6. Updated Test instruments (many of these can be used as examples)
+7. Updates to the GUI - including autoplot options and imporved stability of the plotting and disply subsystems
+8. Performance improvement to MPI
+9. Better performance on reading datafiles (especially on windows)
+10. Updated manual
+... and more
+
 CHANGES in 1.4
 
 1. Source_pt, Source_flat, Source_gaussian, and Source_div now behave in the same manner wrt. phase. The relevant parameters
