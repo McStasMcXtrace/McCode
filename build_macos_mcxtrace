@@ -35,8 +35,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 
 # Generate mxdoc pages
 WORK=`pwd`
-cd $MCINSTALL_PREFIX/mcxtrace/$1/
-./bin/mxdoc -i
+
 cd $WORK
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
@@ -63,12 +62,22 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gsl openmpi -y
-$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy scipy pillow jinja2 mpld3
-#tornado
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/conda install gcc openmpi gsl matplotlib -y
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply numpy scipy pillow tornado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin
+
+# - Nasty hack: rebuild the cif2hkl binary as static
+cd $MCINSTALL_PREFIX/mcstas/$1/libs/cif2hkl
+gfortran -c cif2hkl.F90 -o cif2hkl.o
+ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -macosx_version_min 10.10.0 -lSystem $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libgfortran.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libquadmath.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/gcc/x86_64-apple-darwin11.4.2/4.8.5/libgcc.a cif2hkl.o
+
+export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
+
+cd $WORK
+# Generate mcdoc pages
+$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcxtrace/$1/tools/Python/mcdoc/mxdoc.py -i
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
