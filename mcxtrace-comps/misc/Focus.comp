@@ -33,7 +33,7 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Focus
-SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0, int focus_absolute=1) 
+SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0, int focus_absolute=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -66,24 +66,23 @@ TRACE
    * "focus" target code stolen from slit.comp
    */
   if (focus_absolute){
-      /*x0,y0 are given in the laboratory system (default)*/
-     /*
-      * focusing occurs only through the phase shift introduced above
-      */
-     coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
+    /*x0,y0 are given in the laboratory system (default)*/
+    /*
+     * focusing occurs only through the phase shift introduced above
+     */
+    coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
   }else{
-      /*x0,y0 are relative to the present component*/
-      posx=0;posy=0;
+    /*x0,y0 are relative to the present component*/
+    posx=0;posy=0;
   }
 
   /*
-   * we have a target, so we now consider the 
-   * ray a Huygens wavelet.
-      */
+   * we have a target, so we now consider the ray a Huygens wavelet.
+   */
   double xf,yf,zf;
   if (fabs(focus_xw)>DBL_EPSILON || fabs(focus_yh)>DBL_EPSILON){
       randvec_target_rect_real(&xf, &yf, &zf, &pdir,
-              focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh, 
+              focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh,
               ROT_A_CURRENT_COMP, x, y, z, 0);
   }else{
       xf=focus_x0-posx;yf=focus_y0-posy;zf=dist;
@@ -99,7 +98,7 @@ TRACE
 MCDISPLAY
 %{
  // nothing to display, really
-  
+
   rectangle("xy",0,0,0,2.0,2.0);
 %}
 
