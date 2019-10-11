@@ -14,7 +14,7 @@ git submodule update
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
 ./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
-# For the actual mcstas part, the packages need a 'deep' PREFIX
+# For the actual mcxtrace part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 # 64-bit Mac OS
 ./mkdist mcxtrace $1 "" "" mac "" -- OSXapp
@@ -69,9 +69,9 @@ export PATH=$PATHBAK
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin
 
 # - Nasty hack: rebuild the cif2hkl binary as static
-cd $MCINSTALL_PREFIX/mcstas/$1/libs/cif2hkl
+cd $MCINSTALL_PREFIX/mxtrace/$1/libs/cif2hkl
 gfortran -c cif2hkl.F90 -o cif2hkl.o
-ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -macosx_version_min 10.10.0 -lSystem $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libgfortran.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libquadmath.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/gcc/x86_64-apple-darwin11.4.2/4.8.5/libgcc.a cif2hkl.o
+ld -o $MCINSTALL_PREFIX/mcxtrace/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -macosx_version_min 10.10.0 -lSystem $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/lib/libgfortran.a $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/lib/libquadmath.a $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/lib/gcc/x86_64-apple-darwin11.4.2/4.8.5/libgcc.a cif2hkl.o
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
