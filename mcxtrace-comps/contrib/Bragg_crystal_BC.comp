@@ -8,20 +8,21 @@
  * Component: Bragg_crystal_BC
  *
  * %I
+ * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Date: May, 2017
  * Version: 1.0
- * Release: McXtrace 1.2
+ * Release: McXtrace 1.4
  * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
- * marcus.mendenhall@nist.gov
  *
- * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ * Perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
  * %D
- *  
+ * Bragg_crystal_BC.comp models is intended to supercede Bragg_Crystal.comp.
+ *
  * For details see:
  * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
  * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
- * 
+ *
  * Reads atomic formfactors from a data input file.
  * The Bragg_Crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
  *
@@ -51,7 +52,7 @@
  * h:       [ ]    Miller index of reflection
  * k:       [ ]    Miller index of reflection
  * l:       [ ]    Miller index of reflection
- * alpha: (unit vector)	 	normal to crystal planes.  crystal surface itself has normal [0,1,0].
+ * alpha: [unit vector]	Normal to crystal planes. The crystal surface itself has normal [0,1,0].
  * R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
  * debye_waller_B: [AA^2] Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
  * crystal_type: [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
