@@ -152,8 +152,11 @@ int mccode_main(int argc, char *argv[])
 /* CUDA */
 #ifdef USE_PGI
     curandState_t MCRANDstate;
-    long long seq = Xmcrun_num;
-    curand_init(mcseed+seq, seq, 0ULL, &MCRANDstate);
+    /* To really make sense this should be long long, but for now 
+       compilation for GPU seems to need longs only */
+    //long long seq = Xmcrun_num;
+    long seq = Xmcrun_num+mcseed;
+    curand_init(seq, seq-mcseed, 0ULL, &MCRANDstate);
     particleN.MCRANDstate = MCRANDstate;
 #endif
 
