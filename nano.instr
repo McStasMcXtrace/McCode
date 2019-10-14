@@ -15,11 +15,11 @@ COMPONENT source = Source_simple(
     flux = 1e8)
 AT (0, 0, 0) RELATIVE arm
 
-COMPONENT coll2 = Slit(
+/*COMPONENT coll2 = Slit(
     radius = 0.01)
 AT (0, 0, 6) RELATIVE arm
 
-/*COMPONENT detector = PSD_monitor(
+COMPONENT detector = PSD_monitor(
     nx = 128,
     ny = 128,
     filename = "PSD.dat",
