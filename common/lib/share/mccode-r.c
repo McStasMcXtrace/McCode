@@ -88,18 +88,16 @@ mcstatic unsigned long long int mcrun_num            = 0;
 
 /* SECTION: Dynamic Arrays ================================================== */
 
-#pragma acc routine seq
 DArray1d create_darr1d(int n){
   DArray1d arr2d;
   //arr2d = calloc(n, sizeof(double));
   return arr2d;
 }
-#pragma acc routine seq
+
 void destroy_darr1d(DArray1d a){
   //free(a);
 }
 
-#pragma acc routine seq
 DArray2d create_darr2d(int nx, int ny){
   DArray2d arr2d;
   /*arr2d = calloc(nx, sizeof(double *));
@@ -113,13 +111,12 @@ DArray2d create_darr2d(int nx, int ny){
   }*/
   return arr2d;
 }
-#pragma acc routine seq
+
 void destroy_darr2d(DArray2d a){
   //free(a[0]);
   //free(a);
 }
 
-#pragma acc routine seq
 DArray3d create_darr3d(int nx, int ny, int nz){
   DArray3d arr3d;
   /*
@@ -146,7 +143,7 @@ DArray3d create_darr3d(int nx, int ny, int nz){
   }*/
   return arr3d;
 }
-#pragma acc routine seq
+
 void destroy_darr3d(DArray3d a){
   //free(a[0][0]);
   //free(a[0]);
