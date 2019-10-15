@@ -1739,6 +1739,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   // generate particle struct
   cout("");
   cout("#ifdef USE_PGI");
+  cout("#undef MC_TRACE_ENABLED");
   cout("#include <openacc_curand.h>");
   cout("#endif");
   cout("");
