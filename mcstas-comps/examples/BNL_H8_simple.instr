@@ -90,7 +90,7 @@ lambda);
 
 TRACE
 /* Source description */
-COMPONENT Origin=Progress_bar()
+COMPONENT Origin=Arm()
 AT (0,0,0) ABSOLUTE
 
 /* a flat constant source */
