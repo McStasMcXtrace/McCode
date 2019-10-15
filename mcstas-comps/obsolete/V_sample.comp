@@ -262,7 +262,7 @@ TRACE
         if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h)) {
           /* ??? did not hit cylinder */
           printf("FATAL ERROR: Did not hit cylinder from inside.\n");
-          exit(1);
+          //exit(1);
         }
         dt = t3; /* outgoing point */
         if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
@@ -274,7 +274,7 @@ TRACE
 	      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) {
             /* ??? did not hit box */
             printf("FATAL ERROR: Did not hit box from inside.\n");
-            exit(1);
+            //exit(1);
           }
           dt = t3;
         }
@@ -282,7 +282,7 @@ TRACE
 	      if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere)) {
             /* ??? did not hit sphere */
             printf("FATAL ERROR: Did not hit sphere from inside.\n");
-            exit(1);
+            //exit(1);
           }
           dt = t3;  
         }
