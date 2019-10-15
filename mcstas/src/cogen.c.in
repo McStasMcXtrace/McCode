@@ -742,7 +742,7 @@ int cogen_comp_section_class(
 
     // TRACE only compile gpu variant
     if (!strcmp(section, "TRACE"))
-      coutf("#pragma acc routine seq");
+      coutf("#pragma acc routine seq nohost");
     coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
@@ -1441,7 +1441,7 @@ int cogen_trace(struct instr_def *instr)
   cout("");
 
   /* Experimental support for OpenACC CPU parallelisation */
-  cout("#pragma acc routine seq");
+  cout("#pragma acc routine seq nohost");
 
   /* Write the main code, which calls component trace functions */
   coutf("int raytrace(_class_particle* _particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
