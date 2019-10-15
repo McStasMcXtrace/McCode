@@ -45,6 +45,7 @@
 * m:       [1]    m-value of material. Zero means completely absorbing.
 * W:       [AA-1] Width of supermirror cut-off
 *****************************************************************************/
+#pragma acc routine seq nohost
 void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
     double R0    = mc_pol_par[0];
     double Qc    = mc_pol_par[1];
