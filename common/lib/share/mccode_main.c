@@ -134,13 +134,6 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
-/* main particle event loop */
-#ifdef USE_PGI
-#include <openacc.h>
-#include "mccode_attaches.c"
-#endif
-
-
   #pragma acc parallel loop
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
@@ -152,7 +145,7 @@ int mccode_main(int argc, char *argv[])
 /* CUDA */
 #ifdef USE_PGI
     curandState_t MCRANDstate;
-    /* To really make sense this should be long long, but for now 
+    /* To really make sense this should be long long, but for now
        compilation for GPU seems to need longs only */
     //long long seq = Xmcrun_num;
     long seq = Xmcrun_num+mcseed;
