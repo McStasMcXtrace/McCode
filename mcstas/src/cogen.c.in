@@ -814,6 +814,8 @@ int cogen_comp_section_class(
         coutf("");
       } // type has activated user vars
     }
+    if (!strcmp(section, "DISPLAY"))
+      cout("  printf(\"MCDISPLAY: component %s\\n\", _comp->_name);");
 
     // SHARED comp [section] code here
     codeblock_out(code); // component definition code common to all instances, needs defines
@@ -1451,7 +1453,7 @@ int cogen_trace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
-  cout("  #define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */
@@ -1513,7 +1515,7 @@ int cogen_trace(struct instr_def *instr)
     else
       coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
 
-    coutf("      /* component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
+    coutf("      /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     if (comp->split) {
       char *exp = exp_tostring(comp->split);
       coutf("      *_particle="
@@ -1536,6 +1538,8 @@ int cogen_trace(struct instr_def *instr)
     coutf("          mccoordschange(_%s->_position_relative, _%s->_rotation_relative, _particle);", comp->name, comp->name);
     cout( "      } else flag_nocoordschange=0;");
     cout( "      _particle_save = *_particle;");
+    coutf("      DEBUG_COMP(_%s->_name);", comp->name);
+    cout ("      DEBUG_STATE();");
 
     /* call the component when there are TRACE and/or EXTEND lines */
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
@@ -1545,14 +1549,13 @@ int cogen_trace(struct instr_def *instr)
         coutf("      if (%s) // conditional WHEN execution", exp);
         str_free(exp);
       }
-
       coutf("      class_%s_trace(_%s, _particle);%s",
         comp->def->name,
         comp->name,
         list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
       cout( "      if (_particle->_restore)");
-      coutf( "        *_particle = _particle_save;", comp->index);
+      coutf("        *_particle = _particle_save;", comp->index);
     };
 
     /* undef */
@@ -1604,6 +1607,7 @@ int cogen_trace(struct instr_def *instr)
     }
 
     coutf("      _particle->_index++;");
+    coutf("      if (!ABSORBED) DEBUG_STATE();");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
 
   } /* end while comp list (case) */
