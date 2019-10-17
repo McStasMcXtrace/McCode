@@ -777,22 +777,22 @@ _class_Source_simple *class_Source_simple_trace(_class_Source_simple *_comp
   , _class_particle *_particle) {
   ABSORBED=SCATTERED=RESTORE=0;
 
-  #define radius (_comp->radius)
-  #define yheight (_comp->yheight)
-  #define xwidth (_comp->xwidth)
-  #define dist (_comp->dist)
-  #define focus_xw (_comp->focus_xw)
-  #define focus_yh (_comp->focus_yh)
-  #define E0 (_comp->E0)
-  #define dE (_comp->dE)
-  #define lambda0 (_comp->lambda0)
-  #define dlambda (_comp->dlambda)
-  #define flux (_comp->flux)
-  #define gauss (_comp->gauss)
-  #define target_index (_comp->target_index)
-  #define pmul (_comp->pmul)
-  #define square (_comp->square)
-  #define srcArea (_comp->srcArea)
+  #define radius (_source_var.radius)
+  #define yheight (_source_var.yheight)
+  #define xwidth (_source_var.xwidth)
+  #define dist (_source_var.dist)
+  #define focus_xw (_source_var.focus_xw)
+  #define focus_yh (_source_var.focus_yh)
+  #define E0 (_source_var.E0)
+  #define dE (_source_var.dE)
+  #define lambda0 (_source_var.lambda0)
+  #define dlambda (_source_var.dlambda)
+  #define flux (_source_var.flux)
+  #define gauss (_source_var.gauss)
+  #define target_index (_source_var.target_index)
+  #define pmul (_source_var.pmul)
+  #define square (_source_var.square)
+  #define srcArea (_source_var.srcArea)
  double chi,E,lambda,v,r, xf, yf, rf, dx, dy, pdir;
 
  t=0;
@@ -859,13 +859,13 @@ _class_Slit *class_Slit_trace(_class_Slit *_comp
   , _class_particle *_particle) {
   ABSORBED=SCATTERED=RESTORE=0;
 
-  #define xmin (_comp->xmin)
-  #define xmax (_comp->xmax)
-  #define ymin (_comp->ymin)
-  #define ymax (_comp->ymax)
-  #define radius (_comp->radius)
-  #define xwidth (_comp->xwidth)
-  #define yheight (_comp->yheight)
+  #define xmin (_coll2_var.xmin)
+  #define xmax (_coll2_var.xmax)
+  #define ymin (_coll2_var.ymin)
+  #define ymax (_coll2_var.ymax)
+  #define radius (_coll2_var.radius)
+  #define xwidth (_coll2_var.xwidth)
+  #define yheight (_coll2_var.yheight)
   /*  mcPROP_Z0;
     if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
     || ((radius != 0) && (x*x + y*y > radius*radius)))
@@ -888,23 +888,23 @@ _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
 					, _class_particle *_particle, double *L_N, double *L_p, double *L_p2) {
   ABSORBED=SCATTERED=RESTORE=0;
 
-  #define nL (_comp->nL)
-  #define filename (_comp->filename)
-  #define xmin (_comp->xmin)
-  #define xmax (_comp->xmax)
-  #define ymin (_comp->ymin)
-  #define ymax (_comp->ymax)
-  #define xwidth (_comp->xwidth)
-  #define yheight (_comp->yheight)
-  #define Lmin (_comp->Lmin)
-  #define Lmax (_comp->Lmax)
-  #define restore_neutron (_comp->restore_neutron)
+  #define nL (_detector_var.nL)
+  #define filename (_detector_var.filename)
+  #define xmin (_detector_var.xmin)
+  #define xmax (_detector_var.xmax)
+  #define ymin (_detector_var.ymin)
+  #define ymax (_detector_var.ymax)
+  #define xwidth (_detector_var.xwidth)
+  #define yheight (_detector_var.yheight)
+  #define Lmin (_detector_var.Lmin)
+  #define Lmax (_detector_var.Lmax)
+  #define restore_neutron (_detector_var.restore_neutron)
   /*  #define L_N (_comp->L_N)
   #define L_p (_comp->L_p)
   #define L_p2 (_comp->L_p2)*/
-  vz=1000;
+  //vz=1000;
   PROP_Z0;
-  L_p[0]+=1;
+  //L_p[0]+=1;
   if (x>xmin && x<xmax && y>ymin && y<ymax)
   {
     double L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
