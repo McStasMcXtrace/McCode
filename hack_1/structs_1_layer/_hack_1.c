@@ -285,9 +285,11 @@ struct _struct_L_monitor {
   MCNUM restore_neutron;
   /* Component type 'L_monitor' private parameters */
   /* Component type 'L_monitor' DECLARE code stored as structure members */
-  DArray1d L_N;
-  DArray1d L_p;
-  DArray1d L_p2;
+  MCNUM L_N[128];
+  MCNUM L_p[128];
+  MCNUM L_p2[128];
+  #pragma acc shape( L_N[0:127],L_p[0:127],L_p2[0:127] )
+  
   //_class_L_monitor_parameters _parameters;
 };
 typedef struct _struct_L_monitor _class_L_monitor;
@@ -689,9 +691,9 @@ _class_L_monitor *class_L_monitor_init(_class_L_monitor *_comp
     exit(0);
   }
 
-  L_N = create_darr1d(nL);
+  /*L_N = create_darr1d(nL);
   L_p = create_darr1d(nL);
-  L_p2 = create_darr1d(nL);
+  L_p2 = create_darr1d(nL);*/
 
   int i;
   for (i=0; i<nL; i++)
@@ -742,11 +744,11 @@ int init(void) { /* called by mccode_main for Minimal:INITIALISE */
   DEBUG_INSTR_END();
 #ifdef USE_PGI
 #include <openacc.h>
-acc_attach( (void**)&_arm );
-acc_attach( (void**)&_source );
-acc_attach( (void**)&_coll2 );
-acc_attach( (void**)&_detector );
-acc_attach( (void**)&instrument );
+  acc_attach( (void**)&_arm );
+  acc_attach( (void**)&_source );
+  acc_attach( (void**)&_coll2 );
+  acc_attach( (void**)&_detector );
+  acc_attach( (void**)&instrument );
 #endif
 
   return(0);
@@ -887,7 +889,7 @@ _class_Slit *class_Slit_trace(_class_Slit *_comp
 
 #pragma acc routine seq nohost
 _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
-  , _class_particle *_particle) {
+					, _class_particle *_particle, double *L_N, double *L_p, double *L_p2) {
   ABSORBED=SCATTERED=RESTORE=0;
 
   #define nL (_comp->nL)
@@ -901,10 +903,11 @@ _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
   #define Lmin (_comp->Lmin)
   #define Lmax (_comp->Lmax)
   #define restore_neutron (_comp->restore_neutron)
-  #define L_N (_comp->L_N)
+  /*  #define L_N (_comp->L_N)
   #define L_p (_comp->L_p)
-  #define L_p2 (_comp->L_p2)
+  #define L_p2 (_comp->L_p2)*/
   PROP_Z0;
+  L_N[0]=100;
   if (x>xmin && x<xmax && y>ymin && y<ymax)
   {
     double L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
@@ -942,7 +945,7 @@ _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
 ***************************************************************************** */
 
 #pragma acc routine seq nohost
-int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:TRACE */
+int raytrace(_class_particle* _particle, double *L_N, double *L_p, double *L_p2) { /* called by mccode_main for Minimal:TRACE */
 
   /* init variables and counters for TRACE */
   #undef ABSORB0
@@ -1015,7 +1018,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_detector->_name);
       DEBUG_STATE();
-      class_L_monitor_trace(_detector, _particle);
+      class_L_monitor_trace(_detector, _particle, L_N, L_p, L_p2);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -1130,9 +1133,9 @@ _class_L_monitor *class_L_monitor_finally(_class_L_monitor *_comp
   #define L_N (_comp->L_N)
   #define L_p (_comp->L_p)
   #define L_p2 (_comp->L_p2)
-  destroy_darr1d(L_N);
-  destroy_darr1d(L_p);
-  destroy_darr1d(L_p2);
+  /* destroy_darr1d(L_N); */
+  /* destroy_darr1d(L_p); */
+  /* destroy_darr1d(L_p2); */
   #undef nL
   #undef filename
   #undef xmin
@@ -1356,6 +1359,7 @@ void* _getvar_parameters(char* compname)
   /* if (!strcmp(compname, "source")) return (void *) &(_source->); */
   /* if (!strcmp(compname, "coll2")) return (void *) &(_coll2->); */
   /* if (!strcmp(compname, "detector")) return (void *) &(_detector->); */
+  return NULL;
 }
 
 void* _get_particle_var(char *token, _class_particle *p)

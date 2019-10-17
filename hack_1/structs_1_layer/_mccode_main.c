@@ -27,7 +27,6 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-
   ct = clock();    /* we use clock rather than time to set the default seed */
   mcseed=(long)ct;
 
@@ -136,7 +135,14 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
-  #pragma acc parallel loop
+  double *myL_N =  malloc(128*sizeof(double));
+  double *myL_p = malloc(128*sizeof(double));
+  double *myL_p2 = malloc(128*sizeof(double));
+  double *john = malloc(sizeof(double));
+ *john=0;
+ 
+//#pragma acc data copy( myL_N, myL_p, myL_p2 )
+#pragma acc parallel loop copy( myL_N[0:127], myL_p[0:127], myL_p2[0:127],john[0:1] )
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
 
@@ -154,14 +160,28 @@ int mccode_main(int argc, char *argv[])
     curand_init(seq, seq-mcseed, 0ULL, &MCRANDstate);
     particleN.MCRANDstate = MCRANDstate;
 #endif
+    if (Xmcrun_num<128) {
+      /* _detector->L_N[Xmcrun_num]=42; */
+      /* _detector->L_p[Xmcrun_num]=42; */
+      /* _detector->L_p2[Xmcrun_num]=42; */
+      myL_N[Xmcrun_num]=42;
+      myL_p[Xmcrun_num]=42;
+      myL_p2[Xmcrun_num]=42;
+    }
 
-
-    raytrace(&particleN);
+    raytrace(&particleN,myL_N,myL_p,myL_p2);
   }
-
   /* Likely we need an undef random here... */
 
-
+  printf("john is %g\n",myL_N[0]);
+  for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < 128 ; Xmcrun_num++) {
+    //printf("counting along %i\n",Xmcrun_num);
+    _detector->L_N[Xmcrun_num]=myL_N[Xmcrun_num];
+    _detector->L_p[Xmcrun_num]=myL_p[Xmcrun_num];
+    _detector->L_p2[Xmcrun_num]=myL_p2[Xmcrun_num];
+  }
+  printf("john2 is %g\n",_detector->L_N[0]);
+  
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */
   if (mpi_node_count > 1) {

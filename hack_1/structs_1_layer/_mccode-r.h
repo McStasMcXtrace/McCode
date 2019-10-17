@@ -472,7 +472,7 @@ double randtriangle_gpu(curandState_t* state);
 
 #ifndef DANSE
 int init(void);
-int raytrace(_class_particle*);
+int raytrace(_class_particle*, double*, double*, double*);
 int save(FILE *);
 int finally(void);
 int display(void);
