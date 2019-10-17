@@ -3509,8 +3509,8 @@ unsigned long mt_random(void)
 // randnorm: generate a random number from normal law
 double randnorm_cpu(void)
 {
-  double v1, v2, s;
-  int phase = 0;
+  static double v1, v2, s; /* removing static breaks comparison with McStas <= 2.5 */
+  static int phase = 0;
   double X, u1, u2;
 
   if(phase == 0)
