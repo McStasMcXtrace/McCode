@@ -744,11 +744,6 @@ int init(void) { /* called by mccode_main for Minimal:INITIALISE */
   DEBUG_INSTR_END();
 #ifdef USE_PGI
 #include <openacc.h>
-  acc_attach( (void**)&_arm );
-  acc_attach( (void**)&_source );
-  acc_attach( (void**)&_coll2 );
-  acc_attach( (void**)&_detector );
-  acc_attach( (void**)&instrument );
 #endif
 
   return(0);
@@ -871,12 +866,13 @@ _class_Slit *class_Slit_trace(_class_Slit *_comp
   #define radius (_comp->radius)
   #define xwidth (_comp->xwidth)
   #define yheight (_comp->yheight)
-    mcPROP_Z0;
+  /*  mcPROP_Z0;
     if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
     || ((radius != 0) && (x*x + y*y > radius*radius)))
       ABSORB;
     else
         SCATTER;
+  */
   #undef xmin
   #undef xmax
   #undef ymin
@@ -906,8 +902,9 @@ _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
   /*  #define L_N (_comp->L_N)
   #define L_p (_comp->L_p)
   #define L_p2 (_comp->L_p2)*/
+  vz=1000;
   PROP_Z0;
-  L_N[0]=100;
+  L_p[0]+=1;
   if (x>xmin && x<xmax && y>ymin && y<ymax)
   {
     double L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
