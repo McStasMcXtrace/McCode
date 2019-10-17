@@ -3,6 +3,11 @@
 *******************************************************************************/
 int mccode_main(int argc, char *argv[])
 {
+  /*  double run_num = 0; */
+  time_t  t;
+  clock_t ct;
+
+  
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -20,9 +25,13 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-  struct timeval tm;
+  ct = clock();    /* we use clock rather than time to set the default seed */
+  mcseed=(long)ct;
+
+  // COMMON seed - not functional
+  /*  struct timeval tm;
   gettimeofday(&tm, NULL);
-  mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;
+  mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;*/
 
 #ifdef USE_MPI
   /* *** print number of nodes *********************************************** */
@@ -39,7 +48,8 @@ int mccode_main(int argc, char *argv[])
 
 
   srandom(mcseed);
-  time_t  t;
+  // COMMON seed - not functional
+  //time_t  t;
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
   /* *** parse options ******************************************************* */
