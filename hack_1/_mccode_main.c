@@ -5,6 +5,11 @@
 *******************************************************************************/
 int mccode_main(int argc, char *argv[])
 {
+  /*  double run_num = 0; */
+  time_t  t;
+  clock_t ct;
+
+  
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -22,9 +27,13 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-  struct timeval tm;
+  ct = clock();    /* we use clock rather than time to set the default seed */
+  mcseed=(long)ct;
+
+  // COMMON seed - not functional
+  /*  struct timeval tm;
   gettimeofday(&tm, NULL);
-  mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;
+  mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;*/
 
 #ifdef USE_MPI
   /* *** print number of nodes *********************************************** */
@@ -41,7 +50,8 @@ int mccode_main(int argc, char *argv[])
 
 
   srandom(mcseed);
-  time_t  t;
+  // COMMON seed - not functional
+  //time_t  t;
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
   /* *** parse options ******************************************************* */
@@ -131,7 +141,12 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
-  #pragma acc parallel loop
+  double *myL_N =  malloc(128*sizeof(double));
+  double *myL_p = malloc(128*sizeof(double));
+  double *myL_p2 = malloc(128*sizeof(double));
+
+#pragma acc update device (_arm_var, _source_var, _coll2_var, _detector_var, _instrument_var)
+#pragma acc parallel loop copy( myL_N[0:127], myL_p[0:127], myL_p2[0:127])
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
 
@@ -151,11 +166,16 @@ int mccode_main(int argc, char *argv[])
 #endif
 
 
-    raytrace(&particleN);
+    raytrace(&particleN, myL_N, myL_p, myL_p2);
   }
 
   /* Likely we need an undef random here... */
 
+  for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < 128 ; Xmcrun_num++) {
+    _detector->L_N[Xmcrun_num]=myL_N[Xmcrun_num];
+    _detector->L_p[Xmcrun_num]=myL_p[Xmcrun_num];
+    _detector->L_p2[Xmcrun_num]=myL_p2[Xmcrun_num];
+  }
 
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */

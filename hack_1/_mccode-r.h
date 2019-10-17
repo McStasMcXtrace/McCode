@@ -44,7 +44,9 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <errno.h>
-#include <sys/time.h>
+#include <time.h>
+// COMMON seed - not functional
+//#include <sys/time.h>
 #include <float.h>
 #include <inttypes.h>
 
@@ -472,7 +474,7 @@ double randtriangle_gpu(curandState_t* state);
 
 #ifndef DANSE
 int init(void);
-int raytrace(_class_particle*);
+int raytrace(_class_particle*, double *L_N, double *L_p, double *L_p2);
 int save(FILE *);
 int finally(void);
 int display(void);

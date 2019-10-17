@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: hack_1.instr (Minimal)
- * Date:       Thu Oct 17 18:50:47 2019
+ * Date:       Thu Oct 17 21:18:16 2019
  * File:       hack_1.c
  * CFLAGS=
  */
@@ -116,23 +116,19 @@ struct mcinputtable_struct mcinputtable[] = {
 /* ********************** component definition declarations. **************** */
 
 /* component arm=Arm() [1] DECLARE */
-/* Parameter definition for component type 'Arm' */
-struct _struct_Arm_parameters {
-  char Arm_has_no_parameters;
-}; /* _struct_Arm_parameters */
-typedef struct _struct_Arm_parameters _class_Arm_parameters;
-
 /* Parameters for component type 'Arm' */
 struct _struct_Arm {
   char     _name[256]; /* e.g. arm */
   char     _type[256]; /* Arm */
-  long     _index; /* e.g. 2 index in TRACE list */
+  long     _index; /* e.g. 0 index in TRACE list */
   Coords   _position_absolute;
   Coords   _position_relative; /* wrt PREVIOUS */
   Rotation _rotation_absolute;
   Rotation _rotation_relative; /* wrt PREVIOUS */
   int      _rotation_is_identity;
-  _class_Arm_parameters _parameters;
+/* Parameter definition for component type 'Arm' */
+  char Arm_has_no_parameters;
+
 };
 typedef struct _struct_Arm _class_Arm;
 _class_Arm _arm_var;
@@ -141,8 +137,17 @@ _class_Arm *_arm = &_arm_var;
 #pragma acc declare create ( _arm )
 
 /* component source=Source_simple() [2] DECLARE */
+/* Parameters for component type 'Source_simple' */
+struct _struct_Source_simple {
+  char     _name[256]; /* e.g. source */
+  char     _type[256]; /* Source_simple */
+  long     _index; /* e.g. 0 index in TRACE list */
+  Coords   _position_absolute;
+  Coords   _position_relative; /* wrt PREVIOUS */
+  Rotation _rotation_absolute;
+  Rotation _rotation_relative; /* wrt PREVIOUS */
+  int      _rotation_is_identity;
 /* Parameter definition for component type 'Source_simple' */
-struct _struct_Source_simple_parameters {
   /* Component type 'Source_simple' setting parameters */
   MCNUM radius;
   MCNUM yheight;
@@ -161,20 +166,7 @@ struct _struct_Source_simple_parameters {
   /* Component type 'Source_simple' DECLARE code stored as structure members */
 double pmul, srcArea;
 int square;
-}; /* _struct_Source_simple_parameters */
-typedef struct _struct_Source_simple_parameters _class_Source_simple_parameters;
 
-/* Parameters for component type 'Source_simple' */
-struct _struct_Source_simple {
-  char     _name[256]; /* e.g. source */
-  char     _type[256]; /* Source_simple */
-  long     _index; /* e.g. 2 index in TRACE list */
-  Coords   _position_absolute;
-  Coords   _position_relative; /* wrt PREVIOUS */
-  Rotation _rotation_absolute;
-  Rotation _rotation_relative; /* wrt PREVIOUS */
-  int      _rotation_is_identity;
-  _class_Source_simple_parameters _parameters;
 };
 typedef struct _struct_Source_simple _class_Source_simple;
 _class_Source_simple _source_var;
@@ -183,8 +175,17 @@ _class_Source_simple *_source = &_source_var;
 #pragma acc declare create ( _source )
 
 /* component coll2=Slit() [3] DECLARE */
+/* Parameters for component type 'Slit' */
+struct _struct_Slit {
+  char     _name[256]; /* e.g. coll2 */
+  char     _type[256]; /* Slit */
+  long     _index; /* e.g. 0 index in TRACE list */
+  Coords   _position_absolute;
+  Coords   _position_relative; /* wrt PREVIOUS */
+  Rotation _rotation_absolute;
+  Rotation _rotation_relative; /* wrt PREVIOUS */
+  int      _rotation_is_identity;
 /* Parameter definition for component type 'Slit' */
-struct _struct_Slit_parameters {
   /* Component type 'Slit' setting parameters */
   MCNUM xmin;
   MCNUM xmax;
@@ -193,20 +194,7 @@ struct _struct_Slit_parameters {
   MCNUM radius;
   MCNUM xwidth;
   MCNUM yheight;
-}; /* _struct_Slit_parameters */
-typedef struct _struct_Slit_parameters _class_Slit_parameters;
 
-/* Parameters for component type 'Slit' */
-struct _struct_Slit {
-  char     _name[256]; /* e.g. coll2 */
-  char     _type[256]; /* Slit */
-  long     _index; /* e.g. 2 index in TRACE list */
-  Coords   _position_absolute;
-  Coords   _position_relative; /* wrt PREVIOUS */
-  Rotation _rotation_absolute;
-  Rotation _rotation_relative; /* wrt PREVIOUS */
-  int      _rotation_is_identity;
-  _class_Slit_parameters _parameters;
 };
 typedef struct _struct_Slit _class_Slit;
 _class_Slit _coll2_var;
@@ -215,8 +203,17 @@ _class_Slit *_coll2 = &_coll2_var;
 #pragma acc declare create ( _coll2 )
 
 /* component detector=L_monitor() [4] DECLARE */
+/* Parameters for component type 'L_monitor' */
+struct _struct_L_monitor {
+  char     _name[256]; /* e.g. detector */
+  char     _type[256]; /* L_monitor */
+  long     _index; /* e.g. 0 index in TRACE list */
+  Coords   _position_absolute;
+  Coords   _position_relative; /* wrt PREVIOUS */
+  Rotation _rotation_absolute;
+  Rotation _rotation_relative; /* wrt PREVIOUS */
+  int      _rotation_is_identity;
 /* Parameter definition for component type 'L_monitor' */
-struct _struct_L_monitor_parameters {
   /* Component type 'L_monitor' setting parameters */
   MCNUM nL;
   char filename[16384];
@@ -231,23 +228,10 @@ struct _struct_L_monitor_parameters {
   MCNUM restore_neutron;
   /* Component type 'L_monitor' private parameters */
   /* Component type 'L_monitor' DECLARE code stored as structure members */
-  DArray1d L_N;
-  DArray1d L_p;
-  DArray1d L_p2;
-}; /* _struct_L_monitor_parameters */
-typedef struct _struct_L_monitor_parameters _class_L_monitor_parameters;
+  double L_N[128];
+  double L_p[128];
+  double L_p2[128];
 
-/* Parameters for component type 'L_monitor' */
-struct _struct_L_monitor {
-  char     _name[256]; /* e.g. detector */
-  char     _type[256]; /* L_monitor */
-  long     _index; /* e.g. 2 index in TRACE list */
-  Coords   _position_absolute;
-  Coords   _position_relative; /* wrt PREVIOUS */
-  Rotation _rotation_absolute;
-  Rotation _rotation_relative; /* wrt PREVIOUS */
-  int      _rotation_is_identity;
-  _class_L_monitor_parameters _parameters;
 };
 typedef struct _struct_L_monitor _class_L_monitor;
 _class_L_monitor _detector_var;
@@ -303,36 +287,36 @@ int _source_setpos(void)
   stracpy(_source->_name, "source", 16384);
   stracpy(_source->_type, "Source_simple", 16384);
   _source->_index=2;
-  _source->_parameters.radius = 0.02;
-  #define radius (_source->_parameters.radius)
-  _source->_parameters.yheight = 0;
-  #define yheight (_source->_parameters.yheight)
-  _source->_parameters.xwidth = 0;
-  #define xwidth (_source->_parameters.xwidth)
-  _source->_parameters.dist = 3;
-  #define dist (_source->_parameters.dist)
-  _source->_parameters.focus_xw = 0.01;
-  #define focus_xw (_source->_parameters.focus_xw)
-  _source->_parameters.focus_yh = 0.01;
-  #define focus_yh (_source->_parameters.focus_yh)
-  _source->_parameters.E0 = 0;
-  #define E0 (_source->_parameters.E0)
-  _source->_parameters.dE = 0;
-  #define dE (_source->_parameters.dE)
-  _source->_parameters.lambda0 = 6.0;
-  #define lambda0 (_source->_parameters.lambda0)
-  _source->_parameters.dlambda = 0.5;
-  #define dlambda (_source->_parameters.dlambda)
-  _source->_parameters.flux = 1e8;
-  #define flux (_source->_parameters.flux)
-  _source->_parameters.gauss = 0;
-  #define gauss (_source->_parameters.gauss)
-  _source->_parameters.target_index = + 1;
-  #define target_index (_source->_parameters.target_index)
+  _source->radius = 0.02;
+  #define radius (_source->radius)
+  _source->yheight = 0;
+  #define yheight (_source->yheight)
+  _source->xwidth = 0;
+  #define xwidth (_source->xwidth)
+  _source->dist = 3;
+  #define dist (_source->dist)
+  _source->focus_xw = 0.01;
+  #define focus_xw (_source->focus_xw)
+  _source->focus_yh = 0.01;
+  #define focus_yh (_source->focus_yh)
+  _source->E0 = 0;
+  #define E0 (_source->E0)
+  _source->dE = 0;
+  #define dE (_source->dE)
+  _source->lambda0 = 6.0;
+  #define lambda0 (_source->lambda0)
+  _source->dlambda = 0.5;
+  #define dlambda (_source->dlambda)
+  _source->flux = 1e8;
+  #define flux (_source->flux)
+  _source->gauss = 0;
+  #define gauss (_source->gauss)
+  _source->target_index = + 1;
+  #define target_index (_source->target_index)
 
-  #define pmul (_source->_parameters.pmul)
-  #define square (_source->_parameters.square)
-  #define srcArea (_source->_parameters.srcArea)
+  #define pmul (_source->pmul)
+  #define square (_source->square)
+  #define srcArea (_source->srcArea)
 
   #undef radius
   #undef yheight
@@ -383,20 +367,20 @@ int _coll2_setpos(void)
   stracpy(_coll2->_name, "coll2", 16384);
   stracpy(_coll2->_type, "Slit", 16384);
   _coll2->_index=3;
-  _coll2->_parameters.xmin = -0.01;
-  #define xmin (_coll2->_parameters.xmin)
-  _coll2->_parameters.xmax = 0.01;
-  #define xmax (_coll2->_parameters.xmax)
-  _coll2->_parameters.ymin = -0.01;
-  #define ymin (_coll2->_parameters.ymin)
-  _coll2->_parameters.ymax = 0.01;
-  #define ymax (_coll2->_parameters.ymax)
-  _coll2->_parameters.radius = 0.01;
-  #define radius (_coll2->_parameters.radius)
-  _coll2->_parameters.xwidth = 0;
-  #define xwidth (_coll2->_parameters.xwidth)
-  _coll2->_parameters.yheight = 0;
-  #define yheight (_coll2->_parameters.yheight)
+  _coll2->xmin = -0.01;
+  #define xmin (_coll2->xmin)
+  _coll2->xmax = 0.01;
+  #define xmax (_coll2->xmax)
+  _coll2->ymin = -0.01;
+  #define ymin (_coll2->ymin)
+  _coll2->ymax = 0.01;
+  #define ymax (_coll2->ymax)
+  _coll2->radius = 0.01;
+  #define radius (_coll2->radius)
+  _coll2->xwidth = 0;
+  #define xwidth (_coll2->xwidth)
+  _coll2->yheight = 0;
+  #define yheight (_coll2->yheight)
 
   #undef xmin
   #undef xmax
@@ -434,39 +418,35 @@ int _coll2_setpos(void)
 /* component detector=L_monitor() SETTING, POSITION/ROTATION */
 int _detector_setpos(void)
 { /* sets initial component parameters, position and rotation */
-  SIG_MESSAGE("[_detector_setpos] component detector=L_monitor() SETTING [/usr/share/mcstas/3.0-dev/monitors/L_monitor.comp:65]");
+  SIG_MESSAGE("[_detector_setpos] component detector=L_monitor() SETTING [L_monitor.comp:65]");
   stracpy(_detector->_name, "detector", 16384);
   stracpy(_detector->_type, "L_monitor", 16384);
   _detector->_index=4;
-  _detector->_parameters.nL = 128;
-  #define nL (_detector->_parameters.nL)
+  _detector->nL = 128;
+  #define nL (_detector->nL)
   if("L.dat" && strlen("L.dat"))
-    stracpy(_detector->_parameters.filename, "L.dat" ? "L.dat" : "", 16384);
+    stracpy(_detector->filename, "L.dat" ? "L.dat" : "", 16384);
   else 
-  _detector->_parameters.filename[0]='\0';
-  #define filename (_detector->_parameters.filename)
-  _detector->_parameters.xmin = -0.1;
-  #define xmin (_detector->_parameters.xmin)
-  _detector->_parameters.xmax = 0.1;
-  #define xmax (_detector->_parameters.xmax)
-  _detector->_parameters.ymin = -0.1;
-  #define ymin (_detector->_parameters.ymin)
-  _detector->_parameters.ymax = 0.1;
-  #define ymax (_detector->_parameters.ymax)
-  _detector->_parameters.xwidth = 0;
-  #define xwidth (_detector->_parameters.xwidth)
-  _detector->_parameters.yheight = 0;
-  #define yheight (_detector->_parameters.yheight)
-  _detector->_parameters.Lmin = 5;
-  #define Lmin (_detector->_parameters.Lmin)
-  _detector->_parameters.Lmax = 7;
-  #define Lmax (_detector->_parameters.Lmax)
-  _detector->_parameters.restore_neutron = 0;
-  #define restore_neutron (_detector->_parameters.restore_neutron)
-
-  #define L_N (_detector->_parameters.L_N)
-  #define L_p (_detector->_parameters.L_p)
-  #define L_p2 (_detector->_parameters.L_p2)
+  _detector->filename[0]='\0';
+  #define filename (_detector->filename)
+  _detector->xmin = -0.1;
+  #define xmin (_detector->xmin)
+  _detector->xmax = 0.1;
+  #define xmax (_detector->xmax)
+  _detector->ymin = -0.1;
+  #define ymin (_detector->ymin)
+  _detector->ymax = 0.1;
+  #define ymax (_detector->ymax)
+  _detector->xwidth = 0;
+  #define xwidth (_detector->xwidth)
+  _detector->yheight = 0;
+  #define yheight (_detector->yheight)
+  _detector->Lmin = 5;
+  #define Lmin (_detector->Lmin)
+  _detector->Lmax = 7;
+  #define Lmax (_detector->Lmax)
+  _detector->restore_neutron = 0;
+  #define restore_neutron (_detector->restore_neutron)
 
   #undef nL
   #undef filename
@@ -479,9 +459,6 @@ int _detector_setpos(void)
   #undef Lmin
   #undef Lmax
   #undef restore_neutron
-  #undef L_N
-  #undef L_p
-  #undef L_p2
   /* component detector=L_monitor() AT ROTATED */
   {
     Coords tc1, tc2;
@@ -510,22 +487,22 @@ int _detector_setpos(void)
 
 _class_Source_simple *class_Source_simple_init(_class_Source_simple *_comp
 ) {
-  #define radius (_comp->_parameters.radius)
-  #define yheight (_comp->_parameters.yheight)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define dist (_comp->_parameters.dist)
-  #define focus_xw (_comp->_parameters.focus_xw)
-  #define focus_yh (_comp->_parameters.focus_yh)
-  #define E0 (_comp->_parameters.E0)
-  #define dE (_comp->_parameters.dE)
-  #define lambda0 (_comp->_parameters.lambda0)
-  #define dlambda (_comp->_parameters.dlambda)
-  #define flux (_comp->_parameters.flux)
-  #define gauss (_comp->_parameters.gauss)
-  #define target_index (_comp->_parameters.target_index)
-  #define pmul (_comp->_parameters.pmul)
-  #define square (_comp->_parameters.square)
-  #define srcArea (_comp->_parameters.srcArea)
+  #define radius (_comp->radius)
+  #define yheight (_comp->yheight)
+  #define xwidth (_comp->xwidth)
+  #define dist (_comp->dist)
+  #define focus_xw (_comp->focus_xw)
+  #define focus_yh (_comp->focus_yh)
+  #define E0 (_comp->E0)
+  #define dE (_comp->dE)
+  #define lambda0 (_comp->lambda0)
+  #define dlambda (_comp->dlambda)
+  #define flux (_comp->flux)
+  #define gauss (_comp->gauss)
+  #define target_index (_comp->target_index)
+  #define pmul (_comp->pmul)
+  #define square (_comp->square)
+  #define srcArea (_comp->srcArea)
 square = 0;
 /* Determine source area */
 if (radius && !yheight && !xwidth ) {
@@ -600,13 +577,13 @@ if (radius && !yheight && !xwidth ) {
 
 _class_Slit *class_Slit_init(_class_Slit *_comp
 ) {
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define radius (_comp->_parameters.radius)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define radius (_comp->radius)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
 if (xwidth > 0)  { xmax=xwidth/2;  xmin=-xmax; }
   if (yheight > 0) { ymax=yheight/2; ymin=-ymax; }
   if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
@@ -624,20 +601,18 @@ if (xwidth > 0)  { xmax=xwidth/2;  xmin=-xmax; }
 
 _class_L_monitor *class_L_monitor_init(_class_L_monitor *_comp
 ) {
-  #define nL (_comp->_parameters.nL)
-  #define filename (_comp->_parameters.filename)
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
-  #define Lmin (_comp->_parameters.Lmin)
-  #define Lmax (_comp->_parameters.Lmax)
-  #define restore_neutron (_comp->_parameters.restore_neutron)
-  #define L_N (_comp->_parameters.L_N)
-  #define L_p (_comp->_parameters.L_p)
-  #define L_p2 (_comp->_parameters.L_p2)
+  #define nL (_comp->nL)
+  #define filename (_comp->filename)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
+  #define Lmin (_comp->Lmin)
+  #define Lmax (_comp->Lmax)
+  #define restore_neutron (_comp->restore_neutron)
+  
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -648,17 +623,13 @@ _class_L_monitor *class_L_monitor_init(_class_L_monitor *_comp
     exit(0);
   }
 
-  L_N = create_darr1d(nL);
-  L_p = create_darr1d(nL);
-  L_p2 = create_darr1d(nL);
-
-  int i;
+  /*int i;
   for (i=0; i<nL; i++)
   {
     L_N[i] = 0;
     L_p[i] = 0;
     L_p2[i] = 0;
-  }
+    }*/
   #undef nL
   #undef filename
   #undef xmin
@@ -739,22 +710,22 @@ _class_Source_simple *class_Source_simple_trace(_class_Source_simple *_comp
   , _class_particle *_particle) {
   ABSORBED=SCATTERED=RESTORE=0;
 
-  #define radius (_comp->_parameters.radius)
-  #define yheight (_comp->_parameters.yheight)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define dist (_comp->_parameters.dist)
-  #define focus_xw (_comp->_parameters.focus_xw)
-  #define focus_yh (_comp->_parameters.focus_yh)
-  #define E0 (_comp->_parameters.E0)
-  #define dE (_comp->_parameters.dE)
-  #define lambda0 (_comp->_parameters.lambda0)
-  #define dlambda (_comp->_parameters.dlambda)
-  #define flux (_comp->_parameters.flux)
-  #define gauss (_comp->_parameters.gauss)
-  #define target_index (_comp->_parameters.target_index)
-  #define pmul (_comp->_parameters.pmul)
-  #define square (_comp->_parameters.square)
-  #define srcArea (_comp->_parameters.srcArea)
+  #define radius (_comp->radius)
+  #define yheight (_comp->yheight)
+  #define xwidth (_comp->xwidth)
+  #define dist (_comp->dist)
+  #define focus_xw (_comp->focus_xw)
+  #define focus_yh (_comp->focus_yh)
+  #define E0 (_comp->E0)
+  #define dE (_comp->dE)
+  #define lambda0 (_comp->lambda0)
+  #define dlambda (_comp->dlambda)
+  #define flux (_comp->flux)
+  #define gauss (_comp->gauss)
+  #define target_index (_comp->target_index)
+  #define pmul (_comp->pmul)
+  #define square (_comp->square)
+  #define srcArea (_comp->srcArea)
  double chi,E,lambda,v,r, xf, yf, rf, dx, dy, pdir;
 
  t=0;
@@ -821,13 +792,13 @@ _class_Slit *class_Slit_trace(_class_Slit *_comp
   , _class_particle *_particle) {
   ABSORBED=SCATTERED=RESTORE=0;
 
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define radius (_comp->_parameters.radius)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define radius (_comp->radius)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
     mcPROP_Z0;
     if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
     || ((radius != 0) && (x*x + y*y > radius*radius)))
@@ -846,23 +817,21 @@ _class_Slit *class_Slit_trace(_class_Slit *_comp
 
 #pragma acc routine seq nohost
 _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
-  , _class_particle *_particle) {
+  , _class_particle *_particle, double *L_N, double *L_p, double *L_p2) {
   ABSORBED=SCATTERED=RESTORE=0;
 
-  #define nL (_comp->_parameters.nL)
-  #define filename (_comp->_parameters.filename)
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
-  #define Lmin (_comp->_parameters.Lmin)
-  #define Lmax (_comp->_parameters.Lmax)
-  #define restore_neutron (_comp->_parameters.restore_neutron)
-  #define L_N (_comp->_parameters.L_N)
-  #define L_p (_comp->_parameters.L_p)
-  #define L_p2 (_comp->_parameters.L_p2)
+  #define nL (_comp->nL)
+  #define filename (_comp->filename)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
+  #define Lmin (_comp->Lmin)
+  #define Lmax (_comp->Lmax)
+  #define restore_neutron (_comp->restore_neutron)
+  #define L_p2 (_comp->L_p2)
   PROP_Z0;
   if (x>xmin && x<xmax && y>ymin && y<ymax)
   {
@@ -890,9 +859,6 @@ _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
   #undef Lmin
   #undef Lmax
   #undef restore_neutron
-  #undef L_N
-  #undef L_p
-  #undef L_p2
   return(_comp);
 } /* class_L_monitor_trace */
 
@@ -901,7 +867,7 @@ _class_L_monitor *class_L_monitor_trace(_class_L_monitor *_comp
 ***************************************************************************** */
 
 #pragma acc routine seq nohost
-int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:TRACE */
+int raytrace(_class_particle* _particle, double *jL_N, double *jL_p, double *jL_p2) { /* called by mccode_main for Minimal:TRACE */
 
   /* init variables and counters for TRACE */
   #undef ABSORB0
@@ -974,7 +940,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_detector->_name);
       DEBUG_STATE();
-      class_L_monitor_trace(&_detector_var, _particle);
+      class_L_monitor_trace(&_detector_var, _particle, jL_N, jL_p, jL_p2);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -1015,20 +981,20 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
 
 _class_L_monitor *class_L_monitor_save(_class_L_monitor *_comp
 ) {
-  #define nL (_comp->_parameters.nL)
-  #define filename (_comp->_parameters.filename)
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
-  #define Lmin (_comp->_parameters.Lmin)
-  #define Lmax (_comp->_parameters.Lmax)
-  #define restore_neutron (_comp->_parameters.restore_neutron)
-  #define L_N (_comp->_parameters.L_N)
-  #define L_p (_comp->_parameters.L_p)
-  #define L_p2 (_comp->_parameters.L_p2)
+  #define nL (_comp->nL)
+  #define filename (_comp->filename)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
+  #define Lmin (_comp->Lmin)
+  #define Lmax (_comp->Lmax)
+  #define restore_neutron (_comp->restore_neutron)
+  #define L_N (_comp->L_N)
+  #define L_p (_comp->L_p)
+  #define L_p2 (_comp->L_p2)
   DETECTOR_OUT_1D(
     "Wavelength monitor",
     "Wavelength [AA]",
@@ -1073,42 +1039,6 @@ int save(FILE *handle) { /* called by mccode_main for Minimal:SAVE */
 * instrument 'Minimal' and components FINALLY
 ***************************************************************************** */
 
-_class_L_monitor *class_L_monitor_finally(_class_L_monitor *_comp
-) {
-  #define nL (_comp->_parameters.nL)
-  #define filename (_comp->_parameters.filename)
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
-  #define Lmin (_comp->_parameters.Lmin)
-  #define Lmax (_comp->_parameters.Lmax)
-  #define restore_neutron (_comp->_parameters.restore_neutron)
-  #define L_N (_comp->_parameters.L_N)
-  #define L_p (_comp->_parameters.L_p)
-  #define L_p2 (_comp->_parameters.L_p2)
-  destroy_darr1d(L_N);
-  destroy_darr1d(L_p);
-  destroy_darr1d(L_p2);
-  #undef nL
-  #undef filename
-  #undef xmin
-  #undef xmax
-  #undef ymin
-  #undef ymax
-  #undef xwidth
-  #undef yheight
-  #undef Lmin
-  #undef Lmax
-  #undef restore_neutron
-  #undef L_N
-  #undef L_p
-  #undef L_p2
-  return(_comp);
-} /* class_L_monitor_finally */
-
 
 
 int finally(void) { /* called by mccode_main for Minimal:FINALLY */
@@ -1119,7 +1049,6 @@ int finally(void) { /* called by mccode_main for Minimal:FINALLY */
 
 
 
-  class_L_monitor_finally(_detector);
 
   siminfo_close(); 
 
@@ -1152,22 +1081,22 @@ _class_Arm *class_Arm_display(_class_Arm *_comp
 
 _class_Source_simple *class_Source_simple_display(_class_Source_simple *_comp
 ) {
-  #define radius (_comp->_parameters.radius)
-  #define yheight (_comp->_parameters.yheight)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define dist (_comp->_parameters.dist)
-  #define focus_xw (_comp->_parameters.focus_xw)
-  #define focus_yh (_comp->_parameters.focus_yh)
-  #define E0 (_comp->_parameters.E0)
-  #define dE (_comp->_parameters.dE)
-  #define lambda0 (_comp->_parameters.lambda0)
-  #define dlambda (_comp->_parameters.dlambda)
-  #define flux (_comp->_parameters.flux)
-  #define gauss (_comp->_parameters.gauss)
-  #define target_index (_comp->_parameters.target_index)
-  #define pmul (_comp->_parameters.pmul)
-  #define square (_comp->_parameters.square)
-  #define srcArea (_comp->_parameters.srcArea)
+  #define radius (_comp->radius)
+  #define yheight (_comp->yheight)
+  #define xwidth (_comp->xwidth)
+  #define dist (_comp->dist)
+  #define focus_xw (_comp->focus_xw)
+  #define focus_yh (_comp->focus_yh)
+  #define E0 (_comp->E0)
+  #define dE (_comp->dE)
+  #define lambda0 (_comp->lambda0)
+  #define dlambda (_comp->dlambda)
+  #define flux (_comp->flux)
+  #define gauss (_comp->gauss)
+  #define target_index (_comp->target_index)
+  #define pmul (_comp->pmul)
+  #define square (_comp->square)
+  #define srcArea (_comp->srcArea)
   printf("MCDISPLAY: component %s\n", _comp->_name);
   if (square == 1) {
     
@@ -1203,13 +1132,13 @@ _class_Source_simple *class_Source_simple_display(_class_Source_simple *_comp
 
 _class_Slit *class_Slit_display(_class_Slit *_comp
 ) {
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define radius (_comp->_parameters.radius)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define radius (_comp->radius)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
   printf("MCDISPLAY: component %s\n", _comp->_name);
   
   if (radius == 0) {
@@ -1243,20 +1172,20 @@ _class_Slit *class_Slit_display(_class_Slit *_comp
 
 _class_L_monitor *class_L_monitor_display(_class_L_monitor *_comp
 ) {
-  #define nL (_comp->_parameters.nL)
-  #define filename (_comp->_parameters.filename)
-  #define xmin (_comp->_parameters.xmin)
-  #define xmax (_comp->_parameters.xmax)
-  #define ymin (_comp->_parameters.ymin)
-  #define ymax (_comp->_parameters.ymax)
-  #define xwidth (_comp->_parameters.xwidth)
-  #define yheight (_comp->_parameters.yheight)
-  #define Lmin (_comp->_parameters.Lmin)
-  #define Lmax (_comp->_parameters.Lmax)
-  #define restore_neutron (_comp->_parameters.restore_neutron)
-  #define L_N (_comp->_parameters.L_N)
-  #define L_p (_comp->_parameters.L_p)
-  #define L_p2 (_comp->_parameters.L_p2)
+  #define nL (_comp->nL)
+  #define filename (_comp->filename)
+  #define xmin (_comp->xmin)
+  #define xmax (_comp->xmax)
+  #define ymin (_comp->ymin)
+  #define ymax (_comp->ymax)
+  #define xwidth (_comp->xwidth)
+  #define yheight (_comp->yheight)
+  #define Lmin (_comp->Lmin)
+  #define Lmax (_comp->Lmax)
+  #define restore_neutron (_comp->restore_neutron)
+  #define L_N (_comp->L_N)
+  #define L_p (_comp->L_p)
+  #define L_p2 (_comp->L_p2)
   printf("MCDISPLAY: component %s\n", _comp->_name);
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
@@ -1311,10 +1240,11 @@ int display(void) { /* called by mccode_main for Minimal:DISPLAY */
 void* _getvar_parameters(char* compname)
 /* enables settings parameters based use of the GETPAR macro */
 {
-  if (!strcmp(compname, "arm")) return (void *) &(_arm->_parameters);
-  if (!strcmp(compname, "source")) return (void *) &(_source->_parameters);
-  if (!strcmp(compname, "coll2")) return (void *) &(_coll2->_parameters);
-  if (!strcmp(compname, "detector")) return (void *) &(_detector->_parameters);
+/*  if (!strcmp(compname, "arm")) return (void *) &(_arm->_parameters); */
+/*  if (!strcmp(compname, "source")) return (void *) &(_source->_parameters); */
+/*  if (!strcmp(compname, "coll2")) return (void *) &(_coll2->_parameters); */
+/*  if (!strcmp(compname, "detector")) return (void *) &(_detector->_parameters); */
+return NULL;
 }
 
 void* _get_particle_var(char *token, _class_particle *p)
