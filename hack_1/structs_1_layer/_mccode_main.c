@@ -138,31 +138,14 @@ int mccode_main(int argc, char *argv[])
   double *myL_N =  malloc(128*sizeof(double));
   double *myL_p = malloc(128*sizeof(double));
   double *myL_p2 = malloc(128*sizeof(double));
-  double *john = malloc(sizeof(double));
- *john=0;
- myL_p[0]=100;
- myL_N[0]=_source_var.radius;
-//#pragma acc data copy( myL_N, myL_p, myL_p2 )
-  acc_attach( (void**)&_arm );
-  acc_attach( (void**)&_source );
-  acc_attach( (void**)&_coll2 );
-  acc_attach( (void**)&_detector );
-  acc_attach( (void**)&instrument );
+
 #pragma acc update device (_arm_var, _source_var, _coll2_var, _detector_var, _instrument_var)
-#pragma acc parallel loop copy( myL_N[0:127], myL_p[0:127], myL_p2[0:127],john[0:1])
+#pragma acc parallel loop copy( myL_N[0:127], myL_p[0:127], myL_p2[0:127])
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
 
     _class_particle particleN = mcgenstate(); // initial particle
     particleN._uid = Xmcrun_num;
-    /*particleN.vx=1000;
-
-    _arm = &_arm_var;
-    _source = &_source_var;
-    _coll2 = &_coll2_var;
-    _detector = &_detector_var;
-    instrument = &_instrument_var;*/
-
     
 /* CUDA */
 #ifdef USE_PGI
@@ -174,28 +157,15 @@ int mccode_main(int argc, char *argv[])
     curand_init(seq, seq-mcseed, 0ULL, &MCRANDstate);
     particleN.MCRANDstate = MCRANDstate;
 #endif
-    /* if (Xmcrun_num<128) { */
-    /*   /\* _detector->L_N[Xmcrun_num]=42; *\/ */
-    /*   /\* _detector->L_p[Xmcrun_num]=42; *\/ */
-    /*   /\* _detector->L_p2[Xmcrun_num]=42; *\/ */
-    /*   myL_N[Xmcrun_num]=42; */
-    /*   myL_p[Xmcrun_num]=42; */
-    /*   myL_p2[Xmcrun_num]=42; */
-    /* } */
-    //myL_N[0]+=_source_var.radius;
-
     raytrace(&particleN,myL_N,myL_p,myL_p2);
   }
   /* Likely we need an undef random here... */
 
-  printf("john is %g\n",myL_N[0]);
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < 128 ; Xmcrun_num++) {
-    //printf("counting along %i\n",Xmcrun_num);
     _detector->L_N[Xmcrun_num]=myL_N[Xmcrun_num];
     _detector->L_p[Xmcrun_num]=myL_p[Xmcrun_num];
     _detector->L_p2[Xmcrun_num]=myL_p2[Xmcrun_num];
   }
-  printf("john2 is %g\n",_detector->L_N[0]);
   
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */

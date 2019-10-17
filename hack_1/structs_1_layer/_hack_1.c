@@ -744,6 +744,11 @@ int init(void) { /* called by mccode_main for Minimal:INITIALISE */
   DEBUG_INSTR_END();
 #ifdef USE_PGI
 #include <openacc.h>
+acc_attach( (void**)&_arm );
+acc_attach( (void**)&_source );
+acc_attach( (void**)&_coll2 );
+acc_attach( (void**)&_detector );
+acc_attach( (void**)&instrument );
 #endif
 
   return(0);
