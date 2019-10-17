@@ -41,10 +41,8 @@ int mccode_main(int argc, char *argv[])
 
 
   srandom(mcseed);
-
-  /* set start date before parsing options and creating sim file */
   time_t  t;
-  mcstartdate = (long)t;
+  mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
   /* *** parse options ******************************************************* */
   SIG_MESSAGE("[" __FILE__ "] main START");
@@ -179,4 +177,4 @@ int mccode_main(int argc, char *argv[])
 
 
   return 0;
-}
+} /* mccode_main */

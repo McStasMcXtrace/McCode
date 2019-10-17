@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: hack_1.instr (Minimal)
- * Date:       Thu Oct 17 12:07:07 2019
+ * Date:       Thu Oct 17 18:50:47 2019
  * File:       hack_1.c
  * CFLAGS=
  */
@@ -940,7 +940,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_source->_name);
       DEBUG_STATE();
-      class_Source_simple_trace(_source, _particle);
+      class_Source_simple_trace(&_source_var, _particle);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -957,7 +957,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_coll2->_name);
       DEBUG_STATE();
-      class_Slit_trace(_coll2, _particle);
+      class_Slit_trace(&_coll2_var, _particle);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -974,7 +974,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_detector->_name);
       DEBUG_STATE();
-      class_L_monitor_trace(_detector, _particle);
+      class_L_monitor_trace(&_detector_var, _particle);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
