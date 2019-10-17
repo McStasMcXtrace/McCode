@@ -144,6 +144,9 @@ int mccode_main(int argc, char *argv[])
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
   for (unsigned long long Xmcrun_num=0 ; Xmcrun_num < mcncount ; Xmcrun_num++) {
 
+    struct _struct_Source_simple *_source_gpu = &_source_var;
+    myL_p[0] = _source_gpu->radius;
+    
     _class_particle particleN = mcgenstate(); // initial particle
     particleN._uid = Xmcrun_num;
     
@@ -166,6 +169,8 @@ int mccode_main(int argc, char *argv[])
     _detector->L_p[Xmcrun_num]=myL_p[Xmcrun_num];
     _detector->L_p2[Xmcrun_num]=myL_p2[Xmcrun_num];
   }
+
+  printf("Source radius should be %g\n",myL_p[0]);
   
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */

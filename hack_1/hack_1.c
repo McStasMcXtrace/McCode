@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: hack_1.instr (Minimal)
- * Date:       Thu Oct 17 12:07:07 2019
+ * Date:       Thu Oct 17 18:50:47 2019
  * File:       hack_1.c
  * CFLAGS=
  */
@@ -94,7 +94,7 @@ typedef struct _struct_particle _class_particle;
 #include <stdarg.h>
 #include <limits.h>
 #include <errno.h>
-#include <time.h>
+#include <sys/time.h>
 #include <float.h>
 #include <inttypes.h>
 
@@ -6441,7 +6441,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_source->_name);
       DEBUG_STATE();
-      class_Source_simple_trace(_source, _particle);
+      class_Source_simple_trace(&_source_var, _particle);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -6458,7 +6458,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_coll2->_name);
       DEBUG_STATE();
-      class_Slit_trace(_coll2, _particle);
+      class_Slit_trace(&_coll2_var, _particle);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -6475,7 +6475,7 @@ int raytrace(_class_particle* _particle) { /* called by mccode_main for Minimal:
       _particle_save = *_particle;
       DEBUG_COMP(_detector->_name);
       DEBUG_STATE();
-      class_L_monitor_trace(_detector, _particle);
+      class_L_monitor_trace(&_detector_var, _particle);
       if (_particle->_restore)
         *_particle = _particle_save;
       _particle->_index++;
@@ -6831,11 +6831,6 @@ void* _get_particle_var(char *token, _class_particle *p)
 *******************************************************************************/
 int mccode_main(int argc, char *argv[])
 {
-  /*  double run_num = 0; */
-  time_t  t;
-  clock_t ct;
-
-
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -6853,10 +6848,9 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-
-  ct = clock();    /* we use clock rather than time to set the default seed */
-  mcseed=(long)ct;
-
+  struct timeval tm;
+  gettimeofday(&tm, NULL);
+  mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;
 
 #ifdef USE_MPI
   /* *** print number of nodes *********************************************** */
@@ -6873,6 +6867,7 @@ int mccode_main(int argc, char *argv[])
 
 
   srandom(mcseed);
+  time_t  t;
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
   /* *** parse options ******************************************************* */
