@@ -44,7 +44,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <errno.h>
-#include <time.h>
+#include <sys/time.h>
 #include <float.h>
 #include <inttypes.h>
 
