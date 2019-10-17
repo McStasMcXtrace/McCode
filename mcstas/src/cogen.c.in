@@ -904,11 +904,6 @@ int cogen_comp_setpos(
   return(warnings);
 } /* cogen_comp_setpos */
 
-int cogen_comp_acc_attach(struct comp_inst *comp, struct instr_def *instr)
-{
-  coutf("acc_attach( (void**)&_%s );", comp->name);
-}
-
 /*******************************************************************************
 * Generates the function that returns (a void pointer to) a component instance,
 * based on the component name as a string. Used by GETPAR macros.
@@ -1328,6 +1323,18 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     /* Output graphics representation of components. */
     coutf("  if (mcdotrace) display();");
     cout("  DEBUG_INSTR_END();");
+
+    /* This writes a snippet c-code with calls acc_attach for OpenACC use */
+    cout("#ifdef USE_PGI");
+    liter = list_iterate(instr->complist);
+    // TODO: do we need this here?
+    cout("#include <openacc.h>");
+    while((comp = list_next(liter)) != NULL) {
+      coutf("acc_attach( (void**)&_%s );", comp->name);
+    }
+    // attach instrument
+    cout("acc_attach( (void**)&instrument );");
+    cout("#endif");
   }
   else if (!strcmp(section, "SAVE"))
     coutf("  if (!handle) siminfo_close(); ");
@@ -1342,23 +1349,6 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 
   return(warnings);
 } /* cogen_section */
-
-/* *****************************************************************************
-* cogen_acc_attach: write acc_attach pragmas for any compnent
-***************************************************************************** */
-int cogen_acc_attach(struct instr_def *instr)
-{
-  int warnings = 0;
-  List_handle liter = list_iterate(instr->complist);
-  struct comp_inst *comp;
-  cout("#include <openacc.h>");
-  while((comp = list_next(liter)) != NULL)
-    {
-      warnings += cogen_comp_acc_attach(comp, instr);
-    }
-  cout("acc_attach( (void**)&instrument );");
-  return(warnings);
-} /* cogen_acc_attach */
 
 /* *****************************************************************************
 * cogen_trace: Generate the TRACE section.
@@ -2008,8 +1998,4 @@ cogen(char *output_name, struct instr_def *instr)
   coutf("/* end of generated C code %s */", output_name);
 
   fclose(output_handle);
-  /* This writes a snippet c-code with calls to acc_attach for OpenACC use */
-  output_handle = fopen("mccode_attaches.c", "w");
-  warnings += cogen_acc_attach(instr);
-
 } /* cogen */
