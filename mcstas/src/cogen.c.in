@@ -756,7 +756,7 @@ int cogen_comp_section_class(
     // def-undef component pars
     cogen_defundef(comp, comp->def->set_par, LOCAL_INSTANCE_PAR_REF); // [par] -> comp->parameters.[par]
     cogen_defundef(comp, comp->def->out_par, LOCAL_INSTANCE_PAR_REF);
-    
+
     coutf("  SIG_MESSAGE(\"[_%s_%s] component %s=%s() %s [%s:%i]\");",
       comp->name, section_lower, comp->name, comp->def->name, section,
       code && code->quoted_filename ? code->quoted_filename : comp->def->name,
@@ -1423,10 +1423,27 @@ int cogen_trace(struct instr_def *instr)
   cout("***************************************************************************** */");
   cout("");
 
-  /* Experimental support for OpenACC CPU parallelisation */
-  cout("#pragma acc routine seq nohost");
+  // write the "raytraceall()" code (for loop previously in mccode_main.c).
+  coutf("void raytrace_all(int ncount, int seed) {");
+  coutf("");
+  coutf("  #pragma acc parallel loop");
+  coutf("  for (unsigned long long pidx=0 ; pidx < ncount ; pidx++) {");
+  coutf("    _class_particle particleN = mcgenstate(); // initial particle");
+  coutf("    particleN._uid = pidx;");
+  coutf("");
+  coutf("#ifdef USE_PGI");
+  coutf("    curandState_t state;");
+  coutf("    long seq = pidx + seed;");
+  coutf("    curand_init(seq, seq - seed, 0ULL, &state);");
+  coutf("    particleN.MCRANDstate = state;");
+  coutf("#endif");
+  coutf("");
+  coutf("    raytrace(&particleN);");
+  coutf("  }");
+  coutf("}");
+  coutf("");
 
-  /* Write the main code, which calls component trace functions */
+  // write the (particle-) raytrace function
   coutf("int raytrace(_class_particle* _particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
   cout("  /* init variables and counters for TRACE */");
