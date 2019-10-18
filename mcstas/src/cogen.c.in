@@ -1266,6 +1266,16 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
   else if (!strcmp(section, "SAVE"))
     coutf("  if (!handle) siminfo_init(NULL);");
   else if (!strcmp(section, "FINALLY")) {
+    // OpenACC update components on host (e.g. copy back GPU-generated changes)
+    // (first thing to do in "finally")
+    liter = list_iterate(instr->complist);
+    while((comp = list_next(liter)) != NULL) {
+      coutf("#pragma acc update host(_%s_var)", comp->name);
+    }
+    // attach instrument
+    cout("#pragma acc update host(instrument_var)");
+    cout("");
+
     coutf("  siminfo_init(NULL);");
     coutf("  save(siminfo_file); /* save data when simulation ends */");
   }
@@ -1326,11 +1336,30 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     /* Output graphics representation of components. */
     coutf("  if (mcdotrace) display();");
     cout("  DEBUG_INSTR_END();");
+
+    // to call acc_attach for OpenACC use
+    // (last thing to do in "initialize")
+    cout("");
+    cout("#ifdef USE_PGI");
+    liter = list_iterate(instr->complist);
+    // attach component pointers
+    // TODO: do we need to include this here?
+    cout("#include <openacc.h>");
+    while((comp = list_next(liter)) != NULL) {
+      coutf("acc_attach( (void**)&_%s );", comp->name);
+      coutf("#pragma acc update device(_%s_var)", comp->name);
+    }
+    // attach instrument
+    cout("acc_attach( (void**)&instrument );");
+    // update device components (e.g. push "managed" data structures)
+    cout("#pragma acc update device(instrument_var)");
+    cout("#endif");
   }
   else if (!strcmp(section, "SAVE"))
     coutf("  if (!handle) siminfo_close(); ");
-  else if (!strcmp(section, "FINALLY"))
+  else if (!strcmp(section, "FINALLY")) {
     coutf("  siminfo_close(); ");
+  }
   else if (!strcmp(section, "DISPLAY"))
     cout("  printf(\"MCDISPLAY: end\\n\");");
   cout("");
