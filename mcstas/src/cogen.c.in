@@ -320,7 +320,7 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
         continue; // skip invalid parameter names
       switch (define_it) {
       case GLOBAL_INSTANCE_PAR_REF:
-        coutf("  #define %s (_%s->_parameters.%s)",
+        coutf("  #define %s (_%s_var._parameters.%s)",
           c_formal->id, comp->name, c_formal->id);
         break;
       case LOCAL_INSTANCE_PAR_REF:
@@ -522,9 +522,7 @@ int cogen_comp_declare(struct comp_inst *comp)
 
   /* instantiate one structure per component instance */
   coutf("_class_%s _%s_var;", comp->def->name, comp->name);
-  coutf("_class_%s *_%s = &_%s_var;", comp->def->name, comp->name, comp->name);
   coutf("#pragma acc declare create ( _%s_var )", comp->name);
-  coutf("#pragma acc declare create ( _%s )", comp->name);
   cout("");
 
   return(warnings);
@@ -566,24 +564,24 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
         if (par->type == instr_type_string) {
           if (strcmp(val, "0") && strcmp(val, "NULL")) { /* when value is not NULL (avoid warning at compile) */
             coutf("  if(%s && strlen(%s))", val, val);
-            coutf("    stracpy(_%s->_parameters.%s, %s ? %s : \"\", 16384);", comp->name, par->id, val, val);
+            coutf("    stracpy(_%s_var._parameters.%s, %s ? %s : \"\", 16384);", comp->name, par->id, val, val);
             coutf("  else ");
           }
-          coutf("  _%s->_parameters.%s[0]='\\0';", comp->name, par->id);
+          coutf("  _%s_var._parameters.%s[0]='\\0';", comp->name, par->id);
         }
         else if (par->type == instr_type_vector) {
-          coutf("  _%s->_parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
+          coutf("  _%s_var._parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
         }
         else if (par->type == instr_type_symbol) {
           // the user vars value is particle specific, init to null
-          coutf("  _%s->_parameters.%s = \'\\0\';", comp->name, par->id);
+          coutf("  _%s_var._parameters.%s = \'\\0\';", comp->name, par->id);
         } else
-          coutf("  _%s->_parameters.%s = %s;", comp->name, par->id, val);
+          coutf("  _%s_var._parameters.%s = %s;", comp->name, par->id, val);
 
         str_free(val);
       }
       /* define the symbol right after assignment so that we can use it in further parameters */
-      coutf("  #define %s (_%s->_parameters.%s)", par->id, comp->name, par->id);
+      coutf("  #define %s (_%s_var._parameters.%s)", par->id, comp->name, par->id);
     }
     list_iterate_end(list_par);
     if(list_len(l) > 0 && !strcmp(section, "SETTING"))
@@ -624,7 +622,7 @@ static void cogen_comp_init_position(
 
   if(relcomp == NULL)
   {                                /* Absolute orientation. */
-    coutf("    rot_set_rotation(_%s->_rotation_absolute,", comp->name);
+    coutf("    rot_set_rotation(_%s_var._rotation_absolute,", comp->name);
     code_set_source(instr->quoted_source,
                     exp_getlineno(comp->pos->orientation.x));
     coutf("      (%s)*%s, (%s)*%s, (%s)*%s);", x, d2r, y, d2r, z, d2r);
@@ -637,7 +635,7 @@ static void cogen_comp_init_position(
                     exp_getlineno(comp->pos->orientation.x));
     coutf("      (%s)*%s, (%s)*%s, (%s)*%s);", x, d2r, y, d2r, z, d2r);
     code_reset_source();
-    coutf("    rot_mul(tr1, _%s->_rotation_absolute, _%s->_rotation_absolute);", relcomp->name, comp->name);
+    coutf("    rot_mul(tr1, _%s_var._rotation_absolute, _%s_var._rotation_absolute);", relcomp->name, comp->name);
   }
   str_free(z);
   str_free(y);
@@ -647,14 +645,14 @@ static void cogen_comp_init_position(
   if(last == NULL)
   {
     /* First component. */
-    coutf("    rot_copy(_%s->_rotation_relative, _%s->_rotation_absolute);", comp->name, comp->name);
+    coutf("    rot_copy(_%s_var._rotation_relative, _%s_var._rotation_absolute);", comp->name, comp->name);
   }
   else
   {
-    coutf("    rot_transpose(_%s->_rotation_absolute, tr1);", last->name);
-    coutf("    rot_mul(_%s->_rotation_absolute, tr1, _%s->_rotation_relative);", comp->name, comp->name);
+    coutf("    rot_transpose(_%s_var._rotation_absolute, tr1);", last->name);
+    coutf("    rot_mul(_%s_var._rotation_absolute, tr1, _%s_var._rotation_relative);", comp->name, comp->name);
   }
-  coutf("    _%s->_rotation_is_identity =  rot_test_identity(_%s->_rotation_relative);", comp->name, comp->name);
+  coutf("    _%s_var._rotation_is_identity =  rot_test_identity(_%s_var._rotation_relative);", comp->name, comp->name);
 
   /* Absolute position. */
   x = exp_tostring(comp->pos->place.x);
@@ -663,7 +661,7 @@ static void cogen_comp_init_position(
   relcomp = comp->pos->place_rel;
   if(relcomp == NULL)
   {
-    coutf("    _%s->_position_absolute = coords_set(", comp->name);
+    coutf("    _%s_var._position_absolute = coords_set(", comp->name);
     code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
     coutf("      %s, %s, %s);", x, y, z);
     code_reset_source();
@@ -674,9 +672,9 @@ static void cogen_comp_init_position(
     code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
     coutf("      %s, %s, %s);", x, y, z);
     code_reset_source();
-    coutf("    rot_transpose(_%s->_rotation_absolute, tr1);", relcomp->name);
+    coutf("    rot_transpose(_%s_var._rotation_absolute, tr1);", relcomp->name);
     coutf("    tc2 = rot_apply(tr1, tc1);");
-    coutf("    _%s->_position_absolute = coords_add(_%s->_position_absolute, tc2);", comp->name, relcomp->name);
+    coutf("    _%s_var._position_absolute = coords_add(_%s_var._position_absolute, tc2);", comp->name, relcomp->name);
   }
 
   str_free(z);
@@ -685,20 +683,20 @@ static void cogen_comp_init_position(
 
   /* Relative position. */
   if(last == NULL)
-    coutf("    tc1 = coords_neg(_%s->_position_absolute);", comp->name);
+    coutf("    tc1 = coords_neg(_%s_var._position_absolute);", comp->name);
   else
-    coutf("    tc1 = coords_sub(_%s->_position_absolute, _%s->_position_absolute);", last->name, comp->name);
-  coutf("    _%s->_position_relative = rot_apply(_%s->_rotation_absolute, tc1);", comp->name, comp->name);
+    coutf("    tc1 = coords_sub(_%s_var._position_absolute, _%s_var._position_absolute);", last->name, comp->name);
+  coutf("    _%s_var._position_relative = rot_apply(_%s_var._rotation_absolute, tc1);", comp->name, comp->name);
   coutf("  } /* %s=%s() AT ROTATED */", comp->name, comp->def->name);
 
-  coutf("  DEBUG_COMPONENT(\"%s\", _%s->_position_absolute, _%s->_rotation_absolute);", comp->name, comp->name, comp->name);
-  coutf("  instrument->_position_absolute[%i] = _%s->_position_absolute;", comp->index, comp->name);
-  coutf("  instrument->_position_relative[%i] = _%s->_position_relative;", comp->index, comp->name);
+  coutf("  DEBUG_COMPONENT(\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("  instrument->_position_absolute[%i] = _%s_var._position_absolute;", comp->index, comp->name);
+  coutf("  instrument->_position_relative[%i] = _%s_var._position_relative;", comp->index, comp->name);
 
 } /* cogen_comp_init_position */
 
 /* *****************************************************************************
-* cogen_comp_section_class: write a common /shared section part for component
+* cogen_comp_section_class: write a common/shared section part for component
 *   types, generates an class_[comptype]_[section](*comp) function.
 *
 * input:  a component instance structure pointer
@@ -760,6 +758,11 @@ int cogen_comp_section_class(
     // def-undef component pars
     cogen_defundef(comp, comp->def->set_par, LOCAL_INSTANCE_PAR_REF); // [par] -> comp->parameters.[par]
     cogen_defundef(comp, comp->def->out_par, LOCAL_INSTANCE_PAR_REF);
+    
+    coutf("  SIG_MESSAGE(\"[_%s_%s] component %s=%s() %s [%s:%i]\");",
+      comp->name, section_lower, comp->name, comp->def->name, section,
+      code && code->quoted_filename ? code->quoted_filename : comp->def->name,
+      code && code->linenum > 0 ? code->linenum : 0);
 
     // TRACE assign user var values, instance specific switch
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
@@ -880,9 +883,9 @@ int cogen_comp_setpos(
     comp->def->init_code && comp->def->init_code->linenum > 0 ? comp->def->init_code->linenum : 0);
 
   // set comp name, comp type-name
-  coutf("  stracpy(_%s->_name, \"%s\", 16384);", comp->name, comp->name);
-  coutf("  stracpy(_%s->_type, \"%s\", 16384);", comp->name, comp->def->name);
-  coutf("  _%s->_index=%i;", comp->name, comp->index);
+  coutf("  stracpy(_%s_var._name, \"%s\", 16384);", comp->name, comp->name);
+  coutf("  stracpy(_%s_var._type, \"%s\", 16384);", comp->name, comp->def->name);
+  coutf("  _%s_var._index=%i;", comp->name, comp->index);
 
   /* setting & output parameters of the component */
   cogen_comp_init_par(comp, instr, "SETTING");  // specific to each instance
@@ -921,7 +924,7 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   struct comp_inst *comp;
 
   while((comp = list_next(iter)) != NULL) {
-    coutf("  if (!strcmp(compname, \"%s\")) return (void *) &(_%s->_parameters);", comp->name, comp->name);
+    coutf("  if (!strcmp(compname, \"%s\")) return (void *) &(_%s_var._parameters);", comp->name, comp->name);
   }
   list_iterate_end(iter);
 
@@ -1314,7 +1317,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 
     if (list_len(comp_code->lines) > 0) {
       /* each component is called once, iteratively */
-      coutf("  class_%s_%s(_%s);", comp->def->name, section_lower, comp->name);
+      coutf("  class_%s_%s(&_%s_var);", comp->def->name, section_lower, comp->name);
     }
     cout("");
   }
@@ -1325,18 +1328,6 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     /* Output graphics representation of components. */
     coutf("  if (mcdotrace) display();");
     cout("  DEBUG_INSTR_END();");
-
-    /* This writes a snippet c-code with calls acc_attach for OpenACC use */
-    cout("#ifdef USE_PGI");
-    liter = list_iterate(instr->complist);
-    // TODO: do we need this here?
-    cout("#include <openacc.h>");
-    while((comp = list_next(liter)) != NULL) {
-      coutf("acc_attach( (void**)&_%s );", comp->name);
-    }
-    // attach instrument
-    cout("acc_attach( (void**)&instrument );");
-    cout("#endif");
   }
   else if (!strcmp(section, "SAVE"))
     coutf("  if (!handle) siminfo_close(); ");
@@ -1522,15 +1513,15 @@ int cogen_trace(struct instr_def *instr)
 
     // coordinate transformations (wrt to PREVIOUS)
     cout( "      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
-    coutf("        if (_%s->_rotation_is_identity) {", comp->name);
+    coutf("        if (_%s_var._rotation_is_identity) {", comp->name);
     coutf("          coords_get("
-      "coords_add(coords_set(x,y,z), _%s->_position_relative),"
+      "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
       "&x, &y, &z);", comp->name);
     cout( "        } else");
-    coutf("          mccoordschange(_%s->_position_relative, _%s->_rotation_relative, _particle);", comp->name, comp->name);
+    coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
     cout( "      } else flag_nocoordschange=0;");
     cout( "      _particle_save = *_particle;");
-    coutf("      DEBUG_COMP(_%s->_name);", comp->name);
+    coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
     cout ("      DEBUG_STATE();");
 
     /* call the component when there are TRACE and/or EXTEND lines */
@@ -1541,7 +1532,7 @@ int cogen_trace(struct instr_def *instr)
         coutf("      if (%s) // conditional WHEN execution", exp);
         str_free(exp);
       }
-      coutf("      class_%s_trace(_%s, _particle);%s",
+      coutf("      class_%s_trace(&_%s_var, _particle);%s",
         comp->def->name,
         comp->name,
         list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
