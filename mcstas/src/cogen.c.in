@@ -377,8 +377,6 @@ int cogen_comp_declare(struct comp_inst *comp)
   int warnings = 0;
   int nb_parameters = 0;
 
-  printf("Building component declare and parameter structs\n");
-  
   if (!comp->def->flag_defined_structure) {
     int index = 0;
 
