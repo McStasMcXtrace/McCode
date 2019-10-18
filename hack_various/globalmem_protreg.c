@@ -37,7 +37,8 @@ int main() {
       #pragma acc loop seq
       for (int k=N/n*j; k<N/n*(j+1); k++) {
         //#pragma acc atomic capture {
-        #pragma acc atomic update {
+        #pragma acc atomic update
+        {
           hist[j] += arr[k];
         }
       }
