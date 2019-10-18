@@ -23,35 +23,108 @@ rng.html>
       2^32*(2^32-1)*(2^63+2^32-1) > 2^127
 */
 
-#define ulong unsigned long
+/* the KISS state is stored as a vector of 7 unsigned long        */
+/*   0  1  2  3  4      5  6   */
+/* [ x, y, z, w, carry, k, m ] */
 
-static ulong kiss_x = 1;
-static ulong kiss_y = 2;
-static ulong kiss_z = 4;
-static ulong kiss_w = 8;
-static ulong kiss_carry = 0;
-static ulong kiss_k;
-static ulong kiss_m;
+#include <stdio.h>
+#include <math.h>
+#define MC_RAND_MAX ((unsigned long)0xffffffff)
+#define random  kiss_random
+#define srandom kiss_srandom
 
-void seed_rand_kiss(ulong seed) {
-    kiss_x = seed | 1;
-    kiss_y = seed | 2;
-    kiss_z = seed | 4;
-    kiss_w = seed | 8;
-    kiss_carry = 0;
+unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
+  if (seed == 0) seed = 1;
+  state[0] = seed | 1; // x
+  state[1] = seed | 2; // y
+  state[2] = seed | 4; // z
+  state[3] = seed | 8; // w
+  state[4] = 0;        // carry
 }
 
-ulong rand_kiss() {
-    kiss_x = kiss_x * 69069 + 1;
-    kiss_y ^= kiss_y << 13;
-    kiss_y ^= kiss_y >> 17;
-    kiss_y ^= kiss_y << 5;
-    kiss_k = (kiss_z >> 2) + (kiss_w >> 3) + (kiss_carry >> 2);
-    kiss_m = kiss_w + kiss_w + kiss_z + kiss_carry;
-    kiss_z = kiss_w;
-    kiss_w = kiss_m;
-    kiss_carry = kiss_k >> 30;
-    return kiss_x + kiss_y + kiss_w;
+unsigned long kiss_random(unsigned long state[7]) {
+    state[0] = state[0] * 69069 + 1;
+    state[1] ^= state[1] << 13;
+    state[1] ^= state[1] >> 17;
+    state[1] ^= state[1] << 5;
+    state[5] = (state[2] >> 2) + (state[3] >> 3) + (state[4] >> 2);
+    state[6] = state[3] + state[3] + state[2] + state[4];
+    state[2] = state[3];
+    state[3] = state[6];
+    state[4] = state[5] >> 30;
+    return state[0] + state[1] + state[3];
 }
 
+double uniform_double(unsigned long state[7]) {
+
+    unsigned long a = kiss_random(state) >> 6;
+    unsigned long b = kiss_random(state) >> 5;
+    double x = (a * 134217728.0 + b) / 9007199254740992.0;
+
+    return x;
+}
+
+double rand01(unsigned long state[7]) {
+	double randnum;
+	randnum = (double) kiss_random(state);
+	randnum /= (double) MC_RAND_MAX + 1;
+	return randnum;
+}
+
+double randnorm(unsigned long state[7])
+{
+  static double v1, v2, s; /* removing static breaks comparison with McStas <= 2.5 */
+  static int phase = 0;
+  double X, u1, u2;
+
+  if(phase == 0)
+  {
+    do
+    {
+      u1 = rand01(state);
+      u2 = rand01(state);
+      v1 = 2*u1 - 1;
+      v2 = 2*u2 - 1;
+      s = v1*v1 + v2*v2;
+    } while(s >= 1 || s == 0);
+
+    X = v1*sqrt(-2*log(s)/s);
+  }
+  else
+  {
+    X = v2*sqrt(-2*log(s)/s);
+  }
+
+  phase = 1 - phase;
+  return X;
+}
+
+double randnorm2(unsigned long state[7]) {
+
+    double x, y, r;
+
+    do {
+        x = 2.0 * rand01(state) - 1.0;
+        y = 2.0 * rand01(state) - 1.0;
+        r = x*x + y*y;
+    } while (r == 0.0 || r >= 1.0);
+
+    return x * sqrt((-2.0 * log(r)) / r);
+}
+
+
+/* test the KISS algo */
+
+
+
+void main() {
+  unsigned long state[7];
+  kiss_srandom(state, 123454);
+  for (long index=0; index<1000; index++) {
+//    unsigned long randnum = kiss_random(state);
+    double g = randnorm(state);
+    printf("random: %g\n", g);
+  }
+    
+}
 
