@@ -29,7 +29,11 @@ rng.html>
 
 #include <stdio.h>
 #include <math.h>
-#define MC_RAND_MAX ((unsigned long)0xffffffff)
+#include <stdint.h>
+#ifndef ULONG_MAX
+#define ULONG_MAX ((unsigned long)0xffffffffffffffffUL)
+#endif
+#define MC_RAND_MAX ULONG_MAX
 #define random  kiss_random
 #define srandom kiss_srandom
 
@@ -40,6 +44,7 @@ unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
   state[2] = seed | 4; // z
   state[3] = seed | 8; // w
   state[4] = 0;        // carry
+  return 0;
 }
 
 unsigned long kiss_random(unsigned long state[7]) {
@@ -67,7 +72,7 @@ double uniform_double(unsigned long state[7]) {
 double rand01(unsigned long state[7]) {
 	double randnum;
 	randnum = (double) kiss_random(state);
-	randnum /= (double) MC_RAND_MAX + 1;
+	randnum /= (double) MC_RAND_MAX +1;
 	return randnum;
 }
 
@@ -118,13 +123,20 @@ double randnorm2(unsigned long state[7]) {
 
 
 void main() {
+  printf("geting state \n");
   unsigned long state[7];
   kiss_srandom(state, 123454);
+  printf("starting loop\n");
   for (long index=0; index<1000; index++) {
 //    unsigned long randnum = kiss_random(state);
-    double g = randnorm(state);
-    printf("random: %g\n", g);
-  }
+    double g1 = kiss_random(state);
+    printf("kiss_random: %i %g\n", index, g1);
+    double g2 = rand01(state);
+    printf("rand01: %i %g\n", index, g2);
+    double g3 = randnorm(state);
+    printf("randnorm: %i %g\n", index, g3);
     
+  }
+  printf("ending loop\n");
 }
 
