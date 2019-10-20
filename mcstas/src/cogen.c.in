@@ -1452,29 +1452,9 @@ int cogen_trace(struct instr_def *instr)
   cout("***************************************************************************** */");
   cout("");
 
-  // write the "raytraceall()" code (for loop previously in mccode_main.c).
-  coutf("void raytrace_all(int ncount, int seed) {");
-  coutf("");
-  coutf("  #pragma acc parallel loop");
-  coutf("  for (unsigned long long pidx=0 ; pidx < ncount ; pidx++) {");
-  coutf("    _class_particle particleN = mcgenstate(); // initial particle");
-  coutf("    particleN._uid = pidx;");
-  coutf("");
-  coutf("#ifdef USE_PGI");
-  coutf("    curandState_t state;");
-  coutf("    long seq = pidx + seed;");
-  coutf("    curand_init(seq, seq - seed, 0ULL, &state);");
-  coutf("    particleN.MCRANDstate = state;");
-  coutf("#endif");
-  coutf("");
-  coutf("    raytrace(&particleN);");
-  coutf("  }");
-  coutf("}");
-  coutf("");
-
   // write the (particle-) raytrace function
   cout("#pragma acc routine seq");
-  coutf("int raytrace(_class_particle* _particle) { /* called by mccode_main for %s:%s */", instr->name, "TRACE");
+  coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
   cout("  /* init variables and counters for TRACE */");
 
@@ -1516,10 +1496,10 @@ int cogen_trace(struct instr_def *instr)
     }
   }
 
-  cout("  /* the main iteration loop for one incoming neutron */");
-  cout("  while (!ABSORBED) { /* iterate neutron event until absorbed */");
+  cout("  /* the main iteration loop for one incoming event */");
+  cout("  while (!ABSORBED) { /* iterate event until absorbed */");
   cout("    _class_particle _particle_save;");
-  cout("    /* send neutron event to component instance, one after the other */");
+  cout("    /* send particle event to component instance, one after the other */");
   cout("    char flag_nocoordschange=0;");
 
   /* now we produce the list of statements for each component index, with the attached logic */
@@ -1665,6 +1645,43 @@ int cogen_trace(struct instr_def *instr)
   cout("");
   cout("  return(_particle->_index);");
   coutf("} /* raytrace */");
+  
+  // write the "raytrac_eall()" code (for loop previously in mccode_main.c).
+  cout("");
+  coutf("void raytrace_all(int ncount, int seed) { /* loop to generate events and propagate them */");
+  coutf("");
+  
+  /* add the openacc pragma for managed data update CPU -> GPU */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    coutf("  #pragma acc update device (_%s_var)", comp->name);
+  } 
+  list_iterate_end(liter);
+  cout( "  #pragma acc update device (_instrument_var)");
+  
+  coutf("  #pragma acc parallel loop");
+  coutf("  for (unsigned long long pidx=0 ; pidx < ncount ; pidx++) {");
+  coutf("    _class_particle particleN = mcgenstate(); // initial particle");
+  coutf("    particleN._uid = pidx;");
+  coutf("");
+  coutf("#ifdef USE_PGI");
+  coutf("    curandState_t state;");
+  coutf("    long seq = pidx + seed;");
+  coutf("    curand_init(seq, seq - seed, 0ULL, &state);");
+  coutf("    particleN.MCRANDstate = state;");
+  coutf("#endif");
+  coutf("");
+  coutf("    raytrace(&particleN);");
+  coutf("  } /* for */");
+  /* add the openacc pragma for managed data update GPU -> CPU */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    coutf("  #pragma acc update host (_%s_var)", comp->name);
+  } 
+  list_iterate_end(liter);
+  cout( "  #pragma acc update host (_instrument_var)");
+  coutf("} /* raytrace_all */");
+  coutf("");
 
   // undef everything after the "raytrace" function
   for(i = 0; i < NUM_STATE_PARS; i++)
