@@ -11,7 +11,6 @@
  * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Date: May, 2017
  * Version: 1.0
- * Release: McXtrace 1.4
  * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
  *
  * Perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)

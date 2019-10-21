@@ -12,7 +12,6 @@
 * Date: December 1999
 * Version: $Revision$
 * Origin: Risoe
-* Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 * Modified by: EBK 2010: adapted for x-rays:
 * Modified by: M. Schulz, March 2012 : allow to curve the crystal planes

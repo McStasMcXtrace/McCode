@@ -11,7 +11,6 @@
 * Date: May 2, 2012
 * Version: $Revision$
 * Origin: KU-Science
-* Release: McXtrace 1.0
 *
 * A sample describing a thin solution of proteins using linear interpolation
 * to increase computational speed. This components must be compiled with the

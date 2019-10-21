@@ -12,7 +12,6 @@
 * Date: May 2, 2012
 * Version: $Revision$
 * Origin: KU-Science
-* Release: McXtrace 1.0
 *
 * A component mimicking the scattering from a given I(q)-curve by using
 * linear interpolation between the given points.

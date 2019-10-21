@@ -7,7 +7,6 @@
 * Date: 03.02.2016
 * Version: 0.5
 * Origin: SasView, DTU, European Spallation Source ERIC 
-* Release: McStas 2.3 
 *
 * This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McStas. In this way SasView's monodisperse scattering kernels can be call from McStas.
 *
