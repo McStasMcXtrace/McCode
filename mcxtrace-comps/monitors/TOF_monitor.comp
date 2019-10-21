@@ -11,10 +11,14 @@
 * Written by: Erik B Knudsen
 * Date: Aug. 2014
 * Version: $Revision$
-* Origin: British Airways
+* Origin: DTU Physics
 * Release: 1.2
 *
 * Rectangular Time-of-flight monitor.
+*
+* %D
+* A rectangular monitor which records instensity as a funtion of time of flight.
+* More precisely it bins photon rays according to the the state parameter time, t.
 *
 * %P
 * INPUT PARAMETERS:
