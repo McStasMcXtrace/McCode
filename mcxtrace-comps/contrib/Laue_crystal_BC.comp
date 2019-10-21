@@ -8,12 +8,15 @@
  * Component: Laue_crystal_BC
  *
  * %I
+ * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Date: June, 2017
  * Version: 1.0
  * Release: McXtrace 1.2
  * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
- * marcus.mendenhall@nist.gov
  *
+ * Perfect, laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ * 
+ * %D
  * NIST_Laue_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
  * It is based on the full vector math and exact solution  of the dispersion relation in
  * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
@@ -22,7 +25,6 @@
  * This is not an official contribution, in that the results are in no way certified by NIST.
  * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
- * %D
  * Reads atomic form factors from a data input file.
  * The Laue_Crystal code reflects rays in an ideal geometry, does not include surface imperfections or mosaicity.
  *
