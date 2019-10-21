@@ -1273,7 +1273,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
       coutf("#pragma acc update host(_%s_var)", comp->name);
     }
     // attach instrument
-    cout("#pragma acc update host(instrument_var)");
+    cout("#pragma acc update host(_instrument_var)");
     cout("");
 
     coutf("  siminfo_init(NULL);");
@@ -1346,13 +1346,13 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     // TODO: do we need to include this here?
     cout("#include <openacc.h>");
     while((comp = list_next(liter)) != NULL) {
-      coutf("acc_attach( (void**)&_%s );", comp->name);
+      coutf("acc_attach( (void*)&_%s_var );", comp->name);
       coutf("#pragma acc update device(_%s_var)", comp->name);
     }
     // attach instrument
-    cout("acc_attach( (void**)&instrument );");
+    cout("acc_attach( (void*)&_instrument_var );");
     // update device components (e.g. push "managed" data structures)
-    cout("#pragma acc update device(instrument_var)");
+    cout("#pragma acc update device(_instrument_var)");
     cout("#endif");
   }
   else if (!strcmp(section, "SAVE"))
@@ -1667,7 +1667,7 @@ int cogen_trace(struct instr_def *instr)
   coutf("#ifdef USE_PGI");
   coutf("    curandState_t state;");
   coutf("    long seq = pidx + seed;");
-  coutf("    curand_init(seq, seq - seed, 0ULL, &state);");
+  coutf("    //curand_init(seq, seq - seed, 0ULL, &state);");
   coutf("    particleN.MCRANDstate = state;");
   coutf("#endif");
   coutf("");
