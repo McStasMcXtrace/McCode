@@ -1,13 +1,13 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: MAXIV_FemtoMAX
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
-* Date: Current Date
-* Origin: Your institution
-* Version: 0.2
+* Date: Jun 2017
+* Origin: DTU Physics
+* Version: 0.3
 * %INSTRUMENT_SITE: MAXIV
 *
 * Simulation of the FemtoMAX short pulse facility at MAX IV laboratory 
@@ -33,7 +33,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=0, U2SRC=1, U3SRC=0,
+DEFINE INSTRUMENT MAXIV_FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=0, U2SRC=1, U3SRC=0,
     RX=0, RY=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
