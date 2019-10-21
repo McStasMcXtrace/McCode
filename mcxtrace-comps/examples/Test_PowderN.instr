@@ -3,7 +3,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: Test_Saxs_spheres
+* Instrument: Test_PowderN
 *
 * %Identification
 * Written by: Your name (email)
@@ -21,7 +21,7 @@
 * %Example: Test_PowderN.instr -n1e7 TTH=13.4 Detector: detector2_I=2.49827e-16
 *
 * %Parameters
-* TTH: [deg.] Two theta rotation. Only places the last detector (does not tough the sample).
+* TTH: [deg.] Two theta rotation. Only places the last detector (does not touch the sample).
 *
 * %End
 *******************************************************************************/
