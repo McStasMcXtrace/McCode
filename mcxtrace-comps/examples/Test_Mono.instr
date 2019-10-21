@@ -7,7 +7,6 @@
 * Written by: A. Vickery, A. Prodi and E. Knudsen
 * Date: July 2011.
 * Origin: NBI,Ris&oslash; DTU
-* Release: McXtrace 1.0
 * %INSTRUMENT_SITE: Tests
 *
 * Compares intensities of Monochromator components.
