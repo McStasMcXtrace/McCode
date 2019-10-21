@@ -80,7 +80,7 @@
 DEFINE COMPONENT SNS_source_analytic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-  string filename
+  string filename,
   xwidth=0.10,
   yheight=0.12,
   dist,
