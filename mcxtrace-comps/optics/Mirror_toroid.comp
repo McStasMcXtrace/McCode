@@ -10,14 +10,13 @@
 *
 * %I
 *
-* Written by: Kim Lefmann and Kristian Nielsen
-* Modified by: Erik Knudsen 
-* Date: September 2009
+* Written by: Erik B Knudsen 
+* Date: Jul 2016
 * Version: 1.0
 * Release: McXtrace 1.0
-* Origin: Risoe
+* Origin: DTU Physics
 *
-* Mirror with heat bump
+* Toroidal shape mirror
 *
 * %D
 * This is an implementation of a toroidal mirror which may be curved in two dimensions.
