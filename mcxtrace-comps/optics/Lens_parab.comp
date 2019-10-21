@@ -17,6 +17,8 @@
 * Release: McXtrace 0.1
 * Origin: NBI
 *
+* Parabolic (2D) CRL stack
+*
 * %D
 * A simple X-ray compound refractive lens (CRL) with a profile of the parabola in rotation simulates the photons' movement on passing through it. The CRL focuses in 2D
 *
