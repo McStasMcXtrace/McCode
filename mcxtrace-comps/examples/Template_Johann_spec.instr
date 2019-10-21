@@ -1,17 +1,18 @@
-
 /*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
 * Instrument: Template_Johann_spec
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Jan 2019
-* Origin: DTu Physics
-* Version: 
+* Origin: DTU Physics
+* Version: 1.0 
 * %INSTRUMENT_SITE: Templates
 *
-* Template instrument  for a curved crystal Johann-spectrometer
+* Template instrument for a curved crystal Johann-spectrometer
 *
-* %D
+* %Description
 * This is a template instrument for a Johann spectrometer intended
 * for easy inclusion in other "real" instrument simulations. 
 *
@@ -21,14 +22,14 @@
 *
 * %Example: L=2 dtheta_s=0 Detector: det4_I=8.16127e-05
 *
-* %P
+* %Parameters
 * L:         [m]   Length of the analyzer crystal.
 * r_Row:     [m]   Radius of the Rowland circle. Also governs the crystal curvature (2*r_Row).
 * theta_inc: [deg] Angle of incidence at the crystal centre
 * phi_s:     [deg] Opening angle of source. If 0 it is set to cover the full crystal (and some).
 * dtheta_s:  [deg] Rotation angle of the Source. To allow scanning with a pencil beam across the crystal face.
 * 
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Template_Johann_spec(L=0.2, r_Row=0.5, theta_inc=78.5 ,dtheta_s=0, phi_s=0)
 
