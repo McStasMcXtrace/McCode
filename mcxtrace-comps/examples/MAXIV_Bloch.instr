@@ -1,25 +1,27 @@
 /*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
 * Instrument: MAXIV_Bloch
 *
-* %I
+* %Identification
 * Written by: Kristian Soerensen and Philip Smith (s154443@win.dtu.dk)
 * Date: June 2018
 * Origin: DTU Physics
 * Version: 1.7
 * %INSTRUMENT_SITE: MAXIV
 *
-*
 * Bloch high resolution photoelectron spectroscopy beamline under development at the MAX IV synchrotron. 
 *
-*
-* %D
+* %Description
 * This is a simple simulation of the BLOCH beamline at MAXIV. 
 *
 * Two kinds of paramters are given, P and P2.
 * P Parameters are the ones used in the general simulation, i.e when the FOI is intensity ect.
 * P2 parameters are used when the strain of the beamline is the FOI, i.e what happens when the distances change.
 *
-* %P: 
+* %Example MAXIV_Bloch E0=0.03 dE=0 undK=0 lu=0.016 Nper=187 zm_mirror1=14 theta_mirror1=3 R0_M1=1 zm_mirror2=2 R0_M2=1  grating_mode=0 zm_mirror3=1 theta_mirror3=3 R0_M3=1 zm_ExitSlit=9 xwidth_ExSlit=0.005 yheight_ExSlit=0.005 zm_mirror4=19 theta_mirror4=3 R0_M4=1 SourceChoice=0 cff=2.25 n=800 m=3 Exitslit_yshift=2 display=0
+*
+* %Parameters:
 * E0: [keV]      The centreal energy to sample from source model.
 * dE: [keV]      Spectral width to sample from source model.
 * SourceChoice: [0/1]   Choice of souce. For easy simulation do Flat souce [0],in nonzero, the undulator is used.   
@@ -33,8 +35,6 @@
 * undK: [ ]      Undulator K parameter, overrides E0, only used if SourceChoice is non zero.
 * lu: [m]        Magnetic period length of the undulator.
 * Nper: [ ]      Number of magnetic periods in the undulator.
-* 
-* %P2: 
 * grating_mode: [0/1]   If [1] the NIM mode will be used. If [0] cPGM. Otherwise, optimum will be calculated.
 * MCAngle: [deg] Monte Carlo variation of grating. If wanted energy is given, MCAngle is found automaticaly. 
 * zm_mirror1: [m]       distance(z) to first mirror from previous component.
@@ -57,27 +57,18 @@
 * http://www.mcxtrace.org
 * Further reading:
 *
-* %E MAXIV_Bloch E0=0.03 dE=0 undK=0 lu=0.016 Nper=187 zm_mirror1=14 theta_mirror1=3 R0_M1=1 zm_mirror2=2 R0_M2=1  grating_mode=0 zm_mirror3=1 theta_mirror3=3 R0_M3=1 zm_ExitSlit=9 xwidth_ExSlit=0.005 yheight_ExSlit=0.005 zm_mirror4=19 theta_mirror4=3 R0_M4=1 SourceChoice=0 cff=2.25 n=800 m=3 Exitslit_yshift=2 display=0
-*
-* %N
-*
 * %End
 *******************************************************************************/
-
-
 DEFINE INSTRUMENT MAXIV_Bloch(
-    /**********************/
     Wanted_energy=0.378,m=3,cff=2.25,
     r_rho=800,blazed=1,blazed_angle=2,
     SourceChoice=0,E0=0.6, dE=0.4,undK=5.6,Nper=187,
-    /*********************/
     grating_mode=0,
     zm_mirror2=2,R0_M2=1,R0_PG=1,
     zm_mirror1=14,theta_mirror1=3,R0_M1=1,
     zm_mirror3=1,theta_mirror3=3,R0_M3=1,
     zm_mirror4=19,theta_mirror4=3,R0_M4=1,
     zm_ExitSlit=9,xwidth_ExSlit=3,yheight_ExSlit=3,Exitslit_yshift=0.005,R0_PG=1,
-    /*********************/
     display=0,perfectMirrors=0,Error=0
 )
 
