@@ -11,7 +11,7 @@
 *
 * %D
 * Test instrument for the updated BF1 butterfly moderator design using MCPL input files.
-* 
+*
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
 * Example: mcrun -n1e6 ESS_butterfly_MCPL_test.instr sector=N beamline=10 cold=0.5
 *
@@ -71,14 +71,14 @@ DECLARE
   double calcAlpha(double length, double radius) {
     // calculate angle of arm after curved guide
     return RAD2DEG * length/radius;
-  }	
-  
+  }
+
   double calcX(double length, double radius) {
     // calculate position and angle of arm after curved guide
     double alpha = DEG2RAD * calcAlpha(length, radius);
     return radius*(1.0-cos(alpha));
-  }	
-  
+  }
+
   double calcZ(double length, double radius) {
     // calculate position and angle of arm after curved guide
     double alpha = DEG2RAD * calcAlpha(length, radius);
@@ -88,7 +88,7 @@ DECLARE
 
 INITIALIZE
 %{
-  lambdamin=Lmin; 
+  lambdamin=Lmin;
   lambdamax=Lmax;
   XW=1.05*(WidthC+2*WidthT);
   YH=1.05*Yheight;
@@ -152,7 +152,7 @@ EXTEND %{
   p/=1e5;
   z=z-0.137;
 %}
- 
+
 COMPONENT Sphere1 = PSD_monitor_4PI(filename="nonrotated", radius=2.2,restore_neutron=1)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -174,7 +174,7 @@ EXTEND %{
   ALLOW_BACKPROP;
   PROP_Z0;
   SCATTER;
-  
+
   if (fabs(x)>0.06 || fabs(y)>0.06) {
     ABSORB;
   } else {
@@ -191,13 +191,13 @@ EXTEND %{
   ALLOW_BACKPROP;
   PROP_Z0;
   SCATTER;
-  
+
   /* Remove neutrons that are not from around the moderators */
   if (fabs(x)>0.12 || fabs(y)>0.03) {
    ABSORB;
   }
   double myL = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
-  if (myL<Lmin || myL>Lmax) {
+  if (myL<lambdamin || myL>lambdamax) {
     ABSORB;
   }
   t+=rand01()*ESS_SOURCE_DURATION;
@@ -331,11 +331,11 @@ COMPONENT GuideR = Guide_curved(
   COMPONENT RArm=Arm()
   AT (0.416657,0,50.002) RELATIVE GuideR
   ROTATED (0, calcAlpha(50,3000),0) RELATIVE GuideR
-  
+
   COMPONENT RArm2=Arm()
   AT (calcX(50, 3000),0,calcZ(50, 3000)) RELATIVE GuideR
   ROTATED (0, calcAlpha(50,3000),0) RELATIVE GuideR
-  
+
 COMPONENT Monitor2_xy1 = Monitor_nD(
     options = "x limits=[-0.06 0.06] bins=51, y limits=[-0.06 0.06] bins=51,", xwidth = 0.12, yheight = 0.12)
  AT (0, 0, 0.05) RELATIVE RArm
