@@ -1,0 +1,1 @@
+pgcc -ta=multicore -Minfo=accel -DUSE_PGI -DNOSIGNALS

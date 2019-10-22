@@ -1,1 +1,0 @@
-pgcc -ta=tesla:cc70,nollvm,managed,deepcopy -Minfo=accel -Mcudalib:curand -DUSE_PGI -DNOSIGNALS hack_1.c
