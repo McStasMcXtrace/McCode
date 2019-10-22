@@ -91,11 +91,11 @@
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
-#define MCCODE_STRING "McStas 3.0-dev - Oct. 20, 2019"
+#define MCCODE_STRING "McStas 3.0-dev - Oct. 21, 2019"
 #endif
 
 #ifndef MCCODE_DATE
-#define MCCODE_DATE "Oct. 20, 2019"
+#define MCCODE_DATE "Oct. 21, 2019"
 #endif
 
 #ifndef MCCODE_VERSION

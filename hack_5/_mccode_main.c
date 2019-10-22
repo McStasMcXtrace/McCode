@@ -157,7 +157,9 @@ int mccode_main(int argc, char *argv[])
        compilation for GPU seems to need longs only */
     //long long seq = Xmcrun_num;
     long seq = Xmcrun_num+mcseed;
-    curand_init(seq, seq-mcseed, 0ULL, &MCRANDstate);
+    if (Xmcrun_num < 100) {
+      //curand_init(seq, seq-mcseed, 0ULL, &MCRANDstate);
+    }
     particleN.MCRANDstate = MCRANDstate;
 #endif
 

@@ -141,6 +141,8 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
+  
+  
 #pragma acc update device (_Origin_var, _Source_var, _D0_Source_var, _SC1_var, _D1_SC1_Out_var, _As1_var, _As2_var, _As3_var, _As4_var, _D2_A4_var, _Mono_Cradle_var, _PG1Xtal_var, _Mono_Out_var, _D4_SC2_In_var, _SC2_var, _D5_SC2_Out_var, _Sample_Cradle_var, _Sample_Out_var, _Sample_var, _D7_SC3_In_var, _SC3_var, _D8_SC3_Out_var, _Ana_Cradle_var, _PG2Xtal_var, _Ana_Out_var, _D10_SC4_In_var, _SC4_var, _He3H_var, _instrument_var)
 #pragma acc parallel loop 
   /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
@@ -152,13 +154,7 @@ int mccode_main(int argc, char *argv[])
 
 /* CUDA */
 #ifdef USE_PGI
-    curandState_t MCRANDstate;
-    /* To really make sense this should be long long, but for now
-       compilation for GPU seems to need longs only */
-    //long long seq = Xmcrun_num;
-    long seq = Xmcrun_num+mcseed;
-    curand_init(seq, seq-mcseed, 0ULL, &MCRANDstate);
-    particleN.MCRANDstate = MCRANDstate;
+    particleN.MCRANDstate = MCRANDstate[Xmcrun_num];
 #endif
 
 

@@ -2,12 +2,12 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: BNL_H8_simple.instr (BNL_H8)
- * Date:       Sun Oct 20 16:06:55 2019
+ * Date:       Mon Oct 21 16:41:14 2019
  * File:       BNL_H8_simple.c
  * CFLAGS=
  */
 
-#define MCCODE_STRING "McStas 3.0-dev - Oct. 20, 2019"
+#define MCCODE_STRING "McStas 3.0-dev - Oct. 21, 2019"
 #define FLAVOR        "mcstas"
 #define FLAVOR_UPPER  "MCSTAS"
 
@@ -141,11 +141,11 @@ typedef struct _struct_particle _class_particle;
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
-#define MCCODE_STRING "McStas 3.0-dev - Oct. 20, 2019"
+#define MCCODE_STRING "McStas 3.0-dev - Oct. 21, 2019"
 #endif
 
 #ifndef MCCODE_DATE
-#define MCCODE_DATE "Oct. 20, 2019"
+#define MCCODE_DATE "Oct. 21, 2019"
 #endif
 
 #ifndef MCCODE_VERSION
@@ -9837,64 +9837,64 @@ lambda);
 
 #ifdef USE_PGI
 #include <openacc.h>
-acc_attach( (void**)&_Origin );
+acc_attach( (void*)&_Origin_var );
 #pragma acc update device(_Origin_var)
-acc_attach( (void**)&_Source );
+acc_attach( (void*)&_Source_var );
 #pragma acc update device(_Source_var)
-acc_attach( (void**)&_D0_Source );
+acc_attach( (void*)&_D0_Source_var );
 #pragma acc update device(_D0_Source_var)
-acc_attach( (void**)&_SC1 );
+acc_attach( (void*)&_SC1_var );
 #pragma acc update device(_SC1_var)
-acc_attach( (void**)&_D1_SC1_Out );
+acc_attach( (void*)&_D1_SC1_Out_var );
 #pragma acc update device(_D1_SC1_Out_var)
-acc_attach( (void**)&_As1 );
+acc_attach( (void*)&_As1_var );
 #pragma acc update device(_As1_var)
-acc_attach( (void**)&_As2 );
+acc_attach( (void*)&_As2_var );
 #pragma acc update device(_As2_var)
-acc_attach( (void**)&_As3 );
+acc_attach( (void*)&_As3_var );
 #pragma acc update device(_As3_var)
-acc_attach( (void**)&_As4 );
+acc_attach( (void*)&_As4_var );
 #pragma acc update device(_As4_var)
-acc_attach( (void**)&_D2_A4 );
+acc_attach( (void*)&_D2_A4_var );
 #pragma acc update device(_D2_A4_var)
-acc_attach( (void**)&_Mono_Cradle );
+acc_attach( (void*)&_Mono_Cradle_var );
 #pragma acc update device(_Mono_Cradle_var)
-acc_attach( (void**)&_PG1Xtal );
+acc_attach( (void*)&_PG1Xtal_var );
 #pragma acc update device(_PG1Xtal_var)
-acc_attach( (void**)&_Mono_Out );
+acc_attach( (void*)&_Mono_Out_var );
 #pragma acc update device(_Mono_Out_var)
-acc_attach( (void**)&_D4_SC2_In );
+acc_attach( (void*)&_D4_SC2_In_var );
 #pragma acc update device(_D4_SC2_In_var)
-acc_attach( (void**)&_SC2 );
+acc_attach( (void*)&_SC2_var );
 #pragma acc update device(_SC2_var)
-acc_attach( (void**)&_D5_SC2_Out );
+acc_attach( (void*)&_D5_SC2_Out_var );
 #pragma acc update device(_D5_SC2_Out_var)
-acc_attach( (void**)&_Sample_Cradle );
+acc_attach( (void*)&_Sample_Cradle_var );
 #pragma acc update device(_Sample_Cradle_var)
-acc_attach( (void**)&_Sample_Out );
+acc_attach( (void*)&_Sample_Out_var );
 #pragma acc update device(_Sample_Out_var)
-acc_attach( (void**)&_Sample );
+acc_attach( (void*)&_Sample_var );
 #pragma acc update device(_Sample_var)
-acc_attach( (void**)&_D7_SC3_In );
+acc_attach( (void*)&_D7_SC3_In_var );
 #pragma acc update device(_D7_SC3_In_var)
-acc_attach( (void**)&_SC3 );
+acc_attach( (void*)&_SC3_var );
 #pragma acc update device(_SC3_var)
-acc_attach( (void**)&_D8_SC3_Out );
+acc_attach( (void*)&_D8_SC3_Out_var );
 #pragma acc update device(_D8_SC3_Out_var)
-acc_attach( (void**)&_Ana_Cradle );
+acc_attach( (void*)&_Ana_Cradle_var );
 #pragma acc update device(_Ana_Cradle_var)
-acc_attach( (void**)&_PG2Xtal );
+acc_attach( (void*)&_PG2Xtal_var );
 #pragma acc update device(_PG2Xtal_var)
-acc_attach( (void**)&_Ana_Out );
+acc_attach( (void*)&_Ana_Out_var );
 #pragma acc update device(_Ana_Out_var)
-acc_attach( (void**)&_D10_SC4_In );
+acc_attach( (void*)&_D10_SC4_In_var );
 #pragma acc update device(_D10_SC4_In_var)
-acc_attach( (void**)&_SC4 );
+acc_attach( (void*)&_SC4_var );
 #pragma acc update device(_SC4_var)
-acc_attach( (void**)&_He3H );
+acc_attach( (void*)&_He3H_var );
 #pragma acc update device(_He3H_var)
-acc_attach( (void**)&instrument );
-#pragma acc update device(instrument_var)
+acc_attach( (void*)&_instrument_var );
+#pragma acc update device(_instrument_var)
 #endif
 
   return(0);
@@ -11116,7 +11116,7 @@ void raytrace_all(int ncount, int seed) { /* loop to generate events and propaga
 #ifdef USE_PGI
     curandState_t state;
     long seq = pidx + seed;
-    curand_init(seq, seq - seed, 0ULL, &state);
+    //curand_init(seq, seq - seed, 0ULL, &state);
     particleN.MCRANDstate = state;
 #endif
 
@@ -11335,7 +11335,7 @@ int finally(void) { /* called by mccode_main for BNL_H8:FINALLY */
 #pragma acc update host(_D10_SC4_In_var)
 #pragma acc update host(_SC4_var)
 #pragma acc update host(_He3H_var)
-#pragma acc update host(instrument_var)
+#pragma acc update host(_instrument_var)
 
   siminfo_init(NULL);
   save(siminfo_file); /* save data when simulation ends */
