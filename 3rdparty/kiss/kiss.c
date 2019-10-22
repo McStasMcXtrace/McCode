@@ -3,10 +3,10 @@
 /*
  From: http://www.helsbreth.org/random/rng_kiss.html
  Scott Nelson 1999
- 
+
  Based on Marsaglia's KISS or (KISS+SWB) <http://www.cs.yorku.ca/~oz/marsaglia-
 rng.html>
- 
+
  KISS - Keep it Simple Stupid PRNG
 
  the idea is to use simple, fast, individually promising
@@ -61,17 +61,16 @@ unsigned long kiss_random(unsigned long state[7]) {
 }
 
 double uniform_double(unsigned long state[7]) {
-
     unsigned long a = kiss_random(state) >> 6;
     unsigned long b = kiss_random(state) >> 5;
     double x = (a * 134217728.0 + b) / 9007199254740992.0;
-
     return x;
 }
 
 double rand01(unsigned long state[7]) {
 	double randnum;
 	randnum = (double) kiss_random(state);
+  // TODO: can we mult instead of div?
 	randnum /= (double) MC_RAND_MAX +1;
 	return randnum;
 }
@@ -92,51 +91,43 @@ double randnorm(unsigned long state[7])
       v2 = 2*u2 - 1;
       s = v1*v1 + v2*v2;
     } while(s >= 1 || s == 0);
-
     X = v1*sqrt(-2*log(s)/s);
   }
   else
-  {
     X = v2*sqrt(-2*log(s)/s);
-  }
 
   phase = 1 - phase;
   return X;
 }
 
 double randnorm2(unsigned long state[7]) {
-
     double x, y, r;
-
     do {
         x = 2.0 * rand01(state) - 1.0;
         y = 2.0 * rand01(state) - 1.0;
         r = x*x + y*y;
     } while (r == 0.0 || r >= 1.0);
-
     return x * sqrt((-2.0 * log(r)) / r);
 }
 
 
 /* test the KISS algo */
-
-
-
 void main() {
   printf("geting state \n");
   unsigned long state[7];
   kiss_srandom(state, 123454);
   printf("starting loop\n");
-  for (long index=0; index<1000; index++) {
-//    unsigned long randnum = kiss_random(state);
+  for (long index=0; index<100; index++) {
     double g1 = kiss_random(state);
-    printf("kiss_random: %i %g\n", index, g1);
+    printf("kiss_random:  %i %g\n", index, g1);
+  }
+  for (long index=0; index<100; index++) {
     double g2 = rand01(state);
-    printf("rand01: %i %g\n", index, g2);
+    printf("rand01:       %i %g\n", index, g2);
+  }
+  for (long index=0; index<100; index++) {
     double g3 = randnorm(state);
-    printf("randnorm: %i %g\n", index, g3);
-    
+    printf("randnorm:     %i %g\n", index, g3);
   }
   printf("ending loop\n");
 }
-
