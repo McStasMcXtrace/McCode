@@ -740,7 +740,7 @@ int cogen_comp_section_class(
 
     // TRACE only compile gpu variant
     if (!strcmp(section, "TRACE"))
-      coutf("#pragma acc routine seq nohost");
+      coutf("#pragma acc routine seq");
     coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
