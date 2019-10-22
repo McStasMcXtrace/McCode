@@ -3231,7 +3231,6 @@ unsigned long kiss_random(unsigned long state[7]) {
 
 
 // generate a random number from normal law
-#pragma acc routine seq
 double _randnorm(randstate_t* state)
 {
   static double v1, v2, s; /* removing static breaks comparison with McStas <= 2.5 */

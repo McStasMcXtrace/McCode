@@ -423,7 +423,7 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  endif
 #endif
 
-#define randnorm() _randnorm2(_particle->randstate)
+#define randnorm() _randnorm2(_particle->randstate) // NOTE: can not use _randnorm on gpu
 #define rand01() _rand01(_particle->randstate)
 #define randpm1() _randpm1(_particle->randstate)
 #define rand0max(p1) _rand0max(p1, _particle->randstate)
