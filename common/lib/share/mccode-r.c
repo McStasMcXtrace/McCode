@@ -119,7 +119,7 @@ void destroy_darr2d(DArray2d a){
 
 DArray3d create_darr3d(int nx, int ny, int nz){
   DArray3d arr3d;
-  
+
   int i, j;
 
   // 1d
@@ -2235,9 +2235,9 @@ static void
 mcsetseed(char *arg)
 {
   mcseed = atol(arg);
-  if(mcseed) {
-    srandom(mcseed);
-  } else {
+  if(!mcseed) {
+  //  srandom(mcseed);
+  //} else {
     fprintf(stderr, "Error: seed must not be zero (mcsetseed)\n");
     exit(1);
   }
@@ -2922,67 +2922,8 @@ int solve_2nd_order(double *t1, double *t2,
  * with given radius.
  * If radius is zero, choose random direction in full 4PI, no target.
  ******************************************************************************/
-#ifndef USE_PGI
-void randvec_target_circle_cpu(double *xo, double *yo, double *zo, double *solid_angle,
-        double xi, double yi, double zi, double radius)
-{
-  double l2, phi, theta, nx, ny, nz, xt, yt, zt, xu, yu, zu;
-
-  if(radius == 0.0)
-  {
-    /* No target, choose uniformly a direction in full 4PI solid angle. */
-    theta = acos (1 - rand0max(2));
-    phi = rand0max(2 * PI);
-    if(solid_angle)
-      *solid_angle = 4*PI;
-    nx = 1;
-    ny = 0;
-    nz = 0;
-    yi = sqrt(xi*xi+yi*yi+zi*zi);
-    zi = 0;
-    xi = 0;
-  }
-  else
-  {
-    double costheta0;
-    l2 = xi*xi + yi*yi + zi*zi; /* sqr Distance to target. */
-    costheta0 = sqrt(l2/(radius*radius+l2));
-    if (radius < 0) costheta0 *= -1;
-    if(solid_angle)
-    {
-      /* Compute solid angle of target as seen from origin. */
-        *solid_angle = 2*PI*(1 - costheta0);
-    }
-
-    /* Now choose point uniformly on circle surface within angle theta0 */
-    theta = acos (1 - rand0max(1 - costheta0)); /* radius on circle */
-    phi = rand0max(2 * PI); /* rotation on circle at given radius */
-    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
-       perpendicular axis u=i x n and then angle phi around i. */
-    if(xi == 0 && zi == 0)
-    {
-      nx = 1;
-      ny = 0;
-      nz = 0;
-    }
-    else
-    {
-      nx = -zi;
-      nz = xi;
-      ny = 0;
-    }
-  }
-
-  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
-  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
-  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
-  rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
-  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
-  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
-}
-#endif
-#pragma acc routine seq nohost
-void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+#pragma acc routine seq
+void _randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double radius,
         _class_particle* _particle)
 {
@@ -2991,7 +2932,7 @@ void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid
   if(radius == 0.0)
   {
     /* No target, choose uniformly a direction in full 4PI solid angle. */
-    theta = acos (1 - rand0max(2));
+    theta = acos(1 - rand0max(2));
     phi = rand0max(2 * PI);
     if(solid_angle)
       *solid_angle = 4*PI;
@@ -3048,71 +2989,8 @@ void randvec_target_circle_gpu(double *xo, double *yo, double *zo, double *solid
  * width=phi_y=[0,2*PI] (radians)
  * If height or width is zero, choose random direction in full 4PI, no target.
  *******************************************************************************/
-#ifndef USE_PGI
-void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo, double *solid_angle,
-               double xi, double yi, double zi, double width, double height, Rotation A)
-{
-  double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
-  Coords tmp;
-  Rotation Ainverse;
-
-  rot_transpose(A, Ainverse);
-
-  if(height == 0.0 || width == 0.0)
-  {
-    randvec_target_circle(xo, yo, zo, solid_angle,
-               xi, yi, zi, 0);
-    return;
-  }
-  else
-  {
-    if(solid_angle)
-    {
-      /* Compute solid angle of target as seen from origin. */
-      *solid_angle = 2*fabs(width*sin(height/2));
-    }
-
-    /* Go to global coordinate system */
-
-    tmp = coords_set(xi, yi, zi);
-    tmp = rot_apply(Ainverse, tmp);
-    coords_get(tmp, &xi, &yi, &zi);
-
-    /* Now choose point uniformly on the unit sphere segment with angle theta/phi */
-    phi   = width*randpm1()/2.0;
-    theta = asin(randpm1()*sin(height/2.0));
-    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around
-       n, and then phi around u. */
-    if(xi == 0 && zi == 0)
-    {
-      nx = 1;
-      ny = 0;
-      nz = 0;
-    }
-    else
-    {
-      nx = -zi;
-      nz = xi;
-      ny = 0;
-    }
-  }
-
-  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
-  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
-  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
-  rotate  (xt,  yt,  zt, xi, yi, zi, theta, nx, ny, nz);
-  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
-  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xu,  yu,  zu);
-
-  /* Go back to local coordinate system */
-  tmp = coords_set(*xo, *yo, *zo);
-  tmp = rot_apply(A, tmp);
-  coords_get(tmp, &*xo, &*yo, &*zo);
-
-}
-#endif
-#pragma acc routine seq nohost
-void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+#pragma acc routine seq
+void _randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double width, double height, Rotation A,
         _class_particle* _particle)
 {
@@ -3124,8 +3002,7 @@ void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double 
 
   if(height == 0.0 || width == 0.0)
   {
-    randvec_target_circle(xo, yo, zo, solid_angle,
-               xi, yi, zi, 0);
+    randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, 0);
     return;
   }
   else
@@ -3172,7 +3049,6 @@ void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double 
   tmp = coords_set(*xo, *yo, *zo);
   tmp = rot_apply(A, tmp);
   coords_get(tmp, &*xo, &*yo, &*zo);
-
 }
 /* randvec_target_rect_angular */
 
@@ -3189,93 +3065,8 @@ void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo, double 
  * a define (see mcstas-r.h) pointing here. If you use the old rouine, you are NOT
  * taking the local emmission coordinate into account.
 *******************************************************************************/
-#ifndef USE_PGI
-void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *solid_angle,
-        double xi, double yi, double zi,
-        double width, double height, Rotation A,
-        double lx, double ly, double lz, int order)
-{
-  double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
-  double cos_theta;
-  Coords tmp;
-  Rotation Ainverse;
-
-  rot_transpose(A, Ainverse);
-
-  if(height == 0.0 || width == 0.0)
-  {
-    randvec_target_circle(xo, yo, zo, solid_angle,
-               xi, yi, zi, 0);
-    return;
-  }
-  else
-  {
-    /* Now choose point uniformly on rectangle within width x height */
-    dx = width*randpm1()/2.0;
-    dy = height*randpm1()/2.0;
-
-    /* Determine distance to target plane*/
-    dist = sqrt(xi*xi + yi*yi + zi*zi);
-    /* Go to global coordinate system */
-
-    tmp = coords_set(xi, yi, zi);
-    tmp = rot_apply(Ainverse, tmp);
-    coords_get(tmp, &xi, &yi, &zi);
-
-    /* Determine vector normal to trajectory axis (z) and gravity [0 1 0] */
-    vec_prod(nx, ny, nz, xi, yi, zi, 0, 1, 0);
-
-    /* This now defines the x-axis, normalize: */
-    n_norm=sqrt(nx*nx + ny*ny + nz*nz);
-    nx = nx/n_norm;
-    ny = ny/n_norm;
-    nz = nz/n_norm;
-
-    /* Now, determine our y-axis (vertical in many cases...) */
-    vec_prod(mx, my, mz, xi, yi, zi, nx, ny, nz);
-    m_norm=sqrt(mx*mx + my*my + mz*mz);
-    mx = mx/m_norm;
-    my = my/m_norm;
-    mz = mz/m_norm;
-
-    /* Our output, random vector can now be defined by linear combination: */
-
-    *xo = xi + dx * nx + dy * mx;
-    *yo = yi + dx * ny + dy * my;
-    *zo = zi + dx * nz + dy * mz;
-
-    /* Go back to local coordinate system */
-    tmp = coords_set(*xo, *yo, *zo);
-    tmp = rot_apply(A, tmp);
-    coords_get(tmp, &*xo, &*yo, &*zo);
-
-    /* Go back to local coordinate system */
-    tmp = coords_set(xi, yi, zi);
-    tmp = rot_apply(A, tmp);
-    coords_get(tmp, &xi, &yi, &zi);
-
-    if (solid_angle) {
-      /* Calculate vector from local point to remote random point */
-      lx = *xo - lx;
-      ly = *yo - ly;
-      lz = *zo - lz;
-      dist_p = sqrt(lx*lx + ly*ly + lz*lz);
-
-      /* Adjust the 'solid angle' */
-      /* 1/r^2 to the chosen point times cos(\theta) between the normal */
-      /* vector of the target rectangle and direction vector of the chosen point. */
-      cos_theta = (xi * lx + yi * ly + zi * lz) / (dist * dist_p);
-      *solid_angle = width * height / (dist_p * dist_p);
-      int counter;
-      for (counter = 0; counter < order; counter++) {
-        *solid_angle = *solid_angle * cos_theta;
-      }
-    }
-  }
-}
-#endif
-#pragma acc routine seq nohost
-void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *solid_angle,
+#pragma acc routine seq
+void _randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi,
         double width, double height, Rotation A,
         double lx, double ly, double lz, int order,
@@ -3362,152 +3153,86 @@ void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *so
 /* randvec_target_rect_real */
 
 
-/* SECTION: random numbers ================================================== */
+/* SECTION: random numbers ==================================================
+
+  How to add a new RNG:
+
+  - Use an rng with a manegable state vector, e.g. of lengt 4 or 7. The state
+  will sit on the particle struct as a "randstate_t state[RANDSTATE_LEN]"
+  - Add a seed and a random function (the transforms will be reused)
+  - Write the proper defines in mccode-r.h, e.g. randstate_t and RANDSTATE_LEN,
+  srandom and random.
+  - Compile using -DRNG_ALG=<selector int value>
+
+============================================================================= */
 
 
-/* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
-/* See http://www.math.keio.ac.jp/~matumoto/emt.html for original source. */
 /*
-   A C-program for MT19937, with initialization improved 2002/1/26.
-   Coded by Takuji Nishimura and Makoto Matsumoto.
+ From: http://www.helsbreth.org/random/rng_kiss.html
+ Scott Nelson 1999
 
-   Before using, initialize the state by using mt_srandom(seed)
-   or init_by_array(init_key, key_length).
+ Based on Marsaglia's KISS or (KISS+SWB) <http://www.cs.yorku.ca/~oz/marsaglia-
+rng.html>
 
-   Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
-   All rights reserved.
+ KISS - Keep it Simple Stupid PRNG
 
-   Redistribution and use in source and binary forms, with or without
-   modification, are permitted provided that the following conditions
-   are met:
-
-     1. Redistributions of source code must retain the above copyright
-        notice, this list of conditions and the following disclaimer.
-
-     2. Redistributions in binary form must reproduce the above copyright
-        notice, this list of conditions and the following disclaimer in the
-        documentation and/or other materials provided with the distribution.
-
-     3. The names of its contributors may not be used to endorse or promote
-        products derived from this software without specific prior written
-        permission.
-
-   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-   Any feedback is very welcome.
-   http://www.math.keio.ac.jp/matumoto/emt.html
-   email: matumoto@math.keio.ac.jp
+ the idea is to use simple, fast, individually promising
+ generators to get a composite that will be fast, easy to code
+ have a very long period and pass all the tests put to it.
+ The three components of KISS are
+        x(n)=a*x(n-1)+1 mod 2^32
+        y(n)=y(n-1)(I+L^13)(I+R^17)(I+L^5),
+        z(n)=2*z(n-1)+z(n-2) +carry mod 2^32
+ The y's are a shift register sequence on 32bit binary vectors
+ period 2^32-1;
+ The z's are a simple multiply-with-carry sequence with period
+ 2^63+2^32-1.  The period of KISS is thus
+      2^32*(2^32-1)*(2^63+2^32-1) > 2^127
 */
-#include <stdio.h>
-/* Period parameters */
-#define N 624
-#define M 397
-#define MATRIX_A 0x9908b0dfUL   /* constant vector a */
-#define UPPER_MASK 0x80000000UL /* most significant w-r bits */
-#define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
-unsigned long mt[N]; /* the array for the state vector  */
-int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
+/* the KISS state is stored as a vector of 7 unsigned long        */
+/*   0  1  2  3  4      5  6   */
+/* [ x, y, z, w, carry, k, m ] */
 
-// initializes mt[N] with a seed
-void mt_srandom(unsigned long s)
-{
-    mt[0]= s & 0xffffffffUL;
-    for (mti=1; mti<N; mti++) {
-        mt[mti] =
-            (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
-        /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
-        /* In the previous versions, MSBs of the seed affect   */
-        /* only MSBs of the array mt[].                        */
-        /* 2002/01/09 modified by Makoto Matsumoto             */
-        mt[mti] &= 0xffffffffUL;
-        /* for >32 bit machines */
-    }
+#ifndef ULONG_MAX
+#  define ULONG_MAX ((unsigned long)0xffffffffffffffffUL)
+#endif
+#define MC_RAND_MAX ULONG_MAX
+
+#pragma acc routine seq
+unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
+  if (seed == 0) seed = 1;
+  state[0] = seed | 1; // x
+  state[1] = seed | 2; // y
+  state[2] = seed | 4; // z
+  state[3] = seed | 8; // w
+  state[4] = 0;        // carry
+  return 0;
 }
-/* Initialize by an array with array-length.
-   Init_key is the array for initializing keys.
-   key_length is its length. */
-void init_by_array(unsigned long init_key[], unsigned long key_length)
-{
-    int i, j, k;
-    mt_srandom(19650218UL);
-    i=1; j=0;
-    k = (N>key_length ? N : key_length);
-    for (; k; k--) {
-        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525UL))
-          + init_key[j] + j; /* non linear */
-        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
-        i++; j++;
-        if (i>=N) { mt[0] = mt[N-1]; i=1; }
-        if (j>=key_length) j=0;
-    }
-    for (k=N-1; k; k--) {
-        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941UL))
-          - i; /* non linear */
-        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
-        i++;
-        if (i>=N) { mt[0] = mt[N-1]; i=1; }
-    }
 
-    mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */
+#pragma acc routine seq
+unsigned long kiss_random(unsigned long state[7]) {
+    state[0] = state[0] * 69069 + 1;
+    state[1] ^= state[1] << 13;
+    state[1] ^= state[1] >> 17;
+    state[1] ^= state[1] << 5;
+    state[5] = (state[2] >> 2) + (state[3] >> 3) + (state[4] >> 2);
+    state[6] = state[3] + state[3] + state[2] + state[4];
+    state[2] = state[3];
+    state[3] = state[6];
+    state[4] = state[5] >> 30;
+    return state[0] + state[1] + state[3];
 }
-/* generates a random number on [0,0xffffffff]-interval */
-unsigned long mt_random(void)
-{
-    unsigned long y;
-    unsigned long mag01[2]={0x0UL, MATRIX_A};
-    /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    if (mti >= N) { /* generate N words at one time */
-        int kk;
 
-        if (mti == N+1)   /* if mt_srandom() has not been called, */
-            mt_srandom(5489UL); /* a default initial seed is used */
+//
+// random number transforms
+//
 
-        for (kk=0;kk<N-M;kk++) {
-            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
-        }
-        for (;kk<N-1;kk++) {
-            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
-        }
-        y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
-        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
 
-        mti = 0;
-    }
-
-    y = mt[mti++];
-
-    /* Tempering */
-    y ^= (y >> 11);
-    y ^= (y << 7) & 0x9d2c5680UL;
-    y ^= (y << 15) & 0xefc60000UL;
-    y ^= (y >> 18);
-
-    return y;
-}
-#undef N
-#undef M
-#undef MATRIX_A
-#undef UPPER_MASK
-#undef LOWER_MASK
-/* End of "Mersenne Twister". */
-
-// randnorm: generate a random number from normal law
-double randnorm_cpu(void)
+// generate a random number from normal law
+#pragma acc routine seq
+double _randnorm(randstate_t* state)
 {
   static double v1, v2, s; /* removing static breaks comparison with McStas <= 2.5 */
   static int phase = 0;
@@ -3517,8 +3242,8 @@ double randnorm_cpu(void)
   {
     do
     {
-      u1 = rand01_cpu();
-      u2 = rand01_cpu();
+      u1 = _rand01(state);
+      u2 = _rand01(state);
       v1 = 2*u1 - 1;
       v2 = 2*u2 - 1;
       s = v1*v1 + v2*v2;
@@ -3534,83 +3259,55 @@ double randnorm_cpu(void)
   phase = 1 - phase;
   return X;
 }
+// another one
+#pragma acc routine seq
+double _randnorm2(randstate_t* state) {
+  double x, y, r;
+  do {
+      x = 2.0 * _rand01(state) - 1.0;
+      y = 2.0 * _rand01(state) - 1.0;
+      r = x*x + y*y;
+  } while (r == 0.0 || r >= 1.0);
+  return x * sqrt((-2.0 * log(r)) / r);
+}
 // Generate a random number from -1 to 1 with triangle distribution
-double randtriangle_cpu(void) {
-	double randnum = rand01_cpu();
+#pragma acc routine seq
+double _randtriangle(randstate_t* state) {
+	double randnum = _rand01(state);
 	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
 	else return(sqrt(2*randnum)-1);
 }
 // Random number between 0.0 and 1.0 (including?)
-double rand01_cpu() {
+#pragma acc routine seq
+double _rand01(randstate_t* state) {
 	double randnum;
-	randnum = (double) mt_random();
+	randnum = (double) _random();
+  // TODO: can we mult instead of div?
 	randnum /= (double) MC_RAND_MAX + 1;
 	return randnum;
 }
 // Return a random number between 1 and -1
-double randpm1_cpu() {
+#pragma acc routine seq
+double _randpm1(randstate_t* state) {
 	double randnum;
-	randnum = (double) mt_random();
+	randnum = (double) _random();
 	randnum /= ((double) MC_RAND_MAX + 1) / 2;
 	randnum -= 1;
 	return randnum;
 }
 // Return a random number between 0 and max.
-double rand0max_cpu(double max) {
+#pragma acc routine seq
+double _rand0max(double max, randstate_t* state) {
 	double randnum;
-	randnum = (double) mt_random();
+	randnum = (double) _random();
 	randnum /= ((double) MC_RAND_MAX + 1) / max;
 	return randnum;
 }
 // Return a random number between min and max.
-double randminmax_cpu(double min, double max) {
-	return rand0max_cpu(max - min) + max;
+#pragma acc routine seq
+double _randminmax(double min, double max, randstate_t* state) {
+	return _rand0max(max - min, state) + max;
 }
-
-
-/*
-RNG for GPU specific routines below, all based on the native cuda rand01
-equivalent, curand_uniform (see mccode-r.h).
-
-The footprint of the _gpu variants need to include a state variable, since each
-gpu thread needs to keep track of rng iteration independently, and this must
-be handled explicitly.
-*/
-#ifdef USE_PGI
-#pragma acc routine seq nohost
-double randpm1_gpu(curandState_t* state) {
-	return ((double) curand_uniform(state) - 0.5) * 2;
-}
-#pragma acc routine seq nohost
-double rand0max_gpu(double max, curandState_t* state) {
-	return ((double) curand_uniform(state)) * max;
-}
-#pragma acc routine seq nohost
-double randminmax_gpu(double min, double max, curandState_t* state) {
-  return ((double) curand_uniform(state)) * (max - min) + max;
-}
-#pragma acc routine seq nohost
-double randtriangle_gpu(curandState_t* state) {
-	double randnum = curand_uniform(state);
-	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
-	else return(sqrt(2*randnum)-1);
-}
-#endif
-
-
-/**
- * Wrapper functions for fprintf / printf on GPU
- */
-
-/* These would ideally be #pragma acc routine seq */
-/*int printf_GPU(const char *format,...) {
-  return 0;
-  }*/
-
-/* These would ideally be #pragma acc routine seq */
-/*int fprintf_GPU(FILE *stream, const char *format, ...) {
-  return 0;
-  }*/
 
 
 /* SECTION: main and signal handlers ======================================== */

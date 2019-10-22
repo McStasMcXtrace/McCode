@@ -1337,21 +1337,23 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     coutf("  if (mcdotrace) display();");
     cout("  DEBUG_INSTR_END();");
 
-    // to call acc_attach for OpenACC use
-    // (last thing to do in "initialize")
+    // call acc_attach for OpenACC (last thing to do in init)
     cout("");
     cout("#ifdef USE_PGI");
+    cout("#  include <openacc.h>");
+    // attach component instances on device
     liter = list_iterate(instr->complist);
-    // attach component pointers
-    // TODO: do we need to include this here?
-    cout("#include <openacc.h>");
     while((comp = list_next(liter)) != NULL) {
       coutf("acc_attach( (void*)&_%s_var );", comp->name);
+    }
+    // update component instances on device (e.g. push "managed" data structures)
+    liter = list_iterate(instr->complist);
+    while((comp = list_next(liter)) != NULL) {
       coutf("#pragma acc update device(_%s_var)", comp->name);
     }
     // attach instrument
     cout("acc_attach( (void*)&_instrument_var );");
-    // update device components (e.g. push "managed" data structures)
+    // update instrument
     cout("#pragma acc update device(_instrument_var)");
     cout("#endif");
   }
@@ -1645,41 +1647,24 @@ int cogen_trace(struct instr_def *instr)
   cout("");
   cout("  return(_particle->_index);");
   coutf("} /* raytrace */");
-  
-  // write the "raytrac_eall()" code (for loop previously in mccode_main.c).
+
+  // write the "raytrace_all()" code (for loop previously in mccode_main.c).
   cout("");
   coutf("void raytrace_all(int ncount, int seed) { /* loop to generate events and propagate them */");
   coutf("");
-  
-  /* add the openacc pragma for managed data update CPU -> GPU */
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL) {
-    coutf("  #pragma acc update device (_%s_var)", comp->name);
-  } 
-  list_iterate_end(liter);
-  cout( "  #pragma acc update device (_instrument_var)");
-  
+
   coutf("  #pragma acc parallel loop");
   coutf("  for (unsigned long long pidx=0 ; pidx < ncount ; pidx++) {");
   coutf("    _class_particle particleN = mcgenstate(); // initial particle");
+  coutf("    _class_particle* _particle = &particleN;");
   coutf("    particleN._uid = pidx;");
   coutf("");
-  coutf("#ifdef USE_PGI");
-  coutf("    curandState_t state;");
   coutf("    long seq = pidx + seed;");
-  coutf("    //curand_init(seq, seq - seed, 0ULL, &state);");
-  coutf("    particleN.MCRANDstate = state;");
-  coutf("#endif");
+  coutf("    srandom(pidx + seed);");
+  coutf("    //_particle.randstate = state;");
   coutf("");
-  coutf("    raytrace(&particleN);");
+  coutf("    raytrace(_particle);");
   coutf("  } /* for */");
-  /* add the openacc pragma for managed data update GPU -> CPU */
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL) {
-    coutf("  #pragma acc update host (_%s_var)", comp->name);
-  } 
-  list_iterate_end(liter);
-  cout( "  #pragma acc update host (_instrument_var)");
   coutf("} /* raytrace_all */");
   coutf("");
 
@@ -1801,9 +1786,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
 #endif
-  cout("#ifdef USE_PGI");
-  cout("  curandState_t MCRANDstate; /* CUDA RNG state */");
-  cout("#endif");
+  //cout("  randstate_t randstate[RANDSTATE_LEN]");
+  cout("  unsigned long randstate[7];"); // for the KISS generator
   cout("  double t, p;    /* time, event weight */");
   cout("  long long _uid;  /* event ID */");
   cout("  long _index;     /* component index where to send this event */");

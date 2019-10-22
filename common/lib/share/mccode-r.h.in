@@ -43,113 +43,118 @@
 #include <limits.h>
 #include <errno.h>
 #include <time.h>
-// COMMON seed - not functional
-//#include <sys/time.h>
+#include <sys/time.h>
 #include <float.h>
 #include <inttypes.h>
+#include <stdint.h>
+#ifdef USE_PGI
+#include <accelmath.h>
+#else
+#include <math.h>
+#endif
 
 /* If the runtime is embedded in the simulation program, some definitions can
    be made static. */
 
 #ifdef MC_EMBEDDED_RUNTIME
-#define mcstatic
+#  define mcstatic
 #else
-#define mcstatic
+#  define mcstatic
 #endif
 
 #ifdef __dest_os
-#if (__dest_os == __mac_os)
-#define MAC
-#endif
+#  if (__dest_os == __mac_os)
+#    define MAC
+#  endif
 #endif
 
 #ifdef __FreeBSD__
-#define NEED_STAT_H
+#  define NEED_STAT_H
 #endif
 
 #if defined(__APPLE__) && defined(__GNUC__)
-#define NEED_STAT_H
+#  define NEED_STAT_H
 #endif
 
 #ifdef NEED_STAT_H
-#include <sys/stat.h>
+#  include <sys/stat.h>
 #endif
 
 #ifndef MC_PATHSEP_C
-#ifdef WIN32
-#define MC_PATHSEP_C '\\'
-#define MC_PATHSEP_S "\\"
-#else  /* !WIN32 */
-#define MC_PATHSEP_C '/'
-#define MC_PATHSEP_S "/"
-#endif /* !WIN32 */
+#  ifdef WIN32
+#    define MC_PATHSEP_C '\\'
+#    define MC_PATHSEP_S "\\"
+#  else  /* !WIN32 */
+#    define MC_PATHSEP_C '/'
+#    define MC_PATHSEP_S "/"
+#  endif /* !WIN32 */
 #endif /* MC_PATHSEP_C */
 
 
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
-#define MCCODE_STRING "@MCCODE_STRING@"
+#  define MCCODE_STRING "@MCCODE_STRING@"
 #endif
 
 #ifndef MCCODE_DATE
-#define MCCODE_DATE "@MCCODE_DATE@"
+#  define MCCODE_DATE "@MCCODE_DATE@"
 #endif
 
 #ifndef MCCODE_VERSION
-#define MCCODE_VERSION "@MCCODE_VERSION@"
+#  define MCCODE_VERSION "@MCCODE_VERSION@"
 #endif
 
 #ifndef MCCODE_NAME
-#define MCCODE_NAME "@MCCODE_NAME@"
+#  define MCCODE_NAME "@MCCODE_NAME@"
 #endif
 
 #ifndef MCCODE_PARTICLE
-#define MCCODE_PARTICLE "@MCCODE_PARTICLE@"
+#  define MCCODE_PARTICLE "@MCCODE_PARTICLE@"
 #endif
 
 #ifndef MCCODE_PARTICLE_CODE
-#define MCCODE_PARTICLE_CODE @MCCODE_PARTICLE_CODE@
+#  define MCCODE_PARTICLE_CODE @MCCODE_PARTICLE_CODE@
 #endif
 
 #ifndef MCCODE_LIBENV
-#define MCCODE_LIBENV "@MCCODE_LIBENV@"
+#  define MCCODE_LIBENV "@MCCODE_LIBENV@"
 #endif
 
 #ifndef FLAVOR_UPPER
-#define FLAVOR_UPPER MCCODE_NAME
+#  define FLAVOR_UPPER MCCODE_NAME
 #endif
 
 #ifdef MC_PORTABLE
-#ifndef NOSIGNALS
-#define NOSIGNALS 1
-#endif
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
 #endif
 
 #ifdef MAC
-#ifndef NOSIGNALS
-#define NOSIGNALS 1
-#endif
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
 #endif
 
 #if (USE_MPI == 0)
-#undef USE_MPI
+#  undef USE_MPI
 #endif
 
 #ifdef USE_MPI  /* default is to disable signals with MPI, as MPICH uses them to communicate */
-#ifndef NOSIGNALS
-#define NOSIGNALS 1
-#endif
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
 #endif
 
 #ifdef USE_PGI  /* default is to disable signals with PGI/OpenACC */
-#ifndef NOSIGNALS
-#define NOSIGNALS 1
-#endif
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
 #endif
 
 #if (NOSIGNALS == 0)
-#undef NOSIGNALS
+#  undef NOSIGNALS
 #endif
 
 /* Note: the enum instr_formal_types definition MUST be kept
@@ -238,6 +243,7 @@ int mc_MPI_Recv(void *rbuf, long count, MPI_Datatype dtype, int source);
 #else /* !USE_MPI */
 #define MPI_MASTER(instr) instr
 #endif /* USE_MPI */
+
 
 #ifdef USE_MPI
 static int mpi_node_count;
@@ -399,77 +405,49 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 /* selection of random number generator. default is MT */
-#ifndef USE_PGI
-/* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
-#include <math.h>
-#  define random mt_random
-#  define srandom mt_srandom
 
-#  define rand01 rand01_cpu
-#  define randpm1 randpm1_cpu
-#  define rand0max rand0max_cpu
-#  define randminmax randminmax_cpu
-#  define randnorm randnorm_cpu
-#  define randtriangle randtriangle_cpu
-
+#ifndef RNG_ALG
+#  define randstate_t unsigned long
+#  define RANDSTATE_LEN 7
+#  define srandom(seed) kiss_srandom(_particle->randstate, seed)
+#  define random() kiss_random(_particle->randstate)
+#  define _random() kiss_random(state)
 #else
-/* Use CUDA rand algo - we should check for availability
-   of CUDA libs - and otherwise fail */
-#  include <openacc_curand.h>
-#  include <accelmath.h>
-#  define random() /* TODO: set this */
-#  define srandom mt_srandom
-
-#  define rand01() curand_uniform(&_particle->MCRANDstate)
-#  define randpm1() randpm1_gpu(&_particle->MCRANDstate)
-#  define rand0max(p1) rand0max_gpu(p1, &_particle->MCRANDstate)
-#  define randminmax(p1, p2) randminmax_gpu(p1, p2, &_particle->MCRANDstate)
-#  define randnorm() curand_normal(&_particle->MCRANDstate)
-#  define randtriangle() randtriangle_gpu(&_particle->MCRANDstate)
-
-#  define printf_sys printf
-#  define fprintf_sys fprintf
+#  ifdef RNG_ALG==1
+#    define randstate_t unsigned long
+#    define RANDSTATE_LEN 4
+#    define random mt_srandom
+#    define srandom mt_random
+#  elif RNG_ALG==2
+#  elif RNG_ALG==3
+#  endif
 #endif
 
+#define randnorm() _randnorm2(_particle->randstate)
+#define rand01() _rand01(_particle->randstate)
+#define randpm1() _randpm1(_particle->randstate)
+#define rand0max(p1) _rand0max(p1, _particle->randstate)
+#define randminmax(p1, p2) _randminmax(p1, p2, _particle->randstate)
+#define randtriangle() _randtriangle(_particle->randstate)
 
 /*
 * Random number generation.
-*
-* On the CPU, random alg. Marsenne Twister iteration state is handled
-* internally. On the GPU however, every ray needs to keep track of its iteration
-* state. The state variable is tied to the particle truct instance.
-*
-* This means that GPU random number functions need access to the particle
-* context. Thus,separate functions exist for the CPU/GPU, and universally
-* used symbols like "randnorm" and "rand01" are set as defines.
 */
 
-// random number generation (MT on the CPU)
-typedef int mc_int32_t;
-mc_int32_t mc_random(void);
-void mc_srandom (unsigned int x);
+// Mersenne Twister (TODO: change state into an argument, enabling gpu usage)
 unsigned long mt_random(void);
 void mt_srandom (unsigned long x);
 
-// GPUs don't have i/o
-/*int printf_GPU(const char *format, ...);
-  int fprintf_GPU(FILE *stream, const char *format, ...);*/
+// KISS rng
+unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed);
+unsigned long kiss_random(unsigned long state[7]);
 
-// random number genration CPU
-double rand01_cpu();
-double randpm1_cpu();
-double rand0max_cpu(double max);
-double randminmax_cpu(double min, double max);
-double randnorm_cpu(void);
-double randtriangle_cpu(void);
-
-// random number generation GPU
-#ifdef USE_PGI
-double randpm1_gpu(curandState_t* state);
-double rand0max_gpu(double max, curandState_t* state);
-double randminmax_gpu(double min, double max, curandState_t* state);
-double randtriangle_gpu(curandState_t* state);
-#endif
+// RNG transforms
+double _rand01(randstate_t* state);
+double _randpm1(randstate_t* state);
+double _rand0max(double max, randstate_t* state);
+double _randminmax(double min, double max, randstate_t* state);
+double _randtriangle(randstate_t* state);
 
 #ifdef USE_OPENCL
 #include "opencl-lib.h"
@@ -574,7 +552,7 @@ void mcreadparams(void);
 /* this is now in mcstas-r.h and mcxtrace-r.h as the number of state parameters is no longer equal*/
 _class_particle mcgenstate(void);
 
-/* trajectory/shape intersection routines */
+// trajectory/shape intersection routines
 int inside_rectangle(double, double, double, double);
 int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
       double vx, double vy, double vz, double dx, double dy, double dz);
@@ -582,56 +560,37 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
       double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
       double vx, double vy, double vz, double r);
-/* second order equation roots */
+// second order equation roots
 int solve_2nd_order(double *t1, double *t2,
       double A,  double B,  double C);
 
+// random vector generation to shape
+// defines silently introducing _particle as the last argument
+#define randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, radius) \
+  _randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, radius, _particle)
+#define randvec_target_rect_angular(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A) \
+  _randvec_target_rect_angular(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, _particle)
+#define randvec_target_rect_real(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order) \
+  _randvec_target_rect_real(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order, _particle)
+// defines forwarding to "inner" functions
+#define randvec_target_sphere randvec_target_circle
+#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9) \
+  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
+// headers for randvec
+void _randvec_target_circle(double *xo, double *yo, double *zo,
+  double *solid_angle, double xi, double yi, double zi, double radius,
+  _class_particle* _particle);
+void _randvec_target_rect_angular(double *xo, double *yo, double *zo,
+  double *solid_angle, double xi, double yi, double zi, double height,
+  double width, Rotation A,
+  _class_particle* _particle);
+void _randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
+  double xi, double yi, double zi, double height, double width, Rotation A,
+  double lx, double ly, double lz, int order,
+  _class_particle* _particle);
 
-/* random vector generation to shape */
 
-/* jg-20191003: Gpu versions need to apppend _particle for gpu rng functions,
- * which depend on the particle struct MCRANDstate variable, but this has to be
- * transparent to component use of randvec shape functions. */
-
-// interface (shared)
-#  define randvec_target_sphere randvec_target_circle
-#  define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9) \
-        randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
-#ifndef USE_PGI
-// interface (cpu)
-#  define randvec_target_circle       randvec_target_circle_cpu
-#  define randvec_target_rect_angular randvec_target_rect_angular_cpu
-#  define randvec_target_rect_real    randvec_target_rect_real_cpu
-// headers (cpu)
-void randvec_target_circle_cpu(double *xo, double *yo, double *zo,
-      double *solid_angle, double xi, double yi, double zi, double radius);
-void randvec_target_rect_angular_cpu(double *xo, double *yo, double *zo,
-      double *solid_angle,
-      double xi, double yi, double zi, double height, double width, Rotation A);
-void randvec_target_rect_real_cpu(double *xo, double *yo, double *zo, double *solid_angle,
-      double xi, double yi, double zi, double height, double width, Rotation A,
-      double lx, double ly, double lz, int order);
-#else
-// interface (gpu, appending _particle)
-#  define randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, radius) \
-        randvec_target_circle_gpu(xo, yo, zo, solid_angle, xi, yi, zi, radius, _particle)
-#  define randvec_target_rect_angular(xo, yo, zo, solid_angle, xi, yi, zi, height, width, Rotation A) \
-        randvec_target_rect_angular_gpu(xo, yo, zo, solid_angle, xi, yi, zi, height, width, Rotation A, _particle)
-#  define randvec_target_rect_real(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order) \
-        randvec_target_rect_real_gpu(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order, _particle)
-// heaaders (gpu)
-void randvec_target_circle_gpu(double *xo, double *yo, double *zo,
-      double *solid_angle, double xi, double yi, double zi, double radius,
-      _class_particle* _particle);
-void randvec_target_rect_angular_gpu(double *xo, double *yo, double *zo,
-      double *solid_angle, double xi, double yi, double zi, double height,
-      double width, Rotation A, _class_particle* _particle);
-void randvec_target_rect_real_gpu(double *xo, double *yo, double *zo, double *solid_angle,
-      double xi, double yi, double zi, double height, double width, Rotation A,
-      double lx, double ly, double lz, int order, _class_particle* _particle);
-#endif
-
-/* this is the main() */
+// this is the main()
 int mccode_main(int argc, char *argv[]);
 
 
