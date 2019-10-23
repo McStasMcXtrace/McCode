@@ -112,7 +112,7 @@ int mccode_main(int argc, char *argv[])
 #endif /* !NOSIGNALS */
 
 
-  // init
+  // init executed by master/host
   siminfo_init(NULL); /* open SIM */
   SIG_MESSAGE("[" __FILE__ "] main INITIALISE");
   init();
@@ -133,7 +133,13 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
+// MT specific init, note that per-ray init is empty
+#if RNG_ALG == 2
+  mt_srandom(mcseed);
+#endif
 
+
+  // main raytrace work loop
   raytrace_all(mcncount, mcseed);
 
 
@@ -147,7 +153,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 
 
-  // save/finally executed by master node/thread
+  // save/finally executed by master node/thread/host
   finally();
 
 
