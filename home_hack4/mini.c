@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: mini.instr (Minimal)
- * Date:       Wed Oct 23 22:33:36 2019
+ * Date:       Wed Oct 23 22:50:36 2019
  * File:       mini.c
  * CFLAGS=
  */
@@ -5404,7 +5404,7 @@ int main(int argc, char *argv[]){return mccode_main(argc, argv);}
    (Used in e.g. inputparse and I/O function (e.g. detector_out) */
 
 struct _struct_instrument_parameters {
-  MCNUM _Par1;
+  MCNUM _angle;
 };
 typedef struct _struct_instrument_parameters _class_instrument_parameters;
 
@@ -5425,7 +5425,7 @@ struct _instrument_struct *instrument = & _instrument_var;
 
 int numipar = 1;
 struct mcinputtable_struct mcinputtable[] = {
-  "Par1", &(_instrument_var._parameters._Par1), instr_type_double, "1", 
+  "angle", &(_instrument_var._parameters._angle), instr_type_double, "0", 
   NULL, NULL, instr_type_double, ""
 };
 
@@ -5707,7 +5707,7 @@ int _detector_setpos(void)
     Coords tc1, tc2;
     Rotation tr1;
     rot_set_rotation(tr1,
-      (0.0)*DEG2RAD, (0.0)*DEG2RAD, (0.0)*DEG2RAD);
+      (0)*DEG2RAD, (instrument->_parameters._angle)*DEG2RAD, (0)*DEG2RAD);
     rot_mul(tr1, _arm_var._rotation_absolute, _detector_var._rotation_absolute);
     rot_transpose(_source_var._rotation_absolute, tr1);
     rot_mul(_detector_var._rotation_absolute, tr1, _detector_var._rotation_relative);

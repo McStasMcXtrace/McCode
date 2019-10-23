@@ -1,4 +1,4 @@
-DEFINE INSTRUMENT Minimal(Par1=1)
+DEFINE INSTRUMENT Minimal(angle=0)
 
 TRACE
 
@@ -29,5 +29,5 @@ COMPONENT detector = PSD_monitor(
     ymin = -0.1,
     ymax = 0.1)
 AT (0, 0, 9.01) RELATIVE arm
-
+ROTATED (0,angle,0) RELATIVE arm
 END
