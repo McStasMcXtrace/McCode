@@ -117,17 +117,17 @@ void main() {
   unsigned long state[7];
   kiss_srandom(state, 123454);
   printf("starting loop\n");
-  for (long index=0; index<100; index++) {
+  for (long index=0; index<10000; index++) {
     double g1 = kiss_random(state);
-    printf("kiss_random:  %i %g\n", index, g1);
+    printf("kiss_random: %g\n", g1);
   }
-  for (long index=0; index<100; index++) {
+  for (long index=0; index<10000; index++) {
     double g2 = rand01(state);
-    printf("rand01:       %i %g\n", index, g2);
+    printf("rand01: %g\n", g2);
   }
-  for (long index=0; index<100; index++) {
+  for (long index=0; index<10000; index++) {
     double g3 = randnorm(state);
-    printf("randnorm:     %i %g\n", index, g3);
+    printf("randnorm: %g\n", g3);
   }
   printf("ending loop\n");
 }
