@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: mini.instr (Minimal)
- * Date:       Wed Oct 23 21:27:16 2019
+ * Date:       Wed Oct 23 21:48:04 2019
  * File:       mini.c
  * CFLAGS=
  */

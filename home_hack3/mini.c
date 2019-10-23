@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: mini.instr (Minimal)
- * Date:       Wed Oct 23 21:27:16 2019
+ * Date:       Wed Oct 23 21:48:04 2019
  * File:       mini.c
  * CFLAGS=
  */
@@ -464,13 +464,14 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #define RNG_ALG 1
 #endif
 
-#elif RNG_ALG == 1 // MT (currently not functional for gpu)
+#if RNG_ALG == 1 // MT (currently not functional for gpu)
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 #  define randstate_t unsigned long // this could be anything
 #  define RANDSTATE_LEN 1
 #  define srandom(seed) mt_srandom_empty()
 #  define random() mt_random()
 #  define _random() mt_random()
+#endif
 #if RNG_ALG == 2 // KISS
 #  ifndef ULONG_MAX
 #    define ULONG_MAX ((unsigned long)0xffffffffffffffffUL)
