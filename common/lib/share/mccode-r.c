@@ -3370,6 +3370,66 @@ unsigned long kiss_random(unsigned long state[7]) {
 /* end of "KISS" rng */
 
 
+/* FAST KISS in another implementation (Hundt) */
+
+//////////////////////////////////////////////////////////////////////////////
+// fast keep it simple stupid generator
+//////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// Thomas Mueller hash for initialization of rngs
+// http://stackoverflow.com/questions/664014/
+//        what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
+//////////////////////////////////////////////////////////////////////////////
+
+randstate_t _hash(randstate_t x) {
+
+    x = (x + 0x7ed55d16) + (x << 12);
+    x = (x ^ 0xc761c23c) ^ (x >> 19);
+    x = (x + 0x165667b1) + (x <<  5);
+    x = (x + 0xd3a2646c) ^ (x <<  9);
+    x = (x + 0xfd7046c5) + (x <<  3);
+    x = (x ^ 0xb55a4f09) ^ (x >> 16);
+
+    return x;
+}
+
+// fast kiss state is a pointer to 5 long [x,y,z,w,c]
+
+randstate_t fast_kiss(randstate_t * state) {
+
+    state[1] ^= state[1] << 5;
+    state[1] ^= state[1] >> 7;
+    state[1] ^= state[1] << 22;
+
+    randstate_t t = state[2]+state[3]+state[4];
+    state[2]  = state[3];
+    state[4]  = t < 0;
+    state[3]  = t & 2147483647;
+    state[0] += 1411392427;
+
+    // combine
+    return state[0]+state[1]+state[3];
+}
+
+randstate_t * fast_kiss_seed(randstate_t * state, randstate_t seed) {
+
+  randstate_t num_iters=8;
+
+  state[3] = !seed ? 4294967295 : seed;
+  for (randstate_t iter = 0; iter < num_iters; iter++) {
+      state[0] = _hash(state[3]);
+      state[1] = _hash(state[0]);
+      state[2] = _hash(state[1]);
+      state[3] = _hash(state[2]);
+  }
+
+  return state;
+  state[4] = 0;
+
+  return state;
+}
+
 
 // SECTION: random number transforms ==========================================
 
@@ -3414,6 +3474,19 @@ double _randnorm2(randstate_t* state) {
   } while (r == 0.0 || r >= 1.0);
   return x * sqrt((-2.0 * log(r)) / r);
 }
+#pragma acc routine seq
+double _gaussian_double(randstate_t * state) {
+
+    double x, y, r;
+
+    do {
+        x = 2.0 * _uniform_double(state) - 1.0;
+        y = 2.0 * _uniform_double(state) - 1.0;
+        r = x*x + y*y;
+    } while (r == 0.0 || r >= 1.0);
+
+    return x * sqrt((-2.0 * log(r)) / r);
+}
 // Generate a random number from -1 to 1 with triangle distribution
 #pragma acc routine seq
 double _randtriangle(randstate_t* state) {
@@ -3421,7 +3494,16 @@ double _randtriangle(randstate_t* state) {
 	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
 	else return(sqrt(2*randnum)-1);
 }
-// Random number between 0.0 and 1.0 (including?)
+// Random number between 0.0 and 1.0
+#pragma acc routine seq
+double _uniform_double(randstate_t * state) {
+
+    randstate_t a = fast_kiss(state) >> 6;
+    randstate_t b = fast_kiss(state) >> 5;
+    double x = (a * 134217728.0 + b) / 9007199254740992.0;
+
+    return x;
+}
 #pragma acc routine seq
 double _rand01(randstate_t* state) {
 	double randnum;
