@@ -1,3 +1,5 @@
+/* embedding file "mccode-r.h" */
+
 /*******************************************************************************
 *
 * McCode, neutron/xray ray-tracing package
@@ -10,7 +12,7 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: @MCCODE_NAME@ @MCCODE_VERSION@
+* Release: McStas 3.0-dev
 * Version: $Revision$
 *
 * Runtime system header for McStas/McXtrace.
@@ -94,31 +96,31 @@
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
-#  define MCCODE_STRING "@MCCODE_STRING@"
+#  define MCCODE_STRING "McStas 3.0-dev - Oct. 23, 2019"
 #endif
 
 #ifndef MCCODE_DATE
-#  define MCCODE_DATE "@MCCODE_DATE@"
+#  define MCCODE_DATE "Oct. 23, 2019"
 #endif
 
 #ifndef MCCODE_VERSION
-#  define MCCODE_VERSION "@MCCODE_VERSION@"
+#  define MCCODE_VERSION "3.0-dev"
 #endif
 
 #ifndef MCCODE_NAME
-#  define MCCODE_NAME "@MCCODE_NAME@"
+#  define MCCODE_NAME "McStas"
 #endif
 
 #ifndef MCCODE_PARTICLE
-#  define MCCODE_PARTICLE "@MCCODE_PARTICLE@"
+#  define MCCODE_PARTICLE "neutron"
 #endif
 
 #ifndef MCCODE_PARTICLE_CODE
-#  define MCCODE_PARTICLE_CODE @MCCODE_PARTICLE_CODE@
+#  define MCCODE_PARTICLE_CODE 2112
 #endif
 
 #ifndef MCCODE_LIBENV
-#  define MCCODE_LIBENV "@MCCODE_LIBENV@"
+#  define MCCODE_LIBENV "MCSTAS"
 #endif
 
 #ifndef FLAVOR_UPPER
@@ -421,7 +423,8 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define srandom(seed) mt_srandom_empty()
 #  define random() mt_random()
 #  define _random() mt_random()
-#elif RNG_ALG == 2 // KISS
+#endif
+#if RNG_ALG == 2 // KISS
 #  ifndef ULONG_MAX
 #    define ULONG_MAX ((unsigned long)0xffffffffffffffffUL)
 #  endif
@@ -431,13 +434,6 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define srandom(seed) kiss_srandom(_particle->randstate, seed)
 #  define random() kiss_random(_particle->randstate)
 #  define _random() kiss_random(state)
-#elif RNG_ALG == 3 // FAST KISS Hundt impl. (not yet functional)
-#  define randstate_t uint32_t
-#  define RANDSTATE_LEN 5
-#  define srandom(seed) fast_kiss_srandom(_particle->randstate, seed)
-#  define random() fast_kiss_random(_particle->randstate)
-#  define _random() kiss_random(state)
-#  define _rand01
 #endif
 
 // component writers interface
@@ -457,20 +453,12 @@ void mt_srandom_empty();
 unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed);
 unsigned long kiss_random(unsigned long state[7]);
 
-// FAST KISS rng
-randstate_t _hash(randstate_t x);
-randstate_t fast_kiss(randstate_t * state);
-randstate_t * fast_kiss_seed(randstate_t * state, randstate_t seed);
-
-// internal RNG (transforms) interface
+// RNG transforms
 double _rand01(randstate_t* state);
 double _randpm1(randstate_t* state);
 double _rand0max(double max, randstate_t* state);
 double _randminmax(double min, double max, randstate_t* state);
 double _randtriangle(randstate_t* state);
-// some rngs use this package instead
-double _uniform_double(randstate_t * state);
-double _gaussian_double(randstate_t * state);
 
 
 #ifdef USE_OPENCL
