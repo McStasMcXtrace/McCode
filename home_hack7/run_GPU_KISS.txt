@@ -1,0 +1,18 @@
+Instrument:     BNL_H8 on localhost.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Detector: D0_Source_I=0.00315467 D0_Source_ERR=1.39172e-06 D0_Source_N=5.13984e+06 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0194794 D1_SC1_Out_ERR=3.4532e-06 D1_SC1_Out_N=3.207e+07 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0133348 D2_A4_ERR=2.86597e-06 D2_A4_N=2.1989e+07 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154632 D4_SC2_In_ERR=9.74161e-07 D4_SC2_In_N=2.55635e+06 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00120912 D5_SC2_Out_ERR=8.61362e-07 D5_SC2_Out_N=2.01513e+06 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24238e-07 D7_SC3_In_ERR=2.24613e-10 D7_SC3_In_N=335963 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.38073e-08 D8_SC3_Out_ERR=9.88358e-11 D8_SC3_Out_N=63757 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.25205e-09 D10_SC4_In_ERR=2.27045e-11 D10_SC4_In_N=3335 "D10_SC4_In.psd"
+Detector: He3H_I=9.73529e-10 He3H_ERR=2.00557e-11 He3H_N=2587 "He3.psd"
+
+real	0m31.172s
+user	0m23.332s
+sys	0m7.769s
