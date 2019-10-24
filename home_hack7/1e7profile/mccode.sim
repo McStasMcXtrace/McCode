@@ -1,5 +1,5 @@
 McStas simulation description file for BNL_H8.
-Date:    Thu Oct 24 23:47:36 2019
+Date:    Thu Oct 24 23:50:49 2019
 Program: McStas 3.0-dev - Oct. 24, 2019
 
 begin instrument: BNL_H8
@@ -19,13 +19,13 @@ begin simulation: 1e7profile
   Ncount: 10000000
   Trace: no
   Gravitation: no
-  Seed: 1571950056013452
+  Seed: 1571950249257883
   Directory: 1e7profile
   Param: lambda=2.36
 end simulation
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D0_Source
@@ -33,9 +33,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D0_Source.psd
-  statistics: X0=-0.284979; dX=0.898945; Y0=0.0738437; dY=1.49673;
-  signal: Min=4.11333e-07; Max=6.28056e-06; Mean=1.30939e-06;
-  values: 0.000523754 2.48453e-06 292122
+  statistics: X0=0.0690597; dX=0.880651; Y0=-0.000779112; dY=1.54326;
+  signal: Min=4.60417e-07; Max=1.79897e-06; Mean=8.75471e-07;
+  values: 0.000350188 2.04052e-06 307893
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -47,7 +47,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D1_SC1_Out
@@ -55,9 +55,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D1_SC1_Out.psd
-  statistics: X0=-0.0288832; dX=0.892254; Y0=-0.00405589; dY=1.49288;
-  signal: Min=2.65502e-06; Max=6.54714e-06; Mean=3.92578e-06;
-  values: 0.00157031 4.13497e-06 858695
+  statistics: X0=-0.0175913; dX=0.883041; Y0=0.0413729; dY=1.48155;
+  signal: Min=2.5832e-06; Max=8.05619e-06; Mean=3.85645e-06;
+  values: 0.00154258 4.47683e-06 930842
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -69,7 +69,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D2_A4
@@ -77,9 +77,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D2_A4.psd
-  statistics: X0=-0.187956; dX=1.21974; Y0=0.0360797; dY=1.78546;
-  signal: Min=1.32495e-06; Max=6.04575e-06; Mean=2.75462e-06;
-  values: 0.00110185 4.40543e-06 697823
+  statistics: X0=-0.120266; dX=1.23039; Y0=-0.0511615; dY=1.76838;
+  signal: Min=1.32495e-06; Max=7.37418e-06; Mean=2.63787e-06;
+  values: 0.00105515 4.48429e-06 640382
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -91,7 +91,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D4_SC2_In
@@ -99,9 +99,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D4_SC2_In.psd
-  statistics: X0=-0.343748; dX=0.846492; Y0=0.0293174; dY=1.4699;
-  signal: Min=1.84184e-07; Max=4.37793e-06; Mean=1.76874e-06;
-  values: 0.000707496 2.77433e-06 138358
+  statistics: X0=-0.194949; dX=0.921002; Y0=-0.0529323; dY=1.43839;
+  signal: Min=1.24961e-07; Max=4.44834e-06; Mean=1.64624e-06;
+  values: 0.000658495 2.71913e-06 146363
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -113,7 +113,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D5_SC2_Out
@@ -121,9 +121,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D5_SC2_Out.psd
-  statistics: X0=0.111738; dX=0.959599; Y0=-0.11296; dY=1.40679;
-  signal: Min=9.87109e-08; Max=3.91821e-06; Mean=1.06384e-06;
-  values: 0.000425535 2.48255e-06 61425
+  statistics: X0=-0.230571; dX=0.921004; Y0=-0.0390572; dY=1.41316;
+  signal: Min=1.71906e-07; Max=2.4216e-06; Mean=7.661e-07;
+  values: 0.00030644 2.55355e-06 55451
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -135,7 +135,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D7_SC3_In
@@ -143,9 +143,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D7_SC3_In.psd
-  statistics: X0=0.00515625; dX=1.37608; Y0=0.00438766; dY=1.41036;
-  signal: Min=1.78283e-10; Max=4.12506e-10; Mean=3.0525e-10;
-  values: 1.221e-07 7.05184e-10 28259
+  statistics: X0=0.00254174; dX=1.38169; Y0=0.00887959; dY=1.40928;
+  signal: Min=2.12409e-10; Max=4.27101e-10; Mean=3.08039e-10;
+  values: 1.23216e-07 7.10754e-10 29172
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -157,7 +157,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D8_SC3_Out
@@ -165,9 +165,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D8_SC3_Out.psd
-  statistics: X0=-0.0023606; dX=1.38994; Y0=-0.0133246; dY=1.41754;
-  signal: Min=2.30561e-11; Max=1.11087e-10; Mean=6.06738e-11;
-  values: 2.42695e-08 3.10921e-10 6518
+  statistics: X0=0.00429384; dX=1.37594; Y0=-0.0161566; dY=1.42252;
+  signal: Min=1.81276e-11; Max=1.04752e-10; Mean=6.04635e-11;
+  values: 2.41854e-08 3.11829e-10 6509
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -179,7 +179,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: D10_SC4_In
@@ -187,9 +187,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: D10_SC4_In.psd
-  statistics: X0=0.0643743; dX=0.401579; Y0=0.118997; dY=1.37037;
-  signal: Min=0; Max=3.50788e-11; Mean=3.37189e-12;
-  values: 1.34876e-09 7.435e-11 362
+  statistics: X0=0.0928059; dX=0.392448; Y0=-0.113548; dY=1.35086;
+  signal: Min=0; Max=3.54451e-11; Mean=2.86729e-12;
+  values: 1.14692e-09 6.87708e-11 307
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
@@ -201,7 +201,7 @@ begin data
 end data
 
 begin data
-  Date: Thu Oct 24 23:47:38 2019 (1571950058)
+  Date: Thu Oct 24 23:50:52 2019 (1571950252)
   type: array_2d(20, 20)
   Source: BNL_H8 (BNL_H8_simple.instr)
   component: He3H
@@ -209,9 +209,9 @@ begin data
   title: PSD monitor
   ratio: 100000/1e+07
   filename: He3.psd
-  statistics: X0=0.0601486; dX=0.413492; Y0=0.102273; dY=1.41175;
-  signal: Min=0; Max=4.23555e-11; Mean=2.7384e-12;
-  values: 1.09536e-09 6.70399e-11 293
+  statistics: X0=0.0481738; dX=0.397297; Y0=0.0507993; dY=1.42189;
+  signal: Min=0; Max=3.92039e-11; Mean=2.3089e-12;
+  values: 9.23562e-10 6.17834e-11 245
   xvar: X 
   yvar: Y 
   xlabel: X position [cm]
