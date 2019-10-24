@@ -1,0 +1,223 @@
+McStas simulation description file for BNL_H8.
+Date:    Thu Oct 24 23:39:17 2019
+Program: McStas 3.0-dev - Oct. 24, 2019
+
+begin instrument: BNL_H8
+  File: BNL_H8_simple_multicore_KISS_1e7_dir/mccode
+  Source: BNL_H8_simple.instr
+  Parameters:  lambda(double)
+  Trace_enabled: no
+  Default_main: yes
+  Embedded_runtime: yes
+end instrument
+
+begin simulation: BNL_H8_simple_multicore_KISS_1e7_dir
+  Format: McCode with text headers
+  URL: http://www.mccode.org
+  Creator: McStas 3.0-dev - Oct. 24, 2019
+  Instrument: BNL_H8_simple.instr
+  Ncount: 10000000
+  Trace: no
+  Gravitation: no
+  Seed: 1571949557468682
+  Directory: BNL_H8_simple_multicore_KISS_1e7_dir
+  Param: lambda=2.36
+end simulation
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D0_Source
+  position: 0 0 0.0001
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D0_Source.psd
+  statistics: X0=0.000153744; dX=0.86417; Y0=-0.00245034; dY=1.55676;
+  signal: Min=7.30527e-06; Max=8.55865e-06; Mean=7.90673e-06;
+  values: 0.00316269 4.40645e-06 515150
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.5 1.5 -2.7 2.7
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D1_SC1_Out
+  position: 0 0 3.6618
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D1_SC1_Out.psd
+  statistics: X0=-0.00100867; dX=0.854835; Y0=-0.000457536; dY=1.4754;
+  signal: Min=4.04544e-05; Max=6.21762e-05; Mean=5.09862e-05;
+  values: 0.0203945 1.11856e-05 3.34309e+06
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.5 1.5 -2.7 2.7
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D2_A4
+  position: 0 0 4.4142
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D2_A4.psd
+  statistics: X0=-0.00102163; dX=1.23609; Y0=0.000875472; dY=1.76542;
+  signal: Min=1.96786e-05; Max=4.22788e-05; Mean=3.43772e-05;
+  values: 0.0137509 9.18572e-06 2.25732e+06
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.225 2.225 -3.175 3.175
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D4_SC2_In
+  position: 0.146427 0 5.44198
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D4_SC2_In.psd
+  statistics: X0=0.00764993; dX=0.873048; Y0=0.00368902; dY=1.4362;
+  signal: Min=2.43054e-06; Max=4.66549e-06; Mean=3.8691e-06;
+  values: 0.00154764 3.08145e-06 255918
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.59 1.59 -2.475 2.475
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D5_SC2_Out
+  position: 0.548083 0 5.90081
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D5_SC2_Out.psd
+  statistics: X0=0.00397008; dX=0.840172; Y0=0.00287251; dY=1.4419;
+  signal: Min=1.80877e-06; Max=3.97635e-06; Mean=3.02758e-06;
+  values: 0.00121103 2.72557e-06 201902
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.59 1.59 -2.475 2.475
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D7_SC3_In
+  position: 1.06257 0 6.72344
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D7_SC3_In.psd
+  statistics: X0=0.0063378; dX=1.37422; Y0=0.00196839; dY=1.40833;
+  signal: Min=2.21071e-10; Max=4.10822e-10; Mean=3.13095e-10;
+  values: 1.25238e-07 7.13339e-10 33870
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.39 2.39 -2.45 2.45
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D8_SC3_Out
+  position: 1.06257 0 7.02824
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D8_SC3_Out.psd
+  statistics: X0=-0.00423379; dX=1.38428; Y0=0.0209041; dY=1.41424;
+  signal: Min=1.16014e-11; Max=1.10564e-10; Mean=6.01681e-11;
+  values: 2.40672e-08 3.14528e-10 6444
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.39 2.39 -2.45 2.45
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: D10_SC4_In
+  position: 1.28421 0 7.42113
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: D10_SC4_In.psd
+  statistics: X0=0.0270981; dX=0.388104; Y0=0.151313; dY=1.35964;
+  signal: Min=0; Max=2.85465e-11; Mean=3.03939e-12;
+  values: 1.21576e-09 7.01573e-11 330
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.39 2.39 -2.45 2.45
+  variables: I I_err N
+end data
+
+begin data
+  Date: Thu Oct 24 23:39:18 2019 (1571949558)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8_simple.instr)
+  component: He3H
+  position: 1.48511 0 7.65062
+  title: PSD monitor
+  ratio: 100000/1e+07
+  filename: He3.psd
+  statistics: X0=0.021129; dX=0.407829; Y0=-0.0444624; dY=1.33425;
+  signal: Min=0; Max=3.09519e-11; Mean=2.3767e-12;
+  values: 9.50679e-10 6.19153e-11 259
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.54 2.54 -4.285 4.285
+  variables: I I_err N
+end data

@@ -2,10 +2,14 @@ BNL_H8_simple.c: In function 'detector_import':
 BNL_H8_simple.c:1879:57: warning: ' ' directive output may be truncated writing 1 byte into a region of size between 0 and 1023 [-Wformat-truncation=]
      snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
                                                          ^
-BNL_H8_simple.c:1879:5: note: 'snprintf' output 9 or more bytes (assuming 1032) into a destination of size 1024
-     snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
-     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/stdio.h:867:0,
+                 from BNL_H8_simple.c:91:
+/usr/include/x86_64-linux-gnu/bits/stdio2.h:67:10: note: '__builtin___snprintf_chk' output 9 or more bytes (assuming 1032) into a destination of size 1024
+   return __builtin___snprintf_chk (__s, __n, __USE_FORTIFY_LEVEL - 1,
+          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        __bos (__s), __fmt, __va_arg_pack ());
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-real	0m0.312s
-user	0m0.288s
-sys	0m0.024s
+real	0m1.534s
+user	0m1.506s
+sys	0m0.028s
