@@ -5,7 +5,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4788.058
+cpu MHz		: 4680.846
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -32,7 +32,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4696.006
+cpu MHz		: 4476.337
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -59,7 +59,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4727.596
+cpu MHz		: 4647.041
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -86,7 +86,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4758.723
+cpu MHz		: 4703.621
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -113,7 +113,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4757.223
+cpu MHz		: 4642.902
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -140,7 +140,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4757.284
+cpu MHz		: 4661.861
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -167,7 +167,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4691.130
+cpu MHz		: 4642.088
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -194,7 +194,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4701.791
+cpu MHz		: 4589.547
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -221,7 +221,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4797.983
+cpu MHz		: 4630.817
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -248,7 +248,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4744.716
+cpu MHz		: 4597.455
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -275,7 +275,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4779.323
+cpu MHz		: 4530.624
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -302,7 +302,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4718.747
+cpu MHz		: 4539.690
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -329,7 +329,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4687.395
+cpu MHz		: 4615.557
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -356,7 +356,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4798.820
+cpu MHz		: 4693.150
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -383,7 +383,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4748.387
+cpu MHz		: 4643.902
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16
@@ -410,7 +410,7 @@ model		: 158
 model name	: Intel(R) Xeon(R) E-2286M  CPU @ 2.40GHz
 stepping	: 13
 microcode	: 0xb8
-cpu MHz		: 4770.027
+cpu MHz		: 4662.289
 cache size	: 16384 KB
 physical id	: 0
 siblings	: 16

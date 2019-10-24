@@ -204,7 +204,7 @@ raytrace:
 raytrace_all:
   10981, Generating Tesla code
       10982, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-  10981, Local memory used for particleN,..inline
+  10981, Local memory used for particleN
 finally:
   11149, Generating update self(_Origin_var)
   11150, Generating update self(_Source_var)
@@ -237,6 +237,6 @@ finally:
   11178, Generating update self(_instrument_var)
 PGC/x86-64 Linux 19.4-0: compilation completed with warnings
 
-real	0m22.116s
-user	0m21.645s
-sys	0m0.351s
+real	0m10.594s
+user	0m10.324s
+sys	0m0.186s

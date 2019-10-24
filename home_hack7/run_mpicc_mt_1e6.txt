@@ -16,9 +16,6 @@ Ki = 2.662 Angs-1 Energy = 14.69 meV
 Velocity = 1676 m/s, lambda = 2.36 Angs
 Instrument:     BNL_H8 on localhost.
 Monochromator : DM = 3.3539
-A1 = 20.60, A2 = 41.20 (deg)
-Ki = 2.662 Angs-1 Energy = 14.69 meV
-Velocity = 1676 m/s, lambda = 2.36 Angs
 Instrument:     BNL_H8 on localhost.
 Monochromator : DM = 3.3539
 A1 = 20.60, A2 = 41.20 (deg)
@@ -36,6 +33,9 @@ Ki = 2.662 Angs-1 Energy = 14.69 meV
 Velocity = 1676 m/s, lambda = 2.36 Angs
 Instrument:     BNL_H8 on localhost.
 Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
 A1 = 20.60, A2 = 41.20 (deg)
 Ki = 2.662 Angs-1 Energy = 14.69 meV
 Velocity = 1676 m/s, lambda = 2.36 Angs
@@ -49,6 +49,6 @@ Detector: D8_SC3_Out_I=2.63537e-08 D8_SC3_Out_ERR=1.03243e-09 D8_SC3_Out_N=696 "
 Detector: D10_SC4_In_I=1.58259e-09 D10_SC4_In_ERR=2.57407e-10 D10_SC4_In_N=40 "D10_SC4_In.psd"
 Detector: He3H_I=1.58259e-09 He3H_ERR=2.57407e-10 He3H_N=40 "He3.psd"
 
-real	0m2.201s
-user	0m0.584s
-sys	0m0.092s
+real	0m2.231s
+user	0m1.053s
+sys	0m0.122s

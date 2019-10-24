@@ -3,16 +3,16 @@ Monochromator : DM = 3.3539
 A1 = 20.60, A2 = 41.20 (deg)
 Ki = 2.662 Angs-1 Energy = 14.69 meV
 Velocity = 1676 m/s, lambda = 2.36 Angs
-Detector: D0_Source_I=0.000456601 D0_Source_ERR=2.49993e-06 D0_Source_N=287323 "D0_Source.psd"
-Detector: D1_SC1_Out_I=0.00159417 D1_SC1_Out_ERR=4.12568e-06 D1_SC1_Out_N=927989 "D1_SC1_Out.psd"
-Detector: D2_A4_I=0.00111692 D2_A4_ERR=4.58227e-06 D2_A4_N=723998 "D2_A4.psd"
-Detector: D4_SC2_In_I=0.000664058 D4_SC2_In_ERR=2.73701e-06 D4_SC2_In_N=135927 "D4_SC2_In.psd"
-Detector: D5_SC2_Out_I=0.000380567 D5_SC2_Out_ERR=2.46946e-06 D5_SC2_Out_N=63491 "D5_SC2_Out.psd"
-Detector: D7_SC3_In_I=1.22165e-07 D7_SC3_In_ERR=6.98183e-10 D7_SC3_In_N=28570 "D7_SC3_In.psd"
-Detector: D8_SC3_Out_I=2.43985e-08 D8_SC3_Out_ERR=3.13498e-10 D8_SC3_Out_N=6467 "D8_SC3_Out.psd"
-Detector: D10_SC4_In_I=1.29531e-09 D10_SC4_In_ERR=7.2255e-11 D10_SC4_In_N=349 "D10_SC4_In.psd"
-Detector: He3H_I=1.029e-09 He3H_ERR=6.44498e-11 He3H_N=277 "He3.psd"
+Detector: D0_Source_I=0.0031499 D0_Source_ERR=4.39741e-06 D0_Source_N=513268 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.019615 D1_SC1_Out_ERR=1.09738e-05 D1_SC1_Out_N=3.23133e+06 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0133734 D2_A4_ERR=9.06123e-06 D2_A4_N=2.19263e+06 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154749 D4_SC2_In_ERR=3.08158e-06 D4_SC2_In_N=255800 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00120963 D5_SC2_Out_ERR=2.72441e-06 D5_SC2_Out_N=201603 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24457e-07 D7_SC3_In_ERR=7.10305e-10 D7_SC3_In_N=33656 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.38652e-08 D8_SC3_Out_ERR=3.12402e-10 D8_SC3_Out_N=6397 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.07743e-09 D10_SC4_In_ERR=6.50923e-11 D10_SC4_In_N=299 "D10_SC4_In.psd"
+Detector: He3H_I=8.05075e-10 He3H_ERR=5.60717e-11 He3H_N=227 "He3.psd"
 
-real	0m2.929s
-user	0m2.083s
-sys	0m0.768s
+real	0m3.231s
+user	0m2.246s
+sys	0m0.885s

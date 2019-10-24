@@ -13,6 +13,6 @@ Detector: D8_SC3_Out_I=2.46482e-08 D8_SC3_Out_ERR=1.00801e-09 D8_SC3_Out_N=655 "
 Detector: D10_SC4_In_I=1.43478e-09 D10_SC4_In_ERR=2.44899e-10 D10_SC4_In_N=36 "D10_SC4_In.psd"
 Detector: He3H_I=1.04065e-09 He3H_ERR=2.05578e-10 He3H_N=27 "He3.psd"
 
-real	0m0.259s
-user	0m0.259s
-sys	0m0.000s
+real	0m0.626s
+user	0m0.600s
+sys	0m0.016s
