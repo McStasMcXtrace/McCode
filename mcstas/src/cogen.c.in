@@ -1660,8 +1660,7 @@ int cogen_trace(struct instr_def *instr)
   coutf("    particleN._uid = pidx;");
   coutf("");
   coutf("    long seq = pidx + seed;");
-  coutf("    srandom(pidx + seed);");
-  coutf("    //_particle.randstate = state;");
+  coutf("    srandom(_hash(_hash(pidx + seed)));");
   coutf("");
   coutf("    raytrace(_particle);");
   coutf("  } /* for */");
