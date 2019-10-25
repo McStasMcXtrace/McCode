@@ -28,6 +28,7 @@ class InstrTest:
         self.detector = ""
         self.targetval = None
         self.detectorval = None
+        self.testval = None
 
         self.compiled = None
         self.compiletime = None
@@ -38,7 +39,7 @@ class InstrTest:
         ''' extracts parameter values, detector and targetvalue, assuming [detector]_I=[targetvalue] '''
         if text is None:
             text = open(self.localfile).read()
-        m = re.search("\%Example\:([^\n]*)Detector\:([^\n]*)_I=([0-9.]+)", text)
+        m = re.search("\%Example\:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", text)
         if m:
             self.parvals = m.group(1).strip()
             self.detector = m.group(2).strip()
@@ -52,12 +53,15 @@ class InstrTest:
             "localfile"    : self.localfile,
             "instrname"    : self.instrname,
             "hastest"      : self.hastest,
+
             "parvals"      : self.parvals,
             "detector"     : self.detector,
             "targetval"    : self.targetval,
             "detectorval"  : self.detectorval,
+            "testval"      : self.testval,
+
             "compiled"     : self.compiled,
-            "compiletime"  : self.compiletime, 
+            "compiletime"  : self.compiletime,
             "ran"          : self.ran,
             "runtime"      : self.runtime,
             "testcomplete" : self.testcomplete,
@@ -232,6 +236,31 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
             # record run stdout/err
             log.save(join(testdir, test.instrname, "run_std.txt"))
 
+            for (_, dirnames, _) in os.walk(join(testdir, test.instrname)):
+                if len(dirnames) > 0:
+                    lns = open(join(testdir, test.instrname, dirnames[0], "mccode.sim")).read().splitlines()
+                    componentlines = [l for l in lns if re.match("  component:", l)]
+                    filenamelines = [l for l in lns if re.match("  filename:", l)]
+                    idx = 0
+                    for l in componentlines:
+                        if re.match("  component: %s" % test.detector, l):
+                            break
+                        idx = idx + 1
+                    filename = re.match("  filename: (.+)", filenamelines[idx]).group(1)
+                    with open(join(testdir, test.instrname, dirnames[0], filename)) as fp:
+                        while True:
+                            l = fp.readline()
+                            if not l:
+                                break
+                            m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
+                            if m :
+                                I = m.group(1)
+                                I_err = m.group(2)
+                                N = m.group(3)
+                                test.testval = I
+                                break
+                break
+
             # save test result to disk
             test.testcomplete = True
             test.save(infolder=join(testdir, test.instrname))
@@ -335,5 +364,3 @@ if __name__ == '__main__':
         main(args)
     except KeyboardInterrupt:
         print()
-
-
