@@ -3381,7 +3381,7 @@ unsigned long kiss_random(unsigned long state[7]) {
 // http://stackoverflow.com/questions/664014/
 //        what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
 //////////////////////////////////////////////////////////////////////////////
-
+#pragma acc routine seq
 randstate_t _hash(randstate_t x) {
   x = ((x >> 16) ^ x) * 0x45d9f3b;
   x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -3390,7 +3390,7 @@ randstate_t _hash(randstate_t x) {
 }
 
 // fast kiss state is a pointer to 5 long [x,y,z,w,c]
-
+#pragma acc routine seq
 randstate_t fast_kiss(randstate_t * state) {
 
     state[1] ^= state[1] << 5;

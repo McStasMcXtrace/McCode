@@ -25,7 +25,7 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-ta=tesla,managed,nollvm -Minfo=accel -DUSE_PGI -DNOSIGNALS ',
+    "CFLAGS": '-ta=tesla,managed,deepcopy -Minfo=accel -DRNG_ALG=2 -DUSE_PGI -DNOSIGNALS ',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "CC": 'pgcc',
