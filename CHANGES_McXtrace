@@ -26,7 +26,7 @@ CHANGES in 1.5
 5. Updates to components:
         1. Mirror comp - can now be either in the xz or yz-plane
         2. Virtual option to Mask-component - used to artifically add a 2D-pattern to a subsequent component.
-        3. Mirrors now use the refletivity library
+        3. Mirrors now use the reflectivity library
         4. Source_lab: Add Ag as an anode material
         5. Source_lab: Default is now to use lorentzian line-shapes
         6. Undulator: Easier to compile with GSL on windows
@@ -42,7 +42,7 @@ CHANGES in 1.5
         4. PDB_BT
         5. Template_Johann_spectrometer
         6. Updated Test instruments (many of these can be used as examples)
-7. Updates to the GUI - including autoplot options and imporved stability of the plotting and disply subsystems
+7. Updates to the GUI - including autoplot options and improved stability of the plotting and display subsystems
 8. Performance improvement to MPI
 9. Better performance on reading datafiles (especially on windows)
 10. Updated manual
