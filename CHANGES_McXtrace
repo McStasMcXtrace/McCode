@@ -12,7 +12,7 @@
 *************************************************************************/
 CHANGES in 1.5
 
-1. Standardized reflectivity library, making it mush simpler to deal with reflectivity files
+1. Standardized reflectivity library, making it much simpler to deal with reflectivity files
 2. The shipped MCPL-library has been updated
 3. Updated and streamlines the installation procedure - such that windows and Mac installs are now (almost completely sandboxed).
 4. New components:
