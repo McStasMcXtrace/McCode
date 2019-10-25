@@ -113,10 +113,7 @@ INITIALIZE
 
   prms_m=malloc(sizeof(*prms_m));
 
-
-
-
-    int status=0;
+  int status=0;
   if(!Gamma && !Lambda){
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
     prms_m->kinematical = 0;
@@ -124,8 +121,7 @@ INITIALIZE
     status=reflec_Init(&(prms_m->re),COATING_UNDEFINED,reflectivity_datafile);
   }else{
     prms_m->kinematical = 1;
-    status=reflec_Init(&(prms_m->re), KINEMATIC, N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-deinsty material in layer, thickness of layer, e-density contrast*/
-
+    status=reflec_Init(&(prms_m->re), KINEMATIC, N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-density material in layer, thickness of layer, e-density contrast*/
   }
 %}
 
