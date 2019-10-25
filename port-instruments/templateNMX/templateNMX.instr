@@ -45,7 +45,7 @@ AT (0,0,5) RELATIVE source
 
 COMPONENT sample = Single_crystal(
           xwidth=0.001, yheight=0.001, zdepth=0.001, mosaic=1e-4,
-          reflections=reflections)
+          reflections=reflections,order=0,p_transmit=0.00001)
 AT (0,0,0.10) RELATIVE slit
 //EXTEND %{
 //  if (!SCATTERED) ABSORB; /* perfect beam stop */

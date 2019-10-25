@@ -2,7 +2,7 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: templateNMX.instr (templateNMX)
- * Date:       Fri Oct 25 14:55:50 2019
+ * Date:       Fri Oct 25 15:12:05 2019
  * File:       templateNMX.c
  * CFLAGS=
  */
@@ -8183,7 +8183,7 @@ int _sample_setpos(void)
   #define cy (_sample_var._parameters.cy)
   _sample_var._parameters.cz = 0;
   #define cz (_sample_var._parameters.cz)
-  _sample_var._parameters.p_transmit = -1;
+  _sample_var._parameters.p_transmit = 0.00001;
   #define p_transmit (_sample_var._parameters.p_transmit)
   _sample_var._parameters.sigma_abs = 0;
   #define sigma_abs (_sample_var._parameters.sigma_abs)
