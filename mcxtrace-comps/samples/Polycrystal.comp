@@ -82,8 +82,8 @@ SETTING PARAMETERS(string MapFile,
                    ProbabilityOfTransmission = 0.01,
                    SigmaAbsorbtion           = 0.0,
                    SigmaIncoherent           = 0.0,
-                   MaxNumberOfReflections    = 1
-                   Reciprocal                = 0)
+                   MaxNumberOfReflections    = 1,
+                   int Reciprocal            = 0)
 
 OUTPUT PARAMETERS(
   PolyInfo,hklInfo,AbsorbtionInfo,
@@ -173,7 +173,7 @@ SHARE
         int ColumnOrder[5];
 
         // Flags used to raise warnings
-        int Reciprocal;
+        int Reciprocal1;
 
         // Sigma of Delta d / d
         double DeltadOverd1;
@@ -298,7 +298,7 @@ SHARE
                     "column_h",
                     "column_k",
                     "column_l",
-                    "column_F",
+                    "column_F ",
                     "column_F2",
                     "Detla_d/d",
                     "lattice_a",
@@ -412,7 +412,7 @@ SHARE
             return(0);
         }
 
-        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Reciprocal) {
+        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Reciprocal1) {
             fprintf(stderr, "%s: Error: Selecting reciprocal cell and angles is unmeaningful.\n", NAME_CURRENT_COMP);
             return(0);
         }
@@ -463,7 +463,7 @@ SHARE
             }
         } else {
 
-            if (!hklInfo->Reciprocal) {
+            if (!hklInfo->Reciprocal1) {
 
                 if (PrintOrientations) {
                     fprintf(stderr, "%s: \nStructure; \na = [%g, %g, %g] \nb = [%g, %g, %g] \nc = [%g, %g, %g] \n", NAME_CURRENT_COMP, hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
@@ -478,7 +478,7 @@ SHARE
         }
 
         // Compute reciprocal or direct lattice vectors
-        if (!hklInfo->Reciprocal) {
+        if (!hklInfo->Reciprocal1) {
             vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->LatticeVectorb[0], hklInfo->LatticeVectorb[1], hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0], hklInfo->LatticeVectorc[1], hklInfo->LatticeVectorc[2]);
             hklInfo->VolumeOfUnitCell = fabs(scalar_prod(hklInfo->LatticeVectora[0], hklInfo->LatticeVectora[1], hklInfo->LatticeVectora[2], Temp[0], Temp[1], Temp[2]));
 
@@ -551,24 +551,19 @@ SHARE
 
         for (i = 0; i < NumberOfRows; i++) {
             // Get data from table
-            /*hklData[i].h = Table_Index(sTable, i, hklInfo->ColumnOrder[0] - 1);*/
-            hklData[i].h = Table_Index(sTable, i, 0);
+            hklData[i].h = Table_Index(sTable, i, hklInfo->ColumnOrder[0] - 1);
 
-            /*hklData[i].k = Table_Index(sTable, i, hklInfo->ColumnOrder[1] - 1);*/
-            hklData[i].k = Table_Index(sTable, i, 1);
+            hklData[i].k = Table_Index(sTable, i, hklInfo->ColumnOrder[1] - 1);
 
-            /*hklData[i].l = Table_Index(sTable, i, hklInfo->ColumnOrder[2] - 1);*/
-            hklData[i].l = Table_Index(sTable, i, 2);
+            hklData[i].l = Table_Index(sTable, i, hklInfo->ColumnOrder[2] - 1);
 
-            /*if (hklInfo->ColumnOrder[3]) {
+            if (hklInfo->ColumnOrder[3]) {
               hklData[i].F2 = pow(Table_Index(sTable, i, hklInfo->ColumnOrder[3] - 1), 2);
 
               } else if (hklInfo->ColumnOrder[4]) {
               hklData[i].F2 = Table_Index(sTable, i, hklInfo->ColumnOrder[4] - 1);
 
-              }*/
-
-            hklData[i].F2 = Table_Index(sTable, i, 6);
+              }
 
             // Precompute some values
             hklData[i].Tau[0] = hklData[i].h * hklInfo->ReciprocalLatticeVectora[0] +
@@ -600,6 +595,8 @@ SHARE
             // Find the two mosaic axes perpendicular to tau
             if (Mosaicity > 0) {
                 // Use isotropic mosaic
+                hklData[i].Sigma[0] = FWHM2RMS * hklData[i].TauLength * MIN2RAD * Mosaicity;
+
                 hklData[i].u2[0] = b1[0];
                 hklData[i].u2[1] = b1[1];
                 hklData[i].u2[2] = b1[2];
@@ -1016,6 +1013,7 @@ INITIALIZE
     hklInfo.DeltadOverd1    = DeltadOverd;
     hklInfo.SigmaAbsorbtion1= SigmaAbsorbtion;
     hklInfo.SigmaIncoherent1= SigmaIncoherent;
+    hklInfo.Reciprocal1     = Reciprocal;
 
     // Default format: h, k, l, F, F2
     hklInfo.ColumnOrder[0] = 1;
@@ -1040,7 +1038,6 @@ INITIALIZE
     // Loop over all orientations
     for (i = 0; i < TableOfOrientations->rows; ++i) {
         PolyInfo[i] = hklInfo;
-        PolyInfo[i].Reciprocal = 0;
 
         // Apply rotation to crystal vectors
         memcpy(*CurrentRotationMatrix, &(TableOfOrientations->data[i * 9]), sizeof(CurrentRotationMatrix[0][0]) * 9);
@@ -1163,7 +1160,6 @@ TRACE
     // Monte Carlo-properties
     double CalculatedProbabilityOfTransmission;
     double MCTransmission;
-    double MCInteract;
 
     // Indices of current voxel
     int VoxelIndexx;
@@ -1193,16 +1189,13 @@ TRACE
 
     NumberOfScatteringEvents = 0;
 
-    // Scale x-ray to higher intensity
-    p *= 1e24;
-
     // Begin computating if ray intersects crystal hull
     while (Intersect) {
 
-        // Figure out which voxel the ray hit (the small added constant prevents errors on boundaries of the crystal hull
-        VoxelIndexx = floor((x + xwidth  / 2.0) / xwidth  * NumberOfVoxelsx + 1e-10);
-        VoxelIndexy = floor((y + yheight / 2.0) / yheight * NumberOfVoxelsy + 1e-10);
-        VoxelIndexz = floor((z + zdepth  / 2.0) / zdepth  * NumberOfVoxelsz + 1e-10);
+        // Figure out which voxel the ray hit (the small added constant prevents errors on boundaries of the crystal hull)
+        VoxelIndexx = floor((x + xwidth  / 2.0) / xwidth  * NumberOfVoxelsx + copysign(1e-10,kx));
+        VoxelIndexy = floor((y + yheight / 2.0) / yheight * NumberOfVoxelsy + copysign(1e-10,ky));
+        VoxelIndexz = floor((z + zdepth  / 2.0) / zdepth  * NumberOfVoxelsz + copysign(1e-10,kz));
 
         if (VoxelIndexx >= NumberOfVoxelsx || VoxelIndexx < 0 ||
                 VoxelIndexy >= NumberOfVoxelsy || VoxelIndexy < 0 ||
@@ -1435,19 +1428,24 @@ TRACE
             CoherentScatteringLength = CoherentCrosssection / VolumeOfUnitCell;
             TotalScatteringLength    = TotalCrosssection / VolumeOfUnitCell;
 
+            if (TotalScatteringLength < 0){
+                ABSORB;
+            }
+
             // Calculate and account for transmission
             CalculatedProbabilityOfTransmission = exp(-TotalScatteringLength * l2);
 
-            if (!NumberOfScatteringEvents && ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
+            if (NumberOfScatteringEvents >= MaxNumberOfReflections) {
+                MCTransmission = 1.0;
+
+            } else if (ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
                 MCTransmission = ProbabilityOfTransmission;
 
             } else {
                 MCTransmission = CalculatedProbabilityOfTransmission;
             }
 
-            MCInteract = 1.0 - MCTransmission;
-
-            if (MCTransmission > 0.0 && (MCTransmission > 1.0 || rand01() < MCTransmission)) {
+            if (MCTransmission > 0.0 && (MCTransmission >= 1.0 || rand01() < MCTransmission)) {
                 p *= CalculatedProbabilityOfTransmission / MCTransmission;
                 SCATTER;
 
@@ -1457,21 +1455,8 @@ TRACE
                 break;
             }
 
-            if (TotalScatteringLength < 0){
-                ABSORB;
-            }
-
-            if (MCInteract < 0) {
-                IntersectVoxel = 0;
-                PROP_DL(l2);
-
-                break;
-            }
-
             // Scatter the ray
-            if (!NumberOfScatteringEvents) {
-                p *= fabs(1.0 - CalculatedProbabilityOfTransmission) / MCInteract;
-            }
+            p *= (1.0 - CalculatedProbabilityOfTransmission) / (1.0 - MCTransmission);
 
             // Calculate, where the ray is scattered - use linear sampling for weak scatterers
             if (TotalScatteringLength * l2 < 1e-6) {
@@ -1496,7 +1481,7 @@ TRACE
                 ky = ki[1];
                 kz = ki[2];
             } else {
-                if (TotalReflectivity < 0) {
+                if (TotalReflectivity <= 0) {
                     ABSORB;
                 }
 
@@ -1508,7 +1493,7 @@ TRACE
                 for (j = 0; j < TauCount; ++j) {
                     Sum += CurrentTauData[j].Reflectivity;
 
-                    if (Sum > r) {
+                    if (Sum >= r) {
                         break;
                     }
                 }
@@ -1556,23 +1541,13 @@ TRACE
                 kz = CurrenthklData[i].u1[2] * kf[0] +
                     CurrenthklData[i].u2[2] * kf[1] +
                     CurrenthklData[i].u3[2] * kf[2];
+
             }
 
             SCATTER;
 
             // Calculate new trajectory (the 1.0001 has been added to make sure that the ray leaves the ray if it has to)
             IntersectVoxel = box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, 1.0001 * Voxelxwidth, 1.0001 * Voxelyheight, 1.0001 * Voxelzdepth);
-
-            // End loop if maximum numer of scattering events has been reached
-            if (MaxNumberOfReflections && NumberOfScatteringEvents >= MaxNumberOfReflections) {
-                box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, xwidth, yheight, zdepth);
-
-                IntersectVoxel = 0;
-                Intersect = 0;
-                PROP_DL(l2);
-
-                break;
-            }
         }
     }
 
