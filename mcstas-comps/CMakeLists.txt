@@ -81,6 +81,10 @@ if (NOT WINDOWS)
     PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
+  install (
+    PROGRAMS "${CMAKE_SOURCE_DIR}/libs/mcpl/pymcpltool"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
 endif()
 
 # Include mcstas-comp files
