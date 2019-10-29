@@ -1819,6 +1819,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("};");
   cout("typedef struct _struct_particle _class_particle;");
   cout("");
+  cout("_class_particle _particle_global_randnbuse_var;");
+  cout("_class_particle* _particle = &_particle_global_randnbuse_var;");
+  cout("");
 
 
   /* embed runtime files */
