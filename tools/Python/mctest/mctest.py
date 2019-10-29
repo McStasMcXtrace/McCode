@@ -196,7 +196,7 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
                 logging.info(formatstr % test.instrname)
             else:
                 formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
-                logging.info(formatstr % instrname + cmd)
+                logging.info(formatstr % test.instrname + cmd)
             # record compile stdout/err
             log.save(join(testdir, test.instrname, "compile_std.txt"))
 
