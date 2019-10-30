@@ -173,9 +173,7 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
             logging.debug(formatstr % instrname)
 
     # modify environment
-    os.environ["MCSTAS"] = branchdir
-    oldpath = os.environ["PATH"]
-    os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
+    oldpath = activate_mccode_version(branchdir)
     try:
         # compile, record time
         logging.info("")
@@ -246,7 +244,11 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
                         if re.match("  component: %s" % test.detector, l):
                             break
                         idx = idx + 1
-                    filename = re.match("  filename: (.+)", filenamelines[idx]).group(1)
+                    try:
+                        filename = re.match("  filename: (.+)", filenamelines[idx]).group(1)
+                    except:
+                        print("ERROR: targetval for detector %s could not be extracted from %s" % (test.detector, test.instrname))
+                        continue
                     with open(join(testdir, test.instrname, dirnames[0], filename)) as fp:
                         while True:
                             l = fp.readline()
@@ -267,8 +269,7 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
 
     finally:
         # clean up path changes
-        del os.environ["MCSTAS"]
-        os.environ["PATH"] = oldpath
+        deactivate_mccode_version(oldpath)
 
         # save summary containing all test objects by instrname
         try:
@@ -279,6 +280,25 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
         except Exception as e:
             logging.error("could not save master results file: %s" % str(e))
 
+def activate_mccode_version(branchdir):
+    '''
+    Modify environment, returns path as it was.
+    
+    branchdir: mccode version install directory
+    '''
+    os.environ["MCSTAS"] = branchdir
+    oldpath = os.environ["PATH"]
+    os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
+    return oldpath
+
+def deactivate_mccode_version(oldpath):
+    '''
+    Clean up path changes.
+    
+    oldpath: this path is restored
+    '''
+    del os.environ["MCSTAS"]
+    os.environ["PATH"] = oldpath
 
 def main(args):
     if args.verbose:
