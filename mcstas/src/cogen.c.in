@@ -1650,20 +1650,40 @@ int cogen_trace(struct instr_def *instr)
 
   // write the "raytrace_all()" code (for loop previously in mccode_main.c).
   cout("");
-  coutf("void raytrace_all(int ncount, int seed) { /* loop to generate events and propagate them */");
+  coutf("void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to generate events and propagate them */");
   coutf("");
 
-  coutf("  #pragma acc parallel loop");
-  coutf("  for (unsigned long long pidx=0 ; pidx < ncount ; pidx++) {");
-  coutf("    _class_particle particleN = mcgenstate(); // initial particle");
-  coutf("    _class_particle* _particle = &particleN;");
-  coutf("    particleN._uid = pidx;");
+  coutf("  /* CPU-loop */");
+  coutf("  unsigned long long loops;");
+  coutf("  long innerloop=2147483647;");
+  coutf("  loops = ceil((double)ncount/innerloop);");
+  coutf("  if (ncount>innerloop) {");
+  coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
+  coutf("    mcset_ncount(loops*2147483647);");
+  coutf("  } else {");
+  coutf("    loops=1;");
+  coutf("    innerloop = ncount;");
+  coutf("  }");
   coutf("");
-  coutf("    long seq = pidx + seed;");
-  coutf("    srandom(_hash(pidx + seed));");
+  coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
+  coutf("  if (loops>1) {");
+  coutf("    fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
+  coutf("    }");
   coutf("");
-  coutf("    raytrace(_particle);");
-  coutf("  } /* for */");
+  coutf("    #pragma acc parallel loop");
+  coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
+  coutf("      _class_particle particleN = mcgenstate(); // initial particle");
+  coutf("      _class_particle* _particle = &particleN;");
+  coutf("      particleN._uid = pidx;");
+  coutf("");
+  coutf("      long seq = pidx + seed;");
+  coutf("      srandom(_hash(pidx + seed));");
+  coutf("");
+  coutf("      raytrace(_particle);");
+  coutf("    } /* inner for */");
+  coutf("    seed = seed+innerloop;");
+  coutf("  } /* CPU for */");
+  coutf("  printf(\"\\n\");");
   coutf("} /* raytrace_all */");
   coutf("");
 
