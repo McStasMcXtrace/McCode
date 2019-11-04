@@ -44,7 +44,9 @@ class InstrTest:
         self.targetval = targetval
         self.testval = None
 
+        self.compiled = None
         self.compiletime = None
+        self.didrun = None
         self.runtime = None
     def get_json_repr(self):
         return {
@@ -58,8 +60,9 @@ class InstrTest:
             "targetval"    : self.targetval,
             "testval"      : self.testval,
 
-            "compiletime"  : self.compiletime,
             "compiled"     : self.compiled,
+            "compiletime"  : self.compiletime,
+            "didrun"       : self.didrun,
             "runtime"      : self.runtime,
         }
     def save(self, infolder):
@@ -116,21 +119,12 @@ def test_env_settings(mccoderoot, branchname):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
-def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
+def mccode_test(branchdir, testdir, limitinstrs=None):
     ''' test a single mccode "branch" or version that is present on the system '''
-    # create test dir
-    branchdir = join(mccoderoot, branchname)
-    testdir = join(testroot, branchname)
-    try:
-        mkdir(testdir)
-    except:
-        logging.info("multiple tests in the same folder not yet implemented, exiting...")
-        quit()
 
     # copy instr files and record info
     logging.info("")
     logging.info("")
-    logging.info("Testing branch:         %s" % branchname)
     logging.info("Finding instruments in: %s" % branchdir)
     instrs, _ = utils.get_instr_comp_files(branchdir, recursive=True)
     instrs.sort()
@@ -175,113 +169,102 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
             formatstr = "%-" + "%ds: TESTS (%d)" % (maxnamelen, numtests)
             logging.debug(formatstr % instrname)
 
-    # modify environment
-    oldpath = activate_mccode_version(branchdir)
-    try:
-        # compile, record time
-        logging.info("")
-        logging.info("Compiling instruments [seconds]...")
-        for test in tests:
-            log = LineLogger()
-            t1 = time.time()
-            cmd = "mcrun --info %s" % test.localfile
-            utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
-            t2 = time.time()
-            # TODO: detect success / failure from process return code
-            test.compiled = not log.find("error:")
-            test.compiletime = t2 - t1
-            # log to terminal
-            if test.compiled:
-                formatstr = "%-" + "%ds: " % maxnamelen + \
-                    "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
-                logging.info(formatstr % test.instrname)
-            else:
-                formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
-                logging.info(formatstr % test.instrname + cmd)
-            # record compile stdout/err
-            log.save(join(testdir, test.instrname, "compile_std.txt"))
 
-            # save (incomplete) test results to disk
-            test.save(infolder=join(testdir, test.instrname))
+    # compile, record time
+    logging.info("")
+    logging.info("Compiling instruments [seconds]...")
+    for test in tests:
+        log = LineLogger()
+        t1 = time.time()
+        cmd = "mcrun --info %s" % test.localfile
+        utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+        t2 = time.time()
+        # TODO: detect success / failure from process return code
+        test.compiled = not log.find("error:")
+        test.compiletime = t2 - t1
+        # log to terminal
+        if test.compiled:
+            formatstr = "%-" + "%ds: " % maxnamelen + \
+                "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
+            logging.info(formatstr % test.instrname)
+        else:
+            formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
+            logging.info(formatstr % test.instrname + cmd)
+        # record compile stdout/err
+        log.save(join(testdir, test.instrname, "compile_std.txt"))
 
-        # run, record time
-        logging.info("")
-        logging.info("Running tests...")
-        for test in tests:
-            log = LineLogger()
-            if not test.testnb > 0:
-                continue
-            t1 = time.time()
-            cmd = "mcrun %s %s" % (test.localfile, test.parvals)
-            utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
-            t2 = time.time()
-            # TODO: detect success / failure from process return code
-            test.ran = not log.find("error:")
-            test.runtime = t2 - t1
-            # log to terminal
-            if test.compiled:
-                formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
-                    "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
-                logging.info(formatstr % test.get_display_name())
-            else:
-                formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
-                logging.info(formatstr % instrname + ", " + cmd)
+        # save (incomplete) test results to disk
+        test.save(infolder=join(testdir, test.instrname))
 
-            # record run stdout/err
-            log.save(join(testdir, test.instrname, "run_std.txt"))
+    # run, record time
+    logging.info("")
+    logging.info("Running tests...")
+    for test in tests:
+        log = LineLogger()
+        if not test.testnb > 0:
+            continue
+        t1 = time.time()
+        cmd = "mcrun %s %s" % (test.localfile, test.parvals)
+        utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+        t2 = time.time()
+        # TODO: detect success / failure from process return code
+        test.didrun = not log.find("error:")
+        test.runtime = t2 - t1
+        # log to terminal
+        if test.compiled:
+            formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
+                "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
+            logging.info(formatstr % test.get_display_name())
+        else:
+            formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
+            logging.info(formatstr % instrname + ", " + cmd)
 
-            for (_, dirnames, _) in os.walk(join(testdir, test.instrname)):
-                if len(dirnames) > 0:
-                    lns = open(join(testdir, test.instrname, dirnames[0], "mccode.sim")).read().splitlines()
-                    componentlines = [l for l in lns if re.match("  component:", l)]
-                    filenamelines = [l for l in lns if re.match("  filename:", l)]
-                    idx = 0
-                    for l in componentlines:
-                        if re.match("  component: %s" % test.detector, l):
+        # record run stdout/err
+        log.save(join(testdir, test.instrname, "run_std.txt"))
+
+        for (_, dirnames, _) in os.walk(join(testdir, test.instrname)):
+            if len(dirnames) > 0:
+                lns = open(join(testdir, test.instrname, dirnames[0], "mccode.sim")).read().splitlines()
+                componentlines = [l for l in lns if re.match("  component:", l)]
+                filenamelines = [l for l in lns if re.match("  filename:", l)]
+                idx = 0
+                for l in componentlines:
+                    if re.match("  component: %s" % test.detector, l):
+                        break
+                    idx = idx + 1
+                try:
+                    filename = re.match("  filename: (.+)", filenamelines[idx]).group(1)
+                except:
+                    print("ERROR: targetval for detector %s could not be extracted from %s" % (test.detector, test.instrname))
+                    continue
+                with open(join(testdir, test.instrname, dirnames[0], filename)) as fp:
+                    while True:
+                        l = fp.readline()
+                        if not l:
                             break
-                        idx = idx + 1
-                    try:
-                        filename = re.match("  filename: (.+)", filenamelines[idx]).group(1)
-                    except:
-                        print("ERROR: targetval for detector %s could not be extracted from %s" % (test.detector, test.instrname))
-                        continue
-                    with open(join(testdir, test.instrname, dirnames[0], filename)) as fp:
-                        while True:
-                            l = fp.readline()
-                            if not l:
-                                break
-                            m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
-                            if m :
-                                I = m.group(1)
-                                I_err = m.group(2)
-                                N = m.group(3)
-                                test.testval = I
-                                break
-                break
+                        m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
+                        if m :
+                            I = m.group(1)
+                            I_err = m.group(2)
+                            N = m.group(3)
+                            test.testval = I
+                            break
+            break
 
-            # save test result to disk
-            test.testcomplete = True
-            test.save(infolder=join(testdir, test.instrname))
+        # save test result to disk
+        test.testcomplete = True
+        test.save(infolder=join(testdir, test.instrname))
 
-    finally:
-        # clean up path changes
-        deactivate_mccode_version(oldpath)
+    # let the outside world create full report, just return test objects
+    return tests
 
-        # save summary containing all test objects by instrname
-        try:
-            results = OrderedDict()
-            for test in tests:
-                results[test.instrname] = test.get_json_repr()
-            open(join(testdir, "results.json"), 'w').write(json.dumps(results, indent=4))
-        except Exception as e:
-            logging.error("could not save master results file: %s" % str(e))
-
-def activate_mccode_version(branchdir):
+def activate_mccode_version(version, mccoderoot):
     '''
     Modify environment, returns path as it was.
     
     branchdir: mccode version install directory
     '''
+    branchdir = os.path.join(mccoderoot, version)
     os.environ["MCSTAS"] = branchdir
     oldpath = os.environ["PATH"]
     os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
@@ -296,17 +279,86 @@ def deactivate_mccode_version(oldpath):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
+def create_test_dir(testroot, datetime, label):
+    ''' create and return test directory as: testroot/datetime/label'''
+    if not os.path.exists(testroot):
+        mkdir(testroot)
+    if not os.path.exists(testroot):
+        logging.info("test root folder could not create test folder, exiting...")
+        quit()
+    datetimedir = join(testroot, datetime)
+    if not os.path.exists(datetimedir):
+        mkdir(datetimedir)
+    testdir = join(datetimedir, label)
+    if not os.path.exists(testdir):
+        mkdir(testdir)
+    return testdir
+
 def run_default_test(testroot, mccoderoot, limit):
-    print("default not implemented")
+    # get default/system version number
+    logger = LineLogger()
+    utils.run_subtool_to_completion("mcrun --version", stdout_cb=logger.logline)
+    version = logger.lst[-1].strip()
+
+    # create single-run test directory
+    testdir = create_test_dir(testroot, utils.get_datetimestr(), version)
+
+    logging.info("Testing: %s" % version)
+    # TODO: run test
+    # TODO: write master report
+
+
+    print("default test impl. not complete")
     quit()
 
-def run_version_test(testroot, mccoderoot, limit):
-    print("version test not implemented")
-    quit()
+def run_version_test(testroot, mccoderoot, limit, version):
+    # verify that version exists
+    if not os.path.isfile(os.path.join(mccoderoot, version, "environment")):
+        print("mccode version %scould not be found, exiting..." % version)
+        quit(1)
+
+    # create single-run test directory
+    testdir = create_test_dir(testroot, utils.get_datetimestr(), version)
+
+    oldpath = activate_mccode_version(version, mccoderoot)
+    try:
+        logging.info("Testing: %s" % version)
+        # TODO: run test
+        # TODO: write master report
+    finally:
+        deactivate_mccode_version(oldpath)
+
+
+    print("version test impl. not complete")
+    quit(1)
 
 def run_configs_test(testroot, mccoderoot, limit):
-    print("configs test not implemented")
-    quit()
+    # get test directory datetime string
+    datetime = utils.get_datetimestr()
+
+    # test labels loop
+    # TODO: get configs
+    configs = [] 
+    for c in configs:
+
+        oldpath = activate_mccode_version(c.version, mccoderoot)
+        try:
+            # TODO: do mccode_config.py copy-in
+            try:
+                # crate local test root
+                testdir = create_test_dir(testroot, datetime, c.label)
+                logging.info("Testing: %s" % c.label)
+                # TODO: run test
+                # TODO: write master report
+            finally:
+                pass
+                # TODO: mccode_config.py restore
+        finally:
+            deactivate_mccode_version(oldpath)
+
+
+    print("configs test impl. not complete")
+    quit(1)
 
 def show_installed_versions(mccoderoot):
     logging.info("Test environment mode, using output of 'mcstas --vesion'")
@@ -360,9 +412,9 @@ def main(args):
             limit = int(args.limit[0])
         except:
             logging.info("--limit must be a number")
-            quit()
+            quit(1)
     logging.debug("")
-    
+
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
         print("WARNING: version, --configs and --versions are mutually exclusive, exiting")
@@ -371,7 +423,7 @@ def main(args):
     if default:
         run_default_test(testroot, mccoderoot, limit)
     elif version:
-        run_version_test(testroot, mccoderoot, limit)
+        run_version_test(testroot, mccoderoot, limit, version)
     elif configs:
         run_configs_test(testroot, mccoderoot, limit)
     elif vinfo:
@@ -380,57 +432,9 @@ def main(args):
 
 
 
-    ''' CURRENT implementation:
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    else:
-        logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-    # setup test root folder
-    testroot = "/tmp/mctest"
-    if args.testroot:
-        testroot = args.testroot
-
-    # setup mccode dist root
-    mccoderoot = "/usr/share/mcstas/"
-    if args.mccoderoot:
-        mccoderoot = args.mccoderoot
-    logging.info("Using mccode root: %s" % mccoderoot)
-
-    # display mcstas versions info
-    if args.versions:
-        logging.info("Test environment mode, using output of 'mcstas --vesion'")
-        logging.info("")
-        branchnames = get_mccode_versions(mccoderoot)
-        for v in branchnames:
-            test_env_settings(mccoderoot, v)
-        logging.info("Selectable version names are: %s" % ", ".join(branchnames))
-        logging.info("")
-        quit()
-    testlimit = None
-    if args.limit:
-        try:
-            testlimit = int(args.limit[0])
-        except:
-            logging.info("--limit must be a number")
-            quit()
-
-
-
-
+    ''' PREV
 
     branchnames = get_mccode_versions(mccoderoot)
-
-    # create root test folder
-    if not os.path.exists(testroot):
-        mkdir(testroot)
-    if not os.path.exists(testroot):
-        logging.info("test root folder could not be craeted, exiting...")
-        quit()
-    testdir = join(testroot, utils.get_datetimestr())
-    if not os.path.exists(testdir):
-        mkdir(testdir)
 
     # iterate mccode branches
     if args.testversion != None:
@@ -440,8 +444,9 @@ def main(args):
             quit()
         branchnames = [selected_version]
     for branchdirname in branchnames:
-        branch_test(mccoderoot, branchdirname, testdir, testlimit)
+        mccode_test(mccoderoot, branchdirname, testdir, testlimit)
     '''
+
 
 '''
 Rework sketch.
@@ -513,5 +518,4 @@ if __name__ == '__main__':
         main(args)
     except KeyboardInterrupt:
         print()
-
 
