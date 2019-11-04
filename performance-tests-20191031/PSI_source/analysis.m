@@ -13,13 +13,17 @@ load multicore.dat
 
 gcc(7)=10*gcc(6);
 cpu(7)=10*cpu(6);
+gcc(8)=100*gcc(6);
+cpu(8)=100*cpu(6);
+gcc(9)=1000*gcc(6);
+cpu(9)=1000*cpu(6);
 
 hold on
 plot(xes,gpu,'-o')
 plot(xes,gpu_hypatia,'-p')
 plot(xes,gpu_float,'-x')
 plot(xes,gpu_float_hypatia,'-h')
-plot(xes,volta_v100(1:7),'-^')
+plot(xes_volta,volta_v100,'-^')
 plot(xes,multicore,'-+')
 plot(xes(1:6),cpu(1:6),'-s')
 plot(xes(1:6),gcc(1:6),'-d')
@@ -31,30 +35,32 @@ plot(xes(7),cpu(7),'-<')
 
   xlabel('Problem size / neutrons')
   ylabel('Wall-clock time / s')
-  title('Performance in the PSI_source case','interpreter','none')
-
+  title('Performance in the PSI_source case - execution time','interpreter','none')
+  set(gca,'xscale','log','yscale','log')
+  
   figure
 
-  perf_gpu=gcc./gpu;
-  perf_gpu_hypatia=gcc./gpu_hypatia;
-  perf_gpu_float=gcc./gpu_float;
-  perf_gpu_float_hypatia=gcc./gpu_float_hypatia;
-  perf_volta_v100=gcc./volta_v100(1:7);
-  perf_multicore=gcc./multicore;
-  perf_mpi=gcc./mpi;
-  perf_cpu=gcc./cpu;
- perf_gcc=gcc./gcc;
+  perf_gpu=gcc(1:7)./gpu;
+  perf_gpu_hypatia=gcc(1:7)./gpu_hypatia;
+  perf_gpu_float=gcc(1:7)./gpu_float;
+  perf_gpu_float_hypatia=gcc(1:7)./gpu_float_hypatia;
+  perf_volta_v100=gcc./volta_v100;
+  perf_multicore=gcc(1:7)./multicore;
+  perf_mpi=gcc(1:7)./mpi;
+  perf_cpu=gcc(1:7)./cpu(1:7);
+ perf_gcc=gcc(1:7)./gcc(1:7);
  hold on
 plot(xes,perf_gpu,'-o')
 plot(xes,perf_gpu_hypatia,'-p')
 plot(xes,perf_gpu_float,'-x')
 plot(xes,perf_gpu_float_hypatia,'-h')
-plot(xes,perf_volta_v100,'-^')
+plot(xes_volta,perf_volta_v100,'-^')
 plot(xes,perf_multicore,'-+')
 plot(xes,perf_cpu,'-s')
 plot(xes,perf_gcc,'-d')
 plot(xes,perf_mpi,'-*')
   xlabel('Problem size / neutrons')
   ylabel('speed relative to gcc serial')
-   title('Performance in the PSI_source case','interpreter','none')
+   title('Performance in the PSI_source case - relative speedup','interpreter','none')
   legend('PGCC Quadro T2000 doubles -O0','PGCC GeForce GTX 1080 -O0','PGCC Quadro T2000 floats -O0','PGCC GeForce GTX 1080 floats -O0','PGCC Volta V100 -O0','PGCC multicore -O2, 8 cores','PGCC -O2 cpu serial','gcc -O2 cpu serial','PGCC -O2 mpi, 8 cores')
+  set(gca,'xscale','log','yscale','log')
