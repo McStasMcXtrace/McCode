@@ -296,7 +296,22 @@ def deactivate_mccode_version(oldpath):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
-def get_mccode_versions(mccoderoot):
+def run_default_test(testroot, mccoderoot, limit):
+    print("default not implemented")
+    quit()
+
+def run_version_test(testroot, mccoderoot, limit):
+    print("version test not implemented")
+    quit()
+
+def run_configs_test(testroot, mccoderoot, limit):
+    print("configs test not implemented")
+    quit()
+
+def show_installed_versions(mccoderoot):
+    logging.info("Test environment mode, using output of 'mcstas --vesion'")
+    logging.info("")
+
     dirnames = []
     branchnames = []
     for (_, dirnames, _) in os.walk(mccoderoot):
@@ -306,9 +321,67 @@ def get_mccode_versions(mccoderoot):
             break
         if "environment" in files:
             branchnames.append(d)
-    return branchnames
+
+    for v in branchnames:
+        test_env_settings(mccoderoot, v)
+    logging.info("Selectable version names are: %s" % ", ".join(branchnames))
+    logging.info("")
+
 
 def main(args):
+
+    # mutually excusive main branches
+    default = None                  # test system mccode version as-is
+    version = args.testversion      # test a specific mccode version (also) present on the system
+    configs = args.configs          # test all config versions, which are versions of mccode_config.py, located in mccodelib/MCCODE
+    vinfo = args.versions           # display mccode versions installed on the system
+
+    # modifying options
+    verbose = args.verbose          # display more info during runs
+    testroot = args.testroot        # use non-default test output root location
+    mccoderoot = args.mccoderoot    # use non-default mccode system install location
+    limit = args.limit              # only test the first [limit] instruments (useful for debugging purposes)
+
+    # set modifications first
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+    if not testroot:
+        testroot = "/tmp/mctest"
+    logging.debug("Using test root:      %s" % testroot)
+    # TODO: make sure testroot is valid
+    if not mccoderoot:
+        mccoderoot = "/usr/share/mcstas/"
+    # TODO: make sure mccoderoot is valid
+    logging.debug("Using mccode root:    %s" % mccoderoot)
+    if limit:
+        try:
+            limit = int(args.limit[0])
+        except:
+            logging.info("--limit must be a number")
+            quit()
+    logging.debug("")
+    
+    # decide and run main branch
+    if version and configs or version and vinfo or configs and vinfo:
+        print("WARNING: version, --configs and --versions are mutually exclusive, exiting")
+        quit()
+    default = not version and not configs and not vinfo
+    if default:
+        run_default_test(testroot, mccoderoot, limit)
+    elif version:
+        run_version_test(testroot, mccoderoot, limit)
+    elif configs:
+        run_configs_test(testroot, mccoderoot, limit)
+    elif vinfo:
+        show_installed_versions(mccoderoot)
+
+
+
+
+    ''' CURRENT implementation:
+
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG, format="%(message)s")
     else:
@@ -343,6 +416,10 @@ def main(args):
             logging.info("--limit must be a number")
             quit()
 
+
+
+
+
     branchnames = get_mccode_versions(mccoderoot)
 
     # create root test folder
@@ -364,11 +441,67 @@ def main(args):
         branchnames = [selected_version]
     for branchdirname in branchnames:
         branch_test(mccoderoot, branchdirname, testdir, testlimit)
+    '''
+
+'''
+Rework sketch.
+
+1) behavior - overview
+
+(no args), default behavior: Test the current default mccode installation as-is, mc/mx switch built into the dist and tool.
+[testversion]: tests a local mcstas/mxtrace version currently installed on the system (as now)
+--mccoderoot: Override mccode installation root directory, if non-standard
+--testroot: Where to put the test output files (overrides default value)
+--limit: a db tool which works as it does now
+--versions: As now, but fused with --testenvs to form the latter 
+--testenvs: Removed as an option, fused with --versions
+--verbose: Print more info, as now
+--configs: Test not system versions, but configs defined as local mccode_config.py files
+
+2) behavior, --configs
+
+When --configs is chosen, each mccode_config.py_[LABEL] file should be used to define a test run.
+These are located in mccodelib/mcstas-tests or mccodelib/mcxtrace-tests. Each test is executed using the following
+sequence:
+- for each label:
+- load the mccode_config.py file into memory
+- read the MCCODE_VERSION and MCCODE_LIB_DIR from the config member of this module
+- validate that this version exists on the system
+[- give a notice/warning if the mccoderoot variable does not correspond to the contents of the config file]
+- backup the dist mccode_config.py
+- push the label config file
+- execute the test in a try-except-finally block
+- print any error in except
+- revert the mccode_config.py file in finally
+[- consider outputting compact statuses to the terminal in labels mode, progress bars plus overviews]
+
+3) design
+
+- new hierarchy: test_all, TestLabel and TestRun
+- new setup logics accomodating args and using the above 
+
+4) impl. preparatory tasks
+
+- rename label configs to be properly loadable .py python modules - OK
+- elliminate --testenvs in favour of --versions - OK
+- rename class InstrTest to TestRun - OK
+- handle more than one test pr. instrument
+- ensure multiple tests pr. instrument are possible
+
+5) impl. tasks
+
+- create Test and TestRun classes
+- create TestLabels function, which also uses Test and TestRun, but rolls through each config file, copying, restoring, etc.
+- rework setup logics to accomodate all args combinatinos
+
+
+'''
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
+    parser.add_argument('--configs', action='store_true', help='test config files under mccodelib/MCCODE')
     parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mccode installations')
     parser.add_argument('--testroot', nargs='?', help='output test results under this root folder')
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
