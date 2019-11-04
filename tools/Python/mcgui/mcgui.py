@@ -632,22 +632,21 @@ class McGuiAppController():
     def handlePlotOtherResults(self):
         self.emitter.status('')
         resultdir = self.view.showOpenPlotDirDlg(os.getcwd())
-        print("Resultdir is " + resultdir)
-        cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
-        cwd = os.path.dirname(os.path.dirname(resultdir))
-
-        self._runthread = McRunQThread()
-        self._runthread.cmd = cmd
-        self._runthread.cwd = cwd
-        self._runthread.finished.connect(lambda: None)
-        self._runthread.terminated.connect(lambda: None)
-        self._runthread.thread_exception.connect(handleExceptionMsg)
-        self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
-        self._runthread.message.connect(lambda msg: self.emitter.message(msg))
-        self._runthread.start()
+        if not resultdir is "":
+            cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
+            cwd = os.path.dirname(os.path.dirname(resultdir))
+            self._runthread = McRunQThread()
+            self._runthread.cmd = cmd
+            self._runthread.cwd = cwd
+            self._runthread.finished.connect(lambda: None)
+            self._runthread.terminated.connect(lambda: None)
+            self._runthread.thread_exception.connect(handleExceptionMsg)
+            self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
+            self._runthread.message.connect(lambda msg: self.emitter.message(msg))
+            self._runthread.start()
         
-        self.emitter.message(cmd, gui=True)
-        self.emitter.status('Running plotter ...')        
+            self.emitter.message(cmd, gui=True)
+            self.emitter.status('Running plotter ...')        
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
