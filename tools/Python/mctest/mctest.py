@@ -16,57 +16,63 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils
 
 
+def create_instr_test_objs(sourcefile, localfile, header):
+    tests = []
+    ms = re.findall("\%Example\:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", header)
+    if ms:
+        testnb = 1
+        for m in ms:
+            parvals = m[0].strip()
+            detector = m[1].strip()
+            targetval = m[2].strip()
+            tests.append(InstrTest(sourcefile, localfile, parvals, detector, targetval, testnb))
+            testnb = testnb + 1
+    else:
+        tests.append(InstrTest(sourcefile, localfile))
+    return tests
+
 class InstrTest:
     ''' instruent test house keeping object '''
-    def __init__(self, sourcefile, localfile):
+    def __init__(self, sourcefile, localfile, parvals=None, detector=None, targetval=None, testnb=0):
         self.sourcefile = sourcefile
         self.localfile = localfile
         self.instrname = splitext(basename(sourcefile))[0]
-        self.hastest = None
-
-        self.parvals = ""
-        self.detector = ""
-        self.targetval = None
+        self.testnb = testnb
+        
+        self.parvals = parvals
+        self.detector = detector
+        self.targetval = targetval
         self.testval = None
 
-        self.compiled = None
         self.compiletime = None
-        self.ran = None
         self.runtime = None
-        self.testcomplete = False
-    def extract_detector_parvals(self, text=None):
-        ''' extracts parameter values, detector and targetvalue, assuming [detector]_I=[targetvalue] '''
-        if text is None:
-            text = open(self.localfile).read()
-        m = re.search("\%Example\:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", text)
-        if m:
-            self.parvals = m.group(1).strip()
-            self.detector = m.group(2).strip()
-            self.targetval = m.group(3).strip()
-            self.hastest = True
-        else:
-            self.hastest = False
     def get_json_repr(self):
         return {
             "sourcefile"   : self.sourcefile,
             "localfile"    : self.localfile,
             "instrname"    : self.instrname,
-            "hastest"      : self.hastest,
+            "testnb"       : self.testnb,
 
             "parvals"      : self.parvals,
             "detector"     : self.detector,
             "targetval"    : self.targetval,
-            "testval"          : self.testval,
+            "testval"      : self.testval,
 
+            "compiletime"  : self.compiletime,
             "compiled"     : self.compiled,
-            "compiletime"  : self.compiletime, 
-            "ran"          : self.ran,
             "runtime"      : self.runtime,
-            "testcomplete" : self.testcomplete,
         }
     def save(self, infolder):
         text = json.dumps(self.get_json_repr())
-        f = open(join(infolder, self.instrname) + ".json", 'w').write(text)
+        key = self.instrname
+        if self.testnb > 1:
+            key = "%s_%d" % (key, self.testnb)
+        f = open(join(infolder, key) + ".json", 'w').write(text)
+    def get_display_name(self):
+        if self.testnb > 1:
+            return self.instrname + "_%d" % self.testnb
+        else:
+            return self.instrname
 
 def print_to_console(str):
     ''' used with popen wrapper '''
@@ -100,7 +106,6 @@ def test_env_settings(mccoderoot, branchname):
     os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
 
     # run the mcstas --version command
-    logging.info("%s environment:" % branchname)
     cmd = "mcstas --version"
     utils.run_subtool_to_completion(cmd, stdout_cb=print_to_console, stderr_cb=print_to_console)
     logging.info("")
@@ -144,26 +149,30 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
         if l > maxnamelen:
             maxnamelen = l
     for f in instrs:
+        # create the test foldr for this instrument
         instrname = splitext(basename(f))[0]
         instrdir = join(testdir, instrname)
-        # create the test foldr for this instrument
         mkdir(instrdir)
 
+        # create a new file with the instr text in it - e.g. a local copy of the instrument file
         text = open(f).read()
         f_new = join(instrdir, basename(f))
-        # create a new file with the instr text in it - e.g. a local copy of the instrument file
         open(f_new, 'w').write(text)
 
-        test = InstrTest(sourcefile=f, localfile=f_new)
-        tests.append(test)
+        # create a test object for every test defined in the instrument header
+        instrtests = create_instr_test_objs(sourcefile=f, localfile=f_new, header=text)
+        tests = tests + instrtests
 
         # extract and record %Example info from text
-        test.extract_detector_parvals(text)
-        if test.hastest:
+        numtests = len(instrtests) 
+        if numtests == 0:
+            formatstr = "%-" + "%ds: NO TEST" % maxnamelen
+            logging.debug(formatstr % instrname)
+        elif numtests == 1:
             formatstr = "%-" + "%ds: TEST" % maxnamelen
             logging.debug(formatstr % instrname)
         else:
-            formatstr = "%-" + "%ds: NO TEST" % maxnamelen
+            formatstr = "%-" + "%ds: TESTS (%d)" % (maxnamelen, numtests)
             logging.debug(formatstr % instrname)
 
     # modify environment
@@ -200,7 +209,7 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
         logging.info("Running tests...")
         for test in tests:
             log = LineLogger()
-            if not test.hastest:
+            if not test.testnb > 0:
                 continue
             t1 = time.time()
             cmd = "mcrun %s %s" % (test.localfile, test.parvals)
@@ -213,7 +222,7 @@ def branch_test(mccoderoot, branchname, testroot, limitinstrs=None):
             if test.compiled:
                 formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
                     "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
-                logging.info(formatstr % test.instrname)
+                logging.info(formatstr % test.get_display_name())
             else:
                 formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
                 logging.info(formatstr % instrname + ", " + cmd)
@@ -287,34 +296,7 @@ def deactivate_mccode_version(oldpath):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
-def main(args):
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    else:
-        logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-    # setup
-    testroot = "/tmp/mctest"
-    if args.testroot:
-        testroot = args.testroot
-    mccoderoot = "/usr/share/mcstas/"
-    if args.mccoderoot:
-        mccoderoot = args.mccoderoot
-    logging.info("Using mccode root: %s" % mccoderoot)
-    if args.testenvs:
-        logging.info("Test environment mode, using output of 'mcstas --vesion'")
-        logging.info("")
-    if args.versions:
-        logging.info("Subfolders containing an 'environment' file are:")
-        logging.info("")
-    testlimit = None
-    if args.limit:
-        try:
-            testlimit = int(args.limit[0])
-        except:
-            logging.info("--limit must be a number")
-            quit()
-
+def get_mccode_versions(mccoderoot):
     dirnames = []
     branchnames = []
     for (_, dirnames, _) in os.walk(mccoderoot):
@@ -324,22 +306,53 @@ def main(args):
             break
         if "environment" in files:
             branchnames.append(d)
+    return branchnames
+
+def main(args):
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    # setup test root folder
+    testroot = "/tmp/mctest"
+    if args.testroot:
+        testroot = args.testroot
+
+    # setup mccode dist root
+    mccoderoot = "/usr/share/mcstas/"
+    if args.mccoderoot:
+        mccoderoot = args.mccoderoot
+    logging.info("Using mccode root: %s" % mccoderoot)
+
+    # display mcstas versions info
     if args.versions:
-        for v in branchnames:
-            logging.info(v)
+        logging.info("Test environment mode, using output of 'mcstas --vesion'")
         logging.info("")
-        logging.info("Use the --version=[version] option to test a specific version.")
+        branchnames = get_mccode_versions(mccoderoot)
+        for v in branchnames:
+            test_env_settings(mccoderoot, v)
+        logging.info("Selectable version names are: %s" % ", ".join(branchnames))
+        logging.info("")
         quit()
+    testlimit = None
+    if args.limit:
+        try:
+            testlimit = int(args.limit[0])
+        except:
+            logging.info("--limit must be a number")
+            quit()
+
+    branchnames = get_mccode_versions(mccoderoot)
 
     # create root test folder
     if not os.path.exists(testroot):
-        if not args.testenvs:
-            mkdir(testroot)
+        mkdir(testroot)
     if not os.path.exists(testroot):
         logging.info("test root folder could not be craeted, exiting...")
         quit()
     testdir = join(testroot, utils.get_datetimestr())
-    if not os.path.exists(testdir) and not args.testenvs:
+    if not os.path.exists(testdir):
         mkdir(testdir)
 
     # iterate mccode branches
@@ -348,12 +361,9 @@ def main(args):
         if not isdir(join(mccoderoot, selected_version)):
             logging.info("mccode vesion %s could not be found, exiting..." % selected_version)
             quit()
-        dirnames = [selected_version]
-    for branchdirname in dirnames:
-        if args.testenvs:
-            test_env_settings(mccoderoot, branchdirname)
-        else:
-            branch_test(mccoderoot, branchdirname, testdir, testlimit)
+        branchnames = [selected_version]
+    for branchdirname in branchnames:
+        branch_test(mccoderoot, branchdirname, testdir, testlimit)
 
 
 if __name__ == '__main__':
@@ -362,8 +372,7 @@ if __name__ == '__main__':
     parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mccode installations')
     parser.add_argument('--testroot', nargs='?', help='output test results under this root folder')
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
-    parser.add_argument('--versions', action='store_true', help='display local versions')
-    parser.add_argument('--testenvs', action='store_true', help='more detailed local versions info')
+    parser.add_argument('--versions', action='store_true', help='display local versions info')
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
     args = parser.parse_args()
 
