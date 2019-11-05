@@ -183,7 +183,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
 
         # runable tests have testnb > 0
         if test.testnb <= 0:
-            logging.info("skipping testnb<=0 test...")
+            formatstr = "%-" + "%ds:   NO TEST" % (maxnamelen+1)
+            logging.info(formatstr % test.get_display_name())
             continue
 
         t1 = time.time()
