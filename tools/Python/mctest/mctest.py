@@ -4,6 +4,7 @@ import logging
 import argparse
 import json
 import os
+join = os.path.join
 from os.path import basename, join, isdir, splitext
 from os import mkdir
 from collections import OrderedDict
@@ -13,25 +14,30 @@ import time
 import math
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mccodelib import utils
+from mccodelib import utils, mccode_config
 
+
+#
+# Functionality
+#
 
 def create_instr_test_objs(sourcefile, localfile, header):
+    ''' returns a list containing one initialized test object pr %Example within the instr file '''
     tests = []
-    ms = re.findall("\%Example\:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", header)
-    if ms:
+    ms = re.findall("\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", header)
+    if len(ms) > 0:
         testnb = 1
         for m in ms:
             parvals = m[0].strip()
             detector = m[1].strip()
             targetval = m[2].strip()
-            tests.append(InstrTest(sourcefile, localfile, parvals, detector, targetval, testnb))
+            tests.append(InstrExampleTest(sourcefile, localfile, parvals, detector, targetval, testnb))
             testnb = testnb + 1
     else:
-        tests.append(InstrTest(sourcefile, localfile))
+        tests.append(InstrExampleTest(sourcefile, localfile))
     return tests
 
-class InstrTest:
+class InstrExampleTest:
     ''' instruent test house keeping object '''
     def __init__(self, sourcefile, localfile, parvals=None, detector=None, targetval=None, testnb=0):
         self.sourcefile = sourcefile
@@ -79,14 +85,6 @@ class InstrTest:
         else:
             return self.instrname
 
-def print_to_console(str):
-    ''' used with popen wrapper '''
-    logging.info(str)
-
-def print_to_console_debug(str):
-    ''' used with popen wrapper '''
-    logging.debug(str)
-
 class LineLogger():
     ''' log lines to memory, then save to disk '''
     def __init__(self):
@@ -102,27 +100,8 @@ class LineLogger():
                 return True
         return False
 
-def test_env_settings(mccoderoot, branchname):
-    ''' test mccode vesion switching mechanism '''
-    branchdir = join(mccoderoot, branchname)
-
-    os.environ["MCSTAS"] = branchdir
-    oldpath = os.environ["PATH"]
-    os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
-
-    # run the mcstas --version command
-    cmd = "mcstas --version"
-    utils.run_subtool_to_completion(cmd, stdout_cb=print_to_console, stderr_cb=print_to_console)
-    logging.info("")
-
-    # TODO: should we test the existence of mcrun?
-
-    # restore environment
-    del os.environ["MCSTAS"]
-    os.environ["PATH"] = oldpath
-
 def mccode_test(branchdir, testdir, limitinstrs=None):
-    ''' test a single mccode "branch" or version that is present on the system '''
+    ''' this main test function tests the given mccode branch/version '''
 
     # copy instr files and record info
     logging.info("Finding instruments in: %s" % branchdir)
@@ -158,7 +137,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         tests = tests + instrtests
 
         # extract and record %Example info from text
-        numtests = len(instrtests) 
+        numtests = len([t for t in instrtests if t.testnb > 0]) 
         if numtests == 0:
             formatstr = "%-" + "%ds: NO TEST" % maxnamelen
             logging.debug(formatstr % instrname)
@@ -191,7 +170,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
             formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
             logging.info(formatstr % test.instrname + cmd)
         # record compile stdout/err
-        log.save(join(testdir, test.instrname, "compile_std.txt"))
+        log.save(join(testdir, test.instrname, "compile_stdout.txt"))
 
         # save (incomplete) test results to disk
         test.save(infolder=join(testdir, test.instrname))
@@ -201,15 +180,20 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
     logging.info("Running tests...")
     for test in tests:
         log = LineLogger()
-        if not test.testnb > 0:
+
+        # runable tests have testnb > 0
+        if test.testnb <= 0:
+            logging.info("skipping testnb<=0 test...")
             continue
+
         t1 = time.time()
         cmd = "mcrun %s %s -d%d" % (test.localfile, test.parvals, test.testnb)
         utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
         t2 = time.time()
-        # TODO: detect success / failure from process return code
+        # TODO: detect success / failure from process return code, not from guessing at stdout!
         test.didrun = not log.find("error:")
         test.runtime = t2 - t1
+
         # log to terminal
         if test.compiled:
             formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
@@ -220,39 +204,45 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
             logging.info(formatstr % instrname + ", " + cmd)
 
         # record run stdout/err
-        log.save(join(testdir, test.instrname, "run_std.txt"))
+        log.save(join(testdir, test.instrname, "run_stdout.txt"))
 
-        for (_, dirnames, _) in os.walk(join(testdir, test.instrname)):
-            if len(dirnames) > 0:
-                lns = open(join(testdir, test.instrname, dirnames[0], "mccode.sim")).read().splitlines()
-                componentlines = [l for l in lns if re.match("  component:", l)]
-                filenamelines = [l for l in lns if re.match("  filename:", l)]
-                idx = 0
-                # TODO: handle cases where targetval is of the form *.dat, in which case that datafile should always be used
-                for l in componentlines:
-                    if re.match("  component: %s" % test.detector, l):
-                        break
-                    idx = idx + 1
-                try:
-                    filename = re.match("\s*filename:\s+(.+)", filenamelines[idx]).group(1)
-                except:
-                    msg = "ERROR: targetval for monitor name %s could not be extracted from instr. %s" % (test.detector, test.instrname)
-                    test.errmsg = msg
-                    logging.info(msg)
-                    continue
-                with open(join(testdir, test.instrname, dirnames[0], filename)) as fp:
-                    while True:
-                        l = fp.readline()
-                        if not l:
-                            break
-                        m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
-                        if m :
-                            I = m.group(1)
-                            I_err = m.group(2)
-                            N = m.group(3)
-                            test.testval = I
-                            break
-            break
+        # target value extraction: look for a matching entry in mccode.sim, then select the filename in the same entry/of the same index
+        lns = open(join(testdir, test.instrname, str(test.testnb), "mccode.sim")).read().splitlines()
+        componentlines = [l for l in lns if re.match("  component:", l)]
+        filenamelines = [l for l in lns if re.match("  filename:", l)]
+        idx = 0
+        for l in componentlines:
+            if re.match("  component: %s" % test.detector, l):
+                break
+            idx = idx + 1
+        try:
+            filename = re.match("\s*filename:\s+(.+)", filenamelines[idx]).group(1)
+        except:
+            # is test.detector istead a valid filename?
+            detector_was_a_filename = False
+            if re.search("\.", test.detector):
+                filename = test.detector
+                detector_was_a_filename = os.path.isfile(join(testdir, test.instrname, str(test.testnb), filename))
+            # neither an entry in mccode.sim, nor a file of the same name was found, print an error message and continue
+            if not detector_was_a_filename:
+                msg = "ERROR: targetval for monitor name %s could not be extracted from instr. %s" % (test.detector, test.instrname)
+                test.errmsg = msg
+                logging.info(msg)
+                continue
+
+        # extract tested target value from the monitor file
+        with open(join(testdir, test.instrname, str(test.testnb), filename)) as fp:
+            while True:
+                l = fp.readline()
+                if not l:
+                    break
+                m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
+                if m :
+                    I = m.group(1)
+                    I_err = m.group(2)
+                    N = m.group(3)
+                    test.testval = I
+                    break
 
         # save test result to disk
         test.testcomplete = True
@@ -260,6 +250,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
 
     # let the outside world create full report, just return test objects as a json obj
     return [t.get_json_repr() for t in tests]
+
+#
+# Utility
+#
 
 def activate_mccode_version(version, mccoderoot):
     '''
@@ -274,16 +268,13 @@ def activate_mccode_version(version, mccoderoot):
     return oldpath
 
 def deactivate_mccode_version(oldpath):
-    '''
-    Clean up path changes.
-    
-    oldpath: this path is restored
-    '''
+    ''' clean up path changes, restoring oldpath '''
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
 def create_test_dir(testroot, datetime, label):
     ''' create and return test directory as: testroot/datetime/label'''
+
     if not os.path.exists(testroot):
         mkdir(testroot)
     if not os.path.exists(testroot):
@@ -297,7 +288,13 @@ def create_test_dir(testroot, datetime, label):
         mkdir(testdir)
     return testdir
 
+#
+# Program functions for every main test mode
+#
+
 def run_default_test(testroot, mccoderoot, limit):
+    ''' tests the default mccode version '''
+
     # get default/system version number
     logger = LineLogger()
     utils.run_subtool_to_completion("mcrun --version", stdout_cb=logger.logline)
@@ -316,7 +313,10 @@ def run_default_test(testroot, mccoderoot, limit):
     logging.debug("")
     logging.debug("Test results written to: %s" % report_filepath)
 
+
 def run_version_test(testroot, mccoderoot, limit, version):
+    ''' as run_default_test, but activates/deactivates and ses a specific mccode version if it exists '''
+
     # verify that version exists
     if not os.path.isfile(os.path.join(mccoderoot, version, "environment")):
         print("mccode version %scould not be found, exiting..." % version)
@@ -340,36 +340,76 @@ def run_version_test(testroot, mccoderoot, limit, version):
     logging.debug("")
     logging.debug("Test results written to: %s" % report_filepath)
 
+
 def run_configs_test(testroot, mccoderoot, limit):
+    '''
+    Test a suite of configs, each a mccode_config_LABEL.py file, that is copied to the dist dir
+    prior to starting the test. This action modifies the C-flags and the compiler used during
+    the test. The original mccode_config.py file is restored after each test.
+    '''
+
+    def activate_config(version, mccoderoot, configfile):
+        ''' activate a confige given by configfile, returns bckfile for use with deactivate_config '''
+        libdir = join(mccoderoot, version, "tools", "Python", "mccodelib")
+        os.rename(join(libdir, "mccode_config.py"), join(libdir, "mccode_config.py_BAK"))
+        open(join(libdir, "mccode_config.py"), "w").write(open(configfile).read())
+        return join(libdir, "mccode_config.py_BAK")
+    
+    def deactivate_config(bckfile):
+        ''' use to restore changes made by activate_config '''
+        restoreto = join(os.path.dirname(bckfile), "mccode_config.py")
+        os.rename(bckfile, restoreto)
+    
+    def extract_config_mccode_version(configfile):
+        for l in open(configfile).read().splitlines():
+            m = re.match("\s*\"MCCODE_VERSION\": (.+),", l)
+            if m:
+                return m.group(1).strip("'")
+    
+    def get_config_files():
+        ''' look in "__file__/../mccodelib/MCCODE-test" location or config files'''
+        lookin = join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test")
+        for (_, _, files) in os.walk(lookin):
+            return [join(lookin, f) for f in files]
+
     # get test directory datetime string
     datetime = utils.get_datetimestr()
 
     # test labels loop
-    # TODO: get configs
-    configs = [] 
-    for c in configs:
+    for f in get_config_files():
+        version = extract_config_mccode_version(f)
+        label = os.path.splitext(os.path.basename(f))[0].lstrip("mccode_config")
 
-        oldpath = activate_mccode_version(c.version, mccoderoot)
+        oldpath = activate_mccode_version(version, mccoderoot)
         try:
-            # TODO: do mccode_config.py copy-in
+            bckfile = activate_config(version, mccoderoot, f)
             try:
-                # crate local test root
-                testdir = create_test_dir(testroot, datetime, c.label)
-                logging.info("Testing: %s" % c.label)
                 logging.info("")
-                # TODO: run test
-                # TODO: write master report
+                logging.info("Testing label: %s" % label)
+
+                # craete the proper test dir
+                testdir = create_test_dir(testroot, datetime, label)
+                results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
+
+                # write local test result
+                reportfile = os.path.join(testdir, "%s_testresults.json" % label)
+                open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
+            
+                logging.debug("")
+                logging.debug("Test results written to: %s" % reportfile)
             finally:
-                pass
-                # TODO: mccode_config.py restore
+                deactivate_config(bckfile)
         finally:
             deactivate_mccode_version(oldpath)
 
 
-    print("configs test impl. not complete")
-    quit(1)
-
 def show_installed_versions(mccoderoot):
+    ''' utility function, prints identified mccode versions to console '''
+
+    def print_to_console(str):
+        ''' used with popen wrapper '''
+        logging.info(str)
+
     logging.info("Test environment mode, using output of 'mcstas --vesion'")
     logging.info("")
 
@@ -384,13 +424,29 @@ def show_installed_versions(mccoderoot):
             branchnames.append(d)
 
     for v in branchnames:
-        test_env_settings(mccoderoot, v)
+        # test environment
+        branchdir = join(mccoderoot, v)
+    
+        os.environ["MCSTAS"] = branchdir
+        oldpath = os.environ["PATH"]
+        os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
+    
+        # run the mcstas --version command
+        cmd = "mcstas --version"
+        utils.run_subtool_to_completion(cmd, stdout_cb=print_to_console, stderr_cb=print_to_console)
+        logging.info("")
+    
+        # TODO: should we test the existence of mcrun?
+    
+        # restore environment
+        del os.environ["MCSTAS"]
+        os.environ["PATH"] = oldpath
+
     logging.info("Selectable version names are: %s" % ", ".join(branchnames))
     logging.info("")
 
 
 def main(args):
-
     # mutually excusive main branches
     default = None                  # test system mccode version as-is
     version = args.testversion      # test a specific mccode version (also) present on the system
@@ -437,79 +493,6 @@ def main(args):
         run_configs_test(testroot, mccoderoot, limit)
     elif vinfo:
         show_installed_versions(mccoderoot)
-
-
-
-
-    ''' PREV
-
-    branchnames = get_mccode_versions(mccoderoot)
-
-    # iterate mccode branches
-    if args.testversion != None:
-        selected_version = args.testversion
-        if not isdir(join(mccoderoot, selected_version)):
-            logging.info("mccode vesion %s could not be found, exiting..." % selected_version)
-            quit()
-        branchnames = [selected_version]
-    for branchdirname in branchnames:
-        mccode_test(mccoderoot, branchdirname, testdir, testlimit)
-    '''
-
-
-'''
-Rework sketch.
-
-1) behavior - overview
-
-(no args), default behavior: Test the current default mccode installation as-is, mc/mx switch built into the dist and tool.
-[testversion]: tests a local mcstas/mxtrace version currently installed on the system (as now)
---mccoderoot: Override mccode installation root directory, if non-standard
---testroot: Where to put the test output files (overrides default value)
---limit: a db tool which works as it does now
---versions: As now, but fused with --testenvs to form the latter 
---testenvs: Removed as an option, fused with --versions
---verbose: Print more info, as now
---configs: Test not system versions, but configs defined as local mccode_config.py files
-
-2) behavior, --configs
-
-When --configs is chosen, each mccode_config.py_[LABEL] file should be used to define a test run.
-These are located in mccodelib/mcstas-tests or mccodelib/mcxtrace-tests. Each test is executed using the following
-sequence:
-- for each label:
-- load the mccode_config.py file into memory
-- read the MCCODE_VERSION and MCCODE_LIB_DIR from the config member of this module
-- validate that this version exists on the system
-[- give a notice/warning if the mccoderoot variable does not correspond to the contents of the config file]
-- backup the dist mccode_config.py
-- push the label config file
-- execute the test in a try-except-finally block
-- print any error in except
-- revert the mccode_config.py file in finally
-[- consider outputting compact statuses to the terminal in labels mode, progress bars plus overviews]
-
-3) design
-
-- new hierarchy: test_all, TestLabel and TestRun
-- new setup logics accomodating args and using the above 
-
-4) impl. preparatory tasks
-
-- rename label configs to be properly loadable .py python modules - OK
-- elliminate --testenvs in favour of --versions - OK
-- rename class InstrTest to TestRun - OK
-- handle more than one test pr. instrument
-- ensure multiple tests pr. instrument are possible
-
-5) impl. tasks
-
-- create Test and TestRun classes
-- create TestLabels function, which also uses Test and TestRun, but rolls through each config file, copying, restoring, etc.
-- rework setup logics to accomodate all args combinatinos
-
-
-'''
 
 
 if __name__ == '__main__':
