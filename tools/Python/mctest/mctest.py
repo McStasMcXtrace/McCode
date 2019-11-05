@@ -48,6 +48,7 @@ class InstrTest:
         self.compiletime = None
         self.didrun = None
         self.runtime = None
+        self.errmsg = None
     def get_json_repr(self):
         return {
             "sourcefile"   : self.sourcefile,
@@ -64,6 +65,7 @@ class InstrTest:
             "compiletime"  : self.compiletime,
             "didrun"       : self.didrun,
             "runtime"      : self.runtime,
+            "errmsg"       : self.errmsg,
         }
     def save(self, infolder):
         text = json.dumps(self.get_json_repr())
@@ -123,8 +125,6 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
     ''' test a single mccode "branch" or version that is present on the system '''
 
     # copy instr files and record info
-    logging.info("")
-    logging.info("")
     logging.info("Finding instruments in: %s" % branchdir)
     instrs, _ = utils.get_instr_comp_files(branchdir, recursive=True)
     instrs.sort()
@@ -186,7 +186,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         if test.compiled:
             formatstr = "%-" + "%ds: " % maxnamelen + \
                 "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
-            logging.info(formatstr % test.instrname)
+            logging.info(formatstr % test.get_display_name())
         else:
             formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
             logging.info(formatstr % test.instrname + cmd)
@@ -204,7 +204,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         if not test.testnb > 0:
             continue
         t1 = time.time()
-        cmd = "mcrun %s %s" % (test.localfile, test.parvals)
+        cmd = "mcrun %s %s -d%d" % (test.localfile, test.parvals, test.testnb)
         utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
         t2 = time.time()
         # TODO: detect success / failure from process return code
@@ -228,14 +228,17 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
                 componentlines = [l for l in lns if re.match("  component:", l)]
                 filenamelines = [l for l in lns if re.match("  filename:", l)]
                 idx = 0
+                # TODO: handle cases where targetval is of the form *.dat, in which case that datafile should always be used
                 for l in componentlines:
                     if re.match("  component: %s" % test.detector, l):
                         break
                     idx = idx + 1
                 try:
-                    filename = re.match("  filename: (.+)", filenamelines[idx]).group(1)
+                    filename = re.match("\s*filename:\s+(.+)", filenamelines[idx]).group(1)
                 except:
-                    print("ERROR: targetval for detector %s could not be extracted from %s" % (test.detector, test.instrname))
+                    msg = "ERROR: targetval for monitor name %s could not be extracted from instr. %s" % (test.detector, test.instrname)
+                    test.errmsg = msg
+                    logging.info(msg)
                     continue
                 with open(join(testdir, test.instrname, dirnames[0], filename)) as fp:
                     while True:
@@ -255,8 +258,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         test.testcomplete = True
         test.save(infolder=join(testdir, test.instrname))
 
-    # let the outside world create full report, just return test objects
-    return tests
+    # let the outside world create full report, just return test objects as a json obj
+    return [t.get_json_repr() for t in tests]
 
 def activate_mccode_version(version, mccoderoot):
     '''
@@ -304,12 +307,14 @@ def run_default_test(testroot, mccoderoot, limit):
     testdir = create_test_dir(testroot, utils.get_datetimestr(), version)
 
     logging.info("Testing: %s" % version)
-    # TODO: run test
-    # TODO: write master report
+    logging.info("")
+    results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
+    
+    report_filepath = os.path.join(testdir, "results.json")
+    open(os.path.join(report_filepath), "w").write(json.dumps(results, indent=2))
 
-
-    print("default test impl. not complete")
-    quit()
+    logging.debug("")
+    logging.debug("Test results written to: %s" % report_filepath)
 
 def run_version_test(testroot, mccoderoot, limit, version):
     # verify that version exists
@@ -323,14 +328,17 @@ def run_version_test(testroot, mccoderoot, limit, version):
     oldpath = activate_mccode_version(version, mccoderoot)
     try:
         logging.info("Testing: %s" % version)
-        # TODO: run test
-        # TODO: write master report
+        logging.info("")
+
+        results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
     finally:
         deactivate_mccode_version(oldpath)
 
+    report_filepath = os.path.join(testdir, "results.json")
+    open(os.path.join(report_filepath), "w").write(json.dumps(results, indent=2))
 
-    print("version test impl. not complete")
-    quit(1)
+    logging.debug("")
+    logging.debug("Test results written to: %s" % report_filepath)
 
 def run_configs_test(testroot, mccoderoot, limit):
     # get test directory datetime string
@@ -348,6 +356,7 @@ def run_configs_test(testroot, mccoderoot, limit):
                 # crate local test root
                 testdir = create_test_dir(testroot, datetime, c.label)
                 logging.info("Testing: %s" % c.label)
+                logging.info("")
                 # TODO: run test
                 # TODO: write master report
             finally:
