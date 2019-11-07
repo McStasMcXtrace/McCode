@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8"/>
+<head>
+<style>
+.state_one { padding:5px; background-color: green; color: white; }
+.state_two { padding:5px; background-color: red; color: white; }
+.state_three { padding:5px; background-color: gray; color: white; }
+.state_four { padding:5px; background-color: black; color: white; }
+</style>
+</head>
+<body>
+
+<table>
+<tr><th>a</th><th>b</th><th>c</th></tr>
+<tr>
+  <td class=state_one>1.3s<br>3.65s<br>/9.84026e-10 <br> (96%)</td>
+  <td class=state_two>0.2s<br>2.91s<br>9.84026e-10 <br> (4000%)</td>
+  <td class=state_two>1.1s<br>8.48s<br>9.84026e-10 <br> (16%)</td>
+</tr>
+<tr>
+  <td class=state_three>1.3s</td>
+  <td class=state_one>0.7s<br>7.18s<br>134928392834<br>(115%)</td>
+  <td class=state_four></td>
+</tr>
+</table>
+
+<table>
+<!-- write the header row -->
+<tr>
+{% for h in hrow %}
+  <th>{{ h }}</th>
+{% endfor %}
+</tr>
+<!-- write content rows -->
+{% for row in rows %}
+<tr>
+  {% for c in row %}
+  <td class={{ c.state }}>{{ c.ctime }}s<br>{{ c.rtime }}s<br>{{ c.detval }}<br> ({{ refp }})</td>
+  {% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+
+</body>
+</html>
