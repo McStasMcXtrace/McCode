@@ -496,9 +496,14 @@ class McGuiAppController():
             parsers = []
             
             for f in files_comp:
-                if re.search(dirnames[i], os.path.dirname(f)):
-                    compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
-                    parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
+                if i==6:
+                    if re.search(dirnames[i], os.path.dirname(f)):
+                        compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
+                        parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
+                else:
+                    if re.search(dirnames[i], os.path.basename(os.path.dirname(f))):
+                        compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
+                        parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
             
             arg.append(categories[i])
             arg.append(compnames)
@@ -676,17 +681,17 @@ class McGuiAppController():
     
     def handleHelpWeb(self):
         # open the mcstas homepage
-        mcurl = 'http://www.mcstas.org'
+        mcurl = 'http://www.'+mccode_config.configuration["MCCODE"]+'.org'
         webbrowser.open_new_tab(mcurl)
     
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
-        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", "mcstas-manual.pdf")
+        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-manual.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
-        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", "mcstas-components.pdf")
+        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-components.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
@@ -710,7 +715,7 @@ class McGuiAppController():
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
             self.emitter.message("Instrument closed", gui=True)
-            self.emitter.status("Instrument closed", gui=True)
+            self.emitter.status("Instrument closed")
     
     def handleSaveInstrument(self, text):
         result = self.state.saveInstrumentIfFileExists(text)
