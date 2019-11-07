@@ -57,6 +57,7 @@ class InstrExampleTest:
         self.errmsg = None
     def get_json_repr(self):
         return {
+            "displayname"  : self.get_display_name(),
             "sourcefile"   : self.sourcefile,
             "localfile"    : self.localfile,
             "instrname"    : self.instrname,
@@ -75,10 +76,7 @@ class InstrExampleTest:
         }
     def save(self, infolder):
         text = json.dumps(self.get_json_repr())
-        key = self.instrname
-        if self.testnb > 1:
-            key = "%s_%d" % (key, self.testnb)
-        f = open(join(infolder, key) + ".json", 'w').write(text)
+        f = open(join(infolder, self.get_display_name()) + ".json", 'w').write(text)
     def get_display_name(self):
         if self.testnb > 1:
             return self.instrname + "_%d" % self.testnb
@@ -153,24 +151,31 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
     logging.info("")
     logging.info("Compiling instruments [seconds]...")
     for test in tests:
-        log = LineLogger()
-        t1 = time.time()
-        cmd = "mcrun --info %s" % test.localfile
-        utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
-        t2 = time.time()
-        # TODO: detect success / failure from process return code
-        test.compiled = not log.find("error:")
-        test.compiletime = t2 - t1
-        # log to terminal
-        if test.compiled:
-            formatstr = "%-" + "%ds: " % maxnamelen + \
-                "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
-            logging.info(formatstr % test.get_display_name())
+        # if binary exists, set compile time = 0 and continue
+        binfile = os.path.splitext(test.localfile)[0] + ".out"
+        if os.path.exists(binfile):
+            test.compiled = True
+            test.compiletime = 0
         else:
-            formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
-            logging.info(formatstr % test.instrname + cmd)
-        # record compile stdout/err
-        log.save(join(testdir, test.instrname, "compile_stdout.txt"))
+            log = LineLogger()
+            t1 = time.time()
+            cmd = "mcrun --info %s" % test.localfile
+            utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+            t2 = time.time()
+            test.compiled = os.path.exists(binfile)
+            test.compiletime = t2 - t1
+
+            # log to terminal
+            if test.compiled:
+                formatstr = "%-" + "%ds: " % maxnamelen + \
+                    "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
+                logging.info(formatstr % test.get_display_name())
+            else:
+                formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
+                logging.info(formatstr % test.instrname + cmd)
+
+            # save compile stdout/stderr
+            log.save(join(testdir, test.instrname, "compile_stdout.txt"))
 
         # save (incomplete) test results to disk
         test.save(infolder=join(testdir, test.instrname))
@@ -187,16 +192,16 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
             logging.info(formatstr % test.get_display_name())
             continue
 
+        # run the test, record time and runtime success/fail
         t1 = time.time()
         cmd = "mcrun %s %s -d%d" % (test.localfile, test.parvals, test.testnb)
-        utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+        retcode = utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
         t2 = time.time()
-        # TODO: detect success / failure from process return code, not from guessing at stdout!
-        test.didrun = not log.find("error:")
+        test.didrun = not log.find("error:") or retcode != 0
         test.runtime = t2 - t1
 
         # log to terminal
-        if test.compiled:
+        if test.didrun:
             formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
                 "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
             logging.info(formatstr % test.get_display_name())
@@ -308,11 +313,11 @@ def run_default_test(testroot, mccoderoot, limit):
     logging.info("")
     results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
     
-    report_filepath = os.path.join(testdir, "results.json")
-    open(os.path.join(report_filepath), "w").write(json.dumps(results, indent=2))
+    reportfile = os.path.join(testdir, "testresults_%s.json" % version)
+    open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
-    logging.debug("Test results written to: %s" % report_filepath)
+    logging.debug("Test results written to: %s" % reportfile)
 
 
 def run_version_test(testroot, mccoderoot, limit, version):
@@ -335,11 +340,11 @@ def run_version_test(testroot, mccoderoot, limit, version):
     finally:
         deactivate_mccode_version(oldpath)
 
-    report_filepath = os.path.join(testdir, "results.json")
-    open(os.path.join(report_filepath), "w").write(json.dumps(results, indent=2))
+    reportfile = os.path.join(testdir, "testresults_%s.json" % version)
+    open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
-    logging.debug("Test results written to: %s" % report_filepath)
+    logging.debug("Test results written to: %s" % reportfile)
 
 
 def run_configs_test(testroot, mccoderoot, limit):
@@ -393,7 +398,7 @@ def run_configs_test(testroot, mccoderoot, limit):
                 results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
 
                 # write local test result
-                reportfile = os.path.join(testdir, "%s_testresults.json" % label)
+                reportfile = os.path.join(testdir, "testresults_%s.json" % label)
                 open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
             
                 logging.debug("")
