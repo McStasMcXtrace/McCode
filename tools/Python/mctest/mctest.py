@@ -184,6 +184,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
     logging.info("")
     logging.info("Running tests...")
     for test in tests:
+        if not test.compiled:
+            logging.info("%s did not compile" % test.instrname)
+            continue
+        
         log = LineLogger()
 
         # runable tests have testnb > 0
@@ -200,6 +204,9 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         test.didrun = not log.find("error:") or retcode != 0
         test.runtime = t2 - t1
 
+        # record run stdout/err
+        log.save(join(testdir, test.instrname, "run_stdout.txt"))
+
         # log to terminal
         if test.didrun:
             formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
@@ -208,9 +215,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         else:
             formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
             logging.info(formatstr % instrname + ", " + cmd)
-
-        # record run stdout/err
-        log.save(join(testdir, test.instrname, "run_stdout.txt"))
+            continue
 
         # target value extraction: look for a matching entry in mccode.sim, then select the filename in the same entry/of the same index
         lns = open(join(testdir, test.instrname, str(test.testnb), "mccode.sim")).read().splitlines()
