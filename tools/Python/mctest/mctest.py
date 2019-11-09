@@ -259,8 +259,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         test.testcomplete = True
         test.save(infolder=join(testdir, test.instrname))
 
-    # let the outside world create full report, just return test objects as a json obj
-    return [t.get_json_repr() for t in tests]
+    # displayname must be unique, we can return a dict, which eases comparison between tests
+    obj = {}
+    for t in tests:
+        obj[t.get_display_name()] = t.get_json_repr()
+    return obj
 
 #
 # Utility
@@ -330,7 +333,7 @@ def run_version_test(testroot, mccoderoot, limit, version):
 
     # verify that version exists
     if not os.path.isfile(os.path.join(mccoderoot, version, "environment")):
-        print("mccode version %scould not be found, exiting..." % version)
+        print("mccode version %s could not be found, exiting..." % version)
         quit(1)
 
     # create single-run test directory
