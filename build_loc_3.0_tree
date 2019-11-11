@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# rappid-build script for mcstas-kernel dev:
+
+git submodule init
+git submodule update
+git checkout mcstas-3.0
+git pull
+
+WORK=`pwd`
+
+export MCINSTALL_PREFIX=$HOME/McStas
+
+./mkdist mcstas 3.0-test "" "" deb64 "" -- justinst
+./mkdist mcstas-comps 3.0-test "" "" deb64 "" -- justinst
+# can be out-commented after the first build iteration:
+./mkdist mcstas-tools-perl-cmdline 3.0-test tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-perl-cmdline 3.0-test tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcrun 3.0-test tools/Python/mcrun/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mccodelib 3.0-test tools/Python/mccodelib/ "" deb64 "" -- justinst
+cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-test/bin/
