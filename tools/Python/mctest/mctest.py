@@ -30,7 +30,7 @@ def create_instr_test_objs(sourcefile, localfile, header):
         for m in ms:
             parvals = m[0].strip()
             detector = m[1].strip()
-            targetval = m[2].strip()
+            targetval = float(m[2].strip())
             tests.append(InstrExampleTest(sourcefile, localfile, parvals, detector, targetval, testnb))
             testnb = testnb + 1
     else:
@@ -252,7 +252,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
                     I = m.group(1)
                     I_err = m.group(2)
                     N = m.group(3)
-                    test.testval = I
+                    test.testval = float(I)
                     break
 
         # save test result to disk
