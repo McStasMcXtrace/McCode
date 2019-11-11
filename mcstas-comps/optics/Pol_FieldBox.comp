@@ -35,8 +35,8 @@
 
 DEFINE COMPONENT Pol_FieldBox
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth,yheight,zdepth, Bx,By,Bz, filename="")
-OUTPUT PARAMETERS (field_parameters)
+SETTING PARAMETERS (xwidth,yheight,zdepth, Bx,By,Bz, string filename="")
+OUTPUT PARAMETERS (field_parameters,const_field_parameters)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -46,8 +46,8 @@ SHARE
 
 DECLARE
 %{
-    double const field_parameters[3];
-    void *field_parameters;
+  double const_field_parameters[3];
+  void *field_parameters;
 %}
 
 INITIALIZE
@@ -71,9 +71,9 @@ TRACE
     double t0,t1;
     if (hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth)){
         if(t0>0) PROP_DT(t0);
-        field_parameters[0]=Bx;
-        field_parameters[1]=By;
-        field_parameters[2]=Bz;
+        ((double *)field_parameters)[0]=Bx;
+        ((double *)field_parameters)[1]=By;
+        ((double *)field_parameters)[2]=Bz;
 
         mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,field_parameters);
         if(t1-t0>0) PROP_DT(t1-t0);
