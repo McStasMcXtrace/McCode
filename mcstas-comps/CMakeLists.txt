@@ -54,6 +54,22 @@ add_executable(
 target_compile_options(mcpl2ssw PUBLIC "-std=c99")
 target_link_libraries(mcpl2ssw m)
 
+## Build phits2mcpl
+add_executable(
+  phits2mcpl
+  libs/mcpl/phits2mcpl.c
+)
+target_compile_options(phits2mcpl PUBLIC "-std=c99")
+target_link_libraries(phits2mcpl m)
+
+## Build mcpl2phits
+add_executable(
+  mcpl2phits
+  libs/mcpl/mcpl2phits.c
+)
+target_compile_options(mcpl2phits PUBLIC "-std=c99")
+target_link_libraries(mcpl2phits m)
+
 add_executable(
   cif2hkl
   ${CMAKE_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
@@ -77,8 +93,20 @@ if (NOT WINDOWS)
     PROGRAMS "${PROJECT_BINARY_DIR}/mcpl2ssw${DOT_EXE_SUFFIX}"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
+    install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/phits2mcpl${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpl2phits${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
   install (
     PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+  )
+  install (
+    PROGRAMS "${CMAKE_SOURCE_DIR}/libs/mcpl/pymcpltool"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
   )
 endif()
