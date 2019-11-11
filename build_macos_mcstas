@@ -73,18 +73,14 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install gcc openmpi gsl matplotlib -y
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install openmpi gsl matplotlib -y
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply numpy scipy pillow tornado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 
 # - Nasty local macOS hacks:
-# (1) rebuild the cif2hkl binary as static
-cd $MCINSTALL_PREFIX/mcstas/$1/libs/cif2hkl
-gfortran -c cif2hkl.F90 -o cif2hkl.o
-ld -o $MCINSTALL_PREFIX/mcstas/$1/bin/cif2hkl -no_compact_unwind -arch x86_64 -macosx_version_min 10.10.0 -lSystem $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libgfortran.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/libquadmath.a $MCINSTALL_PREFIX/mcstas/$1/miniconda3/lib/gcc/x86_64-apple-darwin11.4.2/4.8.5/libgcc.a cif2hkl.o
-# (2) ensure pymcpltool is run with pythonw binary
+# (1) ensure pymcpltool is run with pythonw binary
 sed -i.orig s/python/pythonw/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
 rm $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool.orig
 
