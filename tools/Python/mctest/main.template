@@ -11,37 +11,50 @@
 </head>
 <body>
 
+<fieldset>
+<legend>colour codes</legend>
 <table>
-<tr><th>a</th><th>b</th><th>c</th></tr>
 <tr>
-  <td class=state_one>1.3s<br>3.65s<br>/9.84026e-10 <br> (96%)</td>
-  <td class=state_two>0.2s<br>2.91s<br>9.84026e-10 <br> (4000%)</td>
-  <td class=state_two>1.1s<br>8.48s<br>9.84026e-10 <br> (16%)</td>
-</tr>
-<tr>
-  <td class=state_three>1.3s</td>
-  <td class=state_one>0.7s<br>7.18s<br>134928392834<br>(115%)</td>
-  <td class=state_four></td>
+  <td class=state_one>ctime<br>rtime<br>detval<br>acc. ok</td>
+  <td class=state_two>ctime<br>rutime<br>detval<br>acc. error</td>
+  <td class=state_three>ctime</td>
+  <td class=state_four>FAIL</td>
 </tr>
 </table>
+</fieldset>
 
+<fieldset style="margin-top:5px;">
+<legend>test results</legend>
 <table>
 <tr>
-  <th></th> {# table upper-left corner #}
-  {% for h in hrow %}<th class=headercell>{{ h }}</th>
-  {% endfor %}
+  <th></th>
+  {# table upper-left corner #}
+  {%- for h in hrow -%}
+  <th class=headercell>{{ h }}</th>
+  {%- endfor -%}
 </tr>
 
-{# ROW: state, ctime, rtime, detval #}
-{% for row in rows %}<tr>
+{# ROW: state, ctime, rtime, testval, reference-percentage #}
+{% for row in rows %}
+<tr>
   <td>{{ row.0 }}</td> {# instr #}
-  {% for c in row %}
-  {% if loop.index0 > 0 %}
-  <td class={{ c.0 }}>{{ c.1 }} s<br>{{ c.2 }} s<br>{{ c.3 }}<br>({{ c.4 }}%)</td>
-  {% endif %}
-  {% endfor %}
-</tr>{% endfor %}
+  {%- for c in row %}
+    {%- if loop.index0 > 0 %}
+      {%- if c.0 == 1 %}
+  <td class=state_one>{{ c.1 }}<br>{{ c.2 }}<br>{{ c.3 }}<br>{{ c.4 }}</td>
+      {%- elif c.0 == 2 %}
+  <td class=state_two>{{ c.1 }}<br>{{ c.2 }}<br>{{ c.3 }}<br>{{ c.4 }}</td>
+      {%- elif c.0 == 3 %}
+  <td class=state_three>{{ c.1 }}</td>
+      {%- else %}
+  <td class=state_four></td>
+      {%- endif %}
+    {%- endif -%}
+  {%- endfor %}
+</tr>
+{%- endfor %}
 </table>
+</fieldset>
 
 </body>
 </html>
