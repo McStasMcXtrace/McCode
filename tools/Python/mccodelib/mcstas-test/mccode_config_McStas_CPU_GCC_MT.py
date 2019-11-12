@@ -6,7 +6,7 @@ mcstas/mcxtrace configuration.
 '''
 configuration = {
     "MCCODE_VERSION": '3.0-test',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/3.0-test',
+    "MCCODE_LIB_DIR": '/u/data/pkwi/McStas/mcstas/3.0-test/',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
@@ -25,10 +25,10 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-g -lm -std=c99 -O2 -DRNG_ALG=2 -DUSE_MPI -lmpi',
+    "CFLAGS": '-g -lm -std=c99 -O2',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "CC": 'mpicc',
+    "CC": 'gcc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
     "MPINODES": '4',
@@ -64,16 +64,16 @@ def load_user_config():
     global configuration
     global compilation
     global platform
-    
+
     if os.name == 'nt':
         userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
     else:
         userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
     userconfig = os.path.join(userdir,"mccode_config.json")
-    
+
     if not os.path.isfile(userconfig):
         return
-    
+
     print("loading user configuration from " + userconfig)
     text = open(userconfig).read()
     obj = json.loads(text)
@@ -95,13 +95,13 @@ def save_user_config():
             os.mkdir(homedirconf)
         except Exception as e:
             print("Directory %s could not be created: %s " % (homedirconf, e.__str__()))
-            
+
     userdir = os.path.join(homedirconf,configuration['MCCODE_VERSION'])
     if not os.path.isdir(userdir):
         try:
             os.mkdir(userdir)
         except Exception as e:
-            print("Directory %s could not be created: %s " % (userdir, e.__str__())) 
+            print("Directory %s could not be created: %s " % (userdir, e.__str__()))
     userconfig = os.path.join(userdir,"mccode_config.json")
     f = None
     try:
@@ -123,7 +123,7 @@ def get_options():
     else:
         suffix='.pl'
         suffix2=''
-        
+
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
         mcdisplay_lst = [prefix+"display-webgl",
@@ -133,7 +133,7 @@ def get_options():
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m",
                          prefix+"display"+suffix+" --format=Matlab",
-                         prefix+"display"+suffix+" --format=VRML", 
+                         prefix+"display"+suffix+" --format=VRML",
                          prefix+"display"+suffix+" --format=Mantid"]
     else:
         prefix = "mx"
@@ -141,13 +141,13 @@ def get_options():
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
-                         prefix+"display"+suffix+" -m", 
+                         prefix+"display"+suffix+" -m",
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML"]
 
- 
+
     mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
-        
+
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 
