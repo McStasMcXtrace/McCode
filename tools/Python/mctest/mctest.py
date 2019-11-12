@@ -4,7 +4,6 @@ import logging
 import argparse
 import json
 import os
-from reportlab.graphics.charts.legends import _getLineCount
 join = os.path.join
 from os.path import basename, join, isdir, splitext
 from os import mkdir
