@@ -9,7 +9,12 @@ from os import walk
 import shutil
 import jinja2
 
-ERROR_THRESSHOLD_ACCEPT = 20
+ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
+
+
+def get_header_info(testobj):
+    i = testobj.get("_meta", None)
+    # TODO: implement
 
 def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
@@ -42,7 +47,7 @@ def run_normal_mode(testdir, reflabel):
             else:
                 refval = float(refval)
             refp = abs(float(cellobj["testval"])/refval*100)
-            if abs(refp-100) > ERROR_THRESSHOLD_ACCEPT:
+            if abs(refp-100) > ERROR_PERCENT_THRESSHOLD_ACCEPT:
                 state = 2
             else:
                 state = 1
@@ -58,16 +63,21 @@ def run_normal_mode(testdir, reflabel):
     alllabels.sort()
 
     refobj = None
-    nonreflabels = []
+    refmeta = None
+    testlabels = []
     for t in alllabels:
         obj = json.loads(open(join(testdir, t, "testresults_%s.json" % t)).read())
+        meta = obj.get("_meta", None)
+        if meta:
+            del obj["_meta"]
         if reflabel == t:
             refobj = obj
+            refmeta = meta
         else:
-            nonreflabels.append((t, obj)) # key, object tuple
+            testlabels.append((t, obj, meta)) # key, object tuple
 
     # create header row
-    hrow = ["%s (ref)" % reflabel] + [t[0] for t in nonreflabels]
+    hrow = ["%s (ref)" % reflabel] + [t[0] for t in testlabels]
     rows = []
 
     # create rows - 1) all instr tests in reference
@@ -84,7 +94,7 @@ def run_normal_mode(testdir, reflabel):
         row.append(get_cell_tuple(refobj[key]))
 
         # test cols
-        for (label, obj) in nonreflabels:
+        for (label, obj, meta) in testlabels:
             o = obj.get(key, None)
             if o:
                 row.append(get_cell_tuple(o, refobj[key]["targetval"]))
