@@ -5,8 +5,8 @@ import json
 mcstas/mcxtrace configuration.
 '''
 configuration = {
-    "MCCODE_VERSION": '3.0-dev',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/3.0-dev',
+    "MCCODE_VERSION": '3.0-test',
+    "MCCODE_LIB_DIR": '/u/data/pkwi/McStas/mcstas/3.0-test/',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
@@ -25,7 +25,7 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-ta=tesla:cc70,managed,deepcopy -Minfo=accel -DUSE_PGI -DNOSIGNALS -DRNG_ALG=2',
+    "CFLAGS": '-ta=tesla,managed,deepcopy -Minfo=accel -DUSE_PGI -DNOSIGNALS -DRNG_ALG=2',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "CC": 'pgcc',
