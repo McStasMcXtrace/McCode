@@ -32,6 +32,7 @@
 * process_string:  [string] Comma seperated names of physical processes
 * my_absorption:   [1/m]    Inverse penetration depth from absorption at standard energy
 * absorber:        [0/1]    Control parameter, if set to 1 the material will have no scattering processes
+* material:        [string] List of elements present in the material. Triggers a search for materials constants files. 
 *
 * OUTPUT PARAMETERS:
 * this_material:            Structure that contains information on this material
@@ -47,7 +48,7 @@
 
 DEFINE COMPONENT Union_make_material
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(string process_string="NULL",my_absorption,absorber=0)
+  SETTING PARAMETERS(string process_string="NULL",my_absorption,absorber=0, string material_string="NULL")
 OUTPUT PARAMETERS (loop_index,this_material,accepted_processes,global_material_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -105,7 +106,7 @@ void manual_linking_function_material(char *input_string, struct pointer_to_glob
           // Alert the user to this problem by showing the process name that was not found and the currently available processes
             printf("\n");
             printf("ERROR: The process string \"%s\" in Union material \"%s\" had an entry that did not match a specified process. \n",input_string,component_name);
-            printf("       The unrecoignized process name was: \"%s\" \n",token);
+            printf("       The unrecognized process name was: \"%s\" \n",token);
             printf("       The processes available at this point (need to be defined before the material): \n");
             for (loop_index=0;loop_index<global_process_list->num_elements;loop_index++)
               printf("         %s\n",global_process_list->elements[loop_index].name);
@@ -159,6 +160,33 @@ int count_commas(char *string) {
 }
 */
 
+int build_my_absorption_table_function(const char *material_string, struct element_data_struct **elements){
+  /*parse for commas*/
+  char local_string[128];
+  const int size=16; /*maximum number of elements in materials*/ 
+
+  strncpy(local_string,material_string,128);
+  
+  /*for each token read the table and compute mu, scale by chemical number density, and put the thing in the new table*/
+  
+  /*init an empty table*/
+  *elements = calloc(size,sizeof(**elements));
+
+  char *token;
+  int table_counter=0;
+  int status;
+  token=strtok(local_string,",");
+  while (token!=NULL){ printf("Union_make_material: generating my abs for material %s\n",token);
+    if ( (status=Read_Table((*elements)->element_table,token,0))==-1){
+      printf("Union_make_material: ERROR Reading file %s.\n", token); 
+      return 0; 
+    } 
+    table_counter++;
+    token=strtok(NULL,",");
+  }
+  return table_counter;
+}
+
 
 %}
 
@@ -208,11 +236,17 @@ INITIALIZE
     printf("ERROR, a Union material may not be called Exit. A exit volume may be created by material=\"Exit\" in a geometry component.\n");
     exit(1);
   }
-  if (my_absorption < 0) {
-    printf("ERROR, Union make material named %s have a negative absorption cross section!.\n",NAME_CURRENT_COMP);
-    exit(1);
-  }
   
+  if ( 0 == strcmp(material_string,"NULL") ){
+    if (my_absorption < 0) {
+      printf("ERROR, Union make material named %s have a negative absorption cross section!.\n",NAME_CURRENT_COMP);
+      exit(1);
+    }
+  }else{
+    /* a material_string is given so use that*/
+    this_material.number_of_elements = build_my_absorption_table_function(material_string, &(this_material.p_element_array) );
+  }
+
   if (absorber == 0) {
     if (process_string && strlen(process_string) && strcmp(process_string,"NULL") && strcmp(process_string, "0")) {
         manual_linking_function_material(process_string, &global_process_list, &accepted_processes, NAME_CURRENT_COMP);
