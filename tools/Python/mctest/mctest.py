@@ -98,7 +98,7 @@ class LineLogger():
                 return True
         return False
 
-def mccode_test(branchdir, testdir, limitinstrs=None):
+def mccode_test(branchdir, testdir, limitinstrs=None, datetime=None):
     ''' this main test function tests the given mccode branch/version '''
 
     # copy instr files and record info
@@ -265,10 +265,38 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
         test.testcomplete = True
         test.save(infolder=join(testdir, test.instrname))
 
+    #    cpu type: cat /proc/cpuinfo |grep name |uniq | cut -f2- -d: 
+    #    gpu type: nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(
+
+    metalog = LineLogger()
+    utils.run_subtool_to_completion("cat /proc/cpuinfo |grep name |uniq | cut -f2- -d: | xargs echo", stdout_cb=metalog.logline)
+    cpu_type = ",".join(metalog.lst)
+
+    metalog = LineLogger()
+    utils.run_subtool_to_completion("nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline)
+    gpu_type = ",".join(metalog.lst)
+
+    metalog = LineLogger()
+    utils.run_subtool_to_completion("hostname", stdout_cb=metalog.logline)
+    hostnamestr = ",".join(metalog.lst)
+
+    metalog = LineLogger()
+    utils.run_subtool_to_completion('echo "$USER"', stdout_cb=metalog.logline)
+    username = ",".join(metalog.lst)
+
+    metainfo = OrderedDict()
+    metainfo["ncount"] = ncount 
+    metainfo["date"] = datetime
+    metainfo["hostname"] = hostnamestr
+    metainfo["user"] = username
+    metainfo["cpu_type"] = cpu_type
+    metainfo["gpu_type"] = gpu_type
+
     # displayname must be unique, we can return a dict, which eases comparison between tests
     obj = {}
     for t in tests:
         obj[t.get_display_name()] = t.get_json_repr()
+    obj["_meta"] = metainfo
     return obj
 
 #
@@ -325,11 +353,12 @@ def run_default_test(testroot, mccoderoot, limit):
         quit(1)
 
     # create single-run test directory
-    testdir = create_test_dir(testroot, utils.get_datetimestr(), version)
+    datetime = utils.get_datetimestr()
+    testdir = create_test_dir(testroot, datetime, version)
 
     logging.info("Testing: %s" % version)
     logging.info("")
-    results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
+    results = mccode_test(os.path.join(mccoderoot, version), testdir, limit, datetime)
     
     reportfile = os.path.join(testdir, "testresults_%s.json" % version)
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
@@ -347,14 +376,15 @@ def run_version_test(testroot, mccoderoot, limit, version):
         quit(1)
 
     # create single-run test directory
-    testdir = create_test_dir(testroot, utils.get_datetimestr(), version)
+    datetime = utils.get_datetimestr()
+    testdir = create_test_dir(testroot, datetime, version)
 
     oldpath = activate_mccode_version(version, mccoderoot)
     try:
         logging.info("Testing: %s" % version)
         logging.info("")
 
-        results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
+        results = mccode_test(os.path.join(mccoderoot, version), testdir, limit, datetime)
     finally:
         deactivate_mccode_version(oldpath)
 
@@ -413,7 +443,7 @@ def run_configs_test(testroot, mccoderoot, limit):
 
                 # craete the proper test dir
                 testdir = create_test_dir(testroot, datetime, label)
-                results = mccode_test(os.path.join(mccoderoot, version), testdir, limit)
+                results = mccode_test(os.path.join(mccoderoot, version), testdir, limit, datetime)
 
                 # write local test result
                 reportfile = os.path.join(testdir, "testresults_%s.json" % label)
