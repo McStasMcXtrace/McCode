@@ -1183,7 +1183,7 @@ TRACE
                     
           } else {
             // Since there is a non-zero number of processes in this material, all the scattering cross section for these are calculated
-            my_sum = 0; k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz; p_my_trace = my_trace; wavevector = coords_set(k[0],k[1],k[2]);
+            my_sum = 0; k[0] = kx; k[1] = ky; k[2] = kz; p_my_trace = my_trace; wavevector = coords_set(k[0],k[1],k[2]);
             for (process_start = process = Volumes[current_volume]->p_physics->p_scattering_array;process - process_start < Volumes[current_volume]->p_physics->number_of_processes;process++) {
             
               if (Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index != -1) {
