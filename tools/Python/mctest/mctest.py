@@ -4,6 +4,7 @@ import logging
 import argparse
 import json
 import os
+from reportlab.graphics.charts.legends import _getLineCount
 join = os.path.join
 from os.path import basename, join, isdir, splitext
 from os import mkdir
@@ -198,10 +199,15 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
 
         # run the test, record time and runtime success/fail
         t1 = time.time()
-        cmd = "mcrun %s %s -d%d" % (test.localfile, test.parvals, test.testnb)
+        global ncount 
+        if ncount is not None:
+            cmd = "mcrun %s %s -n%s -d%d" % (test.localfile, test.parvals, ncount, test.testnb)
+        else:
+            cmd = "mcrun %s %s -d%d" % (test.localfile, test.parvals, test.testnb)
         retcode = utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
         t2 = time.time()
-        test.didrun = not log.find("error:") or retcode != 0
+        didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
+        test.didrun = not log.find("error:") or retcode != 0 or not didwrite
         test.runtime = t2 - t1
 
         # record run stdout/err
@@ -219,6 +225,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None):
 
         # target value extraction: look for a matching entry in mccode.sim, then select the filename in the same entry/of the same index
         lns = open(join(testdir, test.instrname, str(test.testnb), "mccode.sim")).read().splitlines()
+
         componentlines = [l for l in lns if re.match("  component:", l)]
         filenamelines = [l for l in lns if re.match("  filename:", l)]
         idx = 0
@@ -312,7 +319,11 @@ def run_default_test(testroot, mccoderoot, limit):
     # get default/system version number
     logger = LineLogger()
     utils.run_subtool_to_completion("mcrun --version", stdout_cb=logger.logline)
-    version = logger.lst[-1].strip()
+    try:
+        version = logger.lst[-1].strip()
+    except:
+        logging.info("no 'mcrun --version' output, try using --configs")
+        quit(1)
 
     # create single-run test directory
     testdir = create_test_dir(testroot, utils.get_datetimestr(), version)
@@ -384,7 +395,7 @@ def run_configs_test(testroot, mccoderoot, limit):
         ''' look in "__file__/../mccodelib/MCCODE-test" location or config files'''
         lookin = join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test")
         for (_, _, files) in os.walk(lookin):
-            return [join(lookin, f) for f in files]
+            return [join(lookin, f) for f in files if re.search("^mccode_config.*\.py$", f)]
 
     # get test directory datetime string
     datetime = utils.get_datetimestr()
@@ -459,6 +470,7 @@ def show_installed_versions(mccoderoot):
     logging.info("Selectable version names are: %s" % ", ".join(branchnames))
     logging.info("")
 
+ncount = None
 
 def main(args):
     # mutually excusive main branches
@@ -466,7 +478,7 @@ def main(args):
     version = args.testversion      # test a specific mccode version (also) present on the system
     configs = args.configs          # test all config versions, which are versions of mccode_config.py, located in mccodelib/MCCODE
     vinfo = args.versions           # display mccode versions installed on the system
-
+    
     # modifying options
     verbose = args.verbose          # display more info during runs
     testroot = args.testroot        # use non-default test output root location
@@ -494,6 +506,11 @@ def main(args):
             quit(1)
     logging.debug("")
 
+    global ncount
+    if args.ncount:
+        ncount = args.ncount[0]
+        logging.info("ncount is: %s" % ncount)
+
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
         print("WARNING: version, --configs and --versions are mutually exclusive, exiting")
@@ -512,6 +529,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
+    parser.add_argument('--ncount', nargs=1, help='ncount sent to mcrun')
     parser.add_argument('--configs', action='store_true', help='test config files under mccodelib/MCCODE')
     parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mccode installations')
     parser.add_argument('--testroot', nargs='?', help='output test results under this root folder')
