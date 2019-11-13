@@ -344,7 +344,7 @@ def run_default_test(testroot, mccoderoot, limit):
     try:
         version = logger.lst[-1].strip()
     except:
-        logging.info("no 'mcrun --version' output, try using --configs")
+        logging.info("no 'mcstas --version' output, try using --configs")
         quit(1)
 
     # create single-run test directory
