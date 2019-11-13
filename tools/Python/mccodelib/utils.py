@@ -665,15 +665,20 @@ def run_subtool_noread(cmd, cwd=None):
     ''' run subtool to completion in a excessive pipe-output robust way (millions of lines) '''
     if not cwd:
         cwd = os.getcwd()
-    process = subprocess.Popen(cmd,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               stdin=subprocess.PIPE,
-                               shell=True,
-                               universal_newlines=True,
-                               cwd=cwd)
-    process.communicate()
-    return process.returncode
+    try:
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   shell=True,
+                                   universal_newlines=True,
+                                   cwd=cwd)
+        process.communicate()
+        return process.returncode
+    except Exception as e:
+        ''' unicode read error safe-guard '''
+        print("run_subtool_noread (cmd=%s) error: " % (cmd, str(e)))
+        return -1
 
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
