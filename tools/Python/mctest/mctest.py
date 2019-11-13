@@ -268,8 +268,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None, datetime=None):
     cpu_type = ",".join(metalog.lst)
 
     metalog = LineLogger()
-    utils.run_subtool_to_completion("nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline)
+    utils.run_subtool_to_completion("nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline) 
     gpu_type = ",".join(metalog.lst)
+    if "failed because" in gpu_type:
+        gpu_type = "none"
 
     metalog = LineLogger()
     utils.run_subtool_to_completion("hostname", stdout_cb=metalog.logline)
