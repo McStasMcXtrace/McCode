@@ -1,12 +1,21 @@
 import os
 import json
+import sys
 
+'''
+Dynamic vs static LIBDIR location
+'''
+LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
+LIBDIR_FALLBACK = '/Applications/McStas-2.6rc02.app/Contents/Resources/mcstas/3.0-dev/'
+if sys.platform == 'darwin':
+    LIBDIR = LIBDIR_FALLBACK
+    
 '''
 mcstas/mcxtrace configuration.
 '''
 configuration = {
     "MCCODE_VERSION": '3.0-dev',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/3.0-dev/',
+    "MCCODE_LIB_DIR": LIBDIR,
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
