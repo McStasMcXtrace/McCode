@@ -15,7 +15,7 @@ mcstas/mcxtrace configuration.
 '''
 configuration = {
     "MCCODE_VERSION": '3.0-dev',
-    "MCCODE_LIB_DIR": '/u/data/pkwi/McStas/mcstas/3.0-dev/',
+    "MCCODE_LIB_DIR": LIBDIR,
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
