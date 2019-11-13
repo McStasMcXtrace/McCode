@@ -677,7 +677,7 @@ def run_subtool_noread(cmd, cwd=None):
         return process.returncode
     except Exception as e:
         ''' unicode read error safe-guard '''
-        print("run_subtool_noread (cmd=%s) error: " % (cmd, str(e)))
+        print("run_subtool_noread (cmd=%s) error: %s" % (cmd, str(e)))
         return -1
 
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
