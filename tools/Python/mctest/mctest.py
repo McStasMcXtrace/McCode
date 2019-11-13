@@ -188,8 +188,6 @@ def mccode_test(branchdir, testdir, limitinstrs=None, datetime=None):
             logging.info("%s did not compile" % test.instrname)
             continue
         
-        log = LineLogger()
-
         # runable tests have testnb > 0
         if test.testnb <= 0:
             formatstr = "%-" + "%ds:   NO TEST" % (maxnamelen+1)
@@ -200,17 +198,14 @@ def mccode_test(branchdir, testdir, limitinstrs=None, datetime=None):
         t1 = time.time()
         global ncount 
         if ncount is not None:
-            cmd = "mcrun %s %s -n%s -d%d" % (test.localfile, test.parvals, ncount, test.testnb)
+            cmd = "mcrun %s %s -n%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, test.testnb)
         else:
-            cmd = "mcrun %s %s -d%d" % (test.localfile, test.parvals, test.testnb)
-        retcode = utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+            cmd = "mcrun %s %s -d%d  &> run_stdout.txt" % (test.localfile, test.parvals, test.testnb)
+        retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
-        test.didrun = not log.find("error:") or retcode != 0 or not didwrite
+        test.didrun = retcode != 0 or didwrite
         test.runtime = t2 - t1
-
-        # record run stdout/err
-        log.save(join(testdir, test.instrname, "run_stdout.txt"))
 
         # log to terminal
         if test.didrun:

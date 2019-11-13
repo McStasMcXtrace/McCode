@@ -661,6 +661,20 @@ def get_file_contents(filepath):
     else:
         return ''
 
+def run_subtool_noread(cmd, cwd=None):
+    ''' run subtool to completion in a excessive pipe-output robust way (millions of lines) '''
+    if not cwd:
+        cwd = os.getcwd()
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               stdin=subprocess.PIPE,
+                               shell=True,
+                               universal_newlines=True,
+                               cwd=cwd)
+    process.communicate()
+    return process.returncode
+
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
     Synchronous run subprocess.popen with pipe buffer reads, 
@@ -675,8 +689,8 @@ def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
 
     try:
         # open the process with all bells & whistles
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE, 
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE,
                                    shell=True,
