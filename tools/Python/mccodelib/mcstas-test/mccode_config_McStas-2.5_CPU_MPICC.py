@@ -17,7 +17,7 @@ configuration = {
     "MCCODE_VERSION": '2.5',
     "MCCODE_LIB_DIR": LIBDIR,
     "MCCODE": 'mcstas',
-    "MCRUN": 'mcrun',
+    "MCRUN": 'mcrun --mpi=auto',
     "MCPLOT": 'mcplot-pyqtgraph',
     "MCDISPLAY": 'mcdisplay-webgl',
     "TOOL_NAME": 'mcgui',
