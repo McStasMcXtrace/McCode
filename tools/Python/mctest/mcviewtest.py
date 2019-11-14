@@ -15,9 +15,8 @@ ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
 
-    def get_header_lst(testobj):
-        meta = testobj.get("_meta", None)
-        lst = None
+    def get_header_lst(meta):
+        ''' composes an easily-templatable list fom a "_meta" test header object '''
         if meta is not None:
             lst = []
             lst.append(meta["ncount"])
@@ -78,16 +77,67 @@ def run_normal_mode(testdir, reflabel):
 
             return (state, compiletime, runtime, testval, refp)
 
-    def get_empty_cell_tuple():
-        return ("state_four", 0, 0, 0, 0)
+    def get_empty_cell_tuple(tag=None):
+        ''' return a "state_four" black cell, optionally with a tag, this could be "no ref" or "no test" etc. '''
+        if tag is not None: 
+            return (1, tag, )
+        return (1, )
+
+    def has_test(labels):
+        ''' labels : [(t, obj, meta)] '''
+        for l in labels:
+            if len(l.keys()) > 0:
+                return True
+        return False
+
+    def iterate_obj_to_populate_rows(iterobj, otherobjs, rows, ncols, use_iterobj_refvalue=True, del_used_from_overobjs=True):
+        '''
+        Used to construct rows from a dict and a list of dicts with similar keys, either
+        from a reference column, or as egalitarian with a lead "iterate" object. Appends to rows.
+        
+        cols: if higher than 1+len(otherobjs), empty cells are first appended to rows, in order to orient cols correctly)
+        '''
+        # use default order, default sorting (e.g. list.sort()) wasn't satisfactory
+        for key in list(iterobj.keys()):
+            # prepare row list to have the requested amount of cells (cols) 
+            row = []
+            for i in range(ncols - len(otherobjs) - 1):
+                tag = "no test"
+                if i == 0:
+                    tag = "no ref"
+                row.append(get_empty_cell_tuple(tag))
+            rows.append(row)
+            # instr
+            row.append(key)
+            # ref col
+            row.append(get_cell_tuple(iterobj[key]))
+            # remaining cols
+            for obj in otherobjs:
+                o = obj.get(key, None)
+                if o:
+                    # use reference/iterobj targetval, or native/None
+                    targetval = o.get("targetval", None)
+                    if use_iterobj_refvalue:
+                        targetval = iterobj[key]["targetval"]
+                    row.append(get_cell_tuple(o, targetval))
+
+                    # delete "used" cell keys
+                    if del_used_from_overobjs:
+                        del obj[key]
+                else:
+                    row.append(get_empty_cell_tuple())
 
     # load test data
     for _, alllabels, _ in walk(testdir): break
     alllabels.sort()
+    # get number of data columns
+    numcols= len(alllabels)
 
     refobj = None
     refmeta = None
     testlabels = []
+    testobjs = []
+    testmetas =  []
     for t in alllabels:
         obj = json.loads(open(join(testdir, t, "testresults_%s.json" % t)).read())
         meta = obj.get("_meta", None)
@@ -97,41 +147,29 @@ def run_normal_mode(testdir, reflabel):
             refobj = obj
             refmeta = meta
         else:
-            testlabels.append((t, obj, meta)) # key, object tuple
+            testlabels.append(t)
+            testobjs.append(obj)
+            testmetas.append(meta)
 
     # create header row
-    hrow = ["%s (ref)" % reflabel] + [t[0] for t in testlabels]
-    rows = []
+    hrow = ["%s (ref)" % reflabel] + testlabels
 
     # create rows - 1) all instr tests in reference
-    refkeys = list(refobj.keys())
-    refkeys.sort()
-    for key in refkeys:
-        row = []
-        rows.append(row)
+    rows = []
+    iterate_obj_to_populate_rows(refobj, testobjs, rows, ncols=numcols)
 
-        # instr
-        row.append(key)
-
-        # ref col
-        row.append(get_cell_tuple(refobj[key]))
-
-        # test cols
-        for (label, obj, meta) in testlabels:
-            o = obj.get(key, None)
-            if o:
-                row.append(get_cell_tuple(o, refobj[key]["targetval"]))
-            else:
-                row.append(get_empty_cell_tuple())
-
-    # TODO: create remaining rows
-    # TODO: in the above, delete already used keys
-    # TODO: repeat the above, iterating through the next test, etc. (a while loop or recursive)
+    # WARNING: untested in the non-trivial case
+    while has_test(testobjs):
+        leadcol = testobjs.pop(0)
+        iterate_obj_to_populate_rows(leadcol, testobjs, rows, ncols=numcols, use_iterobj_refvalue=False)
 
     text = open(join(dirname(__file__), "main.template")).read()
-    html = jinja2.Template(text).render(hrow=hrow, rows=rows, header=get_header_lst(refobj))
+    html = jinja2.Template(text).render(hrow=hrow, rows=rows, header=get_header_lst(refmeta))
 
-    open("output.html", "w").write(html)
+    datetime = testdir.split("/")[-1]
+    ofile = "%s_output.html" % datetime
+    print("writing ofile: %s" % ofile)
+    open(ofile, "w").write(html)
 
 def run_interactive_mode(testroot):
     ''' a simple utility for deleting useless test directories '''
