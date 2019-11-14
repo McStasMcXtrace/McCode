@@ -427,7 +427,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
     def get_config_files(configfltr):
         ''' look in "__file__/../mccodelib/MCCODE-test" location or config files'''
         lookin = join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test")
-        if os.path.isfile(configfltr):
+        if configfltr is not None and os.path.isfile(configfltr):
             return [configfltr]
         for (_, _, files) in os.walk(lookin):
             if configfltr is not None:
@@ -452,7 +452,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
 
                 # craete the proper test dir
                 labeldir = create_label_dir(testdir, label)
-                results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter, datetime)
+                results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter)
 
                 # write local test result
                 reportfile = os.path.join(labeldir, "testresults_%s.json" % label)
