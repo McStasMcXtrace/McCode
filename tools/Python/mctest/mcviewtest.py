@@ -12,12 +12,21 @@ import jinja2
 ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 
 
-def get_header_info(testobj):
-    i = testobj.get("_meta", None)
-    # TODO: implement
-
 def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
+
+    def get_header_lst(testobj):
+        meta = testobj.get("_meta", None)
+        lst = None
+        if meta is not None:
+            lst = []
+            lst.append(meta["ncount"])
+            lst.append(meta["date"])
+            lst.append(meta["hostname"])
+            lst.append(meta["user"])
+            lst.append(meta["cpu_type"])
+            lst.append(meta["gpu_type"])
+        return lst
 
     def get_cell_tuple(cellobj, refval=None):
         ''' set up and format cell data '''
@@ -33,25 +42,39 @@ def run_normal_mode(testdir, reflabel):
         elif not cellobj["didrun"]:
             state = 3
             compiletime = "%.2f s" % cellobj["compiletime"]
+            if cellobj["testnb"] > 1:
+                # if this is a second test of the same instr, it was already compiled, thus 0.001 compiletime is nonsense
+                compiletime = ""
             return (state, compiletime)
+        elif not cellobj["testval"]:
+            testval = "missing"
+            runtime = "%.2f s" % cellobj["runtime"]
+            compiletime = "%.2f s" % cellobj["compiletime"]
+            if cellobj["testnb"] > 1:
+                compiletime = ""
+            state = 2
+            (state, compiletime, runtime, testval, "")
         else:
             testval = "%.2g" % float(cellobj["testval"])
             runtime = "%.2f s" % cellobj["runtime"]
             compiletime = "%.2f s" % cellobj["compiletime"]
             if cellobj["testnb"] > 1:
-                # if this is a second test of the same instr, it was already compiled, thus 0.001 compiletime is nonsense
                 compiletime = ""
 
             if refval is None:
                 refval = float(cellobj["targetval"])
             else:
                 refval = float(refval)
+    
             refp = abs(float(cellobj["testval"])/refval*100)
             if abs(refp-100) > ERROR_PERCENT_THRESSHOLD_ACCEPT:
                 state = 2
             else:
                 state = 1
-            refp = "(%2.f" % refp + "%)"
+            if abs(refp)>1000:
+                refp = "(%2.g" % refp + "%)"
+            else:
+                refp = "(%2.f" % refp + "%)"
 
             return (state, compiletime, runtime, testval, refp)
 
@@ -106,7 +129,7 @@ def run_normal_mode(testdir, reflabel):
     # TODO: repeat the above, iterating through the next test, etc. (a while loop or recursive)
 
     text = open(join(dirname(__file__), "main.template")).read()
-    html = jinja2.Template(text).render(hrow=hrow, rows=rows)
+    html = jinja2.Template(text).render(hrow=hrow, rows=rows, header=get_header_lst(refobj))
 
     open("output.html", "w").write(html)
 

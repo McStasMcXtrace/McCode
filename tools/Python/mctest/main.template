@@ -3,10 +3,11 @@
 <head>
 <style>
 .headercell { padding:5px }
-.state_one { padding:5px; background-color: green; color: white; }
-.state_two { padding:5px; background-color: red; color: white; }
-.state_three { padding:5px; background-color: gray; color: white; }
-.state_four { padding:5px; background-color: black; color: white; }
+.state_one { padding:5px; background-color:green; color:white; }
+.state_two { padding:5px; background-color:red; color:white; }
+.state_three { padding:5px; background-color:gray; color:white; }
+.state_four { padding:5px; background-color:black; color:white; }
+.vertical { writing-mode:vertical-rl; text-orientation:mixed; }
 </style>
 </head>
 <body>
@@ -25,12 +26,22 @@
 
 <fieldset style="margin-top:5px;">
 <legend>test results</legend>
+{%- if header is not none -%}
+<table>
+  <tr><td>ncount:</td><td>{{ header.0 }}</td></tr>
+  <tr><td>date:</td><td>{{ header.1 }}</td></tr>
+  <tr><td>hostname:</td><td>{{ header.2 }}</td></tr>
+  <tr><td>user:</td><td>{{ header.3 }}</td></tr>
+  <tr><td>cpu type:</td><td>{{ header.4 }}</td></tr>
+  <tr><td>gpu type:</td><td>{{ header.5 }}</td></tr>
+</table>
+{%- endif -%}
 <table>
 <tr>
   <th></th>
   {# table upper-left corner #}
   {%- for h in hrow -%}
-  <th class=headercell>{{ h }}</th>
+  <th class=vertical>{{ h }}</th>
   {%- endfor -%}
 </tr>
 
