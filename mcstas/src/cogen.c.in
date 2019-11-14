@@ -1788,6 +1788,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#ifndef M_SQRT2");
   cout("#define M_SQRT2 1.4142135623730951  /* sqrt(2) */");
   cout("#endif");
+  cout("");
+  cout("#ifdef DISABLE_TRACE");
+  cout("#undef MC_TRACE_ENABLED");
+  cout("#endif");
 
   // generate particle struct
   cout("");

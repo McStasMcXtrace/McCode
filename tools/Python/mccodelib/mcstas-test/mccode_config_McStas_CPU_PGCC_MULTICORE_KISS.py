@@ -34,7 +34,7 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-ta=multicore -Minfo=accel -DNOSIGNALS -DRNG_ALG=2',
+    "CFLAGS": '-ta=multicore -Minfo=accel -DNOSIGNALS -DRNG_ALG=2 -DDISABLE_TRACE',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "CC": 'pgcc',
