@@ -81,7 +81,7 @@ def run_normal_mode(testdir, reflabel):
         ''' return a "state_four" black cell, optionally with a tag, this could be "no ref" or "no test" etc. '''
         if tag is not None: 
             return (1, tag, )
-        return (1, )
+        return (4, )
 
     def has_test(labels):
         ''' labels : [(t, obj, meta)] '''
