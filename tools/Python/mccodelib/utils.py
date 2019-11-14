@@ -3,6 +3,7 @@ Analysis tools for mcstas component files and instrument files.
 '''
 import re
 import os
+from os.path import splitext, join
 import subprocess
 from datetime import datetime
 
@@ -607,20 +608,39 @@ def get_instr_site(instr_file):
         
     return site
 
-def get_instr_comp_files(mydir, recursive=True):
+def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=None):
     ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir"
-    
+
     181211: added recursive, defaults to True to preserve backwards compatibility
-    ''' 
+    191114: added instrfilter and compfilter, which filters results based on filename (before the dot)
+    '''
+    instrreg = None
+    if instrfilter:
+        instrreg = re.compile(instrfilter)
+    compreg = None
+    if compfilter:
+        compreg = re.compile(compfilter)
+
     files_instr = [] 
     files_comp = []
-    
-    for (dirpath, dirname, files) in os.walk(mydir):
+
+    for (dirpath, _, files) in os.walk(mydir):
         for f in files:
-            if os.path.splitext(f)[1] == '.instr':
-                files_instr.append(dirpath + '/' + f)
+            # get instr files
+            if splitext(f)[1] == '.instr':
+                if instrfilter is not None:
+                    if instrreg.match(splitext(f)[0]):
+                        files_instr.append(join(dirpath, f))
+                else:
+                    files_instr.append(join(dirpath, f))
+
+            # get comp files
             if os.path.splitext(f)[1] == '.comp':
-                files_comp.append(dirpath + '/' + f)
+                if compfilter is not None:
+                    if compreg.match(splitext(f)[0]):
+                        files_comp.append(join(dirpath, f))
+                else:
+                    files_comp.append(join(dirpath, f))
         if not recursive:
             break
     
