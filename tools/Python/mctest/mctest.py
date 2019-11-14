@@ -98,7 +98,7 @@ class LineLogger():
                 return True
         return False
 
-def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, datetime=None):
+def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
     ''' this main test function tests the given mccode branch/version '''
 
     # copy instr files and record info
@@ -284,7 +284,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, datetime
 
     metainfo = OrderedDict()
     metainfo["ncount"] = ncount 
-    metainfo["date"] = datetime if datetime is not None else utils.get_datetimestr()
+    metainfo["date"] = utils.get_datetimestr()
     metainfo["hostname"] = hostnamestr
     metainfo["user"] = username
     metainfo["cpu_type"] = cpu_type
@@ -318,27 +318,35 @@ def deactivate_mccode_version(oldpath):
     del os.environ["MCSTAS"]
     os.environ["PATH"] = oldpath
 
-def create_test_dir(testroot, datetime, label):
-    ''' create and return test directory as: testroot/datetime/label'''
-
-    if not os.path.exists(testroot):
-        mkdir(testroot)
-    if not os.path.exists(testroot):
-        logging.info("test root folder could not create test folder, exiting...")
-        quit()
-    datetimedir = join(testroot, datetime)
-    if not os.path.exists(datetimedir):
-        mkdir(datetimedir)
-    testdir = join(datetimedir, label)
+def create_test_dir(testdir):
+    ''' just create testdir or exit '''
     if not os.path.exists(testdir):
         mkdir(testdir)
-    return testdir
+    if not os.path.exists(testdir):
+        logging.info("could not create test folder, exiting...")
+        quit()
+
+def create_label_dir(testdir, label):
+    if not os.path.exists(testdir):
+        mkdir(testdir)
+    if not os.path.exists(testdir):
+        logging.info("could not create test folder, exiting...")
+        quit()
+    labeldir = join(testdir, label)
+    if not os.path.exists(labeldir):
+        mkdir(labeldir)
+    return labeldir
+
+def create_datetime_testdir(testroot):
+    datetime = utils.get_datetimestr()
+    create_label_dir(testroot, datetime)
+    return join(testroot, datetime)
 
 #
 # Program functions for every main test mode
 #
 
-def run_default_test(testroot, mccoderoot, limit, instrfilter):
+def run_default_test(testdir, mccoderoot, limit, instrfilter):
     ''' tests the default mccode version '''
 
     # get default/system version number
@@ -351,21 +359,20 @@ def run_default_test(testroot, mccoderoot, limit, instrfilter):
         quit(1)
 
     # create single-run test directory
-    datetime = utils.get_datetimestr()
-    testdir = create_test_dir(testroot, datetime, version)
+    labeldir = create_label_dir(testdir, version)
 
     logging.info("Testing: %s" % version)
     logging.info("")
-    results = mccode_test(os.path.join(mccoderoot, version), testdir, limit, instrfilter, datetime)
+    results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter)
     
-    reportfile = os.path.join(testdir, "testresults_%s.json" % version)
+    reportfile = os.path.join(labeldir, "testresults_%s.json" % version)
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
     logging.debug("Test results written to: %s" % reportfile)
 
 
-def run_version_test(testroot, mccoderoot, limit, instrfilter, version):
+def run_version_test(testdir, mccoderoot, limit, instrfilter, version):
     ''' as run_default_test, but activates/deactivates and ses a specific mccode version if it exists '''
 
     # verify that version exists
@@ -374,26 +381,25 @@ def run_version_test(testroot, mccoderoot, limit, instrfilter, version):
         quit(1)
 
     # create single-run test directory
-    datetime = utils.get_datetimestr()
-    testdir = create_test_dir(testroot, datetime, version)
+    labeldir = create_label_dir(testdir, version)
 
     oldpath = activate_mccode_version(version, mccoderoot)
     try:
         logging.info("Testing: %s" % version)
         logging.info("")
 
-        results = mccode_test(os.path.join(mccoderoot, version), testdir, limit, instrfilter, datetime)
+        results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter)
     finally:
         deactivate_mccode_version(oldpath)
 
-    reportfile = os.path.join(testdir, "testresults_%s.json" % version)
+    reportfile = os.path.join(labeldir, "testresults_%s.json" % version)
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
     logging.debug("Test results written to: %s" % reportfile)
 
 
-def run_configs_test(testroot, mccoderoot, limit, configfilter, instrfilter):
+def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
     '''
     Test a suite of configs, each a mccode_config_LABEL.py file, that is copied to the dist dir
     prior to starting the test. This action modifies the C-flags and the compiler used during
@@ -445,11 +451,11 @@ def run_configs_test(testroot, mccoderoot, limit, configfilter, instrfilter):
                 logging.info("Testing label: %s" % label)
 
                 # craete the proper test dir
-                testdir = create_test_dir(testroot, datetime, label)
-                results = mccode_test(os.path.join(mccoderoot, version), testdir, limit, instrfilter, datetime)
+                labeldir = create_label_dir(testdir, label)
+                results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter, datetime)
 
                 # write local test result
-                reportfile = os.path.join(testdir, "testresults_%s.json" % label)
+                reportfile = os.path.join(labeldir, "testresults_%s.json" % label)
                 open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
             
                 logging.debug("")
@@ -517,7 +523,7 @@ def main(args):
     # modifying options
     verbose = args.verbose          # display more info during runs
     testroot = args.testroot        # use non-default test output root location
-    #testdir = args.testdir          # use non-default test output location (overrides testroot)
+    testdir = args.testdir          # use non-default test output location (overrides testroot)
     mccoderoot = args.mccoderoot    # use non-default mccode system install location
     limit = args.limit              # only test the first [limit] instruments (useful for debugging purposes)
     instrfilter = args.instr        # test only matching instrs
@@ -529,12 +535,19 @@ def main(args):
         logging.basicConfig(level=logging.INFO, format="%(message)s")
     if not testroot:
         testroot = "/tmp/mctest"
-    logging.debug("Using test root:      %s" % testroot)
-    # TODO: make sure testroot is valid
+    if not testdir:
+        testdir = create_datetime_testdir(testroot)
+        logging.debug("Using test root:         %s" % testroot)
+    else:
+        create_test_dir(testdir)
+        logging.debug("Using explicit test dir: %s" % testdir)
+
     if not mccoderoot:
         mccoderoot = "/usr/share/mcstas/"
-    # TODO: make sure mccoderoot is valid
-    logging.debug("Using mccode root:    %s" % mccoderoot)
+    if not os.path.exists(mccoderoot):
+        logging.info("mccoderoot does not exist")
+        quit(1)
+    logging.debug("Using mccode root:       %s" % mccoderoot)
     if limit:
         try:
             limit = int(args.limit[0])
@@ -554,11 +567,11 @@ def main(args):
         quit()
     default = not version and not configs and not vinfo
     if default:
-        run_default_test(testroot, mccoderoot, limit, instrfilter)
+        run_default_test(testdir, mccoderoot, limit, instrfilter)
     elif version:
-        run_version_test(testroot, mccoderoot, limit, instrfilter, version)
+        run_version_test(testdir, mccoderoot, limit, instrfilter, version)
     elif configs:
-        run_configs_test(testroot, mccoderoot, limit, configfilter, instrfilter)
+        run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter)
     elif vinfo:
         show_installed_versions(mccoderoot)
 
@@ -572,7 +585,7 @@ if __name__ == '__main__':
     parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex)')
     parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mccode installations')
     parser.add_argument('--testroot', nargs='?', help='output test results in a datetime folder in this root')
-    #parser.add_argument('--testdir', nargs='?', help='output test results directly in this dir (overrides testroot)')
+    parser.add_argument('--testdir', nargs='?', help='output test results directly in this dir (overrides testroot)')
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
     parser.add_argument('--versions', action='store_true', help='display local versions info')
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
