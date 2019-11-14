@@ -80,7 +80,7 @@ def run_normal_mode(testdir, reflabel):
     def get_empty_cell_tuple(tag=None):
         ''' return a "state_four" black cell, optionally with a tag, this could be "no ref" or "no test" etc. '''
         if tag is not None: 
-            return (1, tag, )
+            return (4, tag, )
         return (4, )
 
     def has_test(labels):
@@ -98,19 +98,22 @@ def run_normal_mode(testdir, reflabel):
         cols: if higher than 1+len(otherobjs), empty cells are first appended to rows, in order to orient cols correctly)
         '''
         # use default order, default sorting (e.g. list.sort()) wasn't satisfactory
-        for key in list(iterobj.keys()):
-            # prepare row list to have the requested amount of cells (cols) 
+        for key in list(iterobj.keys()): 
             row = []
+            rows.append(row)
+            # instr
+            row.append(key)
+
+            # prepare row list to have the requested amount of cells (cols)
             for i in range(ncols - len(otherobjs) - 1):
                 tag = "no test"
                 if i == 0:
                     tag = "no ref"
                 row.append(get_empty_cell_tuple(tag))
-            rows.append(row)
-            # instr
-            row.append(key)
+
             # ref col
             row.append(get_cell_tuple(iterobj[key]))
+
             # remaining cols
             for obj in otherobjs:
                 o = obj.get(key, None)
