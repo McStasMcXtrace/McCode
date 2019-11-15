@@ -197,11 +197,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
 
         # run the test, record time and runtime success/fail
         t1 = time.time()
-        global ncount 
-        if ncount is not None:
-            cmd = "mcrun %s %s -n%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, test.testnb)
+        global ncount, mpi
+        if mpi is not None:
+            cmd = "mcrun %s %s -n%s --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
         else:
-            cmd = "mcrun %s %s -d%d  &> run_stdout.txt" % (test.localfile, test.parvals, test.testnb)
+            cmd = "mcrun %s %s -n%s -d%d  &> run_stdout.txt" % (test.localfile, test.parvals, ncount, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
@@ -283,7 +283,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
     username = ",".join(metalog.lst)
 
     metainfo = OrderedDict()
-    metainfo["ncount"] = ncount 
+    metainfo["ncount"] = ncount
+    metainfo["mpi"] = mpi
     metainfo["date"] = utils.get_datetimestr()
     metainfo["hostname"] = hostnamestr
     metainfo["user"] = username
@@ -509,6 +510,7 @@ def show_installed_versions(mccoderoot):
     logging.info("")
 
 ncount = None
+mpi = None
 
 def main(args):
     # mutually excusive main branches
@@ -556,10 +558,15 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount
+    global ncount, mpi
     if args.ncount:
         ncount = args.ncount[0]
-        logging.info("ncount is: %s" % ncount)
+    else:
+        ncount = "1e6"
+    logging.info("ncount is: %s" % ncount)
+    if args.mpi:
+        mpi = args.mpi[0]
+        logging.info("mpi count is: %s" % mpi)
 
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
@@ -580,6 +587,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
     parser.add_argument('--ncount', nargs=1, help='ncount sent to mcrun')
+    parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to mcrun')
     parser.add_argument('--configs', action='store_true', help='test config files under mccodelib/MCCODE')
     parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path (enables --configs)')
     parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex)')
