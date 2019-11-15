@@ -106,9 +106,19 @@ TRACE
     i = floor((E-Emin)*nE/(Emax-Emin));
     if(i >= 0 && i < nE)
     {
-      E_N[i]++;
-      E_p[i] += p;
-      E_p2[i] += p*p;
+      double p2 = p*p;
+      #pragma acc atomic
+      {
+        E_N[i] = E_N[i] +1;
+      }
+      #pragma acc atomic
+      {
+        E_p[i] = E_p[i] + p;
+      }
+      #pragma acc atomic
+      {
+        E_p2[i] = E_p2[i] + p2;
+      }
       SCATTER;
     }
   }
