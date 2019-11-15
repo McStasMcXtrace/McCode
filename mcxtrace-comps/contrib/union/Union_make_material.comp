@@ -177,7 +177,7 @@ int build_my_absorption_table_function(const char *material_string, struct eleme
   int status;
   token=strtok(local_string,",");
   while (token!=NULL){ printf("Union_make_material: generating my abs for material %s\n",token);
-    if ( (status=Read_Table((*elements)->element_table,token,0))==-1){
+    if ( (status=Table_Read((*elements)->element_table,token,0))==-1){
       printf("Union_make_material: ERROR Reading file %s.\n", token); 
       return 0; 
     } 
