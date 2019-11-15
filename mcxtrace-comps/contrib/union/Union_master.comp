@@ -43,7 +43,7 @@
 DEFINE COMPONENT Union_master
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(allow_inside_start=0,history_limit=300000,enable_conditionals=1,inherit_number_of_scattering_events=0)
-OUTPUT PARAMETERS (verbal, list_verbal, trace_verbal, finally_verbal, starting_volume_warning, global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, k_old, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, enable_tagging, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterate, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index)
+OUTPUT PARAMETERS (verbal, list_verbal, trace_verbal, finally_verbal, starting_volume_warning, global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, k_old, k_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, enable_tagging, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterate, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index)
 DEPENDENCY "-I@MCCODE_LIB@/share/"
 
 
@@ -51,29 +51,33 @@ DEPENDENCY "-I@MCCODE_LIB@/share/"
 
 SHARE
 %{
+%include "read_table-lib"
+
 #ifndef Union
 #define Union $Revision: 0.9 $
 
 #include "Union_functions.c"
 #include "Union_initialization.c"
 
-double get_my_abs(double k, struct physics_struct this_material){
-  const int my_column=6;
-  double my_abs=0;
-  if (this.material.my_abs==0){
-    int i;
-    for (i=0;i<this_material.number_of_elements;i++){
-      my_abs+=Table_Value(this_material.element_data_struct[i],k*K2E,my_column)*this_material.element_data_struct.rho*this_material.element_data_struct.multiplicity;
-    }
-  }else{
-    my_abs=this_materials.my_abs;
-  }
-  return my_abs;
-}
 
 #endif
 // TEST
 struct logger_with_data_struct loggers_with_data_array;
+
+double get_my_abs(struct physics_struct *this_material, double k){
+  const int my_column=6;
+  double my_a=0;
+  if (this_material->my_a==0){
+    int i;
+    for (i=0;i<this_material->number_of_elements;i++){
+      my_a+=Table_Value(*(this_material->p_element_array[i].element_table),k*K2E,my_column)*this_material->p_element_array[i].rho*this_material->p_element_array[i].multiplicity;
+    }
+  }else{
+    my_a=this_material->my_a;
+  }
+  return my_a;
+}
+
 %}
 
 
@@ -135,7 +139,7 @@ DECLARE
   struct scattering_process_struct *process,*process_start;
   double *my_trace,*p_my_trace,*my_trace_fraction_control;
   double k[3],k_new[3],k_old[3],k_rotated[3];
-  double v_length,my_sum,my_sum_plus_abs,culmative_probability,mc_prop,time_to_scattering;
+  double k_length,my_sum,my_sum_plus_abs,culmative_probability,mc_prop,time_to_scattering;
   double length_to_scattering,length_to_boundery,length_to_boundery_fp,time_to_boundery;
   int selected_process,scattering_event;
   double time_propagated_without_scattering;
@@ -152,7 +156,7 @@ DECLARE
   // For within_which_volume
   int tree_next_volume;
   int *pre_allocated1,*pre_allocated2,*pre_allocated3;
-  Coords ray_position,ray_velocity,ray_velocity_rotated,ray_velocity_final,wavevector,wavevector_rotated;
+  Coords ray_position,ray_wavevector,ray_wavevector_rotated,ray_wavevector_final,wavevector,wavevector_rotated;
   int volume_0_found=0;
   
   int *scattered_flag;
@@ -901,7 +905,7 @@ TRACE
   clear_intersection_table(&intersection_time_table);
   
   time_propagated_without_scattering = 0;
-  v_length = sqrt(vx*vx+vy*vy+vz*vz);
+  k_length = sqrt(kx*kx+ky*ky+kz*kz);
   
   // Initialize logger system / Statistics
   number_of_scattering_events = 0;
@@ -931,13 +935,13 @@ TRACE
   for (iterate=0;iterate<max_conditional_extend_index+1;iterate++) {
     logger_conditional_extend_array[iterate] = 0;
   }
-
+  //TODO change to wavevector done
   // Need to clean up the double notation for position and velocity. // REVIEW_LINE
   r_start[0] = x; r_start[1] = y; r_start[2] = z;
-  r[0]=x;r[1]=y;r[2]=z;v[0]=vx;v[1]=vy;v[2]=vz; // REVIEW_LINE r and v are bad names
+  r[0]=x;r[1]=y;r[2]=z;k[0]=kx;k[1]=ky;k[2]=kz; // REVIEW_LINE r and v are bad names
   
   ray_position = coords_set(x,y,z);
-  ray_velocity = coords_set(vx,vy,vz);
+  ray_wavevector = coords_set(kx,ky,kz);
   
   // Mask update: need to check the mask status for the initial position
   // mask status for a mask is 1 if the ray position is inside, 0 if it is outside
@@ -1022,7 +1026,8 @@ TRACE
         if (intersection_time_table.calculated[*check] == 0) {
              #ifdef Union_trace_verbal_setting
                printf("running intersection for intersect_list with *check = %d \n",*check);
-               // if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+               //TODO done change this to k
+               // if (trace_verbal) printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",r[0],r[1],r[2],k[0],k[1],k[2]);
              #endif
             // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
@@ -1041,7 +1046,8 @@ TRACE
         if (intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]] == 0) {
           #ifdef Union_trace_verbal_setting
             printf("running intersection for mask_intersect_list element = %d \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]);
-          //  printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+            // TODO done change to k
+            //  printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",r[0],r[1],r[2],k[0],k[1],k[2]);
           #endif
           // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
@@ -1178,6 +1184,7 @@ TRACE
     // If a time is not found, the ray must be leaving the ensamble of volumes and the loop will be concluded
     if (time_found) {
         time_to_boundery = min_intersection_time - time_propagated_without_scattering; // calculate the time remaining before the next intersection
+        length_to_boundery = M_C*time_to_boundery;
         scattering_event = 0; // Assume a scattering event will not occur
         
         // Check if a scattering event should occur
@@ -1185,7 +1192,8 @@ TRACE
           if (Volumes[current_volume]->p_physics->number_of_processes == 0) { // If there are no processes, the volume could be vacuum or an absorber
             if (Volumes[current_volume]->p_physics->is_vacuum == 0)
               // This volume does not have physical processes but does have an absorption cross section, so the ray weight is reduced accordingly
-              p *= exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_boundery);
+              //TODO done change to file based absorption change time_to_boundery to lenght_to_boundary
+              p *= exp(-1.0*get_my_abs(Volumes[current_volume]->p_physics,k_length)*length_to_boundery);
     
     
               //#ifdef Union_trace_verbal_setting
@@ -1225,10 +1233,10 @@ TRACE
             
             #ifdef Union_trace_verbal_setting
               printf("time_propagated_without_scattering = %f.\n",time_propagated_without_scattering);
-              printf("v_length                           = %f.\n",v_length);
+              printf("k_length                           = %f.\n",k_length);
             #endif
             
-            length_to_boundery = time_to_boundery * v_length;
+            //length_to_boundery = time_to_boundery * v_length;
             
             #ifdef Union_trace_verbal_setting
               printf("exp(- length_to_boundery*my_sum) = %f. length_to_boundery = %f. my_sum = %f.\n",exp(-length_to_boundery*my_sum),length_to_boundery,my_sum);
@@ -1238,8 +1246,9 @@ TRACE
             // This section have too many if statements, and unessecary calculations
             // Could make seperate functions for p_interact on/off and interact_fraction on/off,
             //   and set function pointers to these in initialize, thus avoiding many unessecary if statements and calculations of x/x.
-            
-            my_sum_plus_abs = my_sum + Volumes[current_volume]->p_physics->my_a*(2200/v_length);
+            //TODO done change to new absorption 
+            //my_sum_plus_abs = my_sum + Volumes[current_volume]->p_physics->my_a*(2200/v_length);
+            my_sum_plus_abs = my_sum + get_my_abs(Volumes[current_volume]->p_physics, k_length);
             
             if (my_sum < 1E-18) {
                 // The scattering cross section is basicly zero, no scattering should occur.
@@ -1339,20 +1348,20 @@ TRACE
             
           }
         } // Done checking for scttering event and in case of scattering selecting a process
-     
+        //TODO done change to wavevector 
         if (scattering_event == 1) {
             #ifdef Union_trace_verbal_setting
               printf("SCATTERING EVENT \n");
               printf("current_volume            = %d \n",current_volume);
-              printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+              printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",r[0],r[1],r[2],k[0],k[1],k[2]);
             // printf("did scatter: my_trace = %E = %f \n",my_trace[selected_process],my_trace[selected_process]);
             #endif
             
             // Calculate the time to scattering
-            time_to_scattering = length_to_scattering/v_length;
+            time_to_scattering = length_to_scattering/M_C;
             
             #ifdef Union_trace_verbal_setting
-              printf("time to scattering        = %2.20f \n",time_to_scattering);
+              printf("length to scattering        = %2.20f \n",length_to_scattering);
             #endif
             
             //#ifdef Union_trace_verbal_setting
@@ -1360,18 +1369,19 @@ TRACE
             //#endif
             
             //PROP_DT(time_to_scattering); // May be replace by version without gravity
-            
+            //TODO done change time_to_scattering => length_to_scattering 
             // Reduce the double book keeping done here // REVIEW LINE
-            x += time_to_scattering*vx; y += time_to_scattering*vy; z += time_to_scattering*vz; t += time_to_scattering;
+            
+            x += length_to_scattering*kx/k_length; y += length_to_scattering*ky/k_length; z += length_to_scattering*kz/k_length; t += time_to_scattering;
             r_start[0] = x; r_start[1] = y; r_start[2] = z;
             r[0] = x; r[1] = y; r[2] = z;
             ray_position = coords_set(x,y,z);
-            ray_velocity = coords_set(vx,vy,vz);
+            ray_wavevector = coords_set(kx,ky,kz);
             
             // Safe check that should be unecessary. Used to fine tune how close to the edge of a volume a scattering event is allowed to take place (1E-14 m away currently).
             if (Volumes[current_volume]->geometry.within_function(ray_position,&Volumes[current_volume]->geometry) == 0) {
               printf("\nERROR, propagated out of current volume instead of to a point within!\n");
-              printf("length_to_scattering_specified = %2.20f\n             length propagated = %2.20f\n            length_to_boundery = %2.20f \n   current_position = (%lf,%lf,%lf) \n",length_to_scattering,sqrt(time_to_scattering*time_to_scattering*vx*vx+time_to_scattering*time_to_scattering*vy*vy+time_to_scattering*time_to_scattering*vz*vz),length_to_boundery,x,y,z);
+              printf("length_to_scattering_specified = %2.20f\n             length propagated = %2.20f\n            length_to_boundery = %2.20f \n   current_position = (%lf,%lf,%lf) \n",length_to_scattering,sqrt(length_to_scattering*length_to_scattering*kx*kx/k_length/k_length+length_to_scattering*length_to_scattering*ky*ky/k_length/k_length+length_to_scattering*length_to_scattering*kz*kz/k_length/k_length),length_to_boundery,x,y,z);
               
               volume_index = within_which_volume(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
               
@@ -1387,16 +1397,16 @@ TRACE
             // Find correct focus_data_array index for this volume/process
             focus_data_index = Volumes[current_volume]->geometry.focus_array_indices.elements[selected_process];
         
-            // Rotation to local process coordinate system (for non isotropic processes)
+            // Rotation to local process coordinate system (for non isotropic processes) TODO done change ray_velocity to ray_wavevector
             if (Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index != -1) {
-                ray_velocity_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index],ray_velocity);
+                ray_wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index],ray_wavevector);
             } else {
-                ray_velocity_rotated = ray_velocity;
+                ray_wavevector_rotated = ray_wavevector;
             }
                 
             // test_physics_scattering(double *k_final, double *k_initial, union data_transfer_union data_transfer) {
             //k[0] = V2K*ray_velocity.x; k[1] = V2K*ray_velocity.y; k[2] = V2K*ray_velocity.z;
-            coords_get(coords_scalar_mult(ray_velocity_rotated,V2K),&k[0],&k[1],&k[2]);
+            coords_get(ray_wavevector_rotated,&k[0],&k[1],&k[2]);
             
             // I may replace a intial and final k with one instance that serves as both input and output
             if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
@@ -1414,24 +1424,25 @@ TRACE
             }
             
             // Update velocity using k
-            ray_velocity_rotated = coords_set(K2V*k_new[0],K2V*k_new[1],K2V*k_new[2]);
+            ray_wavevector_rotated = coords_set(k_new[0],k_new[1],k_new[2]);
             
             // Transformation back to main coordinate system (maybe one should only do this when multiple scattering in that volume was over, especially if there is only one non isotropic frame)
             if (Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index != -1) {
-                ray_velocity_final = rot_apply(Volumes[current_volume]->geometry.transpose_process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index],ray_velocity_rotated);
+                ray_wavevector_final = rot_apply(Volumes[current_volume]->geometry.transpose_process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index],ray_wavevector_rotated);
             } else {
-               ray_velocity_final = ray_velocity_rotated;
+               ray_wavevector_final = ray_wavevector_rotated;
             }
             
             // Write velocity to global variable (temp, only really necessary at final)
             //vx = ray_velocity.x; vy = ray_velocity.y; vz = ray_velocity.z;
-            coords_get(ray_velocity_final,&vx,&vy,&vz);
+            coords_get(ray_wavevector_final,&kx,&ky,&kz);
             
             // Write velocity in array format as it is still used by intersect functions (temp, they need to be updated to ray_position / ray_velocity)
-            v[0] = vx; v[1] = vy; v[2] = vz;
-            v_length = sqrt(vx*vx+vy*vy+vz*vz);
-            k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
-            if (verbal) if (v_length < 1) printf("velocity set to less than 1\n");
+            //TODO done change to wavevector
+            k[0] = kx; k[1] = ky; k[2] = kz;
+            k_length = sqrt(kx*kx+ky*ky+kz*kz);
+            k_new[0] = kx; k_new[1] = ky; k_new[2] = kz;
+            if (verbal) if (k_length < 1) printf("wavevector set to less than 1\n");
             
             #ifdef Union_trace_verbal_setting
               printf("Running logger system for specific volumes \n");
@@ -1501,13 +1512,13 @@ TRACE
             // Propagate x-ray to found minimum time
             // PROP_DT(min_intersection_time - time_propagated_without_scattering);
             //time_to_boundery = min_intersection_time - time_propagated_without_scattering;
-            x += time_to_boundery*vx;
-            y += time_to_boundery*vy;
-            z += time_to_boundery*vz;
+            x += length_to_boundery*kx/k_length;
+            y += length_to_boundery*ky/k_length;
+            z += length_to_boundery*kz/k_length;
             t += time_to_boundery;
             r[0] = x; r[1] = y; r[2] = z;
             ray_position = coords_set(x,y,z);
-            ray_velocity = coords_set(vx,vy,vz);
+            ray_wavevector = coords_set(kx,ky,kz);
             
             /*
             // Absorption moved to before testing if scattering occurs
@@ -1535,7 +1546,7 @@ TRACE
             time_propagated_without_scattering = min_intersection_time;
             SCATTER; // For debugging purposes
             #ifdef Union_trace_verbal_setting
-              printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+              printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",x,y,z,kx,ky,kz);
             #endif
             // Remove this entry from the intersection_time_table
             intersection_time_table.intersection_times[min_volume][min_solution] = -1;
@@ -1561,7 +1572,7 @@ TRACE
                     tree_next_volume = Volumes[current_volume]->geometry.destinations_list.elements[0];
                 else {
                     ray_position = coords_set(x,y,z);
-                    ray_velocity = coords_set(vx,vy,vz);
+                    ray_wavevector = coords_set(kx,ky,kz);
                     tree_next_volume = within_which_volume(ray_position,Volumes[current_volume]->geometry.reduced_destinations_list,Volumes[current_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                 }
 
@@ -1696,7 +1707,7 @@ TRACE
                             printf("Many elements in destinations list, use within_which_volume\n");
                           #endif
                           ray_position = coords_set(x,y,z);
-                          ray_velocity = coords_set(vx,vy,vz);
+                          ray_wavevector = coords_set(kx,ky,kz);
                           tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                         // } Bug fixed on 27/11/2016
                           if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
@@ -1718,7 +1729,7 @@ TRACE
                     mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 1;
                     // When entering a mask, the new highest priority volume may be one of the masked volumes, if not we keep the current volume
                     ray_position = coords_set(x,y,z);
-                    ray_velocity = coords_set(vx,vy,vz);
+                    ray_wavevector = coords_set(kx,ky,kz);
                     //tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                     // Bug found on the 2/9 2016, the destinations_list of a mask does not contain the volumes inside it. Could make an additional list for this.
                     // The temporary fix will be to use the mask list for both reduced destinations list and destinations list.
@@ -1782,7 +1793,7 @@ TRACE
               for (iterate=0;iterate<number_of_volumes;iterate++)
                  printf("%d:%d - ",iterate,scattered_flag[iterate]);
               printf("\n");
-              printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+              printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",x,y,z,kx,ky,kz);
               
               printf("Trace error number (%d/100) \n",component_error_msg);
               //print_intersection_table(intersection_time_table);
@@ -1837,6 +1848,7 @@ TRACE
     // Loggers attatched to specific volumes need to be handled with care to avoid looping over all loggers for every ray
     //for (log_index=0;log_index<loggers_with_data_array.used_elements;log_index++) {
     // TEST
+    //TODO check for wavevector thing here and in functions called
     if (enable_conditionals == 1) {
       for (log_index=loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
         // Check all conditionals attatched to the current logger
@@ -1850,7 +1862,7 @@ TRACE
           #endif
           if (0 == this_logger->conditional_list.conditional_functions[iterate](
                          this_logger->conditional_list.p_data_unions[iterate],
-                         &ray_position,&ray_velocity,&p,&t,&current_volume,
+                         &ray_position,&ray_wavevector,&p,&t,&current_volume,
                          &number_of_scattering_events,scattered_flag,scattered_flag_VP)) {
             conditional_status = 0;
             break;
@@ -1915,7 +1927,7 @@ TRACE
         #endif
         if (0 == tagging_conditional_list->conditional_functions[iterate](
                          tagging_conditional_list->p_data_unions[iterate],
-                         &ray_position,&ray_velocity,&p,&t,&current_volume,
+                         &ray_position,&ray_wavevector,&p,&t,&current_volume,
                          &number_of_scattering_events,scattered_flag,scattered_flag_VP)) {
           conditional_status = 0;
           break;
@@ -1928,7 +1940,7 @@ TRACE
           printf("Before adding statistics to node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
         #endif
         
-          add_statistics_to_node(current_tagging_node,&ray_position, &ray_velocity, &p, &tagging_leaf_counter);
+          add_statistics_to_node(current_tagging_node,&ray_position, &ray_wavevector, &p, &tagging_leaf_counter);
         
         #ifdef Union_trace_verbal_setting
           printf("After adding statistics to node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
@@ -1937,8 +1949,8 @@ TRACE
       }
     }
     
-    // Move the rays a nano meter away from the surface it left, in case activation counter > 1, this will prevent the ray from starting on a volume boundery
-    x += vx*1E-9; y += vy*1E-9; z += vz*1E-9; t += 1E-9;
+    // Move the rays a picometer away from the surface it left, in case activation counter > 1, this will prevent the ray from starting on a volume boundery
+    x += kx*1E-12/k_length; y += ky*1E-12/k_length; z += kz*1E-12/k_length; t += 1E-12/M_C;
         
   } else {
     ABSORB; // Absorb rays that didn't exit correctly for whatever reason
