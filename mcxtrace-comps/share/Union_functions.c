@@ -346,16 +346,16 @@ struct pointer_to_1d_int_list mask_intersect_list;
 
 struct physics_struct
 {
-char name[256]; // User defined material name
-int interact_control;
-int is_vacuum;
-double my_a;
-int number_of_elements;
-// pointer to element data structures
-struct element_data_struct *p_element_array;
-int number_of_processes;
-// pointer to array of pointers to physics_sub structures that each describe a scattering process
-struct scattering_process_struct *p_scattering_array;
+  char name[256]; // User defined material name
+  int interact_control;
+  int is_vacuum;
+  double my_a;
+  int number_of_elements;
+  // pointer to element data structures
+  struct element_data_struct *p_element_array;
+  int number_of_processes;
+  // pointer to array of pointers to physics_sub structures that each describe a scattering process
+  struct scattering_process_struct *p_scattering_array;
 };
 
 union data_transfer_union{
@@ -377,6 +377,7 @@ struct element_data_struct
 {
   char name[12];  //element name (leave room for ion things as well
   int multiplicity; // how many atoms are present per unit of the element
+  double rho,Ar,Z; //mass density, Atomic weight, and atomic number
   t_Table *element_table; // material constants table taken from database
 };
 
