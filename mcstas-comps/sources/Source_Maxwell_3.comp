@@ -68,6 +68,7 @@ OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
 SHARE
 %{
 /* A normalised Maxwellian distribution : Integral over all l = 1 */
+#pragma acc routine seq
 double SM3_Maxwell(double l, double temp)
   {
     double a=949.0/temp;
