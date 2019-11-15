@@ -57,6 +57,20 @@ SHARE
 #include "Union_functions.c"
 #include "Union_initialization.c"
 
+double get_my_abs(double k, struct physics_struct this_material){
+  const int my_column=6;
+  double my_abs=0;
+  if (this.material.my_abs==0){
+    int i;
+    for (i=0;i<this_material.number_of_elements;i++){
+      my_abs+=Table_Value(this_material.element_data_struct[i],k*K2E,my_column)*this_material.element_data_struct.rho*this_material.element_data_struct.multiplicity;
+    }
+  }else{
+    my_abs=this_materials.my_abs;
+  }
+  return my_abs;
+}
+
 #endif
 // TEST
 struct logger_with_data_struct loggers_with_data_array;
