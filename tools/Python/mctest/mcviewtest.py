@@ -15,6 +15,9 @@ ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
 
+    def get_col_header(label, meta):
+        return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), meta.get("cpu_type", ""), meta.get("gpu_type", "")))
+
     def get_header_lst(meta):
         ''' composes an easily-templatable list fom a "_meta" test header object '''
         if meta is not None:
@@ -155,7 +158,10 @@ def run_normal_mode(testdir, reflabel):
             testmetas.append(meta)
 
     # create header row
-    hrow = ["%s (ref)" % reflabel] + testlabels
+    hrow = []
+    hrow.append(get_col_header("%s (ref)" % reflabel, refmeta))
+    for i in range(len(testlabels)):
+        hrow.append(get_col_header(testlabels[i], testmetas[i]))
 
     # create rows - 1) all instr tests in reference
     rows = []

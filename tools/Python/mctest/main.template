@@ -13,27 +13,23 @@
 <body>
 
 <fieldset>
-<legend>colour codes</legend>
-<table>
-<tr>
-  <td class=state_one>ctime<br>rtime<br>detval<br>acc. ok</td>
-  <td class=state_two>ctime<br>rutime<br>detval<br>acc. error</td>
-  <td class=state_three>ctime</td>
-  <td class=state_four>FAIL</td>
-</tr>
-</table>
+  <legend>colour codes</legend>
+  <table>
+    <tr>
+      <td class=state_one>ctime<br>rtime<br>detval<br>acc. ok</td>
+      <td class=state_two>ctime<br>rutime<br>detval<br>acc. error</td>
+      <td class=state_three>ctime</td>
+      <td class=state_four>FAIL</td>
+    </tr>
+  </table>
 </fieldset>
 
 <fieldset style="margin-top:5px;">
 <legend>test results</legend>
 {%- if header is not none -%}
 <table>
-  <tr><td>ncount:</td><td>{{ header.0 }}</td></tr>
-  <tr><td>date:</td><td>{{ header.1 }}</td></tr>
-  <tr><td>hostname:</td><td>{{ header.2 }}</td></tr>
-  <tr><td>user:</td><td>{{ header.3 }}</td></tr>
-  <tr><td>cpu type:</td><td>{{ header.4 }}</td></tr>
-  <tr><td>gpu type:</td><td>{{ header.5 }}</td></tr>
+  <tr><td>ref date:</td><td>{{ header.1 }}</td></tr>
+  <tr><td>ref user:</td><td>{{ header.3 }}</td></tr>
 </table>
 {%- endif -%}
 <table>
