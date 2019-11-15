@@ -2,16 +2,17 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: mini.instr (Minimal)
- * Date:       Thu Oct 31 18:27:01 2019
- * File:       mini.c
+ * Date:       Fri Nov 15 19:08:24 2019
+ * File:       ./mini.c
  * CFLAGS=
  */
 
-#define MCCODE_STRING "McStas 3.0-dev - Oct. 31, 2019"
+#define MCCODE_STRING "McStas 3.0-dev - Nov. 15, 2019"
 #define FLAVOR        "mcstas"
 #define FLAVOR_UPPER  "MCSTAS"
 
 #define MC_USE_DEFAULT_MAIN
+#define MC_TRACE_ENABLED
 #define PI 3.14159265358979323846
 #ifndef M_PI
 #define M_PI PI
@@ -24,6 +25,10 @@
 #endif
 #ifndef M_SQRT2
 #define M_SQRT2 1.4142135623730951  /* sqrt(2) */
+#endif
+
+#ifdef DISABLE_TRACE
+#undef MC_TRACE_ENABLED
 #endif
 
 #ifdef USE_PGI
@@ -147,11 +152,11 @@ _class_particle* _particle = &_particle_global_randnbuse_var;
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
-#  define MCCODE_STRING "McStas 3.0-dev - Oct. 31, 2019"
+#  define MCCODE_STRING "McStas 3.0-dev - Nov. 15, 2019"
 #endif
 
 #ifndef MCCODE_DATE
-#  define MCCODE_DATE "Oct. 31, 2019"
+#  define MCCODE_DATE "Nov. 15, 2019"
 #endif
 
 #ifndef MCCODE_VERSION
@@ -5481,7 +5486,7 @@ int traceenabled = 1;
 #else
 int traceenabled = 0;
 #endif
-#define MCSTAS "/usr/share/mcstas/3.0-dev/"
+#define MCSTAS "/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../"
 int   defaultmain         = 1;
 char  instrument_name[]   = "Minimal";
 char  instrument_source[] = "mini.instr";
@@ -5700,7 +5705,7 @@ int _arm_setpos(void)
 /* component source=Source_simple() SETTING, POSITION/ROTATION */
 int _source_setpos(void)
 { /* sets initial component parameters, position and rotation */
-  SIG_MESSAGE("[_source_setpos] component source=Source_simple() SETTING [/usr/share/mcstas/3.0-dev/sources/Source_simple.comp:64]");
+  SIG_MESSAGE("[_source_setpos] component source=Source_simple() SETTING [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../sources/Source_simple.comp:64]");
   stracpy(_source_var._name, "source", 16384);
   stracpy(_source_var._type, "Source_simple", 16384);
   _source_var._index=2;
@@ -5780,7 +5785,7 @@ int _source_setpos(void)
 /* component coll2=Slit() SETTING, POSITION/ROTATION */
 int _coll2_setpos(void)
 { /* sets initial component parameters, position and rotation */
-  SIG_MESSAGE("[_coll2_setpos] component coll2=Slit() SETTING [/usr/share/mcstas/3.0-dev/optics/Slit.comp:47]");
+  SIG_MESSAGE("[_coll2_setpos] component coll2=Slit() SETTING [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../optics/Slit.comp:47]");
   stracpy(_coll2_var._name, "coll2", 16384);
   stracpy(_coll2_var._type, "Slit", 16384);
   _coll2_var._index=3;
@@ -5835,7 +5840,7 @@ int _coll2_setpos(void)
 /* component detector=PSD_monitor() SETTING, POSITION/ROTATION */
 int _detector_setpos(void)
 { /* sets initial component parameters, position and rotation */
-  SIG_MESSAGE("[_detector_setpos] component detector=PSD_monitor() SETTING [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:64]");
+  SIG_MESSAGE("[_detector_setpos] component detector=PSD_monitor() SETTING [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:64]");
   stracpy(_detector_var._name, "detector", 16384);
   stracpy(_detector_var._type, "PSD_monitor", 16384);
   _detector_var._index=4;
@@ -5924,7 +5929,7 @@ _class_Source_simple *class_Source_simple_init(_class_Source_simple *_comp
   #define pmul (_comp->_parameters.pmul)
   #define square (_comp->_parameters.square)
   #define srcArea (_comp->_parameters.srcArea)
-  SIG_MESSAGE("[_source_init] component source=Source_simple() INITIALISE [/usr/share/mcstas/3.0-dev/sources/Source_simple.comp:64]");
+  SIG_MESSAGE("[_source_init] component source=Source_simple() INITIALISE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../sources/Source_simple.comp:64]");
 square = 0;
 /* Determine source area */
 if (radius && !yheight && !xwidth ) {
@@ -6006,7 +6011,7 @@ _class_Slit *class_Slit_init(_class_Slit *_comp
   #define radius (_comp->_parameters.radius)
   #define xwidth (_comp->_parameters.xwidth)
   #define yheight (_comp->_parameters.yheight)
-  SIG_MESSAGE("[_coll2_init] component coll2=Slit() INITIALISE [/usr/share/mcstas/3.0-dev/optics/Slit.comp:47]");
+  SIG_MESSAGE("[_coll2_init] component coll2=Slit() INITIALISE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../optics/Slit.comp:47]");
 if (xwidth > 0)  { xmax=xwidth/2;  xmin=-xmax; }
   if (yheight > 0) { ymax=yheight/2; ymin=-ymax; }
   if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
@@ -6037,7 +6042,7 @@ _class_PSD_monitor *class_PSD_monitor_init(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_detector_init] component detector=PSD_monitor() INITIALISE [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:64]");
+  SIG_MESSAGE("[_detector_init] component detector=PSD_monitor() INITIALISE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:64]");
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -6161,7 +6166,7 @@ _class_Source_simple *class_Source_simple_trace(_class_Source_simple *_comp
   #define pmul (_comp->_parameters.pmul)
   #define square (_comp->_parameters.square)
   #define srcArea (_comp->_parameters.srcArea)
-  SIG_MESSAGE("[_source_trace] component source=Source_simple() TRACE [/usr/share/mcstas/3.0-dev/sources/Source_simple.comp:120]");
+  SIG_MESSAGE("[_source_trace] component source=Source_simple() TRACE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../sources/Source_simple.comp:120]");
  double chi,E,lambda,v,r, xf, yf, rf, dx, dy, pdir;
 
  t=0;
@@ -6235,7 +6240,7 @@ _class_Slit *class_Slit_trace(_class_Slit *_comp
   #define radius (_comp->_parameters.radius)
   #define xwidth (_comp->_parameters.xwidth)
   #define yheight (_comp->_parameters.yheight)
-  SIG_MESSAGE("[_coll2_trace] component coll2=Slit() TRACE [/usr/share/mcstas/3.0-dev/optics/Slit.comp:56]");
+  SIG_MESSAGE("[_coll2_trace] component coll2=Slit() TRACE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../optics/Slit.comp:56]");
     mcPROP_Z0;
     if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
     || ((radius != 0) && (x*x + y*y > radius*radius)))
@@ -6270,14 +6275,25 @@ _class_PSD_monitor *class_PSD_monitor_trace(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_detector_trace] component detector=PSD_monitor() TRACE [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:90]");
+  SIG_MESSAGE("[_detector_trace] component detector=PSD_monitor() TRACE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:90]");
   PROP_Z0;
   if (x>xmin && x<xmax && y>ymin && y<ymax){
     int i = floor((x - xmin)*nx/(xmax - xmin));
     int j = floor((y - ymin)*ny/(ymax - ymin));
-    PSD_N[i][j]++;
-    PSD_p[i][j] += p;
-    PSD_p2[i][j] += p*p;
+
+    double p2 = p*p;
+    #pragma acc atomic
+    {
+      PSD_N[i][j] = PSD_N[i][j]+1;
+    }
+    #pragma acc atomic
+    {
+      PSD_p[i][j] = PSD_p[i][j]+p;
+    }
+    #pragma acc atomic
+    {
+      PSD_p2[i][j] = PSD_p2[i][j] + p2;
+    }
     SCATTER;
   }
   if (restore_neutron) {
@@ -6467,7 +6483,7 @@ _class_PSD_monitor *class_PSD_monitor_save(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_detector_save] component detector=PSD_monitor() SAVE [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:106]");
+  SIG_MESSAGE("[_detector_save] component detector=PSD_monitor() SAVE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:117]");
   DETECTOR_OUT_2D(
     "PSD monitor",
     "X position [cm]",
@@ -6527,7 +6543,7 @@ _class_PSD_monitor *class_PSD_monitor_finally(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_detector_finally] component detector=PSD_monitor() FINALLY [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:118]");
+  SIG_MESSAGE("[_detector_finally] component detector=PSD_monitor() FINALLY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:129]");
   destroy_darr2d(PSD_N);
   destroy_darr2d(PSD_p);
   destroy_darr2d(PSD_p2);
@@ -6585,7 +6601,7 @@ int finally(void) { /* called by mccode_main for Minimal:FINALLY */
   #define sphere      mcdis_sphere
 _class_Arm *class_Arm_display(_class_Arm *_comp
 ) {
-  SIG_MESSAGE("[_arm_display] component arm=Arm() DISPLAY [/usr/share/mcstas/3.0-dev/optics/Arm.comp:40]");
+  SIG_MESSAGE("[_arm_display] component arm=Arm() DISPLAY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../optics/Arm.comp:40]");
   printf("MCDISPLAY: component %s\n", _comp->_name);
   /* A bit ugly; hard-coded dimensions. */
   
@@ -6613,7 +6629,7 @@ _class_Source_simple *class_Source_simple_display(_class_Source_simple *_comp
   #define pmul (_comp->_parameters.pmul)
   #define square (_comp->_parameters.square)
   #define srcArea (_comp->_parameters.srcArea)
-  SIG_MESSAGE("[_source_display] component source=Source_simple() DISPLAY [/usr/share/mcstas/3.0-dev/sources/Source_simple.comp:166]");
+  SIG_MESSAGE("[_source_display] component source=Source_simple() DISPLAY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../sources/Source_simple.comp:166]");
   printf("MCDISPLAY: component %s\n", _comp->_name);
   if (square == 1) {
     
@@ -6656,7 +6672,7 @@ _class_Slit *class_Slit_display(_class_Slit *_comp
   #define radius (_comp->_parameters.radius)
   #define xwidth (_comp->_parameters.xwidth)
   #define yheight (_comp->_parameters.yheight)
-  SIG_MESSAGE("[_coll2_display] component coll2=Slit() DISPLAY [/usr/share/mcstas/3.0-dev/optics/Slit.comp:66]");
+  SIG_MESSAGE("[_coll2_display] component coll2=Slit() DISPLAY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../optics/Slit.comp:66]");
   printf("MCDISPLAY: component %s\n", _comp->_name);
   
   if (radius == 0) {
@@ -6703,7 +6719,7 @@ _class_PSD_monitor *class_PSD_monitor_display(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_detector_display] component detector=PSD_monitor() DISPLAY [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:125]");
+  SIG_MESSAGE("[_detector_display] component detector=PSD_monitor() DISPLAY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:136]");
   printf("MCDISPLAY: component %s\n", _comp->_name);
   multiline(5,
     (double)xmin, (double)ymin, 0.0,
@@ -6944,4 +6960,4 @@ int mccode_main(int argc, char *argv[])
 } /* mccode_main */
 /* End of file "mccode_main.c". */
 
-/* end of generated C code mini.c */
+/* end of generated C code ./mini.c */
