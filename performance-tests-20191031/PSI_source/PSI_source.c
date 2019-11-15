@@ -2,16 +2,17 @@
  * Format:     ANSI C source code
  * Creator:    McStas <http://www.mcstas.org>
  * Instrument: PSI_source.instr (PSI_DMC)
- * Date:       Fri Nov  1 09:03:48 2019
- * File:       PSI_source.c
+ * Date:       Fri Nov 15 19:03:06 2019
+ * File:       ./PSI_source.c
  * CFLAGS=
  */
 
-#define MCCODE_STRING "McStas 3.0-dev - Oct. 31, 2019"
+#define MCCODE_STRING "McStas 3.0-dev - Nov. 15, 2019"
 #define FLAVOR        "mcstas"
 #define FLAVOR_UPPER  "MCSTAS"
 
 #define MC_USE_DEFAULT_MAIN
+#define MC_TRACE_ENABLED
 #define PI 3.14159265358979323846
 #ifndef M_PI
 #define M_PI PI
@@ -24,6 +25,10 @@
 #endif
 #ifndef M_SQRT2
 #define M_SQRT2 1.4142135623730951  /* sqrt(2) */
+#endif
+
+#ifdef DISABLE_TRACE
+#undef MC_TRACE_ENABLED
 #endif
 
 #ifdef USE_PGI
@@ -147,11 +152,11 @@ _class_particle* _particle = &_particle_global_randnbuse_var;
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
-#  define MCCODE_STRING "McStas 3.0-dev - Oct. 31, 2019"
+#  define MCCODE_STRING "McStas 3.0-dev - Nov. 15, 2019"
 #endif
 
 #ifndef MCCODE_DATE
-#  define MCCODE_DATE "Oct. 31, 2019"
+#  define MCCODE_DATE "Nov. 15, 2019"
 #endif
 
 #ifndef MCCODE_VERSION
@@ -5481,7 +5486,7 @@ int traceenabled = 1;
 #else
 int traceenabled = 0;
 #endif
-#define MCSTAS "/usr/share/mcstas/3.0-dev/"
+#define MCSTAS "/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../"
 int   defaultmain         = 1;
 char  instrument_name[]   = "PSI_DMC";
 char  instrument_source[] = "PSI_source.instr";
@@ -5838,7 +5843,7 @@ int _source_setpos(void)
 /* component PSDbefore_guides=PSD_monitor() SETTING, POSITION/ROTATION */
 int _PSDbefore_guides_setpos(void)
 { /* sets initial component parameters, position and rotation */
-  SIG_MESSAGE("[_PSDbefore_guides_setpos] component PSDbefore_guides=PSD_monitor() SETTING [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:64]");
+  SIG_MESSAGE("[_PSDbefore_guides_setpos] component PSDbefore_guides=PSD_monitor() SETTING [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:64]");
   stracpy(_PSDbefore_guides_var._name, "PSDbefore_guides", 16384);
   stracpy(_PSDbefore_guides_var._type, "PSD_monitor", 16384);
   _PSDbefore_guides_var._index=3;
@@ -6006,7 +6011,7 @@ _class_PSD_monitor *class_PSD_monitor_init(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_PSDbefore_guides_init] component PSDbefore_guides=PSD_monitor() INITIALISE [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:64]");
+  SIG_MESSAGE("[_PSDbefore_guides_init] component PSDbefore_guides=PSD_monitor() INITIALISE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:64]");
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -6235,14 +6240,25 @@ _class_PSD_monitor *class_PSD_monitor_trace(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_PSDbefore_guides_trace] component PSDbefore_guides=PSD_monitor() TRACE [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:90]");
+  SIG_MESSAGE("[_PSDbefore_guides_trace] component PSDbefore_guides=PSD_monitor() TRACE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:90]");
   PROP_Z0;
   if (x>xmin && x<xmax && y>ymin && y<ymax){
     int i = floor((x - xmin)*nx/(xmax - xmin));
     int j = floor((y - ymin)*ny/(ymax - ymin));
-    PSD_N[i][j]++;
-    PSD_p[i][j] += p;
-    PSD_p2[i][j] += p*p;
+
+    double p2 = p*p;
+    #pragma acc atomic
+    {
+      PSD_N[i][j] = PSD_N[i][j]+1;
+    }
+    #pragma acc atomic
+    {
+      PSD_p[i][j] = PSD_p[i][j]+p;
+    }
+    #pragma acc atomic
+    {
+      PSD_p2[i][j] = PSD_p2[i][j] + p2;
+    }
     SCATTER;
   }
   if (restore_neutron) {
@@ -6415,7 +6431,7 @@ _class_PSD_monitor *class_PSD_monitor_save(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_PSDbefore_guides_save] component PSDbefore_guides=PSD_monitor() SAVE [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:106]");
+  SIG_MESSAGE("[_PSDbefore_guides_save] component PSDbefore_guides=PSD_monitor() SAVE [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:117]");
   DETECTOR_OUT_2D(
     "PSD monitor",
     "X position [cm]",
@@ -6474,7 +6490,7 @@ _class_PSD_monitor *class_PSD_monitor_finally(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_PSDbefore_guides_finally] component PSDbefore_guides=PSD_monitor() FINALLY [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:118]");
+  SIG_MESSAGE("[_PSDbefore_guides_finally] component PSDbefore_guides=PSD_monitor() FINALLY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:129]");
   destroy_darr2d(PSD_N);
   destroy_darr2d(PSD_p);
   destroy_darr2d(PSD_p2);
@@ -6530,7 +6546,7 @@ int finally(void) { /* called by mccode_main for PSI_DMC:FINALLY */
   #define sphere      mcdis_sphere
 _class_Arm *class_Arm_display(_class_Arm *_comp
 ) {
-  SIG_MESSAGE("[_source_arm_display] component source_arm=Arm() DISPLAY [/usr/share/mcstas/3.0-dev/optics/Arm.comp:40]");
+  SIG_MESSAGE("[_source_arm_display] component source_arm=Arm() DISPLAY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../optics/Arm.comp:40]");
   printf("MCDISPLAY: component %s\n", _comp->_name);
   /* A bit ugly; hard-coded dimensions. */
   
@@ -6618,7 +6634,7 @@ _class_PSD_monitor *class_PSD_monitor_display(_class_PSD_monitor *_comp
   #define PSD_N (_comp->_parameters.PSD_N)
   #define PSD_p (_comp->_parameters.PSD_p)
   #define PSD_p2 (_comp->_parameters.PSD_p2)
-  SIG_MESSAGE("[_PSDbefore_guides_display] component PSDbefore_guides=PSD_monitor() DISPLAY [/usr/share/mcstas/3.0-dev/monitors/PSD_monitor.comp:125]");
+  SIG_MESSAGE("[_PSDbefore_guides_display] component PSDbefore_guides=PSD_monitor() DISPLAY [/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../monitors/PSD_monitor.comp:136]");
   printf("MCDISPLAY: component %s\n", _comp->_name);
   multiline(5,
     (double)xmin, (double)ymin, 0.0,
@@ -6856,4 +6872,4 @@ int mccode_main(int argc, char *argv[])
 } /* mccode_main */
 /* End of file "mccode_main.c". */
 
-/* end of generated C code PSI_source.c */
+/* end of generated C code ./PSI_source.c */
