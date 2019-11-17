@@ -33,4 +33,4 @@ cd $HOME/TESTS/${DATE}
 $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e6 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_GCC_KISS
 
 echo done on single-CPU / KISS, submitting next job
-$HOME/go4
+$HOME/go4.sh
