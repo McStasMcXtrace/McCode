@@ -68,6 +68,7 @@ fprintf(stdout, "[%s] Initialize\n", instrument_name);
 
 TRACE
 %{
+#ifndef USE_PGI
   double ncount;
   ncount = mcget_run_num();
   if (!StartTime) {
@@ -109,6 +110,7 @@ TRACE
     SCATTER;
     if (flag_save) save(NULL);
   }
+#endif
 %}
 
 SAVE

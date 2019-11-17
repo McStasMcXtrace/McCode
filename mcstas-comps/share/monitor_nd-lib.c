@@ -748,8 +748,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 /* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
 /* return values: 0=neutron was absorbed, -1=neutron was outside bounds, 1=neutron was measured*/
 /* ========================================================================= */
-
-int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
+#pragma acc routine seq
+int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars, _class_particle* _particle)
 {
 
   double  XY=0, pp=0;
@@ -791,16 +791,19 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new events to store in histograms) */
   } /* end if Flag_Auto_Limits == 1 */
 
+#ifndef USE_PGI
   /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
   if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List >= 2))
   {
     if (Vars->Buffer_Size >= 1000000 || Vars->Flag_List == 3)
     { /* save current (possibly append) and re-use Buffer */
+
       Monitor_nD_Save(DEFS, Vars);
       Vars->Flag_List = 3;
       Vars->Buffer_Block = Vars->Buffer_Size;
       Vars->Buffer_Counter  = 0;
       Vars->Neutron_Counter = 0;
+
     }
     else
     {
@@ -810,7 +813,8 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
-
+#endif
+ 
   char    outsidebounds=0;
   while (!While_End)
   { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
@@ -1044,10 +1048,20 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         j = Coord_Index[2];
         if (i >= 0 && i < Vars->Coord_Bin[1] && j >= 0 && j < Vars->Coord_Bin[2])
         {
-          if (Vars->Mon2D_N) { 
-            Vars->Mon2D_N[i][j]++;
-            Vars->Mon2D_p[i][j] += pp;
-            Vars->Mon2D_p2[i][j] += pp*pp;
+          if (Vars->Mon2D_N) {
+	    double p2 = pp*pp;
+            #pragma acc atomic
+	    {
+	      Vars->Mon2D_N[i][j] = Vars->Mon2D_N[i][j]+1;
+	    }
+            #pragma acc atomic
+	    {
+	      Vars->Mon2D_p[i][j] = Vars->Mon2D_p[i][j]+pp;
+	    }
+            #pragma acc atomic
+	    {
+	      Vars->Mon2D_p2[i][j] = Vars->Mon2D_p2[i][j] + p2;
+	    }
           }
         } else {
           outsidebounds=1; 
@@ -1060,9 +1074,20 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
           j = Coord_Index[i];
           if (j >= 0 && j < Vars->Coord_Bin[i]) {
             if  (Vars->Flag_Multiple && Vars->Mon2D_N) {
-              Vars->Mon2D_N[i-1][j]++;
-              Vars->Mon2D_p[i-1][j]  += pp;
-              Vars->Mon2D_p2[i-1][j] += pp*pp;
+	                if (Vars->Mon2D_N) {
+	      double p2 = pp*pp;
+              #pragma acc atomic
+	      {
+		Vars->Mon2D_N[i-1][j] = Vars->Mon2D_N[i-1][j]+1;
+	      }
+              #pragma acc atomic
+	      {
+		Vars->Mon2D_p[i-1][j] = Vars->Mon2D_p[i-1][j]+pp;
+	      }
+              #pragma acc atomic
+	      {
+		Vars->Mon2D_p2[i-1][j] = Vars->Mon2D_p2[i-1][j] + p2;
+	      }
             }
           } else { 
             outsidebounds=1;
@@ -1107,7 +1132,6 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
 /* ========================================================================= */
 /* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
-
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
   {
     char   *fname;

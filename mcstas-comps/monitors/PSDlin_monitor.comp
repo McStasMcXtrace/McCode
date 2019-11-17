@@ -90,12 +90,24 @@ TRACE
     i = floor(nx*(x-xmin)/(xmax-xmin));              /* Bin number */
     if((i >= nx) || (i<0))
     {
+#ifndef USE_PGI
       printf("FATAL ERROR: wrong positioning in linear PSD. i= %i \n",i);
       exit(1);
+#endif
     }
-    PSDlin_N[i]++;
-    PSDlin_p[i] += p;
-    PSDlin_p2[i] += p*p;
+    double p2 = p*p;
+    #pragma acc atomic
+    {
+      PSDlin_N[i] = PSDlin_N[i] +1;
+    }
+    #pragma acc atomic
+    {
+      PSDlin_p[i] = PSDlin_p[i] + p;
+    }
+    #pragma acc atomic
+    {
+      PSDlin_p2[i] = PSDlin_p2[i] + p2;
+    }    
   }
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);

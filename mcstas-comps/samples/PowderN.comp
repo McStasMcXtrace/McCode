@@ -207,7 +207,9 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
+#ifndef USE_PGI
 %include "interoff-lib"
+#endif
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
@@ -264,9 +266,9 @@ double v; /* last velocity (cached) */
       double neutron_passed;
       long   xs_compute, xs_reuse, xs_calls;
     };
-
+#ifndef USE_PGI
   off_struct offdata;
-
+#endif
   // PN_list_compare *****************************************************************
 
   int PN_list_compare (void const *a, void const *b)
@@ -493,6 +495,7 @@ double v; /* last velocity (cached) */
 /* computes the number of possible reflections (return value), and the total xsection 'sum' */
 /* this routine looks for a pre-computed value in the Nq and sum cache tables               */
 /* when found, the earch starts from the corresponding lower element in the table           */
+#pragma acc routine seq
 int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum,
   struct line_info_struct *line_info) {
   int    Nq = 0, line=0, line0=0;
@@ -539,7 +542,9 @@ DECLARE
 %{
   struct line_info_struct line_info;
   double *columns;
+#ifndef USE_PGI
   off_struct offdata;
+#endif
 %}
 
 INITIALIZE
@@ -572,12 +577,15 @@ INITIALIZE
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+#ifndef USE_PGI
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       line_info.shape=3; thickness=0; concentric=0;
     }
   }
-  else if (xwidth && yheight && zdepth)  line_info.shape=1; /* box */
+  else
+#endif
+    if (xwidth && yheight && zdepth)  line_info.shape=1; /* box */
   else if (radius > 0 && yheight)        line_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       line_info.shape=2; /* sphere */
 
@@ -763,8 +771,10 @@ TRACE
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
+#ifndef USE_PGI
       intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
       intersecti = 0;
+#endif
     }
   }
 
@@ -812,9 +822,11 @@ TRACE
 
     if (t3 < 0) {
       t3=0; /* Already past sample?! */
+#ifndef USE_PGI
       if (line_info.flag_warning < 100)
       printf("PowderN: %s: Warning: Neutron has already passed us? (Skipped).\n"
              "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
+#endif
       line_info.flag_warning++;
     } else {
       if (dt<0) { /* Calculate scattering point position */
@@ -843,7 +855,9 @@ TRACE
         PROP_DT(dt+t0); /* Point of scattering */
         SCATTER;
       } else {
+#ifndef USE_PGI
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
+#endif
       }
 
       if (neutrontype == 3) { /* Make coherent scattering event */
@@ -920,15 +934,19 @@ TRACE
             intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
             intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
           } else if (line_info.shape == 3) {
+#ifndef USE_PGI	    
             intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
             intersecti = 0;
+#endif
           }
 
           if (!intersect) {
             /* Strange error: did not hit cylinder */
+#ifndef USE_PGI
             if (line_info.flag_warning < 100)
               printf("PowderN: %s: WARNING: Did not hit sample from inside (coh). ABSORB.\n", NAME_CURRENT_COMP);
             line_info.flag_warning++;
+#endif
             ABSORB;
           }
 
@@ -984,14 +1002,18 @@ TRACE
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
+#ifndef USE_PGI
           intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
           intersecti = 0;
+#endif
         }
 
         if (!intersect) {
           /* Strange error: did not hit cylinder */
+#ifndef USE_PGI
           if (line_info.flag_warning < 100)
             printf("PowderN: %s: WARNING: Did not hit sample from inside (inc). ABSORB.\n", NAME_CURRENT_COMP);
+#endif
           line_info.flag_warning++;
           ABSORB;
         }
@@ -1061,6 +1083,7 @@ FINALLY
 
 MCDISPLAY
 %{
+#ifndef USE_PGI
   if (line_info.V_0) {
 
     if (line_info.shape == 0) { /* cyl */
@@ -1132,8 +1155,9 @@ MCDISPLAY
       circle("xz",0,0,0,radius);
       circle("yz",0,0,0,radius);
     } else if (line_info.shape == 3) {	/* OFF file */
-      off_display(offdata);
+      off_display(offdata, _particle);
     }
   }
+#endif
 %}
 END
