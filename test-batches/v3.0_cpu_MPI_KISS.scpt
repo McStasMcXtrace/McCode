@@ -33,4 +33,4 @@ cd $HOME/TESTS/${DATE}
 $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_MPICC_KISS
 
 echo done on CPU/MPI, submitting next job
-./go3
+$HOME/go3
