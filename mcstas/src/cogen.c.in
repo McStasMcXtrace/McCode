@@ -796,7 +796,8 @@ int cogen_comp_section_class(
         citer = list_iterate(instr->complist);
         while((loopcomp = list_next(citer)) != NULL) {
           if ((!strcmp(comp->def->name, loopcomp->def->name))) {
-            coutf("  if(!strcmp(\"%s\", _comp->_name)) {", loopcomp->name);
+	     coutf("  /* Check if this is component '%s' */ ", loopcomp->name);
+	     coutf("  if(_comp->_index == %i) { ", loopcomp->index);
 
             // loop pars
             piter = list_iterate(loopcomp->def->set_par);
@@ -833,7 +834,8 @@ int cogen_comp_section_class(
         if (list_len(extendcomp->extend->lines) > 0
           && (!strcmp(extendcomp->def->name, comp->def->name))
           ) {
-            coutf("  if (!strcmp(_comp->_name, \"%s\")) {", extendcomp->name);
+            coutf("  /* Check if this is component '%s' */ ", extendcomp->name);
+            coutf("  if (_comp->_index == %i) {  /* DONG */ ", extendcomp->index);
             codeblock_out(extendcomp->extend);
             cout("  }");
         }
