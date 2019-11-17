@@ -147,7 +147,7 @@ int off_x_intersect(double *l0,double *l3,
 * void off_display(off_struct data)
 * ACTION: display up to N_VERTEX_DISPLAYED points from the object
 *******************************************************************************/
-void off_display(off_struct);
+void off_display(off_struct,_class_particle* _particle);
 
 #endif
 
