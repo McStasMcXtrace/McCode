@@ -97,17 +97,12 @@ TRACE
     }
     double p2 = p*p;
     #pragma acc atomic
-    {
-      PSDlin_N[i] = PSDlin_N[i] +1;
-    }
+    PSDlin_N[i] = PSDlin_N[i] +1;
     #pragma acc atomic
-    {
-      PSDlin_p[i] = PSDlin_p[i] + p;
-    }
+    PSDlin_p[i] = PSDlin_p[i] + p;
     #pragma acc atomic
-    {
-      PSDlin_p2[i] = PSDlin_p2[i] + p2;
-    }    
+    PSDlin_p2[i] = PSDlin_p2[i] + p2;
+    SCATTER;
   }
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
