@@ -32,3 +32,7 @@ cd $HOME/TESTS/${DATE}
 
 $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas-2.5_CPU_MPICC
 
+
+echo Done with the jobs, syncronize
+$HOME/go5.sh
+
