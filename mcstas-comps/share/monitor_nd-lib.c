@@ -1051,18 +1051,12 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
           if (Vars->Mon2D_N) {
 	    double p2 = pp*pp;
             #pragma acc atomic
-	    {
-	      Vars->Mon2D_N[i][j] = Vars->Mon2D_N[i][j]+1;
-	    }
+	    Vars->Mon2D_N[i][j] = Vars->Mon2D_N[i][j]+1;
             #pragma acc atomic
-	    {
-	      Vars->Mon2D_p[i][j] = Vars->Mon2D_p[i][j]+pp;
-	    }
+	    Vars->Mon2D_p[i][j] = Vars->Mon2D_p[i][j]+pp;
             #pragma acc atomic
-	    {
-	      Vars->Mon2D_p2[i][j] = Vars->Mon2D_p2[i][j] + p2;
-	    }
-          }
+	    Vars->Mon2D_p2[i][j] = Vars->Mon2D_p2[i][j] + p2;
+	  }
         } else {
           outsidebounds=1; 
         }
@@ -1074,21 +1068,16 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
           j = Coord_Index[i];
           if (j >= 0 && j < Vars->Coord_Bin[i]) {
             if  (Vars->Flag_Multiple && Vars->Mon2D_N) {
-	                if (Vars->Mon2D_N) {
-	      double p2 = pp*pp;
-              #pragma acc atomic
-	      {
+	      if (Vars->Mon2D_N) {
+		double p2 = pp*pp;
+                #pragma acc atomic
 		Vars->Mon2D_N[i-1][j] = Vars->Mon2D_N[i-1][j]+1;
-	      }
-              #pragma acc atomic
-	      {
+                #pragma acc atomic
 		Vars->Mon2D_p[i-1][j] = Vars->Mon2D_p[i-1][j]+pp;
-	      }
-              #pragma acc atomic
-	      {
+		#pragma acc atomic
 		Vars->Mon2D_p2[i-1][j] = Vars->Mon2D_p2[i-1][j] + p2;
 	      }
-            }
+	    }
           } else { 
             outsidebounds=1;
             break;
