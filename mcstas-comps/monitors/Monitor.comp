@@ -75,8 +75,11 @@ TRACE
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
+      #pragma acc atomic
       Nsum++;
+      #pragma acc atomic
       psum += p;
+      #pragma acc atomic
       p2sum += p*p;
       SCATTER;
     }
