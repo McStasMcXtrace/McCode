@@ -205,21 +205,29 @@ TRACE
 
         k = V2K*v;
 
+#ifndef USE_PGI
         if (rTable.data != NULL)
         {
           my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
         }
-        else my_r0 = r0;
-        if (my_r0 >= 1)
+        else
+#endif
+	  my_r0 = r0;
+
+	if (my_r0 >= 1)
         {
+#ifndef USE_PGI
           if (verbose) fprintf(stdout, "Warning: Monochromator_2foc: %s: lowered reflectivity from %f to 0.99 (k=%f)\n", 
             NAME_CURRENT_COMP, my_r0, k);
+#endif
           my_r0=0.99;
         }
         if (my_r0 < 0)
         {
+#ifndef USE_PGI
           if (verbose) fprintf(stdout, "Warning: Monochromator_2foc: %s: raised reflectivity from %f to 0 (k=%f)\n", 
           NAME_CURRENT_COMP, my_r0, k);
+#endif
           my_r0=0;
         }
         x = 0.0;
