@@ -287,8 +287,10 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
-%include "interoff-lib"
-  %include "opencl-lib"
+#ifndef USE_PGI
+    %include "interoff-lib"
+    %include "opencl-lib"
+#endif
 /* Declare structures and functions only once in each instrument. */
 #ifndef SINGLE_CRYSTAL_DECL
 #define SINGLE_CRYSTAL_DECL
@@ -356,7 +358,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
       double kix, kiy, kiz;       /* last incoming neutron ki */
       int    nb_reuses, nb_refl, nb_refl_count;
     };
-
+#pragma acc routine seq
   int SX_list_compare (void const *a, void const *b)
   {
      struct hkl_data const *pa = a;
@@ -880,6 +882,7 @@ int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, dou
 } 
 #endif 
   // non OpenCL case
+#pragma acc routine seq
   int hkl_search(struct hkl_data *L, struct tau_data *T, int count, double V0, 
     double kix, double kiy, double kiz, double tau_max,
     double *coh_refl, double *coh_xsect)
@@ -893,6 +896,12 @@ int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, dou
     double Bt_D_O_x, Bt_D_O_y, y0x, y0y, alpha;
 
     double ki = sqrt(kix*kix+kiy*kiy+kiz*kiz);
+    int jglobal=-1;
+    double coherent_refl,coherent_xsect;
+    //coherent_refl = *coh_refl;
+    //coherent_xsect = *coh_xsect;
+    coherent_refl = 0;
+    coherent_xsect = 0;
 
     /* Common factor in coherent cross-section */
     double xsect_factor = pow(2*PI, 5.0/2.0)/(V0*ki*ki);
@@ -982,7 +991,8 @@ int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, dou
         return (j); // this is 'tau_count', i.e. number of reachable reflections
     } /* end hkl_search */
 
-    int hkl_select(struct tau_data *T, int tau_count, double coh_refl, double *sum) {
+#pragma acc routine seq
+  int hkl_select(struct tau_data *T, int tau_count, double coh_refl, double *sum,_class_particle *_particle) {
       int j;
       double r = rand0max(coh_refl);
       *sum = 0;
@@ -996,26 +1006,30 @@ int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, dou
 
     /* Functions for "reorientation", powder and PG modes */
     /* Powder, forward */
-    void randrotate(double *nx, double *ny, double *nz, double a, double b) {
+#pragma acc routine seq
+void randrotate(double *nx, double *ny, double *nz, double a, double b) {
       double nvx, nvy, nvz;
       rotate(nvx,nvy,nvz, *nx, *ny, *nz, a, 1, 0, 0);
       rotate(*nx,*ny,*nz, nvx,nvy,nvz, b, 0, 1, 0);
     }
     /* Powder, back */
-    void randderotate(double *nx, double *ny, double *nz, double a, double b) {
+#pragma acc routine seq
+void randderotate(double *nx, double *ny, double *nz, double a, double b) {
       double nvx, nvy, nvz;
       rotate(nvx,nvy,nvz,*nx,*ny,*nz, -b, 0, 1, 0);
       rotate(*nx, *ny, *nz, nvx,nvy,nvz, -a, 1, 0, 0);
     }
     /* PG, forward */
-    void PGrotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
+#pragma acc routine seq
+void PGrotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
       /* Currently assumes c-axis along 'x', ought to be generalized... */
       double nvx, nvy, nvz;
       rotate(nvx,nvy,nvz, *nx, *ny, *nz, a, csx, csy, csz);
       *nx = nvx; *ny = nvy; *nz = nvz;
     }
     /* PG, back */
-    void PGderotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
+ #pragma acc routine seq
+void PGderotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
       /* Currently assumes c-axis along 'x', ought to be generalized... */
       double nvx, nvy, nvz;
       rotate(nvx,nvy,nvz, *nx, *ny, *nz, -a, csx, csy, csz);
@@ -1037,7 +1051,9 @@ int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, dou
 DECLARE
 %{
   struct hkl_info_struct hkl_info;
+#ifndef USE_PGI
   off_struct             offdata;
+#endif
 %}
 
 INITIALIZE
@@ -1095,12 +1111,15 @@ INITIALIZE
       NAME_CURRENT_COMP, hkl_info.sigma_i);
 
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+#ifndef USE_PGI
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+     	       	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3;
-    }
+      }	
   }
-  else if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
+  else
+#endif    
+    if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
   else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
 
@@ -1197,9 +1216,10 @@ TRACE
     intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+#ifndef USE_PGI
   else if (hkl_info.shape == 3)
-    intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-
+      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+#endif
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
 
   if(intersect)
@@ -1233,16 +1253,20 @@ TRACE
         intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+#ifndef USE_PGI      
       else if (hkl_info.shape == 3)
-        intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+#endif
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
+#ifndef USE_PGI
         if (hkl_info.flag_warning < 100)
           fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
                 NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
+#endif
         hkl_info.flag_warning++;
         break;
       }
@@ -1398,13 +1422,15 @@ TRACE
           ABSORB;
         }
         sum = 0;
-        j = hkl_select(T, hkl_info.tau_count, hkl_info.coh_refl, &sum);
+        j = hkl_select(T, hkl_info.tau_count, hkl_info.coh_refl, &sum,_particle);
 
         if(j >= hkl_info.tau_count)
         {
+#ifndef USE_PGI
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
               "(sum=%g, j=%i, tau_count=%i).\n", sum, j , hkl_info.tau_count);
+#endif
           hkl_info.flag_warning++;
           j = hkl_info.tau_count - 1;
         }
@@ -1505,7 +1531,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  
+#ifndef USE_PGI  
   if (hkl_info.shape == 0) {	/* cylinder */
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
@@ -1541,8 +1567,9 @@ MCDISPLAY
     circle("xz", 0,  0.0, 0, radius);
     circle("yz", 0,  0.0, 0, radius);
   }
-  else if (hkl_info.shape == 3) {	/* OFF file */
-    off_display(offdata);
-  }
+//  else if (hkl_info.shape == 3) {	/* OFF file */
+//    off_display(offdata);
+//  }
+#endif
 %}
 END
