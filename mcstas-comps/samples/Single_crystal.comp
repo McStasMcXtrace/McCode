@@ -1567,9 +1567,9 @@ MCDISPLAY
     circle("xz", 0,  0.0, 0, radius);
     circle("yz", 0,  0.0, 0, radius);
   }
-//  else if (hkl_info.shape == 3) {	/* OFF file */
-//    off_display(offdata);
-//  }
+  else if (hkl_info.shape == 3) {	/* OFF file */
+    off_display(offdata);
+  }
 #endif
 %}
 END
