@@ -73,6 +73,7 @@ SHARE
 #define PHONON_SIMPLE $Revision$
 #define T2E (1/11.605)   /* Kelvin to meV */
 
+#pragma acc routine seq
 double nbose(double omega, double T)  /* Other name ?? */
   {
     double nb;
@@ -85,24 +86,25 @@ double nbose(double omega, double T)  /* Other name ?? */
 #define UNUSED (-1.11e30)
 #define MAXRIDD 60
 
+#pragma acc routine seq
 void fatalerror(char *s)
   {
-     fprintf(stderr,"%s \n",s);
-     exit(1);
+#ifndef PGI
+    fprintf(stderr,"%s \n",s);
+    exit(1);
+#endif
   }
-
+ 
+#pragma acc routine seq
 double zridd(double (*func)(double*), double x1, double x2, double *parms, double xacc)
     {
       int j;
       double ans, fh, fl, fm, fnew, s, xh, xl, xm, xnew;
 
-/*      printf("zridd called with brackets %g %g acceptance %g \n",x1,x2,xacc);
-      printf("and %i parameters %g %g %g %g %g \n",Nparms,parms[0],parms[1],parms[2],parms[3], parms[4]); */
       parms[0]=x1;
       fl=(*func)(parms);
       parms[0]=x2;
       fh=(*func)(parms);
-/*      printf("Function values: %g %g \n",fl,fh); */
       if (fl*fh >= 0)
       {
         if (fl==0) return x1;
@@ -159,6 +161,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
     }
 
 #define ROOTACC 1e-8
+#pragma acc routine seq
   int findroots(double brack_low, double brack_mid, double brack_high, double *list, int* index, double (*f)(double*), double *parms)
     {
       double root,range=brack_mid-brack_low;
@@ -172,14 +175,12 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       if (root != UNUSED)
       {
         list[(*index)++]=root;
-/*        printf("findroots found a  low root: %g \n",root); */
       }
      }
       root = zridd(f, brack_mid, brack_high, (double *)parms, ROOTACC);
       if (root != UNUSED)
       {
         list[(*index)++]=root;
-/*        printf("findroots found a high root: %g \n",root); */
       }
     }
 
@@ -202,7 +203,6 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       c   =parms[9];
       ah=a/2.0;
 
-/*    printf("omega_q called with parameters vf= %g, vi=%g (%g %g %g) vv=(%g, %g, %g) \n",vf,vi,vi_x,vi_y,vi_z,vv_x,vv_y,vv_z); */
       qx=V2K*(vi_x-vf*vv_x);
       qy=V2K*(vi_y-vf*vv_y);
       qz=V2K*(vi_z-vf*vv_z);
@@ -211,10 +211,6 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
              +cos(ah*(qy+qz))+cos(ah*(qy-qz)) );
       res_phonon=c/a*sqrt(12-Jq);
       res_neutron = fabs(VS2E*(vi*vi-vf*vf));
-/*      if (fabs(res_phonon-res_neutron)<1e-3)
-       printf("in omega_q: q=(%g %g %g), omega_phonon=%g, omega_neutron=%g\n ",
-             qx,qy,qz,res_phonon,res_neutron); */
-/*      printf("omega_q returning %g - %g\n",res_phonon,res_neutron); */
 
       return (res_phonon - res_neutron);
     }
@@ -304,7 +300,6 @@ TRACE
       randvec_target_sphere(&vx,&vy,&vz,&solid_angle,aim_x,aim_y,aim_z, focus_r);
     }
     NORM(vx, vy, vz);
-/*    printf("focussed direction (vx,vy,vz=(%g %g %g) \n",vx,vy,vz); */
     nf=0;
       parms[0]=-1;
       parms[1]=v_i;
@@ -318,21 +313,16 @@ TRACE
       parms[9]=c;
     findroots(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q, parms);
     index=(int)floor(rand01()*nf);
-/*    printf("Root index: %i %g \n", index, vf_list[index]); */
     v_f=vf_list[index];
     parms[0]=v_f-DV;
     f1=omega_q(parms);
     parms[0]=v_f+DV;
     f2=omega_q(parms);
     J_factor = fabs(f2-f1)/(2*DV*K2V);
-/*    printf("f1,f2: %g %g , J factor %g \n",f1,f2,J_factor); */
     omega=VS2E*(v_i*v_i-v_f*v_f);
-/*    printf("nf, omega: %i %g v_i index, v_f: %g %i %g \n", nf,omega,v_i,index,v_f); */
     vx *= v_f;
     vy *= v_f;
     vz *= v_f;
-/* printf("vi= %g (vi_x,vi_y,vi_z)= (%g %g %g); vf= %g (vx,vy,vz)=(%g %g %g) \n",
-         v_i,vx_i,vy_i,vz_i,v_f,vx,vy,vz); */
     kappa_x=V2K*(vx_i-vx);
     kappa_y=V2K*(vy_i-vy);
     kappa_z=V2K*(vz_i-vz);
@@ -341,7 +331,9 @@ TRACE
     if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
     {
       /* ??? did not hit cylinder */
+#ifndef PGI
       printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+#endif
       exit(1);
     }
     dt = t1;
@@ -356,10 +348,6 @@ TRACE
     p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
     p5 = b*b/M;  /* Cross section factor 2 */
     p *= p1*p2*p3*p4*p5;
-
-/*    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
-      printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g \n",
-              J_factor, l_full, v_f/v_i, DW, kappa2, bose_factor, fabs(omega)); */
 
   } /* else transmit: Neutron did not hit the sample */
 %}

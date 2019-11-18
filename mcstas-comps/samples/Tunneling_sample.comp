@@ -120,8 +120,6 @@ INITIALIZE
   else                                /* It is a rectangle */
     VarsV.isrect=1;
 
-/*  if(VarsV.isrect) printf("isrect"); else printf("not isrect"); */
-
   VarsV.sigma_a=sigma_abs;
   VarsV.sigma_i=sigma_inc;
   VarsV.rho = (1/Vc);
@@ -170,7 +168,6 @@ INITIALIZE
     fQE=0;
   else
     fQE=f_QE;
-  //  printf("Tunneling_sample: ftun %g %g fQE %g %g \n",f_tun,ftun,f_QE,fQE);
   if ((ftun+fQE)>1) {
     ftun=0;
     printf("Tunneling_sample: Sum of inelastic probabilities > 1. Setting f_tun=0");
@@ -246,27 +243,22 @@ TRACE
       scatt_choice = rand01();  /* chooses type of scattering */
       v_i = v;                  /* Store initial velocity in case of inel. */
       E_i = VS2E*v_i*v_i;
-      //      printf("Tunneling_sample: scatt_choice %g fQE %g ftun %g \n",scatt_choice, fQE, ftun);
       if (scatt_choice<(fQE+ftun))    /* Inelastic choices */
 	{
           if (scatt_choice<fQE) /* Quasielastic */
           { dE = gamma*tan(PI/2*randpm1());
-	  //            printf("Tunneling_sample: Inside Quasielastic code \n");
 	  }
 	  else
           { if (randpm1()>0)
 	      dE = E_tun;
 		else
               dE = -E_tun;
-	  //	  printf("Tunneling_sample: Inside tunnel code \n");
 	  }
           E_f = E_i + dE;
           if (E_f <= 0) 
             ABSORB;
 	  v_f = SE2V*sqrt(E_f);
           v = v_f;
-	  /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
-		      v_i,E_i,dE,E_f,v_f,v); */
 	}
 
       vx *= v;
@@ -277,8 +269,10 @@ TRACE
         if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight))
         {
           /* ??? did not hit cylinder */
+#ifndef PGI
           printf("FATAL ERROR: Did not hit cylinder from inside.\n");
           exit(1);
+#endif
         }
         dt = t3; /* outgoing point */
         if(thickness && cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight) &&
@@ -290,7 +284,10 @@ TRACE
       if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth))
         {
           /* ??? did not hit box */
+#ifndef PGI
           printf("FATAL ERROR: Did not hit box from inside.\n");
+
+#endi
           exit(1);
         }
         dt = t3;

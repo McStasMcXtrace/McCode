@@ -211,9 +211,6 @@ TRACE
     v = aim_length / flight_time;
 /* !! Remember later to correct for Jacobian in MC choice, t to V !! */
 
-/*    E=E0+dE*randpm1();
-    v=sqrt(E)*SE2V; */
-
     vx *= v;
     vy *= v;
     vz *= v;
@@ -224,8 +221,6 @@ TRACE
     res_struct.kf_y = V2K*vy;
     res_struct.kf_z = V2K*vz;
 
-/* printf("vf= (%g,%g,%g), kf=(%g,%g,%g) \n",vx,vy,vz,
-  res_struct.kf_x,res_struct.kf_y,res_struct.kf_z); */
   }
 %}
 
