@@ -6,7 +6,7 @@
 #BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
 #BSUB -n 10
-### -- Select the resources: 1 gpu in exclusive process mode --
+#BSUB -R "span[block=1]"
 #BSUB -W 2:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
