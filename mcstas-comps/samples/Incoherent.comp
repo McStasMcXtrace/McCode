@@ -124,8 +124,9 @@ OUTPUT PARAMETERS(VarsInc, offdata)
 SHARE
 %{
 %include "read_table-lib"
+#ifndef PGI
 %include "interoff-lib"
-
+#endif
 struct StructVarsInc
 {
 double  sigma_a; /* Absorption cross section per atom (barns) */
@@ -144,17 +145,20 @@ DECLARE
 %{
 
   struct StructVarsInc VarsInc;
+#ifndef PGI
   off_struct offdata;
-
+#endif
 %}
 
 INITIALIZE
 %{
   VarsInc.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+#ifndef PGI
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       VarsInc.shape=3; thickness=0; concentric=0;
     }
+#endif
   }
   else if (xwidth && yheight && zdepth)  VarsInc.shape=1; /* box */
   else if (radius > 0 &&  yheight)       VarsInc.shape=0; /* cylinder */
@@ -252,8 +256,10 @@ TRACE
       intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
     else if (VarsInc.shape == 2)
       intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
+#ifndef PGI
     else if (VarsInc.shape == 3)
       intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+#endif
     if (intersect) {
       int flag_ishollow = 0;
       if (thickness>0) {
@@ -307,14 +313,18 @@ TRACE
       if (!v) v = sqrt(vx*vx + vy*vy + vz*vz);
       if (v) my_a = VarsInc.my_a_v*(2200/v);
       else {
+#ifndef PGI
         printf("Incoherent: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
+#endif
         ABSORB; /* should never occur */
       }
 
       my_t = my_a + VarsInc.my_s;  /* total scattering Xsect (tmp var) */
       if (my_t <= 0) {
+#ifndef PGI	
         printf("Incoherent: %s: ERROR: Null total cross section %g. Removing event.\n",
           NAME_CURRENT_COMP, my_t);
+#endif
         ABSORB; /* should never occur */
       }
       d_path = v * (dt0 + dt2);   /* Length of full path through sample */
@@ -397,8 +407,6 @@ TRACE
             ABSORB;
           v_f = SE2V*sqrt(E_f);
           v = v_f;
-    /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
-	        v_i,E_i,dE,E_f,v_f,v); */
       }
 
       vx *= v;
@@ -427,11 +435,13 @@ TRACE
 
 MCDISPLAY
 %{
-  
+#ifndef PGI  
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }
-  else if (radius > 0 &&  yheight) {	/* cylinder */
+  else
+#endif
+    if (radius > 0 &&  yheight) {	/* cylinder */
       cylinder(0,0,0,radius,yheight,0, 0,1,0);
       cylinder(0,0,0,radius-thickness,yheight,0, 0,1,0);
   }
