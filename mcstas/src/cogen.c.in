@@ -1639,7 +1639,7 @@ int cogen_trace(struct instr_def *instr)
     if (comp && comp->split) {
       coutf("#ifndef NOSPLIT");
       coutf( "    } /* end SPLIT at %s */", comp->name);
-      coutf("#fi");
+      coutf("#endif");
     }
   }
   list_iterate_end(liter);
