@@ -153,6 +153,12 @@
 #  endif
 #endif
 
+#ifdef USE_PGI  /* default is to disable SPLIT with PGI/OpenACC */
+#  ifndef NOSPLIT
+#    define NOSPLIT 1
+#  endif
+#endif
+
 #if (NOSIGNALS == 0)
 #  undef NOSIGNALS
 #endif
