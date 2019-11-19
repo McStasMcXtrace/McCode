@@ -1050,8 +1050,10 @@ int cogen_decls(struct instr_def *instr)
         list_iterate_end(liter2);
       }
       if (comp->split) {
+	coutf("#ifndef NOSPLIT");
         coutf("  long Split_%s; /* this is the SPLIT counter decremented down to 0 */", comp->name);
         coutf("  _class_particle Split_%s_particle; /* this is the particle to duplicate */", comp->name);
+	coutf("#endif");
       }
     }
     cout("};");
@@ -1514,6 +1516,7 @@ int cogen_trace(struct instr_def *instr)
     /* the SPLIT loop must be set before we enter further component blocks */
     if (comp->split) {
       char *exp=exp_tostring(comp->split);
+      coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
       coutf("    instrument->logic.Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    if (!ABSORBED && _particle->_index == %i) ", comp->index);
@@ -1523,6 +1526,7 @@ int cogen_trace(struct instr_def *instr)
         comp->name, comp->name, exp, comp->name);
       str_free(exp);
       cout( "    {");
+      coutf("#endif");
     }
     else
       coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
@@ -1530,9 +1534,11 @@ int cogen_trace(struct instr_def *instr)
     coutf("      /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     if (comp->split) {
       char *exp = exp_tostring(comp->split);
+      coutf("#ifndef NOSPLIT");
       coutf("      *_particle="
         "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
+      coutf("#endif");
     }
 
     if (comp->split || comp->when || list_len(comp->jump) > 0) {
@@ -1631,7 +1637,9 @@ int cogen_trace(struct instr_def *instr)
   liter = list_iterate_back(instr->complist);
   while((comp = list_previous(liter)) != NULL) {
     if (comp && comp->split) {
+      coutf("#ifndef NOSPLIT");
       coutf( "    } /* end SPLIT at %s */", comp->name);
+      coutf("#fi");
     }
   }
   list_iterate_end(liter);
