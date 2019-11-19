@@ -58,12 +58,13 @@ INITIALIZE
 
 TRACE
   %{
+    double p2 = p*p;
     #pragma acc atomic
-    Nsum++;
+    Nsum = Nsum + 1;
     #pragma acc atomic
-    psum += p;
+    psum = psum + p;
     #pragma acc atomic
-    p2sum += p*p;
+    p2sum = p2sum + p2;
     SCATTER;
   %}
 

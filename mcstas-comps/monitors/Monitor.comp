@@ -75,12 +75,13 @@ TRACE
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
+      double p2 = p*p;
       #pragma acc atomic
-      Nsum++;
+      Nsum = Nsum + 1;
       #pragma acc atomic
-      psum += p;
+      psum = psum + p;
       #pragma acc atomic
-      p2sum += p*p;
+      p2sum = p2sum + p2;
       SCATTER;
     }
     if (restore_neutron) {
