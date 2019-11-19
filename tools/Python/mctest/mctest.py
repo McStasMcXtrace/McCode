@@ -241,6 +241,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
                 msg = "ERROR: targetval for monitor name %s could not be extracted from instr. %s" % (test.detector, test.instrname)
                 test.errmsg = msg
                 logging.info(msg)
+                # assigning value -1 to testval
+                test.testval=-1
                 continue
 
         # extract tested target value from the monitor file
