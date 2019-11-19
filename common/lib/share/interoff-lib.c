@@ -799,7 +799,7 @@ int off_x_intersect(double *l0,double *l3,
 *******************************************************************************/
 void off_display(off_struct data, _class_particle* _particle)
 {
-#ifndef PGI
+#ifndef USE_PGI
   unsigned int i;
   double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
   unsigned int pixel=0;
