@@ -165,7 +165,7 @@ TRACE
 
     if (arg) {
       /* Strange error: did not hit cylinder */
-#ifndef PGI
+#ifndef USE_PGI
       fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
 #endif
       ABSORB;

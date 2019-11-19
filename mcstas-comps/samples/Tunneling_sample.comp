@@ -269,7 +269,7 @@ TRACE
         if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight))
         {
           /* ??? did not hit cylinder */
-#ifndef PGI
+#ifndef USE_PGI
           printf("FATAL ERROR: Did not hit cylinder from inside.\n");
           exit(1);
 #endif
@@ -284,7 +284,7 @@ TRACE
       if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth))
         {
           /* ??? did not hit box */
-#ifndef PGI
+#ifndef USE_PGI
           printf("FATAL ERROR: Did not hit box from inside.\n");
 
 #endi

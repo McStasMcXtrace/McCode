@@ -124,7 +124,7 @@ OUTPUT PARAMETERS(VarsInc, offdata)
 SHARE
 %{
 %include "read_table-lib"
-#ifndef PGI
+#ifndef USE_PGI
 %include "interoff-lib"
 #endif
 struct StructVarsInc
@@ -145,7 +145,7 @@ DECLARE
 %{
 
   struct StructVarsInc VarsInc;
-#ifndef PGI
+#ifndef USE_PGI
   off_struct offdata;
 #endif
 %}
@@ -154,7 +154,7 @@ INITIALIZE
 %{
   VarsInc.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-#ifndef PGI
+#ifndef USE_PGI
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       VarsInc.shape=3; thickness=0; concentric=0;
     }
@@ -256,7 +256,7 @@ TRACE
       intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
     else if (VarsInc.shape == 2)
       intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
-#ifndef PGI
+#ifndef USE_PGI
     else if (VarsInc.shape == 3)
       intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 #endif
@@ -313,7 +313,7 @@ TRACE
       if (!v) v = sqrt(vx*vx + vy*vy + vz*vz);
       if (v) my_a = VarsInc.my_a_v*(2200/v);
       else {
-#ifndef PGI
+#ifndef USE_PGI
         printf("Incoherent: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
 #endif
         ABSORB; /* should never occur */
@@ -321,7 +321,7 @@ TRACE
 
       my_t = my_a + VarsInc.my_s;  /* total scattering Xsect (tmp var) */
       if (my_t <= 0) {
-#ifndef PGI	
+#ifndef USE_PGI	
         printf("Incoherent: %s: ERROR: Null total cross section %g. Removing event.\n",
           NAME_CURRENT_COMP, my_t);
 #endif
@@ -435,7 +435,7 @@ TRACE
 
 MCDISPLAY
 %{
-#ifndef PGI  
+#ifndef USE_PGI  
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }

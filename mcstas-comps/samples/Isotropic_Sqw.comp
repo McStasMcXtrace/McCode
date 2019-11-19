@@ -314,7 +314,7 @@ SHARE
 #define qSq               {-1,0,0,0,0,0,1, 0,0 }
 
 %include "read_table-lib"
-#ifndef PGI
+#ifndef USE_PGI
 %include "interoff-lib"
 #endif
 
@@ -435,7 +435,7 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->q_min_file   = 0;
 }
 
-#ifndef PGI
+#ifndef USE_PGI
 off_struct offdata;
 #endif
 
@@ -2007,7 +2007,7 @@ DECLARE
 %{
   struct Sqw_sample_struct VarSqw;
   int *columns;
-#ifndef PGI
+#ifndef USE_PGI
   off_struct offdata;
 #endif
 %}
@@ -2023,7 +2023,7 @@ INITIALIZE
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef PGI
+#ifndef USE_PGI
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       VarSqw.shape=3; thickness=0; concentric=0;
@@ -2242,7 +2242,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
-#ifndef PGI
+#ifndef USE_PGI
       else if (VarSqw.shape == 3)
         intersect=off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 #endif
@@ -2257,7 +2257,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           zdepth-2*thickness > 0 ?  zdepth-2*thickness : zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius-thickness);
-#ifndef PGI
+#ifndef USE_PGI
       else if (VarSqw.shape == 3)
         intersect=off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 #endif
@@ -2337,7 +2337,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (!VarSqw.ki) VarSqw.ki = k;
 
     if (v <= 0) {
-#ifndef PGI
+#ifndef USE_PGI
       printf("Isotropic_Sqw: %s: ERROR: Null velocity !\n",NAME_CURRENT_COMP);
 #endif
       VarSqw.neutron_removed++;
@@ -2367,14 +2367,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect */
     if (my_t <= 0) {
-#ifndef PGI
+#ifndef USE_PGI
       if (VarSqw.neutron_removed<VarSqw.maxloop) printf("Isotropic_Sqw: %s: ERROR: Null total cross section %g. Removing event.\n",
         NAME_CURRENT_COMP, my_t);
 #endif
       VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
     } else if (VarSqw.my_s <= 0) {
-#ifndef PGI
+#ifndef USE_PGI
       if (VarSqw.verbose_output > 1 && VarSqw.neutron_removed<VarSqw.maxloop)
         printf("Isotropic_Sqw: %s: Warning: Null scattering cross section %g. Ignoring.\n",
           NAME_CURRENT_COMP, VarSqw.my_s);
@@ -2526,7 +2526,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
             omega = Data_sqw.SW[index_w].omega;
           }
         } else {
-#ifndef PGI
+#ifndef USE_PGI
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable w transfer for index_w=%li.\n",
               NAME_CURRENT_COMP, index_w);
@@ -2575,7 +2575,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
             q    = Data_sqw.SQW[index_w][index_q].Q;
           }
         } else {
-#ifndef PGI
+#ifndef USE_PGI
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable q transfer for w=%g.\n",
               NAME_CURRENT_COMP, omega);
@@ -2588,7 +2588,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
         /* acceptable values for kf are kf1 and kf2 */
         if (!solve_2nd_order(&kf1, &kf2, 1, 0, -k*k + VarSqw.sqSE2K*omega)) {
-#ifndef PGI
+#ifndef USE_PGI
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: imaginary root for w=%g q=%g Ei=%g (triangle can not close)\n",
             NAME_CURRENT_COMP, omega, q, Ei);
@@ -2616,7 +2616,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
       if (!index_counter) { /* for loop ended: failure for scattering */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
-#ifndef PGI	
+#ifndef USE_PGI	
         if (VarSqw.verbose_output >= 2 && VarSqw.neutron_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
                "               last try (%i): type=%c w=%g q=%g cos(theta)=%g k=%g\n",
@@ -2791,7 +2791,7 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef PGI
+#ifndef USE_PGI
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
 
     if(VarSqw.shape==1)

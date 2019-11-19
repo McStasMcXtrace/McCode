@@ -89,7 +89,7 @@ double nbose(double omega, double T)  /* Other name ?? */
 #pragma acc routine seq
 void fatalerror(char *s)
   {
-#ifndef PGI
+#ifndef USE_PGI
     fprintf(stderr,"%s \n",s);
     exit(1);
 #endif
@@ -331,7 +331,7 @@ TRACE
     if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
     {
       /* ??? did not hit cylinder */
-#ifndef PGI
+#ifndef USE_PGI
       printf("FATAL ERROR: Did not hit cylinder from inside.\n");
 #endif
       exit(1);
