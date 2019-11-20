@@ -1,0 +1,408 @@
+/*******************************************************************************
+* Instrument: Testing the triple-axis resolution,
+*             use "reso.dat" output with mcresplot.py
+*
+* %Identification
+* Written by: Tobias Weber (tweber@ill.fr)
+* Date: 30-Mar-2019
+* Origin: ILL
+* License: GNU GPLv3
+*
+* %Description
+* Triple-axis resolution test instrument,
+* forked from the Hercules McStas course:
+* https://code.ill.fr/tweber/hercules
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, version 3 of the License.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* %End
+*******************************************************************************/
+
+
+DEFINE INSTRUMENT TasResoTest
+(
+	/* source wavelength */
+	double src_lam = 4.5, double src_dlam = 1.0,
+
+	/* monochormator */
+	double ki = -1,
+
+	/* analyser */
+	double kf = -1,
+
+	/* choose a sample: 0=vanadium, 1=single crystal, 2=resolution*/
+	int sample_num = 2,
+
+	/* horizontal and vertical curvatures, -1: optimal, 0: flat */
+	double mono_curvh = -1, double mono_curvv = -1,
+	double ana_curvh = -1, double ana_curvv = -1,
+
+	/* collimator divergences */
+	double coll_presample_div = 30.0,
+	double coll_postsample_div = 30.0,
+
+	double k_filter_cutoff = 1.6
+)
+
+
+DECLARE
+%{
+	/* Distances */
+	double dist_src_mono = 1.;
+	double dist_mono_sample = 1.;
+	double dist_sample_ana = 1.;
+	double dist_ana_det = 1.;
+
+	/* Source */
+	double src_rad = 0.01;
+	double src_k = -1.;
+	double src_E = -1.;
+
+	/* Sample */
+	double sample_rad = 0.01;
+	double sample_height = 0.02;
+	double sample_angle = 26.74;
+	double sample_2angle = -1.;
+
+	/* Monochromator */
+	double mono_mosaic = 30.;
+	double mono_d = 3.355;
+	int mono_slabs_h = 32, mono_slabs_v = 32;
+	double mono_width = 0.1, mono_height = 0.1;
+	const char *mono_R = "HOPG.rfl", *mono_T = "HOPG.trm";
+	double mono_angle = -1.;
+
+	/* Analyser */
+	double ana_mosaic = 30.;
+	double ana_d = 3.355;
+	int ana_slabs_h = 32, ana_slabs_v = 32;
+	double ana_width = 0.1, ana_height = 0.1;
+	const char *ana_R = "HOPG.rfl", *ana_T = "HOPG.trm";
+	double ana_angle = -1.;
+
+	/* Detectors */
+	double det_width = 0.25, det_height = 0.25;
+
+
+	/* ----------------------------------------------------------------------------- */
+	/* Helper functions */
+	double lam_to_k(double lam)
+	{
+		return 2.*PI / lam;
+	}
+
+	double k_to_lam(double k)
+	{
+		return 2.*PI / k;
+	}
+
+	double v_to_k(double v)
+	{
+		double p = v * MNEUTRON;
+		double k = p / (HBAR*1e10);
+		return k;
+	}
+
+	double lam_to_v(double lam)
+	{
+		double k = lam_to_k(lam);
+		double p = HBAR * k*1e10;
+		return p / MNEUTRON;
+	}
+
+	double lam_to_E(double lam)
+	{
+		double v = lam_to_v(lam);
+		return v*v * VS2E;
+	}
+
+	double bragg_angle(double lam, double d)
+	{
+		double dS = lam / (2.*d);
+		return asin(dS) * 180. / PI;
+	}
+
+	double foc_vert(double angle, double f)
+	{
+		return 2.*f * fabs(sin(angle));
+	}
+
+	double foc_hori(double angle, double f)
+	{
+		return 2.*f / fabs(sin(angle));
+	}
+	/* ----------------------------------------------------------------------------- */
+%}
+
+
+INITIALIZE
+%{
+	/* energy & angle */
+	if(src_k < 0.)
+		src_k = lam_to_k(src_lam);
+	if(src_E < 0.)
+		src_E = lam_to_E(src_lam);
+
+	if(ki < 0)		/* if ki < 0 use source wavenumber */
+		ki = src_k;
+	if(mono_angle < 0.)
+		mono_angle = bragg_angle(k_to_lam(ki), mono_d);
+
+	if(kf < 0)		/* if kf < 0 use source wavenumber */
+		kf = src_k;
+	if(ana_angle < 0.)
+		ana_angle = bragg_angle(k_to_lam(kf), ana_d);
+
+	if(sample_2angle < 0.)
+		sample_2angle = 2.*sample_angle;
+
+	/* negative values -> optimal monochromator curvatures */
+	if(mono_curvv < 0. || mono_curvh < 0.) {
+		/* focal length */
+		double f_inv = 1./dist_mono_sample + 1./dist_src_mono;
+
+		if(mono_curvv < 0.)
+			mono_curvv = foc_vert(mono_angle/180.*PI, 1./f_inv);
+		if(mono_curvh < 0.)
+			mono_curvh = foc_hori(mono_angle/180.*PI, 1./f_inv);
+	}
+
+	/* negative values -> optimal monochromator curvatures */
+	if(ana_curvv < 0. || ana_curvh < 0.) {
+		/* focal length */
+		double f_inv = 1./dist_ana_det + 1./dist_sample_ana;
+
+		if(ana_curvv < 0.)
+			ana_curvv = foc_vert(ana_angle/180.*PI, 1./f_inv);
+		if(ana_curvh < 0.)
+			ana_curvh = foc_hori(ana_angle/180.*PI, 1./f_inv);
+	}
+
+	printf("--------------------------------------------------------------------------------\n");
+	printf("Source: lambda = %.4f A, k = %.4f 1/A, E = %.4f meV\n", src_lam, src_k, src_E);
+	printf("Monochromator: ki = %.4f, theta = %.4f deg, d = %.4f, vfoc = %.4f m, hfoc = %.4f m\n", ki, mono_angle, mono_d, mono_curvv, mono_curvh);
+	printf("Analyser: kf = %.4f, theta = %.4f deg, d = %.4f, vfoc = %.4f m, hfoc = %.4f m\n", kf, ana_angle, ana_d, ana_curvv, ana_curvh);
+	printf("Sample: num = %d, theta = %.4f, 2theta = %.4f\n", sample_num, sample_angle, sample_2angle);
+	printf("--------------------------------------------------------------------------------\n");
+%}
+
+
+/* ----------------------------------------------------------------------------- */
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Source */
+
+COMPONENT Src = Source_simple(
+	radius = src_rad,
+	lambda0 = src_lam, dlambda = src_dlam, gauss = 0, flux = 1e10,
+	dist = dist_src_mono, focus_xw = mono_width*sin(mono_angle/180.0*PI), focus_yh = mono_height)
+AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND
+%{
+	/* perfect collimation, parallel beam */
+	/* vx = vy = 0; */
+%}
+
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Monochromator */
+
+COMPONENT mono_arm1 = Arm()
+AT (0, 0, dist_src_mono) RELATIVE Src
+ROTATED (0, 0, 0) RELATIVE Src
+
+
+COMPONENT mono = Monochromator_curved(
+	width = mono_width, height = mono_height,
+	DM = mono_d, mosaic = mono_mosaic,
+	NH = mono_slabs_h, NV = mono_slabs_v,
+	RV = -mono_curvv, RH = -mono_curvh,
+	r0 = 1, reflect = mono_R, t0 = 1, transmit = mono_T,
+	order = 0)
+AT (0, 0, 0) RELATIVE mono_arm1
+ROTATED (0, -mono_angle, 0) RELATIVE mono_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+
+
+COMPONENT mono_arm2 = Arm()
+AT (0, 0, 0) RELATIVE mono_arm1
+ROTATED (0, -2*mono_angle, 0) RELATIVE mono_arm1
+
+
+
+COMPONENT colli_presample = Collimator_linear(
+	xwidth=0.1, yheight=0.1, length=0.2,
+	divergence = coll_presample_div)
+AT (0, 0, dist_mono_sample/2) RELATIVE mono_arm2
+ROTATED (0, 0, 0) RELATIVE mono_arm2
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Samples */
+
+COMPONENT sample_arm1 = Arm()
+AT(0, 0, dist_mono_sample) RELATIVE mono_arm2
+ROTATED (0, 0, 0) RELATIVE mono_arm2
+
+
+COMPONENT sample_Vana = Incoherent(
+	radius = sample_rad, yheight = sample_height,
+	gamma = 0,
+	target_index = +6 /* analyser */, focus_xw = ana_width, focus_yh = ana_height)
+WHEN(sample_num == 0)
+AT (0, 0, 0) RELATIVE sample_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+
+COMPONENT sample_xtal = Single_crystal(
+	radius = sample_rad, yheight = sample_height,
+	reflections = "TasResoTest_xtal.laz", barns = 1,
+	mosaic = 50)
+WHEN(sample_num == 1)
+AT (0, 0, 0) RELATIVE sample_arm1
+ROTATED(0, 90+sample_angle, 0) RELATIVE sample_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+
+COMPONENT sample_reso = Res_sample(
+	radius = sample_rad, yheight = sample_height,
+	E0 = src_E, dE = src_E*0.2,
+	target_index = +4 /*analyser*/, focus_xw = ana_width, focus_yh = ana_height)
+WHEN(sample_num == 2)
+AT (0, 0, 0) RELATIVE sample_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+
+
+COMPONENT sample_arm2 = Arm()
+AT (0, 0, dist_mono_sample) RELATIVE mono_arm2
+ROTATED (0, sample_2angle, 0) RELATIVE mono_arm2
+
+
+
+EXTEND
+%{
+	/* wavelength filter */
+	if(mcipk_filter_cutoff >= 0. && v_to_k(sqrt(vx*vx + vy*vy + vz*vz)) > mcipk_filter_cutoff)
+		ABSORB;
+%}
+
+
+
+COMPONENT colli_postsample = Collimator_linear(
+	xwidth=0.1, yheight=0.1, length=0.2,
+	divergence = coll_postsample_div)
+AT (0, 0, dist_sample_ana/2) RELATIVE sample_arm2
+ROTATED (0, 0, 0) RELATIVE sample_arm2
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Analyser */
+
+COMPONENT ana_arm1 = Arm()
+AT (0, 0, dist_sample_ana) RELATIVE sample_arm2
+ROTATED (0, 0, 0) RELATIVE sample_arm2
+
+
+COMPONENT ana = Monochromator_curved(
+	width = ana_width, height = ana_height,
+	DM = ana_d, mosaic = ana_mosaic,
+	NH = ana_slabs_h, NV = ana_slabs_v,
+	RV = -ana_curvv, RH = -ana_curvh,
+	r0 = 1, reflect = ana_R, t0 = 1, transmit = ana_T,
+	order = 0)
+AT (0, 0, 0) RELATIVE ana_arm1
+ROTATED (0, -ana_angle, 0) RELATIVE ana_arm1
+EXTEND
+%{
+	if(!SCATTERED) ABSORB;
+%}
+
+
+
+COMPONENT ana_arm2 = Arm()
+AT (0, 0, 0) RELATIVE ana_arm1
+ROTATED (0, -2*ana_angle, 0) RELATIVE ana_arm1
+
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Detectors */
+
+COMPONENT psdmon = PSD_monitor(
+	nx = 128, ny = 128,
+	filename = "psd.dat",
+	xwidth = det_width, yheight = det_height,
+	restore_neutron = 1)
+AT (0, 0, dist_ana_det) RELATIVE ana_arm2
+
+COMPONENT divmon = Divergence_monitor(
+	nh = 128, nv = 128,
+	maxdiv_h = 3, maxdiv_v = 3,
+	filename = "div.dat",
+	xwidth = det_width, yheight = det_height,
+	restore_neutron = 1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT lmon = L_monitor(
+	nL = 128,
+	filename = "lam.dat",
+	xwidth = det_width, yheight = det_height,
+	Lmin = src_lam - src_dlam, Lmax = src_lam + src_dlam,
+	restore_neutron = 1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT emon = E_monitor(
+	nE = 128,
+	filename = "E.dat",
+	xwidth = det_width, yheight = det_height,
+	Emin = src_E - src_E*0.15, Emax = src_E + src_E*0.15,
+	restore_neutron = 1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT resmon = Res_monitor(
+	res_sample_comp = sample_reso,
+	filename = "reso.dat",
+	xwidth = det_width, yheight = det_height,
+	restore_neutron = 1)
+WHEN(sample_num == 2)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+END
