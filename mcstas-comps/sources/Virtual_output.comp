@@ -116,7 +116,7 @@ TRACE
   Vars.csz = sz;
   Vars.ct  = t;
 
-  pp = Monitor_nD_Trace(&DEFS, &Varsm _particle);
+  pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
   SCATTER;
 %}

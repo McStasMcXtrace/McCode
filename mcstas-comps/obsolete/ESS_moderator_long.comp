@@ -77,9 +77,9 @@
 * %P
 * Input parameters:
 *
-* size: [m]              Height of the cylindershaped cold source
+* yheight: [m]           Height of the cylindershaped cold source
 * cyl_radius: [m]        Radius of the cylindershaped cold source
-* width_t: [m]           Edge of cube shaped thermal source
+* width_c: [m]           Edge of cube shaped thermal source
 * Lmin: [AA]             Lower edge of wavelength distribution
 * Lmax: [AA]             Upper edge of wavelength distribution
 * dist: [m]              Distance from source to focusing rectangle; at (0,0,dist)
@@ -122,17 +122,19 @@
 
 DEFINE COMPONENT ESS_moderator_long
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (width_c=0, yheight=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=14,
-T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
-n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=0,
-cyl_radius=0.085, branch1=1, branch2=0.5, branch_tail=0.14350,
-int n_pulses=1, width_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
-tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
-branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
+SETTING PARAMETERS (width_c=0, yheight=0.12, Lmin, Lmax, dist=0, focus_xw,
+  focus_yh, nu=14,
+  T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
+  n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=0,
+  cyl_radius=0.085, branch1=1, branch2=0.5, branch_tail=0.14350,
+  int n_pulses=1, width_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
+  tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
+  branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0,
+  tfocus_width=0.0, beamport_angle=30)
 OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t,
-tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2z,
-T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
-r_empty,r_optics)
+  tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2z,
+  T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
+  r_empty,r_optics)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -436,7 +438,7 @@ TRACE
 MCDISPLAY
 %{
   /* Draw cold moderator as cylinder */
-  
+
   circle("xz", 0,  yheight/2.0, 0, cyl_radius);
   circle("xz", 0,  -yheight/2.0, 0, cyl_radius);
   line(0, -yheight/2.0, cyl_radius, 0, yheight/2.0, cyl_radius);

@@ -18,18 +18,18 @@
 *
 * %D
 *
-* The perfect elliptic guide is centered along the z-axis with the entrance 
-* and exit in the xy-plane. The horizontal and vertical ellipses defining 
-* the guide geometry is by default set by two focal points. 
-* These are placed a distance away from the guide openings along the z-axis; 
+* The perfect elliptic guide is centered along the z-axis with the entrance
+* and exit in the xy-plane. The horizontal and vertical ellipses defining
+* the guide geometry is by default set by two focal points.
+* These are placed a distance away from the guide openings along the z-axis;
 * if distance given is positive, when the focal point is outside the guide.
 *
 * Multiple options for defining these ellipse exist including approximation of
 * parabolas and half ellipses (mid point of the ellipse or one of the guide openings)
 *
-* The guide coating parameters can be set for each side of the guide. 
-* Furthermore the m-value can be specified for user defined segments 
-* of the guide. 
+* The guide coating parameters can be set for each side of the guide.
+* Furthermore the m-value can be specified for user defined segments
+* of the guide.
 *
 * %P
 * INPUT PARAMETERS:
@@ -72,31 +72,31 @@
 * mleft: [1]                m-value of material for left vertical mirror
 *
 * option: [string]          options are 'ellipse' and 'halfEllipse'. Ellipse is defined by
-*					both the focal points, while halfEllipse locked the center 
-*					of the ellipse either the entrance or exit of the guide, and 
+*					both the focal points, while halfEllipse locked the center
+*					of the ellipse either the entrance or exit of the guide, and
 *					use the focal point of the other end to define the ellipse
 *
 * dimensionsAt: [string]    define whether xwidth and yheight sets the size of
 *						he opening, minor axis or the end of the guide.
 *
 * majorAxisxw: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of 
+*					  w,h lin and lout parameters if this is nonzero. Length of
 *					  the axis parallel to the z for the horizontal ellipse
 * minorAxisxw: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of 
+*					  w,h lin and lout parameters if this is nonzero. Length of
 *					  the axis Perpendicular to the z for the horizontal ellipse
 * majorAxisyh: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of 
+*					  w,h lin and lout parameters if this is nonzero. Length of
 *					  the axis parallel to the z for the vertical ellipse
 * minorAxisyh: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of 
+*					  w,h lin and lout parameters if this is nonzero. Length of
 *					  the axis Perpendicular to the z for the vertical ellipse
 *
 * majorAxisoffsetxw: [m]    direct defination of the guide geometry,
-*							distance between the center of the horizontal 
-*							ellipse and the guide entrance							
+*							distance between the center of the horizontal
+*							ellipse and the guide entrance
 * majorAxisoffsetyh: [m]    direct defination of the guide geometry,
-*							distance between the center of the vertical 
+*							distance between the center of the vertical
 *							ellipse and the guide entrance
 * verbose: [bool]           Give extra information about calculations
 * curvature: [m]            Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
@@ -109,7 +109,7 @@
 * dynamicalSegLength: [1]   automatic generate length of specific m-value segments
 *					  if no seglength is given
 *
-* %D 
+* %D
 *
 * Example 1, Elliptical definition using focal points:
 * Elliptic_guide_gravity(
@@ -146,7 +146,7 @@
 * 	R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
 * 	mvaluesright=marray,mvaluesleft=marray,mvaluestop=marray,mvaluesbottom=marray
 * )
-* where marray is initialized as 
+* where marray is initialized as
 * for(iter=0; iter < 50; iter++){ marray[iter] = 2; }
 * And Declared as
 * double mValues[50];
@@ -156,26 +156,26 @@
 
 DEFINE COMPONENT Elliptic_guide_gravity
 DEFINITION PARAMETERS(
-mvaluesright=NULL, mvaluesleft=NULL, mvaluestop=NULL, mvaluesbottom=NULL,
-seglength=NULL	)
+	mvaluesright=NULL, mvaluesleft=NULL, mvaluestop=NULL, mvaluesbottom=NULL,
+	seglength=NULL	)
 SETTING PARAMETERS (l,
-xwidth = 0,yheight = 0,
-linxw = 0,loutxw = 0,
-linyh = 0,loutyh = 0,
-majorAxisxw = 0,minorAxisxw = 0,
-majorAxisyh = 0,minorAxisyh = 0,
-majorAxisoffsetxw = 0,
-majorAxisoffsetyh = 0,
-string dimensionsAt = "entrance",
-string option = "ellipse",
-R0=0.99, Qc=0.0218, alpha=6.07, m=2, W=0.003,
-alpharight=-1,  mright=-1,
-alphaleft=-1,   mleft=-1,
-alphatop=-1,    mtop=-1,
-alphabottom=-1, mbottom=-1,
-string verbose = "on", // on or off
-enableGravity = 1.0,
-curvature=0	)
+	xwidth = 0,yheight = 0,
+	linxw = 0,loutxw = 0,
+	linyh = 0,loutyh = 0,
+	majorAxisxw = 0,minorAxisxw = 0,
+	majorAxisyh = 0,minorAxisyh = 0,
+	majorAxisoffsetxw = 0,
+	majorAxisoffsetyh = 0,
+	string dimensionsAt = "entrance",
+	string option = "ellipse",
+	R0=0.99, Qc=0.0218, alpha=6.07, m=2, W=0.003,
+	alpharight=-1,  mright=-1,
+	alphaleft=-1,   mleft=-1,
+	alphatop=-1,    mtop=-1,
+	alphabottom=-1, mbottom=-1,
+	string verbose = "on", // on or off
+	enableGravity = 1.0,
+	curvature=0	)
 
 OUTPUT PARAMETERS (
 guideInfo,latestParticleCollision,Gx,Gy,Gz,
@@ -220,7 +220,7 @@ enum MirrorType {MirrorTypeReflection,MirrorTypeTransparent,MirrorTypeabsorption
 */
 struct Intersection
 {
-	double delta_time_to_next_collision; 
+	double delta_time_to_next_collision;
 	enum Side side;	// A number from 0 to 4 (4 being an error warning)
 	int ApproxOn;
 	enum CollisionType collisionType;
@@ -234,18 +234,18 @@ struct SGI
 {
 	// guide infomation
 	double Length;
-	double entranceHorizontalWidth, entranceVerticalWidth;	
-	double exitHorizontalWidth, exitVerticalWidth;	
+	double entranceHorizontalWidth, entranceVerticalWidth;
+	double exitHorizontalWidth, exitVerticalWidth;
 
 	// ellipses infomation
 	double ellipseMajorAxis[4],		ellipseMinorAxis[4];
 	double ellipseMajorOffset[4],	ellipseMinorOffset[4];
 
 	// mirror infomation
-	double R0Arr[4]; 
-	double QcArr[4]; 
-	double alphaArr[4]; 
-	double mArr[4]; 
+	double R0Arr[4];
+	double QcArr[4];
+	double alphaArr[4];
+	double mArr[4];
 	double WArr[4];
 
 	// mirror type
@@ -289,8 +289,8 @@ int guide_elliptical_illegalInputLessThanZero(char var[],int verbose){
 
 /**
 	The first focal point is in and the second is out.
-	If -in-out > L then they would change position as the 
-	first and second focal points. This is 
+	If -in-out > L then they would change position as the
+	first and second focal points. This is
 	@param in,out is the input varible there the error occurred [text]
 */
 int guide_elliptical_illegalInputFocalPointsHyperbola(
@@ -309,13 +309,13 @@ int guide_elliptical_illegalInputFocalPointsHyperbola(
 }
 
 /**
-	Gives a warning if a part of the code is called that 
+	Gives a warning if a part of the code is called that
 	should not be accessible if the algoritmes are working correctly
 	Most likely errors are floating points and ill-defined cases
 */
 void guide_elliptical_callCriticalWarning(char func[],int verbose){
 	if (verbose)
-		printf("A CRITICAL WARNING has been called inside %s by function %s." 
+		printf("A CRITICAL WARNING has been called inside %s by function %s."
 			"This is most likely due to a programming error \
 			inside the component. \n",
 			"Elliptic_guide_gravity",func);
@@ -331,15 +331,15 @@ int guide_elliptical_getMirrorTypeFromInput(char * input,int verbose){
 	char* a1 = "absorption"; char* a2 = "absorb"; char* a3 = "a";
 	char* t1 = "transparant";char* t2 = "trans"; char* t3 = "t";
 	if (strcmp (input, r1) == 0
-	||  strcmp (input, r2) == 0 
+	||  strcmp (input, r2) == 0
 	||  strcmp (input, r3) == 0)
 		type = MirrorTypeReflection;
 	if (strcmp (input, a1) == 0
-	||  strcmp (input, a2) == 0 
+	||  strcmp (input, a2) == 0
 	||  strcmp (input, a3) == 0)
 		type = MirrorTypeabsorption;
 	if (strcmp (input, t1) == 0
-	||  strcmp (input, t2) == 0 
+	||  strcmp (input, t2) == 0
 	||  strcmp (input, t3) == 0)
 		type = MirrorTypeTransparent;
 	if ( type == -1 && verbose)
@@ -351,21 +351,21 @@ int guide_elliptical_getMirrorTypeFromInput(char * input,int verbose){
 
 ///////////////////////////////////////////////////////////////////////////
 /////////////// Collision functions
-///////////////////////////////////////////////////////////////////////////	
+///////////////////////////////////////////////////////////////////////////
 
 /**
 	Find the intersection between the neutron and the ellipse using newton method.
-	As there is up to 4 solution to this problem, and only the 
-	smallest positive root is the physical solution. Using the tuning points 
+	As there is up to 4 solution to this problem, and only the
+	smallest positive root is the physical solution. Using the tuning points
 	it is possible to look the only the potential roots to speed up calculations.
 
-	@param coef; A pointer to the array holding the coeffecients 
+	@param coef; A pointer to the array holding the coeffecients
 			for the 4th order polynomial.
 	@param startPosition, The default starting point for newton method. [s]
 	@param limit; A point after all the roots of the polynial. [s]
-	@param solution A pointer which will hold the physical solution 
+	@param solution A pointer which will hold the physical solution
 			if this function return true.
-	@return; return 1 if the physical solution is found. [boolean] 
+	@return; return 1 if the physical solution is found. [boolean]
 */
 
 double guide_elliptical_foverdf(double *coefficients,double currentPoint){
@@ -420,7 +420,7 @@ int guide_elliptical_findNeutronEllipseIntersection(
 	double tol = 1e-15;
 	double max_iter = 1e3;
 	double turningP1,turningP2;
-	
+
 	double sp = startPosition;
 	int inside;
 	if ( coef[0]*sp*sp*sp*sp
@@ -450,7 +450,7 @@ int guide_elliptical_findNeutronEllipseIntersection(
 	if (ss > t1 && t1 > 1e-15)	ss = t1;
 	if (ss > t2 && t2 > 1e-15)	ss = t2;
 	*solution = ss;
-	
+
 	return 1;
 }
 
@@ -466,15 +466,15 @@ int guide_elliptical_handleGuideIntersection(
 					   *guideInfo->ellipseMinorAxis[RightSide]);
 	double horEzS = 1/( guideInfo->ellipseMajorAxis[RightSide]
 				 	   *guideInfo->ellipseMajorAxis[RightSide]);
-	double hordiffx = x-guideInfo->ellipseMinorOffset[RightSide]; 
-	double hordiffz = z-guideInfo->ellipseMajorOffset[RightSide]; 
+	double hordiffx = x-guideInfo->ellipseMinorOffset[RightSide];
+	double hordiffz = z-guideInfo->ellipseMajorOffset[RightSide];
 
 	double horAlpha = ( Gx*Gx*horExS + Gz*Gz*horEzS )/4;
 	double horBeta  = ( Gx*vx*horExS + Gz*vz*horEzS );
-	double horGamma = horExS*vx*vx + horEzS*vz*vz 
-					 + horExS*Gx*hordiffx + horEzS*Gz*hordiffz; 
+	double horGamma = horExS*vx*vx + horEzS*vz*vz
+					 + horExS*Gx*hordiffx + horEzS*Gz*hordiffz;
 	double horDelta = 2*horExS*vx*hordiffx + 2*horEzS*vz*hordiffz;
-	double horEpsilon = horExS*hordiffx*hordiffx + horEzS*hordiffz*hordiffz - 1; 
+	double horEpsilon = horExS*hordiffx*hordiffx + horEzS*hordiffz*hordiffz - 1;
 
 	double horCoefficients[5] = {horAlpha,horBeta,horGamma,horDelta,horEpsilon};
 
@@ -487,7 +487,7 @@ int guide_elliptical_handleGuideIntersection(
 
 	double verAlpha = ( Gy*Gy*verEyS + Gz*Gz*verEzS )/4;
 	double verBeta  = ( Gy*vy*verEyS + Gz*vz*verEzS );
-	double verGamma = verEyS*vy*vy + verEzS*vz*vz 
+	double verGamma = verEyS*vy*vy + verEzS*vz*vz
 					+ verEyS*Gy*verdiffy + verEzS*Gz*verdiffz;
 	double verDelta = 2*verEyS*vy*verdiffy + 2*verEzS*vz*verdiffz;
 	double verEpsilon = verEyS*verdiffy*verdiffy + verEzS*verdiffz*verdiffz - 1;
@@ -520,12 +520,12 @@ int guide_elliptical_handleGuideIntersection(
 			currentCollision->delta_time_to_next_collision = solutionH;
 	else if (fabs(solutionH - solutionV) < 1e-12) return 0;
 	else if (solutionH < solutionV){
-		currentCollision->delta_time_to_next_collision = solutionH; 
-		boolean = booleanH; 
+		currentCollision->delta_time_to_next_collision = solutionH;
+		boolean = booleanH;
 		}
 	else{
-		currentCollision->delta_time_to_next_collision = solutionV; 
-		boolean = booleanV; 
+		currentCollision->delta_time_to_next_collision = solutionV;
+		boolean = booleanV;
 		}
 
 	double tside = currentCollision->delta_time_to_next_collision;
@@ -535,15 +535,15 @@ int guide_elliptical_handleGuideIntersection(
 
 	double xfactor =
 		2*sqrt(1 - ( (zside-guideInfo->ellipseMajorOffset[RightSide])
-					*(zside-guideInfo->ellipseMajorOffset[RightSide]) 
-					)/(guideInfo->ellipseMajorAxis[RightSide] 
-					*guideInfo->ellipseMajorAxis[RightSide] ) 
+					*(zside-guideInfo->ellipseMajorOffset[RightSide])
+					)/(guideInfo->ellipseMajorAxis[RightSide]
+					*guideInfo->ellipseMajorAxis[RightSide] )
 		)*guideInfo->ellipseMinorAxis[RightSide];
 
 	double yfactor =
 		2*sqrt(1 - ( (zside-guideInfo->ellipseMajorOffset[BottomSide])
-					*(zside-guideInfo->ellipseMajorOffset[BottomSide]) 
-					)/(guideInfo->ellipseMajorAxis[BottomSide] 
+					*(zside-guideInfo->ellipseMajorOffset[BottomSide])
+					)/(guideInfo->ellipseMajorAxis[BottomSide]
 					*guideInfo->ellipseMajorAxis[BottomSide] )
 		)*guideInfo->ellipseMinorAxis[BottomSide];
 
@@ -563,13 +563,13 @@ int guide_elliptical_handleGuideIntersection(
 }
 
 /**
-	Check if the neutron is within the guide using the sign 
+	Check if the neutron is within the guide using the sign
 	of the crossproduct between the two points,
-	on each of the enclosing box surface and neutrons position.    
-	
+	on each of the enclosing box surface and neutrons position.
+
 	@param x,y,z; position of the neutron. [m]
 	@param guideInfo; pointer to the guide infomation holding structure.
-	@return; return 1 if the neutron is inside the guide [boolean] 
+	@return; return 1 if the neutron is inside the guide [boolean]
 */
 
 /*
@@ -581,14 +581,14 @@ int guide_elliptical_InsideEnclosingBox(double x,double y,double z,struct SGI *g
 						double p2x,double p2y,double p2z,
 						double p3x,double p3y,double p3z,
 						double px ,double py ,double pz ){
-			
+
 			double v1x = p1x - p2x, v1y = p1y-p2y, v1z = p1z-p2z;
 			double v2x = p3x - p2x, v2y = p3y-p2y, v2z = p3z-p2z;
-			double v3x = v2y*v1z-v2z*v1y; 
+			double v3x = v2y*v1z-v2z*v1y;
 			double v3y = v2z*v1x-v2x*v1z;
 			double v3z = v2x*v1y-v2y*v1x;
 
-			return 0 >= v3x*(px-p1x)+v3y*(py-p1y)+v3z*(pz-p1z); 
+			return 0 >= v3x*(px-p1x)+v3y*(py-p1y)+v3z*(pz-p1z);
 		}
 
 		if(	//front
@@ -621,22 +621,22 @@ int guide_elliptical_InsideEnclosingBox(double x,double y,double z,struct SGI *g
 ///////////////////////////////////////////////////////////////////////////
 /////////////// reflection functions
 ///////////////////////////////////////////////////////////////////////////
-		
+
 
 /**
-	Calculate the new velocity vector for the particle colliding on 
+	Calculate the new velocity vector for the particle colliding on
 	the inner side of the elliptic mirror and returns the loss-factor (TODO)
-	
-	@param pos_V0,pos_W0 Is the 2d position vector of the particle, 
+
+	@param pos_V0,pos_W0 Is the 2d position vector of the particle,
 			assumed to be a point on the ellipse. [m]
 	@param pvel_V0,pvel_W0 Is the 2d velocity vector of the particle. [m/s]
 	@param ellipse_V_axis_squared,ellipse_W_axis_squared
 			are the axes of the ellipse. [m]
-	@param ellipse_V_offset,ellipse_W_offset Is the 2d vector difference 
-			between the ellipse coordinate system (center of the ellipse) 
+	@param ellipse_V_offset,ellipse_W_offset Is the 2d vector difference
+			between the ellipse coordinate system (center of the ellipse)
 			and the guide coordinate system [m]
-	@param R0, Mvalue, Qc, W, Alpha #TODO 
-		slaa beskrivelse af disse variabler i andre dokumenter 
+	@param R0, Mvalue, Qc, W, Alpha #TODO
+		slaa beskrivelse af disse variabler i andre dokumenter
 		og hold dig til standarden.
 	@return the new wieght of the package
 */
@@ -652,20 +652,20 @@ double guide_elliptical_ReflectionOnEllipticSurface(
 	double vel_V = *pvel_V;
 	double vel_W = *pvel_W;
 
-	// Galilean transformation of the particles start position 
+	// Galilean transformation of the particles start position
 	// to the ellipse coordinate system
 	pos_V=pos_V-ellipse_V_offset;
 	pos_W=pos_W-ellipse_W_offset;
 
-	/*  
-	*   If we reflect the velocity vector in the normal 
+	/*
+	*   If we reflect the velocity vector in the normal
 	*	to the ellipse in the point of intersection
 	*   The resulting vector will be -f2, do to conservation of momentum.
 	*   this result in the following equation
 	*   f2 = -f1 + 2(f1 dot nhat)nhat
 	*   which is equal to f2 = f1 - 2(f1 dot n)n/nlength^2
 	*/
-	
+
 	// The normal vector to the point of intersection
 	double normVec_V = - pos_W*ellipse_V_axis/ellipse_W_axis;
 	double normVec_W =   pos_V*ellipse_W_axis/ellipse_V_axis;
@@ -794,16 +794,16 @@ double guide_elliptical_handleReflection(double x0, double y0, double z0,
 
 ///////////////////////////////////////////////////////////////////////////
 /////////////// End of functions
-/////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////
 %}
 
 
 DECLARE
 %{
-	/** 
-		All variables below is locally declared 
+	/**
+		All variables below is locally declared
 		and hence accessible through OUTPUT PARAMETERS.
-	*/ 
+	*/
 	struct SGI guideInfo; // Static Guide information, is set in INITIALIZE
 	struct Intersection latestParticleCollision; // Is changed duing trace
 	double Gx,Gy,Gz;  // Local gravity vector, is set once in INITIALIZE
@@ -822,61 +822,61 @@ INITIALIZE
 	if(strcmp(verbose,"on") == 0)
 		guideInfo.verboseSetting = 1;
 	else guideInfo.verboseSetting = 0;
-	
+
 
 	guideInfo.R0Arr[RightSide] 		= R0;
 	guideInfo.QcArr[RightSide] 		= Qc;
 	guideInfo.alphaArr[RightSide] 	= alpharight;
 	guideInfo.mArr[RightSide] 		= mright;
-	guideInfo.WArr[RightSide] 		= W; 
+	guideInfo.WArr[RightSide] 		= W;
 
-	guideInfo.R0Arr[TopSide] 	 = R0; 
-	guideInfo.QcArr[TopSide] 	 = Qc; 
-	guideInfo.alphaArr[TopSide]  = alphatop; 
+	guideInfo.R0Arr[TopSide] 	 = R0;
+	guideInfo.QcArr[TopSide] 	 = Qc;
+	guideInfo.alphaArr[TopSide]  = alphatop;
 	guideInfo.mArr[TopSide] 	 = mtop;
-	guideInfo.WArr[TopSide] 	 = W; 
+	guideInfo.WArr[TopSide] 	 = W;
 
-	guideInfo.R0Arr[LeftSide] 		= R0; 
-	guideInfo.QcArr[LeftSide] 		= Qc; 
-	guideInfo.alphaArr[LeftSide] 	= alphaleft; 
-	guideInfo.mArr[LeftSide] 		= mleft; 
-	guideInfo.WArr[LeftSide] 		= W; 
+	guideInfo.R0Arr[LeftSide] 		= R0;
+	guideInfo.QcArr[LeftSide] 		= Qc;
+	guideInfo.alphaArr[LeftSide] 	= alphaleft;
+	guideInfo.mArr[LeftSide] 		= mleft;
+	guideInfo.WArr[LeftSide] 		= W;
 
-	guideInfo.R0Arr[BottomSide] 	= R0; 
-	guideInfo.QcArr[BottomSide] 	= Qc; 
-	guideInfo.alphaArr[BottomSide] 	= alphabottom; 
-	guideInfo.mArr[BottomSide] 		= mbottom; 
-	guideInfo.WArr[BottomSide] 		= W; 
+	guideInfo.R0Arr[BottomSide] 	= R0;
+	guideInfo.QcArr[BottomSide] 	= Qc;
+	guideInfo.alphaArr[BottomSide] 	= alphabottom;
+	guideInfo.mArr[BottomSide] 		= mbottom;
+	guideInfo.WArr[BottomSide] 		= W;
 
 	int sides;
 	for (sides = RightSide; sides <= BottomSide; sides++){
 		if (guideInfo.alphaArr[sides] == -1) guideInfo.alphaArr[sides] = alpha;
 		if (guideInfo.mArr[sides] == -1)	 guideInfo.mArr[sides] = m;
 	}
-	
+
 	// Test user input for illegal values
 	int inputErrors = 0;
 	// Lower or equal to zero
-	if(l <= 0) inputErrors += 
+	if(l <= 0) inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("length",guideInfo.verboseSetting);
-	if(guideInfo.alphaArr[TopSide] < 0) inputErrors += 
+	if(guideInfo.alphaArr[TopSide] < 0) inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("alphatop",guideInfo.verboseSetting);
-	if(guideInfo.mArr[TopSide] < 0)      inputErrors += 
+	if(guideInfo.mArr[TopSide] < 0)      inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("mtop",guideInfo.verboseSetting);
-	
-	if(guideInfo.alphaArr[BottomSide] < 0) inputErrors += 
+
+	if(guideInfo.alphaArr[BottomSide] < 0) inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("alphabottom",guideInfo.verboseSetting);
-	if(guideInfo.mArr[BottomSide] < 0)       inputErrors += 
+	if(guideInfo.mArr[BottomSide] < 0)       inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("mbottom",guideInfo.verboseSetting);
 
-	if(guideInfo.alphaArr[RightSide] < 0) inputErrors += 
+	if(guideInfo.alphaArr[RightSide] < 0) inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("alpharight",guideInfo.verboseSetting);
-	if(guideInfo.mArr[RightSide] < 0)       inputErrors += 
+	if(guideInfo.mArr[RightSide] < 0)       inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("mright",guideInfo.verboseSetting);
-	
-	if(guideInfo.alphaArr[LeftSide] < 0) inputErrors += 
+
+	if(guideInfo.alphaArr[LeftSide] < 0) inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("alphaleft",guideInfo.verboseSetting);
-	if(guideInfo.mArr[LeftSide] < 0)      inputErrors += 
+	if(guideInfo.mArr[LeftSide] < 0)      inputErrors +=
 				guide_elliptical_illegalInputLessThanZero("mleft",guideInfo.verboseSetting);
 
 	// Focal points result in hyperbola instead of an ellipse
@@ -885,8 +885,8 @@ INITIALIZE
 	if(l <= -linyh-loutyh) inputErrors += guide_elliptical_illegalInputFocalPointsHyperbola(
 						"linh","louth",linyh,loutyh,guideInfo.verboseSetting);
 
-	if( strcmp(dimensionsAt,"entrance") != 0 
-	 && strcmp(dimensionsAt,"mid") != 0 
+	if( strcmp(dimensionsAt,"entrance") != 0
+	 && strcmp(dimensionsAt,"mid") != 0
 	 && strcmp(dimensionsAt,"exit") != 0){
 	 	inputErrors += 1;
 		printf("dimensionsAt were given an incorrect input."
@@ -896,7 +896,7 @@ INITIALIZE
 
 	// Terminate program if any input errors occurred
 	if(inputErrors != 0 ){
-		exit(printf("\nCRITICAL ERROR(S) IN COMPONENT %s" 
+		exit(printf("\nCRITICAL ERROR(S) IN COMPONENT %s"
 				" CONSIDER CHECKING USER INPUT AS %d INPUT ERRORS WAS FOUND.\n",
 				NAME_CURRENT_COMP,inputErrors) );
 	}
@@ -908,17 +908,17 @@ INITIALIZE
 
 	/*  Calculate the foci line for the ellipses.
 		These can be used to calculate the axes of the ellipses
-		using pyth and defination of the ellipse that says distance 
+		using pyth and defination of the ellipse that says distance
 		between the foci and every point on the ellipse is constant.
 	*/
 	int directDefination = 0;
 
-	if( majorAxisyh != 0 || minorAxisyh != 0 
+	if( majorAxisyh != 0 || minorAxisyh != 0
 	 || majorAxisxw != 0 || minorAxisxw != 0)
 	{
 		directDefination = 1;
-		guideInfo.Length = l;	
-		
+		guideInfo.Length = l;
+
 		guideInfo.ellipseMajorAxis[RightSide] = majorAxisxw;
 		guideInfo.ellipseMinorAxis[RightSide] = minorAxisxw;
 		guideInfo.ellipseMajorOffset[RightSide] = majorAxisoffsetxw;
@@ -942,19 +942,19 @@ INITIALIZE
 		guideInfo.entranceHorizontalWidth =
 			2*sqrt(1 - (majorAxisoffsetyh*majorAxisoffsetyh)
 			/(majorAxisyh*majorAxisyh) )*minorAxisyh;
-		guideInfo.entranceVerticalWidth = 	
+		guideInfo.entranceVerticalWidth =
 			2*sqrt(1 - (majorAxisoffsetxw*majorAxisoffsetxw)
 			/(majorAxisxw*majorAxisxw) )*minorAxisxw;
 	}
 
 	if ( strcmp(option,"ellipse") == 0 && directDefination == 0)
 	{
-		if ( strcmp(dimensionsAt,"entrance") == 0 ){ 
-			double lofbs_horizontal = 
+		if ( strcmp(dimensionsAt,"entrance") == 0 ){
+			double lofbs_horizontal =
 				  sqrt( linxw*linxw + xwidth*xwidth*0.25)
 				+ sqrt( (l + loutxw)*(l + loutxw) + xwidth*xwidth*0.25);
 
-			double lofbs_vertical = 
+			double lofbs_vertical =
 				  sqrt( linyh*linyh + yheight*yheight*0.25)
 				+ sqrt( (l + loutyh)*(l + loutyh) + yheight*yheight*0.25);
 
@@ -968,39 +968,39 @@ INITIALIZE
 			guideInfo.ellipseMajorOffset[RightSide] = (l+linxw+loutxw)/2-linxw;
 			guideInfo.ellipseMinorOffset[RightSide] = 0;
 
-			guideInfo.ellipseMajorAxis[LeftSide] = 
+			guideInfo.ellipseMajorAxis[LeftSide] =
 										guideInfo.ellipseMajorAxis[RightSide];
-			guideInfo.ellipseMinorAxis[LeftSide] = 
+			guideInfo.ellipseMinorAxis[LeftSide] =
 										guideInfo.ellipseMinorAxis[RightSide];
-			guideInfo.ellipseMajorOffset[LeftSide] = 
+			guideInfo.ellipseMajorOffset[LeftSide] =
 										guideInfo.ellipseMajorOffset[RightSide];
-			guideInfo.ellipseMinorOffset[LeftSide] = 
+			guideInfo.ellipseMinorOffset[LeftSide] =
 										guideInfo.ellipseMinorOffset[RightSide];
 
 			guideInfo.ellipseMajorAxis[TopSide] = lofbs_vertical/2;
-			
-			guideInfo.ellipseMinorAxis[TopSide] = 
+
+			guideInfo.ellipseMinorAxis[TopSide] =
 					sqrt(0.25*lofbs_vertical*lofbs_vertical
 						-0.25*(l+linyh+loutyh)*(l+linyh+loutyh)	);
 
 			guideInfo.ellipseMajorOffset[TopSide] = (l+linyh+loutyh)/2-linyh;
 			guideInfo.ellipseMinorOffset[TopSide] = 0;
 
-			guideInfo.ellipseMajorAxis[BottomSide] = 
+			guideInfo.ellipseMajorAxis[BottomSide] =
 										guideInfo.ellipseMajorAxis[TopSide];
-			guideInfo.ellipseMinorAxis[BottomSide] = 
+			guideInfo.ellipseMinorAxis[BottomSide] =
 										guideInfo.ellipseMinorAxis[TopSide];
-			guideInfo.ellipseMajorOffset[BottomSide] = 
+			guideInfo.ellipseMajorOffset[BottomSide] =
 										guideInfo.ellipseMajorOffset[TopSide];
-			guideInfo.ellipseMinorOffset[BottomSide] = 
+			guideInfo.ellipseMinorOffset[BottomSide] =
 										guideInfo.ellipseMinorOffset[TopSide];
 		}
-		if ( strcmp(dimensionsAt,"exit") == 0 ){ 
-			double lofbs_horizontal = 
+		if ( strcmp(dimensionsAt,"exit") == 0 ){
+			double lofbs_horizontal =
 				  sqrt( loutxw*loutxw + xwidth*xwidth*0.25)
 				+ sqrt( (l + linxw)*(l + linxw) + xwidth*xwidth*0.25);
 
-			double lofbs_vertical = 
+			double lofbs_vertical =
 				  sqrt( loutyh*loutyh + yheight*yheight*0.25)
 				+ sqrt( (l + linyh)*(l + linyh) + yheight*yheight*0.25);
 
@@ -1014,67 +1014,67 @@ INITIALIZE
 			guideInfo.ellipseMajorOffset[RightSide] =(l+linxw+loutxw)/2-linxw;
 			guideInfo.ellipseMinorOffset[RightSide] = 0;
 
-			guideInfo.ellipseMajorAxis[LeftSide] = 
+			guideInfo.ellipseMajorAxis[LeftSide] =
 										guideInfo.ellipseMajorAxis[RightSide];
-			guideInfo.ellipseMinorAxis[LeftSide] = 
+			guideInfo.ellipseMinorAxis[LeftSide] =
 										guideInfo.ellipseMinorAxis[RightSide];
-			guideInfo.ellipseMajorOffset[LeftSide] = 
+			guideInfo.ellipseMajorOffset[LeftSide] =
 										guideInfo.ellipseMajorOffset[RightSide];
-			guideInfo.ellipseMinorOffset[LeftSide] = 
+			guideInfo.ellipseMinorOffset[LeftSide] =
 										guideInfo.ellipseMinorOffset[RightSide];
 
 			guideInfo.ellipseMajorAxis[TopSide] = lofbs_vertical/2;
-			
-			guideInfo.ellipseMinorAxis[TopSide] = 
+
+			guideInfo.ellipseMinorAxis[TopSide] =
 					sqrt(0.25*lofbs_vertical*lofbs_vertical
 						-0.25*(l+linyh+loutyh)*(l+linyh+loutyh)	);
 
 			guideInfo.ellipseMajorOffset[TopSide] = (l+linyh+loutyh)/2-linyh;
 			guideInfo.ellipseMinorOffset[TopSide] = 0;
 
-			guideInfo.ellipseMajorAxis[BottomSide] = 
+			guideInfo.ellipseMajorAxis[BottomSide] =
 										guideInfo.ellipseMajorAxis[TopSide];
-			guideInfo.ellipseMinorAxis[BottomSide] = 
+			guideInfo.ellipseMinorAxis[BottomSide] =
 										guideInfo.ellipseMinorAxis[TopSide];
-			guideInfo.ellipseMajorOffset[BottomSide] = 
+			guideInfo.ellipseMajorOffset[BottomSide] =
 										guideInfo.ellipseMajorOffset[TopSide];
-			guideInfo.ellipseMinorOffset[BottomSide] = 
+			guideInfo.ellipseMinorOffset[BottomSide] =
 										guideInfo.ellipseMinorOffset[TopSide];
 		}
-		if ( strcmp(dimensionsAt,"mid") == 0 ){ 
+		if ( strcmp(dimensionsAt,"mid") == 0 ){
 
 			guideInfo.Length = l;
-			
-			guideInfo.ellipseMajorAxis[RightSide] = 
+
+			guideInfo.ellipseMajorAxis[RightSide] =
 				sqrt( (linxw+l+loutxw)*(linxw+l+loutxw)/4+xwidth*xwidth/4);
 			guideInfo.ellipseMinorAxis[RightSide] = xwidth/2;
 
 			guideInfo.ellipseMajorOffset[RightSide] = (l+linxw+loutxw)/2-linxw;
 			guideInfo.ellipseMinorOffset[RightSide] = 0;
 
-			guideInfo.ellipseMajorAxis[LeftSide] = 
+			guideInfo.ellipseMajorAxis[LeftSide] =
 										guideInfo.ellipseMajorAxis[RightSide];
-			guideInfo.ellipseMinorAxis[LeftSide] = 
+			guideInfo.ellipseMinorAxis[LeftSide] =
 										guideInfo.ellipseMinorAxis[RightSide];
-			guideInfo.ellipseMajorOffset[LeftSide] = 
+			guideInfo.ellipseMajorOffset[LeftSide] =
 										guideInfo.ellipseMajorOffset[RightSide];
-			guideInfo.ellipseMinorOffset[LeftSide] = 
+			guideInfo.ellipseMinorOffset[LeftSide] =
 										guideInfo.ellipseMinorOffset[RightSide];
 
-			guideInfo.ellipseMajorAxis[TopSide] = 
+			guideInfo.ellipseMajorAxis[TopSide] =
 				sqrt( (linyh+l+loutyh)*(linyh+l+loutyh)/4+yheight*yheight/4);
 			guideInfo.ellipseMinorAxis[TopSide] = yheight/2;
 
 			guideInfo.ellipseMajorOffset[TopSide] = (l+linyh+loutyh)/2-linyh;
 			guideInfo.ellipseMinorOffset[TopSide] = 0;
 
-			guideInfo.ellipseMajorAxis[BottomSide] = 
+			guideInfo.ellipseMajorAxis[BottomSide] =
 										guideInfo.ellipseMajorAxis[TopSide];
-			guideInfo.ellipseMinorAxis[BottomSide] = 
+			guideInfo.ellipseMinorAxis[BottomSide] =
 										guideInfo.ellipseMinorAxis[TopSide];
-			guideInfo.ellipseMajorOffset[BottomSide] = 
+			guideInfo.ellipseMajorOffset[BottomSide] =
 										guideInfo.ellipseMajorOffset[TopSide];
-			guideInfo.ellipseMinorOffset[BottomSide] = 
+			guideInfo.ellipseMinorOffset[BottomSide] =
 										guideInfo.ellipseMinorOffset[TopSide];
 
 		}
@@ -1102,19 +1102,19 @@ INITIALIZE
 		double major_offset_horizontal = 0;
 		double major_offset_vertical = 0;
 
-		if ( strcmp(dimensionsAt,"entrance") == 0 ){ 
-			used_focal_vertical = sqrt( (yheight*yheight)/4 
+		if ( strcmp(dimensionsAt,"entrance") == 0 ){
+			used_focal_vertical = sqrt( (yheight*yheight)/4
 								+ (l+linyh)*(l+linyh) );
-			used_focal_horizontal = sqrt( (xwidth*xwidth)/4 
-								+ (l+linxw)*(l+linxw) ); 
-			major_offset_vertical = l;	
+			used_focal_horizontal = sqrt( (xwidth*xwidth)/4
+								+ (l+linxw)*(l+linxw) );
+			major_offset_vertical = l;
 			major_offset_horizontal = l;
 		}
-		else {	
-			used_focal_vertical = sqrt( (yheight*yheight)/4 
+		else {
+			used_focal_vertical = sqrt( (yheight*yheight)/4
 								+ (l+loutyh)*(l+loutyh) );
-			used_focal_horizontal = sqrt( (xwidth*xwidth)/4 
-								+ (l+loutxw)*(l+loutxw) ); 
+			used_focal_horizontal = sqrt( (xwidth*xwidth)/4
+								+ (l+loutxw)*(l+loutxw) );
 		}
 
 		guideInfo.Length = l;
@@ -1125,13 +1125,13 @@ INITIALIZE
 		guideInfo.ellipseMajorOffset[RightSide] = major_offset_horizontal;
 		guideInfo.ellipseMinorOffset[RightSide] = 0;
 
-		guideInfo.ellipseMajorAxis[LeftSide] = 
+		guideInfo.ellipseMajorAxis[LeftSide] =
 								guideInfo.ellipseMajorAxis[RightSide];
-		guideInfo.ellipseMinorAxis[LeftSide] = 
+		guideInfo.ellipseMinorAxis[LeftSide] =
 								guideInfo.ellipseMinorAxis[RightSide];
-		guideInfo.ellipseMajorOffset[LeftSide] = 
+		guideInfo.ellipseMajorOffset[LeftSide] =
 								guideInfo.ellipseMajorOffset[RightSide];
-		guideInfo.ellipseMinorOffset[LeftSide] = 
+		guideInfo.ellipseMinorOffset[LeftSide] =
 								guideInfo.ellipseMinorOffset[RightSide];
 
 		guideInfo.ellipseMajorAxis[TopSide] = used_focal_vertical;
@@ -1140,70 +1140,70 @@ INITIALIZE
 		guideInfo.ellipseMajorOffset[TopSide] = major_offset_vertical;
 		guideInfo.ellipseMinorOffset[TopSide] = 0;
 
-		guideInfo.ellipseMajorAxis[BottomSide] = 
+		guideInfo.ellipseMajorAxis[BottomSide] =
 								guideInfo.ellipseMajorAxis[TopSide];
-		guideInfo.ellipseMinorAxis[BottomSide] = 
+		guideInfo.ellipseMinorAxis[BottomSide] =
 								guideInfo.ellipseMinorAxis[TopSide];
-		guideInfo.ellipseMajorOffset[BottomSide] = 
+		guideInfo.ellipseMajorOffset[BottomSide] =
 								guideInfo.ellipseMajorOffset[TopSide];
-		guideInfo.ellipseMinorOffset[BottomSide] = 
+		guideInfo.ellipseMinorOffset[BottomSide] =
 								guideInfo.ellipseMinorOffset[TopSide];
 	}
 
 	// Applies the properties of the mirrors in the guide given by the user.
 	// These variables are used in the reflection functions.
 
-	
+
 	// Sets the mirror type of the guides mirrors
-	// These variables are used in the collision functions 
+	// These variables are used in the collision functions
 	// to find the type of collision
 
-	// guideInfo.OuterSide[RightSide]  = 	
+	// guideInfo.OuterSide[RightSide]  =
 	// 	guide_elliptical_getMirrorTypeFromInput(outer_right_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.OuterSide[TopSide]  	= 	
+	// guideInfo.OuterSide[TopSide]  	=
 	// 	guide_elliptical_getMirrorTypeFromInput(outer_top_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.OuterSide[LeftSide]  	= 	
+	// guideInfo.OuterSide[LeftSide]  	=
 	// 	guide_elliptical_getMirrorTypeFromInput(outer_left_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.OuterSide[BottomSide] = 	
+	// guideInfo.OuterSide[BottomSide] =
 	// 	guide_elliptical_getMirrorTypeFromInput(outer_bottom_side_mirror,guideInfo.verboseSetting);
 
-	// guideInfo.InnerSide[RightSide]  = 	
+	// guideInfo.InnerSide[RightSide]  =
 	// 	guide_elliptical_getMirrorTypeFromInput(inner_right_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.InnerSide[TopSide]  	= 	
+	// guideInfo.InnerSide[TopSide]  	=
 	// 	guide_elliptical_getMirrorTypeFromInput(inner_top_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.InnerSide[LeftSide]  	= 	
+	// guideInfo.InnerSide[LeftSide]  	=
 	// 	guide_elliptical_getMirrorTypeFromInput(inner_left_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.InnerSide[BottomSide] =	
+	// guideInfo.InnerSide[BottomSide] =
 	// 	guide_elliptical_getMirrorTypeFromInput(inner_bottom_side_mirror,guideInfo.verboseSetting);
 
-	// Give a warning if all side of the guide is turned off, 
+	// Give a warning if all side of the guide is turned off,
 	// as the guide is essentially turned off
-	if(    guideInfo.OuterSide[RightSide] 	== 1 
+	if(    guideInfo.OuterSide[RightSide] 	== 1
 		&& guideInfo.OuterSide[TopSide] 	== 1
-		&& guideInfo.OuterSide[LeftSide] 	== 1 
+		&& guideInfo.OuterSide[LeftSide] 	== 1
 		&& guideInfo.OuterSide[BottomSide]	== 1
-		&& guideInfo.InnerSide[RightSide] 	== 1 
+		&& guideInfo.InnerSide[RightSide] 	== 1
 		&& guideInfo.InnerSide[TopSide] 	== 1
-		&& guideInfo.InnerSide[LeftSide] 	== 1 
+		&& guideInfo.InnerSide[LeftSide] 	== 1
 		&& guideInfo.InnerSide[BottomSide]  == 1)
 		printf("Warning: In %s all the sides of the guide has been disabled,"
 				" so it not possible for any particle"
 				" to collide with the guide, consider"
 				" disabling this component",NAME_CURRENT_COMP);
-	
-	if(guideInfo.mArr[RightSide] <= 0)  guideInfo.InnerSide[RightSide] = 
+
+	if(guideInfo.mArr[RightSide] <= 0)  guideInfo.InnerSide[RightSide] =
 														MirrorTypeabsorption;
-	if(guideInfo.mArr[TopSide] <= 0) 	 guideInfo.InnerSide[TopSide] 	= 
+	if(guideInfo.mArr[TopSide] <= 0) 	 guideInfo.InnerSide[TopSide] 	=
 														MirrorTypeabsorption;
-	if(guideInfo.mArr[LeftSide] <= 0) 	 guideInfo.InnerSide[LeftSide] 	= 
+	if(guideInfo.mArr[LeftSide] <= 0) 	 guideInfo.InnerSide[LeftSide] 	=
 														MirrorTypeabsorption;
-	if(guideInfo.mArr[BottomSide] <= 0) guideInfo.InnerSide[BottomSide] = 
+	if(guideInfo.mArr[BottomSide] <= 0) guideInfo.InnerSide[BottomSide] =
 														MirrorTypeabsorption;
 	/* if(directDefination == 0){ */
 	/* 	guideInfo.entranceHorizontalWidth = xwidth; */
 	/* 	guideInfo.entranceVerticalWidth = yheight; */
 	/* } */
-	
+
 	if( strcmp(option,"halfellipse") == 0 && directDefination == 0 ){
 		guideInfo.entranceHorizontalWidth =
 			(guideInfo.ellipseMinorAxis[RightSide]
@@ -1212,7 +1212,7 @@ INITIALIZE
 			/( guideInfo.ellipseMajorAxis[RightSide]
 			  *guideInfo.ellipseMajorAxis[RightSide] ) )
 			+ guideInfo.ellipseMinorOffset[RightSide] )*2;
-		guideInfo.entranceVerticalWidth = 
+		guideInfo.entranceVerticalWidth =
 			(guideInfo.ellipseMinorAxis[TopSide]
 			* sqrt(1 - ( guideInfo.ellipseMajorOffset[TopSide]
 						*guideInfo.ellipseMajorOffset[TopSide] )
@@ -1227,7 +1227,7 @@ INITIALIZE
 	/*
 	double DefaultArray1[8] = { 1.0,-1.0,-1.0, 1.0, 1.0,-1.0,-1.0, 1.0};
 	double DefaultArray2[8] = { 1.0, 1.0,-1.0,-1.0, 1.0, 1.0,-1.0,-1.0};
-	double DefaultArray3[8] = {-1.0,-1.0,-1.0,-1.0, 1.0, 1.0, 1.0, 1.0}; 
+	double DefaultArray3[8] = {-1.0,-1.0,-1.0,-1.0, 1.0, 1.0, 1.0, 1.0};
 
 	guideInfo.EnclosingBoxOn = 0;
 	double *xinput;
@@ -1276,22 +1276,22 @@ INITIALIZE
 
 	guideInfo.exitVerticalWidth =
 		2*sqrt(1 - ( (guideInfo.Length-guideInfo.ellipseMajorOffset[BottomSide])
-					*(guideInfo.Length-guideInfo.ellipseMajorOffset[BottomSide]) 
-					)/(guideInfo.ellipseMajorAxis[BottomSide] 
+					*(guideInfo.Length-guideInfo.ellipseMajorOffset[BottomSide])
+					)/(guideInfo.ellipseMajorAxis[BottomSide]
 					*guideInfo.ellipseMajorAxis[BottomSide] )
 		)*guideInfo.ellipseMinorAxis[BottomSide];
 
 	guideInfo.exitHorizontalWidth =
 		2*sqrt(1 - ( (guideInfo.Length-guideInfo.ellipseMajorOffset[RightSide])
-					*(guideInfo.Length-guideInfo.ellipseMajorOffset[RightSide]) 
-					)/(guideInfo.ellipseMajorAxis[RightSide] 
-					*guideInfo.ellipseMajorAxis[RightSide] ) 
+					*(guideInfo.Length-guideInfo.ellipseMajorOffset[RightSide])
+					)/(guideInfo.ellipseMajorAxis[RightSide]
+					*guideInfo.ellipseMajorAxis[RightSide] )
 		)*guideInfo.ellipseMinorAxis[RightSide];
 
     //////////////////segmentation of m values
 
 	// Are the arrays empty?
-	if(mvaluesright != NULL || mvaluesleft != NULL 
+	if(mvaluesright != NULL || mvaluesleft != NULL
 	|| mvaluestop != NULL || mvaluesbottom != NULL)
 	{
 		guideInfo.enableSegments = 1;
@@ -1307,26 +1307,26 @@ INITIALIZE
 
 		// Are the arrays of equal length?
 		if(seglength == NULL){
-			dynamicalSegLength = 
+			dynamicalSegLength =
 					realloc(dynamicalSegLength,
 							guideInfo.numberOfSegments*sizeof(double) );
 			int i;
 			for (i = 0; i < guideInfo.numberOfSegments; ++i){
-				dynamicalSegLength[i] = 
+				dynamicalSegLength[i] =
 						guideInfo.Length/guideInfo.numberOfSegments;
 				}
 			guideInfo.segLength = dynamicalSegLength;
 		}
 		else guideInfo.segLength = seglength;
 
-		if( guideInfo.numberOfSegments != sizeof(mvaluesright)/sizeof(mvaluesright[0]) 
+		if( guideInfo.numberOfSegments != sizeof(mvaluesright)/sizeof(mvaluesright[0])
 		 || guideInfo.numberOfSegments != sizeof(mvaluesleft)/sizeof(mvaluesleft[0])
 		 || guideInfo.numberOfSegments != sizeof(mvaluestop)/sizeof(mvaluestop[0])
 		 || guideInfo.numberOfSegments != sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0])
 		 || (guideInfo.segLength == NULL
-		  & guideInfo.numberOfSegments != sizeof(seglength)/sizeof(guideInfo.segLength[0]) 
+		  & guideInfo.numberOfSegments != sizeof(seglength)/sizeof(guideInfo.segLength[0])
 		  ) ) {
-			
+
 			printf("Error in userinput inside %s, the length of the arrays"
 				   " mvalues and seglength are not equal\n",NAME_CURRENT_COMP);
 			printf("The length of the arrays are: mValuesright is %lu,"
@@ -1337,34 +1337,34 @@ INITIALIZE
 					sizeof(mvaluestop)/sizeof(double),
 					sizeof(mvaluesbottom)/sizeof(double),
 					sizeof(guideInfo.segLength)/sizeof(double),
-					guideInfo.numberOfSegments	
+					guideInfo.numberOfSegments
 					);
-				
+
 			if ( guideInfo.verboseSetting )	{
 				int i;
-				
+
 				printf("The Values of mvaluesright is: [");
-				for(i=0; i < sizeof(mvaluesright)/sizeof(mvaluesright[0]); i++) 	
+				for(i=0; i < sizeof(mvaluesright)/sizeof(mvaluesright[0]); i++)
 						printf("%e,",guideInfo.mValuesright[i] );
 				printf("]\n");
-				
+
 				printf("The Values of mvaluesleft is: [");
-				for(i=0; i < sizeof(mvaluesleft)/sizeof(mvaluesleft[0]); i++) 	
+				for(i=0; i < sizeof(mvaluesleft)/sizeof(mvaluesleft[0]); i++)
 						printf("%e,",guideInfo.mValuesleft[i] );
 				printf("]\n");
-				
+
 				printf("The Values of mvaluestop is: [");
-				for(i=0; i < sizeof(mvaluestop)/sizeof(mvaluestop[0]); i++) 	
+				for(i=0; i < sizeof(mvaluestop)/sizeof(mvaluestop[0]); i++)
 						printf("%e,",guideInfo.mValuestop[i] );
 				printf("]\n");
 
 				printf("The Values of mvaluesbottom is: [");
-				for(i=0; i < sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]); i++) 
+				for(i=0; i < sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]); i++)
 						printf("%e,",guideInfo.mValuesbottom[i] );
 				printf("]\n");
 
 				printf("The Values of seglength is: [");
-				for(i=0; i < sizeof(guideInfo.segLength)/sizeof(guideInfo.segLength[0]); i++) 
+				for(i=0; i < sizeof(guideInfo.segLength)/sizeof(guideInfo.segLength[0]); i++)
 						printf("%e,",guideInfo.segLength[i]);
 				printf("]\n");
 			}
@@ -1379,7 +1379,7 @@ INITIALIZE
 		for(i=0;i< guideInfo.numberOfSegments; i++) {
 			sumOfelements += guideInfo.segLength[i];
 		}
-		if ( guideInfo.verboseSetting 
+		if ( guideInfo.verboseSetting
 		&& fabs(sumOfelements-guideInfo.Length) > 1e-9 )
 			printf("Error in userinput inside %s, the difference between"
 					" guidelength and elements of the seglength array is:"
@@ -1394,9 +1394,9 @@ INITIALIZE
 ///////////////////////////////////////////////////////////////////////////
 
 /*
-	Sets the local gravity vector equal to the global gravity vector (0,-g,0) 
-	and when apply the same rotation matrix as applied to guide. 
-*/ 
+	Sets the local gravity vector equal to the global gravity vector (0,-g,0)
+	and when apply the same rotation matrix as applied to guide.
+*/
 	if (enableGravity != 0){
 		Gx0=0, Gy0=-GRAVITY*enableGravity, Gz0=0;
 		Coords mcLocG;
@@ -1410,7 +1410,7 @@ INITIALIZE
 	Finds the next collision between the particle and the guide.
 	Decided by the type of collision, the particle will then be either
 	reflected on the guide, leaving the guide, or absorbed.
-	If reflected then the particle will have its velocity vector and p 
+	If reflected then the particle will have its velocity vector and p
 	changed appropriable (TODO).
 	In the case of a absorbed particle the ABSORB function is called.
 	and if the particle is found to have left the guide the break command
@@ -1420,24 +1420,24 @@ TRACE
 %{
   PROP_Z0;
   SCATTER;
-  
+
   double Gloc;
   if (curvature) {
     Gloc=(vx*vx+vy*vy+vz*vz)/curvature;
   } else {
     Gloc=0;
   }
-  
+
 
 	if( !guideInfo.EnclosingBoxOn )
-		if( fabs(x) > guideInfo.entranceHorizontalWidth/2.0 
+		if( fabs(x) > guideInfo.entranceHorizontalWidth/2.0
 		    || fabs(y) > guideInfo.entranceVerticalWidth/2.0 )
 		  ABSORB;
 
 
 	int bounces = 0;
 	for(bounces = 0; bounces <= 1000; bounces++){
-	
+
 	  Gx=Gx0; Gy=Gy0; Gz=Gz0;
 	  if (curvature) {
 	    // Add velocity-dependent, location-dependent approximation to centripetal force for curvature...
@@ -1449,16 +1449,16 @@ TRACE
 							x,y,z,vx,vy,vz,Gx,Gy,Gz,
 							&guideInfo,&latestParticleCollision);
 
-		double timeToCollision = 
+		double timeToCollision =
 				latestParticleCollision.delta_time_to_next_collision;
 
 		// Handle special cases.
 		if(boolean == 0) ABSORB;
 		if(timeToCollision < 1e-15) ABSORB;
 
-		// If the neutron reach the end of the guide, when move 
+		// If the neutron reach the end of the guide, when move
 		// the neutron to the end of guide and leave this component.
-		if( z+vz*timeToCollision+0.5*Gz*timeToCollision*timeToCollision 
+		if( z+vz*timeToCollision+0.5*Gz*timeToCollision*timeToCollision
 			>= guideInfo.Length )
 		{
 			double timeToExit = 0;
@@ -1475,16 +1475,16 @@ TRACE
 		if(latestParticleCollision.collisionType == Absorb){ ABSORB; }
 		if(latestParticleCollision.collisionType == Reflex){
 			p *= guide_elliptical_handleReflection(x,y,z,&vx,&vy,&vz,
-						&guideInfo,&latestParticleCollision); 
+						&guideInfo,&latestParticleCollision);
 			SCATTER;
-			if(p == 0) ABSORB; 
+			if(p == 0) ABSORB;
 		}
 	}
-	
-	if( fabs(x) > guideInfo.exitHorizontalWidth/2 
+
+	if( fabs(x) > guideInfo.exitHorizontalWidth/2
 	 || fabs(y) > guideInfo.exitVerticalWidth/2 )
 		ABSORB;
-	
+
 %}
 
 
@@ -1497,10 +1497,10 @@ MCDISPLAY
 
 
 	// Calculate the points need to draw approximation of the ellipses
-	// defining the guide 
+	// defining the guide
 
 	// the number of lines used to draw one side of the guide
-	int ApproximationMirrors = 500; 
+	int ApproximationMirrors = 500;
 
 	// The start of the guide
 	double zvalue=0;
@@ -1519,17 +1519,17 @@ MCDISPLAY
 	double tempy;
 
 	/*
-		Calculate the second coordinates to the points on the ellipse with z_i 
-		as the first coordinate. We transform the point to the coordinate system 
-		there the ellipse is a unit circle. And use the defination of this circle 
+		Calculate the second coordinates to the points on the ellipse with z_i
+		as the first coordinate. We transform the point to the coordinate system
+		there the ellipse is a unit circle. And use the defination of this circle
 		to find second coordinate (x^2+z^2 = 1)
 	*/
 
 	/////////////////////////////////////////////////////////
 	double Length;
 	double entranceHorizontalWidth;
-	double entranceVerticalWidth;	
-	
+	double entranceVerticalWidth;
+
 	// ellipses infomation
 	double ellipseMajorAxis[4],		ellipseMinorAxis[4];
 	double ellipseMajorOffset[4],	ellipseMinorOffset[4];
@@ -1540,7 +1540,7 @@ MCDISPLAY
 	int i = 0;
 	double tempz = 0;
 	for(i=0;i<ApproximationMirrors+1;i++){
-		
+
 		tempx = sqrt(
 			guideInfo.ellipseMinorAxis[RightSide]
 			*guideInfo.ellipseMinorAxis[RightSide]
@@ -1554,7 +1554,7 @@ MCDISPLAY
 
 		xplus[i] =  tempx + guideInfo.ellipseMinorOffset[RightSide];
 		xminus[i]= -tempx + guideInfo.ellipseMinorOffset[RightSide];
-		
+
 		tempy = sqrt(
 			guideInfo.ellipseMinorAxis[TopSide]
 			*guideInfo.ellipseMinorAxis[TopSide]
@@ -1565,7 +1565,7 @@ MCDISPLAY
 			*( zvalue+zdelta*i-guideInfo.ellipseMajorOffset[TopSide] )
 			*( zvalue+zdelta*i-guideInfo.ellipseMajorOffset[TopSide] )
 		);
-		
+
 		yplus[i] =  tempy + guideInfo.ellipseMinorOffset[TopSide];
 		yminus[i]= -tempy + guideInfo.ellipseMinorOffset[TopSide];
 	}
@@ -1587,7 +1587,7 @@ MCDISPLAY
 	line( xminus[j],0 		 , zvalue+j*zdelta,xminus[j],yminus[j], zvalue+j*zdelta);
 	line( xplus[j], 0, 		  zvalue+j*zdelta, xplus[j], yplus[j], zvalue+j*zdelta);
 	line( xplus[j], yminus[j], zvalue+j*zdelta,xplus[j],0 		, zvalue+j*zdelta);
-			
+
 	j=ApproximationMirrors;
 
 	line( xplus[j], yplus[j], zvalue+j*zdelta,0 		, yplus[j], zvalue+j*zdelta);
@@ -1599,8 +1599,8 @@ MCDISPLAY
 	line( xplus[j], 0, 		  zvalue+j*zdelta, xplus[j], yplus[j], zvalue+j*zdelta);
 	line( xplus[j], yminus[j], zvalue+j*zdelta,xplus[j], 0 		 , zvalue+j*zdelta);
 
-			  
-			  
+
+
 	// find boardest place on the guide and draw a band around the guide
 	int m0;
 	double boardestPlace = 0;
@@ -1623,25 +1623,25 @@ MCDISPLAY
 	line( xplus[j], yminus[j], zvalue+j*zdelta, xplus[j], 0 		 , zvalue+j*zdelta);
 
 
-			  
+
 	// Drawing lines parallel with the z direction
-			  
+
 	int k=0;
 	for(k=0; k < ApproximationMirrors; k++){
-		
+
 		line( xplus[k], yplus[k], zvalue+k*zdelta,xplus[k+1], yplus[k+1], zvalue+(k+1)*zdelta);
 		line( xminus[k],yplus[k], zvalue+k*zdelta,xminus[k+1],yplus[k+1], zvalue+(k+1)*zdelta);
-		
+
 		line( xplus[k], yminus[k],zvalue+k*zdelta,xplus[k+1], yminus[k+1],zvalue+(k+1)*zdelta);
-		
+
 		line( xminus[k],yminus[k],zvalue+k*zdelta,xminus[k+1],yminus[k+1],zvalue+(k+1)*zdelta);
-		
+
 		line( xminus[k],0 		, zvalue+k*zdelta, xminus[k+1],0 	, zvalue+(k+1)*zdelta);
 		line( xplus[k], 0 		, zvalue+k*zdelta, xplus[k+1], 0 	, zvalue+(k+1)*zdelta);
-		
+
 		line( 0 	, yminus[k],  zvalue+k*zdelta, 0 	  	,yminus[k+1],zvalue+(k+1)*zdelta);
 		line( 0 	,yplus[k]  , zvalue+k*zdelta , 0 		,yplus[k] , zvalue+(k+1)*zdelta);
-		
+
 		}
 
 		if(guideInfo.EnclosingBoxOn){
