@@ -1110,7 +1110,7 @@ TRACE
               Vars.csz = sz;
               Vars.ct  = t;
 
-              pp = Monitor_nD_Trace(&DEFS, &Vars);
+              pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
               Vars.Nsum++;
               Vars.psum  += P;

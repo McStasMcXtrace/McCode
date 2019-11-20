@@ -8,17 +8,17 @@
 * Component: Tunneling_sample
 *
 * %I
-* Written by: Kim Lefmann 
+* Written by: Kim Lefmann
 * Date: 10.05.07
 * Origin: Risoe
-* 
+*
 * A Double-cylinder shaped all-incoherent scatterer
-* with elastic, quasielastic (Lorentzian), and tunneling (sharp) 
+* with elastic, quasielastic (Lorentzian), and tunneling (sharp)
 * components.
 *
 * %D
 * A Double-cylinder shaped all-incoherent scatterer
-* with both elastic, quasielastic (Lorentzian), and tunneling (sharp) 
+* with both elastic, quasielastic (Lorentzian), and tunneling (sharp)
 * components. No multiple scattering. Absorbtion included.
 * The shape of the sample may be a box with dimensions xwidth, yheight, zdepth.
 * The area to scatter to is a disk of radius 'focus_r' situated at the target.
@@ -31,8 +31,8 @@
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
 *
-* The outgoing polarization is calculated as for nuclear spin incoherence: 
-*   P' = 1/3*P-2/3P = -1/3P 
+* The outgoing polarization is calculated as for nuclear spin incoherence:
+*   P' = 1/3*P-2/3P = -1/3P
 * As above multiple scattering is ignored .
 *
 * Example: Tunneling_sample(thickness=0.001,radius=0.01,yheight=0.02,focus_r=0.035,
@@ -40,11 +40,11 @@
 *
 * %P
 * INPUT PARAMETERS:
-* radius: [m]        Outer radius of sample in (x,z) plane 
-* yheight: [m]       vert.  dimension of sample, as a height 
-* thickness: [m]     Thickness of cylindrical sample in (x,z) plane 
-* focus_r: [m]       Radius of disk containing target. Use 0 for full space 
-* target_index: [1]  relative index of component to focus at, e.g. next is +1 
+* radius: [m]        Outer radius of sample in (x,z) plane
+* yheight: [m]       vert.  dimension of sample, as a height
+* thickness: [m]     Thickness of cylindrical sample in (x,z) plane
+* focus_r: [m]       Radius of disk containing target. Use 0 for full space
+* target_index: [1]  relative index of component to focus at, e.g. next is +1
 *
 
 * Optional parameters
@@ -239,7 +239,7 @@ TRACE
         randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
       }
       NORM(vx, vy, vz);
-      
+
       scatt_choice = rand01();  /* chooses type of scattering */
       v_i = v;                  /* Store initial velocity in case of inel. */
       E_i = VS2E*v_i*v_i;
@@ -255,7 +255,7 @@ TRACE
               dE = -E_tun;
 	  }
           E_f = E_i + dE;
-          if (E_f <= 0) 
+          if (E_f <= 0)
             ABSORB;
 	  v_f = SE2V*sqrt(E_f);
           v = v_f;
@@ -287,7 +287,7 @@ TRACE
 #ifndef USE_PGI
           printf("FATAL ERROR: Did not hit box from inside.\n");
 
-#endi
+#endif
           exit(1);
         }
         dt = t3;
@@ -303,7 +303,7 @@ TRACE
       sx *= -1.0/3.0;
       sy *= -1.0/3.0;
       sz *= -1.0/3.0;
-	
+
       SCATTER;
     }
   else /* Transmitting; always elastic */
@@ -316,8 +316,8 @@ TRACE
 
 MCDISPLAY
 %{
-  
-  if (!VarsV.isrect) 
+
+  if (!VarsV.isrect)
   {
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
@@ -325,7 +325,7 @@ MCDISPLAY
     line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
     line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
     line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
-    if (thickness) 
+    if (thickness)
     {
       double radius_i=radius-thickness;
       circle("xz", 0,  yheight/2.0, 0, radius_i);

@@ -195,7 +195,7 @@ TRACE
         Vars.cvz = s->rz;
         Vars.csz = s->pi;
         Vars.ct  = p/s->pi;
-        Monitor_nD_Trace(&DEFS, &Vars);
+        Monitor_nD_Trace(&DEFS, &Vars, _particle);
       } /* if s->pi */
       SCATTER;
     } /* if p */

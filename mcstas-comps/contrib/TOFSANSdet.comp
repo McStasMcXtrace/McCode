@@ -50,7 +50,7 @@
 * qmax: [1/A]   Upper limit of q-range
 * Nq: [1]       Number of q-bins
 * fname: []     file name (first part without extensions)
-* rstneu:    restore neutron after treatment ??? (0.0 = no)
+* rstneu:       restore neutron after treatment ??? (0.0 = no)
 * centol: []    tolerance of center determination (if center larger than centol*calculated_center then set back to theory)
 * inttol: []    tolerance of intensity            (if primary beam intensity smaller than inttol*max_intensity then discard data)
 * qcal: []      calibration of intensity (cps) to width of q-bin (non_zero = yes, zero = no)
@@ -77,9 +77,9 @@ SETTING PARAMETERS (
   Nx=128.0, Ny=128.0, Nt=500.0,                       /* be cautious with large numbers */
   qmin=0.0005, qmax=0.11, // Nq=500.0, <<<<<<<<<<<<<<<<< defined above
   rstneu = 0.0,
-  centol = 0.1, inttol = 0.0001, qcal=1.0)
+  centol = 0.1, inttol = 0.0001, qcal=1,
+  string fname=0)
 OUTPUT PARAMETERS (
-  string fname=0,
   simplN,simplI,simplIe,
   Nxc,Nyc,Ntc,Nqc,
   TSdNf,TSdpf,TSdp2f,

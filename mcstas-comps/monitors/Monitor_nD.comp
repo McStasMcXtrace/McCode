@@ -281,7 +281,7 @@ INITIALIZE
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
-#ifndef USE_PGI  
+#ifndef USE_PGI
   if (Vars.Flag_OFF) {
     offdata.mantidflag=Vars.Flag_mantid;
     offdata.mantidoffset=Vars.Coord_Min[Vars.Coord_Number-1];
@@ -324,7 +324,7 @@ TRACE
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
 
- #ifndef USE_PGI 
+ #ifndef USE_PGI
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
@@ -501,7 +501,7 @@ MCDISPLAY
 #ifndef USE_PGI
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
-    off_display(offdata, _particle);
+    off_display(offdata);
   } else {
     Monitor_nD_McDisplay(&DEFS, &Vars);
   }
