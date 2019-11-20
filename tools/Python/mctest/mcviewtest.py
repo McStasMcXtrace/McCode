@@ -16,7 +16,7 @@ def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
 
     def get_col_header(label, meta):
-        return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), meta.get("cpu_type", ""), meta.get("gpu_type", "")))
+        return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), meta.get("cpu_type", ""), meta.get("gpu_type", ""), meta.get("date", "")))
 
     def get_header_lst(meta):
         ''' composes an easily-templatable list fom a "_meta" test header object '''
@@ -28,6 +28,7 @@ def run_normal_mode(testdir, reflabel):
             lst.append(meta["user"])
             lst.append(meta["cpu_type"])
             lst.append(meta["gpu_type"])
+            lst.append(meta["date"])
         return lst
 
     def get_cell_tuple(cellobj, refval=None):
@@ -82,8 +83,8 @@ def run_normal_mode(testdir, reflabel):
 
     def get_empty_cell_tuple(tag=None):
         ''' return a "state_four" black cell, optionally with a tag, this could be "no ref" or "no test" etc. '''
-        if tag is not None: 
-            return (4, tag, )
+        if tag is not None:
+            return (4, tag)
         return (4, )
 
     def has_test(labels):
@@ -131,7 +132,8 @@ def run_normal_mode(testdir, reflabel):
                     if del_used_from_overobjs:
                         del obj[key]
                 else:
-                    row.append(get_empty_cell_tuple())
+                    errmsg = iterobj[key]["errmsg"]
+                    row.append(get_empty_cell_tuple(errmsg))
 
     # load test data
     for _, alllabels, _ in walk(testdir): break

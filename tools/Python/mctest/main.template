@@ -8,6 +8,17 @@
 .state_three { padding:5px; background-color:gray; color:white; }
 .state_four { padding:5px; background-color:black; color:white; }
 .vertical { writing-mode:vertical-rl; text-orientation:mixed; }
+a:link {
+  color: white; 
+  background-color: transparent; 
+  text-decoration: none;
+}
+
+a:visited {
+  color: lightgrey;
+  background-color: transparent;
+  text-decoration: none;
+}
 </style>
 </head>
 <body>
@@ -28,11 +39,10 @@
 <legend>test results</legend>
 {%- if header is not none -%}
 <table>
-  <tr><td>ref date:</td><td>{{ header.1 }}</td></tr>
   <tr><td>ref user:</td><td>{{ header.3 }}</td></tr>
 </table>
 {%- endif -%}
-<table>
+<table border=1 bordercolor="#dddddd">
 <tr>
   <th></th>
   {# table upper-left corner #}
@@ -44,17 +54,17 @@
 {# ROW: state, ctime, rtime, testval, reference-percentage #}
 {% for row in rows %}
 <tr>
-  <td>{{ row.0 }}</td> {# instr #}
+  <td>{{ row.0 }}</td>
   {%- for c in row %}
     {%- if loop.index0 > 0 %}
       {%- if c.0 == 1 %}
-  <td class=state_one>{{ c.1 }}<br>{{ c.2 }}<br>{{ c.3 }}<br>{{ c.4 }}</td>
+  <td class=state_one><a href={{ c.5 }} >C: {{ c.1 }} | R: {{ c.2 }} | I: {{ c.3 }} | {{ c.4 }}</a></td>
       {%- elif c.0 == 2 %}
-  <td class=state_two>{{ c.1 }}<br>{{ c.2 }}<br>{{ c.3 }}<br>{{ c.4 }}</td>
+  <td class=state_two><a href={{ c.5 }} >C: {{ c.1 }} | R: {{ c.2 }} | I: {{ c.3 }} | {{ c.4 }}</a></td>
       {%- elif c.0 == 3 %}
-  <td class=state_three>{{ c.1 }}</td>
+  <td class=state_three><a href={{ c.5 }} >C: {{ c.1 }}</a></td>
       {%- else %}
-  <td class=state_four></td>
+  <td class=state_four><a href={{ c.5 }} >{{ c.1 }}</a></td>
       {%- endif %}
     {%- endif -%}
   {%- endfor %}
