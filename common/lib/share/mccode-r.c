@@ -3565,6 +3565,11 @@ mchelp(char *pgmname)
   fprintf(stderr,
   "This instrument has been compiled with MPI support.\n  Use 'mpirun %s [options] [parm=value ...]'.\n", pgmname);
 #endif
+#ifdef USE_PGI
+  fprintf(stderr,
+  "This instrument has been compiled with NVIDIA GPU support through OpenACC.\n  Running on systems without such devices will lead to segfaults.\n");
+#endif
+
   if(numipar > 0)
   {
     fprintf(stderr, "Instrument parameters are:\n");
