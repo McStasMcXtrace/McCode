@@ -103,7 +103,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
 
     # copy instr files and record info
     logging.info("Finding instruments in: %s" % branchdir)
-    instrs, _ = utils.get_instr_comp_files(branchdir, recursive=True, instrfilter=instrfilter)
+    instrs, _ = utils.get_instr_comp_files(join(branchdir, "examples"), recursive=True, instrfilter=instrfilter)
     instrs.sort()
 
     # limt runs if required
