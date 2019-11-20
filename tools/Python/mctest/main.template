@@ -31,7 +31,7 @@
   <tr><td>ref user:</td><td>{{ header.3 }}</td></tr>
 </table>
 {%- endif -%}
-<table>
+<table border=1 bordercolor="#dddddd">
 <tr>
   <th></th>
   {# table upper-left corner #}
@@ -43,7 +43,7 @@
 {# ROW: state, ctime, rtime, testval, reference-percentage #}
 {% for row in rows %}
 <tr>
-  <td>{{ row.0 }}</td> {# instr #}
+  <td>{{ row.0 }}</td>
   {%- for c in row %}
     {%- if loop.index0 > 0 %}
       {%- if c.0 == 1 %}
