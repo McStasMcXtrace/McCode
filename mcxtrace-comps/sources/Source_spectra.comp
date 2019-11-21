@@ -262,10 +262,10 @@ TRACE
   double yy=y*1e3;
 
 
-  ix  = (int)floor((xx - prms.xmin)*nx/(prms.xmax - prms.xmin));
-  ipx = (int)floor((xp- prms.xpmin)*npx/(prms.xpmax-prms.xpmin));
-  iy  = (int)floor((yy - prms.ymin)*ny/(prms.ymax - prms.ymin));
-  ipy = (int)floor((yp- prms.ypmin)*npy/(prms.ypmax-prms.ypmin));
+  ix  = (int)floor((xx - prms.xmin)*(nx-1)/(prms.xmax - prms.xmin));
+  ipx = (int)floor((xp- prms.xpmin)*(npx-1)/(prms.xpmax-prms.xpmin));
+  iy  = (int)floor((yy - prms.ymin)*(ny-1)/(prms.ymax - prms.ymin));
+  ipy = (int)floor((yp- prms.ypmin)*(npy-1)/(prms.ypmax-prms.ypmin));
   xptr=&(prms.xproj[num]);
   yptr=&(prms.yproj[num]);
 
