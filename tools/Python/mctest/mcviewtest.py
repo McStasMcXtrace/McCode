@@ -38,6 +38,10 @@ def run_normal_mode(testdir, reflabel):
         runtime = None
         testval = None
         refp = None
+        # Decostruct localfile path to find 'label' corresponding to current cell
+        label = cellobj["localfile"].split("/");
+        label=label[len(label)-3];
+        url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"])
 
         if not cellobj["compiled"]:
             state = 4
@@ -48,7 +52,7 @@ def run_normal_mode(testdir, reflabel):
             if cellobj["testnb"] > 1:
                 # if this is a second test of the same instr, it was already compiled, thus 0.001 compiletime is nonsense
                 compiletime = ""
-            return (state, compiletime)
+            return (state, compiletime, "", "", "", url)
         elif not cellobj["testval"]:
             testval = "missing"
             runtime = "%.2f s" % cellobj["runtime"]
@@ -56,7 +60,7 @@ def run_normal_mode(testdir, reflabel):
             if cellobj["testnb"] > 1:
                 compiletime = ""
             state = 2
-            (state, compiletime, runtime, testval, "")
+            return (state, compiletime, runtime, testval, "", url)
         else:
             testval = "%.2g" % float(cellobj["testval"])
             runtime = "%.2f s" % cellobj["runtime"]
@@ -79,7 +83,7 @@ def run_normal_mode(testdir, reflabel):
             else:
                 refp = "%2.f" % refp + "%"
 
-            return (state, compiletime, runtime, testval, refp)
+            return (state, compiletime, runtime, testval, refp, url)
 
     def get_empty_cell_tuple(tag=None):
         ''' return a "state_four" black cell, optionally with a tag, this could be "no ref" or "no test" etc. '''
