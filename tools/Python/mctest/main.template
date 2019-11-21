@@ -36,7 +36,7 @@ a:visited { color: lightgrey; background-color: transparent; text-decoration: no
   <th></th>
   {# table upper-left corner #}
   {%- for h in hrow -%}
-  <th class=vertical>{{ h }}</th>
+  <th>{{ h }}</th>
   {%- endfor -%}
 </tr>
 
