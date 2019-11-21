@@ -6,31 +6,20 @@
 .state_one { padding:5px; background-color:green; color:white; }
 .state_two { padding:5px; background-color:red; color:white; }
 .state_three { padding:5px; background-color:gray; color:white; }
-.state_four { padding:5px; background-color:black; color:white; }
+.state_four { padding:5px; color:black; }
 .vertical { writing-mode:vertical-rl; text-orientation:mixed; }
-a:link {
-  color: white; 
-  background-color: transparent; 
-  text-decoration: none;
-}
-
-a:visited {
-  color: lightgrey;
-  background-color: transparent;
-  text-decoration: none;
-}
+a:link { color: white; background-color: transparent; text-decoration: none; }
+a:visited { color: lightgrey; background-color: transparent; text-decoration: none; }
 </style>
 </head>
 <body>
 
 <fieldset>
-  <legend>colour codes</legend>
   <table>
     <tr>
       <td class=state_one>ctime<br>rtime<br>detval<br>acc. ok</td>
       <td class=state_two>ctime<br>rutime<br>detval<br>acc. error</td>
       <td class=state_three>ctime</td>
-      <td class=state_four>FAIL</td>
     </tr>
   </table>
 </fieldset>
@@ -58,11 +47,11 @@ a:visited {
   {%- for c in row %}
     {%- if loop.index0 > 0 %}
       {%- if c.0 == 1 %}
-  <td class=state_one><a href={{ c.5 }} >C: {{ c.1 }} | R: {{ c.2 }} | I: {{ c.3 }} | {{ c.4 }}</a></td>
+  <td class=state_one><a href={{ c.5 }} >{{ c.1 }} | {{ c.2 }} | {{ c.3 }} | {{ c.4 }}</a></td>
       {%- elif c.0 == 2 %}
-  <td class=state_two><a href={{ c.5 }} >C: {{ c.1 }} | R: {{ c.2 }} | I: {{ c.3 }} | {{ c.4 }}</a></td>
+  <td class=state_two><a href={{ c.5 }} >{{ c.1 }} | {{ c.2 }} | {{ c.3 }} | {{ c.4 }}</a></td>
       {%- elif c.0 == 3 %}
-  <td class=state_three><a href={{ c.5 }} >C: {{ c.1 }}</a></td>
+  <td class=state_three><a href={{ c.5 }} >{{ c.1 }}</a></td>
       {%- else %}
   <td class=state_four><a href={{ c.5 }} >{{ c.1 }}</a></td>
       {%- endif %}

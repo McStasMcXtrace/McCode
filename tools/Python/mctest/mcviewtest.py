@@ -75,9 +75,9 @@ def run_normal_mode(testdir, reflabel):
             else:
                 state = 1
             if abs(refp)>1000:
-                refp = "(%2.g" % refp + "%)"
+                refp = "%2.g" % refp + "%"
             else:
-                refp = "(%2.f" % refp + "%)"
+                refp = "%2.f" % refp + "%"
 
             return (state, compiletime, runtime, testval, refp)
 
