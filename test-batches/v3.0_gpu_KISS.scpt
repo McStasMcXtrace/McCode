@@ -38,4 +38,3 @@ cd $HOME
 
 echo done on GPU, submitting MPI jobs
 $HOME/go2.sh
-$HOME/go_2.5.sh
