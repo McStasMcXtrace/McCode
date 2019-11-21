@@ -1,0 +1,20 @@
+#
+# lattice_a 5
+# lattice_b 5
+# lattice_c 5
+# lattice_aa 90
+# lattice_bb 90
+# lattice_cc 90
+#
+# column_h 1
+# column_k 2
+# column_l 3
+# column_F 4
+#
+#   h     k     l     Fn
+    1     0     0     10
+   -1     0     0     10
+    0     1     0     10
+    0    -1     0     10
+    0     0     1     10
+    0     0    -1     10

@@ -1204,6 +1204,7 @@ cogen_trace(struct instr_def *instr)
       coutf("  if (!%sGroup%s) { /* previous comps of GROUP have not SCATTERED yet */", ID_PRE, comp->group->name);
       coutf("#undef %sabsorb", ID_PRE);
       cout ("/* if ABSORBed in GROUP/comp, will go to end of component */");
+      cout ("RESTORE=1;");
       coutf("#define %sabsorb %sabsorbComp%s", ID_PRE, ID_PRE, comp->name);
 
     } /* GROUP */
@@ -1217,7 +1218,7 @@ cogen_trace(struct instr_def *instr)
       coutf("#undef %sabsorb", ID_PRE);
       coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
       coutf("  } /* end comp %s in GROUP %s */", comp->name, comp->group->name);
-      coutf("  if (SCATTERED) {\n    %sGroup%s=%i;\n  } else {\n    RESTORE=1;\n  }",
+      coutf("  if (SCATTERED) {\n    %sGroup%s=%i;\n    RESTORE=0;\n  }",
         ID_PRE, comp->group->name, comp->index);
     } /* GROUP */
     /* mcabsorbComp label for any component */

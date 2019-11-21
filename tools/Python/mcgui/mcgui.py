@@ -778,6 +778,9 @@ class McGuiAppController():
     
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        if not os.path.isfile(instr):
+            self.emitter.status("Please select a file rather than a folder. Folder load not supported.")
+            return
         if not instr:
             return
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(instr))==False:
