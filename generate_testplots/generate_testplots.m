@@ -29,12 +29,10 @@ if exist(ref,'dir') == 7
             for k=1:rows
                 thisref=refdata(k);
                 if (not(isempty(thisref)))
-                    if (not(exist([ref '/' refsim '/' thisref.Label '.svg'])))
-                        if (sum(thisref(:)>1e200)==0)
-                            plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
-                            title([ref '/' refsim ' / ' thisref.Label]);
-                            print('-dsvg', [ref '/' refsim '/' thisref.Label '.svg']);
-                        end
+                    if (sum(thisref(:)>1e200)==0)
+                        plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
+                        title([ref '/' refsim ' / ' thisref.Label]);
+                        print('-dsvg', [ref '/' refsim '/' thisref.Label '.svg']);
                     end
                 end
                 othersim=other;%{l};
@@ -44,13 +42,11 @@ if exist(ref,'dir') == 7
                         if (length(otherdata) == length(refdata))
                             otherref=otherdata(k);
                             if (not(isempty(otherref)))
-                                if (not(exist([othersim '/' refsim '/' otherref.Label '.svg'])))
-                                    if (sum(otherref(:)>1e200)==0)
-                                        plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
-                                        title([othersim '/' refsim ' / ' otherref.Label]);
-                                        print('-dsvg', [othersim '/' refsim '/' otherref.Label '.svg']);                                        
-                                    end 
-                                end
+                                if (sum(otherref(:)>1e200)==0)
+                                    plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
+                                    title([othersim '/' refsim ' / ' otherref.Label]);
+                                    print('-dsvg', [othersim '/' refsim '/' otherref.Label '.svg']);                                        
+                                end 
                                 if (all(size(thisref)==size(otherref)))
                                     diff = thisref - otherref;
                                     if (sum(diff(:)>1e200)==0)
