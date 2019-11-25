@@ -30,12 +30,17 @@ if exist(ref,'dir') == 7
             for k=1:rows
                 thisref=refdata(k);
                 if (not(isempty(thisref)))
-                    
-                        plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
-                        title([ref '/' refsim ' / ' thisref.Label]);
-                        display(['print -dpng ' ref '/' refsim '/' thisref.Label '.png']);
-                        eval(['print -dpng ' ref '/' refsim '/' thisref.Label '.png']);
-                    
+                    % Check for NaN and max val's
+                    nans=any(isnan(thisref(:)));
+                    Max = max(thisref(:));
+                    if (not(nans))
+                        if (Max < 1e200)
+                            plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
+                            title([ref '/' refsim ' / ' thisref.Label]);
+                            display(['print -dsvg ' ref '/' refsim '/' thisref.Label '.svg']);
+                            eval(['print -dsvg ' ref '/' refsim '/' thisref.Label '.svg']);
+                        end
+                    end
                 end
                 othersim=other;%{l};
                 if (length(othersim>0))
@@ -44,19 +49,30 @@ if exist(ref,'dir') == 7
                         if (length(otherdata) == length(refdata))
                             otherref=otherdata(k);
                             if (not(isempty(otherref)))
-                    
-                                    plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
-                                    title([othersim '/' refsim ' / ' otherref.Label]);
-                                    eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '.png']);
-                    
+                                % Check for NaN and max val's
+                                nans=any(isnan(otherref(:)));
+                                Max = max(otherref(:));
+                                if (not(nans))
+                                    if (Max < 1e200)
+                                        plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
+                                        title([othersim '/' refsim ' / ' otherref.Label]);
+                                        eval(['print -dsvg ' othersim '/' refsim '/' thisref.Label '.svg']);
+                                    end
+                                end
                                 if (all(size(thisref)==size(otherref)))
                                     diff = thisref - otherref;
                                     if (not(isempty(diff)))
-
-                                            plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
-                                            title([otherref.Label ' difference to ref']);
-                                            eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '_diff.png']);
-                                    end                                        
+                                        % Check for NaN and max val's
+                                        nans=any(isnan(diff(:)));
+                                        Max = max(diff(:));
+                                        if (not(nans))
+                                            if (Max < 1e200)
+                                                plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
+                                                title([otherref.Label ' difference to ref']);
+                                                eval(['print -dsvg ' othersim '/' refsim '/' thisref.Label '_diff.png']);
+                                            end                                       
+                                        end
+                                    end
                                 end
                             end
                         end
