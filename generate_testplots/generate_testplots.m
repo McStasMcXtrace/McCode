@@ -4,7 +4,7 @@ function generate_testplots(dir, ref, other)
 % Add iFit etc. to path
 
 addpath(genpath([getenv('HOME') '/iFit')])
-addpath(genpath([getenv('HOME') '/McCode/generate_testplots/')])
+addpath(genpath([getenv('HOME') '/McCode/generate_testplots/']))
 currdir=pwd;
 addpath(currdir)
 
