@@ -3,7 +3,7 @@ function generate_testplots(dir, ref, other)
 
 % Add iFit etc. to path
 
-addpath(genpath([getenv('HOME') '/iFit')])
+addpath(genpath([getenv('HOME') '/iFit']))
 currdir=pwd;
 addpath(currdir)
 
