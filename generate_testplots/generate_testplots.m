@@ -32,7 +32,7 @@ if exist(ref,'dir') == 7
                 if (not(isempty(thisref)))
                     % Check for NaN and max val's
                     nans=any(isnan(thisref(:)));
-                    Max = max(thisref(:));
+                    Max = max(abs(thisref(:)));
                     if (not(nans))
                         if (Max < 1e200)
                             plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
@@ -51,7 +51,7 @@ if exist(ref,'dir') == 7
                             if (not(isempty(otherref)))
                                 % Check for NaN and max val's
                                 nans=any(isnan(otherref(:)));
-                                Max = max(otherref(:));
+                                Max = max(abs(otherref(:)));
                                 if (not(nans))
                                     if (Max < 1e200)
                                         plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
@@ -64,7 +64,7 @@ if exist(ref,'dir') == 7
                                     if (not(isempty(diff)))
                                         % Check for NaN and max val's
                                         nans=any(isnan(diff(:)));
-                                        Max = max(diff(:));
+                                        Max = max(absdiff(:)));
                                         if (not(nans))
                                             if (Max < 1e200)
                                                 plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
