@@ -64,7 +64,7 @@ if exist(ref,'dir') == 7
                                     if (not(isempty(diff)))
                                         % Check for NaN and max val's
                                         nans=any(isnan(diff(:)));
-                                        Max = max(absdiff(:)));
+                                        Max = max(abs(diff(:)));
                                         if (not(nans))
                                             if (Max < 1e200)
                                                 plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
