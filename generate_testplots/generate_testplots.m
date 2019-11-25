@@ -3,6 +3,7 @@ function generate_testplots(dir, ref, other)
 
 % Add iFit etc. to path
 
+opengl('save','software')
 addpath(genpath([getenv('HOME') '/iFit']))
 currdir=pwd;
 addpath(currdir)
@@ -29,11 +30,12 @@ if exist(ref,'dir') == 7
             for k=1:rows
                 thisref=refdata(k);
                 if (not(isempty(thisref)))
-                    if (sum(thisref(:)>1e200)==0)
+                    
                         plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
                         title([ref '/' refsim ' / ' thisref.Label]);
-                        print('-dsvg', [ref '/' refsim '/' thisref.Label '.svg']);
-                    end
+                        display(['print -dpng ' ref '/' refsim '/' thisref.Label '.png']);
+                        eval(['print -dpng ' ref '/' refsim '/' thisref.Label '.png']);
+                    
                 end
                 othersim=other;%{l};
                 if (length(othersim>0))
@@ -42,20 +44,20 @@ if exist(ref,'dir') == 7
                         if (length(otherdata) == length(refdata))
                             otherref=otherdata(k);
                             if (not(isempty(otherref)))
-                                if (sum(otherref(:)>1e200)==0)
+                    
                                     plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
                                     title([othersim '/' refsim ' / ' otherref.Label]);
-                                    print('-dsvg', [othersim '/' refsim '/' otherref.Label '.svg']);                                        
-                                end 
+                                    eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '.png']);
+                    
                                 if (all(size(thisref)==size(otherref)))
                                     diff = thisref - otherref;
-                                    if (sum(diff(:)>1e200)==0)
+                    
                                         if (sum(otherref(:)>1e200)==0)
                                             plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
                                             title([otherref.Label ' difference to ref']);
-                                            print('-dsvg', [othersim '/' refsim '/' otherref.Label '_diff.svg']);                                
+                                            eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '_diff.png']);
                                         end
-                                    end 
+                    
                                 end
                             end
                         end
