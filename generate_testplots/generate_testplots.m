@@ -69,7 +69,7 @@ if exist(ref,'dir') == 7
                                             if (Max < 1e200)
                                                 plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
                                                 title([otherref.Label ' difference to ref']);
-                                                eval(['print -dsvg ' othersim '/' refsim '/' thisref.Label '_diff.png']);
+                                                eval(['print -dsvg ' othersim '/' refsim '/' thisref.Label '_diff.svg']);
                                             end                                       
                                         end
                                     end
