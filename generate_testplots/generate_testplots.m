@@ -51,13 +51,12 @@ if exist(ref,'dir') == 7
                     
                                 if (all(size(thisref)==size(otherref)))
                                     diff = thisref - otherref;
-                    
-                                        if (sum(otherref(:)>1e200)==0)
+                                    if (not(isempty(diff)))
+
                                             plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
                                             title([otherref.Label ' difference to ref']);
                                             eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '_diff.png']);
-                                        end
-                    
+                                    end                                        
                                 end
                             end
                         end
