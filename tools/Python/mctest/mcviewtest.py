@@ -41,7 +41,7 @@ def run_normal_mode(testdir, reflabel):
         # Decostruct localfile path to find 'label' corresponding to current cell
         label = cellobj["localfile"].split("/");
         label=label[len(label)-3];
-        url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"])
+        url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"]) + "/browse.html"
 
         if not cellobj["compiled"]:
             state = 4
