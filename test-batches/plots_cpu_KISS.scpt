@@ -7,9 +7,9 @@
 ### -- ask for number of cores (default: 1) --
 #BSUB -n 1
 ### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -W 2:00
+#BSUB -W 5:00
 # request 5GB of system-memory
-#BSUB -R "rusage[mem=5GB]"
+#BSUB -R "rusage[mem=10GB]"
 ### -- set the email address --
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
