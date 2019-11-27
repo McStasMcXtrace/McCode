@@ -36,5 +36,5 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --m
 cd $HOME
 echo Done with the jobs, syncronize
 $HOME/do_plots.sh
-$Home/go5.sh
+
 
