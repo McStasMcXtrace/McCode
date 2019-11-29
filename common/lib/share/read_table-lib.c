@@ -684,6 +684,7 @@ void *Table_File_List_store(t_Table *tab){
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
 
+#pragma acc routine seq
 double Table_Index(t_Table Table, long i, long j)
 {
   long AbsIndex;
@@ -740,6 +741,15 @@ int Table_SetElement(t_Table *Table, long i, long j,
   return 0;
 } /* end Table_SetElement */
 
+#pragma acc routine seq
+int str_comp(char *str1, char *str2) {
+  while (*str1 && *str1 == *str2) {
+    str1++;
+    str2++;
+  }
+  return *str1 - *str2;
+}
+
 /*******************************************************************************
 * double Table_Value(t_Table Table, double X, long j)
 *   ACTION: read column [j] of a single Table at row which 1st column is X
@@ -752,6 +762,7 @@ int Table_SetElement(t_Table *Table, long i, long j,
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
 * NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
+#pragma acc routine seq
 double Table_Value(t_Table Table, double X, long j)
 {
   long   Index = -1;
@@ -800,10 +811,10 @@ double Table_Value(t_Table Table, double X, long j)
   Y1 = Table_Index(Table,Index-1,j);
   Y2 = Table_Index(Table,Index  ,j);
 
-  if (!strcmp(Table.method,"linear")) {
+  if (str_comp(Table.method,"linear")) {
     ret = Table_Interp1d(X, X1,Y1, X2,Y2);
   }
-  else if (!strcmp(Table.method,"nearest")) {
+  else if (str_comp(Table.method,"nearest")) {
     ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
   }
 
@@ -1244,6 +1255,7 @@ char **Table_ParseHeader_backend(char *header, ...){
 *    ACTION: interpolates linearly at x between y1=f(x1) and y2=f(x2)
 *    return: y=f(x) value
 *******************************************************************************/
+#pragma acc routine seq
 double Table_Interp1d(double x,
   double x1, double y1,
   double x2, double y2)
@@ -1260,6 +1272,7 @@ double Table_Interp1d(double x,
 *    ACTION: table lookup with nearest method at x between y1=f(x1) and y2=f(x2)
 *    return: y=f(x) value
 *******************************************************************************/
+#pragma acc routine seq
 double Table_Interp1d_nearest(double x,
   double x1, double y1,
   double x2, double y2)
@@ -1277,6 +1290,7 @@ double Table_Interp1d_nearest(double x,
 *     y1 |   z11  z21
 *     y2 |   z12  z22
 *******************************************************************************/
+#pragma acc routine seq
 double Table_Interp2d(double x, double y,
   double x1, double y1,
   double x2, double y2,

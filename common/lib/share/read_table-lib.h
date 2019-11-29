@@ -127,6 +127,8 @@ double Table_Interp1d(double x, double x1, double y1, double x2, double y2);
 double Table_Interp1d_nearest(double x, double x1, double y1, double x2, double y2);
 double Table_Interp2d(double x, double y, double x1, double y1, double x2, double y2,
 double z11, double z12, double z21, double z22);
+int str_comp(char *str1, char *str2);
+
 
 #endif
 

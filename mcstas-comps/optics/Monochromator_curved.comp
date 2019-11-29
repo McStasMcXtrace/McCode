@@ -121,7 +121,8 @@ double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
 0.198431485327111, 0.202578241925561, 0.198431485327111,
 0.186161000115562, 0.166269205816994, 0.139570677926154,
 0.107159220467172, 0.070366047488108, 0.030753241996117};
-
+#pragma acc declare create ( Gauss_X )
+#pragma acc declare create ( Gauss_W )
 
 #define GAUSS(x,mean,rms) \
   (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
@@ -312,12 +313,16 @@ TRACE
           else my_r0 = r0;
           if (my_r0 > 1)
           {
+	  #ifndef USE_PGI
             if (my_r0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
+	  #endif
             my_r0=0.999;
           }
           if (my_r0 < 0)
           {
+	  #ifndef USE_PGI
             if (verbose) fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
+	  #endif
             my_r0=0;
           }
 
@@ -426,7 +431,9 @@ TRACE
           /* do not SCATTER, else GROUP does not work */
           if (my_t0 > 1)
           {
+	  #ifndef USE_PGI
             if (my_t0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
+	  #endif   
             my_t0=0.999;
           }
           if (my_t0 > 0) p*= my_t0;

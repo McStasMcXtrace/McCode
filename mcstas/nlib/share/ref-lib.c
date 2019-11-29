@@ -101,6 +101,7 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
 *
 * Looks up the reflectivity in a table using the routines in read_table-lib.
 *****************************************************************************/
+#pragma acc routine seq
 void TableReflecFunc(double mc_pol_q, t_Table *mc_pol_par, double *mc_pol_r) {
 
   *mc_pol_r = Table_Value(*mc_pol_par, mc_pol_q, 1);
