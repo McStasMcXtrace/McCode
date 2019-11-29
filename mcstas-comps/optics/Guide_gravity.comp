@@ -117,7 +117,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect="NULL")
-OUTPUT PARAMETERS (GVars, pTable)
+OUTPUT PARAMETERS (GVars, pTable, table_present)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
@@ -252,6 +252,7 @@ SHARE
     aVars->fc_phase = a_phase;
   }
 
+#pragma acc routine seq
   int Gravity_guide_Trace(double *dt,
         Gravity_guide_Vars_type *aVars,
         double cx, double cy, double cz,
@@ -332,6 +333,7 @@ DECLARE
 %{
   Gravity_guide_Vars_type GVars;
   t_Table pTable;
+  int table_present;
 %}
 
 INITIALIZE
@@ -343,7 +345,9 @@ INITIALIZE
   if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr,"Guide_gravity: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
+    table_present=1;
   } else {
+    table_present=0;
     if (W < 0 || R0 < 0 || Qc < 0)
     { fprintf(stderr,"Guide_gravity: %s: W R0 Qc must be >0.\n", NAME_CURRENT_COMP);
       exit(-1); }
@@ -484,8 +488,11 @@ TRACE
         /* only positive dt are valid */
         /* exit reflection loops if no intersection (neutron is after box) */
         if (side == 0 || dt <= 0)
-          { if (GVars.warnings < 100)
+          {
+	  #ifndef USE_PGI
+	  if (GVars.warnings < 100)
               fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+	  #endif
             GVars.warnings++;
             x += w_adj; y += h_adj; ABSORB; } /* should never occur */
 
@@ -523,7 +530,7 @@ TRACE
         /* scattering q=|n_i-n_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
         q = 2*V2Q*fabs(B)/GVars.norm_n[side];
 
-        if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
+        if (table_present==1)
           TableReflecFunc(q, &pTable, &B);
         else {
           double par[] = {R0, Qc, GVars.Alpha[side], GVars.M[side], W};
