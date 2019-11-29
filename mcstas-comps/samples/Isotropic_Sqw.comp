@@ -713,6 +713,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 *  Choose an energy in the projected S(w) distribution
 * Used in : TRACE (1)
 *****************************************************************************/
+#pragma acc routine seq
 int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
 {
   int index_w=0;
@@ -749,6 +750,7 @@ int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
 *  index is given by Sqw_search_SW
 * Used in : TRACE (1)
 *****************************************************************************/
+#pragma acc routine seq
 int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int index_w)
 {
   int index_q=0;
@@ -784,6 +786,7 @@ int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int ind
 *   Returns the integral value
 * Used in: Sqw_readfile (1)
 *****************************************************************************/
+#pragma acc routine seq
 double Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
 {
   long   index_w;

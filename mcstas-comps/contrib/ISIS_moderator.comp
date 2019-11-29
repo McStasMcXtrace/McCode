@@ -112,7 +112,7 @@ double** matrix(const int m,const int n)
   return pd;
 }
 
-
+#pragma acc routine seq
 double polInterp(double* X,double* Y,int Psize,double Aim)
   /*!
     returns the interpolated polynomial between Epnts
@@ -170,6 +170,7 @@ double polInterp(double* X,double* Y,int Psize,double Aim)
   return out;
 }
 
+#pragma acc routine seq
 int binSearch(int Npts,double* AR,double V)
   /*!
     Object is to find the point in
@@ -188,7 +189,9 @@ int binSearch(int Npts,double* AR,double V)
   if (V<AR[0])
     {
       // if(AR[0]>0.0)AR[0]=0.0;
+#ifndef USE_PGI
       fprintf(stderr,"here");
+#endif
       return 0;
     }
   klo=0;
@@ -521,7 +524,8 @@ int readHtable(FILE* TFile,const double Einit,const double Eend, Source *TS)
   return 1;
 } // readHtable
 
-void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS)
+#pragma acc routine seq
+void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _class_particle *_particle)
  /*!
    Calculate the Time and Energy
    by sampling the file.
@@ -578,7 +582,9 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS)
 
   if(R < TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
+#ifndef USE_PGI
       fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+#endif
     }
 
   if(Epnt == 0)
@@ -596,13 +602,17 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS)
 
   if (Tpnt==0 || Epnt==0)
     {
+#ifndef USE_PGI
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
+#endif
     }
   if (Tpnt==TS.nTime)
     {
+#ifndef	USE_PGI
       fprintf(stderr,"BIG ERROR WITH Tpnt and Epnt\n");
       exit(1);
+#endif
       *TV=0.0;
       Tspread=TS.Flux[Epnt-1][0]-TS.EInt[Epnt-1];
       TRange=TS.TimeBin[0];
@@ -633,22 +643,26 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS)
 
     if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
+#ifndef	USE_PGI
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
       fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
+#endif
     }
 
 
   if(*EV < *lim1 || *EV > *lim2)
     {
+#ifndef	USE_PGI
       fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
 
 
       fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);
       fprintf(stderr,"Points (%g) == ",R1);
+
       for(i=0;i<iEnd-iStart;i++)
 	fprintf(stderr," %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
       fprintf(stderr,"\n");
-
+#endif
       //fprintf(stderr,"energy value %g\n",*EV);
       //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],Rend,TS.Flux[Epnt-1][Tpnt]);
     }
@@ -1090,12 +1104,13 @@ TRACE
       Ddist=1.0;
     }
 
-  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS);
+  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS, _particle);
 
   //fprintf(stderr,"outside %g mev\n", TS.Total );
+#ifndef  USE_PGI
   if(Eval>rtE1 || Eval<rtE0)
       fprintf(stderr,"outside %g mev\n", Eval );
-
+#endif
   Ival=TS.Total*3.744905847e14*1.1879451;  /* ( of proton in 60uAmp) * (1-cos(30))*2*Pi  */
 
 
@@ -1104,10 +1119,12 @@ TRACE
   vy = v*dy/r;
   vx = v*dx/r;
 
+#ifndef USE_PGI
   if (Ncount==1)
     fprintf(stderr,"Totals:: %g %d %d \n",TS.Total,TS.nEnergy,TS.nTime);
   if (!(Ncount % 100000) && verbose)
     fprintf(stderr,"FF[%d]=> %g %g %g %g \n",Ncount,Eval,Tval,TS.Total,Ival);
+#endif
 
   t=Tval;
   
