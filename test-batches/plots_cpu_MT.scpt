@@ -33,4 +33,5 @@ export MATLABPATH=${HOME}/McCode/generate_testplots/
 
 matlab -r "generate_testplots('$DATE','$REF','$TARGET');"
 
+$HOME/go5.sh
 
