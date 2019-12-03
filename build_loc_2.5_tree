@@ -19,3 +19,4 @@ export FC=gfortran
 ./mkdist mcstas-tools-perl-cmdline 2.5 tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 2.5 tools/Python/mcrun/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 2.5 tools/Python/mccodelib/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 2.5 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
