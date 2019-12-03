@@ -236,6 +236,9 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             if re.search("\.", test.detector):
                 filename = test.detector
                 detector_was_a_filename = os.path.isfile(join(testdir, test.instrname, str(test.testnb), filename))
+            else:
+                filename = test.detector + ".dat"
+                detector_was_a_filename = os.path.isfile(join(testdir, test.instrname, str(test.testnb), test.detector + ".dat"))
             # neither an entry in mccode.sim, nor a file of the same name was found, print an error message and continue
             if not detector_was_a_filename:
                 msg = "ERROR: targetval for monitor name %s could not be extracted from instr. %s" % (test.detector, test.instrname)
