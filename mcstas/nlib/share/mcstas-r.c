@@ -167,6 +167,7 @@ mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
 * inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight)
 * return 0 if outside and 1 if inside
 *******************************************************************************/
+#pragma acc routine seq
 int inside_rectangle(double x, double y, double xwidth, double yheight)
 {
   if (x>-xwidth/2 && x<xwidth/2 && y>-yheight/2 && y<yheight/2)
