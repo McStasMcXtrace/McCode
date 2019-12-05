@@ -1457,13 +1457,20 @@ int cogen_trace(struct instr_def *instr)
   coutf("* instrument '%s' %s", instr->name, "TRACE");
   cout("***************************************************************************** */");
   cout("");
-
+  cout("/* if on GPU, nullify sprintf,fprintf,printfs */");
+  cout("#ifdef USE_PGI");
+  cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+  cout("#define sprintf(string,...) printf(__VA_ARGS__)");
+  cout("#define printf(...) noprintf()");
+  cout("#endif");
+  
   // write the (particle-) raytrace function
   cout("#pragma acc routine seq");
   coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
-  cout("  /* init variables and counters for TRACE */");
 
+  cout("  /* init variables and counters for TRACE */");
+  
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");

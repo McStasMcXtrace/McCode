@@ -85,6 +85,12 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
+/* String nullification on GPU */
+#ifdef USE_PGI
+int noprintf() {
+  return 0;
+}
+#endif
 
 /* SECTION: Dynamic Arrays ================================================== */
 
@@ -3567,7 +3573,7 @@ mchelp(char *pgmname)
 #endif
 #ifdef USE_PGI
   fprintf(stderr,
-  "This instrument has been compiled with NVIDIA GPU support through OpenACC.\n  Running on systems without such devices will lead to segfaults.\n");
+  "This instrument has been compiled with NVIDIA GPU support through OpenACC.\n  Running on systems without such devices will lead to segfaults.\nFurter, fprintf, sprintf and printf have been removed from any component TRACE.\n");
 #endif
 
   if(numipar > 0)

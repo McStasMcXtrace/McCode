@@ -49,6 +49,7 @@
 #include <stdint.h>
 #ifdef USE_PGI
 #include <accelmath.h>
+int noprintf();
 #else
 #include <math.h>
 #endif
