@@ -750,6 +750,12 @@ int cogen_comp_section_class(
         comp->def->name, comp->def->name, section_lower, comp->def->name);
       cout("  ABSORBED=SCATTERED=RESTORE=0;");
       cout("");
+      cout("/* if on GPU, nullify sprintf,fprintf,printfs */");
+      cout("#ifdef USE_PGI");
+      cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+      cout("#define sprintf(string,...) printf(__VA_ARGS__)");
+      cout("#define printf(...) noprintf()");
+      cout("#endif");
     } else
       cout(") {");
 
@@ -1457,12 +1463,6 @@ int cogen_trace(struct instr_def *instr)
   coutf("* instrument '%s' %s", instr->name, "TRACE");
   cout("***************************************************************************** */");
   cout("");
-  cout("/* if on GPU, nullify sprintf,fprintf,printfs */");
-  cout("#ifdef USE_PGI");
-  cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
-  cout("#define sprintf(string,...) printf(__VA_ARGS__)");
-  cout("#define printf(...) noprintf()");
-  cout("#endif");
   
   // write the (particle-) raytrace function
   cout("#pragma acc routine seq");

@@ -87,6 +87,7 @@ mcstatic unsigned long long int mcrun_num            = 0;
 
 /* String nullification on GPU */
 #ifdef USE_PGI
+#pragma acc routine seq
 int noprintf() {
   return 0;
 }
