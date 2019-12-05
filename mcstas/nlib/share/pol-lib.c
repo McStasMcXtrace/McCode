@@ -91,6 +91,7 @@ void mc_pol_set_timestep(double dt){
 #endif
 
 /*traverse the stack and return the magnetic field*/
+#pragma acc routine seq
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
   mcmagnet_field_info *p=stack[0];
   Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
@@ -135,6 +136,7 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
   }
 }
 */
+#pragma acc routine seq
 void *mcmagnet_push(mcmagnet_field_func *func,  Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms){
   mcmagnet_field_info *p;
   int i;
@@ -150,7 +152,7 @@ void *mcmagnet_push(mcmagnet_field_func *func,  Rotation *magnet_rot, Coords *ma
   }
   return (void *) stack[0];
 }
-
+#pragma acc routine seq
 void *mcmagnet_pop(void) {
   mcmagnet_field_info **p,*t;
   /*move the stack one step up*/
@@ -168,7 +170,7 @@ void *mcmagnet_pop(void) {
   }
   return (void*) t;
 }
-
+#pragma acc routine seq
 void mcmagnet_free_stack(void){
   mcmagnet_field_info **p;
   for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){
@@ -232,6 +234,7 @@ void mcmagnet_print_stack(){
 
 
 /*Example magnetic field functions*/
+#pragma acc routine seq
 int const_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
   int stat=1;
@@ -241,7 +244,7 @@ int const_magnetic_field(double x, double y, double z, double t,
   *bz=((double *)data)[2];
   return stat;
 }
-
+#pragma acc routine seq
 int rot_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
   /* Field of magnitude By that rotates to x in magnetLength m*/
@@ -255,7 +258,7 @@ int rot_magnetic_field(double x, double y, double z, double t,
   //printf("mag field at (x,y,z)=( %g %g %g ) t=%g is B=( %g %g %g )\n",x,y,z,t,*bx,*by,*bz);
   return 1;
 }
-
+#pragma acc routine seq
 int majorana_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
   /* Large linearly decreasing (from +Bx to -Bx in magnetLength) component along x axis,
@@ -270,7 +273,7 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   *bz =  0;
   return 1;
 }
-
+#pragma acc routine seq
 int table_magnetic_field(double x, double y, double z, double t,
                          double *bx, double *by, double *bz,
                          void *data)
@@ -293,6 +296,7 @@ int table_magnetic_field(double x, double y, double z, double t,
 * FM = sign(Rup)*sqrt(|Rup|) + sign(Rdown)*sqrt(|Rdown|)
 * FN = sign(Rup)*sqrt(|Rup|) - sign(Rdown)*sqrt(|Rdown|)
 *****************************************************************************/
+#pragma acc routine seq
 void GetMonoPolFNFM(double mc_pol_Rup, double mc_pol_Rdown,
 		    double *mc_pol_FN, double *mc_pol_FM) {
   if (mc_pol_Rup>0)
@@ -321,6 +325,7 @@ void GetMonoPolFNFM(double mc_pol_Rup, double mc_pol_Rdown,
 *     (= |Rup| + |Rdown| (for sy_in=0))
 * where FN and FM are calculated from Rup and Rdown by GetMonoPolFNFM
 *****************************************************************************/
+#pragma acc routine seq
 void GetMonoPolRefProb(double mc_pol_FN, double mc_pol_FM,
 		       double mc_pol_sy, double *mc_pol_prob) {
   *mc_pol_prob = mc_pol_FN*mc_pol_FN + mc_pol_FM*mc_pol_FM
@@ -343,6 +348,7 @@ void GetMonoPolRefProb(double mc_pol_FN, double mc_pol_FM,
 * where sx_in, sy_in, and sz_in is the incoming polarisation, and
 * FN and FM are calculated from Rup and Rdown by GetMonoPolFNFM
 *****************************************************************************/
+#pragma acc routine seq
 void SetMonoPolRefOut(double mc_pol_FN, double mc_pol_FM,
 		      double mc_pol_refProb, double* mc_pol_sx,
 		      double* mc_pol_sy, double* mc_pol_sz) {
@@ -369,6 +375,7 @@ void SetMonoPolRefOut(double mc_pol_FN, double mc_pol_FM,
 * where refProb is calculated using the routine GetMonoPolRefProb
 * and s_ref is calculated by SetMonoPolRefOut
 *****************************************************************************/
+#pragma acc routine seq
 void SetMonoPolTransOut(double mc_pol_FN, double mc_pol_FM,
 			double mc_pol_refProb, double* mc_pol_sx,
 			double* mc_pol_sy, double* mc_pol_sz) {
@@ -390,6 +397,7 @@ void SetMonoPolTransOut(double mc_pol_FN, double mc_pol_FM,
 *			         double* sx, double* sy, double* sz, double dt)
 *
 *****************************************************************************/
+#pragma acc routine seq
 void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
 			       double mc_pol_z, double mc_pol_time,
 			       double mc_pol_vx, double mc_pol_vy,
@@ -501,6 +509,7 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
 * length(=time*velocity).
 *
 *****************************************************************************/
+#pragma acc routine seq
 double GetConstantField(double mc_pol_length, double mc_pol_lambda,
 			double mc_pol_angle)
 {
