@@ -1056,10 +1056,8 @@ int cogen_decls(struct instr_def *instr)
         list_iterate_end(liter2);
       }
       if (comp->split) {
-	coutf("#ifndef NOSPLIT");
         coutf("  long Split_%s; /* this is the SPLIT counter decremented down to 0 */", comp->name);
         coutf("  _class_particle Split_%s_particle; /* this is the particle to duplicate */", comp->name);
-	coutf("#endif");
       }
     }
     cout("};");
@@ -1526,7 +1524,9 @@ int cogen_trace(struct instr_def *instr)
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
       coutf("    instrument->logic.Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
-      coutf("    if (!ABSORBED && _particle->_index == %i) ", comp->index);
+      coutf("#endif");
+      coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
+      coutf("#ifndef NOSPLIT");
       coutf("    for (" "instrument->logic.Split_%s = 0; "
                         "instrument->logic.Split_%s< %s; "
                         "instrument->logic.Split_%s++) {",
