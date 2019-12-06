@@ -683,6 +683,71 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   return(polySize);
 } /* off_init */
 
+
+#define BYTE_SWAP(A, B)				\
+{ \
+  p1 = (A);					\
+  p2 = (B);					\
+  end = p2 + size;				\
+  do {						\
+    swap = *p1;					\
+    *p1++ = *p2;				\
+    *p2++ = swap;				\
+  } while (p2 != end);				\
+}
+
+#pragma acc routine seq
+void q2sort(void *base, size_t nmemb, size_t size,
+	    int (*compar)(const void *, const void *))
+{
+  unsigned char *left;
+  size_t middle, last, right;
+  struct {
+    size_t bytes;
+    void *base;
+  } stack[CHAR_BIT * sizeof nmemb], *stack_ptr;
+  unsigned char *p1, *p2, *end, swap;
+  
+  stack -> bytes = nmemb * size;
+  stack -> base = base;
+  stack_ptr = stack + 1;
+  do {
+    --stack_ptr;
+    if (stack_ptr -> bytes > size) {
+      left = stack_ptr -> base;
+      right = last = stack_ptr -> bytes - size;
+      middle = size;
+      while (compar(left, left + middle) > 0 && middle != right) {
+	middle += size;
+      }
+      while (compar(left + last, left) > 0) {
+	last -= size;
+      }
+      while (last > middle) {
+	BYTE_SWAP(left + middle, left + last);
+	do {
+	  middle += size;
+	} while (compar(left, left + middle) > 0);
+	do {
+	  last -= size;
+	} while (compar(left + last, left) > 0);
+      }
+      BYTE_SWAP(left, left + last);
+      if (right - last > last) {
+	stack_ptr -> base = left + last + size;
+	stack_ptr++ -> bytes = right - last;
+	stack_ptr -> base = left;
+	stack_ptr++ -> bytes = last;
+      } else {
+	stack_ptr++ -> bytes = last;
+	stack_ptr -> base = left + last + size;
+	stack_ptr++ -> bytes = right - last;
+      }
+    }
+  } while (stack_ptr != stack);
+}
+
+
 /*******************************************************************************
 * int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
@@ -708,7 +773,7 @@ int off_intersect_all(double* t0, double* t3,
     Coords B={x+vx, y+vy, z+vz};
     int t_size=off_clip_3D_mod(data->intersects, A, B,
       data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
-    qsort(data->intersects, t_size, sizeof(intersection),  off_compare);
+    q2sort(data->intersects, t_size, sizeof(intersection),  off_compare);
     off_cleanDouble(data->intersects, &t_size);
     off_cleanInOut(data->intersects,  &t_size);
 

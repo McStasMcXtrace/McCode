@@ -832,7 +832,7 @@ double Table_Value(t_Table Table, double X, long j)
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
 * NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
-#pragma acc routine
+#pragma acc routine seq
   double Table_Value2d(t_Table Table, double X, double Y)
   {
     long   x1,x2,y1,y2;
@@ -860,7 +860,7 @@ double Table_Value(t_Table Table, double X, long j)
     if (x2 != x1) z21=Table_Index(Table, x2, y1); else z21 = z11;
     if (y2 != y1) z22=Table_Index(Table, x2, y2); else z22 = z21;
 
-    if (str_comp(Table.method,"linear"))
+    if (!strcmp(Table.method,"linear"))
       ret = Table_Interp2d(X,Y, x1,y1,x2,y2, z11,z12,z21,z22);
     else {
       if (fabs(X-x1) < fabs(X-x2)) {
