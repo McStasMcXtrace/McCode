@@ -400,6 +400,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
 
 
 // off_compare *****************************************************************
+#pragma acc routine seq
 int off_compare (void const *a, void const *b)
 {
    intersection const *pa = a;
@@ -411,6 +412,7 @@ int off_compare (void const *a, void const *b)
 // off_cleanDouble *************************************************************
 //given an array of intersections throw those which appear several times
 //returns 1 if there is a possibility of error
+#pragma acc routine seq
 int off_cleanDouble(intersection* t, int* t_size)
 {
   int i=1;
@@ -445,6 +447,7 @@ int off_cleanDouble(intersection* t, int* t_size)
 //given an array of intesections throw those which enter and exit in the same time
 //Meaning the ray passes very close to the volume
 //returns 1 if there is a possibility of error
+#pragma acc routine seq
 int off_cleanInOut(intersection* t, int* t_size)
 {
   int i=1;
@@ -683,68 +686,96 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   return(polySize);
 } /* off_init */
 
+#pragma acc routine seq
+int Min(int x, int y) {
+  return (x<y)? x :y;
+}
 
-#define BYTE_SWAP(A, B)				\
-{ \
-  p1 = (A);					\
-  p2 = (B);					\
-  end = p2 + size;				\
-  do {						\
-    swap = *p1;					\
-    *p1++ = *p2;				\
-    *p2++ = swap;				\
-  } while (p2 != end);				\
+#pragma acc routine(merge) 
+ void merge(int arr[], int l, int m, int r)
+{
+int i, j, k;
+int n1 = m - l + 1;
+int n2 =  r - m;
+
+/* create temp arrays */
+int *L, *R;
+ L = (int *)malloc(sizeof(int) * n1);
+ R = (int *)malloc(sizeof(int) * n2);
+/* Copy data to temp arrays L[] and R[] */
+ #pragma acc loop independent
+for (i = 0; i < n1; i++)
+    L[i] = arr[l + i];
+ #pragma acc loop independent
+for (j = 0; j < n2; j++)
+    R[j] = arr[m + 1+ j];
+
+/* Merge the temp arrays back into arr[l..r]*/
+i = 0;
+j = 0;
+k = l;
+
+while (i < n1 && j < n2)
+{
+    if (L[i] <= R[j])
+    {
+        arr[k] = L[i];
+        i++;
+    }
+    else
+    {
+        arr[k] = R[j];
+        j++;
+    }
+    k++;
+}
+
+/* Copy the remaining elements of L[], if there are any */
+
+while (i < n1)
+{
+    arr[k] = L[i];
+    i++;
+    k++;
+}
+
+/* Copy the remaining elements of R[], if there are any */
+while (j < n2)
+{
+    arr[k] = R[j];
+    j++;
+    k++;
+}
+free(L);
+free(R);
 }
 
 #pragma acc routine seq
 void q2sort(void *base, size_t nmemb, size_t size,
 	    int (*compar)(const void *, const void *))
 {
-  unsigned char *left;
-  size_t middle, last, right;
-  struct {
-    size_t bytes;
-    void *base;
-  } stack[CHAR_BIT * sizeof nmemb], *stack_ptr;
-  unsigned char *p1, *p2, *end, swap;
-  
-  stack -> bytes = nmemb * size;
-  stack -> base = base;
-  stack_ptr = stack + 1;
-  do {
-    --stack_ptr;
-    if (stack_ptr -> bytes > size) {
-      left = stack_ptr -> base;
-      right = last = stack_ptr -> bytes - size;
-      middle = size;
-      while (compar(left, left + middle) > 0 && middle != right) {
-	middle += size;
+  int curr_size;  // For current size of subarrays to be merged
+  // curr_size varies from 1 to n/2
+  int left_start; // For picking starting index of left subarray
+  // to be merged
+  // pcopying (R[0:n2])
+  {
+    for (curr_size=1; curr_size<=size-1; curr_size = 2*curr_size)
+      {
+	// Pick starting point of different subarrays of current size
+	for (left_start=0; left_start<size-1; left_start += 2*curr_size)
+	  {
+	    // Find ending point of left subarray. mid+1 is starting
+	    // point of right
+	    int mid = left_start + curr_size - 1;
+	    
+	    int right_end = Min(left_start + 2*curr_size - 1, size-1);
+	    
+	    // Merge Subarrays arr[left_start...mid] & arr[mid+1...right_end]
+	    if (mid < right_end) merge(base, left_start, mid, right_end);
+	  }
       }
-      while (compar(left + last, left) > 0) {
-	last -= size;
-      }
-      while (last > middle) {
-	BYTE_SWAP(left + middle, left + last);
-	do {
-	  middle += size;
-	} while (compar(left, left + middle) > 0);
-	do {
-	  last -= size;
-	} while (compar(left + last, left) > 0);
-      }
-      BYTE_SWAP(left, left + last);
-      if (right - last > last) {
-	stack_ptr -> base = left + last + size;
-	stack_ptr++ -> bytes = right - last;
-	stack_ptr -> base = left;
-	stack_ptr++ -> bytes = last;
-      } else {
-	stack_ptr++ -> bytes = last;
-	stack_ptr -> base = left + last + size;
-	stack_ptr++ -> bytes = right - last;
-      }
-    }
-  } while (stack_ptr != stack);
+  }
 }
 
 
