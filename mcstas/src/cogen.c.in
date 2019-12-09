@@ -757,6 +757,7 @@ int cogen_comp_section_class(
       cout("#define printf(...) noprintf()");
       cout("#define exit(...) noprintf()");
       cout("#define strcmp(a,b) str_comp(a,b)");
+      cout("#define strlen(a) str_len(a)");
       cout("#endif");
     } else
       cout(") {");

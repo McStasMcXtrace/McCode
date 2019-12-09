@@ -50,6 +50,8 @@
 #ifdef USE_PGI
 #include <accelmath.h>
 int noprintf();
+int str_comp(char *str1, char *str2);
+size_t str_len(const char *s);
 #else
 #include <math.h>
 #endif

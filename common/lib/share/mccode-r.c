@@ -101,6 +101,21 @@ int str_comp(char *str1, char *str2) {
   return !(*str1 - *str2);
 }
 
+#pragma acc rotine seq
+size_t str_len(const char *s)
+{
+  size_t len = 0;
+  if(s != NULL)
+  {
+    while(*s != '\0')
+    {
+      ++len;
+      ++s;
+    }
+  }
+  return len;
+}
+
 #endif
 
 /* SECTION: Dynamic Arrays ================================================== */
