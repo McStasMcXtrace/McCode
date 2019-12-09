@@ -741,15 +741,6 @@ int Table_SetElement(t_Table *Table, long i, long j,
   return 0;
 } /* end Table_SetElement */
 
-#pragma acc routine seq
-int str_comp(char *str1, char *str2) {
-  while (*str1 && *str1 == *str2) {
-    str1++;
-    str2++;
-  }
-  return *str1 - *str2;
-}
-
 /*******************************************************************************
 * double Table_Value(t_Table Table, double X, long j)
 *   ACTION: read column [j] of a single Table at row which 1st column is X
@@ -811,10 +802,10 @@ double Table_Value(t_Table Table, double X, long j)
   Y1 = Table_Index(Table,Index-1,j);
   Y2 = Table_Index(Table,Index  ,j);
 
-  if (str_comp(Table.method,"linear")) {
+  if (!strcmp(Table.method,"linear")) {
     ret = Table_Interp1d(X, X1,Y1, X2,Y2);
   }
-  else if (str_comp(Table.method,"nearest")) {
+  else if (!strcmp(Table.method,"nearest")) {
     ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
   }
 
@@ -860,7 +851,7 @@ double Table_Value(t_Table Table, double X, long j)
     if (x2 != x1) z21=Table_Index(Table, x2, y1); else z21 = z11;
     if (y2 != y1) z22=Table_Index(Table, x2, y2); else z22 = z21;
 
-    if (str_comp(Table.method,"linear"))
+    if (!strcmp(Table.method,"linear"))
       ret = Table_Interp2d(X,Y, x1,y1,x2,y2, z11,z12,z21,z22);
     else {
       if (fabs(X-x1) < fabs(X-x2)) {

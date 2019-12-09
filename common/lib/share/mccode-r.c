@@ -85,12 +85,22 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
-/* String nullification on GPU */
+/* String nullification on GPU and other replacements */
 #ifdef USE_PGI
 #pragma acc routine seq
 int noprintf() {
   return 0;
 }
+
+#pragma acc routine seq
+int str_comp(char *str1, char *str2) {
+  while (*str1 && *str1 == *str2) {
+    str1++;
+    str2++;
+  }
+  return !(*str1 - *str2);
+}
+
 #endif
 
 /* SECTION: Dynamic Arrays ================================================== */
