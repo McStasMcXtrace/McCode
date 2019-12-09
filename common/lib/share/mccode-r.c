@@ -101,7 +101,7 @@ int str_comp(char *str1, char *str2) {
   return !(*str1 - *str2);
 }
 
-#pragma acc rotine seq
+#pragma acc routine seq
 size_t str_len(const char *s)
 {
   size_t len = 0;
