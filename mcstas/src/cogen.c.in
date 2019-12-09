@@ -755,6 +755,7 @@ int cogen_comp_section_class(
       cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
       cout("#define sprintf(string,...) printf(__VA_ARGS__)");
       cout("#define printf(...) noprintf()");
+      cout("#define exit(...) noprintf()");
       cout("#endif");
     } else
       cout(") {");
