@@ -196,6 +196,7 @@ SHARE
 
 #ifndef PSD_Detector_SHARE
 #define PSD_Detector_SHARE
+#pragma acc routine seq
 double PSD_He_interp1value(double *array_x,double *array_y,long n_elements,double interp_x) {
     long cnt1 = 0;
     double a;
