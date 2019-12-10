@@ -1542,7 +1542,6 @@ int cogen_trace(struct instr_def *instr)
                         "instrument->logic.Split_%s++) {",
         comp->name, comp->name, exp, comp->name);
       str_free(exp);
-      cout( "    {");
       coutf("#endif");
     }
     else
@@ -1556,11 +1555,6 @@ int cogen_trace(struct instr_def *instr)
         "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
       coutf("#endif");
-    }
-
-    if (comp->split || comp->when || list_len(comp->jump) > 0) {
-      cogen_defundef(comp, comp->def->set_par, GLOBAL_INSTANCE_PAR_REF);
-      cogen_defundef(comp, comp->def->out_par, GLOBAL_INSTANCE_PAR_REF);
     }
 
     // coordinate transformations (wrt to PREVIOUS)
@@ -1592,12 +1586,6 @@ int cogen_trace(struct instr_def *instr)
       cout( "      if (_particle->_restore)");
       coutf("        *_particle = _particle_save;", comp->index);
     };
-
-    /* undef */
-    if (comp->split || comp->when || list_len(comp->jump) > 0) {
-      cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
-      cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
-    }
 
     /* if we have a JUMP, change the index */
     // JUMP
