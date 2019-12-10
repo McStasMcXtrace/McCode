@@ -237,7 +237,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
     logging.info("Running tests...")
     for test in tests:
         if not test.compiled:
-            logging.info("%s did not compile" % test.instrname)
+            formatstr = "%-" + "%ds: NO COMPILE" % maxnamelen
+            logging.info(formatstr % test.instrname)
             continue
         
         # runable tests have testnb > 0
