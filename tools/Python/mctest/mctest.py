@@ -98,6 +98,54 @@ class LineLogger():
                 return True
         return False
 
+def extract_testvals(datafolder, monitorname):
+    ''' extract monitor I (as well as Ierr and N) from results dir given monitor name '''
+    result = None
+
+    # target value extraction: look for a matching entry in mccode.sim, then select the filename in the same entry/of the same index
+    lns = open(join(datafolder, "mccode.sim")).read().splitlines()
+
+    componentlines = [l for l in lns if re.match("  component:", l)]
+    filenamelines = [l for l in lns if re.match("  filename:", l)]
+    idx = 0
+    for l in componentlines:
+        if re.match("  component: %s" % monitorname, l):
+            break
+        idx = idx + 1
+    try:
+        filename = re.match("\s*filename:\s+(.+)", filenamelines[idx]).group(1)
+    except:
+        # is test.detector istead a valid filename?
+        detector_was_a_filename = False
+        if re.search("\.", monitorname):
+            filename = monitorname
+            detector_was_a_filename = os.path.isfile(join(datafolder, filename))
+        else:
+            filename = monitorname + ".dat"
+            detector_was_a_filename = os.path.isfile(join(datafolder, monitorname + ".dat"))
+        # neither an entry in mccode.sim, nor a file of the same name was found, print an error message and continue
+        if not detector_was_a_filename:
+            msg = "ERROR: targetval could not be extracted from monitor %s" % (monitorname)
+            result = msg
+            logging.info(msg)
+            return result
+
+    # extract tested target value from the monitor file
+    with open(join(datafolder, filename)) as fp:
+        while True:
+            l = fp.readline()
+            if not l:
+                break
+            m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
+            if m :
+                I = float(m.group(1))
+                I_err = float(m.group(2))
+                N = float(m.group(3))
+                result = (I, I_err, N)
+                break
+
+    return result
+
 def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
     ''' this main test function tests the given mccode branch/version '''
 
@@ -218,49 +266,12 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             logging.info(formatstr % instrname + ", " + cmd)
             continue
 
-        # target value extraction: look for a matching entry in mccode.sim, then select the filename in the same entry/of the same index
-        lns = open(join(testdir, test.instrname, str(test.testnb), "mccode.sim")).read().splitlines()
-
-        componentlines = [l for l in lns if re.match("  component:", l)]
-        filenamelines = [l for l in lns if re.match("  filename:", l)]
-        idx = 0
-        for l in componentlines:
-            if re.match("  component: %s" % test.detector, l):
-                break
-            idx = idx + 1
-        try:
-            filename = re.match("\s*filename:\s+(.+)", filenamelines[idx]).group(1)
-        except:
-            # is test.detector istead a valid filename?
-            detector_was_a_filename = False
-            if re.search("\.", test.detector):
-                filename = test.detector
-                detector_was_a_filename = os.path.isfile(join(testdir, test.instrname, str(test.testnb), filename))
-            else:
-                filename = test.detector + ".dat"
-                detector_was_a_filename = os.path.isfile(join(testdir, test.instrname, str(test.testnb), test.detector + ".dat"))
-            # neither an entry in mccode.sim, nor a file of the same name was found, print an error message and continue
-            if not detector_was_a_filename:
-                msg = "ERROR: targetval for monitor name %s could not be extracted from instr. %s" % (test.detector, test.instrname)
-                test.errmsg = msg
-                logging.info(msg)
-                # assigning value -1 to testval
-                test.testval=-1
-                continue
-
-        # extract tested target value from the monitor file
-        with open(join(testdir, test.instrname, str(test.testnb), filename)) as fp:
-            while True:
-                l = fp.readline()
-                if not l:
-                    break
-                m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
-                if m :
-                    I = m.group(1)
-                    I_err = m.group(2)
-                    N = m.group(3)
-                    test.testval = float(I)
-                    break
+        # test value extraction
+        extraction = extract_testvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
+        if type(extraction) is tuple:
+            test.testval = extraction[0]
+        else:
+            test.testval = -1
 
         # save test result to disk
         test.testcomplete = True
