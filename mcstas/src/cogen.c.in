@@ -862,7 +862,7 @@ int cogen_comp_section_class(
     cout("#undef printf(...)");
     cout("#undef sprintf(string,...)");
     cout("#undef fprintf(stderr,...)");
-    cout("#endif")
+    cout("#endif");
     cout("  return(_comp);");
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
     cout("");
