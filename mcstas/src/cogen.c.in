@@ -856,12 +856,12 @@ int cogen_comp_section_class(
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
     cout("#ifdef USE_PGI");
-    cout("#undef strlen(a)");
-    cout("#undef strcmp(a,b)");
-    cout("#undef exit(...)");
-    cout("#undef printf(...)");
-    cout("#undef sprintf(string,...)");
-    cout("#undef fprintf(stderr,...)");
+    cout("#undef strlen");
+    cout("#undef strcmp");
+    cout("#undef exit");
+    cout("#undef printf");
+    cout("#undef sprintf");
+    cout("#undef fprintf");
     cout("#endif");
     cout("  return(_comp);");
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
