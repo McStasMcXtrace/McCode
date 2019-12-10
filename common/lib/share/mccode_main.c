@@ -143,8 +143,14 @@ int mccode_main(int argc, char *argv[])
 #endif
 
 
-  // main raytrace work loop
+// main raytrace work loop
+#ifndef FUNNEL
+  // legacy version
   raytrace_all(mcncount, mcseed);
+#else
+  // "funneled" version in which propagation is more parallelizable
+  raytrace_all_funnel(mcncount, mcseed);
+#endif
 
 
 #ifdef USE_MPI

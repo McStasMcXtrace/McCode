@@ -1471,14 +1471,14 @@ int cogen_trace(struct instr_def *instr)
   coutf("* instrument '%s' %s", instr->name, "TRACE");
   cout("***************************************************************************** */");
   cout("");
-  
+
   // write the (particle-) raytrace function
   cout("#pragma acc routine seq");
   coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
 
   cout("  /* init variables and counters for TRACE */");
-  
+
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
@@ -1728,6 +1728,21 @@ int cogen_trace(struct instr_def *instr)
   return(warnings);
 } /* cogen_trace */
 
+/*******************************************************************************
+*
+*
+*
+*******************************************************************************/
+int cogen_trace_funnel(struct instr_def *instr)
+{
+  cout("");
+  coutf("void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {");
+  coutf("  printf(\"raytrace_all_funnel not yet implemented, exiting...\\n\");");
+  coutf("  exit(1);");
+  coutf("} /* raytrace_all_funnel */");
+  coutf("");
+
+} /* cogen_trace_funnel */
 
 /*******************************************************************************
 * Output code for the mcstas runtime system. Default is to copy the runtime
@@ -2063,6 +2078,7 @@ cogen(char *output_name, struct instr_def *instr)
   warnings += cogen_decls(instr);
   warnings += cogen_section(instr, "INITIALISE", "init", instr->inits);
   warnings += cogen_trace(instr);
+  warnings += cogen_trace_funnel(instr);
   warnings += cogen_section(instr, "SAVE", "save", instr->saves);
   warnings += cogen_section(instr, "FINALLY", "finally", instr->finals);
   warnings += cogen_section(instr, "DISPLAY", "display", NULL);
