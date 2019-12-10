@@ -98,37 +98,42 @@ class LineLogger():
                 return True
         return False
 
+def _monitorname_filename_match(dfolder, monname):
+    '''
+    mccode.sim is organized in sections, e.g. data sections are coded by from "begin data" to "end data",
+    within which "  component:" and "  filename:" tags may be available.
+    
+    returns the filename or None
+    '''
+    look_for_filename = False
+    lns = open(join(dfolder, "mccode.sim")).read().splitlines()
+    for l in lns:
+        if re.match("  component: %s" % monname, l):
+            # flag this data section 
+            look_for_filename = True
+        if look_for_filename:
+            m = re.match("\s*filename:\s+(.+)", l)
+            if m:
+                filename = m.group(1) 
+                if os.path.isfile(filename):
+                    return filename 
+            if re.match("end data", l):
+                # the filename can for 0D monitors be monname.dat
+                zeroDfilename = join(dfolder, monname + ".dat")
+                if os.path.isfile(zeroDfilename):
+                    return zeroDfilename
+                return None
+
 def extract_testvals(datafolder, monitorname):
-    ''' extract monitor I (as well as Ierr and N) from results dir given monitor name '''
-    result = None
-
-    # target value extraction: look for a matching entry in mccode.sim, then select the filename in the same entry/of the same index
-    lns = open(join(datafolder, "mccode.sim")).read().splitlines()
-
-    componentlines = [l for l in lns if re.match("  component:", l)]
-    filenamelines = [l for l in lns if re.match("  filename:", l)]
-    idx = 0
-    for l in componentlines:
-        if re.match("  component: %s" % monitorname, l):
-            break
-        idx = idx + 1
-    try:
-        filename = re.match("\s*filename:\s+(.+)", filenamelines[idx]).group(1)
-    except:
-        # is test.detector istead a valid filename?
-        detector_was_a_filename = False
-        if re.search("\.", monitorname):
-            filename = monitorname
-            detector_was_a_filename = os.path.isfile(join(datafolder, filename))
-        else:
-            filename = monitorname + ".dat"
-            detector_was_a_filename = os.path.isfile(join(datafolder, monitorname + ".dat"))
-        # neither an entry in mccode.sim, nor a file of the same name was found, print an error message and continue
-        if not detector_was_a_filename:
-            msg = "ERROR: targetval could not be extracted from monitor %s" % (monitorname)
-            result = msg
-            logging.info(msg)
-            return result
+    '''
+    Extract monitor I (as well as Ierr and N) from results dir given monitor name.
+    
+    Returns an error string or a tuple containing (I, I_err, N), or None if datafile does not contain a "values" line.
+    '''
+    # get any filename in mccode.sim matching monitorname AKA test.detector 
+    filename = _monitorname_filename_match(datafolder, monitorname)
+    if filename is None:
+        return "ERROR: targetval could not be extracted from monitor %s" % (monitorname)
 
     # extract tested target value from the monitor file
     with open(join(datafolder, filename)) as fp:
@@ -141,10 +146,8 @@ def extract_testvals(datafolder, monitorname):
                 I = float(m.group(1))
                 I_err = float(m.group(2))
                 N = float(m.group(3))
-                result = (I, I_err, N)
+                return (I, I_err, N)
                 break
-
-    return result
 
 def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
     ''' this main test function tests the given mccode branch/version '''
