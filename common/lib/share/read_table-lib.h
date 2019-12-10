@@ -60,10 +60,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef USE_PGI
-#define strcmp(a,b) str_comp(a,b)
-#endif
-
   typedef struct struct_table
   {
     char    filename[1024];

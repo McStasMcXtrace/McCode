@@ -802,12 +802,22 @@ double Table_Value(t_Table Table, double X, long j)
   Y1 = Table_Index(Table,Index-1,j);
   Y2 = Table_Index(Table,Index  ,j);
 
+#ifdef USE_PGI
+#define strcmp(a,b) str_comp(a,b)
+#endif
+
   if (!strcmp(Table.method,"linear")) {
     ret = Table_Interp1d(X, X1,Y1, X2,Y2);
   }
   else if (!strcmp(Table.method,"nearest")) {
     ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
   }
+
+#ifdef USE_PGI
+#ifdef strcmp
+#undef strcmp
+#endif
+#endif
 
   return ret;
 } /* end Table_Value */
@@ -851,8 +861,17 @@ double Table_Value(t_Table Table, double X, long j)
     if (x2 != x1) z21=Table_Index(Table, x2, y1); else z21 = z11;
     if (y2 != y1) z22=Table_Index(Table, x2, y2); else z22 = z21;
 
+#ifdef USE_PGI
+#define strcmp(a,b) str_comp(a,b)
+#endif
+
     if (!strcmp(Table.method,"linear"))
       ret = Table_Interp2d(X,Y, x1,y1,x2,y2, z11,z12,z21,z22);
+#ifdef USE_PGI
+#ifdef strcmp
+#undef strcmp
+#endif
+#endif
     else {
       if (fabs(X-x1) < fabs(X-x2)) {
         if (fabs(Y-y1) < fabs(Y-y2)) ret = z11; else ret = z12;
