@@ -12,7 +12,7 @@
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
-*  seperates geometry and physics within McXtrace.
+*  separates geometry and physics within McXtrace.
 * The use of this component requires other components to be used.
 *
 * 1) One specifies a number of processes using process components
@@ -28,7 +28,7 @@
 * The position of this component is the center of the box, zdepth/2 in each direction.
 *
 * It is allowed to overlap components, but it is not allowed to have two
-*  parallel planes that coincides. This will crash the code on run time.
+*  parallel planes that coincide. This will crash the code on run time.
 *
 *
 * Algorithm:
@@ -58,6 +58,7 @@
 * focus_xw   [m]   horiz. dimension of a rectangular area
 * focus_xh   [m]   vert. dimension of a rectangular area
 * focus_r    [m]   focusing on circle with this radius
+*
 * OUTPUT PARAMETERS:
 *
 * %L
@@ -70,7 +71,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string material_string=0, priority, xwidth, yheight, zdepth, xwidth2=-1, yheight2=-1, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact = 0, string mask_string=0, string mask_setting=0,number_of_activations=1)
 OUTPUT PARAMETERS (loop_index,this_box_volume,global_geometry_element,this_box_storage)
 
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+/* X-ray parameters: (x,y,z,kx,ky,kz ,phi, t, Ex,Ey,Ez,p) */
 
 SHARE
 %{
