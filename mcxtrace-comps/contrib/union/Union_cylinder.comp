@@ -8,11 +8,11 @@
 * Date: 20.08.15
 * Origin: ESS DMSC & DTU Physics
 *
-* A sample component to separate geometry and phsysics
+* A sample component to separate geometry and physics
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
-*  sperates geometry and physics within McXtrace.
+*  separates geometry and physics within McXtrace.
 * The use of this component requires other components to be used.
 *
 * 1) One specifies a number of processes using process components
@@ -23,13 +23,13 @@
 * Only in step 4 will any simulation happen, and per default all geometries
 *  defined before this master, but after the previous will be simulated here.
 *
-* There is a dedicated manual available for the Union_components
+* There is a dedicated manual available for the Union components
 *
 * The position of this component is the center of the cylinder, and it thus
 *  extends yheight/2 up and down along y axis.
 *
 * It is allowed to overlap components, but it is not allowed to have two
-*  parallel planes that coincides. This will crash the code on run time.
+*  parallel planes that coincide. This will crash the code on run time.
 *
 *
 * %P
@@ -37,7 +37,7 @@
 * radius: [m]          Outer radius volume in (x,z) plane
 * yheight: [m]         Cylinder height in (y) direction
 * material_string: []  material name of this volume, defined using Union_make_material
-* priority   [1]  priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* priority   [1]  priority of the volume (can not be the same as another volume) A high priority is on top of low.
 * p_interact [1]  probability to interact with this geometry [0-1]
 * visualize  [1]  set to 0 if you wish to hide this geometry in mcdisplay
 * number_of_activations [1]  Number of subsequent Union_master components that will simulate this geometry
@@ -66,7 +66,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string material_string=0, priority, radius, yheight, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact=0, string mask_string=0, string mask_setting=0,number_of_activations=1)
 OUTPUT PARAMETERS (loop_index,this_cylinder_volume,global_geometry_element,this_cylinder_storage)
 
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+/* X-ray parameters: (x,y,z,kx,ky,kz ,phi, t, Ex,Ey,Ez,p) */
 
 SHARE
 %{
