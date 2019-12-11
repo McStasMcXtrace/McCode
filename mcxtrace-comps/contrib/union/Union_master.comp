@@ -65,12 +65,12 @@ SHARE
 struct logger_with_data_struct loggers_with_data_array;
 
 double get_my_abs(struct physics_struct *this_material, double k){
-  const int my_column=6;
+  const int my_column=5;
   double my_a=0;
   if (this_material->my_a==0){
     int i;
     for (i=0;i<this_material->number_of_elements;i++){
-      my_a+=Table_Value(*(this_material->p_element_array[i].element_table),k*K2E,my_column)*this_material->p_element_array[i].rho*this_material->p_element_array[i].multiplicity;
+      my_a+=Table_Value(this_material->p_element_array[i].element_table,k*K2E,my_column)*this_material->p_element_array[i].rho*this_material->p_element_array[i].multiplicity;
     }
   }else{
     my_a=this_material->my_a;
@@ -921,7 +921,7 @@ TRACE
   }
   
   // If first Union_master in instrument, reset loggers_with_data_array and clean unused data.
-  // Unused data happens when logging data is passed to the next Union_master, but the ray is absorbed on the way.
+  // Unused data happens when logging data is passed to the next Union_master, but the ray is absorbed on the way.
   // Could be improved by using the precompiler instead as ncount times the number of Union_masters could be avoided.
   if (global_master_list.elements[0].component_index == INDEX_CURRENT_COMP) {
     // If this is the first Union master, clean up logger data for rays that did not make it through Union components
@@ -1012,7 +1012,7 @@ TRACE
     #endif
     
     // Calculating intersections with the necessary volumes. The relevant set of volumes depend on the current volume and the mask status array.
-    // First the volumes on the current volumes intersect list is checked, then its mask interset list. Before checking the volume itself, it is
+    // First the volumes on the current volumes intersect list is checked, then its mask intersect list. Before checking the volume itself, it is
     //  checked if any children of the current volume is intersected, in which case the intersection calculation with the current volume can be
     //  skipped.
     
@@ -1029,9 +1029,10 @@ TRACE
                //TODO done change this to k
                // if (trace_verbal) printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",r[0],r[1],r[2],k[0],k[1],k[2]);
              #endif
-            // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
-            //  that are also imbedded in the structure.
-            geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
+            // Calculate intersections using intersect function embedded in the relevant volume structure using parameters
+            //  that are also embedded in the structure.
+            //TODO intersection_times is now actually intersection_lengths in m
+            geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,k,&Volumes[*check]->geometry);
             intersection_time_table.calculated[*check] = 1;
             // if (trace_verbal) printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
@@ -1174,7 +1175,7 @@ TRACE
     }
     
     #ifdef Union_trace_verbal_setting
-      printf("min_intersection_time = %f \n",min_intersection_time);
+      printf("min_intersection_time = %f \n",min_intersection_time);/*actually a length now*/
       printf("min_solution          = %d \n",min_solution);
       printf("min_volume            = %d \n",min_volume);
       printf("time_found            = %d \n",time_found);
@@ -1184,7 +1185,7 @@ TRACE
     // If a time is not found, the ray must be leaving the ensamble of volumes and the loop will be concluded
     if (time_found) {
         time_to_boundery = min_intersection_time - time_propagated_without_scattering; // calculate the time remaining before the next intersection
-        length_to_boundery = M_C*time_to_boundery;
+        length_to_boundery = time_to_boundery;
         scattering_event = 0; // Assume a scattering event will not occur
         
         // Check if a scattering event should occur
@@ -1489,8 +1490,8 @@ TRACE
             clear_intersection_table(&intersection_time_table);
             time_propagated_without_scattering = 0.0;
             #ifdef Union_trace_verbal_setting
-              printf("SCATTERED SUCSSESFULLY \n");
-              printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+              printf("SCATTERED SUCCESSFULLY \n");
+              printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",x,y,z,kx,ky,kz);
             
               if (enable_tagging && stop_tagging_ray == 0) printf("Before new process node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
               if (enable_tagging && stop_tagging_ray == 0) printf("Before new process node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
@@ -1507,7 +1508,7 @@ TRACE
         } else {
             #ifdef Union_trace_verbal_setting
               printf("Propagate out of volume %d\n", current_volume);
-              printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+              printf("r = (%f,%f,%f) k = (%f,%f,%f) \n",x,y,z,kx,ky,kz);
             #endif
             // Propagate x-ray to found minimum time
             // PROP_DT(min_intersection_time - time_propagated_without_scattering);
