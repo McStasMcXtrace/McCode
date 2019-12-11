@@ -302,7 +302,7 @@ int A_overlaps_B(struct geometry_struct *child, struct geometry_struct *parent) 
 // These functions needs to be fast, as they may be used many times for each ray
 int sample_box_intersect_advanced(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
     // possible approaches
-    // rotate to a simple coordinate system by rotating the ray (easier to switch to McStas standard)
+    // rotate to a simple coordinate system by rotating the ray (easier to switch to McXtrace standard)
     
     // There are still many variables here that can be pre calculated and saved in the box_storage.
     
@@ -526,7 +526,7 @@ int sample_box_intersect_simple(double *t,int *num_solutions,double *r,double *v
     //     printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
     
     int output;
-    // Run McStas built in sphere intersect funtion (sphere centered around origin)
+    // Run McXtrasce built in box intersect funtion (box centered on origin with sides aligned with cartesian axis)
     if ((output = box_intersect(&t[0],&t[1],rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,rotated_velocity.x,rotated_velocity.y,rotated_velocity.z,width,height,depth)) == 0) {
         *num_solutions = 0;t[0]=-1;t[1]=-1;}
     else if (t[1] != 0) *num_solutions = 2;
@@ -695,7 +695,7 @@ int sample_cone_intersect(double *t,int *num_solutions,double *r,double *v,struc
     
     
     int output;
-    // Run McStas built in sphere intersect funtion (sphere centered around origin)
+    // Run McXtrace built in sphere intersect funtion (sphere centered around origin)
     if ((output = sphere_intersect(&sphere_t[0],&sphere_t[1],x_sphere,y_sphere,z_sphere,v[0],v[1],v[2],sphere_radius)) == 0)
     
 
@@ -840,7 +840,7 @@ switch(*num_solutions) {
 
 int cone_intersect(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry){
 /*
-This function takes the inputs from a neutron and calculates all intersections with the cone geometry.
+This function takes the inputs from a photon and calculates all intersections with the cone geometry.
 Output is true or false depending on intersections will occour, and a list of time-stapms of all possible intersections.
 
 Math used here is based on the math found on:
@@ -1208,7 +1208,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
     // rot_set_rotation(rotation_matrix_debug,-1.0*geometry->rotation.x,-1.0*geometry->rotation.y,-1.0*geometry->rotation.z);
     // rot_transpose(geometry->rotation_matrix,rotation_matrix_debug);
 
-    // Rotate the position of the neutron around the center of the mesh
+    // Rotate the position of the photon around the center of the mesh
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     // rotated_coordinates = rot_apply(rotation_matrix_debug,coordinates);
     //     ////printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
@@ -1536,7 +1536,7 @@ int sample_sphere_intersect(double *t,int *num_solutions,double *r,double *v,str
     z_new = r[2] - geometry->center.z;
     
     int output;
-    // Run McStas built in sphere intersect funtion (sphere centered around origin)
+    // Run McXtrace built in sphere intersect funtion (sphere centered around origin)
     if ((output = sphere_intersect(&t[0],&t[1],x_new,y_new,z_new,v[0],v[1],v[2],radius)) == 0) {
         *num_solutions = 0;t[0]=-1;t[1]=-1;}
     else if (t[1] != 0) *num_solutions = 2;
@@ -1643,7 +1643,7 @@ int sample_cylinder_intersect(double *t,int *num_solutions,double *r,double *v,s
     }
     
     int output;
-    // Run McStas built in sphere intersect funtion (sphere centered around origin)
+    // Run McXtrace built in cylinder intersect funtion (cylinder centered around origin and axis along y)
     if ((output = cylinder_intersect(&t[0],&t[1],rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,rotated_velocity.x,rotated_velocity.y,rotated_velocity.z,radius,height)) == 0) {
         *num_solutions = 0;t[0]=-1;t[1]=-1;}
     else if (t[1] != 0) *num_solutions = 2;
