@@ -378,7 +378,7 @@ struct element_data_struct
   char name[12];  //element name (leave room for ion things as well
   int multiplicity; // how many atoms are present per unit of the element
   double rho,Ar,Z; //mass density, Atomic weight, and atomic number
-  t_Table *element_table; // material constants table taken from database
+  t_Table element_table; // material constants table taken from database
 };
 
 struct scattering_process_struct
