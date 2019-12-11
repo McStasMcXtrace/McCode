@@ -169,24 +169,38 @@ int build_my_absorption_table_function(const char *material_string, struct eleme
   
   /*for each token read the table and compute mu, scale by chemical number density, and put the thing in the new table*/
   
-  /*init an empty table*/
+  /*init empty elements - tables can be read later*/
   *elements = calloc(size,sizeof(**elements));
 
-  char *token;
+  char *token,token2[128];
   int table_counter=0;
   int status;
   token=strtok(local_string,",");
-  while (token!=NULL){ printf("Union_make_material: generating my abs for material %s\n",token);
-    if ( (status=Table_Read((*elements)->element_table,token,0))==-1){
+  while (token!=NULL){ printf("Union_make_material: Reading data table for material %s\n",token);
+    /*allow an integer before the filename*/
+    if( (sscanf(token,"%d",&( (*elements)->multiplicity) )==1) ){
+      token+=1;
+    }else{
+      (*elements)->multiplicity=1;
+    }
+    if ( (status=Table_Read(&((*elements)->element_table),token,0))==-1){
       printf("Union_make_material: ERROR Reading file %s.\n", token); 
-      return 0; 
+      return -1;
     } 
+    /*parse the tabel header for some constants*/
+    char **header_parsed;
+    header_parsed=Table_ParseHeader((*elements)->element_table.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+    if (header_parsed[0]){(*elements)->Z=strtol(header_parsed[0],NULL,10);}
+    if (header_parsed[1]){(*elements)->Ar=strtod(header_parsed[1],NULL);}
+    if (header_parsed[2]){(*elements)->rho=strtod(header_parsed[2],NULL);}
+    else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",token);(*elements)->rho=1;}
+
     table_counter++;
     token=strtok(NULL,",");
+
   }
   return table_counter;
 }
-
 
 %}
 
@@ -239,12 +253,15 @@ INITIALIZE
   
   if ( 0 == strcmp(material_string,"NULL") ){
     if (my_absorption < 0) {
-      printf("ERROR, Union make material named %s have a negative absorption cross section!.\n",NAME_CURRENT_COMP);
+      printf("ERROR, Union make material named %s has a negative absorption cross section!.\n",NAME_CURRENT_COMP);
       exit(1);
     }
   }else{
     /* a material_string is given so use that*/
-    this_material.number_of_elements = build_my_absorption_table_function(material_string, &(this_material.p_element_array) );
+    if ( (this_material.number_of_elements = build_my_absorption_table_function(material_string, &(this_material.p_element_array) ))==-1 ){
+      printf("ERROR, The material data file assigned to Union make material named %s could not be read and parsed.\n",NAME_CURRENT_COMP);
+      exit(1);
+    }
   }
 
   if (absorber == 0) {
@@ -264,8 +281,8 @@ INITIALIZE
   this_material.number_of_processes = accepted_processes.num_elements; // Add number of processes
   this_material.is_vacuum = 0; // This material is not vacuum
   
-  if (this_material.number_of_processes == 0 && my_absorption == 0) {
-    printf("ERROR, the material named %s has no processes assigned and no absorption cross section, making it eqvialent to vacuum. Vacuums are assigned by setting material=\"Vacuum\" in a geometry component.\n",NAME_CURRENT_COMP);
+  if (this_material.number_of_processes == 0 && this_material.number_of_elements==0 && my_absorption == 0) {
+    printf("ERROR, the material named %s has no processes assigned, no material_data_tables assigned nor no absorption cross section, making it eqvialent to vacuum. Vacuums are assigned by setting material=\"Vacuum\" in a geometry component.\n",NAME_CURRENT_COMP);
     exit(1);
   }
   
