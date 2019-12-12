@@ -70,7 +70,8 @@ double get_my_abs(struct physics_struct *this_material, double k){
   if (this_material->my_a==0){
     int i;
     for (i=0;i<this_material->number_of_elements;i++){
-      my_a+=Table_Value(this_material->p_element_array[i].element_table,k*K2E,my_column)*this_material->p_element_array[i].rho*this_material->p_element_array[i].multiplicity;
+      /*the factor 100 is because tabulated values from the database are in cm2/g*/
+      my_a+=Table_Value(this_material->p_element_array[i].element_table,k*K2E,my_column)*this_material->p_element_array[i].rho*this_material->p_element_array[i].multiplicity*100;
     }
   }else{
     my_a=this_material->my_a;
