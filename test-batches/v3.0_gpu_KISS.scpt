@@ -36,5 +36,7 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e9 --configs --mccoderoot $
 
 cd $HOME
 
-echo done on GPU, submitting MPI jobs
-$HOME/go2.sh
+echo done on GPU, submitting 1st MPI job and plots
+# 10-core MPI run 
+bsub < $HOME/McCode/test-batches/v3.0_cpu_MPI_KISS.scpt
+bsub < $HOME/McCode/test-batches/plots_gpu.scpt 

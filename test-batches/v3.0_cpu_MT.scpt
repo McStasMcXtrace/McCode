@@ -35,4 +35,5 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e6 --configs --mccoderoot $
 cd $HOME
 
 # Now post-process and synchronize
+bsub < $HOME/McCode/test-batches/plots_cpu_MT.scpt
 $HOME/go5.sh

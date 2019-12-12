@@ -35,4 +35,5 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e6 --configs --mccoderoot $
 cd $HOME
 
 echo done on single-CPU / KISS, submitting next job
-$HOME/go4.sh
+bsub < $HOME/McCode/test-batches/v3.0_cpu_MT.scpt
+bsub < $HOME/McCode/test-batches/plots_cpu_KISS.scpt
