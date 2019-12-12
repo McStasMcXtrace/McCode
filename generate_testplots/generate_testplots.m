@@ -1,5 +1,5 @@
 function generate_testplots(dir, ref, other)
-% Generate SVG graphics andembed in html
+% Generate PNG graphics andembed in html
 
 % Add iFit etc. to path
 
@@ -21,7 +21,7 @@ if exist(ref,'dir') == 7
     % Look for datasets with actual output in ref
     [tmp, refsims] = unix(['find ' ref ' -name mccode.sim | cut -f2-3 -d/']);
     refsims=split(refsims);
-    % Work through the refsims, generating SVG's and html
+    % Work through the refsims, generating PNG's and html
     for j=1:length(refsims)
         refsim=refsims{j};
         if (length(refsim>0))
@@ -37,8 +37,8 @@ if exist(ref,'dir') == 7
                         if (Max < 1e200)
                             plot(thisref); view([0 0 1]); axis tight; if not(any(size(thisref)==1)) colorbar; end
                             title([ref '/' refsim ' / ' thisref.Label]);
-                            display(['print -dsvg ' ref '/' refsim '/' thisref.Label '.svg']);
-                            eval(['print -dsvg ' ref '/' refsim '/' thisref.Label '.svg']);
+                            display(['print -dpng ' ref '/' refsim '/' thisref.Label '.png']);
+                            eval(['print -dpng ' ref '/' refsim '/' thisref.Label '.png']);
                         end
                     end
                 end
@@ -56,7 +56,7 @@ if exist(ref,'dir') == 7
                                     if (Max < 1e200)
                                         plot(otherref); view([0 0 1]); axis tight; if not(any(size(otherref)==1)) colorbar; end
                                         title([othersim '/' refsim ' / ' otherref.Label]);
-                                        eval(['print -dsvg ' othersim '/' refsim '/' thisref.Label '.svg']);
+                                        eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '.png']);
                                     end
                                 end
                                 if (all(size(thisref)==size(otherref)))
@@ -69,7 +69,7 @@ if exist(ref,'dir') == 7
                                             if (Max < 1e200)
                                                 plot(diff); view([0 0 1]); axis tight; if not(any(size(diff)==1)) colorbar; end
                                                 title([otherref.Label ' difference to ref']);
-                                                eval(['print -dsvg ' othersim '/' refsim '/' thisref.Label '_diff.svg']);
+                                                eval(['print -dpng ' othersim '/' refsim '/' thisref.Label '_diff.png']);
                                             end                                       
                                         end
                                     end
