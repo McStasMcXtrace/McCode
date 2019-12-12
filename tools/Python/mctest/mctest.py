@@ -115,7 +115,7 @@ def _monitorname_filename_match(dfolder, monname):
             m = re.match("\s*filename:\s+(.+)", l)
             if m:
                 filename = m.group(1) 
-                if os.path.isfile(filename):
+                if os.path.isfile(join(dfolder,filename)):
                     return filename 
             if re.match("end data", l):
                 # the filename can for 0D monitors be monname.dat
