@@ -65,7 +65,7 @@ SHARE
 struct logger_with_data_struct loggers_with_data_array;
 
 double get_my_abs(struct physics_struct *this_material, double k){
-  const int my_column=5;
+  const int my_column=3;
   double my_a=0;
   if (this_material->my_a==0){
     int i;
