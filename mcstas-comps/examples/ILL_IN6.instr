@@ -89,27 +89,28 @@ DECLARE
 /* capture flux positions from moderator: 21.4    28.4    61.2 */
 
 /* variables for IN6 */
-  double DM = 3.355;        /*   mono d-spacing (Angs)  */
-  double mos= 40;
-  double RV = 3;
+  double DM;        /*   mono d-spacing (Angs)  */
+  double mos;
+  double RV;
 
 /* Bragg angles of the 3 monochromators */
   double A1;
   double A2;
   double A3;
-  double LME = 2.1;   /* distance monochromator 2 <--> sample */
-  double LMM = 0.030; /* distance between 2 monochromators    */
-  double LED = 2.483; /* distance sample <--> detector        */
-  double LCE = 0.395; /* distance fermi chopper <--> sample   */
-  double LCC = 0.2;   /* [m] Chopper1-Chopper2 distance */
+  double LME;   /* distance monochromator 2 <--> sample */
+  double LMM; /* distance between 2 monochromators    */
+  double LED; /* distance sample <--> detector        */
+  double LCE; /* distance fermi chopper <--> sample   */
+  double LCC;   /* [m] Chopper1-Chopper2 distance */
   double Frequency, vi;
-  double ref_phas=0, phas_ferm;
+  double ref_phas, phas_ferm;
 
   double iTOF_DELAY;   /* time of arrival at sample position, from source */
   double iCHA_WIDTH;
   double iTOF_CHA_RESOL;
   double iELPEAK;
   double iRATIO;
+  #pragma acc declare create(iRATIO) 
   double iSPEED;
   double A2cradle;
   double iPHASE, period;
@@ -121,15 +122,36 @@ DECLARE
 /* monitoring sample env */
   double ki_x, ki_y, ki_z;
   double kf_x, kf_y, kf_z;
-  double dq=0, dw=0, vf;
+  double dq, dw, vf;
   char opt1[256]; /* options for Monitor_nD */
   char opt2[256];
 
+%}
+
+USERVARS
+%{
   double monok_index;
 %}
 
 INITIALIZE
 %{
+  /* capture flux positions from moderator: 21.4    28.4    61.2 */
+
+/* variables for IN6 */
+  DM = 3.355;        /*   mono d-spacing (Angs)  */
+  mos= 40;
+  RV = 3;
+
+/* Bragg angles of the 3 monochromators */
+  LME = 2.1;   /* distance monochromator 2 <--> sample */
+  LMM = 0.030; /* distance between 2 monochromators    */
+  LED = 2.483; /* distance sample <--> detector        */
+  LCE = 0.395; /* distance fermi chopper <--> sample   */
+  LCC = 0.2;   /* [m] Chopper1-Chopper2 distance */
+  ref_phas=0;
+  dq=0;
+  dw=0;
+
   double chopper_const = 252.77;  /*constant in chopper SPEED formula*/
   double Ki, Ei, theta;
   double tmin, tmax;

@@ -145,6 +145,7 @@ double X[5],Z[5]; /* position of interaction locations in the Fermi chopper rota
 /*****************************************************************************
 * FC_zrot: returns Z' in rotating frame, from X,Z and t,omega,ph0
 ****************************************************************************/
+#pragma acc routine seq
 double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs)
 {
   double omega =FCs.omega;
@@ -157,6 +158,7 @@ double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs)
  * FC_xrot: returns X' in rotating frame, from X,Z and omega,t,ph0
  *          additional coordinate shift in case of curved slits
  ****************************************************************************/
+#pragma acc routine seq
 double FC_xrot(double X, double Z, double T, struct FermiChopper_struct FCs)
 {
   double omega =FCs.omega;
@@ -181,6 +183,7 @@ double FC_xrot(double X, double Z, double T, struct FermiChopper_struct FCs)
  *   returns X' or Z' in rotating frame, from X,Z and t,omega,ph0
  *              taking into account propagation with velocity during time dt
  ****************************************************************************/
+#pragma acc routine seq
 double FC_xzrot_dt(double x, double z, double vx, double vz,
                    double t, double dt, char type, struct FermiChopper_struct FCs)
 {
@@ -200,6 +203,7 @@ double FC_xzrot_dt(double x, double z, double vx, double vz,
  *                          -2 if exceed MAX iteration
  *                          -3 no sign change in range
  ****************************************************************************/
+#pragma acc routine seq
 double FC_xzbrent(double x, double z, double vx, double vz,
                   double t, double dt,
                   char type, double d, struct FermiChopper_struct FCs)
@@ -272,12 +276,14 @@ double FC_xzbrent(double x, double z, double vx, double vz,
 /*****************************************************************************
  * Wrappers to intersection algorithms
  ****************************************************************************/
+#pragma acc routine seq
 double FC_xintersect(double x, double z, double vx, double vz,
                    double t, double dt,
                    double d, struct FermiChopper_struct FCs)
 {
   return(FC_xzbrent(x, z, vx, vz, t, dt, 'x', d, FCs));
 }
+#pragma acc routine seq
 double FC_zintersect(double x, double z, double vx, double vz,
                    double t, double dt,
                    double d, struct FermiChopper_struct FCs)
@@ -498,10 +504,13 @@ TRACE
     zp1 = FC_zrot(x,z, t, FCVars);
     FCVars.X[1] = xp1; FCVars.Z[1] = zp1;
 
+#ifndef USE_PGI
     if (mcdotrace) {
       /* indicate position of neutron in mcdisplay */
       double xp2 = x; double zp2 = z; x = xp1; z=zp1; SCATTER; x=xp2; z=zp2;
-    } else SCATTER;
+    } else 
+#endif
+SCATTER;
 
     if (verbose > 2)
       printf("FermiChopper: %s: PROP_DT t=%8.3g dt=%8.3g x'=%8.3g z'=%8.3g length=%g (slit enter).\n",
@@ -718,11 +727,14 @@ TRACE
             FCVars.absorb_slitcoating++; ABSORB;
           } /* Cutoff ~ 1E-10 */
         }
+#ifndef USE_PGI
         if (mcdotrace) {
           double xp2 = x; double zp2 = z;
           /* indicate position of neutron in mcdisplay */
           x = FC_xrot(x,z, t,FCVars); z= FC_zrot(x,z, t,FCVars); SCATTER; x=xp2; z=zp2;
-        } else SCATTER;
+        } else 
+#endif
+	SCATTER;
 
         /* reflect perpendicular velocity and compute new velocity in static frame */
         vxp1 *= -1;
