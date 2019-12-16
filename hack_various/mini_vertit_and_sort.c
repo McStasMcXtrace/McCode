@@ -916,7 +916,7 @@ long sort_absorb_last(_class_particle* particles, long len) {
   _class_particle tmp;
   long i = 0;
   while (i < iflt) {
-    while (particles[i]._absorbed) {
+    while (particles[i]._absorbed && i < iflt) {
       tmp = particles[iflt];
       particles[iflt] = particles[i];
       particles[i] = tmp;
