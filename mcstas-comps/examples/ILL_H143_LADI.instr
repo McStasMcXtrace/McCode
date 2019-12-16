@@ -69,7 +69,10 @@ DECLARE
 
   double Rh_H14_2,  Rh_H14_3;
   double Rv_H143_1, Rv_H143_2;
+%}
 
+USERVARS
+%{
   double v;
   double eff;
 %}
