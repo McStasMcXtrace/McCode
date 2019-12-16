@@ -30,8 +30,8 @@
 /*******************************************************************************
 * Find i in adaptive search tree t s.t. v(i) <= v < v(i+1).
 *******************************************************************************/
-int
-adapt_tree_search(struct adapt_tree *t, adapt_t v)
+#pragma acc routine seq
+int adapt_tree_search(struct adapt_tree *t, adapt_t v)
 {
   adapt_t F = 0;    /* Current value. */
   int i = 0;      /* Current candidate. */
@@ -56,8 +56,8 @@ adapt_tree_search(struct adapt_tree *t, adapt_t v)
 /*******************************************************************************
 * Add v to v[i], updating the cumulative sums appropriately.
 *******************************************************************************/
-void
-adapt_tree_add(struct adapt_tree *t, int i, adapt_t v)
+#pragma acc routine seq
+void adapt_tree_add(struct adapt_tree *t, int i, adapt_t v)
 {
   int j = t->root;
   int step = t->initstep;
