@@ -87,9 +87,13 @@ TRACE
 
   if (radpos < rmax) {
     i = floor(nr*radpos/rmax);
-    PSDr_N[i]++;
-    PSDr_p[i] += p;
-    PSDr_p2[i]+= p*p;
+    double p2 = p*p;
+    #pragma acc atomic
+    PSDr_N[i][j] = PSDr_N[i][j]+1;
+    #pragma acc atomic
+    PSDr_p[i][j] = PSDr_p[i][j]+p;
+    #pragma acc atomic
+    PSDr_p2[i][j] = PSDr_p2[i][j] + p2;
     SCATTER;
   }
 %}
