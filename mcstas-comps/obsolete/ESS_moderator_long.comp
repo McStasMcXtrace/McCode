@@ -139,12 +139,14 @@ OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t,
 
 SHARE
 %{
-double Mezei_M_fct(double l, double temp)
+#pragma acc routine seq
+  double Mezei_M_fct(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
   }
 
+#pragma acc routine seq
   double Mezei_F_fct(double t, double tau, int n)
   {
     return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
