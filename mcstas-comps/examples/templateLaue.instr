@@ -17,6 +17,7 @@
 * Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
 *
 * %Example: templateLaue Detector: det_I=1.14351e+07
+* %Example: templateLaue reflections=leucine.lau Detector: det_I=4.63548e+08
 *
 * %Parameters
 *
