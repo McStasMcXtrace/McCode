@@ -61,9 +61,15 @@ DECLARE
 %{
   double A1; /* rotation of monok and d-spacing */
   double RV; /* vertical curvature of monochromator */
-  double flag_container,flag_sample,flag_env;
   double verbose=1;
   double L1=0.5, L2=1.25, L3=0.5;
+%}
+
+USERVARS
+%{
+  double flag_container;
+  double flag_sample;
+  double flag_env;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */

@@ -69,9 +69,13 @@ DEFINE INSTRUMENT ILL_H22_D1B(lambda=2.52, dlambda=0.03, DM=0, string Powder="Na
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-/* flags to separate scattering processes */
-double flag_sample=0, flag_env=0;
+%}
 
+USERVARS
+%{
+/* flags to separate scattering processes */
+double flag_sample;
+double flag_env;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -121,7 +125,11 @@ COMPONENT D2B_Mono_Dx = Monitor_nD(
   xwidth=0.03, yheight=0.2, restore_neutron=1,
   options="dx, all auto, per cm2, slit", restore_neutron=1)
 AT (0, 0, L1) RELATIVE PREVIOUS
-
+EXTEND 
+%{
+  flag_env=0;
+  flag_sample=0;
+%}
 /* TIP: monochromator cradle */
 SPLIT COMPONENT mono_cradle = Arm()
   AT (TRAS_X, 0, TRAS_Z) RELATIVE D2B_Mono_Dx

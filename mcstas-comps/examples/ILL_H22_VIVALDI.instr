@@ -46,10 +46,16 @@ DEFINE INSTRUMENT ILL_H22_VIVALDI(lambda=3, dlambda=2.2,
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-/* flags to separate scattering processes */
-double flag_container,flag_sample,flag_env;
 double L2=5.5;  /* sample position wrt last guide element entry [m] */
 double L3=0.32; /* detector diameter */
+%}
+
+USERVARS
+%{
+/* flags to separate scattering processes */
+double flag_container;
+double flag_sample;
+double flag_env;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
