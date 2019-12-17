@@ -750,15 +750,6 @@ int cogen_comp_section_class(
         comp->def->name, comp->def->name, section_lower, comp->def->name);
       cout("  ABSORBED=SCATTERED=RESTORE=0;");
       cout("");
-      cout("/* if on GPU, nullify sprintf,fprintf,printfs */");
-      cout("#ifdef USE_PGI");
-      cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
-      cout("#define sprintf(string,...) printf(__VA_ARGS__)");
-      cout("#define printf(...) noprintf()");
-      cout("#define exit(...) noprintf()");
-      cout("#define strcmp(a,b) str_comp(a,b)");
-      cout("#define strlen(a) str_len(a)");
-      cout("#endif");
     } else
       cout(") {");
 
@@ -855,14 +846,6 @@ int cogen_comp_section_class(
     /* undefine aliases */
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
-    cout("#ifdef USE_PGI");
-    cout("#undef strlen");
-    cout("#undef strcmp");
-    cout("#undef exit");
-    cout("#undef printf");
-    cout("#undef sprintf");
-    cout("#undef fprintf");
-    cout("#endif");
     cout("  return(_comp);");
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
     cout("");
@@ -1390,8 +1373,148 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
   return(warnings);
 } /* cogen_section */
 
+
+/*******************************************************************************
+* def_trace_section: #define symbols for entire TRACE section
+*******************************************************************************/
+void def_trace_section(struct instr_def *instr)
+{
+  List_handle liter;
+  int i = 0;
+  static char *statepars_all[] =
+  { /* particle state parameter names are used for defines */
+  #if MCCODE_PROJECT == 1     /* neutron */
+  #define NUM_STATE_PARS 11
+          "x", "y", "z", "vx", "vy", "vz",
+          "t", "sx", "sy", "sz", "p"
+  #elif MCCODE_PROJECT == 2   /* xray */
+  #define NUM_STATE_PARS 12
+          "x", "y", "z", "kx", "ky", "kz",
+          "phi", "t", "Ex", "Ey","Ez", "p"
+  #endif
+  };
+
+  cout("/*******************************************************************************");
+  coutf("* components %s", "TRACE");
+  cout("*******************************************************************************/");
+  cout("");
+
+  /* define state parameters for all TRACE*/
+  for(i=0; i<NUM_STATE_PARS; i++)
+    coutf("#define %s (_particle->%s)", statepars_all[i], statepars_all[i]);
+
+  /* def user variables as state pars */
+  cout("// user variables:");
+  liter = list_iterate(instr->user_vars);
+  char *var;
+  while(var = list_next(liter)) {
+    coutf("#define %s (_particle->%s)", var, var);
+  }
+  list_iterate_end(liter);
+  cout("");
+
+  cout("/* if on GPU, nullify sprintf,fprintf,printfs */");
+  cout("#ifdef USE_PGI");
+  cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+  cout("#define sprintf(string,...) printf(__VA_ARGS__)");
+  cout("#define printf(...) noprintf()");
+  cout("#define exit(...) noprintf()");
+  cout("#define strcmp(a,b) str_comp(a,b)");
+  cout("#define strlen(a) str_len(a)");
+  cout("#endif");
+
+  /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
+  coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
+  coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
+  coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
+  coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
+  #if MCCODE_PROJECT == 1     /* neutron */
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
+  #elif MCCODE_PROJECT == 2   /* xray */
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(_comp); } while(0)");
+  #endif
+  cout( "#define ABSORB ABSORB0");
+} /* def_trace_section */
+
+
+/*******************************************************************************
+* undef_trace_section: #undef TRACE section symbols
+*******************************************************************************/
+void undef_trace_section(struct instr_def *instr)
+{
+  List_handle liter;
+  int i = 0;
+  static char *statepars_all[] =
+    { /* particle state parameter names are used for defines */
+    #if MCCODE_PROJECT == 1     /* neutron */
+    #define NUM_STATE_PARS 11
+            "x", "y", "z", "vx", "vy", "vz",
+            "t", "sx", "sy", "sz", "p"
+    #elif MCCODE_PROJECT == 2   /* xray */
+    #define NUM_STATE_PARS 12
+            "x", "y", "z", "kx", "ky", "kz",
+            "phi", "t", "Ex", "Ey","Ez", "p"
+    #endif
+    };
+  List l;
+
+  // undef everything after the "raytrace" function
+  for(i = 0; i < NUM_STATE_PARS; i++)
+    coutf("#undef %s", statepars_all[i]);
+
+  /* undef user variables as state pars */
+  cout("// user variables:");
+  liter = list_iterate(instr->user_vars);
+  char *var2;
+  while(var2 = list_next(liter)) {
+    coutf("#undef %s", var2);
+  }
+  list_iterate_end(liter);
+  cout("");
+  cout("#ifdef USE_PGI");
+  cout("#undef strlen");
+  cout("#undef strcmp");
+  cout("#undef exit");
+  cout("#undef printf");
+  cout("#undef sprintf");
+  cout("#undef fprintf");
+  cout("#endif");
+  cout("#undef SCATTERED");
+  cout("#undef RESTORE"  );
+  cout("#undef RESTORE_NEUTRON"  );
+  cout("#undef STORE_NEUTRON"  );
+  cout("#undef ABSORBED" );
+  cout("#undef ABSORB");
+  cout("#undef ABSORB0");
+} /* undef_trace_section */
+
+
+/*******************************************************************************
+* cogen_trace_functions: Generate the component TRACE functions.
+*******************************************************************************/
+int cogen_trace_functions(struct instr_def *instr)
+{
+  List_handle liter;
+  struct comp_inst *comp = NULL;
+  int warnings = 0;
+
+  /* instrument section comment */
+  if (verbose) fprintf(stderr, "Writing components %s\n",
+    "TRACE");
+
+  /* generate trace class fcs */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    warnings += cogen_comp_section_class(comp, instr, "TRACE", "trace",
+      comp->def->trace_code, &(comp->def->flag_defined_trace));
+  }
+  list_iterate_end(liter);
+
+  return(warnings);
+}
+
 /* *****************************************************************************
-* cogen_trace: Generate the TRACE section.
+* cogen_raytrace: Generate the main raytrace function.
 * Extended Grammar:
 *   WHEN: the trace section of comp is embraced in a: if (when) { ...  }
 *   GROUP: defines a global Group_<name> flag which gets true when one of the
@@ -1402,7 +1525,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 *          or condition is (counter < iterations)
 *   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
 ***************************************************************************** */
-int cogen_trace(struct instr_def *instr)
+int cogen_raytrace(struct instr_def *instr)
 {
   List_handle liter;
   struct comp_inst *comp = NULL;
@@ -1423,56 +1546,15 @@ int cogen_trace(struct instr_def *instr)
     };
   List l;
 
-  /* instrument section comment */
-  if (verbose) fprintf(stderr, "Writing components %s\n",
-    "TRACE");
-
-  cout("/*******************************************************************************");
-  coutf("* components %s", "TRACE");
-  cout("*******************************************************************************/");
-  cout("");
-
-  /* define state parameters for all TRACE*/
-  for(i=0; i<NUM_STATE_PARS; i++)
-    coutf("#define %s (_particle->%s)", statepars_all[i], statepars_all[i]);
-
-  /* def user variables as state pars */
-  cout("// user variables:");
-  List_handle liter2;
-  liter2 = list_iterate(instr->user_vars);
-  char *var;
-  while(var = list_next(liter2)) {
-    coutf("#define %s (_particle->%s)", var, var);
-  }
-  list_iterate_end(liter2);
-  cout("");
-
-  /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
-  coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
-  coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
-  coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
-  coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
-  #if MCCODE_PROJECT == 1     /* neutron */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
-  #elif MCCODE_PROJECT == 2   /* xray */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(_comp); } while(0)");
-  #endif
-  cout( "#define ABSORB ABSORB0");
-
-  /* generate trace class fcs */
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL) {
-    warnings += cogen_comp_section_class(comp, instr, "TRACE", "trace",
-      comp->def->trace_code, &(comp->def->flag_defined_trace));
-  }
-  list_iterate_end(liter);
+  //
+  // write the raytrace function
+  //
 
   cout("/* *****************************************************************************");
   coutf("* instrument '%s' %s", instr->name, "TRACE");
   cout("***************************************************************************** */");
   cout("");
 
-  // write the (particle-) raytrace function
   cout("#pragma acc routine seq");
   coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
@@ -1702,47 +1784,76 @@ int cogen_trace(struct instr_def *instr)
   coutf("} /* raytrace_all */");
   coutf("");
 
-  // undef everything after the "raytrace" function
-  for(i = 0; i < NUM_STATE_PARS; i++)
-    coutf("#undef %s", statepars_all[i]);
-
-  /* undef user variables as state pars */
-  cout("// user variables:");
-  List_handle liter3;
-  liter3 = list_iterate(instr->user_vars);
-  char *var2;
-  while(var2 = list_next(liter3)) {
-    coutf("#undef %s", var2);
-  }
-  list_iterate_end(liter3);
-  cout("");
-
-  cout("#undef SCATTERED");
-  cout("#undef RESTORE"  );
-  cout("#undef RESTORE_NEUTRON"  );
-  cout("#undef STORE_NEUTRON"  );
-  cout("#undef ABSORBED" );
-  cout("#undef ABSORB");
-  cout("#undef ABSORB0");
-
   return(warnings);
-} /* cogen_trace */
+} /* cogen_raytrace */
 
 /*******************************************************************************
-*
-*
+* cogen_rt_funnel : Cogen raytrace_funnel function, an alternative, and more
+*     parallel, raytrace iteration.
 *
 *******************************************************************************/
-int cogen_trace_funnel(struct instr_def *instr)
+int cogen_rt_funnel(struct instr_def *instr)
 {
+  List_handle liter;
+  struct comp_inst *comp = NULL;
+  int warnings = 0;
+  int i = 0;
+  int split_counts = 0;
+  static char *statepars_all[] =
+    { /* particle state parameter names are used for defines */
+    #if MCCODE_PROJECT == 1     /* neutron */
+    #define NUM_STATE_PARS 11
+            "x", "y", "z", "vx", "vy", "vz",
+            "t", "sx", "sy", "sz", "p"
+    #elif MCCODE_PROJECT == 2   /* xray */
+    #define NUM_STATE_PARS 12
+            "x", "y", "z", "kx", "ky", "kz",
+            "phi", "t", "Ex", "Ey","Ez", "p"
+    #endif
+    };
+  List l;
+
   cout("");
   coutf("void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {");
   coutf("  printf(\"raytrace_all_funnel not yet implemented, exiting...\\n\");");
   coutf("  exit(1);");
+  coutf("");
+  coutf("  /* CPU-loop */");
+  coutf("  unsigned long long loops;");
+  coutf("  long innerloop=2147483647;");
+  coutf("  loops = ceil((double)ncount/innerloop);");
+  coutf("  if (ncount>innerloop) {");
+  coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
+  coutf("    mcset_ncount(loops*2147483647);");
+  coutf("  } else {");
+  coutf("    loops=1;");
+  coutf("    innerloop = ncount;");
+  coutf("  }");
+  coutf("");
+
+  coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
+  coutf("  if (loops>1) {");
+  coutf("    fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
+  coutf("    }");
+  coutf("");
+  coutf("    #pragma acc parallel loop");
+  coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
+  coutf("      _class_particle particleN = mcgenstate(); // initial particle");
+  coutf("      _class_particle* _particle = &particleN;");
+  coutf("      particleN._uid = pidx;");
+  coutf("");
+  coutf("      long seq = pidx + seed;");
+  coutf("      srandom(_hash(pidx + seed));");
+  coutf("");
+  coutf("      raytrace(_particle);");
+  coutf("    } /* inner for */");
+  coutf("    seed = seed+innerloop;");
+  coutf("  } /* CPU for */");
+  coutf("  printf(\"\\n\");");
   coutf("} /* raytrace_all_funnel */");
   coutf("");
 
-} /* cogen_trace_funnel */
+} /* cogen_rt_funnel */
 
 /*******************************************************************************
 * Output code for the mcstas runtime system. Default is to copy the runtime
@@ -1852,7 +1963,7 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   /* Append variables from instr VARS block to particle struct (user vars,
   *  always double). Also store these strings in in the appropriate instrument
-  *  list for later def/undef as state variables (see cogen_trace). */
+  *  list for later def/undef as state variables (see cogen_raytrace). */
 
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
@@ -2047,7 +2158,6 @@ int get_user_particle_vars(struct code_block *code, List vars, List types) {
   return(ans);
 }
 
-
 /*******************************************************************************
 * cogen: the code generator
 *   Generate the output file (in C).
@@ -2073,18 +2183,27 @@ cogen(char *output_name, struct instr_def *instr)
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
 
+
   /* and we now call the writers */
   cogen_header(instr, output_name);
   warnings += cogen_decls(instr);
   warnings += cogen_section(instr, "INITIALISE", "init", instr->inits);
-  warnings += cogen_trace(instr);
-  warnings += cogen_trace_funnel(instr);
+
+  // TRACE section requires a bit more flexibility
+  def_trace_section(instr);
+  warnings += cogen_trace_functions(instr);
+  warnings += cogen_raytrace(instr);
+  warnings += cogen_rt_funnel(instr);
+  undef_trace_section(instr);
+
   warnings += cogen_section(instr, "SAVE", "save", instr->saves);
   warnings += cogen_section(instr, "FINALLY", "finally", instr->finals);
   warnings += cogen_section(instr, "DISPLAY", "display", NULL);
 
+  // API macro support functions
   cogen_getvarpars_fct(instr);
   cogen_getparticlevar_fct(instr);
+
 
   embed_file("mccode_main.c");
 
