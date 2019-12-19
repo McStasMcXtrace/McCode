@@ -283,6 +283,7 @@ char  *mcsig_message;
 
 /* Useful macros and constants ============================================== */
 
+
 #ifndef FLT_MAX
 #define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
 #endif
@@ -414,9 +415,9 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 
-/*
-* Random number generation.
-*/
+
+/* random number generation. ================================================ */
+
 
 /* selection of random number generator */
 #ifndef RNG_ALG
@@ -495,7 +496,17 @@ int finally(void);
 int display(void);
 #endif
 
+
+/* GPU related algorithms =================================================== */
+
+// Rearrange an array of particles such as the absorbed ones appear last.
+// NOTE: Pretty simple, non-efficient implementation for testing purposes.
+long sort_absorb_last(_class_particle* particles, long len);
+
+
 /* simple vector algebra ==================================================== */
+
+
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
 	vec_prod_func(&x, &y, &z, x1, y1, z1, x2, y2, z2)
 mcstatic void vec_prod_func(double *x, double *y, double *z,
@@ -582,7 +593,9 @@ void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);
 
-/* this is now in mcstas-r.h and mcxtrace-r.h as the number of state parameters is no longer equal*/
+/* this is now in mcstas-r.h and mcxtrace-r.h as the number of state parameters
+is no longer equal */
+
 _class_particle mcgenstate(void);
 
 // trajectory/shape intersection routines

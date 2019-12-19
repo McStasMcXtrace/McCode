@@ -118,6 +118,7 @@ size_t str_len(const char *s)
 
 #endif
 
+
 /* SECTION: Dynamic Arrays ================================================== */
 
 DArray1d create_darr1d(int n){
@@ -2793,6 +2794,26 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 		*z /= temp;
 	}
 }
+
+
+/* SECTION: GPU algorithm related =========================================== */
+#pragma acc routine seq
+long sort_absorb_last(_class_particle* particles, long len) {
+  long  iflt = len - 1;
+  _class_particle tmp;
+  long i = 0;
+  while (i < iflt) {
+    while (particles[i]._absorbed && i < iflt) {
+      tmp = particles[iflt];
+      particles[iflt] = particles[i];
+      particles[i] = tmp;
+      iflt = iflt - 1;
+    }
+    i = i + 1;
+  }
+  return iflt + 1; // new, reduced, array lenth
+}
+
 
 /*******************************************************************************
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
