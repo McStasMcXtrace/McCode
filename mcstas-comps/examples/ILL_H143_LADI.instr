@@ -73,7 +73,7 @@ DECLARE
 
 USERVARS
 %{
-  double v;
+  double vel;
   double eff;
 %}
 
@@ -458,8 +458,8 @@ EXTEND %{
   /* take into account detector efficiency (absorption law) */
   if (!SCATTERED) ABSORB;
   eff=0.5;
-  v=sqrt(vx*vx+vy*vy+vz*vz);
-  p *= 1.0-exp(3960.0/v*log(1.0-eff/100.0));
+  vel=sqrt(vx*vx+vy*vy+vz*vz);
+  p *= 1.0-exp(3960.0/vel*log(1.0-eff/100.0));
 %}
 
 COMPONENT ImagePlate = Monitor_nD(
