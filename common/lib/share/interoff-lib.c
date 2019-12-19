@@ -687,11 +687,11 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 } /* off_init */
 
 #pragma acc routine seq
-int Min(int x, int y) {
+int Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
-#pragma acc routine(merge) 
+#pragma acc routine(merge)
  void merge(int arr[], int l, int m, int r)
 {
 int i, j, k;
@@ -768,9 +768,9 @@ void q2sort(void *base, size_t nmemb, size_t size,
 	    // Find ending point of left subarray. mid+1 is starting
 	    // point of right
 	    int mid = left_start + curr_size - 1;
-	    
-	    int right_end = Min(left_start + 2*curr_size - 1, size-1);
-	    
+
+	    int right_end = Min_int(left_start + 2*curr_size - 1, size-1);
+
 	    // Merge Subarrays arr[left_start...mid] & arr[mid+1...right_end]
 	    if (mid < right_end) merge(base, left_start, mid, right_end);
 	  }
