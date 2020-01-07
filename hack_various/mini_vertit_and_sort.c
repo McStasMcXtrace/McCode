@@ -954,6 +954,7 @@ void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to ge
     // create memory block
     _class_particle* particles = malloc(innerloop*sizeof(_class_particle));
     // TODO: we probably need to attach and update "particles" on device
+
     // set up
     #pragma acc parallel loop
     for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {
@@ -990,7 +991,6 @@ void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to ge
     for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {
       _class_particle* _particle = particles + pidx;
       _class_particle _particle_save;
-      char flag_nocoordschange=0;
       if (!ABSORBED) {
         /* begin component source=Source_simple() [2] */
         if (_source_var._rotation_is_identity) {
@@ -1013,7 +1013,6 @@ void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to ge
     for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {
       _class_particle* _particle = particles + pidx;
       _class_particle _particle_save;
-      char flag_nocoordschange=0;
       if (!ABSORBED) {
         /* begin component coll2=Slit() [3] */
         if (_coll2_var._rotation_is_identity) {
@@ -1036,7 +1035,8 @@ void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to ge
     for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {
       _class_particle* _particle = particles + pidx;
       _class_particle _particle_save;
-      char flag_nocoordschange=0;
+
+
       if (!ABSORBED) {
         /* begin component detector=PSD_monitor() [4] */
         if (_detector_var._rotation_is_identity) {
@@ -1049,6 +1049,8 @@ void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to ge
           *_particle = _particle_save;
         _particle->_index++;
       } /* end component detector [4] */
+
+
     }
 
 
@@ -1060,7 +1062,7 @@ void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to ge
         ABSORBED++; /* absorbed when passed all components */
     }
 
-    // inner for (s) are done
+    // inner loops are done
     seed = seed+innerloop;
 
   } /* CPU for */
