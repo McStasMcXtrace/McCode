@@ -1747,7 +1747,8 @@ int cogen_raytrace(struct instr_def *instr)
 
   // write the "raytrace_all()" code (for loop previously in mccode_main.c).
   cout("");
-  coutf("void raytrace_all(unsigned long long ncount, unsigned long seed) { /* loop to generate events and propagate them */");
+  coutf("/* loop to generate events and call raytrace() propagate them */");
+  coutf("void raytrace_all(unsigned long long ncount, unsigned long seed) {");
   coutf("");
 
   coutf("  /* CPU-loop */");
@@ -1763,9 +1764,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  }");
   coutf("");
   coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
-  coutf("  if (loops>1) {");
-  coutf("    fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
-  coutf("    }");
+  coutf("    if (loops>1) fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
   coutf("");
   coutf("    #pragma acc parallel loop");
   coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
@@ -1813,12 +1812,12 @@ int cogen_rt_funnel(struct instr_def *instr)
     };
   List l;
 
-  cout("");
-  coutf("void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {");
-  coutf("  printf(\"raytrace_all_funnel not yet implemented, exiting...\\n\");");
-  coutf("  exit(1);");
   coutf("");
-  coutf("  /* CPU-loop */");
+  coutf("// Alternative raytrace algorithm which \"funnels\" particles through");
+  coutf("// the instrument, enabling a higher degree of parallelization.");
+  coutf("void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {");
+  coutf("");
+  coutf("  /* outer (CPU) loop integer blocks of length max_long */");
   coutf("  unsigned long long loops;");
   coutf("  long innerloop=2147483647;");
   coutf("  loops = ceil((double)ncount/innerloop);");
@@ -1831,25 +1830,90 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  }");
   coutf("");
 
+  // batches
+  coutf("  // run batches one at the time");
   coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
-  coutf("  if (loops>1) {");
-  coutf("    fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
-  coutf("    }");
+  coutf("    if (loops>1) fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
   coutf("");
+
+  // init batch
+  coutf("    // create memory block");
+  coutf("    _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
+  coutf("");
+  coutf("    // set up");
   coutf("    #pragma acc parallel loop");
   coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
-  coutf("      _class_particle particleN = mcgenstate(); // initial particle");
-  coutf("      _class_particle* _particle = &particleN;");
-  coutf("      particleN._uid = pidx;");
-  coutf("");
-  coutf("      long seq = pidx + seed;");
-  coutf("      srandom(_hash(pidx + seed));");
-  coutf("");
-  coutf("      raytrace(_particle);");
-  coutf("    } /* inner for */");
+  coutf("      // generate particle state, set loop index and seed");
+  coutf("      particles[pidx] = mcgenstate();");
+  coutf("      _class_particle* _particle = particles + pidx;");
+  coutf("      _particle->_uid = pidx;");
+  coutf("      srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro");
+  coutf("    }");
+  cout( "");
+
+  // iterate batch through the component list
+  cout("    // iterate components");
+  cout("");
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    List_handle liter2;
+
+    coutf("    // %s", comp->name);
+    coutf("    #pragma acc parallel loop");
+    coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
+
+    coutf("      _class_particle* _particle = particles + pidx;");
+    coutf("      _class_particle _particle_save;");
+    coutf("      if (!ABSORBED) {");
+
+    // coordinate transformations (wrt to PREVIOUS)
+    coutf("        if (_%s_var._rotation_is_identity)", comp->name);
+    coutf("          coords_get("
+      "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
+      "&x, &y, &z);", comp->name);
+    cout( "        else");
+    coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
+    cout( "        _particle_save = *_particle;");
+
+    // call the component with TRACE and/or EXTEND lines
+    if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
+      // WHEN
+      if (comp->when) {
+        char *exp=exp_tostring(comp->when);
+        coutf("        if (%s) // conditional WHEN", exp);
+        str_free(exp);
+      }
+      // TRACE
+      coutf("        class_%s_trace(&_%s_var, _particle);%s",
+        comp->def->name,
+        comp->name,
+        list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
+
+      cout( "        if (_particle->_restore)");
+      coutf("          *_particle = _particle_save;", comp->index);
+    };
+
+    coutf("        _particle->_index++;");
+    coutf("      }");
+    coutf("    }");
+    cout( "");
+
+  } /* end while comp list (case) */
+  list_iterate_end(liter);
+
+  // finalize batch
+  coutf("    // finalize particle batch");
+  coutf("    #pragma acc parallel loop");
+  coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
+  coutf("      _class_particle* _particle = particles + pidx;");
+  coutf("      if (_particle->_index > 4)");
+  coutf("        ABSORBED++; /* absorbed when passed all components */");
+  coutf("    }");
   coutf("    seed = seed+innerloop;");
-  coutf("  } /* CPU for */");
+  coutf("  } /* outer loop */");
+  cout( "");
   coutf("  printf(\"\\n\");");
+
   coutf("} /* raytrace_all_funnel */");
   coutf("");
 
