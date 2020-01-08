@@ -149,6 +149,7 @@ int mccode_main(int argc, char *argv[])
   raytrace_all(mcncount, mcseed);
 #else
   // "funneled" version in which propagation is more parallelizable
+  printf("\nNOTE: Massively parallel \"FUNNEL\" raytrace algorithm enabled.\n");
   raytrace_all_funnel(mcncount, mcseed);
 #endif
 
