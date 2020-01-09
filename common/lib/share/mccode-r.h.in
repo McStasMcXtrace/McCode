@@ -499,9 +499,11 @@ int display(void);
 
 /* GPU related algorithms =================================================== */
 
-// Rearrange an array of particles such as the absorbed ones appear last.
-// NOTE: Pretty simple, non-efficient implementation for testing purposes.
-long sort_absorb_last(_class_particle* particles, long len);
+/*
+*  Divide-and-conquer strategy for parallel sort absorbed last.
+*/
+long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
+  _class_particle** pbuffer, long len);
 
 
 /* simple vector algebra ==================================================== */

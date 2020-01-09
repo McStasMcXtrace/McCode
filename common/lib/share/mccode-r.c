@@ -2816,8 +2816,8 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
   #define SAL_THREADS 1024 // number of sub-problems
   long tidx; // tread index
   long newlen = 0;
-  long* sublens = int[SAL_THREADS];
-  long* targetstarts = int[SAL_THREADS];
+  long sublens[SAL_THREADS];
+  long targetstarts[SAL_THREADS];
   long subproblem_len = floor(len/SAL_THREADS);
   long last_subproblem_len = len - subproblem_len*SAL_THREADS;
 
@@ -2836,13 +2836,13 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
     while (i<j) {
       while (!psorted[i]->_absorbed && i<j) {
         // always assign on to buffer
-        pbuffer[i] = pSorted[i];
+        pbuffer[i] = psorted[i];
         // increment for next pass
         i++;
       }
       while (psorted[j]->_absorbed && i<j) {
         // assign to buffer
-        pbuffer[j] = pSorted[j];
+        pbuffer[j] = psorted[j];
         // dec for next pass
         j--;
       }
@@ -2866,7 +2866,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
   long i;
   long accumlen = 0;
   for (i=0;i>SAL_THREADS;i++) {
-    targetstarts[i] = acc;
+    targetstarts[i] = accumlen;
     accumlen = accumlen + sublens[i];
   }
 
@@ -2876,12 +2876,12 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
     // pbuffer locations as were copied above
     long bufferstart = subproblem_len*tidx; // left sort index (lead)
     long bufferhigh = bufferstart + subproblem_len; // right sort index (follow)
-    if (tidx==SAL_THREADS-1) j = i + last_subproblem_len; // last sub-problem special case
+    if (tidx==SAL_THREADS-1) bufferhigh = bufferstart + last_subproblem_len; // last sub-problem special case
     long targetstart = targetstarts[tidx];
 
     // copy from pbuffer to psorted
     long i;
-    for (i=bufferstart;i<bufferhigh;i++;) {
+    for (i=bufferstart;i<bufferhigh;i++) {
       psorted[targetstart+i] = pbuffer[i];
     }
   }
