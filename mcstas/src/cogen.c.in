@@ -1863,7 +1863,6 @@ int cogen_rt_funnel(struct instr_def *instr)
     List_handle liter2;
 
     coutf("    //TODO: innerloop = sort_absorb_last(particles, innerloop);");
-    coutf("    //TODO: printf("%ld\n", innerloop);");
     coutf("");
 
     coutf("    // %s", comp->name);
