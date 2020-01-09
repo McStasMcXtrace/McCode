@@ -2809,7 +2809,7 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *   len:        total number of particles to sort, counted from the left of
 *               psorted
 */
-#pragma acc routine seq
+//#pragma acc routine seq
 long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
   _class_particle** pbuffer, long len) {
 
@@ -2822,7 +2822,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
   long last_subproblem_len = len - subproblem_len*SAL_THREADS;
 
   // step 1: sort individual sub-arrays
-  #pragma acc parallel loop
+  //#pragma acc parallel loop
   for (tidx=0;tidx<SAL_THREADS;tidx++) {
     // NOTE: all lenths add up to input parameter length (len), but become reduced,
     //       according to the amount of absorbed particles in that sub problem.
@@ -2858,7 +2858,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
     sublens[tidx] = j + 1;
 
     // accumulate to total length
-    #pragma acc atomic
+    //#pragma acc atomic
     newlen = newlen + sublens[tidx];
   }
 
@@ -2871,7 +2871,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
   }
 
   // step 2: write non-absorbed sub-arrays to psorted/output from the left
-  #pragma acc parallel loop
+  //#pragma acc parallel loop
   for (tidx=0;tidx<SAL_THREADS;tidx++) {
     // pbuffer locations as were copied above
     long bufferstart = subproblem_len*tidx; // left sort index (lead)
