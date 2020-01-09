@@ -1817,7 +1817,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("// the instrument, enabling a higher degree of parallelization.");
   coutf("void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {");
   coutf("");
-  coutf("  /* outer (CPU) loop integer blocks of length max_long */");
+  coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
   coutf("  long innerloop=2147483647;");
   coutf("  loops = ceil((double)ncount/innerloop);");
@@ -1831,16 +1831,20 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
 
   // batches
-  coutf("  // run batches one at the time");
+  coutf("  // outer loop / particle batches");
   coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
   coutf("    if (loops>1) fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
   coutf("");
 
   // init batch
-  coutf("    // create memory block");
+  coutf("    // create particles memory block and pointer array (buffer and sorted)");
   coutf("    _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
+  coutf("    // TODO: _class_particle** psorted = malloc(innerloop*sizeof(_class_particle*));");
+  coutf("    // TODO: _class_particle** pbuffer = malloc(innerloop*sizeof(_class_particle*));");
   coutf("");
-  coutf("    // set up");
+  coutf("    // TODO: do we need a GPU data section for the above buffers here?");
+  coutf("");
+  coutf("    // set up, generate particles");
   coutf("    #pragma acc parallel loop");
   coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
@@ -1857,6 +1861,10 @@ int cogen_rt_funnel(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
+
+    coutf("    //TODO: innerloop = sort_absorb_last(particles, innerloop);");
+    coutf("    //TODO: printf("%ld\n", innerloop);");
+    coutf("");
 
     coutf("    // %s", comp->name);
     coutf("    #pragma acc parallel loop");
@@ -1909,8 +1917,9 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("      if (_particle->_index > 4)");
   coutf("        ABSORBED++; /* absorbed when passed all components */");
   coutf("    }");
+  coutf("    // jump to next viable seed");
   coutf("    seed = seed+innerloop;");
-  coutf("  } /* outer loop */");
+  coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  printf(\"\\n\");");
 
