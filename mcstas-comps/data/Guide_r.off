@@ -13,7 +13,7 @@ OFF
 0.025 0.025 0
 0.025 0.025 1.0
 -0.025 0.025 1.0
-# List six faces, all squared
+# List six faces, all squared with reflectivity 1
 4 0 5 6 4 1
 4 1 5 6 7 1
 4 3 0 4 2 1
