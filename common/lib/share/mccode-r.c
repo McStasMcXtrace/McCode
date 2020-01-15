@@ -2052,6 +2052,22 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
 *   distributed across the range x1..x2 (x1 is lower limit of first
 *   bin, x2 is upper limit of last bin). Title is t, axis labels are xl
 *   and yl. File name is f, component name is c.
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   xvar: measured variable length
+*   x1:   x axus min
+*   x2:   x axis max
+*   n:    1d data vector lenght
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
 *******************************************************************************/
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2,
@@ -2080,7 +2096,26 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 
 /*******************************************************************************
 * mcdetector_out_2D: wrapper for 2D.
-*   special case for list: master creates file first, then slaves append their blocks without header
+*   Special case for list: master creates file first, then slaves append their
+*   blocks without header-
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   x1:   x axus min
+*   x2:   x axis max
+*   y1:   y axis min
+*   y2:   y axis max
+*   m:    dim 1 (x) size
+*   n:    dim 2 (y) size
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
 *******************************************************************************/
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
