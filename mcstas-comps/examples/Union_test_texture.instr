@@ -1,0 +1,120 @@
+/*************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_test_mask
+*
+* Identification
+* Written by: Victor Laliena
+* Date: January 2019
+* Origin: University of Zaragoza
+* %INSTRUMENT_SITE: Union_demos
+*
+* Simple test instrument for Texture functionality in Union framework.
+*
+* Example: Detector: m4pi_I=2.27579e-07
+*
+* %Description
+* simple test instrument for texture sample component.
+*
+* 3.112614E-322nd
+*******************************************************************************/
+
+DEFINE INSTRUMENT SNR_texture(lmax=0,
+      string crystal_fn="Zr.laz",
+      string fcoef_fn="coef_Four_L2.txt",barns=1)
+DECLARE
+%{
+  double sample_wx = 0.01;
+  double sample_wy = 0.01;
+  double sample_wz = 0.01;
+
+  double lambda=3.0;
+  double cts, I, I2, nneutrons;
+  
+  int pack = 1;
+  double geometry_interact = 0.0;
+
+  FILE *filep;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT texture = Texture_process(crystal_fn=crystal_fn,fcoef_fn=fcoef_fn,lmax_user=lmax,
+interact_fraction=-1,barns=barns,packing_factor=pack)
+AT (0,0,0) ABSOLUTE
+ROTATED (0,0,0) RELATIVE ABSOLUTE
+
+COMPONENT texture_material = Union_make_material(my_absorption=0,process_string="texture")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT a1 = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+// Source
+COMPONENT source = Source_div(xwidth=sample_wx,yheight=sample_wy,
+   focus_aw=0.4, focus_ah=0.4,
+   lambda0 = lambda,dlambda = 1.0, gauss=0)
+AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+EXTEND
+%{
+  //printf("new neutron:\n");
+  //nneutrons += 1;
+%}
+
+
+// source monitors
+COMPONENT div_mon = Divergence_monitor(
+    nh = 100, nv = 100, filename = "div_monitor.dat",
+    xwidth = sample_wx, yheight = sample_wy, maxdiv_h = 0.001, maxdiv_v = 0.001,
+    restore_neutron = 1)
+AT (0, 0, 0.0001) RELATIVE source
+
+COMPONENT lambda_monitor = L_monitor(filename="L_monitor_source.dat",
+    nL = 420, xwidth = 2.0*sample_wx, yheight = 2.0*sample_wy, Lmin = 1.9, Lmax = 6.1)
+  AT (0, 0, 0.0002) RELATIVE source
+  ROTATED (0, 0, 0) RELATIVE source
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,0.3) RELATIVE source
+ROTATED (0,0,0) RELATIVE source
+
+//sample
+SPLIT 1000 COMPONENT sample = Union_box(xwidth=sample_wx,yheight=sample_wy,zdepth=sample_wz,
+priority=1, material_string="texture_material",
+p_interact=geometry_interact)
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT simulation_master = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+EXTEND
+%{
+%}
+
+COMPONENT monitor = L_monitor(filename="L_monitor_transmission.dat",
+    nL = 420, xwidth = 2.0*sample_wx, yheight = 2.0*sample_wy, Lmin = 1.9, Lmax = 6.1)
+  AT (0, 0, 0.1) RELATIVE beam_center
+  ROTATED (0, 0, 0) RELATIVE beam_center
+
+
+FINALLY
+%{
+
+%}
+
+END
+
+
+
+
+
