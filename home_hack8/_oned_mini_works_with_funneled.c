@@ -1083,7 +1083,7 @@ void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {
     if (loops>1) fprintf(stdout, "%d..", (int)cloop); fflush(stdout);
 
     // create particles memory block and pointer array (buffer and sorted)
-    //_class_particle* 
+    //_class_particle*
     particles = acc_malloc(innerloop*sizeof(_class_particle));
     #pragma acc enter data create(particles[0:innerloop])
     // TODO: _class_particle** psorted = malloc(innerloop*sizeof(_class_particle*));
@@ -1096,10 +1096,9 @@ void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {
     for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {
       // generate particle state, set loop index and seed
       particles[pidx] = mcgenstate();
-      /*_class_particle* _particle = particles + pidx;
+      _class_particle* _particle = particles + pidx;
       _particle->_uid = pidx;
       srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro
-      */
     }
     // iterate components
 
@@ -1107,7 +1106,7 @@ void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {
     //TODO: innerloop = sort_absorb_last(particles, innerloop);
 
     // arm
-   
+
     #pragma acc kernels present(particles)
     for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {
       _class_particle* _particle = particles + pidx;
