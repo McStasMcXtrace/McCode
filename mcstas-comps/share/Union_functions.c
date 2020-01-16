@@ -366,6 +366,7 @@ union data_transfer_union{
     struct PhononSimple_physics_storage_struct *pointer_to_a_PhononSimple_storage_struct;
     struct MagnonSimple_physics_storage_struct *pointer_to_a_MagnonSimple_storage_struct;
     struct Sans_spheres_physics_storage_struct *pointer_to_a_Sans_spheres_physics_storage_struct;
+    struct Texture_physics_storage_struct *pointer_to_a_Texture_physics_storage_struct;
     struct Template_physics_storage_struct *pointer_to_a_Template_physics_storage_struct;
     // possible to add as many structs as wanted, without increasing memory footprint.
 };
