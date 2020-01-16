@@ -1813,13 +1813,18 @@ int cogen_rt_funnel(struct instr_def *instr)
   List l;
 
   coutf("");
+  coutf("// global variable and declare create required for acc");
+  coutf("_class_particle* particles;");
+  coutf("#pragma acc declare device_resident(particles)");
+  coutf("");
   coutf("// Alternative raytrace algorithm which \"funnels\" particles through");
   coutf("// the instrument, enabling a higher degree of parallelization.");
+
   coutf("void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {");
   coutf("");
   coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
-  coutf("  long innerloop=2147483647;");
+  coutf("  long innerloop=1024*1024; // <-- tune by memory capacity here (max threads: 2147483647);");
   coutf("  loops = ceil((double)ncount/innerloop);");
   coutf("  if (ncount>innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
@@ -1838,14 +1843,19 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // init batch
   coutf("    // create particles memory block and pointer array (buffer and sorted)");
+  coutf("    #ifdef USE_PGI");
+  coutf("    _class_particle* particles = acc_malloc(innerloop*sizeof(_class_particle));");
+  coutf("    #else");
   coutf("    _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
+  coutf("    #endif");
+  coutf("    #pragma acc enter data create(particles[0:innerloop])");
   coutf("    // TODO: _class_particle** psorted = malloc(innerloop*sizeof(_class_particle*));");
   coutf("    // TODO: _class_particle** pbuffer = malloc(innerloop*sizeof(_class_particle*));");
   coutf("");
   coutf("    // TODO: do we need a GPU data section for the above buffers here?");
   coutf("");
   coutf("    // set up, generate particles");
-  coutf("    #pragma acc parallel loop");
+  coutf("    #pragma acc parallel loop present(particles)");
   coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
@@ -1866,7 +1876,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     coutf("");
 
     coutf("    // %s", comp->name);
-    coutf("    #pragma acc parallel loop");
+    coutf("    #pragma acc parallel loop present(particles)");
     coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
 
     coutf("      _class_particle* _particle = particles + pidx;");
@@ -1910,7 +1920,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // finalize batch
   coutf("    // finalize particle batch");
-  coutf("    #pragma acc parallel loop");
+  coutf("    #pragma acc parallel loop present(particles)");
   coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
   coutf("      _class_particle* _particle = particles + pidx;");
   coutf("      if (_particle->_index > 4)");
@@ -1918,6 +1928,11 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    }");
   coutf("    // jump to next viable seed");
   coutf("    seed = seed+innerloop;");
+  coutf("    #ifdef USE_PGI");
+  coutf("    acc_free(particles);");
+  coutf("    #else");
+  coutf("    free(particles);");
+  coutf("    #endif");
   coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  printf(\"\\n\");");
