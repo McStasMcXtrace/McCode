@@ -89,11 +89,11 @@ TRACE
     i = floor(nr*radpos/rmax);
     double p2 = p*p;
     #pragma acc atomic
-    PSDr_N[i][j] = PSDr_N[i][j]+1;
+    PSDr_N[i] = PSDr_N[i]+1;
     #pragma acc atomic
-    PSDr_p[i][j] = PSDr_p[i][j]+p;
+    PSDr_p[i] = PSDr_p[i]+p;
     #pragma acc atomic
-    PSDr_p2[i][j] = PSDr_p2[i][j] + p2;
+    PSDr_p2[i] = PSDr_p2[i] + p2;
     SCATTER;
   }
 %}
