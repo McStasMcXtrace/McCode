@@ -1,0 +1,121 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Scatter_logger_stop.comp
+*
+* %I
+*
+* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby 
+* Date: January 2013
+* Version: $Revision: 1.12 $
+* Release: McStas 2.1
+* Origin: DTU Physics / DTU Nutech
+*
+* Stop logging iteractions of neutrons with components
+*
+* %D
+* Component which marks the end of the region where SCATTER events should be logged.
+*
+* %P
+* Input parameters:
+*
+* logger: The Scatter_logger.comp which began the logging region. This is necessary to allow communication between the components. ( )
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Shielding_logger_stop
+DEFINITION PARAMETERS (logger)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+
+SHARE
+  %{
+#define SCATTER0\
+    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
+#define ABSORB0\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
+%}
+
+DECLARE
+%{ 
+  int bounce_store_index;
+  int bounce_store_overrun;
+  int logger_buffer_cleared;
+%}
+
+INITIALIZE
+%{
+#ifndef logger
+  fprintf(stderr,"Error(%s): Logger undefined - can't stop noexisting logger\n", NAME_CURRENT_COMP);
+#endif
+logger_buffer_cleared=0;
+%}
+
+
+TRACE
+%{
+
+#undef SCATTER
+#define SCATTER SCATTER0
+
+#undef ABSORB
+#define ABSORB ABSORB0
+
+#undef mcabsorb
+#define mcabsorb mcabsorbAll
+
+#ifdef scatter_logger_stop
+#undef scatter_logger_stop
+#endif
+
+#define scatter_logger_stop logger
+scatter_logger_stop:
+    
+  if (bounce_store_index<BOUNCE_LOG_SIZE){
+    struct Generalized_State_t *bp;
+    bp=&(Bounce_store[bounce_store_index]);
+    bp->_x=0;
+    bp->_y=0;
+    bp->_z=0;
+    bp->_vx=0;
+    bp->_vy=0;
+    bp->_vz=0;
+    bp->_sx=0;
+    bp->_sy=0;
+    bp->_sz=0;
+    bp->_t=0;
+    if(absorbed_in_optics==1) bp->_p=-2; else bp->_p=-1;
+    bp->_nid=0; 
+    bp->_comp=0;
+    bounce_store_index++;
+  }else if(bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun){
+    printf("Warning (%s): Scatter_log overrun - cannot set stop bit. Aborting\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  %}
+
+FINALLY
+%{
+  /*If we are a logger stop we should also free the memory*/
+  int i;
+  struct Generalized_State_t *bp;
+  for (i=0;i<BOUNCE_LOG_SIZE;i++){
+    bp=&(Bounce_store[i]);
+    /* maybe this should be in the share block - must be able to discern between different loggers*/       
+    /*      printf("SCATTERLOG: %d %lld %g %g %g  %g %g %g  %g  %g %g %g  %g  %d\n", \*/
+    /*	     i,bp->_nid,bp->_x,bp->_y,bp->_z, bp->_vx, bp->_vy, bp->_vz, bp->_t, \*/
+    /*	     bp->_sx, bp->_sy, bp->_sz, bp->_p, bp->_comp);*/
+  }
+ if (!logger_buffer_cleared) { free(Bounce_store); logger_buffer_cleared=1;}
+ 
+/*do nothing if the memory has already been freed*/
+%}
+
+END
