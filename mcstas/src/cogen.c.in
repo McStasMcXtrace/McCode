@@ -1413,12 +1413,14 @@ void def_trace_section(struct instr_def *instr)
   list_iterate_end(liter);
   cout("");
 
-  cout("/* if on GPU, nullify sprintf,fprintf,printfs */");
+  cout("/* if on GPU, globally nullify sprintf,fprintf,printfs   */");
+  cout("/* (Similar defines are available in each comp trace but */");
+  cout("/*  those are not enough to handle external libs etc. )  */");
   cout("#ifdef USE_PGI");
-  /*cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+  cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
   cout("#define sprintf(string,...) printf(__VA_ARGS__)");
   cout("#define printf(...) noprintf()");
-  cout("#define exit(...) noprintf()");*/
+  cout("#define exit(...) noprintf()");
   cout("#define strcmp(a,b) str_comp(a,b)");
   cout("#define strlen(a) str_len(a)");
   cout("#endif");
