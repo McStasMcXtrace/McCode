@@ -68,6 +68,7 @@ Changes in McStas v.2.6, January 24th, 2020
    - On Unix platforms, the Perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the Perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
+ - Contribution from Tobias Weber ILL: Python-version of mcresplot.
  
  Platforms:
  - Nothing really new to report here. We still support 64bit Windows 10, all recent 64bit macOS, Debian-based and RPM-based distros
