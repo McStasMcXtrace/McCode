@@ -99,6 +99,8 @@ Changes in McStas v.2.6, January 24th, 2020
      Shielding_log_iterator_Ti_new, Shielding_log_iterator_stop, Shielding_log_iterator_total, Shielding_logger.comp,
      Shielding_logger_stop.comp.
    - See https://doi.org/10.3233/JNR-190123 and https://doi.org/10.3233/JNR-180088
+ - Guide_anyshape_r additions from Peter Link MLZ. Allows describing geometry in OFF format with reflectivity "per" face.
+   Test instrument is Test_guides which has been updated to include this modified component.
  - Vertical_Bender from Andrew Jackson ESS and Richard Heenan STFC. Allows modelling a multi-channel bender
    that curves vertically down.
  - Guide_simple is identical to Guide except from not having OFF library support. Common with forthcoming
@@ -126,6 +128,7 @@ Changes in McStas v.2.6, January 24th, 2020
    - MCPL_merge: Read up to 10 MCPL input files and write neutrons to a merged MCPL file   
  - SINE2020-developed McStas_Isotropic_Sqw, McStas_PowderN, McStas_Single_crystal by Erik Knudsen. They have
    MCPL input/output and are intended for easy use of McStas samples within SIMRES.
+ - Test_guides has been modified to include Guide_anyshape_r from Peter Link MLZ.
  - BNL_H8_simple.instr is identical to BNL_H8.instr except e.g. not including SPLIT. Common with forthcoming
    McStas 3.0 beta release with GPU support.
  - PSI_DMC_simple is identical to PSI_DMC.instr except e.g. not including SPLIT. Common with forthcoming
