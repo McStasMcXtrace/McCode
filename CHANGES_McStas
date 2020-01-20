@@ -104,6 +104,9 @@ Changes in McStas v.2.6, January 24th, 2020
    Test instrument is Test_guides which has been updated to include this modified component.
  - Vertical_Bender from Andrew Jackson ESS and Richard Heenan STFC. Allows modelling a multi-channel bender
    that curves vertically down.
+ - SANS_spheres2 by Peter Willendrup, derived from Henrich Frilinghaus' SANS_benchmark2. More realistic cross-section
+   calculations than from e.g. Sans_spheres. templateSANS2.instr is the related test instrument.
+ - Updated version of Sample_nxs from Mirko Boin HZB.
  - Guide_simple is identical to Guide except from not having OFF library support. Common with forthcoming
    McStas 3.0 beta release with GPU support.
  - Elliptic_guide_gravity promoted from contrib to optics since Mads Bertelsen is full member of McStas dev team. 
@@ -130,6 +133,7 @@ Changes in McStas v.2.6, January 24th, 2020
  - SINE2020-developed McStas_Isotropic_Sqw, McStas_PowderN, McStas_Single_crystal by Erik Knudsen. They have
    MCPL input/output and are intended for easy use of McStas samples within SIMRES.
  - Test_guides has been modified to include Guide_anyshape_r from Peter Link MLZ.
+ - templateSANS2 serves as test instrument for SANS_spheres2.
  - BNL_H8_simple.instr is identical to BNL_H8.instr except e.g. not including SPLIT. Common with forthcoming
    McStas 3.0 beta release with GPU support.
  - PSI_DMC_simple is identical to PSI_DMC.instr except e.g. not including SPLIT. Common with forthcoming
