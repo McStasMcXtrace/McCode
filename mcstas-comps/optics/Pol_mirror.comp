@@ -22,9 +22,13 @@
 * The reflectivity function (see e.g. share/ref-lib for examples) and parameters
 * are passed to this component to give a bigger freedom.
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
+* IMPORTANT: At present the component only works correctly for polarization along the up/down
+* direction and for completely unpolarized beams, i.e. sx=sy=sz=0 for all rays.
+*
 * For now we assume:
 * P(Transmit|Q) = 1 - P(Reflect|Q)
 * i.e. NO ABSORPTION!
+*
 *
 * The component can both reflect and transmit neutrons with a respective proportion
 * depending on the p_reflect parameter:
