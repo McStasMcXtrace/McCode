@@ -1,4 +1,3 @@
-
 /*******************************************************************************
 * McStas instrument definition URL=http://www.mcstas.org
 *
@@ -27,14 +26,11 @@
 *
 * %Link
 * "Using an onion like neutron scattering instrument model to quickly optimize design parameters"
-* T. Huegle, Nuclear Instruments and Methods in Physics Research Section A, 2019
+* T. Huegle, <a href="https://doi.org/10.1016/j.nima.2019.162711">Nuclear Instruments and Methods in Physics Research Section A, 2019<a>
 *
 * %End
 *******************************************************************************/
-
-
-
-DEFINE INSTRUMENT ONION (double divergence = 0.4, double distance = 32)
+DEFINE INSTRUMENT Tools_ONION (double divergence = 0.4, double distance = 32)
 
 DECLARE
 %{
