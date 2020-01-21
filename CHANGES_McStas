@@ -108,6 +108,10 @@ Changes in McStas v.2.6, January 24th, 2020
      Shielding_log_iterator_Ti_new, Shielding_log_iterator_stop, Shielding_log_iterator_total, Shielding_logger.comp,
      Shielding_logger_stop.comp.
    - See https://doi.org/10.3233/JNR-190123 and https://doi.org/10.3233/JNR-180088
+   - Please note that the included Shielding- and Dose- calculators will only give sensible for guides with
+     borosilicate glass substrate. If the substrate is, e.g. copper, the dose rates from neutrons transmitted 
+     through the coating and captured in the substrate will overshoot the coating contribution significantly, 
+     so that shielding has to be enforced by few tens of centimeters of concrete. 
  - Guide_anyshape_r additions from Peter Link MLZ. Allows describing geometry in OFF format with reflectivity "per" face.
    Test instrument is Test_guides which has been updated to include this modified component.
  - Vertical_Bender from Andrew Jackson ESS and Richard Heenan STFC. Allows modelling a multi-channel bender
