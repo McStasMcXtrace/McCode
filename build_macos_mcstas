@@ -26,6 +26,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp

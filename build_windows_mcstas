@@ -33,6 +33,7 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
