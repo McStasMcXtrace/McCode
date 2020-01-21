@@ -12,8 +12,14 @@
 *
 * %D
 * This model of the ESS BIFROST instrument illustrates the use of the "shielding-logger"
-* components, as described in the publications <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> 
-* and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>.
+* components, as described in the publications <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a>, 
+* <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a> and <a href="https://doi.org/10.1016/j.nima.2018.12.069">https://doi.org/10.1016/j.nima.2018.12.069</a>.
+*
+* An important note from the author:
+* Please note that the included Shielding- and Dose- calculators will only give sensible for guides with 
+* borosilicate glass substrate. If the substrate is, e.g. copper, the dose rates from neutrons transmitted 
+* through the coating and captured in the substrate will overshoot the coating contribution significantly, 
+* so that shielding has to be enforced by few tens of centimeters of concrete. 
 *
 * Example: ESS_BIFROST_shielding.instr WaveMin=1
 *
@@ -35,7 +41,8 @@
 * BWopen:           [deg]   Bandwidth-chopper opening angle - unused
 * 
 * %L
-* See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>
+* See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a>, 
+* <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a> and <a href="https://doi.org/10.1016/j.nima.2018.12.069">https://doi.org/10.1016/j.nima.2018.12.069</a>.
 *
 * %E
 *******************************************************************************/

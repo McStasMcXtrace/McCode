@@ -12,9 +12,14 @@
 *
 * %Description
 * This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH, modified to illustrate
-* the use of the "shielding-logger" components, as described in the publications 
-* <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> 
-* and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>.
+* the use of the "shielding-logger" components, as described in the publications <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a>, 
+* <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a> and <a href="https://doi.org/10.1016/j.nima.2018.12.069">https://doi.org/10.1016/j.nima.2018.12.069</a>.
+*
+* An important note from the author:
+* Please note that the included Shielding- and Dose- calculators will only give sensible for guides with 
+* borosilicate glass substrate. If the substrate is, e.g. copper, the dose rates from neutrons transmitted 
+* through the coating and captured in the substrate will overshoot the coating contribution significantly, 
+* so that shielding has to be enforced by few tens of centimeters of concrete. 
 *
 * %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
 * Example: lambda=3.4 Detector: PSD_SAMPLE_I=1.58754E+05
@@ -25,7 +30,8 @@
 * chopp_ratio: [1]  Chopper radio Fermi Chopper to Disk Chopper
 * DET: [deg ]       Detector angle
 *
-* %Link See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>
+* %Link See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a>, 
+* <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a> and <a href="https://doi.org/10.1016/j.nima.2018.12.069">https://doi.org/10.1016/j.nima.2018.12.069</a>.
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT PSI_Focus_shielding(lambda=4.4, dL=4.0, chopp_ratio=1, DET=-69.9)
