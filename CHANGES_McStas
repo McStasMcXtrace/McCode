@@ -114,7 +114,10 @@ Changes in McStas v.2.6, January 24th, 2020
  - NPI_tof_theta_monitor is in contrib, was by mistace placed in monitors before.  
  
  Instruments:
- - Union_test_texture.instr demonstrates use of Texture_process.comp by Victor Laliena.
+ - Union_test_texture.instr demonstrates use of Texture_process.comp by Victor Laliena. To be used with datafile
+   "coef_Four_L2.txt" found in the installation data-folder.
+ - Union_IncoherentPhonon_test.instr demonstrates use of IncoherentPhonon_process.comp by Victor Laliena. To be used
+   with datafile "dos_meV.txt" found in the installation data-folder.
  - Union_test_mesh.instr demonstrates use of mesh geometry in Union
  - ESS_BIFROST_shielding.instr and PSI_Focus_shielding.instr, demonstration of Shielding_logger concept from
    Rodion Kolevatov
