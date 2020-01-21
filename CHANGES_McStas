@@ -107,7 +107,7 @@ Changes in McStas v.2.6, January 24th, 2020
    - Components patched / derived from the "scatterlogger" framework to model Ni and Ti layers seperately: Shielding_log_iterator_Ni_new,
      Shielding_log_iterator_Ti_new, Shielding_log_iterator_stop, Shielding_log_iterator_total, Shielding_logger.comp,
      Shielding_logger_stop.comp.
-   - See https://doi.org/10.3233/JNR-190123 and https://doi.org/10.3233/JNR-180088
+   - See https://doi.org/10.3233/JNR-190123, https://doi.org/10.1016/j.nima.2018.12.069 and https://doi.org/10.3233/JNR-180088
    - Please note that the included Shielding- and Dose- calculators will only give sensible for guides with
      borosilicate glass substrate. If the substrate is, e.g. copper, the dose rates from neutrons transmitted 
      through the coating and captured in the substrate will overshoot the coating contribution significantly, 
