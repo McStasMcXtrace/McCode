@@ -1,5 +1,5 @@
 #!/bin/sh
-# Wrapper script for @P@plot-pyqtgraph-py
+# Wrapper script for mcresplot-py
 
 # First ensure that we follow symlink if needed
 LINK=`readlink $0`
@@ -11,8 +11,8 @@ else
     LIB=`dirname $0`
 fi
 PATH=$LIB/../miniconda3/bin:$PATH
-LIB="$LIB/../tools/Python/@P@plot/pyqtgraph"
-TOOL="@P@plot"
+LIB="$LIB/../tools/Python/mcresplot"
+TOOL="mcresplot"
 VERS="@MCCODE_VERSION@"
 
 
