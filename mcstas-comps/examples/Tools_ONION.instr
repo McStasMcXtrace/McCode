@@ -15,7 +15,8 @@
 * Set up to be run in McStas -> Mantid mode, refer to manual for details on execution.
 * Simulates desired divergence by adjusting moderator size.
 * Considers only in-plane (xwidth) factors, sets yheight as 1 cm.
-* For an example on how to analyze the data, see the 'Onion_analyzerScript.py'
+* For an example on how to analyze the data, see the 'Onion_analyzerScript.py' available at 
+* <a href="https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle">https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle</a>
 *
 * Acceptable statistics can be achieved by running the simulation with 1E7 neutrons (output file: ~400MB) 
 * 
@@ -27,6 +28,7 @@
 * %Link
 * "Using an onion like neutron scattering instrument model to quickly optimize design parameters"
 * T. Huegle, <a href="https://doi.org/10.1016/j.nima.2019.162711">Nuclear Instruments and Methods in Physics Research Section A, 2019<a>
+* Python script available at <a href="https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle">https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle</a>
 *
 * %End
 *******************************************************************************/
