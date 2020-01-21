@@ -15,7 +15,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}run/")
+set(TOOLS_NAME "tools/Python/mcresplot")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mcresplot-${MCCODE_VERSION}")
