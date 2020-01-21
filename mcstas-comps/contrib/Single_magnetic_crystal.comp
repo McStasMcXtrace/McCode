@@ -2,27 +2,33 @@
 *
 * McStas, neutron ray-tracing package
 *         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
 *
-* Component: Single_crystal
+* Component: Magnetic_single_crystal
 *
 * %I
-* Written by: Kristian Nielsen
-* Date: December 1999
-* Version: $Revision: 1.51 $
-* Origin: Risoe
-* Release: McStas 1.6
-* Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
+* Written by: Erik B Knudsen and Linda Udby
+* Date: Jan 2020
+* Origin: DTU Physics
+* Release: McStas 2.6
 *
-* Mosaic single crystal with multiple scattering vectors.
+* Mosaic magnetic single crystal with multiple scattering vectors.
 *
 * %D
-* Single crystal with mosaic. Delta-D/D option for finite-size effects.
-* Rectangular geometry. Multiple scattering and secondary extinction included.
+* WARNING: This is an experimental component - no experimental validation has yet been done
+*
+* Single magnetic crystal with mosaic. Delta-D/D option for finite-size effects.
+* Multiple scattering and secondary extinction included.
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_h, mosaic_v, and mosaic_n
 * parameters.
+*
+* The scattering is computed solely in an spin up-down configuration. That is the
+* scattering is considered in relation to the externally defined vector (mx,my,mz), where it
+* can be either SF or NSF.
+* Simplifications and comments :
+*  Lande splitting factor is assumed to be g=2
+*  Magnetic form factors are set =1
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
@@ -40,28 +46,8 @@
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
-* <b>Crystal definition file format</b>
-* Crystal structure is specified with an ascii data file. 
-* Each line contains * 4 or more numbers, separated by white spaces:
-*
-* Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
-*           delta_d_d=1e-4, mosaic = 5,
-*           ax = 3.8186, ay = 0, az = 0,
-*           bx = 0, by = 3.8843, bz = 0,
-*           cx = 0, cy = 0, cz = 11.6777,
-*           reflections="YBaCuO.lau")
-*
-* Vanadium sigma_inc elastic scattering with multiple scattering
-* Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
-*           reflections="", sigma_abs=5.08, sigma_inc=4.935,
-*           ax=3.0282, by=3.0282, cz=3.0282/2)
-*
-* %BUGS:
-* The component is known not to work properly as a Bragg monochromator. The 
-* reason is likely to relate to the internal definition of reciprocal space 
-* orientation. Investigation undergoing. 
-*
 * Also, always use a non-zero value of delta_d_d.
+*
 *
 * %P
 * INPUT PARAMETERS:
@@ -99,6 +85,8 @@
 *              empty ("") or NULL for sigma_inc scattering only [string]
 * order:      limit multiple scattering up to given order
 *                 (0: all, 1: first, 2: second, ...) [1]
+* q_min: [AA^⁻1]  lower boundary of momentum transfer range to generate hkls in
+* q_max: [AA^⁻1]  upper boundary of momentum transfer range to generate hkls in
 *
 * Optional input parameters:
 *
@@ -112,29 +100,9 @@
 *
 * hkl_info: Internal [structure]
 *
-* %L
-* See <a href="icsd.ill.fr">ICSD</a> powder diffraction data base
-* %L
-* Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
-* %L
-* Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
-* %L
 * Geomview and Object File Format (OFF) <http|://www.geomview.org>
-* %L
-* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
-*
 * %E
 ****************************************************************************/
-
-/*
-  %D
-  Simplifications and comments :
-  Lande splitting factor is assumed to be g=2
-  Magnetic form factors are set =1
-
-
-%E
- */
 
 DEFINE COMPONENT Single_magnetic_crystal
 DEFINITION PARAMETERS()
@@ -145,8 +113,6 @@ SETTING PARAMETERS(string atom_sites=0, string geometry=NULL,
             na=1, nb=1, nc=1, ax = 0, ay = 0, az = 0, bx = 0, by = 0, bz = 0, cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,order=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
-//STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-//POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
@@ -366,7 +332,7 @@ SHARE
                 L_z=Table_Index(atoms,m,11)*info->m_az/info->m_a+Table_Index(atoms,m,12)*info->m_bz/info->m_b+ Table_Index(atoms,m,13)*info->m_cz/info->m_c;
                 g=gs+gl;
 
-                M=fabs(r0)*g/2*1e12;/*2nd factor to ednd up with x-sections in barns*/
+                M=fabs(r0)*g/2*1e12;/*2nd factor to end up with x-sections in barns*/
                 if ( (S_x!=0 || S_y!=0 || S_z!=0) ){
                   /*S_|_=q_norm x (S x _norm) */
                   double S_orto_x,S_orto_y,S_orto_z;
@@ -558,11 +524,14 @@ INITIALIZE
   else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
 
   if (hkl_info.shape < 0) 
-    exit(fprintf(stderr,"Single_crystal: %s: sample has invalid dimensions.\n"
+    exit(fprintf(stderr,"Single_magnetic_crystal: %s: sample has invalid dimensions.\n"
                         "ERROR           Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   
-  printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
+  printf("Single_magnetic_crystal: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
       NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, atom_sites && strlen(atom_sites) ? atom_sites : "NULL");
+
+  printf("WARNING; Single_magnetic_crystal has not yet been experimentally validated. Please use caution when intepreting results.\n");
+
 %}
 
 TRACE
