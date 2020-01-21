@@ -1,16 +1,57 @@
+/*******************************************************************************
+* Instrument: ESS_BIFROST_shielding
+*
+* %I
+* Written by: Rodion Kolevatov, IFE <rodion.kolevatov@ife.no>
+* Date: 2020/01
+* Origin: IFE
+* %INSTRUMENT_SITE: ESS
+*
+* Model of the ESS BIFROST instrument that illustrates the use of the "shielding-logger" 
+* components
+*
+* %D
+* This model of the ESS BIFROST instrument illustrates the use of the "shielding-logger"
+* components, as described in the publications <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> 
+* and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>.
+*
+* Example: ESS_BIFROST_shielding.instr WaveMin=1
+*
+* %P
+* WaveMin:           [AA]   Minimum wavelength from moderator
+* WaveMax:           [AA]   Maximum wavelength from moderator
+* E_0:              [meV]   Lowest energy in wavelength band - used for chopper settings
+* L_0:               [AA]   Alternative: highest wavelength in wavelength band - used for chopper settings
+* chopPulseOpening:   [s]   Opening time of pulse shapping chopper
+* DivSlit0_width:     [m]   Opening of Divergence Slit nr 0
+* DivSlit1_width:     [m]   Opening of Divergence Slit nr 1
+* DivSlit2_width:     [m]   Opening of Divergence Slit nr 2
+* DivSlit3_width:     [m]   Opening of Divergence Slit nr 3
+* Npulse:             [1]   Number of pulses to produce at the source
+* print:              [1]   Bolean flag to print values of interest for debugging. mcdisplay does not work when this is set to 1
+* makeVirtualSource:  [1]   Bolean flag to save all neutrons to virtual source file 
+* printMValues:       [1]   Bolean flag to indicate that M-values should be printed
+* power:             [MW]   ESS accelerator power
+* BWopen:           [deg]   Bandwidth-chopper opening angle - unused
+* 
+* %L
+* See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>
+*
+* %E
+*******************************************************************************/
 DEFINE INSTRUMENT ESS_BIFROST_shielding(
-WaveMin=1, // Minimum wavelength from moderator
-WaveMax=10, // Maximum wavelength from moderator
-E_0=4.0, // Lowest energy in wavelength band.
-L_0=0, // Alternative: Lowest wavelength in wavelength band
-chopPulseOpening=0.004, // Opening time of pulse shapping chopper [s]
-DivSlit0_width=0.1, // opening of Divergence Slit nr 0
-DivSlit1_width=0.1,  // opening of Divergence Slit nr 1
-DivSlit2_width=0.1,  // opening of Divergence Slit nr 2
-DivSlit3_width=0.1,  // opening of Divergence Slit nr 3
+WaveMin=1, 
+WaveMax=10,
+E_0=4.0, 
+L_0=0,  
+chopPulseOpening=0.004, 
+DivSlit0_width=0.1,
+DivSlit1_width=0.1,  
+DivSlit2_width=0.1,  
+DivSlit3_width=0.1,  
 Npulse=1,
-int print=0, // print values of interest for debugging. McTrace does not work when this is set to 1.
-int makeVirtualSource=0, // if 1 print all neutrons to virtual source file 
+int print=0, 
+int makeVirtualSource=0, 
 int printMValues=0,
 double power = 5.0,
 double BWopen=161

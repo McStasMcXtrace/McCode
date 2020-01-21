@@ -2,29 +2,33 @@
 * Instrument: PSI_Focus_shielding
 *
 * %Identification
-* Written by: <a href="mailto:Uwe.Filges@psi.ch">Uwe Filges</a>
+* Written by: Rodion Kolevatov, IFE <rodion.kolevatov@ife.no>, derived from work by Uwe Filges, PSI
 * Date: Jan 2004
-* Origin: <a href="http://www.psi.ch">PSI</a>
+* Origin: IFE
 * %INSTRUMENT_SITE: PSI
 *
-* The FOCUS Spectrometer at PSI (Paul Scherrer Institute,Switzerland)
+* Special version of the FOCUS Spectrometer at PSI (Paul Scherrer Institute,Switzerland), adapted
+* for illustration of the use of the "shielding-logger" components
 *
 * %Description
-* This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH.
+* This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH, modified to illustrate
+* the use of the "shielding-logger" components, as described in the publications 
+* <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> 
+* and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>.
 *
 * %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
 * Example: lambda=3.4 Detector: PSD_SAMPLE_I=1.58754E+05
 *
 * %Parameters
-* lambda: [Angs]    source energy
+* lambda: [Angs]    Central source wavelength
+* dL:     [Angs]    Half-width of source wavelength distribution
 * chopp_ratio: [1]  Chopper radio Fermi Chopper to Disk Chopper
 * DET: [deg ]       Detector angle
 *
-* %Link
-* Written by U.Filges <uwe.filges@psi.ch> PSI, Jan 2004
+* %Link See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a> and <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a>
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT PSI_Focus(lambda=4.4, dL=4.0, chopp_ratio=1, DET=-69.9)
+DEFINE INSTRUMENT PSI_Focus_shielding(lambda=4.4, dL=4.0, chopp_ratio=1, DET=-69.9)
 
 DECLARE
 %{
