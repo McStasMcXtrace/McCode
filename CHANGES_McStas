@@ -75,20 +75,21 @@ Changes in McStas v.2.6, January 24th, 2020
    (RPMs are built on/for CentOS, you may get varying milage elsewhere.)
 
  Libraries:
- - Updated NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
-   platforms. To use it, carry out the below steps:
+ - Updated version 1.0.0 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. To use it, carry out the below steps:
      mcstas:~/NCryst$ mcstas-2.6-environment 
      mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
      mcstas:~/NCryst$ ncrystal_preparemcstasdir 
      mcstas:~/NCryst$ cp $MCSTAS/examples/NCrystal_example_mcstas.instr .
      mcstas:~/NCryst$ mcrun -c NCrystal_example_mcstas.instr
    The NCrystal library from this version of McStas also includes the nice ncrystal_inspectfile python tool that allows
-   to visualise cross-section data, e.g. the included ncmat files. To use that:
+   to quickly visualise scattering-kernel data from .ncmat, .nxs, .lau and .laz files. To use that:
      mcstas:~/NCryst$ mcstas-2.6-environment 
      mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
      mcstas:~/NCryst$ ncrystal_inspectfile $NCRYSTALDIR/data/Ca_sg225.ncmat
  - MCPL library from the same authors now included at v. 1.3.0. The distributed version of MCPL now includes the 
-   python-based pymcpltool command that can e.g. be used to extract gaussian statistics form MCPL files.
+   python-based pymcpltool command that can e.g. be used to extract gaussian statistics from MCPL files. McStas now
+   ships the mcpl2phits and phits2mcpl tools (mcpl2ssw and ssw2mcpl have been included since mcstas-2.3).
  - Updated version of the NXS lib from Mirko Boin HZB.
 
  Components:
