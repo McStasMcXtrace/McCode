@@ -24,7 +24,7 @@
 *
 *
 * Algorithm:
-* Described elsewhere
+* Described elsewhere, see e.g. <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
 *
 * %P
 * INPUT PARAMETERS:
@@ -44,6 +44,7 @@
 * effective_my_scattering   // Variable used in initialize
 *
 * %L
+* See <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
 *
 * %E
 ******************************************************************************/

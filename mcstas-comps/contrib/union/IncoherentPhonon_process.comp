@@ -25,7 +25,7 @@
 *
 *
 * Algorithm:
-* Described elsewhere
+* Described elsewhere, see e.g. <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
 *
 * %P
 * INPUT PARAMETERS:
@@ -51,8 +51,7 @@
 * IncoherentPhonon_storage
 *
 * %L
-* The test/example instrument 
-* <a href="../examples/Test_IncoherentPhonon.instr">Test_IncoherentPhonon.instr</a>.
+* See <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
 *
 * %E
 ******************************************************************************/
