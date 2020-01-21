@@ -75,7 +75,7 @@ mknonvalueexp(char *s)
 CExp
 exp_id(char *id)  /* used in e.g. cogen:cogen_comp_init_par */
 {
-  return mkvalueexp(str_cat("instrument->_parameters._", id, NULL));
+  return mkvalueexp(str_cat("instrument->_parameters.", id, NULL));
 }
 
 CExp
