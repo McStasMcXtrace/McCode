@@ -70,5 +70,4 @@ if [ "x$2" != "x" ]; then
     cp $WORK/INSTALL-McStas/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
-    cp INSTALL-McStas/Windows/README.md dist
 fi
