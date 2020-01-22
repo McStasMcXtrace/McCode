@@ -40,6 +40,18 @@
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v. 2.6, January, 2020
+
+ Components:
+ - Single_magnetic_crystal.comp is an experimental magnetic csingle crystal model. Its operational model is based 
+   on that of Single_crystal.comp but supports SF and NSF magnetic scattering. The present model only supports
+   the SF-NSF paradigm along a given reference vector.  
+ - PSD_monitor_4PI_spin.comp is a version of PSD_monitor_4PI but with separate SF- and NSF-channels
+ 
+ Instruments:
+ - Test_single_magnetic_crystal.instr is a skeleton Laue camera which exemplfies use of Single_magnetic_crystal.comp 
+
+
 Changes in McStas v.2.5, December 12th, 2018
 
  McStas 2.5 is the seventh release in the 2.x series and fixes various issues with McStas 2.4.1, plus 
