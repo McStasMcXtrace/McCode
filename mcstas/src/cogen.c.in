@@ -1460,6 +1460,31 @@ void undef_trace_section(struct instr_def *instr)
   cout("#undef ABSORB0");
 } /* undef_trace_section */
 
+/*******************************************************************************
+* undef_uservars: #define symbols for particle struct USERVARS.
+*******************************************************************************/
+void def_uservars(struct instr_def *instr)
+{
+  List_handle uservarsiter = list_iterate(instr->user_vars);
+  char *var;
+  while(var = list_next(uservarsiter)) {
+    coutf("#define %s (_particle->%s)", var, var);
+  }
+  list_iterate_end(uservarsiter);
+}
+
+/*******************************************************************************
+* undef_uservars: #undef symbols for particle struct USERVARS.
+*******************************************************************************/
+void undef_uservars(struct instr_def *instr)
+{
+  List_handle uservarsiter = list_iterate(instr->user_vars);
+  char *var;
+  while(var = list_next(uservarsiter)) {
+    coutf("#undef %s (_particle->%s)", var);
+  }
+  list_iterate_end(uservarsiter);
+}
 
 /*******************************************************************************
 * cogen_trace_functions: Generate the component TRACE functions.
@@ -2251,8 +2276,10 @@ cogen(char *output_name, struct instr_def *instr)
   // TRACE section requires a bit more flexibility
   def_trace_section(instr);
   warnings += cogen_trace_functions(instr);
+  def_uservars(instr);
   warnings += cogen_raytrace(instr);
   warnings += cogen_rt_funnel(instr);
+  undef_uservars(instr);
   undef_trace_section(instr);
 
   warnings += cogen_section(instr, "SAVE", "save", instr->saves);
