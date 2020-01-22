@@ -124,6 +124,10 @@ Changes in McStas v.2.6, January 24th, 2020
  - Elliptic_guide_gravity promoted from contrib to optics since Mads Bertelsen is full member of McStas dev team. 
  - PolAnalyser_ideal and Set_pol moved from misc to optics.
  - NPI_tof_theta_monitor is in contrib, was by mistace placed in monitors before.  
+ - Single_magnetic_crystal.comp is an experimental magnetic csingle crystal model. Its operational model is based 
+   on that of Single_crystal.comp but supports SF and NSF magnetic scattering. The present model only supports
+   the SF-NSF paradigm along a given reference vector.  
+ - PSD_monitor_4PI_spin.comp is a version of PSD_monitor_4PI but with separate SF- and NSF-channels
  
  Instruments:
  - Union_test_texture.instr demonstrates use of Texture_process.comp by Victor Laliena. To be used with datafile
@@ -157,6 +161,7 @@ Changes in McStas v.2.6, January 24th, 2020
    with GPU support.
  - mini minimal instrument with source, slit and PSD. Common with forthcoming McStas 3.0 beta release
    with GPU support.
+ - Test_single_magnetic_crystal.instr is a skeleton Laue camera which exemplfies use of Single_magnetic_crystal.comp 
 
 
 We hope you will enjoy this new release!!!
