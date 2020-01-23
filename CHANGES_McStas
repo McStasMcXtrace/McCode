@@ -131,7 +131,8 @@ Changes in McStas v.2.6, January 24th, 2020
  
  Instruments:
  - Union_test_texture.instr demonstrates use of Texture_process.comp by Victor Laliena. To be used with datafile
-   "coef_Four_L2.txt" found in the installation data-folder.
+   "coef_Four_L2.txt" found in the installation data-folder. This datafile contains texture information on Zr alloys
+   derived from the publication https://doi.org/10.1016/j.jnucmat.2018.08.003.
  - Union_IncoherentPhonon_test.instr demonstrates use of IncoherentPhonon_process.comp by Victor Laliena. To be used
    with datafile "dos_meV.txt" found in the installation data-folder.
  - Union_test_mesh.instr demonstrates use of mesh geometry in Union
