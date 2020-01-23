@@ -1,0 +1,157 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_single_magnegtic_crystal
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan 2020
+* Origin: DTU Physics
+* Release: McStas 2.6
+* Version: 0.2
+* %INSTRUMENT_SITE: Test
+*
+* Unit test instrument for magnetic single crystal
+*
+* %Description
+* A very simple unit test/example instrument for the experimental Single_magnetic_crystal
+* component. It is a very simple implementation of a Laue camera using 4PI spherical
+* monitors.
+*
+* %Example: Test_single_magnetic_crystal.instr L0=4 Detector: PSD4PImon_I=3.89987e-06
+*
+* %Parameters
+* L0: [AA]    Centre wavelength to simulate
+* dL: [AA]    Half wavelength spread to sample
+* OM: [deg]   Sample rotation
+* TT: [deg]   Rotation of detector arm
+* PX: [ ]     x-component of initial polarization
+* PY: [ ]     y-component of initial polarization
+* PZ: [ ]     z-component of initial polarization
+* MOS:[arcmin] Isotropic mosaic of the crystal.
+* QMIN: [AA^-1] lower boundary of momentum transfer range to generate hkls in
+* QMAX: [AA^-1] upper boundary of momentum transfer range to generate hkls in
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_single_magnetic_crystal(L0=4,dL=3.91,OM=0,TT=0,PX=0,PY=1,PZ=0,MOS=100,QMIN=0.1,QMAX=5)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_simple(
+    yheight = 0.01, xwidth = 0.01, dist = 1, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = L0, dlambda =dL , gauss = 0)
+AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT polariser = Set_pol(
+    px = PX, py = PY, pz = PZ)
+AT (0, 0, 1.5) RELATIVE Source
+
+COMPONENT Lmon = L_monitor(
+    nL = 100, filename = "Lmon.dat", restore_neutron = 1,
+    xwidth = 0.05, yheight = 0.05, Lmin = L0-2*dL, Lmax = L0+2*dL)
+AT (0, 0, 1) RELATIVE Source
+
+COMPONENT Divmon = Divergence_monitor(
+    nh = 100, nv = 100, filename = "Divmon.dat", restore_neutron = 1,
+    xwidth = 0.05, yheight = 0.05, maxdiv_h = 0.5,
+    maxdiv_v = 0.5)
+AT (0, 0, 1+1e-3) RELATIVE Source
+
+
+COMPONENT PSDmon = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSDmon.dat",
+    restore_neutron = 1, xwidth = 0.05, yheight = 0.05)
+AT (0, 0, 1+2e-3) RELATIVE Source
+
+
+
+COMPONENT A3 = Arm(
+    )
+AT (0, 0, 2) RELATIVE Source
+ROTATED (0, OM, 0) RELATIVE Source
+
+COMPONENT A4 = Arm(
+    )
+AT (0, 0, 2) RELATIVE Source
+ROTATED (0, TT, 0) RELATIVE Source
+
+COMPONENT A4180 = Arm(
+    )
+AT (0, 0, 2) RELATIVE Source
+ROTATED (0, TT-180, 0) RELATIVE Source
+
+COMPONENT Sample = Single_magnetic_crystal(
+    atom_sites = "La2CuO4_rial_yzdirect_rel_all_nolabel.txt", xwidth = 0.01, yheight = 0.01,
+    zdepth = 0.01, delta_d_d = 1e-4, mosaic = MOS, ax =5.356, ay = 0, az = 0, bx = 0, by = 5.402 , bz = 0, cx = 0, cy = 0, cz = 13.150,
+    q_min=QMIN,q_max=QMAX,na=1, nb=1, nc=1,
+    sigma_abs = 0.086883, sigma_inc = 0.011368,mx=PX,my=PY,mz=PZ)
+AT (0, 0, 0) RELATIVE A3
+EXTEND
+%{ 
+if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT PSD4PImon = PSD_monitor_4PI(
+    nx = 1000, ny = 1000, filename = "PSD4PImon.dat",
+    restore_neutron = 1, radius = 0.5)
+  AT (0, 0, 2+1e-9) RELATIVE Source
+
+COMPONENT PSD4PImon_spin = PSD_monitor_4PI_spin(
+    nx = 1000, ny = 1000, filename = "PSD4PImon_spin",
+    restore_neutron = 1, radius = 0.5, mx=PX,my=PY,mz=PZ)
+  AT (0, 0, 2+2e-9) RELATIVE Source
+
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+
+
+
+
+

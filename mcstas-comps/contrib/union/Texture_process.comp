@@ -1377,6 +1377,7 @@ void readFourierCoef(char *filename, struct fourier_coef *c)
   int nread, nlines, lmax, i, l, m, n, np, smn, sg;
   double x1, x2, x3, x4, x5, rmax, fmn;
   struct fourier_coef *ctemp;
+  char str[100];
   FILE *filep;
 
   // Note: if the coeeficients have been obtained from mtex
@@ -1394,6 +1395,12 @@ void readFourierCoef(char *filename, struct fourier_coef *c)
      exit(1);
   }
 
+  str[0]=0;
+  while(strcmp(str,"#COEFFICIENTS:")!=0) {
+    nread = fscanf(filep,"%s",str);
+    if(nread==EOF) { break; }
+  }
+  printf("readFourierCoef: %s found\n",str);	
   lmax = -1;
   nlines = 0;
   while(1) {
@@ -1411,6 +1418,10 @@ void readFourierCoef(char *filename, struct fourier_coef *c)
     printf("readCoef: lmax < 0.\n");
     printf("lmax = %d\n",lmax);
     printf("Probably coef file\n  %s\nis wrong\n",filename);
+    printf("Check if the line\n");
+    printf("#COEFFICIENTS:\n");
+    printf("with no spaces or other characters) is exactly");
+    printf(" present just above the data\n");
     printf("Exiting...\n");
     exit(1);
   }
@@ -1449,8 +1460,15 @@ void readFourierCoef(char *filename, struct fourier_coef *c)
   for(l=0;l<=lmax;l++) {
     np += (2*l+1)*(2*l+1);
   }
-  
+
+
   rewind(filep);
+  str[0]=0;
+  while(strcmp(str,"#COEFFICIENTS:")!=0) {
+    nread = fscanf(filep,"%s",str);
+    if(nread==EOF) { break; }
+  }
+  printf("readFourierCoef: %s found\n",str);	
   for(i=1;i<=np;i++) {
     nread=fscanf(filep,"%lf %lf %lf %lf %lf",&x1,&x2,&x3,&x4,&x5);
     l = (int)round(x1);
