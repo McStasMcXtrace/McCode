@@ -1481,7 +1481,7 @@ void undef_uservars(struct instr_def *instr)
   List_handle uservarsiter = list_iterate(instr->user_vars);
   char *var;
   while(var = list_next(uservarsiter)) {
-    coutf("#undef %s (_particle->%s)", var);
+    coutf("#undef %s", var);
   }
   list_iterate_end(uservarsiter);
 }
