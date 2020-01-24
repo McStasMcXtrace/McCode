@@ -164,6 +164,18 @@ Changes in McStas v.2.6, January 24th, 2020
    with GPU support.
  - Test_single_magnetic_crystal.instr is a skeleton Laue camera which exemplfies use of Single_magnetic_crystal.comp 
 
+ Datafiles:
+ - Klaus Lieutenant from FZJ/Vitess has collected reflectitivy-data from SwissNeutronics, Mirrotron and S-DH, analysed
+   these and fitted the "classical" McStas mirror-reflectivity profile to these. The resulting data have been placed
+   in the data directory under the filenames of
+   - SwissNeutronics_mirors_2020.txt
+   - Mirrotron_mirors_2020.txt
+   - S-DH_mirors_2020.txt.
+   The files are not to be used directly with reflecting components, but can instead be used as lookup-tables for
+   relevant parameters in each case. I.e. for a mirror of nominal m-value m_nom, use m_real, R_0, W and alpha from the
+   relevant table.
+ - Most other new datafiles are directly related to component- or instrument-additions and have been mentioned above.
+ 
 
 We hope you will enjoy this new release!!!
 
