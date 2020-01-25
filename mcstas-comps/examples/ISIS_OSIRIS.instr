@@ -100,8 +100,6 @@ DECLARE
 
   // TARGET SECTION PARAMETERS
   const double VANADIUMHEIGHT      =  0.07; // m
-  /* This variable helps us select which target to interact with*/
-  double probTarget;
 
   // ANALYZER SECTION PARAMETERS
   const double ANARADIUS     = 0.9068; // m
@@ -117,10 +115,14 @@ DECLARE
   const double DETECTORWIDTH  = 0.01125; //m (half inch)
   const double DETECTORHEIGHT = 0.01125; //m (half inch)
 
-  // Variable to help classify hits from different analyzer crystals
-  int groupNumber = 0;
   %}
 
+USERVARS %{
+  /* This variable helps us select which target to interact with*/
+  double probTarget;
+  // Variable to help classify hits from different analyzer crystals
+  int groupNumber;
+%}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
@@ -159,7 +161,11 @@ TRACE
 
 COMPONENT armStart = Arm()
      AT (0,0,0) ABSOLUTE
-
+EXTEND %{
+  probTarget=0;
+  groupNumber=0;
+%}
+  
 COMPONENT isis_mod =
 ISIS_moderator(Face="iris", Emin = -LAMBDAMIN, Emax = -LAMBDAMAX, dist = DMODGUIDE,
 	       focus_xw = GUIDEWIDTH, focus_yh = GUIDEHEIGHT, xwidth = MODSIZEX,
