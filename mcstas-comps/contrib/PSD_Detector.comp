@@ -915,8 +915,8 @@ TRACE
             ABSORB;
             }
             if (cylinder_intersect(&tine,&toute,x,y,z,vxp,vyp,vzp,radius,yheight+2*bordery) ==0) {
-              tine=-HUGE_VAL; // ugly fix for cases where the inner cylinder is missed
-              toute=HUGE_VAL;
+              tine=-DBL_MAX; // ugly fix for cases where the inner cylinder is missed
+              toute=DBL_MAX;
             }
             t1=tine;
             if (t1<0) {
