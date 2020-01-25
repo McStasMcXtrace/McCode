@@ -1,0 +1,824 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H15_D11
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: 2012
+* Origin:ILL
+* Release: McStas 2.5
+* Version: $Revision: 1.0 $
+* %INSTRUMENT_SITE: ILL
+*
+* D11 at the ILL: Lowest momentum transfer, lowest background small-angle neutron scattering instrument
+*
+* %Description
+*
+* D11 - LOWEST MOMENTUM TRANSFER and  LOWEST BACKGROUND SANS
+*
+* D11 is the archetype of a long, pinhole geometry instrument for small angle 
+* neutron scattering (SANS), designed for the study of large scale structures in 
+* soft matter systems, chemistry, biology, solid state physics and materials science. 
+*
+* This model allows to specify the collimation length, i.e. the free path between 
+* the end of the guide and the sample location. When Lc=1.5 m, the intensity is 
+* maximal, but Q-resolution (divergence) is degraded. The Lc=40.5 m configuration
+* is the low-Q one.
+* The collimation can also be given as predefined configuration 'iLc' starting from 0
+*
+*   iLc ={ 1.5, 2.5, 4, 5.5, 8, 10.5, 13.5, 16.5, 20.5, 28, 34, 40.5}
+*
+* so that e.g. iLc=5 corresponds with a 10.5 m collimation
+*  
+* The quality of the collimation section can be specified among a set of glass
+* pre-set specifications. The available configurations are:
+*
+*               | Borkron_1972   Borkron_2003    Borofloat_2001  Borofloat_2003
+* Chamfers [mm] | 0.2            0.2             0.8             0.2                    
+* Wavyness [rad]| 2.5e-5         1e-4            8e-4            2e-4                
+*
+* %Example: Lambda=4.51 Detector: SampleC_I=2.1e7
+*
+* %Parameters
+* Lambda:  neutron wavelength reaching D11 sample [Angs]
+* Config:  guide configuration. Must be one of Borkron_1972 Borkron_2003 Borofloat_2001 Borofloat_2003 [string]
+* Lc:      guide collimation, i.e. free path between end of guide and sample location. Must be one of 40.5, 34, 28, 20.5, 16.5 13.5 10.5, 8, 5.5, 4, 2.5, 1.5 [m]
+* iLc:     guide collimation predefined length [index]
+* Chamfers: chamfers width (input/output movable guide section+longitudinal top/bottom sides) [m]
+  Waviness: movable guide Waviness [rad]
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H15_D11(Lambda=4.51, string Config="Borkron_1972", Lc=0, iLc=5, 
+  Chamfers=0.0002, Waviness=2.5e-5)
+
+/* H15_D11@ILL simulation for McStas. E. Farhi <farhi@ill.fr> August 2003
+
+  Lambda  : wavelength [Angs]
+  Lc      : collimation length [m] among 40.5, 34, 28, 20.5, 16.5 13.5 10.5, 8, 5.5, 4, 2.5 1.5
+  Config  : Borkron_1972   Borkron_2003    Borofloat_2001  Borofloat_2003
+            0.2            0.2             0.8             0.2                 Chamfers [mm]    
+            2.5e-5         1e-4            8e-4            2e-4                Waviness [rad]
+  Chamfers: chamfers width (input/output movable guide section+longitudinal top/bottom sides) [m]
+  Waviness: movable guide Waviness [rad]
+            
+  setenv MCSTAS_FORMAT "Matlab binary"
+  setenv MCSTAS_CFLAGS ""
+            
+  
+  mcrun h15_d11.instr --ncount=1e6 --dir=t1_5 Lambda=4.51 Config=Borkron_1972 iLc=5 Lc=0 Chamfers=0.0002 Waviness=2.5e-5
+
+ */
+
+
+DECLARE
+%{
+
+  #define VERSION "H15_D11@ILL Farhi 10/08/2003"
+
+  /* all variables defined here can be used, and modified, in the whole instrument */
+  /* variables used in instrument definition and for user computations */
+
+  /* Source specifications */
+  double sLambda            = 4;
+  double sDeltaLambdaPercent= 0.08;  /* Lambda spread in % (full width) */
+  double sDeltaLambda;
+  double sT1=216.8,sI1=1.24e+13;  /* VCS */
+  double sT2=33.9, sI2=1.02e+13; 
+  double sT3=16.7, sI3=3.0423e+12;
+  double sH                 = 0.22;
+  double sW                 = 0.10;
+
+  /* Guide geometry specifications, default values */
+  double gInputWidth        = 0.038;
+  double gObtWidth          = 0.032;
+  double gGuideHeight1      = 0.2;
+  double gGuideHeight2      = 0.05;
+  double gSourceInput       = 2.33;
+
+  double gGuideWidth        = 0.03;
+  double gLength1           = 25.5;   /* 25 pieces */
+  double gCurvatureRadius   = 2700.0;
+  double gLength2           = 22.284; /* 22 pieces */
+  double gLength3           = 5.4;    /* 5 pieces */  
+
+  double gToSampleLength    = 1.5;
+  double gElementGap        = 0.004;
+
+  double gElmtLength1;
+  double gElmtLength2;
+  double gElmtLength3;
+  double gElmtRot1;
+
+  /* Guide coatings specifications */
+  double mInPile            = 1;
+  double mGuide1            = 1;
+  double mGuide2            = 0.65; /* 0.953075 */
+
+  double mAlpha             = 4.07; /* 0 */
+  double mQc                = 0.0218; /* 0.0175455 */
+  double mR0                = 0.995;  /* 0.953075 */
+  double mW                 = 1.0/300.0;  /* 0.00299565 */
+  
+  double Vrpm;
+  double Config_l[20];
+  double Config_n[20];
+  double Config_g[20];
+  
+  /* geometry configurations */
+  double Borkron_1972_l[] = {20, 0,0,0,  0,4,3,3,2.5,0,  2.5,0,  1.5,0,1.5,0,0};  /* length 17 */
+  double Borkron_2003_l[] = {6.5,0,6,7.5,0,4,3,3,2.5,0,  2.5,0,  1.5,0,1.5,0,1};
+  double Borofloat_2001_l[]={0.5,6,6,0.5,7,4,3,3,2,  0.5,2,  0.5,0.5,1,0.5,1,1};
+  
+  double Borkron_1972_n[] = {40,0,0, 0, 0,8,6,6,5,0,5,0,3,0,3,0,0};
+  double Borkron_2003_n[] = {13,0,12,15,0,8,6,6,5,0,5,0,3,0,3,0,2};
+  double Borofloat_2001_n[]={1, 6,6, 1, 7,4,3,3,2,1,2,1,1,1,1,1,1};
+  
+  double Borkron_1972_g[] = {0   ,0   };
+  double Borkron_2003_g[] = {0.002,0.002};
+  double Borofloat_2001_g[]={0.002,0.002};
+  
+  double Length_Lc[]       ={1.5,2.5,4,5.5,8,10.5,13.5,16.5,20.5,28,34,40.5};
+  
+  double microGap = 0.0001;
+  
+%}
+/* end of DECLARE */
+
+INITIALIZE
+%{
+  double PhiC, GammaC, ThetaC, LambdaC, LStar, Zc;
+  double Ki;
+  int    i=0;
+  double sum_length=0;
+  double n_elements=0;
+  
+  /* curved section total 25.5 m in 25 elements */
+  gElmtLength1 = fabs(gLength1)/25;
+  gElmtRot1    = gElmtLength1/gCurvatureRadius*180/PI;
+  
+  gElmtLength2 = fabs(gLength2)/22;
+  gElmtLength3 = fabs(gLength3)/5;
+
+/* INFO ******************************************************************* */
+  printf("Simulation : %s on %s [pid %i]\n",VERSION,getenv("HOSTNAME"), getpid());
+
+  /* Source and guide parameters */
+ 
+  sLambda = Lambda;
+  sDeltaLambda        = sDeltaLambdaPercent * sLambda / 2;
+
+  /* First guide Phase-Space parameters */
+  PhiC    = sqrt(2*fabs(gGuideWidth/gCurvatureRadius));
+  GammaC  = mGuide1*mQc/4/PI;
+  ThetaC  = sLambda*GammaC;
+  LambdaC = PhiC/GammaC;
+  LStar   = sqrt(8*fabs(gGuideWidth*gCurvatureRadius));
+  Zc      = gGuideWidth*(0.5-ThetaC*ThetaC/PhiC/PhiC);
+
+  printf("Guide: L =%.4f m, rho=%.4f m, m=%.2f\n", gLength1, gCurvatureRadius, mGuide1);
+  printf("Guide: L*=%.2f m, Phi_c = %.2f deg, Gamma_c = %.2f deg/Angs\n", LStar, PhiC*RAD2DEG, GammaC*RAD2DEG);
+  printf("Guide: Zc = %.4f m, Lambda_c = %.2f Angs\n", Zc, LambdaC);
+  if (sLambda < LambdaC) 
+    printf("Guide: Garland reflections only\n");
+  else 
+    printf("Guide: Garland and Zig-Zag reflections\n");
+  if (gLength1 < LStar) 
+    printf("Guide: Guide is too short\n");
+  
+  if (Lambda < 0.12) exit(printf("** D11 Error: Unreachable wavelength for D11: %.4g\n", Lambda));
+
+  Ki   = 2*PI/Lambda;
+  Vrpm = 124270/(Lambda-0.11832);
+  if (Vrpm < 3100 || Vrpm > 28300) exit(printf("D11 Error: Unreachable V_selector speed for D11: %.4g\n", Vrpm));
+  if (Vrpm > 9000 && Vrpm < 11900) printf("D11 Warning: Resonance V_selector speed for D11: %.4g\n", Vrpm);
+  printf("D11:   Ki = %.4g [Angs-1], Lambda = %.4g [Angs], V_Dolores=%.4g [rpm]\n", Ki, Lambda, Vrpm);
+  
+  if (!Config) exit(printf("** D11 Error: No movable guide configuration selected for D11\n"));
+  
+  if (strstr(Config, "Borkron_1972")) {
+    for (i=0; i<17; i++) {
+      Config_l[i] = Borkron_1972_l[i];
+      Config_n[i] = Borkron_1972_n[i];
+      if (i<2) Config_g[i] = Borkron_1972_g[i];
+    }
+  }
+  if (strstr(Config, "Borkron_2003")) {
+    for (i=0; i<17; i++) {
+      Config_l[i] = Borkron_2003_l[i];
+      Config_n[i] = Borkron_2003_n[i];
+      if (i<2) Config_g[i] = Borkron_2003_g[i];
+    }
+  }
+  if (strstr(Config, "Borofloat_2001")) {
+    for (i=0; i<17; i++) {
+      Config_l[i] = Borofloat_2001_l[i];
+      Config_n[i] = Borofloat_2001_n[i];
+      if (i<2) Config_g[i] = Borofloat_2001_g[i];
+    }
+  }
+  if (strstr(Config, "Borofloat_2003")) {
+    for (i=0; i<17; i++) {
+      Config_l[i] = Borofloat_2001_l[i];
+      Config_n[i] = Borofloat_2001_n[i];
+      if (i<2) Config_g[i] = Borofloat_2001_g[i];
+    }
+  }
+  if (!i) exit(printf("** D11 Error: No movable guide configuration selected for D11\n"));
+  if (strstr(Config,"nogap")) for (i=0; i<2; Config_g[i++]=0);
+  
+  if (Lc == 0)
+    if (iLc >= 0 && iLc < 12)
+      Lc = Length_Lc[(int)iLc];
+    else exit(printf("** D11 Error: invalid collimator length specification for D11\n"));
+  
+  for (i=0; i< 17; i++) { 
+    if (40.5 - Lc <= sum_length) Config_n[i]=0;
+    else {
+      sum_length += Config_l[i];
+      n_elements += Config_n[i];
+    }
+  }
+  printf("D11:   Coll.  L_c=%8.3g [m], Configuration='%s', \n", Lc, Config);
+  printf("D11:   Length L_g=%8.3g [m], n_elements=%8.2g\n", sum_length, n_elements);
+  printf("D11:   Chamfers  =%8.3g [m], Waviness  =%8.3g [rad] (%.3g [deg])\n", Chamfers, Waviness, Waviness*RAD2DEG);
+  Waviness *= RAD2DEG;
+
+%}
+/* end of INITIALIZE */
+
+TRACE
+/* Source description ******************************************************* */
+
+/* a flat rectangular source with Maxwellian distribution */
+/* Reactor source 22x16 cm */ 
+
+COMPONENT PG = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_gen( 
+  yheight        = sH,
+  xwidth        = sW,
+  zdepth   = 0.1,
+  dist     = gSourceInput,
+  focus_xw       = gInputWidth,
+  focus_yh       = gGuideHeight1,
+  Lmin     = sLambda-sDeltaLambda,
+  Lmax     = sLambda+sDeltaLambda,
+  T1       = sT1,
+  I1       = sI1,
+  T2       = sT2,
+  I2       = sI2,
+  T3       = sT3,
+  I3       = sI3,
+  verbose  = 1
+  )
+AT (0,0,0) ABSOLUTE
+ 
+COMPONENT AlWindow1 = Al_window(thickness=0.002)
+AT (0,0,gSourceInput-0.01) RELATIVE Source 
+
+COMPONENT PinkCarter = Guide_gravity(
+        w1=gInputWidth, h1=gGuideHeight1, w2=gObtWidth, h2=gGuideHeight1, l=3.170, 
+        R0=mR0, Qc=mQc, alpha=mAlpha, m=mInPile, W=mW)
+AT (0,0,gSourceInput) RELATIVE Source  /* 2.33 from Source */
+
+COMPONENT AlWindow2 = Al_window(thickness=0.002)
+AT (0,0,gSourceInput+3.522+0.001) RELATIVE Source
+ 
+/* Followed by a 228 mm guide (for H1) in Obturator, after at 10 mm gap, ends at 5.952 m from source after 80 mm gap */
+
+COMPONENT LeadShutter = Guide_gravity(
+        w1=gObtWidth, h1=gGuideHeight1, w2=gObtWidth, h2=gGuideHeight1, l=0.228,
+        R0=mR0, Qc=mQc, alpha=mAlpha, m=mInPile, W=mW)
+AT (0,0,gSourceInput+3.522+0.01) RELATIVE Source
+
+
+COMPONENT AlWindow3 = Al_window(thickness=0.002)
+AT (0,0,gSourceInput+3.522+0.01+0.228+0.005) RELATIVE Source 
+
+/*-------------------------*/
+/*  Curved Guide  ("MAN")  */
+/*-------------------------*/
+  
+/* curvature radius is 2700 m , start at XR=5.913 m from source */
+
+COMPONENT CurvedGuideStart = Arm()
+AT (0,0,gSourceInput+3.522+0.01+0.228+0.08) RELATIVE Source
+
+/* curved part 1, 25 elements : should be 25.5 m long, rho=2700 */             
+             
+COMPONENT cg1  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0,0) RELATIVE CurvedGuideStart ROTATED (0, gElmtRot1,0) RELATIVE CurvedGuideStart
+
+COMPONENT cg2  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg1 ROTATED (0, gElmtRot1,0) RELATIVE cg1
+          
+COMPONENT cg3  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg2 ROTATED (0, gElmtRot1,0) RELATIVE cg2          
+          
+COMPONENT cg4  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg3 ROTATED (0, gElmtRot1,0) RELATIVE cg3    
+                     
+COMPONENT cg5  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg4 ROTATED (0, gElmtRot1,0) RELATIVE cg4
+
+COMPONENT cg6  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg5 ROTATED (0, gElmtRot1,0) RELATIVE cg5
+
+COMPONENT cg7  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg6 ROTATED (0, gElmtRot1,0) RELATIVE cg6
+
+COMPONENT cg8  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg7 ROTATED (0, gElmtRot1,0) RELATIVE cg7
+
+COMPONENT cg9  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg8 ROTATED (0, gElmtRot1,0) RELATIVE cg8
+
+COMPONENT cg10 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg9 ROTATED (0, gElmtRot1,0) RELATIVE cg9
+
+COMPONENT cg11 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg10 ROTATED (0, gElmtRot1,0) RELATIVE cg10
+
+COMPONENT cg12 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg11 ROTATED (0, gElmtRot1,0) RELATIVE cg11
+
+COMPONENT cg13 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg12 ROTATED (0, gElmtRot1,0) RELATIVE cg12
+
+COMPONENT cg14 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg13 ROTATED (0, gElmtRot1,0) RELATIVE cg13
+
+COMPONENT cg15 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg14 ROTATED (0, gElmtRot1,0) RELATIVE cg14
+
+COMPONENT cg16 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg15 ROTATED (0, gElmtRot1,0) RELATIVE cg15
+
+COMPONENT cg17 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg16 ROTATED (0, gElmtRot1,0) RELATIVE cg16
+
+COMPONENT cg18 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg17 ROTATED (0, gElmtRot1,0) RELATIVE cg17
+
+COMPONENT cg19 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg18 ROTATED (0, gElmtRot1,0) RELATIVE cg18
+
+COMPONENT cg20 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg19 ROTATED (0, gElmtRot1,0) RELATIVE cg19
+
+COMPONENT cg21 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg20 ROTATED (0, gElmtRot1,0) RELATIVE cg20
+
+COMPONENT cg22 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg21 ROTATED (0, gElmtRot1,0) RELATIVE cg21
+
+COMPONENT cg23 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg22 ROTATED (0, gElmtRot1,0) RELATIVE cg22
+
+COMPONENT cg24 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg23 ROTATED (0, gElmtRot1,0) RELATIVE cg23
+
+COMPONENT cg25 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength1-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength1) RELATIVE cg24 ROTATED (0, gElmtRot1,0) RELATIVE cg24
+
+/* gap V.T.E. 0.260 at 27408 */
+
+COMPONENT AlWindow4 = Al_window(thickness=0.002)
+AT (0,0,gElmtLength1+0.001) RELATIVE cg25 
+
+COMPONENT PSD_VTE = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight1,
+  options="x y")
+AT (0,0,gElmtLength1+0.13) RELATIVE cg25
+
+COMPONENT AlWindow5 = Al_window(thickness=0.002)
+AT (0,0,gElmtLength1+0.26-0.003) RELATIVE cg25
+
+COMPONENT VTEtoIN6GuideStart = Arm()
+AT (0,0,gElmtLength1+0.26) RELATIVE cg25
+
+/* Ni guide -> IN6: 22.284 m long at 27.588, 22 elements */
+             
+COMPONENT sg1  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0,0) RELATIVE VTEtoIN6GuideStart 
+
+COMPONENT sg2  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg1 
+          
+COMPONENT sg3  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg2     
+          
+COMPONENT sg4  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg3       
+           
+COMPONENT sg5  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg4 
+
+COMPONENT sg6  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg5 
+
+COMPONENT sg7  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg6 
+
+COMPONENT sg8  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg7 
+
+COMPONENT sg9  = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg8 
+
+COMPONENT sg10 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg9 
+
+COMPONENT sg11 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg10 
+
+COMPONENT sg12 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg11 
+
+COMPONENT sg13 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg12 
+
+COMPONENT sg14 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg13 
+
+COMPONENT sg15 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg14 
+
+COMPONENT sg16 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg15 
+
+COMPONENT sg17 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg16 
+
+COMPONENT sg18 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg17 
+
+COMPONENT sg19 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg18 
+
+COMPONENT sg20 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg19 
+
+COMPONENT sg21 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg20 
+
+COMPONENT sg22 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength2-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength2) RELATIVE sg21 
+
+/* gap 0.3 m  OT, OS IN6 H15 */
+
+COMPONENT AlWindow6 = Al_window(thickness=0.002)
+AT (0,0,gElmtLength2+0.001) RELATIVE sg22 
+
+COMPONENT PSD_IN6 = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight1,
+  options="x y")
+AT (0,0,gElmtLength2+0.15) RELATIVE sg22
+
+COMPONENT AlWindow7 = Al_window(thickness=0.002)
+AT (0,0,gElmtLength2+0.290) RELATIVE sg22 
+
+COMPONENT IN6toD7GuideStart = Arm()
+AT (0,0,gElmtLength2+0.30) RELATIVE sg22
+
+/* Ni guide -> D7 Carter Man 2 L=5.4 */
+
+COMPONENT sg23 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength3-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, 0) RELATIVE IN6toD7GuideStart 
+
+COMPONENT sg24 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength3-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength3) RELATIVE sg23 
+
+COMPONENT sg25 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength3-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength3) RELATIVE sg24
+
+COMPONENT sg26 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength3-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength3) RELATIVE sg25
+
+COMPONENT sg27 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight1,w2=gGuideWidth,h2=gGuideHeight1,
+              l=(gElmtLength3-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide1,W=mW)
+AT (0,0, gElmtLength3) RELATIVE sg26
+
+/* gap 0.3 m OS D7/D11 at 55572 */
+
+COMPONENT AlWindow8 = Al_window(thickness=0.002)
+AT (0,0,gElmtLength3+0.001) RELATIVE sg27
+
+COMPONENT PSD_D7 = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight1,
+  options="x y")
+AT (0,0,gElmtLength3+0.15) RELATIVE sg27
+
+COMPONENT AlWindow9 = Al_window(thickness=0.002)
+AT (0,0,gElmtLength3+0.290) RELATIVE sg27
+
+COMPONENT D7toD11GuideStart = Arm()
+AT (0,-.065,gElmtLength3+0.30) RELATIVE sg27
+
+/* Glass guide SPRI 1.25 m h=0.05 AT (0,-0.065,0.3) */
+
+COMPONENT sg28 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,w2=gGuideWidth,h2=gGuideHeight2,
+              l=(1.25-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide2,W=mW)
+AT (0,0, 0) RELATIVE D7toD11GuideStart
+
+/* Glass guide  0.68 h=0.05 */
+
+COMPONENT sg29 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,w2=gGuideWidth,h2=gGuideHeight2,
+              l=(0.5-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide2,W=mW)
+AT (0,0, 1.25) RELATIVE sg28
+
+/* Velocity selector 0.3. Path in atm is 7 cm */
+
+COMPONENT AlWindow10 = Al_window(thickness=0.004)
+AT (0,0,0.5+0.001) RELATIVE sg29
+
+COMPONENT Mon_D11_In = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight2,
+  options="x lambda, auto")
+AT (0,0,0.5+0.01) RELATIVE sg29
+
+COMPONENT Dolores = V_selector(xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=48.298,
+             length=0.250, d=0.0004, nu=Vrpm/60, nslit=72)
+AT (0,0, 0.5+0.025+0.30/2) RELATIVE sg29
+
+COMPONENT AlWindow11 = Al_window(thickness=0.004)
+AT (0,0,0.15+0.01) RELATIVE Dolores
+
+/* Glass guide  0.50 h=0.05 */
+
+COMPONENT sg30 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,w2=gGuideWidth,h2=gGuideHeight2,
+              l=(0.5-gElementGap),
+              R0=mR0,Qc=mQc,alpha=mAlpha,m=mGuide2,W=mW)
+AT (0,0, 0.15+0.02) RELATIVE Dolores
+
+/* Gap 16 cm, start of movable guide */
+
+COMPONENT AlWindow12 = Al_window(thickness=0.002)
+AT (0,0,0.5+0.001) RELATIVE sg30
+
+COMPONENT Mon_D11_Out = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight2,
+  options="x lambda, auto")
+AT (0,0,0.5+0.01) RELATIVE sg30
+
+COMPONENT AlWindow13 = Al_window(thickness=0.002)
+AT (0,0,0.5+0.03-0.003) RELATIVE sg30
+
+COMPONENT MovableGuideStart = Arm()
+AT (0,0, 0.66) RELATIVE sg30
+
+/* D11 Movable guide start */
+
+/* Configurations [c]
+
+    Borkron 1972   Borkron 2003    Borofloat 2001  Borofloat 2003                      
+    0.2            0.2             0.8             0.2              Chamfers [mm]
+mg  2.5e-5         1e-4            8e-4            2e-4             Waviness [rad]
+ 
+ 0  40*500         13*500          1*500           idem Borofloat 2001
+ 1                                 6*1000
+                   Gap 2           Gap 2                            (34 m)
+ 2                 12*500          6*1000
+                   Gap 2           Gap 2                            (28 m)
+ 3                 15*500          1*500
+ 4                                 7*1000
+    Gap 17         Gap 17          Gap 17                           (20.5 m *)
+ 5  8*500          8*500           4*1000
+    Gap 2          Gap 2           Gap 2                            (16.5 m)
+ 6  6*500          6*500           3*1000
+    Gap 2          Gap 2           Gap 2                            (13.5 m)
+ 7  6*500          6*500           3*1000
+    Gap 17         Gap 17          Gap 17                           (10.5 m *)
+ 8  5*500          5*500           2*1000
+ 9                                 1*500
+    Gap 2          Gap 2           Gap 2                            (8 m)
+10  5*500          5*500           2*1000
+11                                 1*500
+    Gap 17         Gap 17          Gap 17                           (5.5 m *)
+12  3*500          3*500           1*500
+13                                 1*1000
+    Gap 2          Gap 2           Gap 2                            (4 m)
+14  3*500          3*500           1*500
+15                                 1*1000
+                   Gap 2           Gap 2                            (2.5 m *)
+16  void 1 m       2*500           1*1000
+  
+*/
+
+COMPONENT mg0 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[0]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=Config_n[0], 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,0) RELATIVE MovableGuideStart
+
+COMPONENT mg1 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[1]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[1]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[0])) RELATIVE mg0
+
+COMPONENT mg2 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[2]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[2]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[1]+Config_g[0])) RELATIVE mg1
+
+COMPONENT mg3 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[3]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[3]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[2]+Config_g[1])) RELATIVE mg2
+
+COMPONENT mg4 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[4]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[4]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[3])) RELATIVE mg3
+
+/* Gap 17 mm at 20.5 m collimation */
+
+COMPONENT mg5 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[5]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[5]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[4]+0.017)) RELATIVE mg4
+
+COMPONENT mg6 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[6]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[6]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[5]+0.002)) RELATIVE mg5
+
+COMPONENT mg7 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[7]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[7]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[6]+0.002)) RELATIVE mg6
+
+COMPONENT mg8 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[8]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[8]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[7]+0.017)) RELATIVE mg7
+
+COMPONENT mg9 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[9]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[9]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[8])) RELATIVE mg8
+
+COMPONENT mg10 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[10]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[10]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[9]+0.002)) RELATIVE mg9
+
+COMPONENT mg11 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[11]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[11]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[10])) RELATIVE mg10
+
+COMPONENT mg12 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[12]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[12]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[11]+0.017)) RELATIVE mg11
+
+COMPONENT mg13 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[13]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[13]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[12])) RELATIVE mg12
+
+COMPONENT mg14 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[14]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[14]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[13]+0.002)) RELATIVE mg13
+
+COMPONENT mg15 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[15]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[15]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[14])) RELATIVE mg14
+
+COMPONENT mg16 = Guide_gravity(w1=gGuideWidth,h1=gGuideHeight2,
+              w2=gGuideWidth,h2=gGuideHeight2,
+              l=(Config_l[16]), chamfers_tb=Chamfers, chamfers_z=Chamfers, nelements=(Config_n[16]), 
+              wavy=Waviness, m=mGuide2, W=mW, alpha=mAlpha)
+AT (0,0,(microGap+Config_l[15]+0.002)) RELATIVE mg15
+
+/* Sample is 1.5 m ahead */
+COMPONENT SampleF = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight2,
+  options="x y, per cm2")
+AT (0,0,(Config_l[15]+2.5)) RELATIVE mg15
+
+COMPONENT SampleC = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight2,
+  options="x y, capture, per cm2")
+AT (0,0,0.001) RELATIVE SampleF
+
+END
