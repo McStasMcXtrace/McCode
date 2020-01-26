@@ -551,7 +551,7 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
         str_free(val);
       }
       /* define the symbol right after assignment so that we can use it in further parameters */
-      coutf("  #define %s (_%s_var._parameters.%s)", par->id, comp->name, par->id);
+      //coutf("  #define %s (_%s_var._parameters.%s)", par->id, comp->name, par->id);
     }
     list_iterate_end(list_par);
     if(list_len(l) > 0 && !strcmp(section, "SETTING"))
@@ -880,8 +880,8 @@ int cogen_comp_setpos(
   cogen_comp_init_par(comp, instr, "PRIVATE");  // specific to each instance
 
   /* undef aliases */
-  cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
-  cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
+  //cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
+  //cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
 
   /* position/rotation */
   cogen_comp_init_position(comp, last, instr); // specific to each instance
