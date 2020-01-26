@@ -129,9 +129,8 @@ matrix(const int m,const int n)
   return pd;
 } /* matrix */
 
-
-double
-polInterp(double* X,double* Y,int Psize,double Aim)
+#pragma acc routine seq
+double polInterp(double* X,double* Y,int Psize,double Aim)
   /*!
     returns the interpolated polynomial between Epnts
     and the integration
@@ -188,8 +187,8 @@ polInterp(double* X,double* Y,int Psize,double Aim)
   return out;
 } /* polInterp */
 
-int
-binSearch(int Npts,double* AR,double V)
+#pragma acc routine seq
+int binSearch(int Npts,double* AR,double V)
   /*!
     Object is to find the point in
     array AR, closest to the value V
@@ -204,12 +203,14 @@ binSearch(int Npts,double* AR,double V)
 
   if(AR[0]>0.0)AR[0]=0.0;
 
+#ifndef USE_PGI
   if (V<AR[0])
     {
       // if(AR[0]>0.0)AR[0]=0.0;
       fprintf(stderr,"here");
       return 0;
     }
+#endif
   klo=0;
   khi= Npts-1;
   while (khi-klo >1)
@@ -713,7 +714,7 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
 } /* readHtable */
 
 #pragma acc routine seq
-void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS)
+void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS, _class_particle *_particle)
  /*!
    Calculate the Time and Energy
    by sampling the file.
@@ -1039,7 +1040,7 @@ INITIALIZE
 
   readHtable(Tfile,rtE0,rtE1, TS, modPosition, xw, yh, verbose);
   fclose(Tfile);
-
+  #pragma acc declare create( TS )
   /**********************************************************************/
 
   Tnpts=0;
@@ -1055,7 +1056,7 @@ INITIALIZE
     }
   /* Do solid angle correction */
   angleArea= strArea(TS, focus_xw, focus_yh, dist);
-
+  #pragma acc update host( TS )
   fprintf(stderr,"Totals:: %g %d %d \n",TS.Total,TS.nEnergy,TS.nTime);
 
 %}
@@ -1076,7 +1077,7 @@ TRACE
   xf = focus_xw*(0.5-rand01());          /* Choose focusing position uniformly */
   yf = focus_yh*(0.5-rand01());          /* Choose focusing position uniformly */
 
-  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS);
+  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS, _particle);
   
 //  Ival=TS.Total*6.2415093e+12; // * 1.1879451;  /* ( of proton in 1uAmp) * (1-cos(30))*2*Pi  */
 //  Ival=TS.Total*5.9294338e+12; // Number of proton in 1uAmp * 0.95 (0.95 because of muon target loss)
