@@ -502,8 +502,7 @@ int display(void);
 /*
 *  Divide-and-conquer strategy for parallel sort absorbed last.
 */
-long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
-  _class_particle** pbuffer, long len);
+long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long len);
 
 
 /* simple vector algebra ==================================================== */

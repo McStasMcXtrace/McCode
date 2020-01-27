@@ -2863,11 +2863,11 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
 
     // write into pbuffer at i and j
     while (i < j) {
-      while (!psorted[i]->_parameters._absorbed && i<j) {
+      while (!psorted[i]->_absorbed && i<j) {
         pbuffer[i] = psorted[i];
         i++;
       }
-      while (psorted[j]->_parameters._absorbed && i<j) {
+      while (psorted[j]->_absorbed && i<j) {
         pbuffer[j] = psorted[j];
         j--;
       }
@@ -2887,7 +2887,7 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
     lens[tidx] = 0;
     if (loclen>0)
       for (long k=lo; k<lo+loclen; k++)
-        if (*pbuffer[k]==0)
+        if (!psorted[i]->_absorbed)
           lens[tidx]++;
   }
 
