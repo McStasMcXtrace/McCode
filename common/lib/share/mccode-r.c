@@ -2838,86 +2838,73 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *  Divide-and-conquer strategy for parallelizing this task: Sort absorbed
 *  particles last.
 *
-*   particles:  array of particles, of some unknown lenth
-*   psorted:    ptr array of lenth len, pointing to members of particles
-*   pbuffer:    intermediary ptr array of lenth len for internal use
-*   len:        total number of particles to sort, counted from the left of
-*               psorted
+*   psorted:    size len pointer array of source and sorted particles
+*   pbuffer:    size len pointer array, buffer space
+*   len:        meaningful size of psorted and pbuffer
 */
 //#pragma acc routine seq
-long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
-  _class_particle** pbuffer, long len) {
+long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long len) {
 
-  #define SAL_THREADS 1024 // number of sub-problems
-  long tidx; // tread index
+  #define SAL_THREADS 9 // number of sub-problems
   long newlen = 0;
-  long sublens[SAL_THREADS];
-  long targetstarts[SAL_THREADS];
-  long subproblem_len = floor(len/SAL_THREADS);
-  long last_subproblem_len = len - subproblem_len*SAL_THREADS;
+  long tidx; // tread index
+  long los[SAL_THREADS]; // target array startidxs
+  long lens[SAL_THREADS]; // target array sublens
+  long l = floor(len/(SAL_THREADS-1)); // subproblem_len
+  long ll = len - l*(SAL_THREADS-1); // last_subproblem_len
 
-  // step 1: sort individual sub-arrays
-  //#pragma acc parallel loop
-  for (tidx=0;tidx<SAL_THREADS;tidx++) {
-    // NOTE: all lenths add up to input parameter length (len), but become reduced,
-    //       according to the amount of absorbed particles in that sub problem.
+  // step 1: sort sub-arrays
+  for (tidx=0; tidx<SAL_THREADS; tidx++) {
+    long lo = l*tidx;
+    long loclen = l;
+    if (tidx==(SAL_THREADS-1)) loclen = ll; // last sub-problem special case
+    long i = lo;
+    long j =  lo + loclen - 1;
 
-    // sub-problem regions
-    long i = subproblem_len*tidx; // left sort index (lead)
-    long j = i + subproblem_len; // right sort index (follow)
-    if (tidx==SAL_THREADS-1) j = i + last_subproblem_len; // last sub-problem special case
-
-    // write into pbuffer at i and j, covering all indices
-    while (i<j) {
-      while (!psorted[i]->_absorbed && i<j) {
-        // always assign on to buffer
+    // write into pbuffer at i and j
+    while (i < j) {
+      while (!psorted[i]->_parameters._absorbed && i<j) {
         pbuffer[i] = psorted[i];
-        // increment for next pass
         i++;
       }
-      while (psorted[j]->_absorbed && i<j) {
-        // assign to buffer
+      while (psorted[j]->_parameters._absorbed && i<j) {
         pbuffer[j] = psorted[j];
-        // dec for next pass
         j--;
       }
       if (i < j) {
-        // now, i is absorbed and j is empty, interchange the two (on buffer)
         pbuffer[i] = psorted[j];
         pbuffer[j] = psorted[i];
-        // dec/inc to move away from handled indices, as only pbuffer is updated
         i++;
         j--;
       }
     }
-    sublens[tidx] = j + 1;
+    // edge case
+    if (i==j)
+      pbuffer[i] = psorted[i];
 
-    // accumulate to total length
-    //#pragma acc atomic
-    newlen = newlen + sublens[tidx];
+    // record the number of hits
+    los[tidx] = 0;
+    lens[tidx] = 0;
+    if (loclen>0)
+      for (long k=lo; k<lo+loclen; k++)
+        if (*pbuffer[k]==0)
+          lens[tidx]++;
   }
 
-  // serialy determine start indices for parallel sub-problem results copy
-  long i;
+  // determine lo's
   long accumlen = 0;
-  for (i=0;i>SAL_THREADS;i++) {
-    targetstarts[i] = accumlen;
-    accumlen = accumlen + sublens[i];
+  for (long i=0; i<SAL_THREADS; i++) {
+    los[i] = accumlen;
+    accumlen = accumlen + lens[i];
   }
 
   // step 2: write non-absorbed sub-arrays to psorted/output from the left
-  //#pragma acc parallel loop
-  for (tidx=0;tidx<SAL_THREADS;tidx++) {
-    // pbuffer locations as were copied above
-    long bufferstart = subproblem_len*tidx; // left sort index (lead)
-    long bufferhigh = bufferstart + subproblem_len; // right sort index (follow)
-    if (tidx==SAL_THREADS-1) bufferhigh = bufferstart + last_subproblem_len; // last sub-problem special case
-    long targetstart = targetstarts[tidx];
-
-    // copy from pbuffer to psorted
-    long i;
-    for (i=bufferstart;i<bufferhigh;i++) {
-      psorted[targetstart+i] = pbuffer[i];
+  for (tidx=0; tidx<SAL_THREADS; tidx++) {
+    long j, k;
+    for (long i=0; i<lens[tidx]; i++) {
+      j = i + l*tidx;
+      k = i + los[tidx];
+      psorted[k] = pbuffer[j];
     }
   }
 
