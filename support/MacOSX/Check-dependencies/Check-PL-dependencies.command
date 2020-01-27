@@ -21,6 +21,18 @@ else
     exit 1
 fi
 
+
+# Ask user if the app attributes should be reset?
+osascript -e "tell app \"System Events\" to display dialog \"Do you want me to reset attributes on the McCode.app? \n (This should bypass macOS checks on the bundle and allow you to open the app immediately after installation) \""
+rc1=$?; 
+if [[ $rc1 == 0 ]]; 
+then
+    echo "OK, resetting attributes - may take a while to complete..."
+    xattr -rc /Applications/$NEWESTAPP 
+else
+    echo "OK, not resetting attributes"
+fi
+
 # Check if Xcode commandline tools is installed
 
 # xcode-select --print-path to check, otherwise

@@ -22,6 +22,7 @@ WORK=`pwd`
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64 "" -- rpm

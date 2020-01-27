@@ -1,0 +1,10 @@
+# Reflectivity-table for S-DH NiTi supermirrors, January 2020
+#
+# Data compiled and analysed by Klaus Lieutentant FZJ / Vitess with 
+# permission from S-DH Gmbh, DE-69123 Heidelberg
+# 
+# m_nom	m_real	R_0	R_cut	W	alpha
+2.0	2.217	0.995	0.960	0.0015	0.012
+2.5	2.684	0.995	0.930	0.0014	0.015
+3.0	3.217	0.995	0.890	0.0012	0.019
+4.0	4.186	0.995	0.705	0.0011	0.036

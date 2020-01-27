@@ -23,7 +23,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT template_body_simple(Par1=1)
+DEFINE INSTRUMENT template_simple(Par1=1)
 
 DECLARE
 %{

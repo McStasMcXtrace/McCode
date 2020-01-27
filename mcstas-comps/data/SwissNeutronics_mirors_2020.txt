@@ -1,0 +1,13 @@
+# Reflectivity-table for SwissNeutronics NiTi supermirrors, January 2020
+#
+# Data compiled and analysed by Klaus Lieutentant FZJ / Vitess with 
+# permission from SwissNeutronics AG, CH-5313 Klingnau
+# 
+# m_nom	m_real	R_0	R_cut	W	alpha
+2.0	2.130	0.995	0.940	0.0020	0.016
+3.0	3.080	0.995	0.905	0.0015	0.014
+4.0	4.020	0.995	0.820	0.0015	0.019
+5.0	5.050	0.995	0.720	0.0015	0.023
+6.0	6.185	0.995	0.655	0.0017	0.022
+7.0	7.040	0.995	0.575	0.0015	0.023
+8.0	8.000	0.995	0.490	0.0030	0.024

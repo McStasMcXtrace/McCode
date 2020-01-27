@@ -13,13 +13,14 @@
 * Date: November 11, 2009
 * Version: $Revision$
 * Origin: Risoe
+* Release: McXtrace 0.1
 *
 * Specialized X-ray source for reading in SPECTRA source definitions
 *
 * %D
 *
 * This is a source component for connecting SPECTRA -output files with McXtrace.
-*
+* 
 * SPECTRA is an application software to calculate optical properties of synchrotron 
 * radiation (SR) emitted from bending magnets, wigglers (conventional and elliptical) 
 * and undulators (conventional, helical, elliptical and figure-8). Calculations 
@@ -29,6 +30,10 @@
 * result graphically. The energy spectrum and radiation power after transmitting 
 * various filters and convolution of detector's resolution are also available. 
 * See <a href="http://spectrax.org/spectra/">SPECTRA</a>.
+*
+* If the source is symmetric in x and/or y it is possible to speed up the spectra
+* calculations by only including one half-plane or quadrant. The other side will then
+* be mirrored by McXtrace.
 *
 * %VALIDATION
 *
@@ -52,6 +57,8 @@
 * verbose (1) If non-zero output more warning messages. 
 * initial_serial (1) First serial number that the series of spectra files.
 * target_harmonic (1) Scaling factor for the fundamental wavelength.
+* symmetricx (0) Is the source symmetric in x.
+* symmetricy (0) Is the source symmetric in y.
 *
 * OUTPUT PARAMETERS:
 *
@@ -66,7 +73,7 @@ DEFINE COMPONENT Source_spectra
 DEFINITION PARAMETERS (int brilliance_column=2, int nE, string spectra_stem_x="", string spectra_stem_y="", string spectra_suffix="dsc", verbose=0)
 SETTING PARAMETERS ( 
     E0=0, dE=0, Emin,Emax, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, randomphase=1, phase=0,
-    nx=51,ny=51,npx=51,npy=51, int initial_serial=1)
+    int nx=0, int ny=0, int npx=0, int npy=0, int initial_serial=1, int symmetricx=0, int symmetricy=0)
 OUTPUT PARAMETERS (prms, dist)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -76,8 +83,10 @@ SHARE
 
   int source_spectra_find_offset(char * fn){
       /*find the first line that starts with [-0-9], i.e. can be considered a number*/
-      char line[512];
-      long pos,done=0;
+      char line[3][512];
+      int linecheck[3],done=0;
+      long pos[3]={0,-1,-2};
+      double buf[6];
       FILE *fs;
 
       if( (fs=fopen(fn,"rb"))==NULL){
@@ -85,35 +94,33 @@ SHARE
           exit(-1);
       }
 
-      line[0]='\0';
-      do {
-          pos=ftell(fs);
-          fgets(line,512,fs);
-          switch (line[0]){
-              case '-':
-              case '0':
-              case '1':
-              case '2':
-              case '3':
-              case '4':
-              case '5':
-              case '6':
-              case '7':
-              case '8':
-              case '9':
-                  done=1;
-                  break;
-              default:
-                  if (feof(fs)){
-                      fprintf(stderr,"Error (%s): Could not strip header from file %s\n"NAME_CURRENT_COMP, fn);
-                      exit(-1);
-                  }
-          }
-      } while (!done);
-      fclose(fs);
-      return pos;
-  }  
+      /*read lines and save position 3 lines back, when three consecutive line have 3
+        columns we have an offset*/
+      line[0][0]='\0';line[1][0]='\0';line[2][0]='\0';
+      line[0][511]='\0';line[1][511]='\0';line[2][511]='\0';
 
+      do {
+          pos[2]=pos[1];pos[1]=pos[0];pos[0]=ftell(fs);
+          strncpy(line[2],line[1],511);
+          strncpy(line[1],line[0],511);
+          fgets(line[0],512,fs);
+
+          /*check for file overrun*/
+          if (feof(fs)){
+              fprintf(stderr,"Error (%s): Could not strip header from file %s\n"NAME_CURRENT_COMP, fn);
+              exit(-1);
+          }
+
+          int i;
+          for (i=0;i<3;i++){
+              linecheck[i]=sscanf(line[i],"%lf %lf %lf %lf %lf %lf", buf, buf+1, buf+2, buf+3, buf+4, buf+5);
+          }
+          if(linecheck[0]==linecheck[1] && linecheck[2]==linecheck[1] && linecheck[0]==3){
+              done=1;
+          }
+      } while(!done);
+      return pos[2];
+  }
 %}
 
 DECLARE
@@ -134,32 +141,33 @@ INITIALIZE
 %{
 
 
-    /*read the bunch of spectra files i fthey exist - if not try to call spectra to generate them.*/
-    /*They might be big - assume them to be x-y-projections*/
-    int num,status;
-    long offset, orig_offset;
-    char fn[256]="";
-    printf("%u %s\n",initial_serial,spectra_suffix);
-    if (strlen(spectra_stem_x)==0 || strlen(spectra_stem_y)==0){
-        fprintf(stderr,"Error (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
-        exit(-1);
-    }
+  /*read the bunch of spectra files i fthey exist - if not try to call spectra to generate them.*/
+  /*They might be big - assume them to be x-y-projections*/
+  int num,status;
+  long offset, orig_offset;
+  char fnx[256]="";
+  char fny[256]="";
+
+  if (strlen(spectra_stem_x)==0 || strlen(spectra_stem_y)==0){
+    fprintf(stderr,"Error (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
+    exit(-1);
+  }
         
-    sprintf(fn,"%s-%d.%s",spectra_stem_x,initial_serial,spectra_suffix);
-    printf("%s\n",fn);
-    orig_offset=source_spectra_find_offset(fn);
+  /*find the offset of the datafiles. Assume to be identical for all of them.*/
+  sprintf(fnx,"%s-%d.%s",spectra_stem_x,initial_serial,spectra_suffix);
+  orig_offset=source_spectra_find_offset(fnx);
 
   for (num=0;num<nE;num++){
-    sprintf(fn,"%s-%d.%s",spectra_stem_x,num+initial_serial,spectra_suffix);
-    offset=orig_offset;/*Table_Read_Offset overwrites offset*/
-    if ( (status=Table_Read_Offset(&(prms.xproj[num]),fn,0,&offset,0))==-1){
-      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fn);
+    sprintf(fnx,"%s-%d.%s",spectra_stem_x,num+initial_serial,spectra_suffix);
+    offset=orig_offset;/*Have to do this every time since Table_Read_Offset overwrites offset*/
+    if ( (status=Table_Read_Offset(&(prms.xproj[num]),fnx,0,&offset,0))==-1){
+      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fnx);
       exit(-1);
     }
-    sprintf(fn,"%s-%d.%s",spectra_stem_y,num+initial_serial,spectra_suffix);
-    offset=orig_offset;/*Table_Read_Offset overwrites offset*/
-    if ( (status=Table_Read_Offset(&(prms.yproj[num]),fn,0,&offset,0))==-1){
-      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fn);
+    sprintf(fny,"%s-%d.%s",spectra_stem_y,num+initial_serial,spectra_suffix);
+    offset=orig_offset;/*Have to do this every time since Table_Read_Offset overwrites offset*/
+    if ( (status=Table_Read_Offset(&(prms.yproj[num]),fny,0,&offset,0))==-1){
+      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fny);
       exit(-1);
     }
     prms.Ix[num]=prms.Iy[num]=0;
@@ -167,8 +175,8 @@ INITIALIZE
     int r;
     for (r=0;r<prms.xproj[num].rows;r++){
       prms.Ix[num]+=Table_Index(prms.xproj[num],r,brilliance_column);//prms.xproj.data[r*prms.xproj.columns+ brilliance_column];
-
     }
+    
     for (r=0;r<prms.yproj[num].rows;r++){
       prms.Iy[num]+=Table_Index(prms.yproj[num],r,brilliance_column);//prms.yproj.data[r*prms.yproj.columns+ brilliance_column];
     }
@@ -176,12 +184,60 @@ INITIALIZE
       fprintf(stderr,"Warning (%s): Integrated intensities do not match up for x and y projections at num %d\n",NAME_CURRENT_COMP,num);
     }
     if (verbose) printf("\\int I [%d] = (%g,%g)\n",num,prms.Ix[num],prms.Iy[num]); 
-    printf("%d %g %g\n",num,prms.Ix[num],prms.Iy[num]);
 
+    if (num==0){  
+      /*check the data structure for the first two input files*/
+      /*if not given deduce the number of sample-points in datafiles*/
+      if (nx==0){
+        int r;
+        double p1,p2;
+        for (r=0;r<prms.xproj[0].rows;r++){
+          if ( nx==0 && (p1=Table_Index(prms.xproj[0],r,0))>(p2=Table_Index(prms.xproj[0],r+1,0)) ){
+            /*this means we have found where the first coordinate starts over*/
+            nx=r+1;
+            break;
+          }
+        }
+        if (nx==0){
+          nx=1;
+        }
+        npx/=nx;
+      }
+      if (npx==0){
+        npx=prms.xproj[0].rows/nx;
+      }
+
+      if( nx*npx != prms.xproj[0].rows){
+        fprintf(stderr,"Error (%s): number of read rows (%d) in %s does not match nx*npx = ( %d * %d). Please check the input files. Aborting.\n",NAME_CURRENT_COMP,prms.xproj[0].rows,fnx,nx,npx);
+        exit(-1);
+      }
+
+      if(ny==0){
+        int r;
+        for (r=0;r<prms.yproj[0].rows;r++){
+          if ( ny==0 && Table_Index(prms.yproj[0],r,0)>Table_Index(prms.yproj[0],r+1,0) ){
+            /*this means we have found where the first coordinate starts over*/
+            ny=r+1;
+            break;
+          }
+        }
+        if (ny==0){
+          ny=1;
+        }
+      }
+      if (npy==0){
+        npy=prms.yproj[0].rows/ny;
+      }
+      if( ny*npy != prms.yproj[0].rows){
+        fprintf(stderr,"Error (%s): number of read rows (%d) in %s does not match ny*npy = ( %d * %d). Please check the input files. Aborting.\n",NAME_CURRENT_COMP,prms.yproj[0].rows,fny,ny,npy);
+        exit(-1);
+      }
+      printf("Info (%s): (nx,nxp) = ( %d %d ), (ny,npy) = ( %d %d )\n",NAME_CURRENT_COMP,nx,npx,ny,npy);
+    }/*if num==0*/
   }
-
   /*find limits in x,x',y, and y', assuming they're the same across all source files.*/
   /*these would be relevant for a search*/
+
   //prms.xmin=prms.xpmin=prms.ymin=prms.ypmin=FLT_MAX;
   //prms.xmax=prms.xpmax=prms.ymax=prms.ypmax=FLT_MIN;
   t_Table *xptr=&(prms.xproj[0]);
@@ -199,15 +255,28 @@ INITIALIZE
   prms.ystep=Table_Index(*yptr,1,0)-Table_Index(*yptr,0,0);
   prms.ypstep=Table_Index(*yptr,ny,1)-Table_Index(*yptr,0,1);
 
+  /*Must adjust for integration steps in Ix and Iy*/
+  for (num=0;num<nE;num++){
+      //prms.Ix[num] *= prms.xstep* 1e-3 * prms.xpstep*1e-3;
+      //prms.Iy[num] *= prms.ystep* 1e-3 * prms.ypstep*1e-3;
+  }
+
   if (incoherent!=randomphase){
-    fprintf(stderr,"Warning(%s): Parameter incoherent=%d overridden by randomphase=%d\n",NAME_CURRENT_COMP,(int)incoherent, (int) randomphase);
+    fprintf(stderr,"Warning (%s): Parameter incoherent=%d overridden by randomphase=%d\n",NAME_CURRENT_COMP,(int)incoherent, (int) randomphase);
     incoherent=randomphase;
   }
 
-  if(E0-dE<Emin || E0+dE>Emax){
+  if(E0-dE-Emin <-FLT_MAX || E0+dE-Emax>FLT_MAX){
     fprintf(stderr,"Warning(%s): Sampled energy interval (%g+-%g keV) reaches outside what\'s defined by datafiles (%g+-%g keV)\n",NAME_CURRENT_COMP,E0,dE,(Emin+Emax)*0.5,(Emax-Emin)*0.5);
   }
 
+  /*downweight accoring to number of rays*/
+  prms.pmul=1.0/((double) mcget_ncount());
+
+  /*downweight for not using the full energy window. Don't do this for deterministic energy (dE=0).*/
+  if(dE && ( (E0-dE>Emin) || E0+dE<Emax) ){
+    prms.pmul*=2*dE/(Emax-Emin);
+  }
 
 %}
 
@@ -225,6 +294,7 @@ TRACE
   x=(prms.xmin+rand01()*(prms.xmax-prms.xmin))*1e-3;
   y=(prms.ymin+rand01()*(prms.ymax-prms.ymin))*1e-3;
 
+  
   /*So now interpolate to get at Brilliance values*/
   /*Need to normalize to something*/
   
@@ -238,12 +308,6 @@ TRACE
       ABSORB;
   }
 
-  /*downweight for not using the full energy window. Don't do this for deterministic energy (dE=0).*/
-  if(dE && ( (E0-dE>Emin) || E0+dE<Emax) ){
-    p=2*dE/(Emax-Emin);
-  }else{
-    p=1;
-  }
 
   k=E2K*e;
 
@@ -269,24 +333,56 @@ TRACE
   xptr=&(prms.xproj[num]);
   yptr=&(prms.yproj[num]);
 
-  alpha=( (xx - Table_Index(*xptr,ix,0)) /prms.xstep);/*regular grid so no need to do ix + ipx*nx*/
-  beta=( (xp - Table_Index(*xptr,ipx*nx,1)) /prms.xpstep) ;
+  int ie;
+  double pe[2];
+  double ealpha,estep;
+  estep=(Emax-Emin)/(nE-1);
+  ealpha = (e- (Emin+estep*num))/estep;
 
-  double t0,t1;
-  t0=(1-alpha)*Table_Index(*xptr,ix+ipx*nx,2) + alpha*Table_Index(*xptr,(ix+1)+ipx*nx,2);
-  t1=(1-alpha)*Table_Index(*xptr,ix+(ipx+1)*nx,2) + alpha*Table_Index(*xptr,(ix+1)+(ipx+1)*nx,2);
-  Iinterpx = (1-beta)*t0+beta*t1;
-  
-  alpha=( (yy - Table_Index(*yptr,iy,0)) /prms.ystep);/*regular grid so no need to do ix + ipx*nx*/
-  beta=( (yp - Table_Index(*yptr,ipy*ny,1)) /prms.ypstep) ;
+  for (ie=0;ie<2;ie++){
+    alpha=( (xx - Table_Index(*xptr,ix,0)) /prms.xstep);/*regular grid so no need to do ix + ipx*nx*/
+    beta=( (xp - Table_Index(*xptr,ipx*nx,1)) /prms.xpstep) ;
 
-  t0=(1-alpha)*Table_Index(*yptr,iy+ipy*ny,2) + alpha*Table_Index(*yptr,(iy+1)+ipy*ny,2);
-  t1=(1-alpha)*Table_Index(*yptr,iy+(ipy+1)*ny,2) + alpha*Table_Index(*yptr,(iy+1)+(ipy+1)*ny,2);
-  Iinterpy = (1-beta)*t0+beta*t1;
+    double t0,t1;
+    t0=(1-alpha)*fabs(Table_Index(*xptr,ix+ipx*nx,2)) + alpha*fabs(Table_Index(*xptr,(ix+1)+ipx*nx,2));
+    t1=(1-alpha)*fabs(Table_Index(*xptr,ix+(ipx+1)*nx,2)) + alpha*fabs(Table_Index(*xptr,(ix+1)+(ipx+1)*nx,2));
+    Iinterpx = (1-beta)*t0+beta*t1 *prms.xstep*1e-3*prms.xpstep*1e-3;
 
-  p*=Iinterpx/prms.Ix[num] * Iinterpy/prms.Iy[num] * (prms.Ix[num]+prms.Iy[num])*0.5;
+    alpha=( (yy - Table_Index(*yptr,iy,0)) /prms.ystep);/*regular grid so no need to do iy + ipy*ny*/
+    beta=( (yp - Table_Index(*yptr,ipy*ny,1)) /prms.ypstep) ;
 
+    t0=(1-alpha)*fabs(Table_Index(*yptr,iy+ipy*ny,2)) + alpha*fabs(Table_Index(*yptr,(iy+1)+ipy*ny,2));
+    t1=(1-alpha)*fabs(Table_Index(*yptr,iy+(ipy+1)*ny,2)) + alpha*fabs(Table_Index(*yptr,(iy+1)+(ipy+1)*ny,2));
+    Iinterpy = (1-beta)*t0+beta*t1 * prms.ystep*1e-3*prms.ypstep*1e-3;
 
+    pe[ie]=Iinterpx/prms.Ix[num+ie] * Iinterpy/prms.Iy[num+ie] * (prms.Ix[num+ie]+prms.Iy[num+ie])*0.5;
+  }
+  /* Set the photon ray weight to the mean of the two multiplied by initial weight
+   * due to energy interval and ray count*/
+
+  //p=prms.pmul * Iinterpx/prms.Ix[num] * Iinterpy/prms.Iy[num] * (prms.Ix[num]+prms.Iy[num])*0.5;
+  /*now we interpolate in energy*/
+  p=prms.pmul * (ealpha*pe[0] + (1-ealpha)*pe[1]);
+
+  /*if symmetric source possibly reflect x*/
+  if (symmetricx){
+    if (rand01()<0.5){
+      x=-x;
+    }
+    if (rand01()<0.5){
+      kx=-kx;
+    }
+  }
+  if (symmetricy){
+    if (rand01()<0.5){
+      y=-y;
+    }
+    if (rand01()<0.5){
+      ky=-ky;
+    }
+  }
+
+  /*spectra output is in brilliance (unit photons/s/mm^2/mrad^2/0.1%BW), so scale to get at raw flux in photons/s */
 
   /*set polarization and phase to something known*/
   Ex=0;Ey=0;Ez=0;
@@ -303,7 +399,6 @@ TRACE
 
 MCDISPLAY
 %{
-  
   double dist=1;
   multiline(5, prms.xmin, prms.ymin, 0.0,
       prms.xmax, prms.ymin, 0.0,

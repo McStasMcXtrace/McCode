@@ -1,0 +1,152 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSD_monitor_4PI
+*
+* %I
+* Written by: Kim Lefmann and Kristian Nielsen
+* Date: April 17, 1998
+* Version: $Revision: 1.27 $
+* Origin: Risoe
+* Release: McStas 1.12ac
+*
+* Spherical position-sensitive detector.
+*
+* %D
+* An (n times m) pixel spherical PSD monitor using a cylindrical projection.
+* Mostly for test and debugging purposes.
+*
+* Example: PSD_monitor_4PI(radius=0.1,
+            nx=90, ny=90, filename="Output.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius:   Radius of detector (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
+* mx:       x-component of spin reference-vector (1)
+* my:       y-component of spin reference-vector (1)
+* mz:       z-component of spin reference-vector (1)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">Test
+* results</A> (not up-to-date).
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT PSD_monitor_4PI_spin
+DEFINITION PARAMETERS (nx=90, ny=90)
+SETTING PARAMETERS (radius, string filename, restore_neutron=0, mx=0, my=1, mz=0)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+
+DECLARE
+%{
+  double PSD_N[nx][ny];
+  double PSDu_p[nx][ny],PSDd_p[nx][ny];
+  double PSDu_p2[nx][ny],PSDd_p2[nx][ny];
+%}
+INITIALIZE
+%{
+  int i,j;
+
+  for (i=0; i<nx; i++)
+    for (j=0; j<ny; j++)
+    {
+      PSD_N[i][j] = 0;
+      PSDu_p[i][j] = 0;
+      PSDu_p2[i][j] = 0;
+      PSDd_p[i][j] = 0;
+      PSDd_p2[i][j] = 0;
+    }
+%}
+TRACE
+%{
+  double t0, t1, phi, theta;
+  int i,j;
+
+  if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
+  {
+    if(t0 < 0)
+      t0 = t1;
+    /* t0 is now time of intersection with the sphere. */
+    PROP_DT(t0);
+    phi = atan2(x,z);
+    i = floor(nx*(phi/(2*PI)+0.5));
+    if(i >= nx)
+      i = nx-1;                      /* Special case for phi = PI. */
+    else if(i < 0)
+      i = 0;
+    theta=asin(y/radius);
+    j = floor(ny*(theta+PI/2)/PI+0.5);
+    if(j >= ny)
+      j = ny-1;                      /* Special case for y = radius. */
+    else if(j < 0)
+      j = 0;
+    /*look at spin-down neutrons*/
+    double n_up=(1+scalar_prod(sx,sy,sz,mx,my,mz))*p/2;
+    /*look at spin-down neutrons*/
+    double n_down=(1-scalar_prod(sx,sy,sz,mx,my,mz))*p/2;
+
+    PSD_N[i][j]++;
+    PSDu_p[i][j] += n_up;
+    PSDu_p2[i][j] += n_up*n_up;
+    PSDd_p[i][j] += n_down;
+    PSDd_p2[i][j] += n_down*n_down;
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+   char title[256];
+   char fn[256];
+   snprintf(title,256,"4PI PSD Monitor spin %s (parallel to m=%g,%g,%g).","up",mx,my,mz); 
+   snprintf(fn,256,"%s.up",filename);
+   DETECTOR_OUT_2D(
+          title,
+          "Longitude [deg]",
+          "Lattitude [deg]",
+          -180, 180, -90, 90,
+          nx, ny,
+          &PSD_N[0][0],&PSDu_p[0][0],&PSDu_p2[0][0],
+          fn);
+   snprintf(title,256,"4PI PSD Monitor spin %s (antiparallel to m=%g,%g,%g).","down",mx,my,mz); 
+   snprintf(fn,256,"%s.down",filename);
+   DETECTOR_OUT_2D(
+          title,
+          "Longitude [deg]",
+          "Lattitude [deg]",
+          -180, 180, -90, 90,
+          nx, ny,
+          &PSD_N[0][0],&PSDd_p[0][0],&PSDd_p2[0][0],
+          fn);
+
+%}
+
+MCDISPLAY
+%{
+  magnify("");
+  circle("xy",0,0,0,radius);
+  circle("xz",0,0,0,radius);
+  circle("yz",0,0,0,radius);
+%}
+
+END

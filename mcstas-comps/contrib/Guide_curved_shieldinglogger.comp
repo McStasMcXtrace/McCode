@@ -1,0 +1,208 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Guide_curved
+*
+* %I
+* Written by: Ross Stewart
+* Date: November 18 2003
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>.
+* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
+*
+* Updated by: Rodion Kolevatov, 2019
+* Update content: sets value of a global variable m_local_refl at each reflection
+*                 to the m-value of the coating or to -1 if missed the guide opening
+* 
+* Non-focusing curved neutron guide.
+*
+* %D
+* Models a rectangular curved guide tube with entrance centered on the Z axis.
+* The entrance lies in the X-Y plane.  Draws a true depiction
+* of the guide, and trajectories.  Guide is not focusing.
+*
+* Example: Guide_curved(w=0.1, h=0.1, l=2.0, R0=0.99, Qc=0.021,
+*                alpha=6.07, m=2, W=0.003, r=2700)
+*
+* %BUGS
+* This component does not work with gravitation on. Use component Guide_gravity then.
+* Systematic error on transmitted flux is found to be about 10%.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w: [m]         Width at the guide entry
+* h: [m]         Height at the guide entry
+* l: [m]          length of guide
+* R0: [1]         Low-angle reflectivity
+* Qc: [AA-1]      Critical scattering vector
+* alpha: [AA]     Slope of reflectivity
+* m: [1]          m-value of material. Zero means completely absorbing.
+* W: [AA-1]       Width of supermirror cut-off
+* r: [m]  Radius of curvature of the guide
+*
+* %L
+* <a href="../optics/Bender.comp.html">Bender</a>
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Guide_curved_shieldinglogger
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w, h, l, r=2700,
+R0a=0.99,Qca=0.0218,alphaa=6.07,ma=2,Wa=0.003, //out
+R0i=0.99,Qci=0.0218,alphai=6.07,mi=2,Wi=0.003, //in
+R0s=0.99,Qcs=0.0218,alphas=6.07,ms=2,Ws=0.003) //bottom and top
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SHARE
+%{
+// m_local_refl is to be used in shielding applications and accessed by shielding logger
+#ifndef MVALUE_LOCAL_IS_DEF
+#define MVALUE_LOCAL_IS_DEF 1
+double m_local_refl=-1;
+#endif
+%include "ref-lib"
+%}
+
+INITIALIZE
+%{
+if (mcgravitation) fprintf(stderr,"WARNING: Guide_curved: %s: "
+    "This component produces wrong results with gravitation !\n"
+    "Use Guide_gravity.\n",
+    NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+  double t11, t12, t21, t22, theta, alphaAng, endtime, phi;
+  double time, time1, time2, q, R;
+  int ii, i_bounce;
+
+  double whalf  = 0.5*w, hhalf = 0.5*h;   /* half width and height of guide */
+  double z_off  = r*sin(l/r);       /* z-component of total guide length */
+  double R1     = r - whalf;        /* radius of curvature of inside mirror */
+  double R2     = r + whalf;        /* radius of curvature of outside mirror */
+  double vel    = sqrt(vx*vx + vy*vy + vz*vz);  /* neutron velocity */
+  double vel_xz = sqrt(vx*vx + vz*vz);      /* in plane velocity */
+  double K      = V2K*vel;        /* neutron wavevector */
+  double lambda = 2.0*PI/K;       /* neutron wavelength */
+
+/* Propagate neutron to guide entrance. */
+
+  PROP_Z0;
+  if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
+   {  m_local_refl=-1; // RK - missing the entrance of the curved guide
+	ABSORB;
+   }
+  m_local_refl=-1; // RK - just entered the curved guide, haven't reached coating yet
+  SCATTER;
+  for(;;)
+  {
+    double par[]={0.0, 0.0, 0.0, 0.0, 0.0};
+    /* Find itersection points of neutron with inside and outside guide walls */
+    ii = cylinder_intersect(&t11, &t12 ,x - r, y, z, vx, vy, vz, R1, h);
+    ii = cylinder_intersect(&t21, &t22 ,x - r, y, z, vx, vy, vz, R2, h);
+
+    /* Choose appropriate reflection time */
+    time1 = (t11 < 1e-7) ? t12 : t11;
+    time2 = (t21 < 1e-7) ? t22 : t21;
+    time  = (time1 < 1e-7 || time2 < time1) ? time2 : time1;
+
+    /* Has neutron left the guide? */
+    endtime = (z_off - z)/vz;
+    if (time > endtime || time <= 1e-7) break;
+
+    PROP_DT(time);
+
+    /* Find reflection surface */
+   // R = (time == time1) ? R1 : R2;
+	if (time == time1) {
+	R=R1;
+      par[0]=R0i;
+      par[1]=Qci; 
+	par[2]=alphai; 
+	par[3]=mi;
+	par[4]= Wi;
+	} else {
+	
+	R=R2;
+      par[0]=R0a;
+      par[1]=Qca; 
+	par[2]=alphaa; 
+	par[3]=ma;
+	par[4]=Wa;
+	}
+    i_bounce = (fabs(y - hhalf) < 1e-7 || fabs(y + hhalf) < 1e-7) ? 2 : 1;
+    switch(i_bounce) {
+    case 1:           /* Inside or Outside wall */
+	phi   = atan(vx/vz);        /* angle of neutron trajectory */
+      alphaAng = asin(z/R);      /* angle of guide wall */
+      theta = fabs(phi - alphaAng);    /* angle of reflection */
+              vz    = vel_xz*cos(2.0*alphaAng - phi);
+      vx    = vel_xz*sin(2.0*alphaAng - phi);
+      break;
+    case 2:       /* Top or Bottom wall */
+      par[0]=R0s;
+      par[1]=Qcs; 
+	par[2]=alphas; 
+	par[3]=ms;
+	par[4]= Ws;
+      theta = fabs(atan(vy/vz));
+      vy    = -vy;
+      break;
+    }
+    double R0,m;
+	R0=par[0];
+	m=par[3];
+    /* Now compute reflectivity. */
+    if (m == 0 || !R0) {m_local_refl=-1;  ABSORB; } // RK - no coating, absorbed 
+
+    q = 4.0*PI*sin(theta)/lambda;
+    StdReflecFunc(q, par, &R);
+    if (R >= 0) p *= R; else { m_local_refl=-1; ABSORB;  }
+    m_local_refl = par[3];
+    SCATTER; 
+  } 
+%}
+
+MCDISPLAY
+%{
+  double x1, x2, z1, z2;
+  double xplot1[100], xplot2[100], zplot1[100], zplot2[100];
+  int n = 100;
+  int j = 1;
+  double R1 = (r - 0.5*w);    /* radius of inside arc */
+  double R2 = (r + 0.5*w);    /* radius of outside arc */
+
+  magnify("xy");
+
+  for(j=0;j<n;j++) {
+    z1 = ((double)j)*(R1*l/r)/(double)(n - 1);
+    z2 = ((double)j)*(R2*l/r)/(double)(n - 1);
+    x1 = r - sqrt(R1*R1 - z1*z1);
+    x2 = r - sqrt(R2*R2 - z2*z2);
+    xplot1[j] = x1;
+    xplot2[j] = x2;
+    zplot1[j] = z1;
+    zplot2[j] = z2;
+  }
+  line(xplot1[0], 0.5*h,zplot1[0],xplot2[0], 0.5*h,zplot2[0]);
+  line(xplot1[0], 0.5*h,zplot1[0],xplot1[0],-0.5*h,zplot1[0]);
+  line(xplot2[0],-0.5*h,zplot2[0],xplot2[0], 0.5*h,zplot2[0]);
+  line(xplot1[0],-0.5*h,zplot1[0],xplot2[0],-0.5*h,zplot2[0]);
+  for(j=0;j<n-1;j++) {
+    line(xplot1[j],  0.5*h, zplot1[j], xplot1[j+1],  0.5*h, zplot1[j+1]);
+    line(xplot2[j],  0.5*h, zplot2[j], xplot2[j+1],  0.5*h, zplot2[j+1]);
+    line(xplot1[j], -0.5*h, zplot1[j], xplot1[j+1], -0.5*h, zplot1[j+1]);
+    line(xplot2[j], -0.5*h, zplot2[j], xplot2[j+1], -0.5*h, zplot2[j+1]);
+  }
+  line(xplot1[n-1], 0.5*h,zplot1[n-1],xplot2[n-1], 0.5*h,zplot2[n-1]);
+  line(xplot1[n-1], 0.5*h,zplot1[n-1],xplot1[n-1],-0.5*h,zplot1[n-1]);
+  line(xplot2[n-1],-0.5*h,zplot2[n-1],xplot2[n-1], 0.5*h,zplot2[n-1]);
+  line(xplot1[n-1],-0.5*h,zplot1[n-1],xplot2[n-1],-0.5*h,zplot2[n-1]);
+%}
+
+END

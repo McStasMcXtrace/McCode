@@ -316,7 +316,7 @@ struct pointer_to_1d_coords_list shell_points(struct geometry_struct *geometry,i
 	double *v1_z = geometry->geometry_parameters.p_mesh_storage->v1_z;
 	double *v2_x = geometry->geometry_parameters.p_mesh_storage->v2_x;
 	double *v2_y = geometry->geometry_parameters.p_mesh_storage->v2_y;
-	double *v2_z= geometry->geometry_parameters.p_mesh_storage->v2_z;
+	double *v2_z = geometry->geometry_parameters.p_mesh_storage->v2_z;
 	double *v3_x = geometry->geometry_parameters.p_mesh_storage->v3_x;
 	double *v3_y = geometry->geometry_parameters.p_mesh_storage->v3_y;
 	double *v3_z = geometry->geometry_parameters.p_mesh_storage->v3_z;
@@ -389,7 +389,9 @@ struct pointer_to_1d_coords_list shell_points(struct geometry_struct *geometry,i
 			//printf("\n Added a point [%f,%f,%f] ",this_vert.x,this_vert.y,this_vert.z);
 		}
 	}
+    
   printf("\n test is there to high j? j = %i, number_of_points_in_array = %i , lenght of array = %i ",j,number_of_points_in_array,3*n_facets * sizeof(Coords));
+  j = number_of_points_in_array - 1; // Last legal index, currently j is out of bounds.
   printf("\n test= [%f,%f,%f]",mesh_shell_array.elements[j].x ,mesh_shell_array.elements[j].y,mesh_shell_array.elements[j].z);
   
   mesh_shell_array.num_elements = number_of_points_in_array;
@@ -672,7 +674,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         */
 		
 	}
-	printf("\n TEST inf v1 is long enough! i = %i , n_facets = %i\n",i,n_facets);
+	printf("\n TEST inf v1 is long enough! i = %i , n_facets = %i, counter = %i \n",i,n_facets,counter);
 	
 	// Create bounding sphere using Ritter [https://en.wikipedia.org/wiki/Bounding_sphere#cite_note-Ritter1990-2]
 	//  Ritter, Jack (1990), "An efficient bounding sphere", in Glassner, Andrew S., Graphics Gems, San Diego, CA, US: Academic Press Professional, Inc., pp. 301–303, ISBN 0-12-286166-3
