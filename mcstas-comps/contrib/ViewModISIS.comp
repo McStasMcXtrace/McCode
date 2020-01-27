@@ -129,9 +129,8 @@ matrix(const int m,const int n)
   return pd;
 } /* matrix */
 
-
-double
-polInterp(double* X,double* Y,int Psize,double Aim)
+#pragma acc routine seq
+double polInterp(double* X,double* Y,int Psize,double Aim)
   /*!
     returns the interpolated polynomial between Epnts
     and the integration
@@ -188,8 +187,8 @@ polInterp(double* X,double* Y,int Psize,double Aim)
   return out;
 } /* polInterp */
 
-int
-binSearch(int Npts,double* AR,double V)
+#pragma acc routine seq
+int binSearch(int Npts,double* AR,double V)
   /*!
     Object is to find the point in
     array AR, closest to the value V
@@ -204,12 +203,14 @@ binSearch(int Npts,double* AR,double V)
 
   if(AR[0]>0.0)AR[0]=0.0;
 
+#ifndef USE_PGI
   if (V<AR[0])
     {
       // if(AR[0]>0.0)AR[0]=0.0;
       fprintf(stderr,"here");
       return 0;
     }
+#endif
   klo=0;
   khi= Npts-1;
   while (khi-klo >1)
@@ -712,8 +713,8 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
   return;
 } /* readHtable */
 
-void
-getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS)
+#pragma acc routine seq
+void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS, _class_particle *_particle)
  /*!
    Calculate the Time and Energy
    by sampling the file.
@@ -747,12 +748,13 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS)
   Epnt=binSearch(TS.nEnergy-1,TS.EInt,R);
   Tpnt=binSearch(TS.nTime-1,TS.Flux[Epnt-1],R);
 
+  #ifndef USE_PGI
   if(Epnt<0 || R<TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
       fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",
       TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
     }
-
+  #endif
   if(Epnt == 0)
     {
       Estart=0.0;
@@ -765,12 +767,13 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS)
       Espread=TS.EInt[Epnt]-TS.EInt[Epnt-1];
       *EV=(Epnt>TS.nEnergy-1) ? TS.EnergyBin[Epnt+1] : TS.EnergyBin[Epnt];
     }
-
+  #ifndef USE_PGI
   if (Tpnt==0 || Epnt==0 || Tpnt==TS.nTime)
     {
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
     }
+  #endif
   *TV=TS.TimeBin[Tpnt-1];
   TRange=TS.TimeBin[Tpnt]-TS.TimeBin[Tpnt-1];
   Tspread=TS.Flux[Epnt-1][Tpnt]-TS.Flux[Epnt-1][Tpnt-1];
@@ -786,13 +789,14 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS)
 
   *EV=polInterp(TS.EInt+iStart,TS.EnergyBin+iStart,1+iEnd-iStart,R1);
 
+  
+  #ifndef USE_PGI
   if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
       fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
     }
   
-
   if(*EV < *lim1 || *EV > *lim2)
     {
       fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",
@@ -805,6 +809,7 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS)
       fprintf(stderr,"\n");
       exit(1);
     }
+  #endif
   return;
 } /* getPoint */
 
@@ -1035,7 +1040,7 @@ INITIALIZE
 
   readHtable(Tfile,rtE0,rtE1, TS, modPosition, xw, yh, verbose);
   fclose(Tfile);
-
+  #pragma acc declare create( TS )
   /**********************************************************************/
 
   Tnpts=0;
@@ -1051,7 +1056,7 @@ INITIALIZE
     }
   /* Do solid angle correction */
   angleArea= strArea(TS, focus_xw, focus_yh, dist);
-
+  #pragma acc update host( TS )
   fprintf(stderr,"Totals:: %g %d %d \n",TS.Total,TS.nEnergy,TS.nTime);
 
 %}
@@ -1072,7 +1077,7 @@ TRACE
   xf = focus_xw*(0.5-rand01());          /* Choose focusing position uniformly */
   yf = focus_yh*(0.5-rand01());          /* Choose focusing position uniformly */
 
-  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS);
+  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS, _particle);
   
 //  Ival=TS.Total*6.2415093e+12; // * 1.1879451;  /* ( of proton in 1uAmp) * (1-cos(30))*2*Pi  */
 //  Ival=TS.Total*5.9294338e+12; // Number of proton in 1uAmp * 0.95 (0.95 because of muon target loss)

@@ -51,19 +51,21 @@ DEFINE INSTRUMENT ILL_H53_D16(lambda=4.7, DM=3.355, dlambda=0.05, string Powder=
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
+double KI, Vi, EI;
+%}
+
+USERVARS
+%{
 /* D16 parameters */
-char flag_al=0, flag_sample=0;
-
+  char flag_al;
+  char flag_sample;
 /* capture flux positions from moderator: 21.4    28.4    61.2 */
-
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-double KI, Vi, EI;
-
 if (!THETA_M && lambda && DM)
 	THETA_M =asin(lambda/(2*DM))*RAD2DEG;
 else if (THETA_M && !lambda && DM)
@@ -105,7 +107,11 @@ TRACE
 /* TIP: monochromator cradle */
 COMPONENT mono_cradle = Arm()
 AT (0,0,L1) RELATIVE PREVIOUS
-
+EXTEND %{
+  flag_al=0;
+  flag_sample=0;
+%}
+  
 COMPONENT Mono_XY = Monitor_nD(
   options="x y, all auto",
   xwidth=0.06, yheight=.12, restore_neutron=1)

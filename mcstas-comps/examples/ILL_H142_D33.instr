@@ -1,0 +1,118 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ILL_H142_D33
+*
+* %Identification
+* Written by: FARHI Emmanuel (farhi@ill.fr)
+* Date: 2012
+* Origin:ILL
+* Release: McStas 2.5
+* Version: $Revision: 1.0 $
+* %INSTRUMENT_SITE: ILL
+*
+* A simplified H142 cold guide model at the ILL, with a simple D33 model at the end
+*
+* %Description
+*
+* This model decribes a simiplified H142 cold guide at the ILL, with D33.
+*
+* The D33 Massive dynamic q-range small-angle diffractometer is a Small-Angle Neutron 
+* Scattering instrument for the characterization of samples with typical sizes
+* varying from the nanometer scale to few tenth of micrometer. In addition to a
+* standard monochromatic mode of operation, D33 offers a time of flight mode (TOF)
+* to cover an enhanced dynamic q-range qmax/qmin in one instrument setting. High
+* magnetic fields, up to 17 T at the sample position, beam polarization and 3He
+* spin analysis, facilitate and expand studies of magnetism and allow a more
+* quantitative analysis of spin incoherent samples. The high flux allows for
+* kinetic experiments with time resolution of the order of few milliseconds.
+*
+* mcrun ILL_H142_D33.instr lambda=14 dlambda=1.4
+*
+* %Parameters
+*      lambda:  central wavelength band for guide illumination [Angs]
+*     dlambda:  half width of guide wavelength band [Angs]
+*          m1:  m-coating for 1st guide section
+*          m2:  m-coating for 2nd guide section
+*          m3:  m-coating for 3th guide section
+*          m4:  m-coating for 4th guide section
+*   diaphragm:  diaphragm diameter between section 3 and 4; use 0 to remove [cm]
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H142_D33(lambda=14, dlambda=1.4, m1=1, m2=1, m3=1, m4=1, diaphragm=0)
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source in front of collimation, before virtual source */
+/* warning: wavelength range is rectangular */
+
+/*
+COMPONENT GuideSource = Source_gen(
+    xwidth=0.03, yheight=0.03, 
+    lambda=lambda, dlambda=dlambda,
+    focus_xw=0.03, focus_yh=0.03, dist=1,
+  )
+  AT (0,0,0) RELATIVE Origin
+*/
+
+COMPONENT GuideSource = Source_div(
+    xwidth=0.03, yheight=0.03, 
+    focus_aw=2, focus_ah=2, 
+    lambda0=lambda, dlambda=dlambda, gauss=0)
+  AT (0,0,0) RELATIVE Origin
+  
+COMPONENT GuideLong = Guide_gravity(
+  w1=0.03, h1=0.03, l=10.0, m=1)
+  AT (0,0,0.01) RELATIVE Origin
+  
+COMPONENT VirtualSource = Slit(
+    radius=2.5e-3)
+  AT (0,0,10.01) RELATIVE PREVIOUS
+  
+COMPONENT C1 = COPY(GuideLong)(l=2.5, m=m1)
+  AT (0,0,0.01) RELATIVE PREVIOUS
+  
+COMPONENT C2 = COPY(GuideLong)(l=2.5, m=m2)
+  AT (0,0,2.51) RELATIVE PREVIOUS
+  
+COMPONENT C3 = COPY(GuideLong)(l=2.5, m=m3)
+  AT (0,0,2.51) RELATIVE PREVIOUS
+  
+COMPONENT C34Slit = Slit(radius=diaphragm/2)
+  WHEN(diaphragm)
+  AT (0,0,2.505) RELATIVE PREVIOUS
+  
+COMPONENT C4 = COPY(GuideLong)(l=2.5, m=m4)
+  AT (0,0,0.005) RELATIVE PREVIOUS
+  
+COMPONENT Nose = Guide_gravity(
+    w1=0.002, h1=0.002, l=.5)
+  AT (0,0,2.51) RELATIVE PREVIOUS
+  
+COMPONENT NoseSlit = Slit(
+    radius=0.001)
+  AT (0,0,0.51) RELATIVE PREVIOUS
+  
+COMPONENT DivMon = Monitor_nD(
+    xwidth=0.002, yheight=0.002,
+    options="dx dy, all auto", bins=200
+  )
+  AT (0,0,0.005) RELATIVE PREVIOUS
+  
+SPLIT 100 COMPONENT Sample = Sans_spheres(
+    R = 100, Phi = 1e-3, Delta_rho = 0.6, 
+    sigma_abs = 50, xwidth=0.002, yheight=0.002, zdepth=0.0002,
+    focus_xw=.64, focus_yh=.64, target_index=+1)
+  AT (0,0,0.02) RELATIVE PREVIOUS
+  
+COMPONENT PSD = Monitor_nD(
+    xwidth=.64, yheight=.64, bins=128,
+    options="x y")
+  AT (0,0,14) RELATIVE PREVIOUS
+  
+END
+  
