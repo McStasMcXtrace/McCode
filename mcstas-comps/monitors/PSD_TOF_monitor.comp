@@ -116,13 +116,20 @@ TRACE
     j = floor((y - ymin)*ny/(ymax - ymin));
     k = floor((1E6*t - tmin)*nt/(tmax - tmin));
 
-    PSD_N[k][i][j]++;
-    PSD_p[k][i][j] += p;
-    PSD_p2[k][i][j] += p*p;
+    double p2 = p*p;
+    #pragma acc atomic    
+    PSD_N[k][i][j] = PSD_N[k][i][j]+1;
+    #pragma acc atomic
+    PSD_p[k][i][j] = PSD_p[k][i][j]+p;
+    #pragma acc atomic    
+    PSD_p2[k][i][j] = PSD_p2[k][i][j]+p2;
 
-    PSD_Ns[i][j]++;
-    PSD_ps[i][j] += p;
-    PSD_p2s[i][j] += p*p;
+    #pragma acc atomic
+    PSD_Ns[i][j] = PSD_Ns[i][j]+1;
+    #pragma acc atomic
+    PSD_ps[i][j] = PSD_ps[i][j]+p;
+    #pragma acc atomic    
+    PSD_p2s[i][j] = PSD_p2s[i][j]+p2;
 
     SCATTER;
   }

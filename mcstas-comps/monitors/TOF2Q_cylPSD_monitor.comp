@@ -107,9 +107,13 @@ TRACE
 // printf("--------------- Q = %g Å ---------------  \n",Q);
   i = floor((Q-Qmin)*nQ/(Qmax-Qmin));
 
-  TOF_N[i][j]++;
-  TOF_p[i][j] += p;
-  TOF_p2[i][j] += p*p;
+  double p2 = p*p;
+  #pragma acc atomic
+  TOF_N[i][j] = TOF_N[i][j]+1;
+  #pragma acc atomic
+  TOF_p[i][j] = TOF_p[i][j]+p;
+  #pragma acc atomic
+  TOF_p2[i][j] = TOF_p2[i][j]+p2;
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }

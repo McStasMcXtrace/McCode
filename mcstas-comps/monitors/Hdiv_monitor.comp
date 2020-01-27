@@ -100,9 +100,17 @@ TRACE
     if (h_div < (double)h_maxdiv && h_div > -(double)h_maxdiv)
     {
       i = floor((h_div + (double)h_maxdiv)*nh/(2.0*(double)h_maxdiv));
-      Div_N[i]++;
-      Div_p[i] += p;
-      Div_p2[i] += p*p;
+
+      double p2 = p*p;
+      #pragma acc atomic
+      Div_N[i] = Div_N[i] + 1;
+
+      #pragma acc atomic
+      Div_p[i] = Div_p[i] + p;
+
+      #pragma acc atomic
+      Div_p2[i] = Div_p2[i] + p2;
+
       SCATTER;
     }
   }

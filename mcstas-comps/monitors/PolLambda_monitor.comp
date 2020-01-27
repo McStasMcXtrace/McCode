@@ -123,9 +123,16 @@ TRACE
       i = floor((pol_proj+1.0)*npol/2.0);
     j = floor((lambda - Lmin)*nL/(Lmax - Lmin));
 
-    PolL_N[j][i]++;
-    PolL_p[j][i] += p;
-    PolL_p2[j][i] += p*p;
+    double p2 = p*p;
+    #pragma acc atomic
+    PolL_N[j][i] = PolL_N[j][i]+1;
+
+    #pragma acc atomic
+    PolL_p[j][i] = PolL_p[j][i]+p;
+
+    #pragma acc atomic
+    PolL_p2[j][i] = PolL_p2[j][i]+p2;
+
     SCATTER;
   }
   if (restore_neutron) {
