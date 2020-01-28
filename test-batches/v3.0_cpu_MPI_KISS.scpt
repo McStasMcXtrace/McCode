@@ -34,5 +34,4 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=10 --configs --mcc
 
 cd $HOME
 echo done on CPU/MPI, submitting next job
-bsub < $HOME/McCode/test-batches/v3.0_cpu_KISS.scpt
 bsub < $HOME/McCode/test-batches/plots_cpu_MPI_KISS.scpt
