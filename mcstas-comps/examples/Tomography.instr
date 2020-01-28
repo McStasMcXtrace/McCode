@@ -22,7 +22,7 @@
 * and a Unix/Mac) in the tools/matlab folder to reconstruct a 3D volume of the object. Use e.g. 
 * isosurface to do thresholding for extraction of the object surface.
 *
-* %Example: omega=0 Detector: monitor_I=2.23492e-09
+* Example: omega=0 Detector: monitor_I=2.23492e-09
 *
 * %Parameters
 * geometry: [string]  Name of the OFF file describing the sample shape
