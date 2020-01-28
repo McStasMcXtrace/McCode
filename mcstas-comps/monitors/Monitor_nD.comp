@@ -304,6 +304,12 @@ MPI_MASTER(
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
 );
+#else
+#ifdef USE_PGI
+  if (strstr(Vars.option, "auto"))
+    printf("Monitor_nD: %s is using automatic limits option 'auto' together with GPU.\n"
+           "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
+#endif
 #endif
 %}
 
