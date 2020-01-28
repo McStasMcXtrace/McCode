@@ -822,11 +822,9 @@ TRACE
 
     if (t3 < 0) {
       t3=0; /* Already past sample?! */
-#ifndef USE_PGI
       if (line_info.flag_warning < 100)
       printf("PowderN: %s: Warning: Neutron has already passed us? (Skipped).\n"
              "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
-#endif
       line_info.flag_warning++;
     } else {
       if (dt<0) { /* Calculate scattering point position */
@@ -855,9 +853,7 @@ TRACE
         PROP_DT(dt+t0); /* Point of scattering */
         SCATTER;
       } else {
-#ifndef USE_PGI
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
-#endif
       }
 
       if (neutrontype == 3) { /* Make coherent scattering event */
@@ -942,11 +938,9 @@ TRACE
 
           if (!intersect) {
             /* Strange error: did not hit cylinder */
-#ifndef USE_PGI
             if (line_info.flag_warning < 100)
               printf("PowderN: %s: WARNING: Did not hit sample from inside (coh). ABSORB.\n", NAME_CURRENT_COMP);
             line_info.flag_warning++;
-#endif
             ABSORB;
           }
 
@@ -1010,10 +1004,8 @@ TRACE
 
         if (!intersect) {
           /* Strange error: did not hit cylinder */
-#ifndef USE_PGI
           if (line_info.flag_warning < 100)
             printf("PowderN: %s: WARNING: Did not hit sample from inside (inc). ABSORB.\n", NAME_CURRENT_COMP);
-#endif
           line_info.flag_warning++;
           ABSORB;
         }

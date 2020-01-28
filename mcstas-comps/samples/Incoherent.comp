@@ -313,18 +313,14 @@ TRACE
       if (!v) v = sqrt(vx*vx + vy*vy + vz*vz);
       if (v) my_a = VarsInc.my_a_v*(2200/v);
       else {
-#ifndef USE_PGI
         printf("Incoherent: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
-#endif
         ABSORB; /* should never occur */
       }
 
       my_t = my_a + VarsInc.my_s;  /* total scattering Xsect (tmp var) */
       if (my_t <= 0) {
-#ifndef USE_PGI	
         printf("Incoherent: %s: ERROR: Null total cross section %g. Removing event.\n",
           NAME_CURRENT_COMP, my_t);
-#endif
         ABSORB; /* should never occur */
       }
       d_path = v * (dt0 + dt2);   /* Length of full path through sample */

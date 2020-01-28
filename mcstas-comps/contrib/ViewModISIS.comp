@@ -203,14 +203,12 @@ int binSearch(int Npts,double* AR,double V)
 
   if(AR[0]>0.0)AR[0]=0.0;
 
-#ifndef USE_PGI
   if (V<AR[0])
     {
       // if(AR[0]>0.0)AR[0]=0.0;
-      fprintf(stderr,"here");
       return 0;
     }
-#endif
+
   klo=0;
   khi= Npts-1;
   while (khi-klo >1)
@@ -748,13 +746,11 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
   Epnt=binSearch(TS.nEnergy-1,TS.EInt,R);
   Tpnt=binSearch(TS.nTime-1,TS.Flux[Epnt-1],R);
 
-  #ifndef USE_PGI
   if(Epnt<0 || R<TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
       fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",
-      TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+        TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
     }
-  #endif
   if(Epnt == 0)
     {
       Estart=0.0;
@@ -767,13 +763,12 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
       Espread=TS.EInt[Epnt]-TS.EInt[Epnt-1];
       *EV=(Epnt>TS.nEnergy-1) ? TS.EnergyBin[Epnt+1] : TS.EnergyBin[Epnt];
     }
-  #ifndef USE_PGI
   if (Tpnt==0 || Epnt==0 || Tpnt==TS.nTime)
     {
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
     }
-  #endif
+
   *TV=TS.TimeBin[Tpnt-1];
   TRange=TS.TimeBin[Tpnt]-TS.TimeBin[Tpnt-1];
   Tspread=TS.Flux[Epnt-1][Tpnt]-TS.Flux[Epnt-1][Tpnt-1];
@@ -790,7 +785,6 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
   *EV=polInterp(TS.EInt+iStart,TS.EnergyBin+iStart,1+iEnd-iStart,R1);
 
   
-  #ifndef USE_PGI
   if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
@@ -809,7 +803,7 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
       fprintf(stderr,"\n");
       exit(1);
     }
-  #endif
+
   return;
 } /* getPoint */
 

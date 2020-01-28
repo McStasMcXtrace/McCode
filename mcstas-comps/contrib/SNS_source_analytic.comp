@@ -397,9 +397,7 @@ double sample_t_from_f_sp (double para[4], double tmin, double tmax, double rand
       printf(" tmax=%01.4e tmin=%10.4e " , tmax, tmin);
       printf(" Imax=%01.4e Imin=%10.4e arg4=%10.4e" , Imax, Imin, arg);
       printf(" randd=%10.4e diff=%10.4e t=%10.4e\n", randd, diff, t);
-      #ifndef USE_PGI
       abort();
-      #endif
     }
     if(arg<randd) {
       tm = t;
@@ -689,9 +687,7 @@ double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, d
   else {
     printf("troubble in sample_t_from_f_lp\n");
     printf("  E=%e tmax=%e tmin=%e CImax=%e CImin=%e\n", E, tmax, tmin, CImax, CImin);
-  #ifndef USE_PGI
   abort();
-  #endif
   }
 
   tm = tmin;
@@ -720,9 +716,7 @@ double sample_t_from_f_lp (double para[4], double E, double tmin, double tmax, d
       printf(" E=%10.4e",E);
       printf(" CImax=%01.4e CImin=%10.4e arg4=%10.4e" , CImax, CImin, arg);
       printf(" randd=%10.4e diff=%10.4e t=%10.4e\n", randd, diff, t);
-      #ifndef USE_PGI
       abort();
-      #endif
     }
     if(arg<randd) {
       tm = t;
@@ -814,9 +808,7 @@ INITIALIZE
 	    &para_a[3], &para_a[4], &para_a[5], &para_a[6], &para_a[7], &para_a[8], &para_a[9]);
   if(kk!=10) {
     printf("para_a: insufficient number of data entries read\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
 
   /* b parameter of emission time distribuation */
@@ -827,9 +819,7 @@ INITIALIZE
 	    &para_b[3], &para_b[4], &para_b[5], &para_b[6], &para_b[7], &para_b[8], &para_b[9]);
   if(kk!=10) {
     printf("para_b: insufficient number of data entries read\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
 
   /* R parameter of emission time distribuation */
@@ -840,9 +830,7 @@ INITIALIZE
 	    &para_R[3], &para_R[4], &para_R[5], &para_R[6], &para_R[7], &para_R[8], &para_R[9]);
   if(kk!=10) {
     printf("para_R: kk=%d  insufficient number of data entries read\n", kk);
-    #ifndef USE_PGI
     abort();
-    #endif
   }
 
   /* to parameter of emission time distribuation */
@@ -853,9 +841,7 @@ INITIALIZE
 	    &para_to[3], &para_to[4], &para_to[5], &para_to[6], &para_to[7], &para_to[8], &para_to[9]);
   if(kk!=10) {
     printf("para_R: insufficient number of data entries read\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
 
   printf("\n");
@@ -883,9 +869,7 @@ INITIALIZE
     CItot = prepare_cumulative_spectral_function ( csfE, Emin, Emax, para_sp );
     if(CItot<=0.0) {
        printf(" choice of Emin and Emax gives zero neutron intensity\n");
-       #ifndef USE_PGI
        abort();
-       #endif
     }
     //  for(i=0;i<=1000;i++){
     //    printf("E-%d = %12.4e\n", i, csfE[i]);
@@ -895,33 +879,23 @@ INITIALIZE
 /* some checks */
   if(dist<=0.0) {
     printf(" dist must be greater zero\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
   else if(focus_xw<=0.0) {
     printf(" focus_xw must be greater zero\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
   else if(focus_yh<=0.0) {
     printf(" focus_yh must be greater zero\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
   else if(p_power<=0) {
     printf(" p_power must be greater zero\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
   else if(n_pulses<=0) {
     printf(" n_pulses must be greater zero\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
 
 /* Normalization */
@@ -988,9 +962,7 @@ TRACE
   }
   else {
     printf("sample_E allows only values 0, 1, 2 or 3!\n");
-    #ifndef USE_PGI
     abort();
-    #endif
   }
 
   /* determine tval from emisstime distribution */
