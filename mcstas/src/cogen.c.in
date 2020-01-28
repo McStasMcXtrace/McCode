@@ -1613,8 +1613,10 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
       coutf("    instrument->logic.Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
-      coutf("#endif");
+      coutf("    if (!ABSORBED && _particle->_index == %i) ", comp->index);
+      coutf("#else");
       coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
+      coutf("#endif");
       coutf("#ifndef NOSPLIT");
       coutf("    for (" "instrument->logic.Split_%s = 0; "
                         "instrument->logic.Split_%s< %s; "
@@ -1710,8 +1712,11 @@ int cogen_raytrace(struct instr_def *instr)
 
     coutf("      _particle->_index++;");
     coutf("      if (!ABSORBED) DEBUG_STATE();");
+    coutf("#ifndef NOSPLIT");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
-
+    coutf("#else");
+    coutf("      /* end component %s [%i] */", comp->name, comp->index);
+    coutf("#endif");
   } /* end while comp list (case) */
   list_iterate_end(liter);
 
