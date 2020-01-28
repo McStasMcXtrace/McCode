@@ -55,7 +55,7 @@ SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
 	    int maxNeutronSaved = 1)
 OUTPUT PARAMETERS (This_process,Texture_storage,effective_my_scattering,
-                   hkl_info_texture,packing_factor)
+                   hkl_info_texture, global_process_element)
 
 SHARE
 %{
@@ -1351,7 +1351,7 @@ int read_hkl_data_texture(char *SC_file, struct hkl_info_struct_texture *info)
     fflush(stdout);
 
     //Find two arbitrary axes perpendicular to G and each other.
-    normal_vec(b1[0], b1[1], b1[2],
+    normal_vec(&b1[0], &b1[1], &b1[2],
                list[i].uGx, list[i].uGy, list[i].uGz);
     vec_prod(b2[0], b2[1], b2[2],
              list[i].uGx, list[i].uGy, list[i].uGz,
@@ -2247,7 +2247,7 @@ INITIALIZE
     printf("Texture_process: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info_texture.num_hkl, crystal_fn);
   } else {
-    printf("Texture_process: %s: No reflections read from file. No scattering will take place.\n"
+    printf("Texture_process: %s: No reflections read from file. No scattering will take place.\n",
       NAME_CURRENT_COMP);
   }
   

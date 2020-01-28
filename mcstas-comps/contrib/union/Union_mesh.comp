@@ -148,6 +148,13 @@ return fromString;
 
 };
 
+int coord_comp(Coords A,Coords B) {
+    if (A.x==B.x && A.y==B.y && A.z==B.z){
+        return 1;
+    }
+    return 0;
+};
+
 
 
 void mcdisplay_mesh_function(struct lines_to_draw *lines_to_draw_output,int index, struct geometry_struct **Geometries,int number_of_volumes) {
@@ -189,12 +196,6 @@ void mcdisplay_mesh_function(struct lines_to_draw *lines_to_draw_output,int inde
 	    print1 = 1;
     	print2 = 1;
     	print3 = 1;
-	    int coord_comp(Coords A,Coords B){
-		    if (A.x==B.x && A.y==B.y && A.z==B.z){
-			    return 1;
-		    }
-		    return 0;
-	    }
 	
 	// Make sure it does not print a line if it is already printed.... (might take a while?)
 	for (i = 0 ; i < counter ; i++){
@@ -416,8 +417,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -466,6 +466,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -830,7 +831,6 @@ add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

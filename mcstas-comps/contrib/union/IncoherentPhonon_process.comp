@@ -65,7 +65,7 @@ SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
 		   int interact_fraction=-1)
-OUTPUT PARAMETERS (This_process,IncoherentPhonon_storage)
+OUTPUT PARAMETERS (This_process, IncoherentPhonon_storage, global_process_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -627,7 +627,7 @@ int build_K_final(double kabs, double ct, double *ki, double *kf)
 
   // build kprime (ki,t1,t2) orthonormal right handed triad
   NORM(ki[0],ki[1],ki[2]);
-  normal_vec(t1[0],t1[1],t1[2],ki[0],ki[1],ki[2]);
+  normal_vec(&t1[0],&t1[1],&t1[2],ki[0],ki[1],ki[2]);
   vec_prod(t2[0],t2[1],t2[2],ki[0],ki[1],ki[2],t1[0],t1[1],t1[2]);
 
   kf[0] = ct*ki[0] + st*(cp*t1[0] + sp*t2[0]);
