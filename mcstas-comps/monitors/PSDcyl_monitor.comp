@@ -91,9 +91,16 @@ TRACE
         phi=atan2(x,z);
         i=(int)floor((phi/(2*PI))*nr);
         j=(int)floor((y/yheight)*ny);
-        PSD_N[i][j]++;
-        PSD_p[i][j] += p;
-        PSD_p2[i][j] += p*p;
+
+	double p2 = p*p;
+        #pragma acc atomic
+        PSD_N[i][j] = PSD_N[i][j]+1;
+
+	#pragma acc atomic
+        PSD_p[i][j] = PSD_p[i][j]+p;
+
+	#pragma acc atomic
+        PSD_p2[i][j] = PSD_p2[i][j]+p2;
       }
       else
         ABSORB;  /* Should not be necessary */

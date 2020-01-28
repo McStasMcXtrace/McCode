@@ -119,10 +119,18 @@ TRACE
 
     i= floor((lambda - Lmin)*nL/(Lmax - Lmin));
 
+    double p2 = p*p;
+    #pragma acc atomic
     PolL_N[i]++;
-    HelpArray[i] += p;
-    PolL_p[i]    += pol_proj*p;
-    PolL_p2[i]   += pol_proj*pol_proj*p;
+
+    #pragma acc atomic
+    HelpArray[i] = HelpArray[i] + p;
+
+    #pragma acc atomic
+    PolL_p[i]  = PolL_p[i] + pol_proj*p;
+
+    #pragma acc atomic
+    PolL_p2[i] = PolL_p2[i] + pol_proj*pol_proj*p; /* Shouldn't this be p2?? */
 
     SCATTER;
   }

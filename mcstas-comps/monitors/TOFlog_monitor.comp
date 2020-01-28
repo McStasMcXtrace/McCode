@@ -97,9 +97,13 @@ TRACE
   {
     i = (int)floor(ndec*log(1E6*t/tmin)/log(10.0));         /* Bin number */
     if(i >= 0 && i < nchan) {
-      TOF_N[i]++;
-      TOF_p[i] += p;
-      TOF_p2[i] += p*p;
+      double p2 = p*p;
+      #pragma acc atomic      
+      TOF_N[i] = TOF_N[i]+1;
+      #pragma acc atomic
+      TOF_p[i] = TOF_p[i]+p;
+      #pragma acc atomic      
+      TOF_p2[i] = TOF_p2[i]+p2;
     }
   }
   if (restore_neutron) {

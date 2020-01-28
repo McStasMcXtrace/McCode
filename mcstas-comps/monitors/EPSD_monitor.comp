@@ -94,14 +94,21 @@ TRACE
   PROP_Z0;
   v=vx*vx+vy*vy+vz*vz;
   E=VS2E*(vx*vx+vy*vy+vz*vz);
-/*  printf("(x,y,E,v,p) = (%g, %g, %g, %g, %g)\n",x,y,E,v,p); */
+
   if (x>xmin && x<xmax && y>ymin && y<ymax && E>Emin && E<Emax)
   {
     i = floor((x - xmin)*nx/(xmax - xmin));
     j = floor((E - Emin)*nE/(Emax - Emin));
-    PSD_N[i][j]++;
-    PSD_p[i][j] += p;
-    PSD_p2[i][j] += p*p;
+
+    double p2 = p*p;
+    #pragma acc atomic
+    PSD_N[i][j] = PSD_N[i][j]+1;
+
+    #pragma acc atomic
+    PSD_p[i][j] = PSD_p[i][j]+p;
+
+    #pragma acc atomic
+    PSD_p2[i][j] = PSD_p2[i][j]+p2;
   }
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
