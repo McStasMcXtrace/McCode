@@ -7,7 +7,7 @@
 ### -- ask for number of cores (default: 1) --
 #BSUB -n 10
 #BSUB -R "span[block=1]"
-#BSUB -W 2:00
+#BSUB -W 7:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
