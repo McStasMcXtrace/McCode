@@ -288,7 +288,7 @@ INITIALIZE
   }
 #endif
 
-  if (filename)// && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
+  if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
     strncpy(Vars.Mon_File, filename, 128);
 
   /* check if user given filename with ext will be used more than once */
