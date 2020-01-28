@@ -4,7 +4,7 @@
 
 git submodule init
 git submodule update
-git checkout mcstas-3.0
+#git checkout mcstas-3.0
 git pull
 
 WORK=`pwd`
