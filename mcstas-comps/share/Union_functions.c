@@ -60,6 +60,8 @@ union geometry_parameter_union{
     struct sphere_storage   *p_sphere_storage;
     struct cylinder_storage *p_cylinder_storage;
     struct box_storage      *p_box_storage;
+    struct cone_storage     *p_cone_storage;
+    struct mesh_storage     *p_mesh_storage;
     // add as many pointers to structs as wanted, without increasing memory footprint.
 };
 
@@ -81,6 +83,12 @@ Rotation absolute_rotation;
 // focusing_function creates a vector per selected criteria of focus_data_struct / selected focus function and returns solid angle
 void (*focusing_function)(Coords*, double*, struct focus_data_struct*);
 //                        v_out  , solid_a,
+};
+
+struct focus_data_array_struct
+{
+struct focus_data_struct *elements;
+int num_elements;
 };
 
 struct Detector_3D_struct {
@@ -140,6 +148,7 @@ union logger_data_union{
   struct a_3DS_storage_struct *p_3DS_storage;
   struct a_1D_storage_struct *p_1D_storage;
   struct a_2DS_t_storage_struct *p_2DS_t_storage;
+  struct a_2D_kf_storage_struct *p_2D_kf_storage;
   struct a_2D_kf_t_storage_struct *p_2D_kf_t_storage;
   // Additional logger storage structs to be addedd
 };
@@ -168,9 +177,12 @@ struct logger_pointer_set_struct {
   // Write temporary to permanent is used when the record to temp function is active, and the condition is met.
   void (*temp_to_perm)(union logger_data_union*);
   
-  // Write permanent to disk is used at the end of the overall simulation, it will write the results in permanent to disk.
-  // Obsolete, moved to individual logger component files
-  //int (*perm_to_disk)(union logger_data_union*, union detector_pointer_union*);
+  // Write temporary final_p to permanent is used when the record to temp function is active, and the condition is met
+  //  and the final weight is given to be used for all stored events in the logger.
+  void (*temp_to_perm_final_p)(union logger_data_union*, double);
+  
+  // Select which temp_to_perm function to use
+  int select_t_to_p; // 1: temp_to_perm, 2: temp_to_perm_final_p
   
 };
 
@@ -285,6 +297,10 @@ union geometry_parameter_union geometry_parameters; // relevant parameters for t
 union geometry_parameter_union (*copy_geometry_parameters)(union geometry_parameter_union*);
 struct focus_data_struct focus_data; // Used for focusing from this geometry
 
+// New focus data implementation to remove the focusing bug for non-isotripic processes
+struct focus_data_array_struct focus_data_array;
+struct pointer_to_1d_int_list focus_array_indices; // Add 1D integer array with indecies for correct focus_data for each process
+
 
 // intersect_function takes position/velocity of ray and parameters, returns time list
 int (*intersect_function)(double*,int*,double*,double*,struct geometry_struct*);
@@ -346,9 +362,17 @@ union data_transfer_union{
     struct Powder_physics_storage_struct *pointer_to_a_Powder_physics_storage_struct;
     struct Single_crystal_physics_storage_struct *pointer_to_a_Single_crystal_physics_storage_struct;
     struct AF_HB_1D_physics_storage_struct *pointer_to_a_AF_HB_1D_physics_storage_struct;
+    struct IncoherentPhonon_physics_storage_struct *pointer_to_a_IncoherentPhonon_physics_storage_struct;
+    struct PhononSimpleNumeric_physics_storage_struct *pointer_to_a_PhononSimpleNumeric_storage_struct;
+    struct PhononSimple_physics_storage_struct *pointer_to_a_PhononSimple_storage_struct;
+    struct MagnonSimple_physics_storage_struct *pointer_to_a_MagnonSimple_storage_struct;
+    struct Sans_spheres_physics_storage_struct *pointer_to_a_Sans_spheres_physics_storage_struct;
+    struct Texture_physics_storage_struct *pointer_to_a_Texture_physics_storage_struct;
     struct Template_physics_storage_struct *pointer_to_a_Template_physics_storage_struct;
     // possible to add as many structs as wanted, without increasing memory footprint.
 };
+
+
 
 struct scattering_process_struct
 {
@@ -378,7 +402,6 @@ struct loggers_struct loggers; // Loggers assosiated with this volume
 
 // example of calling a scattering process
 // volume_pointer_list[3]->physics.scattering_process[5].probability_for_scattering_function(input,volume_pointer_list[3]->physics.scattering_process[5])
-
 
 struct starting_lists_struct
 {
@@ -466,6 +489,7 @@ struct global_tagging_conditional_element_struct *elements;
 struct global_master_element_struct {
 char name[128];
 int component_index;
+int stored_number_of_scattering_events; // TEST
 struct conditional_list_struct *tagging_conditional_list_pointer;
 };
 
@@ -487,6 +511,8 @@ double distance_between(Coords position1,Coords position2) {
                 (position1.z-position2.z)*(position1.z-position2.z));
 };
 
+
+
 double length_of_3vector(double *r) {
         return sqrt(r[0]*r[0]+r[1]*r[1]+r[2]*r[2]);
     };
@@ -494,7 +520,6 @@ double length_of_3vector(double *r) {
 double length_of_position_vector(Coords point) {
         return sqrt(point.x*point.x+point.y*point.y+point.z*point.z);
     };
-
 
 Coords make_position(double *r) {
     Coords temp;
@@ -506,6 +531,10 @@ Coords make_position(double *r) {
 Coords coords_scalar_mult(Coords input,double scalar) {
     return coords_set(scalar*input.x,scalar*input.y,scalar*input.z);
 };
+
+double union_coords_dot(Coords vector1,Coords vector2) {
+    return vector1.x*vector2.x + vector1.y*vector2.y + vector1.z*vector2.z;
+}
 
 
 int sum_int_list(struct pointer_to_1d_int_list list) {
@@ -584,37 +613,53 @@ void merge_lists(struct pointer_to_1d_int_list *result,struct pointer_to_1d_int_
 
 void add_element_to_double_list(struct pointer_to_1d_double_list *list,double value) {
     if (list->num_elements == 0) {
-    list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(double));
-    list-> elements[0] = value;
-    }
-    else {
-    double temp[list->num_elements];
-    int iterate;
-    for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
-    free(list->elements);
-    list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(double));
-    for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
-    list->elements[list->num_elements-1] = value;
+      list->num_elements++;
+      list-> elements = malloc(list->num_elements*sizeof(double));
+      list-> elements[0] = value;
+    } else {
+      double temp[list->num_elements];
+      int iterate;
+      for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
+      free(list->elements);
+      list->num_elements++;
+      list-> elements = malloc(list->num_elements*sizeof(double));
+      for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
+      list->elements[list->num_elements-1] = value;
     }
     };
 
 void add_element_to_int_list(struct pointer_to_1d_int_list *list,int value) {
     if (list->num_elements == 0) {
-    list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(int));
-    list-> elements[0] = value;
+      list->num_elements++;
+      list-> elements = malloc(list->num_elements*sizeof(int));
+      list-> elements[0] = value;
+    } else {
+      int temp[list->num_elements];
+      int iterate;
+      for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
+      free(list->elements);
+      list->num_elements++;
+      list-> elements = malloc(list->num_elements*sizeof(int));
+      for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
+      list->elements[list->num_elements-1] = value;
     }
-    else {
-    double temp[list->num_elements];
-    int iterate;
-    for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
-    free(list->elements);
-    list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(int));
-    for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
-    list->elements[list->num_elements-1] = value;
+    };
+
+// Need to check if absolute_rotation is preserved correctly.
+void add_element_to_focus_data_array(struct focus_data_array_struct *focus_data_array,struct focus_data_struct focus_data) {
+    if (focus_data_array->num_elements == 0) {
+      focus_data_array->num_elements++;
+      focus_data_array-> elements = malloc(focus_data_array->num_elements*sizeof(struct focus_data_struct));
+      focus_data_array-> elements[0] = focus_data;
+    } else {
+      struct focus_data_struct temp[focus_data_array->num_elements];
+      int iterate;
+      for (iterate=0;iterate<focus_data_array->num_elements;iterate++) temp[iterate] = focus_data_array->elements[iterate];
+      free(focus_data_array->elements);
+      focus_data_array->num_elements++;
+      focus_data_array-> elements = malloc(focus_data_array->num_elements*sizeof(struct focus_data_struct));
+      for (iterate=0;iterate<focus_data_array->num_elements-1;iterate++) focus_data_array->elements[iterate] = temp[iterate];
+      focus_data_array->elements[focus_data_array->num_elements-1] = focus_data;
     }
     };
 
@@ -2064,6 +2109,12 @@ int inside_function(struct Volume_struct *parent_volume, struct Volume_struct *c
     else if (strcmp("box",parent_volume->geometry.shape) == 0 && strcmp("box",child_volume->geometry.shape) == 0) {
         if (box_within_box(&child_volume->geometry,&parent_volume->geometry)) return 1;
     }
+    else if (strcmp("cone",parent_volume->geometry.shape) == 0 && strcmp("cone",child_volume->geometry.shape) == 0) {
+        if (cone_within_cone(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("mesh",parent_volume->geometry.shape) == 0 && strcmp("mesh",child_volume->geometry.shape) == 0) {
+        if (mesh_within_mesh(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
     else if (strcmp("box",parent_volume->geometry.shape) == 0 && strcmp("cylinder",child_volume->geometry.shape) == 0) {
         if (cylinder_within_box(&child_volume->geometry,&parent_volume->geometry)) return 1;
     }
@@ -2082,12 +2133,32 @@ int inside_function(struct Volume_struct *parent_volume, struct Volume_struct *c
     else if (strcmp("cylinder",parent_volume->geometry.shape) == 0 && strcmp("sphere",child_volume->geometry.shape) == 0) {
         if (sphere_within_cylinder(&child_volume->geometry,&parent_volume->geometry)) return 1;
     }
+    else if (strcmp("cone",parent_volume->geometry.shape) == 0 && strcmp("sphere",child_volume->geometry.shape) == 0) {
+        if (sphere_within_cone(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("sphere",parent_volume->geometry.shape) == 0 && strcmp("cone",child_volume->geometry.shape) == 0) {
+        if (cone_within_sphere(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("cone",parent_volume->geometry.shape) == 0 && strcmp("cylinder",child_volume->geometry.shape) == 0) {
+        if (cylinder_within_cone(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("cylinder",parent_volume->geometry.shape) == 0 && strcmp("cone",child_volume->geometry.shape) == 0) {
+        if (cone_within_cylinder(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("cone",parent_volume->geometry.shape) == 0 && strcmp("box",child_volume->geometry.shape) == 0) {
+        if (box_within_cone(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("box",parent_volume->geometry.shape) == 0 && strcmp("cone",child_volume->geometry.shape) == 0) {
+        if (cone_within_box(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
     else {
         printf("Need within function for type: ");
         printf("%s",parent_volume->geometry.shape);
-        printf(" and type:");
+        printf(" and type: ");
         printf("%s",child_volume->geometry.shape);
         printf(".\n");
+        printf("It is not yet supported to mix mesh geometries with the basic shapes, but several mesh geometries are allowed.\n");
+        exit(1);
     }
     
     return 0;
@@ -2373,6 +2444,12 @@ void generate_overlap_lists(struct pointer_to_1d_int_list **true_overlap_lists, 
         else if (strcmp("box",Volumes[parent]->geometry.shape) == 0 && strcmp("box",Volumes[child]->geometry.shape) == 0) {
             if (box_overlaps_box(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
         }
+        else if (strcmp("cone",Volumes[parent]->geometry.shape) == 0 && strcmp("cone",Volumes[child]->geometry.shape) == 0) {
+            if (cone_overlaps_cone(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("mesh",Volumes[parent]->geometry.shape) == 0 && strcmp("mesh",Volumes[child]->geometry.shape) == 0) {
+            if (mesh_overlaps_mesh(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
         else if (strcmp("box",Volumes[parent]->geometry.shape) == 0 && strcmp("cylinder",Volumes[child]->geometry.shape) == 0) {
             if (box_overlaps_cylinder(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
         }
@@ -2391,12 +2468,32 @@ void generate_overlap_lists(struct pointer_to_1d_int_list **true_overlap_lists, 
         else if (strcmp("cylinder",Volumes[parent]->geometry.shape) == 0 && strcmp("sphere",Volumes[child]->geometry.shape) == 0) {
             if (cylinder_overlaps_sphere(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
         }
+        else if (strcmp("cone",Volumes[parent]->geometry.shape) == 0 && strcmp("sphere",Volumes[child]->geometry.shape) == 0) {
+            if (cone_overlaps_sphere(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("sphere",Volumes[parent]->geometry.shape) == 0 && strcmp("cone",Volumes[child]->geometry.shape) == 0) {
+            if (sphere_overlaps_cone(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("cone",Volumes[parent]->geometry.shape) == 0 && strcmp("cylinder",Volumes[child]->geometry.shape) == 0) {
+            if (cone_overlaps_cylinder(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("cylinder",Volumes[parent]->geometry.shape) == 0 && strcmp("cone",Volumes[child]->geometry.shape) == 0) {
+            if (cylinder_overlaps_cone(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("cone",Volumes[parent]->geometry.shape) == 0 && strcmp("box",Volumes[child]->geometry.shape) == 0) {
+            if (cone_overlaps_box(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("box",Volumes[parent]->geometry.shape) == 0 && strcmp("cone",Volumes[child]->geometry.shape) == 0) {
+            if (box_overlaps_cone(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
         else {
             printf("Need overlap function for type: ");
             printf("%s",Volumes[parent]->geometry.shape);
-            printf(" and type:");
+            printf(" and type: ");
             printf("%s",Volumes[child]->geometry.shape);
             printf(".\n");
+            printf("It is not yet supported to mix mesh geometries with the basic shapes, but several mesh geometries are allowed.\n");
+            exit(1);
         }
         }
       }
@@ -3182,7 +3279,7 @@ void generate_destinations_lists_experimental(struct pointer_to_1d_int_list **tr
     
     //if (verbal) print_1d_int_list(work_list,"After 8)");
     
-    // 9) Remove true parents of n on the list that has other true parents on the list with higher priority
+    // 9) Remove true parents of n on the list that has other true parents of n on the list with higher priority
     for (iterate=work_list.num_elements-1;iterate>-1;iterate--) {
       if (on_int_list(*true_parents_lists[volume_index],work_list.elements[iterate])){
         // work_list.elements[iterate] is the volume index of a volume that is a true parent of n
@@ -3433,7 +3530,10 @@ void generate_reduced_destinations_lists(struct pointer_to_1d_int_list **parents
                 if (rest_dest_volume != 0) {
                     if (on_int_list(*parents_lists[checked_dest_volume],rest_dest_volume) == 1) {
                         // In this case, do not include element checked_dest_index on the reduced destinations list
-                        logic_list.elements[checked_dest_index] = 0;
+                        // ADD mask check
+                        if (Volumes[rest_dest_volume]->geometry.is_masked_volume == 0) {
+                          logic_list.elements[checked_dest_index] = 0;
+                        }
                     }
                 }
             }
@@ -3749,7 +3849,6 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
     struct pointer_to_1d_int_list **grandparents_lists;
     grandparents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
     generate_grandparents_lists(grandparents_lists,parents_lists,number_of_volumes,verbal);
-    printf("grandparents_lists[0]->num_elements = %d \n",grandparents_lists[0]->num_elements);
     
     // Generate version of grandparents list as it would have been if no masks were defined
     struct pointer_to_1d_int_list **grandparents_lists_no_masks;
@@ -3914,8 +4013,11 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
     printf("\nERROR in Union geometry component named \"%s\", spatial focus radius focus_r < 0! \n",component_name);
     exit(1);
   }
+  
+  struct focus_data_struct focus_data;
 
   // Initialize focus_data_struct
+  /*
   geometry->focus_data.Aim = coords_set(0,0,0);
   geometry->focus_data.angular_focus_width = 0;
   geometry->focus_data.angular_focus_height = 0;
@@ -3923,6 +4025,14 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
   geometry->focus_data.spatial_focus_height = 0;
   geometry->focus_data.spatial_focus_radius = 0;
   rot_copy(geometry->focus_data.absolute_rotation,ROT_A_CURRENT);
+  */
+  focus_data.Aim = coords_set(0,0,0);
+  focus_data.angular_focus_width = 0;
+  focus_data.angular_focus_height = 0;
+  focus_data.spatial_focus_width = 0;
+  focus_data.spatial_focus_height = 0;
+  focus_data.spatial_focus_radius = 0;
+  rot_copy(focus_data.absolute_rotation,ROT_A_CURRENT);
 
   // Built on code from Incoherent.comp by Kim Lefmann and Kristian Nielsen
   if (target_index != 0 && !target_x && !target_y && !target_z)
@@ -3932,28 +4042,28 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
     ToTarget = coords_sub(POS_A_TARGET,POS_A_CURRENT);
     //ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     ToTarget = rot_apply(ROT_A_CURRENT, ToTarget);
-    coords_get(ToTarget, &geometry->focus_data.Aim.x, &geometry->focus_data.Aim.y, &geometry->focus_data.Aim.z);
+    coords_get(ToTarget, &focus_data.Aim.x, &focus_data.Aim.y, &focus_data.Aim.z);
   }
   else
-  { geometry->focus_data.Aim.x = target_x; geometry->focus_data.Aim.y = target_y; geometry->focus_data.Aim.z = target_z; }
+  { focus_data.Aim.x = target_x; focus_data.Aim.y = target_y; focus_data.Aim.z = target_z; }
   
-  if (!(geometry->focus_data.Aim.x || geometry->focus_data.Aim.y || geometry->focus_data.Aim.z)) {
+  if (!(focus_data.Aim.x || focus_data.Aim.y || focus_data.Aim.z)) {
     // Somehow set a variable to signify scattering into 4pi
     // printf("Union %s: The target is not defined. Using scattering into 4pi.\n",NAME_CURRENT_COMP);
-    geometry->focus_data.Aim.z=1; // set aim to one so that the randvec output vector has length 1 instead of 0
+    focus_data.Aim.z=1; // set aim to one so that the randvec output vector has length 1 instead of 0
   }
 
   int focusing_model_selected = 0;
   if (angular_focus_width != 0 && angular_focus_height != 0) {
-    geometry->focus_data.focusing_function = &randvec_target_rect_angular_union;
-    geometry->focus_data.angular_focus_width = DEG2RAD*angular_focus_width; // Convert to radians here
-    geometry->focus_data.angular_focus_height = DEG2RAD*angular_focus_height;
+    focus_data.focusing_function = &randvec_target_rect_angular_union;
+    focus_data.angular_focus_width = DEG2RAD*angular_focus_width; // Convert to radians here
+    focus_data.angular_focus_height = DEG2RAD*angular_focus_height;
     focusing_model_selected = 1;
   }
   if (spatial_focus_width != 0 && spatial_focus_height != 0) {
-    geometry->focus_data.focusing_function = &randvec_target_rect_union;
-    geometry->focus_data.spatial_focus_width = spatial_focus_width;
-    geometry->focus_data.spatial_focus_height = spatial_focus_height;
+    focus_data.focusing_function = &randvec_target_rect_union;
+    focus_data.spatial_focus_width = spatial_focus_width;
+    focus_data.spatial_focus_height = spatial_focus_height;
     if (focusing_model_selected) {
         printf("ERROR %s: Select either angular or spatial focusing, not both! Exiting \n",component_name);
         exit(1);
@@ -3961,8 +4071,8 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
     focusing_model_selected = 1;
   }
   if (spatial_focus_radius != 0) {
-    geometry->focus_data.focusing_function = &randvec_target_circle_union;
-    geometry->focus_data.spatial_focus_radius = spatial_focus_radius;
+    focus_data.focusing_function = &randvec_target_circle_union;
+    focus_data.spatial_focus_radius = spatial_focus_radius;
     if (focusing_model_selected) {
         printf("ERROR %s: Select a maximum of one focusing method (spatial rectangle or cicle, or angular rectangle! Exiting \n",component_name);
         exit(1);
@@ -3971,8 +4081,13 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
   }
   if (focusing_model_selected == 0) {
     // Select 4pi focusing
-    geometry->focus_data.spatial_focus_radius = 0;
-    geometry->focus_data.focusing_function = &randvec_target_circle_union;
+    focus_data.spatial_focus_radius = 0;
+    focus_data.focusing_function = &randvec_target_circle_union;
   }
+  
+  // Allocate the isotropic focus_data struct
+  geometry->focus_data_array.num_elements = 0;
+  //geometry->focus_data_array.elements = malloc(sizeof(focus_data_struct));
+  add_element_to_focus_data_array(&geometry->focus_data_array,focus_data);
 };
 

@@ -334,6 +334,32 @@ global_geometry_element.activation_counter = number_of_activations;
 global_geometry_element.component_index = INDEX_CURRENT_COMP;
 global_geometry_element.Volume = &this_sphere_volume; // Would be nicer if this m was a pointer, now we have the (small) data two places
 add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
+
+
+
+// TEST Union sphere has been initialized, test shell point function by writing to file.
+/*
+struct pointer_to_1d_coords_list shell_points;
+shell_points = this_sphere_volume.geometry.shell_points(&this_sphere_volume.geometry,400); // using 500 rings with 500 points
+
+
+FILE *fp;
+
+char filename[124] = "";
+
+strcat(filename,NAME_CURRENT_COMP);
+strcat(filename,"_debug.dat");
+
+fp = fopen(filename,"w");
+
+for (loop_index=0;loop_index<shell_points.num_elements;loop_index++)
+   fprintf(fp,"%lf %lf %lf\n",shell_points.elements[loop_index].x,shell_points.elements[loop_index].y,shell_points.elements[loop_index].z);
+
+free(shell_points.elements);
+
+fclose(fp);
+*/
+
 %}
 
 TRACE
