@@ -211,8 +211,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
         else:
             log = LineLogger()
             t1 = time.time()
-            cmd = "mcrun --info %s" % test.localfile
-            utils.run_subtool_to_completion(cmd, cwd=join(testdir, test.instrname), stdout_cb=log.logline, stderr_cb=log.logline)
+            cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
+            utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
             t2 = time.time()
             test.compiled = os.path.exists(binfile)
             test.compiletime = t2 - t1
@@ -225,10 +225,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             else:
                 formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
                 logging.info(formatstr % test.instrname + cmd)
-
-            # save compile stdout/stderr
-            log.save(join(testdir, test.instrname, "compile_stdout.txt"))
-
+                            
         # save (incomplete) test results to disk
         test.save(infolder=join(testdir, test.instrname))
 

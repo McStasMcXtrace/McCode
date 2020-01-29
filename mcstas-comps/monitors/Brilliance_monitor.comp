@@ -172,13 +172,22 @@ TRACE
       i = floor((lambda - lambda_0)*nlam/(lambda_1 - lambda_0));
       j = floor((t-tt_0)*nt/(tt_1-tt_0));
       Pnorm=p/dlam/ster/srcarea;
-      BRIL_meanN[i]++;
-      BRIL_mean[i] += Pnorm;
-      BRIL_meanE[i] += Pnorm*Pnorm;
+      double Pnorm2 = Pnorm*Pnorm;
+      #pragma acc atomic
+      BRIL_meanN[i] = BRIL_meanN[i]+1;
+      #pragma acc atomic
+      BRIL_mean[i] = BRIL_mean[i]+Pnorm;
+      #pragma acc atomic      
+      BRIL_meanE[i] = BRIL_meanE[i]+Pnorm2;
+      
       Pnorm=Pnorm/Freq/dt;
-      BRIL_N[j][i]++;
-      BRIL_p[j][i] += Pnorm;
-      BRIL_p2[j][i] += Pnorm*Pnorm;
+      Pnorm2=Pnorm+Pnorm;
+      #pragma acc atomic      
+      BRIL_N[j][i] = BRIL_N[j][i]+1;
+      #pragma acc atomic
+      BRIL_p[j][i] = BRIL_p[j][i]+Pnorm;
+      #pragma acc atomic
+      BRIL_p2[j][i] = BRIL_p2[j][i]+Pnorm2;
     }
   }
   if (restore_neutron) {

@@ -106,9 +106,14 @@ TRACE
       i = floor((lambda - Lmin)*nL/(Lmax - Lmin));
       j = floor((t-tt_0)*nt/(tt_1-tt_0));
       /*  printf("tt_0, tt_1, nt %g %g %i t j %g %i \n",tt_0,tt_1,nt,t,j);
-      */        TOFL_N[j][i]++;
-      TOFL_p[j][i] += p;
-      TOFL_p2[j][i] += p*p;
+      */
+      double p2 = p*p;
+      #pragma acc atomic
+      TOFL_N[j][i] = TOFL_N[j][i]+1;
+      #pragma acc atomic
+      TOFL_p[j][i] = TOFL_p[j][i]+p;
+      #pragma acc atomic
+      TOFL_p2[j][i] = TOFL_p2[j][i]+p2;
     }
   }
   if (restore_neutron) {

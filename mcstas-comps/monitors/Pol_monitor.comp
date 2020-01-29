@@ -98,10 +98,19 @@ TRACE
             ABSORB;
         }
     }
-    Pol_N++;
-    Psum  += p;
-    Pol_p += pol_proj*p;
-    Pol_p2 += pol_proj*pol_proj*p;
+    double p2 = p*p;
+    #pragma acc atomic
+    Pol_N = Pol_N+1;
+
+    #pragma acc atomic
+    Psum = Psum+p;
+
+    #pragma acc atomic
+    Pol_p = Pol_p+pol_proj*p;
+
+    #pragma acc atomic
+    Pol_p2 = Pol_p2+pol_proj*pol_proj*p; // Shouldn't this be p2?
+    
     SCATTER;
   }
   if (restore_neutron) {

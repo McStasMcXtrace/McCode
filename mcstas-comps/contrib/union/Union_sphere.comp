@@ -173,8 +173,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -227,6 +226,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -334,11 +334,36 @@ global_geometry_element.activation_counter = number_of_activations;
 global_geometry_element.component_index = INDEX_CURRENT_COMP;
 global_geometry_element.Volume = &this_sphere_volume; // Would be nicer if this m was a pointer, now we have the (small) data two places
 add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
+
+
+
+// TEST Union sphere has been initialized, test shell point function by writing to file.
+/*
+struct pointer_to_1d_coords_list shell_points;
+shell_points = this_sphere_volume.geometry.shell_points(&this_sphere_volume.geometry,400); // using 500 rings with 500 points
+
+
+FILE *fp;
+
+char filename[124] = "";
+
+strcat(filename,NAME_CURRENT_COMP);
+strcat(filename,"_debug.dat");
+
+fp = fopen(filename,"w");
+
+for (loop_index=0;loop_index<shell_points.num_elements;loop_index++)
+   fprintf(fp,"%lf %lf %lf\n",shell_points.elements[loop_index].x,shell_points.elements[loop_index].y,shell_points.elements[loop_index].z);
+
+free(shell_points.elements);
+
+fclose(fp);
+*/
+
 %}
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

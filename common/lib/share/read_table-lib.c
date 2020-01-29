@@ -143,7 +143,7 @@ int Table_File_List_gc(t_Table *tab){
  * input tab: pointer to table to store.
  * return None.
 *******************************************************************************/
-void *Table_File_List_store(t_Table *tab){
+void Table_File_List_store(t_Table *tab){
     Table_File_List_Handler(STORE,tab,0);
 }
 

@@ -106,9 +106,13 @@ TRACE
   {
     i = floor((1E6*t-t_min)/delta_t);              /* Bin number */
     if(i >= 0 && i < nt) {
-      TOF_N[i]++;
-      TOF_p[i] += p;
-      TOF_p2[i] += p*p;
+      double p2 = p*p;
+      #pragma acc atomic      
+      TOF_N[i] = TOF_N[i]+1;
+      #pragma acc atomic
+      TOF_p[i] = TOF_p[i]+p;
+      #pragma acc atomic      
+      TOF_p2[i] = TOF_p2[i]+p2;
       SCATTER;
     }
   }
