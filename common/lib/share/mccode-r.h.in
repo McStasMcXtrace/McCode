@@ -341,6 +341,15 @@ char  *mcsig_message;
 /* the body of this function depends on component instances, and is cogen'd */
 void* _getvar_parameters(char* compname);
 
+/* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
+* after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
+* component sample. Such are the joys of ANSI C.
+
+* Anyway the usage of MCGETPAR requires that we use sometimes bare names...
+*/
+#define MC_GETPAR2(comp, par) (_ ## comp ## _var._parameters.par)
+#define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
+
 #define INSTRUMENT_GETPAR(par) (instrument->_parameters. ## par)
 
 /* Current component name, index, position and orientation */
