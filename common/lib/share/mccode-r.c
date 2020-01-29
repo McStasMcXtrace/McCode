@@ -2887,7 +2887,7 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
     lens[tidx] = 0;
     if (loclen>0)
       for (long k=lo; k<lo+loclen; k++)
-        if (!psorted[i]->_absorbed)
+        if (!pbuffer[k]->_absorbed)
           lens[tidx]++;
   }
 
@@ -2907,6 +2907,7 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
       psorted[k] = pbuffer[j];
     }
   }
+  //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
 
   return accumlen;
 }
