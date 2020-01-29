@@ -72,7 +72,7 @@
 DEFINE COMPONENT Union_conditional_PSD
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, xwidth, yheight,time_min=0, time_max=0, overwrite_logger_weight=0) // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
-OUTPUT PARAMETERS (accepted_loggers_all,accepted_loggers_specific,accepted_tagging,found_logger,loop_index,return_value,this_conditional_data,this_data_union)
+OUTPUT PARAMETERS (accepted_loggers_all,accepted_loggers_specific,accepted_tagging,found_logger,loop_index,return_value,this_conditional_data,this_data_union, new_tagging_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -81,8 +81,8 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 #endif
 
@@ -175,10 +175,10 @@ int loop_index;
 
 // This function pointer is used to switch the logger function pointers for active and inactive logger functions.
 // Need to have the same input (defined in logger_pointer_set_struct in Union_functions.c)
-void (*temp_function_pointer)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
+//void (*temp_function_pointer)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
 int return_value;
-struct pointer_to_1d_int_list accepted_loggers_all = {0,NULL};
-struct pointer_to_1d_int_list accepted_loggers_specific = {0,NULL};
+struct pointer_to_1d_int_list accepted_loggers_all;
+struct pointer_to_1d_int_list accepted_loggers_specific;
 //struct pointer_to_1d_int_list accepted_tagging = {0,NULL};
 
 struct logger_struct *found_logger;
@@ -192,6 +192,10 @@ struct global_tagging_conditional_element_struct *new_tagging_element;
 
 INITIALIZE
 %{
+  accepted_loggers_all.elements = NULL;
+  accepted_loggers_all.num_elements = 0;
+  accepted_loggers_specific.elements = NULL;
+  accepted_loggers_specific.num_elements = 0;
 
   printf("starded conditional initialize \n");
   
@@ -276,6 +280,9 @@ INITIALIZE
       exit(1);
     }
     
+    // This function pointer is used to switch the logger function pointers for active and inactive logger functions.
+    // Need to have the same input (defined in logger_pointer_set_struct in Union_functions.c)
+    void (*temp_function_pointer)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
     for (loop_index=0;loop_index<accepted_loggers_all.num_elements;loop_index++) {
       //printf("all loop \n");
     
