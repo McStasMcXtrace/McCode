@@ -23,7 +23,7 @@
 :syntax keyword instrRuntime
 	\ ABSORB 
 	\ SCATTERED 
-	\ MC_GETPAR 
+	\ MC_GETPAR3 
 	\ DETECTOR_OUT 
 	\ DETECTOR_OUT_0D 
 	\ DETECTOR_OUT_1D 
