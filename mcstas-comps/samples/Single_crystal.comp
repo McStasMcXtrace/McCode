@@ -1175,6 +1175,7 @@ TRACE
   struct hkl_data *L;           /* Structure factor list */
   int i;                        /* Index into structure factor list */
   struct tau_data *T;           /* List of reflections close to Ewald sphere */
+  int tau_count;                /* Number of reflections close to Ewald sphere*/
   int j;                        /* Index into reflection list */
   int event_counter;            /* scattering event counter */
   double kix, kiy, kiz, ki;     /* Initial wave vector [1/AA] */
@@ -1209,6 +1210,7 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
+
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1241,8 +1243,9 @@ TRACE
 
     L = hkl_info.list;
     T = hkl_info.tau_list;
+#ifndef USE_PGI
     hkl_info.type = '\0';
-
+#endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
       double Alpha, Beta;
@@ -1266,8 +1269,8 @@ TRACE
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
                 NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
-#endif
         hkl_info.flag_warning++;
+#endif
         break;
       }
 
@@ -1306,49 +1309,52 @@ TRACE
 
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
-      if ( fabs(kix - hkl_info.kix) < 1e-6
+/*      if ( fabs(kix - hkl_info.kix) < 1e-6
         && fabs(kiy - hkl_info.kiy) < 1e-6
         && fabs(kiz - hkl_info.kiz) < 1e-6) {
         hkl_info.nb_reuses++;
       } else {
-        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
+*/        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
         double coh_xsect = 0, coh_refl = 0;
 
         /* call hkl_search */
         #ifdef USE_OPENCL
         if (oclContext_SX.Kernel != NULL){ // the Kernel could be initialised
-          hkl_info.tau_count = hkl_search_opencl(L, T, hkl_info.count, hkl_info.V0, 
+          tau_count = hkl_search_opencl(L, T, hkl_info.count, hkl_info.V0, 
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect, oclContext_SX,
               d_L, d_T, d_tau_count, d_coh_refl, d_coh_xsect);
-	  if (hkl_info.tau_count != 0)
-	    printf("\nGPU hkl_info.tau_count:%i\n",hkl_info.tau_count);
+	  if (tau_count != 0)
+	    printf("\nGPU tau_count:%i\n",tau_count);
         }
         else 
         #endif
-	  hkl_info.tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+
+	  tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect);
 	
         /* store ki so that we can check for further SPLIT iterations */
-        if (event_counter == 0 ) { /* only for incoming neutron */
-          hkl_info.kix = kix;
-          hkl_info.kiy = kiy;
-          hkl_info.kiz = kiz;
-        }
+#ifndef USE_PGI
+//        if (event_counter == 0 ) { /* only for incoming neutron */
+//          hkl_info.kix = kix;
+//          hkl_info.kiy = kiy;
+//          hkl_info.kiz = kiz;
+//        }
 
-        hkl_info.coh_refl  = coh_refl;
-        hkl_info.coh_xsect = coh_xsect;
-        hkl_info.nb_refl += hkl_info.tau_count;
-        hkl_info.nb_refl_count++;
-      }
-
+//        hkl_info.coh_refl  = coh_refl;
+//        hkl_info.coh_xsect = coh_xsect;
+//        hkl_info.nb_refl += tau_count;
+//        hkl_info.nb_refl_count++;
+#endif
+/*      }
+*/
       /* (3). Probabilities of the different possible interactions. */
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
          scattering lengths to m**-1 */
-      coh_xlen = hkl_info.coh_xsect/V0;
+      coh_xlen = coh_xsect/V0;
       if (barns) {
         coh_xlen *= 100;
       } /* else assume fm^2 */
@@ -1361,7 +1367,9 @@ TRACE
       } else {
         mc_trans = p_trans;
       }
+#ifndef USE_PGI
       hkl_info.type = 't';
+#endif
       mc_interact = 1 - mc_trans;
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
@@ -1415,24 +1423,26 @@ TRACE
         vx = kix; /* ki vector is used as tmp var with norm v */
         vy = kiy;
         vz = kiz; /* Go for next scattering event */
+#ifndef USE_PGI
         hkl_info.type = 'i';
+#endif
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
-        if(hkl_info.coh_refl <= 0){
+        if(coh_refl <= 0){
           ABSORB;
         }
         sum = 0;
-        j = hkl_select(T, hkl_info.tau_count, hkl_info.coh_refl, &sum,_particle);
+        j = hkl_select(T, tau_count, coh_refl, &sum,_particle);
 
-        if(j >= hkl_info.tau_count)
+        if(j >= tau_count)
         {
 #ifndef USE_PGI
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
-              "(sum=%g, j=%i, tau_count=%i).\n", sum, j , hkl_info.tau_count);
-#endif
+              "(sum=%g, j=%i, tau_count=%i).\n", sum, j , tau_count);
           hkl_info.flag_warning++;
-          j = hkl_info.tau_count - 1;
+#endif
+          j = tau_count - 1;
         }
         i = T[j].index;
         /* (8). Pick scattered wavevector kf from 2D Gauss distribution. */
@@ -1450,15 +1460,17 @@ TRACE
         kfy *= adjust;
         kfz *= adjust;
         /* Adjust neutron weight (see manual for explanation). */
-        p *= T[j].xsect*hkl_info.coh_refl/(hkl_info.coh_xsect*T[j].refl);
+        p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
 
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
+#ifndef USE_PGI
         hkl_info.type = 'c';
         hkl_info.h    = L[i].h;
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
+#endif
       }
       /* lattice curvature option: rotate back neutron velocity */
       if (RZ || RY) {
