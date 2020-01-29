@@ -41,11 +41,14 @@
       <item> OUTPUT </item>
       <item> INSTRUMENT </item>
       <item> include </item>
+      <item> USERVARS </item>
+      <item> REMOVABLE </item>
+      <item> DEPENDENCY </item>
     </list>
     <list name="mcstas_runtime">
       <item> ABSORB </item>
       <item> SCATTERED </item>
-      <item> MC_GETPAR </item>
+      <item> MC_GETPAR3 </item>
       <item> DETECTOR_OUT </item>
       <item> DETECTOR_OUT_0D </item>
       <item> DETECTOR_OUT_1D </item>

@@ -143,6 +143,9 @@
                       <keyword>OUTPUT</keyword>
                       <keyword>INSTRUMENT</keyword>
                       <keyword>%include</keyword>
+                      <keyword>REMOVABLE</keyword>
+                      <keyword>DEPENDENCY</keyword>
+                      <keyword>USERVARS</keyword>
         </keyword-list>
 
        <keyword-list _name = "mcstas_trace" style = "Others 2" case-sensitive="FALSE">
@@ -161,13 +164,12 @@
                       <keyword>ITERATE</keyword>
                       <keyword>SPLIT</keyword>
                       <keyword>COPY</keyword>
-                      <keyword>REMOVABLE</keyword>
         </keyword-list>
 
         <keyword-list _name = "mcstas_runtime" style = "Others 3" case-sensitive="TRUE">
                       <keyword>ABSORB</keyword>
                       <keyword>SCATTERED</keyword>
-                      <keyword>MC_GETPAR</keyword>
+                      <keyword>MC_GETPAR3</keyword>
                       <keyword>DETECTOR_OUT</keyword>
                       <keyword>DETECTOR_OUT_0D</keyword>
                       <keyword>DETECTOR_OUT_1D</keyword>

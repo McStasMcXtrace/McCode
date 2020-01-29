@@ -321,6 +321,8 @@
         <keyword>INSTRUMENT</keyword>
         <keyword>%include</keyword>
         <keyword>REMOVABLE</keyword>
+        <keyword>DEPENDENCY</keyword>
+        <keyword>USERVARS</keyword>
     </context>
     
     <!-- McStas keywords (grammar) -->
@@ -346,7 +348,7 @@
     <context id="mcstas_runtime" style-ref="mcstas_runtime">
         <keyword>ABSORB</keyword>
         <keyword>SCATTERED</keyword>
-        <keyword>MC_GETPAR</keyword>
+        <keyword>MC_GETPAR3</keyword>
         <keyword>DETECTOR_OUT</keyword>
         <keyword>DETECTOR_OUT_0D</keyword>
         <keyword>DETECTOR_OUT_1D</keyword>
