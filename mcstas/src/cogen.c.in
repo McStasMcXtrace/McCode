@@ -1847,9 +1847,9 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    #pragma acc enter data create(particles[0:livebatchsize])");
   coutf("    #else");
   coutf("    _class_particle* particles = malloc(livebatchsize*sizeof(_class_particle));");
+  coutf("    #endif");
   coutf("    _class_particle** psorted = malloc(livebatchsize*sizeof(_class_particle*));");
   coutf("    _class_particle** pbuffer = malloc(livebatchsize*sizeof(_class_particle*));");
-  coutf("    #endif");
   coutf("");
   coutf("    // TODO: do we need a GPU data section for the above buffers here?");
   coutf("");
