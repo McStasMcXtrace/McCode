@@ -17,7 +17,7 @@
 * %Description
 * Use of all basic geometries, sphere, cylinder, cone and box
 *
-* Example: Detector: detector_I=1982.98
+* %Example: Detector: detector_scat_I=40.2053
 *
 * %Parameters
 *
@@ -66,7 +66,7 @@ COMPONENT a1 = Progress_bar()
 COMPONENT source = Source_div(
         xwidth=0.09, yheight=0.15,focus_aw=0.01, focus_ah=0.01,
         E0 = 5,
-        dE = 0, flux = 1E9)
+        dE = 0, flux = 1E12)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT sample_pos = Arm()
@@ -98,7 +98,7 @@ AT (0.02,-0.03,0) RELATIVE sample_pos
 ROTATED (0,0,20) RELATIVE sample_pos
 
 COMPONENT test_logger_1D = Union_logger_1D(
-  variable="time", min_value=1E-4, max_value=6E-4, n1=200, filename="logger_1D.dat"
+  variable="time", min_value=1E-4, max_value=8E-4, n1=200, filename="logger_1D.dat"
 )
 AT (0,0,0) RELATIVE sample_pos
 ROTATED (0,0,0) RELATIVE sample_pos
