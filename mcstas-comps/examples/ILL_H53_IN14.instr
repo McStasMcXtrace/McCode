@@ -23,14 +23,14 @@
 *
 * The sample, analyser and detector units are mounted on standard Tanzboden
 * modules and the distance between these units may be changed if necessary. For
-* sample positioning, two motorized arcs (+/- 20deg), and two horizontal 
-* translation tables (+/- 10 mm) are available. Soller collimators can be easily 
+* sample positioning, two motorized arcs (+/- 20deg), and two horizontal
+* translation tables (+/- 10 mm) are available. Soller collimators can be easily
 * inserted before and after the sample, and before the detector.
 *
 * Three horizontally focusing analysers are available: (002) pyrolytic graphite,
 * bent Si(111), and Heusler (111) for polarised neutrons.
 *
-* In this TAS configuration, PG002 is used as monochromator analyser, 
+* In this TAS configuration, PG002 is used as monochromator analyser,
 * with a single type detector.
 *
 * %Example: KI=1.55 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=7.5962E+07
@@ -39,27 +39,27 @@
 * KI: [Angs-1]  central wavevector for incoming neutrons
 * QM: [Angs-1]  wavevector transfer modulus at the sample
 * EN: [meV]     energy transfer at the sample
-* verbose: []   
-* WM: []        
-* HM: []        
-* NHM: []       
-* NVM: []       
-* RMV: []       
-* DM: []        
-* WA: []        
-* HA: []        
-* NHA: []       
-* NVA: []       
-* RAV: []       
-* RAH: []       
-* DA: []        
-* SM: []        
-* SS: []        
-* SA: []        
-* L1: []        
-* L2: []        
-* L3: []        
-* L4: []        
+* verbose: []
+* WM: []
+* HM: []
+* NHM: []
+* NVM: []
+* RMV: []
+* DM: []
+* WA: []
+* HA: []
+* NHA: []
+* NVA: []
+* RAV: []
+* RAH: []
+* DA: []
+* SM: []
+* SS: []
+* SA: []
+* L1: []
+* L2: []
+* L3: []
+* L4: []
 *
 * %Link
 * The <a href="http://www.ill.fr/in14">IN14 TAS</a> at the ILL
@@ -101,14 +101,14 @@ double gRh          = 4000;
 /* guide section parameters (total length/number of elements) */
 
 double gH 	    = 0.12;
-double L_H53_COM    = 6.0  /4.0, Rh_H53_COM = 0; 
-double L_H53_C1     = 3.5  /3.0, Rh_H53_C1  = 0; 
-double L_H53_C2     = 9.5  /7.0, Rh_H53_C2  = 0; 
-double L_H53_C3     = 3.0  /3.0, Rh_H53_C3  = 0; 
-double L_H53_P1     = 6.0  /4.0, Rh_H53_P1  = 0; 
-double L_H53_P2     = 7.5  /5.0, Rh_H53_P2  = 0; 
-double L_H53_P3     = 7.5  /5.0, Rh_H53_P3  = 0; 
-double L_H53_P4     = 7.5  /5.0, Rh_H53_P4  = 0; 
+double L_H53_COM    = 6.0  /4.0, Rh_H53_COM = 0;
+double L_H53_C1     = 3.5  /3.0, Rh_H53_C1  = 0;
+double L_H53_C2     = 9.5  /7.0, Rh_H53_C2  = 0;
+double L_H53_C3     = 3.0  /3.0, Rh_H53_C3  = 0;
+double L_H53_P1     = 6.0  /4.0, Rh_H53_P1  = 0;
+double L_H53_P2     = 7.5  /5.0, Rh_H53_P2  = 0;
+double L_H53_P3     = 7.5  /5.0, Rh_H53_P3  = 0;
+double L_H53_P4     = 7.5  /5.0, Rh_H53_P4  = 0;
 
 /* gaps and Al window parameters */
 
@@ -139,7 +139,7 @@ if (gRh) {
 
 lambda=2*PI/KI;
 dlambda=lambda*0.015;
-printf("ILL_IN14: Incoming wavelength lambda=%g [Angs]\n", lambda);
+printf("%s: Incoming wavelength lambda=%g [Angs]\n", NAME_INSTRUMENT, lambda);
 
 %}
 /* end of INITIALIZE */
@@ -149,7 +149,7 @@ TRACE
 
 COMPONENT Origin = Arm()
   AT (0,0,0) ABSOLUTE
-  
+
 COMPONENT HCS = Source_gen(
   radius   = 0.21,
   dist     = 2.155,
@@ -160,7 +160,7 @@ COMPONENT HCS = Source_gen(
   T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13,T3=40.1 ,I3=2.78e13,
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
-  
+
 COMPONENT Entrance = Arm()
 AT (0,0,2.155) RELATIVE PREVIOUS ROTATED (0,0,0) RELATIVE PREVIOUS
 
@@ -168,24 +168,24 @@ COMPONENT NiGuide_entrance = Arm()
 AT (0,0,0) RELATIVE PREVIOUS ROTATED (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT NiGuide = Guide(
-  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=2.775, 
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=2.775,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,0.01) RELATIVE PREVIOUS
 
 COMPONENT H53_BOG1 = Guide(
-  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.860, 
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.860,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,2.775+.025) RELATIVE NiGuide
 
 /* this is the O.P. Gap 12 mm  */
 
 COMPONENT H53_BOG2 = Guide(
-  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=1.440, 
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=1.440,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,0.860+.012) RELATIVE PREVIOUS
 
 COMPONENT H53_BOG3 = Guide(
-  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.74, 
+  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=0.74,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,1.44+.012) RELATIVE PREVIOUS
 
