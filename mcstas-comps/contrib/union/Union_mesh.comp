@@ -75,9 +75,8 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 //#include "mesh_in_mesh.c"
 //#include "/MeshFunctions/r_within_mesh.c"
