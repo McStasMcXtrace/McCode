@@ -1479,6 +1479,7 @@ void undef_trace_section(struct instr_def *instr)
   cout("#undef abort");
   cout("#undef printf");
   cout("#undef sprintf");
+  cout("#undef snprintf");
   cout("#undef fprintf");
   cout("#endif");
   cout("#undef SCATTERED");
