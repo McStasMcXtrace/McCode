@@ -1106,6 +1106,19 @@ int cogen_decls(struct instr_def *instr)
         cout("/* ************************************************************************** */");
         cout("");
       }
+      cout("/* if on GPU, globally nullify sprintf,fprintf,printfs   */");
+      cout("/* (Similar defines are available in each comp trace but */");
+      cout("/*  those are not enough to handle external libs etc. )  */");
+      cout("#ifdef USE_PGI");
+      cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+      cout("#define sprintf(string,...) printf(__VA_ARGS__)");
+      cout("#define snprintf(string, len, ...) printf(__VA_ARGS__)");
+      cout("#define printf(...) noprintf()");
+      cout("#define exit(...) noprintf()");
+      cout("#define abort(...) noprintf()");
+      cout("#define strcmp(a,b) str_comp(a,b)");
+      cout("#define strlen(a) str_len(a)");
+      cout("#endif");
       coutf("/* Shared user declarations for all components types '%s'. */", comp->def->name);
       codeblock_out(comp->def->share_code);
       comp->def->flag_defined_share = 1; /* flag the component so that SHARE outputs only once */
@@ -1115,6 +1128,20 @@ int cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
   if (index) {
+    cout("");
+    cout("/* if on GPU, globally nullify sprintf,fprintf,printfs   */");
+    cout("/* (Similar defines are available in each comp trace but */");
+    cout("/*  those are not enough to handle external libs etc. )  */");
+    cout("#ifdef USE_PGI");
+    cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+    cout("#define sprintf(string,...) printf(__VA_ARGS__)");
+    cout("#define snprintf(string, len, ...) printf(__VA_ARGS__)");
+    cout("#define printf(...) noprintf()");
+    cout("#define exit(...) noprintf()");
+    cout("#define abort(...) noprintf()");
+    cout("#define strcmp(a,b) str_comp(a,b)");
+    cout("#define strlen(a) str_len(a)");
+    cout("#endif");
     cout("");
     cout("/* ************************************************************************** */");
     cout("/*             End of SHARE user declarations for all components              */");
@@ -1449,6 +1476,7 @@ void undef_trace_section(struct instr_def *instr)
   cout("#undef strlen");
   cout("#undef strcmp");
   cout("#undef exit");
+  cout("#undef abort");
   cout("#undef printf");
   cout("#undef sprintf");
   cout("#undef fprintf");
