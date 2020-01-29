@@ -488,10 +488,8 @@ TRACE
         /* exit reflection loops if no intersection (neutron is after box) */
         if (side == 0 || dt <= 0)
           {
-	  #ifndef USE_PGI
 	  if (GVars.warnings < 100)
               fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
-	  #endif
             GVars.warnings++;
             x += w_adj; y += h_adj; ABSORB; } /* should never occur */
 

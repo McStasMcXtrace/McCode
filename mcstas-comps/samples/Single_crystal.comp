@@ -1260,13 +1260,11 @@ TRACE
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
-#ifndef USE_PGI
         if (hkl_info.flag_warning < 100)
           fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
                 NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
-#endif
         hkl_info.flag_warning++;
         break;
       }
@@ -1426,11 +1424,9 @@ TRACE
 
         if(j >= hkl_info.tau_count)
         {
-#ifndef USE_PGI
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
               "(sum=%g, j=%i, tau_count=%i).\n", sum, j , hkl_info.tau_count);
-#endif
           hkl_info.flag_warning++;
           j = hkl_info.tau_count - 1;
         }

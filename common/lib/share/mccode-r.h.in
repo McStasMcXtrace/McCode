@@ -427,7 +427,7 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 /* random number generation. ================================================ */
 
-/* available rundom number generators */
+/* available random number generators */
 #define _RNG_ALG_MT         1
 #define _RNG_ALG_KISS       2
 #define _RNG_ALG_FAST_KISS  3
