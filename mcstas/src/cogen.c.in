@@ -1615,18 +1615,17 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
       coutf("    instrument->logic.Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
-      coutf("#endif");
-      coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
-      coutf("#ifndef NOSPLIT");
       coutf("    for (" "instrument->logic.Split_%s = 0; "
                         "instrument->logic.Split_%s< %s; "
                         "instrument->logic.Split_%s++) {",
-        comp->name, comp->name, exp, comp->name);
-      str_free(exp);
+	    comp->name, comp->name, exp, comp->name);
+      coutf("      *_particle="
+	    "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
+      coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
       coutf("#endif");
+      str_free(exp);
     }
-    else
-      coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
+    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
 
     coutf("      /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     if (comp->split) {
@@ -1636,6 +1635,7 @@ int cogen_raytrace(struct instr_def *instr)
         "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
       coutf("#endif");
+      str_free(exp);
     }
 
     // coordinate transformations (wrt to PREVIOUS)

@@ -49,10 +49,8 @@
 
 DEFINE COMPONENT Single_crystal_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(
-	    vector mosaic_AB = {0,0, 0,0,0, 0,0,0},
-	    string reflections=0, delta_d_d=1e-4,
-            mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
+SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
+            mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1, vector mosaic_AB={0,0, 0,0,0, 0,0,0},
             recip_cell=0, barns=0,
             ax = 0, ay = 0, az = 0,
             bx = 0, by = 0, bz = 0,
@@ -60,7 +58,7 @@ SETTING PARAMETERS(
             //p_transmit = -1, sigma_abs = 0, sigma_inc = 0, // handled elsewhere
 		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
            interact_fraction=-1,packing_factor=1)
-OUTPUT PARAMETERS (This_process,Single_crystal_storage,effective_my_scattering,hkl_info_union,global_process_element)
+OUTPUT PARAMETERS (This_process, Single_crystal_storage, effective_my_scattering, hkl_info_union, global_process_element)
 
 SHARE
 %{
@@ -968,8 +966,8 @@ INITIALIZE
   hkl_info_union.nb_reuses = hkl_info_union.nb_refl = hkl_info_union.nb_refl_count = 0;
   hkl_info_union.tau_count = 0;
 
-  /*this is necessary to allow a numerical array to be passed through as a DEFINITION parameter*/ 
-  double* mosaic_ABin=mosaic_AB;
+  /* ought to be cleaned up as mosaic_AB now is a proper vector/array and not a define */
+  double* mosaic_ABin = mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data_union(reflections, &hkl_info_union, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
     printf("Single_crystal_process: %s: Error: Aborting.\n", NAME_CURRENT_COMP);

@@ -430,14 +430,14 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #endif
 
 
-#if RNG_ALG == RNG_ALG_MT  // MT (currently not functional for gpu)
+#if RNG_ALG == _RNG_ALG_MT  // MT (currently not functional for gpu)
 #  define MC_RAND_MAX ((unsigned long)0xffffffff)
 #  define randstate_t unsigned long // this could be anything
 #  define RANDSTATE_LEN 1
 #  define srandom(seed) mt_srandom_empty()
 #  define random() mt_random()
 #  define _random() mt_random()
-#elif RNG_ALG == RNG_ALG_KISS  // KISS
+#elif RNG_ALG == _RNG_ALG_KISS  // KISS
 #  ifndef ULONG_MAX
 #    define ULONG_MAX ((unsigned long)0xffffffffffffffffUL)
 #  endif
@@ -447,7 +447,7 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define srandom(seed) kiss_srandom(_particle->randstate, seed)
 #  define random() kiss_random(_particle->randstate)
 #  define _random() kiss_random(state)
-#elif RNG_ALG == RNG_ALG_FAST_KISS  // FAST KISS Hundt impl. (not yet functional)
+#elif RNG_ALG == _RNG_ALG_FAST_KISS  // FAST KISS Hundt impl. (not yet functional)
 #  define randstate_t uint32_t
 #  define RANDSTATE_LEN 5
 #  define srandom(seed) fast_kiss_srandom(_particle->randstate, seed)
@@ -508,8 +508,7 @@ int display(void);
 /*
 *  Divide-and-conquer strategy for parallel sort absorbed last.
 */
-long sort_absorb_last(_class_particle* particles, _class_particle** psorted,
-  _class_particle** pbuffer, long len);
+long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long len);
 
 
 /* simple vector algebra ==================================================== */
