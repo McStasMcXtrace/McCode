@@ -394,6 +394,8 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_string;
         } else if(!strcmp($1, "vector")) {
           formal->type = instr_type_vector;
+          formal->isoptional = 1;
+          formal->default_value = exp_number("NULL");
         } else if(!strcmp($1, "symbol")) {
           formal->type = instr_type_symbol;
         } else {
@@ -412,6 +414,8 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_string;
         } else if(!strcmp($1, "double")) {
           formal->type = instr_type_vector;
+          formal->isoptional = 1;
+          formal->default_value = exp_number("NULL");
         } else {
           print_error("ERROR: Illegal type %s* for component "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
