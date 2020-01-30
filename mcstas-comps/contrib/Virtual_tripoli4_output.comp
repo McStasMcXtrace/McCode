@@ -21,35 +21,40 @@
 * virtual source neutron file when neutron are coming from a
 * Virtual_tripoli4_input.comp.
 * As McStas keeps the notion of batch with this component, it's possible
-* to calculate standard deviations for the flux in differents energy groupes.
+* to calculate standard deviations for the flux in differents energy groups.
 * The component geometry is the full plane, and saves the neutron state as
 * it exits from the previous component.
 * Format is the one used by TRIPOLI4.4 stock files :
 *
 *   NEUTRON energy position_X position_Y position_Z dir_X dir_Y dir_Z weight
 *
-* energy is in Mega eV
-* positions are in cm and the direction vector is normalized to 1.
+* energy is in [Mega eV]
+* positions are in [cm] and the direction vector is normalized to 1.
+*
+* In case you wish to collect batch information from an existing Virtual_tripoli4_input
+* component, you should define the TRIPOLI4_INPUT_DEFS symbol at compile time, 
+* and assign the 'virtual_tripoli4_input_comp'  as the name of the input component
+* gievn as a string.
+* The simplest is to use the 'batch' component parameter.
 *
 * %BUGS
-* This component will NOT work with parallel execution (MPI).
+* This component will NOT work with parallel execution (MPI/GPU).
 *
 * EXAMPLE:
 * To create a file collecting all neutron states with TRIPOLI4 format
 * COMPONENT T4output = Virtual_tripoli4_output(
-*    filename = "exit_guide_result.dat",
-*    virtual_tripoli4_input_comp = source_file_tripoli )
-*  at the position where will be the Virtual_tripoli4_input.
+*    filename = "exit_guide_result.dat", batch = 1 )
+*  at the position where will be the Virtual_tripoli4_input when reading the file.
 *
 * %P
 * INPUT PARAMETERS
-* filename: [str]                     name of the Tripoli4 neutron output file,
+* filename: [str]                     Name of the Tripoli4 neutron output file,
 *                                     or stdout if left to 0.
-* batch: [1]                          index of the Tripoli batch to generate, when no
+* batch: [1]                          Index of the Tripoli batch to generate, when no
 *                                     Tripoli4_input component is available in instrument.
-* Virtual_tripoli_input_comp: [comp]  Name of the Tripoli4_input component
-*                             	      from which is to be obtained batch information
-*                              	      use '0' if not defined.
+* Virtual_tripoli_input_comp: [str]   Name of the Tripoli4_input component
+*                             	      from which is to be obtained batch information.
+*                                     Then, the TRIPOLI4_INPUT_DEFS must be defined.
 *
 * %L
 * <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>
@@ -74,13 +79,13 @@ INITIALIZE
 %{
   previous_batch=0;
   int i;
-  char *** head_ptr;
   char ** head;
-  long *nl_ptr;
   long nl;
 
-#if defined (USE_MPI)
-  exit(printf("Tripoli4_output: %s: ERROR: This component can not be used in parallel execution mode (MPI). Abort.\n", NAME_CURRENT_COMP));
+#if defined (USE_MPI) || defined(USE_PGI)
+  exit(printf("Tripoli4_output: %s: ERROR: "
+    "This component can not be used in parallel execution mode (MPI/GPU). Abort.\n", 
+    NAME_CURRENT_COMP));
 #endif
 
   /* Open neutron output file. */
@@ -102,10 +107,8 @@ INITIALIZE
   /* use header information from Virtual_tripoli4_input component instance */
   /* WARNING: the next four lines are untested, this was the best possible without
   *  an example instrument */
-  head_ptr = (char***)(MC_GETPAR3(Virtual_tripoli4_input, head));
-  head = *head_ptr;
-  nl_ptr = (long*)(MC_GETPAR3(Virtual_tripoli4_input, nl));
-  nl = *nl_ptr;
+  head = MC_GETPAR(virtual_tripoli4_input_comp, head);
+  nl   = MC_GETPAR(virtual_tripoli4_input_comp, nl);
 
   for(i=0;i<nl;++i){
     fprintf(hfile,head[i]);
@@ -138,8 +141,7 @@ TRACE
   double ux,uy,uz,pos_x,pos_y,pos_z;
 
 #ifdef TRIPOLI4_INPUT_DEFS
-  // TODO: update to use the cogen3 version of GETPAR, see PreMonitor_nD
-  current_batch = (MC_GETPAR(virtual_tripoli4_input_comp, num_batch));
+  current_batch = (MC_GETPAR3(Virtual_tripoli4_input, virtual_tripoli4_input_comp, num_batch));
 #else
   current_batch = batch;
 #endif

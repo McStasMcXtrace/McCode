@@ -90,10 +90,8 @@ TRACE
     i = floor(nx*(x-xmin)/(xmax-xmin));              /* Bin number */
     if((i >= nx) || (i<0))
     {
-#ifndef USE_PGI
       printf("FATAL ERROR: wrong positioning in linear PSD. i= %i \n",i);
       exit(1);
-#endif
     }
     double p2 = p*p;
     #pragma acc atomic

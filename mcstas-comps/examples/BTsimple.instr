@@ -58,7 +58,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 EXTEND %{
   /* Initialize divergencies to 0 */
   VertDiv = 0;
-  HorDiv = 0;
+  HorDiv  = 0;
 %}
 
 COMPONENT source = Source_gen(
@@ -78,7 +78,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 EXTEND %{
   /* Calculate divergence of ray as emitted by the source */
   VertDiv = RAD2DEG*atan2(vy,vz);
-  HorDiv = RAD2DEG*atan2(vx,vz);
+  HorDiv  = RAD2DEG*atan2(vx,vz);
 %}
 
 /* Measure incoming phase-space */
@@ -143,10 +143,10 @@ FINALLY
   double* tmpp2;
   double* tmpd1;
   double* tmpd2;
-  tmpN=MC_GETPAR(BT_out,L_N);
-  tmpp1=MC_GETPAR(BT_in,L_p);
+  tmpN =MC_GETPAR(BT_out,L_N);
+  tmpp1=MC_GETPAR(BT_in, L_p);
   tmpp2=MC_GETPAR(BT_out,L_p);
-  tmpd1=MC_GETPAR(BT_in,L_p2);
+  tmpd1=MC_GETPAR(BT_in, L_p2);
   tmpd2=MC_GETPAR(BT_out,L_p2);
   for (j=0;j<101;j++) {
     
@@ -165,15 +165,16 @@ FINALLY
       BT_p2[j] /= mpi_node_count;
 #endif
 
-    
   }
-  DETECTOR_OUT_1D(
+  // we can not call the DETECTOR_OUT_1D as it transparently makes use of
+  // NAME_CURRENT_COMP and POS_A_CURRENT_COMP, which are set to match '_comp'
+  mcdetector_out_1D(
 		  "Brilliance transfer",
 		  "Wavelength [AA]",
 		  "BT",
 		  "L", lambda-dlambda, lambda+dlambda, 101,
 		  &BT_N[0],&BT_p[0],&BT_p2[0],
-		  "Brilliance_transfer");
+		  "Brilliance_transfer", NAME_INSTRUMENT, coords_set(0,0,0));
 
 %}
 
