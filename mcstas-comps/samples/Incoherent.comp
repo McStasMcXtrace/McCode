@@ -124,7 +124,7 @@ OUTPUT PARAMETERS(VarsInc, offdata)
 SHARE
 %{
 %include "read_table-lib"
-#ifndef USE_PGI
+#ifndef USE_GPU
 %include "interoff-lib"
 #endif
 struct StructVarsInc
@@ -145,7 +145,7 @@ DECLARE
 %{
 
   struct StructVarsInc VarsInc;
-#ifndef USE_PGI
+#ifndef USE_GPU
   off_struct offdata;
 #endif
 %}
@@ -154,7 +154,7 @@ INITIALIZE
 %{
   VarsInc.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-#ifndef USE_PGI
+#ifndef USE_GPU
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       VarsInc.shape=3; thickness=0; concentric=0;
     }
@@ -256,7 +256,7 @@ TRACE
       intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
     else if (VarsInc.shape == 2)
       intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
-#ifndef USE_PGI
+#ifndef USE_GPU
     else if (VarsInc.shape == 3)
       intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 #endif
@@ -431,7 +431,7 @@ TRACE
 
 MCDISPLAY
 %{
-#ifndef USE_PGI  
+#ifndef USE_GPU  
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }

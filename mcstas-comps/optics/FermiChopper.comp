@@ -504,7 +504,7 @@ TRACE
     zp1 = FC_zrot(x,z, t, FCVars);
     FCVars.X[1] = xp1; FCVars.Z[1] = zp1;
 
-#ifndef USE_PGI
+#ifndef USE_GPU
     if (mcdotrace) {
       /* indicate position of neutron in mcdisplay */
       double xp2 = x; double zp2 = z; x = xp1; z=zp1; SCATTER; x=xp2; z=zp2;
@@ -727,7 +727,7 @@ SCATTER;
             FCVars.absorb_slitcoating++; ABSORB;
           } /* Cutoff ~ 1E-10 */
         }
-#ifndef USE_PGI
+#ifndef USE_GPU
         if (mcdotrace) {
           double xp2 = x; double zp2 = z;
           /* indicate position of neutron in mcdisplay */

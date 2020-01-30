@@ -68,7 +68,7 @@ fprintf(stdout, "[%s] Initialize\n", instrument_name);
 
 TRACE
 %{
-#ifndef USE_PGI
+#ifndef USE_GPU
   double ncount;
   ncount = mcget_run_num();
   if (!StartTime) {

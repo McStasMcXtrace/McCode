@@ -1,1 +1,1 @@
-pgcc -ta=tesla,managed,deepcopy -Minfo=accel -DUSE_PGI -DNOSIGNALS -DRNG_ALG=2
+pgcc -ta=tesla,managed,deepcopy -Minfo=accel -DUSE_GPU
