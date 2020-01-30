@@ -143,11 +143,11 @@ FINALLY
   double* tmpp2;
   double* tmpd1;
   double* tmpd2;
-  tmpN =MC_GETPAR(BT_out,L_N);
-  tmpp1=MC_GETPAR(BT_in, L_p);
-  tmpp2=MC_GETPAR(BT_out,L_p);
-  tmpd1=MC_GETPAR(BT_in, L_p2);
-  tmpd2=MC_GETPAR(BT_out,L_p2);
+  tmpN =COMP_GETPAR(BT_out,L_N);
+  tmpp1=COMP_GETPAR(BT_in, L_p);
+  tmpp2=COMP_GETPAR(BT_out,L_p);
+  tmpd1=COMP_GETPAR(BT_in, L_p2);
+  tmpd2=COMP_GETPAR(BT_out,L_p2);
   for (j=0;j<101;j++) {
     
     BT_N[j]=tmpN[j];
