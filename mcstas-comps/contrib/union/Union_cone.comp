@@ -76,9 +76,8 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 //#include "Cone_in_Cone.c"
 //#include "/ConeFunctions/r_within_Cone.c"
@@ -206,8 +205,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -273,6 +271,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -388,6 +387,7 @@ this_cone_storage.height = yheight;
 
 sprintf(this_cone_volume.name,NAME_CURRENT_COMP);
 sprintf(this_cone_volume.geometry.shape,"cone");
+this_cone_volume.geometry.eShape = cone;
 this_cone_volume.geometry.priority_value = priority;
 // Currently the coordinates will be in absolute space.
 this_cone_volume.geometry.center = POS_A_CURRENT_COMP;
@@ -420,7 +420,6 @@ add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

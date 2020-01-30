@@ -65,7 +65,7 @@ SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
 		   int interact_fraction=-1)
-OUTPUT PARAMETERS (This_process,IncoherentPhonon_storage)
+OUTPUT PARAMETERS (This_process, IncoherentPhonon_storage, global_process_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -74,8 +74,8 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 #endif
 
@@ -627,7 +627,7 @@ int build_K_final(double kabs, double ct, double *ki, double *kf)
 
   // build kprime (ki,t1,t2) orthonormal right handed triad
   NORM(ki[0],ki[1],ki[2]);
-  normal_vec(t1[0],t1[1],t1[2],ki[0],ki[1],ki[2]);
+  normal_vec(&t1[0],&t1[1],&t1[2],ki[0],ki[1],ki[2]);
   vec_prod(t2[0],t2[1],t2[2],ki[0],ki[1],ki[2],t1[0],t1[1],t1[2]);
 
   kf[0] = ct*ki[0] + st*(cp*t1[0] + sp*t2[0]);
@@ -4625,6 +4625,10 @@ struct scattering_process_struct This_process;
 	#define PROCESS_DETECTOR dummy
 #endif
 
+#ifndef PROCESS_INCOHERENTPHONON_DETECTOR
+    #define PROCESS_INCOHERENTPHONON_DETECTOR dummy
+#endif
+
 // Declare for this component, to do calculations on the input / store in the transported data
 struct IncoherentPhonon_physics_storage_struct IncoherentPhonon_storage;
 
@@ -4651,6 +4655,9 @@ INITIALIZE
   // Need to specify if this process is isotropic
   This_process.non_isotropic_rot_index = -1; // Yes (powder)
   //This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // The type of the process must be saved in the global enum process
+  This_process.eProcess = IncoherentPhonon;
 
   // Packing the data into a structure that is transported to the main component
   sprintf(This_process.name,NAME_CURRENT_COMP);

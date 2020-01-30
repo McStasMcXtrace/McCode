@@ -14,6 +14,27 @@
 ******************************************************************************/
 
 // -------------    Definition of data structures   ---------------------------------------------
+
+// GPU
+enum shape {
+  box,
+  sphere,
+  cylinder,
+  cone,
+  mesh
+};
+
+enum process {
+  Incoherent,
+  Powder,
+  Single_crystal,
+  AF_HB_1D,
+  PhononSimple,
+  Texture,
+  IncoherentPhonon,
+  Template
+};
+
 struct intersection_time_table_struct {
 int num_volumes;
 int *calculated;
@@ -148,6 +169,7 @@ union logger_data_union{
   struct a_3DS_storage_struct *p_3DS_storage;
   struct a_1D_storage_struct *p_1D_storage;
   struct a_2DS_t_storage_struct *p_2DS_t_storage;
+  struct a_2D_kf_storage_struct *p_2D_kf_storage;
   struct a_2D_kf_t_storage_struct *p_2D_kf_t_storage;
   // Additional logger storage structs to be addedd
 };
@@ -274,6 +296,7 @@ struct loggers_struct {
 struct geometry_struct
 {
 char shape[64];     // name of shape used (sphere, cylinder, box, off, ...)
+enum shape eShape;  // enum with shape for flexible functions GPU
 double priority_value;    // priority of the geometry
 Coords center;      // Center position of volume, reported by components in global frame, updated to main frame in initialize
 // Rotation of this volume
@@ -376,6 +399,7 @@ union data_transfer_union{
 struct scattering_process_struct
 {
 char name[256];                // User defined process name
+enum process eProcess;         // enum value corresponding to this process GPU
 double process_p_interact;     // double between 0 and 1 that describes the fraction of events forced to undergo this process. -1 for disable
 int non_isotropic_rot_index;   // -1 if process is isotrpic, otherwise is the index of the process rotation matrix in the volume
 Rotation rotation_matrix;      // rotation matrix of process, reported by component in local frame, transformed and moved to volume struct in main

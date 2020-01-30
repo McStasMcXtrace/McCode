@@ -75,9 +75,8 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 //#include "mesh_in_mesh.c"
 //#include "/MeshFunctions/r_within_mesh.c"
@@ -148,6 +147,13 @@ return fromString;
 
 };
 
+int coord_comp(Coords A,Coords B) {
+    if (A.x==B.x && A.y==B.y && A.z==B.z){
+        return 1;
+    }
+    return 0;
+};
+
 
 
 void mcdisplay_mesh_function(struct lines_to_draw *lines_to_draw_output,int index, struct geometry_struct **Geometries,int number_of_volumes) {
@@ -189,12 +195,6 @@ void mcdisplay_mesh_function(struct lines_to_draw *lines_to_draw_output,int inde
 	    print1 = 1;
     	print2 = 1;
     	print3 = 1;
-	    int coord_comp(Coords A,Coords B){
-		    if (A.x==B.x && A.y==B.y && A.z==B.z){
-			    return 1;
-		    }
-		    return 0;
-	    }
 	
 	// Make sure it does not print a line if it is already printed.... (might take a while?)
 	for (i = 0 ; i < counter ; i++){
@@ -416,8 +416,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -466,6 +465,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -796,6 +796,7 @@ this_mesh_storage.n_facets = n_facets;
 
 sprintf(this_mesh_volume.name,NAME_CURRENT_COMP);
 sprintf(this_mesh_volume.geometry.shape,"mesh");
+this_mesh_volume.geometry.eShape = mesh;
 this_mesh_volume.geometry.priority_value = priority;
 // Currently the coordinates will be in absolute space.
 this_mesh_volume.geometry.center = POS_A_CURRENT_COMP;
@@ -830,7 +831,6 @@ add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

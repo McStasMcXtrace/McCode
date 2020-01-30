@@ -48,9 +48,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Single_crystal_process // Remember to change the name of process here
-DEFINITION PARAMETERS (mosaic_AB=Mosaic_AB_Undefined)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
-            mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
+            mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1, vector mosaic_AB={0,0, 0,0,0, 0,0,0},
             recip_cell=0, barns=0,
             ax = 0, ay = 0, az = 0,
             bx = 0, by = 0, bz = 0,
@@ -58,15 +58,15 @@ SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
             //p_transmit = -1, sigma_abs = 0, sigma_inc = 0, // handled elsewhere
 		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
            interact_fraction=-1,packing_factor=1)
-OUTPUT PARAMETERS (This_process,Single_crystal_storage,effective_my_scattering,hkl_info_union,packing_factor)
+OUTPUT PARAMETERS (This_process, Single_crystal_storage, effective_my_scattering, hkl_info_union, global_process_element)
 
 SHARE
 %{
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 #endif
 
@@ -399,7 +399,7 @@ SHARE
       sig1 = FWHM2RMS*info->m_delta_d_d*list[i].tau;
 
       /* Find two arbitrary axes perpendicular to tau and each other. */
-      normal_vec(b1[0], b1[1], b1[2],
+      normal_vec(&b1[0], &b1[1], &b1[2],
                  list[i].u1x, list[i].u1y, list[i].u1z);
       vec_prod(b2[0], b2[1], b2[2],
                list[i].u1x, list[i].u1y, list[i].u1z,
@@ -628,7 +628,7 @@ SHARE
           T[j].oy = oy;
           T[j].oz = oz;
           /* Compute unit vectors b1 and b2 that span the tangent plane. */
-          normal_vec(b1x, b1y, b1z, nx, ny, nz);
+          normal_vec(&b1x, &b1y, &b1z, nx, ny, nz);
           vec_prod(b2x, b2y, b2z, nx, ny, nz, b1x, b1y, b1z);
           T[j].b1x = b1x;
           T[j].b1y = b1y;
@@ -927,6 +927,10 @@ struct scattering_process_struct This_process;
 	//struct pointer_to_global_process_list global_process_list = {0,NULL};
 	#define PROCESS_DETECTOR dummy
 #endif
+
+#ifndef PROCESS_SINGLE_CRYSTAL_DETECTOR
+    #define PROCESS_SINGLE_CRYSTAL_DETECTOR dummy
+#endif
 %}
 
 INITIALIZE
@@ -966,8 +970,8 @@ INITIALIZE
   hkl_info_union.nb_reuses = hkl_info_union.nb_refl = hkl_info_union.nb_refl_count = 0;
   hkl_info_union.tau_count = 0;
 
-  /*this is necessary to allow a numerical array to be passed through as a DEFINITION parameter*/ 
-  double mosaic_ABin[]=mosaic_AB;
+  /* ought to be cleaned up as mosaic_AB now is a proper vector/array and not a define */
+  double* mosaic_ABin = mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data_union(reflections, &hkl_info_union, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
     printf("Single_crystal_process: %s: Error: Aborting.\n", NAME_CURRENT_COMP);
@@ -1045,6 +1049,9 @@ INITIALIZE
   // Need to specify if this process is isotropic
   //This_process.non_isotropic_rot_index = -1; // Yes (powder)
   This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // The type of the process must be saved in the global enum process
+  This_process.eProcess = Single_crystal;
 
   // Packing the data into a structure that is transported to the main component
   This_process.data_transfer.pointer_to_a_Single_crystal_physics_storage_struct = &Single_crystal_storage;
