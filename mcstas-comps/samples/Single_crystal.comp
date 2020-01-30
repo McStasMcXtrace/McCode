@@ -775,12 +775,15 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
     info->list = list;
     info->count = i;
-    info->tau_list = malloc(i*sizeof(*info->tau_list));
+    
+    info->tau_list = (struct tau_data*)malloc(i*sizeof(*info->tau_list));
+
     if(!info->tau_list)
     {
       fprintf(stderr, "Single_crystal: Error: Out of memory!\n");
       return(0);
     }
+    
     return(info->count);
   } /* read_hkl_data */
 
@@ -793,95 +796,6 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     this function returns:
       tau_count (return), coh_refl, coh_xsect, T (updated elements in the array up to [j])
    */
-
-#ifdef USE_OPENCL // when using OpenCL
-int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, double V0, 
-  double kix, double kiy, double kiz, double tau_max,
-  double* h_coh_refl, double* h_coh_xsect, struct opencl_context oclContext,
-  cl_mem d_L, cl_mem d_T, cl_mem d_tau_count, cl_mem d_coh_refl, cl_mem d_coh_xsect)
-{ 
-    cl_int             ciErr1;                              // Error code var
-    size_t             globalWorkSize[1] = {4096};          // 1D var for Total # of work items
-    size_t             localWorkSize[1] = {64};            // 1D var for # of work items in the work group	
-    
-    int h_tau_count=0;
-
-    //printf("In GPU-based hkl_search");
-
-    //  Using GPU(s)...
-    if (oclContext.Kernel == NULL || oclContext.GPUContext == NULL) {
-      printf("OpenCL Kernel could not be initialized\n");
-      return(-10); // OpenCL Kernel could not be initialized
-    }
-    
-    // Write data 
-    int iDevice = 0;
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_L, CL_TRUE, 0, sizeof(struct hkl_data)*count, h_L, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-1);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_T, CL_TRUE, 0, sizeof(struct tau_data)*count, h_T, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-2);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_tau_count, CL_TRUE, 0, sizeof(int), &h_tau_count, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS){
-      return(-3);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_coh_refl, CL_TRUE, 0, sizeof(double), h_coh_refl, 0, NULL, NULL); 
-    if (ciErr1 !=CL_SUCCESS){
-      return(-4);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_coh_xsect, CL_TRUE, 0, sizeof(double), h_coh_xsect , 0, NULL, NULL); 
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-5);
-    }
-
-    clFinish(oclContext.CommandQueue[iDevice]);    
-	
-    ciErr1  = clSetKernelArg(oclContext.Kernel, 0, sizeof(cl_mem), (void*)&d_L);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 1, sizeof(cl_mem), (void*)&d_T);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 2, sizeof(int),    (void*)&count);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 3, sizeof(double), (void*)&V0);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 4, sizeof(double), (void*)&kix);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 5, sizeof(double), (void*)&kiy);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 6, sizeof(double), (void*)&kiz);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 7, sizeof(double), (void*)&tau_max);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 8, sizeof(cl_mem), (void*)&d_tau_count);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 9, sizeof(cl_mem), (void*)&d_coh_refl);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel,10, sizeof(cl_mem), (void*)&d_coh_xsect);
-    if (ciErr1 !=CL_SUCCESS) return(0);
-
-    ciErr1 = clEnqueueNDRangeKernel(oclContext.CommandQueue[iDevice], oclContext.Kernel, 1, NULL, 
-        globalWorkSize, localWorkSize, 0, NULL, NULL); 
-    if (ciErr1 !=CL_SUCCESS) return (0);
-                     	
-    clFinish(oclContext.CommandQueue[iDevice]);
-
-    //Read back results...
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_T, CL_TRUE, 0, sizeof(struct tau_data)*count, h_T, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-6);
-    }
-    
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_tau_count, CL_TRUE, 0, sizeof(int), &h_tau_count, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return (-7); 
-    }
-    
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_coh_refl, CL_TRUE, 0, sizeof(double), h_coh_refl, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return (-8);      
-    }
-    
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_coh_xsect, CL_TRUE, 0, sizeof(double), h_coh_xsect, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return (-9);
-    }
-    return h_tau_count;
-} 
-#endif 
-  // non OpenCL case
 #pragma acc routine seq
   int hkl_search(struct hkl_data *L, struct tau_data *T, int count, double V0, 
     double kix, double kiy, double kiz, double tau_max,
@@ -1242,9 +1156,13 @@ TRACE
     abs_xlen *= 100; inc_xlen *= 100;
 
     L = hkl_info.list;
-    T = hkl_info.tau_list;
 #ifndef USE_PGI
+    T = hkl_info.tau_list;
     hkl_info.type = '\0';
+#else
+    T = hkl_info.tau_list;
+ // T = malloc(100*sizeof(*hkl_info.tau_list));
+ // T = malloc(hkl_info.count*sizeof(struct tau_data));
 #endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
@@ -1433,7 +1351,6 @@ TRACE
         }
         sum = 0;
         j = hkl_select(T, tau_count, coh_refl, &sum,_particle);
-
         if(j >= tau_count)
         {
 #ifndef USE_PGI
@@ -1453,6 +1370,7 @@ TRACE
         kfx = T[j].rho_x + T[j].ox + T[j].b1x*y1 + T[j].b2x*y2;
         kfy = T[j].rho_y + T[j].oy + T[j].b1y*y1 + T[j].b2y*y2;
         kfz = T[j].rho_z + T[j].oz + T[j].b1z*y1 + T[j].b2z*y2;
+
         /* Normalize kf to length of ki, to account for planer
           approximation of the Ewald sphere. */
         adjust = ki/sqrt(kfx*kfx + kfy*kfy + kfz*kfz);
@@ -1460,8 +1378,9 @@ TRACE
         kfy *= adjust;
         kfz *= adjust;
         /* Adjust neutron weight (see manual for explanation). */
+#ifndef USE_PGI
         p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
-
+#endif
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
@@ -1471,6 +1390,7 @@ TRACE
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
 #endif
+
       }
       /* lattice curvature option: rotate back neutron velocity */
       if (RZ || RY) {
