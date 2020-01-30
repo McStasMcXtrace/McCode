@@ -43,7 +43,7 @@
 * (McStas units are in general neutrons/second)
 *
 * Example general parameters (general):
-*          size=0.12 Lmin=0.1 Lmax=10 dist=1.6 focus_xw=0.19 focus_yh=0.15 nu=16.67
+*          yheight=0.12 Lmin=0.1 Lmax=10 dist=1.6 focus_xw=0.19 focus_yh=0.15 nu=16.67
 *
 * Example moderator specific parameters
 * (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00:
