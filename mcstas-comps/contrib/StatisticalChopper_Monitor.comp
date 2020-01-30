@@ -89,13 +89,13 @@ SAVE
   /* the detector file written by the Monitor_nD is stored in a 'MCDETECTOR detector' structure */
 
   /* get back information from the StatisticalChopper */
-  int *m_ptr = MC_GETPAR3(StatisticalChopper, comp, m); /* number of appertures in the sequence */
+  int *m_ptr = COMP_GETPAR3(StatisticalChopper, comp, m); /* number of appertures in the sequence */
   int m = *m_ptr;
-  int *nslit_ptr = MC_GETPAR3(StatisticalChopper, comp, nslit); /* length of the sequence (number of possible slits around disk) */
+  int *nslit_ptr = COMP_GETPAR3(StatisticalChopper, comp, nslit); /* length of the sequence (number of possible slits around disk) */
   int nslit = *nslit_ptr;
-  double *nu = MC_GETPAR3(StatisticalChopper, comp, nu);
+  double *nu_ptr = COMP_GETPAR3(StatisticalChopper, comp, nu);
   double nu = *nu_ptr;
-  int *Sequence= MC_GETPAR3(StatisticalChopper, comp, Sequence);
+  int *Sequence= COMP_GETPAR3(StatisticalChopper, comp, Sequence);
 
   double c = (double)(m-1)/(double)(nslit-1); /* duty cycle */
   int f; /* number of periods in the detected time range */

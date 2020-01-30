@@ -155,9 +155,6 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Elliptic_guide_gravity
-DEFINITION PARAMETERS(
-	mvaluesright=NULL, mvaluesleft=NULL, mvaluestop=NULL, mvaluesbottom=NULL,
-	seglength=NULL	)
 SETTING PARAMETERS (l,
 	xwidth = 0,yheight = 0,
 	linxw = 0,loutxw = 0,
@@ -175,7 +172,9 @@ SETTING PARAMETERS (l,
 	alphabottom=-1, mbottom=-1,
 	string verbose = "on", // on or off
 	enableGravity = 1.0,
-	curvature=0	)
+	curvature=0,
+	vector mvaluesright=NULL, vector mvaluesleft=NULL, vector mvaluestop=NULL, vector mvaluesbottom=NULL,
+	vector seglength=NULL	)
 
 OUTPUT PARAMETERS (
 guideInfo,latestParticleCollision,Gx,Gy,Gz,

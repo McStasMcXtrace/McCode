@@ -23,12 +23,12 @@
 * Example:
 *   R=Rotator(nu=14, phase=0)
 *   ...
-*   DR=Derotator(rotator=R)
+*   DR=Derotator(rotator="R")
 *   AT (0,0,0) RELATIVE R
 *
 * %Parameters
 * INPUT PARAMETERS:
-* rotator: [no quotes]  the name of the Rotator component used to initiate the rotation
+* rotator: [string]  the name of the Rotator component used to initiate the rotation
 *
 * OUTPUT PARAMETERS:
 * angle: [deg]          rotation angle
@@ -37,14 +37,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Derotator
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string rotator)
-OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 TRACE
 %{
-  double* angleptr = MC_GETPAR3(Rotator, rotator, angle);
+  double* angleptr = COMP_GETPAR3(Rotator, rotator, angle);
   double angle = *angleptr;
 
   if (angle) { /* rotate back neutron w/r to monochromator */
@@ -57,11 +55,6 @@ TRACE
     /* rotate speed */
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   }
-%}
-
-MCDISPLAY
-%{
-
 %}
 
 END

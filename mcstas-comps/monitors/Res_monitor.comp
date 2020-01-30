@@ -178,10 +178,8 @@ TRACE
     /* Now fetch data from the Res_sample. */
     if(p && (!bufsize || buffer_index<bufsize))
     {
-      // TODO: this should be updated to the cogen3 version of GETPAR, but no
-      // test instrument was found to support implementation and determine
-      // the component type from which a par is gotten.
-      struct Res_sample_struct *s = &(MC_GETPAR(res_sample_comp, res_struct));
+
+      struct Res_sample_struct *s = (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));
       if(s->pi != 0)
       {
         Vars.cp  = s->ki_x;
