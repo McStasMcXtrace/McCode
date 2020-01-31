@@ -2175,6 +2175,13 @@ int Texture_physics_scattering(double *k_final, double *k_initial, double *weigh
   return 1;
 };
 
+#ifndef PROCESS_DETECTOR
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_TEXTURE_DETECTOR
+    #define PROCESS_TEXTURE_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -2188,14 +2195,6 @@ struct hkl_info_struct_texture hkl_info_texture;
 // Needed for transport to the main component, will be the same for all processes
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
-
-#ifndef PROCESS_DETECTOR
-    #define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_TEXTURE_DETECTOR
-    #define PROCESS_TEXTURE_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE

@@ -909,6 +909,14 @@ int Single_crystal_physics_scattering(double *k_final, double *k_initial, double
     return 1;
 };
 
+#ifndef PROCESS_DETECTOR
+    //struct pointer_to_global_process_list global_process_list = {0,NULL};
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_SINGLE_CRYSTAL_DETECTOR
+    #define PROCESS_SINGLE_CRYSTAL_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -923,14 +931,6 @@ struct hkl_info_struct_union hkl_info_union;
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
 
-#ifndef PROCESS_DETECTOR
-	//struct pointer_to_global_process_list global_process_list = {0,NULL};
-	#define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_SINGLE_CRYSTAL_DETECTOR
-    #define PROCESS_SINGLE_CRYSTAL_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE

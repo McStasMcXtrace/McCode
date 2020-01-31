@@ -66,19 +66,23 @@ int physics_scattering(enum process choice, double *k_final, double *k_initial, 
     #ifdef PROCESS_DETECTOR
     switch(choice) {
         #ifdef PROCESS_INCOHERENT_DETECTOR
-        case Incoherent: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case Incoherent:
+            output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         #ifdef PROCESS_POWDER_DETECTOR
-        case Powder: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case Powder:
+            output = Powder_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         #ifdef PROCESS_SINGLE_CRYSTAL_DETECTOR
-        case Single_crystal: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case Single_crystal:
+            output = Single_crystal_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         #ifdef PROCESS_AF_HB_1D_DETECTOR
-        case AF_HB_1D: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case AF_HB_1D:
+            output = AF_HB_1D_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         #ifdef PROCESS_PHONONSIMPLE_DETECTOR
@@ -87,15 +91,18 @@ int physics_scattering(enum process choice, double *k_final, double *k_initial, 
             break;
         #endif
         #ifdef PROCESS_TEXTURE_DETECTOR
-        case Texture: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case Texture:
+            output = Texture_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         #ifdef PROCESS_INCOHERENTPHONON_DETECTOR
-        case IncoherentPhonon: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case IncoherentPhonon:
+            output = IncoherentPhonon_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         #ifdef PROCESS_TEMPLATE_DETECTOR
-        case Template: output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
+        case Template:
+            output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data);
             break;
         #endif
         default: printf("physics_scattering: No scattering process matches input!");

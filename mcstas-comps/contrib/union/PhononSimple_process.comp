@@ -441,6 +441,15 @@ int PhononSimple_scattering(double *k_final, double *k_initial, double *weight, 
 
 };
 
+// These lines help with future error correction, and tell other Union components
+//  that at least one process have been defined.
+#ifndef PROCESS_DETECTOR
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_PHONONSIMPLE_DETECTOR
+    #define PROCESS_PHONONSIMPLE_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -456,15 +465,6 @@ double sigma_const;
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
 
-// These lines help with future error correction, and tell other Union components
-//  that at least one process have been defined.
-#ifndef PROCESS_DETECTOR
-	#define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_PHONONSIMPLE_DETECTOR
-    #define PROCESS_PHONONSIMPLE_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE

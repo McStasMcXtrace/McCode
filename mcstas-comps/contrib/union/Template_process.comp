@@ -113,6 +113,15 @@ int Template_physics_scattering(double *k_final, double *k_initial, double *weig
     
 };
 
+// These lines help with future error correction, and tell other Union components
+//  that at least one process have been defined.
+#ifndef PROCESS_DETECTOR
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_TEMPLATE_DETECTOR
+    #define PROCESS_TEMPLATE_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -127,15 +136,6 @@ double effective_my_scattering;
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
 
-// These lines help with future error correction, and tell other Union components
-//  that at least one process have been defined.
-#ifndef PROCESS_DETECTOR
-	#define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_TEMPLATE_DETECTOR
-    #define PROCESS_TEMPLATE_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE

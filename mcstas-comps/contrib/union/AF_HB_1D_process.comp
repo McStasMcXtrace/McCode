@@ -241,6 +241,15 @@ int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weig
     
 };
 
+// These lines help with future error correction, and tell other Union components
+//  that at least one process have been defined.
+#ifndef PROCESS_DETECTOR
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_AF_HB_1D_DETECTOR
+    #define PROCESS_AF_HB_1D_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -254,18 +263,6 @@ double effective_my_scattering;
 // Needed for transport to the main component, will be the same for all processes
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
-
-// These lines help with future error correction, and tell other Union components
-//  that at least one process have been defined.
-#ifndef PROCESS_DETECTOR
-    // Obsolete
-	//struct pointer_to_global_process_list global_process_list = {0,NULL};
-	#define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_AF_HB_1D_DETECTOR
-    #define PROCESS_AF_HB_1D_DETECTOR dummy
-#endif
 
 %}
 

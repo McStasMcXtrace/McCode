@@ -1220,11 +1220,13 @@ TRACE
           } else {
             // Since there is a non-zero number of processes in this material, all the scattering cross section for these are calculated
             my_sum = 0; k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz; p_my_trace = my_trace; wavevector = coords_set(k[0],k[1],k[2]);
-            for (process_start = process = Volumes[current_volume]->p_physics->p_scattering_array;process - process_start < Volumes[current_volume]->p_physics->number_of_processes;process++) {
+            //for (process_start = process = Volumes[current_volume]->p_physics->p_scattering_array;process - process_start < Volumes[current_volume]->p_physics->number_of_processes;process++) { // function pointer approach
+            int p_index;
+            for (p_index=0; p_index < Volumes[current_volume]->p_physics->number_of_processes; p_index++ ){
             
-              if (Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index != -1) {
+              if (Volumes[current_volume]->p_physics->p_scattering_array[p_index].non_isotropic_rot_index != -1) {
                 // If the process is not isotropic, the wavevector is transformed into the local coordinate system of the process
-                wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index],wavevector);
+                wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[p_index].non_isotropic_rot_index],wavevector);
                 
                 coords_get(wavevector_rotated,&k_rotated[0],&k_rotated[1],&k_rotated[2]);
 
@@ -1233,10 +1235,17 @@ TRACE
               }
               
               // Find correct focus_data_array index for this volume/process
-              focus_data_index = Volumes[current_volume]->geometry.focus_array_indices.elements[process - process_start];
+              focus_data_index = Volumes[current_volume]->geometry.focus_array_indices.elements[p_index];
               
               // Call the probability for scattering function assighed to this specific procress (the process pointer is updated in the for loop)
-              process->probability_for_scattering_function(p_my_trace,k_rotated,process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+              // Function pointer approach:
+              //process->probability_for_scattering_function(p_my_trace,k_rotated,process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+              // GPU
+              process = &Volumes[current_volume]->p_physics->p_scattering_array[p_index];
+              
+              int physics_output;
+              physics_output = physics_my(process->eProcess, p_my_trace, k_rotated, process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+              
               
               my_sum += *p_my_trace;
               #ifdef Union_trace_verbal_setting
@@ -1420,8 +1429,13 @@ TRACE
             //k[0] = V2K*ray_velocity.x; k[1] = V2K*ray_velocity.y; k[2] = V2K*ray_velocity.z;
             coords_get(coords_scalar_mult(ray_velocity_rotated,V2K),&k[0],&k[1],&k[2]);
             
+            process = &Volumes[current_volume]->p_physics->p_scattering_array[selected_process];
             // I may replace a intial and final k with one instance that serves as both input and output
-            if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
+            // Function pointer version
+            //if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
+            //if (0 == process->scattering_function(k_new,k,&p,process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
+            // GPU Version with flexible function
+            if (0 == physics_scattering(process->eProcess, k_new, k, &p, process->data_transfer, &Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
               /*
               // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
               // It can arise from need to simplify sampling process and end up in cases where weight factor is 0, and the ray should be absorbed in these cases
