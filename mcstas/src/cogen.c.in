@@ -1877,7 +1877,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     List_handle liter2;
 
     coutf("    //printf(\"livebatchsize: percent ld\\n\", livebatchsize);");
-    coutf("    livebatchsize = sort_absorb_last(psorted, pbuffer, innerloop);");
+    coutf("    livebatchsize = sort_absorb_last(psorted, pbuffer, livebatchsize);");
     coutf("");
 
     coutf("    // %s", comp->name);
@@ -2052,13 +2052,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _restore;   /* set to true if neutron event must be restored */");
 
 
-  /* Append variables from instr VARS block to particle struct (user vars,
+  /* Append variables from instr USERVARS block to particle struct (user vars,
   *  always double). Also store these strings in in the appropriate instrument
   *  list for later def/undef as state variables (see cogen_raytrace). */
 
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
-  if (get_user_particle_vars(instr->vars, instr->user_vars, instr->user_vars_types)) {
+  if (get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND")) {
     cout("  // user variables:");
     List_handle liter;
     List_handle liter2;
@@ -2167,16 +2167,92 @@ cogen_header(struct instr_def *instr, char *output_name)
 
 } /* cogen_header */
 
+
 /*******************************************************************************
-* get_user_particle_vars: Extracts user variables from code block and adds them
-*   as new strings to the list vars.
+* var_is_in_codeblock: Checks if variabe of name var and type tpe is in code block
+*   code. Filters out comment sections.
 *
-* code: code block containing user variablse to be extracted.
+* code:     code block containing var, or not
+* varname:  variable declaration id
+*
+* returns: char 0 if not, 1 otherwise
+*******************************************************************************/
+char varname_is_in_codeblock(struct code_block* code, char* varname) {
+  char flag_is_in_codeblock = 0;
+
+  if(list_len(code->lines) > 0) {
+    List_handle liter = list_iterate(code->lines);
+    char *line;                /* Single code line. */
+    char *comment_start= NULL; /* this is the C style comment start */
+    char *comment_end  = NULL; /* this is the C style comment end */
+    char *comment_toend= NULL; /* this is the C++ style comment start (to end of line) */
+
+    // iterate declare code
+    while(line = list_next(liter))
+    {
+      char *subline = line;
+      char *p       = NULL;
+
+      /* search for comments */
+      if (comment_start)       /* continuation from a previous line */
+        comment_start = line;
+      else if (!comment_start) /* start of a new comment ? */
+        comment_start = strstr(line, "/*");
+      comment_end   = strstr(line, "*/");
+      if (comment_end && comment_end+2 < line+strlen(line))
+        comment_end += 2;
+      comment_toend = strstr(line, "//");
+
+      if (comment_start && comment_end) { /* a full C-style comment on a line (or continuation to end) */
+        for (p=comment_start; p<comment_end; p++) *p=' ';
+        comment_start = comment_end = NULL; /* reset locations for next comment */
+      }
+      if (comment_start && !comment_end) { /* the start of a multiline C-style comment (or continuation) */
+        for (p=comment_start; p<line+strlen(line)-1; p++) *p=' ';
+      }
+      if (comment_toend) {
+        for (p=comment_toend; p<line+strlen(line)-1; p++) *p=' ';
+      }
+
+      while (p=strstr(subline, varname)) {
+        /* the parameter name appears in code block */
+        int char_before=0;
+        int char_after=0;
+        if (p > line)
+          char_before=*(p-1); /* char before the match */
+        if (p+strlen(varname) <= line+strlen(line))
+          char_after=*(p+strlen(varname)); /* char after the match */
+        /* check if appears as a single word */
+        if ( (!char_before || (char_before && strchr(" ,\t*",  char_before))) &&
+             (!char_after  || (char_after  && strchr(" ,\t;[=", char_after ))) )
+          flag_is_in_codeblock++;
+        else subline = p+strlen(varname);
+        if (flag_is_in_codeblock) break;
+        if (p+strlen(varname) >= line+strlen(line)) break;
+      } /* while in declare code */
+      if (flag_is_in_codeblock) break;
+
+    } /* while line */
+    list_iterate_end(liter);
+  }
+
+  return flag_is_in_codeblock;
+} // varname_is_in_codeblock
+
+
+/*******************************************************************************
+* get_codeblock_vars: Extracts variable declaration statements from a code block
+*   and adds their varnames and types to lists.
+*
+* code: code block containing variable declaration statements
 * vars: variable name strings are added to this list
-* types: type strings, the stuff preceding the variable name in the user decl.
+* types: the string(s) preceding the variable name in the user decl. are added
+*
 * returns: the number of vars added
 *******************************************************************************/
-int get_user_particle_vars(struct code_block *code, List vars, List types) {
+int get_codeblock_vars(struct code_block *code, List vars, List types,
+  char* block_name, char* movetoblock_name) {
+
   if(list_len(code->lines) <= 0)
     return(0);
 
@@ -2202,36 +2278,44 @@ int get_user_particle_vars(struct code_block *code, List vars, List types) {
         // skip
       }
       else {
+        char* tpe;
+        char* vn;
+
+        // extract the type
         len = re_match("\\s+\\w+;", l+pos); // end of type string
-
-        char *tpe = (char*) malloc((len + 1) * sizeof(char)); // new location
+        tpe = (char*) malloc((len + 1) * sizeof(char)); // new location
         *(tpe+len) = '\0'; // null terminate
-
         if (len > -1) {
           strncpy(tpe, l+pos, len);
-          list_add(types, tpe);
         }
 
+        // TODO: can we handle partitioned types such as "struct something"?
+
+        // extract the varname
         pos = re_match("\\w+;", l); // match start of varname
         if (pos > -1) {
           len = re_match(";", l+pos); // match end of varname
 
           if (len > -1) {
-            char *vn = (char*) malloc((len + 1) * sizeof(char)); // new location
+            vn = (char*) malloc((len + 1) * sizeof(char)); // new location
             *(vn+len) = '\0'; // null terminate
 
             strncpy(vn, l+pos, len);
-            list_add(vars, vn);
             l = l + pos + len + 1; // inc line to pos after scolon
             ans++;
           }
         }
 
+        // check that symbol was not found inside a comment block
+        if (varname_is_in_codeblock(code, vn)) {
+          list_add(types, tpe);
+          list_add(vars, vn);
+        }
       }
     } while(idx > -1);
   }
 
-  // warning/error if code block contains '=' char
+  // print a warning if code block contains '=' char
   int warnings = 0;
   if(list_len(code->lines) > 0) {
     List_handle liter;
@@ -2242,12 +2326,13 @@ int get_user_particle_vars(struct code_block *code, List vars, List types) {
     list_iterate_end(liter);
   }
   if (warnings)
-    fprintf(stderr,"Warning: USERVARS block contains %i assignments (= sign).\n"
-                   "         Move them into an EXTEND section. May fail at compile.\n"
-                   , warnings);
+    fprintf(stderr,"Warning: %s block contains %i assignments (= sign).\n"
+                   "         Move them into an %s section. May fail at compile.\n"
+                   , block_name, warnings, movetoblock_name);
 
   return(ans);
-}
+} // get_codeblock_vars
+
 
 /*******************************************************************************
 * cogen: the code generator
