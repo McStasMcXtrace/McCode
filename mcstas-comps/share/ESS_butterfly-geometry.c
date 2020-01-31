@@ -22,7 +22,7 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
   double BrT2_x, double BrT2_z, 
   double BrT3_x, double BrT3_z,
   double Br11, double Br12, double Br21, double Br22,
-  double Bfocus_xw, double Bfocus_yh)
+  double Bfoc_XW, double Bfoc_YH)
 {
   /* Draw the two butterfly shapes at top and bottom level */
   double y0;
@@ -184,8 +184,8 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
   NORM(xx1,yy1,zz1);
   vec_prod(xx2,yy2,zz2,Btx,Bty,Btz,xx1,yy1,zz1);
   NORM(xx2,yy2,zz2);
-  xx1*=Bfocus_xw/2.0; yy1*=Bfocus_xw/2.0; zz1*=Bfocus_xw/2.0;
-  xx2*=Bfocus_yh/2.0; yy2*=Bfocus_yh/2.0; zz2*=Bfocus_yh/2.0;
+  xx1*=Bfoc_XW/2.0; yy1*=Bfoc_XW/2.0; zz1*=Bfoc_XW/2.0;
+  xx2*=Bfoc_YH/2.0; yy2*=Bfoc_YH/2.0; zz2*=Bfoc_YH/2.0;
   printf("Normal vectors pointing in directions\n %g %g %g and \n %g %g %g \n",xx1,yy1,zz1,xx2,yy2,zz2);
   dashed_line(Btx -xx1 -xx2, Bty -yy1 -yy2, Btz -zz1 -zz2,
 	      Btx +xx1 -xx2, Bty +yy1 -yy2, Btz +zz1 -zz2,5);
