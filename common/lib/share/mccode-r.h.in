@@ -47,7 +47,7 @@
 #include <float.h>
 #include <inttypes.h>
 #include <stdint.h>
-#ifdef USE_PGI
+#ifdef USE_GPU
 #include <accelmath.h>
 int noprintf();
 int str_comp(char *str1, char *str2);
@@ -150,13 +150,13 @@ size_t str_len(const char *s);
 #  endif
 #endif
 
-#ifdef USE_PGI  /* default is to disable signals with PGI/OpenACC */
+#ifdef USE_GPU  /* default is to disable signals with PGI/OpenACC */
 #  ifndef NOSIGNALS
 #    define NOSIGNALS 1
 #  endif
 #endif
 
-#ifdef USE_PGI  /* default is to disable SPLIT with PGI/OpenACC */
+#ifdef USE_GPU  /* default is to disable SPLIT with PGI/OpenACC */
 #  ifndef NOSPLIT
 #    define NOSPLIT 1
 #  endif
