@@ -521,6 +521,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend, Source *TS)
   return 1;
 } // readHtable
 
+
 #pragma acc routine seq
 void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _class_particle *_particle)
  /*!
@@ -579,7 +580,9 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
   if(R < TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
-      fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+#ifndef USE_PGI
+      fprintf(stderr, "outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+#endif
     }
 
   if(Epnt == 0)
@@ -597,13 +600,18 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
   if (Tpnt==0 || Epnt==0)
     {
+#ifndef USE_PGI
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
+#endif
     }
   if (Tpnt==TS.nTime)
     {
+#ifndef USE_PGI
       fprintf(stderr,"BIG ERROR WITH Tpnt and Epnt\n");
       exit(1);
+#endif
+
       *TV=0.0;
       Tspread=TS.Flux[Epnt-1][0]-TS.EInt[Epnt-1];
       TRange=TS.TimeBin[0];
@@ -634,15 +642,17 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
     if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
+#ifndef USE_PGI
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
       fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
+#endif
     }
 
 
   if(*EV < *lim1 || *EV > *lim2)
     {
+#ifndef USE_PGI
       fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
-
 
       fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);
       fprintf(stderr,"Points (%g) == ",R1);
@@ -650,12 +660,14 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
       for(i=0;i<iEnd-iStart;i++)
 	fprintf(stderr," %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
       fprintf(stderr,"\n");
+#endif
 
       //fprintf(stderr,"energy value %g\n",*EV);
       //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],Rend,TS.Flux[Epnt-1][Tpnt]);
     }
   return;
 } // getPoint
+
 
 int cmdnumberI(char *mc,int* num,const int len)
   /*!
@@ -763,6 +775,7 @@ int cmdnumberI(char *mc,int* num,const int len)
         printf("Opening -- %s\n",ss);
       return efile;
     }
+
 
   double strArea(double dist, double rtmodX, double rtmodY, double focus_xw, double focus_yh)
     {
@@ -1057,6 +1070,7 @@ INITIALIZE
   }
   
 %}
+
 
 TRACE
 %{
