@@ -1877,7 +1877,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     List_handle liter2;
 
     coutf("    //printf(\"livebatchsize: percent ld\\n\", livebatchsize);");
-    coutf("    livebatchsize = sort_absorb_last(psorted, pbuffer, innerloop);");
+    coutf("    livebatchsize = sort_absorb_last(psorted, pbuffer, livebatchsize);");
     coutf("");
 
     coutf("    // %s", comp->name);
