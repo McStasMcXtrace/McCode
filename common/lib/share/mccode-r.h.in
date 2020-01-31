@@ -335,13 +335,24 @@ char  *mcsig_message;
 #define POS_A_COMP_INDEX(index) (instrument->_position_absolute[index])
 #define POS_R_COMP_INDEX(index) (instrument->_position_relative[index])
 
-/* setting parameters based MC_GETPAR */
-#define MC_GETPAR3(type, compname, par) \
+/* setting parameters based COMP_GETPAR (returned as pointer)         */
+/* compname must be given as a string, type and par are symbols.      */
+#define COMP_GETPAR3(type, compname, par) \
     &( ((_class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
 /* the body of this function depends on component instances, and is cogen'd */
 void* _getvar_parameters(char* compname);
 
-#define INSTRUMENT_GETPAR(par) (instrument->_parameters. ## par)
+/* Note: The two-stage approach to COMP_GETPAR is NOT redundant; without it,
+* after #define C sample, COMP_GETPAR(C,x) would refer to component C, not to
+* component sample. Such are the joys of ANSI C.
+
+* Anyway the usage of COMP_GETPAR requires that we use sometimes bare names...
+* NOTE: This can ONLY be used in instrument descriptions, not components.
+*/
+#define COMP_GETPAR2(comp, par) (_ ## comp ## _var._parameters.par)
+#define COMP_GETPAR(comp, par) COMP_GETPAR2(comp,par)
+
+#define INSTRUMENT_GETPAR(par) (instrument->_parameters.par)
 
 /* Current component name, index, position and orientation */
 /* These macros work because, using class-based functions, "comp" is usually
@@ -418,7 +429,7 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 
 /* random number generation. ================================================ */
 
-/* available rundom number generators */
+/* available random number generators */
 #define _RNG_ALG_MT         1
 #define _RNG_ALG_KISS       2
 #define _RNG_ALG_FAST_KISS  3

@@ -775,12 +775,15 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
     info->list = list;
     info->count = i;
-    info->tau_list = malloc(i*sizeof(*info->tau_list));
+    
+    info->tau_list = (struct tau_data*)malloc(i*sizeof(*info->tau_list));
+
     if(!info->tau_list)
     {
       fprintf(stderr, "Single_crystal: Error: Out of memory!\n");
       return(0);
     }
+    
     return(info->count);
   } /* read_hkl_data */
 
@@ -793,95 +796,6 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     this function returns:
       tau_count (return), coh_refl, coh_xsect, T (updated elements in the array up to [j])
    */
-
-#ifdef USE_OPENCL // when using OpenCL
-int hkl_search_opencl(struct hkl_data *h_L, struct tau_data* h_T, int count, double V0, 
-  double kix, double kiy, double kiz, double tau_max,
-  double* h_coh_refl, double* h_coh_xsect, struct opencl_context oclContext,
-  cl_mem d_L, cl_mem d_T, cl_mem d_tau_count, cl_mem d_coh_refl, cl_mem d_coh_xsect)
-{ 
-    cl_int             ciErr1;                              // Error code var
-    size_t             globalWorkSize[1] = {4096};          // 1D var for Total # of work items
-    size_t             localWorkSize[1] = {64};            // 1D var for # of work items in the work group	
-    
-    int h_tau_count=0;
-
-    //printf("In GPU-based hkl_search");
-
-    //  Using GPU(s)...
-    if (oclContext.Kernel == NULL || oclContext.GPUContext == NULL) {
-      printf("OpenCL Kernel could not be initialized\n");
-      return(-10); // OpenCL Kernel could not be initialized
-    }
-    
-    // Write data 
-    int iDevice = 0;
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_L, CL_TRUE, 0, sizeof(struct hkl_data)*count, h_L, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-1);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_T, CL_TRUE, 0, sizeof(struct tau_data)*count, h_T, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-2);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_tau_count, CL_TRUE, 0, sizeof(int), &h_tau_count, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS){
-      return(-3);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_coh_refl, CL_TRUE, 0, sizeof(double), h_coh_refl, 0, NULL, NULL); 
-    if (ciErr1 !=CL_SUCCESS){
-      return(-4);
-    }
-    ciErr1 = clEnqueueWriteBuffer(oclContext.CommandQueue[iDevice], d_coh_xsect, CL_TRUE, 0, sizeof(double), h_coh_xsect , 0, NULL, NULL); 
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-5);
-    }
-
-    clFinish(oclContext.CommandQueue[iDevice]);    
-	
-    ciErr1  = clSetKernelArg(oclContext.Kernel, 0, sizeof(cl_mem), (void*)&d_L);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 1, sizeof(cl_mem), (void*)&d_T);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 2, sizeof(int),    (void*)&count);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 3, sizeof(double), (void*)&V0);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 4, sizeof(double), (void*)&kix);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 5, sizeof(double), (void*)&kiy);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 6, sizeof(double), (void*)&kiz);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 7, sizeof(double), (void*)&tau_max);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 8, sizeof(cl_mem), (void*)&d_tau_count);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel, 9, sizeof(cl_mem), (void*)&d_coh_refl);
-    ciErr1 |= clSetKernelArg(oclContext.Kernel,10, sizeof(cl_mem), (void*)&d_coh_xsect);
-    if (ciErr1 !=CL_SUCCESS) return(0);
-
-    ciErr1 = clEnqueueNDRangeKernel(oclContext.CommandQueue[iDevice], oclContext.Kernel, 1, NULL, 
-        globalWorkSize, localWorkSize, 0, NULL, NULL); 
-    if (ciErr1 !=CL_SUCCESS) return (0);
-                     	
-    clFinish(oclContext.CommandQueue[iDevice]);
-
-    //Read back results...
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_T, CL_TRUE, 0, sizeof(struct tau_data)*count, h_T, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return(-6);
-    }
-    
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_tau_count, CL_TRUE, 0, sizeof(int), &h_tau_count, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return (-7); 
-    }
-    
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_coh_refl, CL_TRUE, 0, sizeof(double), h_coh_refl, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return (-8);      
-    }
-    
-    ciErr1 = clEnqueueReadBuffer(oclContext.CommandQueue[iDevice], d_coh_xsect, CL_TRUE, 0, sizeof(double), h_coh_xsect, 0, NULL, NULL);
-    if (ciErr1 !=CL_SUCCESS) {
-      return (-9);
-    }
-    return h_tau_count;
-} 
-#endif 
-  // non OpenCL case
 #pragma acc routine seq
   int hkl_search(struct hkl_data *L, struct tau_data *T, int count, double V0, 
     double kix, double kiy, double kiz, double tau_max,
@@ -1175,6 +1089,7 @@ TRACE
   struct hkl_data *L;           /* Structure factor list */
   int i;                        /* Index into structure factor list */
   struct tau_data *T;           /* List of reflections close to Ewald sphere */
+  int tau_count;                /* Number of reflections close to Ewald sphere*/
   int j;                        /* Index into reflection list */
   int event_counter;            /* scattering event counter */
   double kix, kiy, kiz, ki;     /* Initial wave vector [1/AA] */
@@ -1209,6 +1124,7 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
+
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1240,9 +1156,14 @@ TRACE
     abs_xlen *= 100; inc_xlen *= 100;
 
     L = hkl_info.list;
+#ifndef USE_PGI
     T = hkl_info.tau_list;
     hkl_info.type = '\0';
-
+#else
+    T = hkl_info.tau_list;
+ // T = malloc(100*sizeof(*hkl_info.tau_list));
+ // T = malloc(hkl_info.count*sizeof(struct tau_data));
+#endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
       double Alpha, Beta;
@@ -1260,14 +1181,14 @@ TRACE
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
-#ifndef USE_PGI
         if (hkl_info.flag_warning < 100)
+#ifndef USE_PGI
           fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
                 NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
-#endif
         hkl_info.flag_warning++;
+#endif
         break;
       }
 
@@ -1306,49 +1227,52 @@ TRACE
 
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
-      if ( fabs(kix - hkl_info.kix) < 1e-6
+/*      if ( fabs(kix - hkl_info.kix) < 1e-6
         && fabs(kiy - hkl_info.kiy) < 1e-6
         && fabs(kiz - hkl_info.kiz) < 1e-6) {
         hkl_info.nb_reuses++;
       } else {
-        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
+*/        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
         double coh_xsect = 0, coh_refl = 0;
 
         /* call hkl_search */
         #ifdef USE_OPENCL
         if (oclContext_SX.Kernel != NULL){ // the Kernel could be initialised
-          hkl_info.tau_count = hkl_search_opencl(L, T, hkl_info.count, hkl_info.V0, 
+          tau_count = hkl_search_opencl(L, T, hkl_info.count, hkl_info.V0, 
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect, oclContext_SX,
               d_L, d_T, d_tau_count, d_coh_refl, d_coh_xsect);
-	  if (hkl_info.tau_count != 0)
-	    printf("\nGPU hkl_info.tau_count:%i\n",hkl_info.tau_count);
+	  if (tau_count != 0)
+	    printf("\nGPU tau_count:%i\n",tau_count);
         }
         else 
         #endif
-	  hkl_info.tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+
+	  tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect);
 	
         /* store ki so that we can check for further SPLIT iterations */
-        if (event_counter == 0 ) { /* only for incoming neutron */
-          hkl_info.kix = kix;
-          hkl_info.kiy = kiy;
-          hkl_info.kiz = kiz;
-        }
+#ifndef USE_PGI
+//        if (event_counter == 0 ) { /* only for incoming neutron */
+//          hkl_info.kix = kix;
+//          hkl_info.kiy = kiy;
+//          hkl_info.kiz = kiz;
+//        }
 
-        hkl_info.coh_refl  = coh_refl;
-        hkl_info.coh_xsect = coh_xsect;
-        hkl_info.nb_refl += hkl_info.tau_count;
-        hkl_info.nb_refl_count++;
-      }
-
+//        hkl_info.coh_refl  = coh_refl;
+//        hkl_info.coh_xsect = coh_xsect;
+//        hkl_info.nb_refl += tau_count;
+//        hkl_info.nb_refl_count++;
+#endif
+/*      }
+*/
       /* (3). Probabilities of the different possible interactions. */
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
          scattering lengths to m**-1 */
-      coh_xlen = hkl_info.coh_xsect/V0;
+      coh_xlen = coh_xsect/V0;
       if (barns) {
         coh_xlen *= 100;
       } /* else assume fm^2 */
@@ -1361,7 +1285,9 @@ TRACE
       } else {
         mc_trans = p_trans;
       }
+#ifndef USE_PGI
       hkl_info.type = 't';
+#endif
       mc_interact = 1 - mc_trans;
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
@@ -1415,24 +1341,25 @@ TRACE
         vx = kix; /* ki vector is used as tmp var with norm v */
         vy = kiy;
         vz = kiz; /* Go for next scattering event */
+#ifndef USE_PGI
         hkl_info.type = 'i';
+#endif
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
-        if(hkl_info.coh_refl <= 0){
+        if(coh_refl <= 0){
           ABSORB;
         }
         sum = 0;
-        j = hkl_select(T, hkl_info.tau_count, hkl_info.coh_refl, &sum,_particle);
-
-        if(j >= hkl_info.tau_count)
+        j = hkl_select(T, tau_count, coh_refl, &sum,_particle);
+        if(j >= tau_count)
         {
 #ifndef USE_PGI
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
-              "(sum=%g, j=%i, tau_count=%i).\n", sum, j , hkl_info.tau_count);
-#endif
+              "(sum=%g, j=%i, tau_count=%i).\n", sum, j , tau_count);
           hkl_info.flag_warning++;
-          j = hkl_info.tau_count - 1;
+#endif
+          j = tau_count - 1;
         }
         i = T[j].index;
         /* (8). Pick scattered wavevector kf from 2D Gauss distribution. */
@@ -1443,6 +1370,7 @@ TRACE
         kfx = T[j].rho_x + T[j].ox + T[j].b1x*y1 + T[j].b2x*y2;
         kfy = T[j].rho_y + T[j].oy + T[j].b1y*y1 + T[j].b2y*y2;
         kfz = T[j].rho_z + T[j].oz + T[j].b1z*y1 + T[j].b2z*y2;
+
         /* Normalize kf to length of ki, to account for planer
           approximation of the Ewald sphere. */
         adjust = ki/sqrt(kfx*kfx + kfy*kfy + kfz*kfz);
@@ -1450,15 +1378,19 @@ TRACE
         kfy *= adjust;
         kfz *= adjust;
         /* Adjust neutron weight (see manual for explanation). */
-        p *= T[j].xsect*hkl_info.coh_refl/(hkl_info.coh_xsect*T[j].refl);
-
+#ifndef USE_PGI
+        p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
+#endif
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
+#ifndef USE_PGI
         hkl_info.type = 'c';
         hkl_info.h    = L[i].h;
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
+#endif
+
       }
       /* lattice curvature option: rotate back neutron velocity */
       if (RZ || RY) {

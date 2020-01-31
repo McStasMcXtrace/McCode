@@ -109,7 +109,7 @@ TRACE
     j = floor((yp - ymin)*ny/(ymax - ymin));
 
     double p2w = p*p*weight*weight;
-    double pw = p*weight
+    double pw = p*weight;
     
     #pragma acc atomic
     PSD_N[i][j] = PSD_N[i][j]+1;

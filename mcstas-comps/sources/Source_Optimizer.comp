@@ -74,7 +74,7 @@
 *  optim_s = Source_Optimizer(options="please be clever") (same as empty)
 *     (...)
 *  Monitor_Optimizer(xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-*             optim_comp = optim_s)
+*             optim_comp = "optim_s")
 *
 * A good optimization needs to record enough non optimized neutrons on Monitor
 * during step 2. Typical enhancement in computation speed is by a factor 20.

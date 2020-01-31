@@ -48,7 +48,8 @@
     <list name="mcstas_runtime">
       <item> ABSORB </item>
       <item> SCATTERED </item>
-      <item> MC_GETPAR3 </item>
+      <item> COMP_GETPAR3 </item>
+      <item> COMP_GETPAR </item>
       <item> DETECTOR_OUT </item>
       <item> DETECTOR_OUT_0D </item>
       <item> DETECTOR_OUT_1D </item>

@@ -175,16 +175,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *)
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_McDisplay(MonitornD_Defines_type *,
  MonitornD_Variables_type *);
-
-#define MONND_DECLARE(monname) \
-  struct MonitornD_Variables *mcmonnd ## monname;
-#define MONND_USER_TITLE(monname, num, title) \
-  { mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
-    strcpy(mcmonnd ## monname->UserName ## num, title); }
-#define MONND_USER_VALUE(monname, num, value) \
-  { mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
-    mcmonnd ## monname->UserVariable ## num = (value); }
-
+ 
 #endif
 
 /* end of monitor_nd-lib.h */

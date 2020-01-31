@@ -35,7 +35,7 @@
 * xmax: [m]       Upper x bound of monitor opening
 * ymin: [m]       Lower y bound of monitor opening
 * ymax: [m]       Upper y bound of monitor opening
-* optim_comp: []  name of the Source_Optimizer component in the instrument definition. Do not use quotes (no quotes)
+* optim_comp: [str]  name of the Source_Optimizer component in the instrument definition. Do not use quotes (no quotes)
 * xwidth: [m]     Width of monitor. Overrides xmin,xmax.
 * yheight: [m]    Height of monitor. Overrides ymin,ymax.
 *
@@ -52,7 +52,7 @@
 DEFINE COMPONENT Monitor_Optimizer
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-  string optim_comp
+  string optim_comp,
   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (This_Monitor_id)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -68,9 +68,9 @@ int This_Monitor_id;
 
 INITIALIZE
 %{
-  // TODO: This should be upgraded to cogen3 GETPAR version, but no test
-  // instrument was found for this component.
-  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+
+  struct Optim_Variables *Vars = 
+    (struct Optim_Variables *)(COMP_GETPAR3(Source_Optimizer, optim_comp, Vars));
 
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
@@ -81,8 +81,10 @@ INITIALIZE
 
 TRACE
 %{
-  struct Optim_Defines *DEFS = &(MC_GETPAR(optim_comp, DEFS));
-  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+  struct Optim_Defines *DEFS   = 
+    (struct Optim_Defines *)(COMP_GETPAR3(Source_Optimizer, optim_comp, DEFS));
+  struct Optim_Variables *Vars = 
+    (struct Optim_Variables *)(COMP_GETPAR3(Source_Optimizer, optim_comp, Vars));
 
   PROP_Z0;
   if ((Vars->Phase != DEFS->PHASE_UNACTIVATE)
@@ -207,7 +209,8 @@ TRACE
 
 FINALLY
 %{
-  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+  struct Optim_Variables *Vars = 
+    (struct Optim_Variables *)(COMP_GETPAR3(Source_Optimizer, optim_comp, Vars));
 
   if (Vars->Monitor_Number == 0)
   {

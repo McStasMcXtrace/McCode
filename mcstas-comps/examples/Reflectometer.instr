@@ -203,7 +203,7 @@ mirflag=0;
 %}
 
 COMPONENT cold_source = ESS_moderator_long(
-    size = 0.12, Lmin = Lam_min, Lmax = Lam_max, dist = 2,
+    yheight = 0.12, Lmin = Lam_min, Lmax = Lam_max, dist = 2,
     focus_xw = fxw, focus_yh =fyh, nu = frequency, T = 50, tau = 287e-6, tau1 = 0,
     tau2 = 20e-6, d = Pulse_width, n = 20, n2 = 5, chi2 = 0.9,
     I0 = 6.9e11, I2 = 27.6e10, branch1 =1.0, branch2 = 0.5,
@@ -266,12 +266,12 @@ ROTATED (TT_guide,0,0) RELATIVE Origin
 
 COMPONENT guide1 = Elliptic_guide_gravity(
     l=guide_length*0.5-1e-6,
-    linh = focus_inh,
-    louth= focus_outh+guide_length*0.5,
-    linv = focus_inv,
-    loutv= focus_outv+guide_length*0.5,
-    widthOfEllipsev=small_axis_h*0.5,
-    widthOfEllipseh=small_axis_w*0.5,
+    linxw = focus_inh,
+    loutxw = focus_outh+guide_length*0.5,
+    linyh = focus_inv,
+    loutyh= focus_outv+guide_length*0.5,
+    minorAxisxw=small_axis_h*0.5,
+    minorAxisyh=small_axis_w*0.5,
     R0=R0_par,
     Qc=Qcrit,
     alpha=alpha_par,
@@ -288,13 +288,13 @@ EXTEND
 
 
 COMPONENT guide2 = Elliptic_guide_gravity(
-    L=guide_length*0.5-1e-6-cutoffguide,
-    Linh = focus_inh+guide_length*0.5,
-    Louth= focus_outh+cutoffguide,
-    Linv = focus_inv+guide_length*0.5,
-    Loutv= focus_outv+cutoffguide,
-    widthOfEllipsev=small_axis_h*0.5,
-    widthOfEllipseh=small_axis_w*0.5,
+    l=guide_length*0.5-1e-6-cutoffguide,
+    linxw = focus_inh+guide_length*0.5,
+    loutxw= focus_outh+cutoffguide,
+    linyh = focus_inv+guide_length*0.5,
+    loutyh= focus_outv+cutoffguide,
+    minorAxisxw=small_axis_h*0.5,
+    minorAxisyh=small_axis_w*0.5,
     R0=R0_par,
     Qc=Qcrit,
     alpha=alpha_par,

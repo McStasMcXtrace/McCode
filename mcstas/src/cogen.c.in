@@ -540,7 +540,10 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
           coutf("  _%s_var._parameters.%s[0]='\\0';", comp->name, par->id);
         }
         else if (par->type == instr_type_vector) {
-          coutf("  _%s_var._parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
+          if (val[0] == '{')
+            coutf("  _%s_var._parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
+          else
+            coutf("  _%s_var._parameters.%s = %s; // default pointer allocation", comp->name, par->id, val);
         }
         else if (par->type == instr_type_symbol) {
           // the user vars value is particle specific, init to null
@@ -1115,6 +1118,7 @@ int cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
   if (index) {
+    cout("");
     cout("");
     cout("/* ************************************************************************** */");
     cout("/*             End of SHARE user declarations for all components              */");

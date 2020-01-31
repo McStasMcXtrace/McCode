@@ -169,7 +169,8 @@
         <keyword-list _name = "mcstas_runtime" style = "Others 3" case-sensitive="TRUE">
                       <keyword>ABSORB</keyword>
                       <keyword>SCATTERED</keyword>
-                      <keyword>MC_GETPAR3</keyword>
+                      <keyword>COMP_GETPAR3</keyword>
+                      <keyword>COMP_GETPAR</keyword>
                       <keyword>DETECTOR_OUT</keyword>
                       <keyword>DETECTOR_OUT_0D</keyword>
                       <keyword>DETECTOR_OUT_1D</keyword>

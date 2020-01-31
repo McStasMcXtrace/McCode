@@ -23,18 +23,16 @@
 * does not matter; all neutrons that have not been absorbed prior to
 * the component are considered "good".
 *
-* Example: Adapt_check(source_comp=MySource)
+* Example: Adapt_check(source_comp="MySource")
 *
 * %P
-* source_comp: [no quotes]  The name of the Source_adapt component in the instrument definition.
+* source_comp: [string]  The name of the Source_adapt component in the instrument definition.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Adapt_check
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string source_comp)
-OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
@@ -47,7 +45,7 @@ DECLARE
 TRACE
 %{
   double new_v, psi;
-  struct source_adapt *adpt = MC_GETPAR3(Source_adapt, source_comp, adpt);
+  struct source_adapt *adpt = COMP_GETPAR3(Source_adapt, source_comp, adpt);
 
   if(p == 0)
     ABSORB;
@@ -58,11 +56,6 @@ TRACE
                 (adpt->n[adpt->idx]*adpt->psi_tot) +
           adpt->a_beta/adpt->num;
   adapt_tree_add(adpt->atree, adpt->idx, new_v - adpt->atree->v[adpt->idx]);
-%}
-
-MCDISPLAY
-%{
-
 %}
 
 END
