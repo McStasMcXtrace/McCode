@@ -796,6 +796,7 @@ this_mesh_storage.n_facets = n_facets;
 
 sprintf(this_mesh_volume.name,NAME_CURRENT_COMP);
 sprintf(this_mesh_volume.geometry.shape,"mesh");
+this_mesh_volume.geometry.eShape = mesh;
 this_mesh_volume.geometry.priority_value = priority;
 // Currently the coordinates will be in absolute space.
 this_mesh_volume.geometry.center = POS_A_CURRENT_COMP;

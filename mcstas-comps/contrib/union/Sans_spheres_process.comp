@@ -49,10 +49,10 @@
 * %E
 ******************************************************************************/
 
-DEFINE COMPONENT Template_process // Remember to change the name of process here
+DEFINE COMPONENT Sans_spheres_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(sigma=5.08,packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1)
-OUTPUT PARAMETERS (This_process,Template_storage,effective_my_scattering)
+SETTING PARAMETERS(R=100, Phi=1e-3, Delta_rho=0.6, packing_factor=1, interact_fraction=-1)
+OUTPUT PARAMETERS (This_process,Sans_spheres_storage,R,Phi,Delta_rho)
 
 SHARE
 %{
@@ -65,30 +65,24 @@ SHARE
 #endif
 
 // Very important to add a pointer to this struct in the Union_functions.c file
-struct Template_physics_storage_struct{
+struct Sans_spheres_physics_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component
     // The function for calculating my
     // The function for calculating scattering
     
     // Avoid duplicates of output parameters and setting parameters in naming
-    double my_scattering;
+    double my_s_pre;
+    double sphere_radius;
+    double final_wavevector[3];
+    double weight_update;
 };
 
 // Function for calculating my, the inverse penetration depth (for only this scattering process).
 // The input for this function and its order may not be changed, but the names may be updated.
-int Template_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int Sans_spheres_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
     // *k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] which describes the wavevector
-
-    // Simple case, just retrive the parameter saved from initialize
-    *my = data_transfer.pointer_to_a_Template_physics_storage_struct->my_scattering;
-    return 1;
-};
-
-// Function that provides description of a basic scattering event.
-// Do not change the
-int Template_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
-
+    
     // k_final and k_initial are passed as pointers to double vector[3]
     double k_length = sqrt(k_initial[0]*k_initial[0]+k_initial[1]*k_initial[1]+k_initial[2]*k_initial[2]);
 
@@ -97,9 +91,40 @@ int Template_physics_scattering(double *k_final, double *k_initial, double *weig
     double solid_angle;
     focus_data->focusing_function(&k_out,&solid_angle,focus_data);
     NORM(k_out.x,k_out.y,k_out.z);
-    *weight *= solid_angle*0.25/PI;
-
+    data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->weight_update = solid_angle*0.25/PI;
+    
+    double k_final[3];
     k_final[0] = k_out.x*k_length; k_final[1] = k_out.y*k_length; k_final[2] = k_out.z*k_length;
+    
+    double qx,qy,qz;
+    qx = k_initial[0] - k_final[0];
+    qy = k_initial[1] - k_final[1];
+    qz = k_initial[2] - k_final[2];
+    
+    double q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double sphere_radius = data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->sphere_radius;
+    
+    double f = 3 * (sin(q*sphere_radius) - q*sphere_radius*cos(q*sphere_radius))/(q*sphere_radius*q*sphere_radius*q*sphere_radius);
+
+    data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->final_wavevector[0] = k_final[0];
+    data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->final_wavevector[1] = k_final[1];
+    data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->final_wavevector[2] = k_final[2];
+
+    // Simple case, just retrive the parameter saved from initialize
+    *my = data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->my_s_pre*f*f;
+    return 1;
+};
+
+// Function that provides description of a basic scattering event.
+// Do not change the
+int Sans_spheres_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+
+    k_final[0] = data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->final_wavevector[0];
+    k_final[1] = data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->final_wavevector[1];
+    k_final[2] = data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->final_wavevector[2];
+    *weight *= data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->weight_update;
+    
     // A pointer to k_final is returned, and the wavevector will be set to k_final after a scattering event
     return 1; // return 1 is sucess, return 0 is failure, and the ray will be absorbed.
               // failure should not happen, as this function will only be called when
@@ -107,7 +132,7 @@ int Template_physics_scattering(double *k_final, double *k_initial, double *weig
     
     // There is access to the data_transfer from within the scattering function
     // In this case the only variable is my, but it could be read by:
-    // double my = data_transfer.pointer_to_a_Template_physics_storage_struct->my_scattering;
+    // double my = data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct->my_scattering;
     // One can assume that if the scattering function is running, the my fuction was
     //  executed just before and for the same k_initial.
     
@@ -118,10 +143,11 @@ int Template_physics_scattering(double *k_final, double *k_initial, double *weig
 DECLARE
 %{
 // Declare for this component, to do calculations on the input / store in the transported data
-struct Template_physics_storage_struct Template_storage; // Replace template with your own name here
+struct Sans_spheres_physics_storage_struct Sans_spheres_storage; // Replace Sans_spheres with your own name here
 
 // Variables needed in initialize of this function.
 double effective_my_scattering;
+double my_s_pre;
 
 // Needed for transport to the main component, will be the same for all processes
 struct global_process_element_struct global_process_element;
@@ -130,31 +156,26 @@ struct scattering_process_struct This_process;
 // These lines help with future error correction, and tell other Union components
 //  that at least one process have been defined.
 #ifndef PROCESS_DETECTOR
+    // Obsolete
+	//struct pointer_to_global_process_list global_process_list = {0,NULL};
 	#define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_TEMPLATE_DETECTOR
-    #define PROCESS_TEMPLATE_DETECTOR dummy
 #endif
 %}
 
 INITIALIZE
 %{
   // Initialize done in the component
-  effective_my_scattering = ((packing_factor/unit_cell_volume) * 100 * sigma);
-  Template_storage.my_scattering = effective_my_scattering;
+  Sans_spheres_storage.my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho*packing_factor;
+  Sans_spheres_storage.sphere_radius = R;
   
   // Need to specify if this process is isotropic
   This_process.non_isotropic_rot_index = -1; // Yes (powder)
   //This_process.non_isotropic_rot_index =  1;  // No (single crystal)
 
-  // The type of the process must be saved in the global enum process
-  This_process.eProcess = Template;
-
   // Packing the data into a structure that is transported to the main component
-  This_process.data_transfer.pointer_to_a_Template_physics_storage_struct = &Template_storage;
-  This_process.probability_for_scattering_function = &Template_physics_my;
-  This_process.scattering_function = &Template_physics_scattering;
+  This_process.data_transfer.pointer_to_a_Sans_spheres_physics_storage_struct = &Sans_spheres_storage;
+  This_process.probability_for_scattering_function = &Sans_spheres_physics_my;
+  This_process.scattering_function = &Sans_spheres_physics_scattering;
 
   // This will be the same for all process's, and can thus be moved to an include.
   sprintf(This_process.name,NAME_CURRENT_COMP);
