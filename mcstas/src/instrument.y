@@ -948,7 +948,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
-        comp_formals_actuals(comp, comp->actuals);
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -980,12 +979,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
-        if(def != NULL)
-        {
-          /* Check actual parameters against definition and
-                         setting parameters. */
-          comp_formals_actuals(comp, comp->actuals);
-        }
         $$ = comp;
       }
 ;
@@ -1010,6 +1003,13 @@ component: removable split "COMPONENT" instname '=' instref
         comp->split = $2;
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
+        
+        if(comp->def != NULL)
+        {
+          /* Check actual parameters against definition and
+                         setting parameters. */
+          comp_formals_actuals(comp, comp->actuals);
+        }
       }
       when place orientation groupref extend jumps
       {

@@ -711,6 +711,7 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
   return;
 } /* readHtable */
 
+
 #pragma acc routine seq
 void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod TS, _class_particle *_particle)
  /*!
@@ -748,8 +749,10 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
 
   if(Epnt<0 || R<TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
+#ifndef USE_PGI
       fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",
         TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+#endif
     }
   if(Epnt == 0)
     {
@@ -765,8 +768,10 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
     }
   if (Tpnt==0 || Epnt==0 || Tpnt==TS.nTime)
     {
+#ifndef USE_PGI
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
+#endif
     }
 
   *TV=TS.TimeBin[Tpnt-1];
@@ -787,12 +792,15 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
   
   if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
+#ifndef USE_PGI
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
       fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
+#endif
     }
   
   if(*EV < *lim1 || *EV > *lim2)
     {
+#ifndef USE_PGI
       fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",
 	      Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
 
@@ -802,10 +810,12 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
 	fprintf(stderr,"Time start %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
       fprintf(stderr,"\n");
       exit(1);
+#endif
     }
 
   return;
 } /* getPoint */
+
 
 int
 cmdnumberI(char *mc,int* num,const int len)
