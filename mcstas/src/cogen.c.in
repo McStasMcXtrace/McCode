@@ -1623,7 +1623,7 @@ int cogen_raytrace(struct instr_def *instr)
                         "Split_%s_counter < %s; "
                         "Split_%s_counter ++) {",
       	    comp->name, comp->name, exp, comp->name);
-      coutf("      Split_%s_party[Split_%s_counter]=*_particle;", comp->name, comp->name); // store incoming particle state at SPLIT
+      coutf("      Split_%s_party[Split_%s_counter] = _particle;", comp->name, comp->name); // store incoming particle state at SPLIT
       coutf("      Split_%s_party[Split_%s_counter]._uid += ncount*Split_%s_counter;", comp->name, comp->name, comp->name);
       coutf("      srandom(_hash(Split_%s_party[Split_%s_counter]._uid + seed));", comp->name, comp->name);
       coutf("    } // end SPLIT buffer init");
