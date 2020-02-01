@@ -9567,7 +9567,7 @@ _class_PowderN *class_PowderN_trace(_class_PowderN *_comp
       } else {
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
       }
-
+      if (!SCATTERED) ABSORB;
       if (neutrontype == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
