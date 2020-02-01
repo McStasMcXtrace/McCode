@@ -10430,228 +10430,226 @@ int raytrace(_class_particle* _particle) { /* single event propagation, called b
     } /* end component sma [20] */
 #ifndef NOSPLIT
     /* start SPLIT at foc_mono */
-    _class_particle Split_foc_mono_party=*_particle;
-    int Split_foc_mono_counter;
+    _class_particle Split_foc_mono_party[10];
+    int  Split_foc_mono_counter;
     for (Split_foc_mono_counter = 0; Split_foc_mono_counter < 10; Split_foc_mono_counter++) {
-      *_particle=Split_foc_mono_party;
+      Split_foc_mono_party[Split_foc_mono_counter]=*_particle;
+    }
+    for (Split_foc_mono_counter = 0; Split_foc_mono_counter < 10; Split_foc_mono_counter++) {
+      *_particle=Split_foc_mono_party[Split_foc_mono_counter];
       p /= 10 > 0 ? 10 : 1;
 #endif
-    if (!ABSORBED && _particle->_index == 21) {
-      /* begin component foc_mono=Monochromator_2foc() [21] */
+      if (!ABSORBED && _particle->_index == 21) {
+	/* begin component foc_mono=Monochromator_2foc() [21] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_foc_mono_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _foc_mono_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_foc_mono_var._position_relative, _foc_mono_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_foc_mono_var._name);
+	DEBUG_STATE();
+	class_Monochromator_2foc_trace(&_foc_mono_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component foc_mono [21] */
+      if (!ABSORBED && _particle->_index == 22) {
+	/* begin component msa=Arm() [22] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_msa_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _msa_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_msa_var._position_relative, _msa_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_msa_var._name);
+	DEBUG_STATE();
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component msa [22] */
+      if (!ABSORBED && _particle->_index == 23) {
+	/* begin component out1_slit=Slit() [23] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_out1_slit_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _out1_slit_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_out1_slit_var._position_relative, _out1_slit_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_out1_slit_var._name);
+	DEBUG_STATE();
+	class_Slit_trace(&_out1_slit_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component out1_slit [23] */
+      if (!ABSORBED && _particle->_index == 24) {
+	/* begin component Amoin_slit=Slit() [24] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_Amoin_slit_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _Amoin_slit_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_Amoin_slit_var._position_relative, _Amoin_slit_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_Amoin_slit_var._name);
+	DEBUG_STATE();
+	class_Slit_trace(&_Amoin_slit_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component Amoin_slit [24] */
+      if (!ABSORBED && _particle->_index == 25) {
+	/* begin component Bmoin_slit=Slit() [25] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_Bmoin_slit_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _Bmoin_slit_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_Bmoin_slit_var._position_relative, _Bmoin_slit_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_Bmoin_slit_var._name);
+	DEBUG_STATE();
+	class_Slit_trace(&_Bmoin_slit_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component Bmoin_slit [25] */
+      if (!ABSORBED && _particle->_index == 26) {
+	/* begin component out2_slit=Slit() [26] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_out2_slit_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _out2_slit_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_out2_slit_var._position_relative, _out2_slit_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_out2_slit_var._name);
+	DEBUG_STATE();
+	class_Slit_trace(&_out2_slit_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component out2_slit [26] */
+      if (!ABSORBED && _particle->_index == 27) {
+	/* begin component PSD_sample=PSD_monitor() [27] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_PSD_sample_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _PSD_sample_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_PSD_sample_var._position_relative, _PSD_sample_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_PSD_sample_var._name);
+	DEBUG_STATE();
+	class_PSD_monitor_trace(&_PSD_sample_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component PSD_sample [27] */
+      if (!ABSORBED && _particle->_index == 28) {
+	/* begin component lambda_sample=L_monitor() [28] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_lambda_sample_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _lambda_sample_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_lambda_sample_var._position_relative, _lambda_sample_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_lambda_sample_var._name);
+	DEBUG_STATE();
+	class_L_monitor_trace(&_lambda_sample_var, _particle);
+	if (_particle->_restore)
+	  *_particle = _particle_save;
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component lambda_sample [28] */
+      if (!ABSORBED && _particle->_index == 29) {
+	/* begin component sa_arm=Arm() [29] */
+	if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	  if (_sa_arm_var._rotation_is_identity) {
+	    coords_get(coords_add(coords_set(x,y,z), _sa_arm_var._position_relative),&x, &y, &z);
+	  } else
+	    mccoordschange(_sa_arm_var._position_relative, _sa_arm_var._rotation_relative, _particle);
+	} else flag_nocoordschange=0;
+	_particle_save = *_particle;
+	DEBUG_COMP(_sa_arm_var._name);
+	DEBUG_STATE();
+	_particle->_index++;
+	if (!ABSORBED) DEBUG_STATE();
+      } /* end component sa_arm [29] */
 #ifndef NOSPLIT
-      *_particle=Split_foc_mono_party;
-      p /= 10 > 0 ? 10 : 1;
+      /* start SPLIT at sample */
+      _class_particle Split_sample_party[10];
+      int Split_sample_counter;
+      for (Split_sample_counter = 0; Split_sample_counter < 10; Split_sample_counter++) {
+	Split_sample_party[Split_sample_counter]=*_particle;
+      }
+      for (Split_sample_counter = 0; Split_sample_counter < 10; Split_sample_counter++) {
+	*_particle=Split_sample_party[Split_sample_counter];
+	p /= 10 > 0 ? 10 : 1;
 #endif
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_foc_mono_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _foc_mono_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_foc_mono_var._position_relative, _foc_mono_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_foc_mono_var._name);
-      DEBUG_STATE();
-      class_Monochromator_2foc_trace(&_foc_mono_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component foc_mono [21] */
-    if (!ABSORBED && _particle->_index == 22) {
-      /* begin component msa=Arm() [22] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_msa_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _msa_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_msa_var._position_relative, _msa_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_msa_var._name);
-      DEBUG_STATE();
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component msa [22] */
-    if (!ABSORBED && _particle->_index == 23) {
-      /* begin component out1_slit=Slit() [23] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_out1_slit_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _out1_slit_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_out1_slit_var._position_relative, _out1_slit_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_out1_slit_var._name);
-      DEBUG_STATE();
-      class_Slit_trace(&_out1_slit_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component out1_slit [23] */
-    if (!ABSORBED && _particle->_index == 24) {
-      /* begin component Amoin_slit=Slit() [24] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_Amoin_slit_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _Amoin_slit_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_Amoin_slit_var._position_relative, _Amoin_slit_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_Amoin_slit_var._name);
-      DEBUG_STATE();
-      class_Slit_trace(&_Amoin_slit_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component Amoin_slit [24] */
-    if (!ABSORBED && _particle->_index == 25) {
-      /* begin component Bmoin_slit=Slit() [25] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_Bmoin_slit_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _Bmoin_slit_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_Bmoin_slit_var._position_relative, _Bmoin_slit_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_Bmoin_slit_var._name);
-      DEBUG_STATE();
-      class_Slit_trace(&_Bmoin_slit_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component Bmoin_slit [25] */
-    if (!ABSORBED && _particle->_index == 26) {
-      /* begin component out2_slit=Slit() [26] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_out2_slit_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _out2_slit_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_out2_slit_var._position_relative, _out2_slit_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_out2_slit_var._name);
-      DEBUG_STATE();
-      class_Slit_trace(&_out2_slit_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component out2_slit [26] */
-    if (!ABSORBED && _particle->_index == 27) {
-      /* begin component PSD_sample=PSD_monitor() [27] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_PSD_sample_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _PSD_sample_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_PSD_sample_var._position_relative, _PSD_sample_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_PSD_sample_var._name);
-      DEBUG_STATE();
-      class_PSD_monitor_trace(&_PSD_sample_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component PSD_sample [27] */
-    if (!ABSORBED && _particle->_index == 28) {
-      /* begin component lambda_sample=L_monitor() [28] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_lambda_sample_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _lambda_sample_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_lambda_sample_var._position_relative, _lambda_sample_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_lambda_sample_var._name);
-      DEBUG_STATE();
-      class_L_monitor_trace(&_lambda_sample_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component lambda_sample [28] */
-    if (!ABSORBED && _particle->_index == 29) {
-      /* begin component sa_arm=Arm() [29] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_sa_arm_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _sa_arm_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_sa_arm_var._position_relative, _sa_arm_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_sa_arm_var._name);
-      DEBUG_STATE();
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component sa_arm [29] */
+	if (!ABSORBED && _particle->_index == 30) {
+	  /* begin component sample=PowderN() [30] */
+	  if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	    if (_sample_var._rotation_is_identity) {
+	      coords_get(coords_add(coords_set(x,y,z), _sample_var._position_relative),&x, &y, &z);
+	    } else
+	      mccoordschange(_sample_var._position_relative, _sample_var._rotation_relative, _particle);
+	  } else flag_nocoordschange=0;
+	  _particle_save = *_particle;
+	  DEBUG_COMP(_sample_var._name);
+	  DEBUG_STATE();
+	  class_PowderN_trace(&_sample_var, _particle);
+	  if (_particle->_restore)
+	    *_particle = _particle_save;
+	  _particle->_index++;
+	  if (!ABSORBED) DEBUG_STATE();
+	} /* end component sample [30] */
+	if (!ABSORBED && _particle->_index == 31) {
+	  /* begin component STOP=Beamstop() [31] */
+	  if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	    if (_STOP_var._rotation_is_identity) {
+	      coords_get(coords_add(coords_set(x,y,z), _STOP_var._position_relative),&x, &y, &z);
+	    } else
+	      mccoordschange(_STOP_var._position_relative, _STOP_var._rotation_relative, _particle);
+	  } else flag_nocoordschange=0;
+	  _particle_save = *_particle;
+	  DEBUG_COMP(_STOP_var._name);
+	  DEBUG_STATE();
+	  class_Beamstop_trace(&_STOP_var, _particle);
+	  if (_particle->_restore)
+	    *_particle = _particle_save;
+	  _particle->_index++;
+	  if (!ABSORBED) DEBUG_STATE();
+	} /* end component STOP [31] */
+	if (!ABSORBED && _particle->_index == 32) {
+	  /* begin component Detector=Monitor_nD() [32] */
+	  if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
+	    if (_Detector_var._rotation_is_identity) {
+	      coords_get(coords_add(coords_set(x,y,z), _Detector_var._position_relative),&x, &y, &z);
+	    } else
+	      mccoordschange(_Detector_var._position_relative, _Detector_var._rotation_relative, _particle);
+	  } else flag_nocoordschange=0;
+	  _particle_save = *_particle;
+	  DEBUG_COMP(_Detector_var._name);
+	  DEBUG_STATE();
+	  class_Monitor_nD_trace(&_Detector_var, _particle);
+	  if (_particle->_restore)
+	    *_particle = _particle_save;
+	  _particle->_index++;
+	  if (!ABSORBED) DEBUG_STATE();
+	} /* end component Detector [32] */
 #ifndef NOSPLIT
-    /* start SPLIT at sample */
-    _class_particle Split_sample_party=*_particle;
-    int Split_sample_counter;
-    for (Split_sample_counter = 0; Split_sample_counter < 10; Split_sample_counter++) {
-      *_particle=Split_sample_party;
-      p /= 10 > 0 ? 10 : 1;
-#endif
-    if (!ABSORBED && _particle->_index == 30) {
-      /* begin component sample=PowderN() [30] */
-#ifndef NOSPLIT
-      *_particle=Split_sample_party;
-      p /= 10 > 0 ? 10 : 1;
-#endif
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_sample_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _sample_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_sample_var._position_relative, _sample_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_sample_var._name);
-      DEBUG_STATE();
-      class_PowderN_trace(&_sample_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component sample [30] */
-    if (!ABSORBED && _particle->_index == 31) {
-      /* begin component STOP=Beamstop() [31] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_STOP_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _STOP_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_STOP_var._position_relative, _STOP_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_STOP_var._name);
-      DEBUG_STATE();
-      class_Beamstop_trace(&_STOP_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component STOP [31] */
-    if (!ABSORBED && _particle->_index == 32) {
-      /* begin component Detector=Monitor_nD() [32] */
-      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change
-        if (_Detector_var._rotation_is_identity) {
-          coords_get(coords_add(coords_set(x,y,z), _Detector_var._position_relative),&x, &y, &z);
-        } else
-          mccoordschange(_Detector_var._position_relative, _Detector_var._rotation_relative, _particle);
-      } else flag_nocoordschange=0;
-      _particle_save = *_particle;
-      DEBUG_COMP(_Detector_var._name);
-      DEBUG_STATE();
-      class_Monitor_nD_trace(&_Detector_var, _particle);
-      if (_particle->_restore)
-        *_particle = _particle_save;
-      _particle->_index++;
-      if (!ABSORBED) DEBUG_STATE();
-    } /* end component Detector [32] */
-#ifndef NOSPLIT
-    } /* end SPLIT at sample */
+      } /* end SPLIT at sample */
 #endif
 #ifndef NOSPLIT
     } /* end SPLIT at foc_mono */
@@ -10659,11 +10657,11 @@ int raytrace(_class_particle* _particle) { /* single event propagation, called b
     if (_particle->_index > 32)
       ABSORBED++; /* absorbed when passed all components */
   } /* while !ABSORBED */
-
+  
   DEBUG_LEAVE()
   DEBUG_STATE()
-
-  return(_particle->_index);
+    
+    return(_particle->_index);
 } /* raytrace */
 
 /* loop to generate events and call raytrace() propagate them */
