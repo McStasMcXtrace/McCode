@@ -1616,23 +1616,16 @@ int cogen_raytrace(struct instr_def *instr)
       char *exp=exp_tostring(comp->split);
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
-      coutf("    _class_particle* Split_%s_party;", comp->name);
-      coutf("    int Split_%s_counter = %s;", comp->name,exp);
-      coutf("    Split_%s_party = malloc( %s *sizeof(_class_particle) );", comp->name, exp); 
+      coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
+      coutf("    int Split_%s_particle_counter;", comp->name);
       coutf("    for (" "Split_%s_counter = 0; "
-                        "Split_%s_counter < %s; "
-                        "Split_%s_counter ++) {",
-      	    comp->name, comp->name, exp, comp->name);
-      coutf("      Split_%s_party[Split_%s_counter] = _particle;", comp->name, comp->name); // store incoming particle state at SPLIT
-      coutf("      Split_%s_party[Split_%s_counter]._uid += ncount*Split_%s_counter;", comp->name, comp->name, comp->name);
-      coutf("      srandom(_hash(Split_%s_party[Split_%s_counter]._uid + seed));", comp->name, comp->name);
-      coutf("    } // end SPLIT buffer init");
-      coutf("    for (" "Split_%s_counter = 0; "
-                        "Split_%s_counter < %s; "
-                        "Split_%s_counter ++) {",
+                        "Split_%s_counter< %s; "
+                        "Split_%s_counter++) {",
 	    comp->name, comp->name, exp, comp->name);
-      coutf("      *_particle = Split_%s_party[Split_%s_counter];", comp->name, comp->name);
+      coutf("      _particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
+      coutf("      _particle._uid += ncount;");
       coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
+      coutf("      srandom(_hash(_particle._uid + seed));");
       coutf("#endif");
       str_free(exp);
     }
@@ -1725,7 +1718,6 @@ int cogen_raytrace(struct instr_def *instr)
   while((comp = list_previous(liter)) != NULL) {
     if (comp && comp->split) {
       coutf("#ifndef NOSPLIT");
-      coutf( "    free(Split_%s_party);", comp->name);
       coutf( "    } /* end SPLIT at %s */", comp->name);
       coutf("#endif");
     }
