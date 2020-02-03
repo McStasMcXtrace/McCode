@@ -1,4 +1,4 @@
-# Installing McStas 2.6 on Fedorda 
+# Installing McStas 2.6 on Fedora 
 
 ## Add the rpmfusion repo
 Follow the instructions at https://rpmfusion.org/Configuration
