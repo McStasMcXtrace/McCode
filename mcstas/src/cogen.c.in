@@ -1616,30 +1616,20 @@ int cogen_raytrace(struct instr_def *instr)
       char *exp=exp_tostring(comp->split);
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
-      coutf("    instrument->logic.Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
-      coutf("    for (" "instrument->logic.Split_%s = 0; "
-                        "instrument->logic.Split_%s< %s; "
-                        "instrument->logic.Split_%s++) {",
-	    comp->name, comp->name, exp, comp->name);
-      coutf("      *_particle="
-	    "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
-      coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
+      coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
+      coutf("    int Split_%s_counter;", comp->name);
+      coutf("    int SplitS_%s = %s;", comp->name, exp);
+      coutf("    for (" "Split_%s_counter = 0; "
+                        "Split_%s_counter< SplitS_%s; "
+                        "Split_%s_counter++) {",
+	    comp->name, comp->name, comp->name, comp->name);
+      coutf("      *_particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
+      coutf("      p /= SplitS_%s > 0 ? SplitS_%s : 1;", comp->name, comp->name);
       coutf("#endif");
       str_free(exp);
     }
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
-
     coutf("      /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
-    if (comp->split) {
-      char *exp = exp_tostring(comp->split);
-      coutf("#ifndef NOSPLIT");
-      coutf("      *_particle="
-        "instrument->logic.Split_%s_particle;", comp->name); // restore particle for SPLIT loop
-      coutf("      p /= %s > 0 ? %s : 1;", exp, exp);
-      coutf("#endif");
-      str_free(exp);
-    }
-
     // coordinate transformations (wrt to PREVIOUS)
     cout( "      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
     coutf("        if (_%s_var._rotation_is_identity) {", comp->name);
