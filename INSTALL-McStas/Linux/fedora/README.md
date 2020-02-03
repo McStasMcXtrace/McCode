@@ -18,8 +18,8 @@ sudo rpm -i libtk-codetext-perl-0.3.4-2.noarch.rpm
 * Afterwards you can install the wanted packages, i.e for McStas + python
 tools:
 ```bash
-sudo rpm -i mcstas-2.6-rpm64.rpm mcstas-comps-2.5-rpm64.rpm \
-mcstas-manuals-2.6-rpm64.rpm mcstas-miniconda3-2.5-rpm64.rpm \
+sudo rpm -i mcstas-2.6-rpm64.rpm mcstas-comps-2.6-rpm64.rpm \
+mcstas-manuals-2.6-rpm64.rpm mcstas-miniconda3-2.6-rpm64.rpm \
 mcstas-tools-perl-cmdline-2.6-rpm64.rpm \
 mcstas-tools-python-mccodelib-2.6-rpm64.rpm \
 mcstas-tools-python-mcdisplay-mantid-2.6-rpm64.rpm \
