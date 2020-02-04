@@ -33,7 +33,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt")
-SETTING PARAMETERS (string geometry=0,xwidth,yheight,zdepth) 
+SETTING PARAMETERS (string geometry=0,xwidth=0,yheight=0,zdepth=0, radius=0)
 OUTPUT PARAMETERS (prms,filter_row)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -101,18 +101,19 @@ INITIALIZE
   prms=calloc(1,sizeof(* prms));
 
   /*if geometry is specified - try to read the off/ply file and set shape*/
-  prms->shape=CUBE; 
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &(prms->offdata))) {
       prms->shape=ANY; 
     }
-  } else if(!xwidth || !yheight || !zdepth){
+  } else if (radius && yheight){
+    prms->shape=CYLINDER;
+  } else if (xwidth && yheight && zdepth){
+    prms->shape=CUBE;
+  } else {
     fprintf(stderr,"Error (%s): Filter has zero effective volume\n",NAME_CURRENT_COMP);
     exit(-1);
   }
   
-  
-  //t_Table T;
   if ( (status=Table_Read(&(prms->table),material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
@@ -143,7 +144,9 @@ TRACE
   double alpha,e,k,mu,mu0,delta,beta,f;
   double l0,l1,nx,ny,nz;
   int i,status=0;
-  if (prms->shape==CUBE) {
+  if (prms->shape==CYLINDER){
+    status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
+  }else if (prms->shape==CUBE) {
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
   }else if (prms->shape==ANY){
     status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
@@ -164,6 +167,14 @@ TRACE
     /*change direction of ray due to refraction*/
     if(refraction){
       switch (prms->shape){
+        case CYLINDER:
+          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheigt*0.5)<FLT_EPSILON ){
+            /*we are on the top/bottom surface*/
+            nx=0;ny=1;nz=0;
+          }else{
+            nx=x;ny=0;nz=z;NORM(nx,ny,nz);
+          }
+          break;
         case CUBE:
           {
             if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
@@ -187,7 +198,9 @@ TRACE
       SCATTER;
 
       /*change of direction - we must now intersect again*/
-      if (prms->shape==CUBE) {
+      if (prms->shape==CYLINDER){
+        status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
+      }else if (prms->shape==CUBE) {
           status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
       }else if (prms->shape==ANY){
           status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
@@ -207,6 +220,14 @@ TRACE
     /*change direction of ray due to refraction*/
     if(refraction){
       switch (prms->shape){
+        case CYLINDER:
+          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheigt*0.5)<FLT_EPSILON ){
+            /*we are on the top/bottom surface*/
+            nx=0;ny=1;nz=0;
+          }else{
+            nx=x;ny=0;nz=z;NORM(nx,ny,nz);
+          }
+          break;
         case CUBE:
           {
             if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
