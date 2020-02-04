@@ -2845,7 +2845,9 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 //#pragma acc routine seq
 long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long len) {
 
-  #define SAL_THREADS 9 // number of sub-problems
+  #define SAL_THREADS 1024 // num parallel sections
+  if (len<SAL_THREADS) return sort_absorb_last_serial(psorted, len);
+
   long newlen = 0;
   long tidx; // tread index
   long los[SAL_THREADS]; // target array startidxs
@@ -2878,17 +2880,12 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
         j--;
       }
     }
-    // edge case
+    // transfer edge case
     if (i==j)
       pbuffer[i] = psorted[i];
 
-    // record the number of hits
-    los[tidx] = 0;
-    lens[tidx] = 0;
-    if (loclen>0)
-      for (long k=lo; k<lo+loclen; k++)
-        if (!pbuffer[k]->_absorbed)
-          lens[tidx]++;
+    lens[tidx] = i;
+    if (i==j && !psorted[i]->_absorbed) lens[tidx]++;
   }
 
   // determine lo's
@@ -2910,6 +2907,34 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
   //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
 
   return accumlen;
+}
+
+/*
+*  Fallback serial version of the above.
+*/
+long sort_absorb_last_serial(_class_particle** psorted, long len) {
+  long i = 0;
+  long j = len - 1;
+  _class_particle* pbuffer;
+
+  // bubble
+  while (i < j) {
+    while (!psorted[i]->_absorbed && i<j) i++;
+    while (psorted[j]->_absorbed && i<j) j--;
+    if (i < j) {
+      pbuffer = psorted[j];
+      psorted[j] = psorted[i];
+      psorted[i] = pbuffer;
+      i++;
+      j--;
+    }
+  }
+
+  // return new length
+  if (i==j && !psorted[i]->_absorbed)
+    return i + 1;
+  else
+    return i;
 }
 
 
