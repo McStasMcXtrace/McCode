@@ -1,20 +1,20 @@
-# Installation of McStas 2.5 on macOS 
+# Installation of McStas 2.6 on macOS 
 
 ## Supported macOS releases
-* macOS 10.9-10.14 (Maverics, Yosemite, El Capitan, Sierra, High
-  Sierra, Mojave) Fully supported, both perl and python tool sets
+* macOS 10.9-10.15 (Maverics, Yosemite, El Capitan, Sierra, High
+  Sierra, Mojave, Catalina) Fully supported, both perl and python tool sets
 
 * Mac OS X 10.8 (Partially supported, perl tool set works and python might...)
 
 ## Steps to perform
 
 * Download
-  [McStas 2.5 for macOS](http://download.mcstas.org/current/mac/mcstas-2.5.tgz)
+  [McStas 2.6 for macOS](http://download.mcstas.org/current/mac/mcstas-2.6.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder
 
-* Drag the McStas-2.5.app and the McStas-2.5-environment.command to
+* Drag the McStas-2.6.app and the McStas-2.6-environment.command to
 /Applications
 
 * Run the Check-PY-dependencies.command script to check for / install
