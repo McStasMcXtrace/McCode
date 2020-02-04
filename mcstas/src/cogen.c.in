@@ -2291,16 +2291,12 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
   int idx = -1;
   int pos = -1;
   int len = -1;
-  int pos_tpe = -1;
-  int len_tpe = -1;
-  int pos_vn = -1;
-  int len_vn = -1;
   int ans = 0;
 
   while(l = list_next(myiter)) {
     do {
       // line must match this format
-      pos = re_match("\\w[\\s\\w]+\\s+\\w+;", l); // match general var decl pat
+      pos = re_match("\\w[\\s\\w\\*]+\\s+\\*?\\w+;", l); // match general var decl pattern
 
       if (pos <= -1) {
         // skip
@@ -2310,14 +2306,12 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
         char* vn;
 
         // extract the type
-        len = re_match("\\s+\\w+;", l+pos); // end of type string
+        len = re_match("\\w+;", l+pos); // end of type string
         tpe = (char*) malloc((len + 1) * sizeof(char)); // new location
         *(tpe+len) = '\0'; // null terminate
         if (len > -1) {
           strncpy(tpe, l+pos, len);
         }
-
-        // TODO: are partitioned types such as "struct something" handled corr.?
 
         // extract the varname
         pos = re_match("\\w+;", l); // match start of varname
