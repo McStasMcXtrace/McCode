@@ -1333,7 +1333,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 
     // call acc_attach for OpenACC (last thing to do in init)
     cout("");
-    cout("#ifdef USE_PGI");
+    cout("#ifdef OPENACC");
     cout("#  include <openacc.h>");
     // attach component instances on device
     liter = list_iterate(instr->complist);
@@ -1399,7 +1399,7 @@ void def_trace_section(struct instr_def *instr)
   cout("/* if on GPU, globally nullify sprintf,fprintf,printfs   */");
   cout("/* (Similar defines are available in each comp trace but */");
   cout("/*  those are not enough to handle external libs etc. )  */");
-  cout("#ifdef USE_PGI");
+  cout("#ifdef OPENACC");
   cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
   cout("#define sprintf(string,...) printf(__VA_ARGS__)");
   cout("#define printf(...) noprintf()");
@@ -1447,7 +1447,7 @@ void undef_trace_section(struct instr_def *instr)
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("#undef %s", statepars_all[i]);
 
-  cout("#ifdef USE_PGI");
+  cout("#ifdef OPENACC");
   cout("#undef strlen");
   cout("#undef strcmp");
   cout("#undef exit");
@@ -1838,7 +1838,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // init batch
   coutf("    // create particles memory block and pointer array (buffer and sorted)");
-  coutf("    #ifdef USE_PGI");
+  coutf("    #ifdef OPENACC");
   coutf("    _class_particle* particles = acc_malloc(livebatchsize*sizeof(_class_particle));");
   coutf("    #pragma acc enter data create(particles[0:livebatchsize])");
   coutf("    #else");
@@ -1924,7 +1924,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    }");
   coutf("    // jump to next viable seed");
   coutf("    seed = seed + innerloop;");
-  coutf("    #ifdef USE_PGI");
+  coutf("    #ifdef OPENACC");
   coutf("    acc_free(particles);");
   coutf("    #else");
   coutf("    free(particles);");
@@ -2019,7 +2019,7 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   // generate particle struct
   cout("");
-  cout("#ifdef USE_PGI");
+  cout("#ifdef OPENACC");
   cout("#undef MC_TRACE_ENABLED");
   cout("#endif");
   cout("");
