@@ -1848,15 +1848,15 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    // create particles memory block and pointer array (buffer and sorted)");
   coutf("    #ifdef USE_PGI");
   coutf("    _class_particle* particles = acc_malloc(livebatchsize*sizeof(_class_particle));");
-  coutf("    _class_particle** psorted = acc_malloc(livebatchsize*sizeof(_class_particle*));");
-  coutf("    _class_particle** pbuffer = acc_malloc(livebatchsize*sizeof(_class_particle*));");
+  coutf("    long* psorted = acc_malloc(livebatchsize*sizeof(long));");
+  coutf("    long* pbuffer = acc_malloc(livebatchsize*sizeof(long));");
   coutf("    #pragma acc enter data create(particles[0:livebatchsize])");
   coutf("    #pragma acc enter data create(psorted[0:livebatchsize])");
   coutf("    #pragma acc enter data create(pbuffer[0:livebatchsize])");
   coutf("    #else");
   coutf("    _class_particle* particles = malloc(livebatchsize*sizeof(_class_particle));");
-  coutf("    _class_particle** psorted = malloc(livebatchsize*sizeof(_class_particle*));");
-  coutf("    _class_particle** pbuffer = malloc(livebatchsize*sizeof(_class_particle*));");
+  coutf("    long* psorted = malloc(livebatchsize*sizeof(long));");
+  coutf("    long* pbuffer = malloc(livebatchsize*sizeof(long));");
   coutf("    #endif");
   coutf("");
   coutf("    // TODO: do we need a GPU data section for the above buffers here?");
@@ -1866,7 +1866,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
-  coutf("      psorted[pidx] = &(particles[pidx]);");
+  coutf("      psorted[pidx] = pidx;");
   coutf("      _class_particle* _particle = particles + pidx;");
   coutf("      _particle->_uid = pidx;");
   coutf("      srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro");
@@ -1881,13 +1881,13 @@ int cogen_rt_funnel(struct instr_def *instr)
     List_handle liter2;
 
     coutf("    //printf(\"livebatchsize: percent ld\\n\", livebatchsize);");
-    coutf("    livebatchsize = sort_absorb_last(psorted, pbuffer, livebatchsize);");
+    coutf("    livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
     coutf("");
 
     coutf("    // %s", comp->name);
     coutf("    #pragma acc parallel loop present(particles, psorted)");
     coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-    coutf("      _class_particle* _particle = *(psorted + pidx);");
+    coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
     coutf("      _class_particle _particle_save;");
     coutf("      if (!ABSORBED) {");
 
@@ -1930,7 +1930,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    // finalize particle batch");
   coutf("    #pragma acc parallel loop present(particles, psorted)");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-  coutf("      _class_particle* _particle = *(psorted + pidx);");
+  coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
   coutf("      if (_particle->_index > 4)");
   coutf("        ABSORBED++; /* absorbed when passed all components */");
   coutf("    }");
@@ -1938,8 +1938,12 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    seed = seed + innerloop;");
   coutf("    #ifdef USE_PGI");
   coutf("    acc_free(particles);");
+  coutf("    acc_free(psorted);");
+  coutf("    acc_free(pbuffer);");
   coutf("    #else");
   coutf("    free(particles);");
+  coutf("    free(psorted);");
+  coutf("    free(pbuffer);");
   coutf("    #endif");
   coutf("  } // outer loop / particle batches");
   cout( "");
