@@ -427,7 +427,7 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #define _RNG_ALG_MT         1
 #define _RNG_ALG_KISS       2
 #define _RNG_ALG_FAST_KISS  3
-
+#define _RNG_ALG_CUDA       4
 
 /* selection of random number generator */
 #ifndef RNG_ALG
@@ -459,6 +459,9 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define random() fast_kiss_random(_particle->randstate)
 #  define _random() kiss_random(state)
 #  define _rand01
+#elif RNG_ALG == _RNG_ALG_CUDA
+// Moved here from cogen.c.in for potential future integration
+#include <openacc_curand.h;
 #endif
 
 // component writers interface
