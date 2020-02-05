@@ -86,7 +86,7 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #endif /* !DANSE */
 
 /* String nullification on GPU and other replacements */
-#ifdef USE_PGI
+#ifdef OPENACC
 #pragma acc routine seq
 int noprintf() {
   return 0;
@@ -3716,7 +3716,7 @@ mchelp(char *pgmname)
   fprintf(stderr,
   "This instrument has been compiled with MPI support.\n  Use 'mpirun %s [options] [parm=value ...]'.\n", pgmname);
 #endif
-#ifdef USE_PGI
+#ifdef OPENACC
   fprintf(stderr,
   "This instrument has been compiled with NVIDIA GPU support through OpenACC.\n  Running on systems without such devices will lead to segfaults.\nFurter, fprintf, sprintf and printf have been removed from any component TRACE.\n");
 #endif
