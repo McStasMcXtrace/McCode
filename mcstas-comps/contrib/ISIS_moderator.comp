@@ -580,7 +580,7 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
   if(R < TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
-#ifndef USE_PGI
+#ifndef OPENACC
       fprintf(stderr, "outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
 #endif
     }
@@ -600,14 +600,14 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
   if (Tpnt==0 || Epnt==0)
     {
-#ifndef USE_PGI
+#ifndef OPENACC
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
 #endif
     }
   if (Tpnt==TS.nTime)
     {
-#ifndef USE_PGI
+#ifndef OPENACC
       fprintf(stderr,"BIG ERROR WITH Tpnt and Epnt\n");
       exit(1);
 #endif
@@ -642,7 +642,7 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
     if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
-#ifndef USE_PGI
+#ifndef OPENACC
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
       fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
 #endif
@@ -651,7 +651,7 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS, _clas
 
   if(*EV < *lim1 || *EV > *lim2)
     {
-#ifndef USE_PGI
+#ifndef OPENACC
       fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
 
       fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);

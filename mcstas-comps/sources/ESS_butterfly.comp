@@ -564,7 +564,7 @@ TRACE
 
 MCDISPLAY
 %{
- #ifndef USE_PGI
+ #ifndef OPENACC
   %include "ESS_butterfly-geometry.c"
   
   magnify("");

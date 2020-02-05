@@ -220,7 +220,7 @@ DECLARE
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
   MCDETECTOR detector;
-#ifndef USE_PGI
+#ifndef OPENACC
   off_struct offdata;
 #endif
 %}
@@ -264,7 +264,7 @@ INITIALIZE
     }
   }
   int offflag=0;
-#ifndef USE_PGI
+#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
     if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
@@ -281,7 +281,7 @@ INITIALIZE
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
-#ifndef USE_PGI
+#ifndef OPENACC
   if (Vars.Flag_OFF) {
     offdata.mantidflag=Vars.Flag_mantid;
     offdata.mantidoffset=Vars.Coord_Min[Vars.Coord_Number-1];
@@ -305,7 +305,7 @@ MPI_MASTER(
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
 );
 #else
-#ifdef USE_PGI
+#ifdef OPENACC
   if (strstr(Vars.option, "auto"))
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with GPU.\n"
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
@@ -330,7 +330,7 @@ TRACE
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
 
- #ifndef USE_PGI
+ #ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
@@ -393,7 +393,7 @@ TRACE
   {
     if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND)
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
-#ifndef USE_PGI
+#ifndef OPENACC
 	|| (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
 #else
       )
@@ -504,7 +504,7 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef USE_PGI
+#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     off_display(offdata);

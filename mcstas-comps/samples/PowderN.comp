@@ -207,7 +207,7 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
-#ifndef USE_PGI
+#ifndef OPENACC
 %include "interoff-lib"
 #endif
 /* Declare structures and functions only once in each instrument. */
@@ -266,7 +266,7 @@ double v; /* last velocity (cached) */
       double neutron_passed;
       long   xs_compute, xs_reuse, xs_calls;
     };
-#ifndef USE_PGI
+#ifndef OPENACC
   off_struct offdata;
 #endif
   // PN_list_compare *****************************************************************
@@ -542,7 +542,7 @@ DECLARE
 %{
   struct line_info_struct line_info;
   double *columns;
-#ifndef USE_PGI
+#ifndef OPENACC
   off_struct offdata;
 #endif
 %}
@@ -577,7 +577,7 @@ INITIALIZE
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef USE_PGI
+#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       line_info.shape=3; thickness=0; concentric=0;
@@ -771,7 +771,7 @@ TRACE
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
-#ifndef USE_PGI
+#ifndef OPENACC
       intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
       intersecti = 0;
 #endif
@@ -930,7 +930,7 @@ TRACE
             intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
             intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
           } else if (line_info.shape == 3) {
-#ifndef USE_PGI
+#ifndef OPENACC
             intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
             intersecti = 0;
 #endif
@@ -996,7 +996,7 @@ TRACE
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
-#ifndef USE_PGI
+#ifndef OPENACC
           intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
           intersecti = 0;
 #endif
@@ -1075,7 +1075,7 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef USE_PGI
+#ifndef OPENACC
   if (line_info.V_0) {
 
     if (line_info.shape == 0) { /* cyl */
