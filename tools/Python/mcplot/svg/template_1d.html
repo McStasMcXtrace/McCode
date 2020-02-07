@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <head>
-  <script src="d3.v4.min.js"></script>
-  <script src="plotfuncs.js"></script>
+  <script src="@LIBPATH@d3.v4.min.js"></script>
+  <script src="@LIBPATH@plotfuncs.js"></script>
 </head>
-<body>
+<body style="margin:0;overflow:hidden">
 <script>
   var params = @PARAMS@;
+  var plt = new Plot1D(params, d3.select("body").append("svg"), logscale=@LOGSCALE@);
 
-  let plt = new Plot1D(params);
+  plt.rgstrMouseClickPlot( () => { console.log("click"); } );
+  plt.rgstrMouseCtrlClickPlot( () => { console.log("ctrl click"); } );
+  plt.rgstrMouseRClickPlot( () => { console.log("right click"); } );
 </script>
 <p>
 <a href="@DATAFILE@">Click for ascii data</a>

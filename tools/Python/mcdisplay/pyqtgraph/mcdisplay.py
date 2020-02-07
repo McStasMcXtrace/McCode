@@ -542,19 +542,24 @@ def main(args):
         pg.setConfigOption('foreground', 'k')
 
     gui = McDisplay2DGui(title=dirname)
-    if not args.tof and not args.TOF and not args.ToF:
+    try:
+      if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
-    else:
+      else:
         sys.exit(gui.run_ui_tof(instrument, raybundle.rays))
+    except:
+      sys.exit(gui.run_ui(instrument, raybundle.rays))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
-    parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
-    parser.add_argument('--TOF', action='store_true', help='alternative to --tof')
-    parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')
+    #enable tof for mcdisplay (McStas) only
+    if( (os.path.basename(sys.argv[0]).startswith('mc')) ):
+      parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
+      parser.add_argument('--TOF', action='store_true', help='alternative to --tof')
+      parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')

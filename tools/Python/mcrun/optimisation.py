@@ -33,7 +33,11 @@ def build_header(options, params, intervals, detectors):
     lst = intervals[list(params)[0]]
     xmin = min(lst)
     xmax = max(lst)
+    # Get Numpoints from length of -L list
     N = len(lst)
+    # ... or using options.numponts if in fact a normal scan
+    if options.numpoints:
+        N = options.numpoints
 
     # TODO: figure out correct scan type
     title = 'Scan of %s' % xvars

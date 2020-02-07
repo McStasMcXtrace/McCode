@@ -54,7 +54,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python/webgl -based mcdisplay (mcdisplay-webgl-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python/webgl -based ${P}display (${P}display-webgl-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
@@ -66,18 +66,13 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
   )
 
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-webgl" @ONLY)
 
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-webgl")
-endif()
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-webgl-py" @ONLY)
 
 # Program files
 if(WINDOWS)
@@ -90,8 +85,9 @@ if(WINDOWS)
   endforeach()
 
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/mcdisplay.py"
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}display.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -110,8 +106,9 @@ if(NOT WINDOWS)
   endforeach()
 
   install(
-    FILES ${BINS}
+    FILES ${PROJECT_SOURCE_DIR}/mcdisplay.py
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    RENAME "${P}display.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

@@ -98,13 +98,13 @@ if(WINDOWS)
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${TOOLS_NAME}"
+    RENAME "${P}gui.py"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
 endif()
-
 
 if(NOT WINDOWS)
   # Python files
