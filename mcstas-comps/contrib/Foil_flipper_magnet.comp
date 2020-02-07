@@ -95,7 +95,9 @@ DECLARE
   void *magnet_prms;
   double foil_n[3];
   Rotation spin_flip;
-  double inside_magnet[6],instray_magnet[6],outstray_magnet[6];
+  double inside_magnet[6];
+  double instray_magnet[6];
+  double outstray_magnet[6];
   int stray_fields=0;
   int hit_foil;
 %}

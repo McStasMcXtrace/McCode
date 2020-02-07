@@ -55,10 +55,15 @@ SHARE
 
 DECLARE
 %{
-double  beta1, gamma1;             /* parabola half-axis */
-double delta, angle;               /* angle: angle between themirror and z-axis */
+double  beta1;                       /* parabola half-axis */
+double  gamma1;
+double  delta;                         /* angle: angle between themirror and z-axis */
+double  angle;
 t_Table pTable;
-int err,nom,vz_neg,p_0;            /* counts neutron absorbed for anormal reasons */
+int err;                                     /* counts neutron absorbed for anormal reasons */
+int nom;
+int vz_neg;
+int p_0; 
 %}
 
 INITIALIZE

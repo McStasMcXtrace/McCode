@@ -840,9 +840,10 @@ DECLARE
 
   /* runtime variables*/
 
-  double rtE0,rtE1;       /* runtime Energy minima and maxima so we can use angstroms as negative input */
-  double rtmodX,rtmodY;    /* runtime moderator sizes, so that a negative argument may give a default size */
-
+  double rtE0;       /* runtime Energy minima and maxima so we can use angstroms as negative input */
+  double rtE1;
+  double rtmodX;    /* runtime moderator sizes, so that a negative argument may give a default size */
+  double rtmodY;
   int TargetStation;
   double CurrentWeight;
 %}

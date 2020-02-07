@@ -213,8 +213,10 @@ off_struct offdata;
 
 DECLARE
 %{
-  double rho, bc;
-  double my_s, my_a_v;
+  double rho;
+  double bc;
+  double my_s;
+  double my_a_v;
   double mean_n;
   double events;
 %}
