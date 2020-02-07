@@ -115,8 +115,10 @@ The \textit{cm2} option will ask to normalize the flux to the monitor section su
 \Phi_c = \int_0^{0.5 eV}{\frac{d\Phi}{d\lambda} \frac{\lambda}{\lambda_{2200 m/s}} d\lambda}
 \end{equation}
 
-The \verb+auto+ option is probably the most useful one: it asks the monitor to determine automatically the best limits for each variable, in order to obtain the most significant monitored histogram. This option should preceed each variable, or be located after all variables in which case they are all affected.
+The \verb+auto+ option is probably the most useful one: it asks the monitor to automatically determine the best limits for each variable, in order to obtain the most significant monitored histogram. This option should preceed each variable, or be located after all variables in which case they are all affected.
 On the other hand, one may manually set the limits with the \verb+limits=[min max]+ option.
+If no limits are set monitor\_nd uses predefined limits that usually make sense for most neutron scattering simulations. Example: the default upper energy limit is $100$ meV, but may be changed with an options string like
+\verb+options="energy limits 0 200"+. Note that the limits also apply in list mode (see below).
 
 The \verb+log+ and \verb+abs+ options should be positioned before each variable to specify logarithmic binning and absolute value respectively.
 
@@ -157,8 +159,11 @@ The \textbf{Monitor\_nD} can additionally produce a \textit{list} of variable
 values for neutrons that pass into the monitor. This feature is additive
 to the 1D or 2D output. By default only 1000 events will be recorded in
 the file, but you can specify for instance "\textit{list} 3000 neutrons" or
-"\textit{list all} neutrons". This last option might require a lot of
-memory and generate huge files.
+"\textit{list all} neutrons". This last option may require a lot of
+memory and generate huge files. Note that the limits to the measured parameters also apply in this mode.
+To exemplify, a monitor\_nd instance with the option string \verb+"list all v"+ will \emph{only} record those neutrons which have a velocity below $100000$ m/s,
+whereas an instance with the option string \verb+"list all vx vy vz 0 2000"+ will record all neutrons with $|v_x,v_y|<100$ m/s and $0<v_z<2000$ m/s. 
+Thus, in this latter case, any neutron travelling in the negative z-direction will be disregarded.
 
 \subsection{Monitor equivalences}
 

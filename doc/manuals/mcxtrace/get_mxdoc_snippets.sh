@@ -28,7 +28,7 @@ do
     sed s/@COMP@/$COMP/g $PREFIX | sed s/@CAT@/$DIRNAME/g > $DIRNAME/$COMP.parms
     cat $HEADER >> $DIRNAME/$COMP.parms
     cd $COMP_SOURCE_DIR/mcxtrace-comps
-    mxdoc.pl -t $COMP.comp | grep -A1000 \#\ Input | grep -B1000 \#\ Output | grep -ve ^\ *$ | grep -v \# >> $PW/$DIRNAME/$COMP.parms
+    mxdoc.pl --exact -t $COMP.comp | grep -A1000 \#\ Input | grep -B1000 \#\ Output | grep -ve ^\ *$ | grep -v \# >> $PW/$DIRNAME/$COMP.parms
     cd $PW
     cat $FOOTER >> $DIRNAME/$COMP.parms
 done
