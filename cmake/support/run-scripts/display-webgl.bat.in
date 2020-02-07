@@ -1,3 +1,3 @@
 @REM Isn't windows a lovely place???
-@python @CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@display\\webgl\\mcdisplay.py %*
+@python @CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@display\\webgl\\@MCCODE_PREFIX@display.py %*
 @exit
