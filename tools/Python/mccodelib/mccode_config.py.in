@@ -1,12 +1,21 @@
 import os
 import json
+import sys
 
+'''
+Dynamic vs static LIBDIR location
+'''
+LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
+LIBDIR_FALLBACK = '@MCCODE_LOCATION@'
+if sys.platform == 'darwin':
+    LIBDIR = LIBDIR_FALLBACK
+    
 '''
 mcstas/mcxtrace configuration.
 '''
 configuration = {
     "MCCODE_VERSION": '@MCCODE_VERSION@',
-    "MCCODE_LIB_DIR": os.path.join(os.path.dirname(__file__),"..","..",".."),
+    "MCCODE_LIB_DIR": LIBDIR,
     "MCCODE": '@FLAVOR@',
     "MCRUN": '@MCCODE_PREFIX@run',
     "MCPLOT": '@MCCODE_PREFIX@plot-pyqtgraph',
@@ -28,7 +37,7 @@ compilation = {
     "CFLAGS": '@CFLAGS@',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "CC": 'gcc',
+    "CC": '@TOOLS_CC@',
     "MPICC": '@MPICC@',
     "MPIRUN": '@MPIRUN@',
     "MPINODES": '4',
@@ -139,7 +148,6 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
-                         prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",

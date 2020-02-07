@@ -36,7 +36,7 @@ class McDisplayReader(object):
             b2 = bool(re.search('-n', o)) or b2
         if not b1 and not b2:
             if not n:
-                cmd = cmd + ' --ncount=' + str(100)
+                cmd = cmd + ' --ncount=' + str(300)
             else:
                 cmd = cmd + ' --ncount=' + str(n)
         else:
