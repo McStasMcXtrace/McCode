@@ -65,7 +65,7 @@ use Config;
      MCCODE => '@FLAVOR@',
      PKGNAME => '@MCCODE_NAME@',
      PARTICLE=> '@MCCODE_PARTICLE@',
-     CC => 'gcc',
+     CC => '@TOOLS_CC@',
      AT => '@AT@',
      TERMINAL => '@TERMINAL@',
      EXTERNAL_EDITOR => '',
