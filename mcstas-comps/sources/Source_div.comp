@@ -66,7 +66,16 @@ OUTPUT PARAMETERS (thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, f
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
+double thetah;
+double thetav;
+double sigmah;
+double sigmav;
+double tan_h;
+double tan_v;
+double p_init;
+double dist;
+double focus_xw;
+double focus_yh;
 %}
 INITIALIZE
 %{
