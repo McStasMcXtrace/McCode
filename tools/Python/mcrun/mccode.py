@@ -153,7 +153,9 @@ class McStas:
         # Setup cflags
         cflags = ['-lm']  # math library
         cflags += [self.options.mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
-        cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
+        cflags += [self.options.openacc and mccode_config.compilation['OACCFLAGS']  or ' ']  # OpenACC
+        if not self.options.openacc:
+            cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath,'rb')
         counter = 0

@@ -80,6 +80,11 @@ def add_mcrun_options(parser):
         metavar='NB_CPU',
         help='spread simulation over NB_CPU machines using MPI')
     
+    # Accellerator-support
+    add('--openacc',
+        action='store_true', default=False,
+        help='parallelize using openacc')
+
     add('--machines',
         metavar='machines',
         help='defines path of MPI machinefile to use in parallel mode')
@@ -181,6 +186,10 @@ def expand_options(options):
         options.use_mpi = True
         options.cc      = mccode_config.compilation['MPICC']
         options.mpirun  = mccode_config.compilation['MPIRUN']
+    elif options.openacc is not None:
+        options.use_openacc = True
+        options.cc      = mccode_config.compilation['OACC']
+        options.use_mpi = False
     else:
         options.use_mpi = False
         options.cc = mccode_config.compilation['CC']
