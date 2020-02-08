@@ -169,9 +169,13 @@ inline double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, 
 DECLARE
 %{
   struct {
-    t_Table T,R,C;
+    t_Table T;
+    t_Table R;
+    t_Table C;
     int by_q;
-    double rw,rw_q,phi;
+    double rw;
+    double rw_q;
+    double phi;
   } prms;
 %}
 

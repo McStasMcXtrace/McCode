@@ -51,7 +51,9 @@ SHARE
 
 DECLARE
 %{
-  double d_rms, mos_rms, mono_Q;
+  double d_rms;
+  double mos_rms;
+  double mono_Q;
 %}
 
 INITIALIZE

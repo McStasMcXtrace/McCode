@@ -88,7 +88,11 @@ SHARE
 DECLARE
 %{
   t_Table pTable;
-  double m,alpha,Qc,R0,W;
+  double m;
+  double alpha;
+  double Qc;
+  double R0;
+  double W;
 %}
 
 INITIALIZE

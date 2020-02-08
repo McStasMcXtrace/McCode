@@ -87,7 +87,7 @@ SHARE
 %}
 DECLARE
 %{
-double mos_y; /* mosaic, in radians */
+double mos_y; /* mosaic - in radians */
 double mos_z;
 double mono_Q;
 double SlabWidth;
