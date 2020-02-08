@@ -16,9 +16,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MinGW)
 
 # Commands for running various external tools
-set(BROWSER "start")
+set(BROWSER "start")OACCFLAGS
 set(VRMLVIEW "start")
 set(TOOLS_CC "gcc")
+set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
 set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available
