@@ -60,7 +60,11 @@ OUTPUT PARAMETERS (Tg, To, delta_y, height,omega)
 
 DECLARE
 %{
-double Tg,To,delta_y,height,omega;
+double Tg;
+double To;
+double delta_y;
+double height;
+double omega;
 %}
 
 INITIALIZE

@@ -50,7 +50,8 @@ OUTPUT PARAMETERS (Nsum, psum, p2sum)
 DECLARE
 %{
 double Nsum;
-double psum, p2sum;
+double psum;
+double p2sum;
 %}
 
 INITIALIZE

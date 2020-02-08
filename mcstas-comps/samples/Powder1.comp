@@ -73,7 +73,9 @@ OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v, isrect)
 
 DECLARE
 %{
-double my_s_v2, my_a_v, q_v;
+double my_s_v2;
+double my_a_v;
+double q_v;
 char isrect;
 %}
 

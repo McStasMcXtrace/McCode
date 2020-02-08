@@ -104,7 +104,8 @@ SHARE
 
 DECLARE
 %{
-double bk, mWin;
+double bk;
+double mWin;
 %}
 
 INITIALIZE

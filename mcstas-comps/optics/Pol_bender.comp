@@ -112,8 +112,13 @@ SHARE
 DECLARE
 %{
 Coords localG;
-Coords normTopBot, normIn, normOut;
-Coords pointTop, pointBot, pointIn, pointOut;
+Coords normTopBot;
+Coords normIn;
+Coords normOut;
+Coords pointTop;
+Coords pointBot;
+Coords pointIn;
+Coords pointOut;
 
 #if (useTables)
   t_Table *rTopUpParPtr;

@@ -55,7 +55,17 @@ OUTPUT PARAMETERS(omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f
 
 DECLARE
 %{
-double omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha;
+double omega;
+double alpha_rad;
+double dt0;
+double dt1;
+double r_i;
+double r_f;
+double r_mean;
+double theta_i;
+double theta_f;
+double A;
+double d_s_alpha;
 %}
 
 INITIALIZE

@@ -49,7 +49,9 @@ DECLARE
   DArray2d TOF_N;
   DArray2d TOF_p;
   DArray2d TOF_p2;
-  double binphi, tt_0, tt_1;
+  double binphi;
+  double tt_0;
+  double tt_1;
 %}
 
 INITIALIZE

@@ -59,7 +59,9 @@ DECLARE
   DArray1d E_N;
   DArray1d E_p;
   DArray1d E_p2;
-  double S_p, S_pE, S_pE2;
+  double S_p;
+  double S_pE;
+  double S_pE2;
 %}
 
 INITIALIZE

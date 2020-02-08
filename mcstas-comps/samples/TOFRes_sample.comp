@@ -92,7 +92,9 @@ double tx,ty,tz;    /* target coords */
 
 DECLARE
 %{
-double f, E0, dE;
+double f;
+double E0;
+double dE;
 struct Res_sample_struct res_struct;
 %}
 

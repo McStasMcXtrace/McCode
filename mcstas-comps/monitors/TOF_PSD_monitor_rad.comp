@@ -55,7 +55,8 @@ OUTPUT PARAMETERS (TOFPSDr_N, TOFPSDr_p, TOFPSDr_p2, TOFPSDr_av_p, TOFPSDr_av_p2
 
 DECLARE
 %{
-  double tt_0, tt_1;
+  double tt_0;
+  double tt_1;
 
   DArray2d TOFPSDr_N;
   DArray2d TOFPSDr_p;

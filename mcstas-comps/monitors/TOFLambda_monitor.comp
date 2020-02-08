@@ -61,7 +61,8 @@ DECLARE
   DArray2d TOFL_N;
   DArray2d TOFL_p;
   DArray2d TOFL_p2;
-  double tt_0, tt_1;
+  double tt_0;
+  double tt_1;
 %}
 
 INITIALIZE

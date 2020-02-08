@@ -314,10 +314,13 @@ double *nx, double *ny, double *nz) {
 
 DECLARE
 %{
-  double rho, bc;
+  double rho;
+  double bc;
   off_struct offdata;
-  double mean_n, events;
-  double theta1, theta2;
+  double mean_n;
+  double events;
+  double theta1;
+  double theta2;
 %}
 
 INITIALIZE

@@ -97,8 +97,8 @@ SHARE
 
 DECLARE
 %{
-double mos_rms; /* root-mean-square of mosaic, in radians */
-double d_rms;   /* root-mean-square of d-spread, in AA */
+double mos_rms; /* root-mean-square of mosaic in radians */
+double d_rms;   /* root-mean-square of d-spread in AA */
 double mono_Q;
 
 double FN; /* Unit cell nuclear structure factor */
