@@ -1,8 +1,3 @@
-mcstas-comps/contrib/Elliptic_guide_gravity.comp
-mcstas-comps/contrib/Guide_four_side.comp
-mcstas-comps/contrib/Guide_four_side_10_shells.comp
-mcstas-comps/contrib/Guide_four_side_2_shells.comp
-mcstas-comps/contrib/PSD_Detector.comp
 mcstas-comps/contrib/SANSCurve.comp
 mcstas-comps/contrib/SANS_AnySamp.comp
 mcstas-comps/contrib/ViewModISIS.comp
