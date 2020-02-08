@@ -20,8 +20,6 @@ mcstas-comps/contrib/union/Union_mesh.comp
 mcstas-comps/contrib/union/Union_sphere.comp
 mcstas-comps/misc/MCPL_output.comp
 mcstas-comps/misc/Scatter_log_iterator.comp
-mcstas-comps/monitors/Monitor_nD.comp
-mcstas-comps/samples/Isotropic_Sqw.comp
 mcstas-comps/sources/ESS_butterfly.comp
 mcstas-comps/sources/ESS_moderator.comp
 mcstas-comps/sources/Source_Maxwell_3.comp
