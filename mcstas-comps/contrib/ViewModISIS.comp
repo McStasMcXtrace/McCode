@@ -1026,7 +1026,8 @@ DECLARE %{
 
   /* runtime variables*/
   double fullAngle;
-  double rtE0,rtE1;       /* runtime Energy minima and maxima so we can use angstroms as negative input */
+  double rtE0;       /* runtime Energy minima and maxima so we can use angstroms as negative input */
+  double rtE1;
 %}
 
 INITIALIZE

@@ -1,8 +1,3 @@
-mcstas-comps/contrib/SANSCurve.comp
-mcstas-comps/contrib/SANS_AnySamp.comp
-mcstas-comps/contrib/ViewModISIS.comp
-mcstas-comps/contrib/Virtual_mcnp_input.comp
-mcstas-comps/contrib/Virtual_tripoli4_input.comp
 mcstas-comps/contrib/union/AF_HB_1D_process.comp
 mcstas-comps/contrib/union/IncoherentPhonon_process.comp
 mcstas-comps/contrib/union/Incoherent_process.comp
