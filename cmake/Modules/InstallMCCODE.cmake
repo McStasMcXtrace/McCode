@@ -54,7 +54,7 @@ macro(installMCCODE)
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
 
   include(CPack)
-  
+
   string(TIMESTAMP MCCODE_YEAR "%Y")
 
   ## Add global definitions
@@ -234,7 +234,7 @@ macro(installMCCODE)
     WORKING_DIRECTORY work/src
   )
 
-  # Handling of system-provided random functions on windows - 
+  # Handling of system-provided random functions on windows -
   # needed only in the link step for mccode and -format
   if(WINDOWS)
     AppendDef(random=rand)
@@ -255,6 +255,7 @@ macro(installMCCODE)
  	  work/src/port.c
 	  work/src/port.h
 	  work/src/symtab.c
+	  work/src/re.c
 
     # files generated with flex and bison
  	  work/src/lex.yy.c
@@ -263,15 +264,13 @@ macro(installMCCODE)
   )
 
 
-  if (NOT enable_mcxtrace)
-    ## Build McFormat executable
-    add_executable(
+  ## Build McFormat executable
+  add_executable(
 	  "${FLAVOR_FMT}"
 	  work/src/mcformat.c
-    )
-    ## McFormat needs to be linked against m
-    target_link_libraries(${FLAVOR_FMT} m)
-  endif()
+  )
+  ## McFormat needs to be linked against m
+  target_link_libraries(${FLAVOR_FMT} m)
 
   ## Add install targets
   include(MCUtil)
@@ -288,13 +287,12 @@ macro(installMCCODE)
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-      )
-    if (NOT enable_mcxtrace)
-      install (
-        PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-        DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-      )
-    endif()
+    )
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    )
+
     foreach (name environment module)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
@@ -317,7 +315,7 @@ macro(installMCCODE)
     endforeach()
 
     # Python/Perl related batches special handling
-    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat resplot.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}
@@ -329,15 +327,12 @@ macro(installMCCODE)
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
-      )
-    
-    if (NOT enable_mcxtrace)    
-      install (
-        PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-        DESTINATION ${bin}
-      )
-    endif()
-  
+    )
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
+      DESTINATION ${bin}
+    )
+
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
       DESTINATION ${bin}
