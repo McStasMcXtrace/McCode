@@ -287,8 +287,8 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
+%include "interoff-lib"
 #ifndef OPENACC
-    %include "interoff-lib"
     %include "opencl-lib"
 #endif
 /* Declare structures and functions only once in each instrument. */
