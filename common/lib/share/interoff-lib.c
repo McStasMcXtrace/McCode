@@ -368,7 +368,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
       {
         if (t_size>CHAR_BUF_LENGTH)
         {
-#ifndef USE_PGI
+#ifndef OPENACC
           fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", CHAR_BUF_LENGTH);
 #endif
             return (t_size);
@@ -895,7 +895,7 @@ int off_x_intersect(double *l0,double *l3,
 *******************************************************************************/
 void off_display(off_struct data)
 {
-#ifndef USE_PGI
+#ifndef OPENACC
   unsigned int i;
   double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
   unsigned int pixel=0;
