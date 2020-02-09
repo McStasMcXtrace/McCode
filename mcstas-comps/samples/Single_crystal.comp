@@ -287,7 +287,7 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
-#ifndef USE_PGI
+#ifndef OPENACC
     %include "interoff-lib"
     %include "opencl-lib"
 #endif
@@ -965,7 +965,7 @@ void PGderotate(double *nx, double *ny, double *nz, double a, double csx, double
 DECLARE
 %{
   struct hkl_info_struct hkl_info;
-#ifndef USE_PGI
+#ifndef OPENACC
   off_struct             offdata;
 #endif
 %}
@@ -1025,7 +1025,7 @@ INITIALIZE
       NAME_CURRENT_COMP, hkl_info.sigma_i);
 
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef USE_PGI
+#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
      	       	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3;
@@ -1132,7 +1132,7 @@ TRACE
     intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
-#ifndef USE_PGI
+#ifndef OPENACC
   else if (hkl_info.shape == 3)
       intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 #endif
@@ -1156,7 +1156,7 @@ TRACE
     abs_xlen *= 100; inc_xlen *= 100;
 
     L = hkl_info.list;
-#ifndef USE_PGI
+#ifndef OPENACC
     T = hkl_info.tau_list;
     hkl_info.type = '\0';
 #else
@@ -1174,7 +1174,7 @@ TRACE
         intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
-#ifndef USE_PGI      
+#ifndef OPENACC      
       else if (hkl_info.shape == 3)
 	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
 #endif
@@ -1182,7 +1182,7 @@ TRACE
       {
         /* neutron is leaving the sample */
         if (hkl_info.flag_warning < 100)
-#ifndef USE_PGI
+#ifndef OPENACC
           fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
@@ -1254,7 +1254,7 @@ TRACE
               &coh_refl, &coh_xsect);
 	
         /* store ki so that we can check for further SPLIT iterations */
-#ifndef USE_PGI
+#ifndef OPENACC
 //        if (event_counter == 0 ) { /* only for incoming neutron */
 //          hkl_info.kix = kix;
 //          hkl_info.kiy = kiy;
@@ -1285,7 +1285,7 @@ TRACE
       } else {
         mc_trans = p_trans;
       }
-#ifndef USE_PGI
+#ifndef OPENACC
       hkl_info.type = 't';
 #endif
       mc_interact = 1 - mc_trans;
@@ -1341,7 +1341,7 @@ TRACE
         vx = kix; /* ki vector is used as tmp var with norm v */
         vy = kiy;
         vz = kiz; /* Go for next scattering event */
-#ifndef USE_PGI
+#ifndef OPENACC
         hkl_info.type = 'i';
 #endif
       } else {
@@ -1353,7 +1353,7 @@ TRACE
         j = hkl_select(T, tau_count, coh_refl, &sum,_particle);
         if(j >= tau_count)
         {
-#ifndef USE_PGI
+#ifndef OPENACC
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
               "(sum=%g, j=%i, tau_count=%i).\n", sum, j , tau_count);
@@ -1378,13 +1378,13 @@ TRACE
         kfy *= adjust;
         kfz *= adjust;
         /* Adjust neutron weight (see manual for explanation). */
-#ifndef USE_PGI
+#ifndef OPENACC
         p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
-#endif
+#endif OPENACC
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
-#ifndef USE_PGI
+#ifndef OPENACC
         hkl_info.type = 'c';
         hkl_info.h    = L[i].h;
         hkl_info.k    = L[i].k;
@@ -1463,7 +1463,7 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef USE_PGI  
+#ifndef OPENACC  
   if (hkl_info.shape == 0) {	/* cylinder */
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);

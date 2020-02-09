@@ -70,7 +70,7 @@ INITIALIZE
   char ** head;
   long nl;
 
-#if defined (USE_MPI) || defined(USE_PGI)
+#if defined (USE_MPI) || defined(OPENACC)
   exit(printf("Tripoli4_output: %s: ERROR: "
     "This component can not be used in parallel execution mode (MPI/GPU). Abort.\n", 
     NAME_CURRENT_COMP));

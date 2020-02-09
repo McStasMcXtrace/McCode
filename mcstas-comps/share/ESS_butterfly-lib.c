@@ -27,7 +27,7 @@
 #error McStas : please import this library with %include "ESS_butterfly-lib"
 #endif
 
-#ifdef USE_PGI
+#ifdef OPENACC
 #define exit(...) noprintf()
 #endif
 
@@ -338,6 +338,6 @@ double ESS_2015_Schoenfeldt_thermal_timedist(double time,double lambda,double he
 } /* end of ESS_2015_Schoenfeldt_thermal_timedist */
 
 /* end of ESS_butterfly-lib.c */
-#ifdef USE_PGI
+#ifdef OPENACC
 #undef exit
 #endif

@@ -32,11 +32,11 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e9 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_GPU_PGCC_TESLA_KISS
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e9 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_GPU_PGCC_TESLA_KISS_NOSPLIT
 
 cd $HOME
 
-echo done on GPU with split, submitting GPU job with disabled split
+echo done on GPU, submitting 1st MPI job and plots
 # 10-core MPI run 
-bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
-bsub < $HOME/McCode/test-batches/plots_gpu.scpt 
+bsub < $HOME/McCode/test-batches/v3.0_cpu_MPI_KISS.scpt
+bsub < $HOME/McCode/test-batches/plots_gpu_nosplit.scpt 

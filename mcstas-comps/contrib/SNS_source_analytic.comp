@@ -101,7 +101,7 @@ OUTPUT PARAMETERS (hdiv,vdiv,p_in, CL, CU, para_sp, para_a,para_b,para_R,para_to
 SHARE
 %{
 
-#ifdef USE_PGI
+#ifdef OPENACC
 	/* there's no abort() on the GPU */
 	#define _ABORT()
 #else

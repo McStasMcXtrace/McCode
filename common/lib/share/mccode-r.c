@@ -86,7 +86,7 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #endif /* !DANSE */
 
 /* String nullification on GPU and other replacements */
-#ifdef USE_PGI
+#ifdef OPENACC
 #pragma acc routine seq
 int noprintf() {
   return 0;
@@ -2838,20 +2838,26 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *  Divide-and-conquer strategy for parallelizing this task: Sort absorbed
 *  particles last.
 *
-*   psorted:    size len pointer array of source and sorted particles
-*   pbuffer:    size len pointer array, buffer space
+*   particles:  the particle array, required to checking _absorbed
+*   psorted:    size len index array of source and sorted particles
+*   pbuffer:    size len index array, buffer space
 *   len:        meaningful size of psorted and pbuffer
 */
 //#pragma acc routine seq
-long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long len) {
+long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len) {
 
-  #define SAL_THREADS 9 // number of sub-problems
+  #define SAL_THREADS 1024 // num parallel sections
+  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, psorted, len);
+
   long newlen = 0;
   long tidx; // tread index
   long los[SAL_THREADS]; // target array startidxs
   long lens[SAL_THREADS]; // target array sublens
   long l = floor(len/(SAL_THREADS-1)); // subproblem_len
   long ll = len - l*(SAL_THREADS-1); // last_subproblem_len
+
+  // TODO: The l vs ll is too simplistic, since ll can become much larger
+  // than l, resulting in idling. We should distribute lengths more evenly.
 
   // step 1: sort sub-arrays
   for (tidx=0; tidx<SAL_THREADS; tidx++) {
@@ -2863,11 +2869,11 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
 
     // write into pbuffer at i and j
     while (i < j) {
-      while (!psorted[i]->_absorbed && i<j) {
+      while (!particles[psorted[i]]._absorbed && i<j) {
         pbuffer[i] = psorted[i];
         i++;
       }
-      while (psorted[j]->_absorbed && i<j) {
+      while (particles[psorted[j]]._absorbed && i<j) {
         pbuffer[j] = psorted[j];
         j--;
       }
@@ -2878,24 +2884,19 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
         j--;
       }
     }
-    // edge case
+    // transfer edge case
     if (i==j)
       pbuffer[i] = psorted[i];
 
-    // record the number of hits
-    los[tidx] = 0;
-    lens[tidx] = 0;
-    if (loclen>0)
-      for (long k=lo; k<lo+loclen; k++)
-        if (!pbuffer[k]->_absorbed)
-          lens[tidx]++;
+    lens[tidx] = i - lo;
+    if (i==j && !particles[psorted[i]]._absorbed) lens[tidx]++;
   }
 
   // determine lo's
   long accumlen = 0;
-  for (long i=0; i<SAL_THREADS; i++) {
-    los[i] = accumlen;
-    accumlen = accumlen + lens[i];
+  for (long idx=0; idx<SAL_THREADS; idx++) {
+    los[idx] = accumlen;
+    accumlen = accumlen + lens[idx];
   }
 
   // step 2: write non-absorbed sub-arrays to psorted/output from the left
@@ -2910,6 +2911,34 @@ long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long
   //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
 
   return accumlen;
+}
+
+/*
+*  Fallback serial version of the one above.
+*/
+long sort_absorb_last_serial(_class_particle* particles, long* psorted, long len) {
+  long i = 0;
+  long j = len - 1;
+  _class_particle* pbuffer;
+
+  // bubble
+  while (i < j) {
+    while (!particles[psorted[i]]._absorbed && i<j) i++;
+    while (particles[psorted[j]]._absorbed && i<j) j--;
+    if (i < j) {
+      pbuffer = psorted[j];
+      psorted[j] = psorted[i];
+      psorted[i] = pbuffer;
+      i++;
+      j--;
+    }
+  }
+
+  // return new length
+  if (i==j && !particles[psorted[i]]._absorbed)
+    return i + 1;
+  else
+    return i;
 }
 
 
@@ -3716,7 +3745,7 @@ mchelp(char *pgmname)
   fprintf(stderr,
   "This instrument has been compiled with MPI support.\n  Use 'mpirun %s [options] [parm=value ...]'.\n", pgmname);
 #endif
-#ifdef USE_PGI
+#ifdef OPENACC
   fprintf(stderr,
   "This instrument has been compiled with NVIDIA GPU support through OpenACC.\n  Running on systems without such devices will lead to segfaults.\nFurter, fprintf, sprintf and printf have been removed from any component TRACE.\n");
 #endif

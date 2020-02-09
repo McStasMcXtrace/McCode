@@ -47,7 +47,7 @@
 #include <float.h>
 #include <inttypes.h>
 #include <stdint.h>
-#ifdef USE_PGI
+#ifdef OPENACC
 #include <accelmath.h>
 int noprintf();
 int str_comp(char *str1, char *str2);
@@ -150,15 +150,9 @@ size_t str_len(const char *s);
 #  endif
 #endif
 
-#ifdef USE_PGI  /* default is to disable signals with PGI/OpenACC */
+#ifdef OPENACC  /* default is to disable signals with PGI/OpenACC */
 #  ifndef NOSIGNALS
 #    define NOSIGNALS 1
-#  endif
-#endif
-
-#ifdef USE_PGI  /* default is to disable SPLIT with PGI/OpenACC */
-#  ifndef NOSPLIT
-#    define NOSPLIT 1
 #  endif
 #endif
 
@@ -433,7 +427,7 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #define _RNG_ALG_MT         1
 #define _RNG_ALG_KISS       2
 #define _RNG_ALG_FAST_KISS  3
-
+#define _RNG_ALG_CUDA       4
 
 /* selection of random number generator */
 #ifndef RNG_ALG
@@ -465,6 +459,9 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define random() fast_kiss_random(_particle->randstate)
 #  define _random() kiss_random(state)
 #  define _rand01
+#elif RNG_ALG == _RNG_ALG_CUDA
+// Moved here from cogen.c.in for potential future integration
+#include <openacc_curand.h;
 #endif
 
 // component writers interface
@@ -519,7 +516,8 @@ int display(void);
 /*
 *  Divide-and-conquer strategy for parallel sort absorbed last.
 */
-long sort_absorb_last(_class_particle** psorted, _class_particle** pbuffer, long len);
+long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len);
+long sort_absorb_last_serial(_class_particle* particles, long* psorted, long len);
 
 
 /* simple vector algebra ==================================================== */
