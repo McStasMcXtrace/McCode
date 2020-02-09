@@ -124,9 +124,7 @@ OUTPUT PARAMETERS(VarsInc, offdata)
 SHARE
 %{
 %include "read_table-lib"
-#ifndef USE_PGI
 %include "interoff-lib"
-#endif
 struct StructVarsInc
 {
 double  sigma_a; /* Absorption cross section per atom (barns) */
@@ -143,11 +141,8 @@ double  sigma_a; /* Absorption cross section per atom (barns) */
 
 DECLARE
 %{
-
   struct StructVarsInc VarsInc;
-#ifndef USE_PGI
   off_struct offdata;
-#endif
 %}
 
 INITIALIZE
