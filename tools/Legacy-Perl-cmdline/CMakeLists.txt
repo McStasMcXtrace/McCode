@@ -32,9 +32,9 @@ find_program(AT at)
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 if (APPLE)
-  set(CFLAGS "-g -O2 -lm -std=c99 -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+  set(CFLAGS "-g -O2 -std=c99 -lm -headerpad_max_install_names ${CMAKE_C_FLAGS}")
 else()
-  set(CFLAGS "-g -O2 -lm -std=c99 ${CMAKE_C_FLAGS}")
+  set(CFLAGS "-g -O2 -std=c99 -lm ${CMAKE_C_FLAGS}")
 endif()
 
 
@@ -139,8 +139,8 @@ configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONL
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
 
 # Generate perl header
-configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY immediate)
-configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
+configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY)
+configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY)
 
 exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 

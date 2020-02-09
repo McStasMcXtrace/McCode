@@ -1,22 +1,23 @@
 # the name of the target operating system
-set(CMAKE_SYSTEM_NAME "Darwin")
-set(ARCH   "amd64")
+set(CMAKE_SYSTEM_NAME "noarch")
+set(ARCH   "noarch")
 
 # Commands for running various external tools
-set(CC "gcc")
 set(BROWSER "open")
 set(VRMLVIEW "open")
+set(TOOLS_CC "cc")
 set(MPICC "mpicc")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
-set(PERL "/usr/bin/perl5.18")
+set(PERL "/usr/bin/perl")
 
 # Plotting options
 
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
-set(GNUDEV "x11")
+set(GNUDEV "wxt")
 
 # Suffix for executables
 set(EXE "out")
+

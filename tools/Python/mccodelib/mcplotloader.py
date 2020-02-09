@@ -18,6 +18,7 @@ class DataMcCode(object):
     ''' base type holding only the data object's title '''
     def __init__(self, *args, **kwargs):
         self.title = ''
+        self.filepath = ''
 
     def __str__(self, *args, **kwargs):
         return self.title
@@ -53,6 +54,8 @@ class Data1D(DataMcCode):
     
     def clone(self):
         data = Data1D()
+        
+        data.filepath = self.filepath
         
         data.component = self.component
         data.filename = self.filename
@@ -308,6 +311,7 @@ def _load_monitor(monitorfile):
             else:
                 print('load_monitor: unknown data format %s' % typ)
                 data = None
+            data.filepath = f
             return data
         else:
             return Data0D()
@@ -396,13 +400,13 @@ def _load_multiplot_1D_lst(f_dat):
         for l in lines:
             if '#' in l:
                 continue
-            xvals.append(l.split()[0])
+            xvals.append(float(l.split()[0]))
 
             for i in range(len(yvars)//2):
                 yvals_lst.append([])
                 yvals_err_lst.append([])
-                yvals_lst[i].append(l.split()[2*i+num_xvars])
-                yvals_err_lst[i].append(l.split()[2*i+num_xvars+1])
+                yvals_lst[i].append(float(l.split()[2*i+num_xvars]))
+                yvals_err_lst[i].append(float(l.split()[2*i+num_xvars+1]))
         header.xvals = xvals
         
         # create a new instance for each y variable
@@ -666,12 +670,9 @@ def load_simulation(args):
 
 def load_sweep(args):
     d = args['directory']
-    if isfile(join(d, 'mccode.sim')):
-        f_sim = join(d, 'mccode.sim')
-    elif isfile(join(d, 'mcstas.sim')):
-        f_sim = join(d, 'mcstas.sim')
-        
     f_dat = join(d, 'mccode.dat')
+    if isfile(join(d, 'mcstas.sim')):
+        f_dat = join(d, 'mcstas.sim')
 
     # load primary data_handle, 1D sweep values
     data_handle_lst_sweep1D = _load_multiplot_1D_lst(f_dat)

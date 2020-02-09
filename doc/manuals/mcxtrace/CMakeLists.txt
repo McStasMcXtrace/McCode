@@ -54,7 +54,7 @@ include(CPack)
 
 message( "LaTeX configuration" )
 # set(LATEX_OUTPUT_PATH ".")
-file(GLOB LIST RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "*.tex" "*.sty" "*.bib" "*.bst" "[m-s]*/*.tex" "figures/*" "Semi_mirror.comp")
+file(GLOB LIST RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "*.tex" "*.sty" "*.bib" "*.bst" "[m-s]*/*.tex" "[m-s]*/*.parms" "figures/*" "Semi_mirror.comp")
 
 foreach(NAME sources samples optics monitors misc)
   add_custom_command(

@@ -290,7 +290,7 @@ sub get_out_file_next {
       # Replace any @MCCODE_LIB@ by the McStas system path
       $mcstas_cflags =~ s/\@MCCODE_LIB\@/${MCSTAS::sys_dir}/g;
     }
-    my $libs = "-lm -std=c99 ";
+    my $libs = "-lm ";
     if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
       $libs .= " -DUSE_MPI ";
       $cc      = $MCSTAS::mcstas_config{'MPICC'};
@@ -444,8 +444,7 @@ sub do_test {
     my $k;
     if (!@val_par) {
     	&$printer("Instrument without test: $base");
-	# No reason to use cflags on instruments without test condition
-    	my $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} -c -n0 --no-cflags $base";
+    	my $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} -c -n0 $base";
     	&$printer("Executing: $this_cmd");
     	my $res = qx/$this_cmd/;
     	if ($child_error_code) {

@@ -12,6 +12,7 @@ Proof of concept solution for calling a C++ library from McStas/McXtrace:
 4) hello.cpp has a single function hello() that prints the input string via cout 
 
 5) Compilation steps:
+
    a) Compile libhello.so via
       g++ -fpic -shared hello.cpp -o libhello.so
    

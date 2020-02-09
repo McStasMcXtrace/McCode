@@ -37,16 +37,16 @@ aperture.
 \def\svgwidth{\columnwidth}
 %\input{../figures/source_lab.pdf_tex}
 \import{figures/}{source_lab.pdf_tex}
-\caption{Geometry of the \textbf{Source\_lab} component. A electron beam impinges at a right angle on
+\caption{Geometry of the \textbf{Source\_lab} component. An electron beam impinges at a right angle on
 an anode material, where X-rays are generated. The Origin is defined to be a the centre of the electron beam
-on the anode surface, and the coodrinate system is oriented such that the $\boldsymbol{z}$-axis point towards
+on the anode surface, and the coordinate system is oriented such that the $\boldsymbol{z}$-axis point towards
 the exit aperture.} 
 \end{figure}
 
-For each photon ray to be generated, a Monte Carlo choice is made to either
+For each photon ray to be generated, a Monte Carlo choice is made to
 generate either a Bremsstrahlung photon or one from one of the x-ray emission
-lines of the material. $1-\mathit{frac}$ of the rays are generated from characteristic
-emission, and $\mathit{frac}$ from Bremsstrahlung. In most cases Bremsstrahlung is
+lines of the material. $( 1-\mathit{frac} )$ of the rays are generated from characteristic
+emission, and $( \mathit{frac} )$ from Bremsstrahlung. In most cases Bremsstrahlung is
 unwanted background, which is why the default is $0.1$. Note that this
 \emph{only} governs how much of the available statistics is diverted into
 simulating Bremsstrahlung. It does not have an impact on what intensity is detected
@@ -69,3 +69,20 @@ figure~\ref{f:source_lab_spectrum}.
 \label{f:source_lab_spectrum}
 \caption{Intensity vs. wavelenghth for a Cu-anode laboratory source.}
 \end{figure}
+
+\textbf{Source\_lab} includes a set of common anode materials: \{Cu, Ga, Mo, Ag, W\}. More materials can be added by the following procedure:
+\begin{enumerate}
+\item Find the atomic number, $Z$, for the material you want to add. So far only single materials are supported.
+\item Look up (and note down) the central energies of (up to) 6 characteristic lines for the material in e.g. \cite{bearden1967x}. Also note down the number lines you have recorded.
+\item Look up the natural spectral widths of those lines in \cite{krause1979natural}.
+\item Find the relative intensity of the the set of lines. For instance from the x-ray data booklet.
+\item Note down the ionization energy $E_I(Z)$, and flourescence yield, $Y(Z)$, of the anode material.
+\end{enumerate}
+With this information assemble a code line as:\\
+\texttt{\{$Z$,$E_I(Z)$,$Y(Z)$,$n$,\{$[E_C]$\},\{$[W]$\},\{$[I]$\}\},}\\
+ and put it in the source file \texttt{Source\_lab.comp}, just above the line that reads\\
+\texttt{\{0,0.0,0.0,0,\{0,0,0,0,0,0\},\{0,0,0,0,0,0\},\{0,0,0,0,0,0\}\}}\\
+in the \texttt{SHARE} section of the component source code.
+Here $[E_C]$ refers to a comma separated list of characteristic energies in \si{keV}, $[W]$ a
+list of characteristic widths in \si{keV}, and $[I]$ a list of relative line intensities.
+Lastly, $n$ denotes the number of x-ray lines.

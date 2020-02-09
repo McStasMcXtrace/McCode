@@ -205,6 +205,8 @@ class McMainWindow(QtWidgets.QMainWindow):
             prefix = 'mc'
         self.setWindowTitle(prefix + 'gui-py')
         self.ui.actionMcdoc.setText(prefix + "doc Component Reference")
+        self.ui.actionMcDocCurrent.setText(prefix +"doc current instrument")
+
 
         mccode = mccode_config.configuration["MCCODE"]
         self.ui.actionMcstas_User_Manual.setText(mccode + " User Manual")

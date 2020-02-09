@@ -487,18 +487,23 @@ class McGuiAppController():
         # load installed mcstas components:
         # args - [category, comp_names[], comp_parsers[]]
         args = []
-        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Obsolete'}
-        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6 : 'obsolete'}
+        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
+        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'contrib/union', 7 : 'obsolete'}
         i = 0
-        while i < 7:
+        while i < 8:
             arg = [] # arg - category, comp_names[], comp_parsers[]
             compnames = []
             parsers = []
             
             for f in files_comp:
-                if re.search(dirnames[i], os.path.basename(os.path.dirname(f))):
-                    compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
-                    parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
+                if i==6:
+                    if re.search(dirnames[i], os.path.dirname(f)):
+                        compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
+                        parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
+                else:
+                    if re.search(dirnames[i], os.path.basename(os.path.dirname(f))):
+                        compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
+                        parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
             
             arg.append(categories[i])
             arg.append(compnames)
@@ -632,22 +637,21 @@ class McGuiAppController():
     def handlePlotOtherResults(self):
         self.emitter.status('')
         resultdir = self.view.showOpenPlotDirDlg(os.getcwd())
-        print("Resultdir is " + resultdir)
-        cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
-        cwd = os.path.dirname(os.path.dirname(resultdir))
-
-        self._runthread = McRunQThread()
-        self._runthread.cmd = cmd
-        self._runthread.cwd = cwd
-        self._runthread.finished.connect(lambda: None)
-        self._runthread.terminated.connect(lambda: None)
-        self._runthread.thread_exception.connect(handleExceptionMsg)
-        self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
-        self._runthread.message.connect(lambda msg: self.emitter.message(msg))
-        self._runthread.start()
+        if not resultdir is "":
+            cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
+            cwd = os.path.dirname(os.path.dirname(resultdir))
+            self._runthread = McRunQThread()
+            self._runthread.cmd = cmd
+            self._runthread.cwd = cwd
+            self._runthread.finished.connect(lambda: None)
+            self._runthread.terminated.connect(lambda: None)
+            self._runthread.thread_exception.connect(handleExceptionMsg)
+            self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
+            self._runthread.message.connect(lambda msg: self.emitter.message(msg))
+            self._runthread.start()
         
-        self.emitter.message(cmd, gui=True)
-        self.emitter.status('Running plotter ...')        
+            self.emitter.message(cmd, gui=True)
+            self.emitter.status('Running plotter ...')        
     
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
@@ -677,17 +681,17 @@ class McGuiAppController():
     
     def handleHelpWeb(self):
         # open the mcstas homepage
-        mcurl = 'http://www.mcstas.org'
+        mcurl = 'http://www.'+mccode_config.configuration["MCCODE"]+'.org'
         webbrowser.open_new_tab(mcurl)
     
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
-        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", "mcstas-manual.pdf")
+        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-manual.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
-        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", "mcstas-components.pdf")
+        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-components.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
@@ -774,6 +778,9 @@ class McGuiAppController():
     
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        if not os.path.isfile(instr):
+            self.emitter.status("Please select a file rather than a folder. Folder load not supported.")
+            return
         if not instr:
             return
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(instr))==False:

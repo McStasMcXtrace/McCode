@@ -17,7 +17,9 @@ class PlotNode(object):
     '''
     def __init__(self):
         self.parent = None
+        ''' primary node children'''
         self.primaries = []
+        ''' alternative/secondary node children '''
         self.secondaries = []
     def set_primaries(self, node_lst):
         self.primaries = node_lst

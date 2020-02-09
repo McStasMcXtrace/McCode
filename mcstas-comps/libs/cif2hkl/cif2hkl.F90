@@ -6654,7 +6654,7 @@ End Module CFML_GlobalDeps
     !!----
     Function RFormat(Val,W) Result(String)
        !---- Use ----!
-       use ieee_arithmetic, only : ieee_is_nan,ieee_is_finite
+       !use ieee_arithmetic, only : ieee_is_nan,ieee_is_finite
 
        !---- Arguments ----!
        real,    intent(in) :: val        ! value to be output
@@ -6675,8 +6675,8 @@ End Module CFML_GlobalDeps
        !> Test for NaN
 
        !> Alternative: if (val /= val) then
-       !if (isnan(val))then
-       if (ieee_is_nan(val)) then
+       if (isnan(val))then
+       !if (ieee_is_nan(val)) then
           string(1:w-3)=' '
           string(w-2:w)='NaN'
           return
@@ -54991,6 +54991,7 @@ Contains
 ! Example: ./cif2hkl -o CaF2.laz CaF2.cfl
 
 ! Compile with:
+!   gfortran -O2 CFML_GlobalDeps_Linux.f90 CFML_Math_Gen.f90 CFML_String_Util_gf.f90 CFML_Math_3D.f90 CFML_Sym_Table.f90 CFML_Chem_Scatt.f90 CFML_Symmetry.f90 CFML_Cryst_Types.f90 CFML_Reflct_Util.f90 CFML_Atom_Mod.f90 CFML_Geom_Calc.f90 CFML_Molecules.f90 CFML_Form_CIF.f90 CFML_Sfac.f90 -o cif2hkl cif2hkl.F90 -lm
 !   rm *.mod
 !   ./cif2hkl ../CIF/CaF2.cfl
 ! 
@@ -55296,6 +55297,7 @@ Contains
 ! Module CFML_Molecular_Crystals             CFML_Molecules.f90
 ! Module CFML_IO_Formats                     CFML_Form_CIF.f90
 !
+! CFML_GlobalDeps_Linux.f90 CFML_Math_Gen.f90 CFML_String_Util_gf.f90 CFML_Math_3D.f90 CFML_Sym_Table.f90 CFML_Chem_Scatt.f90 CFML_Symmetry.f90 CFML_Cryst_Types.f90 CFML_Reflct_Util.f90 CFML_Atom_Mod.f90 CFML_Geom_Calc.f90 CFML_Molecules.f90 CFML_Form_CIF.f90 CFML_Sfac.f90
 
  
 ! ==============================================================================
@@ -55920,35 +55922,44 @@ program cif2hkl
       if (argv(1:2) == "-h" .or. argv(1:6) == "--help") then
         call print_usage(pgmname, message)
         write(*,*) trim(message)
+        stop
       end if
       if (argv(1:2) == "-v" .or. argv(1:9) == "--version") then
         call print_version(pgmname, message)
         write(*,*) trim(message)
+        stop
       end if
       if ( (argv(1:8) == "--lambda" .or. argv(1:2) == "-l") .and. i<argc) then
         i=i+1
         call getarg(i, argv)
         read(argv, *) lambda
+        cycle
       end if
       if ( (argv(1:5) == "--out".or. argv(1:2) == "-o") .and. i < argc) then
         i=i+1
         call getarg(i, outfile)
+        cycle
       end if
       if ( (argv(1:6) == "--mode".or. argv(1:2) == "-m") .and. i < argc) then
         i=i+1
         call getarg(i, mode)
+        cycle
       end if
       if (argv(1:2) == "-p" .or. argv(1:3) == "--p") then
         powxtal = "p"
+        cycle
       end if
       if (argv(1:2) == "-x" .or. argv(1:3) == "--x") then
         powxtal = "x"
+        cycle
       end if
       if (argv(1:8) == "-verbose" .or. argv(1:9) == "--verbose") then
         verbose = 1
+        cycle
       end if
       if (argv(1:4) == "--no") then
         powxtal = "-"
+        cycle
       end if
       if (argv(1:1) .ne. '-') then
         ! convert argv[i]: process conversion
@@ -55962,6 +55973,7 @@ program cif2hkl
 
         ! revert outfile to default
         outfile = ""
+        cycle
       end if
     end do
   end if
