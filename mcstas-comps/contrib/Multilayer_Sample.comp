@@ -69,8 +69,13 @@ SHARE
 
 DECLARE
 %{
-double xmin, xmax, zmin, zmax;
-double tx, ty, tz;
+double xmin;
+double xmax;
+double zmin; 
+double zmax;
+double tx;
+double ty; 
+double tz;
 %}
 
 INITIALIZE

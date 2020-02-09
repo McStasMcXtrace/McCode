@@ -110,7 +110,11 @@ double acos0_2pi(double x,double y)
 
 DECLARE
 %{
-   double omega, off, splen, rad, sw;
+   double omega;
+   double off;
+   double splen;
+   double rad;
+   double sw;
 %}
 
 INITIALIZE

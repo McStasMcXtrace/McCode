@@ -107,7 +107,8 @@ double sigma_a; /* Absorption cross section per atom (barns) */
 DECLARE
 %{
   struct StructVarsV VarsV;
-  double ftun, fQE;
+  double ftun;
+  double fQE;
 %}
 
 INITIALIZE

@@ -2192,7 +2192,9 @@ DECLARE
 
   float *model_pars_ptr;
 
-  double my_a_v, q, shape;
+  double my_a_v,;
+  double q;
+  double shape;
 %}
 
 INITIALIZE

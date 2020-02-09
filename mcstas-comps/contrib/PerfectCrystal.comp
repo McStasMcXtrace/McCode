@@ -227,7 +227,19 @@ SHARE
 DECLARE
 %{
    // official output variables
-   double tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps;
+   double tt;
+   double phi;
+   double xi;
+   double phid;
+   double vd;
+   double zd;
+   double v0;
+   double vmin;
+   double vmax;
+   double vperp;
+   double E0;
+   double R;
+   double eps;
 
    // internal stuff
    double sin_facette_xi;

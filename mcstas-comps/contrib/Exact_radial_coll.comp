@@ -55,8 +55,15 @@ OUTPUT PARAMETERS (alpha_in, alpha_out, out_radius, beta_in, beta_out, iw, ow,di
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double alpha_in, alpha_out, beta_in, beta_out, theta;
-double out_radius, iw, ow, divergence;
+double alpha_in;
+double alpha_out;
+double beta_in; 
+double beta_out; 
+double theta;
+ double out_radius;
+double iw;
+double ow;
+double divergence;
 %}
 INITIALIZE
 %{

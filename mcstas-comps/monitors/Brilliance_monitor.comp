@@ -95,8 +95,12 @@ DECLARE
   DArray1d BRIL_shapeN;
   DArray1d BRIL_shapeE;
 
-  double tt_0, tt_1;
-  double xmin, xmax, ymin, ymax;
+  double tt_0;
+  double tt_1;
+  double xmin;
+  double xmax;
+  double ymin;
+  double ymax;
   double ster;
   double prsec;
   double dlam;

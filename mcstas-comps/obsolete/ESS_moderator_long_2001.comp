@@ -107,7 +107,12 @@ double Mezei_M_fct(double l, double temp)
 
 DECLARE
 %{
-  double l_range, w_mult, branchframe, tx, ty, tz;
+  double l_range;
+  double w_mult;
+  double branchframe;
+  double tx;
+  double ty;
+  double tz;
 %}
 
 INITIALIZE

@@ -778,14 +778,18 @@ double pade_function (double para[10], double E)
 
 DECLARE
 %{
-  double hdiv, vdiv;
-  double p_in, CL, CU;
+  double hdiv;
+  double vdiv;
+  double p_in;
+  double CL;
+  double CU;
   double para_sp[14];
   double para_a[10];
   double para_b[10];
   double para_R[10];
   double para_to[10];
-  double csfE[1001], CItot;
+  double csfE[1001];
+  double CItot;
 %}
 
 

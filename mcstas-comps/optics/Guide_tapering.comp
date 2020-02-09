@@ -95,20 +95,40 @@ DECLARE
 %{
 double *w1c;
 double *w2c;
-double *ww, *hh;
-double *whalf, *hhalf;
-double *lwhalf, *lhhalf;
-double *h1_in, *h2_out, *w1_in, *w2_out;
-double l_seg, h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh;
-double mxi ,u1 ,u2 ,div1, p2_para;
-double test,Div1;
+double *ww;
+double *hh;
+double *whalf;
+double *hhalf;
+double *lwhalf;
+double *lhhalf;
+double *h1_in;
+double *h2_out; 
+double *w1_in;
+double *w2_out;
+double l_seg;
+double h12;
+double  h2;
+double w12;
+double w2;
+double a_ell_q;
+double b_ell_q;
+double lbw;
+double lbh;
+double mxi;
+double u1;
+double u2;
+double div1; 
+double p2_para;
+double test;
+double Div1;
 int seg;
 char *fu;
 char *pos;
 char file_name[1024];
 char *ep;
 FILE *num;
-double rotation_h, rotation_v;
+double rotation_h;
+double rotation_v;
 %}
 
 INITIALIZE

@@ -48,7 +48,8 @@ OUTPUT PARAMETERS (slope, slopeV)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double slope, slopeV;
+double slope;
+double slopeV;
 %}
 INITIALIZE
 %{

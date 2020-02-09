@@ -803,10 +803,14 @@ DECLARE
 		All variables below is locally declared
 		and hence accessible through OUTPUT PARAMETERS.
 	*/
-	struct SGI guideInfo; // Static Guide information, is set in INITIALIZE
+	struct SGI guideInfo; // Static Guide information is set in INITIALIZE
 	struct Intersection latestParticleCollision; // Is changed duing trace
-	double Gx,Gy,Gz;  // Local gravity vector, is set once in INITIALIZE
-	double Gx0, Gy0, Gz0;
+	double Gx;  // Local gravity vector, is set once in INITIALIZE
+	double Gy;
+	double Gz;
+	double Gx0;
+	double Gy0;
+	double Gz0;
 	double Circ;
 	double *dynamicalSegLength;
 

@@ -78,8 +78,10 @@ double SM3_Maxwell(double l, double temp)
 
 DECLARE
 %{
-  double l_range, w_mult;
-  double w_source, h_source;
+  double l_range;
+  double w_mult;
+  double w_source;
+  double h_source;
 %}
 
 INITIALIZE

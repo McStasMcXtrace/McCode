@@ -69,7 +69,11 @@ OUTPUT PARAMETERS (my_s_pre, my_a_v, q_v, q, shape)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double my_s_pre, my_a_v, q_v, q, shape;
+double my_s_pre;
+double my_a_v;
+double q_v;
+double q;
+double shape;
 %}
 INITIALIZE
 %{

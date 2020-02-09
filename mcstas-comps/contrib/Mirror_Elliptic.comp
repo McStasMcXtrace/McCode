@@ -60,13 +60,18 @@ SHARE
 
 DECLARE
 %{
-  double  beta1, alpha1;                 /* ellipse parameters */
-  double  beta2, alpha2;                 /* ellipse squared parameters */
-  double a, b;                         
+  double  beta1;                 /* ellipse parameters */
+  double  alpha1;
+  double  beta2;                 /* ellipse squared parameters */
+  double alpha2;
+  double a;
+  double b;                         
   double delta;
   double angle;
   t_Table pTable;
-  double old_x,old_y,old_z;
+  double old_x;
+  double old_y;
+  double old_z;
   int err;                            
 %}  
 

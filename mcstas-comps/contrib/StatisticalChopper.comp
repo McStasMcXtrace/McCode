@@ -53,7 +53,9 @@ OUTPUT PARAMETERS (delta_y, height,omega, Sequence,SequenceIndex,nslit,m)
 
 DECLARE
 %{
-double delta_y,height,omega;
+double delta_y;
+double height;
+double omega;
 int *Sequence;      /* Array containing 0=closed and 1=opened*/
 int *SequenceIndex; /* index of '1' in the sequence */
 int nslit;

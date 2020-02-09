@@ -519,8 +519,10 @@ DECLARE
   double Qmind;            /* AA-1 somehow SANS limit -- the total range should be reasonably large, so Qmind close enough to ZERO        */
   double Qmaxd;            /* AA-1 approx. model Q-limit, where coh. scatt. becomes zero -- practical limit -- 1.0 for most SANS problems */
 
-  double Qminl, Qmaxl, l10;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
-
+  double Qminl;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
+  double Qmaxl;
+  double l10;
+ 
   double Qtab[512];
   double Itab[512];
 %}

@@ -131,14 +131,25 @@ SHARE
 
 DECLARE
 %{
-  int Nxc, Nyc, Ntc, Nqc;
+  int Nxc;
+  int Nyc;
+  int Ntc;
+  int Nqc;
   double *TSdNf;
   double *TSdpf;
   double *TSdp2f;
-  double ds1c, ds2c, ds3c;
-  double xw1c, xw2c, xw3c;
-  double yh1c, yh2c, yh3c;
-  double hl1c, hl2c, hl3c;
+  double ds1c;
+  double ds2c;
+  double ds3c;
+  double xw1c;
+  double xw2c;
+  double xw3c;
+  double yh1c;
+  double yh2c;
+  double yh3c;
+  double hl1c;
+  double hl2c;
+  double hl3c;
   double vx3c;
   double Pic;
 
@@ -146,8 +157,10 @@ DECLARE
   DArray1d simplI;
   DArray1d simplIe;
 
-  double Ncount, Pcount;
-  double storez, storen;
+  double Ncount;
+  double Pcount;
+  double storez;
+  double storen;
 %}
 
 INITIALIZE

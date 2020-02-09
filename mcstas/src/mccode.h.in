@@ -410,16 +410,19 @@ enum instr_formal_types
     instr_type_char,
     instr_type_vector,
     instr_type_double,
-    instr_type_symbol
+    instr_type_symbol,
+    instr_type_custom
   };
 
 /* Component formal input parameters. */
 struct comp_iformal
   {
     enum instr_formal_types type; /* Type (string, int, double) */
-    char *id;     /* Parameter name */
-    int isoptional;   /* True if default value is available */
-    CExp default_value;   /* Default value if isoptional is true */
+    char *id;                     /* Parameter name */
+    char *type_custom;            /* custom type string, in which case
+                                     instr_formal_types takes value # 6, custom */
+    int isoptional;               /* True if default value is available */
+    CExp default_value;           /* Default value if isoptional is true */
   };
 
 /* Component definitions. */
@@ -435,7 +438,7 @@ struct comp_def
     int  flag_defined_display;      /* set to 1 when a common DISPLAY block is generated */
     int  flag_defined_trace;        /* set to 1 when a common TRACE block is generated */
     int  counter_instances;         /* number of instances using the same definition/class */
-    List def_par, set_par, out_par; /* Formal parameters. */
+    List def_par, set_par, out_par, decl_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */

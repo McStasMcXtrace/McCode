@@ -137,9 +137,12 @@ DECLARE
   double mos_rms_z;
   double mos_rms_max;
   double mono_Q;
-  double SlabWidth, SlabHeight;
-  t_Table rTable, tTable;
-  double row,col;
+  double SlabWidth;
+  double SlabHeight;
+  t_Table rTable;
+  t_Table tTable;
+  double row;
+  double col;
   double* tiltH;
   double* tiltV;
 %}

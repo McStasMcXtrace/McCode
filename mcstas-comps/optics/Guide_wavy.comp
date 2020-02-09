@@ -73,7 +73,16 @@ SHARE %{
 %}
 DECLARE
 %{
-  double whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy;
+  double whalf;
+  double hhalf;
+  double lwhalf;
+  double lhhalf;
+  double norm_nv;
+  double norm_nh;
+  double f_h;
+  double f_v;
+  double eta_z;
+  double eta_xy;
 %}
 
 INITIALIZE

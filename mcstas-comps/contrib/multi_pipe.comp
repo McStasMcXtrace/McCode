@@ -57,9 +57,11 @@ DECLARE
 %{
 t_Table pTable;
 int user_file;
-int ynum,xnum;
+int ynum;
+int xnum;
 double diam;
-double w_pipe,h_pipe;
+double w_pipe;
+double h_pipe;
 int h_number;
 %}
 

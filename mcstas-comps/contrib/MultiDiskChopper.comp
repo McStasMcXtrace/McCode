@@ -93,9 +93,13 @@ OUTPUT PARAMETERS (T, To, omega, dslit_center, dhslit_width, t0, t1, islit, irev
 
 DECLARE
 %{
-double T,To,omega;
-double *dslit_center, *dhslit_width;
-double *t0, *t1;
+double T; 
+double To;
+double omega;
+double *dslit_center;
+double *dhslit_width;
+double *t0;
+double *t1;
 int islit;
 int irev=0;
 %}

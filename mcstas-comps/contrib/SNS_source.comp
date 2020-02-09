@@ -411,19 +411,29 @@ double tPfunc(double t,double y,double ntvals,double *txval,double *tyval)
 
 DECLARE
 %{
-  double hdiv,vdiv;
+  double hdiv;
+  double vdiv;
   double p_in;
-  double *inxvec,*inyvec,*Pvec;
+  double *inxvec;
+  double *inyvec;
+  double *Pvec;
   int xylength;
-  double *tcol, *Ecol;
-  double *txval, *tyval;
+  double *tcol;
+  double *Ecol;
+  double *txval;
+  double *tyval;
   double *tPvec;
   double **Ptmat;
-  double EPmax, EPmin,INorm,INorm2;
-  int ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals;
-
-
-
+  double EPmax;
+  double EPmin;
+  double INorm;
+  double INorm2;
+  int ntvals;
+  int idxstart;
+  int idxstop;
+  int tidxstart;
+  int tidxstop;
+  int nEvals;
 %}
 
 INITIALIZE

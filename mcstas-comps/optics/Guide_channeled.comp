@@ -79,9 +79,12 @@ DECLARE
 %{
 double w1c;
 double w2c;
-double ww, hh;
-double whalf, hhalf;
-double lwhalf, lhhalf;
+double ww;
+double hh;
+double whalf;
+double hhalf;
+double lwhalf;
+double lhhalf;
 %}
 
 INITIALIZE
