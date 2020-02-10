@@ -34,11 +34,11 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-g -lm -std=c99 -O2 -DRNG_ALG=2 -DUSE_MPI -lmpi',
+    "CFLAGS": '-g -lm -O2 -DUSE_MPI -lmpi -L/appl/gcc/6.4.0/openmpi/3.0.0-lsf10-threadmultiple-mxm/lib',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "OACCFLAGS": '-ta:tesla,managed,deepcopy -DOPENACC',
-    "CC": 'mpicc',
+    "CC": '/appl/gcc/6.4.0/openmpi/3.0.0-lsf10-threadmultiple-mxm/bin/mpicc',
     "OACC": 'pgcc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
