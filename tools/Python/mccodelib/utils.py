@@ -3,6 +3,7 @@ Analysis tools for mcstas component files and instrument files.
 '''
 import re
 import os
+from os.path import splitext, join
 import subprocess
 from datetime import datetime
 
@@ -455,7 +456,7 @@ def read_define_instr(file):
             lines.append(l.strip())
             break
     
-    if len(lines) > 0 and not re.search('\)', lines[-1]):
+    if not re.search('\)', lines[-1]):
         for l in file:
             lines.append(l.strip())
             if re.search('\)', l):
@@ -533,39 +534,8 @@ def clean_instr_def(defline):
 def parse_params(params_line):
     ''' creates a list of 3-tuples (type, name, devault_value)) from a "params string" '''
     params = []
-
-    def par_rec(substr, lst):
-        try:
-            # handle parameter sections including curly bracket default values (case 2)
-            m1 = re.match('([^,{]+),(.*)', substr) # not comma or curl, then a comma
-            m2 = re.match('([^,{]+\{[^}]*\}\s*),(.*)', substr) # not comma or curl, then not a right curl, then a rigt curlt, then a comma
-    
-            if m1:
-                lst.append(m1.group(1)) 
-                substr = m1.group(2)
-            elif m2:
-                lst.append(m2.group(1))
-                substr = m2.group(2)
-            else:
-                # the end
-                return lst
-    
-            # continue recursion
-            return par_rec(substr, lst)
-        except Exception as e:
-            print("error", e)
-
-    # split the line into parts corresponding to each parameter definition
-    params_line = params_line.lstrip('(').rstrip(')') # secure brackets stripped
-    if '{' in params_line:
-        # NOTE: this may exceed python max recursion depth in some cases, e.g. guide_four_sides_10_shells
-        # however, this version is required for parsing {a,b,c} style default values
-        # TODO: reimplement into a while-based iteration rather than a recursion
-        parts = par_rec(params_line, [])
-    else:
-        parts = [s.strip() for s in params_line.split(',')]
-
-    # parse each parameter
+    # p = (type, name, defvalue)
+    parts = [s.strip() for s in params_line.split(',')]
     for part in parts:
         tpe = None
         dval = None
@@ -638,20 +608,39 @@ def get_instr_site(instr_file):
         
     return site
 
-def get_instr_comp_files(mydir, recursive=True):
+def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=None):
     ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir"
-    
-    181211: added recursive dir search, defaults to True to preserve backwards compatibility
-    ''' 
+
+    181211: added recursive, defaults to True to preserve backwards compatibility
+    191114: added instrfilter and compfilter, which filters results based on filename (before the dot)
+    '''
+    instrreg = None
+    if instrfilter:
+        instrreg = re.compile(instrfilter)
+    compreg = None
+    if compfilter:
+        compreg = re.compile(compfilter)
+
     files_instr = [] 
     files_comp = []
-    
-    for (dirpath, dirname, files) in os.walk(mydir):
+
+    for (dirpath, _, files) in os.walk(mydir):
         for f in files:
-            if os.path.splitext(f)[1] == '.instr':
-                files_instr.append(dirpath + '/' + f)
+            # get instr files
+            if splitext(f)[1] == '.instr':
+                if instrfilter is not None:
+                    if instrreg.match(splitext(f)[0]):
+                        files_instr.append(join(dirpath, f))
+                else:
+                    files_instr.append(join(dirpath, f))
+
+            # get comp files
             if os.path.splitext(f)[1] == '.comp':
-                files_comp.append(dirpath + '/' + f)
+                if compfilter is not None:
+                    if compreg.match(splitext(f)[0]):
+                        files_comp.append(join(dirpath, f))
+                else:
+                    files_comp.append(join(dirpath, f))
         if not recursive:
             break
     
@@ -692,6 +681,25 @@ def get_file_contents(filepath):
     else:
         return ''
 
+def run_subtool_noread(cmd, cwd=None):
+    ''' run subtool to completion in a excessive pipe-output robust way (millions of lines) '''
+    if not cwd:
+        cwd = os.getcwd()
+    try:
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   shell=True,
+                                   universal_newlines=True,
+                                   cwd=cwd)
+        process.communicate()
+        return process.returncode
+    except Exception as e:
+        ''' unicode read error safe-guard '''
+        print("run_subtool_noread (cmd=%s) error: %s" % (cmd, str(e)))
+        return -1
+
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
     Synchronous run subprocess.popen with pipe buffer reads, 
@@ -706,8 +714,8 @@ def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
 
     try:
         # open the process with all bells & whistles
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE, 
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE,
                                    shell=True,
