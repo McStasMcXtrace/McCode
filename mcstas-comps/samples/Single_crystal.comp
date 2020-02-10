@@ -281,7 +281,7 @@ bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
 p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
 aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0)
-OUTPUT PARAMETERS(hkl_info, offdata)
+OUTPUT PARAMETERS(hkl_info, hkl_list, tau_list, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
@@ -298,6 +298,8 @@ SHARE
 #ifndef Mosaic_AB_Undefined
 #define Mosaic_AB_Undefined {0,0, 0,0,0, 0,0,0}
 #endif
+
+#define MCSX_REFL_SLIST_SIZE 1024
 
 struct hkl_data
 {
@@ -330,9 +332,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
   struct hkl_info_struct
     {
-      struct hkl_data *list;      /* Reflection array */
       int count;                  /* Number of reflections */
-      struct tau_data *tau_list;  /* Reflections close to Ewald Sphere */
       double m_delta_d_d;         /* Delta-d/d FWHM */
       double m_ax,m_ay,m_az;      /* First unit cell axis (direct space, AA) */
       double m_bx,m_by,m_bz;      /* Second unit cell axis */
@@ -357,6 +357,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
       double coh_refl, coh_xsect; /* cross section computed with last tau_list */
       double kix, kiy, kiz;       /* last incoming neutron ki */
       int    nb_reuses, nb_refl, nb_refl_count;
+      int    max_tau_count;
     };
 #pragma acc routine seq
   int SX_list_compare (void const *a, void const *b)
@@ -371,7 +372,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
   /* ------------------------------------------------------------------------ */
   int
-  read_hkl_data(char *SC_file, struct hkl_info_struct *info,
+  read_hkl_data(char *SC_file, struct hkl_info_struct *info, struct hkl_data **hkl_list,
       double SC_mosaic, double SC_mosaic_a, double SC_mosaic_b, double SC_mosaic_c, double *SC_mosaic_AB)
   {
     struct hkl_data *list = NULL;
@@ -583,7 +584,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     }
 
     /* allocate hkl_data array */
-    list = (struct hkl_data*)malloc(size*sizeof(struct hkl_data));
+    list = (struct hkl_data*) malloc(size*sizeof(struct hkl_data));
 
     for (i=0; i<size; i++)
     {
@@ -773,16 +774,8 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     /* sort the list with increasing tau */
     qsort(list, i, sizeof(struct hkl_data),  SX_list_compare);
 
-    info->list = list;
+    *hkl_list = list;
     info->count = i;
-    
-    info->tau_list = (struct tau_data*)malloc(i*sizeof(*info->tau_list));
-
-    if(!info->tau_list)
-    {
-      fprintf(stderr, "Single_crystal: Error: Out of memory!\n");
-      return(0);
-    }
     
     return(info->count);
   } /* read_hkl_data */
@@ -797,7 +790,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
       tau_count (return), coh_refl, coh_xsect, T (updated elements in the array up to [j])
    */
 #pragma acc routine seq
-  int hkl_search(struct hkl_data *L, struct tau_data *T, int count, double V0, 
+int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
     double kix, double kiy, double kiz, double tau_max,
     double *coh_refl, double *coh_xsect)
   {
@@ -812,6 +805,9 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     double ki = sqrt(kix*kix+kiy*kiy+kiz*kiz);
     int jglobal=-1;
     double coherent_refl,coherent_xsect;
+
+    struct tau_data *T=(struct tau_data *)TT;
+
     //coherent_refl = *coh_refl;
     //coherent_xsect = *coh_xsect;
     coherent_refl = 0;
@@ -819,8 +815,8 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
     /* Common factor in coherent cross-section */
     double xsect_factor = pow(2*PI, 5.0/2.0)/(V0*ki*ki);
-
-    for(i = j = 0; i < count; i++)
+    j=0;
+    for(i = 0; i < count; i++)
       {
     /* Assuming reflections are sorted, stop search when max tau exceeded. */
         if(L[i].tau > tau_max)
@@ -895,12 +891,15 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
           alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
                        (y0x*y0x*n11 + y0y*y0y*n22 + 2*y0x*y0y*n12);
           T[j].refl = xsect_factor*det_L*exp(-alpha)/L[i].sig123; /* intensity of that Bragg */
-          *coh_refl += T[j].refl;                                  /* total scatterable intensity */
+          *coh_refl += T[j].refl;                                 /* total scatterable intensity*/
           T[j].xsect = T[j].refl*L[i].F2;
           *coh_xsect += T[j].xsect;
           j++;
         }
-
+        /*protect against tau shortlist buffer overrrun*/
+        if (j==MCSX_REFL_SLIST_SIZE){
+          break;
+        }
       } /* end for */
         return (j); // this is 'tau_count', i.e. number of reachable reflections
     } /* end hkl_search */
@@ -957,7 +956,6 @@ void PGderotate(double *nx, double *ny, double *nz, double a, double csx, double
   #endif
 
 
-
 #endif /* !SINGLE_CRYSTAL_DECL */
 %}
 
@@ -967,7 +965,9 @@ DECLARE
   struct hkl_info_struct hkl_info;
 #ifndef OPENACC
   off_struct             offdata;
+  struct hkl_data *hkl_list;
 #endif
+  struct tau_data tau_list[MCSX_REFL_SLIST_SIZE];
 %}
 
 INITIALIZE
@@ -1010,7 +1010,7 @@ INITIALIZE
   /* ought to be cleaned up as mosaic_AB now is a proper vector/array and not a define */
   double* mosaic_ABin = mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
-  if (!read_hkl_data(reflections, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
+  if (!read_hkl_data(reflections, &hkl_info, &hkl_list, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
     printf("Single_crystal: %s: Error: Aborting.\n", NAME_CURRENT_COMP);
     exit(0);
   }
@@ -1024,6 +1024,7 @@ INITIALIZE
   else printf("Single_crystal: %s: Using incoherent elastic scattering only sigma=%g.\n",
       NAME_CURRENT_COMP, hkl_info.sigma_i);
 
+  /*this should not be in hkl_info*/
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
 #ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
@@ -1033,7 +1034,7 @@ INITIALIZE
   }
   else
 #endif    
-    if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
+  if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
   else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
 
@@ -1045,34 +1046,6 @@ INITIALIZE
       NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i,
       reflections && strlen(reflections) ? reflections : "NULL");
       
-  #ifdef USE_OPENCL
-  oclContext_SX = oclInitKernel("hkl_search.cl", 1);
-  
-  if (oclContext_SX.Kernel) {
-    int iDevice;
-    int nDevice=1;
-    for (iDevice = 0; iDevice < nDevice; iDevice++) {
-      cl_int             ciErr1;                              // Error code var
-      //  Initialization: load MT parameters and init host buffers    
-      d_L = clCreateBuffer(oclContext_SX.GPUContext, CL_MEM_READ_WRITE, sizeof(struct hkl_data)*hkl_info.count, NULL, &ciErr1);
-      if (ciErr1 !=CL_SUCCESS) { oclContext_SX.Kernel=NULL; break; }
-    
-      d_T = clCreateBuffer(oclContext_SX.GPUContext, CL_MEM_READ_WRITE, sizeof(struct tau_data)*hkl_info.count, NULL, &ciErr1);
-      if (ciErr1 !=CL_SUCCESS) { oclContext_SX.Kernel=NULL; break; }
-              
-      d_tau_count = clCreateBuffer(oclContext_SX.GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &ciErr1);
-      if (ciErr1 !=CL_SUCCESS) { oclContext_SX.Kernel=NULL; break; }
-         
-      d_coh_refl = clCreateBuffer(oclContext_SX.GPUContext, CL_MEM_READ_WRITE, sizeof(double), NULL, &ciErr1);
-      if (ciErr1 !=CL_SUCCESS) { oclContext_SX.Kernel=NULL; break; }
-          
-      d_coh_xsect = clCreateBuffer(oclContext_SX.GPUContext, CL_MEM_READ_WRITE, sizeof(double), NULL, &ciErr1);
-      if (ciErr1 !=CL_SUCCESS) { oclContext_SX.Kernel=NULL; break; }
-      clFinish(oclContext_SX.CommandQueue[iDevice]);
-      
-    }
-  }
-  #endif
 
   if (PG && !(order==1)) {
     fprintf(stderr,"Single_crystal: %s: PG mode means implicit choice of no multiple scattering!\n"
@@ -1088,7 +1061,11 @@ TRACE
   double t1, t2=0;                /* Entry and exit times in sample */
   struct hkl_data *L;           /* Structure factor list */
   int i;                        /* Index into structure factor list */
+#ifndef OPENACC
   struct tau_data *T;           /* List of reflections close to Ewald sphere */
+#else
+  struct tau_data T[MCSX_REFL_SLIST_SIZE];
+#endif
   int tau_count;                /* Number of reflections close to Ewald sphere*/
   int j;                        /* Index into reflection list */
   int event_counter;            /* scattering event counter */
@@ -1124,7 +1101,6 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
-
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1155,14 +1131,10 @@ TRACE
        to get scattering lengths in m, since V0 is assumed to be in AA*/
     abs_xlen *= 100; inc_xlen *= 100;
 
-    L = hkl_info.list;
+    L = hkl_list;
 #ifndef OPENACC
-    T = hkl_info.tau_list;
+    T = tau_list;
     hkl_info.type = '\0';
-#else
-    T = hkl_info.tau_list;
- // T = malloc(100*sizeof(*hkl_info.tau_list));
- // T = malloc(hkl_info.count*sizeof(struct tau_data));
 #endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
@@ -1239,7 +1211,7 @@ TRACE
         /* call hkl_search */
         #ifdef USE_OPENCL
         if (oclContext_SX.Kernel != NULL){ // the Kernel could be initialised
-          tau_count = hkl_search_opencl(L, T, hkl_info.count, hkl_info.V0, 
+          tau_count = hkl_search_opencl(L, T, hkl_info.count, hkl_info.V0,
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect, oclContext_SX,
               d_L, d_T, d_tau_count, d_coh_refl, d_coh_xsect);
@@ -1249,22 +1221,25 @@ TRACE
         else 
         #endif
 
-	  tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+          tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect);
-	
+
         /* store ki so that we can check for further SPLIT iterations */
 #ifndef OPENACC
-//        if (event_counter == 0 ) { /* only for incoming neutron */
-//          hkl_info.kix = kix;
-//          hkl_info.kiy = kiy;
-//          hkl_info.kiz = kiz;
-//        }
+        if (tau_count>hkl_info.max_tau_count){
+          hkl_info.max_tau_count=tau_count;
+        }
+        if (event_counter == 0 ) { /* only for incoming neutron */
+          hkl_info.kix = kix;
+          hkl_info.kiy = kiy;
+          hkl_info.kiz = kiz;
+        }
 
-//        hkl_info.coh_refl  = coh_refl;
-//        hkl_info.coh_xsect = coh_xsect;
-//        hkl_info.nb_refl += tau_count;
-//        hkl_info.nb_refl_count++;
+        hkl_info.coh_refl  = coh_refl;
+        hkl_info.coh_xsect = coh_xsect;
+        hkl_info.nb_refl += tau_count;
+        hkl_info.nb_refl_count++;
 #endif
 /*      }
 */
@@ -1378,9 +1353,7 @@ TRACE
         kfy *= adjust;
         kfz *= adjust;
         /* Adjust neutron weight (see manual for explanation). */
-#ifndef OPENACC
         p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
-#endif OPENACC
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
@@ -1429,6 +1402,10 @@ FINALLY
 
   /* in case this instance is used in a SPLIT, we can recommend the
      optimal iteration value */
+  if (hkl_info.max_tau_count>=MCSX_REFL_SLIST_SIZE){
+    fprintf(stderr,"Warning (%s): The reflection short list buffer was exhausted at least once. Please consider redefining MCSX_REFL_SLIST_SIZE > %d\n",NAME_CURRENT_COMP,MCSX_REFL_SLIST_SIZE);
+  }
+
   if (hkl_info.nb_refl_count) {
     double split_iterations = (double)hkl_info.nb_reuses/hkl_info.nb_refl_count + 1;
     double split_optimal    = (double)hkl_info.nb_refl/hkl_info.nb_refl_count;
