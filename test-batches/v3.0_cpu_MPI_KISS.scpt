@@ -24,6 +24,10 @@
 #BSUB -e gpu_%J.err
 # -- end of LSF options --
 
+module load mpi/3.0.0-gcc-6.4.0
+module list
+which mpicc
+
 DATE=`date +%F`
 mkdir -p $HOME/TESTS/
 mkdir -p $HOME/TESTS/${DATE}
