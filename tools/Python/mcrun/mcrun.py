@@ -186,7 +186,7 @@ def expand_options(options):
         options.use_mpi = True
         options.cc      = mccode_config.compilation['MPICC']
         options.mpirun  = mccode_config.compilation['MPIRUN']
-    elif options.openacc is not None:
+    elif options.openacc is True:
         options.use_openacc = True
         options.cc      = mccode_config.compilation['OACC']
         options.use_mpi = False
