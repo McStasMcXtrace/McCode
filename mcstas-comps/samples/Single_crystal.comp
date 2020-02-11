@@ -299,7 +299,9 @@ SHARE
 #define Mosaic_AB_Undefined {0,0, 0,0,0, 0,0,0}
 #endif
 
+#ifndef MCSX_REFL_SLIST_SIZE
 #define MCSX_REFL_SLIST_SIZE 1024
+#endif
 
 struct hkl_data
 {
