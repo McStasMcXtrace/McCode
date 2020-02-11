@@ -20,8 +20,8 @@
 #BSUB -N
 ### -- Specify the output and error file. %J is the job-id --
 ### -- -o and -e mean append, -oo and -eo mean overwrite --
-#BSUB -o gpu-%J.out
-#BSUB -e gpu_%J.err
+#BSUB -o cpu-%J.out
+#BSUB -e cpu_%J.err
 # -- end of LSF options --
 
 module load mpi/3.0.0-gcc-6.4.0

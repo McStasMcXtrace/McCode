@@ -1,12 +1,12 @@
-!/bin/sh
+#!/bin/sh
 ### General options
 ### –- specify queue --
 #BSUB -q hpc
 ### -- set the job Name --
-#BSUB -J Plots_test_job
+#BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
-#BSUB -n 1
-### -- Select the resources: 1 gpu in exclusive process mode --
+#BSUB -n 10
+#BSUB -R "span[block=1]"
 #BSUB -W 7:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
@@ -20,17 +20,22 @@
 #BSUB -N
 ### -- Specify the output and error file. %J is the job-id --
 ### -- -o and -e mean append, -oo and -eo mean overwrite --
-#BSUB -o plots-%J.out
-#BSUB -e plots_%J.err
+#BSUB -o cpu-%J.out
+#BSUB -e cpu_%J.err
 # -- end of LSF options --
 
+module load mpi/3.0.0-gcc-6.4.0
+module list
+which mpicc
+
 DATE=`date +%F`
-REF="McStas-2.5_CPU_MPICC"
-TARGET="McStas_GPU_PGCC_TESLA_KISS"
-cd $HOME/TESTS/
+mkdir -p $HOME/TESTS/
+mkdir -p $HOME/TESTS/${DATE}
 
-export MATLABPATH=${HOME}/McCode/generate_testplots/
+cd $HOME/TESTS/${DATE}
 
-matlab -r "generate_testplots('$DATE','$REF','$TARGET');"
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=10 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_MPICC_MT
 
-$HOME/go5.sh
+cd $HOME
+echo done on CPU/MPI, submitting next job
+bsub < $HOME/McCode/test-batches/plots_cpu_MPI_MT.scpt
