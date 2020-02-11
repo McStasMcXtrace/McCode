@@ -300,7 +300,7 @@ SHARE
 #endif
 
 #ifndef MCSX_REFL_SLIST_SIZE
-#define MCSX_REFL_SLIST_SIZE 1024
+#define MCSX_REFL_SLIST_SIZE 128
 #endif
 
 struct hkl_data
