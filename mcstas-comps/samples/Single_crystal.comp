@@ -281,7 +281,7 @@ bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
 p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
 aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0)
-OUTPUT PARAMETERS(hkl_info, hkl_list, tau_list, offdata)
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
