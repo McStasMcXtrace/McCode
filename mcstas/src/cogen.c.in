@@ -438,7 +438,6 @@ int cogen_comp_declare(struct comp_inst *comp)
 	    int len = re_match("\\[",c_formal->id);
 	    if (len>=0) {
 	      c_formal->id[len]='\0';
-	      printf("Found match in %s\n",c_formal->id);
 	    }
           }
           else if (c_formal->type != instr_type_string) {
@@ -2337,7 +2336,6 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
         // extract the varname
         pos = re_match("\\w+\\[?\\w*\\]?;", l); // match start of varname
 	if (pos > -1) {
-	  // check if there is a a static array decl here
 	  len = re_match(";", l+pos); // match end of varname
 
           if (len > -1) {
