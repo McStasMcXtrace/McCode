@@ -95,7 +95,7 @@ SETTING PARAMETERS (
   proton_T=0.0,
   p_power=2.0,
   n_pulses=1.0)
-OUTPUT PARAMETERS (hdiv,vdiv,p_in, CL, CU, para_sp, para_a,para_b,para_R,para_to,csfE, CItot)
+OUTPUT PARAMETERS ()
 
 
 SHARE
