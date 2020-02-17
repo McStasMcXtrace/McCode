@@ -2317,7 +2317,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
     do {
       // line must match this format
       pos = re_match("\\w[\\s\\w\\*]+\\s+\\*?\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match general var decl pattern
-      //printf("%s has %i \n",l,pos);
+
       if (pos <= -1) {
         // skip
       }
