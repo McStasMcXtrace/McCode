@@ -2335,8 +2335,8 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
 
         // extract the varname
         pos = re_match("\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match start of varname
-	if (pos > -1) {
-	  len = re_match(";", l+pos); // match end of varname
+        if (pos > -1) {
+          len = re_match(";", l+pos); // match end of varname
 
           if (len > -1) {
             vn = (char*) malloc((len + 1) * sizeof(char)); // new location
