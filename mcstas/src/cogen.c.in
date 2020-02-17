@@ -2316,7 +2316,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
   while(l = list_next(myiter)) {
     do {
       // line must match this format
-      pos = re_match("\\w[\\s\\w\\*]+\\s+\\*?\\w+\\[?\\w*\\]?;", l); // match general var decl pattern
+      pos = re_match("\\w[\\s\\w\\*]+\\s+\\*?\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match general var decl pattern
       //printf("%s has %i \n",l,pos);
       if (pos <= -1) {
         // skip
@@ -2326,7 +2326,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
         char* vn;
 
         // extract the type
-        len = re_match("\\w+\\[?\\w*\\]?;", l+pos); // end of type string
+        len = re_match("\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l+pos); // end of type string
         tpe = (char*) malloc((len + 1) * sizeof(char)); // new location
         *(tpe+len) = '\0'; // null terminate
         if (len > -1) {
@@ -2334,7 +2334,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
         }
 
         // extract the varname
-        pos = re_match("\\w+\\[?\\w*\\]?;", l); // match start of varname
+        pos = re_match("\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match start of varname
 	if (pos > -1) {
 	  len = re_match(";", l+pos); // match end of varname
 
