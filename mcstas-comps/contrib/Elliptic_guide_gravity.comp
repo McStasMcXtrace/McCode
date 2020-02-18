@@ -176,10 +176,7 @@ SETTING PARAMETERS (l,
 	vector mvaluesright=NULL, vector mvaluesleft=NULL, vector mvaluestop=NULL, vector mvaluesbottom=NULL,
 	vector seglength=NULL	)
 
-OUTPUT PARAMETERS (
-guideInfo,latestParticleCollision,Gx,Gy,Gz,
-Gx0, Gy0, Gz0,Circ,dynamicalSegLength
-)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{
@@ -366,7 +363,7 @@ int guide_elliptical_getMirrorTypeFromInput(char * input,int verbose){
 			if this function return true.
 	@return; return 1 if the physical solution is found. [boolean]
 */
-
+#pragma acc routine seq
 double guide_elliptical_foverdf(double *coefficients,double currentPoint){
 	double numerator= coefficients[0]*currentPoint*currentPoint*currentPoint*currentPoint
 					+ coefficients[1]*currentPoint*currentPoint*currentPoint
@@ -379,7 +376,7 @@ double guide_elliptical_foverdf(double *coefficients,double currentPoint){
 					+ coefficients[3];
 	return numerator/denominator;
 }
-
+#pragma acc routine seq
 int guide_elliptical_newtonRapsonsMethod4thOrder(
 		double *coefficients,double *solution,double startingPoint,
 		double tolerance,double max_iterations){
@@ -400,7 +397,7 @@ int guide_elliptical_newtonRapsonsMethod4thOrder(
 }
 
 
-
+#pragma acc routine seq
 int guide_elliptical_findNeutronEllipseIntersection(
 				double *coef,double startPosition,
 				double limit,double *solution){
@@ -453,7 +450,7 @@ int guide_elliptical_findNeutronEllipseIntersection(
 	return 1;
 }
 
-
+#pragma acc routine seq
 int guide_elliptical_handleGuideIntersection(
 		double x, double y, double z,
 		double vx,double vy,double vz,
@@ -639,6 +636,7 @@ int guide_elliptical_InsideEnclosingBox(double x,double y,double z,struct SGI *g
 		og hold dig til standarden.
 	@return the new wieght of the package
 */
+#pragma acc routine seq
 double guide_elliptical_ReflectionOnEllipticSurface(
 			double pos_V,double pos_W,
 			double *pvel_V,double *pvel_W,
@@ -700,6 +698,7 @@ double guide_elliptical_ReflectionOnEllipticSurface(
 	Use the found side of Intersection to call guide_elliptical_ReflectionOnEllipticSurface with
 	the parameters of that side.
 */
+#pragma acc routine seq
 double guide_elliptical_handleReflection(double x0, double y0, double z0,
 				double *vx_p,double *vy_p,double *vz_p,
 				struct SGI *sgi,
