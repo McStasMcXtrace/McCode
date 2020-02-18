@@ -528,8 +528,7 @@ TRACE
 			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 0);
   
   w_focus=focus_xw*focus_yh/(tx*tx+ty*ty+tz*tz);
-  printf("w_focus: %g\n",w_focus);   
-  printf("tx,ty,tz =  %g %g %g\n",tx,ty,tz);
+
   dx = xf-x;
   dy = yf-y;
   dz = zf-z;
@@ -558,7 +557,6 @@ TRACE
     w_tfocus=1;
   }
   
-  printf("pars 1: %g %g %g %g\n",x,y,z,p);
   if (iscold) {          //case: cold moderator
     /* Apply simple engineering reality correction */
     ESS_2015_Schoenfeldt_cold(&t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, yheight, Mwidth_t, yheight, Mwidth_c, tmax_multiplier, beamportangle, modX, modY);
@@ -569,21 +567,15 @@ TRACE
     p *= t_performance;
     p *= ThermalScalars[beamline-1];
   }
-  printf("pars 2: %g %g %g %g\n",x,y,z,p);
   p*=w_stat*w_focus*w_geom*w_mult*w_tfocus;
-  printf("weights: %g %g %g %g %g\n",w_stat,w_focus,w_geom,w_mult,w_tfocus);
-  printf("pars 3: %g %g %g %g\n",x,y,z,p);
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
-  printf("pars 4: %g %g %g %g\n",x,y,z,p);
   p*=cos_factor;
-  printf("pars 5: %g %g %g %g\n",x,y,z,p);
   /* Correct weight for sampling of cold vs. thermal events. */
   if (iscold) {
     p /= cold_frac;
   } else {
     p /= (1-cold_frac);
   }
-  printf("pars 4: %g %g %g %g\n",x,y,z,p);
  SCATTER;
 %}
 
