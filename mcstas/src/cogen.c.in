@@ -1736,7 +1736,10 @@ int cogen_raytrace(struct instr_def *instr)
 
   coutf("  /* CPU-loop */");
   coutf("  unsigned long long loops;");
-  coutf("  long innerloop=2147483647;");
+  coutf("  #ifndef GPU_INNERLOOP");
+  coutf("  #define GPU_INNERLOOP 2147483647");
+  coutf("  #endif");
+  coutf("  long innerloop=GPU_INNERLOOP;");
   coutf("  loops = ceil((double)ncount/innerloop);");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
@@ -1744,7 +1747,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  #endif");
   coutf("  if (ncount>innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
-  coutf("    mcset_ncount(loops*2147483647);");
+  coutf("    mcset_ncount(loops*innerloop);");
   coutf("  } else {");
   coutf("    loops=1;");
   coutf("    innerloop = ncount;");
