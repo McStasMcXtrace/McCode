@@ -1606,6 +1606,7 @@ int cogen_raytrace(struct instr_def *instr)
       char *exp=exp_tostring(comp->split);
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
+      coutf("    if (!ABSORBED) {");
       coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    int Split_%s_counter;", comp->name);
       coutf("    int SplitS_%s = %s;", comp->name, exp);
@@ -1709,6 +1710,7 @@ int cogen_raytrace(struct instr_def *instr)
     if (comp && comp->split) {
       coutf("#ifndef NOSPLIT");
       coutf( "    } /* end SPLIT at %s */", comp->name);
+      coutf( "    } /* if (!ABSORBED) relating to SPLIT at %s */", comp->name);
       coutf("#endif");
     }
   }
