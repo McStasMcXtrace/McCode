@@ -2321,7 +2321,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
   while(l = list_next(myiter)) {
     do {
       // line must match this format
-      pos = re_match("\\w[\\s\\w\\*]+\\s+\\*?\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match general var decl pattern
+      pos = re_match("\\w[\\s\\w\\*]+\\s+\\**\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match general var decl pattern
 
       if (pos <= -1) {
         // skip
