@@ -52,7 +52,7 @@ DEFINE COMPONENT MCPL_output_GPU
 DEFINITION PARAMETERS ()
   SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, userflag=0,
   string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
-OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
+OUTPUT PARAMETERS (outputfile, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
@@ -68,8 +68,6 @@ int mcpl_file_exist (char *filename)
 DECLARE
 %{
     mcpl_outfile_t outputfile;
-    mcpl_particle_t *particle,
-    mcpl_particle_t Particle;
     int userflagenabled;
     DArray1d X;
     DArray1d Y;
@@ -144,8 +142,6 @@ INITIALIZE
     printf("MCPL_output verbose mode: after generating the mcpl-file it will be reread and a summary printed.\n");
     }
 
-    /*pointer to the single particle storage area*/
-    particle=&Particle;
     
     /*Add comments on what the orientation and position of this component is.*/
     /*Include the instrument file itself as a binary blob in the mcpl file*/
@@ -200,43 +196,34 @@ SAVE
 %{
   double nrm;
   unsigned long long i;
+  mcpl_particle_t *particle,Particle;
+  particle=&Particle;
   for (i=0;i<mcget_ncount();i++) {
-    double x=X[i];
-    double y=Y[i];
-    double z=Z[i];
-    double vx=VX[i];
-    double vy=VY[i];
-    double vz=VZ[i];
-    double sx=SX[i];
-    double sy=SY[i];
-    double sz=SZ[i]; 
-    double t=T[i];
-    double p=P[i];
-    if (p>0) {
+    if (P[i]>0) {
       /*positions are in cm*/
-      particle->position[0]=x*100;
-      particle->position[1]=y*100;
-      particle->position[2]=z*100;
+      Particle.position[0]=X[i]*100;
+      Particle.position[1]=Y[i]*100;
+      Particle.position[2]=Z[i]*100;
       
       if(polarisationuse){
-	particle->polarisation[0]=sx;
-	particle->polarisation[1]=sy;
-	particle->polarisation[2]=sz;
+	Particle.polarisation[0]=SX[i];
+	Particle.polarisation[1]=SY[i];
+	Particle.polarisation[2]=SZ[i];
       }
       
-      nrm =sqrt(vx*vx + vy*vy + vz*vz);
+      nrm =sqrt(VX[i]*VX[i] + VY[i]*VY[i] + VZ[i]*VZ[i]);
       /*ekin is in MeV*/
-      particle->ekin = VS2E*nrm*nrm/1e9;
-      particle->direction[0] = vx/nrm;
-      particle->direction[1] = vy/nrm;
-      particle->direction[2] = vz/nrm;
+      Particle.ekin = VS2E*nrm*nrm/1e9;
+      Particle.direction[0] = VX[i]/nrm;
+      Particle.direction[1] = VY[i]/nrm;
+      Particle.direction[2] = VZ[i]/nrm;
       /*time in ms:*/
-      particle->time = t*1e3;
+      Particle.time = T[i]*1e3;
       /*weight in unspecified units:*/
-      particle->weight = p;
+      Particle.weight = P[i];
       /*if specified also add the userflags*/
       if(userflagenabled){
-	particle->userflags = (uint32_t) userflag;
+	Particle.userflags = (uint32_t) userflag;
       }
       
       if (verbose==3 && mcrun_num<10) {
