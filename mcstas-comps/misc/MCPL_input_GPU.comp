@@ -183,7 +183,7 @@ if(Emax<Emin){
 
 TRACE
 %{
-  unsigned long i=_particle->_uid;
+  unsigned long long i=_particle->_uid;
   if (i>=nparticles) {
     repeating=1;
     i = i % nparticles;
