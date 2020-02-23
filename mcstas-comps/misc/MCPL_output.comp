@@ -68,7 +68,8 @@ int mcpl_file_exist (char *filename)
 DECLARE
 %{
     mcpl_outfile_t outputfile;
-    mcpl_particle_t *particle,Particle;
+    mcpl_particle_t *particle,
+    mcpl_particle_t Particle;
     int userflagenabled;
 %}
 
