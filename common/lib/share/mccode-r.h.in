@@ -460,8 +460,11 @@ void mcdis_sphere(double x, double y, double z, double r, int N);
 #  define _random() kiss_random(state)
 #  define _rand01
 #elif RNG_ALG == _RNG_ALG_CUDA
-// Moved here from cogen.c.in for potential future integration
-#include <openacc_curand.h;
+#  include <openacc_curand.h>
+#  define randstate_t curandState_t /* CUDA RNG state */
+#  define srandom(seed) curand_init(_particle->_uid, seed, 0ULL, _particle->randstate);
+#  define random() curand_uniform(_particle->randstate)
+#  define _random() curand_uniform(state);
 #endif
 
 // component writers interface
