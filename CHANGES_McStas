@@ -61,6 +61,7 @@ Changes in McStas 3.0beta technology preview, Feburary 25th, 2020
  Main new features and changes:
  1. New code-generation scheme based on functions instead of #defines, which brings
    * Much improved compilation-times, the code is better suited for modern compilers
+   * In most cases a speed-up of order 20%
    * The neutron _particle is now represented by a struct
    * The component types and instances are also represented by structs
    * In the generic TRACE function of a given component type, the _comp var is
