@@ -16,7 +16,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MinGW)
 
 # Commands for running various external tools
-set(BROWSER "start")OACCFLAGS
+set(BROWSER "start")
 set(VRMLVIEW "start")
 set(TOOLS_CC "gcc")
 set(OACCFLAGS "-ta:multicore -DOPENACC")
