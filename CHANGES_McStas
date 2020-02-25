@@ -53,6 +53,7 @@ Changes in McStas 3.0beta technology preview, Feburary 25th, 2020
  - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
  - Thanks to Guido Juckeland (HZDR,DE) and Sebastian Alfthan (CSC,FI) who were
    behind the GPU Hackathons we participated in
+ - Thanks to our NVIDIA mentors Vishal Metha, Christian Hundt and Alexey Romanenko
 
  Installation:
  - As this is NOT a production release, we will only offer installation packages in
