@@ -36,10 +36,150 @@
 * Modified by: PW May 2017: version 2.4
 * Modified by: PW June 2017: version 2.4.1
 * Modified by: PW December 2018: version 2.5
-* This file is part of McStas version 2.5, released December 12th 2018.
+* Modified by: PW January 2020: version 2.6
+* This file is part of McStas version 2.6, released January 24th 2020.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v.2.6, January 24th, 2020
+
+ McStas 2.6 is the eight release in the 2.x series and fixes various issues with McStas 2.5, plus 
+ new developments. 
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ 
+ Fixes of issues from last release:
+ - A number of issues from 2.5 were corrected, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.5%22+
+
+ Plus lots of work in general:
+ https://github.com/McStasMcXtrace/McCode/issues?page=1&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F5&utf8=✓
+ 
+ Tools:
+ - As for the earlier few releases the default set of tools are Python-based and developed by Jakob Garde, DTU. 
+   The Perl ones are still around as a backup solution, handy for those that prefer "the oldschool way"
+   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - On Unix platforms, the Perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
+   - On Windows, the Perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
+   - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
+ - Contribution from Tobias Weber ILL: Python-version of mcresplot.
+ 
+ Platforms:
+ - Nothing really new to report here. We still support 64bit Windows 10, all recent 64bit macOS, Debian-based and RPM-based distros
+   (RPMs are built on/for CentOS, you may get varying milage elsewhere.)
+
+ Libraries:
+ - Updated version 1.0.0 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. To use it, carry out the below steps:
+     mcstas:~/NCryst$ mcstas-2.6-environment 
+     mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
+     mcstas:~/NCryst$ ncrystal_preparemcstasdir 
+     mcstas:~/NCryst$ cp $MCSTAS/examples/NCrystal_example_mcstas.instr .
+     mcstas:~/NCryst$ mcrun -c NCrystal_example_mcstas.instr
+   The NCrystal library from this version of McStas also includes the nice ncrystal_inspectfile python tool that allows
+   to quickly visualise scattering-kernel data from .ncmat, .nxs, .lau and .laz files. To use that:
+     mcstas:~/NCryst$ mcstas-2.6-environment 
+     mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
+     mcstas:~/NCryst$ ncrystal_inspectfile $NCRYSTALDIR/data/Ca_sg225.ncmat
+ - MCPL library from the same authors now included at v. 1.3.0. The distributed version of MCPL now includes the 
+   python-based pymcpltool command that can e.g. be used to extract gaussian statistics from MCPL files. McStas now
+   ships the mcpl2phits and phits2mcpl tools (mcpl2ssw and ssw2mcpl have been included since mcstas-2.3).
+ - Updated version of the NXS lib from Mirko Boin HZB.
+
+ Components:
+ - Updated Union library from Mads Bertelsen, ESS DMSC including:
+   - New geometries, mesh (for stl file input in Union setups) and cone (e.g. relevant for describing anvils
+     in pressure cells.
+   - New AF_HB_1D_process for modelling 1D antiferromagnetic Heisenberg chains and PhononSimple_process for
+     modelling single-branchg acoustic phonons ala Phonon_simple
+   - New SINE2020-developed Union physics processes from Victor Laliena, Uni Zaragoza: Texture_process.comp
+     and IncoherentPhonon_process.comp. See https://doi.org/10.3233/JNR-190117.
+ - Shieldinglogger-components from Rodion Kolevatov, IFE for estimating gamma-production in guides:
+   - Contributions Dose_calculator and Shielding_calculator
+   - Patched versions of optics-components: Elliptic_guide_gravity_shieldinglogger, Guide_channeled_shieldinglogger,
+     Guide_curved_shieldinglogger, Guide_gravity_shieldinglogger, Guide_shieldinglogger
+   - Components patched / derived from the "scatterlogger" framework to model Ni and Ti layers seperately: Shielding_log_iterator_Ni_new,
+     Shielding_log_iterator_Ti_new, Shielding_log_iterator_stop, Shielding_log_iterator_total, Shielding_logger.comp,
+     Shielding_logger_stop.comp.
+   - See https://doi.org/10.3233/JNR-190123, https://doi.org/10.1016/j.nima.2018.12.069 and https://doi.org/10.3233/JNR-180088
+   - Please note that the included Shielding- and Dose- calculators will only give sensible for guides with
+     borosilicate glass substrate. If the substrate is, e.g. copper, the dose rates from neutrons transmitted 
+     through the coating and captured in the substrate will overshoot the coating contribution significantly, 
+     so that shielding has to be enforced by few tens of centimeters of concrete. 
+ - Guide_anyshape_r additions from Peter Link MLZ. Allows describing geometry in OFF format with reflectivity "per" face.
+   Test instrument is Test_guides which has been updated to include this modified component.
+ - Vertical_Bender from Andrew Jackson ESS and Richard Heenan STFC. Allows modelling a multi-channel bender
+   that curves vertically down.
+ - SANS_spheres2 by Peter Willendrup, derived from Henrich Frilinghaus' SANS_benchmark2. More realistic cross-section
+   calculations than from e.g. Sans_spheres. templateSANS2.instr is the related test instrument.
+ - Updated version of Sample_nxs from Mirko Boin HZB.
+ - Guide_simple is identical to Guide except from not having OFF library support. Common with forthcoming
+   McStas 3.0 beta release with GPU support.
+ - Elliptic_guide_gravity promoted from contrib to optics since Mads Bertelsen is full member of McStas dev team. 
+ - PolAnalyser_ideal and Set_pol moved from misc to optics.
+ - NPI_tof_theta_monitor is in contrib, was by mistace placed in monitors before.  
+ - Single_magnetic_crystal.comp is an experimental magnetic csingle crystal model. Its operational model is based 
+   on that of Single_crystal.comp but supports SF and NSF magnetic scattering. The present model only supports
+   the SF-NSF paradigm along a given reference vector.  
+ - PSD_monitor_4PI_spin.comp is a version of PSD_monitor_4PI but with separate SF- and NSF-channels
+ 
+ Instruments:
+ - Union_test_texture.instr demonstrates use of Texture_process.comp by Victor Laliena. To be used with datafile
+   "coef_Four_L2.txt" found in the installation data-folder. This datafile contains texture information on Zr alloys
+   derived from the publication https://doi.org/10.1016/j.jnucmat.2018.08.003.
+ - Union_IncoherentPhonon_test.instr demonstrates use of IncoherentPhonon_process.comp by Victor Laliena. To be used
+   with datafile "dos_meV.txt" found in the installation data-folder.
+ - Union_test_mesh.instr demonstrates use of mesh geometry in Union
+ - ESS_BIFROST_shielding.instr and PSI_Focus_shielding.instr, demonstration of Shielding_logger concept from
+   Rodion Kolevatov
+ - TasResoTest, triple-axis resolution test instrument from Tobias Weber ILL. Can be used with his new tool
+   development mcresplot.py.
+ - Tools_ONION, instrument to investigate q-resolution via Mantid, by Thomas Huegle, ORNL. See also
+   https://doi.org/10.1016/j.nima.2019.162711 and the related python code available at 
+   https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle
+ - templateSANS_MCPL, behaves like the normal templateSANS but dumps all events in an MCPL file.
+ - MCPL-oriented tool-instruments by Peter Willendrup
+   - MCPL2Mantid_flat: Read MCPL input and write Mantid-compatible NeXus output
+   - MCPL_filter_energy: Read MCPL input and write only neutrons in wanted energy interval
+   - MCPL_filter_wavelength: Read MCPL input and write only neutrons in wanted wavelength interval
+   - MCPL_filter_radius: Read MCPL input and write only neutrons with position within wanted radius
+   - MCPL_merge: Read up to 10 MCPL input files and write neutrons to a merged MCPL file   
+ - SINE2020-developed McStas_Isotropic_Sqw, McStas_PowderN, McStas_Single_crystal by Erik Knudsen. They have
+   MCPL input/output and are intended for easy use of McStas samples within SIMRES.
+ - Test_guides has been modified to include Guide_anyshape_r from Peter Link MLZ.
+ - templateSANS2 serves as test instrument for SANS_spheres2.
+ - BNL_H8_simple.instr is identical to BNL_H8.instr except e.g. not including SPLIT. Common with forthcoming
+   McStas 3.0 beta release with GPU support.
+ - PSI_DMC_simple is identical to PSI_DMC.instr except e.g. not including SPLIT. Common with forthcoming
+   McStas 3.0 beta release with GPU support.
+ - PSI_source is a simple frontend derived from PSI_DMC. Common with forthcoming McStas 3.0 beta release
+   with GPU support.
+ - mini minimal instrument with source, slit and PSD. Common with forthcoming McStas 3.0 beta release
+   with GPU support.
+ - Test_single_magnetic_crystal.instr is a skeleton Laue camera which exemplfies use of Single_magnetic_crystal.comp 
+
+ Datafiles:
+ - Klaus Lieutenant from FZJ/Vitess has collected reflectitivy-data from SwissNeutronics, Mirrotron and S-DH, analysed
+   these and fitted the "classical" McStas mirror-reflectivity profile to these. The resulting data have been placed
+   in the data directory under the filenames of
+   - SwissNeutronics_mirors_2020.txt
+   - Mirrotron_mirors_2020.txt
+   - S-DH_mirors_2020.txt.
+   The files are not to be used directly with reflecting components, but can instead be used as lookup-tables for
+   relevant parameters in each case. I.e. for a mirror of nominal m-value m_nom, use m_real, R_0, W and alpha from the
+   relevant table.
+ - Most other new datafiles are directly related to component- or instrument-additions and have been mentioned above.
+ 
+
+We hope you will enjoy this new release!!!
+
+
 Changes in McStas v.2.5, December 12th, 2018
 
  McStas 2.5 is the seventh release in the 2.x series and fixes various issues with McStas 2.4.1, plus 
