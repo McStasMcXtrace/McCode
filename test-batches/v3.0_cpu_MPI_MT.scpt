@@ -34,7 +34,7 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=10 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_MPICC_MT
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_MPICC_MT
 
 cd $HOME
 echo done on CPU/MPI, submitting next job
