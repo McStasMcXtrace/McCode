@@ -40,7 +40,7 @@ compilation = {
     "CC": 'mpicc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
-    "MPINODES": '4',
+    "MPINODES": '10',
 }
 
 '''

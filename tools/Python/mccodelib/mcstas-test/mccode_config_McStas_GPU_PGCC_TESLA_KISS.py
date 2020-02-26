@@ -42,7 +42,7 @@ compilation = {
     "OACC": 'pgcc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
-    "MPINODES": '4',
+    "MPINODES": '10',
 }
 
 '''
