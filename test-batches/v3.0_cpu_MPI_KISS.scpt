@@ -24,7 +24,7 @@
 #BSUB -e cpu_%J.err
 # -- end of LSF options --
 
-module load mpi/3.0.0-gcc-6.4.0
+#module load mpi/3.0.0-gcc-6.4.0
 module list
 which mpicc
 
