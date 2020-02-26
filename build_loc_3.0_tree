@@ -28,3 +28,6 @@ fi
 ./mkdist mcstas-tools-python-mcplot-svg 3.0-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.0-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-dev/bin/
+
+# Ensure we are configured for 10 node MPI runs
+sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcstas/3.0-dev/tools/mccodelib/mccode_config.py
