@@ -541,7 +541,7 @@ def main(args):
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
 
-    gui = McDisplay2DGui(title=dirname)
+    gui = McDisplay2DGui(title=dirname+" - Press 'h' for app shortcuts")
     try:
       if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
