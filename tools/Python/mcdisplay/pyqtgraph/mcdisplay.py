@@ -369,7 +369,6 @@ class McDisplay2DGui(object):
                 self.iw = create_infowindow(self._get_comp_color_pairs())
                 self.iw.show()
                 self.iw_visible = True
-                self.mw.raise_()
                 self.mw.activateWindow()
             else:
                 self.iw.hide()
