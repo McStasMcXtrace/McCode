@@ -84,6 +84,9 @@ cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 # (1) ensure pymcpltool is run with pythonw binary
 sed -i.orig s/python/pythonw/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
 rm $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool.orig
+# (2) same type of hack for mcgui seems to remove focusing-issue
+sed -i.orig s/python3/pythonw/ $MCINSTALL_PREFIX/mcstas/$1/bin/mcgui
+rm $MCINSTALL_PREFIX/mcstas/$1/bin/mcgui.orig
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 

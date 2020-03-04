@@ -53,7 +53,7 @@ class McPyqtgraphPlotter():
     def runplot(self):
         node = self.graph
         
-        plt_layout = create_plotwindow(title=self.sourcedir)
+        plt_layout = create_plotwindow(title=self.sourcedir+" - Press 'h' for app shortcuts")
         
         # create the logflipper
         viewmodel = ViewModel(sourcedir=self.sourcedir)
