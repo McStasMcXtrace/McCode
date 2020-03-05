@@ -1617,7 +1617,7 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("      randstate_t randbackup = *_particle->randstate;");
       coutf("      *_particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      *_particle->randstate = randbackup;");
-      coutf("      srandom(_hash(_particle->_uid*(1+Split_Sample_counter)));");
+      coutf("      srandom(_hash(_particle->_uid*(1+Split_%s_counter)));", comp->name);
       coutf("      p /= SplitS_%s > 0 ? SplitS_%s : 1;", comp->name, comp->name);
       coutf("#endif");
       str_free(exp);
