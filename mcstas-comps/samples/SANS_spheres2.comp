@@ -56,25 +56,28 @@ OUTPUT PARAMETERS (p0)
 
 SHARE
 %{
-#include <math.h>
-#include <stdio.h>
 
-double min(double A, double B) {
+#pragma acc routine seq
+double Min(double A, double B) {
 if (A<B) return A; else return B;
 };
 
-double max(double A, double B) {
+#pragma acc routine seq
+double Max(double A, double B) {
 if (A>B) return A; else return B;
 };
 
-int imin(int A, int B) {
+#pragma acc routine seq
+int IMin(int A, int B) {
 if (A<B) return A; else return B;
 };
 
-int imax(int A, int B) {
+#pragma acc routine seq
+int IMax(int A, int B) {
 if (A>B) return A; else return B;
 };
  
+#pragma acc routine seq
  double dSigdW(double Q, double R, double phi, double drho) {
 
   double out;
@@ -96,8 +99,10 @@ if (A>B) return A; else return B;
 
 DECLARE
 %{
-  double Idsdw[31];
-  double Qminl, Qmaxl, l10;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
+  DArray1d Idsdw;
+  double Qminl;
+  double Qmaxl; 
+  double l10;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
   double p0;
 %}
 
@@ -121,12 +126,14 @@ INITIALIZE
 
   istp = floor((Qmaxl-Qminl)*300.0+0.5);
 
+  Idsdw = create_darr1d(31);
+
   /* By integration, calculate the coherent scattering cross-section for the relevant wavelength range */
   for (iii=1;iii<=30;iii++) {                             /* wavelength in AA, up to 30 */
     Idsdw[iii] = 0.0;
     Isq  = 0.0;
     qmin = 0.0;
-    step = (log10(min(Qmaxd,4.0*PI/iii))-Qminl)/istp;
+    step = (log10(Min(Qmaxd,4.0*PI/iii))-Qminl)/istp;
     for (kkk=0;kkk<=istp;kkk++) {
       qmax = pow(10.0,Qminl+kkk*step);
       q    = 0.5*(qmin+qmax);
@@ -135,6 +142,8 @@ INITIALIZE
     };
     Idsdw[iii]= Isq;
   };
+  #pragma acc update device(Idsdw[0:31])
+
 %}
 
 TRACE
@@ -166,8 +175,8 @@ TRACE
   k0     = v / K2V;
   lambda = 2.0*PI / k0;
 
-  Ilam   = imax(floor(lambda),1);
-  Ilam2  = imin(Ilam+1,30);
+  Ilam   = IMax(floor(lambda),1);
+  Ilam2  = IMin(Ilam+1,30);
   /* Coherent "SANS" scattering  - in 3 intervals, asymptotic values at the low and high WL end */
   if (lambda<=1.0)   Scoh = 200.0*PI*Idsdw[1]  / (k0*k0);
   else {
@@ -177,7 +186,7 @@ TRACE
 
   /* Scattering triangle consideration, limit to lowes of
      either Qmind or double initial k0 value */
-  qmax   = min(Qmaxd,2.0*k0);
+  qmax   = Min(Qmaxd,2.0*k0);
   qmaxl  = log10(qmax);
   
   Ymax   = 0.25*qmax*qmax/(k0*k0);
@@ -230,7 +239,7 @@ TRACE
       iscatt = 1;
 
       /* Partition statistics according to "SANS" vs. incoherent scattering */
-      fcut   = max(Ymax,sans_aim);
+      fcut   = Max(Ymax,sans_aim);
 
       /* Scatter SANS or not */
       if (rand01()<=fcut) {
@@ -281,7 +290,7 @@ TRACE
           iscatt++;
 
 	  /* Apply the same weighting and logic scheme as for single-scattering above */
-          fcut   = max(Ymax,sans_aim);
+          fcut   = Max(Ymax,sans_aim);
 
 	  if (rand01()<=fcut) {
 	    Q     = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());

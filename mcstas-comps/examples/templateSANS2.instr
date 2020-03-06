@@ -37,7 +37,7 @@
 *******************************************************************************/
 DEFINE INSTRUMENT templateSANS2(lambda=6, dlambda=0.05, r=150, PHI=1e-3, Delta_Rho=6e10, frac_dir=0.03, frac_inc=0.01)
 
-DECLARE %{
+USERVARS %{
   int was_scattered;
 %}
   
