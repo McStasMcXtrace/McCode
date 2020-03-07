@@ -108,9 +108,9 @@ COMPONENT TwoTheta = Arm(
   ROTATED (0, TT, 0) RELATIVE Sample
 
 
-COMPONENT PSD = PSD_monitor(
+/* COMPONENT PSD = PSD_monitor(
     filename = "smallPSD", xwidth = 0.001, yheight = 0.1)
-  AT (0, 0, 1.51) RELATIVE PREVIOUS
+  AT (0, 0, 1.51) RELATIVE PREVIOUS */
 
 
 /* This section is executed when the simulation ends (C code). Other    */
