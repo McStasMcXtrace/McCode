@@ -1,3 +1,4 @@
+
 /*******************************************************************************
 * Instrument: BTsimple.instr
 *
@@ -12,7 +13,7 @@
 * %D
 * Example instrument showing how to calculate brilliance transfer using L_monitor's and WHEN statements
 *
-* %Example: -n1e7 BTsimple.instr lambda=10 Detector: Brilliance_transfer.dat_I=75.4758
+* %Example: -n1e7 BTsimple.instr lambda=10 Detector: BTransfer_I=75.4758
 *
 * %P
 * lambda:  [AA]  Central wavelength produced at the source
@@ -174,7 +175,7 @@ FINALLY
 		  "BT",
 		  "L", lambda-dlambda, lambda+dlambda, 101,
 		  &BT_N[0],&BT_p[0],&BT_p2[0],
-		  "Brilliance_transfer", NAME_INSTRUMENT, coords_set(0,0,0));
+		  "Brilliance_transfer", "BTransfer", coords_set(0,0,0));
 
 %}
 
