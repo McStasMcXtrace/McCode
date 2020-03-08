@@ -131,7 +131,6 @@ AT (0,0,0) RELATIVE  PREVIOUS
 FINALLY
 %{
   /* This adds another "monitor" that measures BT_out / BT_in */
-  /* In MPI-mode renormalisation by mpi_node_count needs doing */
   int j;
   double* tmpN;
   double* tmpp1;
@@ -155,12 +154,6 @@ FINALLY
       BT_p2[j]=sqrt((tmpd1[j]/tmpp1[j])*(tmpd1[j]/tmpp1[j])  + (tmpd2[j]/tmpp2[j])*(tmpd2[j]/tmpp2[j]));
     } else
       BT_p2[j]=0;
-#if defined (USE_MPI)
-      BT_p[j] /= mpi_node_count;
-      BT_p2[j] /= mpi_node_count;
-#endif
-
-    
   }
   DETECTOR_OUT_1D(
 		  "Brilliance transfer",
