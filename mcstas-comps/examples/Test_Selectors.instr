@@ -59,7 +59,7 @@ COMPONENT VS2   = Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, l
   WHEN (selector == 2)
   AT (0, 0, 1) RELATIVE Source
 
-COMPONENT VS_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="auto wavelength")
+COMPONENT VS_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="wavelength limits=[0 10] bins=401")
   AT (0,0,1+d_vs+0.1) RELATIVE Source
 END
 
