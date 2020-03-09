@@ -180,6 +180,7 @@ SHARE
     }
   }
 
+  #pragma acc routine seq
   int Honeycomb_guide_Trace(double *dt,
         Honeycomb_guide_Vars_type *aVars,
         double cx, double cy, double cz,
@@ -236,6 +237,7 @@ SHARE
 DECLARE
 %{
   Honeycomb_guide_Vars_type GVars;
+  #prama acc routine declare create(GVars)
 %}
 
 INITIALIZE
@@ -261,7 +263,7 @@ INITIALIZE
     Gx, Gy, Gz,mright, mleft, mleftup, mrightdown, mrightup, mleftdown);
 
   if (!G) for (i=0; i<7; GVars.A[i++] = 0);
-
+  #pragma acc update device(GVars)
 %}
 
 TRACE
