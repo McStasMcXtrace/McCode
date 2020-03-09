@@ -82,7 +82,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_BRISP(DM=3.355, string coh="V.laz", string inc="NULL", string container="NULL", LSD=4.5)
+DEFINE INSTRUMENT ILL_BRISP(DM=3.355, string coh="V.laz", string inc="NULL", string container="NULL", LSD=4.5, Frequency=0, LCC=0, DELAY=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -90,20 +90,25 @@ DECLARE
 %{
   double LCE      = 1.0;       /* distance fermi chopper <--> sample   */
   double LME;                  /* distance monochromator <--> sample   */
-  double LCC;                  /* [m] Chopper1-Chopper2 distance */
 
   double lambda   =0;
   double A1       =17.5;
   double RATIO    =4;
-  double Frequency=0;
-  double DELAY    =0;
 
-  double flag_container, flag_sample, flag_env;
-  double Ei,Ef;
+  double Ei;
 
   double lsd;
   double RH, RV;
-  double vix, viy, viz;
+%}
+
+USERVARS %{
+  double flag_container;
+  double flag_sample;
+  double flag_env;
+  double vix;
+  double viy;
+  double viz;
+  double Ef;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -235,8 +240,8 @@ EXTEND %{
   PROP_Z0;
   /* we fisrt put all events in the Fermi time transmission window */
   /* Fermi opening time is atan(w/length)/PI/frequency */
-  double Tfermi=atan2(0.031/136,0.013)/Frequency/PI; /* opening time for Fermi [s] */
-  t  = DELAY*(LCC-0.2)/LCC+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
+  double Tfermi=atan2(0.031/136,0.013)/INSTRUMENT_GETPAR(Frequency)/PI; /* opening time for Fermi [s] */
+  t  = INSTRUMENT_GETPAR(DELAY)*(INSTRUMENT_GETPAR(LCC)-0.2)/INSTRUMENT_GETPAR(LCC)+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
 
   /* geometric integrated transmission of Fermi=0.55 % */
   /* 2 sides*angular opening = 2*atan2(0.031/136,0.013)*RAD2DEG/360 */
@@ -328,25 +333,18 @@ COMPONENT Detector=Monitor_nD(  /* SANS XY detector */
   AT (0, 0, 0.01) RELATIVE PREVIOUS
 
 COMPONENT Detector_Q=Monitor_nD( /* I(q) detector */
-  options="user1 limits=[0 1.5]", xwidth=160*12.7/1000, yheight=1.118, bins=50, restore_neutron=1,
-  user1=V2K*sqrt( (vx-vix)*(vx-vix)+(vy-viy)*(vy-viy)+(vz-viz)*(vz-viz) ), username1="Q transfer [Angs-1]" )
+  options="v limits=[0 1.5]", xwidth=160*12.7/1000, yheight=1.118, bins=50, restore_neutron=1)
   WHEN (flag_sample || flag_container || flag_env )
   AT (0, 0, 0.01) RELATIVE PREVIOUS
 
-COMPONENT Detector_E=Monitor_nD( /* Energy distribution */
-  options="auto user1", xwidth=160*12.7/1000, yheight=1.118, restore_neutron=1, bins=50,
-  min=-Ei, max=2*Ei,
-  user1=Ef-Ei, username1="Energy transfer [meV]")
-  WHEN (flag_sample || flag_container || flag_env)
-  AT (0, 0, 0.01) RELATIVE PREVIOUS
 
-COMPONENT Detector_QE=Monitor_nD(
-  options="user1 limits=[0 1.5], user2 limits=[-10 10]", xwidth=160*12.7/1000, yheight=1.118,
+/*COMPONENT Detector_QE=Monitor_nD(
+  options=v limits=[0 1.5], user2 limits=[-10 10]", xwidth=160*12.7/1000, yheight=1.118,
     restore_neutron=1, bins=50,
     user1=V2K*sqrt( (vx-vix)*(vx-vix)+(vy-viy)*(vy-viy)+(vz-viz)*(vz-viz) ), username1="Q transfer [Angs-1]",
     user2=Ef-Ei, username2="Energy transfer [meV]")
   WHEN (flag_sample || flag_container || flag_env)
-  AT (0, 0, 0.01) RELATIVE PREVIOUS
+  AT (0, 0, 0.01) RELATIVE PREVIOUS*/
 
 COMPONENT EndOfInstrument=Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
