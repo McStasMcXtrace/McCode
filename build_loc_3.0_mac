@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# rappid-build script for mcstas-kernel dev:
+
+git submodule init
+git submodule update
+#git checkout mcstas-3.0
+git pull
+
+WORK=`pwd`
+
+export MCINSTALL_PREFIX=$HOME/McStas
+export CC=gcc
+export FC=gfortran
+
+if [[ -d $HOME/McStas/mcstas/3.0-dev ]]
+then
+    rm -rf $HOME/McStas/mcstas/3.0-dev/*
+fi
+./mkdist mcstas 3.0-dev "" "" mac "" -- justinst
+./mkdist mcstas-comps 3.0-dev "" "" mac "" -- justinst
+# can be out-commented after the first build iteration:
+./mkdist mcstas-tools-perl-cmdline 3.0-dev tools/Legacy-Perl-cmdline/ "" mac "" -- justinst
+./mkdist mcstas-tools-perl 3.0-dev tools/Legacy-Perl/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcrun 3.0-dev tools/Python/mcrun/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcgui 3.0-dev tools/Python/mcgui/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mccodelib 3.0-dev tools/Python/mccodelib/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.0-dev tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.0-dev tools/Python/mcplot/pyqtgraph/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcplot-svg 3.0-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcplot-matplotlib 3.0-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
+cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-dev/bin/
+ln -sf  /Applications/McStas-2.6.app/Contents/Resources/mcstas/2.6/miniconda3/ $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3
