@@ -809,10 +809,13 @@ TRACE
       dt = -1.0*rand01(); /* In case of scattering we will scatter on 'forward' part of sample */
     } else {
       if (!intersecti) {
-        t1 = (t3 + t0) /2;
-        t2 = t1;
+        t1 = t2 = t0;
       }
-      dt = randpm1(); /* Possibility to scatter at all points in line of sight */
+      if (t1 <= 0) {
+         dt = rand01(); /* already in inner hollow, can only scatter on 'backside' part */
+      } else {
+         dt = randpm1(); /* Possibility to scatter at all points in line of sight, front and back */
+      }
     }
 
     /* Neutron enters at t=t0. */
