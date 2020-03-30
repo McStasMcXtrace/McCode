@@ -30,7 +30,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT MAXII_711(R=-100,phi_mirror=3,phi_mono=9.25, chi=0, ome=0,phi=0,tth=0)
+DEFINE INSTRUMENT MAXII_711(R=-100,phi_mirror=3,phi_mono=9.25, chi=0, ome=0,phi=0,tth=0, dphi=160)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -64,7 +64,7 @@ COMPONENT Origin = Progress_bar()
 
 COMPONENT source = Source_gaussian(
     sig_x = 3655.04e-6, sig_y = 160.2e-6, sigPr_x = 4802.92e-6,
-    sigPr_y = 204.129e-6, lambda0 = lambda0, dlambda = dlambda)
+    sigPr_y = 204.129e-6, lambda0 = lambda0, dlambda = dlambda, focus_xw=1e-3, focus_yh=1e-3, dist=5)
 AT (0, 0, 0) RELATIVE Origin
 
 
@@ -159,7 +159,7 @@ COMPONENT sample_rot_phi = Arm()
 ROTATED (0,phi,0) RELATIVE sample_rot_chi
 
 COMPONENT sample = PowderN(
-    radius=0.0010,yheight=1e-3,reflections="C_diamond.laz",material="C.txt",format=Lazy,d_phi=160,
+    radius=0.0010,yheight=1e-3,reflections="C_diamond.laz",material="C.txt",format=Lazy,d_phi=dphi,
     barns=1,p_inc=0    
 )
 AT(0,0,0) RELATIVE sample_rot_phi
