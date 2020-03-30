@@ -99,7 +99,7 @@ INITIALIZE
     if(E0) printf("INFO: Source_div(%s): E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if (!E0 && !lambda0){
     fprintf(stderr,"ERROR (%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
-    exit(-1);  
+    exit(-1);
   }  
 
   /*calculate the X-ray weight from the flux*/
