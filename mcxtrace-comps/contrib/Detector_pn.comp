@@ -68,8 +68,8 @@ INITIALIZE
   int status=0;
  
   if(!xwidth || !yheight){
-    fprintf(stderr,"%s: Detector has zero effective area\n",NAME_CURRENT_COMP);
-    exit(0);
+    fprintf(stderr,"ERROR: (%s): Detector has zero effective area\n",NAME_CURRENT_COMP);
+    exit(-1);
   }
   xmax=xwidth/2.0;
   xmin=-xmax;
@@ -78,7 +78,7 @@ INITIALIZE
 
   t_Table T;
   if ( (status=Table_Read(&T,material_datafile,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    fprintf(stderr,"ERROR: (%s): Could not parse file \"%s\" in COMP %s\n",NAME_CURRENT_COMP,material_datafile;
     exit(-1);
   }
   char **header_parsed;
@@ -105,10 +105,8 @@ INITIALIZE
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("PSD_monitor: %s: Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      printf("ERROR: (%s) PSD_monitor: %s: Null detection area! Exiting.\n", NAME_CURRENT_COMP);
+      exit(-1);
     }
 
     for (i=0; i<nx; i++){

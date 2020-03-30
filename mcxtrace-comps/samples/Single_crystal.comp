@@ -822,7 +822,7 @@ INITIALIZE
   double mosaic_ABin[]=mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin))
-    exit(0);
+    exit(-1);
   if (hkl_info.count)
     printf("Single_crystal: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info.count, reflections);

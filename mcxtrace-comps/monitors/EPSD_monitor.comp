@@ -76,14 +76,12 @@ INITIALIZE
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            fprintf(stderr,"Error (%s): Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
     if (Emax<=Emin){
-        fprintf(stderr,"Error (%s): Unmeaningful energy interval E:[%g,%g]\n Aborting",NAME_CURRENT_COMP,Emin,Emax);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Unmeaningful energy interval E:[%g,%g]\n Aborting",NAME_CURRENT_COMP,Emin,Emax);
+      exit(-1);
     }
     if (Emax==0){
       Emax=FLT_MAX;

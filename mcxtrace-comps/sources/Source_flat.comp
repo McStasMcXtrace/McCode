@@ -87,14 +87,14 @@ INITIALIZE
 
   
   if (srcArea <= 0) {
-    printf("Source_flat: %s: Source area is <= 0 !\n ERROR - Exiting\n",
+    printf("ERROR: Source_flat: %s: Source area is <= 0 !\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if (dist <= 0 || focus_xw <= 0 || focus_yh <= 0) {
-    printf("Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n ERROR - Exiting\n",
+    printf("ERROR: Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   
   if (spectrum_file){
@@ -115,8 +115,8 @@ INITIALIZE
     printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if ( !E0 && !lambda0){
-    fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
-    exit(0);  
+    fprintf(stderr,"ERROR: Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
+    exit(-1);  
   }  
   /*calculate the X-ray weight from the flux*/
   if (flux){
