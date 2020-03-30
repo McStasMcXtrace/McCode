@@ -161,7 +161,7 @@ ROTATED (0,phi,0) RELATIVE sample_rot_chi
 
 COMPONENT sample = PowderN(
     radius=0.0010,yheight=1e-3,reflections="C_diamond.laz",material="C.txt",format=Lazy,d_phi=dphi,
-    barns=1,p_inc=0    
+    barns=1,p_inc=0
 )
 AT(0,0,0) RELATIVE sample_rot_phi
 EXTEND
