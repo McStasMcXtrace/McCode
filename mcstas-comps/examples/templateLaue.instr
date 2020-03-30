@@ -43,10 +43,7 @@ AT (0,0,5) RELATIVE source
 
 COMPONENT sample = Single_crystal(
           xwidth=0.01, yheight=0.01, zdepth=0.01,
-          delta_d_d=1e-4, mosaic = 5,
-          ax = 3.8186, ay = 0,      az = 0,
-          bx = 0,      by = 3.8843, bz = 0,
-          cx = 0,      cy = 0,      cz = 11.6777,
+          delta_d_d=1e-4, mosaic = 5, sigma_inc=0,
           reflections=reflections, order=1)
 AT (0,0,0.10) RELATIVE slit
 EXTEND %{
