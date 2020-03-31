@@ -70,10 +70,9 @@ if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("Divergence_monitor: %s: Null detection area !\n"
-                   "ERROR               (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+      printf("ERROR: (%s): Null detection area! Aborting.\n"
            NAME_CURRENT_COMP);
-      exit(0);
+      exit(-1);
     }
 
     for (i=0; i<nh; i++)

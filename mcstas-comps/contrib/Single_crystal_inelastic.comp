@@ -609,7 +609,7 @@ INITIALIZE
   double mosaic_ABin[]=mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(sqw, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin, qwidth))
-    exit(0);
+    exit(-1);
 
   if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;
   if (hkl_info.sigma_i<0) hkl_info.sigma_i=0;

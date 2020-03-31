@@ -75,7 +75,7 @@ if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
             printf("DivPos_monitor: %s: Null detection area !\n"
                    "ERROR           (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
-      exit(0);
+      exit(-1);
     }
 
     for (i=0; i<nh; i++)

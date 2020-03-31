@@ -523,10 +523,10 @@ dataIn=fopen(filename,"r");
 } else {
     // file doesn't exist
 printf("Shielding calculator could not find file\n%s\nexiting.",NiCaptureFile);
-exit(0);
+exit(-1);
 }
 
-if (dataIn==NULL) {printf("Can't open file\n"); exit(0);};
+if (dataIn==NULL) {printf("Can't open file\n"); exit(-1);};
 while (fgets(line, 1000,dataIn)!=NULL)
 { 
 if (*line=='#') continue; // ignore comment line
@@ -569,11 +569,11 @@ dataIn=fopen(filename,"r");
 } else {
     // file doesn't exist
 printf("Shielding calculator could not find file\n%s\nexiting.",TiCaptureFile);
-exit(0);
+exit(-1);
 }
 
 ibin=0;
-if (dataIn==NULL) {printf("Can't open file\n"); exit(0);};
+if (dataIn==NULL) {printf("Can't open file\n"); exit(-1);};
 while (fgets(line, 1000,dataIn)!=NULL)
 { 
 if (*line=='#') continue; // ignore comment line
@@ -583,7 +583,7 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4)
 	};
 };
 if (ibin!=NBINS){printf("Shielding calculator:\nMismatch in number of bins between input files.\nNo shielding calculation performed, exiting\n");
-exit(0);}
+exit(-1);}
 
 rewind(dataIn);
 
@@ -614,12 +614,12 @@ dataIn=fopen(filename,"r");
 } else {
     // file doesn't exist
 printf("Shielding calculator could not find file\n%s\nexiting.",TotalCaptureFile);
-exit(0);
+exit(-1);
 }
 
 
 ibin=0;
-if (dataIn==NULL) {printf("Can't open file\n"); exit(0);};
+if (dataIn==NULL) {printf("Can't open file\n"); exit(-1);};
 while (fgets(line, 1000,dataIn)!=NULL)
 { 
 if (*line=='#') continue; // ignore comment line
@@ -629,7 +629,7 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4)
 	};
 };
 if (ibin!=NBINS){printf("Shielding calculator:\nMismatch in number of bins between input files.\nNo shielding calculation performed, exiting\n");
-exit(0);}
+exit(-1);}
 
 rewind(dataIn);
 

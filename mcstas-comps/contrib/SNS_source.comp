@@ -318,8 +318,8 @@ void Pcalc(double (*func)(double),double llim, double hlim, double *xvec, double
 
   }
   if (idx1<1){
-   printf("Error: lower energy limit is out of bounds\n");
-   exit(0);
+   printf("ERROR: (SNS_source): lower energy limit is out of bounds\n");
+   exit(-1);
   }
   *idxstart=idx1;
    Prob[idx1]=integ1((*func),llim,xvec[idx1],0.001);
