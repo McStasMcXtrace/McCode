@@ -16,20 +16,25 @@
 * Block of an attenuating material
 * 
 * %D
-* A rectangular block of attenuating material. Attenuation is computed through
+* A chunk of attenuating material. Attenuation is computed through
 * the effective length travelled within the material. No scattering is modelled at present.
+* The material may take the shape of a block, a cylinder, a sphere, or a general polygonalized
+* shape through an off/ply file.
 *
 * %P
 * INPUT PARAMETERS
 *
-* xwidth: Width of block. (m) 
-* yheight: Height of block. (m)
-* zdepth:  Thickness of block. (m)
-* material_datafile: Dile where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt]
-* geometry: File (off/ply) containing the polygon definition of a general shape object. ( )
-* fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
-* refraction: If nonzero, refraction is enabled. ( ) 
+* xwidth:  [m]    Width of block.
+* yheight: [m]    Height of block or cylinder.
+* zdepth:  [m]    Thickness of block.
+* radius:  [m]    Raidus of cylinder or sphere.
+* material_datafile: [string]   File where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website.
+* geometry: [string] File (off/ply) containing the polygon definition of a general shape object.
+* fixed_delta: [ ] Use a fixed delta to compute refraction - useful for debugging.
+* refraction:  [ ] If nonzero, refraction is enabled.
+*
 * %E
+*
 *******************************************************************************/
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt")
