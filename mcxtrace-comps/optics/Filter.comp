@@ -42,7 +42,7 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
 
-  enum shapes_t {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY};
+  enum shapes_t {NONE=-1,SPHERE, CYLINDER, CUBE, ELLIPSOID, ANY};
 
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
@@ -107,6 +107,8 @@ INITIALIZE
     }
   } else if (radius && yheight){
     prms->shape=CYLINDER;
+  } else if (radius){
+    prms->shape=SPHERE;
   } else if (xwidth && yheight && zdepth){
     prms->shape=CUBE;
   } else {
@@ -146,7 +148,9 @@ TRACE
   int i,status=0;
   if (prms->shape==CYLINDER){
     status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
-  }else if (prms->shape==CUBE) {
+  } else if (prms->shape==SPHERE){
+    status=sphere_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius);
+  } else if (prms->shape==CUBE) {
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
   }else if (prms->shape==ANY){
     status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
@@ -168,13 +172,19 @@ TRACE
     if(refraction){
       switch (prms->shape){
         case CYLINDER:
-          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheigt*0.5)<FLT_EPSILON ){
+          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheight*0.5)<FLT_EPSILON ){
             /*we are on the top/bottom surface*/
             nx=0;ny=1;nz=0;
           }else{
             nx=x;ny=0;nz=z;NORM(nx,ny,nz);
           }
           break;
+        case SPHERE:
+          {
+            nx=x;ny=y;nz=z;
+            NORM(nx,ny,nz);
+            break;
+          }
         case CUBE:
           {
             if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
@@ -200,10 +210,12 @@ TRACE
       /*change of direction - we must now intersect again*/
       if (prms->shape==CYLINDER){
         status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
-      }else if (prms->shape==CUBE) {
-          status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
+      } else if (prms->shape==SPHERE){
+        status=sphere_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius);
+      } else if (prms->shape==CUBE) {
+        status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
       }else if (prms->shape==ANY){
-          status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
+        status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
       }
     }
 
@@ -221,13 +233,19 @@ TRACE
     if(refraction){
       switch (prms->shape){
         case CYLINDER:
-          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheigt*0.5)<FLT_EPSILON ){
+          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheight*0.5)<FLT_EPSILON ){
             /*we are on the top/bottom surface*/
             nx=0;ny=1;nz=0;
           }else{
             nx=x;ny=0;nz=z;NORM(nx,ny,nz);
           }
           break;
+        case SPHERE:
+          {
+            nx=x;ny=y;nz=z;
+            NORM(nx,ny,nz);
+            break;
+          }
         case CUBE:
           {
             if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
@@ -267,10 +285,20 @@ FINALLY
 
 MCDISPLAY
 %{
-  
   if (prms->shape==CUBE){
     box(0,0,0,xwidth,yheight,zdepth);
-  }else if (prms->shape == ANY) {	/* OFF file */
+  } else if (prms->shape==CYLINDER){
+    circle("xy",0, yheight/2.0,0,radius);
+    circle("xy",0,-yheight/2.0,0,radius);
+    line( radius,yheight/2.0,0, radius,-yheight/2.0,0);
+    line(-radius,yheight/2.0,0,-radius,-yheight/2.0,0);
+    line(0,yheight/2.0, radius, 0,-yheight/2.0, radius);
+    line(0,yheight/2.0,-radius, 0,-yheight/2.0,-radius);
+  } else if (prms->shape==SPHERE){
+    circle("xy",0,0,0,radius);
+    circle("xz",0,0,0,radius);
+    circle("yz",0,0,0,radius);
+  } else if (prms->shape == ANY) {	/* OFF file */
     off_display(prms->offdata);
   }
 %}
