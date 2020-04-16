@@ -320,13 +320,13 @@ MCDISPLAY
   /*draw individiual lenses*/
   /*draw a circle at the maximal aperture and a parabola along x and y*/
   int i,j=0;
-  for (j=0;j<(N<20?N:20);j++){
+  for (j=0;j<=N;j=j+N){
       circle("xy",0,0,-w+j*(d+2*w),r_ap);
       circle("xy",0,0,d+w+j*(d+2*w),r_ap);
       double zz0,zz1,yy0,yy1,dz,s;
       yy0=r_ap;
       zz0=zz1=-w;
-      dz=w/(64.0-1.0);
+      dz=w/(16.0-1.0);
       s=j*(d+2*w);
       /*first parabola*/
       while (zz1<=0){
@@ -350,8 +350,11 @@ MCDISPLAY
           zz0=zz1;yy0=yy1;
       }
   }
-  /*draw a circle at the last aperture of the lens*/
-  circle("xy",0,0,zdepth-w,r_ap);
-%}
 
+  /*draw lines along the length of the CRL*/
+  line(0, r_ap,-w,0, r_ap,w+N*(d+2*w)+d);
+  line(0,-r_ap,-w,0,-r_ap,w+N*(d+2*w)+d);
+  line( r_ap,0,-w, r_ap,0,w+N*(d+2*w)+d);
+  line(-r_ap,0,-w,-r_ap,0,w+N*(d+2*w)+d);
+%}
 END
