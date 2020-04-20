@@ -1,4 +1,4 @@
-## Install McXtrace 1.5rc1 On Debian class systems (including Ubuntu, mint etc.):
+## Install McXtrace 1.5 On Debian class systems (including Ubuntu, mint etc.):
 
 # Add the McCode repository
 After following the below steps your package manager should now be aware of mcxtrace
@@ -11,7 +11,7 @@ sudo apt-get update
 # Debian only:
 On Debian you will further have to install the non-free repository to have access to all McXtrace tool parts. See https://wiki.debian.org/SourcesList
 
-# Look for McStas packages to install
+# Look for McXtrace packages to install
 ```bash
 mcxtrace@debian:~$ apt-cache search mcxtrace | grep 1.5
 mcxtrace-1.5 - mcxtrace built using CMake
