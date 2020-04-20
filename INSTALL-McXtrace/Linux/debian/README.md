@@ -11,6 +11,13 @@ sudo apt-get update
 # Debian only:
 On Debian you will further have to install the non-free repository to have access to all McXtrace tool parts. See https://wiki.debian.org/SourcesList
 
+# The easiest way:
+The meta-packages mcxtrace-suite-perl and mcxtrace-suite-python allows you to install mcxtrace with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
+```bash
+sudo apt-get install mcxtrace-suite-python
+```
+For the legacy perl tools just replace python with perl.
+
 # Look for McXtrace packages to install
 ```bash
 mcxtrace@debian:~$ apt-cache search mcxtrace | grep 1.5
@@ -29,10 +36,6 @@ mcxtrace-tools-python-mxdisplay-webgl-1.5 - python-tools-mxdisplay-webgl built u
 mcxtrace-tools-python-mxgui-1.5 - python-tools-mxgui built using CMake
 mcxtrace-tools-python-mxplot-pyqtgraph-1.5 - python-tools-mxplot-pyqtgraph built using CMake
 mcxtrace-tools-python-mxrun-1.5 - python-tools-mxrun built using CMake
-```
-The meta-packages mcxtrace-suite-perl and mcxtrace-suite-python allows you to install mcxtrace with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
-```bash
-sudo apt-get install mcxtrace-suite-python
 ```
 # Optionals
 Optionally install iFit to visualize results using a Matlab environment (for free, no license needed).
