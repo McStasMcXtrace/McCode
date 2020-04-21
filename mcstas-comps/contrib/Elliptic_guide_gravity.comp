@@ -803,7 +803,7 @@ DECLARE
 		and hence accessible through OUTPUT PARAMETERS.
 	*/
 	struct SGI guideInfo; // Static Guide information is set in INITIALIZE
-	struct Intersection latestParticleCollision; // Is changed duing trace
+
 	double Gx;  // Local gravity vector, is set once in INITIALIZE
 	double Gy;
 	double Gz;
@@ -1420,6 +1420,12 @@ INITIALIZE
 */
 TRACE
 %{
+  struct Intersection latestParticleCollision;
+  latestParticleCollision.delta_time_to_next_collision=0;
+  latestParticleCollision.side=0;
+  latestParticleCollision.ApproxOn=0;
+  latestParticleCollision.collisionType=0;
+
   PROP_Z0;
   SCATTER;
 
