@@ -227,7 +227,7 @@ SHARE
       double w;                   /* Intrinsic line width */
     };
 
-  struct abs_data
+  struct powdern_abs_data
   {
     double E;       /*energy (in keV)*/
     double k;       /*wavenumber corresponding to E*/
@@ -287,7 +287,7 @@ SHARE
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
 
-  int read_abs_data(char *ABS_file, struct abs_data **abs)
+  int read_powdern_abs_data(char *ABS_file, struct powdern_abs_data **abs)
   {
     t_Table table;
     char **parsing;
@@ -295,7 +295,7 @@ SHARE
 
     if (!ABS_file || !strlen(ABS_file) || !strcmp(ABS_file, "NULL")) {
       fprintf(stderr,"Warning: material file (%s) not found.\n",ABS_file);
-      *abs=calloc(2,sizeof(struct abs_data));
+      *abs=calloc(2,sizeof(struct powdern_abs_data));
       (*abs)[1].E=-1;
       (*abs)[1].k=-1;
       (*abs)[1].mu=-1;
@@ -305,7 +305,7 @@ SHARE
         exit(-1);
       }
       parsing=Table_ParseHeader(table.header,"Z","A[r]","rho",NULL);
-      *abs=calloc(table.rows+1,sizeof(struct abs_data));
+      *abs=calloc(table.rows+1,sizeof(struct powdern_abs_data));
       for (i=0;i<table.rows;i++){
         (*abs)[i].E=table.data[i*table.columns];
         (*abs)[i].k=(*abs)[i].E*E2K;
