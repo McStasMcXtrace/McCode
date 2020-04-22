@@ -533,18 +533,18 @@ FILE *dataIn;
 memset(filename,0,sizeof(filename));//resetting filename to NULL string
 strcat(strcat(filename,dirname),NiCaptureFile);
 
-//printf("Shielding calculator:\n Reading file %s\n",filename);
+//printf("Dose calculator:\n Reading file %s\n",filename);
 
 if( access( filename, R_OK ) != -1 ) {
     // file exists
 dataIn=fopen(filename,"r");
 } else {
     // file doesn't exist
-printf("Shielding calculator could not find file\n%s\nexiting.",NiCaptureFile);
-exit(0);
+printf("Dose calculator could not find file\n%s\nexiting.",NiCaptureFile);
+exit(-1);
 }
 
-if (dataIn==NULL) {printf("Can't open file\n"); exit(0);};
+if (dataIn==NULL) {printf("Can't open file\n"); exit(-1);};
 while (fgets(line, 1000,dataIn)!=NULL)
 { 
 if (*line=='#') continue; // ignore comment line
@@ -554,7 +554,7 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4) ibin++;
 
 NBINS=ibin;
 
-//printf("Shielding calculator:\n Input file contains %d bins.\n", NBINS);
+//printf("Dose calculator:\n Input file contains %d bins.\n", NBINS);
 
 double* zhat =  malloc(NBINS*sizeof(double));
 double* Ihat= malloc(NBINS*sizeof(double));
@@ -573,25 +573,25 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4)
 	};
 };
 
-//printf("Shielding calculator:\n Closing file %s...",filename);
+//printf("Dose calculator:\n Closing file %s...",filename);
 fclose(dataIn);
 //printf("done\n");
 
 memset(filename,0,sizeof(filename));// setting filename to NULL string
 strcat(strcat(filename,dirname),TiCaptureFile); //setting filename to TiCapture file
-//printf("Shielding calculator:\n Next input: %s\n",filename);
+//printf("Dose calculator:\n Next input: %s\n",filename);
 
 if( access( filename, R_OK ) != -1 ) {
     // file exists
 dataIn=fopen(filename,"r");
 } else {
     // file doesn't exist
-printf("Shielding calculator could not find file\n%s\nexiting.",TiCaptureFile);
-exit(0);
+printf("Dose calculator could not find file\n%s\nexiting.",TiCaptureFile);
+exit(-1);
 }
 
 ibin=0;
-if (dataIn==NULL) {printf("Can't open file\n"); exit(0);};
+if (dataIn==NULL) {printf("Can't open file\n"); exit(-1);};
 while (fgets(line, 1000,dataIn)!=NULL)
 { 
 if (*line=='#') continue; // ignore comment line
@@ -600,13 +600,13 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4)
 		ibin++;
 	};
 };
-if (ibin!=NBINS){printf("Shielding calculator:\nMismatch in number of bins between input files.\nNo shielding calculation performed, exiting\n");
-exit(0);}
+if (ibin!=NBINS){printf("Dose calculator:\nMismatch in number of bins between input files.\nNo shielding calculation performed, exiting\n");
+exit(-1);}
 
 rewind(dataIn);
 
 
-//printf("Shielding calculator:\n Reading file %s\n",filename);
+//printf("Dose calculator:\n Reading file %s\n",filename);
 ibin=0;
 
 while (fgets(line, 1000,dataIn))
@@ -624,20 +624,20 @@ fclose(dataIn);
 
 memset(filename,0,sizeof(filename));
 strcat(strcat(filename,dirname),TotalCaptureFile);
-//printf("Shielding calculator:\n Next input: %s\n",filename);
+//printf("Dose calculator:\n Next input: %s\n",filename);
 
 if( access( filename, R_OK ) != -1 ) {
     // file exists
 dataIn=fopen(filename,"r");
 } else {
     // file doesn't exist
-printf("Shielding calculator could not find file\n%s\nexiting.",TotalCaptureFile);
-exit(0);
+printf("Dose calculator could not find file\n%s\nexiting.",TotalCaptureFile);
+exit(-1);
 }
 
 
 ibin=0;
-if (dataIn==NULL) {printf("Can't open file\n"); exit(0);};
+if (dataIn==NULL) {printf("Can't open file\n"); exit(-1);};
 while (fgets(line, 1000,dataIn)!=NULL)
 { 
 if (*line=='#') continue; // ignore comment line
@@ -646,12 +646,12 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4)
 		ibin++;
 	};
 };
-if (ibin!=NBINS){printf("Shielding calculator:\nMismatch in number of bins between input files.\nNo shielding calculation performed, exiting\n");
-exit(0);}
+if (ibin!=NBINS){printf("Dose calculator:\nMismatch in number of bins between input files.\nNo shielding calculation performed, exiting\n");
+exit(-1);}
 
 rewind(dataIn);
 
-//printf("Shielding calculator:\n Reading file %s\n",filename);
+//printf("Dose calculator:\n Reading file %s\n",filename);
 ibin=0;
 while (fgets(line, 1000,dataIn))
 { 
@@ -663,7 +663,7 @@ if(sscanf(line,"%le %le %le %le",&d1, &d2, &d3, &d4)==4)
 		ibin++;
 	};
 };
-//printf("Shielding calculator:\n Closing file %s...",filename);
+//printf("Dose calculator:\n Closing file %s...",filename);
 fclose(dataIn);
 //printf("done\n");
 

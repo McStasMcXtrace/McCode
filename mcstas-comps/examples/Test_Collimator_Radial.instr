@@ -65,6 +65,11 @@ EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
 
+COMPONENT BananaThetaIn = Monitor_nD(
+  options = "banana, angle limits=[2 160], bins=1280", restore_neutron=1,
+  radius = 0.3, yheight = 0.09)
+AT (0, 0, 0) RELATIVE Sample
+
 COMPONENT collimador_rad = Collimator_radial(
   nslit=ceil((130-2)/0.42),
   radius=0.324, length=0.419-0.324, yheight=0.09,

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: Pump_probe
+* Instrument: Pump_probe_solvent
 *
 * %Identification
 * Written by: Erik B Knudsen
@@ -33,7 +33,7 @@
 * parameters. Please be aware the by restricting the azimuthal range it is not uncommon to underfill
 * the acceptance area of subsequent components. This is particularly the case for small psi.
 *
-* Example: mxrun Pump_probe.instr Dt=2e-9 Detector: 1dpsd_I=2.78312e-26
+* %Example: Pump_probe_solvent.instr Dt=0 Detector: det_ccd_I=0.00664655
 *
 * %Parameters
 * excitation_prob: [1] Fraction of the molecules in solution that are excited at t=0.

@@ -105,7 +105,7 @@ SHARE
 	if((S0->_p-S1->_p)>1.e-5*S0->_p)  ns_tilde[10]=S0->_p*captureprob; else ns_tilde[10]=0.0; 
 	/* if "mvalue" is -1,  then absorption happened not on the coating but somewhere else. The weight of capture in nickel should be set to zero.*/
 
- if(ns_tilde[10]>(S0->_p-S1->_p)) { printf("%f\t%f\t%f\t%E\t%E\t%f\t%E\n",velocity, qinm, S1->_mvalue, S0->_p, S1->_p, captureprob, ns_tilde[10]); exit(0);}
+ if(ns_tilde[10]>(S0->_p-S1->_p)) { printf("%f\t%f\t%f\t%E\t%E\t%f\t%E\n",velocity, qinm, S1->_mvalue, S0->_p, S1->_p, captureprob, ns_tilde[10]); exit(-1);}
     return 0;
   }
 

@@ -296,14 +296,14 @@ INITIALIZE
   else if (borderx<0) {
     fprintf(stderr,"PSD_Detector: %s: Negative x border zone specified. Exit.\n",
       NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if (bordery==-2) bordery = yheight/ny;
   else if (bordery==-1) bordery = zdepth;
   else if (bordery<0) {
     fprintf(stderr,"PSD_Detector: %s: Negative y border zone specified. Exit.\n",
       NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
 
   if (xwidth>0) { /* panel */
@@ -311,7 +311,7 @@ INITIALIZE
     if (zdepth<0) {
     fprintf(stderr,"PSD_Detector: %s: Detector box has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
   }
   if (radius && angle>0)       awidth=angle/360*2*PI*radius;
@@ -324,37 +324,37 @@ INITIALIZE
     if (zdepth<=0) {
     fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
     if (radius<=0) {
     fprintf(stderr,"PSD_Detector: %s: Non-positive radial distance to the sample was specified. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
     if (!dc && zdepth && LensOn) dc = zdepth/2;
     if (((dc>zdepth) || (dc<0)) && (LensOn==1)) {
     fprintf(stderr,"PSD_Detector: %s: Electrostatic lens was turned on, but\n"
                    "              no valid zdepth of the cathode plane was specified. Exit.\n",
                                   NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
     if (awidth+2*borderx>2*PI*radius) {
     fprintf(stderr,"PSD_Detector: %s: Detector comes perilously close to encompassing 2pi. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
   }
   if (yheight<=0) {
     fprintf(stderr,"PSD_Detector: %s: Detector has no height (yheight). Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if ( (DetectorType!=1) && (DetectorType!=2) &&(DetectorType!=4) ) {
     fprintf(stderr,"PSD_Detector: %s: Detector has conflicting size\n"
                      "              specifications, i.e. combinations of xwidth, radius\n"
                      "              or awidth, or none at all. Exit.\n",
                                     NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if (verbose) {
     printf("PSD_Detector: %s: Geometry is ", NAME_CURRENT_COMP);
@@ -412,7 +412,7 @@ INITIALIZE
       fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
                      "              have different number of entries. Exit.\n",
                      NAME_CURRENT_COMP, FN_Conv, FN_Stop);
-      exit(0); }
+      exit(-1); }
 
   E_p = (double *) malloc(nH_p*sizeof(double));
 
@@ -423,7 +423,7 @@ INITIALIZE
         fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
                        "              list different energies (proton part). Exit.\n",
                        NAME_CURRENT_COMP, FN_Conv, FN_Stop);
-        exit(0); }
+        exit(-1); }
     dEdx_p[i] = PressureConv*Table_Index(Part_He_3_p,i,1) + PressureStop*Table_Index(Part_Stop_p,i,1);
   }
   FullEnergyP = E_p[nH_p-1];
@@ -477,7 +477,7 @@ INITIALIZE
         fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
                        "              list different energies (triton part). Exit.\n",
                        NAME_CURRENT_COMP, FN_Conv, FN_Stop);
-        exit(0); }
+        exit(-1); }
     dEdx_t[i] = PressureConv*Table_Index(Part_He_3_t,i,1) + PressureStop*Table_Index(Part_Stop_t,i,1);
   }
   FullEnergyT = E_t[nH_t-1];
@@ -801,7 +801,7 @@ TRACE
 
       break;  /* end switch case DetectorType==4 */
     default:
-      exit(0);
+      exit(-1);
   } // end switch DetectorType (1)
 
   if (intersect && tout<=0) {
@@ -982,7 +982,7 @@ TRACE
                            "              specifications, i.e. combinations of xwidth, radius\n"
                            "              or awidth, or none at all. Exit.\n",
                                           NAME_CURRENT_COMP);
-            exit(0);
+            exit(-1);
         } // end switch detectortype (2)
         if (t1*t2>=0 && !(VariousErrors&64) ) {
           fprintf(stderr,"PSD_Detector: %s: t1 was %g and t2 was %g.\n"

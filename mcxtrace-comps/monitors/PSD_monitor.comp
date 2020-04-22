@@ -73,10 +73,8 @@ INITIALIZE
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ( ((xmin >= xmax) || (ymin >= ymax)) && !radius ) {
-            printf("PSD_monitor: %s: Null detection area !\n"
-                "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax,radius). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
     if(!radius){
       p1=calloc(nx*ny,sizeof(double));

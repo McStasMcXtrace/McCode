@@ -369,7 +369,6 @@ class McDisplay2DGui(object):
                 self.iw = create_infowindow(self._get_comp_color_pairs())
                 self.iw.show()
                 self.iw_visible = True
-                self.mw.raise_()
                 self.mw.activateWindow()
             else:
                 self.iw.hide()
@@ -541,7 +540,7 @@ def main(args):
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
 
-    gui = McDisplay2DGui(title=dirname)
+    gui = McDisplay2DGui(title=dirname+" - Press 'h' for comp list")
     try:
       if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))

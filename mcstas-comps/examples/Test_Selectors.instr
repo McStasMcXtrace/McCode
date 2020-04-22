@@ -49,6 +49,9 @@ COMPONENT Source = Source_simple(dist=1, radius=0.03, focus_xw=0.03, focus_yh=0.
                                  lambda0=lambda, dlambda=lambda*0.15)
   AT (0,0,0) ABSOLUTE
 
+COMPONENT Src_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="wavelength limits=[0 10] bins=401")
+  AT (0,0,0.1) RELATIVE Source
+
 COMPONENT VS1   = V_selector(xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=phi,
            length=d_vs, d=0.0004, nu=3956*phi*DEG2RAD/(2*PI*lambda*d_vs), nslit=72)
   WHEN (selector == 1)
@@ -59,7 +62,7 @@ COMPONENT VS2   = Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, l
   WHEN (selector == 2)
   AT (0, 0, 1) RELATIVE Source
 
-COMPONENT VS_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="auto wavelength")
+COMPONENT VS_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="wavelength limits=[0 10] bins=401")
   AT (0,0,1+d_vs+0.1) RELATIVE Source
 END
 

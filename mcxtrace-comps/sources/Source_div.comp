@@ -95,11 +95,11 @@ INITIALIZE
     for (i=0;i<prms.T.rows-1;i++){
       prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
     }
-    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
-    if(E0) printf("Source_div(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+    printf("INFO: Source_div(%s): Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("INFO: Source_div(%s): E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if (!E0 && !lambda0){
-    fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
-    exit(0);  
+    fprintf(stderr,"ERROR (%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(-1);
   }  
 
   /*calculate the X-ray weight from the flux*/

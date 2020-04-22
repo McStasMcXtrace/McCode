@@ -80,13 +80,13 @@ INITIALIZE
           printf("PSD_TOF_monitor: %s: Null detection area !\n"
                  "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
          NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
 
   if (tmin >= tmax) {
     printf("PSD_TOF_monitor: %s: Unmeaningful TOF definition!\n",
      NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
 
   PSD_N = create_darr3d(nt, nx, ny);
