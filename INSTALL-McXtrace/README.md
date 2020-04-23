@@ -1,4 +1,4 @@
-# This is the (new) home of installation instructions fro McXtrace 1.5 and onwards.
+# Installation instructions for McXtrace 1.5
 
 Please consult the individual pages for your platform of choice. 
 
