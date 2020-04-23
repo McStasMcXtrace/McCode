@@ -131,10 +131,8 @@ SETTING PARAMETERS (width_c=0, yheight=0.12, Lmin, Lmax, dist=0, focus_xw,
   tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
   branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0,
   tfocus_width=0.0, beamport_angle=30)
-OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t,
-  tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2z,
-  T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
-  r_empty,r_optics)
+OUTPUT PARAMETERS (l_range, w_mult, w_geom_c, w_geom_t,
+  tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2zm,r_empty,r_optics)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -157,7 +155,6 @@ DECLARE
 %{
   double l_range;
   double w_mult;
-  double w_geom;
   double w_geom_c;
   double w_geom_t;
   double tx;
@@ -169,16 +166,6 @@ DECLARE
   double t2x;
   double t2y;
   double t2z;
-  /* Neutron-specific distribution-shape variables */
-  double T_n;
-  double tau_n;
-  double tau1_n;
-  double tau2_n;
-  double chi2_n;
-  double I0_n;
-  double I2_n;
-  double branch1_n;
-  double branch2_n;
 
   /* Target station geometry... */
   double r_empty; /* two meters from moderator surface and out... */
@@ -274,7 +261,8 @@ INITIALIZE
 
 TRACE
 %{
-  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime,w_geom;
+  double T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
 
   /* Bispectral source - choice of spectrum and initial position */
   int cold = ( rand01() < cold_frac ) ? 1 : 0;
