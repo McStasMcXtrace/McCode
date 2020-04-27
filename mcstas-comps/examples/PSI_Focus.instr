@@ -155,10 +155,10 @@ COMPONENT FirstChopper = DiskChopper(theta_0=0, abs_out=0, verbose=1,
 				     radius = 0.70, yheight=0.70, xwidth = 0.07, nu = DISC_SPEED/2/PI, nslit = 2, delay = FO_PHA, isfirst = 1)
   AT (0, 0, 69.674) RELATIVE a1
 
-COMPONENT  DISCTOF = Monitor_nD(
+  /*COMPONENT  DISCTOF = Monitor_nD(
     bins = 30, filename = "DISC_TOF.dat", xmin = -0.05,
     xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
-  AT (0, 0, 69.718) RELATIVE a1
+    AT (0, 0, 69.718) RELATIVE a1*/
 
 COMPONENT PSDmon1Chopper = PSD_monitor(
     xwidth = 0.1, yheight = 0.2,
@@ -208,10 +208,10 @@ COMPONENT PSDmonMono = PSD_monitor(
     nx=60, ny=60, filename="psdmono.dat")
   AT (0, 0, 72.4) RELATIVE a1  ROTATED (0, 0, 0) RELATIVE a1
 
-COMPONENT  MONOTOF = Monitor_nD(
+  /*COMPONENT  MONOTOF = Monitor_nD(
     bins = 30, filename = "MONO_TOF.dat", xmin = -0.05,
     xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
-  AT (0, 0, 72.41) RELATIVE a1
+    AT (0, 0, 72.41) RELATIVE a1*/
 
 COMPONENT DivMonMono = Divergence_monitor(
           nh=60, nv=60, filename="divmono.dat",
@@ -237,10 +237,10 @@ SPLIT COMPONENT mono = Monochromator_2foc(
 COMPONENT a2 = Arm()
   AT (0,0,0) RELATIVE focus_mono ROTATED (0, TTM, 0) RELATIVE a1
 
-COMPONENT  FERMITOF_before = Monitor_nD(
+/*COMPONENT  FERMITOF_before = Monitor_nD(
     bins = 30, filename = "FERMI_TOF_before.dat", xmin = -0.05,
     xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
-  AT (0, 0, 0.9) RELATIVE a2
+    AT (0, 0, 0.9) RELATIVE a2*/
 
 COMPONENT lambdaFermi = L_monitor(
 	xwidth=0.1, yheight=0.2,
@@ -282,19 +282,19 @@ COMPONENT DivMonfermi2 = Divergence_monitor(
           maxdiv_h=2, maxdiv_v=2)
   AT (0, 0, 1.064) RELATIVE a2
 
-COMPONENT  FERMITOF1 = Monitor_nD(
+  /*COMPONENT  FERMITOF1 = Monitor_nD(
     bins = 30, filename = "FERMI_TOF1.dat.dat", xmin = -0.05,
     xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
-  AT (0, 0, 1.154) RELATIVE a2
+    AT (0, 0, 1.154) RELATIVE a2*/
 
 COMPONENT SAMPLE_SLIT = Slit(
     xwidth=0.02, yheight=0.06)
   AT (0, 0, 1.155) RELATIVE a2
 
-COMPONENT  FERMITOF2 = Monitor_nD(
+  /*COMPONENT  FERMITOF2 = Monitor_nD(
     bins = 30, filename = "FERMI_TOF2.dat.dat", xmin = -0.05,
     xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
-  AT (0, 0, 1.2) RELATIVE a2
+    AT (0, 0, 1.2) RELATIVE a2*/
 
 COMPONENT PSD_SAMPLE = PSD_monitor(
     xwidth=0.02, yheight=0.1,
@@ -320,19 +320,19 @@ COMPONENT a3 = Arm()
 
 SPLIT COMPONENT Sample = V_sample(
     radius = 0.008, yheight = 0.055, focus_xw=0.336, focus_yh=0.4, pack=1,
-    target_index=+3)
+    target_index=+1)
   AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT TOF_Det = Monitor_nD(
+  /*COMPONENT TOF_Det = Monitor_nD(
  xwidth=1.5, yheight=0.2,
  options="auto time, abs angle limits=[10 180], banana, parallel",
  bins=100)
-AT(0, 0, 0) RELATIVE PREVIOUS
+ AT(0, 0, 0) RELATIVE PREVIOUS*/
 
-COMPONENT FoDet = Monitor_nD(
+  /*COMPONENT FoDet = Monitor_nD(
   xwidth = 0.336, yheight = 0.4,
   options="t auto file=TofDet.dat")
-AT (0, 0, 2.5) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a3
+  AT (0, 0, 2.5) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a3*/
 
 COMPONENT EMON_DET = E_monitor(
 	xwidth=0.4, yheight=0.4,
