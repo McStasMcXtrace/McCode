@@ -5,8 +5,9 @@
 
 | Version.         | Supported          |
 | ---------------- | ------------------ |
-| McStas 2.6       | :white_check_mark: |
-| McXtrace 1.5     | :white_check_mark: |
+| McStas 3.0bet    | :yellow_circle:    |
+| McStas 2.6       | :green_circle:     |
+| McXtrace 1.5     | :green_circle:     |
 | Earlier McStas   | :x:                |
 | Earlier McXtrace | :x:                |
 
