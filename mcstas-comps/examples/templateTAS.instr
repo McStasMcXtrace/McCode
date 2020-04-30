@@ -145,6 +145,8 @@ DEFINE INSTRUMENT templateTAS( KI=2.662, KF=0, EI=0, EF=0, QH=0, QK=0, QL=0,
 
 DECLARE
 %{
+  int OpenACC;
+  #pragma acc declare create(OpenACC)
   struct sample_struct {
     double as, bs, cs;
     double aa, bb, cc;
@@ -352,6 +354,14 @@ DECLARE
 
 INITIALIZE
 %{
+
+#ifdef OPENACC
+  OpenACC = 1;
+#else
+  OpenACC = 0;
+#endif
+  #pragma acc update device(OpenACC)
+
   double Vi, Vf;
   char   anglemode = 0;
 
@@ -564,7 +574,7 @@ AT (0, 0, machine_hkl.l1-0.2) ABSOLUTE
 COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 0.2) RELATIVE PREVIOUS
 
-SPLIT COMPONENT PG1Xtal = Monochromator_curved(
+SPLIT COMPONENT PG1Xtal = Monochromator_2foc(
   width  = WM,
   height = HM,
   NH=NHM, NV=NVM,
@@ -574,6 +584,9 @@ SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Mono_Cradle
 ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
+EXTEND %{
+  if(!SCATTERED) ABSORB;
+%}
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
@@ -614,19 +627,20 @@ COMPONENT D7_SC3_1D = Monitor_nD(
   options="theta energy, all auto, banana")
 AT (0, 0, 0) RELATIVE Sample_Out
 
+
 COMPONENT SC3 =Collimator_linear(
   xmin =-0.06/2, ymin =-0.12/2,
   xmax = 0.06/2, ymax = 0.12/2,
   length = 0.40,
   divergence=ALF3,
   divergenceV=BET3)
-WHEN (ALF3 && BET3)
+WHEN (ALF3 && BET3 && !OpenACC)
 AT (0, 0, (machine_hkl.l3-0.40)/2) RELATIVE Sample_Out
 
 COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
 
-SPLIT COMPONENT PG2Xtal = Monochromator_curved(
+SPLIT COMPONENT PG2Xtal = Monochromator_2foc(
   width  = WA,
   height = HA,
   NH=NHA, NV=NVA,
@@ -636,6 +650,9 @@ SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Ana_Cradle
 ROTATED (0, machine_real.a5, 0) RELATIVE Ana_Cradle
+EXTEND %{
+  if(!SCATTERED) ABSORB;
+%}
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
   AT (0,0,0) RELATIVE Ana_Cradle
@@ -656,5 +673,6 @@ COMPONENT He3H = PSD_monitor(
   ymin = -0.042850, ymax = 0.042850,
   nx=20, ny=20, filename="He3H.psd")
 AT (0, 0, machine_hkl.l4) RELATIVE Ana_Out
+
 
 END
