@@ -66,6 +66,8 @@ export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin
 
+export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
+
 cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcxtrace/$1/tools/Python/mxdoc/mcdoc.py -i
