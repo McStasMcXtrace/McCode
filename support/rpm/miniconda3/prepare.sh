@@ -5,7 +5,7 @@
 
 # Download the installer
 cd `dirname $0`
-curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 chmod a+x Miniconda3-latest-Linux-x86_64.sh
 ./Miniconda3-latest-Linux-x86_64.sh -b -p $PWD/miniconda3/
 export PATHBAK=$PATH
