@@ -37,10 +37,28 @@
 * Modified by: PW June 2017: version 2.4.1
 * Modified by: PW December 2018: version 2.5
 * Modified by: PW January 2020: version 2.6
-* This file is part of McStas version 2.6, released January 24th 2020.
+* Modified by: PW May 2020: version 2.6.1
+* This file is part of McStas version 2.6.1, released May 4th 2020.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v.2.6.1, May 4th, 2020
+
+ McStas 2.6.1 is the nineth release in the 2.x series and fixes various minor issues with McStas 2.6.
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+
+ Fixes of issues from last release:
+ - A number of minor issues from 2.6 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue++label%3A%22McStas+2.6%22+
+
+
 Changes in McStas v.2.6, January 24th, 2020
 
  McStas 2.6 is the eight release in the 2.x series and fixes various issues with McStas 2.5, plus 

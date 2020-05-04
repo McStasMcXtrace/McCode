@@ -1,4 +1,4 @@
-# Installation of McStas 2.6 on macOS 
+# Installation of McStas 2.6.1 on macOS 
 
 ## Supported macOS releases
 * macOS 10.9-10.15 (Maverics, Yosemite, El Capitan, Sierra, High
@@ -9,12 +9,12 @@
 ## Steps to perform
 
 * Download
-  [McStas 2.6 for macOS](http://download.mcstas.org/current/mac/mcstas-2.6.tgz)
+  [McStas 2.6.1 for macOS](http://download.mcstas.org/current/mac/mcstas-2.6.1.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder
 
-* Drag the McStas-2.6.app and the McStas-2.6-environment.command to
+* Drag the McStas-2.6.1.app and the McStas-2.6.1-environment.command to
 /Applications
 
 * Run the Check-PY-dependencies.command script to check for / install
