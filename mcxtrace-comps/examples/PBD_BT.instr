@@ -15,9 +15,42 @@
 * %Description
 * This is a preliminary setup of the PBD, using single-bounce crystals instead of 3-bounce crystals 
 *
-* Example: mxrun-1.1 --mpi=8 rigaku_source.out --dir=scan --format=PGPLOT --ncount=1000000 beam_vert=0.005 beam_hor=0.001 slit_vert=0.001 slit_hor=0.002 omega=53.35 theta=160.05 xtal_len=0.1 xtal_wid=0.02
+* %Example: mxrun-1.1 --mpi=8 rigaku_source.out --dir=scan --format=PGPLOT --ncount=1000000 beam_vert=0.005 beam_hor=0.001 slit_vert=0.001 slit_hor=0.002 omega=53.35 theta=160.05 xtal_len=0.1 xtal_wid=0.02
+* 
 * %Parameters
-* Par1: [unit] Parameter1 description
+* source_y: [m]           Vertical offset of the source exit-widow.
+* source_rotation: [deg]  Rotation around the X-axis of the source.
+* beam_vert: [m]          Height of beam exit.window.
+* beam_hor:  [m]          Width of beam exit-window.
+* mirror_length: [m]      Length of the focusing mirror
+* mirror_full_deflection_angle: [deg]  Deflection angle of mirror
+* mirror_center_distance: [m]  Distance from 
+* mirror_focal_error: [ ] 
+* mirror_rotation_angle:  [ ]  
+* mirror_y_offset
+* use_mirror: [ ]         Flag to set whether to use the mirror or no.
+* mono_rotation: [ ]      Rotation angle of the monochromator crystal.
+* use_mono: [ ]           Flag enabling/disabling the monochromator.
+* mono_detuning_seconds: [arcsec]  Detuning angle for the monochromator crystal(s).
+* mono_misalignment_angle_arcsec: [arcsec] Mislignment of the monochromator.
+* mono_incident_angle_deg: [deg] Nominal angle of incidence for beam vs. monochromator.
+* slit_1_vert: [m]        1st aperture vertical.
+* slit_1_hor: [m]         1st aperture horizontal.
+* slit_2_vert: [m]        2nd aperture vertical.
+* slit_2_hor: [m]         2nd aperture horizontal.
+* emin: [keV]             Minimal energy to sample.
+* emax: [keV]             Maximal energy to sample.
+* omega: [deg]            Sample roation around the Y-axis.
+* theta: [deg]            Sample rotation around the X-axis. 
+* crystal_central_angle: [deg]    sample_crystal_angle.
+* hh: [ ]                 1st Miller index of the sample crystal reflection under study.
+* kk: [ ]                 2nd Miller index of the sample crystal reflection under study.
+* ll: [ ]                 3rd  Miller index of the sample crystal reflection under study.
+* use_flat_source: [ ]    Use a flat source instead of Lab_source, for debugging.
+* stop_at_energy: [ ]     Flag 
+* use_3_bounce: [ ]       Use a 3-bounce set up instead of 1-bounce.
+* run_setup: [string]     Which setup to use?
+* polarization: [string]  Should polarization be taken into effect.     
 *
 * %Link
 * A reference/HTML link for more information
@@ -27,7 +60,7 @@
 
 /* Change name of instrument and input parameters with default values */
 /* note: the mirror (Mirror-Id.: 4148a) has d=3.8 nm at the center, which for 0.15406 nm radiation, gives a full deflection angle of 2.32 degrees */
-DEFINE INSTRUMENT PBD(source_y=0.0, source_rotation=0.0, beam_vert=0.002, beam_hor=0.001,
+DEFINE INSTRUMENT PBD_BT(source_y=0.0, source_rotation=0.0, beam_vert=0.002, beam_hor=0.001,
   mirror_length = 0.05,  
   mirror_full_deflection_angle=2.32, 
   mirror_center_distance=0.1, mirror_focal_error=0.0,
@@ -68,7 +101,7 @@ DECLARE
        the angle of the surface is theta_m=arctan(dy/dz)=arctan(z/(2 p)) so tan(theta_m)=z/(2 p), but z=l sin(2 theta_m)
        so p=l sin(2 theta_m)/(2 tan(theta_m)) = l (2 cos(theta_m) sin(theta_m)) / (2 sin(theta_m)/cos(theta_m)) = l sin(theta_m)^2 
        where 'l' is the distance from the focus to the active center.
-*/
+     */
 
     double mirror_focal_length, mirror_tantheta, mirror_tansq, mirror_cosrot, mirror_sinrot;
     double mirror_vertex_x, mirror_vertex_z;
