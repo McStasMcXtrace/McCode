@@ -6,6 +6,6 @@ RUN curl http://packages.mccode.org/debian/mccode.list >/etc/apt/sources.list.d/
 RUN apt-get --yes update
 RUN apt-get --yes install mcxtrace-suite-python
 RUN groupadd docker
-RUN useradd -m -g docker docker
+RUN useradd -g docker docker
 ENV HOME /home/docker
 WORKDIR /home/docker
