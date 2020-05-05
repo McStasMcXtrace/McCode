@@ -21,8 +21,7 @@
 * through the coating and captured in the substrate will overshoot the coating contribution significantly, 
 * so that shielding has to be enforced by few tens of centimeters of concrete. 
 *
-* %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
-* Example: lambda=3.4 Detector: PSD_SAMPLE_I=1.58754E+05
+* %Example: lambda=4.4 Detector: PSD_Fermi1_I=1.08177e+07
 *
 * %Parameters
 * lambda: [Angs]    Central source wavelength
