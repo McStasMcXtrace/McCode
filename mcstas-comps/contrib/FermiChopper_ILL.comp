@@ -116,11 +116,13 @@ double omega, t0;  /* chopper rotation */
 /*********** ORTHOGONAL TRANSFORMATION INTO ROTATING FRAME ******************/
 
 /************ X - component ********************/
+#pragma acc routine seq
 double xstrich(double X, double Z, double T, double omega, double t0){
   return( X*cos(omega*(T-t0))+Z*sin(omega*(T-t0)) );
 }
 
 /************ Z - component ********************/
+#pragma acc routine seq
 double zstrich(double X, double Z, double T, double omega, double t0){
   return( Z*cos(omega*(T-t0))-X*sin(omega*(T-t0)) );
 }
@@ -130,6 +132,7 @@ double zstrich(double X, double Z, double T, double omega, double t0){
 /*************************** SECANT METHOD FOR... ***************************/
 
 /****************************...X-component *********************************/
+#pragma acc routine seq
 double xsecant(double x, double z, double vx, double vz,
                double t, double dt, double d, double omega, double t0){
 
@@ -157,6 +160,7 @@ double xsecant(double x, double z, double vx, double vz,
 
 
 /****************************...Z-component *********************************/
+#pragma acc routine seq
 double zsecant(double x, double z, double vx, double vz,
                double t, double dt, double d, double omega, double t0) {
 
@@ -185,6 +189,7 @@ double zsecant(double x, double z, double vx, double vz,
 /*************************** INTERPOLATION METHOD FOR... ********************/
 
 /****************************...X-component *********************************/
+#pragma acc routine seq
 double xinterpolation(double x, double z, double vx, double vz,
                       double t, double dt, double d, double omega, double t0){
 
@@ -210,6 +215,7 @@ double xinterpolation(double x, double z, double vx, double vz,
 
 
 /****************************...Z-component *********************************/
+#pragma acc routine seq
 double zinterpolation(double x, double z, double vx, double vz,
                       double t, double dt, double d, double omega, double t0){
 
