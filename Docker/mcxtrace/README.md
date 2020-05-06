@@ -2,8 +2,11 @@
 Simply run the script docker_mxgui
 - You will run as the user "docker" inside the docker.
 - Currently the pyqtplot utilities do not work - nor does webgl.
-- matplotlib plotting works though
+- Matplotlib plotting works
+- Mounts the users home directory as the home directory for the docker run.
+
 
 ## TODO still
-1. change to use the users username etc instead of docker
-2. mount the local home-directory as the home of the docker user.
+1. Change to use the users username etc instead of docker
+2. Use the currrent work dir as work-dir for the docker.
+3. Fix the broken connection to plotting tools

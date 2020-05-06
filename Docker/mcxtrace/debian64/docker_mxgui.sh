@@ -14,4 +14,4 @@ docker image build --tag $containername .
 #more sophisticated version which seem to work
 XAUTH=/tmp/.docker.xauth
 xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
-docker run -u docker -ti -e DISPLAY=$DISPLAY -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH --device /dev/dri $containername /usr/bin/mxgui
+docker run -u docker -ti -e DISPLAY=$DISPLAY -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH --device /dev/dri $containername mxgui
