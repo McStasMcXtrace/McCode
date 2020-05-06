@@ -70,7 +70,7 @@ if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-      printf("ERROR: (%s): Null detection area! Aborting.\n"
+      printf("ERROR: (%s): Null detection area! Aborting.\n",
            NAME_CURRENT_COMP);
       exit(-1);
     }
