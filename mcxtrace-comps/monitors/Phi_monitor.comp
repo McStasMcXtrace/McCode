@@ -72,10 +72,10 @@ INITIALIZE
     }
 
     if (Phimin<0){
-      fprintf(stderr,"WARNING (%s): Lower bound <0. Phase is in the interval [0,2*pi].\n");
+      fprintf(stderr,"WARNING (%s): Lower bound <0. Phase is in the interval [0,2*pi].\n",NAME_CURRENT_COMP);
     } 
     if (Phimax<0){
-      fprintf(stderr,"WARNING (%s): Upper bound > 2*pi. Phase is in the interval [0,2*pi].\n");
+      fprintf(stderr,"WARNING (%s): Upper bound > 2*pi. Phase is in the interval [0,2*pi].\n",NAME_CURRENT_COMP);
     } 
 
 
