@@ -807,15 +807,13 @@ class McGuiAppController():
         subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
+        terminal = mccode_config.configuration["TERMINAL"]
         if not sys.platform == 'win32':
             scriptfile = mccode_config.configuration["MCCODE_LIB_DIR"] + '/environment'
-            if sys.platform == 'darwin':
-                scriptfile = 'open ' + scriptfile
-            else:
-                scriptfile = 'x-terminal-emulator -e ' + scriptfile
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
-        subprocess.Popen(scriptfile, shell=True)
+
+        subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
         
     def handleDefault(self):
         reply = QtWidgets.QMessageBox.question(self.view.mw,

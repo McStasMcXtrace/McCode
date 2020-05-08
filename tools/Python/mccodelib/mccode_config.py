@@ -16,6 +16,7 @@ mcstas/mcxtrace configuration.
 configuration = {
     "MCCODE_VERSION": '2.5-dev',
     "MCCODE_LIB_DIR": '/usr/share/mcstas/2.5-dev/',
+    "TERMINAL": 'x-terminal-emulator -e',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',
