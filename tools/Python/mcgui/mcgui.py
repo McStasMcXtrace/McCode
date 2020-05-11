@@ -637,7 +637,7 @@ class McGuiAppController():
     def handlePlotOtherResults(self):
         self.emitter.status('')
         resultdir = self.view.showOpenPlotDirDlg(os.getcwd())
-        if not resultdir is "":
+        if resultdir != "":
             cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
             cwd = os.path.dirname(os.path.dirname(resultdir))
             self._runthread = McRunQThread()
@@ -807,15 +807,13 @@ class McGuiAppController():
         subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
+        terminal = mccode_config.configuration["TERMINAL"]
         if not sys.platform == 'win32':
             scriptfile = mccode_config.configuration["MCCODE_LIB_DIR"] + '/environment'
-            if sys.platform == 'darwin':
-                scriptfile = 'open ' + scriptfile
-            else:
-                scriptfile = 'x-terminal-emulator -e ' + scriptfile
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
-        subprocess.Popen(scriptfile, shell=True)
+
+        subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
         
     def handleDefault(self):
         reply = QtWidgets.QMessageBox.question(self.view.mw,

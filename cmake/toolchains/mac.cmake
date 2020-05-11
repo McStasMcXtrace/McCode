@@ -4,6 +4,7 @@ set(ARCH   "amd64")
 
 # Commands for running various external tools
 set(TOOLS_CC "/usr/bin/gcc")
+set(TERMINAL "open ")
 set(BROWSER "open")
 set(VRMLVIEW "open")
 set(MPICC "mpicc.gcc-clang")
