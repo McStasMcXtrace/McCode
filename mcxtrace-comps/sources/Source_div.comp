@@ -45,6 +45,7 @@
 * flux:   [1/(s * mm**2 *mrad**2 * energy unit]) flux per energy unit, Angs or keV.
 * randomphase [1] If !=0 the photon phase is chosen randomly.
 * phase [1] Value of the photon phase (if randomphase==0).
+* spectrum_file: [ ] File from which to read the spectral intensity profile
 *
 * OUTPUT PARAMETERS:
 *

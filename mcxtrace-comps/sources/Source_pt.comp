@@ -39,6 +39,7 @@
 * flux:   [ph/s] Total flux radiated from the source. 
 * randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
 * phase: [ ] Set phase to something given. 
+* spectrum_file: [ ] File from which to read the spectral intensity profile
 * 
 * %E
 ******************************************************************/
