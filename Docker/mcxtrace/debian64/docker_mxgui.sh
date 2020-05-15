@@ -1,5 +1,5 @@
 #!bin/bash
-containername="mcxtrace:1.5"
+containername="mcxtrace-1.5:1.0"
 XSOCK=/tmp/.X11-unix
 
 
