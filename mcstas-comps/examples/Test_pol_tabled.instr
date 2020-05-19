@@ -17,8 +17,6 @@
 * at entry and flips to l0 \mu T along the negative z-axis halfway through
 *
 * %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=1.0
-*   N.b. this example will not be run by autotest since it reuireq the presence of the file
-*    flipfield.dat in the working directory.
 *
 * %Parameters
 *
@@ -39,9 +37,6 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  printf("N.B. This example instrument requires that the file %s is present in the working directory\n",MF);
-  printf("     If you get errors - check that this is so\n");
-  printf("     The default file is located in the McStas data directory - on UNIX this is usually /usr/local/lib/mcstas-2.0/data.\n");
 %}
 
 /* Here comes the TRACE section, where the actual      */
