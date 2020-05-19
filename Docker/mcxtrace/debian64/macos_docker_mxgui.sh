@@ -9,6 +9,6 @@ DOCK_GID=$(id -g)
 docker image build --tag $containername .
 xhost +
 #a simple version with out xauth gynmastics
-docker run -u docker -ti -e DISPLAY=host.docker.internal:0 $containername /usr/bin/mxgui
+docker run -v $HOME/dockerhome:/home/docker -u docker -ti -e DISPLAY=host.docker.internal:0 $containername /usr/bin/mxgui
 
 
