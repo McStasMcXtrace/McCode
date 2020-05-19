@@ -108,7 +108,7 @@ def _monitorname_filename_match(dfolder, monname):
     look_for_filename = False
     lns = open(join(dfolder, "mccode.sim")).read().splitlines()
     for l in lns:
-        if re.match("  component: %s" % monname, l):
+        if re.match("  component: %s$" % monname, l):
             # flag this data section 
             look_for_filename = True
         if look_for_filename:
