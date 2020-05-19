@@ -19,7 +19,7 @@
 * WARNING: Result of test no. 1 for Source_adapt.comp is not correct if MPI is used, as
 * that source component does not support MPI.
 *
-* %Example: source=1 Detector: m1_I=9.97273e+11
+* Example: source=1 Detector: m1_I=9.97273e+11
 * %Example: source=2 Detector: m1_I=9.48467e+11
 * %Example: source=3 Detector: m1_I=9.96553e+11
 * %Example: source=4 Detector: m1_I=9.966e+11
