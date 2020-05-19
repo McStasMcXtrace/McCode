@@ -142,6 +142,9 @@ SAVE
       continue;
 
     PolL_p[i]  /= HelpArray[i];
+#ifdef USE_MPI
+    PolL_p[i]  /= mpi_node_count;
+#endif
     // Mcstas uses the error sigma**2=sum p_i**2 for intensities
     // But here we have the mean so the error**2 should be VAR/N:
     // sigma**2 = [sum s_i*s_i*p_i/sum p_i - (sum s_i*p_i/sum p_i)**2]/N
