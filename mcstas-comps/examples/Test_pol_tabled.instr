@@ -62,7 +62,13 @@ COMPONENT src = Source_simple(
     radius = 0.02, dist = 5, focus_xw = 0.1, focus_yh = 0.1,
     lambda0 = 5, dlambda = 4.99)
   AT (0, 0, 0) RELATIVE Origin
-
+EXTEND %{
+#ifdef USE_MPI
+  // As a workaround, lower weight by # MPI processes
+  p /= mpi_node_count;
+#endif
+%}
+  
 COMPONENT setpol = Set_pol(
     px = 0, py = 1, pz = 0)
   AT (0, 0, 1) RELATIVE src
