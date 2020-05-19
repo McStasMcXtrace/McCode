@@ -49,7 +49,7 @@
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (string spectrum_file=NULL)
   SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
-  dist=0, focus_xw=.045, focus_yh=.12, 
+  dist=1, focus_xw=.045, focus_yh=.12, focus_r=0,
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,randomphase=1,phase=0)
 OUTPUT PARAMETERS (prms,square,pmul, srcArea)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -93,8 +93,8 @@ INITIALIZE
            NAME_CURRENT_COMP);
     exit(-1);
   }
-  if (dist <= 0 || focus_xw <= 0 || focus_yh <= 0) {
-    printf("ERROR: Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n Exiting\n",
+  if (dist <= 0 || !( focus_r>0 || focus_xw>0 || focus_yh>0 )) {
+    printf("ERROR: Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh / focus_r)\n Exiting\n",
            NAME_CURRENT_COMP);
     exit(-1);
   }
@@ -149,9 +149,12 @@ TRACE
     x=r*cos(chi);
     y=r*sin(chi);
   }
-  randvec_target_rect_real(&xf, &yf, &rf, &pdir,
-      0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
-
+  if(!focus_r){
+    randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+        0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+  }else{
+    randvec_target_circle(&xf,&yf,&rf, &pdir,0,0,dist, focus_r);
+  }
   dx = xf-x;
   dy = yf-y;
   rf = sqrt(dx*dx+dy*dy+dist*dist);
