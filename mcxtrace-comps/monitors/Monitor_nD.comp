@@ -48,7 +48,7 @@
 * If no limits are specified for a given observable, reasonable defaults will be
 * applied. Note that these implicit limits are <b>even</b> applied in list mode. 
 *
-* <b>Implicit limits for typical variables:<b>
+* <b>Implicit limits for typical variables:</b>
 * (consult monitor_nd-lib.c if you don't find your variable here)
 * x, y, z: Derived from detection-object geometry
 * k: [0 10] Angs-1
