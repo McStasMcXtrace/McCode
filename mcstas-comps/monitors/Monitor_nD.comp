@@ -60,6 +60,8 @@
 * vz: [0 10000] m/s
 * kx, ky: [-1 1] Angs-1
 * kz: [-10 10] Angs-1
+* energy, omega: [0 100] meV
+* lambda,wavelength: [0 100] Angs
 * sx, sy, sz: [-1 1] in polarisation-units
 * angle: [-50 50] deg
 * divergence, vdiv, hdiv, xdiv, ydiv: [-5 5] deg
