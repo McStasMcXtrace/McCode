@@ -25,7 +25,7 @@
 * %Example: source=4 Detector: m1_I=9.966e+11
 * %Example: source=5 Detector: m1_I=2.4279e+11
 * %Example: source=6 Detector: m1_I=2.42284e+11
-* %Example: source=7 Detector: m1_I=2.2362e+11
+* %Example: source=7 Detector: m1_I=2.28139e+13
 * %Example: source=8 Detector: m1_I=5.0787e+13
 *
 * %Parameters
@@ -38,6 +38,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_Sources(int source=0, Lmin=1, Lmax=11)
+DEPENDENCY "-Mnollvm"
 
 DECLARE
 %{
