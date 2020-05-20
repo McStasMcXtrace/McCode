@@ -47,7 +47,26 @@
 * limits=[-5 5]) When placed after all variables,  these two latter modifiers
 * apply to the signal (e.g. intensity). Unknown keywords are ignored.
 * If no limits are specified for a given observable, reasonable defaults will be
-* applied. Not that this is the case also in list mode. 
+* applied. Note that these implicit limits are <b>even</b> applied in list mode. 
+*
+* <b>Implicit limits for typical variables:<b>
+* (consult monitor_nd-lib.c if you don't find your variable here)
+* x, y, z: Derived from detection-object geometry
+* k: [0 10] Angs-1
+* v: [0 1e6] m/s
+* t: [0 1] s
+* p: [0 FLT_MAX] in intensity-units
+* vx, vy: [-1000 1000] m/s
+* vz: [0 10000] m/s
+* kx, ky: [-1 1] Angs-1
+* kz: [-10 10] Angs-1
+* sx, sy, sz: [-1 1] in polarisation-units
+* angle: [-50 50] deg
+* divergence, vdiv, hdiv, xdiv, ydiv: [-5 5] deg
+* longitude, lattitude: [-180 180] deg
+* neutron: [0 simulaton_ncount]
+* id, pixel id: [0 FLT_MAX]
+* uservars u1,u2,u3: [-1e10 1e10]
 *
 * In the case of multiple components at the same position, the 'parallel'
 * keyword must be used in each instance instead of defining a GROUP.
