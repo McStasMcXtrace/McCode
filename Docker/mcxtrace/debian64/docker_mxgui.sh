@@ -1,12 +1,12 @@
 #!bin/bash
-containername="mcxtrace-1.5:1.0"
+containername="mccode/mcxtrace-1.5:1.0"
 XSOCK=/tmp/.X11-unix
 
 
 DOCK_UID=$(id -u)
 DOCK_GID=$(id -g)
 
-docker image build --tag $containername .
+#docker image build --tag $containername .
 
 #a simple version with out xauth gynmastics
 #docker run -u docker -ti -e DISPLAY=$DISPLAY -v $XSOCK:$XSOCK $containername /usr/bin/mxgui
