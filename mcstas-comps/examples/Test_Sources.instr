@@ -29,7 +29,7 @@
 * %Example: source=8 Detector: m1_I=5.0787e+13
 *
 * %Parameters
-* source: [1]  selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
+* source: [1]  selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_butterfly, 8=Moderator
 * Lmin: []
 * Lmax: []
 * Lmin: []
@@ -61,7 +61,7 @@ INITIALIZE
   case 6:
     printf("Using Source_Maxwell_3\n"); break;
   case 7:
-    printf("Using ESS_moderator_long\n"); break;
+    printf("Using ESS_butterfly\n"); break;
   case 8:
     printf("Using Moderator\n"); break;
   }
@@ -77,12 +77,6 @@ COMPONENT Origin = Progress_bar()
 AT (0, 0, 0) ABSOLUTE
 
 /* the sources ============================================================== */
-COMPONENT sa1 = Source_adapt( /* flux in n/s/cm2/st/AA */
-  xwidth=0.01, yheight=0.01,
-  dist=1, focus_xw=0.1, focus_yh=0.1,
-  lambda0=Lambda0, dlambda=dLambda, flux=1e13
-) WHEN (source == 1)
-AT (0,0,0) ABSOLUTE
 
 COMPONENT sa2 = Source_div(  /* flux in n/s/cm2/st/AA */
   xwidth=0.01, yheight=0.01, focus_aw=2*RAD2DEG*atan(0.1/1.0/2), focus_ah=2*RAD2DEG*atan(0.1/1.0/2), lambda0=Lambda0, dlambda=dLambda, gauss=0, flux=1e13
@@ -117,12 +111,9 @@ COMPONENT sa6 = Source_Maxwell_3( /* flux in n/s/cm2/st/AA */
 ) WHEN (source == 6)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT sa7 = ESS_moderator_long(  /* flux in n/s/cm2/st/AA */
-  Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1,
-  yheight=0.01, width_c=0.01, cyl_radius=0, nu = 1000.0/60.0, T = 50, tau = 287e-6, tau1 = 0,
-  tau2 = 20e-6, d =0.002, n = 20, n2 = 5, chi2 = 0.9,
-  I0 = 6.9e11, I2 = 27.6e10, branch1 = 1, branch2 = 0.5,
-  branch_tail = 0.1) WHEN (source == 7)
+COMPONENT sa7 = ESS_butterfly(sector="W",beamline=8,
+  Lmin=Lmin, Lmax=Lmax, dist=1, focus_xw=0.1, focus_yh=0.1
+) WHEN (source == 7)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT sa8 = Moderator( /* flux in n/s/cm2/st */
@@ -132,11 +123,6 @@ COMPONENT sa8 = Moderator( /* flux in n/s/cm2/st */
 AT (0,0,0) ABSOLUTE
 
 /* the monitor ============================================================== */
-COMPONENT a1 = Adapt_check(
-  source_comp="sa1"
-) WHEN (source == 1)
-AT (0,0,1) ABSOLUTE
-
 COMPONENT m1 = Monitor_nD(
   xwidth=0.1, yheight=0.1,
   options="auto lambda", bins=40
