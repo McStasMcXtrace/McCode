@@ -134,7 +134,7 @@ INITIALIZE
   if (header_parsed[2]){prms->rho=strtod(header_parsed[2],NULL);}
   else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);prms->rho=1;}
 
-  /*If we are uising a 3-column format assume only attenuation
+  /*If we are using a three column format assume only attenuation
    I.e. set the delta prefactor to 0*/
   if (prms->table.columns==3){
     prms->mu_c=1;
