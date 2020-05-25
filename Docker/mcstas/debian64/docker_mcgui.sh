@@ -1,4 +1,4 @@
-#!bin/bash
+#!/usr/bin/env bash
 containername="mccode/mcstas-2.6.1:1.0"
 XSOCK=/tmp/.X11-unix
 

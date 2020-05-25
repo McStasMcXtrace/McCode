@@ -1,4 +1,4 @@
-#!bin/bash
+#!/usr/bin/env bash
 containername="mccode/mcxtrace-1.5:1.0"
 XSOCK=/tmp/.X11-unix
 
