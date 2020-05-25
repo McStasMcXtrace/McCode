@@ -5,6 +5,10 @@ Simply run the script docker_mcgui
 - Matplotlib plotting works
 - Mounts the users home directory as the home directory for the docker run.
 
+# On windows you will also need
+- To install Docker Desktop
+- To install Xming
+- Set your user homedir among the docker shared folders
 
 ## TODO still
 1. Change to use the users username etc instead of docker
