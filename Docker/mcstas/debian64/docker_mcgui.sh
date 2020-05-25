@@ -12,6 +12,14 @@ DOCK_GID=$(id -g)
 #docker run -u docker -ti -e DISPLAY=$DISPLAY -v $XSOCK:$XSOCK $containername /usr/bin/mcgui
 
 #more sophisticated version which seem to work
-XAUTH=/tmp/.docker.xauth
-xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
-docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e DISPLAY=$DISPLAY -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH --device /dev/dri $containername mcgui
+export XAUTH=/tmp/.docker.xauth
+
+# Different handling of xauth and --dev on linux than macOS
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  export DEVICESTRING="--device /dev/dri"
+  export DISPLAYVAR=$DISPLAY  
+fi
+
+xauth nlist $DISPLAYVAR | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
+
+docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e DISPLAY=host.docker.internal:0 -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING $containername mcgui
