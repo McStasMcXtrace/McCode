@@ -19,17 +19,11 @@ Simply run the script ```docker_mxgui.sh```, this will pull an image from docker
 ## The McStas debian based docker
 Simply run the script ```docker_mcgui.sh```, this will pull an image from dockerhub and cache it locally.
 
-In both cases this will:
+**In both cases:**
 - You will run as the user "docker" inside the docker.
-when run on a Mac OSX host.
-- PyQt-plotting works
-- Matplotlib plotting works
 - Mounts the users home directory as the home directory for the docker run.
 
 # On windows you will also need
 - To install Docker Desktop
 - To install Xming
 - Set your user homedir among the docker shared folders
-
-# TODO still
-1. Change to use the users username etc instead of docker
