@@ -12,12 +12,17 @@ The punctuation mark at the end, is necessary to tell docker where to find the
 # To push the image to dockerhub:
 ```docker image push mccode/FLAVOUR-VERSION:IMAGEVERSION```
 
-# To run 
-## The McXtrace debian based docker
+## The McXtrace debian based docker on Linux / macOS:
 Simply run the script ```docker_mxgui.sh```, this will pull an image from dockerhub and cache it locally.
 
-## The McStas debian based docker
+## The McXtrace debian based docker on Windows:
+Simply run the script ```docker_mxgui.bat```, this will pull an image from dockerhub and cache it locally.
+
+## The McStas debian based docker on Linux /macOS:
 Simply run the script ```docker_mcgui.sh```, this will pull an image from dockerhub and cache it locally.
+
+## The McStas debian based docker on Windows:
+Simply run the script ```docker_mcgui.bat```, this will pull an image from dockerhub and cache it locally.
 
 **In both cases:**
 - You will run as the user "docker" inside the docker.
