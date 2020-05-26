@@ -25,4 +25,4 @@ fi
 
 xauth nlist $DISPLAYVAR | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
 
-docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e LIBGL_ALWAYS_SOFTWARE=1 -e DISPLAY=${DISPLAY_TO_USE} -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING $containername mcgui
+docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e DISPLAY=${DISPLAY_TO_USE} -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING $containername mcgui
