@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-containername="mccode/mcstas-2.6.1:1.0"
+containername="mccode/mcstas-2.6.1:1.1"
 XSOCK=/tmp/.X11-unix
 
 
 DOCK_UID=$(id -u)
 DOCK_GID=$(id -g)
 
-#docker image build --tag $containername .
+docker image build --tag $containername .
 
 #a simple version with out xauth gynmastics
 #docker run -u docker -ti -e DISPLAY=$DISPLAY -v $XSOCK:$XSOCK $containername /usr/bin/mcgui
@@ -25,4 +25,4 @@ fi
 
 xauth nlist $DISPLAYVAR | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
 
-docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e DISPLAY=${DISPLAY_TO_USE} -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING $containername mcgui
+docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e LIBGL_ALWAYS_SOFTWARE=1 -e DISPLAY=${DISPLAY_TO_USE} -v $XSOCK:$XSOCK -v $XAUTH:$XAUTH -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING $containername mcgui
