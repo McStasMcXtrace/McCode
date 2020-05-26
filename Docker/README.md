@@ -14,10 +14,10 @@ The punctuation mark at the end, is necessary to tell docker where to find the
 
 # To run 
 ## The McXtrace debian based docker
-Simply run the script docker_mxgui.sh, this will pull an image from dockerhub and cache it locally.
+Simply run the script ```docker_mxgui.sh```, this will pull an image from dockerhub and cache it locally.
 
 ## The McStas debian based docker
-Simply run the script docker_mcgui.sh, this will pull an image from dockerhub and cache it locally.
+Simply run the script ```docker_mcgui.sh```, this will pull an image from dockerhub and cache it locally.
 
 In both cases this will:
 - You will run as the user "docker" inside the docker.
