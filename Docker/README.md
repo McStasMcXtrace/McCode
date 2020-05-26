@@ -23,6 +23,10 @@ Simply run the script ```docker_mcgui.sh```, this will pull an image from docker
 - You will run as the user "docker" inside the docker.
 - Mounts the users home directory as the home directory for the docker run.
 
+# On macOS you will also need
+- To install Docker Desktop for macOS
+- To install XQuartz
+
 # On windows you will also need
 - To install Docker Desktop
 - To install Xming
