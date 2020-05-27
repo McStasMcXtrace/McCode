@@ -20,4 +20,4 @@ fi
 
 xauth nlist $DISPLAYVAR | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
 
-docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -v $XSOCK:$XSOCK -v XAUTH:$XAUTH -e DISPLAY:${DISPLAY_TO_USE} -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING -p 8080:8080 $containername jupyter notebook --no-browser --ip 0.0.0.0 --port 8080 /home/mcstasscript
+docker run -u docker -ti -e QT_X11_NO_MITSHM=1 -e JUPYTER_RUNTIME_DIR=/tmp -v $XSOCK:$XSOCK -v XAUTH:$XAUTH -e DISPLAY:${DISPLAY_TO_USE} -v $HOME:/home/docker -e XAUTHORITY=$XAUTH $DEVICESTRING -p 8080:8080 $containername jupyter notebook --no-browser --ip 0.0.0.0 --port 8080 /home/mcstasscript
