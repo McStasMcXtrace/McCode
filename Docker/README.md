@@ -28,14 +28,17 @@ Simply run the script ```docker_mcgui.bat```, this will pull an image from docke
 - You will run as the user "docker" inside the docker.
 - Mounts the users home directory as the home directory for the docker run.
 
+# On Linux you will also need
+- To install Docker for your variant of Linux
+
 # On macOS you will also need
-- To install Docker Desktop for macOS
-- To install XQuartz
+- To install [Docker Desktop for macOS](https://docs.docker.com/docker-for-mac/install/)
+- To install [XQuartz](https://www.xquartz.org)
 - Use the [XQuartz preferences](https://raw.githubusercontent.com/McStasMcXtrace/McCode/master/Docker/images/XQuartz-prefs.png) pane to ["Allow connections from network clients"](https://raw.githubusercontent.com/McStasMcXtrace/McCode/master/Docker/images/Allow-connections-from-network-clients.png)
 
 # On windows you will also need
-- To install Docker Desktop
-- To install Xming
+- To install [Docker Desktop](https://docs.docker.com/docker-for-windows/install/)
+- To install [Xming](https://sourceforge.net/projects/xming/files/latest/download)
 - Create the subfolder McXtrace-dockers and / or McStas-dockers  in
   your homedir
 - Set your user homedir/the above folder among the docker shared folders
