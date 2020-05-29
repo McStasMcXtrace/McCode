@@ -41,4 +41,4 @@ Simply run the script ```docker_mcgui.bat```, this will pull an image from docke
 - To install [Xming](https://sourceforge.net/projects/xming/files/latest/download)
 - Create the subfolder McXtrace-dockers and / or McStas-dockers  in
   your homedir
-- Set your user homedir/the above folder among the docker shared folders
+- Set your [user homedir/the above folder](https://raw.githubusercontent.com/McStasMcXtrace/McCode/master/Docker/images/Docker-resources-file-sharing.png) among the docker shared folders
