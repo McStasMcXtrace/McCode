@@ -31,6 +31,7 @@ Simply run the script ```docker_mcgui.bat```, this will pull an image from docke
 # On macOS you will also need
 - To install Docker Desktop for macOS
 - To install XQuartz
+- Use the [XQuartz preferences](https://raw.githubusercontent.com/McStasMcXtrace/McCode/master/Docker/images/XQuartz-prefs.png) pane to ["Allow connections from network clients"](https://github.com/McStasMcXtrace/McCode/raw/master/Docker/images/XQuartz-prefs.png)
 
 # On windows you will also need
 - To install Docker Desktop
