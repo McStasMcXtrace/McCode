@@ -29,7 +29,7 @@ Simply run the script ```docker_mcgui.bat```, this will pull an image from docke
 - Mounts the users home directory as the home directory for the docker run.
 
 # On Linux you will also need
-- To install Docker for your variant of Linux
+- To [install Docker for your variant of Linux](https://docs.docker.com/engine/install/#server)
 
 # On macOS you will also need
 - To install [Docker Desktop for macOS](https://docs.docker.com/docker-for-mac/install/)
