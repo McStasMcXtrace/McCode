@@ -35,4 +35,6 @@ Simply run the script ```docker_mcgui.bat```, this will pull an image from docke
 # On windows you will also need
 - To install Docker Desktop
 - To install Xming
-- Set your user homedir among the docker shared folders
+- Create the subfolder McXtrace-dockers and / or McStas-dockers  in
+  your homedir
+- Set your user homedir/the above folder among the docker shared folders
