@@ -3150,6 +3150,48 @@ int solve_2nd_order(double *t1, double *t2,
   return(ret);
 } /* solve_2nd_order */
 
+int solve_2nd_order_improved(double *t0, double *t1, double A, double B, double C){
+  int retval=0;
+  double sign=copysign(1.0,B);
+  double dt0,dt1;
+
+  if(t1==NULL){
+    return 0;
+  }
+  dt0=0;
+  dt1=0;
+
+  if(A==0){
+    /*equation is linear*/
+    dt0=-C/B;
+    retval=1;
+  }else if (C==0){
+    /*one root is 0*/
+    if(sign<0){
+      dt0=0;dt1=-B/A;
+    }else{
+      dt0=-B/A;dt1=0;
+    }
+    retval=2;
+  }else{
+    /*a regular eq.*/
+    double D;
+    D=B*B-4*A*C;
+    if (D>=0){
+      dt0=(-B - sign*sqrt(B*B-4*A*C))/(2*A);
+      dt1=C/(A*dt0);
+    }else{
+      retval=0;
+    }
+
+  }
+  *t0=dt0;
+  *t1=dt1;
+  return retval;
+
+} /*solve_2nd_order_improved*/
+
+
 /*******************************************************************************
  * randvec_target_circle: Choose random direction towards target at (x,y,z)
  * with given radius.
