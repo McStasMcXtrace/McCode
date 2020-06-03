@@ -33,19 +33,32 @@
 * ymax: [m] upper bound of mirror in y ( height/2.0)
 * zmin: [m] lower bound of mirror in z (-depth/2.0)
 * zmax: [m] upper bound of mirror in z ( depth/2.0)
+
+* OUTPUT PARAMETERS
+* xmax: [m] Mirrors' extent along x.
+* zmax: [m] Mirrors' extent along z.
 * %E
 *******************************************************************************/
 
 
 DEFINE COMPONENT Mirror_parabolic
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=1, a=1, b=1, xmin=-1, xmax=1, ymin=0, ymax=1, zmin=-1, zmax=1)
-OUTPUT PARAMETERS (a2inv,b2inv,focus)
+  SETTING PARAMETERS (R=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0)
+OUTPUT PARAMETERS (a2inv,b2inv,xmax,zmax, focus)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+
+
+%}
+
 
 DECLARE
 %{
   double a2inv,b2inv, focus;
+  double xmax,zmax;
+
 %}
 
 INITIALIZE
@@ -57,99 +70,88 @@ INITIALIZE
 
 TRACE
 %{
-  double A,B,C,D2,kxu, kyu, kzu;
-  double l0,l1;
+  int status;
+  double l0,l1,sx,sz;
+  double nx,ny,nz,zz;
   do {
-      kxu=kx; kyu=ky; kzu=kz; NORM(kxu, kyu, kzu);
-      A=kzu*kzu*a2inv + kxu*kxu*b2inv;
-      B=2*(z*kzu*a2inv + x*kxu*b2inv) - kyu ;
-      C=z*z*a2inv + x*x*b2inv - y;
+    if (b==0 && kx==0 && ky==0){
+      /*k || z and mirror invariant in z*/
+      zz=x*x*a2inv;
+      if(fabs(z-zz)<=yheight){
+        ABSORB;
+      }
+    }
+    if (a==0 && ky==0 && kz==0){
+      /*k || x and mirror invariant in x*/
+      zz=y*y*b2inv;
+      if(fabs(z-zz)<=yheight){
+        ABSORB;
+      }
+    }
 
-      D2= (B*B-4*A*C);
-      if (D2<0) break;
 
-      l0=(-B + sqrt(D2) ) / (2*A);
-      l1=(-B - sqrt(D2) ) / (2*A);
-#ifdef MCDEBUG
-          fprintf(stderr, "\n\nMIRROR \"%s\" k=(%g,%g,%g), x=(%g,%g,%g) \n", NAME_CURRENT_COMP, kx, ky, kz, x, y, z);
-          fprintf(stderr, "mirror computation: A= %g, B=%g, C=%g, D2=%g, l0=%g, l1=%g \n", A, B, C, D2,l0,l1);
-#endif
 
-      double xt0=x+l0*kxu, yt0=y+l0*kyu, zt0=z+l0*kzu; /* l0 intersection with mirror */
-      double xt1=x+l1*kxu, yt1=y+l1*kyu, zt1=z+l1*kzu; /* l1 intersection with mirror */
-      /* now, check given mirror bounds and see which of these is on the mirror */
-      if ( l0 > 0 && (xt0>xmin && xt0<xmax) && (yt0>ymin && yt0<ymax) && (zt0>zmin && zt0<zmax ) ){
-          /* valid solution on this branch */
-          PROP_DL(l0);
-      } else if ( l1 > 0 && (xt1>xmin && xt1<xmax) && (yt1>ymin && yt1<ymax) && (zt1>zmin && zt1<zmax ) ){
-          /* valid solution on this branch  */
-          PROP_DL(l1);
+    /*The intersect routine assumes a parabola opening towards positive z
+     so swap y and z.*/
+    status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
+    
+    if (status){
+      /*if l0==0, assume that we should pick l1 instead (if it is positive).*/
+      if (l0>0){
+        PROP_DL(l0);
+      } else if (l1>0) {
+        PROP_DL(l1);
       } else {
-	RESTORE;
+        /*both l0 and l1 <=0*/
+        status=0;break;
+      }
+       /*need a check fro mirror limits here*/
+      if(a!=0){
+        sx= (a*a)/2.0 * ( x*a2inv * sqrt( (2*x*a2inv)*(2*x*a2inv) + 1) + asinh(2*x*a2inv)/2.0 );
+      }else{
+        sx=fabs(x);
+      }
+      if(b!=0){
+        sz= (b*b)/2.0 * ( z*b2inv * sqrt( (2*z*b2inv)*(2*z*b2inv) + 1) + asinh(2*z*b2inv)/2.0 );
+      }else{
+        sz=fabs(z);
+      }
+      
+      if( sx>xwidth/2.0 || sz>zdepth/2.0 ){
+        /*Path length to either x or z coordinate bigger than mirror limits
+         * => we have missed the mirror.*/
+        RESTORE_XRAY(INDEX_CURRENT_COMP,x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
+        status=0;
         break;
       }
-#ifdef MCDEBUG
-          fprintf(stderr, "\n\nmirror \"%s\" at surface: k=(%g,%g,%g), x=(%g,%g,%g) \n", NAME_CURRENT_COMP, kx, ky, kz, x, y, z);
-#endif
-       SCATTER;
-      /*reflect ray "through" normal vector of tangent plane at x,y,z (as photon is now at the mirror surface)*/
-      /* note that since the mirror surface is defined by x^2/b^2 + z^2/a^2 - y = 0, the gradient (surface normal) is (2x/b^2, -1, 2z/a^2) */
-      double nx,ny,nz;
-      nx=2*x*b2inv;ny=-1;nz=2*z*a2inv;
-      NORM(nx,ny,nz);
-      double kdotn=scalar_prod(nx,ny,nz,kx,ky,kz);
-      kx-=2*nx*kdotn;
-      ky-=2*ny*kdotn;
-      kz-=2*nz*kdotn;
-#ifdef MCDEBUG
-         fprintf(stderr, "kfinal=(%g,%g,%g)\n", kx, ky, kz);
-#endif
 
-      /*adjust weight of ray*/
+      /*reflect in normal - again swap y and z.*/
+      paraboloid_normal(&nx,&nz,&ny, x,z,y, a,b,1);
+
+      printf("DEBUG: %g %g %g     %g %g %g",x,y,z,nx,ny,nz);
+
+      double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+      if (s!=0){
+        kx -= s*2*nx;
+        ky -= s*2*ny;
+        kz -= s*2*nz;
+      }
+      SCATTER;
+
       p*=R;
       /*update phase - as an approximation turn by 180 deg.*/
       phi+=M_PI;
-   }  while (D2 > 0); /* keep trying as long as a bounce is available */
+    }
+  }while(status);
 
+  PROP_DL(0.1);
+  printf("    DEBUG2: %g %g %g     %g %g %g\n",x,y,z,nx,ny,nz);
+
+ 
 %}
 
 MCDISPLAY
 %{
-  int i,j,N=50;
-  double t,xx,yy,zz,xx0,yy0,zz0, boxsize;
-  /* printf("plot params (%f %f %f) (%f %f %f) %f %f\n", x_a, y_b, z_c, a2, b2, c2, width, length); */
-  /* xmin, xmax, ymin and ymax are used to set the bounds to plot */
-  double zzmin=a*sqrt(ymin), zzmax=a*sqrt(ymax), dzz=(zzmax-zzmin);
-  for (j=0;j<N;j++){
-    zz=j*dzz/(N-1)+zzmin;
-    yy=zz*zz*a2inv;
-    if(j && zmax > 0) multiline(5,
-        xmin,yy0,zz0,
-        xmax,yy0,zz0,
-        xmax, yy,zz,
-        xmin, yy,zz,
-        xmin,yy0,zz0); /* draw a rectangular slice of the mirror */
-   if(j && zmin < 0) multiline(5,
-        xmin,yy0,-zz0,
-        xmax,yy0,-zz0,
-        xmax, yy,-zz,
-        xmin, yy,-zz,
-        xmin,yy0,-zz0); /* draw a rectangular slice of the mirror */
-    zz0=zz;
-    yy0=yy;
-  }
-  /* draw a little box and crosshair at the focus  */
-  boxsize=(xmax-xmin)/20.;
-  multiline(8,
-     0.,  boxsize+focus,  boxsize,
-     0., -boxsize+focus,  boxsize,
-     0., -boxsize+focus, -boxsize,
-     0.,  boxsize+focus, -boxsize,
-     0.,  boxsize+focus,  boxsize,
-     0., -boxsize+focus, -boxsize,
-     0., -boxsize+focus,  boxsize,
-     0.,  boxsize+focus, -boxsize
-     );
 %}
 
 END
