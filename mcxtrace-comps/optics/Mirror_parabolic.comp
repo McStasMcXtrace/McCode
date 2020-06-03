@@ -19,21 +19,18 @@
 * Takes a reflectivity (default=1) as input and reflects rays in a ideal geometry
 * parabolic mirror. The mirror is positioned in the zx-plane curving towards positive y.
 * I.e. the focal point is (0,0,f(a,b))
-* Parabola is y = z^2 / a^2 + x^2 / b^2
-* the focal length for the 'z' curve is f=a^2 / 4
+* The geometry of the paraboloid is governed by the equation: y = x^2 / a^2 + z^2 / b^2
+* Hence, the focal length for the 'x' curve is f=a^2 / 4, and analogous for z.
 *
 * %P
 * INPUT PARAMETERS
-* R: [1] reflectivity of mirror.
-* a: [sqrt(m)] (z) primary axis curvature scale
-* b: [sqrt(m)] (x) curvature scale, if zero, flat in x.
-* xmin: [m] lower bound of mirror in x (-width/2.0)
-* xmax: [m] upper bound of mirror in x ( width/2.0)
-* ymin: [m] lower bound of mirror in y (-height/2.0)
-* ymax: [m] upper bound of mirror in y ( height/2.0)
-* zmin: [m] lower bound of mirror in z (-depth/2.0)
-* zmax: [m] upper bound of mirror in z ( depth/2.0)
-
+* R: [1]       Reflectivity of mirror.
+* a: [sqrt(m)]       Transverse curvature scale, if zero - the mirror is flat along x.
+* b: [sqrt(m)]       Longitudinal curvature scale, if zero, flat along z.
+* xwidth: [m]  Width of mirror.
+* zdepth: [m]  Length of mirror.
+* yheight: [m] Thickness of mirror. If 0 (the default) the mirror is mathemticlly thin. Only has an effect for hitting the mirror from the side.
+* 
 * OUTPUT PARAMETERS
 * xmax: [m] Mirrors' extent along x.
 * zmax: [m] Mirrors' extent along z.
@@ -43,20 +40,19 @@
 
 DEFINE COMPONENT Mirror_parabolic
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (R=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0)
-OUTPUT PARAMETERS (a2inv,b2inv,xmax,zmax, focus)
+SETTING PARAMETERS (R=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0)
+OUTPUT PARAMETERS (a2inv,b2inv,xmax,zmax, focusx,focusz)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
-
 
 %}
 
 
 DECLARE
 %{
-  double a2inv,b2inv, focus;
+  double a2inv,b2inv, focusx,focusz;
   double xmax,zmax;
 
 %}
@@ -65,7 +61,8 @@ INITIALIZE
 %{
   a2inv=1/(a*a);
   b2inv=(b!=0)?(1.0/(b*b)):0; /* if b==0, it is really infinity */
-  focus=a*a/4.0;
+  focusx=a*a/4.0;
+  focusz=b*b/4.0;
 %}
 
 TRACE
@@ -144,7 +141,7 @@ TRACE
     }
   }while(status);
 
-  PROP_DL(0.1);
+  //PROP_DL(0.1);
   printf("    DEBUG2: %g %g %g     %g %g %g\n",x,y,z,nx,ny,nz);
 
  
@@ -152,6 +149,33 @@ TRACE
 
 MCDISPLAY
 %{
+  const int Ni=5;
+  const int Nj=5;
+
+  double dx=xwidth/(Ni);
+  double dz=zdepth/(Nj);
+  double x0,x1,z0,z1,y[4];
+  int i,j;
+
+  /*approximate the mirror bounds by width and depth to avoid inverting the sx and sz functions*/
+  for (i=0;i<Ni;i++){
+    x0=i*dx - xwidth/2.0;
+    x1=(i+1)*dx - xwidth/2.0;
+    for (j=0;j<Nj;j++){
+      z0=j*dz - zdepth/2.0;
+      z1=(j+1)*dz - zdepth/2.0;
+      y[0]=x0*x0*a2inv + z0*z0*b2inv;
+      y[1]=x1*x1*a2inv + z0*z0*b2inv;
+      y[2]=x0*x0*a2inv + z1*z1*b2inv;
+      y[3]=x1*x1*a2inv + z1*z1*b2inv;
+    
+      line(x0,y[0],z0, x1,y[1],z0);
+      line(x0,y[0],z0, x0,y[2],z1);
+      if(i==Ni-1) line(x1,y[1],z0, x1,y[3],z1);
+      if(j==Nj-1) line(x0,y[2],z1, x1,y[3],z1);
+    }
+  }
+
 %}
 
 END
