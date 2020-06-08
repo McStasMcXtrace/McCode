@@ -30,4 +30,4 @@ fi
 ./mkdist mcstas-tools-python-mcplot-svg 3.0-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.0-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-dev/bin/
-ln -sf  /Applications/McStas-2.6.app/Contents/Resources/mcstas/2.6/miniconda3/ $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3
+ln -sf  /Applications/McStas-2.6.1.app/Contents/Resources/mcstas/2.6.1/miniconda3/ $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3
