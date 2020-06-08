@@ -1367,9 +1367,9 @@ void def_trace_section(struct instr_def *instr)
   static char *statepars_all[] =
   { /* particle state parameter names are used for defines */
   #if MCCODE_PROJECT == 1     /* neutron */
-  #define NUM_STATE_PARS 11
+  #define NUM_STATE_PARS 14
           "x", "y", "z", "vx", "vy", "vz",
-          "t", "sx", "sy", "sz", "p"
+          "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
   #elif MCCODE_PROJECT == 2   /* xray */
   #define NUM_STATE_PARS 12
           "x", "y", "z", "kx", "ky", "kz",
@@ -1422,9 +1422,9 @@ void undef_trace_section(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 11
+    #define NUM_STATE_PARS 14
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
     #elif MCCODE_PROJECT == 2   /* xray */
     #define NUM_STATE_PARS 12
             "x", "y", "z", "kx", "ky", "kz",
@@ -1526,9 +1526,9 @@ int cogen_raytrace(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 11
+    #define NUM_STATE_PARS 14
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
     #elif MCCODE_PROJECT == 2   /* xray */
     #define NUM_STATE_PARS 12
             "x", "y", "z", "kx", "ky", "kz",
@@ -1806,9 +1806,9 @@ int cogen_rt_funnel(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 11
+    #define NUM_STATE_PARS 14
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
     #elif MCCODE_PROJECT == 2   /* xray */
     #define NUM_STATE_PARS 12
             "x", "y", "z", "kx", "ky", "kz",
@@ -2048,6 +2048,9 @@ cogen_header(struct instr_def *instr, char *output_name)
 #if MCCODE_PROJECT == 1   /* neutron */
   cout("  double vx,vy,vz; /* velocity [m/s] */");
   cout("  double sx,sy,sz; /* spin [0-1] */");
+  cout("  int mcgravitation; /* gravity-state */");
+  cout("  int mcMagnet;    /* precession-state */");
+  cout("  int allow_backprop; /* allow backprop */");
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
