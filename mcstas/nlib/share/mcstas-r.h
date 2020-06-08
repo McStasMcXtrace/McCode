@@ -200,7 +200,7 @@
 
 #pragma acc routine seq
 _class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-                double t, double sx, double sy, double sz, double p);
+			   double t, double sx, double sy, double sz, double p, int mcgravitation);
 
 #ifdef DEBUG
 

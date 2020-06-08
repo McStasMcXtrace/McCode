@@ -52,7 +52,7 @@ int (*mcMagneticField) (double, double, double, double,
 *******************************************************************************/
 #pragma acc routine seq
 _class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-           double t, double sx, double sy, double sz, double p)
+			   double t, double sx, double sy, double sz, double p, int mcgravitation)
 {
   _class_particle mcneutron;
 
@@ -67,6 +67,7 @@ _class_particle mcsetstate(double x, double y, double z, double vx, double vy, d
   mcneutron.sy = sy;
   mcneutron.sz = sz;
   mcneutron.p  = p;
+  mcneutron.mcgravitation = mcgravitation;
   mcneutron._uid       = 0;
   mcneutron._index     = 1;
   mcneutron._absorbed  = 0;
@@ -106,7 +107,7 @@ _class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, doub
 #pragma acc routine seq
 _class_particle mcgenstate(void)
 {
-  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,mcgravitation));
   /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
 }
 
@@ -158,7 +159,7 @@ mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
     *sz =  *dptr++;
     *p  =  *dptr;
 
-    return mcsetstate(*x, *y, *z, *vx, *vy, *vz, *t, *sx, *sy, *sz, *p);
+    return mcsetstate(*x, *y, *z, *vx, *vy, *vz, *t, *sx, *sy, *sz, *p, mcgravitation);
 } /* mcrestore_neutron */
 
 /* intersection routines ==================================================== */
