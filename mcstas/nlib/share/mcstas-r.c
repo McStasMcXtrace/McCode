@@ -52,7 +52,7 @@ int (*mcMagneticField) (double, double, double, double,
 *******************************************************************************/
 #pragma acc routine seq
 _class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-			   double t, double sx, double sy, double sz, double p, int mcgravitation)
+			   double t, double sx, double sy, double sz, double p, int mcgravitation, int mcMagnet, int mcallowbackprop)
 {
   _class_particle mcneutron;
 
@@ -68,6 +68,8 @@ _class_particle mcsetstate(double x, double y, double z, double vx, double vy, d
   mcneutron.sz = sz;
   mcneutron.p  = p;
   mcneutron.mcgravitation = mcgravitation;
+  mcneutron.mcMagnet = mcMagnet;
+  mcneutron.allow_backprop = mcallowbackprop;
   mcneutron._uid       = 0;
   mcneutron._index     = 1;
   mcneutron._absorbed  = 0;
@@ -107,8 +109,7 @@ _class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, doub
 #pragma acc routine seq
 _class_particle mcgenstate(void)
 {
-  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,mcgravitation));
-  /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
+  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));
 }
 
 /*******************************************************************************
@@ -136,31 +137,6 @@ mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
     mccoordschange_polarisation(t, sx, sy, sz);
 
 }
-
-/*******************************************************************************
-* mcrestore_neutron: restores neutron coodinates from global array
-*******************************************************************************/
-#pragma acc routine seq
-_class_particle
-mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
-               double *vx, double *vy, double *vz, double *t,
-               double *sx, double *sy, double *sz, double *p)
-{
-    double *dptr = &s[11*index];
-    *x  =  *dptr++;
-    *y  =  *dptr++;
-    *z  =  *dptr++;
-    *vx =  *dptr++;
-    *vy =  *dptr++;
-    *vz =  *dptr++;
-    *t  =  *dptr++;
-    *sx =  *dptr++;
-    *sy =  *dptr++;
-    *sz =  *dptr++;
-    *p  =  *dptr;
-
-    return mcsetstate(*x, *y, *z, *vx, *vy, *vz, *t, *sx, *sy, *sz, *p, mcgravitation);
-} /* mcrestore_neutron */
 
 /* intersection routines ==================================================== */
 
