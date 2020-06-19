@@ -3108,7 +3108,7 @@ void normal_vec(double *nx, double *ny, double *nz,
  * Without acceleration, t=-n.(r-W)/n.v
  ******************************************************************************/
 #pragma acc routine seq
-int solve_2nd_order(double *t1, double *t2,
+int solve_2nd_order_old(double *t1, double *t2,
                   double A,  double B,  double C)
 {
   int ret=0;
@@ -3150,43 +3150,80 @@ int solve_2nd_order(double *t1, double *t2,
   return(ret);
 } /* solve_2nd_order */
 
-int solve_2nd_order_improved(double *t0, double *t1, double A, double B, double C){
+int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
   int retval=0;
   double sign=copysign(1.0,B);
   double dt0,dt1;
 
-  if(t1==NULL){
-    return 0;
-  }
   dt0=0;
   dt1=0;
 
-  if(A==0){
-    /*equation is linear*/
-    dt0=-C/B;
-    retval=1;
-  }else if (C==0){
-    /*one root is 0*/
-    if(sign<0){
-      dt0=0;dt1=-B/A;
-    }else{
-      dt0=-B/A;dt1=0;
-    }
-    retval=2;
+  /*protect against rounding errors by locally equating DBL_EPSILON with 0*/
+  if (fabs(A)<DBL_EPSILON){
+    A=0;
+  }
+  if (fabs(B)<DBL_EPSILON){
+    B=0;
+  }
+  if (fabs(C)<DBL_EPSILON){
+    C=0;
+  }
+
+  /*check if coefficient are sane*/
+  if( A==0  && B==0){
+    retval=0;
   }else{
-    /*a regular eq.*/
-    double D;
-    D=B*B-4*A*C;
-    if (D>=0){
-      dt0=(-B - sign*sqrt(B*B-4*A*C))/(2*A);
-      dt1=C/(A*dt0);
+    if(A==0){
+      /*equation is linear*/
+      dt0=-C/B;
+      retval=1;
+    }else if (C==0){
+      /*one root is 0*/
+      if(sign<0){
+        dt0=0;dt1=-B/A;
+      }else{
+        dt0=-B/A;dt1=0;
+      }
+      retval=2;
+    }else if (B==0){
+      dt0=-C/A;
+      dt1= C/A;
+      retval=2;
     }else{
-      retval=0;
+      /*a regular eq.*/
+      double D;
+      D=B*B-4*A*C;
+      if (D>=0){
+        dt0=(-B - sign*sqrt(B*B-4*A*C))/(2*A);
+        dt1=C/(A*dt0);
+        retval=2;
+      }else{
+        /*no real roots*/
+        retval=0;
+      }
+    }
+    /*sort the solutions*/
+    if (retval==1){
+      /*put both solutions in t0 and t1*/
+      *t0=dt0;
+      if(t1) *t1=dt1;
+    }else{
+      /*we have two solutions*/
+      /*swap if both are positive and t1 smaller than t0 or t1 the only positive*/
+      int swap=0;
+      if(dt1>0 && ( dt1<dt0 || dt0<=0) ){
+        swap=1;
+      }
+      if (swap){
+        *t0=dt1;
+        if(t1) *t1=dt0;
+      }else{
+        *t0=dt0;
+        if(t1) *t1=dt0;
+      }
     }
 
   }
-  *t0=dt0;
-  *t1=dt1;
   return retval;
 
 } /*solve_2nd_order_improved*/

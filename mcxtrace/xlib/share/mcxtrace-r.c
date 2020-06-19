@@ -435,7 +435,7 @@ paraboloid_intersect(double *l0, double *l1, double x, double y, double z,
   B=sign*2*kx*x*a2i + sign*ky*y*b2i - kz;
   C=sign*x*x*a2i + sign*y*y*b2i - z;
 
-  retval=solve_2nd_order_improved(l0,l1,A,B,C);
+  retval=solve_2nd_order(l0,l1,A,B,C);
   /*convert to solution in m*/
   *l0 *= k; *l1 *=k;
   return retval;
