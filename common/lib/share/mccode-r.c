@@ -3157,6 +3157,8 @@ int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
 
   dt0=0;
   dt1=0;
+  *t0;
+  if(t1){ *t1=0;}
 
   /*protect against rounding errors by locally equating DBL_EPSILON with 0*/
   if (fabs(A)<DBL_EPSILON){
@@ -3185,12 +3187,8 @@ int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
         dt0=-B/A;dt1=0;
       }
       retval=2;
-    }else if (B==0){
-      dt0=-C/A;
-      dt1= C/A;
-      retval=2;
     }else{
-      /*a regular eq.*/
+      /*a regular 2nd order eq. Also works out fine for B==0.*/
       double D;
       D=B*B-4*A*C;
       if (D>=0){
