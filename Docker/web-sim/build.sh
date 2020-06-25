@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-containername="mccode/websim:1.1"
+containername="mccode/websim:1.2"
 docker image build --tag $containername .
 
 echo Build of $containername done.
