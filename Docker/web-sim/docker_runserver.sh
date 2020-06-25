@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-containername="mccode/websim:1.2"
+containername="mccode/websim:1.3"
 
 mkdir -p $HOME/McStas-dockers/sim-local
 mkdir -p $HOME/McStas-dockers/simdata-local
