@@ -8,7 +8,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get --yes install keyboard-configuration
 RUN DEBIAN_FRONTEND=noninteractive apt-get --yes install coreutils git curl xbase-clients xdg-utils openmpi-bin libopenmpi-dev nano cpanminus
 RUN curl http://packages.mccode.org/debian/mccode.list > /etc/apt/sources.list.d/mccode.list
 RUN apt-get --yes update
-RUN apt-get --yes install mcstas-suite-python mcstas-suite-perl mcxtrace-suite-python mcxtrace-suite-perl
+RUN apt-get --yes install mcstas-suite-python mcstas-suite-perl mcxtrace-suite-python mcxtrace-suite-perl mcstas-tools-python-mcplot-svg-2.6.1
 RUN apt-get --yes install python-dev libssl-dev makepasswd
 RUN curl https://raw.githubusercontent.com/McStasMcXtrace/McCode/master/tools/Python/mcgui/mcgui.py > /usr/share/mcstas/2.6.1/tools/Python/mcgui/mcgui.py
 RUN curl https://raw.githubusercontent.com/McStasMcXtrace/McCode/master/tools/Python/mccodelib/mccode_config.py  > /usr/share/mcstas/2.6.1/tools/Python/mccodelib/mccode_config.py
@@ -31,6 +31,7 @@ RUN cd /home/docker/McWeb/mcsimrunner; sed -i "s+/srv/mcweb/McWeb/mcsimrunner/st
 RUN cd /home/docker/McWeb/mcsimrunner; sed -i "s/SANSsimple/templateSANS2/g" mcweb/settings.py
 RUN cd /home/docker/McWeb/mcsimrunner; sed -i "s/DEBUG\ =\ False/DEBUG\ =\ True/g" mcweb/settings.py
 RUN cd /home/docker/McWeb/mcsimrunner; sed -i "s/STATIC_ROOT/\#STATIC_ROOT/g" mcweb/settings.py
+RUN cd /home/docker/McWeb/mcsimrunner; sed -i "s/svg-dev/svg/g" mcweb/settings.py
 RUN cd /home/docker/McWeb/mcsimrunner; python manage.py migrate
 RUN cd /home/docker/McWeb/mcsimrunner; python manage.py collect_instr
 RUN cd /home/docker/McWeb/mcsimrunner; echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('docker', 'admin@localhost', 'docker')" | python manage.py shell
