@@ -4,7 +4,6 @@ CMD ["/sbin/my_init"]
 ENV VERSION=2.6.1
 RUN apt-get --yes update && apt-get --yes dist-upgrade
 RUN apt-get --yes install tzdata
-RUN DEBIAN_FRONTEND=noninteractive apt-get --yes install keyboard-configuration
 RUN DEBIAN_FRONTEND=noninteractive apt-get --yes install coreutils git curl xbase-clients xdg-utils openmpi-bin libopenmpi-dev nano cpanminus
 RUN curl http://packages.mccode.org/debian/mccode.list > /etc/apt/sources.list.d/mccode.list
 RUN apt-get --yes update
