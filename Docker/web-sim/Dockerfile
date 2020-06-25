@@ -36,6 +36,8 @@ RUN cd /home/docker/McWeb/mcsimrunner; python manage.py collect_instr
 RUN cd /home/docker/McWeb/mcsimrunner; echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('docker', 'admin@localhost', 'docker')" | python manage.py shell
 RUN mkdir -p /srv/mcweb && ln -sf /home/docker/McWeb/ /srv/mcweb/McWeb
 RUN chown -R docker:docker /home/docker/
-RUN cd /home/docker/McWeb/mcsimrunner; ./manage.py runworker &> workerlog
+RUN cd /home/docker/McWeb/mcsimrunner; curl http://tmp.willendrup.org/go.sh > go.sh
+RUN cd /home/docker/McWeb/mcsimrunner; cat go.sh
+RUN cd /home/docker/McWeb/mcsimrunner; chmod a+x go.sh
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
