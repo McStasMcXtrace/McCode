@@ -67,10 +67,9 @@ INITIALIZE
 
 TRACE
 %{
-  int status;
+  int status,first;
   double l0,l1,sx,sz;
   double nx,ny,nz,zz;
-  do {
     if (b==0 && kx==0 && ky==0){
       /*k || z and mirror invariant in z*/
       zz=x*x*a2inv;
@@ -86,13 +85,11 @@ TRACE
       }
     }
 
-
-
     /*The intersect routine assumes a parabola opening towards positive z
      so swap y and z.*/
+    first=1;
     status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
-    
-    if (status){
+    while(status) {
       /*if l0==0, assume that we should pick l1 instead (if it is positive).*/
       if (l0>0){
         PROP_DL(l0);
@@ -114,10 +111,12 @@ TRACE
         sz=fabs(z);
       }
       
-      if( sx>xwidth/2.0 || sz>zdepth/2.0 ){
+      if( fabs(sx)>xwidth/2.0 || fabs(sz)>zdepth/2.0 ){
         /*Path length to either x or z coordinate bigger than mirror limits
          * => we have missed the mirror.*/
-        RESTORE_XRAY(INDEX_CURRENT_COMP,x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
+        if (first){
+          RESTORE_XRAY(INDEX_CURRENT_COMP,x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
+        }
         status=0;
         break;
       }
