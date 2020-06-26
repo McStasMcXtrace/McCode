@@ -59,7 +59,7 @@ DECLARE
 
 INITIALIZE
 %{
-  a2inv=1/(a*a);
+  a2inv=(a!=0)?(1.0/(a*a)):0; /* if a==0, it is really infinity */
   b2inv=(b!=0)?(1.0/(b*b)):0; /* if b==0, it is really infinity */
   focusx=a*a/4.0;
   focusz=b*b/4.0;
@@ -102,7 +102,7 @@ TRACE
         /*both l0 and l1 <=0*/
         status=0;break;
       }
-       /*need a check fro mirror limits here*/
+       /*need a check for mirror limits here*/
       if(a!=0){
         sx= (a*a)/2.0 * ( x*a2inv * sqrt( (2*x*a2inv)*(2*x*a2inv) + 1) + asinh(2*x*a2inv)/2.0 );
       }else{
@@ -125,8 +125,6 @@ TRACE
       /*reflect in normal - again swap y and z.*/
       paraboloid_normal(&nx,&nz,&ny, x,z,y, a,b,1);
 
-      printf("DEBUG: %g %g %g     %g %g %g",x,y,z,nx,ny,nz);
-
       double s=scalar_prod(kx,ky,kz,nx,ny,nz);
       if (s!=0){
         kx -= s*2*nx;
@@ -138,32 +136,77 @@ TRACE
       p*=R;
       /*update phase - as an approximation turn by 180 deg.*/
       phi+=M_PI;
+      first=0; 
+      status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
     }
-  }while(status);
-
-  //PROP_DL(0.1);
-  printf("    DEBUG2: %g %g %g     %g %g %g\n",x,y,z,nx,ny,nz);
-
- 
 %}
 
 MCDISPLAY
 %{
   const int Ni=5;
-  const int Nj=5;
+  const int Nj=25;
+
 
   double dx=xwidth/(Ni);
   double dz=zdepth/(Nj);
-  double x0,x1,z0,z1,y[4];
+  double x0,x1,z0,z1,y[4],xmax,zmax;
   int i,j;
 
+  /*find the limits in x and z*/  
+  x0=0;x1=xwidth/2.0;
+
+  if(a!=0){
+    double xx=(x1-x0)/2.0;
+    double sx= (a*a)/2.0 * ( xx*a2inv * sqrt( (2*xx*a2inv)*(2*xx*a2inv) + 1) + asinh(2*xx*a2inv)/2.0 );
+    i=0;
+    while ( fabs(sx-xwidth/2.0)>1e-4 && i<100){
+      //printf("MCDISDEBUG: %d  %g %g %g   %g\n",i,x0,xx,x1,sx); 
+      if ((sx-xwidth/2.0)>0){
+        x0=(x1-x0)/2.0;
+      }else{
+        x1=(x1-x0)/2.0;
+      }
+      xx=(x1-x0)/2.0;
+      sx= (a*a)/2.0 * ( xx*a2inv * sqrt( (2*xx*a2inv)*(2*xx*a2inv) + 1) + asinh(2*xx*a2inv)/2.0 );
+      i++;
+
+    }
+    xmax=xx;
+  }else{
+    xmax=xwidth/2.0;
+  }
+
+  z0=0;z1=zdepth/2.0;
+  if(b!=0){
+    double zz=(z1+z0)/2.0;
+    double sz= (b*b)/2.0 * ( zz*b2inv * sqrt( (2*zz*b2inv)*(2*zz*b2inv) + 1) + asinh(2*zz*b2inv)/2.0 );
+    j=0;
+    while ( fabs(sz-zdepth/2.0)>1e-4 & j<100){
+      if ((sz-zdepth/2.0)>0){
+        z1=zz;
+      }else{
+        z0=zz;;
+      }
+      zz=(z1+z0)/2.0;
+      sz= (b*b)/2.0 * ( zz*b2inv * sqrt( (2*zz*b2inv)*(2*zz*b2inv) + 1) + asinh(2*zz*b2inv)/2.0 );
+      j++;
+    }
+    zmax=zz;
+  }else{
+    zmax=zdepth/2.0;
+  }
+
+  dx=2.0*xmax/(Ni);
+  dz=2.0*zmax/(Nj);
+  
   /*approximate the mirror bounds by width and depth to avoid inverting the sx and sz functions*/
+  /*mirror is symmetric around x,z=0,0. so we c an use xmax and zmax.*/
   for (i=0;i<Ni;i++){
-    x0=i*dx - xwidth/2.0;
-    x1=(i+1)*dx - xwidth/2.0;
+    x0=i*dx - xmax;
+    x1=(i+1)*dx - xmax;
     for (j=0;j<Nj;j++){
-      z0=j*dz - zdepth/2.0;
-      z1=(j+1)*dz - zdepth/2.0;
+      z0=j*dz - zmax;
+      z1=(j+1)*dz - zmax;
       y[0]=x0*x0*a2inv + z0*z0*b2inv;
       y[1]=x1*x1*a2inv + z0*z0*b2inv;
       y[2]=x0*x0*a2inv + z1*z1*b2inv;
