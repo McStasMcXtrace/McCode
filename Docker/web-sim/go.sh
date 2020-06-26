@@ -9,3 +9,4 @@ start-stop-daemon --start --background --pidfile PIDFILE_WRK --make-pidfile -d $
 start-stop-daemon --stop --pidfile PIDFILE_WRK -d $PWD
 cat worker.log
 cp db.sqlite3 static/data/
+cp worker.log static/data/
