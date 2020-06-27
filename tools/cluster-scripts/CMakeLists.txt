@@ -44,7 +44,7 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, perl")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, perl, libfile-which-perl")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
@@ -57,8 +57,8 @@ include(CPack)
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure scripts
-configure_file("${CMAKE_SOURCE_DIR}/mcsub_pbs.in" "${WORK}/mcsub_pbs" @ONLY)
-configure_file("${CMAKE_SOURCE_DIR}/mcsub_slurm.in" "${WORK}/mcsub_slurm" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcsub_pbs.in" "${WORK}/${FLAVOR}_mcsub_pbs" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcsub_slurm.in" "${WORK}/${FLAVOR}_mcsub_slurm" @ONLY)
 
 if(WINDOWS)
   foreach(NAME "mcsub_pbs" "mcsub_slurm")
@@ -68,7 +68,7 @@ if(WINDOWS)
       )
   endforeach()
 else()
-  foreach(NAME "mcsub_pbs" "mcsub_slurm")
+  foreach(NAME "${FLAVOR}_mcsub_pbs" "${FLAVOR}_mcsub_slurm")
     install(
       FILES "${WORK}/${NAME}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/bin"
