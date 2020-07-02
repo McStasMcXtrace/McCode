@@ -20,7 +20,7 @@
 * bender. The bender has a cylindrically curved entry plane (Will be extended to also 
 * allow a flat entry plane).
 * 
-* The bender may also be tapered such that it can have focusing or defocusing porperties.
+* The bender may also be tapered such that it can have focusing or defocusing properties.
 * This may be specified through the "channel_file"-parameter, which points to a data file
 * in which the individual channels are defined by an entry- and an exit-width. 
 *
@@ -133,7 +133,7 @@ double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, do
  * Calculate new spin vector after reflection in a surface with reflectivities 
  * Rup and Rdown referring to the y-axis (up)  
  *****************************************************************/
-inline double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, double *sz){
+double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, double *sz){
   return pol_reflect_spin_ref(Rup, Rdown, sx, sy, sz, 0.0, 0.0, 0.0);
 }
 
@@ -210,7 +210,7 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(prms.R.header,"parameter");
-  if (strcmp("m",header_parsed[0])){
+  if (strstr(header_parsed[0],"m")){
     prms.by_q=0;
   }else{
     prms.by_q=1;
@@ -302,7 +302,7 @@ TRACE
       
       while ( !( x> entry_radius*sin(dx2/entry_radius) && x< entry_radius*sin(dx1/entry_radius) ) ){
         channel_no++;
-        if(channel_no>prms.T.rows && x>entry_radius*sin((dx2+d_substrate+1e-6)/entry_radius)  ){
+        if(channel_no>prms.T.rows){
           //printf("oops I've missed all channels ");
           //printf("%lld %g %g %g %g %g %g %g\n",mcget_run_num(),x,y,z,vx,vy,vz,p);
           ABSORB;
@@ -515,9 +515,6 @@ TRACE
           }
           /*if trace is set - transform back to bender frame, set SCATTER, and transform back to channel frame again*/
           bounce++;
-          if( p<DBL_EPSILON){
-            ABSORB;
-          }
           SCATTER;
 
           break;
