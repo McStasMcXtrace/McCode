@@ -1,0 +1,81 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: <your name (email)>
+* Date: <current date>
+* Origin: <your institution>
+* Version: <instrument version>
+* %INSTRUMENT_SITE: Templates
+*
+* <instrument short description>
+*
+* %D
+* <instrument description>
+*
+* Example: <parameters=values>
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* ...
+* 
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT template_body_simple(D=1,MM=0, BB=1, check=0)
+
+DECLARE
+%{
+  int bounce;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT source = Source_div(
+    focus_aw=0, focus_ah=0, xwidth=0.1, yheight=0.001, 
+    E0=12, dE=1)
+AT (0, 0, 0) RELATIVE origin
+
+COMPONENT m2psd = PSD_monitor(restore_xray=0,xwidth=0.2, yheight=0.2, filename="m2psd")
+WHEN(check) AT(0,0,10-1/4) RELATIVE origin
+
+COMPONENT m2 = Mirror_parabolic(
+    b=0.1, a=0, xwidth=0.2, zdepth=0.1, R=1)
+WHEN(MM==1) AT(0,0,10) RELATIVE origin
+ROTATED (-90,0,0) RELATIVE origin
+EXTEND
+%{
+  //printf("%g %g\n",focusx,focusz);
+  bounce=mcScattered;
+%}
+
+COMPONENT det_a = Arm()
+AT(0,0,0) RELATIVE m2
+ROTATED (-90,0,0) RELATIVE m2
+
+COMPONENT fpi = PSD_monitor_4PI(restore_xray=1,radius=1, filename="fpi", restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT det = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="det", restore_xray=1)
+AT(0,0,D) RELATIVE det_a
+
+
+COMPONENT detBB = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB")
+WHEN(bounce==mcipBB)AT(0,0,D) RELATIVE det_a
+
+
+FINALLY
+%{
+%}
+
+END
