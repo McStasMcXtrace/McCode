@@ -6,7 +6,7 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
@@ -171,8 +171,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -230,6 +229,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -331,6 +331,7 @@ rot_transpose(ROT_A_CURRENT_COMP,this_cylinder_volume.geometry.transpose_rotatio
 
 // Initialize loggers
 this_cylinder_volume.loggers.num_elements = 0;
+this_cylinder_volume.abs_loggers.num_elements = 0;
 
 // packing the information into the global_geometry_element, which is then included in the global_geometry_list.
 sprintf(global_geometry_element.name,NAME_CURRENT_COMP);
@@ -342,7 +343,6 @@ add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

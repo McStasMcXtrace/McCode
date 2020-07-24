@@ -794,7 +794,7 @@ int sample_cone_intersect(double *t,int *num_solutions,double *r,double *v,struc
 
 
     // Count solutions
-    *num_solutions == 0;
+    *num_solutions = 0;
     if (t[0] > 0){
         *num_solutions += 1;
     }else {
