@@ -70,8 +70,7 @@ INITIALIZE
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   if ((xmin >= xmax) || (ymin >= ymax)) {
-    printf("ERROR: (%s): Null detection area! Aborting.\n",
-        NAME_CURRENT_COMP);
+    printf("ERROR: (%s): Null detection area! Aborting.\n", NAME_CURRENT_COMP);
     exit(-1);
   }
 
