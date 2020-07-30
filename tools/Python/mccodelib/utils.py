@@ -506,6 +506,8 @@ def get_comp_category(filepath):
 def parse_define_comp(text):
     text = text.replace('\n', ' ')
     text = text.replace(' = ', '=')
+    text = text.replace(' =', '=')
+    text = text.replace('= ', '=')
     
     name = re.search('DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
     m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
