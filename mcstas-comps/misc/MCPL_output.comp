@@ -117,7 +117,7 @@ INITIALIZE
         }
 	fclose(fp);
     } else {
-      fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, mcinstrument_source);
+      fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, instrument_source);
     }
 
 
