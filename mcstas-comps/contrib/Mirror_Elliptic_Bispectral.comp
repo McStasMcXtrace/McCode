@@ -35,7 +35,7 @@
 * alpha: [AA]                  slope of reflectivity
 * m:			[1]	m-value of material
 * W: [AA-1]                    width of supermirror cutoff
-* transmit: [0/1]              0: non reflected neutrons are absorbed. 1: non reflected neutrons pass through
+* transmit: [0/1]              non reflected neutrons are absorbed. 1: non reflected neutrons pass through
 * substrate_thickness: [m]     thickness of substrate (for absorption)
 * coating_thickness: [m]       thickness of coating (for absorption)
 * theta_1: [deg]               angle of mirror wrt propagation direction at start of mirror
