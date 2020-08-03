@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
@@ -54,15 +54,16 @@
 * D2_max:          [1] histogram boundery, max position value for second axis
 * D2_min:          [1] histogram boundery, min position value for second axis
 * n2:              [1] number of bins for second axis
-* time_bins        [1] Number of time bins
-* time_min         [1] Minimum time
-* time_max         [1] Maximum time
+* time_bins:        [1] Number of time bins
+* time_min:         [1] Minimum time
+* time_max:         [1] Maximum time
 * target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
 * target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
 * order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
 * order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* order_volume_process: [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* filename:        [string] Filename for logging output
 *
 * OUTPUT PARAMETERS:
 *
@@ -74,9 +75,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_logger_2D_space_time
-DEFINITION PARAMETERS (n1=90, n2=90, time_bins=10)
-SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL",D1_min=-5,D1_max=5,D2_min=-5,D2_max=5,time_min=0,time_max=1,string D_direction_1="x", string D_direction_2="z",string filename="NULL", order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1)
-OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume,logger_conditional_extend_index,part_filename,number_string,storage_N,storage_p,storage_2p)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL",D1_min=-5,D1_max=5,D2_min=-5,D2_max=5,time_min=0,time_max=1,string D_direction_1="x", string D_direction_2="z",string filename="NULL", n1=90, n2=90, time_bins=10, order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1)
+OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume,part_filename,number_string,storage_N,storage_p,storage_2p)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -470,8 +471,8 @@ DECLARE
 //struct global_material_element_struct global_material_element;
 //struct physics_struct this_material;
 
-int loop_index,l1,l2,l3;
-int process_index;
+int loop_index;
+
 int found_process;
 int specified_processes;
 char local_string[256];
@@ -480,19 +481,17 @@ char number_string[16];
 char part_filename[256];
 
 // Reused for logger
-struct pointer_to_1d_int_list accepted_processes = {0,NULL};
+struct pointer_to_1d_int_list accepted_processes;
 
 struct global_logger_element_struct logger_list_element;
 
-struct pointer_to_1d_int_list accepted_volumes = {0,NULL};
+struct pointer_to_1d_int_list accepted_volumes;
 
 struct logger_struct this_logger;
 struct a_2DS_t_storage_struct this_storage;
 
 struct loggers_struct *loggers_on_target_volume;
 struct Volume_struct *target_volume;
-
-char temp_string[2];
 
 double *storage_N,*storage_p,*storage_2p;
 
@@ -501,7 +500,12 @@ double *storage_N,*storage_p,*storage_2p;
 INITIALIZE
 %{
 
+  accepted_processes.elements = NULL;
+  accepted_processes.num_elements = 0;
 
+  accepted_volumes.elements = NULL;
+  accepted_volumes.num_elements = 0;
+  
   // Initialize storage from input
   if (D1_min >= D1_max) {
     printf("ERROR, Union logger \"%s\" had D1_min >= D1_max.\n",NAME_CURRENT_COMP);
@@ -569,6 +573,7 @@ INITIALIZE
   
 
   //printf("Allocated 3D arrays \n");
+  int l1,l2,l3;
   for (l1=0;l1<n1;l1++) { //n1 is technically a double, but this works fine
     for (l2=0;l2<n2;l2++) {
       for (l3=0;l3<time_bins;l3++) {
@@ -604,6 +609,7 @@ INITIALIZE
       exit(1);
   }
   
+  char temp_string[2];
   if (strcmp(D_direction_2,"x") == 0 || strcmp(D_direction_2,"X") == 0) {
       this_storage.dim_2_choice = 0;
       sprintf(this_storage.Detector_3D.string_axis_2,"x [m]");
@@ -685,6 +691,7 @@ INITIALIZE
     // Add this logger to the global_specific_volumes_logger_list (so that conditionals can affect it)
     add_element_to_logger_list(&global_specific_volumes_logger_list,logger_list_element);
     
+    int process_index;
     for (loop_index=0;loop_index<accepted_volumes.num_elements;loop_index++) {
       target_volume = global_geometry_list.elements[accepted_volumes.elements[loop_index]].Volume;
       // Add an element to its logger list

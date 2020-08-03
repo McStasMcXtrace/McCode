@@ -41,16 +41,18 @@
 * pack: [1]       Substrate packing factor
 * nlayer: [1]     Number of film layers
 * sldPar: [1]     (Angstoms ^-2) Scattering length Density's of layers
-* dPar: [1]       (Angstroms) Thicknesses of film layers
+* dPar:   [1]     (Angstroms) Thicknesses of film layers
 * sigmaPar: [1]   (Angstroms) r.m.s roughnesses of the interfaces
+* target_index: [1] relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m]                       Width of target
+* focus_yh: [m]                       Height of target
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_Sample
-DEFINITION PARAMETERS (xwidth = 0.2, zlength = 0.2,
-nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0},
-sigmaPar={5.0,5.0}, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
+DEFINITION PARAMETERS (sldPar={0.0,2.0e-6,0.0e-6}, dPar={20.0}, sigmaPar={5.0,5.0})
+SETTING PARAMETERS (xwidth = 0.2, zlength = 0.2, nlayer=1, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
 OUTPUT PARAMETERS (sldParPtr, dParPtr, sigmaParPtr, tx, ty, tz)
 DEPENDENCY "-lgsl -lgslcblas -L@MCCODE_LIB@/miniconda3/lib -I@MCCODE_LIB@/miniconda3/include"
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */

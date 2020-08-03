@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 *
 * %D
@@ -37,11 +37,13 @@
 *
 * %P
 * INPUT PARAMETERS:
-* unit_cell_volume: [AA^3]   Unit cell volume (set either unit_cell_volume or number density)
-* number_density    [1/AA^3] Number of scatteres per volume
-* J_interaction:    [meV]    Exchange constant
-* A_constant        [unitless] constant from Müller paper 1981, probably somewhere between 1 and 1.5
-* atom_distance     [Å] distance between atom's in chain
+* unit_cell_volume: [AA^3]     Unit cell volume (set either unit_cell_volume or number density)
+* number_density:   [1/AA^3]   Number of scatteres per volume
+* J_interaction:    [meV]      Exchange constant
+* A_constant:       [unitless] constant from Müller paper 1981, probably somewhere between 1 and 1.5
+* atom_distance:    [AA]       distance between atom's in chain
+* packing_factor:   [1]        Material packing factor
+* interact_fraction:   [1]     Fraction of rays that should be forced to interact
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter
@@ -56,8 +58,8 @@
 
 DEFINE COMPONENT AF_HB_1D_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(atom_distance=1,number_density=0,unit_cell_volume=0,A_constant=1,J_interaction=1,packing_factor=1,interact_fraction=-1)
-OUTPUT PARAMETERS (This_process,AF_HB_1D_storage,effective_my_scattering)
+SETTING PARAMETERS(atom_distance=1, number_density=0, unit_cell_volume=0, A_constant=1, J_interaction=1, packing_factor=1, interact_fraction=-1)
+OUTPUT PARAMETERS (This_process, AF_HB_1D_storage, effective_my_scattering)
 
 SHARE
 %{

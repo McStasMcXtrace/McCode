@@ -20,19 +20,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* focus_s: [m]                 first focal point of ellipse in ABSOLUTE COORDINATES
-* focus_e: [m]                 second focal point of ellipse in ABSOLUTE COORDINATES
+* focus_start_w: [m]           first focal point of ellipse in ABSOLUTE COORDINATES, horizontal
+* focus_end_w: [m]             second focal point of ellipse in ABSOLUTE COORDINATES, horizontal
+* focus_start_h: [m]           first focal point of ellipse in ABSOLUTE COORDINATES, vertical
+* focus_end_h: [m]             second focal point of ellipse in ABSOLUTE COORDINATES, vertical
 * mirror_start: [m]            start of mirror in ABSOLUTE COORDINATES
 * guide_start: [m]             start of guide in ABSOLUTE COORDINATES
 * yheight: [m]                 the height of the mirror when not in the guide
-* smallaxis: [m]               the smallaxis of the guide
+* smallaxis_w: [m]               the horizontal smallaxis of the guide
+* smallaxis_h: [m]               the vertical smallaxis of the guide
 * length: [m]                  the length of the mirror
-* R0=0.99:		[]	low angle reflectivity
+* R0=0.99:		[1]	low angle reflectivity
 * Qc: [AA-1]                   critical scattering vector
 * alpha: [AA]                  slope of reflectivity
-* m:			[]	m-value of material
+* m:			[1]	m-value of material
 * W: [AA-1]                    width of supermirror cutoff
-* transmit: [0/1]              0: non reflected neutrons are absorbed. 1: non reflected neutrons pass through
+* transmit: [0/1]              non reflected neutrons are absorbed. 1: non reflected neutrons pass through
 * substrate_thickness: [m]     thickness of substrate (for absorption)
 * coating_thickness: [m]       thickness of coating (for absorption)
 * theta_1: [deg]               angle of mirror wrt propagation direction at start of mirror

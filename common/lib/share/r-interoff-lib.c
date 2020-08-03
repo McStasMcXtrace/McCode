@@ -835,7 +835,7 @@ void r_off_display(r_off_struct data)
     cmz /= nbVertex;
     
     char pixelinfo[1024];    
-    sprintf(pixelinfo, "%u,%u,%u,%i,%g,%g,%g,%g,%g,%g", data.mantidoffset+pixel, data.mantidoffset, data.mantidoffset+data.polySize-1, nbVertex, cmx, cmy, cmz, x1-cmx, y1-cmy, z1-cmz);
+    sprintf(pixelinfo, "%lu,%lu,%lu,%i,%g,%g,%g,%g,%g,%g", data.mantidoffset+pixel, data.mantidoffset, data.mantidoffset+data.polySize-1, nbVertex, cmx, cmy, cmz, x1-cmx, y1-cmy, z1-cmz);
     for (j=2; j<=nbVertex; j++) {
       double x2,y2,z2;
       x2 = data.vtxArray[data.faceArray[i+j]].x;
@@ -858,4 +858,4 @@ void r_off_display(r_off_struct data)
   }
 } /* r_off_display */
 
-/* end of r-inter-lib.c */
+/* end of r-interoff-lib.c */

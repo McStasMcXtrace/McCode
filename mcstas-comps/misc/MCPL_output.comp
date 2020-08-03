@@ -126,13 +126,16 @@ INITIALIZE
         fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
         if ( size && (buffer=malloc(size))!=NULL){
             if (size!=(fread(buffer,1,size,fp))){
-	      fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
+	      fprintf(stderr,"\nWarning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
             }
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
+	fclose(fp);
+    } else {
+      fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, mcinstrument_source);
     }
-    fclose(fp);
+
 
     int ii;
     char *clr,clbuf[CHAR_BUF_LENGTH];

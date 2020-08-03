@@ -36,12 +36,18 @@
 *
 * %P
 * INPUT PARAMETERS:
+* packing_factor: [1] Material packing factor
 * unit_cell_volume: [AA^3]   Unit cell volume
 * a: [AA]   fcc lattice constant
 * c: [meV*AA]  Velocity of sound
 * M: [unit]  Nucleus atomic mass in units
 * b: [fm] scattring length
 * MC: [1] steps in numerical integral
+* interact_fraction: [1] Fraction of neutrons to force-interact
+* T: [Kelvin] Temperature
+* DW: [1] Global Debye-Waller factor 
+* longitudinal: [1] Select to generate a longitudinal phonon mode
+* transverse: [1] Select to generate a transverse phonon mode
 *
 * OUTPUT PARAMETERS:
 * PhononSimple_storage      // Important to update this output paramter
@@ -375,7 +381,7 @@ int PhononSimple_my(double *my, double *k_initial, union data_transfer_union dat
      k_phonon_l = kappa_z - nearest_bragg_l;
      
      NORM(k_phonon_h,k_phonon_k,k_phonon_l);
-     
+
      if (data_transfer.pointer_to_a_PhononSimple_storage_struct->enable_longitudinal == 1) {
        pol_weight_factor = (kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l)*(kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l);
      }
@@ -384,8 +390,6 @@ int PhononSimple_my(double *my, double *k_initial, union data_transfer_union dat
        pol_weight_factor = kappa_x*kappa_x+kappa_y*kappa_y+kappa_z*kappa_z - (kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l)*(kappa_x*k_phonon_h+kappa_y*k_phonon_k+kappa_z*k_phonon_l);
      }
      
-     //Coords pol_vector = data_transfer.pointer_to_a_PhononSimple_storage_struct->pol_vector;
-     //pol_weight_factor = k_phonon_h*pol_vector.x + k_phonon_k*pol_vector.y + k_phonon_l*pol_vector.z;
      /*
      // This test shows the predicted behavior where all nearest bragg sets corresponds to Bragg peaks.
      printf("--------------------------------------------\n");
@@ -394,16 +398,9 @@ int PhononSimple_my(double *my, double *k_initial, union data_transfer_union dat
      */
    }
    
-   
-
-   //*my = nf*V_rho*(k_final/k_length)*DW*(kappa2*K2V*K2V*VS2E)/fabs(omega)*nbose(omega,T)*2*VS2E*K2V*k_final/J_factor*b*b/M;
    // my_constant = V_rho*DW*K2V*K2V*VS2E*2*VS2E*K2V*b*b/M // done in initialize
-
-   //*my = (double) nf*k_final/k_length*kappa2/fabs(omega)*nbose_union(omega,T)*k_final/J_factor*data_transfer.pointer_to_a_PhononSimple_storage_struct->my_constant;
    
    *my = (double) nf*k_final/k_length*pol_weight_factor/fabs(omega)*nbose_union(omega,T)*k_final/J_factor*data_transfer.pointer_to_a_PhononSimple_storage_struct->my_constant;
-   
-   //*my = 10;
    
    data_transfer.pointer_to_a_PhononSimple_storage_struct->k_final = k_final;
    data_transfer.pointer_to_a_PhononSimple_storage_struct->k_f[0] = k_f[0];
