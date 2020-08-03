@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Guide
+* Component: Guide_m
 *
 * %I
 * Written by: Kristian Nielsen
@@ -39,18 +39,32 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      (m)    Width at the guide entry
-* h1:      (m)    Height at the guide entry
-* w2:      (m)    Width at the guide exit
-* h2:      (m)    Height at the guide exit
-* l:       (m)    length of guide
-* For all planes
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off
-* reflect: (str)  Reflectivity file name. Format [q(Angs-1) R(0-1)]
+* w1:      [m]    Width at the guide entry
+* h1:      [m]    Height at the guide entry
+* w2:      [m]    Width at the guide exit
+* h2:      [m]    Height at the guide exit
+* l:       [m]    length of guide
+* R0_top:      [1]    Low-angle reflectivity, top mirror.
+* Qc_top:      [AA-1] Critical scattering vector, top mirror.
+* alpha_top:   [AA]   Slope of reflectivity, top mirror.
+* m_top:       [1]    m-value of material, top mirror. Zero means completely absorbing.
+* W_top:       [AA-1] Width of supermirror cut-off, top mirror.
+* R0_bottom:      [1]    Low-angle reflectivity, bottom mirror.
+* Qc_bottom:      [AA-1] Critical scattering vector, bottom mirror.
+* alpha_bottom:   [AA]   Slope of reflectivity, bottom mirror.
+* m_bottom:       [1]    m-value of material, bottom mirror. Zero means completely absorbing.
+* W_bottom:       [AA-1] Width of supermirror cut-off, bottom mirror.
+* R0_left:      [1]    Low-angle reflectivity, left mirror.
+* Qc_left:      [AA-1] Critical scattering vector, left mirror.
+* alpha_left:   [AA]   Slope of reflectivity, left mirror.
+* m_left:       [1]    m-value of material, left mirror. Zero means completely absorbing.
+* W_left:       [AA-1] Width of supermirror cut-off, left mirror.
+* R0_right:      [1]    Low-angle reflectivity, right mirror.
+* Qc_right:      [AA-1] Critical scattering vector, right mirror.
+* alpha_right:   [AA]   Slope of reflectivity, right mirror.
+* m_right:       [1]    m-value of material, right mirror. Zero means completely absorbing.
+* W_right:       [AA-1] Width of supermirror cut-off, right mirror.
+* reflect: [str]  Reflectivity file name. Format [q(Angs-1) R(0-1)]
 *
 * %D
 * Example values: m=4 Qc=0.0219 W=1/300 alpha=6.49 R0=1
