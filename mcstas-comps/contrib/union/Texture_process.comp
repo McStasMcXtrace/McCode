@@ -28,16 +28,16 @@
 *
 * %P
 * INPUT PARAMETERS:
-* packing_factor [1]      How dense is the material compared to optimal 0-1
-* Interact_fraction [1]   How large a part of the scattering events should use 
-*                         this process 0-1 
-*                         (sum of all processes in material = 1)
-* crystal_fn [s]          Path to a file (.laz) containing crystallographic and physical information
-* fcoef_fn [s]            Path to a text file containing the Fourier coefficients of the ODF.
+* packing_factor: [1]      How dense is the material compared to optimal 0-1
+* interact_fraction: [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* crystal_fn: [s]          Path to a file (.laz) containing crystallographic and physical information
+* fcoef_fn: [s]            Path to a text file containing the Fourier coefficients of the ODF.
 *                         It must have five columns: l m n Real(Clmn) Imag(Clmn)
-* lmax [1]                Cut-off for the Fourier series.
+* lmax: [1]                Cut-off for the Fourier series.
 *                         If negative, the program uses all the coefficients provided in the file fcoef_fn
-* maxNeutronSaved [1]     Maximum number of neutron cross sections saved for reusing
+* maxNeutronSaved: [1]     Maximum number of neutron cross sections saved for reusing
+* barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
+* order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...) 
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter

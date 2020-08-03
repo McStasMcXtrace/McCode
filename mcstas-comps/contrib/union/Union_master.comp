@@ -30,16 +30,17 @@
 *
 * %P
 * INPUT PARAMETERS:
-*   allow_inside_start:     Set to 1 if rays are expected to start inside a volume in this master
-*   history_limit:          Limits how many histories are recorded before stopping
-*   verbal:                 Toogles terminal output describing the defined simulation
-*   list_verbal:            Toogles information of all internal lists in intersection network
-*   finally_verbal:         Toogles information about cleanup performed in finally section
-*   allow_inside_start      Set to 1 to allow rays to start inside the defined geometry
-*   enable_tagging          Enable tagging of ray history (geometry, scattering process)
-*   history_limit=300000    Limit the number of unique histories that are saved
-*   enable_conditionals     Use conditionals with this master
-*   inherit_number_of_scattering_events Inherit the number of scattering events from last master
+*   allow_inside_start:  [bool]    Set to 1 if rays are expected to start inside a volume in this master
+*   history_limit:       [bool]    Limits how many histories are recorded before stopping
+*   verbal:              [bool]    Toogles terminal output describing the defined simulation
+*   list_verbal:         [bool]    Toogles information of all internal lists in intersection network
+*   finally_verbal:      [bool]    Toogles information about cleanup performed in finally section
+*   allow_inside_start:  [bool]    Set to 1 to allow rays to start inside the defined geometry
+*   enable_tagging:      [bool]    Enable tagging of ray history (geometry, scattering process)
+*   history_limit:       [bool]    Limit the number of unique histories that are saved
+*   enable_conditionals: [bool]    Use conditionals with this master
+*   inherit_number_of_scattering_events: [bool] Inherit the number of scattering events from last master
+*   record_absorption:   [bool]    Toggles logging of absorption
 *
 * OUTPUT PARAMETERS:
 *

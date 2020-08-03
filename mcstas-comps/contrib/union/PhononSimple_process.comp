@@ -36,12 +36,18 @@
 *
 * %P
 * INPUT PARAMETERS:
+* packing_factor: [1] Material packing factor
 * unit_cell_volume: [AA^3]   Unit cell volume
 * a: [AA]   fcc lattice constant
 * c: [meV*AA]  Velocity of sound
 * M: [unit]  Nucleus atomic mass in units
 * b: [fm] scattring length
 * MC: [1] steps in numerical integral
+* interact_fraction: [1] Fraction of neutrons to force-interact
+* T: [Kelvin] Temperature
+* DW: [1] Global Debye-Waller factor 
+* longitudinal: [1] Select to generate a longitudinal phonon mode
+* transverse: [1] Select to generate a transverse phonon mode
 *
 * OUTPUT PARAMETERS:
 * PhononSimple_storage      // Important to update this output paramter

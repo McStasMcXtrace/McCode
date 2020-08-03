@@ -44,7 +44,7 @@
 *
 * %P
 * INPUT PARAMETERS:
-* yheiight:        [m] height of absorption logger
+* yheight:         [m] height of absorption logger
 * n:               [1] number of bins for spatial axis
 * time_min:        [s] Minimum time recorded
 * time_max:        [s] Maximum time recorded
@@ -52,7 +52,8 @@
 * target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
 * order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
 * order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* filename:        [string] Filename for logging output
 *
 * OUTPUT PARAMETERS:
 *
