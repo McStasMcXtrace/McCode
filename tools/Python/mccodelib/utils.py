@@ -573,6 +573,8 @@ def parse_params(params_line):
         tpe = None
         dval = None
         name = None
+        if re.match('double ', part):
+            part = part.replace('double ', '').strip()
         if re.match('string ', part):
             tpe = 'string'
             part = part.replace('string ', '').strip()
