@@ -56,8 +56,9 @@
 * target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
 * order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
 * order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, uwsing the same process
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* order_volume_process: [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* filename:        [string] Filename for logging output
 *
 * OUTPUT PARAMETERS:
 *
