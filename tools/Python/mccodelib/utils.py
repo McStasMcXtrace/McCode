@@ -573,12 +573,12 @@ def parse_params(params_line):
         tpe = None
         dval = None
         name = None
-        if re.match('string', part):
+        if re.match('string ', part):
             tpe = 'string'
-            part = part.replace('string', '').strip()
-        if re.match('int', part):
+            part = part.replace('string ', '').strip()
+        if re.match('int ', part):
             tpe = 'int'
-            part = part.replace('int', '').strip()
+            part = part.replace('int ', '').strip()
         if re.search('=', part):
             m = re.match("(.*)=(.*)", part)
             dval = m.group(2)
