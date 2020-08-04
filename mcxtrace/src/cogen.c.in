@@ -2176,9 +2176,12 @@ cogen_header(struct instr_def *instr, char *output_name)
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
+<<<<<<< HEAD
   cout("  int mcgravitation; /* gravity-state */");
   cout("  int mcMagnet;    /* precession-state */");
   cout("  int allow_backprop; /* allow backprop */");
+=======
+>>>>>>> copy over mcstas-3.0 sources.
 #endif
   //cout("  randstate_t randstate[RANDSTATE_LEN]");
   cout("  unsigned long randstate[7];"); // for the KISS generator
