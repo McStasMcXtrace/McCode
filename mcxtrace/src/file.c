@@ -96,7 +96,7 @@ get_sys_dir(void)
   {
     sys_dir = getenv(FLAVOR_UPPER);
     if(sys_dir == NULL)
-      sys_dir = MCSTAS;
+      sys_dir = MCXTRACE;
     sys_dir = str_dup(sys_dir);
   }
   return sys_dir;
