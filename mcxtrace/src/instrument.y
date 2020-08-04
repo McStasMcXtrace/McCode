@@ -939,7 +939,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         comp_src = $3;
         palloc(comp);
-        comp->type   = comp_src->type;
         comp->def    = comp_src->def;
         comp->extend = comp_src->extend;
         comp->group  = comp_src->group;
@@ -949,7 +948,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
-        comp_formals_actuals(comp, comp->actuals);
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -958,7 +956,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         comp_src = $3;
         palloc(comp);
-        comp->type   = comp_src->type;
         comp->defpar = comp_src->defpar;
         comp->setpar = comp_src->setpar;
         comp->def    = comp_src->def;
@@ -976,19 +973,12 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         def = read_component($1);
 
         palloc(comp);
-        comp->type         = $1;
         comp->def          = def;
         comp->extend = codeblock_new();
         comp->group  = NULL;
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
-        if(def != NULL)
-        {
-          /* Check actual parameters against definition and
-                         setting parameters. */
-          comp_formals_actuals(comp, comp->actuals);
-        }
         $$ = comp;
       }
 ;
@@ -1074,34 +1064,6 @@ split:    /* empty */
       }
 ;
 
-formallist:   '(' formals ')'
-      {
-        $$ = $2;
-      }
-;
-
-
-formals:    /* empty */
-      {
-        $$ = list_create();
-      }
-    | formals1
-      {
-        $$ = $1;
-      }
-;
-
-formals1:   TOK_ID
-      {
-        $$ = list_create();
-        list_add($$, $1);
-      }
-    | formals1 ',' TOK_ID
-      {
-        list_add($1, $3);
-        $$ = $1;
-      }
-;
 
 actuallist:   '(' actuals ')'
       {
@@ -1781,7 +1743,6 @@ main(int argc, char *argv[])
   instrument_definition->name      = NULL;
   instrument_definition->decls     = NULL;
   instrument_definition->inits     = NULL;
-  instrument_definition->nxinfo    = NULL;
   instrument_definition->saves     = NULL;
   instrument_definition->finals    = NULL;
   instrument_definition->compmap   = NULL;
