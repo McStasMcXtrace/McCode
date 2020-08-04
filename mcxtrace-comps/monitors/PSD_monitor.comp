@@ -113,9 +113,12 @@ TRACE
     {
       i = floor((x - xmin)*nx/(xmax - xmin));
       j = floor((y - ymin)*ny/(ymax - ymin));
-      PSD_N[i][j]++;
-      PSD_p[i][j] += p;
-      PSD_p2[i][j] += p*p;
+#pragma acc atomic
+      PSD_N[i][j]= PSD_N[i][j] + 1;
+#pragma acc atomic
+      PSD_p[i][j] = PSD_p[i][j] + p;
+#pragma acc atomic
+      PSD_p2[i][j] = PSD_p2[i][j] + p*p;
       SCATTER;
     }
   }else{
