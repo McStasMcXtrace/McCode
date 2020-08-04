@@ -45,20 +45,24 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS (nx=90, ny=90, string filename=0)
-SETTING PARAMETERS (radius=1, restore_xray=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius=1, restore_xray=0, int nx=90, int ny=90, string filename="")
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{
-  double PSD_N[nx][ny];
-  double PSD_p[nx][ny];
-  double PSD_p2[nx][ny];
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
 INITIALIZE
 %{
   int i,j;
+
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
 
   for (i=0; i<nx; i++)
     for (j=0; j<ny; j++)
@@ -70,19 +74,19 @@ INITIALIZE
 %}
 TRACE
 %{
-  double l0, l1, phi, theta;
+  double l0, l1, psi, theta;
   int i,j;
 
   if(sphere_intersect(&l0, &l1, x, y, z, kx, ky, kz, radius) && l1 > 0)
   {
     if(l0 < 0)
       l0 = l1;
-    /* t0 is now time of intersection with the sphere. */
+    /* l0 is the intersection length with the sphere. */
     PROP_DL(l0);
-    phi = atan2(x,z);
-    i = floor(nx*(phi/(2*PI)+0.5));
+    psi = atan2(x,z);
+    i = floor(nx*(psi/(2*PI)+0.5));
     if(i >= nx)
-      i = nx-1;                      /* Special case for phi = PI. */
+      i = nx-1;                      /* Special case for psi = PI. */
     else if(i < 0)
       i = 0;
     theta=asin(y/radius);
@@ -91,9 +95,12 @@ TRACE
       j = ny-1;                      /* Special case for y = radius. */
     else if(j < 0)
       j = 0;
-    PSD_N[i][j]++;
-    PSD_p[i][j] += p;
-    PSD_p2[i][j] += p*p;
+#pragma acc atomic
+    PSD_N[i][j] = PSD_N[i][j]+1 ;
+#pragma acc atomic
+    PSD_p[i][j] = PSD_p[i][j] + p;
+#pragma acc atomic
+    PSD_p2[i][j] = PSD_p2[i][j] + p*p;
     SCATTER;
   }
   if (restore_xray) {
@@ -112,6 +119,14 @@ SAVE
     &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
     filename);
 %}
+
+FINALLY
+%{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
 
 MCDISPLAY
 %{
