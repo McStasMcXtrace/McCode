@@ -48,8 +48,8 @@
 ******************************************************************/
 
 DEFINE COMPONENT Source_pt
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (focus_xw=0,focus_yh=0,focus_x0=0,focus_y0=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0, string spectrum_file="")
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0,string spectrum_file="")
 OUTPUT PARAMETERS (pmul, spectrum_T)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
