@@ -1401,11 +1401,13 @@ void def_trace_section(struct instr_def *instr)
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
-  coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
+  coutf("#define RESTORE_PARTICLE(_index, ...) _particle->_restore = _index;");
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   #if MCCODE_PROJECT == 1     /* neutron */
+  cout( "#define RESTORE_NEUTRON RESTORE_PARTICLE");
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
   #elif MCCODE_PROJECT == 2   /* xray */
+  cout( "#define RESTORE_XRAY RESTORE_PARTICLE");
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(_comp); } while(0)");
   #endif
   cout( "#define ABSORB ABSORB0");
