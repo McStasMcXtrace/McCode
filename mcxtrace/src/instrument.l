@@ -108,32 +108,38 @@ ABSOLUTE      return TOK_ABSOLUTE;
 AT            return TOK_AT;
 COMPONENT     return TOK_COMPONENT;
 DECLARE       return TOK_DECLARE;
+USERVARS      return TOK_USERVARS;
 DEFINE        return TOK_DEFINE;
 DEFINITION    return TOK_DEFINITION;
 END           return TOK_END;
-MCDISPLAY     return TOK_MCDISPLAY;
+MCDISPLAY     return TOK_DISPLAY;
+DISPLAY       return TOK_DISPLAY; /* DISPLAY is alias to MCDISPLAY */
 FINALLY       return TOK_FINALLY;
-INITIALIZE    return TOK_INITIALIZE;
+INITIALIZE    return TOK_INITIALISE;
+INITIALISE    return TOK_INITIALISE;  /* INITIALISE is alias to INITIALIZE */
 INSTRUMENT    return TOK_INSTRUMENT;
-OUTPUT        return TOK_OUTPUT;
+OUTPUT        return TOK_PRIVATE;
+PRIVATE       return TOK_PRIVATE; /* PRIVATE is alias to OUTPUT */
 PARAMETERS    return TOK_PARAMETERS;
 RELATIVE      return TOK_RELATIVE;
 ROTATED       return TOK_ROTATED;
 PREVIOUS      return TOK_PREVIOUS;
 SETTING       return TOK_SETTING;
+STATE         return TOK_STATE; /* obsolete -> error */
+POLARISATION  return TOK_POL;   /* obsolete -> error */
 TRACE         return TOK_TRACE;
 SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;
-GROUP         return TOK_GROUP;
+GROUP         return TOK_GROUP;         /* extended McXtrace grammar */
 SAVE          return TOK_SAVE;
-JUMP          return TOK_JUMP;
-WHEN          return TOK_WHEN;
-NEXT          return TOK_NEXT;
-ITERATE       return TOK_ITERATE;
-MYSELF        return TOK_MYSELF;
-COPY          return TOK_COPY;
-SPLIT         return TOK_SPLIT;
-REMOVABLE     return TOK_REMOVABLE; 
+JUMP          return TOK_JUMP;          /* extended McXtrace grammar */
+WHEN          return TOK_WHEN;          /* extended McXtrace grammar */
+NEXT          return TOK_NEXT;          /* extended McXtrace grammar */
+ITERATE       return TOK_ITERATE;       /* extended McXtrace grammar */
+MYSELF        return TOK_MYSELF;        /* extended McXtrace grammar */
+COPY          return TOK_COPY;          /* extended McXtrace grammar */
+SPLIT         return TOK_SPLIT;         /* extended McXtrace grammar */
+REMOVABLE     return TOK_REMOVABLE;     /* extended McXtrace grammar with include */
 DEPENDENCY    return TOK_DEPENDENCY;
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
@@ -216,7 +222,7 @@ DEPENDENCY    return TOK_DEPENDENCY;
 "%"{EOL}    instr_current_line++; /* Ignore comment. */
 "% "[^\n]*{EOL} instr_current_line++; /* Ignore comment. */
 
- /* Include files for McStas comp/instr (INITIAL state). */
+ /* Include files for McXtrace comp/instr (INITIAL state). */
  /* then next token is the file name */
 {INCLUDE}[ \t]+\" BEGIN(inclname);
 <inclname>{

@@ -67,7 +67,10 @@
 #define MCCODE_YEAR "@MCCODE_YEAR@"
 #endif
 
-/* Functions defined in memory.c */
+
+/*******************************************************************************
+* Functions defined in memory.c
+*******************************************************************************/
 
 typedef struct Pool_header *Pool;
 
@@ -83,7 +86,6 @@ Pool pool_create(void);   /* Create pool. */
 void pool_free(Pool p);   /* Free pool and associated memory. */
 void *pool_mem(Pool p, size_t size); /* Allocate memory in pool. */
 
-
 /* Allocate memory to a pointer. If p is a pointer to type t, palloc(p) will
    make p point to dynamically allocated memory for one element of type
    t. Used to dynamicaaly allocate structures, eg.
@@ -96,8 +98,9 @@ void *pool_mem(Pool p, size_t size); /* Allocate memory in pool. */
 #define nalloc(p, n) ((p) = mem((n)*sizeof(*(p))))
 
 
-
-/* Functions defined in symtab.c */
+/*******************************************************************************
+* Functions defined in symtab.c
+*******************************************************************************/
 
 /* Structure for symbol table entries, returned by symtab_lookup() and the
    like.  */
@@ -130,7 +133,9 @@ void symtab_iterate_end(Symtab_handle sh);
 struct Symtab_entry *symtab_previous(Symtab st, int index);
 
 
-/* Definitions for list.c */
+/*******************************************************************************
+* Definitions for list.c
+*******************************************************************************/
 
 /* Abstract data type for lists. */
 typedef struct List_header *List;
@@ -141,7 +146,9 @@ void list_add(List, void *);        /* Add element at end. */
 void list_free(List, void (*)(void *)); /* Deallocate a list. */
 int list_len(List l);               /* Get list length. */
 List_handle list_iterate(List);     /* Prepare to traverse list. */
+List_handle list_iterate_back(List);     /* Prepare to traverse list. */
 void *list_next(List_handle);       /* Get next element in list. */
+void *list_previous(List_handle);       /* Get previous element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
 
 
@@ -166,6 +173,7 @@ void exp_fprint(FILE *f, CExp e); /* Output an expression to file. */
 int exp_isvalue(CExp e);  /* Ask if expression is a value. */
 void exp_setlineno(CExp e, int n); /* Set line number of expression */
 int exp_getlineno(CExp e);  /* Get line number of expression, or zero */
+
 
 /*******************************************************************************
 * Definitions in coords.c
@@ -225,6 +233,7 @@ struct comp_orientation
          when no ROTATED modifier is given. */
   };
 
+
 /*******************************************************************************
 * Definitions in instrument.y
 *******************************************************************************/
@@ -252,6 +261,8 @@ extern Symtab read_components;
 /* Verbose parsing/code generation */
 extern char verbose;
 /* Will store component instance for PREVIOUS reference */
+extern char embed_instrument_file;
+/* Will store component instance for PREVIOUS reference */
 extern struct comp_inst *previous_comp;
 extern struct comp_inst *myself_comp;
 /* current instance index */
@@ -277,10 +288,10 @@ void lex_new_file(FILE *file);
 /* Handle a new autoincluded file (uses recursive parser call). */
 void push_autoload(FILE *file);
 
+
 /*******************************************************************************
 * Definitions for file.c
 *******************************************************************************/
-
 
 extern char *component_pathname;
 
@@ -297,10 +308,25 @@ char *get_sys_dir(void);
 
 
 /*******************************************************************************
-* Definitions for cogen.c
+* Definitions in re.c (added jg-20190312 via github.com/kokke)
 *******************************************************************************/
 
-#define ID_PRE "mc"
+/* Typedef'd pointer to get abstract datatype. */
+typedef struct regex_t* re_t;
+
+/* Compile regex string pattern to a regex_t-array. */
+re_t re_compile(const char* pattern);
+
+/* Find matches of the compiled pattern inside text. */
+int  re_matchp(re_t pattern, const char* text);
+
+/* Find matches of the txt pattern inside text (will compile automatically first). */
+int  re_match(const char* pattern, const char* text);
+
+
+/*******************************************************************************
+* Definitions for cogen.c
+*******************************************************************************/
 
 /* Allocate a new, empty codeblock. */
 struct code_block *codeblock_new(void);
@@ -362,8 +388,9 @@ extern int debug_current_level;
 #endif /* !defined(DEBUG) */
 
 
-
-/* Common structure definitions. */
+/*******************************************************************************
+* Common structure definitions.
+*******************************************************************************/
 
 /* Code blocks. */
 struct code_block
@@ -375,19 +402,27 @@ struct code_block
   };
 
 /* Note: the enum instr_formal_types definition MUST be kept
-   synchronized with the one in mcstas-r.h. */
+   synchronized with the one in mccode-r.h. */
 enum instr_formal_types
   {
-    instr_type_double, instr_type_int, instr_type_string
+    instr_type_int,
+    instr_type_string,
+    instr_type_char,
+    instr_type_vector,
+    instr_type_double,
+    instr_type_symbol,
+    instr_type_custom
   };
 
 /* Component formal input parameters. */
 struct comp_iformal
   {
     enum instr_formal_types type; /* Type (string, int, double) */
-    char *id;     /* Parameter name */
-    int isoptional;   /* True if default value is available */
-    CExp default_value;   /* Default value if isoptional is true */
+    char *id;                     /* Parameter name */
+    char *type_custom;            /* custom type string, in which case
+                                     instr_formal_types takes value # 6, custom */
+    int isoptional;               /* True if default value is available */
+    CExp default_value;           /* Default value if isoptional is true */
   };
 
 /* Component definitions. */
@@ -395,15 +430,22 @@ struct comp_def
   {
     char *name;                     /* Component name. */
     char *source;                   /*  Name of source file for definition */
-    int  comp_inst_number;          /* Number of this comp in the instrument  */
-    List def_par, set_par, out_par; /* Formal parameters. */
+    int  flag_defined_structure;    /* set to 1 when the parameter block is generated */
+    int  flag_defined_share;        /* set to 1 when the SHARE block is generated */
+    int  flag_defined_init;         /* set to 1 when a common INIT block is generated */
+    int  flag_defined_save;         /* set to 1 when a common SAVE block is generated */
+    int  flag_defined_finally;      /* set to 1 when a common FINALLY block is generated */
+    int  flag_defined_display;      /* set to 1 when a common DISPLAY block is generated */
+    int  flag_defined_trace;        /* set to 1 when a common TRACE block is generated */
+    int  counter_instances;         /* number of instances using the same definition/class */
+    List def_par, set_par, out_par, decl_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */
     struct code_block *trace_code;  /* Ray-trace simulation code. */
     struct code_block *save_code;   /* Code executed to save data */
     struct code_block *finally_code;    /* Code for simulation end. */
-    struct code_block *mcdisplay_code;  /* Code for drawing components. */
+    struct code_block *display_code;  /* Code for drawing components. */
   };
 
 /* Component group instances */
@@ -413,10 +455,9 @@ struct group_inst
     int   index;
     char *first_comp;
     char *last_comp;
-    char  final_absorb_when_all_not_scattered;
-    char  skip_following_when_scattered;
-    char  comp_absorb_sends_to_next;
-    CExp  split;
+    int   first_comp_index;
+    int   last_comp_index;
+    // CExp  split;
   };
 
 struct when_condition {
@@ -450,13 +491,6 @@ struct instr_formal
     CExp default_value;           /* Default value if isoptional is true */
   };
 
-/* NeXus information. NeXus is supported through the NeXus API */
-struct NXinfo
-  {
-    int any;           /* True only if any NEXUS decls. */
-    char *hdfversion;  /* may be 4 or 5, or xml, with optionally compression */
-  };
-
 /* Instrument definition. */
 struct instr_def
   {
@@ -464,6 +498,7 @@ struct instr_def
     char *source;   /* Name of source file for definition */
     char *quoted_source;      /* File name quoted for inclusion in C */
     struct code_block *decls; /* Code for declarations */
+    struct code_block *vars;  /* Code for particle variables */
     struct code_block *inits; /* Code for initializations */
     struct code_block *saves; /* Code executed to save data */
     struct code_block *finals;/* Code for simulation end */
@@ -472,13 +507,14 @@ struct instr_def
     Symtab groupmap;          /* Map of component group names */
     List complist;            /* List of components in declaration order */
     List grouplist;           /* List of component groups in declaration order */
-    struct NXinfo *nxinfo;    /* NeXus declarations */
     int use_default_main;     /* If set, output a main() function */
     int include_runtime;      /* If set, include runtime in output */
     int enable_trace;         /* If set, enable output of ray traces */
     int portable;             /* If set, emit strictly portable ANSI C */
     int has_included_instr;   /* Flag set when instruments are %included in instr */
     char dependency[1024];    /* stores all dependencies needed to compile, from comps and instr */
+    List user_vars;           /* stores custom particle user variables */
+    List user_vars_types;     /* stores custom particle user variable types */
   };
 
 struct jump_struct

@@ -46,11 +46,11 @@
 #endif /* !WIN32 */
 #endif /* MC_PATHSEP_C */
 
-#ifndef MCSTAS
+#ifndef @MCCODE_LIBENV@
 #ifdef MAC
-#define MCSTAS ":@MCCODE_TARNAME@:lib" /* ToDo: What to put here? */
+#define @MCCODE_LIBENV@ ":@MCCODE_TARNAME@:lib" /* ToDo: What to put here? */
 #else  /* !MAC */
-#define MCSTAS "@MCCODE_LIB@"
+#define @MCCODE_LIBENV@ "@MCCODE_LIB@"
 #endif /* !MAC */
 #endif /* MCSTAS */
 
