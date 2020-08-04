@@ -2,8 +2,7 @@
 *
 * McXtrace, X-ray tracing package
 *           Copyright (C) 1997-2009, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+*           DTU Physics , Kgs. Lyngby, Denmark
 *
 * Runtime: share/mcxtrace-r.c
 *
@@ -20,94 +19,117 @@
 *
 *******************************************************************************/
 
+#ifndef MCXTRACE_R_H
+#include "mcxtrace-r.h"
+#endif
+
+/*******************************************************************************
+* The I/O format definitions and functions
+*******************************************************************************/
+
 #ifndef MCXTRACE_H
 
-/*******************************************************************************
-* mcstore_xray: stores neutron coodinates into global array (per component)
-*******************************************************************************/
-void
-mcstore_xray(MCNUM *s, int index, double x, double y, double z,
-               double kx, double ky, double kz, double phi, double t,
-               double Ex, double Ey, double Ez, double p)
-{
-    double *dptr = &s[12*index];
-    *dptr++  = x;
-    *dptr++  = y ;
-    *dptr++  = z ;
-    *dptr++  = kx;
-    *dptr++  = ky;
-    *dptr++  = kz;
-    *dptr++  = phi;
-    *dptr++  = t;
-    *dptr++  = Ex;
-    *dptr++  = Ey;
-    *dptr++  = Ez;
-    *dptr    = p ;
-}
 
 /*******************************************************************************
-* mcrestore_xray: restores neutron coodinates from global array
+* mcsetstate: transfer parameters into global McXtrace variables
 *******************************************************************************/
-void
-mcrestore_xray(MCNUM *s, int index, double *x, double *y, double *z,
-               double *kx, double *ky, double *kz, double *phi, double *t,
-               double *Ex, double *Ey, double *Ez, double *p)
+#pragma acc routine seq
+_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,
+			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop)
 {
-    double *dptr = &s[12*index];
-    *x  =  *dptr++;
-    *y  =  *dptr++;
-    *z  =  *dptr++;
-    *kx =  *dptr++;
-    *ky =  *dptr++;
-    *kz =  *dptr++;
-    *phi=  *dptr++;
-    *t  =  *dptr++;
-    *Ex =  *dptr++;
-    *Ey =  *dptr++;
-    *Ez =  *dptr++;
-    *p  =  *dptr;
-} /* mcrestore_xray */
+  _class_particle mcphoton;
 
-/*******************************************************************************
-* mcsetstate: transfer parameters into global McXtrace variables 
-*******************************************************************************/
-void
-mcsetstate(double x, double y, double z, double kx, double ky, double kz,
-           double phi, double t, double Ex, double Ey, double Ez, double p)
-{
-  extern double mcnx, mcny, mcnz, mcnkx, mcnky, mcnkz;
-  extern double mcnphi, mcnt, mcnEx, mcnEy, mcnEz, mcnp;
+  mcphoton.x  = x;
+  mcphoton.y  = y;
+  mcphoton.z  = z;
+  mcphoton.kx = kx;
+  mcphoton.ky = ky;
+  mcphoton.kz = kz;
+  mcphoton.phi  = phi;
+  mcphoton.t  = t;
+  mcphoton.Ex = Ex;
+  mcphoton.Ey = Ey;
+  mcphoton.Ez = Ez;
+  mcphoton.p  = p;
+  mcphoton.mcgravitation = mcgravitation;
+  mcphoton.mcMagnet = mcMagnet;
+  mcphoton.allow_backprop = mcallowbackprop;
+  mcphoton._uid       = 0;
+  mcphoton._index     = 1;
+  mcphoton._absorbed  = 0;
+  mcphoton._restore   = 0;
+  mcphoton._scattered = 0;
 
-  mcnx = x;
-  mcny = y;
-  mcnz = z;
-  mcnkx = kx;
-  mcnky = ky;
-  mcnkz = kz;
-  mcnphi = phi;
-  mcnt = t;
-  mcnEx = Ex;
-  mcnEy = Ey;
-  mcnEz = Ez;
-  mcnp = p;
+  return(mcphoton);
 } /* mcsetstate */
 
 /*******************************************************************************
-* mcgenstate: set default xray parameters 
+* mcgetstate: get photon parameters from particle structure
+*******************************************************************************/
+#pragma acc routine seq
+_class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, double *z,
+               double *kx, double *ky, double *kz, double *phi, double *t,
+               double *Ex, double *Ey, double *Ez, double *p)
+{
+  *x  =  mcphoton.x;
+  *y  =  mcphoton.y;
+  *z  =  mcphoton.z;
+  *kx =  mcphoton.kx;
+  *ky =  mcphoton.ky;
+  *kz =  mcphoton.kz;
+  *phi  =  mcphoton.phi;
+  *t  =  mcphoton.t;
+  *Ex =  mcphoton.Ex;
+  *Ey =  mcphoton.Ey;
+  *Ez =  mcphoton.Ez;
+  *p  =  mcphoton.p;
+
+  return(mcphoton);
+} /* mcgetstate */
+
+
+/*******************************************************************************
+* mcgenstate: set default photon parameters 
+*******************************************************************************/
+#pragma acc routine seq
+_class_particle mcgenstate(void)
+{
+  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));
+}
+
+/*******************************************************************************
+* mccoordschanges: old style rotation routine rot -> (x y z) ,(vx vy vz),(sx,sy,sz)
 *******************************************************************************/
 void
-mcgenstate(void)
+mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
+               double *kx, double *ky, double *kz, double *Ex, double *Ey, double *Ez)
 {
-  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-  /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
+  Coords b, c;
+
+  b.x = *x;
+  b.y = *y;
+  b.z = *z;
+  c = rot_apply(t, b);
+  b = coords_add(c, a);
+  *x = b.x;
+  *y = b.y;
+  *z = b.z;
+
+  if ( (kz && ky  && kx) && (*kz != 0.0 || *kx != 0.0 || *ky != 0.0) )
+    mccoordschange_polarisation(t, kx, ky, kz);
+
+  if ( (Ez && Ey  && Ex) && (*Ez != 0.0 || *Ex != 0.0 || *Ey != 0.0) )
+    mccoordschange_polarisation(t, Ex, Ey, Ez);
+
 }
 
 /* intersection routines ==================================================== */
 
 /*******************************************************************************
-* inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight) 
-* return 0 if outside and 1 if inside 
+* inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight)
+* return 0 if outside and 1 if inside
 *******************************************************************************/
+#pragma acc routine seq
 int inside_rectangle(double x, double y, double xwidth, double yheight)
 {
   if (x>-xwidth/2 && x<xwidth/2 && y>-yheight/2 && y<yheight/2)
@@ -119,8 +141,9 @@ int inside_rectangle(double x, double y, double xwidth, double yheight)
 /*******************************************************************************
  * box_intersect: compute length intersection with a box
  * returns 0 when no intersection is found
- *      or 1 in case of intersection with resulting travelling lengths dl_in and dl_out
+ *      or 1 in case of intersection with resulting lengths dl_in and dl_out
 *******************************************************************************/
+#pragma acc routine sequential
 int box_intersect(double *dl_in, double *dl_out,
                   double x, double y, double z,
                   double kx, double ky, double kz,
@@ -187,10 +210,6 @@ int box_intersect(double *dl_in, double *dl_out,
       l_[5]=0;
     }
   }
-  /*check validity of intersects*/
-  if (count>2){
-    fprintf(stderr,"box_instersect: xray hitting box more than twice\n");
-  }
   if (!count){
     *dl_in=0;*dl_out=0;
     return 0;
@@ -212,8 +231,8 @@ int box_intersect(double *dl_in, double *dl_out,
  *     and resulting times l0 and l1
  * Written by: EK 11.6.09 
  *******************************************************************************/
-int
-cylinder_intersect(double *l0, double *l1, double x, double y, double z,
+#pragma acc routine sequential
+int cylinder_intersect(double *l0, double *l1, double x, double y, double z,
                    double kx, double ky, double kz, double r, double h)
 {
   double A,B,C,D,k2,k;
@@ -279,8 +298,8 @@ cylinder_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting lengths l0 and l1 
  *******************************************************************************/
-int
-sphere_intersect(double *l0, double *l1, double x, double y, double z,
+#pragma acc routine sequential
+int sphere_intersect(double *l0, double *l1, double x, double y, double z,
                  double kx, double ky, double kz, double r)
 {
   double B, C, D, k;
@@ -305,8 +324,8 @@ sphere_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 when they are found with resulting lemngths l0 and l1.
  *****************************************************************************/
-int
-ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
+#pragma acc routine sequential
+int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
     double kx, double ky, double kz, double a, double b, double c,
     Rotation Q)
 {
@@ -367,8 +386,8 @@ ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found (i.e. line is parallel to the plane)
  * returns 1 or -1 when intersection length is positive and negative, respectively
  *******************************************************************************/
-int
-plane_intersect(double *l, double x, double y, double z,
+#pragma acc routine sequential
+int plane_intersect(double *l, double x, double y, double z,
                  double kx, double ky, double kz, double nx, double ny, double nz, double wx, double wy, double wz)
 {
   double s,k2;
