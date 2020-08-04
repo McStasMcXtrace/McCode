@@ -40,14 +40,15 @@
 * flux:   [ph/s] Total flux radiated from the source. 
 * randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
 * phase: [ ] Set phase to something given. 
+* spectrum_file: [ ]  File from which to read an input spectrum.
 * 
 * %E
 ******************************************************************/
 
 DEFINE COMPONENT Source_pt
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0)
-OUTPUT PARAMETERS (prms)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0,string spectrum_file="")
+OUTPUT PARAMETERS (pmul, spectrum_T)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -58,18 +59,14 @@ SHARE
 
 DECLARE
 %{
-  double e,l;
-  struct {
-    double l0,dl;
-    double pmul,pint;
-    t_Table T;
-  } prms;
-
+  double pmul;
+  t_Table spectrum_T;
 %}
 
 INITIALIZE
 %{
   double fi_x,fi_y,t_ome;
+  double pint;
   /*input logic*/
   if(dist<=0 || focus_yh<=0 || focus_xw<=0){
     fprintf(stderr,"Source_pt (%s): Error: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n",
@@ -82,22 +79,22 @@ INITIALIZE
   /*fractional solid angle subtended by the target*/
   t_ome=asin(sin(fi_y)*sin(fi_x))/M_PI;
   
-  if (spectrum_file){
+  if (spectrum_file && strlen(spectrum_file)>0 && strcmp(spectrum_file,"NULL")!=0 ){
     /*read spectrum from file*/
     int status=0;
-    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+    if ( (status=Table_Read(&(spectrum_T),spectrum_file,0))==-1){
       fprintf(stderr,"Source_pt(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
-    /*data is now in table prms.T*/
+    /*data is now in table spectrum_T*/
     /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
     int i;
-    prms.pint=0;
-    t_Table *T=&(prms.T);
-    for (i=0;i<prms.T.rows-1;i++){
-      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+    pint=0;
+    t_Table *T=&(spectrum_T);
+    for (i=0;i<spectrum_T.rows-1;i++){
+      pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
     }
-    printf("Source_pt(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    printf("Source_pt(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
     if(E0) printf("Source_pt(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   } else if (!E0 && !lambda0){
     fprintf(stderr,"Error(%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
@@ -107,18 +104,18 @@ INITIALIZE
   if(phase) printf("got phase %g from outside\n",phase);
   /*calculate the X-ray weight from the flux*/
   if (flux){
-    prms.pmul=flux;
+    pmul=flux;
   }else{
-    prms.pmul=1;
+    pmul=1;
   }
-  prms.pmul*=t_ome/(double)mcget_ncount();
+  pmul*=t_ome/(double)mcget_ncount();
 %}
 
 TRACE
 %{
   double k,l,e;
   /*point source*/
-  p=prms.pmul;
+  p=pmul;
   x=0;y=0;z=0;
  
   /*draw random coordinates in the acceptance window*/
@@ -127,11 +124,11 @@ TRACE
   kz= dist;
   NORM(kx,ky,kz);  
   /*sample wavelength*/
-  if (spectrum_file){
+  if (spectrum_file && strlen(spectrum_file)>0 && strcmp(spectrum_file,"NULL")!=0){
     double pp=0;
     //while (pp<=0){ 
-    l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
-    pp=Table_Value(prms.T,l,1);
+    l=spectrum_T.data[0]+ (spectrum_T.data[(spectrum_T.rows-1)*spectrum_T.columns] -spectrum_T.data[0])*rand01();
+    pp=Table_Value(spectrum_T,l,1);
     //}
     p*=pp;
     /*if E0!=0 the tabled value is assumed to be energy in keV*/
@@ -177,7 +174,7 @@ TRACE
 
 FINALLY
 %{
-  Table_Free(&(prms.T));
+  Table_Free(&(spectrum_T));
 %}
 
 MCDISPLAY
