@@ -102,6 +102,7 @@
     z = z+ (dl)*kz/k;\
     phi = phi+ 1e10*k*(dl);\
     t = t + (dl)/((double)M_C);\
+    if (isnan(p) || isinf(p)) { instrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
   }while (0)
 /* this had to be taken out to avoid error 700. This may need to be atomic, but probably should be somewhere else.*/
 /*    if (isnan(p) || isinf(p)) { instrument->counter_AbsorbProp[INDEX_CURRENT_COMP] =  instrument->counter_AbsorbProp[INDEX_CURRENT_COMP] + 1; ABSORB; }\
