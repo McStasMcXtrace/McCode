@@ -43,7 +43,7 @@
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=0, int N=1, int verbose=0, f=1, string material_datafile="Be.txt")
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS (Z,Ar,rho,matT)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -53,12 +53,9 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    int Z;
-    double At, rho;
-    double *E,*delta;
-    t_Table Tb;
-  } *prms;
+  int Z;
+  double Ar, rho;
+  t_Table matT;
 %}
 
 INITIALIZE
@@ -75,21 +72,20 @@ INITIALIZE
       exit(-1);
   }
 
-  prms=calloc(1,sizeof(*prms));
   if (!f && material_datafile && strlen(material_datafile)){
-      if ( (status=Table_Read(&(prms->Tb),material_datafile,0))==-1){
+      if ( (status=Table_Read(&(matT),material_datafile,0))==-1){
           fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
           exit(-1);
       }
       char **header_parsed;
-      header_parsed=Table_ParseHeader(prms->Tb.header,"Z","A[r]","rho","sigma[a]");
-      if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
-      if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
-      if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+      header_parsed=Table_ParseHeader(matT.header,"Z","A[r]","rho");
+      if (!Ar) Ar=strtod(header_parsed[1],NULL);
+      if (!Z) Z=strtol(header_parsed[0],NULL,10);
+      if (!rho) rho=strtod(header_parsed[2],NULL);
   }
 
   if (T==0){
-      fprintf(stderr,"Warning (%s): Transmission is set to 0 and no material set. All X-rays will be absorbed by lens\n.",NAME_CURRENT_COMP);
+    fprintf(stderr,"Warning (%s): Transmission is set to 0 and no material set. All X-rays will be absorbed by lens\n.",NAME_CURRENT_COMP);
   }
 %}
 
@@ -111,18 +107,18 @@ TRACE
 
   /*change direction towards focal point*/
   if(!f){
-      /*Focal length given by lambda and delta*/
-      k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-      e=K2E*k;
-      f1=Table_Value(prms->Tb,e,1);
+    /*Focal length given by lambda and delta*/
+    k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    e=K2E*k;
+    f1=Table_Value(matT,e,1);
 
-      /*Calculation of Refractive Index */
-      rhoel= f1*NA*(prms->rho*1e-24)/prms->At; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-      delta= 2.0*M_PI*RE*rhoel/(k*k);
-      F=r/2/delta/N;
+    /*Calculation of Refractive Index */
+    rhoel= f1*NA*(rho*1e-24)/Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+    delta= 2.0*M_PI*RE*rhoel/(k*k);
+    F=r/2/delta/N;
   }else{
-      /*focal length is a scalar*/
-      F=f;
+    /*focal length is a scalar*/
+    F=f;
   }
 
   /*Only focusing in the y-direction for now.*/
@@ -147,33 +143,30 @@ TRACE
   rotate(s2x,s2y,s2z, kx,ky,kz, theta, 1, 0, 0);
 
   kx=s2x;ky=s2y;kz=s2z;
-  //printf("s= %g %g %g   s2= %g %g %g\n",sx,sy,sz,s2x,s2y,s2z);
 
   /*set the phase shift*/
-  //printf("PHI %.15e ",phi);
   phi+=k*1e10*((x*x+y*y)/2*F); /*k in AA⁻1 but x,y and f are in m. conversion factor.*/
-  //printf("%.15e %.8e\n", phi, k*1e10*((x*x+y*y)/2*F));
 %}
 
 FINALLY
 %{
-  Table_Free(&(prms->Tb));
-  free(prms);
+  Table_Free(&(matT));
 %}
 
 
 MCDISPLAY
 %{
   double delta;
-  int N=8,i;
+  int NN=8;
+  int i;
   
   rectangle("xy",0,0,0,xwidth,yheight);
   if (yheight<xwidth){
-    delta=yheight/N;
+    delta=yheight/NN;
   } else {
-    delta=xwidth/N;
+    delta=xwidth/NN;
   }
-  for (i=1;i<=N;i++){
+  for (i=1;i<=NN;i++){
     circle("xy",0,0,0,sqrt(delta*i));
   }
 %}
