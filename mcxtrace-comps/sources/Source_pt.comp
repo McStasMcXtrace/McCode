@@ -56,7 +56,6 @@ SHARE
   %include "read_table-lib"
 %}
 
-
 DECLARE
 %{
   double pmul;
@@ -71,7 +70,7 @@ INITIALIZE
   if(dist<=0 || focus_yh<=0 || focus_xw<=0){
     fprintf(stderr,"Source_pt (%s): Error: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   fi_x=atan(focus_xw/2.0/dist);
   fi_y=atan(focus_yh/2.0/dist);
@@ -169,7 +168,6 @@ TRACE
 
   /*set polarization vector*/
   Ex=0;Ey=0;Ez=0;
-
 %}
 
 FINALLY
