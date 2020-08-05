@@ -14,7 +14,7 @@
 * Date: 2009
 * Version: 1.0
 * Origin: ILL
-* Release: McStas 1.6
+* Release: McXtrace 1.0
 *
 * A simulation progress bar
 *
@@ -30,19 +30,18 @@
 *
 * %P
 * INPUT PARAMETERS:
-* percent:  (0-100) percentage interval between updates. Default is 10%.
-* minutes:  (min)   time in minutes between updates (Overrides percent flag).
-* flag_save:(0|1)   flag to enable intermediate saving for all monitors
-* profile:  (str)   file name to save the simulation profile
-*                 if set to "", it is set to the name of the instrument.
+* percent: [0-100]  percentage interval between updates. Default is 10%.
+* minutes: [min]    time in minutes between updates (Overrides percent flag).
+* flag_save: [0|1]  flag to enable intermediate saving for all monitors
+* profile: [str]    file name to save the simulation profile, if set to "", it is set to the name of the instrument.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar
-DEFINITION PARAMETERS (string profile=0)
-SETTING PARAMETERS (percent=10,flag_save=0,minutes=0)
-OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
+OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime,CurrentTime)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
@@ -53,15 +52,20 @@ DECLARE
 #error Only one Progress_bar component may be used in an instrument definition.
 #endif
 
-  double IntermediateCnts=0;
-  time_t StartTime       =0;
-  time_t EndTime         =0;
-  time_t CurrentTime     =0;
+  double IntermediateCnts;
+  time_t StartTime;
+  time_t EndTime;
+  time_t CurrentTime;
 %}
 
 INITIALIZE
 %{
-  fprintf(stdout, "[%s] Initialize\n", mcinstrument_name);
+  IntermediateCnts=0;
+  StartTime=0;
+  EndTime=0;
+  CurrentTime=0;
+
+  fprintf(stdout, "[%s] Initialize\n", instrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
   }
@@ -69,6 +73,7 @@ INITIALIZE
 
 TRACE
 %{
+#ifndef OPENACC
   double ncount;
   ncount = mcget_run_num();
   if (!StartTime) {
@@ -77,9 +82,10 @@ TRACE
   }
   time_t NowTime;
   time(&NowTime);
+  /* compute initial estimate of computation duration */
   if (!EndTime && ncount >= IntermediateCnts) {
     CurrentTime = NowTime;
-    if (difftime(NowTime,StartTime) > 10) { /* wait 10 sec before writing ETA */
+    if (difftime(NowTime,StartTime) > 10 && ncount) { /* wait 10 sec before writing ETA */
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
 				     *(double)mcget_ncount()/ncount);
       IntermediateCnts = 0;
@@ -94,31 +100,37 @@ TRACE
     fflush(stdout);
   }
 
-  if (EndTime &&
+  /* display percentage when percent or minutes have reached step */
+  if (EndTime && mcget_ncount() &&
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
-    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
+    fprintf(stdout, "%d ", (int)(ncount*100.0/mcget_ncount())); fflush(stdout);
     CurrentTime = NowTime;
+
     IntermediateCnts = ncount + percent*mcget_ncount()/100;
-    if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");
-    if (flag_save) mcsave(NULL);
+    /* check that next intermediate ncount check is a multiple of the desired percentage */
+    IntermediateCnts = floor(IntermediateCnts*100/percent/mcget_ncount())*percent*mcget_ncount()/100;
+    /* raise flag to indicate that we did something */
+    SCATTER;
+    if (flag_save) save(NULL);
   }
+#endif
 %}
 
 SAVE
 %{
-  MPI_MASTER(fprintf(stdout, "\nSave [%s]\n", mcinstrument_name););
-  if (profile && strlen(profile)) {
+  MPI_MASTER(fprintf(stdout, "\nSave [%s]\n", instrument_name););
+  if (profile && strlen(profile) && strcmp(profile,"NULL") && strcmp(profile,"0")) {
     char filename[256];
-    if (!strlen(profile)) strcpy(filename, mcinstrument_name);
+    if (!strlen(profile) || !strcmp(profile,"NULL") || !strcmp(profile,"0")) strcpy(filename, instrument_name);
     else strcpy(filename, profile);
     DETECTOR_OUT_1D(
         "Intensity profiler",
         "Component index [1]",
         "Intensity",
         "prof", 1, mcNUMCOMP, mcNUMCOMP-1,
-        &mcNCounter[1],&mcPCounter[1],&mcP2Counter[1],
+        &(instrument->counter_N[1]),&(instrument->counter_P[1]),&(instrument->counter_P2[1]),
         filename);
 
   }
@@ -128,7 +140,7 @@ FINALLY
 %{
   time_t NowTime;
   time(&NowTime);
-  fprintf(stdout, "\nFinally [%s: %s]. Time: ", mcinstrument_name, mcdirname ? mcdirname : ".");
+  fprintf(stdout, "\nFinally [%s: %s]. Time: ", instrument_name, dirname ? dirname : ".");
   if (difftime(NowTime,StartTime) < 60.0)
     fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
   else if (difftime(NowTime,StartTime) > 3600.0)
@@ -136,6 +148,11 @@ FINALLY
   else
     fprintf(stdout, "%g [min] ", difftime(NowTime,StartTime)/60.0);
   fprintf(stdout, "\n");
+%}
+
+MCDISPLAY
+%{
+
 %}
 
 END
