@@ -159,7 +159,7 @@
 * mosaic_a: [arc minutes]                                 Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model.
 * mosaic_b: [arc minutes]                                 Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS.
 * mosaic_c: [arc minutes]                                 Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS
-* mosaic_AB: [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]  In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which  the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices).
+* mosaic_AB: [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]  In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which  the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the two reflections chosen by A and B (Miller indices).
 *
 * recip_cell: [1]                                         Choice of direct/reciprocal (0/1) unit cell definition
 * ax: [AA or AA^-1]                                       Coordinates of first (direct/recip) unit cell vector 
