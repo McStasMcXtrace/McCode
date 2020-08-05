@@ -34,24 +34,22 @@
 
 
 DEFINE COMPONENT Lens_parab
-DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=0.5e-3, r_ap=1.4e-3, yheight=0, d=.1e-3, int N=1, rough_z=0, rough_xy=0)
-OUTPUT PARAMETERS (prms,parab)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string material_datafile="Be.txt", r=0.5e-3, r_ap=1.4e-3, yheight=0, d=.1e-3, int N=1, rough_z=0, rough_xy=0, T=1)
+OUTPUT PARAMETERS (Z,Ar,rho,matT)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-  typedef struct {
+  struct incom_parab {
       double coord[3];
       double k[3];
-  } incom_parab;
-  typedef struct {
-      double constants[6];
-  } lens_parab;
+  };
 
-  incom_parab intersection_lens_parab(incom_parab a,lens_parab b, double rough_xy,double rough_z){
-      incom_parab result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
+#pragma acc routine seq
+  struct incom_parab intersection_lens_parab(struct incom_parab a, double *b, double roughness_xy,double roughness_z){
+      struct incom_parab result;//={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
       int i;
       double A,B,C,D,rr;
       double t[2],p[3],knorm[3],k[3],pos1_tmp[3],pos_tmp[3];
@@ -64,10 +62,9 @@ SHARE
       double tx,ty,tz,tnorm,txn,tyn,tzn;
       double v,w;
 
-
       for(i=0;i<=2;i++){
-          k[i]=a.k[i];
-          p[i]=a.coord[i];
+        result.k[i]=k[i]=a.k[i];
+        result.coord[i]=p[i]=a.coord[i];
       }
 
       Knorm=sqrt(k[0]*k[0]+k[1]*k[1]+k[2]*k[2]);
@@ -75,12 +72,12 @@ SHARE
       knorm[1]=k[1]/Knorm;
       knorm[2]=k[2]/Knorm;
 
-      rr=b.constants[0];
-      yh=b.constants[1];
-      xw=b.constants[2];
-      dd=b.constants[3];
-      M=b.constants[4];
-      Sign=b.constants[5];
+      rr=b[0];
+      yh=b[1];
+      xw=b[2];
+      dd=b[3];
+      M=b[4];
+      Sign=b[5];
 
       A=knorm[0]*knorm[0]+knorm[1]*knorm[1];
       B= 2.0*(p[0]*knorm[0]+p[1]*knorm[1] - Sign*rr*knorm[2]);
@@ -88,12 +85,10 @@ SHARE
       D=B*B-4.0*A*C;
     
     if (D<0) { /*ray does not intersect the parabola*/
-        fprintf(stderr,"line 96: D<0 %s\n","Lens_parab");
         return result;
     }
     if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
         if(B==0){
-            fprintf(stderr, "Division by zero in %s\n","Lens_parab");
             return result;
         }
         t[0]=-C/B;
@@ -141,14 +136,12 @@ SHARE
         Ny=-Sign*(result.coord[1]/rr);
         Nz=1;
 
-        if (rough_xy) {
-            double d_xy=rough_xy*randnorm();
-            Nx+=d_xy;
-            Ny+=d_xy;
+        if (roughness_xy) {
+            //Nx=Nx+roughness_xy*randnorm();
+            //Ny=Ny+roughness_xy*randnorm();
         }
-        if (rough_z) {
-            double d_z=rough_z*randnorm();
-            Nz+=d_z;
+        if (roughness_z) {
+            //Nz=Nz+roughness_z*randnorm();
         }
 
         NORM=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
@@ -186,7 +179,6 @@ SHARE
 
     /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
-       fprintf(stderr,"line 134: Division by zero\n"); 
        return result; 
     }
     
@@ -207,53 +199,49 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-    t_Table T;
-  } *prms;
+  int Z;
+  double Ar, rho;
+  t_Table matT;
 %} 
 
 INITIALIZE
 %{
   int status=0;
-  prms=calloc(1,sizeof(*prms));
 
-  if ( (status=Table_Read(&(prms->T),material_datafile,0))==-1){
+  if ( (status=Table_Read(&(matT),material_datafile,0))==-1){
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
       exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(prms->T.header,"Z","A[r]","rho",NULL);
-  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
-  if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
-  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+  header_parsed=Table_ParseHeader(matT.header,"Z","A[r]","rho",NULL);
+  if (!Z) Z=strtol(header_parsed[0],NULL,10);
+  if (!Ar) Ar=strtod(header_parsed[1],NULL);
+  if (!rho) rho=strtod(header_parsed[2],NULL);
 %}
 
 TRACE
 %{
-  incom_parab incid,refr,outg;
-  lens_parab parab;
+  double parab[6];
   double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w;
+  struct incom_parab incid,refr,outg;
 
   int i=0,nr;
   
-  parab.constants[0]=r;
-  parab.constants[1]=r_ap*2;
-  parab.constants[2]=r_ap*2;
+  parab[0]=r;
+  parab[1]=r_ap*2;
+  parab[2]=r_ap*2;
   
   w=(r_ap*r_ap)/(2.0*r);
   k=sqrt(kx*kx+ky*ky+kz*kz); 
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
   /*Interpolation of Table Values*/
-  mu=Table_Value(prms->T,e,5)*prms->rho*1e2;/*mu is now in SI, [m^-1]*/;
+  mu=Table_Value(matT,e,5)*rho*1e2;/*mu is now in SI, [m^-1]*/;
 
-  f=Table_Value(prms->T,e,1);
+  f=Table_Value(matT,e,1);
 
   /*Calculation of Refractive Index */
-  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  rhoel= f*NA*(rho*1e-24)/Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   delta= 2.0*M_PI*RE*rhoel/(k*k);
   beta= mu*1e-10/(2.0*k); /*mu and k in  A^-1*/
 
@@ -270,9 +258,9 @@ TRACE
 
   d_total=0;
   for (nr=0;nr<=(N-1);nr++){
-    parab.constants[3]=nr*d+nr*2*w; // d constant
-    parab.constants[4]=1.0/Refractive_Index_Re; // M constant
-    parab.constants[5]=-1.0; // Sign constant
+    parab[3]=nr*d+nr*2*w; // d constant
+    parab[4]=1.0/Refractive_Index_Re; // M constant
+    parab[5]=-1.0; // Sign constant
     
     refr=intersection_lens_parab(incid,parab,rough_xy,rough_z);
     
@@ -287,9 +275,9 @@ TRACE
     kz=refr.k[2];
 
     //alter parabolic input to match second parabola
-    parab.constants[3]=(nr+1)*d+nr*2*w;
-    parab.constants[4]=Refractive_Index_Re;
-    parab.constants[5]=1.0; 
+    parab[3]=(nr+1)*d+nr*2*w;
+    parab[4]=Refractive_Index_Re;
+    parab[5]=1.0; 
     
     outg=intersection_lens_parab(refr,parab,rough_xy,rough_z);
     
@@ -308,8 +296,7 @@ TRACE
 
 FINALLY
 %{
-    Table_Free(&(prms->T));
-    free(prms);
+    Table_Free(&(matT));
 %}
 
 MCDISPLAY
