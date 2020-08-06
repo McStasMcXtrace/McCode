@@ -1,0 +1,59 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_SX
+*
+* %Identification
+* Written by: E. Farhi
+* Date: Sept 26th 2019
+* Origin: Synchrotron Soleil
+* Version: 0.2
+* %INSTRUMENT_SITE: Tests
+*
+* Unit-test instrument for the Single_crystal sample component.
+*
+* Simply a model source illuminating a SX sample.
+* The sample itself is a Mo bulk crystal.
+*
+* %Parameters
+* TTH: [deg.] Two theta rotation. Only places the last detector.
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Test_SX(TTH=13.4)
+
+TRACE
+COMPONENT src = Source_flat(
+    yheight = 1e-3, xwidth = 1e-3, dist = 10, focus_xw = 1e-3,
+    focus_yh = 1e-3, E0 = 7, dE = 6.9)
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT psd0 = PSD_monitor(
+    nx = 100, ny = 100, filename = "psd0", xwidth = 2e-3, yheight = 2e-3)
+AT (0, 0, 1e-9) RELATIVE src
+
+COMPONENT sample = Single_crystal(reflections="Mo.lau", material="NULL", 
+    radius = .5e-4, yheight = 1e-3,mosaic=1e-4)
+AT (0, 0, 10) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+/*EXTEND %{*/
+/*  if(!SCATTERED) ABSORB;*/
+/*%}*/
+
+COMPONENT psd4pi = PSD_monitor_4PI(
+    nx = 180, ny = 180, filename = "psd4pi", radius = 0.1, restore_xray = 1)
+AT (0, 0, 0) RELATIVE sample
+
+/*COMPONENT detector = PSD_monitor(*/
+/*    nx=200, ny=200, xwidth=0.1, yheight=0.1, filename="psd1",restore_xray=1)*/
+/*AT(0,0,0.1) RELATIVE sample*/
+/**/
+/*COMPONENT ttharm= Arm()*/
+/*AT(0,0,0) RELATIVE sample*/
+/*ROTATED (TTH,TTH,0) RELATIVE sample*/
+/**/
+/*COMPONENT detector2 = PSD_monitor(*/
+/*    nx=200, ny=200, xwidth=2e-3, yheight=1e-2, filename="psd2",restore_xray=1)*/
+/*AT(0,0,0.1) RELATIVE ttharm*/
+END
