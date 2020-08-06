@@ -1053,7 +1053,7 @@ TRACE
           #endif
           // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
-          geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry);
+          geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]],number_of_solutions,r_start,k,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry);
           intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]] = 1;
           // if (trace_verbal) printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
@@ -1113,7 +1113,7 @@ TRACE
           printf("intersection_with_children = %d \n",intersection_with_children);
         #endif
         if (intersection_with_children == 0) {
-            geometry_output = Volumes[current_volume]->geometry.intersect_function(intersection_time_table.intersection_times[current_volume],number_of_solutions,r_start,v,&Volumes[current_volume]->geometry);
+            geometry_output = Volumes[current_volume]->geometry.intersect_function(intersection_time_table.intersection_times[current_volume],number_of_solutions,r_start,k,&Volumes[current_volume]->geometry);
             intersection_time_table.calculated[current_volume] = 1;
         }
     }
@@ -1444,7 +1444,7 @@ TRACE
             k[0] = kx; k[1] = ky; k[2] = kz;
             k_length = sqrt(kx*kx+ky*ky+kz*kz);
             k_new[0] = kx; k_new[1] = ky; k_new[2] = kz;
-            if (verbal) if (k_length < 1) printf("wavevector set to less than 1\n");
+            //if (verbal) if (k_length < 1) printf("wavevector set to less than 1\n");
             
             #ifdef Union_trace_verbal_setting
               printf("Running logger system for specific volumes \n");
