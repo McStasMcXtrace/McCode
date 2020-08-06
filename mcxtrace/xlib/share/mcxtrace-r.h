@@ -97,12 +97,11 @@
 #define mcPROP_DL(dl) \
   do { \
     MCNUM k=sqrt( scalar_prod(kx,ky,kz,kx,ky,kz));\
-    x += (dl)*kx/k;\
-    y += (dl)*ky/k;\
-    z += (dl)*kz/k;\
-    phi += 1e10*k*(dl);\
-    t += (dl)/((double)M_C);\
-    if (isnan(p) || isinf(p)) { instrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
+    x = x+ (dl)*kx/k;\
+    y = y+ (dl)*ky/k;\
+    z = z+ (dl)*kz/k;\
+    phi = phi+ 1e10*k*(dl);\
+    t = t + (dl)/((double)M_C);\
   }while (0)
 /* this had to be taken out to avoid error 700. This may need to be atomic, but probably should be somewhere else.*/
 /*    if (isnan(p) || isinf(p)) { instrument->counter_AbsorbProp[INDEX_CURRENT_COMP] =  instrument->counter_AbsorbProp[INDEX_CURRENT_COMP] + 1; ABSORB; }\
