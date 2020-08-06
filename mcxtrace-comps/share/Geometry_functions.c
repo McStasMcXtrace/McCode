@@ -845,7 +845,7 @@ Output is true or false depending on intersections will occour, and a list of ti
 
 Math used here is based on the math found on:
 http://lousodrome.net/blog/light/2017/01/03/intersection-of-a-ray-and-a-cone/
-But has been modified to sollve the problem within the syntax needed in Union
+But has been modified to solve the problem within the syntax needed in Union
 
 This function was created by Martin Olsen at NBI on september 20, 2018.
 */
