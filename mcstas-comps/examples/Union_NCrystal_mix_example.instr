@@ -19,7 +19,14 @@
 /*                                                                            */
 /******************************************************************************/
 
-DEFINE INSTRUMENT NCrystal_example()
+/******************************************************************************/
+* Modified NCrystal_example to use the Union components with an NCrystal       *
+* process in addition to the stand alone NCrystal component. This example      *
+* exists primarily to show the two components can run together without issue.  *
+* Changes by Mads Bertelsen, 13/8 2020.                                        *
+*******************************************************************************/
+
+DEFINE INSTRUMENT Union_NCrystal_mix_example()
 
 DECLARE
 %{
