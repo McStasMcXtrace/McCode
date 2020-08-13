@@ -287,23 +287,47 @@ INITIALIZE
 
   /* access crystal structure to get number density (natoms/volume): */
   ncrystal_info_t info = ncrystal_create_info(cfg);
-  unsigned cell_sg,cell_atnum;
-  double cell_a,cell_b,cell_c,cell_alpha,cell_beta,cell_gamma,cell_volume;
-  if(!ncrystal_info_getstructure(info,&cell_sg,&cell_a,&cell_b,&cell_c,&cell_alpha,&cell_beta,&cell_gamma,&cell_volume,&cell_atnum))
-    NCMCERR("Structure information is unavailable in the loaded NCrystal Info");
-  ncrystal_unref(&info);
-
-  //cell_atnum/cell_volume is the atomic number density in units of
-  //Aa^-3=1e30m^3, and given that we have cross-sections in barn (1e-28m^2) and
-  //want to generate distances in meters with -log(R)/(numberdensity*xsect), we
-  //get the unit conversion factor of 0.01. We also apply the powder packing
-  //factor here (it is guaranteed to be non-zero):
   
-  // Union change: In NCrystal_sample density factor is negative for easier sampling,
-  //  but as the sampling is performed in the master we use a positive sign for the
-  //  density factor as this is more intuitive.
-  params.density_factor = 0.01 * cell_volume / ( cell_atnum * packingfactor );
-  params.inv_density_factor = 1.0/params.density_factor;
+  // Depending on the version of NCrystal, the number density is retrieved in
+  // two different ways. The preprocessor is used to switch between the two
+  // methods depending on the NCRYSTAL_VERSION
+  #if NCRYSTAL_VERSION  >= 1099001
+      double numberdensity = ncrystal_info_getnumberdensity(info);
+      if( numberdensity <= 0.0 )
+        NCMCERR("Number density information is unavailable in the loaded NCrystal Info");
+      ncrystal_unref(&info);
+
+      //numberdensity is the atomic number density in units of Aa^-3=1e30m^3, and
+      //given that we have cross-sections in barn (1e-28m^2) and want to generate
+      //distances in meters with -log(R)/(numberdensity*xsect), we get the unit
+      //conversion factor of 0.01. We also apply the powder packing factor here (it
+      //is guaranteed to be non-zero):
+      
+      // Union change: In NCrystal_sample density factor is negative for easier sampling,
+      //  but as the sampling is performed in the master we use a positive sign for the
+      //  density factor as this is more intuitive.
+      params.density_factor = 0.01  / ( numberdensity * packingfactor );
+      params.inv_density_factor = 1.0/params.density_factor;
+
+  #else
+      unsigned cell_sg,cell_atnum;
+      double cell_a,cell_b,cell_c,cell_alpha,cell_beta,cell_gamma,cell_volume;
+      if(!ncrystal_info_getstructure(info,&cell_sg,&cell_a,&cell_b,&cell_c,&cell_alpha,&cell_beta,&cell_gamma,&cell_volume,&cell_atnum))
+        NCMCERR("Structure information is unavailable in the loaded NCrystal Info");
+      ncrystal_unref(&info);
+
+      //cell_atnum/cell_volume is the atomic number density in units of
+      //Aa^-3=1e30m^3, and given that we have cross-sections in barn (1e-28m^2) and
+      //want to generate distances in meters with -log(R)/(numberdensity*xsect), we
+      //get the unit conversion factor of 0.01. We also apply the powder packing
+      //factor here (it is guaranteed to be non-zero):
+      
+      // Union change: In NCrystal_sample density factor is negative for easier sampling,
+      //  but as the sampling is performed in the master we use a positive sign for the
+      //  density factor as this is more intuitive.
+      params.density_factor = 0.01 * cell_volume / ( cell_atnum * packingfactor );
+      params.inv_density_factor = 1.0/params.density_factor;
+  #endif
 
   //TODO for NC2: The density used here is in principle different from the one
   //used in the Geant4 interface, which is possibly inconsistent when not using
