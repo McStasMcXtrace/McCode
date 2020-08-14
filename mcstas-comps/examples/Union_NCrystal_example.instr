@@ -1,4 +1,11 @@
+/******************************************************************************/
+* Modified NCrystal_example to use the Union components with an NCrystal       *
+* process instead of their stand alone component.                              *
+* Changes by Mads Bertelsen, 13/8 2020.                                        *
+*******************************************************************************/
 
+/******************************************************************************/
+/* The original code contained the following license/copyright statement:     */
 /******************************************************************************/
 /*                                                                            */
 /*  This file is part of NCrystal (see https://mctools.github.io/ncrystal/)   */
@@ -18,12 +25,6 @@
 /*  limitations under the License.                                            */
 /*                                                                            */
 /******************************************************************************/
-
-/******************************************************************************/
-* Modified NCrystal_example to use the Union components with an NCrystal       *
-* process instead of their stand alone component.                              *
-* Changes by Mads Bertelsen, 13/8 2020.                                        *
-*******************************************************************************/
 
 DEFINE INSTRUMENT Union_NCrystal_example()
 

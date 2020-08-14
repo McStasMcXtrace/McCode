@@ -1,4 +1,12 @@
 /******************************************************************************/
+* Used NCrystal_sample as basis for creating a Union process that can use the  *
+* NCrystal library.                                                            *
+* Changes by Mads Bertelsen, 13/8 2020.                                        *
+*******************************************************************************/
+
+/******************************************************************************/
+/* The original code contained the following license/copyright statement:     */
+/******************************************************************************/
 /*                                                                            */
 /*  This file is part of NCrystal (see https://mctools.github.io/ncrystal/)   */
 /*                                                                            */
