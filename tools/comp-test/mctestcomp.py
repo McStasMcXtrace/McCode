@@ -47,6 +47,7 @@ class McTestcomp:
     return subprocess.run([f"{self.flavour}","-t",f"{instr.name}","-o",f"{instr.name}.c"])
 
   def run_compiler(self,instr):
+    #this needs to somehow deal with DEPENDENCY also, through m[cx]run?
     args=[f"{self.compiler}",f"{instr.name}.c","-o",f"{instr.name}.out",self.cflags]
     args.append(self.cflags)
     return subprocess.run(args)
@@ -64,7 +65,7 @@ TRACE
 COMPONENT origin = Arm()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-COMPONENT t = {self.compname}()
+COMPONENT comp = {self.compname}()
 AT(0,0,0) RELATIVE origin
 
 END
@@ -79,7 +80,7 @@ END
 if __name__=='__main__':
   results={}
 
-  p=pathlib.Path('Arm.comp')
+  p=pathlib.Path('Source_simple.comp')
   t=McTestcomp(p)
   rcs=t.run()
   results.update({p.name:rcs})
