@@ -226,10 +226,8 @@ DECLARE
   double bc;
   double my_s;
   double my_a_v;
-  #ifndef OPENACC
   double mean_n;
   double events;
-  #endif
 %}
 
 INITIALIZE
@@ -324,10 +322,11 @@ do {
   n      = 1-lambda*lambda*rho/2/PI*sqrt(bc*bc-alpha1*alpha1); */
   n   = sqrt(1-(lambda*lambda*rho*bc/PI));
 
-#ifndef OPENACC
+#pragma acc atomic
   mean_n += n*p;
+#pragma acc atomic
   events += p;
-#endif
+
   theta_RMS=atan(2*RMS/lambda);           /* cone angle from RMS roughness */
 
   /* compute normal vector (1) when not given by OFF/PLY */
@@ -580,12 +579,12 @@ FINALLY %{
 
   if (f1) f+= 1/f1;
   if (f2) f+= 1/f2;
-#ifndef OPENACC
+
   if (f)  {
     f = 1/f;
     printf("Lens: %s: focal length f=%g [m]. Focal length for N lenses is f/N.\n", NAME_CURRENT_COMP, f);
   }
-#endif
+
 %}
 
 MCDISPLAY
