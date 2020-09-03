@@ -108,7 +108,7 @@ COMPONENT COPY(L11) = COPY (L11)
    AT (0,0,0.0071987) RELATIVE PREVIOUS
 
 COMPONENT PSD_mon = Monitor_nD(
-    xwidth=0.01, yheight = 0.01, options="x y, auto, per cm2",bins=100,restore_neutron=1)
+    xwidth=0.01, yheight = 0.01, options="x y, per cm2",bins=100,restore_neutron=1)
   AT (0, 0, position_PSD) RELATIVE PREVIOUS
 
 COMPONENT COPY(PSD_mon) = COPY(PSD_mon)
