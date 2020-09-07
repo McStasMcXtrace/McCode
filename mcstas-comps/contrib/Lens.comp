@@ -448,7 +448,11 @@ do {
   }
 
   if (flag) { /* propagate directly to secound surface */
-    p *= p_mult; /* apply absorption correction */
+    if (!isnan(p_mult)) {
+	p *= p_mult; /* apply absorption correction */
+    } else {
+        ABSORB;
+    }
   }
   else
   {
@@ -474,7 +478,11 @@ do {
     vz*=v;
 
     p_mult *= solid_angle/4/PI;
-    p *= p_mult;
+    if (!isnan(p_mult)) {
+	p *= p_mult;
+    } else {
+        ABSORB;
+    }
     SCATTER;
 
     /* recompute new intersection time to go to second surface (velocity changed during scattering event) */
