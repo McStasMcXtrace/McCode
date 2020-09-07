@@ -159,7 +159,7 @@ int inside_rectangle(double x, double y, double xwidth, double yheight)
  *      or 1 in case of intersection with resulting times dt_in and dt_out
  * This function written by Stine Nyborg, 1999.
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int box_intersect(double *dt_in, double *dt_out,
                   double x, double y, double z,
                   double vx, double vy, double vz,
@@ -277,7 +277,7 @@ int box_intersect(double *dt_in, double *dt_out,
  *     and resulting times t0 and t1
  * Written by: EM,NB,ABA 4.2.98
   *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
                    double vx, double vy, double vz, double r, double h)
 {
@@ -333,7 +333,7 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting times t0 and t1
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r)
 {
@@ -357,7 +357,7 @@ int sphere_intersect(double *t0, double *t1, double x, double y, double z,
  * returns 0 when no intersection is found (i.e. line is parallel to the plane)
  * returns 1 or -1 when intersection time is positive and negative respectively
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int plane_intersect(double *t, double x, double y, double z,
                  double vx, double vy, double vz, double nx, double ny, double nz, double wx, double wy, double wz)
 {
