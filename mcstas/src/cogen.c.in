@@ -792,7 +792,10 @@ int cogen_comp_section_class(
     // shared comp [section] code here
     if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
     codeblock_out(code); // component definition code common to all instances, needs defines
-    if (!strcmp(section, "TRACE")) cout("}");
+    if (!strcmp(section, "TRACE")) {
+      cout("  if(isnan(p)) ABSORB;");
+      cout("}");
+    }
 
     // EXTEND blocks written here, as component name switch, if any
     if (!strcmp("TRACE", section) && cnt_extend > 0) {
