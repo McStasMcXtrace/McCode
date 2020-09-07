@@ -37,7 +37,7 @@ compilation = {
     "CFLAGS": '-g -lm -O2 -DUSE_MPI -lmpi -DRNG_ALG=1',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "OACCFLAGS": '-ta:tesla,managed,deepcopy -DOPENACC',
+    "OACCFLAGS": '-ta:tesla,managed -DOPENACC',
     "CC": 'mpicc',
     "OACC": 'pgcc',
     "MPICC": 'mpicc',
