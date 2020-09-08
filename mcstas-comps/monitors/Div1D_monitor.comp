@@ -1,0 +1,154 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Hdiv_monitor
+*
+*%I
+* Written by: KL,
+* Date: Nov. 11, 1998
+* Origin: Risoe
+* Modified by: Thomas Hansen,  December, 1999
+* Modified by: Erik B Knudsen,  Sep, 2020
+* 
+* A 1D divergence sensitive monitor.
+*
+* %D
+* A divergence sensitive monitor. The counts are distributed in
+* ndiv pixels along either the horizontal axis x (default) or the vertical y.
+*
+* Example: Div1D_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, ndiv=20, filename="Output.hd", maxdiv=2)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin,xmax.
+* yheight: [m]          Height of detector. Overrides ymin,ymax.
+* ndiv: [1]             Number of pixel rows
+* maxdiv: [deg]         Maximal divergence detected
+* filename: [str]       Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+*
+* OUTPUT PARAMETERS:
+*
+* Div_N: []             Array of neutron counts
+* Div_p: []             Array of neutron weight counts
+* Div_p2: []            Array of second moments
+*
+*%E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Div1D_monitor
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (ndiv=20, string filename=0,
+  xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
+  maxdiv=2, int restore_neutron=0, int vertical=0)
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray1d Div_N;
+  DArray1d Div_p;
+  DArray1d Div_p2;
+%}
+
+INITIALIZE
+%{
+  int i;
+
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+          printf("Error(%s): Div1D_monitor: Null detection area !\n"
+                 "(xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+         NAME_CURRENT_COMP);
+    exit(0);
+  }
+
+  Div_N = create_darr1d(ndiv);
+  Div_p = create_darr1d(ndiv);
+  Div_p2 = create_darr1d(ndiv);
+  for (i=0; i<ndiv; i++){
+    Div_N[i] = 0;
+    Div_p[i] = 0;
+    Div_p2[i] = 0;
+  }
+%}
+
+TRACE
+%{
+  int i;
+  double div;
+
+  PROP_Z0;
+  if (x>xmin && x<xmax && y>ymin && y<ymax)
+  {
+    if (!vertical){
+      div = RAD2DEG*atan2(vx,vz);
+    }else{
+      div = RAD2DEG*atan2(vy,vz); 
+    }
+    if (div < (double)maxdiv && div > -(double)maxdiv){
+      i = floor((div + (double)maxdiv)*ndiv/(2.0*(double)maxdiv));
+
+      double p2 = p*p;
+      #pragma acc atomic
+      Div_N[i] = Div_N[i] + 1;
+
+      #pragma acc atomic
+      Div_p[i] = Div_p[i] + p;
+
+      #pragma acc atomic
+      Div_p2[i] = Div_p2[i] + p2;
+
+      SCATTER;
+    }
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  if (!vertical){
+    DETECTOR_OUT_1D(
+      "Horizontal divergence monitor","horizontal divergence [deg]",
+      "Intensity","divergence", -maxdiv, maxdiv, ndiv,
+      &Div_N[0],&Div_p[0],&Div_p2[0],filename);
+  }else{
+    DETECTOR_OUT_1D(
+      "Vertical divergence monitor","vertical divergence [deg]",
+      "Intensity","divergence", -maxdiv, maxdiv, ndiv,
+      &Div_N[0],&Div_p[0],&Div_p2[0],filename);
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr1d(Div_N);
+  destroy_darr1d(Div_p);
+  destroy_darr1d(Div_p2);
+%}
+
+MCDISPLAY
+%{
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+
+END
