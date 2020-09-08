@@ -12,24 +12,28 @@
  Origin: Risoe
 * Release: McStas 1.6
 *
-* Rectangular 1D PSD, measuring intensity vs. vertical position, x
+* Rectangular 1D PSD, measuring intensity vs. position along an axis, 
 *
 * %D
+* A 1-dimensional PSD measuring intensity along either the horizontal axis x (default) or
+* the vertical axis y. 
 *
-* Example: PSDlin_monitor(nx=20, filename="Output.x", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+*
+* Example: PSDlin_monitor(nb=20, filename="Output.x", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening [m]
-* xmax:     Upper x bound of detector opening [m]
-* ymin:     Lower y bound of detector opening [m]
-* ymax:     Upper y bound of detector opening [m]
-* xwidth:   Width of detector. Overrides xmin, xmax [m]
-* yheight:  Height of detector. Overrides ymin, ymax [m]
-* nx:       Number of x bins [1]
-* filename: Name of file in which to store the detector image [string]
-* restore_neutron: If set, the monitor does not influence the neutron state [1]
+* xmin: [m]    Lower x bound of detector opening.
+* xmax: [m]    Upper x bound of detector opening.
+* ymin: [m]    Lower y bound of detector opening.
+* ymax: [m]    Upper y bound of detector opening.
+* xwidth: [m]  Width of detector. Overrides xmin, xmax.
+* yheight: [m] Height of detector. Overrides ymin, ymax.
+* nb: [1]      Number of positional bins.
+* filename: [str] Name of file in which to store the detector image.
+* vertical: [1]   Flag to indicate whether the monitor measures along the horiz. or vert. axis
+* restore_neutron: [1] If set, the monitor does not influence the neutron state.
 *
 * OUTPUT PARAMETERS:
 *
@@ -42,8 +46,8 @@
 
 DEFINE COMPONENT PSDlin_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nx=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
-  xwidth=0, yheight=0, restore_neutron=0)
+SETTING PARAMETERS (nb=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+    xwidth=0, yheight=0, int restore_neutron=0, int vertical=0)
 OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -68,9 +72,9 @@ INITIALIZE
     exit(0);
   }
 
-  PSDlin_N = create_darr1d(nx);
-  PSDlin_p = create_darr1d(nx);
-  PSDlin_p2 = create_darr1d(nx);
+  PSDlin_N = create_darr1d(nb);
+  PSDlin_p = create_darr1d(nb);
+  PSDlin_p2 = create_darr1d(nb);
 
   for (i=0; i<nx; i++)
   {
@@ -85,12 +89,16 @@ TRACE
   int i;
 
   PROP_Z0;
-  if (x>xmin && x<xmax && y>ymin && y<ymax)
-  {
-    i = floor(nx*(x-xmin)/(xmax-xmin));              /* Bin number */
-    if((i >= nx) || (i<0))
+  if (x>xmin && x<xmax && y>ymin && y<ymax){ 
+    /* Bin number */
+    if (!vertical){
+      i = floor(nb*(x-xmin)/(xmax-xmin));
+    }else{
+      i = floor(nb*(y-ymin)/(ymax-ymin));
+    }
+    if((i >= nb) || (i<0))
     {
-      printf("FATAL ERROR: wrong positioning in linear PSD. i= %i \n",i);
+      printf("ERROR: (%s) wrong positioning in linear PSD. i= %i \n",NAME_CURRENT_COMP,i);
       exit(1);
     }
     double p2 = p*p;
@@ -109,13 +117,15 @@ TRACE
 
 SAVE
 %{
-  DETECTOR_OUT_1D(
-      "Linear PSD monitor",
-      "x-Position [m]",
-      "Intensity",
-      "x", xmin, xmax, nx,
-      &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],
-      filename);
+  if (!vertical){
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor","x-Position [m]","Intensity","x", xmin, xmax, nb,
+        &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],filename);
+  }else{
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor","y-Position [m]","Intensity","y", ymin, ymax, nb,
+        &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],filename);
+  }
 %}
 
 FINALLY
