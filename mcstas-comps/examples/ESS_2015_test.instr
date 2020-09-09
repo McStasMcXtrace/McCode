@@ -97,12 +97,12 @@ COMPONENT PortOrig = Arm()
   ROTATED (0, 0, 0) RELATIVE Origin
 /* comp 2 */
 COMPONENT XmonT = PSDlin_monitor(
-    nx = 250, filename = "XmonT.dat", xmin=-mon_width/2+mon_shift, xmax=mon_width/2+mon_shift, yheight = 0.04,
+    nbins = 250, filename = "XmonT.dat", xmin=-mon_width/2+mon_shift, xmax=mon_width/2+mon_shift, yheight = 0.04,
     restore_neutron = 1)
   WHEN(! IsCold)  AT (0, 0, 0.3) RELATIVE PortOrig
 /* comp 3 */
 COMPONENT XmonC = PSDlin_monitor(
-    nx = 250, filename = "XmonC.dat", xmin=-mon_width/2+mon_shift, xmax=mon_width/2+mon_shift, yheight = 0.04,
+    nbins = 250, filename = "XmonC.dat", xmin=-mon_width/2+mon_shift, xmax=mon_width/2+mon_shift, yheight = 0.04,
     restore_neutron = 1)
   WHEN(IsCold)  AT (0, 0, 0.3) RELATIVE PortOrig
 /* comp 4 */

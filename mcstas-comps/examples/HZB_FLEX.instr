@@ -416,14 +416,14 @@ COMPONENT div_mono_H = Hdiv_monitor(
      h_maxdiv = 4)
    AT (0, 0, L2-0.04) RELATIVE Mono_sample_arm
 
- COMPONENT psd_sam = PSD_monitor(
+COMPONENT psd_sam = PSD_monitor(
      nx = 60, ny = 60, filename = "psd-sam.dat",
      restore_neutron = 1, xwidth = 0.20, yheight = 0.20)
      AT (0, 0, 0) RELATIVE Sample_center ROTATED (0,0,0) RELATIVE Mono_sample_arm
 
- COMPONENT 1dpsd = PSDlin_monitor(nx=30, filename="linpsdsam.dat",
-         xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
-     AT (0, 0, 0) RELATIVE Sample_center ROTATED (0,0,0) RELATIVE Mono_sample_arm
+COMPONENT 1dpsd = PSDlin_monitor(nbins=30, filename="linpsdsam.dat",
+     xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+AT (0, 0, 0) RELATIVE Sample_center ROTATED (0,0,0) RELATIVE Mono_sample_arm
 
 
 /* This section is executed when the simulation ends (C code). Other    */
