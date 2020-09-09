@@ -1328,6 +1328,12 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cout("");
     cout("#ifdef OPENACC");
     cout("#  include <openacc.h>");
+    cout("#ifdef USE_MPI");
+    cout("int num_devices = acc_get_num_devices(acc_device_nvidia);");
+    cout("int my_device = mpi_node_rank % num_devices;");
+    cout("printf(\"Node %i should use device %i\\n\",mpi_node_rank,my_device);");
+    cout("#pragma acc set device_num(my_device) device_type(acc_device_nvidia)");
+    cout("#endif");
     // attach component instances on device
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
