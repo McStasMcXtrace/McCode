@@ -19,7 +19,7 @@
 * the vertical axis y. 
 *
 *
-* Example: PSDlin_monitor(nb=20, filename="Output.x", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+* Example: PSDlin_monitor(nbins=20, filename="Output.x", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -30,7 +30,7 @@
 * ymax: [m]    Upper y bound of detector opening.
 * xwidth: [m]  Width of detector. Overrides xmin, xmax.
 * yheight: [m] Height of detector. Overrides ymin, ymax.
-* nb: [1]      Number of positional bins.
+* nbins: [1]   Number of positional bins.
 * filename: [str] Name of file in which to store the detector image.
 * vertical: [1]   Flag to indicate whether the monitor measures along the horiz. or vert. axis
 * restore_neutron: [1] If set, the monitor does not influence the neutron state.
@@ -46,7 +46,7 @@
 
 DEFINE COMPONENT PSDlin_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nb=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
+SETTING PARAMETERS (nbins=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
     xwidth=0, yheight=0, int restore_neutron=0, int vertical=0)
 OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -72,11 +72,11 @@ INITIALIZE
     exit(0);
   }
 
-  PSDlin_N = create_darr1d(nb);
-  PSDlin_p = create_darr1d(nb);
-  PSDlin_p2 = create_darr1d(nb);
+  PSDlin_N = create_darr1d(nbins);
+  PSDlin_p = create_darr1d(nbins);
+  PSDlin_p2 = create_darr1d(nbins);
 
-  for (i=0; i<nx; i++)
+  for (i=0; i<nbins; i++)
   {
     PSDlin_N[i] = 0;
     PSDlin_p[i] = 0;
@@ -92,11 +92,11 @@ TRACE
   if (x>xmin && x<xmax && y>ymin && y<ymax){ 
     /* Bin number */
     if (!vertical){
-      i = floor(nb*(x-xmin)/(xmax-xmin));
+      i = floor(nbins*(x-xmin)/(xmax-xmin));
     }else{
-      i = floor(nb*(y-ymin)/(ymax-ymin));
+      i = floor(nbins*(y-ymin)/(ymax-ymin));
     }
-    if((i >= nb) || (i<0))
+    if((i >= nbins) || (i<0))
     {
       printf("ERROR: (%s) wrong positioning in linear PSD. i= %i \n",NAME_CURRENT_COMP,i);
       exit(1);
@@ -119,11 +119,11 @@ SAVE
 %{
   if (!vertical){
     DETECTOR_OUT_1D(
-        "Linear PSD monitor","x-Position [m]","Intensity","x", xmin, xmax, nb,
+        "Linear PSD monitor","x-Position [m]","Intensity","x", xmin, xmax, nbins,
         &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],filename);
   }else{
     DETECTOR_OUT_1D(
-        "Linear PSD monitor","y-Position [m]","Intensity","y", ymin, ymax, nb,
+        "Linear PSD monitor","y-Position [m]","Intensity","y", ymin, ymax, nbins,
         &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],filename);
   }
 %}
