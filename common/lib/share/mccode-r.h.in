@@ -217,7 +217,9 @@ void destroy_darr3d(DArray3d a);
 #include "mpi.h"
 
 #ifdef OMPI_MPI_H  /* openmpi does not use signals: we may install our sighandler */
+#ifndef OPENACC    /* ... but only if we are not also running on GPU */
 #undef NOSIGNALS
+#endif
 #endif
 
 /*
