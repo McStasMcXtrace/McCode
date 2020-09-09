@@ -184,7 +184,10 @@ def expand_options(options):
     # MPI
     if options.mpi is not None:
         options.use_mpi = True
-        options.cc      = mccode_config.compilation['MPICC']
+        if options.openacc is True:
+            options.cc      = mccode_config.compilation['OACC']
+        else:
+            options.cc      = mccode_config.compilation['MPICC']
         options.mpirun  = mccode_config.compilation['MPIRUN']
     elif options.openacc is True:
         options.use_openacc = True

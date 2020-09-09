@@ -152,7 +152,7 @@ class McStas:
 
         # Setup cflags
         cflags = ['-lm']  # math library
-        cflags += [self.options.mpi and '-DUSE_MPI' or '']  # MPI
+        cflags += [self.options.mpi and mccode_config.compilation['MPIFLAGS'] or '']  # MPI
         cflags += [self.options.openacc and mccode_config.compilation['OACCFLAGS']  or ' ']  # OpenACC
         if not self.options.openacc:
             cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
