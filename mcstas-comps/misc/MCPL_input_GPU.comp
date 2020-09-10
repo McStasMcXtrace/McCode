@@ -88,7 +88,7 @@ if(Emax<Emin){
   
     if ( !(nparticles=mcpl_hdr_nparticles(inputfile)) ) {
         fprintf(stderr,"Warning(%s): MCPL-file reports no present particles. Foolishly trying to go on.\n",NAME_CURRENT_COMP);
-        nparticles=ncount;
+        //nparticles=ncount;
     }else{
         printf("Message(%s): MCPL file (%s) produced with %s.\n",NAME_CURRENT_COMP,filename,mcpl_hdr_srcname(inputfile));
         printf("Message(%s): MCPL file (%s) contains %lu particles.\n",NAME_CURRENT_COMP,filename,(long unsigned)nparticles); 
@@ -105,7 +105,6 @@ if(Emax<Emin){
 
       repeating = 0;
 
-      X = create_darr1d(nparticles);
       X = create_darr1d(nparticles);
       Y = create_darr1d(nparticles);
       Z = create_darr1d(nparticles);
@@ -177,7 +176,17 @@ if(Emax<Emin){
 
       ncount=mcget_ncount();
       fprintf(stdout,"Initialize ncount is %lu\n",(long unsigned)ncount);
-      #pragma acc update device(X,Y,Z,VX,VY,VZ,SX,SY,SZ,T,P)
+/*      #pragma acc update device( X )
+      #pragma acc update device( Y )
+      #pragma acc update device( Z )
+      #pragma acc update device( VX )
+      #pragma acc update device( VY )
+      #pragma acc update device( VZ )
+      #pragma acc update device( SX )
+      #pragma acc update device( SY )
+      #pragma acc update device( SZ )
+      #pragma acc update device( T )
+      #pragma acc update device( P )*/
       
 %}
 
