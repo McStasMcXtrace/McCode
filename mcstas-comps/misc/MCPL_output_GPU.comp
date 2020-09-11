@@ -168,23 +168,23 @@ INITIALIZE
       free(myfilename);
     }
     long long nparticles = mcget_ncount();
-    X = create_darr1d(nparticles);
-    X = create_darr1d(nparticles);
-    Y = create_darr1d(nparticles);
-    Z = create_darr1d(nparticles);
-    VX = create_darr1d(nparticles);
-    VY = create_darr1d(nparticles);
-    VZ = create_darr1d(nparticles);
-    SX = create_darr1d(nparticles);
-    SY = create_darr1d(nparticles);
-    SZ = create_darr1d(nparticles);
-    T = create_darr1d(nparticles);
-    P = create_darr1d(nparticles);
+    X = create_darr1d(GPU_INNERLOOP);
+    X = create_darr1d(GPU_INNERLOOP);
+    Y = create_darr1d(GPU_INNERLOOP);
+    Z = create_darr1d(GPU_INNERLOOP);
+    VX = create_darr1d(GPU_INNERLOOP);
+    VY = create_darr1d(GPU_INNERLOOP);
+    VZ = create_darr1d(GPU_INNERLOOP);
+    SX = create_darr1d(GPU_INNERLOOP);
+    SY = create_darr1d(GPU_INNERLOOP);
+    SZ = create_darr1d(GPU_INNERLOOP);
+    T = create_darr1d(GPU_INNERLOOP);
+    P = create_darr1d(GPU_INNERLOOP);
 %}
 
 TRACE
 %{
-  unsigned long long i=_particle->_uid;
+  unsigned long long i=_particle->_uid % GPU_INNERLOOP;
   X[i]=x;
   Y[i]=y;
   Z[i]=z;
@@ -205,7 +205,7 @@ SAVE
   unsigned long long i;
   mcpl_particle_t *particle,Particle;
   particle=&Particle;
-  for (i=0;i<mcget_ncount();i++) {
+  for (i=0;i<GPU_INNERLOOP;i++) {
     if (P[i]>0) {
       /*positions are in cm*/
       Particle.position[0]=X[i]*100;
@@ -243,6 +243,10 @@ SAVE
       mcpl_add_particle(outputfile,particle);
     }
   }
+%}
+
+FINALLY
+%{
   #ifdef USE_MPI
   if (merge_mpi && mpi_node_count > 1) {
     mcpl_close_outfile(outputfile);
@@ -252,11 +256,6 @@ SAVE
   #else
   mcpl_closeandgzip_outfile(outputfile);
   #endif
-
-%}
-
-FINALLY
-%{
 #ifdef USE_MPI
  MPI_Barrier(MPI_COMM_WORLD);
  MPI_MASTER(
