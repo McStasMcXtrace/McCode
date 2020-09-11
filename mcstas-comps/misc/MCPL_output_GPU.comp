@@ -87,7 +87,14 @@ INITIALIZE
     char extension[128]="";
     char *myfilename;
 
+#if defined (USE_MPI)
+  /* In case of MPI, simply redefine the filename used by each node */
+    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    sprintf(extension,"node_%i.mcpl",mpi_node_rank);
+#else
     sprintf(extension,"mcpl");
+#endif
+
     /*add output dir (if applicable) to the output filename and add extension if */
     myfilename=mcfull_file(filename,extension);
 
@@ -236,12 +243,62 @@ SAVE
       mcpl_add_particle(outputfile,particle);
     }
   }
-  mcpl_closeandgzip_outfile(outputfile); 
+  #ifdef USE_MPI
+  if (merge_mpi && mpi_node_count > 1) {
+    mcpl_close_outfile(outputfile);
+  } else {
+    mcpl_closeandgzip_outfile(outputfile);
+  }
+  #else
+  mcpl_closeandgzip_outfile(outputfile);
+  #endif
+
 %}
 
 FINALLY
 %{
+#ifdef USE_MPI
+ MPI_Barrier(MPI_COMM_WORLD);
+ MPI_MASTER(
+     /* Only attempt merge if requested and meaningful */
+     if (merge_mpi && mpi_node_count > 1) {
+        char **mpi_node_files;
+        char *merge_outfilename;
+        char extension[128]="mcpl";
+        int j;
+        mcpl_outfile_t merge_outfile;
 
+	merge_outfilename=mcfull_file(filename,extension);
+
+        mpi_node_files=(char **) calloc(mpi_node_count,sizeof(char *));
+        for (j=0;j<mpi_node_count;j++){
+            sprintf(extension,"node_%i.mcpl",j);
+            mpi_node_files[j]=mcfull_file(filename,extension);
+        }
+        /*now do the merge through the call to mcpl_merge_files*/
+	merge_outfile = mcpl_merge_files(merge_outfilename,mpi_node_count,(const char **) mpi_node_files);
+        mcpl_closeandgzip_outfile(merge_outfile);
+
+        /*remove the original unmerged files if wanted*/
+        if(!keep_mpi_unmerged){
+            int status=0;
+            for (j=0;j<mpi_node_count;j++){
+                status+=remove(mpi_node_files[j]);
+            }
+            if (status){
+                fprintf(stderr,"Warning (%s): Could not remove one or more unmerged files.\n",NAME_CURRENT_COMP);
+            }
+        }
+
+        /*free the string storage*/
+        free(merge_outfilename);
+        for (j=0;j<mpi_node_count;j++){
+            free(mpi_node_files[j]);
+        }
+        free(mpi_node_files);
+    }
+  );
+#endif
 %}
 
 MCDISPLAY
