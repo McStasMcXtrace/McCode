@@ -51,7 +51,7 @@
 DEFINE COMPONENT MCPL_output_GPU
 DEFINITION PARAMETERS ()
   SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, userflag=0,
-  string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
+  string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=1e6)
 OUTPUT PARAMETERS (outputfile, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
@@ -80,6 +80,7 @@ DECLARE
     DArray1d SZ;
     DArray1d T;
     DArray1d P;
+    long long captured;
 %}
 
 INITIALIZE
@@ -167,36 +168,44 @@ INITIALIZE
     if (myfilename){
       free(myfilename);
     }
-    long long nparticles = mcget_ncount();
-    X = create_darr1d(GPU_INNERLOOP);
-    X = create_darr1d(GPU_INNERLOOP);
-    Y = create_darr1d(GPU_INNERLOOP);
-    Z = create_darr1d(GPU_INNERLOOP);
-    VX = create_darr1d(GPU_INNERLOOP);
-    VY = create_darr1d(GPU_INNERLOOP);
-    VZ = create_darr1d(GPU_INNERLOOP);
-    SX = create_darr1d(GPU_INNERLOOP);
-    SY = create_darr1d(GPU_INNERLOOP);
-    SZ = create_darr1d(GPU_INNERLOOP);
-    T = create_darr1d(GPU_INNERLOOP);
-    P = create_darr1d(GPU_INNERLOOP);
+    long long nparticles = ceil(buffermax) ;//mcget_ncount();
+    X = create_darr1d(nparticles);
+    X = create_darr1d(nparticles);
+    Y = create_darr1d(nparticles);
+    Z = create_darr1d(nparticles);
+    VX = create_darr1d(nparticles);
+    VY = create_darr1d(nparticles);
+    VZ = create_darr1d(nparticles);
+    SX = create_darr1d(nparticles);
+    SY = create_darr1d(nparticles);
+    SZ = create_darr1d(nparticles);
+    T = create_darr1d(nparticles);
+    P = create_darr1d(nparticles);
+
+    captured=-1;
 %}
 
 TRACE
 %{
-  unsigned long long i=_particle->_uid % GPU_INNERLOOP;
-  X[i]=x;
-  Y[i]=y;
-  Z[i]=z;
-  VX[i]=vx;
-  VY[i]=vy;
-  VZ[i]=vz;
-  SX[i]=sx;
-  SY[i]=sy;
-  SZ[i]=sz; 
-  T[i]=t;
-  P[i]=p;
-  SCATTER;
+  #pragma acc atomic
+  {
+    captured = captured+1;
+  }
+  unsigned long long i=captured; //_particle->_uid % GPU_INNERLOOP;
+  if (captured < ceil(buffermax)) {
+    X[i]=x;
+    Y[i]=y;
+    Z[i]=z;
+    VX[i]=vx;
+    VY[i]=vy;
+    VZ[i]=vz;
+    SX[i]=sx;
+    SY[i]=sy;
+    SZ[i]=sz; 
+    T[i]=t;
+    P[i]=p;
+    SCATTER;
+  }
 %}
 
 SAVE
@@ -205,7 +214,10 @@ SAVE
   unsigned long long i;
   mcpl_particle_t *particle,Particle;
   particle=&Particle;
-  for (i=0;i<GPU_INNERLOOP;i++) {
+  if (captured >= ceil(buffermax)) {
+     fprintf(stderr,"MCPL_output captured %g particles which is more than the buffersize (%g)!\n",(double)captured,buffermax);
+  }
+  for (i=0;i<ceil(buffermax);i++) {
     if (P[i]>0) {
       /*positions are in cm*/
       Particle.position[0]=X[i]*100;
