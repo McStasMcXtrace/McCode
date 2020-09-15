@@ -42,4 +42,4 @@ echo done on GPU, submitting 1st MPI job and plots
 bsub < $HOME/McCode/test-batches/plots_gpu_nosplit.scpt 
 rsync -avz elearn1.fysik.dtu.dk:TESTS/${DATE}/ TESTS/${DATE} --exclude='*.mcpl' --exclude='*.mcpl.gz' --exclude='*_list*' --exclude='*.out'
 bsub < $HOME/McCode/test-batches/plots_cpu_MPI_KISS.scpt
-bsuv < $HOME/McCode/test-batches/plots_cpu_multicore.scpt
+bsub < $HOME/McCode/test-batches/plots_cpu_multicore.scpt
