@@ -54,7 +54,7 @@ sudo yum install mcstas-suite-python
 all dependencies, and hence is preferred!
 
 ## Install without repo use
-If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.6.1-rpm64-CentOS_7/
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.6.1-rpm64-CentOS_7.7/
 
 
 ## In case of issues
