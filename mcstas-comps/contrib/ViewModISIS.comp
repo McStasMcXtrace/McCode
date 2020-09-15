@@ -1045,7 +1045,8 @@ INITIALIZE
 
   readHtable(Tfile,rtE0,rtE1, TS, modPosition, xw, yh, verbose);
   fclose(Tfile);
-  #pragma acc declare create( TS )
+  // Below pragma was needed with PGI 19.x, compilation fails with NVC 20.7 
+  //#pragma acc declare create( TS )
   /**********************************************************************/
 
   Tnpts=0;
@@ -1061,7 +1062,8 @@ INITIALIZE
     }
   /* Do solid angle correction */
   angleArea= strArea(TS, focus_xw, focus_yh, dist);
-  #pragma acc update host( TS )
+  // Below pragma was needed with PGI 19.x, compilation fails with NVC 20.7 
+  //#pragma acc update host( TS )
   fprintf(stderr,"Totals:: %g %d %d \n",TS.Total,TS.nEnergy,TS.nTime);
 
 %}
