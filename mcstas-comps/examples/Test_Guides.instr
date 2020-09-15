@@ -39,27 +39,15 @@ USERVARS
 
 INITIALIZE
 %{
-  switch (Guide) {
-  case 1:
-    printf("Using Guide\n"); break;
-  case 2:
-    printf("Using Guide_channeled\n"); break;
-  case 3:
-    printf("Using Guide_gravity\n"); break;
-  case 4:
-    printf("Using Guide_wavy\n"); break;
-  case 5:
-    printf("Using Guide_curved\n"); break;
-  case 6:
-    printf("Using Elliptic_guide_gravity\n"); break;
-  case 7:
-    printf("Using Guide_anyshape\n"); break;
-  case 8:
-    printf("Using Guide_honeycomb\n"); break;
-  case 9:
-    printf("Using Guide_r_anyshape\n"); break;
-  }
-  
+  if(Guide==1) printf("Using Guide\n");
+  if(Guide==2) printf("Using Guide_channeled\n"); 
+  if(Guide==3) printf("Using Guide_gravity\n"); 
+  if(Guide==4) printf("Using Guide_wavy\n"); 
+  if(Guide==5) printf("Using Guide_curved\n");
+  if(Guide==6) printf("Using Elliptic_guide_gravity\n"); 
+  if(Guide==7) printf("Using Guide_anyshape\n");
+  if(Guide==8) printf("Using Guide_honeycomb\n");
+  if(Guide==9) printf("Using Guide_r_anyshape\n");
 %}
 
 TRACE
