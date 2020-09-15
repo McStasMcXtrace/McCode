@@ -178,9 +178,9 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
         mkdir(instrdir)
 
         # create a new file with the instr text in it - e.g. a local copy of the instrument file
-        text = open(f).read()
+        text = open(f, encoding='utf-8').read()
         f_new = join(instrdir, basename(f))
-        open(f_new, 'w').write(text)
+        open(f_new, 'w', encoding='utf-8').write(text)
 
         # create a test object for every test defined in the instrument header
         instrtests = create_instr_test_objs(sourcefile=f, localfile=f_new, header=text)
