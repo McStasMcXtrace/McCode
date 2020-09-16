@@ -142,7 +142,6 @@ INITIALIZE
     };
     Idsdw[iii]= Isq;
   };
-  #pragma acc update device(Idsdw[0:31])
 
 %}
 
