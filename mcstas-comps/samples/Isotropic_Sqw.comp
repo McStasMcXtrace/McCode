@@ -279,7 +279,7 @@ SETTING PARAMETERS(
   rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, classical=-1,
   powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
   p_interact=-1, norm=-1, powder_barns=1, string quantum_correction="Frommhold")
-OUTPUT PARAMETERS (VarSqw, columns, offdata)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 /*****************************************************************************/
@@ -314,9 +314,7 @@ SHARE
 #define qSq               {-1,0,0,0,0,0,1, 0,0 }
 
 %include "read_table-lib"
-#ifndef OPENACC
 %include "interoff-lib"
-#endif
 
 /* For the density of states S(w) */
 struct Sqw_W_struct
@@ -435,9 +433,7 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->q_min_file   = 0;
 }
 
-#ifndef OPENACC
 off_struct offdata;
-#endif
 
 /* gaussian distribution to appply around Bragg peaks in a powder */
 double Sqw_powder_gauss(double x, double mean, double rms) {
@@ -2010,9 +2006,7 @@ DECLARE
 %{
   struct Sqw_sample_struct VarSqw;
   int *columns;
-#ifndef OPENACC
   off_struct offdata;
-#endif
 %}
 
 /*****************************************************************************/
@@ -2858,7 +2852,9 @@ MCDISPLAY
       circle("xz",0,0,0,radius);
       circle("yz",0,0,0,radius);
     } else if (VarSqw.shape == 3) {	/* OFF file */
+    #ifndef OPENACC
       off_display(offdata);
+    #endif
     }
   }
 #endif

@@ -41,34 +41,30 @@ DEFINE INSTRUMENT Test_Sources(int source=0, Lmin=1, Lmax=11)
 
 DECLARE
 %{
-  double Lambda0, dLambda;
+  double Lambda0;
+  double dLambda;
+  char lamopts[128];
 %}
 
 INITIALIZE
 %{
   printf("%s: ", NAME_INSTRUMENT);
-  switch (source) {
-  case 1:
-    printf("Using Source_adapt\n"); break;
-  case 2:
-    printf("Using Source_div\n"); break;
-  case 3:
-    printf("Using Source_simple\n"); break;
-  case 4:
-    printf("Using Source_gen (flat spectrum)\n"); break;
-  case 5:
-    printf("Using Source_gen\n"); break;
-  case 6:
-    printf("Using Source_Maxwell_3\n"); break;
-  case 7:
-    printf("Using ESS_butterfly\n"); break;
-  case 8:
-    printf("Using Moderator\n"); break;
+  if (source==1) printf("Using Source_adapt\n");
+  else if (source==2) printf("Using Source_div\n");
+  else if (source==3) printf("Using Source_simple\n");
+  else if (source==4) printf("Using Source_gen (flat spectrum)\n");
+  else if (source==5) printf("Using Source_gen\n");
+  else if (source==6) printf("Using Source_Maxwell_3\n");
+  else if (source==7) printf("Using ESS_butterfly\n");
+  else if (source==8) printf("Using Moderator\n");
+  else { 
+    printf("Selected moderator undefined, exiting!\n");
+    exit(-1);
   }
   printf("Studied wavelength range is [%g %g] AA\n", Lmin, Lmax);
   dLambda=(Lmax-Lmin)/2;
   Lambda0=(Lmax+Lmin)/2;
-
+  sprintf(lamopts,"lambda limits=[%g %g]",Lmin,Lmax);
 %}
 
 TRACE
@@ -125,12 +121,12 @@ AT (0,0,0) ABSOLUTE
 /* the monitor ============================================================== */
 COMPONENT m1 = Monitor_nD(
   xwidth=0.1, yheight=0.1,
-  options="auto lambda", bins=40
+  options=lamopts, bins=40
 ) AT (0,0,1) ABSOLUTE
 
 COMPONENT m2 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto x, auto y, parallel", bins=40
+  options="x, y, parallel", bins=40
 ) AT (0,0,1) ABSOLUTE
 
 COMPONENT m3 = Monitor_nD(

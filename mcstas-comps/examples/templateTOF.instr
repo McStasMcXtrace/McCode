@@ -47,21 +47,21 @@ DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6,
   string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw", thickness=1e-4,
   yheight=0.0168,radius=0.005, string container="Nb.laz",
   container_thickness=50e-6, string environment="Al.laz",
-  environment_radius=0.025, environment_thickness=2e-3)
+  environment_radius=0.025, environment_thickness=2e-3, dt0=0)
 
 DECLARE
 %{
   /* monitoring sample env */
   double vi;
+  char op[256];
+%}
+
+USERVARS %{
   /* flags per detector */
   char flag_single;    /* sample single scatt */
   char flag_multi;     /* sample multi scatt */
   char flag_env;    /* sample environment scatt */
   char flag_container;  /* container scatt */
-
-  char op[256];
-  double dt0;
-
 %}
 
 INITIALIZE
@@ -140,7 +140,7 @@ EXTEND
   if      (SCATTERED == 1) flag_single=(VarSqw.type == 'c' ? 1 : 2);
   else if (SCATTERED >  1) flag_multi =(VarSqw.type == 'c' ? 1 : 2);
   else                     flag_multi =flag_single=0;
-  t = randtriangle()*2*dt0;  // we assume that in the real instrument, the chopper is close to sample
+  t = randtriangle()*2*INSTRUMENT_GETPAR(dt0);  // we assume that in the real instrument, the chopper is close to sample
 %}
 
 COMPONENT Container_out=COPY(Container_in)(concentric=0)
