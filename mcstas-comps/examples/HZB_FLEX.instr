@@ -277,14 +277,14 @@ COMPONENT NL1B_Elliptical_Entrance_Window = Arm()
   AT (0.0000, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.000,  0.00) RELATIVE NL1B_Straight2_Entrance_Window
 //AT (0.0006, 0, 3.500) RELATIVE NL1B_Straight2_Entrance_Window ROTATED (0, 0.015, -0.06) RELATIVE NL1B_Straight2_Entrance_Window
 
-/*COMPONENT elliptical_piece = Guide_tapering(
+COMPONENT elliptical_piece = Guide_tapering(
     option = "elliptical", segno = 800, w1 = 0.06, h1 = 0.125,
     l = 2.5, linw = 2.9, loutw = 0.4, R0 = 0.99, Qcx = 0.0217,
     Qcy = 0.0217, alphax = 4.00, alphay = alpha_para, W = 0.002,
-    mx = 5.2, my = MGUIDE)*/
+    mx = 5.2, my = MGUIDE)
 //AT (0.0006, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window ROTATED (0, 0.015, -0.06) RELATIVE NL1B_Elliptical_Entrance_Window
-/*  AT (0, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window
-    ROTATED (0, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window*/
+  AT (0, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window
+    ROTATED (0, 0, 0) RELATIVE NL1B_Elliptical_Entrance_Window
 
 // END elliptical guide section
 
