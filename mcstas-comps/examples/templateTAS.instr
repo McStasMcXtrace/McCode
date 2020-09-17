@@ -55,8 +55,8 @@
 *     WA=0.16, HA=0.08, RAH=-1, RAV=-1, DA=2.087, NHA=15, NVA=15,
 *     L1=2.33
 *
-* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=2.55907e+08
-* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=256
+* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=3.0e+08
+* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=260
 *
 * %Parameters
 * KI: [Angs-1]            Incoming neutron wavevector
