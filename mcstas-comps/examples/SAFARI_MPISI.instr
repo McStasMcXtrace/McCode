@@ -156,17 +156,13 @@ wafer_d = (11.89/13.0/1000);    //Wafer diameter. Total blade diameter (11.89mm)
 start_wafer_pos = 6.0 * wafer_d;  //In order to have the middle waver situated at the centre of the port takeoff
 
 msw=(int)mono_Si_type;
-switch (msw) {
-  case 422: mono_d = 1.10858; break;
-  case 400: mono_d = 1.35773; break;
-  case 311: mono_d = 1.63748; break;
-  case 511: mono_d = 1.04518; break;
-  case 111: mono_d = 3.135; break;
-  case 331: mono_d = 1.24594; break;
-  case 551: mono_d = 0.76049; break;
-
-}
-
+if (msw==422) mono_d = 1.10858;
+if (msw==400) mono_d = 1.35773;
+if (msw==311) mono_d = 1.63748;
+if (msw==511) mono_d = 1.04518;
+if (msw==111) mono_d = 3.135;
+if (msw==331) mono_d = 1.24594;
+if (msw==551) mono_d = 0.76049;
 
 mono_q = 2*PI/mono_d;
 double mono_omega = fabs(mono_takeoff/2.0);
