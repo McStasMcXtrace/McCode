@@ -46,7 +46,7 @@ mcxtrace-tools-python-mxdoc-1.5.x86_64 : python-tools-mxdoc built using CMake
 
   Name and summary matches only, use "search all" for everything.
 ```
-The meta-packages mcxtrace-suite-perl and mcxtrace-suite-python allows you to install mcxtrace with one or both sets of tools (mxrun/mxplot etc.) by simple yum commands like
+The meta-packages *mcxtrace-suite-python* and *mcxtrace-suite-perl* allows you to install mcxtrace with one or both sets of tools (mxrun/mxplot etc.) by simple yum commands like
 
 ```bash
 sudo yum install mcxtrace-suite-python
