@@ -138,6 +138,10 @@ DEFINE INSTRUMENT templateTAS( KI=2.662, KF=0, EI=0, EF=0, QH=0, QK=0, QL=0, EN=
 
 DECLARE
 %{
+
+  char ethmonopts[128];
+  char lmonopts[128];
+  
   struct sample_struct {
     double as, bs, cs;
     double aa, bb, cc;
@@ -525,6 +529,9 @@ machine_real.rmh = fabs(machine_real.rmh)*machine_hkl.sm;
 machine_real.rav = fabs(machine_real.rav)*machine_hkl.sa;
 machine_real.rah = fabs(machine_real.rah)*machine_hkl.sa;
 
+sprintf(ethmonopts,"theta limits=[-180 180] energy limits=[%g %g], banana", 0.95*EF, 1.05*EF);
+sprintf(lmonopts,"lambda limits=[%g %g] cm", 0.95*(2*PI)/fabs(KI), 1.05*(2*PI)/fabs(KI));
+ 
 %}
 /* end of INITIALIZE */
 
@@ -541,7 +548,7 @@ REMOVABLE COMPONENT Source = Source_gen(
   focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
   T1 = 683.7, I1 = 0.5874e13, T2 = 257.7, I2 = 2.5094e13, T3 =  16.7, I3 = 0.10343e13,
   E0 = machine_hkl.ei,
-  dE = machine_hkl.ei*0.03)
+  dE = machine_hkl.ei*0.09)
 AT (0,0,0) ABSOLUTE
 
 REMOVABLE COMPONENT SC1 = Collimator_linear(
@@ -578,7 +585,7 @@ COMPONENT Mono_Out = Arm()
   COMPONENT D4_SC2_1D = Monitor_nD(
   xmin = -0.0420/2, xmax = 0.0420/2,
   ymin = -0.1200/2, ymax = 0.1200/2,
-  options="lambda, cm2, auto")
+  options=lmonopts,bins=100)
 AT (0, 0, (machine_hkl.l2-0.35)/3) RELATIVE Mono_Out
 
 COMPONENT SC2 = Collimator_linear(
@@ -605,8 +612,8 @@ COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
   ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
 
 COMPONENT D7_SC3_1D = Monitor_nD(
-  xwidth = 0.06, yheight = HA, bins=50, restore_neutron=1,
-  options="theta energy, all auto, banana")
+  xwidth = 0.06, yheight = HA, bins=100, restore_neutron=1,
+  options=ethmonopts)
 AT (0, 0, 0) RELATIVE Sample_Out
 
 COMPONENT SC3 =Collimator_linear(
