@@ -103,6 +103,7 @@ DECLARE
   double LCE; /* distance fermi chopper <--> sample   */
   double LCC;   /* [m] Chopper1-Chopper2 distance */
   double Frequency, vi;
+  #pragma acc declare create(Frequency)
   double ref_phas, phas_ferm;
 
   double iTOF_DELAY;   /* time of arrival at sample position, from source */
@@ -196,6 +197,7 @@ INITIALIZE
 
     if (TOF_CHA_RESOL<=0) iTOF_CHA_RESOL=128; else iTOF_CHA_RESOL=TOF_CHA_RESOL;
     if (RATIO <= 0)       iRATIO = 1;         else iRATIO        =RATIO;
+    #pragma acc update device(iRATIO)
     if (ELPEAK >= 0 && ELPEAK<=iTOF_CHA_RESOL) iELPEAK  = ELPEAK;
     else iELPEAK=ceil(iTOF_CHA_RESOL/2);
 
@@ -220,7 +222,7 @@ INITIALIZE
     if (TOF_DELAY <=0)    iTOF_DELAY=delay;        else iTOF_DELAY=TOF_DELAY;
     if (SPEED     <0)     iSPEED=speed;            else iSPEED=SPEED;
     Frequency = iSPEED/60;
-
+    #pragma acc update device(Frequency)
     printf("Instrument Simulation %s (%s)\n", instrument_name, instrument_source);
     printf("  using computed monochromator take-off angles: %g %g %g [deg]\n", A1, A2, A3);
     printf("Wavelength               [AA]  %g\n",  lambda);
@@ -414,7 +416,7 @@ AT (0,0,+0.06+0.001) RELATIVE FermiPos
 /* --------------------------- IN6 Fermi END --------------------- */
 
 COMPONENT MonokMonitor = Monitor_nD(
-  xwidth = 0.2, yheight = 0.2, user1=monok_index, username1="Monoch. index",
+  xwidth = 0.2, yheight = 0.2, user1=0, username1="Monoch. index",
   options="user1 limits=[0.5,3.5] bins=9, auto lambda bins=20, square, per cm2")
 AT (0,0,+0.06+0.002) RELATIVE FermiPos
 
