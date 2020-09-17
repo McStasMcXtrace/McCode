@@ -12,7 +12,7 @@ sudo apt-get update
 On Debian you will further have to install the non-free repository to have access to all McXtrace tool parts. See https://wiki.debian.org/SourcesList
 
 # The easiest way:
-The meta-packages mcxtrace-suite-perl and mcxtrace-suite-python allows you to install mcxtrace with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
+The meta-packages *mcxtrace-suite-perl* and *mcxtrace-suite-python* allow you to install mcxtrace with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
 ```bash
 sudo apt-get install mcxtrace-suite-python
 ```
