@@ -36,7 +36,8 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e8 --configs --mccoderoot $
 
 cd $HOME
 
-echo done on GPU with split, submitting GPU job with disabled split
-# 10-core MPI run 
-bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
+echo done on GPU with split
+#echo submitting multi-GPU job
+# 
+#bsub < $HOME/McCode/test-batches/v3.0_multigpu_KISS.scpt
 bsub < $HOME/McCode/test-batches/plots_gpu.scpt 
