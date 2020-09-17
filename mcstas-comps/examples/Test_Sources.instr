@@ -41,7 +41,9 @@ DEFINE INSTRUMENT Test_Sources(int source=0, Lmin=1, Lmax=11)
 
 DECLARE
 %{
-  double Lambda0, dLambda;
+  double Lambda0;
+  double dLambda;
+  char lamopts[128];
 %}
 
 INITIALIZE
@@ -68,7 +70,7 @@ INITIALIZE
   printf("Studied wavelength range is [%g %g] AA\n", Lmin, Lmax);
   dLambda=(Lmax-Lmin)/2;
   Lambda0=(Lmax+Lmin)/2;
-
+  sprintf(lamopts,"lambda limits=[%g %g]",Lmin,Lmax);
 %}
 
 TRACE
@@ -136,12 +138,12 @@ AT (0,0,1) ABSOLUTE
 
 COMPONENT m1 = Monitor_nD(
   xwidth=0.1, yheight=0.1,
-  options="auto lambda", bins=40
+  options=lamopts, bins=40
 ) AT (0,0,1) ABSOLUTE
 
 COMPONENT m2 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto x, auto y, parallel", bins=40
+  options="x, y, parallel", bins=40
 ) AT (0,0,1) ABSOLUTE
 
 COMPONENT m3 = Monitor_nD(
