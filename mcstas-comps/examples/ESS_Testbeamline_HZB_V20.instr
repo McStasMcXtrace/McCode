@@ -1,3 +1,4 @@
+
 /*******************************************************************************
 * Instrument: ESS_Testbeamline_HZB_V20
 *
@@ -62,6 +63,7 @@ DEFINE INSTRUMENT ESS_Testbeamline_HZB_V20( lambda_min=1, lambda_max=15,frequenc
 /* declare variables and functions in C syntax */
 DECLARE
 %{
+
 
  double L_g1,L_g2,L_g3,L_g4,L_g5,L_g6,L_g7,L_g8,L_g9,L_g10,L_g11,L_g12;
  double w_g1,w_g2,w_g3,w_g4,w_g5,w_g6,w_g7,w_g8,w_g9,w_g10,w_g11,w_g12;
@@ -278,7 +280,7 @@ COMPONENT WFMC_1_dummy = Arm()
   AT (0, 0.465, 28.594-Z*0.5) RELATIVE origin
  GROUP Choppers
 EXTEND %{
-  if (INSTRUMENT_GETPAR(Choppers_WFM1_in)==0) SCATTER;
+  if (INSTRUMENT_GETPAR(Choppers_WFM1_in==0)) SCATTER;
 %}
 
 /*----------------------------------------End of WFM-1 Chopper -------------------------------------------------------*/
@@ -649,7 +651,7 @@ ROTATED (0, 0, 0) RELATIVE origin
 
 SPLIT 100
 COMPONENT Fealpha = PowderN(
-  reflections = "Fe.laz", format = Crystallographica, radius=0.006, yheight=0.08,
+  reflections = "Fe.laz", radius=0.006, yheight=0.08,
  Vc =  2.867*2.867*2.867, p_inc=0.1,  Strain=0,
   barns = 1, d_phi=10, p_transmit=0.1)
  AT (0, 0, 0) RELATIVE arm_sample
