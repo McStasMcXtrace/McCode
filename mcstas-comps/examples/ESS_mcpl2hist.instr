@@ -50,7 +50,7 @@ COMPONENT Origin = Progress_bar()
 AT (0, 0, 0) ABSOLUTE
   
 
-COMPONENT vin = MCPL_input(filename=MCPLfile,verbose=1)
+COMPONENT vin = MCPL_input_GPU(filename=MCPLfile,verbose=1)
   AT(0,0,0) RELATIVE PREVIOUS
 EXTEND %{
   SCATTER;
