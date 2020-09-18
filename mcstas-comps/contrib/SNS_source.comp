@@ -163,6 +163,7 @@ SHARE %{
 ------------------------------------------------------------------------*/
 /* given a point (x1,y1) on the low side of xdes and one (x2,y2) on the
 high side of xdes return the interpolated y values */
+#pragma acc routine
 double linint(double xdes,double x1, double x2, double y1, double y2)
 {
   double m;
@@ -194,6 +195,7 @@ double linfuncint(double xdes, double xylen, double *vecx, double *vecy)
 --------------------------------------------------------------------------*/
 /* given 2 points on the low side of xdes and one on the high side, return
 a quadratically interpolated result */
+#pragma acc routine
 double quadint(double xdes,double x1, double x2,double x3, double y1, double
 y2, double y3)
 {
@@ -204,6 +206,7 @@ y2, double y3)
   return t1+t2+t3;
 } /* quadint */
 
+#pragma acc routine
 double quadfuncint(double xdes, double xylen, double *vecx, double *vecy)
   {
   int idx;
@@ -227,6 +230,7 @@ double quadfuncint(double xdes, double xylen, double *vecx, double *vecy)
 /*-------------------------------------------------------------------
   integration routines
 ---------------------------------------------------------------------*/
+#pragma acc routine
 double integtrap(double (*func)(double,double,double*,double*),double prev,double low,double high, int step,
   double len, double *xvec, double *yvec)
 {
@@ -251,6 +255,7 @@ double integtrap(double (*func)(double,double,double*,double*),double prev,doubl
  }
 } /* integtrap */
 
+#pragma acc routine
 double integ1(double (*func)(double,double,double*,double*),double low, double high, double err,
   double len, double *xvec, double *yvec)
 {
@@ -274,6 +279,7 @@ double integ1(double (*func)(double,double,double*,double*),double low, double h
   Modified version of rtbis from "Numerical Recipes in C: pg 354
  -----------------------------------------------------------------------------*/
 
+#pragma acc routine
 double zero_find(double (*func)(double, double, double, double*, double*),
   double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
 {
@@ -304,6 +310,7 @@ Routine for calculating Probability distribution
 
 // Pcalc(xonly,llim,hlim,inxvec,Pvec,xylength,&idxstart,&idxstop, inyvec);
 // xonly(double x,double xylength,double *inxvec,double *inyvec)
+#pragma acc routine
 void Pcalc(double (*func)(double,double,double*,double*),
   double llim, double hlim, double *xvec, double *Prob, int veclen,
   int *idxstart, int *idxstop, double *inyvec)
@@ -347,6 +354,7 @@ Routine for calculating t Probability distribution
 ----------------------------------------------------------------------------*/
 // tPcalc(txonly,ltlim,htlim,tcol,tPvec,ntvals,&tidxstart,&tidxstop, txval,tyval);
 // txonly(double t,double ntvals,double *txval,double *tyval)
+#pragma acc routine
 void tPcalc(double (*func)(double,double,double*,double*),double llim, double hlim,
   double *xvec, double *Prob, int veclen, int *idxstart, int *idxstop,
   double *txval,double *tyval)
@@ -386,10 +394,12 @@ void tPcalc(double (*func)(double,double,double*,double*),double llim, double hl
 /*-----------------------------------------------------------------
 Functions for random energy generation
 ------------------------------------------------------------------*/
+#pragma acc routine
 double xonly(double x,double xylength,double *inxvec,double *inyvec)
 {
   return linfuncint(x,xylength,inxvec,inyvec);
 }
+#pragma acc routine
 double Pfunc(double x, double y,double xylength,double *inxvec,double *Pvec)
 {
   return quadfuncint(x,xylength,inxvec,Pvec)-y;
@@ -398,10 +408,12 @@ double Pfunc(double x, double y,double xylength,double *inxvec,double *Pvec)
 /*----------------------------------------------------------------
 Functions for random time generation
 ------------------------------------------------------------------*/
+#pragma acc routine
 double txonly(double t,double ntvals,double *txval,double *tyval)
 {
   return linfuncint(t,ntvals,txval,tyval);
 }
+#pragma acc routine
 double tPfunc(double t,double y,double ntvals,double *txval,double *tyval)
 {
   return quadfuncint(t,ntvals,txval,tyval)-y;
