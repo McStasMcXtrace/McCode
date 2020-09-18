@@ -1090,9 +1090,20 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-          
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
+	  // This is is where the list is appended. How to make this "atomic"?
+	  // Tricks ala what is done in normal 2D-monitor mode with p, p2 and events ++ does not work here..
+	  // a)
+	  //   Invalid atomic expression/Invalid atomic region for
+          //   #pragma acc atomic
+          //   Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
+	  // b)
+	  // int index=i + Vars->Neutron_Counter*(Vars->Coord_Number+1);
+	  // double coord=Coord[i];
+	  // double* Buf = Vars->Mon2D_Buffer;
+	  // #pragma acc atomic
+	  //   Buf[index] = coord;
           Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
         }
         Vars->Buffer_Counter++;
