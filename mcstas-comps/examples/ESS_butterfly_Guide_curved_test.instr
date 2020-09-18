@@ -40,38 +40,9 @@ DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",
   int index=8,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,filter=0,repeat=1,
   E_smear=0.1,pos_smear=0.01,dir_smear=0.01)
 
-DECLARE
-%{
-  int IsCold;
-  double SrcX, SrcY, SrcZ;
-  double Theta;
-  double MonTransl;
-  double XW, YH;
-  char options1[256],options2[256],options3[256],options4[256];
-  char srcdef[128];
-  double WidthC=0.072,WidthT=0.108;
-  double WL;
-  double lambdamin, lambdamax;
-  double CCold,CThermal;
-  double SurfSign;
-  double TCollmin;
-  double TCollmax;
-  double Emin,Emax;
-  double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
-  double Eneutron;
-  /* 10 beamlines in sector N and E  - plus one location added for drawing */
-  double iBeamlinesN[] = { 30.0,  36.0,  42.0,  48.0,  54.0,  60.0,  66.0,  72.0,  78.0,  84.0,  90.0};
-  double iBeamlinesE[] = {-30.0, -36.0, -42.0, -48.0, -54.0, -60.0, -66.0, -72.0, -78.0, -84.0, -90.0};
-  /* 11 beamlines in sector S and W - plus one location added for drawing */
-  double iBeamlinesW[] = { 150.0,  144.7,  138.0,  132.7,  126.0,  120.7,  114.0,  108.7,  102.0,  96.7,  90.0,  84.0};
-  double iBeamlinesS[] = {-150.0, -144.7, -138.0, -132.7, -126.0, -120.7, -114.0, -108.7, -102.0, -96.7, -90.0, -84.0};
-  double* iBeamlines;
-  double ANGLE;
-  double DeltaX,DeltaZ;
-  char MCPLfile[128];
-  double T0,L0;
 
-  double calcAlpha(double length, double radius) {
+DECLARE %{
+    double calcAlpha(double length, double radius) {
     // calculate angle of arm after curved guide
     return RAD2DEG * length/radius;
   }
@@ -87,6 +58,39 @@ DECLARE
     double alpha = DEG2RAD * calcAlpha(length, radius);
     return radius*sin(alpha);
   }
+
+  double XW, YH;
+  char options1[256],options2[256],options3[256],options4[256];
+  char srcdef[128];
+  double WidthC=0.072,WidthT=0.108;
+  double lambdamin, lambdamax;
+  double TCollmin;
+  double TCollmax;
+  #pragma acc declare create(TCollmin,TCollmax)
+  double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
+  #pragma acc declare create(EminTh,EmaxTh,EminC,EmaxC)
+  /* 10 beamlines in sector N and E  - plus one location added for drawing */
+  double iBeamlinesN[] = { 30.0,  36.0,  42.0,  48.0,  54.0,  60.0,  66.0,  72.0,  78.0,  84.0,  90.0};
+  double iBeamlinesE[] = {-30.0, -36.0, -42.0, -48.0, -54.0, -60.0, -66.0, -72.0, -78.0, -84.0, -90.0};
+  /* 11 beamlines in sector S and W - plus one location added for drawing */
+  double iBeamlinesW[] = { 150.0,  144.7,  138.0,  132.7,  126.0,  120.7,  114.0,  108.7,  102.0,  96.7,  90.0,  84.0};
+  double iBeamlinesS[] = {-150.0, -144.7, -138.0, -132.7, -126.0, -120.7, -114.0, -108.7, -102.0, -96.7, -90.0, -84.0};
+  double* iBeamlines;
+  double ANGLE;
+  double DeltaX,DeltaZ;
+  char MCPLfile[128];
+%}
+
+USERVARS %{
+  int IsCold;
+  double SrcX;
+  double SrcY;
+  double SrcZ;
+  double Emin;
+  double Emax;
+  double Eneutron;
+  double T0;
+  double L0;
 %}
 
 INITIALIZE
@@ -111,6 +115,7 @@ INITIALIZE
     TCollmin=0.011;
     TCollmax=0.071;
   }
+  #pragma acc update device(TCollmin,TCollmax)
   if (strcasestr(sector,"N")) {
     iBeamlines=iBeamlinesN;
     DeltaX=-0.0585; DeltaZ=0.0925;
@@ -130,6 +135,7 @@ INITIALIZE
   else
     sprintf(MCPLfile,"%s%i_filtered.mcpl.gz",sector,beamline);
   printf("MCPLfile is %s\n",MCPLfile);
+  #pragma acc update device(EminTh,EmaxTh,EminC,EmaxC)
 %}
 
 TRACE
@@ -147,7 +153,7 @@ COMPONENT vinROT1 = Arm()
 AT(0,0,0) RELATIVE PREVIOUS
   ROTATED (-90,0,0) RELATIVE PREVIOUS
 
-  COMPONENT vin = MCPL_input(filename=MCPLfile,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
+  COMPONENT vin = MCPL_input_GPU(filename=MCPLfile,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT(0,0,0) RELATIVE PREVIOUS
 EXTEND %{
   SCATTER;
@@ -231,7 +237,7 @@ COMPONENT Arm2 = Arm()
 
 
 
-COMPONENT AutoTOFL0 = Monitor_nD(xwidth=XW, yheight=YH, user1=T0, user2=L0, options="user1 limits=[0 5e-3] bins=51, user2 limits=[0.1 20] bins=41", restore_neutron=1)
+/*COMPONENT AutoTOFL0 = Monitor_nD(xwidth=XW, yheight=YH, user1=T0, user2=L0, options="user1 limits=[0 5e-3] bins=51, user2 limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 0.001) RELATIVE BackTrace
 
 COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, user1=T0, options="user1 limits=[0 5e-3] bins=51", restore_neutron=1)
@@ -239,8 +245,8 @@ COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, user1=T0, options="user1 
 
   COMPONENT AutoL0 = Monitor_nD(xwidth=XW, yheight=YH, user1=L0, options="user1 limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 0.001) RELATIVE PREVIOUS
-
-  COMPONENT PSD0= Monitor_nD(filename="flat",xwidth=0.2,yheight=0.2,user1=SrcX,user2=SrcY,options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
+*/
+/*  COMPONENT PSD0= Monitor_nD(filename="flat",xwidth=0.2,yheight=0.2,user1=SrcX,user2=SrcY,options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
   AT (0,0,0.001) RELATIVE PREVIOUS
 
   COMPONENT PSD1=Monitor_nD(filename="flatC",xwidth=0.2,yheight=0.2,user1=SrcX,user2=SrcY,options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
@@ -250,38 +256,28 @@ WHEN (Eneutron<EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 WHEN (Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
 
-/* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
 COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
 AT (0, 0, 1) RELATIVE Source
 
-/* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
 COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=EmaxC && Eneutron>=EminC) AT (0, 0, 1) RELATIVE Source
 
-/* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
 COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=EmaxTh && Eneutron>=EminTh) AT (0, 0, 1) RELATIVE Source
 
-/* Measures the vertical emmision coordinate of cold neutrons */
 COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
   WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
 
-/* Measures the vertical emmision coordinate of thermal neutrons */
 COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
   WHEN(!IsCold) AT (0, 0, 1) RELATIVE Source
 
-/* 2D-plot of emmision coordinates for all neutrons */
 COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
-/* 2D-plot of (x,z) emmision coordinates for all neutrons */
 COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
-  EXTEND %{
-    //printf("Time is %g\n",t);
-%}
 
-
+*/
 
 COMPONENT AutoTOFL = Monitor_nD(xwidth=0.1, yheight=0.1, options="tof limits=[0 15e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 2) RELATIVE Source
@@ -318,7 +314,7 @@ COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
       Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1,source_dist=2,xwidth=0.1,yheight=0.1)
   WHEN (fabs(SrcY)<Yheight/2.5 && -SrcX>(TCollmin+delta) && -SrcX<(TCollmax+delta))  AT (0, 0, 2) RELATIVE Source
 
-  COMPONENT PSD0x= Monitor_nD(filename="flat_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
+/*  COMPONENT PSD0x= Monitor_nD(filename="flat_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
   AT (0,0,0.001) RELATIVE PREVIOUS
 
   COMPONENT PSD1x=Monitor_nD(filename="flatC_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
@@ -326,6 +322,7 @@ WHEN (Eneutron<EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
   COMPONENT PSD2x=Monitor_nD(filename="flatT_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
 WHEN (Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
+*/
 
 COMPONENT GuideR = Guide_curved(
     w1 = 0.1, h1 = 0.1, l = 50, curvature=3000)
