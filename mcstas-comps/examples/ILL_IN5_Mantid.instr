@@ -491,7 +491,7 @@ AT (0,0,0) RELATIVE center_det
 ROTATED (0,0,0) RELATIVE center_det
 
 COMPONENT in5_t = Monitor_nD(
-  options="banana, auto t bins=50, parallel, previous")
+  options="banana, t limits=[0.0206 0.0216] bins=41, parallel, previous")
 AT      (0,0,0) RELATIVE center_det
 ROTATED (0,0,0) RELATIVE center_det
 
