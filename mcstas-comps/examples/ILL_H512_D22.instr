@@ -55,10 +55,10 @@ DECLARE %{
   double  D22_nu      = 0;
 
   double flag         = 0;
-  #ifdef OPENACC
+  //#ifdef OPENACC
   // This single bracket is put here to kill compilation on GPU - as it seemingly never finishes...
-  {
-  #endif
+  //{
+  //#endif
 %}
 
 INITIALIZE %{
