@@ -1,0 +1,79 @@
+/*******************************************************************************
+* Instrument: MCPL_filter_energy
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: 2019-03
+* Origin: DTU
+* %INSTRUMENT_SITE: Tools
+*
+* Filtering-by-energy instrument file for processing MCPL input files
+*
+* %D
+* 
+* Example: Split an MCPL file at an energy of 0.5 meV
+* mcrun MCPL_filter_energy MCPLfile=my.mcpl.gz energy=0.5
+*
+* %P
+* MCPLfile:  [str] Defines the MCPL input file to process
+* energy:    [meV]   Defines a threshold energy to split the MCPLfile at
+* min:       [meV]  Minimum energy in Monitor_nD plots
+* max:       [meV]  Maximum energy in Monitor_nD plots
+* bins:      [1]   Number of bins in Monitor_nD plots
+*
+* %L
+* <reference/HTML link>
+* MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT MCPL_filter_energy(string MCPLfile="my.mcpl.gz", energy=40, max=100, min=0, int bins=100)
+
+DECLARE
+%{
+  char monopts1[128];
+  char monopts2[128];
+%}
+
+USERVARS
+%{
+  double Energy;
+%}
+INITIALIZE
+%{
+  sprintf(monopts1,"previous E limits=[%g %g] bins=%i",min, energy, bins);
+  sprintf(monopts2,"previous E limits=[%g %g] bins=%i",energy, max, bins);
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read neutrons from an mcpl file*/
+
+COMPONENT MCPLinput = MCPL_input_GPU(filename=MCPLfile,verbose=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Calc = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  Energy = VS2E*(vx*vx+vy*vy+vz*vz);
+%}
+  
+COMPONENT MCPLlow = MCPL_output_GPU(filename="E_low")
+WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT MCPLhigh = MCPL_output_GPU(filename="E_high")
+WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Elow = Monitor_nD(filename="E_low", options=monopts1)
+WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Ehigh = Monitor_nD(filename="E_high", options=monopts2)
+WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
+  
+FINALLY
+%{
+%}
+
+END

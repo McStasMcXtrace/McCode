@@ -1,0 +1,66 @@
+/*******************************************************************************
+* Instrument: MCPL_filter_radius
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: 2019-03
+* Origin: DTU
+* %INSTRUMENT_SITE: Tools
+*
+* Filtering-by-radius instrument file for processing MCPL input files 
+*
+* %D
+* 
+* Example: Split an MCPL file at a radius of 2.5 m from the origin
+* mcrun MCPL_filter_radius MCPLfile=my.mcpl.gz radius=2.5
+*
+* %P
+* MCPLfile:  [str] Defines the MCPL input file to process
+* radius:    [m]   Defines a threshold distance to split the MCPLfile at
+*
+* %L
+* <reference/HTML link>
+* MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT MCPL_filter_radius(string MCPLfile="my.mcpl.gz", radius=2.5)
+
+USERVARS
+%{
+  double Radius;
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read neutrons from an mcpl file*/
+
+COMPONENT MCPLinput_GPU = MCPL_input_GPU(filename=MCPLfile,verbose=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Calc = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  Radius = sqrt(x*x+y*y+z*z);
+%}
+  
+COMPONENT MCPLlow = MCPL_output_GPU(filename="R_short")
+WHEN (Radius < radius) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT MCPLhigh = MCPL_output_GPU(filename="R_long")
+WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS
+
+/* COMPONENT Rshort = Monitor_nD(filename="R_short", options="previous auto user1", user1=Radius, username1="Distance from origin / m")
+WHEN (Radius < radius) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Rlong = Monitor_nD(filename="R_long", options="previous auto user1", user1=Radius, username1="Distance from origin / m")
+WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS */
+
+
+FINALLY
+%{
+%}
+
+END
