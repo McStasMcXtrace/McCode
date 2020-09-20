@@ -14,7 +14,7 @@
 * It produces a tof-angle and angle-energy detectors and also exports the
 * S(q,w) and S(q) data.
 *
-* %Example: lambda=3.4 Detector: M_theta_t_I=1.57351e-07
+* %Example: lambda=3.4 Detector: M_theta_t_I=1.60949e-07
 *
 * %Parameters
 * lambda: [Angs]     source energy
@@ -56,7 +56,7 @@ if (!SCATTERED) ABSORB;
 
 COMPONENT M_theta_t = Monitor_nD(
  xwidth=2.5, yheight=0.2,
- options="time limits=[0.023 0.028], abs angle limits=[0 180], banana, parallel",
+ options="time limits=[0.0017 0.0117], abs angle limits=[0 180], banana, parallel",
  bins=100)
 AT (0,0,0) RELATIVE Sample_pos
 
