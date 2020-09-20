@@ -78,6 +78,7 @@ OUTPUT PARAMETERS (GVars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
+%include "ref-lib"
 #ifndef Honeycomb_guide_Version
 #define Honeycomb_guide_Version "$Revision$"
 
