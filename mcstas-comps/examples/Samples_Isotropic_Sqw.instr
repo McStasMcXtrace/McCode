@@ -36,7 +36,7 @@ COMPONENT Source=Source_gen(
         radius=0.01, focus_xw=0.01, focus_yh=0.02, dist=1.5, lambda0=lambda, dlambda=0.01*lambda, I1=1)
 AT (0,0,0) RELATIVE Origin
 
-COMPONENT PSD=Monitor_nD(xwidth=.1, yheight=.1, options="x,y, auto, parallel")
+COMPONENT PSD=Monitor_nD(xwidth=.1, yheight=.1, options="x, y, parallel", bins=100)
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* sample position */
@@ -56,13 +56,13 @@ if (!SCATTERED) ABSORB;
 
 COMPONENT M_theta_t = Monitor_nD(
  xwidth=2.5, yheight=0.2,
- options="auto time, abs angle limits=[0 180], banana, parallel",
+ options="time limits=[0.023 0.028], abs angle limits=[0 180], banana, parallel",
  bins=100)
 AT (0,0,0) RELATIVE Sample_pos
 
 COMPONENT M_aw = Monitor_nD(
  xwidth=2.5, yheight=0.4,
- options="abs angle limits=[0 180], auto energy, banana, parallel",
+ options="abs angle limits=[0 180], energy limits=[0 35], banana, parallel",
  bins=100)
 AT (0,0,0) RELATIVE Sample_pos
 
