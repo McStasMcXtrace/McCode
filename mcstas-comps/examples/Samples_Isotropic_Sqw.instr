@@ -36,7 +36,7 @@ COMPONENT Source=Source_gen(
         radius=0.01, focus_xw=0.01, focus_yh=0.02, dist=1.5, lambda0=lambda, dlambda=0.01*lambda, I1=1)
 AT (0,0,0) RELATIVE Origin
 
-COMPONENT PSD=Monitor_nD(xwidth=.1, yheight=.1, options="x, y, parallel", bins=100)
+COMPONENT PSD=Monitor_nD(xwidth=.011, yheight=.011, options="x, y, parallel", bins=110)
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* sample position */
