@@ -190,6 +190,7 @@ COMPONENT D2B_ALPHA1_Div = Monitor_nD(
      options="dx limits=[-0.5 0.5] dy limits=[-1 1]",
      bins = 40, xwidth = 0.1, yheight = 0.3, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS
+
 COMPONENT D2B_Mono_Lambda = Monitor_nD(
      options=lamopts,
      bins = 40, xwidth = 0.1, yheight = 0.3, restore_neutron=1)
@@ -235,8 +236,9 @@ COMPONENT D2B_ALPHA2_Div = Monitor_nD(
      options="dx limits=[-0.5 0.5] dy limits=[-1 1]",
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS
+
 COMPONENT D2B_Sample_Lambda = Monitor_nD(
-     options="lambda, all auto",
+     options=lamopts,
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS
 
