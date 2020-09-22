@@ -20,8 +20,15 @@
 *
 *******************************************************************************/
 
+%{
+int yylex();
+int yyerror(char *s);
+int list_cat(struct List_header *, struct List_header *);
+int symtab_cat(struct List_header *, struct List_header *);
+%}
 
 %{
+  
 #include <math.h>
 #include <string.h>
 #include <stdio.h>

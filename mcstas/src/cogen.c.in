@@ -84,6 +84,12 @@
 #define MCCODE_LIBENV @MCCODE_LIBENV@
 #endif
 
+int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
+				 char* block_name, char* movetoblock_name);
+
+int get_codeblock_vars(struct code_block *code, List vars, List types,
+		       char* block_name, char* movetoblock_name);
+
 /* Functions for outputting code. */
 
 /* Handle for output file. */
