@@ -35,6 +35,8 @@
 * maxdiv: [deg]         Maximal divergence detected
 * filename: [str]       Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
+* vertical: [1]         If set, measure vertical divergence instead of horizontal.
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,7 +52,7 @@ DEFINE COMPONENT Div1D_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (ndiv=20, string filename=0,
   xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
-  maxdiv=2, int restore_neutron=0, int vertical=0)
+  maxdiv=2, int restore_neutron=0, int nowritefile=0, int vertical=0)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -69,10 +71,10 @@ INITIALIZE
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   if ((xmin >= xmax) || (ymin >= ymax)) {
-          printf("Error(%s): Div1D_monitor: Null detection area !\n"
+    printf("Error(%s): Div1D_monitor: Null detection area !\n"
                  "(xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-         NAME_CURRENT_COMP);
-    exit(0);
+        NAME_CURRENT_COMP);
+    exit(-1);
   }
 
   Div_N = create_darr1d(ndiv);
@@ -96,7 +98,7 @@ TRACE
     if (!vertical){
       div = RAD2DEG*atan2(vx,vz);
     }else{
-      div = RAD2DEG*atan2(vy,vz); 
+      div = RAD2DEG*atan2(vy,vz);
     }
     if (div < (double)maxdiv && div > -(double)maxdiv){
       i = floor((div + (double)maxdiv)*ndiv/(2.0*(double)maxdiv));
@@ -121,16 +123,18 @@ TRACE
 
 SAVE
 %{
-  if (!vertical){
-    DETECTOR_OUT_1D(
-      "Horizontal divergence monitor","horizontal divergence [deg]",
-      "Intensity","divergence", -maxdiv, maxdiv, ndiv,
-      &Div_N[0],&Div_p[0],&Div_p2[0],filename);
-  }else{
-    DETECTOR_OUT_1D(
-      "Vertical divergence monitor","vertical divergence [deg]",
-      "Intensity","divergence", -maxdiv, maxdiv, ndiv,
-      &Div_N[0],&Div_p[0],&Div_p2[0],filename);
+  if(!nowritefile){
+    if (!vertical){
+      DETECTOR_OUT_1D(
+        "Horizontal divergence monitor","horizontal divergence [deg]",
+        "Intensity","divergence", -maxdiv, maxdiv, ndiv,
+        &Div_N[0],&Div_p[0],&Div_p2[0],filename);
+    }else{
+      DETECTOR_OUT_1D(
+        "Vertical divergence monitor","vertical divergence [deg]",
+        "Intensity","divergence", -maxdiv, maxdiv, ndiv,
+        &Div_N[0],&Div_p[0],&Div_p2[0],filename);
+    }
   }
 %}
 
@@ -144,10 +148,10 @@ FINALLY
 MCDISPLAY
 %{
   multiline(5, (double)xmin, (double)ymin, 0.0,
-               (double)xmax, (double)ymin, 0.0,
-               (double)xmax, (double)ymax, 0.0,
-               (double)xmin, (double)ymax, 0.0,
-               (double)xmin, (double)ymin, 0.0);
+      (double)xmax, (double)ymin, 0.0,
+      (double)xmax, (double)ymax, 0.0,
+      (double)xmin, (double)ymax, 0.0,
+      (double)xmin, (double)ymin, 0.0);
 %}
 
 
