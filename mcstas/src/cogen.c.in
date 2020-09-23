@@ -2041,7 +2041,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   if(instr->portable)
     cout("#define MC_PORTABLE");
 
-  /* particle definition */
+  /* Math constants */
   cout("#define PI 3.14159265358979323846");
   cout("#ifndef M_PI");
   cout("#define M_PI PI");
@@ -2059,7 +2059,15 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#ifdef DISABLE_TRACE");
   cout("#undef MC_TRACE_ENABLED");
   cout("#endif");
+  cout("");
 
+  /* McCode-specific typedefs */
+  cout("typedef double MCNUM;");
+  cout("typedef struct {MCNUM x, y, z;} Coords;");
+  cout("typedef MCNUM Rotation[3][3];");
+  cout("#define MCCODE_BASE_TYPES");
+  cout("");
+  
   // generate particle struct
   cout("");
   cout("#ifdef OPENACC");

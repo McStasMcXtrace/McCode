@@ -176,9 +176,11 @@ struct mcinputtable_struct { /* defines instrument parameters */
   char *val;  /* default value */
 };
 
+#ifndef MCCODE_BASE_TYPES
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
+#endif
 
 /* the following variables are defined in the McStas generated C code
    but should be defined externally in case of independent library usage */
