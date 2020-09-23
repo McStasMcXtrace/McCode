@@ -127,14 +127,16 @@ DECLARE
   double S2W = 0.03;
   double S2H = 0.04;
 
-  double RotateNeutronX; /* the angle to rotate neutron so that neutrons go to the analyser */
-  double RotateNeutronY; /* the angle to rotate neutron so that neutrons go to the analyser */
   double RVA;            /* curvature of analyser (local approx) */
+%}
 
-  double flag_mono_transmitted=0;
-  double flag_sample=0;
-
-  Rotation R; /* rotation */
+USERVARS %{
+  double RotateNeutronX;
+  double RotateNeutronY;
+  double LDS;
+  double flag_mono_transmitted;
+  double flag_sample;
+  Rotation R;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -199,6 +201,10 @@ TRACE
 /* should be located at the end of the H24@ILL guide */
 REMOVABLE COMPONENT Progress = Progress_bar()
   AT (0, 0, 0)  ABSOLUTE
+EXTEND %{
+  /* a hack to carry value like DECLARE variable LDS */
+  LDS=2.3;
+%}
 
 REMOVABLE COMPONENT Source = Source_gen(
   lambda0=IN13lam, dlambda=0.005, xwidth=0.03, yheight=.125,
@@ -224,7 +230,7 @@ AT (0, 0, 0)        RELATIVE mono_pos
 ROTATED (0, TH0, 0) RELATIVE mono_pos
 
 
-COMPONENT CaF2_mono = Monochromator_curved(width=0.045, height=0.15, NV=3, NH=1,
+COMPONENT CaF2_mono = Monochromator_2foc(width=0.045, height=0.15, NV=3, NH=1,
   DM = DM, mosaic=CaF2mos, RV=RMV)
   AT (0, 0, 0) RELATIVE mono_cradle
   EXTEND %{
@@ -451,10 +457,10 @@ COMPONENT Sample_copy = COPY(Sample)(p_interact=0.1)
 COMPONENT DetectorMount = Arm()
   AT (0,0,-LSD) RELATIVE RotateNeutron
 
-COMPONENT Detector = Monitor_nD(
+/* COMPONENT Detector = Monitor_nD(
   xwidth=0.1, yheight=.25, user1=RotateNeutronX, username1="Angle [deg]",
   options="user1 limits=[-60 120], y", restore_neutron=1, bins=100)
-  AT (0, 0, 0)       RELATIVE DetectorMount
+  AT (0, 0, 0)       RELATIVE DetectorMount*/
 
 COMPONENT DetectorEnergy = Monitor_nD(
     options="energy",
