@@ -33,9 +33,9 @@ DEFINE INSTRUMENT RTP_Laue(theta=0, phi=0, det_rotation=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
-DECLARE
+USERVARS
 %{
-  double sample_scattered=0;
+  double sample_scattered;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */

@@ -31,9 +31,9 @@
 *******************************************************************************/
 DEFINE INSTRUMENT RTP_NeutronRadiography(theta=0, phi=0)
 
-DECLARE
+USERVARS
 %{
-  double sample_scattered=0;
+  double sample_scattered;
 %}
 
 /* Here comes the TRACE section, where the actual      */

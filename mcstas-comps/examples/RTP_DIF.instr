@@ -34,9 +34,9 @@ DEFINE INSTRUMENT RTP_DIF(lambda=2.36, DM=3.355, Mono_tilt=0, string powder="Na2
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
-DECLARE
+USERVARS
 %{
-  double mono_index=0;
+  double mono_index;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */

@@ -47,8 +47,12 @@ DEFINE INSTRUMENT RTP_SANS(lambda=5, DM=3.355, dlambda=.2, Be_Filter_depth=.15, 
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-  double mono_index=0;
   double A1,L;
+%}
+
+USERVARS
+%{
+  double mono_index;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
