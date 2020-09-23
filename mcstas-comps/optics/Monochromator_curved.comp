@@ -236,6 +236,7 @@ TRACE
   if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
   {                             /* Moving towards crystal? */
     double zmin,zmax, ymin,ymax;
+    _class_particle stored_particle_state=*_particle;
 
     /* Propagate to crystal plane */
     PROP_DT(dt);    /* now in the vertical plane of monochromator */
@@ -261,7 +262,7 @@ TRACE
       else tiltv=0;
 
       /* restore neutron in order to transform to slab coordinates */
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+      *_particle=stored_particle_state;
 
       /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
       double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2;
