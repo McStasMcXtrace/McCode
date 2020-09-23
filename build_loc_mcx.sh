@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-# rappid-build script for mcstas-kernel dev:
+# rapid-build script for mcxtrace-kernel dev:
 
 git submodule init
 git submodule update
