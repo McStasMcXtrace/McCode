@@ -121,7 +121,7 @@ TRACE
 
     double p2 = p*p;
     #pragma acc atomic
-    PolL_N[i]++;
+    PolL_N[i] = PolL_N[i]+1;
 
     #pragma acc atomic
     HelpArray[i] = HelpArray[i] + p;
