@@ -230,7 +230,7 @@ AT (0, 0, 0)        RELATIVE mono_pos
 ROTATED (0, TH0, 0) RELATIVE mono_pos
 
 
-COMPONENT CaF2_mono = Monochromator_2foc(width=0.045, height=0.15, NV=3, NH=1,
+COMPONENT CaF2_mono = Monochromator_curved(width=0.045, height=0.15, NV=3, NH=1,
   DM = DM, mosaic=CaF2mos, RV=RMV)
   AT (0, 0, 0) RELATIVE mono_cradle
   EXTEND %{
