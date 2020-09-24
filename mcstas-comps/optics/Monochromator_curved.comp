@@ -416,7 +416,6 @@ TRACE
             if (p_reflect > 1)  p_reflect = 1;
             p *= p_reflect;
 
-            SCATTER;
           } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */
           else do_transmit = 1;
             /* else transmit neutron */
@@ -449,6 +448,11 @@ TRACE
       coords_get(rot_apply(TT,coords_set(x,y,z)),&x,&y,&z);
       y+=center_y;
       z+=center_z;
+      /* Visualise scattering point in proper, component frame 
+	 - but only if the neutron is reflected, that is none of:
+	 * transmitted
+	 * falling outside the slab material */	
+      if(!do_transmit) SCATTER;
 
       /* mccoordschange_polarisation(tt, &sx, &sy, &sz); */
     } /* End intersect the crystal (if z) */
@@ -471,7 +475,6 @@ MCDISPLAY
 %{
   int ih;
 
-  
   for(ih = 0; ih < NH; ih++)
   {
     int iv;
