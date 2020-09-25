@@ -95,14 +95,14 @@ DECLARE %{
   double LFS       = 0.675; /* FC to Sample distance */
   double LSD       = 2;     /* Sample to Detector distance */
   double LVS       = 0.583; /* BC1 to VS distance */
-  double flag_sample=0;     /* flag set to 1 when sample scatters */
-  double flag_env  = 0;     /* flag set to 1 when sample environment scatters */
   double sample_width          = 0.05;
   double sample_thickness      = 1e-3;
   double sample_height         = 0.05;
   double environment_radius    = 0.05;
   double environment_thickness = 1e-3;
+  #pragma acc declare create( environment_thickness )
   double container_thickness   = 5e-4;
+  #pragma acc declare create( container_thickness )
   char   environment[]         = "Al.laz";
   char   container[]           = "V.laz";
 
@@ -118,10 +118,6 @@ DECLARE %{
   char   mon_qe[1024];
 
   double Lmin, Lmax;
-
-  char   flag_sample_choice=0;
-  double flag_source_order =0;
-  double order_extend;
 
   double t1F=0;
   double t12=0;
@@ -219,6 +215,14 @@ DECLARE %{
   } /* Write_Sqw_Dirac */
 %}
 
+USERVARS %{
+  char   flag_sample_choice;
+  double flag_source_order;
+  double order_extend;
+  double flag_sample;
+  double flag_env;
+%}
+
 INITIALIZE %{
   double Vi, Ki;
   double thetaB;
@@ -310,10 +314,6 @@ INITIALIZE %{
     Write_Sqw_Dirac(0, 0, 3*Ki, 5*Ei, 1000, "Dirac2D.sqw"));
   );
 
-  /* tests for consistency */
-  if (order <= 0 || order > 4) order = 4;
-  order_extend = order;
-
   if (nu < 0 || nu > 700) exit(printf("ERROR: Invalid: Fermi master frequency nu=%g [Hz]. Change DM ?\n", nu));
   if (fabs(A1) < 5)      exit(printf("ERROR: Invalid: mono take-off angle A1=%g [deg]. Change DM ?\n", A1));
   if (bctr < 0)           exit(printf("Invalid: BC1-BC2 distance bctr=%g [m]. Change DM ?\n", bctr));
@@ -333,6 +333,10 @@ COMPONENT Origin = Progress_bar()
   AT (0, 0, 0) ABSOLUTE
   EXTEND %{
     flag_source_order = floor(rand01()*order_extend*.99);
+    /* tests for consistency */
+    int ord=INSTRUMENT_GETPAR(order);
+    if (ord <= 0 || ord > 4) ord = 4;
+    order_extend = ord;
   %}
 
 COMPONENT Thermal = Source_gen(
