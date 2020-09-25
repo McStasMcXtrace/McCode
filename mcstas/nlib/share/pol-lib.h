@@ -42,14 +42,14 @@
 
 
 typedef int mcmagnet_field_func (double, double, double, double, double *, double *, double *, void *);
-typedef void mcmagnet_prec_func (double, double, double, double, double, double, double, double*, double*, double*, double, Coords, Rotation);
+typedef void mcmagnet_prec_func (Coords, Rotation, _class_particle *, double);
 typedef va_list mcmagnet_data;
 
 /*here's where the mcstas magnet stack is declared*/
 /*the magnet stack*/
 
 typedef struct mcmagnet_field_info {
-  mcmagnet_field_func *func;
+  int func;
   Rotation *rot;
   Coords *pos;
   void *data;
@@ -134,16 +134,7 @@ void SetMonoPolRefOut(double, double, double, double*, double*, double*);
 void SetMonoPolTransOut(double, double, double, double*, double*, double*);
 
 // Routines for spin precession in magnetic fields
-void SimpleNumMagnetPrecession(double, double, double, double, double, double, 
-			       double, double*, double*, double*, double, 
-			       Coords, Rotation);
-
-void SimpleNumMagnetPrecession___(double, double, double, double, double, double, 
-			       double, double*, double*, double*, double, 
-			       Coords, Rotation);
-void SeegerNumMagnetPrecession(double, double, double, double, double, double, 
-			       double, double*, double*, double*, double, 
-			       Coords, Rotation);
+void SimpleNumMagnetPrecession(Coords, Rotation, _class_particle *, double);
 
 
 // Routines to help calculate the rquired magnetic field
