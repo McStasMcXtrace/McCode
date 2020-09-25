@@ -49,12 +49,8 @@ typedef va_list mcmagnet_data;
 /*the magnet stack*/
 
 typedef struct mcmagnet_field_info {
-<<<<<<< HEAD
-  int func;
-=======
-  mcmagnet_field_func *func;
   int func_id;
->>>>>>> WIP: adding a dispatcher function to allow GPU
+  mcmagnet_field_func *func;
   Rotation *rot;
   Coords *pos;
   void *data;
@@ -121,6 +117,9 @@ void *mcmagnet_init_par_backend(int dummy, ...);
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
 void *mcmagnet_push(int func_id, NULL, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
 void *mcmagnet_pop(void);
+
+/*main magnetic field dispatcher function - every request goes through here*/
+int field_dispatcher(int field_id, double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 
 /*example functions for magnetic fields*/
 int const_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
