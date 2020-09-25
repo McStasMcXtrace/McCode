@@ -49,7 +49,12 @@ typedef va_list mcmagnet_data;
 /*the magnet stack*/
 
 typedef struct mcmagnet_field_info {
+<<<<<<< HEAD
   int func;
+=======
+  mcmagnet_field_func *func;
+  int func_id;
+>>>>>>> WIP: adding a dispatcher function to allow GPU
   Rotation *rot;
   Coords *pos;
   void *data;
@@ -62,10 +67,11 @@ void mc_pol_set_angular_accuracy(double);
 #define mcmagnet_sizeof (sizeof(mcmagnet_field_func *)+ sizeof(Rotation *)+ sizeof(Coords *)+ sizeof(double *))
 #define mcmagnet_malloc(n) malloc( (n)*sizeof(mcmagnet_field_info) );
 
-#define mcmagnet_pack(dest,funk,rotation,position,stopbit,args) \
+#define mcmagnet_pack(dest,id,funk,rotation,position,stopbit,args) \
   do { \
     mcmagnet_field_info * mctmp_p; \
     mctmp_p=(dest); \
+    mctmp_p->func_id=id;\
     mctmp_p->func=(mcmagnet_field_func *)(funk); \
     mctmp_p->rot=(rotation); \
     mctmp_p->pos=(position); \
@@ -113,7 +119,7 @@ void mcmagnet_print_stack();
 void *mcmagnet_init_par_backend(int dummy, ...);
 
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
-void *mcmagnet_push(mcmagnet_field_func *func,  Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
+void *mcmagnet_push(int func_id, NULL, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
 void *mcmagnet_pop(void);
 
 /*example functions for magnetic fields*/
@@ -135,7 +141,6 @@ void SetMonoPolTransOut(double, double, double, double*, double*, double*);
 
 // Routines for spin precession in magnetic fields
 void SimpleNumMagnetPrecession(Coords, Rotation, _class_particle *, double);
-
 
 // Routines to help calculate the rquired magnetic field
 double GetConstantField(double, double, double);

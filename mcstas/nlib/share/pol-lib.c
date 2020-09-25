@@ -90,6 +90,55 @@ void mc_pol_set_timestep(double dt){
   } while(0)
 #endif
 
+int const_magnetic_field(){
+}
+
+enum field_functions{
+  constant,
+  majorana,
+  MSF,
+  RF,
+  rotating,
+  gradient
+};
+
+
+
+int field_dispatcher(int field_function_no, double x, double y, double z, double t, double *bx,double *by, double *bz, double *dummy){
+  int retval=1;
+  switch (field_function_no){
+    case constant: 
+      {
+        retval=constant_magnetic_field(x,y,z,t,*bx,*by,*bz, dummy);
+        break;
+      }
+    case majorana:
+      {
+        retval=majorana_magnetic_field(x,y,z,t,*bx,*by,*bz, dummy);
+        break;
+      }
+    case rotating:
+      {
+        retval=rot_magnetic_field(x,y,z,t,*bx,*by,*bz, dummy);
+        break;
+      }
+    case RF:
+      {
+        /*not implemented yet*/
+        break;
+      }
+    case gradient:
+      {
+        retval=gradient_magnetic_field(x,y,z,*bx,*by,*bz,dummy);
+        break;
+      }
+  }
+  return retval;
+}
+
+
+
+
 /*traverse the stack and return the magnetic field*/
 #pragma acc routine seq
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
@@ -109,7 +158,7 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
   while(p){
     /*transform to the coordinate system of the particular magnetic function*/
     loc=coords_sub(rot_apply(*(p->rot),in),*(p->pos));
-    stat=(p->func) (loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->data);
+    stat=field_dispatcher((p->funcid),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->data);
     /*check if the field function should be garbage collected*/
     //printf("getfield_(loc):_(xyz,t)=( %g %g %g %g )\n",loc.x,loc.y,loc.z,t);
     if (stat){
