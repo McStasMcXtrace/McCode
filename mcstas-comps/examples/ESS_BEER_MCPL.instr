@@ -97,18 +97,18 @@ DECLARE
 			}
 		}
   };
-  
+  Rotation smi;
+  int filt;
+  double tof;
+  #pragma acc declare create(smi,filt,tof)
 %}
 
 USERVARS
 %{
-  double tof;
   double scX;
   double scY;
   double scZ;
   double scP;
-  Rotation smi;
-  int filt;
 %}
 
 INITIALIZE
@@ -192,6 +192,9 @@ rot_set_rotation(sm, 0.0,omega*DEG2RAD,chi*DEG2RAD);
 rot_transpose(sm, smi);
 tof=det_Linst/hm*lam0*1e6; // tof in [us]
 filt=only_event;
+
+#pragma acc update device(smi,tof,filt)
+
 /* 2D plot of the sampling gauge volume, in mm*/
 sprintf(optSGV2,"user1 bins=201 limits=[-5,5], user2 bins=201 limits=[-5,5]");
 /* 2D plot of the sampling gauge volume, in mm*/
@@ -219,7 +222,7 @@ COMPONENT Origin = Progress_bar()
   AT (0, 0, 0) ABSOLUTE
   
 /* Read neutrons from an mcpl file. */
-COMPONENT src = MCPL_input(filename=input, polarisationuse=0, verbose=0, Emin=Emin, Emax=Emax, repeat_count=repetition, E_smear=0, pos_smear=0.0001, dir_smear=0.001)
+COMPONENT src = MCPL_input_GPU(filename=input, polarisationuse=0, verbose=0, Emin=Emin, Emax=Emax, repeat_count=repetition, E_smear=0, pos_smear=0.0001, dir_smear=0.001)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 COMPONENT xymon = PSD_monitor(
