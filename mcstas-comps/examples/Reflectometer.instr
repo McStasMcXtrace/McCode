@@ -46,7 +46,6 @@ double foot=40,fxw=0.13,fyh=0.1;
 double sample_Z=0.0; // negative sample_Z: move monitor upstream
 double zlos=0.59,cutoffguide=0,slitGravity=1,slitGravCor=7.2075 ;// the slit height are adjusted due to gravity. Mean displacements are as for 7.21AA neutrons
 double vCor,deltaY_Grav1,deltaY_Grav2; // slitheight correction due to gravity.
-double reflectflag=0;
 double h[2], w[2];
 double focus_s_w; double focus_e_w;
 double focus_s_h; double focus_e_h;
@@ -54,7 +53,6 @@ double elength_h; double elength_w;
 // parameters for guide calculation
 double guide_start=1.27+1e-6;
 double W_par=0.003, R0_par=0.99,Qcrit=0.0217,mvalue=6,alpha_par=6.07;
-double guide1flag,guide2flag;
 
 // parameters for slit settings
  double S1gap=2,S2gap=2;
@@ -68,7 +66,6 @@ double guide_dist, Pulse_freq;
 // Parametes for the mirror
 double L_mirror=2.5;         //length
 double h_mirror=0.12;        //width
-double mirflag=0;
 
 double dist_moderator_detector=30, dist_moderator_mirrorbegin=2, dist_guide_S1=0.02, dist_S1_S2=1.5, dist_sample_detector=3;
 double guide_length,dist_guide_S2,dist_guide_sample,dist_S2_sample;
@@ -86,6 +83,11 @@ char optionstring6 [128];
 char optionstring6x [128];
 double deltaTheta;
 double LOSSlitheight;
+
+  double mirflag;
+  double guide1flag;
+  double guide2flag;
+  double reflectflag;
 %}
 
 INITIALIZE
@@ -262,13 +264,13 @@ ROTATED (TT_guide,0,0) RELATIVE Origin
 
 
 COMPONENT guide1 = Elliptic_guide_gravity(
-    L=guide_length*0.5-1e-6,
-    Linh = focus_inh,
-    Louth= focus_outh+guide_length*0.5,
-    Linv = focus_inv,
-    Loutv= focus_outv+guide_length*0.5,
-    widthOfEllipsev=small_axis_h*0.5,
-    widthOfEllipseh=small_axis_w*0.5,
+    l=guide_length*0.5-1e-6,
+    linxw = focus_inh,
+    loutxw = focus_outh+guide_length*0.5,
+    linyh = focus_inv,
+    loutyh= focus_outv+guide_length*0.5,
+    minorAxisxw=small_axis_h*0.5,
+    minorAxisyh=small_axis_w*0.5,
     R0=R0_par,
     Qc=Qcrit,
     alpha=alpha_par,
@@ -285,13 +287,13 @@ EXTEND
 
 
 COMPONENT guide2 = Elliptic_guide_gravity(
-    L=guide_length*0.5-1e-6-cutoffguide,
-    Linh = focus_inh+guide_length*0.5,
-    Louth= focus_outh+cutoffguide,
-    Linv = focus_inv+guide_length*0.5,
-    Loutv= focus_outv+cutoffguide,
-    widthOfEllipsev=small_axis_h*0.5,
-    widthOfEllipseh=small_axis_w*0.5,
+    l=guide_length*0.5-1e-6-cutoffguide,
+    linxw = focus_inh+guide_length*0.5,
+    loutxw= focus_outh+cutoffguide,
+    linyh = focus_inv+guide_length*0.5,
+    loutyh= focus_outv+cutoffguide,
+    minorAxisxw=small_axis_h*0.5,
+    minorAxisyh=small_axis_w*0.5,
     R0=R0_par,
     Qc=Qcrit,
     alpha=alpha_par,
