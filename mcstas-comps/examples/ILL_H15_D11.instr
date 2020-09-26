@@ -142,7 +142,8 @@ DECLARE
   double Length_Lc[]       ={1.5,2.5,4,5.5,8,10.5,13.5,16.5,20.5,28,34,40.5};
   
   double microGap = 0.0001;
-  
+
+  char xlmonopts[128];
 %}
 /* end of DECLARE */
 
@@ -244,6 +245,8 @@ INITIALIZE
   printf("D11:   Length L_g=%8.3g [m], n_elements=%8.2g\n", sum_length, n_elements);
   printf("D11:   Chamfers  =%8.3g [m], Waviness  =%8.3g [rad] (%.3g [deg])\n", Chamfers, Waviness, Waviness*RAD2DEG);
   Waviness *= RAD2DEG;
+
+  sprintf(xlmonopts,"x bins=100 lambda limits=[%g %g] bins=100",sLambda-sDeltaLambda,sLambda+sDeltaLambda);
 
 %}
 /* end of INITIALIZE */
@@ -638,7 +641,7 @@ COMPONENT AlWindow10 = Al_window(thickness=0.004)
 AT (0,0,0.5+0.001) RELATIVE sg29
 
 COMPONENT Mon_D11_In = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight2,
-  options="x lambda, auto")
+  options=xlmonopts)
 AT (0,0,0.5+0.01) RELATIVE sg29
 
 COMPONENT Dolores = V_selector(xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=48.298,
@@ -661,7 +664,7 @@ COMPONENT AlWindow12 = Al_window(thickness=0.002)
 AT (0,0,0.5+0.001) RELATIVE sg30
 
 COMPONENT Mon_D11_Out = Monitor_nD(xwidth=gGuideWidth, yheight=gGuideHeight2,
-  options="x lambda, auto")
+  options=xlmonopts)
 AT (0,0,0.5+0.01) RELATIVE sg30
 
 COMPONENT AlWindow13 = Al_window(thickness=0.002)
