@@ -181,10 +181,10 @@ COMPONENT lmon_reflect2 = Monitor_nD(
   options="disk, auto wavelength", bins=50)
   AT (0, 0, 0.575) RELATIVE mono_takeoff
 
-COMPONENT lmon_reflect = Monitor_nD(
+/*COMPONENT lmon_reflect = Monitor_nD(
   xwidth=.02, yheight=.02, user1=mono_index,
   options="disk slit, auto wavelength, user1 limits=[0 4]", bins=50)
-  AT (0, 0, 0.575+1e-4) RELATIVE mono_takeoff
+  AT (0, 0, 0.575+1e-4) RELATIVE mono_takeoff*/
 
 COMPONENT coll1=Guide(w1=.05,h1=.05,l=3.8)
   AT (0, 0, 0.575+1e-3) RELATIVE mono_takeoff
