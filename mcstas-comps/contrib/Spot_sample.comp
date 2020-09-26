@@ -70,9 +70,9 @@ xwidth=0, yheight=0, zthick=0, Eideal=100.0,w=50.0,two_theta=25.0,n_spots=4)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) removed to go to mcstas version 2
 
-DECLARE
+SHARE
 %{
-struct StructVarsV
+struct StructVarsVspot
 {
 double sigma_a; /* Absorption cross section per atom (barns) */
     double sigma_i; /* Incoherent scattering cross section per atom (barns) */
@@ -80,7 +80,11 @@ double sigma_a; /* Absorption cross section per atom (barns) */
     double my_s;
     double my_a_v;
     char   isrect;      /* true when sample is a box */
-  } VarsV;
+  };
+%}
+
+DECLARE %{
+struct StructVarsVspot VarsV;
 %}
 
 INITIALIZE
