@@ -49,8 +49,6 @@ DEFINE INSTRUMENT ISIS_Prisma2(TT=-30,PHA=22,PHA1=-3,PHA2=-2,PHA3=-1, PHA4=0,PHA
 
 DECLARE
 %{
-int neu_color;                  /* "Color" of current neutron */
-
 /* 30' mosaicity used on analysator */
 double prisma_ana_mosaic = 30;
 /* Q vector for bragg scattering with monochromator and analysator */
@@ -59,6 +57,10 @@ double prisma_ana_r0 = 0.6;
 double focus_x,focus_z;
 
 double apos1, apos2, apos3, apos4, apos5, apos6, apos7;
+%}
+
+USERVARS %{
+  int neu_color;
 %}
 
 INITIALIZE
@@ -88,9 +90,6 @@ COMPONENT mod = Moderator(
                           Emin = 10, Emax = 15,
                           Ec = 9.0, t0 = 37.15, gamma = 39.1)
      AT (0,0,0) ABSOLUTE
-EXTEND %{
-  neu_color=0;
-%}
 
 /* Use a slit to get the effect of a rectangular source. */
 COMPONENT modslit = Slit(xmin = -0.05, xmax = 0.05,
@@ -227,11 +226,53 @@ COMPONENT psd = PSD_monitor(xmin = -0.05, xmax = 0.05,
                             filename = "prisma2.psd")
      AT(0,0,0.20) RELATIVE a3
 
- COMPONENT Detector = Monitor_nD(xmin = -0.05, xmax = 0.05,
+COMPONENT Detector = Monitor_nD(xmin = -0.05, xmax = 0.05,
                                  ymin = -0.05, ymax = 0.05,
-				 user1=neu_color, username1="Mono blade", options="user1 limits=[0 6] bins=7, t limits=[0 10000] bins=1000",
-                                 filename = "prisma2.tof")
-     AT (0,0,0.20) RELATIVE a3
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector1 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+				 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==1) AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector2 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==2) AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector3 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==3) AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector4 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==4) AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector5 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==5) AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector6 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==6) AT (0,0,0.20) RELATIVE a3
+
+COMPONENT Detector7 = Monitor_nD(xmin = -0.05, xmax = 0.05,
+                                 ymin = -0.05, ymax = 0.05,
+                                 options="t limits=[0 10000] bins=1000",
+                                 restore_neutron=1)
+WHEN (neu_color==7) AT (0,0,0.20) RELATIVE a3
 
 COMPONENT mon9 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
      AT(0,0,0.01) RELATIVE Detector
