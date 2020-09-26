@@ -20,7 +20,7 @@
 * %Description
 * Very simple test instrument for the Sans_spheres component
 *
-* %Example: lambda=6 Detector: detector_I=6.56942e-17
+* Example: lambda=6 Detector: detector_I=6.56942e-17
 *
 * %Parameters
 * lambda: [AA]          Mean wavelength of neutrons
