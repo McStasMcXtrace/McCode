@@ -206,12 +206,9 @@ reflectflag=0;
 mirflag=0;
 %}
 
-COMPONENT cold_source = ESS_moderator_long(
-    yheight = 0.12, Lmin = Lam_min, Lmax = Lam_max, dist = 2,
-    focus_xw = fxw, focus_yh =fyh, nu = frequency, T = 50, tau = 287e-6, tau1 = 0,
-    tau2 = 20e-6, d = Pulse_width, n = 20, n2 = 5, chi2 = 0.9,
-    I0 = 6.9e11, I2 = 27.6e10, branch1 =1.0, branch2 = 0.5,
-    branch_tail = 0.1)
+COMPONENT cold_source = ESS_butterfly(
+    Lmin = Lam_min, Lmax = Lam_max, dist = 2,
+    focus_xw = fxw, focus_yh =fyh)
   AT (0, 0, 0) RELATIVE Origin
 
 
