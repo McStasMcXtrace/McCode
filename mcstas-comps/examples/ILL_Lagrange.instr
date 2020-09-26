@@ -55,9 +55,13 @@ DECLARE
 %{
   double A1,A5; /* rotation of monok and analyser */
   double RVA;   /* focusing of analyser */
-  double RotateNeutron=30; /* the angle to rotate neutron so that neutrons go to the analyser */
-int flag_env=0;
 %}
+
+USERVARS %{
+  double RotateNeutron;
+  int flag_env;
+%}
+
 
 INITIALIZE
 %{
@@ -102,6 +106,9 @@ TRACE
 
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
+EXTEND %{
+  RotateNeutron=30;
+%}
 
 /* Hot source at the ILL */
 COMPONENT Source = Source_gen(
