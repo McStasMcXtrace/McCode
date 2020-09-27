@@ -23,9 +23,9 @@
 *******************************************************************************/
 DEFINE INSTRUMENT Test_MCPL_output(merge=1)
 
-DECLARE
+USERVARS
 %{
-    int32_t flag;
+    //int32_t flag;
 %}
 
 INITIALIZE
@@ -46,15 +46,15 @@ COMPONENT sa = Source_Maxwell_3( /* flux in n/s/cm2/st/AA */
 AT (0,0,0) ABSOLUTE
 EXTEND %{
   t=1e-3*rand01();
-  flag=(uint32_t)mcget_run_num();
+  //flag=(uint32_t)mcget_run_num();
 %}
 
 /* the output ============================================================== */
-COMPONENT vout = MCPL_output(
-     filename="voutput", verbose=1, userflag=flag, userflagcomment="Neutron Id", merge_mpi=merge)
+COMPONENT vout = MCPL_output_GPU(
+     filename="voutput", verbose=1) 
 AT(0,0,0) RELATIVE PREVIOUS
 
-COMPONENT m1 = Monitor_nD(
+/*COMPONENT m1 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
   options="auto lambda, parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
@@ -78,5 +78,5 @@ COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=2112,
   options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"
 ) AT (0,0,0) ABSOLUTE
-
+*/
 END
