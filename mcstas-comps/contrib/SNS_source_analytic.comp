@@ -928,6 +928,9 @@ INITIALIZE
   CL = (1.0/sqrt(Emin*1e-3)-1.0/sqrt(Emax*1e-3))/(Emax-Emin)*1e3;
   CU = (log(Emax*1e-3)-log(Emin*1e-3))/(Emax-Emin)*1e3;
 
+  #ifdef USE_MPI
+  p_in /= mpi_node_count;
+  #endif
 %}
 
 TRACE
@@ -1044,9 +1047,7 @@ TRACE
   vx = v*cos(phi)*sin(theta);
 
   p*=p_E*p_sa*p_t/mcget_ncount();
-#if defined (USE_MPI)
-  p/=mpi_node_count;
-#endif
+
   //printf("Eval=%e tval=%e p_E=%e p_t=%e p_sa=%e p=%e\n", Eval, tval, p_E, p_t, p_sa, p);
 %}
 

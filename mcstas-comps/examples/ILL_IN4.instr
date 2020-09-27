@@ -507,28 +507,28 @@ COMPONENT sample_qxy = Monitor_nD(
 
 /* sample environment and cell */
 
-/* external shield */
-COMPONENT Environment_in=Isotropic_Sqw(
-  radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
-  Sqw_coh=environment, concentric=1, verbose=0, order=1, d_phi=2*RAD2DEG*atan2(1, LSD)
-) WHEN (environment_thickness > 0)
-AT (0, 0, 0) RELATIVE Sample_rot
-EXTEND %{
-  flag_env += SCATTERED;
-%}
+/* /\* external shield *\/ */
+/* COMPONENT Environment_in=Isotropic_Sqw( */
+/*   radius = environment_radius, yheight = 0.1, thickness=environment_thickness, */
+/*   Sqw_coh=environment, concentric=1, verbose=0, order=1, d_phi=2*RAD2DEG*atan2(1, LSD) */
+/* ) WHEN (environment_thickness > 0) */
+/* AT (0, 0, 0) RELATIVE Sample_rot */
+/* EXTEND %{ */
+/*   flag_env += SCATTERED; */
+/* %} */
 
-/* sample container */
-COMPONENT Container_in=Isotropic_Sqw(
-  xwidth  = sample_width+1e-4+container_thickness,
-  zdepth  = sample_thickness+1e-4+container_thickness,
-  yheight = sample_height, thickness=container_thickness,
-  Sqw_coh=container, concentric=1, verbose=0, order=1, d_phi=2*RAD2DEG*atan2(1, LSD)
-  ) WHEN(container_thickness > 0)
-AT (0, 0, 0) RELATIVE Sample_rot
-EXTEND
-%{
-  flag_env += SCATTERED;
-%}
+/* /\* sample container *\/ */
+/* COMPONENT Container_in=Isotropic_Sqw( */
+/*   xwidth  = sample_width+1e-4+container_thickness, */
+/*   zdepth  = sample_thickness+1e-4+container_thickness, */
+/*   yheight = sample_height, thickness=container_thickness, */
+/*   Sqw_coh=container, concentric=1, verbose=0, order=1, d_phi=2*RAD2DEG*atan2(1, LSD) */
+/*   ) WHEN(container_thickness > 0) */
+/* AT (0, 0, 0) RELATIVE Sample_rot */
+/* EXTEND */
+/* %{ */
+/*   flag_env += SCATTERED; */
+/* %} */
 
 COMPONENT SampleS=Isotropic_Sqw(
   xwidth = sample_width, zdepth=sample_thickness, yheight = sample_height,
@@ -550,21 +550,21 @@ EXTEND
   flag_sample += SCATTERED;
 %}
 
-COMPONENT Container_out=COPY(Container_in)(concentric=0)
-WHEN(container_thickness > 0)
-AT (0, 0, 0) RELATIVE Sample_rot
-EXTEND
-%{
-  flag_env += SCATTERED;
-%}
+/* COMPONENT Container_out=COPY(Container_in)(concentric=0) */
+/* WHEN(container_thickness > 0) */
+/* AT (0, 0, 0) RELATIVE Sample_rot */
+/* EXTEND */
+/* %{ */
+/*   flag_env += SCATTERED; */
+/* %} */
 
-/* external shield */
-COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
-WHEN (environment_thickness > 0)
-AT (0, 0, 0) RELATIVE Sample_rot
-EXTEND %{
-  flag_env += SCATTERED;
-%}
+/* /\* external shield *\/ */
+/* COMPONENT Environment_out=COPY(Environment_in)(concentric=0) */
+/* WHEN (environment_thickness > 0) */
+/* AT (0, 0, 0) RELATIVE Sample_rot */
+/* EXTEND %{ */
+/*   flag_env += SCATTERED; */
+/* %} */
 
 COMPONENT Detector = Monitor_nD(radius=LSD, yheight=2, restore_neutron=1,
   options="theta limits=[-15 135] bins=300, y bins=100, banana")
