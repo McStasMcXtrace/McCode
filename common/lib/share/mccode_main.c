@@ -22,6 +22,7 @@ int mccode_main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_node_rank);
   MPI_Comm_set_name(MPI_COMM_WORLD, instrument_name);
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
+  #pragma acc declare create(mpi_node_count, mpi_node_rank, mpi_node_name)
 #endif /* USE_MPI */
 
   //ct = clock();    /* we use clock rather than time to set the default seed */
