@@ -515,7 +515,7 @@ int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum,
       line_info->xs_sum[line]= *sum;
       line_info->xs_compute++;
     } else line_info->xs_reuse++;
-    line0 = Nq - 1;
+    line0 = Nq;
   }
 
   line_info->xs_calls++;
