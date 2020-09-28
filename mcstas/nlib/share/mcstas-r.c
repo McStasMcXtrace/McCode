@@ -106,11 +106,12 @@ _class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, doub
 /*******************************************************************************
 * mcgenstate: set default neutron parameters
 *******************************************************************************/
-#pragma acc routine seq
-_class_particle mcgenstate(void)
-{
-  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));
-}
+// Moved to generated code
+/* #pragma acc routine seq */
+/* _class_particle mcgenstate(void) */
+/* { */
+/*   return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop)); */
+/* } */
 
 /*******************************************************************************
 * mccoordschanges: old style rotation routine rot -> (x y z) ,(vx vy vz),(sx,sy,sz)
