@@ -773,11 +773,11 @@ TRACE
   char   intersect=0;
   char   intersecti=0;
 
-#ifdef OPENACC
+  /*#ifdef OPENACC
   struct line_info_struct Myline_info = line_info;
-#else
+  #else*/
 #define Myline_info line_info
-#endif
+  //#endif
 
   Myline_info.type = '\0';
   Myline_info.itype = 0;
