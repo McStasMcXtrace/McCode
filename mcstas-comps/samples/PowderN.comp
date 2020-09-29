@@ -773,20 +773,26 @@ TRACE
   char   intersect=0;
   char   intersecti=0;
 
-  line_info.type = '\0';
-  line_info.itype = 0;
+#ifdef OPENACC
+  struct line_info_struct Myline_info = line_info;
+#else
+#define Myline_info line_info
+#endif
 
-  if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
-    if (line_info.shape == 1) {
+  Myline_info.type = '\0';
+  Myline_info.itype = 0;
+
+  if (Myline_info.V_0 > 0 && (Myline_info.count || Myline_info.my_inc)) {
+    if (Myline_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
-    } else if (line_info.shape == 0) {
+      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, Myline_info.xwidth_i, Myline_info.yheight_i, Myline_info.zdepth_i);
+    } else if (Myline_info.shape == 0) {
       intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.radius_i, line_info.yheight_i);
-    } else if (line_info.shape == 2) {
+      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, Myline_info.radius_i, Myline_info.yheight_i);
+    } else if (Myline_info.shape == 2) {
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-      intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
-    } else if (line_info.shape == 3) {
+      intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, Myline_info.radius_i);
+    } else if (Myline_info.shape == 3) {
 #ifndef OPENACC
       intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
       intersecti = 0;
@@ -820,28 +826,28 @@ TRACE
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (t3 - t2 + t1 - t0);
 
-    if (line_info.neutron_passed < CHAR_BUF_LENGTH) {
-      if (v < line_info.v_min) line_info.v_min = v;
-      if (v > line_info.v_max) line_info.v_max = v;
-      line_info.neutron_passed++;
+    if (Myline_info.neutron_passed < CHAR_BUF_LENGTH) {
+      if (v < Myline_info.v_min) Myline_info.v_min = v;
+      if (v > Myline_info.v_max) Myline_info.v_max = v;
+      Myline_info.neutron_passed++;
     }
 
     /* Calculate total scattering cross section at relevant velocity */
-    if ( fabs(v - line_info.v) < 1e-6) {
-        line_info.nb_reuses++;
+    if ( fabs(v - Myline_info.v) < 1e-6) {
+        Myline_info.nb_reuses++;
       } else {
-        line_info.Nq = calc_xsect(v, line_info.q_v, line_info.my_s_v2, line_info.count, &line_info.my_s_v2_sum, &line_info);
-        line_info.v = v;
-        line_info.nb_refl += line_info.Nq;
-        line_info.nb_refl_count++;
+        Myline_info.Nq = calc_xsect(v, Myline_info.q_v, Myline_info.my_s_v2, Myline_info.count, &Myline_info.my_s_v2_sum, &Myline_info);
+        Myline_info.v = v;
+        Myline_info.nb_refl += Myline_info.Nq;
+        Myline_info.nb_refl_count++;
       }
 
     if (t3 < 0) {
       t3=0; /* Already past sample?! */
-      if (line_info.flag_warning < 100)
+      if (Myline_info.flag_warning < 100)
       printf("PowderN: %s: Warning: Neutron has already passed us? (Skipped).\n"
              "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
-      line_info.flag_warning++;
+      Myline_info.flag_warning++;
     } else {
       if (dt<0) { /* Calculate scattering point position */
         dt = fabs(dt)*(t1 - t0); /* 'Forward' part */
@@ -849,9 +855,9 @@ TRACE
         dt = dt * (t3 - t2) + (t2-t0) ; /* Possibly also 'backside' part */
       }
 
-      my_s = line_info.my_s_v2_sum/(v*v)+line_info.my_inc;
+      my_s = Myline_info.my_s_v2_sum/(v*v)+Myline_info.my_inc;
       /* Total attenuation from scattering */
-	  line_info.lfree=0;
+	  Myline_info.lfree=0;
       neutrontype = rand01();
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
       if (neutrontype < p_transmit) {
@@ -873,15 +879,15 @@ TRACE
       }
 
       if (neutrontype == 3) { /* Make coherent scattering event */
-        if (line_info.count > 0) {
+        if (Myline_info.count > 0) {
           /* choose line */
-			if (line_info.Nq > 1) line=floor(line_info.Nq*rand01());  /* Select between Nq powder lines */
+			if (Myline_info.Nq > 1) line=floor(Myline_info.Nq*rand01());  /* Select between Nq powder lines */
 			else line = 0;
-			if (line_info.w_v[line])
-				arg = line_info.q_v[line]*(1+line_info.w_v[line]*randnorm())/(2.0*v);
+			if (Myline_info.w_v[line])
+				arg = Myline_info.q_v[line]*(1+Myline_info.w_v[line]*randnorm())/(2.0*v);
 			else
-				arg = line_info.q_v[line]/(2.0*v);
-			my_s_n = line_info.my_s_v2[line]/(v*v);
+				arg = Myline_info.q_v[line]/(2.0*v);
+			my_s_n = Myline_info.my_s_v2[line]/(v*v);
 			if(fabs(arg) > 1)
 				ABSORB;                   /* No bragg scattering possible*/
 			if (tth_sign == 0) {
@@ -949,25 +955,25 @@ TRACE
 			vz = tmp_vz;
 			  
 			  /* Since now scattered and new direction given, calculate path to exit */
-			if (line_info.shape == 1) {
+			if (Myline_info.shape == 1) {
 				intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-				intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
-			} else if (line_info.shape == 0) {
+				intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, Myline_info.xwidth_i, Myline_info.yheight_i, Myline_info.zdepth_i);
+			} else if (Myline_info.shape == 0) {
 				intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-				intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.radius_i, line_info.yheight_i);
-			} else if (line_info.shape == 2) {
+				intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, Myline_info.radius_i, Myline_info.yheight_i);
+			} else if (Myline_info.shape == 2) {
 				intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-				intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
-			} else if (line_info.shape == 3) {
+				intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, Myline_info.radius_i);
+			} else if (Myline_info.shape == 3) {
 				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
 				intersecti = 0;
 			}
 
 			if (!intersect) {
 				/* Strange error: did not hit cylinder */
-				if (line_info.flag_warning < 100)
+				if (Myline_info.flag_warning < 100)
 				  printf("PowderN: %s: WARNING: Did not hit sample from inside (coh). ABSORB.\n", NAME_CURRENT_COMP);
-				line_info.flag_warning++;
+				Myline_info.flag_warning++;
 				ABSORB;
 			}
 
@@ -989,15 +995,15 @@ TRACE
 
 			l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-			pmul  = line_info.Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
+			pmul  = Myline_info.Nq*l_full*my_s_n*exp(-(Myline_info.my_a_v/v+my_s)*(l+l_1))
 									  /(1-(p_inc+p_transmit));
 			  /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
 			if (d_phi) pmul *= alpha/PI;
 
-			line_info.type = 'c';
-			line_info.itype = 1;
-			line_info.dq = line_info.q_v[line]*V2K;
-			line_info.lfree=1/(line_info.my_a_v/v+my_s);
+			Myline_info.type = 'c';
+			Myline_info.itype = 1;
+			Myline_info.dq = Myline_info.q_v[line]*V2K;
+			Myline_info.lfree=1/(Myline_info.my_a_v/v+my_s);
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (neutrontype == 2) {  /* Make incoherent scattering event */
@@ -1018,16 +1024,16 @@ TRACE
         vz *= v/v1;
 
         /* Since now scattered and new direction given, calculate path to exit */
-        if (line_info.shape == 1) {
+        if (Myline_info.shape == 1) {
           intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-          intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
-        } else if (line_info.shape == 0) {
+          intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, Myline_info.xwidth_i, Myline_info.yheight_i, Myline_info.zdepth_i);
+        } else if (Myline_info.shape == 0) {
           intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-          intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.radius_i, line_info.yheight_i);
-        } else if (line_info.shape == 2) {
+          intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, Myline_info.radius_i, Myline_info.yheight_i);
+        } else if (Myline_info.shape == 2) {
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-          intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
-        } else if (line_info.shape == 3) {
+          intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, Myline_info.radius_i);
+        } else if (Myline_info.shape == 3) {
 #ifndef OPENACC
           intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
           intersecti = 0;
@@ -1036,9 +1042,9 @@ TRACE
 
         if (!intersect) {
           /* Strange error: did not hit cylinder */
-          if (line_info.flag_warning < 100)
+          if (Myline_info.flag_warning < 100)
             printf("PowderN: %s: WARNING: Did not hit sample from inside (inc). ABSORB.\n", NAME_CURRENT_COMP);
-          line_info.flag_warning++;
+          Myline_info.flag_warning++;
           ABSORB;
         }
 
@@ -1060,25 +1066,29 @@ TRACE
 
         l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-        pmul = l_full*line_info.my_inc*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
+        pmul = l_full*Myline_info.my_inc*exp(-(Myline_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
-		line_info.lfree=1/(line_info.my_a_v/v+my_s);
-        line_info.type = 'i';
-		line_info.itype = 2;
+		Myline_info.lfree=1/(Myline_info.my_a_v/v+my_s);
+        Myline_info.type = 'i';
+		Myline_info.itype = 2;
 
       }  /* Incoherent scattering event */
       else if (neutrontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change neutron weight */
-        pmul = exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
-        line_info.lfree=1/(line_info.my_a_v/v+my_s);
-        line_info.type = 't';
-		line_info.itype = 3;
+        pmul = exp(-(Myline_info.my_a_v/v+my_s)*(l))/(p_transmit);
+        Myline_info.lfree=1/(Myline_info.my_a_v/v+my_s);
+        Myline_info.type = 't';
+		Myline_info.itype = 3;
       }
       p *= pmul;
     } /* Neutron leaving since it has passed already */
   } /* else transmit non interacting neutrons */
 
+  #ifdef Myline_info
+  #undef Myline_info 
+  #endif
+  
 %}
 
 FINALLY
