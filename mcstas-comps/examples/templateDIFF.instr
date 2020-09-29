@@ -56,6 +56,10 @@
 *******************************************************************************/
 DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355, string Powder="Na2Ca3Al2F14.laz", RV=-1, L1=17, L2=3.2, L3=1.471, ALPHA1=5,ALPHA2=60,ALPHA3=5, ETA=12, verbose=1, THETA_M=0, SM=1)
 
+DECLARE %{
+   char lmonopts[128];
+%}
+ 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
@@ -99,6 +103,7 @@ if (verbose) {
 
 RV = fabs(RV)*SM;
 
+sprintf(lmonopts,"lambda limits=[%g %g] bins=100",0.985*lambda,1.025*lambda);
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -126,13 +131,13 @@ COMPONENT Alpha_One = Collimator_linear(
   AT (0, 0, -1.045) RELATIVE mono_cradle
 
 COMPONENT Diff_Mono_XY = Monitor_nD(
-     options="x y, all auto",
+     options="x y", bins=100,
      bins = 40, xwidth = 0.1, yheight = 0.15, restore_neutron=1)
    WHEN (L1>1.1)
    AT (0, 0, -.1) RELATIVE mono_cradle
 
 COMPONENT Diff_Mono_Lambda = Monitor_nD(
-     options="lambda, all auto",
+     options=lmonopts,
      bins = 40, xwidth = 0.1, yheight = 0.15, restore_neutron=1)
   WHEN (L1>1.1)
   AT (0, 0, -0.01) RELATIVE mono_cradle
@@ -156,7 +161,7 @@ COMPONENT Alpha_Two = Collimator_linear(
   AT (0, 0, L2-0.25) RELATIVE mono_out
 
 COMPONENT Diff_Sample_Lambda = Monitor_nD(
-     options="lambda, all auto",
+     options=lmonopts,
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
    AT (0, 0, 0.2) RELATIVE PREVIOUS
 
