@@ -518,6 +518,9 @@ TRACE
   {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
+  #ifndef OPENACC
+  #undef MyVars
+  #endif
 %}
 
 SAVE
@@ -539,7 +542,7 @@ MCDISPLAY
   {
     off_display(offdata);
   } else {
-    Monitor_nD_McDisplay(&DEFS, &MyVars);
+    Monitor_nD_McDisplay(&DEFS, &Vars);
   }
 #endif
 %}
