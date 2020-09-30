@@ -338,6 +338,13 @@ MPI_MASTER(
 
 TRACE
 %{
+#ifdef OPENACC
+  MonitornD_Variables_type MyVars;
+#else
+#define MyVars Vars
+#endif
+
+  MyVars=Vars;
   double  XY=0;
   double  t0 = 0;
   double  t1 = 0;
@@ -345,9 +352,9 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  Vars.UserVariable1 = user1;
-  Vars.UserVariable2 = user2;
-  Vars.UserVariable3 = user3;
+  MyVars.UserVariable1 = user1;
+  MyVars.UserVariable2 = user2;
+  MyVars.UserVariable3 = user3;
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
@@ -359,18 +366,18 @@ TRACE
     /* determine intersections with object */
     intersect = off_intersect_all(&t0, &t1, NULL, NULL,
        x,y,z, vx, vy, vz, &offdata );
-    if (Vars.Flag_mantid) {
+    if (MyVars.Flag_mantid) {
       if(intersect) {
-        Vars.OFF_polyidx=(offdata.intersects[offdata.nextintersect]).index;
+        MyVars.OFF_polyidx=(offdata.intersects[offdata.nextintersect]).index;
       } else {
-        Vars.OFF_polyidx=-1;
+        MyVars.OFF_polyidx=-1;
       }
     }
   }
   else
 #endif
-    if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
-            || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
+    if ( (abs(MyVars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+            || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
   {
     // propagate to xy plane and find intersection
     // make sure the event is recoverable afterwards
@@ -379,15 +386,15 @@ TRACE
     PROP_Z0;
     if ( (t>=t0) && (z==0.0) ) // forward propagation to xy plane was successful
     {
-      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+      if (abs(MyVars.Flag_Shape) == DEFS.SHAPE_SQUARE)
       {
         // square xy
-        intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+        intersect = (x>=MyVars.mxmin && x<=MyVars.mxmax && y>=MyVars.mymin && y<=MyVars.mymax);
       }
       else
       {
         // disk xy
-        intersect = (SQR(x) + SQR(y)) <= SQR(Vars.Sphere_Radius);
+        intersect = (SQR(x) + SQR(y)) <= SQR(MyVars.Sphere_Radius);
       }
     }
     else
@@ -395,27 +402,27 @@ TRACE
       intersect=0;
     }
   }
-  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  else if (abs(MyVars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
   {
-    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
+    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, MyVars.Sphere_Radius);
   /*      intersect = (intersect && t0 > 0); */
   }
-  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
+  else if ((abs(MyVars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
   {
-    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, MyVars.Sphere_Radius, MyVars.Cylinder_Height);
   }
-  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
+  else if (abs(MyVars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
   {
     intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz,
-                              fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+                              fabs(MyVars.mxmax-MyVars.mxmin), fabs(MyVars.mymax-MyVars.mymin), fabs(MyVars.mzmax-MyVars.mzmin));
   }
-  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
+  else if (abs(MyVars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
   { intersect = 1; }
 
   if (intersect)
   {
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND)
-     || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
+    if ((abs(MyVars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_CYLIND)
+     || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_BANANA)
 #ifndef OPENACC
 	|| (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
 #else
@@ -423,26 +430,26 @@ TRACE
 #endif
     {
       /* check if we have to remove the top/bottom with BANANA shape */
-      if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
+      if ((abs(MyVars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
         double y0,y1;
         /* propagate to intersection point as temporary variable to check top/bottom */
         y0 = y+t0*vy;
         y1 = y+t1*vy;
-        if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) t0 = t1;
-        if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) t1 = t0;
+        if (fabs(y0) >= MyVars.Cylinder_Height/2*0.99) t0 = t1;
+        if (fabs(y1) >= MyVars.Cylinder_Height/2*0.99) t1 = t0;
       }
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
       if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
         t1 = t;
       /* t0 is now time of incoming intersection with the detection area */
-      if ((Vars.Flag_Shape < 0) && (t1 > 0))
+      if ((MyVars.Flag_Shape < 0) && (t1 > 0))
         PROP_DT(t1); /* t1 outgoing beam */
       else
         PROP_DT(t0); /* t0 incoming beam */
       /* Final test if we are on lid / bottom of banana/sphere */
-      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
-        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
+      if (abs(MyVars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(MyVars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
+        if (fabs(y) >= MyVars.Cylinder_Height/2*0.99) {
           intersect=0;
           Flag_Restore=1;
         }
@@ -453,39 +460,39 @@ TRACE
   if (intersect)
   {
     /* Now get the data to monitor: current or keep from PreMonitor */
-    if (Vars.Flag_UsePreMonitor != 1)
+    if (MyVars.Flag_UsePreMonitor != 1)
     {
-      Vars.cp  = p;
-      Vars.cx  = x;
-      Vars.cvx = vx;
-      Vars.csx = sx;
-      Vars.cy  = y;
-      Vars.cvy = vy;
-      Vars.csy = sy;
-      Vars.cz  = z;
-      Vars.cvz = vz;
-      Vars.csz = sz;
-      Vars.ct  = t;
+      MyVars.cp  = p;
+      MyVars.cx  = x;
+      MyVars.cvx = vx;
+      MyVars.csx = sx;
+      MyVars.cy  = y;
+      MyVars.cvy = vy;
+      MyVars.csy = sy;
+      MyVars.cz  = z;
+      MyVars.cvz = vz;
+      MyVars.csz = sz;
+      MyVars.ct  = t;
     }
 
-    if ((Vars.He3_pressure > 0) && (t1 != t0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
+    if ((MyVars.He3_pressure > 0) && (t1 != t0) && ((abs(MyVars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(MyVars.Flag_Shape) == DEFS.SHAPE_BOX)))
     {
-      XY = exp(-7.417*Vars.He3_pressure*fabs(t1-t0)*2*PI*K2V);
+      XY = exp(-7.417*MyVars.He3_pressure*fabs(t1-t0)*2*PI*K2V);
       /* will monitor the absorbed part */
-      Vars.cp *= 1-XY;
+      MyVars.cp *= 1-XY;
       /* and modify the neutron weight after monitor, only remains 1-p_detect */
       p *= XY;
     }
 
-    if (Vars.Flag_capture)
+    if (MyVars.Flag_capture)
     {
-      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
+      XY = sqrt(MyVars.cvx*MyVars.cvx+MyVars.cvy*MyVars.cvy+MyVars.cvz*MyVars.cvz);
       XY *= V2K;
       if (XY != 0) XY = 2*PI/XY; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
-      Vars.cp *= XY/1.7985;
+      MyVars.cp *= XY/1.7985;
     }
 
-    pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
+    pp = Monitor_nD_Trace(&DEFS, &MyVars, _particle);
     if (pp==0.0)
     { ABSORB;
     }
@@ -494,11 +501,11 @@ TRACE
       SCATTER;
     }
 
-    if (Vars.Flag_parallel) /* back to neutron state before detection */
+    if (MyVars.Flag_parallel) /* back to neutron state before detection */
       Flag_Restore = 1;
   } /* end if intersection */
   else {
-    if (Vars.Flag_Absorb && !Vars.Flag_parallel)
+    if (MyVars.Flag_Absorb && !MyVars.Flag_parallel)
     {
       // restore neutron ray before absorbing for correct mcdisplay
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
@@ -532,7 +539,7 @@ MCDISPLAY
   {
     off_display(offdata);
   } else {
-    Monitor_nD_McDisplay(&DEFS, &Vars);
+    Monitor_nD_McDisplay(&DEFS, &MyVars);
   }
 #endif
 %}
