@@ -97,10 +97,11 @@ if (yheight) yheight=yheight;
 %}
 TRACE
 %{
-  double t0, t1, v, l_full, l, l_1, dt, d_phi0, theta, my_s;
+  double t0, t1, v, l_full, l, l_1, dt, dphi_in,d_phi0, theta, my_s;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
   char   intersect=0;
 
+  dphi_in = d_phi;
   if (isrect)
     intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else
@@ -123,22 +124,22 @@ TRACE
     theta = asin(arg);          /* Bragg scattering law */
 
 /* Choose point on Debye-Scherrer cone */
-      if (d_phi)
+      if (dphi_in)
       { /* relate height of detector to the height on DS cone */
-        arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
-        if (arg < -1 || arg > 1) d_phi = 0;
-        else d_phi = 2*asin(arg);
+        arg = sin(dphi_in*DEG2RAD/2)/sin(2*theta);
+        if (arg < -1 || arg > 1) dphi_in = 0;
+        else dphi_in = 2*asin(arg);
       }
-      if (d_phi) {
-        d_phi = fabs(d_phi);
-        d_phi0= 2*rand01()*d_phi;
-        if (d_phi0 > d_phi) arg = 1; else arg = 0;
+      if (dphi_in) {
+        dphi_in = fabs(dphi_in);
+        d_phi0= 2*rand01()*dphi_in;
+        if (d_phi0 > dphi_in) arg = 1; else arg = 0;
         if (arg) {
-          d_phi0=PI+(d_phi0-1.5*d_phi);
+          d_phi0=PI+(d_phi0-1.5*dphi_in);
         } else {
-          d_phi0=d_phi0-0.5*d_phi;
+          d_phi0=d_phi0-0.5*dphi_in;
         }
-        p *= d_phi/PI;
+        p *= dphi_in/PI;
       }
       else
         d_phi0 = PI*randpm1();
