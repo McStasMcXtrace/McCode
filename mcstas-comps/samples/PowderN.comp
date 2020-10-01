@@ -1110,12 +1110,13 @@ TRACE
   line_info.xs_reuse=xs_reuse;
   line_info.xs_calls=xs_calls;
   line_info.dq=dq;
+  line_info.neutron_passed = neutron_passed;  
   #endif
   // These should be updated in any case
   #pragma acc atomic write
   line_info.flag_warning = flag_warning;
-  #pragma acc atomic write
-  line_info.neutron_passed = neutron_passed;
+  //#pragma acc atomic write
+  //line_info.neutron_passed = neutron_passed;
 
 %}
 
