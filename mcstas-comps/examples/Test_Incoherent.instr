@@ -17,24 +17,12 @@
 * %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
 *
 * %Parameters
-* lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
-* DM: [Angs]      d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
-* THETA_M: [deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
-* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
-* L1: [m]         Source-Monochromator distance
-* L2: [m]         Monochromator-Sample distance
-* L3: [m]         Sample-Detector distance
-* ALPHA1: [min]   Horizontal collimator divergence for L1 arm (before monochromator)
-* ALPHA2: [min]   Horizontal collimator divergence for L2 arm (monochromator-sample)
-* ALPHA3: [min]   Horizontal collimator divergence for L3 arm (sample-detector)
-* ETA: [min]      Monochromator horizontal mosaic (gaussian)
-* Powder: [str]   File name for powder description
-* verbose: [int]  Print DIF configuration. 0 to be quiet
-* SM: [int]       Scattering sense of beam from Monochromator. 1:left, -1:right
+* lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
+* L1: [m]         Source-sample distance
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Monitor_nD(lambda=1, L1=10)
+DEFINE INSTRUMENT Test_Incoherent(lambda=1, L1=10)
 
 DECLARE %{
 %}
