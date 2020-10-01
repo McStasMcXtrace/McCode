@@ -710,7 +710,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
       /* no Mon2D allocated for
        * (Vars->Coord_Number != 2) && !Vars->Flag_Multiple && Vars->Flag_List */
-
     Vars->psum  = 0;
     Vars->p2sum = 0;
     Vars->Nsum  = 0;
@@ -882,17 +881,36 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       /* automatically compute area and steradian solid angle when in AUTO mode */
       /* compute the steradian solid angle incoming on the monitor */
       double v;
-      v=sqrt(Vars->cvx*Vars->cvx
-            +Vars->cvy*Vars->cvy
-            +Vars->cvz*Vars->cvz);
-      if (Vars->min_x > Vars->cx) Vars->min_x = Vars->cx;
-      if (Vars->max_x < Vars->cx) Vars->max_x = Vars->cx;
-      if (Vars->min_y > Vars->cy) Vars->min_y = Vars->cy;
-      if (Vars->max_y < Vars->cy) Vars->max_y = Vars->cy;
-      Vars->mean_p  += Vars->cp;
+      double tmp;
+      v=sqrt(_particle->vx*_particle->vx + _particle->vy*_particle->vy + _particle->vz*_particle->vz);
+      tmp=_particle->x;
+      if (Vars->min_x > _particle->x){
+        #pragma acc atomic write
+        Vars->min_x = tmp;
+      }
+      if (Vars->max_x < _particle->x){
+        #pragma acc atomic write
+        Vars->max_x = tmp;
+      }
+      tmp=_particle->y;
+      if (Vars->min_y > _particle->y){
+        #pragma acc atomic write
+        Vars->min_y = tmp;
+      }
+      if (Vars->max_y < _particle->y){
+        tmp=_particle->y;
+        #pragma acc atomic write       Vars->max_y = tmp;
+      }
+
+      #pragma acc atomic
+      Vars->mean_p  = Vars->mean_p + _particle->p;
       if (v) {
-        Vars->mean_dx += Vars->cp*fabs(Vars->cvx/v);
-        Vars->mean_dy += Vars->cp*fabs(Vars->cvy/v);
+        tmp=_particle->p*fabs(_particle->vx/v);
+        #pragma acc atomic
+        Vars->mean_dx = Vars->mean_dx + tmp; //_particle->p*fabs(_particle->vx/v);
+        tmp=_particle->p*fabs(_particle->vy/v);
+        #pragma acc atomic
+        Vars->mean_dy = Vars->mean_dy + tmp; //_particle->p*fabs(_particle->vy/v);
       }
 
       for (i = 0; i <= Vars->Coord_Number; i++)
@@ -900,81 +918,81 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         XY = 0;
         Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
         /* get values for variables to monitor */
-        if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = Vars->cx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = _particle->x;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_Y) XY = Vars->cy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_Y) XY = _particle->y;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_Z) XY = Vars->cz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_Z) XY = _particle->z;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VX) XY = Vars->cvx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VX) XY = _particle->vx;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VY) XY = Vars->cvy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VY) XY = _particle->vy;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VZ) XY = Vars->cvz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VZ) XY = _particle->vz;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KX) XY = V2K*Vars->cvx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KX) XY = V2K*_particle->vx;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KY) XY = V2K*Vars->cvy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KY) XY = V2K*_particle->vy;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = V2K*Vars->cvz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = V2K*_particle->vz;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_SX) XY = Vars->csx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_SX) XY = _particle->sx;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_SY) XY = Vars->csy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_SY) XY = _particle->sy;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_SZ) XY = Vars->csz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_SZ) XY = _particle->sz;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = Vars->ct;
+        if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = _particle->t;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = Vars->cp;
+        if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = _particle->p;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_HDIV) XY = RAD2DEG*atan2(Vars->cvx,Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_HDIV) XY = RAD2DEG*atan2(_particle->vx,_particle->vz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VDIV) XY = RAD2DEG*atan2(Vars->cvy,Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VDIV) XY = RAD2DEG*atan2(_particle->vy,_particle->vz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy+_particle->vz*_particle->vz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS)
-          XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+          XY = sqrt(_particle->x*_particle->x+_particle->y*_particle->y+_particle->z*_particle->z);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_XY)
-          XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy)*(Vars->cx > 0 ? 1 : -1);
+          XY = sqrt(_particle->x*_particle->x+_particle->y*_particle->y)*(_particle->x > 0 ? 1 : -1);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(_particle->y*_particle->y+_particle->z*_particle->z);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_XZ)
-          XY = sqrt(Vars->cx*Vars->cx+Vars->cz*Vars->cz);
+          XY = sqrt(_particle->x*_particle->x+_particle->z*_particle->z);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvz*Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(_particle->vx*_particle->vx+_particle->vz*_particle->vz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(_particle->vy*_particle->vy+_particle->vz*_particle->vz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_K) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_K) { XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy+_particle->vz*_particle->vz);  XY *= V2K; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KXY) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);  XY *= V2K; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_KXY) { XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);  XY *= V2K; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KXZ) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvz*Vars->cvz);  XY *= V2K; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_KXZ) { XY = sqrt(_particle->vx*_particle->vx+_particle->vz*_particle->vz);  XY *= V2K; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KYZ) { XY = sqrt(Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_KYZ) { XY = sqrt(_particle->vy*_particle->vy+_particle->vz*_particle->vz);  XY *= V2K; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) { XY = Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz;  XY *= VS2E; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) { XY = _particle->vx*_particle->vx+_particle->vy*_particle->vy+_particle->vz*_particle->vz;  XY *= VS2E; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy+_particle->vz*_particle->vz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Vars->Neutron_Counter;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
-        {  XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
-           if (Vars->cvz != 0)
-                XY = RAD2DEG*atan2(XY,Vars->cvz)*(Vars->cx > 0 ? 1 : -1);
+        {  XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);
+           if (_particle->vz != 0)
+                XY = RAD2DEG*atan2(XY,_particle->vz)*(_particle->x > 0 ? 1 : -1);
            else XY = 0;
         }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (Vars->cz != 0) XY = RAD2DEG*atan2(Vars->cx,Vars->cz); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (_particle->z != 0) XY = RAD2DEG*atan2(_particle->x,_particle->z); }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/Vars->cz); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (_particle->z != 0) XY = RAD2DEG*asin(_particle->y/_particle->z); }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = Vars->UserVariable1;
         else
@@ -1114,9 +1132,12 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     } /* end (Vars->Flag_Auto_Limits != 2) */
     
   } /* end while */
-  Vars->Nsum++;
-  Vars->psum  += pp;
-  Vars->p2sum += pp*pp;
+  #pragma acc atomic
+  Vars->Nsum = Vars->Nsum + 1;
+  #pragma acc atomic
+  Vars->psum  = Vars->psum + pp;
+  #pragma acc atomic
+  Vars->p2sum = Vars->p2sum + pp*pp;
 
   /*determine return value: 1:neutron was in bounds and measured, -1: outside bounds, 0: outside bounds, should be absorbed.*/
   if(outsidebounds){
