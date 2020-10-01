@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 
 if [ "${1}x" == "x" ]; then
@@ -13,10 +13,10 @@ else
 	ln -sf ${BASE}.instr ${BASE}_gpu.instr
 	
 	echo Spawning requested run in xterms and waiting here... 
-	echo mcrun --openacc ${BASE}_gpu.instr $2 $3 $4 $5 $6 $7 $8 $9 ${10}  --autoplot -s 1000
-	echo mcrun ${BASE}_cpu.instr $2 $3 $4 $5 $6 $7 $8 $9 ${10}  --autoplot -s 1000
-	xterm -T "GPU run..." -e mcrun --openacc ${BASE}_gpu.instr $2 $3 $4 $5 $6 $7 $8 $9 ${10}  --autoplot -s 1000 &
-	xterm -T "CPU run..." -e mcrun ${BASE}_cpu.instr $2 $3 $4 $5 $6 $7 $8 $9 ${10}  --autoplot -s 1000 
+	echo mcrun --openacc ${BASE}_gpu.instr ${*:1}  --autoplot -s 1000
+	echo mcrun ${BASE}_cpu.instr ${*:1}  --autoplot -s 1000
+	xterm -T "GPU run..." -e "time mcrun --openacc ${BASE}_gpu.instr ${*:1}  --autoplot -s 1000 " &
+	xterm -T "CPU run..." -e "time mcrun ${BASE}_cpu.instr ${*:1}  --autoplot -s 1000 "
 	echo  Done.
     else
 	echo "$1 does not exist, sorry..."
