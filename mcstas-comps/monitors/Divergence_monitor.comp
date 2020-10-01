@@ -58,9 +58,9 @@ OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double Div_N[nh][nv];
-double Div_p[nh][nv];
-double Div_p2[nh][nv];
+DArray2d Div_N;
+DArray2d Div_p;
+DArray2d Div_p2;
 %}
 INITIALIZE
 %{
@@ -74,13 +74,10 @@ INITIALIZE
     exit(-1);
   }
 
-  for (i=0; i<nh; i++)
-    for (j=0; j<nv; j++)
-    {
-      Div_N[i][j] = 0;
-      Div_p[i][j] = 0;
-      Div_p2[i][j] = 0;
-    }
+  Div_N = create_darr2d(nh,nv);
+  Div_p = create_darr2d(nh,nv);
+  Div_p2 = create_darr2d(nh,nv);
+
   NORM(nx,ny,nz);
 %}
 TRACE

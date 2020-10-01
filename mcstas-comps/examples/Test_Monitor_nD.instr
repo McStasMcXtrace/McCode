@@ -103,7 +103,7 @@ COMPONENT Tof_mon = TOF_monitor(nt=100, xwidth = 0.1, yheight = 0.15, restore_ne
 COMPONENT nD_ToF = Monitor_nD(options=tofopts, xwidth = xw, yheight = yh, restore_neutron=1)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
-COMPONENT Div_mon = Divergence_monitor(xwidth = xw, yheight = yh, restore_neutron=1, filename="Div", nh=100, nv=100,maxdiv_h=hdiv, maxdiv_v=vdiv)
+COMPONENT Div_mon = Divergence_monitor(xwidth = xw, yheight = yh, restore_neutron=1, filename="Div", nh=bins, nv=bins,maxdiv_h=hdiv, maxdiv_v=vdiv)
  AT (0, 0, mudist) RELATIVE PREVIOUS
 
 COMPONENT nD_Div = Monitor_nD(options=divopts, xwidth = xw, yheight = yh, restore_neutron=1)
