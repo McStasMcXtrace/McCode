@@ -1105,7 +1105,7 @@ TRACE
   line_info.Nq=Nq;
   line_info.v_min=v_min;
   line_info.v_max=v_max;
-  line_info.lfreel=free;
+  line_info.lfree=lfree;
   line_info.xs_compute=xs_compute;
   line_info.xs_reuse=xs_reuse;
   line_info.xs_calls=xs_calls;
