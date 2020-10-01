@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: Test Incoherent output
+* Instrument: Test PowderN output
 *
 * %Identification
 * Written by: P. Willendrup
@@ -9,12 +9,12 @@
 * Origin: DTU
 * %INSTRUMENT_SITE: Tests
 *
-* Test output of Incoherent on two spherical monitor.
+* Test output of PowderN on a spherical monitor.
 *
 * %Description
-* A test instrument for Incoherent output on spherical monitor.
+* A test instrument for PowderN output on a spherical monitor.
 *
-* %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
+* %Example: lambda=1 Detector: Sph_mon_I=1.09119e+09
 *
 * %Parameters
 * lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
@@ -34,15 +34,18 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Monitor_nD(lambda=1, L1=10)
+DEFINE INSTRUMENT Test_Monitor_nD(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=17)
 
 DECLARE %{
+  int DirectBeam;
+  #pragma acc declare create(DirectBeam)
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
+  DirectBeam = directbeam;
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -63,8 +66,15 @@ REMOVABLE COMPONENT Source = Source_gen(
 COMPONENT sample_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
 
-COMPONENT Inc = Incoherent(radius=0.005, yheight=0.1)
+SPLIT SPLITS COMPONENT Inc = PowderN(radius=0.005, yheight=0.1, reflections=reflections)
   AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if(DirectBeam == 0) {
+    if (!SCATTERED) {
+      ABSORB;
+    }
+  }
+%}
 
 COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sphere")
   AT (0, 0, 0) RELATIVE PREVIOUS
