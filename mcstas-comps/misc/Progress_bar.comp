@@ -64,6 +64,9 @@ fprintf(stdout, "[%s] Initialize\n", instrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
   }
+  #ifdef OPENACC
+  time(&StartTime);
+  #endif
 %}
 
 TRACE
