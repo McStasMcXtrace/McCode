@@ -1,0 +1,73 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test Incoherent output
+*
+* %Identification
+* Written by: P. Willendrup
+* Date: October 1st 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Test output of Incoherent on two spherical monitor.
+*
+* %Description
+* A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
+*
+* %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
+*
+* %Parameters
+* lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* DM: [Angs]      d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* ALPHA1: [min]   Horizontal collimator divergence for L1 arm (before monochromator)
+* ALPHA2: [min]   Horizontal collimator divergence for L2 arm (monochromator-sample)
+* ALPHA3: [min]   Horizontal collimator divergence for L3 arm (sample-detector)
+* ETA: [min]      Monochromator horizontal mosaic (gaussian)
+* Powder: [str]   File name for powder description
+* verbose: [int]  Print DIF configuration. 0 to be quiet
+* SM: [int]       Scattering sense of beam from Monochromator. 1:left, -1:right
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Monitor_nD(lambda=1, L1=10)
+
+DECLARE %{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_gen(
+    radius = 0.11, dist = L1, focus_xw = 0.01, focus_yh = 0.1,
+    lambda0 = lambda, dlambda = lambda*0.01,
+    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TIP: monochromator cradle */ 
+COMPONENT sample_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+
+COMPONENT Inc = Incoherent(radius=0.005, yheight=0.1)
+  AT (0, 0, 0) RELATIVE sample_cradle
+
+COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sphere")
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+/* The END token marks the instrument definition end */
+END
