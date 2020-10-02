@@ -2285,9 +2285,9 @@ unsigned long long int mcget_ncount(void)
 
 /* mcget_run_num: get curent number of rays in TRACE */
 #pragma acc routine seq
-unsigned long long int mcget_run_num(void)
-{
-  return mcrun_num;
+unsigned long long int mcget_run_num() // shuld be (_class_particle* _particle) somehow
+{  // FIXME!! do though a define in TRACE
+  return 100000; // should return _particle->uid;
 }
 
 /* mcsetn_arg: get ncount from a string argument */
