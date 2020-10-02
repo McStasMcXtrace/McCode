@@ -898,8 +898,9 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         Vars->min_y = tmp;
       }
       if (Vars->max_y < _particle->y){
-        tmp=_particle->y;
-        #pragma acc atomic write       Vars->max_y = tmp;
+	tmp=_particle->y;
+        #pragma acc atomic write
+	Vars->max_y = tmp;
       }
 
       #pragma acc atomic
