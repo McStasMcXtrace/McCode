@@ -1805,7 +1805,9 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("      _class_particle* _particle = &particleN;");
   coutf("      particleN._uid = pidx;");
   coutf("");
-  coutf("      srandom(_hash(pidx + pidx*seed));");
+  coutf("      srandom(_hash(mcseed));");
+  coutf("      #pragma acc atomic");
+  coutf("      mcseed = mcseed + (pidx+1) * mcseed;");
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
