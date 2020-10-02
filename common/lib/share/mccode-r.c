@@ -2287,8 +2287,7 @@ unsigned long long int mcget_ncount(void)
 #pragma acc routine seq
 unsigned long long int mcget_run_num(void)
 {
-  //FIXME!!
-  return 100000;//mcrun_num;
+  return mcrun_num;
 }
 
 /* mcsetn_arg: get ncount from a string argument */
