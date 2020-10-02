@@ -12,7 +12,7 @@
 * Test output of PowderN on a spherical monitor.
 *
 * %Description
-* A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
+* A test instrument for PowderN output on a spherical monitor.
 *
 * %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
 *
