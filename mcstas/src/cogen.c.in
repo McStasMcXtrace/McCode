@@ -1413,12 +1413,14 @@ void def_trace_section(struct instr_def *instr)
   cout("/* (Similar defines are available in each comp trace but */");
   cout("/*  those are not enough to handle external libs etc. )  */");
   cout("#ifdef OPENACC");
+  cout("#ifndef MULTICORE");
   cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
   cout("#define sprintf(string,...) printf(__VA_ARGS__)");
   cout("#define printf(...) noprintf()");
   cout("#define exit(...) noprintf()");
   cout("#define strcmp(a,b) str_comp(a,b)");
   cout("#define strlen(a) str_len(a)");
+  cout("#endif");
   cout("#endif");
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
@@ -1461,12 +1463,14 @@ void undef_trace_section(struct instr_def *instr)
     coutf("#undef %s", statepars_all[i]);
 
   cout("#ifdef OPENACC");
+  cout("#ifndef MULTICORE");
   cout("#undef strlen");
   cout("#undef strcmp");
   cout("#undef exit");
   cout("#undef printf");
   cout("#undef sprintf");
   cout("#undef fprintf");
+  cout("#endif");
   cout("#endif");
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
@@ -1769,7 +1773,9 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  loops = ceil((double)ncount/innerloop);");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
+  coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
+  coutf("  #endif");
   coutf("  #endif");
   coutf("  if (ncount>innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
@@ -1784,7 +1790,9 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("    /* if on GPU, re-nullify printf */");
   coutf("    #ifdef OPENACC");
+  coutf("    #ifndef MULTICORE");
   coutf("    #define printf(...) noprintf()");
+  coutf("    #endif");
   coutf("    #endif");
   coutf("");
   coutf("    #ifndef VECSIZE");
@@ -1805,9 +1813,13 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
+  coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
+  coutf("  #endif"); 
   coutf("  #endif");
-  coutf("  printf(\"\\n\");");
+  coutf("  MPI_MASTER(");
+  coutf("  printf(\"*** TRACE end *** \\n\");");
+  coutf("  );");
   coutf("} /* raytrace_all */");
   coutf("");
 
