@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: Test_RNG_randnorm
+* Instrument: Test_RNG_randpm1
 *
 * %I
 * Written by: Peter Willendrup
@@ -18,7 +18,7 @@
 * For a low statistics, one may e.g. check that setting the seed gives
 * varied output or fixing the seed gives fixed output·
 *
-* %Example: Ncount=1000000 Detector: PSD_I=0.999999999
+* %Example: Ncount=1000 Detector: PSD_I=1000
 *
 * %P
 * Ncount: [1] Specify statistics
@@ -29,19 +29,16 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Test_RNG_randnorm(Ncount=1000000,int seed=0)
+DEFINE INSTRUMENT Test_RNG_randpm1(Ncount=1000,int seed=0)
 
 DECLARE
 %{
-  double p0;
-  #pragma acc declare create p0;
 %}
 
 INITIALIZE
 %{
   mcset_ncount(Ncount);
   if (seed) mcseed = seed;
-  p0=1.0/mcget_ncount();
 %}
 
 TRACE
@@ -50,9 +47,9 @@ COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
   // position x in one of 100 bins
-  x = 0.2*randnorm();
-  y = 0.2*randnorm();
-  p = p0;
+  x = randpm1();
+  y = randpm1();
+  p = 1;
   vz=1000;
 %}
 
