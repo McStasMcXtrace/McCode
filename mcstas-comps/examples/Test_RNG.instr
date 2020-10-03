@@ -1,0 +1,63 @@
+/*******************************************************************************
+* Instrument: Test_RNG
+*
+* %I
+* Written by: Peter Willendrup
+* Date: Oct 2nd, 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Instrument to get basic test output from random number generator.
+*
+* %D
+* Instrument to get basic test output from random number generator.
+* 
+* The instrument generates 2 randon numbers pr. particle using randpm1(),
+* encoded into the particle x and y coordinates.
+*
+* For a low statistics, one may e.g. check that setting the seed gives
+* varied output or fixing the seed gives fixed output·
+*
+* %Example: Ncount=1000 Detector: PSD_I=1000
+*
+* %P
+* Ncount: [1] Specify statistics
+* seed:   [1] Specify RNG seed
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_RNG(int Ncount=1000,int seed=0)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+  mcset_ncount(Ncount);
+  if (seed) mcseed = seed;
+%}
+
+TRACE
+
+COMPONENT Arm = Arm()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  // position x in one of 100 bins
+  x = randpm1();
+  y = randpm1();
+  p = 1;
+  vz=1000;
+%}
+
+COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
+  AT (0,0,0) ABSOLUTE
+
+FINALLY
+%{
+%}
+
+END
