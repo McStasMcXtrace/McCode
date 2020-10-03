@@ -7,41 +7,29 @@
 * Origin: DTU
 * %INSTRUMENT_SITE: Tests
 *
-* Instrument to get test output from random number generator via MCPL.
+* Instrument to get basic test output from random number generator.
 *
 * %D
-* Instrument to get test output from random number generator via MCPL.
+* Instrument to get basic test output from random number generator.
 * 
-* The instrument generates 5 randon numbers pr. particle, and encode 
-* thes into parameters x, y, z, p and t in an MCPL file.
+* The instrument generates 2 randon numbers pr. particle using randpm1(),
+* encoded into the particle x and y coordinates.
 *
-* Normalisation is chosen as to make the numbers easily readable
-* numbers between 0 and 1,  using  mcpltool, i.e: 
-* (other columns left out for clarity)
+* For a low statistics, one may e.g. check that setting the seed gives
+* varied output or fixing the seed gives fixed output·
 *
-* index     x[cm]       y[cm]       z[cm]    time[ms]      weight
-*    0  4.7716e-14  1.1445e-08   0.0030424    0.84209     0.23464
-*    1    0.052938     0.24235     0.31045    0.75907     0.48355
-*    2     0.10564     0.16617     0.74402    0.63349     0.56875
-*    3     0.14932     0.32095    0.021348    0.54636     0.15253
-*    4     0.28277     0.87852     0.16528    0.76655    0.016315
-*    5     0.82321     0.95137     0.84491    0.91095     0.35857
-*    6     0.22836     0.84944     0.50107    0.46494     0.32294
-*    7     0.47637     0.45936     0.19632    0.20068     0.59062
-*    8     0.56553     0.75704     0.33059    0.49076     0.29758
-*    9     0.15809      0.7943     0.83793    0.57469     0.28235
-*
-* Example: Par1=1
+* %Example: Ncount=1000 Detector: PSD_I=1000
 *
 * %P
-* Par1: [1] Dummy parameter
+* Ncount: [1] Specify statistics
+* seed:   [1] Specify RNG seed
 *
 * %L
 * <reference/HTML link>
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Test_RNG(Par1=1)
+DEFINE INSTRUMENT Test_RNG(int Ncount=1000,int seed=0)
 
 DECLARE
 %{
@@ -49,6 +37,8 @@ DECLARE
 
 INITIALIZE
 %{
+  mcset_ncount(Ncount);
+  if (seed) mcseed = seed;
 %}
 
 TRACE
@@ -56,14 +46,14 @@ TRACE
 COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  x = rand01()/100;
-  y = rand01()/100;
-  z = rand01()/100;
-  p = rand01();
-  t = rand01()/1000;
+  // position x in one of 100 bins
+  x = randpm1();
+  y = randpm1();
+  p = 1;
+  vz=1000;
 %}
 
-COMPONENT out = MCPL_output_GPU(filename="rngout")
+COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
   AT (0,0,0) ABSOLUTE
 
 FINALLY
