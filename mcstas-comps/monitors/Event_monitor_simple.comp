@@ -41,13 +41,13 @@ INITIALIZE
 %{
   Nevents = ceil(nevents);
   Events = create_darr2d(Nevents, 11);
-  sprintf(fullfile,"%s/%s",dirname,NAME_CURRENT_COMP);
+  sprintf(fullfile,"%s/%s.log",mcdirname,NAME_CURRENT_COMP,"log");
 %}
 
 TRACE
 %{
 
-  unsigned long i = _particle->_uid;
+  unsigned long i = mcget_run_num();
   if (i < Nevents) {
     #pragma acc atomic write
     Events[i][0] = x;
