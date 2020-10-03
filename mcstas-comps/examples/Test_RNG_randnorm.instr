@@ -34,7 +34,7 @@ DEFINE INSTRUMENT Test_RNG_randnorm(Ncount=1000000,int seed=0)
 DECLARE
 %{
   double p0;
-  #pragma acc declare create p0;
+  #pragma acc declare create(p0)
 %}
 
 INITIALIZE
