@@ -50,7 +50,7 @@ TRACE
 COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  randvec_target_rect_angular(&vx, &vy, &vz, NULL, 0, 0, 1, mcipangle*DEG2RAD, mcipangle*DEG2RAD, ROT_A_CURRENT_COMP);
+  randvec_target_rect_angular(&vx, &vy, &vz, NULL, 0, 0, 1, INSTRUMENT_GETPAR(angle)*DEG2RAD, INSTRUMENT_GETPAR(angle)*DEG2RAD, ROT_A_CURRENT_COMP);
   NORM(vx,vy,vz);
   vx *= 1000;
   vy *= 1000;

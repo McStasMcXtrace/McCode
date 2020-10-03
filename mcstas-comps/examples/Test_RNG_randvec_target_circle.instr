@@ -50,7 +50,7 @@ TRACE
 COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  randvec_target_circle(&vx, &vy, &vz, NULL, 0, 0, mcipdist, 0.95);
+  randvec_target_circle(&vx, &vy, &vz, NULL, 0, 0, INSTRUMENT_GETPAR(dist), 0.95);
   NORM(vx,vy,vz);
   vx *= 1000;
   vy *= 1000;
