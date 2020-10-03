@@ -168,7 +168,7 @@ INITIALIZE
     if (myfilename){
       free(myfilename);
     }
-    long long nparticles = ceil(buffermax) ;//mcget_ncount();
+    long long nparticles = mcget_ncount();
     X = create_darr1d(nparticles);
     X = create_darr1d(nparticles);
     Y = create_darr1d(nparticles);
@@ -191,8 +191,8 @@ TRACE
   {
     captured = captured+1;
   }
-  unsigned long long i=captured; //_particle->_uid % GPU_INNERLOOP;
-  if (captured < ceil(buffermax)) {
+  unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
+  //  if (captured < ceil(buffermax)) {
     X[i]=x;
     Y[i]=y;
     Z[i]=z;
@@ -205,7 +205,7 @@ TRACE
     T[i]=t;
     P[i]=p;
     SCATTER;
-  }
+    //}
 %}
 
 SAVE
