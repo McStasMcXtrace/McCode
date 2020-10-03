@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: Test_RNG
+* Instrument: Test_RNG_randpm1
 *
 * %I
 * Written by: Peter Willendrup
@@ -29,7 +29,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Test_RNG(Ncount=1000,int seed=0)
+DEFINE INSTRUMENT Test_RNG_randpm1(Ncount=1000,int seed=0)
 
 DECLARE
 %{
