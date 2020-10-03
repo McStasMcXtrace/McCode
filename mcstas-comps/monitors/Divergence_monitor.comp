@@ -58,6 +58,7 @@ OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
+%include "array-lib"
 DArray2d Div_N;
 DArray2d Div_p;
 DArray2d Div_p2;
