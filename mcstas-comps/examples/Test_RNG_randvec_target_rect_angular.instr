@@ -36,6 +36,8 @@ DECLARE
 %{
   double p0;
   #pragma acc declare create(p0)
+  double Angle;
+  #pragma acc declare create(Angle)
 %}
 
 INITIALIZE
@@ -44,6 +46,8 @@ INITIALIZE
   if (seed) mcseed = seed;
   p0=1.0/mcget_ncount();
   #pragma acc update device(p0)
+  Angle=angle;
+  #pragma acc update device(Angle)
 %}
 
 TRACE
@@ -51,7 +55,7 @@ TRACE
 COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  randvec_target_rect_angular(&vx, &vy, &vz, NULL, 0, 0, 1, INSTRUMENT_GETPAR(angle)*DEG2RAD, INSTRUMENT_GETPAR(angle)*DEG2RAD, ROT_A_CURRENT_COMP);
+  randvec_target_rect_angular(&vx, &vy, &vz, NULL, 0, 0, 1, Angle*DEG2RAD, Angle*DEG2RAD, ROT_A_CURRENT_COMP);
   NORM(vx,vy,vz);
   vx *= 1000;
   vy *= 1000;

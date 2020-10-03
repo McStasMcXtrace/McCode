@@ -36,6 +36,8 @@ DECLARE
 %{
   double p0;
   #pragma acc declare create(p0)
+  double Dist;
+  #pragma acc declare create(Dist)
 %}
 
 INITIALIZE
@@ -44,6 +46,8 @@ INITIALIZE
   if (seed) mcseed = seed;
   p0=1.0/mcget_ncount();
   #pragma acc update device(p0)
+  Dist=dist;
+  #pragma acc update device(Dist)
 %}
 
 TRACE
@@ -51,7 +55,7 @@ TRACE
 COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  randvec_target_circle(&vx, &vy, &vz, NULL, 0, 0, INSTRUMENT_GETPAR(dist), 0.95);
+  randvec_target_circle(&vx, &vy, &vz, NULL, 0, 0, Dist, 0.95);
   NORM(vx,vy,vz);
   vx *= 1000;
   vy *= 1000;
