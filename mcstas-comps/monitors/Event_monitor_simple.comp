@@ -40,7 +40,7 @@ INITIALIZE
 %{
   Nevents = ceil(nevents);
   Events = create_darr2d(Nevents, 11);
-  sprintf(fullfile,"%s/%s",dirname,NAME_CURRENT_COMP);
+  sprintf(fullfile,"%s/%s.%s",dirname,NAME_CURRENT_COMP,"log");
 %}
 
 TRACE
