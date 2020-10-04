@@ -42,6 +42,10 @@ INITIALIZE
   mcset_ncount(Ncount);
   if (seed) mcseed = seed;
   p0=1.0/mcget_ncount();
+  #ifdef USE_MPI
+  p0 *= mpi_node_count;
+  #endif
+  #pragma acc update device(p0)
 %}
 
 TRACE
