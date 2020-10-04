@@ -148,7 +148,7 @@ COMPONENT m2 = Monitor_nD(
 
 COMPONENT m3 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto dx, auto dy, parallel", bins=40
+  options="dx limits=[-3.5 3.5] dy limits=[-3.5 3.5], parallel", bins=40
 ) AT (0,0,1) ABSOLUTE
 
 END
