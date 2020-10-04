@@ -14,14 +14,14 @@
 *
 * This is a unit test for the MCPL_output component.
 *
-* Example: -n1e3 merge=0 Detector: m1_I=2.42284e+11
+* %Example: Ncount=1e3 merge=0 Detector: m1_I=2.42284e+11
 *
 * %Parameters
 * merge: [1]  Flag to indicate if we should merge the output in case of MPI
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_output(merge=1)
+DEFINE INSTRUMENT Test_MCPL_output(merge=1, Ncount=1e3)
 
 USERVARS
 %{
@@ -30,6 +30,7 @@ USERVARS
 
 INITIALIZE
 %{
+  mcset_ncount(ceil(Ncount));
 %}
 
 TRACE
@@ -54,29 +55,29 @@ COMPONENT vout = MCPL_output_GPU(
      filename="voutput", verbose=1) 
 AT(0,0,0) RELATIVE PREVIOUS
 
-/*COMPONENT m1 = Monitor_nD(
+COMPONENT m1 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto lambda, parallel", bins=40
+  options="lambda limits=[1 11] bins=100 parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m2 = Monitor_nD(
-  xwidth=0.2, yheight=0.2,
-  options="auto x, auto y, parallel", bins=40
+  xwidth=0.2, yheight=0.2, 
+  options="x y, parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m3 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto t parallel", bins=40
+  options="t limits=[0 1e-3]parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m4 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto E, parallel", bins=40
+  options="E limits=[0 82] parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=2112,
   options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"
 ) AT (0,0,0) ABSOLUTE
-*/
+
 END
