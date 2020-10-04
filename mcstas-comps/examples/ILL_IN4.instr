@@ -88,7 +88,7 @@
 * http://www.ill.eu/fr/instruments-support/instruments-groups/instruments/in4c
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_IN4(lambda=2.2, dlambda=0.1, DM=3.355, ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1, string sample_coh="Dirac2D.sqw", string sample_inc="NULL", order=1)
+DEFINE INSTRUMENT ILL_IN4(lambda=2.2, dlambda=0.1, DM=3.355, ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1, string sample_coh="Dirac2D.sqw", string sample_inc="NULL", int order=1)
 
 DECLARE %{
   double A1, RMH, RMV=-1.9;
@@ -123,6 +123,9 @@ DECLARE %{
   double t12=0;
 
   double Ei=0;
+
+  int _order;
+  #pragma acc declare create(_order)
 
   /* Write_Sqw: writes an Sqw file for Isotropic_Sqw as a Dirac 2D array
      INPUT:
@@ -224,6 +227,8 @@ USERVARS %{
 %}
 
 INITIALIZE %{
+  _order=order;
+  #pragma acc update device(_order)
   double Vi, Ki;
   double thetaB;
   double dSx=5.556;   /* BC1 to sample along beam tube axis */
@@ -334,7 +339,7 @@ COMPONENT Origin = Progress_bar()
   EXTEND %{
     flag_source_order = floor(rand01()*order_extend*.99);
     /* tests for consistency */
-    int ord=INSTRUMENT_GETPAR(order);
+    int ord=_order;
     if (ord <= 0 || ord > 4) ord = 4;
     order_extend = ord;
   %}
