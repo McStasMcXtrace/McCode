@@ -843,15 +843,19 @@ TRACE
       neutron_passed++;
     }
 
-    /* Calculate total scattering cross section at relevant velocity */
+    /* Calculate total scattering cross section at relevant velocity - but not on GPU*/
+    #ifndef OPENACC
     if ( fabs(v - vcache) < 1e-6) {
         nb_reuses++;
-      } else {
-        Nq = calc_xsect(v, line_info.q_v, line_info.my_s_v2, line_info.count, &line_info.my_s_v2_sum, &line_info);
-        vcache = v;
-        nb_refl += Nq;
-        nb_refl_count++;
-      }
+    } else {
+    #endif
+      Nq = calc_xsect(v, line_info.q_v, line_info.my_s_v2, line_info.count, &line_info.my_s_v2_sum, &line_info);
+      vcache = v;
+      nb_refl += Nq;
+      nb_refl_count++;
+    #ifndef OPENACC
+    }
+    #endif
 
     if (t3 < 0) {
       t3=0; /* Already past sample?! */
