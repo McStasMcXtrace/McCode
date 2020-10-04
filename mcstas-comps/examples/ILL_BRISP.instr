@@ -99,6 +99,9 @@ DECLARE
 
   double lsd;
   double RH, RV;
+  
+  double _Frequency, _DELAY, _LCC;
+  #pragma acc declare create(_Frequency, _DELAY, _LCC)
 %}
 
 USERVARS %{
@@ -154,6 +157,10 @@ INITIALIZE
   RV = 2*L*sin(DEG2RAD*A1);
   RH = 2*L/sin(DEG2RAD*A1);
 
+  _Frequency=Frequency;
+  _DELAY=DELAY;
+  _LCC=LCC;
+  #pragma acc update device(_Frequency, _DELAY, _LCC)
 %}
 
 TRACE
@@ -197,7 +204,7 @@ COMPONENT MonokOut = Arm()
 AT (0,0,0) RELATIVE MonoCradle2 ROTATED (0,-2*A1,90) RELATIVE MonoCradle2
 
 COMPONENT LmonokOUT = Monitor_nD(
-    options = "auto lambda", xwidth=0.06, yheight=0.06)
+    options = "lambda limits=[1.7 2.1] bins=40", xwidth=0.06, yheight=0.06)
   AT (0, 0, 1.7) RELATIVE MonokOut
 
 COMPONENT Monitor1 = Monitor_nD(
@@ -211,7 +218,7 @@ COMPONENT DC=DiskChopper(radius=.240, theta_0=15, nslit=8,
 /* flux outgoing from Disk is in [n/s] (integrated in time) */
 
 COMPONENT DC_OUT_T = Monitor_nD(
-    options = "auto time, bins=100", xwidth=0.06, yheight=0.06)
+    options = "time limits=[5.5e-4 8.5e-4] bins=100", xwidth=0.06, yheight=0.06)
 AT (0,0,0.2) RELATIVE PREVIOUS ROTATED (0,0,0) RELATIVE MonokOut
 
 /* Honeycomb Collimator       alpha2 = 0.4°
@@ -240,8 +247,8 @@ EXTEND %{
   PROP_Z0;
   /* we fisrt put all events in the Fermi time transmission window */
   /* Fermi opening time is atan(w/length)/PI/frequency */
-  double Tfermi=atan2(0.031/136,0.013)/INSTRUMENT_GETPAR(Frequency)/PI; /* opening time for Fermi [s] */
-  t  = INSTRUMENT_GETPAR(DELAY)*(INSTRUMENT_GETPAR(LCC)-0.2)/INSTRUMENT_GETPAR(LCC)+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
+  double Tfermi=atan2(0.031/136,0.013)/_Frequency/PI; /* opening time for Fermi [s] */
+  t  = _DELAY*(_LCC-0.2)/_LCC+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
 
   /* geometric integrated transmission of Fermi=0.55 % */
   /* 2 sides*angular opening = 2*atan2(0.031/136,0.013)*RAD2DEG/360 */
@@ -256,7 +263,7 @@ COMPONENT FC=FermiChopper(xwidth=.031, yheight=.101, nslit=136, nu=Frequency,
 /* Dist: Fermi chopper – Sample 1000 mm */
 
 COMPONENT FC_OUT_T = Monitor_nD(
-    options = "auto time", xwidth=0.06, yheight=0.06)
+    options = "time limits=[2.15e-3 2.175e-3] bins=20", xwidth=0.06, yheight=0.06)
   AT (0, 0, 0.2) RELATIVE PREVIOUS ROTATED (0,0,0) RELATIVE MonokOut
 
 
