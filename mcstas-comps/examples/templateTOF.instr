@@ -54,6 +54,8 @@ DECLARE
   /* monitoring sample env */
   double vi;
   char op[256];
+  double _dt0;
+  #pragma acc declare create(_dt0)
 %}
 
 USERVARS %{
@@ -88,6 +90,9 @@ INITIALIZE
       && radius+container_thickness+0.0001 > environment_radius-environment_thickness)
     exit(printf("templateTOF: sample container radius %g is larger than sample environment %g\n",
       radius+container_thickness+0.0001, environment_radius-environment_thickness));
+
+  _dt0=dt0;
+  #pragma acc update device(_dt0)
 %}
 
 TRACE
@@ -140,7 +145,7 @@ EXTEND
   if      (SCATTERED == 1) flag_single=(VarSqw.type == 'c' ? 1 : 2);
   else if (SCATTERED >  1) flag_multi =(VarSqw.type == 'c' ? 1 : 2);
   else                     flag_multi =flag_single=0;
-  t = randtriangle()*2*INSTRUMENT_GETPAR(dt0);  // we assume that in the real instrument, the chopper is close to sample
+  t = randtriangle()*2*_dt0;  // we assume that in the real instrument, the chopper is close to sample
 %}
 
 COMPONENT Container_out=COPY(Container_in)(concentric=0)
