@@ -1,7 +1,6 @@
 These instruments still have auto limits
 
 ESS_mcpl2hist.instr
-ILL_BRISP.instr
 ILL_H15.instr
 ILL_H16.instr
 ILL_H16_Mantid.instr
@@ -31,6 +30,4 @@ RTP_Laue.instr
 RTP_NeutronRadiography.instr
 RTP_SANS.instr
 SNS_BASIS.instr
-Test_Fermi.instr
-Test_MCPL_output.instr
 Test_StatisticalChopper.instr
