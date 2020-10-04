@@ -71,7 +71,7 @@ COMPONENT ts1_mod = ISIS_moderator(
   AT (0, 0, 0) RELATIVE a1
 
 COMPONENT monFC = Monitor_nD(
-    options = "square auto t bins=100",
+    options = "square t limits=[1.03e-3 1.16e-3] bins=100",
     filename = "FC_mon2.dat", xwidth=0.2, yheight = 0.2)
   AT (0, 0, 9.8) RELATIVE a1
 
@@ -85,7 +85,7 @@ COMPONENT FCslit1 = Slit(
   AT (0, 0, 0.15) RELATIVE FC
 
 COMPONENT monT = Monitor_nD(
-    options = "square auto t bins=100",
+    options = "square t limits=[1.07e-3 1.13e-3] bins=100",
     filename = "FC_mon.dat", xwidth=0.2, yheight = 0.2)
   AT (0, 0, 0.035) RELATIVE FCslit1
 
@@ -108,7 +108,7 @@ COMPONENT a2=Arm()
 AT (0,0,0) RELATIVE target
 
 COMPONENT cyl = Monitor_nD(
-    options = "banana, auto t bins=100  , theta limits[9.31 28.69] bins=1",
+    options = "banana, t limits=[1.505e-3 1.575e-3] bins=100  , theta limits[9.31 28.69] bins=1",
     filename = "det_out.dat",   xwidth=5.0,   yheight = 0.3)
   AT (0, 0, 0) RELATIVE a2
 
