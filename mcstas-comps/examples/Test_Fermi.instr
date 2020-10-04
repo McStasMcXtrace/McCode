@@ -38,6 +38,10 @@
 *******************************************************************************/
 DEFINE INSTRUMENT Test_Fermi(int Fermi=1, lambda=3.39, width_FC=0.044, height_FC=0.064,length_FC=0.012, FC_Hz=100, Nslit_FC=120,d_SF=3, d_FD=3, phase=271.92, time_to_arrival=0, time_window_width=0)
 
+DECLARE %{
+  double Time_window_width;
+  #pragma acc declare create(Time_window_width)
+%}
 
 INITIALIZE
 %{
@@ -72,6 +76,8 @@ INITIALIZE
   time_to_arrival  = (d_SF/v);
   time_window_width = atan2(w,length_FC)/PI/FC_Hz;
   if (phase == -0) phase=(d_SF/v)/(1/FC_Hz)*360; /* assumes time at source is centered on 0 */
+  Time_window_width = time_window_width;
+  #pragma acc update device(Time_window_width)
 %}
 
 TRACE
@@ -88,12 +94,12 @@ EXTEND %{
   /* 1 ms triangle time window */
   // t = randtriangle()*1e-3;  /* trianglular distribution */
   // t = randpm1()*time_window_width-time_to_arrival;          /* rectangular distribution */
-  t = randpm1()*INSTRUMENT_GETPAR(time_window_width);
+  t = randpm1()*Time_window_width;
   vx=vy=0;
 %}
 
 COMPONENT Monitor1_xt = Monitor_nD(
-    options = "multiple x y time, all auto", xwidth = width_FC, yheight = height_FC)
+    options = "multiple x y time limits=[2.1e-3 2.8e-3] bins=40 ", xwidth = width_FC, yheight = height_FC)
   AT (0, 0, d_SF-0.1) RELATIVE PREVIOUS
 
 COMPONENT FC_Position = Arm( )
@@ -131,7 +137,7 @@ COMPONENT Fake_Origin = Arm()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT Monitor2_xt = Monitor_nD(
-    options = "multiple x y time, all auto",
+    options = "multiple x y time limits=[4.7e-3 5.1e-3] bins=40",
     restore_neutron=1,
     xwidth = width_FC, yheight = height_FC)
   AT (0, 0, d_FD) RELATIVE FC_Position
