@@ -287,9 +287,9 @@ COMPONENT sample = PowderN(
 AT (0, 0, 0) RELATIVE Sample_axis
 ROTATED (0, omega, chi) RELATIVE Sample_axis
 EXTEND %{
-if ((filt>-1) && (line_info.itype!=filt)) {
+  /*if ((filt>-1) && (itype!=filt)) {
  ABSORB; 
-}
+ }*/
 // gauge coord. in mm
 double r0[3] = {x,y,z};
 double r[3]; 
