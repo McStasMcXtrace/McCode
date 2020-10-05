@@ -15,6 +15,7 @@
 * A test instrument for PowderN output on a spherical monitor.
 *
 * %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
+* %Example: lambda=1 d_phi=10 Detector: Sph_mon_I=8.94853e+07
 *
 * %Parameters
 * lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
@@ -28,7 +29,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0, frac_i=0.01, frac_t=0.01)
+DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0, frac_i=0.01, frac_t=0.01, d_phi=0)
 
 DECLARE %{
   int DirectBeam;
@@ -60,7 +61,7 @@ REMOVABLE COMPONENT Source = Source_gen(
 COMPONENT sample_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
 
-SPLIT SPLITS COMPONENT Pow = PowderN(radius=0.005, yheight=0.1, reflections=reflections, p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c)
+SPLIT SPLITS COMPONENT Pow = PowderN(radius=0.005, yheight=0.1, reflections=reflections, p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c, d_phi=d_phi)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
   if(DirectBeam == 0) {
