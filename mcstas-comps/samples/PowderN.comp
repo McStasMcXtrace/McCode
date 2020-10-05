@@ -777,6 +777,7 @@ TRACE
   // Variables calculated within thread for thread purpose only 
   char type = '\0';
   int itype = 0;
+  double d_phi_thread = d_phi;
   // These ones are injected back to struct at the end of TRACE in non-OpenACC case
   int nb_reuses = line_info.nb_reuses;
   int nb_refl = line_info.nb_refl;
@@ -913,16 +914,16 @@ TRACE
 				sg = tth_sign/fabs(tth_sign);
 			theta = asin(arg);          /* Bragg scattering law */
 			  /* Choose point on Debye-Scherrer cone */
-			if (d_phi)
+			if (d_phi_thread)
 			{ /* relate height of detector to the height on DS cone */
 				arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
 				/* If full Debye-Scherrer cone is within d_phi, don't focus */
-				if (arg < -1 || arg > 1) d_phi = 0;
+				if (arg < -1 || arg > 1) d_phi_thread = 0;
 				/* Otherwise, determine alpha to rotate from scattering plane
 				   into d_phi focusing area*/
 				else alpha = 2*asin(arg);
 			}
-			if (d_phi) {
+			if (d_phi_thread) {
 				/* Focusing */
 				alpha = fabs(alpha);
 				alpha0 = 0.5*randpm1()*alpha;
@@ -1013,7 +1014,7 @@ TRACE
 			pmul  = Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
 									  /(1-(p_inc+p_transmit));
 			  /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-			if (d_phi) pmul *= alpha/PI;
+			if (d_phi_thread) pmul *= alpha/PI;
 
 			type = 'c';
 			itype = 1;
@@ -1022,13 +1023,13 @@ TRACE
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (neutrontype == 2) {  /* Make incoherent scattering event */
-		if (d_omega && d_phi) {
+		if (d_omega && d_phi_thread) {
 			randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
-			  tgt_x, tgt_y, tgt_z, d_omega*DEG2RAD, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
-		} else if (d_phi) {
+			  tgt_x, tgt_y, tgt_z, d_omega*DEG2RAD, d_phi_thread*DEG2RAD, ROT_A_CURRENT_COMP);
+		} else if (d_phi_thread) {
 			randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
                                       tgt_x, tgt_y, tgt_z,
-                                      2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
+                                      2*PI, d_phi_thread*DEG2RAD, ROT_A_CURRENT_COMP);
         } else {
           randvec_target_circle(&vx, &vy, &vz,
                                 &solid_angle, 0, 0, 1, 0);
