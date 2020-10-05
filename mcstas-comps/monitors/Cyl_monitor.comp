@@ -38,36 +38,33 @@
 * %E
 ******************************************************************************/
 
-DEFINE COMPONENT PSDcyl_monitor
+DEFINE COMPONENT Cyl_monitor
 
 DEFINITION PARAMETERS ()
 
-  SETTING PARAMETERS (nr=20, ny=20, string filename=0, yheight=0.3, radius=1, restore_neutron=0, thmin=0, thmax=360)
+SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0, thmin=0, thmax=360)
 
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-  DArray2d PSD_N;
-  DArray2d PSD_p;
-  DArray2d PSD_p2;
+  DArray1d PSD_N;
+  DArray1d PSD_p;
+  DArray1d PSD_p2;
 %}
 
 INITIALIZE
 %{
-  int i, j;
-
-  PSD_N = create_darr2d(nr, ny);
-  PSD_p = create_darr2d(nr, ny);
-  PSD_p2 = create_darr2d(nr, ny);
-
+  PSD_N =  create_darr1d(nr);
+  PSD_p =  create_darr1d(nr);
+  PSD_p2 = create_darr1d(nr);
 %}
 
 TRACE
 %{
   int i, j;
-  double t0, t1;
+  double t0, t1, phi;
 
   if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1) {
     if(t0<0) {
@@ -75,23 +72,20 @@ TRACE
 	PROP_DT(t1);
 	/* Calculate pixel */
 	if (fabs(y) < yheight/2.0) {
-	  double phi, yprime;
 	  phi=(atan2(x,z)+PI)*RAD2DEG;
-	  yprime=y+yheight/2.0;
 	  
 	  if (phi >= thmin && phi < thmax) {
 	    i=floor((nr-1) * (phi-thmin)/(thmax-thmin));
-	    j=floor((ny-1) * yprime/yheight);
 	    
 	    double p2 = p*p;
             #pragma acc atomic
-	    PSD_N[i][j] = PSD_N[i][j]+1;
-
+	    PSD_N[i] = PSD_N[i]+1;
+	    
             #pragma acc atomic
-	    PSD_p[i][j] = PSD_p[i][j]+p;
+	    PSD_p[i] = PSD_p[i]+p;
 	  
 	    #pragma acc atomic
-	    PSD_p2[i][j] = PSD_p2[i][j]+p2;
+	    PSD_p2[i] = PSD_p2[i]+p2;
 	  }
 	}
       }
@@ -104,21 +98,22 @@ TRACE
 
 SAVE
 %{
-  DETECTOR_OUT_2D(
-      "PSD cylindrical monitor",
+   
+  DETECTOR_OUT_1D(
+      "Cylindrical monitor",
       "radial position [deg]",
-      "yheight [m]",
-      thmin, thmax, -yheight/2.0, yheight/2.0,
-      nr, ny,
-      &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+      "Intensity",
+      "Theta",
+      thmin, thmax, nr, 
+      &PSD_N[0],&PSD_p[0],&PSD_p2[0],
       filename);
 %}
 
 FINALLY
 %{
-  destroy_darr2d(PSD_N);
-  destroy_darr2d(PSD_p);
-  destroy_darr2d(PSD_p2);
+  destroy_darr1d(PSD_N);
+  destroy_darr1d(PSD_p);
+  destroy_darr1d(PSD_p2);
 %}
 
 MCDISPLAY
