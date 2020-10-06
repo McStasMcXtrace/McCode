@@ -78,10 +78,10 @@ SAVE
   FILE * fp;
   printf("Storing event logfile -->  %s\n",fullfile);
   fp = fopen(fullfile, "w+");
-  fprintf(fp,"(%s, contains %lu events)\n",fullfile,Nevents);
-  fprintf(fp,"=========================================== START EVENT LIST ============================================\n");
-  fprintf(fp,"    id        x        y        z       vx       vy       vz        t       sx       sy       sz        p\n");
-  fprintf(fp,"=========================================================================================================\n");
+  fprintf(fp,"# Event-file %s, contains %lu events\n",fullfile,Nevents);
+  fprintf(fp,"########################################### START EVENT LIST ##############################################\n");
+  fprintf(fp,"#   id        x        y        z       vx       vy       vz        t       sx       sy       sz        p # \n");
+  fprintf(fp,"###########################################################################################################\n");
   unsigned long i;
   int j;
   for (i=0; i<Nevents; i++) {
@@ -91,8 +91,8 @@ SAVE
     }
     fprintf(fp,"\n");
   }
-  fprintf(fp,"=========================================================================================================\n");
-  fprintf(fp,"============================================ END EVENT LIST! ============================================\n");
+  fprintf(fp,"###########################################################################################################\n");
+  fprintf(fp,"############################################ END EVENT LIST! ##############################################\Nd");
   fclose(fp);
   printf("Done storing logfile.\n");
 %}
