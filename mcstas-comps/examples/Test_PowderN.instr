@@ -29,7 +29,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=17, frac_c=0, frac_i=0.01, frac_t=0.01, d_phi=10)
+DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=17, frac_c=0, frac_i=0.01, frac_t=0.01, d_phi=0)
 
 DECLARE %{
 %}
