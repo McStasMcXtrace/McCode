@@ -121,7 +121,7 @@ SAVE
   DETECTOR_OUT_2D(
     "4PI PSD monitor",
     "Longitude [deg]",
-    "Lattitude [deg]",
+    "Latitude [deg]",
     -180, 180, -90, 90,
     nx, ny,
     &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
