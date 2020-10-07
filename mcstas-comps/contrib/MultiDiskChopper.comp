@@ -76,11 +76,6 @@ delay are cumulative, and both can be specified.
 * ratio:                        Spacing of the additional revolutions from the parameter nrev from the central revolution.
 *                               Default: 1
 *
-* OUTPUT PARAMETERS:
-* islit:                        Index of the slit which has transmitted the current neutron (between 0 and nslits-1).
-* irev:                         Index of the disk revolution that has transmitted the current neutron.
-*                               Only set if isfirst=1. irev will be between (-nrev*ratio) and (nrev*ratio), where irev=0
-*                               is the central revolution.
 *
 * %E
 *******************************************************************************/
@@ -89,7 +84,7 @@ DEFINE COMPONENT MultiDiskChopper
 
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string slit_center="0 180", string slit_width="10 20", nslits=2, delta_y=-0.3, nu=0, nrev=0, ratio=1, jitter=0, delay=0, isfirst=0, phase=0, radius = 0.375, equal=0, abs_out=0, verbose=0)
-OUTPUT PARAMETERS (T, To, omega, dslit_center, dhslit_width, t0, t1, islit, irev)
+OUTPUT PARAMETERS (T, To, omega, dslit_center, dhslit_width, t0, t1)
 
 DECLARE
 %{
@@ -100,8 +95,6 @@ double *dslit_center;
 double *dhslit_width;
 double *t0;
 double *t1;
-int islit;
-int irev=0;
 %}
 
 INITIALIZE
@@ -257,7 +250,8 @@ TRACE
    double phi;
    double xprime,yprime;
    double toff;
-   
+   int irev, islit;
+
    // Propagate into the chopper disk plane
    PROP_Z0;
 
