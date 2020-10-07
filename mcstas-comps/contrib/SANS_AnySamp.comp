@@ -59,11 +59,11 @@ DEFINE COMPONENT SANS_AnySamp
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (transm=0.5, Rg=100, qmax=0.03,
 xwidth=0.01, yheight=0.01, zdepth=0.001)
-OUTPUT PARAMETERS (q_v,isq)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double q_v,isq;
+double isq;
 %}
 
 INITIALIZE
@@ -94,7 +94,7 @@ if (!xwidth || !yheight || !zdepth) {
 
 TRACE
 %{
-  double a,q,qm,sq;
+  double a,q,qm,sq,q_v;
   double transsim=0.03;                  // portion of paths for transmission
 
   double transmr, t0, t1, v, l_full, l, dt, d_phi, theta;
