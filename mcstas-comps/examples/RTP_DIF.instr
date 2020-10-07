@@ -98,7 +98,7 @@ COMPONENT mono_rotation = Arm()
 COMPONENT mono1 = Monochromator_curved(
     width=.11, height=.03, NH=1,NV=1, RH=0, RV=0,
     DM=DM, mosaich=48, mosaicv=48,
-    reflect="HOPG.rfl",transmit="HOPG.trm")
+    reflect="HOPG.rfl"/*,transmit="HOPG.trm"*/)
   AT (-.01, 0, 0) RELATIVE mono_rotation
   ROTATED (0, Mono_tilt, 0) RELATIVE mono_rotation
   EXTEND %{
