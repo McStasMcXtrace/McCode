@@ -2216,6 +2216,7 @@ double p_mult=1;
 double mc_trans, p_trans, mc_scatt;
 double coh=0, inc=0;
 struct Sqw_Data_struct Data_sqw;
+double d_phi_thread = d_phi;
 
 
 /* Store Initial neutron state */
@@ -2454,9 +2455,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
       /* CASE 1: incoherent case */
       if (!VarSqw.Data_inc.intensity) {
         /* CASE 1a: no incoherent Sqw from file, use isotropic V-like */
-        if (d_phi && order == 1) {
+        if (d_phi_thread && order == 1) {
           randvec_target_rect_angular(&u1x, &u1y, &u1z, &solid_angle,
-              vx, vy, vz, 2*PI, d_phi, ROT_A_CURRENT_COMP);
+              vx, vy, vz, 2*PI, d_phi_thread, ROT_A_CURRENT_COMP);
           p_mult *= solid_angle/4/PI; /* weighted by focused range to total range */
         } else
           randvec_target_circle(&u1x, &u1y, &u1z, NULL, vx, vy, vz, 0);
@@ -2615,18 +2616,18 @@ do { /* Main interaction loop. Ends with intersect=0 */
       theta = acos(costheta);
 
       /* Choose point on Debye-Scherrer cone */
-      if (order == 1 && d_phi)
+      if (order == 1 && d_phi_thread)
       { /* relate height of detector to the height on DS cone */
         double cone_focus;
-        cone_focus = sin(d_phi/2)/sin(theta);
-        /* If full Debye-Scherrer cone is within d_phi, don't focus */
-        if (cone_focus < -1 || cone_focus > 1) d_phi = 0;
+        cone_focus = sin(d_phi_thread/2)/sin(theta);
+        /* If full Debye-Scherrer cone is within d_phi_thread, don't focus */
+        if (cone_focus < -1 || cone_focus > 1) d_phi_thread = 0;
         /* Otherwise, determine alpha to rotate from scattering plane
-            into d_phi focusing area*/
+            into d_phi_thread focusing area*/
         else alpha = 2*asin(cone_focus);
-        if (d_phi) p_mult *= alpha/PI;
+        if (d_phi_thread) p_mult *= alpha/PI;
       }
-      if (d_phi) {
+      if (d_phi_thread) {
         /* Focusing */
         alpha = fabs(alpha);
         /* Trick to get scattering for pos/neg theta's */
