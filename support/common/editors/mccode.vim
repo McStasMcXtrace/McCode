@@ -14,7 +14,7 @@
 :runtime! syntax/c.vim
 
 "keywords for mcstas statements
-:syntax keyword instrStatement DECLARE DEPENDENCY DEFINE END FINALLY INITIALIZE MCDISPLAY SAVE SHARE
+:syntax keyword instrStatement DECLARE DEPENDENCY DEFINE END FINALLY INITIALIZE MCDISPLAY SAVE SHARE USERVARS
 :syntax keyword instrStatement TRACE DEFINITION PARAMETERS POLARISATION SETTING STATE
 :syntax keyword instrStatement OUTPUT INSTRUMENT include
 :highlight link instrStatement Statement
