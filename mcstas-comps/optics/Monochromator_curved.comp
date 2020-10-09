@@ -97,36 +97,19 @@
 DEFINE COMPONENT Monochromator_curved
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect="NULL", string transmit="NULL",
-zwidth=0.01, yheight=0.01,
-gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
+zwidth=0.01, yheight=0.01,gap=0.0005, int NH=11, int NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
 RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,
-SlabWidth,SlabHeight,rTable, tTable, row, col,tiltH,tiltV)
+SlabWidth,SlabHeight,rTable, tTable, row, col)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-#ifndef GAUSS
-/* Define these arrays only once for all instances. */
-/* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
-James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103.
-This reference is available from the Copenhagen UB2 library */
-double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
--0.724417731360170, -0.570972172608539, -0.394151347077563,
--0.201194093997435, 0, 0.201194093997435,
-0.394151347077563, 0.570972172608539, 0.724417731360170,
-0.848206583410427, 0.937273392400706, 0.987992518020485};
-double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
-0.139570677926154, 0.166269205816994, 0.186161000115562,
-0.198431485327111, 0.202578241925561, 0.198431485327111,
-0.186161000115562, 0.166269205816994, 0.139570677926154,
-0.107159220467172, 0.070366047488108, 0.030753241996117};
-#pragma acc declare create ( Gauss_X )
-#pragma acc declare create ( Gauss_W )
+#pragma acc routine
+double GAUSS_monocurved(double x, double mean, double rms){
+  return (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)));
+}
 
-#define GAUSS(x,mean,rms) \
-  (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
-#endif
 
 %include "read_table-lib"
 %}
@@ -141,10 +124,12 @@ DECLARE
   double SlabHeight;
   t_Table rTable;
   t_Table tTable;
-  double row;
-  double col;
-  double* tiltH;
-  double* tiltV;
+  int rTableFlag;
+  int tTableFlag;
+  int row;
+  int col;
+  double *tiltH;
+  double *tiltV;
 %}
 
 INITIALIZE
@@ -193,8 +178,10 @@ INITIALIZE
     Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
     if (rTable.rows < 2) Table_Free(&rTable);
     if (verbose) Table_Info(rTable);
-  } else rTable.data = NULL;
-
+    rTableFlag = 1;
+  } else {
+    rTableFlag = 0;
+  }
   if (transmit != NULL && strlen(transmit) && strcmp(transmit,"NULL") && strcmp(transmit,"0"))
   {
     if (verbose) fprintf(stdout, "Monochromator_curved: %s: Transmission data (k, T) from %s\n", NAME_CURRENT_COMP, transmit);
@@ -202,27 +189,28 @@ INITIALIZE
     Table_Rebin(&tTable);         /* rebin as evenly, increasing array */
     if (tTable.rows < 2) Table_Free(&tTable);
     if (verbose) Table_Info(tTable);
-  } else tTable.data = NULL;
+    tTableFlag = 1;
+  } else {
+    tTableFlag = 0;
+  }
 
   if (width == 0) SlabWidth = zwidth;
   else SlabWidth = (width+gap)/NH - gap;
   if (height == 0) SlabHeight = yheight;
   else SlabHeight = (height+gap)/NV - gap;
 
-  tiltH=malloc((int)(NH+1)*sizeof(double));
-  tiltV=malloc((int)(NV+1)*sizeof(double));
+  tiltH=calloc((int)2*(NH+1),sizeof(double));
+  tiltV=calloc((int)2*(NV+1),sizeof(double));
 
   if (!tiltH) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NH=%g).\n", NAME_CURRENT_COMP, NH);
   else if (RH) { /* pre-compute tilts */
-    for (i=0;i<=NH;i++)
-    {
+    for (i=0;i<=NH;i++){
       tiltH[i]=asin((i-(NH+1)/2)*(SlabWidth+gap)/RH);
     }
   }
   if (!tiltV) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NV=%g).\n", NAME_CURRENT_COMP, NV);
   else if (RV) {
-    for (i=0;i<=NV;i++)
-    {
+    for (i=0;i<=NV;i++){
       tiltV[i]=-asin((i-(NV+1)/2)*(SlabHeight+gap)/RV);
     }
   }
@@ -232,56 +220,67 @@ INITIALIZE
 TRACE
 %{
   double dt;
+  double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
+    -0.724417731360170, -0.570972172608539, -0.394151347077563,
+    -0.201194093997435, 0, 0.201194093997435,
+    0.394151347077563, 0.570972172608539, 0.724417731360170,
+    0.848206583410427, 0.937273392400706, 0.987992518020485};
+  double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
+    0.139570677926154, 0.166269205816994, 0.186161000115562,
+    0.198431485327111, 0.202578241925561, 0.198431485327111,
+    0.186161000115562, 0.166269205816994, 0.139570677926154,
+    0.107159220467172, 0.070366047488108, 0.030753241996117};
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
   {                             /* Moving towards crystal? */
     double zmin,zmax, ymin,ymax;
-    _class_particle stored_particle_state=*_particle;
+    double yy,zz;
 
-    /* Propagate to crystal plane */
-    PROP_DT(dt);    /* now in the vertical plane of monochromator */
-
-    zmax = ((NH*(SlabWidth+gap))-gap)/2;
+    zmax = ((NH*(SlabWidth+gap))-gap)/2.0;
     zmin = -zmax;
-    ymax = ((NV*(SlabHeight+gap))-gap)/2;
+    ymax = ((NV*(SlabHeight+gap))-gap)/2.0;
     ymin = -ymax;
 
-    /* hit a slab or a gap ? */
-
-    if (z>zmin && z<zmax && y>ymin && y<ymax) { /* Intersect the crystal? */
+    /* Test-propagate to crystal plane */
+    zz=z+vz*dt;
+    yy=y+vy*dt;
+    if (zz>zmin && zz<zmax && yy>ymin && yy<ymax) { /* Intersect the crystal? */
       double tilth,tiltv;         /* used to calculate tilt angle of slab */
       double ratio, Q_order, k, kux,kuy,kuz;
       double kix,kiy,kiz;
       int    do_transmit = 0;
 
-      col = ceil ( (z-zmin)/(SlabWidth +gap));  /* which slab hit ? */
-      row = ceil ( (y-ymin)/(SlabHeight+gap));
+      col = (int) ceil ( (z-zmin)/(SlabWidth +gap));  /* which slab hit ? */
+      row = (int) ceil ( (y-ymin)/(SlabHeight+gap));
       if (RH != 0) tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
       else tilth=0;
       if (RV != 0) tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
       else tiltv=0;
 
-      /* restore neutron in order to transform to slab coordinates */
-      *_particle=stored_particle_state;
+      tilth=tiltH[col];//asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
+      tiltv=tiltV[row];//asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
 
       /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
-      double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2;
-      double center_y=ymin+(row-0.5)*(SlabHeight+gap)-gap/2;
+      double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2.0;
+      double center_y=ymin+(row-0.5)*(SlabHeight+gap)-gap/2.0;
+
       Rotation T;
       rot_set_rotation(T, 0, tilth,    tiltv);
       /* now make the coordinate system change */
       mccoordschange_polarisation(T, &vx, &vy, &vz);
-      y-=center_y;
-      z-=center_z;
+      y= y-center_y;
+      z= z-center_z;
       coords_get(rot_apply(T,coords_set(x,y,z)),&x,&y,&z);
 
-      /* this is where polaisation should be handled, plus further down */
+      /* this is where polarisation should be handled, plus further down */
       /* mccoordschange_polarisation(t, &sx, &sy, &sz); */
 
       /* now propagate to slab plane */
       PROP_X0;
 
-      if (fabs(z) <= SlabWidth/2 && fabs(y) <= SlabHeight/2) { /* not in gap ? */
+      /* Hit a slab or a gap ?*/
+      int inside=inside_rectangle(z,y,SlabWidth,SlabHeight);
+      if (inside){ /* not in gap ? */
         kix = V2K*vx;             /* Initial wave vector */
         kiy = V2K*vy;
         kiz = V2K*vz;
@@ -310,9 +309,9 @@ TRACE
           /* Make MC choice: reflect or transmit? */
           delta = asin(fabs(kux)) - theta;
 
-          if (rTable.data != NULL)
+          if (rTableFlag)
           {
-            my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
+            my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */ 
           }
           else my_r0 = r0;
           if (my_r0 > 1)
@@ -333,7 +332,8 @@ TRACE
                         exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
                             (2*mos_rms_z*mos_rms_z));
 
-          if(rand01() <= p_reflect) { /* Reflect */
+          double rr=rand01();
+          if(rr <= p_reflect) { /* Reflect */
             double bx,by,bz,ax,ay,az,phi;
             double cos_2theta,k_sin_2theta,cos_phi,sin_phi,q_x,q_y,q_z;
             double total,c1x,c1y,c1z,w,mos_sample;
@@ -344,9 +344,9 @@ TRACE
             /* Get unit normal to plane containing ki and most probable kf */
             vec_prod(bx, by, bz, kix, kiy, kiz, q0x, 0, 0);
             NORM(bx,by,bz);
-            bx *= k_sin_2theta;
-            by *= k_sin_2theta;
-            bz *= k_sin_2theta;
+            bx = bx * k_sin_2theta;
+            by = by * k_sin_2theta;
+            bz = bz * k_sin_2theta;
             /* Get unit vector normal to ki and b */
             vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
             /* Compute the total scattering probability at this ki */
@@ -390,8 +390,8 @@ TRACE
               q_x = c1x + cos_phi*ax + sin_phi*bx;
               q_y = c1y + cos_phi*ay + sin_phi*by;
               q_z = c1z + cos_phi*az + sin_phi*bz;
-              p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
-                          GAUSS((q_y/q_x),0,mos_rms_z);
+              p_reflect = GAUSS_monocurved((q_z/q_x),0,mos_rms_y)*
+                          GAUSS_monocurved((q_y/q_x),0,mos_rms_z);
               total += Gauss_W[i]*p_reflect;
             }
             total *= w;
@@ -405,28 +405,32 @@ TRACE
             q_x = c1x + cos_phi*ax + sin_phi*bx;
             q_y = c1y + cos_phi*ay + sin_phi*by;
             q_z = c1z + cos_phi*az + sin_phi*bz;
-            p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
-                        GAUSS((q_y/q_x),0,mos_rms_z);
+            p_reflect = GAUSS_monocurved((q_z/q_x),0,mos_rms_y)*
+                        GAUSS_monocurved((q_y/q_x),0,mos_rms_z);
 
             vx = K2V*(kix+q_x);
             vy = K2V*(kiy+q_y);
             vz = K2V*(kiz+q_z);
-            p_reflect /= total*GAUSS(phi,0,mos_sample);
+            p_reflect /= total*GAUSS_monocurved(phi,0,mos_sample);
             if (p_reflect <= 0) ABSORB;
             if (p_reflect > 1)  p_reflect = 1;
-            p *= p_reflect;
+            p = p * p_reflect;
 
           } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */
-          else do_transmit = 1;
+          else{
+            do_transmit = 1;
+          }
             /* else transmit neutron */
         } /* End bragg scattering possible (if order) */
-        else do_transmit=1;
+        else {
+          do_transmit=1;
+        }
         if (do_transmit)
         {
           double my_t0;
-          if (tTable.data != NULL)
+          if (tTableFlag != 0)
           {
-            my_t0 = t0*Table_Value(tTable, k, 1); /* 2nd column */
+            my_t0 = t0*Table_Value(tTable, k, 1); /* 2nd column */ 
           }
           else my_t0 = t0;
           /* do not SCATTER, else GROUP does not work */
@@ -436,7 +440,7 @@ TRACE
               fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
             my_t0=0.999;
           }
-          if (my_t0 > 0) p*= my_t0;
+          if (my_t0 > 0) p = p * my_t0;
           else ABSORB;
         }
       } /* end if not in gap */
@@ -446,8 +450,8 @@ TRACE
       /* now make the coordinate system change */
       mccoordschange_polarisation(TT, &vx, &vy, &vz);
       coords_get(rot_apply(TT,coords_set(x,y,z)),&x,&y,&z);
-      y+=center_y;
-      z+=center_z;
+      y= y+center_y;
+      z= z+center_z;
       /* Visualise scattering point in proper, component frame 
 	 - but only if the neutron is reflected, that is none of:
 	 * transmitted
@@ -465,8 +469,12 @@ TRACE
 
 FINALLY
 %{
-  Table_Free(&rTable);
-  Table_Free(&tTable);
+  if(rTableFlag){
+    Table_Free(&rTable);
+  }
+  if(tTableFlag){
+    Table_Free(&tTable);
+  }
   if (tiltH) free(tiltH);
   if (tiltV) free(tiltV);
 %}
