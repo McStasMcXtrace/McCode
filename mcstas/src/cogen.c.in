@@ -2082,12 +2082,18 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#define MCCODE_BASE_TYPES");
   cout("");
   
-  // generate particle struct
-  cout("");
   cout("#ifdef OPENACC");
   cout("#undef MC_TRACE_ENABLED");
   cout("#endif");
   cout("");
+
+  /* the max number of user variables*/
+  cout("#ifndef MC_NUSERVAR");
+  cout("#define MC_NUSERVAR 10");
+  cout("#endif");
+  cout("");
+
+  /* generate particle struct */
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
 #if MCCODE_PROJECT == 1   /* neutron */
@@ -2109,13 +2115,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
-  cout("   /* Up to 10 user-vars are stored with pointers, inititally set to NULL */");
-  int jvar;
-  for (jvar=1; jvar<11; jvar++) {
-    coutf("  double* uservar%i; ",jvar);
-  }
-
-
   /* Append variables from instr USERVARS block to particle struct (user vars,
   *  always double). Also store these strings in in the appropriate instrument
   *  list for later def/undef as state variables (see cogen_raytrace). */
@@ -2158,22 +2157,45 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc routine seq");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop);");
-  if (get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND")) {
-    cout("  // Initialize user variable aliases:");
-    List_handle liter;
-    liter = list_iterate(instr->user_vars);
-    char *var;
-    for (jvar=1; jvar<11; jvar++) {
-      var = list_next(liter);
-      if (jvar-1 < list_len(instr->user_vars)/2) {
-	coutf("  particle.uservar%i = &particle.%s;", jvar, var);
-	fprintf(stderr,"Defining particle.uservar%i as alias of USERVAR %s. \n --> Access from Monitor_nD by putting e.g. user1=%i\n",jvar,var,jvar);
-      }
-    }
-    list_iterate_end(liter);
-  }
   cout("  return(particle);");
   cout("}");
+
+  /*generate uservar return functions*/
+  if (list_len(instr->user_vars)){
+    //get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND")) {
+    cout("/*Generated user variable handlers:*/");
+    cout("");
+    List_handle liter;
+    liter = list_iterate(instr->user_vars);
+    cout("double particle_getuservar(_class_particle *p, char *name, int *suc){");
+    cout("  int s=1;");
+    cout("  double rval=0;");
+    char *var;
+    while(var = list_next(liter)) {
+      coutf("  if(strcmp(\"%s\",name)){rval=p->%s;s=0;}",var,var);
+    }
+    list_iterate_end(liter);
+    cout("  if (suc!=0x0 && !s) {*suc=0;}");
+    cout("  return rval;");
+    cout("}");
+    cout("");
+
+    liter = list_iterate(instr->user_vars);
+    cout("double particle_getuservar_byid(_class_particle *p, int id, int *suc){");
+    cout("  int s=1;");
+    cout("  double rval=0;");
+    cout("  switch(id){");
+    int jvar=0;
+    while(var = list_next(liter)) {
+      coutf("  case %d: {rval=p->%s;s=1;break;}",jvar++,var);
+    }
+    cout("  }");
+    cout("  if (suc!=0x0 && !s) {*suc=0;}");
+    cout("  return rval;");
+    cout("}");
+    cout("");
+  }
+
 
 
   /* embed runtime files */
