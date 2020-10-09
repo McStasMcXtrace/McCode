@@ -38,8 +38,4 @@ cd $HOME
 
 echo done on GPU, submitting 1st MPI job and plots
 # 10-core MPI run 
-#bsub < $HOME/McCode/test-batches/v3.0_cpu_MPI_KISS.scpt
-bsub < $HOME/McCode/test-batches/plots_gpu_nosplit.scpt 
-rsync -avz elearn1.fysik.dtu.dk:TESTS/${DATE}/ TESTS/${DATE} --exclude='*.mcpl' --exclude='*.mcpl.gz' --exclude='*_list*' --exclude='*.out'
-bsub < $HOME/McCode/test-batches/plots_cpu_MPI_KISS.scpt
-bsub < $HOME/McCode/test-batches/plots_cpu_multicore.scpt
+

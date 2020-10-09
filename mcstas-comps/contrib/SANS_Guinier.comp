@@ -58,11 +58,10 @@
 DEFINE COMPONENT SANS_Guinier
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (transm=0.5, Rg=100, qmax=0.03, xwidth=0.01, yheight=0.01, zdepth=0.001)
-OUTPUT PARAMETERS (q_v)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double q_v;
 %}
 
 INITIALIZE
@@ -74,7 +73,7 @@ if (!xwidth || !yheight || !zdepth) {
 
 TRACE
 %{
-  double a,qm,q;
+  double a,qm,q,q_v;
   double transmr, t0, t1, v, l_full, l, dt, d_phi, theta;
   double axis_x, axis_y, axis_z;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;

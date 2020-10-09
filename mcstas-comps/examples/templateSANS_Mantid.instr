@@ -26,7 +26,7 @@
 * 2) Generate an IDF using mcdisplay templateSANS_Mantid --format=Mantid -n0
 * 3) mcrun templateSANS_Mantid -n1e6 --format=NeXus
 *
-* %Example: lambda=6 Detector: detector_I=6.55e-17
+* Example: lambda=6 
 *
 * %Parameters
 * lambda: [AA]          Mean wavelength of neutrons

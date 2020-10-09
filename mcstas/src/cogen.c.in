@@ -400,14 +400,16 @@ int cogen_comp_declare(struct comp_inst *comp)
     // -- step IIa: transfer all <output minus decl> pars to a new list
     List new_out_pars;
     new_out_pars = list_create();
-    List_handle outputiter;
+
+    // Annihilation of OUTPUT/PRIVATE parameter generation
+    /*    List_handle outputiter;
     outputiter = list_iterate(comp->def->out_par);
     struct comp_iformal* outpar;
     while(outpar = list_next(outputiter)) {
       if (!var_in_list(comp->def->decl_par, outpar)) {
         list_add(new_out_pars, outpar);
       }
-    }
+    } */
 
     // -- step IIb: transfer all decl vars to the new list
     List_handle decliter;
