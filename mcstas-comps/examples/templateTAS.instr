@@ -581,7 +581,7 @@ AT (0, 0, machine_hkl.l1-0.2) ABSOLUTE
 COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 0.2) RELATIVE PREVIOUS
 
-SPLIT COMPONENT PG1Xtal = Monochromator_curved(
+SPLIT COMPONENT PG1Xtal = Monochromator_2foc(
   width  = WM,
   height = HM,
   NH=NHM, NV=NVM,
@@ -646,7 +646,7 @@ AT (0, 0, (machine_hkl.l3-0.40)/2) RELATIVE Sample_Out
 COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
 
-SPLIT COMPONENT PG2Xtal = Monochromator_curved(
+SPLIT COMPONENT PG2Xtal = Monochromator_2foc(
   width  = WA,
   height = HA,
   NH=NHA, NV=NVA,
