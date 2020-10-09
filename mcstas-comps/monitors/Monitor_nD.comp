@@ -198,9 +198,9 @@
 * bins: [1]              Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
 * min: [u]               Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
 * max: [u]               Maximum range value to force for all variables. Use 'max' or 'limits' keyword in 'options' for other limits
-* user1: [string]        Variable assigned to User1
-* user2: [string]        Variable assigned to User2
-* user3: [string]        Variable assigned to User3
+* user1: [string]        Index of USERVAR to be monitored by user1. 
+* user2: [string]        Indes of USERVAR to be monitroed by user2.
+* user3: [string]        Index of USERVAR to be monitored by user3.
 * username1: [str]       Name assigned to User1
 * username2: [str]       Name assigned to User2
 * username3: [str]       Name assigned to User3
@@ -220,7 +220,7 @@
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-  symbol user1=FLT_MAX, symbol user2=FLT_MAX, symbol user3=FLT_MAX,
+    int user1=-1, int user2=-1, int user3=-1,
   xwidth=0, yheight=0, zdepth=0,
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0,
   bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0,
@@ -334,6 +334,12 @@ MPI_MASTER(
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
 #endif
 #endif
+
+  if(user1>=MC_NUSERVAR || user2>=MC_NUSERVAR || user3>=MC_NUSERVAR){
+    fprintf(stderr,"ERROR (%s): uservar index exceeds the number of USERVARS declared in the instrument. Please check your parameters\n",NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
 %}
 
 TRACE
@@ -345,10 +351,15 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  Vars.UserVariable1 = user1;
-  Vars.UserVariable2 = user2;
-  Vars.UserVariable3 = user3;
-
+  if(user1!=-1){
+    Vars.UserVariable1 = particle_getuservar_byid(_particle,user1,NULL);
+  }
+  if(user2!=-1){
+    Vars.UserVariable2 = particle_getuservar_byid(_particle,user2,NULL);
+  }
+  if(user3!=-1){
+    Vars.UserVariable3 = particle_getuservar_byid(_particle,user3,NULL);
+  }
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
