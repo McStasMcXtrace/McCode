@@ -466,6 +466,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
             bckfile = activate_config(version, mccoderoot, f)
             try:
                 logging.info("")
+                label=label+"_"+ncount
                 logging.info("Testing label: %s" % label)
 
                 # craete the proper test dir
