@@ -67,11 +67,7 @@ DECLARE
   double a;
   double b;                         
   double delta;
-  double angle;
   t_Table pTable;
-  double old_x;
-  double old_y;
-  double old_z;
   int err;                            
 %}  
 
@@ -108,7 +104,10 @@ TRACE
   double vx_2,vz_2;
   int i=-1;
   double oa,ob,ab,xa,za;
-  
+  double angle;
+  double old_x;
+  double old_y;
+  double old_z;
   /* First check if neutron has the right direction. */
   if((vz != 0.0 && -z/vz >= 0) && x+beta1> 0)
   {
@@ -146,7 +145,8 @@ TRACE
           }
       }
       if(fabs(x-a*z-b)>0.001){
-            err++;
+	    #pragma acc atomic
+            err = err + 1;
             printf("Mirror_Elliptic: %s: x=%e z=%f X=%f (Absorb)",NAME_CURRENT_COMP,x,z,a*z+b);
             ABSORB;
       }
