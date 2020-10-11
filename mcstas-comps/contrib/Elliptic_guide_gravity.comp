@@ -804,10 +804,7 @@ DECLARE
 	*/
 	struct SGI guideInfo; // Static Guide information is set in INITIALIZE
 
-	double Gx;  // Local gravity vector, is set once in INITIALIZE
-	double Gy;
-	double Gz;
-	double Gx0;
+	double Gx0; // Local gravity vector, is set once in INITIALIZE
 	double Gy0;
 	double Gz0;
 	double Circ;
@@ -1430,6 +1427,7 @@ TRACE
   SCATTER;
 
   double Gloc;
+  double Gx,Gy,Gz;
   if (curvature) {
     Gloc=(vx*vx+vy*vy+vz*vz)/curvature;
   } else {
