@@ -124,7 +124,7 @@ COMPONENT mono_cradle = Arm()
   ROTATED (0, A1, 0) RELATIVE PREVIOUS
 
 /* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
-SPLIT COMPONENT Monok = Monochromator_curved(
+SPLIT COMPONENT Monok = Monochromator_2foc(
     width = 0.1, height = 0.1, NH = 1, NV = 11, RV=RV,
     mosaich = 30, mosaicv = 30, DM = DM)
   AT (0, 0, 0) RELATIVE mono_cradle
