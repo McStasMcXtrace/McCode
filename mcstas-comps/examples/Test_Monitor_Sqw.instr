@@ -113,17 +113,24 @@ DEFINE INSTRUMENT Test_Monitor_Sqw( beam_wavelength_Angs=2, beam_resolution_meV=
 
 DECLARE
 %{
-/* flags for detector */
- int flag_sample;      /* sample                scatt 1:coh, -1:inc, other multiple*/
- int flag_env;         /* container/environment scatt */
 
  double dt0, t0, bins=100;
+ #pragma acc declare create(dt0)
  double Ei=0, vi;
  double env_radius, det_radius;
-
+#pragma acc declare create(env_radius, det_radius, vi)
+ 
  char options_nM[1024];
  char options_nD[1024];
 
+%}
+
+USERVARS
+%{
+/* flags for detector */
+ int flag_sample;      /* sample                scatt 1:coh, -1:inc, other multiple*/
+ int flag_env;         /* container/environment scatt */
+ 
 %}
 
 INITIALIZE
@@ -177,6 +184,9 @@ INITIALIZE
       && sample_radius_m+container_thickness_m+0.0001 > environment_radius_m-environment_thickness_m)
     exit(printf("%s: ERROR: sample container radius %g [m] is larger than sample environment %g [m]\n",
       NAME_INSTRUMENT, sample_radius_m+container_thickness_m+0.0001, environment_radius_m-environment_thickness_m));
+
+  #pragma acc update device(dt0)
+  #pragma acc update device(env_radius, det_radius, vi)
 %}
 
 TRACE
