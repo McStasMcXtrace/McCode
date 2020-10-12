@@ -143,7 +143,7 @@ COMPONENT Diff_Mono_Lambda = Monitor_nD(
   AT (0, 0, -0.01) RELATIVE mono_cradle
 
 /* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
-SPLIT COMPONENT Monok = Monochromator_2foc(
+SPLIT COMPONENT Monok = Monochromator_curved(
     width = 0.1, height = 0.15, NH = 1, NV = 11, RV=RV,
     mosaich = ETA, mosaicv = 12, DM = DM)
   AT (0, 0, 0) RELATIVE mono_cradle
