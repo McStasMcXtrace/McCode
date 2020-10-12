@@ -135,7 +135,7 @@ SPLIT COMPONENT mono_cradle = Arm()
   AT (TRAS_X, 0, TRAS_Z) RELATIVE D2B_Mono_Dx
 
 /* TIP: curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
-COMPONENT Monok = Monochromator_2foc(
+COMPONENT Monok = Monochromator_curved(
     width = 0.060, height = 0.15, NH = 1, NV = 3, RV=RV,
     mosaich = 20, mosaicv = 20, DM = DM)
 AT (0, 0, 0) RELATIVE mono_cradle

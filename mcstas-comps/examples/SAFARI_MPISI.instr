@@ -280,7 +280,7 @@ COMPONENT Mono_axis = Arm()
 COMPONENT Blade_1 = Monochromator_curved(
  //  zwidth = 0.016163, yheight = 0.137/27.0, gap = (141-137)/27.0/1000.0, NH = 51, NV = 27,
    zwidth = 0.2/51.0, yheight = 0.137/27.0, gap = (141-137)/27.0/1000.0, NH = 51, NV = 27,
-   mosaich = mono_mosh,  mosaicv = mono_mosv, r0 = 1.0, /*t0 = 1.0*/, RV = -1.59, RH = -mono_Rh,
+   mosaich = mono_mosh,  mosaicv = mono_mosv, r0 = 1.0, t0 = 1.0, RV = -1.59, RH = -mono_Rh,
    DM = mono_d )
   WHEN (full_instrument==1)
   AT ( -start_wafer_pos, 0,0) RELATIVE Mono_axis

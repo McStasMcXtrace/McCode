@@ -341,19 +341,18 @@ COMPONENT Mono_center = Arm()
   AT (0, 0, 0.25) RELATIVE NL1B_Guide_Exit ROTATED (0,A1,0) RELATIVE NL1B_Guide_Exit
 
 // set monochromator transmission to zero
-// COMPONENT Monochromator = Monochromator_curved(
-COMPONENT Monochromator = Monochromator_flat(
+COMPONENT Monochromator = Monochromator_curved(
     zwidth = 0.02,
     yheight = 0.02,
-    //    gap = 0.0005,
-    //NH = 15,
-    //NV = 7,
+    gap = 0.0005,
+    NH = 15,
+    NV = 7,
     mosaich = 40,
     mosaicv = 40,
-    r0 = 1.0//,
-    //t0 = 0.00001,
-    //RV = RMV,
-    //RH = RMH
+    r0 = 1.0,
+    t0 = 0.00001,
+    RV = RMV,
+    RH = RMH
     )
   AT (0, 0, 0) RELATIVE Mono_center ROTATED (0,0,0) RELATIVE Mono_center
 

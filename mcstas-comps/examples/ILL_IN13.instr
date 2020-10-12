@@ -230,7 +230,7 @@ AT (0, 0, 0)        RELATIVE mono_pos
 ROTATED (0, TH0, 0) RELATIVE mono_pos
 
 
-COMPONENT CaF2_mono = Monochromator_2foc(width=0.045, height=0.15, NV=3, NH=1,
+COMPONENT CaF2_mono = Monochromator_curved(width=0.045, height=0.15, NV=3, NH=1,
   DM = DM, mosaic=CaF2mos, RV=RMV)
   AT (0, 0, 0) RELATIVE mono_cradle
   EXTEND %{
@@ -292,7 +292,7 @@ COMPONENT Defl_lambda = L_monitor(
     yheight = 0.2, Lmin = 0, Lmax = 3, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT IN13_deflector = Monochromator_2foc(width=0.05, height=9*1.5e-2, NV=9, NH=9,
+COMPONENT IN13_deflector = Monochromator_curved(width=0.05, height=9*1.5e-2, NV=9, NH=9,
   DM = 1.607, mosaic=50, RV=RDV, RH=RDH)
   AT (0,0,0) RELATIVE defl_cradle
   EXTEND %{
@@ -424,7 +424,7 @@ COMPONENT Analyser_In = Monitor_nD(
   options="x y", restore_neutron=1)
 AT (0,0,0)       RELATIVE AnalyserMount
 */
-COMPONENT Analyser = Monochromator_2foc(
+COMPONENT Analyser = Monochromator_curved(
   width=2*atan2(0.05+0.03, LDS)*LSA, height=2*atan2(9*1.5e-2+0.05, LDS)*LSA,
   RV=RVA, RH=RVA, NV=10, NH=10, DM=1.1115, mosaic=mos_ana, gap=0 )
   AT (0,0,0)       RELATIVE AnalyserMount
