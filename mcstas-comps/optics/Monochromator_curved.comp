@@ -256,11 +256,13 @@ TRACE
 	tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
       } else {
 	tilth=0;
+	col=1;
       }
       if (RV != 0) {
 	tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
       } else {
 	tiltv=0;
+	row=1;
       }
 
       /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
