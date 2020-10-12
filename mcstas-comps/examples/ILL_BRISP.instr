@@ -196,7 +196,7 @@ AT (0,0,0) RELATIVE PREVIOUS ROTATED (0,0,90) RELATIVE PREVIOUS
    20 crystals in a 4 x 5 matrix: crystal size 4 x 2 cm2, mosaic spread 0.4° (PG) and 0.25° (Cu)
  */
 
-SPLIT COMPONENT Monok = Monochromator_2foc(width=0.208, height=0.086, gap=0.0005,
+SPLIT COMPONENT Monok = Monochromator_curved(width=0.208, height=0.086, gap=0.0005,
           NH=4, NV=5, mosaich=30.0, mosaicv=30.0, r0=0.8, DM=DM)
 AT (0,0,0) RELATIVE MonoCradle2 ROTATED (0,-A1,0) RELATIVE MonoCradle2
 
