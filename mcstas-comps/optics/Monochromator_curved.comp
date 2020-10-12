@@ -228,7 +228,7 @@ TRACE
     0.198431485327111, 0.202578241925561, 0.198431485327111,
     0.186161000115562, 0.166269205816994, 0.139570677926154,
     0.107159220467172, 0.070366047488108, 0.030753241996117};
-  int row, col;
+
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
   {                             /* Moving towards crystal? */
@@ -248,16 +248,22 @@ TRACE
       double ratio, Q_order, k, kux,kuy,kuz;
       double kix,kiy,kiz;
       int    do_transmit = 0;
+      int row, col;
 
-      col = (int) ceil ( (z-zmin)/(SlabWidth +gap));  /* which slab hit ? */
-      row = (int) ceil ( (y-ymin)/(SlabHeight+gap));
-      if (RH != 0) tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
-      else tilth=0;
-      if (RV != 0) tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
-      else tiltv=0;
-
-      tilth=tiltH[col];//asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
-      tiltv=tiltV[row];//asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
+      col = ceil ( (z-zmin)/(SlabWidth +gap));  /* which slab hit ? */
+      row = ceil ( (y-ymin)/(SlabHeight+gap));
+      if (RH != 0) {
+	tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
+      } else {
+	tilth=0;
+	col=1;
+      }
+      if (RV != 0) {
+	tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
+      } else {
+	tiltv=0;
+	row=1;
+      }
 
       /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
       double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2.0;

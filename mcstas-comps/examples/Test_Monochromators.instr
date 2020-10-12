@@ -139,7 +139,7 @@ Monochromator_pol(zwidth = 0.10, yheight = 0.10,
 COMPONENT Mono4 =
 Monochromator_curved(width = 0.10, height = 0.10,
 		   mosaich = Moz, mosaicv = Moz,
-		   r0 = 0.9, Q=mono_q, gap=0)
+		     r0 = 0.9, Q=mono_q, gap=0,NH=1,NV=1)
      WHEN (Mono == 4) AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono5 =
