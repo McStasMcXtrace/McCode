@@ -402,7 +402,7 @@ AT (0,0,0.01) RELATIVE PREVIOUS
 
 COMPONENT GuideOut_dxdy = Monitor_nD(
   xwidth=0.03, yheight=0.2, restore_neutron=1,
-  options="dx dy, all auto, per cm2, slit")
+  options="dx dy, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT GuideOut_Phic = Monitor_nD(
