@@ -172,8 +172,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_Detector
-DEFINITION PARAMETERS (nx=128, ny=128)
-SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nx=128, int ny=128, xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
 threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
 verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
 yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
@@ -210,9 +210,9 @@ DECLARE
     MonitornD_Defines_type   DEFS;  /* for event files */
     MonitornD_Variables_type Vars;
 
-    double PSD_N[nx][ny];
-    double PSD_p[nx][ny];
-    double PSD_p2[nx][ny];
+    DArray2d PSD_N;
+    DArray2d PSD_p;
+    DArray2d PSD_p2;
     double *EAP; // Array of energies for the proton from the list, with zero added on top
     double *EAT; // Array of energies for the triton from the list, with zero added on top
     double *M1P1; // Centers Of Gravity of transfer of energy by proton
@@ -368,13 +368,9 @@ INITIALIZE
   }
 
 /* Gas tables  ************************************************************** */
-  for (i=0; i<nx; i++)
-   for (j=0; j<ny; j++)
-   {
-    PSD_N[i][j] = 0;
-    PSD_p[i][j] = 0;
-    PSD_p2[i][j] = 0;
-   }
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
 
   Table_Read(&Part_He_3_p,FN_Conv,1);
   nH_p = Part_He_3_p.rows;
@@ -617,7 +613,6 @@ INITIALIZE
 
 TRACE
 %{
-
   long   i,j;
   double RangeProton,RangeTriton;
   double rb=radius+zdepth; // radius of the back plane of the detector
@@ -637,7 +632,10 @@ TRACE
   double aa; // alpha coordinate (along the arc of the detector) of the absorption
   double t1,t2; // time for the first and second charged particles to the next wall
 
-  CountNeutrons += p;
+  #define HUGE_VAL DBL_MAX
+  
+  #pragma acc atomic 
+  CountNeutrons = CountNeutrons + p;
 
   RangeProton = PosAP[nH_p];
   RangeTriton = PosAT[nH_t];
@@ -646,7 +644,8 @@ TRACE
       fprintf(stderr,"PSD_Detector: %s: Component cannot deal with\n"
                      "              high-energy neutrons. Absorbing.\n",
                                     NAME_CURRENT_COMP);
-      VariousErrors+=1;
+      #pragma acc atomic
+      VariousErrors = VariousErrors + 1;
       ABSORB; }
   vt = sqrt( 2*0.025243*1.60218e-19 / ( 1.0086649 * 1.66053886e-27 ) ); // speed of 25.243 meV neutron (0.18 nm)
   NAvogadro = 6.022045e23; // Number of atoms per mol
@@ -680,8 +679,9 @@ TRACE
                          "              cylinder_intersect reported a later time\n"
                          "              for entering the cylinder than for leaving it.\n",
                                         NAME_CURRENT_COMP);
-          VariousErrors+=2;
-          ABSORB;
+	  #pragma acc atomic
+	  VariousErrors = VariousErrors + 2;
+	  ABSORB;
         }
       }
       if (cylinder_intersect(&tinb,&toutb,x,y,z,vx,vy,vz,rb,yheight+2*bordery)==0 || tinb==toutb) {
@@ -701,7 +701,8 @@ TRACE
                          "              cylinder_intersect reported a later time\n"
                          "              for entering the cylinder than for leaving it.\n",
                                         NAME_CURRENT_COMP);
-          VariousErrors+=2;
+	  #pragma acc atomic
+	  VariousErrors = VariousErrors + 2;
           ABSORB;
         }
       }
@@ -784,14 +785,16 @@ TRACE
                        "              A later time for entering the detector was calculated\n"
                        "              than for leaving it.\n",
                                       NAME_CURRENT_COMP);
-        VariousErrors+=4;
+	#pragma acc atomic
+	VariousErrors = VariousErrors + 4;
       }
       if ( Impossibility==1 && !(VariousErrors&8) ) {
         fprintf(stderr,"PSD_Detector: %s: Something strange happened. A neutron\n"
                        "              followed a path deemed impossible in the algorithm.\n",
                                       NAME_CURRENT_COMP);
         intersect=0;
-        VariousErrors+=8;
+	#pragma acc atomic
+	VariousErrors = VariousErrors + 8;
       }
     /* NB: at this point the neutron does not yet have to be absorbed
     within the sensitive volume of the detector - we still have to check
@@ -816,7 +819,8 @@ TRACE
                    "              'tunneled' into the detector, rather than just entering\n"
                    "              through the entrance window or one of the other sides.\n",
                                   NAME_CURRENT_COMP);
-    VariousErrors+=16;
+    #pragma acc atomic
+    VariousErrors = VariousErrors + 16;
   }
 
   if (intersect) {
@@ -900,8 +904,9 @@ TRACE
               fprintf(stderr,"PSD_Detector: %s: Oops. A neutron absorbed in the detector"
                              "              failed to send its reaction products towards the detector walls.\n",
                                             NAME_CURRENT_COMP);
-            VariousErrors+=32;
-            ABSORB;
+	      #pragma acc atomic
+	      VariousErrors = VariousErrors + 32;
+	      ABSORB;
             }
             if (cylinder_intersect(&tine,&toute,x,y,z,vxp,vyp,vzp,radius,yheight+2*bordery) ==0) {
               tine=-HUGE_VAL; // ugly fix for cases where the inner cylinder is missed
@@ -989,7 +994,8 @@ TRACE
                          "              One is supposed to be negative, the other positive,\n"
                          "              neither zero.\n",
                                         NAME_CURRENT_COMP,t1,t2);
-          VariousErrors+=64;
+	  #pragma acc atomic
+	  VariousErrors = VariousErrors + 64;
         }
         if ( t1<RangeProton) lp =  t1; // t1 is the time of flight to the next wall
         else lp = RangeProton; // with normalized speed (1 m/s) it is also the distance
@@ -1071,12 +1077,16 @@ TRACE
             // if the particles have deposited sufficient energy to be
             // recognised as a neutron event (and not a gamma event)
             double P = p*pa;
+	    double P2 = P*P;
             x = xCOG; y = yCOG; z = zCOG;
             SCATTER; // show point of detection for 3D view
-            PSD_N[i][j] ++;       // one neutron tallied in the appropriate pixel
-            PSD_p[i][j] += P;     // incremented by neutron weight
-            PSD_p2[i][j] += P*P;  // 2nd order moments
-
+	    #pragma acc atomic
+            PSD_N[i][j] = PSD_N[i][j] + 1;       // one neutron tallied in the appropriate pixel
+            #pragma acc atomic
+	    PSD_p[i][j] = PSD_p[i][j] + P;     // incremented by neutron weight
+	    #pragma acc atomic
+            PSD_p2[i][j] = PSD_p2[i][j] + P2;  // 2nd order moments
+	    
             DetCumul += P; /* probability that a signal was produced in the
               sensitive volume above the energy threshold */
             i = (long)floor(Energy);
@@ -1087,9 +1097,9 @@ TRACE
             }
             /* save event file if activated */
             if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
-              double pp;
+              double pp,P2;
               Vars.cp  = P;
-              Vars.cx  = x;
+	      Vars.cx  = x;
               Vars.cvx = vx;
               Vars.csx = sx;
               Vars.cy  = y;
@@ -1099,12 +1109,16 @@ TRACE
               Vars.cvz = vz;
               Vars.csz = sz;
               Vars.ct  = t;
+	      
+	      P2=P*P;
 
-              pp = Monitor_nD_Trace(&DEFS, &Vars);
-
-              Vars.Nsum++;
-              Vars.psum  += P;
-              Vars.p2sum += P*P;
+              pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
+	      #pragma acc atomic
+              Vars.Nsum = Vars.Nsum + 1;
+	      #pragma acc atomic
+              Vars.psum = Vars.psum + P;
+	      #pragma acc atomic
+              Vars.p2sum = Vars.p2sum + P2;
             }
             // initial version ABSORB detected neutrons.
             // This was removed if user wants to analyze the behaviour of the detector
