@@ -768,7 +768,7 @@ INITIALIZE
 TRACE
 %{
   double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n, sg;
-  double solid_angle, neutrontype;
+  double solid_angle, neutrontype, ntype;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z, nx, ny, nz, pmul=1;
   int    line;
   char   intersect=0;
@@ -874,18 +874,18 @@ TRACE
       my_s = line_info.my_s_v2_sum/(v*v)+line_info.my_inc;
       /* Total attenuation from scattering */
 	  lfree=0;
-      neutrontype = rand01();
+      ntype = rand01();
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
-      if (neutrontype < p_transmit) {
+      if (ntype < p_transmit) {
         neutrontype = 1;
         l = l_full; /* Passing through, full length */
         PROP_DT(t3);
-      } else if (neutrontype >= p_transmit && neutrontype < (p_transmit + p_inc)) {
+      } else if (ntype >= p_transmit && ntype < (p_transmit + p_inc)) {
         neutrontype = 2;
         l = v*dt;       /* Penetration in sample */
         PROP_DT(dt+t0); /* Point of scattering */
         SCATTER;
-      } else if (neutrontype >= p_transmit + p_inc) {
+      } else if (ntype >= p_transmit + p_inc) {
         neutrontype = 3;
         l = v*dt;       /* Penetration in sample */
         PROP_DT(dt+t0); /* Point of scattering */
