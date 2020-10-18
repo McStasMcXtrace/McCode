@@ -2020,14 +2020,12 @@ INITIALIZE
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       VarSqw.shape=3; thickness=0; concentric=0;
     }
   }
   else
-#endif
   if (xwidth && yheight && zdepth)  VarSqw.shape=1; /* box */
   else if (radius > 0 && yheight)        VarSqw.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       VarSqw.shape=2; /* sphere */
@@ -2240,10 +2238,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
-#ifndef OPENACC
       else if (VarSqw.shape == 3)
         intersect=off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-#endif
     } else {
       if (VarSqw.shape==0)
         intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius-thickness,
@@ -2255,10 +2251,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
           zdepth-2*thickness > 0 ?  zdepth-2*thickness : zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius-thickness);
-#ifndef OPENACC
       else if (VarSqw.shape == 3)
         intersect=off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-#endif
     }
   } else intersect=0;
 
@@ -2776,7 +2770,6 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef OPENACC
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
 
     if(VarSqw.shape==1)
@@ -2853,12 +2846,9 @@ MCDISPLAY
       circle("xz",0,0,0,radius);
       circle("yz",0,0,0,radius);
     } else if (VarSqw.shape == 3) {	/* OFF file */
-    #ifndef OPENACC
       off_display(offdata);
-    #endif
     }
   }
-#endif
 /* end MCDISPLAY */
 %}
 
