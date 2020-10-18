@@ -147,7 +147,7 @@ COMPONENT GuideA_sufffix = Slit(xwidth=0.05, yheight=0.05)
 AT (0,0,1+0.0001) RELATIVE Guide_Position
 EXTEND %{
   if (SCATTERED) Flag_anyshape_scatter++;
-  if (INSTRUMENT_GETPAR(Guide)== 7 && !Flag_anyshape_scatter) ABSORB;
+  if (_Guide == 7 && !Flag_anyshape_scatter) ABSORB;
 %}
   
 COMPONENT GuideH = Guide_honeycomb(
