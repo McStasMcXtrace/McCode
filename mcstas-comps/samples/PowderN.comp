@@ -539,9 +539,7 @@ DECLARE
 %{
   struct line_info_struct line_info;
   double *columns;
-#ifndef OPENACC
   off_struct offdata;
-#endif
   double tgt_x;
   double tgt_y;
   double tgt_z;
@@ -577,14 +575,12 @@ INITIALIZE
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       line_info.shape=3; thickness=0; concentric=0;
     }
   }
   else
-#endif
     if (xwidth && yheight && zdepth)  line_info.shape=1; /* box */
   else if (radius > 0 && yheight)        line_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       line_info.shape=2; /* sphere */
@@ -795,10 +791,8 @@ TRACE
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
-#ifndef OPENACC
       intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
       intersecti = 0;
-#endif
     }
   }
 
@@ -1040,10 +1034,8 @@ TRACE
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
-#ifndef OPENACC
           intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
           intersecti = 0;
-#endif
         }
 
         if (!intersect) {
@@ -1143,7 +1135,6 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef OPENACC
   if (line_info.V_0) {
 
     if (line_info.shape == 0) { /* cyl */
@@ -1218,6 +1209,5 @@ MCDISPLAY
       off_display(offdata);
     }
   }
-#endif
 %}
 END
