@@ -495,6 +495,7 @@ DECLARE
   int tidxstart;
   int tidxstop;
   int nEvals;
+  double pmul;
 %}
 
 INITIALIZE
@@ -561,7 +562,11 @@ INITIALIZE
   free(Imat);
 
 printf("Finished calculating probability distribution\n");
-
+  #if defined (USE_MPI)
+  pmul=1/mpi_node_count;
+  #else
+  pmul=1;
+  #endif
 %}
 TRACE
 %{
@@ -627,11 +632,7 @@ TRACE
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
-  p*=(xwidth*yheight/(0.1*0.12))*INorm2/mcget_ncount();
-
-  #if defined (USE_MPI)
-  p/=mpi_node_count;
-  #endif
+  p*=(xwidth*yheight/(0.1*0.12))*INorm2*pmul/mcget_ncount();
 
 %}
 FINALLY
