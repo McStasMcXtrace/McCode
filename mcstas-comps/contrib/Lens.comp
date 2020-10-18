@@ -125,10 +125,8 @@ SHARE
 %include "read_table-lib"
 %include "interoff-lib"
 
-#ifndef OPENACC
     off_struct offdata;
-#endif
-  
+
 /* Lens_roughness: function to rotate normal vector around axis for roughness
 *                 with specified tilt angle (deg)
    * RETURNS: rotated nx,ny,nz coordinates
@@ -242,14 +240,12 @@ INITIALIZE
       NAME_CURRENT_COMP, sigma_coh));
   bc=sqrt(fabs(sigma_coh)*100/4/PI)*1e-5;      /* bound coherent cross section */
   if (sigma_coh<0) bc *= -1;
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     /* init the OFF/PLY without centering and scaling */
 	  if (!off_init(geometry, 0, 0, 0, 1, &offdata))
       exit(printf("Lens: %s: FATAL: could not initialize geometry file %s [OFF/PLY]\n",
       NAME_CURRENT_COMP, geometry));
   }
-#endif
 
   phiy1 *= DEG2RAD; /* planes orientation */
   phiy2 *= DEG2RAD;
@@ -276,7 +272,6 @@ do {
   /* ======================== First face of the lens ========================== */
   /* determine intersection time */
   nx=ny=nz=0;
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     double t1=0,t0=0;
     Coords n, n0, n1;
@@ -290,7 +285,6 @@ do {
     }
     coords_get(n, &nx, &ny, &nz);
   } else
-#endif
   if (r1 && !focus1) {
     dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2, radius, 1, r1);
   } else if (!r1 && focus1){
@@ -374,7 +368,6 @@ do {
   /* ======================== Second face of the lens ========================= */
   /* determine intersection time to go to second surface */
   nx=ny=nz=0;
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     double t1=0,t0=0;
     Coords n, n0, n1;
@@ -388,7 +381,6 @@ do {
     }
     coords_get(n, &nx, &ny, &nz);
   } else
-#endif
   if (r2 && !focus2)
     dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, 1, -r2);
   else if (!r2 && focus2){
@@ -487,7 +479,6 @@ do {
 
     /* recompute new intersection time to go to second surface (velocity changed during scattering event) */
     nx=ny=nz=0;
-#ifndef OPENACC
     if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
       double t1=0,t0=0;
       Coords n, n0, n1;
@@ -501,7 +492,6 @@ do {
       }
       coords_get(n, &nx, &ny, &nz);
     } else
-#endif
     if (r2 && !focus2)
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, 1, -r2);
     else if (!r2 && focus2)
@@ -605,12 +595,10 @@ MCDISPLAY
   dist_parab2=0.0;
 
   /* draw circles to describe the 2 surfaces */
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }
   else {
-#endif
     if (r1 && !focus1) { /* sphere1 */
       theta00=asin(fabs((radius/2)/r1));
       if (r1<0 && r2<=0 && (-r1+r1*cos(theta00)>thickness/2) ){
@@ -807,9 +795,7 @@ MCDISPLAY
 			  line(0,radius,-thickness/2+dist_parab1,0,radius,thickness/2+dist_parab2);
 		  }
 	  }
-#ifndef OPENACC
   } /* end of not a OFF/PLY */
-#endif
 %}
 
 END
