@@ -73,7 +73,7 @@ SHARE
 #define PHONON_SIMPLE $Revision$
 #define T2E (1/11.605)   /* Kelvin to meV */
 
-#pragma acc routine seq
+#pragma acc routine 
 double nbose(double omega, double T)  /* Other name ?? */
   {
     double nb;
@@ -86,16 +86,53 @@ double nbose(double omega, double T)  /* Other name ?? */
 #define UNUSED (-1.11e30)
 #define MAXRIDD 60
 
-#pragma acc routine seq
+void fatalerror_cpu(char *s)
+  {
+    fprintf(stderr,"%s \n",s);
+    exit(1);
+  }
+ 
+#pragma acc routine 
 void fatalerror(char *s)
   {
   #ifndef OPENACC	
-    fprintf(stderr,"%s \n",s);
-    exit(1);
+    fatalerror_cpu(s);
   #endif
   }
- 
-#pragma acc routine seq
+
+  #pragma acc routine
+  double omega_q(double* parms)
+    {
+      /* dispersion in units of meV  */
+      double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
+      double q, qx, qy, qz, Jq, res_phonon, res_neutron;
+      double ah, a, c;
+
+      vf=parms[0];
+      vi=parms[1];
+      vv_x=parms[2];
+      vv_y=parms[3];
+      vv_z=parms[4];
+      vi_x=parms[5];
+      vi_y=parms[6];
+      vi_z=parms[7];
+      a   =parms[8];
+      c   =parms[9];
+      ah=a/2.0;
+
+      qx=V2K*(vi_x-vf*vv_x);
+      qy=V2K*(vi_y-vf*vv_y);
+      qz=V2K*(vi_z-vf*vv_z);
+       q=sqrt(qx*qx+qy*qy+qz*qz);
+      Jq=2*(cos(ah*(qx+qy))+cos(ah*(qx-qy))+cos(ah*(qx+qz))+cos(ah*(qx-qz))
+             +cos(ah*(qy+qz))+cos(ah*(qy-qz)) );
+      res_phonon=c/a*sqrt(12-Jq);
+      res_neutron = fabs(VS2E*(vi*vi-vf*vf));
+
+      return (res_phonon - res_neutron);
+    }
+
+
 double zridd(double (*func)(double*), double x1, double x2, double *parms, double xacc)
     {
       int j;
@@ -160,8 +197,74 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       return 0.0;  /* Never get here */
     }
 
+#pragma acc routine 
+double zridd_gpu(double x1, double x2, double *parms, double xacc)
+    {
+      int j;
+      double ans, fh, fl, fm, fnew, s, xh, xl, xm, xnew;
+
+      parms[0]=x1;
+      fl=omega_q(parms);
+      parms[0]=x2;
+      fh=omega_q(parms);
+      if (fl*fh >= 0)
+      {
+        if (fl==0) return x1;
+        if (fh==0) return x2;
+        return UNUSED;
+      }
+      else
+      {
+        xl=x1;
+        xh=x2;
+        ans=UNUSED;
+        for (j=1; j<MAXRIDD; j++)
+        {
+          xm=0.5*(xl+xh);
+          parms[0]=xm;
+          fm=omega_q(parms);
+          s=sqrt(fm*fm-fl*fh);
+          if (s == 0.0)
+            return ans;
+          xnew=xm+(xm-xl)*((fl >= fh ? 1.0 : -1.0)*fm/s);
+          if (fabs(xnew-ans) <= xacc)
+            return ans;
+          ans=xnew;
+          parms[0]=ans;
+          fnew=omega_q(parms);
+          if (fnew == 0.0) return ans;
+          if (fabs(fm)*SIGN(fnew) != fm)
+          {
+            xl=xm;
+            fl=fm;
+            xh=ans;
+            fh=fnew;
+          }
+          else
+            if (fabs(fl)*SIGN(fnew) != fl)
+            {
+              xh=ans;
+              fh=fnew;
+            }
+            else
+              if(fabs(fh)*SIGN(fnew) != fh)
+              {
+                xl=ans;
+                fl=fnew;
+              }
+              else
+                fatalerror("never get here in zridd");
+          if (fabs(xh-xl) <= xacc)
+            return ans;
+        }
+        fatalerror("zridd exceeded maximum iterations");
+      }
+      return 0.0;  /* Never get here */
+    }
+
+ 
 #define ROOTACC 1e-8
-#pragma acc routine seq
+
   int findroots(double brack_low, double brack_mid, double brack_high, double *list, int* index, double (*f)(double*), double *parms)
     {
       double root,range=brack_mid-brack_low;
@@ -183,37 +286,30 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
         list[(*index)++]=root;
       }
     }
-
-  double omega_q(double* parms)
+  
+#pragma acc routine 
+  int findroots_gpu(double brack_low, double brack_mid, double brack_high, double *list, int* index, double *parms)
     {
-      /* dispersion in units of meV  */
-      double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
-      double q, qx, qy, qz, Jq, res_phonon, res_neutron;
-      double ah, a, c;
+      double root,range=brack_mid-brack_low;
+      int i, steps=100;
 
-      vf=parms[0];
-      vi=parms[1];
-      vv_x=parms[2];
-      vv_y=parms[3];
-      vv_z=parms[4];
-      vi_x=parms[5];
-      vi_y=parms[6];
-      vi_z=parms[7];
-      a   =parms[8];
-      c   =parms[9];
-      ah=a/2.0;
-
-      qx=V2K*(vi_x-vf*vv_x);
-      qy=V2K*(vi_y-vf*vv_y);
-      qz=V2K*(vi_z-vf*vv_z);
-       q=sqrt(qx*qx+qy*qy+qz*qz);
-      Jq=2*(cos(ah*(qx+qy))+cos(ah*(qx-qy))+cos(ah*(qx+qz))+cos(ah*(qx-qz))
-             +cos(ah*(qy+qz))+cos(ah*(qy-qz)) );
-      res_phonon=c/a*sqrt(12-Jq);
-      res_neutron = fabs(VS2E*(vi*vi-vf*vf));
-
-      return (res_phonon - res_neutron);
+     for (i=0; i<steps; i++)
+     {
+       root = zridd_gpu(brack_low+range*i/(int)steps,
+                   brack_low+range*(i+1)/(int)steps,
+                   (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+      }
+     }
+      root = zridd_gpu(brack_mid, brack_high, (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+      }
     }
+  
 #undef UNUSED
 #undef MAXRIDD
 #endif
@@ -311,7 +407,11 @@ TRACE
       parms[7]=vz_i;
       parms[8]=a;
       parms[9]=c;
+    #ifndef OPENACC
     findroots(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q, parms);
+    #else
+    findroots_gpu(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, parms);
+    #endif
     index=(int)floor(rand01()*nf);
     v_f=vf_list[index];
     parms[0]=v_f-DV;
