@@ -125,8 +125,6 @@ SHARE
 %include "read_table-lib"
 %include "interoff-lib"
 
-    off_struct offdata;
-
 /* Lens_roughness: function to rotate normal vector around axis for roughness
 *                 with specified tilt angle (deg)
    * RETURNS: rotated nx,ny,nz coordinates
@@ -226,6 +224,7 @@ DECLARE
   double my_a_v;
   double mean_n;
   double events;
+  off_struct offdata;
 %}
 
 INITIALIZE
