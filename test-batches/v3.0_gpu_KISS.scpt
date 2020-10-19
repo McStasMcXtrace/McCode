@@ -39,5 +39,5 @@ cd $HOME
 echo done on GPU with split
 #echo submitting multi-GPU job
 # 
-bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
+#bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
 bsub < $HOME/McCode/test-batches/plots_gpu.scpt 
