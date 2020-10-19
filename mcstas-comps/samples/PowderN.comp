@@ -780,6 +780,12 @@ TRACE
   int    flag_warning = line_info.flag_warning;
   double dq = line_info.dq;
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata;
+  #end
+  
   if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
@@ -791,10 +797,10 @@ TRACE
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
-      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
       intersecti = 0;
     }
-  }
+  } 
 
   if(intersect && t3 >0) {
 
@@ -965,7 +971,7 @@ TRACE
 				intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
 				intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
 			} else if (line_info.shape == 3) {
-				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
 				intersecti = 0;
 			}
 
@@ -1034,7 +1040,7 @@ TRACE
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
-          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
           intersecti = 0;
         }
 
