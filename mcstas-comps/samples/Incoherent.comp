@@ -240,6 +240,12 @@ TRACE
   double mc_trans, p_trans, mc_scatt, p_scatt, ws;
   double p_mult=1;
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata;
+  #endif
+  
   do { /* Main interaction loop. Ends with intersect=0 */
 
     /* Intersection neutron trajectory / sample (sample surface) */
@@ -250,7 +256,7 @@ TRACE
     else if (VarsInc.shape == 2)
       intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
     else if (VarsInc.shape == 3)
-      intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+      intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
     if (intersect) {
       int flag_ishollow = 0;
       if (thickness>0) {

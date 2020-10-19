@@ -1099,6 +1099,12 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata;
+  #endif
+  
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1107,7 +1113,7 @@ TRACE
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
   else if (hkl_info.shape == 3)
-      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
 
   if(intersect)
@@ -1143,7 +1149,7 @@ TRACE
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
       else if (hkl_info.shape == 3)
-	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
