@@ -113,12 +113,17 @@ TRACE
   int intersect=0;
   int counter=0;
   /* main loop for multiple reflections */
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata;
+  #endif
   do {
     double t0=0, t3=0, dt=0;
     Coords n0, n3, n={0,0,0};
     /* determine intersections with object */
     intersect = off_intersect(&t0, &t3, &n0, &n3,
-       x,y,z, vx, vy, vz, offdata );
+       x,y,z, vx, vy, vz, thread_offdata );
 
     /* get the smallest positive */
     if (t0 > 0) { dt = t0; n=n0; }

@@ -343,6 +343,12 @@ TRACE
   Vars.UserVariable2 = user2;
   Vars.UserVariable3 = user3;
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata;
+  #endif
+  
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
@@ -351,10 +357,10 @@ TRACE
   {
     /* determine intersections with object */
     intersect = off_intersect_all(&t0, &t1, NULL, NULL,
-       x,y,z, vx, vy, vz, &offdata );
+       x,y,z, vx, vy, vz, &thread_offdata );
     if (Vars.Flag_mantid) {
       if(intersect) {
-        Vars.OFF_polyidx=(offdata.intersects[offdata.nextintersect]).index;
+        Vars.OFF_polyidx=(thread_offdata.intersects[thread_offdata.nextintersect]).index;
       } else {
         Vars.OFF_polyidx=-1;
       }
