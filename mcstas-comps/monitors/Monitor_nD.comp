@@ -346,7 +346,7 @@ TRACE
   #ifdef OPENACC
   off_struct thread_offdata = offdata;
   #else
-  #define thread_offdata offdata;
+  #define thread_offdata offdata
   #endif
   
   /* this is done automatically

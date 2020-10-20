@@ -783,7 +783,7 @@ TRACE
   #ifdef OPENACC
   off_struct thread_offdata = offdata;
   #else
-  #define thread_offdata offdata;
+  #define thread_offdata offdata
   #endif
   
   if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {

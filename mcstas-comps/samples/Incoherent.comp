@@ -243,7 +243,7 @@ TRACE
   #ifdef OPENACC
   off_struct thread_offdata = offdata;
   #else
-  #define thread_offdata offdata;
+  #define thread_offdata offdata
   #endif
   
   do { /* Main interaction loop. Ends with intersect=0 */

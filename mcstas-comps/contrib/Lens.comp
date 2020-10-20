@@ -269,7 +269,7 @@ double alpha1, beta1, theta1, theta2; /* angles for refraction computation */
 #ifdef OPENACC
 off_struct thread_offdata = offdata;
 #else
-#define thread_offdata offdata;
+#define thread_offdata offdata
 #endif
 
 /* iterate two faces intersection until no more is possible */
