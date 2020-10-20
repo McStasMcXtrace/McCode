@@ -209,7 +209,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             test.compiled = True
             test.compiletime = 0
         else:
-            if test.testnb > 0 or args.compileall is not None:
+            if test.testnb > 0 or args.compileall:
                 log = LineLogger()
                 t1 = time.time()
                 cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
