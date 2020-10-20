@@ -209,23 +209,25 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             test.compiled = True
             test.compiletime = 0
         else:
-            log = LineLogger()
-            t1 = time.time()
-            cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
-            utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
-            t2 = time.time()
-            test.compiled = os.path.exists(binfile)
-            test.compiletime = t2 - t1
+            if test.testnb > 0 or args.compileall is not None:
+                log = LineLogger()
+                t1 = time.time()
+                cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
+                utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
+                t2 = time.time()
+                test.compiled = os.path.exists(binfile)
+                test.compiletime = t2 - t1
 
-            # log to terminal
-            if test.compiled:
-                formatstr = "%-" + "%ds: " % maxnamelen + \
-                    "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
-                logging.info(formatstr % test.get_display_name())
+                # log to terminal
+                if test.compiled:
+                    formatstr = "%-" + "%ds: " % maxnamelen + \
+                      "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
+                    logging.info(formatstr % test.get_display_name())
+                else:
+                    formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
+                    logging.info(formatstr % test.instrname + cmd)
             else:
-                formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
-                logging.info(formatstr % test.instrname + cmd)
-                            
+                logging.info("Skipping compile of " + test.instrname)
         # save (incomplete) test results to disk
         test.save(infolder=join(testdir, test.instrname))
 
@@ -576,7 +578,7 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, mpi
+    global ncount, mpi, compileall
     if args.ncount:
         ncount = args.ncount[0]
     else:
@@ -615,6 +617,7 @@ if __name__ == '__main__':
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
     parser.add_argument('--versions', action='store_true', help='display local versions info')
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
+    parser.add_argument('--compileall', action='store_true', help='Also attempt compile on instruments without a test')
 
     args = parser.parse_args()
 
