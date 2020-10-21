@@ -1,0 +1,176 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Flex_monitor_1D
+*
+* %I
+* Written by: Erik B Knudsen & Peter Willendrup
+* Date: Oct '20
+* Origin: DTU Physics
+*
+* Flexible monitor.
+*
+* %D
+* A square 2D single monitor that measures intensity (or something else) as a function of two selectable variables or parameters.
+*
+* Example: Flex_monitor_2D(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nU1=20, nU2=20, filename="Output", ustring1="x", ustring2="y", Umin1=-.1, Umax1=.1, Umin2=-.1, Umax2=.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax.
+* yheight: [m]          Height of detector. Overrides ymin, ymax.
+* Umin1: [AA]           Minimum U1 to detect
+* Umax1: [AA]           Maximum U1 to detect
+* nU1: [1]              Number of U1 channels
+* Umin2: [AA]           Minimum U1 to detect
+* Umax2: [AA]           Maximum U1 to detect
+* nU2: [1]              Number of U1 channels
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* uid1: [1]             Integer index of uservar to be monitored. Overrides ustring1.
+* uid2: [1]             Integer index of uservar to be monitored. Overrides ustring2.
+* ustring1: [string]    Name of variable U1 (user or neutron state parameter as a string) to be monitored.
+* ustring2: [string]    Name of variable U2 (user or neutron state parameter as a string) to be monitored.
+* signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
+* nowritefile: [1]      Flag to indicate if monitor should not save any data.
+*
+* OUTPUT PARAMETERS:
+*
+* U_N: []               Array of neutron counts
+* U_p: []               Array of neutron weight counts
+* U_p2: []              Array of second moments
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Flex_monitor_2D
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nU1=20, nU2=20, string filename=0,
+  xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
+		    Umin1, Umax1, uid1=-1, string ustring1="", Umin2, Umax2, uid2=-1, string ustring2="",restore_neutron=0, string signal="p", int nowritefile=0)
+
+OUTPUT PARAMETERS (U_N, U_p, U_p2)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray2d U_N;
+  DArray2d U_p;
+  DArray2d U_p2;
+
+  char username1[128];
+  char username2[128];
+  char signalname[128];
+%}
+
+INITIALIZE
+%{
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("Flex_monitor_2D: %s: Null detection area !\n"
+      "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+      NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
+  U_N =  create_darr2d(nU1,nU2);
+  U_p =  create_darr2d(nU1,nU2);
+  U_p2 = create_darr2d(nU1,nU2);
+
+  if(uid1!=-1){
+    snprintf(username1,127,"uservar%d",uid1);
+  }else{
+    snprintf(username1,127,"%s",ustring1);
+  }
+  if(uid2!=-1){
+    snprintf(username2,127,"uservar%d",uid2);
+  }else{
+    snprintf(username2,127,"%s",ustring2);
+  }
+  snprintf(signalname,127,"%s",signal);
+
+
+%}
+
+TRACE
+%{
+  double U1,U2;
+  int suc1,suc2,suc3;
+  PROP_Z0;
+  if (x>xmin && x<xmax && y>ymin && y<ymax)
+  {
+    if(uid1!=-1){
+      U1 = particle_getuservar_byid(_particle,uid1,&suc1);
+    }else{
+      U1 = particle_getvar(_particle,ustring1,&suc1);
+    }
+    if(uid2!=-1){
+      U2 = particle_getuservar_byid(_particle,uid2,&suc2);
+    }else{
+      U2 = particle_getvar(_particle,ustring2,&suc2);
+    }
+    
+    int i = floor((U1-Umin1)*nU1/(Umax1-Umin1));
+    int j = floor((U2-Umin2)*nU2/(Umax2-Umin2));
+    if(!suc1 && i >= 0 && i < nU1)
+    {
+      if(!suc2 && j >= 0 && j < nU2)
+	{
+	  double pp=particle_getvar(_particle,signal,&suc3);
+	  double p2 = pp*pp;
+          #pragma acc atomic
+	  U_N[i][j] = U_N[i][j] +1;
+          #pragma acc atomic
+	  U_p[i][j] = U_p[i][j] + pp;
+          #pragma acc atomic
+	  U_p2[i][j] = U_p2[i][j] + p2;
+	  SCATTER;
+	}
+    }
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  if (!nowritefile) {
+    DETECTOR_OUT_2D(
+      "Flex monitor 2D",
+      username1, username2,
+      Umin1, Umax1, Umin1, Umin2, nU1, nU2,
+      &U_N[0][0],&U_p[0][0],&U_p2[0][0],
+      filename);
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr1d(U_N);
+  destroy_darr1d(U_p);
+  destroy_darr1d(U_p2);
+%}
+
+MCDISPLAY
+%{
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
