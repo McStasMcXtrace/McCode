@@ -1027,9 +1027,14 @@ INITIALIZE
   /*this should not be in hkl_info*/
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-     	       	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+    #ifndef USE_OFF
+    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
+    exit(-1);
+    #else
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3;
-      }	
+    }
+    #endif
   }
   else
   if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
@@ -1100,7 +1105,9 @@ TRACE
   double theta, phi;            /* rotation angles for curved lattice option */
 
   #ifdef OPENACC
+  #ifdef USE_OFF
   off_struct thread_offdata = offdata;
+  #endif
   #else
   #define thread_offdata offdata
   #endif
@@ -1112,8 +1119,10 @@ TRACE
     intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+  #ifdef USE_OFF
   else if (hkl_info.shape == 3)
       intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
+  #endif
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
 
   if(intersect)
@@ -1148,8 +1157,10 @@ TRACE
         intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+      #ifdef USE_OFF
       else if (hkl_info.shape == 3)
 	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
+      #endif
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
