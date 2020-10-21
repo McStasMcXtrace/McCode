@@ -2161,42 +2161,60 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("}");
 
   /*generate uservar return functions*/
-  if (list_len(instr->user_vars)){
-    //get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND")) {
-    cout("/*Generated user variable handlers:*/");
-    cout("");
-    List_handle liter;
-    liter = list_iterate(instr->user_vars);
-    cout("double particle_getuservar(_class_particle *p, char *name, int *suc){");
-    cout("  int s=1;");
-    cout("  double rval=0;");
-    char *var;
-    while(var = list_next(liter)) {
-      coutf("  if(strcmp(\"%s\",name)){rval=p->%s;s=0;}",var,var);
-    }
-    list_iterate_end(liter);
-    cout("  if (suc!=0x0 && !s) {*suc=0;}");
-    cout("  return rval;");
-    cout("}");
-    cout("");
-
-    liter = list_iterate(instr->user_vars);
-    cout("double particle_getuservar_byid(_class_particle *p, int id, int *suc){");
-    cout("  int s=1;");
-    cout("  double rval=0;");
-    cout("  switch(id){");
-    int jvar=0;
-    while(var = list_next(liter)) {
-      coutf("  case %d: {rval=p->%s;s=1;break;}",jvar++,var);
-    }
-    cout("  }");
-    cout("  if (suc!=0x0 && !s) {*suc=0;}");
-    cout("  return rval;");
-    cout("}");
-    cout("");
+  cout("/*Generated user variable handlers:*/");
+  cout("");
+  List_handle liter;
+  liter = list_iterate(instr->user_vars);
+  cout("#pragma acc routine");
+  cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
+  cout("  int s=1;");
+  cout("  double rval=0;");
+  char *var;
+  cout("  if(str_comp(\"x\",name)){rval=p->x;s=0;}");
+  cout("  if(str_comp(\"y\",name)){rval=p->y;s=0;}");
+  cout("  if(str_comp(\"z\",name)){rval=p->z;s=0;}");
+#if MCCODE_PROJECT == 1   /* neutron */
+  cout("  if(str_comp(\"vx\",name)){rval=p->vx;s=0;}");
+  cout("  if(str_comp(\"vy\",name)){rval=p->vy;s=0;}");
+  cout("  if(str_comp(\"vz\",name)){rval=p->vz;s=0;}");
+  cout("  if(str_comp(\"sx\",name)){rval=p->sx;s=0;}");
+  cout("  if(str_comp(\"sy\",name)){rval=p->sy;s=0;}");
+  cout("  if(str_comp(\"sz\",name)){rval=p->sz;s=0;}");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("  if(str_comp(\"phi\",name)){rval=p->phi;s=0;}");
+  cout("  if(str_comp(\"kx\",name)){rval=p->kx;s=0;}");
+  cout("  if(str_comp(\"ky\",name)){rval=p->ky;s=0;}");
+  cout("  if(str_comp(\"kz\",name)){rval=p->kz;s=0;}");
+  cout("  if(str_comp(\"Ex\",name)){rval=p->Ex;s=0;}");
+  cout("  if(str_comp(\"Ey\",name)){rval=p->Ey;s=0;}");
+  cout("  if(str_comp(\"Ez\",name)){rval=p->Ez;s=0;}");
+#endif
+  cout("  if(str_comp(\"t\",name)){rval=p->t;s=0;}");
+  cout("  if(str_comp(\"p\",name)){rval=p->p;s=0;}");
+  while(var = list_next(liter)) {
+    coutf("  if(str_comp(\"%s\",name)){rval=p->%s;s=0;}",var,var);
   }
+  list_iterate_end(liter);
+  cout("  if (suc!=0x0 && !s) {*suc=0;}");
+  cout("  return rval;");
+  cout("}");
+  cout("");
 
-
+  liter = list_iterate(instr->user_vars);
+  cout("#pragma acc routine");
+  cout("double particle_getuservar_byid(_class_particle *p, int id, int *suc){");
+  cout("  int s=1;");
+  cout("  double rval=0;");
+  cout("  switch(id){");
+  int jvar=0;
+  while(var = list_next(liter)) {
+    coutf("  case %d: {rval=p->%s;s=1;break;}",jvar++,var);
+  }
+  cout("  }");
+  cout("  if (suc!=0x0 && !s) {*suc=0;}");
+  cout("  return rval;");
+  cout("}");
+  cout("");
 
   /* embed runtime files */
   if(instr->include_runtime)
