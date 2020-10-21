@@ -98,7 +98,7 @@ int str_comp(char *str1, char *str2) {
     str1++;
     str2++;
   }
-  return !(*str1 - *str2);
+  return (*str1 - *str2);
 }
 
 #pragma acc routine seq
