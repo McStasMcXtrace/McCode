@@ -243,7 +243,9 @@ DECLARE
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
   MCDETECTOR detector;
+  #ifdef USE_OFF
   off_struct offdata;
+  #endif
 %}
 
 INITIALIZE
@@ -310,8 +312,13 @@ INITIALIZE
       yheight=2*radius;
     }
   }
+
   int offflag=0;
-  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) {
+    #ifndef USE_OFF
+    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
+    exit(-1);
+    #else
     if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
              "            Defaulting to normal Monitor dimensions.\n",
@@ -320,6 +327,8 @@ INITIALIZE
     } else {
       offflag=1;
     }
+    #endif
+  }
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax &&
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
@@ -367,7 +376,9 @@ TRACE
   char    Flag_Restore = 0;
 
   #ifdef OPENACC
+  #ifdef USE_OFF
   off_struct thread_offdata = offdata;
+  #endif
   #else
   #define thread_offdata offdata
   #endif
@@ -375,7 +386,7 @@ TRACE
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
-
+  #ifdef USE_OFF
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
@@ -390,6 +401,7 @@ TRACE
     }
   }
   else
+  #endif
     if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
             || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
   {
