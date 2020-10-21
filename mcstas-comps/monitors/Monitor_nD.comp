@@ -268,7 +268,7 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
-  /* transfer or "zero" username- and user variable strings to Vars struct*/
+  /* transfer, "zero", and check username- and user variable strings to Vars struct*/
   strncpy(Vars.UserName1,
     username1 && strlen(username1) && strcmp(username1, "0") && strcmp(username1, "NULL") ?
     username1 : "", 128);
@@ -278,17 +278,32 @@ INITIALIZE
   strncpy(Vars.UserName3,
     username3 && strlen(username3) && strcmp(username3, "0") && strcmp(username3, "NULL") ?
     username3 : "", 128);
-  strncpy(Vars.UserVariable1,
-    user1 && strlen(user1) && strcmp(user1, "0") && strcmp(user1, "NULL") ?
-    user1 : "", 128);
-  strncpy(Vars.UserVariable2,
-    user2 && strlen(user2) && strcmp(user2, "0") && strcmp(user2, "NULL") ?
-    user2 : "", 128);
-  strncpy(Vars.UserVariable3,
-    user3 && strlen(user3) && strcmp(user3, "0") && strcmp(user3, "NULL") ?
-    user3 : "", 128);
-
-if (radius) {
+  if(user1 && strlen(user1) && strcmp(user1, "0") && strcmp(user1, "NULL")){
+    strncpy(Vars.UserVariable1,user1,128);
+    int fail;_class_particle testparticle;
+    particle_getvar(&testparticle,Vars.UserVariable1,&fail);
+    if(fail){
+      fprintf(stderr,"Warning (%s): user1=%s is unknown. The signal will not be resolved - this is likely not what you intended.\n",NAME_CURRENT_COMP,user1);
+    }
+  }
+  if(user2 && strlen(user2) && strcmp(user2, "0") && strcmp(user2, "NULL")){
+    strncpy(Vars.UserVariable2,user2,128);
+    int fail;_class_particle testparticle;
+    particle_getvar(&testparticle,Vars.UserVariable2,&fail);
+    if(fail){
+      fprintf(stderr,"Warning (%s): user2=%s is unknown. The signal will not be resolved - this is likely not what you intended.\n",NAME_CURRENT_COMP,user2);
+    }
+  }
+  if(user3 && strlen(user3) && strcmp(user3, "0") && strcmp(user3, "NULL")){
+    strncpy(Vars.UserVariable3,user3,128);
+    int fail;_class_particle testparticle;
+    particle_getvar(&testparticle,Vars.UserVariable3,&fail);
+    if(fail){
+      fprintf(stderr,"Warning (%s): user3=%s is unknown. The signal will not be resolved - this is likely not what you intended.\n",NAME_CURRENT_COMP,user3);
+    }
+  }
+  
+  if (radius) {
     xwidth = zdepth = 2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana") && !strstr(Vars.option, "sphere"))
       strcat(Vars.option, " banana");

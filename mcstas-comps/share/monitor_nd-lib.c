@@ -993,11 +993,11 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (_particle->z != 0) XY = RAD2DEG*asin(_particle->y/_particle->z); }
         else
-          if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = particle_getvar(_particle,Vars->UserVariable1,NULL);
+          if (Set_Vars_Coord_Type == DEFS->COORD_USER1) {int fail; XY = particle_getvar(_particle,Vars->UserVariable1,&fail); if(fail) XY=0; }
         else
-          if (Set_Vars_Coord_Type == DEFS->COORD_USER2) XY = particle_getvar(_particle,Vars->UserVariable2,NULL);
+          if (Set_Vars_Coord_Type == DEFS->COORD_USER2) {int fail; XY = particle_getvar(_particle,Vars->UserVariable2,&fail); if(fail) XY=0; }
         else
-          if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = particle_getvar(_particle,Vars->UserVariable3,NULL);
+          if (Set_Vars_Coord_Type == DEFS->COORD_USER3) {int fail; XY = particle_getvar(_particle,Vars->UserVariable3,&fail); if(fail) XY=0; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID && !Vars->Flag_Auto_Limits) {
           /* compute the PixelID from previous coordinates 
