@@ -965,10 +965,8 @@ void PGderotate(double *nx, double *ny, double *nz, double a, double csx, double
 DECLARE
 %{
   struct hkl_info_struct hkl_info;
-#ifndef OPENACC
   off_struct             offdata;
   struct hkl_data *hkl_list;
-#endif
   struct tau_data tau_list[MCSX_REFL_SLIST_SIZE];
 %}
 
@@ -1028,14 +1026,12 @@ INITIALIZE
 
   /*this should not be in hkl_info*/
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
      	       	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3;
       }	
   }
   else
-#endif    
   if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
   else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
@@ -1103,6 +1099,12 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata
+  #endif
+  
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
     intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1110,10 +1112,8 @@ TRACE
     intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
-#ifndef OPENACC
   else if (hkl_info.shape == 3)
-      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-#endif
+      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
 
   if(intersect)
@@ -1148,10 +1148,8 @@ TRACE
         intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
-#ifndef OPENACC      
       else if (hkl_info.shape == 3)
-	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-#endif
+	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
@@ -1442,7 +1440,6 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef OPENACC  
   if (hkl_info.shape == 0) {	/* cylinder */
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
@@ -1481,6 +1478,5 @@ MCDISPLAY
   else if (hkl_info.shape == 3) {	/* OFF file */
     off_display(offdata);
   }
-#endif
 %}
 END

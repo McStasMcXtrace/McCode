@@ -32,7 +32,7 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 export LD_LIBRARY_PATH=/appl/gcc/8.3.0/openmpi/4.0.1-lsf10/lib:$LD_LIBRARY_PATH
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e8 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_multiGPU_PGCC_TESLA_KISS --mpi=2
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_multiGPU_PGCC_TESLA_KISS --mpi=2
 
 cd $HOME
 

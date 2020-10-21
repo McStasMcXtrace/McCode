@@ -205,7 +205,7 @@ ROTATED (0,monoc_ang,0) ABSOLUTE
 COMPONENT Monoc=Monochromator_curved(
     zwidth=0.015, yheight=0.1, gap=0.0005,
     NH=7, NV=1, mosaich=25.0, mosaicv=25.0,
-    reflect="HOPG.rfl", /*transmit="HOPG.trm",*/
+    reflect="HOPG.rfl", transmit="HOPG.trm",
     DM=monoc_d, RV=0, RH=0)
 AT (0,0,0) RELATIVE Pos_2
 

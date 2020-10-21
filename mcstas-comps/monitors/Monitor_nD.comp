@@ -243,9 +243,7 @@ DECLARE
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
   MCDETECTOR detector;
-#ifndef OPENACC
   off_struct offdata;
-#endif
 %}
 
 INITIALIZE
@@ -313,7 +311,6 @@ INITIALIZE
     }
   }
   int offflag=0;
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
     if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
@@ -323,19 +320,16 @@ INITIALIZE
     } else {
       offflag=1;
     }
-#endif
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax &&
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
-#ifndef OPENACC
   if (Vars.Flag_OFF) {
     offdata.mantidflag=Vars.Flag_mantid;
     offdata.mantidoffset=Vars.Coord_Min[Vars.Coord_Number-1];
   }
-#endif
 
   if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
     strncpy(Vars.Mon_File, filename, 128);
@@ -372,26 +366,30 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata
+  #endif
+  
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
 
- #ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
     intersect = off_intersect_all(&t0, &t1, NULL, NULL,
-       x,y,z, vx, vy, vz, &offdata );
+       x,y,z, vx, vy, vz, &thread_offdata );
     if (Vars.Flag_mantid) {
       if(intersect) {
-        Vars.OFF_polyidx=(offdata.intersects[offdata.nextintersect]).index;
+        Vars.OFF_polyidx=(thread_offdata.intersects[thread_offdata.nextintersect]).index;
       } else {
         Vars.OFF_polyidx=-1;
       }
     }
   }
   else
-#endif
     if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
             || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
   {
@@ -439,11 +437,7 @@ TRACE
   {
     if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND)
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
-#ifndef OPENACC
 	|| (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
-#else
-      )
-#endif
     {
       /* check if we have to remove the top/bottom with BANANA shape */
       if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
@@ -548,14 +542,12 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     off_display(offdata);
   } else {
     Monitor_nD_McDisplay(&DEFS, &Vars);
   }
-#endif
 %}
 
 END

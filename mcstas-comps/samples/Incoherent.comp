@@ -149,11 +149,9 @@ INITIALIZE
 %{
   VarsInc.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-#ifndef OPENACC
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       VarsInc.shape=3; thickness=0; concentric=0;
     }
-#endif
   }
   else if (xwidth && yheight && zdepth)  VarsInc.shape=1; /* box */
   else if (radius > 0 &&  yheight)       VarsInc.shape=0; /* cylinder */
@@ -242,6 +240,12 @@ TRACE
   double mc_trans, p_trans, mc_scatt, p_scatt, ws;
   double p_mult=1;
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata
+  #endif
+  
   do { /* Main interaction loop. Ends with intersect=0 */
 
     /* Intersection neutron trajectory / sample (sample surface) */
@@ -251,10 +255,8 @@ TRACE
       intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
     else if (VarsInc.shape == 2)
       intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
-#ifndef OPENACC
     else if (VarsInc.shape == 3)
-      intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
-#endif
+      intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
     if (intersect) {
       int flag_ishollow = 0;
       if (thickness>0) {
@@ -426,12 +428,10 @@ TRACE
 
 MCDISPLAY
 %{
-#ifndef OPENACC  
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }
   else
-#endif
     if (radius > 0 &&  yheight) {	/* cylinder */
       cylinder(0,0,0,radius,yheight,0, 0,1,0);
       cylinder(0,0,0,radius-thickness,yheight,0, 0,1,0);

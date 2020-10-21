@@ -131,32 +131,32 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth: [m]           Width of detector opening, in the case of a flat box
-* radius: [m]           Radius of detector for cylindrical/banana shape
-* awidth: [m]           Width of detector opening along the horizontal arc of the detector, measured along the inside arc of the sensitive volume in the case of a 'banana' detector
-* angle: [deg]          Angular opening of detector in the case of a 'banana' detector, then overrides awidth parameter
-* yheight: [m]          Height of detector opening
-* zdepth: [m]           Depth of the sensitive volume of the detector
-* nx: [1]               Number of pixel columns
-* ny: [1]               Number of pixel rows
-* borderx: [m]          Width of (gas-filled) border on the side of the detector
-* bordery: [m]          Height of (gas-filled) border on the top/bottom of the detector giving rise to various border effects. Set to -2 to obtain the height of one pixel, -1 for the depth of the detector (default), or specify a non-negativedistance
-* FN_Conv: [text]       Filename of the stopping power table of the converter gas
-* PressureConv: [bar]   Pressure of gaseous thermal-neutron converter (e.g. He-3)
-* FN_Stop: [text]       Filename of the stopping power table of the stopping gas
-* PressureStop: [bar]   Pressure of stopping gas
-* threshold: [keV]      Energy threshold for acceptance of an event
-* filename: [text]      Name of file in which to store the detector image. The name of the component is used if file name is not specified
-* interpolate: [1]      Performs energy interpolation if true
-* verbose: [1]          Gives more information and spectrum
-* p_interact: [1]       Fraction of statistical events to be treated by component. Set it to 0 to use real absorption probability
-* LensOn: [1]           set to 1 to simulate an electrostatic lens according to P. Van Esch, NIM A 540 (2005) pp. 361-367.
-* dc: [m]               Distance from the entrance window to the cathode plane, where the correction zone of the lens ends for banana shape and LensOn=1
-* xChDivRelSigma: [1]   Sigma of the error in position determination along the x axis (relative to xwidth), uniquely due to charge division readout. Set to 0 in case of independent channel readout along the x dimension
-* yChDivRelSigma: [1]   Relative sigma due to charge division in y direction, relative to yheight.
-* type: [string]        If set to 'events' detector signal saves signal into an event file to be read e.g. by Histogrammer. This is to be used for TOF detectors.
-* bufsize: [1]          Size of neutron output buffer default is 0, i.e. save all - recommended.
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* xwidth: [m]           Width of detector opening, in the case of a flat box 
+* radius: [m]           Radius of detector for cylindrical/banana shape 
+* awidth: [m]           Width of detector opening along the horizontal arc of the detector, measured along the inside arc of the sensitive volume in the case of a 'banana' detector 
+* angle: [deg]          Angular opening of detector in the case of a 'banana' detector, then overrides awidth parameter 
+* yheight: [m]          Height of detector opening 
+* zdepth: [m]           Depth of the sensitive volume of the detector 
+* nx: [1]               Number of pixel columns 
+* ny: [1]               Number of pixel rows 
+* borderx: [m]          Width of (gas-filled) border on the side of the detector 
+* bordery: [m]          Height of (gas-filled) border on the top/bottom of the detector giving rise to various border effects. Set to -2 to obtain the height of one pixel, -1 for the depth of the detector (default), or specify a non-negativedistance 
+* FN_Conv: [text]       Filename of the stopping power table of the converter gas 
+* PressureConv: [bar]   Pressure of gaseous thermal-neutron converter (e.g. He-3) 
+* FN_Stop: [text]       Filename of the stopping power table of the stopping gas 
+* PressureStop: [bar]   Pressure of stopping gas 
+* threshold: [keV]      Energy threshold for acceptance of an event 
+* filename: [text]      Name of file in which to store the detector image. The name of the component is used if file name is not specified 
+* interpolate: [1]      Performs energy interpolation if true 
+* verbose: [1]          Gives more information and spectrum 
+* p_interact: [1]       Fraction of statistical events to be treated by component. Set it to 0 to use real absorption probability 
+* LensOn: [1]           set to 1 to simulate an electrostatic lens according to P. Van Esch, NIM A 540 (2005) pp. 361-367. 
+* dc: [m]               Distance from the entrance window to the cathode plane, where the correction zone of the lens ends for banana shape and LensOn=1 
+* xChDivRelSigma: [1]   Sigma of the error in position determination along the x axis (relative to xwidth), uniquely due to charge division readout. Set to 0 in case of independent channel readout along the x dimension 
+* yChDivRelSigma: [1]   Relative sigma due to charge division in y direction, relative to yheight. 
+* type: [string]        If set to 'events' detector signal saves signal into an event file to be read e.g. by Histogrammer. This is to be used for TOF detectors. 
+* bufsize: [1]          Size of neutron output buffer default is 0, i.e. save all - recommended. 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
 * OUTPUT PARAMETERS:
 *
@@ -172,21 +172,18 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_Detector
-
 DEFINITION PARAMETERS ()
-
-SETTING PARAMETERS (nx=128, ny=128, xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
-  threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
-  verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
-  yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
-  string type=0, string filename=0,
-  string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
-
+SETTING PARAMETERS (int nx=128, int ny=128, xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
+threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
+verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
+yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
+string type=0, string filename=0,
+string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
-  CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
-  PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
-  DetectorType,
-  DEFS, Vars)
+CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
+PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
+DetectorType,
+DEFS, Vars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -210,48 +207,48 @@ double PSD_He_interp1value(double *array_x,double *array_y,long n_elements,doubl
 %}
 
 DECLARE
-%{
-  MonitornD_Defines_type   DEFS;  /* for event files */
-  MonitornD_Variables_type Vars;
+  %{
+    MonitornD_Defines_type   DEFS;  /* for event files */
+    MonitornD_Variables_type Vars;
 
-  DArray2d PSD_N;
-  DArray2d PSD_p;
-  DArray2d PSD_p2;
+    DArray2d PSD_N;
+    DArray2d PSD_p;
+    DArray2d PSD_p2;
 
-  double *EAP; // Array of energies for the proton from the list, with zero added on top
-  double *EAT; // Array of energies for the triton from the list, with zero added on top
-  double *M1P1; // Centers Of Gravity of transfer of energy by proton
-  double *M1T1; // Centers Of Gravity of transfer of energy by triton
-  double *PosAP; // positions of each packet of energy from the list, in m
-  double *PosAT; // positions of each packet of energy from the list, in m
-  double *PHSpectrum0; // 1 for each neutron
-  double *PHSpectrum;  // Pulse height spectrum procuced in the detector, 1 keV/channel
-  double *PHSpectrum2; // 2nd order moments
-  long PHSpectrum_n;
-  double CrossSectionHe; // cross section for 0.18 nm neutrons in the converter
+    double *EAP; // Array of energies for the proton from the list, with zero added on top
+    double *EAT; // Array of energies for the triton from the list, with zero added on top
+    double *M1P1; // Centers Of Gravity of transfer of energy by proton
+    double *M1T1; // Centers Of Gravity of transfer of energy by triton
+    double *PosAP; // positions of each packet of energy from the list, in m
+    double *PosAT; // positions of each packet of energy from the list, in m
+    double *PHSpectrum0; // 1 for each neutron
+    double *PHSpectrum;  // Pulse height spectrum procuced in the detector, 1 keV/channel
+    double *PHSpectrum2; // 2nd order moments
+    long PHSpectrum_n;
+    double CrossSectionHe; // cross section for 0.18 nm neutrons in the converter
 
-  double CountNeutrons; // counter over all neutrons to pass the component
-  double GeomCumul; /* 'geometric' cumulative probability that
-           simulated neutrons will encounter the detector on their path */
-  double AbsCumul; /* cumulative probability that
-           simulated neutrons that encounter the detector on their path
-           will be absorbed */
-  double SensVolCumul; /* cumulative probability that
-           simulated neutrons that encounter the detector on their path
-           will produce a signal (perhaps small) with COG in the
-     sensitive volume of the detector */
-  double DetCumul; /* cumulative probability that
-           simulated neutrons will be absorbed *and* produce a signal
-           that will cross the threshold */
-  long nH_p; // number of table elements for the proton in Helium-3
-  long nH_t; // number of table elements for the triton in Helium-3
-  double FullEnergyP;
-  double FullEnergyT;
-  long VariousErrors; /* container for the occurrence of various
-           errors, so that the algorithm gives the matching error
-           messages only once each */
-  long DetectorType; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
-%}
+    double CountNeutrons; // counter over all neutrons to pass the component
+    double GeomCumul; /* 'geometric' cumulative probability that
+             simulated neutrons will encounter the detector on their path */
+    double AbsCumul; /* cumulative probability that
+             simulated neutrons that encounter the detector on their path
+             will be absorbed */
+    double SensVolCumul; /* cumulative probability that
+             simulated neutrons that encounter the detector on their path
+             will produce a signal (perhaps small) with COG in the
+       sensitive volume of the detector */
+    double DetCumul; /* cumulative probability that
+             simulated neutrons will be absorbed *and* produce a signal
+             that will cross the threshold */
+    long nH_p; // number of table elements for the proton in Helium-3
+    long nH_t; // number of table elements for the triton in Helium-3
+    double FullEnergyP;
+    double FullEnergyT;
+    long VariousErrors; /* container for the occurrence of various
+             errors, so that the algorithm gives the matching error
+             messages only once each */
+    long DetectorType; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
+  %}
 
 INITIALIZE
 %{
@@ -301,14 +298,14 @@ INITIALIZE
   else if (borderx<0) {
     fprintf(stderr,"PSD_Detector: %s: Negative x border zone specified. Exit.\n",
       NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if (bordery==-2) bordery = yheight/ny;
   else if (bordery==-1) bordery = zdepth;
   else if (bordery<0) {
     fprintf(stderr,"PSD_Detector: %s: Negative y border zone specified. Exit.\n",
       NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
 
   if (xwidth>0) { /* panel */
@@ -316,7 +313,7 @@ INITIALIZE
     if (zdepth<0) {
     fprintf(stderr,"PSD_Detector: %s: Detector box has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
   }
   if (radius && angle>0)       awidth=angle/360*2*PI*radius;
@@ -329,37 +326,37 @@ INITIALIZE
     if (zdepth<=0) {
     fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
     if (radius<=0) {
     fprintf(stderr,"PSD_Detector: %s: Non-positive radial distance to the sample was specified. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
     if (!dc && zdepth && LensOn) dc = zdepth/2;
     if (((dc>zdepth) || (dc<0)) && (LensOn==1)) {
     fprintf(stderr,"PSD_Detector: %s: Electrostatic lens was turned on, but\n"
                    "              no valid zdepth of the cathode plane was specified. Exit.\n",
                                   NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
     if (awidth+2*borderx>2*PI*radius) {
     fprintf(stderr,"PSD_Detector: %s: Detector comes perilously close to encompassing 2pi. Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
     }
   }
   if (yheight<=0) {
     fprintf(stderr,"PSD_Detector: %s: Detector has no height (yheight). Exit.\n",
                            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if ( (DetectorType!=1) && (DetectorType!=2) &&(DetectorType!=4) ) {
     fprintf(stderr,"PSD_Detector: %s: Detector has conflicting size\n"
                      "              specifications, i.e. combinations of xwidth, radius\n"
                      "              or awidth, or none at all. Exit.\n",
                                     NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   if (verbose) {
     printf("PSD_Detector: %s: Geometry is ", NAME_CURRENT_COMP);
@@ -373,18 +370,9 @@ INITIALIZE
   }
 
 /* Gas tables  ************************************************************** */
-
   PSD_N = create_darr2d(nx, ny);
   PSD_p = create_darr2d(nx, ny);
   PSD_p2 = create_darr2d(nx, ny);
-
-  for (i=0; i<nx; i++)
-    for (j=0; j<ny; j++)
-    {
-      PSD_N[i][j] = 0;
-      PSD_p[i][j] = 0;
-      PSD_p2[i][j] = 0;
-    }
 
   Table_Read(&Part_He_3_p,FN_Conv,1);
   nH_p = Part_He_3_p.rows;
@@ -419,11 +407,10 @@ INITIALIZE
 
 
   if (nH_p != nS_p || nH_t != nS_t) {
-    fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
-                   "              have different number of entries. Exit.\n",
-                   NAME_CURRENT_COMP, FN_Conv, FN_Stop);
-    exit(0);
-  }
+      fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
+                     "              have different number of entries. Exit.\n",
+                     NAME_CURRENT_COMP, FN_Conv, FN_Stop);
+      exit(-1); }
 
   E_p = (double *) malloc(nH_p*sizeof(double));
 
@@ -434,7 +421,7 @@ INITIALIZE
         fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
                        "              list different energies (proton part). Exit.\n",
                        NAME_CURRENT_COMP, FN_Conv, FN_Stop);
-        exit(0); }
+        exit(-1); }
     dEdx_p[i] = PressureConv*Table_Index(Part_He_3_p,i,1) + PressureStop*Table_Index(Part_Stop_p,i,1);
   }
   FullEnergyP = E_p[nH_p-1];
@@ -488,7 +475,7 @@ INITIALIZE
         fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
                        "              list different energies (triton part). Exit.\n",
                        NAME_CURRENT_COMP, FN_Conv, FN_Stop);
-        exit(0); }
+        exit(-1); }
     dEdx_t[i] = PressureConv*Table_Index(Part_He_3_t,i,1) + PressureStop*Table_Index(Part_Stop_t,i,1);
   }
   FullEnergyT = E_t[nH_t-1];
@@ -648,7 +635,10 @@ TRACE
   double aa; // alpha coordinate (along the arc of the detector) of the absorption
   double t1,t2; // time for the first and second charged particles to the next wall
 
-  CountNeutrons += p;
+  #define HUGE_VAL DBL_MAX
+  
+  #pragma acc atomic 
+  CountNeutrons = CountNeutrons + p;
 
   RangeProton = PosAP[nH_p];
   RangeTriton = PosAT[nH_t];
@@ -657,7 +647,8 @@ TRACE
       fprintf(stderr,"PSD_Detector: %s: Component cannot deal with\n"
                      "              high-energy neutrons. Absorbing.\n",
                                     NAME_CURRENT_COMP);
-      VariousErrors+=1;
+      #pragma acc atomic
+      VariousErrors = VariousErrors + 1;
       ABSORB; }
   vt = sqrt( 2*0.025243*1.60218e-19 / ( 1.0086649 * 1.66053886e-27 ) ); // speed of 25.243 meV neutron (0.18 nm)
   NAvogadro = 6.022045e23; // Number of atoms per mol
@@ -691,8 +682,9 @@ TRACE
                          "              cylinder_intersect reported a later time\n"
                          "              for entering the cylinder than for leaving it.\n",
                                         NAME_CURRENT_COMP);
-          VariousErrors+=2;
-          ABSORB;
+	  #pragma acc atomic
+	  VariousErrors = VariousErrors + 2;
+	  ABSORB;
         }
       }
       if (cylinder_intersect(&tinb,&toutb,x,y,z,vx,vy,vz,rb,yheight+2*bordery)==0 || tinb==toutb) {
@@ -712,7 +704,8 @@ TRACE
                          "              cylinder_intersect reported a later time\n"
                          "              for entering the cylinder than for leaving it.\n",
                                         NAME_CURRENT_COMP);
-          VariousErrors+=2;
+	  #pragma acc atomic
+	  VariousErrors = VariousErrors + 2;
           ABSORB;
         }
       }
@@ -795,14 +788,16 @@ TRACE
                        "              A later time for entering the detector was calculated\n"
                        "              than for leaving it.\n",
                                       NAME_CURRENT_COMP);
-        VariousErrors+=4;
+	#pragma acc atomic
+	VariousErrors = VariousErrors + 4;
       }
       if ( Impossibility==1 && !(VariousErrors&8) ) {
         fprintf(stderr,"PSD_Detector: %s: Something strange happened. A neutron\n"
                        "              followed a path deemed impossible in the algorithm.\n",
                                       NAME_CURRENT_COMP);
         intersect=0;
-        VariousErrors+=8;
+	#pragma acc atomic
+	VariousErrors = VariousErrors + 8;
       }
     /* NB: at this point the neutron does not yet have to be absorbed
     within the sensitive volume of the detector - we still have to check
@@ -812,7 +807,7 @@ TRACE
 
       break;  /* end switch case DetectorType==4 */
     default:
-      exit(0);
+      exit(-1);
   } // end switch DetectorType (1)
 
   if (intersect && tout<=0) {
@@ -827,7 +822,8 @@ TRACE
                    "              'tunneled' into the detector, rather than just entering\n"
                    "              through the entrance window or one of the other sides.\n",
                                   NAME_CURRENT_COMP);
-    VariousErrors+=16;
+    #pragma acc atomic
+    VariousErrors = VariousErrors + 16;
   }
 
   if (intersect) {
@@ -911,12 +907,13 @@ TRACE
               fprintf(stderr,"PSD_Detector: %s: Oops. A neutron absorbed in the detector"
                              "              failed to send its reaction products towards the detector walls.\n",
                                             NAME_CURRENT_COMP);
-            VariousErrors+=32;
-            ABSORB;
+	      #pragma acc atomic
+	      VariousErrors = VariousErrors + 32;
+	      ABSORB;
             }
             if (cylinder_intersect(&tine,&toute,x,y,z,vxp,vyp,vzp,radius,yheight+2*bordery) ==0) {
-              tine=-DBL_MAX; // ugly fix for cases where the inner cylinder is missed
-              toute=DBL_MAX;
+              tine=-HUGE_VAL; // ugly fix for cases where the inner cylinder is missed
+              toute=HUGE_VAL;
             }
             t1=tine;
             if (t1<0) {
@@ -993,14 +990,15 @@ TRACE
                            "              specifications, i.e. combinations of xwidth, radius\n"
                            "              or awidth, or none at all. Exit.\n",
                                           NAME_CURRENT_COMP);
-            exit(0);
+            exit(-1);
         } // end switch detectortype (2)
         if (t1*t2>=0 && !(VariousErrors&64) ) {
           fprintf(stderr,"PSD_Detector: %s: t1 was %g and t2 was %g.\n"
                          "              One is supposed to be negative, the other positive,\n"
                          "              neither zero.\n",
                                         NAME_CURRENT_COMP,t1,t2);
-          VariousErrors+=64;
+	  #pragma acc atomic
+	  VariousErrors = VariousErrors + 64;
         }
         if ( t1<RangeProton) lp =  t1; // t1 is the time of flight to the next wall
         else lp = RangeProton; // with normalized speed (1 m/s) it is also the distance
@@ -1082,12 +1080,16 @@ TRACE
             // if the particles have deposited sufficient energy to be
             // recognised as a neutron event (and not a gamma event)
             double P = p*pa;
+	    double P2 = P*P;
             x = xCOG; y = yCOG; z = zCOG;
             SCATTER; // show point of detection for 3D view
-            PSD_N[i][j] ++;       // one neutron tallied in the appropriate pixel
-            PSD_p[i][j] += P;     // incremented by neutron weight
-            PSD_p2[i][j] += P*P;  // 2nd order moments
-
+	    #pragma acc atomic
+            PSD_N[i][j] = PSD_N[i][j] + 1;       // one neutron tallied in the appropriate pixel
+            #pragma acc atomic
+	    PSD_p[i][j] = PSD_p[i][j] + P;     // incremented by neutron weight
+	    #pragma acc atomic
+            PSD_p2[i][j] = PSD_p2[i][j] + P2;  // 2nd order moments
+	    
             DetCumul += P; /* probability that a signal was produced in the
               sensitive volume above the energy threshold */
             i = (long)floor(Energy);
@@ -1098,9 +1100,9 @@ TRACE
             }
             /* save event file if activated */
             if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
-              double pp;
+              double pp,P2;
               Vars.cp  = P;
-              Vars.cx  = x;
+	      Vars.cx  = x;
               Vars.cvx = vx;
               Vars.csx = sx;
               Vars.cy  = y;
@@ -1110,12 +1112,16 @@ TRACE
               Vars.cvz = vz;
               Vars.csz = sz;
               Vars.ct  = t;
+	      
+	      P2=P*P;
 
               pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
-
-              Vars.Nsum++;
-              Vars.psum  += P;
-              Vars.p2sum += P*P;
+	      #pragma acc atomic
+              Vars.Nsum = Vars.Nsum + 1;
+	      #pragma acc atomic
+              Vars.psum = Vars.psum + P;
+	      #pragma acc atomic
+              Vars.p2sum = Vars.p2sum + P2;
             }
             // initial version ABSORB detected neutrons.
             // This was removed if user wants to analyze the behaviour of the detector
@@ -1212,13 +1218,13 @@ FINALLY
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
-      printf("PSD_Detector: %s: Saved %Li events (from buffer) in file %s\n",
+      printf("PSD_Detector: %s: Saved %lld events (from buffer) in file %s\n",
              NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
       if (bufsize < Vars.Nsum)
         printf("WARNING         When using this source, intensities must be multiplied\n"
                "                by a factor %g\n", (double)Vars.Nsum/bufsize);
     } else
-      printf("PSD_Detector: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      printf("PSD_Detector: %s: Saved %lld events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
   }
 
   destroy_darr2d(PSD_N);
@@ -1230,7 +1236,7 @@ MCDISPLAY
 %{
   double h;
   h=yheight;
-
+  
   if (xwidth>0) { /* box */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
@@ -1268,7 +1274,7 @@ MCDISPLAY
     } else {
     	int NH=24;
       int ih;
-
+			
 			for(ih = 0; ih < NH; ih++) {
 		    double phi0, phi1;
 		    double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;

@@ -526,7 +526,7 @@ TRACE
     p = p_in*pdir;
 
     /* spectral dependency from files or Maxwellians */
-#ifndef OPENACC
+
     if (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0"))
     {
        double binwidth=Table_Value(pTable, lambda, 1);
@@ -534,7 +534,7 @@ TRACE
        p *= binwidth;
     }
     else 
-#endif
+
 if (T1 > 0 && I1 > 0)
     {
       Maxwell = I1 * SG_Maxwell(lambda, T1);;  /* 1/AA */
@@ -549,7 +549,7 @@ if (T1 > 0 && I1 > 0)
       }
       p *= Maxwell;
     }
-#ifndef OPENACC
+
     /* optional x-xdiv and y-ydiv weightening: position=along columns, div=along rows */
     if (xdiv_file && strlen(xdiv_file)
       && strcmp(xdiv_file,"NULL") && strcmp(xdiv_file,"0") && pTable_xsum > 0) {
@@ -567,7 +567,7 @@ if (T1 > 0 && I1 > 0)
       r = Table_Value2d(pTable_y, i,j);
       p *= r/pTable_ysum;
     }
-#endif
+
     SCATTER;
   }
 %}

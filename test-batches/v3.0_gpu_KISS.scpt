@@ -2,6 +2,7 @@
 ### General options
 ### –- specify queue --
 #BSUB -q gpuv100
+#BSUB -R "select[gpu32gb]"
 ### -- set the job Name --
 #BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
@@ -9,7 +10,7 @@
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -gpu "num=1:mode=exclusive_process"
 ### -- set walltime limit: hh:mm --  maximum 24 hours for GPU-queues right now
-#BSUB -W 12:00
+#BSUB -W 20:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
@@ -32,12 +33,12 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e8 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_GPU_PGCC_TESLA_KISS
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_GPU_PGCC_TESLA_KISS
 
 cd $HOME
 
 echo done on GPU with split
 #echo submitting multi-GPU job
 # 
-bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
+#bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
 bsub < $HOME/McCode/test-batches/plots_gpu.scpt 

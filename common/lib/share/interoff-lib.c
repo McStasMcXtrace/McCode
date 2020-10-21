@@ -692,16 +692,16 @@ int Min_int(int x, int y) {
 }
 
 #pragma acc routine(merge)
- void merge(int arr[], int l, int m, int r)
+void merge(intersection *arr, int l, int m, int r)
 {
 int i, j, k;
 int n1 = m - l + 1;
 int n2 =  r - m;
 
 /* create temp arrays */
-int *L, *R;
- L = (int *)malloc(sizeof(int) * n1);
- R = (int *)malloc(sizeof(int) * n2);
+intersection *L, *R;
+ L = (intersection *)malloc(sizeof(intersection) * n1);
+ R = (intersection *)malloc(sizeof(intersection) * n2);
 /* Copy data to temp arrays L[] and R[] */
  #pragma acc loop independent
 for (i = 0; i < n1; i++)
@@ -717,7 +717,7 @@ k = l;
 
 while (i < n1 && j < n2)
 {
-    if (L[i] <= R[j])
+    if (L[i].time <= R[j].time)
     {
         arr[k] = L[i];
         i++;
@@ -751,8 +751,7 @@ free(R);
 }
 
 #pragma acc routine seq
-void q2sort(void *base, size_t nmemb, size_t size,
-	    int (*compar)(const void *, const void *))
+void gpusort(intersection *arr, int size)
 {
   int curr_size;  // For current size of subarrays to be merged
   // curr_size varies from 1 to n/2
@@ -772,7 +771,7 @@ void q2sort(void *base, size_t nmemb, size_t size,
 	    int right_end = Min_int(left_start + 2*curr_size - 1, size-1);
 
 	    // Merge Subarrays arr[left_start...mid] & arr[mid+1...right_end]
-	    if (mid < right_end) merge(base, left_start, mid, right_end);
+	    if (mid < right_end) merge(arr, left_start, mid, right_end);
 	  }
       }
   }
@@ -804,7 +803,11 @@ int off_intersect_all(double* t0, double* t3,
     Coords B={x+vx, y+vy, z+vz};
     int t_size=off_clip_3D_mod(data->intersects, A, B,
       data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
-    q2sort(data->intersects, t_size, sizeof(intersection),  off_compare);
+    #ifndef OPENACC
+    qsort(data->intersects, t_size, sizeof(intersection),  off_compare);
+    #else
+    gpusort(data->intersects, t_size);
+    #endif
     off_cleanDouble(data->intersects, &t_size);
     off_cleanInOut(data->intersects,  &t_size);
 

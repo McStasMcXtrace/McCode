@@ -158,6 +158,7 @@ SHARE %{
 /*-------------------------------------------------------------
         End load file routines
 --------------------------------------------------------------*/
+
 /*----------------------------------------------------------------------
                 routine to do a 1D linear interpolation
 ------------------------------------------------------------------------*/
@@ -171,6 +172,7 @@ double linint(double xdes,double x1, double x2, double y1, double y2)
   return (m*(xdes-x1)+y1);
 } /*linint */
 
+#pragma acc routine
 double linfuncint(double xdes, double xylen, double *vecx, double *vecy)
   {
   int idx;
@@ -227,10 +229,39 @@ double quadfuncint(double xdes, double xylen, double *vecx, double *vecy)
      }
 
   } /* quadfuncint */
+
+/*-----------------------------------------------------------------
+Functions for random energy generation
+------------------------------------------------------------------*/
+#pragma acc routine
+double xonly(double x,double xylength,double *inxvec,double *inyvec)
+{
+  return linfuncint(x,xylength,inxvec,inyvec);
+}
+#pragma acc routine
+double Pfunc(double x, double y,double xylength,double *inxvec,double *Pvec)
+{
+  return quadfuncint(x,xylength,inxvec,Pvec)-y;
+}
+  
+/*----------------------------------------------------------------
+Functions for random time generation
+------------------------------------------------------------------*/
+#pragma acc routine
+double txonly(double t,double ntvals,double *txval,double *tyval)
+{
+  return linfuncint(t,ntvals,txval,tyval);
+}
+#pragma acc routine
+double tPfunc(double t,double y,double ntvals,double *txval,double *tyval)
+{
+  return quadfuncint(t,ntvals,txval,tyval)-y;
+}
+
+ 
 /*-------------------------------------------------------------------
   integration routines
 ---------------------------------------------------------------------*/
-#pragma acc routine
 double integtrap(double (*func)(double,double,double*,double*),double prev,double low,double high, int step,
   double len, double *xvec, double *yvec)
 {
@@ -255,7 +286,6 @@ double integtrap(double (*func)(double,double,double*,double*),double prev,doubl
  }
 } /* integtrap */
 
-#pragma acc routine
 double integ1(double (*func)(double,double,double*,double*),double low, double high, double err,
   double len, double *xvec, double *yvec)
 {
@@ -279,7 +309,7 @@ double integ1(double (*func)(double,double,double*,double*),double low, double h
   Modified version of rtbis from "Numerical Recipes in C: pg 354
  -----------------------------------------------------------------------------*/
 
-#pragma acc routine
+
 double zero_find(double (*func)(double, double, double, double*, double*),
   double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
 {
@@ -304,13 +334,61 @@ double zero_find(double (*func)(double, double, double, double*, double*),
   }
  return rtb;
 }
+
+#pragma acc routine
+double zero_find_gpu1(double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
+{
+  double xl,xh,f,fmid,xmid,dx,rtb;
+  xl=xmin;
+  xh=pow(10,(log10(xmin)+yval*(log10(xmax)-log10(xmin))));
+  f=Pfunc(xl,yval, arg1, arg2, arg3);
+  fmid=Pfunc(xh,yval, arg1, arg2, arg3);
+  while (fmid*f>=0.0){
+    xh=xh+(xh-xl)*2.0;
+    fmid=Pfunc(xh,yval, arg1, arg2, arg3);
+  }
+  dx=xh-xl;
+  rtb=xl;
+  while(fabs(Pfunc(rtb,yval, arg1, arg2, arg3))>tol){
+    dx=dx*0.5;
+    xmid=rtb+dx;
+    fmid=Pfunc(xmid,yval, arg1, arg2, arg3);
+    if (fmid<0){
+      rtb=xmid;
+    }
+  }
+ return rtb;
+}
+#pragma acc routine
+double zero_find_gpu2(double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
+{
+  double xl,xh,f,fmid,xmid,dx,rtb;
+  xl=xmin;
+  xh=pow(10,(log10(xmin)+yval*(log10(xmax)-log10(xmin))));
+  f=tPfunc(xl,yval, arg1, arg2, arg3);
+  fmid=tPfunc(xh,yval, arg1, arg2, arg3);
+  while (fmid*f>=0.0){
+    xh=xh+(xh-xl)*2.0;
+    fmid=tPfunc(xh,yval, arg1, arg2, arg3);
+  }
+  dx=xh-xl;
+  rtb=xl;
+  while(fabs(tPfunc(rtb,yval, arg1, arg2, arg3))>tol){
+    dx=dx*0.5;
+    xmid=rtb+dx;
+    fmid=tPfunc(xmid,yval, arg1, arg2, arg3);
+    if (fmid<0){
+      rtb=xmid;
+    }
+  }
+ return rtb;
+}
 /*----------------------------------------------------------------------------
 Routine for calculating Probability distribution
 ----------------------------------------------------------------------------*/
 
 // Pcalc(xonly,llim,hlim,inxvec,Pvec,xylength,&idxstart,&idxstop, inyvec);
 // xonly(double x,double xylength,double *inxvec,double *inyvec)
-#pragma acc routine
 void Pcalc(double (*func)(double,double,double*,double*),
   double llim, double hlim, double *xvec, double *Prob, int veclen,
   int *idxstart, int *idxstop, double *inyvec)
@@ -354,7 +432,6 @@ Routine for calculating t Probability distribution
 ----------------------------------------------------------------------------*/
 // tPcalc(txonly,ltlim,htlim,tcol,tPvec,ntvals,&tidxstart,&tidxstop, txval,tyval);
 // txonly(double t,double ntvals,double *txval,double *tyval)
-#pragma acc routine
 void tPcalc(double (*func)(double,double,double*,double*),double llim, double hlim,
   double *xvec, double *Prob, int veclen, int *idxstart, int *idxstop,
   double *txval,double *tyval)
@@ -391,34 +468,6 @@ void tPcalc(double (*func)(double,double,double*,double*),double llim, double hl
   }
 } /* tPcalc */
 
-/*-----------------------------------------------------------------
-Functions for random energy generation
-------------------------------------------------------------------*/
-#pragma acc routine
-double xonly(double x,double xylength,double *inxvec,double *inyvec)
-{
-  return linfuncint(x,xylength,inxvec,inyvec);
-}
-#pragma acc routine
-double Pfunc(double x, double y,double xylength,double *inxvec,double *Pvec)
-{
-  return quadfuncint(x,xylength,inxvec,Pvec)-y;
-}
-
-/*----------------------------------------------------------------
-Functions for random time generation
-------------------------------------------------------------------*/
-#pragma acc routine
-double txonly(double t,double ntvals,double *txval,double *tyval)
-{
-  return linfuncint(t,ntvals,txval,tyval);
-}
-#pragma acc routine
-double tPfunc(double t,double y,double ntvals,double *txval,double *tyval)
-{
-  return quadfuncint(t,ntvals,txval,tyval)-y;
-}
-
 %}
 
 DECLARE
@@ -446,6 +495,7 @@ DECLARE
   int tidxstart;
   int tidxstop;
   int nEvals;
+  double pmul;
 %}
 
 INITIALIZE
@@ -512,7 +562,11 @@ INITIALIZE
   free(Imat);
 
 printf("Finished calculating probability distribution\n");
-
+  #if defined (USE_MPI)
+  pmul=1/mpi_node_count;
+  #else
+  pmul=1;
+  #endif
 %}
 TRACE
 %{
@@ -539,8 +593,13 @@ TRACE
    /*First generate E random value */
     randp=EPmin+rand01()*(EPmax-EPmin);
     /* find E value corresponding to random probability */
+    #ifndef OPENACC
     Eval=zero_find(Pfunc,randp,inxvec[idxstart],inxvec[idxstop],1e-5,
       xylength,inxvec,Pvec);
+    #else
+    Eval=zero_find_gpu1(randp,inxvec[idxstart],inxvec[idxstop],1e-5,
+      xylength,inxvec,Pvec);
+    #endif
    /* from a known E value generate an emission time value */
    /* find the index of the E values that bracket the random E value */
    idx1=0;
@@ -556,8 +615,13 @@ TRACE
    }
    randp=tyval[tidxstart]+rand01()*(tyval[tidxstop-1]-tyval[tidxstart]);
    if (randp>0.0){
-      tval=zero_find(tPfunc,randp,txval[tidxstart],txval[tidxstop-1],1e-5,
+     #ifndef OPENACC
+     tval=zero_find(tPfunc,randp,txval[tidxstart],txval[tidxstop-1],1e-5,
         ntvals,txval,tyval); }
+     #else
+     tval=zero_find_gpu2(randp,txval[tidxstart],txval[tidxstop-1],1e-5,
+        ntvals,txval,tyval); }
+     #endif
     else{
        tval=0;}
   E = Eval*1000.0;  /* Convert Energy from Ev to meV */
@@ -568,11 +632,7 @@ TRACE
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
-  p*=(xwidth*yheight/(0.1*0.12))*INorm2/mcget_ncount();
-
-  #if defined (USE_MPI)
-  p/=mpi_node_count;
-  #endif
+  p*=(xwidth*yheight/(0.1*0.12))*INorm2*pmul/mcget_ncount();
 
 %}
 FINALLY

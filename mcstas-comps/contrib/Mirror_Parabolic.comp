@@ -45,7 +45,7 @@ DEFINE COMPONENT Mirror_Parabolic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, xwidth=0.05, xshift=0.019, yheight=2e-4, focus=6.6e-4,
 R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
-OUTPUT PARAMETERS (beta1, gamma1, err,nom,vz_neg,p_0, delta, angle,pTable)
+OUTPUT PARAMETERS (beta1, gamma1, err,nom,vz_neg, delta, angle,pTable)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
@@ -58,12 +58,10 @@ DECLARE
 double  beta1;                       /* parabola half-axis */
 double  gamma1;
 double  delta;                         /* angle: angle between themirror and z-axis */
-double  angle;
 t_Table pTable;
 int err;                                     /* counts neutron absorbed for anormal reasons */
 int nom;
 int vz_neg;
-int p_0; 
 %}
 
 INITIALIZE
@@ -79,12 +77,12 @@ if (reflect && strlen(reflect) && strcmp(reflect, "NULL") && strcmp(reflect,"0")
   err = 0;
   nom = 0;                      /* number of reflections on the mirror */
   vz_neg = 0;
-  p_0=0;
   yheight/=2;  
 %}
 
 TRACE
 %{
+  double  angle;
   double q, B;
   double div,z1,x1,z2,x2;
   double v;
@@ -93,7 +91,7 @@ TRACE
   double oa,ob,ab,xa,za;
   double a, b;                       /* parameters for neutron propagation */
   double old_x,old_y,old_z;
-  
+
   /* First check if neutron has the right direction. */
   if((vz != 0.0 && -z/vz >= 0) && x-xwidth-xshift < 0)
   {
@@ -123,7 +121,8 @@ TRACE
       }
       /* absorbs the neutron if the difference between the 2 calculation methods is larger than 1% */
       if(fabs(z-a*x-b)>0.01){
-            err++;
+	    #pragma acc atomic
+            err = err +1;
             ABSORB;
       }
         
@@ -133,7 +132,8 @@ TRACE
 
       /*reflection*/
       if((x-xshift)>0 && fabs(y)<=yheight){
-        nom++;
+	#pragma acc atomic
+        nom = nom + 1;
 
         /* reflection angle in the xz plane */
         div = -atan(vx/vz);
@@ -170,7 +170,8 @@ TRACE
         else p *= B;
       }
       if(vz<0){
-           vz_neg++;
+           #pragma acc atomic
+	   vz_neg = vz_neg + 1;
            ABSORB;
       }
     }while((x-xshift)>0 && fabs(y)<=yheight);
@@ -188,10 +189,10 @@ TRACE
 FINALLY
 %{
   /*   printf("\n %d neutrons were reflected on the component %s.\n",nom,NAME_CURRENT_COMP);*/
-  if(err!=0||vz_neg!=0||p_0!=0){
+  if(err!=0||vz_neg!=0){
     fprintf(stderr,"Mirror_Parabolic: %s: %d lost neutrons for inadapted divergence\n"
-      "\t%d for vz <0 \n\t%d B=0 \n neutrons absorbed inside the component.\n",
-    NAME_CURRENT_COMP,err,vz_neg,p_0);
+      "\t%d for vz <0 \n neutrons absorbed inside the component.\n",
+    NAME_CURRENT_COMP,err,vz_neg);
   }
 %}
 

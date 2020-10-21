@@ -55,7 +55,7 @@
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the PLY, OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
-*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
+*   qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
@@ -539,9 +539,7 @@ DECLARE
 %{
   struct line_info_struct line_info;
   double *columns;
-#ifndef OPENACC
   off_struct offdata;
-#endif
   double tgt_x;
   double tgt_y;
   double tgt_z;
@@ -577,14 +575,12 @@ INITIALIZE
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-#ifndef OPENACC
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       line_info.shape=3; thickness=0; concentric=0;
     }
   }
   else
-#endif
     if (xwidth && yheight && zdepth)  line_info.shape=1; /* box */
   else if (radius > 0 && yheight)        line_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       line_info.shape=2; /* sphere */
@@ -643,24 +639,14 @@ INITIALIZE
   if (!line_info.yheight_i) {
     line_info.yheight_i = yheight;
   }
-  if (p_interact) {
-    if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
-    p_transmit = 1-p_interact-p_inc;
-  }
 
-  if (p_inc + p_transmit > 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
-                 NAME_CURRENT_COMP, p_inc+p_transmit);
-    );
-    if (p_inc > p_transmit) p_transmit=1-2*p_inc;
-    else p_transmit=1-2*p_inc;
-  } else if (p_inc + p_transmit == 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested all neutrons be attenuated\n"
-           "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
-    );
-  }
+  if (!p_interact) p_interact=1e-2;
+  if (!p_inc)      p_inc     =1e-2;
+  if (!p_transmit) p_transmit=1e-2;
+
+  p_interact = p_interact / (p_interact+p_inc+p_transmit);
+  p_inc      = p_inc      / (p_interact+p_inc+p_transmit);
+  p_transmit = p_transmit / (p_interact+p_inc+p_transmit);
 
   if (concentric) {
     MPI_MASTER(
@@ -768,7 +754,7 @@ INITIALIZE
 TRACE
 %{
   double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n, sg;
-  double solid_angle, neutrontype;
+  double solid_angle, neutrontype, ntype;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z, nx, ny, nz, pmul=1;
   int    line;
   char   intersect=0;
@@ -794,6 +780,12 @@ TRACE
   int    flag_warning = line_info.flag_warning;
   double dq = line_info.dq;
 
+  #ifdef OPENACC
+  off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata
+  #endif
+  
   if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
@@ -805,12 +797,10 @@ TRACE
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
-#ifndef OPENACC
-      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
       intersecti = 0;
-#endif
     }
-  }
+  } 
 
   if(intersect && t3 >0) {
 
@@ -874,18 +864,18 @@ TRACE
       my_s = line_info.my_s_v2_sum/(v*v)+line_info.my_inc;
       /* Total attenuation from scattering */
 	  lfree=0;
-      neutrontype = rand01();
+      ntype = rand01();
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
-      if (neutrontype < p_transmit) {
+      if (ntype < p_transmit) {
         neutrontype = 1;
         l = l_full; /* Passing through, full length */
         PROP_DT(t3);
-      } else if (neutrontype >= p_transmit && neutrontype < (p_transmit + p_inc)) {
+      } else if (ntype >= p_transmit && ntype < (p_transmit + p_inc)) {
         neutrontype = 2;
         l = v*dt;       /* Penetration in sample */
         PROP_DT(dt+t0); /* Point of scattering */
         SCATTER;
-      } else if (neutrontype >= p_transmit + p_inc) {
+      } else if (ntype >= p_transmit + p_inc) {
         neutrontype = 3;
         l = v*dt;       /* Penetration in sample */
         PROP_DT(dt+t0); /* Point of scattering */
@@ -981,7 +971,7 @@ TRACE
 				intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
 				intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
 			} else if (line_info.shape == 3) {
-				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
 				intersecti = 0;
 			}
 
@@ -1050,10 +1040,8 @@ TRACE
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
-#ifndef OPENACC
-          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
           intersecti = 0;
-#endif
         }
 
         if (!intersect) {
@@ -1153,7 +1141,6 @@ FINALLY
 
 MCDISPLAY
 %{
-#ifndef OPENACC
   if (line_info.V_0) {
 
     if (line_info.shape == 0) { /* cyl */
@@ -1228,6 +1215,5 @@ MCDISPLAY
       off_display(offdata);
     }
   }
-#endif
 %}
 END

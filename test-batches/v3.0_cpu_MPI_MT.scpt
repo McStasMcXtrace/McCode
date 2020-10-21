@@ -5,9 +5,9 @@
 ### -- set the job Name --
 #BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
-#BSUB -n 10
+#BSUB -n 8
 #BSUB -R "span[block=1]"
-#BSUB -W 7:00
+#BSUB -W 10:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
@@ -34,7 +34,7 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_MPICC_MT
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --mpi=auto --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_MPICC_MT
 
 cd $HOME
 echo done on CPU/MPI, submitting next job

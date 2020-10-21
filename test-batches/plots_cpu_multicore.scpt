@@ -8,8 +8,8 @@
 #BSUB -n 1
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -W 10:00
-# request 5GB of system-memory
-#BSUB -R "rusage[mem=5GB]"
+# request 10GB of system-memory
+#BSUB -R "rusage[mem=10GB]"
 ### -- set the email address --
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
@@ -25,8 +25,8 @@
 # -- end of LSF options --
 
 DATE=`date +%F`
-REF="McStas-2.5_CPU_MPICC"
-TARGET="McStas_CPU_PGCC_MULTICORE_KISS"
+REF="McStas-2.5_CPU_MPICC_5e7"
+TARGET="McStas_CPU_PGCC_MULTICORE_KISS_5e7"
 cd $HOME/TESTS/
 
 export MATLABPATH=${HOME}/McCode/generate_testplots/

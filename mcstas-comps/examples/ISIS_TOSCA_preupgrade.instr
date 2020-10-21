@@ -54,6 +54,7 @@ double L_max = 5;
 double t_min = 10;
 double t_max = 40000;
 double L_minE,L_maxE,t_minE,t_maxE;
+#pragma acc declare create(t_minE)
 int myrank;
 FILE *fp;
 %}
@@ -64,7 +65,7 @@ L_minE= 10.0*sqrt(0.81787/(E_max*1.15));
 L_maxE= 10.0*sqrt(0.81787/(E_min*0.85));
 t_maxE = L0/sqrt(2/mneu*meV2J*(E_min*0.85))*1E6;
 t_minE = L0/sqrt(2/mneu*meV2J*(E_max*1.15))*1E6;
-
+#pragma acc update device(t_minE)
 
 %}
 

@@ -80,6 +80,7 @@ DEFINE INSTRUMENT SNS_BASIS(
 DECLARE
 %{
   double Omega1,Omega2,Omega3;
+#pragma acc declare create(Omega1,Omega2,Omega3)
   double TOTAL_LENGTH;
   double Guide_extension; 
   double E_min; 
@@ -158,7 +159,7 @@ INITIALIZE
  Omega1=omega1;
  Omega2=omega2;
  Omega3=omega3;
-  
+#pragma acc update device(Omega1,Omega2,Omega3)
   Guide_extension = TOTAL_LENGTH - 84.0 ;
   SGS3 = 75.7305 + Guide_extension;
   End_Guide = SGS3 + 8.0003;
