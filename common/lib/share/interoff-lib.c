@@ -750,6 +750,7 @@ free(L);
 free(R);
 }
 
+#ifdef USE_OFF
 #pragma acc routine seq
 void gpusort(intersection *arr, int size)
 {
@@ -776,7 +777,7 @@ void gpusort(intersection *arr, int size)
       }
   }
 }
-
+#endif
 
 /*******************************************************************************
 * int off_intersect_all(double* t0, double* t3,
@@ -806,7 +807,9 @@ int off_intersect_all(double* t0, double* t3,
     #ifndef OPENACC
     qsort(data->intersects, t_size, sizeof(intersection),  off_compare);
     #else
+    #ifdef USE_OFF
     gpusort(data->intersects, t_size);
+    #endif
     #endif
     off_cleanDouble(data->intersects, &t_size);
     off_cleanInOut(data->intersects,  &t_size);
