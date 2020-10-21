@@ -36,6 +36,7 @@
 * uid: [1]              Integer index of uservar to be monitored. Overrides ustring.
 * ustring: [string]     Name of variable (user or neutron state parameter as a string) to be monitored.  
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
+* nowritefile: [1]      Flag to indicate if monitor should not save any data.
 *
 * OUTPUT PARAMETERS:
 *
@@ -51,7 +52,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nU=20, string filename=0,
   xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
-  Umin, Umax, uid=-1, string ustring="", restore_neutron=0, string signal="p")
+  Umin, Umax, uid=-1, string ustring="", restore_neutron=0, string signal="p", int nowritefile=0)
 
 OUTPUT PARAMETERS (U_N, U_p, U_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -125,13 +126,15 @@ TRACE
 
 SAVE
 %{
-  DETECTOR_OUT_1D(
-    "Flex monitor 1D",
-    username,
-    signalname,
-    username, Umin, Umax, nU,
-    &U_N[0],&U_p[0],&U_p2[0],
-    filename);
+  if (!nowritefile) {
+    DETECTOR_OUT_1D(
+      "Flex monitor 1D",
+      username,
+      signalname,
+      username, Umin, Umax, nU,
+      &U_N[0],&U_p[0],&U_p2[0],
+      filename);
+  }
 %}
 
 FINALLY
