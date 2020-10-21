@@ -240,10 +240,15 @@ INITIALIZE
   bc=sqrt(fabs(sigma_coh)*100/4/PI)*1e-5;      /* bound coherent cross section */
   if (sigma_coh<0) bc *= -1;
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+    #ifndef USE_OFF
+    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
+    exit(-1);
+    #else
     /* init the OFF/PLY without centering and scaling */
 	  if (!off_init(geometry, 0, 0, 0, 1, &offdata))
       exit(printf("Lens: %s: FATAL: could not initialize geometry file %s [OFF/PLY]\n",
       NAME_CURRENT_COMP, geometry));
+    #endif
   }
 
   phiy1 *= DEG2RAD; /* planes orientation */
@@ -267,7 +272,9 @@ double ax, ay, az; /* temporary vector for surface refraction */
 double alpha1, beta1, theta1, theta2; /* angles for refraction computation */
 
 #ifdef OPENACC
+#ifdef USE_OFF
 off_struct thread_offdata = offdata;
+#endif
 #else
 #define thread_offdata offdata
 #endif
@@ -277,6 +284,7 @@ do {
   /* ======================== First face of the lens ========================== */
   /* determine intersection time */
   nx=ny=nz=0;
+  #ifdef USE_OFF
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     double t1=0,t0=0;
     Coords n, n0, n1;
@@ -290,6 +298,7 @@ do {
     }
     coords_get(n, &nx, &ny, &nz);
   } else
+  #endif
   if (r1 && !focus1) {
     dt = Lens_intersect(x,y,z, vx, vy, vz, thickness/2, radius, 1, r1);
   } else if (!r1 && focus1){
@@ -373,6 +382,7 @@ do {
   /* ======================== Second face of the lens ========================= */
   /* determine intersection time to go to second surface */
   nx=ny=nz=0;
+  #ifdef USE_OFF
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     double t1=0,t0=0;
     Coords n, n0, n1;
@@ -386,6 +396,7 @@ do {
     }
     coords_get(n, &nx, &ny, &nz);
   } else
+  #endif
   if (r2 && !focus2)
     dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, 1, -r2);
   else if (!r2 && focus2){
@@ -484,6 +495,7 @@ do {
 
     /* recompute new intersection time to go to second surface (velocity changed during scattering event) */
     nx=ny=nz=0;
+    #ifdef USE_OFF
     if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
       double t1=0,t0=0;
       Coords n, n0, n1;
@@ -497,6 +509,7 @@ do {
       }
       coords_get(n, &nx, &ny, &nz);
     } else
+    #endif
     if (r2 && !focus2)
       dt = Lens_intersect(x,y,z, vx, vy, vz, -thickness/2, radius, 1, -r2);
     else if (!r2 && focus2)
