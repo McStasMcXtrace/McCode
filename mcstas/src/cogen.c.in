@@ -2167,32 +2167,35 @@ cogen_header(struct instr_def *instr, char *output_name)
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
+  cout("#ifdef OPENACC");
+  cout("#define strcmp(a,b) str_comp(a,b)");
+  cout("#endif");
   cout("  int s=1;");
   cout("  double rval=0;");
   char *var;
-  cout("  if(str_comp(\"x\",name)){rval=p->x;s=0;}");
-  cout("  if(str_comp(\"y\",name)){rval=p->y;s=0;}");
-  cout("  if(str_comp(\"z\",name)){rval=p->z;s=0;}");
+  cout("  if(strcmp(\"x\",name)){rval=p->x;s=0;}");
+  cout("  if(strcmp(\"y\",name)){rval=p->y;s=0;}");
+  cout("  if(strcmp(\"z\",name)){rval=p->z;s=0;}");
 #if MCCODE_PROJECT == 1   /* neutron */
-  cout("  if(str_comp(\"vx\",name)){rval=p->vx;s=0;}");
-  cout("  if(str_comp(\"vy\",name)){rval=p->vy;s=0;}");
-  cout("  if(str_comp(\"vz\",name)){rval=p->vz;s=0;}");
-  cout("  if(str_comp(\"sx\",name)){rval=p->sx;s=0;}");
-  cout("  if(str_comp(\"sy\",name)){rval=p->sy;s=0;}");
-  cout("  if(str_comp(\"sz\",name)){rval=p->sz;s=0;}");
+  cout("  if(strcmp(\"vx\",name)){rval=p->vx;s=0;}");
+  cout("  if(strcmp(\"vy\",name)){rval=p->vy;s=0;}");
+  cout("  if(strcmp(\"vz\",name)){rval=p->vz;s=0;}");
+  cout("  if(strcmp(\"sx\",name)){rval=p->sx;s=0;}");
+  cout("  if(strcmp(\"sy\",name)){rval=p->sy;s=0;}");
+  cout("  if(strcmp(\"sz\",name)){rval=p->sz;s=0;}");
 #elif MCCODE_PROJECT == 2   /* xray */
-  cout("  if(str_comp(\"phi\",name)){rval=p->phi;s=0;}");
-  cout("  if(str_comp(\"kx\",name)){rval=p->kx;s=0;}");
-  cout("  if(str_comp(\"ky\",name)){rval=p->ky;s=0;}");
-  cout("  if(str_comp(\"kz\",name)){rval=p->kz;s=0;}");
-  cout("  if(str_comp(\"Ex\",name)){rval=p->Ex;s=0;}");
-  cout("  if(str_comp(\"Ey\",name)){rval=p->Ey;s=0;}");
-  cout("  if(str_comp(\"Ez\",name)){rval=p->Ez;s=0;}");
+  cout("  if(strcmp(\"phi\",name)){rval=p->phi;s=0;}");
+  cout("  if(strcmp(\"kx\",name)){rval=p->kx;s=0;}");
+  cout("  if(strcmp(\"ky\",name)){rval=p->ky;s=0;}");
+  cout("  if(strcmp(\"kz\",name)){rval=p->kz;s=0;}");
+  cout("  if(strcmp(\"Ex\",name)){rval=p->Ex;s=0;}");
+  cout("  if(strcmp(\"Ey\",name)){rval=p->Ey;s=0;}");
+  cout("  if(strcmp(\"Ez\",name)){rval=p->Ez;s=0;}");
 #endif
-  cout("  if(str_comp(\"t\",name)){rval=p->t;s=0;}");
-  cout("  if(str_comp(\"p\",name)){rval=p->p;s=0;}");
+  cout("  if(strcmp(\"t\",name)){rval=p->t;s=0;}");
+  cout("  if(strcmp(\"p\",name)){rval=p->p;s=0;}");
   while(var = list_next(liter)) {
-    coutf("  if(str_comp(\"%s\",name)){rval=p->%s;s=0;}",var,var);
+    coutf("  if(strcmp(\"%s\",name)){rval=p->%s;s=0;}",var,var);
   }
   list_iterate_end(liter);
   cout("  if (suc!=0x0) {*suc=s;}");
