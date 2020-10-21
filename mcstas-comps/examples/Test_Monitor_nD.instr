@@ -46,6 +46,10 @@ DECLARE %{
   double V,E,T;
 %}
 
+USERVARS %{
+  double Lam;
+%}
+
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
@@ -58,7 +62,6 @@ INITIALIZE
   sprintf(divopts,"hdiv limits=[%g %g] bins=%i, vdiv limits=[%g %g] bins=%i",-hdiv,hdiv,bins,-vdiv,vdiv,bins);
   sprintf(eopts,"energy limits=[%g %g] bins=%i",0.9*E,1.1*E,bins);
   sprintf(tofopts,"tof limits=[%g %g] bins=%i",0.985*T,1.025*T,bins);
-  
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -74,6 +77,9 @@ REMOVABLE COMPONENT Source = Source_gen(
     lambda0 = lambda, dlambda = lambda*0.01,
     T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
   AT (0, 0, 0) RELATIVE Origin
+EXTEND %{
+  Lam=K2V*(2*PI/sqrt(vx*vx+vy*vy+vz*vz));
+%}
 
 /* TIP: monochromator cradle */ 
 COMPONENT mon_cradle = Arm()
@@ -85,10 +91,16 @@ COMPONENT PSD_mon = PSD_monitor(nx=bins,ny=bins, xwidth = xw, yheight = yh, rest
 COMPONENT nD_PSD = Monitor_nD(options=xyopts, xwidth = xw, yheight = yh, restore_neutron=1)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
+COMPONENT nFlex_PSD = Flex_monitor_2D(xwidth = xw, yheight = yh, restore_neutron=1, ustring1="x", ustring2="y",filename="Flex_PSD", Umin1=-xw/2.0,Umax1=xw/2.0,Umin2=-yh/2.0, Umax2=yh/2.0, nU1=bins, nU2=bins)
+  AT (0, 0, mudist) RELATIVE PREVIOUS
+
 COMPONENT L_mon = L_monitor(nL=100, xwidth = 0.1, yheight = 0.15, restore_neutron=1, filename="L",Lmin=0.985*lambda,Lmax=1.025*lambda)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
 COMPONENT nD_L = Monitor_nD(options=lmonopts, xwidth = xw, yheight = yh, restore_neutron=1)
+  AT (0, 0, mudist) RELATIVE PREVIOUS
+
+COMPONENT nFlex_L = Flex_monitor_1D(xwidth = xw, yheight = yh, restore_neutron=1, ustring="Lam", filename="Flex_L",Umin=0.985*lambda,Umax=1.025*lambda, nU=bins)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
 COMPONENT E_mon = E_monitor(nE=100, xwidth = 0.1, yheight = 0.15, restore_neutron=1, filename="E",Emin=0.9*E,Emax=1.1*E)
