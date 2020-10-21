@@ -145,9 +145,9 @@
     char   UserName1[128];
     char   UserName2[128];
     char   UserName3[128];
-    double UserVariable1;
-    double UserVariable2;
-    double UserVariable3;
+    char   UserVariable1[128];
+    char   UserVariable2[128];
+    char   UserVariable3[128];
     char   option[CHAR_BUF_LENGTH];
 
     long long int Nsum;

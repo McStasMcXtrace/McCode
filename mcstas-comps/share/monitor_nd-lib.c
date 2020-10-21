@@ -154,8 +154,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
-    Vars->UserVariable1     = 0;
-    Vars->UserVariable2     = 0;
     Vars->He3_pressure      = 0;
     Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
@@ -995,11 +993,11 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (_particle->z != 0) XY = RAD2DEG*asin(_particle->y/_particle->z); }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = Vars->UserVariable1;
+          if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = particle_getvar(_particle,Vars->UserVariable1,NULL);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_USER2) XY = Vars->UserVariable2;
+          if (Set_Vars_Coord_Type == DEFS->COORD_USER2) XY = particle_getvar(_particle,Vars->UserVariable2,NULL);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = Vars->UserVariable3;
+          if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = particle_getvar(_particle,Vars->UserVariable3,NULL);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID && !Vars->Flag_Auto_Limits) {
           /* compute the PixelID from previous coordinates 

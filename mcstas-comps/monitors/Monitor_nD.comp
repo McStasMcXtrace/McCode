@@ -198,9 +198,9 @@
 * bins: [1]              Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
 * min: [u]               Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
 * max: [u]               Maximum range value to force for all variables. Use 'max' or 'limits' keyword in 'options' for other limits
-* user1: [string]        Index of USERVAR to be monitored by user1. 
-* user2: [string]        Indes of USERVAR to be monitroed by user2.
-* user3: [string]        Index of USERVAR to be monitored by user3.
+* user1: [str]           Variable name of USERVAR to be monitored by user1.
+* user2: [str]           Variable name of USERVAR to be monitored by user2.
+* user3: [str]           Variable name of USERVAR to be monitored by user3.
 * username1: [str]       Name assigned to User1
 * username2: [str]       Name assigned to User2
 * username3: [str]       Name assigned to User3
@@ -220,7 +220,7 @@
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-    int user1=-1, int user2=-1, int user3=-1,
+  string user1="", string user2="", string user3="",
   xwidth=0, yheight=0, zdepth=0,
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0,
   bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0,
@@ -268,6 +268,7 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
+  /* transfer or "zero" username- and user variable strings to Vars struct*/
   strncpy(Vars.UserName1,
     username1 && strlen(username1) && strcmp(username1, "0") && strcmp(username1, "NULL") ?
     username1 : "", 128);
@@ -277,7 +278,17 @@ INITIALIZE
   strncpy(Vars.UserName3,
     username3 && strlen(username3) && strcmp(username3, "0") && strcmp(username3, "NULL") ?
     username3 : "", 128);
-  if (radius) {
+  strncpy(Vars.UserVariable1,
+    user1 && strlen(user1) && strcmp(user1, "0") && strcmp(user1, "NULL") ?
+    user1 : "", 128);
+  strncpy(Vars.UserVariable2,
+    user2 && strlen(user2) && strcmp(user2, "0") && strcmp(user2, "NULL") ?
+    user2 : "", 128);
+  strncpy(Vars.UserVariable3,
+    user3 && strlen(user3) && strcmp(user3, "0") && strcmp(user3, "NULL") ?
+    user3 : "", 128);
+
+if (radius) {
     xwidth = zdepth = 2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana") && !strstr(Vars.option, "sphere"))
       strcat(Vars.option, " banana");
@@ -335,11 +346,6 @@ MPI_MASTER(
 #endif
 #endif
 
-  if(user1>=MC_NUSERVAR || user2>=MC_NUSERVAR || user3>=MC_NUSERVAR){
-    fprintf(stderr,"ERROR (%s): uservar index exceeds the number of USERVARS declared in the instrument. Please check your parameters\n",NAME_CURRENT_COMP);
-    exit(-1);
-  }
-
 %}
 
 TRACE
@@ -351,15 +357,6 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  if(user1!=-1){
-    Vars.UserVariable1 = particle_getuservar_byid(_particle,user1,NULL);
-  }
-  if(user2!=-1){
-    Vars.UserVariable2 = particle_getuservar_byid(_particle,user2,NULL);
-  }
-  if(user3!=-1){
-    Vars.UserVariable3 = particle_getuservar_byid(_particle,user3,NULL);
-  }
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
