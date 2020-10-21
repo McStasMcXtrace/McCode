@@ -2195,7 +2195,7 @@ cogen_header(struct instr_def *instr, char *output_name)
     coutf("  if(str_comp(\"%s\",name)){rval=p->%s;s=0;}",var,var);
   }
   list_iterate_end(liter);
-  cout("  if (suc!=0x0 && !s) {*suc=0;}");
+  cout("  if (suc!=0x0) {*suc=s;}");
   cout("  return rval;");
   cout("}");
   cout("");
@@ -2211,7 +2211,7 @@ cogen_header(struct instr_def *instr, char *output_name)
     coutf("  case %d: {rval=p->%s;s=1;break;}",jvar++,var);
   }
   cout("  }");
-  cout("  if (suc!=0x0 && !s) {*suc=0;}");
+  cout("  if (suc!=0x0) {*suc=s;}");
   cout("  return rval;");
   cout("}");
   cout("");
