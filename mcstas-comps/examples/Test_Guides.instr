@@ -31,6 +31,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_Guides(int Guide=1)
+DEPENDENCY " -DUSE_OFF "
 
 DECLARE %{
   int _Guide;

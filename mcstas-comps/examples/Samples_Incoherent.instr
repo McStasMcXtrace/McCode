@@ -80,6 +80,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, SAMPLE, STOP=0, V_multiples=1, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
+DEPENDENCY " -DUSE_OFF "
 
 DECLARE %{
   double e_min,e_max;
