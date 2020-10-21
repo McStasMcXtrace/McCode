@@ -156,6 +156,12 @@ size_t str_len(const char *s);
 #  endif
 #endif
 
+#ifndef OPENACC /* default is to enable OFF when not using PGI/OpenACC */
+#  ifndef USE_OFF
+#    define USE_OFF
+#  endif
+#endif
+
 #if (NOSIGNALS == 0)
 #  undef NOSIGNALS
 #endif
