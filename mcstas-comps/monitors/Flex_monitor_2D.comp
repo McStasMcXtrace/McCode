@@ -151,7 +151,7 @@ SAVE
     DETECTOR_OUT_2D(
       "Flex monitor 2D",
       username1, username2,
-      Umin1, Umax1, Umin1, Umin2, nU1, nU2,
+      Umin1, Umax1, Umin2, Umax2, nU1, nU2,
       &U_N[0][0],&U_p[0][0],&U_p2[0][0],
       filename);
   }
@@ -159,9 +159,9 @@ SAVE
 
 FINALLY
 %{
-  destroy_darr1d(U_N);
-  destroy_darr1d(U_p);
-  destroy_darr1d(U_p2);
+  destroy_darr2d(U_N);
+  destroy_darr2d(U_p);
+  destroy_darr2d(U_p2);
 %}
 
 MCDISPLAY
