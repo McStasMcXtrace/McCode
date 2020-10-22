@@ -1,0 +1,124 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* %I
+* Written by: Kim Lefmann
+* Date: October 26, 2000
+* Origin: Risoe
+*
+* A 2D Position-sensitive monitor. The shape is cylindrical with
+* the axis vertical. The monitor covers the whole cylinder (360 degrees).
+*
+* %D
+* An (n times m) pixel PSD monitor with cylinder shape,
+* vertical axis, centered at (0,0,0).
+*
+* Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl", yheight=0.2, radius=0.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* yheight: [m]          Height of detector
+* radius: [m]           Radius of detector
+* nr: [1]               Number of pixel (radial) columns
+* ny: [1]               Number of pixel rows
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Cyl_monitor_PSD
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0, thmin=0, thmax=360, ny=100)
+
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
+%}
+
+INITIALIZE
+%{
+  PSD_N =  create_darr2d(nr,ny);
+  PSD_p =  create_darr2d(nr,ny);
+  PSD_p2 = create_darr2d(nr,ny);
+%}
+
+TRACE
+%{
+  int i, j;
+  double t0, t1, phi;
+
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1) {
+    if(t0<0) {
+      if(t1>0) {
+	PROP_DT(t1);
+	/* Calculate pixel */
+	if (fabs(y) < yheight/2.0) {
+	  phi=atan2(x,z)*RAD2DEG;
+	  
+	  if (phi >= thmin && phi < thmax) {
+	    i=floor((nr) * (phi-thmin)/(thmax-thmin));
+	    j=floor((ny) * (y-yheight/2.0)/(yheight));
+	    double p2 = p*p;
+	      
+            #pragma acc atomic
+	    PSD_N[i][j] = PSD_N[i][j]+1;
+
+            #pragma acc atomic
+            PSD_p[i][j] = PSD_p[i][j]+p;
+	      
+            #pragma acc atomic
+	    PSD_p2[i][j] = PSD_p2[i][j]+p2;
+	  }
+	}
+      }
+    }
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+   
+  DETECTOR_OUT_2D(
+      "Cylindrical PSD monitor",
+      "radial position [deg]",
+      "y [m]",
+      thmin, thmax, -yheight/2.0, yheight/2.0, nr, ny,
+      &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+      filename);
+%}
+
+FINALLY
+%{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
+MCDISPLAY
+%{
+  circle("xz", 0, 0, 0, radius );
+%}
+
+END
