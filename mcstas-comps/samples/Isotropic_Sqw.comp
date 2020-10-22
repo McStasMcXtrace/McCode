@@ -554,7 +554,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
         DWfactor = Table_Index(sqwTable, i, Sqw->column_order[3]-1);
       if (Sqw->column_order[4]>0)
         w = Table_Index(sqwTable, i, Sqw->column_order[4]-1);
-      if (Sqw->column_order[5]>0)  {
+      if (Sqw->column_order[5]>0 && !(Sqw->column_order[1]>0))  {
         d = Table_Index(sqwTable, i, Sqw->column_order[5]-1); if (d) d = 1/d/2; }
       if (Sqw->column_order[6]>0)
         q = Table_Index(sqwTable, i, Sqw->column_order[6]-1);
