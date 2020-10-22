@@ -400,10 +400,10 @@ struct line_info_struct
         DWfactor = Table_Index(sTable, i, info->column_order[3]-1);
       if (info->column_order[4] >0)
         w = Table_Index(sTable, i, info->column_order[4]-1);
-      if (info->column_order[5] >0)
+      if (info->column_order[5] >0 && !(info->column_order[1] >0)) // Only use if d not read already
         { d = Table_Index(sTable, i, info->column_order[5]-1);
           d = (d > 0? 1/d/2 : 0); }
-      if (info->column_order[6] >0)
+      if (info->column_order[6] >0 && !(info->column_order[1] >0)) // Only use if d not read already  
         { q = Table_Index(sTable, i, info->column_order[6]-1);
           d = (q > 0 ? 2*PI/q : 0); }
       if (info->column_order[7] >0  && !F2)
