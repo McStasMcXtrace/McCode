@@ -75,7 +75,7 @@ TRACE
 	  phi=(atan2(x,z)+PI)*RAD2DEG;
 	  
 	  if (phi >= thmin && phi < thmax) {
-	    i=floor((nr-1) * (phi-thmin)/(thmax-thmin));
+	    i=floor((nr) * (phi-thmin)/(thmax-thmin));
 	    
 	    double p2 = p*p;
             #pragma acc atomic
