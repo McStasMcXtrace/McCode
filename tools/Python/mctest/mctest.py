@@ -209,7 +209,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             test.compiled = True
             test.compiletime = 0
         else:
-            if test.testnb > 0 or args.compileall:
+            if test.testnb > 0 or (not args.skipnontest):
                 log = LineLogger()
                 t1 = time.time()
                 cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
@@ -578,7 +578,7 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, mpi, compileall
+    global ncount, mpi, skipnontest
     if args.ncount:
         ncount = args.ncount[0]
     else:
@@ -617,7 +617,7 @@ if __name__ == '__main__':
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
     parser.add_argument('--versions', action='store_true', help='display local versions info')
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
-    parser.add_argument('--compileall', action='store_true', help='Also attempt compile on instruments without a test')
+    parser.add_argument('--skipnontest', action='store_true', help='Skip compilation of instruments without a test')
 
     args = parser.parse_args()
 
