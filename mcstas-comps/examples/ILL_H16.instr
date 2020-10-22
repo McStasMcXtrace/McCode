@@ -407,7 +407,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT GuideOut_Phic = Monitor_nD(
   xwidth=0.03, yheight=0.2, restore_neutron=1,
-  options="per cm2, capture, slit")
+  options="x, y, per cm2, capture, slit", bins=40)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT GuideOut_L = Monitor_nD(
