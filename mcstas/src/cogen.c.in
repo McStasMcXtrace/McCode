@@ -2195,7 +2195,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
   while(var = list_next(liter)) {
-    coutf("  if(str_comp(\"%s\",name)){rval=*( (double *)(&(p->%s)) );s=0;}",var,var);
+    coutf("  if(!str_comp(\"%s\",name)){rval=*( (double *)(&(p->%s)) );s=0;}",var,var);
   }
   list_iterate_end(liter);
   cout("  if (suc!=0x0) {*suc=s;}");
