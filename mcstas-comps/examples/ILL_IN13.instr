@@ -409,7 +409,6 @@ COMPONENT RotateNeutron = Arm()
 
     /* keep exact rotation angle for the final detector */
     RotateNeutronX  = RX;
-
   %}
 
 /* install the analyser. */
@@ -457,10 +456,10 @@ COMPONENT Sample_copy = COPY(Sample)(p_interact=0.1)
 COMPONENT DetectorMount = Arm()
   AT (0,0,-LSD) RELATIVE RotateNeutron
 
-/* COMPONENT Detector = Monitor_nD(
-  xwidth=0.1, yheight=.25, user1=RotateNeutronX, username1="Angle [deg]",
-  options="user1 limits=[-60 120], y", restore_neutron=1, bins=100)
-  AT (0, 0, 0)       RELATIVE DetectorMount*/
+COMPONENT Detector = Monitor_nD(
+  xwidth=0.1, yheight=.25, user1="RotateNeutronX", username1="Angle [deg]",
+  options="user1 limits -60 120 y", restore_neutron=1, bins=100)
+  AT (0, 0, 0)       RELATIVE DetectorMount
 
 COMPONENT DetectorEnergy = Monitor_nD(
     options="energy",

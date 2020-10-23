@@ -101,7 +101,7 @@ DECLARE
   double RH, RV;
   
   double _Frequency, _DELAY, _LCC;
-  #pragma acc declare create(_Frequency, _DELAY, _LCC)
+#pragma acc declare create(_Frequency, _DELAY, _LCC,Ei)
 %}
 
 USERVARS %{
@@ -112,6 +112,8 @@ USERVARS %{
   double viy;
   double viz;
   double Ef;
+  double Q;
+  double dE;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -160,7 +162,7 @@ INITIALIZE
   _Frequency=Frequency;
   _DELAY=DELAY;
   _LCC=LCC;
-  #pragma acc update device(_Frequency, _DELAY, _LCC)
+#pragma acc update device(_Frequency, _DELAY, _LCC, Ei)
 %}
 
 TRACE
@@ -334,24 +336,38 @@ EXTEND %{
 %}
 
 /* Global monitor */
+COMPONENT Detector_pre = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+EXTEND
+%{
+  Q=V2K*sqrt( (vx-vix)*(vx-vix)+(vy-viy)*(vy-viy)+(vz-viz)*(vz-viz) );
+  dE=Ef-Ei;
+%}
+
 COMPONENT Detector=Monitor_nD(  /* SANS XY detector */
   options="x y", xwidth=160*12.7/1000, yheight=1.118, bins=50, restore_neutron=1)
   WHEN (flag_sample || flag_container || flag_env)
   AT (0, 0, 0.01) RELATIVE PREVIOUS
 
 COMPONENT Detector_Q=Monitor_nD( /* I(q) detector */
-  options="v limits=[0 1.5]", xwidth=160*12.7/1000, yheight=1.118, bins=50, restore_neutron=1)
+  options="user1 limits=[0 1.5]", user1="Q",username1="Q transfer [Angs-1]", xwidth=160*12.7/1000, yheight=1.118, bins=50, restore_neutron=1)
   WHEN (flag_sample || flag_container || flag_env )
   AT (0, 0, 0.01) RELATIVE PREVIOUS
 
-
-/*COMPONENT Detector_QE=Monitor_nD(
-  options=v limits=[0 1.5], user2 limits=[-10 10]", xwidth=160*12.7/1000, yheight=1.118,
-    restore_neutron=1, bins=50,
-    user1=V2K*sqrt( (vx-vix)*(vx-vix)+(vy-viy)*(vy-viy)+(vz-viz)*(vz-viz) ), username1="Q transfer [Angs-1]",
-    user2=Ef-Ei, username2="Energy transfer [meV]")
+COMPONENT Detector_E=Monitor_nD( /* Energy distribution */
+  options="user1", xwidth=160*12.7/1000, yheight=1.118, restore_neutron=1, bins=50,
+  min=-Ei, max=2*Ei,
+  user1="dE", username1="Energy transfer [meV]")
   WHEN (flag_sample || flag_container || flag_env)
-  AT (0, 0, 0.01) RELATIVE PREVIOUS*/
+  AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT Detector_QE=Monitor_nD(
+  options="user1 limits=[0 1.5], user2 limits=[-10 10]", xwidth=160*12.7/1000, yheight=1.118,
+  restore_neutron=1, bins=50,
+  user1="Q", username1="Q transfer [Angs-1]",
+  user2="dE", username2="Energy transfer [meV]")
+WHEN (flag_sample || flag_container || flag_env)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
 
 COMPONENT EndOfInstrument=Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
