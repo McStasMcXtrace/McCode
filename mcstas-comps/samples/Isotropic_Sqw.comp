@@ -2221,16 +2221,20 @@ double coh=0, inc=0;
 struct Sqw_Data_struct Data_sqw;
 double d_phi_thread = d_phi;
 
+char type;
+
+double ki_x,ki_y,ki_z,ti,vi,ki;
+double kf_x,kf_y,kf_z,tf,kf;
 
 /* Store Initial neutron state */
 
-VarSqw.ki_x = V2K*vx;
-VarSqw.ki_y = V2K*vy;
-VarSqw.ki_z = V2K*vz;
-VarSqw.ti   = t;
-VarSqw.vi   = 0;
-VarSqw.ki   = 0;
-VarSqw.type = '\0';
+ki_x = V2K*vx;
+ki_y = V2K*vy;
+ki_z = V2K*vz;
+ti   = t;
+vi   = 0;
+ki   = 0;
+type = '\0';
 
 #ifdef OPENACC
 #ifdef USE_OFF
@@ -2342,8 +2346,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
     k  = V2K*v;
     Ei = VS2E*v*v;
 
-    if (!VarSqw.vi) VarSqw.vi = v;
-    if (!VarSqw.ki) VarSqw.ki = k;
+    if (!vi) vi = v;
+    if (!ki) ki = k;
 
     if (v <= 0) {
       printf("Isotropic_Sqw: %s: ERROR: Null velocity !\n",NAME_CURRENT_COMP);
@@ -2418,7 +2422,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       p_mult *= fabs(p_scatt/mc_scatt); /* lower than 1 */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
-      if (!VarSqw.type) VarSqw.type = 't';
+      if (!type) type = 't';
       if (!mc_trans) ABSORB;
       p_mult *= fabs(p_trans/mc_trans);  /* attenuate beam by portion which is scattered (and left along) */
     }
@@ -2475,13 +2479,13 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
         vx = u1x; vy = u1y; vz = u1z;
         vf = v; kf = k;
-        if (!VarSqw.type) VarSqw.type = 'v';
+        if (!type) type = 'v';
         SCATTER;
       } else {
         /* CASE 1b: incoherent Sqw from file */
         if (VarSqw.Data_inc.intensity) {
           Data_sqw = VarSqw.Data_inc;
-          if (!VarSqw.type) VarSqw.type = 'i';
+          if (!type) type = 'i';
           flag = 1;
         }
       }
@@ -2489,7 +2493,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       if (VarSqw.Data_coh.intensity) {
         /* CASE2: coherent case */
         Data_sqw = VarSqw.Data_coh;
-        if (!VarSqw.type) VarSqw.type = 'c';
+        if (!type) type = 'c';
         flag = 1;
       }
     }
@@ -2617,7 +2621,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (VarSqw.verbose_output >= 2 && VarSqw.neutron_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
             "               last try (%i): type=%c w=%g q=%g cos(theta)=%g k=%g\n",
-            NAME_CURRENT_COMP, VarSqw.maxloop, (VarSqw.type ? VarSqw.type : '-'), omega, q, costheta, k);
+            NAME_CURRENT_COMP, VarSqw.maxloop, (type ? type : '-'), omega, q, costheta, k);
         VarSqw.neutron_removed++;
         if (order && SCATTERED != order) ABSORB;
         break;       /* finish multiple scattering loop */
@@ -2699,12 +2703,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
 } while (intersect); /* end do (intersect) (multiple scattering loop) */
 
 /* Store Final neutron state */
-VarSqw.kf_x = V2K*vx;
-VarSqw.kf_y = V2K*vy;
-VarSqw.kf_z = V2K*vz;
-VarSqw.tf   = t;
-VarSqw.vf   = v;
-VarSqw.kf   = k;
+kf_x = V2K*vx;
+kf_y = V2K*vy;
+kf_z = V2K*vz;
+tf   = t;
+vf   = v;
+kf   = k;
 VarSqw.theta= theta;
 
 if (SCATTERED) {
@@ -2712,12 +2716,12 @@ if (SCATTERED) {
 
 
   if (SCATTERED == 1) {
-    if (VarSqw.type == 'c') VarSqw.single_coh += p;
+    if (type == 'c') VarSqw.single_coh += p;
     else                    VarSqw.single_inc += p;
-    VarSqw.dq = sqrt((VarSqw.kf_x-VarSqw.ki_x)*(VarSqw.kf_x-VarSqw.ki_x)
-                  +(VarSqw.kf_y-VarSqw.ki_y)*(VarSqw.kf_y-VarSqw.ki_y)
-                  +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
-    VarSqw.dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
+    VarSqw.dq = sqrt((kf_x-ki_x)*(kf_x-ki_x)
+                  +(kf_y-ki_y)*(kf_y-ki_y)
+                  +(kf_z-ki_z)*(kf_z-ki_z));
+    VarSqw.dw = VS2E*(vf*vf - vi*vi);
   } else VarSqw.multi += p;
 
 } else VarSqw.dq=VarSqw.dw=0;
