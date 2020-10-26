@@ -391,7 +391,7 @@ AT (0,0,0) RELATIVE SuppPos
 
 COMPONENT Mon_SuppOutT = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="auto t slit", bins=iTOF_CHA_RESOL)
+  options="t slit", bins=iTOF_CHA_RESOL)
 AT (0,0,+0.07+0.001) RELATIVE SuppPos
 
 /* --------------------------- IN6 Fermi ------------------------ */
@@ -410,14 +410,14 @@ AT (0,0,0) RELATIVE FermiPos
 
 COMPONENT Mon_FermiOutdT = Monitor_nD(
   xwidth = 0.044, yheight = 0.064,
-  options="auto t slit", bins=iTOF_CHA_RESOL)
+  options="t slit", bins=iTOF_CHA_RESOL)
 AT (0,0,+0.06+0.001) RELATIVE FermiPos
 
 /* --------------------------- IN6 Fermi END --------------------- */
 
 COMPONENT MonokMonitor = Monitor_nD(
-  xwidth = 0.2, yheight = 0.2, user1=0, username1="Monoch. index",
-  options="user1 limits=[0.5,3.5] bins=9, auto lambda bins=20, square, per cm2")
+    xwidth = 0.2, yheight = 0.2, user1="monok_index", username1="Monoch. index",
+  options="user1 limits=[0.5,3.5] bins=9, lambda bins=20, square, per cm2")
 AT (0,0,+0.06+0.002) RELATIVE FermiPos
 
 /* sample position (at 2.1 m from monoks) */
@@ -429,7 +429,7 @@ AT (0,0,LME-.273) RELATIVE mono_out
 
 COMPONENT Mon_SampleInXY = Monitor_nD(
   xwidth = 0.2, yheight = 0.1,
-  options="auto x y parallel, per cm2")
+  options="x y parallel, per cm2")
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* BEGIN ********************************** Sample environment and sample */
@@ -452,9 +452,9 @@ COMPONENT M_theta_t_all = Monitor_nD(
  bins=100)
 AT (0,0,0) RELATIVE sample_pos
 
-COMPONENT Detector_nM = Monitor_Sqw(
-  radius=1.3, yheight=1, bins=100, index=-2,
-  options="user1 limits=[0 6] user2 limits=[-20 20]")
-  AT (0, 0, 0) RELATIVE PREVIOUS
+/*COMPONENT Detector_nM = Monitor_Sqw(*/
+/*  radius=1.3, yheight=1, bins=100, index=-2,*/
+/*  options="user1 limits=[0 6] user2 limits=[-20 20]")*/
+/*  AT (0, 0, 0) RELATIVE PREVIOUS*/
 
 END
