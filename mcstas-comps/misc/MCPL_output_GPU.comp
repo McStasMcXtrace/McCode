@@ -51,7 +51,7 @@
 DEFINE COMPONENT MCPL_output_GPU
 DEFINITION PARAMETERS ()
   SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, userflag=0,
-  string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=1e6)
+  string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=0)
 OUTPUT PARAMETERS (outputfile, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
@@ -168,19 +168,21 @@ INITIALIZE
     if (myfilename){
       free(myfilename);
     }
-    long long nparticles = mcget_ncount();
-    X = create_darr1d(nparticles);
-    X = create_darr1d(nparticles);
-    Y = create_darr1d(nparticles);
-    Z = create_darr1d(nparticles);
-    VX = create_darr1d(nparticles);
-    VY = create_darr1d(nparticles);
-    VZ = create_darr1d(nparticles);
-    SX = create_darr1d(nparticles);
-    SY = create_darr1d(nparticles);
-    SZ = create_darr1d(nparticles);
-    T = create_darr1d(nparticles);
-    P = create_darr1d(nparticles);
+    if(!buffermax){
+      buffermax= mcget_ncount();
+    }
+    X = create_darr1d(buffermax);
+    X = create_darr1d(buffermax);
+    Y = create_darr1d(buffermax);
+    Z = create_darr1d(buffermax);
+    VX = create_darr1d(buffermax);
+    VY = create_darr1d(buffermax);
+    VZ = create_darr1d(buffermax);
+    SX = create_darr1d(buffermax);
+    SY = create_darr1d(buffermax);
+    SZ = create_darr1d(buffermax);
+    T = create_darr1d(buffermax);
+    P = create_darr1d(buffermax);
 
     captured=-1;
 %}
@@ -192,20 +194,20 @@ TRACE
     captured = captured+1;
   }
   unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
-  //  if (captured < ceil(buffermax)) {
-    X[i]=x;
-    Y[i]=y;
-    Z[i]=z;
-    VX[i]=vx;
-    VY[i]=vy;
-    VZ[i]=vz;
-    SX[i]=sx;
-    SY[i]=sy;
-    SZ[i]=sz; 
-    T[i]=t;
-    P[i]=p;
+  if (captured < ceil(buffermax)) {
+    X[captured]=x;
+    Y[captured]=y;
+    Z[captured]=z;
+    VX[captured]=vx;
+    VY[captured]=vy;
+    VZ[captured]=vz;
+    SX[captured]=sx;
+    SY[captured]=sy;
+    SZ[captured]=sz;
+    T[captured]=t;
+    P[captured]=p;
     SCATTER;
-    //}
+  }
 %}
 
 SAVE
@@ -217,7 +219,7 @@ SAVE
   if (captured >= ceil(buffermax)) {
      fprintf(stderr,"MCPL_output captured %g particles which is more than the buffersize (%g)!\n",(double)captured,buffermax);
   }
-  for (i=0;i<ceil(buffermax);i++) {
+  for (i=0;i<captured;i++) {
     if (P[i]>0) {
       /*positions are in cm*/
       Particle.position[0]=X[i]*100;

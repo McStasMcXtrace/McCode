@@ -52,7 +52,7 @@ EXTEND %{
 
 /* the output ============================================================== */
 COMPONENT vout = MCPL_output_GPU(
-     filename="voutput", verbose=1) 
+     filename="voutput", verbose=1, buffermax=1000)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
@@ -75,9 +75,9 @@ COMPONENT m4 = Monitor_nD(
   options="E limits=[0 82] parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
 
-COMPONENT m5 = Monitor_nD(
-  xwidth=0.2, yheight=0.2, user1=2112,
-  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"
-) AT (0,0,0) ABSOLUTE
+/*COMPONENT m5 = Monitor_nD(*/
+/*  xwidth=0.2, yheight=0.2, user1=2112,*/
+/*  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"*/
+/*) AT (0,0,0) ABSOLUTE*/
 
 END
