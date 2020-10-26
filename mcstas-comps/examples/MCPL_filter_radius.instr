@@ -52,11 +52,11 @@ WHEN (Radius < radius) AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT MCPLhigh = MCPL_output_GPU(filename="R_long")
 WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS
 
-/* COMPONENT Rshort = Monitor_nD(filename="R_short", options="previous auto user1", user1=Radius, username1="Distance from origin / m")
+COMPONENT Rshort = Monitor_nD(filename="R_short", options="previous user1 limits 0 5", user1="Radius", username1="Distance from origin / m")
 WHEN (Radius < radius) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Rlong = Monitor_nD(filename="R_long", options="previous auto user1", user1=Radius, username1="Distance from origin / m")
-WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS */
+COMPONENT Rlong = Monitor_nD(filename="R_long", options="previous user1 limits 0 5", user1="Radius", username1="Distance from origin / m")
+WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS
 
 
 FINALLY
