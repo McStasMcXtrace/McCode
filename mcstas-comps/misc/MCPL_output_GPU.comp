@@ -50,7 +50,7 @@
 
 DEFINE COMPONENT MCPL_output_GPU
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, userflag=0,
+  SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, string userflag="",
   string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=0)
 OUTPUT PARAMETERS (outputfile, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
@@ -80,6 +80,7 @@ DECLARE
     DArray1d SZ;
     DArray1d T;
     DArray1d P;
+    DArray1d U;
     int captured;
 %}
 
@@ -183,13 +184,16 @@ INITIALIZE
     SZ = create_darr1d(buffermax);
     T = create_darr1d(buffermax);
     P = create_darr1d(buffermax);
-
+    if (userflagenabled) {
+      U = create_darr1d(buffermax);
+    }
     captured=0;
 %}
 
 TRACE
 %{
   int cap;
+  double uvar;
   #pragma acc atomic capture
   {
     cap=captured++;
@@ -197,30 +201,23 @@ TRACE
 
   //  unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
   if (cap < ceil(buffermax)) {
-    #pragma acc atomic write
     X[cap]=x;
-    #pragma acc atomic write
     X[cap]=x;
-    #pragma acc atomic write
     Y[cap]=y;
-    #pragma acc atomic write
     Z[cap]=z;
-    #pragma acc atomic write
     VX[cap]=vx;
-    #pragma acc atomic write
     VY[cap]=vy;
-    #pragma acc atomic write
     VZ[cap]=vz;
-    #pragma acc atomic write
     SX[cap]=sx;
-    #pragma acc atomic write
     SY[cap]=sy;
-    #pragma acc atomic write
     SZ[cap]=sz;
-    #pragma acc atomic write
     T[cap]=t;
-    #pragma acc atomic write
     P[cap]=p;
+    if(userflagenabled) {
+      int fail;
+      uvar = particle_getvar(_particle,userflag,&fail); if(fail) uvar=0;
+      U[cap] = uvar;
+    }
     SCATTER;
   }
 %}
@@ -259,7 +256,7 @@ SAVE
       Particle.weight = P[i];
       /*if specified also add the userflags*/
       if(userflagenabled){
-	Particle.userflags = (uint32_t) userflag;
+	Particle.userflags = (uint32_t) U[i];
       }
       
       if (verbose==3 && mcrun_num<10) {
