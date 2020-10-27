@@ -30,7 +30,7 @@ USERVARS
 
 INITIALIZE
 %{
-  mcset_ncount(ceil(Ncount));
+  mcset_ncount((int)ceil(Ncount));
 %}
 
 TRACE
@@ -52,7 +52,7 @@ EXTEND %{
 
 /* the output ============================================================== */
 COMPONENT vout = MCPL_output_GPU(
-     filename="voutput", verbose=1, buffermax=1000)
+     filename="voutput", verbose=1, buffermax=Ncount)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(

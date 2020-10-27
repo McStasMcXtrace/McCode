@@ -80,7 +80,7 @@ DECLARE
     DArray1d SZ;
     DArray1d T;
     DArray1d P;
-    long long captured;
+    int captured;
 %}
 
 INITIALIZE
@@ -189,23 +189,38 @@ INITIALIZE
 
 TRACE
 %{
-  #pragma acc atomic
+  int cap;
+  #pragma acc atomic capture
   {
-    captured = captured+1;
+    cap=captured++;
   }
-  unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
-  if (captured < ceil(buffermax)) {
-    X[captured]=x;
-    Y[captured]=y;
-    Z[captured]=z;
-    VX[captured]=vx;
-    VY[captured]=vy;
-    VZ[captured]=vz;
-    SX[captured]=sx;
-    SY[captured]=sy;
-    SZ[captured]=sz;
-    T[captured]=t;
-    P[captured]=p;
+
+  //  unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
+  if (cap < ceil(buffermax)) {
+    #pragma acc atomic write
+    X[cap]=x;
+    #pragma acc atomic write
+    X[cap]=x;
+    #pragma acc atomic write
+    Y[cap]=y;
+    #pragma acc atomic write
+    Z[cap]=z;
+    #pragma acc atomic write
+    VX[cap]=vx;
+    #pragma acc atomic write
+    VY[cap]=vy;
+    #pragma acc atomic write
+    VZ[cap]=vz;
+    #pragma acc atomic write
+    SX[cap]=sx;
+    #pragma acc atomic write
+    SY[cap]=sy;
+    #pragma acc atomic write
+    SZ[cap]=sz;
+    #pragma acc atomic write
+    T[cap]=t;
+    #pragma acc atomic write
+    P[cap]=p;
     SCATTER;
   }
 %}
