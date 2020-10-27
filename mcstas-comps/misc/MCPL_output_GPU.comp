@@ -227,7 +227,7 @@ SAVE
   double nrm;
   unsigned long long i;
   mcpl_particle_t Particle;
-  if (captured >= ceil(buffermax)) {
+  if (captured > ceil(buffermax)) {
      fprintf(stderr,"MCPL_output captured %g particles which is more than the buffersize (%g)!\n",(double)captured,buffermax);
   }
   for (i=0;i<captured;i++) {
