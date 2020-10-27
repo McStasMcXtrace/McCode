@@ -202,7 +202,6 @@ TRACE
   //  unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
   if (cap < ceil(buffermax)) {
     X[cap]=x;
-    X[cap]=x;
     Y[cap]=y;
     Z[cap]=z;
     VX[cap]=vx;
@@ -220,14 +219,14 @@ TRACE
     }
     SCATTER;
   }
+
 %}
 
 SAVE
 %{
   double nrm;
   unsigned long long i;
-  mcpl_particle_t *particle,Particle;
-  particle=&Particle;
+  mcpl_particle_t Particle;
   if (captured >= ceil(buffermax)) {
      fprintf(stderr,"MCPL_output captured %g particles which is more than the buffersize (%g)!\n",(double)captured,buffermax);
   }
@@ -261,12 +260,12 @@ SAVE
       
       if (verbose==3 && mcrun_num<10) {
 	printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
-	       mcrun_num, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
-	       particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
-	       particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
+	       mcrun_num, Particle.ekin, Particle.position[0], Particle.position[1], Particle.position[2],
+	       Particle.direction[0], Particle.direction[1], Particle.direction[2], Particle.time, Particle.weight,
+	       Particle.polarisation[0], Particle.polarisation[1], Particle.polarisation[2]);
       }
       
-      mcpl_add_particle(outputfile,particle);
+      mcpl_add_particle(outputfile,&Particle);
     }
   }
 %}
