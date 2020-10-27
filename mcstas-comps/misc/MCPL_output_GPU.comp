@@ -184,7 +184,7 @@ INITIALIZE
     T = create_darr1d(buffermax);
     P = create_darr1d(buffermax);
 
-    captured=-1;
+    captured=0;
 %}
 
 TRACE
