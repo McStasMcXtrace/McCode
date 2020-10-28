@@ -237,47 +237,47 @@ COMPONENT Arm2 = Arm()
 
 
 
-/*COMPONENT AutoTOFL0 = Monitor_nD(xwidth=XW, yheight=YH, user1=T0, user2=L0, options="user1 limits=[0 5e-3] bins=51, user2 limits=[0.1 20] bins=41", restore_neutron=1)
- AT (0, 0, 0.001) RELATIVE BackTrace
+COMPONENT AutoTOFL0 = Monitor_nD(xwidth=XW, yheight=YH, user1="T0", user2="L0", options="user1 limits=[0 5e-3] bins=51, user2 limits=[0.1 20] bins=41", restore_neutron=1)
+AT (0, 0, 0.001) RELATIVE BackTrace
 
-COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, user1=T0, options="user1 limits=[0 5e-3] bins=51", restore_neutron=1)
+COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, user1="T0", options="user1 limits=[0 5e-3] bins=51", restore_neutron=1)
  AT (0, 0, 0.001) RELATIVE PREVIOUS
 
-  COMPONENT AutoL0 = Monitor_nD(xwidth=XW, yheight=YH, user1=L0, options="user1 limits=[0.1 20] bins=41", restore_neutron=1)
+COMPONENT AutoL0 = Monitor_nD(xwidth=XW, yheight=YH, user1="L0", options="user1 limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 0.001) RELATIVE PREVIOUS
-*/
-/*  COMPONENT PSD0= Monitor_nD(filename="flat",xwidth=0.2,yheight=0.2,user1=SrcX,user2=SrcY,options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
+
+COMPONENT PSD0= Monitor_nD(filename="flat",xwidth=0.2,yheight=0.2,user1="SrcX",user2="SrcY",options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
   AT (0,0,0.001) RELATIVE PREVIOUS
 
-  COMPONENT PSD1=Monitor_nD(filename="flatC",xwidth=0.2,yheight=0.2,user1=SrcX,user2=SrcY,options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
-WHEN (Eneutron<EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
+COMPONENT PSD1=Monitor_nD(filename="flatC",xwidth=0.2,yheight=0.2,user1="SrcX",user2="SrcY",options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
+  WHEN (Eneutron<EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
-  COMPONENT PSD2=Monitor_nD(filename="flatT",xwidth=0.16,yheight=0.16,user1=SrcX,user2=SrcY,options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
-WHEN (Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
+COMPONENT PSD2=Monitor_nD(filename="flatT",xwidth=0.16,yheight=0.16,user1="SrcX",user2="SrcY",options="user1 limits=[-0.1 0.1] bins=90, user2 limits=[-0.1 0.1] bins=90,", restore_neutron=1)
+  WHEN (Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
 
-COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
-AT (0, 0, 1) RELATIVE Source
+COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  AT (0, 0, 1) RELATIVE Source
 
-COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=EmaxC && Eneutron>=EminC) AT (0, 0, 1) RELATIVE Source
 
-COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=EmaxTh && Eneutron>=EminTh) AT (0, 0, 1) RELATIVE Source
 
-COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
+COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcY", username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
   WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
 
-COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
+COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcY", username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
   WHEN(!IsCold) AT (0, 0, 1) RELATIVE Source
 
-COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
+COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", user2="SrcY",username2="Vertical position / [m]", options=options2, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
-COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
+COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Emission position / [m]", user2="SrcZ", username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
-*/
+
 
 COMPONENT AutoTOFL = Monitor_nD(xwidth=0.1, yheight=0.1, options="tof limits=[0 15e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 2) RELATIVE Source
@@ -314,15 +314,15 @@ COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
       Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1,source_dist=2,xwidth=0.1,yheight=0.1)
   WHEN (fabs(SrcY)<Yheight/2.5 && -SrcX>(TCollmin+delta) && -SrcX<(TCollmax+delta))  AT (0, 0, 2) RELATIVE Source
 
-/*  COMPONENT PSD0x= Monitor_nD(filename="flat_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
+COMPONENT PSD0x= Monitor_nD(filename="flat_x",xwidth=0.1,yheight=0.1,user1="SrcX",user2="SrcY",options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
   AT (0,0,0.001) RELATIVE PREVIOUS
 
-  COMPONENT PSD1x=Monitor_nD(filename="flatC_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
+  COMPONENT PSD1x=Monitor_nD(filename="flatC_x",xwidth=0.1,yheight=0.1,user1="SrcX",user2="SrcY",options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
 WHEN (Eneutron<EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
-  COMPONENT PSD2x=Monitor_nD(filename="flatT_x",xwidth=0.1,yheight=0.1,user1=SrcX,user2=SrcY,options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
+  COMPONENT PSD2x=Monitor_nD(filename="flatT_x",xwidth=0.1,yheight=0.1,user1="SrcX",user2="SrcY",options="user1 limits=[-0.08 0.08] bins=90, user2 limits=[-0.08 0.08] bins=90,", restore_neutron=1)
 WHEN (Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
-*/
+
 
 COMPONENT GuideR = Guide_curved(
     w1 = 0.1, h1 = 0.1, l = 50, curvature=3000)

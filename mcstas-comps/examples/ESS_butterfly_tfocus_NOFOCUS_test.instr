@@ -170,32 +170,32 @@ COMPONENT Arm2 = Arm()
   AT (0,0,3.5) RELATIVE ABSOLUTE
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
-//COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
-//  WHEN(Eneutron<=Emax && Eneutron>=Emin) AT (0, 0, 1) RELATIVE Source
+COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  WHEN(Eneutron<=Emax && Eneutron>=Emin) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
-//COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
-//  WHEN(Eneutron<=EmaxC && Eneutron>=EminC) AT (0, 0, 1) RELATIVE Source
+COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  WHEN(Eneutron<=EmaxC && Eneutron>=EminC) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
-//COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
-//  WHEN(Eneutron<=EmaxTh && Eneutron>=EminTh) AT (0, 0, 1) RELATIVE Source
+COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  WHEN(Eneutron<=EmaxTh && Eneutron>=EminTh) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the vertical emmision coordinate of cold neutrons */
-//COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
-//  WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
+COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcY", username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
+  WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the vertical emmision coordinate of thermal neutrons */
-//COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
-//  WHEN(!IsCold) AT (0, 0, 1) RELATIVE Source
+COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcY", username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
+  WHEN(!IsCold) AT (0, 0, 1) RELATIVE Source
 
 /* 2D-plot of emmision coordinates for all neutrons */
-//COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
-// AT (0, 0, 1) RELATIVE Source
+COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", user2="SrcY",username2="Vertical position / [m]", options=options2, restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
 
 /* 2D-plot of (x,z) emmision coordinates for all neutrons */
-//COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
-// AT (0, 0, 1) RELATIVE Source
+COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Emission position / [m]", user2="SrcZ", username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
 
 COMPONENT AutoTOFL = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 15e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
