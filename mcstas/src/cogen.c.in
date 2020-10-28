@@ -1574,7 +1574,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("* instrument '%s' %s", instr->name, "TRACE");
   cout("***************************************************************************** */");
   cout("");
-
+  cout("#ifndef FUNNEL");
   cout("#pragma acc routine seq");
   coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
@@ -1824,6 +1824,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  );");
   coutf("} /* raytrace_all */");
   coutf("");
+  coutf("#endif //no-FUNNEL");
 
   return(warnings);
 } /* cogen_raytrace */
@@ -1855,6 +1856,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   List l;
 
   coutf("");
+  coutf("#ifdef FUNNEL");
   coutf("// global variable and declare create required for acc");
   coutf("_class_particle* particles;");
   coutf("#pragma acc declare device_resident(particles)");
@@ -1991,6 +1993,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  printf(\"\\n\");");
 
   coutf("} /* raytrace_all_funnel */");
+  coutf("#endif // FUNNEL");
   coutf("");
 
 } /* cogen_rt_funnel */
