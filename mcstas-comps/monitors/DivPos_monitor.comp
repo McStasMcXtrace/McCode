@@ -115,7 +115,7 @@ TRACE
 
     if (div < maxdiv && div > -maxdiv)
     {
-      if(!Vertical){
+      if(!vertical){
         i = floor((x - xmin)*nb/(xmax - xmin));
       }else{
         i = floor((y - ymin)*nb/(ymax - ymin));
