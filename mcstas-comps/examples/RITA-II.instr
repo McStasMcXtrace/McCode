@@ -184,7 +184,7 @@ double lI,KI,KF;
 int SPLITREP;
 int SPLITMREP;
 int SPLITAREP;
-
+#pragma acc declare create (SPLITREP,SPLITMREP,SPLITAREP)
 /* Guide element parameters*/
 double angleGuideCurved;
 double R = 0.88;
@@ -212,8 +212,6 @@ double mono_d = 0.026;  /* Distance between mono blades. From drawings */
 double dmc; /* Distance monochromator to front of collimator. Was 0.32 from Stine */
 double rmh = 0.58; /* Radius of monohousing. Measured 2008/11/05 */
 double lc = 0.198; /*Length of monocollimator. Measured 2008/11/05*/
-/* Order of scattering from the monochromator */
-int Mono_order;
 
 /* RITA Monitor efficiency 1.7e-5 */
 double EFF = 1.7e-5;
@@ -250,7 +248,6 @@ double A5; /* scattering angle for flat analyser*/
 /* Declarations for 'Coarse Collimator' at the PSD detector surface */
 int EntrySlit;
 int ExitSlit;
-int AnaBlade;
 double BladeThickness = 0.007;// detector coll after 2006, from drawings
 double WindowSize = 0.025;
 double BladeLength = 0.179;// detector coll after 2006, from drawings
@@ -273,9 +270,7 @@ int XwinMin[9];
 int YwinMin[9];
 int XwinMax[9];
 int YwinMax[9];
-int BinX;
-int BinY;
-
+#pragma acc declare create (XwinMin,YwinMin,XwinMax,YwinMax)
 
 
 
@@ -511,6 +506,16 @@ printf("(RITA Analyzer Angle between blades: DA4=%.4g[deg])\n", machine_real.da4
 
 %}
 /* end of DECLARE */
+
+USERVARS
+%{
+  /* Order of scattering from the monochromator */
+  double Mono_order;
+  int AnaBlade;
+  int BinX;
+  int BinY;
+%}
+
 
 INITIALIZE %{
 
@@ -1265,17 +1270,17 @@ WHEN (!VIRTUALIN)  AT (0,0,dmv) RELATIVE a2
 
 
 /* If the virtual output is generated the secondary spectrometer IS NOT simulated */
-  COMPONENT virtualout = Virtual_output(filename=SOURCEFILE, bufsize=0)
-WHEN (!VIRTUALIN && VIRTUALOUT)  AT (0, 0, 0) RELATIVE aa2
-
-
-COMPONENT virtualsource = Virtual_input(filename=SOURCEFILE, verbose=1, repeat_count=REP)
-WHEN (VIRTUALIN && !VIRTUALOUT) AT (0,0,0) RELATIVE aa2
+/*  COMPONENT virtualout = Virtual_output(filename=SOURCEFILE, bufsize=0)*/
+/*WHEN (!VIRTUALIN && VIRTUALOUT)  AT (0, 0, 0) RELATIVE aa2*/
+/**/
+/**/
+/*COMPONENT virtualsource = Virtual_input(filename=SOURCEFILE, verbose=1, repeat_count=REP)*/
+/*WHEN (VIRTUALIN && !VIRTUALOUT) AT (0,0,0) RELATIVE aa2*/
 
 
 COMPONENT OrderMon = Monitor_nD(
       xwidth = 0.04, yheight = 0.08,
-      user1=Mono_order, username1="Intensity of multiples",
+      user1="Mono_order", username1="Intensity of multiples",
       options="user1 bins=5 limits=[0.5 5.5], user1 bins=5 limits=[0.5 5.5]", filename="OrderMonNtest.dat", restore_neutron=1)
  WHEN (Mono_order && !VIRTUALOUT)    AT (0, 0, 0.170-4e-3) RELATIVE aa2
 
