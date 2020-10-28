@@ -38,6 +38,16 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0)
 OUTPUT PARAMETERS(t0,t1,xp,yp,zp,xm,ym,zm,xw, yh, zt)
 
+DECLARE
+%{
+  double xw;
+  double yh;
+  double zt;
+  double xm;
+  double ym;
+  double zm;
+%}
+
 INITIALIZE
 %{
   xw = xmax-xmin;
@@ -52,6 +62,7 @@ INITIALIZE
 
 TRACE
 %{
+  double t0,t1,xp,yp,zp;
   xp = x - xm;
   yp = y - ym;
   zp = z - zm;
