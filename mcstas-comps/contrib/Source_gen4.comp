@@ -201,6 +201,28 @@ DECLARE
   t_Table pTable;
   t_Table pTable_x;
   t_Table pTable_y;
+
+  double p_in;
+  double lambda0;
+  double lambda02;
+  double lambda0b;
+  double lambda02b;
+  double lambda0c;
+  double lambda02c;
+  double L2P;
+  double L2Pb;
+  double L2Pc;
+
+  double pTable_xmin;
+  double pTable_ymin;
+  double pTable_xmax;
+  double pTable_ymax;
+  double pTable_xsum;
+  double pTable_ysum;
+  double pTable_dxmin;
+  double pTable_dxmax;
+  double pTable_dymin;
+  double pTable_dymax;
 %}
 
 INITIALIZE
