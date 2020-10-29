@@ -66,7 +66,7 @@
 
 DEFINE COMPONENT Sqq_w_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,int nqa=90, int nqb=90, int nE=10, string filename, index=-2, int nowritefile=0, int nosum=1, string vix="", string viy="", string viz="")
+SETTING PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,int nqa=90, int nqb=90, int nE=10, string filename, index=-2, int nowritefile=0, int nosum=0, string vix="", string viy="", string viz="")
 OUTPUT PARAMETERS ()
 
 DECLARE
@@ -82,8 +82,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i,j,k;
-  
   /* Make checks for limits on qa, qb, w grid */
   M_N=create_darr3d(nE,nqa,nqb);
   M_p=create_darr3d(nE,nqa,nqb);
@@ -96,7 +94,7 @@ INITIALIZE
 %}
 TRACE
   %{
-    int i,j,k;
+     int i,j,k;
     //double rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp;
     double rvx,rvy,rvz;
     double Ei,Ef,E,Ki,Kf;
@@ -115,7 +113,7 @@ TRACE
     double v_div=scalar_prod(nx, ny, nz, 0, 1, 0);
     /* Initial check to see if this neutron should be counted or not... */ 
     if (fabs(v_div)<=yheight/radius && cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight)) {
-      if(t0<0 && t1>0) {	 
+	if(t0<0 && t1>0) {
 	/* This one hits our cylindrical band, arriving from inside */
 	
 	int fail;
@@ -125,12 +123,12 @@ TRACE
 
 	//RESTORE_NEUTRON(INDEX_CURRENT_COMP+index, rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
 	/* Calculate energy transfer */
-	Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
+  	Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
 	Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
 	E=Ei-Ef;
 	
 	/* calculate k vectors and momentum transfer*/
-	kix=rvx;
+  	kix=rvx;
 	kiy=rvy;
 	kiz=rvz;
 	kfx=vx;
@@ -140,7 +138,7 @@ TRACE
 	NORM(kfx, kfy, kfz);
 	
 	/* K-vector lengths */
-	Ki=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
+ 	Ki=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
 	Kf=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
 	kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
 	kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
@@ -148,8 +146,7 @@ TRACE
 	qx=kix-kfx;
 	qy=kiy-kfy;
 	qz=kiz-kfz;
-	
-	/* Calculate projections along qa and qb */
+  	/* Calculate projections along qa and qb */
 	qqa = qx*qax + qz*qaz;
 	qqb = qx*qbx + qz*qbz;
 	
@@ -160,24 +157,31 @@ TRACE
 	  j = floor((qqb - qbmin)*nqb/(qbmax - qbmin));
 	  k = floor((E - Emin)*nE/(Emax - Emin));
 	  
-	  M_N[k][i][j]++;
-	  M_p[k][i][j] += p;
-	  M_p2[k][i][j] += p*p;
+	  double p2 = p*p;
+  	  #pragma acc atomic
+	  M_N[k][i][j] = M_N[k][i][j] + 1;
+          #pragma acc atomic
+          M_p[k][i][j] = M_p[k][i][j] + p;
+          #pragma acc atomic
+	  M_p2[k][i][j] = M_p2[k][i][j] + p2;
 	  
-	  M_Ns[i][j]++;
-	  M_ps[i][j] += p;
-	  M_p2s[i][j] += p*p;
+	  #pragma acc atomic
+	  M_Ns[i][j] = M_Ns[i][j] + 1 ;
+          #pragma acc atomic
+	  M_ps[i][j] = M_ps[i][j] + p;
+	  #pragma acc atomic
+	  M_p2s[i][j] = M_p2s[i][j] + p2;
 	  
 	  SCATTER;
-	}
+	  }
+	} 
       } 
-    } 
     /* Stuff that don't hit cylinder properly is disregarded */
 %}
 
 SAVE
 %{
-    if (!nowritefile) {
+  if (!nowritefile) {
       
   int kk,ll;
   char ff[256];
@@ -205,7 +209,7 @@ SAVE
         &M_N[kk][0][0],&M_p[kk][0][0],&M_p2[kk][0][0],
         ff);
   }
-    }
+  }
 %}
 
 FINALLY %{
