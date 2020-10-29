@@ -173,8 +173,9 @@ SETTING PARAMETERS (l,
 	string verbose = "on", // on or off
 	enableGravity = 1.0,
 	curvature=0,
+	nSegments=-1,
 	vector mvaluesright=NULL, vector mvaluesleft=NULL, vector mvaluestop=NULL, vector mvaluesbottom=NULL,
-	vector seglength=NULL	)
+		    vector seglength=NULL)
 
 OUTPUT PARAMETERS ()
 
@@ -1295,7 +1296,11 @@ INITIALIZE
 	{
 		guideInfo.enableSegments = 1;
 
-		guideInfo.numberOfSegments = sizeof(mvaluesright)/sizeof(mvaluesright[0]);
+		if (nSegments == -1) {
+         		guideInfo.numberOfSegments = sizeof(mvaluesright)/sizeof(mvaluesright[0]);
+		} else {
+		  guideInfo.numberOfSegments = (int)nSegments;
+		}
 
 		//printf("Length is %i\n",guideInfo.numberOfSegments);
 		guideInfo.mValuesright = mvaluesright;
@@ -1318,60 +1323,60 @@ INITIALIZE
 		}
 		else guideInfo.segLength = seglength;
 
-		if( guideInfo.numberOfSegments != sizeof(mvaluesright)/sizeof(mvaluesright[0])
-		 || guideInfo.numberOfSegments != sizeof(mvaluesleft)/sizeof(mvaluesleft[0])
-		 || guideInfo.numberOfSegments != sizeof(mvaluestop)/sizeof(mvaluestop[0])
-		 || guideInfo.numberOfSegments != sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0])
-		 || (guideInfo.segLength == NULL
-		  & guideInfo.numberOfSegments != sizeof(seglength)/sizeof(guideInfo.segLength[0])
-		  ) ) {
+		/* if( guideInfo.numberOfSegments != sizeof(mvaluesright)/sizeof(mvaluesright[0]) */
+		/*  || guideInfo.numberOfSegments != sizeof(mvaluesleft)/sizeof(mvaluesleft[0]) */
+		/*  || guideInfo.numberOfSegments != sizeof(mvaluestop)/sizeof(mvaluestop[0]) */
+		/*  || guideInfo.numberOfSegments != sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]) */
+		/*  || (guideInfo.segLength == NULL */
+		/*   & guideInfo.numberOfSegments != sizeof(seglength)/sizeof(guideInfo.segLength[0]) */
+		/*   ) ) { */
 
-			printf("Error in userinput inside %s, the length of the arrays"
-				   " mvalues and seglength are not equal\n",NAME_CURRENT_COMP);
-			printf("The length of the arrays are: mValuesright is %lu,"
-				   " mvaluesleft is %lu, mvaluestop is %lu, mvaluesbottom is"
-				   " %lu and seglength is %lu and should be %d \n; Above assume that the arrays are using double \n",
-					sizeof(mvaluesright)/sizeof(double),
-					sizeof(mvaluesleft)/sizeof(double),
-					sizeof(mvaluestop)/sizeof(double),
-					sizeof(mvaluesbottom)/sizeof(double),
-					sizeof(guideInfo.segLength)/sizeof(double),
-					guideInfo.numberOfSegments
-					);
+		/* 	printf("Error in userinput inside %s, the length of the arrays" */
+		/* 		   " mvalues and seglength are not equal\n",NAME_CURRENT_COMP); */
+		/* 	printf("The length of the arrays are: mValuesright is %lu," */
+		/* 		   " mvaluesleft is %lu, mvaluestop is %lu, mvaluesbottom is" */
+		/* 		   " %lu and seglength is %lu and should be %d \n; Above assume that the arrays are using double \n", */
+		/* 			sizeof(mvaluesright)/sizeof(double), */
+		/* 			sizeof(mvaluesleft)/sizeof(double), */
+		/* 			sizeof(mvaluestop)/sizeof(double), */
+		/* 			sizeof(mvaluesbottom)/sizeof(double), */
+		/* 			sizeof(guideInfo.segLength)/sizeof(double), */
+		/* 			guideInfo.numberOfSegments */
+		/* 			); */
 
-			if ( guideInfo.verboseSetting )	{
-				int i;
+		/* 	if ( guideInfo.verboseSetting )	{ */
+		/* 		int i; */
 
-				printf("The Values of mvaluesright is: [");
-				for(i=0; i < sizeof(mvaluesright)/sizeof(mvaluesright[0]); i++)
-						printf("%e,",guideInfo.mValuesright[i] );
-				printf("]\n");
+		/* 		printf("The Values of mvaluesright is: ["); */
+		/* 		for(i=0; i < sizeof(mvaluesright)/sizeof(mvaluesright[0]); i++) */
+		/* 				printf("%e,",guideInfo.mValuesright[i] ); */
+		/* 		printf("]\n"); */
 
-				printf("The Values of mvaluesleft is: [");
-				for(i=0; i < sizeof(mvaluesleft)/sizeof(mvaluesleft[0]); i++)
-						printf("%e,",guideInfo.mValuesleft[i] );
-				printf("]\n");
+		/* 		printf("The Values of mvaluesleft is: ["); */
+		/* 		for(i=0; i < sizeof(mvaluesleft)/sizeof(mvaluesleft[0]); i++) */
+		/* 				printf("%e,",guideInfo.mValuesleft[i] ); */
+		/* 		printf("]\n"); */
 
-				printf("The Values of mvaluestop is: [");
-				for(i=0; i < sizeof(mvaluestop)/sizeof(mvaluestop[0]); i++)
-						printf("%e,",guideInfo.mValuestop[i] );
-				printf("]\n");
+		/* 		printf("The Values of mvaluestop is: ["); */
+		/* 		for(i=0; i < sizeof(mvaluestop)/sizeof(mvaluestop[0]); i++) */
+		/* 				printf("%e,",guideInfo.mValuestop[i] ); */
+		/* 		printf("]\n"); */
 
-				printf("The Values of mvaluesbottom is: [");
-				for(i=0; i < sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]); i++)
-						printf("%e,",guideInfo.mValuesbottom[i] );
-				printf("]\n");
+		/* 		printf("The Values of mvaluesbottom is: ["); */
+		/* 		for(i=0; i < sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]); i++) */
+		/* 				printf("%e,",guideInfo.mValuesbottom[i] ); */
+		/* 		printf("]\n"); */
 
-				printf("The Values of seglength is: [");
-				for(i=0; i < sizeof(guideInfo.segLength)/sizeof(guideInfo.segLength[0]); i++)
-						printf("%e,",guideInfo.segLength[i]);
-				printf("]\n");
-			}
-			exit( printf("Exit due to critical error in userinput for the"
-						" component %s, consider having a look at the input"
-						" for following: mvaluesright,mvaluesleft,mvaluestop,"
-						"mvaluesbottom and/or seglength.",NAME_CURRENT_COMP) );
-		}
+		/* 		printf("The Values of seglength is: ["); */
+		/* 		for(i=0; i < sizeof(guideInfo.segLength)/sizeof(guideInfo.segLength[0]); i++) */
+		/* 				printf("%e,",guideInfo.segLength[i]); */
+		/* 		printf("]\n"); */
+		/* 	} */
+		/* 	exit( printf("Exit due to critical error in userinput for the" */
+		/* 				" component %s, consider having a look at the input" */
+		/* 				" for following: mvaluesright,mvaluesleft,mvaluestop," */
+		/* 				"mvaluesbottom and/or seglength.",NAME_CURRENT_COMP) ); */
+		/* } */
 		//
 		double sumOfelements=0;
 		int i;
