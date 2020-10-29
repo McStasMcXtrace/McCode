@@ -1,0 +1,560 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2000 Risoe National Laboratory.
+*
+* %I
+* Written by: Kim Lefmann
+* Date: 23.10.08 - 24.07.18
+* Origin: KU
+*
+* A sample for AFM or FM magnon scattering
+* based on cross section expressions from Squires, Ch.8.2
+*
+* %D
+* Single-cylinder shape.
+* Absorption included.
+* No multiple scattering.
+* No incoherent scattering emitted.
+* No attenuation from coherent scattering. No Bragg scattering.
+* bcc crystal n.n. and n.n.n. interactions only
+* Can do either FM or AFM order upon a flag
+* Assume J>0 for both FM and AFM. MUST BE CHANGED FOR CONSISTENCY
+* If AFM, the order is two-sublattice, e.g. the AFM Bragg ordering vectors are Q = (1 0 0) and equivalent.
+* One magnon branch only
+* Assume spin along z
+* Possible easy axis anisotropy along z
+* No external field
+*
+* KNOWN BUGS:
+* Gives zero scattering for too large J values (for AFM J=0.362, h approx 1). Probably this is a malfunction of zridd or call thereof
+* The value of the absolute scattered intensity is clearly too high. This is probably due to unit confusion. The relative intensity scaling seems about right.
+* 
+* Algorithm:
+* 0. Always perform the scattering if possible (otherwise ABSORB)
+* 1. Choose direction within a focusing solid angle
+* 2. Calculate the zeros of (E_i-E_f-hbar omega(kappa)) as a function of k_f
+* 3. Choose one value of k_f (always at least one is possible!)
+* 4. Perform the correct weight transformation
+*
+* %P
+* INPUT PARAMETERS:
+* radius: [m]         Outer radius of sample in (x,z) plane
+* yheight: [m]        Height of sample in y direction
+* sigma_abs: [barns]  Absorption cross section at 2200 m/s per atom
+* sigma_inc: [barns]  Incoherent scattering cross section per atom
+* a: [AA]             bcc Lattice constant
+* (r0: [fm]            Classical electron radius)
+* (gamma: [1]           Neutron gyromagnetic moment)
+* FM: [1]           Flag for whether the order if FM (0 means AFM)
+* s: [1]           spin
+* DW: [1]             Debye-Waller factor
+* T: [K]              Temperature
+* F2: [1] magnetic form factor squared
+* J1:     [meV] spin-spin interaction 1 (nn)
+* J2:     [meV] spin-spin interaction 2 (nnn)
+* D:      [mev] single ion anisotropy
+* focus_r: [m]        Radius of sphere containing target.
+* focus_xw: [m]       horiz. dimension of a rectangular area
+* focus_yh: [m]       vert.  dimension of a rectangular area
+* focus_aw: [deg]     horiz. angular dimension of a rectangular area
+* focus_ah: [deg]     vert.  angular dimension of a rectangular area
+* target_x: [m]       position of target to focus at . Transverse coordinate
+* target_y: [m]       position of target to focus at. Vertical coordinate
+* target_z: [m]       position of target to focus at. Straight ahead.
+* target_index: [1]   relative index of component to focus at, e.g. next is +1 
+* verbose: [1]        flag for test printing (print if verbose==1)
+*
+* OUTPUT PARAMETERS:
+* V_rho: [AA^-3]      Atomic density
+* V_my_s: [m^-1]      Attenuation factor due to incoherent scattering
+* V_my_a_v: [m^-1]    Attenuation factor due to absorbtion
+*
+* %L
+* The test/example instrument <a href="../examples/Test_Magnon.instr">Test_Magnon.instr</a>.
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Magnon_bcc
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,FM=0,J1,J2,D,s,DW,T,
+target_x=0, target_y=0, target_z=0, int target_index=0,F2=1,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0,verbose=0)
+OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a_v, DV, parms)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SHARE
+%{
+#ifndef PHONON_SIMPLE
+#define PHONON_SIMPLE $Revision$
+#define T2E (1/11.605)   /* Kelvin to meV */
+
+#pragma acc routine 
+double nbose(double omega, double T)  /* Other name ?? */
+  {
+    double nb;
+
+    nb= (omega>0) ? 1+1/(exp(omega/(T*T2E))-1) : 1/(exp(-omega/(T*T2E))-1);
+    return nb;
+  }
+#undef T2E
+/* Routine types from Numerical Recipies book */
+#define UNUSED (-1.11e30)
+#define MAXRIDD 60
+
+void fatalerror_cpu(char *s)
+ {
+   fprintf(stderr,"%s \n",s);
+   exit(1);
+ }
+ 
+#pragma acc routine 
+ void fatalerror(char *s)
+ {
+#ifndef OPENACC
+   fatalerror_cpu(s);
+  #endif
+ }
+
+ #pragma acc routine
+ double omega_q(double* parms)
+ {
+   /* dispersion in units of meV  */
+   double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
+   double q, qx, qy, qz, FM, J1, J2, J10, J1q, J20, J2q, D, Verbose, res_magnon, res_neutron;
+   double ah, a, s, tmp, coherence_flag, coherence_fac, Omega_magnon;
+   double u_sq_v_sq, uv,cos_factor;
+
+
+ vf=parms[0];
+ vi=parms[1];
+ vv_x=parms[2];
+ vv_y=parms[3];
+ vv_z=parms[4];
+ vi_x=parms[5];
+ vi_y=parms[6];
+ vi_z=parms[7];
+ a   =parms[8];
+ J1   =parms[9];
+ J2 = parms[10];
+ s = parms[11];
+ D = parms[12];
+ Verbose = parms[13];
+ coherence_flag = parms[14];
+ FM = parms[15];
+ ah=a/2.0;
+
+ qx=V2K*(vi_x-vf*vv_x);
+ qy=V2K*(vi_y-vf*vv_y);
+ qz=V2K*(vi_z-vf*vv_z);
+
+ /*       q=sqrt(qx*qx+qy*qy+qz*qz); */
+ J10=8*J1;
+ J1q=2*J1*(cos(ah*(qx+qy+qz))+cos(ah*(qx+qy-qz))+cos(ah*(qx-qy+qz))+cos(ah*(qx-qy-qz)));
+ J20=6*J2;
+ J2q=2*J2*(cos(a*qx)+cos(a*qy)+cos(a*qz));
+ if (FM==1)
+   {
+     Omega_magnon = s*((J10+J20)-(J1q+J2q))+D*(2*s+1);
+   }
+ else
+   {
+     tmp = (s*J10-s*J20+s*J2q+D*(2*s-1))*(s*J10-s*J20+s*J2q+D*(2*s-1))-s*s*J1q*J1q;
+     Omega_magnon = sqrt(tmp);
+   }
+ res_magnon = Omega_magnon;
+ res_neutron = fabs(VS2E*(vi*vi-vf*vf));
+ if ((Verbose==2) && fabs(res_magnon-res_neutron)< 1e-3 && (vi>vf) )
+   {
+     //          printf("ah = %g, ah*(qx+qy+qz) = %g, cos = %g \n",ah,ah*(qx+qy+qz),cos(ah*(qx+qy+qz)));                                                                                                                                                                                                                               
+     printf("omega_q called with parameters vf= %g, vi=%g (%g %g %g) vv=(%g, %g, %g) q=(%g %g %g)\n", vf,vi,vi_x,vi_y,vi_z,vv_x,vv_y,vv_z,qx,qy,qz);
+     printf("omega_q gives: J10 = %g , J1q = %g, J20 = %g, J2q = %g, D = %g, tmp = %g \n",J10,J1q,J20,J2q,D,tmp);
+     printf("in omega_q: q=(%g %g %g) omega_magnon=%g, omega_neutron=%g\n",qx,qy,qz,res_magnon,res_neutron);
+     //      printf("omega_q returning %g - %g\n",res_magnon,res_neutron);                                                                                                                                                                                                                                                            
+   }
+ if (coherence_flag)
+   {
+     if (FM==1)
+       return (1); // no coherence factor for a FM                                                                                                                                                                                                                                                                         
+     else
+       {   // This is a tricky equation, which may need a second check (KL 240718)                                                                                                                                                                                                                                             
+	 u_sq_v_sq = 2*s*(2*s*J10-2*s*(J20-J2q))/Omega_magnon;
+	 uv = -2*s*s*J1q/Omega_magnon;
+	 cos_factor= 1; // TODO: this is probably always so (despite otherwise written in Marshall and Lowsey)                                                                                                                                                                                                               
+	 coherence_fac=u_sq_v_sq + 2*cos_factor*uv;
+	 return (coherence_fac);
+       }
+   }
+ else
+   return (res_magnon - res_neutron);
+}
+
+double zridd(double (*func)(double*), double x1, double x2, double *parms, double xacc)
+    {
+      int j;
+      double ans, fh, fl, fm, fnew, s, xh, xl, xm, xnew;
+
+ //     printf("zridd called with brackets %g %g acceptance %g \n",x1,x2,xacc);
+ //     printf("and %i parameters %g %g %g %g %g \n",Nparms,parms[0],parms[1],parms[2],parms[3], parms[4]); 
+      parms[0]=x1;
+      fl=(*func)(parms);
+      parms[0]=x2;
+      fh=(*func)(parms);
+
+/*      printf("Function values: %g %g \n",fl,fh); */
+      if (fl*fh >= 0)
+      {
+        if (fl==0) return x1;
+        if (fh==0) return x2;
+        return UNUSED;
+      }
+      else
+      {
+        xl=x1;
+        xh=x2;
+        ans=UNUSED;
+        for (j=1; j<MAXRIDD; j++)
+        {
+          xm=0.5*(xl+xh);
+          parms[0]=xm;
+          fm=(*func)(parms);
+          s=sqrt(fm*fm-fl*fh);
+          if (s == 0.0)
+            return ans;
+          xnew=xm+(xm-xl)*((fl >= fh ? 1.0 : -1.0)*fm/s);
+          if (fabs(xnew-ans) <= xacc)
+            return ans;
+          ans=xnew;
+          parms[0]=ans;
+          fnew=(*func)(parms);
+          if (fnew == 0.0) return ans;
+          if (fabs(fm)*SIGN(fnew) != fm)
+          {
+            xl=xm;
+            fl=fm;
+            xh=ans;
+            fh=fnew;
+          }
+          else
+            if (fabs(fl)*SIGN(fnew) != fl)
+            {
+              xh=ans;
+              fh=fnew;
+            }
+            else
+              if(fabs(fh)*SIGN(fnew) != fh)
+              {
+                xl=ans;
+                fl=fnew;
+              }
+              else
+                fatalerror("never get here in zridd");
+          if (fabs(xh-xl) <= xacc)
+            return ans;
+        }
+        fatalerror("zridd exceeded maximum iterations");
+      }
+      return 0.0;  /* Never get here */
+    }
+
+#pragma acc routine 
+ double zridd_gpu(double x1, double x2, double *parms, double xacc)
+ {
+   int j;
+   double ans, fh, fl, fm, fnew, s, xh, xl, xm, xnew;
+
+   parms[0]=x1;
+   fl=omega_q(parms);
+   parms[0]=x2;
+   fh=omega_q(parms);
+   if (fl*fh >= 0)
+     {
+       if (fl==0) return x1;
+       if (fh==0) return x2;
+       return UNUSED;
+     }
+   else
+     {
+       xl=x1;
+       xh=x2;
+       ans=UNUSED;
+       for (j=1; j<MAXRIDD; j++)
+	 {
+	   xm=0.5*(xl+xh);
+	   parms[0]=xm;
+	   fm=omega_q(parms);
+	   s=sqrt(fm*fm-fl*fh);
+	   if (s == 0.0)
+	     return ans;
+	   xnew=xm+(xm-xl)*((fl >= fh ? 1.0 : -1.0)*fm/s);
+	   if (fabs(xnew-ans) <= xacc)
+	     return ans;
+	   ans=xnew;
+	   parms[0]=ans;
+	   fnew=omega_q(parms);
+	   if (fnew == 0.0) return ans;
+	   if (fabs(fm)*SIGN(fnew) != fm)
+	     {
+	       xl=xm;
+	       fl=fm;
+	       xh=ans;
+	       fh=fnew;
+	     }
+	   else
+	     if (fabs(fl)*SIGN(fnew) != fl)
+	       {
+		 xh=ans;
+		 fh=fnew;
+	       }
+	     else
+	       if(fabs(fh)*SIGN(fnew) != fh)
+		 {
+		   xl=ans;
+		   fl=fnew;
+		 }
+	       else
+		 fatalerror("never get here in zridd");
+	   if (fabs(xh-xl) <= xacc)
+	     return ans;
+	 }
+       fatalerror("zridd exceeded maximum iterations");
+     }
+   return 0.0;  /* Never get here */
+ }
+
+#define ROOTACC 1e-8
+  int findroots(double brack_low, double brack_mid, double brack_high, double *list, int* index, double (*f)(double*), double *parms)
+    {
+      double root, range_low=brack_mid-brack_low, range_high=brack_high-brack_mid;
+      int i, steps=100;
+
+     for (i=0; i<steps; i++)
+     {
+      root = zridd(f, brack_mid+range_high*i/(int)steps,
+                   brack_mid+range_high*(i+1)/(int)steps,
+                   (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+ //       printf("findroots found a high root: vf = %g \n",root); 
+      }
+     }
+    
+    for (i=0; i<steps; i++)
+     {
+      root = zridd(f, brack_low+range_low*i/(int)steps,
+                   brack_low+range_low*(i+1)/(int)steps,
+                   (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+ //       printf("findroots found a  low root: vf = %g \n",root); 
+      }      
+     }
+//  fatalerror("exiting findroots");
+     }
+
+#pragma acc routine 
+  int findroots_gpu(double brack_low, double brack_mid, double brack_high, double *list, int* index, double *parms)
+  {
+    double root,range=brack_mid-brack_low;
+    int i, steps=100;
+
+    for (i=0; i<steps; i++)
+      {
+	root = zridd_gpu(brack_low+range*i/(int)steps,
+			 brack_low+range*(i+1)/(int)steps,
+			 (double *)parms, ROOTACC);
+	if (root != UNUSED)
+	  {
+	    list[(*index)++]=root;
+	  }
+      }
+    root = zridd_gpu(brack_mid, brack_high, (double *)parms, ROOTACC);
+    if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+      }
+  }
+
+
+#undef UNUSED
+#undef MAXRIDD
+#endif
+%}
+
+DECLARE
+%{
+  double V_rho;
+  double V_my_s;
+  double V_my_a_v;
+  double DV;
+  double parms[16];
+  double r0;
+  double gamma_n;
+%}
+INITIALIZE
+%{
+  gamma_n=1.913; /* Neutron gamma factor */
+  r0 = 2.818; /* Classical electron radius, units of fm */
+    V_rho = 2/(a*a*a);
+  V_my_s = (V_rho * 100 * sigma_inc);
+  V_my_a_v = (V_rho * 100 * sigma_abs * 2200);
+  DV = 0.0001;   /* Velocity change used for numerical derivative */
+
+  /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
+  if (target_index){
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &target_x, &target_y, &target_z);
+  }
+  if (!(target_x || target_y || target_z)) {
+    printf("Magnon_bcc: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    target_z=1;
+  }
+%}
+TRACE
+%{
+  double t0, t1;                /* Entry/exit time for cylinder */
+  double v_i, v_f;               /* Neutron velocities: initial, final */
+  double vx_i, vy_i, vz_i;  /* Neutron initial velocity vector */
+  double dt0, dt;             /* Flight times through sample */
+  double l_full;                /* Flight path length for non-scattered neutron */
+  double l_i, l_o;              /* Flight path lenght in/out for scattered neutron */
+  double my_a_i;                  /* Initial attenuation factor */
+  double my_a_f;                  /* Final attenuation factor */
+  double solid_angle;           /* Solid angle of target as seen from scattering point */
+  double aim_x=0, aim_y=0, aim_z=1;   /* Position of target relative to scattering point */
+  double kappa_x, kappa_y, kappa_z;   /* Scattering vector */
+  double kappa2,kappa2_norm_z;             /* Square of the scattering vector - squared normalized komponent along z*/
+  double bose_factor;        /* Calculated value of the Bose factor */
+  double omega;              /* energy transfer */
+  int nf, index;                   /* Number of allowed final velocities */
+  double vf_list[7];             /* List of allowed final velocities */
+  double J_factor, coherence_factor;            /* Jacobian from delta fnc.s in cross section  + AFM coherence factor */
+  double f1, f2;            /* probed values of omega_q minus omega */
+  double p1,p2,p3,p4,p5;    /* temporary multipliers */
+
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
+  {
+    if(t0 < 0)
+      ABSORB; /* Neutron came from the sample or begins inside */
+
+    /* Neutron enters at t=t0. */
+    dt0 = t1-t0;                /* Time in sample */
+    v_i = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v_i * dt0;   /* Length of path through sample if not scattered */
+    dt = rand01()*dt0;    /* Time of scattering (relative to t0) */
+    l_i = v_i*dt;                 /* Penetration in sample at scattering */
+    vx_i=vx;
+    vy_i=vy;
+    vz_i=vz;
+    PROP_DT(dt+t0);             /* Point of scattering */
+
+    aim_x = target_x-x;         /* Vector pointing at target (e.g. analyzer) */
+    aim_y = target_y-y;
+    aim_z = target_z-z;
+
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_sphere(&vx,&vy,&vz,&solid_angle,aim_x,aim_y,aim_z, focus_r);
+    }
+    NORM(vx, vy, vz);
+/*    printf("focussed direction (vx,vy,vz=(%g %g %g) \n",vx,vy,vz); */
+    nf=0;
+      parms[0]=-1;
+      parms[1]=v_i;
+      parms[2]=vx;
+      parms[3]=vy;
+      parms[4]=vz;
+      parms[5]=vx_i;
+      parms[6]=vy_i;
+      parms[7]=vz_i;
+      parms[8]=a;
+      parms[9]=J1;
+      parms[10]=J2;
+      parms[11]=s;
+      parms[12]=D;
+      parms[13]=verbose;
+      parms[14]=0;
+      parms[15]=FM;
+    #ifndef OPENACC
+    findroots(0, v_i, v_i+SE2V*sqrt(8*s*fabs(J1)+6*s*fabs(J2)+s*fabs(D)), vf_list, &nf, omega_q, parms);
+    #else
+    findroots_gpu(0, v_i, v_i+SE2V*sqrt(8*s*fabs(J1)+6*s*fabs(J2)+s*fabs(D)), vf_list, &nf, parms);
+    #endif
+
+    index=(int)floor(rand01()*nf);
+//fatalerror("1 line after after call of findroots");
+/*    printf("Root index: %i %g \n", index, vf_list[index]); */
+    v_f=vf_list[index];
+    parms[0]=v_f;
+    parms[14]=1; // return coherence factor
+    coherence_factor = omega_q(parms);
+    parms[0]=v_f-DV;
+    parms[14]=0;  // return dispersion
+    f1=omega_q(parms);
+    parms[0]=v_f+DV;
+    f2=omega_q(parms);
+    J_factor = fabs(f2-f1)/(2*DV*K2V);
+/*    printf("f1,f2: %g %g , J factor %g \n",f1,f2,J_factor); */
+    omega=VS2E*(v_i*v_i-v_f*v_f);
+/*    printf("nf, omega: %i %g v_i index, v_f: %g %i %g \n", nf,omega,v_i,index,v_f); */
+    vx *= v_f;
+    vy *= v_f;
+    vz *= v_f;
+/* printf("vi= %g (vi_x,vi_y,vi_z)= (%g %g %g); vf= %g (vx,vy,vz)=(%g %g %g) \n",
+         v_i,vx_i,vy_i,vz_i,v_f,vx,vy,vz); */
+    kappa_x=V2K*(vx_i-vx);
+    kappa_y=V2K*(vy_i-vy);
+    kappa_z=V2K*(vz_i-vz);
+    kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
+    kappa2_norm_z=kappa_z*kappa_z/kappa2;
+
+    if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
+    {
+      /* ??? did not hit cylinder */
+      printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+      exit(1);
+    }
+    dt = t1;
+    l_o = v_f*dt;
+
+    my_a_i = V_my_a_v/v_i;
+    my_a_f = V_my_a_v/v_f;
+    bose_factor=nbose(omega,T);
+    p1 = exp(-(V_my_s*(l_i+l_o)+my_a_i*l_i+my_a_f*l_o)); /* Absorption factor */
+    p2 = nf*solid_angle*l_full*V_rho/(4*PI);     /* Focusing factors; assume random choice of n_f possibilities */
+    p3 = gamma_n*gamma_n*r0*r0*(v_f/v_i)*F2*DW*s*s*(1+kappa2_norm_z)*bose_factor;   
+        /* Cross section factor approx */
+    p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
+    p5 = coherence_factor;  /* Cross section factor 2 */
+    p *= p1*p2*p3*p4*p5;
+    SCATTER;
+
+ if (verbose==1){    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
+      printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g, coherence %g \n",
+              J_factor, l_full, v_f/v_i, DW, kappa2, bose_factor, fabs(omega), coherence_factor); 
+ }
+  } /* else transmit: Neutron did not hit the sample */
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xz", 0,  yheight/2.0, 0, radius);
+  circle("xz", 0, -yheight/2.0, 0, radius);
+  line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+  line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+  line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+  line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+%}
+
+END
