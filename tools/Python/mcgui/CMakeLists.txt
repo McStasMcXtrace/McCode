@@ -43,7 +43,7 @@ endif()
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+set(CFLAGS "-g -O2 -lm -std=c99 ${CMAKE_C_FLAGS}")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}gui-${MCCODE_VERSION}")

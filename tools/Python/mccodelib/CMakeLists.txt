@@ -46,9 +46,9 @@ endif()
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 if (APPLE)
-  set(CFLAGS "-g -O2 -lm -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+  set(CFLAGS "-g -O2 -lm -std=c99 -headerpad_max_install_names ${CMAKE_C_FLAGS}")
 else()
-  set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+  set(CFLAGS "-g -O2 -lm -std=c99 ${CMAKE_C_FLAGS}")
 endif()
 
 # CPack configuration
