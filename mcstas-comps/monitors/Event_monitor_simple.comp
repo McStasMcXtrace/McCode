@@ -41,7 +41,11 @@ INITIALIZE
 %{
   Nevents = ceil(nevents);
   Events = create_darr2d(Nevents, 11);
-  sprintf(fullfile,"%s/%s.log",mcdirname,NAME_CURRENT_COMP,"log");
+  #ifndef USE_MPI
+  sprintf(fullfile,"%s/%s.%s",dirname,NAME_CURRENT_COMP,"log");
+  #else
+  sprintf(fullfile,"%s/%s_%i.%s",dirname,NAME_CURRENT_COMP,mpi_node_rank,"log");
+  #endif
 %}
 
 TRACE
