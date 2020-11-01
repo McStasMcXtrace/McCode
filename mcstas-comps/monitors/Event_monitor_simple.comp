@@ -35,16 +35,22 @@ DECLARE
   %include "array-lib";
   DArray2d Events; 
   unsigned long Nevents;
-  char fullfile[256];
+  char fullfile[1024];
+  char outputdir[512];
 %}
 INITIALIZE
 %{
   Nevents = ceil(nevents);
   Events = create_darr2d(Nevents, 11);
+  if (mcdirname == NULL) {
+    sprintf(outputdir,".");
+  } else {
+    sprintf(outputdir,mcdirname);
+  }
   #ifndef USE_MPI
-  sprintf(fullfile,"%s/%s.%s",mcdirname,NAME_CURRENT_COMP,"log");
+  sprintf(fullfile,"%s/%s.%s",outputdir,NAME_CURRENT_COMP,"log");
   #else
-  sprintf(fullfile,"%s/%s_%i.%s",mcdirname,NAME_CURRENT_COMP,mpi_node_rank,"log");
+  sprintf(fullfile,"%s/%s_%i.%s",outputdir,NAME_CURRENT_COMP,mpi_node_rank,"log");
   #endif
 %}
 
