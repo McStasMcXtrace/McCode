@@ -42,9 +42,9 @@ INITIALIZE
   Nevents = ceil(nevents);
   Events = create_darr2d(Nevents, 11);
   #ifndef USE_MPI
-  sprintf(fullfile,"%s/%s.%s",dirname,NAME_CURRENT_COMP,"log");
+  sprintf(fullfile,"%s/%s.%s",mcdirname,NAME_CURRENT_COMP,"log");
   #else
-  sprintf(fullfile,"%s/%s_%i.%s",dirname,NAME_CURRENT_COMP,mpi_node_rank,"log");
+  sprintf(fullfile,"%s/%s_%i.%s",mcdirname,NAME_CURRENT_COMP,mpi_node_rank,"log");
   #endif
 %}
 
