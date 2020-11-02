@@ -355,26 +355,33 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
 
 #pragma acc routine 
   int findroots_gpu(double brack_low, double brack_mid, double brack_high, double *list, int* index, double *parms)
-  {
-    double root,range=brack_mid-brack_low;
-    int i, steps=100;
+    {
+      double root, range_low=brack_mid-brack_low, range_high=brack_high-brack_mid;
+      int i, steps=100;
 
-    for (i=0; i<steps; i++)
-      {
-	root = zridd_gpu(brack_low+range*i/(int)steps,
-			 brack_low+range*(i+1)/(int)steps,
-			 (double *)parms, ROOTACC);
-	if (root != UNUSED)
-	  {
-	    list[(*index)++]=root;
-	  }
-      }
-    root = zridd_gpu(brack_mid, brack_high, (double *)parms, ROOTACC);
-    if (root != UNUSED)
+     for (i=0; i<steps; i++)
+     {
+      root = zridd_gpu(brack_mid+range_high*i/(int)steps,
+                   brack_mid+range_high*(i+1)/(int)steps,
+                   (double *)parms, ROOTACC);
+      if (root != UNUSED)
       {
         list[(*index)++]=root;
       }
-  }
+     }
+    
+    for (i=0; i<steps; i++)
+     {
+      root = zridd_gpu(brack_low+range_low*i/(int)steps,
+                   brack_low+range_low*(i+1)/(int)steps,
+                   (double *)parms, ROOTACC);
+      if (root != UNUSED)
+      {
+        list[(*index)++]=root;
+      }      
+     }
+     }
+
 
 
 #undef UNUSED
