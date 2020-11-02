@@ -395,7 +395,6 @@ DECLARE
   double V_my_s;
   double V_my_a_v;
   double DV;
-  double parms[16];
   double r0;
   double gamma_n;
 %}
@@ -443,6 +442,7 @@ TRACE
   double J_factor, coherence_factor;            /* Jacobian from delta fnc.s in cross section  + AFM coherence factor */
   double f1, f2;            /* probed values of omega_q minus omega */
   double p1,p2,p3,p4,p5;    /* temporary multipliers */
+  double parms[16];
 
   if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
   {
