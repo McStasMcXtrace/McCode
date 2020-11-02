@@ -505,8 +505,7 @@ TRACE
 
     if (Vars.Flag_capture)
     {
-      multiplier_capture = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
-      multiplier_capture *= V2K;
+      multiplier_capture = V2K*sqrt(vx*vx+vy*vy+vz*vz);
       if (multiplier_capture != 0) multiplier_capture = 2*PI/multiplier_capture; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
       p = p * multiplier_capture/1.7985;
     }
@@ -522,12 +521,12 @@ TRACE
     }
 
     /*set weight to undetected part if capture and/or he3_pressure*/
-    if (Vars->he3_pressure > 0){
+    if (Vars.He3_pressure > 0){
       /* after monitor, only remains 1-p_detect */
       p = p * transmit_he3/(1.0-transmit_he3);
     }
 
-    if (Vars->capture){
+    if (Vars.Flag_capture){
       p = p / multiplier_capture;
     }
 
