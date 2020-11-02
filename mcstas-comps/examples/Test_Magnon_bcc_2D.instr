@@ -113,7 +113,7 @@ EXTEND %{
 COMPONENT Out = Event_monitor_simple(nevents=1e6)
   AT (0, 0, 5.1) RELATIVE source
 
-COMPONENT Sqqw = Sqq_w_monitor(filename="qa_vs_qb",nE=33,nqa=401,nqb=401,qamin=0.5,qamax=4.5,qamin=0.5,qbmax=4.5,index=-2,Emin=-16, Emax=16, yheight=0.1)
+  COMPONENT Sqqw = Sqq_w_monitor(filename="qa_vs_qb",nE=33,nqa=401,nqb=401,qamin=0.5,qamax=4.5,qamin=0.5,qbmax=4.5,index=-2,Emin=-16, Emax=16, yheight=0.1, vix="vix", viy="viy", viz="viz")
 AT (0,0,0) RELATIVE Magnon
 
 COMPONENT det= PSD_monitor_4PI(radius=2.1, nx=360,ny=180,filename="psd")
