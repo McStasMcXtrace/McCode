@@ -65,7 +65,7 @@
 
 
 DEFINE COMPONENT Sqq_w_monitor
-DEFINITION PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2, int nowritefile=0, int nosum=1)
+DEFINITION PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,nqa=90, nqb=90, nE=10, string filename, index=-2, int nowritefile=0, int nosum=0)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (M_N, M_p, M_p2, M_Ns, M_ps, M_p2s)
 
