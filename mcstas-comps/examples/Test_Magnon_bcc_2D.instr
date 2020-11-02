@@ -69,7 +69,7 @@ EXTEND %{
   viz=vz;
 %}
 
-COMPONENT In = Event_monitor_simple(nevents=1e6)
+COMPONENT In = Event_monitor_simple(nevents=1e2)
   AT (0, 0, 5.1) RELATIVE source
 
 COMPONENT Magnon = Magnon_bcc(
@@ -110,7 +110,7 @@ EXTEND %{
   if(!SCATTERED) ABSORB;
 %}
 
-COMPONENT Out = Event_monitor_simple(nevents=1e6)
+COMPONENT Out = Event_monitor_simple(nevents=1e2)
   AT (0, 0, 5.1) RELATIVE source
 
   COMPONENT Sqqw = Sqq_w_monitor(filename="qa_vs_qb",nE=33,nqa=401,nqb=401,qamin=0.5,qamax=4.5,qamin=0.5,qbmax=4.5,index=-2,Emin=-16, Emax=16, yheight=0.1, vix="vix", viy="viy", viz="viz")
