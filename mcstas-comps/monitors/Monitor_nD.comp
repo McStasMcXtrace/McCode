@@ -366,7 +366,8 @@ MPI_MASTER(
 
 TRACE
 %{
-  double  XY=0;
+  double  transmit_he3=1.0;
+  double  multiplier_capture=1.0;
   double  t0 = 0;
   double  t1 = 0;
   int     pp;
@@ -497,26 +498,37 @@ TRACE
 
     if ((Vars.He3_pressure > 0) && (t1 != t0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
     {
-      XY = exp(-7.417*Vars.He3_pressure*fabs(t1-t0)*2*PI*K2V);
+      transmit_he3 = exp(-7.417*Vars.He3_pressure*fabs(t1-t0)*2*PI*K2V);
       /* will monitor the absorbed part */
-      p = p*(1-XY);
-      /* and modify the neutron weight after monitor, only remains 1-p_detect */
+      p = p * (1-transmit_he3);
     }
 
     if (Vars.Flag_capture)
     {
-      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
-      XY *= V2K;
-      if (XY != 0) XY = 2*PI/XY; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
-      Vars.cp *= XY/1.7985;
+      multiplier_capture = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
+      multiplier_capture *= V2K;
+      if (multiplier_capture != 0) multiplier_capture = 2*PI/multiplier_capture; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
+      p = p * multiplier_capture/1.7985;
     }
 
-    pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
-    if (pp==0){
-      /*particle is outside bounds and should be absorbed*/
+    pp = Monitor_nD_Trace(&DEFS, &Vars);
+    if (pp==0.0)
+    {
       ABSORB;
-    } else if(pp==1){
+    }
+    else if(pp==1)
+    {
       SCATTER;
+    }
+
+    /*set weight to undetected part if capture and/or he3_pressure*/
+    if (Vars->he3_pressure > 0){
+      /* after monitor, only remains 1-p_detect */
+      p = p * transmit_he3/(1.0-transmit_he3);
+    }
+
+    if (Vars->capture){
+      p = p / multiplier_capture;
     }
 
     if (Vars.Flag_parallel) /* back to neutron state before detection */
