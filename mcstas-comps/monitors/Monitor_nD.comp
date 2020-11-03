@@ -510,7 +510,7 @@ TRACE
       p = p * multiplier_capture/1.7985;
     }
 
-    pp = Monitor_nD_Trace(&DEFS, &Vars);
+    pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
     if (pp==0.0)
     {
       ABSORB;
