@@ -357,8 +357,8 @@ MPI_MASTER(
 #else
 #ifdef OPENACC
   if (strstr(Vars.option, "auto"))
-    printf("Monitor_nD: %s is using automatic limits option 'auto' together with GPU.\n"
-           "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
+    printf("Monitor_nD: %s is requesting automatic limits option 'auto' together with OpenACC.\n"
+           "WARNING     this feature is NOT supported using OpenACC and has been disabled!\n", NAME_CURRENT_COMP);
 #endif
 #endif
 

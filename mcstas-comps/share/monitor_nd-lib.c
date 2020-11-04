@@ -322,11 +322,16 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "previous")) { Vars->Flag_Shape = DEFS->SHAPE_PREVIOUS; iskeyword=1; }
         if (!strcmp(token, "parallel")){ Vars->Flag_parallel = 1; iskeyword=1; }
         if (!strcmp(token, "capture")) { Vars->Flag_capture = 1; iskeyword=1; }
-        if (!strcmp(token, "auto") && (Flag_auto != -1)) {
-          Vars->Flag_Auto_Limits = 1;
-          if (Flag_All) Flag_auto = -1;
-          else          Flag_auto = 1;
-          iskeyword=1; Flag_All=0; }
+        if (!strcmp(token, "auto")) { 
+        #ifndef OPENACC
+        if (Flag_auto != -1) {
+	    Vars->Flag_Auto_Limits = 1;
+	    if (Flag_All) Flag_auto = -1;
+	    else          Flag_auto = 1;
+	    iskeyword=1; Flag_All=0; 
+	  }
+        #endif
+	}
         if (!strcmp(token, "premonitor")) {
           Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
         if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
