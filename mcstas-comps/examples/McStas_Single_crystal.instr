@@ -62,7 +62,7 @@ INITIALIZE
 
 TRACE
 
-COMPONENT mcpl_in = MCPL_input_GPU(filename="McStas_Single_crystal_in.mcpl")
+COMPONENT mcpl_in = MCPL_input(filename="McStas_Single_crystal_in.mcpl")
 AT(0,0,0) ABSOLUTE
 
 COMPONENT SX = Single_crystal(reflections=reflections,geometry=geometry,

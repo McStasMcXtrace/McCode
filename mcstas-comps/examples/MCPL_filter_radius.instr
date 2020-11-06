@@ -37,7 +37,7 @@ AT (0, 0, 0) ABSOLUTE
 
 /* read neutrons from an mcpl file*/
 
-COMPONENT MCPLinput_GPU = MCPL_input_GPU(filename=MCPLfile,verbose=1)
+COMPONENT MCPLinput_GPU = MCPL_input(filename=MCPLfile,verbose=1)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT Calc = Arm()

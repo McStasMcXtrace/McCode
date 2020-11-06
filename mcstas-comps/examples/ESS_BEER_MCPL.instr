@@ -222,7 +222,7 @@ COMPONENT Origin = Progress_bar()
   AT (0, 0, 0) ABSOLUTE
   
 /* Read neutrons from an mcpl file. */
-COMPONENT src = MCPL_input_GPU(filename=input, polarisationuse=0, verbose=0, Emin=Emin, Emax=Emax, repeat_count=repetition, E_smear=0, pos_smear=0.0001, dir_smear=0.001)
+COMPONENT src = MCPL_input(filename=input, polarisationuse=0, verbose=0, Emin=Emin, Emax=Emax, repeat_count=repetition, E_smear=0, pos_smear=0.0001, dir_smear=0.001)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 COMPONENT xymon = PSD_monitor(

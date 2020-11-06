@@ -62,7 +62,7 @@ INITIALIZE
 
 TRACE
 
-COMPONENT mcpl_in = MCPL_input_GPU(filename="McStas_Isotropic_Sqw_in.mcpl")
+COMPONENT mcpl_in = MCPL_input(filename="McStas_Isotropic_Sqw_in.mcpl")
 AT(0,0,0) ABSOLUTE
 
 COMPONENT Iso = Isotropic_Sqw(Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, geometry=geometry,

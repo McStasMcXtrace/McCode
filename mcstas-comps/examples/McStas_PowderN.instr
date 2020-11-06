@@ -58,7 +58,7 @@ INITIALIZE
 
 TRACE
 
-COMPONENT mcpl_in = MCPL_input_GPU(filename="McStas_PowderN_in.mcpl")
+COMPONENT mcpl_in = MCPL_input(filename="McStas_PowderN_in.mcpl")
 AT(0,0,0) ABSOLUTE
 
 COMPONENT PowderN = PowderN(reflections=reflections,geometry=geometry,

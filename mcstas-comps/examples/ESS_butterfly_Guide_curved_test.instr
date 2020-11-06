@@ -153,7 +153,7 @@ COMPONENT vinROT1 = Arm()
 AT(0,0,0) RELATIVE PREVIOUS
   ROTATED (-90,0,0) RELATIVE PREVIOUS
 
-  COMPONENT vin = MCPL_input_GPU(filename=MCPLfile,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
+  COMPONENT vin = MCPL_input(filename=MCPLfile,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT(0,0,0) RELATIVE PREVIOUS
 EXTEND %{
   SCATTER;
