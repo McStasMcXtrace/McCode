@@ -48,7 +48,6 @@ DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 SHARE
 %{
 #include <mcpl.h>
-
 %}
 
 DECLARE
@@ -60,6 +59,19 @@ long long used_neutrons;
 int repeat_cnt;
 int repeating;
 int ismpislave;
+#ifdef OPENACC
+DArray1d X;
+DArray1d Y;
+DArray1d Z;
+DArray1d VX;
+DArray1d VY;
+DArray1d VZ;
+DArray1d SX;
+DArray1d SY;
+DArray1d SZ;
+DArray1d T;
+DArray1d P;
+#endif
 %}
 
 INITIALIZE
@@ -78,7 +90,9 @@ if(Emax<Emin){
   
     if ( !(nparticles=mcpl_hdr_nparticles(inputfile)) ) {
         fprintf(stderr,"Warning(%s): MCPL-file reports no present particles. Foolishly trying to go on.\n",NAME_CURRENT_COMP);
+        #ifndef OPENACC
         nparticles=ncount;
+        #endif
     }else{
         printf("Message(%s): MCPL file (%s) produced with %s.\n",NAME_CURRENT_COMP,filename,mcpl_hdr_srcname(inputfile));
         printf("Message(%s): MCPL file (%s) contains %lu particles.\n",NAME_CURRENT_COMP,filename,(long unsigned)nparticles); 
@@ -121,11 +135,84 @@ if(Emax<Emin){
     
 #endif
     repeating = 0;
+#ifdef OPENACC
+      X = create_darr1d(nparticles);
+      Y = create_darr1d(nparticles);
+      Z = create_darr1d(nparticles);
+      VX = create_darr1d(nparticles);
+      VY = create_darr1d(nparticles);
+      VZ = create_darr1d(nparticles);
+      SX = create_darr1d(nparticles);
+      SY = create_darr1d(nparticles);
+      SZ = create_darr1d(nparticles);
+      T = create_darr1d(nparticles);
+      P = create_darr1d(nparticles);
+      printf("Initiating file read...\n");
+      int loop;
+      for (loop=0; loop < nparticles ; loop++) {
+	const mcpl_particle_t *particle;
+	particle=mcpl_read(inputfile);
+	if (particle) {
+	  if (particle->pdgcode==2112) {
+	    if (verbose && read_neutrons<11) {
+	      printf("id=%ld pdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+		     (long unsigned)read_neutrons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
+		     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
+		     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
+	    }
+	    /* check energy range*/
+	    if ( particle->ekin>Emin*1e-9 || particle->ekin<Emax*1e-9 ) {
+	      /* Particle energy in range */
+	      /*positions are in cm*/
+	      X[read_neutrons]=particle->position[0]/100;
+	      Y[read_neutrons]=particle->position[1]/100;
+	      Z[read_neutrons]=particle->position[2]/100;
 
+	      if(polarisationuse){
+		SX[read_neutrons]=(double)particle->polarisation[0];
+		SY[read_neutrons]=(double)particle->polarisation[1];
+		SZ[read_neutrons]=(double)particle->polarisation[2];
+	      }else{
+		SX[read_neutrons]=0;
+		SY[read_neutrons]=0;
+		SZ[read_neutrons]=0;
+	      }
+	      double nrm;
+	      nrm = particle->ekin *1e9/VS2E;
+	      nrm = sqrt(nrm);
+
+	      double d0=particle->direction[0],d1=particle->direction[1],d2=particle->direction[2];
+
+	      VX[read_neutrons]=d0*nrm;
+	      VY[read_neutrons]=d1*nrm;
+	      VZ[read_neutrons]=d2*nrm;
+
+	      /*time in ms:*/
+	      T[read_neutrons] = particle->time*1e-3;
+	      /*weight in unspecified units:*/
+	      P[read_neutrons] = particle->weight;
+
+	      read_neutrons++;
+	    }
+	  }
+	}
+      }
+      printf("Done reading MCPL file, found %ld neutrons\n",(long unsigned)read_neutrons);
+      mcpl_close_file(inputfile);
+      fprintf(stdout, "\n\n Warning: You are using MCPL_input with a repeat_count of %lu:\n - Minimum neutron count requested is %lu x %lu <= %lu",
+	      (long unsigned)repeat_count,(long unsigned)read_neutrons,
+	      (long unsigned)repeat_count,(long unsigned)repeat_cnt*read_neutrons);
+      fprintf(stdout, " neutrons total\n\n");
+      mcset_ncount(repeat_cnt*read_neutrons);
+
+      ncount=mcget_ncount();
+      fprintf(stdout,"Initialize ncount is %lu\n",(long unsigned)ncount);
+#endif
 %}
 
 TRACE
 %{
+#ifndef OPENACC
     long long ncount;
 
     double nrm;
@@ -233,13 +320,59 @@ TRACE
     p /= repeat_cnt;
 #if defined (USE_MPI)   
     p /= mpi_node_count;
-#endif    
-    SCATTER;
+#endif
+#else
+  unsigned long long i=_particle->_uid;
+  if (i>=nparticles) {
+    repeating=1;
+    i = i % nparticles;
+  }
+  x=X[i];
+  y=Y[i];
+  z=Z[i];
+  vx=VX[i];
+  vy=VY[i];
+  vz=VZ[i];
+  sx=SX[i];
+  sy=SY[i];
+  sz=SZ[i];
+  t=T[i];
+  p=P[i];
+  if (repeat_cnt>1) p = p /repeat_cnt;
+
+  if (repeating) {
+    /* Position smearing */
+    double tmpx,tmpy,tmpz;
+    // Position-MC:
+    randvec_target_circle(&tmpx, &tmpy, &tmpz, NULL, 0, 0, 1, 0);
+    NORM(tmpx,tmpy,tmpz);
+    tmpx *= pos_smear*rand01(); tmpy *= pos_smear*rand01(); tmpz *= pos_smear*rand01();
+    x+=tmpx; y+=tmpy; z+=tmpz;
+
+    double d0=vx,d1=vy,d2=vz;
+    /* Direction smearing: */
+    randvec_target_circle(&d0, &d1, &d2, NULL, vx, vy, vz, sin(dir_smear*DEG2RAD));
+    NORM(d0,d1,d2);
+
+    /* Energy smearing: */
+    double tmpe=(1.0+E_smear*randpm1());
+    double nrm=VS2E*vx*vx+vy*vy+vz*vz;
+    nrm *= (1.0+E_smear*randpm1());
+    nrm = sqrt(nrm);
+
+    vx=nrm*d0;
+    vy=nrm*d1;
+    vz=nrm*d2;
+  }
+#endif
+  SCATTER;
 %}
 
 SAVE
 %{
-    mcpl_close_file(inputfile);  
+    #ifndef OPENACC
+    mcpl_close_file(inputfile);
+    #endif
 %}
 
 FINALLY
