@@ -60,10 +60,10 @@ EXTEND %{
   Energy = VS2E*(vx*vx+vy*vy+vz*vz);
 %}
   
-COMPONENT MCPLlow = MCPL_output_GPU(filename="E_low")
+COMPONENT MCPLlow = MCPL_output(filename="E_low")
 WHEN (Energy < energy) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT MCPLhigh = MCPL_output_GPU(filename="E_high")
+COMPONENT MCPLhigh = MCPL_output(filename="E_high")
 WHEN (Energy >= energy) AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT Elow = Monitor_nD(filename="E_low", options=monopts1)

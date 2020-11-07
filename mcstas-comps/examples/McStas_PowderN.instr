@@ -70,7 +70,7 @@ COMPONENT PowderN = PowderN(reflections=reflections,geometry=geometry,
 AT(0,0,0) ABSOLUTE
 ROTATED (rot_x,rot_y,rot_z) ABSOLUTE
 
-COMPONENT mcpl_out = MCPL_output_GPU(filename="McStas_PowderN_out.mcpl")
+COMPONENT mcpl_out = MCPL_output(filename="McStas_PowderN_out.mcpl")
 AT(0,0,0) ABSOLUTE
 
 FINALLY

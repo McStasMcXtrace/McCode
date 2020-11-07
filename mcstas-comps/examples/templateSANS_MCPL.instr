@@ -68,7 +68,7 @@ COMPONENT STOP = Beamstop(
     radius = 0.02)
   AT (0, 0, 2.9) RELATIVE sample
 
-COMPONENT vout=MCPL_output_GPU(filename="output")
+COMPONENT vout=MCPL_output(filename="output")
   AT (0,0,0) RELATIVE sample  
   
 END

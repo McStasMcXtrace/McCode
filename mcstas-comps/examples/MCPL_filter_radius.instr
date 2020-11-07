@@ -46,10 +46,10 @@ EXTEND %{
   Radius = sqrt(x*x+y*y+z*z);
 %}
   
-COMPONENT MCPLlow = MCPL_output_GPU(filename="R_short")
+COMPONENT MCPLlow = MCPL_output(filename="R_short")
 WHEN (Radius < radius) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT MCPLhigh = MCPL_output_GPU(filename="R_long")
+COMPONENT MCPLhigh = MCPL_output(filename="R_long")
 WHEN (Radius >= radius) AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT Rshort = Monitor_nD(filename="R_short", options="previous user1 limits 0 5", user1="Radius", username1="Distance from origin / m")

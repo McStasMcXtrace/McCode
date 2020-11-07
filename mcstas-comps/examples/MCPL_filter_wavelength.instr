@@ -61,10 +61,10 @@ EXTEND %{
   Wavelength = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
 %}
   
-COMPONENT MCPLlow = MCPL_output_GPU(filename="L_low")
+COMPONENT MCPLlow = MCPL_output(filename="L_low")
 WHEN (Wavelength < wavelength) AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT MCPLhigh = MCPL_output_GPU(filename="L_high")
+COMPONENT MCPLhigh = MCPL_output(filename="L_high")
 WHEN (Wavelength >= wavelength) AT (0,0,0) RELATIVE PREVIOUS
 
 

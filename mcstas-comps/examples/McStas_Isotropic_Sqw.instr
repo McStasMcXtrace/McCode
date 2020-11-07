@@ -73,7 +73,7 @@ COMPONENT Iso = Isotropic_Sqw(Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, geometry=geometr
 AT(0,0,0) ABSOLUTE
 ROTATED (rot_x,rot_y,rot_z) ABSOLUTE
 
-COMPONENT mcpl_out = MCPL_output_GPU(filename="McStas_Isotropic_Sqw_out.mcpl")
+COMPONENT mcpl_out = MCPL_output(filename="McStas_Isotropic_Sqw_out.mcpl")
 AT(0,0,0) ABSOLUTE
 
 FINALLY
