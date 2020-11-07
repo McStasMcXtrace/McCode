@@ -50,9 +50,9 @@
 
 DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, userflag=0,
-  string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
-OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
+  SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, string userflag="",
+  string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=0)
+OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
@@ -68,9 +68,22 @@ int mcpl_file_exist (char *filename)
 DECLARE
 %{
     mcpl_outfile_t outputfile;
-    mcpl_particle_t *particle,
+    mcpl_particle_t *particle;
     mcpl_particle_t Particle;
     int userflagenabled;
+    DArray1d X;
+    DArray1d Y;
+    DArray1d Z;
+    DArray1d VX;
+    DArray1d VY;
+    DArray1d VZ;
+    DArray1d SX;
+    DArray1d SY;
+    DArray1d SZ;
+    DArray1d T;
+    DArray1d P;
+    DArray1d U;
+    int captured;
 %}
 
 INITIALIZE
@@ -150,9 +163,6 @@ INITIALIZE
 	    );
 #endif
 
-  /*pointer to the single particle storage area*/
-  particle=&Particle;
-
   /*Add comments on what the orientation and position of this component is.*/
   /*Include the instrument file itself as a binary blob in the mcpl file*/
 
@@ -170,11 +180,64 @@ INITIALIZE
    if (myfilename){
        free(myfilename);
    }
-
+#ifndef OPENACC
+  /*pointer to the single particle storage area*/
+  particle=&Particle;
+#else
+    if(!buffermax){
+      buffermax= mcget_ncount();
+    }
+    X = create_darr1d(buffermax);
+    X = create_darr1d(buffermax);
+    Y = create_darr1d(buffermax);
+    Z = create_darr1d(buffermax);
+    VX = create_darr1d(buffermax);
+    VY = create_darr1d(buffermax);
+    VZ = create_darr1d(buffermax);
+    SX = create_darr1d(buffermax);
+    SY = create_darr1d(buffermax);
+    SZ = create_darr1d(buffermax);
+    T = create_darr1d(buffermax);
+    P = create_darr1d(buffermax);
+    if (userflagenabled) {
+      U = create_darr1d(buffermax);
+    }
+    captured=0;
+#endif
 %}
 
 TRACE
 %{
+  double uvar;
+  int fail;
+#ifdef OPENACC
+  int cap;
+  #pragma acc atomic capture
+  {
+    cap=captured++;
+  }
+
+  //  unsigned long long i=_particle->_uid;// % GPU_INNERLOOP;
+  if (cap < ceil(buffermax)) {
+    X[cap]=x;
+    Y[cap]=y;
+    Z[cap]=z;
+    VX[cap]=vx;
+    VY[cap]=vy;
+    VZ[cap]=vz;
+    SX[cap]=sx;
+    SY[cap]=sy;
+    SZ[cap]=sz;
+    T[cap]=t;
+    P[cap]=p;
+    if(userflagenabled) {
+      uvar = particle_getvar(_particle,userflag,&fail); if(fail) uvar=0;
+      U[cap] = uvar;
+    }
+    SCATTER;
+  }
+
+#else
     double nrm;
     /*positions are in cm*/
     particle->position[0]=x*100;
@@ -199,7 +262,8 @@ TRACE
     particle->weight = p;
     /*if specified also add the userflags*/
     if(userflagenabled){
-        particle->userflags = (uint32_t) userflag;
+        uvar = particle_getvar(_particle,userflag,&fail); if(fail) uvar=0;
+        particle->userflags = (uint32_t) uvar;
     }
 
 #if defined (USE_MPI)
@@ -219,10 +283,56 @@ TRACE
     mcpl_add_particle(outputfile,particle);
 
     SCATTER;
+#endif
 %}
 
 SAVE
 %{
+#ifdef OPENACC
+  double nrm;
+  unsigned long long i;
+  if (captured > ceil(buffermax)) {
+     fprintf(stderr,"MCPL_output captured %g particles which is more than the buffersize (%g)!\n",(double)captured,buffermax);
+  }
+  for (i=0;i<captured;i++) {
+    if (P[i]>0) {
+      /*positions are in cm*/
+      Particle.position[0]=X[i]*100;
+      Particle.position[1]=Y[i]*100;
+      Particle.position[2]=Z[i]*100;
+      
+      if(polarisationuse){
+	Particle.polarisation[0]=SX[i];
+	Particle.polarisation[1]=SY[i];
+	Particle.polarisation[2]=SZ[i];
+      }
+      
+      nrm =sqrt(VX[i]*VX[i] + VY[i]*VY[i] + VZ[i]*VZ[i]);
+      /*ekin is in MeV*/
+      Particle.ekin = VS2E*nrm*nrm/1e9;
+      Particle.direction[0] = VX[i]/nrm;
+      Particle.direction[1] = VY[i]/nrm;
+      Particle.direction[2] = VZ[i]/nrm;
+      /*time in ms:*/
+      Particle.time = T[i]*1e3;
+      /*weight in unspecified units:*/
+      Particle.weight = P[i];
+      /*if specified also add the userflags*/
+      if(userflagenabled){
+	Particle.userflags = (uint32_t) U[i];
+      }
+      
+      if (verbose==3 && mcrun_num<10) {
+	printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+	       mcrun_num, Particle.ekin, Particle.position[0], Particle.position[1], Particle.position[2],
+	       Particle.direction[0], Particle.direction[1], Particle.direction[2], Particle.time, Particle.weight,
+	       Particle.polarisation[0], Particle.polarisation[1], Particle.polarisation[2]);
+      }
+      
+      mcpl_add_particle(outputfile,&Particle);
+    }
+  }
+#endif
 #ifdef USE_MPI
   if (merge_mpi && mpi_node_count > 1) {
     mcpl_close_outfile(outputfile);

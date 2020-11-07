@@ -51,7 +51,7 @@ EXTEND %{
 %}
 
 /* the output ============================================================== */
-COMPONENT vout = MCPL_output_GPU(
+COMPONENT vout = MCPL_output(
      filename="voutput", verbose=1, buffermax=Ncount)
 AT(0,0,0) RELATIVE PREVIOUS
 
