@@ -45,6 +45,7 @@
 * userflagcomment: [str]  String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
 * merge_mpi: [1]          Flag to indicate if output should be merged in case of MPI
 * keep_mpi_unmerged: [1]  Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
+* buffermax: [1]          Maximal number of events to save ( <= MAXINT), GPU/OpenACC only
 * %E
 *******************************************************************************/
 
