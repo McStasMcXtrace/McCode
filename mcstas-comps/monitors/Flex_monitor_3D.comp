@@ -1,0 +1,178 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Flex_monitor_3D
+*
+* %I
+* Written by: Erik B Knudsen & Peter Willendrup
+* Date: Oct '20
+* Origin: DTU Physics
+*
+* Flexible monitor.
+*
+* %D
+* A square 3D single monitor that measures intensity (or something else) as a function of two selectable variables or parameters.
+*
+* Example: Flex_monitor_3D(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nU1=20, nU2=20, nU3=20, filename="Output", ustring1="x", ustring2="y", ustring1="z", Umin1=-.1, Umax1=.1, Umin2=-.1, Umax2=.1, Umin3=-.1, Umax3=.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* Umin1: []             Minimum U1 to detect
+* Umax1: []             Maximum U1 to detect
+* nU1: [1]              Number of U1 channels
+* Umin2: []             Minimum U1 to detect
+* Umax2: []             Maximum U1 to detect
+* nU2: [1]              Number of U1 channels
+* Umin3: []             Minimum U3 to detect
+* Umax3: []             Maximum U3 to detect
+* nU3: [1]              Number of U3 channels
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* uid1: [1]             Integer index of uservar to be monitored. Overrides ustring1.
+* uid2: [1]             Integer index of uservar to be monitored. Overrides ustring2.
+* uid3: [1]             Integer index of uservar to be monitored. Overrides ustring3.
+* ustring1: [string]    Name of variable U1 (user or neutron state parameter as a string) to be monitored.
+* ustring2: [string]    Name of variable U2 (user or neutron state parameter as a string) to be monitored.
+* ustring3: [string]    Name of variable U3 (user or neutron state parameter as a string) to be monitored.
+* signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
+* nowritefile: [1]      Flag to indicate if monitor should not save any data.
+*
+* OUTPUT PARAMETERS:
+*
+* U_N: []               Array of neutron counts
+* U_p: []               Array of neutron weight counts
+* U_p2: []              Array of second moments
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Flex_monitor_3D
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nU1=20, nU2=20, nU3=20, string filename=0,
+ 		    Umin1, Umax1, uid1=-1, string ustring1="", Umin2, Umax2, uid2=-1, string ustring2="", Umin3, Umax3, uid3=-1, string ustring3="", restore_neutron=0, string signal="p", int nowritefile=0)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray3d U_N;
+  DArray3d U_p;
+  DArray3d U_p2;
+
+  char username1[128];
+  char username2[128];
+  char username3[128];
+  char signalname[128];
+%}
+
+INITIALIZE
+%{
+
+  U_N =  create_darr3d(nU1,nU2,nU3);
+  U_p =  create_darr3d(nU1,nU2,nU3);
+  U_p2 = create_darr3d(nU1,nU2,nU3);
+
+  if(uid1!=-1){
+    snprintf(username1,127,"uservar%d",uid1);
+  }else{
+    snprintf(username1,127,"%s",ustring1);
+  }
+  if(uid2!=-1){
+    snprintf(username2,127,"uservar%d",uid2);
+  }else{
+    snprintf(username2,127,"%s",ustring2);
+  }
+  if(uid3!=-1){
+    snprintf(username3,127,"uservar%d",uid3);
+  }else{
+    snprintf(username3,127,"%s",ustring3);
+  }
+  snprintf(signalname,127,"%s",signal);
+
+
+%}
+
+TRACE
+%{
+  double U1,U2,U3;
+  int suc1,suc2,suc3,suc4;
+  if(uid1!=-1){
+    U1 = particle_getuservar_byid(_particle,uid1,&suc1);
+  }else{
+    U1 = particle_getvar(_particle,ustring1,&suc1);
+  }
+  if(uid2!=-1){
+    U2 = particle_getuservar_byid(_particle,uid2,&suc2);
+  }else{
+    U2 = particle_getvar(_particle,ustring2,&suc2);
+  }
+  if(uid3!=-1){
+    U3 = particle_getuservar_byid(_particle,uid3,&suc3);
+  }else{
+    U3 = particle_getvar(_particle,ustring3,&suc3);
+  }
+  
+  int i = floor((U1-Umin1)*nU1/(Umax1-Umin1));
+  int j = floor((U2-Umin2)*nU2/(Umax2-Umin2));
+  int k = floor((U3-Umin3)*nU3/(Umax3-Umin3));
+  if(!suc1 && i >= 0 && i < nU1)
+    {
+      if(!suc2 && j >= 0 && j < nU2)
+	{
+	  if(!suc3 && k >= 0 && k < nU3)
+	    {
+	      double pp=particle_getvar(_particle,signal,&suc4);
+	      double p2 = pp*pp;
+              #pragma acc atomic
+	      U_N[i][j][k] = U_N[i][j][k] +1;
+              #pragma acc atomic
+	      U_p[i][j][k] = U_p[i][j][k] + pp;
+              #pragma acc atomic
+	      U_p2[i][j][k] = U_p2[i][j][k] + p2;
+	      SCATTER;
+	    }
+	}
+    }
+  
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  if (!nowritefile) {
+    int k;
+    char filename_k[256];
+    char label_k[128];
+    for(k=0; k<nU3; k++) {
+      sprintf(filename_k,"%s_%i",filename,k);
+      sprintf(label_k,"Flex monitor 3D slice %i of %i",k,nU3);
+      DETECTOR_OUT_2D(
+        "Flex monitor 3D",
+        username1, username2,
+        Umin1, Umax1, Umin2, Umax2, nU1, nU2,
+        &U_N[0][0][k],&U_p[0][0][k],&U_p2[0][0][k],
+        filename_k);
+    }
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr3d(U_N);
+  destroy_darr3d(U_p);
+  destroy_darr3d(U_p2);
+%}
+
+MCDISPLAY
+%{
+%}
+
+END
