@@ -17,7 +17,7 @@
 * %D
 * A square 3D single monitor that measures intensity (or something else) as a function of two selectable variables or parameters.
 *
-* Example: Flex_monitor_3D(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nU1=20, nU2=20, nU3=20, filename="Output", ustring1="x", ustring2="y", ustring1="z", Umin1=-.1, Umax1=.1, Umin2=-.1, Umax2=.1, Umin3=-.1, Umax3=.1)
+* Example: Flex_monitor_3D(nU1=20, nU2=20, nU3=20, filename="Output", ustring1="x", ustring2="y", ustring1="z", Umin1=-.1, Umax1=.1, Umin2=-.1, Umax2=.1, Umin3=-.1, Umax3=.1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -55,7 +55,10 @@ DEFINE COMPONENT Flex_monitor_3D
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nU1=20, nU2=20, nU3=20, string filename=0,
- 		    Umin1, Umax1, uid1=-1, string ustring1="", Umin2, Umax2, uid2=-1, string ustring2="", Umin3, Umax3, uid3=-1, string ustring3="", restore_neutron=0, string signal="p", int nowritefile=0)
+ 		    Umin1, Umax1, uid1=-1, string ustring1="", 
+		    Umin2, Umax2, uid2=-1, string ustring2="", 
+		    Umin3, Umax3, uid3=-1, string ustring3="", 
+		    restore_neutron=0, string signal="p", int nowritefile=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
