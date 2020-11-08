@@ -28,8 +28,8 @@
 * ymax: [m]             Upper y bound of detector opening
 * xwidth: [m]           Width of detector. Overrides xmin, xmax.
 * yheight: [m]          Height of detector. Overrides ymin, ymax.
-* Umin: [AA]            Minimum U to detect
-* Umax: [AA]            Maximum U to detect
+* Umin: []              Minimum U to detect
+* Umax: []              Maximum U to detect
 * nU: [1]               Number of U channels
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
