@@ -74,9 +74,9 @@ DECLARE
 INITIALIZE
 %{
 
-  U_N =  create_darr3d(nU1,nU2,nU3);
-  U_p =  create_darr3d(nU1,nU2,nU3);
-  U_p2 = create_darr3d(nU1,nU2,nU3);
+  U_N =  create_darr3d(nU3,nU1,nU2);
+  U_p =  create_darr3d(nU3,nU1,nU2);
+  U_p2 = create_darr3d(nU3,nU1,nU2);
 
   if(uid1!=-1){
     snprintf(username1,127,"uservar%d",uid1);
@@ -130,11 +130,11 @@ TRACE
 	      double pp=particle_getvar(_particle,signal,&suc4);
 	      double p2 = pp*pp;
               #pragma acc atomic
-	      U_N[i][j][k] = U_N[i][j][k] +1;
+	      U_N[k][i][j] = U_N[k][i][j] +1;
               #pragma acc atomic
-	      U_p[i][j][k] = U_p[i][j][k] + pp;
+	      U_p[k][i][j] = U_p[k][i][j] + pp;
               #pragma acc atomic
-	      U_p2[i][j][k] = U_p2[i][j][k] + p2;
+	      U_p2[k][i][j] = U_p2[k][i][j] + p2;
 	      SCATTER;
 	    }
 	}
@@ -158,7 +158,7 @@ SAVE
         "Flex monitor 3D",
         username1, username2,
         Umin1, Umax1, Umin2, Umax2, nU1, nU2,
-        &U_N[0][0][k],&U_p[0][0][k],&U_p2[0][0][k],
+        &U_N[k][0][0],&U_p[k][0][0],&U_p2[k][0][0],
         filename_k);
     }
   }
