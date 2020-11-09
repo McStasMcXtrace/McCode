@@ -88,19 +88,19 @@ COMPONENT mon_cradle = Arm()
 COMPONENT PSD_mon = PSD_monitor(nx=bins,ny=bins, xwidth = xw, yheight = yh, restore_neutron=1, filename="PSD")
   AT (0, 0, 0) RELATIVE mon_cradle
 
-COMPONENT nD_PSD = Monitor_nD(options=xyopts, xwidth = xw, yheight = yh, restore_neutron=1)
+COMPONENT nD_PSD = Monitor_nD(options=xyopts, xwidth = xw, yheight = yh)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
-COMPONENT nFlex_PSD = Flex_monitor_2D(xwidth = xw, yheight = yh, restore_neutron=1, ustring1="x", ustring2="y",filename="Flex_PSD", Umin1=-xw/2.0,Umax1=xw/2.0,Umin2=-yh/2.0, Umax2=yh/2.0, nU1=bins, nU2=bins)
+COMPONENT nFlex_PSD = Flex_monitor_2D(ustring1="x", ustring2="y",filename="Flex_PSD", Umin1=-xw/2.0,Umax1=xw/2.0,Umin2=-yh/2.0, Umax2=yh/2.0, nU1=bins, nU2=bins)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
 COMPONENT L_mon = L_monitor(nL=100, xwidth = 0.1, yheight = 0.15, restore_neutron=1, filename="L",Lmin=0.985*lambda,Lmax=1.025*lambda)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
-COMPONENT nD_L = Monitor_nD(options=lmonopts, xwidth = xw, yheight = yh, restore_neutron=1)
+COMPONENT nD_L = Monitor_nD(options=lmonopts, xwidth = xw, yheight = yh)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
-COMPONENT nFlex_L = Flex_monitor_1D(xwidth = xw, yheight = yh, restore_neutron=1, ustring="Lam", filename="Flex_L",Umin=0.985*lambda,Umax=1.025*lambda, nU=bins)
+COMPONENT nFlex_L = Flex_monitor_1D(ustring="Lam", filename="Flex_L",Umin=0.985*lambda,Umax=1.025*lambda, nU=bins)
   AT (0, 0, mudist) RELATIVE PREVIOUS
 
 COMPONENT E_mon = E_monitor(nE=100, xwidth = 0.1, yheight = 0.15, restore_neutron=1, filename="E",Emin=0.9*E,Emax=1.1*E)
