@@ -336,7 +336,7 @@ COMPONENT Detector_Q=Monitor_nD( /* I(q) detector */
   AT (0, 0, 0.01) RELATIVE PREVIOUS
 
 COMPONENT Detector_E=Monitor_nD( /* Energy distribution */
-  options="auto user1", xwidth=160*12.7/1000, yheight=1.118, restore_neutron=1, bins=50,
+  options="user1", xwidth=160*12.7/1000, yheight=1.118, restore_neutron=1, bins=100,
   min=-Ei, max=2*Ei,
   user1=Ef-Ei, username1="Energy transfer [meV]")
   WHEN (flag_sample || flag_container || flag_env)
