@@ -111,9 +111,6 @@ SPLIT COMPONENT Monok = Monochromator_curved(
     width = 0.18, height = 0.2, NH = 1, NV = 7, RV=RV,
     mosaich = 30, mosaicv = 30, DM = DM)
   AT (0, 0, 0) RELATIVE mono_cradle
-EXTEND %{
-  if(!SCATTERED) ABSORB;
-%}
 
 /* TIP: positioning diffraction direction for monok (order 1) */
 COMPONENT mono_out = Arm()

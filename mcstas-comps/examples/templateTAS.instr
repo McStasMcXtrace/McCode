@@ -591,9 +591,6 @@ SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Mono_Cradle
 ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
-EXTEND %{
-  if(!SCATTERED) ABSORB;
-%}
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
@@ -656,9 +653,6 @@ SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Ana_Cradle
 ROTATED (0, machine_real.a5, 0) RELATIVE Ana_Cradle
-EXTEND %{
-  if(!SCATTERED) ABSORB;
-%}
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
   AT (0,0,0) RELATIVE Ana_Cradle

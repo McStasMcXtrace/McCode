@@ -206,9 +206,6 @@ SPLIT COMPONENT Monok = Monochromator_curved(
     mosaich = ETA, mosaicv = 12, DM = DM)
   AT (0, 0, 0) RELATIVE mono_cradle
   ROTATED (0, THETA_M+TILT, 0) RELATIVE mono_cradle
-EXTEND %{
- if(!SCATTERED) ABSORB;
-%}
 
 COMPONENT sphere = PSD_monitor_4PI(filename="sphere", radius=0.5, restore_neutron=1)
   AT (0, 0, 0) RELATIVE mono_cradle
