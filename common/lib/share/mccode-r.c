@@ -79,6 +79,7 @@ mcstatic unsigned long long int mcncount             = 1000000;
 #endif
 #pragma acc declare create ( mcncount )
 mcstatic unsigned long long int mcrun_num            = 0;
+#pragma acc declare create ( mcrun_num )
 #endif /* NEUTRONICS */
 
 #else
@@ -2283,11 +2284,13 @@ unsigned long long int mcget_ncount(void)
   return mcncount;
 }
 
-/* mcget_run_num: get curent number of rays in TRACE */
-#pragma acc routine seq
+/* mcget_run_num: get curent number of rays */
+/* Within the TRACE scope we are now using _particle->uid directly */
 unsigned long long int mcget_run_num() // shuld be (_class_particle* _particle) somehow
-{  // FIXME!! do though a define in TRACE
-  return 100000; // should return _particle->uid;
+{ 
+  /* This function only remains for the few cases outside TRACE where we need to know
+     the number of simulated particles */
+  return mcrun_num;
 }
 
 /* mcsetn_arg: get ncount from a string argument */
