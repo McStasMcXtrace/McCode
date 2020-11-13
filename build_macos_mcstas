@@ -91,6 +91,9 @@ cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
 
+# Hack to make openmpi from the conda env available on Big Sur
+ln -s $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcstas/$1/bin/
+
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then
