@@ -81,18 +81,25 @@ export PATH=$PATHBAK
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 
 # - Nasty local macOS hacks:
-# (1) ensure pymcpltool is run with pythonw binary
+# (1) ensure pymcpltool is run with python3 binary
 sed -i.orig s/python/python3/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
 rm $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool.orig
-# (2) same type of hack for mcgui seems to remove focusing-issue
-#sed -i.orig s/python3/pythonw/ $MCINSTALL_PREFIX/mcstas/$1/bin/mcgui
-#rm $MCINSTALL_PREFIX/mcstas/$1/bin/mcgui.orig
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
 cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
+
+# Put copies of mcgui/mcgui.pl scripts in main App exectuor
+cd /Applications/McStas-$1.app/Contents/MacOS/
+rm -f mccodegui*
+
+ln -sf ../Resources/mcstas/$1/bin/mcgui mccodegui
+ln -sf ../Resources/mcstas/$1/bin/mcgui mccodegui.py
+ln -sf ../Resources/mcstas/$1/bin/mcgui.pl mccodegui.pl
+
+cd $WORK
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
