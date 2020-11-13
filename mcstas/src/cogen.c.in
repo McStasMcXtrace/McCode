@@ -1431,7 +1431,7 @@ void def_trace_section(struct instr_def *instr)
   coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
-  coutf("#define mcget_run_num() _particle->uid");
+  coutf("#define mcget_run_num() _particle->_uid");
   #if MCCODE_PROJECT == 1     /* neutron */
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
   #elif MCCODE_PROJECT == 2   /* xray */
@@ -2061,6 +2061,11 @@ cogen_header(struct instr_def *instr, char *output_name)
   if(instr->portable)
     cout("#define MC_PORTABLE");
 
+  /* Basic includes */
+  cout("");
+  cout("#include <string.h>");
+  cout("");
+  
   /* Math constants */
   cout("#define PI 3.14159265358979323846");
   cout("#ifndef M_PI");
