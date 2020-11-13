@@ -18,6 +18,11 @@ if [[ ${UNAME} = Darwin* ]]; then
     then
 	PATH=$LIB/../miniconda3/bin:$PATH
     fi
+    # Check if we are in / - in that case cd to $HOME
+    PW==`pwd`
+    if [[ ${PWD} = / ]]; then
+	cd $HOME
+    fi
 else
     PATH=$LIB/../miniconda3/bin:$PATH
 fi
