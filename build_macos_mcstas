@@ -91,16 +91,6 @@ cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
 
-# Put copies of mcgui/mcgui.pl scripts in main App exectuor
-cd /Applications/McStas-$1.app/Contents/MacOS/
-rm -f mccodegui*
-
-ln -sf ../Resources/mcstas/$1/bin/mcgui mccodegui
-ln -sf ../Resources/mcstas/$1/bin/mcgui mccodegui.py
-ln -sf ../Resources/mcstas/$1/bin/mcgui.pl mccodegui.pl
-
-cd $WORK
-
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then

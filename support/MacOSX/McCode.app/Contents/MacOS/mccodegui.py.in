@@ -3,30 +3,20 @@
 # Wrapper script for starting mcgui.pl in an app on Mac OS X
 #
 
-PREFIX=`dirname $0`/../Resources/
-
-# program name
-PROGRAM=@GUIPREFIX@gui
-
-# program arguments
-ARGUMENTS=""
-
-# working directory
-DIRECTORY="~"
-
-# paths
-PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:/usr/local/bin:$PATH
-
-# MCCODE
-@FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
-
-# check if the working directory exists and change directory
-DIRECTORY=${DIRECTORY/~/"$HOME"}  # replace ~ with home path
-if ! [ -d "$DIRECTORY" ]
+if [ "@FLAVOR@" == "mcstas" ]
 then
-  DIRECTORY="$HOME"
+    BASEDIR=/Applications/McStas-@MCCODE_VERSION@.app
+else
+    BASEDIR=/Applications/McXtrace-@MCCODE_VERSION@.app
 fi
-cd $DIRECTORY
 
-$PROGRAM $* > /dev/null 2>&1 
+SCRIPT=$BASEDIR/Contents/Resources/@FLAVOR@/@MCCODE_VERSION@/bin/@GUIPREFIX@gui
+
+if [ -e $SCRIPT ]
+then
+    $SCRIPT $* > /dev/null 2>&1 
+else
+    osascript -e "tell app \"System Events\" to display dialog \"It looks like your @FLAVOR@ app is not located in /Applications? \n\n (Please move it there and try again...) \""
+fi
+
 
