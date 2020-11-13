@@ -293,7 +293,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                     font = QtGui.QFont()
                     font.setItalic(False)
                     self.__edtSearch.setFont(font)
-                    #edt.setStyleSheet("color: black;")
+                    edt.setStyleSheet("color: black;")
 
             # handle focus off
             elif event.type() == QtCore.QEvent.FocusOut:
