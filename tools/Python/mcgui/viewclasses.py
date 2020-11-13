@@ -62,13 +62,12 @@ class McView(object):
         self.mw.ui.statusbar.showMessage(text)
 
     def updateLog(self, text='', error=False, gui=False):
-        self.mw.ui.txtbrwMcgui.setStyleSheet("background-color: lightgray;")
         if error:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
         elif gui:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('blue'))
         else:
-            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('green'))
         self.mw.ui.txtbrwMcgui.append(text)
     
     def disableRunBtn(self):
@@ -94,7 +93,7 @@ class McView(object):
         ui.btnEdit.setEnabled(enableRun)
         ui.btnPlot.setEnabled(enablePlot)
         if enableRun:
-            ui.lblInstrument.setStyleSheet('color: black')
+            ui.lblInstrument.setStyleSheet('color: green')
         else:
             ui.lblInstrument.setStyleSheet('color: red')
         ui.actionClose_Instrument.setEnabled(enableRun)
@@ -294,7 +293,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                     font = QtGui.QFont()
                     font.setItalic(False)
                     self.__edtSearch.setFont(font)
-                    edt.setStyleSheet("color: black;")
+                    #edt.setStyleSheet("color: black;")
 
             # handle focus off
             elif event.type() == QtCore.QEvent.FocusOut:
