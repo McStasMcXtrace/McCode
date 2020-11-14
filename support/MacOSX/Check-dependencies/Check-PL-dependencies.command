@@ -105,6 +105,7 @@ fi
 
 # Figure out which OS X this is...
 OSXVER=`sw_vers -productVersion|cut -f 2 -d.`
+OSXVER_MAJOR=`sw_vers -productVersion|cut -f 1 -d.`
 if [ "$OSXVER" == "6" ];
 then
     # 10.6 aka Snow Leopard
@@ -159,8 +160,23 @@ then
     PERLVER="SYSTEM"
     TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
     SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+elif [ "$OSXVER" == "15" ];
+then
+    # 10.15 aka Catalina
+    PERLVER="SYSTEM"
+    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+elif [ "$OSXVER" == "0" ];
+then
+    if [ "$OSXVER_MAJOR" == "11" ]
+    then
+	# 11.0 aka Big Sur
+	PERLVER="SCIPDL"
+	TKPKG=""
+	SCIPDL="SciPDL-v2.019.dmg"
+    fi
 else
-    osascript -e "tell app \"System Events\" to display dialog \"Your macOS is version $OSXVER is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to work with High Sierra and Mojave?\""
+    osascript -e "tell app \"System Events\" to display dialog \"Your macOS is version $OSXVER is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to work with High Sierra, Mojave and Catalina?\""
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then    
@@ -179,19 +195,28 @@ osascript -e "tell app \"System Events\" to display dialog \"Will now request do
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
-    TKPKG="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/Perl-Tk/${TKPKG}?raw=true"
-    SCIPDL="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/SciPDL/${SCIPDL}?raw=true"
-    # Proceed to download and install SciPDL + Tk packages
     echo
     echo "******************************************************"
-    echo "* Spawning browser for downloading these packages    *"
-    echo "* from the mccode GitHub:                            *"
+    echo "* Spawning browser for downloading package(s) from   *"
+    echo "* the mccode GitHub:                            *"
     echo "******************************************************"
+    if [ -z "$TKPKG" ] 
+    then
+	echo not downloading TK
+    else
+	TKPKG="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/Perl-Tk/${TKPKG}?raw=true"
+    fi
+    SCIPDL="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/SciPDL/${SCIPDL}?raw=true"
+    # Proceed to download and install SciPDL + Tk packages
+
     echo $TKPKG
     echo $SCIPDL
     
     sleep 3
-    `open $TKPKG`
+    if [ -z "$TKPKG" ] 
+    then
+	`open $TKPKG`
+    fi
     `open $SCIPDL`
 else
     echo "McCode support packages $TKPKG and $SCIPDL will NOT be downloaded!"
