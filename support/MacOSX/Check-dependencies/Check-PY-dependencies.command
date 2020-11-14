@@ -27,7 +27,7 @@ rc1=$?;
 if [[ $rc1 == 0 ]]; 
 then
     echo "OK, resetting attributes - may take a while to complete..."
-    xattr -rc /Applications/$NEWESTAPP 
+    xattr -d -r com.apple.quarantine /Applications/$NEWESTAPP 
 else
     echo "OK, not resetting attributes"
 fi
