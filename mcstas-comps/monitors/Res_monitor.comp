@@ -88,7 +88,7 @@ DECLARE
 
 INITIALIZE
 %{
-  long buffer_index=0;
+  buffer_index=0;
 
   int i;
   char tmp[1024];
