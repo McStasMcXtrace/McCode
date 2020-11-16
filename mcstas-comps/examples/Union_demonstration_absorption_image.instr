@@ -35,6 +35,8 @@ DECLARE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
 
 // Material definitions here use automatic linking, meaning that all processes
 //  preceding each make_material component is included in that material.

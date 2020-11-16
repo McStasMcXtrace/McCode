@@ -35,6 +35,9 @@ int powderN_scat;
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT Al_powder = Powder_process(reflections="Al.laz")
 AT (0,0,0) ABSOLUTE
 

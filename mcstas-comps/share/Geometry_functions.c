@@ -923,7 +923,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
     int iter =0;
     int counter=0; int neg_counter=0;
     Coords edge1,edge2,h,s,q,tmp,intersect_pos;
-    double UNION_EPSILON = 1e-27;
+    double EPSILON = 1e-27;
     double this_facet_t;
     double a,f,u,V;
     //////printf("\n RWITHIN TEST 1ste");
@@ -940,7 +940,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
-        if (a > -UNION_EPSILON && a < UNION_EPSILON){
+        if (a > -EPSILON && a < EPSILON){
             //////printf("\n Epsilon fail");
         } else{
             f = 1.0/a;
@@ -963,7 +963,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
                         neg_counter++;
 
                     }
-                    if (fabs(f* Dot(q,edge2)) > UNION_EPSILON){
+                    if (fabs(f* Dot(q,edge2)) > EPSILON){
                     } else { //printf("\n [%f %f %f] Failed due to being close to surface, E = %f",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,f* Dot(q,edge2));
                      }
                     
@@ -1004,7 +1004,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
-        if (a > -UNION_EPSILON && a < UNION_EPSILON){
+        if (a > -EPSILON && a < EPSILON){
             //////printf("\n Epsilon fail");
         } else{
             f = 1.0/a;
@@ -1028,7 +1028,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
                         neg_counter++;
 
                     }
-                    if (fabs(f* Dot(q,edge2)) > UNION_EPSILON){
+                    if (fabs(f* Dot(q,edge2)) > EPSILON){
                     } else { printf("\n [%f %f %f] Failed due to being close to surface (2. iteration), E = %f",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,f* Dot(q,edge2));
                      }
                     
@@ -1067,7 +1067,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
-        if (a > -UNION_EPSILON && a < UNION_EPSILON){
+        if (a > -EPSILON && a < EPSILON){
             //////printf("\n Epsilon fail");
         } else{
             f = 1.0/a;
@@ -1091,7 +1091,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
                         neg_counter++;
 
                     }
-                    if (fabs(f* Dot(q,edge2)) > UNION_EPSILON){
+                    if (fabs(f* Dot(q,edge2)) > EPSILON){
                     } else { printf("\n [%f %f %f] Failed due to being close to surface (3. iteration), E = %f",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,f* Dot(q,edge2));
                     }
                     
@@ -1246,7 +1246,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
     int iter =0;
     int counter=0;
     Coords edge1,edge2,h,s,q,tmp,intersect_pos;
-    double UNION_EPSILON = 0.0000001;
+    double EPSILON = 0.0000001;
     double this_facet_t;
     double a,f,u,V,t_intersect[n_facets];
     *num_solutions = 0;
@@ -1267,7 +1267,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
         //a = Dot(h,edge1);
         a = Dot(edge1,h);
         ////printf("\n a=%f",a);
-        //if (a > -UNION_EPSILON && a < UNION_EPSILON){
+        //if (a > -EPSILON && a < EPSILON){
             ////printf("\n Epsilon fail");
         //} else{
             f = 1.0/a;
