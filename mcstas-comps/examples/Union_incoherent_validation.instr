@@ -40,6 +40,9 @@ DECLARE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT Vanadium_incoherent = Incoherent_process(sigma=sigma_inc_vanadium,packing_factor=pack,unit_cell_volume=Vc_vanadium)
 AT (0,0,0) ABSOLUTE
 

@@ -46,7 +46,7 @@
 * %End
 *******************************************************************************/
 
-/* Change name of instrument and input parameters with default values */
+/* Change name of instrument and input parameters with default values */d
 DEFINE INSTRUMENT Union_single_crystal_validation(comp_select=1,string material_data_file="YBaCuO.lau",sigma_inc=2.105, my_absorption_union=8.55, delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , xwidth=0.01, yheight=0.01, zdepth=0.01,unit_cell_volume=173.28,sigma_abs_sc=0,sigma_inc=2.105,x_rotation_geometry=0,y_rotation_geometry=0,x_rotation_geometry_ref=0,y_rotation_geometry_ref=0,x_rotation_process=0,y_rotation_process=0,geometry_interact=0,PG=0,powder=0)
 
 DECLARE
@@ -56,6 +56,9 @@ int scattered_flag_instr;
 %}
 
 TRACE
+
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
 
 COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc, packing_factor=1, unit_cell_volume=173.28, interact_fraction=-1)
 AT (0,0,0) ABSOLUTE

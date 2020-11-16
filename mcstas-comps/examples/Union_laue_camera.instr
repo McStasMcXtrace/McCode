@@ -49,6 +49,8 @@ int scattered_flag_instr;
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
 
 COMPONENT YBaCuO_incoherent = Incoherent_process(sigma=2.105, packing_factor=1, unit_cell_volume=173.28)
 AT (0,0,0) ABSOLUTE

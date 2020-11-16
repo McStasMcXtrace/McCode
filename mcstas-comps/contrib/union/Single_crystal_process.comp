@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 *
 * %D
@@ -57,7 +57,7 @@ SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
             cx = 0, cy = 0, cz = 0,
             //p_transmit = -1, sigma_abs = 0, sigma_inc = 0, // handled elsewhere
 		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
-           interact_fraction=-1,packing_factor=1)
+           interact_fraction=-1,packing_factor=1, string init="init")
 OUTPUT PARAMETERS (This_process, Single_crystal_storage, effective_my_scattering, hkl_info_union, global_process_element)
 
 SHARE
@@ -909,6 +909,10 @@ int Single_crystal_physics_scattering(double *k_final, double *k_initial, double
     return 1;
 };
 
+#ifndef PROCESS_DETECTOR
+    //struct pointer_to_global_process_list global_process_list = {0,NULL};
+    #define PROCESS_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -922,11 +926,6 @@ struct hkl_info_struct_union hkl_info_union;
 // Needed for transport to the main component, will be the same for all processes
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
-
-#ifndef PROCESS_DETECTOR
-	//struct pointer_to_global_process_list global_process_list = {0,NULL};
-	#define PROCESS_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE
@@ -1021,18 +1020,19 @@ INITIALIZE
 
   // Temporary errors untill these features are either added or removed from input
   
+
   if (powder)
     exit(fprintf(stderr,"Single_crystal_process: %s: powder mode not supported yet!\n"
 	     "ERROR           Please disable powder mode.\n", NAME_CURRENT_COMP));
   
+
   if (PG)
     exit(fprintf(stderr,"Single_crystal_process: %s: PG mode not supported yet!\n"
 	     "ERROR           Please disable PG mode.\n", NAME_CURRENT_COMP));
-  
+   
   if (order)
     exit(fprintf(stderr,"Single_crystal_process: %s: Order control not supported yet!\n"
 	     "ERROR           Please set order to zero.\n", NAME_CURRENT_COMP));
-  
   
   // Initialize done in the component
   // Added for single crystal
@@ -1058,7 +1058,10 @@ INITIALIZE
   sprintf(global_process_element.name,NAME_CURRENT_COMP);
   global_process_element.component_index = INDEX_CURRENT_COMP;
   global_process_element.p_scattering_process = &This_process;
-  add_element_to_process_list(&global_process_list,global_process_element);
+  
+  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+  add_element_to_process_list(global_process_list, global_process_element);
+  
  %}
 
 TRACE

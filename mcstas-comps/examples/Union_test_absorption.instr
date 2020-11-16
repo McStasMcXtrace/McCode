@@ -32,6 +32,9 @@ DECLARE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT absorber_material = Union_make_material(my_absorption=3,absorber=1)
 AT (0,0,0) ABSOLUTE
 

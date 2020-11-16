@@ -47,6 +47,9 @@ INITIALIZE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT texture = Texture_process(crystal_fn=crystal_fn,fcoef_fn=fcoef_fn,lmax_user=lmax,
 interact_fraction=-1,barns=barns,packing_factor=pack)
 AT (0,0,0) ABSOLUTE

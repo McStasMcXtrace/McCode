@@ -42,6 +42,9 @@ DECLARE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4) //,interact_fraction=0.8)
 AT (0,0,0) ABSOLUTE
 
