@@ -224,6 +224,9 @@ USERVARS %{
   double order_extend;
   double flag_sample;
   double flag_env;
+  double vix;
+  double viy;
+  double viz;
 %}
 
 INITIALIZE %{
@@ -470,6 +473,7 @@ COMPONENT Fermi = FermiChopper(delay=t1F, radius=0.025, nu=-nu,
 AT (0,0,0) RELATIVE FC_Pos
 EXTEND %{
     if (!SCATTERED) ABSORB;
+    vix=vx,viy=vy,viz=vz;
   %}
 
 /* sample position */
@@ -583,9 +587,9 @@ COMPONENT Detector_env = COPY(Detector)
   WHEN (flag_env)
   AT (0,0,0) RELATIVE Sample_pos
 
-COMPONENT Detector_Sqw = Monitor_Sqw(
-  radius=LSD, yheight=2, bins=1000, index=-9,
-  options=mon_sqw)
+COMPONENT Detector_Sqw = Sqw_monitor(
+  nq=1000, nE=1000, vix="vix",viy="viy",viz="viz",
+    qmin=0, qmax=10, Emin=-50, Emax=50, filename="Sqw_full")
   WHEN (flag_sample && flag_sample_choice == 1)
   /* "user1 limits=[0 10], user2 limits=[-50 50]" */
   AT (0,0,0) RELATIVE Sample_pos
@@ -597,7 +601,7 @@ COMPONENT Detector_qe = Monitor_nD(
   /* "banana, angle limits=[-150 150], energy limits=[0 50]" */
   AT (0,0,0) RELATIVE Sample_pos
 
-COMPONENT Detector_SqwV = COPY(Detector_Sqw)
+COMPONENT Detector_SqwV = COPY(Detector_Sqw)(filename="Sqw_filtered")
   WHEN (flag_sample && flag_sample_choice == 2)
   AT (0,0,0) RELATIVE Sample_pos
 
