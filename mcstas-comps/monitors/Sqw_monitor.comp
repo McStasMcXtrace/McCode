@@ -41,7 +41,6 @@
 * nE:    [int]       Number of energy slices
 * filename: [string] Base filename to use, nE+1 files will be output
 * nowritefile: [1]   If set, monitor will skip writing to disk
-* nosum: [1]         If set, monitor will skip writing the energy-summed array to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -56,7 +55,7 @@
 *******************************************************************************/
 
 
-DEFINE COMPONENT Sqq_w_monitor
+DEFINE COMPONENT Sqw_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename, int nowritefile=0, string vix="", string viy="", string viz="")
 OUTPUT PARAMETERS ()
@@ -138,26 +137,19 @@ TRACE
       SCATTER;
 
     } 
-    
-    /* Stuff that don't hit cylinder properly is disregarded */
 %}
 
 SAVE
 %{
   if (!nowritefile) {
-      
-  int kk,ll;
-  char ff[256];
-  char tt[256];
-  if (!nosum) {
-  DETECTOR_OUT_2D(
-	"q vs E monitor",
-        "qa [AA^-1]",
-        "E [meV]",
-        qmin, qmax, Emin, Emax,
-        nq, nE,
-        &M_N[0][0],&M_p[0][0],&M_p2[0][0],
-        filename);
+    DETECTOR_OUT_2D(
+      "q vs E monitor",
+      "q [AA^-1]",
+      "E [meV]",
+      qmin, qmax, Emin, Emax,
+      nq, nE,
+      &M_N[0][0],&M_p[0][0],&M_p2[0][0],
+      filename);
   }
 %}
 
