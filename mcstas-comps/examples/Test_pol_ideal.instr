@@ -1,0 +1,64 @@
+/*******************************************************************************
+ * Instrument: Test_pol_ideal
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Nov 20
+* Origin: DTU Physics
+* %INSTRUMENT_SITE: Test
+*
+* Unit test instrument for Set_pol, PolAnalyser_ideal, and Pol_monitor
+*
+* %D
+* Simply runs a short test to check that Set_pol, Pol_analyser_ideal, and Pol_monitor really do work
+*
+* %Example: xory=1 Detector: monitor_I=25.9341
+* %Example: xory=0 Detector: monitor_I=4.4496
+* %Example: xory=1 Detector: pmonitory_I=-0.70717
+*
+* %P
+* xory: [ ] 1:check polarisatoin along x, 0:check polarisation along y
+*
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_pol_ideal(xory=1)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT src = Source_simple(radius=0.1, focus_xw=0.1, focus_yh=0.1,dist=1, lambda0=5, dlambda=4.9)
+AT(0,0,0) RELATIVE origin
+
+COMPONENT polariser = Set_pol(px=1.0/M_SQRT2,py=-1.0/M_SQRT2,pz=0)
+AT(0,0,0.1) RELATIVE src
+
+COMPONENT pmonitorx = Pol_monitor(mx=1,my=0,mz=0, xwidth=0.2, yheight=0.2)
+AT(0,0,0.5) RELATIVE src
+COMPONENT pmonitory = Pol_monitor(mx=0,my=1,mz=0, xwidth=0.2, yheight=0.2)
+AT(0,0,0.51) RELATIVE src
+
+
+COMPONENT analyserx = PolAnalyser_ideal(mx=1.0,my=0,mz=0)
+WHEN(xory) AT (0,0,0.9) RELATIVE src
+COMPONENT analysery = PolAnalyser_ideal(mx=0,my=1,mz=0)
+WHEN(!xory) AT (0,0,0.9) RELATIVE src
+
+COMPONENT monitor = PSD_monitor(xwidth=0.2, yheight=0.2,filename="monitor")
+AT(0,0,1) RELATIVE src
+
+FINALLY
+%{
+%}
+
+END
