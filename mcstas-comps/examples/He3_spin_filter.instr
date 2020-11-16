@@ -1,0 +1,128 @@
+/*******************************************************************************
+ * Instrument: He3_spin_filter
+*
+* %I
+* Written by: Pietro Tozzi and Erik B Knudsen
+* Date: Nov 20
+* Origin: DTU Physics et. 
+* %INSTRUMENT_SITE: Test
+*
+* Test instrument for He3_cell
+*
+* %D
+* Simple instrument model serving as an example and unit tyest of the He3-cell model.
+* For the values POLHE=.8 and .5 results comply with "Batz, M et al. “(3) He Spin Filter for Neutrons.” 
+* Journal of research of the National Institute of Standards and Technology vol. 110,3 293-8. 1 Jun. 2005, doi:10.6028/jres.110.042"
+*
+* %Example: POLHE=0.5 
+* %Example: POLHE=0.8
+*
+* %P
+* pol: [ ]       If "x","y", or "z" set polarization along that axis. If "0" use a zero polarization.
+* lamb_1: [AA]   Lower wavelength limit to simulate
+* lamb_2: [AA]   Upper wavelegnth limit to simulate
+* RANDOM: [ ]    Randomize polarization vector in the (ideal) polariser
+* polval: [ ]    Set polarization to (polval,polval,polval). Gets overridden by pol
+* POLHE: [ ]     Polarization of the 3He-gas in the cell.
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT He3_spin_filter(string pol="y", lamb_1=1, lamb_2=10, RANDOM=0, polval=1, POLHE=0.7)
+
+DECLARE
+%{
+    double mx,my,mz;
+%}
+
+INITIALIZE
+%{
+    if (strstr(pol,"x")){
+        mx=1;
+    }
+    if (strstr(pol,"y")){
+        my=1;
+    }
+    if (strstr(pol,"z")){
+        mz=1;
+    }
+    if(strstr(pol,"0")){
+        mx=0, my=0, mz=0;
+    }else{
+        NORM(mx,my,mz);
+        mx*=polval;
+        my*=polval;
+        mz*=polval;
+    }
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT src =Source_div(lambda0=(lamb_1+lamb_2)/2.0, dlambda=(lamb_2-lamb_1)/2.0, xwidth=1e-6, yheight=1e-6, focus_aw=1e-6, focus_ah=1e-6)
+AT(0, 0, 0) RELATIVE origin 
+EXTEND
+%{
+  double v=sqrt(vx*vx+vy*vy+vz*vz);
+  vx=vy=0;
+  vz=v;
+
+%}
+COMPONENT setpol = Set_pol(px=mx,py=my,pz=mz)
+WHEN(RANDOM==0) AT(0,0,1) RELATIVE src 
+
+COMPONENT spot_rand = Set_pol(randomOn=1)
+WHEN (RANDOM==1) AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT pmonx_in = PolLambda_monitor(Lmin=lamb_1, Lmax=lamb_2, mx=1, my=0, mz=0, restore_neutron=1, filename="pol_lambda_inx.dat", xwidth=0.1443845, yheight=0.1543575)
+AT(0,0,0.49+1E-6) RELATIVE PREVIOUS
+COMPONENT pmony_in = PolLambda_monitor(Lmin=lamb_1, Lmax=lamb_2, mx=0, my=1, mz=0, restore_neutron=1, filename="pol_lambda_iny.dat", xwidth=0.1443845, yheight=0.1543575)
+AT(0,0,1E-6) RELATIVE PREVIOUS
+COMPONENT pmonz_in = PolLambda_monitor(Lmin=lamb_1, Lmax=lamb_2, mx=0, my=0, mz=1, restore_neutron=1, filename="pol_lambda_inz.dat", xwidth=0.1443845, yheight=0.1543575)
+AT(0,0,1E-6) RELATIVE PREVIOUS
+
+COMPONENT prepol_monitor_flux = Monitor_nD(
+    options="lambda bins=10 limits=[0 30] bins 200",
+    filename="prepol_flux.dat",
+    xwidth = 0.04438458, yheight = 0.05435723,
+    restore_neutron=1)
+AT (0, 0, 1E-6) RELATIVE PREVIOUS
+
+COMPONENT 3HeCell = He3_cell(
+    radius = 0.11, length = 0.01, pressure = 2, p3he = POLHE,
+    bx = 0.0, by = 1.00, bz = 0.0)
+AT (0, 0, 0.02+1E-6) RELATIVE PREVIOUS ROTATED (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT pmonx_out = PolLambda_monitor(Lmin=lamb_1, Lmax=lamb_2, mx=1, my=0, mz=0, restore_neutron=1, filename="pol_lambda_outx.dat", xwidth=0.0443845, yheight=0.0543575)
+AT(0,0,0.02+1E-06) RELATIVE PREVIOUS ROTATED (0, 0, 0) RELATIVE PREVIOUS
+COMPONENT pmony_out = PolLambda_monitor(Lmin=lamb_1, Lmax=lamb_2, mx=0, my=1, mz=0, restore_neutron=1, filename="pol_lambda_outy.dat", xwidth=0.04438458, yheight=0.05435723)
+AT(0,0,1E-6) RELATIVE PREVIOUS
+COMPONENT pmonz_out = PolLambda_monitor(Lmin=lamb_1, Lmax=lamb_2, mx=0, my=0, mz=1, restore_neutron=1, filename="pol_lambda_outz.dat", xwidth=0.04438458, yheight=0.05435723)
+AT(0,0,1E-6) RELATIVE PREVIOUS
+
+/*COMPONENT polar = Pol_monitor(*/
+/*    xwidth = 0.04438458, yheight = 0.05435723, restore_neutron = 1, mx = 0,*/
+/*    my = 1, mz = 0)*/
+/*AT (0, 0, 1E-06) RELATIVE PREVIOUS*/
+
+COMPONENT media = MeanPolLambda_monitor(xwidth = 0.04438458, yheight = 0.05435723, nL = 20, restore_neutron = 1,
+mx = 0, my = 1, mz = 0, Lmin = lamb_1, Lmax = lamb_2, filename="media.dat")
+AT (0, 0, 1E-06) RELATIVE PREVIOUS
+
+COMPONENT postpol_monitor_flux = Monitor_nD(
+    options="lambda bins=10 limits=[0 30] bins 200",
+    filename="postpol_flux.dat",
+    xwidth = 0.04438458, yheight = 0.05435723,
+    restore_neutron=1)
+AT (0, 0, 1E-6) RELATIVE PREVIOUS
+
+
+FINALLY
+%{
+%}
+
+END
