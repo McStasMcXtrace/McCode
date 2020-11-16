@@ -96,12 +96,10 @@ DECLARE
   double RATIO    =4;
 
   double Ei;
-
+  #pragma acc declare create(Ei)
   double lsd;
   double RH, RV;
   
-  double _Frequency, _DELAY, _LCC;
-#pragma acc declare create(_Frequency, _DELAY, _LCC,Ei)
 %}
 
 USERVARS %{
@@ -132,6 +130,7 @@ INITIALIZE
   Ki = 2*PI/lambda;
   vi = K2V*fabs(Ki);
   Ei = VS2E*vi*vi;
+  #pragma acc update device(Ei)
 
   DELAY   = LCC/vi;           /* neutron propagation time between choppers [s] */
 
@@ -158,11 +157,6 @@ INITIALIZE
 
   RV = 2*L*sin(DEG2RAD*A1);
   RH = 2*L/sin(DEG2RAD*A1);
-
-  _Frequency=Frequency;
-  _DELAY=DELAY;
-  _LCC=LCC;
-#pragma acc update device(_Frequency, _DELAY, _LCC, Ei)
 %}
 
 TRACE
@@ -249,8 +243,8 @@ EXTEND %{
   PROP_Z0;
   /* we fisrt put all events in the Fermi time transmission window */
   /* Fermi opening time is atan(w/length)/PI/frequency */
-  double Tfermi=atan2(0.031/136,0.013)/_Frequency/PI; /* opening time for Fermi [s] */
-  t  = _DELAY*(_LCC-0.2)/_LCC+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
+  double Tfermi=atan2(0.031/136,0.013)/INSTRUMENT_GETPAR(Frequency)/PI; /* opening time for Fermi [s] */
+  t  = INSTRUMENT_GETPAR(DELAY)*(INSTRUMENT_GETPAR(LCC)-0.2)/INSTRUMENT_GETPAR(LCC)+(rand01()-0.5)*Tfermi;    /* center time on DELAY at Fermi position */
 
   /* geometric integrated transmission of Fermi=0.55 % */
   /* 2 sides*angular opening = 2*atan2(0.031/136,0.013)*RAD2DEG/360 */
