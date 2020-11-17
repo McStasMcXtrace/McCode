@@ -154,7 +154,11 @@ DECLARE
 
 %}
 
-
+USERVARS %{
+  double vix;
+  double viy;
+  double viz;
+%}
 
 INITIALIZE
 %{
@@ -511,7 +515,10 @@ AT (0,0,L_Guide45+mono_gap) RELATIVE Guide45
 COMPONENT Det_sample_t = Monitor_nD(xwidth=0.014, yheight=0.054,
   options="auto t bins=20", restore_neutron=1)
 AT (0,0,L_Collimator+0.0002) RELATIVE Collimator
-
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+  vix=vx,viy=vy,viz=vz;
+%}
 
 /*-----------------------*/
 /*       SAMPLE          */
@@ -557,9 +564,9 @@ AT (0,0,0) RELATIVE center_det
 
   
 
-COMPONENT Detector_Sqw = Monitor_Sqw(
-  radius=4, yheight=3, bins=1000, index=-4,
-  options=mon_sqw)
+  COMPONENT Detector_Sqw = Sqw_monitor(
+				       nq=1000, nE=1000, vix="vix",viy="viy",viz="viz",
+				       qmin=0, qmax=3*Ki, Emin=-Ei, Emax=4*Ei, filename="Sqw_map")
   /* "user1 limits=[0 10], user2 limits=[-50 50]" */
   AT (0,0,0) RELATIVE arm2
 
