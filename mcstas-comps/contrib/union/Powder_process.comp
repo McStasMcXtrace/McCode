@@ -617,6 +617,7 @@ int Powder_physics_scattering(double *k_final, double *k_initial, double *weight
     return 1;
 };
 #ifndef PROCESS_DETECTOR
+<<<<<<< HEAD
     #define PROCESS_DETECTOR dummy
 #endif
 
@@ -631,6 +632,14 @@ int Powder_physics_scattering(double *k_final, double *k_initial, double *weight
 #endif
 
 >>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_POWDER_DETECTOR
+    #define PROCESS_POWDER_DETECTOR dummy
+#endif
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

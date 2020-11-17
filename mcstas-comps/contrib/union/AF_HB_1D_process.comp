@@ -254,11 +254,17 @@ int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weig
 #endif
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifndef PROCESS_AF_HB_1D_DETECTOR
     #define PROCESS_AF_HB_1D_DETECTOR dummy
 #endif
 =======
 >>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+#ifndef PROCESS_AF_HB_1D_DETECTOR
+    #define PROCESS_AF_HB_1D_DETECTOR dummy
+#endif
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

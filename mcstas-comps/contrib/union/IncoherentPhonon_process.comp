@@ -4621,12 +4621,18 @@ int finish(struct IncoherentPhonon_physics_storage_struct *data)
     #define PROCESS_DETECTOR dummy
 #endif
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 
 #ifndef PROCESS_INCOHERENTPHONON_DETECTOR
     #define PROCESS_INCOHERENTPHONON_DETECTOR dummy
 #endif
+<<<<<<< HEAD
 =======
 >>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

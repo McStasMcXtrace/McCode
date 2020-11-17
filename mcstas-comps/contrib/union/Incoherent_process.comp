@@ -122,6 +122,7 @@ int Incoherent_physics_scattering(double *k_final, double *k_initial, double *we
 
 #ifndef PROCESS_DETECTOR
 <<<<<<< HEAD
+<<<<<<< HEAD
     #define PROCESS_DETECTOR dummy
 #endif
 
@@ -133,6 +134,14 @@ int Incoherent_physics_scattering(double *k_final, double *k_initial, double *we
     #define PROCESS_DETECTOR dummy
 #endif
 >>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_INCOHERENT_DETECTOR
+    #define PROCESS_INCOHERENT_DETECTOR dummy
+#endif
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

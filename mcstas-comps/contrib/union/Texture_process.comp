@@ -2181,15 +2181,21 @@ int Texture_physics_scattering(double *k_final, double *k_initial, double *weigh
 
 #ifndef PROCESS_DETECTOR
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
     #define PROCESS_DETECTOR dummy
 #endif
 
 #ifndef PROCESS_TEXTURE_DETECTOR
     #define PROCESS_TEXTURE_DETECTOR dummy
+<<<<<<< HEAD
 =======
 //struct pointer_to_global_process_list global_process_list = {0,NULL};
 #define PROCESS_DETECTOR dummy
 >>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 #endif
 %}
 
