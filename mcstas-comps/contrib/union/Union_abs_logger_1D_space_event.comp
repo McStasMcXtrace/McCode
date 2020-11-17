@@ -317,7 +317,7 @@ void record_to_perm_abs_1D_event(Coords *position, double *k, double p, double t
     storage->Vars.ct  = time;
 
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars));
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
 
   }
 
@@ -349,7 +349,7 @@ void write_temp_to_perm_abs_1D_event(union abs_logger_data_union *data_union) {
     storage->Vars.ct  = storage->temp_abs_1D_event_data.elements[index].time;
 
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars));
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
 
   }
   clear_temp_abs_1D_event(data_union);
@@ -380,7 +380,7 @@ void write_temp_to_perm_final_p_abs_1D_event(union abs_logger_data_union *data_u
     storage->Vars.ct  = storage->temp_abs_1D_event_data.elements[index].time;
 
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars));
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
   }
   clear_temp_abs_1D_event(data_union);
 }
@@ -477,6 +477,7 @@ INITIALIZE
 
   // Need to tell the monitor from what integer its pixel id range starts, and it necessary to avoid overlaps.
   // global_mantid_min_pixel_id is initialized as 0, and each monitor adds its number of pixels to avoid overlap.
+  int global_mantid_min_pixel_id = COMP_GETPAR3(Union_init, init, global_mantid_min_pixel_id);
   sprintf(option_string_part,", neutron pixel min=%i t, list all neutrons", global_mantid_min_pixel_id);
   global_mantid_min_pixel_id += 3*n;
 
@@ -534,7 +535,7 @@ INITIALIZE
     this_abs_storage.Vars.ct  = 0.0;
 
     int pp;
-    pp = Monitor_nD_Trace(&(this_abs_storage.DEFS), &(this_abs_storage.Vars));
+    pp = Monitor_nD_Trace(&(this_abs_storage.DEFS), &(this_abs_storage.Vars), _particle);
   }
 
 
