@@ -29,13 +29,8 @@
 *
 * %P
 * INPUT PARAMETERS:
-* process_string:  [string] Comma seperated names of physical processes
-* my_absorption:   [1/m]    Inverse penetration depth from absorption at standard energy
-* absorber:        [0/1]    Control parameter, if set to 1 the material will have no scattering processes
 *
 * OUTPUT PARAMETERS:
-* this_material:            Structure that contains information on this material
-* global_material_element:  Element of global_material_list which is a global variable
 *
 * GLOBAL PARAMETERS:
 * global_material_list:     List of all defined materials, available in the global scope
@@ -108,6 +103,10 @@ DECLARE
 // Initialize global_master_list
   // Used to facilitate communication between Master components (mainly for deallocation)
   struct pointer_to_global_master_list global_master_list;
+  
+// Initialize global_mantid_min_pixel_id
+  // Used for ensuring pixel id's on Mantid monitors do not overlap
+  int global_mantid_min_pixel_id;
 %}
 
 INITIALIZE
@@ -144,6 +143,8 @@ global_tagging_conditional_list.elements = NULL;
 
 global_master_list.num_elements = 0;
 global_master_list.elements = NULL;
+
+global_mantid_min_pixel_id = 0;
 %}
 
 TRACE

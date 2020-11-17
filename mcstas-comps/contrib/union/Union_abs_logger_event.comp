@@ -299,7 +299,7 @@ void record_to_perm_abs_event(Coords *position, double *k, double p, double time
     storage->Vars.ct  = time;
     
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars));
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
     
   }
 
@@ -331,7 +331,7 @@ void write_temp_to_perm_abs_event(union abs_logger_data_union *data_union) {
     storage->Vars.ct  = storage->temp_abs_event_data.elements[index].time;
     
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars));
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
     
   }
   clear_temp_abs_event(data_union);
@@ -362,7 +362,7 @@ void write_temp_to_perm_final_p_abs_event(union abs_logger_data_union *data_unio
     storage->Vars.ct  = storage->temp_abs_event_data.elements[index].time;
     
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars));
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
   }
   clear_temp_abs_event(data_union);
 }
