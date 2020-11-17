@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 *
 * %D
@@ -45,10 +45,10 @@
 * %E
 ******************************************************************************/
 
-DEFINE COMPONENT Powder_process
-DEFINITION PARAMETERS (format=Undefined)
-SETTING PARAMETERS(string reflections="NULL",packing_factor=1, Vc=0, delta_d_d=0, DW=0, nb_atoms=1, d_phi=0, density=0, weight=0, barns=1, Strain=0, interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS (This_process,Powder_storage,effective_my_scattering,d_phi,line_info,columns)
+DEFINE COMPONENT Powder_process_modern
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(string reflections="NULL",packing_factor=1, Vc=0, delta_d_d=0, DW=0, nb_atoms=1, d_phi=0, density=0, weight=0, barns=1, Strain=0, interact_fraction=-1, vector format={0, 0, 0, 0, 0, 0, 0, 0, 0}, string init="init")
+OUTPUT PARAMETERS (This_process, Powder_storage, effective_my_scattering, line_info, columns, global_process_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -57,8 +57,8 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-#include "Union_functions.c"
-#include "Union_initialization.c"
+%include "Union_functions.c"
+%include "Union_initialization.c"
 
 #endif
 
@@ -610,12 +610,10 @@ int Powder_physics_scattering(double *k_final, double *k_initial, double *weight
     //printf("Powder scattering function returned 1\n");
     return 1;
 };
-
 #ifndef PROCESS_DETECTOR
     //struct pointer_to_global_process_list global_process_list = {0,NULL};
     #define PROCESS_DETECTOR dummy
 #endif
-
 %}
 
 DECLARE
@@ -623,20 +621,20 @@ DECLARE
 // Needed for transport to the main component
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
+
 // Declare for this component, to do calculations on the input / store in the transported data
 struct Powder_physics_storage_struct Powder_storage;
 struct line_info_struct_union line_info;
 double effective_my_scattering;
 
-int columns[9] = format;
-
-
+double *columns;
 %}
 
 INITIALIZE
 %{
 
   // Initialize done in the component
+  columns = format;
   
   // Copy from PowderN component
   int i=0;
