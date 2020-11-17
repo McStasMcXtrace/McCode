@@ -331,6 +331,8 @@ AT (0,0,0.4) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 
 END

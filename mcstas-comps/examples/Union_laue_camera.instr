@@ -119,4 +119,7 @@ AT (0,0,0.5) RELATIVE slit
 WHEN (scattered_flag_instr==0)
 AT (0,0,0.5) RELATIVE slit
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
 END

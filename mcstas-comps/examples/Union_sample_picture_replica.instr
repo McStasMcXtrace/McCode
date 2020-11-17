@@ -184,7 +184,8 @@ COMPONENT detector = PSD_monitor(xwidth=0.05, yheight=0.15, nx=200, ny=200, file
 AT (0,0,0.6) RELATIVE source
 ROTATED (0,0,0) RELATIVE source
 
-
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 
 END

@@ -223,5 +223,7 @@ COMPONENT detector = PSD_monitor(xwidth=0.1, yheight=0.08, nx=200, ny=200, filen
 AT (0,-0.02,0.4) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 END

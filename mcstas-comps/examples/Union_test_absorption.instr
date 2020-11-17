@@ -66,6 +66,7 @@ ROTATED(0,0,0) RELATIVE beam_center
 COMPONENT screen = PSD_monitor(xwidth=0.2,yheight=0.2,nx=200,ny=200,filename="absoprtion_picture.dat",restore_neutron=1)
   AT (0,0,2) RELATIVE a1
 
-
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 END

@@ -166,7 +166,8 @@ COMPONENT detector_scat = PSD_monitor(xwidth=0.085, yheight=0.15, nx=200, ny=200
 AT (0,0,0.5) RELATIVE scat_direction
 ROTATED (0,0,0) RELATIVE scat_direction
 
-
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 
 END

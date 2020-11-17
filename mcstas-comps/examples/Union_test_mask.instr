@@ -122,7 +122,8 @@ EXTEND
 COMPONENT m4pi_both = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_12") WHEN (scattered_1 && scattered_2)
   AT (0, 0, 0) RELATIVE beam_center
 
-
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 
 END

@@ -3770,3 +3770,32 @@ int box_within_cone(struct geometry_struct *geometry_child,struct geometry_struc
     // Brute force place holder
     return A_within_B(geometry_child,geometry_parent,(int) 300); // 150 points on each end cap
 };
+
+
+// Flexible intersection function
+int intersect_function(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
+    int output = 0;
+    switch(geometry->eShape) {
+        case box:
+            if (geometry->geometry_parameters.p_box_storage->is_rectangle == 1)
+                output = sample_box_intersect_simple(t, num_solutions, r, v, geometry);
+            else
+                output = sample_box_intersect_advanced(t, num_solutions, r, v, geometry);
+            break;
+        case sphere:
+            output = sample_sphere_intersect(t, num_solutions, r, v, geometry);
+            break;
+        case cylinder:
+            output = sample_cylinder_intersect(t, num_solutions, r, v, geometry);
+            break;
+        case cone:
+            output = sample_cone_intersect(t, num_solutions, r, v, geometry);
+            break;
+        case mesh:
+            output = sample_mesh_intersect(t, num_solutions, r, v, geometry);
+            break;
+        default:
+            printf("physics_my: No scattering process matches input!");
+            break;
+    }
+};

@@ -307,6 +307,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
 
 sprintf(this_sphere_volume.name,NAME_CURRENT_COMP);
 sprintf(this_sphere_volume.geometry.shape,"sphere");
+this_sphere_volume.geometry.eShape = sphere;
 this_sphere_volume.geometry.priority_value = priority;
 // Currently the coordinates will be in absolute space.
 this_sphere_volume.geometry.center = POS_A_CURRENT_COMP;

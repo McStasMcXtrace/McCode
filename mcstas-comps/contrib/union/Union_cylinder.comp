@@ -310,6 +310,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
 
 sprintf(this_cylinder_volume.name,NAME_CURRENT_COMP);
 sprintf(this_cylinder_volume.geometry.shape,"cylinder");
+this_cylinder_volume.geometry.eShape = cylinder;
 this_cylinder_volume.geometry.priority_value = priority;
 // Currently the coordinates will be in absolute space.
 this_cylinder_volume.geometry.center = POS_A_CURRENT_COMP;

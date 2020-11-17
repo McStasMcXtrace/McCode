@@ -910,8 +910,11 @@ int Single_crystal_physics_scattering(double *k_final, double *k_initial, double
 };
 
 #ifndef PROCESS_DETECTOR
-    //struct pointer_to_global_process_list global_process_list = {0,NULL};
     #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_SINGLE_CRYSTAL_DETECTOR
+    #define PROCESS_SINGLE_CRYSTAL_DETECTOR dummy
 #endif
 %}
 
@@ -1045,6 +1048,9 @@ INITIALIZE
   // Need to specify if this process is isotropic
   //This_process.non_isotropic_rot_index = -1; // Yes (powder)
   This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // The type of the process must be saved in the global enum process
+  This_process.eProcess = Single_crystal;
 
   // Packing the data into a structure that is transported to the main component
   This_process.data_transfer.pointer_to_a_Single_crystal_physics_storage_struct = &Single_crystal_storage;
