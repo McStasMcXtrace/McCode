@@ -45,6 +45,9 @@ int single_scattering_flag;
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc,packing_factor=pack,unit_cell_volume=Vc,interact_fraction=incoherent_fraction)
 AT (0,0,0) ABSOLUTE
 

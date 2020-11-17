@@ -44,6 +44,9 @@ DECLARE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
 COMPONENT V_phonon = IncoherentPhonon_process(nphe_exact=nphe_exact, nphe_approx=nphe_approx ,approx=approx, mph_resum=mph_resum,
 T=T,density=density,M=M,sigmaCoh=sigmaCoh,sigmaInc=sigmaInc,dosfn=dosfn,nxs=nxs,kabsmin=kabsmin,kabsmax=kabsmax,interact_fraction=-1)
 AT (0,0,0) ABSOLUTE

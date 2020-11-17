@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 *
 * %D
@@ -56,7 +56,7 @@
 
 DEFINE COMPONENT AF_HB_1D_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(atom_distance=1,number_density=0,unit_cell_volume=0,A_constant=1,J_interaction=1,packing_factor=1,interact_fraction=-1)
+SETTING PARAMETERS(atom_distance=1, number_density=0, unit_cell_volume=0, A_constant=1, J_interaction=1, packing_factor=1, interact_fraction=-1, string init="init")
 OUTPUT PARAMETERS (This_process,AF_HB_1D_storage,effective_my_scattering)
 
 SHARE
@@ -241,6 +241,14 @@ int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weig
     
 };
 
+// These lines help with future error correction, and tell other Union components
+//  that at least one process have been defined.
+#ifndef PROCESS_DETECTOR
+    // Obsolete
+    //struct pointer_to_global_process_list global_process_list = {0,NULL};
+    #define PROCESS_DETECTOR dummy
+#endif
+
 %}
 
 DECLARE
@@ -254,14 +262,6 @@ double effective_my_scattering;
 // Needed for transport to the main component, will be the same for all processes
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
-
-// These lines help with future error correction, and tell other Union components
-//  that at least one process have been defined.
-#ifndef PROCESS_DETECTOR
-    // Obsolete
-	//struct pointer_to_global_process_list global_process_list = {0,NULL};
-	#define PROCESS_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE
@@ -329,7 +329,9 @@ INITIALIZE
   sprintf(global_process_element.name,NAME_CURRENT_COMP);
   global_process_element.component_index = INDEX_CURRENT_COMP;
   global_process_element.p_scattering_process = &This_process;
-  add_element_to_process_list(&global_process_list,global_process_element);
+  
+  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+  add_element_to_process_list(global_process_list,global_process_element);
  %}
 
 TRACE

@@ -33,6 +33,8 @@ DECLARE
 
 TRACE
 
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
 
 COMPONENT Vanadium_incoherent = Incoherent_process(sigma=2*5.08,packing_factor=1,unit_cell_volume=27.66)
 AT (0,0,0) ABSOLUTE

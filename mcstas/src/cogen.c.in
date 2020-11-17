@@ -919,6 +919,10 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   cout("/* enables settings parameters based use of the GETPAR macro */");
   cout("{");
 
+  cout("  #ifdef OPENACC");
+  cout("    #define strcmp(a,b) str_comp(a,b)");
+  cout("  #endif");
+
   List_handle iter;
   iter = list_iterate(instr->complist);
   struct comp_inst *comp;

@@ -69,7 +69,7 @@
 
 DEFINE COMPONENT Union_conditional_standard
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, time_min=0, time_max=0, E_min=0, E_max=0, total_order_min=0, total_order_max=0, last_volume_index=-1,overwrite_logger_weight=0) // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
+SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, time_min=0, time_max=0, E_min=0, E_max=0, total_order_min=0, total_order_max=0, last_volume_index=-1,overwrite_logger_weight=0, string init="init") // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
 OUTPUT PARAMETERS (accepted_loggers_all,accepted_loggers_specific,accepted_tagging,found_logger,loop_index,return_value,this_conditional_data,this_data_union, new_tagging_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -93,8 +93,8 @@ int conditional_function_standard(union conditional_data_union *data_union, Coor
   }
     
   if (data_union->p_standard->E_limit == 1) {
-    // VS2E = 5.2269518201E-9 m_n / 2e
-    double E = 5.2269518201E-9*(velocity->x*velocity->x + velocity->y*velocity->y + velocity->z*velocity->z);
+    // VS2E = 5.22704E-6 m_n / 2e
+    double E = 5.22704E-6*(velocity->x*velocity->x + velocity->y*velocity->y + velocity->z*velocity->z);
     if (E < data_union->p_standard->Emin || E > data_union->p_standard->Emax)
       return 0;
   }
@@ -145,6 +145,34 @@ int manual_linking_logger_function_conditional(char *input_string, struct pointe
    }
    
    return accepted_loggers->num_elements;
+}
+
+int manual_linking_abs_logger_function_conditional(char *input_string, struct pointer_to_global_abs_logger_list *global_abs_logger_list, struct pointer_to_1d_int_list *accepted_abs_loggers) {
+    // Need to check a input_string of text for an occurance of name. If it is in the inputstring, yes return 1, otherwise 0.
+   char *token;
+   int loop_index;
+   char local_string[512];
+   
+   strcpy(local_string,input_string);
+   // get the first token
+   token = strtok(local_string,",");
+   
+   // walk through other tokens
+   while( token != NULL )
+   {
+      //printf( " %s\n", token );
+      for (loop_index=0;loop_index<global_abs_logger_list->num_elements;loop_index++) {
+        if (strcmp(token,global_abs_logger_list->elements[loop_index].name) == 0) {
+          add_element_to_int_list(accepted_abs_loggers,loop_index);
+          break;
+        }
+      }
+      
+      // Updates the token
+      token = strtok(NULL,",");
+   }
+   
+   return accepted_abs_loggers->num_elements;
 }
 
 /*
@@ -216,9 +244,12 @@ int loop_index;
 int return_value;
 struct pointer_to_1d_int_list accepted_loggers_all;
 struct pointer_to_1d_int_list accepted_loggers_specific;
+struct pointer_to_1d_int_list accepted_abs_loggers_all;
+struct pointer_to_1d_int_list accepted_abs_loggers_specific;
 //struct pointer_to_1d_int_list accepted_tagging = {0,NULL};
 
 struct logger_struct *found_logger;
+struct abs_logger_struct *found_abs_logger;
 
 struct conditional_standard_struct this_conditional_data;
 union conditional_data_union this_data_union;
@@ -231,9 +262,12 @@ INITIALIZE
 %{
   accepted_loggers_all.elements = NULL;
   accepted_loggers_all.num_elements = 0;
-  
   accepted_loggers_specific.elements = NULL;
   accepted_loggers_specific.num_elements = 0;
+  accepted_abs_loggers_all.elements = NULL;
+  accepted_abs_loggers_all.num_elements = 0;
+  accepted_abs_loggers_specific.elements = NULL;
+  accepted_abs_loggers_specific.num_elements = 0;
 
   //printf("starded conditional initialize \n");
   // Check if an E range has been set
@@ -283,24 +317,28 @@ INITIALIZE
   this_conditional_data.Total_scat_max = total_order_max;
   this_conditional_data.Total_scat_min = total_order_min;
   
+  struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
+  struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_conditional_data.test_position = POS_A_CURRENT_COMP;
-  add_position_pointer_to_list(&global_positions_to_transform_list,&this_conditional_data.test_position);
+  add_position_pointer_to_list(global_positions_to_transform_list,&this_conditional_data.test_position);
   
   rot_copy(this_conditional_data.test_rotation,ROT_A_CURRENT_COMP);
-  add_rotation_pointer_to_list(&global_rotations_to_transform_list,&this_conditional_data.test_rotation);
+  add_rotation_pointer_to_list(global_rotations_to_transform_list,&this_conditional_data.test_rotation);
   
   rot_transpose(ROT_A_CURRENT_COMP,this_conditional_data.test_t_rotation);
-  add_rotation_pointer_to_list(&global_rotations_to_transform_list,&this_conditional_data.test_t_rotation);
+  add_rotation_pointer_to_list(global_rotations_to_transform_list,&this_conditional_data.test_t_rotation);
   
   
   // Set the data union to be for this specific type of conditional, and supply it with a pointer to its static data
   this_data_union.p_standard = &this_conditional_data;
   
+  struct global_tagging_conditional_list_struct *global_tagging_conditional_list = COMP_GETPAR3(Union_init, init, global_tagging_conditional_list);
+  
   if (master_tagging == 1) {
     // Apply this conditional to the next master components tagging system
     // When a master is encountered, the current_index is increased, meaning it is always the next master that gets the additional conditional
-    if (global_tagging_conditional_list.num_elements < global_tagging_conditional_list.current_index + 1) {
+    if (global_tagging_conditional_list->num_elements < global_tagging_conditional_list->current_index + 1) {
       //printf("allocating new element for global_tagging_conditional_list \n");
       // New element needs to be allocated first
       new_tagging_element = malloc(sizeof(struct global_tagging_conditional_element_struct));
@@ -309,25 +347,33 @@ INITIALIZE
       strcpy(new_tagging_element->name,NAME_CURRENT_COMP);
       
       //printf("adding new element to global_tagging_conditional_list \n");
-      add_element_to_tagging_conditional_list(&global_tagging_conditional_list, *new_tagging_element);
+      add_element_to_tagging_conditional_list(global_tagging_conditional_list, *new_tagging_element);
       //printf("added new element to global_tagging_conditional_list \n");
       
     } else {
       // Making the name reflect all the conditionals used
-      strcat(global_tagging_conditional_list.elements[global_tagging_conditional_list.current_index].name,"-");
-      strcat(global_tagging_conditional_list.elements[global_tagging_conditional_list.current_index].name,NAME_CURRENT_COMP);
+      strcat(global_tagging_conditional_list->elements[global_tagging_conditional_list->current_index].name,"-");
+      strcat(global_tagging_conditional_list->elements[global_tagging_conditional_list->current_index].name,NAME_CURRENT_COMP);
     }
       // Add the conditional element to the current list
-      add_function_to_conditional_list(&global_tagging_conditional_list.elements[global_tagging_conditional_list.current_index].conditional_list,&conditional_function_standard,&this_data_union);
+      add_function_to_conditional_list(&global_tagging_conditional_list->elements[global_tagging_conditional_list->current_index].conditional_list,&conditional_function_standard,&this_data_union);
   }
+  
+  struct pointer_to_global_logger_list *global_specific_volumes_logger_list = COMP_GETPAR3(Union_init, init, global_specific_volumes_logger_list);
+  struct pointer_to_global_logger_list *global_all_volume_logger_list = COMP_GETPAR3(Union_init, init, global_all_volume_logger_list);
+  struct pointer_to_global_abs_logger_list *global_specific_volumes_abs_logger_list = COMP_GETPAR3(Union_init, init, global_specific_volumes_abs_logger_list);
+  struct pointer_to_global_abs_logger_list *global_all_volume_abs_logger_list = COMP_GETPAR3(Union_init, init, global_all_volume_abs_logger_list);
   
   // Need to find the loggers which need to have this conditional applied
   if (target_loggers && strlen(target_loggers) && strcmp(target_loggers,"NULL") && strcmp(target_loggers, "0")) {
     // Certain loggers were selected, find the indicies in the global_specific_volumes_logger_list / global_all_volume_list
     // Create accepted_loggers_specific / accepted_loggers_all
     
-    return_value = manual_linking_logger_function_conditional(target_loggers, &global_all_volume_logger_list, &accepted_loggers_all);
-    return_value += manual_linking_logger_function_conditional(target_loggers, &global_specific_volumes_logger_list, &accepted_loggers_specific);
+    return_value = manual_linking_logger_function_conditional(target_loggers, global_all_volume_logger_list, &accepted_loggers_all);
+    return_value += manual_linking_logger_function_conditional(target_loggers, global_specific_volumes_logger_list, &accepted_loggers_specific);
+    return_value += manual_linking_abs_logger_function_conditional(target_loggers, global_all_volume_abs_logger_list, &accepted_abs_loggers_all);
+    return_value += manual_linking_abs_logger_function_conditional(target_loggers, global_specific_volumes_abs_logger_list, &accepted_abs_loggers_specific);
+    
     //return_value += manual_linking_tagging_function_conditional(target_loggers, &global_tagging_conditional_list, &accepted_tagging);
     
     // Need to find a list over tokens that were not taken by either all_volume or specific_volumes
@@ -343,6 +389,7 @@ INITIALIZE
     }
     
     void (*temp_function_pointer)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
+    void (*temp_abs_function_pointer)(Coords*, double*, double,  double, int, int, struct abs_logger_struct*, struct abs_logger_with_data_struct*);
     for (loop_index=0;loop_index<accepted_loggers_all.num_elements;loop_index++) {
       //printf("all loop \n");
     
@@ -350,7 +397,7 @@ INITIALIZE
       //  if not conditional function pointer is assigned yet, switch the active and inactive record function pointers in the logger
       //  Assing a function pointer to the conditional function pointer (maybe a list of these if more conditions are to be used)
     
-      found_logger = global_all_volume_logger_list.elements[accepted_loggers_all.elements[loop_index]].logger;
+      found_logger = global_all_volume_logger_list->elements[accepted_loggers_all.elements[loop_index]].logger;
     
       if (found_logger->conditional_list.num_elements == 0) {
         // Switching function pointers, only necessary for the first application of a conditional
@@ -372,7 +419,7 @@ INITIALIZE
       //  if not conditional function pointer is assigned yet, switch the active and inactive record function pointers in the logger
       //  Assing a function pointer to the conditional function pointer (maybe a list of these if more conditions are to be used)
     
-      found_logger = global_specific_volumes_logger_list.elements[accepted_loggers_specific.elements[loop_index]].logger;
+      found_logger = global_specific_volumes_logger_list->elements[accepted_loggers_specific.elements[loop_index]].logger;
     
       if (found_logger->conditional_list.num_elements == 0) {
         // Switching function pointers, only necessary for the first application of a conditional
@@ -388,11 +435,50 @@ INITIALIZE
       // Add a pointer to this conditional function to the list of conditionals for this logger
       add_function_to_conditional_list(&found_logger->conditional_list,&conditional_function_standard,&this_data_union);
     }
+    for (loop_index=0;loop_index<accepted_abs_loggers_all.num_elements;loop_index++) {
+      //printf("all loop \n");
+    
+      // For each accepted logger do these tasks:
+      //  if not conditional function pointer is assigned yet, switch the active and inactive record function pointers in the logger
+      //  Assing a function pointer to the conditional function pointer (maybe a list of these if more conditions are to be used)
+    
+      found_abs_logger = global_all_volume_abs_logger_list->elements[accepted_abs_loggers_all.elements[loop_index]].abs_logger;
+    
+      if (found_abs_logger->conditional_list.num_elements == 0) {
+        // Switching function pointers, only necessary for the first application of a conditional
+        // This makes the logger record to a temporary storage that is transfered to the permanent in case the conditional is true istead of directly to the permanent storage.
+        temp_abs_function_pointer = found_abs_logger->function_pointers.active_record_function;
+        found_abs_logger->function_pointers.active_record_function = found_abs_logger->function_pointers.inactive_record_function;
+        found_abs_logger->function_pointers.inactive_record_function = temp_abs_function_pointer;
+      }
+      
+      // Add a pointer to this conditional function to the list of conditionals for this logger
+      add_function_to_conditional_list(&found_abs_logger->conditional_list, &conditional_function_standard, &this_data_union);
+    }
+    for (loop_index=0;loop_index<accepted_abs_loggers_specific.num_elements;loop_index++) {
+      //printf("specific loop \n");
+      // For each accepted logger do these tasks:
+      //  if not conditional function pointer is assigned yet, switch the active and inactive record function pointers in the logger
+      //  Assing a function pointer to the conditional function pointer (maybe a list of these if more conditions are to be used)
+    
+      found_abs_logger = global_specific_volumes_abs_logger_list->elements[accepted_abs_loggers_specific.elements[loop_index]].abs_logger;
+    
+      if (found_abs_logger->conditional_list.num_elements == 0) {
+        // Switching function pointers, only necessary for the first application of a conditional
+        // This makes the logger record to a temporary storage that is transfered to the permanent in case the conditional is true istead of directly to the permanent storage.
+        temp_abs_function_pointer = found_abs_logger->function_pointers.active_record_function;
+        found_abs_logger->function_pointers.active_record_function = found_abs_logger->function_pointers.inactive_record_function;
+        found_abs_logger->function_pointers.inactive_record_function = temp_abs_function_pointer;
+      }
+      
+      // Add a pointer to this conditional function to the list of conditionals for this logger
+      add_function_to_conditional_list(&found_logger->conditional_list,&conditional_function_standard,&this_data_union);
+    }
     /*
     for (loop_index=0;loop_index<accepted_tagging.num_elements;loop_index++) {
       //printf("master loop \n");
       // Adding a conditional to the tagging part of a master does not need any change in the record functions, as it doesn't work as a logger
-      add_function_to_conditional_list(&global_tagging_conditional_list.elements[accepted_tagging.elements[loop_index]].conditional_list,&conditional_function_standard,&this_data_union);
+      add_function_to_conditional_list(&global_tagging_conditional_list->elements[accepted_tagging.elements[loop_index]].conditional_list,&conditional_function_standard,&this_data_union);
     }
     */
       
@@ -421,6 +507,8 @@ FINALLY
 // Remember to clean up allocated lists
 if (accepted_loggers_specific.num_elements > 0) free(accepted_loggers_specific.elements);
 if (accepted_loggers_all.num_elements > 0) free(accepted_loggers_all.elements);
+if (accepted_abs_loggers_specific.num_elements > 0) free(accepted_abs_loggers_specific.elements);
+if (accepted_abs_loggers_all.num_elements > 0) free(accepted_abs_loggers_all.elements);
 //if (accepted_tagging.num_elements > 0) free(accepted_tagging.elements);
 
 %}

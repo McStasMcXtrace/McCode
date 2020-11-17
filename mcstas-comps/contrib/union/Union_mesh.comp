@@ -65,7 +65,7 @@
 
 DEFINE COMPONENT Union_mesh
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(string filename = 0,string material_string=0, priority, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact=0, string mask_string=0, string mask_setting=0,number_of_activations=1)
+SETTING PARAMETERS(string filename = 0,string material_string=0, priority, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact=0, string mask_string=0, string mask_setting=0,number_of_activations=1, string init="init")
 OUTPUT PARAMETERS (loop_index,this_mesh_volume,global_geometry_element,this_mesh_storage)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -302,7 +302,7 @@ void initialize_mesh_geometry_from_main_component(struct geometry_struct *mesh) 
     */
 }
 
-struct pointer_to_1d_coords_list shell_points(struct geometry_struct *geometry,int max_number_of_points) {
+struct pointer_to_1d_coords_list mesh_shell_points(struct geometry_struct *geometry,int max_number_of_points) {
   // Function that returns a number (less than max) of points on the geometry surface
   // Run trhough all points in list of faces, and remove dublicates
   // There are three points in a face and very often these will be dublicated a few times. This removes dublicates to boost performance down stream...
@@ -402,6 +402,11 @@ struct pointer_to_1d_coords_list shell_points(struct geometry_struct *geometry,i
   return mesh_shell_array;
 }
 
+#ifndef ANY_GEOMETRY_DETECTOR_DECLARE
+    #define ANY_GEOMETRY_DETECTOR_DECLARE dummy
+    //struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
+#endif
+
 %}
 
 DECLARE
@@ -410,11 +415,6 @@ DECLARE
 
 //
 struct global_geometry_element_struct global_geometry_element;
-
-#ifndef ANY_GEOMETRY_DETECTOR_DECLARE
-    #define ANY_GEOMETRY_DETECTOR_DECLARE dummy
-	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
-#endif
 
 int loop_index;
 int loop_2_index;
@@ -431,9 +431,11 @@ INITIALIZE
 focus_initialize(&this_mesh_volume.geometry, POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index), POS_A_CURRENT_COMP, ROT_A_CURRENT_COMP, target_index, target_x, target_y, target_z, focus_aw, focus_ah, focus_xw, focus_xh, focus_r, NAME_CURRENT_COMP);
 
 
+
+struct pointer_to_global_material_list *global_material_list = COMP_GETPAR3(Union_init, init, global_material_list);
 // Use sanitation
 #ifdef MATERIAL_DETECTOR
-if (global_material_list.num_elements == 0) {
+if (global_material_list->num_elements == 0) {
   // Here if the user have defined a material, but only after this material
   printf("\nERROR: Need to define a material using Union_make_material before using a Union geometry component. \n");
   printf("       %s was defined before first use of Union_make_material.\n",NAME_CURRENT_COMP);
@@ -449,6 +451,8 @@ if (global_material_list.num_elements == 0) {
 this_mesh_volume.geometry.is_masked_volume = 0;
 this_mesh_volume.geometry.is_exit_volume = 0;
 this_mesh_volume.geometry.is_mask_volume = 0;
+
+struct pointer_to_global_geometry_list *global_geometry_list = COMP_GETPAR3(Union_init, init, global_geometry_list);
 
 // Read the material input, or if it lacks, use automatic linking.
 if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(mask_string, "0")) {
@@ -466,18 +470,18 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
     }
     
     int found_geometries = 0;
-    for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
+    for (loop_index=0;loop_index<global_geometry_list->num_elements;loop_index++) {
         // Add mask list
-        if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
-            add_element_to_int_list(&this_mesh_volume.geometry.mask_list,global_geometry_list.elements[loop_index].component_index);
-            add_element_to_int_list(&global_geometry_list.elements[loop_index].Volume->geometry.masked_by_list,INDEX_CURRENT_COMP);
-            global_geometry_list.elements[loop_index].Volume->geometry.is_masked_volume = 1;
+        if (1 == manual_linking_function(global_geometry_list->elements[loop_index].name,mask_string)) {
+            add_element_to_int_list(&this_mesh_volume.geometry.mask_list,global_geometry_list->elements[loop_index].component_index);
+            add_element_to_int_list(&global_geometry_list->elements[loop_index].Volume->geometry.masked_by_list,INDEX_CURRENT_COMP);
+            global_geometry_list->elements[loop_index].Volume->geometry.is_masked_volume = 1;
             if (this_mesh_volume.geometry.mask_mode == 2)
-                global_geometry_list.elements[loop_index].Volume->geometry.mask_mode = 2;
+                global_geometry_list->elements[loop_index].Volume->geometry.mask_mode = 2;
             if (this_mesh_volume.geometry.mask_mode == 1) {
-                if (global_geometry_list.elements[loop_index].Volume->geometry.is_masked_volume == 1 && global_geometry_list.elements[loop_index].Volume->geometry.mask_mode != 2)
+                if (global_geometry_list->elements[loop_index].Volume->geometry.is_masked_volume == 1 && global_geometry_list->elements[loop_index].Volume->geometry.mask_mode != 2)
                     // If more than one mask is added to one volume, the ANY mode overwrites the (default) ALL mode.
-                    global_geometry_list.elements[loop_index].Volume->geometry.mask_mode = 1;
+                    global_geometry_list->elements[loop_index].Volume->geometry.mask_mode = 1;
             }
             
             found_geometries = 1;
@@ -514,17 +518,17 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         this_mesh_volume.geometry.is_exit_volume = 1;
         sprintf(this_mesh_volume.p_physics->name,"Exit");
     } else {
-        for (loop_index=0;loop_index<global_material_list.num_elements;loop_index++) {
-          if (0 == strcmp(material_string,global_material_list.elements[loop_index].name)) {
-            this_mesh_volume.p_physics = global_material_list.elements[loop_index].physics;
+        for (loop_index=0;loop_index<global_material_list->num_elements;loop_index++) {
+          if (0 == strcmp(material_string,global_material_list->elements[loop_index].name)) {
+            this_mesh_volume.p_physics = global_material_list->elements[loop_index].physics;
             break;
           }
-          if (loop_index == global_material_list.num_elements-1) {
+          if (loop_index == global_material_list->num_elements-1) {
             printf("\n");
             printf("ERROR: The material string \"%s\" in Union geometry \"%s\" did not match a specified material. \n",material_string,NAME_CURRENT_COMP);
             printf("       The materials available at this point (need to be defined before the geometry): \n");
-            for (loop_index=0;loop_index<global_material_list.num_elements;loop_index++)
-              printf("         %s\n",global_material_list.elements[loop_index].name);
+            for (loop_index=0;loop_index<global_material_list->num_elements;loop_index++)
+              printf("         %s\n",global_material_list->elements[loop_index].name);
             printf("\n");
             printf("       It is also possible to use one of the defualt materials avaiable: \n");
             printf("           Vacuum (for a Volume without scattering or absorption)\n");
@@ -540,7 +544,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         printf("Need to define a material before the geometry to use automatic linking %s.\n",NAME_CURRENT_COMP);
         exit(1);
     #endif
-    this_mesh_volume.p_physics = global_material_list.elements[global_material_list.num_elements-1].physics;
+    this_mesh_volume.p_physics = global_material_list->elements[global_material_list->num_elements-1].physics;
 }
 
 
@@ -809,7 +813,7 @@ this_mesh_volume.geometry.geometry_parameters.p_mesh_storage = &this_mesh_storag
 this_mesh_volume.geometry.within_function = &r_within_mesh;
 this_mesh_volume.geometry.intersect_function = &sample_mesh_intersect;
 this_mesh_volume.geometry.mcdisplay_function = &mcdisplay_mesh_function;
-this_mesh_volume.geometry.shell_points = &shell_points;
+this_mesh_volume.geometry.shell_points = &mesh_shell_points;
 this_mesh_volume.geometry.initialize_from_main_function = &initialize_mesh_geometry_from_main_component;
 this_mesh_volume.geometry.process_rot_allocated = 0;
 this_mesh_volume.geometry.copy_geometry_parameters = &allocate_mesh_storage_copy;
@@ -825,7 +829,7 @@ sprintf(global_geometry_element.name,NAME_CURRENT_COMP);
 global_geometry_element.activation_counter = number_of_activations;
 global_geometry_element.component_index = INDEX_CURRENT_COMP;
 global_geometry_element.Volume = &this_mesh_volume; // Would be nicer if this m was a pointer, now we have the (small) data two places
-add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
+add_element_to_geometry_list(global_geometry_list,global_geometry_element);
 %}
 
 TRACE

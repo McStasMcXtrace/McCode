@@ -1,0 +1,773 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Mads Bertelsen
+* Date: 19.06.20
+* Version: $Revision: 0.1 $
+* Origin: ESS DMSC
+*
+* A sample component to separate geometry and phsysics
+*
+* %D
+* Part of the Union components, a set of components that work together and thus
+*  separates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box/cylinder/sphere, assigned a material
+* 4) Logger and conditional components can be placed which will record what happens
+* 5) A Union_master component placed after all of the above
+*
+* Only in step 5 will any simulation happen, and per default all geometries
+*  defined before this master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union_components
+*
+* This component is an absorption logger, and thus placed in point 4) above.
+*
+* A absorption logger will log something for each absorption event happening
+*  in the geometry or geometries on which it is attached. These are specified
+*  in the target_geometry string. By leaving it blank, all geometries are
+*  logged, even the ones not defined at this point in the instrument file.
+*  Multiple geometries are specified as a comma separated list.
+*
+* This absorption logger records the absorbed intensity as a function of the
+*  measured and true wavelength. The measured wavelength is calculated from
+*  the time of flight and distance travelled. This distance is a constant from
+*  source to sample added to the distance from the sample position to the
+*  detector pixel in which the event is detected. The true wavelength is
+*  calculated directly from the velocity. This information shows any error in
+*  conversion from tof to wavelength, especially from any added travelled
+*  distance from multiple scattering.
+*
+* The lambda_min, max and bin parameters are used to set both the range for
+*  measured and true wavelength. If either of these, denoted lambda_m and
+*  lambda_t respectively, is set they will overwrite the lambda setting for
+*  that part. Sine most data will be along the line lambda_m = lambda_t, it
+*  is possible to record lambda_m / lambda_t as a function of lambda_t, which
+*  will be close to 1.0. This mode is selected by setting relative_measured
+*  to 1, and then the range can be selected with relative_min, max and bins.
+*
+* This absorption logger needs to be placed in space, the position is recorded in
+*  the coordinate system of the logger component. Note the detection is along the
+*  y axis of the component, so it is natural to place it relative to a cylinder.
+*
+* It is possible to attach one or more conditional components to this absorption
+*  logger. Such a conditional component would impose a condition on the state of
+*  the neutron after the Union_master component that executes the simulation,
+*  and the absorption logger will only record the event if this condition is true.
+*
+* To use the logger_conditional_extend function, set it to some integer value n
+*  and make and extend section to the master component that runs the geometry.
+* In this extend function, logger_conditional_extend[n] is 1 if the conditional
+*  stack evaluated to true, 0 if not. This way one can check what rays is logged
+*  using regular McStas monitors. Only works if a conditional is applied to this
+*  logger.
+*
+* %P
+* INPUT PARAMETERS:
+* ref_component:      [no quotes] Reference component instance, sample position for distance calculation
+* source_sample_dist: [m] Travel distance between source and sample position, used to calculate total travelled distance
+* yheight:            [m] Height of absorption logger
+* yn:                 [1] number of bins along y axis
+* lambda_min:         [AA] Minimum wavelength recorded (sets both lambda_m_min and lambda_t_min)
+* lambda_max:         [AA] Maximum wavelength recorded (sets both lambda_m_max and lambda_t_max)
+* lambda_bins:        [1] number of wavelength bins
+* lambda_m_min:       [AA] Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
+* lambda_m_max:       [AA] Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
+* lambda_m_bins:      [1] number of measured wavelength bins
+* lambda_t_min:       [AA] Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
+* lambda_t_max:       [AA] Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
+* lambda_t_bins:      [1] number of true wavelength bins
+* relative_measured:  [1] Default 0, records measured as function of true wavelength, if this is enabled, records measured relative to true wavelength
+* relative_min:       [1] Smallest value of measured / true wavelength in histogram
+* relative_max:       [1] Largest value of measured / true wavelength in histogram
+* relative_bins:      [1] Number of bins on histogram axis with measured divided by true wavelength
+* target_geometry:    [string] Comma separated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* filename:           [string] Filename of produced data file
+* order_total:        [1] Only log rays that have scattered n times, -1 for all orders
+* order_volume:       [1] Only log rays that have scattered n times in the same geometry, -1 for all orders
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then access logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+*
+* OUTPUT PARAMETERS:
+*
+* GLOBAL PARAMETERS:
+*
+* %L
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Union_abs_logger_1D_space_tof_to_lambda
+SETTING PARAMETERS(string target_geometry="NULL",
+                   string ref_component,
+                   yheight, yn, source_sample_dist=0.0,
+                   lambda_min=-1, lambda_max=-1, lambda_bins=-1,
+                   lambda_m_min=-1, lambda_m_max=-1, lambda_m_bins=-1,
+                   lambda_t_min=-1, lambda_t_max=-1, lambda_t_bins=-1,
+                   relative_measured=0, relative_min=0.5, relative_max=1.5, relative_bins=100,
+                   string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
+OUTPUT PARAMETERS (loop_index, accepted_processes, accepted_volumes, abs_logger_list_element, this_abs_logger, this_abs_storage, abs_loggers_on_target_volume, target_volume)
+
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE
+%{
+#ifndef Union
+#define Union $Revision: 0.8 $
+
+%include "Union_functions.c"
+%include "Union_initialization.c"
+
+#endif
+
+struct temp_1D_time_to_lambda_abs_data_element_struct {
+ int index_1;
+ int index_2;
+ double weight;
+};
+
+struct temp_1D_time_to_lambda_abs_data_struct {
+  int num_elements;
+  int allocated_elements;
+  struct temp_1D_time_to_lambda_abs_data_element_struct *elements;
+};
+
+struct a_1D_time_to_lambda_abs_storage_struct {
+  struct Detector_2D_struct Detector_2D;
+  struct temp_1D_time_to_lambda_abs_data_struct temp_1D_time_to_lambda_abs_data;
+  int order;
+  int order_in_this_volume;
+  double y_min;
+  double y_max;
+  double y_bins;
+  Coords sample_pos;
+  int transformed;
+  //Coords *logger_position;
+  Coords logger_position;
+  Rotation *logger_rotation;
+  double source_to_sample_dist;
+  int relative;
+};
+
+// record_to_temp
+// Would be nice if x y z, k_new and k_old were all coords
+void record_to_temp_1D_time_to_lambda_abs(Coords *position, double *k, double p, double time, int scattered_in_this_volume, int total_number_of_scattering_events, struct abs_logger_struct *abs_logger, struct abs_logger_with_data_struct *abs_logger_with_data_array) {
+
+  struct a_1D_time_to_lambda_abs_storage_struct *storage;
+  storage = abs_logger->data_union.p_1D_time_to_lambda_abs_storage;
+  
+  int add_point = 1;
+
+  if (storage->order != -1) {
+    if (storage->order == total_number_of_scattering_events)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+  
+  if (storage->order_in_this_volume != -1) {
+    if (storage->order_in_this_volume == scattered_in_this_volume)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+  
+  
+  // Bin y_position
+  int y_bin;
+  double dummy1, y_pos, dummy2;
+  coords_get(*position, &dummy1, &y_pos, &dummy2);
+    
+  if (y_pos > storage->y_min && y_pos < storage->y_max) {
+    add_point = 1;
+    y_bin = floor((y_pos - storage->y_min)*storage->y_bins/(storage->y_max - storage->y_min));
+    y_pos = (y_bin + 0.5)*(storage->y_max - storage->y_min)/storage->y_bins + storage->y_min; // Now binned y_pos
+  } else {
+    add_point = 0;
+  }
+
+  if (add_point == 1) {
+  
+    double p1,p2;
+    
+    // Wavelength from velocity
+    double k_length = sqrt(k[0]*k[0]+k[1]*k[1]+k[2]*k[2]);
+    p1 = 2.0*PI/k_length;
+  
+    // Transform sample_pos to logger coordinate system
+    if (storage->transformed == 0) {
+      //storage->sample_pos = coords_sub(storage->sample_pos, *(storage->logger_position));
+      storage->sample_pos = coords_sub(storage->sample_pos, storage->logger_position);
+      storage->sample_pos = rot_apply(*(storage->logger_rotation), storage->sample_pos);
+      storage->transformed = 1;
+    }
+
+    double distance, speed;
+    // Wavelength from tof
+    distance = sqrt( (storage->sample_pos.x - 0.0)*(storage->sample_pos.x - 0.0)
+                   + (storage->sample_pos.y - y_pos)*(storage->sample_pos.y - y_pos)
+                   + (storage->sample_pos.z - 0.0)*(storage->sample_pos.z - 0.0) );
+    distance += storage->source_to_sample_dist;
+    speed = distance/time;
+    p2 = 2.0*PI/(speed*V2K);
+    
+    if (storage->relative == 1) p2 /= p1;
+  
+    int i,j;
+  
+    // Find bin in histogram
+    if (p1>storage->Detector_2D.D1min && p1<storage->Detector_2D.D1max && p2>storage->Detector_2D.D2min && p2<storage->Detector_2D.D2max) {
+      i = floor((p1 - storage->Detector_2D.D1min)*storage->Detector_2D.bins_1/(storage->Detector_2D.D1max - storage->Detector_2D.D1min));
+      j = floor((p2 - storage->Detector_2D.D2min)*storage->Detector_2D.bins_2/(storage->Detector_2D.D2max - storage->Detector_2D.D2min));
+    
+      // Save bin in histogram to temp (may need to allocate more memory)
+      int index;
+      //printf("number of data points used: %d space allocated for %d data points. \n",storage->temp_1D_time_to_lambda_abs_data.num_elements,storage->temp_1D_time_to_lambda_abs_data.allocated_elements);
+  
+      if (storage->temp_1D_time_to_lambda_abs_data.num_elements < storage->temp_1D_time_to_lambda_abs_data.allocated_elements) {
+        storage->temp_1D_time_to_lambda_abs_data.elements[storage->temp_1D_time_to_lambda_abs_data.num_elements].index_1 = i;
+        storage->temp_1D_time_to_lambda_abs_data.elements[storage->temp_1D_time_to_lambda_abs_data.num_elements].index_2 = j;
+        storage->temp_1D_time_to_lambda_abs_data.elements[storage->temp_1D_time_to_lambda_abs_data.num_elements++].weight = p;
+      } else {
+        // No more space, need to allocate a larger buffer for this logger. Wish I had generics.
+    
+        // copy current data to temp
+        struct temp_1D_time_to_lambda_abs_data_struct temporary_storage;
+        temporary_storage.num_elements = storage->temp_1D_time_to_lambda_abs_data.num_elements;
+        temporary_storage.elements = malloc(temporary_storage.num_elements*sizeof(struct temp_1D_time_to_lambda_abs_data_element_struct));
+    
+        for (index=0;index<storage->temp_1D_time_to_lambda_abs_data.num_elements;index++) {
+          temporary_storage.elements[index].index_1 = storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1;
+          temporary_storage.elements[index].index_2 = storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2;
+          temporary_storage.elements[index].weight = storage->temp_1D_time_to_lambda_abs_data.elements[index].weight;
+        }
+      
+        // free current data
+        free(storage->temp_1D_time_to_lambda_abs_data.elements);
+    
+        // allocate larger array (10 larger)
+        storage->temp_1D_time_to_lambda_abs_data.allocated_elements = 10 + storage->temp_1D_time_to_lambda_abs_data.num_elements;
+        storage->temp_1D_time_to_lambda_abs_data.elements = malloc(storage->temp_1D_time_to_lambda_abs_data.allocated_elements*sizeof(struct temp_1D_time_to_lambda_abs_data_element_struct));
+    
+        // copy back from temp
+        for (index=0;index<storage->temp_1D_time_to_lambda_abs_data.num_elements;index++) {
+          storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1 = temporary_storage.elements[index].index_1;
+          storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2 = temporary_storage.elements[index].index_2;
+          storage->temp_1D_time_to_lambda_abs_data.elements[index].weight = temporary_storage.elements[index].weight;
+        }
+    
+        // free temporary data
+        free(temporary_storage.elements);
+    
+        // add new data point
+        storage->temp_1D_time_to_lambda_abs_data.elements[storage->temp_1D_time_to_lambda_abs_data.num_elements].index_1 = i;
+        storage->temp_1D_time_to_lambda_abs_data.elements[storage->temp_1D_time_to_lambda_abs_data.num_elements].index_2 = j;
+        storage->temp_1D_time_to_lambda_abs_data.elements[storage->temp_1D_time_to_lambda_abs_data.num_elements++].weight = p;
+      }
+  
+      // If this is the first time this ray is being recorded in this logger, add it to the list of loggers that write to temp and may get it moved to perm
+      if (storage->temp_1D_time_to_lambda_abs_data.num_elements == 1)
+        add_to_abs_logger_with_data(abs_logger_with_data_array, abs_logger);
+      
+    }
+  }
+  
+}
+
+// clear_temp
+void clear_temp_1D_time_to_lambda_abs(union abs_logger_data_union *data_union) {
+  data_union->p_1D_time_to_lambda_abs_storage->temp_1D_time_to_lambda_abs_data.num_elements = 0;
+}
+
+// record_to_perm
+void record_to_perm_1D_time_to_lambda_abs(Coords *position, double *k, double p, double time, int scattered_in_this_volume, int total_number_of_scattering_events, struct abs_logger_struct *abs_logger, struct abs_logger_with_data_struct *abs_logger_with_data_array) {
+  
+  //printf("In record to permanent \n");
+  struct a_1D_time_to_lambda_abs_storage_struct *storage;
+  storage = abs_logger->data_union.p_1D_time_to_lambda_abs_storage;
+
+  int add_point = 1;
+
+  if (storage->order != -1) {
+    if (storage->order == total_number_of_scattering_events)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+  
+  if (storage->order_in_this_volume != -1) {
+    if (storage->order_in_this_volume == scattered_in_this_volume)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
+  // Bin y_position
+  int y_bin;
+  double dummy1, y_pos, dummy2;
+  coords_get(*position, &dummy1, &y_pos, &dummy2);
+    
+  if (y_pos > storage->y_min && y_pos < storage->y_max) {
+    add_point = 1;
+    y_bin = floor((y_pos - storage->y_min)*storage->y_bins/(storage->y_max - storage->y_min));
+    y_pos = (y_bin + 0.5)*(storage->y_max - storage->y_min)/storage->y_bins + storage->y_min; // Now binned y_pos
+  } else {
+    add_point = 0;
+  }
+
+  if (add_point == 1) {
+  
+    double p1,p2;
+    
+    // Wavelength from velocity
+    double k_length = sqrt(k[0]*k[0]+k[1]*k[1]+k[2]*k[2]);
+    p1 = 2.0*PI/k_length;
+  
+    // Transform sample_pos to logger coordinate system
+    if (storage->transformed == 0) {
+      //storage->sample_pos = coords_sub(storage->sample_pos, *(storage->logger_position));
+      storage->sample_pos = coords_sub(storage->sample_pos, storage->logger_position);
+      storage->sample_pos = rot_apply(*(storage->logger_rotation), storage->sample_pos);
+      storage->transformed = 1;
+    }
+
+    double distance, speed;
+    // Wavelength from tof
+    distance = sqrt( (storage->sample_pos.x - 0.0)*(storage->sample_pos.x - 0.0)
+                   + (storage->sample_pos.y - y_pos)*(storage->sample_pos.y - y_pos)
+                   + (storage->sample_pos.z - 0.0)*(storage->sample_pos.z - 0.0) );
+    distance += storage->source_to_sample_dist;
+    speed = distance/time;
+    p2 = 2.0*PI/(speed*V2K);
+    
+    if (storage->relative == 1) p2 /= p1;
+  
+    int i,j;
+  
+    // Find bin in histogram
+    if (p1>storage->Detector_2D.D1min && p1<storage->Detector_2D.D1max && p2>storage->Detector_2D.D2min && p2<storage->Detector_2D.D2max) {
+  
+      i = floor((p1 - storage->Detector_2D.D1min)*(double)storage->Detector_2D.bins_1/(storage->Detector_2D.D1max - storage->Detector_2D.D1min));
+      j = floor((p2 - storage->Detector_2D.D2min)*(double)storage->Detector_2D.bins_2/(storage->Detector_2D.D2max - storage->Detector_2D.D2min));
+    
+      
+      //printf("Added to statistics for monitor [%d] [%d] \n",i,j);
+      //printf("indicies found\n");
+      
+      storage->Detector_2D.Array_N[i][j]++;
+      storage->Detector_2D.Array_p[i][j] += p;
+      storage->Detector_2D.Array_p2[i][j] += p*p;
+    
+    }
+  }
+
+}
+
+// write_temp_to_perm
+void write_temp_to_perm_1D_time_to_lambda_abs(union abs_logger_data_union *data_union) {
+  struct a_1D_time_to_lambda_abs_storage_struct *storage;
+  storage = data_union->p_1D_time_to_lambda_abs_storage;
+
+  int index;
+  // Add all data points to the historgram, they are saved as index / weight combinations
+  for (index=0;index<storage->temp_1D_time_to_lambda_abs_data.num_elements;index++) {
+  
+    storage->Detector_2D.Array_N[storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1][storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2]++;
+    
+    storage->Detector_2D.Array_p[storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1][storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2] += storage->temp_1D_time_to_lambda_abs_data.elements[index].weight;
+    
+    storage->Detector_2D.Array_p2[storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1][storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2] += storage->temp_1D_time_to_lambda_abs_data.elements[index].weight*storage->temp_1D_time_to_lambda_abs_data.elements[index].weight;
+  }
+  
+  clear_temp_1D_time_to_lambda_abs(data_union);
+}
+
+// write_temp_to_perm_final_p
+void write_temp_to_perm_final_p_1D_time_to_lambda_abs(union abs_logger_data_union *data_union, double final_weight) {
+  struct a_1D_time_to_lambda_abs_storage_struct *storage;
+  storage = data_union->p_1D_time_to_lambda_abs_storage;
+
+  int index;
+  // Add all data points to the historgram, they are saved as index / weight combinations
+  for (index=0;index<storage->temp_1D_time_to_lambda_abs_data.num_elements;index++) {
+  
+    storage->Detector_2D.Array_N[storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1][storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2]++;
+    
+    storage->Detector_2D.Array_p[storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1][storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2] += final_weight;
+    
+    storage->Detector_2D.Array_p2[storage->temp_1D_time_to_lambda_abs_data.elements[index].index_1][storage->temp_1D_time_to_lambda_abs_data.elements[index].index_2] += final_weight*final_weight;
+  }
+  
+  clear_temp_1D_time_to_lambda_abs(data_union);
+}
+
+// Only need to define linking function for loggers once.
+#ifndef UNION_ABS_LOGGER
+#define UNION_ABS_LOGGER Dummy
+// Linking function for loggers, finds the indicies of the specified geometries on the global_geometry_list
+void manual_linking_function_abs_logger_volumes(char *input_string, struct pointer_to_global_geometry_list *global_geometry_list, struct pointer_to_1d_int_list *accepted_volumes, char *component_name) {
+    // Need to check a input_string of text for an occurance of name. If it is in the inputstring, yes return 1, otherwise 0.
+   char *token;
+   int loop_index;
+   char local_string[512];
+   
+   strcpy(local_string,input_string);
+   // get the first token
+   token = strtok(local_string,",");
+   
+   // walk through other tokens
+   while( token != NULL ) 
+   {
+      //printf( " %s\n", token );
+      for (loop_index=0;loop_index<global_geometry_list->num_elements;loop_index++) {
+        if (strcmp(token,global_geometry_list->elements[loop_index].name) == 0) {
+          add_element_to_int_list(accepted_volumes,loop_index);
+          break;
+        }
+        
+        if (loop_index == global_geometry_list->num_elements - 1) {
+          // All possible geometry names have been looked through, and the break was not executed.
+          // Alert the user to this problem by showing the geometry name that was not found and the currently available geometires
+            printf("\n");
+            printf("ERROR: The target_geometry string \"%s\" in Union logger component \"%s\" had an entry that did not match a specified geometry. \n",input_string,component_name);
+            printf("       The unrecoignized geometry name was: \"%s\" \n",token);
+            printf("       The geometries available at this point (need to be defined before the logger): \n");
+            for (loop_index=0;loop_index<global_geometry_list->num_elements;loop_index++)
+              printf("         %s\n",global_geometry_list->elements[loop_index].name);
+            exit(1);
+        }
+      }
+      
+      // Updates the token
+      token = strtok(NULL,",");
+   }
+}
+#endif
+
+double** allocate2Ddouble_1D_time_to_lambda_abs(int count_x, int count_y) {
+    // This function is needed to dynamically declare an array
+    //  that has continous data as a static array would have,
+    //  as that is the format expected by DETECTOR_OUT_2D.
+    int i;
+
+    // allocate space for actual data
+    double *data = malloc(sizeof(double) * (count_x+1) * (count_y+1));
+
+    // create array or pointers to first elem in each 2D row
+    double **ptr_array = malloc(sizeof(double*) * count_x);
+    //double **ptr_array = malloc(sizeof(double*) * (count_x+1));
+    for (i = 0; i < count_x; i++) {
+        ptr_array[i] = data + (i*count_y);
+    }
+
+    return ptr_array;
+}
+
+void free2Ddouble_1D_time_to_lambda_abs(double** ptr_array) {
+    if (!ptr_array) return;
+    if (ptr_array[0]) free(ptr_array[0]);
+    free(ptr_array);
+}
+
+%}
+
+DECLARE
+%{
+// From make material
+// Needed for transport to the main component
+//struct global_material_element_struct global_material_element;
+//struct physics_struct this_material;
+
+int loop_index;
+int found_process;
+int specified_processes;
+//char local_string[256];
+
+// Reused for logger
+struct pointer_to_1d_int_list accepted_processes;
+
+struct global_abs_logger_element_struct abs_logger_list_element;
+
+struct pointer_to_1d_int_list accepted_volumes;
+
+struct abs_logger_struct this_abs_logger;
+struct a_1D_time_to_lambda_abs_storage_struct this_abs_storage;
+
+struct abs_loggers_struct *abs_loggers_on_target_volume;
+struct Volume_struct *target_volume;
+%}
+
+INITIALIZE
+%{
+
+  accepted_processes.elements = NULL;
+  accepted_processes.num_elements = 0;
+  
+  accepted_volumes.elements = NULL;
+  accepted_volumes.num_elements = 0;
+
+  // Initialize storage from input
+  if (yheight <= 0) {
+    printf("ERROR, Union abs logger \"%s\" had yheight <= 0.\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  this_abs_storage.y_min = -0.5*yheight;
+  this_abs_storage.y_max = 0.5*yheight;
+  
+  if (yn <= 0) {
+    printf("ERROR, Union abs logger \"%s\" had yn <= 0.\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  this_abs_storage.y_bins = yn;
+  
+  if (relative_measured == 0)
+    this_abs_storage.relative = 0;
+  else
+    this_abs_storage.relative = 1;
+  
+  double lambda_m_min_used, lambda_t_min_used;
+  lambda_m_min_used = lambda_min;
+  lambda_t_min_used = lambda_min;
+  
+  double lambda_m_max_used, lambda_t_max_used;
+  lambda_m_max_used = lambda_max;
+  lambda_t_max_used = lambda_max;
+  
+  double lambda_m_bins_used, lambda_t_bins_used;
+  lambda_m_bins_used = lambda_bins;
+  lambda_t_bins_used = lambda_bins;
+  
+  if (lambda_m_min >= 0) lambda_m_min_used = lambda_m_min;
+  if (lambda_t_min >= 0) lambda_t_min_used = lambda_t_min;
+  if (lambda_m_max >= 0) lambda_m_max_used = lambda_m_max;
+  if (lambda_t_max >= 0) lambda_t_max_used = lambda_t_max;
+  if (lambda_t_bins >= 0) lambda_t_bins_used = lambda_t_bins;
+  if (lambda_m_bins >= 0) lambda_m_bins_used = lambda_m_bins;
+  
+  
+  if (lambda_t_min_used < 0) {
+    printf("ERROR, Union abs logger \"%s\" had lambda_t_min < 0. Set either lambda_t_min or lambda_min!\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (lambda_t_max_used <= 0) {
+    printf("ERROR, Union abs logger \"%s\" had lambda_t_max <= 0. Set either lambda_t_max or lambda_max!\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  this_abs_storage.Detector_2D.D1min = lambda_t_min_used;
+  this_abs_storage.Detector_2D.D1max = lambda_t_max_used;
+  
+  
+  if (lambda_m_min_used < 0) {
+    printf("ERROR, Union abs logger \"%s\" had lambda_m_min < 0. Set either lambda_m_min or lambda_min!\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (lambda_m_max_used <= 0) {
+    printf("ERROR, Union abs logger \"%s\" had lambda_m_max <= 0. Set either lambda_m_max or lambda_max!\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  this_abs_storage.Detector_2D.D2min = lambda_m_min_used;
+  this_abs_storage.Detector_2D.D2max = lambda_m_max_used;
+  
+  if (lambda_t_bins_used <= 0) {
+    printf("ERROR, Union abs logger \"%s\" had lambda_t_bins <= 0. Set either lambda_t_bins or lambda_bins!\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  this_abs_storage.Detector_2D.bins_1 = lambda_t_bins_used;
+  
+  if (lambda_m_bins_used <= 0) {
+    printf("ERROR, Union abs logger \"%s\" had lambda_m_bins <= 0. Set either lambda_m_bins or lambda_bins!\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  this_abs_storage.Detector_2D.bins_2 = lambda_m_bins_used;
+
+  this_abs_storage.source_to_sample_dist = source_sample_dist;
+
+  if (this_abs_storage.relative == 1) {
+    if (relative_min < 0) {
+      printf("ERROR, Union abs logger \"%s\" had relative_min < 0.\n",NAME_CURRENT_COMP);
+      exit(1);
+    }
+    
+    this_abs_storage.Detector_2D.D2min = relative_min;
+  
+    if (relative_min <= 0) {
+      printf("ERROR, Union abs logger \"%s\" had relative_min <= 0.\n",NAME_CURRENT_COMP);
+      exit(1);
+    }
+    
+    this_abs_storage.Detector_2D.D2max = relative_max;
+    
+    if (relative_bins <= 0) {
+      printf("ERROR, Union abs logger \"%s\" had relative_bins <= 0.\n",NAME_CURRENT_COMP);
+      exit(1);
+    }
+    
+    this_abs_storage.Detector_2D.bins_2 = relative_bins;
+  
+  }
+  
+  // Set up storage for main data histogram
+  // Remember to take special care when deallocating this array, use free2Ddouble
+  this_abs_storage.Detector_2D.Array_N = allocate2Ddouble_1D_time_to_lambda_abs(this_abs_storage.Detector_2D.bins_1, this_abs_storage.Detector_2D.bins_2);
+  this_abs_storage.Detector_2D.Array_p = allocate2Ddouble_1D_time_to_lambda_abs(this_abs_storage.Detector_2D.bins_1, this_abs_storage.Detector_2D.bins_2);
+  this_abs_storage.Detector_2D.Array_p2 = allocate2Ddouble_1D_time_to_lambda_abs(this_abs_storage.Detector_2D.bins_1, this_abs_storage.Detector_2D.bins_2);
+  
+  int l1,l2;
+  for (l1=0;l1<this_abs_storage.Detector_2D.bins_1;l1++) {
+    for (l2=0;l2<this_abs_storage.Detector_2D.bins_2;l2++) {
+      this_abs_storage.Detector_2D.Array_N[l1][l2] = 0;
+      this_abs_storage.Detector_2D.Array_p[l1][l2] = 0;
+      this_abs_storage.Detector_2D.Array_p2[l1][l2] = 0;
+    }
+  }
+  
+  sprintf(this_abs_storage.Detector_2D.title_string, "1D TOF PSD to Lambda Absorption logger");
+  sprintf(this_abs_storage.Detector_2D.string_axis_1, "true lambda [Å]");
+  if (this_abs_storage.relative == 0)
+    sprintf(this_abs_storage.Detector_2D.string_axis_2, "measured lambda [Å]");
+  else
+    sprintf(this_abs_storage.Detector_2D.string_axis_2, "measured lambda / true lambda [1]");
+  
+  sprintf(this_abs_storage.Detector_2D.Filename, filename);
+  
+  // Get the position from a component instance
+  this_abs_storage.sample_pos = POS_A_COMP(ref_component);
+  this_abs_storage.transformed = 0; // Set to 1 when sample_pos is transformed
+  
+  // Input sanitation for sample point and source_sample distance.
+  // Can only check its not the same
+  
+  // Ways I could transform the sample position to the logger system:
+  // treat it as a ray position and transform every time (bad performance, but easy) put updated pos/rot into storage
+  // only transform once, by having a flag in the storage and run it just once
+  
+  this_abs_storage.order = order_total;
+  this_abs_storage.order_in_this_volume = order_volume;
+  this_abs_storage.temp_1D_time_to_lambda_abs_data.num_elements=0;
+  // Added 17/11/2016, allocating some elements in initialize makes code during trace simpler
+  this_abs_storage.temp_1D_time_to_lambda_abs_data.allocated_elements = 10;
+  this_abs_storage.temp_1D_time_to_lambda_abs_data.elements = malloc(this_abs_storage.temp_1D_time_to_lambda_abs_data.allocated_elements*sizeof(struct temp_1D_time_to_lambda_abs_data_element_struct));
+  
+  struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
+  struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
+  // Test position and rotation stored in a data storage, and pointers assigned to transform lists
+  this_abs_logger.position = POS_A_CURRENT_COMP;
+  add_position_pointer_to_list(&global_positions_to_transform_list, &this_abs_logger.position);
+  this_abs_storage.logger_position = POS_A_CURRENT_COMP;
+  add_position_pointer_to_list(global_positions_to_transform_list, &this_abs_storage.logger_position);
+  
+  rot_copy(this_abs_logger.rotation,ROT_A_CURRENT_COMP);
+  add_rotation_pointer_to_list(global_rotations_to_transform_list, &this_abs_logger.rotation);
+  this_abs_storage.logger_rotation = &this_abs_logger.rotation;
+  
+  rot_transpose(ROT_A_CURRENT_COMP,this_abs_logger.t_rotation);
+  add_rotation_pointer_to_list(global_rotations_to_transform_list, &this_abs_logger.t_rotation);
+  
+  //printf("past direction choices sanitation \n");
+  
+  // Book keeping
+  this_abs_logger.abs_logger_extend_index = logger_conditional_extend_index;
+  this_abs_logger.function_pointers.active_record_function = &record_to_perm_1D_time_to_lambda_abs;  // Assume no conditional
+  this_abs_logger.function_pointers.inactive_record_function = &record_to_temp_1D_time_to_lambda_abs; // If an assume is present, these two pointers are switched
+  // Temp to perm functions, and standard identifier
+  //this_abs_logger.function_pointers.select_t_to_p = 1; // 1: temp_to_perm, 2: temp_to_perm_final_p // Not relevant for abs
+  this_abs_logger.function_pointers.temp_to_perm = &write_temp_to_perm_1D_time_to_lambda_abs;
+  this_abs_logger.function_pointers.temp_to_perm_final_p = &write_temp_to_perm_final_p_1D_time_to_lambda_abs;
+  this_abs_logger.function_pointers.clear_temp = &clear_temp_1D_time_to_lambda_abs;
+  // Initializing for conditional
+  this_abs_logger.conditional_list.num_elements = 0;
+  
+  //this_logger.function_pointers.perm_to_disk = &write_perm_to_disk_1D_time_to_lambda_abs; //Obsolete
+  
+  //printf("past this_logger function assignment \n");
+  
+  this_abs_logger.data_union.p_1D_time_to_lambda_abs_storage = &this_abs_storage;
+  
+  sprintf(this_abs_logger.name, NAME_CURRENT_COMP);
+  
+  //printf("past this_logger assignment \n");
+  
+  sprintf(abs_logger_list_element.name, NAME_CURRENT_COMP);
+  abs_logger_list_element.component_index = INDEX_CURRENT_COMP;
+  abs_logger_list_element.abs_logger = &this_abs_logger;
+  
+  //printf("past logger_list_element assignment \n");
+
+  struct pointer_to_global_geometry_list *global_geometry_list = COMP_GETPAR3(Union_init, init, global_geometry_list);
+  struct pointer_to_global_abs_logger_list *global_specific_volumes_abs_logger_list = COMP_GETPAR3(Union_init, init, global_specific_volumes_abs_logger_list);
+  // In order to run the logger at the right times, pointers to this logger is stored in each volume it logs,
+  //  and additionally for each avaiable process. If a process is not logged, the pointer is simply not stored.
+  int process_index;
+  // Need to find the volumes for which the processes should have a reference to this logger
+  if (target_geometry && strlen(target_geometry) && strcmp(target_geometry,"NULL") && strcmp(target_geometry, "0")) {
+    // Certain volumes were selected, find the indicies in the global_geometry_list
+    manual_linking_function_abs_logger_volumes(target_geometry, global_geometry_list, &accepted_volumes, NAME_CURRENT_COMP);
+    // Add this logger to the global_specific_volumes_logger_list (so that conditionals can affect it)
+    add_element_to_abs_logger_list(&global_specific_volumes_abs_logger_list, abs_logger_list_element);
+    
+    for (loop_index=0;loop_index<accepted_volumes.num_elements;loop_index++) {
+      target_volume = global_geometry_list->elements[accepted_volumes.elements[loop_index]].Volume;
+      // Add an element to its abs_logger list
+      
+      add_initialized_abs_logger_in_volume(&target_volume->abs_loggers);
+      target_volume->abs_loggers.p_abs_logger[target_volume->abs_loggers.num_elements-1] = &this_abs_logger;
+      
+    }
+  } else {
+    // Send to global_all_volumes_logger_list
+    // Here there is no system for selecting processes as well
+    struct pointer_to_global_abs_logger_list *global_all_volume_abs_logger_list = COMP_GETPAR3(Union_init, init, global_all_volume_abs_logger_list);
+    add_element_to_abs_logger_list(global_all_volume_abs_logger_list, abs_logger_list_element);
+  }
+  
+
+ %}
+
+TRACE
+%{
+%}
+
+SAVE
+%{
+// Write to disk
+DETECTOR_OUT_2D(
+ this_abs_storage.Detector_2D.title_string,
+ this_abs_storage.Detector_2D.string_axis_1,
+ this_abs_storage.Detector_2D.string_axis_2,
+ this_abs_storage.Detector_2D.D1min, this_abs_storage.Detector_2D.D1max,
+ this_abs_storage.Detector_2D.D2min, this_abs_storage.Detector_2D.D2max,
+ this_abs_storage.Detector_2D.bins_1, this_abs_storage.Detector_2D.bins_2,
+ *this_abs_storage.Detector_2D.Array_N, *this_abs_storage.Detector_2D.Array_p, *this_abs_storage.Detector_2D.Array_p2,
+ this_abs_storage.Detector_2D.Filename);
+
+%}
+
+FINALLY
+%{
+// Remember to clean up allocated lists
+if (this_abs_storage.temp_1D_time_to_lambda_abs_data.allocated_elements>0) free(this_abs_storage.temp_1D_time_to_lambda_abs_data.elements);
+
+free2Ddouble_1D_time_to_lambda_abs(this_abs_storage.Detector_2D.Array_N);
+free2Ddouble_1D_time_to_lambda_abs(this_abs_storage.Detector_2D.Array_p);
+free2Ddouble_1D_time_to_lambda_abs(this_abs_storage.Detector_2D.Array_p2);
+
+if (accepted_processes.num_elements > 0) free(accepted_processes.elements);
+if (accepted_volumes.num_elements > 0) free(accepted_volumes.elements);
+
+%}
+
+END
+

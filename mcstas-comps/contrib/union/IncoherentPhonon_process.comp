@@ -64,7 +64,7 @@ SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
                    char *dosfn=NULL,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
-		   int interact_fraction=-1)
+		   int interact_fraction=-1, string init="init")
 OUTPUT PARAMETERS (This_process, IncoherentPhonon_storage, global_process_element)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -4612,6 +4612,10 @@ int finish(struct IncoherentPhonon_physics_storage_struct *data)
 
 // End implementation of internal functions
 
+#ifndef PROCESS_DETECTOR
+    //struct pointer_to_global_process_list global_process_list = {0,NULL};
+    #define PROCESS_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -4619,11 +4623,6 @@ DECLARE
 // Needed for transport to the main component
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
-
-#ifndef PROCESS_DETECTOR
-	//struct pointer_to_global_process_list global_process_list = {0,NULL};
-	#define PROCESS_DETECTOR dummy
-#endif
 
 // Declare for this component, to do calculations on the input / store in the transported data
 struct IncoherentPhonon_physics_storage_struct IncoherentPhonon_storage;
@@ -4664,7 +4663,9 @@ INITIALIZE
   sprintf(global_process_element.name,NAME_CURRENT_COMP);
   global_process_element.component_index = INDEX_CURRENT_COMP;
   global_process_element.p_scattering_process = &This_process;
-  add_element_to_process_list(&global_process_list,global_process_element);
+  
+  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+  add_element_to_process_list(global_process_list,global_process_element);
 
   fprintf(IncoherentPhonon_storage.filep,"Initialization done\n");
   fflush(IncoherentPhonon_storage.filep);

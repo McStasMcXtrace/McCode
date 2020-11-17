@@ -941,7 +941,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
         if (a > -UNION_EPSILON && a < UNION_EPSILON){
-            //////printf("\n Epsilon fail");
+            //////printf("\n UNION_EPSILON fail");
         } else{
             f = 1.0/a;
             s = coords_sub(rotated_coordinates, coords_set(*(v1_x+iter),*(v1_y+iter),*(v1_z+iter)));
@@ -1005,7 +1005,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
         if (a > -UNION_EPSILON && a < UNION_EPSILON){
-            //////printf("\n Epsilon fail");
+            //////printf("\n UNION_EPSILON fail");
         } else{
             f = 1.0/a;
             s = coords_sub(rotated_coordinates , coords_set(*(v1_x+iter),*(v1_y+iter),*(v1_z+iter)));
@@ -1068,7 +1068,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
         if (a > -UNION_EPSILON && a < UNION_EPSILON){
-            //////printf("\n Epsilon fail");
+            //////printf("\n UNION_EPSILON fail");
         } else{
             f = 1.0/a;
             s = coords_sub(rotated_coordinates , coords_set(*(v1_x+iter),*(v1_y+iter),*(v1_z+iter)));
@@ -1268,7 +1268,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
         a = Dot(edge1,h);
         ////printf("\n a=%f",a);
         //if (a > -UNION_EPSILON && a < UNION_EPSILON){
-            ////printf("\n Epsilon fail");
+            ////printf("\n UNION_EPSILON fail");
         //} else{
             f = 1.0/a;
             s = coords_sub(rotated_coordinates, coords_set(*(v1_x+iter),*(v1_y+iter),*(v1_z+iter)));

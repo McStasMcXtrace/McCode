@@ -88,7 +88,7 @@ DECLARE
 
 INITIALIZE
 %{
-  buffer_index=0;
+  buffer_index = 0;
 
   int i;
   char tmp[1024];
@@ -110,20 +110,22 @@ INITIALIZE
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,0);
 
-  if (Vars.Coord_Number != 10) exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%li).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
+  if (Vars.Coord_Number != 10)
+    exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%li).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
+
   /* set the labels */
   /* we have to record ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f */
-  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[0],tmp);strcpy(Vars.Coord_Var[0],tmp);
-  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[1],tmp);strcpy(Vars.Coord_Var[1],tmp);
-  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[2],tmp);strcpy(Vars.Coord_Var[2],tmp);
-  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[3],tmp);strcpy(Vars.Coord_Var[3],tmp);
-  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[4],tmp);strcpy(Vars.Coord_Var[4],tmp);
-  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[5],tmp);strcpy(Vars.Coord_Var[5],tmp);
-  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[6],tmp);strcpy(Vars.Coord_Var[6],tmp);
-  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[7],tmp);strcpy(Vars.Coord_Var[7],tmp);
-  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[8],tmp);strcpy(Vars.Coord_Var[8],tmp);
-  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[9],tmp);strcpy(Vars.Coord_Var[9],tmp);
-  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[10],tmp);strcpy(Vars.Coord_Var[10],tmp);
+  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[0],tmp);  strcpy(Vars.Coord_Var[0],tmp);
+  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[1],tmp);  strcpy(Vars.Coord_Var[1],tmp);
+  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[2],tmp);  strcpy(Vars.Coord_Var[2],tmp);
+  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[3],tmp);  strcpy(Vars.Coord_Var[3],tmp);
+  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[4],tmp);  strcpy(Vars.Coord_Var[4],tmp);
+  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[5],tmp);  strcpy(Vars.Coord_Var[5],tmp);
+  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[6],tmp);  strcpy(Vars.Coord_Var[6],tmp);
+  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[7],tmp);  strcpy(Vars.Coord_Var[7],tmp);
+  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[8],tmp);  strcpy(Vars.Coord_Var[8],tmp);
+  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[9],tmp);  strcpy(Vars.Coord_Var[9],tmp);
+  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[10],tmp); strcpy(Vars.Coord_Var[10],tmp);
 
   if (filename != NULL)
     strncpy(Vars.Mon_File, filename, 128);
@@ -162,7 +164,10 @@ TRACE
 
   if (intersect)
   {
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || 
+        (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || 
+        (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || 
+        (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
     {
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
@@ -178,8 +183,8 @@ TRACE
     /* Now fetch data from the Res_sample. */
     if(p && (!bufsize || buffer_index<bufsize))
     {
-
-      struct Res_sample_struct *s = (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));
+      struct Res_sample_struct *s =
+        (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));
       if(s->pi != 0)
       {
         Vars.cp  = s->ki_x;
@@ -202,7 +207,6 @@ TRACE
   if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
-
 %}
 
 SAVE

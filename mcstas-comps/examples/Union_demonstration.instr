@@ -40,7 +40,8 @@ int scattered_1,scattered_2,scattered_3,scattered_4;
 
 TRACE
 
-
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
 
 COMPONENT Vanadium_incoherent = Incoherent_process(sigma=5.08,packing_factor=1,unit_cell_volume=13.827)
 AT (0,0,0) ABSOLUTE

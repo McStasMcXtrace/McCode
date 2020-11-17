@@ -53,7 +53,7 @@ DEFINE COMPONENT Texture_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
-	    int maxNeutronSaved = 1)
+	    int maxNeutronSaved = 1, string init="init")
 OUTPUT PARAMETERS (This_process,Texture_storage,effective_my_scattering,
                    hkl_info_texture, global_process_element)
 
@@ -2175,6 +2175,10 @@ int Texture_physics_scattering(double *k_final, double *k_initial, double *weigh
   return 1;
 };
 
+#ifndef PROCESS_DETECTOR
+//struct pointer_to_global_process_list global_process_list = {0,NULL};
+#define PROCESS_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -2188,11 +2192,6 @@ struct hkl_info_struct_texture hkl_info_texture;
 // Needed for transport to the main component, will be the same for all processes
 struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
-
-#ifndef PROCESS_DETECTOR
-//struct pointer_to_global_process_list global_process_list = {0,NULL};
-#define PROCESS_DETECTOR dummy
-#endif
 %}
 
 INITIALIZE
@@ -2283,7 +2282,9 @@ INITIALIZE
   sprintf(global_process_element.name,NAME_CURRENT_COMP);
   global_process_element.component_index = INDEX_CURRENT_COMP;
   global_process_element.p_scattering_process = &This_process;
-  add_element_to_process_list(&global_process_list,global_process_element);
+  
+  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+  add_element_to_process_list(global_process_list,global_process_element);
  %}
 
 TRACE

@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * Functions and structure definitons for Union components.
 *
@@ -161,7 +161,6 @@ struct logger_with_data_struct {
 
 // logger_pointer_struct
 // contains pointers to the different logger functions and it's data union
-
 struct logger_pointer_set_struct {
   // The logger has two record functions, an active and an inactive. Normally the active one will be to permanent storage,
   //  but if a conditional has been defined, it can switch the two, making the active one recording to temporary, which
@@ -183,6 +182,46 @@ struct logger_pointer_set_struct {
   
   // Select which temp_to_perm function to use
   int select_t_to_p; // 1: temp_to_perm, 2: temp_to_perm_final_p
+  
+};
+
+union abs_logger_data_union{
+  struct a_2D_abs_storage_struct *p_2D_abs_storage;
+  struct a_1D_abs_storage_struct *p_1D_abs_storage;
+  struct a_1D_time_abs_storage_struct *p_1D_time_abs_storage;
+  struct a_1D_time_to_lambda_abs_storage_struct *p_1D_time_to_lambda_abs_storage;
+  struct a_event_abs_storage_struct *p_event_abs_storage;
+  struct a_1D_event_abs_storage_struct *p_1D_event_abs_storage;
+  // Additional logger storage structs to be addedd
+};
+
+struct abs_logger_with_data_struct {
+  int used_elements;
+  int allocated_elements;
+  struct abs_logger_struct **abs_logger_pointers;
+};
+
+struct abs_logger_pointer_set_struct {
+  // The logger has two record functions, an active and an inactive. Normally the active one will be to permanent storage,
+  //  but if a conditional has been defined, it can switch the two, making the active one recording to temporary, which
+  //  can then be filtered based on the future path of the ray
+  
+  // function input Coords position, k[3], p, NV, N, logger_data_union, logger_with_data_struct
+  void (*active_record_function)(Coords*, double*, double,  double, int, int, struct abs_logger_struct*, struct abs_logger_with_data_struct*);
+  void (*inactive_record_function)(Coords*, double*, double,  double, int, int, struct abs_logger_struct*, struct abs_logger_with_data_struct*);
+  
+  // A clear temporary data function (for new ray)
+  void (*clear_temp)(union abs_logger_data_union*);
+  
+  // Write temporary to permanent is used when the record to temp function is active, and the condition is met.
+  void (*temp_to_perm)(union abs_logger_data_union*);
+  
+  // Write temporary final_p to permanent is used when the record to temp function is active, and the condition is met
+  //  and the final weight is given to be used for all stored events in the logger.
+  void (*temp_to_perm_final_p)(union abs_logger_data_union*, double);
+  
+  // Select which temp_to_perm function to use
+  //int select_t_to_p; // 1: temp_to_perm, 2: temp_to_perm_final_p
   
 };
 
@@ -269,6 +308,38 @@ struct loggers_struct {
   struct logger_for_each_process_list *p_logger_volume;
 };
 
+
+struct abs_logger_struct {
+  char name[256];
+  // Contains ponters to all the functions assosiated with this logger
+  struct abs_logger_pointer_set_struct function_pointers;
+  // Contains hard copy of logger_data_union since the size is the same as a pointer.
+  union abs_logger_data_union data_union;
+  
+  // Position and rotation of the abs_logger
+  Coords position;
+  Rotation rotation;
+  Rotation t_rotation;
+  
+  int abs_logger_extend_index; // Contain index conditional_extend_array defined in master that can be acsessed from extend section.
+  
+  struct conditional_list_struct conditional_list;
+};
+
+// To be stored in volume, a list of pointers to the relevant abs loggers corresponding to each process
+/*
+struct abs_logger_for_each_process_list {
+  int num_elements;
+  struct abs_logger_struct **p_abs_logger_process;
+};
+*/
+
+// List of abs logger_for_each_process_list
+struct abs_loggers_struct {
+  int num_elements;
+  //struct abs_logger_for_each_process_list *p_abs_logger_volume;
+  struct abs_logger_struct **p_abs_logger;
+};
 
 
 
@@ -368,6 +439,7 @@ union data_transfer_union{
     struct MagnonSimple_physics_storage_struct *pointer_to_a_MagnonSimple_storage_struct;
     struct Sans_spheres_physics_storage_struct *pointer_to_a_Sans_spheres_physics_storage_struct;
     struct Texture_physics_storage_struct *pointer_to_a_Texture_physics_storage_struct;
+    struct Non_physics_storage_struct *pointer_to_a_Non_physics_storage_struct;
     struct Template_physics_storage_struct *pointer_to_a_Template_physics_storage_struct;
     // possible to add as many structs as wanted, without increasing memory footprint.
 };
@@ -395,9 +467,10 @@ int (*scattering_function)(double*,double*,double*,union data_transfer_union,str
 struct Volume_struct
 {
 char name[256]; // User defined volume name
-struct geometry_struct geometry;   // Geometry properties (including intersect functions, generated lists)
-struct physics_struct *p_physics;  // Physical properties (list of scattering processes, absorption)
-struct loggers_struct loggers; // Loggers assosiated with this volume
+struct geometry_struct geometry;        // Geometry properties (including intersect functions, generated lists)
+struct physics_struct *p_physics;       // Physical properties (list of scattering processes, absorption)
+struct loggers_struct loggers;          // Loggers assosiated with this volume
+struct abs_loggers_struct abs_loggers;  // Loggers assosiated with this volume
 };
 
 // example of calling a scattering process
@@ -471,6 +544,16 @@ int num_elements;
 struct global_logger_element_struct *elements;
 };
 
+struct global_abs_logger_element_struct {
+char name[128];
+int component_index;
+struct abs_logger_struct *abs_logger;
+};
+
+struct pointer_to_global_abs_logger_list {
+int num_elements;
+struct global_abs_logger_element_struct *elements;
+};
 
 struct global_tagging_conditional_element_struct {
 struct conditional_list_struct conditional_list;
@@ -545,7 +628,7 @@ int sum_int_list(struct pointer_to_1d_int_list list) {
     
 int on_int_list(struct pointer_to_1d_int_list list,int target) {
     int iterate,output=0;
-    for (iterate = 0;iterate < list.num_elements;iterate++) {
+    for (iterate = 0; iterate<list.num_elements ;iterate++) {
         if (list.elements[iterate] == target) output = 1;
     }
     return output;
@@ -694,6 +777,36 @@ void add_to_logger_with_data(struct logger_with_data_struct *logger_with_data, s
     
 };
 
+void add_to_abs_logger_with_data(struct abs_logger_with_data_struct *abs_logger_with_data, struct abs_logger_struct *abs_logger) {
+    // May reorder the order of the if conditions to avoid checking the == 0 for every single ray
+    if (abs_logger_with_data->allocated_elements == 0) {
+        abs_logger_with_data->allocated_elements = 5;
+        abs_logger_with_data->abs_logger_pointers = malloc(abs_logger_with_data->allocated_elements*sizeof(struct abs_logger_struct*));
+        abs_logger_with_data->used_elements = 1;
+        abs_logger_with_data->abs_logger_pointers[0] = abs_logger;
+    } else if (abs_logger_with_data->used_elements > abs_logger_with_data->allocated_elements-1) {
+        struct abs_logger_with_data_struct temp_abs_logger_with_data;
+        temp_abs_logger_with_data.abs_logger_pointers = malloc((abs_logger_with_data->used_elements)*sizeof(struct abs_logger_struct*));
+        int iterate;
+        for (iterate=0;iterate<abs_logger_with_data->used_elements;iterate++) {
+            temp_abs_logger_with_data.abs_logger_pointers[iterate]  = abs_logger_with_data->abs_logger_pointers[iterate];
+        }
+        free(abs_logger_with_data->abs_logger_pointers);
+        abs_logger_with_data->allocated_elements = abs_logger_with_data->allocated_elements+5;
+        abs_logger_with_data->abs_logger_pointers = malloc(abs_logger_with_data->allocated_elements*sizeof(struct abs_logger_struct*));
+        for (iterate=0;iterate<abs_logger_with_data->used_elements;iterate++) {
+            abs_logger_with_data->abs_logger_pointers[iterate] = temp_abs_logger_with_data.abs_logger_pointers[iterate];
+        }
+
+        abs_logger_with_data->abs_logger_pointers[abs_logger_with_data->used_elements++] = abs_logger;
+        
+        
+    } else {
+        abs_logger_with_data->abs_logger_pointers[abs_logger_with_data->used_elements++] = abs_logger;
+    }
+    
+};
+
 
 // Used typedef to avoid having to change this function later. May update others to use same phillosphy.
 void add_function_to_conditional_list(struct conditional_list_struct *list,conditional_function_pointer new, union conditional_data_union *data_union) {
@@ -810,12 +923,15 @@ void add_position_pointer_to_list(struct global_positions_to_transform_list_stru
     } else {
       Coords **temp;
       temp = malloc(list->num_elements*sizeof(Coords*));
+      if (temp == NULL) printf("malloc failed in add_position_pointer_to_list for temp\n");
+      
       int iterate;
       for (iterate=0;iterate<list->num_elements;iterate++)
         temp[iterate] = list->positions[iterate];
       free(list->positions);
       list->num_elements++;
       list->positions = malloc(list->num_elements*sizeof(Coords*));
+      if (list->positions == NULL) printf("malloc failed in add_position_pointer_to_list for list->positions\n");
       
       for (iterate=0;iterate<list->num_elements-1;iterate++)
         list->positions[iterate] = temp[iterate];
@@ -918,6 +1034,24 @@ void add_element_to_logger_list(struct pointer_to_global_logger_list *list,struc
     }
 };
 
+void add_element_to_abs_logger_list(struct pointer_to_global_abs_logger_list *list, struct global_abs_logger_element_struct new_element) {
+    if (list->num_elements == 0) {
+      list->num_elements++;
+      list->elements = malloc(list->num_elements*sizeof(struct global_abs_logger_element_struct));
+      list->elements[0] = new_element;
+    }
+    else {
+      struct global_abs_logger_element_struct temp[list->num_elements];
+      int iterate;
+      for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
+      free(list->elements);
+      list->num_elements++;
+      list-> elements = malloc(list->num_elements*sizeof(struct global_abs_logger_element_struct));
+      for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
+      list->elements[list->num_elements-1] = new_element;
+    }
+};
+
 void add_element_to_tagging_conditional_list(struct global_tagging_conditional_list_struct *list,struct global_tagging_conditional_element_struct new_element) {
     if (list->num_elements == 0) {
     list->num_elements++;
@@ -980,6 +1114,53 @@ void add_initialized_logger_in_volume(struct loggers_struct *loggers,int number_
   }
 };
 
+/*
+void add_initialized_abs_logger_in_volume(struct abs_loggers_struct *abs_loggers, int number_of_processes) {
+  int iterate;
+  if (abs_loggers->num_elements == 0) {
+    abs_loggers->num_elements++;
+    abs_loggers->p_abs_logger_volume = malloc(abs_loggers->num_elements * sizeof(struct abs_loggers_struct));
+    abs_loggers->p_abs_logger_volume[0].num_elements = number_of_processes;
+    abs_loggers->p_abs_logger_volume[0].p_abs_logger_process = malloc(number_of_processes * sizeof(struct abs_logger_struct**));
+    for (iterate=0;iterate<number_of_processes;iterate++)
+      abs_loggers->p_abs_logger_volume[0].p_abs_logger_process[iterate] = NULL;
+  } else {
+    // Already some elements, store them in temp, free main, transfer back and add newest.
+    struct abs_logger_for_each_process_list temp[abs_loggers->num_elements];
+    
+    for (iterate=0;iterate<abs_loggers->num_elements;iterate++) temp[iterate] = abs_loggers->p_abs_logger_volume[iterate];
+    free(abs_loggers->p_abs_logger_volume);
+    abs_loggers->num_elements++;
+    abs_loggers->p_abs_logger_volume = malloc(abs_loggers->num_elements*sizeof(struct abs_logger_for_each_process_list));
+    for (iterate=0;iterate<abs_loggers->num_elements-1;iterate++) abs_loggers->p_abs_logger_volume[iterate] = temp[iterate];
+    abs_loggers->p_abs_logger_volume[abs_loggers->num_elements-1].num_elements = number_of_processes;
+    abs_loggers->p_abs_logger_volume[abs_loggers->num_elements-1].p_abs_logger_process = malloc(number_of_processes * sizeof(struct abs_logger_struct**));
+    for (iterate=0;iterate<number_of_processes;iterate++) {
+      abs_loggers->p_abs_logger_volume[abs_loggers->num_elements-1].p_abs_logger_process[iterate] = NULL;
+    }
+  }
+};
+*/
+
+void add_initialized_abs_logger_in_volume(struct abs_loggers_struct *abs_loggers) {
+  int iterate;
+  if (abs_loggers->num_elements == 0) {
+    abs_loggers->num_elements++;
+    abs_loggers->p_abs_logger = malloc(abs_loggers->num_elements * sizeof(struct abs_logger_struct*));
+  } else {
+    // Already some elements, store them in temp, free main, transfer back and add newest.
+    struct abs_logger_struct *temp[abs_loggers->num_elements];
+    
+    for (iterate=0;iterate<abs_loggers->num_elements;iterate++) temp[iterate] = abs_loggers->p_abs_logger[iterate];
+    free(abs_loggers->p_abs_logger);
+    
+    abs_loggers->num_elements++;
+    abs_loggers->p_abs_logger = malloc(abs_loggers->num_elements*sizeof(struct abs_logger_struct*));
+    for (iterate=0;iterate<abs_loggers->num_elements-1;iterate++) abs_loggers->p_abs_logger[iterate] = temp[iterate];
+    abs_loggers->p_abs_logger[abs_loggers->num_elements-1] = NULL;
+    
+  }
+};
 
 
 // -------------    Functions used to shorten master trace    ---------------------------------------------
@@ -2380,7 +2561,7 @@ void generate_children_lists(struct Volume_struct **Volumes, struct pointer_to_1
   for(child=0;child<number_of_volumes;child++) free(temporary_children_lists[child].elements);
   free(temporary_children_lists);
   free(true_temp_list_local.elements);
-  
+  free(temp_list_local.elements);
 };
 
 void generate_overlap_lists(struct pointer_to_1d_int_list **true_overlap_lists, struct pointer_to_1d_int_list **raw_overlap_lists, struct Volume_struct **Volumes, int number_of_volumes, int verbal) {
@@ -3160,36 +3341,40 @@ void generate_grandparents_lists(struct pointer_to_1d_int_list **grandparents_li
 
   struct pointer_to_1d_int_list common;
   common.num_elements = number_of_volumes;
-  common.elements = malloc(common.num_elements * sizeof(int)); // Maximum needed space.
+  common.elements = malloc(common.num_elements*sizeof(int)); // Maximum needed space.
   
   struct pointer_to_1d_int_list temp_list_local;
   temp_list_local.num_elements = number_of_volumes;
   temp_list_local.elements = malloc(number_of_volumes*sizeof(int));
   
-  int iterate,parent,child,used_elements;
+  int iterate,reset_int,parent,child,used_elements;
   for (iterate = 0;iterate < number_of_volumes;iterate++) {
     // clear temp list
     used_elements = 0;
+
+    for (reset_int=0; reset_int<number_of_volumes; reset_int++) common.elements[reset_int] = -1; // Initialize to impossible volume ids
+    for (reset_int=0; reset_int<number_of_volumes; reset_int++) temp_list_local.elements[reset_int] = -1; // Initialize to impossible volume ids
+
     grandparents_lists[iterate] = malloc(sizeof(struct pointer_to_1d_int_list));
     
-    for (parent = 0;parent < parents_lists[iterate]->num_elements;parent++) {
+    for (parent = 0; parent<parents_lists[iterate]->num_elements; parent++) {
         // parent number p parents_lists[iterate].elements.[p] in the parent_list for iterate.
-        on_both_int_lists(parents_lists[parents_lists[iterate]->elements[parent]],parents_lists[iterate],&common);
+        on_both_int_lists(parents_lists[parents_lists[iterate]->elements[parent]], parents_lists[iterate], &common);
         // returns a pointer_to_1d_list, with all the elements that are in common.
         for (child = 0;child < common.num_elements;child++) {
             // Need to make sure the element is not already on the list
-            if (0 == on_int_list(temp_list_local,common.elements[child])) {
+            if (0 == on_int_list(temp_list_local, common.elements[child])) {
               temp_list_local.elements[used_elements++] = common.elements[child];
             }
         }
     }
-      allocate_list_from_temp(used_elements,temp_list_local,grandparents_lists[iterate]);
-      
-      char string_output[128];
-      MPI_MASTER(
-      if (verbal) sprintf(string_output,"Grandparents for Volume %d",iterate);
-      if (verbal) print_1d_int_list(*grandparents_lists[iterate],string_output);
-      )
+    allocate_list_from_temp(used_elements, temp_list_local, grandparents_lists[iterate]);
+  
+    char string_output[128];
+    MPI_MASTER(
+      if (verbal) sprintf(string_output,"Grandparents for Volume %d", iterate);
+      if (verbal) print_1d_int_list(*grandparents_lists[iterate], string_output);
+    )
   }
   free(temp_list_local.elements);
   free(common.elements);
@@ -3808,15 +3993,15 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
     
     
     struct pointer_to_1d_int_list **true_children_lists;
-    true_children_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    true_children_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     // generate_children_lists both generate the normal children list for each volume, but also the true children list needed locally.
     generate_children_lists(Volumes, true_children_lists, number_of_volumes,verbal);
     
     
     struct pointer_to_1d_int_list **true_overlap_lists;
-    true_overlap_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    true_overlap_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     struct pointer_to_1d_int_list **raw_overlap_lists;
-    raw_overlap_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    raw_overlap_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     
     generate_overlap_lists(true_overlap_lists, raw_overlap_lists, Volumes,number_of_volumes,verbal);
     
@@ -3825,48 +4010,47 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
     
     
     struct pointer_to_1d_int_list **parents_lists;
-    parents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    parents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_parents_lists(parents_lists,Volumes,number_of_volumes,verbal,1); // The last 1 means masks are taken into account
     
     // Generate version of parent list as it would be without masks
     struct pointer_to_1d_int_list **parents_lists_no_masks;
-    parents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    parents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_parents_lists(parents_lists_no_masks,Volumes,number_of_volumes,verbal,0); // The last 0 means masks are NOT taken into account
     
     // Generate version of parent list using true_children instead
     struct pointer_to_1d_int_list **true_parents_lists;
-    true_parents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    true_parents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_true_parents_lists(true_parents_lists, true_children_lists, Volumes, number_of_volumes, verbal, 1);
     
     // Generate version of parent list no masks using true_children instead
     struct pointer_to_1d_int_list **true_parents_lists_no_masks;
-    true_parents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    true_parents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_true_parents_lists(true_parents_lists_no_masks, true_children_lists, Volumes, number_of_volumes, verbal, 0);
     
     // New version of generate intersect lists
     generate_intersect_check_lists_experimental(true_overlap_lists, raw_overlap_lists, parents_lists, true_parents_lists, Volumes, number_of_volumes, verbal);
     
     struct pointer_to_1d_int_list **grandparents_lists;
-    grandparents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    grandparents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_grandparents_lists(grandparents_lists,parents_lists,number_of_volumes,verbal);
     
     // Generate version of grandparents list as it would have been if no masks were defined
     struct pointer_to_1d_int_list **grandparents_lists_no_masks;
-    grandparents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    grandparents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_grandparents_lists(grandparents_lists_no_masks,parents_lists_no_masks,number_of_volumes,verbal);
     
     // Generate true_grandparents_lists
     struct pointer_to_1d_int_list **true_grandparents_lists;
-    true_grandparents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    true_grandparents_lists = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_grandparents_lists(true_grandparents_lists,true_parents_lists,number_of_volumes,verbal);
     
     struct pointer_to_1d_int_list **true_grandparents_lists_no_masks;
-    true_grandparents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list));
+    true_grandparents_lists_no_masks = malloc(number_of_volumes*sizeof(struct pointer_to_1d_int_list*));
     generate_grandparents_lists(true_grandparents_lists_no_masks,true_parents_lists_no_masks,number_of_volumes,verbal);
     
     // The destinations lists are generated without taking masks into account (they are removed from the overlap list in an early step)
     //generate_destinations_lists(grandparents_lists_no_masks,parents_lists_no_masks,true_overlap_lists,Volumes,number_of_volumes,verbal);
-    
     generate_destinations_lists_experimental(true_overlap_lists, true_children_lists, true_parents_lists_no_masks, true_grandparents_lists_no_masks, Volumes, number_of_volumes, verbal);
     
     // Obsolete, found a way around them in within_which_volume, but need to test the performance difference
@@ -3890,40 +4074,52 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
         //printf("freeing for volume nr %d\n",iterate);
         //printf("true_overlap_lists[iterate]->num_elements = %d \n",true_overlap_lists[iterate]->num_elements);
         if (true_overlap_lists[iterate]->num_elements > 0) free(true_overlap_lists[iterate]->elements);
+        free(true_overlap_lists[iterate]);
         
         //printf("raw_overlap_lists[iterate]->num_elements = %d \n",raw_overlap_lists[iterate]->num_elements);
         if (raw_overlap_lists[iterate]->num_elements > 0) free(raw_overlap_lists[iterate]->elements);
+        free(raw_overlap_lists[iterate]);
         
         //printf("parents_lists[iterate]->num_elements = %d \n",parents_lists[iterate]->num_elements);
         if (parents_lists[iterate]->num_elements > 0) free(parents_lists[iterate]->elements);
+        free(parents_lists[iterate]);
         
         //printf("parents_lists_no_masks[iterate]->num_elements = %d \n",parents_lists_no_masks[iterate]->num_elements);
         if (parents_lists_no_masks[iterate]->num_elements > 0) free(parents_lists_no_masks[iterate]->elements);
+        free(parents_lists_no_masks[iterate]);
         
         //printf("true_parents_lists[iterate]->num_elements = %d \n",true_parents_lists[iterate]->num_elements);
         if (true_parents_lists[iterate]->num_elements > 0) free(true_parents_lists[iterate]->elements);
+        free(true_parents_lists[iterate]);
         
         //printf("true_parents_lists_no_masks[iterate]->num_elements = %d \n",true_parents_lists_no_masks[iterate]->num_elements);
         if (true_parents_lists_no_masks[iterate]->num_elements > 0) free(true_parents_lists_no_masks[iterate]->elements);
+        free(true_parents_lists_no_masks[iterate]);
         
         //printf("grandparents_lists[iterate]->num_elements = %d \n",grandparents_lists[iterate]->num_elements);
         if (grandparents_lists[iterate]->num_elements > 0) free(grandparents_lists[iterate]->elements);
+        free(grandparents_lists[iterate]);
         
         //printf("true_grandparents_lists[iterate]->num_elements = %d \n",true_grandparents_lists[iterate]->num_elements);
         if (true_grandparents_lists[iterate]->num_elements > 0) free(true_grandparents_lists[iterate]->elements);
+        free(true_grandparents_lists[iterate]);
         
         //printf("grandparents_lists_no_masks[iterate]->num_elements = %d \n",grandparents_lists_no_masks[iterate]->num_elements);
         if (grandparents_lists_no_masks[iterate]->num_elements > 0) free(grandparents_lists_no_masks[iterate]->elements);
+        free(grandparents_lists_no_masks[iterate]);
         
         //printf("true_grandparents_lists_no_masks[iterate]->num_elements = %d \n",true_grandparents_lists_no_masks[iterate]->num_elements);
         if (true_grandparents_lists_no_masks[iterate]->num_elements > 0) free(true_grandparents_lists_no_masks[iterate]->elements);
+        free(true_grandparents_lists_no_masks[iterate]);
         
         //printf("true_children_lists[iterate]->num_elements = %d \n",true_children_lists[iterate]->num_elements);
         if (true_children_lists[iterate]->num_elements > 0) free(true_children_lists[iterate]->elements);
+        free(true_children_lists[iterate]);
     }
     //printf("generate lists volume specific free completed\n");
     free(true_overlap_lists);free(raw_overlap_lists);free(parents_lists);free(true_parents_lists);free(true_parents_lists_no_masks);
     free(parents_lists_no_masks);free(true_grandparents_lists);free(grandparents_lists);free(grandparents_lists_no_masks);free(true_grandparents_lists_no_masks);
+    free(true_children_lists);
     //printf("generate lists free completed\n");
 };
 
@@ -4090,4 +4286,80 @@ void focus_initialize(struct geometry_struct *geometry, Coords POS_A_TARGET, Coo
   //geometry->focus_data_array.elements = malloc(sizeof(focus_data_struct));
   add_element_to_focus_data_array(&geometry->focus_data_array,focus_data);
 };
+
+
+struct abs_event{
+    double time1;
+    double position1[3];
+    double time2;
+    double position2[3];
+    double weight_change;
+    int volume_index;
+    int neutron_id;
+};
+
+// Functions for recording absorption
+void initialize_absorption_file() {
+  FILE *fp;
+  fp = fopen("Union_absorption.dat","w");
+  fprintf(fp,"r_old x, r_old y, r_old z, old t, r x, r y, r z, new t, weight change, volume index, neutron id \n");
+  
+  fclose(fp);
+}
+
+
+void write_events_to_file(int last_index, struct abs_event *events) {
+
+  FILE *fp;
+  fp = fopen("Union_absorption.dat","a");
+  
+  struct abs_event *this_event;
+  int iterate;
+  for (iterate=0; iterate<last_index; iterate++) {
+  
+    this_event = &events[iterate];
+    fprintf(fp,"%g, %g, %g, %g, %g, %g, %g, %g, %e, %i, %i \n",
+           this_event->position1[0], this_event->position1[1], this_event->position1[2], this_event->time1,
+           this_event->position2[0], this_event->position2[1], this_event->position2[2], this_event->time2,
+           this_event->weight_change,
+           this_event->volume_index,
+           this_event->neutron_id);
+  }
+
+  fclose(fp);
+}
+
+void record_abs_to_file(double *r, double t1, double *r_old, double t2, double weight_change, int volume, int neutron_id, int *data_index, struct abs_event *events) {
+  
+  
+  
+  struct abs_event *this_event;
+  
+  this_event = &events[(*data_index)++];
+  
+  //printf("Recording something! %i\n", *data_index);
+  
+  this_event->position1[0] = r[0];
+  this_event->position1[1] = r[1];
+  this_event->position1[2] = r[2];
+  this_event->time1 = t1;
+  this_event->position2[0] = r_old[0];
+  this_event->position2[1] = r_old[1];
+  this_event->position2[2] = r_old[2];
+  this_event->time2 = t2;
+  this_event->weight_change = weight_change;
+  this_event->volume_index = volume;
+  this_event->neutron_id = neutron_id;
+  
+  
+  if (*data_index == 999) {
+    
+      write_events_to_file(*data_index, events);
+      *data_index = 0;
+
+  }
+
+};
+
+
 
