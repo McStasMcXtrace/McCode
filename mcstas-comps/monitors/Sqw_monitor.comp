@@ -95,7 +95,7 @@ TRACE
     
     Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
     Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
-    E=Ei-Ef;
+    E=Ef-Ei;
 	
     /* calculate k vectors and momentum transfer*/
     kix=rvx;

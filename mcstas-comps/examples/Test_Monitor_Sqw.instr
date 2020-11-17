@@ -130,7 +130,9 @@ USERVARS
 /* flags for detector */
  int flag_sample;      /* sample                scatt 1:coh, -1:inc, other multiple*/
  int flag_env;         /* container/environment scatt */
- 
+ double vix;
+ double viy;
+ double viz;
 %}
 
 INITIALIZE
@@ -222,6 +224,7 @@ EXTEND %{
    */
   t = randtriangle()*dt0/2-(fabs(env_radius)+0.01)/vi;
   flag_sample=flag_env=0;
+  vix=vx,viy=vy,viz=vz;
 %}
 
 /* sample position ========================================================== */
@@ -289,28 +292,26 @@ EXTEND %{
 
 /* S(q,w) monitors */
 /* the incoming beam is recorded at index -7 from here */
-COMPONENT Detector_nM = Monitor_Sqw(
-  radius=sample_detector_distance_m, yheight=detector_height_m, bins=bins, index=-7,
-  options=options_nM)
+ COMPONENT Detector_nM = Sqw_monitor(vix="vix",viy="viy",viz="viz",filename="Sqw_map",qmin=0,qmax=5,Emin=-10,Emax=15,nq=468,nE=468)
   WHEN (flag_sample || flag_env)
   AT (0, 0, 0) RELATIVE PREVIOUS
-
-COMPONENT Detector_nM_coh = COPY(Detector_nM)(index=-8)
+  
+COMPONENT Detector_nM_coh = COPY(Detector_nM)(filename="Sqw_single")
   WHEN (flag_sample == 1)
   AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT Detector_nM_inc = COPY(Detector_nM)(index=-9)
+COMPONENT Detector_nM_inc = COPY(Detector_nM)(filename="Sqw_inc")
   WHEN (flag_sample == -1)
   AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT Detector_nM_multi = COPY(Detector_nM)(index=-10)
+COMPONENT Detector_nM_multi = COPY(Detector_nM)(filename="Sqw_multi")
   WHEN fabs(flag_sample) > 1
   AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT Detector_nM_env = COPY(Detector_nM)(index=-11)
+COMPONENT Detector_nM_env = COPY(Detector_nM)(filename="Sqw_env")
   WHEN (flag_env)
   AT (0, 0, 0) RELATIVE PREVIOUS
-
+  
 /* I(angle, tof) monitors:
  * WARNING the recorded time on the detector is sensitive to the parallax on the tube height
  * the corrected time for parallax is
