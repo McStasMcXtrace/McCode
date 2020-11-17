@@ -52,6 +52,8 @@ DECLARE
 INITIALIZE
 %{
   enum field_functions ff=field_type;
+  mcmagnet_init();
+
   if(ff==tabled){
     struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
     interpolator_info(interpolator);
@@ -70,9 +72,17 @@ TRACE
     double t0,t1;
     if (hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth)){
         if(t0>0) PROP_DT(t0);
-        mcmagnet_push(field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
-        if(t1-t0>0) PROP_DT(t1-t0);
-        mcmagnet_pop();
+        //mcmagnet_push(field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
+        double phi_prec;
+        if(t1-t0>0){
+          PROP_DT(t1-t0);
+          /*do the precession "manually"*/
+          phi_prec= fmod(sqrt(Bx*Bx+ By*By+ Bz*Bz) * (t1-t0)*mc_pol_omegaL, 2*PI);
+          double sx_i,sy_i,sz_i;
+          sx_i=sx;sy_i=sy;sz_i=sz;
+          rotate(sx, sy, sz, sx_i,sy_i,sz_i, phi_prec, Bx, By, Bz);
+        }
+        //mcmagnet_pop();
     }
 
 %}
