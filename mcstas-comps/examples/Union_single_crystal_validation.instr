@@ -45,6 +45,7 @@
 *
 * %End
 *******************************************************************************/
+
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Union_single_crystal_validation(comp_select=1,string material_data_file="YBaCuO.lau",sigma_inc=2.105, my_absorption_union=8.55, delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5 , xwidth=0.01, yheight=0.01, zdepth=0.01,unit_cell_volume=173.28,sigma_abs_sc=0,sigma_inc=2.105,x_rotation_geometry=0,y_rotation_geometry=0,x_rotation_geometry_ref=0,y_rotation_geometry_ref=0,x_rotation_process=0,y_rotation_process=0,geometry_interact=0,PG=0,powder=0)
 
@@ -128,11 +129,11 @@ COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, th
 AT (0,0,0.1) RELATIVE slit
 ROTATED (0,0,0) RELATIVE slit
 
-COMPONENT PSDlin_transmission_scattered = PSDlin_monitor(xwidth=0.15, yheight=0.01, nbins=100, filename="Output_transmission_lin_scattered.psd",restore_neutron = 1)
+COMPONENT PSDlin_transmission_scattered = PSDlin_monitor(xwidth=0.15, yheight=0.01, nx=100, filename="Output_transmission_lin_scattered.psd",restore_neutron = 1)
 WHEN (scattered_flag_instr==1)
 AT (0,0,0.5) RELATIVE slit
 
-COMPONENT PSDlin_transmission_transmitted = PSDlin_monitor(xwidth=0.15, yheight=0.01, nbins=100, filename="Output_transmission_lin_transmitted.psd",restore_neutron = 1)
+COMPONENT PSDlin_transmission_transmitted = PSDlin_monitor(xwidth=0.15, yheight=0.01, nx=100, filename="Output_transmission_lin_transmitted.psd",restore_neutron = 1)
 WHEN (scattered_flag_instr==0)
 AT (0,0,0.5) RELATIVE slit
 
