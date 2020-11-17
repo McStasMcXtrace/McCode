@@ -60,6 +60,9 @@ DECLARE
 USERVARS %{
   double RotateNeutron;
   int flag_env;
+  double vix;
+  double viy;
+  double viz;
 %}
 
 
@@ -158,6 +161,7 @@ SPLIT COMPONENT SamplePosition = Arm()
   AT (0, 0, L2) RELATIVE mono_out
 EXTEND %{
   flag_env=0;
+  vix=vx,viy=vy,viz=vz;
 %}
 
 COMPONENT cryostat_in = PowderN(radius=0.035, yheight=.1,reflections="Al.laz", thickness=2e-3, concentric=1,p_interact=0.1)
@@ -259,13 +263,12 @@ COMPONENT Detector = Monitor_nD(
   AT (0, 0, 0)       RELATIVE DetectorMount
   ROTATED (90, 0, 0) RELATIVE DetectorMount
 
-COMPONENT Detector_Sqw = Monitor_Sqw(
-  xwidth=.01, yheight=.1, index=-12,
-  options="user1 limits=[0 10] bins=20, user2 limits=[-100 100] bins=100")
+COMPONENT Detector_Sqw = Sqw_monitor(
+  vix="vix",viy="viy",viz="viz",filename="Detector_Sqw",qmin=0,qmax=10,Emin=-100,Emax=100,nq=20,nE=100)
   AT (0, 0, 0)       RELATIVE DetectorMount
   ROTATED (90, 0, 0) RELATIVE DetectorMount
 
-COMPONENT Detector_Sqw_env = COPY(PREVIOUS)
+COMPONENT Detector_Sqw_env = COPY(PREVIOUS)(filename="Detector_Sqw_env")
 WHEN (flag_env)
 AT (0, 0, 0)       RELATIVE PREVIOUS
 
