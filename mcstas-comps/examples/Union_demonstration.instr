@@ -392,7 +392,8 @@ WHEN (scattered_1 + scattered_2 + scattered_3 + scattered_4 > 1)
 AT (0, 0, 0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
-
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 
 END

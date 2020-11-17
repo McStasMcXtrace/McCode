@@ -130,4 +130,7 @@ ROTATED (45,-10,0) RELATIVE sample_position
 COMPONENT PSDlin_scattering_2 = PSDlin_monitor(xwidth=0.1, yheight=0.05, nbins=100, filename="Output_scattering_2.psd",restore_neutron = 1)
 AT (0,0,0.5) RELATIVE scattering_arm_2
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
 END

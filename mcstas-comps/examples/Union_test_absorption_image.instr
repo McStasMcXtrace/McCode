@@ -202,4 +202,7 @@ COMPONENT screen = PSD_monitor(
    nx=500,ny=1200,filename="absoprtion_picture.dat",restore_neutron=1)
   AT (0,0,2) RELATIVE a1
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
 END

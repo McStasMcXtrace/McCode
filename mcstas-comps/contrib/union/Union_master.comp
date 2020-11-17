@@ -63,7 +63,10 @@ SETTING PARAMETERS(verbal = 1,
 /*
 OUTPUT PARAMETERS (global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Volume_copies, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, k_old, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterator, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, this_abs_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, abs_logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index, starting_volume_warning, iterator, non_isotropic_found, number_of_process_interacts_set, total_process_interact, index_of_lacking_process, log_index, mask_check, mask_start, wavevector, wavevector_rotated, k_rotated, ray_velocity_rotated, ray_sucseeded, r_old, initial_weight, abs_weight_factor)
 */
+/*
 OUTPUT PARAMETERS (global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Volume_copies, Geometries, starting_lists, error_msg, component_error_msg, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterator, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, this_abs_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, abs_logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index, starting_volume_warning, iterator, non_isotropic_found, number_of_process_interacts_set, total_process_interact, index_of_lacking_process, log_index, mask_check, mask_start, wavevector, wavevector_rotated, ray_velocity_rotated, ray_sucseeded, initial_weight, abs_weight_factor)
+*/
+OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/share/"
 
 
@@ -1163,7 +1166,12 @@ TRACE
              #endif
             // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
-            geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
+            // CPU Only
+            //geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
+            
+            // GPU Flexible intersect_function call
+            geometry_output = intersect_function(intersection_time_table.intersection_times[*check], number_of_solutions, r_start, v, &Volumes[*check]->geometry);
+            
             intersection_time_table.calculated[*check] = 1;
             // printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
@@ -1182,7 +1190,14 @@ TRACE
           #endif
           // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
-          geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry);
+          // CPU Only
+          //geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry);
+          
+          // GPU allowed
+          int selected_index;
+          selected_index = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
+          geometry_output = intersect_function(intersection_time_table.intersection_times[selected_index], number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
+          
           intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] = 1;
           // if printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
@@ -1242,7 +1257,11 @@ TRACE
           printf("intersection_with_children = %d \n",intersection_with_children);
         #endif
         if (intersection_with_children == 0) {
-            geometry_output = Volumes[current_volume]->geometry.intersect_function(intersection_time_table.intersection_times[current_volume],number_of_solutions,r_start,v,&Volumes[current_volume]->geometry);
+            // CPU Only
+            //geometry_output = Volumes[current_volume]->geometry.intersect_function(intersection_time_table.intersection_times[current_volume],number_of_solutions,r_start,v,&Volumes[current_volume]->geometry);
+            
+            // GPU Allowed
+            geometry_output = intersect_function(intersection_time_table.intersection_times[current_volume], number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
             intersection_time_table.calculated[current_volume] = 1;
         }
     }
@@ -1342,11 +1361,13 @@ TRACE
           } else {
             // Since there is a non-zero number of processes in this material, all the scattering cross section for these are calculated
             my_sum = 0; k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz; p_my_trace = my_trace; wavevector = coords_set(k[0],k[1],k[2]);
-            for (process_start = process = Volumes[current_volume]->p_physics->p_scattering_array;process - process_start < Volumes[current_volume]->p_physics->number_of_processes;process++) {
+            //for (process_start = process = Volumes[current_volume]->p_physics->p_scattering_array;process - process_start < Volumes[current_volume]->p_physics->number_of_processes;process++) {
+            int p_index;
+            for (p_index=0; p_index < Volumes[current_volume]->p_physics->number_of_processes; p_index++ ){ // GPU
             
-              if (Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index != -1) {
+              if (Volumes[current_volume]->p_physics->p_scattering_array[p_index].non_isotropic_rot_index != -1) {
                 // If the process is not isotropic, the wavevector is transformed into the local coordinate system of the process
-                wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index],wavevector);
+                wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[p_index].non_isotropic_rot_index],wavevector);
                 
                 coords_get(wavevector_rotated,&k_rotated[0],&k_rotated[1],&k_rotated[2]);
 
@@ -1355,10 +1376,17 @@ TRACE
               }
               
               // Find correct focus_data_array index for this volume/process
-              focus_data_index = Volumes[current_volume]->geometry.focus_array_indices.elements[process - process_start];
+              focus_data_index = Volumes[current_volume]->geometry.focus_array_indices.elements[p_index];
               
               // Call the probability for scattering function assighed to this specific procress (the process pointer is updated in the for loop)
-              process->probability_for_scattering_function(p_my_trace,k_rotated,process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+              // CPU Only
+              //process->probability_for_scattering_function(p_my_trace,k_rotated,process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+              // GPU Allowed
+              process = &Volumes[current_volume]->p_physics->p_scattering_array[p_index];
+              
+              int physics_output;
+              physics_output = physics_my(process->eProcess, p_my_trace, k_rotated, process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+
               
               my_sum += *p_my_trace;
               #ifdef Union_trace_verbal_setting
@@ -1627,7 +1655,10 @@ TRACE
             coords_get(coords_scalar_mult(ray_velocity_rotated,V2K),&k[0],&k[1],&k[2]);
             
             // I may replace a intial and final k with one instance that serves as both input and output
-            if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
+            // CPU Only
+            //if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
+            // GPU Version with flexible function
+            if (0 == physics_scattering(process->eProcess, k_new, k, &p, process->data_transfer, &Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
               /*
               // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
               // It can arise from need to simplify sampling process and end up in cases where weight factor is 0, and the ray should be absorbed in these cases

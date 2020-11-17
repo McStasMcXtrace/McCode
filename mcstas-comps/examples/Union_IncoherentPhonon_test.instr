@@ -100,6 +100,9 @@ COMPONENT energy_mon_2 = E_monitor(
     restore_neutron = 1)
 AT (0, 0, 0.5) RELATIVE arm_ener_2
 ROTATED (0,0,0) RELATIVE arm_ener_2
+
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
   
 END
 

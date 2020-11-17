@@ -109,11 +109,14 @@ COMPONENT monitor = L_monitor(filename="L_monitor_transmission.dat",
   AT (0, 0, 0.1) RELATIVE beam_center
   ROTATED (0, 0, 0) RELATIVE beam_center
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 FINALLY
 %{
 
 %}
+
 
 END
 

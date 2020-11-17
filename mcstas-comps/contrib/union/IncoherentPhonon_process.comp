@@ -4616,6 +4616,10 @@ int finish(struct IncoherentPhonon_physics_storage_struct *data)
     //struct pointer_to_global_process_list global_process_list = {0,NULL};
     #define PROCESS_DETECTOR dummy
 #endif
+
+#ifndef PROCESS_INCOHERENTPHONON_DETECTOR
+    #define PROCESS_INCOHERENTPHONON_DETECTOR dummy
+#endif
 %}
 
 DECLARE
@@ -4650,6 +4654,9 @@ INITIALIZE
   // Need to specify if this process is isotropic
   This_process.non_isotropic_rot_index = -1; // Yes (powder)
   //This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // The type of the process must be saved in the global enum process
+  This_process.eProcess = IncoherentPhonon;
 
   // Packing the data into a structure that is transported to the main component
   sprintf(This_process.name,NAME_CURRENT_COMP);

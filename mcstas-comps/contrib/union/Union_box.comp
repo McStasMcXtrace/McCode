@@ -357,6 +357,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
 
 sprintf(this_box_volume.name,NAME_CURRENT_COMP);
 sprintf(this_box_volume.geometry.shape,"box");
+this_box_volume.geometry.eShape = box;
 this_box_volume.geometry.priority_value = priority;
 this_box_volume.geometry.geometry_p_interact = p_interact;
 // Currently the coordinates will be in absolute space.

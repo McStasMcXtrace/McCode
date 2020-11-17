@@ -82,5 +82,7 @@ AT(0,0,0) RELATIVE sample_position
 COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, theta limits=[20,170], bins=200",filename="banana.dat")
 AT (0,0,0) RELATIVE sample_position
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 END

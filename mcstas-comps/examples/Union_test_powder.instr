@@ -70,5 +70,7 @@ ROTATED(0,0,0) RELATIVE beam_center
 COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",restore_neutron=1)
   AT (0, 0, 0) RELATIVE beam_center
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
 
 END

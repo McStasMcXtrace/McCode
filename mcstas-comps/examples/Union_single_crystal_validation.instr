@@ -137,4 +137,7 @@ COMPONENT PSDlin_transmission_transmitted = PSDlin_monitor(xwidth=0.15, yheight=
 WHEN (scattered_flag_instr==0)
 AT (0,0,0.5) RELATIVE slit
 
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
 END
