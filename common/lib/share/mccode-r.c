@@ -2287,7 +2287,7 @@ unsigned long long int mcget_ncount(void)
 /* mcget_run_num: get curent number of rays */
 /* Within the TRACE scope we are now using _particle->uid directly */
 unsigned long long int mcget_run_num() // shuld be (_class_particle* _particle) somehow
-{ 
+{
   /* This function only remains for the few cases outside TRACE where we need to know
      the number of simulated particles */
   return mcrun_num;
@@ -2845,16 +2845,14 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *   pbuffer:    size len index array, buffer space
 *   len:        meaningful size of psorted and pbuffer
 */
-//#pragma acc routine seq
 long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len) {
-
   #define SAL_THREADS 1024 // num parallel sections
   if (len<SAL_THREADS) return sort_absorb_last_serial(particles, psorted, len);
 
   long newlen = 0;
-  long tidx; // tread index
   long los[SAL_THREADS]; // target array startidxs
   long lens[SAL_THREADS]; // target array sublens
+  #pragma acc data copyin(los, lens)
   long l = floor(len/(SAL_THREADS-1)); // subproblem_len
   long ll = len - l*(SAL_THREADS-1); // last_subproblem_len
 
@@ -2862,19 +2860,23 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
   // than l, resulting in idling. We should distribute lengths more evenly.
 
   // step 1: sort sub-arrays
-  for (tidx=0; tidx<SAL_THREADS; tidx++) {
+  #pragma acc parallel loop present(particles, psorted, pbuffer, lens)
+  for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
     long lo = l*tidx;
     long loclen = l;
     if (tidx==(SAL_THREADS-1)) loclen = ll; // last sub-problem special case
     long i = lo;
-    long j =  lo + loclen - 1;
+    long j = lo + loclen - 1;
 
     // write into pbuffer at i and j
+    #pragma acc loop seq private(i, j)
     while (i < j) {
+      #pragma acc loop seq
       while (!particles[psorted[i]]._absorbed && i<j) {
         pbuffer[i] = psorted[i];
         i++;
       }
+      #pragma acc loop seq
       while (particles[psorted[j]]._absorbed && i<j) {
         pbuffer[j] = psorted[j];
         j--;
@@ -2896,14 +2898,17 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
 
   // determine lo's
   long accumlen = 0;
+  #pragma acc loop seq
   for (long idx=0; idx<SAL_THREADS; idx++) {
     los[idx] = accumlen;
     accumlen = accumlen + lens[idx];
   }
 
   // step 2: write non-absorbed sub-arrays to psorted/output from the left
-  for (tidx=0; tidx<SAL_THREADS; tidx++) {
+  #pragma acc parallel loop present(psorted, pbuffer, lens)
+  for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
     long j, k;
+    #pragma acc loop seq
     for (long i=0; i<lens[tidx]; i++) {
       j = i + l*tidx;
       k = i + los[tidx];
