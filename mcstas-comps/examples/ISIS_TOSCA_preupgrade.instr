@@ -59,12 +59,20 @@ int myrank;
 FILE *fp;
 %}
 
+USERVARS %{
+  double t_prime;
+  double vix;
+  double viy;
+  double viz;
+%}
+
 INITIALIZE
 %{
 L_minE= 10.0*sqrt(0.81787/(E_max*1.15));
 L_maxE= 10.0*sqrt(0.81787/(E_min*0.85));
 t_maxE = L0/sqrt(2/mneu*meV2J*(E_min*0.85))*1E6;
 t_minE = L0/sqrt(2/mneu*meV2J*(E_max*1.15))*1E6;
+printf("Found t_minE at %g \n",t_minE);
 #pragma acc update device(t_minE)
 
 %}
@@ -74,8 +82,8 @@ TRACE
 COMPONENT arm1 = Progress_bar() AT (0,0,0) ABSOLUTE
 
 // MODERATOR
-COMPONENT moder=ViewModISIS(Face="TS1_N08_Tosca.mcstas", E0 = 0.01, E1 = 500.0,
- modPosition=0, xw=0.12, yh = 0.115,  xw = 0.04, yh = 0.04, dist = 17)  
+COMPONENT moder=ISIS_moderator(Face="tosca", Emin = 0.01, Emax = 500.0,
+          xwidth=0.12, yheight = 0.115,  focus_xw = 0.04, focus_yh = 0.04, dist = 17)  
 
 AT (0, 0, 0.00001) RELATIVE arm1
 
@@ -101,15 +109,24 @@ yheight = 0.04, xwidth =0.04 , restore_neutron = 1, filename="Bmon.tof")
 AT (0, 0, 15.791) RELATIVE arm1
 
 COMPONENT Emon = E_monitor(Emin = Emin, Emax = Emax, nE = 100,
-yheight = 0.04, xwidth =0.04 , restore_neutron = 1, filename="Emon")
+yheight = 0.04, xwidth =0.04, filename="Emon")
 AT (0, 0, 15.792) RELATIVE arm1
 
 
-COMPONENT TOF_sample=Monitor_nD(user1=t-t_minE/1e6, options="user1 limits=[0 0.026] bins=1000,previous")
+COMPONENT TOF_sample0=Monitor_nD(options="t limits=[0 1] bins=1000,previous")
   AT(0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  t_prime = t-t_minE/1e6;
+%}
 
 
-COMPONENT arm_sample = Arm() AT (0, 0, 17.0) RELATIVE arm1 ROTATED (0, 180, 0) ABSOLUTE            
+COMPONENT TOF_sample=Monitor_nD(user1="t_prime", options="user1 limits=[0 0.026] bins=1000,previous")
+  AT(0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  vix=vx,viy=vy,viz=vz;
+%}
+
+COMPONENT arm_sample = Arm() AT (0, 0, 17.0) RELATIVE arm1 ROTATED (0, 180, 0) ABSOLUTE
 COMPONENT arm_bank1 = Arm() AT (0,0,0) RELATIVE arm_sample ROTATED (0, 0*180, -180+0*60) RELATIVE arm1
 COMPONENT arm_bank2 = Arm() AT (0,0,0) RELATIVE arm_sample ROTATED (0, 0*180, -180+1*60) RELATIVE arm1
 COMPONENT arm_bank3 = Arm() AT (0,0,0) RELATIVE arm_sample ROTATED (0, 0*180, -180+2*60) RELATIVE arm1
@@ -130,127 +147,156 @@ SPLIT 1000 COMPONENT powder=Isotropic_Sqw(
 ) AT (0, 0, 0) RELATIVE arm_sample
 EXTEND
 %{
-  if (!SCATTERED) ABSORB; 
+  if (!SCATTERED) ABSORB;
 %}
 
 COMPONENT sampleMantid = Arm()
 AT (0,0,0) RELATIVE powder
 
 
-
-COMPONENT sqw = Monitor_Sqw(index=-2, radius=2, bins=1000, options="user1 limits=[-18 18] bins=361, user2 limits=[-100 100] bins=501, parallel")
+COMPONENT sqw = Sqw_monitor(nq=316,qmin=0, qmax=18, nE=501, Emin=-100, Emax=100, vix="vix",viy="viy",viz="viz",filename="sqw")
 AT (0,0,0) RELATIVE powder
-
 
 SPLIT 100 COMPONENT Repeat = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
 
 //BACKWARD BANKS
 COMPONENT monocr_b1 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank1 ROTATED (0, 90, 0) RELATIVE arm_bank1
 GROUP Monos
  
 COMPONENT monocr_b2 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank2 ROTATED (0, 90, 0) RELATIVE arm_bank2
 GROUP Monos
 
 COMPONENT monocr_b3 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank3 ROTATED (0, 90, 0) RELATIVE arm_bank3
 GROUP Monos
 
 COMPONENT monocr_b4 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank4 ROTATED (0, 90, 0) RELATIVE arm_bank4
 GROUP Monos
 
 COMPONENT monocr_b5 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank5 ROTATED (0, 90, 0) RELATIVE arm_bank5
 GROUP Monos
 
 
 COMPONENT monocr_f6 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank6 ROTATED (0, 90, 0) RELATIVE arm_bank6
 GROUP Monos
  
 COMPONENT monocr_f7 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank7 ROTATED (0, 90, 0) RELATIVE arm_bank7
 GROUP Monos
 
 COMPONENT monocr_f8 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank8 ROTATED (0, 90, 0) RELATIVE arm_bank8
 GROUP Monos
 
 COMPONENT monocr_f9 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank9 ROTATED (0, 90, 0) RELATIVE arm_bank9
 GROUP Monos
 
 COMPONENT monocr_f10 = Monochromator_curved( order=1, mosaich = 150,
-mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl", 
-NH = 15, NV = 10, RH = 0, gap = 0.001) 
+mosaicv = 150, width = 0.10, height = 0.12, DM = 3.354, reflect="HOPG.rfl",
+NH = 15, NV = 10, RH = 0, gap = 0.001)
 AT (0, 0.23, -0.2625) RELATIVE arm_bank10 ROTATED (0, 90, 0) RELATIVE arm_bank10
 GROUP Monos
 
-COMPONENT sqw2 = Monitor_Sqw(index=-14, radius=2, options="user2 limits=[-100 100] bins=501, user1 limits=[-18 18] bins=361, parallel")
+COMPONENT sqw2 = Sqw_monitor(nq=316,qmin=0, qmax=18, nE=501, Emin=-100, Emax=100, vix="vix",viy="viy",viz="viz",filename="swq2")
   AT (0,0,0) RELATIVE powder
 
 COMPONENT Eabs = Monitor_nD(radius=2, options="energy limits=[-100 100] bins=501, q limits=[-18 18] bins=361, parallel")
   AT (0,0,0) RELATIVE powder
 
 
-  COMPONENT Sphere = PSD_monitor_4PI(filename="outgoing", radius=2.1, restore_neutron=1)
+COMPONENT Sphere = PSD_monitor_4PI(filename="outgoing", radius=2.1, restore_neutron=1)
   AT (0,0,0) RELATIVE powder
 
+COMPONENT TOF_1_0 = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank1  GROUP detectors0
 
+COMPONENT TOF2_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank2  GROUP detectors0
 
-COMPONENT TOF_1 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_3_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank3  GROUP detectors0
+
+COMPONENT TOF_4_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank4  GROUP detectors0
+
+COMPONENT TOF_5_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank5  GROUP detectors0
+
+COMPONENT TOF6_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank6  GROUP detectors0
+
+COMPONENT TOF_7_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank7  GROUP detectors0
+
+COMPONENT TOF_8_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank8  GROUP detectors0
+
+COMPONENT TOF_9_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank9  GROUP detectors0
+
+COMPONENT TOF_10_0  = Monitor_nD(xwidth=0.2, yheight=0.1762,  options="y bins=13, t limits=[0 1] bins=4900")
+AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank10  GROUP detectors0
+
+COMPONENT Calc_t_prime = Arm()
+AT (0,0,0) RELATIVE powder
+EXTEND %{
+  t_prime = t-t_minE/1e6;
+%}
+
+COMPONENT TOF_1 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank1  GROUP detectors
 
-COMPONENT TOF2 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF2 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank2  GROUP detectors
 
-COMPONENT TOF_3 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_3 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank3  GROUP detectors
 
-COMPONENT TOF_4 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_4 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank4  GROUP detectors
 
-COMPONENT TOF_5 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_5 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank5  GROUP detectors
 
-COMPONENT TOF6 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF6 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank6  GROUP detectors
 
-COMPONENT TOF_7 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_7 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank7  GROUP detectors
 
-COMPONENT TOF_8 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_8 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank8  GROUP detectors
 
-COMPONENT TOF_9 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_9 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank9  GROUP detectors
 
-COMPONENT TOF_10 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1=t-t_minE/1e6, options="y bins=13, user1 limits=[0 0.0260] bins=4900")
+COMPONENT TOF_10 = Monitor_nD(xwidth=0.2, yheight=0.1762, user1="t_prime", options="y bins=13, user1 limits=[0 0.0260] bins=4900")
 AT (0, 0.4165+0.09-0.18/13*7, -0.05952) RELATIVE arm_bank10  GROUP detectors
-
-
-
 
   
 END
