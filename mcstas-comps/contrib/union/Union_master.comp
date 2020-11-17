@@ -241,7 +241,7 @@ DECLARE
   int number_of_scattering_events;
   
   // For geometry p interact
-  double real_transmission_probability
+  double real_transmission_probability;
   double mc_transmission_probability;
   
   // Process p interact
