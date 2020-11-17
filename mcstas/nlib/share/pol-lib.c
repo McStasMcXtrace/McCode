@@ -37,7 +37,9 @@
 enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
 
 /*definition of the magnetic stack*/
+
 static mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
+#pragma acc declare create( stack )
 
 /*definition of the precession function*/
 mcmagnet_prec_func *mcMagnetPrecession=SimpleNumMagnetPrecession;
@@ -58,10 +60,12 @@ int mcmagnet_init(){
 
 void mc_pol_set_angular_accuracy(double domega){
     mc_pol_angular_accuracy = domega;
+#pragma acc update device ( mc_pol_angular_accuracy )
 }
 
 void mc_pol_set_timestep(double dt){
     mc_pol_initial_timestep=dt;
+#pragma acc update device ( mc_pol_initial_timestep )
 }
 
 #ifdef PROP_MAGNET
@@ -76,37 +80,35 @@ void mc_pol_set_timestep(double dt){
   } while(0)
 #endif
 
-int const_magnetic_field(){
-}
-
 enum field_functions{
-  none,
+  tabled=-1,
+  none=0,
   constant=1,
-  majorana,
-  MSF,
-  RF,
-  rotating,
-  gradient
+  majorana=2,
+  MSF=3,
+  RF=4,
+  rotating=5,
+  gradient=6,
 };
 
 
 #pragma acc routine seq
-int magnetic_field_dispatcher(int field_function_no, double x, double y, double z, double t, double *bx,double *by, double *bz, double *dummy){
+int magnetic_field_dispatcher(int field_function_no, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
   int retval=1;
   switch (field_function_no){
     case constant: 
       {
-        retval=constant_magnetic_field(x,y,z,t,*bx,*by,*bz, dummy);
+        retval=const_magnetic_field(x,y,z,t,bx,by,bz, dummy);
         break;
       }
     case majorana:
       {
-        retval=majorana_magnetic_field(x,y,z,t,*bx,*by,*bz, dummy);
+        retval=majorana_magnetic_field(x,y,z,t,bx,by,bz, dummy);
         break;
       }
     case rotating:
       {
-        retval=rot_magnetic_field(x,y,z,t,*bx,*by,*bz, dummy);
+        retval=rot_magnetic_field(x,y,z,t,bx,by,bz, dummy);
         break;
       }
     case RF:
@@ -116,7 +118,7 @@ int magnetic_field_dispatcher(int field_function_no, double x, double y, double 
       }
     case gradient:
       {
-        retval=gradient_magnetic_field(x,y,z,*bx,*by,*bz,dummy);
+        retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,dummy);
         break;
       }
   }
@@ -129,7 +131,7 @@ int magnetic_field_dispatcher(int field_function_no, double x, double y, double 
 /*traverse the stack and return the magnetic field*/
 #pragma acc routine seq
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
-  mcmagnet_field_info *p=stack[0];
+  mcmagnet_field_info *p;
   Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
   Rotation r;
 
@@ -145,7 +147,7 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
   while(p){
     /*transform to the coordinate system of the particular magnetic function*/
     loc=coords_sub(rot_apply(*(p->rot),in),*(p->pos));
-    stat=magnetic_field_dispatcher((p->funcid),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->data);
+    stat=magnetic_field_dispatcher((p->func_id),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->field_parameters);
     /*check if the field function should be garbage collected*/
     //printf("getfield_(loc):_(xyz,t)=( %g %g %g %g )\n",loc.x,loc.y,loc.z,t);
     if (stat){
@@ -173,24 +175,23 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
 }
 */
 #pragma acc routine seq
-void *mcmagnet_push(int fund_id, mcmagnet_field_func *func,  Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms){
-  mcmagnet_field_info *p;
+void *mcmagnet_push(int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void *prms){
   int i;
   /*move the stack one step down start from -2 since we have 0-indexing (i.e. last item is stacksize-1) */
   for (i=MCMAGNET_STACKSIZE-2;i>=0;i--){
     stack[i+1]=stack[i];
   }
-  stack[0]=(mcmagnet_field_info *)malloc(sizeof(mcmagnet_field_info));
-  mcmagnet_pack(stack[0],func_id,func,magnet_rot,magnet_pos,stopbit,prms);
+  mcmagnet_pack(stack[0],func_id,magnet_rot,magnet_pos,stopbit,prms);
   mcmagnet_set_active(stack[0]);
   if(stack[0] && stack[0]->func_id){
     MAGNET_ON;
   }
   return (void *) stack[0];
 }
+
 #pragma acc routine seq
 void *mcmagnet_pop(void) {
-  mcmagnet_field_info **p,*t;
+  mcmagnet_field_info *t;
   /*move the stack one step up*/
   int i;
   t=stack[0];
@@ -206,13 +207,14 @@ void *mcmagnet_pop(void) {
   }
   return (void*) t;
 }
+
 #pragma acc routine seq
-void mcmagnet_free_stack(void){
-  mcmagnet_field_info **p;
-  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){
-    free(*p);
-  }
-}
+/*void mcmagnet_free_stack(void){*/
+/*  mcmagnet_field_info **p;*/
+/*  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){*/
+/*    free(*p);*/
+/*  }*/
+/*}*/
 
 void *mcmagnet_init_par_backend(int dummy, ...){
   void * data;
@@ -248,7 +250,7 @@ void mcmagnet_print_field(mcmagnet_field_info *magnet){
     p=magnet->rot;
     printf("rotation matrix of magnetic field:[%g %g %g; %g %g %g; %g %g %g]\n",(*p)[0][0],(*p)[0][1],(*p)[0][2],(*p)[1][0],(*p)[1][1],(*p)[1][2],(*p)[2][0],(*p)[2][1],(*p)[2][2]);
     printf("origin position of magnet (x,y,z) :[%g %g %g]\n",magnet->pos->x,magnet->pos->y,magnet->pos->z);
-    printf("address of magnetic field parameters: %p\n",magnet->data);
+    printf("address of magnetic field parameters: %p\n",magnet->field_parameters);
   } else {
     printf("magnet is NULL\n");
   }

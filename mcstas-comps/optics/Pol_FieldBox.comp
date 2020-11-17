@@ -21,7 +21,7 @@
 *
 *
 * %P
-* fieldFunction: [ ] Should be either const_magnetic field or table_magnetic_field (unquoted in both cases).
+* fieldtype: [ ] Should be either 1 (constant field in the box) or -1 (tabled in data file).
 * xwidth:  [m] Width of the box containing the field.
 * yheight: [m] Height of the box containing the field.
 * zdepth:  [m] Depth of the box containing the field.
@@ -34,8 +34,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_FieldBox
-DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth,yheight,zdepth, Bx,By,Bz, string filename="")
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int field_type=1,xwidth,yheight,zdepth, Bx,By,Bz, string filename="")
 OUTPUT PARAMETERS (field_parameters, const_field_parameters)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -46,21 +46,20 @@ SHARE
 
 DECLARE
 %{
-    double const_field_parameters[3];
-    void *field_parameters;
+  struct field_parameters Bprms;
 %}
 
 INITIALIZE
 %{
-  if (fieldFunction==table_magnetic_field){
-      /*initialize the interpolation vertex structure*/
-      struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
-      interpolator_info(interpolator);
-      field_parameters = (void *)interpolator;
-  }  else {
-      field_parameters = (void *) const_field_parameters;
+  enum field_functions ff=field_type;
+  if(ff==tabled){
+    struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
+    interpolator_info(interpolator);
+    Bprms.generic = (void *)interpolator;
+  } else if (ff==constant){
+    /*constant magnetic field in the box*/
+    Bprms.field_prms[0]=Bx;Bprms.field_prms[1]=By;Bprms.field_prms[2]=Bz;
   }
-
 %}
 
 
@@ -71,13 +70,8 @@ TRACE
     double t0,t1;
     if (hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth)){
         if(t0>0) PROP_DT(t0);
-        field_parameters[0]=Bx;
-        field_parameters[1]=By;
-        field_parameters[2]=Bz;
-
-        mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,field_parameters);
+        mcmagnet_push(field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
         if(t1-t0>0) PROP_DT(t1-t0);
-
         mcmagnet_pop();
     }
 
