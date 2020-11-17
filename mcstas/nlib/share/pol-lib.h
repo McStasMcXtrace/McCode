@@ -48,31 +48,37 @@ typedef va_list mcmagnet_data;
 /*here's where the mcstas magnet stack is declared*/
 /*the magnet stack*/
 
+struct field_parameters{
+  double field_prms[8];
+  char file_string[128];
+  void *generic;
+};
+
+
 typedef struct mcmagnet_field_info {
   int func_id;
   mcmagnet_field_func *func;
   Rotation *rot;
   Coords *pos;
-  void *data;
+  struct field_parameters *field_parameters;
   int stop;
 } mcmagnet_field_info;
 
 void mc_pol_set_timestep(double);
 void mc_pol_set_angular_accuracy(double);
 
-#define mcmagnet_sizeof (sizeof(mcmagnet_field_func *)+ sizeof(Rotation *)+ sizeof(Coords *)+ sizeof(double *))
+#define mcmagnet_sizeof (sizeof(mcmagnet_field_func *)+ sizeof(Rotation *)+ sizeof(Coords *)+ sizeof(struct field_parameters *))
 #define mcmagnet_malloc(n) malloc( (n)*sizeof(mcmagnet_field_info) );
 
-#define mcmagnet_pack(dest,id,funk,rotation,position,stopbit,args) \
+#define mcmagnet_pack(dest,id,rotation,position,stopbit,args) \
   do { \
     mcmagnet_field_info * mctmp_p; \
     mctmp_p=(dest); \
     mctmp_p->func_id=id;\
-    mctmp_p->func=(mcmagnet_field_func *)(funk); \
     mctmp_p->rot=(rotation); \
     mctmp_p->pos=(position); \
     mctmp_p->stop=(stopbit); \
-    mctmp_p->data=(args); \
+    mctmp_p->field_parameters=(args); \
   } while (0);
 
 #define mcmagnet_reset() \
@@ -88,7 +94,7 @@ void mc_pol_set_angular_accuracy(double);
       mcMagneticField=(mcmagnet_new)->func; \
       rot_copy(mcMagnetRot, *((mcmagnet_new)->rot)); \
       mcMagnetPos=*((mcmagnet_new)->pos); \
-      mcMagnetData=(double *)(mcmagnet_new)->data; \
+      mcMagnetData=(void *)(mcmagnet_new)->field_parameters; \
     }else{ \
       mcmagnet_reset(); \
     } \
@@ -115,7 +121,7 @@ void mcmagnet_print_stack();
 void *mcmagnet_init_par_backend(int dummy, ...);
 
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
-void *mcmagnet_push(int func_id, NULL, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
+void *mcmagnet_push(int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
 void *mcmagnet_pop(void);
 
 /*main magnetic field dispatcher function - every request goes through here*/
@@ -128,6 +134,7 @@ int majorana_magnetic_field(double x, double y, double z, double t, double *bx, 
 int table_magnetic_field(double x, double y, double z, double t,
                          double *bx, double *by, double *bz,
                          void *data);
+int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 
 /* Routines used for Monochromator and guides/mirrors 
  * in the special (usual) case where
