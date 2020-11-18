@@ -47,18 +47,17 @@
 * pointed to by bx,by, and bz. Additional parameters to be handed to the function
 * should be handed to the function using the pointer data.
 *
-* Functions supplied by the system are:
-* 1. const_magnetic_field: Constant field (Bx,By,Bz) within the region
-* 2. rot_magnetic_field: Field is initially (0,By,0) but after a length of zdepth
+* Functions supplied by the system are (the number is the ID of the function to be given as the fieldFunction parameter:
+* 1. Constant magnetic field: Constant field (Bx,By,Bz) within the region
+* 2. Rotating magnetic_field: Field is initially (0,By,0) but after a length of zdepth
 *      has rotated to (By,0,0)
-* 3. majorana_magnetic_field: Field is initially (Bx,By,0) liearly transforms to
+* 3. majorana magnetic_field: Field is initially (Bx,By,0) liearly transforms to
 *      (-Bx,By,0) after zdepth where By<<Bx
-* 4. table_magnetic_field: The magnetic field is read from a text file where it is
+* -1. table_magnetic_field: The magnetic field is read from a text file where it is
 *      specified as a point cloud with N rows of 6 columns:
 *      x y z Bx By Bz
 *    the B field map is resampled with Stepx*Stepy*Stepz points.
 *    Use Stepx=Stepy=Stepz=0 to skip resampling and use the table as is.
-* 5. table_magnetic_field
 *
 * Users may specify any other function with the required footprint to have any
 * other field. Note that coordinates refer the coordinate system defined by this
@@ -83,7 +82,7 @@
 * Bx: [T]                   Parameter used for x composant of field.
 * By: [T]                   Parameter used for y composant of field.
 * Bz: [T]                   Parameter used for z composant of field.
-* fieldFunction: [pointer]  Function describing the magnetic field.
+* field_type: []            ID of function describing the magnetic field. -1:tabled field, 1:constant field, 2: rotating fiel, 3: majorana type field, 4: MSF, 5: RF-field, 6: gradient field.
 * filename: [ ]             File where the magnetic field is tabulated.
 * concentric: [ ]           Allow components and/or other fields inside field. Requires a subsequent Pol_simpleBfield_stop component.
 *
@@ -95,10 +94,9 @@
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_Bfield
-DEFINITION PARAMETERS (fieldFunction=const_magnetic_field, field_prms=NULL)
-SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int field_type=0, xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL,
         concentric=1)
-OUTPUT PARAMETERS(magnet, parPtr, prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -114,65 +112,52 @@ DECLARE
   /* Larmor frequency and scalar product threshold*/
   void *parPtr;
   mcmagnet_field_info *magnet;
-
-  struct {
-      int shape;
-  } prms;
+  struct field_parameters Bprms;
+  int shape;
 %}
 
 INITIALIZE
 %{
   enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
   parPtr=NULL;
+  enum field_functions ff=field_type;
   /* these default field functions are part of pol-lib */
-  if (fieldFunction==const_magnetic_field){
-      double *t=malloc(3*sizeof(double));
-      t[0]=Bx;
-      t[1]=By;
-      t[2]=Bz;
-      parPtr=(void *)t;
-  } else if (fieldFunction==rot_magnetic_field){
-    double *t=malloc(2*sizeof(double));
-    t[0]=By;
-    t[1]=zdepth;
-    parPtr=(void *)t;
-  } else if (fieldFunction==majorana_magnetic_field){
-    double *t=malloc(3*sizeof(double));
-    t[0]=Bx;
-    t[1]=By;
-    t[2]=zdepth;
-    parPtr=(void *)t;
-  } else if (fieldFunction==table_magnetic_field){
+  if (ff==constant){
+    double *t=(Bprms.field_prms);
+    t[0]=Bx;t[1]=By;t[2]=Bz;
+  } else if (ff==rotating){
+    double *t=(Bprms.field_prms);
+    t[0]=By;t[1]=zdepth;
+  } else if (ff==majorana){
+    double *t=(Bprms.field_prms);
+    t[0]=Bx; t[1]=By; t[2]=zdepth;
+  } else if (ff==tabled){
     /*initialize the interpolation vertex structure*/
     struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
     interpolator_info(interpolator);
-    parPtr=(void *)interpolator;
-  }
-  /*if not set yet, parPtr can be overridden by the external userland pointer*/
-  if(!parPtr && field_prms){
-      parPtr=field_prms;
+    Bprms.generic=(void *)interpolator;
   }
 
   /*initialize shape to either be window/box/cylinder*/
   /*some logic here to enter through a box or cylinder*/
   if(geometry && strlen(geometry)){
-      prms.shape=ANY;
+      shape=ANY;
   }else if(xwidth && yheight && zdepth){
-      prms.shape=BOX;
+      shape=BOX;
   }else if (xwidth && yheight && !zdepth){
-      prms.shape=WINDOW;
+      shape=WINDOW;
   }else if(radius && yheight){
-      prms.shape=CYLINDER;
+      shape=CYLINDER;
   }else if (radius) {
-      prms.shape=SPHERE;
+      shape=SPHERE;
   }else{
-      prms.shape=NONE;
+      shape=NONE;
   }
 
-  if(prms.shape == WINDOW && !concentric){
+  if(shape == WINDOW && !concentric){
       printf("Warning (%s): Magnetic field has window shape and has concentric set => Field volume == 0.\n",NAME_CURRENT_COMP);
   }
-  if(prms.shape == NONE) {
+  if(shape == NONE) {
       printf("Warning (%s): Magnetic field no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
   }
 
@@ -185,7 +170,7 @@ TRACE
     enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
 
     /*enter through whatever object we are*/
-    switch (prms.shape){
+    switch (shape){
         case BOX:
             hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
             /*terminate neutrons which miss the component*/
@@ -220,14 +205,14 @@ TRACE
         default:
             PROP_Z0;
     }
-    mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
+    mcmagnet_push(_particle, field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
 #ifdef MCDEBUG
     mcmagnet_print_stack();
 #endif
 
     /*does the field "close/stop" itself*/
     if (!concentric){
-        switch (prms.shape){
+        switch (shape){
             case BOX:
                 PROP_DT(t1);
                 break;
@@ -244,7 +229,7 @@ TRACE
             default:
                 PROP_Z0;
         }
-        mcmagnet_pop();
+        mcmagnet_pop(_particle);
     }
 %}
 
