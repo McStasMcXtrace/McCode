@@ -14,8 +14,8 @@
 * %Description
 * A test instrument for PowderN output on a spherical monitor.
 *
-* %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
-* %Example: lambda=1 d_phi=10 Detector: Sph_mon_I=8.94853e+07
+* %Example: lambda=1 Detector: Sph_mon_I=1.02724e+09
+* %Example: lambda=1 d_phi=10 Detector: Sph_mon_I=1.0119e+08
 *
 * %Parameters
 * lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
@@ -29,7 +29,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0, frac_i=0.01, frac_t=0.01, d_phi=0)
+DEFINE INSTRUMENT Test_PowderN_concentric(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0, frac_i=0.01, frac_t=0.8, d_phi=0)
 
 DECLARE %{
 %}
@@ -55,10 +55,16 @@ REMOVABLE COMPONENT Source = Source_gen(
   AT (0, 0, 0) RELATIVE Origin
 
 /* TIP: monochromator cradle */ 
-COMPONENT sample_cradle = Arm()
+SPLIT SPLITS COMPONENT sample_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
 
-SPLIT SPLITS COMPONENT Pow = PowderN(radius=0.005, yheight=0.1, reflections=reflections, p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c, d_phi=d_phi)
+COMPONENT Pow0 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.8, d_phi=0, concentric=1)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+%}
+
+
+COMPONENT Pow = PowderN(radius=0.004, yheight=0.1, reflections=reflections, p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c, d_phi=d_phi)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
   if(INSTRUMENT_GETPAR(directbeam) == 0) {
@@ -66,6 +72,11 @@ EXTEND %{
       ABSORB;
     }
   }
+%}
+
+COMPONENT Pow2 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.8, d_phi=0, concentric=0)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
 %}
 
 COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sphere")
