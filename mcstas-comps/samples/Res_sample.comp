@@ -61,52 +61,57 @@
 
 DEFINE COMPONENT Res_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (thickness=0,radius=0.01,focus_r=0.05,E0=14,dE=2,
-target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
-focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, int target_index=0)
+SETTING PARAMETERS (thickness=0, radius=0.01, focus_r=0.05, E0=14, dE=2,
+  target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, int target_index=0)
 OUTPUT PARAMETERS (res_struct)
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
-SHARE
-%{
-struct Res_sample_struct
-{
-double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
-double rx,ry,rz,pi;
-char   isrect;      /* true when sample is a box */
-double aw,ah;       /* rectangular angular dimensions */
-double xw,yh;       /* rectangular metrical dimensions */
-double tx,ty,tz;    /* target coords */
-};
+SHARE %{
+  struct Res_sample_struct {
+    double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
+    double rx,ry,rz,pi;
+    char   isrect;      /* true when sample is a box */
+    double aw,ah;       /* rectangular angular dimensions */
+    double xw,yh;       /* rectangular metrical dimensions */
+    double tx,ty,tz;    /* target coords */
+  };
 %}
 
-DECLARE
-%{
-struct Res_sample_struct res_struct;
+DECLARE %{
+  struct Res_sample_struct res_struct;
 %}
 
-INITIALIZE
-%{
-if (!radius || !yheight) {
-    if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    else res_struct.isrect=1; }
-  else res_struct.isrect=0;
+INITIALIZE %{
+  if (!radius || !yheight) {
+    if (!xwidth || !yheight || !zdepth)
+      exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else
+      res_struct.isrect = 1;
+  }
+  else {
+    res_struct.isrect = 0;
+  }
 
   /* now compute target coords if a component index is supplied */
-  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
-  if (target_index)
-  {
+  if (!target_index && !target_x && !target_y && !target_z)
+    target_index = 1;
+  if (target_index) {
     Coords ToTarget;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     coords_get(ToTarget, &res_struct.tx, &res_struct.ty, &res_struct.tz);
   }
-  else
-  { res_struct.tx = target_x; res_struct.ty = target_y; res_struct.tz = target_z; }
+  else {
+    res_struct.tx = target_x;
+    res_struct.ty = target_y;
+    res_struct.tz = target_z;
+  }
 
   if (!(res_struct.tx || res_struct.ty || res_struct.tz)) {
     printf("Res_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
-    res_struct.tz=1;
+    res_struct.tz = 1;
   }
 
   /* different ways of setting rectangular area */
@@ -136,25 +141,30 @@ TRACE
   double solid_angle=0;         /* Solid angle of target as seen from scattering point */
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
   double scat_factor;           /* Simple cross-section model */
-  int    intersect=0;
+  int intersect = 0;
 
   if(res_struct.isrect)
     intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
 
-  if(intersect)
-  {
+  if(intersect) {
     if(t0 < 0) ABSORB;
-    if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zdepth; } /* box sample */
+    if(res_struct.isrect) {
+      t1 = t2 = t3;
+      scat_factor = 2*zdepth;
+    } /* box sample */
     else {  /* Hollow cylinder sample */
       /* Neutron enters at t=t0. */
       if(!thickness || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight))
         t1 = t2 = t3;
-      scat_factor = 2*radius; }
+      scat_factor = 2*radius;
+    }
+
     dt0 = t1-t0;                  /* Time in sample, ingoing */
     dt1 = t2-t1;                  /* Time in hole */
     dt2 = t3-t2;                  /* Time in sample, outgoing */
+
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (dt0 + dt2);     /* Length of full path through sample */
     p *= l_full/scat_factor;      /* Scattering probability */
@@ -177,16 +187,18 @@ TRACE
     aim_x = res_struct.tx-x;         /* Vector pointing at target (anal./det.) */
     aim_y = res_struct.ty-y;
     aim_z = res_struct.tz-z;
-    if(res_struct.aw && res_struct.ah) {
-        randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
-          aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
+ 
+   if(res_struct.aw && res_struct.ah) {
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
     } else if(res_struct.xw && res_struct.yh) {
-        randvec_target_rect(&vx, &vy, &vz, &solid_angle,
-          aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
     } else {
-        randvec_target_circle(&vx, &vy, &vz, &solid_angle,
-          aim_x, aim_y, aim_z, focus_r);
+      randvec_target_circle(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_r);
     }
+
     NORM(vx, vy, vz);
     E=E0+dE*randpm1();
     v=sqrt(E)*SE2V;
@@ -195,7 +207,7 @@ TRACE
     vz *= v;
     SCATTER;
 
-      /* Store final neutron state. */
+     /* Store final neutron state. */
     res_struct.kf_x = V2K*vx;
     res_struct.kf_y = V2K*vy;
     res_struct.kf_z = V2K*vz;
@@ -204,9 +216,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
-  if(res_struct.isrect)
-  {                             /* Flat sample. */
+  if(res_struct.isrect) { /* Flat sample. */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
@@ -227,8 +237,7 @@ MCDISPLAY
     line(xmin, ymax, -len, xmin, ymax, len);
     line(xmax, ymax, -len, xmax, ymax, len);
   }
-  else
-  {
+  else {
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
