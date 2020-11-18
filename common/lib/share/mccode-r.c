@@ -2845,6 +2845,7 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *   pbuffer:    size len index array, buffer space
 *   len:        meaningful size of psorted and pbuffer
 */
+#ifdef FUNNEL
 long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len) {
   #define SAL_THREADS 1024 // num parallel sections
   if (len<SAL_THREADS) return sort_absorb_last_serial(particles, psorted, len);
@@ -2918,6 +2919,7 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
 
   return accumlen;
 }
+#endif
 
 /*
 *  Fallback serial version of the one above.
