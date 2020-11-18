@@ -68,7 +68,6 @@ void mc_pol_set_timestep(double);
 void mc_pol_set_angular_accuracy(double);
 
 #define mcmagnet_sizeof (sizeof(mcmagnet_field_func *)+ sizeof(Rotation *)+ sizeof(Coords *)+ sizeof(struct field_parameters *))
-#define mcmagnet_malloc(n) malloc( (n)*sizeof(mcmagnet_field_info) );
 
 #define mcmagnet_pack(dest,id,rotation,position,stopbit,args) \
   do { \
@@ -88,10 +87,11 @@ void mc_pol_set_angular_accuracy(double);
     MAGNET_OFF; \
   } while (0);
 
+/*should be removed*/
 #define mcmagnet_set_active(mcmagnet_new) \
   do { \
     if (mcmagnet_new!=NULL){ \
-      mcMagneticField=(mcmagnet_new)->func; \
+      mcMagneticField=(mcmagnet_new).func; \
       rot_copy(mcMagnetRot, *((mcmagnet_new)->rot)); \
       mcMagnetPos=*((mcmagnet_new)->pos); \
       mcMagnetData=(void *)(mcmagnet_new)->field_parameters; \
@@ -111,8 +111,8 @@ void mc_pol_set_angular_accuracy(double);
 
 #define MCMAGNET_STOP_ARG INT_MIN
 
-#define mcmagnet_init_par(...) \
-  mcmagnet_init_par_backend(0, __VA_ARGS__, MCMAGNET_STOP_ARG);
+//#define mcmagnet_init_par(...) \
+//  mcmagnet_init_par_backend(0, __VA_ARGS__, MCMAGNET_STOP_ARG);
 
 void mcmagnet_print_active();
 void mcmagnet_print_field(mcmagnet_field_info *);
@@ -120,9 +120,9 @@ void mcmagnet_print_stack();
 
 void *mcmagnet_init_par_backend(int dummy, ...);
 
-int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
-void *mcmagnet_push(int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
-void *mcmagnet_pop(void);
+int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
+void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
+void *mcmagnet_pop(_class_particle *_particle);
 
 /*main magnetic field dispatcher function - every request goes through here*/
 int field_dispatcher(int field_id, double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);

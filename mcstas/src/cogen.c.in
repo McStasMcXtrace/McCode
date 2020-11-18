@@ -2116,7 +2116,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double vx,vy,vz; /* velocity [m/s] */");
   cout("  double sx,sy,sz; /* spin [0-1] */");
   cout("  int mcgravitation; /* gravity-state */");
-  cout("  int mcMagnet;    /* precession-state */");
+  cout("  void *mcMagnet;    /* precession-state */");
   cout("  int allow_backprop; /* allow backprop */");
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
