@@ -11,6 +11,7 @@
 * Written by: EF
 * Date: Aug 28, 2002
 * Origin: ILL
+* Modified by: TW, Nov 2020: introduced user doubles
 * Release: McStas 1.6
 * Version: $Revision$
 *

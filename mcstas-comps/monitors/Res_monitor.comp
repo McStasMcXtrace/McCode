@@ -11,6 +11,7 @@
 * Date: 1999
 * Origin: Risoe
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
+* Modified by: TW, Nov 2020: updated for McStas 3
 *
 * Monitor for resolution calculations
 *
@@ -74,20 +75,20 @@ SETTING PARAMETERS (string res_sample_comp,
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
-SHARE
-%{
+
+SHARE %{
   %include "monitor_nd-lib"
 %}
 
-DECLARE
-%{
+
+DECLARE%{
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
   long buffer_index;
 %}
 
-INITIALIZE
-%{
+
+INITIALIZE %{
   buffer_index = 0;
 
   int i;
@@ -109,7 +110,7 @@ INITIALIZE
   if (radius) xwidth = 2*radius;
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin, xmax, ymin, ymax, zmin, zmax, 0);
-  Vars.Coord_Type[0] = DEFS.COORD_USERDOUBLE0; /* p is normally always the first variable*/
+  Vars.Coord_Type[0] = DEFS.COORD_USERDOUBLE0; /* otherwise p is always the first variable */
 
   if (Vars.Coord_Number != 10)
     exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%li).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
@@ -133,8 +134,8 @@ INITIALIZE
     strncpy(Vars.Mon_File, filename, 128);
 %}
 
-TRACE
-%{
+
+TRACE %{
   double t0 = 0;
   double t1 = 0;
   int intersect = 0;
@@ -185,34 +186,33 @@ TRACE
     /* Now fetch data from the Res_sample. */
     if(p && (!bufsize || buffer_index<bufsize))
     {
-      struct Res_sample_struct *s =
-        (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));
-      if(s->pi != 0)
+      /* old behaviour not supported by openacc:
+        struct Res_sample_struct *s =
+        (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));*/
+
+      if(_particle->res_pi != 0)
       {
         /* ki */
-        Vars.UserDoubles[0] = s->ki_x;
-        Vars.UserDoubles[1] = s->ki_y;
-        Vars.UserDoubles[2] = s->ki_z;
+        Vars.UserDoubles[0] = _particle->res_ki_x;
+        Vars.UserDoubles[1] = _particle->res_ki_y;
+        Vars.UserDoubles[2] = _particle->res_ki_z;
 
         /* kf */
-        Vars.UserDoubles[3] = s->kf_x;
-        Vars.UserDoubles[4] = s->kf_y;
-        Vars.UserDoubles[5] = s->kf_z;
+        Vars.UserDoubles[3] = _particle->res_kf_x;
+        Vars.UserDoubles[4] = _particle->res_kf_y;
+        Vars.UserDoubles[5] = _particle->res_kf_z;
 
         /* pos */
-        Vars.UserDoubles[6] = s->rx;
-        Vars.UserDoubles[7] = s->ry;
-        Vars.UserDoubles[8] = s->rz;
+        Vars.UserDoubles[6] = _particle->res_rx;
+        Vars.UserDoubles[7] = _particle->res_ry;
+        Vars.UserDoubles[8] = _particle->res_rz;
 
         /* pi and pf */
-        Vars.UserDoubles[9] = s->pi;
-        Vars.UserDoubles[10] = p / s->pi;
+        Vars.UserDoubles[9] = _particle->res_pi;
+        Vars.UserDoubles[10] = p / _particle->res_pi;
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
-
-        /*printf("pi=%f, pf=%f, kix=%f, kiy=%f, kiz=%f, kfx=%f, kfy=%f, kfz=%f\n",
-            s->pi, p / s->pi, s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z);*/
-      } /* if s->pi */
+      }
 
       SCATTER;
     } /* if p */
@@ -223,20 +223,20 @@ TRACE
     }
 %}
 
-SAVE
-%{
+
+SAVE %{
   /* save results, but do not free pointers */
   Monitor_nD_Save(&DEFS, &Vars);
 %}
 
-FINALLY
-%{
+
+FINALLY %{
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
 %}
 
-MCDISPLAY
-%{
+
+MCDISPLAY %{
   Monitor_nD_McDisplay(&DEFS, &Vars);
 %}
 
