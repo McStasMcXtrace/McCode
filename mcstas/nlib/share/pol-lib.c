@@ -8,7 +8,7 @@
 * Library: share/pol-lib.c
 *
 * %Identification
-* Written by: Erik Knudsen, Astrid Rømer & Peter Christiansen
+* Written by: Erik B Knudsen, Astrid Rømer & Peter Christiansen
 * Date: Oct 08
 * Origin: RISOE
 * Release: McStas 1.12
@@ -38,25 +38,21 @@ enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
 
 /*definition of the magnetic stack*/
 
-static mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
-#pragma acc declare create( stack )
+//static mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
+//#pragma acc declare create( stack )
 
 /*definition of the precession function*/
 mcmagnet_prec_func *mcMagnetPrecession=SimpleNumMagnetPrecession;
 Coords mcMagnetPos;
 Rotation mcMagnetRot;
 double*  mcMagnetData                = NULL;
-int (*mcMagneticField) (double, double, double, double, double*, double*, double*, void *);
+int (*mcMagneticField) (_class_particle *, double, double, double, double, double*, double*, double*, void *);
+
 /*Threshold below which two magnetic fields are considered to be
  * in the same direction.*/
 double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
 /*The maximal timestep taken by neutrons in a const field*/
 double mc_pol_initial_timestep = 1e-5;
-
-int mcmagnet_init(){
-  mcMagnetPrecession=SimpleNumMagnetPrecession;
-  return 0;
-}
 
 void mc_pol_set_angular_accuracy(double domega){
     mc_pol_angular_accuracy = domega;
@@ -91,11 +87,10 @@ enum field_functions{
   gradient=6,
 };
 
-
 #pragma acc routine seq
-int magnetic_field_dispatcher(int field_function_no, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
   int retval=1;
-  switch (field_function_no){
+  switch (func_id){
     case constant: 
       {
         retval=const_magnetic_field(x,y,z,t,bx,by,bz, dummy);
@@ -121,19 +116,32 @@ int magnetic_field_dispatcher(int field_function_no, double x, double y, double 
         retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,dummy);
         break;
       }
+    case none:
+      {
+        retval=0;*bx=0;*by=0;bz=0;
+      }
   }
   return retval;
 }
 
-
+/*make sure the stack is always empty at start*/
+/*int mcmagnet_init(void){*/
+/*  int i;*/
+/*  for (i=0; i<MCMAGNET_STACKSIZE;i++){*/
+/*    stack[i].func_id=0;*/
+/*  }*/
+/*}*/
 
 
 /*traverse the stack and return the magnetic field*/
 #pragma acc routine seq
-int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
-  mcmagnet_field_info *p;
+int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+  mcmagnet_field_info *p,**stack;
   Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
   Rotation r;
+
+  /*extract the magnetic field stack experienced by this particle*/
+  stack=((mcmagnet_field_info **) _particle->mcMagnet);
 
   /*PROP_MAGNET takes care of transforming local "PROP" coordinates to lab system*/
   in.x=x;in.y=y;in.z=z;
@@ -141,10 +149,13 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
   int i=0,stat=1;
   p=stack[i];
   *bx=0;*by=0;*bz=0;
-  if (!p) return 0;
+  if (p==NULL || p->func_id==0){
+    *bx=0;*by=0;*bz=0;
+    return 0;
+  }
   //mcmagnet_print_stack();
   //printf("getfield_(lab):_(xyz,t)=( %g %g %g %g )\n",x,y,z,t);
-  while(p){
+  while(p!==NULL){
     /*transform to the coordinate system of the particular magnetic function*/
     loc=coords_sub(rot_apply(*(p->rot),in),*(p->pos));
     stat=magnetic_field_dispatcher((p->func_id),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->field_parameters);
@@ -167,48 +178,66 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
   return 0;
 }
 
-/*void mcmagnet_init(void){
-  mcmagnet_field_info *p;
-  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){
-    *p = malloc (sizeof(mcmagnet_field_info));
-  }
-}
-*/
+/*void mcmagnet_init(void){*/
+/*  return;*/
+/*  mcmagnet_field_info **p;*/
+/*  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){*/
+/*  #ifdef OPENACC*/
+/*    *p = acc_malloc (sizeof(mcmagnet_field_info *));*/
+/*  #else*/
+/*    *p = malloc (sizeof(mcmagnet_field_info *));*/
+/*  #endif*/
+/*  }*/
+/*}*/
+
 #pragma acc routine seq
-void *mcmagnet_push(int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void *prms){
-  int i;
+void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void *prms){
+  /*check if any field has been pushed already*/
+  if (_particle->mcMagnet==NULL){
+    /*No fields exist in the stack so allocate room for it and point _particle->mcMagnet to it*/
+    _particle->mcMagnet=malloc(sizeof(mcmagnet_field_info *) * MCMAGNET_STACKSIZE);
+  }
+  mcmagnet_field_info **stack=((mcmagnet_field_info **) _particle->mcMagnet);
+
   /*move the stack one step down start from -2 since we have 0-indexing (i.e. last item is stacksize-1) */
+  int i;
   for (i=MCMAGNET_STACKSIZE-2;i>=0;i--){
     stack[i+1]=stack[i];
   }
+  /*allocate momery for the new stack item*/
+  #ifdef OPENACC
+  stack[0]=acc_malloc(sizeof(mcmagnet_field_info *));
+  #else
+  stack[0]=malloc(sizeof(stack[0]));
+  #endif
+  /*drop the new item in*/
   mcmagnet_pack(stack[0],func_id,magnet_rot,magnet_pos,stopbit,prms);
-  mcmagnet_set_active(stack[0]);
-  if(stack[0] && stack[0]->func_id){
-    MAGNET_ON;
-  }
   return (void *) stack[0];
 }
 
 #pragma acc routine seq
-void *mcmagnet_pop(void) {
-  mcmagnet_field_info *t;
+void *mcmagnet_pop(_class_particle *_particle) {
+  mcmagnet_field_info **stack=((mcmagnet_field_info **) _particle->mcMagnet);
+  /*free memory for upper element*/
+#ifdef OPENACC
+  acc_free(stack[0]);
+#else
+  free(stack[0]);
+#endif
   /*move the stack one step up*/
   int i;
-  t=stack[0];
   for (i=0;i<MCMAGNET_STACKSIZE-2;i++){
     stack[i]=stack[i+1];
   }
-  stack[MCMAGNET_STACKSIZE-1]=NULL;
-  mcmagnet_set_active(stack[0]);
-  if(stack[0] && stack[0]->func){
-    MAGNET_ON;
-  }else{
-    MAGNET_OFF;
+  /*if this makes the upper element go NULL also NULL _particle->mcMagnet
+    to flag that precession propagation is no longer needed*/
+  if(stack[0]==NULL){
+    _particle->mcMagnet=NULL;
   }
-  return (void*) t;
+  return (void*) (stack[0]);
 }
 
-#pragma acc routine seq
+/*#pragma acc routine seq*/
 /*void mcmagnet_free_stack(void){*/
 /*  mcmagnet_field_info **p;*/
 /*  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){*/
@@ -216,23 +245,23 @@ void *mcmagnet_pop(void) {
 /*  }*/
 /*}*/
 
-void *mcmagnet_init_par_backend(int dummy, ...){
-  void * data;
-  unsigned char *p=NULL;
-  int q,dp=0;
-  va_list arg_list;
-
-  va_start(arg_list,dummy);
-  p=(unsigned char *)arg_list;
-  q=va_arg(arg_list,int);
-  while (q!=MCMAGNET_STOP_ARG){
-    q=va_arg(arg_list,int);
-  }
-  dp=(unsigned char *)arg_list-p;
-  data=(void *) malloc(sizeof(int)*dp);
-  memcpy(data,p,sizeof(int)*dp);
-  return data;
-}
+/*void *mcmagnet_init_par_backend(int dummy, ...){*/
+/*  void * data;*/
+/*  unsigned char *p=NULL;*/
+/*  int q,dp=0;*/
+/*  va_list arg_list;*/
+/**/
+/*  va_start(arg_list,dummy);*/
+/*  p=(unsigned char *)arg_list;*/
+/*  q=va_arg(arg_list,int);*/
+/*  while (q!=MCMAGNET_STOP_ARG){*/
+/*    q=va_arg(arg_list,int);*/
+/*  }*/
+/*  dp=(unsigned char *)arg_list-p;*/
+/*  data=(void *) malloc(sizeof(int)*dp);*/
+/*  memcpy(data,p,sizeof(int)*dp);*/
+/*  return data;*/
+/*}*/
 
 void mcmagnet_print_active(){
   Rotation *p;
@@ -256,17 +285,18 @@ void mcmagnet_print_field(mcmagnet_field_info *magnet){
   }
 }
 
-void mcmagnet_print_stack(){
-  mcmagnet_field_info *p=stack[0];
+void mcmagnet_print_stack(_class_particle *_particle){
+  mcmagnet_field_info **stack=((mcmagnet_field_info **) _particle->mcMagnet);
+  mcmagnet_field_info *p;
   int i=0;
-  p=stack[i];
+  p=(stack[i]);
   printf("magnetic stack info:\n");
-  if (!p) return;
+  if (p->func_id==0) return;
   while(p) {
     printf("magnet %d:\n",i);
     mcmagnet_print_field(p);
     if (p->stop) break;
-    p=stack[++i];
+    p=(stack[++i]);
   }
 }
 
@@ -473,7 +503,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
   //printf("pos_at_labaftertranformation(xyz)( %g %g %g )\n", mc_pol_x,mc_pol_y,mc_pol_z);
 
   // get initial B-field value
-  mcMagneticField(pp->x, pp->y, pp->z, pp->t,&BxTemp, &ByTemp, &BzTemp,NULL);
+  mcMagneticField(pp, pp->x, pp->y, pp->z, pp->t,&BxTemp, &ByTemp, &BzTemp,NULL);
 
   do {
 
@@ -493,7 +523,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
       yp = pp->y+ pp->vy*mc_pol_timeStep;
       zp = pp->z+ pp->vz*mc_pol_timeStep;
 
-      mcMagneticField(xp,yp,zp, pp->t+mc_pol_timeStep, &BxTemp, &ByTemp, &BzTemp, NULL);
+      mcMagneticField(pp,xp,yp,zp, pp->t+mc_pol_timeStep, &BxTemp, &ByTemp, &BzTemp, NULL);
       // not so elegant, but this is how we make sure that the steps decrease
       // when the WHILE condition is not met
       mc_pol_timeStep *= 0.5;
