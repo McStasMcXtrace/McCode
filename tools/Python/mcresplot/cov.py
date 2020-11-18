@@ -62,13 +62,17 @@ sig2hwhm = np.sqrt(2. * np.log(2.))
 sig2fwhm = 2.*sig2hwhm
 
 
+
 #
 # normalises events and filters out too low probabilities
 #
 def filter_events(Q, E, w):
 	# normalise intensity/probability
-	w /= np.max(w)
-
+	maxw = np.max(w)
+	if np.abs(maxw) > 0.:
+		w /= maxw
+	else:
+		raise ValueError("Given neutron probabilities are zero!")
 
 	# filter out too low probabilities
 	theeps = 1e-4
@@ -79,7 +83,6 @@ def filter_events(Q, E, w):
 	E = E[nonzero_idx]
 	w = w[nonzero_idx]
 
-
 	return [Q, E, w]
 
 
@@ -89,6 +92,7 @@ def filter_events(Q, E, w):
 #
 def load_events_kikf(filename):
 	dat = np.loadtxt(filename)
+
 	ki = dat[:, options["ki_start_idx"]:options["ki_start_idx"]+3]
 	kf = dat[:, options["kf_start_idx"]:options["kf_start_idx"]+3]
 	wi = dat[:, options["wi_idx"]]

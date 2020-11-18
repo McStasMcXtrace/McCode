@@ -64,6 +64,22 @@
     int COORD_USER1 ;
     int COORD_USER2 ;
     int COORD_USER3 ;
+    int COORD_USERDOUBLE0 ;
+    int COORD_USERDOUBLE1 ;
+    int COORD_USERDOUBLE2 ;
+    int COORD_USERDOUBLE3 ;
+    int COORD_USERDOUBLE4 ;
+    int COORD_USERDOUBLE5 ;
+    int COORD_USERDOUBLE6 ;
+    int COORD_USERDOUBLE7 ;
+    int COORD_USERDOUBLE8 ;
+    int COORD_USERDOUBLE9 ;
+    int COORD_USERDOUBLE10 ;
+    int COORD_USERDOUBLE11 ;
+    int COORD_USERDOUBLE12 ;
+    int COORD_USERDOUBLE13 ;
+    int COORD_USERDOUBLE14 ;
+    int COORD_USERDOUBLE15 ;
     int COORD_XY    ;
     int COORD_XZ    ;
     int COORD_YZ    ;
@@ -134,12 +150,14 @@
     char   Monitor_Label[MONnD_COORD_NMAX*30];/* Label for monitor */
     char   Mon_File[128];                     /* output file name */
 
-    double cx,cy,cz;
+    /* these don't seem to be used anymore as they are superseded by _particle */
+    double cx, cy, cz;
     double cvx, cvy, cvz;
     double ckx, cky, ckz;
     double csx, csy, csz;
     double cEx, cEy, cEz;
     double cs1, cs2, ct, cphi, cp;
+
     double He3_pressure;
     char   Flag_UsePreMonitor    ;   /* use a previously stored neutron parameter set */
     char   UserName1[128];
@@ -148,6 +166,7 @@
     char   UserVariable1[128];
     char   UserVariable2[128];
     char   UserVariable3[128];
+    double UserDoubles[16];
     char   option[CHAR_BUF_LENGTH];
 
     long long int Nsum;
