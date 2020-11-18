@@ -151,13 +151,13 @@
     char   Monitor_Label[MONnD_COORD_NMAX*30];/* Label for monitor */
     char   Mon_File[128];                     /* output file name */
 
-    /* these don't seem to be used anymore as they are superseded by _particle */
+    /* these don't seem to be used anymore as they are superseded by _particle
     double cx, cy, cz;
     double cvx, cvy, cvz;
     double ckx, cky, ckz;
     double csx, csy, csz;
     double cEx, cEy, cEz;
-    double cs1, cs2, ct, cphi, cp;
+    double cs1, cs2, ct, cphi, cp; */
 
     double He3_pressure;
     char   Flag_UsePreMonitor    ;   /* use a previously stored neutron parameter set */
