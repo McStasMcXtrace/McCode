@@ -54,7 +54,7 @@ DEFINE COMPONENT PreMonitor_nD
 SETTING PARAMETERS (string monitor_comp)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
-  /* Flag will be set to 1 automatically */
+/* Flag will be set to 1 automatically */
 /* unset by user in Monitor_nD if required (with 'not') */
 /* Monitor_nD with premonitor should check that a PreMonitor exists */
 /* if Flag==0 in option parsing -> no pre monitor -> warning, normal monitor */
@@ -72,7 +72,7 @@ TRACE
     /* directly act on MonitornD_Variables pointer, do not need to update */
     if (Vars->Flag_UsePreMonitor == 1)
     {
-        Vars->cp = p;
+/*        Vars->cp = p;
         Vars->cx = x;
         Vars->cvx = vx;
         Vars->csx = sx;
@@ -82,7 +82,7 @@ TRACE
         Vars->cz = z;
         Vars->cvz = vz;
         Vars->csz = sz;
-        Vars->ct = t;
+        Vars->ct = t; */
         SCATTER;
     }
 %}

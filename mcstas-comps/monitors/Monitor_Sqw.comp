@@ -260,7 +260,7 @@ TRACE
     Vars.UserVariable2  = Ef-Ei;                      // E = Ef-Ei
 
     /* send current neutron state to Monitor_nD_Trace */
-    Vars.cp  = p;
+    /* Vars.cp  = p;
     Vars.cx  = x;
     Vars.cvx = vx;
     Vars.csx = sx;
@@ -270,7 +270,7 @@ TRACE
     Vars.cz  = z;
     Vars.cvz = vz;
     Vars.csz = sz;
-    Vars.ct  = t;
+    Vars.ct  = t; */
 
     pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
     SCATTER;

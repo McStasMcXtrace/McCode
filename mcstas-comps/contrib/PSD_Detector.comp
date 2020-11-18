@@ -1101,7 +1101,7 @@ TRACE
             /* save event file if activated */
             if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
               double pp,P2;
-              Vars.cp  = P;
+              /* Vars.cp  = P;
 	      Vars.cx  = x;
               Vars.cvx = vx;
               Vars.csx = sx;
@@ -1111,7 +1111,7 @@ TRACE
               Vars.cz  = z;
               Vars.cvz = vz;
               Vars.csz = sz;
-              Vars.ct  = t;
+              Vars.ct  = t; */
 	      
 	      P2=P*P;
 
