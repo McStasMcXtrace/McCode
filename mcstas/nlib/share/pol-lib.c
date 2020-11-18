@@ -80,10 +80,10 @@ enum field_functions{
   tabled=-1,
   none=0,
   constant=1,
-  majorana=2,
-  MSF=3,
-  RF=4,
-  rotating=5,
+  rotating=2,
+  majorana=3,
+  MSF=4,
+  RF=5,
   gradient=6,
 };
 
@@ -124,14 +124,6 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
   return retval;
 }
 
-/*make sure the stack is always empty at start*/
-/*int mcmagnet_init(void){*/
-/*  int i;*/
-/*  for (i=0; i<MCMAGNET_STACKSIZE;i++){*/
-/*    stack[i].func_id=0;*/
-/*  }*/
-/*}*/
-
 
 /*traverse the stack and return the magnetic field*/
 #pragma acc routine seq
@@ -155,13 +147,13 @@ int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z,
   }
   //mcmagnet_print_stack();
   //printf("getfield_(lab):_(xyz,t)=( %g %g %g %g )\n",x,y,z,t);
-  while(p!==NULL){
+  while(p!=NULL){
     /*transform to the coordinate system of the particular magnetic function*/
     loc=coords_sub(rot_apply(*(p->rot),in),*(p->pos));
     stat=magnetic_field_dispatcher((p->func_id),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->field_parameters);
     /*check if the field function should be garbage collected*/
     //printf("getfield_(loc):_(xyz,t)=( %g %g %g %g )\n",loc.x,loc.y,loc.z,t);
-    if (stat){
+    if (!stat){
       /*transform to the lab system and add up. (resusing loc variable - to now contain the field in lab coords)*/
       rot_transpose(*(p->rot),r);
       loc=rot_apply(r,b);
@@ -195,7 +187,7 @@ void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_ro
   /*check if any field has been pushed already*/
   if (_particle->mcMagnet==NULL){
     /*No fields exist in the stack so allocate room for it and point _particle->mcMagnet to it*/
-    _particle->mcMagnet=malloc(sizeof(mcmagnet_field_info *) * MCMAGNET_STACKSIZE);
+    _particle->mcMagnet=calloc(MCMAGNET_STACKSIZE,sizeof(mcmagnet_field_info *));
   }
   mcmagnet_field_info **stack=((mcmagnet_field_info **) _particle->mcMagnet);
 
@@ -206,9 +198,9 @@ void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_ro
   }
   /*allocate momery for the new stack item*/
   #ifdef OPENACC
-  stack[0]=acc_malloc(sizeof(mcmagnet_field_info *));
+  stack[0]=acc_malloc(sizeof(mcmagnet_field_info));
   #else
-  stack[0]=malloc(sizeof(stack[0]));
+  stack[0]=calloc(1, sizeof(mcmagnet_field_info));
   #endif
   /*drop the new item in*/
   mcmagnet_pack(stack[0],func_id,magnet_rot,magnet_pos,stopbit,prms);
@@ -305,7 +297,7 @@ void mcmagnet_print_stack(_class_particle *_particle){
 #pragma acc routine seq
 int const_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
-  if (!data) return 0;
+  if (!data) return 1;
   *bx=((double *)data)[0];
   *by=((double *)data)[1];
   *bz=((double *)data)[2];
@@ -317,7 +309,7 @@ int rot_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
   /* Field of magnitude By that rotates to x in magnetLength m*/
   
-  if (!data) return 0;
+  if (!data) return 1;
   double Bmagnitude=((double *)data)[0];//   = mcMagnetData[1];
   double magnetLength=((double *)data)[1];// = mcMagnetData[5];
   *bx =  Bmagnitude * sin(PI/2*z/magnetLength);
@@ -332,7 +324,7 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   /* Large linearly decreasing (from +Bx to -Bx in magnetLength) component along x axis,
    * small constant component along y axis
    */
-  if (!data) return 0;
+  if (!data) return 1;
   double Blarge       = ((double *)data)[0];
   double Bsmall       = ((double *)data)[1];
   double magnetLength = ((double *)data)[2];
@@ -347,7 +339,7 @@ int table_magnetic_field(double x, double y, double z, double t,
                          double *bx, double *by, double *bz,
                          void *data)
 {
-  if (!data) return 0;
+  if (!data) return 1;
   struct interpolator_struct *interpolator = (struct interpolator_struct*)data;
   return(interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz) != NULL);
 }
