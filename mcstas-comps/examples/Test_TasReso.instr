@@ -28,7 +28,6 @@
 * %End
 *******************************************************************************/
 
-
 DEFINE INSTRUMENT TasResoTest
 (
 	/* source wavelength */
@@ -142,6 +141,28 @@ DECLARE
 		return 2.*f / fabs(sin(angle));
 	}
 	/* ----------------------------------------------------------------------------- */
+%}
+
+
+/* needed for resolution calculation */
+USERVARS %{
+  // probability
+  double res_pi;
+
+  // k_i
+  double res_ki_x;
+  double res_ki_y;
+  double res_ki_z;
+
+  // k_f
+  double res_kf_x;
+  double res_kf_y;
+  double res_kf_z;
+
+  // pos
+  double res_rx;
+  double res_ry;
+  double res_rz;
 %}
 
 
