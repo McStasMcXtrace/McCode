@@ -70,7 +70,7 @@ COMPONENT armMSF = Arm()
      AT (0,0,1) RELATIVE Origin
 
 COMPONENT msf =
-Pol_constBfield(xwidth=0.08, yheight=0.08, length=0.2, fliplambda=5.0)
+Pol_constBfield(xwidth=0.08, yheight=0.08, zdepth=0.2, fliplambda=5.0)
      AT (0, 0, 0) RELATIVE armMSF
 
 COMPONENT pollambdaMonitor2x =
