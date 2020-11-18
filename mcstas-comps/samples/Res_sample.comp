@@ -91,11 +91,18 @@ USERVARS %{
 
 
 SHARE %{
+  struct res_sample_vars {
     char   isrect;                     /* true when sample is a box */
     double awdim, ahdim;               /* rectangular angular dimensions */
     double xwdim, yhdim;               /* rectangular metrical dimensions */
     double targetx, targety, targetz;  /* target coords */
+  };
 %}
+
+
+DECLARE %{
+  struct res_sample_vars vars;
+}
 
 
 INITIALIZE %{
@@ -103,10 +110,10 @@ INITIALIZE %{
     if (!xwidth || !yheight || !zdepth)
       exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else
-      isrect = 1;
+      vars.isrect = 1;
   }
   else {
-    isrect = 0;
+    vars.isrect = 0;
   }
 
   /* now compute target coords if a component index is supplied */
@@ -116,26 +123,26 @@ INITIALIZE %{
     Coords ToTarget;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
-    coords_get(ToTarget, &targetx, &targety, &targetz);
+    coords_get(ToTarget, &vars.targetx, &vars.targety, &vars.targetz);
   }
   else {
-    targetx = target_x;
-    targety = target_y;
-    targetz = target_z;
+    vars.targetx = target_x;
+    vars.targety = target_y;
+    vars.targetz = target_z;
   }
 
-  if (!(targetx || targety || targetz)) {
+  if (!(vars.targetx || vars.targety || vars.targetz)) {
     printf("Res_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
     targetz = 1;
   }
 
   /* different ways of setting rectangular area */
-  awdim = ahdim = 0;
-  if (focus_xw) xwdim = focus_xw;
-  if (focus_yh) yhdim = focus_yh;
-  if (focus_aw) awdim = DEG2RAD*focus_aw;
-  if (focus_ah) ahdim = DEG2RAD*focus_ah;
+  vars.awdim = vars.ahdim = 0;
+  if (focus_xw) vars.xwdim = focus_xw;
+  if (focus_yh) vars.yhdim = focus_yh;
+  if (focus_aw) vars.awdim = DEG2RAD*focus_aw;
+  if (focus_ah) vars.ahdim = DEG2RAD*focus_ah;
 %}
 
 
@@ -151,14 +158,14 @@ TRACE %{
   double scat_factor;           /* Simple cross-section model */
   int intersect = 0;
 
-  if(isrect)
+  if(vars.isrect)
     intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
 
   if(intersect) {
     if(t0 < 0) ABSORB;
-    if(isrect) {
+    if(vars.isrect) {
       t1 = t2 = t3;
       scat_factor = 2*zdepth;
     } /* box sample */
@@ -192,16 +199,16 @@ TRACE %{
     _particle->res_ry = y;
     _particle->res_rz = z;
 
-    aim_x = targetx - x;         /* Vector pointing at target (anal./det.) */
-    aim_y = targety - y;
-    aim_z = targetz - z;
+    aim_x = vars.targetx - x;         /* Vector pointing at target (anal./det.) */
+    aim_y = vars.targety - y;
+    aim_z = vars.targetz - z;
  
-   if(awdim && ahdim) {
+   if(vars.awdim && vars.ahdim) {
       randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
-        aim_x, aim_y, aim_z, awdim, ahdim, ROT_A_CURRENT_COMP);
-    } else if(xwdim && yhdim) {
+        aim_x, aim_y, aim_z, vars.awdim, vars.ahdim, ROT_A_CURRENT_COMP);
+    } else if(vars.xwdim && vars.yhdim) {
       randvec_target_rect(&vx, &vy, &vz, &solid_angle,
-        aim_x, aim_y, aim_z, xwdim, yhdim, ROT_A_CURRENT_COMP);
+        aim_x, aim_y, aim_z, vars.xwdim, vars.yhdim, ROT_A_CURRENT_COMP);
     } else {
       randvec_target_circle(&vx, &vy, &vz, &solid_angle,
         aim_x, aim_y, aim_z, focus_r);
@@ -224,7 +231,7 @@ TRACE %{
 
 
 MCDISPLAY %{
-  if(isrect) { /* Flat sample. */
+  if(vars.isrect) { /* Flat sample. */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;

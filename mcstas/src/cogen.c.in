@@ -932,6 +932,7 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   }
   list_iterate_end(iter);
 
+  cout("  return 0;"); /* return a nullptr if case is not handled in the loop above */
   cout("}");
   cout("");
 }
