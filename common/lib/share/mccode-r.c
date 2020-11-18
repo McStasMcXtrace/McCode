@@ -2852,7 +2852,6 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
   long newlen = 0;
   long los[SAL_THREADS]; // target array startidxs
   long lens[SAL_THREADS]; // target array sublens
-  #pragma acc data copyin(los, lens)
   long l = floor(len/(SAL_THREADS-1)); // subproblem_len
   long ll = len - l*(SAL_THREADS-1); // last_subproblem_len
 
@@ -2869,7 +2868,7 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
     long j = lo + loclen - 1;
 
     // write into pbuffer at i and j
-    #pragma acc loop seq private(i, j)
+    #pragma acc loop seq
     while (i < j) {
       #pragma acc loop seq
       while (!particles[psorted[i]]._absorbed && i<j) {
