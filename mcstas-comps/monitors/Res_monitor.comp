@@ -102,30 +102,32 @@ INITIALIZE
   if (strstr(tmp, "list"))
     exit(fprintf(stderr, "Res_monitor: %s: Error: Only use geometry keywords (remove list from 'option').\n", NAME_CURRENT_COMP));
   if (!bufsize)
-    sprintf(Vars.option, "%s borders list all, x vx sx y vy sy z vz sz t ", tmp);
+    sprintf(Vars.option, "%s borders list all, ud1 ud2 ud3 ud4 ud5 ud6 ud7 ud8 ud9 ud10", tmp);
   else
-    sprintf(Vars.option, "%s borders list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
+    sprintf(Vars.option, "%s borders list=%f, ud1 ud2 ud3 ud4 ud5 ud6 ud7 ud8 ud9 ud10", tmp, bufsize);
 
   if (radius) xwidth = 2*radius;
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,0);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin, xmax, ymin, ymax, zmin, zmax, 0);
+  Vars.Coord_Type[0] = DEFS.COORD_USERDOUBLE0; /* p is normally always the first variable*/
 
   if (Vars.Coord_Number != 10)
     exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%li).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
 
   /* set the labels */
   /* we have to record ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f */
-  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[0],tmp);  strcpy(Vars.Coord_Var[0],tmp);
-  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[1],tmp);  strcpy(Vars.Coord_Var[1],tmp);
-  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[2],tmp);  strcpy(Vars.Coord_Var[2],tmp);
-  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[3],tmp);  strcpy(Vars.Coord_Var[3],tmp);
-  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[4],tmp);  strcpy(Vars.Coord_Var[4],tmp);
-  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[5],tmp);  strcpy(Vars.Coord_Var[5],tmp);
-  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[6],tmp);  strcpy(Vars.Coord_Var[6],tmp);
-  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[7],tmp);  strcpy(Vars.Coord_Var[7],tmp);
-  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[8],tmp);  strcpy(Vars.Coord_Var[8],tmp);
-  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[9],tmp);  strcpy(Vars.Coord_Var[9],tmp);
-  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[10],tmp); strcpy(Vars.Coord_Var[10],tmp);
+  int idx = 0;
+  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
 
   if (filename != NULL)
     strncpy(Vars.Mon_File, filename, 128);
@@ -133,9 +135,9 @@ INITIALIZE
 
 TRACE
 %{
-  double  t0 = 0;
-  double  t1 = 0;
-  int     intersect   = 0;
+  double t0 = 0;
+  double t1 = 0;
+  int intersect = 0;
 
   if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
   {
@@ -187,23 +189,35 @@ TRACE
         (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));
       if(s->pi != 0)
       {
-        Vars.cp  = s->ki_x;
-        Vars.cx  = s->ki_y;
-        Vars.cvx = s->ki_z;
-        Vars.csx = s->kf_x;
-        Vars.cy  = s->kf_y;
-        Vars.cvy = s->kf_z;
-        Vars.csy = s->rx;
-        Vars.cz  = s->ry;
-        Vars.cvz = s->rz;
-        Vars.csz = s->pi;
-        Vars.ct  = p/s->pi;
+        /* ki */
+        Vars.UserDoubles[0] = s->ki_x;
+        Vars.UserDoubles[1] = s->ki_y;
+        Vars.UserDoubles[2] = s->ki_z;
+
+        /* kf */
+        Vars.UserDoubles[3] = s->kf_x;
+        Vars.UserDoubles[4] = s->kf_y;
+        Vars.UserDoubles[5] = s->kf_z;
+
+        /* pos */
+        Vars.UserDoubles[6] = s->rx;
+        Vars.UserDoubles[7] = s->ry;
+        Vars.UserDoubles[8] = s->rz;
+
+        /* pi and pf */
+        Vars.UserDoubles[9] = s->pi;
+        Vars.UserDoubles[10] = p / s->pi;
+
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
+
+        /*printf("pi=%f, pf=%f, kix=%f, kiy=%f, kiz=%f, kfx=%f, kfy=%f, kfz=%f\n",
+            s->pi, p / s->pi, s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z);*/
       } /* if s->pi */
+
       SCATTER;
     } /* if p */
-
   } /* end if intersection */
+
   if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
