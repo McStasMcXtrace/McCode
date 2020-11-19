@@ -91,6 +91,7 @@ struct abs_logger_with_data_struct abs_loggers_with_data_array;
     //struct pointer_to_global_master_list_master global_master_list_master = {0,NULL};
     #define MASTER_DETECTOR dummy
 #endif
+
 %}
 
 
@@ -1055,6 +1056,7 @@ TRACE
   // If first Union_master in instrument, reset loggers_with_data_array and clean unused data.
   // Unused data happens when logging data is passed to the next Union_master, but the ray is absorbed on the way.
   // Could be improved by using the precompiler instead as ncount times the number of Union_masters could be avoided.
+  #ifndef OPENACC
   if (global_master_list_master->elements[0].component_index == INDEX_CURRENT_COMP) {
     // If this is the first Union master, clean up logger data for rays that did not make it through Union components
     for (log_index=loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
@@ -1066,7 +1068,7 @@ TRACE
     }
     abs_loggers_with_data_array.used_elements = 0;
   }
-    
+  #endif
   tagging_conditional_extend = 0;
   for (iterator=0;iterator<max_conditional_extend_index+1;iterator++) {
     logger_conditional_extend_array[iterator] = 0;
@@ -1539,6 +1541,7 @@ TRACE
         // min length: 0, max length: length_to_scattering if scattering, else length to boundary
         
         // Avoid logging absorption when the ray is in vacuum.
+        #ifndef OPENACC
         if (current_volume != 0 && abs_weight_factor_set == 1) { // Volume 0 is always vacuum, and if this is the current volume, an event will not occur
           if (Volumes[current_volume]->p_physics->is_vacuum == 0) { // No absorption in vacuum
             
@@ -1599,6 +1602,7 @@ TRACE
             }
           }
         }
+        #endif
         
         if (scattering_event == 1) {
             #ifdef Union_trace_verbal_setting
@@ -1700,6 +1704,7 @@ TRACE
               printf("Running logger system for specific volumes \n");
             #endif
             // Logging for detector components assosiated with this volume
+            #ifndef OPENACC
             for (log_index=0;log_index<Volumes[current_volume]->loggers.num_elements;log_index++) {
               //printf("logging time! Volume specific version. Volume name = %s \n",Volumes[current_volume]->name);
               //printf("  log_index = %d \n",log_index);
@@ -1717,10 +1722,12 @@ TRACE
                 //  if it is not met, the temporary data is cleared.
               }
             }
+            #endif
             
             #ifdef Union_trace_verbal_setting
               printf("Running logger system for all volumes \n");
             #endif
+            #ifndef OPENACC
             for (log_index=0;log_index<global_all_volume_logger_list_master->num_elements;log_index++) {
               //printf("logging time! Global version. log_index = %d \n",log_index);
               // As above, but on a global scale, meaning scattering in all volumes are logged
@@ -1729,6 +1736,7 @@ TRACE
               // Could be interesting to have a monitor that just globally measurres the second scattering event in any volume (must be two in the same). Weird but not meaningless.
               global_all_volume_logger_list_master->elements[log_index].logger->function_pointers.active_record_function(&ray_position,k_new,k_old,p,p_old,t,scattered_flag[current_volume],scattered_flag_VP[current_volume][selected_process],number_of_scattering_events,global_all_volume_logger_list_master->elements[log_index].logger,&loggers_with_data_array);
             }
+            #endif
             
             
             SCATTER;
@@ -2084,6 +2092,7 @@ TRACE
     // Loggers attatched to specific volumes need to be handled with care to avoid looping over all loggers for every ray
     //for (log_index=0;log_index<loggers_with_data_array.used_elements;log_index++) {
     // TEST
+    #ifndef OPENACC
     if (enable_conditionals == 1) {
       for (log_index=loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
         // Check all conditionals attatched to the current logger
@@ -2210,7 +2219,9 @@ TRACE
       }
       
     }
+    #endif
     
+    #ifndef OPENACC
     if (enable_tagging && stop_tagging_ray == 0) {
       conditional_status = 1;
       for (iterator=0;iterator<tagging_conditional_list->num_elements;iterator++) {
@@ -2243,6 +2254,7 @@ TRACE
         #endif
       }
     }
+    #endif
     
     // Move the rays a nano meter away from the surface it left, in case activation counter > 1, this will prevent the ray from starting on a volume boundery
     x += vx*1E-9; y += vy*1E-9; z += vz*1E-9; t += 1E-9;
