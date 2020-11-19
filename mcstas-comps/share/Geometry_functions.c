@@ -3795,7 +3795,42 @@ int intersect_function(double *t,int *num_solutions,double *r,double *v,struct g
             output = sample_mesh_intersect(t, num_solutions, r, v, geometry);
             break;
         default:
-            printf("physics_my: No scattering process matches input!");
+            printf("Intersection function: No matching geometry found!");
             break;
     }
+    
+    return output;
+};
+
+// Flexible within function
+int r_within_function(Coords pos,struct geometry_struct *geometry) {
+    int output = 0;
+    switch(geometry->eShape) {
+        case box:
+            if (geometry->geometry_parameters.p_box_storage->is_rectangle == 1)
+                output = r_within_box_simple(pos, geometry);
+            else
+                output = r_within_box_advanced(pos, geometry);
+            break;
+        case sphere:
+            output = r_within_sphere(pos, geometry);
+            break;
+        case cylinder:
+            output = r_within_cylinder(pos, geometry);
+            break;
+        case cone:
+            output = r_within_cone(pos, geometry);
+            break;
+        case mesh:
+            output = r_within_mesh(pos, geometry);
+            break;
+        case surroundings:
+            output = 1;
+            break;
+        default:
+            printf("Within function: No matching geometry found!");
+            break;
+    }
+    
+    return output;
 };

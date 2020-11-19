@@ -558,6 +558,7 @@ INITIALIZE
   Volumes[0]->geometry.center.y = 0;
   Volumes[0]->geometry.center.z = 0;
   strcpy(Volumes[0]->geometry.shape,"vacuum");
+  Volumes[0]->geometry.eShape = surroundings;
   Volumes[0]->geometry.within_function = &r_within_surroundings; // Always returns 1
   // No physics struct allocated
   Volumes[0]->p_physics = NULL;
@@ -1082,7 +1083,10 @@ TRACE
   // Mask update: need to check the mask status for the initial position
   // mask status for a mask is 1 if the ray position is inside, 0 if it is outside
   for (iterator=0;iterator<number_of_masks;iterator++) {
-    if(Volumes[mask_volume_index_list.elements[iterator]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[iterator]]->geometry) == 1) {
+    // CPU Only
+    //if(Volumes[mask_volume_index_list.elements[iterator]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[iterator]]->geometry) == 1) {
+    // GPU
+    if (r_within_function(ray_position, &Volumes[mask_volume_index_list.elements[iterator]]->geometry) == 1) {
       mask_status_list.elements[iterator] = 1;
     } else {
       mask_status_list.elements[iterator] = 0;
@@ -1094,7 +1098,7 @@ TRACE
   #endif
   
   // Now the initial current_volume can be found, which requires the up to date mask_status_list
-  current_volume = within_which_volume(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+  current_volume = within_which_volume_GPU(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
   
   // Using the mask_status_list and the current volume, the current_mask_intersect_list_status can be made
   //  it contains the effective mask status of all volumes on the current volumes mask intersect list, which needs to be calculated,
@@ -1625,11 +1629,11 @@ TRACE
             ray_velocity = coords_set(vx,vy,vz);
             
             // Safe check that should be unecessary. Used to fine tune how close to the edge of a volume a scattering event is allowed to take place (1E-14 m away currently).
-            if (Volumes[current_volume]->geometry.within_function(ray_position,&Volumes[current_volume]->geometry) == 0) {
+            if (r_within_function(ray_position,&Volumes[current_volume]->geometry) == 0) {
               printf("\nERROR, propagated out of current volume instead of to a point within!\n");
               printf("length_to_scattering_specified = %2.20f\n             length propagated = %2.20f\n            length_to_boundery = %2.20f \n   current_position = (%lf,%lf,%lf) \n",length_to_scattering,sqrt(time_to_scattering*time_to_scattering*vx*vx+time_to_scattering*time_to_scattering*vy*vy+time_to_scattering*time_to_scattering*vz*vz),length_to_boundery,x,y,z);
               
-              volume_index = within_which_volume(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+              volume_index = within_which_volume_GPU(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
               
               printf("Debug info: Volumes[current_volume]->name = %s, but now inside volume number %d named %s.\n",Volumes[current_volume]->name,volume_index,Volumes[volume_index]->name);
               printf("Ray absorbed \n");
@@ -1798,7 +1802,7 @@ TRACE
                 else {
                     ray_position = coords_set(x,y,z);
                     ray_velocity = coords_set(vx,vy,vz);
-                    tree_next_volume = within_which_volume(ray_position,Volumes[current_volume]->geometry.reduced_destinations_list,Volumes[current_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    tree_next_volume = within_which_volume_GPU(ray_position,Volumes[current_volume]->geometry.reduced_destinations_list,Volumes[current_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                 }
 
                 #ifdef Union_trace_verbal_setting
@@ -1933,7 +1937,7 @@ TRACE
                           #endif
                           ray_position = coords_set(x,y,z);
                           ray_velocity = coords_set(vx,vy,vz);
-                          tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                          tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                         // } Bug fixed on 27/11/2016
                           if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
                           current_volume = tree_next_volume;
@@ -1958,7 +1962,7 @@ TRACE
                     //tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                     // Bug found on the 2/9 2016, the destinations_list of a mask does not contain the volumes inside it. Could make an additional list for this.
                     // The temporary fix will be to use the mask list for both reduced destinations list and destinations list.
-                    tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.mask_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.mask_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                     // if within_which_volume returns 0, no result was found (volume 0 can not be masked, so it could not be on the mask list)
                     if (tree_next_volume != 0) {
                       if (Volumes[tree_next_volume]->geometry.priority_value > Volumes[current_volume]->geometry.priority_value) {
@@ -2017,7 +2021,7 @@ TRACE
               printf("\n----------------------------------------------------------------------------------------------------\n");
               printf("Union_master %s: Somehow reached a situation with no intersection time found, but still inside volume %d instead of 0\n",NAME_CURRENT_COMP,current_volume);
               for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
-                if (Volumes[volume_index]->geometry.within_function(ray_position,&Volumes[volume_index]->geometry) == 1)
+                if (r_within_function(ray_position,&Volumes[volume_index]->geometry) == 1)
                     printf("The ray is in volume       %d\n",volume_index);
               }
               
