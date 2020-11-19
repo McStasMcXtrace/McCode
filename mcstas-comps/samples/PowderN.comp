@@ -571,7 +571,10 @@ INITIALIZE
   line_info.neutron_passed=0;
   line_info.nb_reuses = line_info.nb_refl = line_info.nb_refl_count = 0;
   line_info.xs_compute= line_info.xs_reuse= line_info.xs_calls =0;
-  for (i=0; i< 9; i++) line_info.column_order[i] = (int)columns[i];
+  for (i=0; i< 9; i++) {
+    line_info.column_order[i] = (int)columns[i];
+    printf("column %i is %i\n",i,(int)columns[i]);
+  }
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
