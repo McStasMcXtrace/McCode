@@ -36,7 +36,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb32 "" -- deb
 
 export MCINSTALL_PREFIX=/usr/share/mcstas/$1/ncrystal/
-./mkdist mcstas-ncrystal $1 3rdparty-build/ncrystal "" deb32 "" -- deb
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb32 "" -- deb
 export MCINSTALL_PREFIX=/usr/share/
 
 
