@@ -168,7 +168,7 @@ codeblock_out(struct code_block *code)
     return;
   code_set_source(code->quoted_filename, code->linenum + 1);
   liter = list_iterate(code->lines);
-  while(line = list_next(liter))
+  while((line = list_next(liter)))
   {
     fprintf(output_handle, "%s", line);
     num_next_output_line++;
@@ -191,7 +191,7 @@ codeblock_out_brace(struct code_block *code)
   code_set_source(code->quoted_filename, code->linenum);
   cout("{");
   liter = list_iterate(code->lines);
-  while(line = list_next(liter))
+  while((line = list_next(liter)))
   {
     fprintf(output_handle, "%s", line);
     num_next_output_line++;
@@ -291,7 +291,7 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
     struct comp_iformal *c_formal;/* Name of component formal input parameter */
 
     liter = list_iterate(l);
-    while(c_formal = list_next(liter)) {
+    while((c_formal = list_next(liter))) {
       int flag_noconflict=1;
 
       if (!c_formal->id || !strlen(c_formal->id))
@@ -320,7 +320,7 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
               List_handle liter = list_iterate(l);
               struct comp_iformal *ci_formal=NULL;/* Name of component formal input parameter */
 
-              while(ci_formal = list_next(liter))
+              while((ci_formal = list_next(liter)))
                 if (!strcmp(c_formal->id, ci_formal->id)) {
                   flag_noconflict=0; break;
                 }
@@ -350,7 +350,7 @@ int var_in_list(List lst, struct comp_iformal* var) {
   List_handle liter;
   liter = list_iterate(lst);
   struct comp_iformal* lst_var;
-  while(lst_var = list_next(liter)) {
+  while((lst_var = list_next(liter))) {
     if (!strcmp(lst_var->id, var->id)) {
       retval = 1;
       break;
@@ -415,7 +415,7 @@ int cogen_comp_declare(struct comp_inst *comp)
     List_handle decliter;
     decliter = list_iterate(comp->def->decl_par);
     struct comp_iformal* declvar;
-    while(declvar = list_next(decliter)) {
+    while((declvar = list_next(decliter))) {
       list_add(new_out_pars, declvar);
     }
     list_iterate_end(decliter);
@@ -438,7 +438,7 @@ int cogen_comp_declare(struct comp_inst *comp)
           comp->def->name, index == 0 ? "setting" : "private");
 
         // write variable to comp struct
-        while(c_formal = list_next(liter))
+        while((c_formal = list_next(liter)))
         {
           nb_parameters++;
           if (c_formal->type == instr_type_custom) {
@@ -775,7 +775,7 @@ int cogen_comp_section_class(
 
             // loop pars
             piter = list_iterate(loopcomp->def->set_par);
-            while(par = list_next(piter)) {
+            while((par = list_next(piter))) {
               if (par->type == instr_type_symbol) {
                 entry = symtab_lookup(loopcomp->setpar, par->id);
                 val = exp_tostring(entry->val);
@@ -819,7 +819,7 @@ int cogen_comp_section_class(
       cout("");
       List_handle uservarsiter = list_iterate(instr->user_vars);
       char *var;
-      while(var = list_next(uservarsiter)) {
+      while((var = list_next(uservarsiter))) {
         coutf("  #define %s (_particle->%s)", var, var);
       }
       list_iterate_end(uservarsiter);
@@ -838,7 +838,7 @@ int cogen_comp_section_class(
 
       // define symbols for partilce USERVARS for extend section only:
       uservarsiter = list_iterate(instr->user_vars);
-      while(var = list_next(uservarsiter)) {
+      while((var = list_next(uservarsiter))) {
         coutf("  #undef %s", var);
       }
       list_iterate_end(uservarsiter);
@@ -953,7 +953,7 @@ void cogen_getparticlevar_fct(struct instr_def *instr)
   iter = list_iterate(instr->user_vars);
   char *varname;
 
-  while(varname = list_next(iter)) {
+  while((varname = list_next(iter))) {
     coutf("  if (!strcmp(token, \"%s\")) return (void *) &(p->%s);", varname, varname);
   }
   list_iterate_end(iter);
@@ -1007,7 +1007,7 @@ int cogen_decls(struct instr_def *instr)
   } else {
 
     liter = list_iterate(instr->formals);
-    while(i_formal = list_next(liter))
+    while((i_formal = list_next(liter)))
     {
       if (i_formal->id && strlen(i_formal->id)) {
         coutf("  %s %s;", instr_formal_type_names_real[i_formal->type], i_formal->id);
@@ -1037,7 +1037,7 @@ int cogen_decls(struct instr_def *instr)
     if (list_len(instr->grouplist)) {
       struct group_inst *group;
       liter = list_iterate(instr->grouplist);
-      while(group = list_next(liter))
+      while((group = list_next(liter)))
         coutf("  long Group_%s; /* equals index of scattering comp when in group */", group->name);
       list_iterate_end(liter);
     }
@@ -1047,7 +1047,7 @@ int cogen_decls(struct instr_def *instr)
         struct jump_struct *this_jump;
         List_handle liter2;
         liter2 = list_iterate(comp->jump);
-        while(this_jump = list_next(liter2)) {
+        while((this_jump = list_next(liter2))) {
           /* create counter for JUMP iteration */
           if (this_jump->iterate)
             coutf("  long Jump_%s_%s; /* the JUMP connection <from>_<to> */", comp->name, this_jump->target);
@@ -1090,7 +1090,7 @@ int cogen_decls(struct instr_def *instr)
   coutf("int numipar = %d;", numipar);
   coutf("struct mcinputtable_struct mcinputtable[] = {");
   liter = list_iterate(instr->formals);
-  while(i_formal = list_next(liter))
+  while((i_formal = list_next(liter)))
   {
     if (strlen(i_formal->id)) {
       if (i_formal->isoptional  // needed to avoid double quotes in strings
@@ -1112,7 +1112,7 @@ int cogen_decls(struct instr_def *instr)
   /* 4. Component SHAREs. */
   liter = list_iterate(instr->complist);
   index=0;
-  while(comp = list_next(liter))
+  while((comp = list_next(liter)))
   {
     if((list_len(comp->def->share_code->lines) > 0) && (!comp->def->flag_defined_share))
     {
@@ -1146,7 +1146,7 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   liter = list_iterate(instr->complist);
   index=0;
-  while(comp = list_next(liter)) {
+  while((comp = list_next(liter))) {
     comp->index=++index;        /* comp index starts at 1, as in instrument.y */
     // NOTE: "counter_instances" no longer matters, due to class functions
     comp->def->counter_instances++;
@@ -1497,7 +1497,7 @@ void def_uservars(struct instr_def *instr)
 {
   List_handle uservarsiter = list_iterate(instr->user_vars);
   char *var;
-  while(var = list_next(uservarsiter)) {
+  while((var = list_next(uservarsiter))) {
     coutf("#define %s (_particle->%s)", var, var);
   }
   list_iterate_end(uservarsiter);
@@ -1510,7 +1510,7 @@ void undef_uservars(struct instr_def *instr)
 {
   List_handle uservarsiter = list_iterate(instr->user_vars);
   char *var;
-  while(var = list_next(uservarsiter)) {
+  while((var = list_next(uservarsiter))) {
     coutf("#undef %s", var);
   }
   list_iterate_end(uservarsiter);
@@ -1605,7 +1605,7 @@ int cogen_raytrace(struct instr_def *instr)
       struct jump_struct *this_jump;
       List_handle liter2;
       liter2 = list_iterate(comp->jump);
-      while(this_jump = list_next(liter2)) {
+      while((this_jump = list_next(liter2))) {
         /* create counter for JUMP iteration */
         if (this_jump->iterate)
           coutf("  instrument->logic.Jump_%s_%s=0;", comp->name, this_jump->target);
@@ -1695,7 +1695,7 @@ int cogen_raytrace(struct instr_def *instr)
     if(list_len(comp->jump) > 0) {
       struct jump_struct *this_jump;
       List_handle literJ = list_iterate(comp->jump);
-      while(this_jump = list_next(literJ)) {
+      while((this_jump = list_next(literJ))) {
         char *exp = exp_tostring(this_jump->condition);
         /* as there will be a neutron->index++, we subtract 1 to the target */
         if (this_jump->iterate) {
@@ -2145,7 +2145,7 @@ cogen_header(struct instr_def *instr, char *output_name)
     liter2 = list_iterate(instr->user_vars_types);
     char *var;
     char *tpe;
-    while(var = list_next(liter)) {
+    while((var = list_next(liter))) {
       tpe = list_next(liter2);
       coutf("  %s %s;", tpe, var);
     }
@@ -2210,7 +2210,7 @@ cogen_header(struct instr_def *instr, char *output_name)
 #endif
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
-  while(var = list_next(liter)) {
+  while((var = list_next(liter))) {
     coutf("  if(!str_comp(\"%s\",name)){rval=*( (double *)(&(p->%s)) );s=0;}",var,var);
   }
   list_iterate_end(liter);
@@ -2226,7 +2226,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double rval=0;");
   cout("  switch(id){");
   int jvar=0;
-  while(var = list_next(liter)) {
+  while((var = list_next(liter))) {
     coutf("  case %d: { rval=*( (double *)(&(p->%s)) );s=0;break;}",jvar++,var);
   }
   cout("  }");
@@ -2343,7 +2343,7 @@ char varname_is_in_codeblock(struct code_block* code, char* varname) {
     char *comment_toend= NULL; /* this is the C++ style comment start (to end of line) */
 
     // iterate declare code
-    while(line = list_next(liter))
+    while((line = list_next(liter)))
     {
       char *subline = line;
       char *p       = NULL;
@@ -2369,7 +2369,7 @@ char varname_is_in_codeblock(struct code_block* code, char* varname) {
         for (p=comment_toend; p<line+strlen(line)-1; p++) *p=' ';
       }
 
-      while (p=strstr(subline, varname)) {
+      while ((p=strstr(subline, varname))) {
         /* the parameter name appears in code block */
         int char_before=0;
         int char_after=0;
@@ -2418,7 +2418,7 @@ int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
   liter2 = list_iterate(types);
   char *var;
   char *tpe;
-  while(var = list_next(liter)) {
+  while((var = list_next(liter))) {
     tpe = list_next(liter2);
 
     struct comp_iformal* cvar;
@@ -2462,7 +2462,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
   int len = -1;
   int ans = 0;
 
-  while(l = list_next(myiter)) {
+  while((l = list_next(myiter))) {
     do {
       // line must match this format
       pos = re_match("\\w[\\s\\w\\*]+\\s+\\**\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match general var decl pattern
@@ -2512,7 +2512,7 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
     List_handle liter;
     char *line;
     liter = list_iterate(code->lines);
-    while(line = list_next(liter))
+    while((line = list_next(liter)))
       if (strchr(line, '=')) warnings++;
     list_iterate_end(liter);
   }

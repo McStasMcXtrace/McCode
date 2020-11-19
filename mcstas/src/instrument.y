@@ -869,7 +869,7 @@ complist:   /* empty */
               struct comp_iformal *formal;
 
               liter = list_iterate($2->def->out_par);
-              while(par = list_next(liter)) {
+              while((par = list_next(liter))) {
                 if (!strcmp($2->name, par))
                   print_error("ERROR: Component instance name "
               "'%s' matches an internal OUTPUT parameter of component class %s at "
@@ -879,7 +879,7 @@ complist:   /* empty */
               list_iterate_end(liter);
 
               liter = list_iterate($2->def->set_par);
-              while(formal = list_next(liter)) {
+              while((formal = list_next(liter))) {
                 if (!strcmp($2->name, formal->id))
                   print_error("ERROR: Component instance name "
                   "'%s' matches an internal SETTING parameter of component class %s at "
@@ -889,7 +889,7 @@ complist:   /* empty */
               list_iterate_end(liter);
 
               liter = list_iterate($2->def->def_par);
-              while(formal = list_next(liter)) {
+              while((formal = list_next(liter))) {
                 if (!strcmp($2->name, formal->id))
                   print_error("ERROR: Component instance name "
                   "'%s' matches an internal DEFINITION parameter of component class %s at "
@@ -1375,7 +1375,7 @@ topatexp:   "PREVIOUS"
         if (instrument_definition->formals)
           liter = list_iterate(instrument_definition->formals);
         if (liter)
-        while(formal = list_next(liter))
+	          while((formal = list_next(liter)))
         {
           if($1 && formal->id && strcmp($1, "NULL") && !strcmp($1, formal->id))
           {
@@ -1830,7 +1830,7 @@ check_comp_formals(List deflist, List setlist, char *compname)
      symbol table is an error. */
   formals = symtab_create();
   liter = list_iterate(deflist);
-  while(formal = list_next(liter))
+  while((formal = list_next(liter)))
   {
     if (!formal->id || !strlen(formal->id))
       print_error("ERROR: Definition parameter name %s is empty (length=0) "
@@ -1844,7 +1844,7 @@ check_comp_formals(List deflist, List setlist, char *compname)
   }
   list_iterate_end(liter);
   liter = list_iterate(setlist);
-  while(formal = list_next(liter))
+  while((formal = list_next(liter)))
   {
     if (!formal->id || !strlen(formal->id))
       print_error("ERROR: Setting parameter name %s is empty (length=0) "
@@ -1873,7 +1873,7 @@ check_instrument_formals(List formallist, char *instrname)
   /* We check the uniqueness. Any formal parameter that already appears in the
      formal list is reported. */
   liter = list_iterate(formallist);
-  while(formal = list_next(liter)) {
+  while((formal = list_next(liter))) {
     if (!formal->id || !strlen(formal->id))
       continue;
       // print_error("ERROR: Instrument parameter name %s is empty (length=0) "
@@ -1884,7 +1884,7 @@ check_instrument_formals(List formallist, char *instrname)
         struct instr_formal *formal2;
 
         liter2 = list_iterate(formallist);
-        while(formal2 = list_next(liter2)) {
+        while((formal2 = list_next(liter2))) {
         	if (formal != formal2 && strlen(formal2->id) && !strcmp(formal->id, formal2->id)) {
         		strcpy(formal2->id, "");  /* unactivate recurrent previous definition */
         		if (verbose) print_warn(NULL, "Instrument parameter name %s is used multiple times "
@@ -1921,7 +1921,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
 
   /* definition parameters */
   liter = list_iterate(comp->def->def_par);
-  while(formal = list_next(liter))
+  while((formal = list_next(liter)))
   {
     entry = symtab_lookup(actuals, formal->id);
     if(entry == NULL)
@@ -1956,7 +1956,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
 
   /* setting parameters */
   liter = list_iterate(comp->def->set_par);
-  while(formal = list_next(liter))
+  while((formal = list_next(liter)))
   {
     entry = symtab_lookup(actuals, formal->id);
     if(entry == NULL)
@@ -1979,7 +1979,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
 
   /* Now check the actual parameters one by one. */
   siter = symtab_iterate(actuals);
-  while(entry = symtab_next(siter))
+  while((entry = symtab_next(siter)))
   {
     if(symtab_lookup(defpar, entry->name) == NULL &&
        symtab_lookup(setpar, entry->name) == NULL)
@@ -1995,7 +1995,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       fprintf(stderr,"  Definition parameters: ");
       char misspelled[256];
       strcpy(misspelled, "");
-      while(entry2 = symtab_next(siter2)) {
+      while((entry2 = symtab_next(siter2))) {
         fprintf(stderr, "%s ", entry2->name);
         if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name)
          ||  strcasestr(entry->name, entry2->name)
@@ -2004,7 +2004,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       symtab_iterate_end(siter2);
       siter2 = symtab_iterate(setpar);
       fprintf(stderr,"\n  Setting parameters: ");
-      while(entry2 = symtab_next(siter2)) {
+      while((entry2 = symtab_next(siter2))) {
         fprintf(stderr, "%s ", entry2->name);
         if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name)
          ||  strcasestr(entry->name, entry2->name)
