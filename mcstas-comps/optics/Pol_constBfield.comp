@@ -21,14 +21,14 @@
 * flipper. A neutron hitting outside the box opening or the box sides
 * is absorbed.
 *
-* Example: Pol_constBfield(xwidth=0.1, yheight=0.1, length=0.2, fliplambda=5.0)
+* Example: Pol_constBfield(xwidth=0.1, yheight=0.1, zdepth=0.2, fliplambda=5.0)
 *
 * %P
 * INPUT PARAMETERS:
 *
 * xwidth: [m]     Width of opening
 * yheight: [m]    Height of opening
-* length: [m]     Length of field
+* zdepth: [m]     Length of field
 * B: [Gauss]      Magnetic field along y-direction
 * fliplambda: []  lambda for calculating B field
 * flipangle: []   Angle flipped for lambda = fliplambda fliplambda and flipangle overrides B so a neutron with s= (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =(cos(flipangle), sin(flipangle), 0) after the section.
@@ -41,7 +41,7 @@ DEFINE COMPONENT Pol_constBfield
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (xwidth, yheight, length, B=0, fliplambda=0, flipangle=180)
+SETTING PARAMETERS (xwidth, yheight, zdepth, B=0, fliplambda=0, flipangle=180)
 
 OUTPUT PARAMETERS(omegaL)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -72,9 +72,9 @@ INITIALIZE
 
   double velocity = 0, time = 0;
 
-  if ((xwidth<=0) || (yheight<=0) || (length<=0)) {
+  if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {
     fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
-	    "ERROR      (xwidth, yheight, length). Exiting\n",
+	    "ERROR      (xwidth, yheight, zdepth). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
@@ -85,7 +85,7 @@ INITIALIZE
 
   if(fliplambda>0){
     velocity = K2V*2*PI/fliplambda;
-    time = length/velocity;
+    time = zdepth/velocity;
 
     // omegaL*time = flipangle
     omegaL = flipangle*DEG2RAD/time;
@@ -107,7 +107,7 @@ TRACE
     ABSORB;
 
   // Time spent in B-field
-  deltaT = length/vz;
+  deltaT = zdepth/vz;
 
   // check that track goes throgh without hitting the walls
   if (!inside_rectangle(x+vx*deltaT, y+vy*deltaT, xwidth, yheight)) {
@@ -145,7 +145,7 @@ TRACE
 
 MCDISPLAY
 %{
-  box(0, 0, length/2, xwidth, yheight, length);
+  box(0, 0, zdepth/2, xwidth, yheight, zdepth);
 %}
 
 END
