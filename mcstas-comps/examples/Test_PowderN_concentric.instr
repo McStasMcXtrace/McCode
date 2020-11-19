@@ -73,7 +73,7 @@ EXTEND %{
 COMPONENT Pow = PowderN(radius=0.004, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.1)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
-  if(mcipdirectbeam == 0) {
+  if(INSTRUMENT_GETPAR(directbeam) == 0) {
     if (!SCATTERED) {
       ABSORB;
     }
