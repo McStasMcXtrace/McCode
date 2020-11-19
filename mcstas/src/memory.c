@@ -197,7 +197,7 @@ pool_free(Pool p)
   void *mem;
 
   liter = list_iterate(p->list);
-  while(mem = list_next(liter))
+  while((mem = list_next(liter)))
   {
     memfree(mem);
   }

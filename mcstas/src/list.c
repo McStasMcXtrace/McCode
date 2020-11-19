@@ -195,7 +195,7 @@ List list_cat(List l1, List l2)
   List_handle liter;
   void*       litem;
   liter = list_iterate(l2);
-  while(litem = list_next(liter))
+  while((litem = list_next(liter)))
     list_add(l1, litem);
   list_iterate_end(liter);
   return(l1);
