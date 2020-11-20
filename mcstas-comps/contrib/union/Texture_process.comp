@@ -1959,7 +1959,7 @@ struct Texture_physics_storage_struct {
 // Function for calculating my, the inverse penetration depth (for only this scattering process).
 // The input for this function and its order may not be changed, but the names may be updated.
 int Texture_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer,
-                       struct focus_data_struct *focus_data)
+                       struct focus_data_struct *focus_data, _class_particle *_particle)
 {
   int i, is;
   // k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] (wavevector)
@@ -2056,7 +2056,7 @@ int Texture_physics_my(double *my, double *k_initial, union data_transfer_union 
 // Function that provides description of a basic scattering event.
 int Texture_physics_scattering(double *k_final, double *k_initial, double *weight,
                                union data_transfer_union data_transfer, 
-                               struct focus_data_struct *focus_data)
+                               struct focus_data_struct *focus_data, _class_particle *_particle)
 {
   int i, is, j, num_hkl_scatt;                        
   double r, sum, accum, *cumProb_hkl; /* Locals */

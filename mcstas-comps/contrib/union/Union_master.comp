@@ -60,12 +60,6 @@ SETTING PARAMETERS(verbal = 1,
                    inherit_number_of_scattering_events=0,
                    record_absorption=0,
                    string init="init")
-/*
-OUTPUT PARAMETERS (global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Volume_copies, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, k_old, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterator, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, this_abs_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, abs_logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index, starting_volume_warning, iterator, non_isotropic_found, number_of_process_interacts_set, total_process_interact, index_of_lacking_process, log_index, mask_check, mask_start, wavevector, wavevector_rotated, k_rotated, ray_velocity_rotated, ray_sucseeded, r_old, initial_weight, abs_weight_factor)
-*/
-/*
-OUTPUT PARAMETERS (global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Volume_copies, Geometries, starting_lists, error_msg, component_error_msg, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterator, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, this_abs_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, abs_logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index, starting_volume_warning, iterator, non_isotropic_found, number_of_process_interacts_set, total_process_interact, index_of_lacking_process, log_index, mask_check, mask_start, wavevector, wavevector_rotated, ray_velocity_rotated, ray_sucseeded, initial_weight, abs_weight_factor)
-*/
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/share/"
 
@@ -97,20 +91,7 @@ struct abs_logger_with_data_struct abs_loggers_with_data_array;
 
 DECLARE
 %{
-  // Unpack global lists
-  /*
-  struct global_positions_to_transform_list_master_struct *global_positions_to_transform_list_master = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list_master);
-  struct global_rotations_to_transform_list_master_struct *global_rotations_to_transform_list_master = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list_master);
-  struct pointer_to_global_process_list_master *global_process_list_master = COMP_GETPAR3(Union_init, init, global_process_list_master);
-  struct pointer_to_global_material_list_master *global_material_list_master = COMP_GETPAR3(Union_init, init, global_material_list_master);
-  struct pointer_to_global_geometry_list_master *global_geometry_list_master = COMP_GETPAR3(Union_init, init, global_geometry_list_master);
-  struct pointer_to_global_logger_list *global_all_volume_logger_list_master = COMP_GETPAR3(Union_init, init, global_all_volume_logger_list_master);
-  struct pointer_to_global_logger_list *global_specific_volumes_logger_list_master = COMP_GETPAR3(Union_init, init, global_specific_volumes_logger_list_master);
-  struct pointer_to_global_abs_logger_list *global_all_volume_abs_logger_list_master = COMP_GETPAR3(Union_init, init, global_all_volume_abs_logger_list_master);
-  struct pointer_to_global_abs_logger_list *global_specific_volumes_abs_logger_list_master = COMP_GETPAR3(Union_init, init, global_specific_volumes_abs_logger_list_master);
-  struct global_tagging_conditional_list_master_struct *global_tagging_conditional_list_master = COMP_GETPAR3(Union_init, init, global_tagging_conditional_list_master);
-  struct pointer_to_global_master_list_master *global_master_list_master = COMP_GETPAR3(Union_init, init, global_master_list_master);
-  */
+  // Declare global lists, will be retrieved in INITIALIZE
   struct global_positions_to_transform_list_struct *global_positions_to_transform_list_master;
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list_master;
   struct pointer_to_global_process_list *global_process_list_master;
@@ -1113,8 +1094,11 @@ TRACE
   
   // Check if the ray appeared in an allowed starting volume, unless this check is disabled by the user for advanced cases
   if (allow_inside_start == 0 && starting_lists.allowed_starting_volume_logic_list.elements[current_volume] == 0) {
-    printf("ERROR, ray ''teleported'' into Union component %s, if intentional, set allow_inside_start=1\n",NAME_CURRENT_COMP);
+    printf("ERROR, ray ''teleported'' into Union component %s, if intentional, set allow_inside_start=1\n", NAME_CURRENT_COMP);
+    #ifndef OPENACC
+    // NEED ERROR FLAG: Need to set an error flag that is read in finally to warn user of problem.
     exit(1);
+    #endif
   }
   // Warn the user that rays have appeared inside a volume instead of outside as expected
   if (starting_volume_warning == 0 && current_volume != 0) {
@@ -1127,11 +1111,13 @@ TRACE
   // Rays can still follow the nodes created before even when no additional nodes are created, but if a situation that
   //  requires a new node is encountered, stop_tagging_ray is set to 1, stopping further tagging and preventing the data
   //  for that ray to be used further.
+  #ifndef OPENACC
   if (enable_tagging) {
     current_tagging_node = master_tagging_node_list.elements[current_volume];
     stop_tagging_ray = 0; // Allow this ray to be tracked
     if (tagging_leaf_counter > history_limit) stop_creating_nodes = 1;
   }
+  #endif
   
   #ifdef Union_trace_verbal_setting
     if (enable_tagging) printf("current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
@@ -1391,7 +1377,7 @@ TRACE
               process = &Volumes[current_volume]->p_physics->p_scattering_array[p_index];
               
               int physics_output;
-              physics_output = physics_my(process->eProcess, p_my_trace, k_rotated, process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index]);
+              physics_output = physics_my(process->eProcess, p_my_trace, k_rotated, process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index], _particle);
 
               
               my_sum += *p_my_trace;
@@ -1666,7 +1652,7 @@ TRACE
             // CPU Only
             //if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
             // GPU Version with flexible function
-            if (0 == physics_scattering(process->eProcess, k_new, k, &p, process->data_transfer, &Volumes[current_volume]->geometry.focus_data_array.elements[0])) {
+            if (0 == physics_scattering(process->eProcess, k_new, k, &p, process->data_transfer, &Volumes[current_volume]->geometry.focus_data_array.elements[0], _particle)) {
               /*
               // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
               // It can arise from need to simplify sampling process and end up in cases where weight factor is 0, and the ray should be absorbed in these cases
@@ -1752,16 +1738,22 @@ TRACE
               printf("SCATTERED SUCSSESFULLY \n");
               printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
             
+              #ifndef OPENACC
               if (enable_tagging && stop_tagging_ray == 0) printf("Before new process node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
               if (enable_tagging && stop_tagging_ray == 0) printf("Before new process node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+              #endif
             #endif
             
+            #ifndef OPENACC
             if (enable_tagging && stop_tagging_ray == 0)
                 current_tagging_node = goto_process_node(current_tagging_node,selected_process,Volumes[current_volume],&stop_tagging_ray,stop_creating_nodes);
+            #endif
             
             #ifdef Union_trace_verbal_setting
+              #ifndef OPENACC
               if (enable_tagging && stop_tagging_ray == 0) printf("After new process node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
               if (enable_tagging && stop_tagging_ray == 0) printf("After new process node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+              #endif
             #endif
             
         } else {
@@ -1814,18 +1806,24 @@ TRACE
                 }
 
                 #ifdef Union_trace_verbal_setting
+                  #ifndef OPENACC
                   if (enable_tagging) printf("tree method moves from %d to %d\n",current_volume,tree_next_volume);
                 
                   if (enable_tagging && stop_tagging_ray == 0) printf("Before new tree volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
                   if (enable_tagging && stop_tagging_ray == 0) printf("Before new tree volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                  #endif
                 #endif
                 
+                #ifndef OPENACC
                 if (enable_tagging && stop_tagging_ray == 0)
                     current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                #endif
                 
                 #ifdef Union_trace_verbal_setting
+                  #ifndef OPENACC
                   if (enable_tagging && stop_tagging_ray == 0) printf("After new tree volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
                   if (enable_tagging && stop_tagging_ray == 0) printf("After new tree volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                  #endif
                 #endif
                 
                 // Set next volume to the solution found in the tree method
@@ -1851,8 +1849,10 @@ TRACE
                 
             } else {
                 #ifdef Union_trace_verbal_setting
+                  #ifndef OPENACC
                   if (enable_tagging && stop_tagging_ray == 0) printf("Before new intersection volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
                   if (enable_tagging && stop_tagging_ray == 0) printf("Before new intersection volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                  #endif
                 #endif
             
                 //if (enable_tagging) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, min_volume, Volumes);
@@ -1870,7 +1870,9 @@ TRACE
                   #ifdef Union_trace_verbal_setting
                     printf("Min volume is not a mask, next volume = min volume\n");
                   #endif
+                  #ifndef OPENACC
                   if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, min_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                  #endif
                   current_volume = min_volume;
                   //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
                 } else {
@@ -1936,7 +1938,9 @@ TRACE
                           #ifdef Union_trace_verbal_setting
                             printf("The method found the next tree volume to be %d\n",tree_next_volume);
                           #endif
+                          #ifndef OPENACC
                           if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                          #endif
                           current_volume = tree_next_volume;
                           //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
                         } else {
@@ -1947,7 +1951,9 @@ TRACE
                           ray_velocity = coords_set(vx,vy,vz);
                           tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                         // } Bug fixed on 27/11/2016
+                          #ifndef OPENACC
                           if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                          #endif
                           current_volume = tree_next_volume;
                           #ifdef Union_trace_verbal_setting
                             printf("Set new new volume to %d\n",tree_next_volume);
@@ -1975,7 +1981,9 @@ TRACE
                     if (tree_next_volume != 0) {
                       if (Volumes[tree_next_volume]->geometry.priority_value > Volumes[current_volume]->geometry.priority_value) {
                         // In case the current volume has a higher priority, nothing happens, otherwise change current volume
+                        #ifndef OPENACC
                         if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                        #endif
                         current_volume = tree_next_volume;
                       }
                     }
@@ -1988,9 +1996,10 @@ TRACE
                 #ifdef Union_trace_verbal_setting
                   print_1d_int_list(mask_status_list,"Updated mask status list");
                   print_1d_int_list(current_mask_intersect_list_status,"Updated current_mask_intersect_list_status");
-                
+                  #ifndef OPENACC
                   if (enable_tagging) printf("After new intersection volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
                   if (enable_tagging) printf("After new intersection volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                  #endif
                 #endif
                 
             }
@@ -2013,7 +2022,9 @@ TRACE
         // Record final position here and write to file
         MPI_MASTER(
             //if (record_absorption == 1 && abs_weight_factor < 1.0) record_abs_to_file(r_old, time_old, r, t, initial_weight*(1.0-abs_weight_factor), current_volume, mcget_run_num(), &absorption_index, absorption_event_data);
+            #ifndef OPENACC
             if (record_absorption == 1) record_abs_to_file(r_old, time_old, r, t, initial_weight*(1.0-abs_weight_factor), current_volume, mcget_run_num(), &absorption_index, absorption_event_data);
+            #endif
         );
         
     } else { // Here because a shortest time is not found
@@ -2053,7 +2064,10 @@ TRACE
             
             if (component_error_msg > 100) {
                 printf("To many errors encountered, exiting. \n");
+                #ifndef OPENACC
+                // need ERROR FLAG to be read in finally which can warn the user of problems!
                 exit(1);
+                #endif
             }
         }
     }
@@ -2288,9 +2302,11 @@ if (enable_tagging) {
 }
 if (master_tagging_node_list.num_elements > 0) free(master_tagging_node_list.elements);
 
+#ifndef OPENACC
 MPI_MASTER(
   if (record_absorption == 1) write_events_to_file(absorption_index, absorption_event_data);
 );
+#endif
 
 
 if (finally_verbal) printf("Freeing variables which are always allocated \n");

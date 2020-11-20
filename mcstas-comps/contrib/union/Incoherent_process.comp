@@ -81,13 +81,13 @@ struct Incoherent_physics_storage_struct{
 };
 
 // Function for calculating my in Incoherent case
-int Incoherent_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int Incoherent_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
     *my = data_transfer.pointer_to_a_Incoherent_physics_storage_struct->my_scattering;
     return 1;
 };
 
 // Function for basic incoherent scattering event
-int Incoherent_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int Incoherent_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
 
     //New version of incoherent scattering
     double k_length = sqrt(k_initial[0]*k_initial[0]+k_initial[1]*k_initial[1]+k_initial[2]*k_initial[2]);
