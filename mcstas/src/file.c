@@ -118,7 +118,7 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
   if(search_list != NULL)
   {
     liter = list_iterate(search_list);
-    while(dir = list_next(liter))
+    while((dir = list_next(liter)))
     {
       f = (*try_open)(dir, name);
       if(f != NULL)

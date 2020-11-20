@@ -16,6 +16,7 @@
 // -------------    Definition of data structures   ---------------------------------------------
 // GPU
 enum shape {
+  surroundings,
   box,
   sphere,
   cylinder,
@@ -478,11 +479,11 @@ Rotation rotation_matrix;      // rotation matrix of process, reported by compon
 union data_transfer_union data_transfer; // The way to reach the storage space allocated for this process (see examples in process.comp files)
 
 // probability_for_scattering_functions calculates this probability given k_i and parameters
-int (*probability_for_scattering_function)(double*,double*,union data_transfer_union,struct focus_data_struct*);
+int (*probability_for_scattering_function)(double*,double*,union data_transfer_union,struct focus_data_struct*, _class_particle _particle);
 //                                         prop,   k_i,   ,parameters               , focus data / function
 
 // A scattering_function takes k_i and parameters, returns k_f
-int (*scattering_function)(double*,double*,double*,union data_transfer_union,struct focus_data_struct*);
+int (*scattering_function)(double*,double*,double*,union data_transfer_union,struct focus_data_struct*, _class_particle _particle);
 //                         k_f,    k_i,    weight, parameters               , focus data / function
 };
 
@@ -2212,6 +2213,167 @@ int within_which_volume(Coords pos, struct pointer_to_1d_int_list input_list, st
     //printf("residing volume returned %d\n",residing_volume);
     return residing_volume;
 };
+
+int within_which_volume_GPU(Coords pos, struct pointer_to_1d_int_list input_list, struct pointer_to_1d_int_list destinations_list, struct Volume_struct **Volumes, struct pointer_to_1d_int_list *mask_status_list, int number_of_volumes, int *volume_logic_copy, int *ListA, int *ListB) {
+    // This function identifies in which of the volumes of the input list the position pos lies in.
+    // pos: position for which the current volume should be found for
+    // input list: list of potential volumes, reduced to the ones without parents (their children will be checked)
+    // OLD VERSION: volume logic: A logic list of allowed volumes for lookup, volume 1 3 and 5 in a case of 10 volumes would be [0 1 0 1 0 1 0 0 0 0]
+    // destinations_list: list of allowed destinations (the original destinations list)
+    // Volumes: Main volumes array
+    // volume_logic_copy: A pointer to a integer array with at least length "number_of_volumes" (pre alocated for speed)
+    // ListA: A pointer to a integer array with at least length "number_of_volumes" (pre alocated for speed)
+    // ListB: A pointer to a integer array with at least length "number_of_volumes" (pre alocated for speed)
+    
+    // Algorithm description
+    // Check all of input list for pos being within them, those that have it within them are:
+    //      checked against the current highest priority
+    //          if higher, is the new highest priority and the new pick for volume
+    //      have all their direct children added to the next list to be checked (but any volume can only be added to that list once)
+    // Once a run have been made where the next list to check is empty, the answer for new pick for volume is taken.
+    
+    // Mask update:
+    // Algorithm description
+    // Check all of input list for pos being within them, those that have it within them are:
+    //      checked against the current highest priority and mask status
+    //          if higher, this is the new highest priority and the new pick for volume
+    //      have all their direct children added to the next list to be checked (but any volume can only be added to that list once)
+    // Once a run have been made where the next list to check is empty, the answer for new pick for volume is taken.
+    
+    // The advantage of the method is that potentially large numbers of children are skipped when their parents do not contain the position.
+    // The overhead cost is low, as all the lists are prealocated.
+    // Should be checked which of the two implementations is faster, as this is much more complicated than simply checking all possibilities.
+    // No within_function call should be made twice, as the same volume number will not be checked twice because of the properties of the direct_children list and the volume_logic that removes duplicates on each level.
+    
+    
+    // This function uses too much memory, the memory required for the volume logic list is n_volumes^2 ints, or for a MACS monochromator 127000 ints.
+    // Instead the original destinations list must be used, and a function for quick lookup in a (sorted) destinations list made.
+    // Still need a list of n_volumes length for control to avoid adding the same volume to the list twice.
+    
+    
+    int ListA_length=0,ListB_length=0;
+    int done = 0;
+    int i,direct_children_index;
+    int *temp_pointer;
+    double max_priority=-1000000;
+    int residing_volume=0; // 0 can be removed from the input list if default is 0
+    int this_mask_status,mask_index,mask_global_index;
+    
+    // volume_logic_copy
+    //for (i=0;i<volume_logic.num_elements;i++) volume_logic_copy[i] = volume_logic.elements[i];
+    
+    // low memory version of volume_logic_copy
+    for (i=0;i<number_of_volumes;i++) volume_logic_copy[i] = 0;
+    for (i=0;i<destinations_list.num_elements;i++) volume_logic_copy[destinations_list.elements[i]] = 1;
+    //printf("within_which_volume debug\n");
+
+    // Does one loop through the algorithm first to set up ListA instead of copying it from input_list, which takes time
+    for (i=0;i<input_list.num_elements;i++) {
+            if (r_within_function(pos, &Volumes[input_list.elements[i]]->geometry) == 1) {
+                //printf("The position is inside of volume %d\n",input_list.elements[i]);
+                if (Volumes[input_list.elements[i]]->geometry.is_masked_volume == 1) {
+                    // if the volume is masked, I need to know if it can be a destination volume from the mask_status_list.
+                    // if the masked volume is in ANY mode,
+                    this_mask_status=1;
+                    //print_1d_int_list(*mask_status_list,"mask status list from within_which_volume");
+                    for (mask_index=0;mask_index<Volumes[input_list.elements[i]]->geometry.masked_by_mask_index_list.num_elements;mask_index++) {
+                        //printf("Looking at the mask with global index %d \n",Volumes[input_list.elements[i]]->geometry.masked_by_mask_index_list.elements[mask_index]);
+                        if (mask_status_list->elements[Volumes[input_list.elements[i]]->geometry.masked_by_mask_index_list.elements[mask_index]] == 1) {
+                            if (Volumes[input_list.elements[i]]->geometry.mask_mode == 2) { // ANY (break if any one in)
+                                this_mask_status=1;
+                                break;
+                            }
+                            //printf("global index %d had mask status = 1 \n",Volumes[input_list.elements[i]]->geometry.masked_by_mask_index_list.elements[mask_index]);
+                        } else {
+                          //printf("global index %d had mask status = 0 \n",Volumes[input_list.elements[i]]->geometry.masked_by_mask_index_list.elements[mask_index]);
+                          this_mask_status = 0;
+                          if(Volumes[input_list.elements[i]]->geometry.mask_mode == 1) break; // ALL (break if any one out)
+                        }
+                    }
+                    //printf("This volume is masked, and the mask status is %d\n",this_mask_status);
+                } else this_mask_status = 1; // if the volume is not masked
+            
+                if (Volumes[input_list.elements[i]]->geometry.priority_value > max_priority && this_mask_status == 1) {
+                    max_priority = Volumes[input_list.elements[i]]->geometry.priority_value;
+                    residing_volume = input_list.elements[i];
+                    //printf("residing volume set to %d\n",residing_volume);
+                }
+                    for (direct_children_index = 0;direct_children_index < Volumes[input_list.elements[i]]->geometry.direct_children.num_elements;direct_children_index++) {
+                        if (volume_logic_copy[Volumes[input_list.elements[i]]->geometry.direct_children.elements[direct_children_index]] == 1) {
+                            ListA[ListA_length++] = Volumes[input_list.elements[i]]->geometry.direct_children.elements[direct_children_index];
+                            volume_logic_copy[Volumes[input_list.elements[i]]->geometry.direct_children.elements[direct_children_index]] = 0;
+                        }
+                    }
+            }
+    }
+    //printf("Completed first loop, continued in while loop\n");
+    if (ListA_length > 0) {
+        while (done == 0) {
+            for (i=0;i<ListA_length;i++) {
+              //printf("checking element number %d of list A which is volume number %d \n",i,ListA[i]);
+                if (r_within_function(pos,&Volumes[ListA[i]]->geometry) == 1) {
+                  //printf("ray was inside this volume \n");
+                    if (Volumes[ListA[i]]->geometry.is_masked_volume == 1) {
+                      //printf("it is a mask and thus need check of mask status \n");
+                        // if the volume is masked, I need to know if it can be a destination volume from the mask_status_list.
+                        // if the masked volume is in ANY mode,
+                        this_mask_status=1;
+                        for (mask_index=0;mask_index<Volumes[ListA[i]]->geometry.masked_by_mask_index_list.num_elements;mask_index++) {
+                            if (mask_status_list->elements[Volumes[ListA[i]]->geometry.masked_by_mask_index_list.elements[mask_index]] == 1) {
+                                if (Volumes[ListA[i]]->geometry.mask_mode == 2) { // ANY (break if any one in)
+                                    this_mask_status=1;
+                                    break;
+                                }
+                            } else {
+                              this_mask_status = 0;
+                              if(Volumes[ListA[i]]->geometry.mask_mode == 1) break; // ALL (break if any one out)
+                            }
+                        }
+                    } else this_mask_status = 1;
+                    //printf("the mask status is %d \n",this_mask_status);
+                    if (Volumes[ListA[i]]->geometry.priority_value > max_priority && this_mask_status == 1) {
+                        max_priority = Volumes[ListA[i]]->geometry.priority_value;
+                        residing_volume = ListA[i];
+                    }
+                    //printf("Adding direct children to list B \n");
+                        for (direct_children_index = 0;direct_children_index < Volumes[ListA[i]]->geometry.direct_children.num_elements;direct_children_index++) {
+                            //printf("Checking direct_child number %d which is %d \n",direct_children_index,Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index]);
+                            if (volume_logic_copy[Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index]] == 1) {
+                                //printf("It's volume_logic was 1, and it is thus added to listB with index %d \n",ListB_length);
+                                ListB[ListB_length++] = Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index];
+                                volume_logic_copy[Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index]] = 0;
+                            }
+                        }
+                    //printf("List B is now: ");
+                    //for (direct_children_index=0;direct_children_index<ListB_length;direct_children_index++) printf("%d ",ListB[direct_children_index]);
+                    //printf("\n");
+                    
+                    
+                }
+            }
+            if (ListB_length==0) done = 1;
+            else {
+                
+                for (i=0;i<ListB_length;i++) ListA[i] = ListB[i];
+                ListA_length = ListB_length;
+                ListB_length = 0;
+                
+                /*
+                // Could do this with pointers instead to avoid this for loop (and needless copy)
+                // This code block fails on the cluster in rare circumstances
+                ListA = temp_pointer;
+                ListA = ListB;
+                ListB = temp_pointer;
+                ListA_length=ListB_length;
+                ListB_length=0;
+                */
+            }
+        }
+    }
+    //printf("residing volume returned %d\n",residing_volume);
+    return residing_volume;
+};
+
 
 
 
@@ -4328,7 +4490,6 @@ void initialize_absorption_file() {
   
   fclose(fp);
 }
-
 
 void write_events_to_file(int last_index, struct abs_event *events) {
 

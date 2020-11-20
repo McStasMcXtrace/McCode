@@ -221,7 +221,7 @@ Symtab symtab_cat(Symtab st1, Symtab st2)
   Symtab_handle siter;
   struct Symtab_entry *sitem;
   siter = symtab_iterate(st2);
-  while(sitem = symtab_next(siter))
+  while((sitem = symtab_next(siter)))
     symtab_add(st1, sitem->name, sitem->val);
   symtab_iterate_end(siter);
   return(st1);

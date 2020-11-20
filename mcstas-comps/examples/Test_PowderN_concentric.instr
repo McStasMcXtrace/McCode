@@ -14,8 +14,10 @@
 * %Description
 * A test instrument for PowderN output on a spherical monitor.
 *
-* %Example: lambda=1 Detector: Sph_mon_I=1.02724e+09
-* %Example: lambda=1 d_phi=10 Detector: Sph_mon_I=1.0119e+08
+* %Example: lambda=1 Detector: Sph_sum_I=4.93378e+09
+* %Example: lambda=1 Detector: Sph_front_I=3.35878e+08
+* %Example: lambda=1 Detector: Sph_sample_I=7.28574e+08
+* %Example: lambda=1 Detector: Sph_back_I=2.73695e+08
 *
 * %Parameters
 * lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
@@ -29,9 +31,12 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN_concentric(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0, frac_i=0.01, frac_t=0.8, d_phi=0)
+DEFINE INSTRUMENT Test_PowderN_concentric(lambda=1, L1=10, int directbeam=1, string reflections="Fe.laz", int SPLITS=1)
 
-DECLARE %{
+USERVARS %{
+  double Sp0;
+  double Sp1;
+  double Sp2;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -58,13 +63,14 @@ REMOVABLE COMPONENT Source = Source_gen(
 SPLIT SPLITS COMPONENT sample_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
 
-COMPONENT Pow0 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.8, d_phi=0, concentric=1)
+COMPONENT Pow0 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.5, d_phi=0, concentric=1)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
+  if (SCATTERED) Sp0=1;
 %}
 
 
-COMPONENT Pow = PowderN(radius=0.004, yheight=0.1, reflections=reflections, p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c, d_phi=d_phi)
+COMPONENT Pow = PowderN(radius=0.004, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.1)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
   if(INSTRUMENT_GETPAR(directbeam) == 0) {
@@ -72,15 +78,26 @@ EXTEND %{
       ABSORB;
     }
   }
+  if (SCATTERED) Sp1=1;
 %}
 
 COMPONENT Pow2 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.8, d_phi=0, concentric=0)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
+  if (SCATTERED) Sp2=1;
 %}
 
-COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sphere")
+COMPONENT Sph_sum = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sum")
   AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Sph_front = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Front")
+  WHEN(Sp0==1) AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Sph_sample = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sample")
+  WHEN(Sp1==1) AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Sph_back = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Back")
+  WHEN(Sp2==1) AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* The END token marks the instrument definition end */
 END

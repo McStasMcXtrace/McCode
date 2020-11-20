@@ -154,7 +154,7 @@ double numerical_integral_AF_HB_1D(double *k_initial,struct physical_constants_A
 
 // Function for calculating my, the inverse penetration depth (for only this scattering process).
 // The input for this function and its order may not be changed, but the names may be updated.
-int AF_HB_1D_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int AF_HB_1D_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
     // *k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] which describes the wavevector
 
     struct physical_constants_AF_HB_1D *p_constants = &data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->physical_constants;
@@ -174,7 +174,7 @@ int AF_HB_1D_physics_my(double *my, double *k_initial, union data_transfer_union
 
 // Function that provides description of a basic scattering event.
 // Do not change the
-int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
     
     // Unpack the physical constants struct
     struct physical_constants_AF_HB_1D *p_constants = &data_transfer.pointer_to_a_AF_HB_1D_physics_storage_struct->physical_constants;
