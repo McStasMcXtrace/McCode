@@ -123,7 +123,11 @@ DECLARE %{
   double IN15_nu      = 0;
   double  D22_nu      = 0;
 
-  double flag         = 0;
+%}
+
+USERVARS
+%{
+  int flag;
 %}
 
 INITIALIZE %{
