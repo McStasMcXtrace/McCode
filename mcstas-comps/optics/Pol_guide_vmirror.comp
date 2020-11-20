@@ -68,7 +68,7 @@ SETTING PARAMETERS (
   vector rUpPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   vector rDownPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   vector rPar={1.0, 0.0219, 4.07, 3.2, 0.003},
-  string rData="",rUpData="",rDownData="",
+  string rData="",string rUpData="",string rDownData="",
   xwidth, yheight, length,
   int debug=0)
 OUTPUT PARAMETERS (localG,
@@ -111,7 +111,7 @@ DECLARE
 
 INITIALIZE
 %{
-  if (strlen(rData) && strcmp(rData)){
+  if (strlen(rData) && strcmp(rData,"NULL")){
     if (Table_Read(&rTable, rData, 1) <= 0) {
       fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
           NAME_CURRENT_COMP, rPar);
@@ -121,7 +121,7 @@ INITIALIZE
   }else{
     rTableFlag=0;
   }
-  if (strlen(rUpData) && strcmp(rUpData)){
+  if (strlen(rUpData) && strcmp(rUpData,"NULL")){
     if (Table_Read(&rUpTable, rUpData, 1) <= 0) {
       fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
           NAME_CURRENT_COMP, rUpPar);
@@ -131,7 +131,7 @@ INITIALIZE
   }else {
     rDownTableFlag=0;
   }
-  if (strlen(rDownData) && strcmp(rDownData)){
+  if (strlen(rDownData) && strcmp(rDownData,"NULL")){
     if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
       fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
           NAME_CURRENT_COMP, rDownPar);
@@ -359,7 +359,7 @@ TRACE
       if(rTableFlag){
         refWeight=Table_Value(rTable, Q, 1);
       }else{
-        StdReflecFunc(fabs(Q), rParPtr, &refWeight);
+        StdReflecFunc(fabs(Q), rPar, &refWeight);
       }
       p *= refWeight;
 
@@ -371,14 +371,14 @@ TRACE
       if(rUpTableFlag){
         Rup=Table_Value(rUpTable,Q,1);
       }else{
-        StdReflecFunc(fabs(Q), rUpParPtr, &Rup);
+        StdReflecFunc(fabs(Q), rUpPar, &Rup);
       }
       // NOTE: changed from defpars version
       //rDownFunc(fabs(Q), rDownParPtr, &Rdown);
       if(rDownTableFlag){
         Rdown=Table_Value(rDownTable,Q,1);
       }else{
-        StdReflecFunc(fabs(Q), rDownParPtr, &Rdown);
+        StdReflecFunc(fabs(Q), rDownPar, &Rdown);
       }
 
       if (Rup <  0)   ABSORB;
