@@ -3791,9 +3791,11 @@ int intersect_function(double *t,int *num_solutions,double *r,double *v,struct g
         case cone:
             output = sample_cone_intersect(t, num_solutions, r, v, geometry);
             break;
+        #ifndef OPENACC
         case mesh:
             output = sample_mesh_intersect(t, num_solutions, r, v, geometry);
             break;
+        #endif
         default:
             printf("Intersection function: No matching geometry found!");
             break;
@@ -3821,9 +3823,11 @@ int r_within_function(Coords pos,struct geometry_struct *geometry) {
         case cone:
             output = r_within_cone(pos, geometry);
             break;
+        #ifndef OPENACC
         case mesh:
             output = r_within_mesh(pos, geometry);
             break;
+        #endif
         case surroundings:
             output = 1;
             break;

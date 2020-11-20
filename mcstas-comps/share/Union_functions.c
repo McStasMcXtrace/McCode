@@ -479,11 +479,11 @@ Rotation rotation_matrix;      // rotation matrix of process, reported by compon
 union data_transfer_union data_transfer; // The way to reach the storage space allocated for this process (see examples in process.comp files)
 
 // probability_for_scattering_functions calculates this probability given k_i and parameters
-int (*probability_for_scattering_function)(double*,double*,union data_transfer_union,struct focus_data_struct*);
+int (*probability_for_scattering_function)(double*,double*,union data_transfer_union,struct focus_data_struct*, _class_particle _particle);
 //                                         prop,   k_i,   ,parameters               , focus data / function
 
 // A scattering_function takes k_i and parameters, returns k_f
-int (*scattering_function)(double*,double*,double*,union data_transfer_union,struct focus_data_struct*);
+int (*scattering_function)(double*,double*,double*,union data_transfer_union,struct focus_data_struct*, _class_particle _particle);
 //                         k_f,    k_i,    weight, parameters               , focus data / function
 };
 
@@ -4490,7 +4490,6 @@ void initialize_absorption_file() {
   
   fclose(fp);
 }
-
 
 void write_events_to_file(int last_index, struct abs_event *events) {
 

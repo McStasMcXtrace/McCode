@@ -407,7 +407,7 @@ int Powder_physics_initialize(union data_transfer_union data_transfer) {
 };
 
 // Function for calculating my in a test case.
-int Powder_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int Powder_physics_my(double *my,double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
     //*my = data_transfer.pointer_to_a_Powder_physics_storage_struct->my_scattering;
     
     
@@ -495,7 +495,7 @@ int Powder_physics_my(double *my,double *k_initial, union data_transfer_union da
 };
 
 // Function that provides a basic nonuniform elastic scattering. Unphysical for testing purposes.
-int Powder_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
+int Powder_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
 
     // This component need to write to its storage transfer for each event, is that possible with this structure?
     struct line_info_struct_union *line_info = data_transfer.pointer_to_a_Powder_physics_storage_struct->line_info_storage;

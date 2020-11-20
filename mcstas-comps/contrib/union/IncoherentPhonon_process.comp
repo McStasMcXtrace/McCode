@@ -378,7 +378,7 @@ int finish(struct IncoherentPhonon_physics_storage_struct *data);
 
 // Function for calculating my in Incoherent phonon case
 int IncoherentPhonon_physics_my(double *my, double *k_initial, 
-          union data_transfer_union data_transfer, struct focus_data_struct *focus_data)
+          union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle)
 {
   struct IncoherentPhonon_physics_storage_struct *data = 
                 data_transfer.pointer_to_a_IncoherentPhonon_physics_storage_struct;
@@ -426,7 +426,7 @@ int IncoherentPhonon_physics_my(double *my, double *k_initial,
 
 // Function for incoherent phonon scattering event
 int IncoherentPhonon_physics_scattering(double *k_final, double *k_initial, double *weight, 
-              union data_transfer_union data_transfer, struct focus_data_struct *focus_data)
+              union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle)
 {
   int p, type;
   double kabs, E, x, ct, rnd, accum, xstot, ki[3];
