@@ -23,16 +23,18 @@
 *
 *******************************************************************************/
 
-#include "cov-lib.h"
+#ifndef MCCODE_STRING
+	#include "cov-lib.h"
+#endif
 
 #include <math.h>
 #include <float.h>
 #include <stdlib.h>
 
 
-// ----------------------------------------------------------------------------
-// linked list
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
+/* linked list */
+/* ---------------------------------------------------------------------------- */
 
 struct tl2_list* tl2_lst_create(void *elem)
 {
@@ -68,7 +70,7 @@ void tl2_lst_remove(struct tl2_list *lst, void *elem)
 		lst = lst->next;
 	}
 
-	// remove element
+	/* remove element */
 	lst_prev->next = lst->next;
 	free(lst->elem);
 	free(lst);
@@ -79,20 +81,20 @@ void tl2_lst_free(struct tl2_list *lst)
 {
 	if(lst && lst->next)
 		tl2_lst_free(lst->next);
-	if(lst->elem)
+	if(lst && lst->elem)
 		free(lst->elem);
 	if(lst)
 		free(lst);
 }
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
 
 
 
-// ----------------------------------------------------------------------------
-// linalg functions
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
+/* linalg functions */
+/* ---------------------------------------------------------------------------- */
 
-static double g_eps = DBL_EPSILON;
+static double g_tl2_eps = DBL_EPSILON;
 
 
 /**
@@ -100,7 +102,7 @@ static double g_eps = DBL_EPSILON;
  */
 void tl2_set_eps(double eps)
 {
-	g_eps = eps;
+	g_tl2_eps = eps;
 }
 
 
@@ -109,7 +111,7 @@ void tl2_set_eps(double eps)
  */
 double tl2_get_eps()
 {
-	return g_eps;
+	return g_tl2_eps;
 }
 
 
@@ -197,7 +199,7 @@ void tl2_submat(const double* M, int N, double* M_new, int iremove, int jremove)
  */
 double tl2_determinant(const double* M, int N)
 {
-	// special cases
+	/* special cases */
 	if(N == 0)
 		return 0;
 	else if(N == 1)
@@ -206,7 +208,7 @@ double tl2_determinant(const double* M, int N)
 		return M[0*N+0]*M[1*N+1] - M[0*N+1]*M[1*N+0];
 
 
-	// get row with maximum number of zeros
+	/* get row with maximum number of zeros */
 	int row = 0;
 	int maxNumZeros = 0;
 	for(int curRow=0; curRow<N; ++curRow)
@@ -214,7 +216,7 @@ double tl2_determinant(const double* M, int N)
 		int numZeros = 0;
 		for(int curCol=0; curCol<N; ++curCol)
 		{
-			if(tl2_flt_equals(M[curRow*N + curCol], 0, g_eps))
+			if(tl2_flt_equals(M[curRow*N + curCol], 0, g_tl2_eps))
 				++numZeros;
 		}
 
@@ -226,14 +228,14 @@ double tl2_determinant(const double* M, int N)
 	}
 
 
-	// recursively expand determiant along a row
+	/* recursively expand determiant along a row */
 	double fullDet = 0.;
 
 	double *submat = (double*)calloc((N-1)*(N-1), sizeof(double));
 	for(int col=0; col<N; ++col)
 	{
 		const double elem = M[row*N + col];
-		if(tl2_flt_equals(elem, 0, g_eps))
+		if(tl2_flt_equals(elem, 0, g_tl2_eps))
 			continue;
 
 		tl2_submat(M, N, submat, row, col);
@@ -253,8 +255,8 @@ int tl2_inverse(const double* M, double* I, int N)
 {
 	double fullDet = tl2_determinant(M, N);
 
-	// fail if determinant is zero
-	if(tl2_flt_equals(fullDet, 0., g_eps))
+	/* fail if determinant is zero */
+	if(tl2_flt_equals(fullDet, 0., g_tl2_eps))
 		return 0;
 
 	double *submat = (double*)calloc((N-1)*(N-1), sizeof(double));
@@ -504,7 +506,7 @@ void tl2_vec_mean(const struct tl2_list* veclist, const struct tl2_list* problis
 /**
  * covariance matrix
  */
-void tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* problist,
+int tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* problist,
 	double* COV, double* mean, int N)
 {
 	tl2_mat_zero(COV, N, N);
@@ -514,6 +516,7 @@ void tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* probl
 	double *dev = calloc(N, sizeof(double));
 	double *outer = calloc(N*N, sizeof(double));
 	double prob = 0.;
+	unsigned int num_events = 0;
 
 	while(veclist)
 	{
@@ -534,6 +537,7 @@ void tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* probl
 
 		veclist = veclist->next;
 		if(problist) problist = problist->next;
+		++num_events;
 	}
 
 	tl2_mat_div(COV, prob, COV, N, N);
@@ -541,6 +545,8 @@ void tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* probl
 	free(vec);
 	free(dev);
 	free(outer);
+
+	return num_events > 0;
 }
 
 
@@ -568,14 +574,19 @@ void tl2_mat_trafo(const double* M, const double* T, double* RES, int N, int ort
 /**
  * resolution matrix
  */
-void tl2_reso(const struct tl2_list* veclist, const struct tl2_list* problist,
+int tl2_reso(const struct tl2_list* veclist, const struct tl2_list* problist,
 	double* COV, double* RESO)
 {
 	const int N = 4;
 	tl2_mat_zero(COV, N, N);
+	tl2_mat_zero(RESO, N, N);
 
 	double *Qmean = calloc(N, sizeof(double));
-	tl2_covariance(veclist, problist, COV, Qmean, N);
+	if(!tl2_covariance(veclist, problist, COV, Qmean, N))
+	{
+		free(Qmean);
+		return 0;
+	}
 
 	double *Qdir = calloc(N, sizeof(double));
 	double Qlen = tl2_vec_len(Qmean, N-1);
@@ -607,5 +618,19 @@ void tl2_reso(const struct tl2_list* veclist, const struct tl2_list* problist,
 	free(T);
 	free(Qdir);
 	free(Qmean);
+
+	return 1;
 }
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
+
+
+
+/* ----------------------------------------------------------------------------- */
+/* Helper functions */
+/* ----------------------------------------------------------------------------- */
+double tl2_k_to_E(double kix, double kiy, double kiz, double kfx, double kfy, double kfz)
+{
+	const double k2_to_E = 2.0721247;  /* from codata values*/
+	return k2_to_E * (kix*kix + kiy*kiy + kiz*kiz - kfx*kfx - kfy*kfy - kfz*kfz);
+}
+/* ----------------------------------------------------------------------------- */

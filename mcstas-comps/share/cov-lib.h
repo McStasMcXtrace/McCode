@@ -27,25 +27,27 @@
 #define __TLIBS2_C_MATHLIB_H__
 
 
-// ----------------------------------------------------------------------------
-// linked list
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
+/* linked list */
+/* ---------------------------------------------------------------------------- */
 struct tl2_list
 {
 	struct tl2_list *next;
 	void *elem;
 };
 
+typedef struct tl2_list tl2_list_type;
+
 extern struct tl2_list* tl2_lst_create(void *elem);
 extern struct tl2_list* tl2_lst_append(struct tl2_list *lst, void *elem);
 extern void tl2_lst_remove(struct tl2_list *lst, void *elem);
 extern void tl2_lst_free(struct tl2_list *lst);
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
 
 
-// ----------------------------------------------------------------------------
-// linalg functions
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
+/* linalg functions */
+/* ---------------------------------------------------------------------------- */
 /**
  * set float epsilon
  */
@@ -190,7 +192,7 @@ extern void tl2_vec_mean(const struct tl2_list* veclist, const struct tl2_list* 
 /**
  * covariance matrix
  */
-extern void tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* problist,
+extern int tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* problist,
 	double* COV, double* mean, int N);
 
 /**
@@ -201,9 +203,16 @@ extern void tl2_mat_trafo(const double* M, const double* T, double* RES, int N, 
 /**
  * resolution matrix
  */
-extern void tl2_reso(const struct tl2_list* veclist, const struct tl2_list* problist,
+extern int tl2_reso(const struct tl2_list* veclist, const struct tl2_list* problist,
 	double* COV, double* RESO);
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- */
+
+
+/* ----------------------------------------------------------------------------- */
+/* Helper functions */
+/* ----------------------------------------------------------------------------- */
+extern double tl2_k_to_E(double kix, double kiy, double kiz, double kfx, double kfy, double kfz);
+/* ----------------------------------------------------------------------------- */
 
 
 #endif

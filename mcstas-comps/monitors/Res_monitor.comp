@@ -11,7 +11,7 @@
 * Date: 1999
 * Origin: Risoe
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
-* Modified by: TW, Nov 2020: updated for McStas 3
+* Modified by: TW, Nov 2020: added live calculations, updated for McStas 3
 *
 * Monitor for resolution calculations
 *
@@ -54,6 +54,7 @@
 * radius: [m]                   Radius of sphere/cylinder monitor
 * options: [str]                String that specifies the geometry of the monitor
 * restore_neutron: [1]          If set, the monitor does not influence the neutron state
+* live_calc: [1]                If set, the monitor directly outputs the resolution matrix
 *
 * OUTPUT PARAMETERS:
 *
@@ -69,15 +70,16 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (string res_sample_comp,
   string filename=0, string options=0, xwidth=.1, yheight=.1, zdepth=0, radius=0,
-  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0,restore_neutron=0)
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0, restore_neutron=0, live_calc=1)
 
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
+OUTPUT PARAMETERS (DEFS, Vars, buffer_index, reso_events, reso_probabilities)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 
 SHARE %{
   %include "monitor_nd-lib"
+/*  %include "cov-lib" */
 %}
 
 
@@ -85,11 +87,22 @@ DECLARE%{
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
   long buffer_index;
+
+  /*tl2_list_type *reso_events;
+  tl2_list_type *reso_probabilities;*/
 %}
 
 
 INITIALIZE %{
   buffer_index = 0;
+
+  /*reso_events = 0;
+  reso_probabilities = 0;
+
+  if(live_calc) {
+    reso_events = tl2_lst_create(0);
+    reso_probabilities = tl2_lst_create(0);
+  }*/
 
   int i;
   char tmp[1024];
@@ -188,7 +201,7 @@ TRACE %{
     {
       /* old behaviour not supported by openacc:
         struct Res_sample_struct *s =
-        (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));*/
+          (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));*/
 
       if(_particle->res_pi != 0)
       {
@@ -212,6 +225,22 @@ TRACE %{
         Vars.UserDoubles[10] = p / _particle->res_pi;
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
+
+        /* live calculation */
+        /*if(live_calc) {
+          double *reso_event = calloc(4, sizeof(double));
+          reso_event[0] = _particle->res_ki_x - _particle->res_kf_x;
+          reso_event[1] = _particle->res_ki_y - _particle->res_kf_y;
+          reso_event[2] = _particle->res_ki_z - _particle->res_kf_z;
+          reso_event[3] = tl2_k_to_E(_particle->res_ki_x, _particle->res_ki_y, _particle->res_ki_z,
+                                     _particle->res_kf_x, _particle->res_kf_y, _particle->res_kf_z);
+
+          double *reso_prob = calloc(1, sizeof(double));
+          *reso_prob = p;
+
+          tl2_lst_append(reso_events, reso_event);
+          tl2_lst_append(reso_probabilities, reso_prob);
+        }*/
       }
 
       SCATTER;
@@ -227,12 +256,30 @@ TRACE %{
 SAVE %{
   /* save results, but do not free pointers */
   Monitor_nD_Save(&DEFS, &Vars);
+
+  /* live calculation */
+  /*if(live_calc) {
+    double cov[4*4], reso[4*4];
+    if(tl2_reso(reso_events->next, reso_probabilities->next, cov, reso)) {
+      printf("Resolution matrix:\n\t%g %g %g %g\n\t%g %g %g %g\n\t%g %g %g %g\n\t%g %g %g %g\n",
+        reso[0], reso[1], reso[2], reso[3],
+        reso[4], reso[5], reso[6], reso[7],
+        reso[8], reso[9], reso[10], reso[11],
+        reso[12], reso[13], reso[14], reso[15]);
+    }
+    else {
+      printf("Error: Resolution matrix could not be calculated.");
+    }
+  }*/
 %}
 
 
 FINALLY %{
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
+
+  /*tl2_lst_free(reso_events);
+  tl2_lst_free(reso_probabilities);*/
 %}
 
 
