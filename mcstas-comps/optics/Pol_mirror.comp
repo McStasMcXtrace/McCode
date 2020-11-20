@@ -74,19 +74,15 @@
 
 DEFINE COMPONENT Pol_mirror
 
-DEFINITION PARAMETERS (
-  /*useTables=0,*/
-  /*rUpFunc=StdReflecFunc,*/
-  /*rDownFunc=rUpFunc,*/)
-
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
   vector rUpPar={0.99,0.0219,6.07,2.0,0.003},
   vector rDownPar={0.99,0.0219,6.07,2.0,0.003},
+  string rUpData="", string rDownData="",
   p_reflect=-1,
   zwidth,
   yheight)
 
-OUTPUT PARAMETERS  (rUpParPtr, rDownParPtr)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -97,35 +93,35 @@ SHARE
 
 DECLARE
 %{
-#if (useTables)
-  t_Table *rUpParPtr;
-  t_Table *rDownParPtr;
-#else
-  double *rUpParPtr;
-  double *rDownParPtr;
-#endif
+  t_Table rUpTable;
+  int rUpTableFlag;
+  t_Table rDownTable;
+  int rDownTableFlag;
 %}
 
 INITIALIZE
 %{
-#if (useTables)
-  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
 
-  if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_mirror: %s: can not read file %s\n",
-            NAME_CURRENT_COMP, rUpPar);
-    exit(1);
+  if (strlen(rUpData) && strcmp(rUpData,"NULL")){
+    if (Table_Read(&rUpTable, rUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_mirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rUpPar);
+      exit(1);
+    }
+    rUpTableFlag=1;
+  }else{
+    rUpTableFlag=0;
   }
-  if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_mirror: %s: can not read file %s\n",
-            NAME_CURRENT_COMP, rDownPar);
-    exit(1);
+  if (strlen(rUpData) && strcmp(rUpData,"NULL")){
+    if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_mirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rDownPar);
+      exit(1);
+    }
+    rDownTableFlag=1;
+  }else{
+    rDownTableFlag=0;
   }
-#else // use function call with vector parameters
-  rUpParPtr   = (double *)rUpPar;
-  rDownParPtr = (double *)rDownPar;
-#endif
 
   if ((zwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_mirror: %s: NULL or negative length scale!\n"
@@ -154,14 +150,20 @@ TRACE
 
     // downgraded from defpars version
     //rUpFunc(Q, rUpParPtr, &Rup);
-    StdReflecFunc(Q, rUpParPtr, &Rup);
-
+    if(rUpTableFlag){
+      Rup=Table_Value(rUpTable,Q,1);
+    }else{
+      StdReflecFunc(Q, rUpPar, &Rup);
+    }
     // downgraded from defpars version
     //rDownFunc(Q, rDownParPtr, &Rdown);
-    StdReflecFunc(Q, rDownParPtr, &Rdown);
+    if(rDownTableFlag){
+      Rdown=Table_Value(rDownTable,Q,1);
+    }else{
+      StdReflecFunc(Q, rDownPar, &Rdown);
+    }
 
     if(Rup != Rdown) {
-
       isPolarising = 1;
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
