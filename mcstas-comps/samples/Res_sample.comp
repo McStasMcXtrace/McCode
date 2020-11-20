@@ -65,7 +65,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (thickness=0, radius=0.01, focus_r=0.05, E0=14, dE=2,
   target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, int target_index=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (vars)
 
 
 /* Until McStas supports adding USERVARS via components, put these in your instrument:
