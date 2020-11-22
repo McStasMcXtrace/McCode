@@ -124,7 +124,7 @@ Monochromator_flat(zwidth = 0.10, yheight = 0.10,
 		   r0 = 0.9, Q=mono_q)
      WHEN (Mono == 1) AT (0, 0, 0) RELATIVE Mono_Arm
 
-/*COMPONENT Mono2 =
+COMPONENT Mono2 =
 Monochromator_pol(zwidth = 0.10, yheight = 0.10,
 		  mosaic = Moz, dspread = 0.0,
 		  Rup = 0.9, Rdown = 0.9, Q=mono_q)
@@ -135,7 +135,7 @@ Monochromator_pol(zwidth = 0.10, yheight = 0.10,
 		  mosaic = Moz, dspread = 0.0,
 		  Rup = 0.9, Rdown = 0.9, Q=mono_q, pThreshold=0.01)
      WHEN (Mono == 3) AT (0, 0, 0) RELATIVE Mono_Arm
-*/
+
 COMPONENT Mono4 =
 Monochromator_curved(width = 0.10, height = 0.10,
 		   mosaich = Moz, mosaicv = Moz,
