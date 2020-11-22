@@ -164,7 +164,7 @@ EXTEND %{
   vix=vx,viy=vy,viz=vz;
 %}
 
-COMPONENT cryostat_in = PowderN(radius=0.035, yheight=.1,reflections="Al.laz", thickness=2e-3, concentric=1,p_interact=0.1)
+COMPONENT cryostat_in = PowderN(radius=0.035, yheight=.1,reflections="Al.lau", thickness=2e-3, concentric=1,p_interact=0.1)
   AT (0, 0, 0) RELATIVE SamplePosition
   EXTEND %{
   if (SCATTERED) flag_env++;

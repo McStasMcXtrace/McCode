@@ -68,7 +68,7 @@
 * In this model, the sample is a plate of thickness e=4 mm, surrounded by an
 * Al or Nb container, inside an Al shield (phi=10 cm).
 *
-* %Example: coh="V.laz" Detector: Detector_I=31.55
+* %Example: coh="V.lau" Detector: Detector_I=31.55
 *
 * %Parameters
 * DM: [Angs]        Monochromator d-spacing. Use 3.355 for PG002, 1.677 for PG004 and 2.087 for Cu111.
@@ -82,7 +82,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_BRISP(DM=3.355, string coh="V.laz", string inc="NULL", string container="NULL", LSD=4.5, Frequency=0, LCC=0, DELAY=0)
+DEFINE INSTRUMENT ILL_BRISP(DM=3.355, string coh="V.lau", string inc="NULL", string container="NULL", LSD=4.5, Frequency=0, LCC=0, DELAY=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -279,7 +279,7 @@ EXTEND %{
 
 COMPONENT Environment_in=Isotropic_Sqw(
   radius = 0.05, yheight = 0.1, thickness=0.002,
-  Sqw_coh="Al.laz", concentric=1, d_phi=15, order=1,
+  Sqw_coh="Al.lau", concentric=1, d_phi=15, order=1,
   p_interact=0.05)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{

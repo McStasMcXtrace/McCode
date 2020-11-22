@@ -40,7 +40,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ILL_H22_VIVALDI(lambda=3, dlambda=2.2,
-  string crystal="YBaCuO.lau", string container="V.laz", verbose=1)
+  string crystal="YBaCuO.lau", string container="V.lau", verbose=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -115,7 +115,7 @@ EXTEND %{
 
 COMPONENT Environment_in=PowderN(
   radius = 0.05, yheight = 0.1, thickness=0.002,
-  reflections="Al.laz", concentric=1, d_phi=RAD2DEG*atan2(0.5,L3),
+  reflections="Al.lau", concentric=1, d_phi=RAD2DEG*atan2(0.5,L3),
   p_transmit=0.95, p_inc=0, barns=1)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{

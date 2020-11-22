@@ -46,7 +46,7 @@
 *             3=Single_Crystal
 *             4=Isotropic_Sqw
 *             5=Incoherent
-*            10=Isotropic_Sqw with V.laz
+*            10=Isotropic_Sqw with V.lau
 *   cube.off: 6=PowderN,
 *             7=Single_Crystal
 *             8=Isotropic_Sqw
@@ -153,7 +153,7 @@ WHEN (SAMPLE==9) AT (0, 0, 0) RELATIVE Coord
 
 /* other Sqw tests *************************************************************/
 
-COMPONENT SqwV= Isotropic_Sqw(Sqw_coh="V.laz",
+COMPONENT SqwV= Isotropic_Sqw(Sqw_coh="V.lau",
   xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==10) AT (0,0,0) RELATIVE Coord
 
