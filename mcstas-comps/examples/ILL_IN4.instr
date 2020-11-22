@@ -103,8 +103,8 @@ DECLARE %{
   #pragma acc declare create( environment_thickness )
   double container_thickness   = 5e-4;
   #pragma acc declare create( container_thickness )
-  char   environment[]         = "Al.laz";
-  char   container[]           = "V.laz";
+  char   environment[]         = "Al.lau";
+  char   container[]           = "V.lau";
 
   /* the following variables are computed in the IN4 configuration */
   double d0, d2; /* IN4c distances used in NoMad/IN4 doc (Ross/Rols) */
