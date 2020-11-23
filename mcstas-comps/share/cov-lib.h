@@ -14,7 +14,7 @@
 * Release: McStas 3.0
 * Version: 0.1
 *
-* This file is used for resolution calculations, it is taken from "tlibs2" and "matrix_calc":
+* This file is used for resolution calculations, it was taken from "tlibs2" and "matrix_calc":
 *   https://code.ill.fr/scientific-software/takin/tlibs2/-/blob/master/libs/mathlib.h
 *   https://github.com/t-weber/matrix_calc/blob/master/src/runtime.c
 *
@@ -38,10 +38,10 @@ struct tl2_list
 
 typedef struct tl2_list tl2_list_type;
 
-extern struct tl2_list* tl2_lst_create(void *elem);
-extern struct tl2_list* tl2_lst_append(struct tl2_list *lst, void *elem);
-extern void tl2_lst_remove(struct tl2_list *lst, void *elem);
-extern void tl2_lst_free(struct tl2_list *lst);
+extern tl2_list_type* tl2_lst_create(void *elem);
+extern tl2_list_type* tl2_lst_append(tl2_list_type *lst, void *elem);
+extern void tl2_lst_remove(tl2_list_type *lst, void *elem);
+extern void tl2_lst_free(tl2_list_type *lst);
 /* ---------------------------------------------------------------------------- */
 
 
@@ -186,13 +186,13 @@ extern void tl2_mat_div(const double* M, double s, double *RES, int I, int J);
 /**
  * mean vector
  */
-extern void tl2_vec_mean(const struct tl2_list* veclist, const struct tl2_list* problist,
+extern void tl2_vec_mean(const tl2_list_type* veclist, const tl2_list_type* problist,
 	double* mean, int N);
 
 /**
  * covariance matrix
  */
-extern int tl2_covariance(const struct tl2_list* veclist, const struct tl2_list* problist,
+extern int tl2_covariance(const tl2_list_type* veclist, const tl2_list_type* problist,
 	double* COV, double* mean, int N);
 
 /**
@@ -203,7 +203,7 @@ extern void tl2_mat_trafo(const double* M, const double* T, double* RES, int N, 
 /**
  * resolution matrix
  */
-extern int tl2_reso(const struct tl2_list* veclist, const struct tl2_list* problist,
+extern int tl2_reso(const tl2_list_type* veclist, const tl2_list_type* problist,
 	double* COV, double* RESO);
 /* ---------------------------------------------------------------------------- */
 
