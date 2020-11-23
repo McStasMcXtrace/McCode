@@ -750,8 +750,10 @@ int cogen_comp_section_class(
     // write class fct footprint
 
     // TRACE only compile gpu variant
-    if (!strcmp(section, "TRACE"))
-      coutf("#pragma acc routine seq");
+    if (!strcmp(section, "TRACE")) {
+      if (!comp->cpuonly)
+	coutf("#pragma acc routine");
+    }
     coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
@@ -2233,7 +2235,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc declare create ( mcallowbackprop )");
   
   cout("");
-  cout("#pragma acc routine seq");
+  cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop);");
   cout("  return(particle);");
