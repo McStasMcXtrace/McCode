@@ -102,10 +102,6 @@ INITIALIZE %{
   if(live_calc) {
     reso_events = tl2_lst_create(0);
     reso_probabilities = tl2_lst_create(0);
-
-#ifdef OPENACC
-    #pragma message ("Res_monitor: Live resolution calculation is not available for OpenACC.\n")
-#endif
   }
 
   int i;
@@ -230,7 +226,7 @@ TRACE %{
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
-#ifndef OPENACC   /*TODO: make live calculation compatible with openacc*/
+//#ifndef OPENACC   /*TODO: make live calculation compatible with openacc*/
         /* live calculation */
         if(live_calc) {
           double *reso_event = calloc(4, sizeof(double));
@@ -246,7 +242,7 @@ TRACE %{
           tl2_lst_append(reso_events, reso_event);
           tl2_lst_append(reso_probabilities, reso_prob);
         }
-#endif
+//#endif
       }
 
       SCATTER;
