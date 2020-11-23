@@ -1965,29 +1965,43 @@ int cogen_rt_funnel(struct instr_def *instr)
   // iterate batch through the component list
   cout("    // iterate components");
   cout("");
+  int cpuonly_last=0;
+  int first=1;
   liter = list_iterate(instr->complist);
+  coutf("    //livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
+  //coutf("    #pragma acc parallel loop present(particles, psorted)");
+  //    coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
+  //    coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
+  //    coutf("      _class_particle _particle_save;");
+ 
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
-
-    if (comp->cpuonly)
-      printf("%s only meant for CPU use\n",comp->name);
-
-    coutf("    //printf(\"livebatchsize: percent ld\\n\", livebatchsize);");
-    coutf("    livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
-    coutf("");
-
+    if (!first && comp->cpuonly != cpuonly_last) { // Terminate loop if we are shifting between processing units
+      coutf("    }");
+      if (comp->cpuonly) {
+	coutf("    #pragma acc update host(particles, psorted, pbuffer)");
+	printf("CPU kernel fromm component %s\n",comp->name);
+      } else {
+	coutf("    #pragma acc update device(particles, psorted, pbuffer)");
+	printf("GPU kernel fromm component %s\n",comp->name);
+      }
+      coutf("    //livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
+    }
+    if (first || comp->cpuonly != cpuonly_last) {
+      if (comp->cpuonly == 0) {
+	coutf("    #pragma acc parallel loop present(particles, psorted)");
+      }
+      coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
+      coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
+      coutf("      _class_particle _particle_save;");
+    }
     coutf("    // %s", comp->name);
-    coutf("    #pragma acc parallel loop present(particles, psorted)");
-    coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-    coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
-    coutf("      _class_particle _particle_save;");
     coutf("      if (!ABSORBED) {");
-
     // coordinate transformations (wrt to PREVIOUS)
     coutf("        if (_%s_var._rotation_is_identity)", comp->name);
     coutf("          coords_get("
-      "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
-      "&x, &y, &z);", comp->name);
+	  "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
+	  "&x, &y, &z);", comp->name);
     cout( "        else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
     cout( "        _particle_save = *_particle;");
@@ -1996,26 +2010,27 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
       // WHEN
       if (comp->when) {
-        char *exp=exp_tostring(comp->when);
-        coutf("        if (%s) // conditional WHEN", exp);
-        str_free(exp);
+	char *exp=exp_tostring(comp->when);
+	coutf("        if (%s) // conditional WHEN", exp);
+	str_free(exp);
       }
       // TRACE
       coutf("        class_%s_trace(&_%s_var, _particle);%s",
-        comp->def->name,
-        comp->name,
-        list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
+	    comp->def->name,
+	    comp->name,
+	    list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
       cout( "        if (_particle->_restore)");
       coutf("          *_particle = _particle_save;", comp->index);
     };
-
     coutf("        _particle->_index++;");
     coutf("      }");
-    coutf("    }");
+    first=0;
+    cpuonly_last = comp->cpuonly;
     cout( "");
 
   } /* end while comp list (case) */
+  coutf("    }");
   list_iterate_end(liter);
 
   // finalize batch
