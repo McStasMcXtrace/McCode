@@ -11,7 +11,7 @@
 * Date: 1999
 * Origin: Risoe
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
-* Modified by: TW, Nov 2020: a) added live calculations; b) updated for McStas 3
+* Modified by: T. Weber, Nov 2020: a) added live calculations; b) updated for McStas 3 / OpenACC
 *
 * Monitor for resolution calculations
 *
@@ -226,7 +226,6 @@ TRACE %{
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
-//#ifndef OPENACC   /*TODO: make live calculation compatible with openacc*/
         /* live calculation */
         if(live_calc) {
           double *reso_event = calloc(4, sizeof(double));
@@ -242,7 +241,6 @@ TRACE %{
           tl2_lst_append(reso_events, reso_event);
           tl2_lst_append(reso_probabilities, reso_prob);
         }
-//#endif
       }
 
       SCATTER;

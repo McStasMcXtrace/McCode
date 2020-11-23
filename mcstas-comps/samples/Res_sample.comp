@@ -11,7 +11,7 @@
 * Written by: Kristian Nielsen
 * Date: 1999
 * Origin: Risoe
-* Modified by: TW, Nov 2020: updated for McStas 3
+* Modified by: T. Weber, Nov 2020: updated for McStas 3 / OpenACC
 *
 * Sample for resolution function calculation.
 *
