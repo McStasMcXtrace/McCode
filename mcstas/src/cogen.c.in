@@ -1969,6 +1969,9 @@ int cogen_rt_funnel(struct instr_def *instr)
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
 
+    if (comp->cpuonly)
+      printf("%s only meant for CPU use\n",comp->name);
+
     coutf("    //printf(\"livebatchsize: percent ld\\n\", livebatchsize);");
     coutf("    livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
     coutf("");
