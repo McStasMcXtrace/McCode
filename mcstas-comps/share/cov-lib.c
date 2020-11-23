@@ -479,7 +479,7 @@ void tl2_vec_mean(const tl2_list_type* veclist, const tl2_list_type* problist,
 {
 	tl2_vec_zero(mean, N);
 	double prob = 0.;
-	double *vec = malloc(N * sizeof(double));
+	double *vec = (double*)malloc(N * sizeof(double));
 
 	while(veclist)
 	{
@@ -514,9 +514,9 @@ int tl2_covariance(const tl2_list_type* veclist, const tl2_list_type* problist,
 	tl2_mat_zero(COV, N, N);
 	tl2_vec_mean(veclist, problist, mean, N);
 
-	double *vec = malloc(N * sizeof(double));
-	double *dev = malloc(N * sizeof(double));
-	double *outer = malloc(N*N * sizeof(double));
+	double *vec = (double*)malloc(N * sizeof(double));
+	double *dev = (double*)malloc(N * sizeof(double));
+	double *outer = (double*)malloc(N*N * sizeof(double));
 	double prob = 0.;
 	unsigned int num_events = 0;
 
@@ -557,8 +557,8 @@ int tl2_covariance(const tl2_list_type* veclist, const tl2_list_type* problist,
  */
 void tl2_mat_trafo(const double* M, const double* T, double* RES, int N, int ortho)
 {
-	double *Tinv = malloc(N*N * sizeof(double));
-	double *TMP = malloc(N*N * sizeof(double));
+	double *Tinv = (double*)malloc(N*N * sizeof(double));
+	double *TMP = (double*)malloc(N*N * sizeof(double));
 
 	if(ortho)
 		tl2_transpose(T, Tinv, N, N);
@@ -583,26 +583,26 @@ int tl2_reso(const tl2_list_type* veclist, const tl2_list_type* problist,
 	tl2_mat_zero(COV, N, N);
 	tl2_mat_zero(RESO, N, N);
 
-	double *Qmean = malloc(N * sizeof(double));
+	double *Qmean = (double*)malloc(N * sizeof(double));
 	if(!tl2_covariance(veclist, problist, COV, Qmean, N))
 	{
 		free(Qmean);
 		return 0;
 	}
 
-	double *Qdir = malloc(N * sizeof(double));
+	double *Qdir = (double*)malloc(N * sizeof(double));
 	double Qlen = tl2_vec_len(Qmean, N-1);
 	tl2_vec_div(Qmean, Qlen, Qdir, N-1);
 
-	double *Qup = malloc(N * sizeof(double));
+	double *Qup = (double*)malloc(N * sizeof(double));
 	tl2_vec_zero(Qup, N);
 	Qup[1] = 1;
 
-	double *Qside = malloc(N * sizeof(double));
+	double *Qside = (double*)malloc(N * sizeof(double));
 	tl2_vec_zero(Qside, N);
 	tl2_cross(Qup, Qdir, Qside);
 
-	double *T = malloc(N*N * sizeof(double));
+	double *T = (double*)malloc(N*N * sizeof(double));
 	tl2_mat_zero(T, N, N);
 	for(int i=0; i<N; ++i)
 	{
