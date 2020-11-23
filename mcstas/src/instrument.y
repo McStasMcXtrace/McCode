@@ -108,7 +108,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_COPY       "COPY"    /* extended McCode grammar */
 %token TOK_SPLIT      "SPLIT"   /* extended McCode grammar */
 %token TOK_REMOVABLE  "REMOVABLE" /* extended McCode grammar with include */
-%token TOK_CPUONLY    "CPUONLY"   /* extended McStas grammar with GPU-CPU support */
+%token TOK_CPUONLY    "CPU"   /* extended McStas grammar with GPU-CPU support */
 %token TOK_DEPENDENCY "DEPENDENCY"
 
 /*******************************************************************************
@@ -1007,7 +1007,7 @@ cpuonly:    /* empty */
       {
         $$ = 0;
       }
-    | "CPUONLY"
+    | "CPU"
       {
         $$ = 1;
       }
