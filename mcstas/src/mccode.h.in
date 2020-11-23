@@ -480,6 +480,7 @@ struct comp_inst
     Symtab actuals; /* save actual/given parameters for COPY */
     CExp split;     /* NULL or number of SPLITs as an Expr */
     int removable;  /* this comp is removed when included from an %include "instr" */
+    int cpuonly;    /* this comp should be executed CPU only */
   };
 
 /* Instrument formal parameters. */
