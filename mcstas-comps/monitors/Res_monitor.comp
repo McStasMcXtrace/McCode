@@ -11,7 +11,7 @@
 * Date: 1999
 * Origin: Risoe
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
-* Modified by: TW, Nov 2020: added live calculations, updated for McStas 3
+* Modified by: TW, Nov 2020: a) added live calculations; b) updated for McStas 3
 *
 * Monitor for resolution calculations
 *
@@ -79,7 +79,7 @@ OUTPUT PARAMETERS (DEFS, Vars, buffer_index, reso_events, reso_probabilities)
 
 SHARE %{
   %include "monitor_nd-lib"
-/*  %include "cov-lib" */
+  %include "cov-lib"
 %}
 
 
@@ -88,21 +88,25 @@ DECLARE%{
   MonitornD_Variables_type Vars;
   long buffer_index;
 
-  /*tl2_list_type *reso_events;
-  tl2_list_type *reso_probabilities;*/
+  tl2_list_type *reso_events;
+  tl2_list_type *reso_probabilities;
 %}
 
 
 INITIALIZE %{
   buffer_index = 0;
 
-  /*reso_events = 0;
+  reso_events = 0;
   reso_probabilities = 0;
 
   if(live_calc) {
     reso_events = tl2_lst_create(0);
     reso_probabilities = tl2_lst_create(0);
-  }*/
+
+#ifdef OPENACC
+    #pragma message ("Res_monitor: Live resolution calculation is not available for OpenACC.\n")
+#endif
+  }
 
   int i;
   char tmp[1024];
@@ -226,8 +230,9 @@ TRACE %{
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
+#ifndef OPENACC   /*TODO: make live calculation compatible with openacc*/
         /* live calculation */
-        /*if(live_calc) {
+        if(live_calc) {
           double *reso_event = calloc(4, sizeof(double));
           reso_event[0] = _particle->res_ki_x - _particle->res_kf_x;
           reso_event[1] = _particle->res_ki_y - _particle->res_kf_y;
@@ -240,7 +245,8 @@ TRACE %{
 
           tl2_lst_append(reso_events, reso_event);
           tl2_lst_append(reso_probabilities, reso_prob);
-        }*/
+        }
+#endif
       }
 
       SCATTER;
@@ -258,10 +264,14 @@ SAVE %{
   Monitor_nD_Save(&DEFS, &Vars);
 
   /* live calculation */
-  /*if(live_calc) {
+  if(live_calc) {
     double cov[4*4], reso[4*4];
     if(tl2_reso(reso_events->next, reso_probabilities->next, cov, reso)) {
-      printf("Resolution matrix:\n\t%g %g %g %g\n\t%g %g %g %g\n\t%g %g %g %g\n\t%g %g %g %g\n",
+      printf("Resolution matrix:"
+        "\n\t%12.4e %12.4e %12.4e %12.4e"
+        "\n\t%12.4e %12.4e %12.4e %12.4e"
+        "\n\t%12.4e %12.4e %12.4e %12.4e"
+        "\n\t%12.4e %12.4e %12.4e %12.4e\n",
         reso[0], reso[1], reso[2], reso[3],
         reso[4], reso[5], reso[6], reso[7],
         reso[8], reso[9], reso[10], reso[11],
@@ -270,7 +280,7 @@ SAVE %{
     else {
       printf("Error: Resolution matrix could not be calculated.");
     }
-  }*/
+  }
 %}
 
 
@@ -278,8 +288,8 @@ FINALLY %{
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
 
-  /*tl2_lst_free(reso_events);
-  tl2_lst_free(reso_probabilities);*/
+  tl2_lst_free(reso_events);
+  tl2_lst_free(reso_probabilities);
 %}
 
 
