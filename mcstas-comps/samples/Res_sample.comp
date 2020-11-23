@@ -102,7 +102,7 @@ SHARE %{
 
 DECLARE %{
   struct res_sample_vars vars;
-}
+%}
 
 
 INITIALIZE %{
@@ -134,7 +134,7 @@ INITIALIZE %{
   if (!(vars.targetx || vars.targety || vars.targetz)) {
     printf("Res_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
-    targetz = 1;
+    vars.targetz = 1;
   }
 
   /* different ways of setting rectangular area */
