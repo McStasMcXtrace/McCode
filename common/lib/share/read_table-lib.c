@@ -106,6 +106,7 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
             return (void *)0x1 ;/*item not found*/
     }
 
+    return (void*) 0; /* error, action not handled */
 }
 
 /* Access functions to the handler*/
