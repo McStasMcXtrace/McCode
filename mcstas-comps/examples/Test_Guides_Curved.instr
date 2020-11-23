@@ -89,10 +89,10 @@ COMPONENT GuideEl = Elliptic_guide_gravity(
   AT (0, 0, 0) RELATIVE Guide_Position
 
 // For visibility in mcdisplay this component bends the other way
-/*COMPONENT GuideB = Pol_bender(xwidth = 0.05, yheight = 0.05, length = length, radius=-curvature,
+COMPONENT GuideB = Pol_bender(xwidth = 0.05, yheight = 0.05, length = length, radius=-curvature,
 	     nslit=1)
 WHEN (Guide == 3)  AT (0, 0, 0) RELATIVE Guide_Position
-*/
+
 // Does not bend the guide but bends the neutron
 COMPONENT GuideB2 = Bender(w = 0.05, h = 0.05, r=curvature, Win=length/curvature,k=1)
 WHEN (Guide == 4)  AT (0, 0, 0) RELATIVE Guide_Position
