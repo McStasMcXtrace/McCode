@@ -228,14 +228,14 @@ TRACE %{
 
         /* live calculation */
         if(live_calc) {
-          double *reso_event = calloc(4, sizeof(double));
+          double *reso_event = (double*)malloc(4 * sizeof(double));
           reso_event[0] = _particle->res_ki_x - _particle->res_kf_x;
           reso_event[1] = _particle->res_ki_y - _particle->res_kf_y;
           reso_event[2] = _particle->res_ki_z - _particle->res_kf_z;
           reso_event[3] = tl2_k_to_E(_particle->res_ki_x, _particle->res_ki_y, _particle->res_ki_z,
                                      _particle->res_kf_x, _particle->res_kf_y, _particle->res_kf_z);
 
-          double *reso_prob = calloc(1, sizeof(double));
+          double *reso_prob = (double*)malloc(sizeof(double));
           *reso_prob = p;
 
           tl2_lst_append(reso_events, reso_event);

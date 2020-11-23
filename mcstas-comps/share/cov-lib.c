@@ -31,17 +31,14 @@
 	#include <stdlib.h>
 #endif
 
-#pragma acc routine(calloc)
-
 
 /* ---------------------------------------------------------------------------- */
 /* linked list */
 /* ---------------------------------------------------------------------------- */
 
-#pragma acc routine seq
 tl2_list_type* tl2_lst_create(void *elem)
 {
-	tl2_list_type* lst = (tl2_list_type*)calloc(1, sizeof(tl2_list_type));
+	tl2_list_type* lst = (tl2_list_type*)malloc(sizeof(tl2_list_type));
 	lst->elem = elem;
 	lst->next = 0;
 
@@ -55,7 +52,7 @@ tl2_list_type* tl2_lst_append(tl2_list_type *lst, void *elem)
 	while(lst->next)
 		lst = lst->next;
 
-	lst->next = (tl2_list_type*)calloc(1, sizeof(tl2_list_type));
+	lst->next = (tl2_list_type*)malloc(sizeof(tl2_list_type));
 	lst->next->elem = elem;
 	lst->next->next = 0;
 
@@ -63,7 +60,6 @@ tl2_list_type* tl2_lst_append(tl2_list_type *lst, void *elem)
 }
 
 
-#pragma acc routine seq
 void tl2_lst_remove(tl2_list_type *lst, void *elem)
 {
 	tl2_list_type *lst_prev = 0;
@@ -82,7 +78,6 @@ void tl2_lst_remove(tl2_list_type *lst, void *elem)
 }
 
 
-#pragma acc routine seq
 void tl2_lst_free(tl2_list_type *lst)
 {
 	if(lst && lst->next)
@@ -101,13 +96,12 @@ void tl2_lst_free(tl2_list_type *lst)
 /* ---------------------------------------------------------------------------- */
 
 static double g_tl2_eps = DBL_EPSILON;
-#pragma acc declare create(g_tl2_eps)
+//#pragma acc declare create(g_tl2_eps)
 
 
 /**
  * set float epsilon
  */
-#pragma acc routine seq
 void tl2_set_eps(double eps)
 {
 	g_tl2_eps = eps;
@@ -117,7 +111,6 @@ void tl2_set_eps(double eps)
 /**
  * get float epsilon
  */
-#pragma acc routine seq
 double tl2_get_eps()
 {
 	return g_tl2_eps;
@@ -127,7 +120,6 @@ double tl2_get_eps()
 /**
  * tests equality of floating point numbers
  */
-#pragma acc routine seq
 int tl2_flt_equals(double x, double y, double eps)
 {
 	double diff = x-y;
@@ -140,7 +132,6 @@ int tl2_flt_equals(double x, double y, double eps)
 /**
  * set matrix elements to zero
  */
-#pragma acc routine seq
 void tl2_mat_zero(double* M, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -152,7 +143,6 @@ void tl2_mat_zero(double* M, int I, int J)
 /**
  * set vector elements to zero
  */
-#pragma acc routine seq
 void tl2_vec_zero(double* vec, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -163,7 +153,6 @@ void tl2_vec_zero(double* vec, int N)
 /**
  * copy a vector
  */
-#pragma acc routine seq
 void tl2_vec_cpy(double* dst, const double* src, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -174,7 +163,6 @@ void tl2_vec_cpy(double* dst, const double* src, int N)
 /**
  * copy a matrix
  */
-#pragma acc routine seq
 void tl2_mat_cpy(double* DST, const double* SRC, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -186,7 +174,6 @@ void tl2_mat_cpy(double* DST, const double* SRC, int I, int J)
 /**
  * removes a given row and column of a square matrix
  */
-#pragma acc routine seq
 void tl2_submat(const double* M, int N, double* M_new, int iremove, int jremove)
 {
 	int row_new = 0;
@@ -212,7 +199,6 @@ void tl2_submat(const double* M, int N, double* M_new, int iremove, int jremove)
 /**
  * calculates the determinant
  */
-#pragma acc routine seq
 double tl2_determinant(const double* M, int N)
 {
 	/* special cases */
@@ -247,7 +233,7 @@ double tl2_determinant(const double* M, int N)
 	/* recursively expand determiant along a row */
 	double fullDet = 0.;
 
-	double *submat = (double*)calloc((N-1)*(N-1), sizeof(double));
+	double *submat = (double*)malloc((N-1)*(N-1) * sizeof(double));
 	for(int col=0; col<N; ++col)
 	{
 		const double elem = M[row*N + col];
@@ -267,7 +253,6 @@ double tl2_determinant(const double* M, int N)
 /**
  * inverted matrix
  */
-#pragma acc routine seq
 int tl2_inverse(const double* M, double* I, int N)
 {
 	double fullDet = tl2_determinant(M, N);
@@ -276,7 +261,7 @@ int tl2_inverse(const double* M, double* I, int N)
 	if(tl2_flt_equals(fullDet, 0., g_tl2_eps))
 		return 0;
 
-	double *submat = (double*)calloc((N-1)*(N-1), sizeof(double));
+	double *submat = (double*)malloc((N-1)*(N-1) * sizeof(double));
 	for(int i=0; i<N; ++i)
 	{
 		for(int j=0; j<N; ++j)
@@ -295,7 +280,6 @@ int tl2_inverse(const double* M, double* I, int N)
 /**
  * matrix-matrix product
  */
-#pragma acc routine seq
 void tl2_matmat_mul(const double* M1, const double* M2, double *RES, int I, int J, int K)
 {
 	for(int i=0; i<I; ++i)
@@ -314,7 +298,6 @@ void tl2_matmat_mul(const double* M1, const double* M2, double *RES, int I, int 
 /**
  * matrix-vector product
  */
-#pragma acc routine seq
 void tl2_matvec_mul(const double* M, const double* v, double *res, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -331,7 +314,6 @@ void tl2_matvec_mul(const double* M, const double* v, double *res, int I, int J)
 /**
  * transposed matrix
  */
-#pragma acc routine seq
 void tl2_transpose(const double* M, double* T, int rows, int cols)
 {
 	for(int ctr=0; ctr<rows*cols; ++ctr)
@@ -346,7 +328,6 @@ void tl2_transpose(const double* M, double* T, int rows, int cols)
 /**
  * vector inner product
  */
-#pragma acc routine seq
 double tl2_inner(const double* v0, const double* v1, int N)
 {
 	double res = 0.;
@@ -359,7 +340,6 @@ double tl2_inner(const double* v0, const double* v1, int N)
 /**
  * vector outer product
  */
-#pragma acc routine seq
 void tl2_outer(const double* v0, const double* v1, double *M, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -371,7 +351,6 @@ void tl2_outer(const double* v0, const double* v1, double *M, int N)
 /**
  * 3-vector cross product
  */
-#pragma acc routine seq
 void tl2_cross(const double* v0, const double* v1, double *res)
 {
 	res[0] = v0[1]*v1[2] - v0[2]*v1[1];
@@ -383,7 +362,6 @@ void tl2_cross(const double* v0, const double* v1, double *res)
 /**
  * vector length
  */
-#pragma acc routine seq
 double tl2_vec_len(const double* vec, int N)
 {
 	double len = tl2_inner(vec, vec, N);
@@ -394,7 +372,6 @@ double tl2_vec_len(const double* vec, int N)
 /**
  * vector addition
  */
-#pragma acc routine seq
 void tl2_vec_add(const double* v0, const double* v1, double *res, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -405,7 +382,6 @@ void tl2_vec_add(const double* v0, const double* v1, double *res, int N)
 /**
  * vector subtraction
  */
-#pragma acc routine seq
 void tl2_vec_sub(const double* v0, const double* v1, double *res, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -416,7 +392,6 @@ void tl2_vec_sub(const double* v0, const double* v1, double *res, int N)
 /**
  * negative vector
  */
-#pragma acc routine seq
 void tl2_vec_neg(const double* vec, double *res, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -427,7 +402,6 @@ void tl2_vec_neg(const double* vec, double *res, int N)
 /**
  * vector-scalar multiplication
  */
-#pragma acc routine seq
 void tl2_vec_mul(const double* vec, double s, double *res, int N)
 {
 	for(int i=0; i<N; ++i)
@@ -438,7 +412,6 @@ void tl2_vec_mul(const double* vec, double s, double *res, int N)
 /**
  * vector-scalar division
  */
-#pragma acc routine seq
 void tl2_vec_div(const double* vec, double s, double *res, int N)
 {
 	tl2_vec_mul(vec, 1./s, res, N);
@@ -448,7 +421,6 @@ void tl2_vec_div(const double* vec, double s, double *res, int N)
 /**
  * matrix addition
  */
-#pragma acc routine seq
 void tl2_mat_add(const double* M0, const double* M1, double *RES, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -460,7 +432,6 @@ void tl2_mat_add(const double* M0, const double* M1, double *RES, int I, int J)
 /**
  * matrix subtraction
  */
-#pragma acc routine seq
 void tl2_mat_sub(const double* M0, const double* M1, double *RES, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -472,7 +443,6 @@ void tl2_mat_sub(const double* M0, const double* M1, double *RES, int I, int J)
 /**
  * negative matrix
  */
-#pragma acc routine seq
 void tl2_mat_neg(const double* M, double *RES, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -484,7 +454,6 @@ void tl2_mat_neg(const double* M, double *RES, int I, int J)
 /**
  * matrix-scalar multiplication
  */
-#pragma acc routine seq
 void tl2_mat_mul(const double* M, double s, double *RES, int I, int J)
 {
 	for(int i=0; i<I; ++i)
@@ -496,7 +465,6 @@ void tl2_mat_mul(const double* M, double s, double *RES, int I, int J)
 /**
  * matrix-scalar division
  */
-#pragma acc routine seq
 void tl2_mat_div(const double* M, double s, double *RES, int I, int J)
 {
 	tl2_mat_mul(M, 1./s, RES, I, J);
@@ -506,13 +474,12 @@ void tl2_mat_div(const double* M, double s, double *RES, int I, int J)
 /**
  * mean vector
  */
-#pragma acc routine seq
 void tl2_vec_mean(const tl2_list_type* veclist, const tl2_list_type* problist,
 	double* mean, int N)
 {
 	tl2_vec_zero(mean, N);
 	double prob = 0.;
-	double *vec = calloc(N, sizeof(double));
+	double *vec = malloc(N * sizeof(double));
 
 	while(veclist)
 	{
@@ -541,16 +508,15 @@ void tl2_vec_mean(const tl2_list_type* veclist, const tl2_list_type* problist,
 /**
  * covariance matrix
  */
-#pragma acc routine seq
 int tl2_covariance(const tl2_list_type* veclist, const tl2_list_type* problist,
 	double* COV, double* mean, int N)
 {
 	tl2_mat_zero(COV, N, N);
 	tl2_vec_mean(veclist, problist, mean, N);
 
-	double *vec = calloc(N, sizeof(double));
-	double *dev = calloc(N, sizeof(double));
-	double *outer = calloc(N*N, sizeof(double));
+	double *vec = malloc(N * sizeof(double));
+	double *dev = malloc(N * sizeof(double));
+	double *outer = malloc(N*N * sizeof(double));
 	double prob = 0.;
 	unsigned int num_events = 0;
 
@@ -589,11 +555,10 @@ int tl2_covariance(const tl2_list_type* veclist, const tl2_list_type* problist,
 /**
  * matrix trafo
  */
-#pragma acc routine seq
 void tl2_mat_trafo(const double* M, const double* T, double* RES, int N, int ortho)
 {
-	double *Tinv = calloc(N*N, sizeof(double));
-	double *TMP = calloc(N*N, sizeof(double));
+	double *Tinv = malloc(N*N * sizeof(double));
+	double *TMP = malloc(N*N * sizeof(double));
 
 	if(ortho)
 		tl2_transpose(T, Tinv, N, N);
@@ -611,7 +576,6 @@ void tl2_mat_trafo(const double* M, const double* T, double* RES, int N, int ort
 /**
  * resolution matrix
  */
-#pragma acc routine seq
 int tl2_reso(const tl2_list_type* veclist, const tl2_list_type* problist,
 	double* COV, double* RESO)
 {
@@ -619,26 +583,26 @@ int tl2_reso(const tl2_list_type* veclist, const tl2_list_type* problist,
 	tl2_mat_zero(COV, N, N);
 	tl2_mat_zero(RESO, N, N);
 
-	double *Qmean = calloc(N, sizeof(double));
+	double *Qmean = malloc(N * sizeof(double));
 	if(!tl2_covariance(veclist, problist, COV, Qmean, N))
 	{
 		free(Qmean);
 		return 0;
 	}
 
-	double *Qdir = calloc(N, sizeof(double));
+	double *Qdir = malloc(N * sizeof(double));
 	double Qlen = tl2_vec_len(Qmean, N-1);
 	tl2_vec_div(Qmean, Qlen, Qdir, N-1);
 
-	double *Qup = calloc(N, sizeof(double));
+	double *Qup = malloc(N * sizeof(double));
 	tl2_vec_zero(Qup, N);
 	Qup[1] = 1;
 
-	double *Qside = calloc(N, sizeof(double));
+	double *Qside = malloc(N * sizeof(double));
 	tl2_vec_zero(Qside, N);
 	tl2_cross(Qup, Qdir, Qside);
 
-	double *T = calloc(N*N, sizeof(double));
+	double *T = malloc(N*N * sizeof(double));
 	tl2_mat_zero(T, N, N);
 	for(int i=0; i<N; ++i)
 	{
