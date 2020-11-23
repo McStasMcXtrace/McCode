@@ -108,6 +108,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_COPY       "COPY"    /* extended McCode grammar */
 %token TOK_SPLIT      "SPLIT"   /* extended McCode grammar */
 %token TOK_REMOVABLE  "REMOVABLE" /* extended McCode grammar with include */
+%token TOK_CPUONLY    "CPUONLY"   /* extended McStas grammar with GPU-CPU support */
 %token TOK_DEPENDENCY "DEPENDENCY"
 
 /*******************************************************************************
@@ -143,6 +144,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %type <jumpname> jumpname
 %type <jumpcondition> jumpcondition
 %type <linenum> removable
+%type <linenum> cpuonly
 %%
 
 main:     TOK_GENERAL compdefs instrument
@@ -1000,14 +1002,26 @@ removable:    /* empty */
       }
 ;
 
-component: removable split "COMPONENT" instname '=' instref
+
+cpuonly:    /* empty */
+      {
+        $$ = 0;
+      }
+    | "CPUONLY"
+      {
+        $$ = 1;
+      }
+;
+
+component: removable cpuonly split "COMPONENT" instname '=' instref
       {
         struct comp_inst *comp;
 
-        myself_comp = comp = $6;
+        myself_comp = comp = $7;
 
-        comp->name  = $4;
-        comp->split = $2;
+        comp->name  = $5;
+	comp->split = $3;
+	comp->removable = $2;
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
         
@@ -1022,17 +1036,17 @@ component: removable split "COMPONENT" instname '=' instref
       {
         struct comp_inst *comp = myself_comp;
 
-        if ($8) comp->when  = $8;
+        if ($9) comp->when  = $9;
 
         palloc(comp->pos);
-        comp->pos->place           = $9.place;
-        comp->pos->place_rel       = $9.place_rel;
-        comp->pos->orientation     = $10.orientation;
+        comp->pos->place           = $10.place;
+        comp->pos->place_rel       = $10.place_rel;
+        comp->pos->orientation     = $11.orientation;
         comp->pos->orientation_rel =
-            $10.isdefault ? $9.place_rel : $10.orientation_rel;
+            $11.isdefault ? $10.place_rel : $11.orientation_rel;
 
-        if ($11) {
-          comp->group = $11;    /* component is part of an exclusive group */
+        if ($12) {
+          comp->group = $12;    /* component is part of an exclusive group */
           /* store first and last comp of group. Check if a SPLIT is inside */
           if (!comp->group->first_comp) {
              comp->group->first_comp       = comp->name;
@@ -1043,13 +1057,13 @@ component: removable split "COMPONENT" instname '=' instref
           if (comp->split)
             print_warn("WARNING: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
               "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
-              comp->name, comp->def->name, instr_current_filename, instr_current_line, $11->name,
+              comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name,
               comp->group->first_comp);
         }
-        if ($12->linenum)   comp->extend= $12;  /* EXTEND block*/
-        if (list_len($13))  comp->jump  = $13;
+        if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
+        if (list_len($14))  comp->jump  = $14;
 
-        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->def->name));
+        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
         if (!comp->removable) previous_comp = comp;
         $$ = comp;
