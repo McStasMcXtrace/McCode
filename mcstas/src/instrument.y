@@ -1021,7 +1021,7 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
 
         comp->name  = $5;
 	comp->split = $3;
-	comp->removable = $2;
+	comp->cpuonly = $2;
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
         
