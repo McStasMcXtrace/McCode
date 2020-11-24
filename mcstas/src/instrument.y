@@ -109,6 +109,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_SPLIT      "SPLIT"   /* extended McCode grammar */
 %token TOK_REMOVABLE  "REMOVABLE" /* extended McCode grammar with include */
 %token TOK_CPUONLY    "CPU"   /* extended McStas grammar with GPU-CPU support */
+%token TOK_NOACC      "NOACC"
 %token TOK_DEPENDENCY "DEPENDENCY"
 
 /*******************************************************************************
@@ -145,6 +146,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %type <jumpcondition> jumpcondition
 %type <linenum> removable
 %type <linenum> cpuonly
+%type <linenum> noacc
 %%
 
 main:     TOK_GENERAL compdefs instrument
@@ -157,7 +159,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -166,13 +168,14 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare init
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-        c->share_code = $6;
-        c->decl_code = $7;
-        c->init_code = $8;
-        c->trace_code = $9;
-        c->save_code = $10;
-        c->finally_code = $11;
-        c->display_code = $12;
+	c->flag_noacc=$6;
+        c->share_code = $7;
+        c->decl_code = $8;
+        c->init_code = $9;
+        c->trace_code = $10;
+        c->save_code = $11;
+        c->finally_code = $12;
+        c->display_code = $13;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -188,7 +191,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare init
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency share declare initialize trace save finally display "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency noacc share declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -209,13 +212,15 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare init
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-          c->share_code = ($8->linenum ?  $8  : def->share_code);
-          c->decl_code  = ($9->linenum ?  $9  : def->decl_code);
-          c->init_code  = ($10->linenum ?  $10  : def->init_code);
-          c->trace_code = ($11->linenum ? $11 : def->trace_code);
-          c->save_code  = ($12->linenum ? $12 : def->save_code);
-          c->finally_code = ($13->linenum ? $13 : def->finally_code);
-          c->display_code = ($14->linenum ? $14 : def->display_code);
+	  c->flag_noacc=$8;
+	  
+          c->share_code = ($9->linenum ?  $9  : def->share_code);
+          c->decl_code  = ($10->linenum ?  $10  : def->decl_code);
+          c->init_code  = ($11->linenum ?  $11  : def->init_code);
+          c->trace_code = ($12->linenum ? $12 : def->trace_code);
+          c->save_code  = ($13->linenum ? $13 : def->save_code);
+          c->finally_code = ($14->linenum ? $14 : def->finally_code);
+          c->display_code = ($15->linenum ? $15 : def->display_code);
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
@@ -1023,6 +1028,9 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         comp->name  = $5;
 	comp->split = $3;
 	comp->cpuonly = $2;
+	if (!comp->cpuonly) {
+	  comp->cpuonly = comp->def->flag_noacc;
+	}
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
         
@@ -1342,6 +1350,18 @@ dependency:
       strncat(instrument_definition->dependency, $2, 1024);
     }
 
+noacc:
+    {
+      /* Comp class should work on GPU */
+      $$ = 0;
+    }
+  | "NOACC" 
+    {
+      /* Comp class is CPU only */
+      $$ = 1;
+      strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+    }
+;
 /* C expressions used to give component actual parameters **********************
    Top-level comma (',') operator NOT allowed. */
 exp:      { $<linenum>$ = instr_current_line; } topexp
