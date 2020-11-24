@@ -1967,12 +1967,15 @@ int cogen_rt_funnel(struct instr_def *instr)
           sprintf(instr->dependency,"%s %s",instr->dependency,"-DFUNNEL");
           funneldefine=0;
         }
-        coutf("    #pragma acc update host(particles, psorted, pbuffer)");
+        coutf("    // unnecessary from pgi 20.7");
+        coutf("    //#pragma acc update host(particles, psorted, pbuffer)");
         printf("\n * CPU section from component %s\n",comp->name);
       } else {
-        coutf("    #pragma acc update device(particles, psorted, pbuffer)");
+      coutf("    // unnecessary from pgi 20.7");
+      coutf("    //#pragma acc update device(particles, psorted, pbuffer)");
         printf("\n * GPU kernel from component %s\n",comp->name);
       }
+      coutf("    // might be used with SPLIT");
       coutf("    //livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
     }
 
