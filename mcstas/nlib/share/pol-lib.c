@@ -34,7 +34,7 @@
 %include "read_table-lib"
 //%include "interpolation-lib"
 
-#define MCMAGNET_STACKSIZE 6
+#define MCMAGNET_STACKSIZE 12
 /*definition of the magnetic stack*/
 
 //static mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
@@ -564,8 +564,10 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
 
   // change back spin coordinates from lab system to local system
   rot_transpose(rotMagnet, mc_pol_rotBack);
+  //have to do this "manually" since mccordschange does not commute/reverse*/
+  pp->x-=posMagnet.x; pp->y-=posMagnet.y; pp->z-=posMagnet.z;
+  mccoordschange_polarisation(mc_pol_rotBack, &(pp->vx), &(pp->vy), &(pp->vz));
   mccoordschange_polarisation(mc_pol_rotBack, &(pp->sx), &(pp->sy), &(pp->sz));
-
 }
 
 /****************************************************************************
