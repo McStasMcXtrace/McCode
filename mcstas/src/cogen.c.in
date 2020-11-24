@@ -1953,7 +1953,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   cout("");
   int cpuonly_last=-1;
   int first=1;
-  int funneldefine=1;
   liter = list_iterate(instr->complist);
 
   // iterate component list
@@ -1963,10 +1962,6 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (!first && comp->cpuonly != cpuonly_last) { // Terminate loop if we are shifting between processing units
       coutf("    }");
       if (comp->cpuonly) {
-        if (funneldefine) {
-          sprintf(instr->dependency,"%s %s",instr->dependency,"-DFUNNEL");
-          funneldefine=0;
-        }
         coutf("    // unnecessary from pgi 20.7");
         coutf("    //#pragma acc update host(particles, psorted, pbuffer)");
         printf("\n * CPU section from component %s\n",comp->name);
