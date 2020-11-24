@@ -63,15 +63,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_vmirror
-DEFINITION PARAMETERS (
-  /*rFunc=StdReflecFunc,*/
-  /*rUpFunc=StdReflecFunc,*/
-  /*rDownFunc=StdReflecFunc,*/
-  /*useTables=0 */)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
   vector rUpPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   vector rDownPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   vector rPar={1.0, 0.0219, 4.07, 3.2, 0.003},
+  string rData="",string rUpData="",string rDownData="",
   xwidth, yheight, length,
   int debug=0)
 OUTPUT PARAMETERS (localG,
@@ -103,44 +100,47 @@ DECLARE
   Coords pointIn;
   Coords pointOut;
 
-#if (useTables)
-  t_Table *rParPtr;
-  t_Table *rUpParPtr;
-  t_Table *rDownParPtr;
-#else
-  double *rParPtr;
-  double *rUpParPtr;
-  double *rDownParPtr;
-#endif
+  t_Table rTable;
+  t_Table rUpTable;
+  t_Table rDownTable;
 
+  int rTableFlag;
+  int rUpTableFlag;
+  int rDownTableFlag;
 %}
 
 INITIALIZE
 %{
-#if (useTables)
-  rParPtr     = (t_Table*) malloc(sizeof(t_Table));
-  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
-  if (Table_Read(rParPtr, rPar, 1) <= 0) {
-    fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rPar);
-    exit(1);
+  if (strlen(rData) && strcmp(rData,"NULL")){
+    if (Table_Read(&rTable, rData, 1) <= 0) {
+      fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rPar);
+      exit(1);
+    }
+    rTableFlag=1;
+  }else{
+    rTableFlag=0;
   }
-  if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rUpPar);
-    exit(1);
+  if (strlen(rUpData) && strcmp(rUpData,"NULL")){
+    if (Table_Read(&rUpTable, rUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rUpPar);
+      exit(1);
+    }
+    rUpTableFlag=1;
+  }else {
+    rDownTableFlag=0;
   }
-  if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rDownPar);
-    exit(1);
+  if (strlen(rDownData) && strcmp(rDownData,"NULL")){
+    if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rDownPar);
+      exit(1);
+    }
+    rDownTableFlag=1;
+  }else{
+    rDownTableFlag=0;
   }
-#else // use function call with vector parameters
-  rParPtr     = (double *)rPar;
-  rUpParPtr   = (double *)rUpPar;
-  rDownParPtr = (double *)rDownPar;
-#endif
 
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
     fprintf(stderr, "Pol_guide_vmirror: %s: NULL or negative length scale!\n"
@@ -356,8 +356,11 @@ TRACE
 
       // NOTE: changed from defpars version
       //rFunc(fabs(Q), rParPtr, &refWeight);
-      StdReflecFunc(fabs(Q), rParPtr, &refWeight);
-
+      if(rTableFlag){
+        refWeight=Table_Value(rTable, Q, 1);
+      }else{
+        StdReflecFunc(fabs(Q), rPar, &refWeight);
+      }
       p *= refWeight;
 
     } else {
@@ -365,11 +368,18 @@ TRACE
 
       // NOTE: changed from defpars version
       //rUpFunc(fabs(Q), rUpParPtr, &Rup);
-      StdReflecFunc(fabs(Q), rUpParPtr, &Rup);
-
+      if(rUpTableFlag){
+        Rup=Table_Value(rUpTable,Q,1);
+      }else{
+        StdReflecFunc(fabs(Q), rUpPar, &Rup);
+      }
       // NOTE: changed from defpars version
       //rDownFunc(fabs(Q), rDownParPtr, &Rdown);
-      StdReflecFunc(fabs(Q), rDownParPtr, &Rdown);
+      if(rDownTableFlag){
+        Rdown=Table_Value(rDownTable,Q,1);
+      }else{
+        StdReflecFunc(fabs(Q), rDownPar, &Rdown);
+      }
 
       if (Rup <  0)   ABSORB;
       if (Rup >  1)   Rup =1 ;

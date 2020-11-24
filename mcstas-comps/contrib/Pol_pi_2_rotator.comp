@@ -34,15 +34,11 @@
 
 DEFINE COMPONENT Pol_pi_2_rotator
 DEFINITION PARAMETERS()
-SETTING PARAMETERS(xwidth, yheight, zdepth, rx,ry,rz)
+SETTING PARAMETERS(xwidth=0.1, yheight=0.1, zdepth=0.01, rx=0,ry=0,rz=1)
 OUTPUT PARAMETERS()
 
 SHARE
 %{
-/* Declare structures and functions only once in each instrument. */
-#ifndef PI_2_ROTATOR
-#define PI_2_ROTATOR 1
-#endif /* !PI_2_ROTATOR */
 %}
 
 DECLARE

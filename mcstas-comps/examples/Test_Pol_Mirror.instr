@@ -30,10 +30,10 @@
 ******************************************************************************/
 DEFINE INSTRUMENT Test_Pol_Mirror(int mirrorOption = 1)
 
-DECLARE
+USERVARS
 %{
   int reflected;
-  %}
+%}
 
 INITIALIZE
 %{
@@ -42,24 +42,24 @@ INITIALIZE
 TRACE
 
 COMPONENT Origin = Progress_bar()
-     AT (0,0,0) ABSOLUTE
+AT (0,0,0) ABSOLUTE
 
 COMPONENT source =
 Source_simple(radius = 0.001, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01, lambda0 = 15,
 	      dlambda = 14.5, flux = 1)
-     AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT lamStart =
 L_monitor(nL = 30, filename = "lambdaStart.dat",
 	  xwidth = 0.20, yheight = 0.20,
 	  Lmin = 0.0, Lmax = 30)
-     AT (0, 0, 0.5) RELATIVE Origin
+AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT mirror =
 Pol_mirror(zwidth = 0.40, yheight = 0.40, p_reflect=mirrorOption,
 	   rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003},
 	   rDownPar={0.1, 0.0219, 6.07, 2.0, 0.003})
-     AT (0, 0, 1.0) RELATIVE Origin ROTATED (0, 2, 0) RELATIVE Origin
+AT (0, 0, 1.0) RELATIVE Origin ROTATED (0, 2, 0) RELATIVE Origin
 
 /* COMPONENT mirror = */
 /* Pol_mirror(zw = 0.40, yh = 0.40, option=mirrorOption, */
@@ -79,35 +79,35 @@ COMPONENT pollambdaMonitorReflecY =
 MeanPolLambda_monitor(xwidth=0.05, yheight=0.05,
 		      nL=30, Lmin = 0, Lmax = 30,
 		      my=1, filename="pollambdaMonReflecY.data")
-     AT (0, 0, 1.0) RELATIVE armReflec
-     GROUP monitorGroup
+AT (0, 0, 1.0) RELATIVE armReflec
+GROUP monitorGroup
 EXTEND
 %{
   reflected=1;
-  %}
+%}
 
 COMPONENT pollambdaMonitorTransmitY =
 MeanPolLambda_monitor(xwidth=0.05, yheight=0.05,
 		      nL=30, Lmin = 0, Lmax = 30,
 		      my=1, filename="pollambdaMonTransY.data")
-     AT (0, 0, 1.0) RELATIVE armTransmit
-     GROUP monitorGroup
+AT (0, 0, 1.0) RELATIVE armTransmit
+GROUP monitorGroup
 EXTEND
 %{
   reflected=0;
-  %}
+%}
 
 COMPONENT lamReflec =
 L_monitor(nL = 30, filename = "lambdaReflec.dat",
 	  xwidth = 0.20, yheight = 0.20,
 	  Lmin = 0.0, Lmax = 30)
-     WHEN (reflected==1) AT (0, 0, 1.0) RELATIVE armReflec
+WHEN (reflected==1) AT (0, 0, 1.0) RELATIVE armReflec
 
 COMPONENT lamTrans =
 L_monitor(nL = 30, filename = "lambdaTrans.dat",
 	  xwidth = 0.20, yheight = 0.20,
 	  Lmin = 0.0, Lmax = 30)
-     WHEN (reflected==0) AT (0, 0, 1.0) RELATIVE armTransmit
+WHEN (reflected==0) AT (0, 0, 1.0) RELATIVE armTransmit
 
 
 /* This section is executed when the simulation ends (C code). Other    */

@@ -83,24 +83,19 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_bender
-DEFINITION PARAMETERS (
-rTopUpFunc=StdReflecFunc, rTopDownFunc=StdReflecFunc,
-rBotUpFunc=rTopUpFunc, rBotDownFunc=rTopDownFunc,
-rLeftUpFunc=rTopUpFunc, rLeftDownFunc=rTopDownFunc,
-rRightUpFunc=rLeftUpFunc, rRightDownFunc=rLeftDownFunc,
-rTopUpPar={0.99,0.0219,6.07,2.0,0.003},
-rTopDownPar={0.99,0.0219,6.07,2.0,0.003},
-rBotUpPar=rTopUpPar, rBotDownPar=rTopDownPar,
-rLeftUpPar=rTopUpPar, rLeftDownPar=rTopDownPar,
-rRightUpPar=rLeftUpPar, rRightDownPar=rLeftDownPar, useTables=0)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, length, radius, G=9.8, int nslit=1, d=0.0, int debug=0, int endFlat=0,
+vector rTopUpPar={0.99,0.0219,6.07,2.0,0.003},
+vector rTopDownPar={0.99,0.0219,6.07,2.0,0.003},
+vector rBotUpPar={0.99,0.0219,6.07,2.0,0.003},
+vector rBotDownPar={0.99,0.0219,6.07,2.0,0.003},
+vector rLeftUpPar={0.99,0.0219,6.07,2.0,0.003},
+vector rLeftDownPar={0.99,0.0219,6.07,2.0,0.003},
+vector rRightUpPar={0.99,0.0219,6.07,2.0,0.003},
+vector rRightDownPar={0.99,0.0219,6.07,2.0,0.003},
+string rTopUpData="", string rTopDownData="",string rBotUpData="",string rBotDownData="",
+string rLeftUpData="", string rLeftDownData="",string rRightUpData="",string rRightDownData="",
 int drawOption=1)
-OUTPUT PARAMETERS (localG, normTopBot, normIn, normOut,
-pointTop, pointBot, pointIn, pointOut,
-rTopUpParPtr, rTopDownParPtr,
-rBotUpParPtr, rBotDownParPtr,
-rLeftUpParPtr, rLeftDownParPtr,
-rRightUpParPtr, rRightDownParPtr)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
@@ -111,100 +106,66 @@ SHARE
 
 DECLARE
 %{
-Coords localG;
-Coords normTopBot;
-Coords normIn;
-Coords normOut;
-Coords pointTop;
-Coords pointBot;
-Coords pointIn;
-Coords pointOut;
+  Coords localG;
+  Coords normTopBot;
+  Coords normIn;
+  Coords normOut;
+  Coords pointTop;
+  Coords pointBot;
+  Coords pointIn;
+  Coords pointOut;
 
-#if (useTables)
-  t_Table *rTopUpParPtr;
-  t_Table *rTopDownParPtr;
-  t_Table *rBotUpParPtr;
-  t_Table *rBotDownParPtr;
-  t_Table *rLeftUpParPtr;
-  t_Table *rLeftDownParPtr;
-  t_Table *rRightUpParPtr;
-  t_Table *rRightDownParPtr;
-#else
-  double *rTopUpParPtr;
-  double *rTopDownParPtr;
-  double *rBotUpParPtr;
-  double *rBotDownParPtr;
-  double *rLeftUpParPtr;
-  double *rLeftDownParPtr;
-  double *rRightUpParPtr;
-  double *rRightDownParPtr;
-#endif
+  t_Table rTopUpTable;
+  t_Table rTopDownTable;
+  t_Table rBotUpTable;
+  t_Table rBotDownTable;
+  t_Table rLeftUpTable;
+  t_Table rLeftDownTable;
+  t_Table rRightUpTable;
+  t_Table rRightDownTable;
+  int useTables;
 %}
 
 INITIALIZE
 %{
   double angle;
 
-#if (useTables)
-  rTopUpParPtr     = (t_Table*) malloc(sizeof(t_Table));
-  rTopDownParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rBotUpParPtr     = (t_Table*) malloc(sizeof(t_Table));
-  rBotDownParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rLeftUpParPtr    = (t_Table*) malloc(sizeof(t_Table));
-  rLeftDownParPtr  = (t_Table*) malloc(sizeof(t_Table));
-  rRightUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rRightDownParPtr = (t_Table*) malloc(sizeof(t_Table));
-  if (Table_Read(rTopUpParPtr, rTopUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rTopUpPar);
-    exit(1);
+  if(strlen(rTopUpData) && strcmp(rTopUpData,"NULL")){
+    useTables=1;
+    /*if rUpTopData is set assume we'll be usning tabled data for all reflectivities*/
+    if (Table_Read(&rTopUpTable, rTopUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rTopUpData);
+      exit(1);
+    }
+    if (Table_Read(&rTopDownTable, rTopDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rTopDownData);
+      exit(1);
+    }
+    if (Table_Read(&rBotUpTable, rBotUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rBotUpData);
+      exit(1);
+    }
+    if (Table_Read(&rBotDownTable, rBotDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rBotDownData);
+      exit(1);
+    }
+    if (Table_Read(&rLeftUpTable, rLeftUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rLeftUpData);
+      exit(1);
+    }
+    if (Table_Read(&rLeftDownTable, rLeftDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rLeftDownData);
+      exit(1);
+    }
+    if (Table_Read(&rRightUpTable, rRightUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rRightUpData);
+      exit(1);
+    }
+    if (Table_Read(&rRightDownTable, rRightDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_bender: %s: can not read file %s\n",NAME_CURRENT_COMP, rRightDownData);
+      exit(1);
+    }
   }
-  if (Table_Read(rTopDownParPtr, rTopDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rTopDownPar);
-    exit(1);
-  }
-  if (Table_Read(rBotUpParPtr, rBotUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rBotUpPar);
-    exit(1);
-  }
-  if (Table_Read(rBotDownParPtr, rBotDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rBotDownPar);
-    exit(1);
-  }
-  if (Table_Read(rLeftUpParPtr, rLeftUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rLeftUpPar);
-    exit(1);
-  }
-  if (Table_Read(rLeftDownParPtr, rLeftDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rLeftDownPar);
-    exit(1);
-  }
-  if (Table_Read(rRightUpParPtr, rRightUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rRightUpPar);
-    exit(1);
-  }
-  if (Table_Read(rRightDownParPtr, rRightDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_bender: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rRightDownPar);
-    exit(1);
-  }
-#else
-  rTopUpParPtr     = (double [])rTopUpPar;
-  rTopDownParPtr   = (double [])rTopDownPar;
-  rBotUpParPtr     = (double [])rBotUpPar;
-  rBotDownParPtr   = (double [])rBotDownPar;
-  rLeftUpParPtr    = (double [])rLeftUpPar;
-  rLeftDownParPtr  = (double [])rLeftDownPar;
-  rRightUpParPtr   = (double [])rRightUpPar;
-  rRightDownParPtr = (double [])rRightDownPar;
-#endif
-
   if ((xwidth<=0) || (yheight <= 0) || (length<=0) || (radius==0)) {
     fprintf(stderr, "Pol_bender: %s: NULL or negative length scale!\n"
 	    "ERROR      (xwidth,yheight,length, radius). Exiting\n",
@@ -414,33 +375,47 @@ TRACE
 
     // calculate reflection probability
     if(time==tTop) {
-
-      rTopUpFunc(Q, rTopUpParPtr, &Rup);
-      rTopDownFunc(Q, rTopDownParPtr, &Rdown);
+      if(useTables){
+        Rup=Table_Value(rTopUpTable,Q,1);
+        Rdown=Table_Value(rTopDownTable,Q,1);
+      }else{
+        StdReflecFunc(Q, rTopUpPar, &Rup);
+        StdReflecFunc(Q, rTopDownPar, &Rdown);
+      }
       if(debug>0)
-	fprintf(stdout, "\tTop hit:\n");
+          fprintf(stdout, "\tTop hit:\n");
     } else if(time==tBot) {
-
-      rBotUpFunc(Q, rBotUpParPtr, &Rup);
-      rBotDownFunc(Q, rBotDownParPtr, &Rdown);
+      if(useTables){
+        Rup=Table_Value(rBotUpTable,Q,1);
+        Rdown=Table_Value(rBotDownTable,Q,1);
+      }else{
+        StdReflecFunc(Q, rBotUpPar, &Rup);
+        StdReflecFunc(Q, rBotDownPar, &Rdown);
+      }
       if(debug>0)
-	fprintf(stdout, "\tBot hit:\n");
+          fprintf(stdout, "\tBot hit:\n");
     } else if(time==tRight) {
-
-      rRightUpFunc(Q, rRightUpParPtr, &Rup);
-      rRightDownFunc(Q, rRightDownParPtr, &Rdown);
+      if(useTables){
+        Rup=Table_Value(rRightUpTable,Q,1);
+        Rdown=Table_Value(rRightDownTable,Q,1);
+      }else{
+        StdReflecFunc(Q, rRightUpPar, &Rup);
+        StdReflecFunc(Q, rRightDownPar, &Rdown);
+      }
       if(debug>0)
-	fprintf(stdout, "\tRight hit:\n");
+          fprintf(stdout, "\tRight hit:\n");
     } else if(time==tLeft) {
-
-      rLeftUpFunc(Q, rLeftUpParPtr, &Rup);
-      rLeftDownFunc(Q, rLeftDownParPtr, &Rdown);
+      if(useTables){
+        Rup=Table_Value(rLeftUpTable,Q,1);
+        Rdown=Table_Value(rLeftDownTable,Q,1);
+      }else{
+        StdReflecFunc(Q, rLeftUpPar, &Rup);
+        StdReflecFunc(Q, rLeftDownPar, &Rdown);
+      }
       if(debug>0)
-	fprintf(stdout, "\tLeft hit:\n");
+          fprintf(stdout, "\tLeft hit:\n");
     }
-
     if(Rup != Rdown) {
-
       isPolarising = 1;
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &weight);
