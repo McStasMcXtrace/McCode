@@ -1859,7 +1859,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  #ifdef OPENACC");
   coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
-  coutf("  #endif"); 
+  coutf("  #endif");
   coutf("  #endif");
   coutf("  MPI_MASTER(");
   coutf("  printf(\"*** TRACE end *** \\n\");");
@@ -2104,7 +2104,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("#include <string.h>");
   cout("");
-  
+
   /* Math constants */
   cout("#define PI 3.14159265358979323846");
   cout("#ifndef M_PI");
@@ -2131,7 +2131,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("typedef MCNUM Rotation[3][3];");
   cout("#define MCCODE_BASE_TYPES");
   cout("");
-  
+
   cout("#ifdef OPENACC");
   cout("#undef MC_TRACE_ENABLED");
   cout("#endif");
@@ -2200,9 +2200,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc declare create ( mcgravitation )");
   cout("int mcMagnet;    /* precession-state */");
   cout("#pragma acc declare create ( mcMagnet )");
-  cout("int mcallowbackprop;        ");  
+  cout("int mcallowbackprop;        ");
   cout("#pragma acc declare create ( mcallowbackprop )");
-  
+
   cout("");
   cout("#pragma acc routine seq");
   cout("_class_particle mcgenstate(void) {");
