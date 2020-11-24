@@ -50,10 +50,8 @@ typedef va_list mcmagnet_data;
 
 struct field_parameters{
   double field_prms[8];
-  //char file_string[128];
   void *generic;
 };
-
 
 typedef struct mcmagnet_field_info {
   int func_id;
