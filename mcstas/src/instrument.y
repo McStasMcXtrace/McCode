@@ -1010,6 +1010,7 @@ cpuonly:    /* empty */
     | "CPU"
       {
         $$ = 1;
+	strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
       }
 ;
 
