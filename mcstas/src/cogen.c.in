@@ -1998,7 +1998,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (first || comp->cpuonly != cpuonly_last) {
       if (comp->cpuonly == 0) {
 	coutf("    #pragma acc parallel loop present(particles, psorted)");
-	printf("GPU kernel from component %s\n",comp->name);
+	printf("\n * GPU kernel from component %s\n",comp->name);
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
