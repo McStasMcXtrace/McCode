@@ -140,7 +140,8 @@ MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
 COPY          return TOK_COPY;          /* extended McStas grammar */
 SPLIT         return TOK_SPLIT;         /* extended McStas grammar */
 REMOVABLE     return TOK_REMOVABLE;     /* extended McStas grammar with include */
-CPU       return TOK_CPUONLY;       /* extended McStas grammar with GPU-CPU support */
+CPU           return TOK_CPUONLY;       /* extended McStas grammar with GPU-CPU support */
+NOACC         return TOK_NOACC; 
 DEPENDENCY    return TOK_DEPENDENCY;
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */

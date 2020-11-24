@@ -751,7 +751,8 @@ int cogen_comp_section_class(
 
     // TRACE only compile gpu variant
     if (!strcmp(section, "TRACE")) {
-       coutf("#pragma acc routine");
+      if (!comp->def->flag_noacc)
+	coutf("#pragma acc routine");
     }
     coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
@@ -1958,6 +1959,9 @@ int cogen_rt_funnel(struct instr_def *instr)
   // iterate component list
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
+    if (comp->def->flag_noacc) {
+      printf("Component %s is NOACC, CPUONLY=%i\n",comp->name,comp->cpuonly);
+    }
 
     if (!first && comp->cpuonly != cpuonly_last) { // Terminate loop if we are shifting between processing units
       coutf("    }");

@@ -438,6 +438,7 @@ struct comp_def
     int  flag_defined_display;      /* set to 1 when a common DISPLAY block is generated */
     int  flag_defined_trace;        /* set to 1 when a common TRACE block is generated */
     int  counter_instances;         /* number of instances using the same definition/class */
+    int  flag_noacc;                /* Component type not available on GPU */
     List def_par, set_par, out_par, decl_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
