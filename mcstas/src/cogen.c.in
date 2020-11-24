@@ -1989,10 +1989,10 @@ int cogen_rt_funnel(struct instr_def *instr)
 	  funneldefine=0;
 	}
 	coutf("    #pragma acc update host(particles, psorted, pbuffer)");
-	printf("CPU kernel fromm component %s\n",comp->name);
+	printf("CPU section from component %s\n",comp->name);
       } else {
 	coutf("    #pragma acc update device(particles, psorted, pbuffer)");
-	printf("GPU kernel fromm component %s\n",comp->name);
+	printf("GPU kernel from component %s\n",comp->name);
       }
       coutf("    //livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
     }
