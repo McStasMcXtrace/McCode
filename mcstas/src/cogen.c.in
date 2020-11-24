@@ -751,8 +751,7 @@ int cogen_comp_section_class(
 
     // TRACE only compile gpu variant
     if (!strcmp(section, "TRACE")) {
-      if (!comp->cpuonly)
-	coutf("#pragma acc routine");
+       coutf("#pragma acc routine");
     }
     coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
@@ -1969,7 +1968,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   // iterate batch through the component list
   cout("    // iterate components");
   cout("");
-  int cpuonly_last=0;
+  int cpuonly_last=-1;
   int first=1;
   int funneldefine=1;
   liter = list_iterate(instr->complist);
@@ -1999,6 +1998,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (first || comp->cpuonly != cpuonly_last) {
       if (comp->cpuonly == 0) {
 	coutf("    #pragma acc parallel loop present(particles, psorted)");
+	printf("GPU kernel from component %s\n",comp->name);
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
