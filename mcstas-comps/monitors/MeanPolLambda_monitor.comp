@@ -142,6 +142,13 @@ TRACE
 SAVE
 %{
   int i;
+  double mpifactor=1;
+
+  /*1st order correction: As polarisation is not an additive signal we should downweight by the node count.
+    This asssumes that all nodes have equal weight sum.*/
+#ifdef USE_MPI
+  mpifactor=mpi_node_count;
+#endif
 
   // Average output
   for (i=0; i<nL; i++) {
@@ -149,11 +156,11 @@ SAVE
     if(HelpArray[i] == 0)
       continue;
 
-    PolL_p[i]  /= HelpArray[i];
+    PolL_p[i]  /= HelpArray[i]*mpifactor;
     // Mcstas uses the error sigma**2=sum p_i**2 for intensities
     // But here we have the mean so the error**2 should be VAR/N:
     // sigma**2 = [sum s_i*s_i*p_i/sum p_i - (sum s_i*p_i/sum p_i)**2]/N
-    PolL_p2[i] /= HelpArray[i];
+    PolL_p2[i] /= HelpArray[i]*mpifactor;
     PolL_p2[i] -= PolL_p[i]*PolL_p[i];
     PolL_p2[i] /= PolL_N[i];
   }
