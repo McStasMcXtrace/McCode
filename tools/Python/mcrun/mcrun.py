@@ -85,6 +85,11 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='parallelize using openacc')
 
+    add('--funnel',
+        action='store_true', default=False,
+        help='funneling simulation flow, e.g. for mixed CPU/GPU')
+
+
     add('--machines',
         metavar='machines',
         help='defines path of MPI machinefile to use in parallel mode')
@@ -196,6 +201,9 @@ def expand_options(options):
     else:
         options.use_mpi = False
         options.cc = mccode_config.compilation['CC']
+
+    if options.funnel is not None:
+        options.use_funnel = True
 
     # Output dir
     if options.dir is None:
