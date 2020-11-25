@@ -1913,7 +1913,10 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
   coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
-  coutf("  long innerloop=1024*1024; // <-- tune by memory capacity here (max threads: 2147483647);");
+  coutf("  #ifndef GPU_FUNNEL_INNERLOOP");
+  coutf("  #define GPU_FUNNEL_INNERLOOP 1024*1024");
+  coutf("  #endif");
+  coutf("  long innerloop=GPU_FUNNEL_INNERLOOP; // <-- tune by memory capacity here (max threads: 2147483647);");
   coutf("  loops = ceil((double)ncount/innerloop);");
   coutf("  if (ncount>innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
