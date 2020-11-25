@@ -232,6 +232,7 @@ TRACE
 
   double t11, t12, t21, t22, theta, alpha, endtime, phi;
   int i_bounce;
+  int nerr=0;
 
   // Pol variables
   double FN, FM, Rup, Rdown, weight;
@@ -331,10 +332,17 @@ TRACE
     else
       time=tSide;
 
-    if (time<=tThreshold)
-      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
-	      "tUp: %f, tSide: %f, time: %f\n",
+    if (time<=tThreshold) {
+      nerr++;
+      if (nerr < 10) {
+        fprintf(stdout, "tTop: %e, tBot:%e, tRight: %e, tLeft: %e\n"
+	      "tUp: %e, tSide: %e, time: %e\n",
 	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
+      } else {
+        fprintf(stdout, "Found 10 propagation error for this neutron, terminating!\n");
+        break;
+      }
+    }
 
     /* Has neutron left the guide? */
     if (tOut>tThreshold && (tOut<tIn || tIn<=tThreshold))
