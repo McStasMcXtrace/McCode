@@ -1637,7 +1637,8 @@ int cogen_raytrace(struct instr_def *instr)
   /* Debugging (initial state). */
   cout("  DEBUG_ENTER();");
   cout("  DEBUG_STATE();");
-
+  printf("\n-----------------------------------------------------------\n");
+  printf("\nGenerating single GPU kernel or single CPU section layout: \n");
   /* intialize split counters */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
@@ -1785,6 +1786,7 @@ int cogen_raytrace(struct instr_def *instr)
   liter = list_iterate_back(instr->complist);
   while((comp = list_previous(liter)) != NULL) {
     if (comp && comp->split) {
+      printf("\n-> SPLIT N at component %s\n",comp->name);
       coutf("#ifndef NOSPLIT");
       coutf( "    } /* end SPLIT at %s */", comp->name);
       coutf( "    } /* if (!ABSORBED) relating to SPLIT at %s */", comp->name);
@@ -1957,34 +1959,35 @@ int cogen_rt_funnel(struct instr_def *instr)
   cout("");
   int cpuonly_last=-1;
   int first=1;
+  int do_split=0;
   liter = list_iterate(instr->complist);
-
+  printf("\n-----------------------------------------------------------\n");
+  printf("\nGenerating GPU/CPU -DFUNNEL layout:\n");
   // iterate component list
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
     if (comp->def->flag_noacc) {
       printf("Component %s is NOACC, CPUONLY=%i\n",comp->name,comp->cpuonly);
     }
-
-    if (!first && comp->cpuonly != cpuonly_last) { // Terminate loop if we are shifting between processing units
+  
+    if (!first && ((comp->cpuonly != cpuonly_last) || comp->split)) { // Terminate loop if we are shifting between processing units
       coutf("    }");
-      if (comp->cpuonly) {
-        coutf("    // unnecessary from pgi 20.7");
-        coutf("    //#pragma acc update host(particles, psorted, pbuffer)");
-        printf("\n * CPU section from component %s\n",comp->name);
-      } else {
-      coutf("    // unnecessary from pgi 20.7");
-      coutf("    //#pragma acc update device(particles, psorted, pbuffer)");
-        printf("\n * GPU kernel from component %s\n",comp->name);
+      if (comp->split) {
+	coutf("    // SPLIT with available livebatchsize ");
+	coutf("    livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize, innerloop, 1);");
       }
-      coutf("    // might be used with SPLIT");
-      coutf("    //livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize, innerloop, 0);");
+      if (comp->split) {
+	printf("\n-> SPLIT within buffer at component %s\n",comp->name);
+      } else if (comp->cpuonly) {
+        printf("\n-> CPU section from component %s\n",comp->name);
+      } else {
+	printf("\n-> GPU kernel from component %s\n",comp->name);
+      }
     }
 
-    if (first || comp->cpuonly != cpuonly_last) {
+    if (first || comp->split || comp->cpuonly != cpuonly_last) {
       if (comp->cpuonly == 0) {
         coutf("    #pragma acc parallel loop present(particles, psorted)");
-        printf("\n * GPU kernel from component %s\n",comp->name);
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
@@ -2050,7 +2053,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("} /* raytrace_all_funnel */");
   coutf("#endif // FUNNEL");
   coutf("");
-
+  printf("\n-----------------------------------------------------------\n");
 } /* cogen_rt_funnel */
 
 /*******************************************************************************
