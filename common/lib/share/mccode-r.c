@@ -2931,6 +2931,7 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
   // copy non-absorbed block
   #pragma acc parallel loop present(psorted)
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
+    particles[psorted[tidx]].p=particles[psorted[tidx]].p/mult;
     #pragma acc loop seq
     for (long bidx = 1; bidx < mult; bidx++) { // bidx: block index
       psorted[bidx*mult + tidx] = psorted[tidx];
