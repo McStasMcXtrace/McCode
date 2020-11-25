@@ -2846,7 +2846,7 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *   len:        meaningful size of psorted and pbuffer
 */
 #ifdef FUNNEL
-long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len) {
+long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len, long buffer_len, long flag_split) {
   #define SAL_THREADS 1024 // num parallel sections
   if (len<SAL_THREADS) return sort_absorb_last_serial(particles, psorted, len);
 
@@ -2917,7 +2917,28 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
   }
   //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
 
-  return accumlen;
+  // return (no SPLIT)
+  if (flag_split != 1)
+    return accumlen;
+
+  // SPLIT - repeat the non-absorbed block N-1 times, where len % accumlen = N + R
+  int mult = buffer_len / accumlen; // TODO: possibly use a new arg, bufferlen, rather than len
+
+  // not enough space for full-block split, return
+  if (mult <= 1)
+    return accumlen;
+
+  // copy non-absorbed block
+  #pragma acc parallel loop present(psorted)
+  for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
+    #pragma acc loop seq
+    for (long bidx = 1; bidx < mult; bidx++) { // bidx: block index
+      psorted[bidx*mult + tidx] = psorted[tidx];
+    }
+  }
+
+  // return expanded array size
+  return accumlen * mult;
 }
 #endif
 
