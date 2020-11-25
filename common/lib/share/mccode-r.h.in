@@ -530,7 +530,7 @@ int display(void);
 *  Divide-and-conquer strategy for parallel sort absorbed last.
 */
 #ifdef FUNNEL
-long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len);
+long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len, long buffer_len, long flag_split);
 #endif
 long sort_absorb_last_serial(_class_particle* particles, long* psorted, long len);
 
