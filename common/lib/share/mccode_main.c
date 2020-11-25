@@ -148,8 +148,10 @@ int mccode_main(int argc, char *argv[])
   // legacy version
   raytrace_all(mcncount, mcseed);
 #else
+  MPI_MASTER(
   // "funneled" version in which propagation is more parallelizable
-  printf("\nNOTE: CPU COMPONENT grammar activated:\n 1) \"FUNNEL\" raytrace algorithm enabled.\n 2) any use of SPLIT is supressed. \n");
+  printf("\nNOTE: CPU COMPONENT grammar activated:\n 1) \"FUNNEL\" raytrace algorithm enabled.\n 2) Any SPLIT's are dynamically allocated based on available buffer size. \n");
+	     );
   raytrace_all_funnel(mcncount, mcseed);
 #endif
 
