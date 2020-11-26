@@ -105,7 +105,7 @@ COMPONENT msf_onoff = Pol_Bfield(xwidth=0.08, yheight=0.08,  Bx=0, By=BVALUE, Bz
 WHEN (ONOFF) AT (0, 0, 0) RELATIVE armMSF
 
 COMPONENT msf_onoff_stop = Pol_Bfield_stop(xwidth=0.08, yheight=0.08)
-WHEN(ONOFF) AT (0, 5, MAGNETLENGTH) RELATIVE armMSF
+WHEN(ONOFF) AT (0, 0, MAGNETLENGTH) RELATIVE armMSF
 
 
 COMPONENT pollambdaMonitor2x =
