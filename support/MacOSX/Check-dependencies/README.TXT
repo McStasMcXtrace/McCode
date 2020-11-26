@@ -2,7 +2,7 @@
 README and install instructions for 
 McStas and McXtrace on Mac OS X.
 
-OS X versions 10.9-10.14 fully supported,
+OS X versions 11.0 and 10.9-10.15 fully supported,
 earlier ones only limited support...
 ******************************************
 
