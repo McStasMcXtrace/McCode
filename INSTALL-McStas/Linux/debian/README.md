@@ -1,4 +1,4 @@
-## Install McStas 2.6.1 On Debian class systems (including Ubuntu, mint etc.):
+## Install McStas 2.7 On Debian class systems (including Ubuntu, mint etc.):
 
 # Add the McCode repository
 After following the below steps your package manager should now be aware of mcstas
@@ -13,23 +13,23 @@ On Debian you will further have to install the non-free repository to have acces
 
 # Look for McStas packages to install
 ```bash
-mcstas@debian:~$ apt-cache search mcstas | grep -v 2.0 |grep -v 2.1 | grep -v 2.2 | grep -v 2.3 | grep -v 2.4 | grep -v 2.5
-mcstas-2.6.1 - mcstas built using CMake
-mcstas-comps-2.6.1 - mcstas-comps built using CMake
-mcstas-manuals-2.6.1 - mcstas_manuals built using CMake
+mcstas@debian:~$ apt-cache search mcstas | grep -v 2.0 |grep -v 2.1 | grep -v 2.2 | grep -v 2.3 | grep -v 2.4 | grep -v 2.5 | grep -v 2.6
+mcstas-2.7 - mcstas built using CMake
+mcstas-comps-2.7 - mcstas-comps built using CMake
+mcstas-manuals-2.7 - mcstas_manuals built using CMake
 mcstas-suite - A metapackage for McStas + perl and python tools
 mcstas-suite-perl - A metapackage for McStas + perl tools
 mcstas-suite-python - A metapackage for McStas + python tools
-mcstas-tools-matlab-mcplot-2.6.1 - matlab-tools-mcplot built using CMake
-mcstas-tools-perl-2.6.1 - legacy-tools built using CMake
-mcstas-tools-perl-cmdline-2.6.1 - legacy-tools-cmdline built using CMake
-mcstas-tools-python-mccodelib-2.6.1 - python-tools-mccodelib built using CMake
-mcstas-tools-python-mcdisplay-mantid-2.6.1 - python-tools-mcdisplay-mantid built using CMake
-mcstas-tools-python-mcdisplay-pyqtgraph-2.6.1 - python-tools-mcdisplay-pyqtgraph built using CMake
-mcstas-tools-python-mcdisplay-webgl-2.6.1 - python-tools-mcdisplay-webgl built using CMake
-mcstas-tools-python-mcgui-2.6.1 - python-tools-mcgui built using CMake
-mcstas-tools-python-mcplot-pyqtgraph-2.6.1 - python-tools-mcplot-pyqtgraph built using CMake
-mcstas-tools-python-mcrun-2.6.1 - python-tools-mcrun built using CMake
+mcstas-tools-matlab-mcplot-2.7 - matlab-tools-mcplot built using CMake
+mcstas-tools-perl-2.7 - legacy-tools built using CMake
+mcstas-tools-perl-cmdline-2.7 - legacy-tools-cmdline built using CMake
+mcstas-tools-python-mccodelib-2.7 - python-tools-mccodelib built using CMake
+mcstas-tools-python-mcdisplay-mantid-2.7 - python-tools-mcdisplay-mantid built using CMake
+mcstas-tools-python-mcdisplay-pyqtgraph-2.7 - python-tools-mcdisplay-pyqtgraph built using CMake
+mcstas-tools-python-mcdisplay-webgl-2.7 - python-tools-mcdisplay-webgl built using CMake
+mcstas-tools-python-mcgui-2.7 - python-tools-mcgui built using CMake
+mcstas-tools-python-mcplot-pyqtgraph-2.7 - python-tools-mcplot-pyqtgraph built using CMake
+mcstas-tools-python-mcrun-2.7 - python-tools-mcrun built using CMake
 ```
 The meta-packages mcstas-suite-perl and mcstas-suite-python allows you to install mcstas with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
 ```bash
@@ -43,7 +43,7 @@ Please report any trouble with the repository to [mcstas-users](mailto:mcstas-us
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.6.1-deb64/
+dpkg, the packages are available for download at http://download.mcstas.org/current/linux/mcstas-2.7-deb64/
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
