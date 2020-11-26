@@ -804,8 +804,8 @@ double Table_Value(t_Table Table, double X, long j)
       } /* end for Index */
   }
 
-  Y1 = Table_Index(Table,Index-1,j);
-  Y2 = Table_Index(Table,Index  ,j);
+  Y1 = Table_Index(Table,Index, j);
+  Y2 = Table_Index(Table,Index+1, j);
 
   if (!strcmp(Table.method,"linear")) {
     ret = Table_Interp1d(X, X1,Y1, X2,Y2);
