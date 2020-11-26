@@ -1,0 +1,69 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+git submodule init
+git submodule update
+cd -
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+WORK=`pwd`
+
+# From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=/usr/share/
+
+# 64-bit
+./mkdist mcstas $1 "" "" deb32 "" -- deb
+./mkdist mcstas-comps $1 "" "" deb32 "" -- deb
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" deb32 "" -- deb
+./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" deb32 "" -- deb
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" deb32 "" -- deb
+./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" deb32 "" -- deb
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb32 "" -- deb
+./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb32 "" -- deb
+
+export MCINSTALL_PREFIX=/usr/share/mcstas/$1/ncrystal/
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb32 "" -- deb
+export MCINSTALL_PREFIX=/usr/share/
+
+
+
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/deb
+
+  for controlfile in `ls control.mcstas*`
+  do
+    sed -i.bak s/@VERSION@/${1}/g $controlfile
+    equivs-build $controlfile
+    mv $controlfile.bak $controlfile
+  done
+
+  mv $WORK/meta-pkgs/deb/mcstas-suite*${1}*.deb $WORK/dist
+  cp $WORK/INSTALL-McStas/Linux/debian/README.md $WORK/dist
+fi
