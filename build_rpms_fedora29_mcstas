@@ -7,8 +7,20 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
 git submodule init
 git submodule update
+cd -
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
 
 WORK=`pwd`
 
