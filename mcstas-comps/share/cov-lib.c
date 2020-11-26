@@ -96,7 +96,7 @@ void tl2_lst_free(tl2_list_type *lst)
 /* ---------------------------------------------------------------------------- */
 
 static double g_tl2_eps = DBL_EPSILON;
-//#pragma acc declare create(g_tl2_eps)
+/* #pragma acc declare create(g_tl2_eps) */
 
 
 /**
