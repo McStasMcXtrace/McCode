@@ -7,10 +7,22 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
 git submodule init
 git submodule update
+cd -
 
-# This is an app bundle being built, relocatable.
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+# This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
 ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
@@ -40,14 +52,14 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 WORK=`pwd`
 
 # NCrystal installation:
-rm -rf 3rdparty-build/ncrystal/build
-mkdir 3rdparty-build/ncrystal/build
-cd 3rdparty-build/ncrystal/build
+rm -rf 3rdparty/ncrystal/build
+mkdir 3rdparty/ncrystal/build
+cd 3rdparty/ncrystal/build
 cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ncrystal/ -DBUILD_G4HOOKS=OFF
 make
 make install
 cd $WORK
-rm -rf 3rdparty-build/ncrystal/build
+rm -rf 3rdparty/ncrystal/build
 
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then

@@ -7,8 +7,20 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
 git submodule init
 git submodule update
+cd -
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
 
 WORK=`pwd`
 
@@ -33,7 +45,7 @@ WORK=`pwd`
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" rpm64 "" -- rpm
 
 export MCINSTALL_PREFIX=/usr/local/mcstas/$1/ncrystal/
-./mkdist mcstas-ncrystal $1 3rdparty-build/ncrystal "" rpm64 "" -- rpm
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" rpm64 "" -- rpm
 export MCINSTALL_PREFIX=/usr/local/
 
 #build metapackages?
