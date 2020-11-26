@@ -169,7 +169,7 @@ INITIALIZE
   }
 
   if(prms.shape == WINDOW && !concentric){
-      printf("Warning (%s): Magnetic field has window shape and has concentric set => Field volume == 0.\n",NAME_CURRENT_COMP);
+    printf("Warning (%s): Magnetic field has window shape without concentric set => Field volume == 0.\n",NAME_CURRENT_COMP);
   }
   if(prms.shape == NONE) {
       printf("Warning (%s): Magnetic field no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
