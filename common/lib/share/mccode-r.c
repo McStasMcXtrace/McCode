@@ -2846,9 +2846,9 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *   len:        meaningful size of psorted and pbuffer
 */
 #ifdef FUNNEL
-long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, long len, long buffer_len, long flag_split) {
+long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split) {
   #define SAL_THREADS 1024 // num parallel sections
-  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, psorted, len);
+  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
 
   long newlen = 0;
   long los[SAL_THREADS]; // target array startidxs
@@ -2860,7 +2860,7 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
   // than l, resulting in idling. We should distribute lengths more evenly.
 
   // step 1: sort sub-arrays
-  #pragma acc parallel loop present(particles, psorted, pbuffer)
+  #pragma acc parallel loop present(particles, pbuffer)
   for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
     long lo = l*tidx;
     long loclen = l;
@@ -2872,28 +2872,28 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
     #pragma acc loop seq
     while (i < j) {
       #pragma acc loop seq
-      while (!particles[psorted[i]]._absorbed && i<j) {
-        pbuffer[i] = psorted[i];
+      while (!particles[i]._absorbed && i<j) {
+        pbuffer[i] = particles[i];
         i++;
       }
       #pragma acc loop seq
-      while (particles[psorted[j]]._absorbed && i<j) {
-        pbuffer[j] = psorted[j];
+      while (particles[j]._absorbed && i<j) {
+        pbuffer[j] = particles[j];
         j--;
       }
       if (i < j) {
-        pbuffer[i] = psorted[j];
-        pbuffer[j] = psorted[i];
+        pbuffer[j] = particles[i];
+        pbuffer[i] = particles[j];
         i++;
         j--;
       }
     }
     // transfer edge case
     if (i==j)
-      pbuffer[i] = psorted[i];
+      pbuffer[i] = particles[i];
 
     lens[tidx] = i - lo;
-    if (i==j && !particles[psorted[i]]._absorbed) lens[tidx]++;
+    if (i==j && !particles[i]._absorbed) lens[tidx]++;
   }
 
   // determine lo's
@@ -2905,14 +2905,14 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
   }
 
   // step 2: write non-absorbed sub-arrays to psorted/output from the left
-  #pragma acc parallel loop present(psorted, pbuffer)
+  #pragma acc parallel loop present(pbuffer)
   for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
     long j, k;
     #pragma acc loop seq
     for (long i=0; i<lens[tidx]; i++) {
       j = i + l*tidx;
       k = i + los[tidx];
-      psorted[k] = pbuffer[j];
+      particles[k] = pbuffer[j];
     }
   }
   //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
@@ -2929,12 +2929,20 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
     return accumlen;
 
   // copy non-absorbed block
-  #pragma acc parallel loop present(psorted)
+  #pragma acc parallel loop present(particles)
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
-    particles[psorted[tidx]].p=particles[psorted[tidx]].p/mult;
+    unsigned long randstate[7];
+    _class_particle targetbuffer;
+    // assign reduced weight to all particles
+    particles[tidx].p=particles[tidx].p/mult;
     #pragma acc loop seq
     for (long bidx = 1; bidx < mult; bidx++) { // bidx: block index
-      psorted[bidx*mult + tidx] = psorted[tidx];
+      // preserve absorbed particle randstate
+      memcpy(randstate, particles[bidx*mult + tidx].randstate, sizeof(unsigned long)*7);
+      // copy full particle struct
+      particles[bidx*mult + tidx] = particles[tidx];
+      // reassign previous randstate
+      memcpy(particles[bidx*mult + tidx].randstate, randstate, sizeof(unsigned long)*7);
     }
   }
 
@@ -2946,31 +2954,30 @@ long sort_absorb_last(_class_particle* particles, long* psorted, long* pbuffer, 
 /*
 *  Fallback serial version of the one above.
 */
-long sort_absorb_last_serial(_class_particle* particles, long* psorted, long len) {
+long sort_absorb_last_serial(_class_particle* particles, long len) {
   long i = 0;
   long j = len - 1;
-  _class_particle* pbuffer;
+  _class_particle pbuffer;
 
   // bubble
   while (i < j) {
-    while (!particles[psorted[i]]._absorbed && i<j) i++;
-    while (particles[psorted[j]]._absorbed && i<j) j--;
+    while (!particles[i]._absorbed && i<j) i++;
+    while (particles[j]._absorbed && i<j) j--;
     if (i < j) {
-      pbuffer = psorted[j];
-      psorted[j] = psorted[i];
-      psorted[i] = pbuffer;
+      pbuffer = particles[j];
+      particles[j] = particles[i];
+      particles[i] = pbuffer;
       i++;
       j--;
     }
   }
 
   // return new length
-  if (i==j && !particles[psorted[i]]._absorbed)
+  if (i==j && !particles[i]._absorbed)
     return i + 1;
   else
     return i;
 }
-
 
 /*******************************************************************************
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)

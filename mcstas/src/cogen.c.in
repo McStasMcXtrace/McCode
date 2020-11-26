@@ -1930,8 +1930,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
   coutf("  // create particles struct and pointer arrays (same memory used by all batches)");
   coutf("  _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
-  coutf("  long* psorted = malloc(innerloop*sizeof(long));");
-  coutf("  long* pbuffer = malloc(innerloop*sizeof(long));");
+  coutf("  _class_particle* pbuffer = malloc(innerloop*sizeof(_class_particle));");
   coutf("  long livebatchsize = innerloop;");
   coutf("");
 
@@ -1943,11 +1942,10 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // init batch
   coutf("    // init particles");
-  coutf("    #pragma acc parallel loop present(particles, psorted)");
+  coutf("    #pragma acc parallel loop present(particles)");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
-  coutf("      psorted[pidx] = pidx;");
   coutf("      _class_particle* _particle = particles + pidx;");
   coutf("      _particle->_uid = pidx;");
   coutf("      srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro");
@@ -1956,7 +1954,6 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // iterate batch through the component list
   cout("    // iterate components");
-  cout("");
   int cpuonly_last=-1;
   int first=1;
   int do_split=0;
@@ -1969,31 +1966,34 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (comp->def->flag_noacc) {
       printf("Component %s is NOACC, CPUONLY=%i\n",comp->name,comp->cpuonly);
     }
-  
+
     if (!first && ((comp->cpuonly != cpuonly_last) || comp->split)) { // Terminate loop if we are shifting between processing units
       coutf("    }");
       if (comp->split) {
-	coutf("    // SPLIT with available livebatchsize ");
-	coutf("    livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize, innerloop, 1);");
+        coutf("");
+        coutf("    // SPLIT with available livebatchsize ");
+        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, innerloop, 1);");
+        coutf("    //printf(\"livebatchsize: %cld\\n\",  livebatchsize);", '%');
       }
       if (comp->split) {
-	printf("\n-> SPLIT within buffer at component %s\n",comp->name);
+        printf("-> SPLIT within buffer at component %s\n",comp->name);
       } else if (comp->cpuonly) {
-        printf("\n-> CPU section from component %s\n",comp->name);
+        printf("-> CPU section from component %s\n",comp->name);
       } else {
-	printf("\n-> GPU kernel from component %s\n",comp->name);
+        printf("-> GPU kernel from component %s\n",comp->name);
       }
     }
 
     if (first || comp->split || comp->cpuonly != cpuonly_last) {
+      coutf("");
       if (comp->cpuonly == 0) {
-        coutf("    #pragma acc parallel loop present(particles, psorted)");
+        coutf("    #pragma acc parallel loop present(particles)");
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-      coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
+      coutf("      _class_particle* _particle = &particles[pidx];");
       coutf("      _class_particle _particle_save;");
-      coutf("");
     }
+    coutf("");
     coutf("      // %s", comp->name);
     coutf("      if (!ABSORBED) {");
     // coordinate transformations (wrt to PREVIOUS)
@@ -2026,26 +2026,26 @@ int cogen_rt_funnel(struct instr_def *instr)
     coutf("      }");
     first=0;
     cpuonly_last = comp->cpuonly;
-    cout( "");
   } /* end while comp list (case) */
+  coutf("");
   coutf("    }");
+  cout( "");
   list_iterate_end(liter);
 
   // finalize batch
-  coutf("");
   coutf("    // finalize particle batch");
-  coutf("    #pragma acc parallel loop present(particles, psorted)");
+  coutf("    #pragma acc parallel loop present(particles)");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-  coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
+  coutf("      _class_particle* _particle = &particles[pidx];");
   coutf("      if (_particle->_index > 4)");
   coutf("        ABSORBED++; /* absorbed when passed all components */");
   coutf("    }");
+  coutf("");
   coutf("    // jump to next viable seed");
   coutf("    seed = seed + innerloop;");
   coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  free(particles);");
-  coutf("  free(psorted);");
   coutf("  free(pbuffer);");
   cout( "");
   coutf("  printf(\"\\n\");");
