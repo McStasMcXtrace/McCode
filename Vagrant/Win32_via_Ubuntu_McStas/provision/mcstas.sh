@@ -14,5 +14,5 @@ ln -s /home/vagrant /home/vagrant/.wine/dosdevices/z\:
 
 cd McCode
 git pull
-sudo -u vagrant ./build_windows_mcstas 2.5 meta
+sudo -u vagrant ./build_windows_mcstas 2.7 meta
 
