@@ -65,11 +65,10 @@
 * 
 * %E
 *******************************************************************************/
-
 DEFINE COMPONENT ViewModISIS
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string Face="TS1_S04_Merlin.mcstas", E0, E1, modPosition=0, xw=0.12, yh=0.12, focus_xw=0.094, focus_yh=0.094, dist=1.7, int verbose=0, beamcurrent=1)
-OUTPUT_PARAMETERS ()
+OUTPUT PARAMETERS ()
 
 DECLARE
 %{

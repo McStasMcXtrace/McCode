@@ -1,4 +1,4 @@
-# Installation of McStas 2.6.1 on Windows 64 bit systems
+# Installation of McStas 2.7 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
@@ -16,7 +16,7 @@ in a cmd.exe shell and start the Perl and McStas installers from there
 BEFORE  attempting to install the McStas metapackage!!!
 
 ## IMPORTANT C:
-* Please install the [McStas 2.6.1 metapackage](http://download.mcstas.org/current/windows/McStas-Metapackage-2.6.1-win64.exe)
+* Please install the [McStas 2.7 metapackage](http://download.mcstas.org/current/windows/McStas-Metapackage-2.7-win64.exe)
 
 * The [extras](http://download.mcstas.org/current/windows/extras)
   folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McStas metapackage installation
