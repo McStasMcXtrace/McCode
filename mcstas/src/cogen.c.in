@@ -1972,8 +1972,8 @@ int cogen_rt_funnel(struct instr_def *instr)
       if (comp->split) {
         coutf("");
         coutf("    // SPLIT with available livebatchsize ");
-        coutf("    long mult;");
-        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, innerloop, 1, &mult);");
+        coutf("    long mult_%s;",comp->name);
+        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, innerloop, 1, &mult_%s);",comp->name);
         coutf("    //printf(\"livebatchsize: %cld, split: %cld\\n\",  livebatchsize, mult);", '%', '%');
       }
       if (comp->split) {
