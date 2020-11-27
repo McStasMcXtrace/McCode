@@ -2841,15 +2841,18 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 *  particles last.
 *
 *   particles:  the particle array, required to checking _absorbed
-*   psorted:    size len index array of source and sorted particles
-*   pbuffer:    size len index array, buffer space
-*   len:        meaningful size of psorted and pbuffer
+*   pbuffer:    same-size particle buffer array required for parallel sort
+*   len:        sorting area-of-interest size (e.g. from previous calls)
+*   buffer_len: total array size
+*   flag_split: if set, multiply live particles into absorbed slots, up to buffer_len
+*   multiplier: output arg, becomes the  SPLIT multiplier if flag_split is set
 */
 #ifdef FUNNEL
-long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split) {
+long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split, long* multiplier) {
   #define SAL_THREADS 1024 // num parallel sections
   if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
 
+  if (multiplier != NULL) *multiplier = -1; // set default out value for multiplier
   long newlen = 0;
   long los[SAL_THREADS]; // target array startidxs
   long lens[SAL_THREADS]; // target array sublens
@@ -2932,23 +2935,36 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   #pragma acc parallel loop present(particles)
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
     unsigned long randstate[7];
+    _class_particle sourcebuffer;
     _class_particle targetbuffer;
     // assign reduced weight to all particles
     particles[tidx].p=particles[tidx].p/mult;
     #pragma acc loop seq
     for (long bidx = 1; bidx < mult; bidx++) { // bidx: block index
-      // preserve absorbed particle randstate
-      memcpy(randstate, particles[bidx*mult + tidx].randstate, sizeof(unsigned long)*7);
-      // copy full particle struct
-      particles[bidx*mult + tidx] = particles[tidx];
+      // preserve absorbed particle (for randstate)
+      sourcebuffer = particles[bidx*mult + tidx];
+      // buffer full particle struct
+      targetbuffer = particles[tidx];
       // reassign previous randstate
-      memcpy(particles[bidx*mult + tidx].randstate, randstate, sizeof(unsigned long)*7);
+      targetbuffer.randstate[0] = sourcebuffer.randstate[0];
+      targetbuffer.randstate[1] = sourcebuffer.randstate[1];
+      targetbuffer.randstate[2] = sourcebuffer.randstate[2];
+      targetbuffer.randstate[3] = sourcebuffer.randstate[3];
+      targetbuffer.randstate[4] = sourcebuffer.randstate[4];
+      targetbuffer.randstate[5] = sourcebuffer.randstate[5];
+      targetbuffer.randstate[6] = sourcebuffer.randstate[6];
+      // apply
+      particles[bidx*mult + tidx] = targetbuffer;
     }
   }
+
+  // set out split multiplier value
+  *multiplier = mult;
 
   // return expanded array size
   return accumlen * mult;
 }
+
 #endif
 
 /*
