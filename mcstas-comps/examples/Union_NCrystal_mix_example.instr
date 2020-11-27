@@ -1,8 +1,13 @@
-/******************************************************************************/
+/*******************************************************************************
 * Modified NCrystal_example to use the Union components with an NCrystal       *
 * process in addition to the stand alone NCrystal component. This example      *
 * exists primarily to show the two components can run together without issue.  *
 * Changes by Mads Bertelsen, 13/8 2020.                                        *
+*                                                                              *
+* NB: This instrument requires that the below commands are run prior to        *
+*     compilation with mcrun or mcgui                                          *
+* 1) source $MCSTAS/ncrystal/setup.sh                                          *
+* 2) mcstas-comps/examples/Union_IncoherentPhonon_test.instr                   *
 *******************************************************************************/
 
 /******************************************************************************/
