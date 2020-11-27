@@ -83,7 +83,7 @@ WHEN (mirrorIn>0) AT (0, 0, 5.0) RELATIVE Origin
 COMPONENT guide1 =
 Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
       l = 1.8, m = 1.0, R0=GUIDEREF)
-WHEN (polariserIn<=0) AT (0, 0, 5.0) RELATIVE Origin
+WHEN (mirrorIn<=0) AT (0, 0, 5.0) RELATIVE Origin
 
 COMPONENT armGuide = Arm()
 AT (0, 0, 6.8)
