@@ -10,19 +10,19 @@
 * Date: 6 December 2006
 * Origin: PSI
 *
-* Saphire filter at 300K
+* Sapphire filter at 300K
 *
 * %DESCRIPTION
 *
-* This saphire filter, defined by two identical rectangular opening apertures,
+* This sapphire filter, defined by two identical rectangular opening apertures,
 * is based upon an absorption function absorp=exp(L*A+C*(exp(-(B/L^2+D/L^4))))
 * decribed by Freund (1983) Nucl. Instrum. Methods, A278, 379-401. The
-* defaultvalues is for Saphire at 300K as found by measurement by (Mildner &
+* defaultvalues is for Sapphire at 300K as found by measurement by (Mildner &
 * Lamaze (1998) J. Appl. Cryst. 31,835-840
 * ( http://journals.iucr.org/j/issues/1998/06/00/hw0070/hw0070bdy.html#BB4)). It
 * is possble to ajust the formular to other materials or temperatures by typing in
 * other parameters.
-* The transmission in saphire is only lightly demependt on temperature, but
+* The transmission in sapphire is only lightly demependt on temperature, but
 * The formular is only cheked at wavelenths between 0.5 and 14 AA (0.4 meV 0.3
 * eV).
 * The filter is for example used in the Eiger beamline at PSI to cut of high
@@ -46,7 +46,7 @@
 * %END
 *******************************************************************************/
 
-DEFINE COMPONENT Saphire_Filter
+DEFINE COMPONENT Sapphire_Filter
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.16, xmax=0.16, ymin=-0.16, ymax=0.16, len=0.1,A=0.8116,B=0.1618, C=21.24,D=0.1291)
 OUTPUT PARAMETERS ()
