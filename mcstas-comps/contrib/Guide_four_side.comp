@@ -310,12 +310,8 @@ q,
 xtest,ytest,
 
 riTable, liTable, uiTable, diTable,
-roTable, loTable, uoTable, doTable,
+roTable, loTable, uoTable, doTable
 
-TEST_INPUT, TEST_INPUT_1, TEST_INPUT_2,TEST_INPUT_3, TEST_INPUT_4,
-ELLIPSE,PARABEL_FOCUS,PARABEL_DEFOCUS,LINEAR,
-TIME_LINEAR,TIME_LINEAR_1,TIME_PARABEL,TIME_PARABEL_1,TIME_ELLIPSE,TIME_ELLIPSE_1,
-TEST_UP_DOWN,TEST_LEFT_RIGHT
 )
 
 SHARE
@@ -417,7 +413,7 @@ void TEST_INPUT(char name[20])
     *pbwt=length+lout+*p2parawt/4.0;								/* parameter b for parabolic equation to define the wall (OUTER side)*/
     *pawt=1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
     *w2wt=sqrt(*p2parawt*(lout+ *p2parawt/4.0));						/* exit width (OUTER side) */
-    *w1wt=sqrt(*p2parawt*(lout+l+ *p2parawt/4.0));						/* entrance width (OUTER side) */
+    *w1wt=sqrt(*p2parawt*(lout+length+ *p2parawt/4.0));						/* entrance width (OUTER side) */
    }
 
 

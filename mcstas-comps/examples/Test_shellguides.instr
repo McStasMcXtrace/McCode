@@ -179,6 +179,8 @@ COMPONENT monitorGuide = PSD_monitor(
 /* the given default values models a parabolic focusing lens , all together you can change 52 (one shell)* 11 (1 central part and 10 shells) Parameters */
 
 
+/* Due to name-clashes in SHARE between the different versions of the shell-guides, the 10-shell version has been disabled */
+
 COMPONENT lens = Guide_four_side_10_shells(
     l = 1.0, R0 = .99,
     w1l = lens_width/2, w2l = lens_width/2, linwl = lens_focal_in_hor, loutwl = lens_focal_out_hor,
@@ -392,8 +394,7 @@ COMPONENT divmonlens = Divergence_monitor(
 COMPONENT PSDmonLens = PSD_monitor(
 	xmin = -0.045, xmax = 0.045, ymin = -0.045, ymax = 0.045,
 	nx=200, ny=200, filename="PSDmonlens.dat")
-  AT (0, 0, 1.0003+lens_focal_out_hor) RELATIVE lens
-
+	AT (0, 0, 1.0003+lens_focal_out_hor) RELATIVE lens */
 
 
 END
