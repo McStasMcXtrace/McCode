@@ -39,11 +39,11 @@
 * Modified by: PW January 2020: version 2.6
 * Modified by: PW May 2020: version 2.6.1
 * Modified by: PW November 2020: version 2.7
-* This file is part of McStas version 2.7, released November 26th 2020.
+* This file is part of McStas version 2.7, released November 27th 2020.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v.2.7, Novmeber 26th, 2020
+Changes in McStas v.2.7, Novmeber 27th, 2020
 
  McStas 2.7 is the 10th release in the 2.x series, provides minor incremental
  improvements and fixes various minor issues with McStas 2.6.1
