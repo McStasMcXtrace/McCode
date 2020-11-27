@@ -18,7 +18,7 @@ for MODULE in `echo $THIRDPARTY`
 do
     if [ -d "3rdparty/patches/${MODULE}" ]; then
 	echo Making McCode cake modules available for $MODULE
-        cp -rp cmake/ 3rdparty/patches/${MODULE}/
+        cp -rp cmake 3rdparty/${MODULE}/
 	echo Applying McCode patches to 3rdparty/${MODULE}
 	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
     fi
