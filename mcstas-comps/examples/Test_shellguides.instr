@@ -179,7 +179,7 @@ COMPONENT monitorGuide = PSD_monitor(
 /* the given default values models a parabolic focusing lens , all together you can change 52 (one shell)* 11 (1 central part and 10 shells) Parameters */
 
 
-/* Due to name-clashes in SHARE between the different versions of the shell-guides, the 10-shell version has been disabled */
+/* Due to name-clashes in SHARE between the different versions of the shell-guides, the 10-shell version has been disabled 
 
 COMPONENT lens = Guide_four_side_10_shells(
     l = 1.0, R0 = .99,
