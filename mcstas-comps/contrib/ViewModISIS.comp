@@ -198,7 +198,6 @@ int binSearch(int Npts,double* AR,double V)
       // if(AR[0]>0.0)AR[0]=0.0;
       return 0;
     }
-
   klo=0;
   khi= Npts-1;
   while (khi-klo >1)
@@ -483,7 +482,7 @@ calcRDum(double* RPts, Source_ViewMod TS)
 } /* calcRDum */
 
 void
-processHeader(FILE* TFile, Source_ViewMod TS, double modPosition, double xw, double yh)
+processHeader(FILE* TFile, Source_ViewMod *TS, double modPosition, double xw, double yh)
   /*!
     Determine the window and the time offset
     \param TFile :: file [rewound on exit]
@@ -502,9 +501,11 @@ processHeader(FILE* TFile, Source_ViewMod TS, double modPosition, double xw, dou
 
   while(fgets(ss,255,TFile))
     {
-      if (!timeOffsetFlag)
-	timeOffsetFlag=findTimeOffset(ss,&TS.timeOffset);
-
+      if (!timeOffsetFlag) {
+	double toff;
+	timeOffsetFlag=findTimeOffset(ss,&toff);
+	TS->timeOffset=toff;
+      }
       if (!rdumCnt)
 	rdumCnt=findRDUM(ss);
       if (rdumCnt && rdumCnt<5)
@@ -519,22 +520,22 @@ processHeader(FILE* TFile, Source_ViewMod TS, double modPosition, double xw, dou
 	{
 	  for(j=0;j<3;j++)
 	    {
-	      TS.ZAxis+=(RPts[3+j]-RPts[j])*(RPts[3+j]-RPts[j]);
-	      TS.XAxis+=(RPts[6+j]-RPts[3+j])*(RPts[6+j]-RPts[3+j]);
+	      TS->ZAxis+=(RPts[3+j]-RPts[j])*(RPts[3+j]-RPts[j]);
+	      TS->XAxis+=(RPts[6+j]-RPts[3+j])*(RPts[6+j]-RPts[3+j]);
 	    }	
 
 
-	  TS.ZAxis=sqrt(TS.ZAxis)/100.0;   // convert to metres from cm
-	  TS.XAxis=sqrt(TS.XAxis)/100.0;
+	  TS->ZAxis=sqrt(TS->ZAxis)/100.0;   // convert to metres from cm
+	  TS->XAxis=sqrt(TS->XAxis)/100.0;
               if (!modPosition)
                  {
-	          TS.ZAxis=yh;
-	          TS.XAxis=xw;
+	          TS->ZAxis=yh;
+	          TS->XAxis=xw;
                   }
-	  fprintf(stderr,"Time off sec == %g \n",TS.timeOffset);
-	  fprintf(stderr,"mod size z == %g \n",TS.ZAxis);
+	  fprintf(stderr,"Time off sec == %g \n",TS->timeOffset);
+	  fprintf(stderr,"mod size z == %g \n",TS->ZAxis);
 	  // TS.rdumMid=calcRDum(RPts, TS);
-	  TS.rdumMid=TS.timeOffset; // Goran
+	  TS->rdumMid=TS->timeOffset; // Goran
 	  return;
 	}
     }
@@ -545,7 +546,7 @@ processHeader(FILE* TFile, Source_ViewMod TS, double modPosition, double xw, dou
 
 void
 readHtable(FILE* TFile,const double Einit,const double Eend, 
-  Source_ViewMod TS, double modPosition, double xw, double yh, int verbose)
+  Source_ViewMod *TS, double modPosition, double xw, double yh, int verbose)
 /*!
   Process a general h.o file to create an integrated
   table of results from Einit -> Eend
@@ -563,23 +564,29 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
   double Tsum;           // Running integration
   double Efraction;      // Amount to use for an energy/time bin
 
+  // extern Source TS;
+
+  int DebugCnt;
   int i;
   /*!
     Status Flag::
     Ftime=1 :: [time ] Reading Time : Data : Err [Exit on Total]
 
+
+    /*
     Double Read File to determine how many bins and
     memery size
   */
+  if (!TFile) return(0);
   Ea=0.0;
   Eb=0.0;
   fprintf(stderr,"Energy == %g %g\n",Einit,Eend);
   eIndex= -1;
+  DebugCnt=0;
   Ftime=0;
   tIndex=0;
-  TS.nTime=0;
-  TS.nEnergy=0;
-  
+  TS->nTime=0;
+  TS->nEnergy=0;
   processHeader(TFile, TS, modPosition, xw, yh);
 
   // Read file and get time bins:
@@ -587,29 +594,29 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
     {
       if (notComment(ss))
 	{
+	  DebugCnt++;
           if (!Ftime)
 	    {
-	      // find :: energy bin: <Number> to <Number> 
-	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))  
+	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))
 		{
 		  if (eIndex==0)
-		    TS.nTime=tIndex;
+		    TS->nTime=tIndex;
 		  eIndex++;
 		}
-	      else if (timeStart(ss))    // find :: <spc> time 
+	      else if (timeStart(ss))
 		{
 		  Ftime=1;
 		  tIndex=0;
 		}
 	    }
-	  else  // In the time data section
+	  else  // In the time section
 	    {
 	      if (timeEnd(ss))     // Found "total"
 		Ftime=0;
 	      else
 		{
 		  // Need to read the line in the case of first run
-		  if (TS.nTime==0)
+		  if (TS->nTime==0)
 		    {
 		      if (cmdnumberD(ss,&T) &&
 			  cmdnumberD(ss,&D))
@@ -619,42 +626,40 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
 	    }
 	}
     }
-  // 
   // Plus 2 since we have a 0 counter and we have missed the last line.
-  // 
-  TS.nEnergy=eIndex+2;
-  if (!TS.nTime && tIndex)  // SMALL TEST if reading first energy bin
-    TS.nTime=tIndex;
-  // printf("tIndex %d %d %d %d \n",tIndex,eIndex,TS.nEnergy,TS.nTime);
+  TS->nEnergy=eIndex+2;
+  if (!TS->nTime && tIndex)
+    TS->nTime=tIndex;
+  // printf("tIndex %d %d %d %d \n",tIndex,eIndex,TS->nEnergy,TS->nTime);
 
   /* SECOND TIME THROUGH:: */
   rewind(TFile);
 
-  TS.Flux=matrix(TS.nEnergy,TS.nTime);
-  TS.EInt=(double*) malloc(TS.nEnergy*sizeof(double));     // Runing integral of energy 
-  TS.TimeBin=(double*) malloc(TS.nTime*sizeof(double));
-  TS.EnergyBin=(double*) malloc(TS.nEnergy*sizeof(double));
-  if (verbose) fprintf(stderr,"NUMBER %d %d \n",TS.nEnergy,TS.nTime);
+  TS->Flux=matrix(TS->nEnergy,TS->nTime);
+  TS->EInt=(double*) malloc(TS->nEnergy*sizeof(double));
+  TS->TimeBin=(double*) malloc(TS->nTime*sizeof(double));
+  TS->EnergyBin=(double*) malloc(TS->nEnergy*sizeof(double));
 
   Tsum=0.0;
   Ea=0.0;
   Eb=0.0;
   eIndex=-1;
+  DebugCnt=0;
   Ftime=0;
   tIndex=0;
-  TS.EInt[0]=0.0;
-
+  TS->EInt[0]=0.0;
   // Read file and get time bins
   while(fgets(ss,255,TFile) && Eend>Ea)
     {
       if (notComment(ss))
 	{
+	  DebugCnt++;
           if (!Ftime)
 	    {
 	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))
 		{
 		  eIndex++;
-		  TS.EnergyBin[eIndex]=(Einit>Ea) ? Einit : Ea;
+		  TS->EnergyBin[eIndex]=(Einit>Ea) ? Einit : Ea;
 		  Efraction=calcFraction(Einit,Eend,Ea,Eb);
 		  Ftime++;
 		}
@@ -667,14 +672,13 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
 		  tIndex=0;
 		}
 	    }
+
 	  else           // In the time section
 	    {
 	      if (timeEnd(ss))     // Found "total"
 		{
 		  Ftime=0;
-		  TS.EInt[eIndex+1]=Tsum;
-		  
-		  if (verbose) fprintf(stderr,"Energy %g %g \n",EtoLambda(Ea),(TS.EInt[eIndex+1]-TS.EInt[eIndex])*3.744905847e14);
+		  TS->EInt[eIndex+1]=Tsum;
 		}
 	      else
 		{
@@ -682,24 +686,25 @@ readHtable(FILE* TFile,const double Einit,const double Eend,
 		  if (cmdnumberD(ss,&T) &&
 		      cmdnumberD(ss,&D))
 		    {
-		      TS.TimeBin[tIndex]=T/1e8;     // convert Time into second (from shakes)
+		      TS->TimeBin[tIndex]=T/1e8;     // convert Time into second (from shakes)
 		      Tsum+=D*Efraction;
-		      TS.Flux[eIndex][tIndex]=Tsum;
+		      TS->Flux[eIndex][tIndex]=Tsum;
 		      tIndex++;
 		    }
 		}
 	    }
 	}
     }
-  TS.EnergyBin[eIndex+1]=Eend;
-  TS.Total=Tsum;
 
-  // printf("tIndex %d %d %d \n",tIndex,eIndex,TS.nTime);
-  // printf("Tsum %g \n",Tsum);
-  // fprintf(stderr,"ebin1 ebinN %g %g\n",TS.EnergyBin[0],TS.EnergyBin[TS.nEnergy-1]);
+  TS->EnergyBin[eIndex+1]=Eend;
+  TS->Total=Tsum;
 
-  return;
-} /* readHtable */
+  //  printf("tIndex %d %d %d \n",tIndex,eIndex,TS.nTime);
+  //printf("Tsum %g \n",Tsum);
+  //fprintf(stderr,"ebin1 ebinN %g %g\n",TS.EnergyBin[0],TS.EnergyBin[TS.nEnergy-1]);
+
+  return 1;
+} // readHtable
 
 
 #pragma acc routine seq
@@ -732,18 +737,38 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
   // static int testVar=0;
 
   R0=rand01();
+  /* if (testVar==0)
+    {
+    R0=1.0e-8;
+    testVar=1;
+    }
+  */
   Rend=R=TS.Total*R0;
   // This gives Eint[Epnt-1] > R > Eint[Epnt]
   Epnt=binSearch(TS.nEnergy-1,TS.EInt,R);
-  Tpnt=binSearch(TS.nTime-1,TS.Flux[Epnt-1],R);
 
-  if(Epnt<0 || R<TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
+  //      if (Epnt < 0)
+  //   Epnt=1;
+  Tpnt=binSearch(TS.nTime-1,TS.Flux[Epnt-1],R);
+  //  fprintf(stderr,"TBoundaryX == %12.6e %12.6e \n",TS.TimeBin[Tpnt-1],TS.TimeBin[Tpnt]);
+  //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n\n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+  //  if (Epnt == -1)
+  //{
+  //    Epnt=0;
+  // fprintf(stderr,"\n Rvals == %g %d %d %g\n",R,Epnt,Tpnt,TS.TimeBin[0]);
+  //  fprintf(stderr,"EInt == %d %12.6e %12.6e %12.6e %12.6e \n",Epnt,TS.EInt[Epnt-1],R,TS.EInt[Epnt],TS.EInt[Epnt+1]);
+  // printf("EBoundary == %12.6e %12.6e \n",TS.EnergyBin[Epnt],TS.EnergyBin[Epnt+1]);
+
+  //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n\n",TS.Flux[Epnt+1][Tpnt],R,TS.Flux[Epnt+1][Tpnt+1]);
+  // }
+
+  if(R < TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
     {
 #ifndef OPENACC
-      fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",
-        TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+      fprintf(stderr, "outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
 #endif
     }
+
   if(Epnt == 0)
     {
       Estart=0.0;
@@ -754,21 +779,36 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
     {
       Estart=TS.EInt[Epnt-1];
       Espread=TS.EInt[Epnt]-TS.EInt[Epnt-1];
-      *EV=(Epnt>TS.nEnergy-1) ? TS.EnergyBin[Epnt+1] : TS.EnergyBin[Epnt];
+      *EV=TS.EnergyBin[Epnt+1];
     }
-  if (Tpnt==0 || Epnt==0 || Tpnt==TS.nTime)
+
+  if (Tpnt==0 || Epnt==0)
     {
 #ifndef OPENACC
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
       exit(1);
 #endif
     }
+  if (Tpnt==TS.nTime)
+    {
+#ifndef OPENACC
+      fprintf(stderr,"BIG ERROR WITH Tpnt and Epnt\n");
+      exit(1);
+#endif
 
-  *TV=TS.TimeBin[Tpnt-1];
-  TRange=TS.TimeBin[Tpnt]-TS.TimeBin[Tpnt-1];
-  Tspread=TS.Flux[Epnt-1][Tpnt]-TS.Flux[Epnt-1][Tpnt-1];
-  R-=TS.Flux[Epnt-1][Tpnt-1];
-
+      *TV=0.0;
+      Tspread=TS.Flux[Epnt-1][0]-TS.EInt[Epnt-1];
+      TRange=TS.TimeBin[0];
+      R-=TS.EInt[Epnt-1];
+    }
+  else
+    {
+      *TV=TS.TimeBin[Tpnt-1];
+      TRange=TS.TimeBin[Tpnt]-TS.TimeBin[Tpnt-1];
+      Tspread=TS.Flux[Epnt-1][Tpnt]-TS.Flux[Epnt-1][Tpnt-1];
+      R-=TS.Flux[Epnt-1][Tpnt-1];
+    }
+  //  printf("R == %12.6e\n",R);
   R/=Tspread;
   *TV+=TRange*R;
 
@@ -779,30 +819,32 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source_ViewMod T
 
   *EV=polInterp(TS.EInt+iStart,TS.EnergyBin+iStart,1+iEnd-iStart,R1);
 
-  
-  if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
+  //  fprintf(stderr,"Energy == %d %d %12.6e %12.6e \n",iStart,iEnd,R1,*EV);
+  //  fprintf(stderr,"bins == %12.6e %12.6e %12.6e %12.6e \n",TS.EnergyBin[iStart],TS.EnergyBin[iEnd],
+  //	  TS.EInt[Epnt],TS.EInt[Epnt-1]);
+
+    if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
     {
 #ifndef OPENACC
       fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
       fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
 #endif
     }
-  
+
+
   if(*EV < *lim1 || *EV > *lim2)
     {
 #ifndef OPENACC
-      fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",
-	      Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
+      fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
 
       fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);
       fprintf(stderr,"Points (%g) == ",R1);
+
       for(i=0;i<iEnd-iStart;i++)
-	fprintf(stderr,"Time start %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
+	fprintf(stderr," %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
       fprintf(stderr,"\n");
-      exit(1);
 #endif
     }
-
   return;
 } /* getPoint */
 
@@ -1033,7 +1075,7 @@ INITIALIZE
   rtE1=convertEnergy(E1);
   orderEnergy(&rtE0,&rtE1);
 
-  readHtable(Tfile,rtE0,rtE1, TS, modPosition, xw, yh, verbose);
+  readHtable(Tfile,rtE0,rtE1, &TS, modPosition, xw, yh, verbose);
   fclose(Tfile);
   // Below pragma was needed with PGI 19.x, compilation fails with NVC 20.7 
   //#pragma acc declare create( TS )
@@ -1066,18 +1108,15 @@ TRACE
 
   Ncount++;
 
-  x += TS.XAxis*(0.5-rand01());            /* Get point on shutter enterance */
-  y += TS.ZAxis*(0.5-rand01());            /* Get point on shutter enterance */
+  x = TS.XAxis*(0.5-rand01());            /* Get point on shutter enterance */
+  y = TS.ZAxis*(0.5-rand01());            /* Get point on shutter enterance */
     
-  // if (modPosition) z=TS.rdumMid;    //   Goran          
-
+  
   xf = focus_xw*(0.5-rand01());          /* Choose focusing position uniformly */
   yf = focus_yh*(0.5-rand01());          /* Choose focusing position uniformly */
 
-  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS, _particle);
+   getPoint(&Tval,&Eval,&rtE0,&rtE1, TS, _particle);
   
-//  Ival=TS.Total*6.2415093e+12; // * 1.1879451;  /* ( of proton in 1uAmp) * (1-cos(30))*2*Pi  */
-//  Ival=TS.Total*5.9294338e+12; // Number of proton in 1uAmp * 0.95 (0.95 because of muon target loss)
   Ival=TS.Total*6.2415093e+12; // Number of proton in 1uAmp
 
   dx = xf-x;
@@ -1089,7 +1128,7 @@ TRACE
   vx = v*dx/r;
 
 
-   t=Tval-(TS.rdumMid-TS.timeOffset)/vz; ///vz;
+   t=Tval-(TS.rdumMid-TS.timeOffset)/vz;
    
      if (modPosition)
      {
@@ -1098,10 +1137,8 @@ TRACE
 
   p=beamcurrent*angleArea*Ival/Nsim;
 
-  //   testing only - Goran              
-  //  if (!modPosition) p*=TS.timeOffset;
 
-
+#ifndef OPENACC
   if (verbose && !(Ncount % 100000))
     {
       fprintf(stderr,"FPos[%d]=> %g %g %g  \n",Ncount,x,y,z);
@@ -1112,7 +1149,8 @@ TRACE
       fprintf(stderr,"TimeOffset[%d]=> %g\n",Ncount,TS.timeOffset);
       fprintf(stderr,"TimeTval[%d]=> %g\n",Ncount,Tval);
       fprintf(stderr,"TimeZero[%d]=> %g\n",Ncount,t);
-    }  
+    }
+#endif  
 
 %}
 
