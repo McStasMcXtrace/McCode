@@ -44,12 +44,13 @@
 *******************************************************************************/
 void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier){
 
-    /* logic here is Read_Table should include a call to FIND. If found the return value shoud just be used as
-     * if the table had been read. If not found then read the table and STORE.
-     * Table_Free should include a call to GC. If this returns non-NULL then we shoudl proceed with freeing the memory
-     * associated with the table item - otherwise do nothing since there are more references that may need it.*/
+    /* logic here is Read_Table should include a call to FIND. If found the return value should just be used as
+     * if the table had been read from disk. If not found then read the table and STORE.
+     * Table_Free should include a call to GC. If this returns non-NULL then we should proceed with freeing the memory
+     * associated with the table item - otherwise only decrement the reference counter since there are more references
+     * that may need it.*/
 
-    static t_Read_table_file_item read_table_file_list[1024];
+    static t_Read_table_file_item read_table_file_list[1024];  
     static int read_table_file_count=0;
 
     t_Read_table_file_item *tr;
@@ -72,26 +73,25 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
         case STORE:
             /*find an available slot and store references to table there*/
             tr=&(read_table_file_list[read_table_file_count++]);
-            tr->table_ref=(t_Table *)calloc(1,sizeof(t_Table));
-            /*copy the contents of the table handle*/
-            *(tr->table_ref)= *((t_Table *) item);
+            tr->table_ref = ((t_Table *) item);
             tr->ref_count++;
             return NULL;
         case GC:
-            /* Should this item be garbage collected (freed) - if so scratch the entry and return the address of the item -
+            /* Should this item be garbage collected (freed) - if so scratch the entry and return the address of the item - 
              * else decrement ref_count and return NULL.
              * A non-NULL return expects the item to actually be freed afterwards.*/
             tr=read_table_file_list;
             while ( tr->table_ref!=NULL ){
-                if ( tr->table_ref->data ==((t_Table *)item)->data &&
+                if ( tr->table_ref->data ==((t_Table *)item)->data && 
                         tr->table_ref->block_number == ((t_Table *)item)->block_number){
                     /*matching item found*/
                     if (tr->ref_count>1){
-                        /*the item is found - no garbage collection needed*/
+                        /*the item is found and no garbage collection needed*/
                         tr->ref_count--;
                         return NULL;
                     }else{
-                        /* The item is found - move remaining list items up one slot,
+                        /* The item is found and the reference counter is 1.
+                         * This means we should garbage collect. Move remaining list items up one slot,
                          * and return the table for garbage collection by caller*/
                         while (tr->table_ref!=NULL){
                             *tr=*(tr+1);
@@ -103,10 +103,11 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                 }
                 tr++;
             }
-            return (void *)0x1 ;/*item not found*/
+            /* item not found, and so should be garbage collected. This could be the case if freeing a
+             * Table that has been constructed from code - not read from file. Return 0x1 to flag it for
+             * collection.*/
+            return (void *) 0x1 ;
     }
-
-    return (void*) 0; /* error, action not handled */
 }
 
 /* Access functions to the handler*/
@@ -142,10 +143,10 @@ int Table_File_List_gc(t_Table *tab){
 /*****************************************************************************
  * void *Table_File_List_store(t_Table *tab)
  * input tab: pointer to table to store.
- * return None.
+ * return None. 
 *******************************************************************************/
 void Table_File_List_store(t_Table *tab){
-    Table_File_List_Handler(STORE,tab,0);
+    return Table_File_List_Handler(STORE,tab,0);
 }
 
 
@@ -162,10 +163,10 @@ void Table_File_List_store(t_Table *tab){
   {
     char path[1024];
     FILE *hfile = NULL;
-
+    
     if (!File || File[0]=='\0')                     return(NULL);
     if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(NULL);
-
+    
     /* search in current or full path */
     strncpy(path, File, 1024);
     hfile = fopen(path, Mode);
@@ -173,7 +174,7 @@ void Table_File_List_store(t_Table *tab){
     {
       char dir[1024];
 
-      if (!hfile && instrument_source && strlen(instrument_source)) /* search in instrument source location */
+      if (!hfile && instrument_source[0] != '\0' && strlen(instrument_source)) /* search in instrument source location */
       {
         char *path_pos   = NULL;
         /* extract path: searches for last file separator */
@@ -188,7 +189,7 @@ void Table_File_List_store(t_Table *tab){
           }
         }
       }
-      if (!hfile && instrument_exe && strlen(instrument_exe)) /* search in PWD instrument executable location */
+      if (!hfile && instrument_exe[0] != '\0' && strlen(instrument_exe)) /* search in PWD instrument executable location */
       {
         char *path_pos   = NULL;
         /* extract path: searches for last file separator */
@@ -277,9 +278,9 @@ void Table_File_List_store(t_Table *tab){
 
     /*Need to be able to store the pointer*/
     if (!Table) return(-1);
-
+    
     //if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
-    //else
+    //else                   
     strncpy(name, File, 1024);
     if(offset && *offset){
         begin=*offset;
@@ -303,12 +304,12 @@ void Table_File_List_store(t_Table *tab){
       printf("Opening input file '%s' (Table_Read_Offset)\n", path);
       );
     }
-
+    
     /* read file state */
     stat(path,&stfile); filesize = stfile.st_size;
     if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
     begin     = ftell(hfile);
-
+    
     Table_Init(Table, 0, 0);
 
     /* read file content and set the Table */
@@ -317,7 +318,7 @@ void Table_File_List_store(t_Table *tab){
     Table->end   = ftell(hfile);
     Table->filesize = (filesize>0 ? filesize : 0);
     Table_Stat(Table);
-
+    
     Table_File_List_store(Table);
 
     if (offset) *offset=Table->end;
@@ -354,7 +355,7 @@ void Table_File_List_store(t_Table *tab){
     if (!Table) return(-1);
 
     Table_Init(Table, 0, 0);
-
+    
     /* open the file */
     hfile = Open_File(File, "r", path);
     if (!hfile) return(-1);
@@ -363,12 +364,12 @@ void Table_File_List_store(t_Table *tab){
       printf("Opening input file '%s' (Table_Read, Binary)\n", path);
       );
     }
-
+    
     /* read file state */
     stat(File,&stfile);
     filesize = stfile.st_size;
     Table->filesize=filesize;
-
+    
     /* read file content */
     if (type && !strcmp(type,"double")) sizeofelement = sizeof(double);
     else  sizeofelement = sizeof(float);
@@ -541,7 +542,7 @@ void Table_File_List_store(t_Table *tab){
                 } else { /* store into data array */
                   if (count_in_array >= malloc_size) {
                     /* realloc data buffer if necessary */
-                    malloc_size = count_in_array+CHAR_BUF_LENGTH;
+                    malloc_size = count_in_array*1.5;
                     Data = (double*) realloc(Data, malloc_size*sizeof(double));
                     if (Data == NULL) {
                       fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
@@ -601,7 +602,7 @@ void Table_File_List_store(t_Table *tab){
     if (Rows * Columns != count_in_array)
     {
       fprintf(stderr, "Warning: Read_Table :%s %s Data has %li values that should be %li x %li\n",
-        (Table->filename ? Table->filename : ""),
+        (Table->filename[0] != '\0' ? Table->filename : ""),
         (!block_number ? " catenated" : ""),
         count_in_array, Rows, Columns);
       Columns = count_in_array; Rows = 1;
@@ -630,7 +631,7 @@ void Table_File_List_store(t_Table *tab){
     /* performs linear interpolation on X axis (0-th column) */
 
     if (!Table) return(-1);
-    if (!Table->data
+    if (!Table->data 
     || Table->rows*Table->columns == 0 || !Table->step_x)
       return(0);
     Table_Stat(Table); /* recompute statitstics and minimal step */
@@ -657,7 +658,7 @@ void Table_File_List_store(t_Table *tab){
 
       Table->rows = Length_Table;
       Table->step_x = new_step;
-      Table->max_x = Table->min_x + (Length_Table-1)*new_step;
+      Table->max_x = Table->min_x + (Length_Table-1)*new_step; 
       /*max might not be the same anymore
        * Use Length_Table -1 since the first and laset rows are the limits of the defined interval.*/
       free(Table->data);
@@ -886,14 +887,16 @@ double Table_Value(t_Table Table, double X, long j)
 
 /*******************************************************************************
 * void Table_Free(t_Table *Table)
-*   ACTION: free a single Table
+*   ACTION: free a single Table. First Call Table_File_list_gc. If this returns
+*   non-zero it means there are more refernces to the table, and so the table
+*   should not bee freed.
 *   return: empty Table
 *******************************************************************************/
   void Table_Free(t_Table *Table)
   {
     if( !Table_File_List_gc(Table) ){
        return;
-    }
+    } 
     if (!Table) return;
     if (Table->data   != NULL) free(Table->data);
     if (Table->header != NULL) free(Table->header);
@@ -913,7 +916,7 @@ double Table_Value(t_Table Table, double X, long j)
     if (!Table.block_number) strcpy(buffer, "catenated");
     else sprintf(buffer, "block %li", Table.block_number);
     printf("Table from file '%s' (%s)",
-      Table.filename ? Table.filename : "", buffer);
+      Table.filename[0] != '\0' ? Table.filename : "", buffer);
     if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
       printf(" is %li x %li ", Table.rows, Table.columns);
@@ -993,7 +996,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
 *     when x1=x2=0 or y1=y2=0, the table default limits are used.
 *   return: 0=all is fine, non-0: error
 *******************************************************************************/
-MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
+MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl, 
   double x1, double x2, double y1, double y2)
 {
   long    i =0;
@@ -1063,7 +1066,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
       if (X < min_x) min_x = X;
       if (X > max_x) max_x = X;
     } /* for */
-
+    
     /* test for monotonicity and constant step if the table is an XY or single vector */
     if (n > 1) {
       /* mean step */
@@ -1080,7 +1083,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
         if ((max_x - min_x)*diff < 0 && monotonic)
           monotonic = 0;
       } /* end for */
-
+      
       /* now test if steps are constant within READ_TABLE_STEPTOL */
       if(!step){
         /*means there's a disconitnuity -> not constantstep*/
@@ -1120,7 +1123,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
     long allocated=256;
     long nelements=1;
 
-    /* fisrt allocate an initial empty t_Table array */
+    /* first allocate an initial empty t_Table array */
     Table_Array = (t_Table *)malloc(allocated*sizeof(t_Table));
     if (!Table_Array) {
       fprintf(stderr, "Error: Can not allocate memory %li (Table_Read_Array).\n",
@@ -1136,25 +1139,28 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
       /* if ok, set t_Table block number else exit loop */
       block_number++;
       Table.block_number = block_number;
-
+      
       /* access file at offset and get following block. Block number is from the set offset
        * hence the hardcoded 1 - i.e. the next block counted from offset.*/
       nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
-      /* if t_Table array is not long enough, expand and realocate */
-      if (block_number >= allocated-1) {
-        allocated += 256;
-        Table_Array = (t_Table *)realloc(Table_Array,
-           allocated*sizeof(t_Table));
-        if (!Table_Array) {
-          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
-              allocated*sizeof(t_Table));
-          *blocks = 0;
-          return (NULL);
-        }
+      /*if the block is empty - don't store it*/
+      if (nelements>0){
+          /* if t_Table array is not long enough, expand and realocate */
+          if (block_number >= allocated-1) {
+              allocated += 256;
+              Table_Array = (t_Table *)realloc(Table_Array,
+                      allocated*sizeof(t_Table));
+              if (!Table_Array) {
+                  fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
+                          allocated*sizeof(t_Table));
+                  *blocks = 0;
+                  return (NULL);
+              }
+          }
+          /* store it into t_Table array */
+          //snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
+          Table_Array[block_number-1] = Table;
       }
-      /* store it into t_Table array */
-      //snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
-      Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }
     /* send back number of extracted blocks */
@@ -1172,11 +1178,10 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 *******************************************************************************/
   void Table_Free_Array(t_Table *Table)
   {
-    long index=0;
+    long index;
     if (!Table) return;
-    while (Table[index].data || Table[index].header){
+    for (index=0;index < Table[0].array_length; index++){
             Table_Free(&Table[index]);
-            index++;
     }
     free(Table);
   } /* end Table_Free_Array */
