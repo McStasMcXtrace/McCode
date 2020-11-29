@@ -66,7 +66,11 @@ SPLIT SPLITS COMPONENT sample_cradle = Arm()
 COMPONENT Pow0 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.5, d_phi=0, concentric=1)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
-  if (SCATTERED) Sp0=1;
+  if (SCATTERED) {
+    Sp0=1;
+  } else {
+    Sp0=0;
+  }
 %}
 
 
@@ -77,14 +81,21 @@ EXTEND %{
     if (!SCATTERED) {
       ABSORB;
     }
+  if (SCATTERED) {
+    Sp1=1;
+  } else {
+    Sp1=0;
   }
-  if (SCATTERED) Sp1=1;
 %}
 
 COMPONENT Pow2 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.8, d_phi=0, concentric=0)
   AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
-  if (SCATTERED) Sp2=1;
+  if (SCATTERED) {
+    Sp2=1;
+  } else {
+    Sp2=0;
+  }
 %}
 
 COMPONENT Sph_sum = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sum")
