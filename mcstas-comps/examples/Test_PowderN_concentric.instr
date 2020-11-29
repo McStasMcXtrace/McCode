@@ -81,6 +81,7 @@ EXTEND %{
     if (!SCATTERED) {
       ABSORB;
     }
+  }
   if (SCATTERED) {
     Sp1=1;
   } else {
