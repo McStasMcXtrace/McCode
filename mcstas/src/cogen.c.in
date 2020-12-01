@@ -1786,7 +1786,7 @@ int cogen_raytrace(struct instr_def *instr)
   liter = list_iterate_back(instr->complist);
   while((comp = list_previous(liter)) != NULL) {
     if (comp && comp->split) {
-      printf("\n-> SPLIT N at component %s\n",comp->name);
+      printf("-> SPLIT N at component %s\n",comp->name);
       coutf("#ifndef NOSPLIT");
       coutf( "    } /* end SPLIT at %s */", comp->name);
       coutf( "    } /* if (!ABSORBED) relating to SPLIT at %s */", comp->name);
@@ -2298,10 +2298,14 @@ cogen_header(struct instr_def *instr, char *output_name)
       if (!strstr(tpe, "[") && !strstr(tpe, "]") && !strstr(tpe, "*")) {
 	coutf("  p->%s=0;",var);
       } else {
-	printf("\nWARNING:\n   --> USERVAR %s is of type %s (array/pointer?) and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
+	printf("\nWARNING:\n   --> USERVAR %s is of type %s (array/pointer?)\n", var,tpe);
+	printf("   --> and may need specific per-particle\n");
+	printf("   --> initialisation through an EXTEND block!\n");
       }
     } else {
-      printf("\nWARNING:\n   --> USERVAR %s is of type %s and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
+      printf("\nWARNING:\n   --> USERVAR %s is of type %s and may need specific\n", var,tpe);
+      printf("   --> per-particle initialisation through an\n");
+      printf("   --> EXTEND block!\n");
     }
   }
   cout("}");
