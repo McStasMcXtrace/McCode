@@ -2298,7 +2298,7 @@ cogen_header(struct instr_def *instr, char *output_name)
       if (!strstr(tpe, "[") && !strstr(tpe, "]") && !strstr(tpe, "*")) {
 	coutf("  p->%s=0;",var);
       } else {
-	printf("\nWARNING:\n   --> USERVAR %s is of type %s (vector?) and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
+	printf("\nWARNING:\n   --> USERVAR %s is of type %s (array/pointer?) and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
       }
     } else {
       printf("\nWARNING:\n   --> USERVAR %s is of type %s and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
