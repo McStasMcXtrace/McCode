@@ -1681,6 +1681,7 @@ int cogen_raytrace(struct instr_def *instr)
     /* the SPLIT loop must be set before we enter further component blocks */
     if (comp->split) {
       char *exp=exp_tostring(comp->split);
+      printf("-> SPLIT N at component %s\n",comp->name);
       coutf("#ifndef NOSPLIT");
       coutf("    /* start SPLIT at %s */", comp->name);
       coutf("    if (!ABSORBED) {");
@@ -1786,7 +1787,6 @@ int cogen_raytrace(struct instr_def *instr)
   liter = list_iterate_back(instr->complist);
   while((comp = list_previous(liter)) != NULL) {
     if (comp && comp->split) {
-      printf("-> SPLIT N at component %s\n",comp->name);
       coutf("#ifndef NOSPLIT");
       coutf( "    } /* end SPLIT at %s */", comp->name);
       coutf( "    } /* if (!ABSORBED) relating to SPLIT at %s */", comp->name);
