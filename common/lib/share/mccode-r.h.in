@@ -281,7 +281,7 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
 char  *mcsig_message;
 #define SIG_MESSAGE(msg) mcsig_message=(char *)(msg);
 #else
-#define SIG_MESSAGE
+#define SIG_MESSAGE(...)
 #endif /* !NOSIGNALS */
 
 
