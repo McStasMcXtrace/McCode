@@ -1720,7 +1720,7 @@ int cogen_raytrace(struct instr_def *instr)
       // WHEN
       if (comp->when) {
         char *exp=exp_tostring(comp->when);
-        coutf("      if (%s) // conditional WHEN execution", exp);
+        coutf("      if ((%s)) // conditional WHEN execution", exp);
         str_free(exp);
       }
       coutf("      class_%s_trace(&_%s_var, _particle);%s",
@@ -2013,7 +2013,7 @@ int cogen_rt_funnel(struct instr_def *instr)
       // WHEN
       if (comp->when) {
         char *exp=exp_tostring(comp->when);
-        coutf("        if (%s) // conditional WHEN", exp);
+        coutf("        if ((%s)) // conditional WHEN", exp);
         str_free(exp);
       }
       // TRACE
