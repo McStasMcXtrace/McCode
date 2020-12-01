@@ -2232,7 +2232,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   /*generate uservar return functions*/
   cout("/*Generated user variable handlers:*/");
   cout("");
-  List_handle liter;
+  List_handle liter,liter2;
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
@@ -2241,7 +2241,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#endif");
   cout("  int s=1;");
   cout("  double rval=0;");
-  char *var;
+  char *var, *tpe;
   cout("  if(!str_comp(\"x\",name)){rval=p->x;s=0;}");
   cout("  if(!str_comp(\"y\",name)){rval=p->y;s=0;}");
   cout("  if(!str_comp(\"z\",name)){rval=p->z;s=0;}");
@@ -2289,10 +2289,20 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
 
   liter = list_iterate(instr->user_vars);
+  liter2 = list_iterate(instr->user_vars_types);
   cout("#pragma acc routine");
   cout("void particle_uservar_init(_class_particle *p){");
   while((var = list_next(liter))) {
-    coutf("  p->%s=0;",var);
+    tpe = list_next(liter2);
+    if (strstr(tpe, "double") || strstr(tpe, "MCNUM") || strstr(tpe, "int")){
+      if (!strstr(tpe, "[") && !strstr(tpe, "]") && !strstr(tpe, "*")) {
+	coutf("  p->%s=0;",var);
+      } else {
+	printf("\nWARNING:\n   --> USERVAR %s is of type %s (vector?) and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
+      }
+    } else {
+      printf("\nWARNING:\n   --> USERVAR %s is of type %s and may need specific per-particle\n   --> initialisation through an EXTEND block!\n", var,tpe);
+    }
   }
   cout("}");
   cout("");
