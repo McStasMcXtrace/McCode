@@ -89,13 +89,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,
 int surface_id=-1,
 nps=0,smooth=1)
-OUTPUT PARAMETERS (hfile,rep,begin_neutrons,do_rotate,do_translate,
-bx,by,bz,angle2z,mean_x, mean_y, mean_z,
-old_surface,surface,informed_event,informed_surface,
-min_x, min_y, min_z,    max_x , max_y , max_z ,
-min_vx, min_vy, min_vz, max_vx, max_vy, max_vz,
-mean_dx, mean_dy, mean_dz,
-n_count_extrapolated, repeat_cnt)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

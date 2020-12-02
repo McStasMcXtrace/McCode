@@ -142,22 +142,7 @@ SETTING PARAMETERS (
   flux_file_perAA=0, flux_file_log=0,
   Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0,phi_init=0,
   theta_init=0,HEtailA=0,HEtailL0=0)
-OUTPUT PARAMETERS (
-  p_in,lambda0, lambda02, L2P,
-  lambda0b, lambda02b, L2Pb,
-  lambda0c, lambda02c, L2Pc,
-  pTable,pTable_x,pTable_y,
-  pTable_xmin,
-  pTable_xmax,
-  pTable_xsum,
-  pTable_ymin,
-  pTable_ymax,
-  pTable_ysum,
-  pTable_dxmin,
-  pTable_dxmax,
-  pTable_dymin,
-  pTable_dymax
-)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

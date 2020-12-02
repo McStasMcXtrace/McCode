@@ -50,7 +50,7 @@
 DEFINE COMPONENT Mirror_Elliptic_Bispectral
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0,focus_start_w,focus_end_w, focus_start_h, focus_end_h, mirror_start, m,  smallaxis_w, smallaxis_h, length, transmit=0, substrate_thickness=0.0005, coating_thickness=10e-6)
-OUTPUT PARAMETERS (pTable)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

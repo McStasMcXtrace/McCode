@@ -58,7 +58,7 @@
 DEFINE COMPONENT NPI_tof_theta_monitor
 DEFINITION PARAMETERS (nt=128, na=90)
 SETTING PARAMETERS (string filename=0, radius=1, yheight=0.3, tmin, tmax, amin, amax, restore_neutron=1, verbose=0)
-OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, th2_min, th2_max, dth, dtof, tt_0, tt_1)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
   %{

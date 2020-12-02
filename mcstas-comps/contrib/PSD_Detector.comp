@@ -179,11 +179,7 @@ verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
 yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
 string type=0, string filename=0,
 string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
-CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
-PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
-DetectorType,
-DEFS, Vars)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

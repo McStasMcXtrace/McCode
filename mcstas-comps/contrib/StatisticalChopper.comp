@@ -48,7 +48,7 @@
 DEFINE COMPONENT StatisticalChopper
 SETTING PARAMETERS (radius=0.5, yheight=0, nu, jitter=0, delay=0, isfirst=0, abs_out=1, phase=0, verbose=0, n_pulse=1,
 string sequence="NULL")
-OUTPUT PARAMETERS (delta_y, height,omega, Sequence,SequenceIndex,nslit,m)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

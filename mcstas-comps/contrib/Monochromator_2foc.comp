@@ -76,7 +76,7 @@
 DEFINE COMPONENT Monochromator_2foc
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
-OUTPUT PARAMETERS (mos_y, mos_z,  mono_Q, SlabWidth, SlabHeight, rTable)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

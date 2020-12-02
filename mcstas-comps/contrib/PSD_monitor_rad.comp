@@ -46,7 +46,7 @@
 DEFINE COMPONENT PSD_monitor_rad
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nr=100, string filename=0, string filename_av=0, rmax=0.2)
-OUTPUT PARAMETERS (PSDr_N, PSDr_p, PSDr_p2, PSDr_av_p, PSDr_av_p2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

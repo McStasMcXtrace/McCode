@@ -116,7 +116,7 @@ thickness=0.001,radius=0.015,
 sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822,
 density=3.148,weight=62.3018,
 p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0, string geometry=0)
-OUTPUT PARAMETERS (rho, bc, my_s, my_a_v, mean_n, events)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

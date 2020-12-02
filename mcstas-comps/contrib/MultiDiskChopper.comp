@@ -84,7 +84,7 @@ DEFINE COMPONENT MultiDiskChopper
 
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string slit_center="0 180", string slit_width="10 20", nslits=2, delta_y=-0.3, nu=0, nrev=0, ratio=1, jitter=0, delay=0, isfirst=0, phase=0, radius = 0.375, equal=0, abs_out=0, verbose=0)
-OUTPUT PARAMETERS (T, To, omega, dslit_center, dhslit_width, t0, t1)
+OUTPUT PARAMETERS ()
 
 DECLARE
 %{

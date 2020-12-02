@@ -51,7 +51,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (ndiv=20, restore_neutron=0, string filename, xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, maxdiv_r=2, Lmin, Lmax)
 
-OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
+OUTPUT PARAMETERS ()
 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 

@@ -67,7 +67,7 @@ DEFINE COMPONENT Spot_sample
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_o=0.01, h=0.05, pack = 1,
 xwidth=0, yheight=0, zthick=0, Eideal=100.0,w=50.0,two_theta=25.0,n_spots=4)
-OUTPUT PARAMETERS(StructVarsV, VarsV)
+OUTPUT PARAMETERS()
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) removed to go to mcstas version 2
 
 SHARE

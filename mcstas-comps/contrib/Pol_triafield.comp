@@ -54,7 +54,7 @@
 
 DEFINE COMPONENT Pol_triafield
 SETTING PARAMETERS (xwidth, yheight, zdepth, B=0, Bguide=0)
-OUTPUT PARAMETERS(omegaL, omegaLguide)
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
