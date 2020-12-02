@@ -80,7 +80,7 @@ SETTING PARAMETERS (symbol user3=FLT_MAX,
   int index=-1, string options=0, string filename=0, string geometry=0,
   string username3=0)
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector, mean_vx, mean_vy, mean_vz, sum_p, offdata)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

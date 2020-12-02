@@ -50,7 +50,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, restore_neutron=0, string filename, mx=0, my=0, mz=0, Lmin, Lmax)
 
-OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, HelpArray)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

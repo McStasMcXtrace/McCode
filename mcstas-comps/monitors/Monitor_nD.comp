@@ -228,7 +228,7 @@ SETTING PARAMETERS (
   string username1="NULL", string username2="NULL", string username3="NULL"
 )
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector, offdata)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
