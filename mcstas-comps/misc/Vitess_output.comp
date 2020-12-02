@@ -42,7 +42,7 @@
 DEFINE COMPONENT Vitess_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename = 0, int bufsize = 10000, int progress = 0)
-OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
