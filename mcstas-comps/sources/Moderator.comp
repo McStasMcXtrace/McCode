@@ -40,7 +40,7 @@
 DEFINE COMPONENT Moderator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0.07, Emin, Emax, dist=0, focus_xw=0.02, focus_yh=0.02, t0=37.15, Ec=9.0, gamma=39.1, int target_index=+1, flux=1)
-OUTPUT PARAMETERS (p_in)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{

@@ -62,7 +62,7 @@
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, E0=0.0, dE=0.0, lambda0=0.0, dlambda=0.0, gauss=0, flux=1)
-OUTPUT PARAMETERS (thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
