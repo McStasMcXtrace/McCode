@@ -1,9 +1,6 @@
 [submodule "3rdparty/mcpl"]
 	path = 3rdparty/mcpl
 	url = https://github.com/mctools/mcpl.git
-[submodule "3rdparty/ncrystal"]
-	path = 3rdparty/ncrystal
-	url = https://github.com/mctools/ncrystal.git
 [submodule "3rdparty/nxs"]
 	path = 3rdparty/nxs
 	url = https://bitbucket.org/mirkoboin/nxs.git
