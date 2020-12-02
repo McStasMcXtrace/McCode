@@ -80,7 +80,7 @@ DEFINE COMPONENT Magnon_bcc
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,FM=0,J1,J2,D,s,DW,T,
 target_x=0, target_y=0, target_z=0, int target_index=0,F2=1,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0,verbose=0)
-OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a_v, DV, parms)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

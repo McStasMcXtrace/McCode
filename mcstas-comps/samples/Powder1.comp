@@ -68,7 +68,7 @@ SETTING PARAMETERS (radius=0.01, yheight=0.05, xwidth=0, zdepth=0,
 q= 1.8049, d=0, d_phi= 0,
 pack= 1, j= 6, DW= 1, F2= 56.8, Vc= 85.0054, sigma_abs= 0.463)
 
-OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v, isrect)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

@@ -135,10 +135,7 @@ SETTING PARAMETERS (
   focus_ah=0,
   focus_r=0)
 
-OUTPUT PARAMETERS (
-  model_pars_ptr,
-  my_a_v,
-  shape)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DEPENDENCY "-std=c99"
 
