@@ -46,7 +46,7 @@
 DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6,
   string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw", thickness=1e-4,
   yheight=0.0168,radius=0.005, string container="Nb.laz",
-  container_thickness=50e-6, string environment="Al.lau",
+  container_thickness=50e-6, string environment="Al.laz",
   environment_radius=0.025, environment_thickness=2e-3, dt0=0)
 
 DECLARE
@@ -142,8 +142,8 @@ COMPONENT Sample_in=Isotropic_Sqw(
 ) AT (0, 0, 0) RELATIVE SampleIn
 EXTEND
 %{
-  if      (SCATTERED == 1) flag_single=(VarSqw.type == 'c' ? 1 : 2);
-  else if (SCATTERED >  1) flag_multi =(VarSqw.type == 'c' ? 1 : 2);
+  if      (SCATTERED == 1) flag_single=(type == 'c' ? 1 : 2);
+  else if (SCATTERED >  1) flag_multi =(type == 'c' ? 1 : 2);
   else                     flag_multi =flag_single=0;
   t = randtriangle()*2*_dt0;  // we assume that in the real instrument, the chopper is close to sample
 %}
