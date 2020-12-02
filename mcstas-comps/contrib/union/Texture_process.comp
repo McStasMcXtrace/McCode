@@ -54,8 +54,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
 	    int maxNeutronSaved = 1, string init="init")
-OUTPUT PARAMETERS (This_process,Texture_storage,effective_my_scattering,
-                   hkl_info_texture, global_process_element)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

@@ -52,7 +52,7 @@
 DEFINE COMPONENT Template_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(sigma=5.08,packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS (This_process,Template_storage,effective_my_scattering)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

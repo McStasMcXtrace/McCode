@@ -48,7 +48,7 @@
 DEFINE COMPONENT Union_make_material
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string process_string="NULL", my_absorption,absorber=0, string init="init")
-OUTPUT PARAMETERS (loop_index,this_material,accepted_processes,global_material_element)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

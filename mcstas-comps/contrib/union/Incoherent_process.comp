@@ -53,7 +53,7 @@
 DEFINE COMPONENT Incoherent_process
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(sigma=5.08,f_QE=0,gamma=0,packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS (This_process,Incoherent_storage,effective_my_scattering, global_process_element)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

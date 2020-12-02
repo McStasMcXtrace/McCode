@@ -76,7 +76,7 @@
 DEFINE COMPONENT Union_logger_2D_space_time
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL",D1_min=-5,D1_max=5,D2_min=-5,D2_max=5,time_min=0,time_max=1,string D_direction_1="x", string D_direction_2="z",string filename="NULL", n1=90, n2=90, time_bins=10, order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

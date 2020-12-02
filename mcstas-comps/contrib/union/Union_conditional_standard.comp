@@ -70,7 +70,7 @@
 DEFINE COMPONENT Union_conditional_standard
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, time_min=0, time_max=0, E_min=0, E_max=0, total_order_min=0, total_order_max=0, last_volume_index=-1,overwrite_logger_weight=0, string init="init") // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
-OUTPUT PARAMETERS (accepted_loggers_all,accepted_loggers_specific,accepted_tagging,found_logger,loop_index,return_value,this_conditional_data,this_data_union, new_tagging_element)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

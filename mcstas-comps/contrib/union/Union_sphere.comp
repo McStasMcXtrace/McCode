@@ -62,7 +62,7 @@
 DEFINE COMPONENT Union_sphere
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string material_string=0, priority, radius, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact=0, string mask_string=0, string mask_setting=0,number_of_activations=1, string init="init")
-OUTPUT PARAMETERS (loop_index,this_sphere_volume,global_geometry_element,this_sphere_storage)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
