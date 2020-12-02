@@ -122,7 +122,7 @@ DECLARE
  
  char options_nM[1024];
  char options_nD[1024];
-
+ double ki;
 %}
 
 USERVARS
@@ -137,7 +137,7 @@ USERVARS
 
 INITIALIZE
 %{
-  double ki=2*PI/beam_wavelength_Angs;      /* wavevector [Angs-1] */
+  ki=2*PI/beam_wavelength_Angs;      /* wavevector [Angs-1] */
 
   vi=ki*K2V;                                /* velocity   [m/s] */
   t0=sample_detector_distance_m/vi;         /* elastic travel time sample-detector (in-plane) [s] */
@@ -256,8 +256,7 @@ WHEN(sample_radius_m > 0)
 AT (0, 0, 0) RELATIVE SamplePos
 EXTEND
 %{
-  flag_sample=SCATTERED*(VarSqw.type == 'c' ? 1 : -1);
-
+  flag_sample=SCATTERED*(type == 'c' ? 1 : -1);
 %}
 
 COMPONENT Container_out=COPY(Container_in)(concentric=0)
@@ -292,7 +291,7 @@ EXTEND %{
 
 /* S(q,w) monitors */
 /* the incoming beam is recorded at index -7 from here */
- COMPONENT Detector_nM = Sqw_monitor(vix="vix",viy="viy",viz="viz",filename="Sqw_map",qmin=0,qmax=5,Emin=-10,Emax=15,nq=468,nE=468)
+ COMPONENT Detector_nM = Sqw_monitor(radius=sample_detector_distance_m, yheight=detector_height_m, vix="vix",viy="viy",viz="viz",filename="Sqw_map",qmin=0,qmax=3*ki,Emin=-2*Ei,Emax=4*Ei,nq=468,nE=468)
   WHEN (flag_sample || flag_env)
   AT (0, 0, 0) RELATIVE PREVIOUS
   
