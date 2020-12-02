@@ -32,7 +32,7 @@
 DEFINE COMPONENT Scatter_logger
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (bounce_store_index, bounce_store_overrun)
+OUTPUT PARAMETERS ()
 
 SHARE
   %{

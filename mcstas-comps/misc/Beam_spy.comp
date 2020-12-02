@@ -35,10 +35,7 @@
 DEFINE COMPONENT Beam_spy
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz,
-                   min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
-                   max_vx, max_vy, max_vz,  mean_x, mean_y, mean_z, mean_t, mean_v,
-                   n_neutrons_p, n_neutrons, n_neutrons_p2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{

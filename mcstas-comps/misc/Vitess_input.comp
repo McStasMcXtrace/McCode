@@ -41,7 +41,7 @@
 DEFINE COMPONENT Vitess_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename = 0, int bufsize = 10000, repeat_count = 1)
-OUTPUT PARAMETERS (file,hfile, ibuf, size, pos, rep, finished)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
