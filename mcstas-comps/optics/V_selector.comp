@@ -50,7 +50,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=48.298, length=0.25, d=0.0004, nu=300, nslit=72)
 
-OUTPUT PARAMETERS(omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha)
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

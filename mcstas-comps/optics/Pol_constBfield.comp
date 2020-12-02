@@ -43,7 +43,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (xwidth, yheight, zdepth, B=0, fliplambda=0, flipangle=180)
 
-OUTPUT PARAMETERS(omegaL)
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

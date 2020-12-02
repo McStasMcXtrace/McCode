@@ -70,7 +70,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
 R0=0.995, Qc=0, alpha=0, m=0, nslit=1, d=0.0005,
 Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, nu=0, phase=0)
-OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE %{
 %include "ref-lib"

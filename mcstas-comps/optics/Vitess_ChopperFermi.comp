@@ -121,9 +121,7 @@ SETTING PARAMETERS (string sGeomFileName=0, int GeomOption=0, int zerotime=0,
   freq=300.0, height=0.05, width=0.04,
   depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
   wallwidth=0.0002)
-OUTPUT PARAMETERS (Option, CurvGeomOption, TOF, WL, radius_of_curv,
-  main_depth, shift_y, angle_channel, phase0, y_ch, x_ch, coef_pi,
-  XFILEName, GeomFilePtr, Pos, Dir, Neutrons, pos_ch, omega, optimal_wl)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

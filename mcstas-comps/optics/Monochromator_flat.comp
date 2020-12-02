@@ -64,7 +64,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin=-0.05, zmax=0.05, ymin=-0.05, ymax=0.05,
 zwidth=0, yheight=0,
 mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, DM=0)
-OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
