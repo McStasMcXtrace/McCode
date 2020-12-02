@@ -43,7 +43,7 @@ DEFINE COMPONENT PSDlin_diff_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nx=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
     xwidth=0, yheight=0, restore_neutron=0)
-OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2, PSDdiff_N, PSDdiff_p, PSDdiff_p2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

@@ -45,7 +45,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, restore_neutron=0, mx=0, my=0, mz=0)
 
-OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2, Psum)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

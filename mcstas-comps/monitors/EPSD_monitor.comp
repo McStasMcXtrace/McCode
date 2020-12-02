@@ -50,7 +50,7 @@ DEFINE COMPONENT EPSD_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nx=20, nE=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
   xwidth=0, yheight=0, Emin, Emax, restore_neutron=0)
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

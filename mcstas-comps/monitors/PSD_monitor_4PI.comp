@@ -48,7 +48,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nx=90, ny=90, string filename=0, radius=1, restore_neutron=0)
 
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

@@ -53,7 +53,7 @@ SETTING PARAMETERS (
   xwidth=0, yheight=0, Lmin, Lmax,
   restore_neutron=0)
 
-OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

@@ -52,7 +52,7 @@
 DEFINE COMPONENT TOF2E_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nE=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, Emin, Emax, T_zero, L_flight, restore_neutron=0)
-OUTPUT PARAMETERS (E_N, E_p, E_p2, S_p, S_pE, S_pE2)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
