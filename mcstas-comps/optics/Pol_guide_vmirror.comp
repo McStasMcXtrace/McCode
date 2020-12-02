@@ -71,11 +71,7 @@ SETTING PARAMETERS (
   string rData="",string rUpData="",string rDownData="",
   xwidth, yheight, length,
   int debug=0)
-OUTPUT PARAMETERS (localG,
-  normalTop, normalBot, normalLeft, normalRight, normalInOut,
-  pointTop, pointBot, pointLeft, pointRight,
-  pointIn, pointOut,
-  rParPtr, rUpParPtr, rDownParPtr)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

@@ -97,7 +97,7 @@ Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
 zero_time=0, xwidth=0, verbose=0, yheight=0.08,
 curvature=0,delay=0)
 
-OUTPUT PARAMETERS(FCVars)
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

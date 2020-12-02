@@ -54,7 +54,7 @@
 DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, xwidth, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003, center=0, transmit=0)
-OUTPUT PARAMETERS (pTable)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

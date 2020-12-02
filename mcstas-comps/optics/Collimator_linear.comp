@@ -44,7 +44,7 @@
 DEFINE COMPONENT Collimator_linear
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.02, xmax=0.02, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, length=0.3, divergence=40,transmission=1, divergenceV=0)
-OUTPUT PARAMETERS (slope, slopeV)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{

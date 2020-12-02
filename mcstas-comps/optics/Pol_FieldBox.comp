@@ -36,7 +36,7 @@
 DEFINE COMPONENT Pol_FieldBox
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int field_type=1,xwidth,yheight,zdepth, Bx,By,Bz, string filename="")
-OUTPUT PARAMETERS (field_parameters, const_field_parameters)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

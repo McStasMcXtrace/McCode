@@ -87,7 +87,7 @@
 DEFINE COMPONENT Monochromator_pol
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zwidth=0.1, yheight=0.1, mosaic=30.0, dspread=0, Q=1.8734, DM=0, pThreshold=0, Rup = 1, Rdown =1, int debug=0)
-OUTPUT PARAMETERS (mos_rms, d_rms, mono_Q, FN, FM)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

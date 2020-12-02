@@ -74,7 +74,7 @@ DEFINE COMPONENT Filter_gen
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string options=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
   xwidth=0, yheight=0, thickness=1, scaling=1, verbose=0)
-OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

@@ -146,7 +146,7 @@ sigma_inc=0, sigma_abs=0, Qc=0,
 p_interact=0.05, RMS=0, focus_scatter=10, verbose=0,
 p_scatter=1, p_reflect=1, p_refract=1)
 
-OUTPUT PARAMETERS (rho, bc, offdata, theta1, theta2, mean_n, events)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
