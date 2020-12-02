@@ -81,7 +81,7 @@ d_min=1, d_max=3, time0, Linst, Lc,
 res_x=0, res_y=0, res_t=0, mu=1.0, mod_shift=0,
 modulation=0, mod_dt=0, mod_twidth=0, string mod_d0_table=0, 
 verbose=0, restore_neutron=1)
-OUTPUT PARAMETERS (D_N, D_p, D_p2, TOF_N, TOF_p, TOF_p2, time_min, time_max, grf_th1, grf_th2, t2lam, L0, dhkl, n_dhkl)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE

@@ -127,7 +127,7 @@ SETTING PARAMETERS (nxpsd,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect="NULL")
 
-OUTPUT PARAMETERS (GVars, pTable,PSDlin_Nxp, PSDlin_pxp, PSDlin_p2xp, PSDlin_Nyp, PSDlin_pyp, PSDlin_p2yp, PSDlin_Nxn, PSDlin_pxn, PSDlin_p2xn, PSDlin_Nyn, PSDlin_pyn, PSDlin_p2yn)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

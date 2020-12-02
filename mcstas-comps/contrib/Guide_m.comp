@@ -77,7 +77,7 @@
 DEFINE COMPONENT Guide_m
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, w1, h1, w2, h2, l, R0_left=0.99, R0_right=0.99, R0_top=0.99, R0_bottom=0.99, Qc_left=0.0219, Qc_right=0.0219, Qc_top=0.0219, Qc_bottom=0.0219, alpha_left=6.07, alpha_right=6.07, alpha_top=6.07, alpha_bottom=6.07, m_left=2, m_right=2, m_top=2, m_bottom=2, W_left=0.003, W_right=0.003 , W_top=0.003 , W_bottom=0.003)
-  OUTPUT PARAMETERS (pTable,m,alpha,Qc,R0,W)
+OUTPUT PARAMETERS ()
 
 
 SHARE

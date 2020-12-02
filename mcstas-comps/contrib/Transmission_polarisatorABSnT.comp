@@ -61,9 +61,7 @@ R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
 R0_up=0.99, Qc_up=0.0109, alpha_up=4.25, W_up=0.0025,
 R0_down=0.99, Qc_down=0.02174, alpha_down=6.25, W_down=0.001,
 mleft=-1, mright=-1, mtop=-1, mbottom=-1, mup=-1, mdown=-1)
-OUTPUT PARAMETERS (Vars,
-  Si_sig_i,Si_sig_a,Si_cross_i,Si_cros_av,Si_cross_a_v,Si_cross_tot,lwafer_Si,
-  Fe_sig_i,Fe_sig_a,Fe_cross_i,Fe_cros_av,Fe_cross_a_v,Fe_cross_tot,lwafer_Fe)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

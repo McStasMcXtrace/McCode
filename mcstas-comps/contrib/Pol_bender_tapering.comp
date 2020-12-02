@@ -73,7 +73,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string channel_file="channel.dat", xwidth=0, yheight, length,
         d_substrate, entry_radius=10, radius=100, G=9.8, int nslit=1, int debug=1,
         string reflect_file=NULL, sigma_abs=0.231, V0=66.4, nspacer=5)
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

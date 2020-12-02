@@ -89,7 +89,7 @@ DEFINE COMPONENT Source_multi_surfaces
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, yheight=0.16,xwidth=0.09,dist=1.18,xw=0.08,yh=0.15,xdim=4,ydim=4,
 Emin=0.0,Emax=0.0,Lmin=0.0,Lmax=0.0)
-OUTPUT PARAMETERS (p_in)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

@@ -125,12 +125,7 @@ facette=0, facette_xi=0, centerfocus=0, radius=0, tau=NAN, lambda=NAN, R0=1.0,
 dtauovertau=NAN, dtauovertau_ext=0,
 ewald=1,sigma=NAN,ismirror=0,speed=0,amplitude=0,smartphase=0,
 smartwidth=NAN, exclusive=0, transmit=0, verbose=0 )
-OUTPUT PARAMETERS (
-// official
-tt,phi,xi,phid,vd,zd,v0,vmin,vmax,vperp,E0,R,eps,
-// internal
-sin_facette_xi
-)
+OUTPUT PARAMETERS ()
 SHARE
 %{
 // convert between spherical (r,tt,phi) and cartesian (x,y,z) coordinates (angles in deg)

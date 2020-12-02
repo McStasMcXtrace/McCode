@@ -39,7 +39,7 @@
 DEFINE COMPONENT Spherical_Backscattering_Analyser
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, mosaic=21.0, dspread=0.00035, Q=2.003886241, DM=0, radius=2.5, f_doppler=0, A_doppler=0, R0=1, debug=0)
-OUTPUT PARAMETERS (d_rms, mos_rms, mono_Q)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

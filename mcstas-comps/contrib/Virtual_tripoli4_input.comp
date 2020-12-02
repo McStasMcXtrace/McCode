@@ -88,11 +88,7 @@ DEFINE COMPONENT Virtual_tripoli4_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=1,
 T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
-OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_filename,begin_batch,do_rotate,do_translate,
-bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
-min_x, min_y, min_z,    max_x , max_y , max_z ,
-min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt,
-first_batch, end_batch)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

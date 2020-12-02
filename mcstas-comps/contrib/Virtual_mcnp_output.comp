@@ -53,7 +53,7 @@
 DEFINE COMPONENT Virtual_mcnp_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0)
-OUTPUT PARAMETERS (hfile)
+OUTPUT PARAMETERS ()
 DEPENDENCY "@MCCODE_LIB@/libs/neutronics/neutronics-subs.o -lgfortran"
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

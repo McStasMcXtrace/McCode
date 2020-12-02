@@ -48,7 +48,7 @@
 DEFINE COMPONENT Mirror_Curved_Bispectral
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0,focus_s,focus_e, mirror_start, guide_start, yheight, smallaxis, length ,m, transmit=0, substrate_thickness=0.0005, coating_thickness=10e-6, theta_1=1.25, theta_2=1.25, theta_3=1.25)
-OUTPUT PARAMETERS (pTable)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

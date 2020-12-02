@@ -74,7 +74,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, w2=0, l,
 R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
 mleftup=-1, mrightup=-1, mleftdown=-1, mrightdown=-1,mleft=-1, mright=-1, G=0)
-OUTPUT PARAMETERS (GVars)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

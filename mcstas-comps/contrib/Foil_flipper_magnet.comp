@@ -53,7 +53,7 @@ This comment will not be exported to mcdoc
 DEFINE COMPONENT Foil_flipper_magnet
 DEFINITION PARAMETERS(field_function=const_magnetic_field, stray_field_function=NULL)
 SETTING PARAMETERS(xwidth, yheight, zdepth, Bxwidth=-1, Byheight=-1, Bzdepth=-1, phi=0.0, Bx,By,Bz,foil_in=1, verbose=0)
-OUTPUT PARAMETERS(stray_fields,instray_magnet,outstray_magnet,inside_magnet,hit_foil)
+OUTPUT PARAMETERS()
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE

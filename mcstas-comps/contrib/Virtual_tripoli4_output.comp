@@ -54,7 +54,7 @@
 
 DEFINE COMPONENT Virtual_tripoli4_output
 SETTING PARAMETERS (string filename=0, batch=1)
-OUTPUT PARAMETERS (hfile,previous_batch)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

@@ -70,7 +70,7 @@
 DEFINE COMPONENT Virtual_mcnp_ss_output
 DEFINITION PARAMETERS()
 SETTING PARAMETERS (string file="rssa", verbose=1)
-OUTPUT PARAMETERS(hfile,to_mcstas,from_mcstas,counterout,ntrk,nhis)
+OUTPUT PARAMETERS()
 DEPENDENCY "-L@MCCODE_LIB@/libs/neutronics/ -lneutronics -lgfortran"
 
 SHARE

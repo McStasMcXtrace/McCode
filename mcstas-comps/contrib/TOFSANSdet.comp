@@ -79,21 +79,7 @@ SETTING PARAMETERS (
   rstneu = 0.0,
   centol = 0.1, inttol = 0.0001, qcal=1,
   string fname=0)
-OUTPUT PARAMETERS (
-  simplN,simplI,simplIe,
-  Nxc,Nyc,Ntc,Nqc,
-  TSdNf,TSdpf,TSdp2f,
-  ds1c,ds2c,ds3c,
-  xw1c,xw2c,xw3c,
-  yh1c,yh2c,yh3c,
-  hl1c,hl2c,hl3c,
-  vx3c,
-  Pic,
-  simplN,
-  simplI,
-  simplIe,
-  storez,storen,
-  Ncount,Pcount)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

@@ -38,7 +38,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (len, w1, w2, nu, delta, tc, ymin, ymax)
 
-OUTPUT PARAMETERS (omega, off, splen, rad, sw)
+OUTPUT PARAMETERS ()
 //STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 SHARE

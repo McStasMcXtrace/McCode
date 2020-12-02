@@ -46,7 +46,7 @@
 DEFINE COMPONENT multi_pipe
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, xmin,xmax,ymin,ymax,radius=0.0,gap=0.0,thickness=0.0, xwidth=0, yheight=0)
-OUTPUT PARAMETERS (pTable, user_file, ynum, xnum, diam, w_pipe, h_pipe, h_number)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
