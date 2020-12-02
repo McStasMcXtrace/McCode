@@ -24,8 +24,8 @@
 * %P
 * INPUT PARAMETERS:
 *
-* radius:  [m]       Cylinder radius
-* yheight: [m]       Cylinder height  
+* radius:  [m]       Cylinder radius (optional)
+* yheight: [m]       Cylinder height  (optional)
 * qax:     [1]       x-component of 1st q-vector
 * qaz:     [1]       z-component of 1st q-vector
 * qbx:     [1]       x-component of 2nd q-vector
@@ -57,7 +57,7 @@
 
 DEFINE COMPONENT Sqw_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename, int nowritefile=0, string vix="", string viy="", string viz="")
+  SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename, int nowritefile=0, string vix="", string viy="", string viz="", radius=0, yheight=0)
 OUTPUT PARAMETERS ()
 
 DECLARE
@@ -87,6 +87,8 @@ TRACE
     double kix,kiy,kiz;
     double kfx,kfy,kfz;
     double t0,t1;
+    double phi;
+    int detect=1;
     
     int fail;
     rvx = particle_getvar(_particle,vix,&fail); if(fail) rvx=0;
@@ -96,6 +98,8 @@ TRACE
     Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
     Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
     E=Ef-Ei;
+
+    if(fabs(E)<2*DBL_EPSILON) detect=0;
 	
     /* calculate k vectors and momentum transfer*/
     kix=rvx;
@@ -119,9 +123,19 @@ TRACE
 
     qq = sqrt(qx*qx+qy*qy+qz*qz);
     
+    /* Check if we should detect or not */
+    if (detect) {
+      if (radius && yheight) {
+	if (!(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1)) {
+	  detect=0;
+	}
+      }
+    }
+
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     
     /* Check if we are within the selected q/e range */
-    if (qq <= qmax && qq>=qmin && E<= Emax && E>=Emin) {
+    if (detect && qq <= qmax && qq>=qmin && E<= Emax && E>=Emin) {
       i = floor((qq - qmin)*nq/(qmax - qmin));
       j = floor((E - Emin)*nE/(Emax - Emin));
       
