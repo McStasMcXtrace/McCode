@@ -76,7 +76,7 @@ SETTING PARAMETERS(string target_geometry="NULL", string target_process="NULL",
                    string D_direction_1="x", D1_min=-5, D1_max=5, n1=90,
                    string D_direction_2="z", D2_min=-5, D2_max=5, n2=90,
                    string filename="NULL", order_total=0, order_volume=0, order_volume_process=0, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

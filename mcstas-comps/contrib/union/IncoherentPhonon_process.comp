@@ -65,7 +65,7 @@ SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
 		   int interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS (This_process, IncoherentPhonon_storage, global_process_element)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

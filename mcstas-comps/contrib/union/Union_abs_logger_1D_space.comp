@@ -81,7 +81,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string target_geometry="NULL",
                    yheight, n=100,
                    string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS (loop_index, accepted_processes, accepted_volumes, logger_list_element, this_abs_logger, this_abs_storage, loggers_on_target_volume, target_volume)
+OUTPUT PARAMETERS ()
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

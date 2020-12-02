@@ -55,7 +55,7 @@
 DEFINE COMPONENT PhononSimple_process
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1,a=4.95,c=10,M=207.2,b=9.4,T=290,DW=1,longitudinal=1,transverse=1, string init="init")
-OUTPUT PARAMETERS (This_process,PhononSimple_storage,effective_my_scattering)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{
