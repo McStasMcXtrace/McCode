@@ -52,7 +52,7 @@
 DEFINE COMPONENT SANS_spheres2
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0.01, yheight=0.01, zthick=0.001, dsdw_inc=0.02, sc_aim=0.97, sans_aim=0.95, R=150, phi=1e-3, drho=6e10, int singlesp=1, Qmind = 0.0001, Qmaxd = 2.1544346900319)
-OUTPUT PARAMETERS (p0)
+OUTPUT PARAMETERS ()
 
 SHARE
 %{

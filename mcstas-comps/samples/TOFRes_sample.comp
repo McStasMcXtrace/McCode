@@ -73,7 +73,7 @@ time_bin=20000, time_width=10,
 target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
 focus_aw=0, focus_ah=0, xwidth=0, zdepth=0, int target_index=0)
 
-OUTPUT PARAMETERS (res_struct, f, E0, dE)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

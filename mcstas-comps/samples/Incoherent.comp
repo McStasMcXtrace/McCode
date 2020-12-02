@@ -118,7 +118,7 @@ target_x = 0, target_y = 0, target_z = 0, focus_r = 0,
 focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0,
 pack = 1, p_interact=1, f_QE=0, gamma=0,
 sigma_abs=5.08, sigma_inc=5.08, Vc=13.827, concentric=0, order=0)
-OUTPUT PARAMETERS(VarsInc, offdata)
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
