@@ -35,9 +35,6 @@
 DEFINE INSTRUMENT Test_Magnon_bcc_2D(lambda=10, dlambda=9.9, Rotation=0, inelastic=1, aa=6.283185307179586,
 				     sample_J=2, TT=300, FerroMagnet=0, Verbose=0, imultiplier=1)
 DECLARE %{
-  double Inelastic;
-  double Imultiplier;
-  #pragma acc declare create(Inelastic,Imultiplier)
 %}
 
 USERVARS %{
@@ -48,9 +45,6 @@ USERVARS %{
 %}
 
 INITIALIZE %{
-  Inelastic=inelastic;
-  Imultiplier=imultiplier;
-  #pragma acc update device(Inelastic,Imultiplier)
 %}
 
 TRACE
@@ -94,8 +88,8 @@ COMPONENT Magnon = Magnon_bcc(
   WHEN (inelastic>0 && Samplechoice<inelastic)  AT (0, 0, 5.1) RELATIVE source
   ROTATED (0, Rotation, 0) RELATIVE source
 EXTEND %{
-    p/=Inelastic;
-    p*=Imultiplier;
+    p/=INSTRUMENT_GETPAR(inelastic);
+    p*=INSTRUMENT_GETPAR(imultiplier);
 %}
 
 
@@ -105,7 +99,7 @@ COMPONENT Lattice = Single_crystal(order=1,
   WHEN (inelastic<1 && Samplechoice>=inelastic) AT ( 0, 0, 5.1) RELATIVE source
   ROTATED (0, Rotation, 0) RELATIVE source
 EXTEND %{
-  p/=(1-Inelastic);
+  p/=(1-INSTRUMENT_GETPAR(inelastic));
    // Remove direct beam
   if(!SCATTERED) ABSORB;
 %}
