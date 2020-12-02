@@ -838,7 +838,7 @@ int cogen_comp_section_class(
       cout("  printf(\"MCDISPLAY: component %s\\n\", _comp->_name);");
 
     // shared comp [section] code here
-    if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
+    //if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
     codeblock_out(code); // component definition code common to all instances, needs defines
     if (!strcmp(section, "TRACE")) {
       cout("  /* Check for nan or inf particle parms */ ");
@@ -850,7 +850,7 @@ int cogen_comp_section_class(
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
-      cout("}");
+      //cout("}");
     }
 
     // EXTEND blocks written here, as component name switch, if any
