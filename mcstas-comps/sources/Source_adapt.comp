@@ -96,7 +96,7 @@ SETTING PARAMETERS (
   E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13,
   int target_index=+1, alpha=0.25, beta=0.25)
 
-OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
+OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

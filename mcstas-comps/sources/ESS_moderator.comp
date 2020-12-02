@@ -81,11 +81,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (isleft=0.9,
 Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
 int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2015", xwidth_c=0.1, xwidth_t=0.18, extraction_opening=120)
-OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat,
-cold,wasleft,cosine,tx,ty,tz,cx,cy,cz,cyl_radius,t1x,t1y,t1z,t2x,t2y,t2z,
-modextras,cold_bril,thermal_bril,tfocus_width,  tfocus_time,  dt,r_empty,lambda,
-xprime,yprime,zprime,sgnport, abs_beamport_angle, cos_beamport_angle, edge_thermal,
-cos_thermal, cos_cold, sin_beamport_angle)
+OUTPUT PARAMETERS ()
 SHARE
 %{
 %include "ess_source-lib"
