@@ -369,10 +369,10 @@ COMPONENT energy_mono = E_monitor(
     xwidth = 0.2, yheight = 0.125, Emin = e_min, Emax = e_max)
   AT (0, 0, 0.15) RELATIVE Mono_sample_arm
 //
-// COMPONENT hdiv_mono = Hdiv_monitor(
-//     nh = 200, filename = "hdiv-mono.dat",
+// COMPONENT hdiv_mono = Div1D_monitor(
+//     ndiv = 200, filename = "hdiv-mono.dat",
 //     restore_neutron = 1, xwidth = 0.2, yheight = 0.125,
-//     h_maxdiv = 4)
+//     maxdiv = 4)
 //   AT (0, 0, 0.15) RELATIVE Mono_sample_arm
 //
 // COMPONENT div_mono = Divergence_monitor(
