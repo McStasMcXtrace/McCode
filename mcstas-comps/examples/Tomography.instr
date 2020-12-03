@@ -9,10 +9,10 @@
 * Origin: Risoe
 * %INSTRUMENT_SITE: Templates
 *
-* Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
+* Instrument to study tomographic imaging by means of the feature of OFF shape samples.
 *
 * %Description
-* Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
+* Instrument to study tomographic imaging by means of the feature of OFF shape samples.
 *
 * Example: mcrun Tomography.instr offfile=bunny.off -n1e4 -N18 omega=0,340 -d TomoScan
 * (Note that to achieve proper statistics for tomographic reconstruction, MUCH higher ncounts

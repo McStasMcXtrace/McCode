@@ -196,8 +196,8 @@ AT (0, 0, 0.7811) RELATIVE D5_SC2_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
 AT (0,0,0) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
 
-COMPONENT Sample = V_sample(
- radius_i = 0.0, radius = 0.0064, yheight = 0.0254,
+COMPONENT Sample = Incoherent(
+ radius = 0.0064, yheight = 0.0254,
  focus_r = 0.035, pack = 1,
  target_x = 0, target_y = 0, target_z = 0.234)
 AT (0,0,0) RELATIVE Sample_Out

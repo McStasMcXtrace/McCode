@@ -1330,7 +1330,7 @@ WHEN(!VIRTUALOUT) AT (0,0,0) RELATIVE a3
  ROTATED (0, 0, TILT) RELATIVE a3
 
 
-COMPONENT incohSample = Incoherent( // The size is the standard  V_sample at RITA
+COMPONENT incohSample = Incoherent( // The size is the standard  Vanadium sample at RITA
 /*      V0=1,sig_a=0,sig_i=4.70,radius_i=0, radius_o=0.0025, h=0.068,target_index=10, // perspex sample  */
     Vc=13.827,sigma_abs=5.08,sigma_inc=5.08,thickness=0.0201/2-0.0149/2, radius=0.0201/2, yheight=0.0187,target_index=10, // vanadium sample
     focus_xw=0.16,focus_yh=0.16) // focus on ana_slit1.

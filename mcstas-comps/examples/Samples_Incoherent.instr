@@ -16,8 +16,7 @@
 * This instrument allows to compare incoherent scattering from different McStas
 * sample components:
 *
-* V_sample
-* PowderN
+* * PowderN
 * Single_crystal
 * Isotropic_sqw
 * Incoherent
