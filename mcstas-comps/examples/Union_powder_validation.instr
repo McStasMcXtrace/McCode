@@ -38,7 +38,7 @@
 
 DEFINE INSTRUMENT Union_powder_validation(int comp_select=1, string material_data_file = "Al.laz",E0 = 100,dE = 2,sample_radius=0.01,sample_height=0.01,pack=1,sigma_inc=0.0328,sigma_abs=0.924,Vc=66.4,geometry_interact=0.5,incoherent_fraction=0.2)
 
-DECLARE
+USERVARS
 %{
 int single_scattering_flag;
 %}

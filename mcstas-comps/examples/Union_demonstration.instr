@@ -35,7 +35,15 @@ DEFINE INSTRUMENT Union_demonstration(stick_displacement=0)
 DECLARE
 %{
 int sample_1_index=27,sample_2_index=30,sample_3_index=33,sample_4_index=36; // Indexes of four samples
-int scattered_1,scattered_2,scattered_3,scattered_4;
+#pragma acc declare create(sample_1_index,sample_2_index,sample_3_index,sample_4_index)
+#pragma acc update device(sample_1_index,sample_2_index,sample_3_index,sample_4_index)
+%}
+
+USERVARS %{
+  int scattered_1;
+  int scattered_2;
+  int scattered_3;
+  int scattered_4;
 %}
 
 TRACE
