@@ -695,12 +695,12 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 } /* r_off_init */
 
 #pragma acc routine seq
-int Min_int(int x, int y) {
+int r_Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
-#pragma acc routine(merge)
-void merge(intersection *arr, int l, int m, int r)
+#pragma acc routine(r_merge)
+void r_merge(intersection *arr, int l, int m, int r)
 {
 int i, j, k;
 int n1 = m - l + 1;
@@ -760,7 +760,7 @@ free(R);
 
 #ifdef USE_OFF
 #pragma acc routine seq
-void gpusort(intersection *arr, int size)
+void r_gpusort(intersection *arr, int size)
 {
   int curr_size;  // For current size of subarrays to be merged
   // curr_size varies from 1 to n/2
@@ -777,10 +777,10 @@ void gpusort(intersection *arr, int size)
 	    // point of right
 	    int mid = left_start + curr_size - 1;
 
-	    int right_end = Min_int(left_start + 2*curr_size - 1, size-1);
+	    int right_end = r_Min_int(left_start + 2*curr_size - 1, size-1);
 
 	    // Merge Subarrays arr[left_start...mid] & arr[mid+1...right_end]
-	    if (mid < right_end) merge(arr, left_start, mid, right_end);
+	    if (mid < right_end) r_merge(arr, left_start, mid, right_end);
 	  }
       }
   }
@@ -819,7 +819,7 @@ int r_off_intersect_all(double* t0, double* t3,
     qsort(data->intersects, t_size, sizeof(r_intersection),  r_off_compare);
     #else
     #ifdef USE_OFF
-    gpusort(data->intersects, t_size);
+    r_gpusort(data->intersects, t_size);
     #endif
     #endif
     r_off_cleanDouble(data->intersects, &t_size);
