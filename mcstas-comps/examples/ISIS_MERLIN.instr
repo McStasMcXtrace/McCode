@@ -140,9 +140,9 @@ COMPONENT final_Guide = Guide_channeled(
   AT (0, 0, 10.277) RELATIVE Origin
 
 /* horizontal beam divergence monitor at sample */
-COMPONENT horz_div = Hdiv_monitor(nh=30, filename="horz.div.m",
+COMPONENT horz_div = Div1D_monitor(ndiv=30, filename="horz.div.m",
           xmin=-0.025, xmax=0.025, ymin=-0.025, ymax=0.025,
-          h_maxdiv=0.3*lam+.4)
+          maxdiv=0.3*lam+.4)
  AT (0, 0, 11.79) RELATIVE Origin
 
 /* Position sentive detector*/

@@ -97,7 +97,7 @@ COMPONENT presampslit = Slit(
     xmin = -0.0225, xmax = 0.0225, ymin = -0.0225, ymax = 0.0225)
   AT (0, 0, 1.4) RELATIVE postFCslit
 
-COMPONENT target = V_sample(
+COMPONENT target = Incoherent(
   xwidth=0.04,yheight=0.04,zdepth=0.002,
   focus_aw=19.38,focus_ah=3.435,
   pack = 1,
