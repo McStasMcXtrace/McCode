@@ -323,10 +323,10 @@ COMPONENT energy_endguide = E_monitor(
     xwidth = 0.17, yheight = 0.135, Emin = e_min, Emax = e_max)
   AT (0, 0, 0) RELATIVE NL1B_Guide_Exit
 
-// COMPONENT hdiv_endguide = Hdiv_monitor(
-//     nh = 200, filename = "hdiv-endguide.dat",
+// COMPONENT hdiv_endguide = Div1D_monitor(
+//     ndiv = 200, filename = "hdiv-endguide.dat",
 //     restore_neutron = 1, xwidth = 0.17, yheight = 0.135,
-//     h_maxdiv = 3)
+//     maxdiv = 3)
 //   AT (0, 0, 0) RELATIVE NL1B_Guide_Exit
 //
 // COMPONENT div_endguide = Divergence_monitor(
@@ -408,10 +408,10 @@ COMPONENT div_mono = Divergence_monitor(
      maxdiv_h = 4, maxdiv_v = 4)
    AT (0, 0, L2-0.05) RELATIVE Mono_sample_arm
 
-COMPONENT div_mono_H = Hdiv_monitor(
-     nh = 35, filename = "H-div-sample.dat",
+COMPONENT div_mono_H = Div1D_monitor(
+     ndiv = 35, filename = "H-div-sample.dat",
      restore_neutron = 1, xwidth = 0.005, yheight = 0.7,
-     h_maxdiv = 4)
+     maxdiv = 4)
    AT (0, 0, L2-0.04) RELATIVE Mono_sample_arm
 
 COMPONENT psd_sam = PSD_monitor(
