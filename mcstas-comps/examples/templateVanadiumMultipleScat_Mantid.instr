@@ -1,18 +1,15 @@
 DEFINE INSTRUMENT templateVanadiumMultipleScat_Mantid()
 
-DECLARE
+USERVARS
 %{
-int multi_flag ;
-int single_flag ;
+int multi_flag;
+int single_flag;
 %}
 
 TRACE
 
 COMPONENT Origin = Progress_bar(percent=5)
 AT (0,0,0) ABSOLUTE
-EXTEND %{
-	single_flag = multi_flag = 0;
-%}
 
 COMPONENT sourceMantid = Source_simple(radius=0.001, dist=1,
 		focus_xw=0.001, focus_yh=0.001, E0=5, dE=0.01)
