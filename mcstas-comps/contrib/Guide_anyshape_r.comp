@@ -75,7 +75,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_anyshape_r
-DEFINITION PARAMETERS (string geometry=0)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, center=0, transmit=0,
 R0=0.99, Qc=0.0219, alpha=0, m=0, W=0, string geometry=0)
 OUTPUT PARAMETERS ()
