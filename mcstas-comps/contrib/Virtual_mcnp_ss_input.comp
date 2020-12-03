@@ -72,6 +72,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string file="rssa", verbose=1)
 OUTPUT PARAMETERS()
 DEPENDENCY "-L@MCCODE_LIB@/libs/neutronics/ -lneutronics -lgfortran"
+NOACC
 
 SHARE
 %{
