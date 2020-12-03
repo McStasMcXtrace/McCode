@@ -124,7 +124,7 @@ SETTING PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1,
 OUTPUT PARAMETERS ()
   
 DEPENDENCY "-I@MCCODE_LIB@/libs/libnxs/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
-
+NOACC
 
 SHARE
 %{
