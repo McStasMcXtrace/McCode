@@ -1,0 +1,204 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2010, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Guide
+*
+* %I
+* Written by: Emmanuel Farhi, adapted by Peter Link
+* Date: August 4th 2010
+* Origin: ILL/MLZ
+*
+* Reflecting surface (guide and mirror) with any shape, defined from an OFF file
+* and a patch to allow reflectivites added per polygon face. Derived from Guide_anyshape.
+*
+* %D
+*
+* This is a reflecting object component, derived from Guide_anyshape.
+* Its shape (and optionally m-value pr. surface) is defined from an OFF file,
+* given with its file name. The object size is set as given from the file, where
+* dimensions should be in meters. The bounding box may be re-scaled by specifying
+* xwidth,yheight,zdepth parameters. The object may optionally be centered when
+* using 'center=1'.
+*
+* The reflectivity is specified either from the usual parametric description
+* R0,Qc,alpha,W,m, or by defning an m-value for each face present in the OFF file.
+*
+* The complex OFF/PLY geometry option handles any closed non-convex polyhedra.
+*   It supports the OFF and NOFF file format but not COFF (colored faces).
+*   Such files may be generated from XYZ data using:
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
+*   or
+*     powercrust coordinates.xyz
+*   and viewed with geomview or java -jar jroff.jar (see below).
+*   The default size of the object depends of the OFF file data, but its
+*   bounding box may be resized using xwidth,yheight and zdepth.
+*   PLY geometry files are also supported.
+*
+* %BUGS
+* This component does take into account gravitation accurately.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* geometry: [str]              Name of the OFF/PLY file describing the guide geometry
+* xwidth: [m]                  Redimension the object bounding box on X axis is non-zero
+* yheight: [m]                 Redimension the object bounding box on Y axis is non-zero
+* zdepth: [m]                  Redimension the object bounding box on Z axis is non-zero
+* center: [1]                  When set to 1, the object will be centered w.r.t. the local coordinate frame
+* R0: [1]                      Low-angle reflectivity
+* Qc: [AA-1]                   Critical scattering vector
+* alpha: [AA]                  Slope of reflectivity
+* m: [1]                       m-value of material. Zero means completely absorbing.
+* W: [AA-1]                    Width of supermirror cut-off
+* transmit: [1]                When true, non reflected neutrons are transmitted through the surfaces, instead of being absorbed. No material absorption is taken into account though
+*
+* OUTPUT PARAMETERS:
+* SCATTERED: []                number of reflected events
+*
+* %D
+* Example values: m=4 Qc=0.0219 W=1/300 alpha=6.49 R0=1
+*
+* %L
+* <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
+* %L
+* Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
+* %L
+* <a href="http://qhull.org">qhull</a>
+* %L
+* <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Guide_anyshape_r
+DEFINITION PARAMETERS (string geometry=0)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, center=0, transmit=0,
+R0=0.99, Qc=0.0219, alpha=0, m=0, W=0, string geometry=0)
+OUTPUT PARAMETERS ()
+DEPENDENCY " -DUSE_OFF "
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE
+%{
+%include "r-interoff-lib"
+%include "ref-lib"
+%}
+
+DECLARE
+%{
+r_off_struct offdata;
+int use_file_coatings;
+%}
+
+INITIALIZE
+%{
+/* initialize OFF object from the file(s) */
+  if (!r_off_init( geometry, xwidth, yheight, zdepth, !center, &offdata )) exit(-1);
+
+  if (m==0 && alpha==0 && W==0) {
+    use_file_coatings = 1;
+    printf("Guide_anyshape_r: %s: All of m, alpha, W assigned 0: \n - We are using H. Jacobsen reflectivity model if m-values are given in %s\n", NAME_CURRENT_COMP, geometry);
+  } else {
+    printf("Guide_anyshape_r: %s:At least one of alpha, W assigned 0: \n m-values are given in %s will be ignored!\n", NAME_CURRENT_COMP, geometry);
+    use_file_coatings = 0;
+  }
+%}
+
+TRACE
+%{
+  int intersect=0;
+  int counter=0;
+  /* main loop for multiple reflections */
+  #ifdef OPENACC
+  r_off_struct thread_offdata = offdata;
+  #else
+  #define thread_offdata offdata
+  #endif
+  do {
+    double t0=0, t3=0, dt=0;
+    unsigned long faceindex0=0, faceindex3=0, fi=0;
+    Coords n0, n3, n={0,0,0};
+    /* determine intersections with object; PL: get index of the intersected face */
+    intersect = r_off_intersect(&t0, &t3, &n0, &n3, &faceindex0, &faceindex3,
+       x,y,z, vx, vy, vz, thread_offdata );
+
+    /* get the smallest positive */
+    if (t0 > 0) { dt = t0; n=n0; fi=faceindex0;}
+    if (intersect > 1 && dt <= 0 && t3 > dt) { dt = t3; n=n3; fi=faceindex3;}
+
+    /* exit loop when no intersection forward */
+    if (dt <= 0 || !intersect) break;
+
+    double nx,ny,nz;
+    coords_get(n, &nx, &ny, &nz);
+
+    /* test if the angle is large in case the object has an internal coating */
+    double n2      = nx*nx+ny*ny+nz*nz;
+    double n_dot_v = scalar_prod(vx,vy,vz,nx,ny,nz);
+    double q       = 2*fabs(n_dot_v)*V2K/sqrt(n2);
+
+    /* propagate neutron to reflection point */
+    PROP_DT(dt);
+
+    /* handle surface intersection */
+    double R=0;
+    double m_value = m;
+    if (use_file_coatings == 1) {
+      m_value = offdata.facepropsArray[fi];
+    }
+    double par[] = {R0, Qc, alpha, m_value, W};
+    StdReflecFunc(q, par, &R);
+    
+
+    if (R > 1) {
+      fprintf(stderr,"Guide_anyshape_r: %s: Warning: Reflectivity R=%g > 1 lowered to R=1.\n", NAME_CURRENT_COMP, R);
+      R=1;
+    }
+    /* now handle either probability when transmit or reflect */
+    if (R > 0) {
+      /* when allowing transmission, we should check if indeed we reflect */
+      if (!transmit || (transmit && rand01() < R)) {
+        /* reflect velocity: -q -> -2*n*n.v/|n|^2 */
+        if (!transmit) p *= R;
+        n_dot_v *= 2/n2;
+        vx -= nx*n_dot_v;
+        vy -= ny*n_dot_v;
+        vz -= nz*n_dot_v;
+        SCATTER;
+      } else {
+        if (transmit) {
+          p *= (1-R); /* transmitted beam has non reflected weight */
+        } else ABSORB;
+      }
+    } else {
+      /* R=0: no reflection: absorb or transmit through when allowed */
+      if (!transmit) ABSORB;
+    }
+
+    /* leave surface by a small amount so that next intersection is not the same one */
+    PROP_DT(1e-9);
+  } while (intersect && counter++<CHAR_BUF_LENGTH);
+  /* end of main loop */
+
+%}
+
+MCDISPLAY
+%{
+  /* display the object */
+  r_off_display(offdata);
+  /* and its bounding box */
+  /*
+  mcdis_box(( offdata.xmin+offdata.xmax)/2,
+            ( offdata.ymin+offdata.ymax)/2,
+            ( offdata.zmin+offdata.zmax)/2,
+            (-offdata.xmin+offdata.xmax),
+            (-offdata.ymin+offdata.ymax),
+            (-offdata.zmin+offdata.zmax));
+  */
+%}
+
+END
