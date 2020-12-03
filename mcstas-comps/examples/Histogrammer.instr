@@ -68,9 +68,6 @@ DECLARE
 %{
    int   file_mode;
    char *VirtualI_filename;
-   char *Vitess_filename;
-   char *Tripoli_filename;
-   char *MCNP_filename;
    char *MCPL_filename;
 
 %}
@@ -82,40 +79,20 @@ INITIALIZE
   file_mode = MODE;
   /* Set all filenames empty */
   VirtualI_filename = NULL;
-  Vitess_filename   = NULL;
-  Tripoli_filename  = NULL;
-  MCNP_filename     = NULL;
   MCPL_filename     = NULL;
   if (file_mode == 0) {
     printf("\n%s usage:\n'filename' input event file (in Virtual_input/Vitess/MCNP/Tripoli4 formats)\n", NAME_INSTRUMENT);
     printf("'MODE':\n");
     printf("  0 - Print this help and exit)\n");
     printf("  1 - Virtual_input event file\n");
-    printf("  2 - Vitess event file\n");
-    printf("  3 - MCNP p-trac event file\n");
-    printf("  4 - Tripoli4 event file\n");
-    printf("  5 - MCPL event file\n");
+    printf("  2 - MCPL event file\n");
     printf("'options' - options string for Monitor_nD, see mcdoc Monitor_nD.comp\n\n");
-    printf("'bufsize' parameter only relevant for Vitess_input (MODE==2), see mcdoc Vitess_input.comp\n\n");
 
     exit(0);
   } else if (file_mode == 1) {
     printf("%s: Mode is 1 (Virtual_input event file)\n", NAME_INSTRUMENT);
     VirtualI_filename = filename;
   } else if (file_mode == 2) {
-    printf("%s: Mode is 2 (Vitess_input event file)\n", NAME_INSTRUMENT);
-    if (!strcmp(filename,"stdin")) {
-      Vitess_filename = NULL;
-    } else {
-      Vitess_filename = filename;
-    }
-  } else if (file_mode == 3) {
-    printf("%s: Mode is 3 (MCNP p-trac event file)\n", NAME_INSTRUMENT);
-    MCNP_filename = filename;
-  } else if (file_mode == 4) {
-    printf("%s: Mode is 4 (Tripoli4 event file)\n", NAME_INSTRUMENT);
-    Tripoli_filename = filename;
-  } else if (file_mode == 5) {
     printf("%s: Mode is 5 (MCPL event file)\n", NAME_INSTRUMENT);
     MCPL_filename = filename;
   }
@@ -134,21 +111,6 @@ COMPONENT Origin = Progress_bar()
 COMPONENT Virtualinput = Virtual_input(
   filename=VirtualI_filename)
 WHEN (file_mode ==1)  AT (0, 0, 0) RELATIVE Origin
-
-
-COMPONENT VITESSinput = Vitess_input(
-  filename=Vitess_filename, bufsize=bufsize)
-WHEN (file_mode ==2)  AT (0, 0, 0) RELATIVE Origin
-
-
-COMPONENT MCNPinput = Virtual_mcnp_input(
-  filename=MCNP_filename, verbose=1, autocenter="translate rotate rescale")
-WHEN (file_mode ==3)  AT (0, 0, 0) RELATIVE Origin
-
-
-COMPONENT TRIPOLI4input = Virtual_tripoli4_input(
-  filename=Tripoli_filename, verbose=1, autocenter="translate rotate rescale")
-WHEN (file_mode ==4)  AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT MCPLinput = MCPL_input(
   filename=MCPL_filename, verbose=1)
