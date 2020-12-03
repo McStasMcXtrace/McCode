@@ -64,6 +64,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, verbose=0,repeat_count=1,smooth=1)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+NOACC
 
 SHARE
 %{
@@ -100,13 +101,27 @@ DECLARE
   t_Table rTable;
 
   /* statistics on first block */
-  double mean_x, mean_y, mean_z;
-  double mean_vx, mean_vy, mean_vz;
-  double mean_dx, mean_dy, mean_dz;
-  double min_x, min_y, min_z;
-  double max_x, max_y, max_z;
-  double min_vx, min_vy, min_vz;
-  double max_vx, max_vy, max_vz;
+  double mean_x;
+  double mean_y;
+  double mean_z;
+  double mean_vx;
+  double mean_vy;
+  double mean_vz;
+  double mean_dx;
+  double mean_dy;
+  double mean_dz;
+  double min_x; 
+  double min_y;
+  double min_z;
+  double max_x;
+  double max_y;
+  double max_z;
+  double min_vx;
+  double min_vy; 
+  double min_vz;
+  double max_vx;
+  double max_vy;
+  double max_vz;
   double n_count_extrapolated;
 %}
 
@@ -218,7 +233,7 @@ TRACE
       /* BEWARE! This is a non-standard way of using mcrestore_neutron, order of 
          parameters MUST be &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz
          to match the data format from the Virtual_input files */
-      mcrestore_neutron(rTable.data,pos, &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz);
+      //mcrestore_neutron(rTable.data,pos, &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz);
 
       if (first_block) {
         double v;
