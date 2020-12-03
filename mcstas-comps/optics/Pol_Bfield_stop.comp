@@ -58,12 +58,13 @@ OUTPUT PARAMETERS()
 SHARE
 %{
 %include "pol-lib"
+struct BfstopStruct{
+      int shape;
+};
 %}
 DECLARE
 %{
-    struct {
-        int shape;
-    } prms;
+struct BfstopStruct prms;
 %}
 INITIALIZE
 %{
@@ -111,7 +112,7 @@ TRACE
         default:
             PROP_Z0;
     }
-    mcmagnet_pop();
+    mcmagnet_pop(_particle);
 %}
 
 END
