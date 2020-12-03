@@ -52,13 +52,16 @@ DECLARE
 INITIALIZE
 %{
   enum field_functions ff=field_type;
+  #ifdef USE_OFF
   mcmagnet_init();
 
   if(ff==tabled){
     struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
     interpolator_info(interpolator);
     Bprms.generic = (void *)interpolator;
-  } else if (ff==constant){
+  } else 
+  #endif
+  if (ff==constant){
     /*constant magnetic field in the box*/
     Bprms.field_prms[0]=Bx;Bprms.field_prms[1]=By;Bprms.field_prms[2]=Bz;
   }
