@@ -136,7 +136,7 @@ COMPONENT Sample_Out = Arm()
      AT (0, 0, 0) RELATIVE Sample_Arm ROTATED (0, A4, 0) RELATIVE Mono_Out
 
 COMPONENT Sample =
-V_sample(radius = 0.024, yheight = 0.0254,
+Incoherent(radius = 0.024, yheight = 0.0254,
 	 target_x= 0, target_y=0, target_z= 1.0,
 	 focus_xw=0.01, focus_yh = 0.01, pack = 1)
      AT (0, 0, 0) RELATIVE Sample_Out
