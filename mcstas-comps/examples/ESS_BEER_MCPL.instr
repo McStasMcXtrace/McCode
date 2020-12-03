@@ -244,9 +244,9 @@ COMPONENT lmon = L_monitor(
     restore_neutron=1)
 AT (0, 0, 0.002) RELATIVE src   
 
-COMPONENT hdiv_mon = Hdiv_monitor(
-    nh = 100, filename = "hdiv.dat", xwidth = 0.05,
-    yheight = 0.05, h_maxdiv = 0.5, restore_neutron = 1)
+COMPONENT hdiv_mon = Div1D_monitor(
+    ndiv = 100, filename = "hdiv.dat", xwidth = 0.05,
+    yheight = 0.05, maxdiv = 0.5, restore_neutron = 1)
   AT (0, 0, 0.003) RELATIVE src
 
 
