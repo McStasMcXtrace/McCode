@@ -201,7 +201,7 @@ COMPONENT emon1 = E_monitor(
   filename = "linup_6_1.vmon")
   AT(0, 0, 1.5) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
-SPLIT COMPONENT sample = V_sample(
+SPLIT COMPONENT sample = Incoherent(
   thickness = 0.0025, radius = 0.010,
   yheight = 0.019,
   focus_xw = 0.04, focus_yh=0.063, /* Guess focus (no GET_X yet...); check with PSD. */

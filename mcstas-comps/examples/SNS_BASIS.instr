@@ -888,8 +888,8 @@ EXTEND %{
 %}
 
 /*
-COMPONENT Sample = V_sample(
-    radius_i = 0, radius_o = 0.015, h= 0.07,
+COMPONENT Sample = Incoherent(
+    radius_o = 0.015, h= 0.07,
     focus_xw = 1.57, focus_yh = 0.98, target_index = 5)
   AT (0, 0, 3.54) RELATIVE Funnel_4
 EXTEND %{
