@@ -24,11 +24,9 @@
 *
 * Examples:
 *
-* Compare incoherent scattering from all sample comps, beamstop in place:
-* (V_multiples=0: V_sample algo identical to PowderN algo - NO multiples
-*  V_multiples: V_sample performs crude estimate for multiple scattering)
+* Compare incoherent scattering from all sample comps, beamstop in place.
 *
-* mcrun Samples_Incoherent -d Some_directory -N5 SAMPLE=1,5 STOP=1 V_multiples=0
+* mcrun Samples_Incoherent -d Some_directory -N5 SAMPLE=1,5 STOP=1
 *
 * Compare incoherent scattering and direct beam attenuation for PowderN, Single_crystal
 * and Isotroic_sqw:
@@ -52,21 +50,20 @@
 *             8=Isotropic_Sqw
 *             9=Incoherent
 *
-* %Example: SAMPLE=1 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.2321e+06
-* %Example: SAMPLE=2 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.2324e+06
-* %Example: SAMPLE=3 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.3196e+06
-* %Example: SAMPLE=4 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.3246e+06
-* %Example: SAMPLE=5 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.3252e+06
-* %Example: SAMPLE=6 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.2324e+06
-* %Example: SAMPLE=7 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3225e+06
-* %Example: SAMPLE=8 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3233e+06
-* %Example: SAMPLE=9 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3239e+06
-* %Example: SAMPLE=10 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.28905e+06
+* %Example: SAMPLE=1 STOP=1 Detector: PSD_Sphere_4pi_I=1.2321e+06
+* %Example: SAMPLE=2 STOP=1 Detector: PSD_Sphere_4pi_I=1.2324e+06
+* %Example: SAMPLE=3 STOP=1 Detector: PSD_Sphere_4pi_I=1.3196e+06
+* %Example: SAMPLE=4 STOP=1 Detector: PSD_Sphere_4pi_I=1.3246e+06
+* %Example: SAMPLE=5 STOP=1 Detector: PSD_Sphere_4pi_I=1.3252e+06
+* %Example: SAMPLE=6 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.2324e+06
+* %Example: SAMPLE=7 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3225e+06
+* %Example: SAMPLE=8 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3233e+06
+* %Example: SAMPLE=9 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3239e+06
+* %Example: SAMPLE=10 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.28905e+06
 *
 * %Parameters
 * L_min: [AA]         Minimum wavelength of neutrons
 * L_max: [AA]         Maximum wavelength of neutrons
-* V_multiples: [1]    Use crude estimate for multiple scattering in V_sample?
 * STOP: [1]           Beamstop inserted? (Needed in case of comparison between V and SX/sqw).
 * DB: [1]             Direct Beam monitor inserted? (Side-effect: absorbs 'backscattered' neutrons).
 * Order: [1]          Maximum order of multiple scattering in SX/sqw
@@ -79,7 +76,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, SAMPLE, STOP=0, V_multiples=1, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
+DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, SAMPLE, STOP=0, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
 DEPENDENCY " -DUSE_OFF "
 
 DECLARE %{
@@ -104,8 +101,7 @@ COMPONENT Coord = Progress_bar()
 
 /* set of samples *************************************************************/
 
-COMPONENT Vsample = V_sample(multiples=V_multiples,
-  sigma_abs=ABS, sigma_inc=INC,
+COMPONENT Vsample = Incoherent(sigma_abs=ABS, sigma_inc=INC,
   xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==1) AT (0, 0, 0) RELATIVE Coord
 
