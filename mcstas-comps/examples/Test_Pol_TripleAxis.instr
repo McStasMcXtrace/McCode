@@ -136,7 +136,7 @@ COMPONENT Sample_Out = Arm()
      AT (0, 0, 0) RELATIVE Sample_Arm ROTATED (0, A4, 0) RELATIVE Mono_Out
 
 COMPONENT Sample =
-V_sample(radius = 0.024, yheight = 0.0254,
+Incoherent(radius = 0.024, yheight = 0.0254,
 	 target_x= 0, target_y=0, target_z= 1.0,
 	 focus_xw=0.01, focus_yh = 0.01, pack = 1)
      AT (0, 0, 0) RELATIVE Sample_Out
@@ -148,7 +148,7 @@ PolLambda_monitor(xwidth=0.10, yheight=0.10,
      AT (0, 0, 0.25) RELATIVE Sample_Out
 
 COMPONENT msf =
-Pol_constBfield(xwidth=0.10, yheight=0.10, length=0.2, fliplambda=LAMBDA)
+Pol_constBfield(xwidth=0.10, yheight=0.10, zdepth=0.2, fliplambda=LAMBDA)
      WHEN (OPTION==-1) AT (0, 0, 0.4) RELATIVE Sample_Out
 ROTATED (0, 0, 90) RELATIVE Sample_Out
 
