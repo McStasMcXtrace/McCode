@@ -318,7 +318,7 @@ COMPONENT EMON_SAMPLE = E_monitor(
 COMPONENT a3 = Arm()
   AT (0, 0, 1.5) RELATIVE a2
 
-SPLIT COMPONENT Sample = V_sample(
+SPLIT COMPONENT Sample = Incoherent(
     radius = 0.008, yheight = 0.055, focus_xw=0.336, focus_yh=0.4, pack=1,
     target_index=+1)
   AT (0, 0, 0) RELATIVE PREVIOUS
