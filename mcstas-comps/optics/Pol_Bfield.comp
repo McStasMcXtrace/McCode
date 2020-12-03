@@ -131,18 +131,24 @@ INITIALIZE
   } else if (ff==majorana){
     double *t=(Bprms.field_prms);
     t[0]=Bx; t[1]=By; t[2]=zdepth;
-  } else if (ff==tabled){
+  } 
+  #ifdef USE_OFF
+  else if (ff==tabled){
     /*initialize the interpolation vertex structure*/
     struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
     interpolator_info(interpolator);
     Bprms.generic=(void *)interpolator;
   }
+  #endif
 
   /*initialize shape to either be window/box/cylinder*/
   /*some logic here to enter through a box or cylinder*/
+  #ifdef USE_OFF
   if(geometry && strlen(geometry)){
       shape=ANY;
-  }else if(xwidth && yheight && zdepth){
+  }else 
+  #endif
+  if(xwidth && yheight && zdepth){
       shape=BOX;
   }else if (xwidth && yheight && !zdepth){
       shape=WINDOW;
