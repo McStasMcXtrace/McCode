@@ -676,7 +676,7 @@ SHARE
         return (j); // this is 'tau_count', i.e. number of reachable reflections
     } /* end hkl_search */
     
-    int hkl_select_union(struct tau_data_union *T, int tau_count, double coh_refl, double *sum) {
+    int hkl_select_union(struct tau_data_union *T, int tau_count, double coh_refl, double *sum, _class_particle *_particle) {
       int j;
       double r = rand0max(coh_refl);
       *sum = 0;
@@ -857,14 +857,16 @@ int Single_crystal_physics_scattering(double *k_final, double *k_initial, double
           return 0; // Return 0 will use ABSORB in main component (as it is not allowed in a function)
     }
     sum = 0;
-    j = hkl_select_union(T, hkl_info->tau_count, hkl_info->coh_refl, &sum);
+    j = hkl_select_union(T, hkl_info->tau_count, hkl_info->coh_refl, &sum, _particle);
     //printf("Selected j = %d with T[%d].refl = %f \n",j,j,T[j].refl);
 
     if(j >= hkl_info->tau_count)
     {
+      #ifndef OPENACC
       if (hkl_info->flag_warning < 100)
         fprintf(stderr, "Single_crystal_process: Error: Illegal tau search "
           "(r=%g, sum=%g, j=%i, tau_count=%i).\n", r, sum, j , hkl_info->tau_count);
+      #endif
       hkl_info->flag_warning++;
       j = hkl_info->tau_count - 1;
     }

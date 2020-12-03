@@ -42,7 +42,7 @@ DEFINE INSTRUMENT Union_laue_camera(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, ra
    x_rotation_process=0, y_rotation_process=0, z_rotation_process=0,
    geometry_interact=0)
 
-DECLARE
+USERVARS
 %{
 int scattered_flag_instr;
 %}
