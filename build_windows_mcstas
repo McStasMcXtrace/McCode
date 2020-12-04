@@ -8,10 +8,26 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-WORK=`pwd`
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
+
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        cp -rp cmake/ 3rdparty/${MODULE}/
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+WORK=`pwd`
 
 # Workaround for having CRLF linefeeds in a couple of windows packages
 rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
@@ -48,7 +64,7 @@ if [ "x$2" != "x" ]; then
     cd meta-pkgs/windows/Support
     if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
-	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
     fi
     cd ..
 

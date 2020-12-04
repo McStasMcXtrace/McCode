@@ -7,9 +7,23 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
 
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        cp -rp cmake/ 3rdparty/${MODULE}/
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
 WORK=`pwd`
 
 # 64-bit
@@ -31,6 +45,12 @@ WORK=`pwd`
 ./mkdist mcstas-miniconda3 $1 support/rpm/miniconda3/ "" linux64 "" -- src
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" linux64 "" -- src
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- src
+
+export MCINSTALL_PREFIX=/usr/local/mcstas/$1/ncrystal/
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb64 "" -- src
+export MCINSTALL_PREFIX=/usr/local/
+
+
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
