@@ -10,15 +10,16 @@ fi
 THIRDPARTY=`ls 3rdparty | grep -v patches`
 cd 3rdparty
 echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
-cd -
+
 
 for MODULE in `echo $THIRDPARTY`
 do
     if [ -d "3rdparty/patches/${MODULE}" ]; then
-	echo Making McCode cake modules available for $MODULE
-        cp -rp cmake 3rdparty/${MODULE}/
+	echo Making McCode cmake modules available for $MODULE
+        cp -rp cmake/ 3rdparty/${MODULE}/
 	echo Applying McCode patches to 3rdparty/${MODULE}
 	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
     fi
