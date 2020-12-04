@@ -48,7 +48,7 @@
 * %E
 ******************************************************************************/
 
-DEFINE COMPONENT Union_master
+DEFINE COMPONENT Union_master_GPU
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(verbal = 1,
                    list_verbal = 0,
@@ -108,7 +108,7 @@ DECLARE
   //#define Union_trace_verbal_setting
   //#define Union_enable_tagging_setting
 
-  int starting_volume_warning;
+  //int starting_volume_warning;
 
   // Declare the global variables (not to be in output parameters)
   struct global_master_element_struct global_master_element;
@@ -119,9 +119,7 @@ DECLARE
   int geometry_list_index;
 
   // The main structures used in this component
-  #ifndef OPENACC
   struct intersection_time_table_struct *intersection_time_table;
-  #endif
   struct Volume_struct **Volumes;
   struct geometry_struct **Geometries;
   struct Volume_struct **Volume_copies;
@@ -136,7 +134,7 @@ DECLARE
   double v[3];
 
   // Error handling
-  int error_msg;
+  //int error_msg;
   int component_error_msg;
   
   // For verbal output
@@ -149,7 +147,7 @@ DECLARE
   int iterator;
   int solutions;
   int max_number_of_processes;
-  int limit;
+  //int limit;
   int solution;
   int min_solution;
   int min_volume;
@@ -162,30 +160,13 @@ DECLARE
   double *my_trace;
   double *p_my_trace;
   double *my_trace_fraction_control;
-  double k[3];
-  double k_new[3];
-  double k_old[3];
-  double k_rotated[3];
-  double v_length;
-  double my_sum;
-  double my_sum_plus_abs;
-  double culmative_probability;
-  double mc_prop;
-  double time_to_scattering;
-  double length_to_scattering;
-  double length_to_boundery;
-  double length_to_boundery_fp
-  double time_to_boundery;
-  int selected_process;
-  int scattering_event;
-  double time_propagated_without_scattering;
   
   int a_next_volume_found;
   int next_volume;
   double next_volume_priority;
   
-  int done;
-  int current_volume;
+  // int done;
+  // int current_volume;
   int ray_sucseeded;
   int *number_of_solutions;
   int number_of_solutions_static;
@@ -196,9 +177,6 @@ DECLARE
   
   // For within_which_volume
   int tree_next_volume;
-  int *pre_allocated1;
-  int *pre_allocated2;
-  int *pre_allocated3;
   Coords ray_position;
   Coords ray_velocity;
   Coords ray_velocity_rotated;
@@ -266,7 +244,7 @@ DECLARE
   int *logger_conditional_extend_array;
   int *abs_logger_conditional_extend_array;
   int max_conditional_extend_index;
-  int tagging_conditional_extend;
+  //int tagging_conditional_extend;
   int free_tagging_conditioanl_list;
   
   // Reliability control
@@ -277,25 +255,7 @@ DECLARE
   // Focusing
   struct focus_data_struct temporary_focus_data;
   int focus_data_index;
-  
-  // Record absorption
-  double r_old[3];
-  double initial_weight;
-  double abs_weight_factor;
-  double time_old;
-  int absorption_index;
-  int abs_weight_factor_set;
-  double my_abs;
-  struct abs_event absorption_event_data[1000];
-  
-  // Absorption logger
-  Coords abs_position;
-  Coords transformed_abs_position;
-  double t_abs_propagation;
-  double abs_distance;
-  double abs_max_length;
-  
-  
+
 %}
 
 INITIALIZE
@@ -315,7 +275,7 @@ INITIALIZE
 
 
   // It is possible to surpress warnings on starting volume by setting this to 1
-  starting_volume_warning = 0;
+  //starting_volume_warning = 0;
   
   // Start at 0 error messages, quit after 100.
   component_error_msg = 0;
@@ -808,9 +768,9 @@ INITIALIZE
   component_error_msg = 0;
   
   // Pre allocated memory for destination list search
-  pre_allocated1 = malloc(number_of_volumes * sizeof(int));
+  /*pre_allocated1 = malloc(number_of_volumes * sizeof(int));
   pre_allocated2 = malloc(number_of_volumes * sizeof(int));
-  pre_allocated3 = malloc(number_of_volumes * sizeof(int));
+  pre_allocated3 = malloc(number_of_volumes * sizeof(int));*/
   
   // Allocate memory for logger_conditional_extend_array used in the extend section of the master component, if it is needed.
   if (max_conditional_extend_index > -1) {
@@ -949,7 +909,6 @@ INITIALIZE
   // When the intersections times are calculated for a volume, all future intersections are kept in the time table.
   // Thus the memory allocation have to take into account how many intersections there can be with each volume, but it is currently set to 2, but can easily be changed. This may need to be reported by individual geometry components in the future.
   
-  #ifndef OPENACC
   intersection_time_table = malloc(sizeof(struct intersection_time_table_struct));
   intersection_time_table->num_volumes = number_of_volumes;
   
@@ -975,7 +934,6 @@ INITIALIZE
         }
       }
   }
-  #endif
   
   // If enabled, the tagging system tracks all different histories sampled by the program.
 
@@ -1012,6 +970,23 @@ INITIALIZE
 
 TRACE
 %{
+  int starting_volume_warning=0;
+  // Record absorption
+  double r_old[3];
+  double initial_weight;
+  double abs_weight_factor;
+  double time_old;
+  int absorption_index;
+  int abs_weight_factor_set;
+  double my_abs;
+  struct abs_event absorption_event_data[1000];
+  
+  // Absorption logger
+  Coords abs_position;
+  Coords transformed_abs_position;
+  double t_abs_propagation;
+  double abs_distance;
+  double abs_max_length;
   
   #ifdef Union_trace_verbal_setting
     printf("\n\n\n\n\n----------- NEW RAY -------------------------------------------------\n");
@@ -1019,45 +994,46 @@ TRACE
   #endif
   
   // Initialize logic
-  done = 0;
-  error_msg = 0;
-  
-  #ifdef debug_initialize_timetable
-  #ifdef OPENACC
-  struct intersection_time_table_struct *intersection_time_table;
-  intersection_time_table = malloc(sizeof(struct intersection_time_table_struct));
-  
-  intersection_time_table->num_volumes = number_of_volumes;
-  
-  intersection_time_table->n_elements = (int*) malloc(intersection_time_table->num_volumes * sizeof(int));
-  intersection_time_table->calculated = (int*) malloc(intersection_time_table->num_volumes * sizeof(int));
-  intersection_time_table->intersection_times = (double**) malloc(intersection_time_table->num_volumes * sizeof(double));
-  for (iterator = 0;iterator < intersection_time_table->num_volumes;iterator++){
-      #ifndef OPENACC // mesh wont work on GPU yet,
-      if (strcmp(Volumes[iterator]->geometry.shape, "mesh") == 0) {
-        intersection_time_table->n_elements[iterator] = (int) 100; // Meshes can have any number of intersections, here we allocate room for 100
-      } else
-      #endif
-        intersection_time_table->n_elements[iterator] = (int) 2; // number of intersection for all other geometries
+  int done = 0;
+  int current_volume;
+  int error_msg = 0;
+  int my_iterator;
 
-      if (iterator == 0) intersection_time_table->n_elements[iterator] = (int) 0; // number of intersection solutions
-      intersection_time_table->calculated[iterator] = (int) 0; // Initializing calculated logic
-      
-      if (iterator == 0) {
-           intersection_time_table->intersection_times[0] = NULL;
-      }
-      else {
-        intersection_time_table->intersection_times[iterator] = (double*) malloc(intersection_time_table->n_elements[iterator]*sizeof(double));
-        for (solutions = 0;solutions < intersection_time_table->n_elements[iterator];solutions++) {
-              intersection_time_table->intersection_times[iterator][solutions] = -1.0;
-        }
-      }
-  }
-  #endif
-  #endif // debug
+  double k[3];
+  double k_new[3];
+  double k_old[3];
+  double k_rotated[3];
+  double v_length;
+  double my_sum;
+  double my_sum_plus_abs;
+  double culmative_probability;
+  double mc_prop;
+  double time_to_scattering;
+  double length_to_scattering;
+  double length_to_boundery;
+  double length_to_boundery_fp;
+  double time_to_boundery;
+  int selected_process;
+  int scattering_event;
+  double time_propagated_without_scattering;
+  struct pointer_to_1d_int_list my_mask_status_list;
+  struct intersection_time_table_struct *my_intersection_time_table;
+  int *my_logger_conditional_extend_array = malloc((max_conditional_extend_index + 1)*sizeof(int));
+  my_intersection_time_table = malloc(sizeof(struct intersection_time_table_struct));
+  my_mask_status_list = mask_status_list;
+  my_intersection_time_table = intersection_time_table;
+  my_logger_conditional_extend_array = logger_conditional_extend_array;
+
+  int *pre_allocated1;
+  int *pre_allocated2;
+  int *pre_allocated3;
+  // Pre allocated memory for destination list search
+  pre_allocated1 = malloc(number_of_volumes * sizeof(int));
+  pre_allocated2 = malloc(number_of_volumes * sizeof(int));
+  pre_allocated3 = malloc(number_of_volumes * sizeof(int));
   
-  #ifdef debug_before_while
-  clear_intersection_table(intersection_time_table);
+  // Any reason to clear here?
+  //clear_intersection_table(my_intersection_time_table);
   
   time_propagated_without_scattering = 0;
   v_length = sqrt(vx*vx+vy*vy+vz*vz);
@@ -1095,9 +1071,9 @@ TRACE
     abs_loggers_with_data_array.used_elements = 0;
   }
   #endif
-  tagging_conditional_extend = 0;
-  for (iterator=0;iterator<max_conditional_extend_index+1;iterator++) {
-    logger_conditional_extend_array[iterator] = 0;
+  int tagging_conditional_extend = 0;
+  for (my_iterator=0;my_iterator<max_conditional_extend_index+1;my_iterator++) {
+    my_logger_conditional_extend_array[my_iterator] = 0;
   }
 
   // Need to clean up the double notation for position and velocity. // REVIEW_LINE
@@ -1110,35 +1086,36 @@ TRACE
   
   // Mask update: need to check the mask status for the initial position
   // mask status for a mask is 1 if the ray position is inside, 0 if it is outside
-  for (iterator=0;iterator<number_of_masks;iterator++) {
+  for (my_iterator=0;my_iterator<number_of_masks;my_iterator++) {
     // CPU Only
-    //if(Volumes[mask_volume_index_list.elements[iterator]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[iterator]]->geometry) == 1) {
+    //if(Volumes[mask_volume_index_list.elements[my_iterator]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[my_iterator]]->geometry) == 1) {
     // GPU
-    if (r_within_function(ray_position, &Volumes[mask_volume_index_list.elements[iterator]]->geometry) == 1) {
-      mask_status_list.elements[iterator] = 1;
+    if (r_within_function(ray_position, &Volumes[mask_volume_index_list.elements[my_iterator]]->geometry) == 1) {
+      my_mask_status_list.elements[my_iterator] = 1;
     } else {
-      mask_status_list.elements[iterator] = 0;
+      my_mask_status_list.elements[my_iterator] = 0;
     }
   }
   
   #ifdef Union_trace_verbal_setting
-    print_1d_int_list(mask_status_list,"Initial mask status list");
+    print_1d_int_list(my_mask_status_list,"Initial mask status list");
   #endif
+
+  #ifdef which_volume
+  // Now the initial current_volume can be found, which requires the up to date my_mask_status_list
+  current_volume = within_which_volume(ray_position,my_starting_lists.reduced_start_list,my_starting_lists.starting_destinations_list,Volumes,&my_mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
   
-  // Now the initial current_volume can be found, which requires the up to date mask_status_list
-  current_volume = within_which_volume_GPU(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
-  
-  // Using the mask_status_list and the current volume, the current_mask_intersect_list_status can be made
+  // Using the my_mask_status_list and the current volume, the current_mask_intersect_list_status can be made
   //  it contains the effective mask status of all volumes on the current volumes mask intersect list, which needs to be calculated,
   //  but only when the current volume or mask status changes, not under for example scattering inside the current volume
-  update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+  update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
   
   #ifdef Union_trace_verbal_setting
     printf("Starting current_volume = %d\n",current_volume);
   #endif
   
   // Check if the ray appeared in an allowed starting volume, unless this check is disabled by the user for advanced cases
-  if (allow_inside_start == 0 && starting_lists.allowed_starting_volume_logic_list.elements[current_volume] == 0) {
+  if (allow_inside_start == 0 && my_starting_lists.allowed_starting_volume_logic_list.elements[current_volume] == 0) {
     printf("ERROR, ray ''teleported'' into Union component %s, if intentional, set allow_inside_start=1\n", NAME_CURRENT_COMP);
     #ifndef OPENACC
     // NEED ERROR FLAG: Need to set an error flag that is read in finally to warn user of problem.
@@ -1174,14 +1151,15 @@ TRACE
   //  or a dedicated exit volume. The loop is cancelled after a large number of iterations as a failsafe for errors.
   // A single run of the loop will either be a propagation to the next volume along the path of the ray, or a
   //  scattering event at some point along the path of the ray in the current volume.
-  limit = 100000;
-  #endif // debug
+  #endif
+  int limit = 100000;
+  
   while (done == 0) {
     limit--;
     
     #ifdef Union_trace_verbal_setting
       printf("----------- START OF WHILE LOOP --------------------------------------\n");
-      print_intersection_table(intersection_time_table);
+      print_intersection_table(my_intersection_time_table);
       printf("current_volume = %d \n",current_volume);
     #endif
     
@@ -1197,7 +1175,7 @@ TRACE
           printf("Intersect_list = %d being checked \n",*check);
         #endif
     
-        if (intersection_time_table->calculated[*check] == 0) {
+        if (my_intersection_time_table->calculated[*check] == 0) {
              #ifdef Union_trace_verbal_setting
                printf("running intersection for intersect_list with *check = %d \n",*check);
                // printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
@@ -1205,12 +1183,12 @@ TRACE
             // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
             // CPU Only
-            //geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table->intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
+            //geometry_output = Volumes[*check]->geometry.intersect_function(my_intersection_time_table->intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
             
             // GPU Flexible intersect_function call
-            geometry_output = intersect_function(intersection_time_table->intersection_times[*check], number_of_solutions, r_start, v, &Volumes[*check]->geometry);
+            geometry_output = intersect_function(my_intersection_time_table->intersection_times[*check], number_of_solutions, r_start, v, &Volumes[*check]->geometry);
             
-            intersection_time_table->calculated[*check] = 1;
+            my_intersection_time_table->calculated[*check] = 1;
             // printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
     }
@@ -1221,7 +1199,7 @@ TRACE
         #ifdef Union_trace_verbal_setting
           printf("Mask Intersect_list = %d being checked \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]);
         #endif
-        if (intersection_time_table->calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] == 0) {
+        if (my_intersection_time_table->calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] == 0) {
           #ifdef Union_trace_verbal_setting
             printf("running intersection for mask_intersect_list element = %d \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]);
           //  printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
@@ -1229,21 +1207,21 @@ TRACE
           // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
           // CPU Only
-          //geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry.intersect_function(intersection_time_table->intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry);
+          //geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry.intersect_function(my_intersection_time_table->intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry);
           
           // GPU allowed
           int selected_index;
           selected_index = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
-          geometry_output = intersect_function(intersection_time_table->intersection_times[selected_index], number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
+          geometry_output = intersect_function(my_intersection_time_table->intersection_times[selected_index], number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
           
-          intersection_time_table->calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] = 1;
+          my_intersection_time_table->calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] = 1;
           // if printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
       }
     }
     
     // Checking if there are intersections with children of current volume, which means there is an intersection before current_volume, and thus can be skipped. But only if they have not been overwritten. In case current_volume is 0, there is no need to do this regardless.
-    if (current_volume != 0 && intersection_time_table->calculated[current_volume] == 0) {
+    if (current_volume != 0 && my_intersection_time_table->calculated[current_volume] == 0) {
         #ifdef Union_trace_verbal_setting
           printf("Checking if children of current_volume = %d have intersections. \n",current_volume);
         #endif
@@ -1254,7 +1232,7 @@ TRACE
               printf("Checking if child %d of current_volume = %d have intersections. \n",*check,current_volume);
             #endif
             // Only check the first of the two results in the intersection table, as they are ordered, and the second is of no interest
-            if (intersection_time_table->calculated[*check] == 1 && intersection_time_table->intersection_times[*check][0] > time_propagated_without_scattering) {
+            if (my_intersection_time_table->calculated[*check] == 1 && my_intersection_time_table->intersection_times[*check][0] > time_propagated_without_scattering) {
                 // If this child is masked, its mask status need to be 1 in order to be taken into account
                 if (Volumes[*check]->geometry.is_masked_volume == 0) {
                   #ifdef Union_trace_verbal_setting
@@ -1270,7 +1248,7 @@ TRACE
                   if (Volumes[*check]->geometry.mask_mode == 2) { // ANY mask mode
                     tree_next_volume = 0;
                     for (mask_start=mask_check=Volumes[*check]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[*check]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
-                       if (mask_status_list.elements[*mask_check] == 1) {
+                       if (my_mask_status_list.elements[*mask_check] == 1) {
                          intersection_with_children = 1;
                          break;
                        }
@@ -1278,7 +1256,7 @@ TRACE
                   } else { // ALL mask mode
                     intersection_with_children = 1;
                     for (mask_start=mask_check=Volumes[*check]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[*check]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
-                      if (mask_status_list.elements[*mask_check] == 0) {
+                      if (my_mask_status_list.elements[*mask_check] == 0) {
                         intersection_with_children = 0;
                         break;
                       }
@@ -1296,17 +1274,17 @@ TRACE
         #endif
         if (intersection_with_children == 0) {
             // CPU Only
-            //geometry_output = Volumes[current_volume]->geometry.intersect_function(intersection_time_table->intersection_times[current_volume],number_of_solutions,r_start,v,&Volumes[current_volume]->geometry);
+            //geometry_output = Volumes[current_volume]->geometry.intersect_function(my_intersection_time_table->intersection_times[current_volume],number_of_solutions,r_start,v,&Volumes[current_volume]->geometry);
             
             // GPU Allowed
-            geometry_output = intersect_function(intersection_time_table->intersection_times[current_volume], number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
-            intersection_time_table->calculated[current_volume] = 1;
+            geometry_output = intersect_function(my_intersection_time_table->intersection_times[current_volume], number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
+            my_intersection_time_table->calculated[current_volume] = 1;
         }
     }
 
-    // At this point, intersection_time_table is updated with intersection times of all possible intersections.
+    // At this point, my_intersection_time_table is updated with intersection times of all possible intersections.
     #ifdef Union_trace_verbal_setting
-      print_intersection_table(intersection_time_table);
+      print_intersection_table(my_intersection_time_table);
     #endif
     
     // Next task is to find the next intersection time. The next intersection must be greater than the time_propagated_without_scattering (0 at start of loop)
@@ -1315,13 +1293,13 @@ TRACE
     // First loop for checking intersect_check_list
     time_found = 0;
     for (start=check=Volumes[current_volume]->geometry.intersect_check_list.elements;check-start<Volumes[current_volume]->geometry.intersect_check_list.num_elements;check++) {
-        for (solution = 0;solution<intersection_time_table->n_elements[*check];solution++) {
+        for (solution = 0;solution<my_intersection_time_table->n_elements[*check];solution++) {
             if (time_found) {
-                if ((intersection_time = intersection_time_table->intersection_times[*check][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
+                if ((intersection_time = my_intersection_time_table->intersection_times[*check][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
                 }
             } else {
-                if ((intersection_time = intersection_time_table->intersection_times[*check][solution]) > time_propagated_without_scattering) {
+                if ((intersection_time = my_intersection_time_table->intersection_times[*check][solution]) > time_propagated_without_scattering) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
                     time_found = 1;
                 }
@@ -1332,13 +1310,13 @@ TRACE
     // Now check the masked_intersect_list, but only the ones that are currently active
     for (mask_iterator=0;mask_iterator<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterator++) {
       if (current_mask_intersect_list_status.elements[mask_iterator] == 1) {
-        for (solution = 0;solution<intersection_time_table->n_elements[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]];solution++) {
+        for (solution = 0;solution<my_intersection_time_table->n_elements[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]];solution++) {
             if (time_found) {
-                if ((intersection_time = intersection_time_table->intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
+                if ((intersection_time = my_intersection_time_table->intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
                 }
             } else {
-                if ((intersection_time = intersection_time_table->intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]][solution]) > time_propagated_without_scattering) {
+                if ((intersection_time = my_intersection_time_table->intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]][solution]) > time_propagated_without_scattering) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
                     time_found = 1;
                 }
@@ -1348,13 +1326,13 @@ TRACE
     }
     
     // And check the current_volume
-    for (solution = 0;solution<intersection_time_table->n_elements[current_volume];solution++) {
+    for (solution = 0;solution<my_intersection_time_table->n_elements[current_volume];solution++) {
         if (time_found) {
-            if ((intersection_time = intersection_time_table->intersection_times[current_volume][solution]) > time_propagated_without_scattering && intersection_time < min_intersection_time) {
+            if ((intersection_time = my_intersection_time_table->intersection_times[current_volume][solution]) > time_propagated_without_scattering && intersection_time < min_intersection_time) {
                 min_intersection_time = intersection_time;min_solution = solution;min_volume = current_volume;
             }
         } else {
-            if ((intersection_time = intersection_time_table->intersection_times[current_volume][solution]) > time_propagated_without_scattering) {
+            if ((intersection_time = my_intersection_time_table->intersection_times[current_volume][solution]) > time_propagated_without_scattering) {
                 min_intersection_time = intersection_time;min_solution = solution;min_volume = current_volume;
                 time_found = 1;
             }
@@ -1672,7 +1650,7 @@ TRACE
               printf("\nERROR, propagated out of current volume instead of to a point within!\n");
               printf("length_to_scattering_specified = %2.20f\n             length propagated = %2.20f\n            length_to_boundery = %2.20f \n   current_position = (%lf,%lf,%lf) \n",length_to_scattering,sqrt(time_to_scattering*time_to_scattering*vx*vx+time_to_scattering*time_to_scattering*vy*vy+time_to_scattering*time_to_scattering*vz*vz),length_to_boundery,x,y,z);
               
-              volume_index = within_which_volume_GPU(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+              volume_index = within_which_volume_GPU(ray_position,my_starting_lists.reduced_start_list,my_starting_lists.starting_destinations_list,Volumes,&my_mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
               
               printf("Debug info: Volumes[current_volume]->name = %s, but now inside volume number %d named %s.\n",Volumes[current_volume]->name,volume_index,Volumes[volume_index]->name);
               printf("Ray absorbed \n");
@@ -1783,7 +1761,7 @@ TRACE
             
 
             // Empty intersection time lists
-            clear_intersection_table(intersection_time_table);
+            clear_intersection_table(my_intersection_time_table);
             time_propagated_without_scattering = 0.0;
             #ifdef Union_trace_verbal_setting
               printf("SCATTERED SUCSSESFULLY \n");
@@ -1828,8 +1806,8 @@ TRACE
             #ifdef Union_trace_verbal_setting
               printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
             #endif
-            // Remove this entry from the intersection_time_table
-            intersection_time_table->intersection_times[min_volume][min_solution] = -1;
+            // Remove this entry from the my_intersection_time_table
+            my_intersection_time_table->intersection_times[min_volume][min_solution] = -1;
             
             // Use destination list for corresponding intersection entry n,i) to find next volume
             #ifdef Union_trace_verbal_setting
@@ -1853,7 +1831,7 @@ TRACE
                 else {
                     ray_position = coords_set(x,y,z);
                     ray_velocity = coords_set(vx,vy,vz);
-                    tree_next_volume = within_which_volume_GPU(ray_position,Volumes[current_volume]->geometry.reduced_destinations_list,Volumes[current_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    tree_next_volume = within_which_volume_GPU(ray_position,Volumes[current_volume]->geometry.reduced_destinations_list,Volumes[current_volume]->geometry.destinations_list,Volumes,&my_mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                 }
 
                 #ifdef Union_trace_verbal_setting
@@ -1879,7 +1857,7 @@ TRACE
                 
                 // Set next volume to the solution found in the tree method
                 current_volume = tree_next_volume;
-                update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
                 #ifdef Union_trace_verbal_setting
                   print_1d_int_list(current_mask_intersect_list_status,"Updated current_mask_intersect_list_status");
                 #endif
@@ -1925,17 +1903,17 @@ TRACE
                   if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, min_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
                   #endif
                   current_volume = min_volume;
-                  //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                  //update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
                 } else {
                   #ifdef Union_trace_verbal_setting
                     printf("Current volume is not a mask, complex decision tree\n");
                   #endif
-                  if (mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] == 1) {
+                  if (my_mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] == 1) {
                     // We are leaving the mask, change the status
                     #ifdef Union_trace_verbal_setting
                       printf("mask status changed from 1 to 0 as a mask is left\n");
                     #endif
-                    mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 0;
+                    my_mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 0;
                     // If the current volume is masked by this mask, run within_which_volume using the masks destination list, otherwise keep the current volume
                     //if (on_int_list(Volumes[min_volume]->geometry.mask_list,current_volume))
                     if (on_int_list(Volumes[current_volume]->geometry.masked_by_list,min_volume) == 1) {
@@ -1946,7 +1924,7 @@ TRACE
                       need_to_run_within_which_volume = 1;
                       if (Volumes[current_volume]->geometry.mask_mode == 2) {
                         for (mask_start=mask_check=Volumes[current_volume]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[current_volume]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
-                          if (mask_status_list.elements[*mask_check] == 1) {
+                          if (my_mask_status_list.elements[*mask_check] == 1) {
                             // Nothing needs to be done, the effective mask status of the current volume is still 1
                             need_to_run_within_which_volume = 0;
                             break;
@@ -1971,7 +1949,7 @@ TRACE
                             if (Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.mask_mode == 2) { // ANY mask mode
                               tree_next_volume = 0;
                               for (mask_start=mask_check=Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
-                                if (mask_status_list.elements[*mask_check] == 1) {
+                                if (my_mask_status_list.elements[*mask_check] == 1) {
                                   tree_next_volume = Volumes[min_volume]->geometry.destinations_list.elements[0];
                                   break;
                                 }
@@ -1979,7 +1957,7 @@ TRACE
                             } else { // ALL mask mode
                               tree_next_volume = Volumes[min_volume]->geometry.destinations_list.elements[0];
                               for (mask_start=mask_check=Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
-                                if (mask_status_list.elements[*mask_check] == 0) {
+                                if (my_mask_status_list.elements[*mask_check] == 0) {
                                   tree_next_volume = 0;
                                   break;
                                 }
@@ -1993,14 +1971,14 @@ TRACE
                           if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
                           #endif
                           current_volume = tree_next_volume;
-                          //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                          //update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
                         } else {
                           #ifdef Union_trace_verbal_setting
                             printf("Many elements in destinations list, use within_which_volume\n");
                           #endif
                           ray_position = coords_set(x,y,z);
                           ray_velocity = coords_set(vx,vy,vz);
-                          tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                          tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&my_mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                         // } Bug fixed on 27/11/2016
                           #ifndef OPENACC
                           if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
@@ -2010,7 +1988,7 @@ TRACE
                             printf("Set new new volume to %d\n",tree_next_volume);
                           #endif
                         } // Moved here on 27/11/2016, problem was two calls to current_tagging_node when only one element in destinations list
-                        //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                        //update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
                       } else {
                         #ifdef Union_trace_verbal_setting
                           printf("Did not need updating, as another mask was covering the volume\n");
@@ -2020,14 +1998,14 @@ TRACE
 
                   } else {
                     // Here beccause the mask status of the mask that is intersected was 0, and it is thus switched to 1
-                    mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 1;
+                    my_mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 1;
                     // When entering a mask, the new highest priority volume may be one of the masked volumes, if not we keep the current volume
                     ray_position = coords_set(x,y,z);
                     ray_velocity = coords_set(vx,vy,vz);
-                    //tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    //tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&my_mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                     // Bug found on the 2/9 2016, the destinations_list of a mask does not contain the volumes inside it. Could make an additional list for this.
                     // The temporary fix will be to use the mask list for both reduced destinations list and destinations list.
-                    tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.mask_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    tree_next_volume = within_which_volume_GPU(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.mask_list,Volumes,&my_mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
                     // if within_which_volume returns 0, no result was found (volume 0 can not be masked, so it could not be on the mask list)
                     if (tree_next_volume != 0) {
                       if (Volumes[tree_next_volume]->geometry.priority_value > Volumes[current_volume]->geometry.priority_value) {
@@ -2038,14 +2016,14 @@ TRACE
                         current_volume = tree_next_volume;
                       }
                     }
-                    //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                    //update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
                   }
                 }
                 
                 // Regardless of the outcome of the above code, either the mask status or current volume have changed, and thus a effective mask update is needed.
-                update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                update_current_mask_intersect_status(&current_mask_intersect_list_status, &my_mask_status_list, Volumes, &current_volume);
                 #ifdef Union_trace_verbal_setting
-                  print_1d_int_list(mask_status_list,"Updated mask status list");
+                  print_1d_int_list(my_mask_status_list,"Updated mask status list");
                   print_1d_int_list(current_mask_intersect_list_status,"Updated current_mask_intersect_list_status");
                   #ifndef OPENACC
                   if (enable_tagging) printf("After new intersection volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
@@ -2096,7 +2074,7 @@ TRACE
                     printf("The ray is in volume       %d\n",volume_index);
               }
               
-              print_1d_int_list(mask_status_list,"mask status list");
+              print_1d_int_list(my_mask_status_list,"mask status list");
               
               for (iterator=0;iterator<number_of_volumes;iterator++)
                  printf("%d:%d - ",iterator,scattered_flag[iterator]);
@@ -2105,7 +2083,7 @@ TRACE
               
               printf("Trace error number (%d/100) \n",component_error_msg);
               #endif
-              //print_intersection_table(intersection_time_table);
+              //print_intersection_table(my_intersection_time_table);
               //printf("Cluster is loosing the thread, debug for this behavior\n");
               //printf("global_all_volume_logger_list_master->num_elements = %d\n",global_all_volume_logger_list_master->num_elements);
               //printf("global_specific_volumes_logger_list_master->num_elements = %d\n",global_specific_volumes_logger_list_master->num_elements);
@@ -2198,10 +2176,10 @@ TRACE
           // Luxury feature to be added later
           if (loggers_with_data_array.logger_pointers[log_index]->logger_extend_index != -1) {
             #ifdef Union_trace_verbal_setting
-              printf("Updating logger_conditional_extend_array[%d] to 1 (max length = %d)\n",loggers_with_data_array.logger_pointers[log_index]->logger_extend_index,max_conditional_extend_index);
+              printf("Updating my_logger_conditional_extend_array[%d] to 1 (max length = %d)\n",loggers_with_data_array.logger_pointers[log_index]->logger_extend_index,max_conditional_extend_index);
             #endif
             // The user can set a condtional_extend_index, so that the evaluation of this specific conditional can be taken easily from extend
-            logger_conditional_extend_array[loggers_with_data_array.logger_pointers[log_index]->logger_extend_index] = 1;
+            my_logger_conditional_extend_array[loggers_with_data_array.logger_pointers[log_index]->logger_extend_index] = 1;
             // Are all reset to 0 for each new ray
             #ifdef Union_trace_verbal_setting
               printf("Updated extend index sucessfully\n");
@@ -2257,7 +2235,7 @@ TRACE
           // Luxury feature to be added later
           if (abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index != -1) {
             #ifdef Union_trace_verbal_setting
-              printf("Updating logger_conditional_extend_array[%d] to 1 (max length = %d)\n",abs_loggers_with_data_array.logger_pointers[log_index]->abs_logger_extend_index,max_conditional_extend_index);
+              printf("Updating my_logger_conditional_extend_array[%d] to 1 (max length = %d)\n",abs_loggers_with_data_array.logger_pointers[log_index]->abs_logger_extend_index,max_conditional_extend_index);
             #endif
             // The user can set a condtional_extend_index, so that the evaluation of this specific conditional can be taken easily from extend
             abs_logger_conditional_extend_array[abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index] = 1;
@@ -2345,7 +2323,7 @@ TRACE
   
   #ifdef debug_initialize_timetable
   #ifdef OPENACC
-  free(intersection_time_table);
+  free(my_intersection_time_table);
   #endif
   #endif
   
@@ -2380,14 +2358,14 @@ if (finally_verbal) printf("Freeing variables which are always allocated \n");
 // free allocated arrays specific to this master union component
 free(scattered_flag);
 free(my_trace);
-free(pre_allocated1);
+/*free(pre_allocated1);
 free(pre_allocated2);
-free(pre_allocated3);
+free(pre_allocated3);*/
 free(number_of_processes_array);
 free(Geometries);
 
 #ifndef OPENACC
-if (finally_verbal) printf("Freeing intersection_time_table \n");
+if (finally_verbal) printf("Freeing my_intersection_time_table \n");
 for (iterator = 1;iterator < intersection_time_table->num_volumes;iterator++){
     free(intersection_time_table->intersection_times[iterator]);
 }
