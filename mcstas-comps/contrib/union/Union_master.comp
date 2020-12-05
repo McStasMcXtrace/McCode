@@ -62,7 +62,7 @@ SETTING PARAMETERS(verbal = 1,
                    string init="init")
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/share/"
-
+NOACC
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
