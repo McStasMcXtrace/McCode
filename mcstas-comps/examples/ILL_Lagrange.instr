@@ -109,9 +109,6 @@ TRACE
 
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
-EXTEND %{
-  RotateNeutron=30;
-%}
 
 /* Hot source at the ILL */
 COMPONENT Source = Source_gen(
@@ -183,7 +180,9 @@ COMPONENT cryostat_out = COPY(cryostat_in)(concentric=0)
    AT (0, 0, 0) RELATIVE SamplePosition
 EXTEND %{
   if (SCATTERED) flag_env++;
+  RotateNeutron = RAD2DEG*atan2(vx,vz);
 %}
+
 /*
 COMPONENT BeFilter = Isotropic_Sqw(radius=0.1,yheight=.1,Sqw_coh="Be.laz", p_interact=1)
    AT (0, -.1, 0) RELATIVE SamplePosition
@@ -213,9 +212,7 @@ COMPONENT Barrel_PSD_monitor = Monitor_nD(
   radius  = L3*sin(A5*DEG2RAD)/2, yheight = L3, restore_neutron=1
   )
   AT (0,-L3/2,0) RELATIVE Sample
-  EXTEND %{
-    RotateNeutron = RAD2DEG*atan2(vx,vz);
-  %}
+
 
 COMPONENT Barrel_PSD_monitor2 = COPY(Barrel_PSD_monitor)
   (options = "banana, theta limits=[-180 180] bins=360, energy limits=[0 100] bins=50",
@@ -237,8 +234,6 @@ COMPONENT RotateNeutron = Arm()
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   %}
 
-COMPONENT TheEvents = Event_monitor_simple(nevents=1e6)
-  AT(0,0,0) RELATIVE RotateNeutron
 
 /* all neutrons are now with x=vx=0 */
 COMPONENT Barrel_PSD_monitor3 = Monitor_nD
