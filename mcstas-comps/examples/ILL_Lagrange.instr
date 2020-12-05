@@ -226,7 +226,7 @@ COMPONENT RotateNeutron = Arm()
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   %}
 
-COMPONENT Events = Event_monitor_simple(nevents=1e6)
+COMPONENT TheEvents = Event_monitor_simple(nevents=1e6)
   AT(0,0,0) RELATIVE RotateNeutron
 
 /* all neutrons are now with x=vx=0 */
