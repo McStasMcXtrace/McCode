@@ -237,6 +237,9 @@ COMPONENT RotateNeutron = Arm()
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   %}
 
+COMPONENT Events = Event_monitor_simple(nevents=1e6)
+  AT(0,0,0) RELATIVE RotateNeutron
+
 /* all neutrons are now with x=vx=0 */
 COMPONENT Barrel_PSD_monitor3 = Monitor_nD
   (xwidth=0.01, yheight=0.669, options = "energy limits=[0 100] bins=100, y bins=20",
