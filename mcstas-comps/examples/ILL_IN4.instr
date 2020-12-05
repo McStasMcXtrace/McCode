@@ -103,8 +103,8 @@ DECLARE %{
   #pragma acc declare create( environment_thickness )
   double container_thickness   = 5e-4;
   #pragma acc declare create( container_thickness )
-  char   environment[]         = "Al.lau";
-  char   container[]           = "V.lau";
+  char   environment[]         = "Al.laz";
+  char   container[]           = "V.laz";
 
   /* the following variables are computed in the IN4 configuration */
   double d0, d2; /* IN4c distances used in NoMad/IN4 doc (Ross/Rols) */
@@ -123,9 +123,6 @@ DECLARE %{
   double t12=0;
 
   double Ei=0;
-
-  int _order;
-  #pragma acc declare create(_order)
 
   /* Write_Sqw: writes an Sqw file for Isotropic_Sqw as a Dirac 2D array
      INPUT:
@@ -230,8 +227,6 @@ USERVARS %{
 %}
 
 INITIALIZE %{
-  _order=order;
-  #pragma acc update device(_order)
   double Vi, Ki;
   double thetaB;
   double dSx=5.556;   /* BC1 to sample along beam tube axis */
@@ -342,8 +337,10 @@ COMPONENT Origin = Progress_bar()
   EXTEND %{
     flag_source_order = floor(rand01()*order_extend*.99);
     /* tests for consistency */
-    int ord=_order;
-    if (ord <= 0 || ord > 4) ord = 4;
+    int ord=INSTRUMENT_GETPAR(order);
+    if ((ord <= 0 || ord > 4)) {
+      ord = 4;
+    }
     order_extend = ord;
   %}
 
