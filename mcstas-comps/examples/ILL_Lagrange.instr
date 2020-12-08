@@ -245,13 +245,24 @@ COMPONENT Barrel_PSD_monitor3 = Monitor_nD
 COMPONENT AnalyserMount = Arm()
   AT (0,-L3/2,L3*sin(A5*DEG2RAD)/2) RELATIVE Sample
 
-COMPONENT Analyser = Monochromator_curved(
+SPLIT COMPONENT Analyser = Monochromator_curved(
   width=.05, height=0.669, RV=RVA, NV=11, NH=1, DM=3.355, reflect="HOPG.rfl")
   AT (0,0,0)       RELATIVE AnalyserMount
   ROTATED (0,90,0) RELATIVE AnalyserMount
-  EXTEND %{
+GROUP POSTsample
+EXTEND %{
     if (!SCATTERED) ABSORB; /* perferct beam stop to account for the B4C block */
-  %}
+%}
+
+COMPONENT KillDirectBeam = Arm()
+  AT (0,0,0) RELATIVE PREVIOUS
+GROUP POSTsample
+EXTEND %{
+  // For some reason, the above B4C solution is not enough to block on mcstas-3.0.
+  // This catchall ensures that there is no communication directly between sample
+  // and detector.
+  SCATTER; ABSORB;
+%}
 
 COMPONENT DetectorMount = Arm()
   AT (0,-L3, 0) RELATIVE Sample
