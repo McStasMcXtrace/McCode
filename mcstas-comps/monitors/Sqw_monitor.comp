@@ -58,7 +58,7 @@
 DEFINE COMPONENT Sqw_monitor
 DEFINITION PARAMETERS (vix,viy,viz)
 SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename, int nowritefile=0, radius=0, yheight=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (M_N,M_p,M_p2,dE)
 
 SHARE
 %{
@@ -172,9 +172,9 @@ SAVE
 %}
 
 FINALLY %{
-  /*  destroy_darr2d(M_N);
+  destroy_darr2d(M_N);
   destroy_darr2d(M_p);
-  destroy_darr2d(M_p2);*/
+  destroy_darr2d(M_p2);
 %}
 
 MCDISPLAY
