@@ -146,7 +146,7 @@ int Table_File_List_gc(t_Table *tab){
  * return None. 
 *******************************************************************************/
 void Table_File_List_store(t_Table *tab){
-    return Table_File_List_Handler(STORE,tab,0);
+    Table_File_List_Handler(STORE,tab,0);
 }
 
 
