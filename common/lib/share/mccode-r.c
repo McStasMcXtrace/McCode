@@ -2942,7 +2942,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
     #pragma acc loop seq
     for (long bidx = 1; bidx < mult; bidx++) { // bidx: block index
       // preserve absorbed particle (for randstate)
-      sourcebuffer = particles[bidx*mult + tidx];
+      sourcebuffer = particles[bidx*accumlen + tidx];
       // buffer full particle struct
       targetbuffer = particles[tidx];
       // reassign previous randstate
@@ -2954,7 +2954,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
       targetbuffer.randstate[5] = sourcebuffer.randstate[5];
       targetbuffer.randstate[6] = sourcebuffer.randstate[6];
       // apply
-      particles[bidx*mult + tidx] = targetbuffer;
+      particles[bidx*accumlen + tidx] = targetbuffer;
     }
   }
 
