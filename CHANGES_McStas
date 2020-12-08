@@ -38,11 +38,183 @@
 * Modified by: PW December 2018: version 2.5
 * Modified by: PW January 2020: version 2.6
 * Modified by: PW February 2020: 3.0beta tech preview
-* This file is part of McStas 3.0beta tech preview, released February 25th 2020.
+* Modified by: PW May 2020: version 2.6.1
+* Modified by: PW November 2020: version 2.7
+* This file is part of McStas 3.0, released December 11th 2020.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.0beta technology preview, Feburary 25th, 2020
+Changes in McStas 3.0, December 11th, 2020
+
+ McStas 3.0 is the first official release in the 3.x series, with a modernised 
+ code-generator and support for GPU acceleration on NVIDIA cards.
+ 
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
+ - Thanks to Guido Juckeland (HZDR,DE) and Sebastian Alfthan (CSC,FI) who were
+   behind the GPU Hackathons we participated in
+ - Thanks to our NVIDIA mentors Vishal Metha, Christian Hundt and Alexey Romanenko
+
+ Installation:
+ - As this is NOT a production release, we will only offer installation packages in
+   the form of "manually installable" packages.
+   
+ Main new features and changes:
+ 1. New code-generation scheme based on functions instead of #defines, which brings
+   * Much improved compilation-times, the code is better suited for modern compilers
+   * In most cases a speed-up of order 20%
+   * The neutron _particle is now represented by a struct
+   * The component types and instances are also represented by structs
+   * In the generic TRACE function of a given component type, the _comp var is
+     short-hand for "whatever the component instance is"
+   * New instrument section of USERVARS %{ double example_flag; %} which enriches
+     the _particle struct
+   * In component DECLARE blocks, assignments can no longer be done and all declarations
+     must be listed independently, i.e double a; is OK, double a,b; is not. Variables in
+     this scope are automatically so-called "OUTPUT PARAMETERS" (we may deprecate that
+     keyword completely for the official McStas 3.0 release)
+   * Components no longer support DEFINITION PARAMETERS, instead the SETTING PARAMETERS
+     must be used, which now includes a vector and string type supplementing the (default)
+     double/MCNUM and int types.
+   * New macros have been added for
+   * INSTRUMENT_GETPAR(parameter_name)
+   * COMP_GETPAR(component, parameter_name) which is similar to the legacy MC_GETPAR
+   * MC_GETPAR3(component_class, component_name,parameter_name)
+   * Further, the new cogen implements support for Nvidia GPU's, for details see point 2 below.
+   * Status on CPU (20200220) is that 134 out of 176 instruments from the mcstas-3.0 branch compile
+     for CPU - and most run as expected.
+ 2. Limited, experimental support for OpenACC acceleration on NVIDIA GPU's
+   * #pragma driven, inserted by the code-generation, but also implemented in (many, not all)
+     libs and comps
+   * Status on GPU (20200220) is that 91 out of 176 instruments from the mcstas-3.0 branch compile
+     for GPU. These 91 instruments include in total 73 out of 213 components. Out of the functional
+     instruments, around 45 produce meaningful data at this point.
+   * Speedups measured using top-notch NVIDIA V100 datacenter cards are in the range of 10-600 with
+     respect to a single-core of a modern CPU, see the figure in the below link. It was generated for
+     an "ideally" parallel instrument.
+     (https://camo.githubusercontent.com/96fcceec70d0761f8709eda4de7bcbde5597aee6/687474703a2f2f746d702e6d63737461732e6f72672f563130302d73706565647570732e706e67)
+   * Platform support / compiler configuration:
+     - Required compiler for GPU/OpenACC: PGI 19.4 or newer. Community edition works fine
+     - Required GPU hardware: NVIDIA Tesla card + configured driver
+     - Windows: At this point UNSUPPORTED for GPU/OpenACC since the CUDA managed memory mode is not
+       available for this platform. (Very simple instruments without monitors may work, at this point
+       untested). OpenACC multi-threading should work with pgcc -ta:multicore -DOPENACC, also untested.
+     - macOS: Only CPU-thread parallelisation is supported, since NVIDIA Cards at this point are
+       unsupported on recent macOS versions. Parallelises similarly to MPI, but slightly slower.
+     - Linux: Full acceleration support with GPU, and with multicore.
+   * Install the compiler and put it on your system PATH. Install and configure Nvidia drivers for your card.
+   * We hope that GCC will offer better support for OpenACC in the near future.
+   * Tool support
+     - On Linux and macOS mcrun is preconfigured so that mcrun -c --openacc compiles with:
+     - Linux: pgcc -ta:tesla,managed,deepcopy -DOPENACC
+     - macOS: pgcc -ta:multicore -DOPENACC
+   * For both of the above, adding -Minfo:accel will output verbose information on parallelisation
+   * In mcgui, the mcrun --openacc configuration can be selected via the preferences
+ 3. Interoperability with McStas 2.6
+   * Rudimentary support for MCPL event interchange has been added through a set of MCPL_input_GPU
+     and MCPL_output_GPU components.
+ 4. Known limitations
+   * As mentioned above, not all components/instruments are ported to the GPU technology yet
+   * We have not fully decided if our newly implemented random number algorithm is sufficiently
+     robust/stable.
+   * Monitor_nD user vars can not currently access the neutron USERVARS, but a solution is in the pipe.
+   * Not all features of all components correspond to those from McStas 2.6, partly because not all
+     modifications have been ported from the 2.6 tree to the 3.0 tree.
+   * Especially the sample components may
+     - Create GPU-side segmentation faults etc. with big datasets / large statistic, this is a
+       targeted area of development before the actual release of 3.0. :-)
+     - Give simulation results that are systematically 'off' with respect to CPU results.
+
+
+Changes in McStas v.2.7, Novmeber 27th, 2020
+
+ McStas 2.7 is the 10th release in the 2.x series, provides minor incremental
+ improvements and fixes various minor issues with McStas 2.6.1
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+
+
+Fixes of issues from last release:
+ - A number of minor issues from 2.6.1 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=label%3A%22McStas+2.6.1%22+label%3A%22ready+for+release+on+master%22+is%3Aclosed
+
+Tools:
+ - On macOS (from 11.0 Big Sur onwards), mcgui will assume light/dark mode with the system settings.
+   (The change came from using the system python3 with our app/miniconda-distributed Qt libs etc.)
+ - We now no longer officially support the perl/PGPLOT backend, these may or may not work on your system.
+
+ Platforms:
+ - Nothing really new to report here. We still support 64bit Windows 10, all recent 64bit macOS including 11.0 Big Sur,
+   Debian-based and RPM-based distros. (RPMs are built on/for CentOS, you may get varying milage elsewhere.)
+
+ Libraries:
+ - Updated version 2.1.1 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. To use it, carry out the below steps:
+     mcstas:~/NCryst$ mcstas-2.7-environment
+     mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
+     mcstas:~/NCryst$ ncrystal_preparemcstasdir
+     mcstas:~/NCryst$ cp $MCSTAS/examples/NCrystal_example_mcstas.instr .
+     mcstas:~/NCryst$ mcrun -c NCrystal_example_mcstas.instr
+ - MCPL library from the same authors now included at v. 1.3.2.
+
+ Components:
+ - Updated Union library from Mads Bertelsen, ESS DMSC.
+ - Cyl_monitor.comp, enriched with angular limits and dynamic allocation.
+ - Event_monitor_simple.comp, a simple ascii event-list monitor, good for debugging purposes
+
+ Instruments:
+ - New "unit test" instruments for basic functionalities and key components:
+   * Random numbers and focusing
+     . Test_RNG_rand01.instr
+     . Test_RNG_randnorm.instr
+     . _RNG_randpm1.instr
+     . Test_RNG_randtriangle.instr
+     . Test_RNG_randvec_target_circle.instr
+     . Test_RNG_randvec_target_rect.instr
+     . Test_RNG_randvec_target_rect_angular.instr
+   * Monitors
+     . Test_Monitor_nD.instr
+   * Sample components
+     . Test_Incoherent.instr
+     . Test_PowderN.instr
+     . Test_PowderN_concentric.instr
+     . Test_SX.instr
+     . Test_Sqw.instr
+ - Various new instruments used for comparison with the forthcoming McStas 3.0
+   ILL_D2B_noenv.instr, ILL_H22_D1A_noenv.instr, ILL_H22_D1B_noenv.instr,
+ - Name change, TasResoTest.instr is now called Test_TasReso.instr
+ - Instruments providing earlier models of ESS moderators have been retired, i.e. are not in the
+   release anymore:
+   ESS_2001_bispectral.instr, ESS_2015_test.instr, ESS_Brilliance_2001.instr, ESS_Brilliance_2013.instr,
+   ESS_Brilliance_2014.instr, ESS_Brilliance_2015.instr, ESS_Brilliance_TDR.instr
+
+We hope you will enjoy this new release!!! (And keep an eye out for 3.0, it is almost also there...)
+
+
+Changes in McStas v.2.6.1, May 4th, 2020
+
+ McStas 2.6.1 is the nineth release in the 2.x series and fixes various minor issues with McStas 2.6.
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+
+ Fixes of issues from last release:
+ - A number of minor issues from 2.6 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue++label%3A%22McStas+2.6%22+
+
+
+Changes in McStas 3.0 technology preview, Feburary 25th, 2020
 
  IMPORTANT: 3.0beta IS a proper 'beta', that is: Don't expect it to fully work, don't expect it to be fully stable,
  Do on the other hand expect interesting BUGS!
