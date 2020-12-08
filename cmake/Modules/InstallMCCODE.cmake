@@ -1,7 +1,7 @@
 # InstallMCCODE
 # A module for configuring and installing McStas / McXtrace
 # The following macros needs to be defined before calling this:
-# NAME, FLAVOR, FLAVOR_FMT, FLAVOR_LIB,
+# NAME, FLAVOR, FLAVOR_LIB,
 # MCCODE_PARTICLE, MCCODE_LIBENV, MCCODE_PROJECT
 # MAJOR, MINOR, MCCODE_VERSION, MCCODE_NAME, MCCODE_DATE,
 # MCCODE_STRING MCCODE_TARNAME
@@ -264,14 +264,6 @@ macro(installMCCODE)
   )
 
 
-  ## Build McFormat executable
-  add_executable(
-	  "${FLAVOR_FMT}"
-	  work/src/mcformat.c
-  )
-  ## McFormat needs to be linked against m
-  target_link_libraries(${FLAVOR_FMT} m)
-
   ## Add install targets
   include(MCUtil)
   set(WORK "${PROJECT_BINARY_DIR}/work")
@@ -286,10 +278,6 @@ macro(installMCCODE)
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    )
-    install (
-      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
 
@@ -328,11 +316,7 @@ macro(installMCCODE)
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
     )
-    install (
-      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${bin}
-    )
-
+ 
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
       DESTINATION ${bin}

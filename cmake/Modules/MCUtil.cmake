@@ -62,8 +62,6 @@ macro(setupMCCODE FLAVOR)
     set(FLAVOR           "mcstas")
     set(FLAVOR_UPPER     "MCSTAS")
 
-    set(FLAVOR_FMT       "mcformat")
-
     set(FLAVOR_LIB       "nlib")
     set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
 
@@ -79,8 +77,6 @@ macro(setupMCCODE FLAVOR)
 
     set(FLAVOR           "mcxtrace")
     set(FLAVOR_UPPER     "MCXTRACE")
-
-    set(FLAVOR_FMT       "mxformat")
 
     set(FLAVOR_LIB       "xlib")
     set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
@@ -99,7 +95,7 @@ macro(setupMCCODE FLAVOR)
 
   set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
     NAME="${NAME}" FLAVOR="${FLAVOR}" FLAVOR_UPPER="${FLAVOR_UPPER}"
-    FLAVOR_FMT="${FLAVOR_FMT}" FLAVOR_LIB="${FLAVOR_LIB}"
+    FLAVOR_LIB="${FLAVOR_LIB}"
     MCCODE_LIBENV="${MCCODE_LIBENV}" MCCODE_PARTICLE="${MCCODE_PARTICLE}"
     MCCODE_PROJECT=${MCCODE_PROJECT}
     )
