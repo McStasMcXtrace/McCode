@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: Test_Monitor_Sqw.instr
+* Instrument: Test_Sqw_monitor.instr
 *
 * %Identification
 * Written by: E. Farhi
@@ -109,7 +109,7 @@
 * The <a href="https://forge.epn-campus.eu/projects/nmoldyn">nMoldyn</a> package to create Sqw data sets from MD trajectories
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Monitor_Sqw( beam_wavelength_Angs=2, beam_resolution_meV=0.1, string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw", sample_thickness_m=1e-3, sample_height_m=0.03, sample_radius_m=0.005, string container="Al.lau", container_thickness_m=50e-6, string environment="Al.lau", environment_radius_m=0.025, environment_thickness_m=2e-3, detector_height_m=3, sample_detector_distance_m=4.0)
+DEFINE INSTRUMENT Test_Sqw_monitor( beam_wavelength_Angs=2, beam_resolution_meV=0.1, string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw", sample_thickness_m=1e-3, sample_height_m=0.03, sample_radius_m=0.005, string container="Al.laz", container_thickness_m=50e-6, string environment="Al.laz", environment_radius_m=0.025, environment_thickness_m=2e-3, detector_height_m=3, sample_detector_distance_m=4.0)
 
 DECLARE
 %{
