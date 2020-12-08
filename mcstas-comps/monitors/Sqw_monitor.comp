@@ -1,0 +1,184 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Sqw_monitor
+*
+* %I
+* Written by: Peter Willendrup
+* Date: November, 2020
+* Origin: DTU
+*
+* Monitor outputting S(q,w)
+* %D
+*
+* The assumption is that the "current" neutron represents the final state, whereas the incoming state
+* is found by restoring the neutron state "index" components earlier.
+*
+* Example: Sqw_monitor(filename="output", Emin=0,Emax=5,nE=11,nq=100,nqb=100,qmin=0,qmax=1,index=-2)
+*          AT (0,0,0) RELATIVE sample
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius:  [m]       Cylinder radius (optional)
+* yheight: [m]       Cylinder height  (optional)
+* qax:     [1]       x-component of 1st q-vector
+* qaz:     [1]       z-component of 1st q-vector
+* qbx:     [1]       x-component of 2nd q-vector
+* qbz:     [1]       z-component of 2nd q-vector
+* qamin:   [AA^-1]   Defines interval (qamin,qamax) where monitor measures in nqa bins
+* qamax:   [AA^-1]   Defines interval (qamin,qamax) where monitor measures in nqa bins
+* qbmin:   [AA^-1]   Defines interval (qbmin,qbmax) where monitor measures in nqb bins
+* qbmax:   [AA^-1]   Defines interval (qbmin,qbmax) where monitor measures in nqb bins
+* nqa:     [int]     Number of bins along qa direction
+* nqb:     [int]     Number of bins along qb direction
+* Emin:    [meV]     Defines the energy-transfer [Emin,Emax] window to monitor in nE bins
+* Emax:    [meV]     Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
+* nE:    [int]       Number of energy slices
+* filename: [string] Base filename to use, nE+1 files will be output
+* nowritefile: [1]   If set, monitor will skip writing to disk
+*
+* OUTPUT PARAMETERS:
+*
+* M_N: []             2D array of neutron counts
+* M_p: []             2D array of neutron weight counts
+* N_p2: []            2D array of second moments
+* M_Ns: []            2D array of neutron counts
+* M_ps: []            2D array of neutron weight counts
+* N_p2s: []           2D array of second moments
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Sqw_monitor
+DEFINITION PARAMETERS (vix,viy,viz)
+SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename, int nowritefile=0, radius=0, yheight=0)
+OUTPUT PARAMETERS ()
+
+SHARE
+%{
+  %include "array-lib"
+%}
+
+DECLARE
+%{
+  DArray2d M_N;
+  DArray2d M_p;
+  DArray2d M_p2;
+  double dE;
+%}
+
+INITIALIZE
+%{
+  /* Make checks for limits on qa, qb, w grid */
+  M_N=create_darr2d(nE,nq);
+  M_p=create_darr2d(nE,nq);
+  M_p2=create_darr2d(nE,nq);
+  
+  dE=(Emax-Emin)/(1.0*nE-1);
+%}
+TRACE
+  %{
+    int i,j;
+    double Ei,Ef,E,Ki,Kf;
+    double qx,qy,qz;
+    double q,qq;
+    double kix,kiy,kiz;
+    double kfx,kfy,kfz;
+    double t0,t1;
+    double phi;
+    int detect=1;
+    
+    /* If initial state is with v=(0,0,0), detect nothing */
+    if (!(vix==0 && viy==0 && viz==0)) {
+      Ei = VS2E*(vix*vix + viy*viy + viz*viz);
+      Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
+      E=Ef-Ei;
+      
+      /* calculate k vectors and momentum transfer*/
+      kix=vix;
+      kiy=viy;
+      kiz=viz;
+      kfx=vx;
+      kfy=vy;
+      kfz=vz;
+      NORM(kix, kiy, kiz);
+      NORM(kfx, kfy, kfz);
+      
+      /* K-vector lengths */
+      Ki=V2K*sqrt((vix*vix)+(viy*viy)+(viz*viz));
+      Kf=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
+      kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
+      kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
+      
+      qx=kfx-kix;
+      qy=kfy-kiy;
+      qz=kfz-kiz;
+      
+      qq = sqrt(qx*qx+qy*qy+qz*qz);
+      
+      /* Check if we should detect or not */
+      if (detect) {
+	if (radius && yheight) {
+	  if (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1) {
+	    if (t0<0 && t1>0) {
+	      PROP_DT(t1);
+	    } else {
+	      detect=0;
+	    }
+	  } else {
+	    detect=0;
+	  }
+	}
+      }
+      
+      /* Check if we are within the selected q/e range */
+      if (detect && qq <= qmax && qq>=qmin && E<= Emax && E>=Emin) {
+	i = floor((qq - qmin)*nq/(qmax - qmin));
+	j = floor((E - Emin)*nE/(Emax - Emin));
+	
+	double p2 = p*p;
+	
+        #pragma acc atomic
+        M_N[i][j] = M_N[i][j] + 1 ;
+        #pragma acc atomic
+        M_p[i][j] = M_p[i][j] + p;
+        #pragma acc atomic
+        M_p2[i][j] = M_p2[i][j] + p2;
+ 
+        SCATTER;
+      }
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    } 
+%}
+
+SAVE
+%{
+  if (!nowritefile) {
+    DETECTOR_OUT_2D(
+      "q vs E monitor",
+      "q [AA^-1]",
+      "E [meV]",
+      qmin, qmax, Emin, Emax,
+      nq, nE,
+      &M_N[0][0],&M_p[0][0],&M_p2[0][0],
+      filename);
+  }
+%}
+
+FINALLY %{
+  /*  destroy_darr2d(M_N);
+  destroy_darr2d(M_p);
+  destroy_darr2d(M_p2);*/
+%}
+
+MCDISPLAY
+%{
+%}
+
+END
