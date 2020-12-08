@@ -95,61 +95,66 @@ TRACE
     rvy = particle_getvar(_particle,viy,&fail); if(fail) rvy=0;
     rvz = particle_getvar(_particle,viz,&fail); if(fail) rvz=0;
     
-    Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
-    Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
-    E=Ef-Ei;
-
-    if(fabs(E)<2*DBL_EPSILON) detect=0;
-	
-    /* calculate k vectors and momentum transfer*/
-    kix=rvx;
-    kiy=rvy;
-    kiz=rvz;
-    kfx=vx;
-    kfy=vy;
-    kfz=vz;
-    NORM(kix, kiy, kiz);
-    NORM(kfx, kfy, kfz);
-	
-    /* K-vector lengths */
-    Ki=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
-    Kf=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
-    kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
-    kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
-    
-    qx=kfx-kix;
-    qy=kfy-kiy;
-    qz=kfz-kiz;
-
-    qq = sqrt(qx*qx+qy*qy+qz*qz);
-    
-    /* Check if we should detect or not */
-    if (detect) {
-      if (radius && yheight) {
-	if (!(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1)) {
-	  detect=0;
+    /* If initial state is with v=(0,0,0), detect nothing */
+    if (!(rvx==0 && rvy==0 && rvz==0)) {
+      Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
+      Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
+      E=Ef-Ei;
+      
+      /* calculate k vectors and momentum transfer*/
+      kix=rvx;
+      kiy=rvy;
+      kiz=rvz;
+      kfx=vx;
+      kfy=vy;
+      kfz=vz;
+      NORM(kix, kiy, kiz);
+      NORM(kfx, kfy, kfz);
+      
+      /* K-vector lengths */
+      Ki=V2K*sqrt((rvx*rvx)+(rvy*rvy)+(rvz*rvz));
+      Kf=V2K*sqrt((vx*vx)+(vy*vy)+(vz*vz));
+      kix=Ki*kix; kiy=Ki*kiy; kiz=Ki*kiz; 
+      kfx=Kf*kfx; kfy=Kf*kfy; kfz=Kf*kfz; 
+      
+      qx=kfx-kix;
+      qy=kfy-kiy;
+      qz=kfz-kiz;
+      
+      qq = sqrt(qx*qx+qy*qy+qz*qz);
+      
+      /* Check if we should detect or not */
+      if (detect) {
+	if (radius && yheight) {
+	  if (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1) {
+	    if (t0<0 && t1>0) {
+	      PROP_DT(t1);
+	    } else {
+	      detect=0;
+	    }
+	  } else {
+	    detect=0;
+	  }
 	}
       }
-    }
-
-    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    
-    /* Check if we are within the selected q/e range */
-    if (detect && qq <= qmax && qq>=qmin && E<= Emax && E>=Emin) {
-      i = floor((qq - qmin)*nq/(qmax - qmin));
-      j = floor((E - Emin)*nE/(Emax - Emin));
       
-      double p2 = p*p;
-  
-      #pragma acc atomic
-      M_N[i][j] = M_N[i][j] + 1 ;
-      #pragma acc atomic
-      M_p[i][j] = M_p[i][j] + p;
-      #pragma acc atomic
-      M_p2[i][j] = M_p2[i][j] + p2;
-	  
-      SCATTER;
-
+      /* Check if we are within the selected q/e range */
+      if (detect && qq <= qmax && qq>=qmin && E<= Emax && E>=Emin) {
+	i = floor((qq - qmin)*nq/(qmax - qmin));
+	j = floor((E - Emin)*nE/(Emax - Emin));
+	
+	double p2 = p*p;
+	
+        #pragma acc atomic
+        M_N[i][j] = M_N[i][j] + 1 ;
+        #pragma acc atomic
+        M_p[i][j] = M_p[i][j] + p;
+        #pragma acc atomic
+        M_p2[i][j] = M_p2[i][j] + p2;
+ 
+        SCATTER;
+      }
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     } 
 %}
 
