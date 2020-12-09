@@ -136,21 +136,31 @@ Changes in McStas 3.0, December 11th, 2020
      ALL particle events durin INITIALIZE and MCPL_output writes ALL particle events during SAVE,
      whereas when using CPU in 3.0 or 2.7, reads and writes happen during the TRACE flow.
  5. Known limitations
-   * We don't ship an updated set of manuals for McStas 3.0, but essential documentation is available
-     on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
-   * Most components/instruments are now ported to our OpenACC based GPU-technology, but you may find
-     combinations of use that slipped through our not fully exhaustive test-suite. Missing support may
-     come in the form of either
+   * The Union subsystem works on CPU only for now, but can be used in the mixed GPU/CPU funnnel
+     mode as mentioned above. Union_master is a NOACC component.
+   * The same solution should be applied in use of the NCrystal_sample and Sample_nxs.
+   * Not all features of all components correspond to those from McStas 2.7, but all essential components
+     have beenfully ported from the 2.7 tree to the 3.0 tree. Hence, some parts distributed with McStas 2.7
+     will either not exist in the 3.0 release or may not function, due to either:
+     (1) very specialised features (2) maintainability issues or (3) use ofcomplex algorithms.
+   * Notable examples of unsupported / non-functional components or instruments are:
+     - The scatter_logger and shielding_logger components / instruments
+     - The Vitess_chopperfermi component
+     - The FZJ_BenchmarkSfin2 instrument / SANS_benchmark2 component
+     - The MCPL_merge instrument
+     - SEMSANS_instrument
+  * Generally, most components/instruments are now ported to our OpenACC based GPU-technology, but you
+     likely may find combinations of use that slipped through our not fully exhaustive test-suite. Missing
+     support may come in the form of either
      - Code that does not compile
      - Instruments that segfaults during execution
      - Instruments or components that produce obscure results
-   * The Union subsystem works on CPU only for now, but can be used in the mixed GPU/CPU funnnel
-     mode as mentioned above. Union_master is a NOACC component.
    * At the time of release, the nightly tests http://new-nightly.mccode.org/ show that
      - McStas 3.0 ships with 211 instruments that succesfully compiles
      - These instruments use 147 of our components
-   * Not all features of all components correspond to those from McStas 2.7, but all essential components
-     have beenfully ported from the 2.7 tree to the 3.0 tree.
+   * We don't ship an updated set of manuals for McStas 3.0, but essential documentation is available
+     on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
+
 
 Tools:
  - The tools for McStas 3.0 correspond to those distributed with McStas 2.7, apart from the above-mentioned
