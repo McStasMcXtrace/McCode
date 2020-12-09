@@ -117,6 +117,8 @@ Changes in McStas 3.0, December 11th, 2020
      - The --funnel option can be used to launch the FUNNEL simulation flow, see description below.
    * For both of the above, adding -Minfo:accel will output verbose information on parallelisation
    * In mcgui, the mcrun --openacc configuration can be selected via the preferences
+   * Both mcgui and mcrun allow combining --openacc and --mpi if you have multiple GPU's available.
+     The n'th mpi process will attempt to use the k'th GPU, where k = #available GPU's % #MPI nodes.
  3. Special McStas 3.0 grammar for mixed CPU/GPU mode:
    * A "FUNNEL" mode has been added, which allows
      - Mixed GPU/CPU mode, were sections of the instrument are executed on each device type, with
@@ -149,6 +151,27 @@ Changes in McStas 3.0, December 11th, 2020
      - These instruments use 147 of our components
    * Not all features of all components correspond to those from McStas 2.7, but all essential components
      have beenfully ported from the 2.7 tree to the 3.0 tree.
+
+Tools:
+ - The tools for McStas 3.0 correspond to those distributed with McStas 2.7, apart from the above-mentioned
+   mcrun options for --openacc and --funnel.
+ - On macOS (from 11.0 Big Sur onwards), mcgui will assume light/dark mode with the system settings.
+   (The change came from using the system python3 with our app/miniconda-distributed Qt libs etc.)
+ - We now no longer officially support the perl/PGPLOT backend, these may or may not work on your system.
+
+ Platforms:
+ - Nothing really new to report here. We still support 64bit Windows 10, all recent 64bit macOS including 11.0 Big Sur,
+   Debian-based and RPM-based distros. (RPMs are built on/for CentOS, you may get varying milage elsewhere.)
+
+ Libraries:
+ - Updated version 2.2.1 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. To use it, carry out the below steps:
+     mcstas:~/NCryst$ mcstas-2.7-environment
+     mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
+     mcstas:~/NCryst$ ncrystal_preparemcstasdir
+     mcstas:~/NCryst$ cp $MCSTAS/examples/NCrystal_example_mcstas.instr .
+     mcstas:~/NCryst$ mcrun -c NCrystal_example_mcstas.instr
+ - MCPL library from the same authors now included at v. 
 
 We hope you will enjoy this new release!!!
 
