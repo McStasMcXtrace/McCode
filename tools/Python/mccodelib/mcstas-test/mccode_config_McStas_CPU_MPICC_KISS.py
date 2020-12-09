@@ -39,7 +39,7 @@ compilation = {
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "OACCFLAGS": '-ta:tesla,managed -DOPENACC',
     "CC": 'mpicc',
-    "OACC": 'pgcc',
+    "OACC": 'nvc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
     "MPINODES": '10',

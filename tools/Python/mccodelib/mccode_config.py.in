@@ -40,7 +40,7 @@ compilation = {
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "OACCFLAGS": '@OACCFLAGS@',
     "CC": '@TOOLS_CC@',
-    "OACC": 'pgcc',
+    "OACC": 'nvc',
     "MPICC": '@MPICC@',
     "MPIRUN": '@MPIRUN@',
     "MPINODES": '4',
