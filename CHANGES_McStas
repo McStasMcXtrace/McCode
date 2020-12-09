@@ -138,7 +138,7 @@ Changes in McStas 3.0, December 11th, 2020
  5. Known limitations
    * The Union subsystem works on CPU only for now, but can be used in the mixed GPU/CPU funnnel
      mode as mentioned above. Union_master is a NOACC component.
-   * The same solution should be applied in use of the NCrystal_sample and Sample_nxs.
+   * The same solution is applied in use of the NCrystal_sample and will eventually come for Sample_nxs.
    * Not all features of all components correspond to those from McStas 2.7, but all essential components
      have beenfully ported from the 2.7 tree to the 3.0 tree. Hence, some parts distributed with McStas 2.7
      will either not exist in the 3.0 release or may not function, due to either:
@@ -149,6 +149,7 @@ Changes in McStas 3.0, December 11th, 2020
      - The FZJ_BenchmarkSfin2 instrument / SANS_benchmark2 component
      - The MCPL_merge instrument
      - SEMSANS_instrument
+     - Sample_nxs
   * Generally, most components/instruments are now ported to our OpenACC based GPU-technology, but you
      likely may find combinations of use that slipped through our not fully exhaustive test-suite. Missing
      support may come in the form of either
