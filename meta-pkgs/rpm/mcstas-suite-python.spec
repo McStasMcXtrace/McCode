@@ -1,4 +1,4 @@
-%define name			mcstas-suite-python
+%define name			mcstas-suite-python-ng
 %define summary			A metapackage for McStas + python tools
 %define version			@VERSION@
 %define release			1
