@@ -28,7 +28,7 @@ compilation = {
     "CFLAGS": '-ta=tesla,managed,deepcopy -Minfo=accel -DRNG_ALG=2 -DOPENACC -DNOSIGNALS ',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "CC": 'pgcc',
+    "CC": 'nvc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
     "MPINODES": '4',
