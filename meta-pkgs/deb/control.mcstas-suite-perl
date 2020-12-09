@@ -1,4 +1,4 @@
-Package: mcstas-suite-perl
+Package: mcstas-suite-perl-ng
 Version: @VERSION@
 Section: main
 Priority: optional
