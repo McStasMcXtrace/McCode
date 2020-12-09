@@ -134,6 +134,8 @@ Changes in McStas 3.0, December 11th, 2020
      ALL particle events durin INITIALIZE and MCPL_output writes ALL particle events during SAVE,
      whereas when using CPU in 3.0 or 2.7, reads and writes happen during the TRACE flow.
  5. Known limitations
+   * We don't ship an updated set of manuals for McStas 3.0, but essential documentation is available
+     on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
    * Most components/instruments are now ported to our OpenACC based GPU-technology, but you may find
      combinations of use that slipped through our not fully exhaustive test-suite. Missing support may
      come in the form of either
