@@ -121,10 +121,12 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1,
   xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, 
   string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="" )
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (isrect,intersect,nxs_init_success,p_transmit,xsect_total,xsect_coherent,
+  xsect_incoherent,xsect_absorption,
+  lambda,velocity,fullpath,t1,t2,uc,A,mu_factor,sd,V2L,atomInfoList)
   
 DEPENDENCY "-I@MCCODE_LIB@/libs/libnxs/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
-NOACC
+
 
 SHARE
 %{
@@ -595,7 +597,7 @@ if( intersect && (t2>0) && nxs_init_success )
           double contrib = 0.0;
           while( max_hkl1<(int)uc.nHKL-1 && 2.0*uc.hklList[max_hkl1+1].dhkl-lambda > 1E-6 )
           {
-            max_hkl++;
+            max_hkl1++;
             contrib += uc.hklList[max_hkl1].FSquare * uc.hklList[max_hkl1].multiplicity * uc.hklList[max_hkl1].dhkl;
           }
 
