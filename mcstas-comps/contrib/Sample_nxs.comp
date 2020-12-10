@@ -121,9 +121,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1,
   xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, 
   string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="" )
-OUTPUT PARAMETERS (isrect,intersect,nxs_init_success,p_transmit,xsect_total,xsect_coherent,
-  xsect_incoherent,xsect_absorption,
-  lambda,velocity,fullpath,t1,t2,uc,A,mu_factor,sd,V2L,atomInfoList)
+OUTPUT PARAMETERS ()
   
 DEPENDENCY "-I@MCCODE_LIB@/libs/libnxs/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
 
