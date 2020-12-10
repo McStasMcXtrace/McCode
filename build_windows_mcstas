@@ -30,7 +30,7 @@ done
 WORK=`pwd`
 
 # Workaround for having CRLF linefeeds in a couple of windows packages
-rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
+rsync -avz --delete --exclude=".svn/" --exclude="NCrystal_sample.comp" --exclude="NCrystal_example.instr" mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win

@@ -10,9 +10,10 @@ fi
 THIRDPARTY=`ls 3rdparty | grep -v patches`
 cd 3rdparty
 echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
-cd -
+
 
 for MODULE in `echo $THIRDPARTY`
 do
@@ -29,7 +30,7 @@ WORK=`pwd`
 # From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr/share/
 
-# 64-bit
+# 32-bit
 ./mkdist mcstas $1 "" "" deb32 "" -- deb
 ./mkdist mcstas-comps $1 "" "" deb32 "" -- deb
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" deb32 "" -- deb
@@ -49,7 +50,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb32 "" -- deb
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb32 "" -- deb
 
-export MCINSTALL_PREFIX=/usr/share/mcstas/$1/ncrystal/
+export MCINSTALL_PREFIX=/usr/share/mcstas/$1/
 ./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb32 "" -- deb
 export MCINSTALL_PREFIX=/usr/share/
 

@@ -55,14 +55,14 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 WORK=`pwd`
 
 # NCrystal installation:
-rm -rf 3rdparty/ncrystal/build
-mkdir 3rdparty/ncrystal/build
-cd 3rdparty/ncrystal/build
-cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ncrystal/ -DBUILD_G4HOOKS=OFF
+rm -rf 3rdparty/build
+mkdir 3rdparty/build
+cd 3rdparty/build
+cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DBUILD_G4HOOKS=OFF
 make
 make install
 cd $WORK
-rm -rf 3rdparty/ncrystal/build
+rm -rf 3rdparty/build
 
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
