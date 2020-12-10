@@ -50,7 +50,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb64 "" -- deb
 
-export MCINSTALL_PREFIX=/usr/share/mcstas/$1/ncrystal/
+export MCINSTALL_PREFIX=/usr/share/mcstas/$1/
 ./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb64 "" -- deb
 export MCINSTALL_PREFIX=/usr/share/
 
