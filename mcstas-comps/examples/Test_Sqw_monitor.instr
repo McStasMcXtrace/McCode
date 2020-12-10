@@ -133,6 +133,7 @@ USERVARS
  double vix;
  double viy;
  double viz;
+ double Vi;
 %}
 
 INITIALIZE
@@ -222,7 +223,8 @@ EXTEND %{
    * the instrument energy resolution.
    * We assume that in the real instrument, the chopper is close to sample.
    */
-  t = randtriangle()*dt0/2-(fabs(env_radius)+0.01)/vi;
+  Vi=sqrt(vx*vx+vy*vy+vz*vz);
+  t = randtriangle()*dt0/2-(fabs(env_radius)+0.01)/Vi;
   flag_sample=flag_env=0;
   vix=vx,viy=vy,viz=vz;
 %}
@@ -284,7 +286,7 @@ EXTEND %{
   double dy = y + dt*vy;
   /* correct for parallax for further time detectors */
   /* this must be done here  as further monitors use restore_neutron=1 */
-  t -= (sqrt(det_radius*det_radius + dy*dy) - det_radius)/vi;
+  t -= (sqrt(det_radius*det_radius + dy*dy) - det_radius)/Vi;
 %}
 
 /* detectors ================================================================ */
