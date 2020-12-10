@@ -169,6 +169,7 @@ Tools:
  - On macOS (from 11.0 Big Sur onwards), mcgui will assume light/dark mode with the system settings.
    (The change came from using the system python3 with our app/miniconda-distributed Qt libs etc.)
  - We now no longer officially support the perl/PGPLOT backend, these may or may not work on your system.
+ - The mcformat utility has been deprecated.
 
  Platforms:
  - Nothing really new to report here. We still support 64bit Windows 10, all recent 64bit macOS including 11.0 Big Sur,
