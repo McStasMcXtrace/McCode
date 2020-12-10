@@ -274,6 +274,10 @@ TRACE
     if (params.absmode)
       ncrystal_crosssection_nonoriented(params.proc_abs, ekin,&xsect_abs);
 
+    #ifndef INFINITY
+    #define INFINITY DBL_MAX
+    #endif
+    
     while(1)
     {
       /* Make the calculations and pick the final state before exiting the sample */
