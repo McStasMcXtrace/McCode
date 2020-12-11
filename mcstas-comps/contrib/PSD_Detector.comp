@@ -1091,11 +1091,11 @@ TRACE
             i = (long)floor(Energy);
             if (i >= 0 &&  i < PHSpectrum_n ) {
 	      double P2 = P*P;
-	      #pragma acc atomic
+	      //#pragma acc atomic
               PHSpectrum0[i] ++;     // one neutron tallied per pixel
-	      #pragma acc atomic
+	      //#pragma acc atomic
               PHSpectrum[i] = PHSpectrum[i] + P;   // energy bin in pulse height spectrum incremented by neutron weight
-	      #pragma acc atomic
+	      //#pragma acc atomic
 	      PHSpectrum2[i] = PHSpectrum2[i] + P2; // 2nd order moments
             }
             /* save event file if activated */
