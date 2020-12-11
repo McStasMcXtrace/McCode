@@ -63,7 +63,7 @@
 DEFINE COMPONENT NCrystal_sample
 SETTING PARAMETERS (string cfg = "", absorptionmode = 1, multscat = 1, xwidth = 0, yheight = 0, zdepth = 0, radius = 0 )
 OUTPUT PARAMETERS ()/*not really intended for output, but here for multi-instance support*/
-DEPENDENCY "-Wl,-rpath,NCrystalLink/lib -LNCrystalLink/lib -lNCrystal -INCrystalLink/include"
+DEPENDENCY "-Wl,-rpath,@MCCODE_LIB@/libs -L@MCCODE_LIB@/libs -lNCrystal -I@MCCODE_LIB@/include"
 NOACC
 
 SHARE
@@ -151,6 +151,14 @@ SHARE
 #  define NCMCERR(msg) NCMCERR2(NAME_CURRENT_COMP,msg)
 #endif
 
+  double randloc() {
+    /* NCrystal-local wrapper for legacy McStas MT RNG */
+    double randnum;
+    randnum = (double) mt_random();
+    randnum /= (double) ((unsigned long)0xffffffff) + 1;
+    return randnum;
+  }
+
 %}
 
 DECLARE
@@ -204,8 +212,11 @@ INITIALIZE
     NCMCERR("Invalid value of absorptionmode");
   params.absmode = absorptionmode;
 
-  /* Make sure NCrystal use the McStas RNG (ok if more than one component instance does this): */
-  //ncrystal_setrandgen(rand01);
+  /* Make sure NCrystal uses the legacy McStas MT RNG (ok if more than one component instance does this): */
+  /* NCrystal used an RNG internally, and can not accept an rng footprint with content, i.e. _rand01(_particle->randstate) */
+  /* - we therefore fall back to a hardcoded MT with a local randloc function in SHARE ^ */
+  mt_srandom(mcseed);
+  ncrystal_setrandgen(randloc);
 
   /* access powder packingfactor (nb: always 1.0 for non-powders): */
   double packingfactor = ncrystal_decodecfg_packfact(cfg);
@@ -274,6 +285,10 @@ TRACE
     if (params.absmode)
       ncrystal_crosssection_nonoriented(params.proc_abs, ekin,&xsect_abs);
 
+    #ifndef INFINITY
+    #define INFINITY DBL_MAX
+    #endif
+    
     while(1)
     {
       /* Make the calculations and pick the final state before exiting the sample */

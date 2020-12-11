@@ -2,8 +2,25 @@
 
 # rappid-build script for mcstas-kernel dev:
 
+# Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
+
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
 #git checkout mcstas-3.0
 git pull
 
@@ -30,4 +47,12 @@ fi
 ./mkdist mcstas-tools-python-mcplot-svg 3.0-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.0-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-dev/bin/
-ln -sf  /Applications/McStas-2.6.1.app/Contents/Resources/mcstas/2.6.1/miniconda3/ $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3
+
+export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.0-dev/
+./mkdist mcstas-ncrystal 3.0-dev 3rdparty/ncrystal "" mac "" -- justinst
+
+
+# Ensure we are configured for 10 node MPI runs
+sed -i s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.0-dev/tools/Python/mccodelib/mccode_config.py
+
+ln -sf  /Applications/McStas-2.7.app/Contents/Resources/mcstas/2.7/miniconda3/ $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3

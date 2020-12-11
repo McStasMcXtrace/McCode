@@ -92,7 +92,7 @@ if(NOT DEFINED NCRYSTAL_NOTOUCH_CMAKE_BUILD_TYPE)
 endif()
 
 #Options:
-option( BUILD_EXAMPLES  "Whether to build examples." ON )
+option( BUILD_EXAMPLES  "Whether to build examples." OFF )
 option( BUILD_G4HOOKS   "Whether to build the G4 hooks (requires Geant4 to be available)." OFF )
 option( BUILD_EXTRA     "Whether to build optional modules for .nxs/.laz/.lau support (nb: different license!)." ON )
 set( BUILD_STRICT OFF CACHE STRING "Stricter build (primarily for testing). Can optionally select specific C++ standard.")
@@ -100,10 +100,11 @@ set_property(CACHE BUILD_STRICT PROPERTY STRINGS ON OFF 11 14 17 20 )
 option( INSTALL_MCSTAS  "Whether to install the NCrystal mcstas component and related scripts." ON )
 option( INSTALL_PY      "Whether to install the NCrystal python module and various python scripts (including ncrystal-config)." ON )
 option( INSTALL_DATA    "Whether to install the shipped data files (always .ncmat files, .nxs files when BUILD_EXTRA=ON)." ON )
-option( INSTALL_SETUPSH "Whether to install setup.sh/unsetup.sh which users can source in order to use installaton." ON )
+option( INSTALL_SETUPSH "Whether to install setup.sh/unsetup.sh which users can source in order to use installaton." OFF )
 option( EMBED_DATA      "Whether to embed the shipped .ncmat files directly into the NCrystal library (forces INSTALL_DATA=OFF)." OFF )
 option( MODIFY_RPATH    "Whether to try to set RPATH in installed binaries (if disabled all special RPATH handling is skipped)." ON )
 option( DISABLE_DYNLOAD "Disable dynamic library loading capabilities (incl. plugins)." OFF )
+set(CMAKE_INSTALL_LIBDIR libs)
 
 set(BUILTIN_PLUGIN_LIST "" CACHE STRING
     "Semicolon separated list of external NCrystal plugins to statically build into the NCrystal library (local paths to sources or git <repo_url:tag>)" )
