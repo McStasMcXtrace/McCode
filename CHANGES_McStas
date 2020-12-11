@@ -40,11 +40,11 @@
 * Modified by: PW February 2020: 3.0beta tech preview
 * Modified by: PW May 2020: version 2.6.1
 * Modified by: PW November 2020: version 2.7
-* This file is part of McStas 3.0, released December 11th 2020.
+* This file is part of McStas 3.0, released December 15th 2020.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.0, December 11th, 2020
+Changes in McStas 3.0, December 15th, 2020
 
  McStas 3.0 is the first official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
@@ -176,14 +176,9 @@ Tools:
    Debian-based and RPM-based distros. (RPMs are built on/for CentOS, you may get varying milage elsewhere.)
 
  Libraries:
- - Updated version 2.2.1 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
-   platforms only. To use it, carry out the below steps:
-     mcstas:~/NCryst$ mcstas-2.7-environment
-     mcstas:~/NCryst$ source $MCSTAS/ncrystal/setup.sh
-     mcstas:~/NCryst$ ncrystal_preparemcstasdir
-     mcstas:~/NCryst$ cp $MCSTAS/examples/NCrystal_example_mcstas.instr .
-     mcstas:~/NCryst$ mcrun -c NCrystal_example_mcstas.instr
- - MCPL library from the same authors now included at v. 
+ - Updated version 2.2.2 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. With McStas 3.0, NCrystal is more tightly integrated and should run without using ncrystal_preparemcstasdir.
+ - MCPL library from the same authors now included at v. 1.3.2
 
 We hope you will enjoy this new release!!!
 
