@@ -1090,9 +1090,13 @@ TRACE
               sensitive volume above the energy threshold */
             i = (long)floor(Energy);
             if (i >= 0 &&  i < PHSpectrum_n ) {
+	      double P2 = P*P;
+	      #pragma acc atomic
               PHSpectrum0[i] ++;     // one neutron tallied per pixel
-              PHSpectrum[i]  += P;   // energy bin in pulse height spectrum incremented by neutron weight
-              PHSpectrum2[i] += P*P; // 2nd order moments
+	      #pragma acc atomic
+              PHSpectrum[i] = PHSpectrum[i] + P;   // energy bin in pulse height spectrum incremented by neutron weight
+	      #pragma acc atomic
+	      PHSpectrum2[i] = PHSpectrum2[i] + P2; // 2nd order moments
             }
             /* save event file if activated */
             if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
