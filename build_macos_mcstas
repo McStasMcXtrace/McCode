@@ -19,7 +19,7 @@ for MODULE in `echo $THIRDPARTY`
 do
     if [ -d "3rdparty/patches/${MODULE}" ]; then
 	echo Making McCode cmake modules available for $MODULE
-        cp -rp cmake/ 3rdparty/${MODULE}/cmake
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
 	echo Applying McCode patches to 3rdparty/${MODULE}
 	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
     fi
@@ -58,12 +58,14 @@ WORK=`pwd`
 rm -rf 3rdparty/ncrystal/build
 mkdir 3rdparty/ncrystal/build
 cd 3rdparty/ncrystal/build
-cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ncrystal/ -DBUILD_G4HOOKS=OFF
+cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DBUILD_G4HOOKS=OFF
 make
 make install
 cd $WORK
 rm -rf 3rdparty/ncrystal/build
 
+# Hack to ensure pymcpltool is in place
+ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
