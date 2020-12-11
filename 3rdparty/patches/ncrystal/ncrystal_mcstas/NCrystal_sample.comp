@@ -1,0 +1,391 @@
+
+/******************************************************************************/
+/*                                                                            */
+/*  This file is part of NCrystal (see https://mctools.github.io/ncrystal/)   */
+/*                                                                            */
+/*  Copyright 2015-2020 NCrystal developers                                   */
+/*                                                                            */
+/*  Licensed under the Apache License, Version 2.0 (the "License");           */
+/*  you may not use this file except in compliance with the License.          */
+/*  You may obtain a copy of the License at                                   */
+/*                                                                            */
+/*      http://www.apache.org/licenses/LICENSE-2.0                            */
+/*                                                                            */
+/*  Unless required by applicable law or agreed to in writing, software       */
+/*  distributed under the License is distributed on an "AS IS" BASIS,         */
+/*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  */
+/*  See the License for the specific language governing permissions and       */
+/*  limitations under the License.                                            */
+/*                                                                            */
+/******************************************************************************/
+/*
+*
+* Component: NCrystal_sample
+*
+* %I
+*
+* Written by: NCrystal developers
+* Version: 2.2.2
+* Origin: NCrystal Developers (European Spallation Source ERIC and DTU Nutech)
+*
+* McStas sample component for the NCrystal scattering library. Find more
+* information at <a href="https://github.com/mctools/ncrystal/wiki">the NCrystal
+* wiki</a>. In particular, browse the available datafiles at <a
+* href="https://github.com/mctools/ncrystal/wiki/Data-library">Data-library</a>
+* and read about format of the configuration string expected in the "cfg"
+* parameter at <a href="https://github.com/mctools/ncrystal/wiki/Using-NCrystal">Using-NCrystal</a>.
+*
+* <p/>NCrystal is available under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 license</a>. Depending
+* on the configuration choices, optional NCrystal modules under different
+* licenses might be enabled - see <a
+* href="https://github.com/mctools/ncrystal/wiki/About">About</a> for more
+* details.
+*
+* %D
+*
+* McStas sample component for the NCrystal scattering library
+*
+* %P
+* Input parameters:
+* cfg:            [str] NCrystal material configuration string (details <a href="https://github.com/mctools/ncrystal/wiki/Using-NCrystal">on this page</a>).
+* absorptionmode: [0|1|2] 0 : disable absorption. 1 : enable absorption via intensity reduction. 2 : enable absorption by terminating the tracking.
+* multscat:       [0|1]   0 : disable multiple scattering. 1 : enable multiple scattering
+* xwidth:         [m]  x-dimension (width) of sample, if box shape is desired
+* yheight:        [m]  y-dimension (height) of sample, if box or cylinder shape is desired
+* zdepth:         [m]  z-dimension (depth) of sample, if box shape is desired
+* radius:         [m]  radius of sample, if sphere or cylinder shape is desired
+*
+* %L
+* The NCrystal wiki at <a href="https://github.com/mctools/ncrystal/wiki">https://github.com/mctools/ncrystal/wiki</a>.
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT NCrystal_sample
+SETTING PARAMETERS (string cfg = "", absorptionmode = 1, multscat = 1, xwidth = 0, yheight = 0, zdepth = 0, radius = 0 )
+OUTPUT PARAMETERS (params, geoparams)/*not really intended for output, but here for multi-instance support*/
+DEPENDENCY "-Wl,-rpath,@MCCODE_LIB@/libs -L@MCCODE_LIB@/libs -lNCrystal -I@MCCODE_LIB@/include"
+
+SHARE
+%{
+  /* common includes, defines, functions, etc. shared by all instances of this component */
+#include "NCrystal/ncrystal.h"
+#include "stdio.h"
+#include "stdlib.h"
+#ifndef NCMCERR2
+  /* consistent/convenient error reporting */
+#  define NCMCERR2(compname,msg) do { fprintf(stderr, "\nNCrystal: %s: ERROR: %s\n\n", compname, msg); exit(1); } while (0)
+#endif
+
+  static int ncsample_reported_version = 0;
+
+  //Keep all instance-specific parameters on a few structs:
+  typedef struct {
+    double density_factor;
+    double inv_density_factor;
+    ncrystal_scatter_t scat;
+    ncrystal_process_t proc_scat, proc_abs;
+    int proc_scat_isoriented;
+    int absmode;
+  } ncrystalsample_t;
+
+  typedef enum {NC_BOX, NC_SPHERE, NC_CYLINDER} ncrystal_shapetype;
+  typedef struct {
+    ncrystal_shapetype shape;
+    double dx, dy, dz, radius;
+  } ncrystalsamplegeom_t;
+
+  /* Factor out geometry related code in the following functions (+MCDISPLAY section below): */
+
+  void ncrystalsample_initgeom(ncrystalsamplegeom_t* geom, const char * name_comp, double xwidth, double yheight, double zdepth, double radius)
+  {
+    int isbox = ( xwidth>0 && yheight>0 && zdepth>0 );
+    int iscyl = ( yheight>0 && radius>0 );
+    int issphere = ( !iscyl && radius>0 );
+    int nshapes = (isbox?1:0)+(iscyl?1:0)+(issphere?1:0);
+    if (nshapes==0)
+      NCMCERR2(name_comp,"must specify more parameters to define shape");
+    if ( nshapes > 1
+         || ( iscyl && ( xwidth>0 || zdepth>0 ) )
+         || ( issphere && ( xwidth>0 || yheight > 0 || zdepth>0 ) ) )
+      NCMCERR2(name_comp,"conflicting shape parameters specified (pick either parameters for box, cylinder or sphere, not more than one)");
+
+    if (isbox) {
+      geom->shape = NC_BOX;
+      geom->dx = xwidth;
+      geom->dy = yheight;
+      geom->dz = zdepth;
+      geom->radius = 0.0;
+    } else if (iscyl) {
+      geom->shape = NC_CYLINDER;
+      geom->dx = 0.0;
+      geom->dy = yheight;
+      geom->dz = 0.0;
+      geom->radius = radius;
+    } else {
+      if (!issphere)
+        NCMCERR2(name_comp,"logic error in shape selection");
+      geom->shape = NC_SPHERE;
+      geom->dx = 0.0;
+      geom->dy = 0.0;
+      geom->dz = 0.0;
+      geom->radius = radius;
+    }
+  }
+
+  int ncrystalsample_surfintersect(ncrystalsamplegeom_t* geom, double *t0, double *t1,
+                                   double x, double y, double z, double vx, double vy, double vz)
+  {
+    switch (geom->shape) {
+    case NC_CYLINDER:
+      return cylinder_intersect(t0,t1,x,y,z,vx,vy,vz,geom->radius, geom->dy);
+    case NC_BOX:
+      return box_intersect(t0, t1, x, y, z, vx, vy, vz,geom->dx, geom->dy, geom->dz);
+    case NC_SPHERE:
+      return sphere_intersect(t0,t1,x,y,z,vx,vy,vz,geom->radius);
+    };
+  }
+
+#ifndef NCMCERR
+  /* more convenient form (only works in TRACE section, not in SHARE functions) */
+#  define NCMCERR(msg) NCMCERR2(NAME_CURRENT_COMP,msg)
+#endif
+
+%}
+
+DECLARE
+%{
+  ncrystalsample_t params;
+  ncrystalsamplegeom_t geoparams;
+  double ncrystal_convfact_vsq2ekin;
+  double ncrystal_convfact_ekin2vsq;
+%}
+
+INITIALIZE
+%{
+  //Print NCrystal version + sanity check setup.
+  if ( NCRYSTAL_VERSION != ncrystal_version() ) {
+    NCMCERR("Inconsistency detected between included ncrystal.h and linked NCrystal library!");
+  }
+  if (ncsample_reported_version != ncrystal_version()) {
+    if (ncsample_reported_version) {
+      NCMCERR("Inconsistent NCrystal library versions detected - this should normally not be possible!");
+    }
+    ncsample_reported_version = ncrystal_version();
+    printf( "NCrystal: McStas sample component(s) are using version %s of the NCrystal library.\n",ncrystal_version_str());
+  }
+
+  //The following conversion factors might look slightly odd. They reflect the
+  //fact that the various conversion factors used in McStas and NCrystal are not
+  //completely consistent among each other (TODO: Follow up on this with McStas
+  //developers!). Also McStas's V2K*K2V is not exactly 1. All in all, this can
+  //give issues when a McStas user is trying to set up a narrow beam very
+  //precisely in an instrument file, attempting to carefully hit a certain
+  //narrow Bragg reflection in this NCrystal component. We can not completely
+  //work around all issues here, but for now, we assume that the user is
+  //carefully setting up things by specifying the wavelength to some source
+  //component. That wavelength is then converted to the McStas state pars
+  //(vx,vy,vz) via K2V. We thus here first use 1/K2V (and *not* V2K) to convert
+  //back to a wavelength, and then we use NCrystal's conversion constants to
+  //convert the resulting wavelength to kinetic energy needed for NCrystal's
+  //interfaces.
+
+  // 0.0253302959105844428609698658024319097260896937 is 1/(4*pi^2)
+  ncrystal_convfact_vsq2ekin = ncrystal_wl2ekin(1.0) * 0.0253302959105844428609698658024319097260896937 / ( K2V*K2V );
+  ncrystal_convfact_ekin2vsq = 1.0 / ncrystal_convfact_vsq2ekin;
+
+  //for our sanity, zero-initialise all instance-specific data:
+  memset(&params,0,sizeof(params));
+  memset(&params,0,sizeof(geoparams));
+
+  ncrystalsample_initgeom(&geoparams, NAME_CURRENT_COMP, xwidth, yheight, zdepth, radius);
+
+  if (!(absorptionmode==0||absorptionmode==1||absorptionmode==2))
+    NCMCERR("Invalid value of absorptionmode");
+  params.absmode = absorptionmode;
+
+  /* Make sure NCrystal uses the legacy McStas MT RNG (ok if more than one component instance does this): */
+  ncrystal_setrandgen(rand01);
+
+  /* access powder packingfactor (nb: always 1.0 for non-powders): */
+  double packingfactor = ncrystal_decodecfg_packfact(cfg);
+
+  /* access crystal structure to get number density (natoms/volume): */
+  ncrystal_info_t info = ncrystal_create_info(cfg);
+  double numberdensity = ncrystal_info_getnumberdensity(info);
+  if( numberdensity <= 0.0 )
+    NCMCERR("Number density information is unavailable in the loaded NCrystal Info");
+  ncrystal_unref(&info);
+
+  //numberdensity is the atomic number density in units of Aa^-3=1e30m^3, and
+  //given that we have cross-sections in barn (1e-28m^2) and want to generate
+  //distances in meters with -log(R)/(numberdensity*xsect), we get the unit
+  //conversion factor of 0.01. We also apply the powder packing factor here (it
+  //is guaranteed to be non-zero):
+  params.density_factor = - 0.01  / ( numberdensity * packingfactor );
+  params.inv_density_factor = 1.0/params.density_factor;
+
+  //TODO: The density used here is in principle different from the one
+  //used in the Geant4 interface, which is possibly inconsistent when not using
+  //.ncmat files (more info at https://github.com/mctools/ncrystal/issues/9).
+
+  //Setup scattering:
+  params.scat = ncrystal_create_scatter(cfg);
+  params.proc_scat = ncrystal_cast_scat2proc(params.scat);
+  params.proc_scat_isoriented = ! ncrystal_isnonoriented(params.proc_scat);;
+
+  //Setup absorption:
+  if (params.absmode) {
+    params.proc_abs = ncrystal_cast_abs2proc(ncrystal_create_absorption(cfg));
+    if (!ncrystal_isnonoriented(params.proc_abs))
+      NCMCERR("Encountered oriented NCAbsorption process which is not currently supported by this component.");
+  }
+
+%}
+
+TRACE
+%{
+  /* Handle arbitrary incoming neutron with state vector
+     (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+  do {
+    /* neutron is outside our surface at this point. First check if it intersects it... */
+    double t0,t1;
+    if (!ncrystalsample_surfintersect(&geoparams,&t0,&t1,x,y,z,vx,vy,vz))
+      break;//no intersections with our sample geometry, so nothing more to do.
+
+    /* Propagate the neutron to our surface (t0<=0 means we started inside!) */
+    if (t0>0)
+      PROP_DT(t0); /* let the neutron fly in a straight line for t0 */
+
+    double dir[3], dirout[3];
+    double v2 = vx*vx+vy*vy+vz*vz;
+    double absv = sqrt(v2);
+    double inv_absv = 1.0/absv;
+    dir[0] = vx*inv_absv;
+    dir[1] = vy*inv_absv;
+    dir[2] = vz*inv_absv;
+
+    double ekin = ncrystal_convfact_vsq2ekin * v2;
+    double xsect_scat = 0.0;
+    double xsect_abs = 0.0;
+
+    ncrystal_crosssection(params.proc_scat,ekin,(const double(*)[3])&dir,&xsect_scat);
+    if (params.absmode)
+      ncrystal_crosssection_nonoriented(params.proc_abs, ekin,&xsect_abs);
+
+    #ifndef INFINITY
+    #define INFINITY DBL_MAX
+    #endif
+    
+    while(1)
+    {
+      /* Make the calculations and pick the final state before exiting the sample */
+      double xsect_step = xsect_scat;
+      if (params.absmode==2) xsect_step += xsect_abs;
+      double distance = xsect_step ? log( rand01() ) * params.density_factor / xsect_step : INFINITY; /* in m */
+      double timestep = distance * inv_absv;
+      /* Test when the neutron would reach the outer surface in absence of interactions: */
+
+      if (!ncrystalsample_surfintersect(&geoparams,&t0,&t1,x,y,z,vx,vy,vz))
+        NCMCERR("Can not propagate to surface from inside volume!");
+
+      if(timestep>t1)  {
+        /* neutron reaches surface, move forward to surface and apply intensity reduction if absmode=1 */
+        if (params.absmode==1)
+          p *=  exp( absv * t1 * xsect_abs * params.inv_density_factor );
+        PROP_DT(t1);
+        break;//end stepping inside volume
+      }
+
+      /*move neutron forward*/
+      PROP_DT(timestep);
+
+      /* perform reaction */
+      if (params.absmode==2 && xsect_abs > rand01()*xsect_step ) {
+        /* reaction was full-blooded absorption */
+        ABSORB;/* kill track (uses goto to jump out of current loop context)*/
+      } else if (params.absmode==1) {
+        /* reaction was scatter and we model absorption by intensity-reduction */
+        p *=  exp( distance * xsect_abs * params.inv_density_factor );
+      } else {
+        /* reaction was scatter and we do not perform any intensity-reduction */
+      }
+
+      /* scattering */
+      double delta_ekin;
+      ncrystal_genscatter( params.scat,ekin, (const double(*)[3])&dir, &dirout, &delta_ekin);
+      if (delta_ekin) {
+        ekin += delta_ekin;
+        if (ekin<=0) {
+          //not expected to happen much, but an interaction could in principle bring the neutron to rest.
+          ABSORB;
+        }
+        v2 = ncrystal_convfact_ekin2vsq * ekin;
+        absv = sqrt(v2);
+        inv_absv = 1.0/absv;
+      }
+      vx=dirout[0]*absv;
+      vy=dirout[1]*absv;
+      vz=dirout[2]*absv;
+      dir[0]=dirout[0];
+      dir[1]=dirout[1];
+      dir[2]=dirout[2];
+
+      SCATTER;/* update mcstas scatter counter and potentially enable trajectory visualisation */
+
+      if (multscat) {
+        //Must update x-sects if energy changed or processes are oriented:
+        if (delta_ekin&&params.absmode)
+          ncrystal_crosssection_nonoriented(params.proc_abs, ekin,&xsect_abs);
+        if (delta_ekin||params.proc_scat_isoriented)
+          ncrystal_crosssection(params.proc_scat,ekin,(const double(*)[3])&dir,&xsect_scat);
+      } else {
+        //Multiple scattering disabled, so we just need to propagate the neutron
+        //out of the sample and (if absmode==1) apply one more intensity
+        //reduction factor. We handle this by putting cross-sections to 0 here,
+        //which will result in an infinife step length of the next step.
+        xsect_scat = 0.0;
+        if (params.absmode!=1)
+          xsect_abs = 0.0;
+      }
+    }/*exited at a surface*/
+
+    /* Exited the surface. We let the while condition below always be false for  *
+     * now, since we only support convex bodies, so there is no need to check if *
+     * we might be able to enter our shape again:                                */
+  } while (0);
+%}
+
+FINALLY
+%{
+  ncrystal_unref(&params.scat);
+  ncrystal_invalidate(&params.proc_scat);//a cast of params.scat, so just invalidate handle don't unref
+  if (params.absmode)
+    ncrystal_unref(&params.proc_abs);
+%}
+
+MCDISPLAY
+%{
+  //NB: Future McStas (2.5?) is slated to introduce mcdis_cylinder and
+  //mcdis_sphere functions, which we at that point should likely use.
+  switch (geoparams.shape) {
+  case NC_CYLINDER:
+    mcdis_circle("xz", 0,  geoparams.dy/2.0, 0, geoparams.radius);
+    mcdis_circle("xz", 0, -geoparams.dy/2.0, 0, geoparams.radius);
+    mcdis_line(-geoparams.radius, -geoparams.dy/2.0, 0, -geoparams.radius, +yheight/2.0, 0);
+    mcdis_line(+geoparams.radius, -geoparams.dy/2.0, 0, +geoparams.radius, +yheight/2.0, 0);
+    mcdis_line(0, -geoparams.dy/2.0, -geoparams.radius, 0, +geoparams.dy/2.0, -geoparams.radius);
+    mcdis_line(0, -geoparams.dy/2.0, +geoparams.radius, 0, +geoparams.dy/2.0, +geoparams.radius);
+    break;
+  case NC_BOX:
+    mcdis_box(0., 0., 0., geoparams.dx, geoparams.dy, geoparams.dz);
+    break;
+  case NC_SPHERE:
+    mcdis_circle("xy", 0., 0., 0., geoparams.radius);
+    mcdis_circle("xz", 0., 0., 0., geoparams.radius);
+    mcdis_circle("yz", 0., 0., 0., geoparams.radius);
+    break;
+  };
+%}
+
+END
