@@ -55,9 +55,14 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 WORK=`pwd`
 
 # NCrystal installation:
-export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" mac "" -- OSXapp
-export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
+rm -rf 3rdparty/ncrystal/build
+mkdir 3rdparty/ncrystal/build
+cd 3rdparty/ncrystal/build
+cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DBUILD_G4HOOKS=OFF
+make
+make install
+cd $WORK
+rm -rf 3rdparty/ncrystal/build
 
 # Hack to ensure pymcpltool is in place
 ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
