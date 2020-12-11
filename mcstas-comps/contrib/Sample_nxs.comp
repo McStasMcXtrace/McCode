@@ -122,9 +122,8 @@ SETTING PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1,
   xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, 
   string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="" )
 OUTPUT PARAMETERS ()
-  
 DEPENDENCY "-I@MCCODE_LIB@/libs/libnxs/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
-
+NOACC
 
 SHARE
 %{
