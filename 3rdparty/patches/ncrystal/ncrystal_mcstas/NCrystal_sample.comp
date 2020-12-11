@@ -25,7 +25,7 @@
 * %I
 *
 * Written by: NCrystal developers
-* Version: 2.2.1
+* Version: 2.2.2
 * Origin: NCrystal Developers (European Spallation Source ERIC and DTU Nutech)
 *
 * McStas sample component for the NCrystal scattering library. Find more
@@ -62,7 +62,7 @@
 
 DEFINE COMPONENT NCrystal_sample
 SETTING PARAMETERS (string cfg = "", absorptionmode = 1, multscat = 1, xwidth = 0, yheight = 0, zdepth = 0, radius = 0 )
-OUTPUT PARAMETERS ()/*not really intended for output, but here for multi-instance support*/
+OUTPUT PARAMETERS (params, geoparams)/*not really intended for output, but here for multi-instance support*/
 DEPENDENCY "-Wl,-rpath,@MCCODE_LIB@/libs -L@MCCODE_LIB@/libs -lNCrystal -I@MCCODE_LIB@/include"
 NOACC
 
