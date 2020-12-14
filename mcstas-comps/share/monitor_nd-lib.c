@@ -95,6 +95,22 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_USER1  =26;
     DEFS->COORD_USER2  =27;
     DEFS->COORD_USER3  =28;
+    DEFS->COORD_USERDOUBLE0=39;
+    DEFS->COORD_USERDOUBLE1=40;
+    DEFS->COORD_USERDOUBLE2=41;
+    DEFS->COORD_USERDOUBLE3=42;
+    DEFS->COORD_USERDOUBLE4=43;
+    DEFS->COORD_USERDOUBLE5=44;
+    DEFS->COORD_USERDOUBLE6=45;
+    DEFS->COORD_USERDOUBLE7=46;
+    DEFS->COORD_USERDOUBLE8=47;
+    DEFS->COORD_USERDOUBLE9=48;
+    DEFS->COORD_USERDOUBLE10=49;
+    DEFS->COORD_USERDOUBLE11=50;
+    DEFS->COORD_USERDOUBLE12=51;
+    DEFS->COORD_USERDOUBLE13=52;
+    DEFS->COORD_USERDOUBLE14=53;
+    DEFS->COORD_USERDOUBLE15=54;
     DEFS->COORD_XY     =37;
     DEFS->COORD_YZ     =31;
     DEFS->COORD_XZ     =32;
@@ -444,6 +460,39 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_USER2; strncpy(Set_Vars_Coord_Label,Vars->UserName2,30); strcpy(Set_Vars_Coord_Var,"U2"); lmin = -1e10; lmax = 1e10; }
         if (!strcmp(token, "user3") || !strcmp(token, "u3"))
           { Set_Vars_Coord_Type = DEFS->COORD_USER3; strncpy(Set_Vars_Coord_Label,Vars->UserName3,30); strcpy(Set_Vars_Coord_Var,"U3"); lmin = -1e10; lmax = 1e10; }
+
+        if (!strcmp(token, "userdouble0") || !strcmp(token, "ud0"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE0; strcpy(Set_Vars_Coord_Label,"ud0 [1]"); strcpy(Set_Vars_Coord_Var,"ud0"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble1") || !strcmp(token, "ud1"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE1; strcpy(Set_Vars_Coord_Label,"ud1 [1]"); strcpy(Set_Vars_Coord_Var,"ud1"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble2") || !strcmp(token, "ud2"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE2; strcpy(Set_Vars_Coord_Label,"ud2 [1]"); strcpy(Set_Vars_Coord_Var,"ud2"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble3") || !strcmp(token, "ud3"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE3; strcpy(Set_Vars_Coord_Label,"ud3 [1]"); strcpy(Set_Vars_Coord_Var,"ud3"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble4") || !strcmp(token, "ud4"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE4; strcpy(Set_Vars_Coord_Label,"ud4 [1]"); strcpy(Set_Vars_Coord_Var,"ud4"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble5") || !strcmp(token, "ud5"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE5; strcpy(Set_Vars_Coord_Label,"ud5 [1]"); strcpy(Set_Vars_Coord_Var,"ud5"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble6") || !strcmp(token, "ud6"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE6; strcpy(Set_Vars_Coord_Label,"ud6 [1]"); strcpy(Set_Vars_Coord_Var,"ud6"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble7") || !strcmp(token, "ud7"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE7; strcpy(Set_Vars_Coord_Label,"ud7 [1]"); strcpy(Set_Vars_Coord_Var,"ud7"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble8") || !strcmp(token, "ud8"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE8; strcpy(Set_Vars_Coord_Label,"ud8 [1]"); strcpy(Set_Vars_Coord_Var,"ud8"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble9") || !strcmp(token, "ud9"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE9; strcpy(Set_Vars_Coord_Label,"ud9 [1]"); strcpy(Set_Vars_Coord_Var,"ud9"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble10") || !strcmp(token, "ud10"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE10; strcpy(Set_Vars_Coord_Label,"ud10 [1]"); strcpy(Set_Vars_Coord_Var,"ud10"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble11") || !strcmp(token, "ud11"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE11; strcpy(Set_Vars_Coord_Label,"ud11 [1]"); strcpy(Set_Vars_Coord_Var,"ud11"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble12") || !strcmp(token, "ud12"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE12; strcpy(Set_Vars_Coord_Label,"ud12 [1]"); strcpy(Set_Vars_Coord_Var,"ud12"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble13") || !strcmp(token, "ud13"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE13; strcpy(Set_Vars_Coord_Label,"ud13 [1]"); strcpy(Set_Vars_Coord_Var,"ud13"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble14") || !strcmp(token, "ud14"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE14; strcpy(Set_Vars_Coord_Label,"ud14 [1]"); strcpy(Set_Vars_Coord_Var,"ud14"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "userdouble15") || !strcmp(token, "ud15"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USERDOUBLE15; strcpy(Set_Vars_Coord_Label,"ud15 [1]"); strcpy(Set_Vars_Coord_Var,"ud15"); lmin = -1e10; lmax = 1e10; }
 
         /* now stores variable keywords detected, if any */
         if (Set_Vars_Coord_Type != DEFS->COORD_NONE)
@@ -949,6 +998,38 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = _particle->t;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = _particle->p;
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE0) XY = Vars->UserDoubles[0];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE1) XY = Vars->UserDoubles[1];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE2) XY = Vars->UserDoubles[2];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE3) XY = Vars->UserDoubles[3];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE4) XY = Vars->UserDoubles[4];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE5) XY = Vars->UserDoubles[5];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE6) XY = Vars->UserDoubles[6];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE7) XY = Vars->UserDoubles[7];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE8) XY = Vars->UserDoubles[8];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE9) XY = Vars->UserDoubles[9];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE10) XY = Vars->UserDoubles[10];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE11) XY = Vars->UserDoubles[11];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE12) XY = Vars->UserDoubles[12];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE13) XY = Vars->UserDoubles[13];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE14) XY = Vars->UserDoubles[14];
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_USERDOUBLE15) XY = Vars->UserDoubles[15];
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_HDIV) XY = RAD2DEG*atan2(_particle->vx,_particle->vz);
         else
