@@ -16,7 +16,7 @@ if [[ ${UNAME} = Darwin* ]]; then
     # Check if we are on macos 10.x or 11.x
     if [ "$OSXVER" == "10" ];
     then
-	PATH=$LIB/../miniconda3/bin:$PATH
+	export PATH=$LIB/../miniconda3/bin:$PATH
     fi
     # Check if we are in / - in that case cd to $HOME
     PW==`pwd`
@@ -24,7 +24,8 @@ if [[ ${UNAME} = Darwin* ]]; then
 	cd $HOME
     fi
 else
-    PATH=$LIB/../miniconda3/bin:$PATH
+    export PATH=$LIB/../miniconda3/bin:$PATH
+    export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
 fi
 
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
