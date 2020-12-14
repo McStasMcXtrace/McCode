@@ -311,6 +311,7 @@ INITIALIZE
 	radius=zdepth/2.0;
       }
     }else{
+      /*radius is set - propagate to xwidth. It is used inside monitor_nd-lib*/
       xwidth=2*radius;
     }
     if(!yheight){
@@ -318,8 +319,7 @@ INITIALIZE
       yheight=2*radius;
     }
   }else if (radius) {
-    /*radius is set - this must be a curved shape. Infer shape from yheight, and set remaining values
-     (xwidth etc. They are used inside monitor_nd-lib.*/
+    /*radius is set - this must be curved shape then. Infer shape from yheight*/
     xwidth = zdepth = 2*radius;
     if (yheight){
       /*a height is given (and no shape explitly set - assume cylinder*/
@@ -475,8 +475,8 @@ TRACE
         /* propagate to intersection point as temporary variable to check top/bottom */
         y0 = y+t0*vy;
         y1 = y+t1*vy;
-        if (fabs(y0) >= Vars.Cylinder_Height/2) t0 = t1;
-        if (fabs(y1) >= Vars.Cylinder_Height/2) t1 = t0;
+        if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) t0 = t1;
+        if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) t1 = t0;
       }
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
@@ -489,7 +489,7 @@ TRACE
         PROP_DT(t0); /* t0 incoming beam */
       /* Final test if we are on lid / bottom of banana/sphere */
       if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
-        if (fabs(y) >= Vars.Cylinder_Height/2) {
+        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
           intersect=0;
           Flag_Restore=1;
         }
