@@ -43,14 +43,8 @@ set(CPACK_RPM_SPEC_INSTALL_POST "/bin/true")
 include(CPack)
 
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/miniconda3")
-  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/miniconda3.tgz")
-    execute_process(COMMAND wget http://support.mccode.org/rpm/miniconda3.tgz
+    execute_process(COMMAND ./prepare.sh
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-  endif()
-  execute_process(COMMAND tar xzf miniconda3.tgz
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-  execute_process(COMMAND rm miniconda3.tgz
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif()
 
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/miniconda3"
