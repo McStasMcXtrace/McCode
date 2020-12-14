@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This is a python-based replacement of the old mcresplot.pl
 # @author Tobias Weber <tweber@ill.fr>
