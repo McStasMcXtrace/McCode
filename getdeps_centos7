@@ -5,6 +5,7 @@ echo
 sudo yum update
 sudo yum -y groupinstall 'Development Tools'
 sudo yum -y install epel-release
+sudo yum -y install rpm-build
 sudo yum -y install cmake
 sudo ln -sf /usr/bin/cmake3 /usr/local/bin/cmake
 sudo ln -sf /usr/bin/cpack3 /usr/local/bin/cpack
