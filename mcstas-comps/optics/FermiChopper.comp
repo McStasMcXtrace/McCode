@@ -98,7 +98,7 @@ zero_time=0, xwidth=0, verbose=0, yheight=0.08,
 curvature=0,delay=0)
 
 OUTPUT PARAMETERS()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+NOACC
 
 SHARE
 %{
