@@ -23,6 +23,6 @@ sudo yum -y upgrade
 sudo yum install -y libtk-codetext-perl
 
 cd /home/vagrant
-sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules 
+sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1 --recurse-submodules -b mcstas-3.0
 cd McCode
-sudo -u vagrant ./build_rpms_fedora29_mcstas 2.5 meta
+sudo -u vagrant ./build_rpms_fedora29_mcstas 3.0 meta
