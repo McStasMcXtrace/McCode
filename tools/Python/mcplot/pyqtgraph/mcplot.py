@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 pyqtgraph mcplot frontend, which uses the mcplot graph-based data loader.
 '''
