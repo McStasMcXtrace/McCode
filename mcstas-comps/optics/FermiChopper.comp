@@ -133,13 +133,6 @@ long absorb_nocontrol;
 long absorb_cylexit;
 long warn_notreachslitoutput;
 char compcurname[256];
-double X[5],Z[5]; /* position of interaction locations in the Fermi chopper rotating frame
-[0]=cylinder input
-[1]=slit input
-[2]=slit wall reflection
-[3]=slit exit
-[4]=cylinder exit
-*/
 };
 
 /*****************************************************************************
@@ -400,13 +393,21 @@ TRACE
   double t1=0,t2=0; /* cylinder intersection time (at entry and exit of slit pack - n1 n2 - or cylinder) */
   double dt;        /* interaction intervals (e.g. time for exiting slit pack) */
 
+  double X[5],Z[5]; /* position of interaction locations in the Fermi chopper rotating frame
+		       [0]=cylinder input
+		       [1]=slit input
+		       [2]=slit wall reflection
+		       [3]=slit exit
+		       [4]=cylinder exit
+		    */
+  
   /************************ TIME OF FLIGHT RESET ************************/
   if (zero_time == 1 && nu)
     t -= floor( (t+1/(4*nu))*(2*nu) )/(2*nu);
 
   /* zero arrays used to store positions */
   for (loopcounter=0; loopcounter < 5; loopcounter++)
-    FCVars.X[loopcounter] = FCVars.Z[loopcounter]=0;
+    X[loopcounter] = Z[loopcounter]=0;
 
   /************** test, if the neutron interacts with the cylinder ***/
   if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight))
@@ -464,7 +465,7 @@ TRACE
     /* zp1 = Z' at entrance of cylinder Z'(t) */
     zp1  = FC_zrot(x,z, t, FCVars);
 
-    FCVars.X[0] = xp1; FCVars.Z[0] = zp1;
+    X[0] = xp1; Z[0] = zp1;
 
     /* here we should have sqrt(x*x+z*z) == sqrt(xp1*xp1+zp1*zp1) */
     t3 = sqrt(x*x+z*z) / sqrt(xp1*xp1+zp1*zp1);
@@ -502,7 +503,7 @@ TRACE
     dt -= t3; /* remaining time from slit pack entry to exit of cylinder */
     xp1 = FC_xrot(x,z, t, FCVars); /* should be slit_input */
     zp1 = FC_zrot(x,z, t, FCVars);
-    FCVars.X[1] = xp1; FCVars.Z[1] = zp1;
+    X[1] = xp1; Z[1] = zp1;
 
 #ifndef OPENACC
     if (mcdotrace) {
@@ -688,7 +689,7 @@ SCATTER;
         PROP_DT(t3); dt -= t3; /* dt: time remaining to slit exit after propagation */
         xp1 = FC_xrot(x,z, t, FCVars); /* X'(t+t3) : on slit wall */
         zp1 = FC_zrot(x,z, t, FCVars); /* Z'(t+t3) : on slit wall */
-        FCVars.X[2] = xp1; FCVars.Z[2] = zp1;
+        X[2] = xp1; Z[2] = zp1;
 
         if (verbose > 2)
           printf("FermiChopper: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] (on wall). z'=%g\n",
@@ -771,7 +772,7 @@ SCATTER;
 
     xp1 = FC_xrot(x,z, t,FCVars);
     zp1 = FC_zrot(x,z, t,FCVars);
-    FCVars.X[3] = xp1; FCVars.Z[3] = zp1; /* slit exit */
+    X[3] = xp1; Z[3] = zp1; /* slit exit */
 
     if (fabs(xp1) >= nslit*w/2)
     {
@@ -824,7 +825,7 @@ SCATTER;
 
     xp1 = FC_xrot(x,z, t,FCVars);
     zp1 = FC_zrot(x,z, t,FCVars);
-    FCVars.X[4] = xp1; FCVars.Z[4] = zp1;
+    X[4] = xp1; Z[4] = zp1;
 
     if (verbose > 2)
       printf("FermiChopper: %s: t1=%8.3g PROP_DT t2=%8.3g xyz=[%8.3g %8.3g %8.3g] (OUT cyl). z'=%g\n",
