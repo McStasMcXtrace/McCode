@@ -37,12 +37,152 @@
 * Modified by: PW June 2017: version 2.4.1
 * Modified by: PW December 2018: version 2.5
 * Modified by: PW January 2020: version 2.6
+* Modified by: PW February 2020: 3.0beta tech preview
 * Modified by: PW May 2020: version 2.6.1
 * Modified by: PW November 2020: version 2.7
-* This file is part of McStas version 2.7, released November 27th 2020.
+* This file is part of McStas 3.0, released December 15th 2020.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas 3.0, December 15th, 2020
+
+ McStas 3.0 is the first official release in the 3.x series, with a modernised 
+ code-generator and support for GPU acceleration on NVIDIA cards.
+ 
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
+ - A special thanks to Jakob Garde who has continued to contribute (unpaid!)
+   to the 3.0 efforts even after leaving DTU.
+ - Thanks to Guido Juckeland (HZDR,DE) and Sebastian Alfthan (CSC,FI) who were
+   behind the GPU Hackathons we participated in
+ - Thanks to our NVIDIA mentors Vishal Metha, Christian Hundt and Alexey Romanenko
+
+ Installation:
+ - Our install docs are now available on the McCode GitHub page at
+   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
+   mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
+   series packages
+ - OpenACC GPU (and CPU multicore) acceleration is at the time of release ONLY
+   supported on Linux systems, as this is the only platform targeted by the NVIDIA
+   HPC package. Versions 20.x should all work. On Windows 64bit systems, support is
+   promised to arrive with WSL 2.0 (i.e. via a Linux-layer), but may also become
+   supported with a targeted release by NVIDIA. macOS is unfortunately not supported
+   by NVIDIA HPC acceleration.
+   
+ Main new features and changes:
+ 1. New code-generation scheme based on functions instead of #defines, which brings
+   * Much improved compilation-times, the code is better suited for modern compilers
+   * In most cases a speed-up of order 20%
+   * The neutron _particle is now represented by a struct
+   * The component types and instances are also represented by structs
+   * In the generic TRACE function of a given component type, the _comp var is
+     short-hand for "whatever the component instance is"
+   * New instrument section of USERVARS %{ double example_flag; %} which enriches
+     the _particle struct
+   * In component DECLARE blocks, assignments can no longer be done and all declarations
+     must be listed independently, i.e double a; is OK, double a,b; is not. Variables in
+     this scope are automatically so-called "OUTPUT PARAMETERS" (we may deprecate that
+     keyword completely for the official McStas 3.0 release)
+   * Components no longer support DEFINITION PARAMETERS, instead the SETTING PARAMETERS
+     must be used, which now includes a vector and string type supplementing the (default)
+     double/MCNUM and int types.
+   * New macros have been added for
+   * INSTRUMENT_GETPAR(parameter_name)
+   * COMP_GETPAR(component, parameter_name) which is similar to the legacy MC_GETPAR
+   * MC_GETPAR3(component_class, component_name,parameter_name)
+   * The function particle_getvar(_particle,"variable",success) provides component-access
+     to the instrument USERVARS, e.g. in Monitor_nD.
+   * Further, the new cogen implements support for Nvidia GPU's, for details see point 2 below.
+ 2. Support for OpenACC acceleration on NVIDIA GPU's on Linux systems
+   * #pragma driven, inserted by the code-generation, but also implemented in libs and comps
+   * Speedups measured using top-notch NVIDIA V100 datacenter cards are in the range of 10-600 with
+     respect to a single-core of a modern CPU, see the figure in the below link. It was generated for
+     an "ideally" parallel instrument.
+     (https://camo.githubusercontent.com/96fcceec70d0761f8709eda4de7bcbde5597aee6/687474703a2f2f746d702e6d63737461732e6f72672f563130302d73706565647570732e706e67)
+   * Platform support / compiler configuration:
+     - Required compiler for GPU/OpenACC: NVIDIA HPC SDK 20.x or newer. Community edition works fine
+     - Required GPU hardware: NVIDIA Tesla card + configured driver
+     - Windows: At this point UNSUPPORTED for GPU/OpenACC since NVIDIA does not yet ship a package for
+       this platform. Support should come with WSL 2.0 or via native support from NVIDIA.
+     - macOS: At this point UNSUPPORTED for OpenACC since NVIDIA does not ship a package for
+       this platform.
+     - Linux: Full acceleration support with GPU, and with CPU/multicore.
+   * Install the compiler and put it on your system PATH. Install and configure Nvidia drivers for your card.
+   * We hope that GCC will offer better support for OpenACC in the near future.
+   * Tool support
+     - On Linux and macOS mcrun is preconfigured so that mcrun -c --openacc compiles with:
+     - Linux: nvc -ta:tesla,managed,deepcopy -DOPENACC
+     - Linux: You may configure for use on CPU/multicore via: nvc -ta:multicore -DOPENACC
+     - The --funnel option can be used to launch the FUNNEL simulation flow, see description below.
+   * For both of the above, adding -Minfo:accel will output verbose information on parallelisation
+   * In mcgui, the mcrun --openacc configuration can be selected via the preferences
+   * Both mcgui and mcrun allow combining --openacc and --mpi if you have multiple GPU's available.
+     The n'th mpi process will attempt to use the k'th GPU, where k = #available GPU's % #MPI nodes.
+ 3. Special McStas 3.0 grammar for mixed CPU/GPU mode:
+   * A "FUNNEL" mode has been added, which allows
+     - Mixed GPU/CPU mode, were sections of the instrument are executed on each device type, with
+       copying of neutron-bunches back and forth.
+     - When this instrument grammar is specified, it signifies that the component should be executed
+       on CPU rather than GPU.
+        CPU SPLIT 10 COMPONENT Sample = Something()
+     - Sections before and after that are not marked CPU will be executed on GPU.
+     - If a component includes the NOACC token in the component header, the CPU-mode is forced
+       through the compilation, as it signifies that the component does NOT support GPU. This is
+       for the time being the case for Union_master. (Support is expected to come with McStas 3.1)
+ 4. Interoperability with McStas 2.7
+   * Support for MCPL event interchange has been added through MCPL_input and MCPL_output components,
+     that work both on CPU and GPU for McStas 3.0. Note however that targeting GPU, MCPL_input reads
+     ALL particle events durin INITIALIZE and MCPL_output writes ALL particle events during SAVE,
+     whereas when using CPU in 3.0 or 2.7, reads and writes happen during the TRACE flow.
+ 5. Known limitations
+   * The Union subsystem works on CPU only for now, but can be used in the mixed GPU/CPU funnnel
+     mode as mentioned above. Union_master is a NOACC component.
+   * The same solution is applied in use of the NCrystal_sample and will eventually come for Sample_nxs.
+   * Not all features of all components correspond to those from McStas 2.7, but all essential components
+     have beenfully ported from the 2.7 tree to the 3.0 tree. Hence, some parts distributed with McStas 2.7
+     will either not exist in the 3.0 release or may not function, due to either:
+     (1) very specialised features (2) maintainability issues or (3) use ofcomplex algorithms.
+   * Notable examples of unsupported / non-functional components or instruments are:
+     - The scatter_logger and shielding_logger components / instruments
+     - The Vitess_chopperfermi component
+     - The FZJ_BenchmarkSfin2 instrument / SANS_benchmark2 component
+     - The MCPL_merge instrument
+     - SEMSANS_instrument
+     - Sample_nxs
+  * Generally, most components/instruments are now ported to our OpenACC based GPU-technology, but you
+     likely may find combinations of use that slipped through our not fully exhaustive test-suite. Missing
+     support may come in the form of either
+     - Code that does not compile
+     - Instruments that segfaults during execution
+     - Instruments or components that produce obscure results
+   * At the time of release, the nightly tests http://new-nightly.mccode.org/ show that
+     - McStas 3.0 ships with 211 instruments that succesfully compiles
+     - These instruments use 147 of our components
+   * We don't ship an updated set of manuals for McStas 3.0, but essential documentation is available
+     on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
+
+
+Tools:
+ - The tools for McStas 3.0 correspond to those distributed with McStas 2.7, apart from the above-mentioned
+   mcrun options for --openacc and --funnel.
+ - On macOS (from 11.0 Big Sur onwards), mcgui will assume light/dark mode with the system settings.
+   (The change came from using the system python3 with our app/miniconda-distributed Qt libs etc.)
+ - We now no longer officially support the perl/PGPLOT backend, these may or may not work on your system.
+ - The mcformat utility has been deprecated.
+
+ Platforms:
+ - Nothing really new to report here. We still support 64bit Windows 10, all recent 64bit macOS including 11.0 Big Sur,
+   Debian-based and RPM-based distros. (RPMs are built on/for CentOS, you may get varying milage elsewhere.)
+
+ Libraries:
+ - Updated version 2.2.2 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. With McStas 3.0, NCrystal is more tightly integrated and should run without using ncrystal_preparemcstasdir.
+ - MCPL library from the same authors now included at v. 1.3.2
+
+We hope you will enjoy this new release!!!
+
+
 Changes in McStas v.2.7, Novmeber 27th, 2020
 
  McStas 2.7 is the 10th release in the 2.x series, provides minor incremental
@@ -129,6 +269,90 @@ Changes in McStas v.2.6.1, May 4th, 2020
  Fixes of issues from last release:
  - A number of minor issues from 2.6 were addressed, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue++label%3A%22McStas+2.6%22+
+
+
+Changes in McStas 3.0 technology preview, Feburary 25th, 2020
+
+ IMPORTANT: 3.0beta IS a proper 'beta', that is: Don't expect it to fully work, don't expect it to be fully stable,
+ Do on the other hand expect interesting BUGS!
+
+ McStas 3.0beta is a preview of technology in the forthcoming 3.x series.
+ 
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
+ - Thanks to Guido Juckeland (HZDR,DE) and Sebastian Alfthan (CSC,FI) who were
+   behind the GPU Hackathons we participated in
+ - Thanks to our NVIDIA mentors Vishal Metha, Christian Hundt and Alexey Romanenko
+
+ Installation:
+ - As this is NOT a production release, we will only offer installation packages in
+   the form of "manually installable" packages.
+   
+ Main new features and changes:
+ 1. New code-generation scheme based on functions instead of #defines, which brings
+   * Much improved compilation-times, the code is better suited for modern compilers
+   * In most cases a speed-up of order 20%
+   * The neutron _particle is now represented by a struct
+   * The component types and instances are also represented by structs
+   * In the generic TRACE function of a given component type, the _comp var is
+     short-hand for "whatever the component instance is"
+   * New instrument section of USERVARS %{ double example_flag; %} which enriches
+     the _particle struct
+   * In component DECLARE blocks, assignments can no longer be done and all declarations
+     must be listed independently, i.e double a; is OK, double a,b; is not. Variables in
+     this scope are automatically so-called "OUTPUT PARAMETERS" (we may deprecate that
+     keyword completely for the official McStas 3.0 release)
+   * Components no longer support DEFINITION PARAMETERS, instead the SETTING PARAMETERS
+     must be used, which now includes a vector and string type supplementing the (default)
+     double/MCNUM and int types.
+   * New macros have been added for
+   * INSTRUMENT_GETPAR(parameter_name)
+   * COMP_GETPAR(component, parameter_name) which is similar to the legacy MC_GETPAR
+   * MC_GETPAR3(component_class, component_name,parameter_name)
+   * Further, the new cogen implements support for Nvidia GPU's, for details see point 2 below.
+   * Status on CPU (20200220) is that 134 out of 176 instruments from the mcstas-3.0 branch compile
+     for CPU - and most run as expected.
+ 2. Limited, experimental support for OpenACC acceleration on NVIDIA GPU's
+   * #pragma driven, inserted by the code-generation, but also implemented in (many, not all)
+     libs and comps
+   * Status on GPU (20200220) is that 91 out of 176 instruments from the mcstas-3.0 branch compile
+     for GPU. These 91 instruments include in total 73 out of 213 components. Out of the functional
+     instruments, around 45 produce meaningful data at this point.
+   * Speedups measured using top-notch NVIDIA V100 datacenter cards are in the range of 10-600 with
+     respect to a single-core of a modern CPU, see the figure in the below link. It was generated for
+     an "ideally" parallel instrument.
+     (https://camo.githubusercontent.com/96fcceec70d0761f8709eda4de7bcbde5597aee6/687474703a2f2f746d702e6d63737461732e6f72672f563130302d73706565647570732e706e67)
+   * Platform support / compiler configuration:
+     - Required compiler for GPU/OpenACC: PGI 19.4 or newer. Community edition works fine
+     - Required GPU hardware: NVIDIA Tesla card + configured driver
+     - Windows: At this point UNSUPPORTED for GPU/OpenACC since the CUDA managed memory mode is not
+       available for this platform. (Very simple instruments without monitors may work, at this point
+       untested). OpenACC multi-threading should work with pgcc -ta:multicore -DOPENACC, also untested.
+     - macOS: Only CPU-thread parallelisation is supported, since NVIDIA Cards at this point are
+       unsupported on recent macOS versions. Parallelises similarly to MPI, but slightly slower.
+     - Linux: Full acceleration support with GPU, and with multicore.
+   * Install the compiler and put it on your system PATH. Install and configure Nvidia drivers for your card.
+   * We hope that GCC will offer better support for OpenACC in the near future.
+   * Tool support
+     - On Linux and macOS mcrun is preconfigured so that mcrun -c --openacc compiles with:
+     - Linux: pgcc -ta:tesla,managed,deepcopy -DOPENACC
+     - macOS: pgcc -ta:multicore -DOPENACC
+   * For both of the above, adding -Minfo:accel will output verbose information on parallelisation
+   * In mcgui, the mcrun --openacc configuration can be selected via the preferences
+ 3. Interoperability with McStas 2.6
+   * Rudimentary support for MCPL event interchange has been added through a set of MCPL_input_GPU
+     and MCPL_output_GPU components.
+ 4. Known limitations
+   * As mentioned above, not all components/instruments are ported to the GPU technology yet
+   * We have not fully decided if our newly implemented random number algorithm is sufficiently
+     robust/stable.
+   * Monitor_nD user vars can not currently access the neutron USERVARS, but a solution is in the pipe.
+   * Not all features of all components correspond to those from McStas 2.6, partly because not all
+     modifications have been ported from the 2.6 tree to the 3.0 tree.
+   * Especially the sample components may
+     - Create GPU-side segmentation faults etc. with big datasets / large statistic, this is a
+       targeted area of development before the actual release of 3.0. :-)
+     - Give simulation results that are systematically 'off' with respect to CPU results.
 
 
 Changes in McStas v.2.6, January 24th, 2020
