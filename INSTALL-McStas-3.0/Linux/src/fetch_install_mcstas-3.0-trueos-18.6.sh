@@ -10,7 +10,11 @@ WORK=`pwd`
 mkdir -p TMP
 cd TMP
 
+<<<<<<< HEAD:INSTALL-McStas-3.0/Linux/src/fetch_install_mcstas-3.0-trueos-18.6.sh
 fetch http://downloads.mcstas.org/mcstas-3.0/unix/mcstas-3.0-UNIX-src.tar.gz
+=======
+fetch http://downloads.mcstas.org/current/unix/mcstas-3.0-UNIX-src.tar.gz
+>>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-trueos-18.6.sh
 
 tar xzf mcstas-3.0-UNIX-src.tar.gz
 
