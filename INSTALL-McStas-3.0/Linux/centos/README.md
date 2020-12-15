@@ -1,4 +1,4 @@
-# Installing McStas 2.6 on CentOS 
+# Installing McStas 3.0 on CentOS 
 
 McStas provides a package repository for use with RedHat-based
 distributions, such as CentOS. To allow automatic update of your
