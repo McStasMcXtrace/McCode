@@ -1,4 +1,4 @@
-# Installing McStas 2.6 on Fedora 
+# Installing McStas 3.0 on Fedora 33
 
 ## Add the rpmfusion repo
 Follow the instructions at https://rpmfusion.org/Configuration
@@ -9,7 +9,7 @@ sudo yum install pgplot perl-PGPLOT perl-Tk perl-PDL perl python2
 ```
 
 ## Install the remaining packages manually
-* Downlooad the [all-rpms](http://download.mcstas.org/current/linux/mcstas-2.6-rpm64-Fedora29/all-rpms.tgz)
+* Download the [all-rpms](http://download.mcstas.org/current/linux/mcstas-3.0-rpm64-Fedora33/all-rpms.tgz)
 * Unpack the archive
 * Install the libtk-codetext-perl-0.3.4-2.noarch.rpm
 ```bash
@@ -18,22 +18,22 @@ sudo rpm -i libtk-codetext-perl-0.3.4-2.noarch.rpm
 * Afterwards you can install the wanted packages, i.e for McStas + python
 tools:
 ```bash
-sudo rpm -i mcstas-2.6-rpm64.rpm mcstas-comps-2.6-rpm64.rpm \
-mcstas-manuals-2.6-rpm64.rpm mcstas-miniconda3-2.6-rpm64.rpm \
-mcstas-tools-perl-cmdline-2.6-rpm64.rpm \
-mcstas-tools-python-mccodelib-2.6-rpm64.rpm \
-mcstas-tools-python-mcdisplay-mantid-2.6-rpm64.rpm \
-mcstas-tools-python-mcdisplay-pyqtgraph-2.6-rpm64.rpm \
-mcstas-tools-python-mcdisplay-webgl-2.6-rpm64.rpm \
-mcstas-tools-python-mcdoc-2.6-rpm64.rpm \
-mcstas-tools-python-mcgui-2.6-rpm64.rpm \
-mcstas-tools-python-mcplot-matplotlib-2.6-rpm64.rpm \
-mcstas-tools-python-mcplot-pyqtgraph-2.6-rpm64.rpm \
-mcstas-tools-python-mcrun-2.6-rpm64.rpm
+sudo rpm -i mcstas-3.0-rpm64.rpm mcstas-comps-3.0-rpm64.rpm \
+mcstas-manuals-3.0-rpm64.rpm mcstas-miniconda3-3.0-rpm64.rpm \
+mcstas-tools-perl-cmdline-3.0-rpm64.rpm \
+mcstas-tools-python-mccodelib-3.0-rpm64.rpm \
+mcstas-tools-python-mcdisplay-mantid-3.0-rpm64.rpm \
+mcstas-tools-python-mcdisplay-pyqtgraph-3.0-rpm64.rpm \
+mcstas-tools-python-mcdisplay-webgl-3.0-rpm64.rpm \
+mcstas-tools-python-mcdoc-3.0-rpm64.rpm \
+mcstas-tools-python-mcgui-3.0-rpm64.rpm \
+mcstas-tools-python-mcplot-matplotlib-3.0-rpm64.rpm \
+mcstas-tools-python-mcplot-pyqtgraph-3.0-rpm64.rpm \
+mcstas-tools-python-mcrun-3.0-rpm64.rpm
 ```
 * And add this extra package to also install the legacy perl based gui/graphics tools:
 ```bash
-sudo rpm -i mcstas-tools-perl-2.6-rpm64.rpm
+sudo rpm -i mcstas-tools-perl-3.0-rpm64.rpm
 ```
 * (there are also other packages available that are optional, but
   whose dependencies are not easy to resolve)
