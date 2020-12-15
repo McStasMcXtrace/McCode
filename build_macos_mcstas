@@ -123,7 +123,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1.tgz mcstas-$1
-    cp INSTALL-McStas/macOS/README.md dist
+    cp INSTALL-McStas-2.x/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
 else
