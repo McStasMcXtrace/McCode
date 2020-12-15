@@ -74,5 +74,5 @@ if [ "x$2" != "x" ]; then
   tar -tf $outfile
   gzip $outfile
   rm mcstas-${1}-UNIX-src
-  cp $WORK/INSTALL-McStas/Linux/src/README.md $WORK/dist
+  cp $WORK/INSTALL-McStas-3.0/Linux/src/README.md $WORK/dist
 fi

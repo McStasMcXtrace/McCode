@@ -83,7 +83,7 @@ if [ "x$2" != "x" ]; then
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
     cp Perl/*.msi dist/
-    cp $WORK/INSTALL-McStas/Windows/README.md dist/
+    cp $WORK/INSTALL-McStas-3.0/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
 fi
