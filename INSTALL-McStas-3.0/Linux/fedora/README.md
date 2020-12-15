@@ -9,7 +9,11 @@ sudo yum install pgplot perl-PGPLOT perl-Tk perl-PDL perl python2
 ```
 
 ## Install the remaining packages manually
+<<<<<<< HEAD
 * Download the [all-rpms](http://download.mcstas.org/mcstas-3.0/linux/fedora/all-rpms.tgz)
+=======
+* Download the [all-rpms](http://download.mcstas.org/current/linux/mcstas-3.0-rpm64-Fedora33/all-rpms.tgz)
+>>>>>>> b2c46b000... Put in dedicated folder structure
 * Unpack the archive
 * Install the libtk-codetext-perl-0.3.4-2.noarch.rpm
 ```bash
@@ -31,12 +35,19 @@ mcstas-tools-python-mcplot-matplotlib-3.0-rpm64.rpm \
 mcstas-tools-python-mcplot-pyqtgraph-3.0-rpm64.rpm \
 mcstas-tools-python-mcrun-3.0-rpm64.rpm
 ```
+<<<<<<< HEAD
 
 * Optionally you can install the mcstas-tools-perl pakage which provides the **legacy** perl based gui/graphics tools:
 ```bash
 sudo rpm -i mcstas-tools-perl-3.0-rpm64.rpm
 ```
 * Dependencies can likely be resolved via https://rmpfusion.org (untested)
+=======
+* And add this extra package to also install the legacy perl based gui/graphics tools:
+```bash
+sudo rpm -i mcstas-tools-perl-3.0-rpm64.rpm
+```
+>>>>>>> b2c46b000... Put in dedicated folder structure
 * (there are also other packages available that are optional, but
   whose dependencies are not easy to resolve)
 
