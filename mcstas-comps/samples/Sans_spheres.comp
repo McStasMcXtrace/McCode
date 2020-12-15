@@ -71,8 +71,6 @@ DECLARE
 %{
 double my_s_pre;
 double my_a_v;
-double q_v;
-double q;
 double shape;
 %}
 INITIALIZE
@@ -112,7 +110,7 @@ TRACE
   double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
-  double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz;
+  double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz,q;
   char   intersect=0;
 
   /* Intersection neutron trajectory / sample (sample surface) */
@@ -162,7 +160,8 @@ TRACE
     f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
 
     l_1 = v*t1;
-    p *= l_full*solid_angle/(4*PI)*my_s_pre*f*f*exp(-my_a_v*(l+l_1)/v);
+    double pmul=l_full*solid_angle/(4*PI)*my_s_pre*f*f*exp(-my_a_v*(l+l_1)/v);
+    p = p * pmul;
     SCATTER;
   }
 %}
