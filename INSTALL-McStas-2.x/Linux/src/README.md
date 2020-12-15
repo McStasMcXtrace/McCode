@@ -2,7 +2,7 @@
 
 * Download and build the McStas source code for Unix systems:
 ```bash
-wget http://downloads.mcstas.org/current/unix/mcstas-2.7-UNIX-src.tar.gz
+wget http://downloads.mcstas.org/mcstas-2.7/unix/mcstas-2.7-UNIX-src.tar.gz
 (or curl -O or fetch or...)
 ```
 * Unpack the "metapackage" tarball
