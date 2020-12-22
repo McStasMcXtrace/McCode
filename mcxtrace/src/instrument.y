@@ -20,8 +20,15 @@
 *
 *******************************************************************************/
 
+%{
+int yylex();
+int yyerror(char *s);
+int list_cat(struct List_header *, struct List_header *);
+int symtab_cat(struct List_header *, struct List_header *);
+%}
 
 %{
+  
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -101,6 +108,8 @@
 %token TOK_COPY       "COPY"    /* extended McCode grammar */
 %token TOK_SPLIT      "SPLIT"   /* extended McCode grammar */
 %token TOK_REMOVABLE  "REMOVABLE" /* extended McCode grammar with include */
+%token TOK_CPUONLY    "CPU"   /* extended McStas grammar with GPU-CPU support */
+%token TOK_NOACC      "NOACC"
 %token TOK_DEPENDENCY "DEPENDENCY"
 
 /*******************************************************************************
@@ -136,6 +145,8 @@
 %type <jumpname> jumpname
 %type <jumpcondition> jumpcondition
 %type <linenum> removable
+%type <linenum> cpuonly
+%type <linenum> noacc
 %%
 
 main:     TOK_GENERAL compdefs instrument
@@ -148,7 +159,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -157,13 +168,14 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare init
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-        c->share_code = $6;
-        c->decl_code = $7;
-        c->init_code = $8;
-        c->trace_code = $9;
-        c->save_code = $10;
-        c->finally_code = $11;
-        c->display_code = $12;
+	c->flag_noacc=$6;
+        c->share_code = $7;
+        c->decl_code = $8;
+        c->init_code = $9;
+        c->trace_code = $10;
+        c->save_code = $11;
+        c->finally_code = $12;
+        c->display_code = $13;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -179,7 +191,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare init
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency share declare initialize trace save finally display "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency noacc share declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -200,13 +212,15 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare init
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-          c->share_code = ($8->linenum ?  $8  : def->share_code);
-          c->decl_code  = ($9->linenum ?  $9  : def->decl_code);
-          c->init_code  = ($10->linenum ?  $10  : def->init_code);
-          c->trace_code = ($11->linenum ? $11 : def->trace_code);
-          c->save_code  = ($12->linenum ? $12 : def->save_code);
-          c->finally_code = ($13->linenum ? $13 : def->finally_code);
-          c->display_code = ($14->linenum ? $14 : def->display_code);
+	  c->flag_noacc=$8;
+	  
+          c->share_code = ($9->linenum ?  $9  : def->share_code);
+          c->decl_code  = ($10->linenum ?  $10  : def->decl_code);
+          c->init_code  = ($11->linenum ?  $11  : def->init_code);
+          c->trace_code = ($12->linenum ? $12 : def->trace_code);
+          c->save_code  = ($13->linenum ? $13 : def->save_code);
+          c->finally_code = ($14->linenum ? $14 : def->finally_code);
+          c->display_code = ($15->linenum ? $15 : def->display_code);
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
@@ -993,14 +1007,30 @@ removable:    /* empty */
       }
 ;
 
-component: removable split "COMPONENT" instname '=' instref
+
+cpuonly:    /* empty */
+      {
+        $$ = 0;
+      }
+    | "CPU"
+      {
+        $$ = 1;
+	strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+      }
+;
+
+component: removable cpuonly split "COMPONENT" instname '=' instref
       {
         struct comp_inst *comp;
 
-        myself_comp = comp = $6;
+        myself_comp = comp = $7;
 
-        comp->name  = $4;
-        comp->split = $2;
+        comp->name  = $5;
+	comp->split = $3;
+	comp->cpuonly = $2;
+	if (!comp->cpuonly) {
+	  comp->cpuonly = comp->def->flag_noacc;
+	}
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
         
@@ -1015,17 +1045,17 @@ component: removable split "COMPONENT" instname '=' instref
       {
         struct comp_inst *comp = myself_comp;
 
-        if ($8) comp->when  = $8;
+        if ($9) comp->when  = $9;
 
         palloc(comp->pos);
-        comp->pos->place           = $9.place;
-        comp->pos->place_rel       = $9.place_rel;
-        comp->pos->orientation     = $10.orientation;
+        comp->pos->place           = $10.place;
+        comp->pos->place_rel       = $10.place_rel;
+        comp->pos->orientation     = $11.orientation;
         comp->pos->orientation_rel =
-            $10.isdefault ? $9.place_rel : $10.orientation_rel;
+            $11.isdefault ? $10.place_rel : $11.orientation_rel;
 
-        if ($11) {
-          comp->group = $11;    /* component is part of an exclusive group */
+        if ($12) {
+          comp->group = $12;    /* component is part of an exclusive group */
           /* store first and last comp of group. Check if a SPLIT is inside */
           if (!comp->group->first_comp) {
              comp->group->first_comp       = comp->name;
@@ -1036,13 +1066,13 @@ component: removable split "COMPONENT" instname '=' instref
           if (comp->split)
             print_warn("WARNING: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
               "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
-              comp->name, comp->def->name, instr_current_filename, instr_current_line, $11->name,
+              comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name,
               comp->group->first_comp);
         }
-        if ($12->linenum)   comp->extend= $12;  /* EXTEND block*/
-        if (list_len($13))  comp->jump  = $13;
+        if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
+        if (list_len($14))  comp->jump  = $14;
 
-        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->def->name));
+        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
         if (!comp->removable) previous_comp = comp;
         $$ = comp;
@@ -1320,6 +1350,18 @@ dependency:
       strncat(instrument_definition->dependency, $2, 1024);
     }
 
+noacc:
+    {
+      /* Comp class should work on GPU */
+      $$ = 0;
+    }
+  | "NOACC" 
+    {
+      /* Comp class is CPU only */
+      $$ = 1;
+      strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+    }
+;
 /* C expressions used to give component actual parameters **********************
    Top-level comma (',') operator NOT allowed. */
 exp:      { $<linenum>$ = instr_current_line; } topexp
