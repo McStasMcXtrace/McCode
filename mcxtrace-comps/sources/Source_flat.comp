@@ -61,7 +61,8 @@ SHARE
 
 DECLARE
 %{
-  double pmul, srcArea;
+  double pmul;
+  double srcArea;
   int square;
   t_Table spectrum_T;
 %}
