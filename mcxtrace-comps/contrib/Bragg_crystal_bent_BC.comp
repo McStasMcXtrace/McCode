@@ -103,9 +103,14 @@ DECLARE
         t_Table m_t;
         t_Table f0_t;
     }prms;
-  double a2inv,b2inv,c2inv; /* 1/r^2 for physical ellipse */
-  double l_a2inv,l_b2inv,l_c2inv; /* 1/r^2 for lattice ellipse */
-  double cos_alpha0, sin_alpha0;
+  double a2inv;
+  double b2inv;
+  double c2inv; /* 1/r^2 for physical ellipse */
+  double l_a2inv;
+  double l_b2inv;
+  double l_c2inv; /* 1/r^2 for lattice ellipse */
+  double cos_alpha0;
+  double sin_alpha0;
 %}
 
 INITIALIZE

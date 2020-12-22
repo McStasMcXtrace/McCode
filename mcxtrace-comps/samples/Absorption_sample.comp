@@ -57,7 +57,8 @@ DECLARE
     double Z_A,rho,V;
     int E_c,l_c,mu_c;
   } prms_o,prms_i;
-  t_Table t_o,t_i;
+  t_Table t_o;
+  t_Table t_i;
 %}
 
 INITIALIZE
