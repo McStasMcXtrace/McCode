@@ -69,7 +69,8 @@ DECLARE
     t_Table T;
   } prms;
 
-  double spX,spY;
+  double spX;
+  double spY;
   int uniform_sampling;
 %}
 
