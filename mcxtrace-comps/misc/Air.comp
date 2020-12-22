@@ -77,10 +77,7 @@ OUTPUT PARAMETERS (shape)
 
 DECLARE
 %{
-    double shape;
-    double an[4]={12.2126, 3.1322, 2.0125, 1.1663}, ao[4]={3.0485, 2.2868, 1.5463, 0.867}, aar[4]={7.4845, 6.7723, 0.6539, 1.6442};
-    double bn[4]={0.0057, 9.8933, 28.9975, 0.5826}, bo[4]={13.2771, 5.7011, 0.3239, 32.9089}, bar[4]={0.9072, 14.8407, 43.8983, 33.3929};
-    double cn=-11.529, co=0.2508, car=1.4445;
+  int shape;
 %}
 
 INITIALIZE
@@ -117,6 +114,16 @@ TRACE
     double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
     double f0, solid_angle, sc_angle, kx_i, ky_i, kz_i, k, q, qx, qy, qz, polarization, Ptot_sc_unpolarized;
     char   intersect=0;
+    /*material constants for the constituent gases*/
+    double an[4]={12.2126, 3.1322, 2.0125, 1.1663};
+    double ao[4]={3.0485, 2.2868, 1.5463, 0.867};
+    double aar[4]={7.4845, 6.7723, 0.6539, 1.6442};
+    double bn[4]={0.0057, 9.8933, 28.9975, 0.5826};
+    double bo[4]={13.2771, 5.7011, 0.3239, 32.9089};
+    double bar[4]={0.9072, 14.8407, 43.8983, 33.3929};
+    double cn=-11.529;
+    double co=0.2508;
+    double car=1.4445;
 
     /* Intersection X_ray trajectory / sample (sample surface) */
     if (shape == 0)
