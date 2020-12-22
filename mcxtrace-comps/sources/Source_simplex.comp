@@ -49,7 +49,8 @@ SHARE
 
 DECLARE
 %{
-  double e,l;
+  double e;
+  double l;
   struct {
     double l0,dl;
     double s0,s1;

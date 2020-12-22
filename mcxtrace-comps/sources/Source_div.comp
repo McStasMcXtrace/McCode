@@ -66,7 +66,8 @@ SHARE
 
 DECLARE
 %{
-  double  p_init, dist;
+  double p_init;
+  double dist;
   struct {
     double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
     t_Table T;

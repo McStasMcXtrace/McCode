@@ -90,7 +90,8 @@ SHARE
 
 DECLARE
 %{
-  Rotation R_xray_gen,R_xray_geni;
+  Rotation R_xray_gen;
+  Rotation R_xray_geni;
   Coords O_xray_gen;
   struct {
     int Z;
@@ -101,13 +102,16 @@ DECLARE
     int linemin,linemax;
   } prms; 
   double p_continous;
-  double mu=0.2e-6;
+  double mu;
   double pmul_c;
 %}
 
 INITIALIZE
 %{
+  mu=0.2e-6;
+ 
   int status,ii;
+
   if (E0<=0){
     fprintf(stderr,"Error %s: Impinging electron energy (E0) must be >0, was %g\n",NAME_CURRENT_COMP, E0);
     exit(-1);
