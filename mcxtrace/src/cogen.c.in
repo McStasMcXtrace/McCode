@@ -836,9 +836,21 @@ int cogen_comp_section_class(
       cout("  printf(\"MCDISPLAY: component %s\\n\", _comp->_name);");
 
     // shared comp [section] code here
-    if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
+    //if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
     codeblock_out(code); // component definition code common to all instances, needs defines
-    if (!strcmp(section, "TRACE")) cout("}");
+    if (!strcmp(section, "TRACE")) {
+      cout("  /* Check for nan or inf particle parms */ ");
+      cout("  if(isnan(p)  ||  isinf(p)) ABSORB;");
+      cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
+      cout("  if(isnan(phi)  ||  isinf(phi)) ABSORB;");
+      cout("  if(isnan(kx) || isinf(vx)) ABSORB;");
+      cout("  if(isnan(ky) || isinf(vy)) ABSORB;");
+      cout("  if(isnan(ky) || isinf(vy)) ABSORB;");
+      cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
+      cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
+      cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
+      //cout("}");
+    }
 
     // EXTEND blocks written here, as component name switch, if any
     if (!strcmp("TRACE", section) && cnt_extend > 0) {
@@ -955,6 +967,7 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   }
   list_iterate_end(iter);
 
+  cout("  return 0;"); /* return a nullptr if case is not handled in the loop above */
   cout("}");
   cout("");
 }
@@ -1371,6 +1384,12 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cout("");
     cout("#ifdef OPENACC");
     cout("#  include <openacc.h>");
+    cout("#ifdef USE_MPI");
+    cout("int num_devices = acc_get_num_devices(acc_device_nvidia);");
+    cout("int my_device = mpi_node_rank % num_devices;");
+    cout("printf(\"Node %i should use device %i\\n\",mpi_node_rank,my_device);");
+    cout("#pragma acc set device_num(my_device) device_type(acc_device_nvidia)");
+    cout("#endif");
     // attach component instances on device
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
@@ -1436,12 +1455,14 @@ void def_trace_section(struct instr_def *instr)
   cout("/* (Similar defines are available in each comp trace but */");
   cout("/*  those are not enough to handle external libs etc. )  */");
   cout("#ifdef OPENACC");
+  cout("#ifndef MULTICORE");
   cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
   cout("#define sprintf(string,...) printf(__VA_ARGS__)");
   cout("#define printf(...) noprintf()");
   cout("#define exit(...) noprintf()");
   cout("#define strcmp(a,b) str_comp(a,b)");
   cout("#define strlen(a) str_len(a)");
+  cout("#endif");
   cout("#endif");
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
@@ -1486,12 +1507,14 @@ void undef_trace_section(struct instr_def *instr)
     coutf("#undef %s", statepars_all[i]);
 
   cout("#ifdef OPENACC");
+  cout("#ifndef MULTICORE");
   cout("#undef strlen");
   cout("#undef strcmp");
   cout("#undef exit");
   cout("#undef printf");
   cout("#undef sprintf");
   cout("#undef fprintf");
+  cout("#endif");
   cout("#endif");
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
@@ -1661,7 +1684,7 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("    for (" "Split_%s_counter = 0; "
                         "Split_%s_counter< SplitS_%s; "
                         "Split_%s_counter++) {",
-	    comp->name, comp->name, comp->name, comp->name);
+      comp->name, comp->name, comp->name, comp->name);
       coutf("      randstate_t randbackup = *_particle->randstate;");
       coutf("      *_particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      *_particle->randstate = randbackup;");
@@ -1690,7 +1713,7 @@ int cogen_raytrace(struct instr_def *instr)
       // WHEN
       if (comp->when) {
         char *exp=exp_tostring(comp->when);
-        coutf("      if (%s) // conditional WHEN execution", exp);
+        coutf("      if ((%s)) // conditional WHEN execution", exp);
         str_free(exp);
       }
       coutf("      class_%s_trace(&_%s_var, _particle);%s",
@@ -1794,7 +1817,9 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  loops = ceil((double)ncount/innerloop);");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
+  coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
+  coutf("  #endif");
   coutf("  #endif");
   coutf("  if (ncount>innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
@@ -1809,7 +1834,9 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("    /* if on GPU, re-nullify printf */");
   coutf("    #ifdef OPENACC");
+  coutf("    #ifndef MULTICORE");
   coutf("    #define printf(...) noprintf()");
+  coutf("    #endif");
   coutf("    #endif");
   coutf("");
   coutf("    #ifndef VECSIZE");
@@ -1823,18 +1850,25 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("      particleN._uid = pidx;");
   coutf("");
   coutf("      srandom(_hash(pidx + pidx*seed));");
+  coutf("      particle_uservar_init(_particle);");
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
   coutf("    seed = seed+innerloop;");
+  coutf("    mcncount += innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
+  coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
   coutf("  #endif");
-  coutf("  printf(\"\\n\");");
+  coutf("  #endif");
+  coutf("  MPI_MASTER(");
+  coutf("  printf(\"*** TRACE end *** \\n\");");
+  coutf("  );");
   coutf("} /* raytrace_all */");
   coutf("");
+  coutf("#endif //no-FUNNEL");
 
   return(warnings);
 } /* cogen_raytrace */
@@ -1887,67 +1921,82 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    innerloop = ncount;");
   coutf("  }");
   coutf("");
+  coutf("  // create particles struct and pointer arrays (same memory used by all batches)");
+  coutf("  _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
+  coutf("  _class_particle* pbuffer = malloc(innerloop*sizeof(_class_particle));");
+  coutf("  long livebatchsize = innerloop;");
+  coutf("");
 
   // batches
   coutf("  // outer loop / particle batches");
   coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
   coutf("    if (loops>1) fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
   coutf("");
-  coutf("    long livebatchsize = innerloop;");
-  coutf("");
 
   // init batch
-  coutf("    // create particles memory block and pointer array (buffer and sorted)");
-  coutf("    #ifdef OPENACC");
-  coutf("    _class_particle* particles = acc_malloc(livebatchsize*sizeof(_class_particle));");
-  coutf("    long* psorted = acc_malloc(livebatchsize*sizeof(long));");
-  coutf("    long* pbuffer = acc_malloc(livebatchsize*sizeof(long));");
-  coutf("    #pragma acc enter data create(particles[0:livebatchsize])");
-  coutf("    #pragma acc enter data create(psorted[0:livebatchsize])");
-  coutf("    #pragma acc enter data create(pbuffer[0:livebatchsize])");
-  coutf("    #else");
-  coutf("    _class_particle* particles = malloc(livebatchsize*sizeof(_class_particle));");
-  coutf("    long* psorted = malloc(livebatchsize*sizeof(long));");
-  coutf("    long* pbuffer = malloc(livebatchsize*sizeof(long));");
-  coutf("    #endif");
-  coutf("");
-  coutf("    // TODO: do we need a GPU data section for the above buffers here?");
-  coutf("");
-  coutf("    // set up, generate particles");
-  coutf("    #pragma acc parallel loop present(particles, psorted)");
+  coutf("    // init particles");
+  coutf("    #pragma acc parallel loop present(particles)");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
-  coutf("      psorted[pidx] = pidx;");
   coutf("      _class_particle* _particle = particles + pidx;");
   coutf("      _particle->_uid = pidx;");
   coutf("      srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro");
+  coutf("      particle_uservar_init(_particle);");
   coutf("    }");
   cout( "");
 
   // iterate batch through the component list
   cout("    // iterate components");
-  cout("");
+  int cpuonly_last=-1;
+  int first=1;
+  int do_split=0;
   liter = list_iterate(instr->complist);
+  printf("\n-----------------------------------------------------------\n");
+  printf("\nGenerating GPU/CPU -DFUNNEL layout:\n");
+  // iterate component list
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
+    if (comp->def->flag_noacc) {
+      printf("Component %s is NOACC, CPUONLY=%i\n",comp->name,comp->cpuonly);
+      printf("-> FUNNEL mode enabled, SPLIT within buffer.\n");
+    }
 
-    coutf("    //printf(\"livebatchsize: percent ld\\n\", livebatchsize);");
-    coutf("    livebatchsize = sort_absorb_last(particles, psorted, pbuffer, livebatchsize);");
+    if (!first && ((comp->cpuonly != cpuonly_last) || comp->split)) { // Terminate loop if we are shifting between processing units
+      coutf("    }");
+      if (comp->split) {
+        coutf("");
+        coutf("    // SPLIT with available livebatchsize ");
+        coutf("    long mult_%s;",comp->name);
+        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, innerloop, 1, &mult_%s);",comp->name);
+        coutf("    //printf(\"livebatchsize: %cld, split: %cld\\n\",  livebatchsize, mult);", '%', '%');
+      }
+      if (comp->split) {
+        printf("-> SPLIT within buffer at component %s\n",comp->name);
+	} else if (comp->cpuonly) {
+        printf("-> CPU section from component %s\n",comp->name);
+      } else {
+        printf("-> GPU kernel from component %s\n",comp->name);
+      }
+    }
+
+    if (first || (comp->cpuonly != cpuonly_last) || comp->split) {
+      coutf("");
+      if (comp->cpuonly == 0) {
+        coutf("    #pragma acc parallel loop present(particles)");
+      }
+      coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
+      coutf("      _class_particle* _particle = &particles[pidx];");
+      coutf("      _class_particle _particle_save;");
+    }
     coutf("");
-
-    coutf("    // %s", comp->name);
-    coutf("    #pragma acc parallel loop present(particles, psorted)");
-    coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-    coutf("      _class_particle* _particle = &particles[psorted[pidx]];");
-    coutf("      _class_particle _particle_save;");
+    coutf("      // %s", comp->name);
     coutf("      if (!ABSORBED) {");
-
     // coordinate transformations (wrt to PREVIOUS)
     coutf("        if (_%s_var._rotation_is_identity)", comp->name);
     coutf("          coords_get("
-      "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
-      "&x, &y, &z);", comp->name);
+    	"coords_add(coords_set(x,y,z), _%s_var._position_relative),"
+    	"&x, &y, &z);", comp->name);
     cout( "        else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
     cout( "        _particle_save = *_particle;");
@@ -2066,7 +2115,12 @@ cogen_header(struct instr_def *instr, char *output_name)
   if(instr->portable)
     cout("#define MC_PORTABLE");
 
-  /* particle definition */
+  /* Basic includes */
+  cout("");
+  cout("#include <string.h>");
+  cout("");
+
+  /* Math constants */
   cout("#define PI 3.14159265358979323846");
   cout("#ifndef M_PI");
   cout("#define M_PI PI");
@@ -2084,20 +2138,34 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#ifdef DISABLE_TRACE");
   cout("#undef MC_TRACE_ENABLED");
   cout("#endif");
-
-  // generate particle struct
   cout("");
+
+  /* McCode-specific typedefs */
+  cout("typedef double MCNUM;");
+  cout("typedef struct {MCNUM x, y, z;} Coords;");
+  cout("typedef MCNUM Rotation[3][3];");
+  cout("#define MCCODE_BASE_TYPES");
+  cout("");
+
   cout("#ifdef OPENACC");
   cout("#undef MC_TRACE_ENABLED");
   cout("#endif");
   cout("");
+
+  /* the max number of user variables*/
+  cout("#ifndef MC_NUSERVAR");
+  cout("#define MC_NUSERVAR 10");
+  cout("#endif");
+  cout("");
+
+  /* generate particle struct */
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
 #if MCCODE_PROJECT == 1   /* neutron */
   cout("  double vx,vy,vz; /* velocity [m/s] */");
   cout("  double sx,sy,sz; /* spin [0-1] */");
   cout("  int mcgravitation; /* gravity-state */");
-  cout("  int mcMagnet;    /* precession-state */");
+  cout("  void *mcMagnet;    /* precession-state */");
   cout("  int allow_backprop; /* allow backprop */");
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
