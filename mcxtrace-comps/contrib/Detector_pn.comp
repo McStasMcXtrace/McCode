@@ -52,7 +52,10 @@ SHARE
 
 DECLARE
 %{
-  double xmax,xmin,ymax,ymin;
+  double xmax;
+  double xmin;
+  double ymax;
+  double ymin;
 
   struct {
     int Z;

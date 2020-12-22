@@ -65,7 +65,8 @@ OUTPUT PARAMETERS (shape, prms, prmsp)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
 %{
-  double my_s_pre, shape;
+  double my_s_pre;
+  int shape;
   struct {
     int Z;
     double At, rho;
