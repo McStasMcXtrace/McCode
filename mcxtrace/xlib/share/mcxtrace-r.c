@@ -143,7 +143,7 @@ int inside_rectangle(double x, double y, double xwidth, double yheight)
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting lengths dl_in and dl_out
 *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int box_intersect(double *dl_in, double *dl_out,
                   double x, double y, double z,
                   double kx, double ky, double kz,
@@ -231,7 +231,7 @@ int box_intersect(double *dl_in, double *dl_out,
  *     and resulting times l0 and l1
  * Written by: EK 11.6.09 
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int cylinder_intersect(double *l0, double *l1, double x, double y, double z,
                    double kx, double ky, double kz, double r, double h)
 {
@@ -298,7 +298,7 @@ int cylinder_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting lengths l0 and l1 
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int sphere_intersect(double *l0, double *l1, double x, double y, double z,
                  double kx, double ky, double kz, double r)
 {
@@ -324,7 +324,7 @@ int sphere_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 when they are found with resulting lemngths l0 and l1.
  *****************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
     double kx, double ky, double kz, double a, double b, double c,
     Rotation Q)
@@ -386,7 +386,7 @@ int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found (i.e. line is parallel to the plane)
  * returns 1 or -1 when intersection length is positive and negative, respectively
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int plane_intersect(double *l, double x, double y, double z,
                  double kx, double ky, double kz, double nx, double ny, double nz, double wx, double wy, double wz)
 {
