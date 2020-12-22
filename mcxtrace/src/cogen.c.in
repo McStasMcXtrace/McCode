@@ -845,9 +845,9 @@ int cogen_comp_section_class(
       cout("  if(isnan(p)  ||  isinf(p)) ABSORB;");
       cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
       cout("  if(isnan(phi)  ||  isinf(phi)) ABSORB;");
-      cout("  if(isnan(kx) || isinf(vx)) ABSORB;");
-      cout("  if(isnan(ky) || isinf(vy)) ABSORB;");
-      cout("  if(isnan(ky) || isinf(vy)) ABSORB;");
+      cout("  if(isnan(kx) || isinf(kx)) ABSORB;");
+      cout("  if(isnan(ky) || isinf(ky)) ABSORB;");
+      cout("  if(isnan(kz) || isinf(kz)) ABSORB;");
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
@@ -2214,8 +2214,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
 
   cout("_class_particle mcgenstate(void);");
-  cout("_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,");
-  cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);");
+  cout("_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,");
+  cout("			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);");
   cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
   cout("#pragma acc declare create ( mcgravitation )");
@@ -2227,8 +2227,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void) {");
-  /*FIXME*/
-  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop);");
+  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop);");
   cout("  return(particle);");
   cout("}");
 
