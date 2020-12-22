@@ -84,6 +84,36 @@
 #define MCCODE_LIBENV @MCCODE_LIBENV@
 #endif
 
+int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
+   char* block_name, char* movetoblock_name);
+
+int get_codeblock_vars(struct code_block *code, List vars, List types,
+         char* block_name, char* movetoblock_name);
+
+int parse_curlybrackets_vector(char* string, double* values) {
+  char* s = string;
+  int vidx = 0;
+  char* r;
+  while(*s != '\0') {
+    // jump to a non-trivial position
+    if (*s == ' ' || *s == ',' || *s == '{') {
+      ++s;
+      continue;
+    }
+    if (*s == '}') return vidx;
+
+    // extract a value
+    double val = strtod(s, &r);
+    if (!values==NULL) values[vidx] = val;
+    ++vidx;
+
+    // iterate
+    if (*r == '\0') return vidx;
+    s = r + 1;
+  }
+  return vidx;
+}
+
 /* Functions for outputting code. */
 
 /* Handle for output file. */
@@ -97,7 +127,7 @@ char *instr_formal_type_names[] =
 
 /* 'char' and 'MCNUM' are for static array allocations */
 char *instr_formal_type_names_real[] =
-  { "long", "char*", "char", "MCNUM*", "MCNUM", "double"};
+  { "long", "char*", "char", "MCNUM", "MCNUM", "double"};
 
 /*******************************************************************************
 * Output a single line of code
@@ -437,12 +467,21 @@ int cogen_comp_declare(struct comp_inst *comp)
           nb_parameters++;
           if (c_formal->type == instr_type_custom) {
             coutf("  %s %s;", c_formal->type_custom, c_formal->id);
-	    int len = re_match("\\[",c_formal->id);
-	    if (len>=0) {
-	      c_formal->id[len]='\0';
-	    }
-          }
-          else if (c_formal->type != instr_type_string) {
+      int len = re_match("\\[",c_formal->id);
+      if (len>=0) {
+        c_formal->id[len]='\0';
+      }
+          } else if (c_formal->type ==instr_type_vector) {
+      struct Symtab_entry *entry;
+      entry = symtab_lookup(comp->setpar, c_formal->id);
+      char *val = exp_tostring(entry->val); /* replaced by instrument parameter when exists */
+      if (val[0] == '{') {
+        int vl = parse_curlybrackets_vector(val, NULL);
+        coutf("  %s %s[%i];", instr_formal_type_names_real[c_formal->type], c_formal->id, vl);
+      } else {
+        coutf("  %s* %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
+      }
+          } else if (c_formal->type != instr_type_string) {
             coutf("  %s %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
           }
           else  /* array parameter */ {
@@ -532,9 +571,14 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
           coutf("  _%s_var._parameters.%s[0]='\\0';", comp->name, par->id);
         }
         else if (par->type == instr_type_vector) {
-          if (val[0] == '{')
-            coutf("  _%s_var._parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
-          else
+          if (val[0] == '{') {
+      double values[100];
+      int vl = parse_curlybrackets_vector(val, values);
+      int i;
+      for (i=0; i<vl; i++) {
+        coutf("  _%s_var._parameters.%s[%i] = %g;", comp->name, par->id, i, values[i]);
+      }
+    } else
             coutf("  _%s_var._parameters.%s = %s; // default pointer allocation", comp->name, par->id, val);
         }
         else if (par->type == instr_type_symbol) {
