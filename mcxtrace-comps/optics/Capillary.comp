@@ -36,11 +36,13 @@ DEFINITION PARAMETERS (string coating="Be.txt", longw=1)
 SETTING PARAMETERS ( radius=1, length=0.2, R0=0, rtable=0, waviness=0)
 OUTPUT PARAMETERS(prms,prmsp)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
-
-DECLARE
+SHARE
 %{
 #include <complex.h>
-  %include "read_table-lib"
+%include "read_table-lib"
+%}
+DECLARE
+%{
   struct {
     int Z;
     double At, rho;

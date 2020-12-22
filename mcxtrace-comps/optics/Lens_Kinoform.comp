@@ -41,24 +41,12 @@ OUTPUT PARAMETERS (prms,mat_data)
 SHARE
 %{
   %include "read_table-lib"
-  struct KL_struct{
-    double *z_KL, *x_KL;
-  }; 
-  
-  struct data{
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-  };
-
-//  const double Re=2.8179402894e-5;     /* Thomson Scattering length [Angstrom] */
-//  const double Na=6.02214179e23;       /* Avogadro's number [atoms per gram-mole]*/ 
 %}
 
 DECLARE
 %{
-  struct KL_struct *prms;
-  struct data *mat_data;
+  struct { double *z_KL, *x_KL;} *prms;
+  struct { int Z; double Ar; double rho; double *E, *mu, *f; } *mat_data;
 %}   
   
 INITIALIZE
@@ -91,7 +79,7 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(TT.header,"Z","A[r]","rho",NULL);
-  mat_data=calloc(1,sizeof(struct data));
+  mat_data=calloc(1,sizeof(* mat_data ));
   if (!mat_data->Z) mat_data->Z=strtol(header_parsed[0],NULL,10);
   if (!mat_data->Ar) mat_data->Ar=strtod(header_parsed[1],NULL);
   if (!mat_data->rho) mat_data->rho=strtod(header_parsed[2],NULL);

@@ -46,7 +46,9 @@ OUTPUT PARAMETERS (a2inv,b2inv,focus)
 
 DECLARE
 %{
-  double a2inv,b2inv, focus;
+  double a2inv;
+  double b2inv;
+  double focus;
 %}
 
 INITIALIZE
