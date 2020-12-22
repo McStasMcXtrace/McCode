@@ -84,7 +84,14 @@ SHARE
 
 DECLARE
 %{
-  double a,b,c,M,Z0,Y0,xi,cost0;
+  double a;
+  double b;
+  double c;
+  double M;
+  double Z0;
+  double Y0;
+  double xi;
+  double cost0;
   struct {
      double *Q;
      double **R; //reflectivity

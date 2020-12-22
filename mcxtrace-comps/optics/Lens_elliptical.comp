@@ -173,8 +173,6 @@ typedef struct {
 DECLARE
 %{
   struct datastruct *prms;
-  const double Re=2.8179402894e-5;
-  const double Na=6.02214179e23;
 %} 
 
 
@@ -227,8 +225,7 @@ TRACE
   mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
   f=(1-E)*prms->f[i-1]+E*prms->f[i];
   
-  //delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(prms->Z+f)*1e24); 
-  delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(Z+f)*1e-24);
+  delta=((2.0*M_PI*RE)/pow(k,2))*((NA/prms->Ar)*prms->rho*(Z+f)*1e-24);
   beta=mu/(2.0*k*1e10);
   n=1.0-delta-beta;
   

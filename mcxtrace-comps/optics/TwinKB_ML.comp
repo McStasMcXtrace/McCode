@@ -81,8 +81,16 @@ SHARE
 
 DECLARE
 %{
-  double a,b,c,M,Z0,Y0,xi,cost0;
-  Rotation Q1,Q2;
+  double a;
+  double b;
+  double c;
+  double M;
+  double Z0;
+  double Y0;
+  double xi;
+  double cost0;
+  Rotation Q1;
+  Rotation Q2;
   t_Table ref_table;
 %}
 
