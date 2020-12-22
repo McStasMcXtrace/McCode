@@ -51,9 +51,9 @@ _class_particle mcsetstate(double x, double y, double z, double kx, double ky, d
   mcphoton.Ey = Ey;
   mcphoton.Ez = Ez;
   mcphoton.p  = p;
-  mcphoton.mcgravitation = mcgravitation;
+  /*mcphoton.mcgravitation = mcgravitation;
   mcphoton.mcMagnet = mcMagnet;
-  mcphoton.allow_backprop = mcallowbackprop;
+  mcphoton.allow_backprop = mcallowbackprop;*/
   mcphoton._uid       = 0;
   mcphoton._index     = 1;
   mcphoton._absorbed  = 0;
@@ -91,11 +91,12 @@ _class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, doubl
 /*******************************************************************************
 * mcgenstate: set default photon parameters 
 *******************************************************************************/
-#pragma acc routine seq
-_class_particle mcgenstate(void)
-{
-  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));
-}
+/*moved to generated code*/
+/*#pragma acc routine seq*/
+/*_class_particle mcgenstate(void)*/
+/*{*/
+/*  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));*/
+/*}*/
 
 /*******************************************************************************
 * mccoordschanges: old style rotation routine rot -> (x y z) ,(vx vy vz),(sx,sy,sz)
