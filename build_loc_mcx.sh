@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # rapid-build script for mcxtrace-kernel dev:
 
@@ -7,13 +7,21 @@ git submodule update
 
 WORK=`pwd`
 
-export MCINSTALL_PREFIX=$HOME/McXtrace
+export MCINSTALL_PREFIX=$HOME
 export CC=gcc
 export FC=gfortran
 
-if [[ -d $HOME/McXtrace/mcxtrace/3.0-dev ]]
+NUM_CPU=`grep CPU /proc/cpuinfo|wc -l`
+
+VERSION="3.0-dev"
+if [ "x$1" != "x" ]
 then
-    rm -rf $HOME/McXtrace/mcxtrace/3.0-dev/*
+        VERSION=$1
+fi
+
+if [ -d $MCINSTAL_PREFIX/mcxtrace/$VERSION ]
+then
+    mv  $MCINSTALL_PREFIX/mcxtrace/$VERSION $MCINSTALL_PREFIX/mcxtrace/${VERSION}.bak
 fi
 
 ./mkdist mcxtrace 3.0-dev "" "" deb64 "" -- justinst
@@ -28,5 +36,5 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib 3.0-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcxtrace/3.0-dev/bin/
 
-# Ensure we are configured for 10 node MPI runs
-sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcxtrace/3.0-dev/tools/Python/mccodelib/mccode_config.py
+# Ensure we are configured for 4 node MPI runs
+sed -i s/\'${NUM_CPU}\'/\'10\'/g $MCINSTALL_PREFIX/mcxtrace/3.0-dev/tools/Python/mccodelib/mccode_config.py
