@@ -92,7 +92,6 @@ DECLARE
         t_Table m_t;
         t_Table f0_t;
     }prms;
-    
 %}
 
 INITIALIZE

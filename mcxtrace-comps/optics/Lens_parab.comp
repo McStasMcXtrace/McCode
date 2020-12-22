@@ -200,7 +200,8 @@ SHARE
 DECLARE
 %{
   int Z;
-  double Ar, rho;
+  double Ar;
+  double rho;
   t_Table matT;
 %} 
 
