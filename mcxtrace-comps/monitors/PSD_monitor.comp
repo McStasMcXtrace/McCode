@@ -59,9 +59,9 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 
 DECLARE
 %{
-  double **PSD_N;
-  double **PSD_p;
-  double **PSD_p2;
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
 
 INITIALIZE
@@ -78,29 +78,10 @@ INITIALIZE
         NAME_CURRENT_COMP);
     exit(0);
   }
-  if(!radius){
-    p1=calloc(nx*ny,sizeof(double));
-    p2=calloc(nx*ny,sizeof(double));
-    p3=calloc(nx*ny,sizeof(double));
 
-    PSD_N=calloc(nx,sizeof(double *));
-    PSD_p=calloc(nx,sizeof(double *));
-    PSD_p2=calloc(nx,sizeof(double *));
-
-    for (i=0; i<nx; i++){
-      PSD_N[i]=&(p1[i*ny]);//calloc(ny,sizeof(double));
-      PSD_p[i]=&(p2[i*ny]);//calloc(ny,sizeof(double));
-      PSD_p2[i]=&(p3[i*ny]);//calloc(ny,sizeof(double));
-    }
-  }else{
-    PSD_N=calloc(1,sizeof(double *));
-    PSD_p=calloc(1,sizeof(double *));
-    PSD_p2=calloc(1,sizeof(double *));
-    *PSD_N=calloc(nr,sizeof(double));
-    *PSD_p=calloc(nr,sizeof(double));
-    *PSD_p2=calloc(nr,sizeof(double));
-  }
-
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
 %}
 
 TRACE
@@ -108,26 +89,18 @@ TRACE
   int i,j;
 
   PROP_Z0;
-  if (!radius){
-    if (x>xmin && x<xmax && y>ymin && y<ymax)
-    {
-      i = floor((x - xmin)*nx/(xmax - xmin));
-      j = floor((y - ymin)*ny/(ymax - ymin));
-      PSD_N[i][j]++;
-      PSD_p[i][j] += p;
-      PSD_p2[i][j] += p*p;
-      SCATTER;
-    }
-  }else{
-    double r=sqrt(x*x+y*y);
-    if (r<radius){
-      i = floor(r*nr/radius);
-      PSD_N[0][i]++;
-      PSD_p[0][i] += p;
-      PSD_p2[0][i] += p*p;
-      SCATTER;
-    }
+  if (x>xmin && x<xmax && y>ymin && y<ymax){
+    i = floor((x - xmin)*nx/(xmax - xmin));
+    j = floor((y - ymin)*ny/(ymax - ymin));
+#pragma acc atomic 
+    PSD_N[i][j] = PSD_N[i][j] +1;
+#pragma acc atomic 
+    PSD_p[i][j] = PSD_p[i][j] + p;
+#pragma acc atomic 
+    PSD_p2[i][j] = PSD_p2[i][j] + p*p;
+    SCATTER;
   }
+  
   if (restore_xray) {
     RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
   }
@@ -135,46 +108,36 @@ TRACE
 
 SAVE
 %{
-  if(!radius){
-    if(nx==1 && ny==1){
-      DETECTOR_OUT_0D(NAME_CURRENT_COMP, PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
-    }else if(nx==1){
-      DETECTOR_OUT_1D(
-          "PSD_monitor","Y Position[m]", "Intensity", "Y",
-          ymin,ymax,ny,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
-    }else if (ny==1){
-      DETECTOR_OUT_1D(
-          "PSD_monitor","X Position[m]", "Intensity", "X",
-          xmin,xmax,nx,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
-    }else{
-      DETECTOR_OUT_2D(
-          "PSD monitor",
-          "X position [m]",
-          "Y position [m]",
-          xmin, xmax, ymin, ymax,
-          nx, ny,
-          *PSD_N,*PSD_p,*PSD_p2,
-          filename);
-    }
-  }else{
+  if(nx==1 && ny==1){
+    DETECTOR_OUT_0D(NAME_CURRENT_COMP, PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
+  }else if(nx==1){
     DETECTOR_OUT_1D(
-        "PSD_monitor","Radial Position[m]", "Intensity", "R",
-        0,radius,nr,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+        "PSD_monitor","Y Position[m]", "Intensity", "Y",
+        ymin,ymax,ny,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+  }else if (ny==1){
+    DETECTOR_OUT_1D(
+        "PSD_monitor","X Position[m]", "Intensity", "X",
+        xmin,xmax,nx,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+  }else{
+    DETECTOR_OUT_2D(
+        "PSD monitor",
+        "X position [m]",
+        "Y position [m]",
+        xmin, xmax, ymin, ymax,
+        nx, ny,
+        *PSD_N,*PSD_p,*PSD_p2,
+        filename);
   }
 %}
 
 FINALLY
 %{
-   free(PSD_N[0]);
-   free(PSD_N);
-   free(PSD_p[0]);
-   free(PSD_p);
-   free(PSD_p2[0]);
-   free(PSD_p2);
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
 %}
 MCDISPLAY
 %{
-
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

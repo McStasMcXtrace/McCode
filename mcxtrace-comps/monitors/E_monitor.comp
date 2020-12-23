@@ -50,39 +50,39 @@
 *******************************************************************************/
 
 DEFINE COMPONENT E_monitor
-DEFINITION PARAMETERS (nE=20, string filename=0)
-SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nE=20, string filename="", xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
   xwidth=0, yheight=0, Emin, Emax, restore_xray=0)
 OUTPUT PARAMETERS (E_N, E_p, E_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
 %{
-    double E_N[nE];
-    double E_p[nE], E_p2[nE];
+  DArray1d E_N;
+  DArray1d E_p;
+  DArray1d E_p2;
 %}
+
 INITIALIZE
-  %{
+%{
     int i;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("E_monitor: %s: Null detection area !\n"
+            printf("E_monitor (%s): Null detection area !\n"
                    "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
       exit(0);
     }
 
-    for (i=0; i<nE; i++)
-    {
-      E_N[i] = 0;
-      E_p[i] = 0;
-      E_p2[i] = 0;
-    }
-  %}
+  E_N = create_darr1d(nE);
+  E_p = create_darr1d(nE);
+  E_p2 = create_darr1d(nE);
+%}
+
 TRACE
-  %{
+%{
     int i;
     double E;
 
@@ -94,18 +94,22 @@ TRACE
       i = floor((E-Emin)*nE/(Emax-Emin));
       if(i >= 0 && i < nE)
       {
-        E_N[i]++;
-        E_p[i] += p;
-        E_p2[i] += p*p;
+#pragma acc atomic
+        E_N[i] = E_N[i] + 1;
+#pragma acc atomic
+        E_p[i] = E_p[i] + p;
+#pragma acc atomic
+        E_p2[i] = E_p2[i] + p*p;
         SCATTER;
       }
     }
     if (restore_xray) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  %}
+%}
+
 SAVE
-  %{
+%{
     DETECTOR_OUT_1D(
         "Energy monitor",
         "Energy [keV]",
@@ -113,11 +117,10 @@ SAVE
         "E", Emin, Emax, nE,
         &E_N[0],&E_p[0],&E_p2[0],
         filename);
-  %}
+%}
 
 MCDISPLAY
 %{
-  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,
