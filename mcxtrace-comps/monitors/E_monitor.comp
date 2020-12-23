@@ -28,21 +28,21 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* Emin:     Minimum energy to detect (keV)
-* Emax:     Maximum energy to detect (keV)
-* nE:       Number of energy channels (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xmin: [m]    Lower x bound of detector opening.
+* xmax: [m]    Upper x bound of detector opening.
+* ymin: [m]    Lower y bound of detector opening.
+* ymax: [m]    Upper y bound of detector opening.
+* xwidth: [m]  Width of detector. Overrides xmin,xmax.
+* yheight: [m] Height of detector. Overrides ymin,ymax.
+* Emin: [keV]  Minimum energy to detect.
+* Emax: [keV]  Maximum energy to detect.
+* nE: [m]      Number of energy channels.
+* filename: [str]  Name of file in which to store the detector image.
+* restore_xray: [ ]If set, the monitor does not influence the x-ray state.
 *
 * OUTPUT PARAMETERS:
 *
-* E_N:      Array of x.ray counts
+* E_N:      Array of x-ray counts
 * E_p:      Array of x-ray weight counts
 * E_p2:     Array of second moments
 *
