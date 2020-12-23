@@ -8,7 +8,7 @@
 * Component: Bending_magnet
 *
 * %I
-* Written by: Erik Knudsen
+* Written by: Erik B. Knudsen
 * Date: May, 2013.
 * Version: 1.0
 * Origin: DTU Physics
@@ -21,7 +21,6 @@
 *
 * %P
 * Input Parameters:
-* gamma: [ ] Gamma parameter of the Bending Magnet
 * Ee: [GeV] Storage ring electron energy (typically a few GeV)
 * Ie: [A]   Ring current
 * tbunch: [s] Bunch length. 0 means continous source.
