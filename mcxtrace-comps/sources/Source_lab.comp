@@ -57,19 +57,22 @@
 *************************************************************************/
 
 DEFINE COMPONENT Source_lab
-DEFINITION PARAMETERS (string material_datafile="Cu.txt")
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (width=1e-3, height=1e-3, thickness=100e-6, E0=20, Emax=0, Emin=1, focus_xw=5e-3, focus_yh=5e-3,
-        take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1)
+        take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1,
+        string material_datafile="Cu.txt")
 OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, prms,pmul_c,mu,p_continous)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-    
+/*possibly this should be in TRACE*/
+#ifndef SOURCE_LAB_MAT_DATA
+#define SOURCE_LAB_MAT_DATA
   /*here are some material data- currently only for Cu, Mo and W*/
-  struct xray_em_data{
-    int Z;/*atom number*/
+  const struct xray_em_data{
+    int _Z;/*atom number*/
     double Ek;/*ionazation energy*/
     double w_k;/*flourescence yield*/
     int linec;
@@ -85,7 +88,7 @@ SHARE
     {0,0.0,0.0,0,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}}
   };
   const double BKRAMER=2e-6; /*photons /keV /electron*/
-
+#endif
 %}
 
 DECLARE
@@ -93,14 +96,15 @@ DECLARE
   Rotation R_xray_gen;
   Rotation R_xray_geni;
   Coords O_xray_gen;
-  struct {
-    int Z;
-    double At,rho;
-    t_Table T;
-    struct xray_em_data *em_p;
-    double Icont,Ichar;
-    int linemin,linemax;
-  } prms; 
+  int Z;
+  double At;
+  double rho;
+  t_Table T;
+  struct xray_em_data *em_p;
+  double Icont;
+  double Ichar;
+  int linemin;
+  int linemax;
   double p_continous;
   double mu;
   double pmul_c;
@@ -128,62 +132,62 @@ INITIALIZE
     exit(-1);
   }
  
-  if ( (status=Table_Read(&(prms.T),material_datafile,0))==-1){
+  if ( (status=Table_Read(&(T),material_datafile,0))==-1){
     fprintf(stderr,"Error %s: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material_datafile?material_datafile:"");
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-  if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-  if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-  if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+  if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+  if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+  if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
   /*use the atom number to get at the right data structure*/  
-  prms.em_p=&(xray_mat_data[0]);
-  while (prms.Z!=prms.em_p->Z){
-    prms.em_p++;
-    if ((prms.em_p->Z)==0){
-      fprintf(stderr,"Error: %s (Z=%d) anode not implemented yet. Please contact the McXtrace team to fix this. Aborting.\n",material_datafile,prms.Z);
+  em_p=&(xray_mat_data[0]);
+  while (Z!=em_p->_Z){
+    em_p++;
+    if ((em_p->_Z)==0){
+      fprintf(stderr,"Error: %s (Z=%d) anode not implemented yet. Please contact the McXtrace team to fix this. Aborting.\n",material_datafile,Z);
       exit(-1);
     }
   }
   
   /*Integrate the continuous spectrum and the characteristic so as to get the relative intenisities right*/
-  prms.Icont=tube_current/CELE*BKRAMER*prms.Z*(E0*log(Emax)-E0*log(Emin) - Emax + Emin);
+  Icont=tube_current/CELE*BKRAMER*Z*(E0*log(Emax)-E0*log(Emin) - Emax + Emin);
   /*check if E0 >Ek. If not, no characteristic emission can take place*/
-  if (E0>prms.em_p->Ek){
-    double Bk=1.2e-5*pow(prms.em_p->Ek,1.67)*exp(-0.077*prms.Z);
-    prms.Ichar=tube_current/CELE*4*M_PI*(E0/prms.em_p->Ek-1)*Bk;
+  if (E0>em_p->Ek){
+    double Bk=1.2e-5*pow(em_p->Ek,1.67)*exp(-0.077*Z);
+    Ichar=tube_current/CELE*4*M_PI*(E0/em_p->Ek-1)*Bk;
     double Ichar_tot=0;
     int linec=0;
-    prms.linemin=0;
-    prms.linemax=prms.em_p->linec;
-    for (ii=0;ii<prms.em_p->linec;ii++){
+    linemin=0;
+    linemax=em_p->linec;
+    for (ii=0;ii<em_p->linec;ii++){
       /*if the interval [Emin,Emax] contains 5 sigma of the characteristic peak - use full peak.*/
-      if (Emin>prms.em_p->e[ii]+5*prms.em_p->w[ii] ){
+      if (Emin>em_p->e[ii]+5*em_p->w[ii] ){
         /*way below of energy limit - do not use.*/
-        prms.linemin=ii;
-      }else if ( Emax<prms.em_p->e[ii]-5*prms.em_p->w[ii]){
+        linemin=ii;
+      }else if ( Emax<em_p->e[ii]-5*em_p->w[ii]){
         /*way above of energy limit - do not use.*/
-        prms.linemax= prms.linemax<ii?prms.linemax:ii;
+        linemax= linemax<ii?linemax:ii;
       }else{
         linec++;
       }
-      if(Emax>prms.em_p->e[ii]+5*prms.em_p->w[ii] && Emin<prms.em_p->e[ii]-5*prms.em_p->w[ii]){
-        Ichar_tot+=prms.em_p->i[ii];
+      if(Emax>em_p->e[ii]+5*em_p->w[ii] && Emin<em_p->e[ii]-5*em_p->w[ii]){
+        Ichar_tot+=em_p->i[ii];
       }else{
         if(!lorentzian){
 	  /*We only partially use the peak - so update the relative intensity to reflect that*/
-          Ichar_tot+=prms.em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-prms.em_p->e[ii])/prms.em_p->w[ii]) - erf(M_SQRT1_2*(Emin-prms.em_p->e[ii])/prms.em_p->w[ii]) );
-          prms.em_p->i[ii]= prms.em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-prms.em_p->e[ii])/prms.em_p->w[ii]) - erf(M_SQRT1_2*(Emin-prms.em_p->e[ii])/prms.em_p->w[ii]) );
+          Ichar_tot+=em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-em_p->e[ii])/em_p->w[ii]) - erf(M_SQRT1_2*(Emin-em_p->e[ii])/em_p->w[ii]) );
+          em_p->i[ii]= em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-em_p->e[ii])/em_p->w[ii]) - erf(M_SQRT1_2*(Emin-em_p->e[ii])/em_p->w[ii]) );
         }else{
 	  /* 1/pi atan(2x/w)) is integrated lorentzian of fwhm w, MHM, April 2015 */
-          Ichar_tot+=prms.em_p->i[ii]*(1.0/M_PI)*( atan(2*(Emax-prms.em_p->e[ii])/prms.em_p->w[ii]) - atan(2*(Emin-prms.em_p->e[ii])/prms.em_p->w[ii]) );
+          Ichar_tot+=em_p->i[ii]*(1.0/M_PI)*( atan(2*(Emax-em_p->e[ii])/em_p->w[ii]) - atan(2*(Emin-em_p->e[ii])/em_p->w[ii]) );
         }
       }
     }
 
-    p_continous=prms.Icont/(prms.Ichar*Ichar_tot+prms.Icont);
-    printf("Bk,Ico,Ich,Icht,p_c=%g %g %g %g %g\n",Bk,prms.Icont,prms.Ichar,Ichar_tot,p_continous);
+    p_continous=Icont/(Ichar*Ichar_tot+Icont);
+    printf("Bk,Ico,Ich,Icht,p_c=%g %g %g %g %g\n",Bk,Icont,Ichar,Ichar_tot,p_continous);
   }else{
     /*characteristic K-emission is not possible*/
     p_continous=1;
@@ -209,11 +213,11 @@ TRACE
   double px,py,pz; 
   Coords P;
 
-  /* transform initial coords to ones relative to the exit window which is our reference point*/
+  /* transform initial coords to ones relative to the exit window which is centered on our optical axis*/
   P=coords_set(x1,y1,z1);
   P=coords_add(rot_apply(R_xray_gen,P),O_xray_gen);
   coords_get(P,&x,&y,&z);
-
+  //this should be the same as the above, no?
   //mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1, 0,0,0, 0,0,0);
 
   /*set a scatter pt at the generation pt*/
@@ -237,23 +241,23 @@ TRACE
     /*bremsstrahlung*/
     e=rand01()*(Emax-Emin)+Emin;
     k=e*E2K;
-    pmul=tube_current/CELE*BKRAMER*prms.Z*(E0/e-1);
+    pmul=tube_current/CELE*BKRAMER*Z*(E0/e-1);
     /*correct for not having the full E-window*/
     pmul*=(Emax-Emin)/E0;
     /*correct for monte-carlo statistics*/
     pmul*=p_continous/frac;
   }else{
-    const struct xray_em_data *pt=prms.em_p;
+    const struct xray_em_data *pt=em_p;
     /*characteristic radiation*/
     /*first pick a possible line*/
-    r=rand01()*(prms.linemax-prms.linemin) + prms.linemin;
+    r=rand01()*(linemax-linemin) + linemin;
     int lineno=(int)floor(r);
     if (lineno==pt->linec) {
       lineno--;/*we might get overflow*/
     }
 
     if(!lorentzian){
-      pmul=pt->i[lineno]*prms.Ichar;
+      pmul=pt->i[lineno]*Ichar;
       e=(randnorm()*pt->w[lineno]+pt->e[lineno]);
       /*this can be very inefficient*/
       while (e<Emin || e>Emax){
@@ -263,7 +267,7 @@ TRACE
       /* compute upper and lower random range to map onto energy bounds such that a*tan(u)+b = energy. Note -0.5<u<0.5 */
       double umin=atan(2*(Emin-pt->e[lineno])/pt->w[lineno])/M_PI;
       double umax=atan(2*(Emax-pt->e[lineno])/pt->w[lineno])/M_PI;
-      pmul=pt->i[lineno]*prms.Ichar*(umax-umin); /* weight intensity for partial line strength */
+      pmul=pt->i[lineno]*Ichar*(umax-umin); /* weight intensity for partial line strength */
       e=tan(((umax-umin)*rand01()+umin)*M_PI)*pt->w[lineno]/2+pt->e[lineno];
     }
     k=E2K*e;
@@ -294,9 +298,9 @@ TRACE
     if(l0<0){
     }
   }
-  mu_abs=Table_Value(prms.T, k*K2E, 5)*prms.rho*1e2; /*mu_abs in m^-1*/
+  mu_abs=Table_Value(T, k*K2E, 5)*rho*1e2; /*mu_abs in m^-1*/
   p*=exp(-l0*mu_abs);
-  //printf("%g %g %g %g\n",k*K2E,mu_abs,exp(-l0*mu_abs),Table_Value(prms.T, k*K2E, 5) );
+  //printf("%g %g %g %g\n",k*K2E,mu_abs,exp(-l0*mu_abs),Table_Value(T, k*K2E, 5) );
   /*set a random phase - and propagate to the exit window*/
   phi=rand01()*2*M_PI;
 %}
@@ -313,58 +317,58 @@ MCDISPLAY
   height_2=height/2.0;
   x1=-width_2;y1=0;z1=-height_2;
   x2=-width_2;y2=0;z2= height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x1,y1,z1,x2,y2,z2);
-
-  x1=width_2;y1=0;z1=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x2,y2,z2,x1,y1,z1);
-  
-  x2=width_2;y2=0;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x1,y1,z1,x2,y2,z2);
-
-  x1=-width_2;y1=0;z1=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x2,y2,z2,x1,y1,z1);
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x1,y1,z1,x2,y2,z2);*/
+/**/
+/*  x1=width_2;y1=0;z1=height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x2,y2,z2,x1,y1,z1);*/
+/*  */
+/*  x2=width_2;y2=0;z2=-height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x1,y1,z1,x2,y2,z2);*/
+/**/
+/*  x1=-width_2;y1=0;z1=-height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x2,y2,z2,x1,y1,z1);*/
 
   /*this is the mean penetration depth of electron that get converted to x-rays*/  
-  x1=-width_2;y1=-mu;z1=-height_2;
-  x2=-width_2;y2=-mu;z2= height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=width_2;y1=-mu;z1=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  dashed_line(x2,y2,z2,x1,y1,z1,5);
-  x2= width_2;y2=-mu;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=-width_2;y1=-mu;z1=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  dashed_line(x2,y2,z2,x1,y1,z1,5);
-  
-  x1=-width_2;y1=-mu;z1=-height_2;
-  x2=-width_2;y2=0;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x2,y2,z2,x1,y1,z1);
-  x1=width_2;y1=-mu;z1=-height_2;
-  x2=width_2;y2=0;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x2,y2,z2,x1,y1,z1);
-  x1=-width_2;y1=-mu;z1=height_2;
-  x2=-width_2;y2=0;z2=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x2,y2,z2,x1,y1,z1);
-  x1=width_2;y1=-mu;z1=height_2;
-  x2=width_2;y2=0;z2=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
-  line(x2,y2,z2,x1,y1,z1);
+/*  x1=-width_2;y1=-mu;z1=-height_2;*/
+/*  x2=-width_2;y2=-mu;z2= height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  dashed_line(x1,y1,z1,x2,y2,z2,5);*/
+/*  x1=width_2;y1=-mu;z1=height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  dashed_line(x2,y2,z2,x1,y1,z1,5);*/
+/*  x2= width_2;y2=-mu;z2=-height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  dashed_line(x1,y1,z1,x2,y2,z2,5);*/
+/*  x1=-width_2;y1=-mu;z1=-height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  dashed_line(x2,y2,z2,x1,y1,z1,5);*/
+/*  */
+/*  x1=-width_2;y1=-mu;z1=-height_2;*/
+/*  x2=-width_2;y2=0;z2=-height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x2,y2,z2,x1,y1,z1);*/
+/*  x1=width_2;y1=-mu;z1=-height_2;*/
+/*  x2=width_2;y2=0;z2=-height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x2,y2,z2,x1,y1,z1);*/
+/*  x1=-width_2;y1=-mu;z1=height_2;*/
+/*  x2=-width_2;y2=0;z2=height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x2,y2,z2,x1,y1,z1);*/
+/*  x1=width_2;y1=-mu;z1=height_2;*/
+/*  x2=width_2;y2=0;z2=height_2;*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);*/
+/*  line(x2,y2,z2,x1,y1,z1);*/
 
 
   /*now draw "exit" window*/
