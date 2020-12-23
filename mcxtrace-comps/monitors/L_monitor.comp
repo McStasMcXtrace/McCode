@@ -27,22 +27,22 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* Lmin:     Minimum wavelength to detect (AA)
-* Lmax:     Maximum wavelength to detect (AA)
-* nL:       Number of wavelength channels (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the x-ray state (1)
+* xmin: [m]    Lower x bound of detector opening.
+* xmax: [m]    Upper x bound of detector opening.
+* ymin: [m]    Lower y bound of detector opening.
+* ymax: [m]    Upper y bound of detector opening.
+* xwidth: [m]  Width of detector. Overrides xmin,xmax.
+* yheight: [m] Height of detector. Overrides ymin,ymax.
+* Lmin: [AA]   Minimum wavelength to detect.
+* Lmax: [AA]   Maximum wavelength to detect.
+* nL: [m]      Number of wavelength channels.
+* filename: [str]  Name of file in which to store the detector image.
+* restore_xray: [ ]If set, the monitor does not influence the x-ray state.
 *
 * OUTPUT PARAMETERS:
 *
-* L_N:      Array of xray counts
-* L_p:      Array of xray weight counts
+* L_N:      Array of x-ray counts
+* L_p:      Array of x-ray weight counts
 * L_p2:     Array of second moments
 *
 * %E
