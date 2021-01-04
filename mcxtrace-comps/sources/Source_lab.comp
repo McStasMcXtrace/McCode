@@ -59,8 +59,8 @@
 DEFINE COMPONENT Source_lab
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (width=1e-3, height=1e-3, thickness=100e-6, E0=20, Emax=0, Emin=1, focus_xw=5e-3, focus_yh=5e-3,
-        take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1,
-        string material_datafile="Cu.txt")
+    take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1, xwidth=0, yheight=0,
+    string material_datafile="Cu.txt")
 OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, prms,pmul_c,mu,p_continous)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -217,8 +217,6 @@ TRACE
   P=coords_set(x1,y1,z1);
   P=coords_add(rot_apply(R_xray_gen,P),O_xray_gen);
   coords_get(P,&x,&y,&z);
-  //this should be the same as the above, no?
-  //mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1, 0,0,0, 0,0,0);
 
   /*set a scatter pt at the generation pt*/
   //x=x1;y=y1;z=z1;
@@ -281,28 +279,29 @@ TRACE
   /*set the x-ray weight to whatever we computed just before and correct for only sampling the exit window, and correct for number of issued photons*/
   p=pmul*pmul_c;
     
-  double mu_abs,l0;  
+
   int ie;
   /*Correct for absorption*/
-  if (take_off<0){
-    double px,py,pz,nx,ny,nz;
-    coords_get(rot_apply(R_xray_gen,coords_set(0,1,0)),&nx,&ny,&nz);
-    coords_get(rot_apply(R_xray_gen,coords_set(0,-thickness,0)),&px,&py,&pz);
-    /*this means we exit through the bottom of the anode slab*/
-    ie=plane_intersect(&l0,x,y,z,kx,ky,kz,nx,ny,nz,px,py,pz);
-  }else{
-    double nx,ny,nz;
-    coords_get(rot_apply(R_xray_gen,coords_set(0,1,0)),&nx,&ny,&nz);
-    /*exit through top of anode slab*/
-    ie=plane_intersect(&l0,x,y,z,kx,ky,kz,nx,ny,nz,0,0,0);
-    if(l0<0){
-    }
+  double mu_abs,l0,l1,lx,ly,lz,klx,kly,klz,xw,yh;
+  l0=0;l1=0;
+  /*if dimensions are set the anode has a limited size - otherwise use a
+    practically infinite slab*/
+  if(!xwidth) xw=FLT_MAX;
+  if(!yheight) yh=FLT_MAX;
+  coords_get(rot_apply(R_xray_geni,coords_set(x,y,z)),&lx,&ly,&lz);
+  coords_get(rot_apply(R_xray_geni,coords_set(kx,ky,kz)),&klx,&kly,&klz);
+  /*find path length inside anode material*/
+  ie=box_intersect(&l0,&l1,lx,ly+thickness/2.0,lz,klz,kly,klz,xw,thickness,yh);
+  if(!ie || l0>0){
+    /*photon is somehow outside the anode - this should not happen*/
+    ABSORB;
   }
-  mu_abs=Table_Value(T, k*K2E, 5)*rho*1e2; /*mu_abs in m^-1*/
-  p*=exp(-l0*mu_abs);
-  //printf("%g %g %g %g\n",k*K2E,mu_abs,exp(-l0*mu_abs),Table_Value(T, k*K2E, 5) );
-  /*set a random phase - and propagate to the exit window*/
+
+  mu_abs=Table_Value(prms.T, k*K2E, 5)*prms.rho*1e2; /*mu_abs in m^-1*/
+  p*=exp(-l1*mu_abs);
+  /*set a random phase*/
   phi=rand01()*2*M_PI;
+
 %}
 
 MCDISPLAY
