@@ -68,5 +68,5 @@ if [ "x$2" != "x" ]; then
   done
 
   mv $WORK/meta-pkgs/deb/mcstas-suite*${1}*.deb $WORK/dist
-  cp $WORK/INSTALL-McStas/Linux/debian/README.md $WORK/dist
+  cp $WORK/INSTALL-McStas-2.x/Linux/debian/README.md $WORK/dist
 fi
