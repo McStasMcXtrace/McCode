@@ -178,9 +178,9 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
         mkdir(instrdir)
 
         # create a new file with the instr text in it - e.g. a local copy of the instrument file
-        text = open(f).read()
+        text = open(f, encoding='utf-8').read()
         f_new = join(instrdir, basename(f))
-        open(f_new, 'w').write(text)
+        open(f_new, 'w', encoding='utf-8').write(text)
 
         # create a test object for every test defined in the instrument header
         instrtests = create_instr_test_objs(sourcefile=f, localfile=f_new, header=text)
@@ -209,23 +209,25 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             test.compiled = True
             test.compiletime = 0
         else:
-            log = LineLogger()
-            t1 = time.time()
-            cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
-            utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
-            t2 = time.time()
-            test.compiled = os.path.exists(binfile)
-            test.compiletime = t2 - t1
+            if test.testnb > 0 or (not args.skipnontest):
+                log = LineLogger()
+                t1 = time.time()
+                cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
+                utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
+                t2 = time.time()
+                test.compiled = os.path.exists(binfile)
+                test.compiletime = t2 - t1
 
-            # log to terminal
-            if test.compiled:
-                formatstr = "%-" + "%ds: " % maxnamelen + \
-                    "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
-                logging.info(formatstr % test.get_display_name())
+                # log to terminal
+                if test.compiled:
+                    formatstr = "%-" + "%ds: " % maxnamelen + \
+                      "{:3d}.".format(math.floor(test.compiletime)) + str(test.compiletime-int(test.compiletime)).split('.')[1][:2]
+                    logging.info(formatstr % test.get_display_name())
+                else:
+                    formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
+                    logging.info(formatstr % test.instrname + cmd)
             else:
-                formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
-                logging.info(formatstr % test.instrname + cmd)
-                            
+                logging.info("Skipping compile of " + test.instrname)
         # save (incomplete) test results to disk
         test.save(infolder=join(testdir, test.instrname))
 
@@ -466,6 +468,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
             bckfile = activate_config(version, mccoderoot, f)
             try:
                 logging.info("")
+                label=label+"_"+ncount
                 logging.info("Testing label: %s" % label)
 
                 # craete the proper test dir
@@ -575,7 +578,7 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, mpi
+    global ncount, mpi, skipnontest
     if args.ncount:
         ncount = args.ncount[0]
     else:
@@ -614,6 +617,7 @@ if __name__ == '__main__':
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs in every version')
     parser.add_argument('--versions', action='store_true', help='display local versions info')
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
+    parser.add_argument('--skipnontest', action='store_true', help='Skip compilation of instruments without a test')
 
     args = parser.parse_args()
 
