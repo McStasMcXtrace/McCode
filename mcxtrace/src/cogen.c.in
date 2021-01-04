@@ -2062,7 +2062,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 } /* cogen_rt_funnel */
 
 /*******************************************************************************
-* Output code for the mcstas runtime system. Default is to copy the runtime
+* Output code for the runtime system. Default is to copy the runtime
 * code into the generated executable, to minimize problems with finding the
 * right files during compilation and linking, but this may be changed using
 * the --no-runtime compiler switch.
