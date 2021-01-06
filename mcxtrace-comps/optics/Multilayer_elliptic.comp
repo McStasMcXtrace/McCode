@@ -248,7 +248,7 @@ MCDISPLAY
     line(-width/2,y0,z0,width/2,y0,z0);
     for (j=0;j<=N;j++){
       z1=z0+length/N;
-      z_el=cos(xi)*z0+Z0;
+      z_el=cos(xi)*z1+Z0;
       y_el=b*sqrt(1.0-((z_el*z_el)/(a*a))); 
       y1=cos(xi)*(y_el-Y0)-sin(xi)*(z_el-Z0); 
       line(x0,y0,z0,x0,y1,z1);
