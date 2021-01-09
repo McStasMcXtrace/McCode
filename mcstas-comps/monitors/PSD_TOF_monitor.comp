@@ -173,7 +173,7 @@ FINALLY
   destroy_darr3d(PSD_p);
   destroy_darr3d(PSD_p2);
 
-  destroy_darr2d(PSD_Ns;
+  destroy_darr2d(PSD_Ns);
   destroy_darr2d(PSD_ps);
   destroy_darr2d(PSD_p2s);
 %}
