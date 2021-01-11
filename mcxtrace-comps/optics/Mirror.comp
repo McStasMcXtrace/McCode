@@ -116,6 +116,8 @@ TRACE
         double q=2.0*s;
         double R=reflecq(&re,q,0,k*K2E,fabs(90-acos(s/k)*RAD2DEG));
         p*=R;
+        /*update phase - as an approximation turn by 180 deg.*/;
+        phi+=M_PI;
     }else{
         /*missed mirror - restore xray*/
         RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);

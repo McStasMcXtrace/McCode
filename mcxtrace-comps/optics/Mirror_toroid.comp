@@ -42,7 +42,8 @@ OUTPUT PARAMETERS (reflec_table, prms)
 
 SHARE
 %{
-#include <complex.h>
+  #include <complex.h>
+  %include "reflectivity-lib"
 %}
 
 DECLARE
@@ -52,12 +53,12 @@ DECLARE
         int use_reflec_table;
     } prms;
     t_Table reflec_table;
-
+    t_Reflec re;
 %}
 
 INITIALIZE
 %{
-    if (reflec && strlen(reflec)) {
+    if (reflec && strlen(reflec)){
         char **header_parsed;
         t_Table *tp=&reflec_table;
         /* read 1st block data from file into tp */
@@ -148,6 +149,8 @@ TRACE
             double e=K2E*k;
             R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
             p*=R;
+            /*update phase - as an approximation turn by 180 deg.*/
+	    phi+=M_PI;
         }else{
             p*=R0;
         }

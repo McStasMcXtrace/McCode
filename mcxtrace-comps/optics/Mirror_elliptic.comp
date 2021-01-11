@@ -28,7 +28,6 @@
 *
 * %P
 * INPUT PARAMETERS
-*
 * R: [1] reflectivity of mirror.
 * a: [m] long half axis (along z).
 * b: [m] 1st short half axis (along x)
@@ -119,6 +118,8 @@ TRACE
        kx=kfx;ky=kfy;kz=kfz;
        /*adjust weight of ray*/
        p*=R;
+       /*update phase - as an approximation turn by 180 deg.*/
+       phi+=M_PI;
      }
   }
 

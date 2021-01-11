@@ -107,7 +107,9 @@ TRACE
 
       /*adjust weight of ray*/
       p*=R;
-  }  while (D2 > 0); /* keep trying as long as a bounce is available */
+      /*update phase - as an approximation turn by 180 deg.*/
+      phi+=M_PI;
+   }  while (D2 > 0); /* keep trying as long as a bounce is available */
 
 %}
 
