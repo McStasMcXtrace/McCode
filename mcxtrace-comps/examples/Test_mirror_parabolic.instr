@@ -1,30 +1,30 @@
 /*******************************************************************************
-* Instrument: <instrument name>
+ * Instrument: Test_mirror_parabolic
 *
 * %I
-* Written by: <your name (email)>
-* Date: <current date>
-* Origin: <your institution>
-* Version: <instrument version>
-* %INSTRUMENT_SITE: Templates
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan '21
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests
 *
-* <instrument short description>
+* Unit test instrument for Mirror_parabolic
 *
 * %D
-* <instrument description>
+* This is a test instrument for Mirror parabolic. A collimated beam impinges on a
+* with normal incidence on a parabolic mirror, is reflected to the focal point, and
+* back to flat detector some distance, D, away.
 *
-* Example: <parameters=values>
+* %Example: D=0.0025 MM=1 Detector: detBB=1
+* %Example: D=1 MM=1 Detector: detBB=0.104959
 *
 * %P
-* <parameter1>: [<unit>] <parameter1 description>
-* ...
+* D: [m]   Distance between mirror apex and detector plane.
+* MM: [ ]  Flag to deactivate the mirror.
 * 
-* %L
-* <reference/HTML link>
-*
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT template_body_simple(D=1,MM=0, BB=1, check=0)
+DEFINE INSTRUMENT template_body_simple(D=1,MM=1)
 
 DECLARE
 %{
@@ -42,16 +42,18 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 
 // insert components here (e.g. Insert -> Source -> ...)
 COMPONENT source = Source_div(
-    focus_aw=0, focus_ah=0, xwidth=0.1, yheight=0.001, 
+    focus_aw=0, focus_ah=0, xwidth=0.1, yheight=0.5e-2,
     E0=12, dE=1)
 AT (0, 0, 0) RELATIVE origin
+EXTEND
+%{
+  //y=mcipYH;
+%}
 
-COMPONENT m2psd = PSD_monitor(restore_xray=0,xwidth=0.2, yheight=0.2, filename="m2psd")
-WHEN(check) AT(0,0,10-1/4) RELATIVE origin
 
 COMPONENT m2 = Mirror_parabolic(
-    b=0.1, a=0, xwidth=0.2, zdepth=0.1, R=1)
-WHEN(MM==1) AT(0,0,10) RELATIVE origin
+    b=0.1, a=0, xwidth=0.2, zdepth=0.01, R=1)
+WHEN(MM==1) AT(0,0,5) RELATIVE origin
 ROTATED (-90,0,0) RELATIVE origin
 EXTEND
 %{
@@ -70,8 +72,14 @@ COMPONENT det = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="
 AT(0,0,D) RELATIVE det_a
 
 
-COMPONENT detBB = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB")
-WHEN(bounce==mcipBB)AT(0,0,D) RELATIVE det_a
+COMPONENT det = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB")
+AT(0,0,D) RELATIVE det_a
+
+COMPONENT det_dbl = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB_dbl")
+WHEN(bounce>1) AT(0,0,D) RELATIVE det_a
+
+COMPONENT det_div = Monitor_nD(xwidth=0.21,yheight=0.21,options="ydiv auto", filename="det_BB_div", bins=201)
+AT(0,0,0) RELATIVE PREVIOUS
 
 
 FINALLY
