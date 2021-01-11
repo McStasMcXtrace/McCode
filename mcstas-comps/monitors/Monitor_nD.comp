@@ -276,15 +276,36 @@ INITIALIZE
   strncpy(Vars.UserName3,
     username3 && strlen(username3) && strcmp(username3, "0") && strcmp(username3, "NULL") ?
     username3 : "", 128);
-  if (radius) {
+
+  /*sanitize parameters set for curved shapes*/
+  if(strstr(Vars.option,"cylinder") || strstr(Vars.option,"banana") || strstr(Vars.option,"sphere")){
+    /*this _is_ an explicit curved shape. Should have a radius. Inherit from xwidth or zdepth (diameters), x has precedence.*/
+    if (!radius){
+      if(xwidth){
+	radius=xwidth/2.0;
+      }else{
+	radius=zdepth/2.0;
+      }
+    }else{
+      xwidth=2*radius;
+    }
+    if(!yheight){
+      /*if not set - use the diameter as height for the curved object. This will likely only happen for spheres*/
+      yheight=2*radius;
+    }
+  }else if (radius) {
+    /*radius is set - this must be a curved shape. Infer shape from yheight, and set remaining values
+     (xwidth etc. They are used inside monitor_nd-lib.*/
     xwidth = zdepth = 2*radius;
-    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana") && !strstr(Vars.option, "sphere"))
+    if (yheight){
+      /*a height is given (and no shape explitly set - assume cylinder*/
       strcat(Vars.option, " banana");
-    else if (!yheight && !strstr(Vars.option ,"sphere")) {
+    }else {
       strcat(Vars.option, " sphere");
       yheight=2*radius;
     }
   }
+
   int offflag=0;
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) {
     if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
@@ -413,8 +434,8 @@ TRACE
         /* propagate to intersection point as temporary variable to check top/bottom */
         y0 = y+t0*vy;
         y1 = y+t1*vy;
-        if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) t0 = t1;
-        if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) t1 = t0;
+        if (fabs(y0) >= Vars.Cylinder_Height/2) t0 = t1;
+        if (fabs(y1) >= Vars.Cylinder_Height/2) t1 = t0;
       }
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
@@ -427,7 +448,7 @@ TRACE
         PROP_DT(t0); /* t0 incoming beam */
       /* Final test if we are on lid / bottom of banana/sphere */
       if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
-        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
+        if (fabs(y) >= Vars.Cylinder_Height/2) {
           intersect=0;
           Flag_Restore=1;
         }

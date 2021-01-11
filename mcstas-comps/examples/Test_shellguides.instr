@@ -72,9 +72,9 @@ COMPONENT a1 = Progress_bar()
   AT (0, 0, 0) RELATIVE armSource
 
 
-COMPONENT source = Source_gen (
-    xwidth = 0.104, yheighth=0.15, focus_xw = 0.08, focus_yh = 0.15,
-    dist = 1.14,lambda0 = Lambda_source, dlambda = dLambda_source,
+COMPONENT source = Source_gen4 (
+    w = 0.104, h=0.15, xw = 0.08, yh = 0.15,
+    dist = 1.14,Lambda0 = Lambda_source, dLambda = dLambda_source,
     T1=289.42, I1=(3.083e12/4/PI),
     T2=120.002,I2=(3.575e12/4/PI),
     T3=24.144,I3=(7.26e12/4/PI),
@@ -178,6 +178,8 @@ COMPONENT monitorGuide = PSD_monitor(
 /* Start of Four-Side-Guide LENS section--------------------------------- */
 /* the given default values models a parabolic focusing lens , all together you can change 52 (one shell)* 11 (1 central part and 10 shells) Parameters */
 
+
+/* Due to name-clashes in SHARE between the different versions of the shell-guides, the 10-shell version has been disabled 
 
 COMPONENT lens = Guide_four_side_10_shells(
     l = 1.0, R0 = .99,
@@ -392,8 +394,7 @@ COMPONENT divmonlens = Divergence_monitor(
 COMPONENT PSDmonLens = PSD_monitor(
 	xmin = -0.045, xmax = 0.045, ymin = -0.045, ymax = 0.045,
 	nx=200, ny=200, filename="PSDmonlens.dat")
-  AT (0, 0, 1.0003+lens_focal_out_hor) RELATIVE lens
-
+	AT (0, 0, 1.0003+lens_focal_out_hor) RELATIVE lens */
 
 
 END

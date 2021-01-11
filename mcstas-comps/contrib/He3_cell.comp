@@ -8,9 +8,9 @@
 * Component: He3_cell
 *
 * %Identification
-* Written by: Trefor Roberts
+* Written by: Trefor Roberts & Erik B Knudsen
 * Date: March 1999
-* Origin: ILL
+* Origin: ILL/DTU Physics
 * version: $Revision$
 *
 * Polarised 3He cell
@@ -46,13 +46,6 @@ OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-#ifndef opac_cnv
-#define opac_cnv    7.33     /* opacity conversion factor so that
-the opacity can be expressed in
-bar.m.angstroms */
-#define gyro        1.832e8  /* absolute value of the gyromagnetic
-ratio of the neutron (s-1T-1) */
-#endif
 %}
 
 INITIALIZE
@@ -72,6 +65,10 @@ TRACE
   double px,py,pz;     /* auxilliary vector polarisation (-1 to +1) */
   double bnx,bny,bnz;  /* normal vector parallel to the magnetic field*/
 
+  const double gyro = 1.832e8; /*absolute value of the gyromagnetic ratio of the neutron (1/(s.T))*/
+  const double opac_cnv = 7.33; /*opacity conversion factor to express opacity in (bar.m.angstrom)*/
+
+
   /* calculate the intersection times with the volume of gas, if the neutron
      goes through the cell, continue with calculation otherwise all done.
      Note that y and z are swapped - this is because the cylindrical axis of
@@ -79,19 +76,15 @@ TRACE
 
   if(cylinder_intersect(&t0,&t1,x,z,y,vx,vz,vy,radius,length))
   {
-
     /* Calculate the neutron velocity and wavelength */
-
     v=sqrt(vx*vx+vy*vy+vz*vz);
     lambda=2*PI/(V2K*v);
 
     /* Calculate the path length of the neutron through the gas */
-
     dt0=t1-t0;
     l_full=v*dt0;
 
     /* Calculate the opacity of the cell for the path length travelled */
-
     opacity=pressure*l_full*lambda*opac_cnv;
 
     /* propagate the polarisation accross the cell (assuming a constant
@@ -110,29 +103,29 @@ TRACE
     bnx=bx;bny=by;bnz=bz;
     NORM(bnx,bny,bnz);
     double pm1=scalar_prod(sx,sy,sz,bnx,bny,bnz);
-    //if(pm1!=0) {
-      double phiu,phid,T, Tup,Tdown;
-      phiu=((pm1)+1)/2.0;
-      phid=(1-(pm1))/2.0;
-      Tup=exp(-opacity*(1.0-p3he));
-      Tdown=exp(-opacity*(1.0+p3he));
+    double phiu,phid,T, Tup,Tdown;
 
-      p*=phiu*Tup + phid*Tdown;
+    phiu=((pm1)+1)/2.0;
+    phid=(1-(pm1))/2.0;
+    Tup=exp(-opacity*(1.0-p3he));
+    Tdown=exp(-opacity*(1.0+p3he));
 
-      /*set the outgoing polarization vector without touching the part perpendicular
-        to the polarisation of the gas .
-        Perpendicular comp: P_=S - P// = S - (S.b_n)b_n
-        Parallel comp: P// = Pn bn, where Pn is the polarisation efficiency.*/
-      px=sx - pm1*bnx;
-      py=sy - pm1*bny;
-      pz=sz - pm1*bnz;
+    p*=phiu*Tup + phid*Tdown;
+
+    /*set the outgoing polarization vector without touching the part perpendicular
+      to the polarisation of the gas .
+      Perpendicular comp: P_=S - P// = S - (S.b_n)b_n
+      Parallel comp: P// = Pn bn, where Pn is the polarisation efficiency.*/
+    px=sx - pm1*bnx;
+    py=sy - pm1*bny;
+    pz=sz - pm1*bnz;
 
 
-      double Pn=(Tup-Tdown)/(Tup+Tdown);
-      sx=px + Pn*bnx;
-      sy=py + Pn*bny;
-      sz=pz + Pn*bnz;
-    //}
+    double Pn=(Tup-Tdown)/(Tup+Tdown);
+    sx=px + Pn*bnx;
+    sy=py + Pn*bny;
+    sz=pz + Pn*bnz;
+
     SCATTER;
   }
 %}

@@ -7,10 +7,25 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
 
-# This is an app bundle being built, relocatable.
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+# This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
 ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
@@ -40,15 +55,17 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 WORK=`pwd`
 
 # NCrystal installation:
-rm -rf 3rdparty-build/ncrystal/build
-mkdir 3rdparty-build/ncrystal/build
-cd 3rdparty-build/ncrystal/build
-cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ncrystal/ -DBUILD_G4HOOKS=OFF
+rm -rf 3rdparty/ncrystal/build
+mkdir 3rdparty/ncrystal/build
+cd 3rdparty/ncrystal/build
+cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DBUILD_G4HOOKS=OFF
 make
 make install
 cd $WORK
-rm -rf 3rdparty-build/ncrystal/build
+rm -rf 3rdparty/ncrystal/build
 
+# Hack to ensure pymcpltool is in place
+ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
@@ -106,7 +123,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1.tgz mcstas-$1
-    cp INSTALL-McStas/macOS/README.md dist
+    cp INSTALL-McStas-2.x/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
 else

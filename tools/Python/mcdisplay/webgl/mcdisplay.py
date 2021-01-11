@@ -10,6 +10,7 @@ import argparse
 import json
 import subprocess
 from datetime import datetime
+import pathlib
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -181,13 +182,16 @@ def main(args):
         file_save(jsonized, 'jsonized.json')
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
+    #possibly replace the mc prefix in the description string
+    scriptname=pathlib.Path(__file__).stem
+    prefix=scriptname[:2]
+    parser = argparse.ArgumentParser(description=__doc__.replace('mcdisplay',scriptname))
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
-    parser.add_argument('--dirname', help='name of the output directory requested to mcrun')
-    parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
+    parser.add_argument('--dirname', help='name of the output directory requested to %srun' % (prefix))
+    parser.add_argument('--inspect', help='display only particle rays reaching this component passed to %srun' % prefix )
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('--debug', action='store_true', help='dump debug trace data')

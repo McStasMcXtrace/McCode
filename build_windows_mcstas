@@ -8,13 +8,29 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-WORK=`pwd`
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
 
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+WORK=`pwd`
+
 # Workaround for having CRLF linefeeds in a couple of windows packages
-rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
+rsync -avz --delete --exclude=".svn/" --exclude="NCrystal_sample.comp" --exclude="NCrystal_example.instr" mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
@@ -67,7 +83,7 @@ if [ "x$2" != "x" ]; then
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
     cp Perl/*.msi dist/
-    cp $WORK/INSTALL-McStas/Windows/README.md dist/
+    cp $WORK/INSTALL-McStas-2.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
 fi

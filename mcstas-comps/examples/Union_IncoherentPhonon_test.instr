@@ -19,7 +19,6 @@
 * Example: Detector: Banana_monitor_I=18.4632
 *
 * %Parameters
-* comp_select: [] 1: Union components, 2: Incoherent
 * sample_radius: []      
 * sample_height: []      
 * pack: []               
@@ -32,7 +31,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_incoherent_validation(int comp_select=1,sample_radius=0.01,sample_height=0.03,pack=1,
+DEFINE INSTRUMENT Union_incoherent_validation(sample_radius=0.01,sample_height=0.03,pack=1,
 sigma_inc_vanadium=5.08,sigma_abs_vanadium=5.08,Vc_vanadium=13.827,geometry_interact=0.5,
 int nphe_exact=1,int nphe_approx=0,int approx=0,int mph_resum=0,
 T=294,density=6.0,M=50.94,sigmaCoh=0.0184,sigmaInc=5.08,string dosfn="dos_meV.txt",nxs=1000,kabsmin=0.1,kabsmax=25,
@@ -64,12 +63,10 @@ AT (0,0,1) RELATIVE a1
 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT cylinder_sample_union = Union_cylinder(radius=sample_radius, yheight=sample_height, priority=1, material_string="V",p_interact = geometry_interact)
-WHEN(comp_select == 1)
 AT (0,0,0) RELATIVE sample_position
 ROTATED (0,0,0) RELATIVE sample_position
 
 COMPONENT test_sample = Union_master()
-WHEN(comp_select == 1)
 AT(0,0,1) RELATIVE a1
 
 COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.3, options="banana, theta limits=[10,170], bins=40",filename="banana.dat",restore_neutron=1)
