@@ -13,27 +13,42 @@
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
-*  sperates geometry and physics within McStas.
+*  separates geometry and physics within McStas.
 * The use of this component requires other components to be used.
 *
 * 1) One specifies a number of processes using process components
 * 2) These are gathered into material definitions using Union_make_material
 * 3) Geometries are placed using Union_box/cylinder/sphere, assigned a material
-* 4) A Union_master component placed after all of the above
+* 4) Logger and conditional components can be placed which will record what happens
+* 5) A Union_master component placed after all of the above
 *
-* Only in step 4 will any simulation happen, and per default all geometries
+* Only in step 5 will any simulation happen, and per default all geometries
 *  defined before this master, but after the previous will be simulated here.
 *
 * There is a dedicated manual available for the Union_components
 *
-* This absorption logger logs a 2D projection of the position of absorption events in lab frame.
+* This component is an absorption logger, and thus placed in point 4) above.
 *
-* This absorption logger needs to be placed in space, the position is the center of the histogram.
+* A absorption logger will log something for each absorption event happening
+*  in the geometry or geometries on which it is attached. These are specified
+*  in the target_geometry string. By leaving it blank, all geometries are
+*  logged, even the ones not defined at this point in the instrument file.
+*  Multiple geometries are specified as a comma separated list.
 *
-* A absorption logger will log something for absorption events happening to certain volumes,
-*  which are specified in the target_geometry string. By leaving it blank, all
-*  geometries are logged, even the ones not defined at this point in the
-*  instrument file. A list of target_geometries can be selected.
+* This absorption logger records the absorbed intensity as a function of the
+*  y position and time of flight. One common use could be to attach this
+*  absorption logger to a cylindrical helium-3 volume, creating a model of
+*  the detector volume. In such a detector, only the y position of the event
+*  is known, and as such creates a similar dataset.
+*
+* This absorption logger needs to be placed in space, the position is recorded in
+*  the coordinate system of the logger component. Note the detection is along the
+*  y axis of the component, so it is natural to place it relative to a cylinder.
+*
+* It is possible to attach one or more conditional components to this absorption
+*  logger. Such a conditional component would impose a condition on the state of
+*  the neutron after the Union_master component that executes the simulation,
+*  and the absorption logger will only record the event if this condition is true.
 *
 * To use the logger_conditional_extend function, set it to some integer value n
 *  and make and extend section to the master component that runs the geometry.
@@ -49,11 +64,12 @@
 * time_min:        [s] Minimum time recorded
 * time_max:        [s] Maximum time recorded
 * time_bins:       [1] number of time bins
-* target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
-* order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
-* order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
-* filename:        [string] Filename for logging output
+* target_geometry: [string] Comma separated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* filename:        [string] Filename of produced data file
+* order_total:     [1] Only log rays that have scattered n times, -1 for all orders
+* order_volume:    [1] Only log rays that have scattered n times in the same geometry, -1 for all orders
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then access logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+
 *
 * OUTPUT PARAMETERS:
 *
@@ -69,8 +85,8 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string target_geometry="NULL",
                    yheight, n=0.2,
                    time_min=0, time_max=1, time_bins=100,
-                   string filename="NULL", order_total=0, order_volume=0, logger_conditional_extend_index=-1)
-OUTPUT PARAMETERS (loop_index, accepted_processes, accepted_volumes, logger_list_element, this_abs_logger, this_abs_storage, loggers_on_target_volume, target_volume)
+                   string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1)
+OUTPUT PARAMETERS (loop_index, accepted_processes, accepted_volumes, abs_logger_list_element, this_abs_logger, this_abs_storage, abs_loggers_on_target_volume, target_volume)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -112,15 +128,15 @@ void record_to_temp_1D_time_abs(Coords *position, double *k, double p, double ti
   
   int add_point = 1;
 
-  if (storage->order != 0) {
-    if (storage->order - 1 == total_number_of_scattering_events)
+  if (storage->order != -1) {
+    if (storage->order == total_number_of_scattering_events)
       add_point = 1;
     else
       add_point = 0;
   }
   
-  if (storage->order_in_this_volume != 0) {
-    if (storage->order_in_this_volume - 1 == scattered_in_this_volume)
+  if (storage->order_in_this_volume != -1) {
+    if (storage->order_in_this_volume == scattered_in_this_volume)
       add_point = 1;
     else
       add_point = 0;
@@ -211,15 +227,15 @@ void record_to_perm_1D_time_abs(Coords *position, double *k, double p, double ti
 
   int add_point = 1;
 
-  if (storage->order != 0) {
-    if (storage->order - 1 == total_number_of_scattering_events)
+  if (storage->order != -1) {
+    if (storage->order == total_number_of_scattering_events)
       add_point = 1;
     else
       add_point = 0;
   }
   
-  if (storage->order_in_this_volume != 0) {
-    if (storage->order_in_this_volume - 1 == scattered_in_this_volume)
+  if (storage->order_in_this_volume != -1) {
+    if (storage->order_in_this_volume == scattered_in_this_volume)
       add_point = 1;
     else
       add_point = 0;
@@ -343,10 +359,12 @@ double** allocate2Ddouble_1D_time_abs(int count_x, int count_y) {
     int i;
 
     // allocate space for actual data
-    double *data = malloc(sizeof(double) * count_x * count_y);
+    //double *data = malloc(sizeof(double) * count_x * count_y);
+    double *data = malloc(sizeof(double) * (count_x+1) * (count_y+1));
 
     // create array or pointers to first elem in each 2D row
-    double **ptr_array = malloc(sizeof(double*) * count_x);
+    //double **ptr_array = malloc(sizeof(double*) * count_x);
+    double **ptr_array = malloc(sizeof(double*) * (count_x+1));
     for (i = 0; i < count_x; i++) {
         ptr_array[i] = data + (i*count_y);
     }
@@ -371,7 +389,7 @@ DECLARE
 int loop_index;
 int found_process;
 int specified_processes;
-char local_string[256];
+//char local_string[256];
 
 // Reused for logger
 struct pointer_to_1d_int_list accepted_processes;
@@ -454,7 +472,6 @@ INITIALIZE
   // Added 17/11/2016, allocating some elements in initialize makes code during trace simpler
   this_abs_storage.temp_1D_time_abs_data.allocated_elements = 10;
   this_abs_storage.temp_1D_time_abs_data.elements = malloc(this_abs_storage.temp_1D_time_abs_data.allocated_elements*sizeof(struct temp_1D_time_abs_data_element_struct));
-  
   
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_abs_logger.position = POS_A_CURRENT_COMP;

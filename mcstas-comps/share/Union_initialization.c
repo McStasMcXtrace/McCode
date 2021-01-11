@@ -72,3 +72,7 @@
 // Initialize global_master_list
   // Used to facilitate communication between Master components (mainly for deallocation)
   struct pointer_to_global_master_list global_master_list = {0,NULL};
+
+// Initialize global_mantid_min_pixel_id
+  // Used for ensuring pixel id's on Mantid monitors do not overlap
+  int global_mantid_min_pixel_id = 0;

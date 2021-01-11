@@ -13,27 +13,46 @@
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
-*  sperates geometry and physics within McStas.
+*  separates geometry and physics within McStas.
 * The use of this component requires other components to be used.
 *
 * 1) One specifies a number of processes using process components
 * 2) These are gathered into material definitions using Union_make_material
 * 3) Geometries are placed using Union_box/cylinder/sphere, assigned a material
-* 4) A Union_master component placed after all of the above
+* 4) Logger and conditional components can be placed which will record what happens
+* 5) A Union_master component placed after all of the above
 *
-* Only in step 4 will any simulation happen, and per default all geometries
+* Only in step 5 will any simulation happen, and per default all geometries
 *  defined before this master, but after the previous will be simulated here.
 *
 * There is a dedicated manual available for the Union_components
 *
-* This absorption logger logs a 2D projection of the position of absorption events in lab frame.
+* This component is an absorption logger, and thus placed in point 4) above.
 *
-* This absorption logger needs to be placed in space, the position is the center of the histogram.
+* A absorption logger will log something for each absorption event happening
+*  in the geometry or geometries on which it is attached. These are specified
+*  in the target_geometry string. By leaving it blank, all geometries are
+*  logged, even the ones not defined at this point in the instrument file.
+*  Multiple geometries are specified as a comma separated list.
 *
-* A absorption logger will log something for absorption events happening to certain volumes,
-*  which are specified in the target_geometry string. By leaving it blank, all
-*  geometries are logged, even the ones not defined at this point in the
-*  instrument file. A list of target_geometries can be selected.
+* This absorption logger stores the absorbed weight in a histogram spanning two
+*  spatial directions. The position of the event is projected onto this plane.
+*  The plotted data is very useful when ensuring the simulated geometry matches
+*  the intentions. It is not recommended to use this tool for safety concerns,
+*  as for example to estimate activity of a sample after irradiation.
+*
+* The spatial plane in which the histogram is performed are chosen with the
+*  D_direction_1 and D_direction_2 parameters which can be "x", "y" or "z".
+*  The D1_min and D1_max parameters sets the limits for the first axis, and
+*  D2_min / D2_max likewise for the second axis.
+*
+* This absorption logger needs to be placed in space, the position is recorded in
+*  the coordinate system of the logger component.
+*
+* It is possible to attach one or more conditional components to this absorption
+*  logger. Such a conditional component would impose a condition on the state of
+*  the neutron after the Union_master component that executes the simulation,
+*  and the absorption logger will only record the event if this condition is true.
 *
 * To use the logger_conditional_extend function, set it to some integer value n
 *  and make and extend section to the master component that runs the geometry.
@@ -45,19 +64,18 @@
 * %P
 * INPUT PARAMETERS:
 * D_direction_1:   [string] Direction for first axis ("x", "y" or "z")
-* D1_max:          [1] histogram boundery, max position value for first axis
-* D1_min:          [1] histogram boundery, min position value for first axis
+* D1_max:          [1] histogram boundary, max position value for first axis
+* D1_min:          [1] histogram boundary, min position value for first axis
 * n1:              [1] number of bins for first axis
 * D_direction_2:   [string] Direction for second axis ("x", "y" or "z")
-* D2_max:          [1] histogram boundery, max position value for second axis
-* D2_min:          [1] histogram boundery, min position value for second axis
+* D2_max:          [1] histogram boundary, max position value for second axis
+* D2_min:          [1] histogram boundary, min position value for second axis
 * n2:              [1] number of bins for second axis
-* target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
-* target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
-* order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
-* order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
-* filename:        [string] Filename for logging output
+* target_geometry: [string] Comma separated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* filename:        [string] Filename of produced data file
+* order_total:     [1] Only log rays that have scattered n times, -1 for all orders
+* order_volume:    [1] Only log rays that have scattered n times in the same geometry, -1 for all orders
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then access logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 *
 * OUTPUT PARAMETERS:
 *
@@ -71,9 +89,9 @@
 DEFINE COMPONENT Union_abs_logger_2D_space
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string target_geometry="NULL",
-                   string D_direction_1="x", D1_min=-0.2, D1_max=5, n1=0.2,
-                   string D_direction_2="z", D2_min=-0.2, D2_max=5, n2=0.2,
-                   string filename="NULL", order_total=0, order_volume=0, logger_conditional_extend_index=-1)
+                   string D_direction_1="x", D1_min=-0.2, D1_max=0.2, n1=100,
+                   string D_direction_2="z", D2_min=-0.2, D2_max=0.2, n2=100,
+                   string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1)
 OUTPUT PARAMETERS (loop_index, accepted_processes, accepted_volumes, logger_list_element, this_abs_logger, this_abs_storage, loggers_on_target_volume, target_volume)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -123,15 +141,15 @@ void record_to_temp_2D_abs(Coords *position, double *k, double p, double time, i
   
   int add_point = 1;
 
-  if (storage->order != 0) {
-    if (storage->order - 1 == total_number_of_scattering_events)
+  if (storage->order != -1) {
+    if (storage->order == total_number_of_scattering_events)
       add_point = 1;
     else
       add_point = 0;
   }
   
-  if (storage->order_in_this_volume != 0) {
-    if (storage->order_in_this_volume - 1 == scattered_in_this_volume)
+  if (storage->order_in_this_volume != -1) {
+    if (storage->order_in_this_volume == scattered_in_this_volume)
       add_point = 1;
     else
       add_point = 0;
@@ -237,15 +255,15 @@ void record_to_perm_2D_abs(Coords *position, double *k, double p, double time, i
 
   int add_point = 1;
 
-  if (storage->order != 0) {
-    if (storage->order - 1 == total_number_of_scattering_events)
+  if (storage->order != -1) {
+    if (storage->order == total_number_of_scattering_events)
       add_point = 1;
     else
       add_point = 0;
   }
   
-  if (storage->order_in_this_volume != 0) {
-    if (storage->order_in_this_volume - 1 == scattered_in_this_volume)
+  if (storage->order_in_this_volume != -1) {
+    if (storage->order_in_this_volume == scattered_in_this_volume)
       add_point = 1;
     else
       add_point = 0;
