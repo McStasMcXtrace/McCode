@@ -25,15 +25,19 @@
 * %P
 * INPUT PARAMETERS
 * R: [1]       Reflectivity of mirror.
-* a: [sqrt(m)]       Transverse curvature scale, if zero - the mirror is flat along x.
-* b: [sqrt(m)]       Longitudinal curvature scale, if zero, flat along z.
+* a: [sqrt(m)] Transverse curvature scale, if zero - the mirror is flat along x.
+* b: [sqrt(m)] Longitudinal curvature scale, if zero, flat along z.
 * xwidth: [m]  Width of mirror.
 * zdepth: [m]  Length of mirror.
 * yheight: [m] Thickness of mirror. If 0 (the default) the mirror is mathemticlly thin. Only has an effect for hitting the mirror from the side.
 * 
 * OUTPUT PARAMETERS
-* xmax: [m] Mirrors' extent along x.
-* zmax: [m] Mirrors' extent along z.
+* xmax: [m]     Mirrors' extent along x.
+* zmax: [m]     Mirrors' extent along z.
+* a2inv: [m^-2] Inverse of a^2.
+* b2inv: [m^-2] Inverse of b^2.
+* focusx:[m]    Focal length wrt x = f(a).
+* focusz:[m]    Focal length wrt z = f(b).
 * %E
 *******************************************************************************/
 
@@ -113,17 +117,18 @@ TRACE
         so swap y and z.*/
       first=1;
       status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
+      /*if l0==0, assume that we should pick l1 instead (if it is positive).*/
+      double ll;
+      if (l0>0){
+        ll=l0;
+      } else if (l1>0) {
+        ll=l1;
+      } else {
+        /*both l0 and l1 <=0*/
+        status=0;
+      }
       while(status) {
-        /*if l0==0, assume that we should pick l1 instead (if it is positive).*/
-        if (l0>0){
-          PROP_DL(l0);
-        } else if (l1>0) {
-          PROP_DL(l1);
-        } else {
-          /*both l0 and l1 <=0*/
-          status=0;break;
-        }
-
+        PROP_DL(ll);
         /*reflect in normal - again swap y and z.*/
         paraboloid_normal(&nx,&nz,&ny, x,z,y, a,b,1);
 
@@ -140,6 +145,36 @@ TRACE
         phi+=M_PI;
         first=0;
         status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
+        /*need to check if the new reflection point is within mirror limits*/
+        if(status){
+          if(l0>0){
+            ll=l0;
+          }else if (l1>0){
+            ll=l1;
+          }else{
+            status=0;break;
+          }
+
+          double knx,kny,knz;
+          knx=kx;kny=ky;knz=kz;
+          NORM(knx,kny,knz);
+
+          double xx=x+knx*ll;
+          if(a!=0){
+            sx= (a*a)/2.0 * ( xx*a2inv * sqrt( (2*xx*a2inv)*(2*xx*a2inv) + 1) + asinh(2*xx*a2inv)/2.0 );
+          }else{
+            sx=fabs(xx);
+          }
+          double zz=z+knz*ll;
+          if(b!=0){
+            sz= (b*b)/2.0 * ( zz*b2inv * sqrt( (2*zz*b2inv)*(2*zz*b2inv) + 1) + asinh(2*zz*b2inv)/2.0 );
+          }else{
+            sz=fabs(zz);
+          }
+          if(fabs(sx)>xwidth/2.0 || fabs(sz)>zdepth/2.0 ){
+            status=0;break;
+          }
+        }
       }
     }
 %}
