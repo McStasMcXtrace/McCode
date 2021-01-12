@@ -6,7 +6,7 @@
 *         Institut Laue Langevin, Grenoble, France
 *         University of Copenhagen, Copenhagen, Denmark
 *
-* Component:MultiPurpose_reflective_grating
+* Component: Reflective_grating
 *
 * %I
 *
@@ -15,17 +15,17 @@
 * Version: 1.4
 * Origin: DTU
 *
-* A reflective, multi purpose grating.
+* A reflective grating.
 *
 * %D
-* A reflective grating that diffracts the incicence photon. 
-* The grating is in the XZ-plane. It then reflects the incomming photon using a MC picked angle, the span of this angle is given by d_phi (default=1)
+* A reflective grating that diffracts the incident photons.
+* The grating is in the XZ-plane. It then reflects the incoming photon using a MC picked angle, the span of this angle is given by d_phi (default=1)
 *  
 * Two modes are possible;
 *  0) Lamellar grating.
 *  1) Blazed grating.
 * 
-* Using Lamellar mode, the grating is diffracted using only the incomming and MC angle.
+* Using Lamellar mode, the grating is diffracted using only the incoming and MC angle.
 * Using the Blazed mode, the grating diffracts the photon using the blazed angle.
 *
 * The grating adjusts the weight of the given photon according to its direction based on:
@@ -45,21 +45,19 @@
 * b: [AA]        Width of the spacing i Angstrom. If zero, default is found using r_rho/3.
 * d: [AA]        Width of the slits in Angstrom. If zero, default is found using r_rho.
 * N: [ ]         Number of slits. If Zero, default is found using r_rho.
-* blazed: [ ]    If nonzero, on-balzed condition will be used. If zero, lamellar conditions is used.
-* cff: [ ]       fixed focus constant for the blazed grating. (Not fully developed yet)
+* blazed: [ ]    If nonzero, on-blazed condition will be used. If zero, lamellar conditions is used.
+* cff: [ ]       Fixed focus constant for the blazed grating. (Not fully developed yet)
 * Blazed_angle: [deg]     Blaze angle. This overrides cff.
-* d_phi: [deg]   MC picked angle in the range [-d_phi/2 ; d_phi/2 ].
+* d_phi: [deg]   Range of diffraction angle that is to be simulated -d_phi/2 ; d_phi/2 .
 * display: [ ]   If non-zero, information will be displayed. Nb. generates much output.
 *
+* Example Blazed:
+*   COMPONENT Grating_blazed = Reflective_grating(
+*   blazed=1,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =800,b=0,N_slits=0,d=0,cff=0,blazed_angle=2)
 *
-* %E
-*Blazed:
-*COMPONENT Grating_blazed = Reflective_grating(
-*blazed=1,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =800,b=0,N_slits=0,d=0,cff=0,blazed_angle=2)
-*
-*Lamellar:
-*COMPONENT Grating_lamellar = Reflective_grating(
-*blazed=0,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =1200,b=0,N_slits=0,d=0,cff=0,blazed_angle=0)
+* Example Lamellar:
+*   COMPONENT Grating_lamellar = Reflective_grating(
+*   blazed=0,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =1200,b=0,N_slits=0,d=0,cff=0,blazed_angle=0)
 *
 *
 *******************************************************************************/
@@ -67,7 +65,7 @@
 DEFINE COMPONENT Reflective_grating
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (d_phi=1, R0=1, r_rho =800,b=0,N_slits=0,d=0,cff=0,blazed_angle=0, zdepth=0.015, xwidth=0.136, int blazed=0, int display=0)
-OUTPUT PARAMETERS (N_slits, b,d,DirectionalSamplingFactor)
+OUTPUT PARAMETERS (DirectionalSamplingFactor)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 
@@ -78,8 +76,7 @@ DECLARE
 %{
 #include <complex.h>
   %include "read_table-lib"
-    double N_slits, b,d;
-    double DirectionalSamplingFactor;
+  double DirectionalSamplingFactor;
 %}
 
 
@@ -150,7 +147,7 @@ TRACE
     Initializing by simulating a perfectly reflecting mirror:
    ********************************************************************************************/
 
-  /*Placing the grating on the Y axis. */
+  /*Placing the grating along the Y-axis. */
   PROP_Y0;
   /*If the photon is passing the grating, it shouldn't be reflected. Instead, for book-keeping, it is restored to previoulsy state before the component using RESTORE_XRAY */
   if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
