@@ -121,7 +121,7 @@ INITIALIZE
     }
 
     if(!d){
-      // Angstrom/linje
+      // Angstrom/line
       d=10000000/r_rho; 
     }
     if(!N_slits){
