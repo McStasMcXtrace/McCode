@@ -60,17 +60,17 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT MAXIV_Bloch(
-    Wanted_energy=0.378,m=3,cff=2.25,
-    r_rho=800,blazed=1,blazed_angle=2,
-    SourceChoice=0,E0=0.6, dE=0.4,undK=5.6,Nper=187,
+    Wanted_energy=0.378,m=3,cff=0,
+    r_rho=800,blazed=0,blazed_angle=0,
+    SourceChoice=0,E0=0.6, dE=0.4,
+    undK=5.6,Nper=187,
     grating_mode=0,
     zm_mirror2=2,R0_M2=1,R0_PG=1,
     zm_mirror1=14,theta_mirror1=3,R0_M1=1,
     zm_mirror3=1,theta_mirror3=3,R0_M3=1,
     zm_mirror4=19,theta_mirror4=3,R0_M4=1,
-    zm_ExitSlit=9,xwidth_ExSlit=3,yheight_ExSlit=3,Exitslit_yshift=0.005,R0_PG=1,
-    display=0,perfectMirrors=0,Error=0
-)
+    zm_ExitSlit=9,xwidth_ExSlit=1e-2,yheight_ExSlit=1e-2,Exitslit_yshift=0.005,R0_PG=1,
+    display=0,perfectMirrors=0,Error=0, angle_grating=6, mirror2_angle=6)
 
 
 /******************************************************
@@ -100,7 +100,8 @@ Opening_error_exitslit;
    /* MISC*/
    double R0_cPGM, R0_NIM,d;
    double MCAngleVariation;
-   double d,a,bb,c,vinkel,beta_wl,beta_rho,angle_grating,alpha,beta,mirror2_angle;
+   double d,a,bb,c,vinkel,beta_wl,beta_rho;
+   double alpha,beta;
 %}
 
 
@@ -182,7 +183,7 @@ Distances used in the Monochromator:
 *******************************************************/
 
 A = 0.064819;
-B = 0.000125;
+B = -0.000125;
 C = 0.043821;
 D = 0.020;
 E = 0.620;
@@ -239,14 +240,11 @@ if (cff && !grating_mode){
   //            mirror2_angle = (90-blazed_angle+beta);   
   mirror2_angle = (90+beta);   
 } 
-if(blazed && blazed_angle){
-  angle_grating = angle_grating-blazed_angle;
-}
 
 
 printf("\n Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg. \n \n",mirror2_angle,angle_grating);
 //Here, in testing the monochroamtor the MC angle need to be "big enough". 
-MCAngleVariation=angle_grating;
+MCAngleVariation=angle_grating*0.99;
 
 
 
@@ -321,7 +319,7 @@ COMPONENT source_flat = Source_flat(
 WHEN (!SourceChoice)
 AT (0, 0, 0) RELATIVE origin
 
-COMPONENT dmu = Undulator(verbose=1,E0=E0,dE=dE,Ee=1.5,dEe=((6e-9)*(60e-12))/1.5,Ie=0.5,tbunch=43,K=undK,gap=14e-3,Nper=Nper, 
+COMPONENT dmu = Undulator(verbose=0,E0=E0,dE=dE,Ee=1.5,dEe=((6e-9)*(60e-12))/1.5,Ie=0.5,tbunch=43,K=undK,gap=14e-3,Nper=Nper, 
     lu=84e-3,sigey=1.3e-5,sigex=185e-5,sigepx=32e-6,sigepy=4.6e-6,focus_xw=1.1e-3,focus_yh=1.1e-3,dist=zm_mirror1,E1st=E1st)
 WHEN (SourceChoice)
 AT(0,0,0) RELATIVE origin
@@ -378,7 +376,7 @@ ROTATED (90,0,90) RELATIVE PREVIOUS
 COMPONENT M1_wl_monitor = L_monitor(nL=101,filename="M1_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT M1_psd_monitor = PSD_monitor(filename="M1_psd_monitor",nx = 271,ny = 271,xwidth=0.06,yheight=0.06,restore_xray=1)
+COMPONENT M1_psd_monitor = PSD_monitor(filename="M1_psd_monitor",nx = 21,ny = 21,xwidth=0.06,yheight=0.06,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 /**************************************************************
@@ -546,19 +544,15 @@ EXIT SLIT:
 2) based on input parameters, different photons will be let through, i.e different wavelengths.
 *************************************************************/
 
-COMPONENT ExT_arm1= Arm()
-AT(0,0,0) RELATIVE Exit_slit_arm0
-ROTATED (theta_mirror3,0,0) RELATIVE Exit_slit_arm0
-
 COMPONENT ExT_arm2= Arm()
-AT(0,0,zm_ExitSlit) RELATIVE ExT_arm1 
-ROTATED (theta_mirror3,0,0) RELATIVE ExT_arm1
+AT(0,0,zm_ExitSlit) RELATIVE M4_arm1 
+ROTATED (0,0,0) RELATIVE M4_arm1
 
 COMPONENT Exitslit = Slit(
     xwidth=xwidth_ExSlit, 
     yheight=yheight_ExSlit)
-AT (0, -Exitslit_yshift,0) RELATIVE ExT_arm2
-ROTATED (0,0,90) RELATIVE ExT_arm2
+AT (0, 0,0) RELATIVE ExT_arm2
+ROTATED (0,0,0) RELATIVE ExT_arm2
 
 /****************************************
  Monitors Before Mirror 4
@@ -582,12 +576,12 @@ AT (0, 0, 1) RELATIVE Exitslit
 
 COMPONENT M4_arm2= Arm()
 AT(0,0,zm_mirror4) RELATIVE M4_arm1
-ROTATED (theta_mirror3,0,0) RELATIVE M4_arm1
+ROTATED (0,theta_mirror4,0) RELATIVE M4_arm1
 
 COMPONENT mirror4 = Mirror(
-    zdepth=0.2,xwidth=0.06,R0=R0_M4)
+    zdepth=0.2,yheight=0.06,R0=R0_M4)
 AT (0, 0, 0) RELATIVE M4_arm2 
-ROTATED (0,0, 0) RELATIVE M4_arm2
+ROTATED (0, 0, 0) RELATIVE M4_arm2
 
 
 /****************************************
@@ -596,11 +590,11 @@ ROTATED (0,0, 0) RELATIVE M4_arm2
 
 COMPONENT M4_Monitor_Arm= Arm()
 AT(0,0,0) RELATIVE mirror4 
-ROTATED (2*theta_mirror4,0,90) RELATIVE mirror4
+ROTATED (0,theta_mirror4,0) RELATIVE mirror4
 
 COMPONENT M4_psd_monitor = PSD_monitor(filename="M4_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.06,yheight=0.06)
 AT (0, 0, 0.3) RELATIVE PREVIOUS
-ROTATED (0,0,90) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT M4_e_monitor = E_monitor(nE=101,filename="M4_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=2,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
