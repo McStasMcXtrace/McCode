@@ -322,8 +322,8 @@ if [[ $rc1 == 0 ]];
 then
     echo sudo chown -R $USER:staff /usr/local/*
     sudo chown -R $USER:staff /usr/local/*
-    echo sudo xattr -d -r com.apple.quarantine /Applications/SciPDL
-    sudo xattr -d -r com.apple.quarantine /Applications/SciPDL
+    echo sudo xattr -d -r com.apple.quarantine /Applications/PDL
+    sudo xattr -d -r com.apple.quarantine /Applications/PDL
     mkdir -p /usr/local/bin
 else
     echo "Not taking ownership of /usr/local..."
