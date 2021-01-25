@@ -3150,6 +3150,7 @@ int solve_2nd_order_old(double *t1, double *t2,
   return(ret);
 } /* solve_2nd_order */
 
+#pragma acc routine seq
 int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
   int retval=0;
   double sign=copysign(1.0,B);
