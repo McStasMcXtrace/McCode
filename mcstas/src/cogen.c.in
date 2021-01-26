@@ -1960,7 +1960,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   int first=1;
   int do_split=0;
   liter = list_iterate(instr->complist);
-<<<<<<< HEAD
   printf("\n-----------------------------------------------------------\n");
   printf("\nGenerating GPU/CPU -DFUNNEL layout:\n");
   // iterate component list
@@ -1986,49 +1985,19 @@ int cogen_rt_funnel(struct instr_def *instr)
         printf("-> CPU section from component %s\n",comp->name);
       } else {
         printf("-> GPU kernel from component %s\n",comp->name);
-=======
-
-  // iterate component list
-  while((comp = list_next(liter)) != NULL) {
-    List_handle liter2;
-
-    if (!first && comp->cpuonly != cpuonly_last) { // Terminate loop if we are shifting between processing units
-      coutf("    }");
-      if (comp->cpuonly) {
-        if (funneldefine) {
-          sprintf(instr->dependency,"%s %s",instr->dependency,"-DFUNNEL");
-          funneldefine=0;
-        }
-        coutf("    #pragma acc update host(particles, psorted, pbuffer)");
-        printf("\n * CPU section from component %s\n",comp->name);
-      } else {
-        coutf("    #pragma acc update device(particles, psorted, pbuffer)");
-        printf("\n * GPU kernel from component %s\n",comp->name);
->>>>>>> update default funnel cogen: extract malloc to only be done once, remove pragmas not needed in pgi v.20.7, fix whitespaces in cogen and generated code
       }
     }
 
-<<<<<<< HEAD
     if (first || (comp->cpuonly != cpuonly_last) || comp->split) {
       coutf("");
       if (comp->cpuonly == 0) {
         coutf("    #pragma acc parallel loop present(particles)");
-=======
-    if (first || comp->cpuonly != cpuonly_last) {
-      if (comp->cpuonly == 0) {
-        coutf("    #pragma acc parallel loop present(particles, psorted)");
-        printf("\n * GPU kernel from component %s\n",comp->name);
->>>>>>> update default funnel cogen: extract malloc to only be done once, remove pragmas not needed in pgi v.20.7, fix whitespaces in cogen and generated code
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[pidx];");
       coutf("      _class_particle _particle_save;");
-      coutf("");
     }
-<<<<<<< HEAD
     coutf("");
-=======
->>>>>>> update default funnel cogen: extract malloc to only be done once, remove pragmas not needed in pgi v.20.7, fix whitespaces in cogen and generated code
     coutf("      // %s", comp->name);
     coutf("      if (!ABSORBED) {");
     // coordinate transformations (wrt to PREVIOUS)
@@ -2045,11 +2014,7 @@ int cogen_rt_funnel(struct instr_def *instr)
       // WHEN
       if (comp->when) {
         char *exp=exp_tostring(comp->when);
-<<<<<<< HEAD
         coutf("        if ((%s)) // conditional WHEN", exp);
-=======
-        coutf("        if (%s) // conditional WHEN", exp);
->>>>>>> update default funnel cogen: extract malloc to only be done once, remove pragmas not needed in pgi v.20.7, fix whitespaces in cogen and generated code
         str_free(exp);
       }
       // TRACE
@@ -2065,10 +2030,6 @@ int cogen_rt_funnel(struct instr_def *instr)
     coutf("      }");
     first=0;
     cpuonly_last = comp->cpuonly;
-<<<<<<< HEAD
-=======
-    cout( "");
->>>>>>> update default funnel cogen: extract malloc to only be done once, remove pragmas not needed in pgi v.20.7, fix whitespaces in cogen and generated code
   } /* end while comp list (case) */
   coutf("");
   coutf("    }");
@@ -2076,7 +2037,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   list_iterate_end(liter);
 
   // finalize batch
-  coutf("");
   coutf("    // finalize particle batch");
   coutf("    #pragma acc parallel loop present(particles)");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
@@ -2090,10 +2050,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  free(particles);");
-<<<<<<< HEAD
-=======
-  coutf("  free(psorted);");
->>>>>>> update default funnel cogen: extract malloc to only be done once, remove pragmas not needed in pgi v.20.7, fix whitespaces in cogen and generated code
   coutf("  free(pbuffer);");
   cout( "");
   coutf("  printf(\"\\n\");");
