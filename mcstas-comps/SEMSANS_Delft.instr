@@ -1,0 +1,141 @@
+/*******************************************************************************
+* Instrument: SESANS_Delft
+*
+* %I
+* Written by: Wim Bouwman (w.g.bouwman@tudelft.nl), Peter Willendrup and Erik Knudsen
+* Date: December 2019>
+* Origin: Delft University of Technology
+* %INSTRUMENT_SITE: Reactor Institute Delft
+* Idealised SESANS instrument using magnetised foil flippers with realistic sample
+*
+*
+* %D
+* A full description of the instrument can be found in J. Appl. Cryst. (2021) V. 54 https://doi.org/10.1107/S1600576720015496
+* The instrument has the bare essentials to simulate the Larmor precession of the neutron spins in the foil flippers and the 
+* geometry and wavelength distribution of a version of SEMSANS that can be made from the SESANS in Delft as described in
+* Physica B 406(2011)2357–2360 https://doi.org/10.1016/j.physb.2010.11.069
+* An essential component is the realistic SANS sample, describing both the scattered and transmitted neutron, including multiple scattering.
+* For a full SEMSANS scan the applied magnetic field By has to be scanned. 
+* It is best to run it twice with the analyser in up and down orientation.
+* In principle the sample can be removed to study the empty beam instrument, which with this idealised setup have perfect polarisation.
+* It is possible to monitor the evolution of the polarisation with several polarisation monitors that have beeen commented in this version.
+* The foil-angle, thickness and wavelength yield now matched parameters to have the SESANS working. 
+* These parameter and the sphere radius match now with the magnetic fields below to get a good measurement range.
+* A pretty high number of neutrons is needed to get good statistics in the fine position sensitive detector.
+*
+* Example: 
+* SESANS_Delft -n 100000000 -N 31 L0=2.165 DL=0.02 By=0,0.0468 AnaSign=1
+* SESANS_Delft -n 100000000 -N 31 L0=2.165 DL=0.02 By=0,0.0468 AnaSign=-1
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* L0: [AA]		nominal wavelength
+* DL: [AA]		wavelength band width
+* By: [T}		Applied magnetic field in foil flippers
+* AnaSign: []	Direction of analyser (-1 or 1)
+*
+* %L
+* <reference/HTML link>
+* https://doi.org/10.1107/S1600576720015496
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT SEMSANS_Delft(L0=2.165, DL=0.02, By=4.68e-3, AnaSign=1)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT src = Source_simple(
+    yheight=0.01, 
+    xwidth=0.01, 
+    dist=5, 
+    focus_xw=0.01, 
+    focus_yh=0.01, 
+    lambda0=L0, 
+    dlambda=DL,
+    gauss=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+COMPONENT set_pol = Set_pol(
+    px=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/*
+COMPONENT px1 = PolLambda_monitor(
+    restore_neutron=1, Lmin=L0-DL, Lmax=L0+DL, nL=501,
+    mx=1,filename="px1")
+AT (0, 0, 0.1) RELATIVE PREVIOUS
+
+COMPONENT py1 = PolLambda_monitor(
+    restore_neutron=1, Lmin=L0-DL, Lmax=L0+DL, nL=501,
+    my=1,filename="py1")
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+*/
+
+COMPONENT f1 = Foil_flipper_magnet2(
+    xwidth=0.1, 
+    yheight=0.1, 
+    zdepth=0.3, 
+    phi=0.095993, 
+    foilthick=3.0, 
+    Bx=0, 
+    By=By, 
+    Bz=0, 
+    foil_in=1, verbose=0)
+AT (0, 0, 1.0) RELATIVE src
+
+/*
+COMPONENT px2 = COPY(px1)(filename="px2")
+AT (0, 0, 0.3) RELATIVE PREVIOUS
+
+COMPONENT py2 = COPY(py1)(filename="py2")
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+*/
+
+COMPONENT f2 = COPY(f1)(By=2*By)
+AT(0,0,3) RELATIVE src
+
+/*
+COMPONENT px3 = COPY(px1)(filename="px3")
+AT (0, 0, 0.16) RELATIVE PREVIOUS
+
+COMPONENT py3 = COPY(py1)(filename="py3")
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+*/
+
+COMPONENT ana = PolAnalyser_ideal(mx=AnaSign)
+AT(0,0,0.18) RELATIVE f2
+
+COMPONENT sans_spheres = SANS_spheres2(xwidth=0.02, 
+    yheight=0.02, 
+	zthick=0.001, 
+	dsdw_inc=0.0, 
+	sc_aim=0.8, 
+	sans_aim=0.95, 
+	R=10000, 
+	phi=0.015, 
+	singlesp=0,
+	Qmind = 0.00003,
+	Qmaxd = 0.001)
+AT (0, 0, 0.2) RELATIVE f2
+
+COMPONENT det = PSD_monitor(xwidth=0.011, yheight=0.011, filename="det",ny=1001, nx=1)
+AT(0,0,5) RELATIVE src
+
+FINALLY
+%{
+%}
+
+END
