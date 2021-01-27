@@ -1,0 +1,102 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ESRF-ID11-nanofocus beamline
+*
+* %Identification
+* Written by: E. B. Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan '21
+* Origin: DTU Physics
+* Release: McXtrace 1.6
+* Version: $Revision$
+* %INSTRUMENT_SITE: DTU
+*
+* Example instrument to display how to use the absorption multiobject component
+* 
+* %Description
+* This instrument simply has a lab source, a few monitors and a multi-off object scene
+* by means of the Abs_objects component. BY sullpiying a control fiel and a set of 
+* off/ply-files a scene is put together which may be used for tomography style
+* simulations. The default input file contains a single object: a mechanical socket.
+*
+* %Parameters
+* SFILE: [ ]    Name of file that contains the off/ply parameters for the scene
+* ANGLE: [ ]    Rotation around y-axis
+* posX: [m]     Displacement of scene along x-axis
+* posY: [m]     Displacement of scene along y-axis
+* posZ: [m]     Displacement of scene along z-axis
+*
+* %Link
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Airp_scannerII(string SFILE="input_abs_objects_template.dat",ANGLE=0,posX=0,posY=0,posZ=0)
+
+DECLARE
+%{
+  unsigned long long phid;
+
+  double deth,detw;
+  double troh=1.4;
+  double trow=0.6;
+
+  int dNx,dNy;
+%}
+
+
+INITIALIZE
+%{
+  /*set some geometry parameters*/
+  double s=1;
+
+  dNy=200/s;//(int)(deth/1e-3);
+  dNx=200/s;//(int)(detw/1e-3);
+
+  deth=s*dNy*2e-3;//7.0/6.0*troh;
+  detw=s*dNx*2e-3;//7.0/6.0*trow;
+
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar(percent=1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source1 =  Source_flat(E0=70, dE=69, xwidth=1e-3, yheight=1e-3, focus_xw=deth, focus_yh=deth, dist=3.5)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT psd0 = PSD_monitor(restore_xray=1, nx=101,ny=101, filename="psd0.dat",xwidth=0.5,yheight=0.5)
+AT(0,0,0.1) RELATIVE Origin
+
+COMPONENT emon = E_monitor(restore_xray=1,nE=101,Emin=0, Emax=200, filename="emon.dat",xwidth=0.5, yheight=0.5)
+AT(0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT sample_mount_point = Arm()
+AT(0,0,3) RELATIVE Origin
+ROTATED (0,ANGLE,0) RELATIVE Origin
+
+COMPONENT sample_scan=Abs_objects(objects=SFILE)
+AT (posX,posY,posZ) RELATIVE sample_mount_point
+
+COMPONENT psd2 = PSD_monitor(restore_xray=1,nx=dNx,ny=dNy,filename="psd2.dat",xwidth=detw,yheight=deth)
+AT (0,0,4) RELATIVE Origin
+
+COMPONENT psd_far= PSD_monitor(nx=200,ny=200,filename="psdfar.dat",xwidth=deth,yheight=deth)
+AT(0,0,20) RELATIVE Origin
+
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
