@@ -60,7 +60,7 @@ require "mccode_config.perl";
 
 # Overload with user's personal config
 if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl") {
-  print "mcdisplay: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl\n";
+  print "mcdisplay-mantid: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl\n";
   require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/".$MCSTAS::mcstas_config{'VERSION'}."/mccode_config.perl";
 }
 
@@ -1158,7 +1158,7 @@ for($i = 0; $i < @ARGV; $i++) {
    }
 }
 if ($show_help) { undef $sim_cmd; }
-die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
+die "Usage: mcdisplay-mantid [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -h        --help            Show this help
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
            --param=FILE      Read input parameters from parameter file
@@ -1184,8 +1184,8 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  unless $sim_cmd;
 
 if($paramfile) {
-    open(IN, "<$paramfile") || die "mcdisplay: Failed to open parameter file '$paramfile'";
-    print "\nmcdisplay: Parameters specified using file \"$paramfile\"\n";
+    open(IN, "<$paramfile") || die "mcdisplay-mantid: Failed to open parameter file '$paramfile'";
+    print "\nmcdisplay-mantid: Parameters specified using file \"$paramfile\"\n";
     while(<IN>) {
         my $p;
         for $p (split) {
@@ -1239,7 +1239,7 @@ if ($plotter =~ /McStas|PGPLOT/i) {
   print STDERR "\n******************************************************\n";
   print STDERR "Default / selected PLOTTER is PGPLOT                    \n";
   print STDERR "PGPLOT is not supported with this mcdisplay variant     \n";
-  die "mcdisplay-NOPG: PGPLOT problems...\n";
+  die "mcdisplay-mantid: PGPLOT problems...\n";
 }
 
 $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
@@ -1265,10 +1265,10 @@ if ($plotter =~ /vrml/i) {
   # Matlab is plotter - open a pipe / OLE connection
   if ($Config{'osname'} eq 'MSWin32') {
     $pid=0;
-    $ML = Win32::OLE->new('Matlab.Application') || die "mcdisplay: Could not start Matlab\n";
+    $ML = Win32::OLE->new('Matlab.Application') || die "mcdisplay-mantid: Could not start Matlab\n";
   } else {
     my $cmd = "$MCSTAS::mcstas_config{'MATLAB'} $MCSTAS::mcstas_config{'MATLAB_COMMAND'} > /dev/null";
-    $pid=open2(READER,WRITER, $cmd) || die "mcdisplay: Could not start Matlab\n$cmd\n";
+    $pid=open2(READER,WRITER, $cmd) || die "mcdisplay-mantid: Could not start Matlab\n$cmd\n";
   }
   print STDERR "Opened up pipe to matlab - pid is $pid\n";
   print STDERR "Building Matlab INSTRUMENT struct, please have patience...\n";
@@ -1283,7 +1283,7 @@ if ($STDIN==1) {
   $args = join(" ", @cmdline);
   $cmdline = "$sim_cmd --trace --no-output-files $args";
   printf STDERR "Starting simulation '$cmdline' ...\n";
-  open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
+  open(IN, "$cmdline |") || die "mcdisplay-mantid: Could not run simulation\n";
 }
 
 $numcomp = read_instrument(IN);
