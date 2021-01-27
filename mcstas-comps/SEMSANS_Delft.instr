@@ -3,7 +3,7 @@
 *
 * %I
 * Written by: Wim Bouwman (w.g.bouwman@tudelft.nl), Peter Willendrup and Erik Knudsen
-* Date: December 2019>
+* Date: December 2019
 * Origin: Delft University of Technology
 * %INSTRUMENT_SITE: Reactor Institute Delft
 * Idealised SESANS instrument using magnetised foil flippers with realistic sample
@@ -31,12 +31,12 @@
 * <parameter1>: [<unit>] <parameter1 description>
 * L0: [AA]		nominal wavelength
 * DL: [AA]		wavelength band width
-* By: [T}		Applied magnetic field in foil flippers
+* By: [T]		Applied magnetic field in foil flippers
 * AnaSign: []	Direction of analyser (-1 or 1)
 *
 * %L
 * <reference/HTML link>
-* https://doi.org/10.1107/S1600576720015496
+* <a href="https://doi.org/10.1107/S1600576720015496">https://doi.org/10.1107/S1600576720015496</a>
 *
 * %E
 *******************************************************************************/
