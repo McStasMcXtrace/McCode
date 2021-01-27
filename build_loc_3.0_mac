@@ -55,4 +55,4 @@ export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.0-dev/
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.0-dev/tools/Python/mccodelib/mccode_config.py
 
-ln -sf  /Applications/McStas-2.7.app/Contents/Resources/mcstas/2.7/miniconda3/ $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3
+ln -sf  /Applications/McStas-2.7.app/Contents/Resources/mcstas/2.7/miniconda3 $MCINSTALL_PREFIX/mcstas/3.0-dev/miniconda3
