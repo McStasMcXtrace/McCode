@@ -32,10 +32,8 @@
 * a: [m] long half axis (along z).
 * b: [m] 1st short half axis (along x)
 * c: [m] 2nd short half axis (along y)
-* width: [m] width of the mirror (obsolescent - will be removed in later release)
-* length: [m] length of the mirror (obsolescent - will be removed in later release)
-* yheight: [m] yheight (width) of the mirror. Overrides width.
-* zdepth: [m] zdepth (length) of the mirror. Overrides length.
+* yheight: [m] yheight (width) of the mirror.
+* zdepth: [m] zdepth (length) of the mirror.
 * z_offset: [m] shift of mirror centre along the z-axis.
 * 
 * %E
@@ -44,7 +42,7 @@
 
 DEFINE COMPONENT Mirror_elliptic
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=1, a=0, b=0, c=1, width=0, length=0, yheight=1, zdepth=1)
+SETTING PARAMETERS (R=1, a=0, b=0, c=1, yheight=1, zdepth=1)
 OUTPUT PARAMETERS (a2,b2,c2,Ox,Oy,Oz)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
