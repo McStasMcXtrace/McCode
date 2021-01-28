@@ -13,7 +13,7 @@
 * Test instrument for the updated BF1 butterfly moderator design.
 * 
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
-* Example: mcrun -n1e6 ESS_butterfly_test.instr sector=N beamline=10 cold=0.5
+* %Example: mcrun ESS_butterfly_test.instr sector=N beamline=10 cold=0.5 Detector: AutoTOFL0_I=2.7e+11
 *
 * Was used to generate MCNP benchmarked output for the ESS_butterfly.comp - see 
 * <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
@@ -36,7 +36,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=8,dist=0,cold=0.5,Yheight=0.03,delta=0)
+DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=16,dist=0,cold=0.5,Yheight=0.03,delta=0)
 
 DECLARE
 %{
@@ -100,15 +100,13 @@ COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=
 AT (0,0,0) ABSOLUTE
 EXTEND %{
   /* Various logical flags for measuring brilliances etc. below */
-  IsCold=round(rand01());//iscold;
-  SurfSign=rand01();//surf_sign;
-  SurfSign=SurfSign/fabs(SurfSign);
+  IsCold=iscold;
+  SurfSign=surf_sign;
   SrcX=x;SrcY=y;SrcZ=z;
-  WL=(2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+  WL=lambda;
   CCold=cos_cold;
   CThermal=cos_thermal;
   Eneutron=VS2E*(vx*vx + vy*vy + vz*vz);
-  
   if (IsCold) {
     Emin=EminC;Emax=EmaxC;
   } else {

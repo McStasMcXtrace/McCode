@@ -1423,15 +1423,13 @@ TRACE
                     mc_transmission_probability = (1.0 - Volumes[current_volume]->geometry.geometry_p_interact);
                     if ((scattering_event = (rand01() > mc_transmission_probability))) {
                         // Scattering event happens, this is the correction for the weight
-                        abs_weight_factor = (1.0-real_transmission_probability)/(1.0-mc_transmission_probability); // Absorption simulated in weight
-                        abs_weight_factor_set = 1;
+                        p *= (1.0-real_transmission_probability)/(1.0-mc_transmission_probability); // Absorption simulated in weight
 
                         // Find length to next scattering knowing the ray will scatter.
                         length_to_scattering = safty_distance -log(1.0 - rand0max((1.0 - exp(-my_sum_plus_abs*(length_to_boundery-safty_distance2))))) / my_sum_plus_abs;
                     } else {
                         // Scattering event does not happen, this is the appropriate correction
-                        abs_weight_factor = real_transmission_probability/mc_transmission_probability; // Absorption simulated in weight
-                        abs_weight_factor_set = 1;
+                        p *= real_transmission_probability/mc_transmission_probability; // Absorption simulated in weight
                         
                     }
                 } else {

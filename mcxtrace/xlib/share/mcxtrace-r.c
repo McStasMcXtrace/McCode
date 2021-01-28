@@ -320,9 +320,9 @@ int sphere_intersect(double *l0, double *l1, double x, double y, double z,
  * ellipsoid_intersect: Calculate intersection between a line and an ellipsoid.
  * They ellisoid is fixed by a set of half-axis (a,b,c) and a matrix Q, with the
  * columns of Q being the (orthogonal) vectors along which the half-axis lie.
- * This allows for complete freedom in orienting th eellipsoid.
+ * This allows for complete freedom in orienting the ellipsoid.
  * returns 0 when no intersection is found
- *      or 1 when they are found with resulting lemngths l0 and l1.
+ *      or 1 when they _are_ found with resulting lengths l0 and l1.
  *****************************************************************************/
 #pragma acc routine sequential
 int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
@@ -335,8 +335,8 @@ int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
   Gamma[0][0]=Gamma[0][1]=Gamma[0][2]=0;
   Gamma[1][1]=Gamma[1][0]=Gamma[1][2]=0;
   Gamma[2][2]=Gamma[2][0]=Gamma[2][1]=0;
-  /*now set diagonal to ellipsoid half axis if non-zero.
-   * This way a zero value mean the sllipsoid extends infinitely along that axis,
+  /* now set diagonal to ellipsoid half axis if non-zero.
+   * This way a zero value means the ellipsoid extends infinitely along that axis,
    * which is useful for objects only curved in one direction*/ 
   if (a!=0){
     Gamma[0][0]=1/(a*a);
@@ -398,5 +398,75 @@ int plane_intersect(double *l, double x, double y, double z,
   if (*l<0) return -1;
   else return 1;
 } /* plane_intersect */
+
+/*******************************************************************************
+ * paraboloid_intersect: Calculate intersection between a rotational paraboloid
+ * and a line with direction k through the point x,y,z.
+ * The paraboloid is oriented such that it opens towards positive y,with the scaling
+ * prms  a and b for x and y resp.. The paex is on the z=0-axis. I.e. the equation for the paraboloid is:
+ * z=(x/a)^2 + (y/b)^2
+ * If the other direction (opening towards z<0) is wanted simply set the sign parameter to -1
+ *******************************************************************************/
+int
+paraboloid_intersect(double *l0, double *l1, double x, double y, double z,
+    double kx, double ky, double kz, double a, double b, int sign)
+{
+  double A,B,C,D,k;
+  double a2i,b2i;
+  int retval=0;
+  if(a!=0 && b!=0){
+    a2i=1.0/(a*a);b2i=1.0/(b*b);
+  }else if (a!=0){
+    /*paraboloid is infinite/invariant along y, must check if k||y */
+    if (kx==0 && kz==0){
+      *l0=*l1=0;return 0;
+    }
+    a2i=1.0/(a*a);b2i=0;
+  }else if (b!=0){
+    /*paraboloid is infinite/invariant along x, must check if k||x */
+    if (ky==0 && kz==0){
+      *l0=*l1=0;return 0;
+    }
+    a2i=0;b2i=1.0/(b*b);
+  }
+  k=sqrt(kx*kx + ky*ky + kz*kz);
+
+  A=sign*(kx*kx*a2i + ky*ky*b2i);
+  B=sign*2*kx*x*a2i + sign*ky*y*b2i - kz;
+  C=sign*x*x*a2i + sign*y*y*b2i - z;
+
+  retval=solve_2nd_order(l0,l1,A,B,C);
+  /*convert to solution in m*/
+  *l0 *= k; *l1 *=k;
+  return retval;
+}
+
+/******************************************************************************
+ * paraboloid_normal: Calucate the normal vector to the given paraboloid at the
+ * point (x,y,z) and put the result i nx,ny,nz. No check is performed if the
+ * the point is on th surface. In that case the result is undefined.
+ *****************************************************************************/
+int paraboloid_normal(double *nx, double *ny, double *nz, double x,double y, double z, double a, double b, int sign){
+  double a2i,b2i;
+  double tx,ty,tz;
+  if(a!=0 && b!=0){
+    a2i=1.0/(a*a);b2i=1.0/(b*b);
+  }else if (a!=0){
+    a2i=1.0/(a*a);b2i=0;
+  }else if (b!=0){
+    a2i=0;b2i=1.0/(b*b);
+  }else{
+    *nx=0; *ny=0; *nz=1;
+    return 1;
+  }
+  tx=-sign*2*x*a2i;
+  ty=-sign*2*y*b2i;
+  tz=1;
+  NORM(tx,ty,tz);
+  *nx=tx; *ny=ty; *nz=tz;
+  return 1;
+}
+
+
 
 #endif /* !MCXTRACE_H */

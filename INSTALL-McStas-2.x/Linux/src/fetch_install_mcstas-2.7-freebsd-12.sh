@@ -15,7 +15,7 @@ WORK=`pwd`
 mkdir -p TMP
 cd TMP
 
-fetch http://downloads.mcstas.org/current/unix/mcstas-2.7-UNIX-src.tar.gz
+fetch http://downloads.mcstas.org/mcstas-2.7/unix/mcstas-2.7-UNIX-src.tar.gz
 
 tar xzf mcstas-2.7-UNIX-src.tar.gz
 
