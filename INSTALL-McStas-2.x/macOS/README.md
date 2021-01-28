@@ -12,7 +12,7 @@
 ## Steps to perform
 
 * Download
-  [McStas 2.7 for macOS](http://download.mcstas.org/current/mac/mcstas-2.7.tgz)
+  [McStas 2.7 for macOS](http://download.mcstas.org/mcstas-2.7/mac/mcstas-2.7.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder

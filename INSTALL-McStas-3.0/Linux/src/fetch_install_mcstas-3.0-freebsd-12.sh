@@ -15,7 +15,7 @@ WORK=`pwd`
 mkdir -p TMP
 cd TMP
 
-fetch http://downloads.mcstas.org/current/unix/mcstas-3.0-UNIX-src.tar.gz
+fetch http://downloads.mcstas.org/mcstas-3.0/unix/mcstas-3.0-UNIX-src.tar.gz
 
 tar xzf mcstas-3.0-UNIX-src.tar.gz
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2010, All rights reserved
+*         Copyright 1997-, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -40,6 +40,7 @@
 * Modified by: PW February 2020: 3.0beta tech preview
 * Modified by: PW May 2020: version 2.6.1
 * Modified by: PW November 2020: version 2.7
+* Modified by: PW December 2020: version 3.0
 * This file is part of McStas 3.0, released December 15th 2020.
 * It gives a 'changes' list from the beginning of the project
 *

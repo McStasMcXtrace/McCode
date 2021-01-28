@@ -9,7 +9,7 @@ sudo yum install pgplot perl-PGPLOT perl-Tk perl-PDL perl python2
 ```
 
 ## Install the remaining packages manually
-* Download the [all-rpms](http://download.mcstas.org/current/linux/mcstas-3.0-rpm64-Fedora33/all-rpms.tgz)
+* Download the [all-rpms](http://download.mcstas.org/mcstas-3.0/linux/mcstas-3.0-rpm64-Fedora33/all-rpms.tgz)
 * Unpack the archive
 * Install the libtk-codetext-perl-0.3.4-2.noarch.rpm
 ```bash
