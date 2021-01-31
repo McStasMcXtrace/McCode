@@ -1856,7 +1856,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("      _class_particle* _particle = &particleN;");
   coutf("      particleN._uid = pidx;");
   coutf("");
-  coutf("      srandom(_hash(pidx + pidx*seed));");
+  coutf("      srandom(_hash((pidx+1)*(seed+1)));");
   coutf("      particle_uservar_init(_particle);");
   coutf("");
   coutf("      raytrace(_particle);");
@@ -1949,7 +1949,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("      particles[pidx] = mcgenstate();");
   coutf("      _class_particle* _particle = particles + pidx;");
   coutf("      _particle->_uid = pidx;");
-  coutf("      srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro");
+  coutf("      srandom(_hash((pidx+1)*(seed+1))); // _particle->state usage built into srandom macro");
   coutf("      particle_uservar_init(_particle);");
   coutf("    }");
   cout( "");
