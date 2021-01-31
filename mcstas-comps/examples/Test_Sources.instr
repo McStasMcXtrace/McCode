@@ -118,6 +118,11 @@ COMPONENT sa8 = Moderator( /* flux in n/s/cm2/st */
 ) WHEN (source == 8)
 AT (0,0,0) ABSOLUTE
 
+
+COMPONENT Events = Event_monitor_simple(nevents=1e3)
+  AT (0,0,0) ABSOLUTE
+
+
 /* the monitor ============================================================== */
 COMPONENT m1 = Monitor_nD(
   xwidth=0.1, yheight=0.1,
