@@ -144,9 +144,7 @@ SHARE %{
   double ThermalScalarsW[]={8.7232e-01, 8.0007e-01, 7.6853e-01, 8.0251e-01, 7.3728e-01, 7.3761e-01, 7.2808e-01, 7.2151e-01, 7.1797e-01, 6.9857e-01, 6.9610e-01};
   double ThermalScalarsS[]={8.6910e-01, 7.9964e-01, 7.6365e-01, 7.9922e-01, 7.3479e-01, 7.3836e-01, 7.2773e-01, 7.2202e-01, 7.1667e-01, 7.0149e-01, 7.0084e-01};
   double dxCold[]={-0.01, -0.01, -0.002, 0.004,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0};
-  #pragma acc declare create(dxCold)
   double dxThermal[]={0.002, 0.003, 0.002, 0.007, 0.007, 0.007, 0.007, 0.007, 0.007, 0.007, 0.007};
-  #pragma acc declare create(dxThermal)
 %}
 
 DECLARE
@@ -212,6 +210,8 @@ DECLARE
   double cx;
   double cz;
   int     jmax;
+  double dxC;
+  double dxT;
 %}
 
 INITIALIZE
@@ -461,6 +461,9 @@ INITIALIZE
   w_mult *= l_range;            /* wavelength range correction */
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
+
+  dxC=dxCold[beamline-1];
+  dxT=dxThermal[beamline-1];
 %}
 
 TRACE
@@ -499,7 +502,7 @@ TRACE
       surf_sign=1;
       cos_factor=cos_thermal;
     }
-    modX=((-1.0*isleft*x0)-dxCold[beamline-1]);
+    modX=((-1.0*isleft*x0)-dxC);
     w_geom=w_geom_c;
   } else {
     iscold=0;
@@ -518,7 +521,7 @@ TRACE
       surf_sign=-1;
       cos_factor=cos_thermal;
     }
-    modX=((-1.0*isleft*x0)+dxThermal[beamline-1]);
+    modX=((-1.0*isleft*x0)+dxT);
     w_geom=w_geom_t;
   }
 
