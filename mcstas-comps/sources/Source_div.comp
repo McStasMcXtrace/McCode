@@ -66,12 +66,8 @@ OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double thetah;
-double thetav;
 double sigmah;
 double sigmav;
-double tan_h;
-double tan_v;
 double p_init;
 double dist;
 double focus_xw;
@@ -126,6 +122,10 @@ sigmah = DEG2RAD*focus_aw/(sqrt(8.0*log(2.0)));
 TRACE
 %{
   double E,lambda,v;
+  double tan_h;
+  double tan_v;
+  double thetah;
+  double thetav;
 
   p=p_init;
   z=0;
