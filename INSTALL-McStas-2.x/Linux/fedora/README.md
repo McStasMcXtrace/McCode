@@ -31,10 +31,11 @@ mcstas-tools-python-mcplot-matplotlib-2.7-rpm64.rpm \
 mcstas-tools-python-mcplot-pyqtgraph-2.7-rpm64.rpm \
 mcstas-tools-python-mcrun-2.7-rpm64.rpm
 ```
-* And add this extra package to also install the legacy perl based gui/graphics tools:
+* Optionally you can install the mcstas-tools-perl pakage which provides the **legacy** perl based gui/graphics tools:
 ```bash
 sudo rpm -i mcstas-tools-perl-2.7-rpm64.rpm
 ```
+* Dependencies can likely be resolved via https://rmpfusion.org (untested)
 * (there are also other packages available that are optional, but
   whose dependencies are not easy to resolve)
 
