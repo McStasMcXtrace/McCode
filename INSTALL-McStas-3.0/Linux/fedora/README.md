@@ -32,7 +32,7 @@ mcstas-tools-python-mcplot-pyqtgraph-3.0-rpm64.rpm \
 mcstas-tools-python-mcrun-3.0-rpm64.rpm
 ```
 
-* Optionally you can install the mcstas-tools-perl provides thelegacy perl based gui/graphics tools:
+* Optionally you can install the mcstas-tools-perl pakage which provides the **legacy** perl based gui/graphics tools:
 ```bash
 sudo rpm -i mcstas-tools-perl-3.0-rpm64.rpm
 ```
