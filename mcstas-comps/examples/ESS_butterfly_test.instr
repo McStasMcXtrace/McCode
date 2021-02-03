@@ -48,9 +48,8 @@ DECLARE
   double CCold,CThermal;
   double TCollmin;
   double TCollmax;
-  double Emin,Emax;
   double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
-  #pragma acc declare create(CCold,CThermal,EminC,EmaxC,Emin,Emax,EminTh,EmaxTh,TCollmin,TCollmax)
+  #pragma acc declare create(CCold,CThermal,EminC,EmaxC,EminTh,EmaxTh,TCollmin,TCollmax)
 %}
 
 USERVARS
@@ -62,6 +61,8 @@ USERVARS
   double WL;  
   double SurfSign;
   double Eneutron;
+  double Emin;
+  double Emax;
 %}
 
 INITIALIZE
@@ -86,7 +87,7 @@ INITIALIZE
     TCollmin=0.011;
     TCollmax=0.071;
   }
-  #pragma acc update device(CCold,CThermal,EminC,EmaxC,Emin,Emax,EminTh,EmaxTh,TCollmin,TCollmax)
+  #pragma acc update device(CCold,CThermal,EminC,EmaxC,EminTh,EmaxTh,TCollmin,TCollmax)
 %}
 
 TRACE
