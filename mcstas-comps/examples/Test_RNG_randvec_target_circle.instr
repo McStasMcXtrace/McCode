@@ -45,11 +45,6 @@ INITIALIZE
   mcset_ncount(Ncount);
   if (seed) mcseed = seed;
   p0=1.0/mcget_ncount();
-  #ifdef OPENACC
-  #ifdef USE_MPI
-  p0 *= mpi_node_count;
-  #endif
-  #endif
   #pragma acc update device(p0)
   Dist=dist;
   #pragma acc update device(Dist)
