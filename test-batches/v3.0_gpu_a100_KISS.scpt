@@ -1,8 +1,7 @@
 #!/bin/sh
 ### General options
 ### –- specify queue --
-#BSUB -q gpuv100
-#BSUB -R "select[gpu32gb]"
+#BSUB -q gpua100
 ### -- set the job Name --
 #BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
@@ -33,12 +32,12 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_GPU_PGCC_TESLA_KISS
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_GPU_A100_PGCC_TESLA_KISS
 
 cd $HOME
 
 echo done on GPU with split
 #echo submitting multi-GPU job
 # 
-bsub < $HOME/McCode/test-batches/v3.0_gpu_a100_KISS_NOSPLIT.scpt
-bsub < $HOME/McCode/test-batches/plots_gpu.scpt 
+#bsub < $HOME/McCode/test-batches/v3.0_gpu_KISS_NOSPLIT.scpt
+bsub < $HOME/McCode/test-batches/plots_gpu_a100.scpt 
