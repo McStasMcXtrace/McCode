@@ -1294,7 +1294,13 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cout("  #undef sphere");
   }
   cout("");
-
+  
+  if (!strcmp(section, "INITIALISE")) {
+    cout("#ifdef OPENACC");
+    cout("#  include <openacc.h>");
+    cout("#endif");
+  }
+  
   /* then write the instrument main code, which calls component ones */
   coutf("int %s(%s) { /* called by mccode_main for %s:%s */",
     section_lower,
@@ -1340,7 +1346,6 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cogen_defundef(NULL, instr->formals, INSTRUMENT_PAR_VALUE);
     cout("");
     cout("#ifdef OPENACC");
-    cout("#  include <openacc.h>");
     cout("#ifdef USE_MPI");
     cout("int num_devices = acc_get_num_devices(acc_device_nvidia);");
     cout("int my_device = mpi_node_rank % num_devices;");
