@@ -80,10 +80,6 @@
 * t0: [1]                 transmission efficiency 
 * order: [1]              specify the diffraction order, 1 is usually prefered. Use 0 for all 
 *
-* OUTPUT PARAMETERS:
-* col: [1:NH]             column index for last hit blade 
-* row: [1:NV]             row index for last hit blade 
-*
 * %Link
 * <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000133.html">Additional note</a> from Peter Link.
 * %L
@@ -97,7 +93,7 @@
 DEFINE COMPONENT Monochromator_curved
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect="NULL", string transmit="NULL",
-zwidth=0.01, yheight=0.01,gap=0.0005, int NH=11, int NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
+zwidth=0.01, yheight=0.01,gap=0.0005,int NH=11, int NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
 RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -202,13 +198,13 @@ INITIALIZE
   if (!tiltH) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NH=%g).\n", NAME_CURRENT_COMP, NH);
   else if (RH) { /* pre-compute tilts */
     for (i=0;i<=NH;i++){
-      tiltH[i]=asin((i-(NH+1)/2)*(SlabWidth+gap)/RH);
+      tiltH[i]=asin((i-(NH+1)/2.0)*(SlabWidth+gap)/RH);
     }
   }
   if (!tiltV) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NV=%g).\n", NAME_CURRENT_COMP, NV);
   else if (RV) {
     for (i=0;i<=NV;i++){
-      tiltV[i]=-asin((i-(NV+1)/2)*(SlabHeight+gap)/RV);
+      tiltV[i]=-asin((i-(NV+1)/2.0)*(SlabHeight+gap)/RV);
     }
   }
 
@@ -233,9 +229,9 @@ TRACE
     double zmin,zmax, ymin,ymax;
     double yy,zz;
 
-    zmax = ((NH*(SlabWidth+gap))-gap)/2.0;
+    zmax = ((NH*(SlabWidth+gap))-gap)/2;
     zmin = -zmax;
-    ymax = ((NV*(SlabHeight+gap))-gap)/2.0;
+    ymax = ((NV*(SlabHeight+gap))-gap)/2;
     ymin = -ymax;
 
     /* Test-propagate to crystal plane */
@@ -252,19 +248,19 @@ TRACE
       row = ceil ( (yy-ymin)/(SlabHeight+gap));
 
       if (RH != 0) {
-	tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
+	tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2.0)*(SlabWidth+gap)/RH);
       } else {
 	tilth=0;
       }
       if (RV != 0) {
-	tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
+	tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2.0)*(SlabHeight+gap)/RV);
       } else {
 	tiltv=0;
       }
 
       /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
-      double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2.0;
-      double center_y=ymin+(row-0.5)*(SlabHeight+gap)-gap/2.0;
+      double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2;
+      double center_y=ymin+(row-0.5)*(SlabHeight+gap)-gap/2;
 
       Rotation T;
       rot_set_rotation(T, 0, tilth,    tiltv);
