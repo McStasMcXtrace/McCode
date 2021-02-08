@@ -250,7 +250,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
         t1 = time.time()
         global ncount, mpi
         if mpi is not None:
-            cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
+            cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &>> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
         else:
             cmd = "mcrun -s 1000 %s %s -n%s -d%d  &> run_stdout.txt" % (test.localfile, test.parvals, ncount, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
