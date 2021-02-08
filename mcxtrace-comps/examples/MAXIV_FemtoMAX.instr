@@ -33,20 +33,26 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT MAXIV_FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=0, U2SRC=1, U3SRC=0,
+DEFINE INSTRUMENT MAXIV_FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=0, int U2SRC=1, int U3SRC=0,
     RX=0, RY=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-  double dxs1,dys1;
-  double dxs2,dys2;
-  double dxs3,dys3;
+  double dxs1;
+  double dys1;
+  double dxs2;
+  double dys2;
+  double dxs3;
+  double dys3;
 
-  double gamma_fm,gamma_mono, gamma_mlmono;
+  double gamma_fm;
+  double gamma_mono;
+  double gamma_mlmono;
 
-  double Ls_ml,Ld_ml;
+  double Ls_ml;
+  double Ld_ml;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -59,6 +65,14 @@ INITIALIZE
 
   dxs1=1e-3;
   dys1=1e-3;
+
+  dxs2=1e-3;
+  dys2=1e-3;
+
+  dxs3=1e-3;
+  dys3=1e-3;
+
+
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -114,8 +128,8 @@ COMPONENT slit1 = Slit(
 	xwidth=dxs1, yheight=dys1)
 AT(0,0,0.9355) RELATIVE a1
 
-COMPONENT popin_yag1 = Monitor(
-	xwidth=1e-3, yheight=1e-3)
+COMPONENT popin_yag1 = PSD_monitor(
+    xwidth=1e-3, yheight=1e-3,filename="popin_yag1")
 AT(0,0, 0.3355) RELATIVE slit1
 
 
@@ -129,7 +143,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (90,gamma_fm,0) RELATIVE PREVIOUS
 
 COMPONENT focus_mirror1 = COPY(focus_mirror0)
-  AT(0,0.21,0) RELATIVE focus_mirror0
+AT(0,0.21,0) RELATIVE focus_mirror0
 
 COMPONENT focus_mirror_exit0 = Arm()
 AT (0,0,0) RELATIVE focus_mirror1
@@ -139,11 +153,15 @@ COMPONENT focus_mirror_exit1 = Arm()
 AT(0,0,0) RELATIVE PREVIOUS
 ROTATED (-90,0,0) RELATIVE PREVIOUS
 
+COMPONENT emon_mono = Monitor_nD(radius=1, restore_xray=1, options="sphere e limits 0 20", bins=200,filename="emon_probe")
+AT(0,0,0) RELATIVE PREVIOUS
+
+
 COMPONENT slit2 = Slit(
 	xwidth=dxs2, yheight=dys2)
-  AT(0,0,1.2) RELATIVE focus_mirror_exit1
+AT(0,0,1.2) RELATIVE focus_mirror_exit1
 
-COMPONENT popin_yag2 = COPY(popin_yag1)(yheight=1e-2)
+COMPONENT popin_yag2 = COPY(popin_yag1)(yheight=1e-2,filename="popin_yag2")
 AT(0,0,0.4) RELATIVE slit2
 
 
