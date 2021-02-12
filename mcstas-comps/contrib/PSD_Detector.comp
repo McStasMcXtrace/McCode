@@ -244,6 +244,7 @@ DECLARE
              errors, so that the algorithm gives the matching error
              messages only once each */
     long DetectorType; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
+    double rb; // radius of the back plane of the detector
   %}
 
 INITIALIZE
@@ -607,6 +608,7 @@ INITIALIZE
            "WARNING         Memory required is %g Mo\n", NAME_CURRENT_COMP,
            bufsize*element_size/1e6, bufsize*sizeof(double)/1e6);
   }
+  rb=radius+zdepth; // radius of the back plane of the detector
 %}
 
 TRACE
@@ -614,7 +616,6 @@ TRACE
 
   long   i,j;
   double RangeProton,RangeTriton;
-  double rb=radius+zdepth; // radius of the back plane of the detector
   double NAvogadro,MolVolume,v,vt,mu;
   double length,GM,ZB,pa,RandomNumber,la,ta;
   double phi,theta;   // direction of emission of the particles
@@ -1091,11 +1092,11 @@ TRACE
             i = (long)floor(Energy);
             if (i >= 0 &&  i < PHSpectrum_n ) {
 	      double P2 = P*P;
-	      //#pragma acc atomic
-              PHSpectrum0[i] ++;     // one neutron tallied per pixel
-	      //#pragma acc atomic
+	      #pragma acc atomic
+              PHSpectrum0[i] = PHSpectrum0[i] + 1;     // one neutron tallied per pixel
+	      #pragma acc atomic
               PHSpectrum[i] = PHSpectrum[i] + P;   // energy bin in pulse height spectrum incremented by neutron weight
-	      //#pragma acc atomic
+	      #pragma acc atomic
 	      PHSpectrum2[i] = PHSpectrum2[i] + P2; // 2nd order moments
             }
             /* save event file if activated */
