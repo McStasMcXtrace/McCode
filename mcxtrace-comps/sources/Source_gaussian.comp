@@ -98,7 +98,7 @@ INITIALIZE
     pmul=1.0/(double)mcget_ncount();
   }
 
-  if (spectrum_file && str_cmp(spectrum_file,"NULL") && strlen(spectrum_file)){
+  if (spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file)){
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&sT,spectrum_file,0))==-1){
