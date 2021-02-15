@@ -171,10 +171,10 @@ _class_particle mcsetstate(double x, double y, double z, double kx, double ky, d
 
 #ifdef DEBUG
 
-#define DEBUG_STATE(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) if(!mcdotrace); else \
+#define DEBUG_STATE() if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
       x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
-#define DEBUG_SCATTER(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) if(!mcdotrace); else \
+#define DEBUG_SCATTER() if(!mcdotrace); else \
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
       x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
 
