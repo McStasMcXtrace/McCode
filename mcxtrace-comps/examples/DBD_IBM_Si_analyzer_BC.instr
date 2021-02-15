@@ -5,9 +5,8 @@
 *
 * %Identification
 * Written by: Marcus H. Mendenhall (marcus.mendenhall@nist.gov)
-* Date: Current Date
-* Origin: Your institution
-* Release: McXtrace 1.2
+* Date: May '17
+* Origin: NIST
 * Version: 0.2
 * %INSTRUMENT_SITE: NIST
 *
@@ -34,7 +33,9 @@ DEFINE INSTRUMENT DBD_IBM(
   slit_3_hor=0.02, slit_3_vert=0.01,
   ibm_offset=0.00, two_theta_si=94.963,
   emin=8.047, emax=8.0471, take_off=6.0, 
-  int use_flat_source=0, int use_si_crystal=1, min_log_weight=1e20)
+  int use_flat_source=0, int use_si_crystal=1,
+  si_hh=3, si_kk=3, si_ll=3,
+  min_log_weight=1e20)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -74,7 +75,7 @@ INITIALIZE
        sin(θa) =       x sin(2θ) / sqrt(1 + x^2 + 2 x cos(2θ))
        sin(θb) = sin(θa) / x
 
-       and the tilt angle of the lattice α=θbragg-θa
+       and the tilt angle of the lattice alpha=θbragg-θa
      */
 
     { /* make a local block for calculation scoping */
@@ -142,7 +143,7 @@ COMPONENT ibm_crystal = Bragg_crystal_bent_BC(
     alpha=alpha,
     material = "Ge.txt", length = 0.02, width = 0.01,
     V=ge_volume,  debye_waller_B=0.47,
-    h=1, k=1, l=1, crystal_type=Bragg_crystal_diamond)
+    h=1, k=1, l=1, crystal_type=Mx_crystal_diamond)
 AT (0, 0, 0) RELATIVE IBM_arm
 ROTATED (180, 0, 0) RELATIVE IBM_arm
 
@@ -175,8 +176,8 @@ ROTATED (0, 0, 0) RELATIVE sample_arm
 COMPONENT si_crystal = Bragg_crystal_BC(
     material = "Si.txt", length = 0.05, width = 0.05,
    V=si_volume,  debye_waller_B=0.4632,
-   alphax=0, alphay=1, alphaz=0, 
-    h=3, k=3, l=3, crystal_type=Bragg_crystal_diamond) WHEN (use_si_crystal != 0)
+   alphax=0, alphay=1, alphaz=0,
+   h=si_hh, k=si_kk, l=si_ll, crystal_type=Mx_crystal_diamond) WHEN (use_si_crystal != 0)
 AT (0, 0, 2*focal_distance) RELATIVE sample_arm
 ROTATED (-two_theta_si/2.0, 0 ,0) RELATIVE sample_arm
 
@@ -186,13 +187,9 @@ ROTATED (-two_theta_si, 0, 0 ) RELATIVE sample_arm
 
 COMPONENT spectrum_mon = E_monitor(
     nE = 700, filename = "emon", xwidth = 0.05, yheight = 0.05,
-    Emin = 8.010, Emax = 8.080, restore_xray = 1)
-AT (0, 0, 0.216) RELATIVE twotheta_arm
-ROTATED (0, 0, 0) RELATIVE twotheta_arm
-
-//COMPONENT phase_space=phase_space_monitor(filename="events.dat", restore_xray=1, pmin=min_log_weight) 
-// AT (0,0,0.2165) relative twotheta_arm
-//  ROTATED (0,0,0) relative twotheta_arm
+    Emin = (emin+emax)/2-(emax-emin), Emax = (emin+emax)/2+(emax-emin), restore_xray = 1)
+  AT (0, 0, 0.216) RELATIVE twotheta_arm
+  ROTATED (0, 0, 0) RELATIVE twotheta_arm
 
 COMPONENT lynxeye = PSD_monitor(
     nx = 1, ny = 192, xwidth = .01, yheight = 0.0144,
