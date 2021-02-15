@@ -143,7 +143,7 @@ COMPONENT ibm_crystal = Bragg_crystal_bent_BC(
     alpha=alpha,
     material = "Ge.txt", length = 0.02, width = 0.01,
     V=ge_volume,  debye_waller_B=0.47,
-    h=1, k=1, l=1, crystal_type=Mx_crystal_diamond)
+    h=1, k=1, l=1, crystal_type=2)
 AT (0, 0, 0) RELATIVE IBM_arm
 ROTATED (180, 0, 0) RELATIVE IBM_arm
 
@@ -177,7 +177,7 @@ COMPONENT si_crystal = Bragg_crystal_BC(
     material = "Si.txt", length = 0.05, width = 0.05,
    V=si_volume,  debye_waller_B=0.4632,
    alphax=0, alphay=1, alphaz=0,
-   h=si_hh, k=si_kk, l=si_ll, crystal_type=Mx_crystal_diamond) WHEN (use_si_crystal != 0)
+   h=si_hh, k=si_kk, l=si_ll, crystal_type=2) WHEN (use_si_crystal != 0)
 AT (0, 0, 2*focal_distance) RELATIVE sample_arm
 ROTATED (-two_theta_si/2.0, 0 ,0) RELATIVE sample_arm
 

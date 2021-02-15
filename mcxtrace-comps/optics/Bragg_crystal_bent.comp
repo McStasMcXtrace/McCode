@@ -81,7 +81,7 @@ SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, lattice_x_a=0, lattice_y_b=1.0, lat
         length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
         structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS (prms,a2inv,b2inv,c2inv,l_a2inv,l_b2inv,l_c2inv)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE

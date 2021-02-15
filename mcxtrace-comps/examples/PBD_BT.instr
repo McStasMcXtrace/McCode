@@ -173,7 +173,7 @@ COMPONENT mono_silicon_1a = Bragg_crystal_BC(
     material = "Si.txt", length = mono_face_length, width = 0.75*inch, 
     alphax=alphax, alphay=alphay, alphaz=alphaz,
     V=160.19329232,  debye_waller_B=0.4632,
-    h=mono_hh, k=mono_kk, l=mono_ll, crystal_type=Bragg_crystal_diamond) WHEN use_mono!=0
+    h=mono_hh, k=mono_kk, l=mono_ll, crystal_type=2) WHEN use_mono!=0
 AT (0, 0 , -mono_face_length/2.0-0.005) RELATIVE monochromator_arm
 ROTATED (180+mono_incident_angle_deg+mono_detuning_seconds/3600.0,0, -mono_misalignment_angle/2) RELATIVE monochromator_arm
 
@@ -234,7 +234,7 @@ COMPONENT silicon_1a = Bragg_crystal_BC(
     material = "Si.txt", length = crystal_1_back_length, width = 0.02,
    alphax=0, alphay=1, alphaz=0, 
    V=160.19329232,  debye_waller_B=debye_waller_B,
-    h=hh, k=kk, l=ll, crystal_type=Bragg_crystal_diamond)
+    h=hh, k=kk, l=ll, crystal_type=2)
 AT (0, -crystal_1_channel_width*use_3_bounce, 0) RELATIVE silicon_1_arm_2
 ROTATED (180, 0, 0) RELATIVE silicon_1_arm_2
 
