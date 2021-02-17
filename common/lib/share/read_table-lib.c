@@ -769,8 +769,8 @@ double Table_Value(t_Table Table, double X, long j)
   if(Table.constantstep) {
     Index = (long)floor(
               (X - Table.min_x) / (Table.max_x - Table.min_x) * (Table.rows-1));
-    X1 = Table_Index(Table,Index  ,0);
-    X2 = Table_Index(Table,Index+1,0);
+    X1 = Table_Index(Table,Index-1,0);
+    X2 = Table_Index(Table,Index  ,0);
   }
   // Use binary search on large, monotonic tables
   else if(Table.monotonic && Table.rows > 100) {
@@ -801,8 +801,8 @@ double Table_Value(t_Table Table, double X, long j)
       } /* end for Index */
   }
 
-  Y1 = Table_Index(Table,Index, j);
-  Y2 = Table_Index(Table,Index+1, j);
+  Y1 = Table_Index(Table,Index-1, j);
+  Y2 = Table_Index(Table,Index  , j);
 
 #ifdef OPENACC
 #define strcmp(a,b) str_comp(a,b)
