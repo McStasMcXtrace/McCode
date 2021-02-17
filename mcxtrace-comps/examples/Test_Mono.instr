@@ -24,8 +24,8 @@
 * 4: Bragg_crystal_bent_BC - variant of the above based on Mendenhall et. al., J. Appl. Cryst 2019
 * 5: Bragg_crystal_simple - a simple mono with a static (flat) Dawrin width.
 *
-* %Example: Test_Mono -n 1e6 Mono=1 Detector: emon_I=5.39036e-17
-* %Example: Test_Mono -n 1e6 Mono=5 Detector: emon_I=5.33687e-17
+* %Example: Test_Mono.instr Mono=1 Detector: emon_I=5.39036e-17
+* %Example: Test_Mono.instr Mono=5 Detector: emon_I=5.33687e-17
 *
 * %Parameters
 * INPUT PARAMETERS:
