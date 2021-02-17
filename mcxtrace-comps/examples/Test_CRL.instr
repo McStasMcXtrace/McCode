@@ -88,15 +88,15 @@ COMPONENT crl1d_rtm = Lens_CRL_RTM(
 WHEN LENS==3 AT (0, 0, 0) RELATIVE crlplace
 
 
-COMPONENT screen_det = PSD_monitor(
+COMPONENT screen= PSD_monitor(
     restore_xray=1, xwidth=1e-3, yheight=1e-3, filename="screen")
 AT(0,0,L2) RELATIVE crlplace
 
-COMPONENT pt_det = PSD_monitor(
+COMPONENT pt= PSD_monitor(
     restore_xray=1, xwidth=.5e-4/4.0,yheight=1e-4/4.0, filename="pt")
 AT(0,0,L2) RELATIVE crlplace
 
-COMPONENT line_det = PSD_monitor(
+COMPONENT line= PSD_monitor(
     restore_xray=1, xwidth=.4e-3,yheight=1e-1/2.0, filename="line")
 AT(0,0,L2) RELATIVE crlplace
 /* This section is executed when the simulation ends (C code). Other    */

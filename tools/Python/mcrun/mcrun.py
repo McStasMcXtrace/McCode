@@ -154,7 +154,7 @@ def add_mcstas_options(parser):
         help='put all data files in directory DIR')
 
     add('--format',
-        metavar='FORMAT', default='McStas',
+        metavar='FORMAT', default='McCode',
         help='output data files using format FORMAT '
              '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
