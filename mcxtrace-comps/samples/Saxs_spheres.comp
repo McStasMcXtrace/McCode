@@ -56,23 +56,23 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Saxs_spheres
-  DEFINITION PARAMETERS (string sphere_mtrl=NULL)
-SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string sphere_mtrl="", R=100, Phi=1e-3, Delta_rho=0.6, 
 xwidth=0, yheight=0, zdepth=0, radius=0,
 target_x = 0, target_y = 0, target_z = 6, int target_index=0, 
 focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, focus_r=0, mu_c=0)
-OUTPUT PARAMETERS (shape, prms, prmsp)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
 %{
   double my_s_pre;
   int shape;
-  struct {
-    int Z;
-    double At, rho;
-    t_Table T;
-    int mu_ci;/*which column holds absorption mus*/
-  } prms,*prmsp;
+  int Z;
+  double At;
+  double rho;
+  t_Table T;
+  int mu_ci;/*which column holds absorption mus*/
+  int abs_data;
 %}
 INITIALIZE
 %{
@@ -101,30 +101,29 @@ INITIALIZE
     target_z=1;
   }
   /*check for existance of a sphere material datafile. If none is given absorption will be neglected.*/
-  if (sphere_mtrl){  
+  if (sphere_mtrl && strlen(sphere_mtrl) && strcmp(sphere_mtrl,"NULL")){  
     int status;
-    if ( sphere_mtrl && (status=Table_Read(&(prms.T),sphere_mtrl,0))==-1){
+    if ( sphere_mtrl && (status=Table_Read(&(T),sphere_mtrl,0))==-1){
       fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,sphere_mtrl);
       exit(-1);
     }
     char **header_parsed;
-    header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-    if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-    if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-    if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+    header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+    if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+    if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+    if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
     /*which columns holds the mus*/
     if (mu_c){
-      prms.mu_ci=mu_c;
+      mu_ci=mu_c;
     }else{
       /*not given so take a guess*/
-      prms.mu_ci=5;
-      if (prms.T.columns==3) prms.mu_ci=1;
-      prmsp=&prms;
+      mu_ci=5;
+      if (T.columns==3) mu_ci=1;
     }
+    abs_data=1;
   }else{
-    prmsp=NULL;
+    abs_data=0;
   }
-
   my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho;
 
 %}
@@ -185,8 +184,8 @@ TRACE
     f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
 
     /*calculate absorption*/
-    if(prmsp){
-      my_a_v=Table_Value((prmsp->T),k*K2E,prmsp->mu_ci);
+    if(abs_data){
+      my_a_v=Table_Value(T,k*K2E,mu_ci);
     }else{
       my_a_v=0;
     }
