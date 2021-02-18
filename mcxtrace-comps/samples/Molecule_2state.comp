@@ -71,25 +71,35 @@ SHARE
 %{
   %include "read_table-lib"
   %include "form_factor-lib"
+#ifndef MXMOLECULE_2STATE
+#define MXMOLECULE_2STATE
   enum SHAPES {NONE,CYLINDER,SPHERE,BOX};
   struct mat_prms {
     int Z;
     double At, rho;
     double *E,*mu;
   };
+#endif
 %}
 
 
 DECLARE
 %{
   double delta_q=0.01;
-  struct{
-    double *q,*f2;
-    int rows;
-    double f2sum,f2mcsum,qnmin,qnmax;
-  } prms[2];
-  struct mat_prms *Prms;
-  enum SHAPES shape;
+
+  double q[2][],f2[2][];
+  int rows[2];
+  double f2sum[2];
+  double f2mcsum[2];
+  double qnmin[2];
+  double qnmax[2];
+  int Z;
+  double At;
+  double rho;
+  double *E;
+  double *Mu;
+  t_Table matT;
+  int shape;
 %}
 
 
@@ -122,23 +132,23 @@ INITIALIZE
 
   if (!q_parametric){
     /*input files are atom positions - use that to compute f2s*/
-    prms[0].f2=malloc(sizeof(double)*nq);/*could be done by read_table-lib*/
-    prms[0].q=malloc(sizeof(double)*nq);
-    prms[1].f2=malloc(sizeof(double)*nq);
-    prms[1].q=malloc(sizeof(double)*nq);
+    f2[0]=malloc(sizeof(double)*nq);/*could be done by read_table-lib*/
+    q[0]=malloc(sizeof(double)*nq);
+    f2[1]=malloc(sizeof(double)*nq);
+    q[1]=malloc(sizeof(double)*nq);
 
     if (!psimax) psimax=M_PI;
     /*compute q-limits*/;
-    if (psimin!=0) prms[0].qnmin=prms[1].qnmin=Emax*E2K*M_SQRT2*sqrt(1-cos(psimin));
-    prms[0].qnmax=prms[1].qnmax=Emax*E2K*M_SQRT2*sqrt(1-cos(psimax));
+    if (psimin!=0) qnmin[0]=qnmin[1]=Emax*E2K*M_SQRT2*sqrt(1-cos(psimin));
+    qnmax[0]=qnmax[1]=Emax*E2K*M_SQRT2*sqrt(1-cos(psimax));
 
     printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
     int r,n,m,states;/*do this for two states*/
-    double dq= prms[0].qnmax/(nq-1);
+    double dq= qnmax[0]/(nq-1);
     for (states=0;states<2;states++){
       for (r=0;r<nq;r++){
         double f2=0;
-        double q=prms[states].qnmin + r*dq;//Table_Index(f0,r,0);
+        double q=qnmin[states] + r*dq;//Table_Index(f0,r,0);
         for (n=0;n<T[states].rows;n++){
           int Zn=(int) Table_Index(T[states],n,0);
           /*figure out Z_n*/
@@ -164,50 +174,50 @@ INITIALIZE
             }
           }
         }
-        prms[states].f2[r]=f2;
-        prms[states].q[r]=q;
+        f2[states][r]=f2;
+        q[states][r]=q;
         if (r>0){
           //double dq=q-Table_Index(f0,r-1,0);
           /*integrate using linear interpolation*/
-          prms[states].f2sum+=0.5*(prms[states].f2[r-1]+f2)*dq;
-          if (q>prms[states].qnmin && q<prms[states].qnmax){
+          f2sum[states]+=0.5*(f2[states][r-1]+f2)*dq;
+          if (q>qnmin[states] && q<qnmax[states]){
             double q1,q2,alpha;
-            q1=(prms[states].qnmin>q-dq?prms[states].qnmin:q-dq);
-            q2=(prms[states].qnmax<q?prms[states].qnmax:q);
+            q1=(qnmin[states]>q-dq?qnmin[states]:q-dq);
+            q2=(qnmax[states]<q?qnmax[states]:q);
             alpha=((q1+q2)*0.5-(q-dq))/q;
-            prms[states].f2mcsum+=(q2-q1)*(alpha*prms[states].f2[r-1]+ (1-alpha)*f2);
+            f2mcsum[states]+=(q2-q1)*(alpha*f2[states][r-1]+ (1-alpha)*f2);
           }
         }
       }
-      prms[states].rows=T[states].rows;
-      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,prms[states].f2sum,RE*RE*prms[states].f2sum);
+      rows[states]=T[states].rows;
+      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,f2sum[states],RE*RE*f2sum[states]);
     }
   }else{
     /*input files contain f2 parametrized by q*/
     double dq=0.1;
     int r,states;/*do this for two states*/
-    prms[0].f2=malloc(sizeof(double)*(T[0].rows+1));/*could be done by read_table-lib*/
-    prms[0].q=malloc(sizeof(double)*(T[0].rows+1));
-    prms[1].f2=malloc(sizeof(double)*(T[1].rows+1));
-    prms[1].q=malloc(sizeof(double)*(T[1].rows+1));
+    f2[0]=malloc(sizeof(double)*(T[0].rows+1));/*could be done by read_table-lib*/
+    q[0]=malloc(sizeof(double)*(T[0].rows+1));
+    f2[1]=malloc(sizeof(double)*(T[1].rows+1));
+    q[1]=malloc(sizeof(double)*(T[1].rows+1));
 
     if (!psimax) psimax=M_PI;
     /*compute q-limits*/;
-    prms[0].qnmin=prms[1].qnmin=M_SQRT2*sqrt(1-cos(psimin));
-    prms[0].qnmax=prms[1].qnmax=M_SQRT2*sqrt(1-cos(psimax));
+    qnmin[0]=qnmin[1]=M_SQRT2*sqrt(1-cos(psimin));
+    qnmax[0]=qnmax[1]=M_SQRT2*sqrt(1-cos(psimax));
 
     printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
     for (states=0;states<2;states++){
       for (r=0;r<T[states].rows;r++){
-        prms[states].q[r]=T[states].data[r*2];
-        prms[states].f2[r]=T[states].data[r*2+1];
-        //printf("%d %d %g %g\n",states,r,prms[states].q[r], prms[states].f2[r]);
-        prms[states].f2sum+=prms[states].f2[r]*dq;
+        q[states][r]=T[states].data[r*2];
+        f2[states][r]=T[states].data[r*2+1];
+        //printf("%d %d %g %g\n",states,r,q[states][r], f2[states][r]);
+        f2sum[states]+=f2[states][r]*dq;
       }
-      prms[states].rows=T[states].rows;
-      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,prms[states].f2sum,RE*RE*prms[states].f2sum);
-      prms[states].f2[r]=prms[states].f2[r-1];
-      prms[states].q[r]=FLT_MAX;
+      rows[states]=T[states].rows;
+      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,f2sum[states],RE*RE*f2sum[states]);
+      f2[states][r]=f2[states][r-1];
+      q[states][r]=FLT_MAX;
     }
   }
   if (radius){
@@ -220,31 +230,34 @@ INITIALIZE
     fprintf(stderr,"Error (%s): could not understand which shape the thing is\n",NAME_CURRENT_COMP);exit(1);
   }
 
-/*Read absorption table*/
   t_Table A;
+  /*Read absorption table*/
   if ( (status=Table_Read(&A,material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(A.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-  Prms=calloc(1,sizeof(struct mat_prms));
-  Prms->E=malloc(sizeof(double)*(A.rows+1));
-  Prms->mu=malloc(sizeof(double)*(A.rows+1));
-  if(header_parsed[2]){Prms->rho=strtod(header_parsed[2],NULL);}
-  else{fprintf(stderr,"Warning(%s): %s found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);Prms->rho=1;}
+  //Prms=calloc(1,sizeof(struct mat_prms));
+  E=malloc(sizeof(double)*(A.rows+1));
+  Mu=malloc(sizeof(double)*(A.rows+1));
+  if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+  else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);rho=1;}
   /*which columns holds the mus*/
   int mu_c=5;
-  if (A.columns==3) mu_c=1;
+  if (A.columns==3){
+    /*three column format*/
+    mu_c=1;
+  }
 
   int i;
   for (i=0;i<A.rows;i++){
-    Prms->E[i]=A.data[i*A.columns];
-    Prms->mu[i]=A.data[mu_c+i*A.columns]*Prms->rho*1e2;     /*mu is now in SI, [m^-1]*/
+    E[i]=A.data[i*A.columns];
+    Mu[i]=A.data[mu_c+i*A.columns]*rho*1e2;     /*mu is now in SI, [m^-1]*/
   }
 
-  Prms->E[A.rows]=-1.0;
-  Prms->mu[A.rows]=-FLT_MAX;
+  E[A.rows]=-1.0;
+  Mu[A.rows]=-FLT_MAX;
 
   Table_Free(&A);
 
@@ -274,14 +287,14 @@ TRACE
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
     i=0;
-    while (e>Prms->E[i]){
+    while (e>E[i]){
       i++;
-      if (Prms->E[i]==-1){
+      if (E[i]==-1){
         fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;
       }
     }
-    alpha=(e-Prms->E[i-1])/(Prms->E[i]-Prms->E[i-1]);
-    mu=(1-alpha)*Prms->mu[i-1]+alpha*Prms->mu[i];
+    alpha=(e-E[i-1])/(E[i]-E[i-1]);
+    mu=(1-alpha)*Mu[i-1]+alpha*Mu[i];
     /*which state is the molecule in?*/
     /*delta_T is positive for optical pulse coming before x-ray pulse (t). Assuming the optical pulse to be
      *short, relaxation has progressed since t+delta_t. Then the probability
@@ -302,7 +315,7 @@ TRACE
     }
     /*now figure out if we scatter at all*/
     double dl=l1-l0;
-    double mu_s=RE*RE*prms[state].f2sum;
+    double mu_s=RE*RE*f2sum[state];
     double l_conc=pow(concentration,0.3333333333333333333333333333333333333);
     double pmul=1,p_s;
     double pr;
@@ -346,15 +359,15 @@ TRACE
       int r;
       if (!q_parametric){
           for(r=1;r<nq-1;r++){
-              if (prms[state].q[r]>q) break;
+              if (q[state][r]>q) break;
           }
       }else{
-          for(r=1;r<prms[state].rows-1;r++){
-              if (prms[state].q[r]>q) break;
+          for(r=1;r<rows[state]-1;r++){
+              if (q[state][r]>q) break;
           }
       }
-      alpha=(q-prms[state].q[r-1])/(prms[state].q[r]-prms[state].q[r-1]);
-      f2=(1-alpha)*prms[state].f2[r-1] + alpha*prms[state].f2[r];
+      alpha=(q-q[state][r-1])/(q[state][r]-q[state][r-1]);
+      f2=(1-alpha)*f2[state][r-1] + alpha*f2[state][r];
       if (f2<0) f2=0;
 
       /*using the new kf-vector, recompute the intersections to find length to go to correct for multiple scattering and absorption*/
@@ -370,9 +383,9 @@ TRACE
       }
 
       /*scale p according to F2 and \int_0_inf F2*/
-      //p*=(f2/prms[state].f2sum) * (psimax-psimin)/M_PI * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
-      p*=(f2/prms[state].f2sum) * solid_angle * p_s/(1-p_transmit);
-      //p*=prms[state].f2mcsum/prms[state].f2sum * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
+      //p*=(f2/f2sum[state]) * (psimax-psimin)/M_PI * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
+      p*=(f2/f2sum[state]) * solid_angle * p_s/(1-p_transmit);
+      //p*=f2mcsum[state]/f2sum[state] * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
 
       /*Absorption after scattering*/
       p*=exp(-mu*l1);
