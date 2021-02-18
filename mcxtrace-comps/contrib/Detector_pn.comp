@@ -40,9 +40,9 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Detector_pn
-DEFINITION PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename=0, restore_xray=0)
-SETTING PARAMETERS (xwidth,yheight,zdepth) 
-OUTPUT PARAMETERS (prms, PSD_N, PSD_p, PSD_p2)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename=0, restore_xray=0,xwidth=1e-2,yheight=1e-2,zdepth=1e-6) 
+OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 SHARE
@@ -57,16 +57,17 @@ DECLARE
   double ymax;
   double ymin;
 
-  struct {
-    int Z;
-    double At, rho;
-    double *E,*mu;
-   } prms;
+  int Z;
+  double At;
+  double rho;
+  double *E;
+  double *Mu;
 
-    double PSD_N[nx][ny];
-    double PSD_p[nx][ny];
-    double PSD_p2[nx][ny];
-  %}
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
+%}
+
 INITIALIZE
 %{
   int status=0;
@@ -87,39 +88,37 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","sigma[a]");
-  //if (!prms.At) prms.At=strtod(header_parsed[1],NULL);
-  //if (!prms.Z) prms.Z=strtol(header_parsed[0],NULL,10);
-  if (!prms.rho) prms.rho=strtod(header_parsed[2],NULL);
-  prms.E=malloc(sizeof(double)*(T.rows+1));
-  prms.mu=malloc(sizeof(double)*(T.rows+1));
+  //if (!At) At=strtod(header_parsed[1],NULL);
+  //if (!Z) Z=strtol(header_parsed[0],NULL,10);
+  if (!rho) rho=strtod(header_parsed[2],NULL);
+  E=malloc(sizeof(double)*(T.rows+1));
+  mu=malloc(sizeof(double)*(T.rows+1));
 
   int i,j;
   for (i=0;i<T.rows;i++){
-    prms.E[i]=T.data[i*T.columns];
-    prms.mu[i]=T.data[1+i*T.columns]*prms.rho*1e2;     /*mu is now in SI, [m^-1]*/ 
+    E[i]=T.data[i*T.columns];
+    Mu[i]=T.data[1+i*T.columns]*rho*1e2;     /*mu is now in SI, [m^-1]*/ 
   }
 
-  prms.E[T.rows]=-1.0;
-  prms.mu[T.rows]=-FLT_MAX;
+  E[T.rows]=-1.0;
+  Mu[T.rows]=-FLT_MAX;
   
   Table_Free(&T);
   
   
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("PSD_monitor: %s: Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
-    }
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("Detector_pn: %s: Null detection area !\n"
+        "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+        NAME_CURRENT_COMP);
+    exit(0);
+  }
 
-    for (i=0; i<nx; i++){
-      memset(PSD_N[i],0,sizeof(double)*ny);
-      memset(PSD_p[i],0,sizeof(double)*ny);
-      memset(PSD_p2[i],0,sizeof(double)*ny);
-    }
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
 %}
 
 TRACE
@@ -133,14 +132,14 @@ TRACE
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
     i=0;
-    while (e>prms.E[i]){
+    while (e>E[i]){
       i++;
-      if (prms.E[i]==-1){
+      if (E[i]==-1){
         fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;
       }
     }
-    alpha=(e-prms.E[i-1])/(prms.E[i]-prms.E[i-1]);
-    mu=(1-alpha)*prms.mu[i-1]+alpha*prms.mu[i];
+    alpha=(e-E[i-1])/(E[i]-E[i-1]);
+    mu=(1-alpha)*Mu[i-1]+alpha*Mu[i];
     //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
     
     l1-=l0; 
@@ -150,9 +149,12 @@ TRACE
     {
       i = floor((x - xmin)*nx/(xmax - xmin));
       j = floor((y - ymin)*ny/(ymax - ymin));
-      PSD_N[i][j]++;
-      PSD_p[i][j] += p;
-      PSD_p2[i][j] += p*p;
+#pragma acc atomic
+      PSD_N[i][j] = PSD_N[i][j] + 1;
+#pragma acc atomic
+      PSD_p[i][j] = PSD_p[i][j] + p;
+#pragma acc atomic
+      PSD_p2[i][j] = PSD_p2[i][j] + p*p;
       SCATTER;
     }
     if (restore_xray) {
@@ -163,7 +165,7 @@ TRACE
 %}
 
 SAVE
-  %{
+%{
     DETECTOR_OUT_2D(
         "Detector_pn",
         "X position [cm]",
@@ -172,11 +174,20 @@ SAVE
         nx, ny,
         &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
         filename);
-  %}
-  
+%}
+ 
+FINALLY
+%{
+  free(Mu);
+  free(E);
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
+ 
 MCDISPLAY
 %{
-  
   box(0,0,0,xwidth,yheight,zdepth);
 %}
 END
