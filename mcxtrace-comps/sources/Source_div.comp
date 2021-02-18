@@ -53,10 +53,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_div
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string spectrum_file="NULL", xwidth, yheight, focus_aw, focus_ah, 
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0)
-OUTPUT PARAMETERS (prms, p_init, dist)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -66,38 +66,39 @@ SHARE
 
 DECLARE
 %{
-  double p_init;
-  double dist;
-  struct {
-    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
-    t_Table T;
-  } prms;
+  double xmin;
+  double xmax;
+  double ymin;
+  double ymax;
+  double pmul;
+  double pint;
+  t_Table T;
 %}
 
 INITIALIZE
 %{
 
-  prms.xmin=-xwidth/2.0;
-  prms.ymin=-yheight/2.0;
-  prms.xmax=xwidth/2.0;
-  prms.ymax=yheight/2.0;
+  xmin=-xwidth/2.0;
+  ymin=-yheight/2.0;
+  xmax=xwidth/2.0;
+  ymax=yheight/2.0;
   
   if (spectrum_file){
     /*read spectrum from file*/
     int status=0;
-    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+    if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
       fprintf(stderr,"Source_div(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
     /*data is now in table t*/
     /*integrate to get total flux, assuming raw numbers have been corrected for measuring aperture*/
     int i;
-    prms.pint=0;
-    t_Table *T=&(prms.T);
-    for (i=0;i<prms.T.rows-1;i++){
-      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+    pint=0;
+    t_Table *T=&(T);
+    for (i=0;i<T.rows-1;i++){
+      pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
     }
-    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
     if(E0) printf("Source_div(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if (!E0 && !lambda0){
     fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
@@ -106,11 +107,11 @@ INITIALIZE
 
   /*calculate the X-ray weight from the flux*/
   if (flux){
-    prms.pmul=flux;
+    pmul=flux;
   }else{
-    prms.pmul=1;
+    pmul=1;
   }
-  prms.pmul*=1.0/((double) mcget_ncount());
+  pmul*=1.0/((double) mcget_ncount());
 
 
 %}
@@ -118,7 +119,7 @@ INITIALIZE
 TRACE
 %{
   double kk,theta_x,theta_y,l,e,k;
-  p=prms.pmul;
+  p=pmul;
   if (!gauss_a){ 
     theta_x=(rand01()-0.5)*focus_aw;
     theta_y=(rand01()-0.5)*focus_ah;
@@ -126,15 +127,15 @@ TRACE
     theta_x=randnorm()*focus_aw;
     theta_y=randnorm()*focus_ah;
   }
-  x=prms.xmin+rand01()*xwidth;
-  y=prms.ymin+rand01()*yheight;
+  x=xmin+rand01()*xwidth;
+  y=ymin+rand01()*yheight;
   z=0;
 
   if (spectrum_file){
     double pp=0;
     while (pp<=0){ 
-      l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
-      pp=Table_Value(prms.T,l,1);
+      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*rand01();
+      pp=Table_Value(T,l,1);
     }
     p*=pp;
     /*if E0!=0 the tabled value is assumed to energy in keV*/
@@ -187,7 +188,6 @@ TRACE
 
 MCDISPLAY
 %{
-  
   double dist=1;
   multiline(5, -xwidth/2.0, -yheight/2.0, 0.0,
                 xwidth/2.0, -yheight/2.0, 0.0,
