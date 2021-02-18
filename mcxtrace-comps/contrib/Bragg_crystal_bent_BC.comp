@@ -87,7 +87,7 @@ SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, lattice_x_a=0, lattice_y_b=1.0, lat
         length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1,
         structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
-OUTPUT PARAMETERS (prms,a2inv,b2inv,c2inv,l_a2inv,l_b2inv,l_c2inv,cos_alpha0, sin_alpha0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
@@ -97,12 +97,13 @@ SHARE
 
 DECLARE
 %{
-    struct {
-        int Z;
-        double rho,At,f_rel,f_nt;
-        t_Table m_t;
-        t_Table f0_t;
-    }prms;
+  int Z;
+  double rho;
+  double At;
+  double f_rel;
+  double f_nt;
+  t_Table m_t;
+  t_Table f0_t;
   double a2inv;
   double b2inv;
   double c2inv; /* 1/r^2 for physical ellipse */
@@ -119,20 +120,20 @@ INITIALIZE
     printf("Component %s: starting up\n",NAME_CURRENT_COMP);
     int status;
     if (material){
-        if ((status=Table_Read(&(prms.m_t),material,0))==-1){
+        if ((status=Table_Read(&(m_t),material,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
             exit(-1);
         }
         char **header_parsed;
-        header_parsed=Table_ParseHeader(prms.m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+        header_parsed=Table_ParseHeader(m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
     }else{
         fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP);
     }
     if(form_factors){
-        if ((status=Table_Read(&(prms.f0_t),form_factors,0))==-1){
+        if ((status=Table_Read(&(f0_t),form_factors,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
             exit(-1);
         }
@@ -237,10 +238,10 @@ TRACE
             alpha_v[1]=ay; alpha_v[2]=az;
             
             double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
-            f00 = prms.Z;
-            f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
-            fp  = Table_Value(prms.m_t,E,1)-prms.Z;
-            fpp = Table_Value(prms.m_t,E,2);
+            f00 = Z;
+            f0h = Table_Value(f0_t,1/(2*d),Z);
+            fp  = Table_Value(m_t,E,1)-Z;
+            fpp = Table_Value(m_t,E,2);
             
             double Rsig, Rpi;
             double kh[3], sig_axis[3], pi_axis[3];
