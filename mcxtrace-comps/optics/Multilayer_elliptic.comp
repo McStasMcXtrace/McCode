@@ -52,9 +52,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_elliptic
-DEFINITION PARAMETERS (string reflectivity_datafile="reflectivity.txt")
-SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, N=0)
-OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string reflectivity_datafile="reflectivity.txt",
+    theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, N=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 
@@ -92,15 +93,16 @@ DECLARE
   double Y0;
   double xi;
   double cost0;
-  struct {
-     double *Q;
-     double **R; //reflectivity
-     double E_min,E_max,E_step;
-     int nE,nQ;
-     int kinematical;
-     double Lambda,Gamma;
-   } *prms_m;
-    
+  double *Q;
+  double **R; //reflectivity
+  double E_min;
+  double E_max;
+  double E_step;
+  int nE;
+  int nQ;
+  int kinematical;
+  double Lambda;
+  double Gamma;
 %}
 
 INITIALIZE
@@ -118,11 +120,9 @@ INITIALIZE
   Y0 = b*sin(acos(cost0)); 
   xi = -atan((Z0*b*b)/(Y0*a*a)); 
 
-  prms_m=malloc(sizeof(*prms_m));
-
   if(!Gamma && !Lambda){
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
-    prms_m->kinematical = 0;
+    kinematical = 0;
     /* reflectivity datafile parsing */
     int status=0;
     t_Table T;
@@ -130,25 +130,25 @@ INITIALIZE
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",reflectivity_datafile,NAME_CURRENT_COMP);
       exit(-1);
     }
-    (prms_m->R)=malloc(sizeof(double *)*(T.rows));
-    prms_m->nQ=T.rows;
-    (prms_m->Q)=malloc(sizeof(double)*(T.rows));
+    (R)=malloc(sizeof(double *)*(T.rows));
+    nQ=T.rows;
+    (Q)=malloc(sizeof(double)*(T.rows));
     int i,j;
     for (i=0;i<T.rows;i++){
-      prms_m->R[i]=malloc(sizeof(double)*(T.columns-1));
+      R[i]=malloc(sizeof(double)*(T.columns-1));
     }
     for(i=0;i<T.rows;i++){
-      prms_m->Q[i]=T.data[i*T.columns];
+      Q[i]=T.data[i*T.columns];
       for(j=0;j<T.columns-1;j++){
-        prms_m->R[i][j]=T.data[i*T.columns+j+1];
+        R[i][j]=T.data[i*T.columns+j+1];
       }
     }
 
     //if the energy is given from outside - don't bother parsing the header.
     if(Emin!=-1 && Emax!=-1 &Estep !=-1){
-      prms_m->E_min=Emin;
-      prms_m->E_step=Estep;
-      prms_m->E_max=Emax;
+      E_min=Emin;
+      E_step=Estep;
+      E_max=Emax;
     }else{
       /*now parse the header to find boundaries*/
       char **header_parsed;
@@ -161,43 +161,43 @@ INITIALIZE
         errno=0;
         td[0]=strtod(p+1,NULL);
         p=strchr(p,':');
-        prms_m->E_step=strtod(p+1,NULL);
+        E_step=strtod(p+1,NULL);
         p=strchr(p+1,':');
-        prms_m->E_max=strtod(p+1,NULL);
+        E_max=strtod(p+1,NULL);
         if(!errno){
-          prms_m->E_min=td[0];
-          prms_m->E_step=td[1];
-          prms_m->E_max=td[2];
+          E_min=td[0];
+          E_step=td[1];
+          E_max=td[2];
         }else{
-          prms_m->E_min=prms_m->E_step=prms_m->E_max=0;
+          E_min=E_step=E_max=0;
         }
 
 
         if (header_parsed[1]){
           /*reflectivity is a fucntion of wavelength*/
-          prms_m->E_min=K2E*2*M_PI/prms_m->E_min;
-          prms_m->E_step=K2E*2*M_PI/prms_m->E_step;
-          prms_m->E_max=K2E*2*M_PI/prms_m->E_max;
+          E_min=K2E*2*M_PI/E_min;
+          E_step=K2E*2*M_PI/E_step;
+          E_max=K2E*2*M_PI/E_max;
         }
       }
     }
-    prms_m->nE=(int) fabs((prms_m->E_min - prms_m->E_max)/prms_m->E_step);
+    nE=(int) fabs((E_min - E_max)/E_step);
 
     /*Swap Emin and Emax if necessary*/
-    if (prms_m->E_min > prms_m->E_max){
-      double tmp=prms_m->E_min;
-      prms_m->E_min = prms_m->E_max; prms_m->E_max=tmp;
+    if (E_min > E_max){
+      double tmp=E_min;
+      E_min = E_max; E_max=tmp;
     }
     /*Sanity check values*/
-    if (prms_m->E_step>fabs(prms_m->E_max-prms_m->E_min) || prms_m->E_step<0){
-      fprintf(stderr,"Error: Multilayer_elliptic(%s): Nonsensical energy interval [%g:%g:%g]\n",NAME_CURRENT_COMP,prms_m->E_min,prms_m->E_step,prms_m->E_max);
+    if (E_step>fabs(E_max-E_min) || E_step<0){
+      fprintf(stderr,"Error: Multilayer_elliptic(%s): Nonsensical energy interval [%g:%g:%g]\n",NAME_CURRENT_COMP,E_min,E_step,E_max);
       exit(-1);
     }
     Table_Free(&T);
   }else{
-    prms_m->kinematical = 1;
-    //prms_m->Gamma = Gamma;
-    //prms_m->Lambda = Lambda;
+    kinematical = 1;
+    //Gamma = Gamma;
+    //Lambda = Lambda;
   }
 %}
 
@@ -268,18 +268,18 @@ TRACE
 	  ky=K*ky;
 	  kz=K*kz;
 	  	  
-	  double Q,E,Ref;
-	  Q=sqrt((kx-kxo)*(kx-kxo)+(ky-kyo)*(ky-kyo)+(kz-kzo)*(kz-kzo)); 
-	  E=K*K2E; 
+	  double QQ,EE,Ref;
+	  QQ=sqrt((kx-kxo)*(kx-kxo)+(ky-kyo)*(ky-kyo)+(kz-kzo)*(kz-kzo)); 
+	  EE=K*K2E; 
 
-          if(prms_m->kinematical){
+          if(kinematical){
             //also add the option of kinematical approximation
             /*
              * \Lambda: thickness of bilayer - following notation in Als-Nielsen/McMorrow
              * \Gamma:  \Gamma*\Lambda thickness of high electron density material.
              * r1(zeta) = 2 i r_0 \rho_{AB} \left(\frac{\Lambda^2 \Gamma}{\zeta}\right) \frac{\sin\left(\pi\Gamma\zeta\right)}{\pi\Gamma\zeta);
              */
-            double zeta=0.5*M_1_PI*Q*Lambda;
+            double zeta=0.5*M_1_PI*QQ*Lambda;
             double beta;
             double complex r1,rN;
             beta=0;/*for now ignore absorption*/
@@ -294,22 +294,22 @@ TRACE
             //interpolate in table
             // This should be rewritten to use read-table-lib
             int col=0;/*the +1 is because the first column contains q.*/
-            col=(int) ceil( (E-prms_m->E_min)/prms_m->E_step)+1;
-            //while (E>(prms_m->E_min+col*prms_m->E_step)) col++;
+            col=(int) ceil( (EE-E_min)/E_step)+1;
+            //while (E>(E_min+col*E_step)) col++;
 
             int row=0;
-            while (row<=prms_m->nQ){
-              if(Q<(prms_m->Q[row])) break;
+            while (row<=nQ){
+              if(QQ<(Q[row])) break;
               row++;
             }
             /*check for table index overrruns*/
             if (col<1)col=1;
-            else if (col>=prms_m->nE) col=prms_m->nE-1;
+            else if (col>=nE) col=nE-1;
             if (row<1)row=1;
-            else if (row>=prms_m->nQ) row=prms_m->nQ-1;
+            else if (row>=nQ) row=nQ-1;
             //for now just take the mean, should really interpolate
 
-            Ref=(prms_m->R[row-1][col-1] + prms_m->R[row-1][col] + prms_m->R[row][col-1] + prms_m->R[row][col])/4;
+            Ref=(R[row-1][col-1] + R[row-1][col] + R[row][col-1] + R[row][col])/4;
           }
 	  
 	  // apply reflectivity
@@ -325,7 +325,6 @@ TRACE
 %}
 FINALLY
 %{
-    free(prms_m);
 %}
 
 MCDISPLAY
