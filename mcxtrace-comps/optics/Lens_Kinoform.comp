@@ -33,9 +33,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_Kinoform
-DEFINITION PARAMETERS (string datafile="kinoform.txt", material_datafile="Si.txt",Re=2.8179402894e-5,Na=6.02214179e23)
-SETTING PARAMETERS (yheight=1e-2,xwidth=5.268e-4,deltaN=0)
-OUTPUT PARAMETERS (prms,mat_data)
+DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (string datafile="kinoform.txt", string material_datafile="Si.txt",
+  yheight=1e-2,xwidth=5.268e-4,deltaN=0)
+OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
@@ -45,8 +46,14 @@ SHARE
 
 DECLARE
 %{
-  struct { double *z_KL, *x_KL;} *prms;
-  struct { int Z; double Ar; double rho; double *E, *mu, *f; } *mat_data;
+  double *z_KL;
+  double *x_KL;
+  int Z;
+  double Ar; 
+  double rho; 
+  double *E;
+  double *Mu;
+  double *F;
 %}   
   
 INITIALIZE
@@ -58,13 +65,12 @@ INITIALIZE
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
-  prms=calloc(1,sizeof(struct KL_struct));
-  prms->z_KL=malloc(sizeof(double)*(T.rows+1));
-  prms->x_KL=malloc(sizeof(double)*(T.rows+1));
+  z_KL=malloc(sizeof(double)*(T.rows+1));
+  x_KL=malloc(sizeof(double)*(T.rows+1));
   int i;
   for(i=0;i<T.rows;i++){
-      prms->z_KL[i]=T.data[i*T.columns]; 
-      prms->x_KL[i]=T.data[1+i*T.columns];               
+      z_KL[i]=T.data[i*T.columns]; 
+      x_KL[i]=T.data[1+i*T.columns];               
       
   }
   Table_Free(&T);
@@ -79,27 +85,26 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(TT.header,"Z","A[r]","rho",NULL);
-  mat_data=calloc(1,sizeof(* mat_data ));
-  if (!mat_data->Z) mat_data->Z=strtol(header_parsed[0],NULL,10);
-  if (!mat_data->Ar) mat_data->Ar=strtod(header_parsed[1],NULL);
-  if (!mat_data->rho) mat_data->rho=strtod(header_parsed[2],NULL);
-  mat_data->E=malloc(sizeof(double)*(TT.rows+1));
-  mat_data->f=malloc(sizeof(double)*(TT.rows+1));
-  mat_data->mu=malloc(sizeof(double)*(TT.rows+1));
+  if (!Z) Z=strtol(header_parsed[0],NULL,10);
+  if (!Ar) Ar=strtod(header_parsed[1],NULL);
+  if (!rho) rho=strtod(header_parsed[2],NULL);
+  E=malloc(sizeof(double)*(TT.rows+1));
+  F=malloc(sizeof(double)*(TT.rows+1));
+  Mu=malloc(sizeof(double)*(TT.rows+1));
   int nr;
   for(nr=0;nr<TT.rows;nr++){
-      mat_data->E[nr]=TT.data[nr*TT.columns]; 
-      mat_data->mu[nr]=TT.data[5+nr*TT.columns]*mat_data->rho*1e2;     /*mu is now in SI, [m^-1]*/          
-      mat_data->f[nr]=TT.data[1+nr*TT.columns];
+      E[nr]=TT.data[nr*TT.columns]; 
+      Mu[nr]=TT.data[5+nr*TT.columns]*rho*1e2;     /*mu is now in SI, [m^-1]*/          
+      F[nr]=TT.data[1+nr*TT.columns];
   }
   Table_Free(&TT);
 %}
 
 TRACE
 %{
-  double F,k,di;
+  double FF,k,di;
   double kxN,kyN,kzN;
-  double E, mu,f,rhoel,e,delta,beta,T;
+  double EE, mu,f,rhoel,e,delta,beta,T;
   double x_tmp,z_int;
   int i,nr;
   k=sqrt(kx*kx+ky*ky+kz*kz);
@@ -107,19 +112,19 @@ TRACE
 
   // determining delta 
   
-  while (e>mat_data->E[i]){
+  while (e>E[i]){
     i++; 
-    if (mat_data->E[i]==-1){
+    if (E[i]==-1){
       fprintf(stderr,"Photon energy (%g keV) is outside of the kinoform's material data\n",k); ABSORB;
     }
   } 
-  E=(e-mat_data->E[i-1])/(mat_data->E[i]-mat_data->E[i-1]); 
-  mu=(1-E)*mat_data->mu[i-1]+E*mat_data->mu[i];
-  f=(1-E)*mat_data->f[i-1]+E*mat_data->f[i]; 
-  rhoel= f*Na*(mat_data->rho*1e-24)/mat_data->Ar; 
+  EE=(e-E[i-1])/(E[i]-E[i-1]); 
+  mu=(1-EE)*Mu[i-1]+EE*Mu[i];
+  f=(1-EE)*F[i-1]+EE*F[i]; 
+  rhoel= f*NA*(rho*1e-24)/Ar; 
  
   if (deltaN==0) {
-      delta= 2.0*M_PI*Re*rhoel/(k*k); 
+      delta= 2.0*M_PI*RE*rhoel/(k*k); 
   } else delta=deltaN; 
   mu*=1e-10; // factor conversion from m^-1 to A^-1
   beta=mu/(2.0*k); 
@@ -130,25 +135,25 @@ TRACE
       y> -yheight/2 && y< yheight/2){ 
 	   /*Interpolation of Table Values*/ 
  
-        while (fabs(x)>prms->x_KL[nr]){
+        while (fabs(x)>x_KL[nr]){
 	    nr++; 
 	    if (nr<=1) nr=1;
 	    if (nr>=1345) nr=1345;
-	    if (prms->x_KL[nr]==-1){
+	    if (x_KL[nr]==-1){
 		fprintf(stderr,"An error with parsing the kinoform dimensions' file\n"); ABSORB;
 	    }
 	}
-    x_tmp=prms->x_KL[nr];z_int=prms->z_KL[nr];
+    x_tmp=x_KL[nr];z_int=z_KL[nr];
 
     PROP_DL(z_int);
     SCATTER;
     
-    F=((x*x)/(2*delta*z)) - (((2*delta-delta*delta)*z)/(2*delta));
+    FF=((x*x)/(2*delta*z)) - (((2*delta-delta*delta)*z)/(2*delta));
 
-    di=sqrt(x*x+(z-F)*(z-F)); // distance to the focal point with the subsequent calculation of a new k vector
+    di=sqrt(x*x+(z-FF)*(z-FF)); // distance to the focal point with the subsequent calculation of a new k vector
     kxN=-(k*x)/di;
     kyN=0;
-    kzN=(k*(F-z))/di;
+    kzN=(k*(FF-z))/di;
     
     double knew_x,knew_y,knew_z;
     double NN,Nx,Ny,Nz,aa, aa1;

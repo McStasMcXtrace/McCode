@@ -37,9 +37,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror_toroid
-DEFINITION PARAMETERS ( string reflec="")
-SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
-OUTPUT PARAMETERS (reflec_table, prms)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ( string reflec="", zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -48,11 +48,14 @@ SHARE
 
 DECLARE
 %{  
-    struct {
-        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
-        int use_reflec_table;
-    } prms;
-    t_Table reflec_table;
+  double e_min;
+  double e_max;
+  double e_step;
+  double theta_min;
+  double theta_max;
+  double theta_step;
+  int use_reflec_table;
+  t_Table reflec_table;
 
 %}
 
@@ -71,26 +74,26 @@ INITIALIZE
         if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                 header_parsed[3] && header_parsed[4] && header_parsed[5])
         {
-            prms.e_min=strtod(header_parsed[0],NULL);
-            prms.e_max=strtod(header_parsed[1],NULL);
-            prms.e_step=strtod(header_parsed[2],NULL);
-            prms.theta_min=strtod(header_parsed[3],NULL);
-            prms.theta_max=strtod(header_parsed[4],NULL);
-            prms.theta_step=strtod(header_parsed[5],NULL);
+            e_min=strtod(header_parsed[0],NULL);
+            e_max=strtod(header_parsed[1],NULL);
+            e_step=strtod(header_parsed[2],NULL);
+            theta_min=strtod(header_parsed[3],NULL);
+            theta_max=strtod(header_parsed[4],NULL);
+            theta_step=strtod(header_parsed[5],NULL);
         } else {
             exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
         }
-        if ((prms.e_max-prms.e_min) != ((tp->rows-1)*prms.e_step) )
+        if ((e_max-e_min) != ((tp->rows-1)*e_step) )
         {
             exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        if ((prms.theta_max-prms.theta_min) != ((tp->columns-1)*prms.theta_step) )
+        if ((theta_max-theta_min) != ((tp->columns-1)*theta_step) )
         {
             exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        prms.use_reflec_table=1;
+        use_reflec_table=1;
     }else{
-        prms.use_reflec_table=0;
+        use_reflec_table=0;
     }
 %}
 
@@ -142,12 +145,12 @@ TRACE
         kz=kz-2*s*nz;
 
         /*find energy, and glancing angle*/ 
-        if (prms.use_reflec_table){
+        if (use_reflec_table){
             /*the get ref. by call to Table_value2d*/
             double R;
             double theta=RAD2DEG*(acos(s/k)-M_PI_2);
             double e=K2E*k;
-            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            R=Table_Value2d(reflec_table,(e-e_min)/e_step, ((theta-theta_min)/theta_step));
             p*=R;
         }else{
             p*=R0;
