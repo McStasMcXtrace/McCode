@@ -9,17 +9,18 @@ import os
 class McTestcomp:
   def __init__(self,flavour='mcstas',compiler='gcc',cflags='-lm', root='default'):
     #self.comppath=pathlib.Path(inpath)
-    #self.compname=self.path_to_compname(comppath)
+    #self.compname=self._path_to_compname(comppath)
     self.root=root
-    self.set_flavour(flavour)
+    self._set_flavour(flavour)
     self.compiler=compiler
     self.cflags=cflags
+    self.results=[]
 
-  def path_to_compname(self,path):
+  def _path_to_compname(self,path):
     #path is a ssumed to be a path object
     return path.stem
 
-  def set_flavour(self,flavour="mcstas"):
+  def _set_flavour(self,flavour="mcstas"):
     self.flavour=flavour
     print(self.root)
     if self.root!=None:
@@ -27,18 +28,14 @@ class McTestcomp:
       d.update({self.flavour.upper() : self.root})
       self.env=d
 
-  def set_path_tree(path=None,pathstring=None):
+  def _set_path_tree(path=None,pathstring=None):
     if ( path.exists() and path.isdir()):
       #assume a path-oject is passed
       pass
     else:
       pass
 
-  def code_cenerate(self):
-    pass
-
   def run(self, *comps):
-    self.results=[]
     print(comps)
     for compname in comps:
       #write the test instrument to a temporary file

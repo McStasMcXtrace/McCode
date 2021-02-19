@@ -7,7 +7,6 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: 12/03/2014
 * Origin: DTU Physics
-* Release: McXtrace 1.2
 * Version: 0.2
 * %INSTRUMENT_SITE: Tests
 *
@@ -42,10 +41,18 @@ INITIALIZE
 %{
   /*write a test mask to a temporary file*/
   sprintf(filename,"Test_Mask_input_file.mask");
-  FILE *fp=fopen(filename,"wb");
-  fprintf(fp,"#this is a test mask with 10 white pixels, 4 gray, and 2 black\n");
-  fprintf(fp,"1.0 1.0 0.5 0.5\n1.0 1.0 0.5 0.5\n1.0 1.0 1.0 1.0\n1.0 1.0 0.0 0.0\n");
-  fclose(fp);
+#ifdef USE_MPI
+  /*make sure only the mpi-rank 0 writes the file and make the other wait for it.*/
+  if(mpi_node_rank==0){
+#endif
+    FILE *fp=fopen(filename,"wb");
+    fprintf(fp,"#this is a test mask with 10 white pixels, 4 gray, and 2 black\n");
+    fprintf(fp,"1.0 1.0 0.5 0.5\n1.0 1.0 0.5 0.5\n1.0 1.0 1.0 1.0\n1.0 1.0 0.0 0.0\n");
+    fclose(fp);
+#ifdef USE_MPI
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
 %}
 
 /* Here comes the TRACE section, where the actual      */
