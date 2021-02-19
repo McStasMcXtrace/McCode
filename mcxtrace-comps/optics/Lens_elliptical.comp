@@ -38,19 +38,14 @@
 
 
 DEFINE COMPONENT Lens_elliptical
-DEFINITION PARAMETERS (string material_datafile="Be_data.txt")
-SETTING PARAMETERS (r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string material_datafile="Be_data.txt",r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-  struct datastruct{
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-  }; 
   typedef struct {
   double coord[3];
   double k[3];
@@ -172,7 +167,12 @@ typedef struct {
 
 DECLARE
 %{
-  struct datastruct *prms;
+  int Z;
+  double Ar;
+  double  rho;
+  double *E;
+  double *Mu;
+  double *F;
 %} 
 
 
@@ -182,18 +182,17 @@ INITIALIZE
   Table_Read(&T, material_datafile,0);
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z=","Ar=","rho=");
-  prms=calloc(1,sizeof(struct datastruct));
-  if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
-  //if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10); - SOMEHOW DOESN'T WORK SO FAR!!!
-  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
-  prms->E=malloc(sizeof(double)*(T.rows+1));
-  prms->mu=malloc(sizeof(double)*(T.rows+1));
-  prms->f=malloc(sizeof(double)*(T.rows+1));
+  if (!Ar) Ar=strtod(header_parsed[1],NULL);
+  if (!Z) Z=strtol(header_parsed[0],NULL,10);
+  if (!rho) rho=strtod(header_parsed[2],NULL);
+  E=malloc(sizeof(double)*(T.rows+1));
+  Mu=malloc(sizeof(double)*(T.rows+1));
+  F=malloc(sizeof(double)*(T.rows+1));
   int i;
   for(i=0;i<T.rows;i++){
-      prms->E[i]=T.data[i*T.columns]; 
-      prms->mu[i]=T.data[1+i*T.columns]*1e-2;
-      prms->f[i]=T.data[2+i*T.columns];
+      E[i]=T.data[i*T.columns]; 
+      Mu[i]=T.data[1+i*T.columns]*1e-2;
+      F[i]=T.data[2+i*T.columns];
   }
   Table_Free(&T);
 %}
@@ -205,8 +204,7 @@ TRACE
 %{
   incom incid,refr,outg;
   lens ellip;
-  double k,n,delta,dl,e,beta,mu,E,f;
-  double Z=4.0; // Z-number of electrons for Be, that has to be read from the file, but doesn't work so far
+  double k,n,delta,dl,e,beta,mu,EE,f;
   int i=0,nr;
   
   ellip.constants[0]=r1;
@@ -215,17 +213,17 @@ TRACE
   
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k*1e-3; 
-  while (e>prms->E[i]){
+  while (e>E[i]){
     i++;
-    if (prms->E[i]==-1){
+    if (E[i]==-1){
       fprintf(stderr,"Photon energy (%g keV) is outside of the lens' material data\n",k); ABSORB;
     }
   }
-  E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
-  mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
-  f=(1-E)*prms->f[i-1]+E*prms->f[i];
+  EE=(e-E[i-1])/(E[i]-E[i-1]);
+  mu=(1-EE)*Mu[i-1]+EE*Mu[i];
+  f=(1-EE)*F[i-1]+EE*F[i];
   
-  delta=((2.0*M_PI*RE)/pow(k,2))*((NA/prms->Ar)*prms->rho*(Z+f)*1e-24);
+  delta=((2.0*M_PI*RE)/pow(k,2))*((NA/Ar)*rho*(Z+f)*1e-24);
   beta=mu/(2.0*k*1e10);
   n=1.0-delta-beta;
   
@@ -256,11 +254,12 @@ TRACE
     incid=outg;
   }
    // transmission calculation
-   if (T==0)
+   if (T==0){
       ABSORB;
-      else 
-	T=exp(-mu*d*N); 
-	p*=T;
+   }else{ 
+     T=exp(-mu*d*N); 
+     p*=T;
+   }
 %}
 
 MCDISPLAY
