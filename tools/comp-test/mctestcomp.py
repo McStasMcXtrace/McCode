@@ -73,7 +73,7 @@ TRACE
 COMPONENT origin = Arm()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-COMPONENT comp = {compname}(args)
+COMPONENT comp = {compname}({args})
 AT(0,0,0) RELATIVE origin
 
 END
