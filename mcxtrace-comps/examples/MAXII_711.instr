@@ -16,7 +16,7 @@
 * A simple beamline setup consisting of a single focusing mirror,
 * a monochromator, and a four-circle goniometer at the sample stage.
 *
-* %Example: MAXII_711.instr R=-100 tth=28 dphi=30 Detector: detector_I=2.01048e-09
+* %Example: MAXII_711.instr R=-100 tth=28 dphi=30 Detector: detector_I=1.3281973e-10
 *
 * %Parameters
 * R: [m] Radius of curvature of the focusing mirror. N.b. a negative curvature simply means the mirror curves towards negative x
@@ -38,7 +38,7 @@ DEFINE INSTRUMENT MAXII_711(R=-100,phi_mirror=3,phi_mono=9.25, chi=0, ome=0,phi=
 DECLARE
 %{
 	double lambda0=1;
-	double dlambda=0.9;
+	double dlambda=0.05;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
