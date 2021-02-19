@@ -51,24 +51,31 @@
 DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS ()
     SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, R0=0, string reflec="", string coating="")
-OUTPUT PARAMETERS (reflec_table, prms)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
+#include <complex.h>
+%include "read_table-lib"
 %}
+
 
 DECLARE
 %{  
-    struct {
-        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
-        int use_reflec_table,use_coating;
-        int Z;
-        double At, rho;
-        t_Table T;
-    } prms;
-    t_Table reflec_table;
-
+  double e_min;
+  double e_max;
+  double e_step;
+  double theta_min;
+  double theta_max;
+  double theta_step;
+  int use_reflec_table;
+  int use_coating;
+  int Z;
+  double At;
+  double rho;
+  t_Table T;
+  t_Table reflec_table;
 %}
 
 INITIALIZE
@@ -86,37 +93,37 @@ INITIALIZE
         if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                 header_parsed[3] && header_parsed[4] && header_parsed[5])
         {
-            prms.e_min=strtod(header_parsed[0],NULL);
-            prms.e_max=strtod(header_parsed[1],NULL);
-            prms.e_step=strtod(header_parsed[2],NULL);
-            prms.theta_min=strtod(header_parsed[3],NULL);
-            prms.theta_max=strtod(header_parsed[4],NULL);
-            prms.theta_step=strtod(header_parsed[5],NULL);
+            e_min=strtod(header_parsed[0],NULL);
+            e_max=strtod(header_parsed[1],NULL);
+            e_step=strtod(header_parsed[2],NULL);
+            theta_min=strtod(header_parsed[3],NULL);
+            theta_max=strtod(header_parsed[4],NULL);
+            theta_step=strtod(header_parsed[5],NULL);
         } else {
             exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
         }
-        if ((int) (prms.e_max-prms.e_min) != (int) ((tp->rows-1)*prms.e_step) )
+        if ((int) (e_max-e_min) != (int) ((tp->rows-1)*e_step) )
         {
             exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        if ((int)(prms.theta_max-prms.theta_min) != (int) ((tp->columns-1)*prms.theta_step) )
+        if ((int)(theta_max-theta_min) != (int) ((tp->columns-1)*theta_step) )
         {
             exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        prms.use_reflec_table=1;
+        use_reflec_table=1;
     }else if (coating && strlen(coating) && ! R0){
-        if ( (Table_Read(&(prms.T),coating,0))==-1){
+        if ( (Table_Read(&(T),coating,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,coating);
             exit(-1);
         }
         char **header_parsed;
-        header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
-        prms.use_coating=1;
+        header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
+        use_coating=1;
     }else{
-        prms.use_reflec_table=0;prms.use_coating=0;
+        use_reflec_table=0;use_coating=0;
     }
 %}
 
@@ -143,15 +150,15 @@ TRACE
         kz=kz-2*s*nz;
 
         /*find energy, and glancing angle*/ 
-        if (prms.use_reflec_table){
+        if (use_reflec_table){
             /*get ref. by call to Table_value2d*/
             double R;
             double theta=RAD2DEG*(acos(s/k)-M_PI_2);
             double e=K2E*k;
-            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            R=Table_Value2d(reflec_table,(e-e_min)/e_step, ((theta-theta_min)/theta_step));
             printf("%g %g %g\n",e,theta,R);
             p*=R;
-        }else if (prms.use_coating){
+        }else if (use_coating){
             /*compute reflectivity directly from material data*/
 
             /*adjust p according to reflectivity*/
@@ -162,11 +169,11 @@ TRACE
             /*interpolate in material data*/
             k2=scalar_prod(kx,ky,kz,kx,ky,kz);
             e=K2E*sqrt(k2);
-            f1=Table_Value(prms.T,e,1);
+            f1=Table_Value(T,e,1);
 
             /*the conversion factor in  the end is to transform the atomic density from cm^-3 to AA^-3
               -> therefore we get Q in AA^-1*/
-            na=NA*prms.rho/prms.At*1e-24;
+            na=NA*rho/At*1e-24;
             Qc=4*sqrt(M_PI*na*RE*f1);
 
             if (Q>Qc){
@@ -175,7 +182,7 @@ TRACE
 
                 q=Q/Qc;
                 /*delta=na*r0*2*M_PI/k2*f1;*/
-                f2=Table_Value(prms.T,e,2);
+                f2=Table_Value(T,e,2);
                 /*beta=na*r0*2*M_PI/k2*f2;*/
                 /*b_mu=beta*(2*k)^2 / Qc^2*/
                 b_mu=4*M_PI*na*RE*f2/(Qc*Qc);
