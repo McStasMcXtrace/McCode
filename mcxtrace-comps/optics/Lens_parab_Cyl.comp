@@ -40,9 +40,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab_Cyl
-DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, int N=1, rough_z=0, rough_xy=0)
-OUTPUT PARAMETERS (prms,parab)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string material_datafile="Be.txt",r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, int N=1, rough_z=0, rough_xy=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -178,28 +178,28 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-    t_Table T;
-  } *prms;
+  int Z;
+  double Ar;
+  double rho;
+  double *E;
+  double *mu;
+  double *f;
+  t_Table T;
 %}
 
 INITIALIZE
 %{
   int status=0;
-  prms=calloc(1,sizeof(*prms));
 
-  if ( (status=Table_Read(&(prms->T),material_datafile,0))==-1){
+  if ( (status=Table_Read(&(T),material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(prms->T.header,"Z","A[r]","rho",NULL);
-  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
-  if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
-  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
+  if (!Z) Z=strtol(header_parsed[0],NULL,10);
+  if (!Ar) Ar=strtod(header_parsed[1],NULL);
+  if (!rho) rho=strtod(header_parsed[2],NULL);
 %}
 
 TRACE
@@ -225,12 +225,12 @@ TRACE
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
   /*Interpolation of Table Values*/
-  mu=Table_Value(prms->T,e,5)*prms->rho*1e2;/*mu is now in SI, [m^-1]*/;
+  mu=Table_Value(T,e,5)*rho*1e2;/*mu is now in SI, [m^-1]*/;
 
-  f=Table_Value(prms->T,e,1);
+  f=Table_Value(T,e,1);
 
   /*Calculation of Refractive Index */
-  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  rhoel= f*NA*(rho*1e-24)/Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   delta= 2.0*M_PI*RE*rhoel/(k*k);
   beta= mu/(2.0*k); /*mu and k in  A^-1*/
 
@@ -286,8 +286,7 @@ TRACE
 
 FINALLY
 %{
-    Table_Free(&(prms->T));
-    free(prms);
+    Table_Free(&(T));
 %}
 
 MCDISPLAY
