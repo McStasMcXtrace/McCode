@@ -4,11 +4,13 @@ import pathlib
 import subprocess
 import tempfile
 import fire
+import os
 
 class McTestcomp:
-  def __init__(self,flavour='mcstas',compiler='gcc',cflags='-lm'):
+  def __init__(self,flavour='mcstas',compiler='gcc',cflags='-lm', root='default'):
     #self.comppath=pathlib.Path(inpath)
     #self.compname=self.path_to_compname(comppath)
+    self.root=root
     self.set_flavour(flavour)
     self.compiler=compiler
     self.cflags=cflags
@@ -18,7 +20,12 @@ class McTestcomp:
     return path.stem
 
   def set_flavour(self,flavour="mcstas"):
-     self.flavour=flavour
+    self.flavour=flavour
+    print(self.root)
+    if self.root!=None:
+      d=os.environ.copy()
+      d.update({self.flavour.upper() : self.root})
+      self.env=d
 
   def set_path_tree(path=None,pathstring=None):
     if ( path.exists() and path.isdir()):
@@ -51,8 +58,7 @@ class McTestcomp:
     return self
 
   def run_cogen(self,instr):
-    print(" ".join([f"{self.flavour}",f"{instr.name}","-o",f"{instr.name}.c"]))
-    return subprocess.run([f"{self.flavour}","-t",f"{instr.name}","-o",f"{instr.name}.c"])
+    return subprocess.run([f"{self.flavour}","-t",f"{instr.name}","-o",f"{instr.name}.c"],env=self.env)
 
   def run_compiler(self,instr):
     #this needs to somehow deal with DEPENDENCY also, through m[cx]run?
@@ -70,11 +76,8 @@ INITIALIZE
 
 TRACE
 
-COMPONENT origin = Arm()
-AT (0, 0, 0) RELATIVE ABSOLUTE
-
 COMPONENT comp = {compname}({args})
-AT(0,0,0) RELATIVE origin
+AT(0,0,0) RELATIVE ABSOLUTE
 
 END
 """
