@@ -48,6 +48,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #ifdef OPENACC
+#include <openacc.h>
 #include <accelmath.h>
 int noprintf();
 int str_comp(char *str1, char *str2);
