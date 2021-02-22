@@ -524,7 +524,7 @@ struct line_info_struct
 
 /* computes the number of possible reflections (return value), and the total xsection 'sum' */
 /* this routine looks for a pre-computed value in the Nq and sum cache tables               */
-/* when found, the earch starts from the corresponding lower element in the table           */
+/* when found, the search starts from the corresponding lower element in the table           */
 int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, double *sum,
         struct line_info_struct *line_info) {
   int    Nq = 0, line=0, line0=0;
