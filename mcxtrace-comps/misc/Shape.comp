@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* McXtrace, X ray-tracing package
 *         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -13,11 +13,11 @@
 * Origin: ILL
 * Modified by: E. Farhi, based on Incoherent
 *
-* A geometric shape without effect on neutron, for instrument display purpose.
+* A geometric shape without effect on photon, for instrument display purpose.
 *
 * %D
 * An inactive geometrical shape, for drawing purposes only.
-* It does not propagate neutron, nor interact.
+* It does not propagate photon, nor interact.
 * <b>Shape:</b>
 * Geometric shape may be a cylinder, a sphere, a box or any other shape
 *   box/plate:       xwidth x yheight x zdepth (thickness=0)
@@ -61,7 +61,7 @@ DEFINE COMPONENT Shape
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0)
 OUTPUT PARAMETERS(offdata)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
