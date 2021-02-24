@@ -41,10 +41,16 @@ INITIALIZE
 %{
   /*write a test mask to a temporary file*/
   sprintf(filename,"Test_Mask_input_file.mask");
-  FILE *fp=fopen(filename,"wb");
-  fprintf(fp,"#this is a test mask with 10 white pixels, 4 gray, and 2 black\n");
-  fprintf(fp,"1.0 1.0 0.5 0.5\n1.0 1.0 0.5 0.5\n1.0 1.0 1.0 1.0\n1.0 1.0 0.0 0.0\n");
-  fclose(fp);
+#ifdef USE_MPI
+  /*make sure only the mpi-rank 0 writes the file and make the other wait for it.*/
+  if(mpi_node_rank==0){
+    FILE *fp=fopen(filename,"wb");
+    fprintf(fp,"#this is a test mask with 10 white pixels, 4 gray, and 2 black\n");
+    fprintf(fp,"1.0 1.0 0.5 0.5\n1.0 1.0 0.5 0.5\n1.0 1.0 1.0 1.0\n1.0 1.0 0.0 0.0\n");
+    fclose(fp);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
 %}
 
 /* Here comes the TRACE section, where the actual      */
