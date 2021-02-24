@@ -23,6 +23,7 @@ fi
 ./mkdist mcstas-tools-perl-cmdline 3.0-dev tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-perl 3.0-dev tools/Legacy-Perl/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 3.0-dev tools/Python/mcrun/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcgui 3.0-dev tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 3.0-dev tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.0-dev tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.0-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
