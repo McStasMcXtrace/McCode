@@ -18,6 +18,7 @@ export FC=gfortran
 # can be out-commented after the first build iteration:
 ./mkdist mcstas-tools-perl-cmdline 2.5 tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 2.5 tools/Python/mcrun/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcgui 2.5 tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 2.5 tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 2.5 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 2.5 tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
