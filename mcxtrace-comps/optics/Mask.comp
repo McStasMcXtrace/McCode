@@ -54,7 +54,7 @@
 
 DEFINE COMPONENT Mask
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth, yheight, string mask, invert=0, virtual=0)
+SETTING PARAMETERS (xwidth, yheight, string mask="", invert=0, virtual=0)
 OUTPUT PARAMETERS (prms,masking,filter_row)
 //DEPENDENCY "-lpng -DUSE_PNG"
 
@@ -78,7 +78,6 @@ DECLARE
   } prms;
   int filter_row;
   double masking;
-
 %}
 
 
@@ -86,7 +85,7 @@ INITIALIZE
 %{
   
   /*do some checks on input parameters*/
-  if (invert){
+  if (invert!=0){
     /*invert should be either 0 or one*/
     invert=1;
   }
@@ -242,20 +241,20 @@ INITIALIZE
 TRACE
 %{
   int i,j;
-
-
+  double pmul;
   PROP_Z0;
   if (x>prms.xmin && x<prms.xmax && y>prms.ymin && y<prms.ymax){
     i = floor((x - prms.xmin)*prms.nx/(xwidth));
     j = floor((y - prms.ymin)*prms.ny/(yheight));
     if (invert){  
-      masking=Table_Index(prms.table,j,i);
+      pmul=Table_Index(prms.table,j,i);
     }else{
-      masking=1.0-Table_Index(prms.table,j,i);
+      pmul=1.0-Table_Index(prms.table,j,i);
     }
     if(!virtual){
-        p*=masking;
+        p*=pmul;
     }
+    masking=pmul;
     SCATTER;
   }
 
@@ -265,8 +264,6 @@ TRACE
 
 MCDISPLAY
 %{
-  /* A bit ugly; hard-coded dimensions. */
-  
   rectangle("xy",0,0,0,xwidth,yheight);
 %}
 
