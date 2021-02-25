@@ -72,10 +72,10 @@ COMPONENT det = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="
 AT(0,0,D) RELATIVE det_a
 
 
-COMPONENT det = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB")
+COMPONENT detBB = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB")
 AT(0,0,D) RELATIVE det_a
 
-COMPONENT det_dbl = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB_dbl")
+COMPONENT detBB_dbl = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB_dbl")
 WHEN(bounce>1) AT(0,0,D) RELATIVE det_a
 
 COMPONENT det_div = Monitor_nD(xwidth=0.21,yheight=0.21,options="ydiv auto", filename="det_BB_div", bins=201)
