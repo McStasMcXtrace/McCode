@@ -73,7 +73,7 @@ TRACE
 %{
     int status,first;
     double l0,l1,sx,sz;
-    double nx,ny,nz,zz, Y0;
+    double nx,ny,nz,zz,xx, Y0;
     if (b==0 && kx==0 && ky==0){
       /*k || z and mirror invariant in z*/
       zz=x*x*a2inv;
@@ -83,8 +83,8 @@ TRACE
     }
     if (a==0 && ky==0 && kz==0){
       /*k || x and mirror invariant in x*/
-      zz=y*y*b2inv;
-      if(fabs(z-zz)<=yheight){
+      xx=z*z*b2inv;
+      if(fabs(x-xx)<=yheight){
         ABSORB;
       }
     }
