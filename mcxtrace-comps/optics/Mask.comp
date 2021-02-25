@@ -269,8 +269,6 @@ TRACE
 
 MCDISPLAY
 %{
-  /* A bit ugly; hard-coded dimensions. */
-  
   rectangle("xy",0,0,0,xwidth,yheight);
 %}
 
