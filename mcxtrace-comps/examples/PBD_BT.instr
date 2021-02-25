@@ -90,11 +90,10 @@ DECLARE
     const double debye_waller_B=0.4632;
 
     /* set up the parameters for the focusing mirror..
-       note that the mirror_parabolic.comp has a mirror with surface y=z^2/a^2 + x^2 / b^2 = z^2/(4 p)+x^2/b^2
+       note that the Mirror_parabolic.comp has a mirror with surface y=x^2/a^2 + z^2 / b^2 = z^2/(4 p)+x^2/a^2
        where 'p' is the focal length of the parabola
        Since a parabola with equation 4 p y = z^2 has a focal length of p,
-       the focal length of such a mirror is p=a^2/4 (assuming b=infinity), or a=sqrt(4*p).
-       Also, the vertex of the mirror is the located at y=-p.
+       the focal length of such a mirror is p=b^2/4 (assuming a=infinity), or b=sqrt(4*p).
        To focus along the 'z' axis, it must be rotated 90 degrees around 'x'.
 
        If the mirror is operated at a half deflection angle of theta_m near its active center,
@@ -164,7 +163,8 @@ AT (0,0,1) ABSOLUTE
 COMPONENT PBD_Rigaku = Source_lab(
     material_datafile = "Cu.txt", width = beam_vert, height = beam_hor,
     E0 = 40, Emin = emin, Emax=emax, focus_xw = slit_1_vert, focus_yh = slit_1_hor,
-    take_off = 6, dist = mirror_center_distance-.03, tube_current = 0.3, lorentzian=1)   WHEN  use_flat_source == 0
+    take_off = 6, dist = mirror_center_distance-.03, tube_current = 0.3, lorentzian=1,
+    exit_window_refpt=1)   WHEN  use_flat_source == 0
 AT (0,source_y, 0) RELATIVE Origin
 ROTATED (source_rotation, 0, 90) RELATIVE Origin
 EXTEND %{
@@ -182,24 +182,29 @@ EXTEND %{
 
 COMPONENT mirror_arm = Arm()
 AT (0,0,mirror_center_distance+mirror_focal_error) RELATIVE Origin
-ROTATED (0, mirror_rotation_angle,0) RELATIVE Origin
+ROTATED (0,0,90) RELATIVE Origin
 
 COMPONENT mirror = Mirror_parabolic(R=1, a=mirror_a, b=0,
-    xmin=-0.01, xmax=0.01, ymin=mirror_center_distance-mirror_length/2, ymax=mirror_center_distance+mirror_length/2, zmin=0, zmax=1) WHEN use_mirror!=0
-AT (mirror_vertex_x,0, mirror_vertex_z) RELATIVE mirror_arm
-ROTATED (0,90,90) RELATIVE mirror_arm
+    xwidth=0.02, yheight=0, zdepth=mirror_length) WHEN use_mirror!=0
+AT (0,0,0) RELATIVE mirror_arm
+ROTATED (-mirror_rotation_angle,0,0) RELATIVE mirror_arm
 
-/*
+
 COMPONENT mirror_psd = PSD_monitor(
     nx = 100, ny = 100, filename = "mirror.psd", restore_xray = 1,
     xwidth = 0.05, yheight = 0.05)
-  AT (0, 0, mirror_center_distance+0.02) RELATIVE Origin
-  ROTATED (0, 0, 0) RELATIVE Origin
-*/
+AT (0, 0, mirror_center_distance+0.02) RELATIVE Origin
+ROTATED (0, 0, 0) RELATIVE Origin
+  
+/*rotate to the outgoing optical axis*/
+COMPONENT mirror_arm_exit0 = Arm()
+AT(0,0,0) RELATIVE mirror
+ROTATED (-mirror_rotation_angle,0,-90) RELATIVE mirror
+
 
 COMPONENT monochromator_arm=Arm()
-AT (0,0,0.25) RELATIVE mirror_arm
-ROTATED (0,mono_rotation,90) RELATIVE mirror_arm
+AT (0,0,0.25) RELATIVE mirror_arm_exit0
+ROTATED (0,mono_rotation,90) RELATIVE mirror_arm_exit0
 
 COMPONENT mono_silicon_1a = Bragg_crystal_BC(
     material = "Si.txt", length = mono_face_length, width = 0.75*inch,
@@ -234,20 +239,20 @@ ROTATED (180-mono_incident_angle_deg-mono_detuning_seconds/3600.0, 0, mono_misal
 COMPONENT slit_2 = Slit(
     xwidth = slit_2_hor, yheight = slit_2_vert)
 AT (0, 0, 0.1) RELATIVE monochromator_arm
-ROTATED (0, 0, 0) RELATIVE mirror_arm
+ROTATED (0, 0, 0) RELATIVE mirror_arm_exit0
 
 COMPONENT incoming_spectrum_mon = E_monitor(
     nE = 200, filename = "mono_all_spect", xwidth = 0.2, yheight = 0.2,
     Emin = emin, Emax = emax, restore_xray = 1)
 AT (0, 0, .11) RELATIVE monochromator_arm
-ROTATED (0, 0, 0) RELATIVE mirror_arm
+ROTATED (0, 0, 0) RELATIVE mirror_arm_exit0
 EXTEND %{
     if(mcipstop_at_energy) ABSORB;
 %}
 
 COMPONENT silicon_1_arm = Arm()
-AT (0,0,1.0) RELATIVE mirror_arm
-ROTATED (0, 0, 90) RELATIVE mirror_arm
+AT (0,0,1.0) RELATIVE mirror_arm_exit0
+ROTATED (0, 0, 90) RELATIVE mirror_arm_exit0
 
 COMPONENT silicon_1_arm_2 = Arm()
 AT (0, 0, 0) RELATIVE silicon_1_arm
@@ -287,7 +292,7 @@ ROTATED (90, 0, 0) RELATIVE silicon_1_arm_2
 
 COMPONENT diffracted_arm = Arm()
 AT (0, 0, 0) RELATIVE silicon_1_arm
-ROTATED (0,-(theta+crystal_central_angle), 90) RELATIVE mirror_arm
+ROTATED (0,-(theta+crystal_central_angle), 90) RELATIVE mirror_arm_exit0
 
 COMPONENT crystal_2_arm = Arm()
 AT (0, 0, 0.27) RELATIVE diffracted_arm
