@@ -53,8 +53,7 @@
 * polarization: [string]  Should polarization be taken into effect.
 *
 * %Link
-* A reference/HTML link for more information
-*
+* <a href="https://www.nist.gov/programs-projects/diffraction-metrology-and-standards/parallel-beam-diffractometer-pbd-laboratory"></a>
 * %End
 *******************************************************************************/
 
