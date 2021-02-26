@@ -187,12 +187,13 @@ TRACE
       theta_y=randnorm()*focus_ah;
     }
 
-    tan_thx=tan(theta_x);
-    tan_thy=tan(theta_y);
-
-    kz=k / sqrt(1 + tan_thx*tan_thx + tan_thy*tan_thy);
-    kx=tan_thx*k;
-    ky=tan_thy*k;
+    kx=tan(theta_x);
+    ky=tan(theta_y);
+    kz=1.0;
+    NORM(kx,ky,kz);
+    kz*=k;
+    kx*=k;
+    ky*=k;
   }else{
     /*radial divergence profile*/
     double theta,phi,kp;
