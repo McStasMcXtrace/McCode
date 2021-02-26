@@ -170,7 +170,7 @@ TRACE
     z=0;
   }
 
-  if (focus_aw!=0 && focus_ah!=0){
+  if (focus_aw!=0 || focus_ah!=0){
     if (!gauss_a){
       /*find limits of uniform sampling scheme for vertical divergence.
         thetav should be acos(1-2*U) for U\in[0,1]. for theta measured from vertical axis
