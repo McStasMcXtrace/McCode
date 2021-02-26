@@ -66,7 +66,7 @@ AT(0,0,0) RELATIVE origin
 ROTATED (0,theta_d,0) RELATIVE origin
 
 COMPONENT src = Source_div(
-        xwidth=1e-3, yheight=1e-9, focus_ah=0, focus_aw=phi_s, E0=6.93, dE=0.2, gauss_a=0)
+        xwidth=1e-3, yheight=1e-9, focus_ah=0, focus_aw=phi_s, E0=6.93, dE=0.175, gauss_a=0)
 AT(0,0,-r_Row) RELATIVE s_arm
 ROTATED (0,-(90-theta_inc)+dtheta_s,0) RELATIVE s_arm
 

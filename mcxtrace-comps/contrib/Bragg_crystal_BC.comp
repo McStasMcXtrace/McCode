@@ -173,7 +173,10 @@ TRACE
                          f00, f0h, fp, fpp, V, h, k, l,
                          debye_waller_B, E,
                          crystal_type,structure_factor_scale_r,structure_factor_scale_i);
-            
+            if(thetaB==0){
+              fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
+              ABSORB;
+            }
             fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha,
                   chi0, chih, chih, k0mag, hscale, thetaB
