@@ -74,14 +74,6 @@ INITIALIZE
   PSD_p = create_darr2d(nx, ny);
   PSD_p2 = create_darr2d(nx, ny);
 
-  int i, j;
-  for (i=0; i<nx; i++){
-    for (j=0; j<ny; j++){
-      PSD_N[i][j] = 0;
-      PSD_p[i][j] = 0;
-      PSD_p2[i][j] = 0;
-    }
-  }
 %}
 
 TRACE
