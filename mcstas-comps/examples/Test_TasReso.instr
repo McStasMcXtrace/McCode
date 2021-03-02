@@ -149,20 +149,20 @@ DECLARE
 /* needed for resolution calculation */
 USERVARS
 %{
-	// probability
+	/* probability */
 	double res_pi;
 
-	// k_i
+	/* k_i */
 	double res_ki_x;
 	double res_ki_y;
 	double res_ki_z;
 
-	// k_f
+	/* k_f */
 	double res_kf_x;
 	double res_kf_y;
 	double res_kf_z;
 
-	// pos
+	/* pos */
 	double res_rx;
 	double res_ry;
 	double res_rz;
