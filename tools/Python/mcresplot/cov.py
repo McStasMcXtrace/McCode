@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 #
-# calculates the covariance from neutron events
+# Calculates the covariance from neutron events.
+#
 # @author Tobias Weber <tweber@ill.fr>
 # @date 30-mar-2019
 # @license GNU GPLv3
+#
 # @descr This tool comes from Takin 2: https://dx.doi.org/10.5281/zenodo.4117437
 # @descr For a good explanation of the covariance matrix method, see T. Arens et al., "Mathematik", 2015, ISBN: 978-3-642-44919-2, pp. 795 and 1372.
 # @descr Reimplements the functionality of https://github.com/McStasMcXtrace/McCode/blob/master/tools/Legacy-Perl/mcresplot.pl
@@ -227,6 +229,7 @@ def descr_ellipse(quadric):
 
 #
 # projects along one axis of the quadric
+# see equ. 57 and 58 in: G. Eckold and O. Sobolev, NIM A 752, pp. 54-64 (2014), doi: 10.1016/j.nima.2014.03.019
 #
 def proj_quad(_E, idx):
 	E = np.delete(np.delete(_E, idx, axis=0), idx, axis=1)
