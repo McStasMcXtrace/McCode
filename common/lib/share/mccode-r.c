@@ -1190,7 +1190,7 @@ MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
 static char *strcpy_valid(char *valid, char *original)
 {
   long i;
-  int  n=32; /* max length of valid names */
+  int  n=CHAR_BUF_LENGTH; /* max length of valid names */
 
   if (original == NULL || !strlen(original)) return(NULL);
 
@@ -1468,7 +1468,7 @@ static void mcinfo_out_nexus(NXhandle f)
 static void
 mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 {
-  char data_name[32];
+  char data_name[CHAR_BUF_LENGTH];
   if (!f || !detector.m || mcdisable_output_files) return;
   
   strcpy_valid(data_name, 
@@ -1543,7 +1543,7 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
   if (!f || length <= 1 || mcdisable_output_files || max == min) return(NX_OK);
   else {
     double axis[length];
-    char valid[32];
+    char valid[CHAR_BUF_LENGTH];
     int dim=(int)length;
     int i;
     int nprimary=1;
@@ -1644,7 +1644,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 *******************************************************************************/
 int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 {
-  char data_name[32];
+  char data_name[CHAR_BUF_LENGTH];
   
   if (!f || !detector.m || mcdisable_output_files) return(NX_OK);
   
