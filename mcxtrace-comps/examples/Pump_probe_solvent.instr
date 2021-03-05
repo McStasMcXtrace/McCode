@@ -111,10 +111,10 @@ COMPONENT src=Source_flat(xwidth=1e-9,yheight=1e-9,focus_xw=1e-10,focus_yh=1e-10
       flux=1e33)
 AT(0,0,0) RELATIVE Origin
 
-COMPONENT emon_src=E_monitor(filename="emon_src",xwidth=0.01,yheight=0.01,Emin=7.49,Emax=7.51)
+COMPONENT emon_src=E_monitor(filename="emon_src",xwidth=0.01,yheight=0.01,Emin=5,Emax=20)
 AT(0,0,1e-3) RELATIVE PREVIOUS
 
-COMPONENT lmon_src=L_monitor(filename="lmon_src",xwidth=0.01,yheight=0.01, Lmin=0.8,Lmax=10)
+COMPONENT lmon_src=L_monitor(filename="lmon_src",xwidth=0.01,yheight=0.01, Lmin=0.2,Lmax=2)
 AT(0,0,1e-3) RELATIVE PREVIOUS
 
 COMPONENT ap1 = Arm()
