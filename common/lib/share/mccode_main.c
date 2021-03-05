@@ -49,6 +49,15 @@ int mccode_main(int argc, char *argv[])
   }
 #endif /* USE_MPI */
 
+#ifdef OPENACC
+#ifdef USE_MPI
+  int num_devices = acc_get_num_devices(acc_device_nvidia);
+  int my_device = mpi_node_rank % num_devices;
+  printf("Node %i should use device %i\n",mpi_node_rank,my_device);
+#pragma acc set device_num(my_device) device_type(acc_device_nvidia)
+#endif
+#endif
+
   // COMMON seed - not functional
   //time_t  t;
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */

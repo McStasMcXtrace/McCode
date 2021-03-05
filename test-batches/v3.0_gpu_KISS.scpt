@@ -27,6 +27,9 @@
 #BSUB -e gpu_%J.err
 # -- end of LSF options --
 
+# Ensure we run with our own miniconda3
+PATH=${HOME}/miniconda3/bin:$PATH
+
 DATE=`date +%F`
 mkdir -p $HOME/TESTS/
 mkdir -p $HOME/TESTS/${DATE}
