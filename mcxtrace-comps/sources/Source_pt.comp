@@ -120,7 +120,6 @@ TRACE
  
   fi_x=atan(focus_xw/2.0/dist)*2.0;
   fi_y=atan(focus_yh/2.0/dist)*2.0;
-  if(mcrun_num==0) {printf("%g %g\n",fi_x,fi_y);}
 
   randvec_target_rect_angular(&kx,&ky,&kz, &t_ome, focus_x0, focus_y0, dist, fi_x,fi_y,ROT_A_CURRENT_COMP);
   NORM(kx,ky,kz);
