@@ -1,0 +1,104 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: Test_Source_pulsed
+*
+* %Identification
+* Written by: Klaus LIEUTENANT (k.lieutenant@fz-juelich.de)  based on 'Test_9-Sources' by Emmanuel FARHI (farhi@ill.fr)
+* Date: Mar 17, 2021
+* Origin:FZJ
+* %INSTRUMENT_SITE: Tests_optics
+*
+* A test instrument to check the component 'Source_pulsed'
+*
+* %Description
+* A test instrument to check if the component 'Source_pulsed' provides valid spectra and intensities. 
+*
+* %Example: source=1 Detector: m1_I=4.680e+09
+* %Example: source=2 Detector: m1_I=2.305e+09
+* %Example: source=3 Detector: m1_I=5.292e+09
+*
+* %Parameters
+* source: [1]  selection of the source to use in 1=Source_pulsed for HBS thermal, 2=Source_pulsed for HBS cold, 3=Source_pulsed for HBS bispectral 
+* Lmin: [Ang]     
+* Lmax: [Ang]     
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Sources(int source=1, Lmin=0.1, Lmax=10.1)
+
+DECLARE
+%{
+  double Lambda0, dLambda;
+%}
+
+INITIALIZE
+%{
+  printf("%s: ", NAME_CURRENT_COMP);
+  switch (source) {
+  case 1:
+    printf("Using Source_pulsed for HBS thermal\n"); break;
+  case 2:
+    printf("Using Source_pulsed for HBS cold\n"); break;
+  case 3:
+    printf("Using Source_pulsed for HBS bispectral\n"); break;
+  }
+  printf("Studied wavelength range is [%g %g] AA\n", Lmin, Lmax);
+  dLambda=(Lmax-Lmin)/2;
+  Lambda0=(Lmax+Lmin)/2;
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* the sources ============================================================== */
+COMPONENT HBS_thml = Source_pulsed
+( xwidth=0.040, yheight=0.040, Lmin=Lmin, Lmax=Lmax, t_min=0.0, t_max=0.0015, 
+  dist = 1.000, focus_xw = 0.020, focus_yh = 0.020, freq=96.0, t_pulse=0.000167, 
+  T1=325.0, I1=7.13e09, tau1=0.000125, n_mod=10, I_um=2.57e08, chi_um=2.5
+) WHEN (source == 1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT HBS_cold = Source_pulsed
+( radius=0.010, Lmin=Lmin, Lmax=Lmax, t_min=0.0, t_max=0.0015, 
+  dist = 1.000, focus_xw = 0.020, focus_yh = 0.020, freq=24.0, t_pulse=0.000667, 
+  T1=60.0, I1=7.29e10, tau1=0.000170, n_mod=5, I_um=1.59e09, chi_um=0.9
+) WHEN (source == 2)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT HBS_bispec = Source_pulsed
+( radius=0.022, r_i=0.010, Lmin=Lmin, Lmax=Lmax, t_min=0.0, t_max=0.0015, 
+  dist = 1.000, focus_xw = 0.020, focus_yh = 0.020, freq=24.0, t_pulse=0.000667, 
+  T1= 60.0, I1=7.29e10, tau1=0.000170,  
+  T2=305.0, I2=2.32e10, tau2=0.000130, n_mod=5, I_um=1.59e09, chi_um=2.5
+) WHEN (source == 3)
+AT (0,0,0) ABSOLUTE
+
+
+/* the monitor ============================================================== */
+
+COMPONENT m0 = TOF_monitor
+( xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+  nt=150, filename="source.mtt", tmin=0.0, tmax=1500.0, dt=10.0
+)
+AT (0, 0, 0.0001) ABSOLUTE
+
+COMPONENT m1 = L_monitor
+( xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+  nL=110, filename="source.mtl", Lmin=0, Lmax=11
+)
+AT (0, 0, 0.0002) ABSOLUTE
+
+COMPONENT m2a = Monitor_nD(
+  xwidth=0.06, yheight=0.06,
+  options="x, y", bins=60, filename="source.pos"
+) AT (0, 0, 0.0003) ABSOLUTE
+
+COMPONENT m2b = Monitor_nD(
+  xwidth=0.06, yheight=0.06,
+  options="x, y", bins=60, filename="target.pos"
+) AT (0, 0, 1.000) ABSOLUTE
+
+END
