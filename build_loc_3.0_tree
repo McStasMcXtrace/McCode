@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # rappid-build script for mcstas-kernel dev:
 
@@ -13,13 +13,23 @@ export MCINSTALL_PREFIX=$HOME/McStas
 export CC=gcc
 export FC=gfortran
 
-
+if [[ -d $HOME/McStas/mcstas/3.0-dev ]]
+then
+    rm -rf $HOME/McStas/mcstas/3.0-dev/*
+fi
 ./mkdist mcstas 3.0-dev "" "" deb64 "" -- justinst
 ./mkdist mcstas-comps 3.0-dev "" "" deb64 "" -- justinst
 # can be out-commented after the first build iteration:
 ./mkdist mcstas-tools-perl-cmdline 3.0-dev tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
-./mkdist mcstas-tools-perl-cmdline 3.0-dev tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-perl 3.0-dev tools/Legacy-Perl/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 3.0-dev tools/Python/mcrun/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcgui 3.0-dev tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 3.0-dev tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.0-dev tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.0-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcplot-svg 3.0-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcplot-matplotlib 3.0-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-dev/bin/
+
+# Ensure we are configured for 10 node MPI runs
+sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcstas/3.0-dev/tools/Python/mccodelib/mccode_config.py

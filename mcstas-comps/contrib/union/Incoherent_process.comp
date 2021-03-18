@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
@@ -35,12 +35,12 @@
 *
 * %P
 * INPUT PARAMETERS:
-* sigma:  [barns]         Incoherent scattering cross section
-* f_QE:                   Fraction of quasielastic scattering (rest is elastic) [1]
-* gamma:                  Lorentzian width of quasielastic broadening (HWHM) [1]
-* packing_factor [1]      How dense is the material compared to optimal 0-1
-* Unit_cell_volume [AA^3] Unit_cell_volume
-* Interact_fraction [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* sigma:  [barns]         Incoherent scattering cross section
+* f_QE:   [1]                Fraction of quasielastic scattering (rest is elastic)
+* gamma:  [1]                Lorentzian width of quasielastic broadening (HWHM)
+* packing_factor: [1]      How dense is the material compared to optimal 0-1
+* unit_cell_volume: [AA^3] Unit_cell_volume
+* interact_fraction: [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 *
 * OUTPUT PARAMETERS:
 *

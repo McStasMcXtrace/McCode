@@ -12,7 +12,7 @@
 * %D
 * Example instrument showing how to calculate brilliance transfer using L_monitor's and WHEN statements
 *
-* %Example: -n1e7 BTsimple.instr lambda=10 Detector: Brilliance_transfer.dat_I=75.4758
+* %Example: -n1e7 BTsimple.instr lambda=10 Detector: BTransfer_I=75.4758
 *
 * %P
 * lambda:  [AA]  Central wavelength produced at the source
@@ -131,7 +131,6 @@ AT (0,0,0) RELATIVE  PREVIOUS
 FINALLY
 %{
   /* This adds another "monitor" that measures BT_out / BT_in */
-  /* In MPI-mode renormalisation by mpi_node_count needs doing */
   int j;
   double* tmpN;
   double* tmpp1;
@@ -155,20 +154,19 @@ FINALLY
       BT_p2[j]=sqrt((tmpd1[j]/tmpp1[j])*(tmpd1[j]/tmpp1[j])  + (tmpd2[j]/tmpp2[j])*(tmpd2[j]/tmpp2[j]));
     } else
       BT_p2[j]=0;
-#if defined (USE_MPI)
-      BT_p[j] /= mpi_node_count;
-      BT_p2[j] /= mpi_node_count;
-#endif
-
-    
   }
+// This set of defines is to avoid getting a '.' in the component name
+#ifdef NAME_CURRENT_COMP
+#undef NAME_CURRENT_COMP
+#define NAME_CURRENT_COMP "BTransfer"
+#endif
   DETECTOR_OUT_1D(
 		  "Brilliance transfer",
 		  "Wavelength [AA]",
 		  "BT",
 		  "L", lambda-dlambda, lambda+dlambda, 101,
 		  &BT_N[0],&BT_p[0],&BT_p2[0],
-		  "Brilliance_transfer");
+		  "Brilliance_transfer.dat");
 
 %}
 

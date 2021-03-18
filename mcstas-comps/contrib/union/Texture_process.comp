@@ -1,0 +1,2311 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Victor Laliena
+* Date: 27.10.18 (last version, 09.07.19)
+* Version: $Revision: 0.1 $
+* Origin:
+*
+*
+* %D
+*
+* Part of the Union components, a set of components that work together and thus
+* seperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* This component deals with the coherent elastic scattering on a textured material.
+* The texture is described through the coefficients of the generalized Fourier transform
+* of the Orientation Distribution Function (ODF).
+* The component expects as input two files, one containing the Fourier coefficients of the
+* ODF and another one with crystallographic and physical information.
+*
+*
+* Algorithm:
+* Described elsewhere, see e.g. <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
+*
+* %P
+* INPUT PARAMETERS:
+* packing_factor: [1]      How dense is the material compared to optimal 0-1
+* interact_fraction: [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* crystal_fn: [s]          Path to a file (.laz) containing crystallographic and physical information
+* fcoef_fn: [s]            Path to a text file containing the Fourier coefficients of the ODF.
+*                         It must have five columns: l m n Real(Clmn) Imag(Clmn)
+* lmax: [1]                Cut-off for the Fourier series.
+*                         If negative, the program uses all the coefficients provided in the file fcoef_fn
+* maxNeutronSaved: [1]     Maximum number of neutron cross sections saved for reusing
+* barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
+* order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...) 
+*
+* OUTPUT PARAMETERS:
+* Template_storage          // Important to update this output paramter
+* effective_my_scattering   // Variable used in initialize
+*
+* %L
+* See <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Texture_process // Remember to change the name of process here
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
+            barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
+	    int maxNeutronSaved = 1)
+OUTPUT PARAMETERS (This_process,Texture_storage,effective_my_scattering,
+                   hkl_info_texture,packing_factor)
+
+SHARE
+%{
+#ifndef Union
+#define Union $Revision: 0.8 $
+
+#include "Union_functions.c"
+#include "Union_initialization.c"
+
+#endif
+
+%include "read_table-lib"
+%include "interoff-lib"
+
+#ifndef TEXTURE_PROCESS_DECL
+#define TEXTURE_PROCESS_DECL
+
+#define nSamplingPoints 120
+#define maxIterReject 3000
+#define tolTexture 1.0e-6
+
+double kx_first, ky_first, kz_first;
+
+struct saveCohMu
+{
+  double kix, kiy, kiz, cohMu, *XS;
+  int num_hkl_scatt;
+};
+
+struct save_hklScattProb
+{
+  double kix, kiy, kiz;
+  // Number of reflections hkl taken into account (below cut-off)
+  int num_hkl_scatt;                 
+  //cummulative probablity of scattering by i-th hkl plane
+  double *cumProb_hkl;
+};
+
+struct saveScattProb
+{
+  double kix, kiy, kiz;
+  double kihx, kihy, kihz;
+  double t1x, t1y, t1z;
+  double t2x, t2y, t2z;
+  double kim, stheta, ctheta;
+  double dphi;
+  double maxProb;
+  double aa[nSamplingPoints], bb[nSamplingPoints];
+};
+
+struct fourier_coef
+{
+  int lmax;
+  double ***cr, ***ci;
+};
+
+struct legendre
+{
+  int lmax;
+  int **index;
+  int *l;
+  int *m;
+  int *nplm;
+  double **x;
+  double **Plm;
+};
+
+struct hkl_data_texture
+{
+  int h, k, l;                // Indices for this reflection
+  int mult;                   // Multiplicity of the line
+  double F2;                  // Value of square of structure factor
+  double Gx, Gy, Gz;          // Coordinates in reciprocal space
+  double uGx, uGy, uGz;       // Unit vector in the direction of G
+  double G, Gct, Gphi;        // polar coordinates of G [Gct=cos(theta)]
+  // to interpolate the total cross section
+  int lmax;
+  int *nctk_l, *nphik_l;
+  double **ctk_l, **phik_l, ***Upsilon_l;
+  //To obtain cross sections
+  int numV;
+  int *lv, *mv;
+  double *RV, *phiV;
+  // to sample kprime
+  // precomputed Q distribution 
+  int nctq, nphiq;
+  double *ctq, *phiq, **probQ;
+  // rejection statistics
+  double numReject, numScatt;
+  //computed cross sections
+  double currXS;
+  //saved scattering parameters
+  int maxSaved, lastSaved;
+  struct saveScattProb *savedNeutrons; 
+};
+
+struct hkl_info_struct_texture
+{
+  // data structures
+  int num_hkl;                 // Number of reflections hkl taken into account
+  int num_hkl_scatt;	       // Number of possible reflections hkl (below Bragg cutoff)
+  struct hkl_data_texture *list; // Reflection array
+  struct legendre *lgdr;       // structure with precomputed spherical harmonics
+  int lmax;                    // cut-off for the Fourier expansion
+
+  // crystal and physical info
+  double m_delta_d_d;          // Delta-d/d FWHM (not used)
+  double m_ax,m_ay,m_az;       // First unit cell axis (direct space, AA)
+  double m_bx,m_by,m_bz;       // Second unit cell axis
+  double m_cx,m_cy,m_cz;       // Third unit cell axis
+  double asx,asy,asz;          // First reciprocal lattice axis (1/AA)
+  double bsx,bsy,bsz;          // Second reciprocal lattice axis
+  double csx,csy,csz;          // Third reciprocal lattice axis
+  double m_a, m_b, m_c;        // length of lattice parameter lengths
+  double m_aa, m_bb, m_cc;     // lattice angles
+  double sigma_a, sigma_i;     // abs and inc X sect
+  double at_weight;            // atomic weight
+  double at_nb;                // nb of atoms in a cell
+  double V0;                   // Unit cell volume (AA**3)
+
+  // precomputed factors
+  double xs2mu;                // cross section to mu (in m^-1)
+  
+  // auxiliar info
+  int    column_order[6];      // column signification [h,k,l,F,F2,j]
+  int    recip;                // Flag to indicate if recip or direct cell axes given
+  int    flag_warning;         // number of warnings
+  char   type;                 // type of last event: t=transmit,c=coherent or i=incoherent
+  double numReused;            // for reusing statistics
+  
+  int new;                     // 1 if this is a new neutron, 0 if this is a scattered neutron
+    
+  // saved info
+  int    h, k, l;              // last coherent scattering momentum transfer indices
+  double cohMu;                // last linear attenuation coefficient computed
+
+  // saved for reusing neutrons
+  int maxSaved, lastCohMuSaved, lastScattSaved;
+  struct saveCohMu *cohMuSaved;
+  struct save_hklScattProb *hkl_ScattProbSaved;
+};
+
+// function declarations
+
+// legendre
+double plgndr(int l, int m, double x);
+double plgndr_mod(int l, int m, double x);
+struct legendre * initLegendre(int lmax);
+// intialization
+int initData(char *coef_fn, char *crystal_fn, struct hkl_info_struct_texture *info, int maxSaved);
+// cross sections
+double total_hkl_XS(double k, double kct, double kphi, struct hkl_data_texture *L,
+                    struct legendre *lgdr);
+double total_hkl_XS_interp(double k, double kct, double kphi,
+                           struct hkl_data_texture *L, struct legendre *lgdr);
+double computeUpsilon_l(double kct, double kphi, int l,
+                        struct hkl_data_texture *L, struct legendre *lgdr);
+int precomputeUpsilon_l(struct hkl_data_texture *L, struct legendre *lgdr);
+int computeV(struct fourier_coef *fc, struct legendre *lgdr, struct hkl_data_texture *L);
+// sampling
+int sampleKprime_hkl(double *kf, double *ki, struct hkl_data_texture *L, struct legendre *lgdr);
+double probPhiq(double ctq, double phiq, struct hkl_data_texture *L, struct legendre *lgdr);
+double probPhiqImag(double ctq, double phiq, struct hkl_data_texture *L, struct legendre *lgdr);
+int precomputeProbPhiq(struct hkl_data_texture *L, struct legendre *lgdr);
+// Input - Output
+int read_hkl_data_texture(char *SC_file, struct hkl_info_struct_texture *info);
+void readFourierCoef(char *filename, struct fourier_coef *c);
+void allocateFourierCoef(int lmax, struct fourier_coef *c);
+void freeFourierCoef(struct fourier_coef *c);
+// Tests
+void computePoleFigure(int h, int k, int l, struct fourier_coef *c,
+                       struct hkl_info_struct_texture *data);
+void poleFigure(double ctG, double phiG, double ctD, double phiD,
+     struct fourier_coef *c, struct legendre *lgdr, double *pfr, double *pfi);
+// auxiliary
+int SX_list_compare_texture (void const *a, void const *b);
+double interp(double x, int n, double *xp, double *yp);
+double interp2D(double x, double y, int nx, int ny, double *xp, double *yp, double **fp);
+// free texture memory
+int free_texture(struct hkl_info_struct_texture *hkl_info);
+int free_hkl_data_texture(struct hkl_data_texture *list);
+int free_legendre(struct legendre *lgdr);
+
+// end function declarations
+
+/////////////////////
+/// legendre     ////
+/////////////////////
+
+double plgndr(int l, int m, double x)
+{
+  double fact, pll, pmm, pmmp1, somx2;
+  int i, ll;
+
+  if (m < 0 || m > l || fabs(x) > 1.0) {
+    printf("Bad arguments in routine plgndr\n");
+    printf("m: %d l: %d x: %f\n",m,l,x);
+    printf("Exiting...\n");
+    exit(1);
+  }
+  //Compute Pmm
+  pmm=1.0;
+  if (m > 0) {
+    somx2 = sqrt((1.0-x)*(1.0+x));
+    fact = 1.0;
+    for (i=1;i<=m;i++) {
+      pmm *= -fact*somx2;
+      fact += 2.0;
+    }
+  }
+  if (l == m) {
+    return pmm;
+  } else {
+    //Compute Pmm+1
+    pmmp1 = x*(2*m+1)*pmm;
+    if (l == (m+1))
+      return pmmp1;
+    else {
+      //Compute Plm, l > m + 1.
+      for (ll=m+2;ll<=l;ll++) {
+	pll = (x*(2*ll-1)*pmmp1-(ll+m-1)*pmm)/(ll-m);
+	pmm = pmmp1;
+	pmmp1 = pll;
+      }
+      return pll;
+    }
+  }
+}
+
+// legendre associated functions normalized for computations (see notes)
+double plgndr_mod(int l, int m, double x)
+{
+  int k;
+  int ma = abs(m);
+  double plm, norm = 1.0;
+  for(k=l+ma;k>l-ma;k--) { norm /= k; }
+  plm = sqrt(norm)*plgndr(l,ma,x);
+  if(m<0 && ma%2) { plm = -plm; }
+  return plm;
+}
+
+struct legendre * initLegendre(int lmax)
+{
+  int i, j, k, l, m, ma, nlm;
+  double x, dx, plm, norm;
+  struct legendre *lgdr;
+  FILE *filep;
+
+  if(lmax<0) {
+    printf("initLegendre: negative lmax = %d\n",lmax);
+    printf("Exiting...\n");
+    fflush(stdout);
+    exit(1);
+  }
+
+  nlm = (lmax+1)*(lmax+1);
+
+  lgdr = (struct legendre *)malloc(sizeof(struct legendre));
+
+  lgdr->lmax = lmax;
+  lgdr->index = (int **)malloc((lmax+1)*sizeof(int *));
+  lgdr->l = (int *)malloc(nlm*sizeof(int));
+  lgdr->m = (int *)malloc(nlm*sizeof(int));
+  lgdr->nplm = (int *)malloc(nlm*sizeof(int));
+  lgdr->x = (double **)malloc(nlm*sizeof(double *));
+  lgdr->Plm = (double **)malloc(nlm*sizeof(double *));
+  i = -1;
+  for(l=0;l<=lmax;l++) {
+    lgdr->index[l] = (int *)malloc((2*l+1)*sizeof(int));	
+    for(m=-l;m<=l;m++) {
+      i++;
+      (lgdr->index)[l][l+m] = i;
+      (lgdr->l)[i] = l;
+      (lgdr->m)[i] = m;
+      (lgdr->nplm)[i] = 100*(l+1);
+      (lgdr->x)[i] = (double *)malloc(((lgdr->nplm)[i])*sizeof(double));
+      (lgdr->Plm)[i] = (double *)malloc(((lgdr->nplm)[i])*sizeof(double));
+      dx = 2.0/((lgdr->nplm)[i]-1);
+      for(j=0;j<(lgdr->nplm)[i]-1;j++) {
+        x = -1.0 + j*dx;
+        (lgdr->x)[i][j] = x;
+        (lgdr->Plm)[i][j] = plgndr_mod(l,m,x);
+      }
+      j = (lgdr->nplm)[i]-1;
+      x = 1.0;
+      (lgdr->x)[i][j] = x;
+      (lgdr->Plm)[i][j] = plgndr_mod(l,m,x);
+    }
+  }
+
+  return lgdr;
+}
+
+// end legendre
+
+/////////////////////////////
+////// Cross sections     ///
+/////////////////////////////
+
+double total_hkl_XS(double k, double kct, double kphi, struct hkl_data_texture *L,
+                    struct legendre *lgdr)
+{
+  int numV = L->numV;
+  int *lv = L->lv;
+  int *mv = L->mv;
+  double *RV = L->RV;
+  double *phiV = L->phiV;
+  double x = (L->G)/(2*k);
+  double XS, XSi, pl, plm;
+  int l, m, i, id, n;
+  FILE *filep;
+
+  if(x>1) {
+    XS = 0;
+    XSi = 0;
+    return XS;
+  }
+  
+  l = -1;
+  XS = 0;
+  XSi = 0;
+  for(i=0;i<numV;i++) {
+    if(lv[i] != l) {
+       l = lv[i];
+       // l-th legendre polynomial evaluated at x, Pl(x)
+       id = (lgdr->index)[l][l]; 
+       pl = interp(x,lgdr->nplm[id],lgdr->x[id],lgdr->Plm[id]);    
+    }
+    m = mv[i];
+    // lm-th associated legendre polynomial evaluated at kct, Plm(kct)
+    id = (lgdr->index)[l][l+m]; 
+    plm = interp(kct,(lgdr->nplm)[id],(lgdr->x)[id],(lgdr->Plm)[id]);
+    XS += pl*RV[i]*plm*cos(phiV[i]-m*kphi);
+    XSi += pl*RV[i]*plm*sin(phiV[i]-m*kphi);
+  }
+
+  if(XS<0) {
+    printf("total_hkl_XS: negative XS: %.6e\n",XS);
+    //printf("h: %d k: %d l: %d Gx: %.6e Gy: %.6e Gz: %.6e\n",L->h,L->k,L->l,L->Gx,L->Gy,L->Gz);
+    //printf("Exiting...");
+    fflush(stdout);
+    filep = fopen("negativeXS.txt","a");
+    fprintf(filep,"%d %d %d %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n",
+            L->h,L->k,L->l,L->Gx,L->Gy,L->Gz,k,kct,kphi,XS);
+    fclose(filep);
+    //exit(1);
+  }
+
+  // this is not the cross section. A different name (reflectivity??) would be appropriate
+  // there is a missed factor N*(2*pi)**3/(v0*k**3), which is a constant and then applied 
+  // only at the end
+  XS *= (L->mult)*(L->F2)/(4*x);
+    
+  return XS;
+}
+
+double total_hkl_XS_interp(double k, double kct, double kphi, struct hkl_data_texture *L,
+                           struct legendre *lgdr)
+{
+  int l, id;
+  double x = (L->G)/(2*k);
+  double XS, XSi, pl, Ul;
+  FILE *filep;
+
+  if(x>1) {
+    XS = 0;
+    XSi = 0;
+    return XS;
+  }
+
+  XSi = 0;
+  XS = 1.0;
+  for(l=1;l<=L->lmax;l++) {
+    // l-th legendre polynomial evaluated at x, Pl(x)
+    id = (lgdr->index)[l][l];
+    pl = interp(x,lgdr->nplm[id],lgdr->x[id],lgdr->Plm[id]);
+    Ul = interp2D(kct,kphi,(L->nctk_l)[l],(L->nphik_l)[l],
+                  (L->ctk_l)[l],(L->phik_l)[l],(L->Upsilon_l)[l]);
+    XS += pl*Ul;
+  }
+  
+  if(XS<0) {
+    printf("total_hkl_XS: negative XS: %.6e\n",XS);
+    fflush(stdout);
+    filep = fopen("negativeXS.txt","a");
+    fprintf(filep,"%d %d %d %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n",
+            L->h,L->k,L->l,L->Gx,L->Gy,L->Gz,k,kct,kphi,XS);
+    fclose(filep);
+  }
+
+  // this is not the cross section. A different name (reflectivity??)
+  // would be appropriate
+  // there is a missed factor N*(2*pi)**3/(v0*k**3), which is a constant
+  // and then applied only at the end
+  XS *= (L->mult)*(L->F2)/(4*x);
+
+  /*
+  filep = fopen("XS_interp.txt","a");
+  fprintf(filep,"%d %d %d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.16e %.16e\n",
+           L->h,L->k,L->l,L->Gx,L->Gy,L->Gz,k,kct,kphi,x,XS,XSi);
+  fclose(filep);
+  */
+  
+  return XS;
+}
+
+int precomputeUpsilon_l(struct hkl_data_texture *L, struct legendre *lgdr)
+{
+  int i, j, l, lmax;
+  int *nctk_l, *nphik_l;
+  double **ctk_l, **phik_l, ***Upsilon_l;
+  double dctk, dphik;
+
+  char fn[500];
+  FILE *filep;
+
+  lmax = L->lmax;
+
+  L->nctk_l = (int *)malloc((lmax+1)*sizeof(int));
+  L->nphik_l = (int *)malloc((lmax+1)*sizeof(int));
+  L->ctk_l = (double **)malloc((lmax+1)*sizeof(double *));
+  L->phik_l = (double **)malloc((lmax+1)*sizeof(double *));
+  L->Upsilon_l = (double ***)malloc((lmax+1)*sizeof(double **));
+  
+  nctk_l = L->nctk_l;
+  nphik_l = L->nphik_l;
+  ctk_l = L->ctk_l;
+  phik_l = L->phik_l;
+  Upsilon_l = L->Upsilon_l;
+
+  for(l=1;l<=lmax;l++) {
+    nctk_l[l] = 201;
+    nphik_l[l] = 601;
+    ctk_l[l] = (double *)malloc(nctk_l[l]*sizeof(double));
+    phik_l[l] = (double *)malloc(nphik_l[l]*sizeof(double));
+    Upsilon_l[l] = (double **)malloc(nctk_l[l]*sizeof(double *));
+    for(i=0;i<nctk_l[l];i++) {
+      Upsilon_l[l][i] = (double *)malloc(nphik_l[l]*sizeof(double));
+    }
+    
+    dctk = 2.0/(nctk_l[l]-1);
+    dphik = (2.0*PI)/(nphik_l[l]-1);
+    
+    for(i=0;i<nctk_l[l]-1;i++) { ctk_l[l][i] = -1.0 + i*dctk; }
+    ctk_l[l][nctk_l[l]-1] = 1.0;
+    
+    for(j=0;j<nphik_l[l]-1;j++) { phik_l[l][j] = -PI + j*dphik; }
+    phik_l[l][nphik_l[l]-1] = PI;
+
+    for(i=0;i<nctk_l[l];i++) {
+      for(j=0;j<nphik_l[l];j++) {
+        Upsilon_l[l][i][j] = computeUpsilon_l(ctk_l[l][i],phik_l[l][j],l,L,lgdr);
+      }   
+    }
+
+    /*
+    sprintf(fn,"Upsilon_l_precomputed_%d_%d_%d.txt",L->h,L->k,L->l);
+    filep = fopen(fn,"a");
+    for(i=0;i<nctk_l[l];i++) {
+      for(j=0;j<nphik_l[l];j++) {
+        fprintf(filep,"%d %f %f %.6e\n",l,ctk_l[l][i],phik_l[l][j],Upsilon_l[l][i][j]);
+      }   
+    }
+    fprintf(filep,"\n\n");
+    fclose(filep);
+    */
+  }
+  
+  return 0;
+}
+
+double computeUpsilon_l(double kct, double kphi, int l,
+                        struct hkl_data_texture *L, struct legendre *lgdr)
+{
+  int i, m, id;
+  double XS, XSi, plm;
+  int numV = L->numV;
+  int *lv = L->lv;
+  int *mv = L->mv;
+  double *RV = L->RV;
+  double *phiV = L->phiV;
+
+  XS = 0;
+  XSi = 0;
+  for(i=0;i<numV;i++) {
+    if(lv[i] == l) {
+       m = mv[i];
+       // lm-th associated legendre polynomial evaluated at kct, Plm(kct)
+       id = (lgdr->index)[l][l+m]; 
+       plm = interp(kct,(lgdr->nplm)[id],(lgdr->x)[id],(lgdr->Plm)[id]);
+       XS += RV[i]*plm*cos(phiV[i]-m*kphi);
+       XSi += RV[i]*plm*sin(phiV[i]-m*kphi);
+     }
+  }
+  
+  return XS;
+}
+
+int computeV(struct fourier_coef *fc, struct legendre *lgdr, struct hkl_data_texture *L)
+{
+  int i, l, m, n, numV;
+  double Gct, Gphi, cnp, snp, pln, vr, vi;
+  double **R, **Phi;
+  FILE *filep;
+
+  int lmax = fc->lmax;
+
+  if(lmax<0) {
+    printf("computeV: negative lmax = %d\n",lmax);
+    printf("Exiting...\n");
+    fflush(stdout);
+    exit(1);
+  }
+
+  Gct = L->Gct;
+  Gphi = L->Gphi;
+
+  R = (double **)malloc((lmax+1)*sizeof(double *));
+  for(l=0;l<=lmax;l++) {
+    R[l] = (double *)malloc((2*l+1)*sizeof(double));
+  }
+  Phi = (double **)malloc((lmax+1)*sizeof(double *));
+  for(l=0;l<=lmax;l++) {
+    Phi[l] = (double *)malloc((2*l+1)*sizeof(double));
+  }
+
+  // compute V
+
+  numV = 0;
+  for(l=0;l<=lmax;l++) {
+    for(m=-l;m<=l;m++) {
+      vr = 0;
+      vi = 0;
+      for(n=-l;n<=l;n++) {
+        pln = plgndr_mod(l,n,Gct); // this can be interpolated from lgdr
+        cnp = cos(n*Gphi);
+        snp = sin(n*Gphi);
+	vr += pln*((fc->cr)[l][l+m][l+n]*cnp - (fc->ci)[l][l+m][l+n]*snp);
+	vi += pln*((fc->cr)[l][l+m][l+n]*snp + (fc->ci)[l][l+m][l+n]*cnp);
+      }
+      R[l][l+m] = sqrt(vr*vr+vi*vi);
+      Phi[l][l+m] = atan2(vi,vr);
+      if(R[l][l+m]>tolTexture) { numV++; }
+    }
+  }
+
+  /*
+  filep = fopen("V.txt","w");
+  for(l=0;l<=lmax;l++) {
+    for(m=0;m<=l;m++) {
+      fprintf(filep,"%d %d %.6e %.6e %.6e %.6e\n",
+               l,m,R[l][l+m],R[l][l-m],Phi[l][l+m],Phi[l][l-m]);
+    }
+  }
+  fclose(filep);
+  */
+  
+  L->numV = numV;
+  L->lv = (int *)malloc(numV*sizeof(int));
+  L->mv = (int *)malloc(numV*sizeof(int));
+  L->RV = (double *)malloc(numV*sizeof(double));
+  L->phiV = (double *)malloc(numV*sizeof(double));
+
+  i = -1;
+  for(l=0;l<=lmax;l++) {
+    for(m=-l;m<=l;m++) {
+      if(R[l][l+m] > tolTexture) {
+        i++;
+	(L->lv)[i] = l;
+	(L->mv)[i] = m;
+	(L->RV)[i] = R[l][l+m];
+	(L->phiV)[i] = Phi[l][l+m];
+      }
+    }
+  }
+
+  /*
+  filep = fopen("Vlarge.txt","a");
+  fprintf(filep,"# %d\n",L->numV);
+  for(i=0;i<L->numV;i++) {
+    fprintf(filep,"%d %d %d %d %d %d %.16e %.16e\n",
+            L->l,L->h,L->k,i,L->lv[i],L->mv[i],L->RV[i],L->phiV[i]);
+  }
+  fclose(filep);
+  */
+  
+  // free memory
+  for(l=0;l<=lmax;l++) {
+    free(R[l]);
+    free(Phi[l]);
+  }
+  free(R);	
+  free(Phi);	
+
+  printf("computeV:");
+  printf(" %d %d %d numV = %d \n",L->h,L->k,L->l,numV);
+
+  return 0;
+}
+
+// end cross sections
+
+////////////////////////////////
+/// Sampling                  //
+////////////////////////////////
+
+int sampleKprime_hkl(double *kf, double *ki, struct hkl_data_texture *L, struct legendre *lgdr)
+{
+  int it, i, is, j;
+  double xi, kdg;
+  // modulus of ki and local orthonormal basis containing ki, (t1,t2,kih)
+  double kim, kihx, kihy, kihz, t1x, t1y, t1z, t2x, t2y, t2z;
+  double stheta, ctheta;
+  // pre computed probalility
+  double phipts[nSamplingPoints], probpts[nSamplingPoints];
+  double *aa, *bb;
+  double dphi;
+  double maxProb;
+  // cartesian coordinates of kf in the (t1,t2,kih) basis
+  double kft1, kft2, kfkih;
+  // azimuthal angle (phi) of kf in the (t1,t2,kih) basis and sine and cosine
+  double phi, kfsp, kfcp;
+  // polar coordinates (in the sample coordinate system) of the unitay scattering vector qh
+  double ctq, phiq;
+  // coefficientes to get the polar coordinates of q
+  double ux0, uxc, uxs, uy0, uyc, uys, uz0, uzc, uzs;
+  // Legendre associated funtion and probability of phi
+  double p, plm, pimag;
+  // File pointers
+  FILE *filep, *filep2;
+  char fn[1000];
+  
+  int lastSaved = L->lastSaved;
+  int maxSaved = L->maxSaved;
+  struct saveScattProb *sp = L->savedNeutrons;
+  struct saveScattProb *sp_save;
+
+  is = -1;
+  for(i=lastSaved;i>=0;i--) {
+     if( fabs(ki[0]-sp[i].kix)<1.0e-90 &&
+         fabs(ki[1]-sp[i].kiy)<1.0e-90 &&
+         fabs(ki[2]-sp[i].kiz)<1.0e-90 ) { is = i; break; }
+  }
+  if(is==-1) {
+    // continue the search
+    for(i=maxSaved-1;i>lastSaved;i--) {
+     if( fabs(ki[0]-sp[i].kix)<1.0e-90 &&
+         fabs(ki[1]-sp[i].kiy)<1.0e-90 &&
+         fabs(ki[2]-sp[i].kiz)<1.0e-90 ) { is = i; break; }
+    }
+  }
+
+  if( is != -1 ) {
+    // equal neutron found. reuse
+    //printf("scatt hkl reuse\n");
+    //fflush(stdout);
+    sp_save = sp + is;
+    kim = sp_save->kim;
+    stheta = sp_save->stheta;
+    ctheta = sp_save->ctheta;
+    kihx = sp_save->kihx;
+    kihy = sp_save->kihy;
+    kihz = sp_save->kihz;
+    t1x = sp_save->t1x;
+    t1y = sp_save->t1y;
+    t1z = sp_save->t1z;
+    t2x = sp_save->t2x;
+    t2y = sp_save->t2y;
+    t2z = sp_save->t2z;
+    dphi = sp_save->dphi;
+    maxProb = sp_save->maxProb;
+    aa = sp_save->aa;
+    bb = sp_save->bb;
+    // save scattering parameters
+    L->lastSaved = is;
+  } else {
+     // neutron different from previous. Compute prob. distribution, etc.
+     //printf("scatt hkl new\n");
+     //fflush(stdout);
+
+     // modulus of ki
+     kim = sqrt(ki[0]*ki[0]+ki[1]*ki[1]+ki[2]*ki[2]);
+     // unitary vector in the direction of ki
+     kihx = ki[0]/kim;
+     kihy = ki[1]/kim;
+     kihz = ki[2]/kim;
+
+     kdg = kim/(L->G);
+
+     ctheta = 1.0 - 0.5/(kdg*kdg);
+     stheta = sqrt(1.0 - ctheta*ctheta);
+  
+     // right-handed orthonormal triad
+     if(1.0-kihz*kihz>1.0e-3) {
+       xi = sqrt(1.0-kihz*kihz);
+       t1x = kihy/xi;
+       t1y = -kihx/xi;
+       t1z = 0;
+       t2x = kihz*kihx/xi;
+       t2y = kihz*kihy/xi;
+       t2z = -xi;
+     } else if(1.0-kihx*kihx>1.0e-3) {
+       xi = sqrt(1.0-kihx*kihx);
+       t1x = 0;
+       t1y = kihz/xi;
+       t1z = -kihy/xi;
+       t2x = -xi;
+       t2y = kihx*kihy/xi;
+       t2z = kihx*kihz/xi;
+    } else {
+       xi = sqrt(1.0-kihy*kihy);
+       t1x = -kihz/xi;
+       t1y = 0;
+       t1z = kihx/xi;
+       t2x = kihy*kihx/xi;
+       t2y = -xi;
+       t2z = kihy*kihz/xi;
+    }
+
+    //coefficients to obtain the polar coordinates of qh = kih - kfh
+    ux0 = (1.0-ctheta)*kihx;
+    uxc = -stheta*t1x;
+    uxs = -stheta*t2x;
+    uy0 = (1.0-ctheta)*kihy;
+    uyc = -stheta*t1y;
+    uys = -stheta*t2y;
+    uz0 = kdg*(1.0-ctheta)*kihz;
+    uzc = -kdg*stheta*t1z;
+    uzs = -kdg*stheta*t2z;
+
+    maxProb = -1.0e99;
+    dphi = (2.0*PI)/(nSamplingPoints-1);
+    phi = -PI;
+    // precompute probability distribution
+    for(j=0;j<nSamplingPoints-1;j++) {
+      kfsp = sin(phi);
+      kfcp = cos(phi);
+      ctq = uz0 + uzc*kfcp + uzs*kfsp;
+      phiq = atan2(uy0+uyc*kfcp+uys*kfsp,ux0+uxc*kfcp+uxs*kfsp);
+      phipts[j] = phi;
+      //probpts[j] = probPhiq(ctq,phiq,L,lgdr);
+      // interpolate instead of computing
+      probpts[j] = interp2D(ctq,phiq,L->nctq,L->nphiq,L->ctq,L->phiq,L->probQ); 
+      if(probpts[j]>maxProb) { maxProb = probpts[j]; }
+      phi += dphi;
+    }
+    phipts[nSamplingPoints-1] = PI;
+    probpts[nSamplingPoints-1] = probpts[0];
+
+    // save scattering parameters
+    lastSaved++;
+    if(lastSaved>=maxSaved) { lastSaved = 0; }
+    L->lastSaved = lastSaved;
+    sp_save = sp + lastSaved;
+    aa = sp_save->aa;
+    bb = sp_save->bb;
+    for(j=0;j<nSamplingPoints-1;j++) {
+     aa[j] = probpts[j] - phipts[j]*(probpts[j+1]-probpts[j])/dphi;
+     bb[j] = (probpts[j+1]-probpts[j])/dphi;
+    }
+    sp_save->kix = ki[0];
+    sp_save->kiy = ki[1];
+    sp_save->kiz = ki[2];
+    sp_save->kim = kim;
+    sp_save->stheta = stheta;
+    sp_save->ctheta = ctheta;
+    sp_save->kihx = kihx;
+    sp_save->kihy = kihy;
+    sp_save->kihz = kihz;
+    sp_save->t1x = t1x;
+    sp_save->t1y = t1y;
+    sp_save->t1z = t1z;
+    sp_save->t2x = t2x;
+    sp_save->t2y = t2y;
+    sp_save->t2z = t2z;
+    sp_save->dphi = dphi;
+    sp_save->maxProb = maxProb;
+  }
+
+  // rejection method
+  for(it=0;it<maxIterReject;it++) {
+     phi = -PI + 2*PI*rand01();
+     //interpolate
+     j = (int) ((PI+phi)/dphi);
+     //p = probpts[j] + (phi-phipts[j])*(probpts[j+1]-probpts[j])/dphi;
+     p = aa[j] + phi*bb[j];
+     if(p/maxProb>rand01()) {
+        //printf("rej. it: %d j: %d  phi: %f\n",it,j,phi);
+	kft1 =  stheta*cos(phi);
+	kft2 =  stheta*sin(phi);
+	kfkih = ctheta;
+        kf[0] = kim*(kft1*t1x + kft2*t2x + kfkih*kihx);
+	kf[1] = kim*(kft1*t1y + kft2*t2y + kfkih*kihy);
+        kf[2] = kim*(kft1*t1z + kft2*t2z + kfkih*kihz);
+        /*
+        filep=fopen("sample_return.txt","a");
+        fprintf(filep,"%.6e %.6e %.6e %.6e %.6e %.6e %.6e\n",
+	               ctheta,kft1,kft2,kfkih,kf[0],kf[1],kf[2]);
+        fclose(filep);
+        filep=fopen("sample_basis.txt","a");
+        fprintf(filep,"%.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n",
+	               t1x,t1y,t1z,t2x,t2y,t2z,kihx,kihy,kihz);
+        fclose(filep);
+	*/
+	/*
+        sprintf(fn,"sampleK_%d%d%d.txt",L->h,L->k,L->l);
+        filep = fopen(fn,"a");
+	fprintf(filep,"%.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n",
+	               ki[0],ki[1],ki[2],kf[0],kf[1],kf[2],stheta,ctheta);
+        fclose(filep);
+	*/
+	L->numReject += it + 1;
+	L->numScatt += 1;
+        return 0;
+     }  
+  }
+
+  /*
+  filep = fopen("probQ_precomputed.txt","a");
+  for(i=0;i<L->nctq;i++) {
+    for(j=0;j<L->nphiq;j++) {
+      fprintf(filep,"%f %f %.6e\n",(L->ctq)[i],(L->phiq)[j],(L->probQ)[i][j]);
+    }   
+  }
+  fclose(filep);
+  */
+
+  printf("sampleKprime_hkl: too many iterations in rejection method\n");
+  printf("find distribution probability in file sampleKprime_hkl_fail.txt\n");
+  //sprintf(fn,"probPhiQ_%d%d%d.txt",L->h,L->k,L->l);
+  filep = fopen("sampleKprime_hkl_fail.txt","w");
+  //filep = fopen(fn,"a");
+  fprintf(filep,"#Plane hkl: %d %d %d\n",L->h,L->k,L->l);
+  fprintf(filep,"#Incoming neutron:\n");
+  fprintf(filep,"#kx: %.6e ky: %.6e kz: %.6e\n",ki[0],ki[1],ki[2]);
+  for(j=0;j<nSamplingPoints-1;j++) {
+    phi = -PI + j*dphi;
+    fprintf(filep,"%f %.6e %.6e %.6e %.6e\n",phi,aa[j]+phi*bb[j],phipts[j],probpts[j],maxProb);
+  }
+  fprintf(filep,"\n\n");
+  phi = -PI;
+  while(phi<PI) {
+    kfsp = sin(phi);
+    kfcp = cos(phi);
+    ctq = uz0 + uzc*kfcp + uzs*kfsp;
+    phiq = atan2(uy0+uyc*kfcp+uys*kfsp,ux0+uxc*kfcp+uxs*kfsp);
+    p = probPhiq(ctq,phiq,L,lgdr);
+    fprintf(filep,"%f %.6e %.6e\n",phi,p,maxProb);
+    phi += 0.001;
+  }
+  fclose(filep);
+  printf("Exiting\n");
+  fflush(stdout);
+  exit(1);
+}
+
+double probPhiq(double ctq, double phiq, struct hkl_data_texture *L, struct legendre *lgdr)
+{
+  int i, l, m, id;
+  double plm;
+
+  int numV = L->numV;
+  int *lv = L->lv;
+  int *mv = L->mv;
+  double *RV = L->RV;
+  double *phiV = L->phiV;
+
+  int *nplm = lgdr->nplm;
+  double **x = lgdr->x;
+  double **Plm = lgdr->Plm;
+
+  double p = 0;
+  for(i=0;i<(L->numV);i++) {
+    l = lv[i];
+    m = mv[i];
+    id = (lgdr->index)[l][l+m];
+    plm = interp(ctq,nplm[id],x[id],Plm[id]);
+    p += RV[i]*plm*cos(phiV[i]-m*phiq);
+  }
+
+  return p;
+}
+
+double probPhiqImag(double ctq, double phiq, struct hkl_data_texture *L, struct legendre *lgdr)
+{
+  int i, l, m, id;
+  double plm;
+
+  int numV = L->numV;
+  int *lv = L->lv;
+  int *mv = L->mv;
+  double *RV = L->RV;
+  double *phiV = L->phiV;
+
+  int *nplm = lgdr->nplm;
+  double **x = lgdr->x;
+  double **Plm = lgdr->Plm;
+
+  double p = 0;
+  for(i=0;i<(L->numV);i++) {
+    l = lv[i];
+    m = mv[i];
+    id = (lgdr->index)[l][l+m];
+    plm = interp(ctq,nplm[id],x[id],Plm[id]);
+    p += RV[i]*plm*sin(phiV[i]-m*phiq);
+  }
+
+  return p;
+}
+
+int precomputeProbPhiq(struct hkl_data_texture *L, struct legendre *lgdr)
+{
+  int i, j, nctq, nphiq;
+  double dctq, dphiq;
+  double *ctq, *phiq, **probQ;
+  char fn[500];
+  FILE *filep;
+
+  nctq = L->nctq;
+  nphiq = L->nphiq;
+  ctq = (double *)malloc(nctq*sizeof(double));
+  phiq = (double *)malloc(nphiq*sizeof(double));
+  probQ = (double **)malloc(nctq*sizeof(double *));
+  for(i=0;i<nctq;i++) { probQ[i] = (double *)malloc(nphiq*sizeof(double)); }
+
+  dctq = 2.0/(nctq-1);
+  dphiq = (2.0*PI)/(nphiq-1);
+
+  for(i=0;i<nctq-1;i++) { ctq[i] = -1.0 + i*dctq; }
+  ctq[nctq-1] = 1.0;
+  for(j=0;j<nphiq-1;j++) { phiq[j] = -PI + j*dphiq; }
+  phiq[nphiq-1] = PI;
+
+  for(i=0;i<nctq;i++) {
+    for(j=0;j<nphiq;j++) {
+      probQ[i][j] = probPhiq(ctq[i],phiq[j],L,lgdr);
+    }   
+  }
+
+  /*
+  sprintf(fn,"probQ_precomputed_%d_%d_%d.txt",L->h,L->k,L->l);
+  filep = fopen(fn,"a");
+  for(i=0;i<nctq;i++) {
+    for(j=0;j<nphiq;j++) {
+      fprintf(filep,"%f %f %.6e\n",ctq[i],phiq[j],probQ[i][j]);
+    }   
+  }
+  fclose(filep);
+  */
+  
+  L->ctq = ctq;
+  L->phiq = phiq;
+  L->probQ = probQ;
+
+  return 0;
+}
+  
+// end sampling
+
+///////////////////////////
+//// Input - Output      //
+///////////////////////////
+
+int read_hkl_data_texture(char *SC_file, struct hkl_info_struct_texture *info)
+{
+  struct hkl_data_texture *list = NULL;
+  int size = 0;
+  t_Table sTable; //
+  int i = 0;
+  double tmp_x, tmp_y, tmp_z;
+  char **parsing;
+  char flag = 0;
+  double nb_atoms = 1;
+  double h = 0, k = 0, l = 0, F2 = 0;
+  int mult = -1;
+  double b1[3], b2[3];
+  FILE *filep;
+  
+  if ( !SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0") ) {
+    info->num_hkl = 0;
+    flag = 1;
+  }
+
+  if (flag) { return -1; }
+
+  // Read the table
+
+  Table_Read(&sTable, SC_file, 1); // read 1st block data from SC_file into sTable
+  if (sTable.columns < 5) {
+     fprintf(stderr, "Texture: Error: The number of columns in %s should be",SC_file);
+     fprintf(stderr," at least %d for [h,k,l,F2,j]\n",5);
+     return(0);
+  }
+  if (!sTable.rows) {
+     fprintf(stderr, "Texture: Error: The number of rows in %s should be at least %d\n",
+                      SC_file, 1);
+     return 0;
+  } else { size = sTable.rows; }
+
+  // parsing of header
+  parsing = Table_ParseHeader(sTable.header,
+    "sigma_abs","sigma_a ",
+    "sigma_inc","sigma_i ",
+    "column_h",
+    "column_k",
+    "column_l",
+    "column_F ",
+    "column_F2",
+    "column_j",
+    "Delta_d/d",
+    "lattice_a ",
+    "lattice_b ",
+    "lattice_c ",
+    "lattice_aa",
+    "lattice_bb",
+    "lattice_cc",
+    "nb_atoms",
+    "multiplicity",
+    NULL);
+
+  printf("l0\n");
+  fflush(stderr);
+  
+  if (parsing) {
+     if (parsing[0] && !info->sigma_a) info->sigma_a=atof(parsing[0]);
+     if (parsing[1] && !info->sigma_a) info->sigma_a=atof(parsing[1]);
+     if (parsing[2] && !info->sigma_i) info->sigma_i=atof(parsing[2]);
+     if (parsing[3] && !info->sigma_i) info->sigma_i=atof(parsing[3]);
+     if (parsing[4])                   info->column_order[0]=atoi(parsing[4]);
+     if (parsing[5])                   info->column_order[1]=atoi(parsing[5]);
+     if (parsing[6])                   info->column_order[2]=atoi(parsing[6]);
+     if (parsing[7])                   info->column_order[3]=atoi(parsing[7]);
+     if (parsing[8])                   info->column_order[4]=atoi(parsing[8]);
+     if (parsing[9])                   info->column_order[5]=atoi(parsing[9]);
+     if (parsing[10] && info->m_delta_d_d <0) info->m_delta_d_d=atof(parsing[10]);
+     if (parsing[11] && !info->m_a)    info->m_a =atof(parsing[11]);
+     if (parsing[12] && !info->m_b)    info->m_b =atof(parsing[12]);
+     if (parsing[13] && !info->m_c)    info->m_c =atof(parsing[13]);
+     if (parsing[14] && !info->m_aa)   info->m_aa=atof(parsing[14]);
+     if (parsing[15] && !info->m_bb)   info->m_bb=atof(parsing[15]);
+     if (parsing[16] && !info->m_cc)   info->m_cc=atof(parsing[16]);
+     if (parsing[17])   nb_atoms=atof(parsing[17]);
+     if (parsing[18])   nb_atoms=atof(parsing[18]);
+     for (i=0; i<=18; i++) { if (parsing[i]) { free(parsing[i]); } }
+     free(parsing);
+  }
+
+  printf("l1\n");
+  fflush(stderr);
+  
+  if (nb_atoms > 1) { info->sigma_a *= nb_atoms; info->sigma_i *= nb_atoms; }
+
+  //special cases for the structure definition (means we specify by hand the vectors)
+  if (info->m_ax || info->m_ay || info->m_az) { info->m_a = 0; } 
+  if (info->m_bx || info->m_by || info->m_bz) { info->m_b = 0; }
+  if (info->m_cx || info->m_cy || info->m_cz) { info->m_c = 0; }
+
+  //compute the norm from vector a if missing
+  if (info->m_ax || info->m_ay || info->m_az) {
+     double as = sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
+     if (!info->m_bx && !info->m_by && !info->m_bz) { info->m_a = info->m_b = as; }
+     if (!info->m_cx && !info->m_cy && !info->m_cz) { info->m_a = info->m_c = as; }
+  }
+  if (info->m_a && !info->m_b) { info->m_b = info->m_a; }
+  if (info->m_b && !info->m_c) { info->m_c = info->m_b; }
+   
+  //compute the lattice angles if not set from data file. Not used when in vector mode.
+  if (info->m_a && !info->m_aa) { info->m_aa = 90; }
+  if (info->m_aa && !info->m_bb) { info->m_bb = info->m_aa; }
+  if (info->m_bb && !info->m_cc) { info->m_cc = info->m_bb; }
+
+  //parameters consistency checks
+  if (!info->m_ax && !info->m_ay && !info->m_az && !info->m_a) {
+     fprintf(stderr,"Texture: Error: Wrong a lattice vector definition\n");
+     return(0);
+  }
+  if (!info->m_bx && !info->m_by && !info->m_bz && !info->m_b) {
+     fprintf(stderr,"Texture: Error: Wrong b lattice vector definition\n");
+     return(0);
+  }
+  if (!info->m_cx && !info->m_cy && !info->m_cz && !info->m_c) {
+     fprintf(stderr,"Texture: Error: Wrong c lattice vector definition\n");
+     return(0);
+  }
+  if (info->m_aa && info->m_bb && info->m_cc && info->recip) {
+     fprintf(stderr,"Texture: Error: Selecting reciprocal cell and angles is unmeaningful\n");
+     return(0);
+  }
+
+  printf("l2\n");
+  fflush(stderr);
+
+  //when lengths a,b,c + angles are given (instead of vectors a,b,c)
+  if (info->m_aa && info->m_bb && info->m_cc) {
+     double as,bs,cs;
+     if (info->m_a) { 
+       as = info->m_a; 
+     } else { 
+       as = sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
+     }
+     if (info->m_b) { 
+       bs = info->m_b;
+     } else { 
+       bs = sqrt(info->m_bx*info->m_bx+info->m_by*info->m_by+info->m_bz*info->m_bz);
+     }
+     if (info->m_c) { 
+       cs = info->m_c;
+     } else {
+       cs =  sqrt(info->m_cx*info->m_cx+info->m_cy*info->m_cy+info->m_cz*info->m_cz);
+     }
+     /*
+     info->m_bz = as; info->m_by = 0; info->m_bx = 0;
+     info->m_az = bs*cos(info->m_cc*DEG2RAD);
+     info->m_ay = bs*sin(info->m_cc*DEG2RAD);
+     info->m_ax = 0;
+     info->m_cz = cs*cos(info->m_bb*DEG2RAD);
+     info->m_cy = cs*(cos(info->m_aa*DEG2RAD)-cos(info->m_cc*DEG2RAD)*cos(info->m_bb*DEG2RAD))
+                    /sin(info->m_cc*DEG2RAD);
+     info->m_cx = sqrt(cs*cs - info->m_cz*info->m_cz - info->m_cy*info->m_cy);
+     */
+
+     /*
+     // victor 1
+     info->m_ax = as;
+     info->m_ay = 0;
+     info->m_az = 0;
+     info->m_bx = as*cos(info->m_cc*DEG2RAD);
+     info->m_by = as*sin(info->m_cc*DEG2RAD);
+     info->m_bz = 0;
+     info->m_cx = 0;
+     info->m_cy = 0;
+     info->m_cz = cs;
+     */					     
+     /*
+     // victor 2
+     info->m_ax = as*cos(0.5*info->m_cc*DEG2RAD);
+     info->m_ay = -as*sin(0.5*info->m_cc*DEG2RAD);
+     info->m_az = 0;
+     info->m_bx = as*cos(0.5*info->m_cc*DEG2RAD);
+     info->m_by = as*sin(0.5*info->m_cc*DEG2RAD);
+     info->m_bz = 0;
+     info->m_cx = 0;
+     info->m_cy = 0;
+     info->m_cz = cs;
+     */
+     
+     // miguel
+     info->m_ax = as*sin(0.5*info->m_cc*DEG2RAD);
+     info->m_ay = as*cos(0.5*info->m_cc*DEG2RAD);
+     info->m_az = 0;
+     info->m_bx = -as*sin(0.5*info->m_cc*DEG2RAD);
+     info->m_by = as*cos(0.5*info->m_cc*DEG2RAD);
+     info->m_bz = 0;
+     info->m_cx = 0;
+     info->m_cy = 0;
+     info->m_cz = cs;
+
+     printf("l3\n");
+     fflush(stderr);
+  
+     printf("Texture: %s structure a=%g b=%g c=%g aa=%g bb=%g cc=%g ",
+         (flag ? "INC" : SC_file), as, bs, cs, info->m_aa, info->m_bb, info->m_cc);
+  } else {
+     if (!info->recip) {
+        printf("Texture: %s structure a=[%g,%g,%g] b=[%g,%g,%g] c=[%g,%g,%g] ",
+           (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+           info->m_bx ,info->m_by ,info->m_bz,
+           info->m_cx ,info->m_cy ,info->m_cz);
+     } else {
+        printf("Texture: %s structure a*=[%g,%g,%g] b*=[%g,%g,%g] c*=[%g,%g,%g] ",
+           (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+           info->m_bx ,info->m_by ,info->m_bz,
+           info->m_cx ,info->m_cy ,info->m_cz);
+     }
+  }
+
+  //Compute reciprocal or direct lattice vectors.
+  if (!info->recip) {
+     vec_prod(tmp_x, tmp_y, tmp_z,
+        info->m_bx, info->m_by, info->m_bz,
+        info->m_cx, info->m_cy, info->m_cz);
+     info->V0 = fabs(scalar_prod(info->m_ax, info->m_ay, info->m_az,
+                                 tmp_x, tmp_y, tmp_z));
+     printf("V0=%g\n", info->V0);
+     info->asx = 2*PI/info->V0*tmp_x;
+     info->asy = 2*PI/info->V0*tmp_y;
+     info->asz = 2*PI/info->V0*tmp_z;
+
+     vec_prod(tmp_x, tmp_y, tmp_z, info->m_cx, info->m_cy, info->m_cz,
+                                   info->m_ax, info->m_ay, info->m_az);
+     info->bsx = 2*PI/info->V0*tmp_x;
+     info->bsy = 2*PI/info->V0*tmp_y;
+     info->bsz = 2*PI/info->V0*tmp_z;
+     
+     vec_prod(tmp_x, tmp_y, tmp_z, info->m_ax, info->m_ay, info->m_az,
+                                   info->m_bx, info->m_by, info->m_bz);
+     info->csx = 2*PI/info->V0*tmp_x;
+     info->csy = 2*PI/info->V0*tmp_y;
+     info->csz = 2*PI/info->V0*tmp_z;
+  } else {
+     info->asx = info->m_ax;
+     info->asy = info->m_ay;
+     info->asz = info->m_az;
+     info->bsx = info->m_bx;
+     info->bsy = info->m_by;
+     info->bsz = info->m_bz;
+     info->csx = info->m_cx;
+     info->csy = info->m_cy;
+     info->csz = info->m_cz;
+      
+     vec_prod(tmp_x, tmp_y, tmp_z,
+        info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
+        info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
+     info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI),
+                                   info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
+     printf("V0=%g\n", info->V0);
+      
+     //compute the direct cell parameters, for completeness 
+     info->m_ax = tmp_x*info->V0;
+     info->m_ay = tmp_y*info->V0;
+     info->m_az = tmp_z*info->V0;
+     vec_prod(tmp_x, tmp_y, tmp_z,info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI),
+                                  info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI));
+
+     info->m_bx = tmp_x*info->V0;
+     info->m_by = tmp_y*info->V0;
+     info->m_bz = tmp_z*info->V0;
+     vec_prod(tmp_x, tmp_y, tmp_z,info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI),
+                                  info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI));
+
+     info->m_cx = tmp_x*info->V0;
+     info->m_cy = tmp_y*info->V0;
+     info->m_cz = tmp_z*info->V0;
+  }
+
+  if (!info->column_order[0] || !info->column_order[1] || !info->column_order[2]) {
+    fprintf(stderr,"Texture: Error: Wrong h,k,l column definition\n");
+    return(0);
+  }
+  if (!info->column_order[3] && !info->column_order[4]) {
+    fprintf(stderr,"Texture: Error: Wrong F,F2 column definition\n");
+    return(0);
+  }
+
+  // print crystal info
+  filep = fopen("crystal.txt","w");
+  fprintf(filep,"Direct lattice:\n");
+  fprintf(filep,"a: %f %f %f\n",info->m_ax,info->m_ay,info->m_az);
+  fprintf(filep,"b: %f %f %f\n",info->m_bx,info->m_by,info->m_bz);
+  fprintf(filep,"c: %f %f %f\n",info->m_cx,info->m_cy,info->m_cz);
+  fprintf(filep,"Reciprocal lattice:\n");
+  fprintf(filep,"a: %f %f %f\n",info->asx,info->asy,info->asz);
+  fprintf(filep,"b: %f %f %f\n",info->bsx,info->bsy,info->bsz);
+  fprintf(filep,"c: %f %f %f\n",info->csx,info->csy,info->csz);  
+  fclose(filep);
+  
+  //allocate hkl_data array
+  list = (struct hkl_data_texture*)malloc(size*sizeof(struct hkl_data_texture));
+
+  //write the data to data structures  
+  for (i=0; i<size; i++) {
+    h = Table_Index(sTable, i, info->column_order[0]-1);
+    k = Table_Index(sTable, i, info->column_order[1]-1);
+    l = Table_Index(sTable, i, info->column_order[2]-1);
+    if (info->column_order[3]) {
+       F2= Table_Index(sTable, i, info->column_order[3]-1); F2 *= F2;
+    } else if (info->column_order[4]) {
+       F2= Table_Index(sTable, i, info->column_order[4]-1);
+    }
+    mult = Table_Index(sTable, i, info->column_order[5]-1);
+    list[i].h = h;
+    list[i].k = k;
+    list[i].l = l;
+    list[i].F2 = F2;
+    list[i].mult = mult;
+    //Precompute some values
+    list[i].Gx = h*info->asx + k*info->bsx + l*info->csx;
+    list[i].Gy = h*info->asy + k*info->bsy + l*info->csy;
+    list[i].Gz = h*info->asz + k*info->bsz + l*info->csz;
+    list[i].G = sqrt(list[i].Gx*list[i].Gx +
+                     list[i].Gy*list[i].Gy +
+                     list[i].Gz*list[i].Gz);
+    list[i].uGx = list[i].Gx/list[i].G;
+    list[i].uGy = list[i].Gy/list[i].G;
+    list[i].uGz = list[i].Gz/list[i].G;
+    list[i].Gct = list[i].uGz;
+    list[i].Gphi = atan2(list[i].uGy,list[i].uGx);
+
+    // print read information
+    printf("%d: %d %d %d %f %d %f %f %f\n",
+          i+1,list[i].h,list[i].k,list[i].l,list[i].F2,list[i].mult,
+	  list[i].G,list[i].Gct,list[i].Gphi);
+    fflush(stdout);
+
+    //Find two arbitrary axes perpendicular to G and each other.
+    normal_vec(b1[0], b1[1], b1[2],
+               list[i].uGx, list[i].uGy, list[i].uGz);
+    vec_prod(b2[0], b2[1], b2[2],
+             list[i].uGx, list[i].uGy, list[i].uGz,
+             b1[0], b1[1], b1[2]);
+ }
+
+ Table_Free(&sTable);
+    
+ //sort the list with increasing G
+ qsort(list, i, sizeof(struct hkl_data_texture),  SX_list_compare_texture);
+   
+ info->list = list;
+ info->num_hkl = i;
+
+ printf("size: %d i: %d info->num_hkl: %d\n",size,i,info->num_hkl);
+ 
+ return info->num_hkl;
+} // read_hkl_data
+
+
+void readFourierCoef(char *filename, struct fourier_coef *c)
+{
+  int nread, nlines, lmax, i, l, m, n, np, smn, sg;
+  double x1, x2, x3, x4, x5, rmax, fmn;
+  struct fourier_coef *ctemp;
+  char str[100];
+  FILE *filep;
+
+  // Note: if the coeeficients have been obtained from mtex
+  // with l2-normalization option, they have to be multiplied
+  // by sqrt(2*l+1)
+
+  printf("readCoef: %s\n",filename);
+
+  filep = fopen(filename,"r");
+  if(!filep) { 
+     printf("readFourierCoef: fourier coefficient file\n");
+     printf("%s\n",filename);
+     printf("not found. Exiting...\n");
+     fflush(stdout);
+     exit(1);
+  }
+
+  str[0]=0;
+  while(strcmp(str,"#COEFFICIENTS:")!=0) {
+    nread = fscanf(filep,"%s",str);
+    if(nread==EOF) { break; }
+  }
+  printf("readFourierCoef: %s found\n",str);	
+  lmax = -1;
+  nlines = 0;
+  while(1) {
+    nread = fscanf(filep,"%lf %lf %lf %lf %lf",&x1,&x2,&x3,&x4,&x5);
+    //printf("nread: %d\n",nread);
+    if(nread != 5) { break; }
+    nlines++;
+    lmax = (int)round(x1);
+    //printf("lmax: %d\n",lmax);
+  }
+
+  printf("readCoef: lmax = %d\n",lmax);
+
+  if(lmax < 0) {
+    printf("readCoef: lmax < 0.\n");
+    printf("lmax = %d\n",lmax);
+    printf("Probably coef file\n  %s\nis wrong\n",filename);
+    printf("Check if the line\n");
+    printf("#COEFFICIENTS:\n");
+    printf("with no spaces or other characters) is exactly");
+    printf(" present just above the data\n");
+    printf("Exiting...\n");
+    exit(1);
+  }
+
+  np = 0;
+  for(l=0;l<=lmax;l++) {
+    np += (2*l+1)*(2*l+1);
+  }
+
+  if(np != nlines) {
+    printf("readCoef: number of lines in coef file\n   %s\n",filename);
+    printf("different than expected\n");
+    printf("lmax: %d  np: %d  nlines: %d\n",lmax,np,nlines);
+    printf("Exiting...\n");
+    exit(1);
+  }
+
+  printf("readFourierCoef: lmax: %d  np: %d  nlines: %d\n",lmax,np,nlines);
+
+  if(c->lmax>=0) {
+    printf("readCoef: using lmax = %d provided by the user\n",c->lmax);
+    if(lmax>c->lmax) {
+      lmax = c->lmax;
+    } else {
+      printf("readCoef: lmax = %d from file smaller than required lmax = %d\n",
+             lmax,c->lmax);
+      printf("readCoef: using lmax from file\n");
+    }
+  }
+  
+  allocateFourierCoef(lmax,c);
+
+  printf("readCoef: using lmax = %d\n",c->lmax);
+
+  np = 0;
+  for(l=0;l<=lmax;l++) {
+    np += (2*l+1)*(2*l+1);
+  }
+
+
+  rewind(filep);
+  str[0]=0;
+  while(strcmp(str,"#COEFFICIENTS:")!=0) {
+    nread = fscanf(filep,"%s",str);
+    if(nread==EOF) { break; }
+  }
+  printf("readFourierCoef: %s found\n",str);	
+  for(i=1;i<=np;i++) {
+    nread=fscanf(filep,"%lf %lf %lf %lf %lf",&x1,&x2,&x3,&x4,&x5);
+    l = (int)round(x1);
+    n = (int)round(x2); // TRANSPOSEE
+    m = (int)round(x3); // TRANSPOSEE
+    x5 = -x5; // conjugate
+    if(m>=0 && n>=0) {
+      smn = 1;
+    } else if (m>=0 && n<0) {
+      if((-n)%2) { smn = -1; } else { smn = 1; }
+    } else if (m<0 && n>=0) {
+      if((-m)%2) { smn = -1; } else { smn = 1; }
+    } else {
+      if((-m-n)%2) { smn = -1; } else { smn = 1; }
+    }
+    //fmn = smn*sqrt(2.*l+1.); // with l2-normalization
+    fmn = smn; // without l2-normalization
+    (c->cr)[l][l+m][l+n] = fmn*x4;
+    (c->ci)[l][l+m][l+n] = fmn*x5;		
+  }
+  fclose(filep);
+
+  // check reality of ODF
+  filep = fopen("coef_original.txt","w");
+  rmax = 0;
+  for(l=0;l<=lmax;l++) {
+    for(m=-l;m<=l;m++) {
+      for(n=-l;n<=l;n++) {
+        x1 = (c->cr)[l][l+m][l+n];
+        x2 = (c->ci)[l][l+m][l+n];
+        x3 = (c->cr)[l][l-m][l-n];
+        x4 = (c->ci)[l][l-m][l-n];
+        if(abs(m-n)%2) { x3 = -x3; x4 = -x4; }
+        x5 = sqrt(pow(x1-x3,2)+pow(-x2-x4,2));
+        //fprintf(filep,"%d %d %d %.6e %.6e %.6e %.6e %.6e\n",
+        //               l,m,n,x1,x2,x3,x4,x5);
+        if(x5>rmax) { rmax = x5; }     
+      }
+    }
+  }
+  fprintf(filep,"#diff max: %.6e\n",rmax);
+  fclose(filep);
+
+  if(rmax>1.0e-6) {
+    printf("Fourier coefficients do not satisfy the reality condition of ODF\n");
+    printf("with sufficient accuracy: %.6e\n",rmax);
+    printf("Imposing it\n");
+
+    ctemp = (struct fourier_coef *)malloc(sizeof(struct fourier_coef));
+    allocateFourierCoef(lmax,ctemp);
+    for(l=0;l<=lmax;l++) {
+      for(m=-l;m<=l;m++) {
+        for(n=-l;n<=l;n++) {
+          (ctemp->cr)[l][l+m][l+n] = -sqrt(-1.0);
+          (ctemp->ci)[l][l+m][l+n] = -sqrt(-1.0);
+        }
+      }
+    }
+    for(l=0;l<=lmax;l++) {
+      for(m=l;m>=-l;m--) {
+        for(n=l;n>=-l;n--) {
+          if( isnan( (ctemp->cr)[l][l+m][l+n] ) ) {
+             (ctemp->cr)[l][l+m][l+n] = (c->cr)[l][l+m][l+n];
+             (ctemp->ci)[l][l+m][l+n] = (c->ci)[l][l+m][l+n];
+             if( abs(m-n)%2 ) { sg = -1; } else { sg = 1; }
+             (ctemp->cr)[l][l-m][l-n] = sg*(ctemp->cr)[l][l+m][l+n];
+             (ctemp->ci)[l][l-m][l-n] = -sg*(ctemp->ci)[l][l+m][l+n];
+          }
+        }
+      }
+    }
+    for(l=0;l<=lmax;l++) {
+      for(m=-l;m<=l;m++) {
+        for(n=-l;n<=l;n++) {
+          (c->cr)[l][l+m][l+n] = (ctemp->cr)[l][l+m][l+n];
+          (c->ci)[l][l+m][l+n] = (ctemp->ci)[l][l+m][l+n];
+          if(m==0 && n==0) { (c->ci)[l][l+m][l+n] = 0; } // this has to be real
+        }
+      }
+    }
+    freeFourierCoef(ctemp);
+    free(ctemp);
+
+    // print new coefficients
+    rmax = 0;
+    filep = fopen("coef_modified.txt","w");
+    for(l=0;l<=lmax;l++) {
+      for(m=-l;m<=l;m++) {
+        for(n=-l;n<=l;n++) {
+          x1 = (c->cr)[l][l+m][l+n];
+          x2 = (c->ci)[l][l+m][l+n];
+          x3 = (c->cr)[l][l-m][l-n];
+          x4 = (c->ci)[l][l-m][l-n];
+          if( abs(m-n)%2 ) { x3 = -x3; x4 = -x4; }
+          x5 = sqrt(pow(x1-x3,2)+pow(-x2-x4,2));
+          fprintf(filep,"%d %d %d %.6e %.6e %.6e %.6e %.6e\n",
+                         l,m,n,x1,x2,x3,x4,x5);
+          if(x5>rmax) { rmax = x5; }     
+        }
+      }
+    }
+    fprintf(filep,"#diff max: %.6e\n",rmax);
+    fclose(filep);
+  }
+} // readFourierCoef
+
+void allocateFourierCoef(int lmax, struct fourier_coef *c)
+{
+  int l, m;
+  if(lmax >= 0) {
+    c->lmax = lmax;
+    c->cr = (double ***)malloc((lmax+1)*sizeof(double));
+    c->ci = (double ***)malloc((lmax+1)*sizeof(double));
+    for(l=0;l<=lmax;l++) {
+      (c->cr)[l] = (double **)malloc((2*l+1)*sizeof(double));
+      (c->ci)[l] = (double **)malloc((2*l+1)*sizeof(double));
+      for(m=-l;m<=l;m++) {
+	(c->cr)[l][m+l] = (double *)malloc((2*l+1)*sizeof(double));
+	(c->ci)[l][m+l] = (double *)malloc((2*l+1)*sizeof(double));
+      }
+    }
+  } else {
+    c->lmax = -1;
+    c->cr = NULL;
+    c->ci = NULL;
+  }
+} // allocateFourierCoef
+
+void freeFourierCoef(struct fourier_coef *c)
+{
+  int l, m;
+  if(c->cr != NULL) {
+    for(l=0;l<=(c->lmax);l++) {
+      for(m=-l;m<=l;m++) {
+	free(c->cr[l][m+l]);
+	free(c->ci[l][m+l]);
+      }
+      free(c->cr[l]);
+      free(c->ci[l]);
+    }
+    free(c->cr);
+    free(c->ci);
+  }
+} // freeFourierCoef
+
+// end Input - Output
+
+/////////////////////////////////////////
+// auxiliary functions
+//////////////////////////////////////////
+
+int SX_list_compare_texture (void const *a, void const *b)
+{
+  struct hkl_data_texture const *pa = a;
+  struct hkl_data_texture const *pb = b;
+  double s = pa->G - pb->G;
+    
+  if (!s) { return 0; } else { return (s < 0 ? -1 : 1); }
+} // SX_list_compare
+
+double interp(double x, int n, double *xp, double *yp)
+{
+  int i, i1, i2;
+  if(x<xp[0] || x>xp[n-1]) {
+    printf("interp: x ouside range\n");
+    printf("x[0] = %.16e\n",xp[0]);
+    printf("   x = %.16e\n",x);
+    printf("x[n-1] = %.16e\n",xp[n-1]);
+    printf("Exiting...\n");
+    fflush(stdout);
+    exit(1);
+  }
+  i1 = 0;
+  i2 = n-1;
+  while(i2-i1>1) {
+    i = (i1+i2)/2;
+    if(xp[i]<=x) { i1 = i; } else { i2 = i; }
+  }
+  if(i2-i1!=1) {
+    printf("interp: i2-i1 > 1\n");
+    printf("i1: %d i2: %d\n",i1,i2);
+    printf("x[0] = %.16e\n",xp[0]);
+    printf("   x = %.16e\n",x);
+    printf("x[1] = %.16e\n",xp[1]);
+    printf("Exiting...\n");
+    fflush(stdout);
+    exit(1);
+  }
+  return yp[i1]+((x-xp[i1])/(xp[i2]-xp[i1]))*(yp[i2]-yp[i1]);
+}
+
+double interp2D(double x, double y, int nx, int ny, double *xp, double *yp, double **fp)
+{
+  int i, j;
+  double t, u, f1, f2, f3, f4;
+
+  i = (int) ((x-xp[0])/(xp[1]-xp[0]));
+  j = (int) ((y-yp[0])/(yp[1]-yp[0]));
+
+  if(i<0 || i>=nx-1) {
+    if(i==nx-1 && fabs(x-xp[i])<1.0e-6) {
+      i = i-1;
+    } else {
+      printf("interp2D: bad i: %d, nx: %d x: %.16e y: %.16e\n",i,nx,x,y);
+      fflush(stdout);
+      exit(1);
+    }
+  } else if(i>0 && x<xp[i]) {
+    i = i-1;
+  }
+  
+  if(j<0 || j>=ny-1) {
+    if(j==ny-1 && fabs(y-yp[j])<1.0e-6) {
+      j = j-1;
+    } else {  
+      printf("interp2D: bad j: %d, ny: %d x: %.16e y: %.16e\n",j,ny,x,y);
+      fflush(stdout);
+      exit(1);
+    }
+  } else if(j>0 && y<yp[j]) {
+    j = j-1;
+  }  
+  
+  f1 = fp[i][j];
+  f2 = fp[i+1][j];
+  f3 = fp[i+1][j+1];
+  f4 = fp[i][j+1];
+
+  t = (x-xp[i])/(xp[i+1]-xp[i]);
+  u = (y-yp[j])/(yp[j+1]-yp[j]);
+
+  if(t<0 || t>1) { 
+    printf("interp2D: bad t: %.6e, u: %.6e x: %f y: %f i: %d nx: %d\n",t,u,x,y,i,nx);
+    printf("%f %f %f\n",x,xp[i],xp[i+1]);
+    fflush(stdout);
+    //exit(1);
+  }
+  if(u<0 || u>1) { 
+    printf("interp2D: bad u: %.6e, t: %.6e x: %f y: %f j: %d ny: %d\n",u,t,x,y,j,ny);
+    printf("%f %f %f\n",y,yp[j],yp[j+1]);
+    printf("\n");
+    for(i=0;i<nx;i++) { printf("%f\n",xp[i]); }
+    printf("\n");
+    for(j=0;j<ny;j++) { printf("%f\n",yp[j]); }
+    fflush(stdout);
+    exit(1);
+  }
+
+  return (1-t)*(1-u)*f1 + t*(1-u)*f2 + t*u*f3 + (1-t)*u*f4;
+}
+
+////////////////////////////////////////
+////// initialization             //////
+////////////////////////////////////////
+
+int initData(char *coef_fn, char *crystal_fn, struct hkl_info_struct_texture *info, int maxSaved)
+{
+  int i, j, jj, nread;
+  int hm, km, lm; // miller indices
+  char c;
+  struct fourier_coef *fc;
+  struct hkl_data_texture *L, *Li;
+  FILE *filep;
+
+  // get fourier coefficients of texture
+  fc = (struct fourier_coef *)malloc(sizeof(struct fourier_coef));
+  fc->lmax = info->lmax;
+  readFourierCoef(coef_fn,fc);
+
+  printf("victor: fourier read. lmax: %d\n",fc->lmax);
+  fflush(stdout);
+
+  // precompute legendre associated functions
+  info->lgdr = initLegendre(fc->lmax);
+
+  // crystallographic data
+  if ( !read_hkl_data_texture(crystal_fn,info) ) {
+    printf("initData: read_hkl_data_texture returns error\n");
+    return 1;
+  }
+
+  // allocate memory for reusing neutrons
+  info->maxSaved = maxSaved;
+  info->cohMuSaved = (struct saveCohMu *)malloc(maxSaved*sizeof(struct saveCohMu));
+  for(j=0;j<maxSaved;j++) {
+    (info->cohMuSaved)[j].kix = 0;
+    (info->cohMuSaved)[j].kiy = 0;
+    (info->cohMuSaved)[j].kiz = 0;
+    (info->cohMuSaved)[j].XS = (double *)malloc((info->num_hkl)*sizeof(double));
+  }
+  info->lastCohMuSaved = 0;
+
+  info->hkl_ScattProbSaved = (struct save_hklScattProb *)malloc(maxSaved*sizeof(struct save_hklScattProb));
+  for(j=0;j<maxSaved;j++) {
+    (info->hkl_ScattProbSaved)[j].kix = 0;
+    (info->hkl_ScattProbSaved)[j].kiy = 0;
+    (info->hkl_ScattProbSaved)[j].kiz = 0;
+    // allocate memory for saved cummulative probability for scattering by i-th hkl plane
+    (info->hkl_ScattProbSaved)[j].cumProb_hkl = (double *)malloc((info->num_hkl)*sizeof(double));
+  }
+  info->lastScattSaved = 0;
+
+  // initialize reusing statistics and variables
+  info->numReused = 0;
+
+  L = info->list;
+  // initialize rejection statistics
+  for(i=0;i<info->num_hkl;i++) {
+    L[i].numReject = 0;
+    L[i].numScatt = 0;
+  }
+  // initialize reuse saved neutrons
+  for(i=0;i<info->num_hkl;i++) {
+    L[i].lastSaved = 0;
+    L[i].maxSaved = maxSaved;
+    L[i].savedNeutrons = (struct saveScattProb *)malloc(maxSaved*sizeof(struct saveScattProb));
+    for(j=0;j<maxSaved;j++) {
+      (L[i].savedNeutrons)[j].kix = 0;
+      (L[i].savedNeutrons)[j].kiy = 0;
+      (L[i].savedNeutrons)[j].kiz = 0;
+    }
+  }
+
+  printf("start computing V\n");
+  fflush(stdout);
+
+  // V matrices for cross sections
+  L = info->list;
+  filep = fopen("Vlarge.txt","r");
+  if(filep != NULL) {
+    for(i=0;i<info->num_hkl;i++) {
+      Li = L + i;
+      c = 0;
+      while(c!='#') { nread = fscanf(filep,"%c",&c); }
+      nread = fscanf(filep,"%d",&(Li->numV));
+      if(Li->numV <= 0) {
+        printf("Vlarge.txt: bad file, non positive numV\n");
+        printf("i: %d nread: %d\n",i,nread);
+        printf("c: %c Li->numV: %d\n",c,Li->numV);
+        printf("Exiting...\n");
+        fclose(filep);
+        fflush(stdout);
+	exit(1);
+      }
+      Li->lv = (int *)malloc((Li->numV)*sizeof(int));
+      Li->mv = (int *)malloc((Li->numV)*sizeof(int));
+      Li->RV = (double *)malloc((Li->numV)*sizeof(double));
+      Li->phiV = (double *)malloc((Li->numV)*sizeof(double));
+      for(j=0;j<Li->numV;j++) {
+        fscanf(filep,"%d %d %d %d %d %d %lf %lf",
+              &lm,&hm,&km,&jj,(Li->lv)+j,(Li->mv)+j,(Li->RV)+j,(Li->phiV)+j);
+        if(hm != Li->h || km != Li->k || lm != Li->l) {
+          printf("Vlarge.txt: bad file\n");
+          printf("i: %d\n",i);
+          printf("h: %d  Li->h: %d\n",hm,Li->h);
+          printf("k: %d  Li->k: %d\n",km,Li->k);
+          printf("l: %d  Li->l: %d\n",lm,Li->l);
+          printf("Exiting...\n");
+          fclose(filep);
+          fflush(stdout);
+	  exit(1);
+        }
+      }
+    }
+    fclose(filep);
+  } else {
+    for(i=0;i<info->num_hkl;i++) {
+      printf("calling computeV for line %d\n",i);
+      fflush(stdout);
+      computeV(fc,info->lgdr,L+i);
+    }
+  }
+
+  // precompute the probability distribution of Q
+  L = info->list;
+  for(i=0;i<info->num_hkl;i++) { 
+    printf("precomputing probQ %d\n",i+1);
+    fflush(stdout);
+    L[i].nctq = 201;
+    L[i].nphiq = 601;
+    precomputeProbPhiq(L+i,info->lgdr);
+  }
+
+  // precompute Upsilon_l
+  L = info->list;
+  for(i=0;i<info->num_hkl;i++) { 
+    printf("precomputing Upsilon_l %d\n",i+1);
+    fflush(stdout);
+    L[i].lmax = info->lmax;
+    precomputeUpsilon_l(L+i,info->lgdr);
+  }
+
+  // free memory of fourier coefficient, not needed anymore
+  freeFourierCoef(fc);
+
+  return 0;
+}
+
+// end initialization
+
+////////////////////////////////////
+///  free memory                ////
+////////////////////////////////////
+
+int free_texture(struct hkl_info_struct_texture *hkl_info)
+{
+  int i;
+
+  if(hkl_info == NULL) { return 0; }
+
+  free_legendre(hkl_info->lgdr);
+  free(hkl_info->lgdr);
+  for(i=0;i<hkl_info->num_hkl;i++) {
+    free_hkl_data_texture(hkl_info->list+i);
+  }
+  free(hkl_info->list);
+
+  return 0;
+}
+
+int free_legendre(struct legendre *lgdr)
+{
+  int l, lmax, i, npt;
+  
+  if(lgdr == NULL) { return 0; }
+
+  lmax = lgdr->lmax;
+  npt = (lmax+1)*(lmax+1);
+
+  free(lgdr->l);
+  free(lgdr->m);
+  for(l=0;l<=lmax;l++) { free((lgdr->index)[l]); }
+  free(lgdr->index);
+
+  free(lgdr->nplm);
+  for(i=0;i<npt;i++) { free((lgdr->x)[i]); }
+  free(lgdr->x);
+  for(i=0;i<npt;i++) { free((lgdr->Plm)[i]); }
+  free(lgdr->Plm);
+
+  return 0;
+}
+
+int free_hkl_data_texture(struct hkl_data_texture *L)
+{
+  int i;
+
+  if(L == NULL) { return 0; }
+
+  free(L->lv);
+  free(L->mv);
+  free(L->RV);
+  free(L->phiV);
+
+  if(L->ctq != NULL) { free(L->ctq); }
+  if(L->phiq != NULL) { free(L->phiq); }
+  if(L->probQ != NULL) { 
+    for(i=0;i<L->nctq;i++) { free((L->probQ)[i]); } 
+    free(L->probQ);
+  }
+  
+  return 0;
+}
+
+// end free memory
+
+/*
+   // McStas function to rotate a vector:
+   // rotate(*nx, *ny, *nz, nvx,nvy,nvz, angle, axis1, axis2, axis3);	
+*/
+
+#endif /* !TEXTURE_PROCESS_DECL */
+
+// Very important to add a pointer to this struct in the Union_functions.c file
+struct Texture_physics_storage_struct {
+  // Variables that needs to be transfered between any of the following places:
+  // The initialize in this component
+  // The function for calculating my
+  // The function for calculating scattering
+    
+  // Avoid duplicates of output parameters and setting parameters in naming
+    
+  struct hkl_info_struct_texture *hkl_info_storage; // struct containing all necessary info for SC
+  double pack; // packing factor
+  double barns_setting; // Sets wether barns of fm^2 is used
+};
+
+// Function for calculating my, the inverse penetration depth (for only this scattering process).
+// The input for this function and its order may not be changed, but the names may be updated.
+int Texture_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer,
+                       struct focus_data_struct *focus_data)
+{
+  int i, is;
+  // k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] (wavevector)
+  double kix = k_initial[0];
+  double kiy = k_initial[1];
+  double kiz = k_initial[2]; 
+  double ki, kict, kiphi, Gmax;
+  int num_hkl_scatt = -1;
+  FILE *filep;
+
+  struct hkl_info_struct_texture *hkl_info = 
+                    data_transfer.pointer_to_a_Texture_physics_storage_struct->hkl_info_storage;
+  struct hkl_data_texture *L = hkl_info->list;
+  struct legendre *lgdr = hkl_info->lgdr;
+  
+  double cohXS = -1;
+  
+  // in case we use 'SPLIT' then consecutive neutrons can be identical when entering here and 
+  // we may skip the cross section computations
+
+  is = -1;
+  for(i=hkl_info->lastCohMuSaved;i>=0;i--) {
+    if ( fabs(kix-(hkl_info->cohMuSaved)[i].kix)<1e-90 &&
+         fabs(kiy-(hkl_info->cohMuSaved)[i].kiy)<1e-90 && 
+         fabs(kiz-(hkl_info->cohMuSaved)[i].kiz)<1e-90 ) { is = i; break; }
+  }
+  if(is==-1) {
+    for(i=hkl_info->maxSaved-1;i>hkl_info->lastCohMuSaved;i--) {
+      if ( fabs(kix-(hkl_info->cohMuSaved)[i].kix)<1e-90 &&
+           fabs(kiy-(hkl_info->cohMuSaved)[i].kiy)<1e-90 && 
+           fabs(kiz-(hkl_info->cohMuSaved)[i].kiz)<1e-90 ) { is = i; break; }
+    }
+  }
+
+  if (is!=-1) {
+    // neutron found. reuse cross section
+    //printf("my reused\n");
+    //fflush(stdout);
+    hkl_info->numReused += 1;
+    hkl_info->num_hkl_scatt = (hkl_info->cohMuSaved)[is].num_hkl_scatt;	
+    hkl_info->cohMu = (hkl_info->cohMuSaved)[is].cohMu;
+    for(i=0;i<hkl_info->num_hkl_scatt;i++) {
+      L[i].currXS = (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].XS[i];
+    }
+    // save the neutron scattering parameters
+    hkl_info->lastCohMuSaved = is;
+  } else {
+    //printf("my new\n");
+    //fflush(stdout);
+    // polar coordinates of wavevector
+    ki = sqrt(kix*kix + kiy*kiy + kiz*kiz);
+    kict = kiz/ki;
+    kiphi = atan2(kiy,kix);
+
+    //Max possible G for this ki with 5*sigma delta-d/d cutoff.
+    //double Gmax = 2*ki/(1 - 5*hkl_info->m_delta_d_d); // no strain taken into acount for the moment
+    Gmax = 2*ki;
+
+    num_hkl_scatt = -1;
+    cohXS = 0;
+    for(i=0;i<hkl_info->num_hkl;i++) {
+      if(L[i].G > Gmax) { break; } // Bragg cutoff
+      num_hkl_scatt = i;
+      //L[i].currXS = total_hkl_XS(ki,kict,kiphi,L+i,lgdr);
+      L[i].currXS = total_hkl_XS_interp(ki,kict,kiphi,L+i,lgdr);
+      cohXS += L[i].currXS;
+    }
+
+    // number of reflections below Bragg cut-off
+    hkl_info->num_hkl_scatt = num_hkl_scatt;
+
+    // multiply by the appropriate factors to get the linear attenuation coefficient cohMu (in m^-1)
+    hkl_info->cohMu = cohXS*(hkl_info->xs2mu)*pow((2*PI)/ki,3)/(hkl_info->V0);
+
+    // save the neutron scattering parameters
+    hkl_info->lastCohMuSaved++;
+    if(hkl_info->lastCohMuSaved>=hkl_info->maxSaved) { hkl_info->lastCohMuSaved = 0; };
+    (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].kix = kix;
+    (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].kiy = kiy;
+    (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].kiz = kiz;
+    (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].num_hkl_scatt = hkl_info->num_hkl_scatt;
+    (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].cohMu = hkl_info->cohMu;
+    for(i=0;i<num_hkl_scatt;i++) {
+      (hkl_info->cohMuSaved)[hkl_info->lastCohMuSaved].XS[i] = L[i].currXS;
+    }
+  }
+
+  *my = hkl_info->cohMu;
+  //printf("my: %.6e\n",*my);
+    
+  return 1;
+};
+
+// Function that provides description of a basic scattering event.
+int Texture_physics_scattering(double *k_final, double *k_initial, double *weight,
+                               union data_transfer_union data_transfer, 
+                               struct focus_data_struct *focus_data)
+{
+  int i, is, j, num_hkl_scatt;                        
+  double r, sum, accum, *cumProb_hkl; /* Locals */
+  double kf[3];                       /* Final wave vector (local) */
+  FILE *filep;
+
+  struct hkl_info_struct_texture *hkl_info 
+        = data_transfer.pointer_to_a_Texture_physics_storage_struct->hkl_info_storage;
+    
+  struct hkl_data_texture *L = hkl_info->list;  // hkl list
+  struct legendre *lgdr = hkl_info->lgdr; // precomputed legendre associated functions
+
+  double G = L->G;
+
+  // This can be removed, since this component deals only with coherent scattering 
+  // (instead here the Bragg cutoff may be implemented)    
+  if(hkl_info->num_hkl_scatt < 0 || hkl_info->cohMu <= 0) {
+    printf("No scattering: %d %d %.6e\n", hkl_info->num_hkl_scatt, hkl_info->num_hkl, hkl_info->cohMu);
+    k_final[0] = k_initial[0];
+    k_final[1] = k_initial[1];
+    k_final[2] = k_initial[2];
+    return 0; // Return 0 will use ABSORB in main component (as it is not allowed in a function)
+  }
+
+  is = -1;
+  for(i=hkl_info->lastScattSaved;i>=0;i--) {
+    if ( fabs(k_initial[0]-(hkl_info->hkl_ScattProbSaved)[i].kix)<1e-90 &&
+         fabs(k_initial[1]-(hkl_info->hkl_ScattProbSaved)[i].kiy)<1e-90 && 
+         fabs(k_initial[2]-(hkl_info->hkl_ScattProbSaved)[i].kiz)<1e-90 ) { is = i; break; }
+  }
+  if(is==-1) {
+    for(i=hkl_info->maxSaved-1;i>hkl_info->lastScattSaved;i--) {
+      if ( fabs(k_initial[0]-(hkl_info->hkl_ScattProbSaved)[i].kix)<1e-90 &&
+           fabs(k_initial[1]-(hkl_info->hkl_ScattProbSaved)[i].kiy)<1e-90 && 
+           fabs(k_initial[2]-(hkl_info->hkl_ScattProbSaved)[i].kiz)<1e-90 ) { is = i; break; }
+    }
+  }
+
+  if(is!=-1) {
+    //printf("scatt reused\n");
+    //fflush(stdout);
+    num_hkl_scatt = (hkl_info->hkl_ScattProbSaved)[is].num_hkl_scatt;
+    cumProb_hkl = (hkl_info->hkl_ScattProbSaved)[is].cumProb_hkl;
+    // save neutron parameters
+    (hkl_info->lastScattSaved) = is;
+  } else {
+    // new neutron. Compute necessary things. select the hkl planes that scatter
+    //printf("scatt new\n");
+    //fflush(stdout);
+
+    num_hkl_scatt = hkl_info->num_hkl_scatt;
+
+    (hkl_info->lastScattSaved)++;
+    if(hkl_info->lastScattSaved >= hkl_info->maxSaved) { hkl_info->lastScattSaved = 0; }
+
+    (hkl_info->hkl_ScattProbSaved)[hkl_info->lastScattSaved].num_hkl_scatt = hkl_info->num_hkl_scatt;
+
+    (hkl_info->hkl_ScattProbSaved)[hkl_info->lastScattSaved].kix = k_initial[0];
+    (hkl_info->hkl_ScattProbSaved)[hkl_info->lastScattSaved].kiy = k_initial[1];
+    (hkl_info->hkl_ScattProbSaved)[hkl_info->lastScattSaved].kiz = k_initial[2];
+
+    cumProb_hkl = (hkl_info->hkl_ScattProbSaved)[hkl_info->lastScattSaved].cumProb_hkl;
+
+    sum = 0;
+    for(i=0;i<=num_hkl_scatt;i++) {
+      // hkl_info->num_hkl_scatt implements Bragg cutoff
+      sum +=  L[i].currXS;
+    }
+    accum = 0;
+    for(i=0;i<=num_hkl_scatt;i++) {
+      // hkl_info->num_hkl_scatt implements Bragg cutoff
+      accum +=  L[i].currXS/sum;
+      cumProb_hkl[i] = accum;
+    }
+  } 
+  
+  j = -1;
+  r = rand01();
+  for(i=0;i<=num_hkl_scatt;i++) {
+    // hkl_info->num_hkl_scatt implements Bragg cutoff
+    if(r<cumProb_hkl[i]) { j = i; break; }
+  }
+
+  if(j==-1) {
+    //This should not happen
+    printf("Texture_physics_scattering: no plane selected !!\n");
+    printf("ki:\n");
+    printf("%.6e %.6e %.6e\n",k_initial[0],k_initial[1],k_initial[2]);
+    for(i=0;i<=num_hkl_scatt;i++) {
+       printf("%d %.6e %.6e\n",i,cumProb_hkl[i],r);
+    }
+    fflush(stdout);
+    exit(1);
+  }
+  
+  // sampling kprime
+  sampleKprime_hkl(kf,k_initial,L+j,lgdr);
+
+  /* Adjust neutron weight (see manual for explanation). */
+  //*weight *= T[j].xsect*hkl_info->coh_refl/(hkl_info->cohMu*T[j].refl);
+  //printf("SCATTERING: hkl_info->coh_refl=%f, hkl_info->cohMu = %f, T[%d].refl = %f\n",
+  //        hkl_info->coh_refl,hkl_info->cohMu,j,T[j].refl);
+  // No weight adjusting here
+  
+  // save some information
+  hkl_info->type = 'c';
+  hkl_info->h = L[i].h;
+  hkl_info->k = L[i].k;
+  hkl_info->l = L[i].l;
+  
+  // return the scattered wave vector
+  k_final[0] = kf[0];
+  k_final[1] = kf[1];
+  k_final[2] = kf[2];
+
+  return 1;
+};
+
+%}
+
+DECLARE
+%{
+// Declare for this component, to do calculations on the input / store in the transported data
+struct Texture_physics_storage_struct Texture_storage;
+
+// Variables needed in initialize of this function.
+struct hkl_info_struct_texture hkl_info_texture;
+
+// Needed for transport to the main component, will be the same for all processes
+struct global_process_element_struct global_process_element;
+struct scattering_process_struct This_process;
+
+#ifndef PROCESS_DETECTOR
+//struct pointer_to_global_process_list global_process_list = {0,NULL};
+#define PROCESS_DETECTOR dummy
+#endif
+%}
+
+INITIALIZE
+%{
+  // Texture initialize
+  //double as, bs, cs;
+  //double lambda, k, kct, kst, kphi, ki[3], kf[3];
+  //int l, m, j, i=0;
+  //FILE *filep;
+  /*
+  kx_first = kx_in;
+  ky_first = ky_in;
+  kz_first = kz_in;
+  */
+  
+  /* default format h,k,l,F,F2  */
+  hkl_info_texture.column_order[0] = 1;
+  hkl_info_texture.column_order[1] = 2;
+  hkl_info_texture.column_order[2] = 3;
+  hkl_info_texture.column_order[3] = 0;
+  hkl_info_texture.column_order[4] = 7;
+  hkl_info_texture.column_order[5] = 4;
+
+  // cut-off for l. If negative, take the cut-off provided in the Fourier coeff file
+  hkl_info_texture.lmax = lmax_user;
+  
+  // first neutron is new
+  hkl_info_texture.new = 1;
+
+  // initialize data
+  if ( initData(fcoef_fn, crystal_fn, &hkl_info_texture, maxNeutronSaved) ) {
+    printf("Texture_process: %s: Error in initData: Aborting.\n", NAME_CURRENT_COMP);
+    fflush(stdout);
+    exit(1);
+  }
+
+  // precomputed factors
+  hkl_info_texture.xs2mu = packing_factor/hkl_info_texture.V0;
+  // Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
+  // in AA**3 = 10**-30 m**3. Hence a factor of 100 is used to convert
+  // scattering lengths to m**-1
+  if (barns) {
+     hkl_info_texture.xs2mu *= 100;
+  }
+  printf("xs2mu = %.6e\n",hkl_info_texture.xs2mu);
+  fflush(stdout);
+    
+  if (hkl_info_texture.sigma_a<0) { hkl_info_texture.sigma_a = 0; }
+  if (hkl_info_texture.sigma_i<0) { hkl_info_texture.sigma_i = 0; }
+  
+  if (hkl_info_texture.num_hkl) {
+    printf("Texture_process: %s: Read %d reflections from file '%s'\n",
+      NAME_CURRENT_COMP, hkl_info_texture.num_hkl, crystal_fn);
+  } else {
+    printf("Texture_process: %s: No reflections read from file. No scattering will take place.\n"
+      NAME_CURRENT_COMP);
+  }
+  
+  printf("Texture: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
+      NAME_CURRENT_COMP, hkl_info_texture.V0, hkl_info_texture.sigma_a, hkl_info_texture.sigma_i,
+      crystal_fn && strlen(crystal_fn) ? crystal_fn : "NULL");
+
+  // Temporary errors until these features are either added or removed from input
+    
+  if (order) {
+    exit(fprintf(stderr,"Texture_process: %s: Order control not supported yet!\n"
+	     "ERROR           Please set order to zero.\n", NAME_CURRENT_COMP));
+  }
+
+  // Initialize done in the component
+  Texture_storage.barns_setting = barns;
+  Texture_storage.pack = packing_factor;
+  Texture_storage.hkl_info_storage = &hkl_info_texture;
+
+  // Need to specify if this process is isotropic
+  //This_process.non_isotropic_rot_index = -1; // Yes (powder)
+  This_process.non_isotropic_rot_index =  1;  // No (single crystal or texture)
+
+  // Packing the data into a structure that is transported to the main component
+  This_process.data_transfer.pointer_to_a_Texture_physics_storage_struct = &Texture_storage;
+  This_process.probability_for_scattering_function = &Texture_physics_my;
+  This_process.scattering_function = &Texture_physics_scattering;
+
+  // This will be the same for all process's, and can thus be moved to an include.
+  This_process.process_p_interact = interact_fraction;
+  sprintf(This_process.name,NAME_CURRENT_COMP);
+  rot_copy(This_process.rotation_matrix,ROT_A_CURRENT_COMP);
+  sprintf(global_process_element.name,NAME_CURRENT_COMP);
+  global_process_element.component_index = INDEX_CURRENT_COMP;
+  global_process_element.p_scattering_process = &This_process;
+  add_element_to_process_list(&global_process_list,global_process_element);
+ %}
+
+TRACE
+%{
+    // Trace should be empty, the simulation is done in Union_master
+%}
+
+FINALLY
+%{
+int i;
+struct hkl_info_struct_texture *hkl_info 
+        = This_process.data_transfer.pointer_to_a_Texture_physics_storage_struct->hkl_info_storage;
+printf("numReused: %.6e\n",hkl_info->numReused); 
+// print rejection statistics
+FILE *filep = fopen("rejectioStatistics.txt","w");
+struct hkl_data_texture *L = hkl_info->list;
+for(i=0;i<hkl_info->num_hkl;i++) {
+  fprintf(filep,"%d %d %d %.6e %.6e\n",L[i].h,L[i].k,L[i].l,L[i].numReject,L[i].numScatt);
+}
+fclose(filep);
+// deallocate allocated memory, etc.
+free_texture(hkl_info);
+%}
+
+END

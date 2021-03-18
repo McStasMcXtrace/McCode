@@ -16,6 +16,7 @@ mcstas/mcxtrace configuration.
 configuration = {
     "MCCODE_VERSION": '@MCCODE_VERSION@',
     "MCCODE_LIB_DIR": LIBDIR,
+    "TERMINAL": '@TERMINAL@',
     "MCCODE": '@FLAVOR@',
     "MCRUN": '@MCCODE_PREFIX@run',
     "MCPLOT": '@MCCODE_PREFIX@plot-pyqtgraph',

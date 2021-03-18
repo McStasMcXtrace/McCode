@@ -28,7 +28,7 @@
 * Cu       220 DM=1.278 AA
 * PG       002 DM=3.355 AA
 *--------------------------
-* %Example: lambda=0.897 Detector: Detector_I=21.7527
+* %Example: lambda=0.897 Detector: Detector_I=3704.83
 *
 * %Parameters
 * lambda: [Angs]  Wavelength at monochromator
@@ -136,16 +136,16 @@ COMPONENT mono_out = Arm()
   AT (0, 0, 0) RELATIVE mono_cradle
   ROTATED (0, 2*A1, 0) RELATIVE Origin
 
-// COMPONENT Lmon2 = L_monitor(
-//     nL = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
-//     Lmin = lambda*0.95, Lmax = lambda*1.05)
-//   AT (0, 0, 0.2) RELATIVE mono_out
+ COMPONENT Lmon2 = L_monitor(
+     nL = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
+     Lmin = lambda*0.95, Lmax = lambda*1.05)
+   AT (0, 0, 0.2) RELATIVE mono_out
   
 /* sample =================================================================== */
   
-// COMPONENT Sample_mon = Monitor_nD(
-//     bins=20, xwidth = 0.03, yheight = 0.03, options="x y, per cm2")
-//   AT (0, 0, L2-0.05) RELATIVE mono_out
+ COMPONENT Sample_mon = Monitor_nD(
+     bins=20, xwidth = 0.03, yheight = 0.03, options="x y, per cm2")
+   AT (0, 0, L2-0.05) RELATIVE mono_out
 
 SPLIT COMPONENT SamplePosition = Arm()
   AT (0, 0, L2) RELATIVE mono_out
@@ -153,7 +153,7 @@ EXTEND %{
   flag_env=0;
 %}
 
-COMPONENT cryostat_in = PowderN(radius=0.035, yheight=.1,reflections="Al.laz", thickness=2e-3, concentric=1,p_interact=0.1)
+COMPONENT cryostat_in = PowderN(radius=0.035, yheight=.1,reflections="Al.laz", thickness=2e-3, concentric=1,p_inc=0.2,p_transmit=0.7)
   AT (0, 0, 0) RELATIVE SamplePosition
   EXTEND %{
   if (SCATTERED) flag_env++;

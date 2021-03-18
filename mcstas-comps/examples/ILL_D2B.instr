@@ -75,6 +75,7 @@ DECLARE
 %{
 double U,V,W;   /* Caglioti UVW parameters */
 double L0;
+char lamopts[128];
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -139,7 +140,7 @@ if (verbose) {
 }
 
 RV = fabs(RV)*SM;
-
+sprintf(lamopts, "lambda limits=[%g, %g]",lambda*0.99, lambda*1.01);
 
 %}
 
@@ -181,15 +182,16 @@ COMPONENT Slit_Mono = Slit(xwidth = 0.05, yheight = 0.3)
   AT (0, 0, L1-0.1) RELATIVE Origin
 
 COMPONENT D2B_Mono_XY = Monitor_nD(
-     options="x y, all auto",
+     options="x y",
      bins = 40, xwidth = 0.1, yheight = 0.3, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS
 COMPONENT D2B_ALPHA1_Div = Monitor_nD(
-     options="dx dy, all auto",
+     options="dx limits=[-0.5 0.5] dy limits=[-1 1]",
      bins = 40, xwidth = 0.1, yheight = 0.3, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS
+
 COMPONENT D2B_Mono_Lambda = Monitor_nD(
-     options="lambda, all auto",
+     options=lamopts,
      bins = 40, xwidth = 0.1, yheight = 0.3, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS   
 
@@ -204,6 +206,10 @@ SPLIT COMPONENT Monok = Monochromator_curved(
   AT (0, 0, 0) RELATIVE mono_cradle
   ROTATED (0, THETA_M+TILT, 0) RELATIVE mono_cradle
 
+COMPONENT sphere = PSD_monitor_4PI(filename="sphere", radius=0.5, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE mono_cradle
+
+  
 /* TIP: positioning diffraction direction for monok (order 1) */
 COMPONENT mono_out = Arm()
   AT (0, 0, 0) RELATIVE mono_cradle
@@ -223,11 +229,12 @@ COMPONENT Slit_Sample = Slit(xwidth = 0.01, yheight = 0.05)
   AT (0, 0, L2-0.02) RELATIVE mono_out
 
 COMPONENT D2B_ALPHA2_Div = Monitor_nD(
-     options="dx dy, all auto",
+     options="dx limits=[-0.5 0.5] dy limits=[-1 1]",
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS
+
 COMPONENT D2B_Sample_Lambda = Monitor_nD(
-     options="lambda, all auto",
+     options=lamopts,
      bins = 40, xwidth = 0.02, yheight = 0.05, restore_neutron=1)
    AT (0, 0, 0) RELATIVE PREVIOUS   
 

@@ -1,0 +1,217 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Scatter_logger.comp
+*
+* %I
+*
+* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby 
+* Date: January 2013
+* Version: $Revision: 1.12 $
+* Release: McStas 2.1
+* Origin: DTU Physics / DTU Nutech
+*
+* Logging iteractions of neutrons with components
+*
+* %D
+* Start of the trace-region in which SCATTER events should be logged.
+* Whenever a SCATTER occurs in components between this one and its counterpart Scatter_logger_stop the neutron state is logged.
+* The log is kept in memory - but only for one single
+* numerical neutron at a time, so there should be no real danger of memory overrun.
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Shielding_logger
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+
+SHARE
+  %{
+
+// m_local_refl is to be used in shielding applications and accessed by shielding logger
+#ifndef MVALUE_LOCAL_IS_DEF
+#define MVALUE_LOCAL_IS_DEF 1
+double m_local_refl=-1;
+#endif
+
+  struct Generalized_State_t {
+    double _x,_y,_z,_vx,_vy,_vz;
+    double _p,_t,_sx,_sy,_sz;
+    double _mvalue; // coating m-value in the place of the hit
+    long long int _nid;
+    int _comp, _idx;
+  };
+  
+#define SCATTER_LOG do { \
+    if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
+      struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
+      if( (bp-1)->_p!=p || (bp-1)->_vx!=vx || (bp-1)->_vy!=vy || (bp-1)->_vz!=vz ){\
+        Coords ctmp=POS_A_CURRENT_COMP;\
+        Coords _r = coords_set(x,y,z);\
+        Coords _v = coords_set(vx,vy,vz);\
+        Coords _s = coords_set(sx,sy,sz);\
+        Coords _rg,_vg,_sg;\
+        Rotation _Rt;\
+        rot_transpose(ROT_A_CURRENT_COMP,_Rt);\
+        _rg=coords_add(rot_apply(_Rt,_r),ctmp);\
+        _vg=rot_apply(_Rt,_v);\
+        _sg=rot_apply(_Rt,_s);\
+        coords_get(_rg,&(bp->_x),&(bp->_y),&(bp->_z));\
+        coords_get(_vg,&(bp->_vx),&(bp->_vy),&(bp->_vz));\
+        coords_get(_sg,&(bp->_sx),&(bp->_sy),&(bp->_sz));\
+        bp->_t=t;\
+        bp->_p=p;\
+        bp->_nid=mcget_run_num();\
+        bp->_comp=INDEX_CURRENT_COMP;\
+        bp->_idx=bounce_store_index;\
+/* New: registering m-value at reflection. it is set to -1 by component the if we missed coating */\
+        bp->_mvalue=m_local_refl;\
+      /* printf("Recording scattering, writing state (%d) to the buffer, r: %g %g %g v: %g %g %g p:%g\n",\
+                bounce_store_index, bp->_x, bp->_y, bp->_z, bp->_vx, bp->_vy, bp->_vz, bp->_p);*/\
+        bounce_store_index++;\
+     }\
+    }else if(bounce_store_index==(BOUNCE_LOG_SIZE-1) && !bounce_store_overrun){\
+      printf("Warning (%s): Scatter_log overrun at %llu - not logging any more events\n",NAME_CURRENT_COMP,mcget_run_num());\
+      bounce_store_overrun=1;\
+    }\
+    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0);\
+} while(0)
+
+#define ABSORB_LOG do { /*printf("DOING ABSORB_LOG\n");*/ \
+    if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
+      struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
+     /* if( (bp-1)->_p!=p || (bp-1)->_vx!=vx || (bp-1)->_vy!=vy || (bp-1)->_vz!=vz )*//*<-- Check removed, works wrong if neutron is absorbed at the entrance*/{\
+        Coords ctmp=POS_A_CURRENT_COMP;\
+        Coords _r = coords_set(x,y,z);\
+        Coords _v = coords_set(vx,vy,vz);\
+        Coords _s = coords_set(sx,sy,sz);\
+        Coords _rg,_vg,_sg;\
+        Rotation _Rt;\
+        rot_transpose(ROT_A_CURRENT_COMP,_Rt);\
+        _rg=coords_add(rot_apply(_Rt,_r),ctmp);\
+        _vg=rot_apply(_Rt,_v);\
+        _sg=rot_apply(_Rt,_s);\
+        coords_get(_rg,&(bp->_x),&(bp->_y),&(bp->_z));\
+        coords_get(_vg,&(bp->_vx),&(bp->_vy),&(bp->_vz));\
+	/*bp->_vx=0.; bp->_vy=0.; bp->_vz=0.;*/\
+        /*vx=0; vy=0;vz=0;*/\
+        coords_get(_sg,&(bp->_sx),&(bp->_sy),&(bp->_sz));\
+        bp->_t=t;\
+        bp->_p=0.;\
+        bp->_nid=mcget_run_num();\
+        bp->_comp=INDEX_CURRENT_COMP;\
+        bp->_idx=bounce_store_index;\
+        bp->_mvalue=m_local_refl;\
+      /* printf("Recording absorption event, writing state (%d) to the buffer, r: %g %g %g v: %g %g %g p:%g\n",\
+                bounce_store_index, bp->_x, bp->_y, bp->_z, bp->_vx, bp->_vy, bp->_vz, bp->_p);*/\
+        bounce_store_index++;\
+      }\
+    }else if(bounce_store_index==(BOUNCE_LOG_SIZE-1) && !bounce_store_overrun){\
+      printf("Warning (%s): Scatter_log overrun at %llu - not logging any more events\n",NAME_CURRENT_COMP,mcget_run_num());\
+      bounce_store_overrun=1;\
+    }\
+absorbed_in_optics=1;\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0);\
+} while(0)
+
+
+#define SCATTER0\
+    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+			mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
+
+#define ABSORB0\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
+
+
+
+  const int BOUNCE_LOG_SIZE=10000000;
+  struct Generalized_State_t *Bounce_store;
+
+%}
+
+DECLARE
+%{ 
+  int bounce_store_index;
+  int bounce_store_overrun;
+  int absorbed_in_optics;
+%}
+
+INITIALIZE
+%{
+  bounce_store_index=0;
+  absorbed_in_optics=0;
+  Bounce_store=malloc(sizeof(*Bounce_store)*BOUNCE_LOG_SIZE);
+  Bounce_store[BOUNCE_LOG_SIZE-1]._p=-1;
+%}
+
+
+TRACE
+%{
+#undef SCATTER
+#define SCATTER SCATTER_LOG
+
+#undef ABSORB
+#define ABSORB ABSORB_LOG
+
+/*
+#ifdef scatter_logger_stop
+#undef scatter_logger_stop
+#endif
+
+#define scatter_logger_stop logger
+*/
+#undef mcabsorb
+#define mcabsorb scatter_logger_stop
+
+  bounce_store_index=0;/*we are now starting logging so we should start afresh*/   
+  absorbed_in_optics=0;/*we are now starting logging so we should start afresh*/ 
+  if (bounce_store_index<BOUNCE_LOG_SIZE){
+    struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);
+    Coords ctmp=POS_A_CURRENT_COMP;
+    Coords r = coords_set(x,y,z);
+    Coords v = coords_set(vx,vy,vz);
+    Coords s = coords_set(sx,sy,sz);
+
+    Coords rg,vg,sg;
+
+    Rotation Rt;
+    rot_transpose(ROT_A_CURRENT_COMP,Rt);
+    rg=coords_add(rot_apply(Rt,r),ctmp);
+    vg=rot_apply(Rt,v);
+    sg=rot_apply(Rt,s);
+    coords_get(rg,&(bp->_x),&(bp->_y),&(bp->_z));
+    coords_get(vg,&(bp->_vx),&(bp->_vy),&(bp->_vz));
+    coords_get(sg,&(bp->_sx),&(bp->_sy),&(bp->_sz));
+    bp->_t=t;
+    bp->_p=p;
+    bp->_nid=mcget_run_num();
+    bp->_comp=INDEX_CURRENT_COMP;
+    bp->_idx=bounce_store_index;
+    bp->_mvalue=0.0; // This is the incoming particle. No collision, setting mvalue=0.
+   // printf("Starting scatter logger, writing state (%d) to the buffer, r: %g %g %g  v: %g %g %g p: %g\n", bounce_store_index, bp->_x, bp->_y, bp->_z, bp->_vx, bp->_vy, bp->_vz, bp->_p);
+    bounce_store_index++;
+  }else if(bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun){
+    printf("Warning (%s): Scatter_log overrun - not logging any more SCATTER events\n",NAME_CURRENT_COMP);
+    bounce_store_overrun=1;
+  }
+%}
+
+FINALLY
+%{
+%}
+
+END

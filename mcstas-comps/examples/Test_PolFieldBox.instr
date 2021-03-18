@@ -1,0 +1,76 @@
+/*******************************************************************************
+* Instrument: Test_Pol_FieldBox
+*
+* %I
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Jan 20
+* Origin: DTU Physics
+* %INSTRUMENT_SITE: Test
+*
+* Unit test instrument for Pol_FieldBox
+*
+* %D
+* An instrument with a single field box with a 1 mT magnetic field along the y-axis.
+* A neutron beam polarized aling the x-axis is emitted with central wavelength such
+* that the  polarization is rotated pihalfturns radians in the field.
+*
+* %Example: Test_Pol_FieldBox pihalfturns=3 pl1z_I=3.07889
+*
+* %P
+* pihalfturns: [ ] beam polarization (for the cetral wavelength) is rotated pihalfturns by the field
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Pol_FieldBox(pihalfturns=1)
+
+DECLARE
+%{
+	double L0;
+	double By;
+%}
+
+INITIALIZE
+%{
+	By=1e-3; /*1mT field*/
+	L0=pihalfturns*PI*PI*K2V/(0.02*1.8325e8 * By);		
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT source_simple = Source_simple(
+    dist=2, 
+    focus_xw=0.1, 
+    focus_yh=0.1, 
+    lambda0=L0, 
+    dlambda=0.5*L0)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT set_pol = Set_pol(
+    px=1)
+AT (0, 0, 0.5) RELATIVE PREVIOUS
+
+COMPONENT pl0x = PolLambda_monitor(mx=1, my=0, mz=0,filename="pl0x.dat", nL=101, npol=51, Lmin=0.5*L0, Lmax=L0*1.5)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT pl0z = COPY(pl0x)(mx=0, my=0, mz=1, filename="pl0z.dat")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT pf=Pol_FieldBox(By=By, Bx=0, Bz=0, xwidth=0.2, yheight=.2, zdepth=0.02)
+AT(0,0,0.01+1e-3) RELATIVE PREVIOUS
+
+
+COMPONENT pl1x = PolLambda_monitor(mx=1, my=0, mz=0,filename="pl1x.dat", nL=101, npol=51,Lmin=0.5*L0, Lmax=L0*1.5)
+AT(0,0,0.01+1e-3) RELATIVE PREVIOUS
+
+COMPONENT pl1z = COPY(pl0x)(mx=0, my=0, mz=1, filename="pl1z.dat")
+AT(0,0,0) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END

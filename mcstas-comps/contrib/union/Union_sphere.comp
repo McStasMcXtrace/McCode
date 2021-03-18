@@ -6,13 +6,13 @@
 * %I
 * Written by: Mads Bertelsen
 * Date: 20.08.15
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
-*  sperates geometry and physics within McStas.
+*  separates geometry and physics within McStas.
 * The use of this component requires other components to be used.
 *
 * 1) One specifies a number of processes using process components
@@ -35,23 +35,23 @@
 * INPUT PARAMETERS:
 * radius: [m]          Radius of sphere
 * material_string: []  material name of this volume, defined using Union_make_material
-* priority   [1]  priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
-* p_interact [1]  probability to interact with this geometry [0-1]
-* visualize  [1]  set to 0 if you wish to hide this geometry in mcdisplay
-* number_of_activations [1]  Number of subsequent Union_master components that will simulate this geometry
+* priority:   [1]  priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* p_interact: [1]  probability to interact with this geometry [0-1]
+* visualize:  [1]  set to 0 if you wish to hide this geometry in mcdisplay
+* number_of_activations: [1]  Number of subsequent Union_master components that will simulate this geometry
 * mask_string: []      Comma seperated list of geometry names which this geometry should mask
 * mask_setting: []     "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
 *
 * Focusing options, if left blank, there will be no focusing.
-* target_x   [m]:
-* target_y   [m]: Position of target to focus at
-* target_z   [m]:
-* focus_aw   [deg] horiz. angular dimension of a rectangular area
-* focus_ah   [deg] vert. angular dimension of a rectangular area
-* focus_xw   [m]   horiz. dimension of a rectangular area
-* focus_xh   [m]   vert. dimension of a rectangular area
-* focus_r    [m]   focusing on circle with this radius
-*
+* target_x:   [m]
+* target_y:   [m] Position of target to focus at
+* target_z:   [m]
+* target_index: [1] Relative index of component to focus at, e.g. next is +1 
+* focus_aw:   [deg] horiz. angular dimension of a rectangular area
+* focus_ah:   [deg] vert. angular dimension of a rectangular area
+* focus_xw:   [m]   horiz. dimension of a rectangular area
+* focus_xh:   [m]   vert. dimension of a rectangular area
+* focus_r:    [m]   focusing on circle with this radius
 * OUTPUT PARAMETERS:
 *
 * %L
@@ -173,8 +173,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -227,6 +226,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -327,6 +327,7 @@ rot_transpose(ROT_A_CURRENT_COMP,this_sphere_volume.geometry.transpose_rotation_
 
 // Initialize loggers
 this_sphere_volume.loggers.num_elements = 0;
+this_sphere_volume.abs_loggers.num_elements = 0;
 
 // packing the information into the global_geometry_element, which is then included in the global_geometry_list.
 sprintf(global_geometry_element.name,NAME_CURRENT_COMP);
@@ -364,7 +365,6 @@ fclose(fp);
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

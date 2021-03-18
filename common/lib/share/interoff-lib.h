@@ -33,8 +33,8 @@
 #ifndef INTEROFF_LIB_H
 #define INTEROFF_LIB_H "$Revision$"
 
-#ifndef EPSILON
-#define EPSILON 1e-13
+#ifndef OFF_EPSILON
+#define OFF_EPSILON 1e-13
 #endif
 
 #define OFF_INTERSECT_MAX 100

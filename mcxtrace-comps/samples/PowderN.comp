@@ -129,38 +129,38 @@
 *
 * %P
 * INPUT PARAMETERS
-* radius:   Outer radius of sample in (x,z) plane [m]
-* xwidth:   Horiz. dimension of sample, as a width [m]
-* yheight:  Height of sample y direction [m]
-* zdepth:   Depth of box sample [m]
-* thickness:Thickness of hollow sample.
+* radius: [m]          Outer radius of sample in (x,z) plane 
+* xwidth: [m]          Horiz. dimension of sample, as a width 
+* yheight: [m]         Height of sample y direction 
+* zdepth: [m]          Depth of box sample 
+* thickness: []        Thickness of hollow sample.
 *                Negative value extends the hollow volume outside of the box/cylinder. [m]
-* reflections: Input file for reflections.
+* reflections: []      Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
 *
 * Optional parameters:
-* d_phi:   [deg]    Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* d_phi: [deg]      Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_theta: [deg]    Longitudinal angle to focus to, i.e. lateral opening angle. This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0
 * focus_flip: [1]   Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
-* pack:    [1]      Packing factor
+* pack: [1]         Packing factor
 * Delta_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
-* format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
-* p_inc:   [1]      Fraction of incoherently scattered rays.
-* p_transmit: [1]   Fraction of transmitted (only attenuated) rays. Used to improve statistics of the scattering pattern 
-*                   wrt. the attenuated, direct beam. It is typically beneficial to leave this parameter at a value << 1.
+* format: [ ]       Name of the format, or list of column indexes (see Description). N.b. no qoutes!
+* p_inc: [1]        Fraction of incoherently scattered rays.
+* p_transmit: [1]   Fraction of transmitted (only attenuated) rays. Used to improve statistics of the scattering pattern wrt. the attenuated,
+*                   direct beam. It is typically beneficial to leave this parameter at a value << 1.
 * p_interact: [1]   Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc.
 * concentric: [1]   Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere).
-* geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
-* barns:   [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
-* Vc:      [AA^3]   Volume of unit cell=nb atoms per cell/density of atoms.
-* DW:      [1]      Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
-* weight:  [g/mol]  Atomic/molecular weight of material [g/mol]
+* geometry: [str]   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
+* barns: [1]        Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
+* Vc:    [AA^3]     Volume of unit cell=nb atoms per cell/density of atoms.
+* DW: [1]           Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
+* weight: [g/mol]   Atomic/molecular weight of material [g/mol]
 * density: [g/cm^3] Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
 *
 * OUTPUT PARAMETERS:
-* line_info: [struct]     Internal structure containing many members/info [struct]
-* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
+* line_info: [struct]     Internal structure containing many members/info.
+* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent.
 * line_info.dq: [Angs^-1] Wavevector transfer of last coherent scattering event.
 *
 * %L
@@ -191,17 +191,17 @@
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (format=Undefined, mat_format=mat_Undefined)
 SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
-                    radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
-                    pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
-                    DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
-                    concentric=0, density=0, weight=0, barns=1, focus_flip=0)
+radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
+pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
+DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
+concentric=0, density=0, weight=0, barns=1, focus_flip=0)
 OUTPUT PARAMETERS (line_info,columns,mat_columns,offdata)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
 %{
-  /* used for reading data table from file */
-  %include "read_table-lib"
-  %include "interoff-lib"
+/* used for reading data table from file */
+%include "read_table-lib"
+%include "interoff-lib"
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
@@ -210,7 +210,7 @@ SHARE
 #define Crystallographica { 4,5,7,0,0,0,0,0 }
 #define Fullprof          { 4,0,8,0,0,5,0,0 }
 #define Lazy              {17,6,0,0,0,0,0,13 }
-#define Undefined         { 0,0,0,0,0,0,0,0 }
+#define Undefined         { 0,0,0,0,0,0,0,0}
   /*format definitions for material data {E my_abs my_cohinc my_coh}*/
 #define FFAST_element {1, 4, 0, 5, 0}
 #define FFAST_compound {1, 3, 0, 0, 4}
@@ -218,67 +218,68 @@ SHARE
 #define mat_Undefined {0,0,0,0,0}
 #endif
 
-  struct line_data
-    {
-      double F2;                  /* Value of structure factor */
-      double q;                   /* Qvector */
-      int j;                      /* Multiplicity */
-      double DWfactor;            /* Debye-Waller factor */
-      double w;                   /* Intrinsic line width */
-    };
+struct line_data
+{
+  double F2;                  /* Value of structure factor */
+  double q;                   /* Qvector */
+  int j;                      /* Multiplicity */
+  double DWfactor;            /* Debye-Waller factor */
+  double w;                   /* Intrinsic line width */
+};
 
-  struct abs_data
-  {
-    double E;       /*energy (in keV)*/
-    double k;       /*wavenumber corresponding to E*/
-    double sigma_a; /*absorption cross section for energy E*/
-    double mu;      /*absoprtion coefficient for the energy E*/
-    double cohinc;  /*coherent +incoherent scattering coefficient*/
-  };
-  struct line_info_struct
-    {
-      struct line_data *list;     /* Reflection array */
-      int  count;                  /* Number of reflections */
-      double Dd;
-      double DWfactor;
-      double V_0;
-      double rho;
-      double at_weight;
-      double at_nb;
-      double sigma_a;
-      double sigma_i;
-      char   compname[256];
-      double flag_barns;
-      int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
-      int    column_order[8]; /* column signification */
-      int    flag_warning;
-      char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
-      double dq;    /* wavevector transfer [Angs-1] */
-      double Epsilon; /* global strain in ppm */
-      double XsectionFactor;
-      double my_s_k2_sum;
-      double my_a;
-      double my_inc;
-      double *w,*q, *my_s_k2;
-      double radius_i,xwidth_i,yheight_i,zdepth_i;
-      double k; /* last velocity (cached) */
-      double Nq;
-      int    nb_reuses, nb_refl, nb_refl_count;
-      double k_min, k_max;
-      double xs_Nq[CHAR_BUF_LENGTH];
-      double xs_sum[CHAR_BUF_LENGTH];
-      double photon_passed;
-      long   xs_compute, xs_reuse, xs_calls;
-      t_Table mat_table;
-      int mat_column_order[5]; /*column signification for the coeff. in material data file*/
-    };
+struct powdern_abs_data
+{
+  double E;       /*energy (in keV)*/
+  double k;       /*wavenumber corresponding to E*/
+  double sigma_a; /*absorption cross section for energy E*/
+  double mu;      /*absoprtion coefficient for the energy E*/
+  double cohinc;  /*coherent +incoherent scattering coefficient*/
+};
+
+struct line_info_struct
+{
+  struct line_data *list;     /* Reflection array */
+  int  count;                  /* Number of reflections */
+  double Dd;
+  double DWfactor;
+  double V_0;
+  double rho;
+  double at_weight;
+  double at_nb;
+  double sigma_a;
+  double sigma_i;
+  char   compname[256];
+  double flag_barns;
+  int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
+  int    column_order[8]; /* column signification */
+  int    flag_warning;
+  char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
+  double dq;    /* wavevector transfer [Angs-1] */
+  double Epsilon; /* global strain in ppm */
+  double XsectionFactor;
+  double my_s_k2_sum;
+  double my_a;
+  double my_inc;
+  double *w,*q, *my_s_k2;
+  double radius_i,xwidth_i,yheight_i,zdepth_i;
+  double k; /* last velocity (cached) */
+  double Nq;
+  int    nb_reuses, nb_refl, nb_refl_count;
+  double k_min, k_max;
+  double xs_Nq[CHAR_BUF_LENGTH];
+  double xs_sum[CHAR_BUF_LENGTH];
+  double photon_passed;
+  long   xs_compute, xs_reuse, xs_calls;
+  t_Table mat_table;
+  int mat_column_order[5]; /*column signification for the coeff. in material data file*/
+};
 
   off_struct offdata;
 
   // PN_list_compare *****************************************************************
 
   int PN_list_compare (void const *a, void const *b)
-    {
+  {
      struct line_data const *pa = a;
      struct line_data const *pb = b;
      double s = pa->q - pb->q;
@@ -287,7 +288,7 @@ SHARE
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
 
-  int read_abs_data(char *ABS_file, struct abs_data **abs)
+  int read_powdern_abs_data(char *ABS_file, struct powdern_abs_data **abs)
   {
     t_Table table;
     char **parsing;
@@ -295,7 +296,7 @@ SHARE
 
     if (!ABS_file || !strlen(ABS_file) || !strcmp(ABS_file, "NULL")) {
       fprintf(stderr,"Warning: material file (%s) not found.\n",ABS_file);
-      *abs=calloc(2,sizeof(struct abs_data));
+      *abs=calloc(2,sizeof(struct powdern_abs_data));
       (*abs)[1].E=-1;
       (*abs)[1].k=-1;
       (*abs)[1].mu=-1;
@@ -305,7 +306,7 @@ SHARE
         exit(-1);
       }
       parsing=Table_ParseHeader(table.header,"Z","A[r]","rho",NULL);
-      *abs=calloc(table.rows+1,sizeof(struct abs_data));
+      *abs=calloc(table.rows+1,sizeof(struct powdern_abs_data));
       for (i=0;i<table.rows;i++){
         (*abs)[i].E=table.data[i*table.columns];
         (*abs)[i].k=(*abs)[i].E*E2K;
@@ -523,7 +524,7 @@ SHARE
 
 /* computes the number of possible reflections (return value), and the total xsection 'sum' */
 /* this routine looks for a pre-computed value in the Nq and sum cache tables               */
-/* when found, the earch starts from the corresponding lower element in the table           */
+/* when found, the search starts from the corresponding lower element in the table           */
 int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, double *sum,
         struct line_info_struct *line_info) {
   int    Nq = 0, line=0, line0=0;
@@ -548,13 +549,13 @@ int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, 
       line_info->xs_sum[line]= *sum;
       line_info->xs_compute++;
     } else line_info->xs_reuse++;
-    line0 = Nq - 1;
+    line0 = Nq;
   }
 
   line_info->xs_calls++;
 
   for(line=line0; line<count; line++) {
-      if (q[line] <= 2*k*sinth) { /* q < 2*kf: restrict structural range */
+    if (q[line] <= 2*k*sinth) { /* q < 2*kf: restrict structural range */
       *sum += my_s_k2[line];
       if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
     } else break;
@@ -591,7 +592,7 @@ int calc_inc_xsect(double k, double *inc, struct line_info_struct *line_info){
     switch (i){
         case 2:
             /*inc is explicitly in column i - no correction term.*/
-            correction=0;
+           correction=0;
             break;
         case 3:
             /*inc is given as inc+ćoh in column i*/
@@ -783,7 +784,7 @@ INITIALIZE
 
   if (line_info.V_0 > 0 && p_inc && (!line_info.sigma_i || !material)) {
   MPI_MASTER(
-      printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not set a material datafile (\'%s\') nor defined sigma_inc!\n", NAME_CURRENT_COMP, material);
+    printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not set a material datafile (\'%s\') nor defined sigma_inc!\n", NAME_CURRENT_COMP, material);
   );
   }
 
@@ -803,7 +804,7 @@ INITIALIZE
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<line_info.count; i++)
     {
-        line_info.my_s_k2[i] = 4*PI*PI*PI* 1.0 *(L[i].DWfactor ? L[i].DWfactor : 1)
+      line_info.my_s_k2[i] = 4*PI*PI*PI* 1.0 *(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0)
                  *(L[i].j * L[i].F2 / L[i].q)*line_info.XsectionFactor;
       /* Is not yet divided by k^2 */
@@ -814,20 +815,19 @@ INITIALIZE
   }
 
   if (material || !strlen(material) || !strcmp(material, "NULL")) {
-      int status;
-      char **parsing;
-      if( (status=Table_Read(&(line_info.mat_table),material,0))==-1){
-          fprintf(stderr,"PowderN: %s Error reading material data from file %s.\n",NAME_CURRENT_COMP,material);
-      }
-      parsing=Table_ParseHeader(line_info.mat_table.header,
-              "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
+    int status;
+    char **parsing;
+    if( (status=Table_Read(&(line_info.mat_table),material,0))==-1){
+      fprintf(stderr,"PowderN: %s Error reading material data from file %s.\n",NAME_CURRENT_COMP,material);
+    }
+    parsing=Table_ParseHeader(line_info.mat_table.header,"column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
 
-      if (parsing){
-          int i;
-          for (i=0;i<5;i++){
-              if (parsing[i]) line_info.mat_column_order[i]=atoi(parsing[i]);
-          }
+    if (parsing){
+      int i;
+      for (i=0;i<5;i++){
+        if (parsing[i]) line_info.mat_column_order[i]=atoi(parsing[i]);
       }
+    }
 
   }
 %}

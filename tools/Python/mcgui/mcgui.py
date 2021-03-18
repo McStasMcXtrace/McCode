@@ -637,7 +637,7 @@ class McGuiAppController():
     def handlePlotOtherResults(self):
         self.emitter.status('')
         resultdir = self.view.showOpenPlotDirDlg(os.getcwd())
-        if not resultdir is "":
+        if resultdir != "":
             cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
             cwd = os.path.dirname(os.path.dirname(resultdir))
             self._runthread = McRunQThread()
@@ -778,10 +778,10 @@ class McGuiAppController():
     
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        if not instr:
+            return
         if not os.path.isfile(instr):
             self.emitter.status("Please select a file rather than a folder. Folder load not supported.")
-            return
-        if not instr:
             return
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(instr))==False:
             return
@@ -807,22 +807,20 @@ class McGuiAppController():
         subprocess.Popen(cmd, shell=True)
 
     def handleEnvironment(self):
+        terminal = mccode_config.configuration["TERMINAL"]
         if not sys.platform == 'win32':
             scriptfile = mccode_config.configuration["MCCODE_LIB_DIR"] + '/environment'
-            if sys.platform == 'darwin':
-                scriptfile = 'open ' + scriptfile
-            else:
-                scriptfile = 'x-terminal-emulator ' + scriptfile
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
-        subprocess.Popen(scriptfile, shell=True)
+
+        subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
         
     def handleDefault(self):
         reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Define system default?',
                                            'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?'),
  
-        if reply[0] == QtWidgets.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
              subprocess.Popen('postinst set_mccode_default', shell=True)
              
 
@@ -830,14 +828,14 @@ class McGuiAppController():
         reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Python ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?')
-        if reply[0] == QtWidgets.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             subprocess.Popen('postinst osx_app_default py', shell=True)
 
     def handleDefaultMcguiPl(self):
         reply = QtWidgets.QMessageBox.question(self.view.mw,
                                            'Make Python gui App default?',
                                            'Do you want to use Perl ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?')
-        if reply[0] == QtWidgets.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             subprocess.Popen('postinst osx_app_default pl', shell=True)
 
         

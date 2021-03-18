@@ -1,0 +1,20 @@
+OFF
+# This is an Object File Format (geomview) to describe a 1 m^3 cube
+# nb points, nb faces, void.
+# Reflectivity m=1 has been assigned to the faces for use with
+# Guide_anyshape_r.
+8 4 0
+# List 8 points coordinates
+0.025 -0.025 0
+-0.025 0.025 0
+-0.025 -0.025 1.0
+-0.025 -0.025 0
+0.025 -0.025 1.0
+0.025 0.025 0
+0.025 0.025 1.0
+-0.025 0.025 1.0
+# List six faces, all squared with reflectivity 1
+4 0 5 6 4 1
+4 1 5 6 7 1
+4 3 0 4 2 1
+4 3 1 7 2 1

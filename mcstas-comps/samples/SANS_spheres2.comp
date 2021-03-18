@@ -1,0 +1,354 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SANS_spheres2
+*
+* %I
+* Written by: P. Willendrup, derived from H. Frielinghaus SANS_benchmark2
+* Date: 16.12.2019
+* Origin: DTU
+*
+* %D
+* Sample for Small Angle Neutron Scattering - hard spheres in thin solution, mono disperse.
+*
+* For the scattering simulation a high fraction of neutron paths is directed to the scattering (exact fraction is sc_aim).
+* The remaining paths are used for the transmitted beams. The absolute intensities are treated accordingly, and the p-parameter is set accordingly.
+*
+* For the scattering probability, the integral of the scattering function between Q = 0.0001 and 1.0 AA-1 is calculated.
+* This is used in terms of transmisson, and of course for the scattering probability.
+* In this way, multiple scattering processes could be treated as well.
+*
+* The typical SANS range was considered to be between 0.0001 and 1.0 AA-1.
+* This means that the scattered neutrons are equally distributed in this range on logarithmic Q-scales.
+*
+* Example: SANS_spheres2(xwidth=0.01, yheight=0.01, zthick=0.001, model=1.0, dsdw_inc=0.02, sc_aim=0.97, sans_aim=0.95, R-150)
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* xwidth:       [m]  Width of sample volume 
+* yheight:      [m]  Height of sample volume 
+* zthick:       [m]  Thickness of sample volume 
+* R:           [AA]  Radius of dilute, monodisperse spheres 
+* phi:          [1]  Volume-ratio of the spheres wrt. solution
+* drho:     [cm^-2]  Scattering length density
+* dsdw_inc: [cm^-1]  The incoherent background from the overall sample, should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
+* sc_aim:       [1]  The fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
+* sans_aim:     [1]  The fraction of neutron paths used to represent the scattered neutrons in the sans-range (up to 1.0AA-1). rest is incoherent with Q>1AA-1.
+* singlesp:     [1]  Switches between multiple scattering (parameter zero 0.0) and single scattering (parameter 1.0). The sc_aim directs a fraction of paths to the first scattering process accordingly. The no. of paths for the second scattering process is derived from the real probability. Up to 10 scattering processes are considered.
+* Qmind:    [AA^-1]  Lower limit of "SANS" scattering
+* Qmaxd:    [AA^-1]  Upper limit of "SANS" scattering
+*
+* %Link
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SANS_spheres2
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth=0.01, yheight=0.01, zthick=0.001, dsdw_inc=0.02, sc_aim=0.97, sans_aim=0.95, R=150, phi=1e-3, drho=6e10, int singlesp=1, Qmind = 0.0001, Qmaxd = 2.1544346900319)
+OUTPUT PARAMETERS (p0)
+
+SHARE
+%{
+#include <math.h>
+#include <stdio.h>
+
+double min(double A, double B) {
+if (A<B) return A; else return B;
+};
+
+double max(double A, double B) {
+if (A>B) return A; else return B;
+};
+
+int imin(int A, int B) {
+if (A<B) return A; else return B;
+};
+
+int imax(int A, int B) {
+if (A>B) return A; else return B;
+};
+ 
+ double dSigdW(double Q, double R, double phi, double drho) {
+
+  double out;
+  double G;  
+  double qR;
+  
+  qR  = Q*R;
+  G   = (drho*drho*phi*4e-24*PI*R*R*R/3.0); /* 4 is from sphere volume, 1e-24 is AA^3->cm^3  */
+
+  /* Note that for very small q, we should rather do a Taylor expansion here. 
+     - See H. Frielinghaus mail to PW, WGB from Dec. 18th 2019 */
+  out  = 3.0*(sin(qR)-qR*cos(qR))/(qR*qR*qR);
+  out *= G * out;
+  
+  return out;
+}
+%}
+
+
+DECLARE
+%{
+  double Idsdw[31];
+  double Qminl, Qmaxl, l10;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
+  double p0;
+%}
+
+INITIALIZE
+%{
+
+  if (!xwidth || !yheight || !zthick)
+  {
+    exit(fprintf(stderr,"%s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  }
+
+  int iii,kkk;
+
+  Qminl = log10(Qmind);
+  Qmaxl = log10(Qmaxd);
+  l10   = log(10.00);
+
+  double q,Isq;
+  double qmin,qmax,step;
+  int    istp;
+
+  istp = floor((Qmaxl-Qminl)*300.0+0.5);
+
+  /* By integration, calculate the coherent scattering cross-section for the relevant wavelength range */
+  for (iii=1;iii<=30;iii++) {                             /* wavelength in AA, up to 30 */
+    Idsdw[iii] = 0.0;
+    Isq  = 0.0;
+    qmin = 0.0;
+    step = (log10(min(Qmaxd,4.0*PI/iii))-Qminl)/istp;
+    for (kkk=0;kkk<=istp;kkk++) {
+      qmax = pow(10.0,Qminl+kkk*step);
+      q    = 0.5*(qmin+qmax);
+      Isq += dSigdW(q,R,phi,drho)*q*(qmax-qmin);
+      qmin = qmax;
+    };
+    Idsdw[iii]= Isq;
+  };
+%}
+
+TRACE
+%{
+  double v,k0,lambda;
+  int    Ilam,Ilam2;
+  double qmax,qmaxl,Ymax,Xmax,thmax;
+
+  /* Wavelength-dependent cross-section variables for cross-section terms */
+  double Scoh, Sinc1, Sinc2, Stot;
+  
+  double rcut,fcut;
+  double Q, Xsc, theta;
+  int    iscatt;
+
+  char   intersect;
+  double t0, t1, dt, phiROT;
+
+  double axis_x, axis_y, axis_z;
+  double tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+
+  /* Initial neutron weight saved for later */
+  p0=p;
+
+  /* Number of scatterings in sample - limit at 10 below */
+  iscatt = 0;
+
+  v      = sqrt(vx*vx + vy*vy + vz*vz);
+  k0     = v / K2V;
+  lambda = 2.0*PI / k0;
+
+  Ilam   = imax(floor(lambda),1);
+  Ilam2  = imin(Ilam+1,30);
+  /* Coherent "SANS" scattering  - in 3 intervals, asymptotic values at the low and high WL end */
+  if (lambda<=1.0)   Scoh = 200.0*PI*Idsdw[1]  / (k0*k0);
+  else {
+    if (lambda>=30.0) Scoh = 200.0*PI*Idsdw[30] / (k0*k0);
+    else               Scoh = 200.0*PI*((Ilam2-lambda)*Idsdw[Ilam]+(lambda-Ilam)*Idsdw[Ilam2]) / (k0*k0);
+  };
+
+  /* Scattering triangle consideration, limit to lowes of
+     either Qmind or double initial k0 value */
+  qmax   = min(Qmaxd,2.0*k0);
+  qmaxl  = log10(qmax);
+  
+  Ymax   = 0.25*qmax*qmax/(k0*k0);
+  /* Maximal relative scale between q and k0 */
+  if (Ymax>=0.9999) Ymax=1.0;       /* if rounding errors occurr, this will help to avoid problems */
+  Xmax   = 1.0 - 2.0*Ymax;
+  /* Maximal scattering angle for SANS signal */
+  thmax  = acos(Xmax);
+  
+  /* Inchoherent "forward" scattering */
+  Sinc1  = 100.0*PI*(    qmax*qmax/(k0*k0)) * fabs(dsdw_inc);
+  /* non-directional incoherent scattering */
+  Sinc2  = 100.0*PI*(4.0-qmax*qmax/(k0*k0)) * fabs(dsdw_inc);
+
+  /* - that result in the total scattering cross-section */
+  Stot   = Sinc1 + Sinc2 + Scoh;
+  
+  /* Check for intersections with sample */
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+
+  /* Are we hitting and does cross-section have finite value? */
+  if (intersect && Stot>0.0) {
+
+    /*  Kill neutron if it already entered sample volume */
+    if(t0<0.0) ABSORB;
+
+    /* Using total XS, check if we should scatter coherently here or transmit. Partition statistics accordingly. */
+    rcut   = exp(-Stot*(t1-t0)*v);
+
+    /* Sample scattering position logarithmically */
+    if (1.0-rcut > sc_aim) {
+      dt = -1.0/(v*Stot)*log(rand01());
+    } else {
+      if (rand01()<=sc_aim) {
+	dt  = -1.0/(v*Stot)*log(1.0-(1.0-rcut)*rand01());
+	p  *= (1.0-rcut)/sc_aim;
+      }
+      else {
+	/* Transmit this guy */
+	dt  = -1.0/(v*Stot)*log(rcut*rand01());
+	dt  = 1e33;                  /* run out of sample ... */
+	p  *= rcut/(1.0-sc_aim);
+      };
+    };
+    
+    /* Based on time-logic, define if we should treat the neutron or not */
+    if (t0+dt<=t1) {
+      PROP_DT(t0+dt);
+      SCATTER;
+      iscatt = 1;
+
+      /* Partition statistics according to "SANS" vs. incoherent scattering */
+      fcut   = max(Ymax,sans_aim);
+
+      /* Scatter SANS or not */
+      if (rand01()<=fcut) {
+	/* Pick a random Q in the SANS regime - logarithmic sampling */
+        Q     = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+	double dsdw;
+	dsdw=dSigdW(Q,R,phi,drho);
+        p *= 200.0*PI*Q*Q/(k0*k0)*(qmaxl-Qminl)*l10*(dsdw+fabs(dsdw_inc))/(Stot*fcut);
+        Xsc   = 1.0 - 0.5*(Q*Q/(k0*k0));
+	/* Scattering angle */
+        theta = 2.0 * asin(0.5*Q/k0);
+      } else {
+	/* Random Q for the incoherent case */
+	Xsc   = -1.0 + (Xmax+1.0)*rand01();
+        p    *= (1.0-Ymax)/(1.0-fcut);
+	/* Scattering angle */
+	theta = acos(Xsc);
+      }
+      /* Azimuthal-symmetrical angle */
+      phiROT = 2.0*PI*rand01();
+
+      /* vector product between \vec{v} and vertical */
+      vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+      /* apply the two rotations from above */
+      rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, theta, axis_x, axis_y, axis_z);
+      rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, phiROT, vx, vy, vz);
+
+      vx = vout_x;
+      vy = vout_y;
+      vz = vout_z;
+
+      /* Check if we should do multiple scattering (still) */
+      while (iscatt<10 && singlesp==0) {
+
+	/* re-intersect component geometry */
+        intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+        if (!intersect) ABSORB;
+
+	/* Logarithmic sampling in time according to Xsect */
+        dt   = -1.0/(v*Stot)*log(rand01());
+
+	/* Still inside the sample? */
+        if (dt<=t1) {
+
+	  /* Propagate and scatter */ 
+          PROP_DT(dt);
+          SCATTER;
+          iscatt++;
+
+	  /* Apply the same weighting and logic scheme as for single-scattering above */
+          fcut   = max(Ymax,sans_aim);
+
+	  if (rand01()<=fcut) {
+	    Q     = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+	    double dsdw;
+	    dsdw=dSigdW(Q,R,phi,drho);
+	    p    *= 200.0*PI*Q*Q/(k0*k0)*(qmaxl-Qminl)*l10*(dsdw+fabs(dsdw_inc))/(Stot*fcut);
+	    Xsc   = 1.0 - 0.5*(Q*Q/(k0*k0));
+	    theta = 2.0 * asin(0.5*Q/k0);
+	  }
+	  else {
+	    Xsc   = -1.0 + (Xmax+1.0)*rand01();
+	    p    *= (1.0-Ymax)/(1.0-fcut);
+	    theta = acos(Xsc);
+	  };
+	
+	  phiROT = 2.0*PI*rand01();
+
+          vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+          rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, theta, axis_x, axis_y, axis_z);
+          rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, phiROT, vx, vy, vz);
+
+          vx = vout_x;
+          vy = vout_y;
+          vz = vout_z;
+        } 
+        else break; /* Not in the sample any longer */
+      };
+
+      /* Final propagation to last "edge" of the sample box */
+      intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+      if (!intersect) ABSORB;
+      PROP_DT(t1);
+
+    } else {
+      PROP_DT(t1); /* Time dt was long enough that we already passed the sample */
+    };
+  };
+
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END

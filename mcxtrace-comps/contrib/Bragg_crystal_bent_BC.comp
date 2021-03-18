@@ -138,11 +138,12 @@ TRACE
     double kxu,kyu,kzu;			// unit vector in the direction of k-vector.
     double x_int,y_int,z_int;		// intersection with the y=0 plane
     double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-    double Thetain;			// (rad) angle between the crystal surface and the incident ray
-    double Theta0;			// (rad) angle between the Bragg planes and the incident ray
-    double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
-    double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
-    double Rpi, Rsig, R;          // Reflectivity value calculated by Mx_DarwinReflectivity() function for each incoming photon
+    //double Thetain;			// (rad) angle between the crystal surface and the incident ray
+    //double Theta0;			// (rad) angle between the Bragg planes and the incident ray
+    //double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
+    //double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
+    //double Rpi, Rsig;
+    double R;          // Reflectivity value calculated by Mx_DarwinReflectivity() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
@@ -227,6 +228,10 @@ TRACE
                          f00, f0h, fp, fpp, V, h, k, l,
                          debye_waller_B, E,
                          crystal_type,structure_factor_scale_r,structure_factor_scale_i);
+            if(thetaB==0){
+              fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
+              ABSORB;
+            }
 
             fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha_v,

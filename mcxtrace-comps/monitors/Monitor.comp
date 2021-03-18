@@ -61,10 +61,8 @@ INITIALIZE
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("E_monitor: %s: Null detection area !\n"
-                   "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
     Nsum=0;
     psum=0;
@@ -88,7 +86,9 @@ TRACE
 
 SAVE
 %{
-    DETECTOR_OUT_0D("Intensity monitor " NAME_CURRENT_COMP, (double) Nsum, psum, p2sum);
+    char title[1024];
+    sprintf(title, "Single monitor %s", NAME_CURRENT_COMP);
+    DETECTOR_OUT_0D(title, (double) Nsum, psum, p2sum);
 %}
 
 MCDISPLAY

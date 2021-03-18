@@ -26,24 +26,24 @@
  *
  * Reads atomic formfactors from a data input file.
  *
- * The crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
- * The crystal planes from which the reflection is made must lie in the X-Z plane on the unbent crystal rotated
- * by an angle alpha about the x axis with respect to the crystal surface.
+ * The crystal code reflects ray in an ideal geometry, i.e. does not include surface imperfections or mosaicity.
+ * The crystal planes from which the reflection is made lies in the X-Z plane on the unbent crystal rotated
+ * by an angle alpha about the Y axis with respect to the crystal surface.
  *
- * The crystal is positioned such that the long axis of the crystal surface coincides with
- * z-axis. The angle between the Bragg planes and the crystal surface is alpha
- * Off-axis rays fixed June 2015 so axial divergence corrections are right
- * Inclusion of polarization and temperature dependence (via Debye-Waller factor), June-September 2015
- * Errors in complex arithmetic in DarwinReflectivity2 corrected, September 2015, MHM
- * Symmetries for form factors corrected 20150924
- * Rotation code updated to use exact DarwinReflectivity Theta0, Thetah so answer is right even if alpha != 0. 20151009 MHM
+ * The crystal itself is set in the X-Z plane positioned such that the long axis of the crystal surface coincides with
+ * the Z-axis, with its normam pointing in the positve Y-direction. The angle between the Bragg planes and the crystal surface is alpha
  *
  * This code has been validated against both experimental data
  * (2 channel-cut 3-bounce Si 440 crystals together in non-dispersive mode, at Cu kalpha)
  * and against theoretical rocking rocking curves from XOP for Si220 at Sc kalpha and Si440 at Cu kalpha.
  *
  * Changelog:  
- * December 1, 2016:  results for (1,1,1) etc. with complex form factor made to agree with XOP
+ * - Off-axis rays fixed June 2015 so axial divergence corrections are right
+ * - Inclusion of polarization and temperature dependence (via Debye-Waller factor), June-September 2015
+ * - Errors in complex arithmetic in DarwinReflectivity2 corrected, September 2015, MHM
+ * - Symmetries for form factors corrected 20150924
+ * - Rotation code updated to use exact DarwinReflectivity Theta0, Thetah so answer is right even if alpha != 0. 20151009 MHM
+ * - Results for (1,1,1) etc. with complex form factor made to agree with XOP. December 1st, 2016
  *
  * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
  *

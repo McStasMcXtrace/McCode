@@ -44,8 +44,8 @@ DECLARE
 INITIALIZE
 %{
   if ((fabs(focus_xw) < 0) || (fabs(focus_yh) < 0)) {
-    fprintf(stderr,"%s: you have to specify a target area\n", NAME_CURRENT_COMP); 
-    exit(0);
+    fprintf(stderr,"ERROR: (%s): you have to specify a target area\n", NAME_CURRENT_COMP); 
+    exit(-1);
   }
 %}
 

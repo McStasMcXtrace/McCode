@@ -11,6 +11,16 @@ void Mx_CubicCrystalChi(double complex *chi0, double complex *chih, double *k0ma
     lambda = 2*PI/(E2K*E);  			/* wavelength in Å, E in keV, using built-in constants for safety    */
     a = cbrt(V); 				/* side length of unit cubic cell (Å)*/
     d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (Å)*/
+
+    if (lambda>2*d){
+      /*cannot close scattering triangle, set all returns to 0 and exit*/
+      *thetaB=0;
+      *k0mag=0;
+      *hscale=0;
+      *chi0=*chih=0;
+      return;
+    }
+
     *thetaB = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
     *k0mag=2.0*M_PI/lambda; /* magnitude of k0 consistent with energy scale */
     *hscale=2.0*M_PI/d; /* minus sign to make it point into the crystal */

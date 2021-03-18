@@ -105,8 +105,8 @@ INITIALIZE
 
 		// Reading file
         if ((File = fopen(Filename, "r")) == 0) {
-            printf("Cannot open file: %s...\n", Filename);
-            exit(0);
+            fprintf(stderr,"ERROR: (%s): Cannot open file: %s...\n", "SAXSCurve.comp",Filename);
+            exit(-1);
         }
 
         NumberOfDatapoints = CountLines(File);

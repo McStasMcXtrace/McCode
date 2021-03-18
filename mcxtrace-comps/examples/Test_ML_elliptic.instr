@@ -18,6 +18,7 @@
 *
 * %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=0 Detector: emon1_I=6.91956e-21
 * %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=1 Detector: emon1_I=4.61321e-21
+* %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=1 fxw=2e-2 fyh=1e-3 Detector: emon1_I=9.22372e-08
 *
 * %Parameters
 * s1: [m] Distance from source focus to multilayer centre.
@@ -32,7 +33,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_ML_elliptic(S1=1, S2=2, gamma=1.2, fromfile=1)
+DEFINE INSTRUMENT Test_ML_elliptic(S1=1, S2=2, gamma=1.2, fromfile=1, fxw=1e-9, fyh=1e-9)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -62,7 +63,7 @@ COMPONENT Origin = Progress_bar()
 
 
 COMPONENT source = Source_flat(
-    radius = 1e-6, dist = 1, focus_xw = 1e-9, focus_yh = 1e-9,
+    radius = 1e-6, dist = 1, focus_xw = fxw, focus_yh = fyh,
     E0 = 20.1, dE = 20.0)
 AT (0, 0, 0) RELATIVE Origin
 

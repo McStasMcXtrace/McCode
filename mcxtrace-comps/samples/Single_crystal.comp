@@ -739,13 +739,13 @@ SHARE
     return(info->count = i);
   } /* read_hkl_data */
   
-  struct abs_data
+  struct sx_abs_data
   {
     int muc; /*column where mu is to be found*/
     t_Table table;
   };
 
-  int sx_read_abs_data(char *ABS_file, struct abs_data *abs){
+  int sx_read_abs_data(char *ABS_file, struct sx_abs_data *abs){
     int status;
     char **parsing;
     if (ABS_file && strlen(ABS_file) && strcmp(ABS_file, "NULL")) {
@@ -783,7 +783,7 @@ DECLARE
 %{
   struct hkl_info_struct hkl_info;
   off_struct offdata;
-  struct abs_data abs_info;
+  struct sx_abs_data abs_info;
 %}
 
 INITIALIZE
@@ -822,7 +822,7 @@ INITIALIZE
   double mosaic_ABin[]=mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin))
-    exit(0);
+    exit(-1);
   if (hkl_info.count)
     printf("Single_crystal: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info.count, reflections);

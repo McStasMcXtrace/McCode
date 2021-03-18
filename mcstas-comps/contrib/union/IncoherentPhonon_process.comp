@@ -1,0 +1,4683 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Victor Laliena
+* Date: 06.11.2018
+* Origin: University of Zaragoza
+*
+* A component to simulate inelastic scattering in the incoherent approximation
+* Takes into account one, two, and three phonon scattering explicitly,
+* and multi-phonon scattering (with n>4) via the saddle point method
+* %D
+*
+*
+* Part of the Union components, a set of components that work together and thus
+* expects geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components like this one
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box / Union_cylinder, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+*
+* Algorithm:
+* Described elsewhere, see e.g. <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
+*
+* %P
+* INPUT PARAMETERS:
+* T: [K]             Temperature
+* density: [g/cm3]   Material density
+* M: [amu]           ion mass
+* sigmaCoh: [barns]  Coherent scattering cross section
+* sigmaInc: [barns]  Incoherent scattering cross section
+* dosfn: [string]    Path to the file that contains the DoS
+* nxs: [1]           Number of energy points at which the total cross sections are precomputed
+* nphe_exact: [1]    Number of terms in the phonon expansion taken exact. Has to be between 1 and 3.
+* nphe_approx: [1]   Number of terms in the phonon expansion taken approximate.
+* approx: [1]        Approximation type: 0 gaussian, 1 saddle point
+* mph_resum: [1]     Resumate the remaining terms of the phonon expansion via a saddle point: 0 No, 1 Yes
+* kabsmin: [A^-1]    Lower cut-off for the neutron wave-vector k
+* kabsmax: [A^-1]    Higher cut-off for the neutron wave-vector k 
+* interact_fraction: [1]   How large a part of the scattering events should use this process 0-1  (sum of all processes in material = 1)
+*
+* OUTPUT PARAMETERS:
+*
+* This_process
+* IncoherentPhonon_storage
+*
+* %L
+* See <a href="https://doi.org/10.3233/JNR-190117">https://doi.org/10.3233/JNR-190117</a>
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT IncoherentPhonon_process
+DEFINITION PARAMETERS ()
+// default parameters for vanadium
+SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
+		   double sigmaCoh=0.0184, double sigmaInc=5.08,
+                   string dosfn=NULL,
+		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
+		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
+		   int interact_fraction=-1)
+OUTPUT PARAMETERS (This_process,IncoherentPhonon_storage)
+
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE
+%{
+#ifndef Union
+#define Union $Revision: 0.8 $
+
+#include "Union_functions.c"
+#include "Union_initialization.c"
+
+#endif
+
+#ifndef INCOHERENTPHONON
+#define INCOHERENTPHONON
+#define maxIter    1000            // Maximum number of iterations for sampling via the rejection method
+#define KS2E       2.0721          // Energy / wave-vector^2 constant
+#define kB         8.6173342e-2    // Boltzmann constant in meV/K 
+#define amu        1.66053892e-27  // atomic mass unit in kg
+#define barn2cmsq  1.0e-24         // conversion factor from barn to cm2
+#define nFCmax     10000000        // maximum number of function calls in nunerical integration
+#endif
+
+struct IncoherentPhonon_physics_storage_struct{
+  // Variables that needs to be transfered between any of the following places:
+  // The initialize in this component
+  // The function for calculating my
+  // The function for calculating scattering
+
+  // Type of computation
+  int nphe_exact;  // number of exact phonon terms in the phonon expansion (0, 1, 2, 3)
+  int nphe_approx; // number of approximate (Gaussian or SP) phonon terms in the phonon expansion
+  int approx;      // type of approximation (Gaussian: 0 or SP:1) 
+  int mph_resum;   // use multi-phonon resummation (no: 0 or yes: 1)  
+
+  // saved calculated cross sections for use in scattering
+  double xsTot, xs1phe, xs2phe, xs3phe, xsmph, *xs_p_phe_gauss, *xs_p_phe_sp;
+
+  //Physical parameters
+  double T;           // Temperature [K] 
+  double density;     // Material density [g/cm3] 
+  double M;           // Ion mass [amu]
+  double sigmaCoh;    // Coherent cross section [barn] 
+  double sigmaInc;    // Incoherent cross section [barn] 
+  double kBT;         // Boltzmann constant times temperature [meV]
+  double mRat;        // ratio of neutron mass to ion mass (m/M)
+  double XS2mu;       // conversion from cross section (barn) to linear attenuation coefficient (m^-1)
+
+  //Inelastic cross section
+  int    nxs;         // Number of kabs points at which the cross section is precomputed
+  double kabsmin;     // Lower cut-off for neutron wave vector [1/A]
+  double kabsmax;     // Higher cut-off for neutron wave vector [1/A]
+  double *kabs;       // array of kabs points (of length nxs) at which the cross section is precomputed 
+
+  //Precomputed data (total cross sections)
+  double *xsTot_1ph;        // one-phonon cross sections at the given kabs points (length nxs) 
+  double *xsTot_2ph;        // two-phonon cross sections at the given kabs points (length nxs) 
+  double *xsTot_3ph;        // three-phonon cross sections at the given kabs points (length nxs)
+  double **xsTot_pph_gauss; // multi-phonon cross sections at the given kabs points (length nxs), for each p
+  double **xsTot_pph_sp;    // multi-phonon cross sections at the given kabs points (length nxs), for each p
+  double *xsTot_mph;        // multi-phonon cross sections at the given kabs points (length nxs) 
+  // Precomputed data (maxima of the differential cross sections, for sampling kprime)
+  double *dXSdx_xmax_1ph;        // transfer (x) at which the cross section is maximum, at the given kabs points (length nxs) 
+  double *dXSdx_xmax_2ph;        // energy transfer (x) at which the cross section is maximum, at the given kabs points (length nxs) 
+  double *dXSdx_xmax_3ph;        // energy transfer (x) at which the cross section is maximum, at the given kabs points (length nxs) 
+  double *dXSdx_Fmax_1ph;        // maximum cross sections at the given kabs points (length nxs) 
+  double *dXSdx_Fmax_2ph;        // maximum cross sections at the given kabs points (length nxs) 
+  double *dXSdx_Fmax_3ph;        // maximum cross sections at the given kabs points (length nxs) 
+  double **dXSdx_xmax_pph_gauss; // energy transfer (x) at which the cross section is maximum, at the given kabs points (length nxs), for each p 
+  double **dXSdx_Fmax_pph_gauss; // maximum cross sections at the given kabs points (length nxs), for each p 
+  double **dXSdx_xmax_pph_sp;    // energy transfer (x) at which the cross section is maximum, at the given kabs points (length nxs), for each p 
+  double **dXSdx_Fmax_pph_sp;    // maximum cross sections at the given kabs points (length nxs), for each p 
+
+  int nF1;
+  int nF2;
+  int nF3;
+  double *u1;
+  double *u2;
+  double *u3;
+  double *F1;
+  double *F2;
+  double *F3;
+  double tolQuadratureFs;
+
+  // phonon expansion in gaussian approximation
+  int    nphe, npmax;
+  double epsilon;
+  double Delta, Delta2;
+
+  // phonon expansion in saddle approximation 
+  int ntsp_p;
+  double ximin_p, ximax_p;
+  double *xi_p;
+  double *tsp_p;
+  double *g_p;
+  double *d2gDg_p;
+  int p;            // to compute differential cross sections (not for simulation)
+
+  // multi-phonon resummation (saddle-point)
+  double ximin;
+  double ximax;
+  int    ntsp;
+  double *xi;
+  double *tsp;
+  double *g;
+  double *d2g;
+  double *H;
+  double g0;
+  double d2g0;
+  double xi1;
+  double xi2;
+  double aH3;
+  double aH4;
+  double tolSaddlePoint;
+  double tolQuadratureGs;
+
+  int    np_u_mph;
+  double *u;
+  double *dXSdu_mph;
+  double tol_dXSdu_mph;
+
+  double *dXSdQ2_Q2max_mph;
+  double *dXSdQ2_Fmax_mph;
+  double *Q2min;
+  double *Q2max;
+
+  int    np_Q2_mph;
+  double *Q2;
+  double *SQ2_mph;
+
+  // exact time correlation function (used only for tests)
+  int npGs;
+  double *s;
+  double *rGs;
+  double *iGs;
+
+  //Density of States
+  int    np;          // number of energy points at which the DoS is known
+  double *e;          // array with the energy at which the DoS is known (length np)
+  double *Z;          // array with the DoS at the energies at which it is known (length np)
+  double Emax;        // cut-off energy for DoS (DoS vanishes above Emax)
+  double dosPar;      // parabolic form of the DoS for E->0: DoS(E) = dosPar*E*E for E->0
+  char   dosfn[250];  // Path to the DoS file
+
+  //Log file
+  FILE *filep;
+};
+
+// function declarations
+
+// total cross sections
+void precomputations(struct IncoherentPhonon_physics_storage_struct *data);
+
+// double differential cross section (not used, only for test)
+double dXS_dEp_dOmega(int type, double E, double Ep, double z, double *Smphon, struct IncoherentPhonon_physics_storage_struct *data);
+//double dXS_dEp_dOmega(int type, double E, double Ep, double z, struct IncoherentPhonon_physics_storage_struct *data);
+void compute_dXS_dEp_dOmega(struct IncoherentPhonon_physics_storage_struct *data);
+
+// build the final wave vector
+int build_K_final(double kabs, double ct, double *ki, double *kf);
+
+// sampling direction in phonon expansion (same function in any approximation: approximations only deal with Fp)
+double sampleDir(double x, double E, int p, struct IncoherentPhonon_physics_storage_struct *data);
+double angularIntegral_p_phonon(int p, double alpha, double x);
+
+///////////////////////////////////////
+// exact terms in phonon expansion ////
+///////////////////////////////////////
+double sampleKprime_1ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+double sampleKprime_2ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+double sampleKprime_3ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+int compute_dXSdx_max_1ph(int n, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax);
+int compute_dXSdx_max_2ph(int n, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax);
+int compute_dXSdx_max_3ph(int n, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax);
+double dXSdx_1ph(double x, double E, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdx_2ph(double x, double E, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdx_3ph(double x, double E, struct IncoherentPhonon_physics_storage_struct *data);
+double totXS_1ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+double totXS_2ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+double totXS_3ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+void computeFs(struct IncoherentPhonon_physics_storage_struct *data);
+void computeTotalXS_exact(struct IncoherentPhonon_physics_storage_struct *data);
+double F1(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double F2(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double F3(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double F2int(double u, double u1, struct IncoherentPhonon_physics_storage_struct *data);
+double F3int(double u, double u1, double u2, struct IncoherentPhonon_physics_storage_struct *data);
+double quadF2(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double trapezF2(double u, int n, double umin, double umax, struct IncoherentPhonon_physics_storage_struct *data);
+double quadF3(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double trapezF3(double u, int n, double umin, double umax, struct IncoherentPhonon_physics_storage_struct *data);
+double quadF3u2(double u, double u1, struct IncoherentPhonon_physics_storage_struct *data);
+double trapezF3u2(double u, double u1, int n, double umin, double umax, struct IncoherentPhonon_physics_storage_struct *data);
+////////////////////////////////////////////////////
+
+///////////////////////////////////
+// for exact Fps///////////////////
+double convolution(double u, int np, double *up, double *Fp, struct IncoherentPhonon_physics_storage_struct *data);
+void computeFps(int pmax, struct IncoherentPhonon_physics_storage_struct *data);
+//////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// multiphonon expansion in gaussian approximation ////////
+///////////////////////////////////////////////////////////
+double sampleKprime_pph_gauss(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdx_pph_gauss(int p, double x, double E, struct IncoherentPhonon_physics_storage_struct *data);
+double totXS_pph_gauss(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+void computeTotalXS_pph_gauss(struct IncoherentPhonon_physics_storage_struct *data);
+int compute_dXSdx_max_pph_gauss(int n, int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax);
+double Sgauss(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data);
+void computeEpsilon(struct IncoherentPhonon_physics_storage_struct *data);
+double epsilonInt(double u, double v, struct IncoherentPhonon_physics_storage_struct *data);
+///////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////
+// multiphonon expansion in saddle approximation ////////
+/////////////////////////////////////////////////////////
+double sampleKprime_pph_sp(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdx_pph_sp(int p, double x, double E, struct IncoherentPhonon_physics_storage_struct *data);
+double totXS_pph_sp(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+void computeTotalXS_pph_sp(struct IncoherentPhonon_physics_storage_struct *data);
+int compute_dXSdx_max_pph_sp(int n, int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax);
+double Fp_sp(int p, double u, struct IncoherentPhonon_physics_storage_struct *data);
+double Smp_phe(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data);
+double Smp_p(double u, double Q2, int p, struct IncoherentPhonon_physics_storage_struct *data);
+double Smp_p_int(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data);
+void tspInterp_p(double xi, double *tsp, double *g, double *d2gDg, struct IncoherentPhonon_physics_storage_struct *data);
+void computeSP_p(int ntsp, double ximin, double ximax, struct IncoherentPhonon_physics_storage_struct *data);
+double saddlePoint_p(double xi, struct IncoherentPhonon_physics_storage_struct *data);
+double integral_Smp_phe(double Q2, double tol, struct IncoherentPhonon_physics_storage_struct *data);
+//////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////
+// multi-phonon resumation saddle-point  ///////////
+////////////////////////////////////////////////////
+void sample_Kprime_and_Dir_mph(double kabs, double *x, double *z, struct IncoherentPhonon_physics_storage_struct *data);
+double sample_u_mph(double umax, struct IncoherentPhonon_physics_storage_struct *data);
+double sample_Q2_mph(double u, double Erat, struct IncoherentPhonon_physics_storage_struct *data);
+double totXS_mph(double kabs, struct IncoherentPhonon_physics_storage_struct *data);
+void compute_dXSdu_mph(struct IncoherentPhonon_physics_storage_struct *data);
+double quad_dXSdu_mph(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double trapez_dXSdu_mph(double u, int n, double Q2max, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdxdz_mph(double kabs, double x, double z, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdx_mph(double kabs, double x, struct IncoherentPhonon_physics_storage_struct *data);
+double dXSdz_mph(double kabs, double z, struct IncoherentPhonon_physics_storage_struct *data);
+double SFunc(double xi, double Q2, struct IncoherentPhonon_physics_storage_struct *data);
+double SFuncInterp(double xi, double Q2, struct IncoherentPhonon_physics_storage_struct *data);
+void computeSaddlePointSol(int ntsp, double ximin, double ximax, struct IncoherentPhonon_physics_storage_struct *data);
+void tspInterp(double xi, double *tsp, double *g, double *d2g, double *H, struct IncoherentPhonon_physics_storage_struct *data);
+double saddlePoint(double xi, struct IncoherentPhonon_physics_storage_struct *data);
+double Gt(double ti, struct IncoherentPhonon_physics_storage_struct *data);
+double dGt(double ti, struct IncoherentPhonon_physics_storage_struct *data);
+double d2Gt(double ti, struct IncoherentPhonon_physics_storage_struct *data);
+double Gtint(double u, double ti, struct IncoherentPhonon_physics_storage_struct *data);
+double dGtint(double u, double ti, struct IncoherentPhonon_physics_storage_struct *data);
+double d2Gtint(double u, double ti, struct IncoherentPhonon_physics_storage_struct *data);
+double quad_mp(double ti, struct IncoherentPhonon_physics_storage_struct *data, 
+               double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *));
+double trapez_mp(int n, double umin, double umax, double ti, 
+                 struct IncoherentPhonon_physics_storage_struct *data,
+		 double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *));
+void compute_dXSdQ2_max_mph(struct IncoherentPhonon_physics_storage_struct *data);
+void compute_SQ2_mph(struct IncoherentPhonon_physics_storage_struct *data);
+void compute_dXSdu_dXSdQ2_max_mph(struct IncoherentPhonon_physics_storage_struct *data);
+void computeTotalXS_mph_resum(struct IncoherentPhonon_physics_storage_struct *data);
+/////////////////////////////////////////////////////
+
+//////////////////////////////////////
+// exact correlation function S //////
+//////////////////////////////////////
+double exactS(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data);
+void getExactS(double Q2, double nu1, double nu2, struct IncoherentPhonon_physics_storage_struct *data);
+
+void computeGs(double s, double *rGs, double *iGs, struct IncoherentPhonon_physics_storage_struct *data);
+double realGsInt(double u, double s, struct IncoherentPhonon_physics_storage_struct *data);
+double imagGsInt(double u, double s, struct IncoherentPhonon_physics_storage_struct *data);
+///////////////////////////////////////
+
+/////////////////////////
+// general functions ////
+/////////////////////////
+double Gu(double u, struct IncoherentPhonon_physics_storage_struct *data);
+double bose(double x);
+double interpFunc(double u, int n, double *up, double *Fp);
+double quadFunc(double x1, double x2, double v, double tol, struct IncoherentPhonon_physics_storage_struct *data,
+		double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *));
+double trapezFunc(int n, double umin, double umax, double v, struct IncoherentPhonon_physics_storage_struct *data,
+		  double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *));
+/////////////////////////
+
+/////////////////////////
+// input/output etc. ////
+/////////////////////////
+void readDoS(struct IncoherentPhonon_physics_storage_struct *data);
+double dos(double E, struct IncoherentPhonon_physics_storage_struct *data);
+/////////////////////////
+
+void setParams(struct IncoherentPhonon_physics_storage_struct *data, 
+               int nphe_exact, int nphe_approx, int approx, int mph_resum,
+               double T, double density, double M, 
+	       double sigmaCoh, double sigmaInc,
+	       double kabsmin, double kabsmax, int nxs, 
+	       char *dosfn, int ntsp, double ximin, double ximax, char *filelog);
+
+int finish(struct IncoherentPhonon_physics_storage_struct *data);
+
+// end function declaration
+
+/*******************************************************************/
+
+// Function for calculating my in Incoherent phonon case
+int IncoherentPhonon_physics_my(double *my, double *k_initial, 
+          union data_transfer_union data_transfer, struct focus_data_struct *focus_data)
+{
+  struct IncoherentPhonon_physics_storage_struct *data = 
+                data_transfer.pointer_to_a_IncoherentPhonon_physics_storage_struct;
+
+  double kabs = sqrt(k_initial[0]*k_initial[0] +  k_initial[1]*k_initial[1] + k_initial[2]*k_initial[2]);
+  int p;
+
+  // exact terms in phonon expansion (at least the single phonon term)
+  data->xs1phe = interpFunc(kabs,data->nxs,data->kabs,data->xsTot_1ph);
+  data->xsTot = data->xs1phe;
+  if(data->nphe_exact>1) {
+    data->xs2phe = interpFunc(kabs,data->nxs,data->kabs,data->xsTot_2ph);
+    data->xsTot += data->xs2phe;
+  }
+  if(data->nphe_exact>2) {
+    data->xs3phe = interpFunc(kabs,data->nxs,data->kabs,data->xsTot_3ph);
+    data->xsTot += data->xs2phe;
+  }
+  
+  // approximate terms in phonon expansion (none if approx==0)
+  if(data->approx==1) {
+    // gaussian approximation
+    for(p=data->nphe_exact+1;p<=data->nphe_approx;p++) {
+      data->xs_p_phe_gauss[p] = interpFunc(kabs,data->nxs,data->kabs,data->xsTot_pph_gauss[p]);
+      data->xsTot +=  data->xs_p_phe_gauss[p];
+    }
+  } else if(data->approx==2) {
+    // saddle point approximation
+    for(p=data->nphe_exact+1;p<=data->nphe_approx;p++) {
+      data->xs_p_phe_sp[p] = interpFunc(kabs,data->nxs,data->kabs,data->xsTot_pph_sp[p]);
+      data->xsTot +=  data->xs_p_phe_sp[p];
+    }
+  }
+
+  // multi-phonon resummation (saddle-point)
+  if(data->mph_resum==1) {
+    data->xsmph = interpFunc(kabs,data->nxs,data->kabs,data->xsTot_mph);
+    data->xsTot +=  data->xsmph;
+  }
+
+  *my = (data->XS2mu)*data->xsTot;
+
+  return 1;
+};
+
+// Function for incoherent phonon scattering event
+int IncoherentPhonon_physics_scattering(double *k_final, double *k_initial, double *weight, 
+              union data_transfer_union data_transfer, struct focus_data_struct *focus_data)
+{
+  int p, type;
+  double kabs, E, x, ct, rnd, accum, xstot, ki[3];
+
+  struct IncoherentPhonon_physics_storage_struct *data = 
+                        data_transfer.pointer_to_a_IncoherentPhonon_physics_storage_struct;
+
+  ki[0] = k_initial[0];
+  ki[1] = k_initial[1];
+  ki[2] = k_initial[2];
+  
+  kabs = sqrt(ki[0]*ki[0]+ki[1]*ki[1]+ki[2]*ki[2]);
+  E = KS2E*kabs*kabs;
+
+  // there should be an extrapolation of the cross section from 
+  // kabs=kabsmin down to kabs=0 and from kabs=kabsmax to infinity
+  // master component will care to ABSORB the neutron
+  if(kabs<data->kabsmin || kabs>data->kabsmax) { return 0; } 
+
+  // sample scattering type
+  xstot = data->xsTot;
+
+  rnd = rand01();
+
+  // one phonon
+  accum = (data->xs1phe)/xstot; 
+  if(rnd<accum) {
+    //Sample energy
+    type = 1;
+    x = sampleKprime_1ph(kabs,data);
+    if(x<0) { 
+      fprintf(data->filep,
+         "sampleKprime_1ph returns negative: %f It seems maxIter=%d exceeded. Exiting\n",x,maxIter);
+      exit(1);
+    }
+    // Sample polar direction
+    ct = sampleDir(x,E,1,data);
+    if(ct<-1) { 
+      fprintf(data->filep,"sampleDir 1ph returns < -1: %f It seems maxIter exceeded. Exiting\n",ct);
+      exit(1);
+    }
+    // x = kprime/k, with normalized kprime
+    build_K_final(x*kabs,ct,ki,k_final);
+    *weight = 1.0;
+    return 1;
+  }
+
+  if(data->nphe_exact>1) {
+    // two phonon exact
+    accum += (data->xs2phe)/xstot; 
+    if(rnd<accum) {
+      //Sample energy
+      type = 2;
+      x = sampleKprime_2ph(kabs,data);
+      if(x<0) { 
+        fprintf(data->filep,
+          "sampleKprime_2ph returns negative: %f It seems maxIter=%d exceeded. Exiting\n",x,maxIter);
+        exit(1);
+      }
+      // Sample polar direction
+      ct = sampleDir(x,E,2,data);
+      if(ct<-1) { 
+        fprintf(data->filep,"sampleDir 2ph returns < -1: %f It seems maxIter exceeded. Exiting\n",ct);
+        exit(1);
+      }
+      // x = kprime/k, with normalized kprime
+      build_K_final(x*kabs,ct,ki,k_final);
+      *weight = 1.0;
+      return 1;
+    } 
+  }
+
+  if(data->nphe_exact>2) {
+    // three phonon exact
+    accum += (data->xs3phe)/xstot; 
+    if(rnd<accum) {
+      //Sample energy
+      type = 3;
+      x = sampleKprime_3ph(kabs,data);
+      if(x<0) { 
+        fprintf(data->filep,
+          "sampleKprime_3ph returns negative: %f It seems maxIter=%d exceeded. Exiting\n",x,maxIter);
+        exit(1);
+      }
+      // Sample polar direction
+      ct = sampleDir(x,E,3,data);
+      if(ct<-1) { 
+        fprintf(data->filep,"sampleDir 3ph returns < -1: %f It seems maxIter exceeded. Exiting\n",ct);
+        exit(1);
+      }
+      // x = kprime/k, with normalized kprime
+      build_K_final(x*kabs,ct,ki,k_final);
+      *weight = 1.0;
+      return 1;
+    }
+  }
+
+  if(data->approx==1) {
+    // p-phonon term gaussian approx
+    for(p=data->nphe_exact+1;p<=data->nphe_approx;p++) {
+      accum += (data->xs_p_phe_gauss)[p]/xstot; 
+      if(rnd<accum) {
+        //Sample energy
+        type = p;
+        x = sampleKprime_pph_gauss(p,kabs,data);
+        if(x<0) { 
+          fprintf(data->filep,
+            "sampleKprime_pph_gauss returns negative: %f It seems maxIter=%d exceeded. Exiting\n",x,maxIter);
+          exit(1);
+        }
+        // Sample polar direction
+        ct = sampleDir(x,E,p,data);
+        if(ct<-1) { 
+          fprintf(data->filep,"sampleDir p-ph gaussian returns < -1: %f It seems maxIter exceeded. Exiting\n",ct);
+          exit(1);
+        }
+        // x = kprime/k, with normalized kprime
+        build_K_final(x*kabs,ct,ki,k_final);
+        *weight = 1.0;
+        return 1;
+      } 
+    }
+  } else if (data->approx==2) {
+    // p-phonon term saddle point approx
+    for(p=data->nphe_exact+1;p<=data->nphe_approx;p++) {
+      accum += (data->xs_p_phe_sp)[p]/xstot; 
+      if(rnd<accum) {
+        //Sample energy
+        type = p;
+        x = sampleKprime_pph_sp(p,kabs,data);
+        if(x<0) { 
+          fprintf(data->filep,
+            "sampleKprime_pph_sp returns negative: %f It seems maxIter=%d exceeded. Exiting\n",x,maxIter);
+          exit(1);
+        }
+        // Sample polar direction
+        ct = sampleDir(x,E,p,data);
+        if(ct<-1) { 
+          fprintf(data->filep,"sampleDir p-ph saddle point returns < -1: %f It seems maxIter exceeded. Exiting\n",ct);
+          exit(1);
+        }
+        // x = kprime/k, with normalized kprime
+        build_K_final(x*kabs,ct,ki,k_final);
+        *weight = 1.0;
+        return 1;
+      }
+    }
+  }
+
+  if (data->mph_resum==1) {
+   //multi-phonon resummation
+   accum += (data->xsmph)/xstot; 
+   if(rnd<accum) {
+     type = 0;
+     //Sample energy and polar direction
+      sample_Kprime_and_Dir_mph(kabs,&x,&ct,data);
+      // x = kprime/k, with normalized kprime
+      build_K_final(x*kabs,ct,ki,k_final);
+      *weight = 1.0;
+      return 1;
+    }
+  }
+
+  // Should not be here
+  printf("IncoherentPhonon_physics_scattering: no scattering happnes !!\n");
+  printf("rnd: %f  accum: %f\n",rnd,accum);
+  printf("cross sections\n");
+  printf("Total: %.6e\n",data->xsTot);
+  printf("1ph:   %.6e\n",data->xs1phe);
+  if(data->nphe_exact>1) { printf("2ph:   %.6e\n",data->xs2phe); }
+  if(data->nphe_exact>2) { printf("3ph:   %.6e\n",data->xs3phe); }
+  if(data->approx==1) {
+    for(p=data->nphe_exact+1;p<=data->nphe_approx;p++) {
+      printf("%dph:   %.6e\n",p,data->xs_p_phe_gauss[p]);
+    }
+  } else if(data->approx==2) {
+    for(p=data->nphe_exact+1;p<=data->nphe_approx;p++) {
+      printf("%dph:   %.6e\n",p,data->xs_p_phe_sp[p]);
+    }
+  }
+  if (data->mph_resum) {
+    printf("mph:   %.6e\n",data->xsmph);
+  }
+  printf("Exiting ...\n");
+  fflush(stdout);
+  exit(1);
+};
+
+int build_K_final(double kabs, double ct, double *ki, double *kf)
+{
+  double t1[3], t2[3];
+  double st = sqrt(1.-ct*ct);
+  
+  // sample azimuthal direction
+  double phi = 2.*PI*rand01();
+  double cp = cos(phi);
+  double sp = sin(phi);
+
+  // build kprime (ki,t1,t2) orthonormal right handed triad
+  NORM(ki[0],ki[1],ki[2]);
+  normal_vec(t1[0],t1[1],t1[2],ki[0],ki[1],ki[2]);
+  vec_prod(t2[0],t2[1],t2[2],ki[0],ki[1],ki[2],t1[0],t1[1],t1[2]);
+
+  kf[0] = ct*ki[0] + st*(cp*t1[0] + sp*t2[0]);
+  kf[1] = ct*ki[1] + st*(cp*t1[1] + sp*t2[1]);
+  kf[2] = ct*ki[2] + st*(cp*t1[2] + sp*t2[2]);
+
+  kf[0] = kabs*kf[0]; 
+  kf[1] = kabs*kf[1];
+  kf[2] = kabs*kf[2];
+
+  return 0;
+};
+
+// Start implementation of internal functions
+
+void precomputations(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, p, pmax;
+  double h = 4.13567; // planck constant in meV*ps
+  double dkabs, Q2, g0;
+  double xi, dxi, fac1, fac2, yp;
+  FILE *filep;
+
+  fprintf(data->filep,"precomputations: start\n");
+  fflush(data->filep);
+
+  g0 = data->g0;
+
+  /*
+  // computes and writes in file the exact Fp functions. Only for tests
+  pmax = 20;
+  computeFps(pmax,data);
+  fprintf(data->filep,"precomputations: Fps done\n");
+  fflush(data->filep);
+  //exit(1);
+  */
+
+  // precompute exact phonon terms
+  computeFs(data);
+  fprintf(data->filep,"precomputations: FS done\n");
+  fflush(data->filep);
+  computeTotalXS_exact(data);
+  fprintf(data->filep,"precomputations: exact total XS done\n");
+  fflush(data->filep);
+
+  // NULL pointers
+  data->xsTot_pph_gauss = NULL;
+  data->dXSdx_xmax_pph_gauss = NULL;
+  data->dXSdx_Fmax_pph_gauss = NULL;
+  data->xsTot_pph_sp = NULL;
+  data->dXSdx_xmax_pph_sp = NULL;
+  data->dXSdx_Fmax_pph_sp = NULL;
+
+  if(data->approx==1) {
+    // precompute gaussian data
+    fprintf(data->filep,"precomputations: gaussian p-phonon done\n");
+    fflush(data->filep);
+    computeTotalXS_pph_gauss(data); 
+    fprintf(data->filep,"precomputations: total XS p-phonon gaussian done\n");
+    fflush(data->filep);
+  } else if(data->approx==2) {
+    computeSP_p(data->ntsp_p,data->ximin_p,data->ximax_p,data);
+    fprintf(data->filep,"precomputations: SP p-phonon done\n");
+    fflush(data->filep);
+    computeTotalXS_pph_sp(data);
+    fprintf(data->filep,"precomputations: total XS p-phonon SP done\n");
+    fflush(data->filep); 
+  }
+
+  if(data->mph_resum==1) { 
+    computeSaddlePointSol(data->ntsp,data->ximin,data->ximax,data);
+    fprintf(data->filep,"precomputations: computeSaddlePointSol done\n");
+    fflush(data->filep);
+    compute_SQ2_mph(data);
+    fprintf(data->filep,"precomputations: compute_SQ2_mph done\n");
+    fflush(data->filep);
+    compute_dXSdu_dXSdQ2_max_mph(data);
+    fprintf(data->filep,"precomputations: compute_dXSdu_dXSdQ2_max_mph done\n");
+    fflush(data->filep);
+    computeTotalXS_mph_resum(data);
+    fprintf(data->filep,"precomputations: total XS multi-phonon resummation done\n");
+    fflush(data->filep);
+  }
+
+  fprintf(data->filep,"precompuations: finished\n");
+  fflush(data->filep);
+};
+
+void computeTotalXS_exact(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, nxs;
+  double aux, dkabs;
+  FILE *filep;
+
+  //exact 1-ph
+  filep = fopen("XS_1ph_exact.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeTotalXS: reading XS 1-ph from file\n");
+    fflush(data->filep);
+    fscanf(filep,"%d",&(data->nxs));
+    data->kabs = (double *)malloc((data->nxs)*sizeof(double));
+    data->xsTot_1ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_1ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_1ph = (double *)malloc((data->nxs)*sizeof(double));
+    for(i=0;i<data->nxs;i++) {
+      fscanf(filep,"%lf %lf %lf %lf",(data->kabs)+i,(data->xsTot_1ph)+i,
+             (data->dXSdx_xmax_1ph)+i,(data->dXSdx_Fmax_1ph)+i);
+    }
+    fclose(filep);
+  } else {
+    data->kabs = (double *)malloc((data->nxs)*sizeof(double));
+    data->xsTot_1ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_1ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_1ph = (double *)malloc((data->nxs)*sizeof(double));
+    dkabs = (data->kabsmax-data->kabsmin)/(data->nxs);
+    fprintf(data->filep,"computeTotalXS: computing XS 1-ph exact\n");
+    fflush(data->filep);
+    (data->kabs)[0] = data->kabsmin;
+    for(i=1;i<data->nxs;i++) {
+      (data->kabs)[i] = (data->kabs)[i-1] + dkabs;
+    }
+    //compute and write the results
+    filep = fopen("XS_1ph_exact.txt","w");
+    fprintf(filep,"%d\n",data->nxs);
+    for(i=0;i<data->nxs;i++) {
+      (data->xsTot_1ph)[i] = totXS_1ph((data->kabs)[i],data);
+      compute_dXSdx_max_1ph(1000,(data->kabs)[i],data,(data->dXSdx_xmax_1ph)+i,(data->dXSdx_Fmax_1ph)+i);
+      fprintf(filep,"%f %.6e %.6e %.6e\n",(data->kabs)[i],(data->xsTot_1ph)[i],
+              (data->dXSdx_xmax_1ph)[i], (data->dXSdx_Fmax_1ph)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+
+  if(data->nphe_exact==1) { 
+    data->xsTot_2ph = NULL;
+    data->dXSdx_xmax_2ph = NULL;
+    data->dXSdx_Fmax_2ph = NULL;
+    data->xsTot_3ph = NULL;
+    data->dXSdx_xmax_3ph = NULL;
+    data->dXSdx_Fmax_3ph = NULL;
+    return;
+  }
+
+  //exact 2-ph
+  filep = fopen("XS_2ph_exact.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeTotalXS: reading XS 2-ph from file\n");
+    fflush(data->filep);
+    fscanf(filep,"%d",&nxs);
+    if(nxs != data->nxs) {
+      fprintf(data->filep,"XS_2ph_exact.txt: different nxs: %d %d\n",nxs,data->nxs);
+      fprintf(data->filep,"Exiting...\n");
+      fclose(data->filep);
+      printf("XS_2ph_exact.txt: different nxs: %d %d\n",nxs,data->nxs);
+      printf("Exiting...\n");
+      fflush(stdout);
+      exit(1);
+    }
+    data->xsTot_2ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_2ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_2ph = (double *)malloc((data->nxs)*sizeof(double));
+    for(i=0;i<data->nxs;i++) {
+      fscanf(filep,"%lf %lf %lf %lf",&aux,(data->xsTot_2ph)+i,
+             (data->dXSdx_xmax_2ph)+i,(data->dXSdx_Fmax_2ph)+i);
+    }
+    fclose(filep);
+  } else {
+    data->xsTot_2ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_2ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_2ph = (double *)malloc((data->nxs)*sizeof(double));
+    fprintf(data->filep,"computeTotalXS: computing XS 2-ph exact\n");
+    fflush(data->filep);
+    //compute and write the results
+    filep = fopen("XS_2ph_exact.txt","w");
+    fprintf(filep,"%d\n",data->nxs);
+    for(i=0;i<data->nxs;i++) {
+      (data->xsTot_2ph)[i] = totXS_2ph((data->kabs)[i],data);
+      compute_dXSdx_max_2ph(1000,(data->kabs)[i],data,(data->dXSdx_xmax_2ph)+i,(data->dXSdx_Fmax_2ph)+i);
+      fprintf(filep,"%f %.6e %.6e %.6e\n",(data->kabs)[i],(data->xsTot_2ph)[i],
+              (data->dXSdx_xmax_2ph)[i], (data->dXSdx_Fmax_2ph)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+
+  if(data->nphe_exact==2) { 
+    data->xsTot_3ph = NULL;
+    data->dXSdx_xmax_3ph = NULL;
+    data->dXSdx_Fmax_3ph = NULL;
+    return;
+  }
+
+  //exact 3-ph
+  filep = fopen("XS_3ph_exact.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeTotalXS: reading XS 3-ph from file\n");
+    fflush(data->filep);
+    fscanf(filep,"%d",&nxs);
+    if(nxs != data->nxs) {
+      fprintf(data->filep,"XS_3ph_exact.txt: different nxs: %d %d\n",nxs,data->nxs);
+      fprintf(data->filep,"Exiting...\n");
+      fclose(data->filep);
+      printf("XS_3ph_exact.txt: different nxs: %d %d\n",nxs,data->nxs);
+      printf("Exiting...\n");
+      fflush(stdout);
+      exit(1);
+    }
+    data->xsTot_3ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_3ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_3ph = (double *)malloc((data->nxs)*sizeof(double));
+    for(i=0;i<data->nxs;i++) {
+      fscanf(filep,"%lf %lf %lf %lf",&aux,(data->xsTot_3ph)+i,
+             (data->dXSdx_xmax_3ph)+i,(data->dXSdx_Fmax_3ph)+i);
+    }
+    fclose(filep);
+  } else {
+    data->xsTot_3ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_3ph = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_3ph = (double *)malloc((data->nxs)*sizeof(double));
+    
+    fprintf(data->filep,"computeTotalXS: computing XS 3-ph exact\n");
+    fflush(data->filep);
+    
+    //compute and write the results
+    filep = fopen("XS_3ph_exact.txt","w");
+    fprintf(filep,"%d\n",data->nxs);
+    for(i=0;i<data->nxs;i++) {
+      (data->xsTot_3ph)[i] = totXS_3ph((data->kabs)[i],data);
+      compute_dXSdx_max_3ph(1000,(data->kabs)[i],data,(data->dXSdx_xmax_3ph)+i,(data->dXSdx_Fmax_3ph)+i);
+      fprintf(filep,"%f %.6e %.6e %.6e\n",(data->kabs)[i],(data->xsTot_3ph)[i],
+              (data->dXSdx_xmax_3ph)[i], (data->dXSdx_Fmax_3ph)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+};
+
+void computeTotalXS_pph_gauss(struct IncoherentPhonon_physics_storage_struct *data)
+{ 
+  int i, p, pmax, pread, pr, nxs;
+  double aux;
+  FILE *filep;
+
+  data->xsTot_pph_gauss = (double **)malloc((data->nphe_approx+1)*sizeof(double *));
+  data->dXSdx_xmax_pph_gauss = (double **)malloc((data->nphe_approx+1)*sizeof(double *));
+  data->dXSdx_Fmax_pph_gauss = (double **)malloc((data->nphe_approx+1)*sizeof(double *));
+  // 0 compoent not used
+  data->xsTot_pph_gauss[0] = NULL;
+  data->dXSdx_xmax_pph_gauss[0] = NULL;
+  data->dXSdx_Fmax_pph_gauss[0] = NULL;
+  // allocate remaining
+  for(p=1;p<=data->nphe_approx;p++) {
+    data->xsTot_pph_gauss[p] = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_pph_gauss[p] = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_pph_gauss[p] = (double *)malloc((data->nxs)*sizeof(double));
+  }
+
+  pread = 0;
+  filep = fopen("XS_pph_gauss.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeTotalXS_pph_gauss: reading XS p-phonon gaussian from file\n");
+    fflush(data->filep);
+    fscanf(filep,"%d %d",&pmax,&nxs);
+    if(nxs != data->nxs) {
+      fprintf(data->filep,"XS_pph_gauss.txt: different nxs: %d %d\n",nxs,data->nxs);
+      fprintf(data->filep,"Exiting...\n");
+      fclose(data->filep);
+      printf("XS_pph_gauss.txt: different nxs: %d %d\n",nxs,data->nxs);
+      printf("Exiting...\n");
+      fflush(stdout);
+      exit(1);
+    }
+    if(data->nphe_approx<=pmax) { pread = data->nphe_approx; } else { pread = pmax; }
+    for(p=1;p<=pread;p++) {
+      for(i=0;i<data->nxs;i++) {
+        fscanf(filep,"%d %lf %lf %lf %lf",&pr,&aux,(data->xsTot_pph_gauss)[p]+i,
+                    (data->dXSdx_xmax_pph_gauss)[p]+i,(data->dXSdx_Fmax_pph_gauss)[p]+i);
+      }
+    }
+    fclose(filep);
+    if(pread == data->nphe_approx) { return; }
+  }
+  // compute what has not been read
+  for(p=pread+1;p<=data->nphe_approx;p++) {
+    for(i=0;i<data->nxs;i++) {
+      (data->xsTot_pph_gauss)[p][i] = totXS_pph_gauss(p,(data->kabs)[i],data);
+      compute_dXSdx_max_pph_gauss(1000,p,(data->kabs)[i],data,
+             (data->dXSdx_xmax_pph_gauss)[p]+i,(data->dXSdx_Fmax_pph_gauss)[p]+i);
+    }
+  }
+  //write the results
+  filep = fopen("XS_pph_gauss.txt","w");
+  fprintf(filep,"%d %d\n",data->nphe_approx,data->nxs);
+  for(p=1;p<=data->nphe_approx;p++) {
+    for(i=0;i<data->nxs;i++) {
+       fprintf(filep,"%d %f %.6e %.6e %.6e\n",p,data->kabs[i],(data->xsTot_pph_gauss)[p][i],
+               (data->dXSdx_xmax_pph_gauss)[p][i],(data->dXSdx_Fmax_pph_gauss)[p][i]);
+     }
+  }
+  fclose(filep);
+};
+
+void computeTotalXS_pph_sp(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, p, pmax, pread, pr, nxs;
+  double aux;
+  FILE *filep;
+
+  data->xsTot_pph_sp = (double **)malloc((data->nphe_approx+1)*sizeof(double *));
+  data->dXSdx_xmax_pph_sp = (double **)malloc((data->nphe_approx+1)*sizeof(double *));
+  data->dXSdx_Fmax_pph_sp = (double **)malloc((data->nphe_approx+1)*sizeof(double *));
+  data->xsTot_pph_sp[0] = NULL;
+  data->dXSdx_xmax_pph_sp[0] = NULL;
+  data->dXSdx_Fmax_pph_sp[0] = NULL;
+  for(p=1;p<=data->nphe_approx;p++) {
+    data->xsTot_pph_sp[p] = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_xmax_pph_sp[p] = (double *)malloc((data->nxs)*sizeof(double));
+    data->dXSdx_Fmax_pph_sp[p] = (double *)malloc((data->nxs)*sizeof(double));
+  }
+
+  pread = 0;
+  filep = fopen("XS_pph_sp.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeTotalXS_pph_sp: reading XS p-phonon saddle-point from file\n");
+    fflush(data->filep);
+    fscanf(filep,"%d %d",&pmax,&nxs);
+    if(nxs != data->nxs) {
+      fprintf(data->filep,"XS_pph_sp.txt: different nxs: %d %d\n",nxs,data->nxs);
+      fprintf(data->filep,"Exiting...\n");
+      fclose(data->filep);
+      printf("XS_pph_sp.txt: different nxs: %d %d\n",nxs,data->nxs);
+      printf("Exiting...\n");
+      fflush(stdout);
+      exit(1);
+    }
+    if(data->nphe_approx<=pmax) { pread = data->nphe_approx; } else { pread = pmax; }
+    for(p=1;p<=pread;p++) {
+      for(i=0;i<data->nxs;i++) {
+        fscanf(filep,"%d %lf %lf %lf %lf",&pr,&aux,(data->xsTot_pph_sp)[p]+i,
+                     (data->dXSdx_xmax_pph_sp)[p]+i,(data->dXSdx_Fmax_pph_sp)[p]+i);
+      }
+    }
+    fclose(filep);
+    if(pread == data->nphe_approx) { return; }
+  }
+  // compute what is has not been read
+  for(p=pread+1;p<=data->nphe_approx;p++) {
+    for(i=0;i<data->nxs;i++) {
+      (data->xsTot_pph_sp)[p][i] = totXS_pph_sp(p,(data->kabs)[i],data);
+      compute_dXSdx_max_pph_sp(1000,p,(data->kabs)[i],data,
+             (data->dXSdx_xmax_pph_sp)[p]+i,(data->dXSdx_Fmax_pph_sp)[p]+i);
+    }
+  }
+  //write the results
+  filep = fopen("XS_pph_sp.txt","w");
+  fprintf(filep,"%d %d\n",data->nphe_approx,data->nxs);
+  for(p=1;p<=data->nphe_approx;p++) {
+    for(i=0;i<data->nxs;i++) {
+       fprintf(filep,"%d %f %.6e %.6e %.6e\n",p,data->kabs[i],(data->xsTot_pph_sp)[p][i],
+              (data->dXSdx_xmax_pph_sp)[p][i],(data->dXSdx_Fmax_pph_sp)[p][i]);
+     }
+  }
+  fclose(filep);
+};
+
+void computeTotalXS_mph_resum(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, nxs;
+  double aux;
+  FILE *filep;
+  filep = fopen("XS_mph_resum.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeTotalXS_mph_resum: reading XS multi-phonon resum from file\n");
+    fflush(data->filep);
+    fscanf(filep,"%d",&nxs);
+    if(nxs != data->nxs) {
+      fprintf(data->filep,"XS_mph_resum.txt: different nxs: %d %d\n",nxs,data->nxs);
+      fprintf(data->filep,"Exiting...\n");
+      fclose(data->filep);
+      printf("XS_mph_resum.txt: different nxs: %d %d\n",nxs,data->nxs);
+      printf("Exiting...\n");
+      fflush(stdout);
+      exit(1);
+    }
+    data->xsTot_mph = (double *)malloc((data->nxs)*sizeof(double));
+    for(i=0;i<data->nxs;i++) { 
+      fscanf(filep,"%lf %lf",&aux,(data->xsTot_mph)+i);
+    }
+    fclose(filep);
+  } else {
+    data->xsTot_mph = (double *)malloc((data->nxs)*sizeof(double));
+    //compute and write the results
+    filep = fopen("XS_mph_resum.txt","w");
+    fprintf(filep,"%d\n",data->nxs);
+    for(i=0;i<data->nxs;i++) {
+      (data->xsTot_mph)[i] = totXS_mph((data->kabs)[i],data);
+      fprintf(filep,"%f %.6e\n",(data->kabs)[i],(data->xsTot_mph)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+};
+
+////////////////////////////////////
+// Exact phonon expansion terms ////
+////////////////////////////////////
+
+double sampleKprime_1ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  //x = kprime/k
+  int i;
+  double x, px;
+  double E = KS2E*kabs*kabs;
+  double iErat = data->Emax/E;
+  double pxmax = interpFunc(kabs,data->nxs,data->kabs,data->dXSdx_Fmax_1ph);
+  double xmax = sqrt(1. + iErat);
+  double xmin, delta_x;
+  if(iErat<1.0) { xmin = sqrt(1.0 - iErat); } else { xmin = 0; }
+  delta_x = xmax - xmin;
+  FILE *filep;
+  for(i=0;i<maxIter;i++) {
+    x =  xmin + delta_x*rand01();
+    px = dXSdx_1ph(x,E,data);
+    if(px>pxmax) {
+      fprintf(data->filep,"sampleKprime_1ph:\n");
+      fprintf(data->filep,"x: %.6e\n",x);
+      fprintf(data->filep,"xmax: %.6e\n",xmax);
+      fprintf(data->filep,"pxmax: %.6e\n",pxmax);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"px/pxmax: %.6e\n",px/pxmax);
+      filep = fopen("dXSdx_1ph.txt","w");
+      x = 0;
+      while(x<=xmax) {
+	px = dXSdx_1ph(x,E,data);
+	fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+	x += xmax/1000;
+      }
+      fclose(filep);
+      exit(1);
+    }
+    if(px/pxmax>rand01()) { return x; }
+  }
+  //What happens if maxIter is exceeded?? return negative value to control
+  fprintf(data->filep,"sampleKprime_1ph: maxIter exceeded\n");
+  filep = fopen("dXSdx_1ph_maxIter_exceeded.txt","w");
+  x = 0;
+  while(x<=xmax) {
+    px = dXSdx_1ph(x,E,data);
+    fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+    x += xmax/1000;
+  }
+  fclose(filep);
+  return -1;
+};
+
+double sampleKprime_2ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  //x = kprime/k
+  int i;
+  double x, px;
+  double E = KS2E*kabs*kabs;
+  double iErat = data->Emax/E;
+  double pxmax = interpFunc(kabs,data->nxs,data->kabs,data->dXSdx_Fmax_2ph);
+  double xmax = sqrt(1. + 2.0*iErat);
+  double xmin, delta_x;
+  if(iErat<0.5) { xmin = sqrt(1.0 - 2.0*iErat); } else { xmin = 0; }
+  delta_x = xmax - xmin;
+  FILE *filep;
+  for(i=0;i<maxIter;i++) {
+    x =  xmin + delta_x*rand01();
+    px = dXSdx_2ph(x,E,data);
+    if(px>pxmax) {
+      fprintf(data->filep,"sampleKprime_2ph:\n");
+      fprintf(data->filep,"x: %.6e\n",x);
+      fprintf(data->filep,"xmax: %.6e\n",xmax);
+      fprintf(data->filep,"pxmax: %.6e\n",pxmax);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"px/pxmax: %.6e\n",px/pxmax);
+      filep = fopen("dXSdx_2ph.txt","w");
+      x = 0;
+      while(x<=xmax) {
+	px = dXSdx_2ph(x,E,data);
+	fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+	x += xmax/1000;
+      }
+      fclose(filep);
+      exit(1);
+    }
+    if(px/pxmax>rand01()) { return x; }
+  }
+  //What happens if maxIter is exceeded?? return negative value to control
+  filep = fopen("dXSdx_2ph_maxIter_exceeded.txt","w");
+  x = 0;
+  while(x<=xmax) {
+    px = dXSdx_2ph(x,E,data);
+    fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+    x += xmax/1000;
+  }
+  fclose(filep);
+  return -1;
+};
+
+double sampleKprime_3ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  //x = kprime/k
+  int i;
+  double x, px;
+  double E = KS2E*kabs*kabs;
+  double iErat = data->Emax/E;
+  double pxmax = interpFunc(kabs,data->nxs,data->kabs,data->dXSdx_Fmax_3ph);
+  double xmax = sqrt(1.+3.0*iErat);
+  double xmin, delta_x;
+  if(iErat<1./3.) { xmin = sqrt(1.0 - 3.0*iErat); } else { xmin = 0; }
+  delta_x = xmax - xmin;
+  FILE *filep;
+  for(i=0;i<maxIter;i++) {
+    x =  xmin + delta_x*rand01();
+    px = dXSdx_3ph(x,E,data);
+    if(px>pxmax) {
+      fprintf(data->filep,"sampleKprime_3ph:\n");
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"xmax: %.6e\n",xmax);
+      fprintf(data->filep,"pxmax: %.6e\n",pxmax);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"px/pxmax: %.6e\n",px/pxmax);
+      filep = fopen("dXSdx_3ph.txt","w");
+      x = 0;
+      while(x<=xmax) {
+	px = dXSdx_3ph(x,E,data);
+	fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+	x += xmax/1000;
+      }
+      fclose(filep);
+      exit(1);
+    }
+    if(px/pxmax>rand01()) { return x; }
+  }
+  //What happens if maxIter is exceeded?? return negative value to control
+  filep = fopen("dXSdx_3ph_maxIter_exceeded.txt","w");
+  x = 0;
+  while(x<=xmax) {
+    px = dXSdx_3ph(x,E,data);
+    fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+    x += xmax/1000;
+  }
+  fclose(filep);
+  return -1;
+};
+
+double sampleDir(double x, double E, int p, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // return z=cos(theta)
+  if(x<=0) { return 1; }
+  int i;
+  double z, Q2, pz, pzmax;
+  double g0 = data->g0;
+  double fac = (E/(data->Emax))*(data->mRat);
+  double Q2min = fac*pow(1-x,2);
+  double Q2max = fac*pow(1+x,2);
+  double Q2med = p/g0;
+  double pz1 = exp(-g0*Q2min)*pow(Q2min,p);
+  double pz2 = exp(-g0*Q2med)*pow(Q2med,p);
+  double pz3 = exp(-g0*Q2max)*pow(Q2max,p);
+  double dQ2 = Q2max - Q2min;
+
+  //determine the maximum
+  if(pz1>pz3) { pzmax = pz1; } else { pzmax = pz3; }
+  if(Q2min<Q2med && Q2med<Q2max && pz2>pzmax) { pzmax = pz2; }
+ 
+  for(i=0;i<maxIter;i++) {
+    z = -1.0 + 2.0*rand01();
+    Q2 = fac*(1 + x*x - 2.0*x*z);
+    pz = exp(-g0*Q2)*pow(Q2,p);
+    if(pz/pzmax>1) { 
+      fprintf(data->filep,"sampleDir:\n");
+      fprintf(data->filep,"Q2min: %f\n",Q2min);
+      fprintf(data->filep,"Q2med: %f\n",Q2med);
+      fprintf(data->filep,"Q2max: %f\n",Q2max);
+      fprintf(data->filep,"Q2: %f\n",Q2);
+      fprintf(data->filep,"pz1: %.6e\n",pz1);
+      fprintf(data->filep,"pz2: %.6e\n",pz2);
+      fprintf(data->filep,"pz3: %.6e\n",pz3);
+      fprintf(data->filep,"pzmax: %.6e\n",pzmax);
+      fprintf(data->filep,"pz: %.6e\n",pz);
+      fprintf(data->filep,"pz/pzmax: %.6e\n",pz/pzmax);
+      exit(1);
+    }
+    if(pz/pzmax>rand01()) { return z; }
+  }
+
+  //What happens if maxIter is exceeded?? return -1000 to control
+  return -1000;
+};
+
+int compute_dXSdx_max_1ph(int n, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax)
+{
+  int i;
+  double x, xmax, dx, ss;
+  double E = KS2E*kabs*kabs;
+
+  xmax = sqrt(1.+(data->Emax)/E);
+  dx = xmax/n;
+
+  x = 0;
+  *xm = 0;
+  *xsDiffMax = dXSdx_1ph(x,E,data);
+  for(i=0;i<n;i++) {
+    x += dx;
+    ss = dXSdx_1ph(x,E,data);
+    if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+  }
+  ss = dXSdx_1ph(xmax,E,data);
+  if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = xmax; }
+  // refine
+  if(*xm>0 && *xm<xmax) {
+    xmax = *xm + dx;
+    x = *xm - dx;
+    dx /= 100;
+    *xm = x;
+    *xsDiffMax = dXSdx_1ph(x,E,data);
+    for(i=0;i<200;i++) {
+      x += dx;
+      ss = dXSdx_1ph(x,E,data);
+      if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+    }
+  }
+  // security
+  *xsDiffMax *= 1.01;
+
+  return 0; 
+};
+
+int compute_dXSdx_max_2ph(int n, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax)
+{
+  int i;
+  double x, xmax, dx, ss;
+  double E = KS2E*kabs*kabs;
+
+  xmax = sqrt(1.+2.*(data->Emax)/E);
+  dx = xmax/n;
+
+  x = 0;
+  *xm = 0;
+  *xsDiffMax = dXSdx_2ph(x,E,data);
+  for(i=0;i<n;i++) {
+    x += dx;
+    ss = dXSdx_2ph(x,E,data);
+    if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+  }
+  ss = dXSdx_2ph(xmax,E,data);
+  if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = xmax; }
+  // refine
+  if(*xm>0 && *xm<xmax) {
+    xmax = *xm + dx;
+    x = *xm - dx;
+    dx /= 100;
+    *xm = x;
+    *xsDiffMax = dXSdx_2ph(x,E,data);
+    for(i=0;i<200;i++) {
+      x += dx;
+      ss = dXSdx_2ph(x,E,data);
+      if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+    }
+  }
+  // security
+  *xsDiffMax *= 1.01;
+
+  return 0; 
+};
+
+int compute_dXSdx_max_3ph(int n, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax)
+{
+  int i;
+  double x, xmax, dx, ss;
+  double E = KS2E*kabs*kabs;
+
+  xmax = sqrt(1.+3.*(data->Emax)/E);
+  dx = xmax/n;
+
+  x = 0;
+  *xm = 0;
+  *xsDiffMax = dXSdx_3ph(x,E,data);
+  for(i=0;i<n;i++) {
+    x += dx;
+    ss = dXSdx_3ph(x,E,data);
+    if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+  }
+  ss = dXSdx_3ph(xmax,E,data);
+  if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = xmax; }
+  // refine
+  if(*xm>0 && *xm<xmax) {
+    xmax = *xm + dx;
+    x = *xm - dx;
+    dx /= 100;
+    *xm = x;
+    *xsDiffMax = dXSdx_3ph(x,E,data);
+    for(i=0;i<200;i++) {
+      x += dx;
+      ss = dXSdx_3ph(x,E,data);
+      if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+    }
+  }
+  // security
+  *xsDiffMax *= 1.01; 
+
+  return 0;
+};
+
+double dXSdx_1ph(double x, double E, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Erat = E/(data->Emax);
+  double u = Erat*(1.0-x*x);
+  if(fabs(u)>1) { return 0; }
+  double Fp = interpFunc(u,data->nF1,data->u1,data->F1);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"dXSdx_1ph: F1 not interpolated\n");
+    exit(1);
+  }
+  double alpha = Erat*(data->mRat)*(data->g0);
+  double ang = angularIntegral_p_phonon(1,alpha,x);
+  return x*Fp*ang;
+};
+
+double dXSdx_2ph(double x, double E, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Erat = E/(data->Emax);
+  double u = Erat*(1.0-x*x);
+  if(fabs(u)>2) { return 0; }
+  double Fp = interpFunc(u,data->nF2,data->u2,data->F2);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"dXSdx_2ph: F2 not interpolated\n");
+    exit(1);
+  }
+  double alpha = Erat*(data->mRat)*(data->g0);
+  double ang = angularIntegral_p_phonon(2,alpha,x);
+  return x*Fp*ang;
+};
+
+double dXSdx_3ph(double x, double E, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Erat = E/(data->Emax);
+  double u = Erat*(1.0-x*x);
+  if(fabs(u)>3) { return 0; }
+  double Fp = interpFunc(u,data->nF3,data->u3,data->F3);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"dXSdx_3ph: F3 not interpolated\n");
+    exit(1);
+  }
+  double alpha = Erat*(data->mRat)*(data->g0);
+  double ang = angularIntegral_p_phonon(3,alpha,x);
+  return x*Fp*ang;
+};
+
+double angularIntegral_p_phonon(int p, double alpha, double x)
+{
+  int l;
+  double pol, term, ang;
+  double ym = alpha*pow(1.0-x,2);
+  double yp = alpha*pow(1.0+x,2);
+  pol = 1;
+  term = 1; 
+  for(l=1;l<=p;l++) {
+    term *= ym/l;
+    pol += term;
+  }
+  ang = exp(-ym)*pol;
+  //
+  pol = 1;
+  term = 1; 
+  for(l=1;l<=p;l++) {
+    term *= yp/l;
+    pol += term;
+  }
+  ang -= exp(-yp)*pol;
+
+  return ang;
+};
+
+double totXS_1ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double f, ym, yp, u, Fp, ss, x, xmin, xmax, dx;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double alpha = Erat*(data->mRat)*(data->g0);
+
+  n = 10000;
+  if(Erat>1.0) { xmin = sqrt(1.0 - 1.0/Erat); } else { xmin = 0; }
+  xmax = sqrt(1.0 + 1.0/Erat);
+  dx = (xmax-xmin)/n;
+
+  x = xmin;
+  u = Erat*(1.0-x*x);
+  Fp = interpFunc(u,data->nF1,data->u1,data->F1);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"totXS_1ph: F1 not interpolated first\n");
+    exit(1);
+  }
+  f = x*Fp*angularIntegral_p_phonon(1,alpha,x);
+  ss = 0.5*f;
+  for(i=1;i<n;i++) {
+    x = xmin + i*dx;
+    u = Erat*(1.0-x*x);
+    Fp = interpFunc(u,data->nF1,data->u1,data->F1);
+    if(isnan(Fp)) {
+      fprintf(data->filep,"totXS_1ph: F1 not interpolated i=%d\n",i);
+      exit(1);
+    }
+    f = x*Fp*angularIntegral_p_phonon(1,alpha,x);
+    ss += f;
+  }
+  x = xmax;
+  u = Erat*(1.0-x*x);
+  Fp = interpFunc(u,data->nF1,data->u1,data->F1);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"totXS_1ph: F1 not interpolated last\n");
+    exit(1);
+  }
+  f = x*Fp*angularIntegral_p_phonon(1,alpha,x);
+  ss += 0.5*f;
+
+  ss *= dx;
+  
+  ss *= (data->sigmaCoh+data->sigmaInc)/(2.*(data->mRat)*(data->g0));
+
+  return ss;
+};
+
+double totXS_2ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double f, ym, yp, u, Fp, ss, x, xmin, xmax, dx;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double alpha = Erat*(data->mRat)*(data->g0);
+
+  n = 20000;
+  if(Erat>2.0) { xmin = sqrt(1.0 - 2.0/Erat); } else { xmin = 0; }
+  xmax = sqrt(1.0 + 2.0/Erat);
+  dx = (xmax-xmin)/n;
+
+  x = xmin;
+  u =Erat*(1.0-x*x);
+  Fp = interpFunc(u,data->nF2,data->u2,data->F2);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"totXS_2ph: F2 not interpolated first\n");
+    exit(1);
+  }
+  f = x*Fp*angularIntegral_p_phonon(2,alpha,x);
+  ss = 0.5*f;
+  for(i=1;i<n;i++) {
+    x = xmin+i*dx;
+    u =Erat*(1.0-x*x);
+    Fp = interpFunc(u,data->nF2,data->u2,data->F2);
+    if(isnan(Fp)) {
+      fprintf(data->filep,"totXS_2ph: F2 not interpolated i=%d\n",i);
+      exit(1);
+    }
+    f = x*Fp*angularIntegral_p_phonon(2,alpha,x);
+    ss += f;
+  }
+  x = xmax;
+  u =Erat*(1.0-x*x);
+  Fp = interpFunc(u,data->nF2,data->u2,data->F2);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"totXS_2ph: F2 not interpolated last\n");
+    exit(1);
+  }
+  f = x*Fp*angularIntegral_p_phonon(2,alpha,x);
+  ss += 0.5*f;
+
+  ss *= dx;
+  
+  ss *= (data->sigmaCoh+data->sigmaInc)/(2.*(data->mRat)*(data->g0));
+
+  return ss;
+};
+
+double totXS_3ph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double f, ym, yp, u, Fp, ss, x, xmin, xmax, dx;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double alpha = Erat*(data->mRat)*(data->g0);
+
+  n = 30000;
+  if(Erat>3.0) { xmin = sqrt(1.0-3.0/Erat); } else { xmin = 0; }
+  xmax = sqrt(1.0 + 3.0/Erat);
+  dx = (xmax-xmin)/n;
+
+  x = xmin;
+  u =Erat*(1.0-x*x);
+  Fp = interpFunc(u,data->nF3,data->u3,data->F3);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"totXS_3ph: F3 not interpolated first u=%f\n",u);
+    exit(1);
+  }
+  f = x*Fp*angularIntegral_p_phonon(3,alpha,x);
+  ss = 0.5*f;
+  for(i=1;i<n;i++) {
+    x = xmin + i*dx;
+    u =Erat*(1.0-x*x);
+    Fp = interpFunc(u,data->nF3,data->u3,data->F3);
+    if(isnan(Fp)) {
+      fprintf(data->filep,"totXS_3ph: F3 not interpolated i=%d\n",i);
+      exit(1);
+    }
+      f = x*Fp*angularIntegral_p_phonon(3,alpha,x);
+    ss += f;
+  }
+  x = xmax;
+  u =Erat*(1.0-x*x);
+  Fp = interpFunc(u,data->nF3,data->u3,data->F3);
+  if(isnan(Fp)) {
+    fprintf(data->filep,"totXS_3ph: F3 not interpolated last\n");
+    exit(1);
+  }
+  f = x*Fp*angularIntegral_p_phonon(3,alpha,x);
+  ss += 0.5*f;
+
+  ss *= dx;
+  
+  ss *= (data->sigmaCoh+data->sigmaInc)/(2.*(data->mRat)*(data->g0));
+
+  return ss;
+};
+
+void computeFs(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double du;
+  FILE *filep;
+
+  // g0 should have been computed in setParams
+  if(data->g0==0) { data->g0 = Gt(0,data); }
+
+  // F1
+  filep = fopen("F1.txt","r");
+  if(filep!=NULL) {
+    fscanf(filep,"%d",&(data->nF1));
+    data->u1 = (double *)malloc((data->nF1)*sizeof(double));
+    data->F1 = (double *)malloc((data->nF1)*sizeof(double));
+    for(i=0;i<data->nF1;i++) {
+      fscanf(filep,"%lf %lf",data->u1+i,data->F1+i);
+    }
+    fclose(filep);
+  } else { 
+    // compute
+    data->nF1 = 1000;
+    data->u1 = (double *)malloc((data->nF1+1)*sizeof(double));
+    data->F1 = (double *)malloc((data->nF1+1)*sizeof(double));
+    du = 2./(data->nF1);
+    data->nF1++;
+    filep = fopen("F1.txt","a");
+    fprintf(filep,"%d\n",data->nF1);
+    for(i=0;i<data->nF1;i++) {
+      (data->u1)[i] = -1.0 + i*du;
+      //fprintf(data->filep,"F1: %d %d %f\n",i,data->nF1,(data->u1)[i]);
+      (data->F1)[i] = F1((data->u1)[i],data);
+      fprintf(filep,"%f %.6e\n",(data->u1)[i],(data->F1)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+
+  if(data->nphe_exact==1) { 
+    data->nF2 = 0;
+    data->u2 = NULL;
+    data->F2 = NULL;
+    data->nF3 = 0;
+    data->u3 = NULL;
+    data->F3 = NULL;
+    return;
+  }
+
+  // F2
+  filep = fopen("F2.txt","r");
+  if(filep!=NULL) {
+    fscanf(filep,"%d",&(data->nF2));
+    data->u2 = (double *)malloc((data->nF2)*sizeof(double));
+    data->F2 = (double *)malloc((data->nF2)*sizeof(double));
+    for(i=0;i<data->nF2;i++) {
+      fscanf(filep,"%lf %lf",data->u2+i,data->F2+i);
+    }
+    fclose(filep);
+  } else { 
+    data->nF2 = 200;
+    data->u2 = (double *)malloc((data->nF2+1)*sizeof(double));
+    data->F2 = (double *)malloc((data->nF2+1)*sizeof(double));
+    du = 4./(data->nF2);
+    data->nF2++;
+    filep = fopen("F2.txt","a");
+    fprintf(filep,"%d\n",data->nF2);
+    for(i=0;i<data->nF2;i++) {
+      (data->u2)[i] = -2.0 + i*du;
+      //fprintf(data->filep,"F2: %d %d %f\n",i,data->nF2,(data->u2)[i]);
+      (data->F2)[i] = F2((data->u2)[i],data);
+      fprintf(filep,"%f %.6e\n",(data->u2)[i],(data->F2)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+
+  if(data->nphe_exact==2) { 
+    data->nF3 = 0;
+    data->u3 = NULL;
+    data->F3 = NULL;
+    return;
+  }
+
+  // F3
+  filep = fopen("F3.txt","r");
+  if(filep!=NULL) {
+    fscanf(filep,"%d",&(data->nF3));
+    data->u3 = (double *)malloc((data->nF3)*sizeof(double));
+    data->F3 = (double *)malloc((data->nF3)*sizeof(double));
+    for(i=0;i<data->nF3;i++) {
+      fscanf(filep,"%lf %lf",data->u3+i,data->F3+i);
+    }
+    fclose(filep);
+  } else { 
+    data->nF3 = 100;
+    data->u3 = (double *)malloc((data->nF3+1)*sizeof(double));
+    data->F3 = (double *)malloc((data->nF3+1)*sizeof(double));
+    du = 6./(data->nF3);
+    data->nF3++;
+    filep = fopen("F3.txt","a");
+    fprintf(filep,"%d\n",data->nF3);
+    for(i=0;i<data->nF3;i++) {
+      (data->u3)[i] = -3.0 + i*du;
+      //fprintf(data->filep,"F3: %d %d %f\n",i,data->nF3,(data->u3)[i]);
+      (data->F3)[i] = F3((data->u3)[i],data);
+      fprintf(filep,"%f %.6e\n",(data->u3)[i],(data->F3)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+};
+
+double Gu(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double E = u*data->Emax;
+  double x = E/data->kBT;
+  if(fabs(u)<1.0e-7) { return (data->dosPar)*(data->Emax)*(data->Emax)*(data->kBT); } // esto esta bien
+  return (data->Emax)*dos(E,data)*bose(x)/u;
+};
+
+double bose(double x)
+{
+  return 1.0/(exp(x)-1.0);
+};
+
+double F1(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return Gu(-u,data)/(data->g0);
+};
+
+double F2(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return quadF2(u,data);
+};
+
+double F3(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return quadF3(u,data);
+};
+
+double F2int(double u, double u1, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return Gu(u1,data)*Gu(-u-u1,data)/pow(data->g0,2);
+};
+
+double F3int(double u, double u1, double u2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return Gu(u1,data)*Gu(u2,data)*Gu(-u-u1-u2,data)/pow(data->g0,3);
+};
+
+double quadF2(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int n;
+  double umin = -1.0;
+  double umax = 1.0;
+  double g1, g2;
+  double tol = data->tolQuadratureFs;
+
+  n = 100;
+  g1 = trapezF2(u,n,umin,umax,data);
+  n = 200;
+  g2 = trapezF2(u,n,umin,umax,data);
+  while(n<nFCmax) {
+    if(fabs(g1-g2)<tol) {
+      return g2;
+    } 
+    n *= 2;
+    g1 = g2;
+    g2 = trapezF2(u,n,umin,umax,data);
+  }
+
+  fprintf(data->filep,"quadF2: not converged\n");
+  fprintf(data->filep,"%f %d %.6e %.6e %.16e\n",u,n,g1,g2,g2-g1);
+  
+  return -sqrt(-1.0);
+};
+
+double trapezF2(double u, int n, double umin, double umax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double u1, du1, hdu1, s, f1, f2;
+
+  if(n<=0) {
+    fprintf(data->filep,"trapezF2: invalid n = %d\n",n);
+    exit(1);
+  }
+
+  du1 = (umax-umin)/n;
+  hdu1 = 0.5*du1;
+
+  s = 0;
+  u1 = umin;
+  f1 = F2int(u,u1,data);
+  for(i=1;i<=n;i++) {
+    u1 += du1;
+    f2 = F2int(u,u1,data);
+    s += hdu1*(f1+f2);
+    f1 = f2;
+  }
+
+  return s;
+};
+
+double quadF3(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int n;
+  double umin = -1.0;
+  double umax = 1.0;
+  double g1, g2;
+  double tol = data->tolQuadratureFs;
+  
+  n = 100;
+  g1 = trapezF3(u,n,umin,umax,data);
+  n = 200;
+  g2 = trapezF3(u,n,umin,umax,data);
+  while(n<nFCmax) {
+    if(fabs(g1-g2)<tol) {
+      return g2;
+    } 
+    n *= 2;
+    g1 = g2;
+    g2 = trapezF3(u,n,umin,umax,data);
+  }
+
+  printf("quadF3: not converged\n");
+  printf("%f %d %.6e %.6e %.16e\n",u,n,g1,g2,g2-g1);
+  
+  return -sqrt(-1.0);
+};
+
+double trapezF3(double u, int n, double umin, double umax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double u1, du1, hdu1, s, f1, f2;
+
+  if(n<=0) {
+    printf("trapezF3: invalid n = %d\n",n);
+    exit(1);
+  }
+
+  du1 = (umax-umin)/n;
+  hdu1 = 0.5*du1;
+
+  s = 0;
+  u1 = umin;
+  f1 = quadF3u2(u,u1,data);
+  for(i=1;i<=n;i++) {
+    u1 += du1;
+    f2 = quadF3u2(u,u1,data);
+    s += hdu1*(f1+f2);
+    f1 = f2;
+  }
+
+  return s;
+};
+
+double quadF3u2(double u, double u1, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int n;
+  double umin = -1.0;
+  double umax = 1.0;
+  double g1, g2;
+  double tol = data->tolQuadratureFs;
+  
+  n = 100;
+  g1 = trapezF3u2(u,u1,n,umin,umax,data);
+  n = 200;
+  g2 = trapezF3u2(u,u1,n,umin,umax,data);
+  while(n<nFCmax) {
+    if(fabs(g1-g2)<tol) {
+      return g2;
+    } 
+    n *= 2;
+    g1 = g2;
+    g2 = trapezF3u2(u,u1,n,umin,umax,data);
+  }
+
+  printf("quadF3u2: not converged\n");
+  printf("%f %f %d %.6e %.6e %.16e\n",u,u1,n,g1,g2,g2-g1);
+  
+  return -sqrt(-1.0);
+};
+
+double trapezF3u2(double u, double u1, int n, double umin, double umax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double u2, du2, hdu2, s, f1, f2;
+
+  if(n<=0) {
+    printf("trapezF3u2: invalid n = %d\n",n);
+    exit(1);
+  }
+
+  du2 = (umax-umin)/n;
+  hdu2 = 0.5*du2;
+
+  s = 0;
+  u2 = umin;
+  f1 = F3int(u,u1,u2,data);
+  for(i=1;i<=n;i++) {
+    u2 += du2;
+    f2 = F3int(u,u1,u2,data);
+    s += hdu2*(f1+f2);
+    f1 = f2;
+  }
+
+  return s;
+};
+
+//Exact computation of Fp (used only for tests)
+void computeFps(int pmax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, p, np1, np2;
+  double *u1, *Fp1, *u2, *Fp2;
+  double umin, umax, du;
+  char fn[500];
+  FILE *filep;
+
+  np1 = 1000;
+  u1 = (double *)malloc((np1+1)*sizeof(double));
+  Fp1 = (double *)malloc((np1+1)*sizeof(double));
+  umin = -1.0;
+  umax = 1.0;
+  du = (umax-umin)/np1;
+  for(i=0;i<np1;i++) {
+    u1[i] = umin + i*du;
+    Fp1[i] = F1(u1[i],data);
+  }
+  u1[np1] = umax;
+  Fp1[np1] = F1(u1[np1],data);
+  sprintf(fn,"F1_conv.txt");
+  filep = fopen(fn,"w");
+  fprintf(filep,"%d\n",np1+1);
+  for(i=0;i<=np1;i++) {
+    fprintf(filep,"%.16e %.16e\n",u1[i],Fp1[i]);
+  }
+  fclose(filep);
+  
+  for(p=2;p<=pmax;p++) {
+    np2 = p*1000;
+    u2 = (double *)malloc((np2+1)*sizeof(double));
+    Fp2 = (double *)malloc((np2+1)*sizeof(double));
+    umin = -p;
+    umax = p;
+    du = (umax-umin)/np2;
+    sprintf(fn,"F%d_conv.txt",p);
+    filep = fopen(fn,"w");
+    for(i=0;i<np2;i++) {
+      u2[i] = umin + i*du;
+      Fp2[i] = convolution(u2[i],np1+1,u1,Fp1,data);
+      fprintf(filep,"%.16e %.16e\n",u2[i],Fp2[i]);
+      fflush(filep);
+    }
+    u2[np2] = umax;
+    Fp2[np2] = convolution(u2[np2],np1+1,u1,Fp1,data);
+    fprintf(filep,"%.16e %.16e\n",u2[np2],Fp2[np2]);
+    fflush(filep);
+    fclose(filep);
+    
+    free(u1);
+    free(Fp1);
+    np1 = np2;
+    u1 = (double *)malloc((np1+1)*sizeof(double));
+    Fp1 = (double *)malloc((np1+1)*sizeof(double));
+    fprintf(filep,"%d\n",np1+1);
+    for(i=0;i<=np1;i++) {
+      u1[i] = u2[i];
+      Fp1[i] = Fp2[i];
+    }
+    free(u2);
+    free(Fp2);
+  }
+}
+
+double convolution(double u, int np, double *up, double *Fp, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double s, s1, s2, tol, umin, umax, du, ui;
+
+  umin = up[0];
+  umax = up[np-1];
+
+  tol = 1.0e-6;
+
+  n = 200;
+  du = (umax-umin)/n;
+  ui = umin;
+  s = 0.5*du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+  for(i=1;i<n;i++) {
+    ui += du;
+    s += du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+  }
+  ui = umax;
+  s += 0.5*du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+  s1 = s;
+
+  n *= 2;
+  du = (umax-umin)/n;
+  ui = umin;
+  s = 0.5*du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+  for(i=1;i<n;i++) {
+    ui += du;
+    s += du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+  }
+  ui = umax;
+  s += 0.5*du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+  s2 = s;
+
+  while(fabs(s2-s1)>tol) {
+    s1 = s2;
+    n *= 2;
+    du = (umax-umin)/n;
+    ui = umin;
+    s = 0.5*du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+    for(i=1;i<n;i++) {
+      ui += du;
+      s += du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+    }
+    ui = umax;
+    s += 0.5*du*F1(u-ui,data)*interpFunc(ui,np,up,Fp);
+    s2 = s;
+  }
+
+  return s2;
+}
+
+/////////////////////////////////////
+// Multi-phonon resummation term  ///
+/////////////////////////////////////
+
+void sample_Kprime_and_Dir_mph(double kabs, double *x, double *z, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // x = kprime/kabs
+  // z = cos(theta)
+  int i;
+  double u, Q2, x2;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double iErat = 1./Erat;
+  double iEMrat = iErat/(data->mRat);
+  // rejection method
+  //for(i=0;i<maxIter;i++) {
+  while(1) {
+    u = sample_u_mph(Erat,data);
+    if(isnan(u)) { 
+      printf("u nan: %f %f %f\n",kabs,E,Erat);
+    }
+    x2 = 1.0 - iErat*u;
+    if(x2<=0) { continue; }
+    *x = sqrt(x2);
+    Q2 = sample_Q2_mph(u,Erat,data);
+    *z = (1.0 + x2 - iEMrat*Q2)/(2*(*x));
+    if(fabs(*z)<=1) { return; }
+  }
+  *x = -sqrt(-1.0);
+  *z = -sqrt(-1.0);
+};
+
+double sample_u_mph(double umax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double u, f, fmax, a1, a2;
+  int np = data->np_u_mph;
+  double *up = data->u;
+  double *xs = data->dXSdu_mph;
+  double umin = up[0];
+  double du = (umax - umin);
+
+  if(umax>up[np-1]) {
+    a1 = (pow(up[np-2],1)*(2*PI-xs[np-1])-pow(up[np-2],2)*(2*PI-xs[np-2]))/(up[np-1]-up[np-2]);
+    a2 = pow(up[np-2],2)*(2*PI-xs[np-2]) - a1*up[np-2];
+    fmax = 2.*PI - a1/umax - a2/(umax*umax);
+  } else {
+    fmax = interpFunc(umax,np,up,xs);
+  }
+
+  // rejection method
+  //for(i=0;i<maxIter;i++) {
+  while(1) {
+    u = umin + rand01()*du;
+    if(u>up[np-1]) { f = 2.*PI - a1/u - a2/(u*u); } else { f = interpFunc(u,np,up,xs); }
+    if(f/fmax>rand01()) { return u; }
+  }
+  printf("sample_u_mph: maxIter reached\n");
+  printf("sample_u_mph: %f %f %f %.6e\n",umin,umax,up[np-1],fmax);
+  return -sqrt(-1.0);
+};
+
+double sample_Q2_mph(double u, double Erat, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  int np = data->np_u_mph;
+  double Q2, f, fmax, Q2m;
+  double x, x2, Q2min, Q2max;
+  double q1, q2, u1, u2;
+  double dQ2;
+
+  x2 = 1.0 - u/Erat;
+  if(x2<0) { return -sqrt(-1.0); }
+  x = sqrt(x2);
+  //the commented lines are wrong. The conservation laws cannot be enforced here: 
+  //the distribution would be biased
+  //Q2min = Erat*(data->mRat)*pow(1.0-x,2);
+  //Q2max = Erat*(data->mRat)*pow(1.0+x,2);
+
+  // obtain fmax
+  if(u<(data->u)[0]) {
+    fmax =  interpFunc(u,np,data->u,data->dXSdQ2_Fmax_mph);
+    Q2m =  interpFunc(u,np,data->u,data->dXSdQ2_Q2max_mph);
+    fmax = (data->dXSdQ2_Fmax_mph)[data->np_u_mph-1];
+    printf("u<data->u[0]\n");
+  } else if (u>(data->u)[np-1]) {
+    u1 = (data->u)[np-1];
+    u2 = (data->u)[np-2];
+    q1 = (data->dXSdQ2_Q2max_mph)[np-1];
+    q2 = (data->dXSdQ2_Q2max_mph)[np-2];
+    Q2m = q1 + (q2-q1)*((u-u1)/(u2-u1));
+    Q2min = (data->Q2min)[np-1];
+    q1 = (data->Q2max)[np-1];
+    q2 = (data->Q2max)[np-2];
+    Q2max = q1 + (q2-q1)*((u-u1)/(u2-u1));
+    // fmax is overstimated, but it is best like this
+    fmax = (data->dXSdQ2_Fmax_mph)[data->np_u_mph-1];
+  } else {
+    fmax =  interpFunc(u,np,data->u,data->dXSdQ2_Fmax_mph);
+    Q2m =  interpFunc(u,np,data->u,data->dXSdQ2_Q2max_mph);
+    Q2min =  interpFunc(u,np,data->u,data->Q2min);
+    Q2max =  interpFunc(u,np,data->u,data->Q2max);
+ }
+
+  if(Q2m<Q2min || Q2m>Q2max) {
+    // the maximum is attained at the borders
+    fmax = SFuncInterp(u/Q2min,Q2min,data);
+    if(isnan(fmax)) {
+      printf("isnan Q2min\n");
+      printf("%f %f %.6e\n",u,Q2min,u/Q2min);
+      exit(1);
+    }
+    f = SFuncInterp(u/Q2max,Q2max,data);
+    if(isnan(f)) {
+      printf("isnan Q2max\n");
+      printf("%f %f %.6e\n",u,Q2max,u/Q2max);
+      exit(1);
+    }
+    if(f>fmax) { fmax = f; }
+  }
+
+  dQ2 = Q2max - Q2min;
+
+  // rejection method
+  //for(i=0;i<maxIter;i++) {
+  while(1) {
+    Q2 = Q2min + rand01()*dQ2;
+    f = SFuncInterp(u/Q2,Q2,data);
+    if(isnan(f)) {
+      printf("isnan Q2\n");
+      printf("%f %f %.6e\n",u,Q2,u/Q2);
+      exit(1);
+    }
+    if(f/fmax>rand01()) { return Q2; }
+  }
+  printf("sample_Q2_mph: maxIter reached\n");
+  return -sqrt(-1.0);
+};
+
+void compute_dXSdu_mph(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, np, np1, np2;
+  double u, du, umin, umax, xs, u1, u2, r;
+  double xsTol = data->tol_dXSdu_mph;
+  FILE *filep;
+
+  fprintf(data->filep,"compute_dXSdu_mph: start\n");
+  fflush(data->filep);
+
+  // look for umin
+  u = -1;
+  xs = quad_dXSdu_mph(u,data);
+  while(xs>xsTol) {
+    u -= 1;
+    xs = quad_dXSdu_mph(u,data);
+  }
+  umin = u;
+  printf("umin: %f\n",umin);
+  fflush(stdout);
+  // look for umax
+  filep = fopen("tirar.txt","w");
+  u = 0;
+  xs = quad_dXSdu_mph(u,data);
+  while(fabs(xs-2*PI)>0.01) {
+    u += 1;
+    xs = quad_dXSdu_mph(u,data);
+    fprintf(filep,"%f %.6e %.6e\n",u,xs,fabs(xs-2*PI));
+    fflush(filep);
+  }
+  fclose(filep);
+  umax = u;
+  printf("umax: %f\n",umax);
+  fflush(stdout);
+
+  u = 0;
+  xs = quad_dXSdu_mph(u,data);
+  while(xs>0.01) {
+    u -= 0.1;
+    xs = quad_dXSdu_mph(u,data);
+  }
+  u1 = u;
+  printf("u1: %f\n",u1);
+  fflush(stdout);
+
+  u = 0;
+  xs = quad_dXSdu_mph(u,data);
+  while(fabs(xs-2*PI)>0.08) {
+    u += 0.1;
+    xs = quad_dXSdu_mph(u,data);
+  }
+  u2 = u;
+  printf("u2: %f\n",u2);
+  fflush(stdout);
+
+  np = data->np_u_mph;
+
+  r = 0.1; // u resolution between u1 and u2 (r*du)
+  np1 = (int)round(np/(1-r+r*(umax-umin)/(u2-u1)));
+  np2 = np - np1;
+
+  du = (u2 - u1)/(r*np1);
+
+  data->u = (double *)malloc(np*sizeof(double));
+  data->dXSdu_mph = (double *)malloc(np*sizeof(double));
+
+  u = umin;
+  for(i=0;i<np;i++) {
+    xs = quad_dXSdu_mph(u,data);
+    printf("i: %d u: %f xs: %.6e\n",i,u,xs);
+    fflush(stdout);
+    if(isnan(xs)) { printf("u: %f\n",u); exit(1); }
+    (data->u)[i] = u;
+    (data->dXSdu_mph)[i] = xs;
+    if((u<u1 && fabs(u-u1)>r*du) || u>=u2) { u += du; } else { u += r*du; } 
+  }
+
+  fprintf(data->filep,"compute_dXSdu_mph: end\n");
+  fflush(data->filep);
+};
+
+double quad_dXSdu_mph(double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int n;
+  double Q2max, s1, s2, sq1, sq2;
+  double tsp, g, d2g, H, S;
+  double xsTol = data->tol_dXSdu_mph;
+
+  if(fabs(u)<1.0e-9) {
+    // for u=0 the integral is singular but can be analytically performed
+    tspInterp(0,&tsp,&g,&d2g,&H,data);
+    return 2.*PI/sqrt(-2.*d2g*H);
+  }
+
+  Q2max = 10;
+  S = SFuncInterp(u/Q2max,Q2max,data);
+  printf("quad_dXSdu_mph a: %f %.6e %.6e\n",u,Q2max,S);
+  fflush(stdout);
+  while(Q2max>0 && S<1.0e-9) {
+    Q2max -= 1;
+    S = SFuncInterp(u/Q2max,Q2max,data);
+    printf("quad_dXSdu_mph c1: %f %.6e %.6e\n",u,Q2max,S);
+    fflush(stdout);
+  }
+  while(S>1.0e-9) {
+    Q2max += 1;
+    S = SFuncInterp(u/Q2max,Q2max,data);
+    printf("quad_dXSdu_mph c2: %f %.6e %.6e\n",u,Q2max,S);
+    fflush(stdout);
+  }
+  if(Q2max<2*u) { Q2max = 2*u; }
+  printf("quad_dXSdu_mph b: %f %.6e %.6e\n",u,Q2max,S);
+  fflush(stdout);
+
+  n = 100;
+  s1 = trapez_dXSdu_mph(u,n,Q2max,data);
+  if(isnan(s1)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+
+  n *= 2;
+  s2 = trapez_dXSdu_mph(u,n,Q2max,data);
+  if(isnan(s2)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+  while(fabs(s2-s1)>xsTol) {
+    n *= 2;
+    if(n>nFCmax) { 
+      printf("quad_dXSdu_mph a: n>nFCmax for u = %f Q2max = %.6e\n",u,Q2max);
+      printf("%.6e %.6e %.6e\n",s2,s1,s2-s1);
+      fflush(stdout);
+      exit(1);
+    }
+    s1 = s2;
+    s2 = trapez_dXSdu_mph(u,n,Q2max,data);
+    if(isnan(s2)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+  }
+
+  return s2;
+
+  // the following is useless since S<10^-9 for Q2>Q2max 
+  sq1 = s2;
+  Q2max *= 2;
+  n = n/2;
+  s1 = trapez_dXSdu_mph(u,n,Q2max,data);
+  if(isnan(s1)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+  n *= 2;
+  s2 = trapez_dXSdu_mph(u,n,Q2max,data);
+  if(isnan(s2)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+  while(fabs(s2-s1)>xsTol) {
+    n *= 2;
+    if(n>nFCmax) { 
+      printf("quad_dXSdu_mph b: n>nFCmax for u = %f Q2max = %.6e\n",u,Q2max); 
+      printf("%.6e %.6e %.6e\n",s2,s1,s2-s1);
+      exit(1); 
+    }
+    s1 = s2;
+    s2 = trapez_dXSdu_mph(u,n,Q2max,data);
+    if(isnan(s2)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+  }
+  sq2 = s2;
+  
+  while(fabs(sq2-sq1)>xsTol) {
+    Q2max *= 2;
+    sq1 = sq2;
+    n = n/2;
+    s1 = trapez_dXSdu_mph(u,n,Q2max,data);
+    if(isnan(s1)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+    n *= 2;
+    s2 = trapez_dXSdu_mph(u,n,Q2max,data);
+    if(isnan(s2)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+    while(fabs(s2-s1)>xsTol) {
+      n *= 2;
+      if(n>nFCmax) {
+	printf("quad_dXSdu_mph c: n>nFCmax for u = %f Q2max = %.6e\n",u,Q2max);
+	printf("%.6e %.6e %.6e\n",s2,s1,s2-s1);
+	exit(1);
+      }
+      s1 = s2;
+      s2 = trapez_dXSdu_mph(u,n,Q2max,data);
+      if(isnan(s2)) { printf("quad_dXSdu_mph nan for u = %f\n",u); return -sqrt(-1.0); }
+    }
+    sq2 = s2;
+  }
+
+  return sq2;
+};
+
+double trapez_dXSdu_mph(double u, int n, double Q2max, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double Q2, dQ2, S, sum, sum0;
+  FILE *filep;
+
+  //filep = fopen("trapez.txt","w");
+
+  dQ2 = 1.0/n;
+  Q2 = dQ2;
+  sum0 = 0;
+  for(i=1;i<n;i++) {
+    S = SFuncInterp(u/Q2,Q2,data);
+    //fprintf(filep,"%.6e %.6e %.6e\n",u,Q2,S);
+    if(isnan(S)) { return -sqrt(-1.0); }
+    sum0 += S;
+    Q2 += dQ2;
+  }
+  Q2 = 1.0;
+  S = SFuncInterp(u/Q2,Q2,data);
+  //fprintf(filep,"%.6e %.6e %.6e\n",u,Q2,S);
+  if(isnan(S)) { return -sqrt(-1.0); }
+  sum0 += 0.5*S;
+  sum0 *= dQ2;
+
+  dQ2 = (Q2max-1.0)/n;
+  Q2 = 1.0;
+  S = SFuncInterp(u/Q2,Q2,data);
+  //fprintf(filep,"%.6e %.6e %.6e\n",u,Q2,S);
+  if(isnan(S)) { return -sqrt(-1.0); }
+  sum = 0.5*S;
+  for(i=1;i<n;i++) {
+    Q2 += dQ2;
+    S = SFuncInterp(u/Q2,Q2,data);
+    //fprintf(filep,"%.6e %.6e %.6e\n",u,Q2,S);
+    if(isnan(S)) { return -sqrt(-1.0); }  
+    sum += S;
+  }
+  Q2 = Q2max;
+  S = SFuncInterp(u/Q2,Q2,data);
+  //fprintf(filep,"%.6e %.6e %.6e\n",u,Q2,S);
+  if(isnan(S)) { return -sqrt(-1.0); }
+  sum += 0.5*S;
+  sum *= dQ2;
+
+  //fclose(filep);
+
+  return sum0 + sum;
+};
+
+void compute_dXSdQ2_max_mph(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, j, n;
+  double u, xs, Q2, dQ2, fmax;
+  double *pQ2, *pfm, *Q2min, *Q2max;
+  int np = data->np_u_mph;
+  FILE *filep;
+
+  fprintf(data->filep,"compute_dXSdQ2_max_mph\n");
+  fflush(data->filep);
+
+  pQ2 = (double *)malloc(np*sizeof(double));
+  pfm = (double *)malloc(np*sizeof(double));
+  Q2min = (double *)malloc(np*sizeof(double));
+  Q2max = (double *)malloc(np*sizeof(double));
+
+  n = 10000;
+  dQ2 = 50./n;
+
+  filep = fopen("dXSdQ2_mph.txt","w");
+  for(i=0;i<np;i++) {
+    u = (data->u)[i];
+    pfm[i] = -1.0;
+    pQ2[i] = 0;
+    for(j=0;j<n;j++) {
+      Q2 = j*dQ2;
+      xs = SFuncInterp(u/Q2,Q2,data);
+      fprintf(filep,"%d %f %f %.6e\n",i,u,Q2,xs);
+      if(xs>pfm[i]) { pfm[i] = xs; pQ2[i] = Q2; }
+    }
+    fprintf(filep,"\n\n");
+    fflush(filep);
+    // limits
+    Q2min[i] = 0;
+    Q2 = pQ2[i];
+    while(1) {
+      Q2 -= dQ2;
+      if(Q2<=0) { break; }
+      xs = SFuncInterp(u/Q2,Q2,data);
+      if(xs/pfm[i] < 1.0e-6) { Q2min[i] = Q2; break; } 
+    }
+    Q2 = pQ2[i];
+    while(1) {
+      Q2 += dQ2;
+      xs = SFuncInterp(u/Q2,Q2,data);
+      if(xs/pfm[i] < 1.0e-6) { Q2max[i] = Q2; break; } 
+    }
+  }
+  fclose(filep);
+
+  data->dXSdQ2_Q2max_mph = pQ2;
+  data->dXSdQ2_Fmax_mph = pfm;
+  data->Q2min = Q2min;
+  data->Q2max = Q2max;
+
+  fprintf(data->filep,"compute_dXSdQ2_max_mph\n");
+  fflush(data->filep);
+};
+
+
+void compute_SQ2_mph(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Q2, ximin, ximax, tol;
+  int    i, np = data->np_Q2_mph;
+  double Q2min, Q2max, dQ2;
+  FILE   *filep, *filep2;
+
+  fprintf(data->filep,"compute_SQ2_mph: start\n");
+  fflush(data->filep);
+
+  filep = fopen("SQ2_mph.txt","r");
+  fprintf(data->filep,"compute_SQ2_mph: open done\n");
+  fflush(data->filep);
+  if(filep != NULL) {
+    fprintf(data->filep,"compute_SQ2_mph: read SQ2\n");
+    fflush(data->filep);
+    fscanf(filep,"%d",&(data->np_Q2_mph));
+    data->Q2 = (double *)malloc((data->np_Q2_mph)*sizeof(double));
+    data->SQ2_mph = (double *)malloc((data->np_Q2_mph)*sizeof(double));
+    for(i=0;i<(data->np_Q2_mph);i++) {
+      fscanf(filep,"%lf %lf",(data->Q2)+i,(data->SQ2_mph)+i);
+    }
+    fclose(filep);
+    return;
+  }
+
+  fprintf(data->filep,"compute_SQ2_mph: compute SQ2\n");
+  fflush(data->filep);
+      
+  Q2min = 1.0e-6;
+  Q2max = 10;
+  dQ2 = (Q2max - Q2min)/np;
+
+  fprintf(data->filep,"compute_SQ2_mph: Q2min %f\n",Q2min);
+  fprintf(data->filep,"compute_SQ2_mph: Q2max %f\n",Q2max);
+  fprintf(data->filep,"compute_SQ2_mph: dQ2   %f\n",dQ2);
+  fflush(data->filep);
+
+  data->SQ2_mph = (double *)malloc(np*sizeof(double));
+  data->Q2 = (double *)malloc(np*sizeof(double));
+
+  tol = 1.0e-6;
+
+  filep2 = fopen("Qlim.txt","a");
+
+  filep = fopen("SQ2_mph_comp.txt","w");
+  fprintf(data->filep,"compute_SQ2_mph: open\n");
+  fflush(data->filep);
+
+  fprintf(filep,"%d\n",np);
+  Q2 = Q2min;
+  for(i=0;i<np;i++) {
+    ximin = -100;
+    fprintf(filep2,"==========\n");
+    fflush(filep2);
+    if(fabs(SFuncInterp(ximin,Q2,data))<1.0e-12) {
+      while(fabs(SFuncInterp(ximin,Q2,data))<1.0e-12) { 
+	fprintf(filep2,"0 %f %f %.16e\n",Q2,ximin,SFuncInterp(ximin,Q2,data));
+	fflush(filep2);
+	ximin += 1;
+      }
+      ximin -= 1;
+    } else {
+      while(fabs(SFuncInterp(ximin,Q2,data))<1.0e-12) {
+	fprintf(filep2,"0 %f %f %.16e\n",Q2,ximin,SFuncInterp(ximin,Q2,data));
+	fflush(filep2);
+	ximin -= 1;
+      }
+      ximin += 1;
+    }
+    ximax = 100;
+    if(fabs(SFuncInterp(ximax,Q2,data))<1.0e-12) {
+      while(fabs(SFuncInterp(ximax,Q2,data))<1.0e-12) {
+	fprintf(filep2,"1 %f %f %.16e\n",Q2,ximax,SFuncInterp(ximax,Q2,data));
+	fflush(filep2);
+	ximax -= 1;
+      }
+      ximax += 1;
+    } else {
+      while(fabs(SFuncInterp(ximax,Q2,data))<1.0e-12) {
+	fprintf(filep2,"1 %f %f %.16e\n",Q2,ximax,SFuncInterp(ximax,Q2,data));
+	fflush(filep2);
+	ximax += 1;
+      }
+      ximax -= 1;
+    }
+    (data->Q2)[i] = Q2;
+    (data->SQ2_mph)[i] = quadFunc(ximin,ximax,Q2,tol,data,SFuncInterp);
+    fprintf(filep,"%f %.6e\n",(data->Q2)[i],(data->SQ2_mph)[i]);
+    fflush(filep);
+    Q2 += dQ2;
+  }
+  fclose(filep);
+  fclose(filep2);
+
+  fprintf(data->filep,"compute_SQ2_mph: end\n");
+
+  //write the results
+  filep = fopen("SQ2_mph.txt","w");	
+  fprintf(filep,"%d\n",data->np_Q2_mph);
+  for(i=0;i<(data->np_Q2_mph);i++) {
+    fprintf(filep,"%f %.6e\n",(data->Q2)[i],(data->SQ2_mph)[i]);
+  }
+  fclose(filep);
+};
+
+void compute_dXSdu_dXSdQ2_max_mph(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  FILE *filep;
+
+  filep = fopen("dXSdu_dXSdQ2_max_mph.txt","r");
+  fprintf(data->filep,"compute_dXSdu_dXSdQ2_max_mph: trying to open dXSdu_dXSdQ2_max_mph.txt\n");
+  fflush(data->filep);
+  if(filep != NULL) {
+    fprintf(data->filep,"compute_dXSdu_dXSdQ2_max_mph: reading dXSdu_dXSdQ2_max_mph.txt\n");
+    fflush(data->filep);
+    fscanf(filep,"%d",&(data->np_u_mph));
+    data->u = (double *)malloc((data->np_u_mph)*sizeof(double));
+    data->dXSdu_mph = (double *)malloc((data->np_u_mph)*sizeof(double));
+    data->Q2min = (double *)malloc((data->np_u_mph)*sizeof(double));
+    data->Q2max = (double *)malloc((data->np_u_mph)*sizeof(double));
+    data->dXSdQ2_Q2max_mph = (double *)malloc((data->np_u_mph)*sizeof(double));
+    data->dXSdQ2_Fmax_mph = (double *)malloc((data->np_u_mph)*sizeof(double));
+    for(i=0;i<(data->np_u_mph);i++) {
+      fscanf(filep,"%lf %lf %lf %lf %lf %lf",(data->u)+i,(data->dXSdu_mph)+i,
+      (data->Q2min)+i,(data->Q2max)+i,
+      (data->dXSdQ2_Q2max_mph)+i,(data->dXSdQ2_Fmax_mph)+i);
+    }
+    fclose(filep);
+  } else {
+    fprintf(data->filep,"compute_dXSdu_dXSdQ2_max_mph: computing dXSdu_dXSdQ2_max_mph\n");
+    fflush(data->filep);
+    compute_dXSdu_mph(data);
+    compute_dXSdQ2_max_mph(data);
+    //write the results
+    filep = fopen("dXSdu_dXSdQ2_max_mph.txt","w");	
+    fprintf(filep,"%d\n",data->np_u_mph);
+    for(i=0;i<(data->np_u_mph);i++) {
+      fprintf(filep,"%f %.6e %.6e %.6e %.6e %.6e\n",(data->u)[i],(data->dXSdu_mph)[i],
+         (data->Q2min)[i],(data->Q2max)[i],
+         (data->dXSdQ2_Q2max_mph)[i],(data->dXSdQ2_Fmax_mph)[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+};
+
+double totXS_mph(double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // x = kprime/k
+  // z = cos(theta)
+  int i, j, nx, nz, num, p;
+  double E, x, xmin, xmax, dx, z, dz, u, Q2, tsp, Erat, Q2f;
+  double fac1, fac2, yp, g0, g0Q2;
+  double S, s1, ss;
+  double Se, s1e;
+  double stol = 1.0e-8;
+  FILE *filep;
+
+  g0 = data->g0;
+
+  E = KS2E*kabs*kabs;
+
+  Erat = E/(data->Emax);
+  Q2f = Erat*(data->mRat);
+
+  nz = 10000;
+  dz = 2./nz;
+
+  // calculate xmin and xmax
+  dx = 0.01;
+  x = 1;
+  num = 0;
+  while(1) {
+    u = Erat*(1.0 - x*x);
+    s1 = 0;
+    s1e = 0;
+    for(j=0;j<=nz;j++) {
+      z = -1.0 + j*dz;
+      Q2 = Q2f*(1.0 + x*x - 2.0*x*z);
+      if(Q2<1.0e-12) { S = 0; } else { S = SFuncInterp(u/Q2,Q2,data); }
+      if(isnan(S)) {
+	printf("%f %f %.6e %.6e %.6e\n",x,z,u,Q2,S);
+	exit(1);
+      }
+      // normalization
+      g0Q2 = g0*Q2;
+      yp = g0Q2;
+      fac1 = 1.0 + yp;
+      for(p=2;p<=3;p++) {
+	yp *= g0Q2/p;
+	fac1 += yp;
+      }
+      fac1 = 1.0 - exp(-g0Q2)*fac1;
+      //fac2 = (2.0*PI)/(Q2*interpFunc(Q2,data->np_Q2_mph,data->Q2,data->SQ2_mph));
+      fac2 = 1.;
+      S *= fac1*fac2;
+      //
+      if(j!=0 && j!=nz) { s1 += S; s1e += Se; } else { s1 += 0.5*S; s1e += 0.5*Se; }
+    }
+    if(x*x*dz*s1<stol) { xmin = x; break; }
+    x -= dx;
+  }
+  x = 1.0 + dx;
+  while(1) {
+    u = Erat*(1.0 - x*x);
+    s1 = 0;
+    s1e = 0;
+    for(j=0;j<=nz;j++) {
+      z = -1.0 + j*dz;
+      Q2 = Q2f*(1.0 + x*x - 2.0*x*z);
+      if(Q2<1.0e-12) { S = 0; } else { S = SFuncInterp(u/Q2,Q2,data); }
+      if(isnan(S)) {
+	printf("%f %f %.6e %.6e %.6e\n",x,z,u,Q2,S);
+	exit(1);
+      }
+      // normalization
+      g0Q2 = g0*Q2;
+      yp = g0Q2;
+      fac1 = 1.0 + yp;
+      for(p=2;p<=3;p++) {
+	yp *= g0Q2/p;
+	fac1 += yp;
+      }
+      fac1 = 1.0 - exp(-g0Q2)*fac1;
+      //fac2 = (2.0*PI)/(Q2*interpFunc(Q2,data->np_Q2_mph,data->Q2,data->SQ2_mph));
+      fac2 = 1;
+      S *= fac1*fac2;
+      //
+      if(j!=0 && j!=nz) { s1 += S; s1e += Se; } else { s1 += 0.5*S; s1e += 0.5*Se; }
+    }
+    if(x*x*dz*s1<stol) { xmax = x; break; }
+    x += dx;
+  }
+
+  filep = fopen("xlim.txt","a");
+  fprintf(filep,"%.6e %.6e %.6e %.6e\n",kabs,E,xmin,xmax);
+  fclose(filep);
+
+  nx = 10000;
+  dx = (xmax-xmin)/nx;
+
+  ss = 0;
+  for(i=0;i<=nx;i++) {
+    x = xmin + i*dx;
+    u = Erat*(1.0 - x*x);
+    s1 = 0;
+    for(j=0;j<=nz;j++) {
+      z = -1.0 + j*dz;
+      Q2 = Q2f*(1.0 + x*x - 2.0*x*z);
+      if(Q2<1.0e-12) { S = 0; } else { S = SFuncInterp(u/Q2,Q2,data); }
+      if(isnan(S)) {
+	printf("%f %f %.6e %.6e %.6e\n",x,z,u,Q2,S);
+	exit(1);
+      }
+      // normalization
+      g0Q2 = g0*Q2;
+      yp = g0Q2;
+      fac1 = 1.0 + yp;
+      for(p=2;p<=3;p++) {
+	yp *= g0Q2/p;
+	fac1 += yp;
+      }
+      fac1 = 1.0 - exp(-g0Q2)*fac1;
+      //fac2 = (2.0*PI)/(Q2*interpFunc(Q2,data->np_Q2_mph,data->Q2,data->SQ2_mph));
+      fac2 = 1;
+      S *= fac1*fac2;
+      //
+      if(j!=0 && j!=nz) { s1 += S; } else { s1 += 0.5*S; }
+    }
+    if(i!=0 && i!=nx) { ss += x*x*dz*s1; } else { ss += 0.5*x*x*dz*s1; }
+  }
+  ss *= dx*Erat;
+
+  ss *= (data->sigmaCoh+data->sigmaInc)/(2*PI);
+
+  return ss;
+};
+
+double dXSdxdz_mph(double kabs, double x, double z, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // x = kprime/k
+  // z = cos(theta)
+  double xs;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double u = Erat*(1.0 - x*x);
+  double Q2 = Erat*(data->mRat)*(1.0 + x*x - 2.0*x*z);
+  if(Q2<1.0e-8) { return 0; }
+  xs = Erat*(x*x/PI)*SFuncInterp(u/Q2,Q2,data);
+  return xs;
+};
+
+double dXSdx_mph(double kabs, double x, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // x = kprime/k
+  // z = cos(theta)
+  int i, n = 200000;
+  double z, dz, f, ss;
+
+  dz = 2.0/n;
+  ss = 0;
+  for(i=1;i<n;i++) {
+    z = -1.0 + i*dz;
+    f = dXSdxdz_mph(kabs,x,z,data);
+    if(i==0 || i==n) { ss += 0.5*f; } else { ss += f; }
+  }
+  ss *= dz;
+
+  return ss;
+};
+
+double dXSdz_mph(double kabs, double z, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // x = kprime/k
+  // z = cos(theta)
+  int i, n = 100000;
+  double x, xmax, dx, f, ss;
+
+  xmax = 10;
+  dx = xmax/n;
+  ss = 0;
+  for(i=0;i<=n;i++) {
+    x = i*dx;
+    f = dXSdxdz_mph(kabs,x,z,data);
+    if(i==0 || i==n) { ss += 0.5*f; } else { ss += f; }
+  }
+  ss *= dx;
+
+  return ss;
+};
+
+double SFunc(double xi, double Q2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // xi = u/Q2
+  double tsp, g, g0, d2g, Q2g, S;
+
+  if(Q2<=0) { return 0; }
+
+  tsp = saddlePoint(xi,data);
+  g = Gt(tsp,data);
+  g0 = data->g0;
+  d2g = d2Gt(tsp,data);
+
+  S = sqrt(2.*PI/(Q2*d2g))*exp(Q2*(xi*tsp+g-g0));
+
+  return S;
+};
+
+double SFuncInterp(double xi, double Q2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // xi = u/Q2
+  double tsp, g, g0, d2g, H, Q2H, Q2g, S;
+
+  if(Q2<=0) { return 0; }
+
+  g0 = data->g0;
+  tspInterp(xi,&tsp,&g,&d2g,&H,data);
+  // it is much better to interpolate the function H than computing it from interpolated values
+  //H = xi*tsp + g - g0;
+  if(fabs(xi-1)<0.2) {
+    H = -0.5*pow(xi-1,2)/(data->d2g0) + (data->aH3)*pow(xi-1,3) + (data->aH4)*pow(xi-1,4);
+  }
+
+  Q2H = Q2*H;
+  if(Q2H<-35) { return 0; }
+
+  if(Q2H>0) { 
+    fprintf(data->filep,"SFuncInterp: positive Q2H %.6e\n",Q2H);
+    fprintf(data->filep,"SFuncInterp: %.6e %.6e %.6e %.6e %.6e %.6e\n",Q2,xi,tsp,g,d2g,xi*tsp+g-g0);
+  }
+
+  S = sqrt(2.0*PI/(Q2*d2g))*exp(Q2H);
+
+  //fprintf(data->filep,"%.6e %.6e %.6e %.6e %.6e\n",xi,tsp,g,d2g,H);
+
+  if(isnan(S)) {
+    fprintf(data->filep,"SFuncInterp: nan\n");
+    fprintf(data->filep,"%.6e %.6e %.6e %.6e %.6e %.6e\n",Q2,xi,tsp,g,d2g,H);
+  }
+
+  return S;
+};
+
+void tspInterp(double xi, double *tsp, double *g, double *d2g, double *H, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, imin, imax;
+  double a;
+  int ntsp_ = data->ntsp;
+  double *xi_ = data->xi;
+  double *tsp_ = data->tsp;
+  double *g_ = data->g;
+  double *d2g_ = data->d2g;
+  double *H_ = data->H;
+  double a0, a2, a4, a6, a8, a10;
+  double b0, b1, b3, b5, b7, b9, b11;
+
+  if(xi<xi_[0]) { 
+    *tsp = tsp_[0] + log(xi/xi_[0]) + 1.5*log(log(-xi)/log(-xi_[0]));
+    a = (xi-xi_[0])/(xi_[1]-xi_[0]);
+    *g = g_[0] + a*(g_[1]-g_[0]);
+    *d2g = d2g_[0] + a*(d2g_[1]-d2g_[0]);
+    *H = H_[0] + a*(H_[1]-H_[0]);
+    return;
+  }
+  if(xi>xi_[ntsp_-1]) { 
+    *tsp = tsp_[ntsp_-1] - log(xi/xi_[ntsp_-1]) - 1.5*log(log(xi)/log(xi_[ntsp_-1]));
+    a = (xi-xi_[ntsp_-1])/(xi_[ntsp_-2]-xi_[ntsp_-1]);
+    *g = g_[ntsp_-1] + a*(g_[ntsp_-2]-g_[ntsp_-1]); 
+    *d2g = d2g_[ntsp_-1] + a*(d2g_[ntsp_-2]-d2g_[ntsp_-1]);
+    *H = H_[ntsp_-1] + a*(H_[ntsp_-2]-H_[ntsp_-1]); 
+    return;
+  }
+
+  // linear interpolation otherwise
+  imin=0; imax=ntsp_-1;
+  while(imax-imin>1) {
+    i = (imax + imin)/2;
+    if (xi<xi_[i]) { imax = i; } else { imin = i; }
+  }
+
+  if(imax==imin) { printf("imax = imin %d %d\n",imin,imax); exit(1); }
+  if(xi<xi_[imin] || xi>xi_[imax]) { 
+    printf("bad bracketing: %d %d %f %f %f\n",imin,imax,xi_[imin],xi,xi_[imax]);
+    exit(1);
+  }
+
+  a = (xi-xi_[imin])/(xi_[imax]-xi_[imin]);
+
+  *tsp = tsp_[imin] + a*(tsp_[imax]-tsp_[imin]);
+  *g = g_[imin] + a*(g_[imax]-g_[imin]);
+  *d2g = d2g_[imin] + a*(d2g_[imax]-d2g_[imin]);
+  *H = H_[imin] + a*(H_[imax]-H_[imin]);
+};
+
+double saddlePoint(double xi, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // solves dgt(tsp) = -z for tsp
+  double tl, th, tm, y;
+  double tol;
+
+  tol = data->tolSaddlePoint;
+
+  tl = -1;
+  y = dGt(tl,data) + xi;
+  while(y>0) {
+    tl *= 2;
+    y = dGt(tl,data) + xi;
+  }
+
+  th = 1;
+  y = dGt(th,data) + xi;
+  while(y<0) {
+    th *= 2;
+    y = dGt(th,data) + xi;
+  }
+
+  while(th-tl>tol) {
+    tm = 0.5*(tl + th);
+    y = dGt(tm,data) + xi;
+    if(y<0) { tl = tm; } else { th = tm; }
+  }
+
+  return 0.5*(tl+th);
+};
+
+double Gt(double ti, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return quad_mp(ti,data,Gtint);
+};
+
+double dGt(double ti, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return quad_mp(ti,data,dGtint);
+};
+
+double d2Gt(double ti, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return quad_mp(ti,data,d2Gtint);
+};
+
+double Gtint(double u, double ti, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double E = u*data->Emax;
+  double x = E/data->kBT;
+  if(fabs(u)<1.0e-7) { return (data->dosPar)*(data->Emax)*(data->Emax)*(data->kBT); }
+  return (data->Emax)*dos(E,data)*bose(x)*exp(u*ti)/u;
+};
+
+double dGtint(double u, double ti, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double E = u*data->Emax;
+  double x = E/data->kBT;
+  if(fabs(u)<1.0e-14) { return (data->dosPar)*(data->Emax)*(data->Emax)*(data->kBT)*u; }
+  return (data->Emax)*dos(E,data)*bose(x)*exp(u*ti);
+};
+
+double d2Gtint(double u, double ti, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double E = u*data->Emax;
+  double x = E/data->kBT;
+  if(fabs(u)<1.0e-6) { return (data->dosPar)*(data->Emax)*(data->Emax)*(data->kBT)*u*u; }
+  return (data->Emax)*dos(E,data)*bose(x)*u*exp(u*ti);
+};
+
+double quad_mp(double ti, struct IncoherentPhonon_physics_storage_struct *data, 
+         double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *))
+{
+  int n;
+  double umin = -1.0;
+  double umax = 1.0;
+  double g1, g2;
+  double tol, relTol;
+
+  tol = data->tolQuadratureGs;
+
+  n = 100;
+  g1 = trapez_mp(n,umin,umax,ti,data,func);
+  n = 200;
+  g2 = trapez_mp(n,umin,umax,ti,data,func);
+  while(n<nFCmax) {
+    if(fabs(0.5*(g1+g2))<10) { relTol = tol; } else { relTol = tol*fabs(0.5*(g1+g2)); }
+    if(fabs(g2-g1)<relTol) {
+      return g2;
+    } 
+    n *= 2;
+    g1 = g2;
+    g2 = trapez_mp(n,umin,umax,ti,data,func);
+  }
+
+  printf("quad: not converged\n");
+  printf("%f %d %.6e %.6e %.16e\n",ti,n,g1,g2,g2-g1);
+  
+  return -sqrt(-1.0);
+};
+
+double trapez_mp(int n, double umin, double umax, double ti,
+                 struct IncoherentPhonon_physics_storage_struct *data,
+		 double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *))
+{
+  int i;
+  double u, du, hdu, s, f1, f2;
+
+  if(n<=0) {
+    printf("quad: invalid n = %d\n",n);
+    exit(1);
+  }
+
+  du = (umax-umin)/n;
+  hdu = 0.5*du;
+
+  s = 0;
+  u = umin;
+  f1 = func(u,ti,data);
+  for(i=1;i<=n;i++) {
+    u += du;
+    f2 = func(u,ti,data);
+    s += hdu*(f1+f2);
+    f1 = f2;
+  }
+
+  return s;
+};
+
+// functions to precompute data
+
+void computeSaddlePointSol(int ntsp, double ximin, double ximax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, done1, doneXi1, doneXi2;
+  double xi, dxi, dximax, *xi_, *tsp_, *g_, *d2g_, *H_;
+  double xi1, tsp1, g1, d2g1, H1, r1;
+  double xi2, tsp2, g2, d2g2, H2, r2;
+  FILE *filep;
+
+  filep = fopen("sp.txt","r");
+  if(filep != NULL) {
+    fscanf(filep,"%d",&ntsp);
+    fscanf(filep,"%lf %lf",&(data->xi1),&(data->xi2));
+    fscanf(filep,"%lf",&(data->aH3));
+    fscanf(filep,"%lf",&(data->aH4));
+    xi_ = (double *)malloc(ntsp*sizeof(double));
+    tsp_ = (double *)malloc(ntsp*sizeof(double));
+    g_ = (double *)malloc(ntsp*sizeof(double));
+    d2g_ = (double *)malloc(ntsp*sizeof(double));
+    H_ = (double *)malloc(ntsp*sizeof(double));
+    for(i=0;i<ntsp;i++) {
+      fscanf(filep,"%lf %lf %lf %lf %lf",xi_+i,tsp_+i,g_+i,d2g_+i,H_+i);
+    }
+    fclose(filep);
+    data->ntsp = ntsp;
+    data->xi = xi_;
+    data->tsp = tsp_;
+    data->g = g_;
+    data->d2g = d2g_;
+    data->H = H_;
+    fprintf(data->filep,"final ntsp: %d\n",data->ntsp);
+    fprintf(data->filep,"final ximin: %f\n",(data->xi)[0]);
+    fprintf(data->filep,"final ximax: %f\n",(data->xi)[(data->ntsp)-1]);
+    fflush(data->filep);
+    return;
+  }
+
+  // computing if necessary
+  printf("Computing saddle point solution...\n");
+
+  // around xi = 1;
+  xi1 = data->xi1;
+  tsp1 = saddlePoint(xi1,data);
+  g1 = Gt(tsp1,data);
+  d2g1 = d2Gt(tsp1,data);
+  H1 = xi1*tsp1 + g1 - (data->g0);
+  
+  xi2 = data->xi2;
+  tsp2 = saddlePoint(xi2,data);
+  g2 = Gt(tsp2,data);
+  d2g2 = d2Gt(tsp2,data);
+  H2 = xi2*tsp2 + g2 - (data->g0);
+  
+  r1 = H1 + (0.5/(data->d2g0))*pow(xi1-1,2);
+  r1 /= pow(xi1-1,3);
+  r2 = H2 + (0.5/(data->d2g0))*pow(xi2-1,2);
+  r2 /= pow(xi2-1,3);
+  
+  data->aH4 = (r1 -r2)/(xi1 -xi2);
+  data->aH3 = r1 - (xi1-1)*data->aH4;
+  
+  fprintf(data->filep,"xi1: %f\n",data->xi1);
+  fprintf(data->filep,"xi2: %f\n",data->xi2);
+  fprintf(data->filep,"aH3: %f\n",data->aH3);
+  fprintf(data->filep,"aH4: %f\n",data->aH4);
+  fflush(data->filep);
+  
+  ///////////
+  
+  if(ntsp<=0) {
+    printf("computeSaddlePointSol: invalid ntsp %d\n",ntsp);
+    fprintf(data->filep,"computeSaddlePointSol: invalid ntsp %d\n",ntsp);
+    exit(1);
+  }
+  
+  dximax = (ximax - ximin)/ntsp;
+  
+  xi1 = 0.5;
+  xi2 = 1.5;
+  
+  // count ntsp
+  ntsp = 0;
+  xi = ximin;
+  while(xi<ximax) {
+    if( !done1 && (fabs(xi-1)<0.05*dximax || (xi-dxi <= 1 && xi >= 1)) ) {
+      done1 = 1;
+      ntsp++;
+      if(fabs(xi-1) > 0.05*dximax) { continue; /* one point added */ } 
+    } else if ( !doneXi1 && (fabs(xi-data->xi1)<0.05*dximax || (xi-dxi <= data->xi1 && xi >= data->xi1)) ) {
+      doneXi1 = 1;
+      ntsp++;
+      if(fabs(xi-data->xi1) > 0.05*dximax) { continue; /* one point added */ }
+    } else if ( !doneXi2 && (fabs(xi-data->xi2)<0.05*dximax || (xi-dxi <= data->xi2 && xi >= data->xi2)) ) {
+      doneXi2 = 1;
+      ntsp++;
+      if(fabs(xi-data->xi2) > 0.05*dximax) { continue; /* one point added */ } 
+    } else {
+      ntsp++;
+    }     
+    if( (xi<xi1 && fabs(xi-xi1)>1.0e-8) || xi>xi2 || fabs(xi-xi2)<1.0e-8) { 
+      dxi = dximax; 
+    } else {
+      dxi = 0.1*dximax;
+      }
+    xi += dxi;
+  }
+  if(fabs(xi-ximax)<1.0e-8) { ntsp++; }
+  
+  xi_ = (double *)malloc(ntsp*sizeof(double));
+  tsp_ = (double *)malloc(ntsp*sizeof(double));
+  g_ = (double *)malloc(ntsp*sizeof(double));
+  d2g_ = (double *)malloc(ntsp*sizeof(double));
+  H_ = (double *)malloc(ntsp*sizeof(double));
+  
+  filep = fopen("sp.txt","w");
+  fprintf(filep,"%d\n",ntsp);
+  fprintf(filep,"%f %f\n",data->xi1,data->xi2);
+  fprintf(filep,"%.16e\n",data->aH3);
+  fprintf(filep,"%.16e\n",data->aH4);
+  xi = ximin;
+  done1 = 0;
+  doneXi1 = 0;
+  doneXi2 = 0;
+  for(i=0;i<ntsp;i++) {
+    printf("%d %d\n",i,ntsp);
+    if( !done1 && (fabs(xi-1)<0.05*dximax || (xi-dxi <= 1 && xi >= 1)) ) {
+      done1 = 1;
+      xi_[i] = 1;
+      tsp_[i] = 0;
+      g_[i] = Gt(tsp_[i],data);
+      d2g_[i] = d2Gt(tsp_[i],data);
+      H_[i] = xi_[i]*tsp_[i] + g_[i] - (data->g0);
+      fprintf(filep,"%.16e %.16e %.16e %.16e %.16e\n",xi_[i],tsp_[i],g_[i],d2g_[i],H_[i]);
+      fflush(filep);
+    } else if ( !doneXi1 && (fabs(xi-data->xi1)<0.05*dximax || (xi-dxi <= data->xi1 && xi >= data->xi1)) ) {
+      doneXi1 = 1;
+      xi_[i] = data->xi1;
+      tsp_[i] = saddlePoint(xi_[i],data);
+      g_[i] = Gt(tsp_[i],data);
+      d2g_[i] = d2Gt(tsp_[i],data);
+      H_[i] = xi_[i]*tsp_[i] + g_[i] - (data->g0);
+      fprintf(filep,"%.16e %.16e %.16e %.16e %.16e\n",xi_[i],tsp_[i],g_[i],d2g_[i],H_[i]);
+      fflush(filep);
+    } else if ( !doneXi2 && (fabs(xi-data->xi2)<0.05*dximax || (xi-dxi <= data->xi2 && xi >= data->xi2)) ) {
+      doneXi2 = 1;
+      xi_[i] = data->xi2;
+      tsp_[i] = saddlePoint(xi_[i],data);
+      g_[i] = Gt(tsp_[i],data);
+      d2g_[i] = d2Gt(tsp_[i],data);
+      H_[i] = xi_[i]*tsp_[i] + g_[i] - (data->g0);
+      fprintf(filep,"%.16e %.16e %.16e %.16e %.16e\n",xi_[i],tsp_[i],g_[i],d2g_[i],H_[i]);
+      fflush(filep);
+    } else {
+      xi_[i] = xi;
+      tsp_[i] = saddlePoint(xi_[i],data);
+      g_[i] = Gt(tsp_[i],data);
+      d2g_[i] = d2Gt(tsp_[i],data);
+      H_[i] = xi_[i]*tsp_[i] + g_[i] - (data->g0);
+      fprintf(filep,"%.16e %.16e %.16e %.16e %.16e\n",xi_[i],tsp_[i],g_[i],d2g_[i],H_[i]);
+      fflush(filep);
+    }     
+    if( (xi<xi1 && fabs(xi-xi1)>1.0e-8) || xi>xi2 || fabs(xi-xi2)<1.0e-8) { 
+      dxi = dximax; 
+    } else {
+      dxi = 0.1*dximax;
+    }
+    xi += dxi;
+  }
+  fclose(filep);
+
+  data->ntsp = ntsp;
+  data->xi = xi_;
+  data->tsp = tsp_;
+  data->g = g_;
+  data->d2g = d2g_;
+  data->H = H_;
+
+  fprintf(data->filep,"final ntsp: %d\n",data->ntsp);
+  fprintf(data->filep,"final ximin: %f\n",(data->xi)[0]);
+  fprintf(data->filep,"final ximax: %f\n",(data->xi)[(data->ntsp)-1]);
+  fflush(data->filep);
+};
+
+/////////////////////////////////////////////////////////
+// multiphonon correlation function in gaussian approx //
+/////////////////////////////////////////////////////////
+
+double totXS_pph_gauss(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double f, ym, yp, u, Fp, ss, x, xmin, xmax, dx;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double alpha = Erat*(data->mRat)*(data->g0);
+  double g0 = data->g0;
+  double twosigma2 = 2.0*p*data->Delta2;
+
+  //In gaussian approx, xmin=0 and xmax=infty. However, the tails are unphysical and we cut them
+  //at the physical values
+  //we should renormalize the corresponding Fp by 2*errf(p), so that int_-p^p du Fp(u) = 1; 
+  n = p*10000;
+  if(Erat>p) { xmin = sqrt(1.0-p/Erat); } else { xmin = 0; }
+  xmax = sqrt(1.0 + p/Erat);
+  dx = (xmax-xmin)/n;
+
+  x = xmin;
+  u =Erat*(1.0-x*x);
+  Fp = exp(-pow(u-p/g0,2)/twosigma2);
+
+  f = x*Fp*angularIntegral_p_phonon(p,alpha,x);
+  ss = 0.5*f;
+  for(i=1;i<n;i++) {
+    x = xmin + i*dx;
+    u =Erat*(1.0-x*x);
+    Fp = exp(-pow(u-p/g0,2)/twosigma2);
+    f = x*Fp*angularIntegral_p_phonon(p,alpha,x);
+    ss += f;
+  }
+  x = xmax;
+  u =Erat*(1.0-x*x);
+  Fp = exp(-pow(u-p/g0,2)/twosigma2);
+  f = x*Fp*angularIntegral_p_phonon(p,alpha,x);
+  ss += 0.5*f;
+
+  // multiply by all constant factors
+  ss *= dx;
+  ss /= sqrt(PI*twosigma2);
+  ss *= (data->sigmaCoh+data->sigmaInc)/(2.*(data->mRat)*(data->g0));
+
+  return ss;
+};
+
+double sampleKprime_pph_gauss(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  //x = kprime/k
+  int i;
+  double x, px;
+  double E = KS2E*kabs*kabs;
+  double iErat = data->Emax/E;
+  double pxmax = interpFunc(kabs,data->nxs,data->kabs,data->dXSdx_Fmax_pph_gauss[p]);
+  // this is a bias since the gaussian has not compact support. But it is a physical bias which
+  // may correct some defects of the gaussian approximation
+  double xmax = sqrt(1.+p*iErat);
+  double xmin, delta_x;
+  if(iErat<1./p) { xmin = sqrt(1.-p*iErat); } else { xmin = 0; }
+  delta_x = xmax - xmin;
+  FILE *filep;
+  for(i=0;i<maxIter;i++) {
+    x =  xmin + delta_x*rand01();
+    px = dXSdx_pph_gauss(p,x,E,data);
+    if(px>pxmax) {
+      fprintf(data->filep,"sampleKprime_pph_gauss: p = %d\n",p);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"xmax: %.6e\n",xmax);
+      fprintf(data->filep,"pxmax: %.6e\n",pxmax);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"px/pxmax: %.6e\n",px/pxmax);
+      fflush(data->filep);
+      filep = fopen("dXSdx_pph_gauss.txt","w");
+      fprintf(filep,"p: %d\n",p);
+      x = 0;
+      while(x<=xmax) {
+	px = dXSdx_pph_gauss(p,x,E,data);
+	fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+	x += xmax/1000;
+      }
+      fclose(filep);
+      exit(1);
+    }
+    if(px/pxmax>rand01()) { return x; }
+  }
+  //What happens if maxIter is exceeded?? return negative value to control
+  filep = fopen("dXSdx_pph_gauss_maxIter_exceeded.txt","w");
+  fprintf(filep,"p: %d\n",p);
+  x = 0;
+  while(x<=xmax) {
+    px = dXSdx_pph_gauss(p,x,E,data);
+    fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+    x += xmax/1000;
+  }
+  fclose(filep);
+  return -1;
+};
+
+double dXSdx_pph_gauss(int p, double x, double E, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Erat = E/(data->Emax);
+  double u = Erat*(1.0-x*x);
+  if(fabs(u)>p) { return 0; }
+  double twosigma2 = 2.0*p*data->Delta*data->Delta;
+  // do not normalize by sqrt(PI*twosigma2), to save time.
+  double Fp = exp(-pow(u-p/data->g0,2)/twosigma2);
+  double alpha = Erat*(data->mRat)*(data->g0);
+  double ang = angularIntegral_p_phonon(p,alpha,x);
+  return x*Fp*ang;
+};
+
+int compute_dXSdx_max_pph_gauss(int n, int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax)
+{
+  int i;
+  double x, xmax, dx, ss;
+  double E = KS2E*kabs*kabs;
+
+  // this is a byas since a gaussian has no xmax (is not of compact support)
+  xmax = sqrt(1.+p*(data->Emax)/E);
+  dx = xmax/n;
+
+  x = 0;
+  *xm = 0;
+  *xsDiffMax = dXSdx_pph_gauss(p,x,E,data);
+  for(i=0;i<n;i++) {
+    x += dx;
+    ss = dXSdx_pph_gauss(p,x,E,data);
+    if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+  }
+  ss = dXSdx_pph_gauss(p,xmax,E,data);
+  if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = xmax; }
+  // refine
+  if(*xm>0 && *xm<xmax) {
+    xmax = *xm + dx;
+    x = *xm - dx;
+    dx /= 100;
+    *xm = x;
+    *xsDiffMax = dXSdx_pph_gauss(p,x,E,data);
+    for(i=0;i<200;i++) {
+      x += dx;
+      ss = dXSdx_pph_gauss(p,x,E,data);
+      if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+    }
+  }
+  // security (better to overstimate maximum)
+  *xsDiffMax *= 1.01; 
+
+  return 0;
+};
+
+double Sgauss(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // from Lovesey, p. 164, Eq. (4.247)
+  int p, pmin, pmax;
+  double Delta = data->Delta;
+  double g0 = data->g0;
+  double x, y, F, hx2, yp;
+
+  x = u/Delta;
+  y = Q2*g0*exp(-0.5/pow(Delta*g0,2));
+
+  hx2 = 0.5*x*x;
+
+  pmin = data->nphe + 1;
+  pmax = data->npmax;
+  // get y**pmin/pmin!
+  yp = y;
+  for(p=2;p<=pmin;p++) { yp *= y/p; }
+  
+  F = yp*exp(-hx2/pmin-Q2*g0)/sqrt(pmin);
+  for(p=pmin+1;p<=pmax;p++) {
+    yp *= y/p;
+    F += yp*exp(-hx2/p-Q2*g0)/sqrt(p);
+  }
+  F /= sqrt(2.*PI);
+
+  return exp(u/(Delta*Delta*g0))*F/Delta;
+}
+
+void computeEpsilon(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double tol = 1.0e-8;
+  data->epsilon = 1.5*quadFunc(0,1,1.0e99,tol,data,epsilonInt);
+}
+
+double epsilonInt(double u, double v, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double E = u*data->Emax;
+  double x = E/data->kBT;
+  if(fabs(u)<1.0e-6) { return (data->dosPar)*(data->Emax)*(data->Emax)*(data->kBT)*u*u; }
+  return (data->Emax)*dos(E,data)*u*(0.5+bose(x));
+}
+
+///////////////////////////////////////////////
+// multiphonon expansion in SP approximation //
+///////////////////////////////////////////////
+
+double sampleKprime_pph_sp(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  //x = kprime/k
+  FILE *filep;
+  int i;
+  double x, px;
+  double E = KS2E*kabs*kabs;
+  double iErat = data->Emax/E;
+  double pxmax = interpFunc(kabs,data->nxs,data->kabs,data->dXSdx_Fmax_pph_sp[p]);
+  double xmax = sqrt(1.+p*iErat);
+  double xmin, delta_x;
+  if(iErat<1./p) { xmin = sqrt(1.-p*iErat); } else { xmin = 0; }
+  delta_x = xmax - xmin;
+  for(i=0;i<maxIter;i++) {
+    x =  xmin + delta_x*rand01();
+    px = dXSdx_pph_sp(p,x,E,data);
+    if(px>pxmax) {
+      fprintf(data->filep,"sampleKprime_pph_sp: p = %d\n",p);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"xmax: %.6e\n",xmax);
+      fprintf(data->filep,"pxmax: %.6e\n",pxmax);
+      fprintf(data->filep,"px: %.6e\n",px);
+      fprintf(data->filep,"px/pxmax: %.6e\n",px/pxmax);
+      filep = fopen("dXSdx_pph_sp.txt","w");
+      fprintf(filep,"p: %d\n",p);
+      x = 0;
+      while(x<=xmax) {
+	px = dXSdx_pph_sp(p,x,E,data);
+	fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+	x += xmax/1000;
+      }
+      fclose(filep);
+      exit(1);
+    }
+    if(px/pxmax>rand01()) { return x; }
+  }
+  //What happens if maxIter is exceeded?? return negative value to control
+  filep = fopen("dXSdx_pph_sp_maxIter_exceeded.txt","w");
+  fprintf(filep,"p: %d\n",p);
+  x = 0;
+  while(x<=xmax) {
+    px = dXSdx_pph_sp(p,x,E,data);
+    fprintf(filep,"%f %.16e %.16e\n",x,px,pxmax);
+    x += xmax/1000;
+  }
+  fclose(filep);
+  return -1;
+};
+
+double dXSdx_pph_sp(int p, double x, double E, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Erat = E/(data->Emax);
+  double u = Erat*(1.0-x*x);
+  if(fabs(u)>p) { return 0; }
+  double Fp = Fp_sp(p,u,data);
+  double alpha = Erat*(data->mRat)*(data->g0);
+  double ang = angularIntegral_p_phonon(p,alpha,x);
+  return x*Fp*ang;
+};
+
+int compute_dXSdx_max_pph_sp(int n, int p, double kabs, 
+              struct IncoherentPhonon_physics_storage_struct *data, double *xm, double *xsDiffMax)
+{
+  int i;
+  double x, xmax, dx, ss;
+  double E = KS2E*kabs*kabs;
+
+  xmax = sqrt(1.+p*(data->Emax)/E);
+  dx = xmax/n;
+
+  x = 0;
+  *xm = 0;
+  *xsDiffMax = dXSdx_pph_sp(p,x,E,data);
+  for(i=0;i<n;i++) {
+    x += dx;
+    ss = dXSdx_pph_sp(p,x,E,data);
+    if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+  }
+  ss = dXSdx_pph_sp(p,xmax,E,data);
+  if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = xmax; }
+  // refine
+  if(*xm>0 && *xm<xmax) {
+    xmax = *xm + dx;
+    x = *xm - dx;
+    dx /= 100;
+    *xm = x;
+    *xsDiffMax = dXSdx_pph_sp(p,x,E,data);
+    for(i=0;i<200;i++) {
+      x += dx;
+      ss = dXSdx_pph_sp(p,x,E,data);
+      if(ss>(*xsDiffMax)) { *xsDiffMax = ss; *xm = x; }
+    }
+  }
+  // security (better to overstimate maximum)
+  *xsDiffMax *= 1.01; 
+
+  return 0;
+};
+
+double totXS_pph_sp(int p, double kabs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double f, u, Fp, ss, x, xmin, xmax, dx;
+  double E = KS2E*kabs*kabs;
+  double Erat = E/(data->Emax);
+  double alpha = Erat*(data->mRat)*(data->g0);
+  //double g0 = data->g0;
+
+  n = p*10000;
+  if(Erat>p) { xmin = sqrt(1.0-p/Erat); } else { xmin = 0; }
+  xmax = sqrt(1.0 + p/Erat);
+  dx = (xmax-xmin)/n;
+
+  x = xmin;
+  u = Erat*(1.0-x*x);
+  Fp = Fp_sp(p,u,data);
+  f = x*Fp*angularIntegral_p_phonon(p,alpha,x);
+  ss = 0.5*f;
+  for(i=1;i<n;i++) {
+    x = xmin + i*dx;
+    u = Erat*(1.0-x*x);
+    Fp = Fp_sp(p,u,data);
+    f = x*Fp*angularIntegral_p_phonon(p,alpha,x);
+    ss += f;
+  }
+  x = xmax;
+  u = Erat*(1.0-x*x);
+  Fp = Fp_sp(p,u,data);
+  f = x*Fp*angularIntegral_p_phonon(p,alpha,x);
+  ss += 0.5*f;
+
+  // multiply by all constant factors
+  ss *= dx;
+  ss *= (data->sigmaCoh+data->sigmaInc)/(2.*(data->mRat)*(data->g0));
+
+  return ss;
+};
+
+double Fp_sp(int p, double u, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double tsp, logg, d2gDg, logpf, rt;
+  double xi = u/p;
+  if(xi < data->xi_p[0] || xi > data->xi_p[data->ntsp_p-1]) { return 0; }
+  tspInterp_p(xi,&tsp,&logg,&d2gDg,data);
+  logpf = 0;
+  //for(i=2;i<=p;i++) { logpf += log(1.0*i); }
+  // notice that what we calles d2gDg is actually -d2gDg
+  rt = sqrt((2.*PI)/(p*(d2gDg-xi*xi)));
+  return rt*exp(u*tsp + p*(logg-log(data->g0)) - logpf);
+};
+
+double Smp_phe(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int p;
+  double s = 0;
+  for(p=(data->nphe)+1;p<=(data->npmax);p++) {
+    s += Smp_p(u,Q2,p,data);
+  }
+  return s;
+};
+
+double Smp_p(double u, double Q2, int p, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i;
+  double tsp, logg, d2gDg, rt, logpf;
+  double xi = u/p;
+
+  //if(1.0-abs(xi) < 1.0e-6) { return 0; }
+
+  if(xi < data->xi_p[0] || xi > data->xi_p[data->ntsp_p-1]) { return 0; }
+
+  tspInterp_p(xi,&tsp,&logg,&d2gDg,data);
+
+  logpf = 0;
+  for(i=2;i<=p;i++) { logpf += log(1.0*i); }
+
+  // notice that what we calles d2gDg is actually -d2gDg
+  rt = sqrt((2.*PI)/(p*(d2gDg-xi*xi)));
+
+  return rt*exp(-Q2*(data->g0) + u*tsp + p*log(Q2) + p*logg - logpf);
+}
+
+double Smp_p_int(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return Smp_p(u,Q2,data->p,data);
+}
+
+double integral_Smp_phe(double Q2, double tol, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double u1, u2, S;
+  u1 = 0;
+  S = Smp_phe(u1,Q2,data);
+  while(S>0.1*tol) {
+    u1 -= 1;
+    S = Smp_phe(u1,Q2,data);
+  }
+  u2 = 0;
+  S = Smp_phe(u2,Q2,data);
+  while(S>0.1*tol) {
+    u2 += 1;
+    S = Smp_phe(u2,Q2,data);
+  }
+  return quadFunc(u1,u2,Q2,tol,data,Smp_phe);
+}
+
+void tspInterp_p(double xi, double *tsp, double *logg, double *d2gDg, 
+                 struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, imin, imax;
+  double a;
+
+  int ntsp_ = data->ntsp_p;
+  double *xi_ = data->xi_p;
+  double *tsp_ = data->tsp_p;
+  double *g_ = data->g_p;
+  double *d2gDg_ = data->d2gDg_p;
+
+  if(xi<xi_[0]) {
+    /*
+    *tsp = data->B_p/(1.0+xi);
+    a = (xi-xi_[0])/(xi_[1]-xi_[0]);
+    *g = g_[0] + a*(g_[1]-g_[0]);
+    *d2g = d2g_[0] + a*(d2g_[1]-d2g_[0]);
+    *H = H_[0] + a*(H_[1]-H_[0]);
+    return;
+    */
+    fprintf(data->filep,"tspInterp_p: xi<xi_p[0]\n");
+    printf("tspInterp_p: xi<xi_p[0]\n");
+    exit(1);
+  }
+  if(xi>xi_[ntsp_-1]) { 
+    /*
+    *tsp = -data->B_p/(1.0-xi);
+    a = (xi-xi_[ntsp_-1])/(xi_[ntsp_-2]-xi_[ntsp_-1]);
+    *g = g_[ntsp_-1] + a*(g_[ntsp_-2]-g_[ntsp_-1]); 
+    *d2g = d2g_[ntsp_-1] + a*(d2g_[ntsp_-2]-d2g_[ntsp_-1]);
+    *H = H_[ntsp_-1] + a*(H_[ntsp_-2]-H_[ntsp_-1]); 
+    return;
+    */
+    fprintf(data->filep,"tspInterp_p: xi>xi_p[ntsp_-1]\n");
+    printf("tspInterp_p: xi<xi_p[ntsp_-1]\n");
+    exit(1);
+  }
+
+  // linear interpolation otherwise
+  imin=0; imax=ntsp_-1;
+  while(imax-imin>1) {
+    i = (imax + imin)/2;
+    if (xi<xi_[i]) { imax = i; } else { imin = i; }
+  }
+
+  if(imax==imin) { printf("imax = imin %d %d\n",imin,imax); exit(1); }
+  if(xi<xi_[imin] || xi>xi_[imax]) { 
+    printf("bad bracketing: %d %d %f %f %f\n",imin,imax,xi_[imin],xi,xi_[imax]);
+    exit(1);
+  }
+
+  a = (xi-xi_[imin])/(xi_[imax]-xi_[imin]);
+
+  *tsp = tsp_[imin] + a*(tsp_[imax]-tsp_[imin]);
+  *logg = log(g_[imin]) + a*(log(g_[imax])-log(g_[imin]));
+  *d2gDg = d2gDg_[imin] + a*(d2gDg_[imax]-d2gDg_[imin]);
+}
+
+void computeSP_p(int ntsp, double ximin, double ximax, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, nread;
+  double xi, dxi, *xi_, *tsp_, *g_, *d2gDg_;
+  FILE *filep;
+
+  fprintf(data->filep,"computeSP_p: start\n");
+  fflush(data->filep);
+  if(ximin<=-1.0 || ximax >= 1.0) { 
+    fprintf(data->filep,"computeSP_p: ximin: %.16e ximax: %.16e\n",ximin,ximax);
+    fflush(data->filep);
+    printf("computeSP_p: ximin: %.16e ximax: %.16e\n",ximin,ximax);
+    exit(1);
+  }
+
+  fprintf(data->filep,"computeSP_p: try open sp_p.txt\n");
+  filep = fopen("sp_p.txt","r");
+  if(filep != NULL) {
+    fprintf(data->filep,"computeSP_p: opened\n");
+    fflush(data->filep);
+    nread = fscanf(filep,"%d",&ntsp);
+    fprintf(data->filep,"computeSP_p: nread %d ntsp %d\n",nread,ntsp);
+    fflush(data->filep);
+    xi_ = (double *)malloc(ntsp*sizeof(double));
+    tsp_ = (double *)malloc(ntsp*sizeof(double));
+    g_ = (double *)malloc(ntsp*sizeof(double));
+    d2gDg_ = (double *)malloc(ntsp*sizeof(double));
+    fprintf(data->filep,"computeSP_p: reading\n");
+    fflush(data->filep);
+    for(i=0;i<ntsp;i++) {
+      fscanf(filep,"%lf %lf %lf %lf",xi_+i,tsp_+i,g_+i,d2gDg_+i);
+    }
+    fclose(filep);
+
+    fprintf(data->filep,"computeSP_p: reading finished\n");
+    fflush(data->filep);
+
+    data->ntsp_p = ntsp;
+    data->xi_p = xi_;
+    data->tsp_p = tsp_;
+    data->g_p = g_;
+    data->d2gDg_p = d2gDg_;
+
+    fprintf(data->filep,"final ntsp_p: %d\n",data->ntsp_p);
+    fprintf(data->filep,"final ximin_p: %f\n",(data->xi_p)[0]);
+    fprintf(data->filep,"final ximax_p: %f\n",(data->xi_p)[(data->ntsp_p)-1]);
+    fprintf(data->filep,"computeSP_p: end\n");
+    fflush(data->filep);
+
+    return;
+  }
+
+  // computing if necessary
+  fprintf(data->filep,"Computing saddle point solution for multiphon expansion in SP...\n");
+  fflush(data->filep);
+
+  dxi = (ximax - ximin)/ntsp;
+  
+  xi_ = (double *)malloc(ntsp*sizeof(double));
+  tsp_ = (double *)malloc(ntsp*sizeof(double));
+  g_ = (double *)malloc(ntsp*sizeof(double));
+  d2gDg_ = (double *)malloc(ntsp*sizeof(double));
+  
+  filep = fopen("sp_p.txt","w");
+  fprintf(filep,"%d\n",ntsp);
+  fflush(filep);
+  xi = ximin;
+  for(i=0;i<ntsp;i++) {
+    //printf("%d %d\n",i,ntsp);
+    xi_[i] = xi;
+    tsp_[i] = saddlePoint_p(xi_[i],data);
+    g_[i] = Gt(tsp_[i],data);
+    d2gDg_[i] = d2Gt(tsp_[i],data)/Gt(tsp_[i],data);
+    fprintf(filep,"%.16e %.16e %.16e %.16e\n",xi_[i],tsp_[i],g_[i],d2gDg_[i]);
+    fflush(filep);
+    xi += dxi;
+  }
+  fclose(filep);
+
+  fprintf(data->filep,"computeSP_p: computation end\n");
+
+  data->ntsp_p = ntsp;
+  data->xi_p = xi_;
+  data->tsp_p = tsp_;
+  data->g_p = g_;
+  data->d2gDg_p = d2gDg_;
+
+  fprintf(data->filep,"final ntsp_p: %d\n",data->ntsp_p);
+  fprintf(data->filep,"final ximin_p: %f\n",(data->xi_p)[0]);
+  fprintf(data->filep,"final ximax_p: %f\n",(data->xi_p)[(data->ntsp_p)-1]);
+  fprintf(data->filep,"computeSP_p: end\n");
+  fflush(data->filep);
+}
+
+double saddlePoint_p(double xi, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // solves dgt(tsp)/gt(tsp) = -z for tsp
+  double tl, th, tm, y;
+  double tol;
+  FILE *filep;
+
+  /*
+  filep = fopen("tirar.txt","w");
+  tm = -20.0;
+  while(tm<20.0) {
+    fprintf(filep,"%f %.16e\n",tm,dGt(tm,data)/Gt(tm,data));
+    tm += 0.1;
+  }
+  fclose(filep);
+  exit(1);
+  */
+
+  if(1.0-abs(xi)<1.0e-8) { return -sqrt(-1.0); }
+
+  //tol = data->tolSaddlePoint;
+  tol = 1.0e-4;
+
+  //filep = fopen("tirar2.txt","w");
+
+  tl = -1;
+  y = dGt(tl,data)/Gt(tl,data) + xi;
+  //fprintf(filep,"%f %.6e %.16e\n",xi,tl,y);
+  //fflush(filep);
+  while(y>0) {
+    tl *= 2;
+    y = dGt(tl,data)/Gt(tl,data) + xi;
+    //fprintf(filep,"%f %.6e %.16e\n",xi,tl,y);
+    //fflush(filep);
+  }
+
+  //fprintf(filep,"\n\n",xi,tl,y);
+  //fflush(filep);
+
+  th = 1;
+  y = dGt(th,data)/Gt(th,data) + xi;
+  //fprintf(filep,"%f %.6e %.16e\n",xi,th,y);
+  //fflush(filep);
+  while(y<0) {
+    th *= 2;
+    y = dGt(th,data)/Gt(th,data) + xi;
+    //fprintf(filep,"%f %.6e %.16e\n",xi,th,y);
+    //fflush(filep);
+  }
+
+  //fclose(filep);
+  //exit(1);
+
+  while(th-tl>tol) {
+    tm = 0.5*(tl + th);
+    y = dGt(tm,data)/Gt(tm,data) + xi;
+    if(y<0) { tl = tm; } else { th = tm; }
+  }
+
+  return 0.5*(tl+th);
+};
+
+/////////////////////////////////////////////////////////
+// for the exact correlation function (only for tests) //
+/////////////////////////////////////////////////////////
+
+double exactS(double u, double Q2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, n;
+  double *s, *rGs, *iGs;
+  double rSF, y1, y2, cus, sus, phe;
+  double Q2p1, Q2p2, Q2p3, Q2p4, EDW; 
+
+  Q2p1 = Q2;
+  Q2p2 = 0.5*Q2p1*Q2;
+  Q2p3 = Q2p2*Q2/3.;
+  Q2p4 = 0.25*Q2p3*Q2;
+  EDW = exp(-Q2*(data->g0));
+
+  n = data->npGs;
+  s = data->s;
+  rGs = data->rGs;
+  iGs = data->iGs;
+
+  rSF = 0;
+  for(i=0;i<n-1;i++) {
+    cus = cos(u*s[i]);
+    sus = sin(u*s[i]);
+    phe = cus;
+    if(data->nphe>0) { phe += Q2p1*(cus*rGs[i]+sus*iGs[i]); } // observe that g0 is absorbed in Gs 
+    if(data->nphe>1) { phe += Q2p2*(cus*(rGs[i]*rGs[i]-iGs[i]*iGs[i]) + 2.0*sus*rGs[i]*iGs[i]); }
+    if(data->nphe>2) {
+      phe += Q2p3*(cus*pow(rGs[i],3)+3.0*sus*iGs[i]*rGs[i]*rGs[i]-3.0*cus*rGs[i]*iGs[i]*iGs[i]-sus*pow(iGs[i],3));
+    }
+    if(data->nphe>3) { 
+      phe += Q2p4*( cus*pow(rGs[i],4) + 4.0*sus*iGs[i]*pow(rGs[i],3) - 6.0*cus*pow(iGs[i]*rGs[i],2)
+		    - 4.0*sus*pow(iGs[i],3)*rGs[i] + cus*pow(iGs[i],4) );
+    }
+    y1 = EDW*(exp(Q2*rGs[i])*cos(Q2*iGs[i]-u*s[i]) - phe);
+    
+    cus = cos(u*s[i+1]);
+    sus = sin(u*s[i+1]);
+    phe = cus;
+    if(data->nphe>0) { phe += Q2p1*(cus*rGs[i+1]+sus*iGs[i+1]); }
+    if(data->nphe>1) { phe += Q2p2*(cus*(rGs[i+1]*rGs[i+1]-iGs[i+1]*iGs[i+1]) + 2.0*sus*rGs[i+1]*iGs[i+1]); }
+    if(data->nphe>2) {
+      phe += Q2p3*(cus*pow(rGs[i+1],3)+3.0*sus*iGs[i+1]*rGs[i+1]*rGs[i+1]-3.0*cus*rGs[i+1]*iGs[i+1]*iGs[i+1]-sus*pow(iGs[i+1],3));
+    }
+    if(data->nphe>3) { 
+      phe += Q2p4*( cus*pow(rGs[i+1],4) + 4.0*sus*iGs[i+1]*pow(rGs[i+1],3) - 6.0*cus*pow(iGs[i+1]*rGs[i+1],2)
+		    - 4.0*sus*pow(iGs[i+1],3)*rGs[i+1] + cus*pow(iGs[i+1],4) );
+    }
+    y2 =  EDW*(exp(Q2*rGs[i+1])*cos(Q2*iGs[i+1]-u*s[i+1]) - phe);
+    
+    rSF += 0.5*(s[i+1]-s[i])*(y1 + y2);
+  }
+  rSF *= 2;
+  
+  return rSF/(2*PI);
+}
+
+void getExactS(double Q2, double nu1, double nu2, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double h = 4.13567; // planck constant in meV*ps
+  int i, n = 200000;
+  double *s, *rGs, *iGs;
+  double smin, smax, ds;
+  double nu, u, rSF, y1, y2, cus, sus, phe;
+  double S1, S2, S3, Fp1, Fp2, Fp3;
+  double g0 = data->g0;
+  FILE *filep;
+
+  filep = fopen("Gs.txt","r");
+  fprintf(data->filep,"exactS: open Gs done\n");
+  fflush(data->filep);
+  if(filep != NULL) {
+    fscanf(filep,"%d",&n);
+    printf("n=%d\n",n);
+    s = (double *)malloc(n*sizeof(double));
+    rGs = (double *)malloc(n*sizeof(double));
+    iGs = (double *)malloc(n*sizeof(double));
+    for(i=0;i<n;i++) {
+      fscanf(filep,"%lf %lf %lf",s+i,rGs+i,iGs+i);
+    }
+    fclose(filep);
+  } else {
+    smin = 0;
+    smax = 200;
+    ds = (smax - smin)/n;
+    s = (double *)malloc(n*sizeof(double));
+    rGs = (double *)malloc(n*sizeof(double));
+    iGs = (double *)malloc(n*sizeof(double));
+    filep = fopen("Gs.txt","w");
+    fprintf(filep,"%d\n",n);
+    for(i=0;i<n;i++) {
+      s[i] = smin + i*ds;
+      computeGs(s[i],rGs+i,iGs+i,data);
+      fprintf(filep,"%.16e %.16e %.16e\n",s[i],rGs[i],iGs[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+  }
+
+  filep = fopen("exactS.txt","w");
+  nu = nu1;
+  while(nu<nu2) {
+    u = (h*nu)/data->Emax;
+    // the three firts terms of the phonon expansion
+    if(fabs(u)<1) { Fp1 = interpFunc(u,data->nF1,data->u1,data->F1); } else { Fp1 = 0; }
+    if(fabs(u)<2) { Fp2 = interpFunc(u,data->nF2,data->u2,data->F2); } else { Fp2 = 0; }
+    if(fabs(u)<3) { Fp3 = interpFunc(u,data->nF3,data->u3,data->F3); } else { Fp3 = 0; }
+    S1 = g0*Fp1*exp(-g0*Q2)*Q2;
+    S2 = g0*g0*Fp2*exp(-g0*Q2)*pow(Q2,2);
+    S3 = g0*g0*g0*Fp3*exp(-g0*Q2)*pow(Q2,3);
+    // the exact multiphonon term
+    rSF = 0;
+    for(i=0;i<n-1;i++) {
+      cus = cos(u*s[i]);
+      sus = sin(u*s[i]);
+      phe = cus;
+      if(data->nphe>0) { phe += Q2*(cus*rGs[i]+sus*iGs[i]); }
+      if(data->nphe>1) { phe += 0.5*pow(Q2,2)*(cus*(rGs[i]*rGs[i]-iGs[i]*iGs[i]) + 2.0*sus*rGs[i]*iGs[i]); }
+      if(data->nphe>2) { 
+	phe += (1./6.)*pow(Q2,3)*(cus*pow(rGs[i],3)+3.0*sus*iGs[i]*rGs[i]*rGs[i]-3.0*cus*rGs[i]*iGs[i]*iGs[i]-sus*pow(iGs[i],3));
+      }
+      if(data->nphe>3) { 
+	phe += (1./24.)*pow(Q2,4)*( cus*pow(rGs[i],4) + 4.0*sus*iGs[i]*pow(rGs[i],3) - 6.0*cus*pow(iGs[i]*rGs[i],2)
+				    - 4.0*sus*pow(iGs[i],3)*rGs[i] + cus*pow(iGs[i],4) );
+      }
+      y1 = exp(-Q2*g0)*(exp(Q2*rGs[i])*cos(Q2*iGs[i]-u*s[i]) - phe);
+
+      cus = cos(u*s[i+1]);
+      sus = sin(u*s[i+1]);
+      phe = cus;
+      if(data->nphe>0) { phe += Q2*(cus*rGs[i+1]+sus*iGs[i+1]); }
+      if(data->nphe>1) { phe += 0.5*pow(Q2,2)*(cus*(rGs[i+1]*rGs[i+1]-iGs[i+1]*iGs[i+1]) + 2.0*sus*rGs[i+1]*iGs[i+1]); }
+      if(data->nphe>2) {
+	phe += (1./6.)*pow(Q2,3)*(cus*pow(rGs[i+1],3)+3.0*sus*iGs[i+1]*rGs[i+1]*rGs[i+1]-3.0*cus*rGs[i+1]*iGs[i+1]*iGs[i+1]-sus*pow(iGs[i+1],3));
+      }
+      if(data->nphe>3) { 
+	phe += (1./24.)*pow(Q2,4)*( cus*pow(rGs[i+1],4) + 4.0*sus*iGs[i+1]*pow(rGs[i+1],3) - 6.0*cus*pow(iGs[i+1]*rGs[i+1],2)
+				    - 4.0*sus*pow(iGs[i+1],3)*rGs[i+1] + cus*pow(iGs[i+1],4) );
+      }
+      y2 =  exp(-Q2*g0)*(exp(Q2*rGs[i+1])*cos(Q2*iGs[i+1]-u*s[i+1]) - phe);
+
+      rSF += 0.5*(s[i+1]-s[i])*(y1 + y2);
+    }
+    rSF *= 2;
+    fprintf(filep,"%f %f %f %.6e %.6e %.6e %.6e\n",Q2,nu,u,S1,S2,S3,rSF);
+    fflush(filep);
+    nu += 0.05;
+  }
+  fclose(filep);
+
+  free(s);
+  free(rGs);
+  free(iGs);
+}
+
+void computeGs(double s, double *rGs, double *iGs, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double tol = 1.0e-6;
+  *rGs = quadFunc(-1,1,s,tol,data,realGsInt);
+  *iGs = quadFunc(-1,1,s,tol,data,imagGsInt);
+}
+
+double realGsInt(double u, double s, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return Gu(u,data)*cos(u*s);
+}
+
+double imagGsInt(double u, double s, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  return -Gu(u,data)*sin(u*s);
+}
+
+////////////////////////////
+// Auxiliary functions   ///
+////////////////////////////
+
+double quadFunc(double x1, double x2, double v, double tol, struct IncoherentPhonon_physics_storage_struct *data,
+		double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *))
+{
+  int n;
+  double s1, s2;
+  double relTol;
+  FILE *filep;
+
+  filep = fopen("quad.txt","a");
+
+  fprintf(filep,"===============\n");
+  fflush(filep);
+
+  n = 100;
+  s1 = trapezFunc(n,x1,x2,v,data,func);
+  n = 200;
+  s2 = trapezFunc(n,x1,x2,v,data,func);
+  if(fabs(0.5*(s1+s2))<10) { relTol = tol; } else { relTol = tol*fabs(0.5*(s1+s2)); }
+  fprintf(filep,"%f %d %.6e %.6e %.16e %.16e\n",v,n,s1,s2,s2-s1,relTol);
+  fflush(filep);
+  while(n<nFCmax) {
+    if(fabs(0.5*(s1+s2))<10) { relTol = tol; } else { relTol = tol*fabs(0.5*(s1+s2)); }
+    if(fabs(s2-s1)<relTol) {
+      fprintf(filep,"===============\n");
+      fclose(filep);
+      return s2;
+    } 
+    n *= 2;
+    s1 = s2;
+    s2 = trapezFunc(n,x1,x2,v,data,func);
+    fprintf(filep,"%f %d %.6e %.6e %.16e %.16e\n",v,n,s1,s2,s2-s1,relTol);
+    fflush(filep);
+  }
+
+  fprintf(filep,"===============\n");
+  fclose(filep);
+
+  printf("quadFunc: not converged\n");
+  printf("%f %f %d %.6e %.6e %.16e\n",x1,x2,n,s1,s2,s2-s1);
+  
+  return -sqrt(-1.0);
+};
+
+double trapezFunc(int n, double umin, double umax, double v, struct IncoherentPhonon_physics_storage_struct *data,
+		  double (*func)(double,double,struct IncoherentPhonon_physics_storage_struct *))
+{
+  int i;
+  double u, du, s;
+
+  if(n<=0) {
+    printf("quad: invalid n = %d\n",n);
+    exit(1);
+  }
+
+  du = (umax-umin)/n;
+
+  u = umin;
+  s = 0.5*du*func(u,v,data);
+  for(i=1;i<n;i++) {
+    u += du;
+    s += du*func(u,v,data);
+  }
+  u = umax;
+  s += 0.5*du*func(u,v,data);
+
+  return s;
+};
+
+double interpFunc(double u, int n, double *up, double *Fp)
+{
+  int i, imin, imax;
+  double a;
+
+  if(u<up[0]) {
+    if(fabs(u-up[0])<1.0e-8) { return Fp[0]; }
+    printf("interpFunc out of range 0: %.16e %.16e\n",u,up[0]);
+    return -sqrt(-1.);
+  }
+  if(u>up[n-1]) {
+    if(fabs(u-up[n-1])<1.0e-8) { return Fp[n-1]; }
+    printf("interpFunc out of range np: %.16e %.16e\n",u,up[n-1]);
+    return -sqrt(-1.);
+  }
+
+  // linear interpolation
+  imin=0; imax=n-1;
+  while(imax-imin>1) {
+    i = (imax + imin)/2;
+    if (u<up[i]) { imax = i; } else { imin = i; }
+  }
+
+  if(imax==imin) { printf("interpFunc: imax = imin %d %d\n",imin,imax); return -sqrt(-1.0); }
+  if(u<up[imin] || u>up[imax]) { 
+    printf("interpFunc: bad bracketing: %d %d %f %f %f\n",imin,imax,up[imin],u,up[imax]);
+    return -sqrt(-1.);
+  }
+
+  // slope
+  a = (Fp[imax]-Fp[imin])/(up[imax]-up[imin]);
+
+  return Fp[imin] + a*(u-up[imin]);
+};
+
+////////////////////////////////////////
+// double differential cross section ///
+////////////////////////////////////////
+
+// the following functions are for computing the differential cross sections, not not for simulation
+
+void compute_dXS_dEp_dOmega(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double h = 4.13567; // planck constant in meV*ps
+  int i, n = 200000;
+  double *s, *rGs, *iGs;
+  double smin, smax, ds;
+  double E, Ep, Epmin, Epmax, dEp, z, dz;
+  double xs0, xs1, xs2, xs3, Smp0, Smp1, Smp2, Smp3;
+  FILE *filep, *filep2;
+
+  if(data->s!=NULL) { free(data->s); data->s = NULL; }
+  if(data->rGs!=NULL) { free(data->rGs); data->rGs = NULL; }
+  if(data->iGs!=NULL) { free(data->iGs); data->iGs = NULL; }
+
+  filep = fopen("Gs.txt","r");
+  fprintf(data->filep," compute_dXS_dEp_dOmega: open Gs done\n");
+  fflush(data->filep);
+  if(filep != NULL) {
+    fscanf(filep,"%d",&n);
+    printf("n=%d\n",n);
+    s = (double *)malloc(n*sizeof(double));
+    rGs = (double *)malloc(n*sizeof(double));
+    iGs = (double *)malloc(n*sizeof(double));
+    for(i=0;i<n;i++) {
+      fscanf(filep,"%lf %lf %lf",s+i,rGs+i,iGs+i);
+    }
+    fclose(filep);
+    // assign
+    data->npGs = n;
+    data->s = s;
+    data->rGs = rGs;
+    data->iGs = iGs;
+  } else {
+    smin = 0;
+    smax = 200;
+    ds = (smax - smin)/n;
+    s = (double *)malloc(n*sizeof(double));
+    rGs = (double *)malloc(n*sizeof(double));
+    iGs = (double *)malloc(n*sizeof(double));
+    filep = fopen("Gs.txt","w");
+    fprintf(filep,"%d\n",n);
+    for(i=0;i<n;i++) {
+      s[i] = smin + i*ds;
+      computeGs(s[i],rGs+i,iGs+i,data);
+      fprintf(filep,"%.16e %.16e %.16e\n",s[i],rGs[i],iGs[i]);
+      fflush(filep);
+    }
+    fclose(filep);
+    // assign
+    data->npGs = n;
+    data->s = s;
+    data->rGs = rGs;
+    data->iGs = iGs;
+  }
+
+  E = 400.0; // meV
+
+  dz = 0.1;
+  Epmin = 0.5*E;
+  Epmax = E + 10*(data->Emax);
+  dEp = (Epmax-Epmin)/1000;
+
+  filep = fopen("double_diff_XS.txt","w");
+  fprintf(filep,"#E: %f\n",E);
+  fflush(filep);
+  filep2 = fopen("XS_mp.txt","w");
+  fprintf(filep2,"#E: %f\n",E);
+  fflush(filep2);
+  z = -1.0;
+  while(z<1.0) {
+    Ep = Epmin;
+    while(Ep<Epmax) {
+      xs0 = dXS_dEp_dOmega(0,E,Ep,z,&Smp0,data);
+      xs1 = dXS_dEp_dOmega(1,E,Ep,z,&Smp1,data);
+      xs2 = dXS_dEp_dOmega(2,E,Ep,z,&Smp2,data);
+      xs3 = dXS_dEp_dOmega(3,E,Ep,z,&Smp3,data);
+      fprintf(filep,"%f %.6e %.6e %.6e %.6e %.6e\n",z,Ep,xs0,xs1,xs2,xs3);
+      fflush(filep);
+      fprintf(filep2,"%f %.6e %.6e %.6e %.6e %.6e\n",z,Ep,Smp0,Smp1,Smp2,Smp3);
+      fflush(filep2);
+      Ep += dEp;
+    }
+    fprintf(filep,"\n\n");
+    fflush(filep);
+    fprintf(filep2,"\n\n");
+    fflush(filep2);
+    z  += dz;
+  }
+  fclose(filep2);
+  fclose(filep2);
+}
+
+double dXS_dEp_dOmega(int type, double E, double Ep, double z, double *XSmphon, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  double Erat, Mrat, S, Sphe, Smp, Fp1, Fp2, Fp3, W, EDW, yp, u;
+  double fac1, fac2, tol;
+  double Emax = data->Emax;
+  double x = sqrt(Ep/E);
+  double Q2 = 1.0 + x*x - 2.0*x*z;
+
+  if(Q2<=0) { return 0; }
+
+  Erat = E/Emax;
+  Mrat = (MNEUTRON/amu)/data->M;
+
+  Q2 *= Erat*Mrat;
+  u = (E-Ep)/Emax;
+
+ // p-phonon contribution
+  W = Q2*(data->g0);
+  fac1 = 1.0;
+  if(data->nphe>0) {
+    yp = W;
+    fac1 += yp;
+    if(fabs(u)<1) {
+      Fp1 = interpFunc(u,data->nF1,data->u1,data->F1); 
+      Sphe = yp*Fp1;
+    } else {
+      Sphe = 0;
+    }
+  }
+  if(data->nphe>1) {
+    yp *= W;
+    fac1 += 0.5*yp;
+    if(fabs(u)<2) {
+      Fp2 = interpFunc(u,data->nF2,data->u2,data->F2);
+      Sphe += 0.5*yp*Fp2;
+    } else {
+      Sphe += 0;
+    }
+  }
+  if(data->nphe>2) {
+    yp *= W;
+    fac1 += yp/6.;
+    if(fabs(u)<3) {
+      Fp3 = interpFunc(u,data->nF3,data->u3,data->F3);
+      Sphe += yp*Fp3/6.;
+    } else {
+      Sphe += 0;
+    }
+  }
+  if(data->nphe>3) {
+    fprintf(data->filep,"dXS_dEp_dO: too large nphe = %d\n",data->nphe);
+    exit(1);
+  }
+
+  EDW = exp(-W);
+  fac1 = 1.0 - EDW*fac1;
+
+  Sphe *= EDW;
+
+  // multiphonon
+  switch(type) {
+  case 0:
+    Smp = exactS(u,Q2,data); // no need for normalization
+    break;
+  case 1:
+    tol = 1.0e-6;
+    fac2 = 1.0/integral_Smp_phe(Q2,tol,data);
+    Smp = fac1*fac2*Smp_phe(u,Q2,data);
+    break;
+  case 2:
+    Smp = Sgauss(u,Q2,data); // no need for normalization
+    break;
+  case 3:
+    fac2 = 1.0/(Q2*interpFunc(Q2,data->np_Q2_mph,data->Q2,data->SQ2_mph));
+    Smp = fac1*fac2*SFuncInterp(u/Q2,Q2,data);
+    break;
+  default:
+    fprintf(data->filep,"dXS_dEp_dO: bad type %d\n",type);
+    exit(1);
+  }
+
+  *XSmphon = (data->sigmaCoh+data->sigmaInc)*x*Smp/(4.0*PI*Emax);
+
+  S = Sphe + Smp;
+
+  // sigma in barn/meV
+  return (data->sigmaCoh+data->sigmaInc)*x*S/(4.0*PI*Emax);
+}
+
+////////////////////////////////
+// functions for the DoS     ///
+////////////////////////////////
+
+double dos(double E, struct IncoherentPhonon_physics_storage_struct *data)
+{
+  int i, imin, imax;
+  double Emax = data->Emax;
+  double *e = data->e;
+  double *Z = data->Z;
+  int np = data->np;
+
+  //if(E<=0 || E>=Emax) { return 0; }
+
+  if(E<0) { E = -E; }
+
+  if(E>=Emax) { return 0; }
+
+  // parabolic around E=0
+  if(E<=e[1]) {
+    return (data->dosPar)*E*E;
+  }
+
+  // linear interpolation elsewhere
+  imin=1; imax=np-1;
+  while(imax-imin>1) {
+    i = (imax + imin)/2;
+    if (E<e[i]) { imax = i; } else { imin = i; }
+  }
+
+  return Z[imin]+(E-e[imin])*(Z[imax]-Z[imin])/(e[imax]-e[imin]);
+};
+
+void readDoS(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  char *snp = "#np:", s[100]="";
+  int i, np, nptrim, nread;
+  double *e, *Z, norm;
+  FILE *filep;
+
+  filep = fopen(data->dosfn,"r");
+
+  if(filep==NULL) {
+    fprintf(data->filep,"readDos: dos file %s not found\n",data->dosfn);
+    fprintf(data->filep,"stopping computation\n");
+    printf("readDos: dos file %s not found\n",data->dosfn);
+    printf("stopping computation\n");
+    exit(1);
+  }
+
+  while(strcmp(s,snp)) {
+     nread = fscanf(filep,"%s",s);
+     if(nread!=1) { 
+       printf("readDoS: not valid file %s\n",data->dosfn);
+       printf("stopping computation\n");	
+       fprintf(data->filep,"readDoS: not valid file %s\n",data->dosfn);
+       fprintf(data->filep,"stopping computation\n");
+       exit(1);
+     }
+  }
+  nread = fscanf(filep,"%d",&np);	
+
+  e = (double *)malloc(np*sizeof(double));
+  Z = (double *)malloc(np*sizeof(double));
+
+  for(i=0;i<np;i++) {
+     nread = fscanf(filep,"%lf %lf",e+i,Z+i);
+  }
+
+  fclose(filep);
+
+  // Make DoS vanish at E=0
+  for(i=np-1;i>=0;i--) { Z[i] -= Z[0]; }
+
+  //trim the dos
+  nptrim = 0;
+  for(i=np-1;i>=0;i--) { 
+    if(Z[i]>1.0e-12) {
+      nptrim = i+2;
+      break;
+    }
+  }
+
+  data->np = nptrim;
+  data->e = (double *)malloc(nptrim*sizeof(double));
+  data->Z = (double *)malloc(nptrim*sizeof(double));
+  for(i=0;i<nptrim&&i<np;i++) {
+    (data->e)[i] = e[i];
+    (data->Z)[i] = Z[i];
+  }
+  if(nptrim > np) {
+    (data->e)[nptrim-1] = 2.*e[np-1] - e[nptrim-2];
+  }
+  (data->Z)[nptrim-1] = 0;
+
+  // parameters
+  data->dosPar = (data->Z)[1]/pow((data->e)[1]-(data->e)[0],2);
+  data->Emax = (data->e)[nptrim-1];
+
+  // dos normalization (very important)
+  norm = (data->dosPar)*pow((data->e)[1],3)/3.; // parabolic at origin
+  for(i=2;i<nptrim;i++) {
+    norm += 0.5*((data->Z)[i]+(data->Z)[i-1])*((data->e)[i]-(data->e)[i-1]);
+  }
+  for(i=0;i<nptrim;i++) {
+    (data->Z)[i] /= norm;
+  }
+  data->dosPar /= norm;
+
+  fprintf(data->filep,"DoS norm: %f\n",norm);
+
+  free(e);
+  free(Z);
+
+  filep = fopen("interpDoS.txt","w");
+  for(i=0;i<10001;i++) {
+     fprintf(filep,"%.16e %.16e\n",i*(data->Emax)/10000,dos(i*(data->Emax)/10000,data));
+  }
+  fclose(filep);
+};
+
+//////////////////////////////
+// initialization functions //
+//////////////////////////////
+
+void setParams(struct IncoherentPhonon_physics_storage_struct *data, 
+               int nphe_exact, int nphe_approx, int approx, int mph_resum,
+               double T, double density, double M, 
+	       double sigmaCoh, double sigmaInc,
+	       double kabsmin, double kabsmax, int nxs, 
+	       char *dosfn, int ntsp, double ximin, double ximax, char *filelog)
+{
+  // log file
+  data->filep = fopen(filelog,"w");
+  fprintf(data->filep,"Initializing\n");
+
+  data->nphe_exact = nphe_exact;
+  data->nphe_approx = nphe_approx;
+  data->approx = approx;     
+  data->mph_resum = mph_resum;  
+
+  data->npmax = data->nphe_approx;
+  data->nphe = nphe_exact;
+
+  // initialize parameters
+  data->T = T;
+  data->density = density;
+  data->M = M;
+  data->sigmaCoh = sigmaCoh;
+  data->sigmaInc = sigmaInc;
+  data->kabsmin = kabsmin;
+  data->kabsmax = kabsmax;
+  data->nxs = nxs;
+  data->kBT = kB*T;
+  data->mRat = (MNEUTRON/amu)/M;
+  data->XS2mu = 100*(density/M)*(NA*barn2cmsq); //the factor 100 to convert from cm-1 to m-1
+
+  data->ntsp = ntsp;
+  data->ximin = ximin;
+  data->ximax = ximax;
+  data->xi1 = 0.8;
+  data->xi2 = 1.2;
+
+  data->tolSaddlePoint = 1.0e-8;
+  data->tolQuadratureFs = 1.0e-6;
+  data->tolQuadratureGs = 1.0e-8;
+
+  data->np_u_mph = 100;
+  data->tol_dXSdu_mph = 1.0e-6;
+
+  data->np_Q2_mph = 1000;
+
+  strcpy(data->dosfn,dosfn);
+
+  readDoS(data);
+
+  data->g0 = Gt(0,data);
+  data->d2g0 = d2Gt(0,data);
+
+  fprintf(data->filep,"Parameters computed\n");
+  fprintf(data->filep,"*************************\n");
+  fprintf(data->filep,"Input parameters:\n");
+  fprintf(data->filep,"nphe_exact: %d\n",data->nphe_exact);
+  fprintf(data->filep,"nphe_approx: %d\n",data->nphe_approx);
+  fprintf(data->filep,"approx: %d\n",data->approx);
+  fprintf(data->filep,"mph_resum: %d\n",data->mph_resum);
+  fprintf(data->filep,"T: %f\n",data->T);
+  fprintf(data->filep,"density: %f\n",data->density);
+  fprintf(data->filep,"M: %f\n",data->M);
+  fprintf(data->filep,"sigmaCoh: %f\n",data->sigmaCoh);
+  fprintf(data->filep,"sigmaInc: %f\n",data->sigmaInc);
+  fprintf(data->filep,"kabsmin: %f\n",data->kabsmin);
+  fprintf(data->filep,"kabsmax: %f\n",data->kabsmax);
+  fprintf(data->filep,"nxs: %d\n",data->nxs);
+  fprintf(data->filep,"kBT: %f\n",data->kBT);
+  fprintf(data->filep,"mRat: %f\n",data->mRat);
+  fprintf(data->filep,"XS2mu: %f\n",data->XS2mu);
+  fprintf(data->filep,"Emax: %f\n",data->Emax);
+  fprintf(data->filep,"dosPar: %f\n",data->dosPar);
+  fprintf(data->filep,"ntsp: %d\n",data->ntsp);
+  fprintf(data->filep,"ximin: %f\n",data->ximin);
+  fprintf(data->filep,"ximax: %f\n",data->ximax);
+  fprintf(data->filep,"G(0): %f\n",data->g0);
+  fprintf(data->filep,"d2G(0): %f\n",data->d2g0);
+  fprintf(data->filep,"np_u_mph: %d\n",data->np_u_mph);
+  fprintf(data->filep,"np_Q2_mph: %d\n",data->np_Q2_mph);
+  fprintf(data->filep,"tolSaddlePoint: %.6e\n",data->tolSaddlePoint);
+  fprintf(data->filep,"tolQuadratureGs: %.6e\n",data->tolQuadratureGs);
+  fprintf(data->filep,"tolQuadratureFs: %.6e\n",data->tolQuadratureFs);
+  fprintf(data->filep,"tol_dXSdu_mph: %.6e\n",data->tol_dXSdu_mph);
+  fprintf(data->filep,"*************************\n");
+
+  fflush(data->filep);
+
+  // Null pointers
+  data->xs_p_phe_gauss = NULL;
+  data->xs_p_phe_sp = NULL;
+
+  // for multiphonon expansion gaussian approximation
+  if(data->approx==1) {
+    computeEpsilon(data);
+    data->Delta = sqrt(4.*(data->epsilon)*(data->g0)/3.-1.)/(data->g0);
+    data->Delta2 = (data->Delta)*(data->Delta);
+
+    if(data->nphe_approx>0) {
+      data->xs_p_phe_gauss = (double *)malloc((data->nphe_approx+1)*sizeof(double));
+    }
+
+    fprintf(data->filep,"epsilon: %.6e\n",data->epsilon);
+    fprintf(data->filep,"Delta:   %.6e\n",data->Delta);
+    fprintf(data->filep,"*************************\n");
+    fflush(data->filep);
+  }
+
+  // for multiphonon expansion in SP approximation 
+  if(data->approx==2) {
+    data->ntsp_p = 1000;
+    data->ximin_p = -0.99;
+    data->ximax_p = -data->ximin_p;
+
+    if(data->nphe_approx>0) {
+      data->xs_p_phe_sp = (double *)malloc((data->nphe_approx+1)*sizeof(double));
+    }
+
+    fprintf(data->filep,"ntsp_p: %d\n",data->ntsp_p);
+    fprintf(data->filep,"xmin_p:   %f\n",data->ximin_p);
+    fprintf(data->filep,"xmax_p:   %f\n",data->ximax_p);
+    fprintf(data->filep,"*************************\n");
+    fflush(data->filep);
+  }
+
+  // precompute total cross sections and other data
+  precomputations(data);
+
+  fprintf(data->filep,"setParams: precomputations done\n");
+  fflush(data->filep);
+};
+
+////////////////////////////
+// finishing functions  ////
+////////////////////////////
+
+int finish(struct IncoherentPhonon_physics_storage_struct *data)
+{
+  // deallocate allocated memory
+
+  int p;  
+
+  if(data->e != NULL) { free(data->e); data->e=NULL;}
+  if(data->Z != NULL) { free(data->Z); data->Z=NULL;}
+
+  if(data->kabs != NULL) { free(data->kabs); data->kabs=NULL;}
+
+  if(data->xsTot_1ph != NULL) { free(data->xsTot_1ph); data->xsTot_1ph=NULL; }
+  if(data->xsTot_2ph != NULL) { free(data->xsTot_2ph); data->xsTot_2ph=NULL; }
+  if(data->xsTot_3ph != NULL) { free(data->xsTot_3ph); data->xsTot_3ph=NULL; }
+  if(data->xsTot_mph != NULL) { free(data->xsTot_mph); data->xsTot_mph=NULL; }
+  if(data->dXSdx_xmax_1ph != NULL) { free(data->dXSdx_xmax_1ph); data->dXSdx_xmax_1ph=NULL; }
+  if(data->dXSdx_xmax_2ph != NULL) { free(data->dXSdx_xmax_2ph); data->dXSdx_xmax_2ph=NULL; }
+  if(data->dXSdx_xmax_3ph != NULL) { free(data->dXSdx_xmax_3ph); data->dXSdx_xmax_3ph=NULL; }
+  if(data->dXSdx_Fmax_1ph != NULL) { free(data->dXSdx_Fmax_1ph); data->dXSdx_Fmax_1ph=NULL; }
+  if(data->dXSdx_Fmax_2ph != NULL) { free(data->dXSdx_Fmax_2ph); data->dXSdx_Fmax_2ph=NULL; }
+  if(data->dXSdx_Fmax_3ph != NULL) { free(data->dXSdx_Fmax_3ph); data->dXSdx_Fmax_3ph=NULL; }
+
+  if(data->xs_p_phe_gauss != NULL) { free(data->xs_p_phe_gauss); }
+  if(data->xsTot_pph_gauss != NULL) {
+     for(p=1;p<=data->nphe_approx;p++) { free((data->xsTot_pph_gauss)[p]); }
+     free(data->xsTot_pph_gauss);
+  }
+  if(data->dXSdx_xmax_pph_gauss != NULL) { 
+     for(p=1;p<=data->nphe_approx;p++) { free((data->dXSdx_xmax_pph_gauss)[p]); }
+     free(data->dXSdx_xmax_pph_gauss);
+  }
+  if(data->dXSdx_Fmax_pph_gauss != NULL) { 
+     for(p=1;p<=data->nphe_approx;p++) { free((data->dXSdx_Fmax_pph_gauss)[p]); }
+     free(data->dXSdx_Fmax_pph_gauss);
+  }
+
+  if(data->xs_p_phe_sp != NULL) { free(data->xs_p_phe_sp); }
+  if(data->xsTot_pph_sp != NULL) {
+     for(p=1;p<=data->nphe_approx;p++) { free((data->xsTot_pph_sp)[p]); }
+     free(data->xsTot_pph_sp);
+  }
+  if(data->dXSdx_xmax_pph_sp != NULL) { 
+     for(p=1;p<=data->nphe_approx;p++) { free((data->dXSdx_xmax_pph_sp)[p]); }
+     free(data->dXSdx_xmax_pph_sp);
+  }
+  if(data->dXSdx_Fmax_pph_sp != NULL) { 
+     for(p=1;p<=data->nphe_approx;p++) { free((data->dXSdx_Fmax_pph_sp)[p]); }
+     free(data->dXSdx_Fmax_pph_sp);
+  }
+
+  if(data->u != NULL) { free(data->u); data->u=NULL; }
+  if(data->dXSdu_mph != NULL) { free(data->dXSdu_mph); data->dXSdu_mph=NULL; }
+
+  if(data->u1 != NULL) { free(data->u1); data->u1=NULL; }
+  if(data->u2 != NULL) { free(data->u2); data->u2=NULL; }
+  if(data->u3 != NULL) { free(data->u3); data->u3=NULL; }
+  if(data->F1 != NULL) { free(data->F1); data->F1=NULL; }
+  if(data->F2 != NULL) { free(data->F2); data->F2=NULL; }
+  if(data->F3 != NULL) { free(data->F3); data->F3=NULL; }
+
+  if(data->xi != NULL) { free(data->xi); data->xi=NULL; }
+  if(data->tsp != NULL) { free(data->tsp); data->tsp=NULL; }
+  if(data->g != NULL) { free(data->g); data->g=NULL; }
+  if(data->d2g != NULL) { free(data->d2g); data->d2g=NULL; }
+  if(data->H != NULL) { free(data->H); data->H=NULL; }
+
+  if(data->u != NULL) { free(data->u); data->u=NULL; }
+  if(data->dXSdu_mph != NULL) { free(data->dXSdu_mph); data->dXSdu_mph=NULL; }
+
+  if(data->Q2min != NULL) { free(data->Q2min); data->Q2min=NULL; }
+  if(data->Q2max != NULL) { free(data->Q2max); data->Q2max=NULL; }
+
+  if(data->Q2 != NULL) { free(data->Q2); data->Q2=NULL; }
+  if(data->SQ2_mph != NULL) { free(data->SQ2_mph); data->SQ2_mph=NULL; }
+
+  if(data->xi_p != NULL) { free(data->xi_p); data->xi_p=NULL; }
+  if(data->tsp_p != NULL) { free(data->tsp_p); data->tsp_p=NULL; }
+  if(data->g_p != NULL) { free(data->g_p); data->g_p=NULL; }
+  if(data->d2gDg_p != NULL) { free(data->d2gDg_p); data->d2gDg_p=NULL; }
+
+  if(data->dXSdQ2_Q2max_mph != NULL) { free(data->dXSdQ2_Q2max_mph); data->dXSdQ2_Q2max_mph=NULL; }
+  if(data->dXSdQ2_Fmax_mph != NULL) { free(data->dXSdQ2_Fmax_mph); data->dXSdQ2_Fmax_mph=NULL; }
+
+  if(data->s != NULL) { free(data->s); data->s=NULL; }
+  if(data->rGs != NULL) { free(data->rGs); data->rGs=NULL; }
+  if(data->iGs != NULL) { free(data->iGs); data->iGs=NULL; }
+
+  fprintf(data->filep,"run finished\n");
+  
+  if(data->filep!=NULL) { fclose(data->filep); data->filep=NULL; }
+  
+  return 1;
+};
+
+// End implementation of internal functions
+
+%}
+
+DECLARE
+%{
+// Needed for transport to the main component
+struct global_process_element_struct global_process_element;
+struct scattering_process_struct This_process;
+
+#ifndef PROCESS_DETECTOR
+	//struct pointer_to_global_process_list global_process_list = {0,NULL};
+	#define PROCESS_DETECTOR dummy
+#endif
+
+// Declare for this component, to do calculations on the input / store in the transported data
+struct IncoherentPhonon_physics_storage_struct IncoherentPhonon_storage;
+
+%}
+
+INITIALIZE
+%{
+  // Initialize done in the component
+  char filelog[250];
+  sprintf(filelog,"IncoherentPhonon_process_%s.log",NAME_CURRENT_COMP);
+  // parameters for numerical computation
+  int    ntsp = 2000;
+  double ximin = -200;
+  double ximax = 200;
+
+  setParams(&IncoherentPhonon_storage,
+            nphe_exact, nphe_approx, approx, mph_resum,
+            T,density,M,sigmaCoh,sigmaInc,kabsmin,kabsmax,nxs,
+             dosfn,ntsp,ximin,ximax,filelog);
+
+  fprintf(IncoherentPhonon_storage.filep,"setParams done\n");
+  fflush(IncoherentPhonon_storage.filep);
+
+  // Need to specify if this process is isotropic
+  This_process.non_isotropic_rot_index = -1; // Yes (powder)
+  //This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+
+  // Packing the data into a structure that is transported to the main component
+  sprintf(This_process.name,NAME_CURRENT_COMP);
+  This_process.process_p_interact = interact_fraction;
+  This_process.data_transfer.pointer_to_a_IncoherentPhonon_physics_storage_struct = &IncoherentPhonon_storage;
+
+  This_process.probability_for_scattering_function = &IncoherentPhonon_physics_my;
+  This_process.scattering_function = &IncoherentPhonon_physics_scattering;
+
+  // This will be the same for all process's, and can thus be moved to an include.
+  sprintf(global_process_element.name,NAME_CURRENT_COMP);
+  global_process_element.component_index = INDEX_CURRENT_COMP;
+  global_process_element.p_scattering_process = &This_process;
+  add_element_to_process_list(&global_process_list,global_process_element);
+
+  fprintf(IncoherentPhonon_storage.filep,"Initialization done\n");
+  fflush(IncoherentPhonon_storage.filep);
+ %}
+
+TRACE
+%{
+%}
+
+FINALLY
+%{
+// deallocate allocated memory, etc.
+struct IncoherentPhonon_physics_storage_struct *data = This_process.data_transfer.pointer_to_a_IncoherentPhonon_physics_storage_struct;
+finish(data);
+%}
+
+END

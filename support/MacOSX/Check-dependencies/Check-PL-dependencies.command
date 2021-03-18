@@ -28,7 +28,7 @@ rc1=$?;
 if [[ $rc1 == 0 ]]; 
 then
     echo "OK, resetting attributes - may take a while to complete..."
-    xattr -rc /Applications/$NEWESTAPP 
+    xattr -d -r com.apple.quarantine /Applications/$NEWESTAPP 
 else
     echo "OK, not resetting attributes"
 fi
@@ -105,6 +105,7 @@ fi
 
 # Figure out which OS X this is...
 OSXVER=`sw_vers -productVersion|cut -f 2 -d.`
+OSXVER_MAJOR=`sw_vers -productVersion|cut -f 1 -d.`
 if [ "$OSXVER" == "6" ];
 then
     # 10.6 aka Snow Leopard
@@ -159,15 +160,30 @@ then
     PERLVER="SYSTEM"
     TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
     SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+elif [ "$OSXVER" == "15" ];
+then
+    # 10.15 aka Catalina
+    PERLVER="SYSTEM"
+    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+elif [ "$OSXVER" == "0" ];
+then
+    if [ "$OSXVER_MAJOR" == "11" ];
+    then
+	# 11.0 aka Big Sur
+	PERLVER="SCIPDL"
+	TKPKG=""
+	SCIPDL="SciPDL-v2.019.dmg"
+    fi
 else
-    osascript -e "tell app \"System Events\" to display dialog \"Your macOS is version $OSXVER is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to work with High Sierra and Mojave?\""
+    osascript -e "tell app \"System Events\" to display dialog \"Your macOS is version $OSXVER is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to give partial support on Big Sur?\""
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then    
-        # Assume that what works for 10.13 and 10.14 will also work here
-	PERLVER="SYSTEM"
-	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+        # Assume that what works partiallu for 11.0
+	PERLVER="SCIPDL"
+	TKPKG=""
+	SCIPDL="SciPDL-v2.019.dmg"
     else
 	echo "OK, cancelling install"
 	exit 1;
@@ -175,23 +191,32 @@ else
 fi
 
 # Download support packages
-osascript -e "tell app \"System Events\" to display dialog \"Will now request download of the packages \n$TKPKG and \n$SCIPDL\n from the McCode GitHub page\n\n !! Please locate the your download folder and install!! \""
+osascript -e "tell app \"System Events\" to display dialog \"Will now request download of the package(s) \n$TKPKG\n$SCIPDL\n from the McCode GitHub page\n\n !! Please locate the your download folder and install!! \""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
-    TKPKG="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/Perl-Tk/${TKPKG}?raw=true"
-    SCIPDL="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/SciPDL/${SCIPDL}?raw=true"
-    # Proceed to download and install SciPDL + Tk packages
     echo
     echo "******************************************************"
-    echo "* Spawning browser for downloading these packages    *"
-    echo "* from the mccode GitHub:                            *"
+    echo "* Spawning browser for downloading package(s) from   *"
+    echo "* the mccode GitHub:                            *"
     echo "******************************************************"
+    if [ -z "$TKPKG" ];
+    then
+	echo not downloading TK
+    else
+	TKPKG="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/Perl-Tk/${TKPKG}?raw=true"
+    fi
+    SCIPDL="https://github.com/McStasMcXtrace/McCode/blob/master/support/MacOSX/SciPDL/${SCIPDL}?raw=true"
+    # Proceed to download and install SciPDL + Tk packages
+
     echo $TKPKG
     echo $SCIPDL
     
     sleep 3
-    `open $TKPKG`
+    if [ -z "$TKPKG" ];
+    then
+	`open $TKPKG`
+    fi
     `open $SCIPDL`
 else
     echo "McCode support packages $TKPKG and $SCIPDL will NOT be downloaded!"
@@ -252,19 +277,36 @@ then
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then
-	if [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcstas" ];
+	if [ "$PERLVER" == "SCIPDL" ]
 	then
-    	    cd /Applications/$NEWESTAPP/Contents/Resources/mcstas/*/bin
-    	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
-	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mcdoc
-	elif [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcxtrace" ];
-	then
-    	    cd /Applications/$NEWESTAPP/Contents/Resources/mcxtrace/*/bin
-    	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
-	    sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mxdoc
+	    if [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcstas" ];
+	    then
+    		cd /Applications/$NEWESTAPP/Contents/Resources/mcstas/*/bin
+    		sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!\ /Applications/PDL/bin/perl+ *.pl
+		sed -i.bak s+\#\!\ /usr/bin/perl+\#\!\ /Applications/PDL/bin/perl+ *.pl
+	    elif [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcxtrace" ];
+	    then
+    		cd /Applications/$NEWESTAPP/Contents/Resources/mcxtrace/*/bin
+    		sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
+	    else
+    		echo "Your app $NEWESTAPP seems to be neither McStas nor McXtrace... Aborting!"
+    		exit 1
+	    fi
 	else
-    	    echo "Your app $NEWESTAPP seems to be neither McStas nor McXtrace... Aborting!"
-    	    exit 1
+	    if [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcstas" ];
+	    then
+    		cd /Applications/$NEWESTAPP/Contents/Resources/mcstas/*/bin
+    		sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
+		sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mcdoc
+	    elif [ -d "/Applications/$NEWESTAPP/Contents/Resources/mcxtrace" ];
+	    then
+    		cd /Applications/$NEWESTAPP/Contents/Resources/mcxtrace/*/bin
+    		sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ *.pl
+		sed -i.bak s+\#\!\ /usr/bin/perl5.18+\#\!/usr/bin/perl$PERLVER+ mxdoc
+	    else
+    		echo "Your app $NEWESTAPP seems to be neither McStas nor McXtrace... Aborting!"
+    		exit 1
+	    fi
 	fi
     else
 	echo "Did not patch McCode package for use with Perl version $PERLVER!"
@@ -274,30 +316,14 @@ else
     echo Excellent, your default Perl is the right version, proceeding!
 fi
 
-cd /Applications
-osascript -e "tell app \"System Events\" to display dialog \"Should I patch $NEWESTAPP to run the Perl GUI? (default is otherwise Python)\""
-rc1=$?; 
-if [[ $rc1 == 0 ]]; 
-then
-    if [ -d "$NEWESTAPP/Contents/Resources/" ];
-    then
-    	cd $NEWESTAPP/Contents/Resources/
-	cp launcher-pl.sh launcher.sh
-    else
-    	echo "Your app $NEWESTAPP seems corrupted, or with wrong layout... Aborting!"
-    	exit 1
-    fi
-else
-    echo "Did not patch McCode package to run the Perl GUI"
-fi
-
-
-osascript -e "tell app \"System Events\" to display dialog \"We recommend that your user $USER takes ownership of /usr/local - do you want to do this? \n\n (Please give your passwd to the sudo command in the terminal...) \""
+osascript -e "tell app \"System Events\" to display dialog \"We recommend that your user $USER takes ownership of /usr/local and reset attributes on SciPDL if it was installed - do you want to do this? \n\n (Please give your passwd to the sudo command in the terminal...) \""
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
     echo sudo chown -R $USER:staff /usr/local/*
     sudo chown -R $USER:staff /usr/local/*
+    echo sudo xattr -d -r com.apple.quarantine /Applications/PDL
+    sudo xattr -d -r com.apple.quarantine /Applications/PDL
     mkdir -p /usr/local/bin
 else
     echo "Not taking ownership of /usr/local..."

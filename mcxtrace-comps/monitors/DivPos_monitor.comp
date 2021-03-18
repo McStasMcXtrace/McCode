@@ -74,10 +74,8 @@ INITIALIZE
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("DivPos_monitor: %s: Null detection area !\n"
-                   "ERROR           (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      printf("ERROR: (%s): Null detection area! Exiting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
 
     for (i=0; i<nh; i++)

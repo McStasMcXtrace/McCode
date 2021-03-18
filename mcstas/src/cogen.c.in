@@ -149,6 +149,11 @@
 #endif
 
 /* Functions for outputting code. */
+int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
+ 				 char* block_name, char* movetoblock_name);
+
+ int get_codeblock_vars(struct code_block *code, List vars, List types,
+ 		       char* block_name, char* movetoblock_name);
 
 /* Handle for output file. */
 static FILE *output_handle = NULL;/* Handle for output file. */

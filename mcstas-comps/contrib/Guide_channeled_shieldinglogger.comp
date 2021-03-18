@@ -1,0 +1,343 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Guide_channeled
+*
+* %I
+* Written by: Christian Nielsen
+* Date: 1999
+* Origin: Risoe
+* Updated by: Rodion Kolevatov, 2019
+* Update content: sets value of a global variable m_local_refl at each reflection
+*                 to the m-value of the coating or to -1 if missed the guide opening
+* 
+* Neutron guide with channels (bender section).
+*
+* %D
+* Models a rectangular guide tube centered on the Z axis. The entrance lies
+* in the X-Y plane.
+* The guide may be tapered, and may have vertical subdivisions (used for
+* bender devices).
+*
+* There is a special rotating mode in order to approximate a Fermi Chopper
+* behaviour, in the case the neutron trajectory is nearly linear inside the
+* chopper slits, i.e. the neutrons are fast w/r/ to the chopper speed.
+* Slits are straight, but may be super-mirror coated. In this case, the
+* component is NOT centered, but located at its entry window. It should then
+* be shifted by -l/2.
+* 
+*
+* Example: Guide_channeled(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=2.0,
+*  R0=0.99, Qcx=0.0219, Qcy=0.0219, alphax=6.07, alphay=6.07, W=0.003, nslit=1,
+* d=0.0005, mx=1, my=1)
+*
+* %BUGS
+* This component does not work with gravitation on. Use Guide_gravity.
+* This component does not work in multichannel focusing geometry.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w1: [m]       Width at the guide entry
+* h1: [m]       Height at the guide entry
+* w2: [m]       Width at the guide exit
+* h2: [m]       Height at the guide exit
+* l: [m]        Length of guide
+* d: [m]        Thickness of subdividing absorbing walls
+* nslit: [1]    Number of channels in the guide (>= 1)
+* R0: [1]       Low-angle reflectivity
+* Qc: [AA-1]    Critical scattering vector
+* alpha: [AA]   Slope of reflectivity
+* m: [1]        m-value of material. Zero means completely absorbing.
+* W: [AA-1]     Width of supermirror cut-off for all mirrors
+* Qcx: [AA-1]   Critical scattering vector for left and right vertical mirrors in each channel
+* Qcy: [AA-1]   Critical scattering vector for top and bottom mirrors
+* alphax: [AA]  Slope of reflectivity for left and right vertical mirrors in each channel
+* alphay: [AA]  Slope of reflectivity for top and bottom mirrors
+* mx: [1]       m-value of material for left and right vertical mirrors in each channel. Zero means completely absorbing.
+* my: [1]       m-value of material for top and bottom mirrors. Zero means completely absorbing.
+* nu: [Hz]      Rotation frequency (round/s) for Fermi Chopper approximation
+* phase: [deg]  Phase shift for the Fermi Chopper approximation
+*
+* %D
+* Example values: mx=4 my=2 Qcx=Qcy=0.0219 W=1/300 alphax=alphay=6.49 R0=1
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Guide_channeled_shieldinglogger
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
+R0=0.995, Qc=0, alpha=0, m=0, nslit=1, d=0.0005,
+Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, nu=0, phase=0)
+OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SHARE %{
+// m_local_refl is to be used in shielding applications and accessed by shielding logger
+#ifndef MVALUE_LOCAL_IS_DEF
+#define MVALUE_LOCAL_IS_DEF 1
+double m_local_refl=-1;
+#endif
+%include "ref-lib"
+%}
+DECLARE
+%{
+double w1c;
+double w2c;
+double ww, hh;
+double whalf, hhalf;
+double lwhalf, lhhalf;
+%}
+
+INITIALIZE
+%{
+if (!w2) w2=w1;
+  if (!h2) h2=h1;
+  if (nslit <= 0 || W <=0)
+  { fprintf(stderr,"Guide_channeled: %s: nslit and W must be positive\n", NAME_CURRENT_COMP);
+    exit(-1); }
+  w1c = (w1 + d)/(double)nslit;
+  w2c = (w2 + d)/(double)nslit;
+  ww = .5*(w2c - w1c);
+  hh = .5*(h2 - h1);
+  whalf = .5*(w1c - d);
+  hhalf = .5*h1;
+  lwhalf = l*whalf;
+  lhhalf = l*hhalf;
+
+  if (m)     { mx=my=m; }
+  if (Qc)    { Qcx=Qcy=Qc; }
+  if (alpha) { alphax=alphay=alpha; }
+
+  if ((nslit > 1) && (w1 != w2))
+  {
+    fprintf(stderr,"WARNING: Guide_channeled: %s:"
+    "This component does not work with multichannel focusing guide\n"
+    "Use Guide_gravity for that.\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
+  if (d*nslit > w1) exit(fprintf(stderr, "Guide_channeled: %s: absorbing walls fill input window. No space left for transmission (d*nslit > w1).\n", NAME_CURRENT_COMP));
+
+  if (mcgravitation) fprintf(stderr,"WARNING: Guide_channeled: %s: "
+    "This component produces wrong results with gravitation !\n"
+    "Use Guide_gravity.\n",
+    NAME_CURRENT_COMP);
+  if (nu != 0 || phase != 0) {
+      if (w1 != w2 || h1 != h2)
+      exit(fprintf(stderr,"Guide_channeled: %s: rotating slit pack must be straight (w1=w2 and h1=h2).\n", NAME_CURRENT_COMP));
+      printf("Guide_channeled: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
+        NAME_CURRENT_COMP, nu, phase);
+    }
+%}
+
+TRACE
+%{
+  double t1,t2;                                 /* Intersection times. */
+  double av,ah,bv,bh,cv1,cv2,ch1,ch2,dd;        /* Intermediate values */
+  double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
+  int i;                                        /* Which mirror hit? */
+  double q;                                     /* Q [1/AA] of reflection */
+  double nlen2;                                 /* Vector lengths squared */
+  double edge;
+  double hadj;                                  /* Channel displacement */
+  double angle=0;
+
+  if (nu != 0 || phase != 0) { /* rotate neutron w/r to guide element */
+    /* approximation of rotating straight Fermi Chopper */
+    Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
+    Rotation R;
+    double dt=(-z+l/2)/vz; /* time shift to each center of slit package */
+    angle=fmod(360*nu*(t+dt)+phase, 360); /* in deg */
+    /* modify angle so that Z0 guide side is always in front of incoming neutron */
+    if (angle > 90 && angle < 270) { angle -= 180; }
+    angle *= DEG2RAD;
+    rot_set_rotation(R, 0, -angle, 0); /* will rotate neutron instead of comp: negative side */
+    /* apply rotation to centered coordinates */
+    Coords   RX = rot_apply(R, X);
+    coords_get(RX, &x, &y, &z);
+    z = z+l/2;
+    /* rotate speed */
+    X  = coords_set(vx,vy,vz);
+    RX = rot_apply(R, X);
+    coords_get(RX, &vx, &vy, &vz);
+  }
+
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
+  /* Scatter here to ensure that fully transmitted neutrons will not be
+     absorbed in a GROUP construction, e.g. all neutrons - even the
+     later absorbed ones are scattered at the guide entry. */
+    m_local_refl=-1; // RK - just entered the guide, haven't reached coating yet
+    SCATTER;
+  if(x <= w1/-2.0 || x >= w1/2.0 || y <= -hhalf || y >= hhalf)
+    {  m_local_refl=-1; // RK - missing the entrance of the curved guide
+       ABSORB;
+   }
+  /* Shift origin to center of channel hit (absorb if hit dividing walls) */
+  x += w1/2.0;
+  edge = floor(x/w1c)*w1c;
+  if(x - edge > w1c - d)
+  {
+    x -= w1/2.0; /* Re-adjust origin */
+    m_local_refl=-1; // RK - missing the entrance of the curved guide
+    ABSORB;
+  }
+  x -= (edge + (w1c - d)/2.0);
+  hadj = edge + (w1c - d)/2.0 - w1/2.0;
+  for(;;)
+  {
+    /* Compute the dot products of v and n for the four mirrors. */
+    av = l*vx; bv = ww*vz;
+    ah = l*vy; bh = hh*vz;
+    vdotn_v1 = bv + av;         /* Left vertical */
+    vdotn_v2 = bv - av;         /* Right vertical */
+    vdotn_h1 = bh + ah;         /* Lower horizontal */
+    vdotn_h2 = bh - ah;         /* Upper horizontal */
+    /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
+    cv1 = -whalf*l - z*ww; cv2 = x*l;
+    ch1 = -hhalf*l - z*hh; ch2 = y*l;
+    /* Compute intersection times. */
+    t1 = (l - z)/vz;
+    i = 0;
+    if(vdotn_v1 < 0 && (t2 = (cv1 - cv2)/vdotn_v1) < t1)
+    {
+      t1 = t2;
+      i = 1;
+    }
+    if(vdotn_v2 < 0 && (t2 = (cv1 + cv2)/vdotn_v2) < t1)
+    {
+      t1 = t2;
+      i = 2;
+    }
+    if(vdotn_h1 < 0 && (t2 = (ch1 - ch2)/vdotn_h1) < t1)
+    {
+      t1 = t2;
+      i = 3;
+    }
+    if(vdotn_h2 < 0 && (t2 = (ch1 + ch2)/vdotn_h2) < t1)
+    {
+      t1 = t2;
+      i = 4;
+    }
+    if(i == 0)
+      break;                    /* Neutron left guide. */
+    PROP_DT(t1);
+    switch(i)
+    {
+      case 1:                   /* Left vertical mirror */
+        nlen2 = l*l + ww*ww;
+        q = V2Q*(-2)*vdotn_v1/sqrt(nlen2);
+        dd = 2*vdotn_v1/nlen2;
+        vx = vx - dd*l;
+        vz = vz - dd*ww;
+        break;
+      case 2:                   /* Right vertical mirror */
+        nlen2 = l*l + ww*ww;
+        q = V2Q*(-2)*vdotn_v2/sqrt(nlen2);
+        dd = 2*vdotn_v2/nlen2;
+        vx = vx + dd*l;
+        vz = vz - dd*ww;
+        break;
+      case 3:                   /* Lower horizontal mirror */
+        nlen2 = l*l + hh*hh;
+        q = V2Q*(-2)*vdotn_h1/sqrt(nlen2);
+        dd = 2*vdotn_h1/nlen2;
+        vy = vy - dd*l;
+        vz = vz - dd*hh;
+        break;
+      case 4:                   /* Upper horizontal mirror */
+        nlen2 = l*l + hh*hh;
+        q = V2Q*(-2)*vdotn_h2/sqrt(nlen2);
+        dd = 2*vdotn_h2/nlen2;
+        vy = vy + dd*l;
+        vz = vz - dd*hh;
+        break;
+    }
+    /* Now compute reflectivity. */
+    if((i <= 2 && mx == 0) || (i > 2 && my == 0))
+    {
+      x += hadj; /* Re-adjust origin */
+      m_local_refl=-1; // zero m-value of the guide walls, no coating
+	 ABSORB;
+    } else {
+      double ref=1;
+      if (i <= 2)
+      {
+        double par[] = {R0, Qcx, alphax, mx, W};
+	 m_local_refl=par[3]; 
+        StdReflecFunc(q, par, &ref);
+        if (ref > 0)
+          p *= ref;
+        else {
+          x += hadj; /* Re-adjust origin */
+          ABSORB;                               /* Cutoff ~ 1E-10 */
+        }
+      } else {
+        double par[] = {R0, Qcy, alphay, my, W};
+        StdReflecFunc(q, par, &ref);
+	  m_local_refl=par[3];
+        if (ref > 0)
+          p *= ref;
+        else {
+          x += hadj; /* Re-adjust origin */
+          ABSORB;                               /* Cutoff ~ 1E-10 */
+        }
+      }
+    }
+    x += hadj; SCATTER; x -= hadj;
+  } /* end for */
+  x += hadj; /* Re-adjust origin */
+  if (nu != 0 || phase != 0) { /* rotate back neutron w/r to guide element */
+      /* approximation of rotating straight Fermi Chopper */
+      Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
+      Rotation R;
+      rot_set_rotation(R, 0, angle, 0); /* will rotate back neutron: positive side */
+      /* apply rotation to centered coordinates */
+      Coords   RX = rot_apply(R, X);
+      coords_get(RX, &x, &y, &z);
+      z = z+l/2;
+      /* rotate speed */
+      X  = coords_set(vx,vy,vz);
+      RX = rot_apply(R, X);
+      coords_get(RX, &vx, &vy, &vz);
+    }
+%}
+
+MCDISPLAY
+%{
+  int i;
+
+  magnify("xy");
+  for(i = 0; i < nslit; i++)
+  {
+    multiline(5,
+              i*w1c - w1/2.0, -h1/2.0, 0.0,
+              i*w2c - w2/2.0, -h2/2.0, (double)l,
+              i*w2c - w2/2.0,  h2/2.0, (double)l,
+              i*w1c - w1/2.0,  h1/2.0, 0.0,
+              i*w1c - w1/2.0, -h1/2.0, 0.0);
+    multiline(5,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
+              (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)l,
+              (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)l,
+              (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
+  }
+  line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
+  line(-w2/2.0, -h2/2.0, (double)l, w2/2.0, -h2/2.0, (double)l);
+
+  if (nu || phase) {
+    double radius = sqrt(w1*w1+l*l);
+    /* cylinder top/center/bottom  */
+    circle("xz", 0,-h1/2,l/2,radius);
+    circle("xz", 0,0    ,l/2,radius);
+    circle("xz", 0, h1/2,l/2,radius);
+  }
+%}
+
+END

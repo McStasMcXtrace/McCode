@@ -99,7 +99,7 @@ EXTEND %{
 %}
 
 COMPONENT Monitor1_xt = Monitor_nD(
-    options = "multiple x y time, all auto", xwidth = width_FC, yheight = height_FC)
+    options = "multiple x y time limits=[2.1e-3 2.8e-3] bins=40", xwidth = width_FC, yheight = height_FC)
   AT (0, 0, d_SF-0.1) RELATIVE PREVIOUS
 
 COMPONENT FC_Position = Arm( )
@@ -144,7 +144,7 @@ COMPONENT FC_Vitess = Vitess_ChopperFermi(
   AT (0, 0, d_SF) RELATIVE PREVIOUS
 
 COMPONENT Monitor2_xt = Monitor_nD(
-    options = "multiple x y time, all auto",
+    options = "multiple x y time limits=[4.7e-3 5.1e-3] bins=40",
     restore_neutron=1,
     xwidth = width_FC, yheight = height_FC)
   AT (0, 0, d_FD) RELATIVE FC_Position

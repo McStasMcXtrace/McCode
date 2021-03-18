@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
@@ -61,6 +61,10 @@
   struct pointer_to_global_logger_list global_all_volume_logger_list = {0,NULL};
   struct pointer_to_global_logger_list global_specific_volumes_logger_list = {0,NULL};
 
+// Initialize global_abs_logger_lists
+  struct pointer_to_global_abs_logger_list global_all_volume_abs_logger_list = {0,NULL};
+  struct pointer_to_global_abs_logger_list global_specific_volumes_abs_logger_list = {0,NULL};
+
 // Initialize global_tagging_conditional_list
   // Used to facilitate communication between conditionals and the other types of Union components
   struct global_tagging_conditional_list_struct global_tagging_conditional_list = {0,0,NULL};
@@ -68,3 +72,7 @@
 // Initialize global_master_list
   // Used to facilitate communication between Master components (mainly for deallocation)
   struct pointer_to_global_master_list global_master_list = {0,NULL};
+
+// Initialize global_mantid_min_pixel_id
+  // Used for ensuring pixel id's on Mantid monitors do not overlap
+  int global_mantid_min_pixel_id = 0;

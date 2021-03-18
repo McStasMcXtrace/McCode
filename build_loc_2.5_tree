@@ -20,3 +20,7 @@ export FC=gfortran
 ./mkdist mcstas-tools-python-mcrun 2.5 tools/Python/mcrun/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 2.5 tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 2.5 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcplot-matplotlib 2.5 tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
+
+# Ensure we are configured for 10 node MPI runs
+sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcstas/2.5/tools/Python/mccodelib/mccode_config.py

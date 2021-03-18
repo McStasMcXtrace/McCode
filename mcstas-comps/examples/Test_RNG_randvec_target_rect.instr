@@ -1,0 +1,70 @@
+/*******************************************************************************
+* Instrument: Test_RNG_randvec_target_rect
+*
+* %I
+* Written by: Peter Willendrup
+* Date: Oct 2nd, 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Instrument to get basic test output from random number generator.
+*
+* %D
+* Instrument to get basic test output from random number generator.
+* 
+* The instrument generates 2 randon numbers pr. particle using randpm1(),
+* encoded into the particle x and y coordinates.
+*
+* For a low statistics, one may e.g. check that setting the seed gives
+* varied output or fixing the seed gives fixed output·
+*
+* %Example: Ncount=1000000 Detector: PSD_I=1
+*
+* %P
+* Ncount: [1] Specify statistics
+* seed:   [1] Specify RNG seed
+* dist:   [m] Distance between synthetic point-source and monitor
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_RNG_randvec_target_rect(Ncount=1000000,int seed=0, dist=1)
+
+DECLARE
+%{
+  double p0;
+  #pragma acc declare create(p0)
+%}
+
+INITIALIZE
+%{
+  mcset_ncount(Ncount);
+  if (seed) mcseed = seed;
+  p0=1.0/mcget_ncount();
+  #pragma acc update device(p0)
+%}
+
+TRACE
+
+COMPONENT Arm = Arm()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  randvec_target_rect_real(&vx, &vy, &vz, NULL,
+			   0, 0, mcipdist, 1.9, 1.9, ROT_A_CURRENT_COMP, 0, 0, 0, 0);
+  NORM(vx,vy,vz);
+  vx *= 1000;
+  vy *= 1000;
+  vz *= 1000;
+  p = p0;
+%}
+
+COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
+  AT (0,0,1) RELATIVE Arm
+
+FINALLY
+%{
+%}
+
+END

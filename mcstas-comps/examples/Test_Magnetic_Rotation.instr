@@ -73,7 +73,7 @@ COMPONENT source =
 Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01,
         lambda0 = 5.0, dlambda = 4.99, flux = 1)
 AT (0, 0, 0) RELATIVE Origin
-
+  
 COMPONENT polSetter =
 Set_pol(py=1)
 AT (0, 0, 0.5) RELATIVE Origin

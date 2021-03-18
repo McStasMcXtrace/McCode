@@ -67,7 +67,7 @@ class McView(object):
         elif gui:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('blue'))
         else:
-            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('green'))
         self.mw.ui.txtbrwMcgui.append(text)
     
     def disableRunBtn(self):
@@ -93,7 +93,7 @@ class McView(object):
         ui.btnEdit.setEnabled(enableRun)
         ui.btnPlot.setEnabled(enablePlot)
         if enableRun:
-            ui.lblInstrument.setStyleSheet('color: black')
+            ui.lblInstrument.setStyleSheet('color: green')
         else:
             ui.lblInstrument.setStyleSheet('color: red')
         ui.actionClose_Instrument.setEnabled(enableRun)

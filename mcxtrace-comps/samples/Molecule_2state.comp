@@ -147,7 +147,6 @@ INITIALIZE
           ny=Table_Index(T[states],n,2);
           nz=Table_Index(T[states],n,3);
           f2+=fabs(f0n*f0n);
-          //printf("debug %d %g\n",Zn,f2);
           for (m=n+1;m<T[states].rows;m++){
             int Zm=(int) Table_Index(T[states],m,0);
             double f0m=atomic_form_factor(Zm,0,q);//Table_Index(f0,r,Zm);
@@ -179,7 +178,7 @@ INITIALIZE
         }
       }
       prms[states].rows=T[states].rows;
-      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,prms[states].f2sum,RE*RE*prms[states].f2sum);
+      printf("%s: Integrated f2 for state %d= %g, Mu_s=%g\n",NAME_CURRENT_COMP,states,prms[states].f2sum,RE*RE*prms[states].f2sum);
     }
   }else{
     /*input files contain f2 parametrized by q*/
@@ -200,7 +199,6 @@ INITIALIZE
       for (r=0;r<T[states].rows;r++){
         prms[states].q[r]=T[states].data[r*2];
         prms[states].f2[r]=T[states].data[r*2+1];
-        //printf("%d %d %g %g\n",states,r,prms[states].q[r], prms[states].f2[r]);
         prms[states].f2sum+=prms[states].f2[r]*dq;
       }
       prms[states].rows=T[states].rows;
@@ -292,10 +290,8 @@ TRACE
       double r=rand01();
       if( r< excitation_yield * exp(-(t+delta_t)/t_relax) ){
         /*excited state*/
-        //printf("I'm excited %g %g %e\n",r, excitation_yield * exp(-(t+delta_t)/t_relax),t);
         state=1;
       }else{
-        //printf("I'm bored %g %g %e\n",r, excitation_yield * exp(-(t+delta_t)/t_relax),t);
         state=0;
       }
     }
@@ -375,7 +371,6 @@ TRACE
 
       /*Absorption after scattering*/
       p*=exp(-mu*l1);
-      //printf("ATT: %g %g %g\n",l1,mu,exp(-mu*l1));
 
     }else{
       /*tunneling branch*/

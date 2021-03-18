@@ -44,7 +44,7 @@
 * MCPL website at <a href="https://mctools.github.io/mcpl/">https://mctools.github.io/mcpl/</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT MCPL_filter_energy(string MCPLfile="my.mcpl.gz", sourceX=0, sourceY=0, sourceZ=-10, 
+DEFINE INSTRUMENT MCPL2Mantid_flat(string MCPLfile="my.mcpl.gz", sourceX=0, sourceY=0, sourceZ=-10, 
 				     sampleX=0, sampleY=0, sampleZ=0,
 				     detectorX=0, detectorY=0, detectorZ=6,
 				     detrotX=0, detrotY=0, detrotZ=0,

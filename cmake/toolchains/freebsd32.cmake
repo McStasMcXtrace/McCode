@@ -4,6 +4,7 @@ SET(ARCH   "i386")
 
 # Commands for running various external tools
 set(BROWSER "xdg-open")
+set(TERMINAL "xterm -e")
 set(VRMLVIEW "whitedune")
 set(TOOLS_CC "clang")
 set(MPICC "mpicc")

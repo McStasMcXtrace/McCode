@@ -17,6 +17,7 @@ include(MinGW)
 
 # Commands for running various external tools
 set(BROWSER "start")
+set(TERMINAL "start")
 set(VRMLVIEW "start")
 set(TOOLS_CC "gcc")
 set(MPICC "mpicc.bat")

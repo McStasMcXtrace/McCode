@@ -1,0 +1,105 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test PowderN output
+*
+* %Identification
+* Written by: P. Willendrup
+* Date: October 1st 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Test output of PowderN on a spherical monitor.
+*
+* %Description
+* A test instrument for PowderN output on a spherical monitor.
+*
+* %Example: lambda=1 Detector: Sph_sum_I=4.93378e+09
+* %Example: lambda=1 Detector: Sph_front_I=3.35878e+08
+* %Example: lambda=1 Detector: Sph_sample_I=7.28574e+08
+* %Example: lambda=1 Detector: Sph_back_I=2.73695e+08
+*
+* %Parameters
+* lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
+* L1: [m]         Source-sample distance
+* directbeam: [1] Suppress direct beam or not
+* reflections: [str] List of powder reflections
+* SPLITS: [1] Number of SPLIT's before sample
+* frac_c: [1] Fraction of stats assigned to coherent scattering (auto-computed if left at 0)
+* frac_i: [1] Fraction of stats assigned to incoherent scattering
+* frac_t: [1] Fraction of stats assigned to unscattered, "direct beam"
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_PowderN_concentric(lambda=1, L1=10, int directbeam=1, string reflections="Fe.laz", int SPLITS=1)
+
+DECLARE %{
+  double Sp0,Sp1,Sp2;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  Sp0=0;
+  Sp1=0;
+  Sp2=0;
+%}
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_gen(
+    radius = 0.11, dist = L1, focus_xw = 0.01, focus_yh = 0.1,
+    lambda0 = lambda, dlambda = lambda*0.01,
+    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TIP: monochromator cradle */ 
+SPLIT SPLITS COMPONENT sample_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+
+COMPONENT Pow0 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.5, d_phi=0, concentric=1)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if (SCATTERED) Sp0=1;
+%}
+
+
+COMPONENT Pow = PowderN(radius=0.004, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.1)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if(mcipdirectbeam == 0) {
+    if (!SCATTERED) {
+      ABSORB;
+    }
+  }
+  if (SCATTERED) Sp1=1;
+%}
+
+COMPONENT Pow2 = PowderN(radius=0.005, thickness=0.001, yheight=0.1, reflections=reflections, p_inc=0.1, p_transmit=0.8, d_phi=0, concentric=0)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if (SCATTERED) Sp2=1;
+%}
+
+COMPONENT Sph_sum = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sum")
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Sph_front = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Front")
+  WHEN(Sp0==1) AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Sph_sample = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sample")
+  WHEN(Sp1==1) AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Sph_back = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Back")
+  WHEN(Sp2==1) AT (0, 0, 0) RELATIVE PREVIOUS
+
+/* The END token marks the instrument definition end */
+END

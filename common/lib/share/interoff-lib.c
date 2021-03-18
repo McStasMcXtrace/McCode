@@ -120,9 +120,9 @@ int off_pnpoly(polygon p, Coords v)
              / (p.p[3*j+pol2dy] - p.p[3*i+pol2dy]) + p.p[3*i+pol2dx]) ))
       c = !c;
 
-    if (((fabs(p.p[3*i+pol2dy]-y)<=EPSILON) || ((fabs(p.p[3*j+pol2dy]-y)<=EPSILON))) &&
+    if (((fabs(p.p[3*i+pol2dy]-y)<=OFF_EPSILON) || ((fabs(p.p[3*j+pol2dy]-y)<=OFF_EPSILON))) &&
         fabs(x -((p.p[3*j+pol2dx] - p.p[3*i+pol2dx]) * (y - p.p[3*i+pol2dy])
-          / (p.p[3*j+pol2dy] - p.p[3*i+pol2dy]) + p.p[3*i+pol2dx])) < EPSILON)
+          / (p.p[3*j+pol2dy] - p.p[3*i+pol2dy]) + p.p[3*i+pol2dx])) < OFF_EPSILON)
     {
       //the point lies on the edge
       c=-1;
@@ -154,7 +154,7 @@ int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
   inter->time = inter->edge = inter->in_out=0;
   inter->v = inter->normal = coords_set(0,0,1);
 
-  if (fabs(ndir) < EPSILON)    // ray is parallel to polygon plane
+  if (fabs(ndir) < OFF_EPSILON)    // ray is parallel to polygon plane
   {
     if (nw0 == 0)              // ray lies in polygon plane (infinite number of solution)
       return 0;
@@ -409,7 +409,7 @@ int off_cleanDouble(intersection* t, int* t_size)
   {
     int j=i;
     //for each intersection with the same time
-    while (j<*t_size && fabs(prev.time-t[j].time)<EPSILON)
+    while (j<*t_size && fabs(prev.time-t[j].time)<OFF_EPSILON)
     {
       //if the intersection is the exact same erase it
       if (prev.in_out==t[j].in_out)
@@ -443,7 +443,7 @@ int off_cleanInOut(intersection* t, int* t_size)
   {
     //if two intersection have the same time but one enters and the other exits erase both
     //(such intersections must be adjacent in the array : run off_cleanDouble before)
-    if (fabs(prev.time-t[i].time)<EPSILON && prev.in_out!=t[i].in_out)
+    if (fabs(prev.time-t[i].time)<OFF_EPSILON && prev.in_out!=t[i].in_out)
     {
       int j=0;
       for (j=i+1; j<*t_size; ++j)

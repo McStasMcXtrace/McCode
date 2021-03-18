@@ -10,7 +10,24 @@ if [ "x$LINK" != "x" ]; then
 else
     LIB=`dirname $0`
 fi
-PATH=$LIB/../miniconda3/bin:$PATH
+UNAME=`uname -s`
+if [[ ${UNAME} = Darwin* ]]; then
+    OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
+    # Check if we are on macos 10.x or 11.x
+    if [ "$OSXVER" == "10" ];
+    then
+	PATH=$LIB/../miniconda3/bin:$PATH
+    fi
+else
+    PATH=$LIB/../miniconda3/bin:$PATH
+fi
+
+# Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
+if [ -d "$LIB/../miniconda3" ]; then
+    PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
+    export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+fi
+
 LIB="$LIB/../tools/Python/@P@plot/pyqtgraph"
 TOOL="@P@plot"
 VERS="@MCCODE_VERSION@"

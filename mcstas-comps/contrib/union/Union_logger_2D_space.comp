@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
@@ -58,8 +58,9 @@
 * target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
 * order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
 * order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* order_volume_process: [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* filename:        [string] Filename for logging output
 *
 * OUTPUT PARAMETERS:
 *
@@ -71,9 +72,12 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_logger_2D_space
-DEFINITION PARAMETERS (n1=90, n2=90)
-SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL",D1_min=-5,D1_max=5,D2_min=-5,D2_max=5,string D_direction_1="x", string D_direction_2="z",string filename="NULL", order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1)
-OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume,logger_conditional_extend_index)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(string target_geometry="NULL", string target_process="NULL",
+                   string D_direction_1="x", D1_min=-5, D1_max=5, n1=90,
+                   string D_direction_2="z", D2_min=-5, D2_max=5, n2=90,
+                   string filename="NULL", order_total=0, order_volume=0, order_volume_process=0, logger_conditional_extend_index=-1)
+OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -454,32 +458,33 @@ DECLARE
 //struct global_material_element_struct global_material_element;
 //struct physics_struct this_material;
 
-int loop_index,l1,l2;
-int process_index;
+int loop_index;
 int found_process;
 int specified_processes;
 char local_string[256];
 
 // Reused for logger
-struct pointer_to_1d_int_list accepted_processes = {0,NULL};
+struct pointer_to_1d_int_list accepted_processes;
 
 struct global_logger_element_struct logger_list_element;
 
-struct pointer_to_1d_int_list accepted_volumes = {0,NULL};
+struct pointer_to_1d_int_list accepted_volumes;
 
 struct logger_struct this_logger;
 struct a_2DS_storage_struct this_storage;
 
 struct loggers_struct *loggers_on_target_volume;
 struct Volume_struct *target_volume;
-
-char temp_string[2];
-
 %}
 
 INITIALIZE
 %{
 
+  accepted_processes.elements = NULL;
+  accepted_processes.num_elements = 0;
+  
+  accepted_volumes.elements = NULL;
+  accepted_volumes.num_elements = 0;
 
   // Initialize storage from input
   if (D1_min >= D1_max) {
@@ -516,6 +521,7 @@ INITIALIZE
   this_storage.Detector_2D.Array_p = allocate2Ddouble_2DS(n1,n2);
   this_storage.Detector_2D.Array_p2 = allocate2Ddouble_2DS(n1,n2);
   
+  int l1,l2;
   for (l1=0;l1<n1;l1++) { //n1 is technically a double, but this works fine
     for (l2=0;l2<n2;l2++) {
       this_storage.Detector_2D.Array_N[l1][l2] = 0;
@@ -545,6 +551,7 @@ INITIALIZE
       exit(1);
   }
   
+  char temp_string[2];
   if (strcmp(D_direction_2,"x") == 0 || strcmp(D_direction_2,"X") == 0) {
       this_storage.dim_2_choice = 0;
       sprintf(this_storage.Detector_2D.string_axis_2,"x [m]");
@@ -618,7 +625,7 @@ INITIALIZE
   
   // In order to run the logger at the right times, pointers to this logger is stored in each volume it logs,
   //  and additionally for each avaiable process. If a process is not logged, the pointer is simply not stored.
-  
+  int process_index;
   // Need to find the volumes for which the processes should have a reference to this logger
   if (target_geometry && strlen(target_geometry) && strcmp(target_geometry,"NULL") && strcmp(target_geometry, "0")) {
     // Certain volumes were selected, find the indicies in the global_geometry_list

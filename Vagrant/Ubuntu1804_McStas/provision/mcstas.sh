@@ -10,5 +10,5 @@ sudo -u vagrant git clone https://github.com/McStasMcXtrace/McCode.git --depth=1
 cd McCode
 sudo ./getdeps_debian
 # Build the debs
-sudo -u vagrant ./build_debs_mcstas 2.5 meta
+sudo -u vagrant ./build_debs_mcstas 2.7 meta
 

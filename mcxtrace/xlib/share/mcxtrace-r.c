@@ -217,61 +217,74 @@ cylinder_intersect(double *l0, double *l1, double x, double y, double z,
                    double kx, double ky, double kz, double r, double h)
 {
   double A,B,C,D,k2,k;
-  double dl1p=0,dl0p=0,dl1c=0,dl0c=0,y0,y1;
-  int ret=1,stat=0,plane_stat=0;
-  enum {HIT_CYL=01,ENTER_TOP=02,ENTER_BOT=04,EXIT_TOP=010,EXIT_BOT=020,ENTER_MASK=06,EXIT_MASK=030};
+  double dl1=0,dl0=0,y0,y1;
+  int rval=1;
   k2=(kx*kx + ky*ky + kz*kz);
   k=sqrt(k2);
 
   /*check for prop. vector 0*/
-  if(!k2) return 0;
+  if(fabs(k2)<DBL_EPSILON) return 0;
 
-  A= (k2 - ky*ky);
+  A= (kx*kx+kz*kz);
   B= 2*(x*kx + z*kz);
   C=(x*x + z*z - r*r);
   D=B*B-4*A*C;
   if(D>=0){
-    if (kx || kz){
-      stat|=HIT_CYL;
-    /*propagation not parallel to y-axis*/
-    /*hit infinitely high cylinder?*/
+    if (A){
+      /*propagation not parallel to y-axis*/
+      /*hit infinitely high cylinder?*/
       D=sqrt(D);
-      dl0c=k*(-B-D)/(2*A);
-      dl1c=k*(-B+D)/(2*A);
-      y0=dl0c*ky/k+y;
-      y1=dl1c*ky/k+y;
-      if ( (y0<-h/2 && y1<-h/2) || (y0>h/2 && y1>h/2) ){
-        /*ray passes above or below cylinder*/
-        return 0;
-      }
-    }
-    /*now check top and bottom planes*/
-    if (ky){
-      dl0p = k*(-h/2-y)/ky;
-      dl1p = k*(h/2-y)/ky;
-      /*switch solutions?*/
-      if (dl0p<dl1p){
-        plane_stat|=(ENTER_BOT|EXIT_TOP);
+      /*stabilize these solutions according to numerical recipes*/
+      if(B>=0){
+        dl0 = (-B-D)/(2*A);
+        dl1 = (C/(A*dl0));
+        dl1*=k;dl0*=k;
       }else{
-        double tmp=dl1p;
-        dl1p=dl0p;dl0p=tmp;
-        plane_stat|=(ENTER_TOP|EXIT_BOT);
+        dl1 = (-B+D)/(2*A);
+        dl0 = (C/(A*dl1));
+        dl1*=k;dl0*=k;
+      }
+    }else if (ky){
+      /*propagation is parallel to y-axis*/
+      /*check if we will hit cylinder top/bottom at all*/
+      dl0 = k*(-h/2-y)/ky;
+      dl1 = k*(h/2-y)/ky;
+      /*switch solutions?*/
+      if (dl0>dl1){
+        double tmp=dl1;
+        dl1=dl0;dl0=tmp;
       }
     }
+    /*dl0,dl1 now contains either plane hits or cylinder hits
+      We determine which is which by checks on the corresponding y-ccordinate: y0,y1*/
+    y0=ky*dl0/k + y;
+    y1=ky*dl1/k + y;
+
+    /*if both are strictly > than h/2.0 we have missed the cylinder completely*/
+    if( (y0>h/2.0 && y1 >h/2.0) || (y0<-h/2.0 && y1<-h/2.0) ) {
+      *l0=0; *l1=0; return 0;
+    }
+
+    if( y0 > h/2.0 ) {
+      dl0 = k*(h/2-y)/ky; rval +=2;
+    }else if ( y0 < -h/2.0 ){
+      dl0 = k*(-h/2-y)/ky; rval +=4;
+    }
+    if( y1 > h/2.0 ) {
+      dl1 = k*(h/2-y)/ky; rval +=8;
+    }else if ( y1 < -h/2.0 ){
+      dl1 = k*(-h/2-y)/ky; rval +=16;
+    }
+
+    *l0=dl0;
+    *l1=dl1;
+    return rval;
+  }else{
+    /* no solution found - i.e. D<0 happens when we completely miss the infinite cylinder*/
+    *l0=0;
+    *l1=0;
+    return 0;
   }
-  if (stat & HIT_CYL){
-    if (ky && dl0p>dl0c){
-      *l0=dl0p;/*1st top/bottom plane intersection happens after 1st cylinder intersect*/
-      stat|= plane_stat & ENTER_MASK;
-    } else
-      *l0=dl0c;
-    if(ky && dl1p<dl1c){
-      *l1=dl1p;/*2nd top/bottom plane intersection happens before 2nd cylinder intersect*/
-      stat|= plane_stat & EXIT_MASK;
-    }else
-      *l1=dl1c;
-  }
-  return stat;
 } /* cylinder_intersect */
 
 /*******************************************************************************
@@ -281,19 +294,24 @@ cylinder_intersect(double *l0, double *l1, double x, double y, double z,
  *******************************************************************************/
 int
 sphere_intersect(double *l0, double *l1, double x, double y, double z,
-                 double kx, double ky, double kz, double r)
-{
-  double B, C, D, k;
+                 double kx, double ky, double kz, double r){
+  double B, C, D, A;
 
-  k = kx*kx + ky*ky + kz*kz;
+  A = kx*kx + ky*ky + kz*kz;
   B = (x*kx + y*ky + z*kz);
   C = x*x + y*y + z*z - r*r;
-  D = B*B - k*C;
-  if(D < 0)
+  D = B*B - A*C;
+  if(D < 0 || A==0 )
     return 0;
   D = sqrt(D);
-  *l0 = (-B - D) / sqrt(k);
-  *l1 = (-B + D) / sqrt(k);
+  if (B>=0){
+    *l0 = (-B - D) / A;
+    *l1 = C/(*l0 *A);
+  }else{
+    *l0 = C /(-B + D);
+    *l1 = C /(*l0 *A);
+  }
+  *l0*=sqrt(A); *l1*=sqrt(A);
   return 1;
 } /* sphere_intersect */
 
@@ -301,9 +319,9 @@ sphere_intersect(double *l0, double *l1, double x, double y, double z,
  * ellipsoid_intersect: Calculate intersection between a line and an ellipsoid.
  * They ellisoid is fixed by a set of half-axis (a,b,c) and a matrix Q, with the
  * columns of Q being the (orthogonal) vectors along which the half-axis lie.
- * This allows for complete freedom in orienting th eellipsoid.
+ * This allows for complete freedom in orienting the ellipsoid.
  * returns 0 when no intersection is found
- *      or 1 when they are found with resulting lemngths l0 and l1.
+ *      or 1 when they _are_ found with resulting lengths l0 and l1.
  *****************************************************************************/
 int
 ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
@@ -316,8 +334,8 @@ ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
   Gamma[0][0]=Gamma[0][1]=Gamma[0][2]=0;
   Gamma[1][1]=Gamma[1][0]=Gamma[1][2]=0;
   Gamma[2][2]=Gamma[2][0]=Gamma[2][1]=0;
-  /*now set diagonal to ellipsoid half axis if non-zero.
-   * This way a zero value mean the sllipsoid extends infinitely along that axis,
+  /* now set diagonal to ellipsoid half axis if non-zero.
+   * This way a zero value means the ellipsoid extends infinitely along that axis,
    * which is useful for objects only curved in one direction*/ 
   if (a!=0){
     Gamma[0][0]=1/(a*a);
@@ -379,5 +397,75 @@ plane_intersect(double *l, double x, double y, double z,
   if (*l<0) return -1;
   else return 1;
 } /* plane_intersect */
+
+/*******************************************************************************
+ * paraboloid_intersect: Calculate intersection between a rotational paraboloid
+ * and a line with direction k through the point x,y,z.
+ * The paraboloid is oriented such that it opens towards positive y,with the scaling
+ * prms  a and b for x and y resp.. The paex is on the z=0-axis. I.e. the equation for the paraboloid is:
+ * z=(x/a)^2 + (y/b)^2
+ * If the other direction (opening towards z<0) is wanted simply set the sign parameter to -1
+ *******************************************************************************/
+int
+paraboloid_intersect(double *l0, double *l1, double x, double y, double z,
+    double kx, double ky, double kz, double a, double b, int sign)
+{
+  double A,B,C,D,k;
+  double a2i,b2i;
+  int retval=0;
+  if(a!=0 && b!=0){
+    a2i=1.0/(a*a);b2i=1.0/(b*b);
+  }else if (a!=0){
+    /*paraboloid is infinite/invariant along y, must check if k||y */
+    if (kx==0 && kz==0){
+      *l0=*l1=0;return 0;
+    }
+    a2i=1.0/(a*a);b2i=0;
+  }else if (b!=0){
+    /*paraboloid is infinite/invariant along x, must check if k||x */
+    if (ky==0 && kz==0){
+      *l0=*l1=0;return 0;
+    }
+    a2i=0;b2i=1.0/(b*b);
+  }
+  k=sqrt(kx*kx + ky*ky + kz*kz);
+
+  A=sign*(kx*kx*a2i + ky*ky*b2i);
+  B=sign*2*kx*x*a2i + sign*2*ky*y*b2i - kz;
+  C=sign*x*x*a2i + sign*y*y*b2i - z;
+
+  retval=solve_2nd_order(l0,l1,A,B,C);
+  /*convert to solution in m*/
+  *l0 *= k; *l1 *=k;
+  return retval;
+}
+
+/******************************************************************************
+ * paraboloid_normal: Calucate the normal vector to the given paraboloid at the
+ * point (x,y,z) and put the result i nx,ny,nz. No check is performed if the
+ * the point is on th surface. In that case the result is undefined.
+ *****************************************************************************/
+int paraboloid_normal(double *nx, double *ny, double *nz, double x,double y, double z, double a, double b, int sign){
+  double a2i,b2i;
+  double tx,ty,tz;
+  if(a!=0 && b!=0){
+    a2i=1.0/(a*a);b2i=1.0/(b*b);
+  }else if (a!=0){
+    a2i=1.0/(a*a);b2i=0;
+  }else if (b!=0){
+    a2i=0;b2i=1.0/(b*b);
+  }else{
+    *nx=0; *ny=0; *nz=1;
+    return 1;
+  }
+  tx=-sign*2*x*a2i;
+  ty=-sign*2*y*b2i;
+  tz=1;
+  NORM(tx,ty,tz);
+  *nx=tx; *ny=ty; *nz=tz;
+  return 1;
+}
+
+
 
 #endif /* !MCXTRACE_H */

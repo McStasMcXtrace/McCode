@@ -1,0 +1,89 @@
+/*******************************************************************************
+ * Instrument: Test_mirror_parabolic
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan '21
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests
+*
+* Unit test instrument for Mirror_parabolic
+*
+* %D
+* This is a test instrument for Mirror parabolic. A collimated beam impinges on a
+* with normal incidence on a parabolic mirror, is reflected to the focal point, and
+* back to flat detector some distance, D, away.
+*
+* %Example: D=0.0025 MM=1 Detector: detBB=1
+* %Example: D=1 MM=1 Detector: detBB=0.104959
+*
+* %P
+* D: [m]   Distance between mirror apex and detector plane.
+* MM: [ ]  Flag to deactivate the mirror.
+* 
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT template_body_simple(D=1,MM=1)
+
+DECLARE
+%{
+  int bounce;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT source = Source_div(
+    focus_aw=0, focus_ah=0, xwidth=0.1, yheight=0.5e-2,
+    E0=12, dE=1)
+AT (0, 0, 0) RELATIVE origin
+EXTEND
+%{
+  //y=mcipYH;
+%}
+
+
+COMPONENT m2 = Mirror_parabolic(
+    b=0.1, a=0, xwidth=0.2, zdepth=0.01, R=1)
+WHEN(MM==1) AT(0,0,5) RELATIVE origin
+ROTATED (-90,0,0) RELATIVE origin
+EXTEND
+%{
+  //printf("%g %g\n",focusx,focusz);
+  bounce=mcScattered;
+%}
+
+COMPONENT det_a = Arm()
+AT(0,0,0) RELATIVE m2
+ROTATED (-90,0,0) RELATIVE m2
+
+COMPONENT fpi = PSD_monitor_4PI(restore_xray=1,radius=1, filename="fpi", restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT det = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="det", restore_xray=1)
+AT(0,0,D) RELATIVE det_a
+
+
+COMPONENT detBB = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB")
+AT(0,0,D) RELATIVE det_a
+
+COMPONENT detBB_dbl = PSD_monitor(xwidth=0.21, yheight=0.21, nx=201, ny=201,filename="detBB_dbl")
+WHEN(bounce>1) AT(0,0,D) RELATIVE det_a
+
+COMPONENT det_div = Monitor_nD(xwidth=0.21,yheight=0.21,options="ydiv auto", filename="det_BB_div", bins=201)
+AT(0,0,0) RELATIVE PREVIOUS
+
+
+FINALLY
+%{
+%}
+
+END

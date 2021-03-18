@@ -16,24 +16,31 @@
 * Block of an attenuating material
 * 
 * %D
-* A rectangular block of attenuating material. Attenuation is computed through
+* A chunk of attenuating material. Attenuation is computed through
 * the effective length travelled within the material. No scattering is modelled at present.
+* The material may take the shape of a block, a cylinder, a sphere, or a general polygonalized
+* shape through an off/ply file.
 *
 * %P
 * INPUT PARAMETERS
 *
-* xwidth: Width of block. (m) 
-* yheight: Height of block. (m)
-* zdepth:  Thickness of block. (m)
-* material_datafile: Dile where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt]
-* geometry: File (off/ply) containing the polygon definition of a general shape object. ( )
-* fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
-* refraction: If nonzero, refraction is enabled. ( ) 
+* xwidth:  [m]    Width of block.
+* yheight: [m]    Height of block or cylinder.
+* zdepth:  [m]    Thickness of block.
+* radius:  [m]    Raidus of cylinder or sphere.
+* material_datafile: [string]   File where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website.
+* geometry: [string] File (off/ply) containing the polygon definition of a general shape object.
+* fixed_delta: [ ] Use a fixed delta to compute refraction - useful for debugging.
+* delta:   [ ]     Value for the fixed delta.
+* refraction:  [ ] If nonzero, refraction is enabled.
+*
 * %E
+*
 *******************************************************************************/
 DEFINE COMPONENT Filter
-DEFINITION PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt")
-SETTING PARAMETERS (string geometry=0,xwidth,yheight,zdepth) 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (refraction=1,fixed_delta=0,delta=0,string material_datafile="Be.txt",
+    string geometry=0,xwidth=0,yheight=0,zdepth=0, radius=0)
 OUTPUT PARAMETERS (prms,filter_row)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -42,7 +49,7 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
 
-  enum shapes_t {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY};
+  enum shapes_t {NONE=-1,SPHERE, CYLINDER, CUBE, ELLIPSOID, ANY};
 
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
@@ -101,18 +108,21 @@ INITIALIZE
   prms=calloc(1,sizeof(* prms));
 
   /*if geometry is specified - try to read the off/ply file and set shape*/
-  prms->shape=CUBE; 
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &(prms->offdata))) {
       prms->shape=ANY; 
     }
-  } else if(!xwidth || !yheight || !zdepth){
+  } else if (radius && yheight){
+    prms->shape=CYLINDER;
+  } else if (radius){
+    prms->shape=SPHERE;
+  } else if (xwidth && yheight && zdepth){
+    prms->shape=CUBE;
+  } else {
     fprintf(stderr,"Error (%s): Filter has zero effective volume\n",NAME_CURRENT_COMP);
     exit(-1);
   }
   
-  
-  //t_Table T;
   if ( (status=Table_Read(&(prms->table),material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
@@ -123,11 +133,17 @@ INITIALIZE
   if (header_parsed[1]){prms->Ar=strtod(header_parsed[1],NULL);}
   if (header_parsed[2]){prms->rho=strtod(header_parsed[2],NULL);}
   else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);prms->rho=1;}
-  /*which columns holds the mus*/
-  prms->mu_c=5;
-  if (prms->table.columns==3) prms->mu_c=1;
 
-  prms->delta_prefactor= NA*(prms->rho*1e-24)/prms->Ar * 2.0*M_PI*RE;
+  /*If we are using a three column format assume only attenuation
+   I.e. set the delta prefactor to 0*/
+  if (prms->table.columns==3){
+    prms->mu_c=1;
+    prms->delta_prefactor=0;
+  }else{
+    prms->mu_c=5;
+    prms->delta_prefactor= NA*(prms->rho*1e-24)/prms->Ar * 2.0*M_PI*RE;
+  }
+
   int j;
   if(10*(double)mcget_ncount()>(prms->table.max_x-prms->table.min_x)/(prms->table.step_x)){
     /*it is probably worth Rebinning*/
@@ -143,7 +159,11 @@ TRACE
   double alpha,e,k,mu,mu0,delta,beta,f;
   double l0,l1,nx,ny,nz;
   int i,status=0;
-  if (prms->shape==CUBE) {
+  if (prms->shape==CYLINDER){
+    status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
+  } else if (prms->shape==SPHERE){
+    status=sphere_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius);
+  } else if (prms->shape==CUBE) {
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
   }else if (prms->shape==ANY){
     status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
@@ -157,13 +177,28 @@ TRACE
     e=k*K2E;
     /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
     f=Table_Value(prms->table,e,1);
-    delta = (fixed_delta ? fixed_delta : f/(k*k) * prms->delta_prefactor);
+    /*fix this: fixed_delta should also have the option to be 0*/
+    delta = (fixed_delta ? delta : f/(k*k) * prms->delta_prefactor);
     mu0=Table_Value(prms->table,e,prms->mu_c)*prms->rho*1e2;
     beta = mu0/(2*k);
 
     /*change direction of ray due to refraction*/
     if(refraction){
       switch (prms->shape){
+        case CYLINDER:
+          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheight*0.5)<FLT_EPSILON ){
+            /*we are on the top/bottom surface*/
+            nx=0;ny=1;nz=0;
+          }else{
+            nx=x;ny=0;nz=z;NORM(nx,ny,nz);
+          }
+          break;
+        case SPHERE:
+          {
+            nx=x;ny=y;nz=z;
+            NORM(nx,ny,nz);
+            break;
+          }
         case CUBE:
           {
             if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
@@ -187,10 +222,14 @@ TRACE
       SCATTER;
 
       /*change of direction - we must now intersect again*/
-      if (prms->shape==CUBE) {
-          status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
+      if (prms->shape==CYLINDER){
+        status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
+      } else if (prms->shape==SPHERE){
+        status=sphere_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius);
+      } else if (prms->shape==CUBE) {
+        status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
       }else if (prms->shape==ANY){
-          status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
+        status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
       }
     }
 
@@ -207,6 +246,20 @@ TRACE
     /*change direction of ray due to refraction*/
     if(refraction){
       switch (prms->shape){
+        case CYLINDER:
+          if(fabs(y-yheight*0.5)<FLT_EPSILON  || fabs(y+yheight*0.5)<FLT_EPSILON ){
+            /*we are on the top/bottom surface*/
+            nx=0;ny=1;nz=0;
+          }else{
+            nx=x;ny=0;nz=z;NORM(nx,ny,nz);
+          }
+          break;
+        case SPHERE:
+          {
+            nx=x;ny=y;nz=z;
+            NORM(nx,ny,nz);
+            break;
+          }
         case CUBE:
           {
             if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
@@ -246,10 +299,20 @@ FINALLY
 
 MCDISPLAY
 %{
-  
   if (prms->shape==CUBE){
     box(0,0,0,xwidth,yheight,zdepth);
-  }else if (prms->shape == ANY) {	/* OFF file */
+  } else if (prms->shape==CYLINDER){
+    circle("xy",0, yheight/2.0,0,radius);
+    circle("xy",0,-yheight/2.0,0,radius);
+    line( radius,yheight/2.0,0, radius,-yheight/2.0,0);
+    line(-radius,yheight/2.0,0,-radius,-yheight/2.0,0);
+    line(0,yheight/2.0, radius, 0,-yheight/2.0, radius);
+    line(0,yheight/2.0,-radius, 0,-yheight/2.0,-radius);
+  } else if (prms->shape==SPHERE){
+    circle("xy",0,0,0,radius);
+    circle("xz",0,0,0,radius);
+    circle("yz",0,0,0,radius);
+  } else if (prms->shape == ANY) {	/* OFF file */
     off_display(prms->offdata);
   }
 %}

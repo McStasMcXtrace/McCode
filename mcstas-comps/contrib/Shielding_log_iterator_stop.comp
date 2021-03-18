@@ -1,0 +1,116 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Scatter_log_iterator_stop.comp
+*
+* %I
+*
+* Written by: Erik B Knudsen 
+* Date: November 2012
+* Version: $Revision: 1.21 $
+* Release: McStas 2.1
+* Origin: DTU Physics
+*
+* Iteration stop element for a Scatter_log
+*
+* %D
+*
+* This component marks the end of the trace-region in which pseudo-neutrons are handled. Please see the Scatter_log_iterator-component for more details.
+* N.B. This component should be immediately followed by a construction like:
+* COMPONENT a1 = Arm()
+* AT (0,0,0) ABSOLUTE
+* JUMP a0 WHEN(MC_GETPAR(iterator_stop_comp_name,loop))
+*
+* This is to extract the value of the loop variable from the innards of this component
+*
+* %P
+* Input parameters:
+*
+* iterator [ ] Instance name of the Scatter_log_iterator log component preceeding this one.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Shielding_log_iterator_stop
+DEFINITION PARAMETERS (iterator)
+SETTING PARAMETERS (int last=0)
+OUTPUT PARAMETERS (loop)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+SHARE 
+%{
+%}
+
+DECLARE
+%{
+  int loop;
+%}
+
+INITIALIZE 
+%{
+  loop=1;
+%}
+
+
+TRACE
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iterator
+scatter_iterator_stop:
+  loop=1;
+  struct Generalized_State_t *s1=MC_GETPAR(iterator,s1);
+
+  if (s1->_p==-1){
+    /*we have reached the end - unset loop and reset neutron state to whatever it was before we entered the pseudo neutron iterator*/
+    loop=0;
+    double *ns=MC_GETPAR(iterator,nstate_initial);
+    x=ns[0];y=ns[1];z=ns[2];
+    vx=ns[3];vy=ns[4];vz=ns[5];
+    t=ns[6];
+    sx=ns[7];sy=ns[8];sz=ns[9];
+    p=ns[10];
+
+    free(ns);
+    MC_GETPAR(iterator,nstate_initial)=NULL;
+    /* Restore std ABSORB */
+#undef mcabsorb
+#define mcabsorb mcabsorbAll
+  // printf("No ABSORB after the iterator\n");
+  } else if (s1->_p==-2) { 
+  /*if the weight equals -2 it means that the neutron was absorbed in components within the scatter_logger (see scatter logger definition) 
+    and should not be propagated further after this iterator*/
+  // printf("Performing ABSORB after the iterator\n");
+   /*we have reached the end - unset loop and reset neutron state to whatever it was before we entered the pseudo neutron iterator*/
+    loop=0;
+    double *ns=MC_GETPAR(iterator,nstate_initial);
+    x=ns[0];y=ns[1];z=ns[2];
+    vx=ns[3];vy=ns[4];vz=ns[5];
+    t=ns[6];
+    sx=ns[7];sy=ns[8];sz=ns[9];
+    p=ns[10];
+
+    free(ns);
+    MC_GETPAR(iterator,nstate_initial)=NULL;
+    /* Restore std ABSORB */
+#undef mcabsorb
+#define mcabsorb mcabsorbAll
+   if (last>0) ABSORB; //Will sample new neutron. 
+  }
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END

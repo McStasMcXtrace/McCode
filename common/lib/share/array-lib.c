@@ -2,10 +2,6 @@
 #define ARRAYS_C
 #include <stdlib.h>
 
-typedef double* DArray1d;
-typedef double** DArray2d;
-typedef double*** DArray3d;
-
 DArray1d create_darr1d(int n){
   DArray1d arr2d;
   arr2d = calloc(n, sizeof(double));

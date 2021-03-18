@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <string.h>
 
 #include "mccode.h"
 static List search_list = NULL;

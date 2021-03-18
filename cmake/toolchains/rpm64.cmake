@@ -4,6 +4,7 @@ SET(ARCH   "x86_64")
 
 # Commands for running various external tools
 set(BROWSER "xdg-open")
+set(TERMINAL "gnome-terminal -e")
 set(VRMLVIEW "whitedune")
 set(TOOLS_CC "gcc")
 set(MPICC "mpicc")

@@ -27,8 +27,8 @@
  * Reads atomic formfactors from a data input file.
  *
  * The crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
- * The crystal planes from which the reflection is made must lie in the X-Z plane on the unbent crystal rotated
- * by an angle alpha about the x axis with respect to the crystal surface.
+ * The crystal planes from which the reflection is made lies in the X-Z plane on the unbent crystal rotated
+ * by an angle alpha about the Y axis with respect to the crystal surface.
  *
  * The external geometry of the crystal follows that of Elliptic_mirror.comp.
  * I.e. the crystal is positioned such that the a-axis of the ellipsoid is on the

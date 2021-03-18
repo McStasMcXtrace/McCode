@@ -1,0 +1,14 @@
+# Reflectivity-table for Mirrotron NiTi supermirrors, January 2020
+#
+# Data compiled and analysed by Klaus Lieutentant FZJ / Vitess with 
+# permission from Mirrotron Ltd, HU-1121 Budapest
+# 
+# m_nom	m_real	R_0	R_cut	W	alpha
+1.5	1.670	0.995	0.980	0.0018	0.011
+2.0	2.180	0.995	0.930	0.0015	0.028
+2.5	2.620	0.995	0.915	0.0012	0.025
+3.0	3.125	0.995	0.900	0.0015	0.022
+3.5	3.685	0.995	0.820	0.0015	0.033
+4.0	4.165	0.995	0.790	0.0014	0.032
+4.5	4.640	0.995	0.720	0.0015	0.038
+5.0	5.190	0.995	0.715	0.0030	0.033

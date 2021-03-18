@@ -1011,7 +1011,7 @@ INITIALIZE
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
     printf("Single_crystal: %s: Error: Aborting.\n", NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
 
   if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;

@@ -11,6 +11,8 @@
 *
 * Demonstrate focusing effect of refractive lenses
 *
+* %Example: lambda=10 position_PSD=8.2 Detector: Last_PSD_I=2.6829e-19
+*
 * %Description
 *
 * Very simple setup with 30 stacked lenses which focus a cold neutron,
@@ -108,7 +110,7 @@ COMPONENT COPY(L11) = COPY (L11)
    AT (0,0,0.0071987) RELATIVE PREVIOUS
 
 COMPONENT PSD_mon = Monitor_nD(
-    xwidth=0.01, yheight = 0.01, options="x y, auto, per cm2",bins=100,restore_neutron=1)
+    xwidth=0.01, yheight = 0.01, options="x y, per cm2",bins=100,restore_neutron=1)
   AT (0, 0, position_PSD) RELATIVE PREVIOUS
 
 COMPONENT COPY(PSD_mon) = COPY(PSD_mon)
@@ -150,7 +152,7 @@ AT (0, 0, 0.1) RELATIVE PREVIOUS
 COMPONENT COPY(PSD_mon) = COPY(PSD_mon)
 AT (0, 0, 0.1) RELATIVE PREVIOUS
 
-COMPONENT COPY(PSD_mon) = COPY(PSD_mon)
+COMPONENT Last_PSD = COPY(PSD_mon)
 AT (0, 0, 0.1) RELATIVE PREVIOUS
 
 END

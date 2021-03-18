@@ -505,6 +505,9 @@ def get_comp_category(filepath):
 
 def parse_define_comp(text):
     text = text.replace('\n', ' ')
+    text = text.replace(' = ', '=')
+    text = text.replace(' =', '=')
+    text = text.replace('= ', '=')
     
     name = re.search('DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
     m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
@@ -570,12 +573,14 @@ def parse_params(params_line):
         tpe = None
         dval = None
         name = None
-        if re.match('string', part):
+        if re.match('double ', part):
+            part = part.replace('double ', '').strip()
+        if re.match('string ', part):
             tpe = 'string'
-            part = part.replace('string', '').strip()
-        if re.match('int', part):
+            part = part.replace('string ', '').strip()
+        if re.match('int ', part):
             tpe = 'int'
-            part = part.replace('int', '').strip()
+            part = part.replace('int ', '').strip()
         if re.search('=', part):
             m = re.match("(.*)=(.*)", part)
             dval = m.group(2)

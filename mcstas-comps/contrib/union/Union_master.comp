@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.8 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 *
 * %D
@@ -30,8 +30,17 @@
 *
 * %P
 * INPUT PARAMETERS:
-*   allow_inside_start: Set to 1 if rays are expected to start inside a volume in this master
-*   history_limit:      Limits how many histories are recorded before stopping
+*   allow_inside_start:  [bool]    Set to 1 if rays are expected to start inside a volume in this master
+*   history_limit:       [bool]    Limits how many histories are recorded before stopping
+*   verbal:              [bool]    Toogles terminal output describing the defined simulation
+*   list_verbal:         [bool]    Toogles information of all internal lists in intersection network
+*   finally_verbal:      [bool]    Toogles information about cleanup performed in finally section
+*   allow_inside_start:  [bool]    Set to 1 to allow rays to start inside the defined geometry
+*   enable_tagging:      [bool]    Enable tagging of ray history (geometry, scattering process)
+*   history_limit:       [bool]    Limit the number of unique histories that are saved
+*   enable_conditionals: [bool]    Use conditionals with this master
+*   inherit_number_of_scattering_events: [bool] Inherit the number of scattering events from last master
+*   record_absorption:   [bool]    Toggles logging of absorption
 *
 * OUTPUT PARAMETERS:
 *
@@ -42,8 +51,16 @@
 
 DEFINE COMPONENT Union_master
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(allow_inside_start=0,history_limit=300000,enable_conditionals=1,inherit_number_of_scattering_events=0)
-OUTPUT PARAMETERS (verbal, list_verbal, trace_verbal, finally_verbal, starting_volume_warning, global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, k_old, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, enable_tagging, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterate, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index)
+SETTING PARAMETERS(verbal = 1,
+                   list_verbal = 0,
+                   finally_verbal = 0,
+                   allow_inside_start=0,
+                   enable_tagging = 0,
+                   history_limit=300000,
+                   enable_conditionals=1,
+                   inherit_number_of_scattering_events=0,
+                   record_absorption=0)
+OUTPUT PARAMETERS (global_master_element, this_global_master_index, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Volume_copies, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, k_old, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, ray_velocity_final, volume_0_found, scattered_flag, scattered_flag_VP, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterator, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list, Volume_copies_allocated, p_old, this_logger, this_abs_logger, conditional_status, tagging_conditional_list, free_tagging_conditioanl_list, logger_conditional_extend_array, abs_logger_conditional_extend_array, tagging_conditional_extend, max_conditional_extend_index,safty_distance,safty_distance2, number_of_processes_array,temporary_focus_data,focus_data_index, starting_volume_warning, iterator, non_isotropic_found, number_of_process_interacts_set, total_process_interact, index_of_lacking_process, log_index, mask_check, mask_start, wavevector, wavevector_rotated, k_rotated, ray_velocity_rotated, ray_sucseeded, r_old, initial_weight, abs_weight_factor)
 DEPENDENCY "-I@MCCODE_LIB@/share/"
 
 
@@ -60,26 +77,17 @@ SHARE
 #endif
 // TEST
 struct logger_with_data_struct loggers_with_data_array;
+struct abs_logger_with_data_struct abs_loggers_with_data_array;
 %}
 
 
 DECLARE
 %{
-  // Settings that can be moved to input.
-  int verbal = 1;
-  int list_verbal = 0;
-  int finally_verbal = 0;
-  
-  // Performance intensive, obsolete, now done in precompiler
-  int trace_verbal = 0;
-  int enable_tagging = 0;
-
-  // It is possible to surpress warnings on starting volume by setting this to 1
-  int starting_volume_warning = 0;
-  
   // New precompiler settings for verbal / tagging
   //#define Union_trace_verbal_setting
   //#define Union_enable_tagging_setting
+
+  int starting_volume_warning;
 
   // Declare the global variables (not to be in output parameters)
   struct global_master_element_struct global_master_element;
@@ -107,14 +115,14 @@ DECLARE
   double r[3],r_start[3],v[3];
 
   // Error handling
-  int error_msg, component_error_msg=0;
+  int error_msg, component_error_msg;
   
   // For verbal output
   char string_output[128];
   
   // Variables for ray-tracing algorithm
   int number_of_volumes, volume_index, process_index;
-  int iterate,solutions,max_number_of_processes,limit;
+  int iterator,solutions,max_number_of_processes,limit;
   int solution,min_solution,min_volume,time_found;
   double intersection_time,min_intersection_time;
   
@@ -139,7 +147,7 @@ DECLARE
   int tree_next_volume;
   int *pre_allocated1,*pre_allocated2,*pre_allocated3;
   Coords ray_position,ray_velocity,ray_velocity_rotated,ray_velocity_final,wavevector,wavevector_rotated;
-  int volume_0_found=0;
+  int volume_0_found;
   
   int *scattered_flag;
   int **scattered_flag_VP;
@@ -156,7 +164,7 @@ DECLARE
   struct list_of_tagging_tree_node_pointers master_tagging_node_list;
   struct tagging_tree_node_struct *current_tagging_node;
   
-  int tagging_leaf_counter=0,stop_tagging_ray,stop_creating_nodes;
+  int tagging_leaf_counter,stop_tagging_ray,stop_creating_nodes;
   int number_of_scattering_events;
   
   // For geometry p interact
@@ -171,11 +179,11 @@ DECLARE
   
   // Masks
   struct pointer_to_1d_int_list mask_volume_index_list;
-  int number_of_masks=0;
-  int number_of_masked_volumes=0;
+  int number_of_masks;
+  int number_of_masked_volumes;
   struct pointer_to_1d_int_list mask_status_list;
   struct pointer_to_1d_int_list current_mask_intersect_list_status;
-  int mask_index_main,mask_iterate;
+  int mask_index_main,mask_iterator;
   int *mask_start,*mask_check;
   int need_to_run_within_which_volume;
   
@@ -185,11 +193,13 @@ DECLARE
   double p_old;
   int log_index,conditional_status;
   struct logger_struct *this_logger;
+  struct abs_logger_struct *this_abs_logger;
   //  union detector_pointer_union detector_pointer;
   
   // Conditionals
   struct conditional_list_struct *tagging_conditional_list;
   int *logger_conditional_extend_array;
+  int *abs_logger_conditional_extend_array;
   int max_conditional_extend_index;
   int tagging_conditional_extend;
   int free_tagging_conditioanl_list;
@@ -202,10 +212,38 @@ DECLARE
   struct focus_data_struct temporary_focus_data;
   int focus_data_index;
   
+  // Record absorption
+  double r_old[3], initial_weight, abs_weight_factor, time_old;
+  int absorption_index;
+  int abs_weight_factor_set;
+  struct abs_event absorption_event_data[1000];
+  
+  // Absorption logger
+  Coords abs_position;
+  Coords transformed_abs_position;
+  double t_abs_propagation, abs_distance;
+  
+  
 %}
 
 INITIALIZE
 %{
+  // It is possible to surpress warnings on starting volume by setting this to 1
+  starting_volume_warning = 0;
+  
+  // Start at 0 error messages, quit after 100.
+  component_error_msg = 0;
+  
+  // For within_which_volume
+  volume_0_found = 0;
+  
+  // For tagging
+  tagging_leaf_counter=0;
+  
+  // For masks
+  number_of_masks = 0;
+  number_of_masked_volumes = 0;
+
   // Use sanitation
   #ifndef ANY_GEOMETRY_DETECTOR_DECLARE
     printf("\nERROR: Need to define at least one Volume using Union_cylinder or Union_box before using the Union_master component. \n");
@@ -245,14 +283,14 @@ INITIALIZE
   number_of_volumes = 1; // Starting with 1 as the surrounding vacuum is considered a volume
   number_of_masks = 0;   // Starting with 0 mask volumes
   number_of_masked_volumes = 0; // Starting with 0 masked volumes
-  for (iterate=0;iterate<global_geometry_list.num_elements;iterate++) {
-    if (global_geometry_list.elements[iterate].component_index < INDEX_CURRENT_COMP && global_geometry_list.elements[iterate].activation_counter > 0) {
-        global_geometry_list.elements[iterate].active = 1;
-        global_geometry_list.elements[iterate].activation_counter--;
+  for (iterator=0;iterator<global_geometry_list.num_elements;iterator++) {
+    if (global_geometry_list.elements[iterator].component_index < INDEX_CURRENT_COMP && global_geometry_list.elements[iterator].activation_counter > 0) {
+        global_geometry_list.elements[iterator].active = 1;
+        global_geometry_list.elements[iterator].activation_counter--;
         number_of_volumes++;
-        if (global_geometry_list.elements[iterate].Volume->geometry.is_mask_volume == 1) number_of_masks++;
-        if (global_geometry_list.elements[iterate].Volume->geometry.is_masked_volume == 1) number_of_masked_volumes++;
-    } else global_geometry_list.elements[iterate].active = 0;
+        if (global_geometry_list.elements[iterator].Volume->geometry.is_mask_volume == 1) number_of_masks++;
+        if (global_geometry_list.elements[iterator].Volume->geometry.is_masked_volume == 1) number_of_masked_volumes++;
+    } else global_geometry_list.elements[iterator].active = 0;
   }
   //printf("Found number of volumes to be %d \n",number_of_volumes);
   
@@ -268,9 +306,9 @@ INITIALIZE
   
   // Make a list of component index from each volume index
   volume_index = 0;
-  for (iterate=0;iterate<global_geometry_list.num_elements;iterate++) {
-    if (global_geometry_list.elements[iterate].active == 1)
-        geometry_component_index_list.elements[++volume_index] = global_geometry_list.elements[iterate].component_index;
+  for (iterator=0;iterator<global_geometry_list.num_elements;iterator++) {
+    if (global_geometry_list.elements[iterator].active == 1)
+        geometry_component_index_list.elements[++volume_index] = global_geometry_list.elements[iterator].component_index;
       
   }
   geometry_component_index_list.elements[0] = 0; // Volume 0 is never set in the above code, but should never be used.
@@ -281,51 +319,55 @@ INITIALIZE
   if (verbal == 1) {
       printf("---------------------------------------------------------------------\n");
       printf("global_process_list.num_elements: %d\n",global_process_list.num_elements);
-      for (iterate=0;iterate<global_process_list.num_elements;iterate++) {
-      printf("name of process [%d]: %s \n",iterate,global_process_list.elements[iterate].name);
-      printf("component index [%d]: %d \n",iterate,global_process_list.elements[iterate].component_index);
+      for (iterator=0;iterator<global_process_list.num_elements;iterator++) {
+      printf("name of process [%d]: %s \n",iterator,global_process_list.elements[iterator].name);
+      printf("component index [%d]: %d \n",iterator,global_process_list.elements[iterator].component_index);
       }
       
       printf("---------------------------------------------------------------------\n");
       printf("global_material_list.num_elements: %d\n",global_material_list.num_elements);
-      for (iterate=0;iterate<global_material_list.num_elements;iterate++) {
-      printf("name of material    [%d]: %s \n",iterate,global_material_list.elements[iterate].name);
-      printf("component index     [%d]: %d \n",iterate,global_material_list.elements[iterate].component_index);
-      printf("my_absoprtion       [%d]: %f \n",iterate,global_material_list.elements[iterate].physics->my_a);
-      printf("number of processes [%d]: %d \n",iterate,global_material_list.elements[iterate].physics->number_of_processes);
+      for (iterator=0;iterator<global_material_list.num_elements;iterator++) {
+      printf("name of material    [%d]: %s \n",iterator,global_material_list.elements[iterator].name);
+      printf("component index     [%d]: %d \n",iterator,global_material_list.elements[iterator].component_index);
+      printf("my_absoprtion       [%d]: %f \n",iterator,global_material_list.elements[iterator].physics->my_a);
+      printf("number of processes [%d]: %d \n",iterator,global_material_list.elements[iterator].physics->number_of_processes);
       }
 
       printf("---------------------------------------------------------------------\n");
       printf("global_geometry_list.num_elements: %d\n",global_material_list.num_elements);
-      for (iterate=0;iterate<global_geometry_list.num_elements;iterate++) {
-        if (global_geometry_list.elements[iterate].active == 1) {
+      for (iterator=0;iterator<global_geometry_list.num_elements;iterator++) {
+        if (global_geometry_list.elements[iterator].active == 1) {
           printf("\n");
-          printf("name of geometry    [%d]: %s \n",iterate,global_geometry_list.elements[iterate].name);
-          printf("component index     [%d]: %d \n",iterate,global_geometry_list.elements[iterate].component_index);
-          printf("Volume.name         [%d]: %s \n",iterate,global_geometry_list.elements[iterate].Volume->name);
-          if (global_geometry_list.elements[iterate].Volume->geometry.is_mask_volume == 0) {
-          printf("Volume.p_physics.is_vacuum           [%d]: %d \n",iterate,global_geometry_list.elements[iterate].Volume->p_physics->is_vacuum);
-          printf("Volume.p_physics.my_absoprtion       [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->p_physics->my_a);
-          printf("Volume.p_physics.number of processes [%d]: %d \n",iterate,global_geometry_list.elements[iterate].Volume->p_physics->number_of_processes);
+          printf("name of geometry    [%d]: %s \n",iterator,global_geometry_list.elements[iterator].name);
+          printf("component index     [%d]: %d \n",iterator,global_geometry_list.elements[iterator].component_index);
+          printf("Volume.name         [%d]: %s \n",iterator,global_geometry_list.elements[iterator].Volume->name);
+          if (global_geometry_list.elements[iterator].Volume->geometry.is_mask_volume == 0) {
+          printf("Volume.p_physics.is_vacuum           [%d]: %d \n",iterator,global_geometry_list.elements[iterator].Volume->p_physics->is_vacuum);
+          printf("Volume.p_physics.my_absorption       [%d]: %f \n",iterator,global_geometry_list.elements[iterator].Volume->p_physics->my_a);
+          printf("Volume.p_physics.number of processes [%d]: %d \n",iterator,global_geometry_list.elements[iterator].Volume->p_physics->number_of_processes);
           }
-          printf("Volume.geometry.shape                [%d]: %s \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.shape);
-          printf("Volume.geometry.center.x             [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.center.x);
-          printf("Volume.geometry.center.y             [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.center.y);
-          printf("Volume.geometry.center.z             [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.center.z);
-          printf("Volume.geometry.rotation_matrix[0]           [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[0][0],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[0][1],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[0][2]);
-          printf("Volume.geometry.rotation_matrix[1]           [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[1][0],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[1][1],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[1][2]);
-          printf("Volume.geometry.rotation_matrix[2]           [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[2][0],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[2][1],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[2][2]);
-          if (strcmp(global_geometry_list.elements[iterate].Volume->geometry.shape,"cylinder") == 0) {
-          printf("Volume.geometry.geometry_parameters.cyl_radius [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.geometry_parameters.p_cylinder_storage->cyl_radius);
-          printf("Volume.geometry.geometry_parameters.height [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.geometry_parameters.p_cylinder_storage->height);
+          printf("Volume.geometry.shape                [%d]: %s \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.shape);
+          printf("Volume.geometry.center.x             [%d]: %f \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.center.x);
+          printf("Volume.geometry.center.y             [%d]: %f \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.center.y);
+          printf("Volume.geometry.center.z             [%d]: %f \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.center.z);
+          printf("Volume.geometry.rotation_matrix[0]           [%d]: [%f %f %f] \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[0][0],global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[0][1],global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[0][2]);
+          printf("Volume.geometry.rotation_matrix[1]           [%d]: [%f %f %f] \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[1][0],global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[1][1],global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[1][2]);
+          printf("Volume.geometry.rotation_matrix[2]           [%d]: [%f %f %f] \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[2][0],global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[2][1],global_geometry_list.elements[iterator].Volume->geometry.rotation_matrix[2][2]);
+          if (strcmp(global_geometry_list.elements[iterator].Volume->geometry.shape,"cylinder") == 0) {
+          printf("Volume.geometry.geometry_parameters.cyl_radius [%d]: %f \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.geometry_parameters.p_cylinder_storage->cyl_radius);
+          printf("Volume.geometry.geometry_parameters.height [%d]: %f \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.geometry_parameters.p_cylinder_storage->height);
           }
-          printf("Volume.geometry.focus_data_array.elements[0].Aim             [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.focus_data_array.elements[0].Aim.x,global_geometry_list.elements[iterate].Volume->geometry.focus_data_array.elements[0].Aim.y,global_geometry_list.elements[iterate].Volume->geometry.focus_data_array.elements[0].Aim.z);
+          printf("Volume.geometry.focus_data_array.elements[0].Aim             [%d]: [%f %f %f] \n",iterator,global_geometry_list.elements[iterator].Volume->geometry.focus_data_array.elements[0].Aim.x,global_geometry_list.elements[iterator].Volume->geometry.focus_data_array.elements[0].Aim.y,global_geometry_list.elements[iterator].Volume->geometry.focus_data_array.elements[0].Aim.z);
         }
       }
       printf("---------------------------------------------------------------------\n");
       printf("number_of_volumes = %d\n",number_of_volumes);
       printf("number_of_masks = %d\n",number_of_masks);
       printf("number_of_masked_volumes = %d\n",number_of_masked_volumes);
+  }
+  
+  if (record_absorption == 1) {
+    initialize_absorption_file();
   }
   ); // End MPI_MASTER
   
@@ -346,9 +388,9 @@ INITIALIZE
   // Find the maximum logger extend index so that the correct memory allocation can be performed later
   // Here the loggers applied to all volumes are searched, later this result is compared to volume specific loggers and updated
   max_conditional_extend_index = -1;
-  for (iterate=0;iterate<global_all_volume_logger_list.num_elements;iterate++) {
-    if (global_all_volume_logger_list.elements[iterate].logger->logger_extend_index > max_conditional_extend_index) {
-      max_conditional_extend_index = global_all_volume_logger_list.elements[iterate].logger->logger_extend_index;
+  for (iterator=0;iterator<global_all_volume_logger_list.num_elements;iterator++) {
+    if (global_all_volume_logger_list.elements[iterator].logger->logger_extend_index > max_conditional_extend_index) {
+      max_conditional_extend_index = global_all_volume_logger_list.elements[iterator].logger->logger_extend_index;
     }
   }
   
@@ -361,21 +403,21 @@ INITIALIZE
   //  next master components.
   
   // Position transformation
-  for (iterate=0;iterate<global_positions_to_transform_list.num_elements;iterate++) {
-    //print_position(*global_positions_to_transform_list.positions[iterate],"Position to transform before");
-    non_rotated_position = coords_sub(*(global_positions_to_transform_list.positions[iterate]),POS_A_CURRENT_COMP);
-    *(global_positions_to_transform_list.positions[iterate]) = rot_apply(ROT_A_CURRENT_COMP,non_rotated_position);
-    //print_position(*global_positions_to_transform_list.positions[iterate],"Position to transform after");
+  for (iterator=0;iterator<global_positions_to_transform_list.num_elements;iterator++) {
+    //print_position(*global_positions_to_transform_list.positions[iterator],"Position to transform before");
+    non_rotated_position = coords_sub(*(global_positions_to_transform_list.positions[iterator]),POS_A_CURRENT_COMP);
+    *(global_positions_to_transform_list.positions[iterator]) = rot_apply(ROT_A_CURRENT_COMP,non_rotated_position);
+    //print_position(*global_positions_to_transform_list.positions[iterator],"Position to transform after");
   }
   if (global_positions_to_transform_list.num_elements > 0) {
     global_positions_to_transform_list.num_elements = 0;
     free(global_positions_to_transform_list.positions);
   }
   // Rotation transformation
-  for (iterate=0;iterate<global_rotations_to_transform_list.num_elements;iterate++) {
-    //print_rotation(*(global_rotations_to_transform_list.rotations[iterate]),"rotation matrix to be updated");
-    rot_mul(master_transposed_rotation_matrix,*(global_rotations_to_transform_list.rotations[iterate]),temp_rotation_matrix);
-    rot_copy(*(global_rotations_to_transform_list.rotations[iterate]),temp_rotation_matrix);
+  for (iterator=0;iterator<global_rotations_to_transform_list.num_elements;iterator++) {
+    //print_rotation(*(global_rotations_to_transform_list.rotations[iterator]),"rotation matrix to be updated");
+    rot_mul(master_transposed_rotation_matrix,*(global_rotations_to_transform_list.rotations[iterator]),temp_rotation_matrix);
+    rot_copy(*(global_rotations_to_transform_list.rotations[iterator]),temp_rotation_matrix);
   }
   if (global_rotations_to_transform_list.num_elements > 0) {
     global_rotations_to_transform_list.num_elements = 0;
@@ -424,7 +466,8 @@ INITIALIZE
   Volumes[0]->geometry.direct_children.num_elements=0;
   Volumes[0]->geometry.destinations_list.num_elements=0;
   Volumes[0]->geometry.reduced_destinations_list.num_elements=0;
-  
+
+  Volumes[0]->geometry.is_exit_volume = 0;
   Volumes[0]->geometry.masked_by_list.num_elements = 0;
   Volumes[0]->geometry.mask_list.num_elements = 0;
   Volumes[0]->geometry.masked_by_mask_index_list.num_elements = 0;
@@ -437,6 +480,7 @@ INITIALIZE
   
   // Logging initialization
   Volumes[0]->loggers.num_elements = 0;
+  Volumes[0]->abs_loggers.num_elements = 0;
   
   
   // --- Loop over user defined volumes ------------------------------------------------------------------------
@@ -479,9 +523,9 @@ INITIALIZE
       // Identify the number of non isotropic processes in a material (this code can be safely executed for the same material many times)
       // A setting of -1 means no transformation necessary, other settings are assigned a unique identifier instead
       non_isotropic_found = 0;
-      for (iterate=0;iterate<Volumes[volume_index]->p_physics->number_of_processes;iterate++) {
-        if (Volumes[volume_index]->p_physics->p_scattering_array[iterate].non_isotropic_rot_index != -1) {
-            Volumes[volume_index]->p_physics->p_scattering_array[iterate].non_isotropic_rot_index = non_isotropic_found;
+      for (iterator=0;iterator<Volumes[volume_index]->p_physics->number_of_processes;iterator++) {
+        if (Volumes[volume_index]->p_physics->p_scattering_array[iterator].non_isotropic_rot_index != -1) {
+            Volumes[volume_index]->p_physics->p_scattering_array[iterator].non_isotropic_rot_index = non_isotropic_found;
             non_isotropic_found++;
         }
       }
@@ -498,8 +542,8 @@ INITIALIZE
       
         // Calculation of the appropriate rotation matrices for transformation between Union_master and the process in a given volume.
         non_isotropic_found = 0;
-        for (iterate=0;iterate<Volumes[volume_index]->p_physics->number_of_processes;iterate++) {
-          if (Volumes[volume_index]->p_physics->p_scattering_array[iterate].non_isotropic_rot_index != -1) {
+        for (iterator=0;iterator<Volumes[volume_index]->p_physics->number_of_processes;iterator++) {
+          if (Volumes[volume_index]->p_physics->p_scattering_array[iterator].non_isotropic_rot_index != -1) {
             // Transformation for each process / geometry combination
             
             // The focus vector is given in relation to the geometry and needs to be transformed to the process
@@ -507,7 +551,7 @@ INITIALIZE
             temporary_focus_data = Volumes[volume_index]->geometry.focus_data_array.elements[0];
             
             // Correct for process rotation
-            temporary_focus_data.Aim = rot_apply(Volumes[volume_index]->p_physics->p_scattering_array[iterate].rotation_matrix,temporary_focus_data.Aim);
+            temporary_focus_data.Aim = rot_apply(Volumes[volume_index]->p_physics->p_scattering_array[iterator].rotation_matrix,temporary_focus_data.Aim);
             
             // Add element to focus_array_indices
             // focus_array_indices refers to the correct element in focus_data_array for this volume/process combination
@@ -528,7 +572,7 @@ INITIALIZE
             // Create rotation matrix for this specific volume / process combination to transform from master coordinate system to the non-isotropics process coordinate system
             // This is done by multipling the transpose master component roration matrix, the volume rotation, and then the process rotation matrix onto the velocity / wavevector
             rot_mul(Volumes[volume_index]->geometry.rotation_matrix,master_transposed_rotation_matrix,temp_rotation_matrix);
-            rot_mul(Volumes[volume_index]->p_physics->p_scattering_array[iterate].rotation_matrix,temp_rotation_matrix,Volumes[volume_index]->geometry.process_rot_matrix_array[non_isotropic_found]);
+            rot_mul(Volumes[volume_index]->p_physics->p_scattering_array[iterator].rotation_matrix,temp_rotation_matrix,Volumes[volume_index]->geometry.process_rot_matrix_array[non_isotropic_found]);
             
             // Need to transpose as well to transform back to the master coordinate system
             rot_transpose(Volumes[volume_index]->geometry.process_rot_matrix_array[non_isotropic_found],Volumes[volume_index]->geometry.transpose_process_rot_matrix_array[non_isotropic_found]);
@@ -547,8 +591,8 @@ INITIALIZE
       // No non isotropic volumes found, focus_array_indices should just be a list of 0's of same length as the number of processes.
       // In this way all processes use the isotropic focus_data structure
         Volumes[volume_index]->geometry.focus_array_indices.elements = malloc(Volumes[volume_index]->p_physics->number_of_processes * sizeof(int));
-        for (iterate=0;iterate<Volumes[volume_index]->p_physics->number_of_processes;iterate++)
-          Volumes[volume_index]->geometry.focus_array_indices.elements[iterate] = 0;
+        for (iterator=0;iterator<Volumes[volume_index]->p_physics->number_of_processes;iterator++)
+          Volumes[volume_index]->geometry.focus_array_indices.elements[iterator] = 0;
           
       }
       //print_1d_int_list(Volumes[volume_index]->geometry.focus_array_indices,"focus_array_indices");
@@ -639,11 +683,11 @@ INITIALIZE
       Volumes[volume_index]->geometry.mask_intersect_list.num_elements = 0;
       
       // Here the mask_list and masked_by_list for the volume is updated from component index values to volume indexes
-      for (iterate=0;iterate<Volumes[volume_index]->geometry.mask_list.num_elements;iterate++)
-        Volumes[volume_index]->geometry.mask_list.elements[iterate] = find_on_int_list(geometry_component_index_list,Volumes[volume_index]->geometry.mask_list.elements[iterate]);
+      for (iterator=0;iterator<Volumes[volume_index]->geometry.mask_list.num_elements;iterator++)
+        Volumes[volume_index]->geometry.mask_list.elements[iterator] = find_on_int_list(geometry_component_index_list,Volumes[volume_index]->geometry.mask_list.elements[iterator]);
       
-      for (iterate=0;iterate<Volumes[volume_index]->geometry.masked_by_list.num_elements;iterate++)
-        Volumes[volume_index]->geometry.masked_by_list.elements[iterate] = find_on_int_list(geometry_component_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterate]);
+      for (iterator=0;iterator<Volumes[volume_index]->geometry.masked_by_list.num_elements;iterator++)
+        Volumes[volume_index]->geometry.masked_by_list.elements[iterator] = find_on_int_list(geometry_component_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterator]);
       
       // If the volume is a mask, its volume number is added to the mask_volume_index list so volume index can be converted to mask_index.
       if (Volumes[volume_index]->geometry.is_mask_volume == 1) Volumes[volume_index]->geometry.mask_index = mask_index_main;
@@ -651,13 +695,13 @@ INITIALIZE
      
       // Check all loggers assosiated with this volume and update the max_conditional_extend_index if necessary
       //printf("reached max_test for volume %d \n",volume_index);
-      for (iterate=0;iterate<Volumes[volume_index]->loggers.num_elements;iterate++) {
-        //printf("iterate = %d \n",iterate);
-        for (process_index=0;process_index<Volumes[volume_index]->loggers.p_logger_volume[iterate].num_elements;process_index++) {
+      for (iterator=0;iterator<Volumes[volume_index]->loggers.num_elements;iterator++) {
+        //printf("iterator = %d \n",iterator);
+        for (process_index=0;process_index<Volumes[volume_index]->loggers.p_logger_volume[iterator].num_elements;process_index++) {
         //printf("process_index = %d \n",process_index);
-          if (Volumes[volume_index]->loggers.p_logger_volume[iterate].p_logger_process[process_index] != NULL) {
-            if (Volumes[volume_index]->loggers.p_logger_volume[iterate].p_logger_process[process_index]->logger_extend_index > max_conditional_extend_index)
-              max_conditional_extend_index = Volumes[volume_index]->loggers.p_logger_volume[iterate].p_logger_process[process_index]->logger_extend_index;
+          if (Volumes[volume_index]->loggers.p_logger_volume[iterator].p_logger_process[process_index] != NULL) {
+            if (Volumes[volume_index]->loggers.p_logger_volume[iterator].p_logger_process[process_index]->logger_extend_index > max_conditional_extend_index)
+              max_conditional_extend_index = Volumes[volume_index]->loggers.p_logger_volume[iterator].p_logger_process[process_index]->logger_extend_index;
           }
         }
       }
@@ -706,8 +750,8 @@ INITIALIZE
   for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
     Volumes[volume_index]->geometry.masked_by_mask_index_list.num_elements = Volumes[volume_index]->geometry.masked_by_list.num_elements;
     Volumes[volume_index]->geometry.masked_by_mask_index_list.elements = malloc(Volumes[volume_index]->geometry.masked_by_mask_index_list.num_elements * sizeof(int));
-    for (iterate=0;iterate<Volumes[volume_index]->geometry.masked_by_list.num_elements;iterate++)
-        Volumes[volume_index]->geometry.masked_by_mask_index_list.elements[iterate] = find_on_int_list(mask_volume_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterate]);
+    for (iterator=0;iterator<Volumes[volume_index]->geometry.masked_by_list.num_elements;iterator++)
+        Volumes[volume_index]->geometry.masked_by_mask_index_list.elements[iterator] = find_on_int_list(mask_volume_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterator]);
   }
   
   // Optimizing speed of the within_which_volume search algorithm
@@ -823,22 +867,22 @@ INITIALIZE
   intersection_time_table.n_elements = (int*) malloc(intersection_time_table.num_volumes * sizeof(int));
   intersection_time_table.calculated = (int*) malloc(intersection_time_table.num_volumes * sizeof(int));
   intersection_time_table.intersection_times = (double**) malloc(intersection_time_table.num_volumes * sizeof(double));
-  for (iterate = 0;iterate < intersection_time_table.num_volumes;iterate++){
-      if (strcmp(Volumes[iterate]->geometry.shape, "mesh") == 0) {
-        intersection_time_table.n_elements[iterate] = (int) 100; // Meshes can have any number of intersections, here we allocate room for 100
+  for (iterator = 0;iterator < intersection_time_table.num_volumes;iterator++){
+      if (strcmp(Volumes[iterator]->geometry.shape, "mesh") == 0) {
+        intersection_time_table.n_elements[iterator] = (int) 100; // Meshes can have any number of intersections, here we allocate room for 100
       } else {
-        intersection_time_table.n_elements[iterate] = (int) 2; // number of intersection for all other geometries
+        intersection_time_table.n_elements[iterator] = (int) 2; // number of intersection for all other geometries
       }
-      if (iterate == 0) intersection_time_table.n_elements[iterate] = (int) 0; // number of intersection solutions
-      intersection_time_table.calculated[iterate] = (int) 0; // Initializing calculated logic
+      if (iterator == 0) intersection_time_table.n_elements[iterator] = (int) 0; // number of intersection solutions
+      intersection_time_table.calculated[iterator] = (int) 0; // Initializing calculated logic
       
-      if (iterate == 0) {
+      if (iterator == 0) {
            intersection_time_table.intersection_times[0] = NULL;
       }
       else {
-        intersection_time_table.intersection_times[iterate] = (double*) malloc(intersection_time_table.n_elements[iterate]*sizeof(double));
-        for (solutions = 0;solutions < intersection_time_table.n_elements[iterate];solutions++) {
-              intersection_time_table.intersection_times[iterate][solutions] = -1.0;
+        intersection_time_table.intersection_times[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
+        for (solutions = 0;solutions < intersection_time_table.n_elements[iterator];solutions++) {
+              intersection_time_table.intersection_times[iterator][solutions] = -1.0;
         }
       }
   }
@@ -864,6 +908,9 @@ INITIALIZE
   // Initialize loggers
   loggers_with_data_array.allocated_elements = 0;
   loggers_with_data_array.used_elements = 0;
+  
+  abs_loggers_with_data_array.allocated_elements = 0;
+  abs_loggers_with_data_array.used_elements = 0;
   
   
   // Signal initialization complete
@@ -911,27 +958,32 @@ TRACE
       loggers_with_data_array.logger_pointers[log_index]->function_pointers.clear_temp(&loggers_with_data_array.logger_pointers[log_index]->data_union);
     }
     loggers_with_data_array.used_elements = 0;
+    for (log_index=abs_loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
+      abs_loggers_with_data_array.abs_logger_pointers[log_index]->function_pointers.clear_temp(&abs_loggers_with_data_array.abs_logger_pointers[log_index]->data_union);
+    }
+    abs_loggers_with_data_array.used_elements = 0;
   }
     
   tagging_conditional_extend = 0;
-  for (iterate=0;iterate<max_conditional_extend_index+1;iterate++) {
-    logger_conditional_extend_array[iterate] = 0;
+  for (iterator=0;iterator<max_conditional_extend_index+1;iterator++) {
+    logger_conditional_extend_array[iterator] = 0;
   }
 
   // Need to clean up the double notation for position and velocity. // REVIEW_LINE
   r_start[0] = x; r_start[1] = y; r_start[2] = z;
   r[0]=x;r[1]=y;r[2]=z;v[0]=vx;v[1]=vy;v[2]=vz; // REVIEW_LINE r and v are bad names
+  k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz;
   
   ray_position = coords_set(x,y,z);
   ray_velocity = coords_set(vx,vy,vz);
   
   // Mask update: need to check the mask status for the initial position
   // mask status for a mask is 1 if the ray position is inside, 0 if it is outside
-  for (iterate=0;iterate<number_of_masks;iterate++) {
-    if(Volumes[mask_volume_index_list.elements[iterate]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[iterate]]->geometry) == 1) {
-      mask_status_list.elements[iterate] = 1;
+  for (iterator=0;iterator<number_of_masks;iterator++) {
+    if(Volumes[mask_volume_index_list.elements[iterator]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[iterator]]->geometry) == 1) {
+      mask_status_list.elements[iterator] = 1;
     } else {
-      mask_status_list.elements[iterate] = 0;
+      mask_status_list.elements[iterator] = 0;
     }
   }
   
@@ -1008,32 +1060,32 @@ TRACE
         if (intersection_time_table.calculated[*check] == 0) {
              #ifdef Union_trace_verbal_setting
                printf("running intersection for intersect_list with *check = %d \n",*check);
-               // if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+               // printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
              #endif
             // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
             geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
             intersection_time_table.calculated[*check] = 1;
-            // if (trace_verbal) printf("succesfully calculated intersection times for volume *check = %d \n",*check);
+            // printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
     }
     
     // Mask update: add additional loop for checking intersections with masked volumes depending on mask statuses
-    for (mask_iterate=0;mask_iterate<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterate++) {
-      if (current_mask_intersect_list_status.elements[mask_iterate] == 1) { // Only check if the mask is active
+    for (mask_iterator=0;mask_iterator<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterator++) {
+      if (current_mask_intersect_list_status.elements[mask_iterator] == 1) { // Only check if the mask is active
         #ifdef Union_trace_verbal_setting
-          printf("Mask Intersect_list = %d being checked \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]);
+          printf("Mask Intersect_list = %d being checked \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]);
         #endif
-        if (intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]] == 0) {
+        if (intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] == 0) {
           #ifdef Union_trace_verbal_setting
-            printf("running intersection for mask_intersect_list element = %d \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]);
+            printf("running intersection for mask_intersect_list element = %d \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]);
           //  printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
           #endif
           // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters
             //  that are also imbedded in the structure.
-          geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry);
-          intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]] = 1;
-          // if (trace_verbal) printf("succesfully calculated intersection times for volume *check = %d \n",*check);
+          geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]]->geometry);
+          intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] = 1;
+          // if printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
       }
     }
@@ -1122,16 +1174,16 @@ TRACE
     }
     
     // Now check the masked_intersect_list, but only the ones that are currently active
-    for (mask_iterate=0;mask_iterate<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterate++) {
-      if (current_mask_intersect_list_status.elements[mask_iterate] == 1) {
-        for (solution = 0;solution<intersection_time_table.n_elements[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]];solution++) {
+    for (mask_iterator=0;mask_iterator<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterator++) {
+      if (current_mask_intersect_list_status.elements[mask_iterator] == 1) {
+        for (solution = 0;solution<intersection_time_table.n_elements[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]];solution++) {
             if (time_found) {
-                if ((intersection_time = intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
-                    min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate];
+                if ((intersection_time = intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
+                    min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
                 }
             } else {
-                if ((intersection_time = intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]][solution]) > time_propagated_without_scattering) {
-                    min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate];
+                if ((intersection_time = intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]][solution]) > time_propagated_without_scattering) {
+                    min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
                     time_found = 1;
                 }
             }
@@ -1160,6 +1212,9 @@ TRACE
       printf("time_found            = %d \n",time_found);
     #endif
 
+    abs_weight_factor = 1.0;
+    abs_weight_factor_set = 0;
+
     // If a time is found, propagation continues, and it will be checked if a scattering occurs before the next intersection.
     // If a time is not found, the ray must be leaving the ensamble of volumes and the loop will be concluded
     if (time_found) {
@@ -1169,18 +1224,23 @@ TRACE
         // Check if a scattering event should occur
         if (current_volume != 0) { // Volume 0 is always vacuum, and if this is the current volume, an event will not occur
           if (Volumes[current_volume]->p_physics->number_of_processes == 0) { // If there are no processes, the volume could be vacuum or an absorber
-            if (Volumes[current_volume]->p_physics->is_vacuum == 0)
+            if (Volumes[current_volume]->p_physics->is_vacuum == 0) {
               // This volume does not have physical processes but does have an absorption cross section, so the ray weight is reduced accordingly
-              p *= exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_boundery);
-    
-    
-              //#ifdef Union_trace_verbal_setting
-              //printf("name of material: %s \n",Volumes[current_volume]->name);
-              //printf("length to boundery  = %f\n",length_to_boundery);
-              //printf("absorption cross section  = %f\n",Volumes[current_volume]->p_physics->my_a);
-              //printf("chance to get through this length of absorber: %f \%\n",100*exp(-Volumes[current_volume]->p_physics->my_a*length_to_boundery));
-              //#endif
-                    
+              
+              my_sum_plus_abs = Volumes[current_volume]->p_physics->my_a*(2200/v_length);
+              length_to_boundery = time_to_boundery * v_length;
+              
+              abs_weight_factor = exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_boundery);
+              abs_weight_factor_set = 1;
+              
+              #ifdef Union_trace_verbal_setting
+                printf("name of material: %s \n",Volumes[current_volume]->name);
+                printf("length to boundery  = %f\n",length_to_boundery);
+                printf("absorption cross section  = %f\n",Volumes[current_volume]->p_physics->my_a);
+                printf("chance to get through this length of absorber: %f \%\n", 100*exp(-Volumes[current_volume]->p_physics->my_a*length_to_boundery));
+              #endif
+              
+            }
           } else {
             // Since there is a non-zero number of processes in this material, all the scattering cross section for these are calculated
             my_sum = 0; k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz; p_my_trace = my_trace; wavevector = coords_set(k[0],k[1],k[2]);
@@ -1230,11 +1290,13 @@ TRACE
             if (my_sum < 1E-18) {
                 // The scattering cross section is basicly zero, no scattering should occur.
                 scattering_event = 0;
-                p *= exp(-length_to_boundery*my_sum_plus_abs); // Correct for absorption and the almost zero scattering
+                abs_weight_factor =  exp(-length_to_boundery*my_sum_plus_abs); // Correct for absorption and the almost zero scattering
+                abs_weight_factor_set = 1;
             } else if (length_to_boundery < safty_distance2) {
                 // Too close to boundery to safly make another scattering, attenuate
-                p *= exp(-length_to_boundery*my_sum_plus_abs); // Attentuate the beam for the small distance
                 scattering_event = 0;
+                abs_weight_factor = exp(-length_to_boundery*my_sum_plus_abs); // Attentuate the beam for the small distance
+                abs_weight_factor_set = 1;
             } else {
                 // The scattering cross section is above zero and the distance to the boundery is sufficient for a scattering
                 if (Volumes[current_volume]->geometry.geometry_p_interact != 0) {
@@ -1258,12 +1320,15 @@ TRACE
                           // Scattering happens, use linear description to select scattering position
                           length_to_scattering = safty_distance + rand0max(length_to_boundery - safty_distance2);
                           // Weight factor necessary to correct for using the linear scattering position distribution
-                          p *= length_to_boundery*my_sum*exp(-length_to_scattering*my_sum_plus_abs); // Absorption simulated in weight
+                          abs_weight_factor = length_to_boundery*my_sum*exp(-length_to_scattering*my_sum_plus_abs); // Absorption simulated in weight
+                          abs_weight_factor_set = 1;
+                          
                           scattering_event = 1;
                         } else scattering_event = 0;
                       } else {
                         // The distance is too short to reliably make a scattering event (in comparison to accuraccy of intersect functions)
-                        p *= exp(-length_to_boundery*my_sum_plus_abs); // Attentuate the beam for the small distance
+                        abs_weight_factor = exp(-length_to_boundery*my_sum_plus_abs); // Attentuate the beam for the small distance
+                        abs_weight_factor_set = 1;
                         scattering_event = 0;
                       }
                     } else {
@@ -1277,7 +1342,8 @@ TRACE
                 
                 if (scattering_event == 1) {
                   // Adjust weight for absorption
-                  p *= my_sum/my_sum_plus_abs;
+                  abs_weight_factor *= my_sum/my_sum_plus_abs;
+                  abs_weight_factor_set = 1;
                   // Safety feature, alert in case of nonsense my results / negative absorption
                   if (my_sum/my_sum_plus_abs > 1.0) printf("WARNING: Absorption weight factor above 1! Should not happen! \n");
                   // Select process
@@ -1290,20 +1356,20 @@ TRACE
                       mc_prop = rand01();culmative_probability=0;total_process_interact=1.0;
                   
                       // If any of the processes have probability 0, they are excluded from the selection
-                      for (iterate = 0;iterate < Volumes[current_volume]->p_physics->number_of_processes;iterate++) {
-                        if (my_trace[iterate] < 1E-18) {
+                      for (iterator = 0;iterator < Volumes[current_volume]->p_physics->number_of_processes;iterator++) {
+                        if (my_trace[iterator] < 1E-18) {
                           // When this happens, the total force probability is corrected and the probability for this particular instance is set to 0
-                          total_process_interact -= Volumes[current_volume]->p_physics->p_scattering_array[iterate].process_p_interact;
-                          my_trace_fraction_control[iterate] = 0;
+                          total_process_interact -= Volumes[current_volume]->p_physics->p_scattering_array[iterator].process_p_interact;
+                          my_trace_fraction_control[iterator] = 0;
                           // In cases where my_trace is not zero, the forced fraction is still used.
-                        } else my_trace_fraction_control[iterate] = Volumes[current_volume]->p_physics->p_scattering_array[iterate].process_p_interact;
+                        } else my_trace_fraction_control[iterator] = Volumes[current_volume]->p_physics->p_scattering_array[iterator].process_p_interact;
                       }
                       // Randomly select a process using the weights stored in my_trace_fraction_control divided by total_process_interact
-                      for (iterate = 0;iterate < Volumes[current_volume]->p_physics->number_of_processes;iterate++) {
-                        culmative_probability += my_trace_fraction_control[iterate]/total_process_interact;
+                      for (iterator = 0;iterator < Volumes[current_volume]->p_physics->number_of_processes;iterator++) {
+                        culmative_probability += my_trace_fraction_control[iterator]/total_process_interact;
                         if (culmative_probability > mc_prop) {
-                          selected_process = iterate;
-                          p *= (my_trace[iterate]/my_sum)*(total_process_interact/my_trace_fraction_control[iterate]);
+                          selected_process = iterator;
+                          p *= (my_trace[iterator]/my_sum)*(total_process_interact/my_trace_fraction_control[iterator]);
                           break;
                         }
                       }
@@ -1311,10 +1377,10 @@ TRACE
                     } else {
                       // Select a process based on their relative attenuations factors
                       mc_prop = rand01();culmative_probability=0;
-                      for (iterate = 0;iterate < Volumes[current_volume]->p_physics->number_of_processes;iterate++) {
-                        culmative_probability += my_trace[iterate]/my_sum;
+                      for (iterator = 0;iterator < Volumes[current_volume]->p_physics->number_of_processes;iterator++) {
+                        culmative_probability += my_trace[iterator]/my_sum;
                         if (culmative_probability > mc_prop) {
-                          selected_process = iterate;
+                          selected_process = iterator;
                           break;
                         }
                       }
@@ -1324,8 +1390,82 @@ TRACE
             }
             
           }
+          
         } // Done checking for scttering event and in case of scattering selecting a process
      
+        // Record initial weight, absorption weight factor and initial position
+        
+        initial_weight = p;
+        r_old[0] = r[0]; r_old[1] = r[1]; r_old[2] = r[2]; time_old = t;
+        // Apply absorption
+        p *= abs_weight_factor;
+        
+        // Create event for absorption loggers
+        // Need to use start position and length travelled to sample that trajectory for absorption event. Could do several, here just one.
+        
+        // min length: 0, max length: length_to_scattering if scattering, else length to boundary
+        
+        // Avoid logging absorption when the ray is in vacuum.
+        if (current_volume != 0 && abs_weight_factor_set == 1) { // Volume 0 is always vacuum, and if this is the current volume, an event will not occur
+          if (Volumes[current_volume]->p_physics->is_vacuum == 0) { // No absorption in vacuum
+          
+            if (scattering_event == 1) {
+                // When scattering events occur, place the absoprtion the same place (the total cross section is used to place it)
+                abs_distance = length_to_scattering;
+            } else {
+                // When the ray exits a volume, the absorption position should be exponentially distributed using the total cross section
+                abs_distance = -log(1.0 - rand0max(1.0 - exp(-my_sum_plus_abs*length_to_boundery)) ) / my_sum_plus_abs;
+            }
+            
+            //printf("abs_distance = %g (with my=%g, scattering_event=%i) \n", abs_distance, my_sum_plus_abs, scattering_event);
+            t_abs_propagation = abs_distance/v_length;
+
+            abs_position = coords_set(x + t_abs_propagation*vx, y + t_abs_propagation*vy, z + t_abs_propagation*vz);
+        
+            // This info needs to be loaded into the absorption loggers
+        
+            // Need to run through relevant absorption loggers here
+            #ifdef Union_trace_verbal_setting
+            printf("Running abs_logger system for specific volumes \n");
+            #endif
+        
+            // Logging for detector components assosiated with this volume
+            for (log_index=0;log_index<Volumes[current_volume]->abs_loggers.num_elements;log_index++) {
+              //printf("logging time! Volume specific version. Volume name = %s \n",Volumes[current_volume]->name);
+              //printf("  log_index = %d \n",log_index);
+              
+              // Make transformation according to the individual position of the abs_logger? This would require position / rotation for all abs_loggers
+              transformed_abs_position = coords_sub(abs_position, Volumes[current_volume]->abs_loggers.p_abs_logger[log_index]->position);
+              transformed_abs_position = rot_apply(Volumes[current_volume]->abs_loggers.p_abs_logger[log_index]->rotation, transformed_abs_position);
+              
+                // This function calls a logger function which in turn stores some data among the passed, and possibly performs some basic data analysis
+              Volumes[current_volume]->abs_loggers.p_abs_logger[log_index]->function_pointers.active_record_function(&transformed_abs_position, k, initial_weight*(1.0-abs_weight_factor), t + t_abs_propagation, scattered_flag[current_volume], number_of_scattering_events, Volumes[current_volume]->abs_loggers.p_abs_logger[log_index], &abs_loggers_with_data_array);
+                // If the logging component have a conditional attatched, the collected data will be written to a temporary place
+                // At the end of the rays life, it will be checked if the condition is met
+                //  if it is met, the temporary data is transfered to permanent, and temp is cleared.
+                //  if it is not met, the temporary data is cleared.
+            }
+        
+            #ifdef Union_trace_verbal_setting
+              printf("Running abs_logger system for all volumes \n");
+            #endif
+            for (log_index=0;log_index<global_all_volume_abs_logger_list.num_elements;log_index++) {
+              //printf("logging time! Global version. log_index = %d \n",log_index);
+              // As above, but on a global scale, meaning scattering in all volumes are logged
+              
+              // Problems with VN, PV, as there is no assosiated volume or process. The functions however need to have the same input to make the logger components general.
+              // Could be interesting to have a monitor that just globally measurres the second scattering event in any volume (must be two in the same). Weird but not meaningless.
+            
+              // Make transformation according to the individual position of the abs_logger? This would require position / rotation for all abs_loggers
+              transformed_abs_position = coords_sub(abs_position, global_all_volume_abs_logger_list.elements[log_index].abs_logger->position);
+              transformed_abs_position = rot_apply(global_all_volume_abs_logger_list.elements[log_index].abs_logger->rotation, transformed_abs_position);
+              
+              // Above version includes scattered_flag_VP, but selected_process may be undefined at this point.
+              global_all_volume_abs_logger_list.elements[log_index].abs_logger->function_pointers.active_record_function(&transformed_abs_position, k, initial_weight*(1.0-abs_weight_factor), t+t_abs_propagation, scattered_flag[current_volume], number_of_scattering_events, global_all_volume_abs_logger_list.elements[log_index].abs_logger, &abs_loggers_with_data_array);
+            }
+          }
+        }
+        
         if (scattering_event == 1) {
             #ifdef Union_trace_verbal_setting
               printf("SCATTERING EVENT \n");
@@ -1495,29 +1635,6 @@ TRACE
             ray_position = coords_set(x,y,z);
             ray_velocity = coords_set(vx,vy,vz);
             
-            /*
-            // Absorption moved to before testing if scattering occurs
-            if (current_volume != 0) {
-                if (Volumes[current_volume]->p_physics->is_vacuum == 0) {
-                    // Absorption is done explicitly when propagating out of a volume, but between all scattering events is done implicitly
-                   
-                    // Old version
-                    //length_to_boundery = (min_intersection_time - time_propagated_without_scattering) * v_length;
-                    //p *= exp(-Volumes[current_volume]->p_physics->my_a*(2200/v_length)*length_to_boundery);
-                    
-                    if (Volumes[current_volume]->p_physics->number_of_processes == 0) {
-                      // Optimized version
-                      //p *= exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_boundery);
-                    
-                    //printf("name of material: %s \n",Volumes[current_volume]->name);
-                    //printf("length to boundery  = %f\n",length_to_boundery);
-                    //printf("absorption cross section  = %f\n",Volumes[current_volume]->p_physics->my_a);
-                    //printf("chance to get through this length of absorber: %f \%\n",100*exp(-Volumes[current_volume]->p_physics->my_a*length_to_boundery));
-                    }
-                }
-            }
-            */
-            
             time_propagated_without_scattering = min_intersection_time;
             SCATTER; // For debugging purposes
             #ifdef Union_trace_verbal_setting
@@ -1552,7 +1669,7 @@ TRACE
                 }
 
                 #ifdef Union_trace_verbal_setting
-                  if (trace_verbal) printf("tree method moves from %d to %d\n",current_volume,tree_next_volume);
+                  if (enable_tagging) printf("tree method moves from %d to %d\n",current_volume,tree_next_volume);
                 
                   if (enable_tagging && stop_tagging_ray == 0) printf("Before new tree volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
                   if (enable_tagging && stop_tagging_ray == 0) printf("Before new tree volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
@@ -1747,6 +1864,13 @@ TRACE
               printf(" TO VOLUME %d \n",current_volume);
             #endif
         }
+        
+        // Record final position here and write to file
+        MPI_MASTER(
+            //if (record_absorption == 1 && abs_weight_factor < 1.0) record_abs_to_file(r_old, time_old, r, t, initial_weight*(1.0-abs_weight_factor), current_volume, mcget_run_num(), &absorption_index, absorption_event_data);
+            if (record_absorption == 1) record_abs_to_file(r_old, time_old, r, t, initial_weight*(1.0-abs_weight_factor), current_volume, mcget_run_num(), &absorption_index, absorption_event_data);
+        );
+        
     } else { // Here because a shortest time is not found
         if (current_volume == 0) {
             done = 1;
@@ -1765,8 +1889,8 @@ TRACE
               }
               
               print_1d_int_list(mask_status_list,"mask status list");
-              for (iterate=0;iterate<number_of_volumes;iterate++)
-                 printf("%d:%d - ",iterate,scattered_flag[iterate]);
+              for (iterator=0;iterator<number_of_volumes;iterator++)
+                 printf("%d:%d - ",iterator,scattered_flag[iterator]);
               printf("\n");
               printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
               
@@ -1828,14 +1952,14 @@ TRACE
         // Check all conditionals attatched to the current logger
         this_logger = loggers_with_data_array.logger_pointers[log_index];
         conditional_status = 1;
-        for (iterate=0;iterate<loggers_with_data_array.logger_pointers[log_index]->conditional_list.num_elements;iterate++) {
+        for (iterator=0;iterator<loggers_with_data_array.logger_pointers[log_index]->conditional_list.num_elements;iterator++) {
           // Call this particular conditional. If it fails, report the status and break
           //printf("checking conditional! \n");
           #ifdef Union_trace_verbal_setting
-            printf("Checking conditional number %d for logger named %s \n",iterate,loggers_with_data_array.logger_pointers[log_index]->name);
+            printf("Checking conditional number %d for logger named %s \n",iterator,loggers_with_data_array.logger_pointers[log_index]->name);
           #endif
-          if (0 == this_logger->conditional_list.conditional_functions[iterate](
-                         this_logger->conditional_list.p_data_unions[iterate],
+          if (0 == this_logger->conditional_list.conditional_functions[iterator](
+                         this_logger->conditional_list.p_data_unions[iterator],
                          &ray_position,&ray_velocity,&p,&t,&current_volume,
                          &number_of_scattering_events,scattered_flag,scattered_flag_VP)) {
             conditional_status = 0;
@@ -1888,19 +2012,78 @@ TRACE
            //  loggers_with_data_array.logger_pointers[log_index]->function_pointers.clear_temp(&loggers_with_data_array.logger_pointers[log_index]->data_union);
         }
       }
+      // Perform the same with abs_loggers and their conditionals
+      for (log_index=abs_loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
+        // Check all conditionals attatched to the current logger
+        this_abs_logger = abs_loggers_with_data_array.abs_logger_pointers[log_index];
+        conditional_status = 1;
+        for (iterator=0;iterator<abs_loggers_with_data_array.abs_logger_pointers[log_index]->conditional_list.num_elements;iterator++) {
+          // Call this particular conditional. If it fails, report the status and break
+          //printf("checking conditional! \n");
+          #ifdef Union_trace_verbal_setting
+            printf("Checking conditional number %d for abs logger named %s \n",iterator, abs_loggers_with_data_array.abs_logger_pointers[log_index]->name);
+          #endif
+          if (0 == this_abs_logger->conditional_list.conditional_functions[iterator](
+                         this_abs_logger->conditional_list.p_data_unions[iterator],
+                         &ray_position, &ray_velocity, &p, &t, &current_volume,
+                         &number_of_scattering_events, scattered_flag, scattered_flag_VP)) {
+            conditional_status = 0;
+            break;
+          }
+        }
+        if (conditional_status == 1) {
+          // If a logger does not have a conditional, it will write directly to perm, and not even add it to the loggers_with_data_array, thus we know the temp_to_perm function needs to be called
+          // The input for the temp_to_perm function is a pointer to the logger_data_union for the appropriate logger
+          abs_loggers_with_data_array.abs_logger_pointers[log_index]->function_pointers.temp_to_perm(&abs_loggers_with_data_array.abs_logger_pointers[log_index]->data_union);
+        
+          // Luxury feature to be added later
+          if (abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index != -1) {
+            #ifdef Union_trace_verbal_setting
+              printf("Updating logger_conditional_extend_array[%d] to 1 (max length = %d)\n",abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index,max_conditional_extend_index);
+            #endif
+            // The user can set a condtional_extend_index, so that the evaluation of this specific conditional can be taken easily from extend
+            abs_logger_conditional_extend_array[abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index] = 1;
+            // Are all reset to 0 for each new ray
+            #ifdef Union_trace_verbal_setting
+              printf("Updated extend index sucessfully\n");
+            #endif
+          
+            //printf("extend_array[%d] = 1 \n",loggers_with_data_array.logger_pointers[log_index]->logger_extend_index);
+          }
+        
+          // Need to remove the current element from logger_with_data as it has been cleared and written to disk
+          // The remaining elements is passed on to the next Union_master as it may fulfill the conditional after that master
+          if (global_master_list.elements[global_master_list.num_elements-1].component_index != INDEX_CURRENT_COMP) {
+            // Move current logger pointer in logger_with_data to end position
+            abs_loggers_with_data_array.abs_logger_pointers[log_index] = abs_loggers_with_data_array.abs_logger_pointers[abs_loggers_with_data_array.used_elements-1];
+            // Decrease logger_with_data.used_elements with 1
+            abs_loggers_with_data_array.used_elements--;
+          
+          }
+        
+        
+        } else {
+           // Conditional status was 0, clear temp data for this logger, but only if this is the last Union_master,
+           //  as the logger data can be written if one of the ray fulfills the conditional afer one of the
+           //  subsequent Union masters.
+           // The job of cleaning was moved to the start of trace on 15/5/2017
+           //if (global_master_list.elements[global_master_list.num_elements-1].component_index == INDEX_CURRENT_COMP)
+           //  loggers_with_data_array.logger_pointers[log_index]->function_pointers.clear_temp(&loggers_with_data_array.logger_pointers[log_index]->data_union);
+        }
+      }
     }
     
     if (enable_tagging && stop_tagging_ray == 0) {
       conditional_status = 1;
-      for (iterate=0;iterate<tagging_conditional_list->num_elements;iterate++) {
+      for (iterator=0;iterator<tagging_conditional_list->num_elements;iterator++) {
         // Call this particular conditional. If it fails, report the status and break
         // Since a conditional can work for a logger and master_tagging at the same time, it may be evaluated twice
         //printf("checking conditional! \n");
         #ifdef Union_trace_verbal_setting
-          printf("Checking tagging conditional number %d\n",iterate);
+          printf("Checking tagging conditional number %d\n",iterator);
         #endif
-        if (0 == tagging_conditional_list->conditional_functions[iterate](
-                         tagging_conditional_list->p_data_unions[iterate],
+        if (0 == tagging_conditional_list->conditional_functions[iterator](
+                         tagging_conditional_list->p_data_unions[iterator],
                          &ray_position,&ray_velocity,&p,&t,&current_volume,
                          &number_of_scattering_events,scattered_flag,scattered_flag_VP)) {
           conditional_status = 0;
@@ -1955,7 +2138,9 @@ if (enable_tagging) {
 }
 if (master_tagging_node_list.num_elements > 0) free(master_tagging_node_list.elements);
 
-
+MPI_MASTER(
+  if (record_absorption == 1) write_events_to_file(absorption_index, absorption_event_data);
+);
 
 
 if (finally_verbal) printf("Freeing variables which are always allocated \n");
@@ -1966,10 +2151,11 @@ free(pre_allocated1);
 free(pre_allocated2);
 free(pre_allocated3);
 free(number_of_processes_array);
+free(Geometries);
 
 if (finally_verbal) printf("Freeing intersection_time_table \n");
-for (iterate = 1;iterate < intersection_time_table.num_volumes;iterate++){
-    free(intersection_time_table.intersection_times[iterate]);
+for (iterator = 1;iterator < intersection_time_table.num_volumes;iterator++){
+    free(intersection_time_table.intersection_times[iterator]);
 }
 
 free(intersection_time_table.n_elements);
@@ -1988,6 +2174,7 @@ if (tagging_conditional_list->num_elements > 0) {
 if (finally_verbal) printf("Freeing lists for individual volumes \n");
 for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
   
+  if (finally_verbal) printf("  Freeing geometry\n");
   if (Volumes[volume_index]->geometry.intersect_check_list.num_elements > 0) free(Volumes[volume_index]->geometry.intersect_check_list.elements);
   if (Volumes[volume_index]->geometry.destinations_list.num_elements > 0) free(Volumes[volume_index]->geometry.destinations_list.elements);
   if (Volumes[volume_index]->geometry.reduced_destinations_list.num_elements > 0) free(Volumes[volume_index]->geometry.reduced_destinations_list.elements);
@@ -2001,7 +2188,7 @@ for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
     if (Volumes[volume_index]->geometry.next_volume_list.num_elements > 0) free(Volumes[volume_index]->geometry.next_volume_list.elements);
   // Add dealocation of logging
   
-
+  if (finally_verbal) printf("  Freeing physics\n");
   if (volume_index > 0) { // Volume 0 does not have physical properties allocated
     free(scattered_flag_VP[volume_index]);
     if (Volumes[volume_index]->geometry.process_rot_allocated == 1) {
@@ -2017,11 +2204,17 @@ for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
       if (Volumes[volume_index]->p_physics->is_vacuum == 1 ) free(Volumes[volume_index]->p_physics);
   }
   
+  if (finally_verbal) printf("  Freeing loggers\n");
   if (Volumes[volume_index]->loggers.num_elements >0) {
-    for (iterate=0;iterate<Volumes[volume_index]->loggers.num_elements;iterate++) {
-      free(Volumes[volume_index]->loggers.p_logger_volume[iterate].p_logger_process);
+    for (iterator=0;iterator<Volumes[volume_index]->loggers.num_elements;iterator++) {
+      free(Volumes[volume_index]->loggers.p_logger_volume[iterator].p_logger_process);
     }
     free(Volumes[volume_index]->loggers.p_logger_volume);
+  }
+  
+  if (finally_verbal) printf("  Freeing abs_loggers\n");
+  if (Volumes[volume_index]->abs_loggers.num_elements > 0) {
+      free(Volumes[volume_index]->abs_loggers.p_abs_logger);
   }
   
 }
@@ -2074,28 +2267,47 @@ if (global_master_list.elements[global_master_list.num_elements-1].component_ind
     
     //#ifdef UNION_LOGGER_DECLARE
     if (finally_verbal) printf("Freeing global logger lists \n");
-    for (iterate=0;iterate<global_all_volume_logger_list.num_elements;iterate++) {
-      if (global_all_volume_logger_list.elements[iterate].logger->conditional_list.num_elements > 0) {
-        free(global_all_volume_logger_list.elements[iterate].logger->conditional_list.conditional_functions);
-        free(global_all_volume_logger_list.elements[iterate].logger->conditional_list.p_data_unions);
+    for (iterator=0;iterator<global_all_volume_logger_list.num_elements;iterator++) {
+      if (global_all_volume_logger_list.elements[iterator].logger->conditional_list.num_elements > 0) {
+        free(global_all_volume_logger_list.elements[iterator].logger->conditional_list.conditional_functions);
+        free(global_all_volume_logger_list.elements[iterator].logger->conditional_list.p_data_unions);
       }
     }
     if (global_all_volume_logger_list.num_elements > 0) free(global_all_volume_logger_list.elements);
     
     
-    for (iterate=0;iterate<global_specific_volumes_logger_list.num_elements;iterate++) {
-      if (global_specific_volumes_logger_list.elements[iterate].logger->conditional_list.num_elements > 0) {
-        free(global_specific_volumes_logger_list.elements[iterate].logger->conditional_list.conditional_functions);
-        free(global_specific_volumes_logger_list.elements[iterate].logger->conditional_list.p_data_unions);
+    for (iterator=0;iterator<global_specific_volumes_logger_list.num_elements;iterator++) {
+      if (global_specific_volumes_logger_list.elements[iterator].logger->conditional_list.num_elements > 0) {
+        free(global_specific_volumes_logger_list.elements[iterator].logger->conditional_list.conditional_functions);
+        free(global_specific_volumes_logger_list.elements[iterator].logger->conditional_list.p_data_unions);
       }
     }
     if (global_specific_volumes_logger_list.num_elements > 0) free(global_specific_volumes_logger_list.elements);
-    //#endif
     
-    for (iterate=0;iterate<global_tagging_conditional_list.num_elements;iterate++) {
-      if (global_tagging_conditional_list.elements[iterate].conditional_list.num_elements > 0) {
-        free(global_tagging_conditional_list.elements[iterate].conditional_list.conditional_functions);
-        free(global_tagging_conditional_list.elements[iterate].conditional_list.p_data_unions);
+    if (finally_verbal) printf("Freeing global abs logger lists \n");
+    for (iterator=0;iterator<global_all_volume_abs_logger_list.num_elements;iterator++) {
+      if (global_all_volume_abs_logger_list.elements[iterator].abs_logger->conditional_list.num_elements > 0) {
+        free(global_all_volume_abs_logger_list.elements[iterator].abs_logger->conditional_list.conditional_functions);
+        free(global_all_volume_abs_logger_list.elements[iterator].abs_logger->conditional_list.p_data_unions);
+      }
+    }
+    if (global_all_volume_abs_logger_list.num_elements > 0) free(global_all_volume_abs_logger_list.elements);
+    
+    
+    for (iterator=0;iterator<global_specific_volumes_abs_logger_list.num_elements;iterator++) {
+      if (global_specific_volumes_abs_logger_list.elements[iterator].abs_logger->conditional_list.num_elements > 0) {
+        free(global_specific_volumes_abs_logger_list.elements[iterator].abs_logger->conditional_list.conditional_functions);
+        free(global_specific_volumes_abs_logger_list.elements[iterator].abs_logger->conditional_list.p_data_unions);
+      }
+    }
+    if (global_specific_volumes_abs_logger_list.num_elements > 0) free(global_specific_volumes_abs_logger_list.elements);
+    //#endif
+
+    if (finally_verbal) printf("Freeing global tagging conditional lists \n");
+    for (iterator=0;iterator<global_tagging_conditional_list.num_elements;iterator++) {
+      if (global_tagging_conditional_list.elements[iterator].conditional_list.num_elements > 0) {
+        free(global_tagging_conditional_list.elements[iterator].conditional_list.conditional_functions);
+        free(global_tagging_conditional_list.elements[iterator].conditional_list.p_data_unions);
       }
     }
     if (global_tagging_conditional_list.num_elements>0) free(global_tagging_conditional_list.elements);
@@ -2121,12 +2333,12 @@ MCDISPLAY
             
             Volumes[volume_index]->geometry.mcdisplay_function(&lines_to_draw_master,volume_index,Geometries,number_of_volumes);
             
-            for (iterate = 0;iterate<lines_to_draw_master.number_of_lines;iterate++) {
-               if (lines_to_draw_master.lines[iterate].number_of_dashes == 1) {
-                 line(lines_to_draw_master.lines[iterate].point1.x,lines_to_draw_master.lines[iterate].point1.y,lines_to_draw_master.lines[iterate].point1.z,lines_to_draw_master.lines[iterate].point2.x,lines_to_draw_master.lines[iterate].point2.y,lines_to_draw_master.lines[iterate].point2.z);
+            for (iterator = 0;iterator<lines_to_draw_master.number_of_lines;iterator++) {
+               if (lines_to_draw_master.lines[iterator].number_of_dashes == 1) {
+                 line(lines_to_draw_master.lines[iterator].point1.x,lines_to_draw_master.lines[iterator].point1.y,lines_to_draw_master.lines[iterator].point1.z,lines_to_draw_master.lines[iterator].point2.x,lines_to_draw_master.lines[iterator].point2.y,lines_to_draw_master.lines[iterator].point2.z);
                }
                else {
-                 dashed_line(lines_to_draw_master.lines[iterate].point1.x,lines_to_draw_master.lines[iterate].point1.y,lines_to_draw_master.lines[iterate].point1.z,lines_to_draw_master.lines[iterate].point2.x,lines_to_draw_master.lines[iterate].point2.y,lines_to_draw_master.lines[iterate].point2.z,lines_to_draw_master.lines[iterate].number_of_dashes);
+                 dashed_line(lines_to_draw_master.lines[iterator].point1.x,lines_to_draw_master.lines[iterator].point1.y,lines_to_draw_master.lines[iterator].point1.z,lines_to_draw_master.lines[iterator].point2.x,lines_to_draw_master.lines[iterator].point2.y,lines_to_draw_master.lines[iterator].point2.z,lines_to_draw_master.lines[iterator].number_of_dashes);
                }
             }
             

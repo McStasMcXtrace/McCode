@@ -6,7 +6,7 @@
 * %Identification
 * Written by: A. Vickery, A. Prodi and E. Knudsen
 * Date: July 2011.
-* Origin: NBI,Ris&oslash; DTU
+* Origin: NBI,Ris&oslash; DTU Physics
 * %INSTRUMENT_SITE: Tests
 *
 * Compares intensities of Monochromator components.
@@ -16,15 +16,25 @@
 * Very simple setup to compare intensities diffracted by Monochromators. 
 * It shows that implementations are equivalent.
 *
-* %Example: Test_Mono -n 1e6 Mono=1 Detector: emon_I=5.39036e-17
+* The inpout parameter Mono chooses which model to use:
+* 0: Obsolete Perfect_crystal
+* 1: Bragg_crystal - validated component
+* 2: Bragg_crystal_bent - bent version of the above
+* 3: Bragg_crystal_BC - variant of the above based on Mendenhall et. al., J. Appl. Cryst 2019
+* 4: Bragg_crystal_bent_BC - variant of the above based on Mendenhall et. al., J. Appl. Cryst 2019
+* 5: Bragg_crystal_simple - a simple mono with a static (flat) Dawrin width.
+*
+* %Example: Test_Mono.instr Mono=1 Detector: emon_I=5.39036e-17
+* %Example: Test_Mono.instr Mono=5 Detector: emon_I=5.33687e-17
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Mono:   Unused (here for compatibility reasons)
-* lambda: Source wavelength   [Angs]
-* L1 [m]: distance from source to monochromator
-* OMM [deg]: rotation angle of monochromator, i.e. angle of incidence
-* TTM [deg]: scattering angle at which to put the detector
+* Mono: [ ]    Which monochromator model to use.
+* lambda: [AA] Source wavelength.
+* L1: [m]      Distance from source to monochromator.
+* OMM: [deg]   Rotation angle of monochromator, i.e. angle of incidence.
+* TTM: [deg]   Scattering angle at which to put the detector.
+* BEND: [m]    Curvature radius of the monochromator crystal lattice. Only relevant for Mono==2.
 *
 * %Link
 *
@@ -120,6 +130,11 @@ WHEN Mono==3 AT (0, 0, 0) RELATIVE Mono_Arm
 COMPONENT MonoBCb = Bragg_crystal_bent_BC(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
 WHEN Mono==4 AT (0, 0, 0) RELATIVE Mono_Arm
+
+COMPONENT MonoBCs = Bragg_crystal_simple(
+    yheight=0.05, xwidth=0.02, DM=3.1355, err_Q= 0.000075, r0=1.0)
+WHEN Mono==5 AT (0,0,0) RELATIVE Mono_Arm
+ROTATED(90,0,0) RELATIVE Mono_Arm
 
 COMPONENT Mono_Out = Arm()
 AT (0, 0, 0) RELATIVE Mono_Arm

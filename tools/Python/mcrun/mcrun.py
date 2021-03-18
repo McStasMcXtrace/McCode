@@ -39,7 +39,7 @@ def add_mcrun_options(parser):
     ''' Add option group for McRun options to parser '''
 
     # McRun options
-    opt = OptionGroup(parser, 'mcrun options')
+    opt = OptionGroup(parser, '%s options' % (mccode_config.configuration["MCRUN"]) )
     add = opt.add_option
 
     add('-c', '--force-compile',
@@ -121,15 +121,15 @@ def add_mcstas_options(parser):
 
     add('-n', '--ncount',
         metavar='COUNT', type=float, default=1000000,
-        help='set number of neutrons to simulate')
+        help='set number of %s to simulate' % (mccode_config.configuration["PARTICLE"]) )
 
     add('-t', '--trace',
         action='store_true', default=False,
-        help='enable trace of neutron through instrument')
-
-    add('-g', '--gravitation', '--gravity',
-        action='store_true', default=False,
-        help='enable gravitation for all trajectories')
+        help='enable trace of %s through instrument' % (mccode_config.configuration["PARTICLE"]) )
+    if (mccode_config.configuration["MCCODE"]=='mcstas'):
+        add('-g', '--gravitation', '--gravity',
+            action='store_true', default=False,
+            help='enable gravitation for all trajectories')
 
     # Data options
     dir_exists = lambda path: isdir(abspath(path))
@@ -154,7 +154,7 @@ def add_mcstas_options(parser):
         help='put all data files in directory DIR')
 
     add('--format',
-        metavar='FORMAT', default='McStas',
+        metavar='FORMAT', default='McCode',
         help='output data files using format FORMAT '
              '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 

@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * A sample component to separate geometry and phsysics
 *
@@ -58,9 +58,9 @@
 * target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
 * order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
 * order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
-*
+* order_volume_process: [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* filename:        [string] Filename for logging output
 *
 * OUTPUT PARAMETERS:
 *
@@ -72,9 +72,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_logger_2D_kf
-DEFINITION PARAMETERS (n1=90, n2=90)
-SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL",Q1_min=-5,Q1_max=5,Q2_min=-5,Q2_max=5,string Q_direction_1="x", string Q_direction_2="z",string filename="NULL", order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1)
-OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume,logger_conditional_extend_index)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL",Q1_min=-5,Q1_max=5,Q2_min=-5,Q2_max=5,string Q_direction_1="x", string Q_direction_2="z",string filename="NULL", n1=90, n2=90, order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1)
+OUTPUT PARAMETERS (loop_index,accepted_processes,accepted_volumes,logger_list_element,this_logger,this_storage,loggers_on_target_volume,target_volume)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -420,18 +420,17 @@ DECLARE
 //struct global_material_element_struct global_material_element;
 //struct physics_struct this_material;
 
-int loop_index,l1,l2;
-int process_index;
+int loop_index;
 int found_process;
 int specified_processes;
 char local_string[256];
 
 // Reused for logger
-struct pointer_to_1d_int_list accepted_processes = {0,NULL};
+struct pointer_to_1d_int_list accepted_processes;
 
 struct global_logger_element_struct logger_list_element;
 
-struct pointer_to_1d_int_list accepted_volumes = {0,NULL};
+struct pointer_to_1d_int_list accepted_volumes;
 
 struct logger_struct this_logger;
 struct a_2D_kf_storage_struct this_storage;
@@ -439,12 +438,15 @@ struct a_2D_kf_storage_struct this_storage;
 struct loggers_struct *loggers_on_target_volume;
 struct Volume_struct *target_volume;
 
-char temp_string[2];
-
 %}
 
 INITIALIZE
 %{
+  accepted_processes.elements = NULL;
+  accepted_processes.num_elements = 0;
+  
+  accepted_volumes.elements = NULL;
+  accepted_volumes.num_elements = 0;
 
 
   // Initialize storage from input
@@ -481,6 +483,7 @@ INITIALIZE
   this_storage.Detector_2D.Array_p = allocate2Ddouble_2D_kf(n1,n2);
   this_storage.Detector_2D.Array_p2 = allocate2Ddouble_2D_kf(n1,n2);
   
+  int l1,l2;
   for (l1=0;l1<n1;l1++) { //n1 is technically a double, but this works fine
     for (l2=0;l2<n2;l2++) {
       this_storage.Detector_2D.Array_N[l1][l2] = 0;
@@ -495,32 +498,33 @@ INITIALIZE
   
   if (strcmp(Q_direction_1,"x") == 0 || strcmp(Q_direction_1,"X") == 0) {
       this_storage.dim_1_choice = 0;
-      sprintf(this_storage.Detector_2D.string_axis_1,"Q_x [A^-1]");
-      sprintf(this_storage.Detector_2D.title_string,"2D Q Union logger in plane x");
+      sprintf(this_storage.Detector_2D.string_axis_1,"kf_x [A^-1]");
+      sprintf(this_storage.Detector_2D.title_string,"2D kf Union logger in plane x");
   } else if (strcmp(Q_direction_1,"y") == 0 || strcmp(Q_direction_1,"Y") == 0) {
       this_storage.dim_1_choice = 1;
-      sprintf(this_storage.Detector_2D.string_axis_1,"Q_y [A^-1]");
-      sprintf(this_storage.Detector_2D.title_string,"2D Q Union logger in plane y");
+      sprintf(this_storage.Detector_2D.string_axis_1,"kf_y [A^-1]");
+      sprintf(this_storage.Detector_2D.title_string,"2D kf Union logger in plane y");
   } else if (strcmp(Q_direction_1,"z") == 0 || strcmp(Q_direction_1,"Z") == 0) {
       this_storage.dim_1_choice = 2;
-      sprintf(this_storage.Detector_2D.string_axis_1,"Q_z [A^-1]");
-      sprintf(this_storage.Detector_2D.title_string,"2D Q Union logger in plane z");
+      sprintf(this_storage.Detector_2D.string_axis_1,"kf_z [A^-1]");
+      sprintf(this_storage.Detector_2D.title_string,"2D kf Union logger in plane z");
   } else {
       printf("ERROR, Union logger 2D_kf named \"%s\" has an invalid Q_direction_1 string, it should be \"x\",\"y\" or \"z\".\n",NAME_CURRENT_COMP);
       exit(1);
   }
   
+  char temp_string[2];
   if (strcmp(Q_direction_2,"x") == 0 || strcmp(Q_direction_2,"X") == 0) {
       this_storage.dim_2_choice = 0;
-      sprintf(this_storage.Detector_2D.string_axis_2,"Q_x [A^-1]");
+      sprintf(this_storage.Detector_2D.string_axis_2,"kf_x [A^-1]");
       sprintf(temp_string,"x");
   } else if (strcmp(Q_direction_2,"y") == 0 || strcmp(Q_direction_2,"Y") == 0) {
       this_storage.dim_2_choice = 1;
-      sprintf(this_storage.Detector_2D.string_axis_2,"Q_y [A^-1]");
+      sprintf(this_storage.Detector_2D.string_axis_2,"kf_y [A^-1]");
       sprintf(temp_string,"y");
   } else if (strcmp(Q_direction_2,"z") == 0 || strcmp(Q_direction_2,"Z") == 0) {
       this_storage.dim_2_choice = 2;
-      sprintf(this_storage.Detector_2D.string_axis_2,"Q_z [A^-1]");
+      sprintf(this_storage.Detector_2D.string_axis_2,"kf_z [A^-1]");
       sprintf(temp_string,"z");
   } else {
       printf("ERROR, Union logger 2D_kf named \"%s\" has an invalid Q_direction_2 string, it should be \"x\",\"y\" or \"z\".\n",NAME_CURRENT_COMP);
@@ -580,6 +584,7 @@ INITIALIZE
     // Add this logger to the global_specific_volumes_logger_list (so that conditionals can affect it)
     add_element_to_logger_list(&global_specific_volumes_logger_list,logger_list_element);
     
+    int process_index;
     for (loop_index=0;loop_index<accepted_volumes.num_elements;loop_index++) {
       target_volume = global_geometry_list.elements[accepted_volumes.elements[loop_index]].Volume;
       // Add an element to its logger list

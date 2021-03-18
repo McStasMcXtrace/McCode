@@ -95,7 +95,7 @@ int CountLines(FILE* File)
 		// Reading file
         if ((File = fopen(Filename, "r")) == 0) {
             printf("Cannot open file: %s...\n", Filename);
-            exit(0);
+            exit(-1);
         }
 
         NumberOfDatapoints = CountLines(File);

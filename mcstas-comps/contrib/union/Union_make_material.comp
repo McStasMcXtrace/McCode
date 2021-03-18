@@ -7,7 +7,7 @@
 * Written by: Mads Bertelsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin: Svanevej 19
+* Origin: University of Copenhagen
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -178,7 +178,7 @@ int found_process;
 int specified_processes;
 char local_string[256];
 
-struct pointer_to_1d_int_list accepted_processes = {0,NULL};
+struct pointer_to_1d_int_list accepted_processes;
 
 // Add setup for loggers since make_material is called before any volume / master
 #ifndef UNION_LOGGER_DECLARE
@@ -191,6 +191,9 @@ struct pointer_to_1d_int_list accepted_processes = {0,NULL};
 
 INITIALIZE
 %{
+
+  accepted_processes.num_elements = 0;
+  accepted_processes.elements = NULL;
 
   /*
   // Comma test

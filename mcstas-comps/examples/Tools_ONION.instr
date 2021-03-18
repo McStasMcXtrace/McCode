@@ -1,0 +1,145 @@
+/*******************************************************************************
+* McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Tools_ONION
+*
+* %Identification
+* Written by: Thomas Huegle
+* Date: July 2019
+* Origin: ORNL
+*
+* Instrument short description: 
+*
+* %Description
+* Test case for an layered detector shell instrument to provide quick overview of resolution per pixel.
+* Set up to be run in McStas -> Mantid mode, refer to manual for details on execution.
+* Simulates desired divergence by adjusting moderator size.
+* Considers only in-plane (xwidth) factors, sets yheight as 1 cm.
+* For an example on how to analyze the data, see the 'Onion_analyzerScript.py' available at 
+* <a href="https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle">https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle</a>
+*
+* Acceptable statistics can be achieved by running the simulation with 1E7 neutrons (output file: ~400MB) 
+* 
+*
+* %Parameters
+* divergence: [degrees] angular divergence of neutrons reaching the sample
+* distance: [m] distance between source and sample
+*
+* %Link
+* "Using an onion like neutron scattering instrument model to quickly optimize design parameters"
+* T. Huegle, <a href="https://doi.org/10.1016/j.nima.2019.162711">Nuclear Instruments and Methods in Physics Research Section A, 2019<a>
+* Python script available at <a href="https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle">https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle</a>
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Tools_ONION (double divergence = 0.4, double distance = 32)
+
+DECLARE
+%{
+double samplewidth, sampleheight;
+double sourcewidth, sourceheight;
+double div_rad;
+%}
+
+INITIALIZE
+%{
+// Calculate size of moderator from desired divergence:	
+div_rad = (divergence/2) * M_PI / 180.;
+sourcewidth = 2*distance*tan(div_rad);
+	printf("source width: %4.2f", sourcewidth);
+sourceheight = 0.01;
+samplewidth = 0.01;
+sampleheight = sourceheight;
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+////////////////////////////////////////////////////////////////
+//			*---SOURCE---*					//
+////////////////////////////////////////////////////////////////
+
+
+COMPONENT sourceMantid = SNS_source(
+	filename = "/usr/share/mcstas/2.5/data/source_sct521_bu_08_1.dat", 
+	xwidth = sourcewidth, yheight = sourceheight,
+	dist = distance, focus_xw = samplewidth, focus_yh = sampleheight,
+	Emin = 0.001, Emax = 1000)
+	AT (0, 0, 0) RELATIVE Origin
+
+
+//////////////////////////////////////////////////////////////////////////
+//		SAMPLE POSITION	//
+//////////////////////////////////////////////////////////////////////////
+
+
+COMPONENT sampleMantid = Arm()
+  AT (0, 0, distance) RELATIVE Origin
+
+COMPONENT sampleSpectrumL = L_monitor(
+	xwidth = samplewidth, yheight = sampleheight,
+	nL = 1000, Lmin = 0, Lmax = 10, 
+	filename = "sampleSpectrum.L",
+	restore_neutron = 1)
+  AT (0, 0, 0.0) RELATIVE sampleMantid
+  
+COMPONENT divergenceMonitor_xy = Divergence_monitor(	
+	xwidth = samplewidth, yheight = sampleheight,
+	maxdiv_h=1, maxdiv_v=1,
+	nh=1000, nv=1000, 
+	filename="Divergence.xy",
+	restore_neutron = 1)
+  AT (0, 0, 0.0) RELATIVE sampleMantid
+
+  COMPONENT sample = Powder1(
+	d = 2, radius = samplewidth/2, yheight = sampleheight, d_phi = 2)
+   AT (0, 0, 0.0) RELATIVE sampleMantid
+
+
+//////////////////////////////////////////////////////////////////////////
+//			*---DETECTORS---*				//
+//////////////////////////////////////////////////////////////////////////
+
+
+COMPONENT nD_Mantid_1 = Monitor_nD(
+         yheight = sampleheight, radius = 1.0,
+         options="mantid, banana, theta limits=[10,170] bins=279, y bins=1, neutron pixel min=0, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_2 = Monitor_nD(
+         yheight = sampleheight, radius = 1.5,
+         options="mantid, banana, theta limits=[10,170] bins=418, y bins=1, neutron pixel min=279, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_3 = Monitor_nD(
+         yheight = sampleheight, radius = 2.0,
+         options="mantid, banana, theta limits=[10,170] bins=558, y bins=1, neutron pixel min=697, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_4 = Monitor_nD(
+         yheight = sampleheight, radius = 2.5,
+         options="mantid, banana, theta limits=[10,170] bins=698, y bins=1, neutron pixel min=1255, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_5 = Monitor_nD(
+         yheight = sampleheight, radius = 3.0,
+         options="mantid, banana, theta limits=[10,170] bins=837, y bins=1, neutron pixel min=1953, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_6 = Monitor_nD(
+         yheight = sampleheight, radius = 3.5,
+         options="mantid, banana, theta limits=[10,170] bins=977, y bins=1, neutron pixel min=2790, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+COMPONENT nD_Mantid_7 = Monitor_nD(
+         yheight = sampleheight, radius = 4.0,
+         options="mantid, banana, theta limits=[10,170] bins=1117, y bins=1, neutron pixel min=3767, t, list all neutrons")
+       AT (0,0,0) RELATIVE sampleMantid
+
+FINALLY
+%{
+%}
+END

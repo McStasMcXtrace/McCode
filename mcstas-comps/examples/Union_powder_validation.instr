@@ -67,7 +67,6 @@ AT (0,0,1) RELATIVE a1
 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT cylinder_sample_union = Union_cylinder(radius=sample_radius, yheight=sample_height, priority=1, material_string="test_material", p_interact = geometry_interact)
-WHEN(comp_select == 1)
 AT (0,0,0) RELATIVE sample_position
 ROTATED (0,0,0) RELATIVE sample_position
 

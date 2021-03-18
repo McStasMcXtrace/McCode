@@ -66,7 +66,7 @@ INITIALIZE
             printf("PSDlin_monitor: %s: Null detection area !\n"
                    "ERROR           (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
-      exit(0);
+      exit(-1);
     }
 
     for (i=0; i<nx; i++)

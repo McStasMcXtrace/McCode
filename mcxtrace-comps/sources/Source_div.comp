@@ -45,6 +45,7 @@
 * flux:   [1/(s * mm**2 *mrad**2 * energy unit]) flux per energy unit, Angs or keV.
 * randomphase [1] If !=0 the photon phase is chosen randomly.
 * phase [1] Value of the photon phase (if randomphase==0).
+* spectrum_file: [ ] File from which to read the spectral intensity profile
 *
 * OUTPUT PARAMETERS:
 *
@@ -53,7 +54,7 @@
 
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, 
+SETTING PARAMETERS (xwidth=0, yheight=0, focus_aw=0, focus_ah=0, focus_ar=0,radius=0,
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0)
 OUTPUT PARAMETERS (prms, p_init, dist)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -79,7 +80,11 @@ INITIALIZE
   prms.ymin=-yheight/2.0;
   prms.xmax=xwidth/2.0;
   prms.ymax=yheight/2.0;
-  
+
+  if(radius==0 && ( prms.xmax==prms.xmin && prms.ymin==prms.xmax) ){
+    printf("ERROR(%s): No meaningful source area set. Either set radius or xwidth and yheight.\n",NAME_CURRENT_COMP);
+  }
+
   if (spectrum_file){
     /*read spectrum from file*/
     int status=0;
@@ -95,11 +100,11 @@ INITIALIZE
     for (i=0;i<prms.T.rows-1;i++){
       prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
     }
-    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
-    if(E0) printf("Source_div(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+    printf("INFO: Source_div(%s): Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("INFO: Source_div(%s): E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if (!E0 && !lambda0){
-    fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
-    exit(0);  
+    fprintf(stderr,"ERROR (%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(-1);
   }  
 
   /*calculate the X-ray weight from the flux*/
@@ -116,17 +121,9 @@ INITIALIZE
 TRACE
 %{
   double kk,theta_x,theta_y,l,e,k;
+  double tan_thx, tan_thy;
+
   p=prms.pmul;
-  if (!gauss_a){ 
-    theta_x=(rand01()-0.5)*focus_aw;
-    theta_y=(rand01()-0.5)*focus_ah;
-  }else{
-    theta_x=randnorm()*focus_aw;
-    theta_y=randnorm()*focus_ah;
-  }
-  x=prms.xmin+rand01()*xwidth;
-  y=prms.ymin+rand01()*yheight;
-  z=0;
 
   if (spectrum_file){
     double pp=0;
@@ -161,14 +158,62 @@ TRACE
     k=(2*M_PI/l);
   }
 
-  kx=tan(theta_x);
-  ky=tan(theta_y);
-  kz=1;
-  NORM(kx,ky,kz);
+  if(!radius){
+    x=prms.xmin+rand01()*xwidth;
+    y=prms.ymin+rand01()*yheight;
+    z=0;
+  }else{
+    double r=radius*sqrt(rand01());
+    double th=rand01()*2*M_PI;
+    x=r*cos(th);
+    y=r*sin(th);
+    z=0;
+  }
 
-  kx*=k;
-  ky*=k;
-  kz*=k;
+  if (focus_aw!=0 || focus_ah!=0){
+    if (!gauss_a){
+      /*find limits of uniform sampling scheme for vertical divergence.
+        thetav should be acos(1-2*U) for U\in[0,1]. for theta measured from vertical axis
+        we only use a sub-interval for U and measure from horizontal plane.*/
+      double sample_lim1,u2;
+      sample_lim1=(1-cos(M_PI_2 - focus_ah/2.0))*0.5;
+      u2=randpm1()*(sample_lim1-0.5) + 0.5;
+      theta_x = randpm1()*focus_aw/2.0;
+      theta_y = acos(1-2*u2) - M_PI_2;
+      //theta_x=(rand01()-0.5)*focus_aw;
+      //theta_y=(rand01()-0.5)*focus_ah;
+    }else{
+      theta_x=randnorm()*focus_aw;
+      theta_y=randnorm()*focus_ah;
+    }
+
+    kx=tan(theta_x);
+    ky=tan(theta_y);
+    kz=1.0;
+    NORM(kx,ky,kz);
+    kz*=k;
+    kx*=k;
+    ky*=k;
+  }else{
+    /*radial divergence profile*/
+    double theta,phi,kp;
+    if(!gauss_a){
+      double sample_lim1,u2;
+      sample_lim1=(1-cos(focus_ar/2.0))*0.5;
+      u2=rand01()*(sample_lim1);
+      phi=acos(1-2*u2);
+    }else{
+      do{
+        phi=abs(randnorm()*focus_ar);
+      } while (phi>M_PI);
+    }
+    theta=rand01()*2*M_PI;
+
+    kz=k*cos(phi);
+    kp=sqrt(k*k-kz*kz);
+    kx=kp*sin(theta);
+    ky=kp*cos(theta);
+  }
 
   /*set polarization and phase.*/
   Ex=0;Ey=0;Ez=0;

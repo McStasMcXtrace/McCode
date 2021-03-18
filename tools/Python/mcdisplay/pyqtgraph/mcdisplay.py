@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
-mcdisplay webgl script.
+mcdisplay pyqtgraph script.
 '''
 import sys
 import os
@@ -10,7 +10,7 @@ import argparse
 from datetime import datetime
 import numpy as np
 from enum import Enum
-
+import pathlib
 import PyQt5
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -369,7 +369,6 @@ class McDisplay2DGui(object):
                 self.iw = create_infowindow(self._get_comp_color_pairs())
                 self.iw.show()
                 self.iw_visible = True
-                self.mw.raise_()
                 self.mw.activateWindow()
             else:
                 self.iw.hide()
@@ -541,7 +540,7 @@ def main(args):
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
 
-    gui = McDisplay2DGui(title=dirname)
+    gui = McDisplay2DGui(title=dirname+" - Press 'h' for comp list")
     try:
       if not args.tof and not args.TOF and not args.ToF:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
@@ -552,11 +551,12 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
+    scriptname=pathlib.Path(__file__).stem
+    parser = argparse.ArgumentParser(description=__doc__.replace('mcdisplay',scriptname))
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
     #enable tof for mcdisplay (McStas) only
-    if( (os.path.basename(sys.argv[0]).startswith('mc')) ):
+    if( scriptname.startswith('mc') ):
       parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
       parser.add_argument('--TOF', action='store_true', help='alternative to --tof')
       parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')

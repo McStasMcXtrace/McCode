@@ -1,0 +1,75 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test Single Crystal output
+*
+* %Identification
+* Written by: P. Willendrup
+* Date: October 1st 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Test output of Single Crystal on a spherical monitor.
+*
+* %Description
+* A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
+*
+* %Example: lambda=5 Detector: Sph_mon_I=6.13193e+7
+*
+* %Parameters
+* lambda: [Angs]  Central wavelength emitted from source
+* dlambda: [Angs] Witdth of wavelength spectrom emitted from source
+* L1: [m]         Source-sample distance
+* directbeam: [1] Suppress direct beam or not
+* reflections: [str]   File name for reflection list
+* SPLITS: [1] Number of SPLIT's before sample
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_SX(lambda=5, dlambda=9.8, L1=30, int directbeam=0, string reflections="YBaCuO.lau", int SPLITS=1)
+
+DECLARE %{
+  int DirectBeam;
+  #pragma acc declare create(DirectBeam)
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  DirectBeam = directbeam;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_gen(
+    radius = 0.11, dist = L1, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = lambda, dlambda = dlambda/2.0,
+    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TIP: monochromator cradle */ 
+COMPONENT sample_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+
+SPLIT SPLITS COMPONENT SX = Single_crystal(radius=0.005, yheight=0.01, reflections=reflections, mosaic=10, delta_d_d=1e-4)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if(DirectBeam == 0) {
+    if (!SCATTERED) {
+      ABSORB;
+    }
+  }
+%}
+
+COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Sphere")
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+/* The END token marks the instrument definition end */
+END

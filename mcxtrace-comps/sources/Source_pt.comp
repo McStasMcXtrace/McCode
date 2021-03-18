@@ -30,6 +30,8 @@
 * %P
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
+* focus_x0:[m]  x-cocordinate of target centre.
+* focus_y0:[m]  y-coordinate of target centre.
 * lambda0:[AA]  Mean wavelength of x-rays.
 * dlambda:[AA]  Wavelength half spread of x-rays (flat or gaussian sigma).
 * E0:     [keV] Mean energy of xrays.
@@ -39,13 +41,14 @@
 * flux:   [ph/s] Total flux radiated from the source. 
 * randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
 * phase: [ ] Set phase to something given. 
+* spectrum_file: [ ] File from which to read the spectral intensity profile
 * 
 * %E
 ******************************************************************/
 
 DEFINE COMPONENT Source_pt
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0)
+SETTING PARAMETERS (focus_xw=0,focus_yh=0,focus_x0=0,focus_y0=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -68,18 +71,12 @@ DECLARE
 
 INITIALIZE
 %{
-  double fi_x,fi_y,t_ome;
   /*input logic*/
   if(dist<=0 || focus_yh<=0 || focus_xw<=0){
-    fprintf(stderr,"Source_pt (%s): Error: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n",
+    fprintf(stderr,"ERROR: (%s): Error: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
-  fi_x=atan(focus_xw/2.0/dist);
-  fi_y=atan(focus_yh/2.0/dist);
-  
-  /*fractional solid angle subtended by the target*/
-  t_ome=asin(sin(fi_y)*sin(fi_x))/M_PI;
   
   if (spectrum_file){
     /*read spectrum from file*/
@@ -110,21 +107,24 @@ INITIALIZE
   }else{
     prms.pmul=1;
   }
-  prms.pmul*=t_ome/(double)mcget_ncount();
+  prms.pmul*=1.0/(double)mcget_ncount();
 %}
 
 TRACE
 %{
   double k,l,e;
+  double fi_x,fi_y,t_ome;
   /*point source*/
   p=prms.pmul;
   x=0;y=0;z=0;
  
-  /*draw random coordinates in the acceptance window*/
-  kx= (focus_xw/2.0 * randpm1());
-  ky= (focus_yh/2.0 * randpm1());
-  kz= dist;
-  NORM(kx,ky,kz);  
+  fi_x=atan(focus_xw/2.0/dist)*2.0;
+  fi_y=atan(focus_yh/2.0/dist)*2.0;
+
+  randvec_target_rect_angular(&kx,&ky,&kz, &t_ome, focus_x0, focus_y0, dist, fi_x,fi_y,ROT_A_CURRENT_COMP);
+  NORM(kx,ky,kz);
+  p*=t_ome/(4*M_PI);
+
   /*sample wavelength*/
   if (spectrum_file){
     double pp=0;

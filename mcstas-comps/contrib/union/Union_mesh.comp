@@ -39,23 +39,23 @@
 * INPUT PARAMETERS:
 * filename: [str] Name of stl file that contains the 3D geometry
 * material_string: []  material name of this volume, defined using Union_make_material
-* priority   [1]  priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
-* p_interact [1]  probability to interact with this geometry [0-1]
-* visualize  [1]  set to 0 if you wish to hide this geometry in mcdisplay
-* number_of_activations [1]  Number of subsequent Union_master components that will simulate this geometry
+* priority:   [1]  priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* p_interact: [1]  probability to interact with this geometry [0-1]
+* visualize:  [1]  set to 0 if you wish to hide this geometry in mcdisplay
+* number_of_activations: [1]  Number of subsequent Union_master components that will simulate this geometry
 * mask_string: []      Comma seperated list of geometry names which this geometry should mask
 * mask_setting: []     "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
 *
 * Focusing options, if left blank, there will be no focusing.
-* target_x   [m]:
-* target_y   [m]: Position of target to focus at
-* target_z   [m]:
-* focus_aw   [deg] horiz. angular dimension of a rectangular area
-* focus_ah   [deg] vert. angular dimension of a rectangular area
-* focus_xw   [m]   horiz. dimension of a rectangular area
-* focus_xh   [m]   vert. dimension of a rectangular area
-* focus_r    [m]   focusing on circle with this radius
-*
+* target_x:   [m]
+* target_y:   [m] Position of target to focus at
+* target_z:   [m]
+* target_index: [1] Relative index of component to focus at, e.g. next is +1 
+* focus_aw:   [deg] horiz. angular dimension of a rectangular area
+* focus_ah:   [deg] vert. angular dimension of a rectangular area
+* focus_xw:   [m]   horiz. dimension of a rectangular area
+* focus_xh:   [m]   vert. dimension of a rectangular area
+* focus_r:    [m]   focusing on circle with this radius
 * OUTPUT PARAMETERS:
 *
 * %L
@@ -316,7 +316,7 @@ struct pointer_to_1d_coords_list shell_points(struct geometry_struct *geometry,i
 	double *v1_z = geometry->geometry_parameters.p_mesh_storage->v1_z;
 	double *v2_x = geometry->geometry_parameters.p_mesh_storage->v2_x;
 	double *v2_y = geometry->geometry_parameters.p_mesh_storage->v2_y;
-	double *v2_z= geometry->geometry_parameters.p_mesh_storage->v2_z;
+	double *v2_z = geometry->geometry_parameters.p_mesh_storage->v2_z;
 	double *v3_x = geometry->geometry_parameters.p_mesh_storage->v3_x;
 	double *v3_y = geometry->geometry_parameters.p_mesh_storage->v3_y;
 	double *v3_z = geometry->geometry_parameters.p_mesh_storage->v3_z;
@@ -389,7 +389,9 @@ struct pointer_to_1d_coords_list shell_points(struct geometry_struct *geometry,i
 			//printf("\n Added a point [%f,%f,%f] ",this_vert.x,this_vert.y,this_vert.z);
 		}
 	}
+    
   printf("\n test is there to high j? j = %i, number_of_points_in_array = %i , lenght of array = %i ",j,number_of_points_in_array,3*n_facets * sizeof(Coords));
+  j = number_of_points_in_array - 1; // Last legal index, currently j is out of bounds.
   printf("\n test= [%f,%f,%f]",mesh_shell_array.elements[j].x ,mesh_shell_array.elements[j].y,mesh_shell_array.elements[j].z);
   
   mesh_shell_array.num_elements = number_of_points_in_array;
@@ -414,8 +416,7 @@ struct global_geometry_element_struct global_geometry_element;
 	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
-int dummy;
-int loop_index,found_geometries;
+int loop_index;
 int loop_2_index;
 int material_index;
 
@@ -464,6 +465,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         }
     }
     
+    int found_geometries = 0;
     for (loop_index=0;loop_index<global_geometry_list.num_elements;loop_index++) {
         // Add mask list
         if (1 == manual_linking_function(global_geometry_list.elements[loop_index].name,mask_string)) {
@@ -672,7 +674,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
         */
 		
 	}
-	printf("\n TEST inf v1 is long enough! i = %i , n_facets = %i\n",i,n_facets);
+	printf("\n TEST inf v1 is long enough! i = %i , n_facets = %i, counter = %i \n",i,n_facets,counter);
 	
 	// Create bounding sphere using Ritter [https://en.wikipedia.org/wiki/Bounding_sphere#cite_note-Ritter1990-2]
 	//  Ritter, Jack (1990), "An efficient bounding sphere", in Glassner, Andrew S., Graphics Gems, San Diego, CA, US: Academic Press Professional, Inc., pp. 301–303, ISBN 0-12-286166-3
@@ -828,7 +830,6 @@ add_element_to_geometry_list(&global_geometry_list,global_geometry_element);
 
 TRACE
 %{
-dummy = 1;
 %}
 
 END

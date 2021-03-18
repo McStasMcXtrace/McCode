@@ -1,0 +1,1876 @@
+/*******************************************************************************
+* Instrument: ESS_BIFROST_shielding
+*
+* %I
+* Written by: Rodion Kolevatov, IFE <rodion.kolevatov@ife.no>
+* Date: 2020/01
+* Origin: IFE
+* %INSTRUMENT_SITE: ESS
+*
+* Model of the ESS BIFROST instrument that illustrates the use of the "shielding-logger" 
+* components
+*
+* %D
+* This model of the ESS BIFROST instrument illustrates the use of the "shielding-logger"
+* components, as described in the publications <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a>, 
+* <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a> and <a href="https://doi.org/10.1016/j.nima.2018.12.069">https://doi.org/10.1016/j.nima.2018.12.069</a>.
+*
+* An important note from the author:
+* Please note that the included Shielding- and Dose- calculators will only give sensible for guides with 
+* borosilicate glass substrate. If the substrate is, e.g. copper, the dose rates from neutrons transmitted 
+* through the coating and captured in the substrate will overshoot the coating contribution significantly, 
+* so that shielding has to be enforced by few tens of centimeters of concrete. 
+*
+* Example: ESS_BIFROST_shielding.instr WaveMin=1
+*
+* %P
+* WaveMin:           [AA]   Minimum wavelength from moderator
+* WaveMax:           [AA]   Maximum wavelength from moderator
+* E_0:              [meV]   Lowest energy in wavelength band - used for chopper settings
+* L_0:               [AA]   Alternative: highest wavelength in wavelength band - used for chopper settings
+* chopPulseOpening:   [s]   Opening time of pulse shapping chopper
+* DivSlit0_width:     [m]   Opening of Divergence Slit nr 0
+* DivSlit1_width:     [m]   Opening of Divergence Slit nr 1
+* DivSlit2_width:     [m]   Opening of Divergence Slit nr 2
+* DivSlit3_width:     [m]   Opening of Divergence Slit nr 3
+* Npulse:             [1]   Number of pulses to produce at the source
+* print:              [1]   Bolean flag to print values of interest for debugging. mcdisplay does not work when this is set to 1
+* makeVirtualSource:  [1]   Bolean flag to save all neutrons to virtual source file 
+* printMValues:       [1]   Bolean flag to indicate that M-values should be printed
+* power:             [MW]   ESS accelerator power
+* BWopen:           [deg]   Bandwidth-chopper opening angle - unused
+* 
+* %L
+* See <a href="https://doi.org/10.3233/JNR-190123">https://doi.org/10.3233/JNR-190123</a>, 
+* <a href="https://doi.org/10.3233/JNR-180088">https://doi.org/10.3233/JNR-180088</a> and <a href="https://doi.org/10.1016/j.nima.2018.12.069">https://doi.org/10.1016/j.nima.2018.12.069</a>.
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT ESS_BIFROST_shielding(
+WaveMin=1, 
+WaveMax=10,
+E_0=4.0, 
+L_0=0,  
+chopPulseOpening=0.004, 
+DivSlit0_width=0.1,
+DivSlit1_width=0.1,  
+DivSlit2_width=0.1,  
+DivSlit3_width=0.1,  
+Npulse=1,
+int print=0, 
+int makeVirtualSource=0, 
+int printMValues=0,
+double power = 5.0,
+double BWopen=161
+)
+
+DECLARE
+%{
+// M-value and element length arrays
+double elementLength6S[150];
+double mValues6verticalS[150];
+double mValues6horizontalS[150];
+double elementLength3S[150];
+double mValues3verticalS[150];
+double mValues3horizontalS[150];
+double elementLength1S[150];
+double mValues1verticalS[150];
+double mValues1horizontalS[150];
+
+
+// Transferred parameters
+double chopPulseFrequencyOrder=14; // Number of chopper pulses pr moderator pulse. It will automatically be reduced when nesesary and a warning will be written in the promt. 
+double sampleSizeX=0.010; // Width of monitors at sample position. Guide optimized for up to 0.015, intruments optimized for 0.001 to 0.01.
+double sampleSizeY=0.010; // Height of monitors at sample position. Guide optimized for up to 0.015, intruments optimized for 0.001 to 0.01.
+double chopBWPos=78;  // Distance from pulse shapping choppers to BW Chopper
+double PscOff=0.0306;
+double discD=0.04;
+double monigap_length = 0.02; // Length of the moni-gap
+double FOCopen1=38.26;
+double FOCopen2=52.01;
+
+//Chopper translation parameters adjusting for engineering margins
+
+//The precise values relate to the FOC chopper document, the value 'u' is calculated from the guide width, and
+//the engineering margin is 3 mm
+
+// u for the bunker = 0.00031 
+// u for the traight section = 0.00123 
+
+//Add engineering margin to this and get. 
+
+double ChopTransBunker=0.00331; //To accomodate floor deformations in the bunker
+double ChopTransE2=0.00423; //To accomodate floor deformations in the E02 hall (piles)
+
+
+
+
+
+
+
+double x_div;
+double y_div;
+int flag;
+double u = 1e-5;
+
+/*************************************** Chopper Variables  *******************************************/
+
+double lambda_0; double lambda_1;
+double v_0; double v_1;
+double InstLength;
+double chopPulseOffset;  double chopPulsePhaseOffset;  double chopPulseDist; double chopPulseOpen; 
+double chopPulse2PhaseOffset;
+double chopFrameOverlap1Offset;   double chopFrameOverlap1PhaseOffset; //double chopFrameOverlap1Pos; 
+double chopFrameOverlap1Open;
+double chopFrameOverlap2Offset;   double chopFrameOverlap2PhaseOffset; //double chopFrameOverlap2Pos; 
+double chopFrameOverlap2Open;
+double chopBWOffset;   double chopBWPhaseOffset; //double chopBWPos; 
+double chopBWOpen;
+double t_samp_center; double t_samp_0; double t_samp_1;
+double chopBW_t0; double  chopBW_t1;
+
+double PulseHighFluxOffset;
+double WavelengthBand;
+double ModPulseLengthHighF;
+double chopPulsePossibleOpening;
+
+
+/////  Martin's cutting parameters:
+double sample_dist = 0.5;
+double startXposition_straight = 49.303484;
+
+
+double length5 = 17.995800;
+//double benderStartXposition =6.380700;
+double benderStartXposition =24.376254 ;
+
+// straiht:
+double length2 = 90.0;
+
+// Focus ellipse:
+double length1 = 22.114200;
+double Linx1 = 24.364542;
+double Loutx1 = 2.250342;
+double Liny1 = 23.034433;
+double Louty1 = 0.920233;
+double alpha1 = 3.1;
+double Qc1 = 0.021700;
+double R01 = 0.990000;
+double smallaxis_y1 = 0.090000/2;
+double smallaxis_x1 = 0.060000/2;
+
+
+
+double elementLength1_part_1[50]; 
+double mValues1vertical_part_1[50]; 
+double mValues1horizontal_part_1[50];
+double elementLength1_part_2[5]; 
+double mValues1vertical_part_2[5]; 
+double mValues1horizontal_part_2[5];
+double elementLength1_part_3[5]; 
+double mValues1vertical_part_3[5]; 
+double mValues1horizontal_part_3[5];
+double elementLength1_part_4[5]; 
+double mValues1vertical_part_4[5]; 
+double mValues1horizontal_part_4[5];
+
+int counter = 0;
+
+double chopper_coordinate_offset = 4.439;
+
+
+double curve_rot = 0; // has to be either 180 or -180. Determines curve to left or right
+
+double chopFrameOverlap1Pos;
+double chopFrameOverlap2Pos;
+
+// These parameters are no longer safe to change
+double DivSlit0Gap=0.02; // Hole in guide required for Divergence slit nr 0 (at the end of guide)
+double DivSlit1Gap=0.02; // Hole in guide required for Divergence slit nr 1
+double DivSlit2Gap=0.02; // Hole in guide required for Divergence slit nr 2
+double DivSlit3Gap=0.02; // Hole in guide required for Divergence slit nr 3
+
+double DivSlit1Pos=1.0814;  // Position of Divergence Slit nr 1
+double DivSlit2Pos=1.661; // Position of Divergence Slit nr 2
+double DivSlit3Pos=2.961; // Position of Divergence Slit nr 3
+// Old divJaw pos:
+//double DivSlit1Pos=1.191;  // Position of Divergence Slit nr 1
+//double DivSlit2Pos=1.661; // Position of Divergence Slit nr 2
+//double DivSlit3Pos=2.961; // Position of Divergence Slit nr 3
+double chopGap=0.04;
+double BW_chopGap=0.04;
+double chopFrameOverlap1Pos= 8.530;    // Distance from moderator to first frame owerlap chopper
+double chopFrameOverlap2Pos= 14.973;    // Distance from moderator to second frame owerlap chopper
+
+double benderAngle = 0.01886551; // Mads numbers = 0.0183513513514;
+
+int i;   
+%}
+
+INITIALIZE
+%{
+
+
+// If there is set a value of L_0, overwrite E_0 and calculate E_0 from L_0 
+if (L_0>0){
+	E_0=81.82/(L_0*L_0);
+}
+
+
+
+// Following is all the m-values for the entire guide hardcoaded in arrays along with the element lengths for each m-value. 
+// It is important to note that the naming convention here goes the opposite way of the neutron path, meaning that mValues1 describes the m-values on the element closest to the sample and mValues6 are closest to the source.
+
+ //// Part 1 //// 
+ elementLength1_part_1[0] = 0.50000; 
+ mValues1vertical_part_1[0] = 1.50; 
+ mValues1horizontal_part_1[0] = 1.50;
+
+ elementLength1_part_1[1] = 0.50000; 
+ mValues1vertical_part_1[1] = 1.50; 
+ mValues1horizontal_part_1[1] = 1.50;
+
+ elementLength1_part_1[2] = 0.50000; 
+ mValues1vertical_part_1[2] = 1.50; 
+ mValues1horizontal_part_1[2] = 1.50;
+
+ elementLength1_part_1[3] = 0.50000; 
+ mValues1vertical_part_1[3] = 1.50; 
+ mValues1horizontal_part_1[3] = 1.50;
+
+ elementLength1_part_1[4] = 0.50000; 
+ mValues1vertical_part_1[4] = 1.50; 
+ mValues1horizontal_part_1[4] = 1.50;
+
+ elementLength1_part_1[5] = 0.50000; 
+ mValues1vertical_part_1[5] = 1.50; 
+ mValues1horizontal_part_1[5] = 1.50;
+
+ elementLength1_part_1[6] = 0.50000; 
+ mValues1vertical_part_1[6] = 1.50; 
+ mValues1horizontal_part_1[6] = 1.50;
+
+ elementLength1_part_1[7] = 0.50000; 
+ mValues1vertical_part_1[7] = 1.50; 
+ mValues1horizontal_part_1[7] = 1.50;
+
+ elementLength1_part_1[8] = 0.50000; 
+ mValues1vertical_part_1[8] = 1.50; 
+ mValues1horizontal_part_1[8] = 1.50;
+
+ elementLength1_part_1[9] = 0.50000; 
+ mValues1vertical_part_1[9] = 1.50; 
+ mValues1horizontal_part_1[9] = 1.50;
+
+ elementLength1_part_1[10] = 0.50000; 
+ mValues1vertical_part_1[10] = 1.50; 
+ mValues1horizontal_part_1[10] = 1.50;
+
+ elementLength1_part_1[11] = 0.50000; 
+ mValues1vertical_part_1[11] = 1.50; 
+ mValues1horizontal_part_1[11] = 1.50;
+
+ elementLength1_part_1[12] = 0.50000; 
+ mValues1vertical_part_1[12] = 1.50; 
+ mValues1horizontal_part_1[12] = 1.50;
+
+ elementLength1_part_1[13] = 0.50000; 
+ mValues1vertical_part_1[13] = 1.50; 
+ mValues1horizontal_part_1[13] = 1.50;
+
+ elementLength1_part_1[14] = 0.50000; 
+ mValues1vertical_part_1[14] = 1.50; 
+ mValues1horizontal_part_1[14] = 1.50;
+
+ elementLength1_part_1[15] = 0.50000; 
+ mValues1vertical_part_1[15] = 1.50; 
+ mValues1horizontal_part_1[15] = 1.50;
+
+ elementLength1_part_1[16] = 0.50000; 
+ mValues1vertical_part_1[16] = 1.50; 
+ mValues1horizontal_part_1[16] = 1.50;
+
+ elementLength1_part_1[17] = 0.50000; 
+ mValues1vertical_part_1[17] = 1.50; 
+ mValues1horizontal_part_1[17] = 1.50;
+
+ elementLength1_part_1[18] = 0.50000; 
+ mValues1vertical_part_1[18] = 1.50; 
+ mValues1horizontal_part_1[18] = 1.50;
+
+ elementLength1_part_1[19] = 0.50000; // Raised vert to 2
+ mValues1vertical_part_1[19] =  1.50; 
+ mValues1horizontal_part_1[19] = 1.50;
+
+ elementLength1_part_1[20] = 0.50000; 
+ mValues1vertical_part_1[20] =  1.50; 
+ mValues1horizontal_part_1[20] = 1.50;
+
+ elementLength1_part_1[21] = 0.50000; 
+ mValues1vertical_part_1[21] =  1.50; 
+ mValues1horizontal_part_1[21] = 1.50;
+
+ elementLength1_part_1[22] = 0.50000; // h=2 v=1.5
+ mValues1vertical_part_1[22] =  2.00; 
+ mValues1horizontal_part_1[22] = 1.5;
+
+ elementLength1_part_1[23] = 0.50000; 
+ mValues1vertical_part_1[23] =  2.00; 
+ mValues1horizontal_part_1[23] = 1.5;
+
+ elementLength1_part_1[24] = 0.50000; 
+ mValues1vertical_part_1[24] =  2.00; 
+ mValues1horizontal_part_1[24] = 1.5;
+
+ elementLength1_part_1[25] = 0.50000; 
+ mValues1vertical_part_1[25] =  2.00; 
+ mValues1horizontal_part_1[25] = 1.5;
+
+ elementLength1_part_1[26] = 0.50000; 
+ mValues1vertical_part_1[26] =  2.00; 
+ mValues1horizontal_part_1[26] = 1.5;
+
+ elementLength1_part_1[27] = 0.50000; 
+ mValues1vertical_part_1[27] =  2.00; 
+ mValues1horizontal_part_1[27] = 1.5;
+
+ elementLength1_part_1[28] = 0.50000; 
+ mValues1vertical_part_1[28] =  2.00; 
+ mValues1horizontal_part_1[28] = 1.5;
+
+ elementLength1_part_1[29] = 0.50000; 
+ mValues1vertical_part_1[29] = 2.00; 
+ mValues1horizontal_part_1[29] = 1.5;
+
+ elementLength1_part_1[30] = 0.50000; 
+ mValues1vertical_part_1[30] = 2.00; 
+ mValues1horizontal_part_1[30] = 1.5;
+
+ elementLength1_part_1[31] = 0.50000; 
+ mValues1vertical_part_1[31] = 2.00; 
+ mValues1horizontal_part_1[31] = 1.5; //
+
+ elementLength1_part_1[32] = 0.50000; 
+ mValues1vertical_part_1[32] = 2.00; 
+ mValues1horizontal_part_1[32] = 2.00;
+
+ elementLength1_part_1[33] = 0.50000; 
+ mValues1vertical_part_1[33] = 2.00; 
+ mValues1horizontal_part_1[33] = 2.00;
+
+ elementLength1_part_1[34] = 0.50000; 
+ mValues1vertical_part_1[34] = 2.00; 
+ mValues1horizontal_part_1[34] = 2.00;
+
+ elementLength1_part_1[35] = 0.50000; 
+ mValues1vertical_part_1[35] = 2.00; 
+ mValues1horizontal_part_1[35] = 2.00;
+
+ elementLength1_part_1[36] = 0.01580;  // Gap 
+ mValues1vertical_part_1[36] = 0.00; 
+ mValues1horizontal_part_1[36] = 0.00;
+
+ elementLength1_part_1[37] = 0.48420; 
+ mValues1vertical_part_1[37] = 2.00; 
+ mValues1horizontal_part_1[37] = 2.00;
+
+ elementLength1_part_1[38] = 0.50000; 
+ mValues1vertical_part_1[38] = 2.50; 
+ mValues1horizontal_part_1[38] = 2.5;
+
+ elementLength1_part_1[39] = 0.50000; 
+ mValues1vertical_part_1[39] = 2.50; 
+ mValues1horizontal_part_1[39] = 2.50;
+
+ elementLength1_part_1[40] = 0.14320; 
+ mValues1vertical_part_1[40] = 2.50; 
+ mValues1horizontal_part_1[40] = 2.50;
+
+ 
+ //// Part 2 //// 
+ elementLength1_part_2[0] = 0.31680;  // changed from 2.5 / 2.5
+ mValues1vertical_part_2[0] = 3.00; 
+ mValues1horizontal_part_2[0] = 3.00;
+
+ elementLength1_part_2[1] = 0.50000; 
+ mValues1vertical_part_2[1] = 3.00; 
+ mValues1horizontal_part_2[1] = 3.00;
+
+ elementLength1_part_2[2] = 0.46320; 
+ mValues1vertical_part_2[2] = 3.00; 
+ mValues1horizontal_part_2[2] = 3.00;
+
+ 
+ //// Part 3 //// 
+ elementLength1_part_3[0] = 0.0596; 
+ mValues1vertical_part_3[0] = 3.00; 
+ mValues1horizontal_part_3[0] = 3.00;
+
+ elementLength1_part_3[1] = 0.500; 
+ mValues1vertical_part_3[1] = 3.00; 
+ mValues1horizontal_part_3[1] = 3.50;
+
+ 
+ //// Part 4 //// 
+ elementLength1_part_4[0] = 0.06670 ; 
+ mValues1vertical_part_4[0] = 3.00; 
+ mValues1horizontal_part_4[0] = 3.50;
+
+ elementLength1_part_4[1] = 0.50000; 
+ mValues1vertical_part_4[1] = 3.50; 
+ mValues1horizontal_part_4[1] = 3.5;
+
+// A bit extra due to mismatch in coating lengths after rounding element length to 0.5 meters:
+// 0.47 cm of this is applied in last tested version (sep 12 2018)
+ elementLength1_part_4[2] = 0.0047;  
+ mValues1vertical_part_4[2] = 3.50; 
+ mValues1horizontal_part_4[2] = 3.5;
+
+elementLength3S[0]=0.50;
+mValues3verticalS[0]=2.000000;
+mValues3horizontalS[0]=2.500000;
+elementLength3S[1]=0.50;
+mValues3verticalS[1]=2.000000;
+mValues3horizontalS[1]=2.500000;
+elementLength3S[2]=0.50;
+mValues3verticalS[2]=2.000000;
+mValues3horizontalS[2]=2.500000;
+elementLength3S[3]=0.50;
+mValues3verticalS[3]=2.000000;
+mValues3horizontalS[3]=2.500000;
+elementLength3S[4]=0.50;
+mValues3verticalS[4]=2.000000;
+mValues3horizontalS[4]=2.500000;
+elementLength3S[5]=0.50;
+mValues3verticalS[5]=2.000000;
+mValues3horizontalS[5]=2.500000;
+elementLength3S[6]=0.50;
+mValues3verticalS[6]=2.000000;
+mValues3horizontalS[6]=2.500000;
+
+// Moni gap
+elementLength3S[7]=monigap_length;
+mValues3verticalS[7]=0;
+mValues3horizontalS[7]=0;
+
+
+elementLength3S[7+1]=0.50-monigap_length;
+mValues3verticalS[7+1]=2.000000;
+mValues3horizontalS[7+1]=2.000000;
+elementLength3S[8+1]=0.50;
+mValues3verticalS[8+1]=2.000000;
+mValues3horizontalS[8+1]=2.000000;
+elementLength3S[9+1]=0.50;
+mValues3verticalS[9+1]=2.000000;
+mValues3horizontalS[9+1]=2.000000;
+elementLength3S[10+1]=0.50;
+mValues3verticalS[10+1]=2.000000;
+mValues3horizontalS[10+1]=2.000000;
+elementLength3S[11+1]=0.50;
+mValues3verticalS[11+1]=2.000000;
+mValues3horizontalS[11+1]=2.000000;
+elementLength3S[12+1]=0.50;
+mValues3verticalS[12+1]=2.000000;
+mValues3horizontalS[12+1]=2.000000;
+elementLength3S[13+1]=0.50;
+mValues3verticalS[13+1]=1.500000;
+mValues3horizontalS[13+1]=2.000000;
+elementLength3S[14+1]=0.50;
+mValues3verticalS[14+1]=1.500000;
+mValues3horizontalS[14+1]=2.000000;
+elementLength3S[15+1]=0.50;
+mValues3verticalS[15+1]=1.500000;
+mValues3horizontalS[15+1]=2.000000;
+elementLength3S[16+1]=0.50;
+mValues3verticalS[16+1]=1.500000;
+mValues3horizontalS[16+1]=2.000000;
+elementLength3S[17+1]=0.50;
+mValues3verticalS[17+1]=1.500000;
+mValues3horizontalS[17+1]=2.000000;
+elementLength3S[18+1]=0.50;
+mValues3verticalS[18+1]=1.500000;
+mValues3horizontalS[18+1]=2.000000;
+elementLength3S[19+1]=0.50;
+mValues3verticalS[19+1]=1.500000;
+mValues3horizontalS[19+1]=2.000000;
+elementLength3S[20+1]=0.50;
+mValues3verticalS[20+1]=1.500000;
+mValues3horizontalS[20+1]=2.000000;
+elementLength3S[21+1]=0.50;
+mValues3verticalS[21+1]=1.500000;
+mValues3horizontalS[21+1]=2.000000;
+elementLength3S[22+1]=0.50;
+mValues3verticalS[22+1]=1.500000;
+mValues3horizontalS[22+1]=2.000000;
+elementLength3S[23+1]=0.50;
+mValues3verticalS[23+1]=1.500000;
+mValues3horizontalS[23+1]=1.500000;
+elementLength3S[24+1]=0.50;
+mValues3verticalS[24+1]=1.500000;
+mValues3horizontalS[24+1]=1.500000;
+elementLength3S[25+1]=0.50;
+mValues3verticalS[25+1]=1.500000;
+mValues3horizontalS[25+1]=1.500000;
+elementLength3S[26+1]=0.50;
+mValues3verticalS[26+1]=1.500000;
+mValues3horizontalS[26+1]=1.500000;
+elementLength3S[27+1]=0.50;
+mValues3verticalS[27+1]=1.500000;
+mValues3horizontalS[27+1]=1.500000;
+elementLength3S[28+1]=0.50;
+mValues3verticalS[28+1]=1.500000;
+mValues3horizontalS[28+1]=1.500000;
+elementLength3S[29+1]=0.50;
+mValues3verticalS[29+1]=1.500000;
+mValues3horizontalS[29+1]=1.500000;
+elementLength3S[30+1]=0.50;
+mValues3verticalS[30+1]=1.500000;
+mValues3horizontalS[30+1]=1.500000;
+elementLength3S[31+1]=0.50;
+mValues3verticalS[31+1]=1.500000;
+mValues3horizontalS[31+1]=1.500000;
+elementLength3S[32+1]=0.50;
+mValues3verticalS[32+1]=1.500000;
+mValues3horizontalS[32+1]=1.500000;
+elementLength3S[33+1]=0.50;
+mValues3verticalS[33+1]=1.500000;
+mValues3horizontalS[33+1]=1.500000;
+elementLength3S[34+1]=0.50;
+mValues3verticalS[34+1]=1.500000;
+mValues3horizontalS[34+1]=1.500000;
+elementLength3S[35+1]=0.50;
+mValues3verticalS[35+1]=1.500000;
+mValues3horizontalS[35+1]=1.500000;
+elementLength3S[36+1]=0.50;
+mValues3verticalS[36+1]=1.500000;
+mValues3horizontalS[36+1]=1.500000;
+elementLength3S[37+1]=0.50;
+mValues3verticalS[37+1]=1.500000;
+mValues3horizontalS[37+1]=1.500000;
+elementLength3S[38+1]=0.50;
+mValues3verticalS[38+1]=1.500000;
+mValues3horizontalS[38+1]=1.500000;
+elementLength3S[39+1]=0.50;
+mValues3verticalS[39+1]=1.500000;
+mValues3horizontalS[39+1]=1.500000;
+elementLength3S[40+1]=0.50;
+mValues3verticalS[40+1]=1.500000;
+mValues3horizontalS[40+1]=1.500000;
+elementLength3S[41+1]=0.50;
+mValues3verticalS[41+1]=1.500000;
+mValues3horizontalS[41+1]=1.500000;
+elementLength3S[42+1]=0.50;
+mValues3verticalS[42+1]=1.500000;
+mValues3horizontalS[42+1]=1.500000;
+elementLength3S[43+1]=0.50;
+mValues3verticalS[43+1]=1.500000;
+mValues3horizontalS[43+1]=1.500000;
+elementLength3S[44+1]=0.50;
+mValues3verticalS[44+1]=1.500000;
+mValues3horizontalS[44+1]=1.500000;
+elementLength3S[45+1]=0.50;
+mValues3verticalS[45+1]=1.500000;
+mValues3horizontalS[45+1]=1.500000;
+elementLength3S[46+1]=0.50;
+mValues3verticalS[46+1]=1.500000;
+mValues3horizontalS[46+1]=1.500000;
+elementLength3S[47+1]=0.50;
+mValues3verticalS[47+1]=1.500000;
+mValues3horizontalS[47+1]=1.500000;
+elementLength3S[48+1]=0.50;
+mValues3verticalS[48+1]=1.500000;
+mValues3horizontalS[48+1]=1.500000;
+elementLength3S[49+1]=0.50 - 0.0712; // Slightly shorter segment last
+mValues3verticalS[49+1]=1.500000;
+mValues3horizontalS[49+1]=1.500000;
+
+
+elementLength6S[0]=0.488444444444444;
+mValues6verticalS[0]=3.500000;
+mValues6horizontalS[0]=3.000000;
+elementLength6S[1]=0.488444444444444;
+mValues6verticalS[1]=3.500000;
+mValues6horizontalS[1]=3.000000;
+elementLength6S[2]=0.488444444444444;
+mValues6verticalS[2]=3.000000;
+mValues6horizontalS[2]=2.500000;
+elementLength6S[3]=0.488444444444444;
+mValues6verticalS[3]=3.000000;
+mValues6horizontalS[3]=2.500000;
+elementLength6S[4]=0.488444444444444;
+mValues6verticalS[4]=2.500000;
+mValues6horizontalS[4]=2.500000;
+elementLength6S[5]=0.488444444444444;
+mValues6verticalS[5]=2.500000;
+mValues6horizontalS[5]=2.000000;
+elementLength6S[6]=0.488444444444444;
+mValues6verticalS[6]=2.500000;
+mValues6horizontalS[6]=1.500000;
+
+elementLength6S[7]=0.061218888888892 ; // Shorter due to window #1
+mValues6verticalS[7]=2.500000;
+mValues6horizontalS[7]=1.500000;
+
+elementLength6S[8]=0.02349; // feeder window #1
+mValues6verticalS[8]=0;
+mValues6horizontalS[8]=0;
+
+elementLength6S[9]=0.488444444444444 - 0.061218888888892 - 0.02349; // End of piece 7 (the window and start of the mirror si substracted from its length)
+mValues6verticalS[9]=2.500000;
+mValues6horizontalS[9]=1.500000;
+
+elementLength6S[10]=0.076264444; // shorter due to window #2
+mValues6verticalS[10]=2.000000;
+mValues6horizontalS[10]=1.500000;
+
+elementLength6S[11]=0.015; // feeder window #2
+mValues6verticalS[11]=0;
+mValues6horizontalS[11]=0;
+
+elementLength6S[12]=0.488444444444444 - 0.015 - 0.076264444 - 0.00047; // End of Feeder (after window 2)
+mValues6verticalS[12]=2.0;
+mValues6horizontalS[12]=1.5;
+
+/************************************************/
+/*                  Chopper calculations                    */
+/************************************************/
+ 
+PulseHighFluxOffset=2.0e-4; // Time from T0 to high pulse.
+ModPulseLengthHighF=2.86e-3; // width of high pulse
+
+InstLength=162.0;
+chopPulseDist= 4.41+0.032+2.0-0.1;  // Distance fro moderator to Pulse chapping chopper
+//chopFrameOverlap1Pos= 2.0;    // Distance from pulse shapping choppers to first frame owerlap chopper
+//chopFrameOverlap2Pos=7.0;     // Distance from pulse shapping choppers to second frame owerlap chopper
+//chopBWPos=71.4403;           // Distance from pulse shapping choppers to tail romval chopper
+
+if  (chopPulseFrequencyOrder*chopPulseOpening > 170.0/360.0/14.0) {    /******* Check if pulse shapping chopper opening is large enough for requested frequency or reduce frequency *******/
+	 chopPulseFrequencyOrder=floor(170.0/360.0/14.0/chopPulseOpening);
+	printf(" \n \n Warning: Impossible combination of chopPulseFrequencyOrder and chopPulseOpening chosen, chopPulseFrequencyOrder reduced to: %f  \n", chopPulseFrequencyOrder);
+}
+
+lambda_1=1.0/(0.1106*sqrt(E_0));  /**** general chopper calculations **********/
+WavelengthBand = 1/(InstLength-chopPulseDist)/14.0/2.528e-4;
+lambda_0=lambda_1-WavelengthBand;
+v_0=3956.0/lambda_1;  
+v_1=3956.0/lambda_0;
+
+t_samp_center=PulseHighFluxOffset+ModPulseLengthHighF/2.0+(InstLength/v_1+InstLength/v_0)/2.0;
+t_samp_0=t_samp_center-1.0/14.0/2.0;
+t_samp_1=t_samp_center+1.0/14.0/2.0;
+
+/***********  Pulse shaping chopper calculations **********/
+chopPulseOffset=(chopPulseDist/v_1+chopPulseDist/v_0)/2.0+ModPulseLengthHighF/2.0+PulseHighFluxOffset;
+chopPulsePossibleOpening=chopPulseDist/v_0-chopPulseOffset;
+chopPulsePhaseOffset=  (chopPulseOffset+ chopPulseOpening/2.0)*14.0*chopPulseFrequencyOrder*360.0-170.0/2.0;
+chopPulse2PhaseOffset= chopPulsePhaseOffset- 360.0*(chopPulseOpening*14.0*chopPulseFrequencyOrder)+170.0;
+
+if  (chopPulseFrequencyOrder == 0) { 
+	chopPulsePhaseOffset= 0;
+	chopPulse2PhaseOffset= 0;
+		printf(" \n \n Warning: Pulse shaping chopper parked! Setting the offsets to zero");
+}
+
+
+/*********** Frame Overlap chopper calculations ******************/
+chopFrameOverlap1Open= 1.0/14.0/InstLength*(chopFrameOverlap1Pos)*1.5 ;
+chopFrameOverlap1Offset=(  ( (chopFrameOverlap1Pos)/v_1+(chopFrameOverlap1Pos)/v_0)/2.0+PulseHighFluxOffset+ModPulseLengthHighF/2.0) ;
+chopFrameOverlap1PhaseOffset=  (chopFrameOverlap1Offset)*14.0*360.0;
+
+chopFrameOverlap2Open= 1.0/14.0/InstLength*(chopFrameOverlap2Pos)*1.65 ;
+chopFrameOverlap2Offset=(  ( (chopFrameOverlap2Pos)/v_1+(chopFrameOverlap2Pos)/v_0)/2.0+PulseHighFluxOffset+ModPulseLengthHighF/2.0) ;
+chopFrameOverlap2PhaseOffset=  (chopFrameOverlap2Offset)*14.0*360.0;
+
+/********** Bandwidth chopper calculations ****************/
+
+//chopBW_t0= chopPulseOffset-chopPulseOpening/2.0 + (t_samp_0-(chopPulseOffset-chopPulseOpening/2.0)) / (InstLength-chopPulseDist) * (InstLength-chopBWPos) ;
+//chopBW_t1= chopPulseOffset+chopPulseOpening/2.0 + (t_samp_1-(chopPulseOffset+chopPulseOpening/2.0)) / (InstLength-chopPulseDist) * (InstLength-chopBWPos);
+chopBW_t0= PulseHighFluxOffset+ModPulseLengthHighF/2.0 + chopBWPos/v_1;
+chopBW_t1=  PulseHighFluxOffset+ModPulseLengthHighF/2.0 + chopBWPos/v_0;
+
+chopBWOpen= 360.0/InstLength*(chopBWPos-chopPulseDist*1); //Here Jonas put a multiplier on the choppulsedist
+chopBWOffset=(chopBW_t0+chopBW_t1)/2.0;
+chopBWPhaseOffset=  (chopBWOffset)*14.0*360.0;
+
+if (printMValues==1) {
+	// Will print all coating values to a file if this is toggled on 
+	FILE* fp = fopen("CoatingDistributions.txt", "w");
+	fprintf(fp,"Coating Distributions. From moderator towards sample:\n");
+	fprintf(fp,"m_horizontal , m_vertical , elementlength:\n");
+	fprintf(fp,"NBOA:\n");
+	for (i = 0 ; i < 13 ; i++){
+		fprintf(fp,"%f , %f , %f\n",mValues6horizontalS[i],mValues6verticalS[i],elementLength6S[i]);
+	}
+
+	fprintf(fp,"\nCurved section:\n");
+	fprintf(fp,"(%f,%f) , %f , %f\n",3.000000,3.500000,2.500000,18.0);
+	
+	fprintf(fp,"\nExpanding ellipse:\n");
+	for (i = 0 ; i < 51 ; i++){
+		fprintf(fp,"%f , %f , %f\n",mValues3horizontalS[i],mValues3verticalS[i],elementLength3S[i]);
+	}
+	
+	fprintf(fp,"\nLong Straight Section\n");
+	fprintf(fp,"%f , %f , %f\n",1.500000,1.000000,90.0);
+
+	fprintf(fp,"\nFocusing Ellipse\n");
+	for (i = 0 ; i < 41 ; i++){
+		fprintf(fp,"%f , %f , %f\n", mValues1horizontal_part_1[i], mValues1vertical_part_1[i],elementLength1_part_1[i]);
+	}
+	fprintf(fp,"2 cm gap for divJaw 3\n");
+	for (i = 0 ; i < 3 ; i++){
+		fprintf(fp,"%f , %f , %f\n", mValues1horizontal_part_2[i], mValues1vertical_part_2[i],elementLength1_part_2[i]);
+	}
+	fprintf(fp,"2 cm gap for divJaw 2\n");
+	for (i = 0 ; i < 2 ; i++){
+		fprintf(fp,"%f , %f , %f\n", mValues1horizontal_part_3[i], mValues1vertical_part_3[i],elementLength1_part_3[i]);
+	}
+fprintf(fp,"2 cm gap for divJaw 1 \n");
+	for (i = 0 ; i < 3 ; i++){
+		fprintf(fp,"%f , %f , %f\n", mValues1horizontal_part_4[i], mValues1vertical_part_4[i],elementLength1_part_4[i]);
+	}
+
+
+fclose(fp);
+}
+
+
+printf("\n part 3 length: %f\n",DivSlit2Pos-DivSlit1Gap/2.0-DivSlit2Gap/2.0-DivSlit1Pos);
+printf("\n part 4 length: %f\n",DivSlit1Pos-DivSlit1Gap/2.0-sample_dist);
+
+%}
+TRACE
+
+COMPONENT Origin = Progress_bar()
+ AT (0,0,0) ABSOLUTE
+
+
+COMPONENT ESS_source = ESS_butterfly(
+yheight=0.030000,beamline=4,
+dist=1.903398,
+focus_xw=0.068797+2*0.01277,
+focus_yh=0.03472,
+Lmin=WaveMin, Lmax=WaveMax, acc_power=power, cold_frac=0.500000, sector="W",
+tmax_multiplier=1.500000, n_pulses=Npulse, c_performance=1.0, t_performance=1.0)
+AT (0, 0, 0) RELATIVE Origin
+ROTATED (0,0,0) RELATIVE Origin
+
+
+
+COMPONENT StartOfGuide = Arm()
+AT (0.01277,0.000000,1.903398-u) RELATIVE Origin
+ROTATED (0,-0.56,0) RELATIVE Origin 
+
+COMPONENT NBOA= Elliptic_guide_gravity_shieldinglogger(
+l=4.39553, linxw=3.4578, linyh=1.36, loutxw=0.415155, loutyh=3.487681,
+xwidth = 0.069634, yheight = 0.04862, dimensionsAt="mid",
+R0=0.990000, Qc=0.021700, alpha=3.100000, mvaluesright = mValues6horizontalS, mvaluesleft = mValues6horizontalS,mvaluestop = mValues6verticalS,mvaluesbottom = mValues6verticalS,seglength = elementLength6S, W=0.003000)
+AT (0,0,u) RELATIVE StartOfGuide
+
+
+COMPONENT EndOfelement_6= Arm()
+AT (0,0,4.39553+2*u) RELATIVE PREVIOUS
+/*
+COMPONENT L_monBeforePSC1 = L_monitor(
+    nL = 100, filename = "L_monBeforePSC1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_1/2, Lmax = lambda_0*2) //Change to 120 to check source
+  AT (0, 0, u) RELATIVE PREVIOUS  
+  
+
+COMPONENT ToFBeforerPSC1 = TOF_monitor(
+    nt = 1000, filename = "ToFBeforePSC1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+
+COMPONENT PSD_beforePulseShapping1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_beforePSC1.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+
+COMPONENT TofLambdaBeforePSC = TOFLambda_monitor(
+    nL = 100, nt = 100, tmin =0, tmax = 2e4,
+    filename = "TofLambdaBeforePSC1.dat", xwidth = sampleSizeY,restore_neutron=1,
+    yheight = sampleSizeY, Lmin = lambda_0*0.5, Lmax = lambda_1*2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+*/
+
+/************** Pulse shaping chopper 1 ****************/
+
+/****
+COMPONENT PulseShapingChopper = DiskChopper(   
+    theta_0 = 170.0, radius = 0.35, nu =14.0*chopPulseFrequencyOrder, nslit = 1, yheight=0.047514+2*ChopTransBunker,
+  phase= chopPulsePhaseOffset-0)
+  AT (0, 0, PscOff) RELATIVE PREVIOUS
+****/
+
+  /*
+COMPONENT PSD_AfterPulseShapping1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_AfterPSC1.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+
+COMPONENT ToFInsidePSC = TOF_monitor(
+    nt = 1000, filename = "ToFInsidePSC.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0,u) RELATIVE  PREVIOUS
+*/
+/************** Pulse shaping chopper 2 ****************/
+/***
+COMPONENT PulseShapingChopper2 = DiskChopper(   
+    theta_0 = 170.0, radius = 0.35, nu =14.0*chopPulseFrequencyOrder, nslit = 1, yheight=0.047514+2*ChopTransBunker,
+  phase= chopPulse2PhaseOffset+0)
+  AT (0, 0, discD) RELATIVE PREVIOUS
+  ***/
+/*
+COMPONENT L_monLongRange1 = L_monitor(
+    nL = 2000, filename = "L_monBeforeRongRange1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_1/2, Lmax = 200) //Change to 120 to check source
+  AT (0, 0, u) RELATIVE PREVIOUS
+  
+COMPONENT TofLambdaAfterPSC2 = TOFLambda_monitor(
+    nL = 100, nt = 100, tmin = 0, tmax = 2e4,
+    filename = "TofLambdaAfterPSC2.dat", xwidth = sampleSizeY,restore_neutron=1,
+    yheight = sampleSizeY, Lmin = lambda_0*0.5, Lmax = lambda_1*2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+  
+COMPONENT PSD_AfterPSC2 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_AfterPSC2.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+
+COMPONENT ToFAfterPSC2 = TOF_monitor(
+    nt = 1000, filename = "ToFAfterPSC2.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0,u) RELATIVE  PREVIOUS
+
+COMPONENT L_monAfterPSC2 = L_monitor(
+    nL = 100, filename = "L_monAfterPSC2.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_1/2, Lmax = lambda_0*2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+*/
+
+COMPONENT EndOfelement_5= Arm()
+AT (0,0,0.081707 ) RELATIVE EndOfelement_6
+
+
+// // BENDER // //
+// The folowing guide is the 18 meter long bender. 
+// In this file it is made by 36 straight sections of each 0.5 meters, rotated [benderAngle] deg each, corresponding to a radius of curvature of ~1519 meters.
+// In this section there are two choppers, FOC1 and FOC2.
+
+COMPONENT curved_guide_1_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (0,0,u) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_2_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_3_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+
+COMPONENT curved_guide_4_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+
+// This section contains first FOC chopper //
+// The chopper is placed 2.15 meters after the start of the curved section, corresponding to 6.6265 meters after guide start. 
+// The gap arround the chopper is 4 cm
+
+COMPONENT curved_guide_5_beforeChopper = Guide_gravity_shieldinglogger(
+  l=0.13,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+/*
+COMPONENT L_monBeforeFOC1 = L_monitor(
+    nL = 100, filename = "L_monBeforeFOC1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = lambda_1*2.0)
+  AT (0, 0, 0.13+u) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT ToFBeforeFOC1 = TOF_monitor(
+    nt = 1000, filename = "ToFBeforeFOC1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+
+
+COMPONENT PSD_beforeFOC1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_beforeFOC1.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+COMPONENT L_monLongRange2 = L_monitor(
+    nL = 2000, filename = "L_monBeforeRongRange2.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_1/2, Lmax = 200) //Change to 120 to check source
+  AT (0, 0, u) RELATIVE PREVIOUS
+*/
+
+/****************************  Pulse removing chopper 1  ************************/
+/*
+COMPONENT FOC1 = DiskChopper(   
+    theta_0 =FOCopen1 , radius = 0.35, nu =14, nslit = 1, yheight=0.047514+2*ChopTransBunker,
+   phase=chopFrameOverlap1PhaseOffset)
+ AT (0, 0,0.02) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+*/
+
+/*
+COMPONENT L_monLongRange3 = L_monitor(
+    nL = 2000, filename = "L_monBeforeRongRange3.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_1/2, Lmax = 200) //Change to 120 to check source
+  AT (0, 0, u) RELATIVE PREVIOUS
+  
+
+COMPONENT PSD_afterFOC1 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_afterFOC1.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+
+COMPONENT ToFAfterFOC1 = TOF_monitor(
+    nt = 1000, filename = "ToFAfterFOC1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+
+COMPONENT L_monAfterFOC1 = L_monitor(
+    nL = 100, filename = "L_monAfterFOC1.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = lambda_1*2.0)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+*/
+
+COMPONENT curved_guide_5_afterChopper = Guide_gravity_shieldinglogger(
+  l=0.33,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (0,0,0.17) RELATIVE curved_guide_5_beforeChopper
+ROTATED (0,0,0) RELATIVE curved_guide_5_beforeChopper
+
+COMPONENT curved_guide_6_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1= 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.33+u) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_7_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_8_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1  = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_9_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_10_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_11_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_12_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_13_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_14_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_15_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_16_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+COMPONENT curved_guide_17_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS
+
+
+// This section contains second FOC chopper // (might be named PR... fix this)
+// The chopper is placed 8.59 meters after the start of the curved section, corresponding to 13.0695 meters after guide start. 
+// The gap arround the chopper is 4 cm
+
+COMPONENT curved_guide_18_beforeChopper = Guide_gravity_shieldinglogger(
+  l=0.07,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_17_1
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_17_1
+
+/*
+COMPONENT L_monBeforeFOC2 = L_monitor(
+    nL = 100, filename = "L_monBeforeFOC2.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = lambda_1*2.0)
+  AT (0,0, 0.07+u) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT ToFBeforeFOC2 = TOF_monitor(
+    nt = 1000, filename = "ToFBeforeFOC2.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+
+COMPONENT PSD_beforeFOC2 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_beforeFOC2.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+  
+  COMPONENT L_monLongRange4 = L_monitor(
+    nL = 2000, filename = "L_monBeforeRongRange4.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_1/2, Lmax = 200) //Change to 120 to check source
+  AT (0, 0, u) RELATIVE PREVIOUS
+*/
+  
+/************** Pulse removing chopper 2 ****************/
+/*
+COMPONENT FOC2 = DiskChopper(        
+    theta_0 =FOCopen2 , radius = 0.35, nu =14, nslit = 1, yheight=0.047514+2*ChopTransBunker,
+   phase=chopFrameOverlap2PhaseOffset)
+ AT (0,0, 0.02) RELATIVE PREVIOUS
+ROTATED (0,0,u) RELATIVE PREVIOUS
+*/
+/*
+COMPONENT PSD_afterFOC2 = PSD_monitor(
+    nx = 100, ny = 100, filename = "PSD_afterFOC2.dat",restore_neutron=1,
+    xwidth = 0.2, yheight = 0.2)
+  AT (0, 0, u) RELATIVE PREVIOUS
+
+COMPONENT ToFAfterFOC2 = TOF_monitor(
+    nt = 1000, filename = "ToFAfterFOC2.dat",restore_neutron=1, xwidth = 0.2,
+    yheight = 0.2, tmax = 2e4)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+
+COMPONENT L_monAfterFOC2 = L_monitor(
+    nL = 1000, filename = "L_monAfterFOC2.dat",restore_neutron=1, xwidth = 0.2,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = 200)
+  AT (0, 0, u) RELATIVE PREVIOUS
+*/
+
+COMPONENT curved_guide_18_afterChopper = Guide_gravity_shieldinglogger(
+  l=0.39,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (0,0,0.11) RELATIVE curved_guide_18_beforeChopper // curved_guide_17_1
+ROTATED (0,0,0) RELATIVE curved_guide_18_beforeChopper // curved_guide_17_1
+
+COMPONENT curved_guide_19_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.39+u) RELATIVE PREVIOUS // curved_guide_18_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_18_0
+
+COMPONENT curved_guide_20_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_19_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_19_0
+
+COMPONENT curved_guide_21_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_20_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_20_0
+
+COMPONENT curved_guide_22_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_21_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_21_0
+
+COMPONENT curved_guide_23_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_22_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_22_0
+
+COMPONENT curved_guide_24_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_23_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_23_0
+
+COMPONENT curved_guide_25_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_24_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_24_0
+
+COMPONENT curved_guide_26_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_25_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_25_0
+
+COMPONENT curved_guide_27_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_26_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_26_0
+
+COMPONENT curved_guide_28_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_27_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_27_0
+
+COMPONENT curved_guide_29_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_28_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_28_0
+
+COMPONENT curved_guide_30_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_29_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_29_0
+
+COMPONENT curved_guide_31_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_30_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_30_0
+
+COMPONENT curved_guide_32_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_31_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_31_0
+
+COMPONENT curved_guide_33_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_32_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_32_0
+
+COMPONENT curved_guide_34_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_33_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_33_0
+
+COMPONENT curved_guide_35_0 = Guide_gravity_shieldinglogger(
+  l=0.5,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_34_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_34_0
+
+
+COMPONENT curved_guide_36_0 = Guide_gravity_shieldinglogger(
+  l=0.495689131828,G=-9.82,
+  w1 = 0.029534, w2 = 0.029534,
+  h1 = 0.047514, h2 = 0.047514,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 3.000000, mright = 3.500000,
+  mtop = 2.500000,mbottom =2.500000)
+AT (7.57345916228e-10,0,0.500 + u + 6e-5) RELATIVE PREVIOUS // curved_guide_34_0
+ROTATED (0,benderAngle,0) RELATIVE PREVIOUS // curved_guide_34_0
+
+
+	
+COMPONENT EndOfelement_4= Arm()
+AT (7.57345916228e-10,0,0.495689132 + u) RELATIVE PREVIOUS // curved_guide_35_0
+
+/*
+COMPONENT Div2d_AfterBender = Divergence_monitor(
+    nh = 200, nv = 200, filename = "Div2d_AfterBender.dat", xwidth = 0.1, restore_neutron=1,
+    yheight = 0.1, maxdiv_h = 2.5, maxdiv_v = 1.5)
+  AT (0, 0,u) RELATIVE PREVIOUS
+*/
+
+
+
+
+/*******  Start of scatter logger. Logging scatterings and absorption in the guide system. *********/
+COMPONENT log_P_start=Shielding_logger()
+AT (0,0,0) RELATIVE PREVIOUS
+EXTEND
+%{
+#ifdef scatter_logger_stop
+#undef scatter_logger_stop
+#endif
+#define scatter_logger_stop log_P_start
+%}
+
+
+COMPONENT elliptical_guide_gravity3= Elliptic_guide_gravity_shieldinglogger(
+l=24.928800, linxw=3.709727, linyh=4.423828, loutxw=28.638527, loutyh=29.352628,
+xwidth = 0.060000, yheight = 0.090000, dimensionsAt="mid",
+R0=0.990000, Qc=0.021700, alpha=3.100000, mvaluesright = mValues3horizontalS, mvaluesleft = mValues3horizontalS,mvaluestop = mValues3verticalS,mvaluesbottom = mValues3verticalS,seglength = elementLength3S, W=0.003000)
+AT (0,0, u) RELATIVE EndOfelement_4
+ROTATED (0,0,0) RELATIVE EndOfelement_4
+
+COMPONENT EndOfelement_3= Arm()
+AT (0,0,24.928800+u) RELATIVE PREVIOUS
+
+/*
+
+COMPONENT Div2d_BeforeStraight = Divergence_monitor(
+    nh = 200, nv = 200, filename = "Div2d_BeforeStraight.dat", xwidth = 0.1, restore_neutron=1,
+    yheight = 0.1, maxdiv_h = 1, maxdiv_v = 1)
+  AT (0, 0,u) RELATIVE PREVIOUS
+*/
+
+/*********************** LONG STRAIGHT SECTION **************************/
+
+COMPONENT straight_guide_2_1= Guide_gravity_shieldinglogger(l=chopBWPos-startXposition_straight-BW_chopGap/2,G=-9.82,
+  w1 = 0.060000, w2 = 0.060000,
+  h1 = 0.090000, h2 = 0.090000,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 1.500000, mright = 1.500000,
+  mtop = 1.000000,mbottom =1.000000)
+AT (0,0, u) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+/*
+COMPONENT L_monBeforeBWC = L_monitor(
+    nL = 100, filename = "L_monBeforeBWC.dat", xwidth = 0.2,restore_neutron=1,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = lambda_1*2.0)
+  AT (0, 0, chopBWPos-startXposition_straight-BW_chopGap/2+u) RELATIVE PREVIOUS
+
+COMPONENT ToFBeforeBWC = TOF_monitor(
+    nt = 300, filename = "ToFBeforeBWC.dat",restore_neutron=1, xwidth = 0.2,
+    yheight = 0.2, tmax = 3.5*72.0*1e6/v_0)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+*/
+
+/*
+ // ************** Bandwidth chopper 1 ****************
+COMPONENT BWC1 = DiskChopper( 
+    theta_0 = BWopen, radius = 0.35, nu =14, nslit = 1, yheight=0.090+2*ChopTransE2,
+   delay=chopBWOffset)
+   //phase=chopBWPhaseOffset)
+  AT (0, 0, BW_chopGap/2+u) RELATIVE PREVIOUS
+
+ // ************** Bandwidth chopper 2 ****************
+  COMPONENT BWC2 = DiskChopper( 
+    theta_0 = BWopen, radius = 0.35, nu =-14, nslit = 1, yheight=0.090+2*ChopTransE2,
+   delay=chopBWOffset)
+   //phase=chopBWPhaseOffset)
+   AT (0, 0, u) RELATIVE  PREVIOUS
+  */
+/*  
+COMPONENT ToFAfterBWC = TOF_monitor(
+    nt = 300, filename = "ToFAfterBWC.dat",restore_neutron=1, xwidth = 0.2,
+    yheight = 0.2, tmax =  3.5*72.0*1.0e6/v_0)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+  
+COMPONENT L_monAfterBWLong = L_monitor(
+    nL = 1000, filename = "L_monAfterBWLong.dat",restore_neutron=1, xwidth = 0.2,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = 200)
+  AT (0, 0, u) RELATIVE PREVIOUS
+  
+COMPONENT L_monAfterBWC = L_monitor(
+    nL = 100, filename = "L_monAfterBWC.dat", restore_neutron=1,xwidth = 0.2,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = lambda_1*2.0)
+  AT (0, 0, u) RELATIVE PREVIOUS
+*/
+
+COMPONENT straight_guide_2_2= Guide_gravity_shieldinglogger(l=length2-chopBWPos+startXposition_straight-BW_chopGap/2,G=-9.82,
+  w1 = 0.060000, w2 = 0.060000,
+  h1 = 0.090000, h2 = 0.090000,
+  R0=0.990000,Qc=0.021700,
+  alpha=3.100000,W=0.003000,
+  mleft = 1.500000, mright = 1.500000,
+  mtop = 1.000000,mbottom =1.000000)
+AT (0,0, BW_chopGap/2) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+
+COMPONENT EndOfelement_2= Arm()
+AT (0,0,length2-chopBWPos+startXposition_straight-BW_chopGap/2 + u) RELATIVE straight_guide_2_2
+
+
+
+
+/*********************** LAST FOCUSING SECTION **************************/
+
+COMPONENT elliptical_guide_gravity1_1= Elliptic_guide_gravity_shieldinglogger(
+l=length1-DivSlit3Pos-DivSlit3Gap/2.0+sample_dist, linxw=Linx1, 
+linyh=Liny1, loutxw=Loutx1+DivSlit3Pos+DivSlit3Gap/2.0-sample_dist, 
+loutyh=Louty1+DivSlit3Pos+DivSlit3Gap/2.0-sample_dist,
+xwidth = 2*smallaxis_x1, yheight = 2*smallaxis_y1, dimensionsAt="mid",
+R0=0.990000, Qc=0.021700, alpha=3.100000, mvaluesright = mValues1horizontal_part_1, mvaluesleft = mValues1horizontal_part_1,mvaluestop = mValues1vertical_part_1,mvaluesbottom = mValues1vertical_part_1,seglength = elementLength1_part_1, W=0.003000)
+AT (0,0, u) RELATIVE EndOfelement_2
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT DiwJaw3 = Slit(
+    yheight =1, xwidth= DivSlit3_width)
+AT (0,0, 2*u+length1-(DivSlit3Pos-sample_dist)) RELATIVE EndOfelement_2
+
+COMPONENT elliptical_guide_gravity1_2= Elliptic_guide_gravity_shieldinglogger(
+l=DivSlit3Pos-DivSlit2Gap/2.0-DivSlit3Gap/2.0-DivSlit2Pos, linxw=Linx1+length1-(DivSlit3Pos-DivSlit3Gap/2.0-sample_dist), 
+linyh=Liny1+length1-(DivSlit3Pos-DivSlit3Gap/2.0-sample_dist), loutxw=Loutx1+DivSlit2Pos+DivSlit2Gap/2.0-sample_dist, 
+loutyh=Louty1+DivSlit2Pos+DivSlit2Gap/2.0-sample_dist,
+xwidth = 2*smallaxis_x1, yheight = 2*smallaxis_y1, dimensionsAt="mid",
+R0=0.990000, Qc=0.021700, alpha=3.100000, mvaluesright = mValues1horizontal_part_2, mvaluesleft = mValues1horizontal_part_2,mvaluestop = mValues1vertical_part_2,mvaluesbottom = mValues1vertical_part_2,seglength = elementLength1_part_2, W=0.003000)
+AT (0,0, 3*u+length1-(DivSlit3Pos-DivSlit3Gap/2.0-sample_dist)) RELATIVE EndOfelement_2
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT DiwJaw2 = Slit(
+    yheight = 1, xwidth=DivSlit2_width)
+AT (0,0, u+length1-(DivSlit2Pos-sample_dist))  RELATIVE EndOfelement_2
+
+COMPONENT elliptical_guide_gravity1_3= Elliptic_guide_gravity_shieldinglogger(
+l=DivSlit2Pos-DivSlit1Gap/2.0-DivSlit2Gap/2.0-DivSlit1Pos, linxw=Linx1+length1-(DivSlit2Pos-DivSlit2Gap/2.0-sample_dist), 
+linyh=Liny1+length1-(DivSlit2Pos-DivSlit2Gap/2.0-sample_dist), loutxw=Loutx1+DivSlit1Pos+DivSlit1Gap/2.0-sample_dist, 
+loutyh=Louty1+DivSlit1Pos+DivSlit1Gap/2.0-sample_dist,
+xwidth = 2*smallaxis_x1, yheight = 2*smallaxis_y1, dimensionsAt="mid",
+R0=0.990000, Qc=0.021700, alpha=3.100000, mvaluesright = mValues1horizontal_part_3, mvaluesleft = mValues1horizontal_part_3,mvaluestop = mValues1vertical_part_3,mvaluesbottom = mValues1vertical_part_3,seglength = elementLength1_part_3, W=0.003000)
+AT (0,0, 4*u+length1-(DivSlit2Pos-DivSlit2Gap/2.0-sample_dist)) RELATIVE EndOfelement_2
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT DiwJaw1 = Slit(
+    yheight =1, xwidth= DivSlit1_width)
+AT (0,0, 5*u+length1-(DivSlit1Pos-sample_dist)) RELATIVE EndOfelement_2
+
+COMPONENT elliptical_guide_gravity1_4= Elliptic_guide_gravity_shieldinglogger(
+l=DivSlit1Pos-DivSlit1Gap/2.0-sample_dist, linxw=Linx1+length1-(DivSlit1Pos-DivSlit1Gap/2.0-sample_dist), 
+linyh=Liny1+length1-(DivSlit1Pos-DivSlit1Gap/2.0-sample_dist), loutxw=Loutx1, loutyh=Louty1,
+xwidth = 2*smallaxis_x1, yheight = 2*smallaxis_y1, dimensionsAt="mid",
+R0=0.990000, Qc=0.021700, alpha=3.100000, mvaluesright = mValues1horizontal_part_4, mvaluesleft = mValues1horizontal_part_4,mvaluestop = mValues1vertical_part_4,mvaluesbottom = mValues1vertical_part_4,seglength = elementLength1_part_4, W=0.003000)
+AT (0,0, 6*u+length1-(DivSlit1Pos-DivSlit1Gap/2.0-sample_dist)) RELATIVE EndOfelement_2
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT EndOfelement_1= Arm()
+AT (0,0,DivSlit1Pos-DivSlit1Gap/2.0-sample_dist +u) RELATIVE PREVIOUS
+
+COMPONENT VirtualOutput = Virtual_output(
+    filename="VirtualOutput_endOfGuide.dat") WHEN (makeVirtualSource==1)
+AT (0, 0,u) RELATIVE PREVIOUS
+
+
+COMPONENT DiwJaw0 = Slit(
+    yheight =1, xwidth=DivSlit0_width)
+AT (0,0, 7*u+length1+DivSlit0Gap/2.0) RELATIVE EndOfelement_2
+
+
+
+
+
+
+
+
+
+
+
+
+/*Stop of scatter logger. Record scatterings in what is between start and stop, that is, parabolic feeder. */
+COMPONENT log_P_stop=Shielding_logger_stop(logger=log_P_start)
+AT (0,0,0) RELATIVE PREVIOUS
+
+
+
+
+
+
+
+/**IIIIIIIIIIIIIIIIIII ITERATOR SECTION. PROCESSING STORED EVENTS  IIIIIIIIIIIIIIII***/
+/* Insert this into McStas instrument file to do the costs evaluation */
+COMPONENT arm_iter_P1_start=Arm()
+AT(0,0,0) RELATIVE ESS_source
+
+COMPONENT iter_P1_start = Shielding_log_iterator_Ni_new()
+AT (0,0,0) RELATIVE ESS_source //ABSOLUTE
+EXTEND
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iter_P1_start
+%}
+JUMP arm_iter_P1_stop WHEN(optics_not_hit)
+
+/*Monitoring the tracks stored by the scatter logger*/
+/*Putting dummy arm to register all neutrons to ensure that monitors_nD with shape "previous" will process them */
+COMPONENT arm_iter_P1_dummy=Arm ()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT mndP01=Monitor_nD (
+restore_neutron=1,   zmin=25.0,
+zmax=150,
+bins=250, options="previous no slit  z ", filename="NiCapture.dat")
+AT(0,0,0) RELATIVE ESS_source //RELATIVE source
+
+COMPONENT arm_iter_P1_stop=Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT iter_P1_stop  = Shielding_log_iterator_stop(iterator=iter_P1_start)
+AT(0,0,0)  RELATIVE ESS_source
+
+/*Moving again to the reference point of iterator start 
+when there are still some tracks stored to perform iterations with,
+checked by the function MC_GETPAR */
+COMPONENT a11i = Arm()
+AT (0,0,0) RELATIVE EndOfelement_1
+JUMP arm_iter_P1_start  WHEN(MC_GETPAR(iter_P1_stop,loop))
+
+/*IIIIIIIIIIIIIIIIIIII  END OF PROCESSING. END OF ITERATOR  SECTION IIIIIIIIIIIIIIIIIIIIIIIIIIIII*/
+
+
+
+
+/**IIIIIIIIIIIIIIIIIII ITERATOR SECTION2. PROCESSING STORED EVENTS  IIIIIIIIIIIIIIII***/
+/* Insert this into McStas instrument file to do the costs evaluation */
+COMPONENT arm_iter_P2_start=Arm()
+AT(0,0,0) RELATIVE ESS_source
+
+COMPONENT iter_P2_start = Shielding_log_iterator_Ti_new()
+AT (0,0,0) RELATIVE ESS_source //ABSOLUTE
+EXTEND
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iter_P2_start
+%}
+JUMP arm_iter_P2_stop WHEN(optics_not_hit)
+
+/*Monitoring the tracks stored by the scatter logger*/
+/*Putting dummy arm to register all neutrons to ensure that monitors_nD with shape "previous" will process them */
+COMPONENT arm_iter_P2_dummy=Arm ()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT mndP02=Monitor_nD (
+restore_neutron=1,   zmin=25.0,
+zmax=150.0,
+bins=250, options="previous no slit  z ", filename="TiCapture.dat")
+AT(0,0,0) RELATIVE ESS_source //RELATIVE source
+
+COMPONENT arm_iter_P2_stop=Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT iter_P2_stop  = Shielding_log_iterator_stop(iterator=iter_P2_start)
+AT(0,0,0)  RELATIVE ESS_source
+
+/*Moving again to the reference point of iterator start 
+when there are still some tracks stored to perform iterations with,
+checked by the function MC_GETPAR */
+COMPONENT a12i = Arm()
+AT (0,0,0) RELATIVE EndOfelement_1 
+JUMP arm_iter_P2_start  WHEN(MC_GETPAR(iter_P2_stop,loop))
+
+/*IIIIIIIIIIIIIIIIIIII  END OF PROCESSING. END OF ITERATOR2  SECTION IIIIIIIIIIIIIIIIIIIIIIIIIIIII*/
+
+/**IIIIIIIIIIIIIIIIIII ITERATOR SECTION3. PROCESSING STORED EVENTS  IIIIIIIIIIIIIIII***/
+/* Insert this into McStas instrument file to do the costs evaluation */
+COMPONENT arm_iter_P3_start=Arm()
+AT(0,0,0) RELATIVE ESS_source
+
+COMPONENT iter_P3_start = Shielding_log_iterator_total()
+AT (0,0,0) RELATIVE ESS_source //ABSOLUTE
+EXTEND
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iter_P3_start
+%}
+JUMP arm_iter_P3_stop WHEN(optics_not_hit)
+
+/*Monitoring the tracks stored by the scatter logger*/
+/*Putting dummy arm to register all neutrons to ensure that monitors_nD with shape "previous" will process them */
+COMPONENT arm_iter_P3_dummy=Arm ()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT mndP03=Monitor_nD (
+restore_neutron=1,   zmin=25.0,
+zmax=150.0,
+bins=250, options="previous no slit  z ", filename="TotalCapture.dat")
+AT(0,0,0) RELATIVE ESS_source //RELATIVE source
+
+COMPONENT arm_iter_P3_stop=Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT iter_P3_stop  = Shielding_log_iterator_stop(iterator=iter_P3_start, last=1)
+AT(0,0,0)  RELATIVE ESS_source
+
+/*Moving again to the reference point of iterator start 
+when there are still some tracks stored to perform iterations with,
+checked by the function MC_GETPAR */
+COMPONENT a13i = Arm()
+AT (0,0,0) RELATIVE EndOfelement_1
+JUMP arm_iter_P3_start  WHEN(MC_GETPAR(iter_P3_stop,loop))
+
+/*IIIIIIIIIIIIIIIIIIII  END OF PROCESSING. END OF ITERATOR3  SECTION IIIIIIIIIIIIIIIIIIIIIIIIIIIII*/
+
+
+
+COMPONENT Beamstop = Beamstop(
+    )
+  AT (0, 0, 0.01) RELATIVE EndOfelement_1
+
+
+
+COMPONENT Lmon_guide_end = L_monitor(
+   nL = 300, filename = "Lmon_guide_end", xwidth = 0.027704, restore_neutron=1,
+   yheight = 0.027704, Lmin = 0.100000, Lmax = 8.000000)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+/*********************** SAMPLE POSITION **************************/
+/*
+COMPONENT Div2d_sample_B = Divergence_monitor(
+    nh = 200, nv = 200, filename = "Div2d_sample_B", xwidth = sampleSizeX,
+    yheight = sampleSizeY, maxdiv_h = 0.750000, maxdiv_v = 0.750000,restore_neutron=1)
+  AT (0, 0,0.580000) RELATIVE EndOfelement_1
+  EXTEND
+    %{
+    x_div = RAD2DEG*atan2(vx,vz);
+    y_div = RAD2DEG*atan2(vy,vz);
+    if (SCATTERED) flag=1; else flag=0;
+    %}
+
+COMPONENT Div2d_sample = Divergence_monitor(
+    nh = 200, nv = 200, filename = "Div2d_sample", xwidth = sampleSizeX, restore_neutron=1,
+    yheight = sampleSizeY, maxdiv_h = 2.250000, maxdiv_v = 2.250000)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+COMPONENT PSD_sample_large = PSD_monitor(
+    nx = 60, ny = 60, filename = "PSD_sample_large", restore_neutron=1,
+    xwidth = 6*sampleSizeX, yheight = 6*sampleSizeY)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+COMPONENT PSD_sample_small = PSD_monitor(
+    nx = 20, ny = 20, filename = "PSD_sample_small", restore_neutron=1,
+    xwidth = sampleSizeX, yheight = sampleSizeY)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+COMPONENT HPSD_sample = PSDlin_monitor(
+    nx = 100, filename="HPSD_sample",xwidth = 4*sampleSizeX, yheight = sampleSizeY, restore_neutron=1)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+
+
+COMPONENT Hdiv_sample = Hdiv_monitor(
+    nh = 200, filename = "Hdiv_sample", xwidth = sampleSizeX,
+    yheight = sampleSizeY, h_maxdiv = 2.250000, restore_neutron=1)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+
+COMPONENT acceptance_x_divx = DivPos_monitor(
+   nh = 200, ndiv = 200, filename = "acceptance_x_divx",
+   xwidth = 2*sampleSizeX, yheight = sampleSizeY, maxdiv_h = 1.500000, restore_neutron=1)
+ AT (0, 0, u) RELATIVE PREVIOUS
+
+
+COMPONENT Lmon_sample_B = L_monitor(
+    nL = 300, filename = "Lmon_sample_B", xwidth = 0.010000, restore_neutron=1,
+    yheight = 0.010000, Lmin = sampleSizeY, Lmax = 8.000000) WHEN flag
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+COMPONENT Div2d_sample_maxdiv = Divergence_monitor(
+    nh = 200, nv = 200, filename = "Div2d_sample_maxdiv", xwidth = sampleSizeX, restore_neutron=1,
+    yheight = sampleSizeY, maxdiv_h = 2.250000, maxdiv_v = 2.250000)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+COMPONENT PSD_sample_maxdiv = PSD_monitor(
+    nx = 200, ny = 200, filename = "PSD_sample_maxdiv", restore_neutron=1,
+    xwidth = 3*sampleSizeX, yheight = 3*sampleSizeY) WHEN (x_div<0.750000 && x_div>-0.750000 && y_div<0.750000 && y_div>-0.750000)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+COMPONENT HPSD_sample_maxdiv = PSDlin_monitor(
+    nx = 100, filename="HPSD_sample_maxdiv",xwidth = 4*sampleSizeX, yheight = sampleSizeY, restore_neutron=1)
+  WHEN (x_div<0.750000 && x_div>-0.750000 && y_div<0.750000 && y_div>-0.750000)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+
+COMPONENT Hdiv_sample_maxdiv = Hdiv_monitor(
+    nh = 200, filename = "Hdiv_sample_maxdiv", xwidth = sampleSizeX, restore_neutron=1,
+    yheight = sampleSizeY, h_maxdiv = 2.250000) WHEN (y_div<0.750000 && y_div>-0.750000)
+  AT (0, 0,u) RELATIVE PREVIOUS
+
+
+COMPONENT acceptance_x_divx_maxdiv = DivPos_monitor(
+   nh = 200, ndiv = 200, filename = "acceptance_x_divx_maxdiv", restore_neutron=1,
+   xwidth = 2*sampleSizeX, yheight = sampleSizeY, maxdiv_h = 1.500000) WHEN (y_div<0.750000 && y_div>-0.750000)
+ AT (0, 0, u) RELATIVE PREVIOUS
+
+
+ COMPONENT ToFatSample = TOF_monitor(
+    nt = 2000, filename = "ToFatSample.dat",restore_neutron=1, xwidth = 0.1,
+    yheight = 0.1, tmax = 5.5*72.0*1e6/v_0)
+  AT (0, 0, u) RELATIVE  PREVIOUS
+  
+COMPONENT Lmon_sample = L_monitor(
+    nL = 400, filename = "Lmon_sample", xwidth = sampleSizeX, restore_neutron=1,
+    yheight = sampleSizeY, Lmin = 2, Lmax = 6)
+  AT (0, 0,u) RELATIVE PREVIOUS
+  
+
+  
+  COMPONENT L_monSampleZoomout = L_monitor(
+    nL = 1000, filename = "L_monsampleZoomOut.dat",restore_neutron=1, xwidth = 0.2,
+    yheight = 0.2, Lmin = lambda_0/2.0, Lmax = 200)
+  AT (0, 0, u) RELATIVE PREVIOUS
+*/
+
+
+/**************** 
+The component SCalc will calculate thicknesses of materials required to reach MaxRate=1 uSv/hr at the shielding surface.
+The source is assumed in the center of 50 cm wide channel inside the shielding.
+The output will not be plotted, but can be found in the file "Shielding.dat" in the output folder.
+Binning in the files for Ni, Ti and Total capture should match.
+****************/
+COMPONENT SCalc=Shielding_calculator(MaxRate=1.0,Innerspace=0.5, NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="Shielding.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*Calculating dose rates at the surface of lateral shielding along the guide.*/
+/*Inner space in the shielding is assumed 40 cm wide, the guide is in the middle of the shielding housing.*/
+/*20 cm thick iron shielding*/
+COMPONENT DoseFe=Dose_calculator(Innerspace=0.4, Thickness=0.2, Material="Fe",  NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseFe.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*60 cm thick concrete shielding*/
+COMPONENT DoseConc=Dose_calculator(Innerspace=0.4, Thickness=0.6, Material="Concrete", NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseConc.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*10 cm steel followed by 40 cm concrete shielding*/
+COMPONENT DoseStandard=Dose_calculator(Innerspace=0.4, Thickness=0.4, Material="Concrete", SteelTubing="yes", TubingThickness=0.1,  NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseConcTubing.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*5 cm steel followed by 40 cm concrete shielding*/
+COMPONENT Dose5=Dose_calculator(Innerspace=0.4, Thickness=0.6, Material="Concrete", SteelTubing="yes", TubingThickness=0.05,  NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseConcTubing5.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+
+FINALLY
+%{
+%}
+END
+
+
+

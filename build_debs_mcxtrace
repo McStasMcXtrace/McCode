@@ -24,6 +24,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- deb
+./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb64 "" -- deb

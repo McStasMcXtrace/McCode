@@ -31,7 +31,7 @@ find_program(AT at)
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+set(CFLAGS "-g -O2 -lm -std=c99 ${CMAKE_C_FLAGS}")
 
 
 # CPack configuration
@@ -133,7 +133,7 @@ configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY)
 configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY)
 
 # Configure launcher
-configure_file(lib/tools/launcher/McCode.desktop.in work/${NAME}.desktop @ONLY)
+configure_file(lib/tools/launcher/McCode.desktop.in work/${NAME}-pl.desktop @ONLY)
 
 exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 
@@ -146,7 +146,7 @@ if(NOT WINDOWS)
   )
 
   install(
-    FILES "${WORK}/${NAME}.desktop" "lib/tools/launcher/${FLAVOR}-pl.png"
+    FILES "${WORK}/${NAME}-pl.desktop" "lib/tools/launcher/${FLAVOR}-pl.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
   ) 
 

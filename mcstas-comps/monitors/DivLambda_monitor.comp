@@ -65,27 +65,26 @@ double Div_p2[nL][nh];
 %}
 INITIALIZE
 %{
-int i,j;
+  int i,j;
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("ERROR: (%s): Null detection area! Aborting.\n",
+        NAME_CURRENT_COMP);
+    exit(-1);
+  }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("Divlambda_monitor: %s: Null detection area !\n"
-                   "ERROR              (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
-    }
-
-    for (i=0; i<nL; i++)
-     for (j=0; j<nh; j++)
-     {
+  for (i=0; i<nL; i++)
+    for (j=0; j<nh; j++)
+    {
       Div_N[i][j] = 0;
       Div_p[i][j] = 0;
       Div_p2[i][j] = 0;
-     }
-    NORM(nx,ny,nz);
-  %}
+    }
+  NORM(nx,ny,nz);
+
+%}
 TRACE
   %{
     int i,j;

@@ -20,8 +20,8 @@ if [ ! -d $WORK/testbuilds/miniconda3 ]; then
 	echo "* Downloading a miniconda3 for testing                  *"
 	echo "*********************************************************"
 	echo   
-	sleep 3 https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
-	curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+	sleep 3 https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+	curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
     fi
     echo "*********************************************************"
     echo "* Embedding miniconda3 in test environment              *"

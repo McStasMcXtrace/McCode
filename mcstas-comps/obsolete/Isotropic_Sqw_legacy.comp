@@ -1910,7 +1910,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           VarSqw.w_max = FLT_MAX;
           if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
             printf("Isotropic_Sqw_legacy: %s: ERROR re-importing data files (Sqw_init from TRACE)\n",NAME_CURRENT_COMP);
-            exit(0);
+            exit(-1);
           } else
             printf("Isotropic_Sqw_legacy: %s: Warning (q,w) range optimization failed. Ignoring.\n",NAME_CURRENT_COMP);
         }

@@ -76,7 +76,7 @@ COMPONENT sample_out = Arm()
 AT (0,0,0) RELATIVE Sample ROTATED (0,0, 0) RELATIVE Sample
 
 COMPONENT monzns = Monitor_nD(
-    radius=dist, yheight=.20, options="banana, angle bins=40 limits=[80 110], auto time bins=128")
+    radius=dist, yheight=.20, options="banana, angle bins=40 limits=[80 110], time bins=128 limits=[0.001 0.019]")
   AT (0, 0, 0) RELATIVE sample_out
 
 END

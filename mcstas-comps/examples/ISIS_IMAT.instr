@@ -145,8 +145,12 @@ AT (0.0, 0.0, 55.996) RELATIVE Origin
 COMPONENT PSDpre = PSD_monitor(nx = 1024, ny = 1024, filename = "PSDpre.dat", xmin =-0.1, xmax =0.1, ymin = -0.1, ymax =0.1, restore_neutron=1)
 AT (0.0, 0.0, 10.00) RELATIVE pinhole
 
+// we can not use anymore the Lazy define with cogen3, as the vector assignment 
+// must here be static, but the grammar tests for a '{' as fisrt char. The 'Lazy'
+// #define is indeed a {value}, but not replaced before the code generation takes
+// place.
 COMPONENT sample = PowderN(reflections="Na2Ca3Al2F14.laz", radius = 0.002, yheight = 0.01,
-        Vc = 1079.1, sigma_abs = 2.9464e-3, sigma_inc = 3.4176, d_phi=60, format=Lazy)
+        Vc = 1079.1, sigma_abs = 2.9464e-3, sigma_inc = 3.4176, d_phi=60, format={17,6,0,0,0,0,0,13,0 })
 AT (0.0, 0.0, 56) RELATIVE Origin
 EXTEND
 %{

@@ -68,8 +68,8 @@ INITIALIZE
     if (!zdepth_o) zdepth_o=yheight_o;
     if (!xwidth_o) xwidth_o=yheight_o;
   }else if (!yheight_o && !radius_o){
-    fprintf(stderr,"Absorption_sample(%s): Error: Unmeaningful outer volume description\n",NAME_CURRENT_COMP);
-    exit(0);
+    fprintf(stderr,"ERROR: (%s): Error: Unmeaningful outer volume description.\n",NAME_CURRENT_COMP);
+    exit(-1);
   }
   if (yheight_i && !radius_i){
     if (!zdepth_i) zdepth_i=yheight_i;

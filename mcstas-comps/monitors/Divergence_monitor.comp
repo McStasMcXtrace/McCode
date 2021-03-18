@@ -58,33 +58,29 @@ OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
-double Div_N[nh][nv];
-double Div_p[nh][nv];
-double Div_p2[nh][nv];
+%include "array-lib"
+DArray2d Div_N;
+DArray2d Div_p;
+DArray2d Div_p2;
 %}
 INITIALIZE
 %{
-int i,j;
+  int i,j;
 
-if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-    if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("Divergence_monitor: %s: Null detection area !\n"
-                   "ERROR               (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
-    }
+  if ((xmin >= xmax) || (ymin >= ymax)) {
+    printf("ERROR: (%s): Null detection area! Aborting.\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
 
-    for (i=0; i<nh; i++)
-     for (j=0; j<nv; j++)
-     {
-      Div_N[i][j] = 0;
-      Div_p[i][j] = 0;
-      Div_p2[i][j] = 0;
-     }
-    NORM(nx,ny,nz);
-  %}
+  Div_N = create_darr2d(nh,nv);
+  Div_p = create_darr2d(nh,nv);
+  Div_p2 = create_darr2d(nh,nv);
+
+  NORM(nx,ny,nz);
+%}
 TRACE
   %{
     int i,j;

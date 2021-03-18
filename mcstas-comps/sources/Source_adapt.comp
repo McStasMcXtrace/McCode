@@ -58,6 +58,8 @@
 * xmax: [m]           Right edge
 * ymin: [m]           Lower edge
 * ymax: [m]           Upper edge
+* xwidth: [m]         Width
+* yheight: [m]        Height
 * target_index: [1]   relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
 * dist: [m]           Distance to target rectangle along z axis
 * focus_xw: [m]       Width of target
@@ -157,7 +159,7 @@ if (target_index && !dist)
       printf("Source_adapt: %s: Error in given wavelength range!\n"
              "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
-      exit(0);
+      exit(-1);
   }
 
   source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */

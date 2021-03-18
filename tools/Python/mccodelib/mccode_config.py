@@ -6,7 +6,7 @@ import sys
 Dynamic vs static LIBDIR location
 '''
 LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
-LIBDIR_FALLBACK = '/usr/share/mcstas/2.5-dev/'
+LIBDIR_FALLBACK = '/usr/share/mcstas/2.6.1/'
 if sys.platform == 'darwin':
     LIBDIR = LIBDIR_FALLBACK
     
@@ -14,8 +14,9 @@ if sys.platform == 'darwin':
 mcstas/mcxtrace configuration.
 '''
 configuration = {
-    "MCCODE_VERSION": '2.5-dev',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.5-dev/',
+    "MCCODE_VERSION": '2.6.1',
+    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.6.1/',
+    "TERMINAL": 'x-terminal-emulator -e',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot-pyqtgraph',

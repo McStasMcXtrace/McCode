@@ -515,7 +515,7 @@ MCDETECTOR mcdetector_statistics(
   MCDETECTOR detector)
 {
 
-  if (!detector.p1 || !detector.m || !detector.filename)
+  if (!detector.p1 || !detector.m)
     return(detector);
   
   /* compute statistics and update MCDETECTOR structure ===================== */
@@ -1133,8 +1133,8 @@ MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
       
         mcruninfo_out( "# ", outfile);
         mcdatainfo_out("# ", outfile,   detector);
-        fprintf(outfile, "# Data [%s/%s] %s:\n", detector.component, detector.filename, detector.zvar);
       }
+      fprintf(outfile, "# Data [%s/%s] %s:\n", detector.component, detector.filename, detector.zvar);
       mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p1, 
         outfile, detector.istransposed);
       if (detector.p2) {
@@ -1190,7 +1190,7 @@ MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
 static char *strcpy_valid(char *valid, char *original)
 {
   long i;
-  int  n=32; /* max length of valid names */
+  int  n=CHAR_BUF_LENGTH; /* max length of valid names */
 
   if (original == NULL || !strlen(original)) return(NULL);
 
@@ -1468,7 +1468,7 @@ static void mcinfo_out_nexus(NXhandle f)
 static void
 mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 {
-  char data_name[32];
+  char data_name[CHAR_BUF_LENGTH];
   if (!f || !detector.m || mcdisable_output_files) return;
   
   strcpy_valid(data_name, 
@@ -1543,7 +1543,7 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
   if (!f || length <= 1 || mcdisable_output_files || max == min) return(NX_OK);
   else {
     double axis[length];
-    char valid[32];
+    char valid[CHAR_BUF_LENGTH];
     int dim=(int)length;
     int i;
     int nprimary=1;
@@ -1644,7 +1644,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 *******************************************************************************/
 int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 {
-  char data_name[32];
+  char data_name[CHAR_BUF_LENGTH];
   
   if (!f || !detector.m || mcdisable_output_files) return(NX_OK);
   
@@ -2756,7 +2756,7 @@ mcstatic void normal_vec_func(double *nx, double *ny, double *nz,
  * so that A = 0.5 n.g; B = n.v; C = n.(r-W);
  * Without acceleration, t=-n.(r-W)/n.v
  ******************************************************************************/
-int solve_2nd_order(double *t1, double *t2,
+int solve_2nd_order_old(double *t1, double *t2,
                   double A,  double B,  double C)
 {
   int ret=0;
@@ -2797,6 +2797,83 @@ int solve_2nd_order(double *t1, double *t2,
   }
   return(ret);
 } /* solve_2nd_order */
+
+int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
+  int retval=0;
+  double sign=copysign(1.0,B);
+  double dt0,dt1;
+
+  dt0=0;
+  dt1=0;
+  *t0;
+  if(t1){ *t1=0;}
+
+  /*protect against rounding errors by locally equating DBL_EPSILON with 0*/
+  if (fabs(A)<DBL_EPSILON){
+    A=0;
+  }
+  if (fabs(B)<DBL_EPSILON){
+    B=0;
+  }
+  if (fabs(C)<DBL_EPSILON){
+    C=0;
+  }
+
+  /*check if coefficient are sane*/
+  if( A==0  && B==0){
+    retval=0;
+  }else{
+    if(A==0){
+      /*equation is linear*/
+      dt0=-C/B;
+      retval=1;
+    }else if (C==0){
+      /*one root is 0*/
+      if(sign<0){
+        dt0=0;dt1=-B/A;
+      }else{
+        dt0=-B/A;dt1=0;
+      }
+      retval=2;
+    }else{
+      /*a regular 2nd order eq. Also works out fine for B==0.*/
+      double D;
+      D=B*B-4*A*C;
+      if (D>=0){
+        dt0=(-B - sign*sqrt(B*B-4*A*C))/(2*A);
+        dt1=C/(A*dt0);
+        retval=2;
+      }else{
+        /*no real roots*/
+        retval=0;
+      }
+    }
+    /*sort the solutions*/
+    if (retval==1){
+      /*put both solutions in t0 and t1*/
+      *t0=dt0;
+      if(t1) *t1=dt1;
+    }else{
+      /*we have two solutions*/
+      /*swap if both are positive and t1 smaller than t0 or t1 the only positive*/
+      int swap=0;
+      if(dt1>0 && ( dt1<dt0 || dt0<=0) ){
+        swap=1;
+      }
+      if (swap){
+        *t0=dt1;
+        if(t1) *t1=dt0;
+      }else{
+        *t0=dt0;
+        if(t1) *t1=dt0;
+      }
+    }
+
+  }
+  return retval;
+
+} /*solve_2nd_order_improved*/
+
 
 /*******************************************************************************
  * randvec_target_circle: Choose random direction towards target at (x,y,z)

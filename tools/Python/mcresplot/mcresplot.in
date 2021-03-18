@@ -1,0 +1,36 @@
+#!/bin/sh
+# Wrapper script for mcresplot-py
+
+# First ensure that we follow symlink if needed
+LINK=`readlink $0`
+
+# Am I a symlink?
+if [ "x$LINK" != "x" ]; then
+    LIB=`dirname $LINK`
+else
+    LIB=`dirname $0`
+fi
+PATH=$LIB/../miniconda3/bin:$PATH
+LIB="$LIB/../tools/Python/mcresplot"
+TOOL="mcresplot"
+VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x ${LIB}/${TOOL}.py ]; then
+        exit 127;
+    fi
+
+    modules="numpy"
+    cmd=""
+    for name in ${modules}; do
+        cmd="${cmd}import ${name}; "
+    done
+    python3 -c "${cmd}"
+}
+
+if ( canrun ); then
+    python3 ${LIB}/${TOOL}.py $*
+else
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
+fi

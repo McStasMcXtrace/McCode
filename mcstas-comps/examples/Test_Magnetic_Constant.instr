@@ -20,15 +20,17 @@
 * made with the old component: Pol_constBfield
 *
 * %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.0768972
+* %Example: ROT_ANGLE=180 ONOFF=1 Detector: pollambdaMonitor2z_I=0.0768972
 *
 * %Parameters
 * ROT_ANGLE: [deg]  Angle that the spin of a 5AA neutron rotates in the 0.2 m magnet
+* ONOFF: [ ]        Should we use a window description (with a _stop comp) to turn the field on and off.
 *
 * %Link
 *
 * %End
 ****************************************************************************/
-DEFINE INSTRUMENT Test_Magnetic_Constant(ROT_ANGLE=180)
+DEFINE INSTRUMENT Test_Magnetic_Constant(ROT_ANGLE=180, ONOFF=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -96,12 +98,14 @@ COMPONENT armMSF = Arm()
 
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
-COMPONENT msf =
-Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0)
-     AT (0, 0, 0) RELATIVE armMSF
+COMPONENT msf = Pol_Bfield(xwidth=0.08, yheight=0.08,  zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0, concentric=0)
+WHEN(!ONOFF) AT (0, 0, 0) RELATIVE armMSF
 
-COMPONENT msfCp = Pol_Bfield_stop()
-AT (0, 0, MAGNETLENGTH) RELATIVE armMSF
+COMPONENT msf_onoff = Pol_Bfield(xwidth=0.08, yheight=0.08,  Bx=0, By=BVALUE, Bz=0, concentric=1)
+WHEN (ONOFF) AT (0, 0, 0) RELATIVE armMSF
+
+COMPONENT msf_onoff_stop = Pol_Bfield_stop(xwidth=0.08, yheight=0.08)
+WHEN(ONOFF) AT (0, 0, MAGNETLENGTH) RELATIVE armMSF
 
 
 COMPONENT pollambdaMonitor2x =

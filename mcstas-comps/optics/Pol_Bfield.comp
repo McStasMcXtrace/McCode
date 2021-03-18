@@ -18,18 +18,23 @@
 *
 * Region with a definable magnetic field.
 *
-* The component is nestable. This means that it requires a
-*
+* The component is nestable if the concentric flag is set (the default). This means that it requires a
 * // START MAGNETIC FIELD
 * COMPONENT msf =
 * Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=0.2, Bx=0, By=-0.678332e-4, Bz=0)
 *      AT (0, 0, 0) RELATIVE armMSF
 *
-* // HERE CAN BE OTHER COMPONENTS INSIDE THE MAGNETIC FIELD
+* // OTHER COMPONENTS INSIDE THE MAGNETIC FIELD CAN BE PLACED HERE
 *
 * // STOP MAGNETIC FIELD
 * COMPONENT msf_stop = Pol_simpleBfield_stop(magnet_comp_stop=msf)
 *      AT (0, 0, 0) RELATIVE armMSF
+*
+* Note that if you have objects within the magnetic field that extend outside it you may get
+* wrong results, because propagation within the field will then possibly extend outside, e.g.
+* when using a tabled field. The evaluated field will then use the nearest defined field point
+* _also_ outside the defintion area. If these outside-points have a non-zero field precession will
+* continue - even after the neutron has left the field region.
 *
 * In between the two component instances the propagation routine
 * PROP_DT also handles spin propagation.
@@ -168,11 +173,11 @@ INITIALIZE
       prms.shape=NONE;
   }
 
-  if(prms.shape == WINDOW && !concentric){
-      printf("Warning (%s): Magnetic field has window shape and has concentric set => Field volume == 0.\n",NAME_CURRENT_COMP);
+  if( (prms.shape == WINDOW || prms.shape == NONE) && !concentric){
+      printf("Warning (%s): Magnetic field has window shape and concentric==0 => Field volume == 0.\n",NAME_CURRENT_COMP);
   }
   if(prms.shape == NONE) {
-      printf("Warning (%s): Magnetic field no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
+      printf("Warning (%s): Magnetic field has no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
   }
 
 %}

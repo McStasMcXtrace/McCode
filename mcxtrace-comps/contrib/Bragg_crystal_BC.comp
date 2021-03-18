@@ -25,8 +25,12 @@
  * Reads atomic formfactors from a data input file.
  * The Bragg_Crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
  *
- * The crystal is positioned such that the long axis of the crystal surface coincides with
- * z-axis and the outer normal to the crystal surface is along +y.
+ * The crystal code reflects ray in an ideal geometry, i.e. does not include surface imperfections or mosaicity.
+ * The crystal planes from which the reflection is made lies in the X-Z plane on the unbent crystal rotated
+ * by an angle alpha about the Y axis with respect to the crystal surface.
+ *
+ * The crystal itself is set in the X-Z plane positioned such that the long axis of the crystal surface coincides with
+ * the Z-axis, withs normal pointing in the poisitivce Y-direction.
  *
  * N.B. The component does not work for rays hitting the back of the monochromator.
  *
@@ -169,7 +173,10 @@ TRACE
                          f00, f0h, fp, fpp, V, h, k, l,
                          debye_waller_B, E,
                          crystal_type,structure_factor_scale_r,structure_factor_scale_i);
-            
+            if(thetaB==0){
+              fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
+              ABSORB;
+            }
             fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha,
                   chi0, chih, chih, k0mag, hscale, thetaB

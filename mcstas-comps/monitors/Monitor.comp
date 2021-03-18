@@ -66,7 +66,7 @@ if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
             printf("Monitor: %s: Null detection area !\n"
                    "ERROR    (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
-      exit(0);
+      exit(-1);
     }
   %}
 

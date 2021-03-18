@@ -41,13 +41,15 @@
 * flux: [pht/s] total flux radiated from the source
 * randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
 * phase: [ ] Set phase to something given. 
+* spectrum_file: [ ] File from which to read the spectral intensity profile
+*
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (string spectrum_file=NULL)
   SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
-  dist=0, focus_xw=.045, focus_yh=.12, 
+  dist=1, focus_xw=.045, focus_yh=.12, focus_r=0,
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,randomphase=1,phase=0)
 OUTPUT PARAMETERS (prms,square,pmul, srcArea)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -87,14 +89,14 @@ INITIALIZE
 
   
   if (srcArea <= 0) {
-    printf("Source_flat: %s: Source area is <= 0 !\n ERROR - Exiting\n",
+    printf("ERROR: Source_flat: %s: Source area is <= 0 !\n Exiting\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
-  if (dist <= 0 || focus_xw <= 0 || focus_yh <= 0) {
-    printf("Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n ERROR - Exiting\n",
+  if (dist <= 0 || !( focus_r>0 || focus_xw>0 || focus_yh>0 )) {
+    printf("ERROR: Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh / focus_r)\n Exiting\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
   
   if (spectrum_file){
@@ -115,8 +117,8 @@ INITIALIZE
     printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if ( !E0 && !lambda0){
-    fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
-    exit(0);  
+    fprintf(stderr,"ERROR: Source_flat(%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(-1);
   }  
   /*calculate the X-ray weight from the flux*/
   if (flux){
@@ -147,9 +149,12 @@ TRACE
     x=r*cos(chi);
     y=r*sin(chi);
   }
-  randvec_target_rect_real(&xf, &yf, &rf, &pdir,
-      0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
-
+  if(!focus_r){
+    randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+        0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+  }else{
+    randvec_target_circle(&xf,&yf,&rf, &pdir,0,0,dist, focus_r);
+  }
   dx = xf-x;
   dy = yf-y;
   rf = sqrt(dx*dx+dy*dy+dist*dist);

@@ -7,9 +7,17 @@
 *
 * Component: Single_crystal_inelastic
 *
+* %I
+* Written by: Some Guy
+* Date: August 2020
+* Origin: DTU Physics
+* 
+* An extension of Single crystal with material dispersion
+*
+* %D
 * The component handles a 4D S(q,w) material dispersion, and scatters neutrons 
 * out of it. It is based on the Isotropic_Sqw methodology, extended to 4D. 
-
+*
 * A number of approximations are applied:
 *
 *  - geometry is restricted to box, cylinder and sphere
@@ -26,9 +34,9 @@
 *
 * The input data file derives from other McStas formats. It may contain structural
 * information as in Lau/Laz files, and a list of S(q,w) [one per row] with 5 columns
-*
-*   [ H K L E S(q,w) ]
-*
+**
+**   [ H K L E S(q,w) ]
+**
 * An example file example.sqw4 is provided in the McStas/Data directory.
 *
 * You may generate such files using <a href="http://ifit.mccode.org">iFit </a> such as:
@@ -42,62 +50,55 @@
 *
 * %P
 * INPUT PARAMETERS:
-* radius:    Outer radius of sample in (x,z) plane [m]
-* xwidth:    Width of crystal [m]
-* yheight:   Height of crystal [m]
-* zdepth:    Depth of crystal (no extinction simulated) [m]
-* geometry:  Name of an Object File Format (OFF) or PLY file for complex geometry. 
-*              The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
-* delta_d_d: Lattice spacing variance, gaussian RMS [1]
-* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the 
-*              isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
-* mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. 
-*              Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
-*              through rotation around the crystal lattice vectors. Has precedence over
-*              in-plane mosaic model. [arc minutes]
-* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), 
-*              gaussian RMS. [arc minutes]
-* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), 
-*              gaussian RMS [arc minutes]
-* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), 
+* radius: [m]    Outer radius of sample in (x,z) plane.
+* xwidth: [m]    Width of crystal.
+* yheight: [m]   Height of crystal.
+* zdepth: [m]    Depth of crystal (no extinction simulated)
+* geometry: [string]   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
+* delta_d_d: [1] Lattice spacing variance, gaussian RMS.
+* mosaic: [arcmin]   Isotropic crystal mosaic, gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters.
+* mosaic_a: [arcmin] Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model.
+* mosaic_b: [arcmin] Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS.
+* mosaic_c: [arcmin] Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS.
+* mosaic_AB: [arcmin,arcmin,1,1,1,1,1,1]    In Plane mosaic rotation and plane vectors (anisotropic), 
 *              mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in 
 *              the in-plane mosaic state. Vectors A and B define plane in which 
 *              the crystal roation is defined, and mosaic_A, mosaic_B, denotes the 
 *              resp. mosaicities (gaussian RMS) with respect to the the two 
-*              reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
-* 
-* recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
-* ax:        Coordinates of first (direct/recip) unit cell vector [AA or AA^-1]
-* ay:        a on y axis
-* az:        a on z axis
-* bx:        Coordinates of second (direct/recip) unit cell vector [AA or AA^-1]
-* by:        b on y axis
-* bz:        b on z axis
-* cx:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
-* cy:        c on y axis
-* cz:        c on z axis
-* reflections: File name containing structure factors of reflections. Use
-*              empty ("") or NULL for incoherent scattering only [string]
-* order:     Limit multiple scattering up to given order
-*              (0: all, 1: first, 2: second, ...) [1]
+*              reflections chosen by A and B (Miller indices).
+* recip_cell: [1] Choice of direct/reciprocal (0/1) unit cell definition.
+* ax: [AA / AA^-1]    Coordinates of first (direct/recip) unit cell vector.
+* ay: [AA / AA^-1]    a on y axis
+* az: [AA / AA^-1]    a on z axis
+* bx: [AA / AA^-1]       Coordinates of second (direct/recip) unit cell vector.
+* by: [AA / AA^-1]       b on y axis
+* bz: [AA / AA^-1]       b on z axis
+* cx: [AA / AA^-1]       Coordinates of third (direct/recip) unit cell vector.
+* cy: [AA / AA^-1]       c on y axis
+* cz: [AA / AA^-1]       c on z axis
+* reflections: [string] File name containing structure factors of reflections. Use
+*              empty ("") or NULL for incoherent scattering only.
+* order: [1]    Limit multiple scattering up to given order
+*              (0: all, 1: first, 2: second, ...).
 *
 * Optional input parameters:
 *
-* p_transmit: Monte Carlo probability for neutrons to be transmitted
+* p_transmit: [1] Monte Carlo probability for neutrons to be transmitted
 *               without any scattering. Used to improve statistics from
-*               weak reflections [1]
-* sigma_abs: Absorption cross-section per unit cell at 2200 m/s [barns]
-* sigma_inc: Incoherent scattering cross-section per unit cell [barns]
-* aa:        Unit cell angles alpha, beta and gamma. Then uses norms of
-*              vectors a,b and c as lattice parameters [deg]
-* bb:        Beta angle [deg] 
-* cc:        Gamma angle [deg].
-* barns:     Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
+*               weak reflections.
+* sigma_abs: [barns]  Absorption cross-section per unit cell at 2200 m/s. 
+* sigma_inc: [barns]  Incoherent scattering cross-section per unit cell.
+* aa: [deg]       Unit cell angles alpha, beta and gamma. Then uses norms of
+*              vectors a,b and c as lattice parameters.
+* bb: [deg]       Beta angle. 
+* cc: [deg]       Gamma angle.
+* barns: [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
 *              barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
-*              barns=0 for lau type files [1]
-* RX:        Radius of horizontal along X lattice curvature. flat for 0 (m)
-* RY:        Radius of vertical lattice curvature. flat for 0 (m)
-* RZ:        Radius of horizontal along Z lattice curvature. flat for 0 (m)
+*              barns=0 for lau type files.
+* RX: [m]       Radius of horizontal along X lattice curvature. flat for 0.
+* RY: [m]       Radius of vertical lattice curvature. flat for 0.
+* RZ: [m]       Radius of horizontal along Z lattice curvature. flat for 0.
+* %E
 ****************************************************************************/
 
 
@@ -105,14 +106,14 @@ DEFINE COMPONENT Single_crystal_inelastic
 DEFINITION PARAMETERS(mosaic_AB=Mosaic_AB_Undefined)
 SETTING PARAMETERS(string sqw=0, string geometry=0, qwidth=0.05,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
-            mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
+            mosaic=-1, mosaic_a=-1, mosaic_b=-1, mosaic_c=-1,
             recip_cell=0, barns=0,
-            ax = 0, ay = 0, az = 0,
-            bx = 0, by = 0, bz = 0,
-            cx = 0, cy = 0, cz = 0,
-            p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
+            ax=0, ay=0, az=0,
+            bx=0, by=0, bz=0,
+            cx=0, cy=0, cz=0,
+            p_transmit=-1, sigma_abs=0, sigma_inc=0,
             aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0,
-            max_stored_ki = 1000, max_bad = 10000)
+            max_stored_ki=1000, max_bad=10000)
 OUTPUT PARAMETERS(hkl_info, offdata)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -609,7 +610,7 @@ INITIALIZE
   double mosaic_ABin[]=mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(sqw, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin, qwidth))
-    exit(0);
+    exit(-1);
 
   if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;
   if (hkl_info.sigma_i<0) hkl_info.sigma_i=0;

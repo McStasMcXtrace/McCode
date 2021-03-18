@@ -116,6 +116,9 @@ SAVE
     if (!nowritefile) {
   if (Psum && Pol_N){
       Pol_p  /= Psum;
+#ifdef USE_MPI
+      Pol_p /= mpi_node_count;
+#endif
       Pol_p2 /= Psum;
       Pol_p2 -= Pol_p*Pol_p;
       Pol_p2 /= Pol_N;

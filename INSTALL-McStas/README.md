@@ -1,10 +1,8 @@
-# Installation instructions for McStas 2.5
+# Installation instructions for McStas
 
-Please consult the individual platform instructions:
+Please consult the individual instructions for either McStas 2.x
+or 3.0 found in 
 
-* [Windows 10 64bit](Windows/README.md)
-* [macOS 10.9-10.14 64bit](macOS/README.md)
-* [Linux (Debian/Ubuntu/CentOS via repo, Fedora manual install)](Linux/README.md)
-* [Unix (source code)](Linux/src/README.md)
+* [McStas 3.0 (aka 'testing')](../INSTALL-McStas-3.0/README.md)
+* [McStas 2.7 (aka 'stable')](../INSTALL-McStas-2.x/README.md)
 
-**If you can not find documentation for your specific OS above, chances are we can help you anyway - write us an email at [mcstas-users](mailto:"mcstas-users@mcstas.org")**

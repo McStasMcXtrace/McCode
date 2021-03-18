@@ -1,0 +1,115 @@
+/*******************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Event_monitor_simple
+*
+* %I
+* Written by: Peter Willendrup
+* Date: Oct 3rd, 2020
+* Origin: DTU
+*
+* Low-key event-monitor for debugging purposes.
+*
+* %D
+* Simple, low-key event-monitor for debugging purposes. No propagation,
+* no MPI support. Simply prints the event list to a log file in the SAVE section. 
+* The filename is "comp-instance".log
+*
+* %P
+* INPUT PARAMETERS:
+*
+* nevents:  [1]   Number of events to store and print
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Event_monitor_simple
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nevents=1e6)
+OUTPUT PARAMETERS (Events)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+DECLARE
+%{
+  %include "array-lib";
+  DArray2d Events; 
+  unsigned long Nevents;
+  char fullfile[1024];
+  char outputdir[512];
+%}
+INITIALIZE
+%{
+  Nevents = ceil(nevents);
+  Events = create_darr2d(Nevents, 11);
+  if (mcdirname == NULL) {
+    sprintf(outputdir,".");
+  } else {
+    sprintf(outputdir,mcdirname);
+  }
+  #ifndef USE_MPI
+  sprintf(fullfile,"%s/%s.%s",outputdir,NAME_CURRENT_COMP,"log");
+  #else
+  sprintf(fullfile,"%s/%s_%i.%s",outputdir,NAME_CURRENT_COMP,mpi_node_rank,"log");
+  #endif
+%}
+
+TRACE
+%{
+
+  unsigned long i = mcget_run_num();
+  if (i < Nevents) {
+    #pragma acc atomic write
+    Events[i][0] = x;
+    #pragma acc atomic write  
+    Events[i][1] = y;
+    #pragma acc atomic write
+    Events[i][2] = z;
+    #pragma acc atomic write
+    Events[i][3] = vx;
+    #pragma acc atomic write
+    Events[i][4] = vy;
+    #pragma acc atomic write
+    Events[i][5] = vz;
+    #pragma acc atomic write
+    Events[i][6] = t;
+    #pragma acc atomic write
+    Events[i][7] = sx;
+    #pragma acc atomic write
+    Events[i][8] = sy;
+    #pragma acc atomic write
+    Events[i][9] = sz;
+    #pragma acc atomic write
+    Events[i][10] = p;
+  }
+%}
+
+SAVE
+%{
+  FILE * fp;
+  printf("Storing event logfile -->  %s\n",fullfile);
+  fp = fopen(fullfile, "w+");
+  fprintf(fp,"(%s, contains %lu events)\n",fullfile,Nevents);
+  fprintf(fp,"=========================================== START EVENT LIST ============================================\n");
+  fprintf(fp,"    id        x        y        z       vx       vy       vz        t       sx       sy       sz        p\n");
+  fprintf(fp,"=========================================================================================================\n");
+  unsigned long i;
+  int j;
+  for (i=0; i<Nevents; i++) {
+    fprintf(fp,"%6i ",i);
+    for (j=0; j<11; j++) {
+      fprintf(fp,"%8.2g ", Events[i][j]);
+    }
+    fprintf(fp,"\n");
+  }
+  fprintf(fp,"=========================================================================================================\n");
+  fprintf(fp,"============================================ END EVENT LIST! ============================================\n");
+  fclose(fp);
+  printf("Done storing logfile.\n");
+%}
+
+MCDISPLAY
+%{
+%}
+
+END

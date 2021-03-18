@@ -22,13 +22,12 @@
 * %P
 * INPUT PARAMETERS:
 *
-* yheight: [m]          Height of detector 
-* radius: [m]           Radius of detector 
-* nr: [1]               Number of pixel (radial) columns 
-* ny: [1]               Number of pixel rows 
-* filename: [string]    Name of file in which to store the detector image 
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
-* nowritefile: [1]      If set, monitor will skip writing to disk
+* yheight: [m]          Height of detector
+* radius: [m]           Radius of detector
+* nr: [1]               Number of pixel (radial) columns
+* ny: [1]               Number of pixel rows
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -39,91 +38,93 @@
 * %E
 ******************************************************************************/
 
-
 DEFINE COMPONENT PSDcyl_monitor
-DEFINITION PARAMETERS (nr=20, ny=20)
-SETTING PARAMETERS (string filename=0, yheight=0.3, radius=1, restore_neutron=0, int nowritefile=0)
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nr=20, ny=20, string filename=0, yheight=0.3, radius=1, restore_neutron=0, thmin=0, thmax=360)
+
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
-double PSD_N[nr][ny];
-double PSD_p[nr][ny];
-double PSD_p2[nr][ny];
+  %include "array-lib"
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
+
 INITIALIZE
 %{
-int i,j;
+  int i, j;
 
-for (i=0; i<nr; i++)
-     for (j=0; j<ny; j++)
-     {
-      PSD_N[i][j] = 0;
-      PSD_p[i][j] = 0;
-      PSD_p2[i][j] = 0;
-     }
-  %}
+  PSD_N = create_darr2d(nr, ny);
+  PSD_p = create_darr2d(nr, ny);
+  PSD_p2 = create_darr2d(nr, ny);
+
+%}
+
 TRACE
-  %{
-    int i,j;
-    double t0,t1,phi;
+%{
+  int i, j;
+  double t0, t1;
 
-    if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
-     {
-      if(t0>0)
-       {
-         printf("FATAL ERROR: Did not come from within cylinder.\n");
-         exit(1);
-       };
-      if(t1<0)
-       {
-         printf("FATAL ERROR: Did not hit cylinder from inside.\n");
-         exit(1);
-       }
-      else
-       {
-        PROP_DT(t1);
-                     /* Calculate pixel */
-        if (fabs(y)<(yheight- 1e-10))
-         {
-          phi=atan2(x,z);
-          i=(int)floor((phi/(2*PI))*nr);
-          j=(int)floor((y/yheight)*ny);
-          PSD_N[i][j]++;
-          PSD_p[i][j] += p;
-          PSD_p2[i][j] += p*p;
-         }
-        else
-          ABSORB;  /* Should not be necessary */
-       }
-     }
-    else
-     {
-      ABSORB;
-     }
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight) == 1) {
+    if(t0<0) {
+      if(t1>0) {
+	PROP_DT(t1);
+	/* Calculate pixel */
+	if (fabs(y) < yheight/2.0) {
+	  double phi, yprime;
+	  phi=(atan2(x,z)+PI)*RAD2DEG;
+	  yprime=y+yheight/2.0;
+	  
+	  if (phi >= thmin && phi < thmax) {
+	    i=floor((nr-1) * (phi-thmin)/(thmax-thmin));
+	    j=floor((ny-1) * yprime/yheight);
+	    
+	    double p2 = p*p;
+            #pragma acc atomic
+	    PSD_N[i][j] = PSD_N[i][j]+1;
+
+            #pragma acc atomic
+	    PSD_p[i][j] = PSD_p[i][j]+p;
+	  
+	    #pragma acc atomic
+	    PSD_p2[i][j] = PSD_p2[i][j]+p2;
+	  }
+	}
+      }
     }
-  %}
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
 SAVE
-  %{
-    if (!nowritefile) {
-    DETECTOR_OUT_2D(
-        "PSD cylindrical monitor",
-        "radial position [deg]",
-        "yheight [m]",
-        -180, 180, -yheight/2.0, yheight/2.0,
-        nr, ny,
-        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-        filename);
-    }
-  %}
+%{
+  DETECTOR_OUT_2D(
+      "PSD cylindrical monitor",
+      "radial position [deg]",
+      "yheight [m]",
+      thmin, thmax, -yheight/2.0, yheight/2.0,
+      nr, ny,
+      &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+      filename);
+%}
+
+FINALLY
+%{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
 
 MCDISPLAY
 %{
-  
   circle("xz", 0, 0, 0, radius );
-
 %}
 
 END

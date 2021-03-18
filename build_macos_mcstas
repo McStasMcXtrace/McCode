@@ -7,10 +7,25 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
 git submodule init
 git submodule update
 
-# This is an app bundle being built, relocatable.
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+# This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
 ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
@@ -26,6 +41,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
@@ -39,15 +55,17 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 WORK=`pwd`
 
 # NCrystal installation:
-rm -rf 3rdparty-build/ncrystal/build
-mkdir 3rdparty-build/ncrystal/build
-cd 3rdparty-build/ncrystal/build
-cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ncrystal/ -DBUILD_G4HOOKS=OFF
+rm -rf 3rdparty/ncrystal/build
+mkdir 3rdparty/ncrystal/build
+cd 3rdparty/ncrystal/build
+cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DBUILD_G4HOOKS=OFF
 make
 make install
 cd $WORK
-rm -rf 3rdparty-build/ncrystal/build
+rm -rf 3rdparty/ncrystal/build
 
+# Hack to ensure pymcpltool is in place
+ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
 
 if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
@@ -57,7 +75,7 @@ if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     echo "*********************************************************"
     echo   
     sleep 3
-    curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
 fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
@@ -73,15 +91,15 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install openmpi gsl matplotlib -y
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install openmpi gsl matplotlib nomkl -y
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply numpy scipy pillow tornado jinja2 mpld3
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 
 # - Nasty local macOS hacks:
-# (1) ensure pymcpltool is run with pythonw binary
-sed -i.orig s/python/pythonw/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
+# (1) ensure pymcpltool is run with python3 binary
+sed -i.orig s/python/python3/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
 rm $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool.orig
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
@@ -89,6 +107,9 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
+
+# Hack to make openmpi from the conda env available on Big Sur
+ln -s $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcstas/$1/bin/
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
@@ -102,7 +123,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1.tgz mcstas-$1
-    cp INSTALL-McStas/macOS/README.md dist
+    cp INSTALL-McStas-2.x/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
 else
