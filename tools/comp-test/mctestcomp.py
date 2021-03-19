@@ -80,9 +80,9 @@ END
 """
 
   def __str__(self):
-    print("component  cogen?   compile?")
-    return "\n".join( "%12s  %12s %12s" % (r['name'],r['cogen_res'],r['compile_res']) for r in self.results)
-
+    header="# component  cogen?   compile?"
+    report="\n".join( "%12s  %12s %12s" % (r['name'],r['cogen_res'],r['compile_res']) for r in self.results)
+    return "\n".join( (header,report))
 
   def print_instrument(self):
     print(self.test_instrument())
