@@ -8,7 +8,7 @@ fi
 
 # Ensure our 3rd party modules are in place and updated
 git submodule init
-git submodule update
+git submodule update --recursive --remote
 
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" noarch "o" -- NONE 
 echo
