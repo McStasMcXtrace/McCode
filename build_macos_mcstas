@@ -97,11 +97,6 @@ export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 
-# - Nasty local macOS hacks:
-# (1) ensure pymcpltool is run with python3 binary
-sed -i.orig s/python/python3/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
-rm $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool.orig
-
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
 cd $WORK
