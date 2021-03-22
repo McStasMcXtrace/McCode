@@ -11,7 +11,7 @@ fi
 WORK=`pwd`
 # Ensure our 3rd party modules are in place and updated
 git submodule init
-git submodule update --recursive --remote
+git submodule update --recursive --remote --recursive --remote
 
 # Workaround for having CRLF linefeeds in a couple of windows packages
 rsync -avz --delete --exclude=".svn/" mcxtrace-comps/ mcxtrace-comps-win
