@@ -54,7 +54,7 @@
 DEFINE COMPONENT Mask
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, string mask, invert=0, virtual=0)
-OUTPUT PARAMETERS (prms,masking,filter_row)
+OUTPUT PARAMETERS ()
 //DEPENDENCY "-lpng -DUSE_PNG"
 
 SHARE
@@ -68,15 +68,15 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    t_Table table;
-    int ny,nx;
-    double xmin,ymin;
-    double xmax,ymax;
-  } prms;
+  t_Table table;
+  int ny;
+  int nx;
+  double xmin;
+  double ymin;
+  double xmax;
+  double ymax;
   int filter_row;
   double masking;
-
 %}
 
 
@@ -145,7 +145,7 @@ INITIALIZE
       }
       unsigned int ct=png_get_color_type(png_ptr,info_ptr);
 
-      Table_Init(&(prms.table),height,width);
+      Table_Init(&(table),height,width);
 
       png_bytep *row_pointers=png_get_rows(png_ptr,info_ptr);
       printf("I just read a png image with size %d by %d, bit depth %d, and color type %d\n",width, height, bd, ct);
@@ -202,7 +202,7 @@ INITIALIZE
           }
           /*Data table should contain opacity values. Possibly invert the image*/
           /*Also png images are stored top-to-bottom, i.e. the first stored row corresponds to y=-yheight/2. Hence, switch the order.*/
-          prms.table.data[(height-r-1)*width+c]=((double)pixel)/tuple_normalizer;
+          table.data[(height-r-1)*width+c]=((double)pixel)/tuple_normalizer;
         }
       }
       break;
@@ -221,19 +221,19 @@ INITIALIZE
 #endif
   /*read the masking file*/ 
     int status;
-    if ( (status=Table_Read(&(prms.table),mask,0))==-1){
+    if ( (status=Table_Read(&(table),mask,0))==-1){
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",mask,NAME_CURRENT_COMP);
       exit(-1);
     }
   }while(0);/*this is to allow breaking out so .png and .pnm will take precedence*/
 
   /*set some image vals*/
-  prms.xmax= xwidth/2.0;
-  prms.xmin=-xwidth/2.0;
-  prms.ymax= yheight/2.0;
-  prms.ymin=-yheight/2.0;
-  prms.nx=prms.table.columns;
-  prms.ny=prms.table.rows;
+  xmax= xwidth/2.0;
+  xmin=-xwidth/2.0;
+  ymax= yheight/2.0;
+  ymin=-yheight/2.0;
+  nx=table.columns;
+  ny=table.rows;
 
 %}
 
@@ -243,13 +243,13 @@ TRACE
 
 
   PROP_Z0;
-  if (x>prms.xmin && x<prms.xmax && y>prms.ymin && y<prms.ymax){
-    i = floor((x - prms.xmin)*prms.nx/(xwidth));
-    j = floor((y - prms.ymin)*prms.ny/(yheight));
+  if (x>xmin && x<xmax && y>ymin && y<ymax){
+    i = floor((x - xmin)*nx/(xwidth));
+    j = floor((y - ymin)*ny/(yheight));
     if (invert){  
-      masking=Table_Index(prms.table,j,i);
+      masking=Table_Index(table,j,i);
     }else{
-      masking=1.0-Table_Index(prms.table,j,i);
+      masking=1.0-Table_Index(table,j,i);
     }
     if(!virtual){
         p*=masking;
