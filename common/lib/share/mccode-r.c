@@ -2605,6 +2605,35 @@ rot_transpose(Rotation src, Rotation dst)
 }
 
 /*******************************************************************************
+* rot_invert: Matrix inversion, in case a Rotatoin is used to represent a
+* a general non-orthonormal matrix.
+*******************************************************************************/
+void
+rot_invert(Rotation t1, Rotation t2)
+{
+  Rotation cofactors;
+  int r,c;
+  double det=0;
+  for (r=0;r<3;r++){
+    for (c=0;c<3;c++){
+      /*this algorithm automatically takes care of the sign changes in computing cofactors*/
+      cofactors[r][c]=t1[(r+1) % 3][(c+1) % 3]*t1[(r+2) % 3][(c+2) % 3] - t1[(r+2) % 3][(c+1) % 3]*t1[(r+1) % 3][(c +2) % 3] ;
+    }
+  }
+  det=t1[0][0]*cofactors[0][0] + t1[0][1]*cofactors[0][1] + t1[0][2]*cofactors[0][2];
+  if(det==0){
+    fprintf(stderr,"Warning: matrix not invertable\n");
+  }
+  rot_transpose(cofactors,t2);
+
+  /*the adjoint matrix should now be scaled by 1/det to get the inverse*/
+  for (r=0;r<3;r++){
+    for (c=0;c<3;c++){
+      t2[r][c]=t2[r][c]/det;
+    }
+  }
+}
+/*******************************************************************************
 * rot_apply: returns t*a
 *******************************************************************************/
 Coords
