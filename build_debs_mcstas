@@ -12,7 +12,7 @@ cd 3rdparty
 echo $THIRDPARTY | xargs -n1 rm -r
 cd -
 git submodule init
-git submodule update
+git submodule update --recursive --remote --recursive --remote
 
 
 for MODULE in `echo $THIRDPARTY`

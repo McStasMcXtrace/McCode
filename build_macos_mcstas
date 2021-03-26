@@ -12,7 +12,7 @@ cd 3rdparty
 echo $THIRDPARTY | xargs -n1 rm -r
 cd -
 git submodule init
-git submodule update
+git submodule update --recursive --remote --recursive --remote
 
 
 for MODULE in `echo $THIRDPARTY`
@@ -96,11 +96,6 @@ $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgrap
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
-
-# - Nasty local macOS hacks:
-# (1) ensure pymcpltool is run with python3 binary
-sed -i.orig s/python/python3/ $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool 
-rm $MCINSTALL_PREFIX/mcstas/$1/bin/pymcpltool.orig
 
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
