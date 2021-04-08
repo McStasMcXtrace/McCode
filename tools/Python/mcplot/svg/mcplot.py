@@ -127,7 +127,7 @@ def get_params_str_2D(data):
             img[i,j,:] = color
 
     # encode png as base64 string
-    image = Image.fromarray((np.flipud(img)*255).astype(np.uint8))
+    image = Image.fromarray(np.flipud(img).astype(np.uint8))
     output = io.BytesIO()
     image.save(output, format="png")
     contents = output.getvalue()
@@ -152,7 +152,7 @@ def get_params_str_2D(data):
                 print(e)
 
     # encode png as base64 string
-    image_log = Image.fromarray((img_log*255).astype(np.uint8))
+    image_log = Image.fromarray(img_log).astype(np.uint8))
     output = io.BytesIO()
     image_log.save(output, format="png")
     encoded_2d_data_log = str(base64.b64encode(output.getvalue())).lstrip('b').strip("\'")
