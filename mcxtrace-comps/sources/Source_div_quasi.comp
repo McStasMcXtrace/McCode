@@ -9,13 +9,12 @@
 * Component: Source_div
 *
 * %I
-* Written by: Erik Knudsen 
-* Date: November 11, 2009
-* Version: $Revision: 1.25 $
-* Origin: Risoe
-* Release: McXtrace 0.1
+* Written by: Mads Carlsen and Erik Bergbäck Knudsen (erkn@fysik.dtu.dk)
+* Date: Apr 21
+* Origin: DTU Physics
+* Release: McXtrace 1.6
 *
-* X-ray source with Gaussian or uniform divergence
+* Quasi-stochastic X-ray source with Gaussian or uniform divergence
 *
 * %D
 * A flat rectangular surface source with uniform or Gaussian divergence profile and focussing.
@@ -26,6 +25,9 @@
 * The spectral intensity profile is uniformly distributed in the energy interval defined by e0+-dE/2 or 
 * by wavelength lambda0+-dlambda/2
 * 
+* The phase space sapnned by the generated X-rays is sampled by means of Halton-sequences, instead of regular
+* pseudo random numbers. This ensures that samples are evenly distributed within the phase space region of interest.
+*
 * Example: Source_div(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
 *
 * %VALIDATION
@@ -33,17 +35,19 @@
 * %BUGS
 *
 * %P
-* xwidth:   (m)  Width of source
-* yheight:  (m)  Height of source
-* focus_aw:(rd) FWHM (Gaussian) or maximal (uniform) horz. width divergence
-* focus_ah:(rd) FWHM (Gaussian) or maximal (uniform) vert. height divergence
-* E0:      (keV) Mean energy of X-rays.
-* dE:      (keV) Energy spread of X-rays.
-* lambda0: (AA) Mean wavelength of X-rays (only relevant for E0=0)
-* dlambda: (AA) Wavelength half spread of X-rays.
-* gauss:  (1)  Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
-* gauss_a:   (1) Criterion: 0: uniform, 1: Gaussian divergence distribution
-* flux:   [1/(s*cm**2*st*energy unit)] flux per energy unit, Angs or meV
+* xwidth: [m]     Width of source
+* yheight: [m]    Height of source
+* focus_aw: [rad] Std. dev. (Gaussian) or maximal (uniform) horz. width divergence
+* focus_ah: [rad] Std. dev. (Gaussian) or maximal (uniform) vert. height divergence
+* focus_xw: [m]   Width of sampling window
+* focus_yh: [m]   Height of sampling window
+* E0: [keV]       Mean energy of X-rays.
+* dE: [keV]       Energy spread of X-rays.
+* lambda0: [AA]   Mean wavelength of X-rays (only relevant for E0=0)
+* dlambda: [AA]   Wavelength half spread of X-rays.
+* gauss: [1]      Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
+* gauss_a: [1]    Criterion: 0: uniform, 1: Gaussian divergence distribution
+* flux: [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
 *
 * OUTPUT PARAMETERS:
 * sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
@@ -57,7 +61,7 @@ DEFINE COMPONENT Source_div_quasi
 DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (xwidth=0, yheight=0, focus_xw=0, focus_yh=0, dist=0, focus_aw=0, focus_ah=0, 
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0)
-OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -96,15 +100,17 @@ SHARE
 
 DECLARE
 %{
-  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist;
+  double dist;
   int ray_number;
-  struct {
-    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
-    t_Table T;
-  } prms;
-
-
-  
+  double xmin;
+  double xmax;
+  double focus_xw_2;
+  double ymin;
+  double ymax;
+  double focus_yh_2;
+  double pmul;
+  double pint;
+  t_Table T;
 %}
 
 INITIALIZE
@@ -114,30 +120,29 @@ INITIALIZE
 
   /* define function for generating numbers in Hatton sequences */
 
-  prms.focus_xw_2=focus_xw/2.0;
-  prms.focus_yh_2=focus_yh/2.0;
-  prms.xmin=-xwidth/2.0;
-  prms.ymin=-yheight/2.0;
-  prms.xmax=xwidth/2.0;
-  prms.ymax=yheight/2.0;
+  focus_xw_2=focus_xw/2.0;
+  focus_yh_2=focus_yh/2.0;
+  xmin=-xwidth/2.0;
+  ymin=-yheight/2.0;
+  xmax=xwidth/2.0;
+  ymax=yheight/2.0;
   
 
   if (spectrum_file){
     /*read spectrum from file*/
     int status=0;
-    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+    if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
       fprintf(stderr,"Source_div(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
     /*data is now in table t*/
     /*integrate to get total flux, assuming raw numbers have been corrected for measuring aperture*/
     int i;
-    prms.pint=0;
-    t_Table *T=&(prms.T);
-    for (i=0;i<prms.T.rows-1;i++){
-      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+    pint=0;
+    for (i=0;i<T.rows-1;i++){
+      pint+=((T.data[i*T.columns+1]+T.data[(i+1)*T.columns+1])/2.0)*(T.data[(i+1)*T.columns]-T.data[i*T.columns]);
     }
-    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
     if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if (!E0 && !lambda0){
     fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
@@ -146,11 +151,11 @@ INITIALIZE
 
   /*calculate the X-ray weight from the flux*/
   if (flux){
-    prms.pmul=flux;
+    pmul=flux;
   }else{
-    prms.pmul=1;
+    pmul=1;
   }
-  prms.pmul*=1.0/((double) mcget_ncount());
+  pmul*=1.0/((double) mcget_ncount());
 
 %}
 
@@ -158,44 +163,44 @@ TRACE
 %{
   double kk,theta_x,theta_y,l,e,k;
   int ray_number;
-  p=prms.pmul;
+  p=pmul;
   if (!gauss_a){ 
     theta_x=(quasi_rand01(0,ray_number)-0.5)*focus_aw;
     if(focus_xw!=0.0){
       if (theta_x>0){
-        x=prms.xmin + quasi_rand01(2,ray_number)*prms.focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)-prms.xmin);
+        x=xmin + quasi_rand01(2,ray_number)*focus_xw_2-dist*tan(theta_x);
+        p*=xwidth-(focus_xw_2-dist*tan(theta_x)-xmin);
       }else{
-        x=prms.xmax + quasi_rand01(3,ray_number)*prms.focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)+prms.xmax);
+        x=xmax + quasi_rand01(3,ray_number)*focus_xw_2-dist*tan(theta_x);
+        p*=xwidth-(focus_xw_2-dist*tan(theta_x)+xmax);
       }
     }else{
-      x=prms.xmin + quasi_rand01(2,ray_number)*xwidth;
+      x=xmin + quasi_rand01(2,ray_number)*xwidth;
     }
     theta_y=(quasi_rand01(1,ray_number)-0.5)*focus_ah;
     if(focus_yh!=0.0){
       if (theta_y>0){
-        y=prms.ymin + quasi_rand01(4,ray_number)*prms.focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)-prms.ymin);
+        y=ymin + quasi_rand01(4,ray_number)*focus_yh_2-dist*tan(theta_y);
+        p*=yheight-(focus_yh_2-dist*tan(theta_y)-ymin);
       }else{
-        y=prms.ymax + quasi_rand01(5,ray_number)*prms.focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)+prms.ymax);
+        y=ymax + quasi_rand01(5,ray_number)*focus_yh_2-dist*tan(theta_y);
+        p*=yheight-(focus_yh_2-dist*tan(theta_y)+ymax);
       }
     } else {
-      y=prms.ymin + quasi_rand01(4,ray_number)*yheight;
+      y=ymin + quasi_rand01(4,ray_number)*yheight;
     }
   }else{
     theta_x=randnorm()*focus_aw;
     theta_y=randnorm()*focus_ah;
-    x=prms.xmin+rand01()*xwidth;
-    y=prms.ymin+rand01()*yheight;
+    x=xmin+rand01()*xwidth;
+    y=ymin+rand01()*yheight;
   }
 
   if (spectrum_file){
     double pp=0;
     while (pp<=0){ 
-      l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*quasi_rand01(6,ray_number);
-      pp=Table_Value(prms.T,l,1);
+      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*quasi_rand01(6,ray_number);
+      pp=Table_Value(T,l,1);
     }
     p*=pp;
     /*if E0!=0 convert the tabled value to wavelength*/
