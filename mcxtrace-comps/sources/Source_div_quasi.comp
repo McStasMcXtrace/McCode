@@ -48,7 +48,7 @@
 * gauss: [1]      Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
 * gauss_a: [1]    Criterion: 0: uniform, 1: Gaussian divergence distribution
 * flux: [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
-*
+* verbose: [ ]    Generate more output on the console.
 * OUTPUT PARAMETERS:
 * sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
 * sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
@@ -60,7 +60,7 @@
 DEFINE COMPONENT Source_div_quasi
 DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (xwidth=0, yheight=0, focus_xw=0, focus_yh=0, dist=0, focus_aw=0, focus_ah=0, 
-    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0)
+    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0, int verbose=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -132,7 +132,7 @@ INITIALIZE
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
-      fprintf(stderr,"Source_div(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
+      fprintf(stderr,"ERROR (%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
     /*data is now in table t*/
@@ -142,12 +142,15 @@ INITIALIZE
     for (i=0;i<T.rows-1;i++){
       pint+=((T.data[i*T.columns+1]+T.data[(i+1)*T.columns+1])/2.0)*(T.data[(i+1)*T.columns]-T.data[i*T.columns]);
     }
-    printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
-    if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+    if (verbose){
+      printf("INFO (%s): Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
+      if(E0) printf("INFO (%s):, E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+    }
   }else if (!E0 && !lambda0){
-    fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"ERORR (%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
     exit(0);  
   }  
+
 
   /*calculate the X-ray weight from the flux*/
   if (flux){
@@ -156,6 +159,27 @@ INITIALIZE
     pmul=1;
   }
   pmul*=1.0/((double) mcget_ncount());
+  
+  /*check if divergence limits are compatible with focus_xw, focus_yh*/
+  if(focus_xw!=0){
+    double maxdivh=atan((xwidth+focus_xw)/dist);
+    if (focus_aw>maxdivh){
+      focus_aw=maxdivh;
+      if (verbose){
+        fprintf(stderr,"WARNING(%s): sampling width does not support full divergence. Adjusting to focus_aw=%g rad\n",NAME_CURRENT_COMP,focus_aw);
+      }
+    }
+  }
+  if(focus_yh!=0){
+    double maxdivv=atan((yheight+focus_yh)/dist);
+    if (focus_ah>maxdivv){
+      focus_ah=maxdivv;
+      if (verbose){
+        fprintf(stderr,"WARNING(%s): sampling height does not support full divergence. Adjusting to focus_ah=%g rad\n",NAME_CURRENT_COMP,focus_ah);
+      }
+    }
+  }
+
 
 %}
 
@@ -167,29 +191,31 @@ TRACE
   if (!gauss_a){ 
     theta_x=(quasi_rand01(0,ray_number)-0.5)*focus_aw;
     if(focus_xw!=0.0){
-      if (theta_x>0){
-        x=xmin + quasi_rand01(2,ray_number)*focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(focus_xw_2-dist*tan(theta_x)-xmin);
-      }else{
-        x=xmax + quasi_rand01(3,ray_number)*focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(focus_xw_2-dist*tan(theta_x)+xmax);
-      }
-    }else{
+      double x0,x1,pi_x;
+      x0=-focus_xw_2-dist*tan(theta_x);
+      x0= MAX(xmin,x0);
+      x1= focus_xw_2-dist*tan(theta_x);
+      x1= MIN(xmax,x1);
+      pi_x = (x1-x0)/(xwidth);
+      x=x0+(x1-x0)*quasi_rand01(2,ray_number);
+      p*=pi_x;
+    } else {
       x=xmin + quasi_rand01(2,ray_number)*xwidth;
     }
     theta_y=(quasi_rand01(1,ray_number)-0.5)*focus_ah;
     if(focus_yh!=0.0){
-      if (theta_y>0){
-        y=ymin + quasi_rand01(4,ray_number)*focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(focus_yh_2-dist*tan(theta_y)-ymin);
-      }else{
-        y=ymax + quasi_rand01(5,ray_number)*focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(focus_yh_2-dist*tan(theta_y)+ymax);
-      }
+      double y0,y1,pi_y;
+      y0=-focus_yh_2-dist*tan(theta_y);
+      y0= MAX(ymin,y0);
+      y1= focus_yh_2-dist*tan(theta_y);
+      y1= MIN(ymax,y1);
+      pi_y = (y1-y0)/(yheight);
+      y=y0+(y1-y0)*quasi_rand01(3,ray_number);
+      p*=pi_y;
     } else {
-      y=ymin + quasi_rand01(4,ray_number)*yheight;
+      y=ymin + quasi_rand01(3,ray_number)*yheight;
     }
-  }else{
+  } else {
     theta_x=randnorm()*focus_aw;
     theta_y=randnorm()*focus_ah;
     x=xmin+rand01()*xwidth;
