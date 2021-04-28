@@ -70,7 +70,7 @@ SHARE
 #define MX_SOURCE_DIV_QUASI_H 1
   %include "read_table-lib"
     
-    double quasi_rand01(int axis,int dummy){
+    double quasi_rand01(int axis){
     const int no_primes=32;
     const int primes[]={2,3,5,7,9,11,13,17,19,23,29, 
         31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 
@@ -126,7 +126,6 @@ INITIALIZE
   ymin=-yheight/2.0;
   xmax=xwidth/2.0;
   ymax=yheight/2.0;
-  
 
   if (spectrum_file){
     /*read spectrum from file*/
@@ -159,7 +158,7 @@ INITIALIZE
     pmul=1;
   }
   pmul*=1.0/((double) mcget_ncount());
-  
+
   /*check if divergence limits are compatible with focus_xw, focus_yh*/
   if(focus_xw!=0){
     double maxdivh=atan((xwidth+focus_xw)/dist);
@@ -186,10 +185,9 @@ INITIALIZE
 TRACE
 %{
   double kk,theta_x,theta_y,l,e,k;
-  int ray_number;
   p=pmul;
   if (!gauss_a){ 
-    theta_x=(quasi_rand01(0,ray_number)-0.5)*focus_aw;
+    theta_x=(quasi_rand01(0)-0.5)*focus_aw;
     if(focus_xw!=0.0){
       double x0,x1,pi_x;
       x0=-focus_xw_2-dist*tan(theta_x);
@@ -197,12 +195,12 @@ TRACE
       x1= focus_xw_2-dist*tan(theta_x);
       x1= MIN(xmax,x1);
       pi_x = (x1-x0)/(xwidth);
-      x=x0+(x1-x0)*quasi_rand01(2,ray_number);
+      x=x0+(x1-x0)*quasi_rand01(2);
       p*=pi_x;
     } else {
-      x=xmin + quasi_rand01(2,ray_number)*xwidth;
+      x=xmin + quasi_rand01(2)*xwidth;
     }
-    theta_y=(quasi_rand01(1,ray_number)-0.5)*focus_ah;
+    theta_y=(quasi_rand01(1)-0.5)*focus_ah;
     if(focus_yh!=0.0){
       double y0,y1,pi_y;
       y0=-focus_yh_2-dist*tan(theta_y);
@@ -210,10 +208,10 @@ TRACE
       y1= focus_yh_2-dist*tan(theta_y);
       y1= MIN(ymax,y1);
       pi_y = (y1-y0)/(yheight);
-      y=y0+(y1-y0)*quasi_rand01(3,ray_number);
+      y=y0+(y1-y0)*quasi_rand01(3);
       p*=pi_y;
     } else {
-      y=ymin + quasi_rand01(3,ray_number)*yheight;
+      y=ymin + quasi_rand01(3)*yheight;
     }
   } else {
     theta_x=randnorm()*focus_aw;
@@ -225,7 +223,7 @@ TRACE
   if (spectrum_file){
     double pp=0;
     while (pp<=0){ 
-      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*quasi_rand01(6,ray_number);
+      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*quasi_rand01(4);
       pp=Table_Value(T,l,1);
     }
     p*=pp;
@@ -274,9 +272,6 @@ TRACE
 
   /*set polarization vector*/
   Ex=0;Ey=0;Ez=0;
-
-  ray_number = ray_number+1;
-
 %}
 
 MCDISPLAY
