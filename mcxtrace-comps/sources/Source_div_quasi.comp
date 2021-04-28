@@ -282,11 +282,16 @@ MCDISPLAY
                 xwidth/2.0,  yheight/2.0, 0.0,
                -xwidth/2.0,  yheight/2.0, 0.0,
                -xwidth/2.0, -yheight/2.0, 0.0);
-  if (dist) {
+  if (focus_xw || focus_yh) {
     dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
     dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
     dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
     dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  }else{
+    dashed_line(0,0,0, tan(-focus_ah/2.0)*dist*0.1, tan(-focus_aw/2.0)*dist*0.1,dist*0.1,4);
+    dashed_line(0,0,0, tan(focus_ah/2.0)*dist*0.1, tan(-focus_aw/2.0)*dist*0.1,dist*0.1,4);
+    dashed_line(0,0,0, tan(focus_ah/2.0)*dist*0.1, tan(focus_aw/2.0)*dist*0.1,dist*0.1,4);
+    dashed_line(0,0,0, tan(-focus_ah/2.0)*dist*0.1, tan(focus_aw/2.0)*dist*0.1,dist*0.1,4);
   }
 %}
 
