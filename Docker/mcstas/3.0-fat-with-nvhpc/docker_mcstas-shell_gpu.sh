@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-containername="mccode/mcstas-3.0:1.1"
+containername="mccode/mcstas-3.0:1.2"
 XSOCK=/tmp/.X11-unix
 
 DOCK_UID=$(id -u)
