@@ -2230,6 +2230,12 @@ cogen_header(struct instr_def *instr, char *output_name)
   List_handle liter,liter2;
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
+  cout("double particle_getvar(_class_particle *p, char *name, int *suc);");
+  cout("");
+  cout("#ifdef OPENACC");
+  cout("int str_comp(char *str1, char *str2);");
+  cout("#endif");
+  cout("");  
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
   cout("#ifndef OPENACC");
   cout("#define str_comp strcmp");

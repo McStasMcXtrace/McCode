@@ -60,12 +60,9 @@ static   long mcseed                 = 0; /* seed for random generator */
 static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
-#pragma acc declare create ( mcgravitation )
 int      mcMagnet                    = 0; /* magnet stack flag */
-#pragma acc declare create ( mcMagnet )
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
-#pragma acc declare create ( mcallowbackprop )
 
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
@@ -88,12 +85,10 @@ mcstatic unsigned long long int mcrun_num            = 0;
 
 /* String nullification on GPU and other replacements */
 #ifdef OPENACC
-#pragma acc routine seq
 int noprintf() {
   return 0;
 }
 
-#pragma acc routine seq
 int str_comp(char *str1, char *str2) {
   while (*str1 && *str1 == *str2) {
     str1++;
@@ -102,7 +97,6 @@ int str_comp(char *str1, char *str2) {
   return (*str1 - *str2);
 }
 
-#pragma acc routine seq
 size_t str_len(const char *s)
 {
   size_t len = 0;

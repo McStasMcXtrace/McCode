@@ -50,8 +50,9 @@
 #ifdef OPENACC
 #include <openacc.h>
 #include <accelmath.h>
+#pragma acc routine
 int noprintf();
-int str_comp(char *str1, char *str2);
+#pragma acc routine
 size_t str_len(const char *s);
 #else
 #include <math.h>
@@ -754,7 +755,6 @@ char    *mcformat                    = NULL;      /* NULL (default) or a specifi
 #ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mccode-r.c) */
 extern FILE * siminfo_file;     /* handle to the output siminfo file */
 extern int    mcgravitation;      /* flag to enable gravitation */
-#pragma acc declare create ( mcgravitation )
 extern int    mcdotrace;          /* flag to print MCDISPLAY messages */
 #else
 mcstatic FILE *siminfo_file        = NULL;
