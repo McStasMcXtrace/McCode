@@ -52,47 +52,29 @@ typedef struct ess_struct ess_moderator_struct;
 
 typedef void (*functype)(double* t , double* p, double lambda,  double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
 
-#pragma acc routine
 double ESS_2015_Schoenfeldt_cold_spectrum(double lambda,double theta);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_thermal_spectrum(double lambda, double theta);
 
 /* List of brilliance definitions */
-#pragma acc routine
 void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, double height_t, double Mwidth_t, double height_c, double Mwidth_c, double tmultiplier, double beamportangle, double X, double Y);
-#pragma acc routine
 void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, double height_t, double Mwidth_t, double height_c, double Mwidth_c, double tmultiplier, double beamportangle, double X, double Y);
 /* List of pulse-shape definitions */
-#pragma acc routine
 double ESS_2015_Schoenfeldt_cold_timedist(double t, double lambda, double height, double pulselength);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_thermal_timedist(double t, double lambda, double height, double pulselength);
 
 /* List of moderator-geometry-weighting definitions */
-#pragma acc routine
 double ESS_2014_Schoenfeldt_cold_y0(double y0,double height);
-#pragma acc routine
 double ESS_2014_Schoenfeldt_cold_x0(double x0,double height, double width);
-#pragma acc routine
 double ESS_2014_Schoenfeldt_thermal_y0(double y0,double height);
-#pragma acc routine
 double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height, double width);
 
-#pragma acc routine
 double ESS_2015_Schoenfeldt_cold_y0(double y0);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_cold_x0(double x0, double theta, double width);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_thermal_y0(double y0);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta, double width);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_cold_Y(double x0,double height);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_thermal_Y(double y0,double height);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_cold_Theta120(double x0,double height);
-#pragma acc routine
 double ESS_2015_Schoenfeldt_thermal_Theta120(double beamportangle,int isleft);
 
 /* end of ESS_butterfly-lib.h */
