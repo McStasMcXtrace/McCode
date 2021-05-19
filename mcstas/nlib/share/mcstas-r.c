@@ -50,7 +50,6 @@ int (*mcMagneticField) (double, double, double, double,
 /*******************************************************************************
 * mcsetstate: transfer parameters into global McStas variables
 *******************************************************************************/
-#pragma acc routine seq
 _class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 			   double t, double sx, double sy, double sz, double p, int mcgravitation, int mcMagnet, int mcallowbackprop)
 {
@@ -82,7 +81,6 @@ _class_particle mcsetstate(double x, double y, double z, double vx, double vy, d
 /*******************************************************************************
 * mcgetstate: get neutron parameters from particle structure
 *******************************************************************************/
-#pragma acc routine seq
 _class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *t,
                double *sx, double *sy, double *sz, double *p)
@@ -145,7 +143,6 @@ mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
 * inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight)
 * return 0 if outside and 1 if inside
 *******************************************************************************/
-#pragma acc routine seq
 int inside_rectangle(double x, double y, double xwidth, double yheight)
 {
   if (x>-xwidth/2 && x<xwidth/2 && y>-yheight/2 && y<yheight/2)
@@ -160,7 +157,6 @@ int inside_rectangle(double x, double y, double xwidth, double yheight)
  *      or 1 in case of intersection with resulting times dt_in and dt_out
  * This function written by Stine Nyborg, 1999.
  *******************************************************************************/
-#pragma acc routine seq
 int box_intersect(double *dt_in, double *dt_out,
                   double x, double y, double z,
                   double vx, double vy, double vz,
@@ -278,7 +274,6 @@ int box_intersect(double *dt_in, double *dt_out,
  *     and resulting times t0 and t1
  * Written by: EM,NB,ABA 4.2.98
   *******************************************************************************/
-#pragma acc routine seq
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
                    double vx, double vy, double vz, double r, double h)
 {
@@ -334,7 +329,6 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting times t0 and t1
  *******************************************************************************/
-#pragma acc routine seq
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r)
 {
@@ -358,7 +352,6 @@ int sphere_intersect(double *t0, double *t1, double x, double y, double z,
  * returns 0 when no intersection is found (i.e. line is parallel to the plane)
  * returns 1 or -1 when intersection time is positive and negative respectively
  *******************************************************************************/
-#pragma acc routine seq
 int plane_intersect(double *t, double x, double y, double z,
                  double vx, double vy, double vz, double nx, double ny, double nz, double wx, double wy, double wz)
 {

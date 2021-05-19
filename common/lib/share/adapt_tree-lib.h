@@ -49,8 +49,9 @@ struct adapt_tree
 
 /* adapt_tree-lib function prototypes */
 /* ========================================================================= */
-
+#pragma acc routine
 int adapt_tree_search(struct adapt_tree *t, adapt_t v);
+#pragma acc routine
 void adapt_tree_add(struct adapt_tree *t, int i, adapt_t v);
 struct adapt_tree * adapt_tree_init(int N);
 void adapt_tree_free(struct adapt_tree *t);

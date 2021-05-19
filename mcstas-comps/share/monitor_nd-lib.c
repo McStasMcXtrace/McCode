@@ -799,7 +799,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 /* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
 /* return values: 0=neutron was absorbed, -1=neutron was outside bounds, 1=neutron was measured*/
 /* ========================================================================= */
-#pragma acc routine seq
 int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars, _class_particle* _particle)
 {
 
