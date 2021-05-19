@@ -803,7 +803,6 @@ void r_gpusort(intersection *arr, int size)
 * PL:     faceindex0 and faceindex3 are the corresponding indices of the face
 *         data is the full OFF structure, including a list intersection type
 *******************************************************************************/
-#pragma acc routine seq
 int r_off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      unsigned long *faceindex0, unsigned long *faceindex3,
@@ -871,7 +870,6 @@ int r_off_intersect_all(double* t0, double* t3,
 *         n0 and n3 are the corresponding normal vectors to the surface
 * PL:     faceindex0 and faceindex3 are the corresponding indices of the face
 *******************************************************************************/
-#pragma acc routine seq
 int r_off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      unsigned long *faceindex0, unsigned long *faceindex3,
@@ -897,7 +895,6 @@ int r_off_intersect(double* t0, double* t3,
 *         n0 and n3 are the corresponding normal vectors to the surface
 * PL:     faceindex0 and faceindex3 are the corresponding indices of the face
 *******************************************************************************/
-#pragma acc routine seq
 int r_off_x_intersect(double *l0,double *l3,
      Coords *n0, Coords *n3,
      unsigned long *faceindex0, unsigned long *faceindex3,
