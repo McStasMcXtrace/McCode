@@ -35,12 +35,12 @@
 #include "interoff-lib.h"
 #endif
 
-#pragma acc routine seq
+#pragma acc routine
 double off_F(double x, double y,double z,double A,double B,double C,double D) {
   return ( A*x + B*y + C*z + D );
 }
 
-#pragma acc routine seq
+#pragma acc routine
 char off_sign(double a) {
   if (a<0)       return(-1);
   else if (a==0) return(0);
@@ -49,7 +49,7 @@ char off_sign(double a) {
 
 // off_normal ******************************************************************
 //gives the normal vector of p
-#pragma acc routine seq
+#pragma acc routine
 void off_normal(Coords* n, polygon p)
 {
   //using Newell method
@@ -75,7 +75,7 @@ void off_normal(Coords* n, polygon p)
 //return 0 if the vertex is out
 //    1 if it is in
 //   -1 if on the boundary
-#pragma acc routine seq
+#pragma acc routine
 int off_pnpoly(polygon p, Coords v)
 {
   int i=0, c = 0;
@@ -140,7 +140,7 @@ int off_pnpoly(polygon p, Coords v)
 // off_intersectPoly ***********************************************************
 //gives the intersection vertex between ray [a,b) and polygon p and its parametric value on (a b)
 //based on http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
-#pragma acc routine seq
+#pragma acc routine
 int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 {
   //direction vector of [a,b]
@@ -270,7 +270,7 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
 
 // off_init_planes *************************************************************
 //gives the equations of 2 perpandicular planes of [ab]
-#pragma acc routine seq
+#pragma acc routine
 void off_init_planes(Coords a, Coords b,
   MCNUM* A1, MCNUM* C1, MCNUM* D1, MCNUM *A2, MCNUM* B2, MCNUM* C2, MCNUM* D2)
 {
@@ -314,7 +314,7 @@ void off_init_planes(Coords a, Coords b,
 } /* off_init_planes */
 
 // off_clip_3D_mod *************************************************************
-#pragma acc routine seq
+#pragma acc routine
 int off_clip_3D_mod(intersection* t, Coords a, Coords b,
   Coords* vtxArray, unsigned long vtxSize, unsigned long* faceArray,
   unsigned long faceSize, Coords* normalArray)
@@ -400,7 +400,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
 
 
 // off_compare *****************************************************************
-#pragma acc routine seq
+#pragma acc routine
 int off_compare (void const *a, void const *b)
 {
    intersection const *pa = a;
@@ -412,7 +412,7 @@ int off_compare (void const *a, void const *b)
 // off_cleanDouble *************************************************************
 //given an array of intersections throw those which appear several times
 //returns 1 if there is a possibility of error
-#pragma acc routine seq
+#pragma acc routine
 int off_cleanDouble(intersection* t, int* t_size)
 {
   int i=1;
@@ -447,7 +447,7 @@ int off_cleanDouble(intersection* t, int* t_size)
 //given an array of intesections throw those which enter and exit in the same time
 //Meaning the ray passes very close to the volume
 //returns 1 if there is a possibility of error
-#pragma acc routine seq
+#pragma acc routine
 int off_cleanInOut(intersection* t, int* t_size)
 {
   int i=1;
@@ -686,7 +686,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   return(polySize);
 } /* off_init */
 
-#pragma acc routine seq
+#pragma acc routine
 int Min_int(int x, int y) {
   return (x<y)? x :y;
 }
@@ -751,7 +751,7 @@ free(R);
 }
 
 #ifdef USE_OFF
-#pragma acc routine seq
+#pragma acc routine
 void gpusort(intersection *arr, int size)
 {
   int curr_size;  // For current size of subarrays to be merged
