@@ -1388,19 +1388,12 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     // call acc_attach for OpenACC (last thing to do in init)
     cout("");
     cout("#ifdef OPENACC");
-    cout("#  include <openacc.h>");
-    // attach component instances on device
-    // liter = list_iterate(instr->complist);
-    //while((comp = list_next(liter)) != NULL) {
-    //  coutf("acc_attach( (void*)&_%s_var );", comp->name);
-    //}
+    cout("#include <openacc.h>");
     // update component instances on device (e.g. push "managed" data structures)
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
       coutf("#pragma acc update device(_%s_var)", comp->name);
     }
-    // attach instrument
-    cout("acc_attach( (void*)&_instrument_var );");
     // update instrument
     cout("#pragma acc update device(_instrument_var)");
     cout("#endif");
