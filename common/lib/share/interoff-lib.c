@@ -691,7 +691,7 @@ int Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
-#pragma acc routine(merge)
+#pragma acc routine
 void merge(intersection *arr, int l, int m, int r)
 {
 int i, j, k;
