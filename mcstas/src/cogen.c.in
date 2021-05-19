@@ -1390,10 +1390,10 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cout("#ifdef OPENACC");
     cout("#  include <openacc.h>");
     // attach component instances on device
-    liter = list_iterate(instr->complist);
-    while((comp = list_next(liter)) != NULL) {
-      coutf("acc_attach( (void*)&_%s_var );", comp->name);
-    }
+    // liter = list_iterate(instr->complist);
+    //while((comp = list_next(liter)) != NULL) {
+    //  coutf("acc_attach( (void*)&_%s_var );", comp->name);
+    //}
     // update component instances on device (e.g. push "managed" data structures)
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
