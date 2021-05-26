@@ -10,7 +10,14 @@ if [ "x$LINK" != "x" ]; then
 else
     LIB=`dirname $0`
 fi
-PATH=$LIB/../miniconda3/bin:$PATH
+ARCH=`arch`
+UNAME=`uname -s`
+if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+    # Then don't use miniconda, rather set up for homebrew in /opt
+    PATH=/opt/homebrew/bin:$PATH
+else
+    PATH=$LIB/../miniconda3/bin:$PATH
+fi
 LIB="$LIB/../tools/Python/@P@display/mantid_xml"
 TOOL="@P@display"
 VERS="@MCCODE_VERSION@"

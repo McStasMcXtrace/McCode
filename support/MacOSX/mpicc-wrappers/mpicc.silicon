@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Wrapper around clang to ensure this is the compiler we are running with mpi
+#
+
+
+# First ensure that we follow symlink if needed
+LINK=`readlink $0`
+
+# Am I a symlink?
+if [ "x$LINK" != "x" ]; then
+    BIN=`dirname $LINK`
+else
+    BIN=`dirname $0`
+fi
+
+export PATH=$BIN:/opt/homebrew/bin:$PATH
+export DYLD_LIBRARY_PATH=/opt/homebrew/lib
+clang $* -DUSE_MPI -lmpi -L/opt/homebrew/lib -I/opt/homebrew/include

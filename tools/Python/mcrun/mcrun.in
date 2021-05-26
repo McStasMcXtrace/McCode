@@ -27,10 +27,19 @@ else
     PATH=$LIB/../miniconda3/bin:$PATH
 fi
 
+ARCH=`arch`
+UNAME=`uname -s`
+if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+    # Then don't use miniconda, rather set up for homebrew in /opt
+    export PATH=/opt/homebrew/bin:$PATH
+fi
+
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
-    PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
-    export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    if [! [ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+	PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
+	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    fi
 fi
 
 LIB="$LIB/../tools/Python/@P@run"
