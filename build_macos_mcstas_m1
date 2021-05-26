@@ -85,6 +85,7 @@ if [ "x$2" = "x" ]; then
     ln -s McStas-$1.app/Contents/Resources/mcstas/$1/environment McStas-$1-environment.command
     cd ..
     cp support/MacOSX/Check-dependencies/* dist
+    cp support/MacOSX/silicon-homebrew-setup/* dist
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1.tgz mcstas-$1
