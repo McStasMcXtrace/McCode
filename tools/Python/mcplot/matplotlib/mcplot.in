@@ -11,6 +11,7 @@ else
     LIB=`dirname $0`
 fi
 UNAME=`uname -s`
+ARCH=`arch`
 if [[ ${UNAME} = Darwin* ]]; then
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
     # Check if we are on macos 10.x or 11.x
@@ -23,22 +24,24 @@ else
     export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
 fi
 
+if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+    # Set up for homebrew in /opt
+    export PATH=/opt/homebrew/bin:$PATH
+fi
+
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
-    PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
-    export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    if [! [ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+ 	PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
+	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    fi
 fi
 
 LIB="$LIB/../tools/Python/@P@plot/matplotlib"
 TOOL="@P@plot"
 VERS="@MCCODE_VERSION@"
 
-# Is this a mac?
-if [ `uname` != "Darwin" ]; then
-    PYTHON="python3"
-else
-    PYTHON="pythonw"
-fi
+PYTHON="python3"
 
 canrun() {
     if ! [ -x ${LIB}/${TOOL}.py ]; then
