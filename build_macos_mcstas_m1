@@ -28,6 +28,8 @@ done
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
 ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
+# hack to ensure the silicon app is opened arch -arm64
+sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
 
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
@@ -88,7 +90,7 @@ if [ "x$2" = "x" ]; then
     cp support/MacOSX/silicon-homebrew-setup/* dist
     mv dist mcstas-$1
     mkdir dist
-    tar cfz dist/mcstas-$1.tgz mcstas-$1
+    tar cfz dist/mcstas-$1_arm64.tgz mcstas-$1
     cp INSTALL-McStas-3.0/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
