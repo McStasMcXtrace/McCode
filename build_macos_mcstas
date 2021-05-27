@@ -117,7 +117,7 @@ if [ "x$2" = "x" ]; then
     cp support/MacOSX/Check-dependencies/* dist
     mv dist mcstas-$1
     mkdir dist
-    tar cfz dist/mcstas-$1.tgz mcstas-$1
+    tar cfz dist/mcstas-$1_x86_64.tgz mcstas-$1
     cp INSTALL-McStas-3.0/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
