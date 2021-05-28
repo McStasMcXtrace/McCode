@@ -10,6 +10,8 @@ if [ "x$LINK" != "x" ]; then
 else
     LIB=`dirname $0`
 fi
+
+ARCH=`arch`
 UNAME=`uname -s`
 if [[ ${UNAME} = Darwin* ]]; then
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
@@ -28,8 +30,6 @@ else
     export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
 fi
 
-ARCH=`arch`
-UNAME=`uname -s`
 if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
     # Set up for homebrew in /opt
     export PATH=/opt/homebrew/bin:$PATH
