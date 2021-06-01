@@ -24,7 +24,9 @@ if [[ ${UNAME} = Darwin* ]]; then
 	cd $HOME
     fi
 else
-    PATH=$LIB/../miniconda3/bin:$PATH
+    if [ -d "$LIB/../miniconda3" ]; then
+	PATH=$LIB/../miniconda3/bin:$PATH
+    fi
 fi
 
 ARCH=`arch`
