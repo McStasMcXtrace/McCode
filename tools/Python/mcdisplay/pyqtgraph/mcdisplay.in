@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Wrapper script for @P@display-pyqtgraph-py
 
 # First ensure that we follow symlink if needed
@@ -21,8 +21,10 @@ if [[ ${UNAME} = Darwin* ]]; then
 	export PATH=$LIB/../miniconda3/bin:$PATH
     fi
 else
-    export PATH=$LIB/../miniconda3/bin:$PATH
-    export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
+    if [ -d "$LIB/../miniconda3" ]; then
+	export PATH=$LIB/../miniconda3/bin:$PATH
+	export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
+    fi
 fi
 
 if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then

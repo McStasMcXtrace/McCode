@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Wrapper script for @P@display-webgl-py
 
 # First ensure that we follow symlink if needed
@@ -17,7 +17,9 @@ if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
     # Then don't use miniconda, rather set up for homebrew in /opt
     PATH=/opt/homebrew/bin:$PATH
 else
-    PATH=$LIB/../miniconda3/bin:$PATH
+    if [ -d "$LIB/../miniconda3" ]; then
+	PATH=$LIB/../miniconda3/bin:$PATH
+    fi
 fi
 
 LIB="$LIB/../tools/Python/@P@display/webgl"
