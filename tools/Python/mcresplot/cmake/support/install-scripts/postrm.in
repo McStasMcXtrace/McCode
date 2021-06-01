@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Extract CMake macros during configure
 PREFIX="@CMAKE_INSTALL_PREFIX@"
