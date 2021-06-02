@@ -39,7 +39,7 @@ fi
 
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
-    if [! [ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
 	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
     fi
 fi
