@@ -17,7 +17,7 @@
 * %D
 * Based on Pol_guide_vmirror by P. Christiansen.
 * Models a rectangular guide with entrance centered on the Z axis and
-* with one supermirros sitting on the diagonal inside.
+* with one supermirror sitting on the diagonal inside.
 * The entrance lies in the X-Y plane.  Draws a true depiction
 * of the guide with mirror and trajectories.
 * The polarisation is handled similar to in Monochromator_pol.
@@ -55,9 +55,9 @@
 *
 * OUTPUT PARAMETERS:
 *
-* localG: [m/s/s]  Gravity vector in guide reference system 
-* normalTop: [1]   One of several normal vectors used for defining the geometry 
-* pointTop: [1]    One of several points used for defining the geometry 
+* localG: [m/s/s]  Gravity vector in guide reference system
+* normalTop: [1]   One of several normal vectors used for defining the geometry
+* pointTop: [1]    One of several points used for defining the geometry
 * rParPtr:      One of several pointers to reflection parameters used with the ref. functions. []
 * SCATTERED: []    is 1 for reflected, and 2 for transmitted neutrons
 *
@@ -68,66 +68,81 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_mirror
-DEFINITION PARAMETERS (xwidth, yheight, length,
-rFunc=StdReflecFunc, rUpFunc=StdReflecFunc,
-rDownFunc=StdReflecFunc,
-rPar    ={1.0, 0.0219, 4.07, 3.2, 0.003},
-rUpPar  ={1.0, 0.0219, 4.07, 3.2, 0.003},
-rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003},
-useTables=0)
-SETTING PARAMETERS (int debug=0)
-OUTPUT PARAMETERS (localG,
-normalTop, normalBot, normalLeft, normalRight, normalInOut,
-pointTop, pointBot, pointLeft, pointRight,
-pointIn, pointOut,
-rParPtr, rUpParPtr, rDownParPtr)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  vector rUpPar={1.0, 0.0219, 4.07, 3.2, 0.003},
+  vector rDownPar={1.0, 0.0219, 4.07, 3.2, 0.003},
+  vector rPar={1.0, 0.0219, 4.07, 3.2, 0.003},
+  string rData="",string rUpData="",string rDownData="",
+  xwidth, yheight, length,
+  int debug=0)
+OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-%include "pol-lib"
-%include "ref-lib"
+  %include "pol-lib"
+  %include "ref-lib"
 %}
 
 DECLARE
 %{
-Coords localG;
-Coords normalTop, normalBot, normalLeft, normalRight, normalInOut;
-Coords pointTop, pointBot, pointLeft, pointRight, pointIn, pointOut;
+  Coords localG;
+  Coords normalTop;
+  Coords normalBot;
+  Coords normalLeft;
+  Coords normalRight;
+  Coords normalInOut;
+  Coords pointTop;
+  Coords pointBot;
+  Coords pointLeft;
+  Coords pointRight;
+  Coords pointIn;
+  Coords pointOut;
 
-#if (useTables)
-  t_Table *rParPtr     = 0;
-  t_Table *rUpParPtr   = 0;
-  t_Table *rDownParPtr = 0;
-#else
-  double rParPtr[]     = (double [])rPar;
-  double rUpParPtr[]   = (double [])rUpPar;
-  double rDownParPtr[] = (double [])rDownPar;
-#endif
+  t_Table rTable;
+  t_Table rUpTable;
+  t_Table rDownTable;
+
+  int rTableFlag;
+  int rUpTableFlag;
+  int rDownTableFlag;
 %}
 
 INITIALIZE
 %{
-#if (useTables)
-  rParPtr     = (t_Table*) malloc(sizeof(t_Table));
-  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
-  if (Table_Read(rParPtr, rPar, 1) <= 0) {
-    fprintf(stderr,"Pol_guide_mirror: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rPar);
-    exit(1);
+  if (strlen(rData) && strcmp(rData,"NULL")){
+    if (Table_Read(&rTable, rData, 1) <= 0) {
+      fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rPar);
+      exit(1);
+    }
+    rTableFlag=1;
+  }else{
+    rTableFlag=0;
   }
-  if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
-    fprintf(stderr,"Pol_guide_mirror: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rUpPar);
-    exit(1);
+  if (strlen(rUpData) && strcmp(rUpData,"NULL")){
+    if (Table_Read(&rUpTable, rUpData, 1) <= 0) {
+      fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rUpPar);
+      exit(1);
+    }
+    rUpTableFlag=1;
+  }else {
+    rDownTableFlag=0;
   }
-  if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) {
-    fprintf(stderr,"Pol_guide_mirror: %s: can not read file %s\n",
-	    NAME_CURRENT_COMP, rDownPar);
-    exit(1);
+  if (strlen(rDownData) && strcmp(rDownData,"NULL")){
+    if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
+      fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
+          NAME_CURRENT_COMP, rDownPar);
+      exit(1);
+    }
+    rDownTableFlag=1;
+  }else{
+    rDownTableFlag=0;
   }
-#endif
+
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
     fprintf(stderr, "Pol_guide_mirror: %s: NULL or negative length scale!\n"
 	                  "ERROR      (xwidth,yheight,length). Exiting\n",
@@ -181,14 +196,6 @@ INITIALIZE
 
 TRACE
 %{
-#if (useTables)
-#undef rFunc
-#undef rUpFunc
-#undef rDownFunc
-#define rFunc TableReflecFunc
-#define rUpFunc TableReflecFunc
-#define rDownFunc TableReflecFunc
-#endif
   /* time threshold */
   const double tThreshold = 1e-10/sqrt(vx*vx + vy*vy + vz*vz);
   const double xwhalf = xwidth/2;
@@ -327,7 +334,6 @@ TRACE
     PROP_DT(time);
     if (mcgravitation)
       vVec = coords_set(vx, vy, vz);
-    //SCATTER;
 
     if(time==tTop)
       normalPointer = &normalTop;
@@ -345,15 +351,28 @@ TRACE
     Q = 2*coords_sp(vVec, *normalPointer)*V2K;
 
     if(!mirrorReflect) {
-      // we have hit one of the sides. Always reflect.
+      /* we have hit one of the sides. Always reflect. */
       vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
-      rFunc(fabs(Q), rParPtr, &refWeight);
+      if(rTableFlag){
+        refWeight=Table_Value(rTable, fabs(Q), 1);
+      }else{
+        StdReflecFunc(fabs(Q), rPar, &refWeight);
+      }
       p *= refWeight;
       SCATTER;
     } else {
-      // we have hit the mirror
-      rUpFunc(fabs(Q), rUpParPtr, &Rup);
-      rDownFunc(fabs(Q), rDownParPtr, &Rdown);
+      /* we have hit the mirror */
+      if(rUpTableFlag){
+        Rup=Table_Value(rUpTable,fabs(Q),1);
+      }else{
+        StdReflecFunc(fabs(Q), rUpPar, &Rup);
+      }
+      if(rDownTableFlag){
+        Rdown=Table_Value(rDownTable,fabs(Q),1);
+      }else{
+        StdReflecFunc(fabs(Q), rDownPar, &Rdown);
+      }
+
       if (Rup <  0)   ABSORB;
       if (Rup >  1)   Rup =1 ;
       if (Rdown <  0) ABSORB;
@@ -365,7 +384,7 @@ TRACE
       if (refWeight <  0) ABSORB;
       if (refWeight >  1) refWeight =1 ;
 
-      if ( rand01()<refWeight) {
+      if (rand01()<refWeight) {
 	      vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
 	      SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);
               SCATTER;
@@ -391,28 +410,17 @@ TRACE
       fprintf(stdout, "Pol_guide_mirror: %s: End v: (%f, %f, %f)\n", NAME_CURRENT_COMP, vx, vy, vz);
     }
   }
-#if (useTables)
-#undef rFunc
-#undef rUpFunc
-#undef rDownFunc
-#define rFunc StdReflecFunc
-#define rUpFunc StdReflecFunc
-#define rDownFunc StdReflecFunc
-#endif
 %}
 
 MCDISPLAY
 %{
   int i, j;
-
-  
-
   // draw box
   box(0, 0, length/2.0, xwidth, yheight, length);
 
-  for(j = -1; j<=1; j+=2)
+  for(j = -1; j<=1; j+=2){
       line(-xwidth/2.0, j*yheight/2, 0, xwidth/2.0, j*yheight/2, length);
-
-  %}
+  }
+%}
 
 END
