@@ -34,12 +34,12 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-g -lm -std=c99 -O2',
+    "CFLAGS": '-fopenacc -foffload=nvptx-none -foffload="-fcf-protection=none" -fno-stack-protector -DOPENACC -foffload=-lm -DGCCOFFLOAD -lm',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "OACCFLAGS": '-ta:tesla,managed -DOPENACC',
-    "CC": 'gcc',
-    "OACC": 'nvc',
+    "OACCFLAGS": '-fopenacc -foffload=nvptx-none -foffload="-fcf-protection=none" -fno-stack-protector -DOPENACC -foffload=-lm -DGCCOFFLOAD -lm',
+    "CC": 'gcc-10',
+    "OACC": 'gcc-10',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',
     "MPINODES": '10',
@@ -156,9 +156,9 @@ def get_options():
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML"]
 
- 
-    mcrun_lst =     [prefix+"run", prefix+"run --openacc", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
-        
+
+    mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 

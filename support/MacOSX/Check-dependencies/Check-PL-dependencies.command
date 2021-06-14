@@ -176,7 +176,7 @@ then
 	SCIPDL="SciPDL-v2.019.dmg"
     fi
 else
-    osascript -e "tell app \"System Events\" to display dialog \"Your macOS is version $OSXVER is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to give partial support on Big Sur?\""
+    osascript -e "tell app \"System Events\" to display dialog \"Your macOS version ${OSXVER_MAJOR}.${OSXVER} is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to give partial support on 11.0?\""
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
     then    

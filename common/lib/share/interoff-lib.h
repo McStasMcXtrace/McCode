@@ -99,6 +99,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 *         n0 and n3 are the corresponding normal vectors to the surface
 *         data is the full OFF structure, including a list intersection type
 *******************************************************************************/
+#pragma acc routine
 int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
@@ -118,6 +119,7 @@ int off_intersect_all(double* t0, double* t3,
 *         t0 and t3 are the smallest incoming and outgoing intersection times
 *         n0 and n3 are the corresponding normal vectors to the surface
 *******************************************************************************/
+#pragma acc routine
 int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
@@ -137,6 +139,7 @@ int off_intersect(double* t0, double* t3,
 *         l0 and l3 are the smallest incoming and outgoing intersection lengths
 *         n0 and n3 are the corresponding normal vectors to the surface
 *******************************************************************************/
+#pragma acc routine
 int off_x_intersect(double *l0,double *l3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,

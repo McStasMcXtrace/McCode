@@ -198,9 +198,12 @@
     DISALLOW_BACKPROP; \
   } while(0)
 
-#pragma acc routine seq
 _class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 			   double t, double sx, double sy, double sz, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);
+
+_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
+			   double *vx, double *vy, double *vz, double *t,
+			   double *sx, double *sy, double *sz, double *p);
 
 #ifdef DEBUG
 

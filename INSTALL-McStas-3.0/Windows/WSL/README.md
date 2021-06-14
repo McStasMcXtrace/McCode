@@ -47,6 +47,9 @@ export DISPLAY=:0.0
 DISPLAY=:0.0)
 * Issue the command mcgui
 
+## Configuring McStas to use the Windows browser
+* Ensure the package ubuntu-wsl (or equivalent) is installed
+* Set the BROWSER="wslview" in your /usr/share/mcstas/3.0/tools/Python/mccodelib/mccode_config.py
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)

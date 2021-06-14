@@ -39,6 +39,7 @@ struct tl2_list
 typedef struct tl2_list tl2_list_type;
 
 extern tl2_list_type* tl2_lst_create(void *elem);
+#pragma acc routine
 extern tl2_list_type* tl2_lst_append(tl2_list_type *lst, void *elem);
 extern void tl2_lst_remove(tl2_list_type *lst, void *elem);
 extern void tl2_lst_free(tl2_list_type *lst);
@@ -211,6 +212,7 @@ extern int tl2_reso(const tl2_list_type* veclist, const tl2_list_type* problist,
 /* ----------------------------------------------------------------------------- */
 /* Helper functions */
 /* ----------------------------------------------------------------------------- */
+#pragma acc routine
 extern double tl2_k_to_E(double kix, double kiy, double kiz, double kfx, double kfy, double kfz);
 /* ----------------------------------------------------------------------------- */
 

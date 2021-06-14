@@ -15,7 +15,7 @@
 * Modified by: Peter Christiansen, Risoe: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P NB! As above multiple scattering is ignored .
 * Modified by: Reynald Arnerin, ILL, 2008: Added option to handle a complex geometry (OFF files)
 *
-* Incoherent sample (such as Vanadium) sample, with quasielastic component.
+* Incoherent sample (such as Vanadium) sample, with quasielastic component OR or global energy transfer.
 *
 * %D
 * A Double-cylinder shaped incoherent scatterer (like Vanadium)
@@ -78,6 +78,8 @@
 * Vc:         Unit cell volume [AA^3]
 * f_QE: [1]           Fraction of quasielastic scattering (rest is elastic) 
 * gamma: [1]          Lorentzian width of quasielastic broadening (HWHM) 
+* Etrans: [meV]       Global energy-transfer, for use in inelastic settings
+* deltaE: [meV]       Width in energy around Etrans, for use in inelastic settings
 * geometry: [str]     Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust 
 * concentric: [1]     Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere) 
 *
@@ -116,7 +118,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0,
 target_x = 0, target_y = 0, target_z = 0, focus_r = 0,
 focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0,
-pack = 1, p_interact=1, f_QE=0, gamma=0,
+pack = 1, p_interact=1, f_QE=0, gamma=0, Etrans=0,deltaE=0,
 sigma_abs=5.08, sigma_inc=5.08, Vc=13.827, concentric=0, order=0)
 OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -401,15 +403,23 @@ TRACE
       NORM(vx, vy, vz);
 
       v_i = v;          /* Store initial velocity in case of quasielastic */
-      if (rand01()<f_QE)	/* Quasielastic contribution */
-      {
-          E_i = VS2E*v_i*v_i;
-          dE = gamma*tan(PI/2*randpm1());
-          E_f = E_i + dE;
-          if (E_f <= 0)
-            ABSORB;
-          v_f = SE2V*sqrt(E_f);
-          v = v_f;
+      E_i = VS2E*v_i*v_i;
+      if (deltaE==0) {
+	if (rand01()<f_QE)	/* Quasielastic contribution */
+	  {
+	    dE = gamma*tan(PI/2*randpm1());
+	    E_f = E_i + dE;
+	    if (E_f <= 0)
+	      ABSORB;
+	    v_f = SE2V*sqrt(E_f);
+	    v = v_f;
+	    /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
+			v_i,E_i,dE,E_f,v_f,v); */
+	  }
+      } else {
+	E_f = E_i - Etrans + deltaE*randpm1(); // E_f=E0;
+	v_f = SE2V*sqrt(E_f);
+	v = v_f;
       }
 
       vx *= v;
