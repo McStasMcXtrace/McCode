@@ -37,6 +37,9 @@
 * yheight:  [m]  Height of source.
 * focus_aw:[rd] Standard deviation (Gaussian) or maximal (uniform) horz. width divergence.
 * focus_ah:[rd] Standard deviation (Gaussian) or maximal (uniform) vert. height divergence.
+* focus_xw: [m]   Width of sampling window
+* focus_yh: [m]   Height of sampling window
+* dist: [m]     Downstream distance to place sampling target window
 * E0:      [keV] Mean energy of X-rays.
 * dE:      [keV] Energy half spread of X-rays. If gauss==0 dE is the half-spread, i.e. E\in[E0-dE,E0+dE], if gauss!=0 it's interpreted as the standard dev. 
 * lambda0: [AA] Mean wavelength of X-rays (only relevant for E0=0).
@@ -46,17 +49,25 @@
 * flux:   [1/(s * mm**2 *mrad**2 * energy unit]) flux per energy unit, Angs or keV.
 * randomphase [1] If !=0 the photon phase is chosen randomly.
 * phase [1] Value of the photon phase (if randomphase==0).
+<<<<<<< Updated upstream
 *
 * OUTPUT PARAMETERS:
 *
+=======
+* spectrum_file: [ ] File from which to read the spectral intensity profile
+>>>>>>> Stashed changes
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
+<<<<<<< Updated upstream
 SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, 
+=======
+SETTING PARAMETERS (xwidth=0, yheight=0, dist=0, focus_aw=0, focus_ah=0, focus_ar=0,radius=0,
+>>>>>>> Stashed changes
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0)
-OUTPUT PARAMETERS (prms, p_init, dist)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -66,38 +77,68 @@ SHARE
 
 DECLARE
 %{
-  double  p_init, dist;
-  struct {
-    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
-    t_Table T;
-  } prms;
+  double  p_init;
+  double dist;
+  double K;
+  double dK;
+  double xmin;
+  double xmax;
+  double xw_2;
+  double focus_xw_2;
+  double ymin;
+  double ymax;
+  double yh_2;
+  double focus_yh_2;
+  double pmul;
+  double pint;
+  t_Table T;
 %}
 
 INITIALIZE
 %{
+<<<<<<< Updated upstream
 
   prms.xmin=-xwidth/2.0;
   prms.ymin=-yheight/2.0;
   prms.xmax=xwidth/2.0;
   prms.ymax=yheight/2.0;
   
+=======
+  focus_xw_2=focus_xw/2.0;
+  focus_yh_2=focus_yh/2.0;
+  xmin=-xwidth/2.0;
+  ymin=-yheight/2.0;
+  xmax=xwidth/2.0;
+  ymax=yheight/2.0;
+
+  if(radius==0 && ( prms.xmax==prms.xmin && prms.ymin==prms.xmax) ){
+    printf("ERROR(%s): No meaningful source area set. Either set radius or xwidth and yheight.\n",NAME_CURRENT_COMP);
+  }
+
+>>>>>>> Stashed changes
   if (spectrum_file){
     /*read spectrum from file*/
     int status=0;
-    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+    if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
       fprintf(stderr,"Source_div(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
     /*data is now in table t*/
     /*integrate to get total flux, assuming raw numbers have been corrected for measuring aperture*/
     int i;
-    prms.pint=0;
-    t_Table *T=&(prms.T);
-    for (i=0;i<prms.T.rows-1;i++){
-      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+    pint=0;
+    for (i=0;i<T.rows-1;i++){
+      pint+=((T.data[i*T.columns+1]+T.data[(i+1)*T.columns+1])/2.0)*(T.data[(i+1)*T.columns]-T.data[i*T.columns]);
     }
+    if (verbose){
+      printf("INFO (%s): Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
+      if(E0) printf("INFO (%s):, E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+    }
+<<<<<<< Updated upstream
     printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_div(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+=======
+>>>>>>> Stashed changes
   }else if (!E0 && !lambda0){
     fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
     exit(0);  
@@ -105,11 +146,31 @@ INITIALIZE
 
   /*calculate the X-ray weight from the flux*/
   if (flux){
-    prms.pmul=flux;
+    pmul=flux;
   }else{
-    prms.pmul=1;
+    pmul=1;
   }
-  prms.pmul*=1.0/((double) mcget_ncount());
+  pmul*=1.0/((double) mcget_ncount());
+
+  /*check if divergence limits are compatible with focus_xw, focus_yh*/
+  if(focus_xw!=0){
+    double maxdivh=atan((xwidth+focus_xw)/dist);
+    if (focus_aw>maxdivh){
+      focus_aw=maxdivh;
+      if (verbose){
+        fprintf(stderr,"WARNING(%s): sampling width does not support full divergence. Adjusting to focus_aw=%g rad\n",NAME_CURRENT_COMP,focus_aw);
+      }
+    }
+  }
+  if(focus_yh!=0){
+    double maxdivv=atan((yheight+focus_yh)/dist);
+    if (focus_ah>maxdivv){
+      focus_ah=maxdivv;
+      if (verbose){
+        fprintf(stderr,"WARNING(%s): sampling height does not support full divergence. Adjusting to focus_ah=%g rad\n",NAME_CURRENT_COMP,focus_ah);
+      }
+    }
+  }
 
 
 %}
@@ -117,6 +178,7 @@ INITIALIZE
 TRACE
 %{
   double kk,theta_x,theta_y,l,e,k;
+<<<<<<< Updated upstream
   p=prms.pmul;
   if (!gauss_a){ 
     theta_x=(rand01()-0.5)*focus_aw;
@@ -128,15 +190,18 @@ TRACE
   x=prms.xmin+rand01()*xwidth;
   y=prms.ymin+rand01()*yheight;
   z=0;
+=======
+  p=pmul;
+>>>>>>> Stashed changes
 
   if (spectrum_file){
     double pp=0;
     while (pp<=0){ 
-      l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
-      pp=Table_Value(prms.T,l,1);
+      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*rand01();
+      pp=Table_Value(T,l,1);
     }
     p*=pp;
-    /*if E0!=0 the tabled value is assumed to energy in keV*/
+    /*if E0!=0 the tabled value is assumed to be energy in keV*/
     if (E0!=0){
       k=E2K*l;
     }else{
@@ -167,9 +232,79 @@ TRACE
   kz=1;
   NORM(kx,ky,kz);
 
+<<<<<<< Updated upstream
   kx*=k;
   ky*=k;
   kz*=k;
+=======
+  if (focus_aw!=0 || focus_ah!=0){
+    if (!gauss_a){ 
+      theta_x=(quasi_rand01(0)-0.5)*focus_aw;
+      if(focus_xw!=0.0){
+        double x0,x1,pi_x;
+        x0=-focus_xw_2-dist*tan(theta_x);
+        x0= MAX(xmin,x0);
+        x1= focus_xw_2-dist*tan(theta_x);
+        x1= MIN(xmax,x1);
+        pi_x = (x1-x0)/(xwidth);
+        x=x0+(x1-x0)*quasi_rand01(2);
+        p*=pi_x;
+      } else {
+        x=xmin + quasi_rand01(2)*xwidth;
+      }
+      theta_y=(quasi_rand01(1)-0.5)*focus_ah;
+      if(focus_yh!=0.0){
+        double y0,y1,pi_y;
+        y0=-focus_yh_2-dist*tan(theta_y);
+        y0= MAX(ymin,y0);
+        y1= focus_yh_2-dist*tan(theta_y);
+        y1= MIN(ymax,y1);
+        pi_y = (y1-y0)/(yheight);
+        y=y0+(y1-y0)*quasi_rand01(3);
+        p*=pi_y;
+      } else {
+        y=ymin + quasi_rand01(3)*yheight;
+      }
+    } else {
+      theta_x=randnorm()*focus_aw;
+      theta_y=randnorm()*focus_ah;
+      x=xmin+rand01()*xwidth;
+      y=ymin+rand01()*yheight;
+    }
+    kx=tan(theta_x);
+    ky=tan(theta_y);
+    kz=1.0;
+    NORM(kx,ky,kz);
+    kz*=k;
+    kx*=k;
+    ky*=k;
+  }else{
+    /*radial divergence profile*/
+    double theta,phi,kp;
+    if(!gauss_a){
+      double sample_lim1,u2;
+      sample_lim1=(1-cos(focus_ar/2.0))*0.5;
+      u2=rand01()*(sample_lim1);
+      phi=acos(1-2*u2);
+    }else{
+      do{
+        phi=abs(randnorm()*focus_ar);
+      } while (phi>M_PI);
+    }
+    theta=rand01()*2*M_PI;
+
+    kz=k*cos(phi);
+    kp=sqrt(k*k-kz*kz);
+    kx=kp*sin(theta);
+    ky=kp*cos(theta);
+
+    double r=radius*sqrt(rand01());
+    double th=rand01()*2*M_PI;
+    x=r*cos(th);
+    y=r*sin(th);
+    z=0;
+  }
+>>>>>>> Stashed changes
 
   /*set polarization and phase.*/
   Ex=0;Ey=0;Ez=0;
