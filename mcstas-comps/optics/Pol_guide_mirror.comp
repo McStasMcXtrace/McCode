@@ -130,7 +130,7 @@ INITIALIZE
     }
     rUpTableFlag=1;
   }else {
-    rDownTableFlag=0;
+    rUpTableFlag=0;
   }
   if (strlen(rDownData) && strcmp(rDownData,"NULL")){
     if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
@@ -377,7 +377,6 @@ TRACE
       if (Rup >  1)   Rup =1 ;
       if (Rdown <  0) ABSORB;
       if (Rdown >  1) Rdown =1 ;
-
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
       // check that refWeight is meaningful
