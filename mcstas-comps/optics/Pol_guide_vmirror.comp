@@ -25,17 +25,21 @@
 *
 * Note that this component can also be used as a frame overlap-mirror
 * if the up and down reflectivities are set equal. In this case the wall
-* refletivity (rPar) should probably be set to absorb.
+* reflectivity (rPar) should probably be set to 0.
 *
-* The parameters can either be
-* double pointer initializations (e.g. {R0, Qc, alpha, m, W})
-* or table names (e.g."supermirror_m2.rfl" AND useTables=1).
-* NB! This might cause warnings by the compiler that can be ignored.
+* Reflectivity values can either come from datafiles or from
+* sets of parameters to the standard analytic reflectivity function commonly
+* used for neutron guides:
+*  R=R0; q<qc, R=(1-tanh((q-m qc)/W))(1-alpha(q-qc)).
+* If a filename is specified for e.g. rData
+* the datafile table overrides the analytic function.
 *
 * GRAVITY: YES
 *
 * %BUGS
 * No absorption by mirror.
+* The reflectivity parameters must be given as literal constants. Using variables
+* will result in undefined behaviour.
 *
 * %P
 * INPUT PARAMETERS:
@@ -43,13 +47,12 @@
 * xwidth: [m]      Width at the guide entry
 * yheight: [m]     Height at the guide entry
 * length: [m]      length of guide
-* rFunc: [1]       Guide Reflection function
-* rPar: [1]        Guide Parameters for rFunc
-* rUpFunc: [1]     Mirror Reflection function for spin up
-* rUpPar: [1]      Mirror Parameters for rUpFunc
-* rDownFunc: [1]   Mirror Reflection function for spin down
-* rDownPar: [1]    Mirror Parameters for rDownFunc
-* useTables: [1]   Parameters are 0: Values, 1: Table names
+* rData: [str]     Guide Reflectivity data file
+* rPar: [1]        Guide Parameters for standard reflectivity function
+* rUpdata: [str]   Mirror Reflectivity data file for spin up
+* rUpPar: [1]      Mirror Parameters for spin up standard reflectivity function
+* rDownData: [str] Mirror Reflectivity data file for spin down
+* rDownPar: [1]    Mirror Parameters for spin down standard reflectivity function
 * debug: [1]       if debug > 0 print out some internal runtime parameters
 *
 * %L
@@ -120,7 +123,7 @@ INITIALIZE
     }
     rUpTableFlag=1;
   }else {
-    rDownTableFlag=0;
+    rUpTableFlag=0;
   }
   if (strlen(rDownData) && strcmp(rDownData,"NULL")){
     if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
