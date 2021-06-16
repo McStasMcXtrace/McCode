@@ -1,7 +1,7 @@
 # InstallMCCODE
 # A module for configuring and installing McStas / McXtrace
 # The following macros needs to be defined before calling this:
-# NAME, FLAVOR, FLAVOR_LIB,
+# NAME, FLAVOR, FLAVOR_FMT, FLAVOR_LIB,
 # MCCODE_PARTICLE, MCCODE_LIBENV, MCCODE_PROJECT
 # MAJOR, MINOR, MCCODE_VERSION, MCCODE_NAME, MCCODE_DATE,
 # MCCODE_STRING MCCODE_TARNAME
@@ -54,7 +54,7 @@ macro(installMCCODE)
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
 
   include(CPack)
-
+  
   string(TIMESTAMP MCCODE_YEAR "%Y")
 
   ## Add global definitions
@@ -234,7 +234,7 @@ macro(installMCCODE)
     WORKING_DIRECTORY work/src
   )
 
-  # Handling of system-provided random functions on windows -
+  # Handling of system-provided random functions on windows - 
   # needed only in the link step for mccode and -format
   if(WINDOWS)
     AppendDef(random=rand)
@@ -303,7 +303,7 @@ macro(installMCCODE)
     endforeach()
 
     # Python/Perl related batches special handling
-    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat resplot.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}
