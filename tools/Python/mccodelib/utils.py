@@ -126,9 +126,15 @@ class ComponentParser(object):
         
         # get setting parameters
         result_2 = []
-        re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.\w\s=,/*\"]+\)', text)
+        re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.\w\s=,/*{}\"]+\)', text)
         if re_out:
-            result_2 = ComponentParser.__parseParLine(re_out.group(0))
+            result_sub, substituted_text = ComponentParser.__substituteCurlyPars(re_out.group(0))
+            result_2 = ComponentParser.__parseParLine(substituted_text)
+            # restitute curly pars default values
+            for r in result_2:
+                for s in result_sub:
+                    if r.par_name == s.par_name:
+                        r.default_value = s.default_value
         
         return result_1 + result_2
     
