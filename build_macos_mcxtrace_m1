@@ -65,7 +65,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 
 cd $WORK
 # Generate mcdoc pages
-python3 $MCINSTALL_PREFIX/mcxtrace/$1/tools/Python/mcdoc/mcdoc.py -i
+python3 $MCINSTALL_PREFIX/mcxtrace/$1/tools/Python/mxdoc/mcdoc.py -i
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
