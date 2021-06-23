@@ -72,6 +72,43 @@ else
     echo Xcode commandline tools is already installed!
 fi
 
+
+# if on arm64, check that homebrew is installed, otherwise prompt user to do this
+ARCH=`arch`
+if [[ ${ARCH} = arm64 ]]; 
+then
+    if [ -d /opt/homebrew/bin ]; then
+	osascript -e "tell app \"System Events\" to display dialog \"Homebrew already installed! \n\n!! Proceed with configuration of Homebrew? !!\""
+	rc1=$?; 
+	if [[ $rc1 == 0 ]]; 
+	then
+	    echo
+	    echo "***************************************************"
+	    echo "* Please rerun $0 after completing Setup-homebrew *"
+	    echo "***************************************************"
+	    echo
+	    WORKDIR=`dirname $0`
+	    open ${WORKDIR}/Setup-homebrew.command
+	    sleep 3
+	    exit 0
+	fi
+    else
+	osascript -e "tell app \"System Events\" to display dialog \"Homebrew (arm64) not installed. \n\n!! Opening browser for instructions at https://brew.sh !!\n\n!! Please install Homebrew first, repeat this tool after installation completes !!\""
+	rc1=$?; 
+	if [[ $rc1 == 0 ]]; 
+	then
+	    echo
+	    echo
+	    echo "*********************************************************************"
+	    echo "* Please follow instructions on https://brew.sh to install Homebrew *"
+	    echo "********************************************************************"
+	    echo
+	    open https://brew.sh
+	    sleep 3
+	    exit 0
+	fi
+    fi
+fi
 ENVSCRIPT=`ls /Applications/$NEWESTAPP/Contents/Resources/mc*/*/environment`
 if [ -f $ENVSCRIPT ]; then
     echo $ENVSCRIPT

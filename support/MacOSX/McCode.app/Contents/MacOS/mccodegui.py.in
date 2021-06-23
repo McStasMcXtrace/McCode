@@ -10,6 +10,13 @@ else
     BASEDIR=/Applications/McXtrace-@MCCODE_VERSION@.app
 fi
 
+ARCH=`arch`
+UNAME=`uname -s`
+if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+    # Set up for homebrew in /opt
+    export PATH=/opt/homebrew/bin:$PATH
+fi
+
 SCRIPT=$BASEDIR/Contents/Resources/@FLAVOR@/@MCCODE_VERSION@/bin/@GUIPREFIX@gui
 
 if [ -e $SCRIPT ]

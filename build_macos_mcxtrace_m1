@@ -1,0 +1,90 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`echo mcpl`
+cd 3rdparty
+echo $THIRDPARTY | xargs -n1 rm -r
+cd -
+git submodule init
+git submodule update --recursive --remote --recursive --remote
+
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+# This is an app bundle being built, but non-relocatable.
+export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
+./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
+# hack to ensure the silicon app is opened arch -arm64
+sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
+
+# For the actual mcxtrace part, the packages need a 'deep' PREFIX
+export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
+# 64-bit Mac OS
+./mkdist mcxtrace $1 "" "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-comps $1 "" "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac-silicon "" -- OSXapp
+
+WORK=`pwd`
+cd $WORK
+
+# Hack to ensure pymcpltool is in place
+ln -s /Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/libs/mcpl/pymcpltool /Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/bin
+
+# Copy in the mpicc snippets
+cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin
+
+export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
+
+cd $WORK
+# Generate mcdoc pages
+python3 $MCINSTALL_PREFIX/mcxtrace/$1/tools/Python/mcdoc/mcdoc.py -i
+
+mkdir -p dist
+# Move the App bundle back to the dist - or keep it in /Applications?
+if [ "x$2" = "x" ]; then
+    mv /Applications/McXtrace-$1.app dist
+    ln -s /Applications dist/
+    cd dist
+    ln -s McXtrace-$1.app/Contents/Resources/mcxtrace/$1/environment McXtrace-$1-environment.command
+    cd ..
+    cp support/MacOSX/Check-dependencies/* dist
+    cp support/MacOSX/silicon-homebrew-setup/* dist
+    mv dist mcxtrace-$1
+    mkdir dist
+    tar cfz dist/mcxtrace-$1_arm64.tgz mcxtrace-$1
+    cp INSTALL-McStas-2.x/macOS/README.md dist
+    echo A tgz of your app is now located in the dist folder
+    rm -rf mcxtrace-$1
+else
+    ln -s /Applications/McXtrace-$1.app dist/
+    echo Your app is now located in /Applications \(link available in the dist folder\)
+fi
+
