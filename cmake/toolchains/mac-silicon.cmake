@@ -12,7 +12,8 @@ set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
-set(PERL "/usr/bin/perl")
+set(PERL "/Applications/PDL/bin/perl")
+set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -I/opt/homebrew/include -L/opt/homebrew/lib")
 
 # Plotting options
 

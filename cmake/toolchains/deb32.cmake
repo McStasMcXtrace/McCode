@@ -8,9 +8,11 @@ set(TERMINAL "x-terminal-emulator -e")
 set(VRMLVIEW "whitedune")
 set(TOOLS_CC "gcc")
 set(MPICC "mpicc")
+set(OACCFLAGS "-ta:tesla,managed -DOPENACC")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
+set(MCCODE_CFLAGS "-g -O2 -lm -std=c99")
 
 # Plotting options
 
