@@ -1,4 +1,4 @@
-/******************************************************************************/
+/*******************************************************************************
 * Used NCrystal_sample as basis for creating a Union process that can use the  *
 * NCrystal library.                                                            *
 * Changes by Mads Bertelsen, 13/8 2020.                                        *
