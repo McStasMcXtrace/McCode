@@ -1,0 +1,179 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Grating_reflect
+*
+* %I
+*
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk), Kristian Sorensen and Philip Smith
+* Date: June 2021
+* Version: 1.6
+* Origin: DTU
+*
+* A reflective grating.
+*
+* %D
+* A reflective grating that diffracts incident photons. 
+* The grating is in the XZ-plane. It then reflects the incoming photon using a MC picked angle, 
+* where the angle is picked from a uniform distribution of width d_phi, i.e. U[-d_phi/2,d_phi/2]
+* The Monte Carlo wight of the ray is then adjusted wrt. to the grating interference pattern, and
+* the diffraction pattern associated with each grating line. All lines are considered equal.
+* For more efficient sampling of a particular direction the centre of the d_phi may be shifted
+* using the parameters order or phi0. In the latter case a set angle is chosen as the centre of the
+* sampled interval, in the former the centre angle is computed from the specified grating order.
+* 
+* In an upcoming release this grating model will also include a blazed grating.
+*
+* %P
+* Input parameters:
+* xwidth: [m]    The width of the grating.
+* zdepth: [m]    The length of the grating.
+* R0:[ ]         Constant reflecticity of the grating [0;1].
+* rho_l: [l/mm]  Number of lines pr mm of the grating. 
+* b: [AA]        Width of the spacing i Angstrom. If zero, default is found using rho_l/3.
+* d: [AA]        Width of the slits in Angstrom. If zero, default is found using rho_l.
+* N: [ ]         Number of slits. If Zero, default is found using r_rho.
+* d_phi: [deg]   Range of diffraction angle that is to be simulated -d_phi/2 ; d_phi/2.
+* order: [ ]     The target order of the grating. If non-zero d_phi will be centered around this scattering line.
+* phi0: [deg]    Target angle to center d_phi. If this is set to 0 the 0th (or any other chosen by the parameter order) order line will be used.
+* verbose: [ ]   If non-zero, more information will be displayed. Nb. generates much output.
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Grating_reflect
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (d_phi=1, R0=1, rho_l=800,
+    order=0, phi0=0,
+    zdepth=0.015, xwidth=0.136, int verbose=0)
+OUTPUT PARAMETERS (d,pdir,b,nslits)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+
+/********************************************************************************************
+In DECLARE section, small functions or variables can be defined and used in the entire grating.
+********************************************************************************************/
+DECLARE
+%{
+  #include <complex.h>
+  %include "read_table-lib"
+  double pdir;
+  double d;
+  double b;
+  int nslits;
+%}
+
+
+/********************************************************************************************
+The INITIALIZE section run each statement once. 
+********************************************************************************************/
+INITIALIZE
+%{
+    int status;
+    if (R0<0 || R0>1){
+      fprintf(stderr,"ERROR: (%s) reflectivity (%f) is specified but is not in [0:1]. \n",NAME_CURRENT_COMP,R0);
+      exit(-1);
+    }
+
+    d=1e7/rho_l;/*grating pitch in Angstrom*/
+    nslits=(zdepth*1e3)*rho_l; /*the relative width of openings*/
+    
+    if(!b){
+      /* Approximated slit-width in Angstrom*/
+      b=d/3;
+    }
+
+    if(verbose){      
+      printf("INFO: (%s): Line width, d=%f [AA]. Number of slits,  N=%f. Slit width, b=%f [AA].\n \n",NAME_CURRENT_COMP,d,nslits,b);  
+    }   
+
+    /*We are not sampling the full 2pi range*/
+    pdir=(((d_phi*DEG2RAD))/(2*M_PI));
+%}
+
+TRACE
+%{
+  /********************************************************************************************
+    Initializing by simulating a perfectly reflecting mirror:
+   ********************************************************************************************/
+
+  /*Placing the grating along the Y-axis. */
+  PROP_Y0;
+  /*If the photon is passing the grating, it shouldn't be reflected. Instead, for book-keeping, it is restored to previoulsy state before the component using RESTORE_XRAY */
+  if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+    RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);
+  }else{
+    double nx,ny,nz;
+    double Gamma,gamma,psi_i,psi_o,spsi_i,spsi_o;
+    double delta_theta,pdiff;
+    /* Normal vector for the grating*/
+    nx=0;
+    ny=1;
+    nz=0;
+    /* scalar-product, s and length of k.*/
+    double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+    double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    /* Outgoing grazing angle for a perfectly reflecting mirror using angle between two vectors.*/
+    psi_i = acos(s/k)-M_PI_2;
+
+    /* outgoing vector for a perfectly reflecting mirror. Order 0.*/
+    kx=kx-2*s*nx;
+    ky=ky-2*s*ny;
+    kz=kz-2*s*nz;
+    // MC picked angle going from +- d_phi
+    delta_theta=DEG2RAD*(rand01()*d_phi - (d_phi*0.5));
+    double alpha,beta;
+    alpha=M_PI_2-psi_i;
+    
+    /********************************************************************************************
+      The grating is lamellar:
+     ********************************************************************************************/        
+    /* Lamellar grating is used.
+         Thus finding outgoing angle only from ingoing angle.
+         using old k and n and rotation matrix.*/
+    beta=asin(order*(2*M_PI/k)/d-sin(alpha));
+    if(phi0){
+      /*a target angle is specified*/
+      psi_o=phi0*DEG2RAD;
+    }else{
+      psi_o=M_PI_2-fabs(beta);/*the fabs is necessary due to the sign convention of beta*/
+    }
+    kx=kx;
+    ky=(ky*cos(-(psi_o-psi_i) + delta_theta) - kz*sin( -(psi_o-psi_i) + delta_theta));
+    kz=(ky*sin(-(psi_o-psi_i) + delta_theta) + kz*cos( -(psi_o-psi_i) + delta_theta));
+
+    /*Finding the weight using diffraction theory.*/ 
+    s=scalar_prod(kx,ky,kz,nx,ny,nz);
+    psi_o = acos(s/k)-M_PI_2;
+
+    /*pay attention to sign conventions here. We might cross to the "incoming" side of the normal.*/
+    spsi_i = sin(M_PI_2-psi_i);
+    spsi_o = sin(M_PI_2-psi_o);//+delta_theta)); // asin angle out
+
+    /* Phase for interference pattern:  k = wave vector, d = lines/Angstrom, b=width in Angstrom */
+    gamma = k*d*(spsi_o-spsi_i);
+    /* Phase for diffraction pattern */
+    Gamma = k*b*(spsi_o-spsi_i);
+    pdiff=((sin(Gamma/2)/(Gamma/2))*(sin(Gamma/2)/(Gamma/2)))*((sin(nslits*gamma/2)/sin(gamma/2))*(sin(nslits*gamma/2)/sin(gamma/2)));
+    p=p*pdir*(pdiff/(pow(nslits,2)));
+  }
+
+%}
+
+/************************************************************************************************************
+  Making lines to illustrace with the TRACE option.
+*************************************************************************************************************/ 
+MCDISPLAY
+%{
+  magnify("");
+  line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
+  line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+  line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
+  line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+%}
+
+END
