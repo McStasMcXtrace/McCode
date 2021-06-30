@@ -64,14 +64,13 @@ DEFINE INSTRUMENT MAXIV_Bloch(
     r_rho=800,blazed=0,blazed_angle=0,
     SourceChoice=0,E0=0.6, dE=0.4,
     undK=5.6,Nper=187,
-    grating_mode=0,
+    grating_mode=-1,
     zm_mirror2=2,R0_M2=1,R0_PG=1,
     zm_mirror1=14,theta_mirror1=3,R0_M1=1,
     zm_mirror3=1,theta_mirror3=3,R0_M3=1,
     zm_mirror4=19,theta_mirror4=3,R0_M4=1,
     zm_ExitSlit=9,xwidth_ExSlit=1e-2,yheight_ExSlit=1e-2,Exitslit_yshift=0.005,R0_PG=1,
-    display=0,perfectMirrors=0,Error=0, angle_grating=6, mirror2_angle=6)
-
+    int verbose=0,perfectMirrors=0,Error=0, angle_grating=6, mirror2_angle=6)
 
 /******************************************************
 *
@@ -101,7 +100,9 @@ Opening_error_exitslit;
    double R0_cPGM, R0_NIM,d;
    double MCAngleVariation;
    double d,a,bb,c,vinkel,beta_wl,beta_rho;
+   //double angle_grating;
    double alpha,beta;
+   //double mirror2_angle;
 %}
 
 
@@ -240,10 +241,13 @@ if (cff && !grating_mode){
   //            mirror2_angle = (90-blazed_angle+beta);   
   mirror2_angle = (90+beta);   
 } 
+/*if(blazed && blazed_angle){*/
+/*  angle_grating = angle_grating-blazed_angle;*/
+/*}*/
 
-
-printf("\n Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg. \n \n",mirror2_angle,angle_grating);
-//Here, in testing the monochroamtor the MC angle need to be "big enough". 
+if(verbose){
+  fprintf(stdout,"INFO(%s):Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg.",mcinstrument_name,mirror2_angle,angle_grating);
+}
 MCAngleVariation=angle_grating*0.99;
 
 
@@ -273,17 +277,17 @@ Error messages:
 *******************************************************/
 if (angle_grating>30 || angle_grating<0)
 {
-  printf("Error: cPGM grating angle is out of bounds(%f DEG). Simulation ended",angle_grating);
+  fprintf(stderr,"ERROR: cPGM grating angle is out of bounds(%f DEG). Simulation ended",angle_grating);
   exit(-1);
 }
 if (mirror2_angle>21 || mirror2_angle<0)
 {
-  printf("Error: M2 angle is out of bounds(%f DEG). Simulation ended",mirror2_angle);
+  fprintf(stderr,"ERROR: M2 angle is out of bounds(%f DEG). Simulation ended",mirror2_angle);
   exit(-1);
 }
 if (theta_PG_NIM>30 || theta_PG_NIM<0)
 {
-  printf("Error: NIM grating angle is out of bounds(%f DEG). Simulation ended",theta_PG_NIM);
+  fprintf(stderr,"ERROR: NIM grating angle is out of bounds(%f DEG). Simulation ended",theta_PG_NIM);
   exit(-1);
 }
 %}
@@ -315,14 +319,20 @@ Find live info on the 1.5 storage ring at:
 **************************************************************/
 
 COMPONENT source_flat = Source_flat(
-    yheight=0.001e-5,xwidth=0.001,dist=zm_mirror1,focus_xw=0.02e-6,focus_yh=0.03,E0=E0,dE=dE)
+    yheight=0.001e-5,xwidth=0.001,dist=zm_mirror1,focus_xw=0.02e-6,focus_yh=0.02,E0=E0,dE=dE)
 WHEN (!SourceChoice)
 AT (0, 0, 0) RELATIVE origin
+EXTEND %{
+  do {
+    double k=sqrt(kx*kx+ky*ky+kz*kz);
+    kx=ky=0;kz=k;
+  }while(0);
+%}
 
-COMPONENT dmu = Undulator(verbose=0,E0=E0,dE=dE,Ee=1.5,dEe=((6e-9)*(60e-12))/1.5,Ie=0.5,tbunch=43,K=undK,gap=14e-3,Nper=Nper, 
-    lu=84e-3,sigey=1.3e-5,sigex=185e-5,sigepx=32e-6,sigepy=4.6e-6,focus_xw=1.1e-3,focus_yh=1.1e-3,dist=zm_mirror1,E1st=E1st)
-WHEN (SourceChoice)
-AT(0,0,0) RELATIVE origin
+/*COMPONENT dmu = Undulator(verbose=1,E0=E0,dE=dE,Ee=1.5,dEe=((6e-9)*(60e-12))/1.5,Ie=0.5,tbunch=43,K=undK,gap=14e-3,Nper=Nper, */
+/*    lu=84e-3,sigey=1.3e-5,sigex=185e-5,sigepx=32e-6,sigepy=4.6e-6,focus_xw=1.1e-3,focus_yh=1.1e-3,dist=zm_mirror1,E1st=E1st)*/
+/*WHEN (SourceChoice)*/
+/*AT(0,0,0) RELATIVE origin*/
 
 /****************************************
  Monitors After source:
@@ -330,8 +340,8 @@ AT(0,0,0) RELATIVE origin
 COMPONENT Source_E_monitor = E_monitor(nE=101,filename="source_E_monitor",xwidth=5e-3,yheight=5e-3,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
 AT (0, 0, 1) RELATIVE PREVIOUS
 
-COMPONENT Source_wl_monitor = L_monitor(nL=101,filename="source_wl_monitor",xwidth=5e-3,yheight=5e-3,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
-AT (0, 0, 0) RELATIVE PREVIOUS
+/*COMPONENT Source_wl_monitor = L_monitor(nL=101,filename="source_wl_monitor",xwidth=5e-3,yheight=5e-3,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
 
 COMPONENT Source_psd_monitor = PSD_monitor(filename="Source_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.06,yheight=0.06)
 AT (0, 0, 0.0) RELATIVE PREVIOUS
@@ -373,8 +383,8 @@ COMPONENT M1_E_monitor = E_monitor(nE=101,filename="M1_E_monitor", xwidth=0.06,y
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (90,0,90) RELATIVE PREVIOUS
 
-COMPONENT M1_wl_monitor = L_monitor(nL=101,filename="M1_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
-AT (0, 0, 0) RELATIVE PREVIOUS
+/*COMPONENT M1_wl_monitor = L_monitor(nL=101,filename="M1_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
 
 COMPONENT M1_psd_monitor = PSD_monitor(filename="M1_psd_monitor",nx = 21,ny = 21,xwidth=0.06,yheight=0.06,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
@@ -414,23 +424,40 @@ WHEN (!grating_mode)
 AT (0, 0, 0) RELATIVE M2_rotation_arm3
 ROTATED (0,0, 0) RELATIVE M2_rotation_arm3
 
-COMPONENT Plane_grating = Reflective_grating(
-    d_phi=MCAngleVariation,
-    blazed=blazed,
-    cff=cff,
-    blazed_angle=blazed_angle,
-    r_rho=r_rho,
-    display=0,zdepth=0.136,xwidth=0.015,R0=R0_PG,b=0,N_slits=0,d=0)
-WHEN (!grating_mode && !perfectMirrors)
+COMPONENT pg_a = Arm()
 AT (0, 0, 0) RELATIVE PG1_arm
 ROTATED (-angle_grating,0, 0) RELATIVE PG1_arm
 
-COMPONENT Plane_grating_perfect_mirror = Mirror(
-    zdepth=0.136,xwidth=0.015,R0=R0_PG)
-WHEN (!grating_mode && perfectMirrors)
-AT (0, 0, 0) RELATIVE PG1_arm
-ROTATED (-angle_grating,0, 0) RELATIVE PG1_arm
+COMPONENT Plane_grating2 = Grating_reflect(
+    d_phi=MCAngleVariation/100,
+    rho_l=r_rho,
+    zdepth=0.136,xwidth=0.015)
+WHEN(grating_mode==0) AT(0,0,0) RELATIVE PG1_arm
+ROTATED(-angle_grating,0,180) RELATIVE PG1_arm
 
+COMPONENT postPgmfpi=PSD_monitor_4PI(filename="postpgm",radius=1, restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd2ma = Arm()
+AT(0,0,0) RELATIVE pg_a
+ROTATED (angle_grating,0,0) RELATIVE pg_a
+
+COMPONENT vbanana = Monitor_nD(xwidth=1,yheight=0.1,options="banana theta limits -6 6 energy limits 0.1 1.1", bins=1001, 
+	filename="vbanana",restore_xray=1)
+AT(0,0,0) RELATIVE psd2ma
+ROTATED (0,0,90) RELATIVE psd2ma
+
+COMPONENT psd2m = PSD_monitor(nx=1,ny=501, yheight=0.5, xwidth=0.1, filename="psd2m", restore_xray=1)
+AT(0,0,2) RELATIVE psd2ma
+
+
+/**/
+/*COMPONENT Plane_grating_perfect_mirror = Mirror(*/
+/*    zdepth=0.136,xwidth=0.015,R0=R0_PG)*/
+/*WHEN (!grating_mode && perfectMirrors)*/
+/*AT (0, 0, 0) RELATIVE PG1_arm*/
+/*ROTATED (-angle_grating,0, 0) RELATIVE PG1_arm*/
+/**/
 /**************************************************************
 NIM  mode:
 1) Arm for the NIM mirror is placed
@@ -438,21 +465,21 @@ NIM  mode:
 There is no reason for a perfect mirror in the NIM case.
 **************************************************************/
 
-COMPONENT NIM_arm1= Arm()
-AT(0,-A,X) RELATIVE M2_rotation_arm1
-ROTATED (0,0,0) RELATIVE M2_rotation_arm1
-
-COMPONENT NIM = Mirror(
-    zdepth=0.02,xwidth=0.02,R0=0) 
-WHEN (!grating_mode)
-AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-theta_NIM,-2*theta_mirror1, 0) RELATIVE origin
-
-COMPONENT Laminar_Grating = Reflective_grating(
-    d_phi=4,blazed=0,cff=0,display=0,blazed_angle=0,zdepth=0.136,xwidth=0.015,R0=R0_PG,r_rho=r_rho,b=0,N_slits=0,d=0)
-WHEN (grating_mode)
-AT (0, 0, 0) RELATIVE PG1_arm
-ROTATED (-theta_PG_NIM,0, 0) RELATIVE PG1_arm
+/*COMPONENT NIM_arm1= Arm()*/
+/*AT(0,-A,X) RELATIVE M2_rotation_arm1*/
+/*ROTATED (0,0,0) RELATIVE M2_rotation_arm1*/
+/**/
+/*COMPONENT NIM = Mirror(*/
+/*    zdepth=0.02,xwidth=0.02,R0=0) */
+/*WHEN (!grating_mode)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+/*ROTATED (-theta_NIM,-2*theta_mirror1, 0) RELATIVE origin*/
+/**/
+/*COMPONENT Laminar_Grating = Reflective_grating(*/
+/*    d_phi=4,blazed=0,cff=0,display=0,blazed_angle=0,zdepth=0.136,xwidth=0.015,R0=R0_PG,r_rho=r_rho,b=0,N_slits=0,d=0)*/
+/*WHEN (grating_mode)*/
+/*AT (0, 0, 0) RELATIVE PG1_arm*/
+/*ROTATED (-theta_PG_NIM,0, 0) RELATIVE PG1_arm*/
 
 /****************************************
  Monitors After Monochromator
@@ -465,8 +492,8 @@ COMPONENT Monochromator_E_monitor = E_monitor(nE=101,filename="AfterMonochromato
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Monochromator_wl_monitor = L_monitor(nL=101,filename="AfterMonochromator_wl_monitor",xwidth=0.06,yheight=0.06+(F/8),Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
-AT (0, 0, 0) RELATIVE PREVIOUS
+/*COMPONENT Monochromator_wl_monitor = L_monitor(nL=101,filename="AfterMonochromator_wl_monitor",xwidth=0.06,yheight=0.06+(F/8),Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
 
 COMPONENT Monochromator_psd_monitor = PSD_monitor(filename="AfterMonochromator_psd_monitor",nx = 40,ny = 100,xwidth=0.06,yheight=0.06+(F/8),restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
@@ -526,33 +553,40 @@ ROTATED (0,theta_mirror3,0) RELATIVE Exit_slit_arm0
 
 COMPONENT M3_Monitor_arm= Arm()
 AT(0,0,0.5) RELATIVE M4_arm1 
-ROTATED (0,90,90) RELATIVE M4_arm1
+ROTATED (0,0,0) RELATIVE M4_arm1
 
 COMPONENT M3_E_monitor = E_monitor(nE=101,filename="M3_E_monitor", xwidth=0.04,yheight=0.03,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (90,0,90) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT M3_wl_monitor = L_monitor(nL=101,filename="M3_wl_monitor",xwidth=0.04,yheight=0.03,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
-AT (0, 0, 0) RELATIVE PREVIOUS
+/*COMPONENT M3_wl_monitor = L_monitor(nL=101,filename="M3_wl_monitor",xwidth=0.04,yheight=0.03,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
 
 COMPONENT M3_psd_monitor = PSD_monitor(filename="M3_psd_monitor",nx = 171,ny = 171,xwidth=0.04,yheight=0.03,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 /**************************************************************
 EXIT SLIT:
-1)Exit slit placed infront of mirror 4
+1)Exit slit placed in front of mirror 4
 2) based on input parameters, different photons will be let through, i.e different wavelengths.
 *************************************************************/
+
 
 COMPONENT ExT_arm2= Arm()
 AT(0,0,zm_ExitSlit) RELATIVE M4_arm1 
 ROTATED (0,0,0) RELATIVE M4_arm1
+
+COMPONENT bef_slit = PSD_monitor(xwidth=3*xwidth_ExSlit, yheight=3*yheight_ExSlit, filename="bef_slit")
+AT(0,0,-1e-3) RELATIVE ExT_arm2
 
 COMPONENT Exitslit = Slit(
     xwidth=xwidth_ExSlit, 
     yheight=yheight_ExSlit)
 AT (0, 0,0) RELATIVE ExT_arm2
 ROTATED (0,0,0) RELATIVE ExT_arm2
+
+COMPONENT aft_slit = COPY(bef_slit)(filename="aft_slit")
+AT(0,0,1e-3) RELATIVE ExT_arm2
 
 /****************************************
  Monitors Before Mirror 4
@@ -564,8 +598,8 @@ AT (0, 0, 1) RELATIVE Exitslit
 COMPONENT M4Before_e_monitor = E_monitor(nE=101,filename="M4Before_e_monitor",xwidth=0.2,yheight=0.2,Emin=0,Emax=2,restore_xray=1)
 AT (0, 0, 1) RELATIVE Exitslit
 
-COMPONENT M4Before_wl_monitor = L_monitor(nL=101,filename="M4Before_wl_monitor",xwidth=0.2,yheight=0.2,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
-AT (0, 0, 1) RELATIVE Exitslit
+/*COMPONENT M4Before_wl_monitor = L_monitor(nL=101,filename="M4Before_wl_monitor",xwidth=0.2,yheight=0.2,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 1) RELATIVE Exitslit*/
 
 /**************************************************************
  Mirror 4
@@ -599,8 +633,8 @@ ROTATED (0,0,0) RELATIVE PREVIOUS
 COMPONENT M4_e_monitor = E_monitor(nE=101,filename="M4_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=2,restore_xray=1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT M4_wl_monitor = L_monitor(nL=101,filename="M4_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)
-AT (0, 0, 0) RELATIVE PREVIOUS
+/*COMPONENT M4_wl_monitor = L_monitor(nL=101,filename="M4_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
 
 
 /*
