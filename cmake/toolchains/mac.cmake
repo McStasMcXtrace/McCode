@@ -11,7 +11,8 @@ set(MPICC "mpicc.clang")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
-set(PERL "/usr/bin/perl")
+set(PERL "/Applications/PDL/bin/perl")
+set(MCCODE_CFLAGS "-g -O2 -lm -std=c99")
 
 # Plotting options
 
