@@ -35,8 +35,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS (reflec="")
-SETTING PARAMETERS (string reflectivity=0, zdepth=0.1, xwidth=0.01, yheight=0, R0=0, rtype=0)
+DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (string reflec="", string reflectivity=0, zdepth=0.1, xwidth=0.01, yheight=0, R0=0, rtype=0)
 OUTPUT PARAMETERS (reflec_table, prms, re)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -129,15 +129,15 @@ MCDISPLAY
   /* A bit ugly; hard-coded dimensions. */
   magnify("");
   if(yheight){
-      line(-yheight/2.0,0,-zdepth/2.0, yheight/2.0,0,-zdepth/2.0);
-      line(-yheight/2.0,0, zdepth/2.0, yheight/2.0,0, zdepth/2.0);
-      line(-yheight/2.0,0,-zdepth/2.0,-yheight/2.0,0, zdepth/2.0);
-      line( yheight/2.0,0,-zdepth/2.0, yheight/2.0,0, zdepth/2.0);
+    line(0,-yheight/2.0,-zdepth/2.0, 0, yheight/2.0,-zdepth/2.0);
+    line(0,-yheight/2.0, zdepth/2.0, 0, yheight/2.0, zdepth/2.0);
+    line(0,-yheight/2.0,-zdepth/2.0, 0,-yheight/2.0, zdepth/2.0);
+    line(0, yheight/2.0,-zdepth/2.0, 0, yheight/2.0, zdepth/2.0);
   }else{
-      line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
-      line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
-      line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
-      line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+    line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
+    line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+    line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
+    line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
   }
 %}
 
