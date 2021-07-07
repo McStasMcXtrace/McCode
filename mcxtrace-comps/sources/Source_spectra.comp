@@ -15,11 +15,12 @@
 * Origin: Risoe
 * Release: McXtrace 0.1
 *
-* Specialized X-ray source for reading in SPECTRA source definitions
+* Specialized X-ray source for reading in SPECTRA 10 source definitions
 *
 * %D
 *
-* This is a source component for connecting SPECTRA -output files with McXtrace.
+* This is a source component for connecting SPECTRA 10-output files with McXtrace.
+* json-style SPECTRA 11 output files are not yet supported.
 * 
 * SPECTRA is an application software to calculate optical properties of synchrotron 
 * radiation (SR) emitted from bending magnets, wigglers (conventional and elliptical) 
@@ -32,7 +33,7 @@
 * See <a href="http://spectrax.org/spectra/">SPECTRA</a>.
 *
 * If the source is symmetric in x and/or y it is possible to speed up the spectra
-* calculations by only including one half-plane or quadrant. The other side will then
+* calculations by only including one half-plane or quadrant. The other side/quadrants will then
 * be mirrored by McXtrace.
 *
 * %VALIDATION
@@ -70,11 +71,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_spectra
-DEFINITION PARAMETERS (int brilliance_column=2, int nE, string spectra_stem_x="", string spectra_stem_y="", string spectra_suffix="dsc", verbose=0)
-SETTING PARAMETERS ( 
-    E0=0, dE=0, Emin,Emax, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, randomphase=1, phase=0,
-    int nx=0, int ny=0, int npx=0, int npy=0, int initial_serial=1, int symmetricx=0, int symmetricy=0)
-OUTPUT PARAMETERS (prms, dist)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+    string spectra_stem_x="", string spectra_stem_y="", string spectra_suffix="dsc",
+    E0=0, dE=0, Emin,Emax, int nE, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, randomphase=1, phase=0,
+    int nx=0, int ny=0, int npx=0, int npy=0, int initial_serial=1, int symmetricx=0, int symmetricy=0, int verbose=0,
+    int brilliance_column=2)
+OUTPUT PARAMETERS (pmul,pint,Ix,Iy,xproj,yproj,xmin,ymin,xpmin,ypmin,xmax,xpmax,ymax,ypmax,xstep,xpstep,ystep,ypstep)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -125,22 +128,15 @@ SHARE
 
 DECLARE
 %{
-
-  double  dist;
-  struct {
-    double K,dK,pmul,pint;
-    t_Table xproj[nE],yproj[nE];
-    double Ix[nE],Iy[nE];
-    double xmin,xmax,ymin,ymax,xpmin,xpmax,ypmin,ypmax;
-    double xstep,ystep,xpstep,ypstep;
-  } prms;
-
+  double K,dK,pmul,pint;
+  t_Table *xproj,*yproj;
+  double *Ix,*Iy;
+  double xmin,xmax,ymin,ymax,xpmin,xpmax,ypmin,ypmax;
+  double xstep,ystep,xpstep,ypstep;
 %}
 
 INITIALIZE
 %{
-
-
   /*read the bunch of spectra files i fthey exist - if not try to call spectra to generate them.*/
   /*They might be big - assume them to be x-y-projections*/
   int num,status;
@@ -148,42 +144,51 @@ INITIALIZE
   char fnx[256]="";
   char fny[256]="";
 
+  xproj=calloc(nE,sizeof(t_Table));
+  yproj=calloc(nE,sizeof(t_Table));
+  Ix=calloc(nE,sizeof(double));
+  Iy=calloc(nE,sizeof(double));
+  if(xproj==NULL || yproj==NULL || Ix==NULL || Iy==NULL){
+    fprintf(stderr,"ERROR (%s): Memory allocation error\n",NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
   if (strlen(spectra_stem_x)==0 || strlen(spectra_stem_y)==0){
-    fprintf(stderr,"Error (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"ERROR (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
     exit(-1);
   }
         
   /*find the offset of the datafiles. Assume to be identical for all of them.*/
-  sprintf(fnx,"%s-%d.%s",spectra_stem_x,initial_serial,spectra_suffix);
+  snprintf(fnx,255,"%s-%d.%s",spectra_stem_x,initial_serial,spectra_suffix);
   orig_offset=source_spectra_find_offset(fnx);
 
   for (num=0;num<nE;num++){
-    sprintf(fnx,"%s-%d.%s",spectra_stem_x,num+initial_serial,spectra_suffix);
+    snprintf(fnx,255,"%s-%d.%s",spectra_stem_x,num+initial_serial,spectra_suffix);
     offset=orig_offset;/*Have to do this every time since Table_Read_Offset overwrites offset*/
-    if ( (status=Table_Read_Offset(&(prms.xproj[num]),fnx,0,&offset,0))==-1){
-      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fnx);
+    if ( (status=Table_Read_Offset(&(xproj[num]),fnx,0,&offset,0))==-1){
+      fprintf(stderr,"ERROR (%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fnx);
       exit(-1);
     }
-    sprintf(fny,"%s-%d.%s",spectra_stem_y,num+initial_serial,spectra_suffix);
+    snprintf(fny,255,"%s-%d.%s",spectra_stem_y,num+initial_serial,spectra_suffix);
     offset=orig_offset;/*Have to do this every time since Table_Read_Offset overwrites offset*/
-    if ( (status=Table_Read_Offset(&(prms.yproj[num]),fny,0,&offset,0))==-1){
-      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fny);
+    if ( (status=Table_Read_Offset(&(yproj[num]),fny,0,&offset,0))==-1){
+      fprintf(stderr,"ERROR (%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fny);
       exit(-1);
     }
-    prms.Ix[num]=prms.Iy[num]=0;
+    Ix[num]=Iy[num]=0;
     /*sum the brilliances to get something to normalize to*/
     int r;
-    for (r=0;r<prms.xproj[num].rows;r++){
-      prms.Ix[num]+=Table_Index(prms.xproj[num],r,brilliance_column);//prms.xproj.data[r*prms.xproj.columns+ brilliance_column];
+    for (r=0;r<xproj[num].rows;r++){
+      Ix[num]+=Table_Index(xproj[num],r,brilliance_column);//xproj.data[r*xproj.columns+ brilliance_column];
     }
     
-    for (r=0;r<prms.yproj[num].rows;r++){
-      prms.Iy[num]+=Table_Index(prms.yproj[num],r,brilliance_column);//prms.yproj.data[r*prms.yproj.columns+ brilliance_column];
+    for (r=0;r<yproj[num].rows;r++){
+      Iy[num]+=Table_Index(yproj[num],r,brilliance_column);//yproj.data[r*yproj.columns+ brilliance_column];
     }
-    if (verbose && prms.Ix[num]!=prms.Iy[num]){
-      fprintf(stderr,"Warning (%s): Integrated intensities do not match up for x and y projections at num %d\n",NAME_CURRENT_COMP,num);
+    if (verbose && Ix[num]!=Iy[num]){
+      fprintf(stderr,"WARNING (%s): Integrated intensities do not match up for x and y projections at num %d\n",NAME_CURRENT_COMP,num);
     }
-    if (verbose) printf("\\int I [%d] = (%g,%g)\n",num,prms.Ix[num],prms.Iy[num]); 
+    if (verbose) printf("INFO (%s): Integrated intensity for projections I [%d] = (%g,%g)\n",NAME_CURRENT_COMP,num,Ix[num],Iy[num]);
 
     if (num==0){  
       /*check the data structure for the first two input files*/
@@ -191,8 +196,8 @@ INITIALIZE
       if (nx==0){
         int r;
         double p1,p2;
-        for (r=0;r<prms.xproj[0].rows;r++){
-          if ( nx==0 && (p1=Table_Index(prms.xproj[0],r,0))>(p2=Table_Index(prms.xproj[0],r+1,0)) ){
+        for (r=0;r<xproj[0].rows;r++){
+          if ( nx==0 && (p1=Table_Index(xproj[0],r,0))>(p2=Table_Index(xproj[0],r+1,0)) ){
             /*this means we have found where the first coordinate starts over*/
             nx=r+1;
             break;
@@ -204,18 +209,18 @@ INITIALIZE
         npx/=nx;
       }
       if (npx==0){
-        npx=prms.xproj[0].rows/nx;
+        npx=xproj[0].rows/nx;
       }
 
-      if( nx*npx != prms.xproj[0].rows){
-        fprintf(stderr,"Error (%s): number of read rows (%d) in %s does not match nx*npx = ( %d * %d). Please check the input files. Aborting.\n",NAME_CURRENT_COMP,prms.xproj[0].rows,fnx,nx,npx);
+      if( nx*npx != xproj[0].rows){
+        fprintf(stderr,"Error (%s): number of read rows (%d) in %s does not match nx*npx = ( %d * %d). Please check the input files. Aborting.\n",NAME_CURRENT_COMP,xproj[0].rows,fnx,nx,npx);
         exit(-1);
       }
 
       if(ny==0){
         int r;
-        for (r=0;r<prms.yproj[0].rows;r++){
-          if ( ny==0 && Table_Index(prms.yproj[0],r,0)>Table_Index(prms.yproj[0],r+1,0) ){
+        for (r=0;r<yproj[0].rows;r++){
+          if ( ny==0 && Table_Index(yproj[0],r,0)>Table_Index(yproj[0],r+1,0) ){
             /*this means we have found where the first coordinate starts over*/
             ny=r+1;
             break;
@@ -226,39 +231,45 @@ INITIALIZE
         }
       }
       if (npy==0){
-        npy=prms.yproj[0].rows/ny;
+        npy=yproj[0].rows/ny;
       }
-      if( ny*npy != prms.yproj[0].rows){
-        fprintf(stderr,"Error (%s): number of read rows (%d) in %s does not match ny*npy = ( %d * %d). Please check the input files. Aborting.\n",NAME_CURRENT_COMP,prms.yproj[0].rows,fny,ny,npy);
+      if( ny*npy != yproj[0].rows){
+        fprintf(stderr,"ERROR (%s): number of read rows (%d) in %s does not match ny*npy = ( %d * %d). Please check the input files. Aborting.\n",NAME_CURRENT_COMP,yproj[0].rows,fny,ny,npy);
         exit(-1);
       }
-      printf("Info (%s): (nx,nxp) = ( %d %d ), (ny,npy) = ( %d %d )\n",NAME_CURRENT_COMP,nx,npx,ny,npy);
+      if(verbose) printf("INFO (%s): (nx,nxp) = ( %d %d ), (ny,npy) = ( %d %d )\n",NAME_CURRENT_COMP,nx,npx,ny,npy);
     }/*if num==0*/
   }
   /*find limits in x,x',y, and y', assuming they're the same across all source files.*/
   /*these would be relevant for a search*/
 
-  //prms.xmin=prms.xpmin=prms.ymin=prms.ypmin=FLT_MAX;
-  //prms.xmax=prms.xpmax=prms.ymax=prms.ypmax=FLT_MIN;
-  t_Table *xptr=&(prms.xproj[0]);
-  t_Table *yptr=&(prms.yproj[0]);
-  prms.xmin=Table_Index(*xptr,0,0);
-  prms.xpmin=Table_Index(*xptr,0,1);
-  prms.ymin=Table_Index(*yptr,0,0);
-  prms.ypmin=Table_Index(*yptr,0,1);
-  prms.xmax=Table_Index(*xptr,nx-1,0);
-  prms.xpmax=Table_Index(*xptr,nx*npx-1,1);
-  prms.ymax=Table_Index(*yptr,ny-1,0);
-  prms.ypmax=Table_Index(*yptr,ny*npy-1,1);
-  prms.xstep=Table_Index(*xptr,1,0)-Table_Index(*xptr,0,0);
-  prms.xpstep=Table_Index(*xptr,nx,1)-Table_Index(*xptr,0,1);
-  prms.ystep=Table_Index(*yptr,1,0)-Table_Index(*yptr,0,0);
-  prms.ypstep=Table_Index(*yptr,ny,1)-Table_Index(*yptr,0,1);
+  t_Table *xptr=&(xproj[0]);
+  t_Table *yptr=&(yproj[0]);
+  xmin=Table_Index(*xptr,0,0);
+  xpmin=Table_Index(*xptr,0,1);
+  ymin=Table_Index(*yptr,0,0);
+  ypmin=Table_Index(*yptr,0,1);
+  xmax=Table_Index(*xptr,nx-1,0);
+  xpmax=Table_Index(*xptr,nx*npx-1,1);
+  ymax=Table_Index(*yptr,ny-1,0);
+  ypmax=Table_Index(*yptr,ny*npy-1,1);
+  xstep=Table_Index(*xptr,1,0)-Table_Index(*xptr,0,0);
+  xpstep=Table_Index(*xptr,nx,1)-Table_Index(*xptr,0,1);
+  ystep=Table_Index(*yptr,1,0)-Table_Index(*yptr,0,0);
+  ypstep=Table_Index(*yptr,ny,1)-Table_Index(*yptr,0,1);
+
+  if(verbose && xmin==0 && symmetricx==0){
+    fprintf(stderr,"WARNING (%s): Minimum x-value in datafile is 0 but symmetricx is not set.\n",NAME_CURRENT_COMP);
+  }
+  if(verbose && xmin==0 && symmetricy==0){
+    fprintf(stderr,"WARNING (%s): Minimum y-value in datafile is 0 but symmetricy is not set.\n",NAME_CURRENT_COMP);
+  }
+
 
   /*Must adjust for integration steps in Ix and Iy*/
   for (num=0;num<nE;num++){
-      //prms.Ix[num] *= prms.xstep* 1e-3 * prms.xpstep*1e-3;
-      //prms.Iy[num] *= prms.ystep* 1e-3 * prms.ypstep*1e-3;
+      //Ix[num] *= xstep* 1e-3 * xpstep*1e-3;
+      //Iy[num] *= ystep* 1e-3 * ypstep*1e-3;
   }
 
   if (incoherent!=randomphase){
@@ -271,11 +282,11 @@ INITIALIZE
   }
 
   /*downweight accoring to number of rays*/
-  prms.pmul=1.0/((double) mcget_ncount());
+  pmul=1.0/((double) mcget_ncount());
 
   /*downweight for not using the full energy window. Don't do this for deterministic energy (dE=0).*/
   if(dE && ( (E0-dE>Emin) || E0+dE<Emax) ){
-    prms.pmul*=2*dE/(Emax-Emin);
+    pmul*=2*dE/(Emax-Emin);
   }
 
 %}
@@ -287,12 +298,12 @@ TRACE
   double alpha,beta,Iinterpx,Iinterpy;
   t_Table *xptr,*yptr;
   
-  p=prms.pmul;
-  theta_x=(prms.xpmin + rand01()*(prms.xpmax-prms.xpmin))*1e-3;
-  theta_y=(prms.ypmin + rand01()*(prms.ypmax-prms.ypmin))*1e-3;
+  p=pmul;
+  theta_x=(xpmin + rand01()*(xpmax-xpmin))*1e-3;
+  theta_y=(ypmin + rand01()*(ypmax-ypmin))*1e-3;
   
-  x=(prms.xmin+rand01()*(prms.xmax-prms.xmin))*1e-3;
-  y=(prms.ymin+rand01()*(prms.ymax-prms.ymin))*1e-3;
+  x=(xmin+rand01()*(xmax-xmin))*1e-3;
+  y=(ymin+rand01()*(ymax-ymin))*1e-3;
 
   
   /*So now interpolate to get at Brilliance values*/
@@ -304,7 +315,7 @@ TRACE
   num=floor( (e-Emin)/(Emax-Emin)*(nE-1) + 0.5);
   if (num<0) num=0;
   if (num>nE-1) num=nE-1;
-  if ( prms.Ix[num]==0 || prms.Iy[num]==0 ){
+  if ( Ix[num]==0 || Iy[num]==0 ){
       ABSORB;
   }
 
@@ -326,12 +337,12 @@ TRACE
   double yy=y*1e3;
 
 
-  ix  = (int)floor((xx - prms.xmin)*(nx-1)/(prms.xmax - prms.xmin));
-  ipx = (int)floor((xp- prms.xpmin)*(npx-1)/(prms.xpmax-prms.xpmin));
-  iy  = (int)floor((yy - prms.ymin)*(ny-1)/(prms.ymax - prms.ymin));
-  ipy = (int)floor((yp- prms.ypmin)*(npy-1)/(prms.ypmax-prms.ypmin));
-  xptr=&(prms.xproj[num]);
-  yptr=&(prms.yproj[num]);
+  ix  = (int)floor((xx - xmin)*(nx-1)/(xmax - xmin));
+  ipx = (int)floor((xp- xpmin)*(npx-1)/(xpmax-xpmin));
+  iy  = (int)floor((yy - ymin)*(ny-1)/(ymax - ymin));
+  ipy = (int)floor((yp- ypmin)*(npy-1)/(ypmax-ypmin));
+  xptr=&(xproj[num]);
+  yptr=&(yproj[num]);
 
   int ie;
   double pe[2];
@@ -340,29 +351,29 @@ TRACE
   ealpha = (e- (Emin+estep*num))/estep;
 
   for (ie=0;ie<2;ie++){
-    alpha=( (xx - Table_Index(*xptr,ix,0)) /prms.xstep);/*regular grid so no need to do ix + ipx*nx*/
-    beta=( (xp - Table_Index(*xptr,ipx*nx,1)) /prms.xpstep) ;
+    alpha=( (xx - Table_Index(*xptr,ix,0)) /xstep);/*regular grid so no need to do ix + ipx*nx*/
+    beta=( (xp - Table_Index(*xptr,ipx*nx,1)) /xpstep) ;
 
     double t0,t1;
     t0=(1-alpha)*fabs(Table_Index(*xptr,ix+ipx*nx,2)) + alpha*fabs(Table_Index(*xptr,(ix+1)+ipx*nx,2));
     t1=(1-alpha)*fabs(Table_Index(*xptr,ix+(ipx+1)*nx,2)) + alpha*fabs(Table_Index(*xptr,(ix+1)+(ipx+1)*nx,2));
-    Iinterpx = (1-beta)*t0+beta*t1 *prms.xstep*1e-3*prms.xpstep*1e-3;
+    Iinterpx = (1-beta)*t0+beta*t1 *xstep*1e-3*xpstep*1e-3;
 
-    alpha=( (yy - Table_Index(*yptr,iy,0)) /prms.ystep);/*regular grid so no need to do iy + ipy*ny*/
-    beta=( (yp - Table_Index(*yptr,ipy*ny,1)) /prms.ypstep) ;
+    alpha=( (yy - Table_Index(*yptr,iy,0)) /ystep);/*regular grid so no need to do iy + ipy*ny*/
+    beta=( (yp - Table_Index(*yptr,ipy*ny,1)) /ypstep) ;
 
     t0=(1-alpha)*fabs(Table_Index(*yptr,iy+ipy*ny,2)) + alpha*fabs(Table_Index(*yptr,(iy+1)+ipy*ny,2));
     t1=(1-alpha)*fabs(Table_Index(*yptr,iy+(ipy+1)*ny,2)) + alpha*fabs(Table_Index(*yptr,(iy+1)+(ipy+1)*ny,2));
-    Iinterpy = (1-beta)*t0+beta*t1 * prms.ystep*1e-3*prms.ypstep*1e-3;
+    Iinterpy = (1-beta)*t0+beta*t1 * ystep*1e-3*ypstep*1e-3;
 
-    pe[ie]=Iinterpx/prms.Ix[num+ie] * Iinterpy/prms.Iy[num+ie] * (prms.Ix[num+ie]+prms.Iy[num+ie])*0.5;
+    pe[ie]=Iinterpx/Ix[num+ie] * Iinterpy/Iy[num+ie] * (Ix[num+ie]+Iy[num+ie])*0.5;
   }
   /* Set the photon ray weight to the mean of the two multiplied by initial weight
    * due to energy interval and ray count*/
 
-  //p=prms.pmul * Iinterpx/prms.Ix[num] * Iinterpy/prms.Iy[num] * (prms.Ix[num]+prms.Iy[num])*0.5;
+  //p=pmul * Iinterpx/Ix[num] * Iinterpy/Iy[num] * (Ix[num]+Iy[num])*0.5;
   /*now we interpolate in energy*/
-  p=prms.pmul * (ealpha*pe[0] + (1-ealpha)*pe[1]);
+  p=pmul * (ealpha*pe[0] + (1-ealpha)*pe[1]);
 
   /*if symmetric source possibly reflect x*/
   if (symmetricx){
@@ -397,20 +408,28 @@ TRACE
 
 %}
 
+FINALLY
+%{
+  free(Ix);
+  free(Iy);
+  Table_Free(xproj);
+  Table_Free(yproj);
+%}
+
 MCDISPLAY
 %{
   double dist=1;
-  multiline(5, prms.xmin, prms.ymin, 0.0,
-      prms.xmax, prms.ymin, 0.0,
-      prms.xmax, prms.ymax, 0.0,
-      prms.xmin, prms.ymax, 0.0,
-      prms.ymin, prms.ymin, 0.0);
+  multiline(5, xmin, ymin, 0.0,
+      xmax, ymin, 0.0,
+      xmax, ymax, 0.0,
+      xmin, ymax, 0.0,
+      ymin, ymin, 0.0);
 
-  dashed_line(0,0,0, tan(prms.xpmax)*dist,0,dist,4);
-  dashed_line(0,0,0, tan(prms.xpmin)*dist,0,dist,4);
+  dashed_line(0,0,0, tan(xpmax)*dist,0,dist,4);
+  dashed_line(0,0,0, tan(xpmin)*dist,0,dist,4);
     
-  dashed_line(0,0,0, 0,tan(prms.ypmax)*dist,dist,4);
-  dashed_line(0,0,0, 0,tan(prms.ypmin)*dist,dist,4);
+  dashed_line(0,0,0, 0,tan(ypmax)*dist,dist,4);
+  dashed_line(0,0,0, 0,tan(ypmin)*dist,dist,4);
 %}
 
 END
