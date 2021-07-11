@@ -36,9 +36,6 @@
 * calculations by only including one half-plane or quadrant. The other side/quadrants will then
 * be mirrored by McXtrace.
 *
-* %Example: Test_source_spectra.instr flag4d=0,1 dE0=12.4 E=0.001 stemx=sp8LU_x stemy=sp8LU_y Detector: psd2_I=1.42775e+11
-* %Example: Test_source_spectra.instr flag4d=0,1 dE0=12.4 E=0.001 stem4d=sp8LU_xy Detector: psd2_I=psd2_I=3.53418e-06
-*
 * %VALIDATION
 *
 * %BUGS

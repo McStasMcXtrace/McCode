@@ -17,14 +17,18 @@
 * A unit test instrument for the Source component that can take input from a SPECTRA-simulation
 * of an undulator/wiggler etc. and input it into McXtrace.
 *
-* Example: Test_source_spectra
+* %Example: Test_source_spectra.instr flag4d=0,1 dE0=12.4 E=0.001 stemx=sp8LU_x stemy=sp8LU_y Detector: psd2_I=1.42775e+11
+* %Example: Test_source_spectra.instr flag4d=0,1 dE0=12.4 E=0.001 stem4d=sp8LU_xy Detector: psd2_I=psd2_I=3.53418e-06
+*
 *
 * %Parameters
 * E0: [keV]   Central wavelength for sampling
 * dE: [keV]   Halfwidth of sampleing window (in energy)
 * stemx: [ ]  Filename stem for the x-projection data files coming from SPECTRA.
 * stemy: [ ]  Filename stem for the y-projection data files coming from SPECTRA
-* 
+* stem4d: [ ] Filename stem for 4D-datafiles from SPECTRA.
+* flag4d: [ ] If zero use projection datafiles, else use 4D.
+*
 * %Link
 * A reference/HTML link for more information
 *
