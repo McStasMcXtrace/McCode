@@ -363,13 +363,8 @@ union data_transfer_union{
     struct Incoherent_physics_storage_struct  *pointer_to_a_Incoherent_physics_storage_struct;
     struct Powder_physics_storage_struct *pointer_to_a_Powder_physics_storage_struct;
     struct Single_crystal_physics_storage_struct *pointer_to_a_Single_crystal_physics_storage_struct;
-    struct AF_HB_1D_physics_storage_struct *pointer_to_a_AF_HB_1D_physics_storage_struct;
-    struct IncoherentPhonon_physics_storage_struct *pointer_to_a_IncoherentPhonon_physics_storage_struct;
-    struct PhononSimpleNumeric_physics_storage_struct *pointer_to_a_PhononSimpleNumeric_storage_struct;
-    struct PhononSimple_physics_storage_struct *pointer_to_a_PhononSimple_storage_struct;
-    struct MagnonSimple_physics_storage_struct *pointer_to_a_MagnonSimple_storage_struct;
-    struct Sans_spheres_physics_storage_struct *pointer_to_a_Sans_spheres_physics_storage_struct;
     struct Template_physics_storage_struct *pointer_to_a_Template_physics_storage_struct;
+    struct Compton_xrl_physics_storage_struct *pointer_to_a_Compton_xrl_physics_storage_struct;
     // possible to add as many structs as wanted, without increasing memory footprint.
 };
 
