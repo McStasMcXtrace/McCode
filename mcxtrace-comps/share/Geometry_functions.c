@@ -526,7 +526,7 @@ int sample_box_intersect_simple(double *t,int *num_solutions,double *r,double *v
     //     printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
     
     int output;
-    // Run McXtrasce built in box intersect funtion (box centered on origin with sides aligned with cartesian axis)
+    // Run McXtrace built in box intersect funtion (box centered on origin with sides aligned with cartesian axis)
     if ((output = box_intersect(&t[0],&t[1],rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,rotated_velocity.x,rotated_velocity.y,rotated_velocity.z,width,height,depth)) == 0) {
         *num_solutions = 0;t[0]=-1;t[1]=-1;}
     else if (t[1] != 0) *num_solutions = 2;
@@ -923,7 +923,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
     int iter =0;
     int counter=0; int neg_counter=0;
     Coords edge1,edge2,h,s,q,tmp,intersect_pos;
-    double EPSILON = 1e-27;
+    double UNION_EPSILON = 1e-27;
     double this_facet_t;
     double a,f,u,V;
     //////printf("\n RWITHIN TEST 1ste");
@@ -940,7 +940,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
-        if (a > -EPSILON && a < EPSILON){
+        if (a > -UNION_EPSILON && a < UNION_EPSILON){
             //////printf("\n Epsilon fail");
         } else{
             f = 1.0/a;
@@ -963,7 +963,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
                         neg_counter++;
 
                     }
-                    if (fabs(f* Dot(q,edge2)) > EPSILON){
+                    if (fabs(f* Dot(q,edge2)) > UNION_EPSILON){
                     } else { //printf("\n [%f %f %f] Failed due to being close to surface, E = %f",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,f* Dot(q,edge2));
                      }
                     
@@ -1004,7 +1004,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
-        if (a > -EPSILON && a < EPSILON){
+        if (a > -UNION_EPSILON && a < UNION_EPSILON){
             //////printf("\n Epsilon fail");
         } else{
             f = 1.0/a;
@@ -1028,7 +1028,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
                         neg_counter++;
 
                     }
-                    if (fabs(f* Dot(q,edge2)) > EPSILON){
+                    if (fabs(f* Dot(q,edge2)) > UNION_EPSILON){
                     } else { printf("\n [%f %f %f] Failed due to being close to surface (2. iteration), E = %f",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,f* Dot(q,edge2));
                      }
                     
@@ -1067,7 +1067,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
         
         a = Dot(edge1,h);
         //////printf("\n a=%f",a);
-        if (a > -EPSILON && a < EPSILON){
+        if (a > -UNION_EPSILON && a < UNION_EPSILON){
             //////printf("\n Epsilon fail");
         } else{
             f = 1.0/a;
@@ -1091,7 +1091,7 @@ int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
                         neg_counter++;
 
                     }
-                    if (fabs(f* Dot(q,edge2)) > EPSILON){
+                    if (fabs(f* Dot(q,edge2)) > UNION_EPSILON){
                     } else { printf("\n [%f %f %f] Failed due to being close to surface (3. iteration), E = %f",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,f* Dot(q,edge2));
                     }
                     
@@ -1246,7 +1246,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
     int iter =0;
     int counter=0;
     Coords edge1,edge2,h,s,q,tmp,intersect_pos;
-    double EPSILON = 0.0000001;
+    double UNION_EPSILON = 0.0000001;
     double this_facet_t;
     double a,f,u,V,t_intersect[n_facets];
     *num_solutions = 0;
@@ -1267,7 +1267,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
         //a = Dot(h,edge1);
         a = Dot(edge1,h);
         ////printf("\n a=%f",a);
-        //if (a > -EPSILON && a < EPSILON){
+        //if (a > -UNION_EPSILON && a < UNION_EPSILON){
             ////printf("\n Epsilon fail");
         //} else{
             f = 1.0/a;
