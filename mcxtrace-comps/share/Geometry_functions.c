@@ -663,7 +663,8 @@ int sample_cone_intersect(double *t,int *num_solutions,double *r,double *v,struc
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     // rotated_coordinates = rot_apply(rotation_matrix_debug,coordinates);
     //     printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
-    
+    /*in McXtrace propagation is done by lengths not time. If we normalize v the automatically works*/
+    NORM(v[0],v[1],v[2]);
     Coords velocity = coords_set(v[0],v[1],v[2]);
     Coords rotated_velocity;
     //     printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
