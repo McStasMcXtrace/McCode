@@ -659,7 +659,7 @@ int sample_cone_intersect(double *t,int *num_solutions,double *r,double *v,struc
     // rot_set_rotation(rotation_matrix_debug,-1.0*geometry->rotation.x,-1.0*geometry->rotation.y,-1.0*geometry->rotation.z);
     // rot_transpose(geometry->rotation_matrix,rotation_matrix_debug);
 
-    // Rotate the position of the neutron around the center of the cone
+    // Rotate the position of the photon around the center of the cone
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     // rotated_coordinates = rot_apply(rotation_matrix_debug,coordinates);
     //     printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
@@ -794,7 +794,7 @@ int sample_cone_intersect(double *t,int *num_solutions,double *r,double *v,struc
 
 
     // Count solutions
-    *num_solutions == 0;
+    *num_solutions = 0;
     if (t[0] > 0){
         *num_solutions += 1;
     }else {
