@@ -125,7 +125,7 @@ TRACE
     /*a photon weight of -1 is nonsensical. I.e. if s1->p>=0, it means there are two states in the log from which we can compute a pseudo-photon*/
     double nstate[12];
     if ( pseudo_photon_state_function(nstate,s0,s1) ){
-      printf("Warning: (%s): error reported when computing pseudo photon\n",NAME_CURRENT_COMP);
+      printf("WARNING: (%s): error reported when computing pseudo photon\n",NAME_CURRENT_COMP);
     }
     /*set photon state for subsequent components*/
     x=nstate[0];y=nstate[1];z=nstate[2];
