@@ -690,6 +690,12 @@ class InstrDocWriter:
         t = self.tags
         h = self.html
 
+        #some McXtrace specific edits
+        if (mccode_config.get_mccode_prefix() == 'mx'):
+          h = h.replace('McStas','McXtrace')
+          h = h.replace('mcstas','mcxtrace')
+          h = h.replace('MCSTAS','MCXTRACE')
+
         h = h.replace(t[0], i.name)
         h = h.replace(t[1], i.name)
         h = h.replace(t[2], i.short_descr)
@@ -850,7 +856,12 @@ class CompDocWriter:
         i = self.info
         t = self.tags
         h = self.html
-        
+        #some McXtrace specific edits
+        if (mccode_config.get_mccode_prefix() == 'mx'):
+          h = h.replace('McStas','McXtrace')
+          h = h.replace('mcstas','mcxtrace')
+          h = h.replace('MCSTAS','MCXTRACE')
+
         h = h.replace(t[0], i.name)
         h = h.replace(t[1], i.name)
         h = h.replace(t[2], i.short_descr)
