@@ -1,0 +1,131 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Template_Scatter_log_losses
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: 2021
+* Origin: DTU Fysik
+* %INSTRUMENT_SITE: Templates
+*
+* Example instrument of Scatter_logger feature usage for detection of lost instensity
+*
+* %Description
+* 
+* This instrument is an example of how to use the Scatter_logger family of components in McXtrace. 
+* In this example the photons deposited in a capillary mirror of a LENGTH m, are monitored by two instances of Monitor_nD
+* The first (mnd1) stretches the full length of the capillary and simply monitors the intensity lost in
+* the walls, the latter (mnd2) shows the lost intensity binned by photon energy in the last
+* 0.1m of tube.
+*
+* Also include (but commented out) is a code-snippet that would dump the lost photons to stdout
+*
+* %Example: Template_Scatter_log_losses LENGTH=1 Detector: mnd2_I=4.31766e-06
+*
+* %Parameters
+* LENGTH: [m]  The length of the capillary to be modelled
+*
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Template_Scatter_log_losses(LENGTH=1, verbose=0)
+
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  char optionstring[CHAR_BUF_LENGTH];
+%}
+
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  snprintf(optionstring,CHAR_BUF_LENGTH,"previous no slit z limits 1e-6 %g bins 100 E limits 0 20 bins 100",LENGTH);
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT src = Source_pt(
+    dist = 1, focus_xw = 0.02, focus_yh = 0.02, E0=10, dE=19.9)
+AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT psd0=PSD_monitor(
+    xwidth=0.1, yheight=0.1, filename="psd0")
+AT(0,0,0.5) RELATIVE PREVIOUS
+
+COMPONENT s1=Scatter_logger()
+AT(0,0,1) RELATIVE src
+
+COMPONENT cap = Capillary(radius=0.01,R0=0,length=LENGTH,coating="Rh.txt")
+AT(0,0,1) RELATIVE src
+
+COMPONENT s2=Scatter_logger_stop(logger=s1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+/*The iterator test code*/
+
+COMPONENT a0=Arm()
+AT(0,0,0) ABSOLUTE
+
+COMPONENT iter1 = Scatter_log_iterator()
+AT(0,0,0) ABSOLUTE
+
+COMPONENT mnd1=Monitor_nD (
+    restore_xray=1, options="previous no slit z limits 1e-6 1",bins=200, filename="mnd1.dat")
+AT(0,0,0) RELATIVE cap
+
+COMPONENT mnd2=Monitor_nD (
+    restore_xray=1,options=optionstring, filename="mnd2.dat")
+AT(0,0,0) RELATIVE cap
+
+/*COMPONENT mnd3=Monitor_nD(*/
+/*    restore_xray=1, options="previous E", filename="mnd3.dat")*/
+/*AT(0,0,0) RELATIVE cap*/
+/**/
+/**/
+COMPONENT printout = Arm()
+WHEN(verbose) AT(0,0,0) ABSOLUTE
+EXTEND
+%{
+  /*print the photon state*/
+  printf("SCATTERLOG_ITERATOR: %llu %g %g %g   %g %g %g   %g %g  %g %g %g   %g  %d\n", \
+      mcget_run_num(),x,y,z, kx, ky, kz, t, phi,\
+      Ex, Ey, Ez, p, INDEX_CURRENT_COMP);
+%}
+
+
+COMPONENT iter2 = Scatter_log_iterator_stop(iterator=iter1)
+AT(0,0,0) RELATIVE iter1
+
+COMPONENT a1 = Arm()
+AT (0,0,0) ABSOLUTE
+JUMP a0 WHEN(MC_GETPAR(iter2,loop))
+
+COMPONENT axxx=Arm()
+At(0,0,12) ABSOLUTE
+ 
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
