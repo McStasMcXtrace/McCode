@@ -85,8 +85,8 @@ scatter_logger_stop:
     bp->_Ez=0;
     bp->_t=0;
     bp->_phi=0;
-    if(absorbed_in_optics==1) bp->_p=-2; else bp->_p=-1;
-    bp->_pid=0;
+    bp->_p=-1;
+    bp-> _pid=0;
     bp->_comp=0;
     bounce_store_index++;
   }else if(bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun){

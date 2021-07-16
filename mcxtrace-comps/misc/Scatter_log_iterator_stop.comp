@@ -78,10 +78,9 @@ scatter_iterator_stop:
     /* Restore std ABSORB */
 #undef mcabsorb
 #define mcabsorb mcabsorbAll
-  // printf("No ABSORB after the iterator\n");
-  } else if (s1->_p==-2) { 
-    /*if the weight equals -2 it means that the photon was absorbed in components within the scatter_logger (see scatter logger definition) 
-      and should not be propagated further after this iterator*/
+  } else if (s1->_abs) {
+    /*if the absorption flag is set for s1 it means that the photon was absorbed in components within the scatter_logger 
+      (see scatter logger definition) and should not be propagated further after this iterator*/
     /* printf("INFO: (%s): Performing ABSORB after the iterator\n",NAME_CURRENT_COMP); */
     loop=0;
     double *ns=MC_GETPAR(iterator,nstate_initial);

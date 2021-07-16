@@ -38,7 +38,7 @@
 DEFINE COMPONENT Scatter_log_iterator
 DEFINITION PARAMETERS (compute_func=NULL)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (nstate_initial,s0,s1)
+OUTPUT PARAMETERS (nstate_initial,s0,s1,optics_not_hit, absorbed_in_optics)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 
@@ -81,6 +81,7 @@ DECLARE
   double *nstate_initial;
   
   int optics_not_hit;
+  int absorbed_in_optics;
 
   /*need a pointer to the structure set up by the logger*/
 %}
@@ -121,6 +122,12 @@ TRACE
 #define mcabsorb scatter_iterator_stop
   }
 
+  if (s1->_abs){
+    absorbed_in_optics=1;
+  }else{
+    absorbed_in_optics=0;
+  }
+
   if (s1->_p>=0){
     /*a photon weight of -1 is nonsensical. I.e. if s1->p>=0, it means there are two states in the log from which we can compute a pseudo-photon*/
     double nstate[12];
@@ -144,8 +151,7 @@ TRACE
     Ex=s0->_Ex;Ey=s0->_Ey;Ez=s0->_Ez;
     p=s0->_p;
     optics_not_hit = 1;
-  /*  fprintf(stdout,"No interactions with optics. Use \"optics_not_hit\" variable to JUMP at scatter_logger_stop and 
-    avoid sending to ScatterLogIterator those photons which were actually not scattered.\n");*/
+    /*  fprintf(stdout,"No interactions with optics. Use \"optics_not_hit\" variable to avoid detecting such neutrons in monitors.\n");*/
   } else {
     fprintf(stderr,"This should not happen. Period.\n");
     exit(1);

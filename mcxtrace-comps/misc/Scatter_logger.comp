@@ -41,7 +41,7 @@ SHARE
     double _x,_y,_z,_kx,_ky,_kz;
     double _p,_t,_phi,_Ex,_Ey,_Ez;
     long long int _pid;
-    int _comp, _idx;
+    int _comp, _idx, _abs;
   };
 
 #define SCATTER_LOG do { \
@@ -67,6 +67,7 @@ SHARE
         bp->_pid=mcget_run_num();\
         bp->_comp=INDEX_CURRENT_COMP;\
         bp->_idx=bounce_store_index;\
+        bp->_abs=0;\
         bounce_store_index++;\
       }\
     }else if(bounce_store_index==(BOUNCE_LOG_SIZE-1) && !bounce_store_overrun){\
@@ -80,7 +81,7 @@ SHARE
 #define ABSORB_LOG do { /*printf("DOING ABSORB_LOG\n");*/ \
     if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
       struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
-      /* if( (bp-1)->_p!=p || (bp-1)->_kx!=kx || (bp-1)->_ky!=ky || (bp-1)->_kz!=kz )*//*<-- Check removed, works wrong if photon is absorbed at the entrance*/{\
+      {\
         Coords ctmp=POS_A_CURRENT_COMP;\
         Coords _r = coords_set(x,y,z);\
         Coords _k = coords_set(kx,ky,kz);\
@@ -98,11 +99,12 @@ SHARE
         coords_get(_Eg,&(bp->_Ex),&(bp->_Ey),&(bp->_Ez));\
         bp->_t=t;\
         bp->_phi=phi;\
-        bp->_p=0.;\
+        bp->_p=0;\
         bp->_pid=mcget_run_num();\
         bp->_comp=INDEX_CURRENT_COMP;\
         bp->_idx=bounce_store_index;\
-       /* printf("Recording absorption event, writing state (%d) to the buffer, r: %g %g %g v: %g %g %g p:%g\n",\
+        bp->_abs=1;\
+        /* printf("Recording absorption event, writing state (%d) to the buffer, r: %g %g %g v: %g %g %g p:%g\n",\
                 bounce_store_index, bp->_x, bp->_y, bp->_z, bp->_kx, bp->_ky, bp->_kz, bp->_p);*/\
         bounce_store_index++;\
       }\
@@ -110,7 +112,6 @@ SHARE
       printf("Warning (%s): Scatter_log overrun at %llu - not logging any more events\n",NAME_CURRENT_COMP,mcget_run_num());\
       bounce_store_overrun=1;\
     }\
-  absorbed_in_optics=1;\
   do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
       mcnlt,mcnlphi,mcnlEx,mcnlEy,mcnlEz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0);\
 } while(0)
