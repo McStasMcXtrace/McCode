@@ -64,17 +64,17 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT src = Source_pt(
     dist = 1, focus_xw = 0.02, focus_yh = 0.02, E0=10, dE=19.9)
-AT (0, 0, 0) RELATIVE Origin
+AT (0, 0.0, 0) RELATIVE Origin
 
 COMPONENT psd0=PSD_monitor(
     xwidth=0.1, yheight=0.1, filename="psd0")
-AT(0,0,0.5) RELATIVE PREVIOUS
+AT(0,0,0.5) RELATIVE Origin
 
 COMPONENT s1=Scatter_logger()
-AT(0,0,1) RELATIVE src
+  AT(0,0,1) RELATIVE Origin
 
 COMPONENT cap = Capillary(radius=0.01,R0=0,length=LENGTH,coating="Rh.txt")
-AT(0,0,1) RELATIVE src
+AT(0,0,1) RELATIVE Origin
 
 COMPONENT s2=Scatter_logger_stop(logger=s1)
 AT(0,0,0) RELATIVE PREVIOUS
@@ -88,12 +88,15 @@ COMPONENT iter1 = Scatter_log_iterator()
 AT(0,0,0) ABSOLUTE
 
 COMPONENT mnd1=Monitor_nD (
-    restore_xray=1, options="previous no slit z limits 1e-6 1",bins=200, filename="mnd1.dat")
-AT(0,0,0) RELATIVE cap
+    restore_xray=1, options="previous no slit z limits 0 1",bins=200, filename="mnd1.dat")
+WHEN(MC_GETPAR(iter1,absorbed_in_optics)!=1 && MC_GETPAR(iter1,optics_not_hit)==0 )AT(0,0,0) RELATIVE cap
+COMPONENT mnd1abs=Monitor_nD (
+    restore_xray=1, options="previous no slit z limits 0 1",bins=200, filename="mnd1abs.dat")
+WHEN(MC_GETPAR(iter1,optics_not_hit)==0 )AT(0,0,0) RELATIVE cap
 
 COMPONENT mnd2=Monitor_nD (
     restore_xray=1,options=optionstring, filename="mnd2.dat")
-AT(0,0,0) RELATIVE cap
+WHEN(MC_GETPAR(iter1,absorbed_in_optics)!=1 && MC_GETPAR(iter1,optics_not_hit)==0 )AT(0,0,0) RELATIVE cap
 
 /*COMPONENT mnd3=Monitor_nD(*/
 /*    restore_xray=1, options="previous E", filename="mnd3.dat")*/
@@ -101,14 +104,14 @@ AT(0,0,0) RELATIVE cap
 /**/
 /**/
 COMPONENT printout = Arm()
-WHEN(verbose) AT(0,0,0) ABSOLUTE
+WHEN(MC_GETPAR(iter1,absorbed_in_optics)==0 && verbose) AT(0,0,0) ABSOLUTE
 EXTEND
 %{
   /*print the photon state*/
   printf("SCATTERLOG_ITERATOR: %llu %g %g %g   %g %g %g   %g %g  %g %g %g   %g  %d\n", \
       mcget_run_num(),x,y,z, kx, ky, kz, t, phi,\
       Ex, Ey, Ez, p, INDEX_CURRENT_COMP);
-%}
+  %}
 
 
 COMPONENT iter2 = Scatter_log_iterator_stop(iterator=iter1)
@@ -118,8 +121,8 @@ COMPONENT a1 = Arm()
 AT (0,0,0) ABSOLUTE
 JUMP a0 WHEN(MC_GETPAR(iter2,loop))
 
-COMPONENT axxx=Arm()
-At(0,0,12) ABSOLUTE
+COMPONENT endPSD=PSD_monitor(xwidth=0.02,yheight=0.02,filename="endpsd")
+AT(0,0,LENGTH+1e-6) RELATIVE cap
  
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
