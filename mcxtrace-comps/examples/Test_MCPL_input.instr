@@ -6,8 +6,7 @@
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Mar 2016
-* Origin: 
-* Version: $Revision$
+* Origin: DTU
 * %INSTRUMENT_SITE: Tests
 *
 * A test instrument for MCPL_input
@@ -16,14 +15,24 @@
 *
 * This is a unit test for the MCPL_input component.
 *
-* %Example: -n1e3 dummy=0 Detector: m1_I=7.9657e-08
+* %Example: -n1e3 repeat=1 Detector: m1_I=7.9657e-08
 *
 * %Parameters
 *
+* repeat: [1]       Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
+* E_smear: [1]      When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
+* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
+*
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_input(dummy=0)
-DEPENDENCY " -DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl "
+DEFINE INSTRUMENT Test_MCPL_input(repeat=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
+
+DECLARE
+%{
+  long long ncount_i;
+%}
 
 INITIALIZE
 %{
@@ -31,23 +40,22 @@ INITIALIZE
 #define STR(macro) QUOTE(macro)
 
 #ifndef MCPLPATH
-#define MCPLPATH=/usr/share/mcxtrace/1.4/MCPL/voutput.mcpl
+#define MCPLPATH=/usr/share/mcxtrace/1.6/MCPL/voutput.mcpl
 #endif
 
 #define MCPLFILE STR(MCPLPATH)
 
 printf("Using the input file: %s\n", MCPLFILE);
 
+ ncount_i=0;
 %}
 
 TRACE
 
 COMPONENT Origin = Progress_bar()
-AT (0, 0, 0) ABSOLUTE
+AT (0, 0, 0) ABSOLUTE/* read photons from an mcpl file*/
 
-/* read photons from an mcpl file*/
-
-COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1)
+COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
@@ -77,5 +85,3 @@ COMPONENT m5 = Monitor_nD(
 
 
 END
-
-
