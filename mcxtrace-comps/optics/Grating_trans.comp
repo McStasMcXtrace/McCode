@@ -10,7 +10,7 @@
 *
 * %I
 *
-* Written by: Erik B Knudsen 
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk) 
 * Date: December 2016
 * Version: 1.0
 * Release: McXtrace 1.4
@@ -28,12 +28,15 @@
 *
 * %P
 * Input parameters:
-* period: [m]     Distance between grating grooves.
-* zdepth: [m]     Depth of grooves.
-* gamma: [ ]      Ratio between groove and period  aka duty cycle. 1 means fully open.
-* sdepth: [m]     Thickness of substrate. The default is to have no substrate - i.e. rods. 
-* width: [m]      Width of the grating. Defines how many lines there are in total.
-* height: [m]     Height of the grating.
+* period: [m]      Distance between grating grooves.
+* zdepth: [m]      Depth of grooves.
+* gamma: [ ]       Ratio between groove and period  aka duty cycle. 1 means fully open.
+* sdepth: [m]      Thickness of substrate. The default is to have no substrate - i.e. rods. 
+* xwidth: [m]      Width of the grating. Defines how many lines there are in total.
+* yheight: [m]     Height of the grating.
+* material: [str]  Data file containing the material from which the grating is made.
+* substrate: [str] Data file containing material data for the substrate.
+* 
 * %E
 *******************************************************************************/
 
