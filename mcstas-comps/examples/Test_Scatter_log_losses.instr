@@ -1,5 +1,5 @@
 /*******************************************************************************
-*         McStas instrument definition URL=http://www.mcstas.org
+* McStas instrument definition URL=http://www.mcstas.org
 *
 * Instrument: test Test_Scatter_log_losses
 *
@@ -13,16 +13,16 @@
 *
 * %Description
 * 
-* This instrument is an example of how to use thet newly developed (and experimental)
-* Scatter_logger family of components in McStas. In this example the neutrons deposited in the
-* guide wall of a LENGTH m long straight guide are monitored bytwo instances of Monitor_nD
+* This instrument is an example of how to use the Scatter_logger family of components in McStas. 
+* In this example the neutrons deposited in the
+* guide wall of a LENGTH m long straight guide are monitored by two instances of Monitor_nD
 * The first (mnd1) stretches the full length of the guide and simply monitors the intensity lost in
 * the guide walls, the latter (mnd2) shows the lost intensity binned by neutron wavelength in the last
 * 1m of guide.
 *
 * Also include (but commented out) is a code-snippet that would dump the lost neutrons to stdout
 *
-* Example: mcrun Test_Scatter_log_losses LENGTH=10
+* Example: Test_Scatter_log_losses LENGTH=10
 *
 * %Parameters
 * LENGTH: [m]  The length of the guide to be modelled

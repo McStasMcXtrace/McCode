@@ -94,10 +94,9 @@ SHARE
       double buf[6];
       FILE *fs;
 
-      if( (fs=fopen(fn,"rb"))==NULL){
-          //fprintf(stderr,"ERROR (%s): Could not open file %s\n","Source_spectra",fn);
-          fprintf(stderr,"ERROR (%s): Could not open file %s\n",NAME_CURRENT_COMP,fn);
-          exit(-1);
+      if( (fs=Open_File(fn,"rb",NULL))==NULL){
+        /*Open_File from read_table-lib searches the McXtrace library. Will report error on failure, so just exit.*/
+        exit(-1);
       }
 
       /*read lines and save position 3 lines back, when three consecutive line have 3
