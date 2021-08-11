@@ -1,19 +1,19 @@
 /*******************************************************************************
 *
 * McXtrace, X ray-tracing package
-*         Copyright (C) 1997-2008, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright (C) 1997-2021, All rights reserved
+*         DTU Physics, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Shape
 *
 * %I
 * Written by: E. Farhi
-* Date: June 23rd 2009
+* Date: Aug. 2021
 * Origin: ILL
-* Modified by: E. Farhi, based on Incoherent
+* Modified by: E. B. Knudsen
 *
-* A geometric shape without effect on photon, for instrument display purpose.
+* A geometric shape without effect on photons, for instrument display purpose.
 *
 * %D
 * An inactive geometrical shape, for drawing purposes only.
@@ -29,7 +29,7 @@
 *   any shape:       geometry=OFF file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
-*   It computes the intersection points of the neutron ray with the object
+*   It computes the intersection points of the photon ray with the object
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using qhull/powercrust, and
@@ -71,23 +71,39 @@ SHARE
 
 DECLARE
 %{
-off_struct offdata;
+  off_struct offdata;
 %}
 
 INITIALIZE
 %{
-if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       thickness=0;
     }
   }
 %}
 
 
-TRACE %{
+TRACE 
+%{
   /* component Shape does nothing */
 %}
 
-MCDISPLAY COPY Incoherent
+MCDISPLAY
+%{
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
+    off_display(offdata);
+  }
+  else if (radius > 0 &&  yheight) {	/* cylinder */
+      cylinder(0,0,0,radius,yheight,0, 0,1,0);
+      cylinder(0,0,0,radius-thickness,yheight,0, 0,1,0);
+  }
+  else if (xwidth && yheight) { 	/* box/rectangle XY */
+      box(0,0,0,xwidth, yheight, zdepth);
+  }
+  else if (radius > 0 && !yheight) {	/* sphere */
+      sphere(0,0,0,radius,0);
+  }
+%}
 
 END
