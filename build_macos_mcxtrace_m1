@@ -7,27 +7,12 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
-THIRDPARTY=`echo mcpl`
-cd 3rdparty
-echo $THIRDPARTY | xargs -n1 rm -r
-cd -
 git submodule init
-git submodule update --recursive --remote --recursive --remote
-
-
-for MODULE in `echo $THIRDPARTY`
-do
-    if [ -d "3rdparty/patches/${MODULE}" ]; then
-	echo Making McCode cmake modules available for $MODULE
-        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
-	echo Applying McCode patches to 3rdparty/${MODULE}
-	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
-    fi
-done
+git submodule update
 
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
-./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac "" -- OSXapp
+./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
 # hack to ensure the silicon app is opened arch -arm64
 sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
 
@@ -41,14 +26,12 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mcodelib $1 tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac-silicon "" -- OSXapp
 
@@ -80,7 +63,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcxtrace-$1
     mkdir dist
     tar cfz dist/mcxtrace-$1_arm64.tgz mcxtrace-$1
-    cp INSTALL-McStas-2.x/macOS/README.md dist
+    cp INSTALL-McStas-3.0/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcxtrace-$1
 else
