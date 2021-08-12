@@ -1128,6 +1128,10 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.edtNumCols.setText(mccode_config.configuration["GUICOLS"])
         self.ui.edtNumCols.conf_var = "GUICOLS"
 
+        self.ui.editor.setText(mccode_config.configuration["EDITOR"])
+        self.ui.editor.conf_var = "EDITOR"
+
+
     def __pullValuesTo_mccode_config(self):
         # mcrun combobox
         i = self.ui.cbxMcrun.currentIndex()
@@ -1148,6 +1152,7 @@ class McConfigDialog(QtWidgets.QDialog):
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
         mccode_config.configuration[str(self.ui.edtNumCols.conf_var)] = str(self.ui.edtNumCols.text())
+        mccode_config.configuration[str(self.ui.editor.conf_var)] = str(self.ui.editor.text())
         # Export selected variables to the system / mcrun
         target_mccode=mccode_config.configuration["MCCODE"].upper()
         # CFLAGS and CC:
