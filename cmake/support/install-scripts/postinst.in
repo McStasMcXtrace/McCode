@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Extract CMake macros during configure
 PREFIX="@CMAKE_INSTALL_PREFIX@"
@@ -44,7 +44,6 @@ MCCODE=${FLAVOR}
 # Function to check if link exists, then remove it
 function checklinkrm {
     if [ -h $1 ]; then
-	echo Removing link $1
 	rm $1
     fi
 }
@@ -165,6 +164,31 @@ then
 	fi
     fi
 fi
+
+# Look for relevant locations of gtksourceview folder
+#
+# Recent GTK on Linux
+if [ -d /usr/share/gtksourceview-4/language-specs/ ];
+then
+    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-4/language-specs/
+fi
+# Slighly older GTK on Linux
+if [ -d /usr/share/gtksourceview-3/language-specs/ ];
+then
+    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-3/language-specs/
+fi
+# homebrew Arm on mac
+if [ -d /opt/homebrew/share/gtksourceview-4/language-specs/ ];
+then
+    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /opt/homebrew/share/gtksourceview-4/language-specs/
+fi
+# homebrew Intel on mac
+if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
+then
+    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/local/share/gtksourceview-4/language-specs/
+fi
+
+
 # Try to figure out if this is a Debian package, a Mac OS X bundle or a generic unix...
 if [[ ${PREFIX} = /usr/share* ]]; 
 then
