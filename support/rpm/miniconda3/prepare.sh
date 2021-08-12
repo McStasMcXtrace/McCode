@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Script for bootstrapping a miniconda3 environment for packaging in rpm 
 # format
