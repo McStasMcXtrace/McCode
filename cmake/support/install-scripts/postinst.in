@@ -183,9 +183,9 @@ then
     cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /opt/homebrew/share/gtksourceview-4/language-specs/
 fi
 # homebrew Intel on mac
-if [ -d /usr/local/homebrew/share/gtksourceview-4/language-specs/ ];
+if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
 then
-    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/local/homebrew/share/gtksourceview-4/language-specs/
+    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/local/share/gtksourceview-4/language-specs/
 fi
 
 
