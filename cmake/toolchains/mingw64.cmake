@@ -26,6 +26,7 @@ set(MPIRUN "mpiexec.exe")
 set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available
 set(GNUPLOT "gnuplot.exe")
 set(MCCODE_CFLAGS "-g -O2 -lm -std=c99")
+set(EDITOR "notepad")
 
 # Plotting options
 
