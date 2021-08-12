@@ -25,10 +25,11 @@ configuration = {
     "PARTICLE": 'neutron',
     "BROWSER": 'xdg-open',
     "GUICOLS": '3',
+    "EDITOR":  'gedit',
 }
 
 # Set environment variables according to the above
-os.environ["MCSTAS"] = configuration["MCCODE_LIB_DIR"]
+os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
 os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
 
 '''
@@ -149,14 +150,13 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
-                         prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML"]
 
  
-    mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    mcrun_lst =     [prefix+"run", prefix+"run --autoplot", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
         
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
