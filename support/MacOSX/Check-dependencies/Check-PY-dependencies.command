@@ -116,9 +116,9 @@ then
     find /Applications/${NEWESTAPP} -name mccode.lang -exec ln -sf \{\} /opt/homebrew/share/gtksourceview-4/language-specs/ \;
 fi
 # homebrew Intel on mac?
-if [ -d /usr/local/homebrew/share/gtksourceview-4/language-specs/ ];
+if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
 then
-    find /Applications/${NEWESTAPP} -name mccode.lang -exec ln -sf \{\} /usr/local/homebrew/share/gtksourceview-4/language-specs/ \;
+    find /Applications/${NEWESTAPP} -name mccode.lang -exec ln -sf \{\} /usr/local/share/gtksourceview-4/language-specs/ \;
 fi
 
 
