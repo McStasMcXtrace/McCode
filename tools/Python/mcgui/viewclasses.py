@@ -106,6 +106,7 @@ class McView(object):
         ui.actionNew_Instrument.setEnabled(True)
         ui.menuNew_From_Template.setEnabled(True)
         ui.actionEdit_Instrument.setEnabled(enableRun)
+        ui.actionEditExt_Instrument.setEnabled(enableRun)
         ui.actionCompile_Instrument.setEnabled(enableRun)
         ui.actionCompile_Instrument_MPI.setEnabled(enableRun)
 
