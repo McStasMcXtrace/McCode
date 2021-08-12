@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-HOST_NAME = "Fedora29-McXtrace"
+HOST_NAME = "Fedora33-McXtrace"
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
@@ -9,7 +9,7 @@ HOST_NAME = "Fedora29-McXtrace"
 # you're doing.
 Vagrant.configure(2) do |config|
   # Centos 7
-  config.vm.box = "generic/fedora29"
+  config.vm.box = "generic/fedora33"
   config.vm.define HOST_NAME do |h|
   #config.vbguest.auto_update = true
   end
