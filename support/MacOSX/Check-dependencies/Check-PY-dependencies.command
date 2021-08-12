@@ -145,10 +145,18 @@ osascript -e "tell app \"System Events\" to display dialog \"Allow embedded open
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
-    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
-    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
-    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
-    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
+    if [[ ${ARCH} = arm64 ]]; 
+    then
+	echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /opt/homebrew/bin/orted
+	sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /opt/homebrew/bin/orted
+	echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /opt/homebrew/bin/orterun
+	sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /opt/homebrew/bin/orterun
+    else
+	echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
+	sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
+	echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
+	sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
+    fi
 else
     echo "Not allowing access for openmpi binaries..."
 fi
