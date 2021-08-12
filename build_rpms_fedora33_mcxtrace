@@ -7,7 +7,7 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
-THIRDPARTY="MCPL"
+THIRDPARTY="mcpl"
 cd 3rdparty
 echo $THIRDPARTY | xargs -n1 rm -r
 cd -
