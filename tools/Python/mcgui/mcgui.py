@@ -712,7 +712,17 @@ class McGuiAppController():
         instr = self.state.getInstrumentFile()
         self.view.showCodeEditorWindow(instr)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
-    
+
+    def handleEditExtInstrument(self):
+        instr = self.state.getInstrumentFile()
+        process = subprocess.Popen(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr)), 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT,
+                                   shell=True,
+                                   universal_newlines=True)
+        self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
+
+
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
@@ -852,6 +862,7 @@ class McGuiAppController():
         mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
         mwui.actionClose_Instrument.triggered.connect(self.handleCloseInstrument)
         mwui.actionEdit_Instrument.triggered.connect(self.handleEditInstrument)
+        mwui.actionEditExt_Instrument.triggered.connect(self.handleEditExtInstrument)
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
