@@ -17,8 +17,11 @@ PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
 PREFIX=`dirname $PREFIX`
 
+ARCH=`arch`
+UNAME=`uname -s`
+
 # On macOS, shorten TMPDIR 
-if [ "$(uname)" == "Darwin" ]; then
+if [[ ${UNAME} = Darwin* ]]; then
     export TMPDIR=/tmp
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
     # Check if we are on macos 10.x or 11.x
@@ -29,6 +32,12 @@ if [ "$(uname)" == "Darwin" ]; then
 else
     export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
 fi
+
+if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+    # Set up for homebrew in /opt
+    export PATH=/opt/homebrew/bin:$PATH
+fi
+
 export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
 export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
 export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
