@@ -14,7 +14,7 @@ set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
 set(PERL "/usr/bin/perl")
 set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -I/opt/homebrew/include -L/opt/homebrew/lib")
-set(EDITOR "gedit")
+set(EDITOR "open")
 
 # Plotting options
 
