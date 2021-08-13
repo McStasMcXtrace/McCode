@@ -10,6 +10,58 @@
 *
 *
 *************************************************************************/
+
+CHANGES in 1.6
+
+1. Union concept for X-ray
+        A subsystem under McXtrace that separate physics from geometry, 
+        thereby allowing multiscattering processes from object to object.
+2. Scatter logger subsystem
+        A concept to allow quantification of parasitic scattering from e.g. mirror substrate.
+3. New Components
+        Sources, Source_div_quasi.comp - quasi-stochastic sampled set divergence source.
+        Samples, Abs_objects.comp - A set of absorbing objects
+
+        Misc, Scatter_logger.comp - The set of components defining the scatter logger interface.  
+        Misc, Scatter_logger_stop.comp 
+        Misc, Scatter_log_iterator.comp
+        Misc, Scatter_log_iterator_stop.comp
+        Misc, Shape.comp - Inactive shape, to embellish instrument display, e.g. a flight tube. 
+        
+        Optics, Grating_trans.comp - Linear transmission grating 
+        Optics, Lens_CRL_RTM.comp - 1D-compound refractive lens based of the rayt transfer method
+
+        Union, Union_master.comp - Set of components defining the Union subsystem.
+        Union, Union_cylinder.comp 
+        Union, Union_sphere.comp
+        Union, Union_make_material.comp
+        Union, Union_box.comp
+        Union, Compton_xrl_process.comp
+        Union, Incoherent_process.comp
+        Union, Union_logger_2D_space.comp
+        Union, Union_logger_1D.comp
+        ...and more...
+
+        Contrib, Bragg_crystal_simple.comp - Simple, easy-to-use reflective crystal.
+4. Many new test-examples and bug fixes.
+        Refer to new-nightly.mcxtrace.org for daily tests
+5. New example instruments
+        Test_mirror_parabolic.instr - Template instrument for the parabolic reflector. 
+        Test_Detector_pn.instr - Templat/test instrument for a detector with quantum efficiency.
+        Test_grating_trans.instr - Template transmission grating instrument
+        Focal_pt_monitor.instr - Template for setting up direct measurement of focal point.
+        NBI_Lab_TOMO.instr - Laboratory tomography setup.
+        Airport_scannerII.instr - Lab-based large scale tomograhy setup with multiple off-objects
+        Union_incoherent.instr - Examples that shows how to use Union.
+        Union_geom_demo.instr 
+        Template_DCM.instr - a template for how to set up a double crystal monochromator.
+        Template_Johann_spec.instr - template for a Johann spectrometer (such as FXE@E-XFEL) 
+        Template_Scatter_log_losses.instr - template for logging losses in a mirror
+        Test_source_spectra.instr
+
+6. A GUI feature to connect the McXtrace GUI with your editor of choice.
+7. Many updates to existing beamline models.
+
 CHANGES in 1.5
 
 1. Standardized reflectivity library, making it much simpler to deal with reflectivity files
