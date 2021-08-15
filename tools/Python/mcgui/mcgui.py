@@ -689,12 +689,12 @@ class McGuiAppController():
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
         mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-manual.pdf")
-        webbrowser.open_new_tab(mcman)
+        webbrowser.open_new_tab("file://" + mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
         mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-components.pdf")
-        webbrowser.open_new_tab(mcman)
+        webbrowser.open_new_tab("file://" + mcman)
     
     def handleHelpAbout(self):
         # get mcstas version using 'mcstas/mcxtrace -v'
