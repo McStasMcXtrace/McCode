@@ -26,7 +26,7 @@ configuration = {
     "BROWSER": '@BROWSER@',
     "GUICOLS": '3',
     "EDITOR":  '@EDITOR@',
-    "QSCI":  '@QSCI@,
+    "QSCI":  '@QSCI@',
 }
 
 # Set environment variables according to the above
