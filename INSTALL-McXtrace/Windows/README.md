@@ -16,12 +16,10 @@ in a cmd.exe shell and start the Perl and McXtrace installers from there
 BEFORE  attempting to install the McXtrace metapackage!!!
 
 ## IMPORTANT C:
-* Please install the [McXtrace 1.5 metapackage](http://download.mcxtrace.org/current/windows/McXtrace-Metapackage-1.5-win64.exe)
+* Please install the [McXtrace 1.6 metapackage](http://download.mcxtrace.org/current/windows/McXtrace-Metapackage-1.6-win64.exe)
 
 * The [extras](http://download.mcxtrace.org/current/windows/extras)
   folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McXtrace metapackage installation
-
-
 
 * An alternative to installing this version is to follow the instructions
 posted at http://www.mcxtrace.org under the heading of
