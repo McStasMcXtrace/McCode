@@ -10,11 +10,6 @@ sudo wget http://packages.mccode.org/rpm/mccode.repo
 sudo yum update
 ```
 
-## Add the EPEL extensions to your system
-```bash
-sudo yum install epel-release
-sudo yum update
-```
 ## Look for the packages descriptions on your system
 After following the above steps your package manager should now be aware of mcxtrace
 ```bash
