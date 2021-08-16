@@ -26,6 +26,7 @@ configuration = {
     "BROWSER": 'xdg-open',
     "GUICOLS": '3',
     "EDITOR":  'gedit',
+    "QSCI":  '1',
 }
 
 # Set environment variables according to the above
