@@ -1,4 +1,4 @@
-# Installation of McXtrace 1.5 on Windows 64 bit systems
+# Installation of McXtrace 1.6 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
