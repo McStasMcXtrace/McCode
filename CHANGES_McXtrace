@@ -29,7 +29,7 @@ CHANGES in 1.6
         Misc, Shape.comp - Inactive shape, to embellish instrument display, e.g. a flight tube. 
         
         Optics, Grating_trans.comp - Linear transmission grating 
-        Optics, Lens_CRL_RTM.comp - 1D-compound refractive lens based of the rayt transfer method
+        Optics, Lens_CRL_RTM.comp - 1D-compound refractive lens based of the ray transfer matrix method
 
         Union, Union_master.comp - Set of components defining the Union subsystem.
         Union, Union_cylinder.comp 
