@@ -1,4 +1,4 @@
-# Installation instructions for McXtrace 1.5
+# Installation instructions for McXtrace 1.6
 
 Please consult the individual pages for your platform of choice. 
 
