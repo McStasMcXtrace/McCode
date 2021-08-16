@@ -27,5 +27,5 @@ posted at http://www.mcxtrace.org under the heading of
 under Windows 10"
 
 ## In case of issues
-Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
+Please report any trouble with the repository to the [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org) mailing list.
 
