@@ -5,7 +5,7 @@ import sys
 import os
 import re
 from widgets import *
-from PyQt5 import Qsci, QtWidgets
+from PyQt5 import QtWidgets
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
@@ -56,7 +56,8 @@ class McView(object):
         self.mw.ui.lblInstrument.setText(labels[0])
         if str(labels[0]) == '':
             self.__ssd = None
-        self.ew.initCodeEditor(instr)
+        if (mccode_config.configuration["QSCI"] == 1):
+            self.ew.initCodeEditor(instr)
 
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
@@ -274,11 +275,12 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             self.resize(920, sheight)
 
         # dynamically added widgets
-        self.__scintilla = None
-        self.__edtSearch = None
-        self.__initScintilla()
-        self.__initCallbacks()
-        self.__initSearchbar()
+        if mccode_config.configuration["QSCI"] == 1:
+            self.__scintilla = None
+            self.__edtSearch = None
+            self.__initScintilla()
+            self.__initCallbacks()
+            self.__initSearchbar()
 
     def __initSearchbar(self):
         ''' set focus, search action events '''
@@ -393,7 +395,8 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                 action.h = h
                 action.triggered.connect(h.handle)
 
-        self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
+        if mccode_config.configuration["QSCI"] == 1:
+            self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
 
     def initCodeEditor(self, instr):
         if instr != '':
@@ -465,6 +468,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
 
     def __initScintilla(self):
         # delete text editor placeholder
+        from PyQt5 import Qsci
         scintilla = Qsci.QsciScintilla(self)
 
         ########################
@@ -594,8 +598,10 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             self.volatileDataTransition.emit(True)
 
     def __handleSaveAction(self):
-        if self.volatileDataExists:
-            self.saveRequest.emit(self.__scintilla.text())
+        if (mccode_config.configuration["QSCI"] == 1):
+            if self.volatileDataExists:
+                self.saveRequest.emit(self.__scintilla.text())
+
 
     def __handleVolatileDataPresent(self, volatileDataExists=False):
         if volatileDataExists:

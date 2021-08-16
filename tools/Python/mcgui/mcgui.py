@@ -880,7 +880,10 @@ class McGuiAppController():
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
-        mwui.btnEdit.clicked.connect(self.handleEditInstrument)
+        if mccode_config.configuration["QSCI"] == 1:
+            mwui.btnEdit.clicked.connect(self.handleEditInstrument)
+        else:
+            mwui.btnEdit.clicked.connect(self.handleEditExtInstrument)
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
 
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
