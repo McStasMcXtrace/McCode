@@ -360,7 +360,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
       {
         if (t_size>CHAR_BUF_LENGTH)
         {
-          fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", CHAR_BUF_LENGTH);
+          fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", OFF_INTERSECT_MAX);
             return (t_size);
         }
         //both planes intersect the polygon, let's find the intersection point
