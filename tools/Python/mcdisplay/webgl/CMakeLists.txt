@@ -62,9 +62,20 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy")
 
 # RPM
+if (${RPMPROFILE})
+   if (${RPMPROFILE} STREQUAL "fedora")
+        set(PYDEPS "python3, python3-ply, python3-numpy")
+   else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+   endif()
+else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+endif()
+
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
-  )
+  "${FLAVOR}-${MCCODE_VERSION},  ${PYDEPS}"
+)
+
 
 include(CPack)
 
