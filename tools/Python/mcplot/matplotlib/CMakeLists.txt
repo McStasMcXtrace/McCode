@@ -64,8 +64,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-pyqt5, python3-mplexporter, python3-tornado")
 
 # RPM
-if (${RPMPROFILE})
-   if (${RPMPROFILE} STREQUAL "fedora")
+if (RPMPROFILE)
+   if (RPMPROFILE STREQUAL "fedora")
         set(PYDEPS "python3-matplotlib, python3-qt5, python3-tornado")
    else()
 	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})

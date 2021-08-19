@@ -64,8 +64,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}, python3, python3-pyqt5.qsci")
 
 # RPM
-if (${RPMPROFILE})
-   if (${RPMPROFILE} STREQUAL "fedora")
+if (RPMPROFILE)
+   if (RPMPROFILE STREQUAL "fedora")
         set(PYDEPS "python3, python3-qt5, python3-qscintilla-qt5")
    else()
 	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})

@@ -49,8 +49,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-yaml")
 
 # RPM
-if (${RPMPROFILE})
-   if (${RPMPROFILE} STREQUAL "fedora")
+if (RPMPROFILE)
+   if (RPMPROFILE STREQUAL "fedora")
         set(PYDEPS "python3-pyyaml")
    else()
 	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
