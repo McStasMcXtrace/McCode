@@ -166,26 +166,29 @@ then
 fi
 
 # Look for relevant locations of gtksourceview folder
-#
-# Recent GTK on Linux
-if [ -d /usr/share/gtksourceview-4/language-specs/ ];
+
+if [ -f  ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang ];
 then
-    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-4/language-specs/
-fi
-# Slighly older GTK on Linux
-if [ -d /usr/share/gtksourceview-3/language-specs/ ];
-then
-    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-3/language-specs/
-fi
-# homebrew Arm on mac
-if [ -d /opt/homebrew/share/gtksourceview-4/language-specs/ ];
-then
-    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /opt/homebrew/share/gtksourceview-4/language-specs/
-fi
-# homebrew Intel on mac
-if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
-then
-    cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/local/share/gtksourceview-4/language-specs/
+    # Recent GTK on Linux
+    if [ -d /usr/share/gtksourceview-4/language-specs/ ];
+    then
+	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-4/language-specs/
+    fi
+    # Slighly older GTK on Linux
+    if [ -d /usr/share/gtksourceview-3/language-specs/ ];
+    then
+	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-3/language-specs/
+    fi
+    # homebrew Arm on mac
+    if [ -d /opt/homebrew/share/gtksourceview-4/language-specs/ ];
+    then
+	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /opt/homebrew/share/gtksourceview-4/language-specs/
+    fi
+    # homebrew Intel on mac
+    if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
+    then
+	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/local/share/gtksourceview-4/language-specs/
+    fi
 fi
 
 
