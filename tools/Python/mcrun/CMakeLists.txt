@@ -131,4 +131,9 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}run"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
+
+  install(
+    PROGRAMS "${PROJECT_SOURCE_DIR}/mcsplit.py"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    )
 endif()
