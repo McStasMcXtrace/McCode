@@ -33,6 +33,7 @@
 * Lmax: [AA]            Maximum wavelength detected
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,7 +48,7 @@ DEFINE COMPONENT TOFLambda_monitor
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (
+SETTING PARAMETERS ( int nowritefile=0,
   nL=20, nt=128, tmin, tmax, string filename=0,
   xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
   xwidth=0, yheight=0, Lmin, Lmax,
@@ -124,6 +125,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
     "TOF-wavelength monitor",
     "Time-of-flight [\\gms]", "Wavelength [AA]",
@@ -131,6 +133,7 @@ SAVE
     nt, nL,
     &TOFL_N[0][0],&TOFL_p[0][0],&TOFL_p2[0][0],
     filename);
+}
 %}
 
 FINALLY

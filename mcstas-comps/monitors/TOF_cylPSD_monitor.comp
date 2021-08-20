@@ -28,6 +28,7 @@
 * nphi: [deg]           Number of angular bins
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -40,7 +41,7 @@
 
 DEFINE COMPONENT TOF_cylPSD_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nt=128, nphi=90, string filename=0, radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
+SETTING PARAMETERS (nt=128, nphi=90, string filename=0, int nowritefile=0, radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -114,6 +115,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
       "Cylindrical Time-of-flight PSD monitor",
       "Time-of-flight [\\gms]",
@@ -122,6 +124,7 @@ SAVE
       nt, nphi,
       &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
       filename);
+}
 %}
 
 FINALLY

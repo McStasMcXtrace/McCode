@@ -34,6 +34,7 @@
 * Lmax: [AA]            Maximum wavelength detected
 * filename: [string]    Name of file in which to store the data
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,7 +48,7 @@
 DEFINE COMPONENT PolLambda_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, npol=21, restore_neutron=0,
-  string filename, mx=0, my=0, mz=0, Lmin, Lmax)
+  string filename, int nowritefile=0, mx=0, my=0, mz=0, Lmin, Lmax)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -142,12 +143,14 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D("Pol-wavelength monitor",
 		  "Wavelength [AA]", "Polarisation projection",
 		  Lmin, Lmax, -1.0, 1.0,
 		  nL, npol,
 		  &PolL_N[0][0],&PolL_p[0][0],&PolL_p2[0][0],
 		  filename);
+}
 %}
 
 FINALLY

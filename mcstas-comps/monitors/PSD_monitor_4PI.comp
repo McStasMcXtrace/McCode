@@ -46,7 +46,7 @@ DEFINE COMPONENT PSD_monitor_4PI
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nx=90, ny=90, string filename=0, radius=1, restore_neutron=0)
+SETTING PARAMETERS (nx=90, ny=90, string filename=0, int nowritefile=0, radius=1, restore_neutron=0)
 
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -118,6 +118,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
     "4PI PSD monitor",
     "Longitude [deg]",
@@ -126,6 +127,7 @@ SAVE
     nx, ny,
     &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
     filename);
+}
 %}
 
 FINALLY
