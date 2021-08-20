@@ -137,8 +137,11 @@
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -mcnlvz, -mcnlz); \
-    if (mc_ret && mc_dt>=0) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnlz=0;}\
-    else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
+    if (mc_ret) { \
+    if (mc_dt>=0 || mcallowbackprop == 1) \
+      PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnlz=0;   \
+    else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}\
+    else { if (mcallowbackprop == 0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Z0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -161,8 +164,11 @@
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -mcnlvx, -mcnlx); \
-    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
+    if (mc_ret) { \
+    if (mc_dt>=0 || mcallowbackprop == 1) \
+      PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnlx=0;   \
+    else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}\
+    else { if (mcallowbackprop == 0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_X0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -185,11 +191,13 @@
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -mcnlvy, -mcnly); \
-    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
+    if (mc_ret) { \
+    if (mc_dt>=0 || mcallowbackprop == 1) \
+      PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnly=0;   \
+    else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}\
+    else { if (mcallowbackprop == 0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Y0; \
-    DISALLOW_BACKPROP;\
-  } while(0)
+    DISALLOW_BACKPROP;\  } while(0)
 
 
 #define mcPROP_Y0 \
