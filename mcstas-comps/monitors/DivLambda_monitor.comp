@@ -41,6 +41,7 @@
 * Lmax: [AA]            Maximum wavelength detected
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -53,7 +54,7 @@
 
 DEFINE COMPONENT DivLambda_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nL=20, nh=20,
+SETTING PARAMETERS (nL=20, nh=20, int nowritefile=0,
   string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, maxdiv_h=2, Lmin, Lmax, restore_neutron=0, nx=0, ny=0, nz=1)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -134,6 +135,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
       "Wavelength-divergence monitor",
       "Wavelength [AA]",
@@ -142,6 +144,7 @@ SAVE
       nL, nh,
       &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
       filename);
+}
 %}
 
 FINALLY

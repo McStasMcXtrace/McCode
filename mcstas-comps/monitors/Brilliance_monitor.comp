@@ -55,6 +55,7 @@
 * source_dist: [m]      Distance from source. Beware when transporting through neutron optics!
 * xwidth: [m]           width of monitor
 * yheight: [m]          height of monitor
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -69,7 +70,7 @@ DEFINE COMPONENT Brilliance_monitor
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nlam=101, nt=1001,
+SETTING PARAMETERS (nlam=101, nt=1001, int nowritefile=0,
   lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcuts=0,
   int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1, string filename,
   t_0=0, t_1=20000, srcarea=1)
@@ -199,6 +200,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   /* First, dump the 2D monitor */
 
   /* For each Wavelength channel, find peak brilliance */
@@ -265,6 +267,7 @@ SAVE
       &BRIL_N[0][0],&BRIL_p[0][0],&BRIL_p2[0][0],
       filename);
   }
+}
 %}
 
 FINALLY
