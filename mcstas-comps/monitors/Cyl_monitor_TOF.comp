@@ -28,6 +28,7 @@
 * ny: [1]               Number of pixel rows
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -42,7 +43,8 @@ DEFINE COMPONENT Cyl_monitor_TOF
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0, thmin=0, thmax=360, nt=100,tmin,tmax)
+SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0,
+		    thmin=0, thmax=360, nt=100,tmin,tmax, int nowritefile=0)
 
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -101,7 +103,7 @@ TRACE
 
 SAVE
 %{
-   
+if (!nowritefile) {   
   DETECTOR_OUT_2D(
       "Cylindrical TOF monitor",
       "radial position [deg]",
@@ -109,6 +111,7 @@ SAVE
       thmin, thmax, tmin, tmax, nr, nt,
       &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
       filename);
+}
 %}
 
 FINALLY
