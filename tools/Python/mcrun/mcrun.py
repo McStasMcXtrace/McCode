@@ -317,7 +317,6 @@ def main():
     LOG.info('===')
 
     if options.info:
-        print('info!')
         mcstas.run(override_mpi=False)
         exit()
 
