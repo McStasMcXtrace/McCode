@@ -140,7 +140,7 @@
     if (mc_ret) { \
     if (mc_dt>=0 || mcallowbackprop == 1) \
       PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnlz=0;   \
-    else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}\
+    } else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}		\
     else { if (mcallowbackprop == 0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Z0; \
     DISALLOW_BACKPROP;\
@@ -167,7 +167,7 @@
     if (mc_ret) { \
     if (mc_dt>=0 || mcallowbackprop == 1) \
       PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnlx=0;   \
-    else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}\
+    } else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}		\
     else { if (mcallowbackprop == 0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_X0; \
     DISALLOW_BACKPROP;\
@@ -194,7 +194,7 @@
     if (mc_ret) { \
     if (mc_dt>=0 || mcallowbackprop == 1) \
       PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); mcnly=0;   \
-    else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}\
+    } else {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}		\
     else { if (mcallowbackprop == 0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Y0; \
     DISALLOW_BACKPROP;\  } while(0)
