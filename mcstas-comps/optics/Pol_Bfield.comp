@@ -101,7 +101,9 @@ SETTING PARAMETERS (int field_type=0, xwidth=0, yheight=0,zdepth=0, radius=0, Bx
 
 SHARE
 %{
-%include "pol-lib"
+  %include "pol-lib"
+  %include "interpolation-lib"
+
   double fmax(double, double);
   double fmin(double, double);
 %}
