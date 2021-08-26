@@ -37,6 +37,7 @@
 * nt: [1]               Number of TOF bins
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,7 +51,8 @@
 DEFINE COMPONENT PSD_TOF_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int nx=90, int ny=90, int nt=10, restore_neutron=0,
-  string filename, xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, tmin=0, tmax=0)
+		    string filename, xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0,
+		    tmin=0, tmax=0, int nowritefile=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, PSD_Ns, PSD_ps, PSD_p2s)
 
 
@@ -138,6 +140,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   int kk;
   char ff[256];
   char tt[256];
@@ -163,6 +166,7 @@ SAVE
       &PSD_N[kk][0][0],&PSD_p[kk][0][0],&PSD_p2[kk][0][0],
       ff);
   }
+}
 %}
 
 FINALLY

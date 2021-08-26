@@ -33,6 +33,7 @@
 * ny: [1]               Number of pixel rows
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,7 +49,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (int nx=90, int ny=90, string filename=0,
   xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
-  restore_neutron=0)
+  restore_neutron=0, int nowritefile=0)
 
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -108,6 +109,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
     "PSD monitor",
     "X position [cm]",
@@ -116,6 +118,7 @@ SAVE
     nx, ny,
     &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
     filename);
+}
 %}
 
 FINALLY
