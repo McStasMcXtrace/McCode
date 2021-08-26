@@ -89,7 +89,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Select prefix
 if(${enable_mcstas})
   set(P "mc")
-  set(SOURCENAMES doc run )
+  set(SOURCENAMES doc run display-mantid)
 else()
   set(P "mx")
   set(SOURCENAMES doc run )
