@@ -37,7 +37,10 @@
 #define OFF_EPSILON 1e-13
 #endif
 
-#define OFF_INTERSECT_MAX 100
+#ifndef OFF_INTERSECT_MAX
+#define OFF_INTERSECT_MAX 1024
+#endif
+
 
 //#include <float.h>
 
