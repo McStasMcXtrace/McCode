@@ -17,7 +17,10 @@
 * %D
 * Models a disc chopper with nslit identical slits, which are symmetrically distributed
 * on the disc. At time t=0, the centre of the first slit opening will be situated at the
-* vertical axis when phase=0.
+* vertical axis when phase=0, assuming the chopper centre of rotation is placed <b>BELOW</b> the beam axis.
+* If you want to place the chopper <b>ABOVE</b> the beam axis, please use a 180 degree rotation around Z 
+* (otherwise unexpected beam splitting can occur in combination with the isfirst=1 setting, see
+*  <a href="https://github.com/McStasMcXtrace/McCode/issues/650">related bug on GitHub</a>)
 *
 * For more complicated gemometries, see component manual example of DiskChopper GROUPing.
 *
