@@ -17,10 +17,11 @@
 * %D
 *
 * This component has no physical size (like Arm - also drawn that
-* way), but is used to set the polarisation in one of two ways:
-* 1) (randomOn=0) Hardcode the polarisation to the vector (px, py, pz)
-* 2) (randomOn!=0) Set the polarisation to a random vector on the unit sphere
-*
+* way), but is used to set the polarisation in one of four ways:
+* 1) (randomOn=0, normalize=0) Hardcode the polarisation to the vector (px, py, pz)
+* 2) (randomOn!=0, normalize!=0) Set the polarisation to a random vector on the unit sphere
+* 3) (randomOn!=0, normalize=0) Set the polarisation to a radnom vector within the unit sphere
+* 4) (randomOn=0, normalize!=0) Hardcode the polarisation to point in the direction of (px,py,pz) but with polarization=1. 
 * Example: Set_pol(px=0, py=-1, pz=0)
 *
 * %P
@@ -30,6 +31,7 @@
 * py: [1]        Y-component of polarisation vector (can be negative) 
 * pz: [1]        Z-component of polarisation vector (can be negative) 
 * randomOn: [1]  Generate random values if randomOn!=0. 
+* normalize: [1] Normalize the polarization vector. If used with randomOn will generate random vectors with length 1.
 *
 * OUTPUT PARAMETERS:
 *
@@ -38,7 +40,7 @@
 
 DEFINE COMPONENT Set_pol
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (px=0, py=0, pz=0, randomOn=0)
+SETTING PARAMETERS (px=0, py=0, pz=0, randomOn=0, normalize=0)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
@@ -48,28 +50,21 @@ DECLARE
 
 INITIALIZE
 %{
-if (px==1 && py==1 && pz==1)
+
+  if (sqrt(px*px + py*py + pz*pz) > 1+FLT_EPSILON)
   {
-    printf("Set_pol: %s: NULL vector defined!\n"
-	   "ERROR      (px, py, pz). Exiting",
-           NAME_CURRENT_COMP);
-    exit(1);
+      printf("WARNING: Set_pol(%s): Polarisation vector (px, py, pz) is unphysical!\n"
+            "px*px + py*py + pz*pz = %.18e> 1. Renormalizing...\n",NAME_CURRENT_COMP,(px*px + py*py + pz*pz));
+      NORM(px,py,pz);
   }
 
-  if ((px*px + py*py + pz*pz) > 1)
-  {
-    printf("Set_pol: %s: Polarisation vector (px, py, pz) is unphysical!\n"
-	   "ERROR  px*px + py*py + pz*pz > 1. Exiting....",
+  if(randomOn!=0){
+    printf("INFO: Set_pol(%s): Setting polarization randomly.\n",
            NAME_CURRENT_COMP);
-    exit(1);
-  }
-
-  if(randomOn!=0)
-    printf("Set_pol: %s: Setting polarisation randomly.\n",
-           NAME_CURRENT_COMP);
-  else
-    printf("Set_pol: %s: Setting polarisation to (%f, %f, %f)\n",
+  }else{
+    printf("INFO: Set_pol(%s): Setting polarization to (%f, %f, %f)\n",
            NAME_CURRENT_COMP, px, py, pz);
+  }
 %}
 
 TRACE
@@ -84,13 +79,22 @@ TRACE
     sx = sin(phi)*cos(theta);
     sy = sin(phi)*sin(theta);
     sz = cos(phi);
-  }
-  else
-  {
+    if (!normalize){
+      double r=rand01();
+      sx*=r;
+      sy*=r;
+      sz*=r;
+    }
+  } else {
     sx = px;
     sy = py;
     sz = pz;
+    if (normalize){
+      NORM(sx,sy,sz);
+    }
   }
+
+
 
   SCATTER;
 %}
