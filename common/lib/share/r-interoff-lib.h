@@ -43,6 +43,7 @@
 #else
 #define OFF_INTERSECT_MAX 1024
 #endif
+#endif
 
 //#include <float.h>
 
