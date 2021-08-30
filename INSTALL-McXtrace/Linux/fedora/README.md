@@ -1,14 +1,12 @@
 # Installing McXtrace 1.6 on CentOS
 
-McXtrace provides a package repository for use with RedHat-based distributions, such as CentOS 7.
-Due to the new direction the CentOS-project has taken ([Announcement](https://blog.centos.org/2020/12/future-is-centos-stream/)) this may change in the future and we will likely not be able to support newer versions of CentOS as smoothly as we have done up to CentOS 7. We intend to switch our focus to track the Fedora-class distributions for the future.
-To allow automatic update of your mcxtrace, mcxtrace-components and tools when new revisions are relased, follow the below instruction. **PLEASE NOTE** that our repo-based RPM packages are built on Fedora 33 and will require glibc-2.14 or newer! Hence, a better solution for you may be, to build yourself using the [repo build instructions](https://github.com/McXtraceMcXtrace/McCode/wiki/Building-McStas-McXtrace)
+McXtrace provides a package repository for use with RedHat-based distributions, such as Fedora 33 or newer. To allow automatic update of your mcxtrace, mcxtrace-components and tools when new revisions are relased, follow the below instruction. **PLEASE NOTE** that our repo-based RPM packages are built on Fedora 33 and will require glibc-2.14 or newer! Hence, a better solution for you may be, to build yourself using the [repo build instructions](https://github.com/McXtraceMcXtrace/McCode/wiki/Building-McStas-McXtrace)
 
 
 ## Add the McCode repo to your system
 ```bash
 cd /etc/yum.repos.d
-sudo wget http://packages.mccode.org/rpm/mccode.repo
+sudo wget http://packages.mccode.org/rpm-fedora/mccode-fedora.repo
 sudo yum update
 ```
 
