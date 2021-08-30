@@ -4,7 +4,7 @@
 # two McStas installations, with path $1 and $2
 #
 
-COMPDIRS="sources optics samples monitors misc contrib contrib/Union obsolete"
+COMPDIRS="sources optics samples monitors misc contrib contrib/union obsolete"
 
 for DIR in `echo $COMPDIRS`
 do
