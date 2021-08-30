@@ -184,10 +184,10 @@
 * cc: [deg]                                               Gamma angle
 * barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
 * RX: [m]                                                 Radius of horizontal along X lattice curvature. flat for 0
-* RY: [m]                                                 Radius of vertical lattice curvature. flat for 0
-* RZ: [m]                                                 Radius of horizontal along Z lattice curvature. flat for 0
+* RY: [m]                                                 Radius of vertical along Y lattice curvature. flat for 0
 * powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1
 * PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0<PG<1 with main axis on 'c'
+* deltak: [AA-1]                                          Equality-threshold for use in SPLIT settings. If difference between all ki_{x,y,z} are less than deltak from previous particle, the two are considered alike enough to jump directly to the MC choice between 'active' reflections 
 *
 * OUTPUT PARAMETERS:
 *
@@ -279,8 +279,9 @@ recip_cell=0, barns=0,
 ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
-p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0)
+p_transmit = 0.001, sigma_abs = 0, sigma_inc = 0,
+aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
+deltak=1e-6)
 OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
@@ -361,7 +362,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
       int    nb_reuses, nb_refl, nb_refl_count;
       int    max_tau_count;
     };
-#pragma acc routine seq
+#pragma acc routine
   int SX_list_compare (void const *a, void const *b)
   {
      struct hkl_data const *pa = a;
@@ -791,7 +792,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     this function returns:
       tau_count (return), coh_refl, coh_xsect, T (updated elements in the array up to [j])
    */
-#pragma acc routine seq
+#pragma acc routine
 int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
     double kix, double kiy, double kiz, double tau_max,
     double *coh_refl, double *coh_xsect)
@@ -906,7 +907,7 @@ int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
         return (j); // this is 'tau_count', i.e. number of reachable reflections
     } /* end hkl_search */
 
-#pragma acc routine seq
+#pragma acc routine
   int hkl_select(struct tau_data *T, int tau_count, double coh_refl, double *sum,_class_particle *_particle) {
       int j;
       double r = rand0max(coh_refl);
@@ -921,21 +922,23 @@ int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
 
     /* Functions for "reorientation", powder and PG modes */
     /* Powder, forward */
-#pragma acc routine seq
-void randrotate(double *nx, double *ny, double *nz, double a, double b) {
-      double nvx, nvy, nvz;
-      rotate(nvx,nvy,nvz, *nx, *ny, *nz, a, 1, 0, 0);
-      rotate(*nx,*ny,*nz, nvx,nvy,nvz, b, 0, 1, 0);
+#pragma acc routine
+       void randrotate(double *nx, double *ny, double *nz, double a, double b, double c) {
+      double x1, y1, z1, x2, y2, z2;
+      rotate(x1, y1, z1, *nx,*ny,*nz, a, 1, 0, 0); /* <1> = rot(<n>,a) */
+      rotate(x2, y2, z2,  x1, y1, z1, b, 0, 1, 0); /* <2> = rot(<1>,b) */
+      rotate(*nx,*ny,*nz, x2, y2, z2, c, 0, 0, 1); /* <n> = rot(<2>,c) */
     }
     /* Powder, back */
-#pragma acc routine seq
-void randderotate(double *nx, double *ny, double *nz, double a, double b) {
-      double nvx, nvy, nvz;
-      rotate(nvx,nvy,nvz,*nx,*ny,*nz, -b, 0, 1, 0);
-      rotate(*nx, *ny, *nz, nvx,nvy,nvz, -a, 1, 0, 0);
+#pragma acc routine
+void randderotate(double *nx, double *ny, double *nz, double a, double b, double c) {
+      double x1, y1, z1, x2, y2, z2;
+      rotate(x1, y1, z1, *nx,*ny,*nz, -c, 0,0,1);
+      rotate(x2, y2, z2,  x1, y1, z1, -b, 0,1,0);
+      rotate(*nx,*ny,*nz, x2, y2, z2, -a, 1,0,0);
     }
     /* PG, forward */
-#pragma acc routine seq
+#pragma acc routine
 void PGrotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
       /* Currently assumes c-axis along 'x', ought to be generalized... */
       double nvx, nvy, nvz;
@@ -943,12 +946,30 @@ void PGrotate(double *nx, double *ny, double *nz, double a, double csx, double c
       *nx = nvx; *ny = nvy; *nz = nvz;
     }
     /* PG, back */
- #pragma acc routine seq
+#pragma acc routine
 void PGderotate(double *nx, double *ny, double *nz, double a, double csx, double csy, double csz) {
       /* Currently assumes c-axis along 'x', ought to be generalized... */
       double nvx, nvy, nvz;
       rotate(nvx,nvy,nvz, *nx, *ny, *nz, -a, csx, csy, csz);
       *nx = nvx; *ny = nvy; *nz = nvz;
+    }
+
+
+
+#pragma acc routine
+    /* rotate vector counterclockwise */
+    void vec_rotate_2d(double* x, double* y, double angle) {
+        double c, s;
+        double newx, newy;
+
+        c = cos(angle);
+        s = sin(angle);
+
+        newx = *x*c - *y*s;
+        newy = *x*s + *y*c;
+
+        *x = newx;
+        *y = newy;
     }
 
   #ifdef USE_OPENCL
@@ -1012,7 +1033,7 @@ INITIALIZE
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, &hkl_list, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
     printf("Single_crystal: %s: Error: Aborting.\n", NAME_CURRENT_COMP);
-    exit(0);
+    exit(-1);
   }
 
   if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;
@@ -1048,7 +1069,16 @@ INITIALIZE
   printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
       NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i,
       reflections && strlen(reflections) ? reflections : "NULL");
-      
+
+  if (powder && PG)
+    exit(fprintf(stderr,"Single_crystal: %s: powder and PG modes can not be used together!\n"
+             "ERROR           Please use EITHER powder or PG mode.\n", NAME_CURRENT_COMP));
+
+  if (powder && !(order==1)) {
+    fprintf(stderr,"Single_crystal: %s: powder mode means implicit choice of no multiple scattering!\n"
+            "WARNING setting order=1\n", NAME_CURRENT_COMP);
+    order=1;
+  }
 
   if (PG && !(order==1)) {
     fprintf(stderr,"Single_crystal: %s: PG mode means implicit choice of no multiple scattering!\n"
@@ -1104,6 +1134,13 @@ TRACE
   int    intersect=0;
   double theta, phi;            /* rotation angles for curved lattice option */
 
+  double curv_xangle;
+  double curv_yangle;
+
+  double _vx;
+  double _vy;
+  double _vz;
+
   #ifdef OPENACC
   #ifdef USE_OFF
   off_struct thread_offdata = offdata;
@@ -1149,7 +1186,7 @@ TRACE
 #endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
-      double Alpha, Beta;
+      double Alpha, Beta, Gamma;
 
       if (hkl_info.shape == 0)
         intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1179,43 +1216,69 @@ TRACE
 
       /* (1). Compute incoming wave vector ki */
       if (powder) { /* orientation of crystallite is random */
-	Alpha = randpm1()*PI*powder;
-	Beta = randpm1()*PI/2;
-	randrotate(&vx, &vy, &vz, Alpha, Beta);
+        Alpha = randpm1()*PI*powder;
+        Beta  = randpm1()*PI/2;
+        Gamma = randpm1()*PI;
+        randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
-      if (PG) { /* orientation of crystallite is random */
+      if (PG) { /* orientation of crystallite is random along <c> axis */
 	Alpha = rand01()*2*PI*PG;
 	PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
 
+
+      /* ------------------------------------------------------------------------- */
       /* lattice curvature option: rotate neutron velocity */
-      if (RX || RY || RZ) {
-        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RX),0,0,1); }
-		    else { b1x=vx; b1y=vy; b1z=vz; }
-		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, atan2(y,RY),1,0,0); }
-		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, atan2(z,RZ),0,1,0); }
-        else { b1x=b2x; b1y=b2y; b1z=b2z; }
-		    kix = V2K*b1x;
-        kiy = V2K*b1y;
-        kiz = V2K*b1z;
-      } else {
-        kix = V2K*vx;
-        kiy = V2K*vy;
-        kiz = V2K*vz;
+      /* WARNING: cannot be used together with the PG c-rotation! */
+      curv_xangle = 0;
+      curv_yangle = 0;
+
+      _vx = vx;
+      _vy = vy;
+      _vz = vz;
+
+      if(RY) { /* rotate v around x axis based on y pos, for vertical focus */
+          curv_yangle = atan2(y, RY);
+          vec_rotate_2d(&vy,&vz, curv_yangle);
+          vec_rotate_2d(&sy,&sz, curv_yangle);
+
+          /*changing y,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&y,&z, curv_yangle);
       }
+      if(RX) { /* rotate v around y axis based on x pos, for horizontal focus */
+          curv_xangle = atan2(x, RX);
+          vec_rotate_2d(&vx,&vz, curv_xangle);
+          vec_rotate_2d(&sx,&sz, curv_xangle);
+
+          /*changing x,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&x,&z, curv_xangle);
+      }
+
+      kix = V2K*vx;
+      kiy = V2K*vy;
+      kiz = V2K*vz;
+      vx = _vx;
+      vy = _vy;
+      vz = _vz;
+      /* ------------------------------------------------------------------------- */
+
+
 
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
-/*      if ( fabs(kix - hkl_info.kix) < 1e-6
-        && fabs(kiy - hkl_info.kiy) < 1e-6
-        && fabs(kiz - hkl_info.kiz) < 1e-6) {
+#ifndef OPENACC
+      if ( fabs(kix - hkl_info.kix) < deltak
+        && fabs(kiy - hkl_info.kiy) < deltak
+        && fabs(kiz - hkl_info.kiz) < deltak) {
         hkl_info.nb_reuses++;
       } else {
-*/        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
+#endif
+        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
         double coh_xsect = 0, coh_refl = 0;
 
@@ -1251,9 +1314,8 @@ TRACE
         hkl_info.coh_xsect = coh_xsect;
         hkl_info.nb_refl += tau_count;
         hkl_info.nb_refl_count++;
+      }
 #endif
-/*      }
-*/
       /* (3). Probabilities of the different possible interactions. */
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
@@ -1279,27 +1341,27 @@ TRACE
       {
         p *= p_trans/mc_trans;
         intersect=0;
-	if (powder) { /* orientation of crystallite is longer random */
-	  randderotate(&vx, &vy, &vz, Alpha, Beta);
-	}
-	if (PG) { /* orientation of crystallite is longer random */
-	  PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cz, hkl_info.m_cz);
-	}
-	break;
+        if (powder) { /* orientation of crystallite is longer random */
+          randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+        }
+        if (PG) { /* orientation of crystallite is longer random */
+          PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cz, hkl_info.m_cz);
+        }
+        break;
       }
       if(tot_xlen <= 0){
         ABSORB;
       }
       if(mc_interact <= 0)        /* Protect against rounding errors */
         { intersect=0;
-	  if (powder) { /* orientation of crystallite is no longer random */
-	    randderotate(&vx, &vy, &vz, Alpha, Beta);
-	  }
-	  if (PG) { /* orientation of crystallite is longer random */
-	    PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
-	  }
-	  break;
-	}
+          if (powder) { /* orientation of crystallite is no longer random */
+            randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+          }
+          if (PG) { /* orientation of crystallite is no longer random, rotation around <c> */
+            PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
+          }
+          break;
+        }
       if (!event_counter) p *= fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the neutron, taking
          secondary extinction into account. */
@@ -1376,20 +1438,28 @@ TRACE
 #endif
 
       }
+      /* ------------------------------------------------------------------------- */
       /* lattice curvature option: rotate back neutron velocity */
-      if (RZ || RY) {
-        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    -atan2(x,RX),0,0,1); }
-		    else { b1x=vx; b1y=vy; b1z=vz; }
-		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, -atan2(y,RY),1,0,0); }
-		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, -atan2(z,RZ),0,1,0); }
-        else { b1x=b2x; b1y=b2y; b1z=b2z; }
-        vx=b1x; vy=b1y; vz=b1z;
-	    }
+      if(RX) {
+          vec_rotate_2d(&vx,&vz, -curv_xangle);
+          vec_rotate_2d(&sx,&sz, -curv_xangle);
 
+          /*changing x,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&x,&z, -curv_xangle);
+      }
+      if(RY) {
+          vec_rotate_2d(&vy,&vz, -curv_yangle);
+          vec_rotate_2d(&sy,&sz, -curv_yangle);
+
+          /*changing y,z actually curves the crystal, not only the planes*/
+          /*comment out if only curvature of the lattice planes is needed*/
+          vec_rotate_2d(&y,&z, -curv_yangle);
+      }
+      /* ------------------------------------------------------------------------- */
       SCATTER;
       if (powder) { /* orientation of crystallite is no longer random */
-	  randderotate(&vx, &vy, &vz, Alpha, Beta);
+        randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
       if (PG) { /* orientation of crystallite is longer random */
 	PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
