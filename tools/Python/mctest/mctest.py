@@ -248,9 +248,12 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
 
         # run the test, record time and runtime success/fail
         t1 = time.time()
-        global ncount, mpi
+        global ncount, mpi, openacc
         if mpi is not None:
-            cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
+            if openacc is True:
+                cmd = "mcrun -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
+            else:
+                cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
         else:
             cmd = "mcrun -s 1000 %s %s -n%s -d%d  &> run_stdout.txt" % (test.localfile, test.parvals, ncount, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
@@ -531,6 +534,7 @@ def show_installed_versions(mccoderoot):
 
 ncount = None
 mpi = None
+openacc = None
 
 def main(args):
     # mutually excusive main branches
@@ -578,7 +582,7 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, mpi, skipnontest
+    global ncount, mpi, skipnontest, openacc
     if args.ncount:
         ncount = args.ncount[0]
     else:
@@ -587,6 +591,9 @@ def main(args):
     if args.mpi:
         mpi = args.mpi[0]
         logging.info("mpi count is: %s" % mpi)
+    if args.openacc:
+        openacc = True
+        logging.info("openacc is enabled")
 
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
@@ -608,6 +615,7 @@ if __name__ == '__main__':
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
     parser.add_argument('--ncount', nargs=1, help='ncount sent to mcrun')
     parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to mcrun')
+    parser.add_argument('--openacc', action='store_true', help='openacc flag sent to mcrun')
     parser.add_argument('--configs', action='store_true', help='test config files under mccodelib/MCCODE')
     parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path (enables --configs)')
     parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex)')
