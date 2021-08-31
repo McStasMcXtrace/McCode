@@ -136,4 +136,9 @@ if(NOT WINDOWS)
     PROGRAMS "${PROJECT_SOURCE_DIR}/mcsplit.py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
+
+  install(
+    PROGRAMS "${PROJECT_SOURCE_DIR}/acc_gpu_bind"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    )
 endif()
