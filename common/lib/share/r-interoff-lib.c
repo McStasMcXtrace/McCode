@@ -362,6 +362,7 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
       }
       if (j<pol.npol)
       {
+#ifdef OFF_LEGACY
         if (t_size>OFF_INTERSECT_MAX)
         {
 #ifndef OPENACC
@@ -369,6 +370,7 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
 #endif
             return (t_size);
         }
+#endif
         //both planes intersect the polygon, let's find the intersection point
         //our polygon :
         int k;
@@ -384,8 +386,35 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
         if (r_off_intersectPoly(&x, a, b, pol))
         {
           x.index = indPoly;
+#ifdef OFF_LEGACY
           t[t_size++]=x;
-        }
+#else
+	  /* Check against our 4 existing times, starting from [-FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX] */
+	  /* Case 1, negative time? */
+	  if (t_size < 4) t_size++;	  
+	  if (x.time < 0) {
+	    if (x.time > t[0].time) {
+	      t[0]=x;
+	    }
+	  } else {
+	    /* Case 2, positive time */
+	    r_intersection xtmp;
+	    if (x.time < t[3].time) {
+	      t[3]=x;
+	      if (t[3].time < t[2].time) {
+		xtmp = t[2];
+		t[2] = t[3];
+		t[3] = xtmp;
+	      }
+	      if (t[2].time < t[1].time) {
+		xtmp = t[1];
+		t[1] = t[2];
+		t[2] = xtmp;
+	      }
+	    } 
+	  }
+#endif
+	}
       } /* if (j<pol.npol) */
     } /* if (j<pol.npol) */
     i += pol.npol;
@@ -699,6 +728,8 @@ int r_Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
+#ifdef OFF_LEGACY
+ 
 #pragma acc routine
 void r_merge(intersection *arr, int l, int m, int r)
 {
@@ -757,8 +788,10 @@ while (j < n2)
 free(L);
 free(R);
 }
+#endif
 
 #ifdef USE_OFF
+#ifdef OFF_LEGACY
 #pragma acc routine
 void r_gpusort(intersection *arr, int size)
 {
@@ -786,6 +819,7 @@ void r_gpusort(intersection *arr, int size)
   }
 }
 #endif
+#endif
 
 /*******************************************************************************
 * int r_off_intersect_all(double* t0, double* t3,
@@ -812,6 +846,8 @@ int r_off_intersect_all(double* t0, double* t3,
 {
     Coords A={x, y, z};
     Coords B={x+vx, y+vy, z+vz};
+
+#ifdef OFF_LEGACY    
     int t_size=r_off_clip_3D_mod(data->intersects, A, B,
       data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
     #ifndef OPENACC
@@ -852,6 +888,27 @@ int r_off_intersect_all(double* t0, double* t3,
       /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
     }
+#else
+    r_intersection intersect4[4];
+    intersect4[0].time=-FLT_MAX;
+    intersect4[1].time=FLT_MAX;
+    intersect4[2].time=FLT_MAX;
+    intersect4[3].time=FLT_MAX;
+		
+    int t_size=off_clip_3D_mod(intersect4, A, B,
+      data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    if(t_size>0){
+      int i=0;
+      if (intersect4[0].time == -FLT_MAX) i=1;
+      data->numintersect=t_size;
+      if (t0) *t0 = intersect4[i].time;
+      if (n0) *n0 = intersect4[i].normal;
+      if (t3) *t3 = intersect4[i+1].time;
+      if (n3) *n3 = intersect4[i+1].normal;
+      /* should also return t[0].index and t[i].index as polygon ID */
+      return t_size;
+    }
+#endif
     return 0;
 } /* r_off_intersect */
 
