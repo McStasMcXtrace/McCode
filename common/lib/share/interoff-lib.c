@@ -366,7 +366,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
       }
       if (j<pol.npol)
       {
-        if (t_size>CHAR_BUF_LENGTH)
+        if (t_size>OFF_INTERSECT_MAX)
         {
 #ifndef OPENACC
           fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", OFF_INTERSECT_MAX);
