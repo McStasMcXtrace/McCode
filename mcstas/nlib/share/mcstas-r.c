@@ -67,7 +67,8 @@ _class_particle mcsetstate(double x, double y, double z, double vx, double vy, d
   mcneutron.sz = sz;
   mcneutron.p  = p;
   mcneutron.mcgravitation = mcgravitation;
-  mcneutron.mcMagnet = mcMagnet;
+  mcneutron.mcMagnet = malloc(sizeof(int));
+  *((int*)mcneutron.mcMagnet) = mcMagnet;
   mcneutron.allow_backprop = mcallowbackprop;
   mcneutron._uid       = 0;
   mcneutron._index     = 1;
