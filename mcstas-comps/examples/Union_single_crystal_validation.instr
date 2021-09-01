@@ -129,11 +129,11 @@ COMPONENT Banana_monitor = Monitor_nD(radius=1, yheight=0.1, options="banana, th
 AT (0,0,0.1) RELATIVE slit
 ROTATED (0,0,0) RELATIVE slit
 
-COMPONENT PSDlin_transmission_scattered = PSDlin_monitor(xwidth=0.15, yheight=0.01, nx=100, filename="Output_transmission_lin_scattered.psd",restore_neutron = 1)
+COMPONENT PSDlin_transmission_scattered = PSDlin_monitor(xwidth=0.15, yheight=0.01, nbins=100, filename="Output_transmission_lin_scattered.psd",restore_neutron = 1)
 WHEN (scattered_flag_instr==1)
 AT (0,0,0.5) RELATIVE slit
 
-COMPONENT PSDlin_transmission_transmitted = PSDlin_monitor(xwidth=0.15, yheight=0.01, nx=100, filename="Output_transmission_lin_transmitted.psd",restore_neutron = 1)
+COMPONENT PSDlin_transmission_transmitted = PSDlin_monitor(xwidth=0.15, yheight=0.01, nbins=100, filename="Output_transmission_lin_transmitted.psd",restore_neutron = 1)
 WHEN (scattered_flag_instr==0)
 AT (0,0,0.5) RELATIVE slit
 

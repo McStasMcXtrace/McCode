@@ -17,14 +17,14 @@
 * %Description
 * Use of all basic geometries, sphere, cylinder, cone and box
 *
-* %Example: Detector: detector_scat_I=40.2053
+* %Example: dummy=1 Detector: detector_scat_I=40.2053
 *
 * %Parameters
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_sample_picture_replica()
+DEFINE INSTRUMENT Union_sample_picture_replica(dummy=1)
 
 DECLARE
 %{
