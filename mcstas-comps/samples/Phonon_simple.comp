@@ -108,6 +108,7 @@ void fatalerror(char *s)
       double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
       double q, qx, qy, qz, Jq, res_phonon, res_neutron;
       double ah, a, c;
+      double gap;
 
       vf=parms[0];
       vi=parms[1];
