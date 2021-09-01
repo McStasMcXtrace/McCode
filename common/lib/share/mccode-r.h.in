@@ -444,8 +444,6 @@ void mcdis_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz);
 void mcdis_sphere(double x, double y, double z, double r, int N);
 
-#  define MC_RAND_MAX ((unsigned long)0xffffffff)
-
 
 /* random number generation. ================================================ */
 
