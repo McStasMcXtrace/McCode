@@ -44,5 +44,5 @@ export FC=gfortran
 sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcstas/2.5/tools/Python/mccodelib/mccode_config.py
 
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/2.5/
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb64 "" -- justinst
+./mkdist mcstas-ncrystal 2.5 3rdparty/ncrystal "" deb64 "" -- justinst
 
