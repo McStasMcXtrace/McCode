@@ -138,6 +138,25 @@ enum StrainDistribution {
   /*NoSym1D*/
 };
 
+    struct list_struct{
+      double pos_x;
+      double pos_y;
+      double hoop;
+      double radial;
+      double axial;
+    };
+
+  
+int pos_x_compare( const void *par1, const void *par2) {
+  return ( ((struct list_struct*)par1)->pos_x<((struct list_struct*)par2)->pos_x ) ? 0 : 1;
+}
+
+  
+int pos_y_compare( const void *par1, const void *par2) {
+  return ( ((struct list_struct*)par1)->pos_y<((struct list_struct*)par2)->pos_y ) ? 0 : 1;
+}
+
+
 typedef struct {
   /** values from FILE **/
   /* strains in the sample represented by lattice spacing */
@@ -258,13 +277,6 @@ int readStrainFile( char *fileName, StrainData *sd, char *comp_name )
     sd->n_entries = dataTable.rows;
 
     /* get data from table */
-    struct list_struct{
-      double pos_x;
-      double pos_y;
-      double hoop;
-      double radial;
-      double axial;
-    };
     struct list_struct* dataList = (struct list_struct*)malloc( sizeof(struct list_struct)*sd->n_entries );
 
 
@@ -279,19 +291,11 @@ int readStrainFile( char *fileName, StrainData *sd, char *comp_name )
     }
 
     /* sort list by position */
-    int pos_x_compare( const void *par1, const void *par2)
-    {
-      return ( ((struct list_struct*)par1)->pos_x<((struct list_struct*)par2)->pos_x ) ? 0 : 1;
-    }
     /* (re-)sort the data set to evaluate it in the TRACE section */
     qsort( dataList, dataTable.rows, sizeof(struct list_struct), pos_x_compare );
 
     if( sd->strain_distr == AxialSym2D )
     {
-      int pos_y_compare( const void *par1, const void *par2)
-      {
-        return ( ((struct list_struct*)par1)->pos_y<((struct list_struct*)par2)->pos_y ) ? 0 : 1;
-      }
       qsort( dataList, dataTable.rows, sizeof(struct list_struct), pos_y_compare );
     }
 
