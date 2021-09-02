@@ -39,9 +39,12 @@ export FC=gfortran
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 2.5 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 2.5 tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 
+export MCINSTALL_PREFIX=$HOME/McStas/mcstas/2.5/
+./mkdist mcstas-ncrystal 2.5 3rdparty/ncrystal "" deb64 "" -- justinst
+export MCINSTALL_PREFIX=$HOME/McStas
+
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcstas/2.5/tools/Python/mccodelib/mccode_config.py
 
-export MCINSTALL_PREFIX=$HOME/McStas/mcstas/2.5/
-./mkdist mcstas-ncrystal 2.5 3rdparty/ncrystal "" deb64 "" -- justinst
+
 
