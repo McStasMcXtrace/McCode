@@ -11,7 +11,7 @@ set(MPICC "mpicc")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
-set(MCCODE_CFLAGS "-g -O2 -lm -std=c99")
+set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -D_POSIX_SOURCE")
 set(EDITOR "gedit")
 set(QSCI "1")
 

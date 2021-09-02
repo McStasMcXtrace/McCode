@@ -13,7 +13,7 @@ set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
 set(PERL "/Applications/PDL/bin/perl")
-set(MCCODE_CFLAGS "-g -O2 -lm -std=c99")
+set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -D_POSIX_SOURCE")
 set(EDITOR "open")
 set(QSCI "1")
 
