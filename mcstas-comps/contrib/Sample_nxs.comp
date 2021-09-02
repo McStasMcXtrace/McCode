@@ -138,14 +138,13 @@ enum StrainDistribution {
   /*NoSym1D*/
 };
 
-    struct list_struct{
-      double pos_x;
-      double pos_y;
-      double hoop;
-      double radial;
-      double axial;
-    };
-
+struct list_struct{
+  double pos_x;
+  double pos_y;
+  double hoop;
+  double radial;
+  double axial;
+};
   
 int pos_x_compare( const void *par1, const void *par2) {
   return ( ((struct list_struct*)par1)->pos_x<((struct list_struct*)par2)->pos_x ) ? 0 : 1;
