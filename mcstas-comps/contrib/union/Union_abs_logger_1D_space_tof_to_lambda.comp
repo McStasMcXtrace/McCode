@@ -70,7 +70,7 @@
 *
 * %P
 * INPUT PARAMETERS:
-* ref_component:      [no quotes] Reference component instance, sample position for distance calculation
+* ref_component:      [1] Reference component instance index, sample position for distance calculation
 * source_sample_dist: [m] Travel distance between source and sample position, used to calculate total travelled distance
 * yheight:            [m] Height of absorption logger
 * yn:                 [1] number of bins along y axis
@@ -104,7 +104,7 @@
 
 DEFINE COMPONENT Union_abs_logger_1D_space_tof_to_lambda
 SETTING PARAMETERS(string target_geometry="NULL",
-                   string ref_component,
+                   int ref_component,
                    yheight, yn, source_sample_dist=0.0,
                    lambda_min=-1, lambda_max=-1, lambda_bins=-1,
                    lambda_m_min=-1, lambda_m_max=-1, lambda_m_bins=-1,
@@ -644,7 +644,7 @@ INITIALIZE
   sprintf(this_abs_storage.Detector_2D.Filename, filename);
   
   // Get the position from a component instance
-  this_abs_storage.sample_pos = POS_A_COMP(ref_component);
+  this_abs_storage.sample_pos = POS_A_COMP_INDEX(INDEX_CURRENT_COMP+ref_component);
   this_abs_storage.transformed = 0; // Set to 1 when sample_pos is transformed
   
   // Input sanitation for sample point and source_sample distance.
