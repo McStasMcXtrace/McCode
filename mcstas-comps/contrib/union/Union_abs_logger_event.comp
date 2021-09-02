@@ -282,24 +282,26 @@ void record_to_perm_abs_event(Coords *position, double *k, double p, double time
     given_x_vel = k[0]*K2V;
     given_y_vel = k[1]*K2V;
     given_z_vel = k[2]*K2V;
+
+    _class_particle _localparticle;
     
-    storage->Vars.cx  = given_x_pos;
-    storage->Vars.cy  = given_y_pos;
-    storage->Vars.cz  = given_z_pos;
+    _localparticle.x  = given_x_pos;
+    _localparticle.y  = given_y_pos;
+    _localparticle.z  = given_z_pos;
       
-    storage->Vars.cvx = given_x_vel;
-    storage->Vars.cvy = given_y_vel;
-    storage->Vars.cvz = given_z_vel;
+    _localparticle.vx = given_x_vel;
+    _localparticle.vy = given_y_vel;
+    _localparticle.vz = given_z_vel;
       
-    storage->Vars.csx = 0.0;
-    storage->Vars.csy = 0.0;
-    storage->Vars.csz = 1.0;
+    _localparticle.sx = 0.0;
+    _localparticle.sy = 0.0;
+    _localparticle.sz = 1.0;
       
-    storage->Vars.cp  = p;
-    storage->Vars.ct  = time;
+    _localparticle.p  = p;
+    _localparticle.t  = time;
     
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), &_localparticle);
     
   }
 
@@ -314,24 +316,26 @@ void write_temp_to_perm_abs_event(union abs_logger_data_union *data_union) {
   int index;
   // Add all data points to the historgram, they are saved as index / weight combinations
   for (index=0;index<storage->temp_abs_event_data.num_elements;index++) {
+
+    _class_particle _localparticle;
     
-    storage->Vars.cx  = storage->temp_abs_event_data.elements[index].x_pos;
-    storage->Vars.cy  = storage->temp_abs_event_data.elements[index].y_pos;
-    storage->Vars.cz  = storage->temp_abs_event_data.elements[index].z_pos;
+    _localparticle.x  = storage->temp_abs_event_data.elements[index].x_pos;
+    _localparticle.y  = storage->temp_abs_event_data.elements[index].y_pos;
+    _localparticle.z  = storage->temp_abs_event_data.elements[index].z_pos;
       
-    storage->Vars.cvx = storage->temp_abs_event_data.elements[index].x_vel;
-    storage->Vars.cvy = storage->temp_abs_event_data.elements[index].y_vel;
-    storage->Vars.cvz = storage->temp_abs_event_data.elements[index].z_vel;
+    _localparticle.vx = storage->temp_abs_event_data.elements[index].x_vel;
+    _localparticle.vy = storage->temp_abs_event_data.elements[index].y_vel;
+    _localparticle.vz = storage->temp_abs_event_data.elements[index].z_vel;
       
-    storage->Vars.csx = 0.0;
-    storage->Vars.csy = 0.0;
-    storage->Vars.csz = 1.0;
+    _localparticle.sx = 0.0;
+    _localparticle.sy = 0.0;
+    _localparticle.sz = 1.0;
       
-    storage->Vars.cp  = storage->temp_abs_event_data.elements[index].weight;
-    storage->Vars.ct  = storage->temp_abs_event_data.elements[index].time;
+    _localparticle.p  = storage->temp_abs_event_data.elements[index].weight;
+    _localparticle.t  = storage->temp_abs_event_data.elements[index].time;
     
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), &_localparticle);
     
   }
   clear_temp_abs_event(data_union);
@@ -345,24 +349,26 @@ void write_temp_to_perm_final_p_abs_event(union abs_logger_data_union *data_unio
   int index;
   // Add all data points to the historgram, they are saved as index / weight combinations
   for (index=0;index<storage->temp_abs_event_data.num_elements;index++) {
-  
-    storage->Vars.cx  = storage->temp_abs_event_data.elements[index].x_pos;
-    storage->Vars.cy  = storage->temp_abs_event_data.elements[index].y_pos;
-    storage->Vars.cz  = storage->temp_abs_event_data.elements[index].z_pos;
+
+    _class_particle _localparticle;
+    
+    _localparticle.x  = storage->temp_abs_event_data.elements[index].x_pos;
+    _localparticle.y  = storage->temp_abs_event_data.elements[index].y_pos;
+    _localparticle.z  = storage->temp_abs_event_data.elements[index].z_pos;
       
-    storage->Vars.cvx = storage->temp_abs_event_data.elements[index].x_vel;
-    storage->Vars.cvy = storage->temp_abs_event_data.elements[index].y_vel;
-    storage->Vars.cvz = storage->temp_abs_event_data.elements[index].z_vel;
+    _localparticle.vx = storage->temp_abs_event_data.elements[index].x_vel;
+    _localparticle.vy = storage->temp_abs_event_data.elements[index].y_vel;
+    _localparticle.vz = storage->temp_abs_event_data.elements[index].z_vel;
       
-    storage->Vars.csx = 0.0;
-    storage->Vars.csy = 0.0;
-    storage->Vars.csz = 1.0;
+    _localparticle.sx = 0.0;
+    _localparticle.sy = 0.0;
+    _localparticle.sz = 1.0;
       
-    storage->Vars.cp  = final_weight;
-    storage->Vars.ct  = storage->temp_abs_event_data.elements[index].time;
+    _localparticle.p  = final_weight;
+    _localparticle.t  = storage->temp_abs_event_data.elements[index].time;
     
     int pp;
-    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), _particle);
+    pp = Monitor_nD_Trace(&(storage->DEFS), &(storage->Vars), &_localparticle);
   }
   clear_temp_abs_event(data_union);
 }
