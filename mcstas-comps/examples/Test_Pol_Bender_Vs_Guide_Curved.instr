@@ -37,8 +37,6 @@ DEFINE INSTRUMENT Test_Pol_Bender_Vs_Guide_Curved(guideLength=10.0, guideRadius=
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-  double randomSwitch;
-
   double calcAlpha(double length, double radius) {
     // calculate angle of arm after curved guide
     return RAD2DEG * length/radius;
@@ -57,6 +55,9 @@ DECLARE
   }
   %}
 
+USERVARS %{
+  double randomSwitch;
+%}
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
