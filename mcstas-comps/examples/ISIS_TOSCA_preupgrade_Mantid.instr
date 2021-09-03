@@ -358,7 +358,7 @@ COMPONENT TOF_10 = Monitor_nD(xwidth=0.2, yheight=0.1762, options="square x limi
   WHEN (eventmode==0)  AT (0,0,0) relative powder
 GROUP detectors
   EXTEND %{
-  if(mcipeventmode==0) SCATTER;
+  if(INSTRUMENT_GETPAR(eventmode)==0) SCATTER;
   %}
 
 
