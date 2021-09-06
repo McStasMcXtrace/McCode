@@ -141,6 +141,7 @@ int kdtree_partition(vertex **points, int d, int left, int right, int pivot)
 // kdtree_splitAboutMedian: Find the median in expected linear time. - We will 
 //   also pivot all the data about the found median, returning the integer giving
 //   the pivot value.
+
 int kdtree_splitAboutMedian(vertex **points, int d, int left, int right)
 {
   int k = (right-left)/2 +left;
@@ -536,7 +537,9 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     v.space_dimensionality=interpolator->space_dimensionality;
     vertex *w =kdtree_nearestNeighbour(&v, interpolator->kdtree);
     if (!w) return NULL;
-    for (i=0; i<interpolator->field_dimensionality; field[i]=w->data[i++]);
+    for (i=0; i<interpolator->field_dimensionality; i++){
+        field[i]=w->data[i];
+    }
     return (w->data);
 
   } else 
