@@ -351,8 +351,8 @@ int table_magnetic_field(double x, double y, double z, double t,
                          void *data)
 {
   if (!data) return 1;
-/*  struct interpolator_struct *interpolator = (struct interpolator_struct*)data;*/
-/*  return(interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz) != NULL);*/
+  struct interpolator_struct *interpolator = (struct interpolator_struct*)data;
+  return(interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz) != NULL);
 }
 
 #pragma acc routine seq
