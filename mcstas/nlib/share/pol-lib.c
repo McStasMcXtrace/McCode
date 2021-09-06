@@ -32,7 +32,7 @@
 #include<sys/stat.h>
 
 %include "read_table-lib"
-//%include "interpolation-lib"
+%include "interpolation-lib"
 
 #define MCMAGNET_STACKSIZE 12
 /*definition of the magnetic stack*/
@@ -123,7 +123,8 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
       }
     case tabled:
       {
-	retval=table_magnetic_field(x,y,z,t,bx,by,bz,dummy);
+	struct field_parameters *Bprms = (struct field_parameters *)dummy;
+	retval=table_magnetic_field(x,y,z,t,bx,by,bz,Bprms->generic);
 	break;
       }
     case none:
