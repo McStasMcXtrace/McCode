@@ -191,6 +191,10 @@ void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_ro
     /*No fields exist in the stack so allocate room for it and point _particle->mcMagnet to it*/
     #ifdef OPENACC
     _particle->mcMagnet=malloc(MCMAGNET_STACKSIZE*sizeof(mcmagnet_field_info *));
+    /* Lack of a calloc makes us NULLify manually since we check for NULL further down */ 
+    for (int ll=0; ll<MCMAGNET_STACKSIZE; ll++) {
+      ((mcmagnet_field_info **) _particle->mcMagnet)[ll]=NULL;
+    }
     #else
     _particle->mcMagnet=calloc(MCMAGNET_STACKSIZE,sizeof(mcmagnet_field_info *));
     #endif
