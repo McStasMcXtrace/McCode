@@ -121,6 +121,11 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
         retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,dummy);
         break;
       }
+    case tabled:
+      {
+	retval=table_magnetic_field(x,y,z,t,bx,by,bz,dummy);
+	break;
+      }
     case none:
       {
         retval=0;*bx=0;*by=0;bz=0;

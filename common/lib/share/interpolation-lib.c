@@ -519,6 +519,9 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
   double *space, double *field)
 {
   if (!space || !interpolator || !field) return NULL;
+  #ifdef OPENACC
+  #define strcmp str_comp
+  #endif
   
   /* k-d tree call ************************************************************/
   if (!strcmp(interpolator->method, "kdtree") && interpolator->kdtree) {
@@ -546,9 +549,11 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     }
     return field;
   } else {
+    #ifndef OPENACC
     fprintf(stderr, "interpolator_interpolate: ERROR: invalid interpolator method %s from file '%s'.\n",
       interpolator->method, interpolator->filename);
     exit(-1);
+    #endif
   }
   
 } // interpolator_interpolate

@@ -113,7 +113,8 @@ struct interpolator_struct *interpolator_load(char *filename,
  *   returns the 'field' value (of length interpolator->field_dimensionality)
  *   at the given 'space' location (of length interpolator->space_dimensionality)
  *   The returned array 'field' MUST be pre-allocated.
- ******************************************************************************/ 
+ ******************************************************************************/
+#pragma acc routine
 double *interpolator_interpolate(struct interpolator_struct *interpolator,
   double *space, double *field);
 
@@ -123,7 +124,8 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
  *   returns the 'field' value (e.g. 3d)
  *   at the given 'coord' location (e.g. 3d)
  * The interpolator->method can be 'kdtree' or 'regular' as set at points load
- ******************************************************************************/ 
+ ******************************************************************************/
+#pragma acc routine
 double *interpolator_interpolate3_3(struct interpolator_struct *interpolator,
                     double  x,  double  y,  double  z,
                     double *bx, double *by, double *bz);
