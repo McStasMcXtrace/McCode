@@ -2199,15 +2199,18 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("_class_particle* _particle = &_particle_global_randnbuse_var;");
   cout("");
 
+  /* Below lines relating to mcgenstate / setstate are in principle McStas-centric, we ought to generate this function based on "project" */
   cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void);");
+  cout("#pragma acc routine");
+  cout("_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,");
+  cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
+  cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
   cout("#pragma acc declare create ( mcgravitation )");
   cout("int mcallowbackprop;        ");
   cout("#pragma acc declare create ( mcallowbackprop )");
 
-
-  /* Below lines are in principle McStas-centric, we ought to generate this function based on "project" */
   cout("");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
