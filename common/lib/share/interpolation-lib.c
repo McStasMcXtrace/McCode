@@ -64,6 +64,7 @@
 
 // kdtree_squaredDistance: Calculate the standard Euclidean distance between 
 //   these two points in whatever dimension we are considering.
+#pragma acc routine
 double kdtree_squaredDistance(vertex* a, vertex* b)
 {
   int i;
@@ -79,6 +80,7 @@ double kdtree_squaredDistance(vertex* a, vertex* b)
 /******************************************************************************/
 // kdtree_borderCheck: Check to see whether or not this node provides a better 
 //   nearest neighbour.
+#pragma acc routine
 void kdtree_borderCheck(vertex *v, treeNode *thisNode,
                  vertex **currentBest, double *sDist)
 {
@@ -113,6 +115,7 @@ void kdtree_borderCheck(vertex *v, treeNode *thisNode,
 
 // kdtree_partition: Note we slightly modify the standard partition algorithm, 
 //   so that we can partition based on only one dimension of the pointset.
+#pragma acc routine
 int kdtree_partition(vertex **points, int d, int left, int right, int pivot)
 {
   double pivotValue = points[pivot]->v[d];
@@ -138,7 +141,6 @@ int kdtree_partition(vertex **points, int d, int left, int right, int pivot)
 // kdtree_splitAboutMedian: Find the median in expected linear time. - We will 
 //   also pivot all the data about the found median, returning the integer giving
 //   the pivot value.
-
 int kdtree_splitAboutMedian(vertex **points, int d, int left, int right)
 {
   int k = (right-left)/2 +left;
@@ -187,6 +189,7 @@ treeNode* kdtree_addToTree(vertex **points, int left, int right, int depth)
 /******************************************************************************/
 // kdtree_nearestNeighbour_helper: helper function for kdtree_nearestNeighbour
 //   used recursively until a close vertex is found
+#pragma acc routine
 void kdtree_nearestNeighbour_helper(vertex* v, treeNode *tree,
                              vertex **bestV, double *bestDist)
 {
@@ -226,6 +229,7 @@ void kdtree_nearestNeighbour_helper(vertex* v, treeNode *tree,
 
 /******************************************************************************/
 // kdtree_nearestNeighbour: find closest vertex in tree to given vertex coords
+#pragma acc routine
 vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
   vertex *bestV = NULL;
   double bestDist = 0;
@@ -285,6 +289,7 @@ struct interpolator_struct *interpolator_init(void) {
 /******************************************************************************/
 // interpolator_offset: determine element offset for an n-dimensional array
 //   used in: interpolator_load and interpolator_interpolate
+#pragma acc routine
 long interpolator_offset(int dim, long *dimInfo, long *indices) {
   
   long result;  // where the resultant offset will be stored 
