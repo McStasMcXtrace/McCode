@@ -83,9 +83,9 @@ COMPONENT lmon_0 = L_monitor(Lmin=0, Lmax=10,xwidth=0.2, yheight=0.2, filename="
 AT(0,0,0) RELATIVE PREVIOUS
 
 
-COMPONENT field = Pol_Bfield(
+COMPONENT field = Pol_Bfield(field_type=-1,
     xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,
-    Bx=0,By=1,Bz=0,fieldFunction=table_magnetic_field)
+    Bx=0,By=1,Bz=0)
 AT(0,0,1) RELATIVE PREVIOUS
 /*COMPONENT field = Pol_Bfield(*/
 /*    xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,*/
