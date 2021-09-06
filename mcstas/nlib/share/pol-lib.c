@@ -496,8 +496,8 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
   double BxTemp, ByTemp, BzTemp, Btemp;
   double Bstep, mc_pol_timeStep, mc_pol_sp;
   const double mc_pol_spThreshold  = cos(mc_pol_angular_accuracy);
-  double dummy1, dummy2;
-  _class_particle *pp = precess_particle;
+  _class_particle ploc=*precess_particle;
+  _class_particle *pp = &ploc;
   Rotation mc_pol_rotBack;
   //int (*mcMagneticField) (_class_particle *, double, double, double, double, double*, double*, double*, void *);
   //cMagneticField=mcmagnet_get_field;
@@ -505,7 +505,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
   //printf("pos_at_caller(xyz)( %g %g %g )\n", mc_pol_x,mc_pol_y,mc_pol_z);
   
   /* change coordinates from current local system to lab system */
-  mccoordschange(posMagnet, rotMagnet, precess_particle);
+  mccoordschange(posMagnet, rotMagnet, pp);
   /*mccoordschange(mc_pol_posLM, mc_pol_rotLM,
 		 &mc_pol_x, &mc_pol_y, &mc_pol_z,
 		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz, mc_pol_sx, mc_pol_sy, mc_pol_sz);*/
@@ -521,7 +521,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
     BxStart = BxTemp; ByStart = ByTemp; BzStart = BzTemp;
     Bstart = sqrt(BxStart*BxStart + ByStart*ByStart + BzStart*BzStart);
     
-    mc_pol_timeStep = 1e-6;//dt;//mc_pol_initial_timestep;
+    mc_pol_timeStep = mc_pol_initial_timestep;
 
     /*check if we need to take multiple steps of maximum size mc_pol_timeStep*/
     if(dt<mc_pol_timeStep){
@@ -534,8 +534,8 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
       zp = pp->z+ pp->vz*mc_pol_timeStep;
 
       mcmagnet_get_field(pp,xp,yp,zp, pp->t+mc_pol_timeStep, &BxTemp, &ByTemp, &BzTemp, NULL);
-      // not so elegant, but this is how we make sure that the steps decrease
-      // when the WHILE condition is not met
+      /* not so elegant, but this is how we make sure that the steps decrease
+       when the WHILE condition is not met*/
       mc_pol_timeStep *= 0.5;
 
       Btemp = sqrt(BxTemp*BxTemp + ByTemp*ByTemp + BzTemp*BzTemp);
@@ -560,7 +560,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
     Bz = 0.5 * (BzStart + BzTemp);
     mc_pol_phiz = fmod(sqrt(Bx*Bx+ By*By+ Bz*Bz) * mc_pol_timeStep*mc_pol_omegaL, 2*PI);
 
-    // Do the neutron spin precession
+    /* Do the neutron spin precession for the small timestep*/
     if(!(Bx==0 && By==0 && Bz==0)) {
 
       double sx_in = pp->sx;
@@ -572,12 +572,16 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
 
   } while (dt>0);
 
-  // change back spin coordinates from lab system to local system
+  /* change back spin coordinates from lab system to local system*/
   rot_transpose(rotMagnet, mc_pol_rotBack);
-  //have to do this "manually" since mccordschange does not commute/reverse*/
+  /*have to do this "manually" since mccordschange does not commute/reverse*/
   pp->x-=posMagnet.x; pp->y-=posMagnet.y; pp->z-=posMagnet.z;
   mccoordschange_polarisation(mc_pol_rotBack, &(pp->vx), &(pp->vy), &(pp->vz));
   mccoordschange_polarisation(mc_pol_rotBack, &(pp->sx), &(pp->sy), &(pp->sz));
+  /*copy back the spin polarization coordinates to the caller*/
+  precess_particle->sx=pp->sx;
+  precess_particle->sy=pp->sy;
+  precess_particle->sz=pp->sz;
 }
 
 /****************************************************************************
