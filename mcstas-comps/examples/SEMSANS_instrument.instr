@@ -115,7 +115,7 @@ AT (0,0,vcoil_12_pos) RELATIVE Origin
 
 
 // START GUIDEFIELD 1
-COMPONENT Guide_field1 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide+Bextra, Bz=0)
+COMPONENT Guide_field1 = Pol_Bfield(field_type=1, xwidth=0.4, yheight=0.4, Bx=0, By=Bguide+Bextra, Bz=0)
      AT (0,0,Guide1_pos) RELATIVE Origin
 
 
@@ -132,7 +132,7 @@ COMPONENT triacoil_1=Pol_triafield(
 
 
 // START GUIDEFIELD 2
-COMPONENT Guide_field2 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0)
+COMPONENT Guide_field2 = Pol_Bfield(field_type=1, xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0)
      AT (0,0,Guide2_pos) RELATIVE Origin
 
 
@@ -153,7 +153,7 @@ AT (0,0,vcoil_34_pos+flippos) RELATIVE Origin
 
 
 // START GUIDEFIELD 3
-COMPONENT Guide_field3 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0)
+COMPONENT Guide_field3 = Pol_Bfield(field_type=1, xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0)
      AT (0,0,Guide3_pos+flippos) RELATIVE Origin
 
 
@@ -170,7 +170,7 @@ COMPONENT triacoil_2=Pol_triafield(
 
 
 // START GUIDEFIELD 4
-COMPONENT Guide_field4 = Pol_Bfield(xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0)
+COMPONENT Guide_field4 = Pol_Bfield(field_type=1, xwidth=0.4, yheight=0.4, Bx=0, By=Bguide, Bz=0)
      AT (0,0,Guide4_pos) RELATIVE Origin
 
 
