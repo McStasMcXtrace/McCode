@@ -129,8 +129,8 @@ int const_magnetic_field(double x, double y, double z, double t, double *bx, dou
 int rot_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int majorana_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int table_magnetic_field(double x, double y, double z, double t,
-                         double *bx, double *by, double *bz,
-                         void *data);
+    double *bx, double *by, double *bz,
+    void *data);
 int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 
 /* Routines used for Monochromator and guides/mirrors 
@@ -145,7 +145,7 @@ void SetMonoPolTransOut(double, double, double, double*, double*, double*);
 // Routines for spin precession in magnetic fields
 void SimpleNumMagnetPrecession(Coords, Rotation, _class_particle *, double);
 
-// Routines to help calculate the rquired magnetic field
+// Routines to help calculate the required magnetic field
 double GetConstantField(double, double, double);
 
 #endif
