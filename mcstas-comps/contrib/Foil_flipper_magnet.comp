@@ -143,7 +143,6 @@ DECLARE
 
 INITIALIZE
 %{
-
   /*default is to have the foil horizontal*/
   Rotation foil_rot;
   Coords n,tmp;
@@ -196,12 +195,12 @@ TRACE
   double sp,v;
   mcmagnet_field_info *old_magnet,*outer_magnet;
   double *dd;
+  v=sqrt(vx*vx + vy*vy + vz*vz);
   /*check if we hit component at all*/
   if (plane_intersect(&t1,x,y,z,vx,vy,vz,0,0,1,0,0,-Bzdepth/2.0)==0){
       if(verbose) fprintf(stderr,"INFO: (%s) Missed the magnetic field plane.\n",NAME_CURRENT_COMP);
       ABSORB;
   }
-  v=sqrt(vx*vx + vy*vy + vz*vz);
   if ( (box_intersect(&t1, &t2, x, y, z, vx, vy, vz, Bxwidth, Byheight, Bzdepth))==0){
   /*propagate to the start of the component (which is -Bzdepth/2)*/
       if(verbose) fprintf(stderr,"INFO: (%s) Missed the magnetic field.\n",NAME_CURRENT_COMP);
@@ -213,7 +212,7 @@ TRACE
       PROP_DT(t1);
       t2=t2-t1;
   }
-  
+  /*There is an implicit assumption here that the neutron has entered at z<zd/2. This might not be true.*/
   if (stray_field){
     /*neutron is now at the start of our b-field description*/
     /*this would be the place to push the magnetic field description from the magnet stack*/
@@ -252,7 +251,7 @@ TRACE
     while inside the gap*/
   if (foil_in){
     if (plane_intersect(&dt,x,y,z,vx,vy,vz,foil_n[0],foil_n[1],foil_n[2],0,0,0)==0 || dt<0 || dt>t4 ){
-      if(verbose) fprintf(stderr,"missed the foil flipper plane of %s (dt=%g)\n",NAME_CURRENT_COMP,dt);
+      if(verbose) fprintf(stderr,"INFO: (%s) Missed the foil flipper plane, (dt=%g).\n",NAME_CURRENT_COMP,dt);
       dt=dt;
       hit_foil=0;
     }
