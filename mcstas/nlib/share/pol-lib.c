@@ -51,22 +51,24 @@
 
 /*Threshold below which two magnetic fields are considered to be
  * in the same direction.*/
-double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
-#pragma acc declare create ( mc_pol_angular_accuracy )
+#define mc_pol_angular_accuracy (1.0*DEG2RAD)
+//double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
+//#pragma acc declare create ( mc_pol_angular_accuracy )
 
 
 /*The maximal timestep taken by neutrons in a const field*/
-double mc_pol_initial_timestep = 1e-5;
-#pragma acc declare create ( mc_pol_initial_timestep )
-void mc_pol_set_angular_accuracy(double domega){
-    mc_pol_angular_accuracy = domega;
-#pragma acc update device ( mc_pol_angular_accuracy )
-}
+#define mc_pol_initial_timestep 1e-5;
+//double mc_pol_initial_timestep = 1e-5;
+//#pragma acc declare create ( mc_pol_initial_timestep )
+//void mc_pol_set_angular_accuracy(double domega){
+//    mc_pol_angular_accuracy = domega;
+//#pragma acc update device ( mc_pol_angular_accuracy )
+//}
 
-void mc_pol_set_timestep(double dt){
-    mc_pol_initial_timestep=dt;
-#pragma acc update device ( mc_pol_initial_timestep )
-}
+//void mc_pol_set_timestep(double dt){
+//    mc_pol_initial_timestep=dt;
+//#pragma acc update device ( mc_pol_initial_timestep )
+//}
 
 
 #ifdef PROP_MAGNET
