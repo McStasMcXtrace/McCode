@@ -117,8 +117,8 @@ void mcmagnet_print_stack();
 
 void *mcmagnet_init_par_backend(int dummy, ...);
 
-int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
-void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
+int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, double Bprms[8]);
+void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, double Bprms[8]);
 void *mcmagnet_pop(_class_particle *_particle);
 
 /*main magnetic field dispatcher function - every request goes through here*/

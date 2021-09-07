@@ -115,7 +115,7 @@ DECLARE
   /* Larmor frequency and scalar product threshold*/
   void *parPtr;
   mcmagnet_field_info *magnet;
-  struct field_parameters Bprms;
+  double Bprms[8];
   int shape;
 %}
 
@@ -126,13 +126,13 @@ INITIALIZE
   enum field_functions ff=field_type;
   /* these default field functions are part of pol-lib */
   if (ff==constant){
-    double *t=(Bprms.field_prms);
+    double *t=Bprms;
     t[0]=Bx;t[1]=By;t[2]=Bz;
   } else if (ff==rotating){
-    double *t=(Bprms.field_prms);
+    double *t=Bprms;
     t[0]=By;t[1]=zdepth;
   } else if (ff==majorana){
-    double *t=(Bprms.field_prms);
+    double *t=Bprms;
     t[0]=Bx; t[1]=By; t[2]=zdepth;
   } 
   #ifdef USE_OFF
@@ -214,7 +214,7 @@ TRACE
         default:
             PROP_Z0;
     }
-    mcmagnet_push(_particle, field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
+    mcmagnet_push(_particle, field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,Bprms);
 #ifdef MCDEBUG
     mcmagnet_print_stack();
 #endif
