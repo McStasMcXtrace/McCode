@@ -51,22 +51,24 @@
 
 /*Threshold below which two magnetic fields are considered to be
  * in the same direction.*/
-double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
-#pragma acc declare create ( mc_pol_angular_accuracy )
+#define mc_pol_angular_accuracy (1.0*DEG2RAD)
+//double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
+//#pragma acc declare create ( mc_pol_angular_accuracy )
 
 
 /*The maximal timestep taken by neutrons in a const field*/
-double mc_pol_initial_timestep = 1e-5;
-#pragma acc declare create ( mc_pol_initial_timestep )
-void mc_pol_set_angular_accuracy(double domega){
-    mc_pol_angular_accuracy = domega;
-#pragma acc update device ( mc_pol_angular_accuracy )
-}
+#define mc_pol_initial_timestep 1e-5;
+//double mc_pol_initial_timestep = 1e-5;
+//#pragma acc declare create ( mc_pol_initial_timestep )
+//void mc_pol_set_angular_accuracy(double domega){
+//    mc_pol_angular_accuracy = domega;
+//#pragma acc update device ( mc_pol_angular_accuracy )
+//}
 
-void mc_pol_set_timestep(double dt){
-    mc_pol_initial_timestep=dt;
-#pragma acc update device ( mc_pol_initial_timestep )
-}
+//void mc_pol_set_timestep(double dt){
+//    mc_pol_initial_timestep=dt;
+//#pragma acc update device ( mc_pol_initial_timestep )
+//}
 
 
 #ifdef PROP_MAGNET
@@ -93,7 +95,7 @@ enum field_functions{
 };
 
 #pragma acc routine seq
-int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, double dummy[8]){
   int retval=1;
   switch (func_id){
     case constant: 
@@ -121,12 +123,6 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
         retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,dummy);
         break;
       }
-    case tabled:
-      {
-	struct field_parameters *Bprms = (struct field_parameters *)dummy;
-	retval=table_magnetic_field(x,y,z,t,bx,by,bz,Bprms->generic);
-	break;
-      }
     case none:
       {
         retval=0;*bx=0;*by=0;bz=0;
@@ -138,7 +134,7 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
 
 /*traverse the stack and return the magnetic field*/
 #pragma acc routine seq
-int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, double dummy[8]){
   mcmagnet_field_info *p,**stack;
   Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
   Rotation r;
@@ -191,7 +187,7 @@ int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z,
 /*}*/
 
 #pragma acc routine seq
-void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void *prms){
+void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, double prms[8]){
   /*check if any field has been pushed already*/
   if (_particle->mcMagnet==NULL){
     /*No fields exist in the stack so allocate room for it and point _particle->mcMagnet to it*/
@@ -351,15 +347,6 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   return 0;
 }
 
-#pragma acc routine seq
-int table_magnetic_field(double x, double y, double z, double t,
-                         double *bx, double *by, double *bz,
-                         void *data)
-{
-  if (!data) return 1;
-  struct interpolator_struct *interpolator = (struct interpolator_struct*)data;
-  return(interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz) != NULL);
-}
 
 #pragma acc routine seq
 int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data){

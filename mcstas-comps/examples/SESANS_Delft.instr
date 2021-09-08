@@ -79,7 +79,7 @@ COMPONENT py1 = PolLambda_monitor(
 AT (0, 0, 0.01) RELATIVE PREVIOUS
 */
 
-COMPONENT f1 = Foil_flipper_magnet2(
+COMPONENT f1 = Foil_flipper_magnet(
     xwidth=0.1, 
     yheight=0.1, 
     zdepth=0.3, 
