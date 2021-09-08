@@ -83,53 +83,13 @@ COMPONENT lmon_0 = L_monitor(Lmin=0, Lmax=10,xwidth=0.2, yheight=0.2, filename="
 AT(0,0,0) RELATIVE PREVIOUS
 
 
-COMPONENT field = Pol_Bfield(field_type=-1,
-    xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,
-    Bx=0,By=1,Bz=0)
+COMPONENT field = Pol_tabled_field(
+    xwidth=0.1, yheight=0.1, zdepth=0.2, filename=MF)
 AT(0,0,1) RELATIVE PREVIOUS
 /*COMPONENT field = Pol_Bfield(*/
 /*    xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,*/
 /*	Bx=0,By=0,Bz=1e-5,fieldFunction=const_magnetic_field)*/
 /*AT(0,0,1) RELATIVE PREVIOUS*/
-
-COMPONENT polx_1 = COPY(polx_0)(filename="polx_1")
-AT(0,0,1e-6) RELATIVE PREVIOUS
-COMPONENT poly_1 = COPY(poly_0)(filename="poly_1")
-AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT polz_1 = COPY(polz_0)(restore_neutron=0,filename="polz_1")
-AT(0,0,0) RELATIVE PREVIOUS
-
-COMPONENT polx_2 = COPY(polx_0)(filename="polx_2")
-AT(0,0,0.25) RELATIVE field
-COMPONENT poly_2 = COPY(poly_0)(filename="poly_2")
-AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT polz_2 = COPY(polz_0)(restore_neutron=0,filename="polz_2")
-AT(0,0,0) RELATIVE PREVIOUS
-
-COMPONENT polx_3 = COPY(polx_0)(filename="polx_3")
-AT(0,0,0.5) RELATIVE field
-COMPONENT poly_3 = COPY(poly_0)(filename="poly_3")
-AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT polz_3 = COPY(polz_0)(restore_neutron=0,filename="polz_3")
-AT(0,0,0) RELATIVE PREVIOUS
-
-COMPONENT polx_4 = COPY(polx_0)(filename="polx_4")
-AT(0,0,0.75) RELATIVE field
-COMPONENT poly_4 = COPY(poly_0)(filename="poly_4")
-AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT polz_4 = COPY(polz_0)(restore_neutron=0,filename="polz_4")
-AT(0,0,0) RELATIVE PREVIOUS
-
-COMPONENT polx_5 = COPY(polx_0)(filename="polx_5")
-AT(0,0,1-1e-6) RELATIVE field
-COMPONENT poly_5 = COPY(poly_0)(filename="poly_5")
-AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT polz_5 = COPY(polz_0)(restore_neutron=0,filename="polz_5")
-AT(0,0,0) RELATIVE PREVIOUS
-
-
-COMPONENT field_stop = Pol_Bfield_stop()
-AT(0,0,1) RELATIVE field
 
 COMPONENT polx_6 = COPY(polx_0)(filename="polx_6")
 AT(0,0,1) RELATIVE field
