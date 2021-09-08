@@ -128,9 +128,6 @@ int field_dispatcher(int field_id, double x, double y, double z, double t, doubl
 int const_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int rot_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int majorana_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
-int table_magnetic_field(double x, double y, double z, double t,
-    double *bx, double *by, double *bz,
-    void *data);
 int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 
 /* Routines used for Monochromator and guides/mirrors 

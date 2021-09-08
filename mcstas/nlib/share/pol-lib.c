@@ -123,12 +123,6 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
         retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,dummy);
         break;
       }
-    case tabled:
-      {
-	/*	struct field_parameters *Bprms = (struct field_parameters *)dummy;
-		retval=table_magnetic_field(x,y,z,t,bx,by,bz,Bprms->generic);*/
-	break;
-      }
     case none:
       {
         retval=0;*bx=0;*by=0;bz=0;
@@ -353,19 +347,6 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   return 0;
 }
 
-#pragma acc routine seq
-int table_magnetic_field(double x, double y, double z, double t,
-                         double *bx, double *by, double *bz,
-                         void *data)
-{
-  if (!data) return 1;
-  struct interpolator_struct *interpolator = (struct interpolator_struct*)data;
-  if( (interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz)) != NULL ){
-    return 0;
-  }else{
-    return 1;
-  }
-}
 
 #pragma acc routine seq
 int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data){
