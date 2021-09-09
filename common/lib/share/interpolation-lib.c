@@ -466,7 +466,7 @@ struct interpolator_struct *interpolator_load(char *filename,
       }
       interpolator->grid[dim] = array;
     } // end for dim(field)
-  } 
+  } else
 
   /* assign interpolation technique: kd-tree (when nearest direct indexing fails) */
   if (!strcmp(interpolator->method, "kdtree")) {
