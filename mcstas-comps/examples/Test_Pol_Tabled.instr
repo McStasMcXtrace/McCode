@@ -16,9 +16,10 @@
 * is working. The field referred to by the default input parameter MF is 10 \mu T along the z-axis
 * at entry and flips to l0 \mu T along the negative z-axis halfway through
 *
-* %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=0.665777
-*   N.b. this example will not be run by autotest since it reuireq the presence of the file
-*    flipfield.dat in the working directory.
+* %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=1.0
+* %Example: -n1e4 MF=constfield.dat Detector: polz_6_I=0.05
+* %Example: -n1e4 MF=flipfield.dat interpol_method=regular Detector: pol_6_I=1.0
+* %Example: -n1e4 MF=constfield.dat interpol_method=regular Detector: polz_6_I=0.05
 *
 * %Parameters
 *
@@ -27,7 +28,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_pol_tabled(string MF="flipfield.dat")
+DEFINE INSTRUMENT Test_pol_tabled(string MF="flipfield.dat", zdepth=1, string interpol_method="kdtree")
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -39,9 +40,6 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  printf("N.B. This example instrument requires that the file %s is present in the working directory\n",MF);
-  printf("     If you get errors - check that this is so\n");
-  printf("     The default file is located in the McStas data directory - on UNIX this is usually /usr/local/lib/mcstas-2.0/data.\n");
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -71,10 +69,11 @@ COMPONENT setpol = Set_pol(
 COMPONENT pol_0 = Pol_monitor(
     restore_neutron=1,xwidth=0.2, yheight=0.2, mx=0, my=1, mz=0)
 AT(0,0,1) RELATIVE setpol
+
 COMPONENT polx_0 = PolLambda_monitor(
     xwidth = 0.2, yheight = 0.2, restore_neutron = 1, mx = 1,
     my = 0, mz = 0, Lmin = 0, Lmax = 10, filename="polx_0")
-AT(0,0,0) RELATIVE PREVIOUS
+AT(0,0,0) RELATIVE setpol
 COMPONENT poly_0 = COPY (polx_0)(mx=0,my=1,mz=0,filename="poly_0")
 AT(0,0,0) RELATIVE PREVIOUS
 COMPONENT polz_0 = COPY (polx_0)(mx=0,my=0,mz=1,filename="polz_0")
@@ -84,12 +83,9 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 
 COMPONENT field = Pol_tabled_field(
-    xwidth=0.1, yheight=0.1, zdepth=0.2, filename=MF)
-AT(0,0,1) RELATIVE PREVIOUS
-/*COMPONENT field = Pol_Bfield(*/
-/*    xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,*/
-/*	Bx=0,By=0,Bz=1e-5,fieldFunction=const_magnetic_field)*/
-/*AT(0,0,1) RELATIVE PREVIOUS*/
+    xwidth=0.1, yheight=0.1, zdepth=zdepth, filename=MF, interpol_method=interpol_method)
+AT(0,0,0.5) RELATIVE PREVIOUS
+
 
 COMPONENT polx_6 = COPY(polx_0)(filename="polx_6")
 AT(0,0,1) RELATIVE field
