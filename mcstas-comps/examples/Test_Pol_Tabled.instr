@@ -18,8 +18,6 @@
 *
 * %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=1.0
 * %Example: -n1e4 MF=constfield.dat Detector: polx_6_I=0.05
-* %Example: -n1e4 MF=flipfield.dat interpol_method=regular Detector: pol_6_I=1.0
-* %Example: -n1e4 MF=constfield.dat interpol_method=regular Detector: polx_6_I=0.05
 *
 * %Parameters
 *
@@ -28,7 +26,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_pol_tabled(string MF="flipfield.dat", zdepth=1, string interpol_method="kdtree")
+DEFINE INSTRUMENT Test_pol_tabled(string MF="flipfield.dat", zdepth=1, string interpol_method="default")
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

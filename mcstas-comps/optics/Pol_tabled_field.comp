@@ -33,14 +33,14 @@
 * zdepth: [m]               Length of field.
 * radius: [m]               Radius of field if it is cylindrical or spherical.
 * filename: [ ]             File where the magnetic field is tabulated.
-* interpol_method: [ ]      Choice of interpolation method "kdtree" (default) / "regular"
+* interpol_method: [ ]      Choice of interpolation method "kdtree" (default on CPU) / "regular" (default on GPU)
 *
 * OUTPUT PARAMETERS:
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Pol_tabled_field
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, string filename="bfield.dat", string geometry=NULL, string interpol_method=NULL)
+SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, string filename="bfield.dat", string geometry=NULL, string interpol_method="default")
 DEPENDENCY " -DUSE_OFF " 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -150,6 +150,15 @@ INITIALIZE
   enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
   /* these default field functions are part of pol-lib */
   /*initialize the interpolation vertex structure*/
+
+  if (!strcmp(interpol_method,"default")) {
+    #ifdef OPENACC
+    sprintf(interpol_method,"regular");
+    #else
+    sprintf(interpol_method,"kdtree");
+    #endif
+  }
+  
   interpolator = interpolator_load(filename, 3, 3, interpol_method);
   interpolator_info(interpolator);
 
