@@ -557,7 +557,7 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
   } else 
   
   /* nearest direct grid element call *****************************************/
-  if (!strcmp(interpolator->method, "regular") && interpolator->gridx[0]) {
+  if (!strcmp(interpolator->method, "regular") && interpolator->gridx) {
     int axis;
     long indices[interpolator->space_dimensionality];
     for (axis=0; axis < interpolator->space_dimensionality; axis++) {
