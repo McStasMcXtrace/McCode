@@ -17,9 +17,9 @@
 * at entry and flips to l0 \mu T along the negative z-axis halfway through
 *
 * %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=1.0
-* %Example: -n1e4 MF=constfield.dat Detector: polz_6_I=0.05
+* %Example: -n1e4 MF=constfield.dat Detector: polx_6_I=0.05
 * %Example: -n1e4 MF=flipfield.dat interpol_method=regular Detector: pol_6_I=1.0
-* %Example: -n1e4 MF=constfield.dat interpol_method=regular Detector: polz_6_I=0.05
+* %Example: -n1e4 MF=constfield.dat interpol_method=regular Detector: polx_6_I=0.05
 *
 * %Parameters
 *
@@ -91,11 +91,11 @@ COMPONENT polx_6 = COPY(polx_0)(filename="polx_6")
 AT(0,0,1) RELATIVE field
 COMPONENT poly_6 = COPY(poly_0)(filename="poly_6")
 AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT polz_6 = COPY(polz_0)(restore_neutron=0,filename="polz_6")
+/* COMPONENT polz_6 = COPY(polz_0)(restore_neutron=0,filename="polz_6")
 AT(0,0,0) RELATIVE PREVIOUS
 COMPONENT pol_6 = COPY(pol_0)
 AT(0,0,0) RELATIVE PREVIOUS
-
+*/
 COMPONENT lmon_6 = COPY(lmon_0)(filename="lmon_6")
 AT(0,0,0) RELATIVE PREVIOUS
 
