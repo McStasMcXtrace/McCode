@@ -90,6 +90,7 @@
 * Bz: [T]                   Parameter used for z composant of field.
 * fieldFunction: [pointer]  Function describing the magnetic field.
 * filename: [ ]             File where the magnetic field is tabulated.
+* interpol_method: [ ]      When using tabulated field, choice of interpolation method "kdtree" (default) / "regular"
 * concentric: [ ]           Allow components and/or other fields inside field. Requires a subsequent Pol_simpleBfield_stop component.
 *
 * OUTPUT PARAMETERS:
@@ -101,7 +102,7 @@
 
 DEFINE COMPONENT Pol_Bfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field, field_prms=NULL)
-SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL,
+SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL, string interpol_method=NULL,
         concentric=1)
 OUTPUT PARAMETERS(magnet, parPtr, prms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -148,7 +149,7 @@ INITIALIZE
       parPtr=(void *) a;
   } else if (fieldFunction==table_magnetic_field){
     /*initialize the interpolation vertex structure*/
-      struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
+      struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, interpol_method);
       interpolator_info(interpolator);
       parPtr=(void *) interpolator;
   }
