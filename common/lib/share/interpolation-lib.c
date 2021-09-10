@@ -282,7 +282,9 @@ struct interpolator_struct *interpolator_init(void) {
     interpolator->bin[dim] = 0;
     interpolator->step[dim]= 0;
     interpolator->constant_step[dim] = 1; /* assumes we have constant step. Check done at load. */
-    interpolator->grid[dim] = NULL;
+    interpolator->gridx = NULL;
+    interpolator->gridy = NULL;
+    interpolator->gridz = NULL;
   }
   return interpolator;
 } /* interpolator_init */
@@ -437,6 +439,7 @@ struct interpolator_struct *interpolator_load(char *filename,
     long prod=1; /* the number of elements in the grid */
     for (dim=0; dim<interpolator->space_dimensionality; dim++)
       prod *= interpolator->bin[dim];
+    interpolator->prod=prod;
     for (dim=0; dim<interpolator->field_dimensionality; dim++) {
       double *array = (double*)calloc(prod, sizeof(double));
       printf("interpolator_load: allocating %g Gb for dim=%d\n",
@@ -464,7 +467,13 @@ struct interpolator_struct *interpolator_load(char *filename,
         // array[axis1][axis2][...] = field[dim] column after [space] elements
         array[this_index] = Table_Index(table, index, interpolator->space_dimensionality+dim);
       }
-      interpolator->grid[dim] = array;
+      if (dim==0)
+	interpolator->gridx = array;
+      if (dim==1)
+        interpolator->gridy = array;
+      if (dim==2)
+        interpolator->gridz = array;
+      #pragma acc data copyin(array[0:prod])
     } // end for dim(field)
   } else
 
@@ -503,7 +512,10 @@ struct interpolator_struct *interpolator_load(char *filename,
     }
 
     interpolator->kdtree = kdtree_addToTree(vertices, 0, table.rows-1, 0); // build treeNode
-    for (i=0; i<INTERPOLATOR_DIMENSIONS; interpolator->grid[i++] = NULL);  // inactivate grid method
+    //for (i=0; i<INTERPOLATOR_DIMENSIONS; interpolator->grid[i++] = NULL);  // inactivate grid method
+    interpolator->gridx=NULL;
+    interpolator->gridy=NULL;
+    interpolator->gridz=NULL;
     free(vertices);
   } 
   else
@@ -545,7 +557,7 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
   } else 
   
   /* nearest direct grid element call *****************************************/
-  if (!strcmp(interpolator->method, "regular") && interpolator->grid[0]) {
+  if (!strcmp(interpolator->method, "regular") && interpolator->gridx[0]) {
     int axis;
     long indices[interpolator->space_dimensionality];
     for (axis=0; axis < interpolator->space_dimensionality; axis++) {
@@ -553,7 +565,12 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     }
     long index = interpolator_offset(3, interpolator->bin, indices);
     for (axis=0; axis < interpolator->field_dimensionality; axis++) {
-      field[axis] = interpolator->grid[axis][index];
+      if (axis==0)
+	field[axis] = interpolator->gridx[index];
+      if (axis==1)
+        field[axis] = interpolator->gridy[index];
+      if (axis==2)
+        field[axis] = interpolator->gridz[index];
     }
     return field;
   } else {
