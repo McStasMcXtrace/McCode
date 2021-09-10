@@ -18,6 +18,8 @@
 *
 * %Example: -n1e4 MF=flipfield.dat Detector: pol_6_I=1.0
 * %Example: -n1e4 MF=constfield.dat Detector: polz_6_I=0.05
+* %Example: -n1e4 MF=flipfield.dat interpol_method=regular Detector: pol_6_I=1.0
+* %Example: -n1e4 MF=constfield.dat interpol_method=regular Detector: polz_6_I=0.05
 *
 * %Parameters
 *
