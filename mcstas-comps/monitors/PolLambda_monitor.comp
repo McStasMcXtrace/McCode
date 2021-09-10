@@ -92,14 +92,6 @@ INITIALIZE
   PolL_p = create_darr2d(nL, npol);
   PolL_p2 = create_darr2d(nL, npol);
 
-  for (i=0; i<npol; i++) {
-    for (j=0; j<nL; j++) {
-
-      PolL_N[j][i] = 0;
-      PolL_p[j][i] = 0;
-      PolL_p2[j][i] = 0;
-    }
-  }
 %}
 
 TRACE
