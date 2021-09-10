@@ -150,11 +150,6 @@ INITIALIZE
   enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
   /* these default field functions are part of pol-lib */
   /*initialize the interpolation vertex structure*/
-
-  #ifdef OPENACC
-  printf("OPENACC, forcing interpol_method=\"regular\"\n");
-  sprintf(interpol_method,"regular");
-  #endif
   interpolator = interpolator_load(filename, 3, 3, interpol_method);
   interpolator_info(interpolator);
 
