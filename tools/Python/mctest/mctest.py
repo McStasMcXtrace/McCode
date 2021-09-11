@@ -251,11 +251,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
         global ncount, mpi, openacc
         if mpi is not None:
             if openacc is True:
-                cmd = "mcrun -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
+                cmd = "mcrun -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
             else:
-                cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb)
+                cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
         else:
-            cmd = "mcrun -s 1000 %s %s -n%s -d%d  &> run_stdout.txt" % (test.localfile, test.parvals, ncount, test.testnb)
+            cmd = "mcrun -s 1000 %s %s -n%s -d%d  &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
