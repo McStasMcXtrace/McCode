@@ -97,8 +97,8 @@ PolLambda_monitor(xwidth=0.1, yheight=0.1,
      AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT magnetNum =
-Pol_Bfield(field_type=1, xwidth=0.08, yheight=0.08, zdepth=magnetLength,
-		 Bx = 0, By = Bmagnitude, Bz = 0)
+Pol_Bfield(field_type=2, xwidth=0.08, yheight=0.08, zdepth=magnetLength,
+	   Bx = 0, By = Bmagnitude, Bz = 0, concentric=1)
      AT (0, 0, 1.0) RELATIVE Origin
 /*
 COMPONENT MPLMonNum2X_1 =
