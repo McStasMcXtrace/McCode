@@ -254,9 +254,6 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
  * begin interpolator section
  ******************************************************************************/
  
-#define INTERPOLATOR_DIMENSIONS 3
-
-
 /******************************************************************************/
 /* interpolator_double_vector_compare: comparator for double qsort */
 int interpolator_double_vector_compare(void const *a, void const *b) {
@@ -604,5 +601,4 @@ double *interpolator_interpolate3_3(struct interpolator_struct *interpolator,
   return(ret);
 } /* interpolator_interpolate3_3 */
 
-#undef INTERPOLATOR_DIMENSIONS
 

@@ -51,8 +51,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-
+#ifndef INTERPOLATOR_DIMENSIONS
 #define INTERPOLATOR_DIMENSIONS 3
+#endif
 
 typedef struct
 {
@@ -96,8 +97,6 @@ struct interpolator_struct {
   double   step[INTERPOLATOR_DIMENSIONS];
   long     constant_step[INTERPOLATOR_DIMENSIONS];
 };
-
-#undef INTERPOLATOR_DIMENSIONS
 
 /******************************************************************************/
 // interpolator_info: print information about the interpolator
