@@ -52,7 +52,7 @@
 #include <math.h>
 #include <string.h>
 
-#define INTERPOLATOR_DIMENSIONS 10
+#define INTERPOLATOR_DIMENSIONS 3
 
 typedef struct
 {
