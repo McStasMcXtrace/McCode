@@ -1,0 +1,116 @@
+/******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Pol_Guide_Vmirror
+*
+* %Identification
+* Written by: Peter Christiansen
+* Date: July 2006
+* Origin: RISOE
+* %INSTRUMENT_SITE: Tests_polarization
+*
+* Test Pol_guide_mirror.
+*
+* %Description
+* Unit test for Pol_guide_mirror.  In this unit test we use the Pol_guide_mirror
+* in a non-polarizing setting, with absorbing walls. This is how it would be set to be used
+* as a frame-overlap mirror.
+*
+* %Example: mirrorIn=1 Detector: psdGuide_I=1.40915e+12
+*
+* %Parameters
+* mirrorIn: [ ]  If zero the in-guide mirror is disabled
+*
+* %Link
+*
+* %End
+******************************************************************************/
+DEFINE INSTRUMENT Test_Pol_Guide_mirror(int mirrorIn=1)
+
+DECLARE
+%{
+#define GUIDEREF 0.99
+#define MIRRORREF 0.99
+%}
+
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+     AT (0,0,0) ABSOLUTE
+
+COMPONENT source =
+Source_simple(radius = 0.05, dist = 5.0, focus_xw = 0.03, focus_yh = 0.05, lambda0 = 11,
+	      dlambda = 10, flux = 1e14)
+     AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT lamStart =
+L_monitor(nL = 30, filename = "lambdaStart.dat",
+	  xwidth = 0.10, yheight = 0.10,
+	  Lmin = 1, Lmax = 21)
+     AT (0, 0, 4.8) RELATIVE Origin
+
+COMPONENT psdStart =
+PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdStart.dat")
+AT (0, 0, 4.8) RELATIVE Origin
+/*  The parameters to the guide mirrors are defined in the common way as follows:
+ *  R0      Qc       alpha  m     W
+ * where R0 is the overall reflectivity below Qc, alpha denotes the slope of
+ * the reflectivity curve above Qc, m the m-value of the mirror, and W the width of the
+ * supermirror cut-off. In this instance the guide-wall are completely absorbing.
+*/
+COMPONENT POL_guide_mirror = Pol_guide_mirror(xwidth = 0.03, yheight = 0.05,
+		  length = 1.8, debug=0,
+		  rPar    ={0,  0.0219, 6.07, 1, 0.003},
+		  rUpPar  ={MIRRORREF, 0.0219, 6.07, 1, 0.003},
+		  rDownPar={MIRRORREF, 0.0219, 6.07, 1, 0.003})
+WHEN (mirrorIn>0) AT (0, 0, 5.0) RELATIVE Origin
+
+
+COMPONENT guide1 =
+Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
+      l = 1.8, m = 1.0, R0=GUIDEREF)
+WHEN (mirrorIn<=0) AT (0, 0, 5.0) RELATIVE Origin
+
+COMPONENT armGuide = Arm()
+AT (0, 0, 6.8)
+RELATIVE Origin
+
+COMPONENT guide2 = Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
+     l = 11.0, m = 1.0, R0=GUIDEREF)
+AT (0, 0, 0) RELATIVE armGuide
+
+COMPONENT armlambdaStop = Arm()
+AT (0, 0, 11.0)
+RELATIVE armGuide
+
+COMPONENT lamStopGuide =
+L_monitor(nL = 20, filename = "lambdaStopPolGuide.dat",
+	  xwidth = 0.10, yheight = 0.10,
+	  Lmin = 3, Lmax = 19)
+AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+COMPONENT psdGuide = PSD_monitor(xwidth=0.10, yheight=0.10,
+	    nx=40, ny=40, filename="psdPolGuide.dat")
+AT (0, 0, 0.05) RELATIVE armlambdaStop
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
