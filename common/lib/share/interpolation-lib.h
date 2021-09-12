@@ -78,9 +78,6 @@ typedef struct _treeNode {
   struct _treeNode *lChild;
 } treeNode;
 
-
-#define INTERPOLATOR_DIMENSIONS 3
-  
 struct interpolator_struct {
   char  method[256];
   long  space_dimensionality; // [x,y,z...]
