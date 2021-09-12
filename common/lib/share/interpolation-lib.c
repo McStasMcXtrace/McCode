@@ -249,7 +249,7 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
  * begin interpolator section
  ******************************************************************************/
  
-#define INTERPOLATOR_DIMENSIONS 10
+#define INTERPOLATOR_DIMENSIONS 3
 
 
 /******************************************************************************/

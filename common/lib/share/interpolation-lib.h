@@ -75,7 +75,7 @@ typedef struct _treeNode {
 } treeNode;
 
 
-#define INTERPOLATOR_DIMENSIONS 10
+#define INTERPOLATOR_DIMENSIONS 3
   
 struct interpolator_struct {
   char  method[256];
