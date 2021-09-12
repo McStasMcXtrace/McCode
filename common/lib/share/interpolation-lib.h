@@ -52,6 +52,10 @@
 #include <math.h>
 #include <string.h>
 
+#ifndef INTERPOLATOR_DIMENSIONS
+#define INTERPOLATOR_DIMENSIONS 3
+#endif
+
 typedef struct
 {
   // This is the location of this point (space).
@@ -91,8 +95,6 @@ struct interpolator_struct {
   double   step[INTERPOLATOR_DIMENSIONS];
   long     constant_step[INTERPOLATOR_DIMENSIONS];
 };
-
-#undef INTERPOLATOR_DIMENSIONS
 
 /******************************************************************************/
 // interpolator_info: print information about the interpolator
