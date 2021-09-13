@@ -2,8 +2,8 @@
 In this folder, we store instruments and components that rely on
 features not yet available in the mcstas-3.x series
 
-## *Scatter_log*
-The scatter logging mechanism redefines the SCATTER keyword, at
+## *Scatter_log* and **shielding** instruments / components
+The scatter logger and shielding mechanisms redefine the SCATTER keyword, at
 present we do not know how to implement this feature in McStas 3.
 
 ## Monitor_Sqw.comp + Test_Monitor_Sqw.instr
