@@ -116,7 +116,7 @@ int r_off_pnpoly(r_polygon p, Coords v)
   } else {
     /* non-finite polygon areas, exit */
     c=0;
-    break;
+    return c;
   }
 
   //trace rays and test number of intersection
