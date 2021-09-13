@@ -115,7 +115,7 @@ int off_pnpoly(polygon p, Coords v)
     } /* otherwise everything is already set up */
   } else {
     /* non-finite polygon areas, exit */
-    c=-1;
+    c=0;
     break;
   }
 
