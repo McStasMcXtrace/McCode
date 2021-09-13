@@ -120,7 +120,7 @@ endforeach()
 configure_file("${CMAKE_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
 
 # copy some descriptory files
-file(COPY "${CMAKE_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_SOURCE_DIR}/README" DESTINATION "${WORK}")
+file(COPY "${CMAKE_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_SOURCE_DIR}/README.md" DESTINATION "${WORK}")
 
 if(WINDOWS)
   install(
@@ -149,7 +149,7 @@ if(WINDOWS)
   target_compile_options(mcpl PUBLIC "-std=c99") 
 else()
   install(
-    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
+    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README.md"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
 endif()
