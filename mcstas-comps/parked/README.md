@@ -43,3 +43,7 @@ the ```SANS_spheres2.comp``` which works with McStas 3.
 The instrument reads / writes from / to MCPL-files within TRACE. This
 is not possible on GPU.
 
+## Union_plus_NCrystal
+Using NCrystal from within Union is at the moment not supported. In 
+essence, the ```NCrystal_process.comp``` needs to be adapted for the
+3.x syntax and rules. 
