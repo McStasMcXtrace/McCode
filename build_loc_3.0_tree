@@ -29,6 +29,7 @@ WORK=`pwd`
 
 export MCINSTALL_PREFIX=$HOME/McStas
 export CC=gcc
+export CXX=c++
 export FC=gfortran
 
 if [[ -d $HOME/McStas/mcstas/3.0-dev ]]
