@@ -64,7 +64,7 @@ COMPONENT Origin = Progress_bar()
 
 
 COMPONENT sourceMantid = SNS_source(
-	filename = "/usr/share/mcstas/2.5/data/source_sct521_bu_08_1.dat", 
+	filename = "/usr/share/mcstas/3.0/data/source_sct521_bu_08_1.dat", 
 	xwidth = sourcewidth, yheight = sourceheight,
 	dist = distance, focus_xw = samplewidth, focus_yh = sampleheight,
 	Emin = 0.001, Emax = 1000)
