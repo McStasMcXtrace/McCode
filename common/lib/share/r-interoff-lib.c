@@ -104,7 +104,7 @@ int r_off_pnpoly(r_polygon p, Coords v)
   areay=(maxx-minx)*(maxz-minz);
   areaz=(maxx-minx)*(maxy-miny);
 
-  if (areax || array || areaz) {
+  if (areax || areay || areaz) {
     if (areaz<areax) {
       if (areax<areay) {
 	pol2dy=2;
