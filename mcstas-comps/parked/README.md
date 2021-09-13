@@ -41,5 +41,3 @@ the ```SANS_spheres2.comp``` which works with McStas 3.
 The instrument reads / writes from / to MCPL-files within TRACE. This
 is not possible on GPU.
 
-## Test_focus
-- needs a look
