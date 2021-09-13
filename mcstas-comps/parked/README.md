@@ -31,3 +31,8 @@ modifications done to ```Single_crystal.comp``` and ```Isotropic_Sqw.comp```
 It should be straightforward to port
 ```Single_magnetic_crystal.comp``` to McStas 3, following the
 modifications done to ```Single_crystal.comp```
+
+## FZJ_BenchmarkSfin2.instr and related SANS_benchmark2.comp
+The component needs lots of work on variable structure etc. to allow
+use with McStas 3. One of the models from component has been ported to
+the ```SANS_spheres2.comp``` which works with McStas 3.
