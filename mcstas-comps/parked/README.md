@@ -21,3 +21,13 @@ components.
 This instrument and the related components have not been ported to
 McStas 3. Ideally they should be rewritten, taking advantage of the
 functionalities of McStas 3.
+
+## Test_Single_crystal_inelastic.instr
+It should be straightforward to port
+```Single_crystal_inelastic.comp``` to McStas 3, following the
+modifications done to ```Single_crystal.comp``` and ```Isotropic_Sqw.comp```
+
+## Test_single_magnetic_crystal.instr
+It should be straightforward to port
+```Single_magnetic_crystal.comp``` to McStas 3, following the
+modifications done to ```Single_crystal.comp```
