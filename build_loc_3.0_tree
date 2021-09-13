@@ -2,6 +2,10 @@
 
 # rapid-build script for mcstas-kernel dev:
 
+
+git checkout mcstas-3.0
+git pull
+
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY=`ls 3rdparty | grep -v patches`
 cd 3rdparty
@@ -20,9 +24,6 @@ do
 	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
     fi
 done
-
-git checkout mcstas-3.0
-git pull
 
 WORK=`pwd`
 
