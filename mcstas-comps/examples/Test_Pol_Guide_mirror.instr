@@ -75,8 +75,8 @@ AT (0, 0, 4.8) RELATIVE Origin
 COMPONENT POL_guide_mirror = Pol_guide_mirror(xwidth = 0.03, yheight = 0.05,
 		  length = 1.8, debug=0,
 		  rPar    ={0,  0.0219, 6.07, 1, 0.003},
-		  rUpPar  ={MIRRORREF, 0.0219, 6.07, 1, 0.003},
-		  rDownPar={MIRRORREF, 0.0219, 6.07, 1, 0.003})
+		  rUpPar  ={0.99, 0.0219, 6.07, 1, 0.003},
+		  rDownPar={0.99, 0.0219, 6.07, 1, 0.003})
 WHEN (mirrorIn>0) AT (0, 0, 5.0) RELATIVE Origin
 
 
