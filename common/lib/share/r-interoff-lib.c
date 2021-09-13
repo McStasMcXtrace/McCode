@@ -84,7 +84,7 @@ int r_off_pnpoly(r_polygon p, Coords v)
 {
   int i=0, c = 0;
   MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
-  MCNUM rangex=0,rangey=0,rangez=0;
+  MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
   MCNUM x=v.x,y=v.y;
@@ -100,24 +100,24 @@ int r_off_pnpoly(r_polygon p, Coords v)
     if (p.p[3*i+2]<minz) minz=p.p[3*i+2];
     if (p.p[3*i+2]>maxz) maxz=p.p[3*i+2];
   }
-  rangex=maxx-minx;
-  rangey=maxy-miny;
-  rangez=maxz-minz;
+  areax=(maxy-miny)*(maxz-minz);
+  areay=(maxx-minx)*(maxz-minz);
+  areaz=(maxx-minx)*(maxy-miny);
 
-  if (rangex<rangez)
+  if (areaz<areax)
   {
-    if (rangex<rangey) {
-      pol2dx=2;
-      x=v.z;
-    } else {
+    if (areax<areay) {
       pol2dy=2;
       y=v.z;
+    } else {
+      pol2dx=2;
+      x=v.z;      
     }
   }
-  else if (rangey<rangez) {
+  else if (areaz<areay) {
     pol2dy=2;
     y=v.z;
-  }
+  } /* otherwise everything is already set up */
 
   //trace rays and test number of intersection
   int j;
