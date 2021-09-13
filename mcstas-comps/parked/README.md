@@ -36,3 +36,13 @@ modifications done to ```Single_crystal.comp```
 The component needs lots of work on variable structure etc. to allow
 use with McStas 3. One of the models from component has been ported to
 the ```SANS_spheres2.comp``` which works with McStas 3.
+
+## MCPL_merge.instr
+The instrument reads / writes from / to MCPL-files within TRACE. This
+is not possible on GPU.
+
+## Tools_ONION
+- needs a look
+
+## Test_focus
+- needs a look
