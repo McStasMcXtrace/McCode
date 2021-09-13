@@ -25,7 +25,9 @@ functionalities of McStas 3.
 ## Test_Single_crystal_inelastic.instr
 It should be straightforward to port
 ```Single_crystal_inelastic.comp``` to McStas 3, following the
-modifications done to ```Single_crystal.comp``` and ```Isotropic_Sqw.comp```
+modifications done to ```Single_crystal.comp``` and
+```Isotropic_Sqw.comp```. ```E_4PI.comp``` is a monitor and should be
+easy to fix.
 
 ## Test_single_magnetic_crystal.instr
 It should be straightforward to port
