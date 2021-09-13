@@ -104,20 +104,24 @@ int r_off_pnpoly(r_polygon p, Coords v)
   areay=(maxx-minx)*(maxz-minz);
   areaz=(maxx-minx)*(maxy-miny);
 
-  if (areaz<areax)
-  {
-    if (areax<areay) {
+  if (areax || array || areaz) {
+    if (areaz<areax) {
+      if (areax<areay) {
+	pol2dy=2;
+	y=v.z;
+      } else {
+	pol2dx=2;
+	x=v.z;
+      }
+    } else if (areaz<areay) {
       pol2dy=2;
       y=v.z;
-    } else {
-      pol2dx=2;
-      x=v.z;      
-    }
+    } /* otherwise everything is already set up */
+  } else {
+    /* non-finite polygon areas, exit */
+    c=-1;
+    break;
   }
-  else if (areaz<areay) {
-    pol2dy=2;
-    y=v.z;
-  } /* otherwise everything is already set up */
 
   //trace rays and test number of intersection
   int j;
