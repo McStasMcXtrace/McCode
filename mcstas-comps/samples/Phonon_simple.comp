@@ -8,8 +8,8 @@
 * Date: 04.02.04
 * Origin: Risoe
 *
-* A sample for phonon scattering
-* based on cross section expressions from Squires, Ch.3.
+* A sample for phonon scattering based on cross section expressions from Squires, Ch.3.
+* Possibility for adding an (unphysical) bandgap.
 *
 * %D
 * Single-cylinder shape.
@@ -49,6 +49,7 @@
 * target_y: [m]       position of target to focus at. Vertical coordinate
 * target_z: [m]       position of target to focus at. Straight ahead.
 * target_index: [1]   relative index of component to focus at, e.g. next is +1 
+* gap: [meV]          Bandgap energy (unphysical)
 *
 * OUTPUT PARAMETERS:
 * V_rho: [AA^-3]      Atomic density
@@ -64,7 +65,7 @@
 DEFINE COMPONENT Phonon_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,b,M,c,DW,T,
-target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0)
+target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0, gap=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
@@ -107,6 +108,7 @@ void fatalerror(char *s)
       double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
       double q, qx, qy, qz, Jq, res_phonon, res_neutron;
       double ah, a, c;
+      double gap;
 
       vf=parms[0];
       vi=parms[1];
@@ -118,6 +120,7 @@ void fatalerror(char *s)
       vi_z=parms[7];
       a   =parms[8];
       c   =parms[9];
+      gap =parms[10];
       ah=a/2.0;
 
       qx=V2K*(vi_x-vf*vv_x);
@@ -126,7 +129,11 @@ void fatalerror(char *s)
        q=sqrt(qx*qx+qy*qy+qz*qz);
       Jq=2*(cos(ah*(qx+qy))+cos(ah*(qx-qy))+cos(ah*(qx+qz))+cos(ah*(qx-qz))
              +cos(ah*(qy+qz))+cos(ah*(qy-qz)) );
-      res_phonon=c/a*sqrt(12-Jq);
+      if (gap>0) {
+	res_phonon=sqrt(gap*gap+(12-Jq)*(c*c)/(a*a));
+      } else {
+        res_phonon=c/a*sqrt(12-Jq);
+      }
       res_neutron = fabs(VS2E*(vi*vi-vf*vf));
 
       return (res_phonon - res_neutron);
@@ -364,7 +371,7 @@ TRACE
   double J_factor;            /* Jacobian from delta fnc.s in cross section */
   double f1, f2;            /* probed values of omega_q minus omega */
   double p1,p2,p3,p4,p5;    /* temporary multipliers */
-  double parms[10];
+  double parms[11];
   
   if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
   {
@@ -407,6 +414,7 @@ TRACE
       parms[7]=vz_i;
       parms[8]=a;
       parms[9]=c;
+      parms[10]=gap;
     #ifndef OPENACC
     findroots(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q, parms);
     #else

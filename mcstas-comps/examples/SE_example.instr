@@ -108,7 +108,7 @@ ROTATED (0, 0, 0) RELATIVE Source
 
 /*beam is now polarized in the flight direction - flip it to the vertical*/
 
-COMPONENT flipper1 = Pol_Bfield(
+COMPONENT flipper1 = Pol_Bfield(field_type=1, 
   xwidth=0.1,yheight=0.1,
   Bx=0, By=Bflip, Bz=Bflip)
 AT( 0,0,0.32) RELATIVE polariser_pt
@@ -129,7 +129,7 @@ ROTATED (0, 0, 0) RELATIVE Source
 COMPONENT guide_field_1_slit=Slit(xwidth=0.1, yheight=0.1)
 AT(0,0,0.0205) RELATIVE flipper1
 
-COMPONENT guide_field_1 = Pol_Bfield(
+COMPONENT guide_field_1 = Pol_Bfield(field_type=1, 
     xwidth=0.1, yheight=0.1, Bx=0, By=0, Bz=Bguide+dBz)
 AT(0, 0, 0.021) RELATIVE flipper1
 
@@ -148,7 +148,7 @@ AT (0, 0, 0.001) RELATIVE guide_field_1_end
 ROTATED (0, 0, 0) RELATIVE Source
 
 /*two flippers after one another*/
-COMPONENT flipper2_1 = Pol_Bfield(
+COMPONENT flipper2_1 = Pol_Bfield(field_type=1, 
   xwidth=0.1,yheight=0.1,
   Bx=0, By=Bflip, Bz=Bflip)
 AT( 0,0,2e-3) RELATIVE guide_field_1_end
@@ -156,7 +156,7 @@ AT( 0,0,2e-3) RELATIVE guide_field_1_end
 COMPONENT flipper2_1_stop=Pol_Bfield_stop()
 AT(0,0,0.02) RELATIVE flipper2_1
 
-COMPONENT flipper2_2 = Pol_Bfield(
+COMPONENT flipper2_2 = Pol_Bfield(field_type=1, 
   xwidth=0.1,yheight=0.1,
   Bx=0, By=-Bflip, Bz=Bflip)
 AT( 0,0,0.021) RELATIVE flipper2_1
@@ -188,7 +188,7 @@ WHEN (SAMPLE==0) AT(0,0,0) RELATIVE sample_mnt
 COMPONENT guide_field_2_slit=Slit(xwidth=0.1, yheight=0.1)
   AT(0,0,0.0205) RELATIVE sample_mnt
 
-COMPONENT guide_field_2 = Pol_Bfield(
+COMPONENT guide_field_2 = Pol_Bfield(field_type=1, 
     xwidth = 0.1, yheight = 0.1, zdepth = 1, Bx=0, By=0, Bz=Bguide)
 AT (0, 0, 0.021) RELATIVE sample_mnt
   
@@ -207,7 +207,7 @@ COMPONENT pl_mon40 = MeanPolLambda_monitor(
 AT (0, 0, 0.001) RELATIVE guide_field_2_end
 ROTATED (0, 0, 0) RELATIVE Source
 
-COMPONENT flipper3 = Pol_Bfield(
+COMPONENT flipper3 = Pol_Bfield(field_type=1, 
   xwidth=0.1,yheight=0.1,
   Bx=0, By=-Bflip, Bz=Bflip)
 AT( 0,0,0.001) RELATIVE guide_field_2_end 

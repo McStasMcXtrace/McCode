@@ -38,30 +38,14 @@
 * in pol-lib.
 *
 * Example: Pol_Bfield(xwidth=0.1, yheight=0.1, zdepth=0.2, Bx=0, By=1, Bz=0)
-*          Pol_Bfield(xwidth=0.1, yheight=0.1, zdepth=0.2,
-*            filename="bfield.dat", fieldFunction=table_magnetic_field)
+*          Pol_Bfield(xwidth=0.1, yheight=0.1, zdepth=0.2, field_type=1)
 *
-* The magetic field may be given as any definable c-function with a specific footprint:
-*   int func(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data)
-* where the magnetic field at coordinates (x,y,z, t) is returned in the variables
-* pointed to by bx,by, and bz. Additional parameters to be handed to the function
-* should be handed to the function using the pointer data.
-*
-* Functions supplied by the system are (the number is the ID of the function to be given as the fieldFunction parameter:
+* Functions supplied by the system are (the number is the ID of the function to be given as the field_type parameter:
 * 1. Constant magnetic field: Constant field (Bx,By,Bz) within the region
 * 2. Rotating magnetic_field: Field is initially (0,By,0) but after a length of zdepth
 *      has rotated to (By,0,0)
 * 3. majorana magnetic_field: Field is initially (Bx,By,0) liearly transforms to
 *      (-Bx,By,0) after zdepth where By<<Bx
-* -1. table_magnetic_field: The magnetic field is read from a text file where it is
-*      specified as a point cloud with N rows of 6 columns:
-*      x y z Bx By Bz
-*    the B field map is resampled with Stepx*Stepy*Stepz points.
-*    Use Stepx=Stepy=Stepz=0 to skip resampling and use the table as is.
-*
-* Users may specify any other function with the required footprint to have any
-* other field. Note that coordinates refer the coordinate system defined by this
-* component.
 *
 * If the concentric parameter is set to 1 the magnetic field is turned on by an
 * instance of this component, and turned off by an instance of Pol_simpleBfield_stop.
@@ -82,26 +66,21 @@
 * Bx: [T]                   Parameter used for x composant of field.
 * By: [T]                   Parameter used for y composant of field.
 * Bz: [T]                   Parameter used for z composant of field.
-* field_type: []            ID of function describing the magnetic field. -1:tabled field, 1:constant field, 2: rotating fiel, 3: majorana type field, 4: MSF, 5: RF-field, 6: gradient field.
-* filename: [ ]             File where the magnetic field is tabulated.
+* field_type: []            ID of function describing the magnetic field. 1:constant field, 2: rotating fiel, 3: majorana type field, 4: MSF, 5: RF-field, 6: gradient field.
 * concentric: [ ]           Allow components and/or other fields inside field. Requires a subsequent Pol_simpleBfield_stop component.
 *
-* OUTPUT PARAMETERS:
-* magnet: [ ]
-* parPtr: [pointer]         Pointer to component magnet parameters.
-* prms:   [ ]               Structur containing the shape of the magnetic field.
 * %E
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_Bfield
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int field_type=0, xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, string filename="bfield.dat", string geometry=NULL,
-        concentric=1)
+SETTING PARAMETERS (int field_type=0, xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, concentric=1)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-%include "pol-lib"
+  %include "pol-lib"
+
   double fmax(double, double);
   double fmin(double, double);
 %}
@@ -110,44 +89,26 @@ SHARE
 DECLARE
 %{
   /* Larmor frequency and scalar product threshold*/
-  void *parPtr;
-  mcmagnet_field_info *magnet;
-  struct field_parameters Bprms;
+  double Bprms[8];
   int shape;
 %}
 
 INITIALIZE
 %{
   enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
-  parPtr=NULL;
   enum field_functions ff=field_type;
   /* these default field functions are part of pol-lib */
   if (ff==constant){
-    double *t=(Bprms.field_prms);
+    double *t=Bprms;
     t[0]=Bx;t[1]=By;t[2]=Bz;
   } else if (ff==rotating){
-    double *t=(Bprms.field_prms);
+    double *t=Bprms;
     t[0]=By;t[1]=zdepth;
   } else if (ff==majorana){
-    double *t=(Bprms.field_prms);
+    double *t=Bprms;
     t[0]=Bx; t[1]=By; t[2]=zdepth;
   } 
-  #ifdef USE_OFF
-  else if (ff==tabled){
-    /*initialize the interpolation vertex structure*/
-    struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
-    interpolator_info(interpolator);
-    Bprms.generic=(void *)interpolator;
-  }
-  #endif
 
-  /*initialize shape to either be window/box/cylinder*/
-  /*some logic here to enter through a box or cylinder*/
-  #ifdef USE_OFF
-  if(geometry && strlen(geometry)){
-      shape=ANY;
-  }else 
-  #endif
   if(xwidth && yheight && zdepth){
       shape=BOX;
   }else if (xwidth && yheight && !zdepth){
@@ -211,7 +172,7 @@ TRACE
         default:
             PROP_Z0;
     }
-    mcmagnet_push(_particle, field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
+    mcmagnet_push(_particle, field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,Bprms);
 #ifdef MCDEBUG
     mcmagnet_print_stack();
 #endif

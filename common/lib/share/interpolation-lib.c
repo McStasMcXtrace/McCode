@@ -64,6 +64,7 @@
 
 // kdtree_squaredDistance: Calculate the standard Euclidean distance between 
 //   these two points in whatever dimension we are considering.
+#pragma acc routine
 double kdtree_squaredDistance(vertex* a, vertex* b)
 {
   int i;
@@ -79,6 +80,7 @@ double kdtree_squaredDistance(vertex* a, vertex* b)
 /******************************************************************************/
 // kdtree_borderCheck: Check to see whether or not this node provides a better 
 //   nearest neighbour.
+#pragma acc routine
 void kdtree_borderCheck(vertex *v, treeNode *thisNode,
                  vertex **currentBest, double *sDist)
 {
@@ -113,6 +115,7 @@ void kdtree_borderCheck(vertex *v, treeNode *thisNode,
 
 // kdtree_partition: Note we slightly modify the standard partition algorithm, 
 //   so that we can partition based on only one dimension of the pointset.
+#pragma acc routine
 int kdtree_partition(vertex **points, int d, int left, int right, int pivot)
 {
   double pivotValue = points[pivot]->v[d];
@@ -187,6 +190,7 @@ treeNode* kdtree_addToTree(vertex **points, int left, int right, int depth)
 /******************************************************************************/
 // kdtree_nearestNeighbour_helper: helper function for kdtree_nearestNeighbour
 //   used recursively until a close vertex is found
+#pragma acc routine
 void kdtree_nearestNeighbour_helper(vertex* v, treeNode *tree,
                              vertex **bestV, double *bestDist)
 {
@@ -226,6 +230,7 @@ void kdtree_nearestNeighbour_helper(vertex* v, treeNode *tree,
 
 /******************************************************************************/
 // kdtree_nearestNeighbour: find closest vertex in tree to given vertex coords
+#pragma acc routine
 vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
   vertex *bestV = NULL;
   double bestDist = 0;
@@ -249,9 +254,6 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
  * begin interpolator section
  ******************************************************************************/
  
-#define INTERPOLATOR_DIMENSIONS 10
-
-
 /******************************************************************************/
 /* interpolator_double_vector_compare: comparator for double qsort */
 int interpolator_double_vector_compare(void const *a, void const *b) {
@@ -277,7 +279,9 @@ struct interpolator_struct *interpolator_init(void) {
     interpolator->bin[dim] = 0;
     interpolator->step[dim]= 0;
     interpolator->constant_step[dim] = 1; /* assumes we have constant step. Check done at load. */
-    interpolator->grid[dim] = NULL;
+    interpolator->gridx = NULL;
+    interpolator->gridy = NULL;
+    interpolator->gridz = NULL;
   }
   return interpolator;
 } /* interpolator_init */
@@ -285,6 +289,7 @@ struct interpolator_struct *interpolator_init(void) {
 /******************************************************************************/
 // interpolator_offset: determine element offset for an n-dimensional array
 //   used in: interpolator_load and interpolator_interpolate
+#pragma acc routine
 long interpolator_offset(int dim, long *dimInfo, long *indices) {
   
   long result;  // where the resultant offset will be stored 
@@ -431,6 +436,7 @@ struct interpolator_struct *interpolator_load(char *filename,
     long prod=1; /* the number of elements in the grid */
     for (dim=0; dim<interpolator->space_dimensionality; dim++)
       prod *= interpolator->bin[dim];
+    interpolator->prod=prod;
     for (dim=0; dim<interpolator->field_dimensionality; dim++) {
       double *array = (double*)calloc(prod, sizeof(double));
       printf("interpolator_load: allocating %g Gb for dim=%d\n",
@@ -458,9 +464,15 @@ struct interpolator_struct *interpolator_load(char *filename,
         // array[axis1][axis2][...] = field[dim] column after [space] elements
         array[this_index] = Table_Index(table, index, interpolator->space_dimensionality+dim);
       }
-      interpolator->grid[dim] = array;
+      if (dim==0)
+	interpolator->gridx = array;
+      if (dim==1)
+        interpolator->gridy = array;
+      if (dim==2)
+        interpolator->gridz = array;
+      #pragma acc data copyin(array[0:prod])
     } // end for dim(field)
-  } 
+  } else
 
   /* assign interpolation technique: kd-tree (when nearest direct indexing fails) */
   if (!strcmp(interpolator->method, "kdtree")) {
@@ -497,7 +509,10 @@ struct interpolator_struct *interpolator_load(char *filename,
     }
 
     interpolator->kdtree = kdtree_addToTree(vertices, 0, table.rows-1, 0); // build treeNode
-    for (i=0; i<INTERPOLATOR_DIMENSIONS; interpolator->grid[i++] = NULL);  // inactivate grid method
+    //for (i=0; i<INTERPOLATOR_DIMENSIONS; interpolator->grid[i++] = NULL);  // inactivate grid method
+    interpolator->gridx=NULL;
+    interpolator->gridy=NULL;
+    interpolator->gridz=NULL;
     free(vertices);
   } 
   else
@@ -519,6 +534,9 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
   double *space, double *field)
 {
   if (!space || !interpolator || !field) return NULL;
+  #ifdef OPENACC
+  #define strcmp str_comp
+  #endif
   
   /* k-d tree call ************************************************************/
   if (!strcmp(interpolator->method, "kdtree") && interpolator->kdtree) {
@@ -528,13 +546,15 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     v.space_dimensionality=interpolator->space_dimensionality;
     vertex *w =kdtree_nearestNeighbour(&v, interpolator->kdtree);
     if (!w) return NULL;
-    for (i=0; i<interpolator->field_dimensionality; field[i]=w->data[i++]);
+    for (i=0; i<interpolator->field_dimensionality; i++){
+        field[i]=w->data[i];
+    }
     return (w->data);
 
   } else 
   
   /* nearest direct grid element call *****************************************/
-  if (!strcmp(interpolator->method, "regular") && interpolator->grid[0]) {
+  if (!strcmp(interpolator->method, "regular") && interpolator->gridx) {
     int axis;
     long indices[interpolator->space_dimensionality];
     for (axis=0; axis < interpolator->space_dimensionality; axis++) {
@@ -542,13 +562,20 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     }
     long index = interpolator_offset(3, interpolator->bin, indices);
     for (axis=0; axis < interpolator->field_dimensionality; axis++) {
-      field[axis] = interpolator->grid[axis][index];
+      if (axis==0)
+	field[axis] = interpolator->gridx[index];
+      if (axis==1)
+        field[axis] = interpolator->gridy[index];
+      if (axis==2)
+        field[axis] = interpolator->gridz[index];
     }
     return field;
   } else {
+    #ifndef OPENACC
     fprintf(stderr, "interpolator_interpolate: ERROR: invalid interpolator method %s from file '%s'.\n",
       interpolator->method, interpolator->filename);
     exit(-1);
+    #endif
   }
   
 } // interpolator_interpolate
@@ -574,5 +601,4 @@ double *interpolator_interpolate3_3(struct interpolator_struct *interpolator,
   return(ret);
 } /* interpolator_interpolate3_3 */
 
-#undef INTERPOLATOR_DIMENSIONS
 

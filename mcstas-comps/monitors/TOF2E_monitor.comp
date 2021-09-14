@@ -36,6 +36,7 @@
 * T_zero: [s]           Zero point in time
 * L_flight: [m]         flight length user in conversion
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -51,7 +52,7 @@
 
 DEFINE COMPONENT TOF2E_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nE=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, Emin, Emax, T_zero, L_flight, restore_neutron=0)
+SETTING PARAMETERS (nE=20, string filename=0, int nowritefile=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, Emin, Emax, T_zero, L_flight, restore_neutron=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -126,6 +127,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_1D(
       "TOF-to-Energy monitor",
       "Energy [meV]",
@@ -135,6 +137,7 @@ SAVE
       filename);
   if (S_p) printf("<E> : %g meV , E-width : %g meV \n",
    S_pE/S_p,sqrt(S_pE2/S_p - S_pE*S_pE/(S_p*S_p)) );
+}
 %}
 
 FINALLY

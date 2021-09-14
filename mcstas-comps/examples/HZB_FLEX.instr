@@ -22,8 +22,8 @@
 * SA: [1]               Analyzer scattering sense
 * A3: [deg]             Sample omega angle
 * A4: [deg]             Sample 2-theta angle
-* L3: [m]               
-* L4: [m]               
+* L3: [m]
+* L4: [m]
 * Mono_flatswitch: [1]  Flag for flat or curved monochromator
 *
 * %End
@@ -419,7 +419,7 @@ COMPONENT psd_sam = PSD_monitor(
      restore_neutron = 1, xwidth = 0.20, yheight = 0.20)
      AT (0, 0, 0) RELATIVE Sample_center ROTATED (0,0,0) RELATIVE Mono_sample_arm
 
-COMPONENT 1dpsd = PSDlin_monitor(nbins=30, filename="linpsdsam.dat",
+COMPONENT dpsd1 = PSDlin_monitor(nbins=30, filename="linpsdsam.dat",
      xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 AT (0, 0, 0) RELATIVE Sample_center ROTATED (0,0,0) RELATIVE Mono_sample_arm
 

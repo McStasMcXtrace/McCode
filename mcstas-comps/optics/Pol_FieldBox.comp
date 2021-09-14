@@ -42,6 +42,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
     %include "pol-lib"
+    %include "interpolation-lib"
 %}
 
 DECLARE
@@ -53,7 +54,7 @@ INITIALIZE
 %{
   enum field_functions ff=field_type;
   #ifdef USE_OFF
-  mcmagnet_init();
+  //mcmagnet_init();
 
   if(ff==tabled){
     struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);

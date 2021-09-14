@@ -132,8 +132,8 @@
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -vz, -z); \
-    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) { ABSORB; }}; }		      \
+    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); z=0;}\
+    else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
     else mcPROP_Z0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -156,8 +156,8 @@
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -vx, -x); \
-    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) { ABSORB; }}; }\
+    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); x=0;}\
+    else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
     else mcPROP_X0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -180,8 +180,8 @@
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -vy, -y); \
-    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) { ABSORB; }}; }\
+    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); y=0;}\
+    else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
     else mcPROP_Y0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -198,9 +198,6 @@
     DISALLOW_BACKPROP; \
   } while(0)
 
-#pragma acc routine seq
-_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-			   double t, double sx, double sy, double sz, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);
 
 #ifdef DEBUG
 

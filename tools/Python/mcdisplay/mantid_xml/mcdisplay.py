@@ -52,7 +52,14 @@ class MantidPixelWriter:
 
     source_footer = '''</type>'''
 
+    def _sample_Z(self):
+        for c in self.components:
+            if c.name == 'sampleMantid':
+                return (c.pos.z)
+
+
     def _get_mantid_source(self):
+
         for c in self.components:
             if c.name == 'sourceMantid':
                 for d in c.drawcalls:
@@ -62,7 +69,7 @@ class MantidPixelWriter:
                         pass
                 s = self.source_type.replace('X_LOC', str(c.pos.x))
                 s = s.replace('Y_LOC', str(c.pos.y))
-                s = s.replace('Z_LOC', str(c.pos.z))
+                s = s.replace('Z_LOC', str(c.pos.z-self._sample_Z()))
                 break
         return '\n'.join([s, self.source_header, self.source_footer])
 
@@ -103,7 +110,7 @@ class MantidPixelWriter:
 
                 h = self.sample.replace('X_COORD', str(c.pos.x))
                 h = h.replace('Y_COORD', str(c.pos.y))
-                h = h.replace('Z_COORD', str(c.pos.z))
+                h = h.replace('Z_COORD', str(c.pos.z-self._sample_Z()))
                 break
         return '\n\n'.join([h, self.sample_type, self.sample_footer])
 
@@ -272,10 +279,12 @@ class MantidPixelWriter:
             if not rec:
                 return ''
 
-            rot_vector, alpha = m.transform.get_rotvector_alpha()
+            rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
 
-            if alpha is 0.0:
+            print ('alpha', alpha)
+            if alpha ==0.0:
                 rot_vector.y = 1
+                print('rot_vector_y', rot_vector.y)
 
             x_step = (float(rec.xmax) - float(rec.xmin)) / float(rec.nx)
             y_step = (float(rec.ymax) - float(rec.ymin)) / float(rec.ny)
@@ -289,7 +298,7 @@ class MantidPixelWriter:
             s = s.replace('MONITOR_NAME', m.name)
             s = s.replace('X_LOC', str(m.pos.x))
             s = s.replace('Y_LOC', str(m.pos.y))
-            s = s.replace('Z_LOC', str(m.pos.z))
+            s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
             s = s.replace('ROT_ANGLE', str(alpha))
             s = s.replace('ROT_X', str(rot_vector.x))
             s = s.replace('ROT_Y', str(rot_vector.y))
@@ -309,6 +318,7 @@ class MantidPixelWriter:
                 monitor_type_id += 1  #
 
                 s_type = s_type.replace('MonNDtype', 'MonNDtype{}'.format(monitor_type_id))
+                s_type = s_type.replace('rectangular_det_type', 'rectangular_det_type{}'.format(monitor_type_id))
                 text.append(s_type)
                 rec_nx_to_type[rec.nx] = monitor_type_id
 
@@ -327,34 +337,35 @@ class MantidPixelWriter:
         return '\n\n'.join(text)
 
     banana_monitor = '''
-<component type="MonNDtype-0" name="MONITOR_NAME" idlist="MonNDtype-0-list">
-    <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/> 
-</component>
+    <component type="MonNDtype-0" name="MONITOR_NAME" idlist="MonNDtype-0-list">
+        <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/> 
+    </component>
 
-<type name="MonNDtype-0">
-<component type="pixel-0">
-    <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
-</component>
-</type>
+    <type name="MonNDtype-0">
+    <component type="pixel-0">
+        <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
+    </component>
+    </type>
 
-<type is="detector" name="pixel-0">
-    <cuboid id="pixel-shape-0">
-        <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
-        <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-    </cuboid>
-    <algebra val="pixel-shape-0"/>
-</type>
+    <type is="detector" name="pixel-0">
+        <cuboid id="pixel-shape-0">
+            <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+            <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
+            <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+            <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+        </cuboid>
+        <algebra val="pixel-shape-0"/>
+    </type>
 
-<idlist idname="MonNDtype-0-list">
-    <id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+    <idlist idname="MonNDtype-0-list">
+        <id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
 
-<type name="in5_t-type">
-</type>'''
+    <type name="in5_t-type">
+    </type>'''
 
     def _get_mantid_banana_monitor(self):
         text = []
+
         for m in self.monitors:
 
             ban = None
@@ -377,7 +388,7 @@ class MantidPixelWriter:
             s = s.replace('MONITOR_NAME', m.name)
             s = s.replace('X_LOC', str(m.pos.x))
             s = s.replace('Y_LOC', str(m.pos.y))
-            s = s.replace('Z_LOC', str(m.pos.z))
+            s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
             s = s.replace('ROT_ANGLE', str(alpha))
             s = s.replace('ROT_X', str(rot_vector.x))
             s = s.replace('ROT_Y', str(rot_vector.y))

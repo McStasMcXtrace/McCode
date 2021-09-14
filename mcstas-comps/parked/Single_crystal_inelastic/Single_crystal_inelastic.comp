@@ -1,0 +1,969 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Single_crystal_inelastic
+*
+* %I
+* Written by: Some Guy
+* Date: August 2020
+* Origin: DTU Physics
+* 
+* An extension of Single crystal with material dispersion
+*
+* %D
+* The component handles a 4D S(q,w) material dispersion, and scatters neutrons 
+* out of it. It is based on the Isotropic_Sqw methodology, extended to 4D. 
+*
+* A number of approximations are applied:
+*
+*  - geometry is restricted to box, cylinder and sphere
+*  - ignore absorption, multiple scattering and incoherent scattering
+*  - no temperature handling. The temperature must be taken into account when 
+*      generating the S(q,w) data sets, which should contain Bose/detailed balance.
+*  - intensity is used as provided by the S(q,w) data set
+*  
+* We recommend that you first try the Test_Single_crystal_inelastic example to 
+* learn how to use this complex component.
+*
+* 4D S(q,w) data files
+* --------------------
+*
+* The input data file derives from other McStas formats. It may contain structural
+* information as in Lau/Laz files, and a list of S(q,w) [one per row] with 5 columns
+**
+**   [ H K L E S(q,w) ]
+**
+* An example file example.sqw4 is provided in the McStas/Data directory.
+*
+* You may generate such files using <a href="http://ifit.mccode.org">iFit </a> such as:
+*
+*   s = sqw_vaks('defaults');             % a 4D model
+*   d = iData(s);                         % use default coarse grid for axes [-0.5:0.5]
+*   saveas(d, 'sx_coh.sqw4', 'mcstas');   % export to 4D Sqw file
+*
+* %VALIDATION:
+* This component is undergoing validation.
+*
+* %P
+* INPUT PARAMETERS:
+* radius: [m]    Outer radius of sample in (x,z) plane.
+* xwidth: [m]    Width of crystal.
+* yheight: [m]   Height of crystal.
+* zdepth: [m]    Depth of crystal (no extinction simulated)
+* geometry: [string]   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
+* delta_d_d: [1] Lattice spacing variance, gaussian RMS.
+* mosaic: [arcmin]   Isotropic crystal mosaic, gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters.
+* mosaic_a: [arcmin] Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity through rotation around the crystal lattice vectors. Has precedence over in-plane mosaic model.
+* mosaic_b: [arcmin] Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS.
+* mosaic_c: [arcmin] Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS.
+* mosaic_AB: [arcmin,arcmin,1,1,1,1,1,1]    In Plane mosaic rotation and plane vectors (anisotropic), 
+*              mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in 
+*              the in-plane mosaic state. Vectors A and B define plane in which 
+*              the crystal roation is defined, and mosaic_A, mosaic_B, denotes the 
+*              resp. mosaicities (gaussian RMS) with respect to the the two 
+*              reflections chosen by A and B (Miller indices).
+* recip_cell: [1] Choice of direct/reciprocal (0/1) unit cell definition.
+* ax: [AA / AA^-1]    Coordinates of first (direct/recip) unit cell vector.
+* ay: [AA / AA^-1]    a on y axis
+* az: [AA / AA^-1]    a on z axis
+* bx: [AA / AA^-1]       Coordinates of second (direct/recip) unit cell vector.
+* by: [AA / AA^-1]       b on y axis
+* bz: [AA / AA^-1]       b on z axis
+* cx: [AA / AA^-1]       Coordinates of third (direct/recip) unit cell vector.
+* cy: [AA / AA^-1]       c on y axis
+* cz: [AA / AA^-1]       c on z axis
+* reflections: [string] File name containing structure factors of reflections. Use
+*              empty ("") or NULL for incoherent scattering only.
+* order: [1]    Limit multiple scattering up to given order
+*              (0: all, 1: first, 2: second, ...).
+*
+* Optional input parameters:
+*
+* p_transmit: [1] Monte Carlo probability for neutrons to be transmitted
+*               without any scattering. Used to improve statistics from
+*               weak reflections.
+* sigma_abs: [barns]  Absorption cross-section per unit cell at 2200 m/s. 
+* sigma_inc: [barns]  Incoherent scattering cross-section per unit cell.
+* aa: [deg]       Unit cell angles alpha, beta and gamma. Then uses norms of
+*              vectors a,b and c as lattice parameters.
+* bb: [deg]       Beta angle. 
+* cc: [deg]       Gamma angle.
+* barns: [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
+*              barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
+*              barns=0 for lau type files.
+* RX: [m]       Radius of horizontal along X lattice curvature. flat for 0.
+* RY: [m]       Radius of vertical lattice curvature. flat for 0.
+* RZ: [m]       Radius of horizontal along Z lattice curvature. flat for 0.
+* %E
+****************************************************************************/
+
+
+DEFINE COMPONENT Single_crystal_inelastic
+DEFINITION PARAMETERS(mosaic_AB=Mosaic_AB_Undefined)
+SETTING PARAMETERS(string sqw=0, string geometry=0, qwidth=0.05,
+            xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
+            mosaic=-1, mosaic_a=-1, mosaic_b=-1, mosaic_c=-1,
+            recip_cell=0, barns=0,
+            ax=0, ay=0, az=0,
+            bx=0, by=0, bz=0,
+            cx=0, cy=0, cz=0,
+            p_transmit=-1, sigma_abs=0, sigma_inc=0,
+            aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0,
+            max_stored_ki=1000, max_bad=10000)
+OUTPUT PARAMETERS(hkl_info, offdata)
+//STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SHARE
+%{
+  /* used for reading data table from file */
+  %include "read_table-lib"
+  %include "interoff-lib"
+/* Declare structures and functions only once in each instrument. */
+#ifndef SINGLE_CRYSTAL_DECL
+#define SINGLE_CRYSTAL_DECL
+
+#ifndef Mosaic_AB_Undefined
+#define Mosaic_AB_Undefined {0,0, 0,0,0, 0,0,0}
+#endif
+
+  struct hkl_data
+    {
+      double h,k,l,en;            /* Indices for this reflection */
+      double SQW;                 /* Value of scattering function */
+      double qx, qy, qz;          /* Coordinates in Cartesian reciprocal space */
+      double qmod;                /* Length of (qx, qy, qz) */
+      double chki;                /* |Q|+(2m/hbar^2)*E/|Q| - should be less than 2ki to satisfy conservation */
+    };
+
+  struct hkl_store
+    {
+      double kx,ky,kz;            /* Momentum direction (in crystal) for this ki */
+      int    *hkl;                /* Indices into hkl_data *list */
+      double *CDF;                /* Cumulative distribution function */
+      int    nhkl;                /* Number of hkl,en points accessible from this ki */
+    };
+
+  struct hkl_info_struct
+    {
+      struct hkl_data *list;      /* Reflection array */
+      int count;                  /* Number of reflections */
+      double m_delta_d_d;         /* Delta-d/d FWHM */
+      double m_ax,m_ay,m_az;      /* First unit cell axis (direct space, AA) */
+      double m_bx,m_by,m_bz;      /* Second unit cell axis */
+      double m_cx,m_cy,m_cz;      /* Third unit cell axis */
+      double asx,asy,asz;         /* First reciprocal lattice axis (1/AA) */
+      double bsx,bsy,bsz;         /* Second reciprocal lattice axis */
+      double csx,csy,csz;         /* Third reciprocal lattice axis */
+      double aix,aiy,aiz;         /* First reciprocal lattice axis (1/AA) */
+      double bix,biy,biz;         /* Second reciprocal lattice axis */
+      double cix,ciy,ciz;         /* Third reciprocal lattice axis */
+      double m_a, m_b, m_c;       /* length of lattice parameter lengths */
+      double m_aa, m_bb, m_cc;    /* lattice angles */
+      double sigma_a, sigma_i;    /* abs and inc X sect */
+      double rho;                 /* density */
+      double at_weight;           /* atomic weight */
+      double at_nb;               /* nb of atoms in a cell */
+      double V0;                  /* Unit cell volume (AA**3) */
+      int    column_order[5];     /* column signification [h,k,l,F,F2] */
+      int    recip;               /* Flag to indicate if recip or direct cell axes given */
+      int    shape;               /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
+      int    flag_warning;        /* number of warnings */
+      char   type;                /* type of last event: t=transmit,c=coherent or i=incoherent */
+      int    h,k,l;               /* last coherent scattering momentum transfer indices */
+      int    is_sorted;           /* S(Q,w) is sorted first by en, then by |Q| in that order */
+      double *SwCDF;              /* Cumulative dist. func. of S(|Q|) for inv. transform sampling */
+      int    nSw;                 /* Number of points in CDF */
+      int    **SwQi;
+      int    *nQ;                 /* Number of q-points at each energy */
+      double *SqwCDF;             /* Cumulative dist. func. of S(E) at particular values of |Q| */
+      int    *iSqwCDF;            /* Index into CDF of S(E) */
+      int    maxecount;           /* Maximum number of E-slice for each |Q| */
+      struct hkl_store *stored;   /* Stored list of allowed hkl for particular ki vector */
+      int    stored_ki_max;       /* Maximum number of saved hkl/ki to store */
+      int    last_stored;         /* Index of the last hkl/ki list computed */
+      double *badx,*bady,*badz;   /* kx,ky,kz of bad ki which cannot satisfy any E(hkl) */
+      int    nbad;                /* Number of bad ki's found */
+      int    nextbad;
+      int    maxbad;
+    };
+
+  /* Quicksort modified from public domain implementation by Darel Rex Finley.
+        http://alienryderflex.com/quicksort/ */
+  void
+  quickSort(int *id, double *val, int elements)
+  {
+    #define  MAX_LEVELS  300
+    double piv, lval, rval;
+    int  beg[MAX_LEVELS], end[MAX_LEVELS], i=0, L, R, C, swap;
+    beg[0]=0; end[0]=elements;
+    while (i>=0) {
+      L=beg[i]; R=end[i]-1;
+      if (L<R)
+      {
+        piv=val[id[L]]; C=id[L];
+        while (L<R)
+        {
+          while (val[id[R]]>=piv && L<R) R--; if (L<R) id[L++]=id[R];
+          while (val[id[L]]<=piv && L<R) L++; if (L<R) id[R--]=id[L];
+        }
+        id[L]=C; beg[i+1]=L+1; end[i+1]=end[i]; end[i++]=L;
+        if (end[i]-beg[i]>end[i-1]-beg[i-1])
+        {
+          swap=beg[i]; beg[i]=beg[i-1]; beg[i-1]=swap;
+          swap=end[i]; end[i]=end[i-1]; end[i-1]=swap;
+        }
+      }
+      else i--;
+    }
+  }
+
+  int
+  read_hkl_data(char *SC_file, struct hkl_info_struct *info,
+      double SC_mosaic, double SC_mosaic_a, double SC_mosaic_b, double SC_mosaic_c, double *SC_mosaic_AB, double qwidth)
+  {
+    struct hkl_data *list = NULL;
+    int size = 0;
+    t_Table sTable; /* sample data table structure from SC_file */
+    int i=0;
+    double tmp_x, tmp_y, tmp_z;
+    char **parsing;
+    char flag=0;
+    double nb_atoms=1;
+    info->is_sorted = 0;
+    FILE *index;
+
+    if (!SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0")) {
+      info->count = 0;
+      flag=1;
+    }
+    if (!flag) {
+      Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+      if (sTable.columns < 5) {
+        fprintf(stderr, "Single_crystal_inelastic: Error: The number of columns in %s should be at least %d for [h,k,l,en,S]\n", SC_file, 4);
+        return(0);
+      }
+      if (!sTable.rows) {
+        fprintf(stderr, "Single_crystal_inelastic: Error: The number of rows in %s should be at least %d\n", SC_file, 1);
+        return(0);
+      } else size = sTable.rows;
+
+      /* parsing of header */
+      parsing = Table_ParseHeader(sTable.header,
+        "sigma_abs","sigma_a ",
+        "sigma_inc","sigma_i ",
+        "column_h",
+        "column_k",
+        "column_l",
+        "column_E ",
+        "column_S ",
+        "Delta_d/d",
+        "lattice_a ",
+        "lattice_b ",
+        "lattice_c ",
+        "lattice_aa",
+        "lattice_bb",
+        "lattice_cc",
+        "nb_atoms",
+        "sorted",
+        NULL);
+
+      if (parsing) {
+        if (parsing[0] && !info->sigma_a) info->sigma_a=atof(parsing[0]);
+        if (parsing[1] && !info->sigma_a) info->sigma_a=atof(parsing[1]);
+        if (parsing[2] && !info->sigma_i) info->sigma_i=atof(parsing[2]);
+        if (parsing[3] && !info->sigma_i) info->sigma_i=atof(parsing[3]);
+        if (parsing[4])                   info->column_order[0]=atoi(parsing[4]);
+        if (parsing[5])                   info->column_order[1]=atoi(parsing[5]);
+        if (parsing[6])                   info->column_order[2]=atoi(parsing[6]);
+        if (parsing[7])                   info->column_order[3]=atoi(parsing[7]);
+        if (parsing[8])                   info->column_order[4]=atoi(parsing[8]);
+        if (parsing[9] && info->m_delta_d_d <0) info->m_delta_d_d=atof(parsing[9]);
+        if (parsing[10] && !info->m_a)    info->m_a =atof(parsing[10]);
+        if (parsing[11] && !info->m_b)    info->m_b =atof(parsing[11]);
+        if (parsing[12] && !info->m_c)    info->m_c =atof(parsing[12]);
+        if (parsing[13] && !info->m_aa)   info->m_aa=atof(parsing[13]);
+        if (parsing[14] && !info->m_bb)   info->m_bb=atof(parsing[14]);
+        if (parsing[15] && !info->m_cc)   info->m_cc=atof(parsing[15]);
+        if (parsing[16])   nb_atoms=atof(parsing[16]);
+        if (parsing[17])   info->is_sorted=1;
+        for (i=0; i<=17; i++) if (parsing[i]) free(parsing[i]);
+        free(parsing);
+      }
+    }
+
+    if (nb_atoms > 1) { info->sigma_a *= nb_atoms; info->sigma_i *= nb_atoms; }
+
+    /* special cases for the structure definition */
+    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0; /* means we specify by hand the vectors */
+    if (info->m_bx || info->m_by || info->m_bz) info->m_b=0;
+    if (info->m_cx || info->m_cy || info->m_cz) info->m_c=0;
+
+    /* compute the norm from vector a if missing */
+    if (info->m_ax || info->m_ay || info->m_az) {
+      double as=sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
+      if (!info->m_bx && !info->m_by && !info->m_bz) info->m_a=info->m_b=as;
+      if (!info->m_cx && !info->m_cy && !info->m_cz) info->m_a=info->m_c=as;
+    }
+    if (info->m_a && !info->m_b) info->m_b=info->m_a;
+    if (info->m_b && !info->m_c) info->m_c=info->m_b;
+
+    /* compute the lattive angles if not set from data file. Not used when in vector mode. */
+    if (info->m_a && !info->m_aa) info->m_aa=90;
+    if (info->m_aa && !info->m_bb) info->m_bb=info->m_aa;
+    if (info->m_bb && !info->m_cc) info->m_cc=info->m_bb;
+
+    /* parameters consistency checks */
+    if (!info->m_ax && !info->m_ay && !info->m_az && !info->m_a) {
+      fprintf(stderr,
+              "Single_crystal_inelastic: Error:Wrong a lattice vector definition\n");
+      return(0);
+    }
+    if (!info->m_bx && !info->m_by && !info->m_bz && !info->m_b) {
+      fprintf(stderr,
+              "Single_crystal_inelastic: Error:Wrong b lattice vector definition\n");
+      return(0);
+    }
+    if (!info->m_cx && !info->m_cy && !info->m_cz && !info->m_c) {
+      fprintf(stderr,
+              "Single_crystal_inelastic: Error:Wrong c lattice vector definition\n");
+      return(0);
+    }
+    if (info->m_aa && info->m_bb && info->m_cc && info->recip) {
+      fprintf(stderr,
+              "Single_crystal_inelastic: Error: Selecting reciprocal cell and angles is unmeaningful\n");
+      return(0);
+    }
+    if (info->m_aa && info->m_bb && info->m_cc)
+    {
+      double as,bs,cs;
+      if (info->m_a) as = info->m_a;
+      else as = sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
+      if (info->m_b) bs = info->m_b;
+      else bs = sqrt(info->m_bx*info->m_bx+info->m_by*info->m_by+info->m_bz*info->m_bz);
+      if (info->m_c) cs = info->m_c;
+      else cs =  sqrt(info->m_cx*info->m_cx+info->m_cy*info->m_cy+info->m_cz*info->m_cz);
+
+      // Single crystal definition of B-matrix with z||b, x||cross(a,b), y||cross(x,z) [real-space]
+      //  [ 0,            0, sqrt( c*c*( 1-cos(beta)-[(cos(a)-cos(g)*cos(b))/sin(g)]**2 ) ]
+      //  [ b*sin(gamma), 0, c*(cos(alpha)-cos(gamma)*cos(beta))/sin(gamma) ]
+      //  [ b*cos(gamma), a, c*cos(beta) ]
+      info->m_bz = as; info->m_by = 0; info->m_bx = 0;
+      info->m_az = bs*cos(info->m_cc*DEG2RAD);
+      info->m_ay = bs*sin(info->m_cc*DEG2RAD);
+      info->m_ax = 0;
+      info->m_cz = cs*cos(info->m_bb*DEG2RAD);
+      info->m_cy = cs*(cos(info->m_aa*DEG2RAD)-cos(info->m_cc*DEG2RAD)*cos(info->m_bb*DEG2RAD))
+                     /sin(info->m_cc*DEG2RAD);
+      info->m_cx = sqrt(cs*cs - info->m_cz*info->m_cz - info->m_cy*info->m_cy);
+/*
+      // Matlab definition of b-matrix with x||a*, z||cross(a*,b*), y||cross(x,z)  [reciprocal space]
+      double ca = cos(info->m_aa*DEG2RAD), cb = cos(info->m_bb*DEG2RAD), cc = cos(info->m_cc*DEG2RAD);
+      double sa = sin(info->m_aa*DEG2RAD), sb = sin(info->m_bb*DEG2RAD), sc = sin(info->m_cc*DEG2RAD);
+      double v = 1-ca*ca-cb*cb-cc*cc+2*ca*cb*cc;
+      if(v<0) { fprintf(stderr,"Unit cell parameters: alpha=%f,beta=%f,gamma=%f are not geometrically consistent.\n",info->m_aa,info->m_bb,info->m_cc); exit(-1); }
+      v = sqrt(v);
+      double ar = (2*PI/v)*(fabs(sa))/as, br = (2*PI/v)*(fabs(sb))/bs, cr = (2*PI/v)*(fabs(sc))/cs;
+      double r_aa = acos( (cb*cc-ca)/fabs(sb*sc) ), r_bb = acos( (cc*ca-cb)/fabs(sc*sa) ), r_cc = acos( (ca*cb-cc)/fabs(sa*sb) );
+      info->m_ax = ar; info->m_bx = br*cos(r_cc); info->m_cx = cr*cos(r_bb);
+      info->m_ay = 0.; info->m_by = bs*sin(r_cc); info->m_cy = -cr*fabs(sin(r_bb))*cos(r_aa);
+      info->m_az = 0.; info->m_bz = 0.;           info->m_cz = 2*PI/cs;
+      info->recip = 1;
+*/
+      printf("B-matrix = \n\t\t % 8.5g,% 8.5g,% 8.5g\n\t\t % 8.5g,% 8.5g,% 8.5g\n\t\t % 8.5g,% 8.5g,% 8.5g\n",
+        info->m_ax,info->m_bx,info->m_cx,info->m_ay,info->m_by,info->m_cy,info->m_az,info->m_bz,info->m_cz);
+
+      printf("Single_crystal_inelastic: %s structure a=%g b=%g c=%g aa=%g bb=%g cc=%g ",
+        (flag ? "INC" : SC_file), as, bs, cs, info->m_aa, info->m_bb, info->m_cc);
+    } else {
+      if (!info->recip) {
+        printf("Single_crystal_inelastic: %s structure a=[%g,%g,%g] b=[%g,%g,%g] c=[%g,%g,%g] ",
+               (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+               info->m_bx ,info->m_by ,info->m_bz,
+               info->m_cx ,info->m_cy ,info->m_cz);
+      } else {
+        printf("Single_crystal_inelastic: %s structure a*=[%g,%g,%g] b*=[%g,%g,%g] c*=[%g,%g,%g] ",
+               (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+               info->m_bx ,info->m_by ,info->m_bz,
+               info->m_cx ,info->m_cy ,info->m_cz);
+      }
+    }
+
+    /* Compute reciprocal or direct lattice vectors. */
+    if (!info->recip) {
+      vec_prod(tmp_x, tmp_y, tmp_z,
+               info->m_bx, info->m_by, info->m_bz,
+               info->m_cx, info->m_cy, info->m_cz);
+      info->V0 = fabs(scalar_prod(info->m_ax, info->m_ay, info->m_az, tmp_x, tmp_y, tmp_z));
+      printf("rV0=%g\n", info->V0);
+
+      info->asx = 2*PI/info->V0*tmp_x;
+      info->asy = 2*PI/info->V0*tmp_y;
+      info->asz = 2*PI/info->V0*tmp_z;
+      vec_prod(tmp_x, tmp_y, tmp_z, info->m_cx, info->m_cy, info->m_cz, info->m_ax, info->m_ay, info->m_az);
+      info->bsx = 2*PI/info->V0*tmp_x;
+      info->bsy = 2*PI/info->V0*tmp_y;
+      info->bsz = 2*PI/info->V0*tmp_z;
+      vec_prod(tmp_x, tmp_y, tmp_z, info->m_ax, info->m_ay, info->m_az, info->m_bx, info->m_by, info->m_bz);
+      info->csx = 2*PI/info->V0*tmp_x;
+      info->csy = 2*PI/info->V0*tmp_y;
+      info->csz = 2*PI/info->V0*tmp_z;
+    } else {
+      info->asx = info->m_ax;
+      info->asy = info->m_ay;
+      info->asz = info->m_az;
+      info->bsx = info->m_bx;
+      info->bsy = info->m_by;
+      info->bsz = info->m_bz;
+      info->csx = info->m_cx;
+      info->csy = info->m_cy;
+      info->csz = info->m_cz;
+
+      vec_prod(tmp_x, tmp_y, tmp_z,
+               info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
+               info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
+      info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
+      printf("V0=%g\n", info->V0);
+
+      /*compute the direct cell parameters, ofr completeness*/
+      info->m_ax = tmp_x*info->V0;
+      info->m_ay = tmp_y*info->V0;
+      info->m_az = tmp_z*info->V0;
+      vec_prod(tmp_x, tmp_y, tmp_z,info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI),info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI));
+      info->m_bx = tmp_x*info->V0;
+      info->m_by = tmp_y*info->V0;
+      info->m_bz = tmp_z*info->V0;
+      vec_prod(tmp_x, tmp_y, tmp_z,info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI),info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI));
+      info->m_cx = tmp_x*info->V0;
+      info->m_cy = tmp_y*info->V0;
+      info->m_cz = tmp_z*info->V0;
+    }
+    if (flag) return(-1);
+
+    if (!info->column_order[0] || !info->column_order[1] || !info->column_order[2] || !info->column_order[3]) {
+      fprintf(stderr,
+              "Single_crystal_inelastic: Error:Wrong h,k,l,E column definition\n");
+      return(0);
+    }
+    if (!info->column_order[4]) {
+      fprintf(stderr,
+              "Single_crystal_inelastic: Error:Wrong S(q,w) column definition\n");
+      return(0);
+    }
+ 
+    /* allocate hkl_data array */
+    list = (struct hkl_data*)malloc(size*sizeof(struct hkl_data));
+
+    /* Sorts the table, if not sorted by |Q| and energy */
+    int *id = (int*)malloc(size*sizeof(int));
+    double en, Qx, Qy, Qz, Qm, *vl;
+    vl = (double*)malloc(size*sizeof(double));
+    double h, k, l, Emax=0, Qmax=0, Emul, Qmul;
+    for (i=0; i<size; i++)
+    {
+      h = Table_Index(sTable, i, info->column_order[0]-1);
+      k = Table_Index(sTable, i, info->column_order[1]-1);
+      l = Table_Index(sTable, i, info->column_order[2]-1);
+      Qx = h*info->asx + k*info->bsx + l*info->csx;
+      Qy = h*info->asy + k*info->bsy + l*info->csy;
+      Qz = h*info->asz + k*info->bsz + l*info->csz;
+      Qm = sqrt(Qx*Qx+Qy*Qy+Qz*Qz);
+      en = Table_Index(sTable, i, info->column_order[3]-1);
+      id[i] = i; if(Qm>Qmax) Qmax=Qm; if(en>Emax) Emax=en;
+      list[i].h = h;
+      list[i].k = k;
+      list[i].l = l;
+      list[i].qx = Qx;
+      list[i].qy = Qy;
+      list[i].qz = Qz;
+      list[i].en = en;
+      list[i].SQW = Table_Index(sTable, i, info->column_order[4]-1);
+      list[i].qmod = Qm;
+      list[i].chki = (Qm + 0.4825966246*en/Qm)/2.;   // |Q|+(2m/hbar^2)*E/|Q| <= 2|ki| to satisfy conservation.
+      if(i>0 && list[i].chki<list[i-1].chki) info->is_sorted = 0; 
+    }
+    if(!info->is_sorted)
+    {
+      printf("Sorting\n");
+      // Sorts by |Q|+(2m/hbar^2)*E/|Q| - if 2*|ki| > first entry, that neutron cannot scatter from the sample
+      for (i=0; i<size; i++) vl[i] = list[i].chki;
+      quickSort(id, vl, size);
+      printf("Sorted\n");
+    }
+    free(vl);
+    FILE *tf;
+    tf=fopen("sorted.out","w");
+    for(i=0; i<size; i++) fprintf(tf,"%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",i,list[id[i]].chki,list[id[i]].qmod,list[id[i]].h,list[id[i]].k,list[id[i]].l,list[id[i]].en,list[id[i]].SQW);
+    fclose(tf);
+
+    // Re-order the list of S(q,w) points by |Q|+(2m/hbar^2)*E/|Q|, and then by |Q| where these are degenerate
+    int isw=0, **SwQi, *SwQt, *nQ; double *Sw, hh, kk, ll, qx, qy, qz; //*CQ, **SqwCDF, **SwQ2; int iswQ=0,
+    Sw=(double*)malloc(size*sizeof(double)); 
+    // Allocates an array of pointers to indices of all the Q's corresponding to a particular |Q|+(2m/hbar^2)*E/|Q|
+    SwQi=(int**)malloc(size*sizeof(int*)); 
+    SwQt = (int*)malloc(size*sizeof(int));
+    nQ = (int*)malloc(size*sizeof(int));
+    int ecount=0, maxecount=0;
+    double oldQ=0;
+    for(i=0; i<size; i++) Sw[i]=0.;
+    for (i=0; i<(size-1); i++)
+    {
+      int ii = info->is_sorted ? i : id[i]; int iip = info->is_sorted ? i+1 : id[i+1];
+      if(list[ii].SQW==0) continue;
+      Sw[isw] += list[ii].SQW;
+      SwQt[ecount++] = ii;
+      if(fabs(list[iip].chki-oldQ)>1e-8 || i==(size-1))
+      {
+        int ii2;
+        SwQi[isw] = (int*)malloc(ecount*sizeof(int)); 
+        nQ[isw] = ecount;
+        for(ii2=0; ii2<ecount; ii2++)
+        {
+           SwQi[isw][ii2]=SwQt[ii2];
+        }
+        oldQ = list[iip].chki;
+        isw++;
+        if(ecount>maxecount) maxecount=ecount;
+        ecount=0;
+      }
+    }
+    printf("\n");
+    double *SwCDF = (double*)malloc(isw*sizeof(double));
+    SwCDF[0] = Sw[0]; for (i=1; i<isw; i++) { SwCDF[i] = SwCDF[i-1]+Sw[i]; }
+    info->SwCDF = SwCDF; 
+    info->nSw = isw;
+    FILE *cdf = fopen("mcdisp_sqw.cdf","w"); 
+    int j;
+    for (i=0; i<isw; i++) { fprintf(cdf,"%f %f\n",list[SwQi[i][0]].chki,SwCDF[i]); for(j=0; j<nQ[i]; j++) fprintf(cdf,"\t%f (%f %f %f, %f) %f\n",
+                  list[SwQi[i][j]].qmod,list[SwQi[i][j]].h,list[SwQi[i][j]].k,list[SwQi[i][j]].l,list[SwQi[i][j]].en,list[SwQi[i][j]].SQW); }
+    fclose(cdf);
+    info->SwQi = SwQi; 
+    info->nQ = nQ;
+    double *SqwCDF; SqwCDF = (double*)malloc(maxecount*sizeof(double)); info->SqwCDF = SqwCDF;
+    int *iSqwCDF; iSqwCDF=  (int*)malloc(maxecount*sizeof(int)); info->iSqwCDF = iSqwCDF;
+    info->maxecount = maxecount;
+
+    Table_Free(&sTable);
+    free(id);
+    info->list = list;
+
+    double a11,a12,a13,a21,a22,a23,a31,a32,a33;
+    a11 = info->asx; a12 = info->bsx; a13 = info->csx;
+    a21 = info->asy; a22 = info->bsy; a23 = info->csy;
+    a31 = info->asz; a32 = info->bsz; a33 = info->csz;
+    double deta = a11*a22*a33 - a11*a23*a32 - a12*a21*a33 + a12*a23*a31 + a13*a21*a32 - a13*a22*a31;
+    if(deta==0.) { printf("bad deta\n"); exit(-1); }
+    info->aix = (a22*a33-a23*a32)/deta; info->bix = (a13*a32-a12*a33)/deta; info->cix = (a12*a23-a13*a22)/deta;
+    info->aiy = (a23*a31-a21*a33)/deta; info->biy = (a11*a33-a13*a31)/deta; info->ciy = (a13*a21-a11*a23)/deta;
+    info->aiz = (a21*a32-a22*a31)/deta; info->biz = (a12*a31-a11*a32)/deta; info->ciz = (a11*a22-a12*a21)/deta;
+
+    return(info->count = size);
+  } /* read_hkl_data */
+#endif /* !SINGLE_CRYSTAL_DECL */
+
+%}
+
+DECLARE
+%{
+  struct hkl_info_struct hkl_info;
+  off_struct offdata;
+  FILE *hist;
+%}
+
+INITIALIZE
+%{
+  hist = fopen("energies.hist","w");
+  double as, bs, cs;
+
+  /* transfer input parameters */
+  hkl_info.m_delta_d_d = delta_d_d;
+  hkl_info.m_a  = 0;
+  hkl_info.m_b  = 0;
+  hkl_info.m_c  = 0;
+  hkl_info.m_aa = aa;
+  hkl_info.m_bb = bb;
+  hkl_info.m_cc = cc;
+  hkl_info.m_ax = ax;
+  hkl_info.m_ay = ay;
+  hkl_info.m_az = az;
+  hkl_info.m_bx = bx;
+  hkl_info.m_by = by;
+  hkl_info.m_bz = bz;
+  hkl_info.m_cx = cx;
+  hkl_info.m_cy = cy;
+  hkl_info.m_cz = cz;
+  hkl_info.sigma_a = sigma_abs;
+  hkl_info.sigma_i = sigma_inc;
+  hkl_info.recip   = recip_cell;
+
+  /* default format h,k,l,en,S  */
+  hkl_info.column_order[0]=1;
+  hkl_info.column_order[1]=2;
+  hkl_info.column_order[2]=3;
+  hkl_info.column_order[3]=4;
+  hkl_info.column_order[4]=5;
+
+  /*this is necessary to allow a numerical array to be passed through as a DEFINITION parameter*/
+  double mosaic_ABin[]=mosaic_AB;
+  /* Read in structure factors, and do some pre-calculations. */
+  if (!read_hkl_data(sqw, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin, qwidth))
+    exit(-1);
+
+  if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;
+  if (hkl_info.sigma_i<0) hkl_info.sigma_i=0;
+
+  if (hkl_info.count)
+    printf("Single_crystal_inelastic: %s: Read %d (Q,w) points from file '%s'\n",
+      NAME_CURRENT_COMP, hkl_info.count, sqw);
+  else printf("Single_crystal_inelastic: %s: Using incoherent elastic scattering with cross-section %f only.\n",
+      NAME_CURRENT_COMP, hkl_info.sigma_i);
+
+  hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+          if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+      hkl_info.shape=3;
+    }
+  }
+  else if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
+  else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
+  else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
+
+  if (hkl_info.shape < 0)
+    exit(fprintf(stderr,"Single_crystal_inelastic: %s: sample has invalid dimensions.\n"
+                        "ERROR           Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
+
+  /* Allocates space for saved ki */
+  int i;
+  hkl_info.stored_ki_max = max_stored_ki;
+  hkl_info.stored = (struct hkl_store*)malloc(max_stored_ki*sizeof(struct hkl_store));
+  for(i=0; i<max_stored_ki; i++) {
+    hkl_info.stored[i].kx = 0.;
+    hkl_info.stored[i].ky = 0.;
+    hkl_info.stored[i].kz = 0.;
+    hkl_info.stored[i].nhkl = 0;
+  }
+  hkl_info.last_stored = 0;
+
+  /* Initialise bad ki_list */
+  hkl_info.maxbad = max_bad;
+  hkl_info.badx = (double*)malloc(max_bad*sizeof(double));
+  hkl_info.bady = (double*)malloc(max_bad*sizeof(double));
+  hkl_info.badz = (double*)malloc(max_bad*sizeof(double));
+  hkl_info.nbad = 0;
+  hkl_info.nextbad = 0;
+
+  printf("Single_crystal_inelastic: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] sqw=%s\n",
+      NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, sqw && strlen(sqw) ? sqw : "NULL");
+%}
+
+TRACE
+%{
+  double t1, t2=0;              /* Entry and exit times in sample */
+  struct hkl_data *L;           /* Structure factor list */
+  int i, i1, i2, i3;            /* Index into structure factor list */
+  int j;                        /* Index into reflection list */
+  int event_counter;            /* scattering event counter */
+  double kix, kiy, kiz, ki;     /* Initial wave vector [1/AA] */
+  double kfx, kfy, kfz;         /* Final wave vector */
+  double v;                     /* Neutron velocity */
+  double tau_max;               /* Max tau allowing reflection at this ki */
+  double tau_x, tau_y, tau_z;
+  double tau;
+  double rho_x, rho_y, rho_z;   /* the vector ki - tau */
+  double rho;
+  double diff;                  /* Deviation from Bragg condition */
+  double ox, oy, oz;            /* Origin of Ewald sphere tangent plane */
+  double b1x, b1y, b1z;         /* First vector spanning tangent plane */
+  double b2x, b2y, b2z;         /* Second vector spanning tangent plane */
+  double n11, n12, n22;         /* 2D Gauss description matrix N */
+  double det_N;                 /* Determinant of N */
+  double inv_n11, inv_n12, inv_n22; /* Inverse of N */
+  double l11, l12, l22;         /* Cholesky decomposition L of 1/2*inv(N) */
+  double det_L;                 /* Determinant of L */
+  double Bt_D_O_x, Bt_D_O_y;    /* Temporaries */
+  double y0x, y0y;              /* Center of 2D Gauss in plane coordinates */
+  double alpha;                 /* Offset of 2D Gauss center from 3D center */
+  int tau_count;                /* Number of reflections within cutoff */
+  double V0;                    /* Volume of unit cell */
+  double l_full;                /* Neutron path length for transmission */
+  double l;                     /* Path length to scattering event */
+  double abs_xsect, abs_xlen;   /* Absorption cross section and length */
+  double inc_xsect, inc_xlen;   /* Incoherent scattering cross section and length */
+  double coh_xsect, coh_xlen;   /* Coherent cross section and length */
+  double tot_xsect, tot_xlen;   /* Total cross section and length */
+  double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
+  double adjust, coh_refl;      /* Temporaries */
+  double r, sum;                /* Temporaries */
+  double xsect_factor;          /* Common factor in coherent cross-section */
+  double p_trans;               /* Transmission probability */
+  double mc_trans, mc_interact; /* Transmission, interaction MC choices */
+  int    intersect=0;
+  double theta, phi;            /* rotation angles for curved lattice option */
+  double u;                     /* Uniformly distributed random variable */
+  double en, kf, kf2, ki2;      /* Energy transfer and final wavevector */
+  double qm0, qm1;              /* Boundaries of bins for linear interpolation */
+  double q2, qmod;              /* Momentum transfer squared and modulus */
+  double qminus, qplus, qdiff;
+  int istart,istop;
+  double eslope;
+  double tau_dmin;
+  int itau;
+
+  double p0=p; p=0;
+  /* Intersection neutron trajectory / sample (sample surface) */
+  if (hkl_info.shape == 0)
+    intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
+  else if (hkl_info.shape == 1)
+    intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+  else if (hkl_info.shape == 2)
+    intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+  else if (hkl_info.shape == 3)
+    intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+
+  if (t2 < 0) intersect=0; /* we passed sample volume already */
+
+  if(intersect)
+  {                             /* Neutron intersects crystal */
+    if(t1 > 0)
+      PROP_DT(t1);                /* Move to crystal surface if not inside */
+    v  = sqrt(vx*vx + vy*vy + vz*vz);
+    ki = V2K*v;
+    event_counter = 0;
+    abs_xsect = hkl_info.sigma_a*2200/v;
+    inc_xsect = hkl_info.sigma_i;
+    V0= hkl_info.V0;
+    abs_xlen  = abs_xsect/V0;
+    inc_xlen  = inc_xsect/V0;
+    if (barns) {
+      /*If cross sections are given in barns, we need a scaling factor of 100 
+        to get scattering lengths in m, since V0 is assumed to be in AA*/
+      abs_xlen *= 100; inc_xlen *= 100;
+    } /* else assume fm^2 */
+    L = hkl_info.list;
+    hkl_info.type = '\0';
+
+    do {  // Loop over multiple scattering events //
+
+      if (hkl_info.shape == 0)
+        intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
+      else if (hkl_info.shape == 1)
+        intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+      else if (hkl_info.shape == 2)
+        intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+      else if (hkl_info.shape == 3)
+        intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+      if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
+      {
+        /* neutron is leaving the sample */
+        if (hkl_info.flag_warning < 100)
+          fprintf(stderr,
+                "Single_crystal_inelastic: %s: Warning: neutron has unexpectedly left the crystal!\n"
+                "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
+                NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
+        hkl_info.flag_warning++;
+        break;
+      }
+
+      l_full = t2*v;
+
+      /* (1). Compute incoming wave vector ki */
+
+      /* lattice curvature option: rotate neutron velocity */
+      if (RX || RY || RZ) {
+        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RX),0,0,1); }
+                    else { b1x=vx; b1y=vy; b1z=vz; }
+                    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, atan2(y,RY),1,0,0); }
+                    else { b2x=b1x; b2y=b1y; b2z=b1z; }
+                    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, atan2(z,RZ),0,1,0); }
+        else { b1x=b2x; b1y=b2y; b1z=b2z; }
+        kix = V2K*b1x;
+        kiy = V2K*b1y;
+        kiz = V2K*b1z;
+      } else {
+        kix = V2K*vx;
+        kiy = V2K*vy;
+        kiz = V2K*vz;
+      }
+      ki2 = kix*kix + kiy*kiy + kiz*kiz;
+
+      if(hkl_info.list[hkl_info.SwQi[0][0]].chki > (2*ki)) {  // No hkl point can satisfy kinematics for this ki.
+        ABSORB;  // Should propagate it out of the crystal ...
+        break;
+      }
+
+      // Goes through the full S(q,w) list to find points which are kinematically accessible with this ki, then save this
+      //   to an array which is then re-used for ki's similar to this one in future.
+      int klist = -1;
+      double kdir,kmag;
+
+      // Checks previously generated list of ki's which cannot scatter from the sample due to orientation.
+      for(i1=0; i1<hkl_info.nbad; i1++) {
+        kmag = sqrt(hkl_info.badx[i1]*hkl_info.badx[i1] + hkl_info.bady[i1]*hkl_info.bady[i1] + hkl_info.badz[i1]*hkl_info.badz[i1]);
+        kdir = (kix*hkl_info.badx[i1] + kiy*hkl_info.bady[i1] + kiz*hkl_info.badz[i1])/kmag/ki;
+        if(fabs(kdir-1)<1e-4 && fabs(kmag-ki)<0.01) {
+          ABSORB;  // Should propagate it out of the crystal ...
+          break;
+        }
+      }
+
+      // Check previously generated list of ki's which can scatter, and see if this ki matchs, saving us to go through the S(q,w) list again.
+      for(i1=0; i1<hkl_info.stored_ki_max; i1++) {
+        if(hkl_info.stored[i1].nhkl>0) {
+          kmag = sqrt(hkl_info.stored[i1].kx*hkl_info.stored[i1].kx + hkl_info.stored[i1].ky*hkl_info.stored[i1].ky + hkl_info.stored[i1].kz*hkl_info.stored[i1].kz);
+          kdir = (kix*hkl_info.stored[i1].kx + kiy*hkl_info.stored[i1].ky + kiz*hkl_info.stored[i1].kz) / ki / kmag;
+          if(fabs(kdir-1)<1e-4 && fabs(kmag-ki)<0.01) {
+            klist = i1;
+            break;
+          }
+        }
+      }
+
+      // If no previous ki's that can scatter is in the list, generate it.
+      if(klist<0) {
+        int *tmp_list; tmp_list = (int*)malloc(hkl_info.count*sizeof(int));
+        klist = hkl_info.last_stored;
+        hkl_info.last_stored++; 
+        if (hkl_info.last_stored>=hkl_info.stored_ki_max) hkl_info.last_stored=0;
+        hkl_info.stored[klist].nhkl = 0;
+        hkl_info.stored[klist].kx = kix;
+        hkl_info.stored[klist].ky = kiy;
+        hkl_info.stored[klist].kz = kiz;
+        for(i1=0; i1<hkl_info.nSw; i1++) {
+          if(hkl_info.list[hkl_info.SwQi[i1][0]].chki > (2*ki)) break;  // Further hkl points not kinematically possible
+          for(i2=0; i2<hkl_info.nQ[i1]; i2++) {
+            kfx = kix - hkl_info.list[hkl_info.SwQi[i1][i2]].qx;
+            kfy = kiy - hkl_info.list[hkl_info.SwQi[i1][i2]].qy;
+            kfz = kiz - hkl_info.list[hkl_info.SwQi[i1][i2]].qz;
+            kf2 = kfx*kfx + kfy*kfy + kfz*kfz;
+            en = 2.072124*(ki2 - kf2);
+            // If the energy transfer for this S(q,w) point matches |ki|-|kf|, add to list
+            if(fabs(en-hkl_info.list[hkl_info.SwQi[i1][i2]].en)<0.001) { // energy fudge factor
+              tmp_list[hkl_info.stored[klist].nhkl] = hkl_info.SwQi[i1][i2];
+              hkl_info.stored[klist].nhkl++;
+            }
+          }
+        }
+        if(hkl_info.stored[klist].nhkl == 0) {  // No dispersion surface E(hkl) can be satisfied with this ki direction.
+          // Add current ki to "bad" list
+          hkl_info.badx[hkl_info.nextbad] = kix;
+          hkl_info.bady[hkl_info.nextbad] = kiy;
+          hkl_info.badz[hkl_info.nextbad] = kiz;
+          hkl_info.nbad++; 
+          hkl_info.nextbad++; 
+          if(hkl_info.nbad>hkl_info.maxbad) hkl_info.nbad=hkl_info.maxbad;
+          if(hkl_info.nextbad>hkl_info.maxbad) hkl_info.nextbad=0;
+          ABSORB;  // Should propagate it out of the crystal ...
+          break;
+        }
+        else {
+          // Add current ki to "good" list
+          hkl_info.stored[klist].hkl = (int*)malloc(hkl_info.stored[klist].nhkl*sizeof(int));
+          hkl_info.stored[klist].CDF = (double*)malloc(hkl_info.stored[klist].nhkl*sizeof(double));
+          // Construct a cumulative distribution of the found hkle
+          hkl_info.stored[klist].CDF[0] = hkl_info.list[tmp_list[0]].SQW;
+          for(i1=0; i1<hkl_info.stored[klist].nhkl; i1++) {
+            hkl_info.stored[klist].hkl[i1] = tmp_list[i1];
+            if(i1>0) hkl_info.stored[klist].CDF[i1] = hkl_info.stored[klist].CDF[i1-1] + hkl_info.list[tmp_list[i1]].SQW;
+          }
+        }
+        free(tmp_list);
+      }
+
+      int notfound = 1;
+      do {
+        // Sample from the generated CDF, but double check that EN matches |ki|-|kf| for this actual ki
+        //   since we could be using saved values from a slightly different ki.
+        double u = rand0max(hkl_info.stored[klist].CDF[hkl_info.stored[klist].nhkl-1]); 
+        for(i1=0; i1<hkl_info.stored[klist].nhkl; i1++) if(u<hkl_info.stored[klist].CDF[i1]) break;
+        if(i1>0) {
+          i1 = (u-hkl_info.stored[klist].CDF[i1])<(hkl_info.stored[klist].CDF[i1]-u) ? i1-1 : i1;
+        }
+        j = hkl_info.stored[klist].hkl[i1];
+        en = hkl_info.list[j].en;
+        kfx = kix - hkl_info.list[j].qx;
+        kfy = kiy - hkl_info.list[j].qy;
+        kfz = kiz - hkl_info.list[j].qz;
+        kf2 = kfx*kfx + kfy*kfy + kfz*kfz;
+        kf = sqrt(kf2);
+        notfound++; 
+        if(notfound>100) {
+          break;
+        }
+        if(fabs(en-2.072124*(ki2-kf2))<0.001) { notfound = 0; } //else { printf("retry\n"); }
+      } while (notfound);
+
+      if(notfound>100) {
+        // Should continue to propagate the neutron...
+        ABSORB;
+        break;
+      }
+
+      // Ignore absorption, multiple scattering and incoherent scattering for the moment (!)
+      p = p0 * hkl_info.list[j].SQW;
+      vx = K2V*kfx; vy = K2V*kfy; vz = K2V*kfz;
+      fprintf(hist,"%12.8f %12.8f (%12.8f %12.8f, %12.8f) %12.8f %12.8f %6d\n",ki,kf,en,2.072124*(ki*ki-kf*kf),fabs(en-2.072124*(ki*ki-kf*kf)),u,hkl_info.list[j].SQW,j);
+
+      SCATTER;
+      break;
+      /* exit if multiple scattering order has been reached */
+      if (order && event_counter >= order) { intersect=0; break; }
+      /* Repeat loop for next scattering event. */
+    } while (intersect); /* end do (intersect) (multiple scattering loop) */
+  } /* if intersect */
+%}
+
+FINALLY
+%{
+  fclose(hist);
+  if (hkl_info.flag_warning)
+    fprintf(stderr, "Single_crystal_inelastic: %s: Error message was repeated %i times with absorbed neutrons.\n",
+      NAME_CURRENT_COMP, hkl_info.flag_warning);
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  if (hkl_info.shape == 0) {    /* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, radius);
+    circle("xz", 0, -yheight/2.0, 0, radius);
+    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+  }
+  else if (hkl_info.shape == 1) {       /* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (hkl_info.shape == 2) {       /* sphere */
+    circle("xy", 0,  0.0, 0, radius);
+    circle("xz", 0,  0.0, 0, radius);
+    circle("yz", 0,  0.0, 0, radius);
+  }
+  else if (hkl_info.shape == 3) {       /* OFF file */
+    off_display(offdata);
+  }
+%}
+END
+

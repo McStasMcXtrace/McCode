@@ -32,7 +32,7 @@
 #include<sys/stat.h>
 
 %include "read_table-lib"
-//%include "interpolation-lib"
+%include "interpolation-lib"
 
 #define MCMAGNET_STACKSIZE 12
 /*definition of the magnetic stack*/
@@ -51,22 +51,24 @@
 
 /*Threshold below which two magnetic fields are considered to be
  * in the same direction.*/
-double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
-#pragma acc declare create ( mc_pol_angular_accuracy )
+#define mc_pol_angular_accuracy (1.0*DEG2RAD)
+//double mc_pol_angular_accuracy = 1.0*DEG2RAD; /*rad.*/
+//#pragma acc declare create ( mc_pol_angular_accuracy )
 
 
 /*The maximal timestep taken by neutrons in a const field*/
-double mc_pol_initial_timestep = 1e-5;
-#pragma acc declare create ( mc_pol_initial_timestep )
-void mc_pol_set_angular_accuracy(double domega){
-    mc_pol_angular_accuracy = domega;
-#pragma acc update device ( mc_pol_angular_accuracy )
-}
+#define mc_pol_initial_timestep 1e-5;
+//double mc_pol_initial_timestep = 1e-5;
+//#pragma acc declare create ( mc_pol_initial_timestep )
+//void mc_pol_set_angular_accuracy(double domega){
+//    mc_pol_angular_accuracy = domega;
+//#pragma acc update device ( mc_pol_angular_accuracy )
+//}
 
-void mc_pol_set_timestep(double dt){
-    mc_pol_initial_timestep=dt;
-#pragma acc update device ( mc_pol_initial_timestep )
-}
+//void mc_pol_set_timestep(double dt){
+//    mc_pol_initial_timestep=dt;
+//#pragma acc update device ( mc_pol_initial_timestep )
+//}
 
 
 #ifdef PROP_MAGNET
@@ -93,7 +95,7 @@ enum field_functions{
 };
 
 #pragma acc routine seq
-int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, double dummy[8]){
   int retval=1;
   switch (func_id){
     case constant: 
@@ -132,7 +134,7 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
 
 /*traverse the stack and return the magnetic field*/
 #pragma acc routine seq
-int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, double dummy[8]){
   mcmagnet_field_info *p,**stack;
   Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
   Rotation r;
@@ -185,12 +187,16 @@ int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z,
 /*}*/
 
 #pragma acc routine seq
-void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void *prms){
+void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, double prms[8]){
   /*check if any field has been pushed already*/
   if (_particle->mcMagnet==NULL){
     /*No fields exist in the stack so allocate room for it and point _particle->mcMagnet to it*/
     #ifdef OPENACC
     _particle->mcMagnet=malloc(MCMAGNET_STACKSIZE*sizeof(mcmagnet_field_info *));
+    /* Lack of a calloc makes us NULLify manually since we check for NULL further down */ 
+    for (int ll=0; ll<MCMAGNET_STACKSIZE; ll++) {
+      ((mcmagnet_field_info **) _particle->mcMagnet)[ll]=NULL;
+    }
     #else
     _particle->mcMagnet=calloc(MCMAGNET_STACKSIZE,sizeof(mcmagnet_field_info *));
     #endif
@@ -341,15 +347,6 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   return 0;
 }
 
-#pragma acc routine seq
-int table_magnetic_field(double x, double y, double z, double t,
-                         double *bx, double *by, double *bz,
-                         void *data)
-{
-  if (!data) return 1;
-/*  struct interpolator_struct *interpolator = (struct interpolator_struct*)data;*/
-/*  return(interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz) != NULL);*/
-}
 
 #pragma acc routine seq
 int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data){
@@ -486,8 +483,8 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
   double BxTemp, ByTemp, BzTemp, Btemp;
   double Bstep, mc_pol_timeStep, mc_pol_sp;
   const double mc_pol_spThreshold  = cos(mc_pol_angular_accuracy);
-  double dummy1, dummy2;
-  _class_particle *pp = precess_particle;
+  _class_particle ploc=*precess_particle;
+  _class_particle *pp = &ploc;
   Rotation mc_pol_rotBack;
   //int (*mcMagneticField) (_class_particle *, double, double, double, double, double*, double*, double*, void *);
   //cMagneticField=mcmagnet_get_field;
@@ -495,7 +492,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
   //printf("pos_at_caller(xyz)( %g %g %g )\n", mc_pol_x,mc_pol_y,mc_pol_z);
   
   /* change coordinates from current local system to lab system */
-  mccoordschange(posMagnet, rotMagnet, precess_particle);
+  mccoordschange(posMagnet, rotMagnet, pp);
   /*mccoordschange(mc_pol_posLM, mc_pol_rotLM,
 		 &mc_pol_x, &mc_pol_y, &mc_pol_z,
 		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz, mc_pol_sx, mc_pol_sy, mc_pol_sz);*/
@@ -511,7 +508,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
     BxStart = BxTemp; ByStart = ByTemp; BzStart = BzTemp;
     Bstart = sqrt(BxStart*BxStart + ByStart*ByStart + BzStart*BzStart);
     
-    mc_pol_timeStep = 1e-6;//dt;//mc_pol_initial_timestep;
+    mc_pol_timeStep = mc_pol_initial_timestep;
 
     /*check if we need to take multiple steps of maximum size mc_pol_timeStep*/
     if(dt<mc_pol_timeStep){
@@ -524,8 +521,8 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
       zp = pp->z+ pp->vz*mc_pol_timeStep;
 
       mcmagnet_get_field(pp,xp,yp,zp, pp->t+mc_pol_timeStep, &BxTemp, &ByTemp, &BzTemp, NULL);
-      // not so elegant, but this is how we make sure that the steps decrease
-      // when the WHILE condition is not met
+      /* not so elegant, but this is how we make sure that the steps decrease
+       when the WHILE condition is not met*/
       mc_pol_timeStep *= 0.5;
 
       Btemp = sqrt(BxTemp*BxTemp + ByTemp*ByTemp + BzTemp*BzTemp);
@@ -550,7 +547,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
     Bz = 0.5 * (BzStart + BzTemp);
     mc_pol_phiz = fmod(sqrt(Bx*Bx+ By*By+ Bz*Bz) * mc_pol_timeStep*mc_pol_omegaL, 2*PI);
 
-    // Do the neutron spin precession
+    /* Do the neutron spin precession for the small timestep*/
     if(!(Bx==0 && By==0 && Bz==0)) {
 
       double sx_in = pp->sx;
@@ -562,12 +559,16 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
 
   } while (dt>0);
 
-  // change back spin coordinates from lab system to local system
+  /* change back spin coordinates from lab system to local system*/
   rot_transpose(rotMagnet, mc_pol_rotBack);
-  //have to do this "manually" since mccordschange does not commute/reverse*/
+  /*have to do this "manually" since mccordschange does not commute/reverse*/
   pp->x-=posMagnet.x; pp->y-=posMagnet.y; pp->z-=posMagnet.z;
   mccoordschange_polarisation(mc_pol_rotBack, &(pp->vx), &(pp->vy), &(pp->vz));
   mccoordschange_polarisation(mc_pol_rotBack, &(pp->sx), &(pp->sy), &(pp->sz));
+  /*copy back the spin polarization coordinates to the caller*/
+  precess_particle->sx=pp->sx;
+  precess_particle->sy=pp->sy;
+  precess_particle->sz=pp->sz;
 }
 
 /****************************************************************************

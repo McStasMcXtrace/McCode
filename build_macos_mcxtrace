@@ -36,7 +36,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 WORK=`pwd`
 cd $WORK
 
-if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
+if [ ! -f Miniconda3-py38_4.10.3-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -44,13 +44,13 @@ if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     echo "*********************************************************"
     echo   
     sleep 3
-    curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+    curl -O https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-MacOSX-x86_64.sh
 fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-chmod a+x Miniconda3-latest-MacOSX-x86_64.sh
-./Miniconda3-latest-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
+chmod a+x Miniconda3-py38_4.10.3-MacOSX-x86_64.sh
+./Miniconda3-py38_4.10.3-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo

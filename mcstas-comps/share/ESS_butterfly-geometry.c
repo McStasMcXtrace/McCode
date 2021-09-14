@@ -1,5 +1,12 @@
 /* MCDISPLAY-section for the ESS butterfly moderator */
 
+/* NOTA BENE:
+   From McStas 3, this file should be included in %SHARE due to requirement  from clang / macOS, that dislikes function definitons in DISPLAY.
+   (clang is more c99-strict than e.g. gcc)
+
+   For this reason, the geometry-calls e.g. line() have to be explicitly the mcdis_line() variant */
+
+
 /* Define the positioning of the buttefly sketch */
 
 /* Point sets for the butterfly */
@@ -43,7 +50,7 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
       rBx = Br11*(butterfly_z[j+1]-Bcz) + Br12*(butterfly_x[j+1]-Bcx);
       rBz = Br21*(butterfly_z[j+1]-Bcz) + Br22*(butterfly_x[j+1]-Bcx);
 
-      line(rAx, y0, rAz, rBx, y0, rBz);
+      mcdis_line(rAx, y0, rAz, rBx, y0, rBz);
 
     }
   }
@@ -58,7 +65,7 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
       rBx = Br11*(butterfly_e_z1[j+1]-Bcz) + Br12*(butterfly_e_x1[j+1]-Bcx);
       rBz = Br21*(butterfly_e_z1[j+1]-Bcz) + Br22*(butterfly_e_x1[j+1]-Bcx);
 
-      line(rAx, y0, rAz, rBx, y0, rBz);
+      mcdis_line(rAx, y0, rAz, rBx, y0, rBz);
 
       rAx = Br11*(butterfly_e_z2[j]-Bcz) + Br12*(butterfly_e_x2[j]-Bcx);
       rAz = Br21*(butterfly_e_z2[j]-Bcz) + Br22*(butterfly_e_x2[j]-Bcx);
@@ -66,23 +73,23 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
       rBx = Br11*(butterfly_e_z2[j+1]-Bcz) + Br12*(butterfly_e_x2[j+1]-Bcx);
       rBz = Br21*(butterfly_e_z2[j+1]-Bcz) + Br22*(butterfly_e_x2[j+1]-Bcx);
 
-      line(rAx, y0, rAz, rBx, y0, rBz);
+      mcdis_line(rAx, y0, rAz, rBx, y0, rBz);
     }
   }
 
   /* Indicate the emission planes of cold/thermal moderator */
   for (y0=-Bdelta_y; y0<2*Bdelta_y; y0+=2*Bdelta_y) {
-    dashed_line(BrC1_x, y0, BrC1_z, BrC2_x, y0, BrC2_z, 11);
-    dashed_line(BrC1_x, y0, BrC1_z, BrC3_x, y0, BrC3_z, 11);
-    dashed_line(BrT1_x, y0, BrT1_z, BrT2_x, y0, BrT2_z, 11);
-    dashed_line(BrT1_x, y0, BrT1_z, BrT3_x, y0, BrT3_z, 11);
+    mcdis_dashed_line(BrC1_x, y0, BrC1_z, BrC2_x, y0, BrC2_z, 11);
+    mcdis_dashed_line(BrC1_x, y0, BrC1_z, BrC3_x, y0, BrC3_z, 11);
+    mcdis_dashed_line(BrT1_x, y0, BrT1_z, BrT2_x, y0, BrT2_z, 11);
+    mcdis_dashed_line(BrT1_x, y0, BrT1_z, BrT3_x, y0, BrT3_z, 11);
   }
-  dashed_line(BrC1_x, -Bdelta_y, BrC1_z, BrC1_x, Bdelta_y, BrC1_z, 11);
-  dashed_line(BrC2_x, -Bdelta_y, BrC2_z, BrC2_x, Bdelta_y, BrC2_z, 11);
-  dashed_line(BrC3_x, -Bdelta_y, BrC3_z, BrC3_x, Bdelta_y, BrC3_z, 11);
-  dashed_line(BrT1_x, -Bdelta_y, BrT1_z, BrT1_x, Bdelta_y, BrT1_z, 11);
-  dashed_line(BrT2_x, -Bdelta_y, BrT2_z, BrT2_x, Bdelta_y, BrT2_z, 11);
-  dashed_line(BrT3_x, -Bdelta_y, BrT3_z, BrT3_x, Bdelta_y, BrT3_z, 11);
+  mcdis_dashed_line(BrC1_x, -Bdelta_y, BrC1_z, BrC1_x, Bdelta_y, BrC1_z, 11);
+  mcdis_dashed_line(BrC2_x, -Bdelta_y, BrC2_z, BrC2_x, Bdelta_y, BrC2_z, 11);
+  mcdis_dashed_line(BrC3_x, -Bdelta_y, BrC3_z, BrC3_x, Bdelta_y, BrC3_z, 11);
+  mcdis_dashed_line(BrT1_x, -Bdelta_y, BrT1_z, BrT1_x, Bdelta_y, BrT1_z, 11);
+  mcdis_dashed_line(BrT2_x, -Bdelta_y, BrT2_z, BrT2_x, Bdelta_y, BrT2_z, 11);
+  mcdis_dashed_line(BrT3_x, -Bdelta_y, BrT3_z, BrT3_x, Bdelta_y, BrT3_z, 11);
 
 
   /* Arrow indicating proton beam direction */
@@ -101,14 +108,14 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
   rBx = Br11*(bz) + Br12*(bx);
   rBz = Br21*(bz) + Br22*(bx);
   /* Main part of the arrow */
-  line(rAx, 0, rAz, rBx, 0, rBz);
+  mcdis_line(rAx, 0, rAz, rBx, 0, rBz);
   /* Inclined lines for arrow head */
   rBx = Br11*(bbz) + Br12*(bbx);
   rBz = Br21*(bbz) + Br22*(bbx);
-  line(rAx, 0, rAz, rBx, 0, rBz);
+  mcdis_line(rAx, 0, rAz, rBx, 0, rBz);
   rBx = Br11*(cBcz) + Br12*(cBcx);
   rBz = Br21*(cBcz) + Br22*(cBcx);
-  line(rAx, 0, rAz, rBx, 0, rBz);
+  mcdis_line(rAx, 0, rAz, rBx, 0, rBz);
 
   /* 120 degree "end of sector" lines */
   bbz = 2 * cos(DEG2RAD*61);
@@ -117,38 +124,38 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
   cBcx = 2 * sin(-DEG2RAD*61);
   rBx = Br11*(bbz) + Br12*(bbx);
   rBz = Br21*(bbz) + Br22*(bbx);
-  dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
+  mcdis_dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
   rBx = Br11*(cBcz) + Br12*(cBcx);
   rBz = Br21*(cBcz) + Br22*(cBcx);
-  dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
+  mcdis_dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
   bbz = 2 * cos(DEG2RAD*119);
   bbx = 2 * sin(DEG2RAD*119);
   cBcz = 2 * cos(-DEG2RAD*119);
   cBcx = 2 * sin(-DEG2RAD*119);
   rBx = Br11*(bbz) + Br12*(bbx);
   rBz = Br21*(bbz) + Br22*(bbx);
-  dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
+  mcdis_dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
   rBx = Br11*(cBcz) + Br12*(cBcx);
   rBz = Br21*(cBcz) + Br22*(cBcx);
-  dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
+  mcdis_dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
   /* Circles indicating extent of the "empBty" zone where optics is not allowed */
-  circle("xz", rAx, 0, rAz, 2.0);
-  circle("xz", rAx, -0.1, rAz, 2.0);
-  circle("xz", rAx, 0.1, rAz, 2.0);
+  mcdis_circle("xz", rAx, 0, rAz, 2.0);
+  mcdis_circle("xz", rAx, -0.1, rAz, 2.0);
+  mcdis_circle("xz", rAx, 0.1, rAz, 2.0);
 
   /* Circles indicating extent of the target monolith */
-  circle("xz", rAx, 0, rAz, 5.5);
-  circle("xz", rAx, -1, rAz, 5.5);
-  circle("xz", rAx, 1, rAz, 5.5);
+  mcdis_circle("xz", rAx, 0, rAz, 5.5);
+  mcdis_circle("xz", rAx, -1, rAz, 5.5);
+  mcdis_circle("xz", rAx, 1, rAz, 5.5);
 
   /* Beamport "plug" dimensions */
   double w1=0.206/2.0, w2=0.276/2.0, l1=2.0+rAz, l2=2.0+rAz+1.75, l3=2.0+rAz+3.5;
-  line(w1, 0, l1, w1, 0, l2);
-  line(-w1, 0, l1, -w1, 0, l2);
-  line(w1, 0, l2, w2, 0, l2);
-  line(-w1, 0, l2, -w2, 0, l2);
-  line(w2, 0, l2, w2, 0, l3);
-  line(-w2, 0, l2, -w2, 0, l3);
+  mcdis_line(w1, 0, l1, w1, 0, l2);
+  mcdis_line(-w1, 0, l1, -w1, 0, l2);
+  mcdis_line(w1, 0, l2, w2, 0, l2);
+  mcdis_line(-w1, 0, l2, -w2, 0, l2);
+  mcdis_line(w2, 0, l2, w2, 0, l3);
+  mcdis_line(-w2, 0, l2, -w2, 0, l3);
 
   /* Draw all the BBeamlines in "this sector" +1 */
   double xx1, yy1, zz1, xx2, yy2, zz2, delta_omega;
@@ -162,26 +169,26 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
     zz1 = Br21*(w1) + Br22*(l1);
     xx2 = Br11*(w1) + Br12*(l2);
     zz2 = Br21*(w1) + Br22*(l2);
-    dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
+    mcdis_dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
     xx1 = Br11*(-w1) + Br12*(l1);
     zz1 = Br21*(-w1) + Br22*(l1);
     xx2 = Br11*(-w1) + Br12*(l2);
     zz2 = Br21*(-w1) + Br22*(l2);
-    dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
+    mcdis_dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
     xx1 = Br11*(w2) + Br12*(l2);
     zz1 = Br21*(w2) + Br22*(l2);
     xx2 = Br11*(w2) + Br12*(l3);
     zz2 = Br21*(w2) + Br22*(l3);
-    dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
+    mcdis_dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
     xx1 = Br11*(-w2) + Br12*(l2);
     zz1 = Br21*(-w2) + Br22*(l2);
     xx2 = Br11*(-w2) + Br12*(l3);
     zz2 = Br21*(-w2) + Br22*(l3);
-    dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
+    mcdis_dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
   }
 
   /* Show instrument axis... */
-  dashed_line(0,0,0,0,0,2+rAz,21);
+  mcdis_dashed_line(0,0,0,0,0,2+rAz,21);
 
   /* Draw up the "focusing rectangle" */ 
   /* Horizontal direction vector @ focusing area */
@@ -192,13 +199,13 @@ void butterfly_geometry(double Bdelta_y, int Bjmax, double Bcx, double Bcz,
   xx1*=Bfoc_XW/2.0; yy1*=Bfoc_XW/2.0; zz1*=Bfoc_XW/2.0;
   xx2*=Bfoc_YH/2.0; yy2*=Bfoc_YH/2.0; zz2*=Bfoc_YH/2.0;
   printf("Normal vectors pointing in directions\n %g %g %g and \n %g %g %g \n",xx1,yy1,zz1,xx2,yy2,zz2);
-  dashed_line(Btx -xx1 -xx2, Bty -yy1 -yy2, Btz -zz1 -zz2,
+  mcdis_dashed_line(Btx -xx1 -xx2, Bty -yy1 -yy2, Btz -zz1 -zz2,
 	      Btx +xx1 -xx2, Bty +yy1 -yy2, Btz +zz1 -zz2,5);
-  dashed_line(Btx -xx1 +xx2, Bty -yy1 +yy2, Btz -zz1 +zz2,
+  mcdis_dashed_line(Btx -xx1 +xx2, Bty -yy1 +yy2, Btz -zz1 +zz2,
 	      Btx +xx1 +xx2, Bty +yy1 +yy2, Btz +zz1 +zz2,5);
 
-  dashed_line(Btx -xx1 -xx2, Bty -yy1 -yy2, Btz -zz1 -zz2,
+  mcdis_dashed_line(Btx -xx1 -xx2, Bty -yy1 -yy2, Btz -zz1 -zz2,
 	      Btx -xx1 +xx2, Bty -yy1 +yy2, Btz -zz1 +zz2,5);
-  dashed_line(Btx +xx1 -xx2, Bty +yy1 -yy2, Btz +zz1 -zz2,
+  mcdis_dashed_line(Btx +xx1 -xx2, Bty +yy1 -yy2, Btz +zz1 -zz2,
 	      Btx +xx1 +xx2, Bty +yy1 +yy2, Btz +zz1 +zz2,5);
 }

@@ -13,7 +13,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   export DISPLAYVAR=$DISPLAY
   export DISPLAY_TO_USE=$DISPLAY
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  export DISPLAY_TO_USE=host.docker.internal:0
+  export DISPLAY_TO_USE=docker.for.mac.host.internal:0
   # Hack to start XQuartz without raising a host-based xterm
   xhost > /dev/null
 fi

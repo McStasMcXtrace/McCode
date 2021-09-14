@@ -75,7 +75,7 @@ AT (0.03,0,0.07) RELATIVE geometry_center
 COMPONENT abs_logger_1D_space_tof_to_lambda = Union_abs_logger_1D_space_tof_to_lambda(
     yheight=0.2, yn=100,
     target_geometry="cone",
-    ref_component="box",
+    ref_component=-4,
     lambda_min=2.0, lambda_max=8.0, lambda_bins=200,
     filename="Union_abs_logger_1D_space_tof_to_lambda.dat")
 AT (0,0,0) RELATIVE geometry_center

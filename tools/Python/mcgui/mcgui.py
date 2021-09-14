@@ -489,6 +489,8 @@ class McGuiAppController():
         args = []
         categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
         dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'contrib/union', 7 : 'obsolete'}
+        if os.name == 'nt':
+            dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'contrib\\\\union', 7 : 'obsolete'}
         i = 0
         while i < 8:
             arg = [] # arg - category, comp_names[], comp_parsers[]
@@ -687,12 +689,12 @@ class McGuiAppController():
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
         mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-manual.pdf")
-        webbrowser.open_new_tab(mcman)
+        webbrowser.open_new_tab("file://" + mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
         mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-components.pdf")
-        webbrowser.open_new_tab(mcman)
+        webbrowser.open_new_tab("file://" + mcman)
     
     def handleHelpAbout(self):
         # get mcstas version using 'mcstas/mcxtrace -v'
@@ -710,7 +712,17 @@ class McGuiAppController():
         instr = self.state.getInstrumentFile()
         self.view.showCodeEditorWindow(instr)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
-    
+
+    def handleEditExtInstrument(self):
+        instr = self.state.getInstrumentFile()
+        process = subprocess.Popen(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr)), 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT,
+                                   shell=True,
+                                   universal_newlines=True)
+        self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
+
+
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
@@ -850,6 +862,7 @@ class McGuiAppController():
         mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
         mwui.actionClose_Instrument.triggered.connect(self.handleCloseInstrument)
         mwui.actionEdit_Instrument.triggered.connect(self.handleEditInstrument)
+        mwui.actionEditExt_Instrument.triggered.connect(self.handleEditExtInstrument)
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
@@ -867,7 +880,11 @@ class McGuiAppController():
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
-        mwui.btnEdit.clicked.connect(self.handleEditInstrument)
+        print(mccode_config.configuration["QSCI"])
+        if mccode_config.configuration["QSCI"] == '1':
+            mwui.btnEdit.clicked.connect(self.handleEditInstrument)
+        else:
+            mwui.btnEdit.clicked.connect(self.handleEditExtInstrument)
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
 
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)

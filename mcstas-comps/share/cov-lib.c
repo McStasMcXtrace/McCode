@@ -46,7 +46,6 @@ tl2_list_type* tl2_lst_create(void *elem)
 }
 
 
-#pragma acc routine seq
 tl2_list_type* tl2_lst_append(tl2_list_type *lst, void *elem)
 {
 	while(lst->next)
@@ -630,7 +629,6 @@ int tl2_reso(const tl2_list_type* veclist, const tl2_list_type* problist,
 /* ----------------------------------------------------------------------------- */
 /* Helper functions */
 /* ----------------------------------------------------------------------------- */
-#pragma acc routine seq
 double tl2_k_to_E(double kix, double kiy, double kiz, double kfx, double kfy, double kfz)
 {
 	const double k2_to_E = 2.0721247;  /* from codata values*/

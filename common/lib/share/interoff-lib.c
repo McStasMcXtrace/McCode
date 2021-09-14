@@ -35,12 +35,12 @@
 #include "interoff-lib.h"
 #endif
 
-#pragma acc routine seq
+#pragma acc routine
 double off_F(double x, double y,double z,double A,double B,double C,double D) {
   return ( A*x + B*y + C*z + D );
 }
 
-#pragma acc routine seq
+#pragma acc routine
 char off_sign(double a) {
   if (a<0)       return(-1);
   else if (a==0) return(0);
@@ -49,7 +49,7 @@ char off_sign(double a) {
 
 // off_normal ******************************************************************
 //gives the normal vector of p
-#pragma acc routine seq
+#pragma acc routine
 void off_normal(Coords* n, polygon p)
 {
   //using Newell method
@@ -75,42 +75,40 @@ void off_normal(Coords* n, polygon p)
 //return 0 if the vertex is out
 //    1 if it is in
 //   -1 if on the boundary
-#pragma acc routine seq
+#pragma acc routine
 int off_pnpoly(polygon p, Coords v)
 {
   int i=0, c = 0;
   MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
-  MCNUM rangex=0,rangey=0,rangez=0;
+  MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
   MCNUM x=v.x,y=v.y;
 
+  /*areax: projected area with x-scratched = |v1_yz x v2_yz|, where v1=(x1-x0,0,z1-z0) & v2=(x2-x0,0,z2-z0).*/
+  /* In principle, if polygon is triangle area should be scaled by 1/2, but this is irrelevant for finding the maximum area.*/
+  /* Similarly for y and z scratched.*/
+  areax=coords_len(coords_xp(
+        coords_set(0,p.p[3*1+1]-p.p[0+1],p.p[3*1+2]-p.p[0+2]),
+        coords_set(0,p.p[3*2+1]-p.p[0+1],p.p[3*2+2]-p.p[0+2])));
+  areay=coords_len(coords_xp(
+        coords_set(p.p[3*1+0]-p.p[0+0],0,p.p[3*1+2]-p.p[0+2]),
+        coords_set(p.p[3*2+0]-p.p[0+0],0,p.p[3*2+2]-p.p[0+2])));
+  areaz=coords_len(coords_xp(
+        coords_set(p.p[3*1+0]-p.p[0+0],p.p[3*1+1]-p.p[0+1],0),
+        coords_set(p.p[3*2+0]-p.p[0+0],p.p[3*2+1]-p.p[0+1],0)));
 
-  //take the most relevant 2D projection (prevent from instability)
-  for (i=0; i<p.npol; ++i)
-  {
-    if (p.p[3*i]<minx)   minx=p.p[3*i];
-    if (p.p[3*i]>maxx)   maxx=p.p[3*i];
-    if (p.p[3*i+1]<miny) miny=p.p[3*i+1];
-    if (p.p[3*i+1]>maxy) maxy=p.p[3*i+1];
-    if (p.p[3*i+2]<minz) minz=p.p[3*i+2];
-    if (p.p[3*i+2]>maxz) maxz=p.p[3*i+2];
-  }
-  rangex=maxx-minx;
-  rangey=maxy-miny;
-  rangez=maxz-minz;
-
-  if (rangex<rangez)
-  {
-    if (rangex<rangey) {
-      pol2dx=2;
-      x=v.z;
-    } else {
+  if(areaz<areax){
+    if(areax<areay){
+      /*pick areay - i.e. scratch y*/
       pol2dy=2;
       y=v.z;
+    }else{
+      /*scratch x*/
+      pol2dx=2;
+      x=v.z;
     }
-  }
-  else if (rangey<rangez) {
+  }else if (areaz<areay){
     pol2dy=2;
     y=v.z;
   }
@@ -140,7 +138,7 @@ int off_pnpoly(polygon p, Coords v)
 // off_intersectPoly ***********************************************************
 //gives the intersection vertex between ray [a,b) and polygon p and its parametric value on (a b)
 //based on http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
-#pragma acc routine seq
+#pragma acc routine
 int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 {
   //direction vector of [a,b]
@@ -270,7 +268,7 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
 
 // off_init_planes *************************************************************
 //gives the equations of 2 perpandicular planes of [ab]
-#pragma acc routine seq
+#pragma acc routine
 void off_init_planes(Coords a, Coords b,
   MCNUM* A1, MCNUM* C1, MCNUM* D1, MCNUM *A2, MCNUM* B2, MCNUM* C2, MCNUM* D2)
 {
@@ -314,7 +312,7 @@ void off_init_planes(Coords a, Coords b,
 } /* off_init_planes */
 
 // off_clip_3D_mod *************************************************************
-#pragma acc routine seq
+#pragma acc routine
 int off_clip_3D_mod(intersection* t, Coords a, Coords b,
   Coords* vtxArray, unsigned long vtxSize, unsigned long* faceArray,
   unsigned long faceSize, Coords* normalArray)
@@ -366,13 +364,15 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
       }
       if (j<pol.npol)
       {
-        if (t_size>CHAR_BUF_LENGTH)
+#ifdef OFF_LEGACY
+        if (t_size>OFF_INTERSECT_MAX)
         {
 #ifndef OPENACC
-          fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", CHAR_BUF_LENGTH);
+          fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", OFF_INTERSECT_MAX);
 #endif
             return (t_size);
         }
+#endif
         //both planes intersect the polygon, let's find the intersection point
         //our polygon :
         int k;
@@ -388,8 +388,35 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
         if (off_intersectPoly(&x, a, b, pol))
         {
           x.index = indPoly;
+#ifdef OFF_LEGACY
           t[t_size++]=x;
-        }
+#else
+	  /* Check against our 4 existing times, starting from [-FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX] */
+	  /* Case 1, negative time? */
+	  if (t_size < 4) t_size++;	  
+	  if (x.time < 0) {
+	    if (x.time > t[0].time) {
+	      t[0]=x;
+	    }
+	  } else {
+	    /* Case 2, positive time */
+	    intersection xtmp;
+	    if (x.time < t[3].time) {
+	      t[3]=x;
+	      if (t[3].time < t[2].time) {
+		xtmp = t[2];
+		t[2] = t[3];
+		t[3] = xtmp;
+	      }
+	      if (t[2].time < t[1].time) {
+		xtmp = t[1];
+		t[1] = t[2];
+		t[2] = xtmp;
+	      }
+	    } 
+	  }
+#endif
+	}
       } /* if (j<pol.npol) */
     } /* if (j<pol.npol) */
     i += pol.npol;
@@ -400,7 +427,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
 
 
 // off_compare *****************************************************************
-#pragma acc routine seq
+#pragma acc routine
 int off_compare (void const *a, void const *b)
 {
    intersection const *pa = a;
@@ -412,7 +439,7 @@ int off_compare (void const *a, void const *b)
 // off_cleanDouble *************************************************************
 //given an array of intersections throw those which appear several times
 //returns 1 if there is a possibility of error
-#pragma acc routine seq
+#pragma acc routine
 int off_cleanDouble(intersection* t, int* t_size)
 {
   int i=1;
@@ -447,7 +474,7 @@ int off_cleanDouble(intersection* t, int* t_size)
 //given an array of intesections throw those which enter and exit in the same time
 //Meaning the ray passes very close to the volume
 //returns 1 if there is a possibility of error
-#pragma acc routine seq
+#pragma acc routine
 int off_cleanInOut(intersection* t, int* t_size)
 {
   int i=1;
@@ -686,12 +713,14 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   return(polySize);
 } /* off_init */
 
-#pragma acc routine seq
+#pragma acc routine
 int Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
-#pragma acc routine(merge)
+#ifdef OFF_LEGACY
+ 
+#pragma acc routine
 void merge(intersection *arr, int l, int m, int r)
 {
 int i, j, k;
@@ -749,9 +778,11 @@ while (j < n2)
 free(L);
 free(R);
 }
+#endif
 
 #ifdef USE_OFF
-#pragma acc routine seq
+#ifdef OFF_LEGACY
+#pragma acc routine
 void gpusort(intersection *arr, int size)
 {
   int curr_size;  // For current size of subarrays to be merged
@@ -778,6 +809,7 @@ void gpusort(intersection *arr, int size)
   }
 }
 #endif
+#endif
 
 /*******************************************************************************
 * int off_intersect_all(double* t0, double* t3,
@@ -793,7 +825,6 @@ void gpusort(intersection *arr, int size)
 *         n0 and n3 are the corresponding normal vectors to the surface
 *         data is the full OFF structure, including a list intersection type
 *******************************************************************************/
-#pragma acc routine seq
 int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,
@@ -802,6 +833,8 @@ int off_intersect_all(double* t0, double* t3,
 {
     Coords A={x, y, z};
     Coords B={x+vx, y+vy, z+vz};
+
+#ifdef OFF_LEGACY    
     int t_size=off_clip_3D_mod(data->intersects, A, B,
       data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
     #ifndef OPENACC
@@ -837,6 +870,27 @@ int off_intersect_all(double* t0, double* t3,
       /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
     }
+#else
+    intersection intersect4[4];
+    intersect4[0].time=-FLT_MAX;
+    intersect4[1].time=FLT_MAX;
+    intersect4[2].time=FLT_MAX;
+    intersect4[3].time=FLT_MAX;
+		
+    int t_size=off_clip_3D_mod(intersect4, A, B,
+      data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    if(t_size>0){
+      int i=0;
+      if (intersect4[0].time == -FLT_MAX) i=1;
+      data->numintersect=t_size;
+      if (t0) *t0 = intersect4[i].time;
+      if (n0) *n0 = intersect4[i].normal;
+      if (t3) *t3 = intersect4[i+1].time;
+      if (n3) *n3 = intersect4[i+1].normal;
+      /* should also return t[0].index and t[i].index as polygon ID */
+      return t_size;
+    }
+#endif
     return 0;
 } /* off_intersect */
 
@@ -853,7 +907,6 @@ int off_intersect_all(double* t0, double* t3,
 *         t0 and t3 are the smallest incoming and outgoing intersection times
 *         n0 and n3 are the corresponding normal vectors to the surface
 *******************************************************************************/
-#pragma acc routine seq
 int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,
@@ -876,7 +929,6 @@ int off_intersect(double* t0, double* t3,
 *         l0 and l3 are the smallest incoming and outgoing intersection lengths
 *         n0 and n3 are the corresponding normal vectors to the surface
 *******************************************************************************/
-#pragma acc routine seq
 int off_x_intersect(double *l0,double *l3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,

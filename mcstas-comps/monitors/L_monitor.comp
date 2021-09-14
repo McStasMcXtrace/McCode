@@ -34,6 +34,7 @@
 * nL: [1]               Number of wavelength channels
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -47,7 +48,7 @@ DEFINE COMPONENT L_monitor
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nL=20, string filename=0,
+SETTING PARAMETERS (nL=20, string filename=0, int nowritefile=0,
   xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
   Lmin, Lmax, restore_neutron=0)
 
@@ -112,6 +113,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_1D(
     "Wavelength monitor",
     "Wavelength [AA]",
@@ -119,6 +121,7 @@ SAVE
     "L", Lmin, Lmax, nL,
     &L_N[0],&L_p[0],&L_p2[0],
     filename);
+}
 %}
 
 FINALLY

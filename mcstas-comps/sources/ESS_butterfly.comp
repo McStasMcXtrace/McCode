@@ -113,7 +113,8 @@ OUTPUT PARAMETERS ()
 
 SHARE %{
   %include "ESS_butterfly-lib"
-  
+  %include "ESS_butterfly-geometry.c"
+
   int nearest_angle(double angle) {
     int AngleList[] = {5, 15, 25, 35, 45, 55};
     double diff = 180;
@@ -585,8 +586,6 @@ TRACE
 MCDISPLAY
 %{
  #ifndef OPENACC
-  %include "ESS_butterfly-geometry.c"
-  
   magnify("");
   butterfly_geometry(delta_y, jmax, cx, cz,
     orientation_angle, Beamlines, tx,ty,tz,

@@ -16,6 +16,7 @@
 * NIM A 451 (2000) 474-479
 *
 * %Example: polariserIn=1 Detector: psdPolGuide_I=3.95407e+12
+* %Example: polariserIn=2 Detector: psdPolGuide_I=4.29664e+12
 *
 * %Parameters
 * polariserIn: [] 
@@ -28,9 +29,7 @@ DEFINE INSTRUMENT Test_Pol_Guide_Vmirror(int polariserIn=1)
 
 DECLARE
 %{
-#define GUIDEREF 0.99
-#define MIRRORREF 0.99
-  %}
+%}
 
 INITIALIZE
 %{
@@ -59,12 +58,12 @@ COMPONENT lamStart =
 L_monitor(nL = 30, filename = "lambdaStart.dat",
 	  xwidth = 0.10, yheight = 0.10,
 	  Lmin = 1, Lmax = 21)
-     AT (0, 0, 4.8) RELATIVE Origin
+AT (0, 0, 4.8) RELATIVE Origin
 
 COMPONENT psdStart =
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdStart.dat")
-     AT (0, 0, 4.8) RELATIVE Origin
+AT (0, 0, 4.8) RELATIVE Origin
 
 // For the vmirror component in V4 at BENSC Berlin we have
 // From NIM A 451 (2000) 474-479
@@ -79,24 +78,32 @@ PSD_monitor(xwidth=0.10, yheight=0.10,
 COMPONENT POLguidevmirror =
 Pol_guide_vmirror(xwidth = 0.03, yheight = 0.05,
 		  length = 1.8, debug=0,
-		  rPar    ={GUIDEREF,  1.0*0.0219, 6.07, 1, 0.003},
-		  rUpPar  ={MIRRORREF, 2.0*0.0219, 6.07, 1, 0.003},
-		  rDownPar={MIRRORREF, 0.4*0.0219, 6.07, 1, 0.003})
-     WHEN (polariserIn>0) AT (0, 0, 5.0) RELATIVE Origin
+		  rPar    ={0.99, 0.0219, 6.07, 1, 0.003},
+		  rUpPar  ={0.99, 0.0438, 6.07, 1, 0.003},
+		  rDownPar={0.99, 0.00876, 6.07, 1, 0.003})
+WHEN (polariserIn==1) AT (0, 0, 5.0) RELATIVE Origin
+
+COMPONENT POLguidemirror =
+Pol_guide_mirror(xwidth = 0.03, yheight = 0.05,
+		  length = 1.8, debug=0,
+		  rPar    ={0.99, 0.0219, 6.07, 1, 0.003},
+		  rUpPar  ={0.99, 0.0438, 6.07, 1, 0.003},
+		  rDownPar={0.99, 0.00876, 6.07, 1, 0.003})
+WHEN (polariserIn==2) AT (0, 0, 5.0) RELATIVE Origin
 
 COMPONENT NONPOLguide =
 Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
-      l = 1.8, m = 1.0, R0=GUIDEREF)
-     WHEN (polariserIn<=0) AT (0, 0, 5.0) RELATIVE Origin
+      l = 1.8, m = 1.0, R0=0.99)
+WHEN (polariserIn<=0) AT (0, 0, 5.0) RELATIVE Origin
 
 COMPONENT armGuide = Arm()
-     AT (0, 0, 6.8)
-     RELATIVE Origin
+AT (0, 0, 6.8)
+RELATIVE Origin
 
 COMPONENT Guide =
 Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
-      l = 11.0, m = 1.0, R0=GUIDEREF)
-     AT (0, 0, 0) RELATIVE armGuide
+      l = 11.0, m = 1.0, R0=0.99)
+AT (0, 0, 0) RELATIVE armGuide
 
 COMPONENT armlambdaStop = Arm()
      AT (0, 0, 11.0)

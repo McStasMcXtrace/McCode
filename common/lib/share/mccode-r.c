@@ -60,12 +60,8 @@ static   long mcseed                 = 0; /* seed for random generator */
 static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
-#pragma acc declare create ( mcgravitation )
-int      mcMagnet                    = 0; /* magnet stack flag */
-#pragma acc declare create ( mcMagnet )
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
-#pragma acc declare create ( mcallowbackprop )
 
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
@@ -88,12 +84,10 @@ mcstatic unsigned long long int mcrun_num            = 0;
 
 /* String nullification on GPU and other replacements */
 #ifdef OPENACC
-#pragma acc routine seq
 int noprintf() {
   return 0;
 }
 
-#pragma acc routine seq
 int str_comp(char *str1, char *str2) {
   while (*str1 && *str1 == *str2) {
     str1++;
@@ -102,7 +96,6 @@ int str_comp(char *str1, char *str2) {
   return (*str1 - *str2);
 }
 
-#pragma acc routine seq
 size_t str_len(const char *s)
 {
   size_t len = 0;
@@ -1920,7 +1913,6 @@ MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 FILE *siminfo_init(FILE *f)
 {
   int exists=0;
-  int index;
 
   /* check format */
   if (!mcformat || !strlen(mcformat)
@@ -2278,7 +2270,6 @@ void mcset_ncount(unsigned long long int count)
 }
 
 /* mcget_ncount: get total number of rays to generate */
-#pragma acc routine seq
 unsigned long long int mcget_ncount(void)
 {
   return mcncount;
@@ -2516,7 +2507,6 @@ void mcdis_sphere(double x, double y, double z, double r, int N){
 *******************************************************************************/
 
 /* coords_set: Assign coordinates. */
-#pragma acc routine seq
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z)
 {
   Coords a;
@@ -2528,7 +2518,6 @@ Coords coords_set(MCNUM x, MCNUM y, MCNUM z)
 }
 
 /* coords_get: get coordinates. Required when 'x','y','z' are #defined as ray pars */
-#pragma acc routine seq
 Coords coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z)
 {
   *x = a.x;
@@ -2538,7 +2527,6 @@ Coords coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z)
 }
 
 /* coords_add: Add two coordinates. */
-#pragma acc routine seq
 Coords coords_add(Coords a, Coords b)
 {
   Coords c;
@@ -2551,7 +2539,6 @@ Coords coords_add(Coords a, Coords b)
 }
 
 /* coords_sub: Subtract two coordinates. */
-#pragma acc routine seq
 Coords coords_sub(Coords a, Coords b)
 {
   Coords c;
@@ -2564,7 +2551,6 @@ Coords coords_sub(Coords a, Coords b)
 }
 
 /* coords_neg: Negate coordinates. */
-#pragma acc routine seq
 Coords coords_neg(Coords a)
 {
   Coords b;
@@ -2576,7 +2562,6 @@ Coords coords_neg(Coords a)
 }
 
 /* coords_scale: Scale a vector. */
-#pragma acc routine seq
 Coords coords_scale(Coords b, double scale) {
   Coords a;
 
@@ -2587,7 +2572,6 @@ Coords coords_scale(Coords b, double scale) {
 }
 
 /* coords_sp: Scalar product: a . b */
-#pragma acc routine seq
 double coords_sp(Coords a, Coords b) {
   double value;
 
@@ -2596,7 +2580,6 @@ double coords_sp(Coords a, Coords b) {
 }
 
 /* coords_xp: Cross product: a = b x c. */
-#pragma acc routine seq
 Coords coords_xp(Coords b, Coords c) {
   Coords a;
 
@@ -2607,13 +2590,11 @@ Coords coords_xp(Coords b, Coords c) {
 }
 
 /* coords_len: Gives length of coords set. */
-#pragma acc routine seq
 double coords_len(Coords a) {
   return sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
 }
 
 /* coords_mirror: Mirror a in plane (through the origin) defined by normal n*/
-#pragma acc routine seq
 Coords coords_mirror(Coords a, Coords n) {
   double t = scalar_prod(n.x, n.y, n.z, n.x, n.y, n.z);
   Coords b;
@@ -2631,10 +2612,10 @@ Coords coords_mirror(Coords a, Coords n) {
 }
 
 /* coords_print: Print out vector values. */
-#pragma acc routine seq
 void coords_print(Coords a) {
-
-  //  fprintf(stdout, "(%f, %f, %f)\n", a.x, a.y, a.z);
+  #ifndef OPENACC
+  fprintf(stdout, "(%f, %f, %f)\n", a.x, a.y, a.z);
+  #endif
   return;
 }
 
@@ -2678,7 +2659,6 @@ mcstatic void coords_norm(Coords* c) {
 * rot_set_rotation: Get transformation for rotation first phx around x axis,
 * then phy around y, then phz around z.
 *******************************************************************************/
-#pragma acc routine seq
 void rot_set_rotation(Rotation t, double phx, double phy, double phz)
 {
   if ((phx == 0) && (phy == 0) && (phz == 0)) {
@@ -2714,7 +2694,6 @@ void rot_set_rotation(Rotation t, double phx, double phy, double phz)
 /*******************************************************************************
 * rot_test_identity: Test if rotation is identity
 *******************************************************************************/
-#pragma acc routine seq
 int rot_test_identity(Rotation t)
 {
   return (t[0][0] + t[1][1] + t[2][2] == 3);
@@ -2726,7 +2705,6 @@ int rot_test_identity(Rotation t)
 * equal to doing first T2, then T1.
 * Note that T3 must not alias (use the same array as) T1 or T2.
 *******************************************************************************/
-#pragma acc routine seq
 void rot_mul(Rotation t1, Rotation t2, Rotation t3)
 {
   if (rot_test_identity(t1)) {
@@ -2744,7 +2722,6 @@ void rot_mul(Rotation t1, Rotation t2, Rotation t3)
 /*******************************************************************************
 * rot_copy: Copy a rotation transformation (arrays cannot be assigned in C).
 *******************************************************************************/
-#pragma acc routine seq
 void rot_copy(Rotation dest, Rotation src)
 {
   int i,j;
@@ -2756,7 +2733,6 @@ void rot_copy(Rotation dest, Rotation src)
 /*******************************************************************************
 * rot_transpose: Matrix transposition, which is inversion for Rotation matrices
 *******************************************************************************/
-#pragma acc routine seq
 void rot_transpose(Rotation src, Rotation dst)
 {
   dst[0][0] = src[0][0];
@@ -2773,7 +2749,6 @@ void rot_transpose(Rotation src, Rotation dst)
 /*******************************************************************************
 * rot_apply: returns t*a
 *******************************************************************************/
-#pragma acc routine seq
 Coords rot_apply(Rotation t, Coords a)
 {
   Coords b;
@@ -2802,7 +2777,6 @@ void rot_print(Rotation rot) {
 /**
  * Vector product: used by vec_prod (mccode-r.h). Use coords_xp for Coords.
  */
-#pragma acc routine seq
 void vec_prod_func(double *x, double *y, double *z,
 		double x1, double y1, double z1,
 		double x2, double y2, double z2) {
@@ -2814,14 +2788,12 @@ void vec_prod_func(double *x, double *y, double *z,
 /**
  * Scalar product: use coords_sp for Coords.
  */
-#pragma acc routine seq
 double scalar_prod(
 		double x1, double y1, double z1,
 		double x2, double y2, double z2) {
 	return ((x1 * x2) + (y1 * y2) + (z1 * z2));
 }
 
-#pragma acc routine seq
 mcstatic void norm_func(double *x, double *y, double *z) {
 	double temp = (*x * *x) + (*y * *y) + (*z * *z);
 	if (temp != 0) {
@@ -2998,7 +2970,6 @@ long sort_absorb_last_serial(_class_particle* particles, long len) {
 /*******************************************************************************
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
 *******************************************************************************/
-#pragma acc routine seq
 void mccoordschange(Coords a, Rotation t, _class_particle *particle)
 {
   Coords b, c;
@@ -3030,7 +3001,6 @@ void mccoordschange(Coords a, Rotation t, _class_particle *particle)
 /*******************************************************************************
 * mccoordschange_polarisation: applies rotation to vector (sx sy sz)
 *******************************************************************************/
-#pragma acc routine seq
 void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 {
   Coords b, c;
@@ -3047,7 +3017,6 @@ void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 /* SECTION: vector math  ==================================================== */
 
 /* normal_vec_func: Compute normal vector to (x,y,z). */
-#pragma acc routine seq
 void normal_vec(double *nx, double *ny, double *nz,
                 double x, double y, double z)
 {
@@ -3107,7 +3076,6 @@ void normal_vec(double *nx, double *ny, double *nz,
  * so that A = 0.5 n.g; B = n.v; C = n.(r-W);
  * Without acceleration, t=-n.(r-W)/n.v
  ******************************************************************************/
-#pragma acc routine seq
 int solve_2nd_order_old(double *t1, double *t2,
                   double A,  double B,  double C)
 {
@@ -3150,7 +3118,6 @@ int solve_2nd_order_old(double *t1, double *t2,
   return(ret);
 } /* solve_2nd_order */
 
-#pragma acc routine seq
 int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
   int retval=0;
   double sign=copysign(1.0,B);
@@ -3158,7 +3125,6 @@ int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
 
   dt0=0;
   dt1=0;
-  *t0;
   if(t1){ *t1=0;}
 
   /*protect against rounding errors by locally equating DBL_EPSILON with 0*/
@@ -3233,7 +3199,6 @@ int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
  * with given radius.
  * If radius is zero, choose random direction in full 4PI, no target.
  ******************************************************************************/
-#pragma acc routine seq
 void _randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double radius,
         _class_particle* _particle)
@@ -3300,7 +3265,6 @@ void _randvec_target_circle(double *xo, double *yo, double *zo, double *solid_an
  * width=phi_y=[0,2*PI] (radians)
  * If height or width is zero, choose random direction in full 4PI, no target.
  *******************************************************************************/
-#pragma acc routine seq
 void _randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi, double width, double height, Rotation A,
         _class_particle* _particle)
@@ -3376,7 +3340,6 @@ void _randvec_target_rect_angular(double *xo, double *yo, double *zo, double *so
  * a define (see mcstas-r.h) pointing here. If you use the old rouine, you are NOT
  * taking the local emmission coordinate into account.
 *******************************************************************************/
-#pragma acc routine seq
 void _randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
         double xi, double yi, double zi,
         double width, double height, Rotation A,
@@ -3654,7 +3617,6 @@ rng.html>
 /*   0  1  2  3  4      5  6   */
 /* [ x, y, z, w, carry, k, m ] */
 
-#pragma acc routine seq
 unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
   if (seed == 0) seed = 1;
   state[0] = seed | 1; // x
@@ -3665,7 +3627,6 @@ unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
   return 0;
 }
 
-#pragma acc routine seq
 unsigned long kiss_random(unsigned long state[7]) {
     state[0] = state[0] * 69069 + 1;
     state[1] ^= state[1] << 13;
@@ -3692,7 +3653,6 @@ unsigned long kiss_random(unsigned long state[7]) {
 // http://stackoverflow.com/questions/664014/
 //        what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
 //////////////////////////////////////////////////////////////////////////////
-#pragma acc routine seq
 randstate_t _hash(randstate_t x) {
   x = ((x >> 16) ^ x) * 0x45d9f3b;
   x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -3701,7 +3661,6 @@ randstate_t _hash(randstate_t x) {
 }
 
 // fast kiss state is a pointer to 5 long [x,y,z,w,c]
-#pragma acc routine seq
 randstate_t fast_kiss(randstate_t * state) {
 
     state[1] ^= state[1] << 5;
@@ -3729,10 +3688,6 @@ randstate_t * fast_kiss_seed(randstate_t * state, randstate_t seed) {
       state[2] = _hash(state[1]);
       state[3] = _hash(state[2]);
   }
-
-  return state;
-  state[4] = 0;
-
   return state;
 }
 
@@ -3770,7 +3725,6 @@ double _randnorm(randstate_t* state)
   return X;
 }
 // another one
-#pragma acc routine seq
 double _randnorm2(randstate_t* state) {
   double x, y, r;
   do {
@@ -3780,7 +3734,7 @@ double _randnorm2(randstate_t* state) {
   } while (r == 0.0 || r >= 1.0);
   return x * sqrt((-2.0 * log(r)) / r);
 }
-#pragma acc routine seq
+
 double _gaussian_double(randstate_t * state) {
 
     double x, y, r;
@@ -3794,14 +3748,12 @@ double _gaussian_double(randstate_t * state) {
     return x * sqrt((-2.0 * log(r)) / r);
 }
 // Generate a random number from -1 to 1 with triangle distribution
-#pragma acc routine seq
 double _randtriangle(randstate_t* state) {
 	double randnum = _rand01(state);
 	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
 	else return(sqrt(2*randnum)-1);
 }
 // Random number between 0.0 and 1.0
-#pragma acc routine seq
 double _uniform_double(randstate_t * state) {
 
     randstate_t a = fast_kiss(state) >> 6;
@@ -3810,7 +3762,6 @@ double _uniform_double(randstate_t * state) {
 
     return x;
 }
-#pragma acc routine seq
 double _rand01(randstate_t* state) {
 	double randnum;
 	randnum = (double) _random();
@@ -3819,7 +3770,6 @@ double _rand01(randstate_t* state) {
 	return randnum;
 }
 // Return a random number between 1 and -1
-#pragma acc routine seq
 double _randpm1(randstate_t* state) {
 	double randnum;
 	randnum = (double) _random();
@@ -3828,7 +3778,6 @@ double _randpm1(randstate_t* state) {
 	return randnum;
 }
 // Return a random number between 0 and max.
-#pragma acc routine seq
 double _rand0max(double max, randstate_t* state) {
 	double randnum;
 	randnum = (double) _random();
@@ -3836,7 +3785,6 @@ double _rand0max(double max, randstate_t* state) {
 	return randnum;
 }
 // Return a random number between min and max.
-#pragma acc routine seq
 double _randminmax(double min, double max, randstate_t* state) {
 	return _rand0max(max - min, state) + max;
 }

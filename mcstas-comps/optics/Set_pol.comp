@@ -1,0 +1,111 @@
+/*****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Set_pol
+*
+* %I
+* Written by: Peter Christiansen
+* Date: August 2006
+* Origin: Risoe
+*
+* (Unphysical) way of setting the polarization.
+*
+* %D
+*
+* This component has no physical size (like Arm - also drawn that
+* way), but is used to set the polarisation in one of four ways:
+* 1) (randomOn=0, normalize=0) Hardcode the polarisation to the vector (px, py, pz)
+* 2) (randomOn!=0, normalize!=0) Set the polarisation to a random vector on the unit sphere
+* 3) (randomOn!=0, normalize=0) Set the polarisation to a radnom vector within the unit sphere
+* 4) (randomOn=0, normalize!=0) Hardcode the polarisation to point in the direction of (px,py,pz) but with polarization=1. 
+* Example: Set_pol(px=0, py=-1, pz=0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* px: [1]        X-component of polarisation vector (can be negative) 
+* py: [1]        Y-component of polarisation vector (can be negative) 
+* pz: [1]        Z-component of polarisation vector (can be negative) 
+* randomOn: [1]  Generate random values if randomOn!=0. 
+* normalize: [1] Normalize the polarization vector. If used with randomOn will generate random vectors with length 1.
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Set_pol
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (px=0, py=0, pz=0, randomOn=0, normalize=0)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+
+%}
+
+INITIALIZE
+%{
+
+  if (sqrt(px*px + py*py + pz*pz) > 1+FLT_EPSILON)
+  {
+      printf("WARNING: Set_pol(%s): Polarisation vector (px, py, pz) is unphysical!\n"
+            "px*px + py*py + pz*pz = %.18e> 1. Renormalizing...\n",NAME_CURRENT_COMP,(px*px + py*py + pz*pz));
+      NORM(px,py,pz);
+  }
+
+  if(randomOn!=0){
+    printf("INFO: Set_pol(%s): Setting polarization randomly.\n",
+           NAME_CURRENT_COMP);
+  }else{
+    printf("INFO: Set_pol(%s): Setting polarization to (%f, %f, %f)\n",
+           NAME_CURRENT_COMP, px, py, pz);
+  }
+%}
+
+TRACE
+%{
+  double theta, phi;
+
+  if(randomOn!=0)
+  {
+    theta = 2*PI*rand01(); // 0-2*PI
+    phi   = acos(2*rand01()-1); // 0-PI
+
+    sx = sin(phi)*cos(theta);
+    sy = sin(phi)*sin(theta);
+    sz = cos(phi);
+    if (!normalize){
+      double r=rand01();
+      sx*=r;
+      sy*=r;
+      sz*=r;
+    }
+  } else {
+    sx = px;
+    sy = py;
+    sz = pz;
+    if (normalize){
+      NORM(sx,sy,sz);
+    }
+  }
+
+
+
+  SCATTER;
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END

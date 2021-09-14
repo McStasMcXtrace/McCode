@@ -34,7 +34,8 @@
 * nt: [1]                Number of time bins
 * tmin: [mu-s]           Beginning of time window
 * tmax: [mu-s]           End of time window
-* *
+* nowritefile: [1]      If set, monitor will skip writing to disk
+*
 * OUTPUT PARAMETERS:
 *
 * PSDr_N: []             Array of neutron counts
@@ -49,7 +50,7 @@
 
 DEFINE COMPONENT TOF_PSD_monitor_rad
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nr=100, nt=100,
+SETTING PARAMETERS (nr=100, nt=100, int nowritefile=0,
   string filename="", string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS ()
 
@@ -116,6 +117,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   int i, j;
   for(i=0; i<nt; i++)
     for(j=0; j<nr; j++) {
@@ -139,6 +141,7 @@ SAVE
     nt, nr,
     &TOFPSDr_N[0][0],&TOFPSDr_av_p[0][0],&TOFPSDr_av_p2[0][0],
     filename_av);
+}
 %}
 
 FINALLY

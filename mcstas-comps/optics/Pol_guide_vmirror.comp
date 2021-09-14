@@ -12,26 +12,34 @@
 * Date: July 2006
 * Origin: RISOE
 *
-* Polarising guide with two supermirros sitting in a v-shape inside.
+* Polarising guide with two supermirrors sitting in a v-shape inside.
 *
 * %D
 * Models a rectangular guide with entrance centered on the Z axis and
-* with two supermirros sitting in a v-shape inside.
+* with two supermirrors sitting in a v-shape inside.
 * The entrance lies in the X-Y plane.  Draws a true depiction
 * of the guide with mirrors, and trajectories.
 * The polarisation is handled similar to in Monochromator_pol.
 * The reflec functions are handled similar to Pol_mirror.
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
 *
-* The parameters can either be
-* double pointer initializations (e.g. {R0, Qc, alpha, m, W})
-* or table names (e.g."supermirror_m2.rfl" AND useTables=1).
-* NB! This might cause warnings by the compiler that can be ignored.
+* Note that this component can also be used as a frame overlap-mirror
+* if the up and down reflectivities are set equal. In this case the wall
+* reflectivity (rPar) should probably be set to 0.
+*
+* Reflectivity values can either come from datafiles or from
+* sets of parameters to the standard analytic reflectivity function commonly
+* used for neutron guides:
+*  R=R0; q<qc, R=(1-tanh((q-m qc)/W))(1-alpha(q-qc)).
+* If a filename is specified for e.g. rData
+* the datafile table overrides the analytic function.
 *
 * GRAVITY: YES
 *
 * %BUGS
 * No absorption by mirror.
+* The reflectivity parameters must be given as literal constants. Using variables
+* will result in undefined behaviour.
 *
 * %P
 * INPUT PARAMETERS:
@@ -39,23 +47,13 @@
 * xwidth: [m]      Width at the guide entry
 * yheight: [m]     Height at the guide entry
 * length: [m]      length of guide
-* rFunc: [1]       Guide Reflection function
-* rPar: [1]        Guide Parameters for rFunc
-* rUpFunc: [1]     Mirror Reflection function for spin up
-* rUpPar: [1]      Mirror Parameters for rUpFunc
-* rDownFunc: [1]   Mirror Reflection function for spin down
-* rDownPar: [1]    Mirror Parameters for rDownFunc
-* useTables: [1]   Parameters are 0: Values, 1: Table names
+* rData: [str]     Guide Reflectivity data file
+* rPar: [1]        Guide Parameters for standard reflectivity function
+* rUpdata: [str]   Mirror Reflectivity data file for spin up
+* rUpPar: [1]      Mirror Parameters for spin up standard reflectivity function
+* rDownData: [str] Mirror Reflectivity data file for spin down
+* rDownPar: [1]    Mirror Parameters for spin down standard reflectivity function
 * debug: [1]       if debug > 0 print out some internal runtime parameters
-*
-* OUTPUT PARAMETERS:
-*
-* localG: [m/s/s]  Gravity vector in guide reference system
-* normalTop: [1]   One of several normal vectors used for defining the geometry
-* pointTop: [1]    One of several points used for defining the geometry
-* rParPtr:      One of several pointers to reflection parameters used with the ref. functions. []
-* SCATTERED: []    is 1 for reflected, and 2 for transmitted neutrons
-*
 *
 * %L
 *
@@ -84,7 +82,7 @@ SHARE
 DECLARE
 %{
   Coords localG;
-  Coords normalTop; 
+  Coords normalTop;
   Coords normalBot;
   Coords normalLeft;
   Coords normalRight;
@@ -125,7 +123,7 @@ INITIALIZE
     }
     rUpTableFlag=1;
   }else {
-    rDownTableFlag=0;
+    rUpTableFlag=0;
   }
   if (strlen(rDownData) && strcmp(rDownData,"NULL")){
     if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
@@ -209,12 +207,13 @@ TRACE
   if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
 
+  SCATTER;
+
   if(x>0) {
     // "left" opening
     normalMirror  = coords_set(norm*length, 0, -norm*xwhalf);
     pointMirror = coords_set(0, 0, 0);
   } else {
-
     // "right" opening
     normalMirror  = coords_set(norm*length, 0, norm*xwhalf);
     pointMirror = coords_set(0, 0, 0);
@@ -329,7 +328,6 @@ TRACE
     PROP_DT(time);
     if (mcgravitation)
       vVec = coords_set(vx, vy, vz);
-    SCATTER;
 
     if(time==tTop)
       normalPointer = &normalTop;
@@ -347,7 +345,7 @@ TRACE
     Q = 2*coords_sp(vVec, *normalPointer)*V2K;
 
     if (!mirrorReflect) {
-      // we have hit one of the sides. Always reflect.
+      /* we have hit one of the sides. Always reflect.*/
       vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
 
       // NOTE: changed from defpars version
@@ -358,21 +356,21 @@ TRACE
         StdReflecFunc(fabs(Q), rPar, &refWeight);
       }
       p *= refWeight;
-
+      SCATTER;
     } else {
-      // we have hit one of the mirrors
+      /* we have hit one of the mirrors*/
 
-      // NOTE: changed from defpars version
-      //rUpFunc(fabs(Q), rUpParPtr, &Rup);
+      /* NOTE: changed from defpars version
+       rUpFunc(fabs(Q), rUpParPtr, &Rup)*/;
       if(rUpTableFlag){
-        Rup=Table_Value(rUpTable,Q,1);
+        Rup=Table_Value(rUpTable,fabs(Q),1);
       }else{
         StdReflecFunc(fabs(Q), rUpPar, &Rup);
       }
-      // NOTE: changed from defpars version
-      //rDownFunc(fabs(Q), rDownParPtr, &Rdown);
+      /* NOTE: changed from defpars version
+       rDownFunc(fabs(Q), rDownParPtr, &Rdown)*/;
       if(rDownTableFlag){
-        Rdown=Table_Value(rDownTable,Q,1);
+        Rdown=Table_Value(rDownTable,fabs(Q),1);
       }else{
         StdReflecFunc(fabs(Q), rDownPar, &Rdown);
       }
@@ -384,7 +382,7 @@ TRACE
 
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
-      // check that refWeight is meaningfull
+      // check that refWeight is meaningful
       if (refWeight <  0) ABSORB;
       if (refWeight >  1) refWeight =1 ;
 
@@ -413,8 +411,9 @@ TRACE
     // set new velocity vector
     coords_get(vVec, &vx, &vy, &vz);
 
-    if(debug>0)
+    if(debug>0){
       fprintf(stdout, "Pol_guide_vmirror: %s: End v: (%f, %f, %f)\n", NAME_CURRENT_COMP, vx, vy, vz);
+    }
   }
 %}
 
@@ -424,9 +423,11 @@ MCDISPLAY
   // draw box
   box(0, 0, length/2, xwidth, yheight, length);
 
-  for(i = -1; i<=1; i+=2)
-    for(j = -1; j<=1; j+=2)
+  for(i = -1; i<=1; i+=2){
+    for(j = -1; j<=1; j+=2){
       line(0, j*yheight/2, 0, i*xwidth/2, j*yheight/2, length);
+    }
+  }
 %}
 
 END
