@@ -151,65 +151,12 @@ OUTPUT PARAMETERS ()
 
 SHARE
 %{
+
+
 %include "read_table-lib"
 %include "interoff-lib"
 %include "ref-lib"
 
-// two sphere separated with a given thickness
-int lens_sphere_intersect_n(double *t0, double *t1,
-double x, double y, double z,
-double vx, double vy, double vz,
-double r, double dz,
-double *nx, double *ny, double *nz) {
-    /* two spherical lenses, concave, with given radius, thickness=zdepth at meniscus,
-       plus cross section=xwidth*yheight */
-    int    intersect1 = 0, intersect2 = 0;
-    double nx1=0,nx2=0,ny1=0,ny2=0,nz1=0,nz2=0;
-    double t2=0,t3=0;
-
-    *t0=*t1=0;
-
-    intersect1 = sphere_intersect_n(t0, t1, x,y,z+r+dz/2,
-      vx,vy,vz, -r, &nx1,&ny1,&nz1); /* -r: use the further intersection with sphere */
-
-    intersect2 = sphere_intersect_n(&t2, &t3, x,y,z-r-dz/2,
-      vx,vy,vz, r, &nx2,&ny2,&nz2);
-
-    /* usual case with 4 intersections: return t1 and t2 */
-    if (intersect1 || intersect2) {
-      if (intersect1) *t0=*t1;
-      if (intersect2) *t1= t2;
-    }
-
-    if (!intersect1 && !intersect2)
-      return(0);
-
-    if (!intersect1 || !intersect2) {
-      if (!intersect1) {
-        /* intersection with the 2st sphere: return t2 and some other external
-           intersection (container box entrance) t0 */
-        intersect1 = box_intersect_n(t0,&t3, x,y,z, vx,vy,vz,
-          2*r, 2*r, 2*r+dz, &nx1,&ny1,&nz1);
-      } else {
-        /* intersection with the 1st sphere: return t1 and some other external
-           intersection (container box exit) t3 */
-        intersect2 = box_intersect_n(&t2,t1, x,y,z, vx,vy,vz,
-          2*r, 2*r, 2*r+dz, &nx2,&ny2,&nz2);
-      }
-    }
-
-    /* the normal vector corresponds to the first forward intersection */
-    if (intersect1 || intersect2) {
-      if (*t0 < 0) {
-        *nx = nx2; *ny = ny2; *nz = nz2;
-      } else {
-        *nx = nx1; *ny = ny1; *nz = nz1;
-      }
-    }
-
-    /* no intersection: use intersection with container box */
-    return(intersect1+intersect2);
-  } // lens_sphere_intersect_n
 
   /* wrappers to intersection routines which also return the normal vector */
   int box_intersect_n(double *t0, double *t1,
@@ -287,11 +234,68 @@ double *nx, double *ny, double *nz) {
     return(intersect);
   } // cylinder_intersect_n
 
+// two sphere separated with a given thickness
+int lens_sphere_intersect_n(double *t0, double *t1,
+double x, double y, double z,
+double vx, double vy, double vz,
+double r, double dz,
+double *nx, double *ny, double *nz) {
+    /* two spherical lenses, concave, with given radius, thickness=zdepth at meniscus,
+       plus cross section=xwidth*yheight */
+    int    intersect1 = 0, intersect2 = 0;
+    double nx1=0,nx2=0,ny1=0,ny2=0,nz1=0,nz2=0;
+    double t2=0,t3=0;
+
+    *t0=*t1=0;
+
+    intersect1 = sphere_intersect_n(t0, t1, x,y,z+r+dz/2,
+      vx,vy,vz, -r, &nx1,&ny1,&nz1); /* -r: use the further intersection with sphere */
+
+    intersect2 = sphere_intersect_n(&t2, &t3, x,y,z-r-dz/2,
+      vx,vy,vz, r, &nx2,&ny2,&nz2);
+
+    /* usual case with 4 intersections: return t1 and t2 */
+    if (intersect1 || intersect2) {
+      if (intersect1) *t0=*t1;
+      if (intersect2) *t1= t2;
+    }
+
+    if (!intersect1 && !intersect2)
+      return(0);
+
+    if (!intersect1 || !intersect2) {
+      if (!intersect1) {
+        /* intersection with the 2st sphere: return t2 and some other external
+           intersection (container box entrance) t0 */
+        intersect1 = box_intersect_n(t0,&t3, x,y,z, vx,vy,vz,
+          2*r, 2*r, 2*r+dz, &nx1,&ny1,&nz1);
+      } else {
+        /* intersection with the 1st sphere: return t1 and some other external
+           intersection (container box exit) t3 */
+        intersect2 = box_intersect_n(&t2,t1, x,y,z, vx,vy,vz,
+          2*r, 2*r, 2*r+dz, &nx2,&ny2,&nz2);
+      }
+    }
+
+    /* the normal vector corresponds to the first forward intersection */
+    if (intersect1 || intersect2) {
+      if (*t0 < 0) {
+        *nx = nx2; *ny = ny2; *nz = nz2;
+      } else {
+        *nx = nx1; *ny = ny1; *nz = nz1;
+      }
+    }
+
+    /* no intersection: use intersection with container box */
+    return(intersect1+intersect2);
+  } // lens_sphere_intersect_n
+  
   /* Surface_wavyness: function to rotate normal vector around axis for roughness
    *                 with specified tilt angle (rad)
    * RETURNS: rotated nx,ny,nz coordinates
    */
-  void Surface_wavyness(double *nx, double *ny, double *nz, double tilt)
+ #pragma acc routine
+ void Surface_wavyness(double *nx, double *ny, double *nz, double tilt, _class_particle *_particle)
   {
     double nt_x, nt_y, nt_z;  /* transverse vector */
     double n1_x, n1_y, n1_z;  /* normal vector (tmp) */
@@ -391,8 +395,9 @@ TRACE
 
     intersect = 0;
     iterations++;
+    #ifndef OPENACC
     strcpy(event, "                                               ");
-
+    #endif
     /* determine intersection times and normal vector with geometry */
     if (!strcmp(geometry, "sphere")) {
       intersect = sphere_intersect_n(&t0, &t1, x,y,z, vx,vy,vz,
@@ -423,8 +428,9 @@ TRACE
       if (dt < 0) dt=0;
     }
     if (dt<=0) break;
-
+    #ifndef OPENACC
     strcpy(event, "none");
+    #endif
     if (verbose)
     printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=(intersect) %s\n",
       NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dt, event);
@@ -524,8 +530,9 @@ TRACE
         }
         /* force to recompute intersection with new neutron direction/position */
         refract_me = 0;
-
+	#ifndef OPENACC
         strcpy(event, "scatter");
+	#endif
         if (verbose)
         printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=(scatter) %s\n",
           NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dl/v, event);
@@ -564,7 +571,7 @@ TRACE
         /* tilt normal vector for roughness, in cone theta_RMS */
         NORM(nx,ny,nz);
         /* cone angle from RMS roughness = atan(2*RMS/lambda) */
-        if (RMS>0) Surface_wavyness(&nx, &ny, &nz, atan(2*RMS/lambda));
+        if (RMS>0) Surface_wavyness(&nx, &ny, &nz, atan(2*RMS/lambda), _particle);
 
         /* Snell-Descartes formula for refraction n1 sin(theta1) = n2 sin(theta2) */
         /*   https://en.wikipedia.org/wiki/Snell's_law                            */
@@ -600,7 +607,9 @@ TRACE
             // choose reflection from MC
             theta2 = theta1;
             coords_get(V_reflect, &vx, &vy, &vz);
+	    #ifndef OPENACC
             strcpy(event, "reflect");
+	    #endif
           } else if (p_refract) {
             // compute refracted ray
             theta2 = acos(cos_theta2)*RAD2DEG;
@@ -610,7 +619,9 @@ TRACE
             Coords V_refract = coords_scale(I_refract, v);
 
             coords_get(V_refract, &vx, &vy, &vz);
+	    #ifndef OPENACC
             strcpy(event, "refract");
+	    #endif
             SCATTER; /* 3 */
           }
         } else if (p_reflect) {
@@ -618,7 +629,9 @@ TRACE
           theta2 = theta1;
           if (0 < R && R < 1) p *= R; // should be R0
           coords_get(V_reflect, &vx, &vy, &vz);
+	  #ifndef OPENACC
           strcpy(event, "reflect");
+	  #endif
         }
 
         /* propagate by a small time so that we leave the surface */

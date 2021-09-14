@@ -2,6 +2,10 @@
 
 # rapid-build script for mcstas-kernel dev:
 
+
+git checkout mcstas-3.0
+git pull
+
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY=`ls 3rdparty | grep -v patches`
 cd 3rdparty
@@ -21,14 +25,11 @@ do
     fi
 done
 
-#git checkout mcstas-3.0
-git pull
-
 WORK=`pwd`
 
 export MCINSTALL_PREFIX=$HOME/McStas
 export CC=gcc
-export CXX=g++
+export CXX=c++
 export FC=gfortran
 
 if [[ -d $HOME/McStas/mcstas/3.0-dev ]]

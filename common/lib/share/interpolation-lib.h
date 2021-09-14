@@ -51,6 +51,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#ifndef INTERPOLATOR_DIMENSIONS
+#define INTERPOLATOR_DIMENSIONS 3
+#endif
 
 typedef struct
 {
@@ -63,7 +66,7 @@ typedef struct
 
   // This is the point index in the point list.
   int    index;
-
+  #pragma acc shape(v[0:space_dimensionality], data[0:space_dimensionality]) init_needed(space_dimensionality)
 } vertex;
  
 /* This struct will store each node of our kdtree. */
@@ -72,11 +75,9 @@ typedef struct _treeNode {
   int       depth;
   struct _treeNode *rChild;
   struct _treeNode *lChild;
+  #pragma acc shape(point[0:1],rChild[0:1],lChild[0:1])
 } treeNode;
 
-
-#define INTERPOLATOR_DIMENSIONS 10
-  
 struct interpolator_struct {
   char  method[256];
   long  space_dimensionality; // [x,y,z...]
@@ -84,15 +85,18 @@ struct interpolator_struct {
   long  points;
   char  filename[1024];
   treeNode *kdtree;    /* for k-d tree */
-  double  *grid[INTERPOLATOR_DIMENSIONS];  /* each grid contains a component of the field */
+  #pragma acc shape(kdtree[0:1])
+  double  *gridx;  /* each grid contains a component of the field */
+  double  *gridy;
+  double  *gridz;
+  long prod;
+  #pragma acc shape(gridx[0:prod],gridy[0:prod],gridz[0:prod]) init_needed(prod)
   double   min[INTERPOLATOR_DIMENSIONS];
   double   max[INTERPOLATOR_DIMENSIONS];
   long     bin[INTERPOLATOR_DIMENSIONS];
   double   step[INTERPOLATOR_DIMENSIONS];
   long     constant_step[INTERPOLATOR_DIMENSIONS];
 };
-
-#undef INTERPOLATOR_DIMENSIONS
 
 /******************************************************************************/
 // interpolator_info: print information about the interpolator
@@ -113,7 +117,8 @@ struct interpolator_struct *interpolator_load(char *filename,
  *   returns the 'field' value (of length interpolator->field_dimensionality)
  *   at the given 'space' location (of length interpolator->space_dimensionality)
  *   The returned array 'field' MUST be pre-allocated.
- ******************************************************************************/ 
+ ******************************************************************************/
+#pragma acc routine
 double *interpolator_interpolate(struct interpolator_struct *interpolator,
   double *space, double *field);
 
@@ -123,7 +128,8 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
  *   returns the 'field' value (e.g. 3d)
  *   at the given 'coord' location (e.g. 3d)
  * The interpolator->method can be 'kdtree' or 'regular' as set at points load
- ******************************************************************************/ 
+ ******************************************************************************/
+#pragma acc routine
 double *interpolator_interpolate3_3(struct interpolator_struct *interpolator,
                     double  x,  double  y,  double  z,
                     double *bx, double *by, double *bz);

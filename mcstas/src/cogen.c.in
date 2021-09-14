@@ -477,6 +477,10 @@ int cogen_comp_declare(struct comp_inst *comp)
       char *val = exp_tostring(entry->val); /* replaced by instrument parameter when exists */
       if (val[0] == '{') {
         int vl = parse_curlybrackets_vector(val, NULL);
+	printf("\nWARNING:\n The parameter %s of %s is intitalized \n using a static {,,,} vector.\n",c_formal->id,comp->name);
+	printf("  -> Such static vectors support literal numbers ONLY.\n");
+	printf("  -> Any vector use of variables or defines must happen via a \n");
+	printf("     DECLARE/INITIALIZE pointer.\n\n");
         coutf("  %s %s[%i];", instr_formal_type_names_real[c_formal->type], c_formal->id, vl);
       } else {
         coutf("  %s* %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
@@ -1388,19 +1392,12 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     // call acc_attach for OpenACC (last thing to do in init)
     cout("");
     cout("#ifdef OPENACC");
-    cout("#  include <openacc.h>");
-    // attach component instances on device
-    liter = list_iterate(instr->complist);
-    while((comp = list_next(liter)) != NULL) {
-      coutf("acc_attach( (void*)&_%s_var );", comp->name);
-    }
+    cout("#include <openacc.h>");
     // update component instances on device (e.g. push "managed" data structures)
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
       coutf("#pragma acc update device(_%s_var)", comp->name);
     }
-    // attach instrument
-    cout("acc_attach( (void*)&_instrument_var );");
     // update instrument
     cout("#pragma acc update device(_instrument_var)");
     cout("#endif");
@@ -1616,7 +1613,7 @@ int cogen_raytrace(struct instr_def *instr)
   cout("***************************************************************************** */");
   cout("");
   cout("#ifndef FUNNEL");
-  cout("#pragma acc routine seq");
+  cout("#pragma acc routine");
   coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
 
@@ -2206,21 +2203,21 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("_class_particle* _particle = &_particle_global_randnbuse_var;");
   cout("");
 
+  /* Below lines relating to mcgenstate / setstate are in principle McStas-centric, we ought to generate this function based on "project" */
+  cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void);");
+  cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,");
-  cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);");
+  cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
   cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
   cout("#pragma acc declare create ( mcgravitation )");
-  cout("int mcMagnet;    /* precession-state */");
-  cout("#pragma acc declare create ( mcMagnet )");
   cout("int mcallowbackprop;        ");
   cout("#pragma acc declare create ( mcallowbackprop )");
 
   cout("");
-  cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void) {");
-  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop);");
+  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
   cout("  return(particle);");
   cout("}");
 
@@ -2230,6 +2227,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   List_handle liter,liter2;
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
+  cout("double particle_getvar(_class_particle *p, char *name, int *suc);");
+  cout("");
+  cout("#ifdef OPENACC");
+  cout("#pragma acc routine");
+  cout("int str_comp(char *str1, char *str2);");
+  cout("#endif");
+  cout("");  
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
   cout("#ifndef OPENACC");
   cout("#define str_comp strcmp");

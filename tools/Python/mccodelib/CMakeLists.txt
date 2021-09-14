@@ -46,9 +46,9 @@ endif()
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 if (APPLE)
-  set(CFLAGS "-g -O2 -lm -std=c99 -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+  set(CFLAGS "${MCCODE_CFLAGS} -headerpad_max_install_names ${CMAKE_C_FLAGS}")
 else()
-  set(CFLAGS "-g -O2 -lm -std=c99 ${CMAKE_C_FLAGS}")
+  set(CFLAGS "${MCCODE_CFLAGS} ${CMAKE_C_FLAGS}")
 endif()
 
 # CPack configuration
@@ -70,8 +70,18 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply")
 
 # RPM
+if (RPMPROFILE)
+   if (RPMPROFILE STREQUAL "fedora")
+        set(PYDEPS "python3, python3-ply")
+   else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+   endif()
+else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+endif()
+
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
+  "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
 )
 
 

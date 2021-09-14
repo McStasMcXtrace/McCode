@@ -33,6 +33,7 @@
 * Lmax: [AA]            Maximum wavelength detected
 * filename: [string]    Name of file in which to store the data
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,7 +49,7 @@ DEFINE COMPONENT MeanPolLambda_monitor
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, restore_neutron=0, string filename, mx=0, my=0, mz=0, Lmin, Lmax)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, restore_neutron=0, string filename, int nowritefile=0, mx=0, my=0, mz=0, Lmin, Lmax)
 
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -141,6 +142,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   int i;
   double mpifactor=1;
 
@@ -171,6 +173,7 @@ SAVE
 		  "Wavelength", Lmin, Lmax, nL,
 		  &PolL_N[0],&PolL_p[0],&PolL_p2[0],
 		  filename);
+}
 %}
 
 FINALLY

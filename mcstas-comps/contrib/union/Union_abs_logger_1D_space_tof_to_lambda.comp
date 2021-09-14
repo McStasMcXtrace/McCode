@@ -70,7 +70,7 @@
 *
 * %P
 * INPUT PARAMETERS:
-* ref_component:      [no quotes] Reference component instance, sample position for distance calculation
+* ref_component:      [1] Reference component instance index, sample position for distance calculation
 * source_sample_dist: [m] Travel distance between source and sample position, used to calculate total travelled distance
 * yheight:            [m] Height of absorption logger
 * yn:                 [1] number of bins along y axis
@@ -104,7 +104,7 @@
 
 DEFINE COMPONENT Union_abs_logger_1D_space_tof_to_lambda
 SETTING PARAMETERS(string target_geometry="NULL",
-                   string ref_component,
+                   int ref_component,
                    yheight, yn, source_sample_dist=0.0,
                    lambda_min=-1, lambda_max=-1, lambda_bins=-1,
                    lambda_m_min=-1, lambda_m_max=-1, lambda_m_bins=-1,
@@ -644,7 +644,7 @@ INITIALIZE
   sprintf(this_abs_storage.Detector_2D.Filename, filename);
   
   // Get the position from a component instance
-  this_abs_storage.sample_pos = POS_A_COMP(ref_component);
+  this_abs_storage.sample_pos = POS_A_COMP_INDEX(INDEX_CURRENT_COMP+ref_component);
   this_abs_storage.transformed = 0; // Set to 1 when sample_pos is transformed
   
   // Input sanitation for sample point and source_sample distance.
@@ -665,7 +665,7 @@ INITIALIZE
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_abs_logger.position = POS_A_CURRENT_COMP;
-  add_position_pointer_to_list(&global_positions_to_transform_list, &this_abs_logger.position);
+  add_position_pointer_to_list(global_positions_to_transform_list, &this_abs_logger.position);
   this_abs_storage.logger_position = POS_A_CURRENT_COMP;
   add_position_pointer_to_list(global_positions_to_transform_list, &this_abs_storage.logger_position);
   
@@ -716,7 +716,7 @@ INITIALIZE
     // Certain volumes were selected, find the indicies in the global_geometry_list
     manual_linking_function_abs_logger_volumes(target_geometry, global_geometry_list, &accepted_volumes, NAME_CURRENT_COMP);
     // Add this logger to the global_specific_volumes_logger_list (so that conditionals can affect it)
-    add_element_to_abs_logger_list(&global_specific_volumes_abs_logger_list, abs_logger_list_element);
+    add_element_to_abs_logger_list(global_specific_volumes_abs_logger_list, abs_logger_list_element);
     
     for (loop_index=0;loop_index<accepted_volumes.num_elements;loop_index++) {
       target_volume = global_geometry_list->elements[accepted_volumes.elements[loop_index]].Volume;

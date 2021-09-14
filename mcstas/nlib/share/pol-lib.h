@@ -117,8 +117,8 @@ void mcmagnet_print_stack();
 
 void *mcmagnet_init_par_backend(int dummy, ...);
 
-int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy);
-void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms);
+int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, double Bprms[8]);
+void *mcmagnet_push(_class_particle *_particle, int func_id, Rotation *magnet_rot, Coords *magnet_pos, int stopbit, double Bprms[8]);
 void *mcmagnet_pop(_class_particle *_particle);
 
 /*main magnetic field dispatcher function - every request goes through here*/
@@ -128,9 +128,6 @@ int field_dispatcher(int field_id, double x, double y, double z, double t, doubl
 int const_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int rot_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int majorana_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
-int table_magnetic_field(double x, double y, double z, double t,
-                         double *bx, double *by, double *bz,
-                         void *data);
 int gradient_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 
 /* Routines used for Monochromator and guides/mirrors 
@@ -145,7 +142,7 @@ void SetMonoPolTransOut(double, double, double, double*, double*, double*);
 // Routines for spin precession in magnetic fields
 void SimpleNumMagnetPrecession(Coords, Rotation, _class_particle *, double);
 
-// Routines to help calculate the rquired magnetic field
+// Routines to help calculate the required magnetic field
 double GetConstantField(double, double, double);
 
 #endif

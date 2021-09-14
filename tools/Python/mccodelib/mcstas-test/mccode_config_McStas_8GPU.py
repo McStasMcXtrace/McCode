@@ -17,7 +17,7 @@ configuration = {
     "MCCODE_VERSION": '3.0-dev',
     "MCCODE_LIB_DIR": LIBDIR,
     "MCCODE": 'mcstas',
-    "MCRUN": 'mcrun --mpi=auto',
+    "MCRUN": 'mcrun --openacc',
     "MCPLOT": 'mcplot-pyqtgraph',
     "MCDISPLAY": 'mcdisplay-webgl',
     "TOOL_NAME": 'mcgui',
@@ -34,14 +34,14 @@ os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pa
 Compilation, parallelisation etc.
 '''
 compilation = {
-    "CFLAGS": '-ta=tesla,managed -Minfo=accel -DOPENACC -DUSE_MPI -lmpi -L/home/opt/modules/software/OpenMPI/2.0.2-GCC-6.3.0-2.27/lib/ -I/home/opt/modules/software/OpenMPI/2.0.2-GCC-6.3.0-2.27/include',
+    "CFLAGS": '-ta=tesla,managed -Minfo=accel -DOPENACC -DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/include',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
     "MPIFLAGS": '-DUSE_MPI -lmpi',
     "OACCFLAGS": '-ta:tesla,managed -DOPENACC',
     "CC": 'nvc',
     "OACC": 'nvc',
-    "MPICC": '/home/opt/modules/software/OpenMPI/2.0.2-GCC-6.3.0-2.27/bin/mpicc',
-    "MPIRUN": '/home/opt/modules/software/OpenMPI/2.0.2-GCC-6.3.0-2.27/bin/mpirun -np 8',
+    "MPICC": '/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/bin/mpicc',
+    "MPIRUN": '/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/bin/mpirun -np 8',
     "MPINODES": '10',
 }
 
@@ -156,9 +156,9 @@ def get_options():
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML"]
 
-
-    mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
-
+ 
+    mcrun_lst =     [prefix+"run", prefix+"run --openacc", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+        
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
                      prefix+"plot-matlab"]
 

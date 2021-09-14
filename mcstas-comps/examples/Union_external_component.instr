@@ -30,7 +30,11 @@ DEFINE INSTRUMENT Union_external_component(stick_displacement=0)
 
 DECLARE
 %{
-int first_master,second_master;
+%}
+
+USERVARS %{
+int first_master;
+int second_master;
 int powderN_scat;
 %}
 

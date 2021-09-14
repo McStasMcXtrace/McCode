@@ -25,10 +25,12 @@ configuration = {
     "PARTICLE": 'neutron',
     "BROWSER": 'xdg-open',
     "GUICOLS": '3',
+    "EDITOR":  'gedit',
+    "QSCI":  '1',
 }
 
 # Set environment variables according to the above
-os.environ["MCSTAS"] = configuration["MCCODE_LIB_DIR"]
+os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
 os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
 
 '''
@@ -149,7 +151,6 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
-                         prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",

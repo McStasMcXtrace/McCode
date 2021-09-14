@@ -27,10 +27,13 @@ DEFINE INSTRUMENT Union_test_box()
 
 DECLARE
 %{
-int scattered_1;
-int scattered_2;
 int sample_1_index = 3;
 int sample_2_index = 4;
+%}
+
+USERVARS %{
+int scattered_1;
+int scattered_2;
 %}
 
 TRACE

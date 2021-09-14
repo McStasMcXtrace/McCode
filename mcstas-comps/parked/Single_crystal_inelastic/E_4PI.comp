@@ -1,0 +1,130 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSD_monitor_4PI
+*
+* %I
+* Written by: Kim Lefmann and Kristian Nielsen
+* Date: April 17, 1998
+* Version: $Revision: 1.28 $
+* Origin: Risoe
+* Release: McStas 1.10c
+*
+* Spherical position-sensitive detector.
+*
+* %D
+* An (n times m) pixel spherical PSD monitor using a cylindrical projection.
+* Mostly for test and debugging purposes.
+*
+* Example: PSD_monitor_4PI(radius=0.1,
+            nx=90, ny=90, filename="Output.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius:   Radius of detector (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">Test
+* results</A> (not up-to-date).
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT E_4PI
+DEFINITION PARAMETERS (ne=50, Emin=0, Emax=5)
+SETTING PARAMETERS (string filename=0, radius=1, restore_neutron=0)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+DECLARE
+%{
+  double PSD_N[ne];
+  double PSD_p[ne];
+  double PSD_p2[ne];
+%}
+INITIALIZE
+%{
+  int i,j,k;
+
+//for (i=0; i<nx; i++)
+// for (j=0; j<ny; j++)
+    for (k=0; k<ne; k++)
+    {
+      PSD_N[k] = 0;
+      PSD_p[k] = 0;
+      PSD_p2[k] = 0;
+    }
+%}
+TRACE
+%{
+  double t0, t1, phi, theta, E;
+  int i,j,k;
+
+  if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
+  {
+    if(t0 < 0)
+      t0 = t1;
+    /* t0 is now time of intersection with the sphere. */
+    PROP_DT(t0);
+//  phi = atan2(x,z);
+//  i = floor(nx*(phi/(2*PI)+0.5));
+//  if(i >= nx)
+//    i = nx-1;                      /* Special case for phi = PI. */
+//  else if(i < 0)
+//    i = 0;
+//  theta=asin(y/radius);
+//  j = floor(ny*(theta+PI/2)/PI+0.5);
+//  if(j >= ny)
+//    j = ny-1;                      /* Special case for y = radius. */
+//  else if(j < 0)
+//    j = 0;
+    E=VS2E*(vx*vx+vy*vy+vz*vz);
+    if(E<=Emax && E>=Emin) {
+      k = floor((E - Emin)*ne/(Emax - Emin));
+      PSD_N[k]++;
+      PSD_p[k] += p;
+      PSD_p2[k] += p*p;
+    }
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  DETECTOR_OUT_1D(
+    "4Pi Energy monitor",
+    "E_F [meV]","Intensity","E",
+    Emin, Emax,
+    ne,
+    &PSD_N[0],&PSD_p[0],&PSD_p2[0],
+    filename);
+%}
+
+MCDISPLAY
+%{
+  magnify("");
+  circle("xy",0,0,0,radius);
+  circle("xz",0,0,0,radius);
+  circle("yz",0,0,0,radius);
+%}
+
+END

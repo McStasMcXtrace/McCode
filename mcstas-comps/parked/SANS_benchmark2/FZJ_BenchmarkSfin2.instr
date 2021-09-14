@@ -1,0 +1,195 @@
+/*******************************************************************************
+*
+* Instrument: FZJ_BenchmarkSfin2
+*
+* %Identification
+* Written by: Henrich Frielinghaus
+* Date: 2013
+* Origin: FZ Juelich
+*
+* Test instrument for the H Frielinghaus SANS_benchmark2 component
+*
+* %INSTRUMENT_SITE: FZ_Juelich
+*
+* %Parameters
+* cnum: []     Set to 0.0 for no polarizer as for benchmarking the normal SANS samples, to 2.0 for two cavities, keep default values as much as possible
+* lbdmin: []   
+* lbdmax: []   
+* NGbend: []   
+* NGblen: []   
+* Clen: []     
+* SampD: []    
+* bendL: []    
+* bendR: []    
+* bendM: []    
+* bendiM: []   
+* dfltM: []    
+* vorPl: []    for two cavities
+* PolLen: []   for two cavities
+* PolTot: []   for two cavities
+* MDOWN: []    
+* Min: []      
+* ROT: []      
+* modnum: []   
+* sglscatt: [] 
+* incs: []     
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT FZJ_BenchmarkSfin2 (lbdmin=2.00, lbdmax=8.5, NGbend=0.053,
+                              NGblen=0.03, Clen = 8.0, SampD=0.01,
+                              bendL = 5.0, bendR = 385.0, bendM = 7.0, bendiM = 7.0, dfltM = 1.5,
+                              vorPl = 0.5, PolLen = 0.492, PolTot = 2.30,
+                              MDOWN = 3.6, Min=1.5, cnum=0.00, ROT=0.0,
+                              modnum= 11.0,sglscatt=1.0, incs=0.0005)
+
+/*
+bandwidth for detector distances:
+ 8m, delta = 6.5AA, so 2 .. 8.5 or 4 .. 10.5
+20m, delta = 5.0AA, so 2 .. 7.0 or 4 ..  9.0
+*/
+
+DECLARE
+%{
+%}
+INITIALIZE
+%{
+%}
+TRACE
+
+COMPONENT origin = Arm()
+  AT (0,0,0) ABSOLUTE
+
+/* yheight MUST be set to 3cm */
+
+COMPONENT source = ESS_moderator_long(yheight=0.07,width_c=0.12,cyl_radius=0.0,dist=2.0,focus_xw=NGbend,focus_yh=NGblen,Lmin=lbdmin,Lmax=lbdmax)
+  AT (0, 0, 0) RELATIVE origin
+
+COMPONENT rspin  = Set_pol (randomOn=1)
+  AT (0, 0, 2.0001) RELATIVE source
+
+COMPONENT pbar   = Progress_bar(percent=2)
+  AT (0, 0, 2.0002) RELATIVE source
+
+COMPONENT Bender1 = Bender     (w=NGbend, h=NGblen, r=bendR, Win=bendL/bendR,
+                                R0a=0.99,Qca=0.02174,alphaa=6.07,ma=bendM, Wa=0.003,
+                                R0i=0.99,Qci=0.02174,alphai=6.07,mi=bendiM,Wi=0.003,
+                                R0s=0.99,Qcs=0.02174,alphas=6.07,ms=dfltM, Ws=0.003)
+  AT (0, 0, 2.0003) RELATIVE source
+  ROTATED (0,0,90)  RELATIVE source
+
+COMPONENT Bender2 = Bender     (w=NGbend, h=NGblen, r=bendR, Win=bendL/bendR,
+                                R0a=0.99,Qca=0.02174,alphaa=6.07,ma=bendM, Wa=0.003,
+                                R0i=0.99,Qci=0.02174,alphai=6.07,mi=bendiM,Wi=0.003,
+                                R0s=0.99,Qcs=0.02174,alphas=6.07,ms=dfltM, Ws=0.003)
+  AT (0, 0, bendL+0.0001) RELATIVE Bender1
+  ROTATED (0,0,-90)   RELATIVE source
+
+COMPONENT Monitor = Monitor_nD  (xmin = -.5*NGblen, xmax = 0.5*NGblen, ymin = -.5*NGblen, ymax = 0.5*NGblen,
+                                 options  = "vdiv bins=100 limits[-0.6 0.6]; lambda bins=30 limits[1.0 20.0]",
+                                 filename = "Divergence.dip")
+  AT (0,0,bendL+0.0005) RELATIVE Bender2
+  ROTATED (-.70,0,0)    RELATIVE source
+
+COMPONENT vorpl  = Guide(w1=NGblen, h1=NGblen, w2=NGblen, h2=NGblen, l=vorPl,
+                         R0=0.99, Qc=0.02174, alpha=6.07, m=dfltM, W=0.003)
+  AT (0,0,bendL+0.001) RELATIVE Bender2
+  ROTATED (-.70,0,0)   RELATIVE source
+
+COMPONENT passNL = Guide(w1=NGblen, h1=NGblen, w2=NGblen, h2=NGblen, l=PolTot-vorPl+0.0003,
+                         R0=0.99, Qc=0.02174, alpha=6.07, m=dfltM, W=0.003)
+  WHEN (cnum<0.5)
+  AT (0, 0, vorPl+0.0001) RELATIVE vorpl
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+COMPONENT cav1 = CavitiesIn(xw=0.05,yw=0.05,xc=cnum,yc=1)
+  WHEN (cnum>=0.5)
+  AT (0, 0, vorPl+0.0001) RELATIVE vorpl
+  ROTATED (0,0,ROT) RELATIVE vorpl
+
+/* Polarizer as parametrized by H. Frielinghaus for KWS-1 at FRM-2, Mirror pars by Swiss Neutronics */
+COMPONENT polzr  = Transmission_polarisatorABSnT(
+  w1 = 0.05/cnum, h1 = 0.05,
+  w2 = 0.05/cnum, h2 = 0.05,
+  l  = PolLen,
+  R0 = 0.99, Qc = 0.02174, alpha = 4.25, W = 0.003,
+  mleft = dfltM, mright = dfltM, mtop = Min, mbottom = Min,
+  waferD = 0.0003, FeD=2.16e-6, Si_i = 0.25, Si_a = 0.215,
+  R0_up = 0.99,   Qc_up = 0.0055,    alpha_up = 6.2,   W_up = 0.002,   mup = 2.2,
+  R0_down = 0.99, Qc_down = 0.02174, alpha_down = 3.4, W_down = 0.004, mdown = MDOWN )
+
+  WHEN (cnum>=0.5)
+  AT (0, 0, 0.0001) RELATIVE cav1
+  ROTATED (0,0,0) RELATIVE cav1
+
+COMPONENT cav2 = CavitiesOut(xw=0.05,yw=0.05)
+  WHEN (cnum>=0.5)
+  AT (0, 0, PolLen+0.0001) RELATIVE polzr
+  ROTATED (0,0,0) RELATIVE cav1
+
+COMPONENT guide1 = Guide(w1=NGblen, h1=NGblen, w2=NGblen, h2=NGblen, l=PolTot-PolLen-vorPl,
+                        R0=0.99, Qc=0.02174, alpha=6.07, m=dfltM, W=0.003)
+  WHEN (cnum>=0.5)
+  AT (0, 0, 0.0001) RELATIVE cav2
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+COMPONENT guide2 = Guide(w1=NGblen, h1=NGblen, w2=NGblen, h2=NGblen, l=20.001-Clen,
+                        R0=0.99, Qc=0.02174, alpha=6.07, m=dfltM, W=0.003)
+  AT (0, 0, PolTot+0.0007) RELATIVE vorpl
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+/*
+COMPONENT colap  = Slit(xmin=-0.015,xmax=0.015,ymin=-0.015,ymax=0.015)
+  AT (0, 0,20.0015-Clen) RELATIVE guide2
+  ROTATED (0,0,0)   RELATIVE vorpl
+*/
+
+COMPONENT smpap  = Slit(xmin=-0.5*SampD,xmax=0.5*SampD,ymin=-0.5*SampD,ymax=0.5*SampD)
+  AT (0, 0,20.0020) RELATIVE guide2
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+/*
+COMPONENT PSDaft = Monitor_nD  (xmin = -SampD, xmax = SampD, ymin = -SampD, ymax = SampD,
+                                options  = "hdiv bins=2 limits[-99 9] ; lambda bins=50 limits[1.0 20.0]",
+                                filename = "after_sample_slit.psd")
+  AT (0, 0,20.0030) RELATIVE guide2
+  ROTATED (0,0,0)   RELATIVE vorpl
+*/
+
+
+SPLIT 1000 COMPONENT repeat = Arm()
+  AT (0, 0,20.00367) RELATIVE guide2
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+COMPONENT sample = SANS_benchmark2(xwidth=2.0*SampD, yheight=2.0*SampD, zthick=0.001, model=modnum, dsdw_inc=incs, sc_aim=0.90, sans_aim=0.95, singlesp = sglscatt)
+   AT (0,0,20.0040) RELATIVE guide2
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+COMPONENT det    = TOFSANSdet( plength=0.003163, ssdist=22.0124+2.0*bendL+PolTot,
+                               coldis = Clen, Sthckn = 0.1,
+                               ds1=1.0,       xw1=0.0, yh1=0.0, hl1=0.0,           /* first one switched off */
+                               ds2=Clen*.125, xw2=1.0, yh2=1.0, hl2=0.2,
+                               ds3=Clen,      xw3=1.0, yh3=1.0, hl3=0.05,
+                               tmin=0.0025, tmax=0.3,
+                               Nx=128.0, Ny=128.0, Nt=800.0,                       /* be cautious with large numbers */
+                               qmin=0.0002, qmax=2.5, Nq=166,                      /* Nq integer !!!!!!!!!!!!!!!!!!! */
+                               fname="SANSareaDet", rstneu = 9.9999)
+   AT (0,0,20.0100) RELATIVE guide2
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+/*
+COMPONENT det1   = Monitor_nD_mod(xmin=-0.5, xmax=0.5, ymin=-0.5, ymax=0.5, xytr=0.1,
+                                  options ="kxy bins=300 limits=[0.0025,0.80]", filename ="short_dist.txt")
+   AT (0,0, Clen*0.2) RELATIVE sample
+  ROTATED (0,0,0)   RELATIVE vorpl
+
+COMPONENT det2   = Monitor_nD_mod(xmin=-0.5, xmax=0.5, ymin=-0.5, ymax=0.5, xytr=0.02,
+                                  options ="kxy bins=300 limits=[0.0005,0.16]", filename ="long__dist.txt")
+   AT (0,0, Clen    ) RELATIVE sample
+  ROTATED (0,0,0)   RELATIVE vorpl
+*/
+
+FINALLY
+%{
+%}
+END

@@ -1,0 +1,856 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SANS_benchmark
+*
+* %I
+* Henrich Frielinghaus
+*
+* Several benchmark SANS samples are defined in this routine. The first ones are analytically defined. Higher numbers are forseen for tables.
+* In principle, the exact definitions can be changed freely - inside this code.
+* The consideration of all parameters as a routine parameter would be too much for the general purpose.
+* The user might decide to make single parameters routine parameters.
+*
+* For the scattering simulation a high fraction of neutron paths is directed to the scattering (exact fraction is sc_aim).
+* The remaining paths are used for the transmitted beams. The absolute intensities are treated accordingly, and the p-parameter is set accordingly.
+*
+* For the scattering probability, the integral of the scattering function between Q = 0.0001 and 1.0 AA-1 is calculated.
+* This is used in terms of transmisson, and of course for the scattering probability.
+* In this way, multiple scattering processes could be treated as well.
+*
+* The typical SANS range was considered to be between 0.0001 and 1.0 AA-1.
+* This means that the scattered neutrons are equally distributed in this range on logarithmic Q-scales.
+* The Q-parameters can be changed still inside the code, if needed.
+*
+* %D
+*
+* Example: SANS_benchmark(xwidth=0.01, yheight=0.01, zthick=0.001, model=1.0, dsdw_inc=0.02, sc_aim=0.97, sans_aim=0.95, singlesp = 0.0)
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* xwidth: [m]   width of sample volume 
+* yheight: [m]  height of sample volume 
+* zthick: [m]   thickness of sample volume 
+* model: model no., real variable will be rounded. negative numbers interpreted as model #0, too large as #18.
+*     case 0 - no coherent scattering
+*     case 1 - polymer with Mw = 2.000g/mol
+*     case 2 - polymer with Mw = 1.000.000g/mol
+*     case 3 - microemulsion
+*     case 4 - wormlike micelle
+*     case 5 - sphere, R = 25 AA
+*     case 6 - sphere, R = 500 AA
+*     case 7 - polymer blend
+*     case 8 - diblock copolymer
+*     case 9 - multilamellar vesicles
+*     case 10 - logarithmically spaced series of sharp peaks
+*     case 11 - logarithmically spaced series of sharp delta peaks !!!!!!
+*     ...
+*     case 15 - sphere, R = 150 AA
+*     case 18   free
+*
+* dsdw_inc: []  the incoherent background from the overall sample (cm-1), should read ca. 1.0 for water, 0.5 for half D2O, half H2O, and ca. 0.02 for D2O
+* sc_aim: []    the fraction of neutron paths used to represent the scattered neutrons (including everything: incoherent and coherent). rest is transmission.
+* sans_aim: []  the fraction of neutron paths used to represent the scattered neutrons in the sans-range (up to 1.0AA-1). rest is incoherent with Q>1AA-1.
+* singlesp: []  switches between multiple scattering (parameter zero 0.0) and single scattering (parameter 1.0). The sc_aim directs a fraction of paths to the first scattering process accordingly. The no. of paths for the second scattering process is derived from the real probability. Up to 10 scattering processes are considered.
+*
+* %Link
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SANS_benchmark2
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth=0.01, yheight=0.01, zthick=0.001, model=1.0, dsdw_inc=0.02, sc_aim=0.97, sans_aim=0.95, singlesp = 0.0)
+OUTPUT PARAMETERS ()
+
+SHARE
+%{
+#include <math.h>
+#include <stdio.h>
+
+double min(double A, double B) {
+if (A<B) return A; else return B;
+};
+
+double max(double A, double B) {
+if (A>B) return A; else return B;
+};
+
+int imin(int A, int B) {
+if (A<B) return A; else return B;
+};
+
+int imax(int A, int B) {
+if (A>B) return A; else return B;
+};
+
+
+double gamma(double X) {
+
+double A[10];
+A[0] =  8.333333333333333e-02;
+A[1] = -2.777777777777778e-03;
+A[2] =  7.936507936507937e-04;
+A[3] = -5.952380952380952e-04;
+A[4] =  8.417508417508418e-04;
+A[5] = -1.917526917526918e-03;
+A[6] =  6.410256410256410e-03;
+A[7] = -2.955065359477124e-02;
+A[8] =  1.796443723688307e-01;
+A[9] = -1.392432216905900e+00;
+
+double X0=X;
+double GL=0.0;
+double N =0.0;
+
+if (X!=1.0 && X!=2.0) {
+
+  if (X<=7.0) {
+    N = floor(7.0-X);
+    X0= X+N;
+   };
+
+  double X2 = 1.0/(X0*X0);
+  double XP = 6.283185307179586477;
+
+  double GL0 = A[9];
+  int K=8;
+
+  for (K=8;K>=0;K--) {GL0=GL0*X2+A[K];};
+
+  GL = GL0/X0 + .5*log(XP) + (X0-.5)*log(X0) - X0;
+
+  if (X<=7.0) {
+    for (K=1;K<=N;K++) {
+      GL -= log(X0-1.0);
+      X0  = X0-1.0;
+    };
+  };
+};
+
+  GL = exp(GL);
+  return GL;
+};
+
+
+double errf(double arg1) {                  /* precision approx. 1e-5, i.e. good enough for simulations */
+
+double Pic = 3.141592653589793238462643;
+double arg2,erf;
+
+if (arg1<0.86)
+{arg2=arg1*arg1;
+ erf = (2.0+(-2.0/3.0+(0.2+(-1.0/21.0+(1.0/108.0-1.0/660.0*arg2)*arg2)*arg2)*arg2)*arg2)*arg1/sqrt(Pic); }
+else
+{if (arg1<2.12)
+ {arg2=arg1-1.5;
+  erf = 0.9661051465+( .1189302893
+                    +(-.1783954339
+                    +( .1387520041
+                    +(-.04459885846
+                    +(-.01486628616
+                    +( .01932617201
+                    +(-.004743053202
+                    +(-.002362677620
+                    +( .001709819553
+                    +(-.00009291428874
+                    +(-.0002544483936 )*arg2)*arg2)*arg2)*arg2)*arg2)*arg2)*arg2)*arg2)*arg2)*arg2)*arg2; }
+ else
+ {arg2=arg1*arg1;
+  erf = 1.0+(-1.0+(0.5+(-0.75+(1.875+(-6.5625+29.53125/arg2)/arg2)/arg2)/arg2)/arg2)/(arg1*sqrt(Pic)*exp(arg2)); };
+};
+
+return erf;
+
+};
+
+
+double J1(double arg0) {
+
+double Pic = 3.141592653589793238462643;
+double J1o,cs,sn;
+
+if (arg0<6.11)
+{arg0=arg0*arg0;
+ J1o = 1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0*(1.0-arg0/528.0)
+                 /440.0)/360.0)/288.0)/224.0)/168.0)/120.0)/80.0)/48.0)/24.0)/8.0;
+}
+else
+{cs = cos(arg0+0.25*Pic);
+ sn = sin(arg0+0.25*Pic);
+ J1o= (-1.12837916709551*cs
+     +( .423142187660818*sn
+     +(-.132231933644006*cs
+     +(-.115702941938505*sn
+     +( .162707262101022*cs
+     +( .313211479544468*sn
+     +(-.763452981389644*cs
+     +(-2.24945967730876*sn
+     +( 7.76766544820683*cs
+     +( 30.7470090658187*sn) /arg0)/arg0)/arg0)/arg0)/arg0)/arg0)/arg0)/arg0)/arg0)/(arg0*sqrt(arg0*.5));  };
+
+return J1o;
+
+};
+
+
+double dSigdW(int sw, double Q, double Qtab[], double Itab[]) {
+
+int i;
+
+double drho = 6e10;
+double Na   = 6.0221413e23;
+double Pi   = 3.14159265358979323846264338328;
+
+double out;
+
+double Rg,Mw,rho,phi,fle,sig;
+double G,P,gam,B,k,AAA,BBB,erf,QQ;
+
+double dd,xi;
+double xim2,k0p2;
+
+double L,b,R2,Rg0,Lb,alpha;
+double u,uu,Sdeb,Sdebp,W,Wp,Sexv,Sexvp,Ssb,Ssbp,C,a1,a2;
+double q0,y;
+double ar2;
+
+double R,qR;
+
+double qRg2;
+
+double f,debye1,debyef,debye1f;
+
+double R0,n,d;
+double eps,VorF,Fv,qa,Sv;
+double qhpt,qmod;
+
+double I0,Qpeak,dQpeak,Qpeak1,Qpeak2,npeaks,delta;
+
+int imi,ima,inew;
+
+switch(sw){
+
+case 1:          /* Polymer with Mw = 2.000g/mol     */
+Rg  = 18.0;      /* radius of gyration in Angstroem  */
+Mw  = 2000.0;    /* molecular weight in g/mol        */
+rho = 1.00;      /* density in g/cm^3                */
+phi = 0.005;     /* concentration vol/vol            */
+fle = 0.588;     /* Flory exponent 0.6 or 0.588 or...*/
+sig = 1.5;       /* cutoff (monomer size) Angstroem  */
+
+G   = drho*drho*phi*(Mw/rho/Na);
+P   = 1.0/fle;
+gam = gamma(P);
+B   = G*P/gam;
+k   = 1.06;
+AAA = k*Rg*0.40824829;
+erf = errf(Q*AAA);
+QQ  = erf*erf*erf/(Q*Rg);
+
+out = ( G * exp(-Q*Q*Rg*Rg/3.0) + B * pow(QQ,P) )  * exp(-sig*sig*Q*Q);
+break;
+
+
+case 2:          /* Polymer with Mw = 1.000.000g/mol */
+Rg  = 408.0;     /* radius of gyration in Angstroem  */
+Mw  = 1e6;       /* molecular weight in g/mol        */
+rho = 1.00;      /* density in g/cm^3                */
+phi = 0.0002;    /* concentration vol/vol            */
+fle = 0.588;     /* Flory exponent 0.6 or 0.588 or...*/
+sig = 1.5;       /* cutoff (monomer size) Angstroem  */
+
+G   = drho*drho*phi*(Mw/rho/Na);
+P   = 1.0/fle;
+gam = gamma(P);
+B   = G*P/gam;
+k   = 1.06;
+AAA = k*Rg*0.40824829;
+erf = errf(Q*AAA);
+QQ  = erf*erf*erf/(Q*Rg);
+
+out = ( G * exp(-Q*Q*Rg*Rg/3.0) + B * pow(QQ,P) )  * exp(-sig*sig*Q*Q);
+break;
+
+
+case 3:          /* Microemulsion                     */
+dd  = 230.0;     /* domain spacing Angstroem          */
+xi  = 100.0;     /* correlation length Angstroem      */
+gam = 0.17;      /* surfactant content vol/vol        */
+sig = 1.5;       /* roughness of surfactant film in AA*/
+
+xim2 = 1.0/(xi*xi);
+k0p2 = pow(2.0*Pi/dd,2);
+AAA  = drho*drho*8e-24*Pi*0.25/xi;
+out  = AAA/(pow(k0p2+xim2,2)-2.0*(k0p2-xim2)*Q*Q+Q*Q*Q*Q);
+
+Rg  = dd*0.3;
+G   = AAA*2.001001001;
+P   = 4.0;
+gam = 6.0;
+B   = G*P/gam;
+k   = 1.06;
+AAA = k*Rg*0.40824829;
+erf = errf(Q*AAA);
+QQ  = erf*erf*erf/Q;
+
+out = ( out + B * pow(QQ,P) ) * exp(-sig*sig*Q*Q);
+break;
+
+
+case 4:          /* wormlike micelle                  */
+L  = 20000.0;    /* contour length in Angstroem       */
+b  = 300.0;      /* Kuhn length    in Angstroem       */
+R2 =  10.0;      /* cross section radius in AA        */
+phi= 2e-4;       /* concentration vol/vol             */
+
+Rg0  = sqrt(L*b/6.0);
+Lb   = L/b;
+alpha= pow(1.0+pow(Lb/3.12,2)+pow(Lb/8.67,3),0.5*0.17/3.0);
+Rg   = Rg0*alpha;
+
+if (Lb>=4.0) {
+ if (Q*b<=3.1) {
+  u    = Rg*Q;
+  uu   = u*u;
+  Sdeb = 2.0*(exp(-uu)+uu-1.0)/(uu*uu);
+  W    = (1.0-tanh((u-1.523)/0.1477))*0.5;
+  Sexv = W*Sdeb + (1.0-W)*(1.22*pow(u,-5.0/3.0)+0.4288*pow(u,-10.0/3.0)-1.651*pow(u,-15.0/3.0));
+  if (Lb>=10.0) {C = 3.06/pow(Lb,0.44);} else {C = 1.0;};
+  Ssb  = Sexv+C/Lb*(4.0/15.0+7.0/(15.0*uu)-(11.0/15.0+7.0/(15.0*uu))*exp(-uu));
+  y    = Ssb;
+ }
+ else {
+  QQ   = 3.1/b;
+  u    = Rg*QQ;
+  uu   = u*u;
+  Sdeb = 2.0*(exp(-uu)+uu-1.0)/(uu*uu);
+  Sdebp= (2.0*(-exp(-uu)+1.0)/(uu*uu)-2.0/uu*Sdeb)*2.0*u*Rg;
+  W    = (1.0-tanh((u-1.523)/0.1477))*0.5;
+  Wp   = Rg*0.5/0.1477/cosh((u-1.523)/0.1477);
+  Sexv = W*Sdeb + (1.0-W)*(1.22*pow(u,-5.0/3.0)+0.4288*pow(u,-10.0/3.0)-1.651*pow(u,-15.0/3.0));
+  Sexvp= Wp * (Sdeb  -    (1.22*pow(u,-5.0/3.0)+0.4288*pow(u,-10.0/3.0)-1.651*pow(u,(-15.0/3.0))))
+        + W *  Sdebp  + (1.0-W) * (- 5.0/3.0*1.22  * pow(u, -8.0/3.0)
+                                   -10.0/3.0*0.4288* pow(u,-13.0/3.0)
+                                   +15.0/3.0*1.651 * pow(u,-18.0/3.0))*Rg;
+  if (Lb>=10.0) {C = 3.06/pow(Lb,0.44);} else {C = 1.0;};
+  Ssb  = Sexv+ C/Lb*(4.0/15.0+7.0/(15.0*uu)-(11.0/15.0+7.0/(15.0*uu))*exp(-uu));
+  Ssbp = Sexvp+C/Lb*(-7.0/(15.0*uu*uu)     +(11.0/15.0+7.0/(15.0*uu)+7.0/(15.0*uu*uu))*exp(-uu))*2.0*u*Rg;
+  a2   = (Ssb+Ssbp*QQ/4.12-Pi/(QQ*L)*(1.0-1.0/4.12))*4.12*pow(QQ*b,4.42)/(4.12-4.42);
+  a1   = (Ssb*pow(QQ,4.12)-a2*pow(QQ,4.12-4.42)*pow(b,-4.42) - Pi/L*pow(QQ,4.12-1.0)) * pow(b,4.12);
+  y    = a1/pow(Q*b,4.12)+a2/pow(Q*b,4.42)+Pi/(Q*L);
+ };
+}
+else {
+ if (1.9*b/Rg>=3.0) {q0=1.9*b/Rg;} else {q0=3.0;};
+ if (Q*b<=q0) {
+   u    = Rg*Q;
+   uu   = u*u;
+   Sdeb = 2.0*(exp(-uu)+uu-1.0)/(uu*uu);
+   y    = Sdeb;
+ }
+ else {
+   QQ   = q0/b;
+   u    = Rg*QQ;
+   uu   = u*u;
+   Sdeb = 2.0*(exp(-uu)+uu-1.0)/(uu*uu);
+   Sdebp= (2.0*(-exp(-uu)+1.0)/(uu*uu)-2.0/uu*Sdeb)*2.0*u*Rg;
+   a2   = (Sdeb+Sdebp*QQ/4.12-Pi/(QQ*L)*(1.0-1.0/4.12))*4.12*pow(QQ*b,4.12)/(4.12-4.42);
+   a1   = (Sdeb*pow(QQ,4.12)-a2*pow(QQ,4.12-4.42)*pow(b,-4.42) - Pi/L*pow(QQ,4.12-1.0)) * pow(b,4.12);
+   y    = a1/pow(Q*b,4.12)+a2/pow(Q*b,4.42)+Pi/(Q*L);
+ };
+};
+
+ar2= Q*R2;
+G   = drho*drho*Pi*R2*R2*L*1e-24*phi;
+out = G * pow(J1(ar2),2) * y;
+break;
+
+
+case 5:          /* sphere, small                     */
+R   = 25.0;      /* radius Angstroem                  */
+phi = 0.001;     /* concentration vol/vol             */
+
+qR  = Q*R;
+G   = (drho*drho*phi*4e-24*Pi*R*R*R/3.0);
+
+out  = 3.0*(sin(qR)-qR*cos(qR))/(qR*qR*qR);
+out *= G * out;
+break;
+
+
+case 15:          /* sphere, medium                    */
+R   = 150.0;      /* radius Angstroem                  */
+phi = 0.001;      /* concentration vol/vol             */
+
+qR  = Q*R;
+G   = (drho*drho*phi*4e-24*Pi*R*R*R/3.0);
+
+out  = 3.0*(sin(qR)-qR*cos(qR))/(qR*qR*qR);
+out *= G * out;
+break;
+
+
+
+
+case 6:          /* sphere, large                     */
+R   = 500.0;     /* radius Angstroem                  */
+phi = 0.001;     /* concentration vol/vol             */
+
+qR  = Q*R;
+G   = (drho*drho*phi*4e-24*Pi*R*R*R/3.0);
+
+out  = 3.0*(sin(qR)-qR*cos(qR))/(qR*qR*qR);
+out *= G * out;
+break;
+
+
+case 7:          /* polymer blend                     */
+Rg  = 22.0;      /* radius of gyration Angstroem      */
+Mw  = 2000.0;    /* molar mass g/mol                  */
+rho = 1.00;      /* density g/cm^3                    */
+gam = 7.8e-4;    /* Flory Huggins parameter (mol/cm^3)*/
+sig = 1.5;       /* cutoff (monomer size) Angstroem   */
+
+qRg2 = pow(Q*Rg,2);
+
+out = (Mw/rho)*0.5*2.0*(exp(-qRg2)-1.0+qRg2)/(qRg2*qRg2);
+out = 0.5*drho*drho/(1.0/out-gam)/Na * exp(-sig*sig*Q*Q);
+break;
+
+
+case 8:          /* diblock copolymer                 */
+Rg  = 105.0;     /* radius of gyration Angstroem      */
+Mw  = 83400.0;   /* molar mass g/mol                  */
+rho = 1.00;      /* density g/cm^3                    */
+f   = 0.65;      /* chainlength ratio                 */
+gam = 1.42e-4;   /* Flory Huggins parameter (mol/cm^3)*/
+sig = 1.5;       /* cutoff (monomer size) Angstroem   */
+
+qRg2 = pow(Q*Rg,2);
+
+debye1 = 2.0*(exp(-qRg2)        -1.0+qRg2        )/(qRg2*qRg2);
+debyef = 2.0*(exp(-qRg2*f)      -1.0+qRg2*f      )/(qRg2*qRg2);
+debye1f= 2.0*(exp(-qRg2*(1.0-f))-1.0+qRg2*(1.0-f))/(qRg2*qRg2);
+
+out = debye1 / (debyef*debye1f-0.25*pow(debye1-debyef-debye1f,2)) / (Mw/rho);
+out = drho*drho/(out-2.0*gam)/Na * exp(-sig*sig*Q*Q);
+break;
+
+
+case 9:          /* multilamellar vesicles            */
+R0  = 70.0;      /* distance of lamellae Angstroem    */
+n   = 14.0;      /* number of concentric shells       */
+phi = 0.0002;    /* concentration vol/vol             */
+d   = 10.0;      /* tickness of single lamellae       */
+
+eps  = 1e-6;
+VorF = drho*drho * phi * 4e-24*Pi*R0*R0*d * 6.0/(((2.0*n+3.0)*n+1.0)*n);
+Fv   = sin(0.5*Q*d)/(0.5*Q*d);
+qa   = fabs(Q*R0);
+
+qhpt= Pi*floor(qa/Pi+0.5);
+qmod= qa - qhpt;
+
+if (fabs(qmod)<=eps) {
+  if (qmod<0.0) {qmod = -eps;} else {qmod =  eps;};
+  qa  = qhpt + qmod;
+};
+
+Sv = (-.50*cos(qa*(n+.5))*(n+.5) + .25*sin(qa*(n+.5))/tan(.5*qa)) / (qa*sin(.5*qa));
+
+out = VorF * Fv*Fv * Sv*Sv;
+break;
+
+case 10:			/* series of peaks         */
+case 11:			/* series of peaks (dummy) */
+Qpeak1 = 0.0001; 		/* Peak location           */
+Qpeak2 = 2.154434690031883;
+npeaks = 13.00;
+I0 = 0.0001; 			/* Peak height */
+
+delta = (log10(Qpeak2) - log10(Qpeak1))/npeaks;
+
+out = 0.0;
+
+for (i = 0; i <= npeaks; i++){
+	Qpeak  = Qpeak1*pow(10.0,i*delta);
+	dQpeak = Qpeak*0.1; 				/* Peak width */
+	out += I0/(PI*Qpeak*dQpeak)*exp(-pow((Q-Qpeak)/dQpeak,2));
+	};
+break;
+
+case 12:
+case 13:
+phi = 1.0;           // vol percent already
+i = (sw-12)*256;
+imi = 0;
+ima = 255;
+if (Q<=Qtab[i+imi]) { out = Itab[i+imi]; break; };
+if (Q>=Qtab[i+ima]) { out = Itab[i+ima]; break; };
+while (ima-imi>1) {
+  inew = (imi+ima)/2;
+  if (Qtab[i+inew]>=Q) ima = inew; else imi = inew;
+};
+out = phi*((Q-Qtab[i+imi])*Itab[i+ima]+(Qtab[i+ima]-Q)*Itab[i+imi])/(Qtab[i+ima]-Qtab[i+imi]);
+/* fprintf(stdout,"%12.4e %12.4e\n",Q,out);  */
+break;
+
+default:
+out = 0.0000;
+};
+
+return out;
+};
+
+%}
+
+
+DECLARE
+%{
+  double Idsdw[31][19];
+  double Qmind;            /* AA-1 somehow SANS limit -- the total range should be reasonably large, so Qmind close enough to ZERO        */
+  double Qmaxd;            /* AA-1 approx. model Q-limit, where coh. scatt. becomes zero -- practical limit -- 1.0 for most SANS problems */
+
+  double Qminl, Qmaxl, l10;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
+
+  double Qtab[512];
+  double Itab[512];
+%}
+
+INITIALIZE
+%{
+  Qmind = 0.0001;
+  Qmaxd = 2.1544346900319;
+
+
+  if (!xwidth || !yheight || !zthick)
+  {
+    exit(fprintf(stderr,"SANS_DebyeS: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  }
+
+  int iii,jjj,kkk;
+
+  FILE *f1,*f2;
+  char o1,o2;
+  char line1[80];
+  double d1,d2,d3;
+
+  f1 = fopen("Apoferritin.txt",       "r");
+  f2 = fopen("humanserumalbumin.txt", "r");
+  o1 = (f1!=NULL);
+  o2 = (f2!=NULL);
+
+  if (o1) o1=(fgets(line1,80,f1)!=NULL);
+  if (o2) o2=(fgets(line1,80,f2)!=NULL);
+
+  if (o1) o1=!feof(f1);
+  if (o2) o2=!feof(f2);
+
+  for (iii=0;iii<256;iii++) {
+
+  if (o1) {o1 = (fscanf(f1,"%lf %lf %lf %lf %lf",&Qtab[iii],    &Itab[iii],    &d1,&d2,&d3)!=0);  Itab[iii]    *= 0.01/752.2e3; if (o1) o1=!feof(f1);  };
+  if (!o1) {Qtab[iii] = 1.0;
+            Itab[iii] = 0.0; };
+
+  if (o2) {o2 = (fscanf(f2,"%lf %lf %lf %lf %lf",&Qtab[256+iii],&Itab[256+iii],&d1,&d2,&d3)!=0);  Itab[256+iii]*= 0.01/110.3e3; if (o2) o2=!feof(f2);  };
+  if (!o2) {Qtab[256+iii] = 1.0;
+            Itab[256+iii] = 0.0; };
+/*
+  fprintf(stdout,"%12.4e %12.4e\n",Qtab[iii],Itab[iii]);
+  fprintf(stdout,"%12.4e %12.4e\n",Qtab[256+iii],Itab[256+iii]);
+*/
+  };
+
+  if(o1) fclose(f1);
+  if(o2) fclose(f2);
+
+  Qminl = log10(Qmind);
+  Qmaxl = log10(Qmaxd);
+  l10   = log(10.00);
+
+  double q,Isq;
+  double qmin,qmax,step;
+  int    istp;
+
+  istp = floor((Qmaxl-Qminl)*300.0+0.5);
+
+  for (jjj=0;jjj<19;jjj++) {Idsdw[0][jjj]=0.0;};          /* wavelength 0 in AA         */
+
+  for (iii=1;iii<=30;iii++) {                             /* wavelength in AA, up to 30 */
+   for (jjj=0;jjj<19;jjj++) {
+    Idsdw[iii][jjj] = 0.0;
+    Isq  = 0.0;
+    qmin = 0.0;
+    step = (log10(min(Qmaxd,4.0*PI/iii))-Qminl)/istp;
+    for (kkk=0;kkk<=istp;kkk++) {
+     qmax = pow(10.0,Qminl+kkk*step);
+     q    = 0.5*(qmin+qmax);
+     Isq += dSigdW(jjj,q,Qtab,Itab)*q*(qmax-qmin);
+     qmin = qmax;
+    };
+    Idsdw[iii][jjj] = Isq;
+   };
+  };
+%}
+
+TRACE
+%{
+  double sc_a   = max(0.01,min(0.99,sc_aim));
+  double sans_a = max(0.01,min(0.99,sans_aim));
+
+  int    modl,sngsp;
+  double v,k0,lambda;
+  int    Ilam,Ilam2;
+  double Scoh;
+  double qmax,qmaxl,Ymax,Xmax,thmax;
+  double Sinc1,Sinc2,S1,Stot;
+  double NNN,I0,icut;
+
+  double rcut,fcut;
+  double Q, Xsc, theta, phi;
+  int    iscatt;
+
+  char   intersect;
+  double t0, t1, dt;
+
+  double axis_x, axis_y, axis_z;
+  double tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+
+  iscatt = 0;
+  modl   = imax(0,imin(18,floor(model+0.5)));
+  sngsp  = floor(singlesp+0.5);
+
+  v      = sqrt(vx*vx + vy*vy + vz*vz);
+  k0     = v / K2V;
+  lambda = 2.0*PI / k0;
+
+  if (modl!=11) {
+
+  Ilam   = imax(floor(lambda),1);
+  Ilam2  = imin(Ilam+1,30);
+  if (lambda<=1.0)   Scoh = 200.0*PI*Idsdw[1][modl]  / (k0*k0);
+  else
+  {if (lambda>=30.0) Scoh = 200.0*PI*Idsdw[30][modl] / (k0*k0);
+  else               Scoh = 200.0*PI*((Ilam2-lambda)*Idsdw[Ilam][modl]+(lambda-Ilam)*Idsdw[Ilam2][modl]) / (k0*k0);
+  };
+
+  qmax   = min(Qmaxd,2.0*k0);
+  qmaxl  = log10(qmax);
+  Ymax   = 0.25*qmax*qmax/(k0*k0);
+  if (Ymax>=0.9999) Ymax=1.0;       /* if rounding errors occurr, this will help to avoid problems */
+  Xmax   = 1.0 - 2.0*Ymax;
+  thmax  = acos(Xmax);
+
+  Sinc1  = 100.0*PI*(    qmax*qmax/(k0*k0)) * fabs(dsdw_inc);
+  Sinc2  = 100.0*PI*(4.0-qmax*qmax/(k0*k0)) * fabs(dsdw_inc);
+  S1     = Sinc1 + Scoh;
+  Stot   = Sinc2 + S1;
+  }
+  else {
+
+  qmax   = min(Qmaxd,2.0*k0);
+  Ymax   = 0.25*qmax*qmax/(k0*k0);
+  if (Ymax>=0.9999) Ymax=1.0;       /* if rounding errors occurr, this will help to avoid problems */
+  Xmax   = 1.0 - 2.0*Ymax;
+  thmax  = acos(Xmax);
+  I0     = 0.0001;
+  icut   = 0.85;
+
+  NNN    = floor(3.0*log10(qmax)+1e-10);
+  if (pow(10.0,NNN/3.0)>2.0*k0) NNN--;
+  qmaxl  = NNN/3.0;
+  qmax   = pow(10.0,qmaxl);
+
+  NNN   += -Qminl*3.0 + 1.0;
+  Scoh   = 200.0*PI*I0*NNN/(sqrt(PI)*k0*k0);
+  Sinc2  = 400.0*PI*fabs(dsdw_inc);
+  Stot   = Sinc2 + Scoh;
+  };
+
+
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+
+  if (intersect && Stot>0.0) {
+
+    if(t0<0.0) ABSORB;
+
+    rcut   = exp(-Stot*(t1-t0)*v);
+
+    if (1.0-rcut > sc_a)   dt = -1.0/(v*Stot)*log(rand01());
+    else {
+     if (rand01()<=sc_a) {
+       dt  = -1.0/(v*Stot)*log(1.0-(1.0-rcut)*rand01());
+       p  *= (1.0-rcut)/sc_a;
+     }
+     else {
+       dt  = -1.0/(v*Stot)*log(rcut*rand01());
+       dt  = 1e33;                  /* run out of sample ... */
+       p  *= rcut/(1.0-sc_a);
+     };
+    };
+
+    if (t0+dt<=t1) {
+
+      PROP_DT(t0+dt);
+      SCATTER;
+      iscatt = 1;
+
+      fcut   = max(Ymax,sans_a);
+
+      if (modl!=11) {
+
+      if (rand01()<=fcut) {
+        Q     = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+        p    *= 200.0*PI*Q*Q/(k0*k0)*(qmaxl-Qminl)*l10*(dSigdW(modl,Q,Qtab,Itab)+fabs(dsdw_inc))/(Stot*fcut);
+        Xsc   = 1.0 - 0.5*(Q*Q/(k0*k0));
+        theta = 2.0 * asin(0.5*Q/k0);
+      }
+      else {
+        Xsc   = -1.0 + (Xmax+1.0)*rand01();
+        p    *= (1.0-Ymax)/(1.0-fcut);
+        theta = acos(Xsc);
+      };
+      }
+      else {
+      if (rand01()<=fcut) {
+        if (rand01()<=icut) {
+        Q     = pow(10.0,Qminl+floor(rand01()*NNN)/3.0);
+        p    *= 200.0*PI*I0*NNN/(3.0*sqrt(PI)*k0*k0*Scoh*fcut*icut);
+        Xsc   = 1.0 - 0.5*(Q*Q/(k0*k0));
+        theta = 2.0 * asin(0.5*Q/k0);
+        }
+        else {
+        Xsc   = 1.0-2.0*Ymax*rand01();
+        p    *= Ymax/(fcut*(1.0-icut));
+        theta = acos(Xsc);
+        };
+      }
+      else {
+        Xsc   = -1.0 + (Xmax+1.0)*rand01();
+        p    *= (1.0-Ymax)/(1.0-fcut);
+        theta = acos(Xsc);
+      };
+      };
+
+      phi = 2.0*PI*rand01();
+
+      vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+      rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, theta, axis_x, axis_y, axis_z);
+      rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, phi, vx, vy, vz);
+
+      vx = vout_x;
+      vy = vout_y;
+      vz = vout_z;
+
+      while (iscatt<10 && sngsp==0) {
+
+        intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+        if (!intersect) ABSORB;
+
+        dt   = -1.0/(v*Stot)*log(rand01());
+
+        if (dt<=t1) {
+
+          PROP_DT(dt);
+          SCATTER;
+          iscatt++;
+
+          fcut   = max(Ymax,sans_a);
+
+          if (modl!=11) {
+
+          if (rand01()<=fcut) {
+            Q     = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+            p    *= 200.0*PI*Q*Q/(k0*k0)*(qmaxl-Qminl)*l10*(dSigdW(modl,Q,Qtab,Itab)+fabs(dsdw_inc))/(Stot*fcut);
+            Xsc   = 1.0 - 0.5*(Q*Q/(k0*k0));
+            theta = 2.0 * asin(0.5*Q/k0);
+          }
+          else {
+            Xsc   = -1.0 + (Xmax+1.0)*rand01();
+            p    *= (1.0-Ymax)/(1.0-fcut);
+            theta = acos(Xsc);
+          };
+          }
+          else {
+          if (rand01()<=fcut) {
+            if (rand01()<=icut) {
+            Q     = pow(10.0,Qminl+floor(rand01()*NNN)/3.0);
+            p    *= 200.0*PI*I0*NNN/(3.0*sqrt(PI)*k0*k0*Scoh*fcut*icut);
+            Xsc   = 1.0 - 0.5*(Q*Q/(k0*k0));
+            theta = 2.0 * asin(0.5*Q/k0);
+            }
+            else {
+            Xsc   = 1.0-2.0*Ymax*rand01();
+            p    *= Ymax/(fcut*(1.0-icut));
+            theta = acos(Xsc);
+            };
+          }
+          else {
+            Xsc   = -1.0 + (Xmax+1.0)*rand01();
+            p    *= (1.0-Ymax)/(1.0-fcut);
+            theta = acos(Xsc);
+          };
+          };
+
+          phi = 2.0*PI*rand01();
+
+          vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+          rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, theta, axis_x, axis_y, axis_z);
+          rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, phi, vx, vy, vz);
+
+          vx = vout_x;
+          vy = vout_y;
+          vz = vout_z;
+        }
+        else break;
+      };
+
+      intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+      if (!intersect) ABSORB;
+      PROP_DT(t1);
+
+    }
+    else {
+      PROP_DT(t1);
+    };
+  };
+
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END

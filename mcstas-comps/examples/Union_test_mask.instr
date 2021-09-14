@@ -27,10 +27,13 @@ DEFINE INSTRUMENT Union_test_mask()
 
 DECLARE
 %{
-int scattered_1;
-int scattered_2;
 int sample_1_index = 1;
 int sample_2_index = 2;
+%}
+
+USERVARS %{
+int scattered_1;
+int scattered_2;
 %}
 
 TRACE

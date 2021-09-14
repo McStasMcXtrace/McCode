@@ -37,10 +37,6 @@
 * Apr 2005: extensive external test, most problems solved (cf. 'Bugs')
 * Validated by: K. Lieutenant, E. Farhi
 *
-* %BUGS
-* May 2017: Issues in use of supermirror slit packages are being investigated. Is NOT solved for McStas 2.4. The component works correctly when not using supermirrors.
-* We suggest to instead use Guide_channeled with the rotate/derotate option shown in the test instrument Test_Fermi.instr. 
-*
 * limitations:
 * no absorbing blade width used
 *

@@ -37,6 +37,7 @@
 * theta: []             Nominal grazing angle
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -49,7 +50,7 @@
 
 DEFINE COMPONENT TOF2Q_cylPSD_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nQ, ny, string filename, radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, restore_neutron=0,theta)
+SETTING PARAMETERS (nQ, ny, string filename, int nowritefile=0, radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, restore_neutron=0,theta)
 OUTPUT PARAMETERS ()
 
 DECLARE
@@ -121,6 +122,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
       "Cylindrical TOF2E PSD monitor",
       "TOF2Q [Ang^-1]",
@@ -129,6 +131,7 @@ SAVE
       nQ, ny,
       &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
       filename);
+}
 %}
 
 FINALLY

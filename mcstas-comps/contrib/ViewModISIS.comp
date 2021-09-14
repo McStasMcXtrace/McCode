@@ -544,7 +544,7 @@ processHeader(FILE* TFile, Source_ViewMod *TS, double modPosition, double xw, do
 
 
 
-void
+int
 readHtable(FILE* TFile,const double Einit,const double Eend, 
   Source_ViewMod *TS, double modPosition, double xw, double yh, int verbose)
 /*!

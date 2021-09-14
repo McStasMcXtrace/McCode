@@ -236,6 +236,8 @@ class McStas:
                 mpi_flags = []
             if self.options.machines:
                 mpi_flags = mpi_flags + ['-machinefile', self.options.machines]
+            if self.options.openacc and not os.name == 'nt':
+                mpi_flags = mpi_flags + [mccode_config.configuration['MCCODE_LIB_DIR'] +'/bin/acc_gpu_bind']
             args = mpi_flags + [self.binpath] + args
         return Process(binpath).run(args, pipe=pipe)
 
