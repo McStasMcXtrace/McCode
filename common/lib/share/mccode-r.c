@@ -1913,7 +1913,6 @@ MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 FILE *siminfo_init(FILE *f)
 {
   int exists=0;
-  int index;
 
   /* check format */
   if (!mcformat || !strlen(mcformat)
@@ -3126,7 +3125,6 @@ int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
 
   dt0=0;
   dt1=0;
-  *t0;
   if(t1){ *t1=0;}
 
   /*protect against rounding errors by locally equating DBL_EPSILON with 0*/
@@ -3690,10 +3688,6 @@ randstate_t * fast_kiss_seed(randstate_t * state, randstate_t seed) {
       state[2] = _hash(state[1]);
       state[3] = _hash(state[2]);
   }
-
-  return state;
-  state[4] = 0;
-
   return state;
 }
 
