@@ -61,6 +61,7 @@ typedef struct intersection {
 typedef struct polygon {
   MCNUM* p;       //vertices of the polygon in adjacent order, this way : x1 | y1 | z1 | x2 | y2 | z2 ...
   int npol;       //number of vertices
+  #pragma acc shape(p[0:npol]) init_needed(npol)
   Coords normal;
 } polygon;
 
@@ -69,8 +70,11 @@ typedef struct off_struct {
     long polySize;
     long faceSize;
     Coords* vtxArray;
+    #pragma acc shape(vtxArray[0:vtxSize]) init_needed(vtxSize)
     Coords* normalArray;
+    #pragma acc shape(vtxArray[0:faceSize]) init_needed(faceSize)
     unsigned long* faceArray;
+    #pragma acc shape(vtxArray[0:faceSize][0:polySize]) init_needed(faceSize,polySize)
     char *filename;
     int mantidflag;
     long mantidoffset;
