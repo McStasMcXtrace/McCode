@@ -85,38 +85,32 @@ int off_pnpoly(polygon p, Coords v)
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
   MCNUM x=v.x,y=v.y;
 
+  /*areax: projected area with x-scratched = |v1_yz x v2_yz|, where v1=(x1-x0,0,z1-z0) & v2=(x2-x0,0,z2-z0).*/
+  /* In principle, if polygon is triangle area should be scaled by 1/2, but this is irrelevant for finding the maximum area.*/
+  /* Similarly for y and z scratched.*/
+  areax=coords_len(coords_xp(
+        coords_set(0,p.p[3*1+1]-p.p[0+1],p.p[3*1+2]-p.p[0+2]),
+        coords_set(0,p.p[3*2+1]-p.p[0+1],p.p[3*2+2]-p.p[0+2])));
+  areay=coords_len(coords_xp(
+        coords_set(p.p[3*1+0]-p.p[0+0],0,p.p[3*1+2]-p.p[0+2]),
+        coords_set(p.p[3*2+0]-p.p[0+0],0,p.p[3*2+2]-p.p[0+2])));
+  areaz=coords_len(coords_xp(
+        coords_set(p.p[3*1+0]-p.p[0+0],p.p[3*1+1]-p.p[0+1],0),
+        coords_set(p.p[3*2+0]-p.p[0+0],p.p[3*2+1]-p.p[0+1],0)));
 
-  //take the most relevant 2D projection (prevent from instability)
-  for (i=0; i<p.npol; ++i)
-  {
-    if (p.p[3*i]<minx)   minx=p.p[3*i];
-    if (p.p[3*i]>maxx)   maxx=p.p[3*i];
-    if (p.p[3*i+1]<miny) miny=p.p[3*i+1];
-    if (p.p[3*i+1]>maxy) maxy=p.p[3*i+1];
-    if (p.p[3*i+2]<minz) minz=p.p[3*i+2];
-    if (p.p[3*i+2]>maxz) maxz=p.p[3*i+2];
-  }
-  areax=(maxy-miny)*(maxz-minz);
-  areay=(maxx-minx)*(maxz-minz);
-  areaz=(maxx-minx)*(maxy-miny);
-
-  if (areax || areay || areaz) {
-    if (areaz<areax) {
-      if (areax<areay) {
-	pol2dy=2;
-	y=v.z;
-      } else {
-	pol2dx=2;
-	x=v.z;
-      }
-    } else if (areaz<areay) {
+  if(areaz<areax){
+    if(areax<areay){
+      /*pick areay - i.e. scratch y*/
       pol2dy=2;
       y=v.z;
-    } /* otherwise everything is already set up */
-  } else {
-    /* non-finite polygon areas, exit */
-    c=0;
-    return c;
+    }else{
+      /*scratch x*/
+      pol2dx=2;
+      x=v.z;
+    }
+  }else if (areaz<areay){
+    pol2dy=2;
+    y=v.z;
   }
 
   //trace rays and test number of intersection
