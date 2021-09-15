@@ -2205,7 +2205,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("_class_particle mcgenstate(void);");
   cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,");
-  cout("			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);");
+  cout("			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
   cout("#pragma acc routine");
   cout("_class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, double *z, double *kx, double *ky, double *kz,");
   cout("			   double *phi, double *t, double *Ex, double *Ey, double *Ez, double *p);");
