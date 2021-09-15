@@ -31,24 +31,16 @@ set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 include(CPack)
 
 ## Build mcpltool
-#add_executable(
-#  mcpltool
-#  libs/mcpl/tool.c
-#  libs/mcpl/mcpl.c
-#)
-#target_compile_options(mcpltool PUBLIC "-std=c99")
-#target_link_libraries(mcpltool m)
+add_executable(
+  mcpltool
+  libs/mcpl/tool.c
+  libs/mcpl/mcpl.c
+)
+target_compile_options(mcpltool PUBLIC "-fPIC" "-std=c99")
+target_link_libraries(mcpltool m)
 
 
 
-#if (NOT WINDOWS)
-#  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
-#  target_compile_options(mcpl PUBLIC "-std=c99")
-#  install (
-#    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
-#    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-#  )
-#endif()
 
 # Install mcxtrace components
 foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
@@ -59,28 +51,28 @@ endforeach()
 configure_file("${CMAKE_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
 
 # copy some descriptory files
-file(COPY "${CMAKE_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_SOURCE_DIR}/README" DESTINATION "${WORK}")
+file(COPY "${CMAKE_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_SOURCE_DIR}/README.md" DESTINATION "${WORK}")
 
 if(WINDOWS)
   install(
     FILES "${WORK}/revision"
     DESTINATION "${lib}"
   )
-#  install (
-#    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
-#    DESTINATION ${bin}
-#    )
-#  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
-
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
+    DESTINATION ${bin}
+    )
+  add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
+  target_compile_options(mcpl PUBLIC "-std=c99")
 else()
   install(
-    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
+    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README.md"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
 endif()
 
 if (NOT WINDOWS)
-    #  install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
+  install(TARGETS mcpl DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libs/mcpl/")
 else()
-    #  install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
+  install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
 endif()
