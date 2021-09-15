@@ -2826,7 +2826,7 @@ End Module CFML_GlobalDeps
     !!--++                   c(i,j) = a(i)*b(j).
     !!--++
     !!--++    It uses the intrinsic Fortran 90 function SPREAD.
-    !!--++    Taken from Numerical Recipes.
+    !!--++    Adapted form Numerical Recipes.
     !!--++
     !!--++ Update: February - 2005
     !!
@@ -2851,7 +2851,7 @@ End Module CFML_GlobalDeps
     !!--++                   c(i,j) = a(i)*b(j).
     !!--++
     !!--++    It uses the intrinsic Fortran 90 function SPREAD.
-    !!--++    Taken from Numerical Recipes.
+    !!--++    Adapted form Numerical Recipes.
     !!--++
     !!--++ Update: February - 2005
     !!
