@@ -144,23 +144,51 @@
     DISALLOW_BACKPROP;\
   } while(0)
 
-
-#define PROP_Z0 \
-  mcPROP_P0(z)
-
 #define PROP_X0 \
-  mcPROP_P0(x)
+  do { \
+    mcPROP_X0; \
+    DISALLOW_BACKPROP; \
+  }while(0)
 
-#define PROP_Y0 \
-  mcPROP_P0(y)
-
-#define mcPROP_P0(P) \
+#define mcPROP_X0 \
   do { \
     MCNUM mc_dl,mc_k; \
-    if(k ## P == 0) { instrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(kx == 0) { ABSORB; }; \
     mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
-    mc_dl= - ## P * mc_k / k ## P; \
-    if(mc_dl<0 && mcallowbackprop==0) {instrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; };\
+    mc_dl= -x * mc_k / kx; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
+    PROP_DL(mc_dl); \
+  } while(0)
+
+#define PROP_Y0 \
+  do { \
+    mcPROP_Y0; \
+    DISALLOW_BACKPROP; \
+  }while(0)
+
+#define mcPROP_Y0 \
+  do { \
+    MCNUM mc_dl,mc_k; \
+    if(ky == 0) { ABSORB; }; \
+    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
+    mc_dl= -y * mc_k / ky; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
+    PROP_DL(mc_dl); \
+  } while(0)
+
+#define PROP_Z0 \
+  do { \
+    mcPROP_Z0; \
+    DISALLOW_BACKPROP; \
+  }while(0)
+
+#define mcPROP_Z0 \
+  do { \
+    MCNUM mc_dl,mc_k; \
+    if(kz == 0) { ABSORB; }; \
+    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
+    mc_dl= -z * mc_k / kz; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
     PROP_DL(mc_dl); \
   } while(0)
 
