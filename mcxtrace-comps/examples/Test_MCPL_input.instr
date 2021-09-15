@@ -82,7 +82,7 @@ COMPONENT m4 = Monitor_nD(
 
 /*COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=22,
-  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
+  options="parallel, photon, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
 ) AT (0,0,0) ABSOLUTE*/
 
 
