@@ -1,15 +1,12 @@
 /*******************************************************************************
-*         McXtrace instrument definition URL=http://mcstas.risoe.dk
 *
 * Instrument: Test_MCPL_output
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Mar 2016
-* Origin: 
-* Release: McStas 2.3
-* Version: $Revision$
-* %INSTRUMENT_SITE: Tests_optics
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
 *
 * A test instrument for MCPL_output
 *
@@ -56,28 +53,29 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto lambda, parallel", bins=40
+  options="lambda limits=[0.1 11], parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m2 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto x, auto y, parallel", bins=40
+  options="x limits=[-0.005 0.005],  y limits=[-0.005 0.005], parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m3 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto t parallel", bins=40
+  options="t limits=[0 1e-3]parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m4 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto E, parallel", bins=40
+  options="E, limits=[0 90] parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
-COMPONENT m5 = Monitor_nD(
+/*COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=22,
-  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
-) AT (0,0,0) ABSOLUTE
+  options="parallel, photon, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
+) AT (0,0,0) ABSOLUTE*/
+
 
 END
 
