@@ -17,13 +17,17 @@
 *
 * This is a unit test for the MCPL_input component.
 *
-* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
+* %Example: -n1e3 repeat=1 Detector: m1_I=2.42284e+11
 *
 * %Parameters
+* repeat: [1]       Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
+* E_smear: [1]      When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
+* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_input(dummy=0)
+DEFINE INSTRUMENT Test_MCPL_input(repeat=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
 DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/MCPL/voutput.mcpl"
 
 INITIALIZE
@@ -47,8 +51,7 @@ COMPONENT Origin = Progress_bar()
 AT (0, 0, 0) ABSOLUTE
 
 /* read photons from an mcpl file*/
-
-COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1)
+COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
