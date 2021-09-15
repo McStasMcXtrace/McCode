@@ -477,6 +477,10 @@ int cogen_comp_declare(struct comp_inst *comp)
       char *val = exp_tostring(entry->val); /* replaced by instrument parameter when exists */
       if (val[0] == '{') {
         int vl = parse_curlybrackets_vector(val, NULL);
+	printf("\nWARNING:\n The parameter %s of %s is intitalized \n using a static {,,,} vector.\n",c_formal->id,comp->name);
+	printf("  -> Such static vectors support literal numbers ONLY.\n");
+	printf("  -> Any vector use of variables or defines must happen via a \n");
+	printf("     DECLARE/INITIALIZE pointer.\n\n");
         coutf("  %s %s[%i];", instr_formal_type_names_real[c_formal->type], c_formal->id, vl);
       } else {
         coutf("  %s* %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
@@ -1389,25 +1393,12 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     // call acc_attach for OpenACC (last thing to do in init)
     cout("");
     cout("#ifdef OPENACC");
-    cout("#  include <openacc.h>");
-    cout("#ifdef USE_MPI");
-    cout("int num_devices = acc_get_num_devices(acc_device_nvidia);");
-    cout("int my_device = mpi_node_rank % num_devices;");
-    cout("printf(\"Node %i should use device %i\\n\",mpi_node_rank,my_device);");
-    cout("#pragma acc set device_num(my_device) device_type(acc_device_nvidia)");
-    cout("#endif");
-    // attach component instances on device
-    liter = list_iterate(instr->complist);
-    while((comp = list_next(liter)) != NULL) {
-      coutf("acc_attach( (void*)&_%s_var );", comp->name);
-    }
+    cout("#include <openacc.h>");
     // update component instances on device (e.g. push "managed" data structures)
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
       coutf("#pragma acc update device(_%s_var)", comp->name);
     }
-    // attach instrument
-    cout("acc_attach( (void*)&_instrument_var );");
     // update instrument
     cout("#pragma acc update device(_instrument_var)");
     cout("#endif");
@@ -1474,15 +1465,11 @@ void def_trace_section(struct instr_def *instr)
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
-  coutf("#define RESTORE_PARTICLE(_index, ...) _particle->_restore = _index;");
+  coutf("#define RESTORE_XRAY(_index, ...) _particle->_restore = _index;");
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
-  #if MCCODE_PROJECT == 1     /* neutron */
-  cout( "#define RESTORE_NEUTRON RESTORE_PARTICLE");
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
-  #elif MCCODE_PROJECT == 2   /* xray */
-  cout( "#define RESTORE_XRAY RESTORE_PARTICLE");
+  /* define mcget_run_num within trace scope to refer to the particle */
+  coutf("#define mcget_run_num() _particle->_uid");
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(_comp); } while(0)");
-  #endif
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
@@ -1623,7 +1610,7 @@ int cogen_raytrace(struct instr_def *instr)
   cout("***************************************************************************** */");
   cout("");
   cout("#ifndef FUNNEL");
-  cout("#pragma acc routine seq");
+  cout("#pragma acc routine");
   coutf("int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for %s:%s */", instr->name, "TRACE");
   cout("");
 
@@ -1857,7 +1844,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("      _class_particle* _particle = &particleN;");
   coutf("      particleN._uid = pidx;");
   coutf("");
-  coutf("      srandom(_hash(pidx + pidx*seed));");
+  coutf("      srandom(_hash((pidx+1)*(seed+1)));");
   coutf("      particle_uservar_init(_particle);");
   coutf("");
   coutf("      raytrace(_particle);");
@@ -1950,7 +1937,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("      particles[pidx] = mcgenstate();");
   coutf("      _class_particle* _particle = particles + pidx;");
   coutf("      _particle->_uid = pidx;");
-  coutf("      srandom(_hash(pidx + seed)); // _particle->state usage built into srandom macro");
+  coutf("      srandom(_hash((pidx+1)*(seed+1))); // _particle->state usage built into srandom macro");
   coutf("      particle_uservar_init(_particle);");
   coutf("    }");
   cout( "");
@@ -2062,7 +2049,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 } /* cogen_rt_funnel */
 
 /*******************************************************************************
-* Output code for the runtime system. Default is to copy the runtime
+* Output code for the mcxtrace runtime system. Default is to copy the runtime
 * code into the generated executable, to minimize problems with finding the
 * right files during compilation and linking, but this may be changed using
 * the --no-runtime compiler switch.
@@ -2213,21 +2200,24 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("_class_particle* _particle = &_particle_global_randnbuse_var;");
   cout("");
 
+  /* Below lines relating to mcgenstate / setstate are in principle McStas-centric, we ought to generate this function based on "project" */
+  cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void);");
+  cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,");
   cout("			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);");
+  cout("#pragma acc routine");
+  cout("_class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, double *z, double *kx, double *ky, double *kz,");
+  cout("			   double *phi, double *t, double *Ex, double *Ey, double *Ez, double *p);");
   cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
   cout("#pragma acc declare create ( mcgravitation )");
-  cout("int mcMagnet;    /* precession-state */");
-  cout("#pragma acc declare create ( mcMagnet )");
   cout("int mcallowbackprop;        ");
   cout("#pragma acc declare create ( mcallowbackprop )");
 
   cout("");
-  cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void) {");
-  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop);");
+  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
   cout("  return(particle);");
   cout("}");
 
@@ -2237,6 +2227,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   List_handle liter,liter2;
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
+  cout("double particle_getvar(_class_particle *p, char *name, int *suc);");
+  cout("");
+  cout("#ifdef OPENACC");
+  cout("#pragma acc routine");
+  cout("int str_comp(char *str1, char *str2);");
+  cout("#endif");
+  cout("");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
   cout("#ifndef OPENACC");
   cout("#define str_comp strcmp");
@@ -2247,14 +2244,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"x\",name)){rval=p->x;s=0;}");
   cout("  if(!str_comp(\"y\",name)){rval=p->y;s=0;}");
   cout("  if(!str_comp(\"z\",name)){rval=p->z;s=0;}");
-#if MCCODE_PROJECT == 1   /* neutron */
-  cout("  if(!str_comp(\"vx\",name)){rval=p->vx;s=0;}");
-  cout("  if(!str_comp(\"vy\",name)){rval=p->vy;s=0;}");
-  cout("  if(!str_comp(\"vz\",name)){rval=p->vz;s=0;}");
-  cout("  if(!str_comp(\"sx\",name)){rval=p->sx;s=0;}");
-  cout("  if(!str_comp(\"sy\",name)){rval=p->sy;s=0;}");
-  cout("  if(!str_comp(\"sz\",name)){rval=p->sz;s=0;}");
-#elif MCCODE_PROJECT == 2   /* xray */
   cout("  if(!str_comp(\"phi\",name)){rval=p->phi;s=0;}");
   cout("  if(!str_comp(\"kx\",name)){rval=p->kx;s=0;}");
   cout("  if(!str_comp(\"ky\",name)){rval=p->ky;s=0;}");
@@ -2262,7 +2251,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"Ex\",name)){rval=p->Ex;s=0;}");
   cout("  if(!str_comp(\"Ey\",name)){rval=p->Ey;s=0;}");
   cout("  if(!str_comp(\"Ez\",name)){rval=p->Ez;s=0;}");
-#endif
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
   while((var = list_next(liter))) {
