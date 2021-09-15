@@ -164,11 +164,6 @@
     PROP_DL(mc_dl); \
   } while(0)
 
-#pragma acc routine seq
-_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,
-    double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);
-
-
 #ifdef DEBUG
 
 #define DEBUG_STATE() if(!mcdotrace); else \
