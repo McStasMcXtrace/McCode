@@ -48,7 +48,7 @@ EXTEND %{
 
 /* the output ============================================================== */
 COMPONENT vout = MCPL_output(
-        filename="voutput", verbose=1, userflag=flag, userflagcomment="Photon Id", merge_mpi=merge)
+        filename="voutput", verbose=1, userflag="flag", userflagcomment="Photon Id", merge_mpi=merge)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(

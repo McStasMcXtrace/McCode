@@ -145,12 +145,16 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
     Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
     Vars->Coord_NumberNoPixel=0;   /* same but without counting PixelID */
-    Vars->Buffer_Block      = 10000;     /* Buffer size for list or auto limits */
+
+/* Allow to specify size of Monitor_nD buffer via a define*/
+#ifndef MONND_BUFSIZ
+    Vars->Buffer_Block      = 100000;     /* Buffer size for list or auto limits */
+#else
+	Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
+#endif
     Vars->Photon_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
-    Vars->UserVariable1     = 0;
-    Vars->UserVariable2     = 0;
     Vars->He3_pressure      = 0;
     Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
@@ -216,8 +220,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (strstr(Vars->option, "double"))
       Vars->Flag_Binary_List  = 2;
 
-    strcpy(Vars->Coord_Label[0],"Intensity");
-    strncpy(Vars->Coord_Var[0],"p",30);
+    strcpy(Vars->Coord_Label[0], "Intensity");
+    strncpy(Vars->Coord_Var[0], "p", 30);
     Vars->Coord_Type[0] = DEFS->COORD_P;
     Vars->Coord_Bin[0] = 1;
     Vars->Coord_Min[0] = 0;
@@ -229,7 +233,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     carg = 1;
     while((Flag_End == 0) && (carg < 128))
     {
-
       if (Flag_New_token) /* retain previous token or get a new one */
       {
         if (carg == 1) token=(char *)strtok(option_copy,DEFS->TOKEN_DEL);
@@ -282,11 +285,11 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
             Vars->Flag_List = 1; }
           Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
-        //if (Set_Coord_Mode == DEFS->COORD_3HE)  /* pressure=%g */
-        //{
-        //    Vars->He3_pressure = atof(token);
-        //    Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
-        //}
+        /*if (Set_Coord_Mode == DEFS->COORD_3HE)*/  /* pressure=%g */
+        /*{*/
+        /*    Vars->He3_pressure = atof(token);*/
+        /*    Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;*/
+        /*}*/
 
         /* now look for general option keywords */
         if (!strcmp(token, "borders"))  {Vars->Flag_With_Borders = 1; iskeyword=1; }
@@ -318,11 +321,16 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "previous")) { Vars->Flag_Shape = DEFS->SHAPE_PREVIOUS; iskeyword=1; }
         if (!strcmp(token, "parallel")){ Vars->Flag_parallel = 1; iskeyword=1; }
         if (!strcmp(token, "capture")) { Vars->Flag_capture = 1; iskeyword=1; }
-        if (!strcmp(token, "auto") && (Flag_auto != -1)) {
-          Vars->Flag_Auto_Limits = 1;
-          if (Flag_All) Flag_auto = -1;
-          else          Flag_auto = 1;
-          iskeyword=1; Flag_All=0; }
+        if (!strcmp(token, "auto")) { 
+        #ifndef OPENACC
+          if (Flag_auto != -1) {
+	    Vars->Flag_Auto_Limits = 1;
+	    if (Flag_All) Flag_auto = -1;
+	    else          Flag_auto = 1;
+	    iskeyword=1; Flag_All=0;
+	  }
+	#endif
+	}
         if (!strcmp(token, "premonitor")) {
           Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
         if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
@@ -420,8 +428,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"vd"); lmin = -5; lmax = 5; }
         if (!strcmp(token, "theta") || !strcmp(token, "longitude") || !strcmp(token, "th"))
           { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
-        if (!strcmp(token, "phi") || !strcmp(token, "lattitude") || !strcmp(token, "ph"))
-          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "phi") || !strcmp(token, "latitude") || !strcmp(token, "ph"))
+          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Latitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -90; lmax = 90; }
         if (!strcmp(token, "ncounts") || !strcmp(token, "n") || !strcmp(token, "photon"))
           { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Photon ID [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = mcget_ncount(); if (Flag_auto>0) Flag_auto=0; }
         if (!strcmp(token, "id") || !strcmp(token, "pixel"))
@@ -708,7 +716,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
       /* no Mon2D allocated for
        * (Vars->Coord_Number != 2) && !Vars->Flag_Multiple && Vars->Flag_List */
-
     Vars->psum  = 0;
     Vars->p2sum = 0;
     Vars->Nsum  = 0;
@@ -746,12 +753,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 /* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
 /* return values: 0=photon was absorbed, -1=photon was outside bounds, 1=photon was measured*/
 /* ========================================================================= */
-
-int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
+int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars, _class_particle* _particle)
 {
 
   double  XY=0, pp=0;
-  int     retval;
   long    i =0, j =0;
   double  Coord[MONnD_COORD_NMAX];
   long    Coord_Index[MONnD_COORD_NMAX];
@@ -789,11 +794,13 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new events to store in histograms) */
   } /* end if Flag_Auto_Limits == 1 */
 
+#ifndef OPENACC
   /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
   if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List >= 2))
   {
     if (Vars->Buffer_Size >= 1000000 || Vars->Flag_List == 3)
     { /* save current (possibly append) and re-use Buffer */
+
       Monitor_nD_Save(DEFS, Vars);
       Vars->Flag_List = 3;
       Vars->Buffer_Block = Vars->Buffer_Size;
@@ -808,6 +815,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Photon_Counter+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
+#endif
 
   char    outsidebounds=0;
   while (!While_End)
@@ -876,17 +884,36 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       /* automatically compute area and steradian solid angle when in AUTO mode */
       /* compute the steradian solid angle incoming on the monitor */
       double k;
-      k=sqrt(Vars->ckx*Vars->ckx
-            +Vars->cky*Vars->cky
-            +Vars->ckz*Vars->ckz);
-      if (Vars->min_x > Vars->cx) Vars->min_x = Vars->cx;
-      if (Vars->max_x < Vars->cx) Vars->max_x = Vars->cx;
-      if (Vars->min_y > Vars->cy) Vars->min_y = Vars->cy;
-      if (Vars->max_y < Vars->cy) Vars->max_y = Vars->cy;
-      Vars->mean_p  += Vars->cp;
-      if (k) {
-        Vars->mean_dx += Vars->cp*fabs(Vars->ckx/k);
-        Vars->mean_dy += Vars->cp*fabs(Vars->cky/k);
+      k=sqrt(_particle->kx*_particle->kx + _particle->ky*_particle->ky + _particle->kz*_particle->kz);
+      tmp=_particle->x;
+      if (Vars->min_x > _particle->x){
+        #pragma acc atomic write
+        Vars->min_x = tmp;
+      }
+      if (Vars->max_x < _particle->x){
+        #pragma acc atomic write
+        Vars->max_x = tmp;
+      }
+      tmp=_particle->y;
+      if (Vars->min_y > _particle->y){
+        #pragma acc atomic write
+        Vars->min_y = tmp;
+      }
+      if (Vars->max_y < _particle->y){
+	tmp=_particle->y;
+        #pragma acc atomic write
+	Vars->max_y = tmp;
+      }
+
+      #pragma acc atomic
+      Vars->mean_p = Vars->mean_p + _particle->p;
+      if (v) {
+        tmp=_particle->p*fabs(_particle->kx/k);
+        #pragma acc atomic
+        Vars->mean_dx = Vars->mean_dx + tmp; //_particle->p*fabs(_particle->kx/k);
+        tmp=_particle->p*fabs(_particle->ky/k);
+        #pragma acc atomic
+        Vars->mean_dy = Vars->mean_dy + tmp; //_particle->p*fabs(_particle->ky/k);
       }
 
       for (i = 0; i <= Vars->Coord_Number; i++)
@@ -894,84 +921,83 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         XY = 0;
         Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
         /* get values for variables to monitor */
-        if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = Vars->cx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = _particle->x;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_Y) XY = Vars->cy;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_Z) XY = Vars->cz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_Z) XY = _particle->z;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VX) XY = Vars->ckx/k*M_C;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VX) XY = _particle->kx/k*M_C;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VY) XY = Vars->cky/k*M_C;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VY) XY = _particle->ky/k*M_C;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VZ) XY = Vars->ckz/k*M_C;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VZ) XY = _particle->kz/k*M_C;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KX) XY = Vars->ckx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KX) XY = _particle->kx;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KY) XY = Vars->cky;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KY) XY = _particle->ky;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = Vars->ckz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = _particle->kz;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PHASE) XY = Vars->cphi;
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHASE) XY = _particle->phi;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = Vars->ct;
+        if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = _particle->t;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = Vars->cp;
+        if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = _particle->p;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_HDIV) XY = RAD2DEG*atan2(Vars->ckx,Vars->ckz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_HDIV) XY = RAD2DEG*atan2(_particle->kx,_particle->kz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VDIV) XY = RAD2DEG*atan2(Vars->cky,Vars->ckz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VDIV) XY = RAD2DEG*atan2(_particle->ky,_particle->kz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = M_C;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS)
-          XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+          XY = sqrt(_particle->x*_particle->x+_particle->y*_particle->y+_particle->z*_particle->z);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_XY)
-          XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy)*(Vars->cx > 0 ? 1 : -1);
+          XY = sqrt(_particle->x*_particle->x+_particle->y*_particle->y)*(_particle->x > 0 ? 1 : -1);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(_particle->y*_particle->y+_particle->z*_particle->z);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_XZ)
-          XY = sqrt(Vars->cx*Vars->cx+Vars->cz*Vars->cz);
+          XY = sqrt(_particle->x*_particle->x+_particle->z*_particle->z);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvz*Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(_particle->vx*_particle->vx+_particle->vz*_particle->vz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(_particle->vy*_particle->vy+_particle->vz*_particle->vz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_K) XY = k;//sqrt(Vars->ckx*Vars->ckx+Vars->cky*Vars->cvy+Vars->ckz*Vars->ckz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_K) XY = k;//sqrt(_particle->kx*_particle->kx+_particle->ky*_particle->ky+_particle->kz*_particle->kz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KXY) XY = sqrt(Vars->ckx*Vars->ckx+Vars->cky*Vars->cky);
+        if (Set_Vars_Coord_Type == DEFS->COORD_KXY) XY = sqrt(_particle->kx*_particle->kx+_particle->ky*_particle->ky);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KXZ) XY = sqrt(Vars->ckx*Vars->ckx+Vars->ckz*Vars->ckz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_KXZ) XY = sqrt(_particle->kx*_particle->kx+_particle->kz*_particle->kz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_KYZ) XY = sqrt(Vars->cky*Vars->cky+Vars->ckz*Vars->ckz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_KYZ) XY = sqrt(_particle->ky*_particle->ky+_particle->kz*_particle->kz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) XY = k*K2E;
         else
-          if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI/k; } // { sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI/k; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Vars->Photon_Counter;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
-        {  XY = sqrt(Vars->ckx*Vars->ckx+Vars->cky*Vars->cky);
-           if (Vars->ckz != 0)
-                XY = RAD2DEG*atan2(XY,Vars->ckz)*(Vars->cx > 0 ? 1 : -1);
+        {  XY = sqrt(_particle->kx*_particle->kx+_particle->ky*_particle->ky);
+           if (_particle->kz != 0)
+                XY = RAD2DEG*atan2(XY,_particle->kz)*(_particle->x > 0 ? 1 : -1);
            else XY = 0;
         }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (Vars->cz != 0) XY = RAD2DEG*atan2(Vars->cx,Vars->cz); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (_particle->z != 0) XY = RAD2DEG*atan2(_particle->x,_particle->z); }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { 
-          if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz)); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { double rr=sqrt(_particle->x*_particle->x+ _particle->y*_particle->y + _particle->z*_particle->z); if (rr != 0) XY = RAD2DEG*asin(_particle->y/rr); }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = Vars->UserVariable1;
+        if (Set_Vars_Coord_Type == DEFS->COORD_USER1) {int fail; XY = particle_getvar(_particle,Vars->UserVariable1,&fail); if(fail) XY=0; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_USER2) XY = Vars->UserVariable2;
+        if (Set_Vars_Coord_Type == DEFS->COORD_USER2) {int fail; XY = particle_getvar(_particle,Vars->UserVariable2,&fail); if(fail) XY=0; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = Vars->UserVariable3;
+        if (Set_Vars_Coord_Type == DEFS->COORD_USER3) {int fail; XY = particle_getvar(_particle,Vars->UserVariable3,&fail); if(fail) XY=0; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID && !Vars->Flag_Auto_Limits) {
           /* compute the PixelID from previous coordinates 
@@ -1032,18 +1058,22 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         pp /= Vars->area;
 
       /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
-      if ( Vars->Coord_NumberNoPixel == 2 && !Vars->Flag_Multiple && !outsidebounds)
+      if ( Vars->Coord_NumberNoPixel == 2 && !Vars->Flag_Multiple)
       { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
         
         i = Coord_Index[1];
         j = Coord_Index[2];
         if (i >= 0 && i < Vars->Coord_Bin[1] && j >= 0 && j < Vars->Coord_Bin[2])
         {
-          if (Vars->Mon2D_N) { 
-            Vars->Mon2D_N[i][j]++;
-            Vars->Mon2D_p[i][j] += pp;
-            Vars->Mon2D_p2[i][j] += pp*pp;
-          }
+          if (Vars->Mon2D_N) {
+	    double p2 = pp*pp;
+            #pragma acc atomic
+	    Vars->Mon2D_N[i][j] = Vars->Mon2D_N[i][j]+1;
+            #pragma acc atomic
+	    Vars->Mon2D_p[i][j] = Vars->Mon2D_p[i][j]+pp;
+            #pragma acc atomic
+	    Vars->Mon2D_p2[i][j] = Vars->Mon2D_p2[i][j] + p2;
+	  }
         } else {
           outsidebounds=1; 
         }
@@ -1055,10 +1085,16 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
           j = Coord_Index[i];
           if (j >= 0 && j < Vars->Coord_Bin[i]) {
             if  (Vars->Flag_Multiple && Vars->Mon2D_N) {
-              Vars->Mon2D_N[i-1][j]++;
-              Vars->Mon2D_p[i-1][j]  += pp;
-              Vars->Mon2D_p2[i-1][j] += pp*pp;
-            }
+	      if (Vars->Mon2D_N) {
+		double p2 = pp*pp;
+                #pragma acc atomic
+		Vars->Mon2D_N[i-1][j] = Vars->Mon2D_N[i-1][j]+1;
+                #pragma acc atomic
+		Vars->Mon2D_p[i-1][j] = Vars->Mon2D_p[i-1][j]+pp;
+		#pragma acc atomic
+		Vars->Mon2D_p2[i-1][j] = Vars->Mon2D_p2[i-1][j] + p2;
+	      }
+	    }
           } else { 
             outsidebounds=1;
             break;
@@ -1071,22 +1107,28 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-          
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
+	  // This is is where the list is appended. How to make this "atomic"?
+          #pragma acc atomic write 
           Vars->Mon2D_Buffer[i + Vars->Photon_Counter*(Vars->Coord_Number+1)] = Coord[i];
         }
-        Vars->Buffer_Counter++;
+	#pragma acc atomic 
+        Vars->Buffer_Counter = Vars->Buffer_Counter + 1;
         if (Vars->Flag_Verbose && (Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List == 1)) 
           printf("Monitor_nD: %s %li photons stored in List.\n", Vars->compcurname, Vars->Buffer_Counter);
       }
-      Vars->Photon_Counter++;
+      #pragma acc atomic
+      Vars->Photon_Counter = Vars->Photon_Counter + 1;
     } /* end (Vars->Flag_Auto_Limits != 2) */
     
   } /* end while */
-  Vars->Nsum++;
-  Vars->psum  += pp;
-  Vars->p2sum += pp*pp;
+  #pragma acc atomic
+  Vars->Nsum = Vars->Nsum + 1;
+  #pragma acc atomic
+  Vars->psum  = Vars->psum + pp;
+  #pragma acc atomic
+  Vars->p2sum = Vars->p2sum + pp*pp;
 
   /*determine return value: 1:photon was in bounds and measured, -1: outside bounds, 0: outside bounds, should be absorbed.*/
   if(outsidebounds){
@@ -1102,7 +1144,6 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
 /* ========================================================================= */
 /* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
-
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
   {
     char   *fname;
@@ -1113,7 +1154,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     char    Coord_X_Label[CHAR_BUF_LENGTH];
     double  min1d, max1d;
     double  min2d, max2d;
-    long    bin1d, bin2d;
     char    While_End = 0;
     long    While_Buffer = 0;
     double  XY=0, pp=0;
@@ -1296,7 +1336,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
           if (strchr(Vars->Mon_File,'.') == NULL)
           { strcat(fname, "."); strcat(fname, Vars->Coord_Var[i]); }
         }
-        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,bin2d,bin1d);
+        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,Vars->Photon_Counter,Vars->Coord_Number);
 
         /* handle the type of list output */
         strcpy(label, Vars->Monitor_Label);

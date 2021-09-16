@@ -1,0 +1,87 @@
+/*******************************************************************************
+* Instrument: Focal_pt_monitor
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Aug. 21
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Templates
+*
+* Template for creating a focal point monitor.
+*
+* %D
+* A template instrument shows how to create a focal point monitor with an
+* instance of Monitor_nD and an EXTEND block on a preceeding Arm.
+* The instrument uses a point source and a thin lens to create a focus.
+* 
+* The working principle behind, is to bin the weight carried by each ray by the 
+* z-coordinate (of a cartesian system defined by an Arm preceeding the Monitor_nD 
+* instance) where the ray's trajectory passes closest to the Z-axis.
+* 
+* Note, the origin of the monitored z-coordinate is defined by the Arm on which
+* the EXTEND-block is attached (In this case fpt0). If the subsequent monitor
+* is placed elsewhere an implicit offset will be the result.
+* The 
+* 
+* %Example: Focal_pt_monitor Rcurve=100e-6 Detector: fpt_I=1.9805e-16
+*
+* %P
+* Rcurve: [m]          Radius of curvature of the lens at the apex.
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Focal_pt_monitor(Rcurve=100e-6)
+
+DECLARE
+%{
+  double fz;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source = Source_pt(
+    focus_xw=1e-8, focus_yh=1e-4, dist=20, E0=10, dE=0.2, gauss=1)
+AT(0,0,0) RELATIVE origin
+COMPONENT lens = Lens_simple(f=0,radius=0.5e-4,material_datafile="Be.txt", N=1, r=Rcurve)
+AT(0,0,20) RELATIVE source
+
+COMPONENT fpt0 = Arm()
+AT(0,0,2e-3) RELATIVE lens
+EXTEND
+%{
+    PROP_Z0;
+    /*Compute where the focal point is along the z-axis
+      i.e. compute the least distance btw. ray and z-axis*/
+    double ux,uy,uz,n1x,n1y,n1z;
+    double g,h,s1,s2;
+    vec_prod(ux,uy,uz, kx,ky,kz,0, 0, 1);
+    NORM(ux,uy,uz);
+    /*The point along the z-axis which intersects the plane formed by translating the ray trajectory
+      along a vector normal to both z-axis and k, is the point we seek.*/
+    /*That plane is defined by its normal: n1 = k x u */
+    /*The intesection is therefore: (0,0,0) + [ ((x,y,0)-O).n1) / (0,0,1).n1 ] (0,0,1),where n1=k x u*/
+    vec_prod(n1x,n1y,n1z, kx,ky,kz, ux,uy,uz);
+    /*numerator*/
+    g=scalar_prod(x,y,0,n1x,n1y,n1z);
+    /*denominator*/
+    h=scalar_prod(0,0,1,n1x,n1y,n1z);
+    fz=g/h;
+%}
+
+COMPONENT fpt = Monitor_nD(
+    xwidth=0.1, yheight=0.1, options="u1 limits -10 100", bins=200, username1="Z", user1=fz)
+AT(0,0,0) RELATIVE fpt0
+
+FINALLY
+%{
+%}
+
+END

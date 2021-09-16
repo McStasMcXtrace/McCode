@@ -35,21 +35,22 @@
 * %P
 * xwidth:   [m]  Width of source.
 * yheight:  [m]  Height of source.
-* focus_aw:[rd] Standard deviation (Gaussian) or maximal (uniform) horz. width divergence.
-* focus_ah:[rd] Standard deviation (Gaussian) or maximal (uniform) vert. height divergence.
-* focus_xw: [m]   Width of sampling window
-* focus_yh: [m]   Height of sampling window
-* dist: [m]     Downstream distance to place sampling target window
+* focus_aw:[rad] Standard deviation (Gaussian) or maximal (uniform) horz. width divergence.
+* focus_ah:[rad] Standard deviation (Gaussian) or maximal (uniform) vert. height divergence.
+* focus_xw: [m]  Width of sampling window
+* focus_yh: [m]  Height of sampling window
+* dist: [m]      Downstream distance to place sampling target window
 * E0:      [keV] Mean energy of X-rays.
 * dE:      [keV] Energy half spread of X-rays. If gauss==0 dE is the half-spread, i.e. E\in[E0-dE,E0+dE], if gauss!=0 it's interpreted as the standard dev. 
-* lambda0: [AA] Mean wavelength of X-rays (only relevant for E0=0).
-* dlambda: [AA] Wavelength half spread of X-rays.
-* gauss:  [1]  Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength.
-* gauss_a:   [1] Criterion: 0: uniform, 1: Gaussian divergence distribution.
+* lambda0: [AA]  Mean wavelength of X-rays (only relevant for E0=0).
+* dlambda: [AA]  Wavelength half spread of X-rays.
+* gauss: [1]     Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength.
+* gauss_a: [1]   Criterion: 0: uniform, 1: Gaussian divergence distribution.
 * flux:   [1/(s * mm**2 *mrad**2 * energy unit]) flux per energy unit, Angs or keV.
 * randomphase [1] If !=0 the photon phase is chosen randomly.
-* phase [1] Value of the photon phase (if randomphase==0).
-* spectrum_file: [ ] File from which to read the spectral intensity profile
+* phase [ ] Value of the photon phase (if randomphase==0).
+* spectrum_file: [ ] File from which to read the spectral intensity profile.
+* verbose: [1]  Output more information runtime.
 *
 * OUTPUT PARAMETERS:
 *
@@ -58,8 +59,9 @@
 
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string spectrum_file="NULL", xwidth=0, yheight=0, dist=0, focus_aw=0, focus_ah=0, focus_ar=0,radius=0,
-    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0)
+SETTING PARAMETERS (string spectrum_file="NULL", xwidth=0, yheight=0, dist=0,
+    focus_xw=0, focus_yh=0,focus_aw=0, focus_ah=0, focus_ar=0, radius=0,
+    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, int randomphase=1, phase=0, int verbose=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -71,7 +73,6 @@ SHARE
 DECLARE
 %{
   double p_init;
-  double dist;
   double K;
   double dK;
   double xmin;
@@ -85,6 +86,7 @@ DECLARE
   double pmul;
   double pint;
   t_Table T;
+  int spectrum_from_file;
 %}
 
 INITIALIZE
@@ -96,11 +98,14 @@ INITIALIZE
   xmax=xwidth/2.0;
   ymax=yheight/2.0;
 
-  if(radius==0 && ( prms.xmax==prms.xmin && prms.ymin==prms.xmax) ){
+  if(radius==0 && ( xmax==xmin && ymin==xmax) ){
     printf("ERROR(%s): No meaningful source area set. Either set radius or xwidth and yheight.\n",NAME_CURRENT_COMP);
   }
 
-  if (spectrum_file){
+  /*flag if we are using a datafile*/
+  spectrum_from_file=(spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file));
+
+  if (spectrum_from_file){
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
@@ -158,7 +163,7 @@ TRACE
   double kk,theta_x,theta_y,l,e,k;
   p=pmul;
 
-  if (spectrum_file){
+  if (spectrum_from_file){
     double pp=0;
     while (pp<=0){ 
       l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*rand01();
@@ -227,20 +232,20 @@ TRACE
     ky*=k;
   }else{
     /*radial divergence profile*/
-    double theta,phi,kp;
+    double theta,psi,kp;
     if(!gauss_a){
       double sample_lim1,u2;
       sample_lim1=(1-cos(focus_ar/2.0))*0.5;
       u2=rand01()*(sample_lim1);
-      phi=acos(1-2*u2);
+      psi=acos(1-2*u2);
     }else{
       do{
-        phi=abs(randnorm()*focus_ar);
-      } while (phi>M_PI);
+        psi=abs(randnorm()*focus_ar);
+      } while (psi>M_PI);
     }
     theta=rand01()*2*M_PI;
 
-    kz=k*cos(phi);
+    kz=k*cos(psi);
     kp=sqrt(k*k-kz*kz);
     kx=kp*sin(theta);
     ky=kp*cos(theta);
@@ -257,19 +262,22 @@ TRACE
 
 MCDISPLAY
 %{
-  double dist=1;
+  double dist_display=1;
+  if (dist_display>dist){
+    dist_display=dist;
+  }
   multiline(5, -xwidth/2.0, -yheight/2.0, 0.0,
                 xwidth/2.0, -yheight/2.0, 0.0,
                 xwidth/2.0,  yheight/2.0, 0.0,
                -xwidth/2.0,  yheight/2.0, 0.0,
                -xwidth/2.0, -yheight/2.0, 0.0);
   if (focus_aw){
-    dashed_line(0,0,0, tan(focus_aw/2.0)*dist,0,dist,4);
-    dashed_line(0,0,0,-tan(focus_aw/2.0)*dist,0,dist,4);
+    dashed_line(0,0,0, tan(focus_aw/2.0)*dist_display,0,dist_display,4);
+    dashed_line(0,0,0,-tan(focus_aw/2.0)*dist_display,0,dist_display,4);
   }
   if (focus_ah){
-    dashed_line(0,0,0,0, tan(focus_ah/2.0)*dist,dist,4);
-    dashed_line(0,0,0,0,-tan(focus_ah/2.0)*dist,dist,4);
+    dashed_line(0,0,0,0, tan(focus_ah/2.0)*dist_display,dist_display,4);
+    dashed_line(0,0,0,0,-tan(focus_ah/2.0)*dist_display,dist_display,4);
   }
 %}
 

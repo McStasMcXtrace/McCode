@@ -119,7 +119,7 @@ TRACE
     double x_int,y_int,z_int;		// intersection with the y=0 plane
     double dist;				// distance from position at t=0 to the y=0 plane
     double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-    double Rpi, Rsig, R;          // Reflectivity values calculated by MxBragg_DarwinReflectivityBC() function for each incoming photon
+    double R;          // Reflectivity values calculated by MxBragg_DarwinReflectivityBC() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
@@ -139,7 +139,7 @@ TRACE
         x_int=x+k0hat[0]*tin;
         y_int=y+k0hat[1]*tin;
         z_int=z+k0hat[2]*tin;
-        
+
         if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
             dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
             PROP_DL(dist); 			/* now the photon is on the crystal surface, ready to be reflected... */
@@ -149,50 +149,50 @@ TRACE
             f0h = Table_Value(f0_t,1/(2*d),Z);
             fp  = Table_Value(m_t,E,1)-Z;
             fpp = Table_Value(m_t,E,2);
-            
+
             double nhat[3]={0,1,0}; // crystal surface normal is yhat, and is set up by mcxtrace to be into the crystal
-            
+
             double alpha[3]={alphax, alphay, alphaz};
             double Rsig, Rpi;
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
-            
+
             fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha,
                   f00, f0h, fp, fpp, V, h, k, l,
                   debye_waller_B, E,
                   crystal_type, structure_factor_scale_r, structure_factor_scale_i
               );
-            
+
             cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction */
             /* sig_axis is the sigma direction, as returned by Bragg_Geometry inside DarwinReflectivityBT */
             /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
             cross(pi_axis, k0hat, sig_axis, 1);
-            
+
             /* update outgoing direction vector kx, ky, kz = kh, fully scaled outgoing k vector */
             kx=kh[0]; ky=kh[1]; kz=kh[2];
-            
+
             /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
             double Esig=(Ex*sig_axis[0]+Ey*sig_axis[1]+Ez*sig_axis[2]);
             double Epi= (Ex* pi_axis[0]+Ey* pi_axis[1]+Ez* pi_axis[2]);
             if(Esig==0 && Epi==0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
-                double phi=rand01()*PI/2;
-                Esig=cos(phi); Epi=sin(phi);
+                double psi=rand01()*PI/2;
+                Esig=cos(psi); Epi=sin(psi);
             }
             Esig=Esig*sqrt(Rsig);
             Epi=Epi*sqrt(Rpi);
             R=Esig*Esig+Epi*Epi; /* projected reflectivity, squared back to intensity */
-            
+
             double pi1_axis[3];
             /* pi1 is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
             cross(pi1_axis, kh, sig_axis,1);
-            
+
             /* a linear combination of these is still perpendicular to k, but has the correct polarization weighting */
             Ex=Epi*pi1_axis[0]+Esig*sig_axis[0];
             Ey=Epi*pi1_axis[1]+Esig*sig_axis[1];
             Ez=Epi*pi1_axis[2]+Esig*sig_axis[2];
             NORM(Ex, Ey, Ez);
-            
+
 #ifdef MCDEBUG
             fprintf(stderr,"Crystal: %s: Rsig=%.4g Rpi=%.4g "
                     " k0=(%.8f, %.8f, %.8f), nhat=(%.8f, %.8f, %.8f) alpha=(%.8f, %.8f, %.8f), "

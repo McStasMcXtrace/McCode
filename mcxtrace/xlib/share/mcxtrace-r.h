@@ -98,11 +98,11 @@
 
 #define mcPROP_DL(dl) \
   do { \
-    MCNUM k=sqrt( scalar_prod(kx,ky,kz,kx,ky,kz));\
-    x = x+ (dl)*kx/k;\
-    y = y+ (dl)*ky/k;\
-    z = z+ (dl)*kz/k;\
-    phi = phi+ 1e10*k*(dl);\
+    MCNUM mc_k=sqrt( scalar_prod(kx,ky,kz,kx,ky,kz));\
+    x = x+ (dl)*kx/mc_k;\
+    y = y+ (dl)*ky/mc_k;\
+    z = z+ (dl)*kz/mc_k;\
+    phi = phi+ 1e10*mc_k*(dl);\
     t = t + (dl)/((double)M_C);\
   }while (0)
 /* this had to be taken out to avoid error 700. This may need to be atomic, but probably should be somewhere else.*/

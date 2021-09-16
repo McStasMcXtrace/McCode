@@ -236,53 +236,53 @@ TRACE
             double ay=alpha_v[1]*cos_alpha0-alpha_v[2]*sin_alpha0;
             double az=alpha_v[2]*cos_alpha0+alpha_v[1]*sin_alpha0;
             alpha_v[1]=ay; alpha_v[2]=az;
-            
+
             double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
             f00 = Z;
             f0h = Table_Value(f0_t,1/(2*d),Z);
             fp  = Table_Value(m_t,E,1)-Z;
             fpp = Table_Value(m_t,E,2);
-            
+
             double Rsig, Rpi;
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
-            
+
             fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha_v,
                   f00, f0h, fp, fpp, V, h, k, l,
                   debye_waller_B, E,
                   crystal_type, structure_factor_scale_r, structure_factor_scale_i
               );
-            
+
             cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction */
             /* sig_axis is the sigma direction, as returned by Bragg_Geometry inside DarwinReflectivityBT */
             /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
             cross(pi_axis, k0hat, sig_axis, 1);
-            
+
             /* update outgoing direction vector kx, ky, kz = kh, fully scaled outgoing k vector */
             kx=kh[0]; ky=kh[1]; kz=kh[2];
-            
+
             /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
             double Esig=(Ex*sig_axis[0]+Ey*sig_axis[1]+Ez*sig_axis[2]);
             double Epi= (Ex* pi_axis[0]+Ey* pi_axis[1]+Ez* pi_axis[2]);
             if(Esig==0 && Epi==0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
-                double phi=rand01()*PI/2;
-                Esig=cos(phi); Epi=sin(phi);
+                double psi=rand01()*PI/2;
+                Esig=cos(psi); Epi=sin(psi);
             }
             Esig=Esig*sqrt(Rsig);
             Epi=Epi*sqrt(Rpi);
             R=Esig*Esig+Epi*Epi; /* projected reflectivity, squared back to intensity */
-            
+
             double pi1_axis[3];
             /* pi1 is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
             cross(pi1_axis, kh, sig_axis,1);
-            
+
             /* a linear combination of these is still perpendicular to k, but has the correct polarization weighting */
             Ex=Epi*pi1_axis[0]+Esig*sig_axis[0];
             Ey=Epi*pi1_axis[1]+Esig*sig_axis[1];
             Ez=Epi*pi1_axis[2]+Esig*sig_axis[2];
             NORM(Ex, Ey, Ez);
-            
+
 #ifdef MCDEBUG
             fprintf(stderr,"Bent Crystal: %s: Rsig=%.4g Rpi=%.4g "
                     " k0=(%.8f, %.8f, %.8f), nhat=(%.8f, %.8f, %.8f) alpha=(%.8f, %.8f, %.8f), "
