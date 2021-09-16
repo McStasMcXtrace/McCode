@@ -9,51 +9,6 @@ LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
 LIBDIR_FALLBACK = '@MCCODE_LOCATION@'
 if sys.platform == 'darwin':
     LIBDIR = LIBDIR_FALLBACK
-    
-'''
-mcstas/mcxtrace configuration.
-'''
-configuration = {
-    "MCCODE_VERSION": '@MCCODE_VERSION@',
-    "MCCODE_LIB_DIR": LIBDIR,
-    "TERMINAL": '@TERMINAL@',
-    "MCCODE": '@FLAVOR@',
-    "MCRUN": '@MCCODE_PREFIX@run',
-    "MCPLOT": '@MCCODE_PREFIX@plot-pyqtgraph',
-    "MCDISPLAY": '@MCCODE_PREFIX@display-webgl',
-    "TOOL_NAME": '@MCCODE_PREFIX@gui',
-    "PARTICLE": '@MCCODE_PARTICLE@',
-    "BROWSER": '@BROWSER@',
-    "GUICOLS": '3',
-    "EDITOR":  '@EDITOR@',
-    "QSCI":  '@QSCI@',
-}
-
-# Set environment variables according to the above
-os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
-os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
-
-'''
-Compilation, parallelisation etc.
-'''
-compilation = {
-    "CFLAGS": '@CFLAGS@',
-    "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
-    "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "OACCFLAGS": '@OACCFLAGS@',
-    "CC": '@TOOLS_CC@',
-    "OACC": 'nvc',
-    "MPICC": '@MPICC@',
-    "MPIRUN": '@MPIRUN@',
-    "MPINODES": '4',
-}
-
-'''
-Platform settings
-'''
-platform = {
-    "EXESUFFIX": '@EXE@',
-}
 
 def check_env_vars():
     ''' checks the OS environment variables '''
@@ -61,43 +16,56 @@ def check_env_vars():
     global compilation
 
     # MCCODE_LIB_DIR
-    if not os.getenv('@FLAVOR_UPPER@_OVERRIDE') is None:
-        configuration['MCCODE_LIB_DIR'] = os.getenv('@FLAVOR_UPPER@_OVERRIDE')
+    if not os.getenv('MCSTAS_OVERRIDE') is None:
+        configuration['MCCODE_LIB_DIR'] = os.getenv('MCSTAS_OVERRIDE')
     # CFLAGS
-    if not os.getenv('@FLAVOR_UPPER@_CFLAGS_OVERRIDE') is None:
-        compilation['CFLAGS'] = os.getenv('@FLAVOR_UPPER@_CFLAGS_OVERRIDE')
+    if not os.getenv('MCSTAS_CFLAGS_OVERRIDE') is None:
+        compilation['CFLAGS'] = os.getenv('MCSTAS_CFLAGS_OVERRIDE')
     # CC
-    if not os.getenv('@FLAVOR_UPPER@_CC_OVERRIDE') is None:
-        compilation['CC'] = os.getenv('@FLAVOR_UPPER@_CC_OVERRIDE')
+    if not os.getenv('MCSTAS_CC_OVERRIDE') is None:
+        compilation['CC'] = os.getenv('MCSTAS_CC_OVERRIDE')
     # MPICC
-    if not os.getenv('@FLAVOR_UPPER@_MPICC_OVERRIDE') is None:
-        compilation['MPICC'] = os.getenv('@FLAVOR_UPPER@_MPICC_OVERRIDE')
+    if not os.getenv('MCSTAS_MPICC_OVERRIDE') is None:
+        compilation['MPICC'] = os.getenv('MCSTAS_MPICC_OVERRIDE')
 
-def load_user_config():
+def load_config(path=None):
     ''' loads a json user config to the dictionaries in this module '''
     global configuration
     global compilation
     global platform
+
+    if path==None:
+        level="system"
+        userconfig = os.path.join(os.path.dirname(__file__),"mccode_config.json")
+        info=""
+    elif path=="user":
+        level="user"
+        if os.name == 'nt':
+            userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
+        else:
+            userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
+        userconfig = os.path.join(userdir,"mccode_config.json")
+        info = " from " + userconfig
     
-    if os.name == 'nt':
-        userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
+        if not os.path.isfile(userconfig):
+            return
     else:
-        userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
-    userconfig = os.path.join(userdir,"mccode_config.json")
+        level="override"
+        userconfig=path
+        info = " from " + userconfig
     
-    if not os.path.isfile(userconfig):
-        return
-    
-    print("loading user configuration from " + userconfig)
+    print("loading " + level + " configuration" + info )
     text = open(userconfig).read()
     obj = json.loads(text)
     configuration = obj['configuration']
     compilation = obj['compilation']
     platform = obj['platform']
+    # Finally, fill in the location of MCCODE_LIB_DIR based on location of Python script
+    configuration["MCCODE_LIB_DIR"]=LIBDIR
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''
-    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
+    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform}, indent=2)
 
     if os.name == 'nt':
         homedirconf =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'])
@@ -172,3 +140,28 @@ def get_mccode_prefix():
         return "mc"
     else:
         return "mx"
+
+'''
+mcstas/mcxtrace configuration.
+'''
+configuration = {
+}
+
+'''
+Compilation, parallelisation etc.
+'''
+compilation = {
+}
+
+'''
+Platform settings
+'''
+platform = {
+}
+
+load_config()
+    
+# Set environment variables according to the above
+os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
+os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
+
