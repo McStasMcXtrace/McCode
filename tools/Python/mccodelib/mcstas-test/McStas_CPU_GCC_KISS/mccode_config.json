@@ -10,7 +10,7 @@
     "PARTICLE": "neutron",
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
-    "EDITOR": "open",
+    "EDITOR": "xdg-open",
     "QSCI": "1"
   },
   "compilation": {
