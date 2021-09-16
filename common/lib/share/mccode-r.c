@@ -4087,10 +4087,10 @@ mcparseoptions(int argc, char *argv[])
       numgangs=atoi(argv[++i]);
     }
     else if(!strncmp("--gpu_innerloop=", argv[i], 16)) {
-      gpu_innerloop=atoi(&argv[i][16]);
+      gpu_innerloop=(long)strtod(&argv[i][16], NULL);
     }
     else if(!strcmp("--gpu_innerloop", argv[i]) && (i + 1) < argc) {
-      gpu_innerloop=atoi(argv[++i]);
+      gpu_innerloop=(long)strtod(argv[++i], NULL);
     }
 
     else if(!strcmp("--no-output-files", argv[i]))
