@@ -1808,23 +1808,19 @@ int cogen_raytrace(struct instr_def *instr)
 
   coutf("  /* CPU-loop */");
   coutf("  unsigned long long loops;");
-  coutf("  #ifndef GPU_INNERLOOP");
-  coutf("  #define GPU_INNERLOOP 2147483647");
-  coutf("  #endif");
-  coutf("  long innerloop=GPU_INNERLOOP;");
-  coutf("  loops = ceil((double)ncount/innerloop);");
+  coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
   coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
   coutf("  #endif");
   coutf("  #endif");
-  coutf("  if (ncount>innerloop) {");
+  coutf("  if (ncount>gpu_innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
-  coutf("    mcset_ncount(loops*innerloop);");
+  coutf("    mcset_ncount(loops*gpu_innerloop);");
   coutf("  } else {");
   coutf("    loops=1;");
-  coutf("    innerloop = ncount;");
+  coutf("    gpu_innerloop = ncount;");
   coutf("  }");
   coutf("");
   coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
@@ -1838,7 +1834,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("");
   coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
-  coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
+  coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
   coutf("      _class_particle* _particle = &particleN;");
   coutf("      particleN._uid = pidx;");
@@ -1848,8 +1844,8 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
-  coutf("    seed = seed+innerloop;");
-  coutf("    mcncount += innerloop;");
+  coutf("    seed = seed+gpu_innerloop;");
+  coutf("    mcncount += gpu_innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
