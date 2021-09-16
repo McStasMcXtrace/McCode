@@ -6,7 +6,7 @@ import sys
 Dynamic vs static LIBDIR location
 '''
 LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
-LIBDIR_FALLBACK = '/Applications/McStas-3.0.1beta.app/Contents/Resources/mcstas/3.0.1beta/'
+LIBDIR_FALLBACK = '/Applications/McStas-2.7.1beta.app/Contents/Resources/mcstas/2.7.1beta/'
 if sys.platform == 'darwin':
     LIBDIR = LIBDIR_FALLBACK
 
