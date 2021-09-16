@@ -49,6 +49,29 @@
 * and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv bins=10
 * limits=[-5 5]) When placed after all variables,  these two latter modifiers
 * apply to the signal (e.g. intensity). Unknown keywords are ignored.
+* If no limits are specified for a given observable, reasonable defaults will be
+* applied. Note that these implicit limits are <b>even</b> applied in list mode. 
+*
+* <b>Implicit limits for typical variables:</b>
+* (consult monitor_nd-lib.c if you don't find your variable here)
+* x, y, z: Derived from detection-object geometry
+* k: [0 10] Angs-1
+* v: [0 1e6] m/s
+* t: [0 1] s
+* p: [0 FLT_MAX] in intensity-units
+* vx, vy: [-1000 1000] m/s
+* vz: [0 10000] m/s
+* kx, ky: [-1 1] Angs-1
+* kz: [-10 10] Angs-1
+* energy, omega: [0 100] meV
+* lambda,wavelength: [0 100] Angs
+* sx, sy, sz: [-1 1] in polarisation-units
+* angle: [-50 50] deg
+* divergence, vdiv, hdiv, xdiv, ydiv: [-5 5] deg
+* longitude, lattitude: [-180 180] deg
+* neutron: [0 simulaton_ncount]
+* id, pixel id: [0 FLT_MAX]
+* uservars u1,u2,u3: [-1e10 1e10]
 *
 * In the case of multiple components at the same position, the 'parallel'
 * keyword must be used in each instance instead of defining a GROUP.
@@ -125,8 +148,7 @@
 *                  and 5 degrees, in 10 bins, into "mon1.A" output 1D file
 *   options = "sphere theta phi outgoing"  for a sphere PSD detector (out
 *                  beam)  and saves into file "MyMon_[Date_ID].th_ph"
-*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height
-         banana detector
+*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height banana detector
 *   options = "angle radius all auto"   is a 2D monitor with automatic limits
 *   options = "list=1000 kx ky kz energy" records 1000 photon event in a file
 *   options = "multiple kx ky kz, auto abs log t, and list all photons"
@@ -146,7 +168,7 @@
 * the instrument:
 *      COMPONENT MyMonitor = Monitor_nD(
 *       xwidth = 0.1, yheight = 0.1,
-*       user1=age, username1="Age of the Captain [years]",
+*       user1="age", username1="Age of the Captain [years]",
 *       options="user1, auto")
 *      AT ...
 *
@@ -177,19 +199,20 @@
 * bins:   [1]    Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
 * min:    [u]    Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
 * max:    [u]    Maximum range value to force for all variables. Use 'max' or 'limits' keyword in 'options' for other limits
-* user1: [variable] Variable assigned to User1
-* user2: [variable] Variable assigned to User2
-* user3: [variable] Variable assigned to User3
+* user1: [str] Variable name of USERVAR to be monitored by user1.
+* user2: [str] Variable name of USERVAR to be monitored by user2.
+* user3: [str] Variable name of USERVAR to be monitored by user3.
 * username1:  [str] Name assigned to User1
 * username2:  [str] Name assigned to User2
 * username3:  [str] Name assigned to User3
 * restore_xray: [0|1] If set, the monitor does not influence the photon state. Equivalent to setting the 'parallel' option.
 * geometry:   [str] Name of an OFF file to specify a complex geometry detector
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
-* DEFS: structure containing Monitor_nD Defines [struct]
-* Vars: structure containing Monitor_nD variables [struct]
+* DEFS: [struct]  structure containing Monitor_nD Defines.
+* Vars: [struct]  structure containing Monitor_nD variables.
 *
 * %Link
 * <a href="PreMonitor_nD.html">PreMonitor_nD</a>
@@ -197,16 +220,18 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX)
-SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  string user1="", string user2="", string user3="",
+  xwidth=0, yheight=0, zdepth=0,
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0,
   bins=0, min=-1e40, max=1e40, restore_xray=0, radius=0,
-  string options="NULL", string filename="NULL",string geometry="NULL",
+  string options="NULL", string filename="NULL",string geometry="NULL", int nowritefile=0,
   string username1="NULL", string username2="NULL", string username3="NULL"
-  )
+)
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector,offdata)
-  /* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+OUTPUT PARAMETERS ()
+/* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
@@ -243,6 +268,7 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
+  /* transfer, "zero", and check username- and user variable strings to Vars struct*/
   strncpy(Vars.UserName1,
     username1 && strlen(username1) && strcmp(username1, "0") && strcmp(username1, "NULL") ?
     username1 : "", 128);
@@ -252,17 +278,66 @@ INITIALIZE
   strncpy(Vars.UserName3,
     username3 && strlen(username3) && strcmp(username3, "0") && strcmp(username3, "NULL") ?
     username3 : "", 128);
-  if (radius) {
+  if(user1 && strlen(user1) && strcmp(user1, "0") && strcmp(user1, "NULL")){
+    strncpy(Vars.UserVariable1,user1,128);
+    int fail;_class_particle testparticle;
+    particle_getvar(&testparticle,Vars.UserVariable1,&fail);
+    if(fail){
+      fprintf(stderr,"Warning (%s): user1=%s is unknown. The signal will not be resolved - this is likely not what you intended.\n",NAME_CURRENT_COMP,user1);
+    }
+  }
+  if(user2 && strlen(user2) && strcmp(user2, "0") && strcmp(user2, "NULL")){
+    strncpy(Vars.UserVariable2,user2,128);
+    int fail;_class_particle testparticle;
+    particle_getvar(&testparticle,Vars.UserVariable2,&fail);
+    if(fail){
+      fprintf(stderr,"Warning (%s): user2=%s is unknown. The signal will not be resolved - this is likely not what you intended.\n",NAME_CURRENT_COMP,user2);
+    }
+  }
+  if(user3 && strlen(user3) && strcmp(user3, "0") && strcmp(user3, "NULL")){
+    strncpy(Vars.UserVariable3,user3,128);
+    int fail;_class_particle testparticle;
+    particle_getvar(&testparticle,Vars.UserVariable3,&fail);
+    if(fail){
+      fprintf(stderr,"Warning (%s): user3=%s is unknown. The signal will not be resolved - this is likely not what you intended.\n",NAME_CURRENT_COMP,user3);
+    }
+  }
+ 
+  /*sanitize parameters set for curved shapes*/
+  if(strstr(Vars.option,"cylinder") || strstr(Vars.option,"banana") || strstr(Vars.option,"sphere")){
+    /*this _is_ an explicit curved shape. Should have a radius. Inherit from xwidth or zdepth (diameters), x has precedence.*/
+    if (!radius){
+      if(xwidth){
+	radius=xwidth/2.0;
+      }else{
+	radius=zdepth/2.0;
+      }
+    }else{
+      /*radius is set - propagate to xwidth. It is used inside monitor_nd-lib*/
+      xwidth=2*radius;
+    }
+    if(!yheight){
+      /*if not set - use the diameter as height for the curved object. This will likely only happen for spheres*/
+      yheight=2*radius;
+    }
+  }else if (radius) {
+    /*radius is set - this must be curved shape then. Infer shape from yheight*/
     xwidth = zdepth = 2*radius;
-    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana") && !strstr(Vars.option, "sphere"))
+    if (yheight){
+      /*a height is given (and no shape explitly set - assume cylinder*/
       strcat(Vars.option, " banana");
-    else if (!yheight && !strstr(Vars.option ,"sphere")) {
+    }else {
       strcat(Vars.option, " sphere");
       yheight=2*radius;
     }
   }
+
   int offflag=0;
-  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) {
+    #ifndef USE_OFF
+    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
+    exit(-1);
+    #else
     if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
              "            Defaulting to normal Monitor dimensions.\n",
@@ -271,7 +346,8 @@ INITIALIZE
     } else {
       offflag=1;
     }
-
+    #endif
+  }
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax &&
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
@@ -295,17 +371,33 @@ MPI_MASTER(
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
 );
+#else
+#ifdef OPENACC
+  if (strstr(Vars.option, "auto"))
+    printf("Monitor_nD: %s is requesting automatic limits option 'auto' together with OpenACC.\n"
+           "WARNING     this feature is NOT supported using OpenACC and has been disabled!\n", NAME_CURRENT_COMP);
 #endif
+#endif
+
 %}
 
 TRACE
 %{
-  double  XY=0;
+//  double  XY=0;
   double  l0 = 0;
   double  l1 = 0;
-  double  pp;
+  int     pp;
   int     intersect   = 0;
   char    Flag_Restore = 0;
+
+  #ifdef OPENACC
+  #ifdef USE_OFF
+  off_struct thread_offdata = offdata;
+  #endif
+  #else
+  #define thread_offdata offdata
+  #endif
+  
 
   if (user1 != FLT_MAX) Vars.UserVariable1 = user1;
   if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
@@ -314,14 +406,16 @@ TRACE
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
-
+  #ifdef USE_OFF
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
     intersect = off_x_intersect(&l0, &l1, NULL, NULL,
        x,y,z, kx, ky, kz, offdata );
   }
-  else if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+  else 
+  #endif
+    if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
             || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
   {
     // propagate to xy plane and find intersection
@@ -374,7 +468,7 @@ TRACE
       if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
         double y0,y1;
         /* propagate to intersection point as temporary variable to check top/bottom */
-        y0 = y+l0; 
+        y0 = y+l0;
         y1 = y+l1;
         if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) l0 = l1;
         if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) l1 = l0;
@@ -383,7 +477,7 @@ TRACE
         l0 = 0;  /* photon was already inside ! */
       if (l1 < 0 && l0 > 0) /* photon exit before entering !! */
         l1 = 0;
-      /* t0 is now time of incoming intersection with the sphere. */
+      /* t0 is now time of incoming intersection with the detection area */
       if ((Vars.Flag_Shape < 0) && (l1 > 0))
         PROP_DL(l1); /* l1 outgoing beam */
       else
@@ -401,26 +495,27 @@ TRACE
   if (intersect)
   {
     /* Now get the data to monitor: current or keep from PreMonitor */
-    if (Vars.Flag_UsePreMonitor != 1)
-    {
-      Vars.cp  = p;
-      Vars.cx  = x;
-      Vars.ckx = kx;
-      Vars.cEx = Ex;
-      Vars.cy  = y;
-      Vars.cky = ky;
-      Vars.cEy = Ey;
-      Vars.cz  = z;
-      Vars.ckz = kz;
-      Vars.cEz = Ez;
-      Vars.ct  = t;
-      Vars.cphi = phi;
-    }
+/*    if (Vars.Flag_UsePreMonitor != 1)*/
+/*    {*/
+/*      Vars.cp  = p;*/
+/*      Vars.cx  = x;*/
+/*      Vars.ckx = kx;*/
+/*      Vars.cEx = Ex;*/
+/*      Vars.cy  = y;*/
+/*      Vars.cky = ky;*/
+/*      Vars.cEy = Ey;*/
+/*      Vars.cz  = z;*/
+/*      Vars.ckz = kz;*/
+/*      Vars.cEz = Ez;*/
+/*      Vars.ct  = t;*/
+/*      Vars.cphi = phi;*/
+/*    }*/
 
 
-    pp = Monitor_nD_Trace(&DEFS, &Vars);
+    pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
     if (pp==0.0)
-    { ABSORB;
+    {
+      ABSORB;
     }
     else if(pp==1)
     {
@@ -448,8 +543,10 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   /* save results, but do not free pointers */
   detector = Monitor_nD_Save(&DEFS, &Vars);
+}
 %}
 
 FINALLY

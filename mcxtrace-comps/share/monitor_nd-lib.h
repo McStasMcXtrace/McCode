@@ -134,19 +134,20 @@
     char   Monitor_Label[MONnD_COORD_NMAX*30];/* Label for monitor */
     char   Mon_File[128];                     /* output file name */
 
-    double cx,cy,cz;
+    /* these don't seem to be used anymore as they are superseded by _particle
+    double cx, cy, cz;
     double cvx, cvy, cvz;
     double ckx, cky, ckz;
     double cEx, cEy, cEz;
-    double ct, cphi, cp;
+    double ct, cphi, cp;*/
     double He3_pressure;
     char   Flag_UsePreMonitor    ;   /* use a previously stored photon parameter set */
     char   UserName1[128];
     char   UserName2[128];
     char   UserName3[128];
-    double UserVariable1;
-    double UserVariable2;
-    double UserVariable3;
+    char   UserVariable1[128];
+    char   UserVariable2[128];
+    char   UserVariable3[128];
     char   option[CHAR_BUF_LENGTH];
 
     long long int Nsum;
@@ -169,20 +170,11 @@
 /* ========================================================================= */
 
 void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, int);
-int Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *);
+#pragma acc routine
+int Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *, _class_particle* _particle);
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);
-void Monitor_nD_McDisplay(MonitornD_Defines_type *,
- MonitornD_Variables_type *);
-
-#define MONND_DECLARE(monname) \
-  struct MonitornD_Variables *mcmonnd ## monname;
-#define MONND_USER_TITLE(monname, num, title) \
-  { mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
-    strcpy(mcmonnd ## monname->UserName ## num, title); }
-#define MONND_USER_VALUE(monname, num, value) \
-  { mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
-    mcmonnd ## monname->UserVariable ## num = (value); }
+void Monitor_nD_McDisplay(MonitornD_Defines_type *, MonitornD_Variables_type *);
 
 #endif
 
