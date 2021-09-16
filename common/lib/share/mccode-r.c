@@ -4073,8 +4073,14 @@ mcparseoptions(int argc, char *argv[])
       mcformat=argv[++i];
     }
     #ifdef OPENACC
+    else if(!strcmp("--vecsize=", argv[i]) && (i + 1) < argc) {
+      vecsize=atoi(&argv[i][10]);
+    }    
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
+    }
+    else if(!strcmp("--numgangs=", argv[i]) && (i + 1) < argc) {
+      numgangs=atoi(&argv[i][11]);
     }
     else if(!strcmp("--numgangs", argv[i]) && (i + 1) < argc) {
       numgangs=atoi(argv[++i]);
