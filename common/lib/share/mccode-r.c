@@ -67,12 +67,7 @@ int      mcallowbackprop             = 0;         /* flag to enable negative/bac
 int vecsize = 128;
 int numgangs = 7813;
 long gpu_innerloop = 2147483647;
-#ifdef FUNNEL
-/* Lower gpu_innerloop in case we 
-   run with the "FUNNEL" layout,
-   used in cases with NOACC / CPU COMPONENT */
-gpu_innerloop=1048576;
-#endif
+
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
 mcstatic unsigned long long int mcncount             = 1;
