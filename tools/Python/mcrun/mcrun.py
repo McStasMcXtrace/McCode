@@ -112,6 +112,10 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='generate a user config file')
 
+    add('--override-config',
+        metavar='PATH', default=False,
+        help='Load config file from specific dir')
+
     parser.add_option_group(opt)
 
 
@@ -290,6 +294,11 @@ def main():
         mccode_config.save_user_config()
         quit()
 
+    # Override system and user level config files if prompted
+    if options.override_config:
+        mccode_config.load_config(options.override_config)
+        mccode_config.check_env_vars()
+        
     
     # Extract instrument and parameters
     if len(args) == 0:
