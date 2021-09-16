@@ -48,7 +48,7 @@
 ******************************************************************/
 
 DEFINE COMPONENT Source_pt
-DEFINITION PARAMETERS (string spectrum_file=NULL)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (focus_xw=0,focus_yh=0,focus_x0=0,focus_y0=0,flux=0,dist=1,E0=0, dE=0, lambda0=0,dlambda=0,phase=0,randomphase=1,gauss=0, string spectrum_file="")
 OUTPUT PARAMETERS (pmul, spectrum_T)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -83,7 +83,7 @@ INITIALIZE
     /*data is now in table spectrum_T*/
     /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
     int i;
-    pint=0;
+    double pint=0;
     t_Table *T=&(spectrum_T);
     for (i=0;i<spectrum_T.rows-1;i++){
       pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
@@ -115,7 +115,6 @@ TRACE
  
   fi_x=atan(focus_xw/2.0/dist)*2.0;
   fi_y=atan(focus_yh/2.0/dist)*2.0;
-  if(mcrun_num==0) {printf("%g %g\n",fi_x,fi_y);}
 
   randvec_target_rect_angular(&kx,&ky,&kz, &t_ome, focus_x0, focus_y0, dist, fi_x,fi_y,ROT_A_CURRENT_COMP);
   NORM(kx,ky,kz);
