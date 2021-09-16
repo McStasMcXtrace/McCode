@@ -180,6 +180,10 @@ def add_mcstas_options(parser):
         metavar='NUMGANGS', default='',
         help='number of \'gangs\' in OpenACC parallel scenarios')
 
+    add('--gpu_innerloop',
+        metavar='INNERLOOP', default='',
+        help='Maximum particles in an OpenACC kernel run. (If INNERLOOP is smaller than ncount we repeat)')
+
     add('--no-output-files',
         action='store_true', default=False,
         help='Do not write any data files')
