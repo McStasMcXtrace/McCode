@@ -6,7 +6,7 @@ import sys
 Dynamic vs static LIBDIR location
 '''
 LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
-LIBDIR_FALLBACK = '/Applications/McStas-3.0.1beta.app/Contents/Resources/mcstas/3.0.1beta/'
+LIBDIR_FALLBACK = '/home/pkwi/McStas/mcstas/3.0-dev/'
 if sys.platform == 'darwin':
     LIBDIR = LIBDIR_FALLBACK
 
@@ -51,7 +51,7 @@ def load_config(path=None):
             return
     else:
         level="override"
-        userconfig=path
+        userconfig= os.path.join(path,"mccode_config.json")
         info = " from " + userconfig
     
     print("loading " + level + " configuration" + info )
@@ -60,6 +60,8 @@ def load_config(path=None):
     configuration = obj['configuration']
     compilation = obj['compilation']
     platform = obj['platform']
+    # Finally, fill in the location of MCCODE_LIB_DIR based on location of Python script
+    configuration["MCCODE_LIB_DIR"]=LIBDIR
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''
