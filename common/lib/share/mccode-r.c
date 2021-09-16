@@ -62,6 +62,10 @@ static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
+#ifdef OPENACC
+int vecsize = 128;
+int numgangs = 7813;
+#endif
 
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
@@ -3813,6 +3817,10 @@ mchelp(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
 "  --source                   Show the instrument code which was compiled.\n"
+#ifdef OPENACC
+"  --vecsize                  OpenACC vector-size\n"
+"  --numgangs                 Number of OpenACC gangs\n"
+#endif
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
@@ -4064,6 +4072,14 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcformat=argv[++i];
     }
+    #ifdef OPENACC
+    else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
+      vecsize=atoi(argv[++i]);
+    }
+    else if(!strcmp("--numgangs", argv[i]) && (i + 1) < argc) {
+      numgangs=atoi(argv[++i]);
+    }
+    #endif
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
     else if(!strcmp("--source", argv[i])) {

@@ -1837,15 +1837,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("    #endif");
   coutf("");
-  coutf("    /* Handle defines for segmentation of GPU parallelisation */");
-  coutf("    #ifndef VECSIZE");
-  coutf("    #define VECSIZE 128");
-  coutf("    #endif");
-  coutf("    #ifndef NUMGANGS");
-  coutf("    #define NUMGANGS 7813");
-  coutf("    #endif");
-  coutf("");
-  coutf("    #pragma acc parallel loop num_gangs(NUMGANGS) vector_length(VECSIZE)");
+  coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
   coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
   coutf("      _class_particle* _particle = &particleN;");
