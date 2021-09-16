@@ -173,11 +173,11 @@ def add_mcstas_options(parser):
              '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--vecsize',
-        metavar='VECSIZE', default=False,
+        metavar='VECSIZE', default=7813,
         help='vector length in OpenACC parallel scenarios')
 
     add('--numgangs',
-        metavar='NUMGANGS', default=False,
+        metavar='NUMGANGS', default=128,
         help='number of \'gangs\' in OpenACC parallel scenarios')
 
     add('--no-output-files',
