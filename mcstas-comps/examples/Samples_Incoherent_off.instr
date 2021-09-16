@@ -27,7 +27,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Samples_Incoherent_off(string geometry="socket.off")
-DEPENDENCY " -DUSE_OFF -DNUMGANGS=100 "
+DEPENDENCY " -DUSE_OFF "
 
 TRACE
 
