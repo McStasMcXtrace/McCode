@@ -51,7 +51,7 @@ def load_config(path=None):
             return
     else:
         level="override"
-        userconfig=path
+        userconfig= os.path.join(path,"mccode_config.json")
         info = " from " + userconfig
     
     print("loading " + level + " configuration" + info )
@@ -60,6 +60,8 @@ def load_config(path=None):
     configuration = obj['configuration']
     compilation = obj['compilation']
     platform = obj['platform']
+    # Finally, fill in the location of MCCODE_LIB_DIR based on location of Python script
+    configuration["MCCODE_LIB_DIR"]=LIBDIR
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''
