@@ -33,23 +33,27 @@
 * 0.75 0.0 0.75 0.0 0.75
 * 1.0 0.0 1.0 0.0 1.0
 * 
-* ...which defines a 5x5 mask with a kind of checkerboard pattern-  
-* 
+* ...which defines a 5x5 mask with a kind of checkerboard pattern.
+*
+* By default the values from the masking image are interepreted as opacity (1 is fully blocking). If invert is nonzero this is inverted and the values are
+* considered as transparency (1 is fully transmissive)
+*
 * N.b. If you want to use the png-option of the component you must have libpng installed _and_ link your compiled instrument to it. Assuming libpng is installed you may do this
 * by adding "-DUSE_PNG=1 -lpng" to 1) the MCXTRACE_CFLAGS environment variable or 2) to the compiler flags textbox in the GUI. Open File->Configuration and edit the textbox. 
 *
-* The virtual option of the Mask, is intended as a help to use a png-image as a grayscale distribution. If the virtual flag is set, rays are porpagated to the mask plane
-* and the pixel value at the intersection point is read, but the rays reamin unaffected. By extracting the output parameter masking it can subsequently be used. 
+* The virtual option of the Mask, is intended as a help to use a png-image as a grayscale distribution. If the virtual flag is set, rays are propagated to the mask plane
+* and the pixel value at the intersection point is read, but the rays remain unaffected. The pixel value is stored in the variable named in the string maskvar. This should be
+* a USERVAR set from the instrument file.
 * 
 * %P
 * Input parameters:
 * xwidth: [m]   Width of the masking object
 * yheight:[m]   Height of the masking object
 * mask:   [ ]   Name of file containing the masking image
-* invert: [ ]   By default the values from the masking image are interepreted as opacity (1 is fully blocking). If invert is nonzero this is inverted and the values are considered as transparency (1 is fully transmissive)
-* virtual:[ ]   Mask does not affect the x-ray, but does read the pixel value of the pixel hit. Could be useful to have as a packing factor for a crystal .
+* invert: [ ]   ==0 => make values are opacity, ==1 => makse values are transparency.
+* virtual:[ ]   Mask does not affect the x-ray, but does still read the pixel value of the pixel hit and stores it in masking.
 * Output parameters:
-* masking: [ ]  Opacity/transmission value. If virtual==0, each ray is downweighted according to the masking value.
+* maskvar: [ ]  Opacity/transmission value.
 * %E
 *******************************************************************************/
 
@@ -79,11 +83,7 @@ DECLARE
   double xmax;
   double ymax;
   int filter_row;
-%}
-
-USERVARS
-%{
-  double masking;
+  double maskval;
 %}
 
 INITIALIZE
@@ -247,23 +247,20 @@ TRACE
 %{
   int i,j;
 
-
   PROP_Z0;
   if (x>xmin && x<xmax && y>ymin && y<ymax){
     i = floor((x - xmin)*nx/(xwidth));
     j = floor((y - ymin)*ny/(yheight));
     if (invert){  
-      masking=Table_Index(table,j,i);
+      maskval=Table_Index(table,j,i);
     }else{
-      masking=1.0-Table_Index(table,j,i);
+      maskval=1.0-Table_Index(table,j,i);
     }
     if(!virtual){
-        p*=masking;
+        p*=maskval;
     }
     SCATTER;
   }
-
-
 
 %}
 

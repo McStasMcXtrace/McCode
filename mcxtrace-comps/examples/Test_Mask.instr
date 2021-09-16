@@ -35,6 +35,11 @@ DECLARE
   char filename[255];
 %}
 
+USERVARS
+%{
+  double maskpixel;
+%}
+
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
@@ -82,7 +87,11 @@ AT(0,0,1) RELATIVE src
 COMPONENT maske = Mask(
     xwidth=0.1, yheight=0.1, invert=invert, mask=filename)
 AT(0,0,1e-6) RELATIVE PREVIOUS
- 
+EXTEND
+%{
+  maskpixel=maskval;
+%}
+
 COMPONENT psd1 = COPY(psd0) (filename="psd1")
 AT(0,0,1e-6) RELATIVE PREVIOUS
 
