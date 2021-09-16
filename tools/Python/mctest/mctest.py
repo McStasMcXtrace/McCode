@@ -149,7 +149,7 @@ def extract_testvals(datafolder, monitorname):
                 return (I, I_err, N)
                 break
 
-def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
+def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=None):
     ''' this main test function tests the given mccode branch/version '''
 
     # copy instr files and record info
@@ -212,7 +212,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
             if test.testnb > 0 or (not args.skipnontest):
                 log = LineLogger()
                 t1 = time.time()
-                cmd = "mcrun --info %s &> compile_stdout.txt" % test.localfile
+                cmd = "mcrun"
+                if version:
+                    cmd = cmd + " --override-config="join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                cmd = cmd + " --info %s &> compile_stdout.txt" % test.localfile
                 utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
                 t2 = time.time()
                 test.compiled = os.path.exists(binfile)
@@ -251,11 +254,20 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None):
         global ncount, mpi, openacc
         if mpi is not None:
             if openacc is True:
-                cmd = "mcrun -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                cmd = "mcrun"
+                if version:
+                    cmd = cmd + " --override-config="join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
             else:
-                cmd = "mcrun -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                cmd = "mcrun"
+                if version:
+                    cmd = cmd + " --override-config="join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
         else:
-            cmd = "mcrun -s 1000 %s %s -n%s -d%d  &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
+            cmd = "mcrun"
+            if version:
+                    cmd = cmd + " --override-config="join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+            cmd = cmd + " -s 1000 %s %s -n%s -d%d  &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
@@ -411,7 +423,7 @@ def run_version_test(testdir, mccoderoot, limit, instrfilter, version):
         logging.info("Testing: %s" % version)
         logging.info("")
 
-        results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter)
+        results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter, version)
     finally:
         deactivate_mccode_version(oldpath)
 
@@ -454,9 +466,9 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
             return [configfltr]
         for (_, _, files) in os.walk(lookin):
             if configfltr is not None:
-                return [join(lookin, f) for f in files if re.search("^mccode_config_%s\.py$" % configfltr, f)]
+                return [join(lookin, f) for f in files if re.search("^%s/mccode_config.json$" % configfltr, f)]
             else:
-                return [join(lookin, f) for f in files if re.search("^mccode_config_.*\.py$", f)]
+                return [join(lookin, f) for f in files if re.search("^mccode_config.json$", f)]
 
     # get test directory datetime string
     datetime = utils.get_datetimestr()
@@ -468,7 +480,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
 
         oldpath = activate_mccode_version(version, mccoderoot)
         try:
-            bckfile = activate_config(version, mccoderoot, f)
+            #bckfile = activate_config(version, mccoderoot, f)
             try:
                 logging.info("")
                 label=label+"_"+ncount
@@ -476,7 +488,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
 
                 # craete the proper test dir
                 labeldir = create_label_dir(testdir, label)
-                results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter)
+                results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter, version)
 
                 # write local test result
                 reportfile = os.path.join(labeldir, "testresults_%s.json" % label)
@@ -484,8 +496,8 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
             
                 logging.debug("")
                 logging.debug("Test results written to: %s" % reportfile)
-            finally:
-                deactivate_config(bckfile)
+            #finally:
+            #    deactivate_config(bckfile)
         finally:
             deactivate_mccode_version(oldpath)
 
