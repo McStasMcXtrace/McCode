@@ -4074,19 +4074,19 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcformat=argv[++i];
     }
-    else if(!strcmp("--vecsize=", argv[i]) && (i + 1) < argc) {
+    else if(!strncmp("--vecsize=", argv[i], 10)) {
       vecsize=atoi(&argv[i][10]);
     }    
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
     }
-    else if(!strcmp("--numgangs=", argv[i]) && (i + 1) < argc) {
+    else if(!strncmp("--numgangs=", argv[i], 11)) {
       numgangs=atoi(&argv[i][11]);
     }
     else if(!strcmp("--numgangs", argv[i]) && (i + 1) < argc) {
       numgangs=atoi(argv[++i]);
     }
-    else if(!strcmp("--gpu_innerloop=", argv[i]) && (i + 1) < argc) {
+    else if(!strncmp("--gpu_innerloop=", argv[i], 16)) {
       gpu_innerloop=atoi(&argv[i][16]);
     }
     else if(!strcmp("--gpu_innerloop", argv[i]) && (i + 1) < argc) {
