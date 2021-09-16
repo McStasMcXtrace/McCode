@@ -1,7 +1,6 @@
 {
   "configuration": {
-    "MCCODE_VERSION": "3.0.1beta",
-    "MCCODE_LIB_DIR": "/usr/share/mcstas/3.0.1beta/",
+    "MCCODE_VERSION": "3.0-dev",
     "TERMINAL": "x-terminal-emulator -e",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun",
@@ -11,19 +10,19 @@
     "PARTICLE": "neutron",
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
-    "EDITOR": "open",
+    "EDITOR": "xdg-open",
     "QSCI": "1"
   },
   "compilation": {
-    "CFLAGS": "-g -O2 -lm -std=c99",
+    "CFLAGS": "-fopenacc -foffload=nvptx-none -foffload="-fcf-protection=none" -fno-stack-protector -DOPENACC -foffload=-lm -DGCCOFFLOAD -lm",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-ta:multicore -DOPENACC",
-    "CC": "gcc",
-    "OACC": "nvc",
+    "OACCFLAGS": "-fopenacc -foffload=nvptx-none -foffload="-fcf-protection=none" -fno-stack-protector -DOPENACC -foffload=-lm -DGCCOFFLOAD -lm",
+    "CC": "gcc-10",
+    "OACC": "nvc-10",
     "MPICC": "mpicc",
     "MPIRUN": "mpirun",
-    "MPINODES": "4"
+    "MPINODES": "10"
   },
   "platform": {
     "EXESUFFIX": "out"
