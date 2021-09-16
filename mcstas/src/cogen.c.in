@@ -1906,23 +1906,23 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
   coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
-  coutf("  #ifndef GPU_FUNNEL_INNERLOOP");
-  coutf("  #define GPU_FUNNEL_INNERLOOP 1024*1024");
-  coutf("  #endif");
-  coutf("  long innerloop=GPU_FUNNEL_INNERLOOP; // <-- tune by memory capacity here (max threads: 2147483647);");
-  coutf("  loops = ceil((double)ncount/innerloop);");
-  coutf("  if (ncount>innerloop) {");
+  coutf("  #ifdef OPENACC");
+  coutf("  loops = ceil((double)ncount/gpu_innerloop);");
+  coutf("  if (ncount>gpu_innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
-  coutf("    mcset_ncount(loops*2147483647);");
+  coutf("    mcset_ncount(loops*gpu_innerloop);");
   coutf("  } else {");
+  coutf("  #endif");
   coutf("    loops=1;");
-  coutf("    innerloop = ncount;");
+  coutf("    gpu_innerloop = ncount;");
+  coutf("  #ifdef OPENACC");
   coutf("  }");
+  coutf("  #endif");
   coutf("");
   coutf("  // create particles struct and pointer arrays (same memory used by all batches)");
-  coutf("  _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
-  coutf("  _class_particle* pbuffer = malloc(innerloop*sizeof(_class_particle));");
-  coutf("  long livebatchsize = innerloop;");
+  coutf("  _class_particle* particles = malloc(gpu_innerloop*sizeof(_class_particle));");
+  coutf("  _class_particle* pbuffer = malloc(gpu_innerloop*sizeof(_class_particle));");
+  coutf("  long livebatchsize = gpu_innerloop;");
   coutf("");
 
   // batches
@@ -1966,7 +1966,7 @@ int cogen_rt_funnel(struct instr_def *instr)
         coutf("");
         coutf("    // SPLIT with available livebatchsize ");
         coutf("    long mult_%s;",comp->name);
-        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, innerloop, 1, &mult_%s);",comp->name);
+        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, gpu_innerloop, 1, &mult_%s);",comp->name);
         coutf("    //printf(\"livebatchsize: %cld, split: %cld\\n\",  livebatchsize, mult);", '%', '%');
       }
       if (comp->split) {
@@ -2036,7 +2036,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    }");
   coutf("");
   coutf("    // jump to next viable seed");
-  coutf("    seed = seed + innerloop;");
+  coutf("    seed = seed + gpu_innerloop;");
   coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  free(particles);");
