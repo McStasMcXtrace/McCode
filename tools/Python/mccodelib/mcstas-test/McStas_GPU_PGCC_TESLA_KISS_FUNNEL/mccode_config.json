@@ -14,10 +14,10 @@
     "QSCI": "1"
   },
   "compilation": {
-    "CFLAGS": "-ta=tesla,managed -Minfo=accel -DOPENACC -DNOSPLIT",
+    "CFLAGS": "-ta=tesla,managed -Minfo=accel -DOPENACC -DFUNNEL",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
+    "OACCFLAGS": "-ta=tesla,managed -DOPENACC -DFUNNEL",
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "mpicc",
