@@ -1,7 +1,6 @@
 {
   "configuration": {
     "MCCODE_VERSION": "3.0.1beta",
-    "MCCODE_LIB_DIR": "/usr/share/mcstas/3.0.1beta/",
     "TERMINAL": "x-terminal-emulator -e",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun",
@@ -18,7 +17,7 @@
     "CFLAGS": "-g -O2 -lm -std=c99",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-ta:multicore -DOPENACC",
+    "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
     "CC": "gcc",
     "OACC": "nvc",
     "MPICC": "mpicc",
