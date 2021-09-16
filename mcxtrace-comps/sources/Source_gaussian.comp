@@ -74,6 +74,7 @@ DECLARE
   double spX;
   double spY;
   int uniform_sampling;
+  int spectrum_from_file;
 %}
 
 
@@ -98,7 +99,10 @@ INITIALIZE
     pmul=1.0/(double)mcget_ncount();
   }
 
-  if (spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file)){
+  /*flag if we are using a datafile*/
+  spectrum_from_file=(spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file));
+
+  if (spectrum_from_file){
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&sT,spectrum_file,0))==-1){
@@ -159,7 +163,7 @@ INITIALIZE
   uniform_sampling=0;
   if (focus_xw && focus_yh){
     /*adjust for a focusing window*/
-    pmul*=erf(focus_xw*0.5*M_SQRT1_2/spX)*erf(focus_yh*0.5*M_SQRT1_2/spY);
+    pmul*=erf(focus_xw*0.5/M_SQRT2/spX)*erf(focus_yh*0.5/M_SQRT2/spY);
     if ( focus_xw<spX || focus_yh<spY){
       /*use a uniform sampling scheme for more efficient sampling by adjusting weights*/
       uniform_sampling=1;
@@ -167,7 +171,7 @@ INITIALIZE
   }
 
   /*corrections for energy range*/
-  if(spectrum_file){
+  if(spectrum_from_file ){
       pmul*=(sT.data[(sT.rows-1)*sT.columns]-sT.data[0]);
   }else{
       if(E0){
@@ -195,7 +199,7 @@ TRACE
   p=1.0;
  
 
-  if (spectrum_file){
+  if (spectrum_from_file){
     double pp=0;
     l=sT.data[0]+ (sT.data[(sT.rows-1)*sT.columns] -sT.data[0])*rand01();
     if(brilliance){
