@@ -200,6 +200,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
 
 
     # compile, record time
+    global ncount, mpi, openacc
     logging.info("")
     logging.info("Compiling instruments [seconds]...")
     for test in tests:
@@ -215,7 +216,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 cmd = "mcrun"
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
-                cmd = cmd + " --info %s &> compile_stdout.txt" % test.localfile
+                if openacc:
+                    cmd = cmd + " --openacc "
+                if mpi:
+                    cmd = cmd + " --mpi=1 "
+                cmd = cmd + " --verbose -c -n0 %s &> compile_stdout.txt" % test.localfile
                 utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
                 t2 = time.time()
                 test.compiled = os.path.exists(binfile)
@@ -251,7 +256,6 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
 
         # run the test, record time and runtime success/fail
         t1 = time.time()
-        global ncount, mpi, openacc
         if mpi is not None:
             if openacc is True:
                 cmd = "mcrun"
