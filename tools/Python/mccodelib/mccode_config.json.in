@@ -18,7 +18,7 @@
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
     "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
-    "CC": "gcc",
+    "CC": "@TOOLS_CC@",
     "OACC": "nvc",
     "MPICC": "@MPICC@",
     "MPIRUN": "@MPIRUN@",
