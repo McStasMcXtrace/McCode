@@ -33,7 +33,12 @@
 *******************************************************************************/
 DEFINE INSTRUMENT Focal_pt_monitor(Rcurve=100e-6)
 
+
 DECLARE
+%{
+%}
+
+USERVARS
 %{
   double fz;
 %}
@@ -77,7 +82,7 @@ EXTEND
 %}
 
 COMPONENT fpt = Monitor_nD(
-    xwidth=0.1, yheight=0.1, options="u1 limits -10 100", bins=200, username1="Z", user1=fz)
+    xwidth=0.1, yheight=0.1, options="u1 limits -10 100", bins=200, username1="Z", user1="fz")
 AT(0,0,0) RELATIVE fpt0
 
 FINALLY

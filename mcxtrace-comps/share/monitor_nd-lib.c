@@ -548,7 +548,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       if ((Set_Vars_Coord_Type == DEFS->COORD_EX)
        || (Set_Vars_Coord_Type == DEFS->COORD_EY)
        || (Set_Vars_Coord_Type == DEFS->COORD_EZ))
-        strcpy(Short_Label[i],"Polarisation");
+       strcpy(Short_Label[i],"Polarisation");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_HDIV)
        || (Set_Vars_Coord_Type == DEFS->COORD_VDIV))
@@ -884,6 +884,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       /* automatically compute area and steradian solid angle when in AUTO mode */
       /* compute the steradian solid angle incoming on the monitor */
       double k;
+      double tmp;
       k=sqrt(_particle->kx*_particle->kx + _particle->ky*_particle->ky + _particle->kz*_particle->kz);
       tmp=_particle->x;
       if (Vars->min_x > _particle->x){
@@ -907,7 +908,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
 
       #pragma acc atomic
       Vars->mean_p = Vars->mean_p + _particle->p;
-      if (v) {
+      if (k) {
         tmp=_particle->p*fabs(_particle->kx/k);
         #pragma acc atomic
         Vars->mean_dx = Vars->mean_dx + tmp; //_particle->p*fabs(_particle->kx/k);
@@ -923,7 +924,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         /* get values for variables to monitor */
         if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = _particle->x;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_Y) XY = Vars->cy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_Y) XY = _particle->y;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_Z) XY = _particle->z;
         else
@@ -962,11 +963,11 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         if (Set_Vars_Coord_Type == DEFS->COORD_XZ)
           XY = sqrt(_particle->x*_particle->x+_particle->z*_particle->z);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(_particle->kx*_particle->kx+_particle->ky*_particle->ky)/k*M_C;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(_particle->vx*_particle->vx+_particle->vz*_particle->vz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(_particle->kx*_particle->kx+_particle->kz*_particle->kz)/k*M_C;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(_particle->vy*_particle->vy+_particle->vz*_particle->vz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(_particle->ky*_particle->ky+_particle->kz*_particle->kz)/k*M_C;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_K) XY = k;//sqrt(_particle->kx*_particle->kx+_particle->ky*_particle->ky+_particle->kz*_particle->kz);
         else

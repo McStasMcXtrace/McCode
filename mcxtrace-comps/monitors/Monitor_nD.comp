@@ -108,7 +108,7 @@
 *     binary {float|double}     with 'source' option, saves in compact files
 *     bins=[bins=20]            Number of bins in the detector along dimension
 *     borders                   To also count off-limits photons (X < min or X > max)
-*     capture                   weight by lambda/lambda(2200m/s) capture flux
+*     capture                   weight by capture flux (not validated)
 *     exclusive                 absorb photon out of monitor limits
 *     file=string               Detector image file name. default is component name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det
@@ -397,11 +397,6 @@ TRACE
   #else
   #define thread_offdata offdata
   #endif
-  
-
-  if (user1 != FLT_MAX) Vars.UserVariable1 = user1;
-  if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
-  if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
