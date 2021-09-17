@@ -51,7 +51,7 @@ def load_config(path=None):
             return
     else:
         level="override"
-        userconfig=path
+        userconfig= os.path.join(path,"mccode_config.json")
         info = " from " + userconfig
     
     print("loading " + level + " configuration" + info )
