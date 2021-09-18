@@ -53,7 +53,9 @@ a:visited { color: lightgrey; background-color: transparent; text-decoration: no
       {%- elif c.0 == 3 %}
   <td class=state_three><a href={{ c.5 }} >C:{{ c.1 }}</a></td>
       {%- else %}
-  <td class=state_four><a href={{ c.5 }} >C:{{ c.1 }}</a></td>
+  <td class=state_four>
+    <a href={{ c.5 }} ><font color="black">{{ c.1}}</font></a>
+  </td>
       {%- endif %}
     {%- endif -%}
   {%- endfor %}
