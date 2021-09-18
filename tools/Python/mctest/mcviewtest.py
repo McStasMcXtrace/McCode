@@ -42,6 +42,7 @@ def run_normal_mode(testdir, reflabel):
         label = cellobj["localfile"].split("/");
         label=label[len(label)-3];
         url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"]) + "/browse.html"
+        burl = label + "/" + cellobj["instrname"] +  "/"
         curl = label + "/" + cellobj["instrname"] +  "/compile_stdout.txt"
 
         if not cellobj["compiled"]:
@@ -53,7 +54,7 @@ def run_normal_mode(testdir, reflabel):
             if cellobj["testnb"] > 1:
                 # if this is a second test of the same instr, it was already compiled, thus 0.001 compiletime is nonsense
                 compiletime = ""
-            return (state, compiletime, "Runtime error", "", "", curl)
+            return (state, compiletime, "", "", "", burl)
         elif not cellobj["testval"]:
             testval = "missing"
             runtime = "%.2f s" % cellobj["runtime"]
