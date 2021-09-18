@@ -27,10 +27,11 @@
 
 DEFINE INSTRUMENT Union_external_component_test()
 
-DECLARE
+USERVARS
 %{
-int first_master,second_master;
-int powderN_scat;
+  int first_master;
+  int second_master;
+  int powderN_scat;
 %}
 
 TRACE
