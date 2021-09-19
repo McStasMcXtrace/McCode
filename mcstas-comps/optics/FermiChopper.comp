@@ -94,6 +94,7 @@ zero_time=0, xwidth=0, verbose=0, yheight=0.08,
 curvature=0,delay=0)
 
 OUTPUT PARAMETERS()
+NOACC
 
 SHARE
 %{
