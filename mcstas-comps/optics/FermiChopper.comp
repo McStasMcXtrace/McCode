@@ -94,7 +94,6 @@ zero_time=0, xwidth=0, verbose=0, yheight=0.08,
 curvature=0,delay=0)
 
 OUTPUT PARAMETERS()
-NOACC
 
 SHARE
 %{
@@ -411,7 +410,8 @@ TRACE
     if (t1 <= 0) { /* Neutron started inside the cylinder */
       if (verbose > 0 && FCVars.absorb_alreadyinside<FermiChopper_MAXITER) printf("FermiChopper: %s: ABSORB Neutron started inside the cylinder, t1=%8.3g (enter).\n",
         NAME_CURRENT_COMP, t1);
-      FCVars.absorb_alreadyinside++;
+      #pragma acc atomic
+      FCVars.absorb_alreadyinside = FCVars.absorb_alreadyinside + 1;
       ABSORB;
     }
     if (verbose > 2)
@@ -430,14 +430,22 @@ TRACE
     if (fabs(y) >= yheight/2.0 || fabs(y+vy*dt) >= yheight/2.0) {
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits top/bottom of cylinder, y=%8.3g (enter).\n",
         NAME_CURRENT_COMP, y);
-      FCVars.absorb_topbottom++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_topbottom =  FCVars.absorb_topbottom + 1;
+      ABSORB;
     }
 
     vxp1 = sqrt(vx*vx+vy*vy+vz*vz);
-    FCVars.sum_v += p*vxp1;
-    FCVars.sum_t += p*t;
-    FCVars.sum_N += p;
+    double tmp=p*vxp1;
+    #pragma acc atomic
+    FCVars.sum_v = FCVars.sum_v + tmp;
+    tmp = p*t;
+    #pragma acc atomic
+    FCVars.sum_t = FCVars.sum_t + tmp;
+    #pragma acc atomic
+    FCVars.sum_N = FCVars.sum_N + p;
 
+#ifndef OPENACC
     if (zero_time > 1 && FCVars.sum_N) { /* automatic phase adjustment */
       double mean_t, mean_phase;
       mean_t     = FCVars.sum_t/FCVars.sum_N;
@@ -446,6 +454,7 @@ TRACE
       mean_phase+= radius/vxp1*2*PI*nu;
       FCVars.ph0 = mean_phase;
     }
+#endif
 
     /* neutron must enter the cylinder opening: |X'| < full package width*/
     xp1 = FC_xrot(x,z, t,FCVars); /* X'(t) */
@@ -453,7 +462,9 @@ TRACE
       if (verbose > 2)
         printf("FermiChopper: %s: ABSORB Neutron X is outside cylinder aperture, x'=%8.3g > %g (enter).\n",
         NAME_CURRENT_COMP, xp1, nslit*w/2);
-      FCVars.absorb_cylentrance++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_cylentrance = FCVars.absorb_cylentrance + 1;
+      ABSORB;
     }
 
 /*********************** PROPAGATE TO SLIT PACKAGE **************************/
@@ -469,7 +480,8 @@ TRACE
       if (verbose > 1 && FCVars.absorb_cylentrance < FermiChopper_MAXITER)
         printf("FermiChopper: %s: ABSORB Neutron radius on cylinder in static frame r=%g does not match that of rotating frame r'=%g.\n",
         NAME_CURRENT_COMP, sqrt(x*x+z*z), sqrt(xp1*xp1+zp1*zp1));
-      FCVars.absorb_cylentrance++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_cylentrance = FCVars.absorb_cylentrance +1 ; ABSORB;
     }
 
     /* Checking on which side of the Chopper the Neutron enters: sign(Z') */
@@ -490,7 +502,8 @@ TRACE
         else if (t3 < 0)
             printf("          Error when solving intersection\n");
       }
-      FCVars.absorb_notreachentrance++;
+      #pragma acc atomic 
+      FCVars.absorb_notreachentrance = FCVars.absorb_notreachentrance + 1;
       ABSORB; /* neutron can not reach slit entrance */
     }
 
@@ -517,7 +530,9 @@ SCATTER;
     if (fabs(xp1) >= nslit*w/2) {
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron X is outside slit package, x'=%8.3g > %g (enter).\n",
         NAME_CURRENT_COMP, xp1, nslit*w/2);
-      FCVars.absorb_packentrance++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_packentrance =  FCVars.absorb_packentrance + 1;
+      ABSORB;
     }
 
     /* solve Z'=-slit_input for time of exit of slit package */
@@ -535,7 +550,8 @@ SCATTER;
         else if (t3 < 0)
             printf("          Error when solving intersection\n");
       }
-      FCVars.warn_notreachslitoutput++;
+      #pragma acc atomic
+      FCVars.warn_notreachslitoutput =  FCVars.warn_notreachslitoutput + 1;
       /* we estimate analytically the time to the slit exit */
       t3 = length/vxp1;
     }
@@ -547,7 +563,8 @@ SCATTER;
       if (verbose > 0 && FCVars.warn_notreachslitoutput < FermiChopper_MAXITER)
         printf("FermiChopper: %s: ABSORB Neutron propagation time v*dt/length=%g in slit does not match its length=%g (slit exit expected).\n",
           NAME_CURRENT_COMP, t3, length);
-      FCVars.warn_notreachslitoutput++;
+      #pragma acc atomic
+      FCVars.warn_notreachslitoutput = FCVars.warn_notreachslitoutput + 1;
       ABSORB;
     }
 
@@ -586,7 +603,9 @@ SCATTER;
       if (n2 != n1 && (m <= 0 || R0 <= 0 || Qc <= 0)) {
         if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits absorbing coating (change slit).\n",
             NAME_CURRENT_COMP);
-        FCVars.absorb_slitcoating++; ABSORB;
+	#pragma acc atomic
+        FCVars.absorb_slitcoating =  FCVars.absorb_slitcoating + 1;
+	ABSORB;
       }
 
       /* compute transversal velocity to determine their intersection */
@@ -633,7 +652,9 @@ SCATTER;
         if (m <= 0 || R0 <= 0 || Qc <= 0) {
           if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits absorbing coating (change slit).\n",
             NAME_CURRENT_COMP);
-          FCVars.absorb_slitcoating++; ABSORB;
+	  #pragma acc atomic
+          FCVars.absorb_slitcoating = FCVars.absorb_slitcoating + 1;
+	  ABSORB;
         }
 
         /* Choosing the first time it isn't in the slit anymore */
@@ -677,7 +698,8 @@ SCATTER;
               printf("        Error when solving intersection\n");
           }
           /* neutron can not reach slit wall. */
-          FCVars.warn_notreachslitwall++;
+	  #pragma acc atomic
+          FCVars.warn_notreachslitwall = FCVars.warn_notreachslitwall + 1;
           ABSORB;
         }
 
@@ -721,7 +743,9 @@ SCATTER;
           else {
             if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits absorbing coating (on slit wall).\n",
               NAME_CURRENT_COMP);
-            FCVars.absorb_slitcoating++; ABSORB;
+            #pragma acc atomic
+            FCVars.absorb_slitcoating = FCVars.absorb_slitcoating + 1;
+	    ABSORB;
           } /* Cutoff ~ 1E-10 */
         }
 #ifndef OPENACC
@@ -754,7 +778,8 @@ SCATTER;
             else if (t3 < 0)
               printf("              Error when solving intersection\n");
           }
-          FCVars.warn_notreachslitoutput++;
+	  #pragma acc atomic
+          FCVars.warn_notreachslitoutput = FCVars.warn_notreachslitoutput + 1;
           ABSORB;
           /* neutron can not reach slit output. */
         } else dt = t3; /* reduce time interval to [0, time of slit exit] */
@@ -774,7 +799,9 @@ SCATTER;
     {
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron X is outside slit package, x'=%8.3g (slit exit).\n",
         NAME_CURRENT_COMP, xp1);
-      FCVars.absorb_slitcoating++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_slitcoating = FCVars.absorb_slitcoating + 1;
+      ABSORB;
     }
 
     if (loopcounter >= FermiChopper_MAXITER)
@@ -782,7 +809,8 @@ SCATTER;
       if (verbose > 1 && FCVars.absorb_maxiterations < FermiChopper_MAXITER)
       printf("FermiChopper: %s: Max iterations %i reached inside slit. Absorb.\n",
         NAME_CURRENT_COMP, FermiChopper_MAXITER);
-      FCVars.absorb_maxiterations++;
+      #pragma acc atomic
+      FCVars.absorb_maxiterations =  FCVars.absorb_maxiterations + 1;
       ABSORB;
     }
 
@@ -794,15 +822,18 @@ SCATTER;
       /* must be inside the cylinder */
       if (verbose > 1) printf("FermiChopper: %s: ABSORB Neutron has unexpectidely exited cylinder ! (exiting)\n",
         NAME_CURRENT_COMP);
-      FCVars.absorb_exitslitpack++;
-      ABSORB; }
+      #pragma acc atomic
+      FCVars.absorb_exitslitpack = FCVars.absorb_exitslitpack + 1;
+      ABSORB;
+    }
 
     if (t1 > 0)
     {
       if (verbose > 1 && FCVars.absorb_wrongdirection < FermiChopper_MAXITER)
       printf("FermiChopper: %s: Neutrons are leaving chopper\n"
              "              in the wrong direction. Absorb.\n", NAME_CURRENT_COMP);
-      FCVars.absorb_wrongdirection++;
+      #pragma acc atomic
+      FCVars.absorb_wrongdirection = FCVars.absorb_wrongdirection + 1;
       ABSORB;
     }
 
@@ -811,7 +842,8 @@ SCATTER;
       if (verbose > 1)
       printf("FermiChopper: %s: Neutrons are leaving chopper\n"
              "              without any control. Absorb.\n", NAME_CURRENT_COMP);
-      FCVars.absorb_nocontrol++;
+      #pragma acc atomic
+      FCVars.absorb_nocontrol = FCVars.absorb_nocontrol + 1;
       ABSORB;
     }
 
@@ -832,7 +864,9 @@ SCATTER;
     {
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits top/bottom of cylinder, y=%8.3g (exiting)\n",
         NAME_CURRENT_COMP, y);
-      FCVars.absorb_topbottom++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_topbottom = FCVars.absorb_topbottom + 1;
+      ABSORB;
     }
 
     /* must have X'< slit package width at package Z'=cylinder output */
@@ -840,13 +874,15 @@ SCATTER;
     {
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron X is outside slit package cylinder, xp1=%8.3g (exiting).\n",
         NAME_CURRENT_COMP, xp1);
-      FCVars.absorb_cylexit++; ABSORB;
+      #pragma acc atomic
+      FCVars.absorb_cylexit = FCVars.absorb_cylexit + 1;
+      ABSORB;
     }
 
     /* Transmission coefficent */
     p = p*eff;          //finite cross section + transmission
-
-    FCVars.sum_N_pass += p;
+    #pragma acc atomic
+    FCVars.sum_N_pass = FCVars.sum_N_pass + p;
 
   } /* end if cylinder_intersect */
 
