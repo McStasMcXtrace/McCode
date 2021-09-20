@@ -6,8 +6,7 @@
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Jan 23, 2011
-* Origin: Your institution
-* Release: McXtrace 
+* Origin: DTU Physics
 * Version: 1.0
 * %INSTRUMENT_SITE: MAXII
 *
@@ -23,24 +22,25 @@
 * If mirrors are in the monochromators are automatically reposistioned to
 * accomadate the deflected beam. 
 *
-* Example: mxrun Max2_811.instr M1=1 M2=1 M1_pitch=1 M2_pitch=1 theta=14.221
+* %Example: MAXII_811.instr M1=1 M2=1 M1_pitch=1 M2_pitch=1 theta=14.226   Detector: sphere_psd_I=4.3114e+08
+* %Example: MAXII_811.instr M1=0 M2=0 theta=14.226    Detector: hutch_E2_I=2.25761e+11
 *
 * %Parameters
-* Emin [keV] energy range of radiation emitted from wiggler. 
-* Emax [keV] 
-* prim_h [m] horizaontal and vertical opening of primary slits.
-* prim_v [m]
-* M1 [] Is mirror 1 in the beam?
-* M1_R [m] Radius of curvature of mirror 1.
-* M1_pitch [deg] Central glancing angle of mirror 1.
-* M2 [] Is mirror 2 in the beam?
-* M2_R [m] Radius of curvature of mirror 2.
-* M2_pitch [deg] Central glancing angle of mirror 2.
-* theta [deg] Scattering angle of monochromators
-* TTH [deg] angle at which to put the surface diffraction detector
-* ATT1 [] Should attenuation filter 1 be in the beam? 
-* ATT2 [] Should attenuation filter 2 be in the beam? 
-* ATT3 [] Should attenuation filter 3 be in the beam? 
+* Emin:    [keV] Minmium energy of radiation emitted from wiggler.
+* Emax:    [keV] Maxmium energy of radiation emitted from wiggler.
+* prim_h:  [m]   Horizontal opening of primary slits.
+* prim_v:  [m]   Vertical opening of primary slits.
+* M1:      [ ]   Is mirror 1 in the beam?
+* M1_R:    [m]   Radius of curvature of mirror 1.
+* M1_pitch: [deg] Central glancing angle of mirror 1.
+* M2:      [ ]   Is mirror 2 in the beam?
+* M2_R:    [m]   Radius of curvature of mirror 2.
+* M2_pitch: [deg] Central glancing angle of mirror 2.
+* theta:   [deg] Scattering angle of monochromators
+* TTH:     [deg] Angle at which to put the surface diffraction detector
+* ATT1:    [ ]   Should attenuation filter 1 be in the beam?
+* ATT2:    [ ]   Should attenuation filter 2 be in the beam?
+* ATT3:    [ ]   Should attenuation filter 3 be in the beam?
 
 * %Link
 * A reference/HTML link for more information
@@ -54,10 +54,10 @@ DEFINE INSTRUMENT MAXII_811(
     prim_h=.40e-3,prim_v=0.6e-3,
     xafs_h=3e-3,xafs_v=3e-3,
     M1=0,M1_R=2000,M1_pitch=0,M2=0,M2_R=800,M2_pitch=0,
-    theta=0,TTH=0,
+    theta=14.226,TTH=0,
     ATT1=0,ATT2=0,ATT3=0,
     XAFS=0
-    )
+)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -70,14 +70,18 @@ DECLARE
   const double att_filter1_L=16;
   const double c_filter_L=17;
 
-  double mono1_y,mono2_z,mono2_y;
+  double mono1_y;
+  double mono2_z;
+  double mono2_y;
 
   const double Delta_y=25e-3;
 
-  double mirror1_angle,mirror2_angle;
+  double mirror1_angle;
+  double mirror2_angle;
   const double M2_L=20;
 
-  double Lmin,Lmax;
+  double Lmin;
+  double Lmax;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -101,9 +105,13 @@ INITIALIZE
 
   /*the lower monchromator must be displaced to catch the beam from the mirrors*/
   mono1_y=8*sin(2*mirror1_angle*DEG2RAD);
-  
   /*now compute the position of mono2*/
   double beta=DEG2RAD*(2*theta-2*mirror1_angle);
+  if (beta<=0){
+    fprintf(stderr,"ERROR: (%s): theta (%g) must be larger than mirror 1 deflection angle (%g) to match fixed exit criterion.\n",instrument_name,theta,mirror1_angle);
+    exit(-1);
+  }
+
   if (mirror2_angle==0){
     double t=(-mono1_y+Delta_y)/sin(beta);
     mono2_y=mono1_y+t*sin(beta);
@@ -111,12 +119,11 @@ INITIALIZE
   }else{
     double t,s;
     s=( (mono1_y+Delta_y) - tan(beta)*(10-8))/(-sin(2*DEG2RAD*mirror2_angle)-cos( 2*DEG2RAD*mirror2_angle)*tan(beta) );
-    printf("%g %g %g\n",beta,mirror2_angle,s);
     mono2_y=(Delta_y)+s*sin(2*DEG2RAD*mirror2_angle);
     mono2_z=10-s*cos(2*DEG2RAD*mirror2_angle);
   }
-  Lmin=2*M_PI/(E2K*Emax);
-  Lmax=2*M_PI/(E2K*Emin);
+  Lmin=2*M_PI/(E2K*20);
+  Lmax=2*M_PI/(E2K*0.1);
 
 %}
 
@@ -138,7 +145,6 @@ COMPONENT wiggler = Source_gaussian(
  sigPr_x=7e-6*FWHM2RMS, sigPr_y=0.3e-6*FWHM2RMS,
  sig_x=250e-6*FWHM2RMS, sig_y=50e-6*FWHM2RMS,
  spectrum_file="characteristics_wiggler811.dc0",E0=(Emin+Emax)/2.0,dE=(Emax-Emin)/2.0,
-// E0=8.045,dE=1e-3,
  dist=4.454,dlambda=0)
 AT(0,0,0) RELATIVE Origin
 
@@ -146,11 +152,11 @@ COMPONENT source_psd=PSD_monitor(
   nx=100,ny=100,xwidth=1e-3, yheight=1e-3, filename="source.psd")
 AT (0,0,1) RELATIVE wiggler 
 COMPONENT source_E=E_monitor(
-  nE=200,Emin=Emin*0.99, Emax=Emax*1.01, xwidth=2e-3, yheight=2e-3,
+  nE=200,Emin=0.1, Emax=20, xwidth=2e-3, yheight=2e-3,
 filename="source.E")
 AT (0,0,1e-9) RELATIVE PREVIOUS 
 COMPONENT source_L=L_monitor(
-  nL=200,Lmin=Lmin*0.99, Lmax=Lmax*1.01, xwidth=2e-3, yheight=2e-3,
+  nL=200,Lmin=Lmin, Lmax=Lmax, xwidth=2e-3, yheight=2e-3,
 filename="source.L")
 AT (0,0,1e-9) RELATIVE PREVIOUS 
 
@@ -181,20 +187,15 @@ AT(0,0,7) RELATIVE wiggler
 COMPONENT m_entry_psd = COPY(source_psd)(filename="me_psd") 
 AT(0,0,9.4) RELATIVE wiggler
 COMPONENT m_entry_E=E_monitor(
-  nE=200,Emin=Emin*.99, Emax=Emax*1.01, xwidth=2e-3, yheight=2e-3,
+  nE=200,Emin=0.1, Emax=20, xwidth=2e-3, yheight=2e-3,
   filename="m_entry.E")
 AT (0,0,1e-9) RELATIVE PREVIOUS 
 COMPONENT m_entry_L=L_monitor(
-  nL=200,Lmin=Lmin*0.99, Lmax=Lmax*1.01, xwidth=2e-3, yheight=2e-3,
+  nL=200,Lmin=Lmin, Lmax=Lmax, xwidth=2e-3, yheight=2e-3,
   filename="m_entry.L")
 AT (0,0,1e-9) RELATIVE PREVIOUS 
 
-
-
-
-
 /*Frontend Wall is here*/
-
 
 COMPONENT mirror1_pos = Arm()
 AT(0,0,10) RELATIVE wiggler
@@ -229,8 +230,8 @@ COMPONENT c_filter =COPY(fe_c_filter)(zdepth=1e-4)
 AT(0,0,c_filter_L) RELATIVE wiggler
 
 /*Monochromator crystals*/
-COMPONENT mono_lower = Perfect_crystal(
-  length=0.05,width=0.02,h=1,k=1,l=1,alpha=0)
+COMPONENT mono_lower = Bragg_crystal_BC(
+  length=0.05,width=0.02,h=1,k=1,l=1)
 AT(0,-mono1_y,8) RELATIVE mirror1_pos
 ROTATED(-(theta-2*mirror1_angle),0,0) RELATIVE mirror1_pos 
 
@@ -238,8 +239,8 @@ COMPONENT mono_upper_mnt = Arm()
 AT(0,mono2_y,mono2_z) RELATIVE mirror1_pos
 ROTATED (0,0,180) RELATIVE wiggler
 
-COMPONENT mono_upper = Perfect_crystal(
-  length=0.05, width=0.02,h=1,k=1,l=1,alpha=0)
+COMPONENT mono_upper = Bragg_crystal_BC(
+  length=0.05, width=0.02,h=1,k=1,l=1)
 AT(0,0,0) RELATIVE mono_upper_mnt
 ROTATED (theta-2*mirror1_angle,0,0) RELATIVE mono_upper_mnt
 
@@ -256,7 +257,6 @@ ROTATED (0,-mirror2_angle,0) RELATIVE mirror2_mnt
 COMPONENT mirror2_exit = Arm()
 AT(0,0,0) RELATIVE mirror2
 ROTATED (0,-2*mirror2_angle,0) RELATIVE mirror2_mnt
-
 
 /*Safety Shutter*/
 
@@ -317,31 +317,32 @@ COMPONENT  diff_sample_psd = PSD_monitor(
   restore_xray=1) 
 AT(0,0,0) RELATIVE diff_sample_pos
 
-COMPONENT si_sample = PowderN(
-  reflections = "Si.laz", format=Lazy, radius = 0.0002,
+COMPONENT si_sample = Arm()
+  AT(0,0,0) RELATIVE diff_sample_pos
+
+/*COMPONENT si_sample = PowderN(
+  reflections = "Si.laz", format={17,6,0,0,0,0,0,13}, radius = 0.0002,
   yheight = 0.05, d_phi= 0)
 AT (0, 0, 0) RELATIVE diff_sample_pos
 EXTEND
 %{
   if (!SCATTERED) ABSORB;
-%}
+%}*/
 COMPONENT tth_arm=Arm()
 AT(0,0,0) RELATIVE diff_sample_pos
 ROTATED (TTH,0,0) RELATIVE diff_sample_pos
+
+COMPONENT sphere_psd=PSD_monitor_4PI(
+    radius=0.5,filename="sphere_psd", restore_xray=1)
+AT(0,0,0) RELATIVE si_sample
 
 COMPONENT square_psd=PSD_monitor(
     xwidth=0.4,yheight=0.4,nx=201,ny=201,filename="square_psd",restore_xray=1)
 AT(0,0,0.2) RELATIVE si_sample
 
-
-COMPONENT sphere_psd=PSD_monitor_4PI(
-    radius=0.5,filename="sphere_psd")
-AT(0,0,0) RELATIVE tth_arm
-/*
 COMPONENT pilatus100k = PSD_monitor(
   nx=487, ny=195, xwidth=83.8e-3, yheight=33.5e-3, filename="pil_diff.psd")
 AT(0,0,1.2) RELATIVE tth_arm
-*/
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
