@@ -5,7 +5,6 @@
 * Date: September 25th, 2009
 * Version: $Revision$
 * Origin: Risoe
-* Release: McXtrace 0.1alpha
 *
 * A curved mirror
 *
@@ -16,7 +15,8 @@
 * radius: [m]   Radius of curvature.
 * length: [m]   Length of the unbent mirror.
 * coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
-* width: [m]    width of the mirror
+* width: [m]    Width of the mirror
+* R0: [ ]       Constant reflectivity value (mostly relevant for debugging).
 *
 * %E
 ***********************************************************************/
@@ -118,11 +118,11 @@ TRACE
       kz=kz-2*s*nz;
       
 
-      if (constant_R && !R0){
+      if (!constant_R){
         /*compute reflectivity from material data*/
 
         /*adjust p according to reflectivity*/
-        double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
+        double Qc,Q,f1,f2,delta,beta,na,e,k2;
         /*length of wavevector transfer may be compute from s and n_ above*/
         Q=fabs(2*s*sqrt(nx*nx+nz*nz));
 
