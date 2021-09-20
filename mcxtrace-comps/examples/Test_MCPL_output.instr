@@ -14,7 +14,7 @@
 *
 * This is a unit test for the MCPL_output component.
 *
-* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
+* %Example: -n1e3 merge=0 Detector: m1_I=2.42284e+11
 *
 *
 * %Parameters
