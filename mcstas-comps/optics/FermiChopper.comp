@@ -105,7 +105,9 @@ SHARE
 /* Definition of internal variable structure: all counters */
 struct FermiChopper_struct
 {
-double omega, ph0, t0;  /* chopper rotation */
+double omega;  /* chopper rotation */
+double ph0;    /* chopper rotation */
+double t0;     /* chopper rotation */
 double C_slit;          /* slit curvature radius in [m] */
 double L_slit;          /* slit package length [m] */
 double sum_t;
@@ -395,6 +397,8 @@ TRACE
 		       [3]=slit exit
 		       [4]=cylinder exit
 		    */
+  double ref = 0;
+  double par[5] = {R0, Qc, alpha, m, W};
   
   /************************ TIME OF FLIGHT RESET ************************/
   if (zero_time == 1 && nu)
@@ -445,16 +449,16 @@ TRACE
     #pragma acc atomic
     FCVars.sum_N = FCVars.sum_N + p;
 
-#ifndef OPENACC
     if (zero_time > 1 && FCVars.sum_N) { /* automatic phase adjustment */
       double mean_t, mean_phase;
       mean_t     = FCVars.sum_t/FCVars.sum_N;
       mean_phase = fmod(mean_t*nu*2*PI, 2*PI);
       /* now we shift the phase so that the neutron pulse is centered on the slit pack */
       mean_phase+= radius/vxp1*2*PI*nu;
+      #pragma acc atomic write
       FCVars.ph0 = mean_phase;
     }
-#endif
+
 
     /* neutron must enter the cylinder opening: |X'| < full package width*/
     xp1 = FC_xrot(x,z, t,FCVars); /* X'(t) */
@@ -481,7 +485,8 @@ TRACE
         printf("FermiChopper: %s: ABSORB Neutron radius on cylinder in static frame r=%g does not match that of rotating frame r'=%g.\n",
         NAME_CURRENT_COMP, sqrt(x*x+z*z), sqrt(xp1*xp1+zp1*zp1));
       #pragma acc atomic
-      FCVars.absorb_cylentrance = FCVars.absorb_cylentrance +1 ; ABSORB;
+      FCVars.absorb_cylentrance = FCVars.absorb_cylentrance +1 ;
+      ABSORB;
     }
 
     /* Checking on which side of the Chopper the Neutron enters: sign(Z') */
@@ -736,8 +741,8 @@ SCATTER;
         q    = 2*V2Q*(fabs(vxp1));
 
         {
-          double ref = 0;
-          double par[] = {R0, Qc, alpha, m, W};
+          /* double ref = 0;
+	     double par[] = {R0, Qc, alpha, m, W};*/
           StdReflecFunc(q, par, &ref);
           if (ref>0) p *= ref;
           else {
