@@ -12,7 +12,6 @@
 * Date: April, 2011.
 * Version: 1.0 
 * Origin: NBI
-* Release: McXtrace 0.1
 *
 * Gaussian cross-section source 
 * 
@@ -92,13 +91,6 @@ INITIALIZE
     exit(1);
   }
 
-  /*calculate the X-ray weight from the flux*/
-  if (flux){//pmul=flux;
-    pmul=flux*1.0/(double)mcget_ncount();
-  }else{
-    pmul=1.0/(double)mcget_ncount();
-  }
-
   /*flag if we are using a datafile*/
   spectrum_from_file=(spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file));
 
@@ -149,7 +141,7 @@ INITIALIZE
             pint+=T->data[i*cols+flc]*ebin;
         }
     }
-    printf("%s: Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
+    printf("INFO (%s): Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
     if(E0) printf("%s: E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   } else if (!E0 && !lambda0){
     fprintf(stderr,"Error (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
@@ -170,15 +162,18 @@ INITIALIZE
     }
   }
 
-  /*corrections for energy range*/
-  if(spectrum_from_file ){
+  /*corrections for energy range, calculate the X-ray weight from the flux*/
+  if (flux){//pmul=flux;
+    pmul=flux*1.0/(double)mcget_ncount();
+    if(E0 && dE){
+      pmul*=2*dE;
+    }else if (lambda0 && dlambda){
+      pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
+    }
+  }else if(spectrum_from_file ){
       pmul*=(sT.data[(sT.rows-1)*sT.columns]-sT.data[0]);
   }else{
-      if(E0){
-          pmul*=2*dE;
-      }else{
-          pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
-      }
+    pmul=1.0/(double)mcget_ncount();
   }
 %}
 
