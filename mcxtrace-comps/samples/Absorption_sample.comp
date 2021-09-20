@@ -57,13 +57,11 @@ SHARE
 DECLARE
 %{
   double Z_A_o;
-  double rho_o;
   double V_o;
   int E_c_o;
   int l_c_o;
   int mu_c_o;
   double Z_A_i;
-  double rho_i;
   double V_i;
   int E_c_i;
   int l_c_i;
@@ -81,19 +79,19 @@ INITIALIZE
     if (!zdepth_o) zdepth_o=yheight_o;
     if (!xwidth_o) xwidth_o=yheight_o;
   }else if (!yheight_o && !radius_o){
-    fprintf(stderr,"Absorption_sample(%s): Error: Unmeaningful outer volume description\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Error: (%s) Unmeaningful outer volume description\n",NAME_CURRENT_COMP);
     exit(0);
   }
   if (yheight_i && !radius_i){
     if (!zdepth_i) zdepth_i=yheight_i;
     if (!xwidth_i) xwidth_i=yheight_i;
   }else if (!yheight_i && !radius_i){
-    fprintf(stderr,"Absorption_sample(%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Warning: (%s) Inner volume = 0\n",NAME_CURRENT_COMP);
     V_i=0;
   }
   /* Loading datafiles */
   if ( material_datafile_o && (status=Table_Read(&t_o,material_datafile_o,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_o,NAME_CURRENT_COMP);
+    fprintf(stderr,"Error: (%s) Could not parse file \"%s\".\n",NAME_CURRENT_COMP,material_datafile_o);
     exit(-1);
   }
   if (t_o.columns==3) {  /*which column is the energy in and which holds mu*/
@@ -102,7 +100,6 @@ INITIALIZE
     E_c_o=0;mu_c_o=5;
   }
   if (V_i){ /*if volume is zero - don't bother to read the file*/
-    printf("Loading inner datafiles");
     if ( material_datafile_i && (status=Table_Read(&t_i,material_datafile_i,0))==-1){
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_i,NAME_CURRENT_COMP);
       exit(-1);
