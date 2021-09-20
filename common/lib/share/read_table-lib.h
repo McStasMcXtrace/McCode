@@ -82,6 +82,9 @@
     char    method[32];    /* interpolation method: nearest, linear */
   } t_Table;
 
+/*maximum number of rows to rebin a table = 1M*/
+enum { mcread_table_rebin_maxsize = 1000000 };
+
 typedef struct t_Read_table_file_item {
     int ref_count;
     t_Table *table_ref;
