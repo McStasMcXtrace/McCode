@@ -39,7 +39,7 @@ class McTestcomp:
     print(comps)
     for compname in comps:
       #write the test instrument to a temporary file
-      with tempfile.NamedTemporaryFile(delete=False) as tf:
+      with tempfile.NamedTemporaryFile(delete=False,dir='.') as tf:
         print(tf.name)
         tf.write(self.test_instrument(compname).encode())
         tf.seek(0)
@@ -63,7 +63,7 @@ class McTestcomp:
     args.append(self.cflags)
     return subprocess.run(args)
     #[f"{self.compiler}",f"{instr.name}.c","-o",f"{instr.name}.out"])
-  
+
   def test_instrument(self,compname,args=""):
     return f"""DEFINE INSTRUMENT Test{compname}(dummy=1)
 
