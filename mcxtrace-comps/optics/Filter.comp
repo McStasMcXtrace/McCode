@@ -45,7 +45,7 @@ SHARE
   %include "interoff-lib"
 
   enum shapes_t {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY};
-
+  #pragma acc routine
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
     const double k=sqrt(scalar_prod(*kx,*ky,*kz, *kx,*ky,*kz));
@@ -94,7 +94,6 @@ DECLARE
   int shape;
   off_struct offdata;
   int filter_row;
-
 %}
 
 INITIALIZE
@@ -108,12 +107,12 @@ INITIALIZE
       shape=ANY;
     }
   } else if(!xwidth || !yheight || !zdepth){
-    fprintf(stderr,"Error (%s): Filter has zero effective volume\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Error (%s): Filter has zero effective volume.\n",NAME_CURRENT_COMP);
     exit(-1);
   }
   
   if ( (status=Table_Read(&(table),material_datafile,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    fprintf(stderr,"Error (%s): Could not parse file \"%s\".\n",NAME_CURRENT_COMP,material_datafile);
     exit(-1);
   }
   char **header_parsed;
