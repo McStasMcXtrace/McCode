@@ -951,7 +951,7 @@ TRACE
         photontype = 1;
         l = l_full; /* Passing through, full length */
         PROP_DL(l3);
-      } else if (ptype >= p_transmit && type < (p_transmit + p_inc)) {
+      } else if (ptype >= p_transmit && ptype < (p_transmit + p_inc)) {
         photontype = 2;
         l = dl;       /* Penetration in sample */
         PROP_DL(dl+l0); /* Point of scattering */
