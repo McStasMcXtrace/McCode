@@ -12,7 +12,6 @@
 * Date: June 16, 2009
 * Version: $Revision: 1.0$
 * Origin: Risoe
-* Release: McXtrace 0.1
 *
 * Simple refractive x-ray lens
 * 
@@ -43,7 +42,7 @@
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=0, int N=1, int verbose=0, f=1, string material_datafile="Be.txt")
-OUTPUT PARAMETERS (Z,Ar,rho,matT)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
