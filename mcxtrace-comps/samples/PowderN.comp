@@ -51,7 +51,7 @@
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
-*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
+*   qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
@@ -62,7 +62,7 @@
 * cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
-*   yheight = 0.05, Vc = 1076.89, Delta_d=0, DW=1,
+*   yheight = 0.05, Vc = 1076.89, delta_d_d=0, DW=1,
 *   format=Crystallographica)
 *
 * <b>Powder definition file format</b>
@@ -74,20 +74,14 @@
 * the following keywords (in the header):
 *   #Vc           <value of unit cell volume Vc [Angs^3]>
 *   #Debye_Waller <value of Debye-Waller factor DW>
-*   #Delta_d/d    <value of Detla_d/d width for all lines>
+*   #delta_d_d/d    <value of delta_d_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
 *
 * The signification of the columns in the numerical block may be
-* set using the 'format' parameter. Built-in formats are:
-*   format=Crystallographica
-*   format=Fullprof
-*   format=Lazy
-* and these specifications it is important NOT to use quotes, as shown.
-*
-* An other possibility to define other formats is to set directly
-* the signification of the columns as a vector of indexes in the order
-*   format={j,d,F2,DW,Delta_d/d,1/2d,q,F}
-* Signification of the symbols is given below. Indexes start at 1.
+* set using the 'format' parameter, by defining signification of the
+* columns as a vector of indexes in the order
+*   format={j,d,F2,DW,delta_d_d/d,1/2d,q,F}
+* Signification of the symbols is given below. Indices start at 1.
 * Indices with zero means that the column are not present, so that:
 *   Crystallographica={ 4,5,7,0,0,0,0,0 }
 *   Fullprof         ={ 4,0,8,0,0,5,0,0 }
@@ -102,7 +96,7 @@
 *   #column_F2    <index of the squared str. factor '|F|^2' column [b]>
 *   #column_F     <index of the structure factor norm '|F|' column>
 *   #column_DW    <index of the Debye-Waller factor 'DW' column>
-*   #column_Dd    <index of the relative line width Delta_d/d 'Dd' column>
+*   #column_Dd    <index of the relative line width delta_d_d/d broadening 'Dd' column>
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
 *
@@ -129,21 +123,21 @@
 *
 * %P
 * INPUT PARAMETERS
-* radius:   Outer radius of sample in (x,z) plane [m]
-* xwidth:   Horiz. dimension of sample, as a width [m]
-* yheight:  Height of sample y direction [m]
-* zdepth:   Depth of box sample [m]
-* thickness:Thickness of hollow sample.
+* radius: [m]          Outer radius of sample in (x,z) plane
+* xwidth: [m]          Horiz. dimension of sample, as a width
+* yheight: [m]         Height of sample y direction
+* zdepth: [m]          Depth of box sample
+* thickness: []        Thickness of hollow sample.
 *                Negative value extends the hollow volume outside of the box/cylinder. [m]
-* reflections: Input file for reflections.
+* reflections: []      Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
 *
 * Optional parameters:
-* d_phi:   [deg]    Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_theta: [deg]    Longitudinal angle to focus to, i.e. lateral opening angle. This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0
 * focus_flip: [1]   Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
-* pack:    [1]      Packing factor
-* Delta_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
+* focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.* pack:    [1]      Packing factor
+* delta_d_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
 * format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
 * p_inc:   [1]      Fraction of incoherently scattered rays.
 * p_transmit: [1]   Fraction of transmitted (only attenuated) rays.
@@ -188,34 +182,24 @@
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (format=Undefined, mat_format=mat_Undefined)
-SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
-                    radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
-                    pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
-                    DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
-                    concentric=0, density=0, weight=0, barns=1, focus_flip=0)
-OUTPUT PARAMETERS (line_info,columns,mat_columns,offdata)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  string reflections="NULL", string material="NULL", string geometry="NULL",
+  vector format={0,0,0,0,0,0,0,0}, vector mat_format={0,0,0,0,0},
+  radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
+  pack=1, Vc=0, delta_d_d=0, p_inc=0.1, p_transmit=0.1,
+  DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
+  concentric=0, density=0, weight=0, barns=1, focus_flip=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
 %{
-  /* used for reading data table from file */
-  %include "read_table-lib"
-  %include "interoff-lib"
+/* used for reading data table from file */
+%include "read_table-lib"
+%include "interoff-lib"
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
-/* format definitions in the order {j d F2 DW Dd inv2d q F} */
-#ifndef Crystallographica
-#define Crystallographica { 4,5,7,0,0,0,0,0 }
-#define Fullprof          { 4,0,8,0,0,5,0,0 }
-#define Lazy              {17,6,0,0,0,0,0,13 }
-#define Undefined         { 0,0,0,0,0,0,0,0 }
-  /*format definitions for material data {E my_abs my_cohinc my_coh}*/
-#define FFAST_element {1, 4, 0, 5, 0}
-#define FFAST_compound {1, 3, 0, 0, 4}
-#define XCOM {1, 4, 3, 0, 0}
-#define mat_Undefined {0,0,0,0,0}
-#endif
 
   struct line_data
     {
@@ -235,8 +219,8 @@ SHARE
     double cohinc;  /*coherent +incoherent scattering coefficient*/
   };
   struct line_info_struct
-    {
-      struct line_data *list;     /* Reflection array */
+  {
+  struct line_data *list;     /* Reflection array */
       int  count;                  /* Number of reflections */
       double Dd;
       double DWfactor;
@@ -251,13 +235,13 @@ SHARE
       int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
       int    column_order[8]; /* column signification */
       int    flag_warning;
-      char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
       double dq;    /* wavevector transfer [Angs-1] */
       double Epsilon; /* global strain in ppm */
       double XsectionFactor;
       double my_s_k2_sum;
       double my_a;
       double my_inc;
+      double lfree; // store mean free path for the last event;
       double *w,*q, *my_s_k2;
       double radius_i,xwidth_i,yheight_i,zdepth_i;
       double k; /* last velocity (cached) */
@@ -272,12 +256,11 @@ SHARE
       int mat_column_order[5]; /*column signification for the coeff. in material data file*/
     };
 
-  off_struct offdata;
-
+ off_struct offdata;
   // PN_list_compare *****************************************************************
 
   int PN_list_compare (void const *a, void const *b)
-    {
+  {
      struct line_data const *pa = a;
      struct line_data const *pb = b;
      double s = pa->q - pb->q;
@@ -286,42 +269,44 @@ SHARE
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
 
-  int read_abs_data(char *ABS_file, struct abs_data **abs)
-  {
-    t_Table table;
-    char **parsing;
-    int status,i;
-
-    if (!ABS_file || !strlen(ABS_file) || !strcmp(ABS_file, "NULL")) {
-      fprintf(stderr,"Warning: material file (%s) not found.\n",ABS_file);
-      *abs=calloc(2,sizeof(struct abs_data));
-      (*abs)[1].E=-1;
-      (*abs)[1].k=-1;
-      (*abs)[1].mu=-1;
-    }else{
-      if ( (status=Table_Read(&table,ABS_file,0))==-1){
-        fprintf(stderr,"Error: %s Could not parse file \"%s\"\n",NAME_CURRENT_COMP,ABS_file);
-        exit(-1);
-      }
-      parsing=Table_ParseHeader(table.header,"Z","A[r]","rho",NULL);
-      *abs=calloc(table.rows+1,sizeof(struct abs_data));
-      for (i=0;i<table.rows;i++){
-        (*abs)[i].E=table.data[i*table.columns];
-        (*abs)[i].k=(*abs)[i].E*E2K;
+  /*TODO - the following function should just use read_table-lib*/
+/*  #pragma acc routine*/
+/*  int read_abs_data(char *ABS_file, struct abs_data **abs)*/
+/*  {*/
+/*    t_Table table;*/
+/*    char **parsing;*/
+/*    int status,i;*/
+/**/
+/*    if (!ABS_file || !strlen(ABS_file) || !strcmp(ABS_file, "NULL")) {*/
+/*      fprintf(stderr,"Warning: material file (%s) not found.\n",ABS_file);*/
+/*      *abs=calloc(2,sizeof(struct abs_data));*/
+/*      (*abs)[1].E=-1;*/
+/*      (*abs)[1].k=-1;*/
+/*      (*abs)[1].mu=-1;*/
+/*    }else{*/
+/*      if ( (status=Table_Read(&table,ABS_file,0))==-1){*/
+/*        fprintf(stderr,"Error (read_abs_data): Could not parse file \"%s\"\n",ABS_file);*/
+/*        exit(-1);*/
+/*      }*/
+/*      parsing=Table_ParseHeader(table.header,"Z","A[r]","rho",NULL);*/
+/*      *abs=calloc(table.rows+1,sizeof(struct abs_data));*/
+/*      for (i=0;i<table.rows;i++){*/
+/*        (*abs)[i].E=table.data[i*table.columns];*/
+/*        (*abs)[i].k=(*abs)[i].E*E2K;*/
         // get from cox_76 abs_info.data[i].sigma_a=aba_info.data[i]*
-        (*abs)[i].mu=100*table.data[i*table.columns + 3];
+/*        (*abs)[i].mu=100*table.data[i*table.columns + 3];*/
         /* column 4 (but 0-indexed) is photoabsorption in cm^2 / g
          * density is in g / cm^3 ->factor 100 to get mu in m^-1.*/
-        (*abs)[i].cohinc=100*table.data[i*table.columns + 4];
+/*        (*abs)[i].cohinc=100*table.data[i*table.columns + 4];*/
         /* column 5 contains the coh+inc mean free paths (mus). in cm^2 / g.*/
-      }
-      (*abs)[i].E=-1;
-      (*abs)[i].k=-1;
-      (*abs)[i].mu=-1;
-      Table_Free(&table);
-      return 1;
-    }
-  }
+/*      }*/
+/*      (*abs)[i].E=-1;*/
+/*      (*abs)[i].k=-1;*/
+/*      (*abs)[i].mu=-1;*/
+/*      Table_Free(&table);*/
+/*      return 1;*/
+/*    }*/
+/*  }*/
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
   {
@@ -356,7 +341,7 @@ SHARE
       "column_inv2d", "column_1/2d", "column_sintheta/lambda",
       "column_q", /* 10 */
       "DW", "Debye_Waller",
-      "Delta_d/d",
+      "delta_d_d/d",
       "column_F ",
       "V_rho",
       "density",
@@ -437,10 +422,10 @@ SHARE
         DWfactor = Table_Index(sTable, i, info->column_order[3]-1);
       if (info->column_order[4] >0)
         w = Table_Index(sTable, i, info->column_order[4]-1);
-      if (info->column_order[5] >0)
+      if (info->column_order[5] >0 && !(info->column_order[1] >0)) // Only use if d not read already
         { d = Table_Index(sTable, i, info->column_order[5]-1);
           d = (d > 0? 1/d/2 : 0); }
-      if (info->column_order[6] >0)
+      if (info->column_order[6] >0 && !(info->column_order[1] >0)) // Only use if d not read already  
         { q = Table_Index(sTable, i, info->column_order[6]-1);
           d = (q > 0 ? 2*PI/q : 0); }
       if (info->column_order[7] >0  && !F2)
@@ -451,8 +436,8 @@ SHARE
       q        = (d > 0 ? 2*PI/d : 0); /* this is q */
   
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
-      w = (w>0 ? w : 0); /* this is q and d relative spreading */
-      F2 = (F2 >= 0 ? F2 : 0);
+      w        = (w>0 ? w : 0); /* this is q and d relative spreading */
+      F2       = (F2 >= 0 ? F2 : 0);
       if (j == 0 || q == 0) {
         MPI_MASTER(
         printf("PowderN: %s: line %i has invalid definition\n"
@@ -522,13 +507,15 @@ SHARE
 /* computes the number of possible reflections (return value), and the total xsection 'sum' */
 /* this routine looks for a pre-computed value in the Nq and sum cache tables               */
 /* when found, the earch starts from the corresponding lower element in the table           */
+#pragma acc routine
 int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, double *sum,
-        struct line_info_struct *line_info) {
+  struct line_info_struct *line_info) {
   int    Nq = 0, line=0, line0=0;
   double sinth=sin(DEG2RAD*tth_max*0.5);
   *sum=0;
 
-  /* check if a line_info element has been recorded already */
+  /* check if a line_info element has been recorded already - not on OpenACC */
+  #ifndef OPENACC
   if (k >= line_info->k_min && k <= line_info->k_max && line_info->photon_passed >= CHAR_BUF_LENGTH) {
     line = (int)floor(k - line_info->k_min)*CHAR_BUF_LENGTH/(line_info->k_max - line_info->k_min);
     Nq    = line_info->xs_Nq[line];
@@ -546,13 +533,14 @@ int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, 
       line_info->xs_sum[line]= *sum;
       line_info->xs_compute++;
     } else line_info->xs_reuse++;
-    line0 = Nq - 1;
+    line0 = Nq;
   }
 
   line_info->xs_calls++;
+  #endif
 
   for(line=line0; line<count; line++) {
-      if (q[line] <= 2*k*sinth) { /* q < 2*kf: restrict structural range */
+    if (q[line] <= 2*k*sinth) { /* q < 2*kf: restrict structural range */
       *sum += my_s_k2[line];
       if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
     } else break;
@@ -561,6 +549,7 @@ int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, 
   return(Nq);
 } /* calc_xsect */
 
+#pragma acc routine
 int calc_abs_xsect(double k, double *abs, struct line_info_struct *line_info){
     /* compute the absorption cross section.
      * amounts to a table lookup in material data_file by energy*/
@@ -570,6 +559,7 @@ int calc_abs_xsect(double k, double *abs, struct line_info_struct *line_info){
     return 0;
 }
 
+#pragma acc routine
 int calc_inc_xsect(double k, double *inc, struct line_info_struct *line_info){
     /*TODO choose one of these bits*/
 
@@ -620,19 +610,19 @@ int calc_inc_xsect(double k, double *inc, struct line_info_struct *line_info){
 DECLARE
 %{
   struct line_info_struct line_info;
-  int *columns;
-  int *mat_columns;
+  double *columns;
+  double *mat_columns;
   off_struct offdata;
-  double  type;
 %}
 
 INITIALIZE
 %{
-  columns = (int[])format;
-  mat_columns = (int[]) mat_format;
+  /* We ought to clean up the columns variable as format is now a proper vector/array */
+  columns = format;
+  mat_columns =  mat_format;
   int i=0;
   struct line_data *L;
-  line_info.Dd       = Delta_d;
+  line_info.Dd       = delta_d_d;
   line_info.DWfactor = DW;
   line_info.V_0      = Vc;
   line_info.rho      = density;
@@ -648,15 +638,24 @@ INITIALIZE
   line_info.photon_passed=0;
   line_info.nb_reuses = line_info.nb_refl = line_info.nb_refl_count = 0;
   line_info.xs_compute= line_info.xs_reuse= line_info.xs_calls =0;
-  for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
-  for (i=0; i< 4;  i++) line_info.mat_column_order[i] = mat_columns[i];
+  for (i=0; i< 8; i++) {
+    line_info.column_order[i] = (int)columns[i];
+  }
+  for (i=0; i< 4;  i++) {
+    line_info.mat_column_order[i] = (int)mat_columns[i];
+  }
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+    #ifndef USE_OFF
+    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
+    exit(-1);
+    #else
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       line_info.shape=3; thickness=0; concentric=0;
     }
+    #endif
   }
   else if (xwidth && yheight && zdepth)  line_info.shape=1; /* box */
   else if (radius > 0 && yheight)        line_info.shape=0; /* cylinder */
@@ -780,9 +779,9 @@ INITIALIZE
     printf("PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
   );
 
-  if (line_info.V_0 > 0 && p_inc && (!line_info.sigma_i || !material)) {
+  if (line_info.V_0 > 0 && p_inc && (!line_info.sigma_i || !(strlen(material) && strcmp(material,"NULL"))) ) {
   MPI_MASTER(
-      printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not set a material datafile (\'%s\') nor defined sigma_inc!\n", NAME_CURRENT_COMP, material);
+    printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not set a material datafile (\'%s\') nor defined sigma_inc!\n", NAME_CURRENT_COMP, material);
   );
   }
 
@@ -802,46 +801,69 @@ INITIALIZE
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<line_info.count; i++)
     {
-        line_info.my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+      line_info.my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0)
                  *(L[i].j * L[i].F2 / L[i].q)*line_info.XsectionFactor;
-      /* Is not yet divided by k^2 */
-      /* Squires [3.103] */
       line_info.q[i] = L[i].q;
       line_info.w[i] = L[i].w;
     }
   }
 
-  if (material || !strlen(material) || !strcmp(material, "NULL")) {
-      int status;
-      char **parsing;
-      if( (status=Table_Read(&(line_info.mat_table),material,0))==-1){
-          fprintf(stderr,"PowderN: %s Error reading material data from file %s.\n",NAME_CURRENT_COMP,material);
-      }
-      parsing=Table_ParseHeader(line_info.mat_table.header,
-              "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
+  if (material && strlen(material) && strcmp(material, "NULL")) {
+    int status;
+    char **parsing;
+    if( (status=Table_Read(&(line_info.mat_table),material,0))==-1){
+       fprintf(stderr,"PowderN: %s Error reading material data from file %s.\n",NAME_CURRENT_COMP,material);
+    }
+    parsing=Table_ParseHeader(line_info.mat_table.header,
+       "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
 
-      if (parsing){
-          int i;
-          for (i=0;i<5;i++){
-              if (parsing[i]) line_info.mat_column_order[i]=atoi(parsing[i]);
-          }
+    if (parsing){
+      int i;
+      for (i=0;i<5;i++){
+        if (parsing[i]) line_info.mat_column_order[i]=atoi(parsing[i]);
       }
-
+    }
   }
 %}
 
 TRACE
 %{
   double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n;
-  double solid_angle;//, type;
+  double solid_angle, photontype, ptype;
   double arg, tmp_kx, tmp_ky, tmp_kz, kout_x, kout_y, kout_z, nx, ny, nz, pmul=1;
   int    line;
   char   intersect=0;
   char   intersecti=0;
+  
+  // Variables calculated within thread for thread purpose only 
+  char type = '\0';
+  int itype = 0;
+  double d_phi_thread = d_phi;
+  // These ones are injected back to struct at the end of TRACE in non-OpenACC case
+  int nb_reuses = line_info.nb_reuses;
+  int nb_refl = line_info.nb_refl;
+  int nb_refl_count = line_info.nb_refl_count;
+  double kcache = line_info.k; 
+  double Nq = line_info.Nq;
+  double k_min = line_info.k_min;
+  double k_max = line_info.k_max;
+  double lfree = line_info.lfree;
+  double photon_passed = line_info.photon_passed;
+  long   xs_compute = line_info.xs_compute;
+  long   xs_reuse   = line_info.xs_reuse;
+  long   xs_calls   = line_info.xs_calls;
+  int    flag_warning = line_info.flag_warning;
+  double dq = line_info.dq;
 
-  line_info.type = '\0';
-
+  #ifdef OPENACC
+  #ifdef USE_OFF
+  off_struct thread_offdata = offdata;
+  #endif
+  #else
+  #define thread_offdata offdata
+  #endif
+  
   if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
@@ -852,10 +874,12 @@ TRACE
     } else if (line_info.shape == 2) {
       intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
       intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
+    #ifdef USE_OFF
     } else if (line_info.shape == 3) {
       intersect  = off_x_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
       intersecti = 0;
     }
+    #endif
   }
 
   if(intersect && l3 >0) {
@@ -891,20 +915,23 @@ TRACE
     }
 
     /* Calculate total scattering cross section at relevant wavevector */
+    #ifndef OPENACC
     if ( fabs(k - line_info.k) < 1e-15) {
         line_info.nb_reuses++;
     } else {
+    #endif
         line_info.Nq = calc_xsect(k, line_info.q, line_info.my_s_k2, line_info.count, d_theta*0.5, &line_info.my_s_k2_sum, &line_info);
         calc_abs_xsect(k, &line_info.my_a, &line_info);
         calc_inc_xsect(k, &line_info.my_inc, &line_info);
         line_info.k = k;
         line_info.nb_refl += line_info.Nq;
         line_info.nb_refl_count++;
+    #ifndef OPENACC
     }
-
+    #endif
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
-      if (line_info.flag_warning < 100)
+      if (flag_warning < 100)
       printf("PowderN: %s: Warning: xray has already passed us? (Skipped).\n"
              "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
       line_info.flag_warning++;
@@ -918,19 +945,19 @@ TRACE
       my_s=line_info.my_s_k2_sum/(k*k)+line_info.my_inc;
       /* Total attenuation from scattering*/
 
-      type = rand01();
+      ptype = rand01();
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
-      if (type < p_transmit) {
-        type = 1;
+      if (ptype < p_transmit) {
+        photontype = 1;
         l = l_full; /* Passing through, full length */
         PROP_DL(l3);
-      } else if (type >= p_transmit && type < (p_transmit + p_inc)) {
-        type = 2;
+      } else if (ptype >= p_transmit && ptype < (p_transmit + p_inc)) {
+        photontype = 2;
         l = dl;       /* Penetration in sample */
         PROP_DL(dl+l0); /* Point of scattering */
         SCATTER;
-      } else if (type >= p_transmit + p_inc) {
-        type = 3;
+      } else if (ptype >= p_transmit + p_inc) {
+        photontype = 3;
         l=dl;
         PROP_DL(dl+l0); /* Point of scattering */
         SCATTER;
@@ -938,7 +965,7 @@ TRACE
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
       }
 
-      if (type == 3) { /* Make coherent scattering event */
+      if (photontype == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
           if (line_info.Nq > 1) line=floor(line_info.Nq*rand01());  /* Select between Nq powder lines */
@@ -1058,12 +1085,13 @@ TRACE
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
 
-          line_info.type = 'c';
-          line_info.dq = line_info.q[line];
+          type = 'c';
+          itype = 1;
+	  dq = line_info.q[line];
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
-      else if (type == 2) {  /* Make incoherent scattering event */
-         /*should be replaced by Compton scattering and/or TDS*/
+      else if (photontype == 2) {  /* Make incoherent scattering event */
+        /*should be replaced by Compton scattering and/or TDS*/
         if(d_phi) {
           randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
                                       0, 0, 1,
@@ -1087,16 +1115,19 @@ TRACE
         } else if (line_info.shape == 2) {
           intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
           intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
-        } else if (line_info.shape == 3) {
+        }
+	#ifdef USE_OFF
+	else if (line_info.shape == 3) {
           intersect  = off_x_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
           intersecti = 0;
         }
+	#endif
 
         if (!intersect) {
           /* Strange error: did not hit cylinder */
-          if (line_info.flag_warning < 100)
+          if (flag_warning < 100)
             printf("PowderN: %s: WARNING: Did not hit sample from inside (inc). ABSORB.\n", NAME_CURRENT_COMP);
-          line_info.flag_warning++;
+          flag_warning++;
           ABSORB;
         }
 
@@ -1121,15 +1152,17 @@ TRACE
         pmul = l_full*line_info.my_inc*exp(-(line_info.my_a+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
 
-        line_info.type = 'i';
+        type = 'i';
+	itype = 2;
 
       }  /* Incoherent scattering event */
-      else if (type == 1) {
+      else if (photontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change xray weight */
-          pmul = exp(-(line_info.my_a+my_s)*(l))/(p_transmit);
+        pmul = exp(-(line_info.my_a+my_s)*(l))/(p_transmit);
 
-        line_info.type = 't';
+        type = 't';
+	itype = 3;
       }
       p *= pmul;
     } /* Photon leaving since it has passed already */
@@ -1157,7 +1190,7 @@ FINALLY
       printf("PowderN: %s: Info: you may highly improve the computation efficiency by using\n"
         "    SPLIT %i COMPONENT %s=PowderN(...)\n"
         "  in the instrument description %s.\n",
-        NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
+        NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, instrument_source);
   }
   );
 
@@ -1166,7 +1199,7 @@ FINALLY
 MCDISPLAY
 %{
   if (line_info.V_0) {
-    
+
     if (line_info.shape == 0) { /* cyl */
       circle("xz", 0,  yheight/2.0, 0, radius);
       circle("xz", 0, -yheight/2.0, 0, radius);
