@@ -126,7 +126,6 @@ INITIALIZE
   if (table.columns==3) mu_c=1;
 
   delta_prefactor= NA*(rho*1e-24)/Ar * 2.0*M_PI*RE;
-  int j;
   if(10*(double)mcget_ncount()>(table.max_x-table.min_x)/(table.step_x)){
     /*it is probably worth Rebinning*/
     printf("%s: Rebinning material data (%s) for faster tracing...",NAME_CURRENT_COMP,material_datafile); 
