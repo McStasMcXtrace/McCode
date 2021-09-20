@@ -32,11 +32,10 @@
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string material_datafile="Be.txt", r=0.5e-3, r_ap=1.4e-3, yheight=0, d=.1e-3, int N=1, rough_z=0, rough_xy=0, T=1)
-OUTPUT PARAMETERS (Z,Ar,rho,matT)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -88,41 +87,39 @@ SHARE
         return result;
     }
     if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
-        if(B==0){
-            return result;
-        }
-        t[0]=-C/B;
-        for(i=0; i<=2; i++){
-            result.coord[i]=p[i]+t[0]*knorm[i];
-        }
+      if(B==0){
+        return result;
+      }
+      t[0]=-C/B;
+      for(i=0;i<=2;i++){
+	result.coord[i]=p[i]+t[0]*knorm[i];
+      }
     } else {
-        double qq;
-        if (B<0){
-            qq=-0.5*(B-sqrt(D));
-        }else{
-            qq=-0.5*(B+sqrt(D));
-        }
-        t[0]=qq/A;
-        t[1]=C/qq;
+      double qq;
+      if (B<0){
+	qq=-0.5*(B-sqrt(D));
+      }else{
+        qq=-0.5*(B+sqrt(D));
+      }
+      t[0]=qq/A;
+      t[1]=C/qq;
 
+      for(i=0;i<=2;i++){
+        pos_tmp[i]=p[i]+t[0]*knorm[i];
+        pos1_tmp[i]=p[i]+t[1]*knorm[i];
+      }
+      if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
         for(i=0;i<=2;i++){
-            pos_tmp[i]=p[i]+t[0]*knorm[i];
-            pos1_tmp[i]=p[i]+t[1]*knorm[i];
+          result.coord[i]=pos_tmp[i];
         }
-        if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
-            for(i=0;i<=2;i++){
-                result.coord[i]=pos_tmp[i];
-            }
-        } else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
-            for(i=0;i<=2;i++){
-                result.coord[i]=pos1_tmp[i];
-            }
+      } else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
+        for(i=0;i<=2;i++){
+          result.coord[i]=pos1_tmp[i];
         }
-        else return result;
+      } else return result;
     }
     
     /* Calculating tangential vector  */
-	
     if (result.coord[0]==0 && result.coord[1]==0){ // incoming ray is along the axis, so it does not refract
         k_new[0]=k[0];
         k_new[1]=k[1];
@@ -175,13 +172,13 @@ SHARE
     tzn=tz/tnorm;
     
     cos_theta=txn*knorm[0]+tyn*knorm[1]+tzn*knorm[2];
-    cos_theta1=M*cos_theta; // Snell's law
+    cos_theta1=M*cos_theta; /* Snell's law*/
 
     /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
        return result; 
     }
-    
+   
     Arg=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
     s=(1/M)*sqrt(Arg);
     q=(Knorm/tnorm)*((1/M)*cos_theta1-s*cos_theta);
@@ -192,8 +189,8 @@ SHARE
     
     for(i=0;i<3;i++) { 
       result.k[i]=k_new[i]; 
-    } 
-    return result;
+    }
+   return result;
   }
 %}
 
@@ -203,15 +200,15 @@ DECLARE
   double Ar;
   double rho;
   t_Table matT;
-%} 
+%}
 
 INITIALIZE
 %{
   int status=0;
 
   if ( (status=Table_Read(&(matT),material_datafile,0))==-1){
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
-      exit(-1);
+    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    exit(-1);
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(matT.header,"Z","A[r]","rho",NULL);
@@ -233,7 +230,7 @@ TRACE
   parab[2]=r_ap*2;
   
   w=(r_ap*r_ap)/(2.0*r);
-  k=sqrt(kx*kx+ky*ky+kz*kz); 
+  k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
   /*Interpolation of Table Values*/
@@ -261,11 +258,11 @@ TRACE
   for (nr=0;nr<=(N-1);nr++){
     parab[3]=nr*d+nr*2*w; // d constant
     parab[4]=1.0/Refractive_Index_Re; // M constant
-    parab[5]=-1.0; // Sign constant
+    parab[5]=-1.0; //Sign constant
     
     refr=intersection_lens_parab(incid,parab,rough_xy,rough_z);
     
-    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue; 
+    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;
     
     dl=sqrt( (refr.coord[0]-x)*(refr.coord[0]-x) + (refr.coord[1]-y)*(refr.coord[1]-y) + (refr.coord[2]-z)*(refr.coord[2]-z) );
     PROP_DL(dl);
@@ -279,7 +276,7 @@ TRACE
     parab[3]=(nr+1)*d+nr*2*w;
     parab[4]=Refractive_Index_Re;
     parab[5]=1.0; 
-    
+
     outg=intersection_lens_parab(refr,parab,rough_xy,rough_z);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );

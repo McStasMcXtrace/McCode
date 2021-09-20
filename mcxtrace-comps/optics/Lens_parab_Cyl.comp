@@ -62,7 +62,7 @@ SHARE
     data_lens_parab_Cyl result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
-    double t[2],p[3],knorm[3],k[3],Knorm,p_tmp[3],p1_tmp[3];
+    double t[2],p[3],knorm[3],k[3],Knorm,pos_tmp[3],pos1_tmp[3];
     double Sign,dd,M;
     
     double N[3],Nx,Ny,Nz,Nnorm;
@@ -93,50 +93,47 @@ SHARE
     C=p[1]*p[1]-Sign*2*rr*p[2]+Sign*dd*2*rr;
     D=B*B-4.0*A*C;
  
-    if (D<0) {
-        /*ray does not intersect the parabola*/
-	fprintf(stderr,"line 89: D<0 %s\n",NAME_CURRENT_COMP);
+    if (D<0) { /*ray does not intersect the parabola*/
         return result;
+    }
+    if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
+      if (B==0){
+	return result;
       }
-    if (A==0){
-      /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
-      if (B==0){ fprintf(stderr, "line 92: Division by zero in %s\n",NAME_CURRENT_COMP); return result;}
-      t[0]=-C/B; 
-      for (i=0;i<=2;i++){
-	result.coord[i]=p[i]+t[0]*knorm[i]; 
+      t[0]=-C/B;
+      for(i=0;i<=2;i++){
+	result.coord[i]=p[i]+t[0]*knorm[i];
       }
     } else {
       double qq;
       if (B<0){
 	qq=-0.5*(B-sqrt(D));
-        }else{
-          qq=-0.5*(B+sqrt(D));
-	}
-        t[0]=qq/A; 
-        t[1]=C/qq;
-      
+      }else{
+        qq=-0.5*(B+sqrt(D));
+      }
+      t[0]=qq/A;
+      t[1]=C/qq;
+
       for(i=0;i<=2;i++){
-	p_tmp[i]=p[i]+t[0]*knorm[i];
-	p1_tmp[i]=p[i]+t[1]*knorm[i];
+	pos_tmp[i]=p[i]+t[0]*knorm[i];
+	pos1_tmp[i]=p[i]+t[1]*knorm[i];
       }
-  
-      if ( fabs(p_tmp[1])<=fabs(yh/2) && fabs(p_tmp[0])<=fabs(xw/2) ){
+      if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
+        for(i=0;i<=2;i++){
+          result.coord[i]=pos_tmp[i];
+        }
+      }	else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
 	for(i=0;i<=2;i++){
-	  result.coord[i]=p_tmp[i];
+	  result.coord[i]=pos1_tmp[i];
 	}
-      }	else if ( fabs(p1_tmp[1])<=fabs(yh/2) && fabs(p1_tmp[0])<=fabs(xw/2) ){
-	for(i=0;i<=2;i++){
-	  result.coord[i]=p1_tmp[i];
-	}
-      }	else return result; 
-      }
-   
+      }	else return result;
+    }
     
     Nx=0;
-    if (result.coord[1]==0){		
-	Ny=1;	
-	Nz=0; 
-    } else if (result.coord[1]!=0) {	
+    if (result.coord[1]==0){
+      Ny=1;
+      Nz=0;
+    } else if (result.coord[1]!=0){
 	Ny=Sign*rr/result.coord[1]; Nz=1;
     }
     if (rough_xy) {
@@ -149,17 +146,18 @@ SHARE
     }  
    
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
-    N[0]=Nx/Nnorm; 
-    N[1]=Ny/Nnorm; 
-    N[2]=Nz/Nnorm; 
+    N[0]=Nx/Nnorm;
+    N[1]=Ny/Nnorm;
+    N[2]=Nz/Nnorm;
     
     cos_theta=N[0]*knorm[0]+N[1]*knorm[1]+N[2]*knorm[2];
-    cos_theta1=M*cos_theta;   // Snell's law
- 
+    cos_theta1=M*cos_theta; /* Snell's law*/
+
     /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
-       fprintf(stderr,"line 134: Division by zero\n"); return result; }
-       
+       return result; 
+    }
+   
     Arg=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
     s=(1/M)*sqrt(Arg);
     q=(Knorm/Nnorm)*((1/M)*cos_theta1-s*cos_theta);
@@ -171,7 +169,6 @@ SHARE
     for(i=0;i<3;i++) { 
       result.k[i]=k_new[i]; 
     }
-
    return result;
   }
 %}
@@ -181,22 +178,19 @@ DECLARE
   int Z;
   double Ar;
   double rho;
-  double *E;
-  double *mu;
-  double *f;
-  t_Table T;
+  t_Table matT;
 %}
 
 INITIALIZE
 %{
   int status=0;
 
-  if ( (status=Table_Read(&(T),material_datafile,0))==-1){
+  if ( (status=Table_Read(&(matT),material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
+  header_parsed=Table_ParseHeader(matT.header,"Z","A[r]","rho",NULL);
   if (!Z) Z=strtol(header_parsed[0],NULL,10);
   if (!Ar) Ar=strtod(header_parsed[1],NULL);
   if (!rho) rho=strtod(header_parsed[2],NULL);
@@ -204,7 +198,7 @@ INITIALIZE
 
 TRACE
 %{
-   // calculation of the parabolic parameters
+  // calculation of the parabolic parameters
   param_lens_parab_Cyl parab_Cyl;
   data_lens_parab_Cyl incid,refr,outg;
   
@@ -220,19 +214,19 @@ TRACE
   
   parab_Cyl.constants[6]=rough_xy;
   parab_Cyl.constants[7]=rough_z;
-  
+
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
   /*Interpolation of Table Values*/
-  mu=Table_Value(T,e,5)*rho*1e2;/*mu is now in SI, [m^-1]*/;
+  mu=Table_Value(matT,e,5)*rho*1e2;/*mu is now in SI, [m^-1]*/;
 
-  f=Table_Value(T,e,1);
+  f=Table_Value(matT,e,1);
 
   /*Calculation of Refractive Index */
   rhoel= f*NA*(rho*1e-24)/Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   delta= 2.0*M_PI*RE*rhoel/(k*k);
-  beta= mu/(2.0*k); /*mu and k in  A^-1*/
+  beta= mu*1e-10/(2.0*k); /*mu and k in  A^-1*/
 
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
@@ -253,7 +247,7 @@ TRACE
     
     refr=intersect_parab_Cyl(incid,parab_Cyl,rough_xy,rough_z);
     
-    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
+    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;
     
     dl=sqrt( (refr.coord[0]-x)*(refr.coord[0]-x) + (refr.coord[1]-y)*(refr.coord[1]-y) + (refr.coord[2]-z)*(refr.coord[2]-z) );
     PROP_DL(dl);
@@ -264,11 +258,10 @@ TRACE
     kz=refr.k[2];
 
     //alter parabolic input to match second parabola
-    
     parab_Cyl.constants[3]=(nr+1)*d+nr*2*w;
     parab_Cyl.constants[4]=Refractive_Index_Re;
     parab_Cyl.constants[5]=1.0; 
- 
+
     outg=intersect_parab_Cyl(refr,parab_Cyl,rough_xy,rough_z);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
@@ -286,7 +279,7 @@ TRACE
 
 FINALLY
 %{
-    Table_Free(&(T));
+    Table_Free(&(matT));
 %}
 
 MCDISPLAY
