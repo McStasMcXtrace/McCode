@@ -42,6 +42,7 @@
 * maxdiv_h: Maximal horizontal divergence detected (degrees)
 * filename: Name of file in which to store the detector image (string)
 * restore_xray: If set, the monitor does not influence the photon state (1)
+* nowritefile: [1]  If set, monitor will skip writing to disk.
 *
 * OUTPUT PARAMETERS:
 *
@@ -53,21 +54,21 @@
 *******************************************************************************/
 
 DEFINE COMPONENT DivPos_monitor
-DEFINITION PARAMETERS (nh=20, ndiv=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-  xwidth=0, yheight=0, maxdiv_h=2, restore_xray=0, nx=0, ny=0, nz=1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nh=20 , int ndiv=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+  xwidth=0, yheight=0, maxdiv_h=2, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* X-ray  parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
-  %{
-    double Div_N[nh][ndiv];
-    double Div_p[nh][ndiv];
-    double Div_p2[nh][ndiv];
-  %}
+%{
+  DArray2d Div_N;
+  DArray2d Div_p;
+  DArray2d Div_p2;
+%}
 
 INITIALIZE
-  %{
+%{
     int i,j;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
@@ -88,10 +89,10 @@ INITIALIZE
       Div_p2[i][j] = 0;
      }
     NORM(nx,ny,nz);
-  %}
+%}
 
 TRACE
-  %{
+%{
     int i,j;
     double div;
     double k, kn;
@@ -116,10 +117,11 @@ TRACE
     if (restore_xray) {
         RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  %}
+%}
 
 SAVE
-  %{
+%{
+  if(!nowritefile){
     DETECTOR_OUT_2D(
         "Position-divergence monitor",
         "pos [m]",
@@ -128,16 +130,24 @@ SAVE
         nh, ndiv,
         &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
         filename);
-  %}
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr2d(Div_N);
+  destroy_darr2d(Div_p);
+  destroy_darr2d(Div_p2);
+%}
 
 MCDISPLAY
-  %{
+%{
     
     multiline(5, (double)xmin, (double)ymin, 0.0,
                  (double)xmax, (double)ymin, 0.0,
                  (double)xmax, (double)ymax, 0.0,
                  (double)xmin, (double)ymax, 0.0,
                  (double)xmin, (double)ymin, 0.0);
-  %}
+%}
 
 END
