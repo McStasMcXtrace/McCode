@@ -1619,7 +1619,7 @@ int cogen_raytrace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
-  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); ABSORBED++; return(ABSORBED);} while(0)");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */

@@ -54,12 +54,10 @@
 /*magnet stuff is probably redundant*/
 #define MAGNET_ON \
   do { \
-    mcMagnet = 1; \
   } while(0)
 
 #define MAGNET_OFF \
   do { \
-    mcMagnet = 0; \
   } while(0)
 
 #define ALLOW_BACKPROP \

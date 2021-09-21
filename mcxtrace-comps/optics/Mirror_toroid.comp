@@ -100,24 +100,23 @@ INITIALIZE
 TRACE
 %{
     int status;
-    double l0,l1,l2,l3,tx,ty,tz;
+    double k,l0,l1,l2,l3,tx,ty,tz;
     
     do {
+        k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+
         /*TODO check the permutation of coordinates and the actual position of the cylinder.*/ 
         status= cylinder_intersect(&l0,&l1,x,z,y+radius,kx,kz,ky, radius, zdepth); 
         if (!status) break; /* no interaction with the cylinder*/
         if(status & (02|04)) break; /*we exit the top/bottom of the cylinder*/
         /*if the first intersection is behind the particle - this means the ray is on the wrong side of the mirror*/
         if(l0<0) break;
-        do {
-            /*this to do a test propagation*/
-            double op[12];
-            mcstore_xray(op,0, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
-            mcPROP_DL(l0);
-            (tx)=x;(ty)=y; (tz)=z;
-            mcrestore_xray(op,0, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
-        }while(0);
-        /*check mirror limits of intersectio point.*/
+
+        tx=x+l0*kx/k;
+        ty=x+l0*ky/k;
+        tz=x+l0*kz/k;
+
+        /*check mirror limits of intersection point.*/
         if(tz<-zdepth/2.0 || tz>zdepth/2.0) break;
         /*check if the width is OK*/
         double xmax=acos(xwidth/(2.0*radius))*radius;
@@ -138,7 +137,6 @@ TRACE
 
         /*By definition the normal vector points out from the ellipsoid*/
         double s=scalar_prod(kx,ky,kz,nx,ny,nz);
-        double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
          
         kx=kx-2*s*nx;
         ky=ky-2*s*ny;

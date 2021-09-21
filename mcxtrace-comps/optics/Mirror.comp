@@ -162,7 +162,7 @@ TRACE
             /*compute reflectivity directly from material data*/
 
             /*adjust p according to reflectivity*/
-            double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
+            double Qc,Q,f1,f2,delta,beta,na,e,k2;
             /*length of wavevector transfer may be compute from s and n_ above*/
             Q=fabs(2*s*sqrt(nx*nx+nz*nz));
 
