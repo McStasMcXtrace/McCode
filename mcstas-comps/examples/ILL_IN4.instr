@@ -216,7 +216,7 @@ DECLARE %{
 %}
 
 USERVARS %{
-  char flagsamplechoice;
+  char   flag_sample_choice;
   char flag_source_order;
   char order_extend;
   char flag_sample;
@@ -443,7 +443,6 @@ COMPONENT Mono_xy = Monitor_nD(
   AT (0,0,0) RELATIVE Cradle
   ROTATED (0, A1, 0) RELATIVE Cradle
 
-  
 SPLIT COMPONENT Mono = Monochromator_curved(
   width=0.22, height=0.2, NH=11, NV=5, RV=RMV, RH=RMH,
   DM=DM, mosaic=ETAM, reflect="HOPG.rfl", transmit="HOPG.trm")
@@ -483,7 +482,7 @@ COMPONENT Sample_pos = Arm()
 COMPONENT Sample_rot = Arm()
   AT (0,0,0) RELATIVE Sample_pos
   ROTATED (0,45,0) RELATIVE Sample_pos
-  
+
 SPLIT 100 COMPONENT sample_flux = Monitor_nD(
     xwidth = 0.06, yheight = 0.06, options = "x y",
     restore_neutron=1, bins=60)
@@ -494,7 +493,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 EXTEND %{
   flag_sample = 0;
   flag_env = 0;
-  flagsamplechoice = (rand01() > 0.5 ? 1 : 2);
+  flag_sample_choice = (rand01() > 0.5 ? 1 : 2);
   p *= 2; /* compensate for MC choice on 2 samples */
 %}
 
@@ -547,7 +546,7 @@ COMPONENT SampleS=Isotropic_Sqw(
   xwidth = sample_width, zdepth=sample_thickness, yheight = sample_height,
   Sqw_coh= sample_coh, Sqw_inc= sample_inc, p_interact=0.9,
   d_phi=2*RAD2DEG*atan2(1, LSD), order=1)
-  WHEN (flagsamplechoice == 1)
+WHEN (flag_sample_choice == 1)
 AT (0, 0, 0)   RELATIVE Sample_rot
 EXTEND
 %{
@@ -556,13 +555,12 @@ EXTEND
 
 COMPONENT SampleV=Incoherent(xwidth = sample_width, zdepth=sample_thickness, yheight = sample_height,
   focus_ah = 2*RAD2DEG*atan2(1, LSD), focus_aw=150.0)
-WHEN (flagsamplechoice == 2)
+WHEN (flag_sample_choice == 2)
 AT (0, 0, 0)   RELATIVE Sample_rot
 EXTEND
 %{
   flag_sample += SCATTERED;
 %}
-
 
 COMPONENT Container_out=COPY(Container_in)(concentric=0)
 WHEN(container_thickness > 0)
@@ -595,23 +593,23 @@ COMPONENT Detector_env = COPY(Detector)
 COMPONENT Detector_Sqw = Sqw_monitor(
   nq=1000, nE=1000, vix="vix",viy="viy",viz="viz",
     qmin=0, qmax=10, Emin=-50, Emax=50, filename="Sqw_full")
-  WHEN (flag_sample && flagsamplechoice == 1)
+  WHEN (flag_sample && flag_sample_choice == 1)
   /* "user1 limits=[0 10], user2 limits=[-50 50]" */
   AT (0,0,0) RELATIVE Sample_pos
 
 COMPONENT Detector_qe = Monitor_nD(
   radius=LSD, yheight=2, bins=500, restore_neutron=1,
   options=mon_qe)
-  WHEN (flag_sample && flagsamplechoice == 1)
+  WHEN (flag_sample && flag_sample_choice == 1)
   /* "banana, angle limits=[-150 150], energy limits=[0 50]" */
   AT (0,0,0) RELATIVE Sample_pos
 
 COMPONENT Detector_SqwV = COPY(Detector_Sqw)(filename="Sqw_filtered")
-  WHEN (flag_sample && flagsamplechoice == 2)
+  WHEN (flag_sample && flag_sample_choice == 2)
   AT (0,0,0) RELATIVE Sample_pos
 
 COMPONENT Detector_qeV = COPY(Detector_qe)
-  WHEN (flag_sample && flagsamplechoice == 2)
+  WHEN (flag_sample && flag_sample_choice == 2)
   AT (0,0,0) RELATIVE Sample_pos
 
 /* display static shapes for viz puposes only =============================== */
