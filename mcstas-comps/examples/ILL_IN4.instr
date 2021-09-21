@@ -446,7 +446,7 @@ COMPONENT Mono_out = Arm()
   ROTATED (0, 2*A1, 0) RELATIVE Cradle
   
 COMPONENT Mono_t = COPY(Cradle_t)
-  AT (0,0,0) RELATIVE Mono_out
+  AT (0,0,0.1*(LMS-LFS)) RELATIVE Mono_out
   
 COMPONENT FC_Pos = Monitor_nD(
   yheight=0.064, xwidth=0.03, options="t limits=[0.001 0.0023]", bins=100,
