@@ -217,10 +217,10 @@ DECLARE %{
 
 USERVARS %{
   char flagsamplechoice;
-  double flag_source_order;
-  double order_extend;
-  double flag_sample;
-  double flag_env;
+  char flag_source_order;
+  char order_extend;
+  char flag_sample;
+  char flag_env;
   double vix;
   double viy;
   double viz;
@@ -326,6 +326,8 @@ INITIALIZE %{
 
   sprintf(mon_sqw, "user1 limits=[0 %g], user2 limits=[%g %g]", 3*Ki, -Ei, 4*Ei);
   sprintf(mon_qe,  "banana, angle limits=[-150 150], energy limits=[0 %g]", 4*Ei);
+
+  #pragma acc update device( environment_thickness )
 
 %}
 
