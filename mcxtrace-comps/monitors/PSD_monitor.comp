@@ -116,7 +116,9 @@ SAVE
     if(!nowritefile){
       if(!radius){
         if(nx==1 && ny==1){
-            DETECTOR_OUT_0D("Intensity monitor " NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
+          char title[256];
+          snprintf(title,255,"Intensity monitor %s",NAME_CURRENT_COMP);
+          DETECTOR_OUT_0D(title, (double) PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
         }else if(nx==1){
             DETECTOR_OUT_1D(
                     "PSD_monitor","Y Position[m]", "Intensity", "Y",
