@@ -145,8 +145,8 @@ int Table_File_List_gc(t_Table *tab){
  * input tab: pointer to table to store.
  * return None. 
 *******************************************************************************/
-void Table_File_List_store(t_Table *tab){
-    Table_File_List_Handler(STORE,tab,0);
+void *Table_File_List_store(t_Table *tab){
+    return Table_File_List_Handler(STORE,tab,0);
 }
 
 
@@ -643,6 +643,11 @@ void Table_File_List_store(t_Table *tab){
       double *New_Table;
 
       Length_Table = ceil(fabs(Table->max_x - Table->min_x)/new_step)+1;
+      /*return early if the rebinned table will become too large*/
+      if (Length_Table > mcread_table_rebin_maxsize){
+        fprintf(stderr,"WARNING: (Table_Rebin): Rebinning table from %s would exceed 1M rows. Skipping.\n", Table->filename); 
+        return(Table->rows*Table->columns);
+      }
       New_Table    = (double*)malloc(Length_Table*Table->columns*sizeof(double));
 
       for (i=0; i < Length_Table; i++)

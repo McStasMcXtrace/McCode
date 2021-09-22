@@ -82,6 +82,9 @@
     char    method[32];    /* interpolation method: nearest, linear */
   } t_Table;
 
+/*maximum number of rows to rebin a table = 1M*/
+enum { mcread_table_rebin_maxsize = 1000000 };
+
 typedef struct t_Read_table_file_item {
     int ref_count;
     t_Table *table_ref;
@@ -116,7 +119,7 @@ MCDETECTOR Table_Write(t_Table Table, char*file, char*xl, char*yl,
 void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier);
 t_Table *Table_File_List_find(char *name, int block, int offset);
 int Table_File_List_gc(t_Table *tab);
-void Table_File_List_store(t_Table *tab);
+void *Table_File_List_store(t_Table *tab);
 
 #define Table_ParseHeader(header, ...) \
   Table_ParseHeader_backend(header,__VA_ARGS__,NULL);
