@@ -7,9 +7,8 @@
 * Written by: Erik B Knudsen
 * Date: \today
 * Origin: DTU Fysik
-* Release: McXtrace 1.1
 * Version: 0.2
-* %INSTRUMENT_SITE: None
+* %INSTRUMENT_SITE: DTU
 *
 * Design study of a pump and probe type instrument. The sample is an excitable molecule
 *
@@ -18,7 +17,7 @@
 * %Description
 * Instrument longer description (type, elements, usage...)
 *
-* Example: mxrun Pump_probe.instr Dt=2e-9 Detector: 1dpsd_I=2.78312e-26
+* %Example: Pump_probe.instr Dt=2e-9 Detector: 1dpsd_I=1.7077e-28
 *
 * %Parameters
 * excitation_prob: [1] Fraction of the molecules in solution that are excited at t=0.
@@ -56,16 +55,9 @@ TRACE
 /* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
 COMPONENT Origin = Progress_bar()
-  AT (0,0,0) ABSOLUTE
+AT (0,0,0) ABSOLUTE
 
-/*COMPONENT src = Source_div(*/
-/*    xwidth = 1e-4, yheight = 1e-4, focus_xw = 1e-4,*/
-/*    focus_yh = 1e-4, dist = 10, focus_aw = 1e-3, focus_ah = 1e-3,*/
-/*    E0 = 7.5, dE = 5e-4, flux = 1, gauss = 1, incoherent = 0,*/
-/*    phase = 0)*/
-/*  AT (0, 0, 0) RELATIVE Origin*/
-
-COMPONENT src=Source_pt(focus_xw=0.02,focus_yh=0.02,dist=10,E0=7.5, dE=0.0005, gauss=1)
+COMPONENT src=Source_pt(focus_xw=1e-4,focus_yh=1e-4,dist=10,E0=7.5, dE=0.0005, gauss=1, flux=1)
 AT(0,0,0) RELATIVE Origin
 
 COMPONENT emon_src=E_monitor(filename="emon_src",xwidth=0.01,yheight=0.01,Emin=7.49,Emax=7.51)
@@ -78,7 +70,6 @@ COMPONENT ap1 = Slit(
   xwidth = 2e-2, yheight = 2e-2)
 AT (0, 0, 10) RELATIVE src
 
-
 COMPONENT pulse_shape_chop = Chopper_simple(
   t0 = -0.5/M_C, T = 20e-6, tau = 100e-12, xwidth = 1e-4,
   yheight = 1e-4, isfirst = 1)
@@ -88,7 +79,7 @@ COMPONENT sample_pos = Arm()
   AT (0,0,0.5) RELATIVE PREVIOUS
 
 COMPONENT sample=Molecule_2state(
-  nq=512,state_0_file="Fe_bpy_GS_DFT.txt",state_1_file="Fe_bpy_ES_DFT.txt",radius=300e-6,
+  nq=512,state_0_file="Fe_bpy_GS_DFT.txt",state_1_file="Fe_bpy_ES_DFT.txt",radius=0.01,
   psimin=PMN*DEG2RAD, psimax=PMX*DEG2RAD, etamin=-1*DEG2RAD,etamax=1*DEG2RAD,
   t_relax=600e-12, delta_t=Dt, excitation_yield=excitation_prob
 )
