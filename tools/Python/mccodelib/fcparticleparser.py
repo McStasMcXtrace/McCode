@@ -73,7 +73,10 @@ def d_iskeywd(args):
     m4 = re.match('STATE:', line)
     if m4:
         return 4
-
+    m5 = re.match('ENTER:', line)
+    if m5:
+        return 4
+    
     raise Exception("wrong line: %s" % line)
 
 # process nodes implementation  --- NOTE: all process nodes increment line idx by one
