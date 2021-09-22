@@ -982,7 +982,6 @@ long Table_Init(t_Table *Table, long rows, long columns)
 MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl, 
   double x1, double x2, double y1, double y2)
 {
-  long    i =0;
   MCDETECTOR detector;
 
   if ((Table.data == NULL) && (Table.rows*Table.columns)) {
