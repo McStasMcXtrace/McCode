@@ -124,6 +124,7 @@ DECLARE
   double dq=0, dw=0, vf;
   char opt1[256]; /* options for Monitor_nD */
   char opt2[256];
+  char opt3[256];
 
   double monok_index;
 %}
@@ -245,6 +246,8 @@ INITIALIZE
   sprintf(opt1, "angle limits=[0 180] bins=180, energy limits=[%g %g] bins=40, banana, parallel",
   (Ei-20 < 0 ? 0 : Ei-20), Ei+20);
 
+  sprintf(opt3,"user1 limits=[0.5,3.5] bins=9, lambda limits=[%g %g] bins=20, square, per cm2",0.97*lambda,1.03*lambda);
+  
 %}
 
 /* -------------------------------- TRACE -------------------------------- */
@@ -334,12 +337,12 @@ AT (0,0,LME-LCE-LCC) RELATIVE mono_out
 
 COMPONENT Mon_SuppInL = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="lambda, all auto")
+  options="lambda limits=[4.075 4.22] bins=50")
 AT (0,0,-0.07-0.002) RELATIVE SuppPos
 
 COMPONENT Mon_SuppInT = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="t slit, all auto", bins=iTOF_CHA_RESOL)
+  options="t slit limits=[0.0042 0.0045]", bins=iTOF_CHA_RESOL)
 AT (0,0,-0.07-0.001) RELATIVE SuppPos
 EXTEND
 %{
@@ -367,7 +370,7 @@ AT (0,0,0) RELATIVE SuppPos
 
 COMPONENT Mon_SuppOutT = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="auto t slit", bins=iTOF_CHA_RESOL)
+  options="t slit limits=[-700e-6 700e-6]", bins=iTOF_CHA_RESOL)
 AT (0,0,+0.07+0.001) RELATIVE SuppPos
 
 /* --------------------------- IN6 Fermi ------------------------ */
@@ -386,26 +389,26 @@ AT (0,0,0) RELATIVE FermiPos
 
 COMPONENT Mon_FermiOutdT = Monitor_nD(
   xwidth = 0.044, yheight = 0.064,
-  options="auto t slit", bins=iTOF_CHA_RESOL)
+  options="t slit limits=[180e-6 365e-6]", bins=iTOF_CHA_RESOL)
 AT (0,0,+0.06+0.001) RELATIVE FermiPos
 
 /* --------------------------- IN6 Fermi END --------------------- */
 
 COMPONENT MonokMonitor = Monitor_nD(
   xwidth = 0.2, yheight = 0.2, user1=monok_index, username1="Monoch. index",
-  options="user1 limits=[0.5,3.5] bins=9, auto lambda bins=20, square, per cm2")
+    options=opt3)
 AT (0,0,+0.06+0.002) RELATIVE FermiPos
 
 /* sample position (at 2.1 m from monoks) */
 
 COMPONENT Mon_SampleInT = Monitor_nD(
   xwidth = 0.05, yheight = 0.05,
-  options="auto t parallel, per cm2", bins=iTOF_CHA_RESOL)
+  options=" t limits=[255e-6 425e-6] parallel, per cm2", bins=iTOF_CHA_RESOL)
 AT (0,0,LME-.273) RELATIVE mono_out
 
 COMPONENT Mon_SampleInXY = Monitor_nD(
-  xwidth = 0.2, yheight = 0.1,
-  options="auto x y parallel, per cm2")
+  xwidth = 0.06, yheight = 0.1,
+  options="x y parallel, per cm2 bins=50")
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* BEGIN ********************************** Sample environment and sample */
