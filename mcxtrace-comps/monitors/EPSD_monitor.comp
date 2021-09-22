@@ -5,19 +5,16 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: PSD_monitor
+* Component: EPSD_monitor
 *
 * %I
-* Written by: Erik Knudsen
+* Written by: Erik B Knudsen
 * Date: June 22, 2009
-* Version: $Revision$
-* Origin: Risoe
-* Release: McXtrace 0.1
+* Release: McXtrace 1.5
 *
 * Position-sensitive monitor.
 *
 * %D
-* Based on neutron component written by Kim Lefmann
 * An nx times ny pixel PSD monitor, which only counts photons with energy in an interval
 * given by Emin and Emax in nE energy bins. The default energy interval is (almost) infinite, with a single bin.
 * If nE>1 the component will output nE detector files + one which is integrated over the full energy interval.
@@ -28,44 +25,38 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* Emin:     Lower bound of energy interval (keV)
-* Emax:     Upper bound of energy interval (keV)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* nE:       Number of energy bins (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
-*
-* OUTPUT PARAMETERS:
-*
-* PSD_N:    Array of xray counts
-* PSD_p:    Array of xray weight counts
-* PSD_p2:   Array of second moments
+* xmin: [m]         Lower x bound of detector opening.
+* xmax: [m]         Upper x bound of detector opening.
+* ymin: [m]         Lower y bound of detector opening.
+* ymax: [m]         Upper y bound of detector opening.
+* Emin: [keV]       Lower bound of energy interval.
+* Emax: [keV]       Upper bound of energy interval.
+* xwidth: [m]       Width of detector. Overrides xmin,xmax.
+* yheight: [m]      Height of detector. Overrides ymin,ymax.
+* nx: [ ]           Number of pixel columns.
+* ny: [ ]           Number of pixel rows.
+* nE: [ ]           Number of energy bins.
+* filename: [str]   Name of file in which to store the detector image.
+* restore_xray: [ ] If set, the monitor does not influence the xray state.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT EPSD_monitor
-DEFINITION PARAMETERS (nx=90, ny=90, string filename=0, restore_xray=0)
-SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, Emax=0, Emin=0, nE=1 )
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, PSD_N_s, PSD_p_s, PSD_p2_s)
+DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (int nx=90, int ny=90, string filename="", int restore_xray=0,
+    xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, Emax=0, Emin=0, nE=1 )
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{
-    double **PSD_N;
-    double **PSD_p;
-    double **PSD_p2;
-    
-    double PSD_N_s[nx][ny];
-    double PSD_p_s[nx][ny];
-    double PSD_p2_s[nx][ny];
+    DArray2d PSD_N;
+    DArray2d PSD_p;
+    DArray2d PSD_p2;
+    DArray2d PSD_N_s;
+    DArray2d PSD_p_s;
+    DArray2d PSD_p2_s;
 %}
 
 INITIALIZE
@@ -90,29 +81,20 @@ INITIALIZE
     }
 
     if (nE>1){
-        /*allocate memory for the data*/
-        if( (PSD_N=calloc(nE, sizeof(*PSD_N)))==NULL ||
-                (PSD_p=calloc(nE, sizeof(*PSD_p)))==NULL ||
-                (PSD_p2=calloc(nE, sizeof(*PSD_p2)))==NULL ){
-            fprintf(stderr,"Error(%s): Memory allocation error for energy bins.\n",NAME_CURRENT_COMP);
-            exit(-1);
-        }
-        for (i=0;i<nE;i++){
-            int status=0;
-;
-            if( (PSD_N[i]=calloc(nx*ny, sizeof(**PSD_N)))==NULL ||
-                    (PSD_p[i]=calloc(nx*ny, sizeof(**PSD_p)))==NULL || 
-                    (PSD_p2[i]=calloc(nx*ny, sizeof(**PSD_p2)))==NULL ){
-                fprintf(stderr,"Error(%s): Memory allocation error.\n",NAME_CURRENT_COMP);exit(-1);
-            }
-        }
+        PSD_N = create_darr2d(nE,nx*ny);
+        PSD_p = create_darr2d(nE,nx*ny);
+        PSD_p2 = create_darr2d(nE,nx*ny);
     }
+    PSD_N_s = create_darr2d(nx,ny);
+    PSD_p_s = create_darr2d(nx,ny);
+    PSD_p2_s = create_darr2d(nx,ny);
+
 %}
 
 TRACE
 %{
     int i,j,k;
-    double e;
+    double e,p2;
 
     PROP_Z0;
     e=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz))*K2E;
@@ -122,15 +104,21 @@ TRACE
       j = floor((y - ymin)*ny/(ymax - ymin));
       k = floor((e-Emin)*nE/(Emax-Emin));
 
+      p2=p*p;
       if (nE>1){
-          PSD_N[k][i*ny+j]++;
-          PSD_p[k][i*ny+j] += p;
-          PSD_p2[k][i*ny+j] += p*p;
+#pragma acc atomic
+        PSD_N[k][i*ny+j] += 1;
+#pragma acc atomic
+        PSD_p[k][i*ny+j] += p;
+#pragma acc atomic
+        PSD_p2[k][i*ny+j] += p2;
       }
-      PSD_N_s[i][j]++;
-      PSD_p_s[i][j]+=p;
-      PSD_p2_s[i][j]+=p*p;
-
+#pragma acc atomic
+      PSD_N_s[i][j] += 1;
+#pragma acc atomic
+      PSD_p_s[i][j] += p;
+#pragma acc atomic
+      PSD_p2_s[i][j] += p2;
       SCATTER;
     }
     if (restore_xray) {
@@ -184,22 +172,17 @@ SAVE
 
 FINALLY
 %{
-    int i;
-    if (nE>1){
-        for (i=0;i<nE;i++){
-            free(PSD_N[i]);
-            free(PSD_p[i]);
-            free(PSD_p2[i]);
-        }
-        free(PSD_N);
-        free(PSD_p);
-        free(PSD_p2);
-    }
+  destroy_daar2d(psd_N);
+  destroy_daar2d(psd_p);
+  destroy_daar2d(psd_p2);
+
+  destroy_daar2d(psd_N_s);
+  destroy_daar2d(psd_p_s);
+  destroy_daar2d(psd_p2_s);
 %}
 
 MCDISPLAY
 %{
-  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,
