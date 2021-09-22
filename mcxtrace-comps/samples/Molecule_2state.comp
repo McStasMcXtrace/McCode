@@ -79,8 +79,6 @@ SHARE
 
 DECLARE
 %{
-  double delta_q=0.01;
-
   double *q[2];
   double *f2[2];
   int lines[2];

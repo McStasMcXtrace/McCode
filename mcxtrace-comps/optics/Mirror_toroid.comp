@@ -10,14 +10,12 @@
 *
 * %I
 *
-* Written by: Kim Lefmann and Kristian Nielsen
-* Modified by: Erik Knudsen 
-* Date: September 2009
+* Written by: Erik B Knudsen
+* Date: Jul 2016
 * Version: 1.0
-* Release: McXtrace 1.0
-* Origin: Risoe
+* Origin: DTU Physics
 *
-* Mirror with heat bump
+* Toroidal shape mirror
 *
 * %D
 * This is an implementation of a toroidal mirror which may be curved in two dimensions.
@@ -38,7 +36,7 @@
 
 DEFINE COMPONENT Mirror_toroid
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS ( string reflec="", zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
+SETTING PARAMETERS (string reflec="", zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -61,7 +59,8 @@ DECLARE
 
 INITIALIZE
 %{
-    if (reflec && strlen(reflec)) {
+    if (reflec && strlen(reflec) && strcmp(reflec,"NULL") ) {
+        use_reflec_table=1;
         char **header_parsed;
         t_Table *tp=&reflec_table;
         /* read 1st block data from file into tp */
@@ -91,7 +90,6 @@ INITIALIZE
         {
             exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        use_reflec_table=1;
     }else{
         use_reflec_table=0;
     }
@@ -113,8 +111,8 @@ TRACE
         if(l0<0) break;
 
         tx=x+l0*kx/k;
-        ty=x+l0*ky/k;
-        tz=x+l0*kz/k;
+        ty=y+l0*ky/k;
+        tz=z+l0*kz/k;
 
         /*check mirror limits of intersection point.*/
         if(tz<-zdepth/2.0 || tz>zdepth/2.0) break;

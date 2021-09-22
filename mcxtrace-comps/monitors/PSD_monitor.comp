@@ -83,7 +83,7 @@ INITIALIZE
 TRACE
 %{
     int i,j,k;
-    double e;
+    double e,p2;
 
     PROP_Z0;
     if (!radius){
@@ -91,18 +91,26 @@ TRACE
       {
         i = floor((x - xmin)*nx/(xmax - xmin));
         j = floor((y - ymin)*ny/(ymax - ymin));
-        PSD_N[i][j]++;
+        p2=p*p;
+#pragma acc atomic
+        PSD_N[i][j] += 1;
+#pragma acc atomic
         PSD_p[i][j] += p;
-        PSD_p2[i][j] += p*p;
+#pragma acc atomic
+        PSD_p2[i][j] += p2;
         SCATTER;
       }
     }else{
       double r=sqrt(x*x+y*y);
       if (r<radius){
         i = floor(r*nr/radius);
-        PSD_N[0][i]++;
+        p2=p*p;
+#pragma acc atomic
+        PSD_N[0][i] += 1;
+#pragma acc atomic
         PSD_p[0][i] += p;
-        PSD_p2[0][i] += p*p;
+#pragma acc atomic
+        PSD_p2[0][i] += p2;
         SCATTER;
       }
     }

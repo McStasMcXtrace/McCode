@@ -49,9 +49,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Perfect_crystal
-DEFINITION PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt",R0=0) 
-SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
-OUTPUT PARAMETERS (prms)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt",R0=0, length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 
@@ -158,33 +158,33 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    int Z;
-    double rho,At,f_rel,f_nt;
-    t_Table m_t;
-    t_Table f0_t;
-  }prms;
-  
+  int Z;
+  double rho;
+  double At;
+  double f_rel;
+  double f_nt;
+  t_Table m_t;
+  t_Table f0_t;
 %}
 
 INITIALIZE
 %{
   int status;
   if (material){
-    if (status=Table_Read(&(prms.m_t),material,0)==-1){
+    if (status=Table_Read(&(m_t),material,0)==-1){
       fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
       exit(-1);
     }
     char **header_parsed;
-    header_parsed=Table_ParseHeader(prms.m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-    if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-    if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-    if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+    header_parsed=Table_ParseHeader(m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+    if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+    if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+    if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
   }else{
     fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP,material);
   }
   if(form_factors){
-    if (status=Table_Read(&(prms.f0_t),form_factors,0)==-1){
+    if (status=Table_Read(&(f0_t),form_factors,0)==-1){
       fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
       exit(-1);
     }
@@ -239,10 +239,10 @@ TRACE
         int quadrant;
         Thetain=fabs(atan(ky/kz));
         double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
-        f00 = prms.Z;
-        f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
-        fp  = Table_Value(prms.m_t,E,1)-prms.Z;
-        fpp = Table_Value(prms.m_t,E,2);
+        f00 = Z;
+        f0h = Table_Value(f0_t,1/(2*d),Z);
+        fp  = Table_Value(m_t,E,1)-Z;
+        fpp = Table_Value(m_t,E,2);
         
         if (ky<0 && kz>0){
           /*4th quadrant - forward hit from above. No change.*/ 
