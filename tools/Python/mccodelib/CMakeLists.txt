@@ -92,7 +92,8 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure config file
 configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
-set(BINS "${WORK}/mccode_config.py")
+configure_file("${CMAKE_SOURCE_DIR}/mccode_config.json.in" "${WORK}/mccode_config.json" @ONLY)
+set(BINS "${WORK}/mccode_config.py" "${WORK}/mccode_config.json")
 
 if(WINDOWS)
   # Python files

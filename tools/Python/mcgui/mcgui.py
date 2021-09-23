@@ -928,7 +928,7 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     try:
-        mccode_config.load_user_config()
+        mccode_config.load_config("user")
         mccode_config.check_env_vars()
 
         mcguiApp = PyQt5.QtWidgets.QApplication(sys.argv)

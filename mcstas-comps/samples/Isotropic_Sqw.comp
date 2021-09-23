@@ -303,7 +303,6 @@ SHARE
 #define ISOTROPIC_SQW $Revision$
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
-
 #ifndef Crystallographica
 #define Crystallographica { 4,5,7,0,0,0,0, 0,0 }
 #define Fullprof          { 4,0,8,0,0,5,0, 0,0 }
@@ -1465,7 +1464,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       index_w_file = w_file2full[index_w];
       /* get Sqw_file element, with bi-linear interpolation from file */
       /* when the initial file does not contain the energy, the opposite element (-w) is used */
-      sqw_file     = Table_Value2d(Table_Array[2], index_q_file, abs(index_w_file));
+      sqw_file     = Table_Value2d(Table_Array[2], index_q_file, fabs(index_w_file));
       /* apply the minimum threshold to remove noisy background in S(q,w) */
       if (sqw_file < Sqw->sqw_threshold) sqw_file = 0;
       else if (index_w_file < 0)         sqw_file = -sqw_file; /* negative == mirrored from other side */
@@ -2621,7 +2620,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (VarSqw.verbose_output >= 2 && VarSqw.neutron_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
             "               last try (%i): type=%c w=%g q=%g cos(theta)=%g k=%g\n",
-            NAME_CURRENT_COMP, VarSqw.maxloop, (type ? type : '-'), omega, q, costheta, k);
+          NAME_CURRENT_COMP, VarSqw.maxloop, (type ? type : '-'), omega, q, costheta, k);
         VarSqw.neutron_removed++;
         if (order && SCATTERED != order) ABSORB;
         break;       /* finish multiple scattering loop */

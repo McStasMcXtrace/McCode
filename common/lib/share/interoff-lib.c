@@ -710,6 +710,12 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   data->polySize   = polySize;
   data->faceSize   = faceSize;
   data->filename   = offfile;
+  #ifdef OPENACC
+  acc_attach(&vtxArray);
+  acc_attach(&normalArray);
+  acc_attach(&faceArray);
+  #endif
+
   return(polySize);
 } /* off_init */
 

@@ -237,8 +237,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (strstr(Vars->option, "double"))
       Vars->Flag_Binary_List  = 2;
 
-    strcpy(Vars->Coord_Label[0], "Intensity");
-    strncpy(Vars->Coord_Var[0], "p", 30);
+    strcpy(Vars->Coord_Label[0],"Intensity");
+    strncpy(Vars->Coord_Var[0],"p",30);
     Vars->Coord_Type[0] = DEFS->COORD_P;
     Vars->Coord_Bin[0] = 1;
     Vars->Coord_Min[0] = 0;
@@ -250,6 +250,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     carg = 1;
     while((Flag_End == 0) && (carg < 128))
     {
+
       if (Flag_New_token) /* retain previous token or get a new one */
       {
         if (carg == 1) token=(char *)strtok(option_copy,DEFS->TOKEN_DEL);
@@ -762,6 +763,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
       /* no Mon2D allocated for
        * (Vars->Coord_Number != 2) && !Vars->Flag_Multiple && Vars->Flag_List */
+
     Vars->psum  = 0;
     Vars->p2sum = 0;
     Vars->Nsum  = 0;
@@ -799,6 +801,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 /* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
 /* return values: 0=neutron was absorbed, -1=neutron was outside bounds, 1=neutron was measured*/
 /* ========================================================================= */
+
 int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars, _class_particle* _particle)
 {
 
@@ -1191,6 +1194,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
+          
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
 	  // This is is where the list is appended. How to make this "atomic"?
@@ -1228,6 +1232,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
 /* ========================================================================= */
 /* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
+
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
   {
     char   *fname;

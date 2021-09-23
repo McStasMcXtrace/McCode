@@ -101,7 +101,8 @@ TRACE
   int i;                                        /* Which mirror hit? */
   double q;                                     /* Q [1/AA] of reflection */
   double nlen2;                                 /* Vector lengths squared */
-
+  double par[5] = {R0, Qc, alpha, m, W};
+  
   /* ToDo: These could be precalculated. */
   double ww = .5*(w2 - w1), hh = .5*(h2 - h1);
   double whalf = .5*w1, hhalf = .5*h1;
@@ -190,7 +191,6 @@ TRACE
     if (reflect && table_present==1)
        TableReflecFunc(q, &pTable, &weight);
     else {
-      double par[] = {R0, Qc, alpha, m, W};
       StdReflecFunc(q, par, &weight);
     }
     if (weight > 0)

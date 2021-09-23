@@ -44,7 +44,7 @@
 * with multiple scattering, customized monitors, and the SPLIT mechanism to
 * improve the statistics. The H15 guide is not described in this model.
 *
-* Example: lambda=4.14 Detector: M_theta_t_all_I=118160
+* %Example: lambda=4.14 Detector: M_theta_t_all_I=120000
 *
 * %Parameters
 * lambda: [Angs]                          wavelength within 4.14|4.6|5.12|5.92
@@ -126,11 +126,14 @@ DECLARE
   double dq, dw, vf;
   char opt1[256]; /* options for Monitor_nD */
   char opt2[256];
-
+  char opt3[256];
 %}
 
 USERVARS
 %{
+  double vix;
+  double viy;
+  double viz;
   double monok_index;
 %}
 
@@ -269,6 +272,8 @@ INITIALIZE
   sprintf(opt1, "angle limits=[0 180] bins=180, energy limits=[%g %g] bins=40, banana, parallel",
   (Ei-20 < 0 ? 0 : Ei-20), Ei+20);
 
+  sprintf(opt3,"user1 limits=[0.5,3.5] bins=9, lambda limits=[%g %g] bins=20, square, per cm2",0.97*lambda,1.03*lambda);
+  
 %}
 
 /* -------------------------------- TRACE -------------------------------- */
@@ -295,12 +300,12 @@ AT (0,0,2.55) RELATIVE PREVIOUS
 
 /* ----------------------- IN6 Monochromators GROUP ----------------------- */
 
-COMPONENT Cradle = Arm()
+SPLIT COMPONENT Cradle = Arm()
 AT (0,0,0.15) RELATIVE PREVIOUS
-EXTEND %{
+EXTEND
+%{
   monok_index=0;
 %}
-
 /* triple-monochromator description:
  *   7 blades, vertically focusing RV=3 m, fixed.
  *   Each blade is 54 mm width, 29 mm heigh. Vertical angle +/- 3 deg.
@@ -308,14 +313,13 @@ EXTEND %{
  *   distance between each crystal ensemble 4 cm
  */
 
-SPLIT COMPONENT Mono1 = Monochromator_curved(
+COMPONENT Mono1 = Monochromator_curved(
   RV     = RV, NV = 7,NH=1,
   zwidth = 0.054, yheight = 0.029,
   DM     = 3.355, gap = 0.001,
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, -LMM) RELATIVE Cradle ROTATED (0,A1/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=1; }
@@ -328,7 +332,6 @@ COMPONENT Mono2 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, 0) RELATIVE Cradle ROTATED (0,A2/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=2; }
@@ -341,7 +344,6 @@ COMPONENT Mono3 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, +LMM) RELATIVE Cradle ROTATED (0,A3/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=3; }
@@ -358,12 +360,12 @@ AT (0,0,LME-LCE-LCC) RELATIVE mono_out
 
 COMPONENT Mon_SuppInL = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="lambda, all auto")
+  options="lambda limits=[4.075 4.22] bins=50")
 AT (0,0,-0.07-0.002) RELATIVE SuppPos
 
 COMPONENT Mon_SuppInT = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="t slit, all auto", bins=iTOF_CHA_RESOL)
+  options="t slit limits=[0.0042 0.0045]", bins=iTOF_CHA_RESOL)
 AT (0,0,-0.07-0.001) RELATIVE SuppPos
 EXTEND
 %{
@@ -386,12 +388,12 @@ EXTEND
 COMPONENT Suppressor = FermiChopper(radius=0.07, nu=Frequency/iRATIO,
    yheight=0.098, xwidth=0.052, nslit=1, R0=0, phase=0,
    length=0.012, eff=1, verbose=1)
-   WHEN (iRATIO > 0)
+  WHEN (iRATIO > 0)
 AT (0,0,0) RELATIVE SuppPos
 
 COMPONENT Mon_SuppOutT = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="t slit", bins=iTOF_CHA_RESOL)
+  options="t slit limits=[-700e-6 700e-6]", bins=iTOF_CHA_RESOL)
 AT (0,0,+0.07+0.001) RELATIVE SuppPos
 
 /* --------------------------- IN6 Fermi ------------------------ */
@@ -410,33 +412,38 @@ AT (0,0,0) RELATIVE FermiPos
 
 COMPONENT Mon_FermiOutdT = Monitor_nD(
   xwidth = 0.044, yheight = 0.064,
-  options="t slit", bins=iTOF_CHA_RESOL)
+  options="t slit limits=[180e-6 365e-6]", bins=iTOF_CHA_RESOL)
 AT (0,0,+0.06+0.001) RELATIVE FermiPos
 
 /* --------------------------- IN6 Fermi END --------------------- */
 
 COMPONENT MonokMonitor = Monitor_nD(
     xwidth = 0.2, yheight = 0.2, user1="monok_index", username1="Monoch. index",
-  options="user1 limits=[0.5,3.5] bins=9, lambda bins=20, square, per cm2")
+    options=opt3)
 AT (0,0,+0.06+0.002) RELATIVE FermiPos
 
 /* sample position (at 2.1 m from monoks) */
 
 COMPONENT Mon_SampleInT = Monitor_nD(
   xwidth = 0.05, yheight = 0.05,
-  options="auto t parallel, per cm2", bins=iTOF_CHA_RESOL)
+  options=" t limits=[255e-6 425e-6] parallel, per cm2", bins=iTOF_CHA_RESOL)
 AT (0,0,LME-.273) RELATIVE mono_out
 
 COMPONENT Mon_SampleInXY = Monitor_nD(
-  xwidth = 0.2, yheight = 0.1,
-  options="x y parallel, per cm2")
+  xwidth = 0.06, yheight = 0.1,
+  options="x y parallel, per cm2 bins=50")
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* BEGIN ********************************** Sample environment and sample */
 
 COMPONENT sample_pos = Arm()
 AT (0,0,LME) RELATIVE mono_out
-
+EXTEND %{
+  vix=vx;
+  viy=vy;
+  viz=vz;
+%}
+  
 SPLIT COMPONENT Sample=Isotropic_Sqw(
   radius = radius, thickness=thickness, yheight = 0.055,
   Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, p_interact=0.9
@@ -446,15 +453,21 @@ EXTEND
   if (!SCATTERED) ABSORB;
 %}
 
+COMPONENT Out = PSD_monitor_4PI(filename="out")
+  AT (0,0,0) RELATIVE sample_pos
+
 COMPONENT M_theta_t_all = Monitor_nD(
  xwidth=2.5, yheight=1,
  options=opt1,
  bins=100)
 AT (0,0,0) RELATIVE sample_pos
 
-/*COMPONENT Detector_nM = Monitor_Sqw(*/
-/*  radius=1.3, yheight=1, bins=100, index=-2,*/
-/*  options="user1 limits=[0 6] user2 limits=[-20 20]")*/
-/*  AT (0, 0, 0) RELATIVE PREVIOUS*/
+COMPONENT Detector_nM = Sqw_monitor(
+ radius=1.3, yheight=1,
+ nq=100, qmin=0, qmax=6,
+ nE=100, Emin=-20, Emax=20,
+ vix="vix", viy="viy", viz="viz",
+ filename="Detector_nM")
+ AT (0, 0, 0) RELATIVE PREVIOUS
 
 END
