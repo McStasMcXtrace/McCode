@@ -26,7 +26,7 @@
 
 DATE=`date +%F`
 REF="McStas-2.5_CPU_MPICC_5e7"
-TARGET="McStas_CPU_GCC_KISS_1e7"
+TARGET="McStas_CPU_GCC_KISS_5e6"
 cd $HOME/TESTS/
 
 export MATLABPATH=${HOME}/McCode/generate_testplots/
