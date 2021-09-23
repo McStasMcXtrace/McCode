@@ -44,7 +44,7 @@
 * with multiple scattering, customized monitors, and the SPLIT mechanism to
 * improve the statistics. The H15 guide is not described in this model.
 *
-* %Example: lambda=4.14 Detector: M_theta_t_all_I=140000
+* %Example: lambda=4.14 Detector: M_theta_t_all_I=120000
 *
 * %Parameters
 * lambda: [Angs]                          wavelength within 4.14|4.6|5.12|5.92
@@ -421,6 +421,9 @@ EXTEND
 %{
   if (!SCATTERED) ABSORB;
 %}
+
+COMPONENT Out = PSD_monitor_4PI(filename="out")
+  AT (0,0,0) RELATIVE sample_pos
 
 COMPONENT M_theta_t_all = Monitor_nD(
  xwidth=2.5, yheight=1,
