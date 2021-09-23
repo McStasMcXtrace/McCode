@@ -66,13 +66,13 @@ COMPONENT origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT ss= Source_spectra(
-    spectra_stem_x=stemx,spectra_stem_y=stemy,
+    spectra_stem_x=stemx,spectra_stem_y=stemy,flag4d=0,noinit=(flag4d!=0),
     E0=E0,dE=dE,Emin=6.2,Emax=18.6,nE=5,
-    symmetricx=1,symmetricy=1)
+    symmetricx=1,symmetricy=1, verbose=0)
 WHEN (flag4d==0) AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT ss4d= Source_spectra(
-    spectra_stem=stem4d,flag4d=1,
+    spectra_stem=stem4d,flag4d=1,noinit=(flag4d==0),
     E0=E0,dE=dE,Emin=6.2,Emax=18.6,nE=5,
     symmetricx=1,symmetricy=1, verbose=1)
 WHEN (flag4d==1) AT(0,0,0) RELATIVE PREVIOUS
