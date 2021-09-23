@@ -55,7 +55,7 @@ if (!SCATTERED) ABSORB;
 /* detectors */
 
 COMPONENT Out = PSD_monitor_4PI(filename="out")
-  AT (0,0,0) RELATIVE sample_pos
+  AT (0,0,0) RELATIVE Sample_pos
   
 COMPONENT M_theta_t = Monitor_nD(
  xwidth=2.5, yheight=0.2,
