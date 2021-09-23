@@ -1691,17 +1691,17 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("#endif");
       str_free(exp);
     }
-    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
-    coutf("      /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     // coordinate transformations (wrt to PREVIOUS)
-    cout( "      if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
-    coutf("        if (_%s_var._rotation_is_identity) {", comp->name);
-    coutf("          coords_get("
-      "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
-      "&x, &y, &z);", comp->name);
-    cout( "        } else");
+    coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
+    cout( "    if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
+    coutf("      if (_%s_var._rotation_is_identity) {", comp->name);
+    coutf("        coords_get("
+	  "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
+	  "&x, &y, &z);", comp->name);
+    cout( "      } else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "      } else flag_nocoordschange=0;");
+    cout( "    } else flag_nocoordschange=0;");
+    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     cout( "      _particle_save = *_particle;");
     coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
     cout ("      DEBUG_STATE();");
