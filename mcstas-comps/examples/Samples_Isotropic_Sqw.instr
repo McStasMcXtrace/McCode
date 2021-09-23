@@ -52,8 +52,11 @@ EXTEND
 if (!SCATTERED) ABSORB;
 %}
 
-  /* detectors */
+/* detectors */
 
+COMPONENT Out = PSD_monitor_4PI(filename="out")
+  AT (0,0,0) RELATIVE sample_pos
+  
 COMPONENT M_theta_t = Monitor_nD(
  xwidth=2.5, yheight=0.2,
  options="time limits=[0.0017 0.0117], abs angle limits=[0 180], banana, parallel",
