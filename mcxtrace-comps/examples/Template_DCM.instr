@@ -1,0 +1,85 @@
+/*******************************************************************************
+* Instrument: Template_DCM
+*
+* %I
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Jan '21
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Templates
+*
+* Template for a vertically defleting DCM
+*
+* %D
+* Simple skeleton instrument showing a vertically deflecting
+* double crystal monochromator. To instead make it horizontally deflecting
+* simply add Arms before and after the crystal assembly that rotate by 
+* 90 and -90 deg. respectively around the z-axis.
+* The crystal is illuminated by a model point source.
+*
+* %Example: TTH=9.17 alpha=0.01 Detector: emon_dcm1_I=8.83566e-21
+*
+* %P
+* E0: [keV]     Central energy to be emitted by the source
+* dEr: [keV]    Relative half width to emitted by the source
+* TH: [deg]     Rotation angle of the crystals. 
+* alpha: [deg]  Asymmetry angle for the crystals.
+* 
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Template_DCM(E0=12.3984, dEr=1e-3,TTH=9.18,alpha=0)
+
+DECLARE
+%{
+  double dcm_gap;
+  double TTH;
+  double dE;
+%}
+
+INITIALIZE
+%{
+   dcm_gap=0.02;
+   dE=dEr*E0;
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source_pt = Source_pt(
+    focus_xw=2e-3, 
+    focus_yh=1e-3, 
+    E0=E0, 
+    dE=dE)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT emon_dcm0 = E_monitor(xwidth=0.05, yheight=0.05, filename="emon_dcm0", Emin=E0-dE*2, Emax=E0+dE*2, nE=101)
+AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT dcm_xtal0 = Bragg_crystal(
+    length=0.04, width=0.04, 
+    alpha=alpha, h=1, k=1, l=1, material="Si.txt", V=160.1826)
+AT(0,0,0.02) RELATIVE PREVIOUS
+ROTATED (-TTH,0,0) RELATIVE PREVIOUS
+
+COMPONENT dcm0 = Arm()
+AT(0,0,0) RELATIVE dcm_xtal0
+ROTATED (-TTH,0,0) RELATIVE PREVIOUS
+
+COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
+AT(0,0,dcm_gap) RELATIVE dcm0
+ROTATED (TTH,0,0) RELATIVE dcm0
+
+COMPONENT dcm1 =Arm()
+AT(0,0,0) RELATIVE dcm_xtal1
+ROTATED (TTH,0,0) RELATIVE dcm_xtal1 
+
+COMPONENT emon_dcm1 = COPY(emon_dcm0)(filename="emon_dcm1")
+AT(0,0,0.02) RELATIVE dcm1 
+
+FINALLY
+%{
+%}
+
+END
