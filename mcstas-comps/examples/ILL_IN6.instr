@@ -44,7 +44,7 @@
 * with multiple scattering, customized monitors, and the SPLIT mechanism to
 * improve the statistics. The H15 guide is not described in this model.
 *
-* %Example: lambda=4.14 Detector: M_theta_t_all_I=118160
+* %Example: lambda=4.14 Detector: M_theta_t_all_I=140000
 *
 * %Parameters
 * lambda: [Angs]                          wavelength within 4.14|4.6|5.12|5.92
@@ -294,7 +294,6 @@ SPLIT COMPONENT Mono1 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, -LMM) RELATIVE Cradle ROTATED (0,A1/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=1; }
@@ -307,7 +306,6 @@ COMPONENT Mono2 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, 0) RELATIVE Cradle ROTATED (0,A2/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=2; }
@@ -320,7 +318,6 @@ COMPONENT Mono3 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, +LMM) RELATIVE Cradle ROTATED (0,A3/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=3; }
