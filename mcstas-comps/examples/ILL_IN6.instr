@@ -294,7 +294,6 @@ SPLIT COMPONENT Mono1 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, -LMM) RELATIVE Cradle ROTATED (0,A1/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=1; }
@@ -307,7 +306,6 @@ COMPONENT Mono2 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, 0) RELATIVE Cradle ROTATED (0,A2/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=2; }
@@ -320,7 +318,6 @@ COMPONENT Mono3 = Monochromator_curved(
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
 AT (0,0, +LMM) RELATIVE Cradle ROTATED (0,A3/2,0) RELATIVE Cradle
-GROUP IN6Monoks
 EXTEND
 %{
   if (SCATTERED) { monok_index=3; }
