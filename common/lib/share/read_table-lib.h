@@ -119,7 +119,7 @@ MCDETECTOR Table_Write(t_Table Table, char*file, char*xl, char*yl,
 void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier);
 t_Table *Table_File_List_find(char *name, int block, int offset);
 int Table_File_List_gc(t_Table *tab);
-void Table_File_List_store(t_Table *tab);
+void *Table_File_List_store(t_Table *tab);
 
 #define Table_ParseHeader(header, ...) \
   Table_ParseHeader_backend(header,__VA_ARGS__,NULL);

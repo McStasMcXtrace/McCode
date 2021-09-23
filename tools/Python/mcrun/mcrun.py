@@ -112,6 +112,10 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='generate a user config file')
 
+    add('--override-config',
+        metavar='PATH', default=False,
+        help='Load config file from specific dir')
+
     parser.add_option_group(opt)
 
 
@@ -167,6 +171,18 @@ def add_mcstas_options(parser):
         metavar='FORMAT', default='McStas',
         help='output data files using format FORMAT '
              '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
+
+    add('--vecsize',
+        metavar='VECSIZE', default='',
+        help='vector length in OpenACC parallel scenarios')
+
+    add('--numgangs',
+        metavar='NUMGANGS', default='',
+        help='number of \'gangs\' in OpenACC parallel scenarios')
+
+    add('--gpu_innerloop',
+        metavar='INNERLOOP', default='',
+        help='Maximum particles in an OpenACC kernel run. (If INNERLOOP is smaller than ncount we repeat)')
 
     add('--no-output-files',
         action='store_true', default=False,
@@ -290,6 +306,11 @@ def main():
         mccode_config.save_user_config()
         quit()
 
+    # Override system and user level config files if prompted
+    if options.override_config:
+        mccode_config.load_config(options.override_config)
+        mccode_config.check_env_vars()
+        
     
     # Extract instrument and parameters
     if len(args) == 0:
@@ -412,7 +433,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        mccode_config.load_user_config()
+        mccode_config.load_config("user")
         mccode_config.check_env_vars()
         
         main()

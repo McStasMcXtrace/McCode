@@ -63,6 +63,11 @@ mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macr
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
+/* OpenACC-related segmentation parameters: */
+int vecsize = 128;
+int numgangs = 7813;
+long gpu_innerloop = 2147483647;
+
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
 mcstatic unsigned long long int mcncount             = 1;
@@ -3813,6 +3818,11 @@ mchelp(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
 "  --source                   Show the instrument code which was compiled.\n"
+#ifdef OPENACC
+"  --vecsize                  OpenACC vector-size\n"
+"  --numgangs                 Number of OpenACC gangs\n"
+"  --gpu_innerloop            Maximum rays to process in a kernel call\n"
+#endif
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
@@ -4064,6 +4074,25 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcformat=argv[++i];
     }
+    else if(!strncmp("--vecsize=", argv[i], 10)) {
+      vecsize=atoi(&argv[i][10]);
+    }    
+    else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
+      vecsize=atoi(argv[++i]);
+    }
+    else if(!strncmp("--numgangs=", argv[i], 11)) {
+      numgangs=atoi(&argv[i][11]);
+    }
+    else if(!strcmp("--numgangs", argv[i]) && (i + 1) < argc) {
+      numgangs=atoi(argv[++i]);
+    }
+    else if(!strncmp("--gpu_innerloop=", argv[i], 16)) {
+      gpu_innerloop=(long)strtod(&argv[i][16], NULL);
+    }
+    else if(!strcmp("--gpu_innerloop", argv[i]) && (i + 1) < argc) {
+      gpu_innerloop=(long)strtod(argv[++i], NULL);
+    }
+
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
     else if(!strcmp("--source", argv[i])) {

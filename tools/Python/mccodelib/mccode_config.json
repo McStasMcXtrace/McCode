@@ -1,0 +1,30 @@
+{
+  "configuration": {
+    "MCCODE_VERSION": "3.0.1beta",
+    "TERMINAL": "x-terminal-emulator -e",
+    "MCCODE": "mcstas",
+    "MCRUN": "mcrun",
+    "MCPLOT": "mcplot-pyqtgraph",
+    "MCDISPLAY": "mcdisplay-webgl",
+    "TOOL_NAME": "mcgui",
+    "PARTICLE": "neutron",
+    "BROWSER": "xdg-open",
+    "GUICOLS": "3",
+    "EDITOR": "open",
+    "QSCI": "1"
+  },
+  "compilation": {
+    "CFLAGS": "-g -O2 -lm -std=c99",
+    "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
+    "MPIFLAGS": "-DUSE_MPI -lmpi",
+    "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
+    "CC": "gcc",
+    "OACC": "nvc",
+    "MPICC": "mpicc",
+    "MPIRUN": "mpirun",
+    "MPINODES": "4"
+  },
+  "platform": {
+    "EXESUFFIX": "out"
+  }
+}

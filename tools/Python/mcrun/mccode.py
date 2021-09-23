@@ -196,7 +196,7 @@ class McStas:
         options = self.options
 
         # Handle proxy options with values
-        proxy_opts_val = ['seed', 'ncount', 'dir', 'format']
+        proxy_opts_val = ['seed', 'ncount', 'dir', 'format','vecsize','numgangs','gpu_innerloop']
         for opt in proxy_opts_val:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))

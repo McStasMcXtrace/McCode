@@ -42,17 +42,19 @@ def run_normal_mode(testdir, reflabel):
         label = cellobj["localfile"].split("/");
         label=label[len(label)-3];
         url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"]) + "/browse.html"
+        burl = label + "/" + cellobj["instrname"] +  "/"
+        curl = label + "/" + cellobj["instrname"] +  "/compile_stdout.txt"
 
         if not cellobj["compiled"]:
             state = 4
-            return (state, )
+            return (state, "<strong><font color=\"red\">! Compile error !</font></strong>", "", "", "", curl)
         elif not cellobj["didrun"]:
             state = 3
             compiletime = "%.2f s" % cellobj["compiletime"]
             if cellobj["testnb"] > 1:
                 # if this is a second test of the same instr, it was already compiled, thus 0.001 compiletime is nonsense
                 compiletime = ""
-            return (state, compiletime, "", "", "", url)
+            return (state, compiletime, "", "", "", burl)
         elif not cellobj["testval"]:
             testval = "missing"
             runtime = "%.2f s" % cellobj["runtime"]
@@ -116,7 +118,7 @@ def run_normal_mode(testdir, reflabel):
             for i in range(ncols - len(otherobjs) - 1):
                 tag = "no test"
                 if i == 0:
-                    tag = "no ref"
+                    tag = "not on branch"
                 row.append(get_empty_cell_tuple(tag))
 
             # ref col
@@ -137,7 +139,7 @@ def run_normal_mode(testdir, reflabel):
                         del obj[key]
                 else:
                     errmsg = iterobj[key]["errmsg"]
-                    row.append(get_empty_cell_tuple(errmsg))
+                    row.append(get_empty_cell_tuple("not on branch"))
 
     # load test data
     for _, alllabels, _ in walk(testdir): break

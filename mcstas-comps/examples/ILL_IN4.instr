@@ -217,10 +217,10 @@ DECLARE %{
 
 USERVARS %{
   char   flag_sample_choice;
-  double flag_source_order;
-  double order_extend;
-  double flag_sample;
-  double flag_env;
+  char flag_source_order;
+  char order_extend;
+  char flag_sample;
+  char flag_env;
   double vix;
   double viy;
   double viz;
@@ -327,6 +327,8 @@ INITIALIZE %{
   sprintf(mon_sqw, "user1 limits=[0 %g], user2 limits=[%g %g]", 3*Ki, -Ei, 4*Ei);
   sprintf(mon_qe,  "banana, angle limits=[-150 150], energy limits=[0 %g]", 4*Ei);
 
+  #pragma acc update device( environment_thickness )
+
 %}
 
 
@@ -413,7 +415,7 @@ COMPONENT BC2_slit = Slit(xwidth=0.07, yheight=.12)
   AT (0,0, bctr-0.02) RELATIVE BC1
 
 COMPONENT BC2_t = Monitor_nD(
-  xwidth=0.07, yheight=0.12, options="auto t", bins=100)
+  xwidth=0.07, yheight=0.12, options="t limits=[0.0001 0.0015]", bins=100)
   AT (0,0, bctr-0.01) RELATIVE BC1
 
 COMPONENT BC2  = DiskChopper(radius=.643/2, nslit=8, theta_0=22.5,
@@ -432,7 +434,7 @@ COMPONENT Cradle_lambda = Monitor_nD(
   AT (0,0,LRM+0.01) RELATIVE Thermal
 
 COMPONENT Cradle_t = Monitor_nD(
-  options="auto t", bins=100, xwidth=.25, yheight=.25,
+  options="t limits=[0.0005 0.0019]", bins=100, xwidth=.25, yheight=.25,
   restore_neutron=1)
   AT (0,0,LRM) RELATIVE Thermal
 
@@ -455,10 +457,10 @@ COMPONENT Mono_out = Arm()
   ROTATED (0, 2*A1, 0) RELATIVE Cradle
 
 COMPONENT Mono_t = COPY(Cradle_t)
-  AT (0,0,0) RELATIVE Mono_out
+  AT (0,0,0.1*(LMS-LFS)) RELATIVE Mono_out
 
 COMPONENT FC_Pos = Monitor_nD(
-  yheight=0.064, xwidth=0.03, options="auto t", bins=100,
+  yheight=0.064, xwidth=0.03, options="t limits=[0.001 0.0023]", bins=100,
   restore_neutron=1)
 AT (0,0,LMS-LFS) RELATIVE Mono_out
 
@@ -485,14 +487,18 @@ SPLIT 100 COMPONENT sample_flux = Monitor_nD(
     xwidth = 0.06, yheight = 0.06, options = "x y",
     restore_neutron=1, bins=60)
   AT (0, 0, 0) RELATIVE Sample_pos
-  EXTEND %{
-    flag_sample = flag_env = 0;
-    flag_sample_choice = (rand01() > 0.5 ? 1 : 2);
-    p *= 2; /* compensate for MC choice on 2 samples */
-  %}
+
+COMPONENT reset = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  flag_sample = 0;
+  flag_env = 0;
+  flag_sample_choice = (rand01() > 0.5 ? 1 : 2);
+  p *= 2; /* compensate for MC choice on 2 samples */
+%}
 
 COMPONENT sample_tof = Monitor_nD(
-  xwidth = 0.1, yheight = 0.1, options = "x, auto time",
+  xwidth = 0.1, yheight = 0.1, options = "x, time limits=[0.0018 0.0019]",
   bins=100, restore_neutron=1)
   AT (0, 0, 0) RELATIVE Sample_pos
 
@@ -507,7 +513,7 @@ COMPONENT sample_w = Monitor_nD(
   AT (0, 0, 0) RELATIVE Sample_pos
 
 COMPONENT sample_qxy = Monitor_nD(
-  xwidth = 0.1, yheight = 0.1, options = "kx ky, all auto",
+  xwidth = 0.1, yheight = 0.1, options = "kx limits=[-0.19 0.19] ky limits=[-0.16 0.16]",
   bins=100, restore_neutron=1)
   AT (0, 0, 0) RELATIVE Sample_pos
 
