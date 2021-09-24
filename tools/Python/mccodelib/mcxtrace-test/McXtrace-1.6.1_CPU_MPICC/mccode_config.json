@@ -12,7 +12,7 @@
     "GUICOLS": "3"
   },
   "compilation": {
-    "CFLAGS": "-g -lm -O2 -DUSE_MPI -lmpi",
+    "CFLAGS": "-std=c99 -g -lm -O2 -DUSE_MPI -lmpi",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
     "CC": "mpicc",
