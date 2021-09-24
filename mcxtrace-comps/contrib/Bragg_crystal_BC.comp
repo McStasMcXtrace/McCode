@@ -8,11 +8,11 @@
  * Component: Bragg_crystal_BC
  *
  * %I
+ * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Date: May, 2017
  * Version: 1.0
  * Release: McXtrace 1.2
- * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
- * marcus.mendenhall@nist.gov
+ * Origin: NIST
  *
  * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
@@ -84,7 +84,6 @@ DECLARE
 
 INITIALIZE
 %{
-    fflush(NULL); // put diagnostics in order!
     int status;
     if (material){
         if ((status=Table_Read(&(m_t),material,0))==-1){
@@ -106,9 +105,7 @@ INITIALIZE
         }
     }
     
-    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
-    fflush(NULL);
-
+    printf("INFO: (%s): initialized\n",NAME_CURRENT_COMP);
 %}
 
 TRACE
