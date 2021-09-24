@@ -1,0 +1,335 @@
+/*******************************************************************************
+ *
+ * McXtrace, X-ray tracing package
+ *         Copyright, All rights reserved
+ *         DTU Physics, Kgs. Lyngby, Denmark
+ *         Institut Laue Langevin, Grenoble, France
+ *
+ * Component: Laue_crystal_BC
+ *
+ * %I
+ * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
+ * Date: June, 2017
+ * Version: 1.0
+ * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
+ *
+ * Perfect, laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ * 
+ * %D
+ * NIST_Laue_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
+ * It is based on the full vector math and exact solution  of the dispersion relation in
+ * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
+ * Non-copyright notice:
+ * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
+ * This is not an official contribution, in that the results are in no way certified by NIST.
+ * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ *
+ * Reads atomic form factors from a data input file.
+ * The Laue_Crystal code reflects rays in an ideal geometry, does not include surface imperfections or mosaicity.
+ *
+ * The crystal is positioned such that the long axis of the crystal surface coincides with
+ * z-axis and the outer normal to the crystal surface is along +y.
+ *
+ * The ratio of the transmitted beam and forward-diffracted Borrman-effect beam is a hack.  The sum of the
+ * two is exactly right, but the actual ratio depends critically on geometry, and I just put in a wild estimate
+ * to allow one to demonstrate what the Borrmann effect looks like. If this is turned on, the displacement of the
+ * transmitted beam and forward diffracted beam at the back side of the crystal will be correctly computed.
+ * This displacement is only exact for symmetrical Laue; asymmetrical computation requires more effort,
+ * and is probably not worth it.
+ * The sampling of these processes are controlled by the 3 variables transmission_sampling, forward_diffraction_sampling,
+ * and laue_sampling. Since 99% of uses of this will have the transmitted beam turned off, and use laue diffraction mode,
+ * the values should be just 0,0,1. If the general behavior of the transmitted beams
+ * is interesting, use 1,1,1 which samples all beams equally.  Results weights are adjusted for this,
+ * so computed intensities won't be affected.
+ *
+ * %D
+ *
+ * %P
+ * Input parameters:
+ * width:         [m] width of the crystal.
+ * length:        [m] zdepth (length) of the crystal.
+ * thickness:     [m] thickness of crystal (along y-axis, the surface normal)
+ * material:      [ ] Si ("Si.txt"), Ge ("Ge.txt")
+ * form_factors   [ ] "FormFactors.txt" from McXtrace install, usually
+ * V:             [AA^3] unit cell volume
+ * h:             [ ] 1st Miller index of reflection
+ * k:             [ ] 2nd Miller index of reflection
+ * l:             [ ] 3rd Miller index of reflection
+ * alphax:        [ ] x component of normal (unit vector) to crystal planes. Vector is usually [0,0,1] for symmetric Laue. Crystal surface itself has normal [0,1,0].
+ * alphay:        [ ] y component of normal (unit vector) to crystal planes.
+ * alphaz:        [ ] z component of normal (unit vector) to crystal planes.
+ * debye_waller_B: [AA^2] Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp, 0.4632
+ * crystal_type:  [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+ *      2 => Mx_crystal_diamond: diamond
+ *      3 => Mx_crystal_fcc: fcc
+ *      4 => Mx_crystal_fcc: bcc
+ * structure_factor_scale_r: [ ] real part of complex explicit override of structure factor multiplier for crystal structure if Bragg_crystal_explicit
+ * structure_factor_scale_i: [ ] imaginary part of complex explicit override of structure factor multiplier for crystal structure if Bragg_crystal_explicit
+ * transmission_sampling:    [ ] enable sampling of transmission diffraction mode.
+ * forward_diffraction_sampling:  [ ]  enable sampling of forward diffraftion mode.
+ * laue_sampling:            [ ] enable sampling of laue diffraction mode.
+ *
+ *
+ * %E
+ *******************************************************************************/
+
+DEFINE COMPONENT Laue_crystal_BC
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (length=0.05, width=0.02, thickness=1e-4,
+	V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",
+        alphax=0.0, alphay = 0.0, alphaz = 1.0,
+        debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
+        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0,
+        transmission_sampling=1.0,
+        forward_diffraction_sampling=1.0,
+        laue_sampling=1.0)
+OUTPUT PARAMETERS (prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+SHARE
+%{
+    %include "perfect_crystals-lib"
+%}
+
+DECLARE
+%{
+    struct {
+        int Z;
+        double rho,At,f_rel,f_nt;
+        t_Table m_t;
+        t_Table f0_t;
+    }prms;
+    
+%}
+
+INITIALIZE
+%{
+    int status;
+    if (material){
+        if ((status=Table_Read(&(prms.m_t),material,0))==-1){
+            fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
+            exit(-1);
+        }
+        char **header_parsed;
+        header_parsed=Table_ParseHeader(prms.m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+    }else{
+        fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP);
+    }
+    if(form_factors){
+        if ((status=Table_Read(&(prms.f0_t),form_factors,0))==-1){
+            fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
+            exit(-1);
+        }
+    }
+    
+    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+    double E;				// (keV) x-ray energy
+    double K; 				// length of k-vector
+    double tin;				// 'time' of intersection of ray with y=0 plane (which include the crystal surface)
+    double x_int,y_int,z_int;		// intersection with the y=0 plane
+    double dist;				// distance from position at t=0 to the y=0 plane
+    double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
+    
+    /* get the photon's kvector and energy */
+    K=sqrt(kx*kx+ky*ky+kz*kz);
+    E = K2E*K; /* use built-in constants for consistency */
+    /* make unit vector in the direction of k :*/
+    double k0hat[3] = {kx/K, ky/K, kz/K};			// unit vector in the direction of k-vector.
+    
+#ifdef MCDEBUG
+    double kk0[3]={kx,ky,kz};
+    fflush(NULL); // make sure all error messages are in order!
+#endif
+    
+    /*intersection calculation*/
+    tin = (-y-thickness/2)/k0hat[1];
+    if (tin > 1e-8){
+        /* check whether our intersection lies within the boundaries of the crystal*/
+        x_int=x+k0hat[0]*tin;
+        y_int=y+k0hat[1]*tin;
+        z_int=z+k0hat[2]*tin;
+        
+        if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
+            dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
+            PROP_DL(dist); 			/* now the photon is on the crystal surface, ready to be reflected... */
+            SCATTER;
+            double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
+            f00 = prms.Z;
+            f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
+            fp  = Table_Value(prms.m_t,E,1)-prms.Z;
+            fpp = Table_Value(prms.m_t,E,2);
+            
+            double nhat[3]={0,1,0}; // crystal surface normal is yhat, and is set up by mcxtrace to be into the crystal
+            
+            double alpha[3]={alphax, alphay, alphaz};
+            int fail;
+
+            double complex chi0, chih;
+            double k0mag, hscale, thetaB;
+            
+            Mx_CubicCrystalChi(&chi0, &chih, &k0mag, &hscale, &thetaB,
+                         f00, f0h, fp, fpp, V, h, k, l,
+                         debye_waller_B, E,
+                         crystal_type,structure_factor_scale_r,structure_factor_scale_i);
+
+            double selsum, transmitlim, borrmannlim;
+            selsum=transmission_sampling+forward_diffraction_sampling+laue_sampling;
+            transmitlim=transmission_sampling/selsum;
+            borrmannlim=(transmission_sampling+forward_diffraction_sampling)/selsum;
+            double sampling_selector=rand01();
+ 
+            double Rsig, Rpi, Tsig, Tpi, Asig, Api;
+            double kh[3], sig_axis[3], pi_axis[3];
+            fail=Mx_LaueReflectivityBC(&Rsig, &Rpi, &Tsig, &Tpi, &Asig, &Api,
+                  kh, // these are the return values
+                  k0hat, nhat, alpha,
+                  chi0, chih, chih, k0mag, hscale, thetaB, thickness
+              );
+
+            cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction for diffracted ray */
+            /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
+            cross(pi_axis, k0hat, sig_axis, 1);
+            
+            /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
+            double Esig=(Ex*sig_axis[0]+Ey*sig_axis[1]+Ez*sig_axis[2]);
+            double Epi= (Ex* pi_axis[0]+Ey* pi_axis[1]+Ez* pi_axis[2]);
+            if(Esig==0 && Epi==0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
+                double phi=rand01()*PI/2;
+                Esig=cos(phi); Epi=sin(phi);
+            }
+            
+            /*, now hack out Borrmann (forward diffraction) estimate. Not really right! 
+                Total forward beam is exact, just partitioning into split beam is estimated */
+            double sigpart=2*Tsig/(Tsig+Asig); // should be 1 far away from anything interesting, 2 for enhanced
+            Asig=(1-((1-sigpart)*(1-sigpart)))*Tsig; // when sigpart=1, all is normal atten, otherwise share
+            Tsig=Tsig-Asig;
+            double pipart=2*Tpi/(Tpi+Api); // should be 1 far away from anything interesting, 2 for enhanced
+            Api=(1-((1-pipart)*(1-pipart)))*Tpi; // when sigpart=1, all is normal atten, otherwise share
+            Tpi=Tpi-Api;
+            
+#ifdef MCDEBUG
+            fprintf(stderr, "Laue %s, Rsig=%.3e, Rpi=%.3e, sigpart=%.3f, pipart=%.3f, Tsig=%.3e, Tpi=%.3e, Asig=%.3e, Api=%.3e\n",
+                NAME_CURRENT_COMP, Rsig, Rpi, sigpart, pipart, Tsig, Tpi, Asig, Api);
+#endif
+
+            /* R is the Laue reflected intensity,  
+                T is the transmitted Bormann intensity, 
+                A is the undiffracted beam */
+
+          /*      In all cases, the emergence from the crystal is only exactly right in the symmetric case, for now.
+                The assumption is the rays move along the crystal planes.
+                The real answer requires getting the normal to the dispersion surface, which I have not implemented.
+                For usual, thin crystals, this makes only a tiny difference.
+            */
+            
+#ifdef MCDEBUG
+                fprintf(stderr, "LAUE component %s: Rsig=%.3e Rpi=%.3e Tsig=%.3f Tpi=%.3e\n",
+                    NAME_CURRENT_COMP,
+                    Rsig, Rpi, Tsig, Tpi);
+#endif
+ 
+            if(transmission_sampling  && ( sampling_selector<= transmitlim )) {
+                double EsigT=Esig*sqrt(Asig); /* Tsig & Tpi are the un-diffracted beam intensity */
+                double EpiT=Epi*sqrt(Api);
+                double RT=EsigT*EsigT+EpiT*EpiT; /* projected transmitted, squared back to intensity */
+                Ex=EpiT*pi_axis[0]+EsigT*sig_axis[0];
+                Ey=EpiT*pi_axis[1]+EsigT*sig_axis[1];
+                Ez=EpiT*pi_axis[2]+EsigT*sig_axis[2];
+                p*=RT/(transmission_sampling/selsum);
+                PROP_DL(thickness/k0hat[1]); // continue through crystal to back side in original direction
+            } else { // doing either forward diffraction (Borrman anomalous transmission) or Laue diffraction.
+                // for both types of diffraction, the beam propagates inside the crystal
+                // along the lattice plane (perpendicular to diffraction plane and alpha) (B&C figure 2, again).
+                double propdir[3];
+                cross(propdir, sig_axis, alpha, 1); // beam appears to move this direction
+                // now bump beam to back side of crystal
+                x+=thickness*propdir[0]/propdir[1];
+                y+=thickness;
+                z+=thickness*propdir[2]/propdir[1];
+                // now, decide between forward (Borrman) diffraction and Laue
+                if(forward_diffraction_sampling && (sampling_selector < borrmannlim)) {
+                    // transmitted direction is same as incoming, no k vector change
+                    double EsigT=Esig*sqrt(Tsig); /* Fsig and Fpi are the Borrmann intensity */
+                    double EpiT=Epi*sqrt(Tpi);
+                    double RT=EsigT*EsigT+EpiT*EpiT; /* projected Borrmann, squared back to intensity */
+                    Ex=EpiT*pi_axis[0]+EsigT*sig_axis[0];
+                    Ey=EpiT*pi_axis[1]+EsigT*sig_axis[1];
+                    Ez=EpiT*pi_axis[2]+EsigT*sig_axis[2];
+                    p*=RT/(forward_diffraction_sampling/selsum);
+                } else if(laue_sampling) {
+                    /* update outgoing direction vector kx, ky, kz = kh, fully scaled diffracted k vector */
+                    kx=kh[0]; ky=kh[1]; kz=kh[2];
+                    double pi1_axis[3];
+                    cross(pi1_axis, kh, sig_axis,1);
+                    /* pi1 is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
+                    double EsigR=Esig*sqrt(Rsig); /* Rsig and Rpi are the Laue intensity */
+                    double EpiR=Epi*sqrt(Rpi);
+                    double RR=EsigR*EsigR+EpiR*EpiR; /* projected diffracted reflectivity, squared back to intensity */
+                    Ex=EpiR*pi1_axis[0]+EsigR*sig_axis[0];
+                    Ey=EpiR*pi1_axis[1]+EsigR*sig_axis[1];
+                    Ez=EpiR*pi1_axis[2]+EsigR*sig_axis[2];
+                    p*=RR/(laue_sampling/selsum);
+                } else {
+                    // no diffraction sampled! illegal.
+                    fprintf(stderr, "LAUE component %s: all sampling choices set to zero. cannot run.\n",
+                        NAME_CURRENT_COMP);
+                    exit(1);
+                }
+                NORM(Ex, Ey, Ez);
+                if (p==0) ABSORB;
+            }
+        } else {
+            RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+        }
+    }
+
+%}
+
+MCDISPLAY
+%{
+    double w2=width/2., l2=length/2., t2=thickness/2., wl2=(width+length)/2.0, arrow=wl2/10.0;
+    magnify("");
+    multiline(9,
+        -w2, -t2, -l2, -w2, t2, -l2, w2, t2, -l2, w2, -t2, -l2, // front face
+        w2, -t2, l2, // connector
+        -w2, -t2,  l2, -w2, t2,  l2, w2, t2,  l2, w2, -t2,  l2 // back face
+    );
+    line(-w2, -t2, -l2, -w2, -t2, l2); // extra edges
+    line(-w2,  t2, -l2, -w2,  t2, l2); // extra edges
+    line( w2,  t2, -l2,  w2,  t2, l2); // extra edges
+    
+    multiline(8,
+        0.,0.,0.,
+        alphax*wl2, alphay*wl2, alphaz*wl2,
+        alphax*wl2, alphay*(wl2-arrow)+alphaz*arrow, alphaz*(wl2-arrow)+alphay*arrow,
+        alphax*wl2, alphay*(wl2-arrow)-alphaz*arrow, alphaz*(wl2-arrow)+alphay*arrow,
+        alphax*wl2, alphay*wl2, alphaz*wl2,
+        alphax*(wl2-arrow)+alphaz*arrow, alphay*wl2, alphaz*(wl2-arrow)+alphax*arrow,
+        alphax*(wl2-arrow)-alphaz*arrow, alphay*wl2, alphaz*(wl2-arrow)+alphax*arrow,
+        alphax*wl2, alphay*wl2, alphaz*wl2
+    ); // display alpha vector assuming it is mostly in the 'z' direction
+
+    double nx=0., ny=1.0/2.0, nz=0.; // short surface normal
+    multiline(8,
+        0.,0.,0.,
+        nx*wl2, ny*wl2, nz*wl2,
+        nx*wl2, ny*(wl2-arrow)+nz*arrow, nz*(wl2-arrow)+ny*arrow,
+        nx*wl2, ny*(wl2-arrow)+nz*arrow, nz*(wl2-arrow)-ny*arrow,
+        nx*wl2, ny*wl2, nz*wl2,
+        nx*(wl2-arrow)+ny*arrow, ny*(wl2-arrow)+nx*arrow, nz*wl2,
+        nx*(wl2-arrow)-ny*arrow, ny*(wl2-arrow)+nx*arrow, nz*wl2,
+        nx*wl2, ny*wl2, nz*wl2
+    ); // display surface normal vector, pointing in forward beam direction,
+       // half the size of alpha vector to make it easy to tell them apart
+
+%}
+
+END
+
