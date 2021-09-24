@@ -11,7 +11,7 @@
  * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Date: June, 2017
  * Version: 1.0
- * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
+ * Origin: NIST
  *
  * Perfect, laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  * 
@@ -19,9 +19,6 @@
  * NIST_Laue_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
  * It is based on the full vector math and exact solution  of the dispersion relation in
  * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
- * Non-copyright notice:
- * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
- * This is not an official contribution, in that the results are in no way certified by NIST.
  * Perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
  * Reads atomic form factors from a data input file.
@@ -42,7 +39,9 @@
  * is interesting, use 1,1,1 which samples all beams equally.  Results weights are adjusted for this,
  * so computed intensities won't be affected.
  *
- * %D
+ * Non-copyright notice:
+ * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
+ * This is not an official contribution, in that the results are in no way certified by NIST.
  *
  * %P
  * Input parameters:
@@ -83,7 +82,7 @@ SETTING PARAMETERS (length=0.05, width=0.02, thickness=1e-4,
         transmission_sampling=1.0,
         forward_diffraction_sampling=1.0,
         laue_sampling=1.0)
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
@@ -93,39 +92,39 @@ SHARE
 
 DECLARE
 %{
-    struct {
-        int Z;
-        double rho,At,f_rel,f_nt;
-        t_Table m_t;
-        t_Table f0_t;
-    }prms;
-    
+  int Z;
+  double rho;
+  double At;
+  double f_rel;
+  double f_nt;
+  t_Table m_t;
+  t_Table f0_t;    
 %}
 
 INITIALIZE
 %{
     int status;
     if (material){
-        if ((status=Table_Read(&(prms.m_t),material,0))==-1){
+        if ((status=Table_Read(&(m_t),material,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
             exit(-1);
         }
         char **header_parsed;
-        header_parsed=Table_ParseHeader(prms.m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+        header_parsed=Table_ParseHeader(m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
     }else{
         fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP);
     }
     if(form_factors){
-        if ((status=Table_Read(&(prms.f0_t),form_factors,0))==-1){
+        if ((status=Table_Read(&(f0_t),form_factors,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
             exit(-1);
         }
     }
     
-    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+    printf("INFO: (%s): initialized\n",NAME_CURRENT_COMP);
 %}
 
 TRACE
@@ -142,9 +141,9 @@ TRACE
     E = K2E*K; /* use built-in constants for consistency */
     /* make unit vector in the direction of k :*/
     double k0hat[3] = {kx/K, ky/K, kz/K};			// unit vector in the direction of k-vector.
+    double kk0[3]={kx,ky,kz};
     
 #ifdef MCDEBUG
-    double kk0[3]={kx,ky,kz};
     fflush(NULL); // make sure all error messages are in order!
 #endif
     
@@ -155,19 +154,19 @@ TRACE
         x_int=x+k0hat[0]*tin;
         y_int=y+k0hat[1]*tin;
         z_int=z+k0hat[2]*tin;
-        
+
         if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
             dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
             PROP_DL(dist); 			/* now the photon is on the crystal surface, ready to be reflected... */
             SCATTER;
             double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
-            f00 = prms.Z;
-            f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
-            fp  = Table_Value(prms.m_t,E,1)-prms.Z;
-            fpp = Table_Value(prms.m_t,E,2);
-            
+            f00 = Z;
+            f0h = Table_Value(f0_t,1/(2*d),Z);
+            fp  = Table_Value(m_t,E,1)-Z;
+            fpp = Table_Value(m_t,E,2);
+
             double nhat[3]={0,1,0}; // crystal surface normal is yhat, and is set up by mcxtrace to be into the crystal
-            
+
             double alpha[3]={alphax, alphay, alphaz};
             int fail;
 
@@ -184,11 +183,10 @@ TRACE
             transmitlim=transmission_sampling/selsum;
             borrmannlim=(transmission_sampling+forward_diffraction_sampling)/selsum;
             double sampling_selector=rand01();
- 
+
             double Rsig, Rpi, Tsig, Tpi, Asig, Api;
             double kh[3], sig_axis[3], pi_axis[3];
-            fail=Mx_LaueReflectivityBC(&Rsig, &Rpi, &Tsig, &Tpi, &Asig, &Api,
-                  kh, // these are the return values
+            fail=Mx_LaueReflectivityBC(&Rsig, &Rpi, &Tsig, &Tpi, &Asig, &Api, kh, // these are the return values
                   k0hat, nhat, alpha,
                   chi0, chih, chih, k0mag, hscale, thetaB, thickness
               );
@@ -201,8 +199,8 @@ TRACE
             double Esig=(Ex*sig_axis[0]+Ey*sig_axis[1]+Ez*sig_axis[2]);
             double Epi= (Ex* pi_axis[0]+Ey* pi_axis[1]+Ez* pi_axis[2]);
             if(Esig==0 && Epi==0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
-                double phi=rand01()*PI/2;
-                Esig=cos(phi); Epi=sin(phi);
+                double psi=rand01()*PI/2;
+                Esig=cos(psi); Epi=sin(psi);
             }
             
             /*, now hack out Borrmann (forward diffraction) estimate. Not really right! 
@@ -213,7 +211,7 @@ TRACE
             double pipart=2*Tpi/(Tpi+Api); // should be 1 far away from anything interesting, 2 for enhanced
             Api=(1-((1-pipart)*(1-pipart)))*Tpi; // when sigpart=1, all is normal atten, otherwise share
             Tpi=Tpi-Api;
-            
+
 #ifdef MCDEBUG
             fprintf(stderr, "Laue %s, Rsig=%.3e, Rpi=%.3e, sigpart=%.3f, pipart=%.3f, Tsig=%.3e, Tpi=%.3e, Asig=%.3e, Api=%.3e\n",
                 NAME_CURRENT_COMP, Rsig, Rpi, sigpart, pipart, Tsig, Tpi, Asig, Api);
@@ -223,18 +221,16 @@ TRACE
                 T is the transmitted Bormann intensity, 
                 A is the undiffracted beam */
 
-          /*      In all cases, the emergence from the crystal is only exactly right in the symmetric case, for now.
-                The assumption is the rays move along the crystal planes.
-                The real answer requires getting the normal to the dispersion surface, which I have not implemented.
-                For usual, thin crystals, this makes only a tiny difference.
-            */
+          /* In all cases, the emergence from the crystal is only exactly right in the symmetric case, for now.
+             The assumption is the rays move along the crystal planes.
+             The real answer requires getting the normal to the dispersion surface, which I have not implemented.
+             For usual, thin crystals, this makes only a tiny difference.*/
             
 #ifdef MCDEBUG
-                fprintf(stderr, "LAUE component %s: Rsig=%.3e Rpi=%.3e Tsig=%.3f Tpi=%.3e\n",
-                    NAME_CURRENT_COMP,
-                    Rsig, Rpi, Tsig, Tpi);
+            fprintf(stderr, "LAUE component %s: Rsig=%.3e Rpi=%.3e Tsig=%.3f Tpi=%.3e\n",
+                    NAME_CURRENT_COMP, Rsig, Rpi, Tsig, Tpi);
 #endif
- 
+
             if(transmission_sampling  && ( sampling_selector<= transmitlim )) {
                 double EsigT=Esig*sqrt(Asig); /* Tsig & Tpi are the un-diffracted beam intensity */
                 double EpiT=Epi*sqrt(Api);
