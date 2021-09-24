@@ -73,7 +73,7 @@
  * %E
  *******************************************************************************/
 
-DEFINE COMPONENT Laue_Crystal_BC
+DEFINE COMPONENT Laue_crystal_BC
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (length=0.05, width=0.02, thickness=1e-4,
 	V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",
