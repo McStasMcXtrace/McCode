@@ -61,6 +61,10 @@ DECLARE %{
   //#endif
 %}
 
+USERVARS %{
+  int splitflag;
+%}
+
 INITIALIZE %{
 
   /* compute H512 parameters: D22 Velocity Selector */
@@ -181,17 +185,23 @@ AT (0,0,0.05) RELATIVE PREVIOUS
 
 COMPONENT H51_split_2 = COPY(H5)(xwidth=0.04, restore_neutron=1, yheight=0.055)
 AT (0,0.12/2-0.055/2,0)  RELATIVE H51_S2_Out
-JUMP H512_Start WHEN SCATTERED
+EXTEND %{
+  if(SCATTERED) splitflag=2;
+%}
+//JUMP H512_Start WHEN SCATTERED
 
 COMPONENT H51_split_1 = COPY(H5)(xwidth=0.04, restore_neutron=1, yheight=0.055)
 AT (0,-0.12/2+0.055/2,0)  RELATIVE H51_S2_Out
-JUMP H511_Start WHEN SCATTERED
+EXTEND %{
+  if(SCATTERED) splitflag=1;
+%}
+//JUMP H511_Start WHEN SCATTERED
 
 /* H511 bottom to IN15 ====================================================== */
 COMPONENT H511_Start = Arm()
 AT (0,0,0) RELATIVE H51_split_1
 EXTEND %{
-  ABSORB; /* H511/IN15 not simulated here */
+  if (splitflag==1) ABSORB; /* H511/IN15 not simulated here */
 %}
 
 /* H512 top to D22 ========================================================== */
