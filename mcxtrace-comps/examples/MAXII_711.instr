@@ -16,7 +16,6 @@
 * %Description
 * A simple beamline setup consisting of a single focusing mirror,
 * a monochromator, and a four-circle goniometer at the sample stage.
-* The beamline is et to work best at 
 *
 * %Parameters
 * R: [m] Radius of curvature of the focusing mirror. N.b. a negative curvature simply means the mirror curves towards negative x
@@ -158,10 +157,9 @@ ROTATED (chi,0,0) RELATIVE sample_rot_ome
 COMPONENT sample_rot_phi = Arm()
   AT(0,0,0)RELATIVE sample_rot_chi
 ROTATED (0,phi,0) RELATIVE sample_rot_chi
-
 COMPONENT sample = PowderN(
-    radius=0.0010,yheight=1e-3,reflections="C_diamond.laz",material="C.txt",format=Lazy,d_phi=160,
-    barns=1,p_inc=0    
+    radius=0.0010,yheight=1e-3,reflections="C_diamond.laz",material="C.txt",format={17,6,0,0,0,0,0,13},d_phi=160,
+    barns=1,p_inc=0
 )
 AT(0,0,0) RELATIVE sample_rot_phi
 EXTEND
