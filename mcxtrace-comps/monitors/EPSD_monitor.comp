@@ -172,13 +172,13 @@ SAVE
 
 FINALLY
 %{
-  destroy_daar2d(psd_N);
-  destroy_daar2d(psd_p);
-  destroy_daar2d(psd_p2);
+  destroy_darr2d(psd_N);
+  destroy_darr2d(psd_p);
+  destroy_darr2d(psd_p2);
 
-  destroy_daar2d(psd_N_s);
-  destroy_daar2d(psd_p_s);
-  destroy_daar2d(psd_p2_s);
+  destroy_darr2d(psd_N_s);
+  destroy_darr2d(psd_p_s);
+  destroy_darr2d(psd_p2_s);
 %}
 
 MCDISPLAY
