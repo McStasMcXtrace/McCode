@@ -134,13 +134,13 @@ TRACE
                     NORM(nx,ny,nz);
                 }else{
                     /*waviness is also transversal but anisotropic*/
-                    double radius;
+                    double scatradius;
                     if(theta<waviness){
-                        radius=atan(waviness);
-                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,0,radius);
+                        scat_radius=atan(waviness);
+                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,0,scat_radius);
                     }else{
-                        radius=(atan(theta)+atan(waviness))/2.0;
-                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,radius-atan(theta),radius);
+                        scat_radius=(atan(theta)+atan(waviness))/2.0;
+                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,scat_radius-atan(theta),scat_radius);
                     }
                     NORM(nx,ny,nz);
                 }
@@ -162,7 +162,7 @@ TRACE
                 /*compute reflectivity from material data*/
 
                 /*adjust p according to reflectivity*/
-                double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
+                double Qc,Q,f1,f2,delta,beta,na,e,k2;
                 /*length of wavevector transfer may be compute from s and n_ above*/
                 Q=fabs(2*s*sqrt(nx*nx+ny*ny+nz*nz));
 
@@ -196,7 +196,6 @@ TRACE
                     /*now also set the phase*/
                     phi+=carg((q-qp)/(q+qp));//*scatterc;
                 }
-                //printf("E= %g R= %g Q= %g Qc= %g\n",e,R,Q,Qc);
             }else{
                 double e,R,theta;
                 e=k*K2E;
@@ -204,8 +203,7 @@ TRACE
                 /*find reflectivity by interpolation*/
                 R=Table_Value2d(T, (e-E_min)/E_step, (theta-theta_min)/theta_step);
                 /*apply interpolated value*/
-                //printf("E= %g R= %g theta= %g norm_e= %g norm_th= %g\n",e,R,theta,(e-prmsp->E_min)/prmsp->E_step, (theta-prmsp->theta_min)/prmsp->theta_step );
-                p*=R;//pow(R,scatterc);
+                p*=R;
             }
 
             scatterc++;
