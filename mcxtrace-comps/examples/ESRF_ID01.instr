@@ -5,10 +5,8 @@
 *
 * %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
-*
 * Date: March, 2015
 * Origin: University of Copenhagen
-* Release: McXtrace 1.0
 * %INSTRUMENT_SITE: ESRF
 *
 * Nano-diffraction imaging beamline at ESRF, Grenoble
@@ -234,7 +232,6 @@ AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2 - 0.00001) RELATI
 
 
 COMPONENT FresnelZonePlate = ZonePlate(
-	cut      = 0.0,
 	radius   = FZPRadius, 
 	L        = FZPFocalLength, 
 	lambda0  = 12.39842 / NominalEnergy,
