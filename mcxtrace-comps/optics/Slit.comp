@@ -57,22 +57,22 @@ OUTPUT PARAMETERS ()
 
 INITIALIZE
 %{
-if (xwidth > 0)  {
-  if (!xmin && !xmax) {
-    xmax=xwidth/2;  xmin=-xmax;
-  } else {
-    fprintf(stderr,"Slit: %s: Error: please specify EITHER xmin & xmax or xwidth\n", NAME_CURRENT_COMP); exit(-1);
+  if (xwidth > 0)  {
+    if (!xmin && !xmax) {
+      xmax=xwidth/2;  xmin=-xmax;
+    } else {
+      fprintf(stderr,"Slit: %s: Error: please specify EITHER xmin & xmax or xwidth\n", NAME_CURRENT_COMP); exit(-1);
+    }
   }
- }
- if (yheight > 0) {
-   if (!ymin && !ymax) {
-     ymax=yheight/2; ymin=-ymax;
-   } else {
-     fprintf(stderr,"Slit: %s: Error: please specify EITHER ymin & ymax or ywidth\n", NAME_CURRENT_COMP); exit(-1);
-   }
- }
- if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
-    { fprintf(stderr,"Slit: %s: Warning: Running with CLOSED slit - is this intentional?? \n", NAME_CURRENT_COMP); }
+  if (yheight > 0) {
+    if (!ymin && !ymax) {
+      ymax=yheight/2; ymin=-ymax;
+    } else {
+      fprintf(stderr,"Slit: %s: Error: please specify EITHER ymin & ymax or ywidth\n", NAME_CURRENT_COMP); exit(-1);
+    }
+  }
+  if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
+  { fprintf(stderr,"Slit: %s: Warning: Running with CLOSED slit - is this intentional?? \n", NAME_CURRENT_COMP); }
 
   if ( (focus_xw || focus_yh) && !( (focus_xw && dist) || (focus_yh && dist) ) ){
     fprintf(stderr,"Error (%s): Inconsistent target definition\n",NAME_CURRENT_COMP);
@@ -82,28 +82,28 @@ if (xwidth > 0)  {
 
 TRACE
 %{
-    PROP_Z0;
-    if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
-    || ((radius != 0) && (x*x + y*y > radius*radius))){
-      ABSORB;
-    }else{
-        SCATTER;
-    }
+  PROP_Z0;
+  if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
+      || ((radius != 0) && (x*x + y*y > radius*radius))){
+    ABSORB;
+  }else{
+    SCATTER;
+  }
 
-    if ( focus_xw || focus_yh ){
-          double posx,posy,posz,pdir,k;
-          coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
+  if ( focus_xw || focus_yh ){
+    double posx,posy,posz,pdir,k;
+    coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
 
-          /*we have a target behind the slit - so we now consider the ray a Huygens wavelet.*/
-          double xf,yf,zf;
-          randvec_target_rect_real(&xf, &yf, &zf, &pdir,
-              focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 0);
-          //p*=pdir;
-          k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-          kx=(xf-x); ky=(yf-y); kz=(zf-z);
-          NORM(kx,ky,kz);
-          kx*=k;ky*=k;kz*=k;
-     }
+    /*we have a target behind the slit - so we now consider the ray a Huygens wavelet.*/
+    double xf,yf,zf;
+    randvec_target_rect_real(&xf, &yf, &zf, &pdir,
+        focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 0);
+    //p*=pdir;
+    k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    kx=(xf-x); ky=(yf-y); kz=(zf-z);
+    NORM(kx,ky,kz);
+    kx*=k;ky*=k;kz*=k;
+  }
 %}
 
 MCDISPLAY
