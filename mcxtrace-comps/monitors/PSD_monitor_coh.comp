@@ -45,6 +45,7 @@
 * restore_xray: If set, the monitor does not influence the xray state.
 * ratio     [ ] ratio between pixel area and effective pixel area.
 * centering [ ] Treat all rays as if they hit the center of the pixel.
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -56,55 +57,47 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor_coh
-DEFINITION PARAMETERS (nx=90, ny=90)
-SETTING PARAMETERS (string filename=0, restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, ratio=1, int centering=1)
-OUTPUT PARAMETERS (PSD_N, PSD_p2,PSD_phi)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nx=90, int ny=90, string filename="", restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, ratio=1, int centering=1, int nowritefile=0)
+OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)*/
+SHARE
+%{
+#include <complex.h>
+%}
 
 DECLARE
-  %{
-#include <complex.h>
-    double **PSD_N;
-    double complex **PSD_phi;
-    double **PSD_p2;
-  %}
+%{
+    DArray2d PSD_N;
+    DArray2d PSD_p2;
+    double complex *PSD_phi;
+%}
+
 INITIALIZE
   %{
     int i,j;
-    double *p1,*p2;
-    double complex *p3;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("PSD_monitor: %s: Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
 
-    p1=calloc(nx*ny,sizeof(double));
-    p2=calloc(nx*ny,sizeof(double));
-    p3=calloc(nx*ny,sizeof(double complex));
-
-    PSD_N=calloc(nx,sizeof(double *));
-    PSD_p2=calloc(nx,sizeof(double *));
-    PSD_phi=calloc(nx,sizeof(double complex *));
-
-    for (i=0; i<nx; i++){
-        PSD_N[i]=&(p1[i*ny]);
-        PSD_p2[i]=&(p2[i*ny]);
-        PSD_phi[i]=&(p3[i*ny]);
-    }
+    PSD_N = create_darr2d(nx,ny);
+    PSD_phi = calloc(nx*ny,sizeof(double complex));
+    PSD_p2 = create_darr2d(nx,ny);
 %}
 
 TRACE
 %{
     int i,j;
-    double k,x_o,y_o,z_o,phi_o;
+    double k,x_o,y_o,z_o;
+    double p2;
+    double complex dphi;
 
-    x_o=x;y_o=y;z_o=z;phi_o=phi;
+    x_o=x;y_o=y;z_o=z;
     k=sqrt(kx*kx+ky*ky+kz*kz);
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
@@ -130,9 +123,14 @@ TRACE
 
       /*check if within the ratio of the pixel*/
       if ( fabs(xwidth/nx*(i+0.5)-xwidth/2.0-x)<xwidth/nx*ratio && fabs(yheight/ny*(j+0.5)-yheight/2.0-y)<yheight/ny*ratio ){
-          PSD_N[i][j]++;
-          PSD_phi[i][j]+=p*cexp(I*(phi-dnu));//I*fmod(phi,2*M_PI));
-          PSD_p2[i][j] += p*p;
+        dphi=p*cexp(I*(phi-dnu));
+        p2 = p*p;
+#pragma acc atomic
+        PSD_N[i][j]+=1;
+#pragma acc atomic
+        PSD_phi[i*ny+j]+= dphi;//p*cexp(I*(phi-dnu));//I*fmod(phi,2*M_PI));
+#pragma acc atomic
+        PSD_p2[i][j] += p2;
           SCATTER;
       }
     }
@@ -143,7 +141,7 @@ TRACE
 
 SAVE
 %{
-    
+  if(!nowritefile){
     char filename_abs[255],filename_arg[255];
 
     double *PSD_p_abs, *PSD_p_arg;
@@ -162,8 +160,8 @@ SAVE
 
     for (i=0;i<nx;i++){
       for (j=0;j<ny;j++){
-        PSD_p_abs[i*ny +j]=cabs(PSD_phi[i][j]);
-        PSD_p_arg[i*ny +j]=carg(PSD_phi[i][j]);
+        PSD_p_abs[i*ny +j]=cabs(PSD_phi[i*ny+j]);
+        PSD_p_arg[i*ny +j]=carg(PSD_phi[i*ny+j]);
       }
     }
 
@@ -211,27 +209,31 @@ SAVE
 #endif
 
     if(nx==1 && ny==1){
-        DETECTOR_OUT_0D("Intensity monitor (absolute value)" NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p_abs[0], PSD_p2[0][0]);
-        DETECTOR_OUT_0D("Intensity monitor (argument)" NAME_CURRENT_COMP, (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0]);
+        char fname1[256],fname2[256];
+        snprintf(fname1,255,"Coh. Intensity monitor (magnitude)",NAME_CURRENT_COMP);
+        snprintf(fname1,255,"Coh. Phase monitor (argument)",NAME_CURRENT_COMP);
+ 
+        DETECTOR_OUT_0D(fname1, (double) PSD_N[0][0], PSD_p_abs[0], PSD_p2[0][0]);
+        DETECTOR_OUT_0D(fname2, (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0]);
     }else if(nx==1){
         DETECTOR_OUT_1D(
-                "PSD_monitor (absolute value)","Y Position[m]", "Intensity", "Y",
+                "Coh. PSD_monitor (magnitude)","Y Position[m]", "Intensity", "Y",
                 ymin,ymax,ny,PSD_N[0],PSD_p_abs,PSD_p2[0],filename_abs);
         DETECTOR_OUT_1D(
-                "PSD_monitor (argument)","Y Position[m]", "Intensity", "Y",
+                "Coh. PSD_monitor (argument)","Y Position[m]", "Phase", "Y",
                 ymin,ymax,ny,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg);
     }else if (ny==1){
         DETECTOR_OUT_1D(
-                "PSD_monitor (absolute value)","X Position[m]", "Intensity", "X",
+                "Coh. PSD_monitor (magnitude)","X Position[m]", "Intensity", "X",
                 xmin,xmax,nx,PSD_N[0],PSD_p_abs,PSD_p2[0],filename_abs);
         DETECTOR_OUT_1D(
-                "PSD_monitor (argument)","X Position[m]", "Intensity", "X",
+                "Coh. PSD_monitor (argument)","X Position[m]", "Phase", "X",
                 xmin,xmax,nx,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg);
     }else{
         /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
         DETECTOR_OUT_2D(
-                "PSD_monitor (absolute value)",
+                "Coh. PSD_monitor (magnitude)",
                 "X position [m]","Y position [m]",
                 xmin, xmax, ymin, ymax, nx, ny,
                 PSD_N[0],PSD_p_abs,PSD_p2[0],
@@ -240,22 +242,20 @@ SAVE
         /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
         DETECTOR_OUT_2D(
-                "PSD_monitor (argument)",
+                "Coh. PSD_monitor (argument)",
                 "X position [m]","Y position [m]",
                 xmin, xmax, ymin, ymax, nx, ny,
                 (PSD_N[0]),PSD_p_arg,PSD_p2[0],
                 filename_arg);
     }
+  }
 %}
 
 FINALLY
 %{
-   free(PSD_N[0]);
-   free(PSD_N);
-   free(PSD_p2[0]);
-   free(PSD_p2);
-   free(PSD_phi[0]);
-   free(PSD_phi);
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p2);
+  free(PSD_phi);
 %}
 
 MCDISPLAY
