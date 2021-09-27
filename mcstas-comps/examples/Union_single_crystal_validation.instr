@@ -16,7 +16,7 @@
 * %Description
 *  Validation of Union single crystal against standard single_crystal.
 *
-* %Example: comp_select=1 Detector: Banana_monitor_I=300707
+* %Example: comp_select=1 Detector: Banana_monitor_I=965535
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: Single crystal
@@ -73,7 +73,7 @@ AT (0,0,0) ABSOLUTE
 ROTATED (x_rotation_process,y_rotation_process,0) ABSOLUTE
 
 COMPONENT test_material = Union_make_material(my_absorption=my_absorption_union,
-  process_string="Single_crystal_test_process,Incoherent_process")
+  process_string="Incoherent_process,Single_crystal_test_process")
 AT (0,0,0) ABSOLUTE
 
 
