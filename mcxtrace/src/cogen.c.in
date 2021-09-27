@@ -1511,8 +1511,8 @@ void undef_trace_section(struct instr_def *instr)
   cout("#endif");
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
-  cout("#undef RESTORE_NEUTRON"  );
-  cout("#undef STORE_NEUTRON"  );
+  cout("#undef RESTORE_XRAY"  );
+  cout("#undef STORE_XRAY"  );
   cout("#undef ABSORBED" );
   cout("#undef ABSORB");
   cout("#undef ABSORB0");
