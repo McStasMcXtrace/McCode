@@ -984,7 +984,7 @@ TRACE
             arg = line_info.q[line]*(1+line_info.w[line]*randnorm())/(2.0*k);
           else
             arg = line_info.q[line]/(2.0*k);
-          my_s_n = line_info.my_s_k2[line]/(k*k);
+          my_s_n = pack*line_info.my_s_k2[line]/(k*k);
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
