@@ -133,11 +133,12 @@
 *                Use only incoherent scattering if NULL or "" [string]
 *
 * Optional parameters:
-* d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* d_phi: [deg]      Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_theta: [deg]    Longitudinal angle to focus to, i.e. lateral opening angle. This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0
 * focus_flip: [1]   Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
-* focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.* pack:    [1]      Packing factor
-* delta_d_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
+* focus_flip:   [1] Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
+* pack: [1]         Packing factor
+* delta_d_d: [AA]   Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
 * format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
 * p_inc:   [1]      Fraction of incoherently scattered rays.
 * p_transmit: [1]   Fraction of transmitted (only attenuated) rays.
@@ -152,8 +153,8 @@
 * nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
 *
 * OUTPUT PARAMETERS:
-* line_info: [struct]     Internal structure containing many members/info [struct]
-* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
+* line_info: [struct]     Internal structure containing many members/info
+* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent
 * line_info.dq: [Angs^-1] Wavevector transfer of last coherent scattering event.
 *
 * %L
@@ -801,7 +802,7 @@ INITIALIZE
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<line_info.count; i++)
     {
-      line_info.my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+      line_info.my_s_k2[i] = 4*PI*PI*PI* 1.0 *(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0)
                  *(L[i].j * L[i].F2 / L[i].q)*line_info.XsectionFactor;
       line_info.q[i] = L[i].q;
@@ -929,6 +930,15 @@ TRACE
     #ifndef OPENACC
     }
     #endif
+
+    if(pack!=1){
+      /*apply packing factor correction*/
+      line_info.my_a *= pack;
+      line_info.my_inc *= pack;
+      line_info.my_s_k2_sum *=pack;
+    }
+
+
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
       if (flag_warning < 100)
@@ -982,16 +992,16 @@ TRACE
 
 
           /* Choose point on Debye-Scherrer cone */
-          if (d_phi)
+          if (d_phi_thread)
           { /* relate height of detector to the height on DS cone */
-            arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+            arg = sin(d_phi_thread*DEG2RAD/2)/sin(2*theta);
             /* If full Debye-Scherrer cone is within d_phi, don't focus */
-            if (arg < -1 || arg > 1) d_phi = 0;
+            if (arg < -1 || arg > 1) d_phi_thread = 0;
             /* Otherwise, determine alpha to rotate from scattering plane
                into d_phi focusing area*/
             else alpha = 2*asin(arg);
           }
-          if (d_phi) {
+          if (d_phi_thread) {
             /* Focusing */
             alpha = fabs(alpha);
             /* Trick to get scattering for pos/neg theta's */
@@ -1083,7 +1093,7 @@ TRACE
 
           pmul  = line_info.Nq*l_full*my_s_n*exp(-(line_info.my_a+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-          if (d_phi) pmul *= alpha/PI;
+          if (d_phi_thread) pmul *= alpha/PI;
 
           type = 'c';
           itype = 1;
@@ -1092,10 +1102,10 @@ TRACE
       }  /* Coherent scattering event */
       else if (photontype == 2) {  /* Make incoherent scattering event */
         /*should be replaced by Compton scattering and/or TDS*/
-        if(d_phi) {
+        if(d_phi_thread) {
           randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
                                       0, 0, 1,
-                                      2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
+                                      2*PI, d_phi_thread*DEG2RAD, ROT_A_CURRENT_COMP);
         } else {
           randvec_target_circle(&kx, &ky, &kz,
                                 &solid_angle, 0, 0, 1, 0);
