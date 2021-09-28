@@ -139,14 +139,13 @@ INITIALIZE
         }
     }
 
-  
     a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
-    b2inv=1/(y_b*y_b);
-    c2inv=1/(z_c*z_c);
+    b2inv=(y_b)?1/(y_b*y_b):0;
+    c2inv=(z_c)?1/(z_c*z_c):0;
 
     l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
-    l_b2inv=1/(lattice_y_b*lattice_y_b);
-    l_c2inv=1/(lattice_z_c*lattice_z_c);
+    l_b2inv=(lattice_y_b)?1/(lattice_y_b*lattice_y_b):0;
+    l_c2inv=(lattice_z_c)?1/(lattice_z_c*lattice_z_c):0;
 
     cos_alpha0=cos(alpha);
     sin_alpha0=sin(alpha);
@@ -167,11 +166,12 @@ TRACE
     double kxu,kyu,kzu;			// unit vector in the direction of k-vector.
     double x_int,y_int,z_int;		// intersection with the y=0 plane
     double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-    double Thetain;			// (rad) angle between the crystal surface and the incident ray
-    double Theta0;			// (rad) angle between the Bragg planes and the incident ray
-    double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
-    double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
-    double Rpi, Rsig, R;          // Reflectivity value calculated by MxBragg_DarwinReflectivity() function for each incoming photon
+    //double Thetain;			// (rad) angle between the crystal surface and the incident ray
+    //double Theta0;			// (rad) angle between the Bragg planes and the incident ray
+    //double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
+    //double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
+    //double Rpi, Rsig;
+    double R;          // Reflectivity value calculated by Mx_DarwinReflectivity() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
@@ -206,8 +206,10 @@ TRACE
         xx0=x+kxu*t0; yy0=y+kyu*t0; zz0=z+kzu*t0;
         xx1=x+kxu*t1; yy1=y+kyu*t1; zz1=z+kzu*t1;
 
-        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0);
-        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0);
+        /*Check if we hit the mirror and whether the hit it is in front of the ray.
+         * This does not account for mirror curvature */
+        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0) && t0>0;
+        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0) && t1>0;
         int doit=hit0 || hit1;
         if(hit0 && !hit1) PROP_DL(t0); /* only one intersection actually on mirror */
         else if (hit1 && !hit0) PROP_DL(t1); /* other intersection */
@@ -224,7 +226,7 @@ TRACE
             SCATTER;
             xt=x; yt=y-y_b; zt=z; /* update shifted coordinates to intersection point */
             double grad_x, grad_y, grad_z;
-            /* grad is the outer normal to the surface at this point */
+            /* grad is the outer normal to the surface at this point on surface presumed to be concave */
             double nhat[3]={-xt*a2inv, -yt*b2inv, -zt*c2inv}; NORM(nhat[0], nhat[1], nhat[2]);
 
             /* compute angle of crystal planes based on lattice ellipse, need to include rotation still! */
@@ -246,12 +248,22 @@ TRACE
             double Rsig, Rpi;
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
+            
+            double complex chi0, chih;
+            double k0mag, hscale, thetaB;
 
-            fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
+            Mx_CubicCrystalChi(&chi0, &chih, &k0mag, &hscale, &thetaB,
+                         f00, f0h, fp, fpp, V, h, k, l,
+                         debye_waller_B, E,
+                         crystal_type,structure_factor_scale_r,structure_factor_scale_i);
+            if(thetaB==0){
+              fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
+              ABSORB;
+            }
+
+            fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha_v,
-                  f00, f0h, fp, fpp, V, h, k, l,
-                  debye_waller_B, E,
-                  crystal_type, structure_factor_scale_r, structure_factor_scale_i
+                  chi0, chih, chih, k0mag, hscale, thetaB
               );
 
             cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction */
@@ -316,28 +328,60 @@ TRACE
 
 MCDISPLAY
 %{
-  int i,j,N=12;
-  double t,xx,yy,zz,xx0,yy0,zz0;
+  int i,j,N=12, M=12;
+  double aa,bb,cc;
+  double vmax,vmin,umax,umin;
   magnify("");
 #ifdef MCDEBUG
   printf("Bent Crystal(%s): plot params (%f %f %f) (%f %f %f) %f %f\n", NAME_CURRENT_COMP,
     x_a, y_b, z_c, a2inv, b2inv, c2inv, width, length);
   fflush(NULL);
 #endif
-  xx=width/2.0;
+
+  /*use the circumference of the ellipse/4 = the the ratio between that and the crystal length/2 should be reasonably close to umax/pi_2*/
+  /*according to Ramanujan 1914*/
+  double Pv=M_PI*(3*(z_c+y_b)- sqrt( (3*z_c+y_b)*(z_c+3*y_b)));
+  double Pu=M_PI*(3*(x_a+y_b)- sqrt( (3*x_a+y_b)*(x_a+3*y_b)));
+
+  vmax = length/2.0 /(Pv/4.0) * M_PI_2;
+  vmin=-vmax;
+
+  umax = width/2.0 /(Pu/4.0) * M_PI_2;
+  umin=-umax;
+
   for (j=0;j<N;j++){
-    zz=j*length/(N-1)-length/2.0;
-    yy=-sqrt((1-zz*zz*c2inv)/b2inv);
-    if(j) multiline(5,
-        -xx,yy0+y_b,zz0,
-         xx,yy0+y_b,zz0,
-         xx, yy+y_b,zz,
-        -xx, yy+y_b,zz,
-        -xx,yy0+y_b,zz0); /* draw a rectangular slice of the mirror */
-    zz0=zz;
-    yy0=yy; 
+      double v0,v1;
+      v0=j*(vmax-vmin)/N + vmin;
+      v1=(j+1)*(vmax-vmin)/N + vmin;
+
+      for (i=0;i<M;i++){
+          double u0,u1;
+          u0=i*(umax-umin)/M + umin;
+          u1=(i+1)*(umax-umin)/M + umin;
+          double nx,ny,nz,l0,l1;
+          double x[4],y[4],z[4];
+          /*assuming 0,0,0 is inside are inside the ellisoid*/
+          nx=cos(v0)*sin(u0);ny=cos(v0)*cos(u0);nz=sin(v0);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[0]=nx*l1; y[0]=ny*l1; z[0]=nz*l1;
+
+          nx=cos(v0)*sin(u1);ny=cos(v0)*cos(u1);nz=sin(v0);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[1]=nx*l1; y[1]=ny*l1; z[1]=nz*l1;
+
+          nx=cos(v1)*sin(u1);ny=cos(v1)*cos(u1);nz=sin(v1);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[2]=nx*l1; y[2]=ny*l1; z[2]=nz*l1;
+
+          nx=cos(v1)*sin(u0);ny=cos(v1)*cos(u0);nz=sin(v1);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[3]=nx*l1; y[3]=ny*l1; z[3]=nz*l1;
+
+          multiline(5, x[0],y_b-y[0],z[0], x[1],y_b-y[1],z[1], x[2],y_b-y[2],z[2], x[3],y_b-y[3],z[3], x[0],y_b-y[0],z[0]);
+      }
   }
-  line(0.,0.,0., 0., cos_alpha0*(width+length)/2.0, sin_alpha0*(width+length)/2.0); // display alpha vector
+
+  line(0.,y_b,0., 0., y_b-cos_alpha0*(width+length)/2.0, sin_alpha0*(width+length)/2.0); // display alpha vector
 %}
 
 END
