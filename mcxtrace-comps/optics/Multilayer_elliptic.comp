@@ -13,7 +13,6 @@
 * Written by: Jana Baltser, Peter Willendrup, Anette Vickery, Andrea Prodi, Erik Knudsen
 * Date: February 2011
 * Version: 1.0
-* Release: McXtrace 0.1
 * Origin: NBI
 *
 * Elliptic multilayer mirror
@@ -62,7 +61,7 @@ SHARE
 %{
 #include <complex.h>
   %include "read_table-lib"
-  
+  %include "reflectivity-lib"
   /*something that would be relevant for ALL elliptical mirrors*/
   /* coordinate transformation McXtrace-Ellipse (ME) and Ellipse-McXtrace(EM) functions */
   void CoordTransME(double *x_el, double *y_el, double *z_el, 
@@ -93,14 +92,8 @@ DECLARE
   double Y0;
   double xi;
   double cost0;
-  double *Q;
-  double **R; //reflectivity
-  double E_min;
-  double E_max;
-  double E_step;
-  int nE;
-  int nQ;
   int kinematical;
+  t_Reflec re;
 %}
 
 INITIALIZE
@@ -118,82 +111,15 @@ INITIALIZE
   Y0 = b*sin(acos(cost0)); 
   xi = -atan((Z0*b*b)/(Y0*a*a)); 
 
+  int status=0;
   if(!Gamma && !Lambda){
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
     kinematical = 0;
-    /* reflectivity datafile parsing */
-    int status=0;
-    t_Table T;
-    if ( (status=Table_Read(&T,reflectivity_datafile,0))==-1){
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",reflectivity_datafile,NAME_CURRENT_COMP);
-      exit(-1);
-    }
-    (R)=malloc(sizeof(double *)*(T.rows));
-    nQ=T.rows;
-    (Q)=malloc(sizeof(double)*(T.rows));
-    int i,j;
-    for (i=0;i<T.rows;i++){
-      R[i]=malloc(sizeof(double)*(T.columns-1));
-    }
-    for(i=0;i<T.rows;i++){
-      Q[i]=T.data[i*T.columns];
-      for(j=0;j<T.columns-1;j++){
-        R[i][j]=T.data[i*T.columns+j+1];
-      }
-    }
-
-    //if the energy is given from outside - don't bother parsing the header.
-    if(Emin!=-1 && Emax!=-1 &Estep !=-1){
-      E_min=Emin;
-      E_step=Estep;
-      E_max=Emax;
-    }else{
-      /*now parse the header to find boundaries*/
-      char **header_parsed;
-      header_parsed=Table_ParseHeader(T.header,"Energy","Lambda",NULL);
-      if (header_parsed[0] || header_parsed[1]){
-        char *p;
-        double td[3];
-        if (header_parsed[0]) p=strchr(header_parsed[0],'[');
-        else if (header_parsed[1]) p=strchr(header_parsed[1],'[');
-        errno=0;
-        td[0]=strtod(p+1,NULL);
-        p=strchr(p,':');
-        E_step=strtod(p+1,NULL);
-        p=strchr(p+1,':');
-        E_max=strtod(p+1,NULL);
-        if(!errno){
-          E_min=td[0];
-          E_step=td[1];
-          E_max=td[2];
-        }else{
-          E_min=E_step=E_max=0;
-        }
-
-
-        if (header_parsed[1]){
-          /*reflectivity is a fucntion of wavelength*/
-          E_min=K2E*2*M_PI/E_min;
-          E_step=K2E*2*M_PI/E_step;
-          E_max=K2E*2*M_PI/E_max;
-        }
-      }
-    }
-    nE=(int) fabs((E_min - E_max)/E_step);
-
-    /*Swap Emin and Emax if necessary*/
-    if (E_min > E_max){
-      double tmp=E_min;
-      E_min = E_max; E_max=tmp;
-    }
-    /*Sanity check values*/
-    if (E_step>fabs(E_max-E_min) || E_step<0){
-      fprintf(stderr,"Error: Multilayer_elliptic(%s): Nonsensical energy interval [%g:%g:%g]\n",NAME_CURRENT_COMP,E_min,E_step,E_max);
-      exit(-1);
-    }
-    Table_Free(&T);
+    /* reflectivity datafile parsing COATING_UNDEFINED - means set the type according to what is found in the file*/
+    status=reflec_Init(&re,COATING_UNDEFINED,reflectivity_datafile);
   }else{
     kinematical = 1;
+    status=reflec_Init(&(re), KINEMATIC, N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-density material in layer, thickness of layer, e-density contrast*/
   }
 %}
 
@@ -208,10 +134,8 @@ TRACE
   double nx,ny,nz;
   double kxn,kyn,kzn;		// reflected ray's kvector
   
-  
   /* get the photon's coordinates and kvector in the ellipse frame */
   K=sqrt(kx*kx+ky*ky+kz*kz);
-  
   
   CoordTransME(&x_el,&y_el,&z_el,x,y,z,Z0,Y0,xi);
   CoordTransME(&kx_el,&ky_el,&kz_el,kx,ky,kz,0,0,xi);
@@ -268,46 +192,24 @@ TRACE
 	  EE=K*K2E; 
 
           if(kinematical){
-            //also add the option of kinematical approximation
             /*
              * \Lambda: thickness of bilayer - following notation in Als-Nielsen/McMorrow
              * \Gamma:  \Gamma*\Lambda thickness of high electron density material.
              * r1(zeta) = 2 i r_0 \rho_{AB} \left(\frac{\Lambda^2 \Gamma}{\zeta}\right) \frac{\sin\left(\pi\Gamma\zeta\right)}{\pi\Gamma\zeta);
              */
-            double zeta=0.5/M_PI*QQ*Lambda;
-            double beta;
-            double complex r1,rN;
-            beta=0;/*for now ignore absorption*/
-            r1=-2*I*RE*1* rho_AB * (pow(Lambda,2.0)*Gamma/zeta) * sin(M_PI*Gamma*zeta)/(M_PI*Gamma*zeta);
-            rN=r1*(1-cexp(I*2*M_PI*zeta*N)*exp(-beta*N))/(1-cexp(I*2*M_PI*zeta)*exp(-beta));
+            double complex rN;
+            rN=refleccq(&(re),QQ,0);
             Ref=cabs(rN);
             if (Ref>1){
               /*Reflectivity can't be >1*/
               Ref=1.0;
             }
           }else{
-            //interpolate in table
-            // This should be rewritten to use read-table-lib
-            int col=0;/*the +1 is because the first column contains q.*/
-            col=(int) ceil( (EE-E_min)/E_step)+1;
-            //while (E>(E_min+col*E_step)) col++;
-
-            int row=0;
-            while (row<=nQ){
-              if(QQ<(Q[row])) break;
-              row++;
-            }
-            /*check for table index overrruns*/
-            if (col<1)col=1;
-            else if (col>=nE) col=nE-1;
-            if (row<1)row=1;
-            else if (row>=nQ) row=nQ-1;
-            //for now just take the mean, should really interpolate
-
-            Ref=(R[row-1][col-1] + R[row-1][col] + R[row][col-1] + R[row][col])/4;
+            /*interpolate in table*/
+            Ref=reflecq(&(re),QQ,0);
           }
 	  
-	  // apply reflectivity
+	  /* apply reflectivity */
 	  p*=Ref; 
 	  SCATTER;
 	  
