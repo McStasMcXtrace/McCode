@@ -215,6 +215,8 @@ INITIALIZE
     dm_strip_tthc=4.8220595;
     dm_strip_tthg=0.5279405;
     dm_strip_tth0=pxrd_strip_tth0;/*tth_offset, 0 is when the first module is perpendicular to the beam*/
+    snprintf(dm_strip_banana_options,511,"banana theta limits=[%g %g] bins=%d",dm_strip_tth0-0.5*dm_strip_tthc, dm_strip_tth0+23.5*dm_strip_tthc,24*1280);
+    printf("%s\n",dm_strip_banana_options);
 
     pxrd_sampleap_h=PXRDsampleap_h;
     pxrd_sampleap_w=PXRDsampleap_w;

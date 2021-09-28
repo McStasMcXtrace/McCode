@@ -1,3 +1,4 @@
+#param=q
 #	The reflectivity of the W/B4C multilayer, N=60;
 #	Top material: W, Bottom material: B4C.
 #	sigmaSub-4 (roughness of the substrate); sigma=4(interface roughness)

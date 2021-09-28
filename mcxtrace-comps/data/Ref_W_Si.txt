@@ -1,3 +1,4 @@
+#param= q
 #d = [40];
 #N = [100];number of layers
 #SubMat = 'Si_'; substrate

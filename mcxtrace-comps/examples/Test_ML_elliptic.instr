@@ -73,7 +73,7 @@ COMPONENT psd0 = PSD_monitor(
 AT(0,0,1) RELATIVE source
 
 COMPONENT emon0 = E_monitor(
-    filename="emon0",xwidth=.3, yheight=.1, nE=201,restore_xray=1, Emin=0, Emax=14.2)
+    filename="emon0",xwidth=.3, yheight=.1, nE=201,restore_xray=1, Emin=0, Emax=50)
 AT(0,0,1) RELATIVE source
 
 COMPONENT a1=Arm()
@@ -81,13 +81,13 @@ AT(0,0,1) RELATIVE source
 ROTATED (gamma,0,0) RELATIVE source
 
 COMPONENT ml0 = Multilayer_elliptic(
-    reflectivity_datafile = "reflectivity.txt", theta = gamma,
+    reflectivity_datafile = "Ref_W_B4C.txt", theta = gamma,
     s1 = S1, s2 = S2, length = 0.1, width = 0.1, R0 = 1,
     Emin=7, Emax=10, Estep=0.05)
 WHEN (fromfile) AT (0, 0, 0) RELATIVE a1
 
 COMPONENT ml1 = Multilayer_elliptic(
-    reflectivity_datafile = NULL, theta = gamma,
+    reflectivity_datafile = "NULL", theta = gamma,
     s1 = S1, s2 = S2, length = 0.1, width = 0.1, R0 = 1,
     Emin=0, Emax=14.2, Estep=0.05,
     Gamma=0.2, Lambda=50, N=10, rho_AB=3.9817)
