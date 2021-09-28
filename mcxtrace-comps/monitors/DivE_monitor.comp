@@ -11,7 +11,6 @@
 * Written by: Erik B Knudsen
 * Based on neutron component by Kristian Nielsen
 * Date: Jun. 2016
-* Version: $Revision$
 * Origin: DTU Physics
 *
 * Divergence/Energy monitor.

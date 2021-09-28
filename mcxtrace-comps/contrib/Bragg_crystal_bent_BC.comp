@@ -26,7 +26,6 @@
 * NOTE: elliptical coordinate code and documentation taken from Mirror_elliptic.comp distributed in McXtrace v1.2
 * Written by: Erik Knudsen
 * Date: Feb 11, 2010
-* Version: $Revision$
 * Origin: Risoe
 * Release: McXtrace 1.0
 * However, the coordinates are rotated to be consistent with Perfect_Crystal.comp and NIST_Perfect_Crystal.comp
