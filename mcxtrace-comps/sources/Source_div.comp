@@ -99,7 +99,8 @@ INITIALIZE
   ymax=yheight/2.0;
 
   if(radius==0 && ( xmax==xmin && ymin==xmax) ){
-    printf("ERROR(%s): No meaningful source area set. Either set radius or xwidth and yheight.\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"ERROR (%s): No meaningful source area set. Either set radius or xwidth and yheight.\n",NAME_CURRENT_COMP);
+    exit(-1);
   }
 
   /*flag if we are using a datafile*/
@@ -109,7 +110,7 @@ INITIALIZE
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
-      fprintf(stderr,"Source_div(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
+      fprintf(stderr,"ERROR (%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
     /*data is now in table t*/
@@ -137,25 +138,26 @@ INITIALIZE
   pmul*=1.0/((double) mcget_ncount());
 
   /*check if divergence limits are compatible with focus_xw, focus_yh*/
+  double maxdivh,maxdivv;
   if(focus_xw!=0){
-    double maxdivh=atan((xwidth+focus_xw)/dist);
+    maxdivh=atan((xwidth+focus_xw)/dist);
     if (focus_aw>maxdivh){
       focus_aw=maxdivh;
       if (verbose){
-        fprintf(stderr,"WARNING(%s): sampling width does not support full divergence. Adjusting to focus_aw=%g rad\n",NAME_CURRENT_COMP,focus_aw);
+        fprintf(stderr,"WARNING (%s): sampling width does not support full divergence. Adjusting to focus_aw=%g rad\n",NAME_CURRENT_COMP,focus_aw);
       }
     }
   }
   if(focus_yh!=0){
-    double maxdivv=atan((yheight+focus_yh)/dist);
+    printf("I am here\n");
+    maxdivv=atan((yheight+focus_yh)/dist);
     if (focus_ah>maxdivv){
       focus_ah=maxdivv;
       if (verbose){
-        fprintf(stderr,"WARNING(%s): sampling height does not support full divergence. Adjusting to focus_ah=%g rad\n",NAME_CURRENT_COMP,focus_ah);
+        fprintf(stderr,"WARNING (%s): sampling height does not support full divergence. Adjusting to focus_ah=%g rad\n",NAME_CURRENT_COMP,focus_ah);
       }
     }
   }
-
 %}
 
 TRACE
@@ -230,7 +232,7 @@ TRACE
     kz*=k;
     kx*=k;
     ky*=k;
-  }else{
+  }else if (focus_ar>0){
     /*radial divergence profile*/
     double theta,psi,kp;
     if(!gauss_a){
@@ -249,6 +251,10 @@ TRACE
     kp=sqrt(k*k-kz*kz);
     kx=kp*sin(theta);
     ky=kp*cos(theta);
+  }else{
+    /*0 dviergence - source is mathematically collimated*/
+    kz=k;
+    kx=ky=0;
   }
 
   /*set polarization and phase.*/
