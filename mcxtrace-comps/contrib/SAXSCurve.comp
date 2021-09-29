@@ -51,7 +51,7 @@ SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 10000.0,
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)
+/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{

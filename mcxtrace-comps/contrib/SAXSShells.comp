@@ -47,7 +47,7 @@ SETTING PARAMETERS (R = 100.0, Thickness = 5.0, Concentration = 0.01, DeltaRho =
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)
+/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{

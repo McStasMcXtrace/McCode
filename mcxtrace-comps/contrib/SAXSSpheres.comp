@@ -45,7 +45,7 @@ SETTING PARAMETERS (R = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, Absorpt
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)
+/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{

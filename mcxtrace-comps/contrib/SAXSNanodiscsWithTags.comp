@@ -73,7 +73,7 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)
+/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{

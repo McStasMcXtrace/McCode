@@ -46,7 +46,7 @@ SETTING PARAMETERS (R = 40.0, Height = 100.0, Concentration = 0.01, DeltaRho = 1
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)
+/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{
