@@ -58,8 +58,8 @@
 DEFINE COMPONENT Source_lab
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string material_datafile="Cu.txt", width=1e-3, height=1e-3, thickness=100e-6, E0=20, Emax=0, Emin=1, focus_xw=5e-3, focus_yh=5e-3,
-    take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1, xwidth=0, yheight=0)
-OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, pmul_c,mu,p_continous)
+    take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1, xwidth=0, yheight=0, exit_window_refpt=0 )
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -211,9 +211,6 @@ TRACE
   P=coords_add(rot_apply(R_xray_gen,P),O_xray_gen);
   coords_get(P,&x,&y,&z);
 
-  /*set a scatter pt at the generation pt*/
-  SCATTER;
-
   /*randvec_target_rect_real computes a target point and a solid angle correction factor, hence the k-vector has to be computed from
     generation point and target point. The (0,0,1) location of the target is due to a silent assumption in randvec() that
     the target cannot be situated in the origin.*/
@@ -294,6 +291,13 @@ TRACE
   /*set a random phase*/
   phi=rand01()*2*M_PI;
 
+  /*Finally, if exit_window_refpt is set revert to legacy behaviour where the centre of the exit window is the
+    reference point of the component*/
+  if(exit_window_refpt){
+    z=z-dist;
+  }
+  /*set a scatter pt at the generation pt*/
+  SCATTER;
 %}
 
 MCDISPLAY
