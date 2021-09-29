@@ -154,7 +154,7 @@ TRACE
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
 
-            fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
+            fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha,
                   f00, f0h, fp, fpp, V, h, k, l,
                   debye_waller_B, E,
