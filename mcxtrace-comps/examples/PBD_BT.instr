@@ -246,7 +246,7 @@ COMPONENT incoming_spectrum_mon = E_monitor(
 AT (0, 0, .11) RELATIVE monochromator_arm
 ROTATED (0, 0, 0) RELATIVE mirror_arm_exit0
 EXTEND %{
-    if(mcipstop_at_energy) ABSORB;
+    if(INSTRUMENT_GETPAR(stop_at_energy)) ABSORB;
 %}
 
 COMPONENT silicon_1_arm = Arm()
