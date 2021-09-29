@@ -7,7 +7,6 @@
 * Written by: Erik Knudsen (erkn@risoe.dtu.dk)
 * Date: July 5th 2011
 * Origin: Ris&oslash; DTU
-* Release: McXtrace
 * Version: 1.0_rc2
 * %INSTRUMENT_SITE: Tests
 *
@@ -22,9 +21,9 @@
 * L0: [AA] centre wavlength of the source
 * DL:  [AA] half width of the (uniform) wavelength distribution
 *
-* %Example: DL=4.9 L0=5 filter_mat=Si Detector: l_mon1_I=1.31502e-07
-* %Example: DL=4.9 L0=5 filter_mat=Rh Detector: l_mon1_I=4.04921e-29
-* %Example: -n5e6 DL=4.9 L0=5 filter_mat=Ti F2=1 Detector: lmon1=1.14111e-08
+* %Example: DL=4.9 L0=5 filter_mat="Si.txt" Detector: l_mon1_I=1.31502e-07
+* %Example: DL=4.9 L0=5 filter_mat="Rh.txt" Detector: l_mon1_I=4.04921e-29
+* %Example: -n5e6 DL=4.9 L0=5 filter_mat="Ti.txt" F2=1 Detector: l_mon1_I=1.14111e-08
 *
 * %Link
 * A reference/HTML link for more information
@@ -32,17 +31,14 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Filter(string filter_mat="Rh",thickness=100e-6,L0=1,DL=0.1, F2=0)
+DEFINE INSTRUMENT Test_Filter(string filter_mat="Rh.txt",thickness=100e-6,L0=1,DL=0.1, F2=0)
 
 DECLARE
 %{
-  char matfilename[255];
-
 %}
 
 INITIALIZE
 %{
-  snprintf(matfilename,254,"%s.txt",filter_mat);
 %}
 
 
@@ -63,12 +59,12 @@ COMPONENT l_mon0 = L_monitor(
 AT (0,0,1e-6) RELATIVE Source
 
 COMPONENT filter = Filter(
-    material_datafile=matfilename,xwidth=0.1,yheight=0.1,zdepth=thickness
+    material_datafile=filter_mat, xwidth=0.1,yheight=0.1,zdepth=thickness
 )
 AT (0,0,0.5) RELATIVE Source
 
 COMPONENT filter2 = Filter(
-    material_datafile=matfilename,xwidth=0.1, yheight=0.1, zdepth=thickness
+    material_datafile=filter_mat,xwidth=0.1, yheight=0.1, zdepth=thickness
 )
 WHEN(F2) AT (0,0,0.5+thickness+1e-3) RELATIVE Source
 
