@@ -1,0 +1,73 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Apr 20
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests
+*
+* Unit test for Detector_pn
+*
+* %D
+* A simple unit test instrument for the Detector_pn component. It consists merely of
+* two sets of monitor each with: 
+*  1 regular PSD_monitor and 2 instances of Detector_pn with a scinitillator screen of
+*  Si and Pb respectively. Obviously, no sane person would use Pb, but it's there for 
+*  illustration purposes.
+* A restore_flag parameter may be passed to Detector_pn which negates the absorption
+* effect for subsequent components.
+*
+* %Example: Test_Detector_pn restore_flag=1 Detector: detap2_I=1.02182e-06
+*
+* %P
+* restore_flag: [ ]   Should the monitor/detector instances restore the x-ray to its pre-detector state
+* E0:           [keV] The central simulation energy to use. A 1% BW will be added. 
+* DE:           [keV] Half energy width of the simulation energy.
+* 
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Detector_pn(restore_flag=0, E0=12.4, DE=0.124)
+
+DECLARE
+%{	
+	char material1[]="Si.txt";
+	char material2[]="Pb.txt";
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source = Source_flat(xwidth=1e-3,yheight=1e-3, focus_xw=0.5e-2, focus_yh=0.45e-2,dist=1, E0=E0, dE=DE)
+AT(0,0,0) RELATIVE origin 
+
+COMPONENT psrc = PSD_monitor(restore_xray=restore_flag, filename="psrc", xwidth=1e-2, yheight=1e-2)
+AT(0,0,1) RELATIVE source
+
+COMPONENT detsrc1 = Detector_pn(restore_xray=restore_flag,filename="detsrc1", material_datafile=material1, xwidth=1e-2, yheight=1e-2,zdepth=1e-5)
+AT(0,0,0.1) RELATIVE psrc
+
+COMPONENT detsrc2 = COPY(detsrc1)(filename="detsrc2", material_datafile=material2)
+AT(0,0,1e-4) RELATIVE detsrc1
+
+COMPONENT pap = COPY(psrc)(filename="pap")
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT detap1 = COPY(detsrc1)(filename="detap1")
+AT(0,0,0.1) RELATIVE pap 
+
+COMPONENT detap2 = COPY(detsrc2)(filename="detap2")
+AT(0,0,1e-4) RELATIVE detap1
+
+FINALLY
+%{
+%}
+
+END
