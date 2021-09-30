@@ -133,7 +133,7 @@ TRACE
                     NORM(nx,ny,nz);
                 }else{
                     /*waviness is also transversal but anisotropic*/
-                    double scatradius;
+                    double scat_radius;
                     if(theta<waviness){
                         scat_radius=atan(waviness);
                         randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,0,scat_radius);
