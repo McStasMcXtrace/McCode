@@ -74,7 +74,7 @@ AT(-slit_offset,0,1) RELATIVE source
 GROUP slits
 
 COMPONENT psd00 = PSD_monitor(
-    yheight=2e-6, xwidth=200e-6, nx=501, ny=2s, filename="psd00")
+    yheight=2e-6, xwidth=200e-6, nx=501, ny=2, filename="psd00")
 AT(0,0,1+1e-6) RELATIVE source
 FINALLY
 %{
