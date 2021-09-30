@@ -41,10 +41,63 @@
 * Modified by: PW May 2020: version 2.6.1
 * Modified by: PW November 2020: version 2.7
 * Modified by: PW December 2020: version 3.0
-* This file is part of McStas 3.0, released December 15th 2020.
+* Modified by: PW September 2021: version 2.7.1
+*
+* This file is part of McStas 2.7.1, released October 1st 2021.
 * It gives a 'changes' list from the beginning of the project
-* 
+*
 *******************************************************************************/
+Changes in McStas v.2.7.1, October 1st, 2021
+
+ McStas 2.7.1 is the 11th release in the 2.x series, provides minor incremental
+ improvements and fixes various minor issues with McStas 2.7
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ Installation:
+ - Our install docs are available on the McCode GitHub page at
+ https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+
+
+Fixes of issues from last release:
+ - A number of minor issues from 2.7 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-2.7
+   
+Tools:
+ - mcgui allows definition of an "external editor", see the configuration menu.
+   - On Linux we preconfigure for gedit (where we now also provide syntax-highlighting, on macOS
+   and Windows we default to use the OS file-type settings, i.e. whatever you get by double-clicking
+   an instr file.) Use ctrl/meta + shift + e to spawn the editor from mcgui.
+ - User-level configuration files are now in a more user-readable form with indentation.
+ - Config setting 'QSCI' has been added, putting this to 0 disables the QScintilla editor.
+ - On macOS (from 11.0 Big Sur onwards), mcgui assumes light/dark mode with the system settings. A
+   side-effect is that the syntax-highlighting in our QScintilla editor becomes close-to-unredable.
+   Workarounds are:
+   - Use the "external editor" option added to mcgui, see above.
+   - Don't use dark mode
+   - Start mcgui in light mode, then switch to dark mode
+
+ Platforms:
+ - Not much new to report here. We still support 64bit Windows 10/11, all recent 64bit macOS including 11.0 Big Sur on
+   both Intel and Apple Silicon/M1 processors. Debian-based and RPM-based distros.
+   (RPMs are built on/for CentOS and Fedora, you may get varying milage elsewhere.)
+
+ Libraries:
+ - Updated version 2.7.3 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed with McStas on Unix
+   platforms only. With McStas 2.7.1, NCrystal is more tightly integrated and should run without using ncrystal_preparemcstasdir.
+ - MCPL library from the same authors included at v. 1.3.2.
+
+ Components:
+ - Minor updates only, adjustments to align with McStas 3.x features
+
+ Instruments:
+ - New "test" instruments have been added for easier comparison with McStas 3.x.
+
+We hope you will enjoy this new release!!! (And keep an eye out for 3.1, it is almost also there...)
+
+
 Changes in McStas 3.0, December 15th, 2020
 
  McStas 3.0 is the first official release in the 3.x series, with a modernised 
