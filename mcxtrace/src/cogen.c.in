@@ -1848,8 +1848,8 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
-  coutf("    seed = seed+innerloop;");
-  coutf("    mcncount += innerloop;");
+  coutf("    seed = seed+gpu_innerloop;");
+  coutf("    mcncount += gpu_innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
