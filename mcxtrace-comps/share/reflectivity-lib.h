@@ -1,0 +1,86 @@
+/*A library for computing reflectivity in surfaces with multilayers etc.*/
+#include <complex.h>
+#include <math.h>
+#include <stdarg.h>
+double Table_Value2d(t_Table, double, double);
+
+enum reflec_Type  {COATING_UNDEFINED=0,CONSTANT=1,BARE, COATING, Q_PARAMETRIC, PARRATT, ETH_PARAMETRIC, KINEMATIC, UNDETERMINED};
+#define NAME_CONSTANT "constant"
+#define NAME_BARE "bare"
+#define NAME_COATING "coating"
+#define NAME_Q_PARAMETRIC "q"
+#define NAME_PARRATT "parratt"
+#define NAME_ETH_PARAMETRIC "eth"
+#define NAME_KINEMATIC "kinematic"
+
+typedef struct t_reflec_constant{
+  double complex R;
+} t_reflec_constant;
+
+typedef struct t_reflec_bare{
+  char *matrl;
+  double d;
+} t_reflec_bare;
+
+typedef struct t_reflec_coating{
+  char *matrl;
+  t_Table *T;
+  double *d;
+  double rho,Z,At;
+}t_reflec_coating;
+
+typedef struct t_reflec_q_prmtc{
+  char *fname;
+  t_Table *T;
+  double qmin,qmax;
+} t_reflec_q_prmtc;
+
+typedef struct t_reflec_parratt{
+  int N;
+  double *d, *delta, *beta;
+} t_reflec_parratt;
+
+/**Multilayer in the kinematical approximation*/
+typedef struct t_reflec_kinematic{
+  int N;/**The number of bilayers in the multilayer*/
+  double Gamma;/**The fraction of thickness of high e-density material*/
+  double Lambda;/**The thickness of the bilayer*/
+  double rho_AB;/**Electron density contrast between material A and B*/
+} t_reflec_kinematic;
+
+typedef struct t_reflec_eth_prmtc{
+  char *fname;
+  t_Table *T;
+  double emin,emax,estep;/*energy range*/
+  double thetamin,thetamax,thetastep;/*incidence angle range*/
+} t_reflec_theta_e_prmtc;
+
+typedef struct reflec_T {
+  enum reflec_Type type;
+  union {
+    struct t_reflec_bare rb;
+    struct t_reflec_coating rc;
+    struct t_reflec_q_prmtc rqpm;
+    struct t_reflec_parratt rp;
+    struct t_reflec_constant rconst;
+    struct t_reflec_kinematic rk;
+    struct t_reflec_eth_prmtc rethpm;
+  } prms;
+} t_Reflec;
+
+/* reflectivity-lib.c */
+int reflec_Init(t_Reflec *R, enum reflec_Type type, ...);
+int reflec_Init_File(t_Reflec *R, char* filename);
+
+double complex refleccq(t_Reflec *r_handle, double q, double g, ... );
+double reflecq(t_Reflec *r_handle, double q, double g, ... );
+double complex reflecc(t_Reflec *r_handle, double kix, double kiy, double kiz, double kfx, double kfy, double kfz, double g );
+
+double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k);
+double complex reflec_bare(t_Reflec *r_handle, double q, double g);
+double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g);
+double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k);
+double complex reflec_kinematical(t_Reflec *r_handle, double q, double g);
+double complex parrat_reflec_bulk(int lc, double *delta, double *beta, double *d, double k, double q);
+double complex reflec_eth_prmtc(t_Reflec *r_handle, double e, double theta, double g);
+enum reflec_Type get_table_reflec_type(t_Table *t);
