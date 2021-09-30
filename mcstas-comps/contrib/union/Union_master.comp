@@ -2197,7 +2197,7 @@ TRACE
           // Luxury feature to be added later
           if (abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index != -1) {
             #ifdef Union_trace_verbal_setting
-              printf("Updating logger_conditional_extend_array[%d] to 1 (max length = %d)\n",abs_loggers_with_data_array.logger_pointers[log_index]->abs_logger_extend_index,max_conditional_extend_index);
+              printf("Updating logger_conditional_extend_array[%d] to 1 (max length = %d)\n",abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index,max_conditional_extend_index);
             #endif
             // The user can set a condtional_extend_index, so that the evaluation of this specific conditional can be taken easily from extend
             abs_logger_conditional_extend_array[abs_loggers_with_data_array.abs_logger_pointers[log_index]->abs_logger_extend_index] = 1;
