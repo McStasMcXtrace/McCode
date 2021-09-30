@@ -3,6 +3,10 @@
 #include <math.h>
 #include <complex.h>
 
+#ifdef REFLIBNAME
+#undef REFLIBNAME
+#endif
+#define REFLIBNAME "reflectivity-lib"
 
 int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
   if (R==NULL){
@@ -105,7 +109,7 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
           break;
       }
     default:
-      fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n",__FILE__);
+      fprintf(stderr,"Error (%s): Undetermined reflectivity parameterization type. r set to 1\n",REFLIBNAME);
       free(R);
       R=NULL;
       return 1;
@@ -254,7 +258,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
       case UNDETERMINED:
       default:
         {
-          fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n",__FILE__);
+          fprintf(stderr,"Error (%s): Undetermined reflectivity parametrization type. r set to 1\n",REFLIBNAME);
           return 1;
         }
     }
@@ -262,11 +266,10 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 }
 
 enum reflec_Type get_table_reflec_type(t_Table *t){
-    printf("header: %s\n", t->header);
     char **header_parsed = Table_ParseHeader(t->header,"param=",NULL);
     char *type = header_parsed[0];
     if(!type){
-        printf("Couldn't read type from reflectivity table file.");
+      printf("ERROR (%S):Couldn't read type from reflectivity table file.",REFLIBNAME);
         exit(-1);
     }
     /*for this to work well we need to trim the type string*/
@@ -278,7 +281,7 @@ enum reflec_Type get_table_reflec_type(t_Table *t){
       *(back++)='\0';
     }
 
-    printf("Type: \'%s\'\n", type);
+    printf("INFO (%s)  reflectivity parameterization type: \'%s\'\n",REFLIBNAME, type);
     if(strcmp(type, NAME_CONSTANT) == 0){
         return CONSTANT;
     } else if(strcmp(type, NAME_BARE) == 0){
@@ -294,7 +297,7 @@ enum reflec_Type get_table_reflec_type(t_Table *t){
     } else if(strcmp(type, NAME_KINEMATIC) == 0){
         return KINEMATIC;
     } else {
-        printf("\'%s\'; is not a known parametrization!", type);
+        printf("ERROR (%s): \'%s\'; is not a known parametrization!", REFLIBNAME, type);
         exit(-1);
     }
 }
@@ -463,7 +466,7 @@ double complex refleccq( t_Reflec *r_handle, double q, double g, ...){
         }
       default:
         {
-          fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");
+          fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
           return 1.0;
         }
     }
@@ -520,7 +523,7 @@ double reflecq( t_Reflec *r_handle, double q, double g, ...){
         }
       default:
         {
-          fprintf(stderr,"Error (reflectivity-lib): Undetermined reflectivity type. r set to 1\n");
+          fprintf(stderr,"ERROR (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
           return 1.0;
         }
     }
