@@ -1995,7 +1995,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     }
     coutf("");
     coutf("      // %s", comp->name);
-    coutf("      if (!ABSORBED) {");
+    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     // coordinate transformations (wrt to PREVIOUS)
     coutf("        if (_%s_var._rotation_is_identity)", comp->name);
     coutf("          coords_get("
