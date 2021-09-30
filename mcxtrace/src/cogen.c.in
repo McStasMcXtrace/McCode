@@ -2019,6 +2019,20 @@ int cogen_rt_funnel(struct instr_def *instr)
       cout( "        if (_particle->_restore)");
       coutf("          *_particle = _particle_save;", comp->index);
     };
+    // GROUP
+    if (comp->group) {
+      coutf("      // GROUP %s: from %s [%i] to %s [%i]", comp->group->name,
+        comp->group->first_comp, comp->group->first_comp_index,
+        comp->group->last_comp,  comp->group->last_comp_index);
+      // skip_following_when_scattered (to end of group)
+      coutf("      if (SCATTERED) _particle->_index = %i; // when SCATTERED in GROUP: reach exit of GROUP after %s",
+        comp->group->last_comp_index, comp->group->last_comp);
+      // final_absorb_when_all_not_scattered
+      if (comp->index == comp->group->last_comp_index)
+        coutf("      else ABSORB;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
+      else // comp_absorb_sends_to_next
+        coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
+    }
     coutf("        _particle->_index++;");
     coutf("      }");
     first=0;
