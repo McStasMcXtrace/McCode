@@ -63,11 +63,11 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT psd_pre = 
 PSD_monitor(xwidth = 3*TR, yheight = 3*TR,
-	    nx=100, ny=100, filename="psdpre.dat")
+    nx=100, ny=100, filename="psdpre.dat")
 AT (0, 0, L1-1e-9) RELATIVE generic_source 
 
 COMPONENT emon_pre = E_monitor(nE=200, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,  
-				xwidth=0, yheight=0, nE=200, Emin=30.05-7.1,Emax=30.05+7.1, restore_xray=1,filename="emon_pre.dat") 
+    xwidth=0, yheight=0, nE=200, Emin=30.05-7.1,Emax=30.05+7.1, restore_xray=1,filename="emon_pre.dat")
 AT (0, 0, L1-1e-10) RELATIVE generic_source  
 
 
@@ -77,7 +77,7 @@ AT(0,0,L1) RELATIVE generic_source
 EXTEND
 %{
     if (SCATTERED) {
-        reflecs=mcScattered;
+        reflecs=SCATTERED;
     }
 %}
 
