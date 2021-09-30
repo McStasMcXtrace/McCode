@@ -15,7 +15,7 @@
 * Position-sensitive monitor.
 *
 * %D
-* An nx times ny pixel PSD monitor, which only counts photons with energy in an interval
+* An nx times ny pixel energy resolved PSD monitor, which only counts photons with energy in an interval
 * given by Emin and Emax in nE energy bins. The default energy interval is (almost) infinite, with a single bin.
 * If nE>1 the component will output nE detector files + one which is integrated over the full energy interval.
 *
@@ -38,6 +38,7 @@
 * nE: [ ]           Number of energy bins.
 * filename: [str]   Name of file in which to store the detector image.
 * restore_xray: [ ] If set, the monitor does not influence the xray state.
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * %E
 *******************************************************************************/
@@ -67,14 +68,12 @@ INITIALIZE
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            fprintf(stderr,"Error (%s): Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
     if (Emax<=Emin){
-        fprintf(stderr,"Error (%s): Unmeaningful energy interval E:[%g,%g]\n Aborting",NAME_CURRENT_COMP,Emin,Emax);
-      exit(0);
+      fprintf(stderr,"ERROR (%s): Unmeaningful energy interval E:[%g,%g]\n Aborting",NAME_CURRENT_COMP,Emin,Emax);
+      exit(-1);
     }
     if (Emax==0){
       Emax=FLT_MAX;
@@ -128,6 +127,7 @@ TRACE
 
 SAVE
 %{
+    if(!nowritefile){
       if (nE<=1){
           DETECTOR_OUT_2D(
                   "PSD monitor",
@@ -168,6 +168,7 @@ SAVE
                       ff);
           }
       }
+    }
 %}
 
 FINALLY
@@ -183,6 +184,7 @@ FINALLY
 
 MCDISPLAY
 %{
+  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,
