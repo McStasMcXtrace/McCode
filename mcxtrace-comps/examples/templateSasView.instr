@@ -12,8 +12,7 @@
 * Modified by: Erik b knudsen
 * Date: Jan 2017.
 * Origin: DTU Physics / ESS DMSC
-* Release: 
-* Version: $Revision$
+* Release: 1.5
 * 
 * %INSTRUMENT_SITE: Templates
 *
@@ -65,11 +64,12 @@ COMPONENT coll2 = Slit(
 /*%}*/
 SPLIT COMPONENT sample= SasView_model(model_index=10, model_scale=1,  model_pars={ 4, 1, 20, 400, 60, 60 },
 model_abs=0.0,
-                         xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=3.6, focus_yh=3.6, target_index=1)
+  xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=3.6, focus_yh=3.6, target_index=1)
    AT (0,0,0.2) RELATIVE coll2
 EXTEND %{
-       if (!SCATTERED) ABSORB;  
+  if (!SCATTERED) ABSORB;
 %}
+
 COMPONENT detector = PSD_monitor(
     nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
     xmax = 0.3, ymin = -0.3, ymax = 0.3)

@@ -4,11 +4,10 @@
 * Instrument: Test_monitors (rename also the example and DEFINE lines below)
 *
 * %Identification
-* Written by: Your name (email)
-* Date: Current Date
-* Origin: Your institution
-* Release: McXtrace 1.0
-* Version: 0.2
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan 21
+* Origin: DTU Physics
+* Version: 1,0
 * %INSTRUMENT_SITE: Tests
 *
 * Unit test instrument for various monitors.
@@ -16,10 +15,14 @@
 * %Description
 * This is a unit test instrument to test some of the McXtrace monitors.
 *
-* Example: test.instr <parameters=values>
+* %Example: Test_monitors.instr monitor_no=1 Detector: epsd0_I=1.81362
+* %Example: Test_monitors.instr monitor_no=2 Detector: epsd1_I=1.81367
+* %Example: Test_monitors.instr monitor_no=3 Detector: div_I=1.83645
+* %Example: Test_monitors.instr monitor_no=4 Detector: mnd_psd_I=1.83632
+*
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
+* monitor_no: [ ] Pick a monitor to test - causes the others not to write any data files.
 *
 * %Link
 * A reference/HTML link for more information
@@ -28,7 +31,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT test(dummy=1)
+DEFINE INSTRUMENT Test_monitors(monitor_no=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -61,15 +64,21 @@ COMPONENT src = Source_gaussian(
     sig_x = 2e-5, sig_y = 1e-5, sigPr_x = 1e-5, sigPr_y = 2e-6,
     dist = 1, gauss = 1, focus_xw = 1e-3, focus_yh = 1e-3,
     E0 = 12.5, dE = 1, dlambda = 0, phase = 1)
-  AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT epsd0= EPSD_monitor(
-	restore_xray=1,xwidth=1e-3, yheight=1e-3, filename="epsd0", Emin=10, Emax=15)
-AT(0,0,10) RELATIVE src
+    nowritefile=(monitor_no==1?0:1),restore_xray=1,xwidth=1e-3, yheight=1e-3, filename="epsd0", Emin=10, Emax=15)
+WHEN(monitor_no==1) AT(0,0,10) RELATIVE src
 
-COMPONENT epsd1 =COPY(epsd0)(filename="epsd1",nE=20)
-AT(0,0,10) RELATIVE src
+COMPONENT epsd1 =COPY(epsd0)(nowritefile=(monitor_no==2?0:1),filename="epsd1",nE=20)
+WHEN(monitor_no==2) AT(0,0,10) RELATIVE src
 
+COMPONENT div = Divergence_monitor(xwidth=1e-3, yheight=1e-3, filename="div0", nowritefile=(monitor_no==3?0:1))
+WHEN(monitor_no==3) AT(0,0,10) RELATIVE src
+
+COMPONENT mnd_psd = Monitor_nD(xwidth=1e-3, yheight=1e-3, options="x limits -1e-3 1e-3 y limits -1e-3 1e-3",
+    nowritefile=(monitor_no==4?0:1))
+WHEN(monitor_no==4) AT(0,0,10) RELATIVE src
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
 FINALLY

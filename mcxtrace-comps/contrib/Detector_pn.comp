@@ -22,14 +22,14 @@
 * %P
 * INPUT PARAMETERS
 *
-* xwidth: Width of block. (m) 
-* yheight: Height of block. (m)
-* zdepth:  Thickness of block. (m)
-* material_datafile: file where the material parameters for the scintillator may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xwidth:[m]        Width of block.
+* yheight: [m]      Height of block.
+* zdepth: [m]       Thickness of block.
+* material_datafile: [str]   File where the material parameters for the scintillator may be found. Format is similar to what may be found off the NISP website.
+* nx: [m]           Number of pixel columns.
+* ny: [m]           Number of pixel rows.
+* filename: [str]   Name of file in which to store the detector image.
+* restore_xray: [ ] If set, the monitor does not influence the xray state.
 *
 * OUTPUT PARAMETERS:
 *
@@ -40,7 +40,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Detector_pn
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename=0, restore_xray=0,xwidth=1e-2,yheight=1e-2,zdepth=1e-6) 
+SETTING PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename="", restore_xray=0,xwidth=1e-2,yheight=1e-2,zdepth=1e-6)
 OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
@@ -59,8 +59,7 @@ DECLARE
   int Z;
   double At;
   double rho;
-  double *E;
-  double *Mu;
+  t_Table T;
 
   DArray2d PSD_N;
   DArray2d PSD_p;
@@ -80,7 +79,7 @@ INITIALIZE
   ymax=yheight/2.0;
   ymin=-ymax;
 
-  t_Table T;
+  //t_Table T;
   if ( (status=Table_Read(&T,material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
@@ -90,20 +89,6 @@ INITIALIZE
   //if (!At) At=strtod(header_parsed[1],NULL);
   //if (!Z) Z=strtol(header_parsed[0],NULL,10);
   if (!rho) rho=strtod(header_parsed[2],NULL);
-  E=malloc(sizeof(double)*(T.rows+1));
-  mu=malloc(sizeof(double)*(T.rows+1));
-
-  int i,j;
-  for (i=0;i<T.rows;i++){
-    E[i]=T.data[i*T.columns];
-    Mu[i]=T.data[1+i*T.columns]*rho*1e2;     /*mu is now in SI, [m^-1]*/ 
-  }
-
-  E[T.rows]=-1.0;
-  Mu[T.rows]=-FLT_MAX;
-  
-  Table_Free(&T);
-  
   
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
@@ -130,20 +115,12 @@ TRACE
     /*table interpolation*/
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
-    i=0;
-    while (e>E[i]){
-      i++;
-      if (E[i]==-1){
-        fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;
-      }
-    }
-    alpha=(e-E[i-1])/(E[i]-E[i-1]);
-    mu=(1-alpha)*Mu[i-1]+alpha*Mu[i];
-    //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
-    
+    mu=Table_Value(T,e,1)*rho*1e2;
+
     l1-=l0; 
     p*=(1-exp(-mu*l1));
-  //photon detected in surface pixel  
+
+    //photon detected in surface pixel  
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
       i = floor((x - xmin)*nx/(xmax - xmin));
@@ -158,8 +135,7 @@ TRACE
     }
     if (restore_xray) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
-      }
-    
+    }
   }
 %}
 
@@ -177,8 +153,7 @@ SAVE
  
 FINALLY
 %{
-  free(Mu);
-  free(E);
+  Table_Free(&T);
   destroy_darr2d(PSD_N);
   destroy_darr2d(PSD_p);
   destroy_darr2d(PSD_p2);
