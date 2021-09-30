@@ -71,7 +71,13 @@ Changes in McStas 3.1, October XX, 2021
    HPC package. Versions 20.x and 21.x should all work. On Windows 64bit systems,
    support is expected to arrive end of 2021. macOS is unfortunately not supported
    by NVIDIA HPC acceleration.
-   
+
+ Any GPU-capable McStas instrument now feature three new input parameters for GPU
+ parallelisation flow-control:
+  --vecsize                  OpenACC vector-size
+  --numgangs                 Number of OpenACC gangs
+  --gpu_innerloop            Maximum rays to process in a kernel call
+
  Main features and changes with respect to the 2.x series:
  1. Modernised code-generation scheme based on functions instead of #defines, which brings
     many befefits.
@@ -137,6 +143,7 @@ Tools:
    and Windows we default to use the OS file-type settings, i.e. whatever you get by double-clicking
    an instr file.) Use ctrl/meta + shift + e to spawn the editor from mcgui.
  - User-level configuration files are now in a more user-readable form with indentation.
+ - Use mcrun --write-user-config to save your user-level configuration file.
  - Config setting 'QSCI' has been added, putting this to 0 disables the QScintilla editor.
  - On macOS (from 11.0 Big Sur onwards), mcgui assumes light/dark mode with the system settings. A
    side-effect is that the syntax-highlighting in our QScintilla editor becomes close-to-unredable.
@@ -182,6 +189,7 @@ Tools:
    and Windows we default to use the OS file-type settings, i.e. whatever you get by double-clicking
    an instr file.) Use ctrl/meta + shift + e to spawn the editor from mcgui.
  - User-level configuration files are now in a more user-readable form with indentation.
+ - Use mcrun --write-user-config to save your user-level configuration file.
  - Config setting 'QSCI' has been added, putting this to 0 disables the QScintilla editor.
  - On macOS (from 11.0 Big Sur onwards), mcgui assumes light/dark mode with the system settings. A
    side-effect is that the syntax-highlighting in our QScintilla editor becomes close-to-unredable.
