@@ -125,6 +125,7 @@ Changes in McStas 3.1, October XX, 2021
    * At the time of release, the nightly tests http://new-nightly.mccode.org/latest/overview.html show that
      - McStas 3.1 ships with 238 instruments that succesfully compile on both CPU and GPU
      - These instruments use 162 of our components
+     - 181 tests produce credible output data on GPU
    * We don't ship an updated set of manuals for McStas 3.1, but essential documentation is available
      on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
 
