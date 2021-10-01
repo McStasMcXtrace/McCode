@@ -15,7 +15,7 @@
 * Release: McXtrace 1.1
 *
 * Blocks of attenuating material in off format
-* 
+*
 * %D
 *
 * This component is a model of 1 or more off-shaped blocks attenuating the x-ray beam.
@@ -30,7 +30,7 @@
 * Rh.txt  chess.off 0 -0.01 0   0 0 0
 *
 * A xwidth etc of zero means use whatever dimensions are in the off/ply file. If xwidth (or yheight or zdepth)
-* is nonzero, the component tries to scale the object to fill that dimension. This is an experimental option. 
+* is nonzero, the component tries to scale the object to fill that dimension. This is an experimental option.
 *
 * %P
 * INPUT PARAMETERS
@@ -41,9 +41,9 @@
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int refraction=1, string objects="input_small.dat", string geometry=0) 
-OUTPUT PARAMETERS (object_data,objectsc)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+SETTING PARAMETERS (int refraction=1, string objects="input_small.dat", string geometry=0)
+OUTPUT PARAMETERS ()
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
@@ -64,7 +64,7 @@ SHARE
     const double k=sqrt(scalar_prod(*kx,*ky,*kz, *kx,*ky,*kz));
     const double nr=(1.0-delta0)/(1.0-delta1);
     double kxi=*kx;
-    double kyi=*ky;       
+    double kyi=*ky;
     double kzi=*kz;
     double s;
 
@@ -80,7 +80,7 @@ SHARE
       *ky=nr* (kyi) - (nr*(-s)+sqrt(1.0-sinth2))*(-ny);
       *kz=nr* (kzi) - (nr*(-s)+sqrt(1.0-sinth2))*(-nz);
     } else {
-      /*n points oppsite to k - i.e. out of material 1, into mat. 0*/ 
+      /*n points oppsite to k - i.e. out of material 1, into mat. 0*/
       double sinth2=nr*nr*(1.0-s*s);
       *kx=nr* (kxi) - (nr*s+sqrt(1.0-sinth2))*nx;
       *ky=nr* (kyi) - (nr*s+sqrt(1.0-sinth2))*ny;
@@ -109,7 +109,7 @@ INITIALIZE
   fgets(line,512,fp);
   objectsc=atoi(line);
   prms=calloc(objectsc,sizeof(struct _abs_object_data_struct));
-  
+
   int i;
   for (i=0;i<objectsc;i++){
     fgets(line,512,fp);
@@ -117,7 +117,7 @@ INITIALIZE
     int status;
     sscanf(line,"%s %s \n", mat_fn,off_fn);
    /*sscanf(line,"%s %s %f %f %f %f %f %f\n", mat_fn,off_fn,prms[i].xx,prms[i].yy,prms[i].zz,prms[i].xwidth,prms[i].yheight,prms[i].zdepth);*/
- 
+
     if ( (status=Table_Read(&(prms[i].table),mat_fn,0))==-1){
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",mat_fn,NAME_CURRENT_COMP);
       exit(-1);
@@ -131,18 +131,18 @@ INITIALIZE
     /*which columns holds the mus*/
     prms[i].mu_c=5;
     if (prms[i].table.columns==3) {
-      /*format for compound material (XCOM) is assumed. For now set delta_prefactor=0 => delta=0 (no refraction).*/ 
+      /*format for compound material (XCOM) is assumed. For now set delta_prefactor=0 => delta=0 (no refraction).*/
       prms[i].mu_c=1;
-      prms[i].delta_prefactor=0; 
+      prms[i].delta_prefactor=0;
     }else{
       prms[i].delta_prefactor= NA*(prms[i].rho*1e-24)/prms[i].Ar * 2.0*M_PI*RE;
     }
-    /*read in the off/ply data from file. The literal 1 is to not center the object in local (0,0,0)*/ 
+    /*read in the off/ply data from file. The literal 1 is to not center the object in local (0,0,0)*/
     if (!off_init(off_fn, prms[i].obj_xwidth, prms[i].obj_yheight, prms[i].obj_zdepth, 1, &(prms[i].offdata))) {
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",off_fn,NAME_CURRENT_COMP);
       exit(-1);
     }
-    printf("i=%d, mfn=%s, ofn=%s\n",i,mat_fn,off_fn);  
+    printf("i=%d, mfn=%s, ofn=%s\n",i,mat_fn,off_fn);
   }
   fclose(fp);
 %}
@@ -159,11 +159,11 @@ TRACE
   struct {
     double l0,dl;
     double mu0,beta,delta;
-    double kx,ky,kz;
+    double _kx,_ky,_kz;
     int idx;
     int entry_exit;
   } *intersections,intersection_tmp;
-  
+
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=k*K2E;
   kx_vac=kx;
@@ -176,7 +176,7 @@ TRACE
     l0=0;
     l1=0;
     status = off_x_intersect(&l0, &l1, NULL, NULL, x-prms[i].xx, y-prms[i].yy, z-prms[i].zz, kx, ky, kz, prms[i].offdata );
-    if (status>1){/*ignore singlet intersections*/ 
+    if (status>1){/*ignore singlet intersections*/
       if (l0<0 && l1 >0){
         /*we're already inside some thing. Set l0 to 0;*/
         l0=0;
@@ -207,9 +207,9 @@ TRACE
         intersections[j].mu0=Table_Value(prms[i].table,e,prms[i].mu_c)*prms[i].rho*1e2;
         intersections[j].beta = mu0/(2*k);
         /*change k we're now inside some material*/
-        intersections[j].kx=kx_vac*(1.0-intersections[j].delta);
-        intersections[j].ky=ky_vac*(1.0-intersections[j].delta);
-        intersections[j].kz=kz_vac*(1.0-intersections[j].delta);
+        intersections[j]._kx=kx_vac*(1.0-intersections[j].delta);
+        intersections[j]._ky=ky_vac*(1.0-intersections[j].delta);
+        intersections[j]._kz=kz_vac*(1.0-intersections[j].delta);
       }
     }
   }
@@ -235,7 +235,7 @@ TRACE
     //kx=kx_vac;
     //ky=ky_vac;
     //kz=kz_vac;
-	
+
     /*we may reenter this object at a later stage so check for intersection again*/
     l0=-1;l1=-1;status=0;
     i=intersections[j].idx;
@@ -245,8 +245,7 @@ TRACE
       intersection_tmp=intersections[j];/*store the computed material values for later*/
       intersection_tmp.dl=l1-l0;
       if (l0<0 && l1 >0){
-        /*we're already inside some thing. Set l0 to 0;*/
-        
+        /*already inside something. Set l0 to 0;*/
         l0=0;
       }
       if (l0>=0) {
@@ -257,7 +256,7 @@ TRACE
           intersections[m]=intersections[m+1];
 	  m++;
         }
-	intersections[m]=intersection_tmp;/*reinsert values but override new intersection lengths*/ 
+	intersections[m]=intersection_tmp;/*reinsert values but override new intersection lengths*/
         intersections[m].l0=l0;
       }
       /*we have added another intersection so don't progress j*/
@@ -287,18 +286,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
