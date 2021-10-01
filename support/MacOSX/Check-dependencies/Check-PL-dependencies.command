@@ -114,7 +114,8 @@ then
     PERLVER="SCIPDL"
     TKPKG=""
     SCIPDL="SciPDL-v2.019.dmg"
-else
+elif [ "$OSXVER_MAJOR" == "10" ];
+then
     if [ "$OSXVER" == "6" ];
     then
 	# 10.6 aka Snow Leopard
@@ -176,6 +177,19 @@ else
 	PERLVER="SYSTEM"
 	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
 	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+    fi
+else
+    osascript -e "tell app \"System Events\" to display dialog \"Your macOS version ${OSXVER_MAJOR}.${OSXVER} is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to give partial support on Big Sur 11.x?\""
+    rc1=$?;
+    if [[ $rc1 == 0 ]];
+    then
+        # Assume that what works partiallu for 11.0
+	PERLVER="SCIPDL"
+	TKPKG=""
+	SCIPDL="SciPDL-v2.019.dmg"
+    else
+	echo "OK, cancelling install"
+	exit 1;
     fi
 fi
 
