@@ -41,14 +41,14 @@
 * Modified by: PW May 2020: version 2.6.1
 * Modified by: PW November 2020: version 2.7
 * Modified by: PW December 2020: version 3.0
-* Modified by: PW September 2021: version 2.7.1
+* Modified by: PW September-October 2021: version 2.7.1
 * Modified by: PW September-October 2021: version 3.1
 *
-* This file is part of McStas 3.1, released October XX 2021.
+* This file is part of McStas 3.1, released October 11th 2021.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.1, October XX, 2021
+Changes in McStas 3.1, October 11th, 2021
 
  McStas 3.1 is the second official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
@@ -165,7 +165,7 @@ Tools:
 We hope you will enjoy this new release!!!
 
 
-Changes in McStas v.2.7.1, October 1st, 2021
+Changes in McStas v.2.7.1, October 4th, 2021
 
  McStas 2.7.1 is the 11th release in the 2.x series, provides minor incremental
  improvements and fixes various minor issues with McStas 2.7
