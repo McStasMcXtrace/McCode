@@ -199,8 +199,8 @@ Tools:
    - Start mcgui in light mode, then switch to dark mode
 
  Platforms:
- - Not much new to report here. We still support 64bit Windows 10/11, all recent 64bit macOS including 11.0 Big Sur on
-   both Intel and Apple Silicon/M1 processors. Debian-based and RPM-based distros.
+ - We still support 64bit Windows 10/11 on Intel, all recent 64bit macOS including 11.0 Big Sur on
+   both Intel and Apple Silicon/M1 processors. Debian-based distros on Intel and Arm, RPM-based distros on Intel.
    (RPMs are built on/for CentOS and Fedora, you may get varying milage elsewhere.)
 
  Libraries:
