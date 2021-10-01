@@ -85,7 +85,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, lattice_x_a=0, lattice_y_b=1.0, lattice_z_c=1.0,
         length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1,
-        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
+        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0, int verbose=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
@@ -115,8 +115,8 @@ DECLARE
 
 INITIALIZE
 %{
-    fflush(NULL); // put diagnostics in order!
-    printf("Component %s: starting up\n",NAME_CURRENT_COMP);
+    if(verbose)
+      printf("Component %s: starting up\n",NAME_CURRENT_COMP);
     int status;
     if (material){
         if ((status=Table_Read(&(m_t),material,0))==-1){
@@ -149,13 +149,11 @@ INITIALIZE
     cos_alpha0=cos(alpha);
     sin_alpha0=sin(alpha);
 
-    printf("Component %s: curve=(%.5f %.5f %.5f) lcurve=(%.3f %.5f %.5f)\n\n",NAME_CURRENT_COMP,
-            a2inv, b2inv, c2inv, l_a2inv, l_b2inv, l_c2inv
-          );
-
-    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
-
-    fflush(NULL); // put diagnostics in order!
+    if (verbose){
+      printf("Component %s: curve=(%.5f %.5f %.5f) lcurve=(%.3f %.5f %.5f)\n\n",NAME_CURRENT_COMP,
+          a2inv, b2inv, c2inv, l_a2inv, l_b2inv, l_c2inv);
+      printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+    }
 %}
 
 TRACE
@@ -256,7 +254,8 @@ TRACE
                          debye_waller_B, E,
                          crystal_type,structure_factor_scale_r,structure_factor_scale_i);
             if(thetaB==0){
-              fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
+              if(verbose){
+                fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
               ABSORB;
             }
 
