@@ -53,7 +53,7 @@
 *                                   of scattering are considered.
 * Reciprocal:                []     If this parameter is set to 0, then the lattice vectors should be given in real space.
 *                                   Anything else implies that the vectors are given in reciprocal space.
-*
+* verbose:                   []     If nonzero - output more info to the console.
 * %E
 ***********************************************************************************************************************************/
 
@@ -61,8 +61,8 @@ DEFINE COMPONENT Polycrystal
 
 DEFINITION PARAMETERS()
 
-SETTING PARAMETERS(string MapFile,
-                   string OrientationsFile,
+SETTING PARAMETERS(string MapFile = "",
+                   string OrientationsFile = "",
                    string ReflectionsDatafile = "Si.lau",
                    string MaterialDatafile    = "Si.txt",
 
@@ -83,12 +83,13 @@ SETTING PARAMETERS(string MapFile,
                    ProbabilityOfTransmission = 0.01,
                    SigmaAbsorbtion           = 0.0,
                    SigmaIncoherent           = 0.0,
-                   MaxNumberOfReflections    = 1
-                   Reciprocal                = 0)
+                   MaxNumberOfReflections    = 1,
+                   Reciprocal                = 0,
+                   verbose                   = 0)
 
 OUTPUT PARAMETERS()
 
-DECLARE
+SHARE
 %{
     // External libraries
     %include "read_table-lib"
@@ -170,10 +171,10 @@ DECLARE
         int ColumnOrder[5];
 
         // Flags used to raise warnings
-        int Reciprocal;
+        int Recip;
 
-        // Sigma of Delta d / d
-        double DeltadOverd;
+        // Sigma of delta d / d
+        double Deltad_d;
 
         // Coordinates of unit cell vectors
         double LatticeVectora[3];
@@ -194,10 +195,10 @@ DECLARE
         double LatticeAngleC;
 
         // Absorbtion crosssection
-        double SigmaAbsorbtion;
+        double SigmaAbs;
 
         // Incoherent crosssection
-        double SigmaIncoherent;
+        double SigmaInc;
 
         // Unit cell volume
         double VolumeOfUnitCell;
@@ -275,13 +276,13 @@ DECLARE
             Table_Read(&sTable, ReflectionsDatafile, 1);
 
             if (sTable.columns < 4) {
-                fprintf(stderr, "%s: Error: The number of columns in %s should be at least %d for [h, k, l, F2]\n", NAME_CURRENT_COMP, ReflectionsDatafile, 4);
-                return(0);
+              fprintf(stderr, "Error (%s): The number of columns in %s should be at least %d for [h, k, l, F2]\n", "ReadReflectionData", ReflectionsDatafile, 4);
+              return(-1);
             }
 
             if (!sTable.rows) {
-                fprintf(stderr, "%s: Error: The number of rows in %s should be at least %d\n", NAME_CURRENT_COMP, ReflectionsDatafile, 1);
-                return(0);
+              fprintf(stderr, "Error (%s): The number of rows in %s should be at least %d\n", "ReadReflectionData", 1);
+              return(-1);
             } else {
                 NumberOfRows = sTable.rows;
             }
@@ -310,16 +311,16 @@ DECLARE
 
             if (Parsing) {
 
-                if (Parsing[0] && !hklInfo->SigmaAbsorbtion)       hklInfo->SigmaAbsorbtion      = atof(Parsing[0]);
-                if (Parsing[1] && !hklInfo->SigmaAbsorbtion)       hklInfo->SigmaAbsorbtion      = atof(Parsing[1]);
-                if (Parsing[2] && !hklInfo->SigmaIncoherent)       hklInfo->SigmaIncoherent      = atof(Parsing[2]);
-                if (Parsing[3] && !hklInfo->SigmaIncoherent)       hklInfo->SigmaIncoherent      = atof(Parsing[3]);
+                if (Parsing[0] && !hklInfo->SigmaAbs)       hklInfo->SigmaAbs      = atof(Parsing[0]);
+                if (Parsing[1] && !hklInfo->SigmaAbs)       hklInfo->SigmaAbs      = atof(Parsing[1]);
+                if (Parsing[2] && !hklInfo->SigmaInc)       hklInfo->SigmaInc      = atof(Parsing[2]);
+                if (Parsing[3] && !hklInfo->SigmaInc)       hklInfo->SigmaInc      = atof(Parsing[3]);
                 if (Parsing[4])                   	    	       hklInfo->ColumnOrder[0]       = atoi(Parsing[4]);
                 if (Parsing[5])                   	    	       hklInfo->ColumnOrder[1]       = atoi(Parsing[5]);
                 if (Parsing[6])                   	    	       hklInfo->ColumnOrder[2]       = atoi(Parsing[6]);
                 if (Parsing[7])                   	    	       hklInfo->ColumnOrder[3]       = atoi(Parsing[7]);
                 if (Parsing[8])                   	    	       hklInfo->ColumnOrder[4]       = atoi(Parsing[8]);
-                if (Parsing[9] && hklInfo->DeltadOverd < 0)        hklInfo->DeltadOverd          = atof(Parsing[9]);
+                if (Parsing[9] && hklInfo->Deltad_d < 0)        hklInfo->Deltad_d             = atof(Parsing[9]);
                 if (Parsing[10] && !hklInfo->LatticeVectoraLength) hklInfo->LatticeVectoraLength = atof(Parsing[10]);
                 if (Parsing[11] && !hklInfo->LatticeVectorbLength) hklInfo->LatticeVectorbLength = atof(Parsing[11]);
                 if (Parsing[12] && !hklInfo->LatticeVectorcLength) hklInfo->LatticeVectorcLength = atof(Parsing[12]);
@@ -342,8 +343,8 @@ DECLARE
 
         // Assign variables
         if (NumberOfAtoms > 1) {
-            hklInfo->SigmaAbsorbtion *= NumberOfAtoms;
-            hklInfo->SigmaIncoherent *= NumberOfAtoms;
+            hklInfo->SigmaAbs *= NumberOfAtoms;
+            hklInfo->SigmaInc *= NumberOfAtoms;
         }
 
         // Special cases for the structure definition
@@ -395,22 +396,22 @@ DECLARE
 
         // Parameters consistency checks
         if (!hklInfo->LatticeVectora[0] && !hklInfo->LatticeVectora[1] && !hklInfo->LatticeVectora[2] && !hklInfo->LatticeVectoraLength) {
-            fprintf(stderr, "%s: Error: Wrong a lattice vector definition.\n", NAME_CURRENT_COMP);
+            fprintf(stderr, "Error (%s): Wrong a lattice vector definition.\n", "ReadReflectionData");
             return(0);
         }
 
         if (!hklInfo->LatticeVectorb[0] && !hklInfo->LatticeVectorb[1] && !hklInfo->LatticeVectorb[2] && !hklInfo->LatticeVectorbLength) {
-            fprintf(stderr, "%s: Error: Wrong b lattice vector definition.\n", NAME_CURRENT_COMP);
+            fprintf(stderr, "Error (%s): Wrong b lattice vector definition.\n", "ReadReflectionData");
             return(0);
         }
 
         if (!hklInfo->LatticeVectorc[0] && !hklInfo->LatticeVectorc[1] && !hklInfo->LatticeVectorc[2] && !hklInfo->LatticeVectorcLength) {
-            fprintf(stderr, "%s: Error: Wrong c lattice vector definition.\n", NAME_CURRENT_COMP);
+            fprintf(stderr, "Error (%s): Wrong c lattice vector definition.\n", "ReadReflectionData");
             return(0);
         }
 
-        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Reciprocal) {
-            fprintf(stderr, "%s: Error: Selecting reciprocal cell and angles is unmeaningful.\n", NAME_CURRENT_COMP);
+        if (hklInfo->LatticeAngleA && hklInfo->LatticeAngleB && hklInfo->LatticeAngleC && hklInfo->Recip) {
+            fprintf(stderr, "Error (%s): Selecting reciprocal cell and angles is unmeaningful.\n", "ReadReflectionData");
             return(0);
         }
 
@@ -456,26 +457,26 @@ DECLARE
                     pow(hklInfo->LatticeVectorc[1], 2));
 
             if (PrintOrientations) {
-                fprintf(stderr, "%s: \nStructure: \na = %g b = %g c = %g \naa = %g bb = %g cc = %g \n", NAME_CURRENT_COMP, asLength, bsLength, csLength, hklInfo->LatticeAngleA, hklInfo->LatticeAngleB, hklInfo->LatticeAngleC);
+                fprintf(stderr, "INFO (%s): \nStructure: \na = %g b = %g c = %g \naa = %g bb = %g cc = %g \n", "ReadReflectionData", asLength, bsLength, csLength, hklInfo->LatticeAngleA, hklInfo->LatticeAngleB, hklInfo->LatticeAngleC);
             }
         } else {
 
-            if (!hklInfo->Reciprocal) {
+            if (!hklInfo->Recip) {
 
                 if (PrintOrientations) {
-                    fprintf(stderr, "%s: \nStructure; \na = [%g, %g, %g] \nb = [%g, %g, %g] \nc = [%g, %g, %g] \n", NAME_CURRENT_COMP, hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
+                    fprintf(stderr, "INFO (%s): \nStructure; \na = [%g, %g, %g] \nb = [%g, %g, %g] \nc = [%g, %g, %g] \n", "ReadReflectionData", hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
                 }
 
             } else {
 
                 if (PrintOrientations) {
-                    fprintf(stderr, "%s: \nStructure: \na* = [%g, %g, %g] \nb* = [%g, %g, %g] \nc* = [%g, %g, %g] \n", NAME_CURRENT_COMP, hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
+                    fprintf(stderr, "INFO (%s): \nStructure: \na* = [%g, %g, %g] \nb* = [%g, %g, %g] \nc* = [%g, %g, %g] \n", "ReadReflectionData", hklInfo->LatticeVectora[0] ,hklInfo->LatticeVectora[1] ,hklInfo->LatticeVectora[2], hklInfo->LatticeVectorb[0] ,hklInfo->LatticeVectorb[1] ,hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0] ,hklInfo->LatticeVectorc[1] ,hklInfo->LatticeVectorc[2]);
                 }
             }
         }
 
         // Compute reciprocal or direct lattice vectors
-        if (!hklInfo->Reciprocal) {
+        if (!hklInfo->Recip) {
             vec_prod(Temp[0], Temp[1], Temp[2], hklInfo->LatticeVectorb[0], hklInfo->LatticeVectorb[1], hklInfo->LatticeVectorb[2], hklInfo->LatticeVectorc[0], hklInfo->LatticeVectorc[1], hklInfo->LatticeVectorc[2]);
             hklInfo->VolumeOfUnitCell = fabs(scalar_prod(hklInfo->LatticeVectora[0], hklInfo->LatticeVectora[1], hklInfo->LatticeVectora[2], Temp[0], Temp[1], Temp[2]));
 
@@ -534,12 +535,12 @@ DECLARE
         }
 
         if (!hklInfo->ColumnOrder[0] || !hklInfo->ColumnOrder[1] || !hklInfo->ColumnOrder[2]) {
-            fprintf(stderr, "%s: Error: Wrong h, k, l column definition\n", NAME_CURRENT_COMP);
+            fprintf(stderr, "Error (%s): Wrong h, k, l column definition\n", "ReadReflectionData");
             return(0);
         }
 
         if (!hklInfo->ColumnOrder[3] && !hklInfo->ColumnOrder[4]) {
-            fprintf(stderr, "%s: Error: Wrong F, F2 column definition\n", NAME_CURRENT_COMP);
+            fprintf(stderr, "Error (%s): Wrong F, F2 column definition\n", "ReadReflectionData");
             return(0);
         }
 
@@ -588,10 +589,10 @@ DECLARE
             hklData[i].u1[1] = hklData[i].Tau[1] / hklData[i].TauLength;
             hklData[i].u1[2] = hklData[i].Tau[2] / hklData[i].TauLength;
 
-            hklData[i].Sigma[0] = FWHM2RMS * hklInfo->DeltadOverd * hklData[i].TauLength;
+            hklData[i].Sigma[0] = FWHM2RMS * hklInfo->Deltad_d * hklData[i].TauLength;
 
             // Find two arbitrary axes perpendicular to tau and each other
-            normal_vec(b1[0], b1[1], b1[2], hklData[i].u1[0], hklData[i].u1[1], hklData[i].u1[2]);
+            normal_vec(&(b1[0]), &(b1[1]), &(b1[2]), hklData[i].u1[0], hklData[i].u1[1], hklData[i].u1[2]);
             vec_prod(b2[0], b2[1], b2[2], hklData[i].u1[0], hklData[i].u1[1], hklData[i].u1[2], b1[0], b1[1], b1[2]);
 
             // Find the two mosaic axes perpendicular to tau
@@ -611,7 +612,7 @@ DECLARE
 
             } else if (MosaicityA > 0 && MosaicityB > 0 && MosaicityC > 0) {
                 // Use anisotropic mosaic
-                fprintf(stderr, "%s: Warning: You are using an experimental feature: anistropic mosaicity. Please examine your data carefully.\n", NAME_CURRENT_COMP);
+                fprintf(stderr, "Warning (%s): You are using an experimental feature: anistropic mosaicity. Please examine your data carefully.\n", "ReadReflectionData");
 
                 // Compute the jacobian of (tau_v, tau_n) from rotations around the unit cell vectors
                 struct hklDataStruct *CurrenthklData = &(hklData[i]);
@@ -701,11 +702,11 @@ DECLARE
             } else if (MosaicityAB[0] != 0 && MosaicityAB[1] != 0) {
 
                 if ((MosaicityAB[2] == 0 && MosaicityAB[3] == 0 && MosaicityAB[4] == 0) || (MosaicityAB[5] == 0 && MosaicityAB[6] == 0 && MosaicityAB[7] == 0)) {
-                    fprintf(stderr,"%s: Error: In-plane mosaics are specified but one (or both) in-plane reciprocal vector is the zero vector.\n", NAME_CURRENT_COMP);
-                    return(0);
+                  fprintf(stderr,"Error (%s): In-plane mosaics are specified but one (or both) in-plane reciprocal vector is the zero vector.\n", "ReadReflectionData");
+                    return(-1);
                 }
 
-                fprintf(stderr, "%s: Warning: You are using an experimental feature: \"in-plane\" anistropic mosaicity. Please examine your data carefully.\n", NAME_CURRENT_COMP);
+                fprintf(stderr, "Warning (%s): You are using an experimental feature: \"in-plane\" anistropic mosaicity. Please examine your data carefully.\n", "ReadReflectionData");
 
                 struct hklDataStruct *CurrenthklData = &(hklData[i]);
 
@@ -767,7 +768,7 @@ DECLARE
                 }
 
                 if ((c1 == 0) && (c2 == 0)) {
-                    fprintf(stderr, "%s: Warning: Reflection tau[i] = (%g, %g, %g) has no component in defined mosaic plane.\n", NAME_CURRENT_COMP, CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2]);
+                  fprintf(stderr, "WARNING (%s): Reflection tau[i] = (%g, %g, %g) has no component in defined mosaic plane.\n", "ReadReflectionData", CurrenthklData->Tau[0], CurrenthklData->Tau[1], CurrenthklData->Tau[2]);
                 }
 
                 // Compute linear combination => sig_tau_i = | c1*sig_tau_a + c2*sig_tau_b |  - also add in the minute to radian scaling factor
@@ -802,8 +803,8 @@ DECLARE
                 }
 
             } else {
-                fprintf(stderr, "%s: Error: Either mosaic or (mosaic_a, mosaic_b, mosaic_c) must be given and be > 0.\n", NAME_CURRENT_COMP);
-                return(0);
+              fprintf(stderr, "ERROR (%s): Either mosaic or (mosaic_a, mosaic_b, mosaic_c) must be given and be > 0.\n", "ReadReflectionData");
+              return(-1);
             }
 
             hklData[i].TotalSigma = hklData[i].Sigma[0] *
@@ -838,8 +839,8 @@ DECLARE
         hklInfo->TauData = malloc(i * sizeof(*hklInfo->TauData));
 
         if (!hklInfo->TauData) {
-            fprintf(stderr, "%s: Error: Out of memory.\n", NAME_CURRENT_COMP);
-            return(0);
+          fprintf(stderr, "ERROR (%s): Out of memory.\n", "ReadReflectionData");
+            return(-1);
         }
 
         return(hklInfo->NumberOfReflections = i);
@@ -856,7 +857,7 @@ DECLARE
         if (AbsorptionFile && strlen(AbsorptionFile) && strcmp(AbsorptionFile, "NULL")) {
 
             if ((Status = Table_Read(&(AbsorbtionInfo->Table), AbsorptionFile, 0)) == -1) {
-                fprintf(stderr, "%s: Error: Could not parse file %s\n", NAME_CURRENT_COMP, AbsorptionFile);
+              fprintf(stderr, "Error (%s): Could not parse file %s\n", "ReadAbsorptionData", AbsorptionFile);
                 exit(-1);
             }
 
@@ -870,12 +871,6 @@ DECLARE
 
             Table_Stat(&(AbsorbtionInfo->Table));
 
-            // Check for rebinning
-            if (10.0 * mcget_ncount() > (AbsorbtionInfo->Table.max_x - AbsorbtionInfo->Table.min_x) / (AbsorbtionInfo->Table.step_x)) {
-                printf("%s: Rebinning MaterialDatafile data (%s) for faster tracing.\n", NAME_CURRENT_COMP, AbsorptionFile);
-                Table_Rebin(&(AbsorbtionInfo->Table));
-            }
-
             return 1;
         } else {
             // Create empty table
@@ -886,14 +881,14 @@ DECLARE
             AbsorbtionInfo->Table.data[2] = FLT_MAX;
             AbsorbtionInfo->Table.data[3] = 0.0;
 
-            fprintf(stderr, "%s: Warning: MaterialDatafile file (%s) not found. Absorption set to 0.\n", NAME_CURRENT_COMP, AbsorptionFile);
+            fprintf(stderr, "Warning (%s): MaterialDatafile file (%s) not found. Absorption set to 0.\n","ReadAbsortionData", AbsorptionFile);
 
             return 1;
         }
     }
 
     // Function used to get the dimensions of the voxels
-    int GetVoxelDimensions(t_Table *TableOfMap, int *NumberOfVoxelsx, double *Voxelxwidth, int *NumberOfVoxelsy, double *Voxelyheight, int *NumberOfVoxelsz, double *Voxelzdepth) {
+    int GetVoxelDimensions(t_Table *TableOfMap, int *NumberOfVoxelsx, int *NumberOfVoxelsy, int *NumberOfVoxelsz) {
         // Declaration
         int xValue=1;
         int yValue=1;
@@ -914,20 +909,17 @@ DECLARE
 
         if (xValue*yValue*zValue==TableOfMap->rows){
             *NumberOfVoxelsx = xValue;
-            *Voxelxwidth     = xwidth  / (double) xValue;
-
             *NumberOfVoxelsy = yValue;
-            *Voxelyheight    = yheight / (double) yValue;
-
             *NumberOfVoxelsz = zValue;
-            *Voxelzdepth     = zdepth  / (double) zValue;
-
             return 0;
         } else {
             return -1;
         }
     }
+%}
 
+DECLARE
+%{
     // Info on polycrystal
     struct hklStruct *PolyInfo;
     struct hklStruct hklInfo;
@@ -944,7 +936,7 @@ DECLARE
     int NumberOfVoxelsx;
     int NumberOfVoxelsy;
     int NumberOfVoxelsz;
-    %}
+%}
 
 
 INITIALIZE
@@ -968,22 +960,25 @@ INITIALIZE
     // Allocation of tables
     TableOfMap = malloc(sizeof(t_Table));
     if ( (i=Table_Read(TableOfMap, MapFile, 0))==-1){
-        fprintf(stderr,"Error(%s): Unable to read map file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,MapFile);
+        fprintf(stderr,"Error (%s): Unable to read map file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,MapFile);
         exit(-1);
     }
     TableOfOrientations = malloc(sizeof(t_Table));
 
     if ( (i=Table_Read(TableOfOrientations, OrientationsFile, 0))==-1){
-        fprintf(stderr,"Error(%s): Unable to read orientation file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,OrientationsFile);
+        fprintf(stderr,"Error (%s): Unable to read orientation file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,OrientationsFile);
         exit(-1);
     }
 
     PolyInfo = calloc(TableOfOrientations->rows, sizeof(struct hklStruct));
 
     // Compute dimensions of voxels
-    if (GetVoxelDimensions(TableOfMap, &NumberOfVoxelsx, &Voxelxwidth, &NumberOfVoxelsy, &Voxelyheight, &NumberOfVoxelsz, &Voxelzdepth) == -1) {
-        fprintf(stderr, "%s: An error occured when assigning the dimensions of the polycrystal. Is the header appropriately formatted?", NAME_CURRENT_COMP);
+    if (GetVoxelDimensions(TableOfMap, &NumberOfVoxelsx, &NumberOfVoxelsy, &NumberOfVoxelsz) == -1) {
+      fprintf(stderr, "Warning (%s): An error occured when assigning the dimensions of the polycrystal. Is the header appropriately formatted?\n", NAME_CURRENT_COMP);
     }
+    Voxelxwidth=xwidth/NumberOfVoxelsx;
+    Voxelyheight=yheight/NumberOfVoxelsy;
+    Voxelzdepth=zdepth/NumberOfVoxelsz;
 
     // Coordinate calculations
     aOriginal = coords_set(ax, ay, az);
@@ -1003,9 +998,9 @@ INITIALIZE
     hklInfo.LatticeVectorc[1] = cy;
     hklInfo.LatticeVectorc[2] = cz;
 
-    hklInfo.DeltadOverd     = DeltadOverd;
-    hklInfo.SigmaAbsorbtion = SigmaAbsorbtion;
-    hklInfo.SigmaIncoherent = SigmaIncoherent;
+    hklInfo.Deltad_d        = DeltadOverd;
+    hklInfo.SigmaAbs        = SigmaAbsorbtion;
+    hklInfo.SigmaInc        = SigmaIncoherent;
 
     // Default format: h, k, l, F, F2
     hklInfo.ColumnOrder[0] = 1;
@@ -1019,18 +1014,18 @@ INITIALIZE
     ReadAbsorbtionData(MaterialDatafile, &AbsorbtionInfo);
 
     // Print properties
-    fprintf(stderr, "\n");
-    fprintf(stderr, "%s: %d reflections found in %s.\n", NAME_CURRENT_COMP, hklInfo.NumberOfReflections, ReflectionsDatafile);
-    fprintf(stderr, "%s: %d different orientations found in %s.\n", NAME_CURRENT_COMP, (int) TableOfOrientations->rows, OrientationsFile);
-    fprintf(stderr, "%s: %d voxels organised in a %d by %d by %d-grid found in %s.\n", NAME_CURRENT_COMP, (int) TableOfMap->rows, NumberOfVoxelsx, NumberOfVoxelsy, NumberOfVoxelsz, MapFile);
-    fprintf(stderr, "%s: The voxels of the polycrystals have dimensions of %g m by %g m by %g m.\n", NAME_CURRENT_COMP, Voxelxwidth, Voxelyheight, Voxelzdepth);
-    fprintf(stderr, "%s: Volume of unit cell is %g AA^3.\n", NAME_CURRENT_COMP, hklInfo.VolumeOfUnitCell);
-    fprintf(stderr, "\n");
+    if(verbose){
+      fprintf(stderr, "INFO (%s): %d reflections found in %s.\n", NAME_CURRENT_COMP, hklInfo.NumberOfReflections, ReflectionsDatafile);
+      fprintf(stderr, "INFO (%s): %d different orientations found in %s.\n", NAME_CURRENT_COMP, (int) TableOfOrientations->rows, OrientationsFile);
+      fprintf(stderr, "INFO (%s): %d voxels organised in a %d by %d by %d-grid found in %s.\n", NAME_CURRENT_COMP, (int) TableOfMap->rows, NumberOfVoxelsx, NumberOfVoxelsy, NumberOfVoxelsz, MapFile);
+      fprintf(stderr, "INFO (%s): The voxels of the polycrystals have dimensions of %g m by %g m by %g m.\n", NAME_CURRENT_COMP, Voxelxwidth, Voxelyheight, Voxelzdepth);
+      fprintf(stderr, "INFO (%s): Volume of unit cell is %g AA^3.\n", NAME_CURRENT_COMP, hklInfo.VolumeOfUnitCell);
+    }
 
     // Loop over all orientations
     for (i = 0; i < TableOfOrientations->rows; ++i) {
         PolyInfo[i] = hklInfo;
-        PolyInfo[i].Reciprocal = 0;
+        PolyInfo[i].Recip = 0;
 
         // Apply rotation to crystal vectors
         memcpy(*CurrentRotationMatrix, &(TableOfOrientations->data[i * 9]), sizeof(CurrentRotationMatrix[0][0]) * 9);
@@ -1333,7 +1328,7 @@ TRACE
                     CurrentTauData[j].Origin[2] = (kiLength - CurrentTauData[j].RhoLength) * CurrentTauData[j].NormalVector[2];
 
                     // Compute unit vectors b1 and b2 that span the tangent plane
-                    normal_vec(b1[0], b1[1], b1[2], CurrentTauData[j].NormalVector[0], CurrentTauData[j].NormalVector[1], CurrentTauData[j].NormalVector[2]);
+                    normal_vec(&(b1[0]), &(b1[1]), &(b1[2]), CurrentTauData[j].NormalVector[0], CurrentTauData[j].NormalVector[1], CurrentTauData[j].NormalVector[2]);
                     vec_prod(b2[0], b2[1], b2[2], CurrentTauData[j].NormalVector[0], CurrentTauData[j].NormalVector[1], CurrentTauData[j].NormalVector[2], b1[0], b1[1], b1[2]);
 
                     CurrentTauData[j].b1[0] = b1[0];
