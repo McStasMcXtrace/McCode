@@ -845,6 +845,7 @@ int cogen_comp_section_class(
     //if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
     codeblock_out(code); // component definition code common to all instances, needs defines
     if (!strcmp(section, "TRACE")) {
+      cout("#ifndef NOABSORB_INF_NAN");
       cout("  /* Check for nan or inf particle parms */ ");
       cout("  if(isnan(p)  ||  isinf(p)) ABSORB;");
       cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
@@ -854,6 +855,7 @@ int cogen_comp_section_class(
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
+      cout("#endif");
       //cout("}");
     }
 
