@@ -78,6 +78,10 @@ Changes in McStas 3.1, October 11th, 2021
   --numgangs                 Number of OpenACC gangs
   --gpu_innerloop            Maximum rays to process in a kernel call
 
+ McStas 3.1 enables further instruments and functionality on GPU and has improved support for
+ use of the union components. Also, the FUNNEL mode with combined CPU-GPU execution has become
+ stable in all tested cases.
+ 
  Main features and changes with respect to the 2.x series:
  1. Modernised code-generation scheme based on functions instead of #defines, which brings
     many befefits.
