@@ -3819,9 +3819,12 @@ mchelp(char *pgmname)
 "  -i        --info           Detailed instrument information.\n"
 "  --source                   Show the instrument code which was compiled.\n"
 #ifdef OPENACC
-"  --vecsize                  OpenACC vector-size\n"
-"  --numgangs                 Number of OpenACC gangs\n"
-"  --gpu_innerloop            Maximum rays to process in a kernel call\n"
+"\n"
+"  --vecsize                  OpenACC vector-size (default: 128)\n"
+"  --numgangs                 Number of OpenACC gangs (default: 7813)\n"
+"  --gpu_innerloop            Maximum rays to process pr. OpenACC \n"
+"                             kernel run (default: 2147483647)\n"
+"\n"
 #endif
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
