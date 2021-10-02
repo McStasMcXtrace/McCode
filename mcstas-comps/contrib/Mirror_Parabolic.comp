@@ -57,7 +57,6 @@ DECLARE
 %{
 double  beta1;                       /* parabola half-axis */
 double  gamma1;
-double  delta;                         /* angle: angle between themirror and z-axis */
 t_Table pTable;
 int err;                                     /* counts neutron absorbed for anormal reasons */
 int nom;
@@ -91,6 +90,8 @@ TRACE
   double oa,ob,ab,xa,za;
   double a, b;                       /* parameters for neutron propagation */
   double old_x,old_y,old_z;
+  double  delta;                         /* angle: angle between themirror and z-axis */
+  double par[5] = {R0, Qc, alpha, m, W};
 
   /* First check if neutron has the right direction. */
   if((vz != 0.0 && -z/vz >= 0) && x-xwidth-xshift < 0)
@@ -163,7 +164,6 @@ TRACE
         if (reflect && strlen(reflect) && strcmp(reflect, "NULL") && strcmp(reflect,"0"))
           TableReflecFunc(q, &pTable, &B);
         else {
-          double par[] = {R0, Qc, alpha, m, W};
           StdReflecFunc(q, par, &B);
         }
         if (B <= 0) { ABSORB; }
