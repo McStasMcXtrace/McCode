@@ -57,15 +57,6 @@ DECLARE
 %{
 double omega;
 double alpha_rad;
-double dt0;
-double dt1;
-double r_i;
-double r_f;
-double r_mean;
-double theta_i;
-double theta_f;
-double A;
-double d_s_alpha;
 %}
 
 INITIALIZE
@@ -77,6 +68,12 @@ if (zdepth < length) zdepth=length;
 
 TRACE
 %{
+  double dt0,dt1;
+  double r_i,r_f,r_mean;
+  double theta_i,theta_f;
+  double A;
+  double d_s_alpha;
+
   if (vz == 0)
     ABSORB;
   dt1= (-zdepth/2.0 - z)/vz;
