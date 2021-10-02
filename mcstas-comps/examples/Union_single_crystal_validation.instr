@@ -70,9 +70,19 @@ COMPONENT Single_crystal_test_process = Single_crystal_process(
 AT (0,0,0) ABSOLUTE
 ROTATED (x_rotation_process,y_rotation_process,0) ABSOLUTE
 
+  COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc, packing_factor=1, unit_cell_volume=173.28, interact_fraction=-1)
+    AT (0,0,0) ABSOLUTE
+
+// With manual linking the result depend on the order in the process string
 COMPONENT test_material = Union_make_material(my_absorption=my_absorption_union,
   process_string="Single_crystal_test_process,Incoherent_process")
 AT (0,0,0) ABSOLUTE
+
+
+// Try automatic linking instead, same result, depends on order of definitions
+/* COMPONENT test_material = Union_make_material(my_absorption=my_absorption_union) */
+/* AT (0,0,0) ABSOLUTE */
+
 
 
 COMPONENT Origin = Progress_bar()
@@ -90,6 +100,24 @@ AT (0,0,5) RELATIVE source
 COMPONENT cylinder_sample_union = Union_cylinder(radius=xwidth,yheight=yheight, priority=1, material_string="test_material",p_interact=geometry_interact)
 AT (0,0,0.1) RELATIVE slit
 ROTATED (x_rotation_geometry,y_rotation_geometry,0) RELATIVE slit
+
+
+// Insert loggers to be tested here
+COMPONENT Union_logger_2DQ_crystal = Union_logger_2DQ(
+    Q_direction_1="z", Q1_min=-5.0, Q1_max=5.0, n1=200,
+    Q_direction_2="x", Q2_min=-5.0, Q2_max=5.0, n2=200,
+    filename="Union_logger_2DQ_crystal.dat",
+    target_geometry="cylinder_sample_union",
+    target_process="Single_crystal_test_process")
+    AT(0,0,0.1) RELATIVE slit
+
+COMPONENT Union_logger_2DQ_incoherent = Union_logger_2DQ(
+    Q_direction_1="z", Q1_min=-5.0, Q1_max=5.0, n1=200,
+    Q_direction_2="x", Q2_min=-5.0, Q2_max=5.0, n2=200,
+    filename="Union_logger_2DQ_incoherent.dat",
+    target_geometry="cylinder_sample_union",
+    target_process="Incoherent_process")
+AT(0,0,0.1) RELATIVE slit
 
 COMPONENT test_sample = Union_master()
 WHEN (comp_select == 1)
