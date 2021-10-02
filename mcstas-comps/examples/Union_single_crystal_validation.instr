@@ -70,9 +70,6 @@ COMPONENT Single_crystal_test_process = Single_crystal_process(
 AT (0,0,0) ABSOLUTE
 ROTATED (x_rotation_process,y_rotation_process,0) ABSOLUTE
 
-  COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc, packing_factor=1, unit_cell_volume=173.28, interact_fraction=-1)
-    AT (0,0,0) ABSOLUTE
-
 // With manual linking the result depend on the order in the process string
 COMPONENT test_material = Union_make_material(my_absorption=my_absorption_union,
   process_string="Single_crystal_test_process,Incoherent_process")
