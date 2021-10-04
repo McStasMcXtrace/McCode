@@ -17,7 +17,7 @@
  * Perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  *
  * %D
- * Bragg_crystal_BC.comp models is intended to supercede Bragg_Crystal.comp.
+ * Bragg_crystal_BC.comp is intended to supercede Bragg_Crystal.comp.
  *
  * For details see:
  * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
@@ -117,7 +117,7 @@ INITIALIZE
     }
     
     if(verbose)
-      printf("INFO: (%s): initialized\n",NAME_CURRENT_COMP);
+      printf("INFO (%s): initialized\n",NAME_CURRENT_COMP);
 %}
 
 TRACE
