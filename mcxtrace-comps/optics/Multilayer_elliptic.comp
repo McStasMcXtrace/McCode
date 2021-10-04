@@ -53,7 +53,7 @@
 DEFINE COMPONENT Multilayer_elliptic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflectivity_datafile="reflectivity.txt",
-    theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, N=0)
+    theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
