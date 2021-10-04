@@ -1178,9 +1178,6 @@ TRACE
 
     NumberOfScatteringEvents = 0;
 
-    // Scale x-ray to higher intensity
-    p *= 1e24;
-
     // Begin computating if ray intersects crystal hull
     while (Intersect) {
 
@@ -1476,7 +1473,6 @@ TRACE
             // Randomly select between coherent and incoherent scattering
             if(rand0max(CoherentScatteringLength + IncoherentScatteringLength) < IncoherentScatteringLength) {
                 randvec_target_circle(&ki[0], &ki[1], &ki[2], NULL, kx, ky, kz, 0);
-
                 kx = ki[0];
                 ky = ki[1];
                 kz = ki[2];
