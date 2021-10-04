@@ -1,4 +1,4 @@
-# Installation of McStas 2.7 on Windows 64 bit systems
+# Installation of McStas 2.7.1 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
@@ -12,13 +12,13 @@
 in a cmd.exe shell and start the Perl and McStas installers from there
 	
 ##  IMPORTANT B:
-* Please install [strawberry-perl-5.26.3.1-64bit.msi](http://download.mcstas.org/mcstas-2.7/windows/strawberry-perl-5.26.3.1-64bit.msi)
+* Please install [strawberry-perl-5.26.3.1-64bit.msi](http://download.mcstas.org/mcstas-2.7.1/windows/strawberry-perl-5.26.3.1-64bit.msi)
 BEFORE  attempting to install the McStas metapackage!!!
 
 ## IMPORTANT C:
-* Please install the [McStas 2.7 metapackage](http://download.mcstas.org/mcstas-2.7/windows/McStas-Metapackage-2.7-win64.exe)
+* Please install the [McStas 2.7.1 metapackage](http://download.mcstas.org/mcstas-2.7.1/windows/McStas-Metapackage-2.7.1-win64.exe)
 
-* The [extras](http://download.mcstas.org/mcstas-2.7/windows/extras)
+* The [extras](http://download.mcstas.org/mcstas-2.7.1/windows/extras)
   folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McStas metapackage installation
 
 
