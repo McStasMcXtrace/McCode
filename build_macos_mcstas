@@ -91,8 +91,6 @@ echo "*********************************************************"
 echo 
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-which conda
-which pip
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install openmpi gsl matplotlib nomkl -y
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply numpy scipy pillow tornado jinja2 mpld3
 export PATH=$PATHBAK
