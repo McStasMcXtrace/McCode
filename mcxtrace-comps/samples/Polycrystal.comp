@@ -881,7 +881,7 @@ SHARE
             AbsorbtionInfo->Table.data[2] = FLT_MAX;
             AbsorbtionInfo->Table.data[3] = 0.0;
 
-            fprintf(stderr, "Warning (%s): MaterialDatafile file (%s) not found. Absorption set to 0.\n","ReadAbsortionData", AbsorptionFile);
+            fprintf(stderr, "Warning (%s): MaterialDatafile file (%s) not found. Absorption set to 0.\n","ReadAbsorptionData", AbsorptionFile);
 
             return 1;
         }
