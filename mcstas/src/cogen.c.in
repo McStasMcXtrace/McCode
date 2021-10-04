@@ -855,6 +855,15 @@ int cogen_comp_section_class(
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
+      cout("#else");
+      cout("  if(isnan(p)  ||  isinf(p)) printf(\"NAN or INF found in p,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(vx) || isinf(vx)) printf(\"NAN or INF found in vx, %s\\n\",_comp->_name);");
+      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vy, %s\\n\",_comp->_name);");
+      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vz, %s\\n\",_comp->_name);");
+      cout("  if(isnan(x)  ||  isinf(x)) printf(\"NAN or INF found in x,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(y)  ||  isinf(y)) printf(\"NAN or INF found in y,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(z)  ||  isinf(z)) printf(\"NAN or INF found in z,  %s\\n\",_comp->_name);");
       cout("#endif");
       //cout("}");
     }
