@@ -7,19 +7,27 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: End of the World
 * Origin: DTU Fysik
-* Release: McXtrace 1.1
 * Version: 0.3
 * %INSTRUMENT_SITE: XFEL
 *
 * European XFEL SPB beamline (on SASE1)
 *
 * %Description
-* Instrument longer description (type, elements, usage...)
+* A simple and early model of the SPB-beamline at the European XFEL in Hamburg.
+* This model includes the long beam transport from the source all the way into
+* experimental hutch.
 *
-* Example: XFEL-SPB.instr <parameters=values>
+* %Example: XFEL_SPB.instr preCRL=0 -n1e7 L0=1.3051 DL=0.01 Detector: detector_I=0.00194989
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
+* L0: [AA]     The central wavelength to be simulated.
+* DL: [AA]     Half width of energy ointerval to be simulated
+* offset_omega_rad: [rad]  Incidence angle of the upstream offset mirror.
+* offset2_rad: [m]       Radius of curvature of 2nd offset mirror.
+* preCRL: [ ]            Flag to choose whether pre-focusing CRLs are active.
+* R1:  [m]               Radius of curvature of 1st focusing mirror.
+* R2:  [m]               Radius of curvature of 2nd focusing mirror.
+* FXE: [ ]               Flag to enable the FXE distribution mirror. Useful for debugging.
 *
 * %Link
 * A reference/HTML link for more information
@@ -28,7 +36,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT XFEL_SPB(L0=1.54,DL=0.01, D=10,offset_omega_rad=3.6e-3,offset2_rad=50000,preCRL=0,FXE=0, R1=20000,R2=20000)
+DEFINE INSTRUMENT XFEL_SPB(L0=1.3051,DL=0.01, D=10,offset_omega_rad=3.6e-3,offset2_rad=50000,preCRL=0,FXE=0, R1=20000,R2=20000)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -79,14 +87,14 @@ COMPONENT src = Source_gaussian(
 AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT psd0=PSD_monitor(
-    xwidth=1e-3, yheight=1e-3, nx=101,ny=101)
+    xwidth=1e-3, yheight=1e-3, nx=101,ny=101, filename="psd0")
 AT(0,0,1e-5) RELATIVE PREVIOUS
 COMPONENT emon0 =E_monitor(
-    xwidth=1e-3, yheight=1e-3, nE=512, Emin=5, Emax=15)
+    xwidth=1e-3, yheight=1e-3, nE=512, Emin=5, Emax=15, filename="emon0")
 AT(0,0,1e-5) RELATIVE PREVIOUS
 
 
-COMPONENT crl_230 = Lens_simple(xwidth=1e-5, yheight=1e-5, material_datafile="Be.txt",N=100,radius=0.3e-3)
+COMPONENT crl_230 = Lens_simple(xwidth=1e-5, yheight=1e-5, material_datafile="Be.txt",N=100,r=0.3e-3)
 WHEN (preCRL) AT(0,0,23) RELATIVE src
 COMPONENT psd_l=COPY(psd0)(filename="psd1")
 AT(0,0,1e-5) RELATIVE PREVIOUS
@@ -149,7 +157,7 @@ COMPONENT mono_origin = Arm()
   AT(0,0,53) RELATIVE distr_orig
 ROTATED (0,0,-90) RELATIVE src
 
-COMPONENT mono1 = Perfect_crystal(
+COMPONENT mono1 = Bragg_crystal(
     material = "Si.txt", length = 0.05, width = 0.02,
     V = 160.1826, h = 1, k = 1, l = 1)
 AT (0, 0, 0) RELATIVE mono_origin
