@@ -256,9 +256,9 @@ TRACE
             if(thetaB==0){
               if(verbose){
                 fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
-              ABSORB;
+                ABSORB;
+              }
             }
-
             fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha_v,
                   chi0, chih, chih, k0mag, hscale, thetaB
@@ -316,7 +316,6 @@ TRACE
             RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
         }
     }
-    
 #ifdef MCDEBUG
     fflush(NULL); // make sure all error messages are in order!
 #endif
