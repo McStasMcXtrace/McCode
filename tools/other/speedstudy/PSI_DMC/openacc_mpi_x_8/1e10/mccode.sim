@@ -1,0 +1,286 @@
+McStas simulation description file for PSI_DMC.
+Date:    Tue Oct  5 15:43:49 2021
+Program: McStas 3.0-dev - Oct. 05, 2021
+
+begin instrument: PSI_DMC
+  File: 1e10/mccode
+  Source: PSI_DMC.instr
+  Parameters:  lambda(double) R(double) R_curve(double) filename(string) D_PHI(double) SHIFT(double) PACK(double) Dw(double) BARNS(double)
+  Trace_enabled: no
+  Default_main: yes
+  Embedded_runtime: yes
+end instrument
+
+begin simulation: 1e10
+  Format: McCode with text headers
+  URL: http://www.mccode.org
+  Creator: McStas 3.0-dev - Oct. 05, 2021
+  Instrument: PSI_DMC.instr
+  Ncount: 10000000000
+  Trace: no
+  Gravitation: no
+  Seed: 1000
+  Directory: 1e10
+  Nodes: 8
+  Param: lambda=2.566
+  Param: R=0.87
+  Param: R_curve=0.87
+  Param: filename=Na2Ca3Al2F14.laz
+  Param: D_PHI=6
+  Param: SHIFT=0
+  Param: PACK=0.7
+  Param: Dw=0.8
+  Param: BARNS=1
+end simulation
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_2d(128, 128)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: PSDbefore_guides
+  position: 0 0 1.49999
+  title: PSD monitor
+  Ncount: 20000000000
+  filename: PSDbefore_guides.dat
+  statistics: X0=-2.21713e-06; dX=0.577316; Y0=-3.78295e-05; dY=3.46253;
+  signal: Min=154250; Max=156226; Mean=155243;
+  values: 2.5435e+09 25435.3 9.99992e+09
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1 1 -6 6
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_1d(101)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: l_mon_source
+  position: 0 0 1.49999
+  title: Wavelength monitor
+  Ncount: 20000000000
+  filename: lmonsource.dat
+  statistics: X0=2.54141; dX=0.0934028;
+  signal: Min=0; Max=1.69365e+09; Mean=2.51831e+07;
+  values: 2.5435e+09 25435.3 9.99992e+09
+  xvar: L
+  yvar: (I,I_err)
+  xlabel: Wavelength [AA]
+  ylabel: Intensity
+  xlimits: 0 20
+  variables: L I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_2d(128, 128)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: PSDbefore_curve
+  position: 0 0 6.164
+  title: PSD monitor
+  Ncount: 20000000000
+  filename: PSDbefore_curve.dat
+  statistics: X0=1.42767e-05; dX=0.578656; Y0=4.28239e-05; dY=3.55988;
+  signal: Min=6151.14; Max=7999.2; Mean=6898.53;
+  values: 1.13025e+08 5170.03 1.25742e+09
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1 1 -6 6
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_2d(128, 128)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: PSDafter_curve
+  position: 0 0 26.1901
+  title: PSD monitor
+  Ncount: 20000000000
+  filename: PSDafter_curve.dat
+  statistics: X0=0.0371116; dX=0.57521; Y0=0.000288231; dY=3.50703;
+  signal: Min=2373.27; Max=3351.27; Mean=2881.14;
+  values: 4.72045e+07 3306.72 9.52189e+08
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1 1 -6 6
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_1d(11)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: ydist_fluxpos
+  position: 0 0 47.8657
+  title: Linear PSD monitor
+  Ncount: 20000000000
+  filename: ydist_fluxpos.dat
+  statistics: X0=-1.02285e-06; dX=0.0343705;
+  signal: Min=3.18786e+06; Max=3.2642e+06; Mean=3.22392e+06;
+  values: 3.54631e+07 2830.32 7.82238e+08
+  xvar: x
+  yvar: (I,I_err)
+  xlabel: x-Position [m]
+  ylabel: Intensity
+  xlimits: -0.06 0.06
+  variables: x I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_2d(100, 100)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: PSD_fluxpos
+  position: 0 0 47.8657
+  title: PSD monitor
+  Ncount: 20000000000
+  filename: xdist_fluxposy.dat
+  statistics: X0=-0.00461264; dX=0.575363; Y0=-0.000125398; dY=3.45081;
+  signal: Min=3135.22; Max=3701.4; Mean=3546.31;
+  values: 3.54631e+07 2830.32 7.82238e+08
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1 1 -6 6
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_1d(11)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: xdist_flux_pos
+  position: 0 0 47.8657
+  title: Linear PSD monitor
+  Ncount: 20000000000
+  filename: xdist_fluxpos.dat
+  statistics: X0=-4.54694e-05; dX=0.00573223;
+  signal: Min=3.10915e+06; Max=3.25092e+06; Mean=3.22392e+06;
+  values: 3.54631e+07 2830.32 7.82238e+08
+  xvar: x
+  yvar: (I,I_err)
+  xlabel: x-Position [m]
+  ylabel: Intensity
+  xlimits: -0.01 0.01
+  variables: x I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_2d(100, 100)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: PSD_fluxposB
+  position: 0 0 48.4257
+  title: PSD monitor
+  Ncount: 20000000000
+  filename: PSD_fluxposB.dat
+  statistics: X0=0.00277879; dX=0.54664; Y0=-9.14772e-05; dY=3.40271;
+  signal: Min=1094.18; Max=3670.51; Mean=3248.52;
+  values: 3.24852e+07 2713.71 6.23122e+08
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1 1 -6 6
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_1d(128)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: lambda_in
+  position: 0 0 48.4288
+  title: Wavelength monitor
+  Ncount: 20000000000
+  filename: L_in.dat
+  statistics: X0=2.56611; dX=0.0200466;
+  signal: Min=0; Max=1.62609e+07; Mean=252697;
+  values: 3.23452e+07 2702.51 6.22551e+08
+  xvar: L
+  yvar: (I,I_err)
+  xlabel: Wavelength [AA]
+  ylabel: Intensity
+  xlimits: 0 5.132
+  variables: L I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_2d(80, 80)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: PSD_sample
+  position: 1.95808 0 51.0371
+  title: PSD monitor
+  Ncount: 20000000000
+  filename: PSD_sample.dat
+  statistics: X0=-0.0151068; dX=1.21; Y0=-8.13073e-05; dY=1.61107;
+  signal: Min=2.2309e-142; Max=20897.1; Mean=2251.53;
+  values: 1.44098e+07 442.417 4.13744e+09
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -5 5 -7 7
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_1d(128)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: lambda_sample
+  position: 1.98635 0 51.0654
+  title: Wavelength monitor
+  Ncount: 20000000000
+  filename: L_sample.dat
+  statistics: X0=2.56604; dX=0.00902993;
+  signal: Min=0; Max=236395; Mean=15686.9;
+  values: 2.00792e+06 175.194 2.46988e+08
+  xvar: L
+  yvar: (I,I_err)
+  xlabel: Wavelength [AA]
+  ylabel: Intensity
+  xlimits: 2.366 2.766
+  variables: L I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:50:28 2021 (1633441828)
+  type: array_1d(400)
+  Source: PSI_DMC (PSI_DMC.instr)
+  component: Detector
+  position: 1.99342 0 51.0725
+  title: Longitude [deg] monitor
+  Ncount: 20000000000
+  filename: detector.dat
+  statistics: X0=71.2447; dX=18.158;
+  signal: Min=0.156882; Max=34.5934; Mean=2.04513;
+  values: 818.052 0.0996691 3.27305e+08
+  xvar: th
+  yvar: (I,I_err)
+  xlabel: Longitude [deg]
+  ylabel: Intensity [n/s/bin]
+  xlimits: 19.9 99.9
+  variables: th I I_err N
+end data

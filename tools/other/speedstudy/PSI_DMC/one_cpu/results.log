@@ -1,0 +1,153 @@
+INFO: Using directory: "1e4"
+INFO: Using existing c-file: ./PSI_DMC.c
+INFO: Using existing binary: ./PSI_DMC.out
+INFO: ===
+[PSI_DMC] Initialize
+Table from file '' (catenated) is empty.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Na2Ca3Al2F14.laz' (Table_Read_Offset)
+Table from file 'Na2Ca3Al2F14.laz' (block 1) is 841 x 18 (x=1:20), constant step. interpolation: linear
+  '# TITLE *-Na2Ca3Al2F14-[I213] Courbion, G.;Ferey, G.[1988] Standard NAC cal ...'
+PowderN: sample: Reading 841 rows from Na2Ca3Al2F14.laz
+PowderN: sample: Read 841 reflections from file 'Na2Ca3Al2F14.laz'
+PowderN: sample: Vc=1079.1 [Angs] sigma_abs=11.7856 [barn] sigma_inc=13.6704 [barn] reflections=Na2Ca3Al2F14.laz
+*** TRACE end *** 
+
+Save [PSI_DMC]
+Detector: PSDbefore_guides_I=2.54363e+09 PSDbefore_guides_ERR=2.54365e+07 PSDbefore_guides_N=10000 "PSDbefore_guides.dat"
+Detector: l_mon_source_I=2.54363e+09 l_mon_source_ERR=2.54365e+07 l_mon_source_N=10000 "lmonsource.dat"
+Detector: PSDbefore_curve_I=1.22411e+08 PSDbefore_curve_ERR=5.38514e+06 PSDbefore_curve_N=1321 "PSDbefore_curve.dat"
+Detector: PSDafter_curve_I=4.8623e+07 PSDafter_curve_ERR=3.37934e+06 PSDafter_curve_N=998 "PSDafter_curve.dat"
+Detector: ydist_fluxpos_I=3.81621e+07 ydist_fluxpos_ERR=2.96533e+06 ydist_fluxpos_N=837 "ydist_fluxpos.dat"
+Detector: PSD_fluxpos_I=3.81621e+07 PSD_fluxpos_ERR=2.96533e+06 PSD_fluxpos_N=837 "xdist_fluxposy.dat"
+Detector: xdist_flux_pos_I=3.81621e+07 xdist_flux_pos_ERR=2.96533e+06 xdist_flux_pos_N=837 "xdist_fluxpos.dat"
+Detector: PSD_fluxposB_I=3.48226e+07 PSD_fluxposB_ERR=2.8424e+06 PSD_fluxposB_N=650 "PSD_fluxposB.dat"
+Detector: lambda_in_I=3.46845e+07 lambda_in_ERR=2.83113e+06 lambda_in_N=650 "L_in.dat"
+Detector: PSD_sample_I=1.52006e+07 PSD_sample_ERR=465891 PSD_sample_N=4381 "PSD_sample.dat"
+Detector: lambda_sample_I=2.10105e+06 lambda_sample_ERR=182425 lambda_sample_N=290 "L_sample.dat"
+Detector: Detector_I=479.445 Detector_ERR=64.2725 Detector_N=396 "detector.dat"
+
+Finally [PSI_DMC: 1e4]. Time: 0 [s] 
+PowderN: sample: Info: you may highly improve the computation efficiency by using
+    SPLIT 58 COMPONENT sample=PowderN(...)
+  in the instrument description PSI_DMC.instr.
+INFO: Placing instr file copy PSI_DMC.instr in dataset 1e4
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 0.47
+user 0.40
+sys 0.07
+INFO: Using directory: "1e5"
+INFO: Using existing c-file: ./PSI_DMC.c
+INFO: Using existing binary: ./PSI_DMC.out
+INFO: ===
+[PSI_DMC] Initialize
+Table from file '' (catenated) is empty.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Na2Ca3Al2F14.laz' (Table_Read_Offset)
+Table from file 'Na2Ca3Al2F14.laz' (block 1) is 841 x 18 (x=1:20), constant step. interpolation: linear
+  '# TITLE *-Na2Ca3Al2F14-[I213] Courbion, G.;Ferey, G.[1988] Standard NAC cal ...'
+PowderN: sample: Reading 841 rows from Na2Ca3Al2F14.laz
+PowderN: sample: Read 841 reflections from file 'Na2Ca3Al2F14.laz'
+PowderN: sample: Vc=1079.1 [Angs] sigma_abs=11.7856 [barn] sigma_inc=13.6704 [barn] reflections=Na2Ca3Al2F14.laz
+*** TRACE end *** 
+
+Save [PSI_DMC]
+Detector: PSDbefore_guides_I=2.54354e+09 PSDbefore_guides_ERR=8.04344e+06 PSDbefore_guides_N=100000 "PSDbefore_guides.dat"
+Detector: l_mon_source_I=2.54354e+09 l_mon_source_ERR=8.04344e+06 l_mon_source_N=100000 "lmonsource.dat"
+Detector: PSDbefore_curve_I=1.12366e+08 PSDbefore_curve_ERR=1.62921e+06 PSDbefore_curve_N=12772 "PSDbefore_curve.dat"
+Detector: PSDafter_curve_I=4.64349e+07 PSDafter_curve_ERR=1.03691e+06 PSDafter_curve_N=9622 "PSDafter_curve.dat"
+Detector: ydist_fluxpos_I=3.47327e+07 ydist_fluxpos_ERR=888088 ydist_fluxpos_N=7907 "ydist_fluxpos.dat"
+Detector: PSD_fluxpos_I=3.47327e+07 PSD_fluxpos_ERR=888088 PSD_fluxpos_N=7907 "xdist_fluxposy.dat"
+Detector: xdist_flux_pos_I=3.47327e+07 xdist_flux_pos_ERR=888088 xdist_flux_pos_N=7907 "xdist_fluxpos.dat"
+Detector: PSD_fluxposB_I=3.15156e+07 PSD_fluxposB_ERR=847462 PSD_fluxposB_N=6261 "PSD_fluxposB.dat"
+Detector: lambda_in_I=3.13907e+07 lambda_in_ERR=844104 lambda_in_N=6256 "L_in.dat"
+Detector: PSD_sample_I=1.37455e+07 PSD_sample_ERR=136965 PSD_sample_N=41651 "PSD_sample.dat"
+Detector: lambda_sample_I=2.00775e+06 lambda_sample_ERR=55332.3 lambda_sample_N=2425 "L_sample.dat"
+Detector: Detector_I=855.027 Detector_ERR=30.4174 Detector_N=3342 "detector.dat"
+
+Finally [PSI_DMC: 1e5]. Time: 0 [s] 
+PowderN: sample: Info: you may highly improve the computation efficiency by using
+    SPLIT 58 COMPONENT sample=PowderN(...)
+  in the instrument description PSI_DMC.instr.
+INFO: Placing instr file copy PSI_DMC.instr in dataset 1e5
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 0.66
+user 0.60
+sys 0.07
+INFO: Using directory: "1e6"
+INFO: Using existing c-file: ./PSI_DMC.c
+INFO: Using existing binary: ./PSI_DMC.out
+INFO: ===
+[PSI_DMC] Initialize
+Table from file '' (catenated) is empty.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Na2Ca3Al2F14.laz' (Table_Read_Offset)
+Table from file 'Na2Ca3Al2F14.laz' (block 1) is 841 x 18 (x=1:20), constant step. interpolation: linear
+  '# TITLE *-Na2Ca3Al2F14-[I213] Courbion, G.;Ferey, G.[1988] Standard NAC cal ...'
+PowderN: sample: Reading 841 rows from Na2Ca3Al2F14.laz
+PowderN: sample: Read 841 reflections from file 'Na2Ca3Al2F14.laz'
+PowderN: sample: Vc=1079.1 [Angs] sigma_abs=11.7856 [barn] sigma_inc=13.6704 [barn] reflections=Na2Ca3Al2F14.laz
+*** TRACE end *** 
+
+Save [PSI_DMC]
+Detector: PSDbefore_guides_I=2.54352e+09 PSDbefore_guides_ERR=2.54355e+06 PSDbefore_guides_N=999992 "PSDbefore_guides.dat"
+Detector: l_mon_source_I=2.54352e+09 l_mon_source_ERR=2.54355e+06 l_mon_source_N=999992 "lmonsource.dat"
+Detector: PSDbefore_curve_I=1.12796e+08 PSDbefore_curve_ERR=516330 PSDbefore_curve_N=126007 "PSDbefore_curve.dat"
+Detector: PSDafter_curve_I=4.72734e+07 PSDafter_curve_ERR=330747 PSDafter_curve_N=95527 "PSDafter_curve.dat"
+Detector: ydist_fluxpos_I=3.53232e+07 ydist_fluxpos_ERR=282411 ydist_fluxpos_N=78476 "ydist_fluxpos.dat"
+Detector: PSD_fluxpos_I=3.53232e+07 PSD_fluxpos_ERR=282411 PSD_fluxpos_N=78476 "xdist_fluxposy.dat"
+Detector: xdist_flux_pos_I=3.53232e+07 xdist_flux_pos_ERR=282411 xdist_flux_pos_N=78476 "xdist_fluxpos.dat"
+Detector: PSD_fluxposB_I=3.23033e+07 PSD_fluxposB_ERR=270522 PSD_fluxposB_N=62597 "PSD_fluxposB.dat"
+Detector: lambda_in_I=3.21631e+07 lambda_in_ERR=269406 lambda_in_N=62538 "L_in.dat"
+Detector: PSD_sample_I=1.43636e+07 PSD_sample_ERR=44179.1 PSD_sample_N=416319 "PSD_sample.dat"
+Detector: lambda_sample_I=2.04534e+06 lambda_sample_ERR=17634.9 lambda_sample_N=25068 "L_sample.dat"
+Detector: Detector_I=839.081 Detector_ERR=9.90381 Detector_N=32691 "detector.dat"
+
+Finally [PSI_DMC: 1e6]. Time: 2 [s] 
+PowderN: sample: Info: you may highly improve the computation efficiency by using
+    SPLIT 58 COMPONENT sample=PowderN(...)
+  in the instrument description PSI_DMC.instr.
+INFO: Placing instr file copy PSI_DMC.instr in dataset 1e6
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 2.44
+user 2.38
+sys 0.06
+INFO: Using directory: "1e7"
+INFO: Using existing c-file: ./PSI_DMC.c
+INFO: Using existing binary: ./PSI_DMC.out
+INFO: ===
+[PSI_DMC] Initialize
+Table from file '' (catenated) is empty.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Na2Ca3Al2F14.laz' (Table_Read_Offset)
+Table from file 'Na2Ca3Al2F14.laz' (block 1) is 841 x 18 (x=1:20), constant step. interpolation: linear
+  '# TITLE *-Na2Ca3Al2F14-[I213] Courbion, G.;Ferey, G.[1988] Standard NAC cal ...'
+PowderN: sample: Reading 841 rows from Na2Ca3Al2F14.laz
+PowderN: sample: Read 841 reflections from file 'Na2Ca3Al2F14.laz'
+PowderN: sample: Vc=1079.1 [Angs] sigma_abs=11.7856 [barn] sigma_inc=13.6704 [barn] reflections=Na2Ca3Al2F14.laz
+
+Trace ETA 19 [s] % 57 60 70 80 90 *** TRACE end *** 
+
+Save [PSI_DMC]
+Detector: PSDbefore_guides_I=2.5435e+09 PSDbefore_guides_ERR=804335 PSDbefore_guides_N=9.99993e+06 "PSDbefore_guides.dat"
+Detector: l_mon_source_I=2.5435e+09 l_mon_source_ERR=804335 l_mon_source_N=9.99993e+06 "lmonsource.dat"
+Detector: PSDbefore_curve_I=1.1278e+08 PSDbefore_curve_ERR=163282 PSDbefore_curve_N=1.25599e+06 "PSDbefore_curve.dat"
+Detector: PSDafter_curve_I=4.69671e+07 PSDafter_curve_ERR=104301 PSDafter_curve_N=951031 "PSDafter_curve.dat"
+Detector: ydist_fluxpos_I=3.52728e+07 ydist_fluxpos_ERR=89241.5 ydist_fluxpos_N=781297 "ydist_fluxpos.dat"
+Detector: PSD_fluxpos_I=3.52728e+07 PSD_fluxpos_ERR=89241.5 PSD_fluxpos_N=781297 "xdist_fluxposy.dat"
+Detector: xdist_flux_pos_I=3.52728e+07 xdist_flux_pos_ERR=89241.5 xdist_flux_pos_N=781297 "xdist_fluxpos.dat"
+Detector: PSD_fluxposB_I=3.23007e+07 PSD_fluxposB_ERR=85556.8 PSD_fluxposB_N=622499 "PSD_fluxposB.dat"
+Detector: lambda_in_I=3.21619e+07 lambda_in_ERR=85204.3 lambda_in_N=621922 "L_in.dat"
+Detector: PSD_sample_I=1.42888e+07 PSD_sample_ERR=13933.6 PSD_sample_N=4.13185e+06 "PSD_sample.dat"
+Detector: lambda_sample_I=2.00228e+06 lambda_sample_ERR=5532.66 lambda_sample_N=247130 "L_sample.dat"
+Detector: Detector_I=799.367 Detector_ERR=3.10574 Detector_N=324545 "detector.dat"
+
+Finally [PSI_DMC: 1e7]. Time: 19 [s] 
+PowderN: sample: Info: you may highly improve the computation efficiency by using
+    SPLIT 58 COMPONENT sample=PowderN(...)
+  in the instrument description PSI_DMC.instr.
+INFO: Placing instr file copy PSI_DMC.instr in dataset 1e7
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 19.02
+user 18.97
+sys 0.05

@@ -1,0 +1,65 @@
+INFO: No output directory specified (--dir)
+INFO: Using directory: "BNL_H8_20211005_150422"
+INFO: Regenerating c-file: BNL_H8.c
+Warning: 'V_sample' is an obsolete component (not maintained).
+CFLAGS=
+
+-----------------------------------------------------------
+
+Generating single GPU kernel or single CPU section layout: 
+-> SPLIT N at component PG1Xtal
+-> SPLIT N at component Sample
+-> SPLIT N at component PG2Xtal
+
+-----------------------------------------------------------
+
+Generating GPU/CPU -DFUNNEL layout:
+-> SPLIT within buffer at component PG1Xtal
+-> SPLIT within buffer at component Sample
+-> SPLIT within buffer at component PG2Xtal
+
+-----------------------------------------------------------
+INFO: Recompiling: ./BNL_H8.out
+"./BNL_H8.c", line 4889: warning: pointless comparison of unsigned integer with zero
+      state[4]  = t < 0;
+                    ^
+
+"./BNL_H8.c", line 6253: warning: missing return statement at end of non-void function "Table_File_List_Handler"
+  }
+  ^
+
+"./BNL_H8.c", line 8062: warning: variable "tc2" was declared but never referenced
+      Coords tc1, tc2;
+                  ^
+
+"./BNL_H8.c", line 8063: warning: variable "tr1" was declared but never referenced
+      Rotation tr1;
+               ^
+
+"./BNL_H8.c", line 8105: warning: variable "tc2" was declared but never referenced
+      Coords tc1, tc2;
+                  ^
+
+"./BNL_H8.c", line 12745: warning: variable "t" is used before its value is set
+    mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
+                        ^
+
+"./BNL_H8.c", line 12690: warning: variable "ct" was declared but never referenced
+    clock_t ct;
+            ^
+
+"./BNL_H8.c", line 1272: warning: variable "mcstartdate" was set but never used
+  static   long mcstartdate            = 0; /* start simulation time */
+                ^
+
+"./BNL_H8.c", line 2513: warning: function "strcpy_valid" was declared but never referenced
+  static char *strcpy_valid(char *valid, char *original)
+               ^
+
+INFO: ===
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+
+real	0m24.996s
+user	0m23.836s
+sys	0m1.153s

@@ -1,0 +1,46 @@
+# Format: McCode with text headers
+# URL: http://www.mccode.org
+# Creator: McStas 3.0-dev - Oct. 05, 2021
+# Instrument: PSI_DMC.instr
+# Ncount: 20000
+# Trace: no
+# Gravitation: no
+# Seed: 1000
+# Directory: 1e4
+# Param: lambda=2.566
+# Param: R=0.87
+# Param: R_curve=0.87
+# Param: filename=Na2Ca3Al2F14.laz
+# Param: D_PHI=6
+# Param: SHIFT=0
+# Param: PACK=0.7
+# Param: Dw=0.8
+# Param: BARNS=1
+# Date: Tue Oct  5 15:35:53 2021 (1633440953)
+# type: array_1d(11)
+# Source: PSI_DMC (PSI_DMC.instr)
+# component: ydist_fluxpos
+# position: 0 0 47.8657
+# title: Linear PSD monitor
+# Ncount: 20000
+# filename: ydist_fluxpos.dat
+# statistics: X0=-0.00203458; dX=0.0330349;
+# signal: Min=1.73676e+06; Max=4.48239e+06; Mean=3.46928e+06;
+# values: 3.81621e+07 2.96533e+06 837
+# xvar: x
+# yvar: (I,I_err)
+# xlabel: x-Position [m]
+# ylabel: Intensity
+# xlimits: -0.06 0.06
+# variables: x I I_err N
+-0.05454545455 3876703.526 959285.7835 68 
+-0.04363636364 3292687.017 887269.498 73 
+-0.03272727273 3105775.487 835249.1006 83 
+-0.02181818182 3091552.944 861777.0453 65 
+-0.01090909091 4482385.869 1029357.619 99 
+0 4222520.301 992296.0668 76 
+0.01090909091 3913416.337 945075.5247 65 
+0.02181818182 2532731.733 745058.1535 66 
+0.03272727273 3873017.284 941098.2744 74 
+0.04363636364 4034505.792 963650.666 81 
+0.05454545455 1736755.208 650867.4323 87 

@@ -1,0 +1,40 @@
+INFO: No output directory specified (--dir)
+INFO: Using directory: "PSI_DMC_20211005_153439"
+INFO: Regenerating c-file: PSI_DMC.c
+Info:    'Al_window' is a contributed component.
+Info:    'Monochromator_2foc' is a contributed component.
+CFLAGS=
+      
+WARNING:
+ The parameter format of sample is intitalized 
+ using a static {,,,} vector.
+  -> Such static vectors support literal numbers ONLY.
+  -> Any vector use of variables or defines must happen via a 
+     DECLARE/INITIALIZE pointer.
+
+
+-----------------------------------------------------------
+
+Generating single GPU kernel or single CPU section layout: 
+-> SPLIT N at component foc_mono
+-> SPLIT N at component sample
+
+-----------------------------------------------------------
+
+Generating GPU/CPU -DFUNNEL layout:
+-> SPLIT within buffer at component foc_mono
+-> SPLIT within buffer at component sample
+
+-----------------------------------------------------------
+INFO: Recompiling: ./PSI_DMC.out
+./PSI_DMC.c: In function ‘sighandler’:
+./PSI_DMC.c:5397:5: warning: implicit declaration of function ‘kill’ [-Wimplicit-function-declaration]
+     kill(0, SIGKILL); /* kill myself if error occurs within sighandler: loops */
+     ^
+INFO: ===
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+
+real	0m4.787s
+user	0m4.522s
+sys	0m0.268s

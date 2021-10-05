@@ -1,0 +1,52 @@
+INFO: No output directory specified (--dir)
+INFO: Using directory: "ILL_IN5_20211005_155257"
+INFO: Regenerating c-file: ILL_IN5.c
+Info:    'PSD_Detector' is a contributed component.
+CFLAGS=
+      
+WARNING:
+ The parameter powder_format of SAMPLE is intitalized 
+ using a static {,,,} vector.
+  -> Such static vectors support literal numbers ONLY.
+  -> Any vector use of variables or defines must happen via a 
+     DECLARE/INITIALIZE pointer.
+
+
+WARNING:
+ The parameter format of hous is intitalized 
+ using a static {,,,} vector.
+  -> Such static vectors support literal numbers ONLY.
+  -> Any vector use of variables or defines must happen via a 
+     DECLARE/INITIALIZE pointer.
+
+
+-----------------------------------------------------------
+
+Generating single GPU kernel or single CPU section layout: 
+
+-----------------------------------------------------------
+
+Generating GPU/CPU -DFUNNEL layout:
+
+-----------------------------------------------------------
+INFO: Recompiling: ./ILL_IN5.out
+./ILL_IN5.c: In function ‘sighandler’:
+./ILL_IN5.c:5397:5: warning: implicit declaration of function ‘kill’ [-Wimplicit-function-declaration]
+     kill(0, SIGKILL); /* kill myself if error occurs within sighandler: loops */
+     ^
+./ILL_IN5.c: In function ‘class_PSD_Detector_trace’:
+./ILL_IN5.c:19398:0: warning: "HUGE_VAL" redefined [enabled by default]
+   #define HUGE_VAL DBL_MAX
+ ^
+In file included from /usr/include/math.h:33:0,
+                 from ./ILL_IN5.c:194:
+/usr/include/bits/huge_val.h:28:0: note: this is the location of the previous definition
+ # define HUGE_VAL (__builtin_huge_val())
+ ^
+INFO: ===
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+
+real	0m5.487s
+user	0m5.209s
+sys	0m0.286s

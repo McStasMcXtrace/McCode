@@ -1,0 +1,192 @@
+INFO: No output directory specified (--dir)
+INFO: Using directory: "PSI_DMC_20211005_153457"
+INFO: Regenerating c-file: PSI_DMC.c
+Info:    'Al_window' is a contributed component.
+Info:    'Monochromator_2foc' is a contributed component.
+CFLAGS=
+      
+WARNING:
+ The parameter format of sample is intitalized 
+ using a static {,,,} vector.
+  -> Such static vectors support literal numbers ONLY.
+  -> Any vector use of variables or defines must happen via a 
+     DECLARE/INITIALIZE pointer.
+
+
+-----------------------------------------------------------
+
+Generating single GPU kernel or single CPU section layout: 
+-> SPLIT N at component foc_mono
+-> SPLIT N at component sample
+
+-----------------------------------------------------------
+
+Generating GPU/CPU -DFUNNEL layout:
+-> SPLIT within buffer at component foc_mono
+-> SPLIT within buffer at component sample
+
+-----------------------------------------------------------
+INFO: Recompiling: ./PSI_DMC.out
+"./PSI_DMC.c", line 4889: warning: pointless comparison of unsigned integer with zero
+      state[4]  = t < 0;
+                    ^
+
+"./PSI_DMC.c", line 6276: warning: missing return statement at end of non-void function "Table_File_List_Handler"
+  }
+  ^
+
+"./PSI_DMC.c", line 7922: warning: variable "minx" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+          ^
+
+"./PSI_DMC.c", line 7922: warning: variable "maxx" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                       ^
+
+"./PSI_DMC.c", line 7922: warning: variable "miny" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                     ^
+
+"./PSI_DMC.c", line 7922: warning: variable "maxy" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                                  ^
+
+"./PSI_DMC.c", line 7922: warning: variable "minz" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                                                ^
+
+"./PSI_DMC.c", line 7922: warning: variable "maxz" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                                                             ^
+
+"./PSI_DMC.c", line 8554: warning: argument of type "Coords **" is incompatible with parameter of type "void **"
+    acc_attach(&vtxArray);
+               ^
+
+"./PSI_DMC.c", line 8555: warning: argument of type "Coords **" is incompatible with parameter of type "void **"
+    acc_attach(&normalArray);
+               ^
+
+"./PSI_DMC.c", line 8556: warning: argument of type "unsigned long **" is incompatible with parameter of type "void **"
+    acc_attach(&faceArray);
+               ^
+
+"./PSI_DMC.c", line 9554: warning: integer conversion resulted in a change of sign
+      Vars->OFF_polyidx       = -1;
+                                ^
+
+"./PSI_DMC.c", line 10481: warning: pointless comparison of unsigned integer with zero
+  	  if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
+  	                                                               ^
+
+"./PSI_DMC.c", line 10627: warning: variable "ratio" was set but never used
+      double  ratio;
+              ^
+
+"./PSI_DMC.c", line 11142: warning: variable "y0" is used before its value is set
+              if (y0 < ymin) y0=ymin; 
+                  ^
+
+"./PSI_DMC.c", line 11144: warning: variable "y1" is used before its value is set
+              if (y1 < ymin) y1=ymin; 
+                  ^
+
+"./PSI_DMC.c", line 11178: warning: variable "dt" was set but never used
+  	double dt, dy;
+  	       ^
+
+"./PSI_DMC.c", line 11178: warning: variable "dy" was set but never used
+  	double dt, dy;
+  	           ^
+
+"./PSI_DMC.c", line 11205: warning: variable "dx" was set but never used
+  	double dx, dy;
+  	       ^
+
+"./PSI_DMC.c", line 11205: warning: variable "dy" was set but never used
+  	double dx, dy;
+  	           ^
+
+"./PSI_DMC.c", line 11917: warning: variable "tc2" was declared but never referenced
+      Coords tc1, tc2;
+                  ^
+
+"./PSI_DMC.c", line 11918: warning: variable "tr1" was declared but never referenced
+      Rotation tr1;
+               ^
+
+"./PSI_DMC.c", line 14774: warning: variable "tau_l" was declared but never referenced
+    double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus;
+             ^
+
+"./PSI_DMC.c", line 14774: warning: variable "E" was declared but never referenced
+    double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus;
+                   ^
+
+"./PSI_DMC.c", line 15382: warning: variable "Al_my_tot" was set but never used
+    double Al_s_tot_lambda,Al_my_tot,Al_my_a ; /* total XS (barn), total scattering length (m-1), absorption scat. length */
+                           ^
+
+"./PSI_DMC.c", line 15642: warning: variable "k" was set but never used
+          double my_r0, k;
+                        ^
+
+"./PSI_DMC.c", line 15808: warning: variable "type" was set but never used
+    char type = '\0';
+         ^
+
+"./PSI_DMC.c", line 15809: warning: variable "itype" was set but never used
+    int itype = 0;
+        ^
+
+"./PSI_DMC.c", line 15812: warning: variable "nb_reuses" was declared but never referenced
+    int nb_reuses = line_info.nb_reuses;
+        ^
+
+"./PSI_DMC.c", line 15815: warning: variable "vcache" was set but never used
+    double vcache = line_info.v; 
+           ^
+
+"./PSI_DMC.c", line 15819: warning: variable "lfree" was set but never used
+    double lfree = line_info.lfree;
+           ^
+
+"./PSI_DMC.c", line 15821: warning: variable "xs_compute" was declared but never referenced
+    long   xs_compute = line_info.xs_compute;
+           ^
+
+"./PSI_DMC.c", line 15822: warning: variable "xs_reuse" was declared but never referenced
+    long   xs_reuse   = line_info.xs_reuse;
+           ^
+
+"./PSI_DMC.c", line 15823: warning: variable "xs_calls" was declared but never referenced
+    long   xs_calls   = line_info.xs_calls;
+           ^
+
+"./PSI_DMC.c", line 15825: warning: variable "dq" was set but never used
+    double dq = line_info.dq;
+           ^
+
+"./PSI_DMC.c", line 19372: warning: variable "t" is used before its value is set
+    mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
+                        ^
+
+"./PSI_DMC.c", line 19317: warning: variable "ct" was declared but never referenced
+    clock_t ct;
+            ^
+
+"./PSI_DMC.c", line 1272: warning: variable "mcstartdate" was set but never used
+  static   long mcstartdate            = 0; /* start simulation time */
+                ^
+
+"./PSI_DMC.c", line 2513: warning: function "strcpy_valid" was declared but never referenced
+  static char *strcpy_valid(char *valid, char *original)
+               ^
+
+INFO: ===
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+
+real	0m27.838s
+user	0m26.624s
+sys	0m1.208s
