@@ -56,8 +56,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_div_quasi
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (xwidth=0, yheight=0, focus_xw=0, focus_yh=0, dist=0, focus_aw=0, focus_ah=0, 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string spectrum_file="", xwidth=0, yheight=0, focus_xw=0, focus_yh=0, dist=0, focus_aw=0, focus_ah=0,
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0, int verbose=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -108,6 +108,7 @@ DECLARE
   double pmul;
   double pint;
   t_Table T;
+  int spectrum_from_file;
 %}
 
 INITIALIZE
@@ -124,7 +125,10 @@ INITIALIZE
   xmax=xwidth/2.0;
   ymax=yheight/2.0;
 
-  if (spectrum_file){
+  /*flag if we are using a datafile*/
+  spectrum_from_file=(spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file));
+
+  if (spectrum_from_file){
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&(T),spectrum_file,0))==-1){
@@ -154,7 +158,6 @@ INITIALIZE
     pmul=1;
   }
   pmul*=1.0/((double) mcget_ncount());
-
 
   if( dist==0 && ( focus_xw!=0 || focus_yh!=0 )){
     fprintf(stderr,"ERROR (%s): Cannot have focus sampling window (focus_xw x focus_yh) = (%g x %g) with dist=0.\n",NAME_CURRENT_COMP);
@@ -222,7 +225,7 @@ TRACE
     y=ymin+rand01()*yheight;
   }
 
-  if (spectrum_file){
+  if (spectrum_from_file){
     double pp=0;
     while (pp<=0){ 
       l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*quasi_rand01(4);
