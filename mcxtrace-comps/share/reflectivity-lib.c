@@ -458,7 +458,9 @@ double complex refleccq( t_Reflec *r_handle, double q, double g, double k, doubl
         }
       default:
         {
+#ifndef OPENACC
           fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
+#endif
           return 1.0;
         }
     }
@@ -508,7 +510,9 @@ double reflecq( t_Reflec *r_handle, double q, double g, double k, double theta){
         }
       default:
         {
+#ifndef OPENACC
           fprintf(stderr,"ERROR (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
+#endif
           return 1.0;
         }
     }

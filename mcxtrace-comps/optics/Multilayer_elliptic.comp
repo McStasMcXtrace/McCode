@@ -64,6 +64,7 @@ SHARE
   %include "reflectivity-lib"
   /*something that would be relevant for ALL elliptical mirrors*/
   /* coordinate transformation McXtrace-Ellipse (ME) and Ellipse-McXtrace(EM) functions */
+#pragma acc routine
   void CoordTransME(double *x_el, double *y_el, double *z_el, 
 		    double x0, double y0, double z0, double Zmir, double Ymir, double xi_mir)
   {
@@ -71,7 +72,8 @@ SHARE
    *y_el=cos(xi_mir)*y0+sin(xi_mir)*z0+Ymir;
    *z_el=-sin(xi_mir)*y0+cos(xi_mir)*z0+Zmir;
   }
-  
+
+#pragma acc routine
   void CoordTransEM(double *x_gen, double *y_gen,double *z_gen,
 		    double x0, double y0, double z0, double Zmir, double Ymir,double xi_mir)
   {

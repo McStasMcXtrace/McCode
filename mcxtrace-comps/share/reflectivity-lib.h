@@ -74,18 +74,28 @@ int reflec_Init_File(t_Reflec *R, char* filename);
 
 int reflec_Init_parratt(t_Reflec *R, int N, double *d, double *delta, double *beta);
 int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, double rhoAB);
+int reflec_Init_const(t_Reflec *R, double R0);
 
-
-
-double complex refleccq(t_Reflec *r_handle, double q, double g, ... );
-double reflecq(t_Reflec *r_handle, double q, double g, ... );
+#pragma acc routine
+double complex refleccq(t_Reflec *r_handle, double q, double g, double k, double theta );
+#pragma acc routine
+double reflecq(t_Reflec *r_handle, double q, double g, double k, double theta );
+#pragma acc routine
 double complex reflecc(t_Reflec *r_handle, double kix, double kiy, double kiz, double kfx, double kfy, double kfz, double g );
 
+#pragma acc routine
 double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k);
+#pragma acc routine
 double complex reflec_bare(t_Reflec *r_handle, double q, double g);
+#pragma acc routine
 double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g);
+#pragma acc routine
 double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k);
+#pragma acc routine
 double complex reflec_kinematical(t_Reflec *r_handle, double q, double g);
+#pragma acc routine
 double complex parrat_reflec_bulk(int lc, double *delta, double *beta, double *d, double k, double q);
+#pragma acc routine
 double complex reflec_eth_prmtc(t_Reflec *r_handle, double e, double theta, double g);
+
 enum reflec_Type get_table_reflec_type(t_Table *t);
