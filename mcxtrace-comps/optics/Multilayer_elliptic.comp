@@ -116,10 +116,11 @@ INITIALIZE
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
     kinematical = 0;
     /* reflectivity datafile parsing COATING_UNDEFINED - means set the type according to what is found in the file*/
-    status=reflec_Init(&re,COATING_UNDEFINED,reflectivity_datafile);
+    status=reflec_Init(&re,COATING_UNDEFINED,reflectivity_datafile, NULL);
   }else{
     kinematical = 1;
-    status=reflec_Init(&(re), KINEMATIC, N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-density material in layer, thickness of layer, e-density contrast*/
+    re.type=KINEMATIC;
+    status=reflec_Init_kinematic(&(re), N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-density material in layer, thickness of layer, e-density contrast*/
   }
 %}
 
