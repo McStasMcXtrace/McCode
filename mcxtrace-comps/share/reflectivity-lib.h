@@ -18,19 +18,19 @@ typedef struct t_reflec_constant{
 } t_reflec_constant;
 
 typedef struct t_reflec_bare{
-  char *matrl;
+  char matrl[256];
   double d;
 } t_reflec_bare;
 
 typedef struct t_reflec_coating{
-  char *matrl;
+  char matrl[256];
   t_Table *T;
   double *d;
   double rho,Z,At;
 }t_reflec_coating;
 
 typedef struct t_reflec_q_prmtc{
-  char *fname;
+  char fname[256];
   t_Table *T;
   double qmin,qmax;
 } t_reflec_q_prmtc;
@@ -49,7 +49,7 @@ typedef struct t_reflec_kinematic{
 } t_reflec_kinematic;
 
 typedef struct t_reflec_eth_prmtc{
-  char *fname;
+  char *fname[256];
   t_Table *T;
   double emin,emax,estep;/*energy range*/
   double thetamin,thetamax,thetastep;/*incidence angle range*/
