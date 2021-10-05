@@ -146,7 +146,7 @@ FINALLY
   if (difftime(NowTime,StartTime) < 60.0)
     fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
   else if (difftime(NowTime,StartTime) > 3600.0)
-    fprintf(stdout, "%g [h] ", difftime(NowTime,StartTime)/3660.0);
+    fprintf(stdout, "%g [h] ", difftime(NowTime,StartTime)/3600.0);
   else
     fprintf(stdout, "%g [min] ", difftime(NowTime,StartTime)/60.0);
   fprintf(stdout, "\n");
