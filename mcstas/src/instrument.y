@@ -1572,7 +1572,7 @@ print_version(void)
 {
   printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
     "Copyright (C) DTU Physics and Risoe National Laboratory, 1997-" MCCODE_YEAR "\n"
-    "Additions (C) Institut Laue Langevin, 2003-" MCCODE_YEAR "\n"
+    "Additions (C) Institut Laue Langevin, 2003-2019\n"
     "All rights reserved\n");
   exit(0);
 }
