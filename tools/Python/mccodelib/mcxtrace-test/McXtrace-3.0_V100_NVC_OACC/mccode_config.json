@@ -12,7 +12,7 @@
     "GUICOLS": "3"
   },
   "compilation": {
-    "CFLAGS": "-g -lm -O2 -DRNG_ALG=2",
+    "CFLAGS": "-lm -O2 -acc=gpu -gpu=fastmath,managed -DOPENACC",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "",
     "OACCFLAGS": "-acc=gpu -gpu=fastmath,managed -DOPENACC",

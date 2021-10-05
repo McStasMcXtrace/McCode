@@ -12,10 +12,10 @@
     "GUICOLS": "3"
   },
   "compilation": {
-    "CFLAGS": "-g -lm -O2 -DRNG_ALG=2",
+    "CFLAGS": "-lm -O2 -acc=multicore -DOPENACC",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "",
-    "OACCFLAGS": "-ta:multicore -DOPENACC",
+    "OACCFLAGS": "-acc=multicore -DOPENACC",
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "",
