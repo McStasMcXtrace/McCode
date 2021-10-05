@@ -34,38 +34,24 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
       break;
     case COATING:
       {
-          R->prms.rc.matrl=va_arg(ap,char *);
-          reflec_Init_File(R,R->prms.rc.matrl);
-/*          struct t_reflec_coating *ptr=&(R->prms.rc);*/
-/*          ptr->T=calloc(1,sizeof(t_Table));*/
-/*          if (ptr->matrl && strlen(ptr->matrl)){*/
-/*              if ( (Table_Read(ptr->T,ptr->matrl,0))==-1){*/
-/*                  fprintf(stderr,"Error(%s): Could not parse file \'%s\'\n",__FILE__,ptr->matrl);*/
-/*                  exit(-1);*/
-/*              }*/
-/*              char **header_parsed;*/
-/*              header_parsed=Table_ParseHeader(ptr->T->header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);*/
-/*              if(header_parsed[2]){ptr->rho=strtod(header_parsed[2],NULL);}*/
-/*              if(header_parsed[0]){ptr->Z=strtod(header_parsed[0],NULL);}*/
-/*              if(header_parsed[1]){ptr->At=strtod(header_parsed[1],NULL);}*/
-/*          }else{*/
-/*              fprintf(stderr,"Error(%s): No coating material file specified, yet a coating (\'%s\') is requested\n",__FILE__,ptr->matrl);*/
-/*              exit(-1);*/
-/*          }*/
+          /*cast the first address to be a scalar integer. The latter ones are pointers to double arrays.*/
+          int N=(int)((double **) pars)[0];
+          if(pars){
+              reflec_Init_parratt(R, N,((double **) pars)[1], ((double **) pars)[2], ((double **) pars)[3]);        
+          }else{
+              fprintf(stderr,"WARNING:(%s) No parameters specified to Parratt reflectivity algortihm. Setting R=0.\n",REFLIBNAME);
+              R->type=CONSTANT;
+              R->rconst.R=0;
+          }
           break;
       }
     case Q_PARAMETRIC:
       {
-          R->prms.rqpm.fname=va_arg(ap,char *);
-          reflec_Init_File(R,R->prms.rqpm.fname);
-/*          struct t_reflec_q_prmtc *ptr=&(R->prms.rqpm);*/
-/*          ptr->T=calloc(1,sizeof(t_Table));*/
-/*          if ( (status=Table_Read(ptr->T,ptr->fname,0))==-1){*/
-/*              fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,ptr->fname);*/
-/*              exit(-1);*/
-/*          }*/
-/*          ptr->qmin=Table_Index(*(ptr->T),0,0);*/
-/*          ptr->qmax=Table_Index(*(ptr->T),ptr->T->rows,0);*/
+          if(pars){
+              reflec_Init_kinematic(R, (int) pars[0],pars[1],pars[2],pars[3]);        
+          }else{
+              reflec_Init_kinematic(R, (int) 0, 0.0, 0.0, 0.0, 0.0);
+          }
           break;
       }
     case PARRATT:
@@ -116,6 +102,22 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, ...){
   }
   va_end(ap);
   return 0;
+}
+
+int reflec_Init_parratt(t_Reflec *R, int N, double *d, double *delta, double *beta){
+    R->rp.N=N;
+    R->rp.d=d;
+    R->rp.delta=delta;
+    R->rp.beta=beta;
+    return 0;
+}
+
+int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, double rhoAB){
+    R->rp.N=N;
+    R->rp.Gamma=Gamma;
+    R->rp.Lambda=Lambda;
+    R->rp.rhoAB=rhoAB;
+    return 0;
 }
 
 /* Initialize a container object for various types of reflectivity parametrization using

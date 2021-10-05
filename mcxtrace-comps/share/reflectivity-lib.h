@@ -69,8 +69,13 @@ typedef struct reflec_T {
 } t_Reflec;
 
 /* reflectivity-lib.c */
-int reflec_Init(t_Reflec *R, enum reflec_Type type, ...);
+int reflec_Init(t_Reflec *R, enum reflec_Type type, char *file, void *pars);
 int reflec_Init_File(t_Reflec *R, char* filename);
+
+int reflec_Init_parratt(t_Reflec *R, int N, double *d, double *delta, double *beta);
+int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, double rhoAB);
+
+
 
 double complex refleccq(t_Reflec *r_handle, double q, double g, ... );
 double reflecq(t_Reflec *r_handle, double q, double g, ... );
