@@ -1917,6 +1917,14 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
   coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
+  coutf("");
+  coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
+  coutf("  #ifdef OPENACC");
+  coutf("  #ifndef MULTICORE");
+  coutf("  #undef printf");
+  coutf("  #endif");
+  coutf("  #endif");
+  coutf("");
   coutf("  #ifdef OPENACC");
   coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  if (ncount>gpu_innerloop) {");
