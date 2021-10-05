@@ -136,6 +136,11 @@ INITIALIZE
   }
   pmul*=1.0/((double) mcget_ncount());
 
+  if( dist==0 && ( focus_xw!=0 || focus_yh!=0 )){
+    fprintf(stderr,"ERROR (%s): Cannot have focus sampling window (focus_xw x focus_yh) = (%g x %g) with dist=0.\n",NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
   /*check if divergence limits are compatible with focus_xw, focus_yh*/
   double maxdivh,maxdivv;
   if(focus_xw!=0){

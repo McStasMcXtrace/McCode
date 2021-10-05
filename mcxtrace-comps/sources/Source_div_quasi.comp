@@ -98,7 +98,6 @@ SHARE
 
 DECLARE
 %{
-  double dist;
   int ray_number;
   double xmin;
   double xmax;
@@ -155,6 +154,12 @@ INITIALIZE
     pmul=1;
   }
   pmul*=1.0/((double) mcget_ncount());
+
+
+  if( dist==0 && ( focus_xw!=0 || focus_yh!=0 )){
+    fprintf(stderr,"ERROR (%s): Cannot have focus sampling window (focus_xw x focus_yh) = (%g x %g) with dist=0.\n",NAME_CURRENT_COMP);
+    exit(-1);
+  }
 
   /*check if divergence limits are compatible with focus_xw, focus_yh*/
   if(focus_xw!=0){
