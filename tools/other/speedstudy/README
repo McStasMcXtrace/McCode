@@ -1,0 +1,11 @@
+As is, the script in this folder
+
+./speedstudy.sh ILL_IN5 lambda=4.5 -s 1000
+
+will run:
+* 1-core:    1e4 ... 1e7 runs
+* 8 way :    1e4 ... 1e8 runs
+* GPU:       1e4 ... 1e9 runs
+* 8 way GPU: 1e4 ... 1e10 runs
+
+The Matlab script speedstudy takes the resulting output folder and generates an eps figure from the above data.
