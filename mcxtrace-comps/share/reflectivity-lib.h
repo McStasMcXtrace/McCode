@@ -49,7 +49,7 @@ typedef struct t_reflec_kinematic{
 } t_reflec_kinematic;
 
 typedef struct t_reflec_eth_prmtc{
-  char *fname[256];
+  char fname[256];
   t_Table *T;
   double emin,emax,estep;/*energy range*/
   double thetamin,thetamax,thetastep;/*incidence angle range*/

@@ -199,7 +199,7 @@ TRACE
              * r1(zeta) = 2 i r_0 \rho_{AB} \left(\frac{\Lambda^2 \Gamma}{\zeta}\right) \frac{\sin\left(\pi\Gamma\zeta\right)}{\pi\Gamma\zeta);
              */
             double complex rN;
-            rN=refleccq(&(re),QQ,0);
+            rN=refleccq(&(re),QQ,0,0,0);
             Ref=cabs(rN);
             if (Ref>1){
               /*Reflectivity can't be >1*/
@@ -207,7 +207,7 @@ TRACE
             }
           }else{
             /*interpolate in table*/
-            Ref=reflecq(&(re),QQ,0);
+            Ref=reflecq(&(re),QQ,0,0,0);
           }
 	  
 	  /* apply reflectivity */

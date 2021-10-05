@@ -31,85 +31,88 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, char *file, void *pars){
     case CONSTANT:
       {
           if (pars){
-              reflec_Init_const(R,pars[0]);
+	    reflec_Init_const(R,((double *)pars)[0]);
           }else{
               reflec_Init_const(R,0);
+	  }
+	  break;
       }
-      break;
     case PARRATT:
       {
           /*cast the first address to be a scalar integer. The latter ones are pointers to double arrays.*/
-          int N=(int)((double **) pars)[0];
+          int N=(unsigned int)((double **) pars)[0];
           if(pars){
               reflec_Init_parratt(R, N,((double **) pars)[1], ((double **) pars)[2], ((double **) pars)[3]);        
           }else{
               fprintf(stderr,"WARNING:(%s) No parameters specified to Parratt reflectivity algortihm. Setting R=0.\n",REFLIBNAME);
               R->type=CONSTANT;
-              R->rconst.R=0;
+              R->prms.rconst.R=0;
           }
           break;
       }
     case KINEMATIC:
       {
           if(pars){
-              reflec_Init_kinematic(R, (int) pars[0],pars[1],pars[2],pars[3]);        
+	    reflec_Init_kinematic(R, (int) ((double *)pars)[0],((double *)pars)[1],((double *)pars)[2],((double *)pars)[3]);
           }else{
-              reflec_Init_kinematic(R, (int) 0, 0.0, 0.0, 0.0, 0.0);
+            reflec_Init_kinematic(R, (int) 0, 0.0, 0.0, 0.0);
           }
           break;
       }
     case BARE:
       {
-          strncpy(R->rb.matrl,file,255);
-          R->rb.matrl[255]='\0';/*ensure termination*/
-          reflec_Init_File(R,R->rb.matrl);
+          stracpy(R->prms.rb.matrl,file,255);
+          reflec_Init_File(R,R->prms.rb.matrl);
           break;
       }
     case COATING:
       {
-          strncpy(R->rc.matrl,file,255);
-          R->rc.matrl[255]='\0';/*ensure termination*/
-          reflec_Init_File(R,R->rc.matrl);
+          stracpy(R->prms.rc.matrl,file,255);
+          reflec_Init_File(R,R->prms.rc.matrl);
           break;
       }
     case Q_PARAMETRIC:
       {
-          strncpy(R->rqpm.fname,file,255);
-          R->rqpm.fname[255]='\0';/*ensure termination*/
-          reflec_Init_File(R,R->rqpm.fname);
+          stracpy(R->prms.rqpm.fname,file,255);
+          reflec_Init_File(R,R->prms.rqpm.fname);
           break;
       }
     case ETH_PARAMETRIC:
       {
-          strncpy(R->rethpm.fname,file,255);
-          R->rethpm.fname[255]='\0';/*ensure termination*/
-          reflec_Init_File(R,R->rethpm.fname);
+          stracpy(R->prms.rethpm.fname,file,255);
+          reflec_Init_File(R,R->prms.rethpm.fname);
           break;
       }
     default:
-      fprintf(stderr,"Error (%s): Undetermined reflectivity parameterization type. Setting R=0\n",REFLIBNAME)
-      free(R);
-      R=NULL;
-      return 0;
+      {
+        fprintf(stderr,"Error (%s): Undetermined reflectivity parameterization type. Setting R=0\n",REFLIBNAME);
+	free(R);
+	R=NULL;
+	return -1;
+      }
   }
   return 0;
 }
 
 int reflec_Init_parratt(t_Reflec *R, int N, double *d, double *delta, double *beta){
-    R->rp.N=N;
-    R->rp.d=d;
-    R->rp.delta=delta;
-    R->rp.beta=beta;
+    R->prms.rp.N=N;
+    R->prms.rp.d=d;
+    R->prms.rp.delta=delta;
+    R->prms.rp.beta=beta;
     return 0;
 }
 
 int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, double rhoAB){
-    R->rp.N=N;
-    R->rp.Gamma=Gamma;
-    R->rp.Lambda=Lambda;
-    R->rp.rhoAB=rhoAB;
+    R->prms.rk.N=N;
+    R->prms.rk.Gamma=Gamma;
+    R->prms.rk.Lambda=Lambda;
+    R->prms.rk.rho_AB=rhoAB;
     return 0;
 }
+ int reflec_Init_const(t_Reflec *R, double R0){
+   R->prms.rconst.R=R0;
+   return 0;
+ }
 
 /* Initialize a container object for various types of reflectivity parametrization using
  * an input file as source.*/
@@ -127,7 +130,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
     if(!(filename && strlen(filename) && strcmp(filename,"NULL") && (status = Table_Read(table, filename, 1)!=-1) ) ) {
       fprintf(stderr,"Warning: (%s) no reflectivity file given. Surface is opaque.\n","reflectivity-lib");
       R->type=CONSTANT;
-      R->rconst.R=0;
+      R->prms.rconst.R=0;
       return 0;
     }
 
@@ -150,7 +153,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
             fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
             exit(-1);
           }
-          R->prms.rb.matrl=header_parsed[0];
+          stracpy(R->prms.rb.matrl,header_parsed[0],255);
           R->prms.rb.d=strtod(header_parsed[1], NULL);
           break;
         }
@@ -162,7 +165,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
             fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
             exit(-1);
           } else {
-            R->prms.rc.matrl=header_parsed[0];
+            stracpy(R->prms.rc.matrl,header_parsed[0],255);
             R->prms.rc.T = table;
             R->prms.rc.d = malloc(sizeof(double));
             *(R->prms.rc.d) = strtod(header_parsed[4], NULL);
@@ -175,7 +178,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 
       case Q_PARAMETRIC:
         {
-          R->prms.rqpm.fname=filename;
+          stracpy(R->prms.rqpm.fname,filename,255);
           R->prms.rqpm.T=table;
           R->prms.rqpm.qmin=Table_Index(*table,0,0);
           R->prms.rqpm.qmax=Table_Index(*table,table->rows,0);
@@ -216,7 +219,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 
       case ETH_PARAMETRIC:
         {
-          R->prms.rethpm.fname=filename;
+          stracpy(R->prms.rethpm.fname,filename,255);
           R->prms.rethpm.T=table;
 
           /*parse header for E_min E_max etc.*/
@@ -517,9 +520,9 @@ double refleceth( t_Reflec *r_handle,double e, double th, double g){
     double k=e*E2K;
     q=k*2.0*sin(th);
     if(r_handle->type==PARRATT || r_handle->type==COATING){
-        return reflecq(r_handle,q,g,k);
+      return reflecq(r_handle,q,g,k,0);
     }else{
-        return reflecq(r_handle,q,g,e,th);
+      return reflecq(r_handle,q,g,k,th);
     }
 }
 
@@ -528,8 +531,8 @@ double complex reflecceth( t_Reflec *r_handle,double e, double th, double g){
     double k=e*E2K;
     q=k*2.0*sin(th);
     if(r_handle->type==PARRATT){
-        return refleccq(r_handle,q,g,k);
+      return refleccq(r_handle,q,g,k,0);
     }else{
-        return refleccq(r_handle,q,g,e,th);
+      return refleccq(r_handle,q,g,k,th);
     }
 }
