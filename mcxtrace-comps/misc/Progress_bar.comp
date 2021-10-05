@@ -12,7 +12,6 @@
 * Written by: Emmanuel Farhi
 * Modified by: Erik Knudsen
 * Date: 2009
-* Version: 1.0
 * Origin: ILL
 * Release: McXtrace 1.0
 *
@@ -33,7 +32,7 @@
 * percent: [0-100]  percentage interval between updates. Default is 10%.
 * minutes: [min]    time in minutes between updates (Overrides percent flag).
 * flag_save: [0|1]  flag to enable intermediate saving for all monitors
-* profile: [str]    file name to save the simulation profile, if set to "", it is set to the name of the instrument.
+* profile: [str]    file name to save the simulation profile in. If set to "", it is set to the name of the instrument.
 *
 * %E
 *******************************************************************************/
@@ -41,7 +40,7 @@
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
-OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime,CurrentTime)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
@@ -69,6 +68,9 @@ INITIALIZE
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
   }
+  #ifdef OPENACC
+  time(&StartTime);
+  #endif
 %}
 
 TRACE
