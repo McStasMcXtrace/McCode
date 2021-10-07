@@ -52,9 +52,14 @@ int mccode_main(int argc, char *argv[])
 #ifdef OPENACC
 #ifdef USE_MPI
   int num_devices = acc_get_num_devices(acc_device_nvidia);
-  int my_device = mpi_node_rank % num_devices;
-  printf("Node %i should use device %i\n",mpi_node_rank,my_device);
-#pragma acc set device_num(my_device) device_type(acc_device_nvidia)
+  if(num_devices>0){
+    int my_device = mpi_node_rank % num_devices;
+    acc_set_device_num( my_device, acc_device_nvidia );
+    printf("Have found %d GPU devices on rank %d. Will use device %d.\n", num_devices, mpi_node_rank, my_device);
+  }else{
+    printf("There was an issue probing acc_get_num_devices, fallback to host\n");
+    acc_set_device_type( acc_device_host );
+  }
 #endif
 #endif
 
