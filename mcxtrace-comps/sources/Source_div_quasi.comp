@@ -68,7 +68,7 @@ SHARE
 #define MX_SOURCE_DIV_QUASI_H 1
   %include "read_table-lib"
     
-    double quasi_rand01(int axis){
+  double _quasi_rand01(int axis, long long uid){
     const int no_primes=32;
     const int primes[]={2,3,5,7,9,11,13,17,19,23,29, 
         31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 
@@ -79,7 +79,7 @@ SHARE
 
     hn = 0.0;
     f = 1.0/primes[axis];
-    n0 = mcget_run_num()+1;
+    n0 = uid+1;
     while ( n0>0 ) 
     {
         n1 = n0/primes[axis];
@@ -89,7 +89,10 @@ SHARE
         n0 = n1;
     }
     return hn;
-}
+  }
+
+#define quasi_rand01(a) _quasi_rand01((a),_particle->_uid)
+
 #endif /*MX_SOURCE_DIV_H*/
 
 
