@@ -4,7 +4,10 @@
 #
 # Kudos to Rémi Lacroix from the OpenACC_Hackathon slack 
 
-export CUDA_VISIBLE_DEVICES=${OMPI_COMM_WORLD_LOCAL_RANK}
+if [ "x" == "x${CUDA_VISIBLE_DEVICES}" ];
+then
+    export CUDA_VISIBLE_DEVICES=${OMPI_COMM_WORLD_LOCAL_RANK}
+fi
 
 "$@"
 
