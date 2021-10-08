@@ -168,7 +168,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 #else
 	Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
 #endif
-    Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
+    Vars->Neutron_Counter   = -1;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
     Vars->He3_pressure      = 0;
@@ -1194,7 +1194,8 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-          
+        #pragma acc atomic
+        Vars->Neutron_Counter = Vars->Neutron_Counter + 1;
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
 	  // This is is where the list is appended. How to make this "atomic"?
@@ -1206,8 +1207,6 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         if (Vars->Flag_Verbose && (Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List == 1)) 
           printf("Monitor_nD: %s %li neutrons stored in List.\n", Vars->compcurname, Vars->Buffer_Counter);
       }
-      #pragma acc atomic
-      Vars->Neutron_Counter = Vars->Neutron_Counter + 1;
     } /* end (Vars->Flag_Auto_Limits != 2) */
     
   } /* end while */
