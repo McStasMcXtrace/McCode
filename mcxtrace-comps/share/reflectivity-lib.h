@@ -92,7 +92,7 @@ double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g);
 #pragma acc routine
 double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k);
 #pragma acc routine
-double complex reflec_kinematical(t_Reflec *r_handle, double q, double g);
+double complex reflec_kinematic(t_Reflec *r_handle, double q, double g);
 #pragma acc routine
 double complex parrat_reflec_bulk(int lc, double *delta, double *beta, double *d, double k, double q);
 #pragma acc routine
