@@ -140,6 +140,7 @@ int Mx_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
         double eratio=cabs(eq24);
         
 #ifdef MCDEBUG
+#ifndef OPENACC
         fprintf(stderr,
                 "Bragg Geometry results: k0=(%.3f %.3f %.3f), kh=(%.3f %.3f %.3f) "
                 "xi0 = (%.3e + %.3e i) "
@@ -151,6 +152,7 @@ int Mx_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
                 creal(xi0), cimag(xi0),
                 b,
                 creal(eq24), cimag(eq24), eratio*eratio/fabs(b));
+#endif
 #endif
         
         if(i==0)  *Rpi=eratio*eratio/fabs(b); // the fabs(b0) is the footprint correction
@@ -234,9 +236,11 @@ int Mx_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], do
             swap=initroots[0]; initroots[0]=initroots[1]; initroots[1]=swap;
         } else {
             // neither root has im(k) < 0, no physically possible solution.  Should never happen.
+#ifndef OPENACC
             fprintf(stderr, "PerfectCrystal: No attenuating solution for incoming vector found, r1=(%.3e + %.3e i) 	r2=(%.3e + %.3e i) \n",
                     creal(initroots[0]), cimag(initroots[0]), creal(initroots[1]), cimag(initroots[1]));
-            exit(1);
+#endif
+            return -1;
         }
     }
     initroots[2]=p1b;
@@ -246,9 +250,11 @@ int Mx_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], do
         double complex dd, kq, pv, dv;
         kq=initroots[rootloops];
 #if MCDEBUG
+#ifndef OPENACC
         fprintf(stderr,"Batterman Cole dispersion Newton Iterations, starting at root =(%.3e + %.3e i) \n",
                 creal(kq), cimag(kq)
                 );
+#endif
 #endif
         int stepcount=0;
         do {
@@ -258,17 +264,22 @@ int Mx_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], do
             kq+=dd;
             stepcount++;
 #ifdef MCDEBUG_EXTRA
+#ifndef OPENACC
+        fprintf(stderr,"Batterman Cole dispersion Newton Iterations, starting at root =(%.3e + %.3e i) \n",
             fprintf(stderr,"Batterman Cole dispersion Newton Iterations, step count=%d, pv=%.3e dv=%.3e "
                     "kq=(%.3e + %.3e I) shift=%.3e\n",
                     stepcount,
                     cabs(pv), cabs(dv), creal(kq), cimag(kq), cabs(dd) );
+#endif
 #endif
         } while ( ((cabs(dd) > 1e-15) && (stepcount < 20)) );
         kqvals[rootloops]=kq;
 
         fail= (stepcount == 20);
         if(fail) { // should never happen. always converges in about 3 steps!
+#ifndef OPENACC
             fprintf(stderr,"****Newton's method convergence failure in Bragg_Geometry, killing particle!\n");
+#endif
             kq=initroots[rootloops]; // leave offset plausible, close to quadratic start
         }
 
@@ -303,7 +314,7 @@ int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
     double k0[3]={k0hat[0]*k0mag, k0hat[1]*k0mag, k0hat[2]*k0mag}; /* actual incoming k vector */
     double H[3]={alpha[0]*hscale, alpha[1]*hscale, alpha[2]*hscale};
 
-    // a bunch of precomputed dot products we will use over and over
+    /* a bunch of precomputed dot products we will use over and over.*/
     double k0dotnhat=vdot(k0,nhat);
     double Hdotnhat=vdot(H, nhat);
     double k0dotH=vdot(k0,H);
@@ -355,6 +366,7 @@ int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
         double complex t0zz=phi0t*(i1+i2*dphi); // transmitted complex field amplitude at exit
         double complex thzz=phi0r*(a1*i1+a2*i2*dphi); // reflected complex field amplitude at exit
 #ifdef MCDEBUG
+#ifndef OPENACC
         fprintf(stderr, "LAUE: "
         " k0 = (%.3f %.3f %.3f) thickness=%.3e"
         " a1=(%.3f + %.3fj) "
@@ -376,6 +388,7 @@ int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
         creal(t0zz), cimag(t0zz),
         creal(thzz), cimag(thzz)
         );
+#endif
 #endif
 
         /* compute the asymmetry b which is the ratio of the sizes of the footprint of the beam on the crystal.
@@ -504,6 +517,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
 
     DeltaThetas = psi0r/sin(2*theta);               	/* eq 32 */
 #ifdef MCDEBUG
+#ifndef OPENACC
     printf("E,lambda= %f , %f \n",E,lambda);
     printf("theta= %f \n",theta*180/PI);
     printf("Theta0= %f \n",*Theta0*180/PI);
@@ -520,6 +534,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
     printf("L= %f \n",L);
     printf("R= %f \n",*R);
     printf("DeltaThetas %f \n",3600*DeltaThetas*180/PI);
+#endif
 #endif
     *DeltaTheta0 = 0.5*(1 + 1/b)*DeltaThetas;                        	/* center of reflectivity curve is at theta + DeltaTheta0 eq 31 */
 }
