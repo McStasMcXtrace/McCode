@@ -14,10 +14,10 @@
     "QSCI": "1"
   },
   "compilation": {
-    "CFLAGS": "-g -O2 -ta=multicore -Minfo=accel -DOPENACC -DMULTICORE",
+    "CFLAGS": "-g -O2 -ta=multicore -Minfo=accel -DOPENACC",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-g -O2 -ta:multicore -Minfo=accel -DOPENACC -DMULTICORE",
+    "OACCFLAGS": "-g -O2 -ta:multicore -Minfo=accel -DOPENACC,
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "mpicc",
