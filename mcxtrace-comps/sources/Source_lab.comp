@@ -65,7 +65,8 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
   %include "read_table-lib"
-    
+#ifndef MX_SOURCE_LAB
+#define MX_SOURCE_LAB
   /*here are some material data- currently only for Cu, Mo, W, and Ag*/
   struct xray_em_data{
     int _Z;/*atom number*/
@@ -75,7 +76,8 @@ SHARE
     double e[6];/*line energy*/
     double w[6];/*natural width of line FWHM*/
     double i[6];/*relative intensity*/
-  } xray_mat_data[]={
+  };
+  struct xray_em_data xray_mat_data[6]={
     {29, 8.979 ,0.407,2,{8.02783,8.04778,0,0,0,0},{2.11e-3,2.17e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
     {31, 10.367,0.0  ,2,{9.22482,9.25174,0,0,0,0},{2.59e-3,2.66e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
     {42, 20.00 ,0.770,5,{17.3743,17.47934,19.5903, 19.6083, 19.965,0},{6.31e-3,6.49e-3,12e-3, 12e-3, 12e-3,0},{0.52,1.0,0.08,0.15,0.03,0}},
@@ -83,7 +85,8 @@ SHARE
     {74, 69.525,0.945,5,{57.9817,59.31824,66.9514,67.2443,69.067,0},{44.9e-3,45.2e-3, 51.1e-3, 50.8e-3 , 50.2,0},{0.58,1.0,0.11,0.22,0.08,0}},
     {0,0.0,0.0,0,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}}
   };
-  const double BKRAMER=2e-6; /*photons /keV /electron*/
+#pragma acc declare create(xray_mat_data)
+#endif
 
 %}
 
@@ -96,19 +99,23 @@ DECLARE
   double At;
   double rho;
   t_Table T;
-  struct xray_em_data *em_p;
+  int em_idx;
   double Icont;
   double Ichar;
   int linemin;
   int linemax;
   double p_continous;
-  double mu=0.2e-6;
   double pmul_c;
   double mu_electron;
+
+  double BKRAMER;
 %}
 
 INITIALIZE
 %{
+  BKRAMER=2e-6; /*photons /keV /electron*/
+#pragma acc update device(xray_mat_data[0:6])
+
   int status,ii;
   if (E0<=0){
     fprintf(stderr,"Error %s: Impinging electron energy (E0) must be >0, was %g\n",NAME_CURRENT_COMP, E0);
@@ -135,15 +142,18 @@ INITIALIZE
   if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
   if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
   if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
+
   /*use the atom number to get at the right data structure*/  
-  em_p=&(xray_mat_data[0]);
-  while (Z!=em_p->_Z){
-    em_p++;
-    if ((em_p->_Z)==0){
+  int idx=0;
+  while (Z!=xray_mat_data[idx]._Z){
+    idx++;
+    if ((xray_mat_data[idx]._Z)==0){
       fprintf(stderr,"Error: %s (Z=%d) anode not implemented yet. Please contact the McXtrace team to fix this. Aborting.\n",material_datafile,Z);
       exit(-1);
     }
   }
+  em_idx=idx;
+  struct xray_em_data *em_p = &(xray_mat_data[em_idx]);
   
   /*Integrate the continuous spectrum and the characteristic so as to get the relative intenisities right*/
   Icont=tube_current/CELE*BKRAMER*Z*(E0*log(Emax)-E0*log(Emin) - Emax + Emin);
@@ -192,6 +202,8 @@ INITIALIZE
 
   pmul_c=1.0/(mcget_ncount());
 
+  mu_electron=0;
+
 %}
 
 TRACE
@@ -222,9 +234,7 @@ TRACE
 
   /*Now for wavelength selection*/
   r=rand01();
-  //printf("brems %g %g\n",r,p_continous);
   if(r<frac){
-    //printf("brems %g \n",r);
     /*bremsstrahlung*/
     e=rand01()*(Emax-Emin)+Emin;
     k=e*E2K;
@@ -234,7 +244,7 @@ TRACE
     /*correct for monte-carlo statistics*/
     pmul*=p_continous/frac;
   }else{
-    const struct xray_em_data *pt=em_p;
+    struct xray_em_data *pt=&(xray_mat_data[em_idx]);
     /*characteristic radiation*/
     /*first pick a possible line*/
     r=rand01()*(linemax-linemin) + linemin;
