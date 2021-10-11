@@ -136,7 +136,7 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
 #pragma acc routine seq
 int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z, double t, double *bx,double *by, double *bz, double dummy[8]){
   mcmagnet_field_info *p,**stack;
-  Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
+  Coords in,loc,b,bsum={0,0,0};
   Rotation r;
   /*extract the magnetic field stack experienced by this particle*/
   stack=((mcmagnet_field_info **) _particle->mcMagnet);
@@ -481,7 +481,7 @@ void SimpleNumMagnetPrecession(Coords posMagnet, Rotation rotMagnet, _class_part
   double Bx, By, Bz, mc_pol_phiz;
   double BxStart, ByStart, BzStart, Bstart;
   double BxTemp, ByTemp, BzTemp, Btemp;
-  double Bstep, mc_pol_timeStep, mc_pol_sp;
+  double mc_pol_timeStep, mc_pol_sp;
   const double mc_pol_spThreshold  = cos(mc_pol_angular_accuracy);
   _class_particle ploc=*precess_particle;
   _class_particle *pp = &ploc;
