@@ -57,31 +57,28 @@ OUTPUT PARAMETERS()
 
 SHARE
 %{
-%include "pol-lib"
-struct BfstopStruct{
-      int shape;
-};
+  %include "pol-lib"
 %}
 DECLARE
 %{
-struct BfstopStruct prms;
+  int shape;
 %}
 INITIALIZE
 %{
     enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
     /*if a start component is given, and no geometry is set, inherent geometry from start comp.*/
     if(geometry && strlen(geometry)){
-        prms.shape=ANY;
+        shape=ANY;
     }else if(xwidth && yheight && zdepth){
-        prms.shape=BOX;
+        shape=BOX;
     }else if (xwidth && yheight && !zdepth){
-        prms.shape=WINDOW;
+        shape=WINDOW;
     }else if(radius && yheight){
-        prms.shape=CYLINDER;
+        shape=CYLINDER;
     }else if (radius) {
-        prms.shape=SPHERE;
+        shape=SPHERE;
     }else{
-        prms.shape=NONE;
+        shape=NONE;
     }
 %}
 
@@ -91,15 +88,15 @@ TRACE
     int nofield=0;
     enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
     /*enter through whatever object we are*/
-    switch (prms.shape){
+    switch (shape){
         case BOX:
             box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
-            if (t0>0) PROP_DT(t0);/*this is to get a hollow inside the field.*/
+	    if (t0>FLT_EPSILON) PROP_DT(t0);/*this is to get a hollow inside the field.*/
             else PROP_DT(t1);
             break;
         case CYLINDER:
             cylinder_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius,yheight);/*this is to get a hollow inside the field.*/
-            if (t0>0) PROP_DT(t0);
+            if (t0>FLT_EPSILON) PROP_DT(t0);
             else PROP_DT(t1);
             break;
         case WINDOW:
