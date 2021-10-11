@@ -135,9 +135,9 @@ DECLARE
   void *magnet_prms;
   double foil_n[3];
   Rotation spin_flip;
-  struct field_parameters inside_magnet;
-  struct field_parameters instray_magnet;
-  struct field_parameters outstray_magnet;
+  double inside_magnet[3];
+  double instray_magnet[4];
+  double outstray_magnet[4];
   int hit_foil;
 %}
 
@@ -160,19 +160,18 @@ INITIALIZE
   Coords localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); 
   
   /*initialize magnet parameters*/
-  instray_magnet.field_prms[0]=Bx;
-  instray_magnet.field_prms[1]=By;
-  instray_magnet.field_prms[2]=Bz;
-  instray_magnet.field_prms[3]=-zdepth/2.0;
+  instray_magnet[1]=By;
+  instray_magnet[2]=Bz;
+  instray_magnet[3]=-zdepth/2.0;
   
-  outstray_magnet.field_prms[0]=Bx;
-  outstray_magnet.field_prms[1]=By;
-  outstray_magnet.field_prms[2]=Bz;
-  outstray_magnet.field_prms[3]=zdepth/2.0;
+  outstray_magnet[0]=Bx;
+  outstray_magnet[1]=By;
+  outstray_magnet[2]=Bz;
+  outstray_magnet[3]=zdepth/2.0;
 
-  inside_magnet.field_prms[0]=Bx;
-  inside_magnet.field_prms[1]=By;
-  inside_magnet.field_prms[2]=Bz;
+  inside_magnet[0]=Bx;
+  inside_magnet[1]=By;
+  inside_magnet[2]=Bz;
 
   /*if the magnetic field dimensions are not given, we assume there are no stray fields.
     I.e. the magnetic field does not extend beyond the magnet gap*/
@@ -217,7 +216,7 @@ TRACE
     /*neutron is now at the start of our b-field description*/
     /*this would be the place to push the magnetic field description from the magnet stack*/
     /*inject our magnet description into the propagation and remember the old one*/
-    mcmagnet_push(_particle,0,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&instray_magnet);
+    mcmagnet_push(_particle,0,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,instray_magnet);
   }
   /*do we hit the magnet opening assuming the magnet gap "tunnel" is rectangular*/
   if ( (box_intersect(&t3, &t4, x, y, z, vx, vy, vz,xwidth, yheight, zdepth))==0){
@@ -234,7 +233,7 @@ TRACE
   if(stray_field) mcmagnet_pop(_particle);//this could be done with a stop bit in the magnet parameters
   
   /*inject another field description for the magnetic field betweeen pole shoes.*/
-  mcmagnet_push(_particle,constant,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),1,&inside_magnet);
+  mcmagnet_push(_particle,constant,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),1,inside_magnet);
   
   /*see if we hit the magnet walls before we exit*/
   if (plane_intersect(&dt,x,y,z,vx,vy,vz,0,0,1,0,0,zdepth/2.0)==0){
@@ -275,7 +274,7 @@ TRACE
   mcmagnet_pop(_particle);
   
   if(stray_field)
-    mcmagnet_push(_particle,0,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&outstray_magnet);
+    mcmagnet_push(_particle,0,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,outstray_magnet);
   if (t2>1e-9){
     /*propagate to the end of the component*/
     PROP_DT(t2);

@@ -15,13 +15,12 @@
 * Release: McStas 2.0
 * Origin: Risoe
 *
-* Box containing a constant or tabled magnetic field
+* Box containing a constant magnetic field
 *
 * %D
 *
 *
 * %P
-* fieldtype: [ ] Should be either 1 (constant field in the box) or -1 (tabled in data file).
 * xwidth:  [m] Width of the box containing the field.
 * yheight: [m] Height of the box containing the field.
 * zdepth:  [m] Depth of the box containing the field.
@@ -35,37 +34,24 @@
 
 DEFINE COMPONENT Pol_FieldBox
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int field_type=1,xwidth,yheight,zdepth, Bx,By,Bz, string filename="")
+SETTING PARAMETERS (xwidth,yheight,zdepth, Bx=0,By=1e-3,Bz=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
     %include "pol-lib"
-    %include "interpolation-lib"
 %}
 
 DECLARE
 %{
-  struct field_parameters Bprms;
+  double Bprms[3];
 %}
 
 INITIALIZE
 %{
-  enum field_functions ff=field_type;
-  #ifdef USE_OFF
-  //mcmagnet_init();
-
-  if(ff==tabled){
-    struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
-    interpolator_info(interpolator);
-    Bprms.generic = (void *)interpolator;
-  } else 
-  #endif
-  if (ff==constant){
-    /*constant magnetic field in the box*/
-    Bprms.field_prms[0]=Bx;Bprms.field_prms[1]=By;Bprms.field_prms[2]=Bz;
-  }
+  /*constant magnetic field in the box*/
+  Bprms[0]=Bx;Bprms[1]=By;Bprms[2]=Bz;
 %}
 
 
@@ -76,7 +62,6 @@ TRACE
     double t0,t1;
     if (hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth)){
         if(t0>0) PROP_DT(t0);
-        //mcmagnet_push(field_type,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,&Bprms);
         double phi_prec;
         if(t1-t0>0){
           PROP_DT(t1-t0);
@@ -86,7 +71,6 @@ TRACE
           sx_i=sx;sy_i=sy;sz_i=sz;
           rotate(sx, sy, sz, sx_i,sy_i,sz_i, phi_prec, Bx, By, Bz);
         }
-        //mcmagnet_pop();
     }
 
 %}
