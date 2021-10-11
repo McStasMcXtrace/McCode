@@ -58,21 +58,18 @@ DEFINE INSTRUMENT Pump_probe_solvent(excitation_prob=0.2, Dt=100e-9, PSIMIN=0,
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
+%}
+
+USERVARS
+%{
   int scattered;
-  double rr,fsolvent;
-  double tjit,jitter;
-  int nosolvent,nosolute;
+  double rr;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  fsolvent=FSOLV;
-  jitter=JITTER;
-  nosolvent=NOSOLVENT;
-  nosolute=NOSOLUTE;
-
   /*sanity check*/
   if(FSOLV==0 && NOSOLUTE){
       fprintf(stderr,"Warning (Pump_probe_solvent): You have disabled solute scattering"
@@ -98,14 +95,6 @@ TRACE
 /* Progress_bar is an Arm displaying simulation progress.               */
 COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
-EXTEND
-%{
-    if(jitter!=0){
-        tjit=(rand01()-0.5)*100e-12*jitter;
-    }else{
-        tjit=0;
-    }
-%}
 
 COMPONENT src=Source_flat(xwidth=1e-9,yheight=1e-9,focus_xw=1e-10,focus_yh=1e-10,dist=1,E0=15.5, dE=0.000005, gauss=1,
       flux=1e33)
@@ -147,10 +136,10 @@ COMPONENT sample=Molecule_2state(
 WHEN (rr>0.5) AT(0,0,0) RELATIVE sample_pos
 EXTEND
 %{
-  if (nosolute) ABSORB;
+  if (INSTRUMENT_GETPAR(NOSOLUTE)) ABSORB;
   if (SCATTERED){
     scattered=1;
-    p*=(1.0-fsolvent)/0.5;
+    p*=(1.0-INSTRUMENT_GETPAR(FSOLV))/0.5;
   }
 %}
 
@@ -164,10 +153,10 @@ COMPONENT solvent=Molecule_2state(
 WHEN (rr<0.5) AT(0,0,0) RELATIVE sample_pos
 EXTEND
 %{
-  if (nosolvent) ABSORB;
+  if (INSTRUMENT_GETPAR(NOSOLVENT)) ABSORB;
   if (SCATTERED){
     scattered=1;
-    p*=fsolvent/0.5;
+    p*=INSTRUMENT_GETPAR(FSOLV)/0.5;
   }
 %}
 
